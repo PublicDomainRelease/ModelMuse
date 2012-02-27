@@ -44,6 +44,10 @@ implementation
 uses ModflowTimeUnit, frmErrorsAndWarningsUnit, ModflowUnitNumbers, 
   frmProgressUnit, Forms;
 
+resourcestring
+  StrTheFollowingGHBOb = 'The following GHB observation names may be valid f' +
+  'or MODFLOW but they are not valid for UCODE.';
+
 { TModflowGHB_Writer }
 
 function TModflowGHB_Writer.CellType: TValueCellType;
@@ -79,7 +83,7 @@ end;
 
 function TModflowGHB_Writer.ObsNameWarningString: string;
 begin
-  result := 'The following GHB observation names may be valid for MODFLOW but they are not valid for UCODE.';
+  result := StrTheFollowingGHBOb;
 end;
 
 function TModflowGHB_Writer.Package: TModflowPackageSelection;

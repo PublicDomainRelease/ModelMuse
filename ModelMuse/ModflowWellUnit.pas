@@ -164,8 +164,6 @@ type
   // )
   // @seealso(TWellCollection)
   TMfWellBoundary = class(TSpecificModflowBoundary)
-//  protected
-//    FFormulaInterpretation: TFormulaInterpretation;
   protected
     // @name fills ValueTimeList with a series of TObjectLists - one for
     // each stress period.  Each such TObjectList is filled with
@@ -178,7 +176,6 @@ type
     // See @link(TModflowParamBoundary.ModflowParamItemClass
     // TModflowParamBoundary.ModflowParamItemClass).
     class function ModflowParamItemClass: TModflowParamItemClass; override;
-//    procedure EvaluateCellListBoundaries;
     function ParameterType: TParameterType; override;
   public
     // @name fills ValueTimeList via a call to AssignCells for each
@@ -214,6 +211,7 @@ const
 
 procedure TWellItem.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TWellItem then
   begin
     PumpingRate := TWellItem(Source).PumpingRate;

@@ -90,6 +90,7 @@ var
   SourceParam: TModflowTransientListParameter;
   ParmChanged: boolean;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TModflowTransientListParameter then
   begin
     SourceParam := TModflowTransientListParameter(Source);

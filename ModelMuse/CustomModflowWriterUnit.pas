@@ -50,6 +50,7 @@ type
       as a warning.)
       }
   TErrorType = (etError, etWarning);
+  TArrayWritingFormat = (awfModflow, awfMt3dms);
 
   { @name is an abstract base class used as an ancestor for classes that
     write MODFLOW input files.
@@ -67,9 +68,11 @@ type
       const ArrayName: string);
     function CheckArrayUniform(const LayerIndex: Integer;
       const DataArray: TDataArray): boolean;
-    procedure WriteArrayValues(const LayerIndex: Integer; const DataArray: TDataArray);
+    procedure WriteArrayValues(const LayerIndex: Integer;
+      const DataArray: TDataArray);
   protected
     FEvaluationType: TEvaluationType;
+    FArrayWritingFormat: TArrayWritingFormat;
     // @name generates a comment line for a MODFLOW input file indentifying
     // the file type
     function File_Comment(const FileID: string): string;
@@ -118,6 +121,7 @@ type
     {@name is the model to be exported.}
     property Model: TCustomModel read FModel;
     // @name converts a real number represented as a string to always use
+    property ArrayWritingFormat: TArrayWritingFormat read FArrayWritingFormat;
     // the period as the decimal separator.
     class Function FortranDecimal(NumberString : string) : string;
     // @name converts "Value" to an string padded at the beginning with blank
@@ -160,10 +164,14 @@ type
     // @name writes a comment line to the output file.
     procedure WriteCommentLine(const Comment: string);
     // @name writes value to the output file using the U2DINT format in MODFLOW
+    // or the IARRAY array reader in MT3DMS depending on the value of
+    // @link(FArrayWritingFormat)
     // for cases when the array is a constant.
     procedure WriteConstantU2DINT(const Comment: string;
       const Value: integer);
     // @name writes value to the output file using the U2DREL format in MODFLOW
+    // or the RARRAY array reader in MT3DMS depending on the value of
+    // @link(FArrayWritingFormat)
     // for cases when the array is a constant.
     procedure WriteConstantU2DREL(const Comment: string;
       const Value: double);
@@ -172,22 +180,34 @@ type
       const ArrayName: string);
     // @name writes Value to the output with a leading blank space.
     procedure WriteFloat(const Value: double);
+    procedure WriteF10Float(const Value: double);
     // @name writes Value to the output with a leading blank space.
     procedure WriteInteger(Const Value: integer);
+    // @name writes Value to the output in I10 format.
+    procedure WriteI10Integer(Const Value: integer; const ErrorID: string);
+    // @name writes Value to the output in I2 format.
+    procedure WriteI2Integer(Const Value: integer; const ErrorID: string);
     // @name writes Value to the output with NO leading blank space.
     procedure WriteString(const Value: String);
     // @name writes the IFACE parameter in MODFLOW.
     procedure WriteIface(const Value: TIface);
-    // @name writes the header for the U2DINT array reader in MODFLOW.
+    // @name writes the header for the U2DINT array reader in MODFLOW
+    // or the IARRAY array reader in MT3DMS depending on the value of
+    // @link(FArrayWritingFormat).
     // @param(Comment is used to identify the array being written.)
     Procedure WriteU2DINTHeader(const Comment: string); virtual;
-    // @name writes the header for the U2DINT array reader in MODFLOW.
+    // @name writes the header for the U2DINT array reader in MODFLOW
+    // or the RARRAY array reader in MT3DMS depending on the value of
+    // @link(FArrayWritingFormat).
     // @param(Comment is used to identify the array being written.)
     Procedure WriteU2DRELHeader(const Comment: string);
     // @name writes a line to the name file.
     class procedure WriteToNameFile(const Ftype: string;
       const UnitNumber: integer; FileName: string;
       const Option: TFileOption; RelativeFileName: boolean = False);
+    class procedure WriteToMt3dMsNameFile(const Ftype: string;
+      const UnitNumber: integer; FileName: string;
+      RelativeFileName: boolean = False);
     // @name adds a comment line to the name file.
     class procedure AddNameFileComment(const Comment: string);
   end;
@@ -221,7 +241,7 @@ type
     // as ALength.
     function ExpandString(Source: string; ALength: integer): string;
     // @name is used to define parameter clusters for Param.
-    // 
+    //
     // When @name is called, Param must be a parameter for which the clusters
     // need to be identified and LayerCount must be greater than or equal
     // to the maximum number of clusters that could be defined for the
@@ -513,6 +533,9 @@ type
   // package. @name writes the input for both the boundary condition
   // and the observations.
   TFluxObsWriter = class(TCustomListWriter)
+  private
+    function GetFluxType(ObservationGroup: TFluxObservationGroup): string;
+    procedure RemoveWarningGroups(ObservationGroup: TFluxObservationGroup);
   protected
     function ObservationPackage: TModflowPackageSelection; virtual; abstract;
     // @name is the file extension used for the observation input file.
@@ -641,34 +664,54 @@ type
     function EndTimeOK(Time: double; PrintChoice: TCustomPrintItem): boolean;
   end;
 
-
-
-  TNameFileWriter = class(TCustomModflowWriter)
+  TCustomNameFileWriter = class(TCustomModflowWriter)
   private
     FNameFile: TStringList;
     FListFileName: string;
-    procedure CheckExternalFiles(const FileName: string);
+  protected
     // @name clears the name file.
-    Procedure ClearNameFile;
+    procedure ClearNameFile;
+    procedure InitilizeNameFile(Const FileName: string;
+      out OutputListFileName: string); virtual; abstract;
+  public
+    Constructor Create(AModel: TCustomModel; const FileName: string;
+      EvaluationType: TEvaluationType); reintroduce;
+    Destructor Destroy; override;
+    // Name saves the name file to a file.
+    procedure SaveNameFile(AFileName: string);
+  public
+    property ListFileName: string read FListFileName;
+    property NameFile: TStringList read FNameFile;
+  end;
+
+  TNameFileWriter = class(TCustomNameFileWriter)
+  private
+    procedure CheckExternalFiles(const FileName: string);
+  protected
     // @name adds lines to the name file to define the listing file,
     // the cell-by-cell flow file, and the files generated outside of
     // ModelMuse.
     procedure InitilizeNameFile(Const FileName: string;
-      out OutputListFileName: string);
+      out OutputListFileName: string); override;
   public
-    Constructor Create(AModel: TCustomModel; const FileName: string; EvaluationType: TEvaluationType); reintroduce;
-    Destructor Destroy; override;
     class function Extension: string; override;
-    // Name saves the name file to a file.
-    procedure SaveNameFile(AFileName: string);
-    property NameFile: TStringList read FNameFile;
-    property ListFileName: string read FListFileName;
+  end;
+
+  TMt3dmsNameWriter = class(TCustomNameFileWriter)
+  protected
+    procedure InitilizeNameFile(Const FileName: string;
+      out OutputListFileName: string); override;
+  public
+    class function Extension: string; override;
   end;
 
 // name writes a batch-file used to run MODFLOW.
 function WriteModflowBatchFile(ProgramLocations: TProgramLocations;
   FileName: string; ListFiles: TStringList; OpenListFile: boolean;
   Before, After: TStrings; ExportModpath, ExportZoneBudget: boolean): string;
+
+function WriteMt3dmsBatchFile(ProgramLocations: TProgramLocations;
+  FileName: string; ListFiles: TStringList; OpenListFile: boolean): string;
 
 // name writes a batch-file used to run MODPATH.
 function WriteModPathBatchFile(ProgramLocations: TProgramLocations;
@@ -681,7 +724,10 @@ function WriteZoneBudgetBatchFile(Model: TCustomModel;
 procedure ResetMaxUnitNumber;
 function GetMaxUnitNumber: integer;
 
-procedure SetCurrentNameFileWriter(NameFileWriter: TNameFileWriter);
+procedure SetCurrentNameFileWriter(NameFileWriter: TCustomNameFileWriter);
+
+resourcestring
+  StrObservationFactor = '(Observation factor for the ' + sLineBreak + '%s)';
 
 const
   // @name is the comment assigned to locations in a @link(TDataArray) where
@@ -709,13 +755,40 @@ resourcestring
   StrNoDefinedBoundarie = 'No defined boundaries in %s.';
   StrTheSPackageHasB = 'The %s package has been activated but no boundaries ' +
   'for it have been defined.';
+  StrValueTooLong = 'Value too long';
+  StrSIsTooLong10 = '%s is too long to be displayed with 10 characters';
+  StrSIsTooLong2 = '%s is too long to be displayed with 2 characters';
+  StrTheSInputFileCa = 'The %s input file can not be created.';
+  StrInTheBoundaryPack = 'In the boundary package related to the %s package,' +
+  ' no boundaries were defined.';
+  StrLayerRowCol = 'Layer, Row, Col = [%0:d, %1:d, %2:d]';
+  StrNoBoundaryConditio1 = 'No boundary conditions for the %0:s in one or mor' +
+  'e stress periods.';
+  StrStressPeriod0d = 'Stress Period %0:d';
+  StrErrorFlowObservatEarly = 'Error; Flow Observation = %0:s Early Times = ' +
+  '%1:s';
+  StrErrorFlowObservatLate = 'Error; Flow Observation = %0:s Late Times = %1' +
+  ':s';
+  EarlyTimeWarning = '%s flow observation times earlier than the beginning of the first stress period will be ignored.';
+  LateTimeWarning = '%s flow observation times later than the end of the last stress period will be ignored.';
+  MissingFile = 'One or more files that you specified in the MODFLOW Name '
+    + 'File dialog box are missing. If these are input files, MODFLOW will '
+    + 'not be able to run.';
+  StrNameFileForMODFLO = 'Name File for MODFLOW created on %0:s by %1:s';
+  StrNameFileForMT3DMS = 'Name File for MT3DMS created on %0:s by %1:s';
+  StrOneOrMoreSParam = 'One or more %s parameters have been eliminated becau' +
+  'se there are no cells associated with them.';
+  StrTheFlowtransportL = 'The flow-transport link file, %s, does not exist. ' +
+  'Run MODFLOW again to correct the problem.';
+  StrMissingFtlFile = 'Missing *.ftl file.';
 
 var
 //  NameFile: TStringList;
   MaxUnitNumber: integer = 0;
-  CurrentNameFileWriter: TNameFileWriter;
+  CurrentNameFileWriter: TCustomNameFileWriter;
 
-procedure SetCurrentNameFileWriter(NameFileWriter: TNameFileWriter);
+
+procedure SetCurrentNameFileWriter(NameFileWriter: TCustomNameFileWriter);
 begin
   CurrentNameFileWriter := NameFileWriter;
 end;
@@ -770,6 +843,46 @@ begin
   end;
 end;
 
+function WriteMt3dmsBatchFile(ProgramLocations: TProgramLocations;
+  FileName: string; ListFiles: TStringList; OpenListFile: boolean): string;
+var
+  ADirectory: string;
+  Mt3dmsLocation: string;
+  BatchFile: TStringList;
+  AFileName: string;
+  ListFileIndex: Integer;
+begin
+  ADirectory:= GetCurrentDir;
+  try
+    result := ExtractFileDir(FileName);
+    SetCurrentDir(result);
+    result := IncludeTrailingPathDelimiter(result)
+      + 'RunMt3dms.Bat';
+
+    Mt3dmsLocation := ProgramLocations.Mt3dmsLocation;
+
+    BatchFile := TStringList.Create;
+    try
+
+      AFileName :=  QuoteFileName(ExpandFileName(Mt3dmsLocation));
+      BatchFile.Add(AFileName + ' ' + ExtractFileName(FileName) {+ ' /wait'});
+
+      for ListFileIndex := 0 to ListFiles.Count - 1 do
+      begin
+        AddOpenListFileLine(ListFiles[ListFileIndex], OpenListFile,
+          BatchFile, ProgramLocations);
+      end;
+
+      BatchFile.Add('pause');
+      BatchFile.SaveToFile(result);
+    finally
+      BatchFile.Free;
+    end;
+  finally
+    SetCurrentDir(ADirectory);
+  end;
+end;
+
 function WriteModflowBatchFile(ProgramLocations: TProgramLocations;
   FileName: string; ListFiles: TStringList; OpenListFile: boolean;
   Before, After: TStrings; ExportModpath, ExportZoneBudget: boolean): string;
@@ -818,14 +931,6 @@ begin
         AFileName :=  QuoteFileName(ExpandFileName(ModflowLocation));
         BatchFile.Add(AFileName + ' ' + ExtractFileName(FileName) + ' /wait');
       end;
-      if ExportModpath then
-      begin
-        BatchFile.Add('call RunModpath.bat');
-      end;
-      if ExportZoneBudget then
-      begin
-        BatchFile.Add('call RunZoneBudget.Bat');
-      end;
 
       BatchFile.AddStrings(After);
       for ListFileIndex := 0 to ListFiles.Count - 1 do
@@ -834,6 +939,14 @@ begin
           BatchFile, ProgramLocations);
       end;
 
+      if ExportModpath then
+      begin
+        BatchFile.Add('call RunModpath.bat');
+      end;
+      if ExportZoneBudget then
+      begin
+        BatchFile.Add('call RunZoneBudget.Bat');
+      end;
 
       BatchFile.Add('pause');
       BatchFile.SaveToFile(result);
@@ -1172,6 +1285,7 @@ constructor TCustomModflowWriter.Create(AModel: TCustomModel; EvaluationType: TE
 begin
   inherited Create;
   FEvaluationType := EvaluationType;
+  FArrayWritingFormat := awfModflow;
   FModel := AModel;
 //  FExportTime := Now;
 end;
@@ -1328,7 +1442,6 @@ procedure TCustomModflowWriter.WriteCommentLine(const Comment: string);
 begin
   WriteString('# ' + Comment);
   NewLine;
-
 end;
 
 procedure TCustomModflowWriter.WriteCommentLines(const Lines: TStrings);
@@ -1407,9 +1520,60 @@ begin
   end;
 end;
 
+procedure TCustomModflowWriter.WriteF10Float(const Value: double);
+begin
+  WriteString(FixedFormattedReal(Value, 10));
+end;
+
 procedure TCustomModflowWriter.WriteFloat(const Value: double);
 begin
   WriteString(' ' + FreeFormattedReal(Value));
+end;
+
+procedure TCustomModflowWriter.WriteI10Integer(const Value: integer;
+  const ErrorID: string);
+const
+  MaxCharacters = 10;
+var
+  ValueAsString: string;
+begin
+  ValueAsString := IntToStr(Value);
+  if Length(ValueAsString) > MaxCharacters then
+  begin
+    frmErrorsAndWarnings.AddError(Model, StrValueTooLong,
+      Format(StrSIsTooLong10, [ErrorID]));
+  end
+  else
+  begin
+    while Length(ValueAsString) < MaxCharacters do
+    begin
+      ValueAsString := ' ' + ValueAsString;
+    end;
+  end;
+  WriteString(ValueAsString);
+end;
+
+procedure TCustomModflowWriter.WriteI2Integer(const Value: integer;
+  const ErrorID: string);
+const
+  MaxCharacters = 2;
+var
+  ValueAsString: string;
+begin
+  ValueAsString := IntToStr(Value);
+  if Length(ValueAsString) > MaxCharacters then
+  begin
+    frmErrorsAndWarnings.AddError(Model, StrValueTooLong,
+      Format(StrSIsTooLong2, [ErrorID]));
+  end
+  else
+  begin
+    while Length(ValueAsString) < MaxCharacters do
+    begin
+      ValueAsString := ' ' + ValueAsString;
+    end;
+  end;
+  WriteString(ValueAsString);
 end;
 
 procedure TCustomModflowWriter.WriteIface(const Value: TIface);
@@ -1438,6 +1602,21 @@ begin
     FFileStream.Write(StringToWrite[1], Length(StringToWrite)*SizeOf(AnsiChar));
 //    UpdateExportTime;
   end;
+end;
+
+class procedure TCustomModflowWriter.WriteToMt3dMsNameFile(const Ftype: string;
+  const UnitNumber: integer; FileName: string; RelativeFileName: boolean);
+var
+  Line: string;
+begin
+  frmGoPhast.PhastModel.AddModelInputFile(FileName);
+  if not RelativeFileName then
+  begin
+    FileName := ExtractFileName(FileName);
+  end;
+  Line := Ftype + ' ' + IntToStr(UnitNumber) + ' ' + FileName;
+  Assert(CurrentNameFileWriter <> nil);
+  CurrentNameFileWriter.NameFile.Add(Line);
 end;
 
 class procedure TCustomModflowWriter.WriteToNameFile(const Ftype: string;
@@ -1497,16 +1676,38 @@ end;
 
 procedure TCustomModflowWriter.WriteU2DINTHeader(const Comment: string);
 begin
-  WriteString( 'INTERNAL 1 (FREE)   ');
-  WriteInteger(IPRN_Integer);
+  case FArrayWritingFormat of
+    awfModflow:
+      begin
+        WriteString( 'INTERNAL 1 (FREE)   ');
+        WriteInteger(IPRN_Integer);
+      end;
+    awfMt3dms:
+      begin
+        WriteString('       103         1                    ');
+        WriteString(FixedFormattedInteger(IPRN_Integer, 10));
+      end;
+  end;
   WriteString( ' # ' + Comment);
   NewLine;
 end;
 
 procedure TCustomModflowWriter.WriteU2DRELHeader(const Comment: string);
 begin
-  WriteString( 'INTERNAL 1.0 (FREE)   ');
-  WriteInteger(IPRN_Real);
+  case FArrayWritingFormat of
+    awfModflow:
+      begin
+        WriteString( 'INTERNAL 1.0 (FREE)   ');
+        WriteInteger(IPRN_Real);
+      end;
+    awfMt3dms:
+      begin
+        WriteString('       103        1.                    ');
+        WriteString(FixedFormattedInteger(IPRN_Real, 10));
+      end;
+    else
+      Assert(False);
+  end;
   WriteString( ' # ' + Comment);
   NewLine;
 end;
@@ -1514,8 +1715,22 @@ end;
 procedure TCustomModflowWriter.WriteConstantU2DINT(const Comment: string;
   const Value: integer);
 begin
-  WriteString( 'CONSTANT   ');
-  WriteInteger(Value);
+  case FArrayWritingFormat of
+    awfModflow:
+      begin
+        WriteString( 'CONSTANT   ');
+        WriteInteger(Value);
+      end;
+    awfMt3dms:
+      begin
+        WriteString('         0');
+        WriteString(FixedFormattedInteger(Value, 10));
+        WriteString('                    ');
+        WriteString(FixedFormattedInteger(IPRN_Integer, 10));
+      end;
+    else
+      Assert(False);
+  end;
   WriteString( ' # ' + Comment);
   NewLine;
 end;
@@ -1523,33 +1738,27 @@ end;
 procedure TCustomModflowWriter.WriteConstantU2DREL(const Comment: string;
   const Value: double);
 begin
-  WriteString( 'CONSTANT   ');
-  WriteFloat(Value);
+  case FArrayWritingFormat of
+    awfModflow:
+      begin
+        WriteString( 'CONSTANT   ');
+        WriteFloat(Value);
+      end;
+    awfMt3dms:
+      begin
+        WriteString('         0');
+        WriteF10Float(Value);
+        WriteString('                    ');
+        WriteI10Integer(IPRN_Real, 'IPRN');
+      end;
+    else
+      Assert(False);
+  end;
   WriteString( ' # ' + Comment);
   NewLine;
 end;
 
 { TNameFileWriter }
-
-procedure TNameFileWriter.ClearNameFile;
-begin
-  NameFile.Clear;
-end;
-
-constructor TNameFileWriter.Create(AModel: TCustomModel; const FileName: string;
-  EvaluationType: TEvaluationType);
-begin
-  inherited Create(AModel, EvaluationType);
-  FNameFile := TStringList.Create;
-  SetCurrentNameFileWriter(self);
-  InitilizeNameFile(FileName, FListFileName);
-end;
-
-destructor TNameFileWriter.Destroy;
-begin
-  FNameFile.Free;
-  inherited;
-end;
 
 class function TNameFileWriter.Extension: string;
 begin
@@ -1557,10 +1766,6 @@ begin
 end;
 
 procedure TNameFileWriter.CheckExternalFiles(const FileName: string);
-const
-  MissingFile = 'One or more files that you specified in the MODFLOW Name '
-    + 'File dialog box are missing. If these are input files, MODFLOW will '
-    + 'not be able to run.';
 var
   Directory: string;
   OldDir: string;
@@ -1622,8 +1827,8 @@ var
   CellFlowsName: string;
 begin
   ClearNameFile;
-  AddNameFileComment('Name File for MODFLOW created on '
-    + DateToStr(Now) + ' by ' + Model.ProgramName);
+  AddNameFileComment(Format(StrNameFileForMODFLO,
+    [DateToStr(Now), Model.ProgramName]));
   OutputListFileName := ChangeFileExt(FileName, '.lst');
   WriteToNameFile(StrLIST, Model.UnitNumbers.UnitNumber(StrLIST),
     OutputListFileName, foOutput);
@@ -1657,12 +1862,6 @@ begin
     NameFile.Add('');
     NameFile.Add('#Files generated by ' + Model.ProgramName);
   end;
-end;
-
-procedure TNameFileWriter.SaveNameFile(AFileName: string);
-begin
-//  AFileName := ChangeFileExt(AFileName, '.nam');
-  NameFile.SaveToFile(FileName(AFileName));
 end;
 
 procedure TCustomModflowWriter.GetFlowUnitNumber(var UnitNumber: Integer);
@@ -1929,9 +2128,8 @@ begin
     begin
       FWarningRoot := WarningRoot;
     end;
-    ErrorMessage := 'Layer, Row, Col = [' + IntToStr(ValueCell.Layer+1)
-      + ', ' + IntToStr(ValueCell.Row+1)
-      + ', ' + IntToStr(ValueCell.Column+1) + ']';
+    ErrorMessage := Format(StrLayerRowCol,
+      [ValueCell.Layer+1, ValueCell.Row+1, ValueCell.Column+1]);
     frmErrorsAndWarnings.AddWarning(Model, FWarningRoot, ErrorMessage);
   end;
 end;
@@ -2001,9 +2199,6 @@ var
   TimeListIndex: Integer;
   DisplayTimeList: TModflowBoundaryDisplayTimeList;
   DataArray: TModflowBoundaryDisplayDataArray;
-const
-  ErrorRoot = 'One or more %s parameters have been eliminated '
-    + 'because there are no cells associated with them.';
 begin
   // Quit if the package isn't used.
   if not Package.IsSelected then
@@ -2034,7 +2229,7 @@ begin
       Else Assert(False);
     end;
     // Set the error message.
-    ErrorMessage := Format(ErrorRoot, [Trim(PARTYP)]);
+    ErrorMessage := Format(StrOneOrMoreSParam, [Trim(PARTYP)]);
 
     // loop over the parameters
     for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
@@ -2310,9 +2505,8 @@ begin
         if (ITMP = 0) and (NP = 0) then
         begin
           frmErrorsAndWarnings.AddWarning(Model,
-            'No boundary conditions for the '
-            + Package.PackageIdentifier + ' in one or more stress periods.',
-            'Stress Period ' + IntToStr(TimeIndex+1));
+            Format(StrNoBoundaryConditio1, [Package.PackageIdentifier]),
+            Format(StrStressPeriod0d, [TimeIndex+1]));
         end;
         // data set 5;
         WriteInteger(ITMP);
@@ -3662,11 +3856,26 @@ begin
   result := ChangeFileExt(AFileName, ObservationOutputExtension);
 end;
 
+procedure TFluxObsWriter.RemoveWarningGroups(ObservationGroup: TFluxObservationGroup);
+begin
+  frmErrorsAndWarnings.RemoveWarningGroup(Model,
+    Format(EarlyTimeWarning, [GetFluxType(ObservationGroup)]));
+  frmErrorsAndWarnings.RemoveWarningGroup(Model,
+    Format(LateTimeWarning, [GetFluxType(ObservationGroup)]));
+end;
+
+function TFluxObsWriter.GetFluxType(ObservationGroup: TFluxObservationGroup): string;
+begin
+  case ObservationGroup.FluxObsType of
+    fotHead: result := 'CHOB ';
+    fotRiver: result := 'RVOB ';
+    fotDrain: result := 'DROB ';
+    fotGHB: result := 'GBOB ';
+  end;
+end;
+
 procedure TFluxObsWriter.WriteObservationDataSet4(ObservationGroup: TFluxObservationGroup;
       DataSet4: TStringList);
-const
-  EarlyTimeWarning = 'Flow observation times earlier than the beginning of the first stress period will be ignored.';
-  LateTimeWarning = 'Flow observation times later than the end of the last stress period will be ignored.';
 var
   ObsTime: TFluxObservation;
   OBSNAM: string;
@@ -3682,15 +3891,6 @@ var
   LateTimes: string;
   StartingTimes: TRealList;
   ReferenceStressPeriodIndex: Integer;
-  function GetFluxType: string;
-  begin
-    case ObservationGroup.FluxObsType of
-      fotHead: result := 'CHOB ';
-      fotRiver: result := 'RVOB ';
-      fotDrain: result := 'DROB ';
-      fotGHB: result := 'GBOB ';
-    end;
-  end;
 begin
   StartingTimes := TRealList.Create;
   try
@@ -3737,7 +3937,6 @@ begin
         Dec(ReferenceStressPeriodIndex);
       end;
       Assert(ReferenceStressPeriodIndex >= 0);
-//      TOFFSET := ObsTime.Time - StartTime;
       TOFFSET := ObsTime.Time - StartingTimes[ReferenceStressPeriodIndex];
       FLWOBS := ObsTime.ObservedValue;
       if ObsTime.Comment = '' then
@@ -3753,24 +3952,20 @@ begin
         + FreeFormattedReal(FLWOBS)
         + ' # Data Set 4: OBSNAM IREFSP TOFFSET FLWOBS'
         + Comment);
-//      DataSet4.Add(OBSNAM + ' 1 ' + FreeFormattedReal(TOFFSET)
-//        + FreeFormattedReal(FLWOBS)
-//        + ' # Data Set 4: OBSNAM IREFSP TOFFSET FLWOBS'
-//        + Comment);
     end;
     if EarlyTimes <> '' then
     begin
-      EarlyTimes := 'Error; Flow Observaton = ' + ObservationGroup.ObservationName +
-        ' Early Times = ' +  EarlyTimes;
+      EarlyTimes := Format(StrErrorFlowObservatEarly,
+        [ObservationGroup.ObservationName, EarlyTimes]);
       frmErrorsAndWarnings.AddWarning(Model,
-        GetFluxType + EarlyTimeWarning, EarlyTimes);
+        Format(EarlyTimeWarning, [GetFluxType(ObservationGroup)]), EarlyTimes);
     end;
     if LateTimes <> '' then
     begin
-      LateTimes := 'Error; Flow Observaton = ' + ObservationGroup.ObservationName +
-        ' Late Times = ' +  LateTimes;
+      LateTimes := Format(StrErrorFlowObservatLate,
+        [ObservationGroup.ObservationName, LateTimes]);
       frmErrorsAndWarnings.AddWarning(Model,
-        GetFluxType + LateTimeWarning, LateTimes);
+        Format(LateTimeWarning, [GetFluxType(ObservationGroup)]), LateTimes);
     end;
   finally
     StartingTimes.Free;
@@ -3861,10 +4056,12 @@ var
   ErrorRoot: string;
   DetailedMessage: string;
 begin
+  // if the package is not selected, quit.
   if not ObservationPackage.IsSelected then
   begin
     Exit;
   end;
+  // If the file has been generated externally, quit.
   if Model.PackageGeneratedExternally(PackageAbbreviation) then
   begin
     Exit;
@@ -3872,6 +4069,7 @@ begin
 
   frmErrorsAndWarnings.RemoveWarningGroup(Model, ObsNameWarningString);;
 
+  // count the number of cell groups for which flux observations are listed
   NQ_Pkg := 0;
   for ObsIndex := 0 to Observations.Count - 1 do
   begin
@@ -3896,17 +4094,15 @@ begin
   AllCells := TList.Create;
   ObsFile := TStringList.Create;
   try
+    // Values stores the values at a list of cells.
     if Values.Count = 0 then
     begin
-//      ErrorRoot := 'The ' + PackageAbbreviation
-//        + ' input file can not be created.';
-//      DetailedMessage := 'In the boundary package related to the '
-//        + PackageAbbreviation + ' package, no boundaries were defined.';
-      ErrorRoot := Format('The %s input file can not be created.', [PackageAbbreviation]);
-      DetailedMessage := Format('In the boundary package related to the %s package, no boundaries were defined.', [PackageAbbreviation]);
+      ErrorRoot := Format(StrTheSInputFileCa, [PackageAbbreviation]);
+      DetailedMessage := Format(StrInTheBoundaryPack, [PackageAbbreviation]);
       frmErrorsAndWarnings.AddError(Model, ErrorRoot, DetailedMessage);
       Exit;
     end;
+    // put the cells for the flux in AllCells
     List := Values[0];
     for CellIndex := 0 to List.Count - 1 do
     begin
@@ -3926,6 +4122,10 @@ begin
     for ObsIndex := 0 to Observations.Count - 1 do
     begin
       ObservationGroup := Observations[ObsIndex];
+      if ObsIndex = 0 then
+      begin
+        RemoveWarningGroups(ObservationGroup);
+      end;
       if Purpose = ObservationGroup.Purpose then
       begin
         DataSet4 := TStringList.Create;
@@ -4057,8 +4257,7 @@ begin
     begin
       ScreenObject := ObsFactor.ScreenObject as TScreenObject;
       frmFormulaErrors.AddFormulaError(ScreenObject.Name,
-        '(Observation factor for the ' + sLineBreak
-        + ObservationPackage.PackageIdentifier + ')',
+        Format(StrObservationFactor, [ObservationPackage.PackageIdentifier]),
         Expression.Decompile, E.Message);
 
       ObsFactor.Factor := '1.';
@@ -4441,6 +4640,61 @@ begin
   ADataArray.CacheData;
 end;
 
-end.
+{ TCustomNameFileWriter }
 
+constructor TCustomNameFileWriter.Create(AModel: TCustomModel;
+  const FileName: string; EvaluationType: TEvaluationType);
+begin
+  inherited Create(AModel, EvaluationType);
+  FNameFile := TStringList.Create;
+  SetCurrentNameFileWriter(self);
+  InitilizeNameFile(FileName, FListFileName);
+end;
+
+destructor TCustomNameFileWriter.Destroy;
+begin
+  FNameFile.Free;
+  inherited;
+end;
+
+procedure TCustomNameFileWriter.ClearNameFile;
+begin
+  NameFile.Clear;
+end;
+
+{ TMt3dmsNameWriter }
+
+class function TMt3dmsNameWriter.Extension: string;
+begin
+  result := StrMtName;
+end;
+
+procedure TMt3dmsNameWriter.InitilizeNameFile(const FileName: string;
+  out OutputListFileName: string);
+var
+  FtlFileName: string;
+begin
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrMissingFtlFile);
+  ClearNameFile;
+  AddNameFileComment(Format(StrNameFileForMT3DMS,
+    [DateToStr(Now), Model.ProgramName]));
+  OutputListFileName := ChangeFileExt(FileName, '.mls');
+  WriteToMt3dMsNameFile(StrLIST, Mt3dList, OutputListFileName);
+  FtlFileName := ChangeFileExt(OutputListFileName, '.ftl');
+  if not FileExists(FtlFileName) then
+  begin
+    frmErrorsAndWarnings.AddError(Model, StrMissingFtlFile,
+      Format(StrTheFlowtransportL, [FtlFileName]));
+  end;
+  WriteToMt3dMsNameFile(StrFTL, Mt3dFtl, FtlFileName);
+  WriteToMt3dMsNameFile(StrDATA, Mt3dCnf, ChangeFileExt(OutputListFileName, '._cnf'));
+end;
+
+procedure TCustomNameFileWriter.SaveNameFile(AFileName: string);
+begin
+  // AFileName := ChangeFileExt(AFileName, '.nam');
+  NameFile.SaveToFile(FileName(AFileName));
+end;
+
+end.
 

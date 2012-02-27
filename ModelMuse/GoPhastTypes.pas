@@ -220,6 +220,11 @@ type
   // @value(umAdd Add new values to existing values.)
   TUpdateMethod = (umAssign, umAdd);
 
+  // In MT3DMS transport observations, observation results can be specified
+  // either at a specific time or at a desired frequency using the same
+  // variable. @name is used to indicate which form is to be used.
+  TObservationType = (otTime, otFrequency);
+
   TBaseModel = class;
 
   // @abstract(@name invalidates the model when it is changed.)
@@ -246,11 +251,45 @@ type
     function Model: TBaseModel;
   end;
 
+  TRealItem = class(TPhastCollectionItem)
+  private
+    FValue: double;
+    FOnChange: TNotifyEvent;
+    procedure SetValue(const Value: double);
+  protected
+    procedure ReadValue(Reader: TReader);
+    procedure WriteValue(Writer: TWriter);
+    procedure DefineProperties(Filer: TFiler); override;
+  public
+    procedure Assign(Source: TPersistent); override;
+    function IsSame(Item: TRealItem): Boolean;
+  published
+    property Value: double read FValue write SetValue;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+  end;
+
+  TRealCollection = class(TPhastCollection)
+  private
+    FInitialValue: Real;
+    function GetItems(Index: Integer): TRealItem;
+    procedure SetItems(Index: Integer; const Value: TRealItem);
+    procedure SetInitialValue(const Value: Real);
+  public
+    constructor Create(Model: TBaseModel);
+    function IsSame(RealCollection: TRealCollection): Boolean;
+    property  Items[Index: Integer]: TRealItem read GetItems
+      write SetItems; default;
+    function Add: TRealItem;
+    property InitialValue: Real read FInitialValue write SetInitialValue;
+  end;
+
   TPointArray = array of TPoint;
 
   TRealStorage = class(TPersistent)
   private
     FValue: real;
+    FOnChange: TNotifyEvent;
+    procedure SetValue(const Value: real);
   protected
     procedure ReadValue(Reader: TReader);
     procedure WriteValue(Writer: TWriter);
@@ -258,7 +297,24 @@ type
   public
     procedure Assign(Source: TPersistent); override;
   published
-    property Value: real read FValue write FValue;
+    property Value: real read FValue write SetValue;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+  end;
+
+  TStringStorage = class(TPersistent)
+  private
+    FValue: string;
+    FOnChange: TNotifyEvent;
+    procedure SetValue(const Value: string);
+  protected
+    procedure ReadValue(Reader: TReader);
+    procedure WriteValue(Writer: TWriter);
+    procedure DefineProperties(Filer: TFiler); override;
+  public
+    procedure Assign(Source: TPersistent); override;
+  published
+    property Value: string read FValue write SetValue;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
   TGoPhastPersistent = class(TPersistent)
@@ -294,6 +350,13 @@ type
     property UpToDate: boolean read FUpToDate write SetUpToDate;
     property DisplayName: string read GetDisplayName;
   end;
+
+  TLayerSort = class(TObject)
+    Layer: integer;
+    ActiveCells: integer;
+    Proportion: double;
+  end;
+
 
   function EvalAtToString(const Eval: TEvaluatedAt;
     const Model: TModelSelection; const Plural, TitleCase: boolean): string;
@@ -420,6 +483,7 @@ const
   StrStressPeriodLabel = 'Stress Period: ';
   StrTimeStepLabel = 'Time Step: ';
   StrElapsedTimeLabel = 'Elapsed Time: ';
+  StrTransportStep = 'Transport Step: ';
   StrParentModel = 'Parent model';
 
 
@@ -429,6 +493,17 @@ var
 
 function StrToStatFlag(Const AStatFlagLabel: string): TStatFlag;
 function StatFlatToStr(AStatFlag: TStatFlag): string;
+function SortLayerSorts(Item1, Item2: Pointer): Integer;
+
+resourcestring
+  StrNoBoundaryConditio = 'No boundary conditions assigned to the %s because' +
+  ' the object does not set the values of either enclosed or intersected cel' +
+  'ls.';
+  StrErrorObjectDuplicateTimes = 'Error; Object = %0:s Duplicate Times = %1:s';
+  StrErrorObjectEarlyTimes = 'Error; Object = %0:s Early Times = %1:s';
+  StrErrorObjectLateTimes = 'Error; Object = %0:s Late Times = %1:s';
+  StrObjectS = 'Object: %s';
+  StrObjectSTimeG = 'Object: %s; Time: %g';
 
 implementation
 
@@ -436,6 +511,21 @@ implementation
 {$IFNDEF Testing}
 uses PhastModelUnit;
 {$ENDIF}
+
+function SortLayerSorts(Item1, Item2: Pointer): Integer;
+var
+  LayerSort1: TLayerSort;
+  LayerSort2: TLayerSort;
+begin
+  LayerSort1 := Item1;
+  LayerSort2 := Item2;
+  result := LayerSort1.ActiveCells - LayerSort2.ActiveCells;
+  if result = 0 then
+  begin
+    result := LayerSort1.Layer - LayerSort2.Layer;
+  end;
+end;
+
 
 function StrToStatFlag(Const AStatFlagLabel: string): TStatFlag;
 var
@@ -502,6 +592,18 @@ end;
 procedure TRealStorage.ReadValue(Reader: TReader);
 begin
   Value := Reader.ReadFloat;
+end;
+
+procedure TRealStorage.SetValue(const Value: real);
+begin
+  if FValue <> Value then
+  begin
+    FValue := Value;
+    if Assigned(OnChange) then
+    begin
+      OnChange(self);
+    end;
+  end;
 end;
 
 procedure TRealStorage.WriteValue(Writer: TWriter);
@@ -798,6 +900,144 @@ begin
   end;
 end;
 
+
+{ TStringStorage }
+
+procedure TStringStorage.Assign(Source: TPersistent);
+begin
+  if Source is TStringStorage then
+  begin
+    Value := TStringStorage(Source).Value;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+procedure TStringStorage.DefineProperties(Filer: TFiler);
+begin
+  inherited DefineProperties(Filer);
+  Filer.DefineProperty('Value', ReadValue, WriteValue, Value = '')
+end;
+
+procedure TStringStorage.ReadValue(Reader: TReader);
+begin
+  Value := Reader.ReadString;
+end;
+
+procedure TStringStorage.SetValue(const Value: string);
+begin
+  if FValue <> Value then
+  begin
+    FValue := Value;
+    if Assigned(OnChange) then
+    begin
+      OnChange(self);
+    end;
+  end;
+end;
+
+procedure TStringStorage.WriteValue(Writer: TWriter);
+begin
+  Writer.WriteString(Value);
+end;
+
+{ TRealItem }
+
+procedure TRealItem.Assign(Source: TPersistent);
+begin
+  if Source is TRealItem then
+  begin
+    Value := TRealItem(Source).Value;
+  end
+  else
+  begin
+    inherited;
+  end;
+  // if Assign is updated, update IsSame too.
+end;
+
+procedure TRealItem.DefineProperties(Filer: TFiler);
+begin
+  inherited DefineProperties(Filer);
+  Filer.DefineProperty('Value', ReadValue, WriteValue, Value = 0)
+end;
+
+function TRealItem.IsSame(Item: TRealItem): Boolean;
+begin
+  Result := Value = Item.Value;
+end;
+
+procedure TRealItem.ReadValue(Reader: TReader);
+begin
+  Value := Reader.ReadFloat;
+end;
+
+procedure TRealItem.SetValue(const Value: double);
+begin
+  if FValue <> Value then
+  begin
+    FValue := Value;
+    InvalidateModel;
+    if Assigned(OnChange) then
+    begin
+      OnChange(self);
+    end;
+  end;
+end;
+
+procedure TRealItem.WriteValue(Writer: TWriter);
+begin
+  Writer.WriteFloat(Value);
+end;
+
+{ TRealCollection }
+
+function TRealCollection.Add: TRealItem;
+begin
+  result := inherited Add as TRealItem;
+  result.FValue := InitialValue;
+end;
+
+constructor TRealCollection.Create(Model: TBaseModel);
+begin
+  inherited Create(TRealItem, Model);
+end;
+
+function TRealCollection.GetItems(Index: Integer): TRealItem;
+begin
+  result := inherited Items[index] as TRealItem
+end;
+
+function TRealCollection.IsSame(RealCollection: TRealCollection): Boolean;
+var
+  index: Integer;
+begin
+  // if Assign is updated, update IsSame too.
+  result := Count = RealCollection.Count;
+  if result then
+  begin
+    for index := 0 to Count - 1 do
+    begin
+      result := Items[index].IsSame(RealCollection[index]);
+      if not result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+procedure TRealCollection.SetInitialValue(const Value: Real);
+begin
+  FInitialValue := Value;
+end;
+
+procedure TRealCollection.SetItems(Index: Integer; const Value: TRealItem);
+begin
+  inherited Items[index] := Value;
+end;
 
 initialization
   InitializeStatTypeLabels;

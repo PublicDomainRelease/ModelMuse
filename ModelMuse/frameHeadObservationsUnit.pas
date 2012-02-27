@@ -10,93 +10,34 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Grids, RbwDataGrid4, StdCtrls, Mask, JvExMask, JvSpin, ExtCtrls,
-  UndoItemsScreenObjects, ModflowHobUnit, Math, ArgusDataEntry, JvExStdCtrls,
-  JvCombobox, JvListComb, ComCtrls, JvExComCtrls, JvComCtrls;
+  Dialogs, frameCustomCellObservationUnit, ExtCtrls, Grids, RbwDataGrid4,
+  StdCtrls, Mask, JvExMask, JvSpin, ArgusDataEntry, ComCtrls, JvExComCtrls,
+  JvComCtrls, JvExStdCtrls, JvCombobox, JvListComb, UndoItemsScreenObjects;
 
 type
-  TframeHeadObservations = class(TFrame)
-    Panel4: TPanel;
-    seLayers: TJvSpinEdit;
-    pnlCaption: TPanel;
-    pnlName: TPanel;
-    edObsName: TLabeledEdit;
+  TframeHeadObservations = class(TframeCustomCellObservation)
     rgMultiObsMethod: TRadioGroup;
-    Panel6: TPanel;
-    btnDeleteLayer: TButton;
-    btnInsertLayer: TButton;
-    lblNumberOfLayers: TLabel;
-    lblTreatment: TLabel;
-    comboTreatment: TComboBox;
-    pcData: TJvPageControl;
-    tabTimes: TTabSheet;
-    tabLayers: TTabSheet;
-    rdgLayers: TRbwDataGrid4;
-    rdeMultiLayerEdit: TRbwDataEntry;
-    Panel5: TPanel;
-    rdeMultiValueEdit: TRbwDataEntry;
     comboMultiStatFlag: TJvImageComboBox;
-    Panel2: TPanel;
-    lblNumberOfTimes: TLabel;
-    seTimes: TJvSpinEdit;
-    btnDeleteValue: TButton;
-    btnInsertValue: TButton;
-    rdgHeads: TRbwDataGrid4;
-    procedure seTimesChange(Sender: TObject);
-    procedure rdgHeadsSetEditText(Sender: TObject; ACol, ARow: Integer;
-      const Value: string);
-    procedure seLayersChange(Sender: TObject);
-    procedure rdgLayersSetEditText(Sender: TObject; ACol, ARow: Integer;
-      const Value: string);
-    procedure rdeMultiValueEditChange(Sender: TObject);
-    procedure rdeMultiLayerEditChange(Sender: TObject);
-    procedure rdgHeadsSelectCell(Sender: TObject; ACol, ARow: Integer;
-      var CanSelect: Boolean);
-    procedure rdgLayersSelectCell(Sender: TObject; ACol, ARow: Integer;
-      var CanSelect: Boolean);
-    procedure btnDeleteValueClick(Sender: TObject);
-    procedure btnInsertValueClick(Sender: TObject);
-    procedure btnDeleteLayerClick(Sender: TObject);
-    procedure btnInsertLayerClick(Sender: TObject);
-    procedure rdgHeadsExit(Sender: TObject);
-    procedure rdgLayersExit(Sender: TObject);
-    procedure edObsNameExit(Sender: TObject);
-    procedure rdgHeadsHorizontalScroll(Sender: TObject);
     procedure comboMultiStatFlagChange(Sender: TObject);
-    procedure FrameResize(Sender: TObject);
-    procedure rdgHeadsColSize(Sender: TObject; ACol, PriorWidth: Integer);
-    procedure splitHeadsLayersMoved(Sender: TObject);
-    procedure edObsNameChange(Sender: TObject);
-    procedure comboTreatmentChange(Sender: TObject);
+    procedure comboTreatmentChange(Sender: TObject); override;
+    procedure seTimesChange(Sender: TObject); override;
+    procedure rdeMultiValueEditChange(Sender: TObject);
     procedure rgMultiObsMethodClick(Sender: TObject);
+    procedure rdgObservationsSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean); override;
   private
-    FDeletingTime: Boolean;
-    FDeletingLayer: Boolean;
-    FChanged: Boolean;
-    FTimesCountChanged: Boolean;
-    FLayerCountChanged: Boolean;
-    procedure ClearGrid(Grid: TRbwDataGrid4);
-    procedure AssignValuesToSelectedGridCells(const NewText: string;
-      Grid: TRbwDataGrid4; const StartCol, EndCol: integer);
-    procedure EnableMultiEditControl(Grid: TRbwDataGrid4; AControl: TControl;
-      const StartCol, EndCol: integer);
-    procedure DeleteSelectedRow(rdgGrid: TRbwDataGrid4; SpinEdit: TJvSpinEdit; DeleteButton: TButton);
-    procedure UpdateSpinEdit(Grid: TRbwDataGrid4; SpinEdit: TJvSpinEdit);
-    procedure InsertRow(Grid: TRbwDataGrid4; SpinEdit: TJvSpinEdit; DeleteButton: TButton);
-    procedure EnableDeleteButton(DeleteButton: TButton; SpinEdit: TJvSpinEdit);
-    procedure SetSpinCount(SpinEdit: TJvSpinEdit; Grid: TRbwDataGrid4);
-    procedure LayoutMultiHeadEditControls;
     { Private declarations }
+  protected
+     procedure LayoutMultiCellEditControls; override;
   public
     procedure GetData(List: TScreenObjectEditCollection);
     procedure SetData(List: TScreenObjectEditCollection; SetAll: boolean;
       ClearAll: boolean);
-    procedure InitializeControls;
+    procedure InitializeControls; override;
     { Public declarations }
   end;
 
 resourcestring
-  StrTime = 'Time';
   StrObservedHead = 'Observed  Head';
   StrStatistic = 'Statistic';
   StrStatFlag = 'StatFlag';
@@ -104,64 +45,29 @@ resourcestring
 implementation
 
 uses
-  GoPhastTypes, frmCustomGoPhastUnit, frmGoPhastUnit;
+  frmCustomGoPhastUnit, ModflowHobUnit, GoPhastTypes;
+
 
 {$R *.dfm}
 
 type
   THeadObsCol = (hocTime, hocHead, hocStatistic, hocStatFlag, hocComment);
-  THeadLayers = (hlLayer, hlFraction);
 
-{ TframeHeadObservations }
-
-procedure TframeHeadObservations.btnDeleteLayerClick(Sender: TObject);
-begin
-  DeleteSelectedRow(rdgLayers, seLayers, btnDeleteLayer);
-end;
-
-procedure TframeHeadObservations.btnDeleteValueClick(Sender: TObject);
-begin
-  DeleteSelectedRow(rdgHeads, seTimes, btnDeleteValue);
-end;
-
-procedure TframeHeadObservations.btnInsertLayerClick(Sender: TObject);
-begin
-  InsertRow(rdgLayers, seLayers, btnDeleteLayer);
-end;
-
-procedure TframeHeadObservations.btnInsertValueClick(Sender: TObject);
-begin
-  InsertRow(rdgHeads, seTimes, btnDeleteValue);
-end;
-
-procedure TframeHeadObservations.ClearGrid(Grid: TRbwDataGrid4);
-var
-  ColIndex: Integer;
-  RowIndex: Integer;
-begin
-  for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
-  begin
-    for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
-    begin
-      Grid.Cells[ColIndex, RowIndex] := '';
-    end;
-  end;
-end;
+{ TframeHeadObservations1 }
 
 procedure TframeHeadObservations.comboMultiStatFlagChange(Sender: TObject);
 begin
-  AssignValuesToSelectedGridCells(comboMultiStatFlag.Text, rdgHeads,
+  inherited;
+  AssignValuesToSelectedGridCells(comboMultiStatFlag.Text, rdgObservations,
     Ord(hocStatFlag), Ord(hocStatFlag));
 end;
-
-type TRbwDataGrid4Crack = class(TRbwDataGrid4);
 
 procedure TframeHeadObservations.comboTreatmentChange(Sender: TObject);
 var
   Purpose: TObservationPurpose;
   Index: Integer;
 begin
-  FChanged := True;
+  inherited;
   if comboTreatment.ItemIndex >= 0 then
   begin
     Purpose := TObservationPurpose(comboTreatment.ItemIndex)
@@ -170,23 +76,22 @@ begin
   begin
     Purpose := ofObserved;
   end;
-  TRbwDataGrid4Crack(rdgHeads).HideEditor;
   case Purpose of
     ofObserved, ofInacative:
       begin
-        rdgHeads.Columns[Ord(hocStatFlag)].PickList := ObservationStatFlagLabels;
+        rdgObservations.Columns[Ord(hocStatFlag)].PickList := ObservationStatFlagLabels;
         comboMultiStatFlag.Items.Assign(ObservationStatFlagLabels);
       end;
     ofPredicted:
       begin
-        rdgHeads.Columns[Ord(hocStatFlag)].PickList := PredictionStatFlagLabels;
+        rdgObservations.Columns[Ord(hocStatFlag)].PickList := PredictionStatFlagLabels;
         comboMultiStatFlag.Items.Assign(PredictionStatFlagLabels);
-        for Index := 1 to rdgHeads.RowCount - 1 do
+        for Index := 1 to rdgObservations.RowCount - 1 do
         begin
-          if (rdgHeads.Cells[Ord(hocStatFlag), Index] <> '')
-            and (rdgHeads.ItemIndex[Ord(hocStatFlag), Index] < 0) then
+          if (rdgObservations.Cells[Ord(hocStatFlag), Index] <> '')
+            and (rdgObservations.ItemIndex[Ord(hocStatFlag), Index] < 0) then
           begin
-            rdgHeads.ItemIndex[Ord(hocStatFlag), Index] := 0;
+            rdgObservations.ItemIndex[Ord(hocStatFlag), Index] := 0;
           end;
         end;
       end;
@@ -205,13 +110,13 @@ var
   LayerItem: TMultiHeadItem;
 begin
   InitializeControls;
-  rdgHeads.BeginUpdate;
+  rdgObservations.BeginUpdate;
   rdgLayers.BeginUpdate;
   try
     edObsName.Text := '';
     edObsName.Enabled := True;
     edObsName.Color := clWindow;
-    ClearGrid(rdgHeads);
+    ClearGrid(rdgObservations);
     ClearGrid(rdgLayers);
     seTimes.AsInteger := 0;
     seLayers.AsInteger := 0;
@@ -231,12 +136,12 @@ begin
           for ItemIndex := 0 to Observations.Values.Count - 1 do
           begin
             HobItem := Observations.Values.HobItems[ItemIndex];
-            rdgHeads.Cells[Ord(hocTime),ItemIndex +1] := FloatToStr(HobItem.Time);
-            rdgHeads.Cells[Ord(hocHead),ItemIndex +1] := FloatToStr(HobItem.Head);
-            rdgHeads.Cells[Ord(hocStatistic),ItemIndex +1] := FloatToStr(HobItem.Statistic);
-            rdgHeads.Cells[Ord(hocStatFlag),ItemIndex +1] :=
-              rdgHeads.Columns[Ord(hocStatFlag)].PickList[Ord(HobItem.StatFlag)];
-            rdgHeads.Cells[Ord(hocComment),ItemIndex +1] := HobItem.Comment;
+            rdgObservations.Cells[Ord(hocTime),ItemIndex +1] := FloatToStr(HobItem.Time);
+            rdgObservations.Cells[Ord(hocHead),ItemIndex +1] := FloatToStr(HobItem.Head);
+            rdgObservations.Cells[Ord(hocStatistic),ItemIndex +1] := FloatToStr(HobItem.Statistic);
+            rdgObservations.Cells[Ord(hocStatFlag),ItemIndex +1] :=
+              rdgObservations.Columns[Ord(hocStatFlag)].PickList[Ord(HobItem.StatFlag)];
+            rdgObservations.Cells[Ord(hocComment),ItemIndex +1] := HobItem.Comment;
           end;
           seLayers.AsInteger := Observations.LayerFractions.Count;
           for ItemIndex := 0 to Observations.LayerFractions.Count - 1 do
@@ -263,46 +168,46 @@ begin
           end;
           if seTimes.AsInteger <> Observations.Values.Count then
           begin
-            ClearGrid(rdgHeads);
+            ClearGrid(rdgObservations);
           end
           else
           begin
             for ItemIndex := 0 to Observations.Values.Count - 1 do
             begin
               HobItem := Observations.Values.HobItems[ItemIndex];
-              if rdgHeads.Cells[Ord(hocTime),ItemIndex +1]
+              if rdgObservations.Cells[Ord(hocTime),ItemIndex +1]
                 <> FloatToStr(HobItem.Time) then
               begin
-                rdgHeads.Cells[Ord(hocTime),ItemIndex +1] := '';
+                rdgObservations.Cells[Ord(hocTime),ItemIndex +1] := '';
 //                ClearGrid(rdgHeads);
 //                break;
               end;
-              if rdgHeads.Cells[Ord(hocHead),ItemIndex +1]
+              if rdgObservations.Cells[Ord(hocHead),ItemIndex +1]
                 <> FloatToStr(HobItem.Head) then
               begin
-                rdgHeads.Cells[Ord(hocHead),ItemIndex +1] := '';
+                rdgObservations.Cells[Ord(hocHead),ItemIndex +1] := '';
 //                ClearGrid(rdgHeads);
 //                break;
               end;
-              if rdgHeads.Cells[Ord(hocStatistic),ItemIndex +1]
+              if rdgObservations.Cells[Ord(hocStatistic),ItemIndex +1]
                 <> FloatToStr(HobItem.Statistic) then
               begin
-                rdgHeads.Cells[Ord(hocStatistic),ItemIndex +1] := '';
+                rdgObservations.Cells[Ord(hocStatistic),ItemIndex +1] := '';
 //                ClearGrid(rdgHeads);
 //                break;
               end;
-              if rdgHeads.Cells[Ord(hocStatFlag),ItemIndex +1]
-                <> rdgHeads.Columns[Ord(hocStatFlag)].
+              if rdgObservations.Cells[Ord(hocStatFlag),ItemIndex +1]
+                <> rdgObservations.Columns[Ord(hocStatFlag)].
                 PickList[Ord(HobItem.StatFlag)] then
               begin
-                rdgHeads.Cells[Ord(hocStatFlag),ItemIndex +1] := '';
+                rdgObservations.Cells[Ord(hocStatFlag),ItemIndex +1] := '';
 //                ClearGrid(rdgHeads);
 //                break;
               end;
-              if rdgHeads.Cells[Ord(hocComment),ItemIndex +1]
+              if rdgObservations.Cells[Ord(hocComment),ItemIndex +1]
                 <> HobItem.Comment then
               begin
-                rdgHeads.Cells[Ord(hocComment),ItemIndex +1] := '';
+                rdgObservations.Cells[Ord(hocComment),ItemIndex +1] := '';
 //                ClearGrid(rdgHeads);
 //                break;
               end;
@@ -343,7 +248,7 @@ begin
       end;
     end;
   finally
-    rdgHeads.EndUpdate;
+    rdgObservations.EndUpdate;
     rdgLayers.EndUpdate;
   end;
   FChanged := False;
@@ -356,33 +261,26 @@ var
   Column: TRbwColumn4;
   Index: Integer;
 begin
-  pcData.ActivePageIndex := 0;
-  rdgHeads.Columns[Ord(hocStatFlag)].PickList := ObservationStatFlagLabels;
+  inherited;
+  rdgObservations.Columns[Ord(hocStatFlag)].PickList := ObservationStatFlagLabels;
   comboMultiStatFlag.Items.Assign(ObservationStatFlagLabels);
-  Column := rdgHeads.Columns[Ord(hocStatFlag)];
+  Column := rdgObservations.Columns[Ord(hocStatFlag)];
   Assert(comboMultiStatFlag.Items.Count = Column.PickList.Count);
   for Index := 0 to Column.PickList.Count - 1 do
   begin
     comboMultiStatFlag.Items[Index].Text := Column.PickList[Index];
   end;
 
-  rdgHeads.Cells[Ord(hocTime),0] := StrTime;
-  rdgHeads.Cells[Ord(hocHead),0] := StrObservedHead;
-  rdgHeads.Cells[Ord(hocStatistic),0] := StrStatistic;
-  rdgHeads.Cells[Ord(hocStatFlag),0] := StrStatFlag;
-  rdgHeads.Cells[Ord(hocComment),0] := 'Comment';
-
-  rdgLayers.Cells[Ord(hlLayer),0] := 'Layer';
-  rdgLayers.Cells[Ord(hlFraction),0] := 'Weight';
+  rdgObservations.Cells[Ord(hocTime),0] := StrTime;
+  rdgObservations.Cells[Ord(hocHead),0] := StrObservedHead;
+  rdgObservations.Cells[Ord(hocStatistic),0] := StrStatistic;
+  rdgObservations.Cells[Ord(hocStatFlag),0] := StrStatFlag;
+  rdgObservations.Cells[Ord(hocComment),0] := StrComment;
 
   rgMultiObsMethod.ItemIndex := 1;
-  comboTreatment.ItemIndex := 0;
-  lblTreatment.Top := comboTreatment.Top - lblTreatment.Height - 2;
-
-  LayoutMultiHeadEditControls;
 end;
 
-procedure TframeHeadObservations.LayoutMultiHeadEditControls;
+procedure TframeHeadObservations.LayoutMultiCellEditControls;
 var
   Index: Integer;
   AColVisible: Boolean;
@@ -390,278 +288,45 @@ begin
   if [csLoading, csReading] * ComponentState <> [] then
   begin
     Exit
-  end;  
+  end;
   AColVisible := False;
   for Index := Ord(hocTime) to Ord(hocStatistic) do
   begin
-    if rdgHeads.ColVisible[Index] then
+    if rdgObservations.ColVisible[Index] then
     begin
-      LayoutControls(rdgHeads, rdeMultiValueEdit, nil, Index);
+      LayoutControls(rdgObservations, rdeMultiValueEdit, nil, Index);
       AColVisible := True;
       break;
     end;
   end;
   if not AColVisible then
   begin
-    LayoutControls(rdgHeads, rdeMultiValueEdit, nil, 0);
+    LayoutControls(rdgObservations, rdeMultiValueEdit, nil, 0);
   end;
-  LayoutControls(rdgHeads, comboMultiStatFlag, nil, Ord(hocStatFlag));
-end;
-
-procedure TframeHeadObservations.SetSpinCount(SpinEdit: TJvSpinEdit; Grid: TRbwDataGrid4);
-begin
-  if Grid.RowCount = 2 then
-  begin
-    if (Grid.Cells[0, 1] = '')
-      and (Grid.Cells[1, 1] = '')
-      and (Grid.Cells[2, 1] = '')
-      and (Grid.Cells[3, 1] = '') then
-    begin
-      SpinEdit.AsInteger := 0;
-    end
-    else
-    begin
-      SpinEdit.AsInteger := 1;
-    end;
-  end;
-end;
-
-procedure TframeHeadObservations.splitHeadsLayersMoved(Sender: TObject);
-begin
-  LayoutMultiHeadEditControls;
-end;
-
-procedure TframeHeadObservations.EnableDeleteButton(DeleteButton: TButton; SpinEdit: TJvSpinEdit);
-begin
-  DeleteButton.Enabled := (SpinEdit.AsInteger > 0);
-end;
-
-procedure TframeHeadObservations.InsertRow(Grid: TRbwDataGrid4; SpinEdit: TJvSpinEdit; DeleteButton: TButton);
-begin
-  FChanged := True;
-  if SpinEdit.AsInteger = 0 then
-  begin
-    SpinEdit.AsInteger := 1;
-  end
-  else
-  begin
-    if (Grid.SelectedRow > 0) and (Grid.SelectedRow < Grid.RowCount) then
-    begin
-      Grid.InsertRow(Grid.SelectedRow);
-      UpdateSpinEdit(Grid, SpinEdit);
-      EnableDeleteButton(DeleteButton, SpinEdit);
-    end;
-  end;
-end;
-
-procedure TframeHeadObservations.UpdateSpinEdit(Grid: TRbwDataGrid4; SpinEdit: TJvSpinEdit);
-begin
-  FChanged := True;
-  if Grid.RowCount > 2 then
-  begin
-    SpinEdit.AsInteger := Grid.RowCount - 1;
-  end;
-end;
-
-procedure TframeHeadObservations.DeleteSelectedRow(rdgGrid: TRbwDataGrid4;
-  SpinEdit: TJvSpinEdit; DeleteButton: TButton);
-var
-  ColIndex: Integer;
-begin
-  FChanged := True;
-  if (rdgGrid.SelectedRow > 0) and (rdgGrid.SelectedRow < rdgGrid.RowCount)
-    and (rdgGrid.RowCount > 2) then
-  begin
-    rdgGrid.DeleteRow(rdgGrid.SelectedRow);
-    UpdateSpinEdit(rdgGrid, SpinEdit);
-  end
-  else if (rdgGrid.SelectedRow = 1) and (rdgGrid.RowCount = 2) then
-  begin
-    for ColIndex := 0 to rdgGrid.ColCount - 1 do
-    begin
-      rdgGrid.Cells[ColIndex,1] := '';
-    end;
-    UpdateSpinEdit(rdgGrid, SpinEdit);
-  end;
-  EnableDeleteButton(DeleteButton, SpinEdit);
-end;
-
-procedure TframeHeadObservations.edObsNameChange(Sender: TObject);
-begin
-  FChanged := True;
-end;
-
-procedure TframeHeadObservations.edObsNameExit(Sender: TObject);
-begin
-  edObsName.Text := StringReplace(edObsName.Text, ' ', '_', [rfReplaceAll]);
-end;
-
-procedure TframeHeadObservations.EnableMultiEditControl(Grid: TRbwDataGrid4;
-  AControl: TControl; const StartCol, EndCol: integer);
-var
-  ShouldEnable: Boolean;
-  ColIndex: Integer;
-  RowIndex: Integer;
-  EnableCount: Integer;
-begin
-  EnableCount := 0;
-  for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
-  begin
-    for ColIndex := StartCol to EndCol do
-    begin
-      ShouldEnable := Grid.IsSelectedCell(ColIndex, RowIndex);
-      if ShouldEnable then
-      begin
-        Inc(EnableCount);
-        if EnableCount >= 2 then
-        begin
-          break;
-        end;
-      end;
-    end;
-  end;
-  ShouldEnable := EnableCount >= 2;
-  AControl.Enabled := ShouldEnable;
-end;
-
-procedure TframeHeadObservations.AssignValuesToSelectedGridCells(
-  const NewText: string; Grid: TRbwDataGrid4; const StartCol, EndCol: integer);
-var
-  ColIndex: Integer;
-  RowIndex: Integer;
-  TempText: string;
-begin
-  if Grid = nil then
-  begin
-    Exit;
-  end;
-  FChanged := True;
-  for ColIndex := StartCol to EndCol do
-  begin
-    if Grid.Columns[ColIndex].Format = rcf4Integer then
-    begin
-      TempText := IntToStr(Round(StrToFloat(NewText)));
-    end
-    else
-    begin
-      TempText := NewText;
-    end;
-    for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
-    begin
-      if Grid.IsSelectedCell(ColIndex, RowIndex) then
-      begin
-        Grid.Cells[ColIndex, RowIndex] := TempText;
-        if Assigned(Grid.OnSetEditText) then
-        begin
-          Grid.OnSetEditText(Grid, ColIndex, RowIndex, TempText);
-        end;
-      end;
-    end;
-  end;
-end;
-
-
-procedure TframeHeadObservations.FrameResize(Sender: TObject);
-begin
-  LayoutMultiHeadEditControls;
-end;
-
-procedure TframeHeadObservations.rdeMultiLayerEditChange(Sender: TObject);
-begin
-  AssignValuesToSelectedGridCells(rdeMultiLayerEdit.Text, rdgLayers,
-    Ord(hlLayer), Ord(hlFraction));
+  LayoutControls(rdgObservations, comboMultiStatFlag, nil, Ord(hocStatFlag));
 end;
 
 procedure TframeHeadObservations.rdeMultiValueEditChange(Sender: TObject);
 begin
-  AssignValuesToSelectedGridCells(rdeMultiValueEdit.Text, rdgHeads,
+  inherited;
+  AssignValuesToSelectedGridCells(rdeMultiValueEdit.Text, rdgObservations,
     Ord(hocTime), Ord(hocStatistic));
 end;
 
-procedure TframeHeadObservations.rdgHeadsColSize(Sender: TObject; ACol,
-  PriorWidth: Integer);
+procedure TframeHeadObservations.rdgObservationsSelectCell(Sender: TObject;
+  ACol, ARow: Integer; var CanSelect: Boolean);
 begin
-  LayoutMultiHeadEditControls;
-end;
-
-procedure TframeHeadObservations.rdgHeadsExit(Sender: TObject);
-begin
-  SetSpinCount(seTimes, rdgHeads);  
-end;
-
-procedure TframeHeadObservations.rdgHeadsHorizontalScroll(Sender: TObject);
-begin
-  LayoutMultiHeadEditControls;
-end;
-
-procedure TframeHeadObservations.rdgHeadsSelectCell(Sender: TObject; ACol,
-  ARow: Integer; var CanSelect: Boolean);
-begin
-  CanSelect := seTimes.AsInteger > 0;
-  EnableMultiEditControl(rdgHeads, rdeMultiValueEdit,
-    Ord(hocTime), Ord(hocStatistic));
-  EnableMultiEditControl(rdgHeads, comboMultiStatFlag,
-    Ord(hocStatFlag), Ord(hocStatFlag));
-end;
-
-procedure TframeHeadObservations.rdgHeadsSetEditText(Sender: TObject; ACol,
-  ARow: Integer; const Value: string);
-begin
-  if FDeletingTime then
-  begin
-    Exit;
-  end;
-  UpdateSpinEdit(rdgHeads, seTimes);
-end;
-
-procedure TframeHeadObservations.rdgLayersExit(Sender: TObject);
-begin
-  SetSpinCount(seLayers, rdgLayers); 
-end;
-
-procedure TframeHeadObservations.rdgLayersSelectCell(Sender: TObject; ACol,
-  ARow: Integer; var CanSelect: Boolean);
-begin
-  CanSelect := seLayers.AsInteger > 0;
-  EnableMultiEditControl(rdgLayers, rdeMultiLayerEdit,
-    Ord(hlLayer), Ord(hlFraction));
-end;
-
-procedure TframeHeadObservations.rdgLayersSetEditText(Sender: TObject; ACol,
-  ARow: Integer; const Value: string);
-begin
-  if FDeletingLayer then
-  begin
-    Exit;
-  end;
-  UpdateSpinEdit(rdgLayers, seLayers);
+  inherited;
+  EnableMultiEditControl(rdgObservations, rdeMultiValueEdit,
+    [Ord(hocTime), Ord(hocHead), Ord(hocStatistic)]);
+  EnableMultiEditControl(rdgObservations, comboMultiStatFlag,
+    Ord(hocStatFlag));
 end;
 
 procedure TframeHeadObservations.rgMultiObsMethodClick(Sender: TObject);
 begin
+  inherited;
   FChanged := True;
-end;
-
-procedure TframeHeadObservations.seLayersChange(Sender: TObject);
-begin
-  FLayerCountChanged := True;
-  FDeletingLayer := True;
-  try
-    if seLayers.AsInteger = 0 then
-    begin
-      rdgLayers.RowCount := 2;
-      rdgLayers.Options := rdgLayers.Options - [goAlwaysShowEditor];
-    end
-    else
-    begin
-      rdgLayers.RowCount := seLayers.AsInteger + 1;
-      rdgLayers.Options := rdgLayers.Options + [goAlwaysShowEditor];
-    end;
-    rdgLayers.Invalidate;
-    EnableDeleteButton(btnDeleteLayer, seLayers);
-  finally
-    FDeletingLayer := False;
-  end;
 end;
 
 procedure TframeHeadObservations.SetData(List: TScreenObjectEditCollection;
@@ -712,7 +377,7 @@ begin
       if rgMultiObsMethod.ItemIndex >= 0 then
       begin
         Observations.MultiObsMethod :=
-          TMultiObsMethod(rgMultiObsMethod.ItemIndex); 
+          TMultiObsMethod(rgMultiObsMethod.ItemIndex);
       end;
       if comboTreatment.ItemIndex >= 0 then
       begin
@@ -720,12 +385,12 @@ begin
           TObservationPurpose(comboTreatment.ItemIndex);
       end;
       ValueCount := 0;
-      for RowIndex := 1 to rdgHeads.RowCount - 1 do
+      for RowIndex := 1 to rdgObservations.RowCount - 1 do
       begin
-        if (TryStrToFloat(rdgHeads.Cells[Ord(hocTime), RowIndex], Time)
-          or (rdgHeads.Cells[Ord(hocTime), RowIndex] = ''))
-          and (TryStrToFloat(rdgHeads.Cells[Ord(hocHead), RowIndex], Head)
-          or (rdgHeads.Cells[Ord(hocHead), RowIndex] = '')) then
+        if (TryStrToFloat(rdgObservations.Cells[Ord(hocTime), RowIndex], Time)
+          or (rdgObservations.Cells[Ord(hocTime), RowIndex] = ''))
+          and (TryStrToFloat(rdgObservations.Cells[Ord(hocHead), RowIndex], Head)
+          or (rdgObservations.Cells[Ord(hocHead), RowIndex] = '')) then
         begin
           Inc(ValueCount);
         end;
@@ -744,32 +409,32 @@ begin
       ValueCount := 0;
       for RowIndex := 1 to seTimes.AsInteger do
       begin
-        if (TryStrToFloat(rdgHeads.Cells[Ord(hocTime), RowIndex], Time)
-          or (rdgHeads.Cells[Ord(hocTime), RowIndex] = ''))
-          and (TryStrToFloat(rdgHeads.Cells[Ord(hocHead), RowIndex], Head)
-          or (rdgHeads.Cells[Ord(hocHead), RowIndex] = '')) then
+        if (TryStrToFloat(rdgObservations.Cells[Ord(hocTime), RowIndex], Time)
+          or (rdgObservations.Cells[Ord(hocTime), RowIndex] = ''))
+          and (TryStrToFloat(rdgObservations.Cells[Ord(hocHead), RowIndex], Head)
+          or (rdgObservations.Cells[Ord(hocHead), RowIndex] = '')) then
         begin
           if ValueCount < Observations.Values.Count then
           begin
             ObsHead := Observations.Values.HobItems[ValueCount];
-            if (rdgHeads.Cells[Ord(hocTime), RowIndex] <> '') then
+            if (rdgObservations.Cells[Ord(hocTime), RowIndex] <> '') then
             begin
               ObsHead.Time := Time;
             end;
-            if (rdgHeads.Cells[Ord(hocHead), RowIndex] <> '') then
+            if (rdgObservations.Cells[Ord(hocHead), RowIndex] <> '') then
             begin
               ObsHead.Head := Head;
             end;
-            if TryStrToFloat(rdgHeads.Cells[Ord(hocStatistic), RowIndex], Statistic) then
+            if TryStrToFloat(rdgObservations.Cells[Ord(hocStatistic), RowIndex], Statistic) then
             begin
               ObsHead.Statistic := Statistic;
             end;
-            if (rdgHeads.Cells[Ord(hocStatFlag), RowIndex] <> '') then
+            if (rdgObservations.Cells[Ord(hocStatFlag), RowIndex] <> '') then
             begin
-              ObsHead.StatFlag := TStatFlag(rdgHeads.Columns[Ord(hocStatFlag)].
-                PickList.IndexOf(rdgHeads.Cells[Ord(hocStatFlag), RowIndex]));
+              ObsHead.StatFlag := TStatFlag(rdgObservations.Columns[Ord(hocStatFlag)].
+                PickList.IndexOf(rdgObservations.Cells[Ord(hocStatFlag), RowIndex]));
             end;
-            NewComment := rdgHeads.Cells[Ord(hocComment), RowIndex];
+            NewComment := rdgObservations.Cells[Ord(hocComment), RowIndex];
             if (List.Count = 1) or (NewComment <> '') then
             begin
               ObsHead.Comment := NewComment;
@@ -819,44 +484,9 @@ begin
 end;
 
 procedure TframeHeadObservations.seTimesChange(Sender: TObject);
-var
-  CharNumber: integer;
 begin
-  FTimesCountChanged := True;
-  FChanged := True;
-  FDeletingTime := True;
-  try
-    if seTimes.AsInteger = 0 then
-    begin
-      rdgHeads.RowCount := 2;
-      rdgHeads.Options := rdgHeads.Options - [goAlwaysShowEditor];
-    end
-    else
-    begin
-      rdgHeads.RowCount := seTimes.AsInteger + 1;
-      rdgHeads.Options := rdgHeads.Options + [goAlwaysShowEditor];
-
-      if seTimes.AsInteger = 1 then
-      begin
-        edObsName.MaxLength := 12;
-      end
-      else
-      begin
-        CharNumber := Trunc(Log10(seTimes.AsInteger))+1;
-        edObsName.MaxLength := 12-CharNumber;
-      end;
-    
-      if Length(edObsName.Text) > edObsName.MaxLength then
-      begin
-        edObsName.Text := Copy(edObsName.Text, 1, edObsName.MaxLength);
-      end;
-    end;
-    EnableDeleteButton(btnDeleteValue, seTimes);
-    rgMultiObsMethod.Enabled := seTimes.AsInteger > 1;
-    rdgHeads.Invalidate;
-  finally
-    FDeletingTime := False;
-  end;
+  inherited;
+  rgMultiObsMethod.Enabled := seTimes.AsInteger > 1;
 end;
 
 end.

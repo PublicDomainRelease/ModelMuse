@@ -150,6 +150,9 @@ uses
   Contnrs, RbwParser, frmGoPhastUnit, ClassificationUnit,PhastModelUnit,
   UndoItems, GIS_Functions, frmShowHideObjectsUnit;
 
+resourcestring
+  StrImportGriddedData = 'import gridded data';
+
 {$R *.dfm}
 
 function ConvertDataFormat(DataType: TRbwDataType): TRbwColumnFormat4;
@@ -1774,7 +1777,7 @@ end;
 
 function TUndoImportGriddedData.Description: string;
 begin
-  result := 'import gridded data';
+  result := StrImportGriddedData;
 end;
 
 procedure TUndoImportGriddedData.DoCommand;

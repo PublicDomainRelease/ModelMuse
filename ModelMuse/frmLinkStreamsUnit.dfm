@@ -7,12 +7,12 @@ inherited frmLinkStreams: TfrmLinkStreams
   ExplicitWidth = 254
   ExplicitHeight = 223
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object lblTolerance: TLabel
     Left = 8
     Top = 79
-    Width = 89
-    Height = 17
+    Width = 97
+    Height = 18
     Caption = 'Link tolerance'
   end
   object rgWhatToLink: TRadioGroup
@@ -32,7 +32,6 @@ inherited frmLinkStreams: TfrmLinkStreams
     Top = 99
     Width = 231
     Height = 22
-    ItemHeight = 0
     TabOrder = 1
     Text = '0'
     DataType = dtReal
@@ -57,8 +56,7 @@ inherited frmLinkStreams: TfrmLinkStreams
     Height = 31
     Caption = '&Apply'
     Default = True
-    TabOrder = 3
-    OnClick = btnApplyClick
+    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -77,22 +75,31 @@ inherited frmLinkStreams: TfrmLinkStreams
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 3
+    OnClick = btnApplyClick
   end
   object btnClose: TBitBtn
     Left = 166
     Top = 150
     Width = 73
     Height = 31
-    TabOrder = 4
+    DoubleBuffered = True
     Kind = bkClose
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 4
   end
   object btnHelp: TBitBtn
     Left = 8
     Top = 150
     Width = 73
     Height = 31
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 5
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
 end

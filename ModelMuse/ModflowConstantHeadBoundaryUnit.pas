@@ -207,6 +207,7 @@ procedure TChdItem.Assign(Source: TPersistent);
 var
   Chd: TChdItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TChdItem then
   begin
     Chd := TChdItem(Source);

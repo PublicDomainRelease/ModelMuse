@@ -65,6 +65,12 @@ resourcestring
   StrVKCBParameterImpro = 'VKCB parameter improperly defined.';
   StrSIsAVKCBParame = '%s  is a VKCB parameter but all the layers in the mod' +
   'el are simulated';
+  StrParameter0sInSim = 'Parameter %0:s in the LPF package is skipped becaus' +
+  'e it is not applied to any cells.  Check that %1:s is set to "True" in at' +
+  ' least one non-simulated unit.';
+  StrParameter0sInNonSim = 'Parameter %0:s in the LPF package is skipped bec' +
+  'ause it is not applied to any cells.  Check that %1:s is set to "True" in' +
+  ' at least one simulated unit.';
 
 { TModflowLPF_Writer }
 
@@ -469,7 +475,8 @@ begin
     frmProgressMM.AddMessage('  Writing Data Set 16 for layer ' + IntToStr(MFLayerIndex));
     DataArray := Model.DataArrayManager.GetDataSetByName(rsWetDry);
     Assert(DataArray <> nil);
-    WriteArray(DataArray, ArrayIndex, 'WETDRY ' + Group.AquiferName + ' Layer ' + IntToStr(MFLayerIndex));
+    WriteArray(DataArray, ArrayIndex,
+    Format('WETDRY %0:s Layer %1:d', [Group.AquiferName, MFLayerIndex]));
   end;
 end;
 
@@ -771,16 +778,15 @@ begin
         end;
         if NCLU = 0 then
         begin
-          Error := 'Parameter ' + Param.ParameterName + ' in the LPF package '
-            + 'is skipped because it is not applied to any cells.  Check that '
-            + Param.ZoneName + ' is set to "True" in at least one ';
           if Param.ParameterType = ptLPF_VKCB then
           begin
-            Error := Error + 'non-simulated unit.';
+            Error := Format(StrParameter0sInSim,
+              [Param.ParameterName, Param.ZoneName]);
           end
           else
           begin
-            Error := Error + 'simulated unit.';
+            Error := Format(StrParameter0sInNonSim,
+              [Param.ParameterName, Param.ZoneName]);
           end;
           frmErrorsAndWarnings.AddWarning(Model, StrParameterZonesNot,
             Error);

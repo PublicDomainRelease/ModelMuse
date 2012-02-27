@@ -26,6 +26,14 @@ implementation
 uses
   frmErrorsAndWarningsUnit, LayerStructureUnit, PhastModelUnit;
 
+resourcestring
+  StrUndefinedLengthUni = 'Undefined length units';
+  StrTheLengthUnitsOf = 'The length units of the model are undefined. MODPAT' +
+  'H-PLOT will treat the units as feet';
+  StrUnsupportedLengthU = 'Unsupported length units for MODPATH-PLOT';
+  StrTheLengthUnitsOf1 = 'The length units of the model are centimeters. MODP' +
+  'ATH-PLOT will treat the units as feet';
+
 { TModpathMainFileWriter }
 
 class function TModpathMainFileWriter.Extension: string;
@@ -37,6 +45,9 @@ procedure TModpathMainFileWriter.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
 begin
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrUndefinedLengthUni);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrUnsupportedLengthU);
+
   NameOfFile := FileName(AFileName);
   OpenFile(NameOfFile);
   try
@@ -221,9 +232,8 @@ begin
     0:
       // undefined
       begin
-        frmErrorsAndWarnings.AddWarning(Model, 'Undefined length units',
-          'The length units of the model are undefined. MODPATH-PLOT '
-          + 'will treat the units as feet');
+        frmErrorsAndWarnings.AddWarning(Model, StrUndefinedLengthUni,
+          StrTheLengthUnitsOf);
       end;
     1:
       // feet
@@ -237,10 +247,8 @@ begin
     3:
       // centimeters
       begin
-        frmErrorsAndWarnings.AddWarning(Model,
-          'Unsupported length units for MODPATH-PLOT',
-          'The length units of the model are centimeters. MODPATH-PLOT '
-          + 'will treat the units as feet');
+        frmErrorsAndWarnings.AddWarning(Model, StrUnsupportedLengthU,
+          StrTheLengthUnitsOf1);
       end;
   else
     Assert(False);

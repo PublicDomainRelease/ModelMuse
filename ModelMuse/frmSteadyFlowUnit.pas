@@ -155,6 +155,9 @@ implementation
 
 uses frmGoPhastUnit;
 
+resourcestring
+  StrSteadyFlow = 'steady flow';
+
 {$R *.dfm}
 
 { TfrmSteadyFlow }
@@ -345,7 +348,7 @@ end;
 
 function TUndoSteadyFlow.Description: string;
 begin
-  result := 'steady flow';
+  result := StrSteadyFlow;
 end;
 
 destructor TUndoSteadyFlow.Destroy;

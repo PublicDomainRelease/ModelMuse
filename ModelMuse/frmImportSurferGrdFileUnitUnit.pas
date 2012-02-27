@@ -42,6 +42,9 @@ uses
   frmGoPhastUnit, DataSetUnit, ScreenObjectUnit, ModelMuseUtilities,
   GoPhastTypes, UndoItems, FastGEO, ValueArrayStorageUnit, GIS_Functions;
 
+resourcestring
+  StrImportSurferGridF = 'import Surfer grid file';
+
 {$R *.dfm}
 
 var
@@ -319,7 +322,7 @@ end;
 
 function TUndoImportGrdFile.Description: string;
 begin
-  result := 'import Surfer grid file';
+  result := StrImportSurferGridF;
 end;
 
 end.

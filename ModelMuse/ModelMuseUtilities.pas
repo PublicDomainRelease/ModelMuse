@@ -73,6 +73,8 @@ procedure RunAProgram(const CommandLine: string);
 
 function FileLength(fileName : string) : Int64;
 
+function IsWOW64: Boolean;
+
 implementation
 
 uses ColorSchemes, JvCreateProcess, AnsiStrings;
@@ -212,7 +214,7 @@ begin
     Result[1] := UpperCase(Result)[1];
     for Index := 1 to Length(result) - 1 do
     begin
-      if result[Index] = ' ' then
+      if (result[Index] = ' ') then
       begin
         result[Index+1] := UpperCase(result[Index+1])[1];
       end;
@@ -322,6 +324,30 @@ begin
     SetLength(FieldName, Length(FieldName) -1);
   end;
   result := FieldName;
+end;
+
+function IsWOW64: Boolean;
+// from http://www.delphipages.com/forum/showthread.php?t=206540
+type
+  TIsWow64Process = function(
+    Handle: THandle;
+    var Res: BOOL
+  ): BOOL; stdcall;
+var
+  IsWow64Result: BOOL;
+  IsWow64Process: TIsWow64Process;
+begin
+  IsWow64Process := GetProcAddress(
+    GetModuleHandle('kernel32'), 'IsWow64Process'
+  );
+  if Assigned(IsWow64Process) then
+  begin
+    if not IsWow64Process(GetCurrentProcess, IsWow64Result) then
+      raise Exception.Create('Bad process handle');
+    Result := IsWow64Result;
+  end
+  else
+    Result := False;
 end;
 
 end.

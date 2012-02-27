@@ -2,19 +2,21 @@ inherited frmGlobalVariables: TfrmGlobalVariables
   HelpType = htKeyword
   HelpKeyword = 'Global_Variables_Dialog_Box'
   Caption = 'Global Variables'
+  ClientHeight = 284
   ClientWidth = 494
   ExplicitWidth = 502
-  ExplicitHeight = 268
+  ExplicitHeight = 318
   PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 164
+    Top = 178
     Width = 494
-    Height = 70
+    Height = 106
     Align = alBottom
     ParentColor = True
-    TabOrder = 0
+    TabOrder = 1
+    ExplicitTop = 120
     object Label1: TLabel
       Left = 71
       Top = 11
@@ -24,29 +26,38 @@ inherited frmGlobalVariables: TfrmGlobalVariables
     end
     object btnHelp: TBitBtn
       Left = 224
-      Top = 40
+      Top = 72
       Width = 82
       Height = 27
-      TabOrder = 0
-      OnClick = btnHelpClick
+      DoubleBuffered = True
       Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 4
+      OnClick = btnHelpClick
     end
     object btnOK: TBitBtn
       Left = 312
-      Top = 40
+      Top = 72
       Width = 82
       Height = 27
-      TabOrder = 1
-      OnClick = btnOKClick
+      DoubleBuffered = True
       Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 5
+      OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
       Left = 400
-      Top = 40
+      Top = 72
       Width = 83
       Height = 27
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 6
     end
     object seGlobalVariableCount: TJvSpinEdit
       Left = 8
@@ -54,33 +65,52 @@ inherited frmGlobalVariables: TfrmGlobalVariables
       Width = 57
       Height = 26
       ButtonKind = bkClassic
-      TabOrder = 3
+      TabOrder = 0
       OnChange = seGlobalVariableCountChange
     end
     object btnDelete: TButton
       Left = 400
-      Top = 7
+      Top = 39
       Width = 83
       Height = 27
       Caption = 'Delete'
       Enabled = False
-      TabOrder = 4
+      TabOrder = 2
       OnClick = btnDeleteClick
+    end
+    object btnImportGlobalVariables: TButton
+      Left = 8
+      Top = 39
+      Width = 185
+      Height = 27
+      Caption = 'Import global variables'
+      TabOrder = 1
+      OnClick = btnImportGlobalVariablesClick
+    end
+    object btnSaveGlobalVariables: TButton
+      Left = 8
+      Top = 72
+      Width = 185
+      Height = 27
+      Caption = 'Save global variables'
+      TabOrder = 3
+      OnClick = btnSaveGlobalVariablesClick
     end
   end
   object rdgGlobalVariables: TRbwDataGrid4
     Left = 0
     Top = 0
     Width = 494
-    Height = 164
+    Height = 178
     Align = alClient
     ColCount = 4
     FixedCols = 0
     RowCount = 2
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
-    TabOrder = 1
+    TabOrder = 0
     OnSelectCell = rdgGlobalVariablesSelectCell
     OnSetEditText = rdgGlobalVariablesSetEditText
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
@@ -110,6 +140,7 @@ inherited frmGlobalVariables: TfrmGlobalVariables
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -136,6 +167,7 @@ inherited frmGlobalVariables: TfrmGlobalVariables
           'Text')
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -157,6 +189,7 @@ inherited frmGlobalVariables: TfrmGlobalVariables
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -178,13 +211,27 @@ inherited frmGlobalVariables: TfrmGlobalVariables
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = True
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
     OnEndUpdate = rdgGlobalVariablesEndUpdate
+    ExplicitHeight = 156
     ColWidths = (
       64
       80
       64
       187)
+  end
+  object dlgOpenGlobVar: TOpenDialog
+    DefaultExt = '.txt'
+    Filter = 'Text files (*.txt)|*.txt|All Files|*.*'
+    Left = 192
+    Top = 112
+  end
+  object dlgSaveGlobalVariables: TSaveDialog
+    DefaultExt = '.txt'
+    Filter = 'Text files (*.txt)|*.txt|All Files|*.*'
+    Left = 280
+    Top = 128
   end
 end

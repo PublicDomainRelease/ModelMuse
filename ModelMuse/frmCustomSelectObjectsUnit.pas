@@ -84,6 +84,9 @@ type
     FvstModflowMnw2Node: PVirtualNode;
     FvstModflowGhbNode: PVirtualNode;
     FvstModflowUzfNode: PVirtualNode;
+    FvstMt3dmsSsm: PVirtualNode;
+    FvstMt3dmsTob: PVirtualNode;
+
     FvstModflowHydmodNode: PVirtualNode;
     // @name holds a PVirtualNode for each @link(TScreenObject)
     // that specifies a PHAST specified head boundary.
@@ -168,6 +171,8 @@ type
     // boundary conditions.
     FLeakyList: TList;
     FHfbList: TList;
+    FSsmList: TList;
+    FTobList: TList;
     FSfrGagList: TList;
     FSfrList: TList;
     FResList: TList;
@@ -244,7 +249,7 @@ type
 var
   frmCustomSelectObjects: TfrmCustomSelectObjects;
 
-const
+resourcestring
   StrAllObjects = 'All Objects';
   StrSetGridCellSize = 'Set Grid Cell Size';
   StrSetGridElementSize = 'Set Grid Element Size';
@@ -256,6 +261,7 @@ const
   StrRiverBoundary = 'River Boundary';
   StrWell = 'Well';
   StrModflowBoundaryConditions = 'MODFLOW Features';
+  StrModflowMt3dFeatures = 'MODFLOW / MT3DMS Features';
   StrUnusedObjects = 'Unused Objects';
 
 implementation
@@ -296,7 +302,14 @@ begin
     end
     else if Node = FvstModflowBoundaryConditionsRoot then
     begin
-      Data.Caption := StrModflowBoundaryConditions;
+      if Packages.Mt3dBasic.IsSelected then
+      begin
+        Data.Caption := StrModflowMt3dFeatures;
+      end
+      else
+      begin
+        Data.Caption := StrModflowBoundaryConditions;
+      end;
       Node.CheckType := ctTriStateCheckBox;
     end
     else if Node = FvstDataSetRootNode then
@@ -386,6 +399,16 @@ begin
     else if Node = FvstModflowDrnNode then
     begin
       Data.Caption := Packages.DrnPackage.PackageIdentifier;
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstMt3dmsSsm then
+    begin
+      Data.Caption := Packages.Mt3dmsSourceSink.PackageIdentifier;
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstMt3dmsTob then
+    begin
+      Data.Caption := Packages.Mt3dmsTransObs.PackageIdentifier;
       Node.CheckType := ctTriStateCheckBox;
     end
     else if Node = FvstModflowDrtNode then
@@ -877,10 +900,23 @@ begin
     begin
       InitializeData(FvstModflowHobNode);
     end;
+
     if (AScreenObject.ModflowHfbBoundary <> nil)
       and AScreenObject.ModflowHfbBoundary.Used then
     begin
       InitializeData(FvstModflowHfbNode);
+    end;
+
+    if (AScreenObject.Mt3dmsConcBoundary <> nil)
+      and AScreenObject.Mt3dmsConcBoundary.Used then
+    begin
+      InitializeData(FvstMt3dmsSsm);
+    end;
+
+    if (AScreenObject.Mt3dmsTransObservations <> nil)
+      and AScreenObject.Mt3dmsTransObservations.Used then
+    begin
+      InitializeData(FvstMt3dmsTob);
     end;
 
     if (AScreenObject.ModpathParticles <> nil)
@@ -969,6 +1005,8 @@ begin
   vstCheckDeleteNode(FvstModflowUzfNode);
   vstCheckDeleteNode(FvstModflowHobNode);
   vstCheckDeleteNode(FvstModflowHfbNode);
+  vstCheckDeleteNode(FvstMt3dmsSsm);
+  vstCheckDeleteNode(FvstMt3dmsTob);
 
   vstCheckDeleteNode(FvstModflowBoundaryConditionsRoot);
   vstCheckDeleteNode(FvstModpathRoot);
@@ -1259,6 +1297,10 @@ begin
   InitializeMF_BoundaryNode(FvstModflowWellNode, PriorNode, FMfWellList);
   InitializeMF_BoundaryNode(FvstModflowHobNode, PriorNode, FHobList);
   InitializeMF_BoundaryNode(FvstModflowHfbNode, PriorNode, FHfbList);
+  InitializeMF_BoundaryNode(FvstMt3dmsSsm, PriorNode, FSsmList);
+  InitializeMF_BoundaryNode(FvstMt3dmsTob, PriorNode, FTobList);
+
+
 
   FDataSetLists.Clear;
 
@@ -1383,6 +1425,8 @@ begin
   FUzfList.Free;
   FHobList.Free;
   FHfbList.Free;
+  FSsmList.Free;
+  FTobList.Free;
   FModpathList.Free;
   FChildModelList.Free;
 
@@ -1423,6 +1467,8 @@ begin
   FUzfList := TList.Create;
   FHobList := TList.Create;
   FHfbList := TList.Create;
+  FSsmList := TList.Create;
+  FTobList := TList.Create;
   FModpathList := TList.Create;
   FChildModelList := TList.Create;
 
@@ -1474,6 +1520,8 @@ begin
   FvstModflowUzfNode := nil;
   FvstModflowHobNode := nil;
   FvstModflowHfbNode := nil;
+  FvstMt3dmsSsm := nil;
+  FvstMt3dmsTob := nil;
   FvstModflowGagNode := nil;
 
   FvstModpathRoot := nil;
@@ -1579,6 +1627,8 @@ begin
   FUzfList.Sort(ScreenObjectCompare);
   FHobList.Sort(ScreenObjectCompare);
   FHfbList.Sort(ScreenObjectCompare);
+  FSsmList.Sort(ScreenObjectCompare);
+  FTobList.Sort(ScreenObjectCompare);
   FModpathList.Sort(ScreenObjectCompare);
   FChildModelList.Sort(ScreenObjectCompare);
   for Index := 0 to FDataSetLists.Count - 1 do

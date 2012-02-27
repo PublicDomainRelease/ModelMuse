@@ -1,0 +1,9 @@
+CHM=D:\Colab\GWModelTools\ModelMuse\Documentation5\ModflowGuide\chm_out\Modflow2000Guide.chm
+L=MODFLOW_LOG.txt
+I=CHM,MODFLOW-2000,OPT_3FRAME,OPT_BREADTRAIL,OPT_FB,OPT_PRINT,OPT_TOGGLE,OPT_SUBTITLE,OPT_URL,OPT_ATOC,OPT_SORTABLE,OPT_TOGTOC
+V=mf2000Variables.txt
+O=C:\Program Files\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.4 Skins\Skins Horizontal Tabs\sky_blue_horiz.hmskin
+CHM=D:\Colab\GWModelTools\ModelMuse\Documentation5\ModflowGuide\chm_out\Modflow2005Guide.chm
+I=CHM,MODFLOW-2000,OPT_3FRAME,OPT_BREADTRAIL,OPT_FB,OPT_PRINT,OPT_TOGGLE,OPT_SUBTITLE,OPT_URL,OPT_ATOC,OPT_SORTABLE,OPT_TOGTOC
+V=mf2005Variables.txt
+O=C:\Program Files\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.4 Skins\Skins Horizontal Tabs\sky_blue_horiz.hmskin

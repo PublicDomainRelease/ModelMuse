@@ -55,6 +55,9 @@ implementation
 uses
   frmGoPhastUnit, ZoomBox2, GoPhastTypes;
 
+resourcestring
+  StrChangeVertexValues = 'change vertex values';
+
 {$R *.dfm}
 
 { TfrmPointValues }
@@ -279,7 +282,7 @@ end;
 
 function TUndoPointPositions.Description: string;
 begin
-  result := 'change vertex values';
+  result := StrChangeVertexValues;
 end;
 
 destructor TUndoPointPositions.Destroy;

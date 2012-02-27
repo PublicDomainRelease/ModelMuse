@@ -221,6 +221,7 @@ var
   ALimitRow: TEndLimits;
   ARow: Integer;
 begin
+  Handle;
   if frmGoPhast.PhastModel.ModflowPackages.ModPath.Binary then
   begin
     fedModpathFile.DefaultExt := '.end_bin';

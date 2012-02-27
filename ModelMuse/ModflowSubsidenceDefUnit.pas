@@ -270,6 +270,7 @@ var
   SubSource: TSubNoDelayBedLayerItem;
 begin
   inherited;
+  // if Assign is updated, update IsSame too.
   if Source is TSubNoDelayBedLayerItem then
   begin
     SubSource := TSubNoDelayBedLayerItem(Source);
@@ -394,6 +395,7 @@ var
   SubSource: TSubDelayBedLayerItem;
 begin
   inherited;
+  // if Assign is updated, update IsSame too.
   if Source is TSubDelayBedLayerItem then
   begin
     SubSource := TSubDelayBedLayerItem(Source);
@@ -648,6 +650,7 @@ end;
 
 procedure TUseLayerNumberItem.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TUseLayerNumberItem then
   begin
     LayerNumber := TUseLayerNumberItem(Source).LayerNumber;
@@ -712,6 +715,7 @@ procedure TCustomSubLayerItem.Assign(Source: TPersistent);
 var
   SubSource: TCustomSubLayerItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TCustomSubLayerItem then
   begin
     SubSource := TCustomSubLayerItem(Source);
@@ -918,6 +922,7 @@ var
   SubItem: TSwtWaterTableItem;
 begin
   inherited;
+  // if Assign is updated, update IsSame too.
   if Source is TSwtWaterTableItem then
   begin
      SubItem := TSwtWaterTableItem(Source);

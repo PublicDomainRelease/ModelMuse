@@ -100,6 +100,7 @@ procedure TSfrEquationItem.Assign(Source: TPersistent);
 var
   Sfr: TSfrEquationItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TSfrEquationItem then
   begin
     Sfr := TSfrEquationItem(Source);

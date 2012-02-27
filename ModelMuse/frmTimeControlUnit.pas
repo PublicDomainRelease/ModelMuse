@@ -102,6 +102,9 @@ implementation
 
 uses Contnrs, Math, frmGoPhastUnit, RealListUnit, IntListUnit, GoPhastTypes;
 
+resourcestring
+  StrTimeControl = 'time control';
+
 {$R *.dfm}
 
 type
@@ -381,7 +384,7 @@ end;
 
 function TUndoTimes.Description: string;
 begin
-  result := 'time control';
+  result := StrTimeControl;
 end;
 
 destructor TUndoTimes.Destroy;

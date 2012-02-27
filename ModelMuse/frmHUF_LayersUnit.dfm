@@ -160,7 +160,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       Height = 278
       Align = alClient
       HideSelection = False
-      Indent = 19
+      Indent = 20
       MultiSelect = True
       ReadOnly = True
       TabOrder = 1
@@ -180,6 +180,10 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       HelpType = htKeyword
       HelpKeyword = 'Properties_TabHUF'
       Caption = 'Properties'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         375
         279)
@@ -238,7 +242,6 @@ inherited frmHUF_Layers: TfrmHUF_Layers
         Font.Name = 'Arial'
         Font.Pitch = fpVariable
         Font.Style = []
-        ItemHeight = 18
         ParentFont = False
         TabOrder = 1
         Text = '1'
@@ -285,7 +288,6 @@ inherited frmHUF_Layers: TfrmHUF_Layers
         Font.Name = 'Arial'
         Font.Pitch = fpVariable
         Font.Style = []
-        ItemHeight = 18
         ParentFont = False
         TabOrder = 3
         Text = '1'
@@ -300,6 +302,10 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       HelpKeyword = 'Parameters_Tab'
       Caption = 'Parameters'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgParameters: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -311,6 +317,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing]
         TabOrder = 0
         OnSelectCell = rdgParametersSelectCell
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
@@ -422,6 +429,10 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       HelpKeyword = 'Print_Tab'
       Caption = 'Print'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblPrintFormat: TLabel
         Left = 103
         Top = 7
@@ -570,9 +581,12 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnOK: TBitBtn
       Left = 298
@@ -580,9 +594,12 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnCancel: TBitBtn
       Left = 412
@@ -590,8 +607,11 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
   end
 end

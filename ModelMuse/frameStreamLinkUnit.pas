@@ -58,6 +58,9 @@ implementation
 uses
   frmGoPhastUnit;
 
+resourcestring
+  StrDisplayStreamLinks = 'display stream links';
+
 {$R *.dfm}
 
 procedure TframeStreamLink.btnDiversionColorClick(Sender: TObject);
@@ -103,6 +106,7 @@ procedure TframeStreamLink.GetData;
 var
   EndTime: double;
 begin
+  Handle;
   FSfrStreamLinkPlot.Free;
   FSfrStreamLinkPlot:= TSfrStreamLinkPlot.Create(nil);
   frmGoPhast.PhastModel.ModflowStressPeriods.
@@ -165,7 +169,7 @@ end;
 
 function TUndoStreamLinks.Description: string;
 begin
-  result := 'display stream links';
+  result := StrDisplayStreamLinks;
 end;
 
 destructor TUndoStreamLinks.Destroy;

@@ -9,7 +9,7 @@
 			<Projects Include="..\ModelMonitor\ModelMonitor.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\ModelMonitor\ListFileAnalizer.dproj">
+			<Projects Include="..\ModelMonitor\ListFileAnalyzer.dproj">
 				<Dependencies/>
 			</Projects>
 		</ItemGroup>
@@ -38,23 +38,23 @@
 		<Target Name="ModelMonitor:Make">
 			<MSBuild Projects="..\ModelMonitor\ModelMonitor.dproj" Targets="Make"/>
 		</Target>
-		<Target Name="ListFileAnalizer">
-			<MSBuild Projects="..\ModelMonitor\ListFileAnalizer.dproj"/>
+		<Target Name="ListFileAnalyzer">
+			<MSBuild Projects="..\ModelMonitor\ListFileAnalyzer.dproj"/>
 		</Target>
-		<Target Name="ListFileAnalizer:Clean">
-			<MSBuild Projects="..\ModelMonitor\ListFileAnalizer.dproj" Targets="Clean"/>
+		<Target Name="ListFileAnalyzer:Clean">
+			<MSBuild Projects="..\ModelMonitor\ListFileAnalyzer.dproj" Targets="Clean"/>
 		</Target>
-		<Target Name="ListFileAnalizer:Make">
-			<MSBuild Projects="..\ModelMonitor\ListFileAnalizer.dproj" Targets="Make"/>
+		<Target Name="ListFileAnalyzer:Make">
+			<MSBuild Projects="..\ModelMonitor\ListFileAnalyzer.dproj" Targets="Make"/>
 		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="ModelMuse;ModelMonitor;ListFileAnalizer"/>
+			<CallTarget Targets="ModelMuse;ModelMonitor;ListFileAnalyzer"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="ModelMuse:Clean;ModelMonitor:Clean;ListFileAnalizer:Clean"/>
+			<CallTarget Targets="ModelMuse:Clean;ModelMonitor:Clean;ListFileAnalyzer:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="ModelMuse:Make;ModelMonitor:Make;ListFileAnalizer:Make"/>
+			<CallTarget Targets="ModelMuse:Make;ModelMonitor:Make;ListFileAnalyzer:Make"/>
 		</Target>
 		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')" Project="$(BDS)\Bin\CodeGear.Group.Targets"/>
 	</Project>

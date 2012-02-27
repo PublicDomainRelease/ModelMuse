@@ -8,7 +8,6 @@ object frameView: TframeView
   TabOrder = 0
   TabStop = True
   OnMouseMove = rulerMouseMove
-  OnMouseWheel = FrameMouseWheel
   object rulVertical: TRbwRuler
     Left = 0
     Top = 54

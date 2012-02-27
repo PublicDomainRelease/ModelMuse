@@ -1,0 +1,789 @@
+unit Mt3dmsBtnWriterUnit;
+
+interface
+
+uses
+  CustomModflowWriterUnit, ModflowPackageSelectionUnit, Forms, PhastModelUnit,
+  ModflowTimeUnit;
+
+type
+  TMt3dmsBtnWriter = class(TCustomModflowWriter)
+  private
+    FNameOfFile: string;
+    NOBS: integer;
+    FMt3dBasic: TMt3dBasic;
+    procedure WriteDataSets1And2;
+    procedure WriteDataSet3;
+    procedure WriteDataSet4;
+    procedure WriteDataSet5;
+    procedure WriteDataSet6;
+    procedure WriteDataSet10;
+    procedure WriteDataSet11;
+    procedure WriteDataSet12;
+    procedure WriteDataSet13;
+    procedure WriteDataSet14;
+    procedure WriteDataSet15;
+    procedure WriteDataSet16;
+    procedure WriteDataSet17;
+    procedure WriteDataSet18;
+    procedure WriteDataSet19;
+    procedure WriteDataSet20;
+    procedure WriteDataSet21to23;
+  protected
+    class function Extension: string; override;
+  public
+    procedure WriteDataSet22(StressPeriod: TModflowStressPeriod);
+    procedure WriteDataSet23(StressPeriod: TModflowStressPeriod);
+    Constructor Create(AModel: TCustomModel; EvaluationType: TEvaluationType); override;
+    procedure WriteFile(const AFileName: string);
+  end;
+
+resourcestring
+  StrTimeDataForMT3DMS = 'Time data for MT3DMS undefined';
+  StrNoTimeDataHasBee = 'No time data has been defined for stress period %d.' +
+  '  Select Model|MODFLOW Time... to define it';
+
+implementation
+
+uses
+  ModflowUnitNumbers, frmProgressUnit, SysUtils, GoPhastTypes,
+  DataSetUnit, Mt3dmsChemSpeciesUnit, ModflowOutputControlUnit, Mt3dmsTimesUnit,
+  frmErrorsAndWarningsUnit;
+
+resourcestring
+  StrSInTheMT3DMSBTN = '%s in the MT3DMS BTN package';
+  StrDZLayerD = 'Data Set 10: DZ Layer: %d';
+  StrPRSITYLayerD = 'Data Set 11: PRSITY, Layer: %d';
+  StrICBUNDLayerD = 'Data Set 12: ICBUND, Layer: %d';
+  StrDataSet14CINACT = ' # Data Set 14: CINACT, THKMIN';
+  StrMaximumNumberOfOb = 'Maximum number of observation locations exceeded.';
+  StrByDefaultMT3DMSO = 'By default, MT3DMS only allows up to 200 observatio' +
+  'n locations to be specified using %s. You must either specify fewer locat' +
+  'ions or modify the MT3DMS source code and recompile to overcome this limi' +
+  'tation. Another option is to use the TOB package. The limitation does not '
+  + 'apply to observations specified through the TOB package.';
+
+{ TMt3dmsBtnWriter }
+
+constructor TMt3dmsBtnWriter.Create(AModel: TCustomModel;
+  EvaluationType: TEvaluationType);
+begin
+  inherited;
+  FMt3dBasic := Model.ModflowPackages.Mt3dBasic;
+  FArrayWritingFormat := awfMt3dms;
+end;
+
+class function TMt3dmsBtnWriter.Extension: string;
+begin
+  result := '.btn';
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet10;
+var
+  LayerIndex: Integer;
+  DataArray: TDataArray;
+begin
+  DataArray := Model.DataArrayManager.GetDataSetByName(rsMT3DMS_Layer_Thickness);
+  DataArray.Initialize;
+  for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
+  begin
+    if Model.IsLayerSimulated(LayerIndex) then
+    begin
+      WriteArray(DataArray, LayerIndex, Format(StrDZLayerD,
+        [Model.DataSetLayerToModflowLayer(LayerIndex)]));
+    end;
+  end;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet11;
+var
+  LayerIndex: Integer;
+  DataArray: TDataArray;
+begin
+  DataArray := Model.DataArrayManager.GetDataSetByName(rsPorosity);
+  DataArray.Initialize;
+  for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
+  begin
+    if Model.IsLayerSimulated(LayerIndex) then
+    begin
+      WriteArray(DataArray, LayerIndex, Format(StrPRSITYLayerD,
+        [Model.DataSetLayerToModflowLayer(LayerIndex)]));
+    end;
+  end;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet12;
+var
+  LayerIndex: Integer;
+  DataArray: TDataArray;
+begin
+  DataArray := Model.DataArrayManager.GetDataSetByName(StrMT3DMSActive);
+  DataArray.Initialize;
+  for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
+  begin
+    if Model.IsLayerSimulated(LayerIndex) then
+    begin
+      WriteArray(DataArray, LayerIndex, Format(StrICBUNDLayerD,
+        [Model.DataSetLayerToModflowLayer(LayerIndex)]));
+    end;
+  end;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet13;
+var
+  SpeciesIndex: Integer;
+  Item: TChemSpeciesItem;
+  procedure WriteInitialConc;
+  var
+    LayerIndex: Integer;
+    DataArray: TDataArray;
+  begin
+    DataArray := Model.DataArrayManager.GetDataSetByName(
+      Item.InitialConcDataArrayName);
+    DataArray.Initialize;
+    for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
+    begin
+      if Model.IsLayerSimulated(LayerIndex) then
+      begin
+        WriteArray(DataArray, LayerIndex, Format('Data Set 13: SCONC: %0:s, Layer: %1:d',
+          [Item.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]));
+      end;
+    end;
+  end;
+begin
+  for SpeciesIndex := 0 to Model.MobileComponents.Count - 1 do
+  begin
+    Item := Model.MobileComponents[SpeciesIndex];
+    WriteInitialConc;
+  end;
+  for SpeciesIndex := 0 to Model.ImmobileComponents.Count - 1 do
+  begin
+    Item := Model.ImmobileComponents[SpeciesIndex];
+    WriteInitialConc;
+  end;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet14;
+var
+  CINACT: Double;
+  THKMIN: Double;
+begin
+  CINACT := FMt3dBasic.InactiveConcentration;
+  THKMIN := FMt3dBasic.MinimumSaturatedFraction;
+  WriteF10Float(CINACT);
+  WriteF10Float(THKMIN);
+  WriteString(StrDataSet14CINACT);
+  NewLine;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet15;
+var
+  IFMTCN: Integer;
+  IFMTNP: Integer;
+  IFMTRF: Integer;
+  IFMTDP: Integer;
+  SAVUCN: string;
+  Mt3dmsOutputControl: TMt3dmsOutputControl;
+begin
+  IFMTCN := IPRN_Real;
+  IFMTNP := IPRN_Integer;
+  IFMTRF := IPRN_Real;
+  IFMTDP := IPRN_Real;
+  Mt3dmsOutputControl := Model.Mt3dmsOutputControl;
+  if Mt3dmsOutputControl.SaveConcentrations then
+  begin
+    SAVUCN := '         T';
+  end
+  else
+  begin
+    SAVUCN := '         F';
+  end;
+  WriteI10Integer(IFMTCN , 'MT3DMS, Basic Package, IFMTCN');
+  WriteI10Integer(IFMTNP , 'MT3DMS, Basic Package, IFMTNP');
+  WriteI10Integer(IFMTRF , 'MT3DMS, Basic Package, IFMTRF');
+  WriteI10Integer(IFMTDP , 'MT3DMS, Basic Package, IFMTDP');
+  WriteString(SAVUCN);
+  WriteString(' # Data set 15: IFMTCN IFMTNP IFMTRF IFMTDP SAVUCN');
+  NewLine;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet16;
+var
+  NPRS: integer;
+  Mt3dmsOutputControl: TMt3dmsOutputControl;
+begin
+  Mt3dmsOutputControl := Model.Mt3dmsOutputControl;
+  NPRS := 0;
+  case Mt3dmsOutputControl.OutputFreqChoice of
+    mofSpecifiedTimes:
+      begin
+        NPRS :=  Mt3dmsOutputControl.OutputTimes.Count;
+      end;
+    mofEndOfSimulation:
+      begin
+        NPRS := 0;
+      end;
+    mofPeriodic:
+      begin
+        NPRS := -Mt3dmsOutputControl.PeriodicOutputCount;
+      end;
+    else
+      Assert(False);
+  end;
+  WriteI10Integer(NPRS, 'MT3DMS Basic package, NPRS');
+  WriteString(' # Data Set 16, NPRS');
+  NewLine;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet17;
+const
+  MaxItemsPerLine = 8;
+var
+  Mt3dmsOutputControl: TMt3dmsOutputControl;
+  Index: Integer;
+  Item: TOuptputTimeItem;
+  NewLineNeeded: Boolean;
+begin
+  NewLineNeeded := True;
+  Mt3dmsOutputControl := Model.Mt3dmsOutputControl;
+  if Mt3dmsOutputControl.OutputFreqChoice = mofSpecifiedTimes then
+  begin
+    for Index := 0 to Mt3dmsOutputControl.OutputTimes.Count - 1 do
+    begin
+      Item := Mt3dmsOutputControl.OutputTimes[Index];
+      WriteF10Float(Item.ObservationTime);
+      if ((Index + 1) mod MaxItemsPerLine) = 0 then
+      begin
+        NewLine;
+        NewLineNeeded := False;
+      end
+      else
+      begin
+        NewLineNeeded := True;
+      end;
+    end;
+    if NewLineNeeded then
+    begin
+      NewLine;
+    end;
+  end;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet18;
+var
+  LayerIndex, RowIndex, ColIndex: Integer;
+  DataArray: TDataArray;
+  Mt3dmsOutputControl: TMt3dmsOutputControl;
+  NPROBS: Integer;
+begin
+  DataArray := Model.DataArrayManager.GetDataSetByName(STR_MT3DMS_Observation_Locations);
+  DataArray.Initialize;
+  NOBS := 0;
+  for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
+  begin
+    if Model.IsLayerSimulated(LayerIndex) then
+    begin
+      for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
+      begin
+        for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
+        begin
+          if DataArray.BooleanData[LayerIndex,RowIndex,ColIndex] then
+          begin
+            Inc(NOBS);
+          end;
+        end;
+      end;
+    end;
+  end;
+  Mt3dmsOutputControl := Model.Mt3dmsOutputControl;
+  NPROBS := Mt3dmsOutputControl.ObservationFrequency;
+
+  WriteI10Integer(NOBS, 'MT3DMS Basic Package, NOBS');
+  WriteI10Integer(NPROBS, 'MT3DMS Basic Package, NPROBS');
+  WriteString(' # Data set 18, NOBS NPROBS');
+  NewLine;
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrMaximumNumberOfOb);
+  if NOBS > 200 then
+  begin
+    frmErrorsAndWarnings.AddWarning(Model, StrMaximumNumberOfOb,
+      Format(StrByDefaultMT3DMSO, [DataArray.Name]));
+  end;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet19;
+var
+  DataArray: TDataArray;
+  LayerIndex: Integer;
+  MFLayer: Integer;
+  RowIndex: Integer;
+  ColIndex: Integer;
+  BaseName: string;
+  SpeciesIndex: Integer;
+  UnitNumber: Integer;
+  Chem: TChemSpeciesItem;
+  OutputFileName: string;
+begin
+  if NOBS > 0 then
+  begin
+    DataArray := Model.DataArrayManager.GetDataSetByName(
+      STR_MT3DMS_Observation_Locations);
+    DataArray.Initialize;
+    for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
+    begin
+      if Model.IsLayerSimulated(LayerIndex) then
+      begin
+        MFLayer := Model.DataSetLayerToModflowLayer(LayerIndex);
+        for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
+        begin
+          for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
+          begin
+            if DataArray.BooleanData[LayerIndex,RowIndex,ColIndex] then
+            begin
+              WriteI10Integer(MFLayer, 'MT3DMS, Data set 19, KOBS');
+              WriteI10Integer(RowIndex+1, 'MT3DMS, Data set 19, IOBS');
+              WriteI10Integer(ColIndex+1, 'MT3DMS, Data set 19, JOBS');
+              NewLine;
+            end;
+          end;
+        end;
+      end;
+    end;
+    BaseName := ChangeFileExt(FNameOfFile, '');
+    // Generate Name file lines for chemical species
+    for SpeciesIndex := 0 to Model.MobileComponents.Count-1 do
+    begin
+      UnitNumber := Mt3dObsStart + SpeciesIndex;
+      Chem := Model.MobileComponents[SpeciesIndex];
+      OutputFileName := BaseName + '_' + Chem.Name + strMtObs;
+      WriteToMt3dMsNameFile(strDATA, UnitNumber, OutputFileName);
+    end;
+    for SpeciesIndex := 0 to Model.ImmobileComponents.Count-1 do
+    begin
+      UnitNumber := Mt3dUcnImmobileStart + Model.MobileComponents.Count + SpeciesIndex;
+      Chem := Model.ImmobileComponents[SpeciesIndex];
+      OutputFileName := BaseName + '_' + Chem.Name + strMtObs;
+      WriteToMt3dMsNameFile(strDATA, UnitNumber, OutputFileName);
+    end;
+  end;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet20;
+var
+  Mt3dmsOutputControl: TMt3dmsOutputControl;
+  CHKMAS: string;
+  NPRMAS: Integer;
+begin
+  Mt3dmsOutputControl := Model.Mt3dmsOutputControl;
+  if Mt3dmsOutputControl.SummarizeMassBalance then
+  begin
+    CHKMAS := '         T';
+  end
+  else
+  begin
+    CHKMAS := '         F';
+  end;
+  NPRMAS := Mt3dmsOutputControl.MassBalanceFrequency;
+  WriteString(CHKMAS);
+  WriteI10Integer(NPRMAS, 'MT3DMS Basic package, NPRMAS');
+  WriteString(' # Data Set 20: CHKMAS NPRMAS');
+  NewLine;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet21to23;
+begin
+  Model.ModflowFullStressPeriods.WriteMt3dmsStressPeriods(self);
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet22(StressPeriod: TModflowStressPeriod);
+begin
+  // do nothing. Data Set 22 is never needed with MODFLOW.
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet23(StressPeriod: TModflowStressPeriod);
+var
+  Mt3dmsTime: TMt3dmsTimeItem;
+  DT0: Double;
+  MXSTRN: Integer;
+  TTSMULT: Double;
+  TTSMAX: Double;
+begin
+  Mt3dmsTime := Model.Mt3dmsTimes.GetItemFromTime(StressPeriod.StartTime);
+  if Mt3dmsTime = nil then
+  begin
+    frmErrorsAndWarnings.AddError(Model, StrTimeDataForMT3DMS,
+      Format(StrNoTimeDataHasBee, [StressPeriod.Index+1]) );
+    Exit;
+  end;
+  DT0 := Mt3dmsTime.StepSize;
+  MXSTRN := Mt3dmsTime.MaxSteps;
+  TTSMULT := Mt3dmsTime.TimeStepMultiplier;
+  TTSMAX := Mt3dmsTime.MaxStepSize;
+  WriteF10Float(DT0);
+  WriteI10Integer(MXSTRN, 'Error in MT3DMS BTN Data Set 23: MXSTRN');
+  WriteF10Float(TTSMULT);
+  WriteF10Float(TTSMAX);
+  WriteString(' # Data Set 23: DT0, MXSTRN, TTSMULT, TTSMAX');
+  NewLine;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet3;
+var
+  NLAY: Integer;
+  NROW: Integer;
+  NCOL: Integer;
+  NPER: Integer;
+  NCOMP: Integer;
+  MCOMP: Integer;
+  SpeciesIndex: integer;
+  UnitNumber: integer;
+  BaseName: string;
+  Chem: TChemSpeciesItem;
+  OutputFileName: string;
+  Mt3dmsChemReact: TMt3dmsChemReaction;
+  SecondUcnFileCreated: boolean;
+begin
+  NLAY := Model.ModflowLayerCount;
+  NROW := Model.ModflowGrid.RowCount;
+  NCOL := Model.ModflowGrid.ColumnCount;
+  NPER := Model.ModflowFullStressPeriods.Count;
+  MCOMP := Model.MobileComponents.Count;
+  NCOMP := MCOMP + Model.ImmobileComponents.Count;
+  WriteI10Integer(NLAY, Format(StrSInTheMT3DMSBTN, ['NLAY']));
+  WriteI10Integer(NROW, Format(StrSInTheMT3DMSBTN, ['NROW']));
+  WriteI10Integer(NCOL, Format(StrSInTheMT3DMSBTN, ['NCOL']));
+  WriteI10Integer(NPER, Format(StrSInTheMT3DMSBTN, ['NPER']));
+  WriteI10Integer(NCOMP, Format(StrSInTheMT3DMSBTN, ['NCOMP']));
+  WriteI10Integer(MCOMP, Format(StrSInTheMT3DMSBTN, ['MCOMP']));
+  WriteString(' # Data Set 3: NLAY NROW NCOL NPER NCOMP MCOMP');
+  NewLine;
+
+  Mt3dmsChemReact := Model.ModflowPackages.Mt3dmsChemReact;
+  SecondUcnFileCreated := Mt3dmsChemReact.IsSelected
+    and (Mt3dmsChemReact.SorptionChoice > scLinear);
+
+  BaseName := ChangeFileExt(FNameOfFile, '');
+  // Generate Name file lines for chemical species
+  for SpeciesIndex := 0 to Model.MobileComponents.Count-1 do
+  begin
+    UnitNumber := Mt3dUcnMobileStart + SpeciesIndex;
+    Chem := Model.MobileComponents[SpeciesIndex];
+    OutputFileName := BaseName + '_' + Chem.Name + StrMt3dConcFile;
+    WriteToMt3dMsNameFile(strDATABINARY, UnitNumber, OutputFileName);
+    if SecondUcnFileCreated then
+    begin
+      UnitNumber := UnitNumber + 100;
+      OutputFileName := BaseName + '_' + Chem.Name + '_S'+ StrMt3dConcFile;
+      WriteToMt3dMsNameFile(strDATABINARY, UnitNumber, OutputFileName);
+    end;
+  end;
+  for SpeciesIndex := 0 to Model.ImmobileComponents.Count-1 do
+  begin
+    UnitNumber := Mt3dUcnImmobileStart + SpeciesIndex;
+    Chem := Model.ImmobileComponents[SpeciesIndex];
+    OutputFileName := BaseName + '_' + Chem.Name + StrMt3dConcFile;
+    WriteToMt3dMsNameFile(strDATABINARY, UnitNumber, OutputFileName);
+    if SecondUcnFileCreated then
+    begin
+      UnitNumber := UnitNumber + 100;
+      OutputFileName := BaseName + '_' + Chem.Name + '_S'+ StrMt3dConcFile;
+      WriteToMt3dMsNameFile(strDATABINARY, UnitNumber, OutputFileName);
+    end;
+  end;
+  for SpeciesIndex := 0 to Model.MobileComponents.Count-1 do
+  begin
+    UnitNumber := Mt3dMassStart + SpeciesIndex;
+    Chem := Model.MobileComponents[SpeciesIndex];
+    OutputFileName := BaseName + '_' + Chem.Name + '._mas';
+    WriteToMt3dMsNameFile(strDATA, UnitNumber, OutputFileName);
+  end;
+  for SpeciesIndex := 0 to Model.ImmobileComponents.Count-1 do
+  begin
+    UnitNumber := Mt3dMassStart + Model.MobileComponents.Count + SpeciesIndex;
+    Chem := Model.ImmobileComponents[SpeciesIndex];
+    OutputFileName := BaseName + '_' + Chem.Name + '._mas';
+    WriteToMt3dMsNameFile(strDATA, UnitNumber, OutputFileName);
+  end;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet4;
+var
+  TUNIT, LUNIT, MUNIT: string;
+begin
+  case Model.ModflowOptions.TimeUnit of
+    0: TUNIT := '   ?';
+    1: TUNIT := ' sec';
+    2: TUNIT := ' min';
+    3: TUNIT := '  hr';
+    4: TUNIT := ' day';
+    5: TUNIT := '  yr';
+    else Assert(False);
+  end;
+  case Model.ModflowOptions.LengthUnit of
+    0: LUNIT := '   ?';
+    1: LUNIT := '  ft';
+    2: LUNIT := '   m';
+    3: LUNIT := '  cm';
+    else Assert(False);
+  end;
+  MUNIT := FMt3dBasic.MassUnit;
+  if MUNIT = '' then
+  begin
+    MUNIT := '   ?';
+  end;
+  while Length(MUNIT) < 4 do
+  begin
+    MUNIT := ' ' + MUNIT;
+  end;
+  if Length(MUNIT) > 4 then
+  begin
+    SetLength(MUNIT, 4);
+  end;
+  WriteString(TUNIT);
+  WriteString(LUNIT);
+  WriteString(MUNIT);
+  WriteString(' # Data Set 4: TUNIT LUNIT MUNIT');
+  NewLine;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet5;
+begin
+  NewLine;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSet6;
+var
+  LAYCON: TOneDIntegerArray;
+  LayerIndex: Integer;
+begin
+  LAYCON := Model.Laytyp;
+  for LayerIndex := 0 to Length(LAYCON) - 1 do
+  begin
+    // In BCF package, strip off interblock transmissivity method
+    LAYCON[LayerIndex] := (LAYCON[LayerIndex] mod 10);
+    WriteI2Integer(LAYCON[LayerIndex], 'MT3DMS Basic Package, LAYCON');
+    if (((LayerIndex+1) mod 40) = 0) and (LayerIndex < Length(LAYCON) - 1) then
+    begin
+      NewLine;
+    end;
+  end;
+  WriteString(' # Data Set 6: LAYCON');
+  NewLine;
+end;
+
+procedure TMt3dmsBtnWriter.WriteDataSets1And2;
+const
+  MaxHeadingLineLength = 80;
+var
+  LineIndex: Integer;
+  Heading: string;
+begin
+  for LineIndex := 0 to 1 do
+  begin
+    if LineIndex < FMt3dBasic.Comments.Count then
+    begin
+      Heading := FMt3dBasic.Comments[LineIndex];
+    end
+    else
+    begin
+      Heading := '';
+    end;
+    if Length(Heading) > MaxHeadingLineLength then
+    begin
+      SetLength(Heading, MaxHeadingLineLength);
+    end;
+    WriteString(Heading);
+    NewLine;
+  end;
+end;
+
+procedure TMt3dmsBtnWriter.WriteFile(const AFileName: string);
+begin
+  // remove errors and warnings
+//  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrFileForTheInitial);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTimeDataForMT3DMS);
+
+  FNameOfFile := FileName(AFileName);
+  // PackageGeneratedExternally needs to be updated for MT3DMS
+  if Model.PackageGeneratedExternally(StrBTN) then
+  begin
+    Exit;
+  end;
+
+  // write to MT3DMS name file.
+  WriteToMt3dMsNameFile(StrBTN, Mt3dBtn,
+    FNameOfFile);
+
+  OpenFile(FNameOfFile);
+  try
+    frmProgressMM.AddMessage('Writing MT3DMS BTN Package input.');
+    frmProgressMM.AddMessage('  Writing Data Sets 1 and 2.');
+    WriteDataSets1And2;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage('  Writing Data Set 3.');
+    WriteDataSet3;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage('  Writing Data Set 4.');
+    WriteDataSet4;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage('  Writing Data Set 5.');
+    WriteDataSet5;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+
+    frmProgressMM.AddMessage('  Writing Data Set 6.');
+    WriteDataSet6;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    // data set 7
+    frmProgressMM.AddMessage('  Writing Data Set 7.');
+    Model.ModflowGrid.WriteDELR(self);
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    // data set 8
+    frmProgressMM.AddMessage('  Writing Data Set 8.');
+    Model.ModflowGrid.WriteDELC(self);
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    // data set 9
+    frmProgressMM.AddMessage('  Writing Data Set 9.');
+    Model.ModflowGrid.WriteTOP(self);
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+    Model.DataArrayManager.CacheDataArrays;
+
+    frmProgressMM.AddMessage('  Writing Data Set 10.');
+    WriteDataSet10;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage('  Writing Data Set 11.');
+    WriteDataSet11;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage('  Writing Data Set 12.');
+    WriteDataSet12;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage('  Writing Data Set 13.');
+    WriteDataSet13;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage('  Writing Data Set 14.');
+    WriteDataSet14;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage('  Writing Data Set 15.');
+    WriteDataSet15;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage('  Writing Data Set 16.');
+    WriteDataSet16;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage('  Writing Data Set 17.');
+    WriteDataSet17;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage('  Writing Data Set 18.');
+    WriteDataSet18;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage('  Writing Data Set 19.');
+    WriteDataSet19;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage('  Writing Data Set 20.');
+    WriteDataSet20;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage('  Writing Data Set 21.');
+    WriteDataSet21to23;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+  finally
+    CloseFile;
+  end;
+
+end;
+
+end.

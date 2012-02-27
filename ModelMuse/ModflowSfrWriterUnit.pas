@@ -91,7 +91,10 @@ type
     NSFRPAR: integer;
     FLgrUsed: Boolean;
     FIsChildModel: Boolean;
+    function NewFormat: boolean;
     procedure CheckParamInstances;
+    procedure WriteDataSet1a;
+    procedure WriteDataSet1b;
     procedure WriteDataSet1;
     procedure WriteDataSet2;
     procedure WriteDataSets3and4;
@@ -189,6 +192,7 @@ resourcestring
   'ave been defined.';
   StrDupParamInstances = 'The following objects contained duplicate SFR ' +
   'Parameter instances.';
+  StrObject0sLayer = 'Object = %0:s; Layer = %1:d; Row = %2:d; Column = %3:d';
 
 const
   StrSegmentNumber = 'Segment Number in ';
@@ -3812,7 +3816,7 @@ begin
     IRTFLG := 0;
   end;
 
-  if (ISFROPT > 0) then
+  if (ISFROPT > 0) and not NewFormat then
   begin
     NSTRM := -NSTRM;
   end;
@@ -3835,7 +3839,7 @@ begin
   WriteFloat(DLEAK);
   WriteInteger(ISTCB1);
   WriteInteger(ISTCB2);
-  if NSTRM < 0 then
+  if (NSTRM < 0)  or (NewFormat and (ISFROPT > 0)) then
   begin
     WriteInteger(ISFROPT);
   end;
@@ -3846,9 +3850,12 @@ begin
     WriteInteger(NSFRSETS);
   end;
 
-  if NSTRM < 0 then
+  if (ISFROPT > 0) or (NSTRM < 0) then
   begin
-    WriteInteger(IRTFLG);
+//    if not NewFormat then
+//    begin
+      WriteInteger(IRTFLG);
+//    end;
     if IRTFLG > 0 then
     begin
       WriteInteger(NUMTIM);
@@ -3862,7 +3869,7 @@ begin
   end;
 
   WriteString(' # Data Set 1: NSTRM NSS NSFRPAR NPARSEG CONST DLEAK ISTCB1  ISTCB2');
-  if NSTRM < 0 then
+  if (NSTRM < 0)  or (NewFormat and (ISFROPT > 0)) then
   begin
     WriteString(' ISFROPT');
   end;
@@ -3870,9 +3877,12 @@ begin
   begin
     WriteString(' NSTRAIL ISUZN NSFRSETS');
   end;
-  if NSTRM < 0 then
+  if (ISFROPT > 0) or (NSTRM < 0) then
   begin
-    WriteString(' IRTFLG');
+//    if not NewFormat then
+//    begin
+      WriteString(' IRTFLG');
+//    end;
     if IRTFLG > 0 then
     begin
       WriteString(' NUMTIM WEIGHT FLWTOL');
@@ -3883,6 +3893,31 @@ begin
     WriteString(' Variables for routing between grids');
   end;
   NewLine;
+end;
+
+procedure TModflowSFR_Writer.WriteDataSet1a;
+begin
+  if NewFormat
+    and ((ISFROPT > 0) or Model.ModflowPackages.SfrPackage.KinematicRouting) then
+  begin
+    if (ISFROPT > 0) then
+    begin
+      WriteString('REACHINPUT ');
+    end;
+    if Model.ModflowPackages.SfrPackage.KinematicRouting then
+    begin
+      WriteString('TRANSROUTE ');
+    end;
+    NewLine;
+  end;
+end;
+
+procedure TModflowSFR_Writer.WriteDataSet1b;
+begin
+  if NewFormat then
+  begin
+    // not currently supported.
+  end;
 end;
 
 procedure TModflowSFR_Writer.WriteDataSet2;
@@ -3948,10 +3983,8 @@ var
     if Reach.ReachLength <= 0 then
     begin
       frmErrorsAndWarnings.AddWarning(Model, WarningRoot,
-        'Object = ' + ObjectName + '; '
-        + 'Layer = ' + IntToStr(Reach.Layer+1) + '; '
-        + 'Row = ' + IntToStr(Reach.Row+1) + '; '
-        + 'Column = ' + IntToStr(Reach.Column+1));
+        Format(StrObject0sLayer,
+        [ObjectName, Reach.Layer+1, Reach.Row+1, Reach.Column+1]));
     end;
   end;
 begin
@@ -4368,6 +4401,14 @@ begin
   end
 end;
 
+function TModflowSFR_Writer.NewFormat: boolean;
+var
+  SfrPackage: TSfrPackageSelection;
+begin
+  SfrPackage := Package as TSfrPackageSelection;
+  Result := (Model.ModelSelection = msModflowNWT) or SfrPackage.UseGsflowFormat;
+end;
+
 procedure TModflowSFR_Writer.WriteSegment(Segment: TSegment; StartTime: double;
   SubSegIndex: integer;
   Item: TSfrParamIcalcItem; Boundary: TSfrBoundary; TimeIndex: integer;
@@ -4647,6 +4688,8 @@ begin
     end;
 
     frmProgressMM.AddMessage('  Writing Data Set 1.');
+    WriteDataSet1a;
+    WriteDataSet1b;
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then

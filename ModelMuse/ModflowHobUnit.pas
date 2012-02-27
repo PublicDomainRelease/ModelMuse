@@ -12,7 +12,7 @@ type
     Time: double;
     HeadAnnotation: string;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList);
-    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); 
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
     procedure RecordStrings(Strings: TStringList);
   end;
 
@@ -27,21 +27,32 @@ type
     class operator NotEqual(const Left, Right: THeadObsResults): Boolean;
   end;
 
-  { TODO : Mark observations as "observations", "predictions", or "omitted". }
-  // @name represents a MODFLOW General Head boundary for one time interval.
-  // @name is stored by @link(TGhbCollection).
-  THobItem = class(TOrderedItem)
+  TCustomLocationObservation = class abstract(TOrderedItem)
+  private
+    FTime: double;
+    FComment: string;
+    procedure SetTime(const Value: double);
+    procedure SetComment(const Value: string);
+  protected
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+  published
+    // @name copies Source to this @classname.
+    procedure Assign(Source: TPersistent); override;
+    // @name indicates the time of this observation.
+    property Time: double read FTime write SetTime;
+    property Comment: string read FComment write SetComment;
+  end;
+
+  // @name represents a MODFLOW head observation for one time.
+  // @name is stored by @link(THobCollection).
+  THobItem = class(TCustomLocationObservation)
   private
     FHead: double;
-    FTime: double;
     FStatFlag: TStatFlag;
     FStatistic: double;
-    FComment: string;
     procedure SetHead(const Value: double);
-    procedure SetTime(const Value: double);
     procedure SetStatFlag(const Value: TStatFlag);
     procedure SetStatistic(const Value: double);
-    procedure SetComment(const Value: string);
     function GetStatFlag: TStatFlag;
   protected
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
@@ -49,17 +60,13 @@ type
   published
     // @name copies Source to this @classname.
     procedure Assign(Source: TPersistent); override;
-    // @name is the formula used to set the observed head
-    // of this boundary.
+    // @name is the observed head
+    // of this head observation.
     property Head: double read FHead write SetHead;
-    // @name indicates the time of this observation.
-    property Time: double read FTime write SetTime;
     property Statistic: double read FStatistic write SetStatistic;
     property StatFlag: TStatFlag read GetStatFlag write SetStatFlag;
-    property Comment: string read FComment write SetComment;
   end;
 
-  THobBoundary = class;
   TObservationTimeList = class;
 
   TObsTimesModelLink = class(TObject)
@@ -82,6 +89,8 @@ type
     Destructor Destroy; override;
     procedure RemoveLink(AModel: TBaseModel);
   end;
+
+  THobBoundary = class;
 
   // @name represents MODFLOW Head observations
   // for a series of times.
@@ -108,7 +117,9 @@ type
     // Do not call @name; call Free instead.
     destructor Destroy; override;
     property HobItems[Index: integer]: THobItem read GetHobItems;
+    // ROFF
     property ObservationRowOffset: double read FObservationRowOffset;
+    // COFF
     property ObservationColumnOffset: double read FObservationColumnOffset;
     property ObservationHeads[AModel: TBaseModel]: TObservationTimeList
       read GetObservationHeads;
@@ -174,31 +185,48 @@ type
 
   TMultiHeadCollection = class(TEnhancedOrderedCollection)
   private
-    FBoundary: THobBoundary;
     FScreenObject: TObject;
     function GetMultiHeadItem(Index: integer): TMultiHeadItem;
   public
-    constructor Create(Boundary: THobBoundary; Model: TBaseModel;
-      ScreenObject: TObject);
-    property MultiHeadItems[Index: integer]: TMultiHeadItem read GetMultiHeadItem; default;
+    constructor Create(Model: TBaseModel; ScreenObject: TObject);
+    property MultiHeadItems[Index: integer]: TMultiHeadItem
+      read GetMultiHeadItem; default;
+  end;
+
+  TCustomLocationObsBoundary = class(TModflowScreenObjectProperty)
+  private
+    FObservationName: string;
+    FLayerFractions: TMultiHeadCollection;
+    FPurpose: TObservationPurpose;
+    procedure SetObservationName(Value: string);
+    procedure SetLayerFractions(const Value: TMultiHeadCollection);
+    procedure SetPurpose(const Value: TObservationPurpose);
+  public
+    // @name creates an instance of @classname.
+    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
+    // @name destroys the current instance of @classname.  Do not call
+    // @name directly.  Call Free instead.
+    Destructor Destroy; override;
+    procedure Assign(Source: TPersistent); override;
+    function GetItemObsName(Item: TCustomLocationObservation): string;
+  published
+    property ObservationName: string read FObservationName
+      write SetObservationName;
+    property LayerFractions: TMultiHeadCollection read FLayerFractions
+      write SetLayerFractions;
+    property Purpose: TObservationPurpose read FPurpose write SetPurpose;
   end;
 
   // @name represents the MODFLOW Head observations associated with
   // a single @link(TScreenObject).
-  THobBoundary = class(TModflowScreenObjectProperty)
+  THobBoundary = class(TCustomLocationObsBoundary)
   private
     FValues: THobCollection;
-    FObservationName: string;
-    FLayerFractions: TMultiHeadCollection;
     FMultiObsMethod: TMultiObsMethod;
-    FPurpose: TObservationPurpose;
     procedure SetValues(const Value: THobCollection);
-    procedure SetObservationName(Value: string);
-    procedure SetLayerFractions(const Value: TMultiHeadCollection);
     function GetCellList(Index: integer): TObsCellList;
     procedure SetMultiObsMethod(const Value: TMultiObsMethod);
     function GetCellListCount: integer;
-    procedure SetPurpose(const Value: TObservationPurpose);
   public
     procedure Assign(Source: TPersistent); override;
     // @name creates an instance of @classname.
@@ -215,20 +243,14 @@ type
     procedure Clear; virtual;
     property CellLists[Index: integer]: TObsCellList read GetCellList;
     property CellListCount: integer read GetCellListCount;
-    function GetItemObsName(Item: THobItem): string;
     procedure RemoveModelLink(AModel: TBaseModel);
   published
-    property ObservationName: string read FObservationName write SetObservationName;
     // @name stores the MODFLOW boundaries that are NOT
     // associated with parameters.
     property Values: THobCollection read FValues write SetValues;
-    property LayerFractions: TMultiHeadCollection read FLayerFractions
-      write SetLayerFractions;
     // ITT
     property MultiObsMethod: TMultiObsMethod read FMultiObsMethod
       write SetMultiObsMethod default momHeadAndDrawdown;
-    property Purpose: TObservationPurpose read FPurpose
-      write SetPurpose;
   end;
 
   // @name is used to store a series of @link(TDataArray)s for head
@@ -274,7 +296,9 @@ uses RbwParser, ScreenObjectUnit, PhastModelUnit, ModflowGridUnit, FastGEO,
   SubscriptionUnit, RealListUnit, frmErrorsAndWarningsUnit;
 
 resourcestring
-  StrErrorObject0s = 'Error; Object = %0:s Duplicate Times = %1:s';
+  ErrorRoot = 'Error: Duplicate head observation times';
+  EarlyTimeWarning = 'Head observation times earlier than the beginning of the first stress period will be ignored.';
+  LateTimeWarning = 'Head observation times later than the end of the last stress period will be ignored.';
 
 { THob_Cell }
 
@@ -286,7 +310,7 @@ end;
 
 function THob_Cell.GetColumn: integer;
 begin
-  result := Values.Cell.Column
+  result := Values.Cell.Column;
 end;
 
 function THob_Cell.GetHead: double;
@@ -386,15 +410,9 @@ begin
   begin
     HobSource := THobBoundary(Source);
     Values := HobSource.Values;
-    LayerFractions := HobSource.LayerFractions;
-    ObservationName := HobSource.ObservationName;
     MultiObsMethod := HobSource.MultiObsMethod;
-    Purpose := HobSource.Purpose;
-  end
-  else
-  begin
-    inherited;
   end;
+  inherited;
 end;
 
 procedure THobBoundary.Clear;
@@ -405,21 +423,13 @@ end;
 constructor THobBoundary.Create(Model: TBaseModel; ScreenObject: TObject);
 begin
   inherited;
-//  Assert((ScreenObject = nil) or (ScreenObject is TScreenObject));
-//  FScreenObject := ScreenObject;
-//  Assert((Model = nil) or (Model is TPhastModel));
-//  FPhastModel := Model;
   FValues:= THobCollection.Create(self, Model,
     ScreenObject);
-  FLayerFractions := TMultiHeadCollection.Create(self, Model,
-    ScreenObject);
   FMultiObsMethod := momHeadAndDrawdown;
-  FPurpose := ofObserved;
 end;
 
 destructor THobBoundary.Destroy;
 begin
-  FLayerFractions.Free;
   FValues.Free;
   inherited;
 end;
@@ -443,37 +453,9 @@ begin
   result := Values.FObservationHeads.FCellList.Count;
 end;
 
-
-function THobBoundary.GetItemObsName(Item: THobItem): string;
-begin
-  Assert(Item.Collection = Values);
-  if Values.Count = 1 then
-  begin
-    result := ObservationName;
-  end
-  else
-  begin
-    result := ObservationName + '_' + IntToStr(Item.Index + 1);
-    if Length(result) > 12 then
-    begin
-      result := ObservationName + IntToStr(Item.Index + 1);
-    end;
-    if Length(result) > 12 then
-    begin
-      // The GUI is designed to prevent this from ever being required.
-      SetLength(result, 12);
-    end;
-  end;
-end;
-
 procedure THobBoundary.RemoveModelLink(AModel: TBaseModel);
 begin
   Values.RemoveModelLink(AModel);
-end;
-
-procedure THobBoundary.SetLayerFractions(const Value: TMultiHeadCollection);
-begin
-  FLayerFractions.Assign(Value);
 end;
 
 procedure THobBoundary.SetMultiObsMethod(const Value: TMultiObsMethod);
@@ -482,32 +464,6 @@ begin
   begin
     InvalidateModel;
     FMultiObsMethod := Value;
-  end;
-end;
-
-procedure THobBoundary.SetPurpose(const Value: TObservationPurpose);
-begin
-  if FPurpose <> Value then
-  begin
-    InvalidateModel;
-    FPurpose := Value;
-  end;
-end;
-
-procedure THobBoundary.SetObservationName(Value: string);
-begin
-  Value := Trim(Value);
-  Value := StringReplace(Value, ' ', '_', [rfReplaceAll]);
-  Value := StringReplace(Value, '"', '', [rfReplaceAll]);
-  Value := StringReplace(Value, '''', '', [rfReplaceAll]);
-  if Length(Value) > 12 then
-  begin
-    Value := Copy(Value, 1, 12);
-  end;
-  if FObservationName <> Value then
-  begin
-    InvalidateModel;
-    FObservationName := Value;
   end;
 end;
 
@@ -527,14 +483,13 @@ procedure THobItem.Assign(Source: TPersistent);
 var
   SourceItem: THobItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is THobItem then
   begin
     SourceItem := THobItem(Source);
     Head := SourceItem.Head;
-    Time := SourceItem.Time;
     Statistic := SourceItem.Statistic;
     StatFlag := SourceItem.StatFlag;
-    Comment := SourceItem.Comment;
   end;
   inherited;
 end;
@@ -561,24 +516,13 @@ function THobItem.IsSame(AnotherItem: TOrderedItem): boolean;
 var
   Item: THobItem;
 begin
-  result := AnotherItem is THobItem;
+  result := inherited IsSame(AnotherItem) and (AnotherItem is THobItem);
   if result then
   begin
     Item := THobItem(AnotherItem);
     result := (Item.Head = Head)
-      and (Item.Time = Time)
       and (Item.Statistic = Statistic)
-      and (Item.StatFlag = StatFlag)
-      and (Item.Comment = Comment);
-  end;
-end;
-
-procedure THobItem.SetComment(const Value: string);
-begin
-  if FComment <> Value then
-  begin
-    FComment := Value;
-    InvalidateModel;
+      and (Item.StatFlag = StatFlag);
   end;
 end;
 
@@ -608,16 +552,6 @@ begin
     InvalidateModel;
   end;
 end;
-
-procedure THobItem.SetTime(const Value: double);
-begin
-  if FTime <> Value then
-  begin
-    FTime := Value;
-    InvalidateModel;
-  end;
-end;
-
 { THobCollection }
 
 function THobCollection.CountObservationTimes(StartTime,
@@ -645,21 +579,11 @@ begin
   Assert((ScreenObject = nil) or (ScreenObject is TScreenObject));
   FScreenObject := ScreenObject;
   FObsTimesModelLinkList := TObsTimesModelLinkList.Create;
-
-//  FObservationHeads:= TObservationTimeList.Create(Model);
-
-//  if Model <> nil then
-//  begin
-//    FObservationHeads.OnInvalidate :=
-//      (Model as TPhastModel).InvalidateMfHobHeads;
-//  end;
-
 end;
 
 destructor THobCollection.Destroy;
 begin
   FObsTimesModelLinkList.Free;
-//  FObservationHeads.Free;
   inherited;
 end;
 
@@ -778,10 +702,6 @@ end;
 
 procedure TObservationTimeList.Initialize(ObservationValues: THobCollection;
   ScreenObject: TObject; UseLgrEdgeCells: boolean; AModel: TBaseModel);
-const
-  ErrorRoot = 'Error: Duplicate head observation times';
-  EarlyTimeWarning = 'Head observation times earlier than the beginning of the first stress period will be ignored.';
-  LateTimeWarning = 'Head observation times later than the end of the last stress period will be ignored.';
 var
   LocalScreenObject: TScreenObject;
   Index: Integer;
@@ -886,7 +806,7 @@ begin
     end;
     if DuplicateTimes <> '' then
     begin
-      DuplicateTimes := Format(StrErrorObject0s,
+      DuplicateTimes := Format(StrErrorObjectDuplicateTimes,
         [LocalScreenObject.Name, DuplicateTimes]);
 //      DuplicateTimes := 'Error; Object = ' + LocalScreenObject.Name +
 //        ' Duplicate Times = ' +  DuplicateTimes;
@@ -894,14 +814,18 @@ begin
     end;
     if EarlyTimes <> '' then
     begin
-      EarlyTimes := 'Error; Object = ' + LocalScreenObject.Name +
-        ' Early Times = ' +  EarlyTimes;
+      EarlyTimes := Format(StrErrorObjectEarlyTimes,
+        [LocalScreenObject.Name, EarlyTimes]);
+//      EarlyTimes := 'Error; Object = ' + LocalScreenObject.Name +
+//        ' Early Times = ' +  EarlyTimes;
       frmErrorsAndWarnings.AddWarning(Model, EarlyTimeWarning, EarlyTimes);
     end;
     if LateTimes <> '' then
     begin
-      LateTimes := 'Error; Object = ' + LocalScreenObject.Name +
-        ' Late Times = ' +  LateTimes;
+      LateTimes := Format(StrErrorObjectLateTimes,
+        [LocalScreenObject.Name, LateTimes]);
+//      LateTimes := 'Error; Object = ' + LocalScreenObject.Name +
+//        ' Late Times = ' +  LateTimes;
       frmErrorsAndWarnings.AddWarning(Model, LateTimeWarning, LateTimes);
     end;
   finally
@@ -928,6 +852,7 @@ procedure TMultiHeadItem.Assign(Source: TPersistent);
 var
   SourceItem: TMultiHeadItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TMultiHeadItem then
   begin
     SourceItem := TMultiHeadItem(Source);
@@ -970,11 +895,10 @@ end;
 
 { TMultiHeadCollection }
 
-constructor TMultiHeadCollection.Create(Boundary: THobBoundary; Model: TBaseModel;
+constructor TMultiHeadCollection.Create(Model: TBaseModel;
   ScreenObject: TObject);
 begin
   inherited Create(TMultiHeadItem, Model);
-  FBoundary := Boundary;
   Assert((ScreenObject = nil) or (ScreenObject is TScreenObject));
   FScreenObject := ScreenObject;
 end;
@@ -1021,7 +945,6 @@ begin
   WriteCompReal(Comp, Head);
   WriteCompReal(Comp, Time);
   WriteCompInt(Comp, Strings.IndexOf(HeadAnnotation));
-//  WriteCompString(Comp, HeadAnnotation);
 end;
 
 procedure THobRecord.RecordStrings(Strings: TStringList);
@@ -1034,7 +957,6 @@ begin
   Cell := ReadCompCell(Decomp);
   Head := ReadCompReal(Decomp);
   Time := ReadCompReal(Decomp);
-//  HeadAnnotation := ReadCompString(Decomp, Annotations);
   HeadAnnotation := Annotations[ReadCompInt(Decomp)];
 end;
 
@@ -1125,5 +1047,136 @@ begin
     or (Left.Difference <> Right.Difference);
 end;
 
-end.
+procedure TCustomLocationObsBoundary.SetObservationName(Value: string);
+begin
+  Value := Trim(Value);
+  Value := StringReplace(Value, ' ', '_', [rfReplaceAll]);
+  Value := StringReplace(Value, '"', '', [rfReplaceAll]);
+  Value := StringReplace(Value, '''', '', [rfReplaceAll]);
+  if Length(Value) > 12 then
+  begin
+    Value := Copy(Value, 1, 12);
+  end;
+  if FObservationName <> Value then
+  begin
+    InvalidateModel;
+    FObservationName := Value;
+  end;
+end;
 
+procedure TCustomLocationObsBoundary.Assign(Source: TPersistent);
+var
+  LocSource: TCustomLocationObsBoundary;
+begin
+  if Source is TCustomLocationObsBoundary then
+  begin
+    LocSource := TCustomLocationObsBoundary(Source);
+    LayerFractions := LocSource.LayerFractions;
+    ObservationName := LocSource.ObservationName;
+    Purpose := LocSource.Purpose;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+constructor TCustomLocationObsBoundary.Create(Model: TBaseModel;
+  ScreenObject: TObject);
+begin
+  inherited;
+  FLayerFractions := TMultiHeadCollection.Create(Model, ScreenObject);
+  FPurpose := ofObserved;
+end;
+
+destructor TCustomLocationObsBoundary.Destroy;
+begin
+  FLayerFractions.Free;
+  inherited;
+end;
+
+procedure TCustomLocationObsBoundary.SetLayerFractions
+  (const Value: TMultiHeadCollection);
+begin
+  FLayerFractions.Assign(Value);
+end;
+
+procedure TCustomLocationObsBoundary.SetPurpose(const Value
+  : TObservationPurpose);
+begin
+  if FPurpose <> Value then
+  begin
+    InvalidateModel;
+    FPurpose := Value;
+  end;
+end;
+
+procedure TCustomLocationObservation.SetTime(const Value: double);
+begin
+  if FTime <> Value then
+  begin
+    FTime := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TCustomLocationObservation.Assign(Source: TPersistent);
+var
+  SourceItem: TCustomLocationObservation;
+begin
+  // if Assign is updated, update IsSame too.
+  if Source is TCustomLocationObservation then
+  begin
+    SourceItem := TCustomLocationObservation(Source);
+    Time := SourceItem.Time;
+    Comment := SourceItem.Comment;
+  end;
+  inherited;
+end;
+
+function TCustomLocationObservation.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  Item: TCustomLocationObservation;
+begin
+  result := AnotherItem is TCustomLocationObservation;
+  if result then
+  begin
+    Item := TCustomLocationObservation(AnotherItem);
+    result := (Item.Time = Time)
+      and (Item.Comment = Comment);
+  end;
+end;
+
+procedure TCustomLocationObservation.SetComment(const Value: string);
+begin
+  if FComment <> Value then
+  begin
+    FComment := Value;
+    InvalidateModel;
+  end;
+end;
+
+function TCustomLocationObsBoundary.GetItemObsName
+  (Item: TCustomLocationObservation): string;
+begin
+  // Assert(Item.Collection = Values);
+  if Item.Collection.Count = 1 then
+  begin
+    result := ObservationName;
+  end
+  else
+  begin
+    result := ObservationName + '_' + IntToStr(Item.Index + 1);
+    if Length(result) > 12 then
+    begin
+      result := ObservationName + IntToStr(Item.Index + 1);
+    end;
+    if Length(result) > 12 then
+    begin
+      // The GUI is designed to prevent this from ever being required.
+      SetLength(result, 12);
+    end;
+  end;
+end;
+
+end.

@@ -8,7 +8,7 @@ uses
   StdCtrls, Dialogs, Grids, Math, RbwDataGrid4, JvExControls, JvComponent,
   JvxCheckListBox, ExtCtrls, Buttons, Mask, JvExMask, JvSpin, ArgusDataEntry,
   frameScreenObjectNoParamUnit, ModflowBoundaryUnit;
-                                              
+
 type
   // See @link(TframeScreenObjectParam.UnselectableColumnsIfParametersUsed).
   TColumn = 0..255;
@@ -58,7 +58,6 @@ type
     procedure SetParameterColumnSuffix(const Value: TStrings);
     { Private declarations }
   public
-    procedure SetButtonCaptions;
     function ParamColumnCaption(NameIndex: integer): string; virtual;
     procedure InitializeFrame(Boundary: TModflowBoundary);
     constructor Create(AOwner: TComponent); override;
@@ -230,21 +229,6 @@ begin
     and (clbParameters.Items.Count > 0) then
   begin
     CanSelect := False;
-  end;
-end;
-
-
-procedure TframeScreenObjectParam.SetButtonCaptions;
-var
-  Index: Integer;
-begin
-  for Index := 0 to dgModflowBoundary.ColCount - 1 do
-  begin
-    if dgModflowBoundary.Columns[Index].ButtonCaption = '...' then
-    begin
-      dgModflowBoundary.Columns[Index].ButtonCaption := 'F()';
-      dgModflowBoundary.Columns[Index].ButtonWidth := 35;
-    end;
   end;
 end;
 

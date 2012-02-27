@@ -45,6 +45,10 @@ uses ModflowTimeUnit, frmErrorsAndWarningsUnit,
   ModflowTransientListParameterUnit, ModflowUnitNumbers, frmProgressUnit,
   RbwParser, DataSetUnit, Forms;
 
+resourcestring
+  StrTheFollowingDrain = 'The following Drain observation names may be valid' +
+  ' for MODFLOW but they are not valid for UCODE.';
+
 { TModflowDRN_Writer }
 
 function TModflowDRN_Writer.CellType: TValueCellType;
@@ -80,7 +84,7 @@ end;
 
 function TModflowDRN_Writer.ObsNameWarningString: string;
 begin
-  result := 'The following Drain observation names may be valid for MODFLOW but they are not valid for UCODE.';
+  result := StrTheFollowingDrain;
 end;
 
 function TModflowDRN_Writer.Package: TModflowPackageSelection;

@@ -110,6 +110,7 @@ var
   Sfr: TSfrChannelItem;
   Index: integer;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TSfrChannelItem then
   begin
     Sfr := TSfrChannelItem(Source);

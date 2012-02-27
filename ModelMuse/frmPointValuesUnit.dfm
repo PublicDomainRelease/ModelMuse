@@ -9,37 +9,47 @@ inherited frmPointValues: TfrmPointValues
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 192
+    Top = 184
     Width = 367
     Height = 42
     Align = alBottom
     TabOrder = 1
+    ExplicitTop = 192
     ExplicitWidth = 468
     object btnHelp: TBitBtn
       Left = 97
       Top = 6
       Width = 83
       Height = 33
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnOK: TBitBtn
       Left = 186
       Top = 6
       Width = 83
       Height = 33
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnCancel: TBitBtn
       Left = 275
       Top = 6
       Width = 83
       Height = 33
-      TabOrder = 3
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 3
     end
     object btnAdd: TButton
       Left = 8
@@ -55,7 +65,7 @@ inherited frmPointValues: TfrmPointValues
     Left = 0
     Top = 0
     Width = 367
-    Height = 192
+    Height = 184
     Align = alClient
     ColCount = 2
     FixedCols = 0
@@ -63,6 +73,7 @@ inherited frmPointValues: TfrmPointValues
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
     TabOrder = 0
     OnKeyPress = rdgValuesKeyPress
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
@@ -115,5 +126,6 @@ inherited frmPointValues: TfrmPointValues
         AutoAdjustColWidths = True
       end>
     ExplicitWidth = 468
+    ExplicitHeight = 192
   end
 end

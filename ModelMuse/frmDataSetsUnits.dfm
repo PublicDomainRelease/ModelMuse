@@ -8,7 +8,6 @@ inherited frmDataSets: TfrmDataSets
   VertScrollBar.Range = 253
   Caption = 'Data Sets'
   Font.Height = 19
-  ExplicitTop = -8
   ExplicitWidth = 656
   ExplicitHeight = 507
   PixelsPerInch = 96
@@ -28,7 +27,7 @@ inherited frmDataSets: TfrmDataSets
     Height = 41
     Align = alBottom
     ParentColor = True
-    TabOrder = 0
+    TabOrder = 2
     DesignSize = (
       648
       41)
@@ -110,7 +109,7 @@ inherited frmDataSets: TfrmDataSets
     MultiSelect = True
     MultiSelectStyle = [msControlSelect, msShiftSelect]
     ReadOnly = True
-    TabOrder = 2
+    TabOrder = 0
     OnChange = tvDataSetsChange
   end
   object pcDataSets: TJvPageControl
@@ -120,9 +119,13 @@ inherited frmDataSets: TfrmDataSets
     Height = 405
     ActivePage = tabBasic
     Align = alRight
-    TabOrder = 3
+    TabOrder = 1
     object tabBasic: TTabSheet
       Caption = 'Basic'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         312
         371)
@@ -308,7 +311,7 @@ inherited frmDataSets: TfrmDataSets
         ImageWidth = 0
         ItemHeight = 23
         ItemIndex = -1
-        TabOrder = 5
+        TabOrder = 6
         OnChange = comboInterpolationChange
         Items = <>
       end
@@ -318,7 +321,7 @@ inherited frmDataSets: TfrmDataSets
         Width = 128
         Height = 30
         Cursor = crIBeam
-        TabOrder = 6
+        TabOrder = 5
         Text = '1'
         OnChange = rdeAnisotropyChange
         DataType = dtReal
@@ -417,6 +420,7 @@ inherited frmDataSets: TfrmDataSets
           Width = 245
           Height = 34
           Caption = 'Use PHAST-style interpolation for all cells'
+          TabOrder = 0
           WordWrap = True
           OnClick = framePhastInterpolationcbPhastInterpolationClick
           AutoSize = False
@@ -468,6 +472,7 @@ inherited frmDataSets: TfrmDataSets
           Width = 272
           Height = 78
           Columns = 2
+          TabOrder = 1
           OnClick = framePhastInterpolationrgInterpolationDirectionClick
           ExplicitLeft = 12
           ExplicitTop = 43
@@ -479,6 +484,7 @@ inherited frmDataSets: TfrmDataSets
           Top = 277
           Width = 272
           Height = 27
+          TabOrder = 7
           OnChange = framePhastInterpolationedMixFormulaChange
           ExplicitLeft = 12
           ExplicitTop = 277
@@ -489,6 +495,7 @@ inherited frmDataSets: TfrmDataSets
           Left = 184
           Top = 250
           Width = 101
+          TabOrder = 6
           OnClick = framePhastInterpolationbtnEditMixtureFormulaClick
           ExplicitLeft = 184
           ExplicitTop = 250
@@ -499,6 +506,10 @@ inherited frmDataSets: TfrmDataSets
     object tabComment: TTabSheet
       Caption = 'Comment'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Splitter2: TSplitter
         Left = 0
         Top = 179
@@ -520,18 +531,17 @@ inherited frmDataSets: TfrmDataSets
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 306
+          Width = 69
           Height = 19
           Align = alTop
           Caption = 'Comment'
-          ExplicitWidth = 69
         end
         object reComment: TJvRichEdit
           AlignWithMargins = True
           Left = 3
-          Top = 28
+          Top = 25
           Width = 306
-          Height = 148
+          Height = 151
           Align = alClient
           TabOrder = 0
           WordWrap = False
@@ -550,18 +560,17 @@ inherited frmDataSets: TfrmDataSets
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 306
+          Width = 164
           Height = 19
           Align = alTop
           Caption = 'Associated model data'
-          ExplicitWidth = 164
         end
         object memoAssociatedDataSets: TMemo
           AlignWithMargins = True
           Left = 3
-          Top = 28
+          Top = 25
           Width = 306
-          Height = 156
+          Height = 159
           Align = alClient
           ReadOnly = True
           ScrollBars = ssVertical

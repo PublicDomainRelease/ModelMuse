@@ -66,14 +66,14 @@ type
     // which is used in handling subscriptions.  See @link(TalksTo).
     property Subject: ISubject read GetSubject;
   protected
-    // @name is used in @link(IsRecursive) to see if a @classname is
-    // observing itself.
-    property Observed: boolean read FObserved write FObserved;
     // See @link(Name).
     procedure SetName(const Value: TComponentName); override;
     // See @link(UpToDate).
     procedure SetUpToDate(const Value: boolean); virtual;
   public
+    // @name is used in @link(IsRecursive) to see if a @classname is
+    // observing itself.
+    property Observed: boolean read FObserved write FObserved;
    // @name creates an instance of @classname.
     constructor Create(AnOwner: TComponent); override;
     // @name destroys the current instance of @classname.

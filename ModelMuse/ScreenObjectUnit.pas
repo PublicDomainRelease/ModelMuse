@@ -35,7 +35,8 @@ uses
   ModflowEtsUnit, ModflowResUnit, ModflowLakUnit, ModflowSfrUnit,
   ModflowUzfUnit, ModflowHobUnit, ValueArrayStorageUnit, QuadTreeClass,
   ModflowHfbUnit, ModpathParticleUnit, GPC_Classes, ModflowGageUnit,
-  FormulaManagerUnit, ModflowMnw2Unit, ModflowHydmodUnit;
+  FormulaManagerUnit, ModflowMnw2Unit, ModflowHydmodUnit, Mt3dmsChemUnit,
+  Mt3dmsTobUnit;
 
 type
   //
@@ -1362,6 +1363,8 @@ view. }
     FModflowGage: TStreamGage;
     FModflowMnw2Boundary: TMnw2Boundary;
     FModflowHydmodData: THydmodData;
+    FMt3dmsConcBoundary: TMt3dmsConcBoundary;
+    FMt3dmsTransObservations: TMt3dmsTransObservations;
   public
     procedure RemoveModelLink(AModel: TBaseModel);
     procedure FreeUnusedBoundaries;
@@ -1401,6 +1404,10 @@ view. }
       write FModflowMnw2Boundary;
     property ModflowHydmodData: THydmodData read FModflowHydmodData
       write FModflowHydmodData;
+    property Mt3dmsConcBoundary: TMt3dmsConcBoundary read FMt3dmsConcBoundary
+      write FMt3dmsConcBoundary;
+    property Mt3dmsTransObservations: TMt3dmsTransObservations read FMt3dmsTransObservations
+      write FMt3dmsTransObservations;
     procedure Assign(Source: TModflowBoundaries);
   end;
 
@@ -2372,6 +2379,10 @@ view. }
     procedure AddTopSubSegments(var ASegment: TCellElementSegment;
       AModel: TBaseModel);
     procedure SetPositionLocked(const Value: boolean);
+    function GetMt3dmsConcBoundary: TMt3dmsConcBoundary;
+    procedure SetMt3dmsConcBoundary(const Value: TMt3dmsConcBoundary);
+    function GetMt3dmsTransObservations: TMt3dmsTransObservations;
+    procedure SetMt3dmsTransObservations(const Value: TMt3dmsTransObservations);
     property SubPolygonCount: integer read GetSubPolygonCount;
     property SubPolygons[Index: integer]: TSubPolygon read GetSubPolygon;
     procedure DeleteExtraSections;
@@ -2843,6 +2854,8 @@ view. }
     procedure CreateHeadObservations;
     procedure CreateGagBoundary;
     procedure CreateMnw2Boundary;
+    procedure CreateMt3dmsConcBoundary;
+    procedure CreateMt3dmsTransObservations;
     function ModflowDataSetUsed(DataArray: TDataArray; AModel: TBaseModel): boolean;
     property SectionCount: integer read GetSectionCount;
     property SectionStart[const Index: integer]: integer read GetSectionStart;
@@ -3418,6 +3431,10 @@ having them take care of the subscriptions. }
       write SetModflowHfbBoundary;
     property ModflowMnw2Boundary: TMnw2Boundary read GetModflowMnw2Boundary
       write SetModflowMnw2Boundary;
+    property Mt3dmsConcBoundary: TMt3dmsConcBoundary read GetMt3dmsConcBoundary
+      write SetMt3dmsConcBoundary;
+    property Mt3dmsTransObservations: TMt3dmsTransObservations read GetMt3dmsTransObservations
+      write SetMt3dmsTransObservations;
     { TODO :
 Consider making SectionStarts private and only exposing SectionStart,
 SectionEnd etc. DefineProperties could be used to store and retrieve
@@ -3692,9 +3709,21 @@ SectionStarts.}
 
   {@abstract(@name is used to store a series of TPoint2Ds.)}
   TPointCollection = class(TCollection)
+  private
+    FTempFileName: string;
+    FCaching: Boolean;
+    procedure StoreData(Stream: TStream);
+    procedure ReadData(DecompressionStream: TDecompressionStream); virtual;
+    function GetCount: Integer;
+  protected
+    procedure Cache;
+    procedure Restore;
+  public
+    property Count: Integer read GetCount;
     // @name creates an instance of @classname.
     // See @link(TPointItem).
     constructor Create;
+    procedure EndUpdate; override;
   end;
 
   {@abstract(@name is used in reading a @link(TScreenObject)
@@ -4325,6 +4354,8 @@ procedure GlobalRemoveScreenObjectDataArraySubscription(Sender: TObject; Subject
 procedure GlobalRestoreDataArraySubscription(Sender: TObject; Subject: TObject;
   const AName: string);
 
+procedure GlobalDummyHandleSubscription(Sender: TObject; Subject: TObject;
+  const AName: string);
 procedure GlobalRemoveElevationSubscription(Sender: TObject; Subject: TObject;
   const AName: string);
 procedure GlobalRestoreElevationSubscription(Sender: TObject; Subject: TObject;
@@ -5538,10 +5569,14 @@ begin
   ColorLine := AScreenObject.ColorLine;
   FillScreenObject := AScreenObject.FillScreenObject;
 
+  AScreenObject.ImportedSectionElevations.RestoreData;
   ImportedSectionElevations := AScreenObject.ImportedSectionElevations;
+  AScreenObject.ImportedHigherSectionElevations.RestoreData;
   ImportedHigherSectionElevations := AScreenObject.ImportedHigherSectionElevations;
+  AScreenObject.ImportedLowerSectionElevations.RestoreData;
   ImportedLowerSectionElevations := AScreenObject.ImportedLowerSectionElevations;
 
+  AScreenObject.ImportedValues.RestoreData;
   ImportedValues := AScreenObject.ImportedValues;
   PositionLocked := AScreenObject.PositionLocked;
 //  LinkedChildModels := AScreenObject.LinkedChildModels;
@@ -5689,6 +5724,8 @@ begin
   ModflowHfbBoundary := AScreenObject.ModflowHfbBoundary;
   ModflowStreamGage := AScreenObject.ModflowStreamGage;
   ModflowMnw2Boundary := AScreenObject.ModflowMnw2Boundary;
+  Mt3dmsConcBoundary := AScreenObject.Mt3dmsConcBoundary;
+  Mt3dmsTransObservations := AScreenObject.Mt3dmsTransObservations;
   ModflowHydmodData := AScreenObject.ModflowHydmodData;
 
   // avoid creating AScreenObject.FPointPositionValues if it
@@ -9295,6 +9332,12 @@ begin
   end;
 end;
 
+procedure GlobalDummyHandleSubscription(Sender: TObject; Subject: TObject;
+  const AName: string);
+begin
+  // do nothing
+end;
+
 procedure GlobalRemoveElevationSubscription(Sender: TObject; Subject: TObject;
   const AName: string);
 begin
@@ -9538,8 +9581,8 @@ begin
       begin
         frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
           FElevationFormulaObject, NewFormula, Get1DCompiler,
-          GlobalRemoveElevationSubscription,
-          GlobalRestoreElevationSubscription, self);
+          GlobalDummyHandleSubscription,
+          GlobalDummyHandleSubscription, self);
       end;
       Exit;
     end;
@@ -9982,8 +10025,8 @@ begin
       begin
         frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
           FHigherElevationFormulaObject, NewFormula, Get1DCompiler,
-          GlobalRemoveHigherElevationSubscription,
-          GlobalRestoreHigherElevationSubscription, self);
+          GlobalDummyHandleSubscription,
+          GlobalDummyHandleSubscription, self);
       end;
       Exit;
     end;
@@ -10012,14 +10055,14 @@ begin
   if OldFormula <> NewFormula then
   begin
     InvalidateModel;
-    if  not FCanInvalidateModel or (csReading in FModel.ComponentState) then
+    if not FCanInvalidateModel or (csReading in FModel.ComponentState) then
     begin
       if ElevationCount = ecTwo then
       begin
         frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
           FLowerElevationFormulaObject, NewFormula, Get1DCompiler,
-          GlobalRemoveLowerElevationSubscription,
-          GlobalRestoreLowerElevationSubscription, self);
+          GlobalDummyHandleSubscription,
+          GlobalDummyHandleSubscription, self);
       end;
       Exit;
     end;
@@ -10350,6 +10393,41 @@ end;
 procedure TScreenObject.SetModpathParticles(const Value: TParticleStorage);
 begin
   FModpathParticles.Assign(Value);
+end;
+
+procedure TScreenObject.SetMt3dmsConcBoundary(const Value: TMt3dmsConcBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FMt3dmsConcBoundary <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FMt3dmsConcBoundary);
+  end
+  else
+  begin
+    CreateMt3dmsConcBoundary;
+    ModflowBoundaries.FMt3dmsConcBoundary.Assign(Value);
+  end;
+end;
+
+procedure TScreenObject.SetMt3dmsTransObservations(
+  const Value: TMt3dmsTransObservations);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FMt3dmsTransObservations <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FMt3dmsTransObservations);
+  end
+  else
+  begin
+    CreateMt3dmsTransObservations;
+    ModflowBoundaries.FMt3dmsTransObservations.Assign(Value);
+  end;
 end;
 
 procedure TScreenObject.Draw2Elev(
@@ -17831,6 +17909,7 @@ begin
         end;
       finally
         ScreenObject.EndUpdate;
+        Points.Clear;
       end;
     finally
       SectionStarts.Free;
@@ -17909,9 +17988,123 @@ end;
 
 { TPointCollection }
 
+procedure TPointCollection.Cache;
+var
+  MemStream: TMemoryStream;
+  Compressor: TZCompressionStream;
+  TempStream: TMemoryStream;
+begin
+  if FCaching then
+  begin
+    Exit;
+  end;
+  FCaching := True;
+  try
+    if FTempFileName = '' then
+    begin
+      FTempFileName := TempFileName;
+    end;
+    MemStream := TMemoryStream.Create;
+    try
+      Compressor := TCompressionStream.Create(ZLib.clDefault, MemStream);
+      TempStream := TMemoryStream.Create;
+      try
+        MemStream.Position := 0;
+        StoreData(TempStream);
+        TempStream.SaveToStream(Compressor);
+      finally
+        Compressor.Free;
+        TempStream.Free;
+      end;
+      MemStream.Position := 0;
+      ZipAFile(FTempFileName, MemStream);
+    finally
+      MemStream.Free;
+    end;
+    Clear;
+  finally
+    FCaching := False;
+  end;
+end;
+
 constructor TPointCollection.Create;
 begin
   inherited Create(TPointItem);
+end;
+
+procedure TPointCollection.EndUpdate;
+begin
+  inherited;
+  Cache;
+end;
+
+function TPointCollection.GetCount: Integer;
+begin
+  if FTempFileName <> '' then
+  begin
+    Restore;
+  end;
+  result := inherited Count;
+end;
+
+procedure TPointCollection.ReadData(DecompressionStream: TDecompressionStream);
+var
+  LocalCount: Integer;
+  index: Integer;
+  Item: TPointItem;
+  Value: double;
+begin
+  Clear;
+  DecompressionStream.Read(LocalCount, SizeOf(LocalCount));
+  Capacity := LocalCount;
+  BeginUpdate;
+  try
+    for index := 0 to LocalCount - 1 do
+    begin
+      Item := Add as TPointItem;
+      DecompressionStream.Read(Value, SizeOf(Value));
+      Item.X := Value;
+      DecompressionStream.Read(Value, SizeOf(Value));
+      Item.Y := Value;
+    end;
+  finally
+    inherited EndUpdate;
+  end;
+end;
+
+procedure TPointCollection.Restore;
+var
+  MemStream: TMemoryStream;
+  DecompressionStream: TZDecompressionStream;
+begin
+  MemStream := TMemoryStream.Create;
+  try
+    ExtractAFile(FTempFileName, MemStream);
+    DecompressionStream := TDecompressionStream.Create(MemStream);
+    try
+      ReadData(DecompressionStream);
+    finally
+      DecompressionStream.Free;
+    end;
+  finally
+    MemStream.Free;
+  end;
+end;
+
+procedure TPointCollection.StoreData(Stream: TStream);
+var
+  LocalCount: Integer;
+  index: Integer;
+  Item: TPointItem;
+begin
+  LocalCount := inherited Count;
+  Stream.Write(LocalCount, SizeOf(LocalCount));
+  for Index := 0 to inherited Count - 1 do
+  begin
+    Item := Items[Index] as TPointItem;
+    Stream.Write(Item.X, SizeOf(Item.X));
+    Stream.Write(Item.Y, SizeOf(Item.Y));
+  end;
 end;
 
 { TCellElementSegmentList }
@@ -20669,7 +20862,6 @@ var
   UpperBound: Double;
   Middle: double;
   RotatedPoints: TEdgePointArray;
-  PointsRotated: boolean;
   APoint: TPoint2D;
   EvalAt: TEvaluatedAt;
   Orientation: TDataSetOrientation;
@@ -20710,7 +20902,6 @@ begin
     else
       Assert(False);
     end;
-    PointsRotated := False;
     if (FScreenObject.SetValuesOfEnclosedCells
       or (FScreenObject.SetValuesOfIntersectedCells
       and (FScreenObject.ElevationCount <> ecZero)))
@@ -20718,8 +20909,6 @@ begin
     begin
       FScreenObject.RotatePoints(Grid, RotatedPoints,
         TempMinX, TempMinY, TempMaxX, TempMaxY);
-      PointsRotated := True;
-
 
       // Get the coordinates of the points.
       FScreenObject.GetColumns(LocalGrid, TempMinX, TempMaxX, FirstCol, LastCol);
@@ -27078,6 +27267,40 @@ begin
   GetCellsToAssign(LocalModel.Grid, '0', nil, nil, CellList, alAll, AModel);
 end;
 
+function TScreenObject.GetMt3dmsConcBoundary: TMt3dmsConcBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateMt3dmsConcBoundary;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FMt3dmsConcBoundary;
+  end;
+end;
+
+function TScreenObject.GetMt3dmsTransObservations: TMt3dmsTransObservations;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateMt3dmsTransObservations;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FMt3dmsTransObservations;
+  end;
+end;
+
 procedure TScreenObject.SetMixtureDataSetFormula(const Index: integer;
   const Value: string);
 var
@@ -27330,6 +27553,14 @@ begin
     ModflowMnw2Boundary.UpdateTimes(ModflowTimes,
       StartTestTime, EndTestTime, StartRangeExtended,EndRangeExtended);
   end;
+  if PhastModel.Mt3dmsIsSelected
+    and (Mt3dmsConcBoundary <> nil)
+    and Mt3dmsConcBoundary.Used then
+  begin
+    Mt3dmsConcBoundary.UpdateTimes(ModflowTimes,
+      StartTestTime, EndTestTime, StartRangeExtended,EndRangeExtended);
+  end;
+
 end;
 
 procedure TScreenObject.CreateValueArrayStorage(
@@ -27338,6 +27569,10 @@ begin
   if StoredValues = nil then
   begin
     StoredValues := TValueArrayStorage.Create;
+  end
+  else
+  begin
+    StoredValues.RestoreData;
   end;
 end;
 
@@ -30506,6 +30741,24 @@ begin
   end;
 end;
 
+procedure TScreenObject.CreateMt3dmsConcBoundary;
+begin
+  if (ModflowBoundaries.FMt3dmsConcBoundary = nil) then
+  begin
+    ModflowBoundaries.FMt3dmsConcBoundary :=
+      TMt3dmsConcBoundary.Create(FModel, self);
+  end;
+end;
+
+procedure TScreenObject.CreateMt3dmsTransObservations;
+begin
+  if (ModflowBoundaries.FMt3dmsTransObservations = nil) then
+  begin
+    ModflowBoundaries.FMt3dmsTransObservations :=
+      TMt3dmsTransObservations.Create(FModel, self);
+  end;
+end;
+
 procedure TScreenObject.CreateRchBoundary;
 begin
   if (ModflowBoundaries.FModflowRchBoundary = nil) then
@@ -33008,11 +33261,40 @@ begin
     end;
     FModflowHydmodData.Assign(Source.FModflowHydmodData);
   end;
+
+  if Source.FMt3dmsConcBoundary = nil then
+  begin
+    FreeAndNil(FMt3dmsConcBoundary);
+  end
+  else
+  begin
+    if FMt3dmsConcBoundary = nil then
+    begin
+      FMt3dmsConcBoundary := TMt3dmsConcBoundary.Create(nil, nil);
+    end;
+    FMt3dmsConcBoundary.Assign(Source.FMt3dmsConcBoundary);
+  end;
+
+  if Source.FMt3dmsTransObservations = nil then
+  begin
+    FreeAndNil(FMt3dmsTransObservations);
+  end
+  else
+  begin
+    if FMt3dmsTransObservations = nil then
+    begin
+      FMt3dmsTransObservations := TMt3dmsTransObservations.Create(nil, nil);
+    end;
+    FMt3dmsTransObservations.Assign(Source.FMt3dmsTransObservations);
+  end;
+
   FreeUnusedBoundaries;
 end;
 
 destructor TModflowBoundaries.Destroy;
 begin
+  FMt3dmsTransObservations.Free;
+  FMt3dmsConcBoundary.Free;
   FModflowHydmodData.Free;
   FModflowMnw2Boundary.Free;
   FModflowGage.Free;
@@ -33108,6 +33390,14 @@ begin
   begin
     FreeAndNil(FModflowHydmodData);
   end;
+  if (FMt3dmsConcBoundary <> nil) and not FMt3dmsConcBoundary.Used then
+  begin
+    FreeAndNil(FMt3dmsConcBoundary);
+  end;
+  if (FMt3dmsTransObservations <> nil) and not FMt3dmsTransObservations.Used then
+  begin
+    FreeAndNil(FMt3dmsTransObservations);
+  end;
 end;
 
 procedure TModflowBoundaries.RemoveModelLink(AModel: TBaseModel);
@@ -33184,6 +33474,14 @@ begin
 //  begin
 //    FModflowHydmodData.RemoveModelLink(AModel);
 //  end;
+  if FMt3dmsConcBoundary <> nil then
+  begin
+    FMt3dmsConcBoundary.RemoveModelLink(AModel);
+  end;
+  if FMt3dmsTransObservations <> nil then
+  begin
+    FMt3dmsTransObservations.RemoveModelLink(AModel);
+  end;
 end;
 
 { TSelectedCells }
@@ -33794,6 +34092,7 @@ procedure TPointValue.Assign(Source: TPersistent);
 var
   AnotherPointValue: TPointValue;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TPointValue then
   begin
     AnotherPointValue := TPointValue(Source);
@@ -33839,6 +34138,7 @@ procedure TPointValuesItem.Assign(Source: TPersistent);
 var
   SourceValues: TPointValuesItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TPointValuesItem then
   begin
     SourceValues := TPointValuesItem(Source);
@@ -34446,3 +34746,6 @@ initialization
   RegisterClass(TScreenObjectClipboard);
 
 end.
+
+
+

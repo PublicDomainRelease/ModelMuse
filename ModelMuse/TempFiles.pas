@@ -40,9 +40,9 @@ function MemoryUsed(out FileCount: integer): Int64;
 
 implementation
 
-uses RTLConsts, Contnrs, Forms, ModelMuseUtilities;
+uses RTLConsts, Contnrs, Forms, ModelMuseUtilities, TlHelp32;
 
-var MaxItems: integer = 250;
+var MaxItems: integer = 200;
 
 type
 //  TInt64Array = array of Int64;
@@ -72,12 +72,14 @@ type
   TTempItems = class(TObject)
   strict private
     FArchiveName: string;
-    FileListName: string;
+    FFileListName: string;
     FFileList: TStringList;
     FStreamList: TList;
     FIsDirty: TBooleanList;
     FCanStore: boolean;
     FPositions: array of Int64;
+    FFileListStream: TFileStream;
+    FFileStream: TFileStream;
     function GetIsDirty(Index: integer): boolean;
     procedure SetIsDirty(Index: integer; const Value: boolean);
     procedure RestoreStreams;
@@ -156,21 +158,32 @@ end;
 
 function CreateZipFile(const DirName: string): string;
 var
-  Count: Integer;
+//  Count: Integer;
   ADirectory: string;
   Position: Integer;
   TempItems: TTempItems;
+  Buffer: array[0..MAX_PATH] of Char;
 begin
-  result := IncludeTrailingPathDelimiter(DirName) + 'MM.tmp';
-  if FileExists(result) then
-  begin
-    Count := 0;
-    repeat
-      Inc(Count);
-      result := IncludeTrailingPathDelimiter(DirName) + 'MM'
-        + IntToStr(Count) + '.tmp';
-    until (not FileExists(result));
-  end;
+//  if (TemporaryFiles.Count > 0) and ((TemporaryFiles.Count mod MaxItems) = 0) then
+//  begin
+//    UpdateCurrentDir;
+//  end;
+
+//  CurrentTempDir := GetAppSpecificTempDir;
+  GetTempFileName(PChar(DirName), PChar('MM_' + IntToStr(TemporaryFiles.Count)),
+    0, Buffer);
+  result := Buffer;
+//  result := TempFileName;
+//  result := IncludeTrailingPathDelimiter(DirName) + 'MM.tmp';
+//  if FileExists(result) then
+//  begin
+//    Count := 0;
+//    repeat
+//      Inc(Count);
+//      result := IncludeTrailingPathDelimiter(DirName) + 'MM'
+//        + IntToStr(Count) + '.tmp';
+//    until (not FileExists(result));
+//  end;
   ZipFiles.Add(result);
   TemporaryFiles.Add(result);
   ADirectory := IncludeTrailingPathDelimiter(ExtractFileDir(result));
@@ -232,6 +245,8 @@ end;
 
 
 function TempFileName: string;
+var
+  Buffer: array[0..MAX_PATH] of Char;
 begin
   if (TemporaryFiles.Count > 0) and ((TemporaryFiles.Count mod MaxItems) = 0) then
   begin
@@ -239,7 +254,9 @@ begin
   end;
 
   CurrentTempDir := GetAppSpecificTempDir;
-  result := CurrentTempDir + 'MM_' + IntToStr(TemporaryFiles.Count);
+  GetTempFileName(PChar(CurrentTempDir), PChar('MM_' + IntToStr(TemporaryFiles.Count)),
+    0, Buffer);
+  result := Buffer;
   TemporaryFiles.Add(result);
 end;
 
@@ -273,28 +290,30 @@ begin
   TemporaryFiles.Clear;
 end;
 
+// from http://www.tek-tips.com/faqs.cfm?fid=7523
+function ProcessCount(const ExeName: String): Integer;
 var
-  ShouldReleaseMutex: boolean = False;
-  MutexHandle: THandle;
-
-// Check if the program is already running.  If not, create a mutex
-// that subsequent instances can use to check if another version is already
-// running.
-function AlreadyRunning: boolean;
-var
-  MutexName: string;
+  ContinueLoop: BOOL;
+  FSnapshotHandle: THandle;
+  FProcessEntry32: TProcessEntry32;
 begin
-  MutexName := ExtractFileName(ParamStr(0));
-  if OpenMutex(MUTEX_ALL_ACCESS, False, PChar(MutexName)) <> 0 then
-  begin
-    result := True;
-  end
-  else
-  begin
-    result := False;
-    MutexHandle := CreateMutex(nil, TRUE, PChar(MutexName));
-    ShouldReleaseMutex := True;
+  FSnapshotHandle:= CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  FProcessEntry32.dwSize:= SizeOf(FProcessEntry32);
+  ContinueLoop:= Process32First(FSnapshotHandle, FProcessEntry32);
+  Result:= 0;
+  while Integer(ContinueLoop) <> 0 do begin
+    if ((UpperCase(ExtractFileName(FProcessEntry32.szExeFile)) =
+      UpperCase(ExeName)) or (UpperCase(FProcessEntry32.szExeFile) =
+      UpperCase(ExeName))) then Inc(Result);
+    ContinueLoop:= Process32Next(FSnapshotHandle, FProcessEntry32);
   end;
+  CloseHandle(FSnapshotHandle);
+end;
+
+// Check if the program is already running.
+function AlreadyRunning: boolean;
+begin
+  result := ProcessCount(ExtractFileName(ParamStr(0))) > 1;
 end;
 
 // Delete all files in the application-specific temporary directory.
@@ -357,12 +376,20 @@ begin
         begin
           if FileExists(Files[Index]) then
           begin
+            if AlreadyRunning then
+            begin
+              Exit;
+            end;
             DeleteFile(Files[Index]);
           end;
         end;
         Files.Clear;
         if DirectoryExists(TempPath) then
         begin
+          if AlreadyRunning then
+          begin
+            Exit;
+          end;
           RemoveDir(TempPath);
         end;
       end;
@@ -435,6 +462,10 @@ procedure ZipAFile(const FileName: string; InStream: TMemoryStream);
 var
   StoredStream: TMemoryStream;
 begin
+  if FileExists(FileName) then
+  begin
+    DeleteFile(FileName);
+  end;
   UpdateCurrentTempItems(FileName);
 
   StoredStream := CurrentTempItems.StreamFromFileName(FileName, False);
@@ -472,6 +503,7 @@ end;
 constructor TTempItems.Create(Const ArchiveName: string);
 begin
   FArchiveName := ArchiveName;
+  FFileStream := TFileStream.Create(FArchiveName, fmCreate or fmShareDenyWrite);
   FFileList := TStringList.Create;
   FFileList.Sorted := True;
   FFileList.Capacity := MaxItems;
@@ -479,6 +511,8 @@ begin
   FStreamList.Capacity := MaxItems;
   FIsDirty:= TBooleanList.Create;
   FIsDirty.Capacity := MaxItems;
+  FFileListStream := nil;
+//  FFileStream := nil;
 end;
 
 destructor TTempItems.Destroy;
@@ -486,6 +520,8 @@ begin
   FFileList.Free;
   FStreamList.Free;
   FIsDirty.Free;
+  FFileListStream.Free;
+  FFileStream.Free;
   inherited;
 end;
 
@@ -514,15 +550,18 @@ end;
 
 procedure TTempItems.RestoreAStream(const FileName: string; OutStream: TMemoryStream);
 var
-  FileStream: TFileStream;
+//  FileStream: TFileStream;
   StreamIndex: Integer;
   StreamSize: Int64;
 //  ByteArray: TInt64Array;
 begin
-  if FileExists(FArchiveName) then
+
+  if FFileStream <> nil  then
   begin
-    FileStream := TFileStream.Create(FArchiveName, fmOpenRead);
-    try
+    Assert(FileExists(FArchiveName));
+    FFileStream.Position := 0;
+//    FileStream := TFileStream.Create(FArchiveName, fmOpenRead);
+//    try
       StreamIndex := FFileList.IndexOf(FileName);
       Assert(StreamIndex >= 0);
       Assert(OutStream = FStreamList[StreamIndex]);
@@ -531,13 +570,13 @@ begin
         StreamSize := FPositions[StreamIndex + 1] - FPositions[StreamIndex];
         if StreamSize > 0 then
         begin
-          FileStream.Position := FPositions[StreamIndex];
-          OutStream.CopyFrom(FileStream, StreamSize * SizeOf(Byte))
+          FFileStream.Position := FPositions[StreamIndex];
+          OutStream.CopyFrom(FFileStream, StreamSize * SizeOf(Byte))
         end;
       end;
-    finally
-      FileStream.Free;
-    end;
+//    finally
+//      FileStream.Free;
+//    end;
   end;
 end;
 
@@ -560,7 +599,7 @@ var
   FileIndex: Integer;
   InStream: TMemoryStream;
   NeedToSave: Boolean;
-  FileStream: TFileStream;
+//  FileStream: TFileStream;
   Count: Integer;
   Position: Int64;
 begin
@@ -579,18 +618,26 @@ begin
   end;
   if NeedToSave then
   begin
-    if (FileListName <> '') and (FFileList.Count = 0) then
+    if (FFileListName <> '') and (FFileList.Count = 0) then
     begin
-      FFileList.LoadFromFile(FileListName);
+      Assert(FFileListStream <> nil);
+      FFileListStream.Position := 0;
+      FFileList.LoadFromStream(FFileListStream);
     end;
     try
       RestoreStreams;
-      if FileExists(FArchiveName) then
+//      if FileExists(FArchiveName) then
+//      begin
+//        DeleteFile(FArchiveName);
+//      end;
+      if FFileStream = nil then
       begin
-        DeleteFile(FArchiveName);
+        FFileStream := TFileStream.Create(FArchiveName, fmCreate or fmShareDenyWrite);
       end;
-      FileStream := TFileStream.Create(FArchiveName, fmCreate);
-      try
+      FFileStream.Size := 0;
+      FFileStream.Position := 0;
+//      FileStream := TFileStream.Create(FArchiveName, fmCreate);
+//      try
         Count := FFileList.Count;
         SetLength(FPositions, Count+1);
 
@@ -602,21 +649,23 @@ begin
           InStream.Position := 0;
           if InStream.Size > 0 then
           begin
-            InStream.SaveToStream(FileStream);
+            InStream.SaveToStream(FFileStream);
           end;
           IsDirty[FileIndex] := False;
           Position := Position + InStream.Size;
           InStream.Clear;
         end;
         FPositions[Count] := Position;
-      finally
-        FileStream.Free;
-      end
+//      finally
+//        FileStream.Free;
+//      end
     finally
-      if FileListName = '' then
+      if FFileListName = '' then
       begin
-        FileListName := TempFileName;
-        FFileList.SaveToFile(FileListName);
+        FFileListName := TempFileName;
+        Assert(FFileListStream = nil);
+        FFileListStream := TFileStream.Create(FFileListName, fmCreate or fmShareDenyWrite);
+        FFileList.SaveToStream(FFileListStream);
       end;
       FFileList.Clear;
     end;
@@ -637,9 +686,11 @@ function TTempItems.StreamFromFileName(const FileName: string; RestoreIfCached: 
 var
   Position: Integer;
 begin
-  if (FileListName <> '') and (FFileList.Count = 0) then
+  if (FFileListName <> '') and (FFileList.Count = 0) then
   begin
-    FFileList.LoadFromFile(FileListName);
+    Assert(FFileListStream <> nil);
+    FFileListStream.Position := 0;
+    FFileList.LoadFromStream(FFileListStream);
   end;
   Position := FFileList.IndexOf(FileName);
   if Position < 0 then
@@ -684,7 +735,7 @@ var
 //  Positions: TInt64Array;
   Count: Integer;
 //  FileStreamSize: Int64;
-  FileStream: TFileStream;
+//  FileStream: TFileStream;
 //  TempFileNames: TStringList;
 //  ByteArray: TInt64Array;
   StreamSize: Int64;
@@ -692,10 +743,11 @@ var
 //  Position: Int64;
   StreamIndex: Integer;
 begin
-  if FileExists(FArchiveName) then
+  if FFileStream <> nil then
   begin
-    FileStream := TFileStream.Create(FArchiveName, fmOpenRead);
-    try
+    Assert(FileExists(FArchiveName));
+//    FileStream := TFileStream.Create(FArchiveName, fmOpenRead);
+//    try
       Count := Length(FPositions)-1;
       for StreamIndex := 0 to Count - 1 do
       begin
@@ -706,17 +758,17 @@ begin
 //          SetLength(ByteArray, StreamSize);
           if StreamSize > 0 then
           begin
-            FileStream.Position := FPositions[StreamIndex];
-            Instream.CopyFrom(FileStream, StreamSize * SizeOf(Byte));
+            FFileStream.Position := FPositions[StreamIndex];
+            Instream.CopyFrom(FFileStream, StreamSize * SizeOf(Byte));
           end;
 //          FileStream.Read(ByteArray[0], Length(ByteArray) * SizeOf(Byte));
 //          Instream.Position := 0;
 //          Instream.Write(ByteArray[0], Length(ByteArray) * SizeOf(Byte));
         end;
       end;
-    finally
-      FileStream.Free;
-    end;
+//    finally
+//      FileStream.Free;
+//    end;
   end;
 end;
 
@@ -794,9 +846,9 @@ finalization
   ZipFiles.Free;
   TemporaryFiles.Free;
   Directories.Free;
-  if ShouldReleaseMutex then
-  begin
-    ReleaseMutex(MutexHandle);
-  end;
+//  if ShouldReleaseMutex then
+//  begin
+//    ReleaseMutex(MutexHandle);
+//  end;
 
 end.

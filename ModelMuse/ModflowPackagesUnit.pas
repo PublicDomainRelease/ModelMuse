@@ -42,6 +42,13 @@ type
     FHydmodPackage: THydPackageSelection;
     FUpwPackage: TUpwPackageSelection;
     FNwtPackage: TNwtPackageSelection;
+    FMt3dBasic: TMt3dBasic;
+    FMt3dmsGCGSolver: TMt3dmsGCGSolverPackage;
+    FMt3dmsAdvection: TMt3dmsAdvection;
+    FMt3dmsDispersion: TMt3dmsDispersion;
+    FMt3dmsSourceSink: TMt3dmsSourceSinkMixing;
+    FMt3dmsChemReaction: TMt3dmsChemReaction;
+    FMt3dmsTransObs: TMt3dmsTransportObservations;
     procedure SetChdBoundary(const Value: TChdPackage);
     procedure SetLpfPackage(const Value: TLpfSelection);
     procedure SetPcgPackage(const Value: TPcgSelection);
@@ -76,6 +83,13 @@ type
     procedure SetHydmodPackage(const Value: THydPackageSelection);
     procedure SetUpwPackage(const Value: TUpwPackageSelection);
     procedure SetNwtPackage(const Value: TNwtPackageSelection);
+    procedure SetMt3dBasic(const Value: TMt3dBasic);
+    procedure SetMt3dmsGCGSolver(const Value: TMt3dmsGCGSolverPackage);
+    procedure SetMt3dmsAdvection(const Value: TMt3dmsAdvection);
+    procedure SetMt3dmsDispersion(const Value: TMt3dmsDispersion);
+    procedure SetMt3dmsSourceSink(const Value: TMt3dmsSourceSinkMixing);
+    procedure SetMt3dmsChemReaction(const Value: TMt3dmsChemReaction);
+    procedure SetMt3dmsTransObs(const Value: TMt3dmsTransportObservations);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Model: TBaseModel);
@@ -84,7 +98,7 @@ type
     procedure Reset;
     // @name is used to set the progress bar limits when exporting
     // the MODFLOW input files.
-    function SelectedPackageCount: integer;
+    function SelectedModflowPackageCount: integer;
   published
     property ChdBoundary: TChdPackage read FChdBoundary write SetChdBoundary;
     property GhbBoundary: TGhbPackage read FGhbBoundary write SetGhbBoundary;
@@ -145,33 +159,88 @@ type
       read FUpwPackage write SetUpwPackage;
     property NwtPackage: TNwtPackageSelection
       read FNwtPackage write SetNwtPackage;
+    property Mt3dBasic: TMt3dBasic read FMt3dBasic write SetMt3dBasic;
+    property Mt3dmsGCGSolver: TMt3dmsGCGSolverPackage read FMt3dmsGCGSolver
+      write SetMt3dmsGCGSolver;
+    property Mt3dmsAdvection: TMt3dmsAdvection read FMt3dmsAdvection
+      write SetMt3dmsAdvection;
+    property Mt3dmsDispersion: TMt3dmsDispersion read FMt3dmsDispersion
+      write SetMt3dmsDispersion;
+    property Mt3dmsSourceSink: TMt3dmsSourceSinkMixing read FMt3dmsSourceSink
+      write SetMt3dmsSourceSink;
+    property Mt3dmsChemReact: TMt3dmsChemReaction read FMt3dmsChemReaction
+      write SetMt3dmsChemReaction;
+    property Mt3dmsTransObs: TMt3dmsTransportObservations read FMt3dmsTransObs
+      write SetMt3dmsTransObs;
     // Assign, Create, Destroy, SelectedPackageCount
     // and Reset must be updated each time a new package is added.
   end;
 
-const
+resourcestring
   StrBoundaryCondition = 'Boundary conditions';
   StrSpecifiedHeadPackages = 'Specified head';
-  BC_SpecHead = StrBoundaryCondition + '|' + StrSpecifiedHeadPackages;
-  StrFlow = 'Flow';
-  StrSolver = 'Solvers';
-  StrHeaddependentFlux = 'Head-dependent flux';
-  BC_HeadDependentFlux = StrBoundaryCondition + '|' + StrHeaddependentFlux;
-  StrSpecifiedFlux = 'Specified flux';
-  BC_SpecifiedFlux = StrBoundaryCondition + '|' + StrSpecifiedFlux;
   StrLPF_Identifier = 'LPF: Layer Property Flow package';
-  StrHUF_Identifier = 'HUF2: Hydrogeologic Unit Flow package';
   StrSFR_Identifier = 'SFR: Stream-Flow Routing package';
+  StrUPW_Identifier = 'UPW: Upstream Weighting package';
+  StrFlow = 'Flow';
+  StrSpecifiedFlux = 'Specified flux';
+  StrHeaddependentFlux = 'Head-dependent flux';
+  StrSolver = 'Solvers';
   StrObservations = 'Observations';
   StrPostProcessors = 'Post processors';
-  StrSubsidence = 'Subsidence';
-  StrOutput = 'Output';
-  StrUPW_Identifier = 'UPW: Upstream Weighting Package';
+
+  function BC_SpecHead: string;
+  function BC_SpecifiedFlux: string;
+  function BC_HeadDependentFlux: string;
 
 implementation
 
 uses
   frmGoPhastUnit, PhastModelUnit, OrderedCollectionUnit;
+
+resourcestring
+  StrHUF_Identifier = 'HUF2: Hydrogeologic Unit Flow package';
+  StrSubsidence = 'Subsidence';
+  StrOutput = 'Output';
+  StrCHDTimeVariantSp = 'CHD: Time-Variant Specified-Head package';
+  StrPCGPreconditioned = 'PCG: Preconditioned Conjugate Gradient package';
+  StrGHBGeneralHeadBo = 'GHB: General-Head Boundary package';
+  StrWELWellPackage = 'WEL: Well package';
+  StrRIVRiverPackage = 'RIV: River package';
+  StrDRNDrainPackage = 'DRN: Drain package';
+  StrDRTDrainReturnPa = 'DRT: Drain Return package';
+  StrRCHRechargePackag = 'RCH: Recharge package';
+  StrEVTEvapotranspirat = 'EVT: Evapotranspiration package';
+  StrETSEvapotranspirat = 'ETS: Evapotranspiration Segments package';
+  StrRESReservoirPacka = 'RES: Reservoir package';
+  StrLAKLakePackage = 'LAK: Lake package';
+  StrUZFUnsaturatedZon = 'UZF: Unsaturated-Zone Flow package';
+  StrGMGGeometricMulti = 'GMG: Geometric Multigrid package';
+  StrSIPStronglyImplic = 'SIP: Strongly Implicit Procedure package';
+  StrDE4DirectSolverP = 'DE4: Direct Solver package';
+  StrHOBHeadObservatio = 'HOB: Head Observation package';
+  StrHFBHorizontalFlow = 'HFB: Horizontal Flow Barrier package';
+  StrMODPATH = 'MODPATH';
+  StrCHOBSpecifiedHead = 'CHOB: Specified-Head Flow Observation package';
+  StrDROBDrainObservat = 'DROB: Drain Observation package';
+  StrGBOBGeneralHeadB = 'GBOB: General-Head-Boundary Observation package';
+  StrRVOBRiverObservat = 'RVOB: River Observation package';
+  StrMNW2MultiNodeWel = 'MNW2: Multi-Node Well package';
+  StrBCF6BlockCentered = 'BCF6: Block-Centered Flow package';
+  StrSUBSubsidenceAnd = 'SUB: Subsidence and Aquifer-System Compaction Packa' +
+  'ge';
+  StrSWTSubsidenceAnd = 'SWT: Subsidence and Aquifer-System Compaction Packa' +
+  'ge for Water-Table Aquifers';
+  StrZONEBUDGET = 'ZONEBUDGET';
+  StrHYDHYDMODPackage = 'HYD: HYDMOD package';
+  StrNWTNewtonSolver = 'NWT: Newton Solver';
+  StrBTNMT3DMSBasicTr = 'BTN: Basic Transport package';
+  StrGCGGeneralizedCon = 'GCG: Generalized Conjugate Gradient Solver';
+  StrADVAdvectionPacka = 'ADV: Advection package';
+  StrDSPDispersionPack = 'DSP: Dispersion package';
+  StrSSMSinkSourceM = 'SSM: Sink and Source Mixing package';
+  StrRCTChemicalReacti = 'RCT: Chemical Reactions package';
+  StrTOBTransportObser = 'TOB: Transport Observation package';
 
 { TModflowPackages }
 
@@ -216,6 +285,13 @@ begin
     HydmodPackage := SourcePackages.HydmodPackage;
     UpwPackage := SourcePackages.UpwPackage;
     NwtPackage := SourcePackages.NwtPackage;
+    Mt3dBasic := SourcePackages.Mt3dBasic;
+    Mt3dmsGCGSolver := SourcePackages.Mt3dmsGCGSolver;
+    Mt3dmsAdvection := SourcePackages.Mt3dmsAdvection;
+    Mt3dmsDispersion := SourcePackages.Mt3dmsDispersion;
+    Mt3dmsSourceSink := SourcePackages.Mt3dmsSourceSink;
+    Mt3dmsChemReact := SourcePackages.Mt3dmsChemReact;
+    Mt3dmsTransObs := SourcePackages.Mt3dmsTransObs;
   end
   else
   begin
@@ -229,7 +305,7 @@ begin
   FModel := Model;
 
   FChdBoundary := TChdPackage.Create(Model);
-  FChdBoundary.PackageIdentifier := 'CHD: Time-Variant Specified-Head package';
+  FChdBoundary.PackageIdentifier := StrCHDTimeVariantSp;
   FChdBoundary.Classification := BC_SpecHead;
 
   FLpfPackage := TLpfSelection.Create(Model);
@@ -244,48 +320,48 @@ begin
 
   FPcgPackage := TPcgSelection.Create(Model);
   FPcgPackage.PackageIdentifier :=
-    'PCG: Preconditioned Conjugate Gradient package';
+    StrPCGPreconditioned;
   FPcgPackage.Classification := StrSolver;
   FPcgPackage.SelectionType := stRadioButton;
 
   FGhbBoundary := TGhbPackage.Create(Model);
-  FGhbBoundary.PackageIdentifier := 'GHB: General-Head Boundary package';
+  FGhbBoundary.PackageIdentifier := StrGHBGeneralHeadBo;
   FGhbBoundary.Classification := BC_HeadDependentFlux;
 
   FWelPackage := TWellPackage.Create(Model);
-  FWelPackage.PackageIdentifier := 'WEL: Well package';
+  FWelPackage.PackageIdentifier := StrWELWellPackage;
   FWelPackage.Classification := BC_SpecifiedFlux;
 
   FRivPackage := TRivPackage.Create(Model);
-  FRivPackage.PackageIdentifier := 'RIV: River package';
+  FRivPackage.PackageIdentifier := StrRIVRiverPackage;
   FRivPackage.Classification := BC_HeadDependentFlux;
 
   FDrnPackage := TDrnPackage.Create(Model);
-  FDrnPackage.PackageIdentifier := 'DRN: Drain package';
+  FDrnPackage.PackageIdentifier := StrDRNDrainPackage;
   FDrnPackage.Classification := BC_HeadDependentFlux;
 
   FDrtPackage := TDrtPackage.Create(Model);
-  FDrtPackage.PackageIdentifier := 'DRT: Drain Return package';
+  FDrtPackage.PackageIdentifier := StrDRTDrainReturnPa;
   FDrtPackage.Classification := BC_HeadDependentFlux;
 
   FRchPackage := TRchPackageSelection.Create(Model);
-  FRchPackage.PackageIdentifier := 'RCH: Recharge package';
+  FRchPackage.PackageIdentifier := StrRCHRechargePackag;
   FRchPackage.Classification := BC_SpecifiedFlux;
 
   FEvtPackage := TEvtPackageSelection.Create(Model);
-  FEvtPackage.PackageIdentifier := 'EVT: Evapotranspiration package';
+  FEvtPackage.PackageIdentifier := StrEVTEvapotranspirat;
   FEvtPackage.Classification := BC_HeadDependentFlux;
 
   FEtsPackage := TEtsPackageSelection.Create(Model);
-  FEtsPackage.PackageIdentifier := 'ETS: Evapotranspiration Segments package';
+  FEtsPackage.PackageIdentifier := StrETSEvapotranspirat;
   FEtsPackage.Classification := BC_HeadDependentFlux;
 
   FResPackage := TResPackageSelection.Create(Model);
-  FResPackage.PackageIdentifier := 'RES: Reservoir package';
+  FResPackage.PackageIdentifier := StrRESReservoirPacka;
   FResPackage.Classification := BC_HeadDependentFlux;
 
   FLakPackage := TLakePackageSelection.Create(Model);
-  LakPackage.PackageIdentifier := 'LAK: Lake package';
+  LakPackage.PackageIdentifier := StrLAKLakePackage;
   LakPackage.Classification := BC_HeadDependentFlux;
 
   FSfrPackage := TSfrPackageSelection.Create(Model);
@@ -293,86 +369,86 @@ begin
   SfrPackage.Classification := BC_HeadDependentFlux;
 
   FUzfPackage := TUzfPackageSelection.Create(Model);
-  UzfPackage.PackageIdentifier := 'UZF: Unsaturated-Zone Flow package';
+  UzfPackage.PackageIdentifier := StrUZFUnsaturatedZon;
   UzfPackage.Classification := StrFlow;
 
   FGmgPackage := TGmgPackageSelection.Create(Model);
-  FGmgPackage.PackageIdentifier := 'GMG: Geometric Multigrid package';
+  FGmgPackage.PackageIdentifier := StrGMGGeometricMulti;
   FGmgPackage.Classification := StrSolver;
   FGmgPackage.SelectionType := stRadioButton;
 
   FSipPackage := TSIPPackageSelection.Create(Model);
-  FSipPackage.PackageIdentifier := 'SIP: Strongly Implicit Procedure package';
+  FSipPackage.PackageIdentifier := StrSIPStronglyImplic;
   FSipPackage.Classification := StrSolver;
   FSipPackage.SelectionType := stRadioButton;
 
   FDe4Package := TDE4PackageSelection.Create(Model);
-  FDe4Package.PackageIdentifier := 'DE4: Direct Solver package';
+  FDe4Package.PackageIdentifier := StrDE4DirectSolverP;
   FDe4Package.Classification := StrSolver;
   FDe4Package.SelectionType := stRadioButton;
 
   FHobPackage := THobPackageSelection.Create(Model);
-  FHobPackage.PackageIdentifier := 'HOB: Head Observation package';
+  FHobPackage.PackageIdentifier := StrHOBHeadObservatio;
   FHobPackage.Classification := StrObservations;
   FHobPackage.SelectionType := stCheckBox;
 
   FHfbPackage := TModflowPackageSelection.Create(Model);
-  FHfbPackage.PackageIdentifier := 'HFB: Horizontal Flow Barrier package';
+  FHfbPackage.PackageIdentifier := StrHFBHorizontalFlow;
   FHfbPackage.Classification := StrFlow;
   FHfbPackage.SelectionType := stCheckBox;
 
   FModPath := TModpathSelection.Create(Model);
-  FModPath.PackageIdentifier := 'MODPATH';
+  FModPath.PackageIdentifier := StrMODPATH;
   FModPath.Classification := StrPostProcessors;
   FModPath.SelectionType := stCheckBox;
 
   FChobPackage := TModflowPackageSelection.Create(Model);
-  FChobPackage.PackageIdentifier := 'CHOB: Specified-Head Flow Observation package';
+  FChobPackage.PackageIdentifier := StrCHOBSpecifiedHead;
   FChobPackage.Classification := StrObservations;
   FChobPackage.SelectionType := stCheckBox;
 
   FDrobPackage := TModflowPackageSelection.Create(Model);
-  FDrobPackage.PackageIdentifier := 'DROB: Drain Observation package';
+  FDrobPackage.PackageIdentifier := StrDROBDrainObservat;
   FDrobPackage.Classification := StrObservations;
   FDrobPackage.SelectionType := stCheckBox;
 
   FGbobPackage := TModflowPackageSelection.Create(Model);
-  FGbobPackage.PackageIdentifier := 'GBOB: General-Head-Boundary Observation package';
+  FGbobPackage.PackageIdentifier := StrGBOBGeneralHeadB;
   FGbobPackage.Classification := StrObservations;
   FGbobPackage.SelectionType := stCheckBox;
 
   FRvobPackage := TModflowPackageSelection.Create(Model);
-  FRvobPackage.PackageIdentifier := 'RVOB: River Observation package';
+  FRvobPackage.PackageIdentifier := StrRVOBRiverObservat;
   FRvobPackage.Classification := StrObservations;
   FRvobPackage.SelectionType := stCheckBox;
 
   FMnw2Package := TMultinodeWellSelection.Create(Model);
-  FMnw2Package.PackageIdentifier := 'MNW2: Multi-Node Well package';
+  FMnw2Package.PackageIdentifier := StrMNW2MultiNodeWel;
   FMnw2Package.Classification := BC_HeadDependentFlux;
   FMnw2Package.SelectionType := stCheckBox;
 
   FBcfPackage := TModflowPackageSelection.Create(Model);
-  FBcfPackage.PackageIdentifier := 'BCF6: Block-Centered Flow package';
+  FBcfPackage.PackageIdentifier := StrBCF6BlockCentered;
   FBcfPackage.Classification := StrFlow;
   FBcfPackage.SelectionType := stRadioButton;
 
   FSubPackage := TSubPackageSelection.Create(Model);
-  FSubPackage.PackageIdentifier := 'SUB: Subsidence and Aquifer-System Compaction Package';
+  FSubPackage.PackageIdentifier := StrSUBSubsidenceAnd;
   FSubPackage.Classification := StrSubsidence;
   FSubPackage.SelectionType := stCheckBox;
 
   FSwtPackage := TSwtPackageSelection.Create(Model);
-  FSwtPackage.PackageIdentifier := 'SWT: Subsidence and Aquifer-System Compaction Package for Water-Table Aquifers';
+  FSwtPackage.PackageIdentifier := StrSWTSubsidenceAnd;
   FSwtPackage.Classification := StrSubsidence;
   FSwtPackage.SelectionType := stCheckBox;
 
   FZoneBudget := TZoneBudgetSelect.Create(Model);
-  FZoneBudget.PackageIdentifier := 'ZONEBUDGET';
+  FZoneBudget.PackageIdentifier := StrZONEBUDGET;
   FZoneBudget.Classification := StrPostProcessors;
   FZoneBudget.SelectionType := stCheckBox;
 
   FHydmodPackage := THydPackageSelection.Create(Model);
-  FHydmodPackage.PackageIdentifier := 'HYD: HYDMOD Package';
+  FHydmodPackage.PackageIdentifier := StrHYDHYDMODPackage;
   FHydmodPackage.Classification := StrOutput;
   FHydmodPackage.SelectionType := stCheckBox;
 
@@ -382,13 +458,55 @@ begin
   FUpwPackage.SelectionType := stRadioButton;
 
   FNwtPackage := TNwtPackageSelection.Create(Model);
-  FNwtPackage.PackageIdentifier := 'NWT Newton Solver';
+  FNwtPackage.PackageIdentifier := StrNWTNewtonSolver;
   FNwtPackage.Classification := StrSolver;
   FNwtPackage.SelectionType := stRadioButton;
+
+  FMt3dBasic := TMt3dBasic.Create(Model);
+  FMt3dBasic.PackageIdentifier := StrBTNMT3DMSBasicTr;
+  FMt3dBasic.Classification := StrMT3DMS;
+  FMt3dBasic.SelectionType := stCheckBox;
+
+  FMt3dmsGCGSolver := TMt3dmsGCGSolverPackage.Create(Model);
+  FMt3dmsGCGSolver.PackageIdentifier := StrGCGGeneralizedCon;
+  FMt3dmsGCGSolver.Classification := StrMT3DMS;
+  FMt3dmsGCGSolver.SelectionType := stCheckBox;
+
+  FMt3dmsAdvection := TMt3dmsAdvection.Create(Model);
+  FMt3dmsAdvection.PackageIdentifier := StrADVAdvectionPacka;
+  FMt3dmsAdvection.Classification := StrMT3DMS;
+  FMt3dmsAdvection.SelectionType := stCheckBox;
+
+  FMt3dmsDispersion := TMt3dmsDispersion.Create(Model);
+  FMt3dmsDispersion.PackageIdentifier := StrDSPDispersionPack;
+  FMt3dmsDispersion.Classification := StrMT3DMS;
+  FMt3dmsDispersion.SelectionType := stCheckBox;
+
+  FMt3dmsSourceSink := TMt3dmsSourceSinkMixing.Create(Model);
+  FMt3dmsSourceSink.PackageIdentifier := StrSSMSinkSourceM;
+  FMt3dmsSourceSink.Classification := StrMT3DMS;
+  FMt3dmsSourceSink.SelectionType := stCheckBox;
+
+  FMt3dmsChemReaction := TMt3dmsChemReaction.Create(Model);
+  FMt3dmsChemReaction.PackageIdentifier := StrRCTChemicalReacti;
+  FMt3dmsChemReaction.Classification := StrMT3DMS;
+  FMt3dmsChemReaction.SelectionType := stCheckBox;
+
+  FMt3dmsTransObs := TMt3dmsTransportObservations.Create(Model);
+  FMt3dmsTransObs.PackageIdentifier := StrTOBTransportObser;
+  FMt3dmsTransObs.Classification := StrMT3DMS;
+  FMt3dmsTransObs.SelectionType := stCheckBox;
 end;
 
 destructor TModflowPackages.Destroy;
 begin
+  FMt3dmsTransObs.Free;
+  FMt3dmsChemReaction.Free;
+  FMt3dmsSourceSink.Free;
+  FMt3dmsDispersion.Free;
+  FMt3dmsAdvection.Free;
+  FMt3dmsGCGSolver.Free;
+  FMt3dBasic.Free;
   FNwtPackage.Free;
   FUpwPackage.Free;
   FHydmodPackage.Free;
@@ -428,91 +546,49 @@ end;
 
 procedure TModflowPackages.Reset;
 begin
-  DrtPackage.IsSelected := False;
-  DrnPackage.IsSelected := False;
-  RivPackage.IsSelected := False;
-  WelPackage.IsSelected := False;
-  ChdBoundary.IsSelected := False;
-  GhbBoundary.IsSelected := False;
-  LpfPackage.IsSelected := True;
-  PcgPackage.IsSelected := True;
-  RchPackage.IsSelected := False;
-  EvtPackage.IsSelected := False;
-  EtsPackage.IsSelected := False;
-  ResPackage.IsSelected := False;
-  LakPackage.IsSelected := False;
-  SfrPackage.IsSelected := False;
-  UzfPackage.IsSelected := False;
-  GmgPackage.IsSelected := False;
-  SipPackage.IsSelected := False;
-  De4Package.IsSelected := False;
-  HobPackage.IsSelected := False;
-  HfbPackage.IsSelected := False;
-  ModPath.IsSelected := False;
-  ChobPackage.IsSelected := False;
-  DrobPackage.IsSelected := False;
-  GbobPackage.IsSelected := False;
-  RvobPackage.IsSelected := False;
-  HufPackage.IsSelected := False;
-  BcfPackage.IsSelected := False;
-  SubPackage.IsSelected := False;
-  ZoneBudget.IsSelected := False;
-  SwtPackage.IsSelected := False;
-  HydmodPackage.IsSelected := False;
-  UpwPackage.IsSelected := False;
-  NwtPackage.IsSelected := False;
-
-  DrtPackage.Comments.Clear;
-  DrnPackage.Comments.Clear;
-  RivPackage.Comments.Clear;
-  WelPackage.Comments.Clear;
-  ChdBoundary.Comments.Clear;
-  GhbBoundary.Comments.Clear;
-  LpfPackage.Comments.Clear;
-  PcgPackage.Comments.Clear;
-  RchPackage.Comments.Clear;
-  EvtPackage.Comments.Clear;
-  EtsPackage.Comments.Clear;
-  ResPackage.Comments.Clear;
-  LakPackage.Comments.Clear;
-  SfrPackage.Comments.Clear;
-  UzfPackage.Comments.Clear;
-  GmgPackage.Comments.Clear;
-  SipPackage.Comments.Clear;
-  De4Package.Comments.Clear;
-  HobPackage.Comments.Clear;
-  HfbPackage.Comments.Clear;
-  ModPath.Comments.Clear;
-  ChobPackage.Comments.Clear;
-  DrobPackage.Comments.Clear;
-  GbobPackage.Comments.Clear;
-  RvobPackage.Comments.Clear;
-  HufPackage.Comments.Clear;
-  BcfPackage.Comments.Clear;
-  SubPackage.Comments.Clear;
-  ZoneBudget.Comments.Clear;
-  SwtPackage.Comments.Clear;
-  HydmodPackage.Comments.Clear;
-  UpwPackage.Comments.Clear;
-  NwtPackage.Comments.Clear;
-
+  DrtPackage.InitializeVariables;
+  DrnPackage.InitializeVariables;
+  RivPackage.InitializeVariables;
+  WelPackage.InitializeVariables;
+  ChdBoundary.InitializeVariables;
+  GhbBoundary.InitializeVariables;
   LpfPackage.InitializeVariables;
   PcgPackage.InitializeVariables;
+  RchPackage.InitializeVariables;
+  EvtPackage.InitializeVariables;
+  EtsPackage.InitializeVariables;
+  ResPackage.InitializeVariables;
+  LakPackage.InitializeVariables;
+  SfrPackage.InitializeVariables;
+  UzfPackage.InitializeVariables;
   GmgPackage.InitializeVariables;
   SipPackage.InitializeVariables;
   De4Package.InitializeVariables;
   HobPackage.InitializeVariables;
+  HfbPackage.InitializeVariables;
   ModPath.InitializeVariables;
+  ChobPackage.InitializeVariables;
+  DrobPackage.InitializeVariables;
+  GbobPackage.InitializeVariables;
+  RvobPackage.InitializeVariables;
   HufPackage.InitializeVariables;
+  BcfPackage.InitializeVariables;
   SubPackage.InitializeVariables;
   ZoneBudget.InitializeVariables;
   SwtPackage.InitializeVariables;
   HydmodPackage.InitializeVariables;
   UpwPackage.InitializeVariables;
   NwtPackage.InitializeVariables;
+  Mt3dBasic.InitializeVariables;
+  Mt3dmsGCGSolver.InitializeVariables;
+  Mt3dmsAdvection.InitializeVariables;
+  Mt3dmsDispersion.InitializeVariables;
+  Mt3dmsSourceSink.InitializeVariables;
+  Mt3dmsChemReact.InitializeVariables;
+  Mt3dmsTransObs.InitializeVariables;
 end;
 
-function TModflowPackages.SelectedPackageCount: integer;
+function TModflowPackages.SelectedModflowPackageCount: integer;
 begin
   result := 0;
   if ChdBoundary.IsSelected then
@@ -780,6 +856,45 @@ begin
   FModPath.Assign(Value);
 end;
 
+procedure TModflowPackages.SetMt3dBasic(const Value: TMt3dBasic);
+begin
+  FMt3dBasic.Assign(Value);
+end;
+
+procedure TModflowPackages.SetMt3dmsAdvection(const Value: TMt3dmsAdvection);
+begin
+  FMt3dmsAdvection.Assign(Value);
+end;
+
+procedure TModflowPackages.SetMt3dmsChemReaction(
+  const Value: TMt3dmsChemReaction);
+begin
+  FMt3dmsChemReaction.Assign(Value);
+end;
+
+procedure TModflowPackages.SetMt3dmsDispersion(const Value: TMt3dmsDispersion);
+begin
+  FMt3dmsDispersion.Assign(Value);
+end;
+
+procedure TModflowPackages.SetMt3dmsGCGSolver(
+  const Value: TMt3dmsGCGSolverPackage);
+begin
+  FMt3dmsGCGSolver.Assign(Value);
+end;
+
+procedure TModflowPackages.SetMt3dmsSourceSink(
+  const Value: TMt3dmsSourceSinkMixing);
+begin
+  FMt3dmsSourceSink.Assign(Value);
+end;
+
+procedure TModflowPackages.SetMt3dmsTransObs(
+  const Value: TMt3dmsTransportObservations);
+begin
+  FMt3dmsTransObs.Assign(Value);
+end;
+
 procedure TModflowPackages.SetNwtPackage(const Value: TNwtPackageSelection);
 begin
   FNwtPackage.Assign(Value);
@@ -851,4 +966,32 @@ begin
   FZoneBudget.Assign(Value);
 end;
 
+  // Except in the initialization section, the following variables
+  // should be treated as constants.
+var
+  FBC_SpecHead: string;
+  FBC_SpecifiedFlux: string;
+  FBC_HeadDependentFlux: string;
+
+function BC_SpecHead: string;
+begin
+  result := FBC_SpecHead;
+end;
+
+function BC_SpecifiedFlux: string;
+begin
+  result := FBC_SpecifiedFlux;
+end;
+
+function BC_HeadDependentFlux: string;
+begin
+  result := FBC_HeadDependentFlux;
+end;
+
+initialization
+  FBC_SpecHead := StrBoundaryCondition + '|' + StrSpecifiedHeadPackages;
+  FBC_SpecifiedFlux := StrBoundaryCondition + '|' + StrSpecifiedFlux;
+  FBC_HeadDependentFlux := StrBoundaryCondition + '|' + StrHeaddependentFlux;
+
 end.
+

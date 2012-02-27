@@ -7941,8 +7941,8 @@ begin
   j := Length(Polygon) - 1;
   for i := 0 to Length(Polygon) - 1 do
   begin
-    if ((Polygon[i].y <= Py) and (Py < Polygon[j].y)) or
-       ((Polygon[j].y <= Py) and (Py < Polygon[i].y)) then
+    if ((Polygon[i].y <= Py) and (Py <= Polygon[j].y)) or
+       ((Polygon[j].y <= Py) and (Py <= Polygon[i].y)) then
     begin
       if IsPointCollinear(Polygon[i],Polygon[j],Px,Py) then
       begin

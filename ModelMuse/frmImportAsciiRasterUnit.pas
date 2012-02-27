@@ -56,6 +56,7 @@ resourcestring
     'to sample a raster file.';
   StrTheLocationsInS = 'The locations in %s that have data are different fro' +
   'm the locations in %s that have data.';
+  StrImportASCIIRaster = 'import ASCII raster file';
 
 {$R *.dfm}
 
@@ -519,7 +520,7 @@ end;
 
 function TUndoImportAsciiRasterFile.Description: string;
 begin
-  result := 'import ASCII raster file';
+  result := StrImportASCIIRaster;
 end;
 
 end.

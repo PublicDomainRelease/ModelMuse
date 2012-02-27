@@ -76,6 +76,9 @@ implementation
 
 uses frmGoPhastUnit;
 
+resourcestring
+  StrGridOptions = 'grid options';
+
 {$R *.dfm}
 
 { TfrmPhastGridOptions }
@@ -149,7 +152,7 @@ end;
 
 function TUndoGridOptions.Description: string;
 begin
-  result := 'grid options';
+  result := StrGridOptions;
 end;
 
 destructor TUndoGridOptions.Destroy;

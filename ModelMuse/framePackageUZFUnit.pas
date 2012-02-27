@@ -6,22 +6,23 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, framePackageLayerChoiceUnit, RbwController, StdCtrls, ExtCtrls,
   ArgusDataEntry, framePackageTransientLayerChoiceUnit,
-  ModflowPackageSelectionUnit, RbwRadioGroup;
+  ModflowPackageSelectionUnit, RbwRadioGroup, CheckLst;
 
 type
+  TCheckListRows = (clrRouteDischarge, clrET, clrPrint, clrSpecifyResid,
+    clrSpecifyInitial, clrSufaceLeakage);
+
   TframePackageUZF = class(TframePackageLayerChoice)
     lblVerticalKSource: TLabel;
     comboVerticalKSource: TComboBox;
-    cbRouteDischargeToStreamsAndLakes: TCheckBox;
-    cbSimulateEvapotranspiration: TCheckBox;
     rdeNumberOfTrailingWaves: TRbwDataEntry;
     lblNumberOfTrailingWaves: TLabel;
     lblNumberOfWaveSets: TLabel;
     rdeNumberOfWaveSets: TRbwDataEntry;
-    cbPrintSummary: TCheckBox;
     lblSURFDEP: TLabel;
     rdeSURFDEP: TRbwDataEntry;
     rgAssignmentMethod: TRbwRadioGroup;
+    chklstOptions: TCheckListBox;
   private
     { Private declarations }
   public
@@ -49,11 +50,19 @@ begin
   inherited;
   Uzf := Package as TUzfPackageSelection;
   comboVerticalKSource.ItemIndex := Uzf.VerticalKSource -1;
-  cbRouteDischargeToStreamsAndLakes.Checked := Uzf.RouteDischargeToStreams;
-  cbSimulateEvapotranspiration.Checked := Uzf.SimulateET;
+
+  chklstOptions.Checked[Ord(clrRouteDischarge)] := Uzf.RouteDischargeToStreams;
+  chklstOptions.Checked[Ord(clrET)] := Uzf.SimulateET;
+  chklstOptions.Checked[Ord(clrPrint)] := Uzf.PrintSummary = 1;
+  chklstOptions.Checked[Ord(clrSpecifyResid)] := Uzf.SpecifyResidualWaterContent;
+  chklstOptions.Checked[Ord(clrSpecifyInitial)] := Uzf.SpecifyInitialWaterContent;
+  chklstOptions.Checked[Ord(clrSufaceLeakage)] := Uzf.CalulateSurfaceLeakage;
+
+//  cbRouteDischargeToStreamsAndLakes.Checked := Uzf.RouteDischargeToStreams;
+//  cbSimulateEvapotranspiration.Checked := Uzf.SimulateET;
   rdeNumberOfTrailingWaves.Text := IntToStr(Uzf.NumberOfTrailingWaves);
   rdeNumberOfWaveSets.Text := IntToStr(Uzf.NumberOfWaveSets);
-  cbPrintSummary.Checked := Uzf.PrintSummary = 1;
+//  cbPrintSummary.Checked := Uzf.PrintSummary = 1;
   rdeSURFDEP.Text := FloatToStr(Uzf.DepthOfUndulations);
   rgAssignmentMethod.ItemIndex := Ord(Uzf.AssignmentMethod);
 end;
@@ -67,8 +76,17 @@ begin
   inherited;
   Uzf := Package as TUzfPackageSelection;
   Uzf.VerticalKSource := comboVerticalKSource.ItemIndex + 1;
-  Uzf.RouteDischargeToStreams := cbRouteDischargeToStreamsAndLakes.Checked;
-  Uzf.SimulateET := cbSimulateEvapotranspiration.Checked;
+
+  Uzf.RouteDischargeToStreams := chklstOptions.Checked[Ord(clrRouteDischarge)];
+  Uzf.SimulateET := chklstOptions.Checked[Ord(clrET)];
+  Uzf.PrintSummary := Ord(chklstOptions.Checked[Ord(clrPrint)]);
+  Uzf.SpecifyResidualWaterContent := chklstOptions.Checked[Ord(clrSpecifyResid)];
+  Uzf.SpecifyInitialWaterContent := chklstOptions.Checked[Ord(clrSpecifyInitial)];
+  Uzf.CalulateSurfaceLeakage := chklstOptions.Checked[Ord(clrSufaceLeakage)];
+
+
+//  Uzf.RouteDischargeToStreams := cbRouteDischargeToStreamsAndLakes.Checked;
+//  Uzf.SimulateET := cbSimulateEvapotranspiration.Checked;
   if TryStrToInt(rdeNumberOfTrailingWaves.Text, Value) then
   begin
     Uzf.NumberOfTrailingWaves := Value;
@@ -77,14 +95,14 @@ begin
   begin
     Uzf.NumberOfWaveSets := Value;
   end;
-  if cbPrintSummary.Checked then
-  begin
-    Uzf.PrintSummary := 1;
-  end
-  else
-  begin
-    Uzf.PrintSummary := 0;
-  end;
+//  if cbPrintSummary.Checked then
+//  begin
+//    Uzf.PrintSummary := 1;
+//  end
+//  else
+//  begin
+//    Uzf.PrintSummary := 0;
+//  end;
   if TryStrToFloat(rdeSURFDEP.Text, RValue) then
   begin
     Uzf.DepthOfUndulations := RValue;

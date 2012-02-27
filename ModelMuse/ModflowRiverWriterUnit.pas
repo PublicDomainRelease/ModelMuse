@@ -47,6 +47,8 @@ resourcestring
   StrInTheFollowingRiv = 'In the following river cells, the stage is below t' +
   'he river bottom.';
   StrLayerDRowDC = 'Layer: %d, Row %d, Column %d';
+  StrTheFollowingRiver = 'The following River observation names may be valid' +
+  ' for MODFLOW but they are not valid for UCODE.';
 
 { TModflowRIV_Writer }
 
@@ -83,7 +85,7 @@ end;
 
 function TModflowRIV_Writer.ObsNameWarningString: string;
 begin
-  result := 'The following River observation names may be valid for MODFLOW but they are not valid for UCODE.';
+  result := StrTheFollowingRiver;
 end;
 
 function TModflowRIV_Writer.Package: TModflowPackageSelection;

@@ -219,6 +219,7 @@ procedure TDrnItem.Assign(Source: TPersistent);
 var
   Drn: TDrnItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TDrnItem then
   begin
     Drn := TDrnItem(Source);

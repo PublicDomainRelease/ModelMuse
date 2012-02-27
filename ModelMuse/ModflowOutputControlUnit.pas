@@ -2,7 +2,7 @@ unit ModflowOutputControlUnit;
 
 interface
 
-uses SysUtils, Classes, GoPhastTypes;
+uses SysUtils, Classes, GoPhastTypes, Mt3dmsTimesUnit;
 
 type
   TCellSaveFormat = (csfNone, csfBinary, csfListing);
@@ -123,8 +123,55 @@ type
       write SetBudgetFrequency;
     property BudgetFrequencyChoice: TFrequencyChoice read FBudgetFrequencyChoice
       write SetBudgetFrequencyChoice;
-
   end;
+
+  TMt3dmsOutputFreq = (mofSpecifiedTimes, mofEndOfSimulation, mofPeriodic);
+
+  TMt3dmsOutputControl = class(TGoPhastPersistent)
+  private
+    FOutputFreqChoice: TMt3dmsOutputFreq;
+    FSaveConcentrations: boolean;
+    FPeriodicOutputCount: integer;
+    FOutputTimes: TMt3dmsOutputTimeCollection;
+    FObservationFrequency: integer;
+    FMassBalanceFrequency: integer;
+    FSummarizeMassBalance: boolean;
+    procedure SetOutputFreqChoice(const Value: TMt3dmsOutputFreq);
+    procedure SetOutputTimes(const Value: TMt3dmsOutputTimeCollection);
+    procedure SetPeriodicOutputCount(const Value: integer);
+    procedure SetSaveConcentrations(const Value: boolean);
+    procedure SetMassBalanceFrequency(const Value: integer);
+    procedure SetObservationFrequency(const Value: integer);
+    procedure SetSummarizeMassBalance(const Value: boolean);
+  public
+    Constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
+    procedure Assign(Source: TPersistent); override;
+    procedure Initialize;
+  published
+    // SAVUCN
+    property SaveConcentrations: boolean read FSaveConcentrations
+      write SetSaveConcentrations;
+    // NPRS
+    property OutputFreqChoice: TMt3dmsOutputFreq read FOutputFreqChoice
+      write SetOutputFreqChoice;
+    // NPRS
+    property PeriodicOutputCount: integer read FPeriodicOutputCount
+      write SetPeriodicOutputCount;
+    // NPRS, TIMPRS
+    property OutputTimes: TMt3dmsOutputTimeCollection read FOutputTimes
+      write SetOutputTimes;
+    // NPROBS
+    property ObservationFrequency: integer read FObservationFrequency
+      write SetObservationFrequency;
+    // NPRMAS
+    property MassBalanceFrequency: integer read FMassBalanceFrequency
+      write SetMassBalanceFrequency;
+    // CHKMAS
+    property SummarizeMassBalance: boolean read FSummarizeMassBalance
+      write SetSummarizeMassBalance;
+  end;
+
 
 implementation
 
@@ -502,6 +549,118 @@ begin
     FWrapping := Value;
     InvalidateModel;
   end;
+end;
+
+{ TMt3dmsOutputControl }
+
+procedure TMt3dmsOutputControl.Assign(Source: TPersistent);
+var
+  SourceControl: TMt3dmsOutputControl;
+begin
+  if Source is TMt3dmsOutputControl then
+  begin
+    SourceControl := TMt3dmsOutputControl(Source);
+//    PrintConcentration := SourceControl.PrintConcentration;
+//    PrintParticles := SourceControl.PrintParticles;
+//    PrintRetardation := SourceControl.PrintRetardation;
+//    PrintDispersion := SourceControl.PrintDispersion;
+    SaveConcentrations := SourceControl.SaveConcentrations;
+    OutputFreqChoice := SourceControl.OutputFreqChoice;
+    PeriodicOutputCount := SourceControl.PeriodicOutputCount;
+    OutputTimes := SourceControl.OutputTimes;
+    ObservationFrequency := SourceControl.ObservationFrequency;
+    MassBalanceFrequency := SourceControl.MassBalanceFrequency;
+    SummarizeMassBalance := SourceControl.SummarizeMassBalance;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+constructor TMt3dmsOutputControl.Create(Model: TBaseModel);
+begin
+  inherited;
+  FOutputTimes := TMt3dmsOutputTimeCollection.Create(Model);
+  Initialize;
+end;
+
+destructor TMt3dmsOutputControl.Destroy;
+begin
+  FOutputTimes.Free;
+  inherited;
+end;
+
+procedure TMt3dmsOutputControl.Initialize;
+begin
+  FOutputFreqChoice := mofEndOfSimulation;
+  FSaveConcentrations := True;
+  FPeriodicOutputCount := 1;
+  FOutputTimes.Clear;
+  FMassBalanceFrequency := 0;
+  FObservationFrequency := 0;
+  FSummarizeMassBalance := True;
+end;
+
+procedure TMt3dmsOutputControl.SetMassBalanceFrequency(const Value: integer);
+begin
+  SetIntegerProperty(FMassBalanceFrequency, Value);
+end;
+
+procedure TMt3dmsOutputControl.SetObservationFrequency(const Value: integer);
+begin
+  SetIntegerProperty(FObservationFrequency, Value);
+end;
+
+procedure TMt3dmsOutputControl.SetOutputFreqChoice(
+  const Value: TMt3dmsOutputFreq);
+begin
+  if FOutputFreqChoice <> Value then
+  begin
+    FOutputFreqChoice := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsOutputControl.SetOutputTimes(
+  const Value: TMt3dmsOutputTimeCollection);
+begin
+  FOutputTimes.Assign(Value);
+end;
+
+procedure TMt3dmsOutputControl.SetPeriodicOutputCount(const Value: integer);
+begin
+  SetIntegerProperty(FPeriodicOutputCount, Value);
+end;
+
+//procedure TMt3dmsOutputControl.SetPrintConcentration(const Value: Integer);
+//begin
+//  SetIntegerProperty(FPrintConcentration, Value);
+//end;
+//
+//procedure TMt3dmsOutputControl.SetPrintDispersion(const Value: integer);
+//begin
+//  SetIntegerProperty(FPrintDispersion, Value);
+//end;
+//
+//procedure TMt3dmsOutputControl.SetPrintParticles(const Value: integer);
+//begin
+//  SetIntegerProperty(FPrintParticles, Value);
+//end;
+//
+//procedure TMt3dmsOutputControl.SetPrintRetardation(const Value: integer);
+//begin
+//  SetIntegerProperty(FPrintRetardation, Value);
+//end;
+
+procedure TMt3dmsOutputControl.SetSaveConcentrations(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveConcentrations, Value);
+end;
+
+procedure TMt3dmsOutputControl.SetSummarizeMassBalance(const Value: boolean);
+begin
+  SetBooleanProperty(FSummarizeMassBalance, Value);
 end;
 
 end.

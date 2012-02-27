@@ -7,12 +7,6 @@ uses SysUtils, Math, Classes, Contnrs , PhastModelUnit, CustomModflowWriterUnit,
   GoPhastTypes, RealListUnit;
 
 type
-  TLayerSort = class(TObject)
-    Layer: integer;
-    ActiveCells: integer;
-    Proportion: double;
-  end;
-
   TModflowHobWriter = class(TCustomPackageWriter)
   private
     NH: Integer;
@@ -52,11 +46,8 @@ uses ModflowUnitNumbers, ScreenObjectUnit, DataSetUnit,
 resourcestring
   ObsNameWarning = 'The following Head observation names may be valid for MODFLOW but they are not valid for UCODE.';
   MissingObsNameError = 'The head observation in the following objects do not have observations names assigned';
-  InvalidEndObsTime = 'Observation time after end of simulation';
-  InvalidStartObsTime = 'Observation time before beginning of simulation';
   HeadOffGrid = 'One or more head observation are not located on the grid and will be ignored';
   NoHeads = 'No head observations';
-  StrObjectSTimeG = 'Object: %s; Time: %g';
   StrNoValidHeadObserv = 'No valid head observations were defined. Check tha' +
   't "Model|Observation Type" is set to the correct value and that the obser' +
   'vation type for each observation is set correctly.';
@@ -64,9 +55,21 @@ resourcestring
   'ent stress period. Check that "Model|Observation Type" is set to the corr' +
   'ect value and that the observation type for each observation is set corre' +
   'ctly.';
-  StrNoValidHeadObs = 'No valid head observations were defined.';
-  StrNoValidHeadObservForCurrent = 'No valid head observations were defined ' +
+  StrNoValidHeadObs = 'No valid head observations were defined ' +
+    'for the current stress period.';
+  StrNoValidHeadPredForCurrent = 'No valid head predictions were defined ' +
   'for the current stress period.';
+  InvalidEndObsTime = 'Head observation time after end of simulation';
+  InvalidStartObsTime = 'Head observation time before beginning of simulation';
+  StrHeadObservationLay = 'Head Observation Layer Weight = 0';
+  StrInTheHeadObservat = 'In the head observation for %0:s the weight assign' +
+  'ed to layer %1:d is zero.';
+  StrInTheHeadObservatMult = 'In the head observation for %0:s a weight was assi' +
+  'gned for layer %1:d but that layer is not part of the multilayer observat' +
+  'ion.';
+  StrHeadObservationLayAssigned = 'Head Observation Layer Weight incorrectly assigne' +
+  'd';
+  Str0sDefinedByObje = '%0:s defined by object %1:s';
 
 { TModflowHobWriter }
 
@@ -102,13 +105,17 @@ begin
   NH := 0;
   MOBS := 0;
   MAXM := 2;
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, ObsNameWarning);
+
   frmErrorsAndWarnings.RemoveErrorGroup(Model, MissingObsNameError);
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, HeadOffGrid);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, NoHeads);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, InvalidStartObsTime);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, InvalidEndObsTime);
+
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, ObsNameWarning);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, HeadOffGrid);
   frmErrorsAndWarnings.RemoveWarningGroup(Model, NoHeads);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrHeadObservationLay);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrHeadObservationLayAssigned);
 
   for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin
@@ -127,7 +134,7 @@ begin
 
         if Observations.CellListCount = 0 then
         begin
-          ErrorMessage := 'Object: ' + ScreenObject.Name;
+          ErrorMessage := Format(StrObjectS, [ScreenObject.Name]);
           frmErrorsAndWarnings.AddWarning(Model, HeadOffGrid, ErrorMessage);
           Continue;
         end;
@@ -135,7 +142,7 @@ begin
         CellList := Observations.CellLists[0];
         if CellList.Count = 0 then
         begin
-          ErrorMessage := 'Object: ' + ScreenObject.Name;
+          ErrorMessage := Format(StrObjectS, [ScreenObject.Name]);
           frmErrorsAndWarnings.AddWarning(Model, HeadOffGrid, ErrorMessage);
           Continue;
         end;
@@ -207,7 +214,7 @@ begin
       else
       begin
         frmErrorsAndWarnings.AddWarning(Model, NoHeads,
-          StrNoValidHeadObservForCurrent);
+          StrNoValidHeadPredForCurrent);
       end;
     end;
   end;
@@ -327,20 +334,6 @@ begin
   WriteFloat(TOMULTH);
   WriteString(' # Data Set 2: TOMULTH');
   NewLine;
-end;
-
-function SortLayerSorts(Item1, Item2: Pointer): Integer;
-var
-  LayerSort1: TLayerSort;
-  LayerSort2: TLayerSort;
-begin
-  LayerSort1 := Item1;
-  LayerSort2 := Item2;
-  result := LayerSort1.ActiveCells - LayerSort2.ActiveCells;
-  if result = 1 then
-  begin
-    result := LayerSort1.Layer - LayerSort2.Layer;
-  end;
 end;
 
 procedure TModflowHobWriter.WriteDataSet3to6(Index: integer);
@@ -663,11 +656,10 @@ begin
 
         if LayerSort.Proportion = 0 then
         begin
-          WarningMessage := 'In the head observation for '
-            + (Observations.ScreenObject as TScreenObject).Name
-            + ' the weight assigned to layer '
-            + IntToStr(LayerSort.Layer+1) + ' is zero.';
-          frmErrorsAndWarnings.AddWarning(Model, 'Head Observation Layer Weight = 0',
+          WarningMessage := Format(StrInTheHeadObservat,
+            [(Observations.ScreenObject as TScreenObject).Name,
+            LayerSort.Layer+1]);
+          frmErrorsAndWarnings.AddWarning(Model, StrHeadObservationLay,
             WarningMessage);
         end;
 
@@ -690,12 +682,9 @@ begin
         Item := Observations.LayerFractions[ProportionIndex];
         if not Item.Used then
         begin
-          WarningMessage := 'In the head observation for '
-            + (Observations.ScreenObject as TScreenObject).Name
-            + ' a weight was assigned for layer '
-            + IntToStr(Item.Layer)
-            + ' but that layer is not part of the multilayer observation.';
-          frmErrorsAndWarnings.AddWarning(Model, 'Head Observation Layer Weight incorrectly assigned',
+          WarningMessage := Format(StrInTheHeadObservatMult,
+            [(Observations.ScreenObject as TScreenObject).Name, Item.Layer]);
+          frmErrorsAndWarnings.AddWarning(Model, StrHeadObservationLayAssigned,
             WarningMessage);
         end;
       end;
@@ -743,8 +732,8 @@ begin
   if not UcodeObsNameOK(OBSNAM) then
   begin
     ScreenObject := Observations.ScreenObject as TScreenObject;
-    frmErrorsAndWarnings.AddWarning(Model, ObsNameWarning, OBSNAM
-      + ' defined by object ' + ScreenObject.Name);
+    frmErrorsAndWarnings.AddWarning(Model, ObsNameWarning,
+      Format(Str0sDefinedByObje, [OBSNAM, ScreenObject.Name]));
   end;
   if CellList.Count > 1 then
   begin

@@ -12,7 +12,7 @@ object frameListParameterDefinition: TframeListParameterDefinition
     Height = 48
     Align = alBottom
     BevelOuter = bvNone
-    TabOrder = 0
+    TabOrder = 1
     DesignSize = (
       320
       48)
@@ -24,16 +24,15 @@ object frameListParameterDefinition: TframeListParameterDefinition
       Caption = 'Number of parameters'
     end
     object btnDelete: TBitBtn
-      Left = 232
-      Top = 7
+      Left = 216
+      Top = 3
       Width = 82
       Height = 33
       Anchors = [akTop, akRight]
       Cancel = True
       Caption = '&Delete'
+      DoubleBuffered = True
       Enabled = False
-      TabOrder = 0
-      OnClick = btnDeleteClick
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
         18000000000000030000120B0000120B00000000000000000000FFFFFFFFFFFF
@@ -61,6 +60,9 @@ object frameListParameterDefinition: TframeListParameterDefinition
         000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+      ParentDoubleBuffered = False
+      TabOrder = 0
+      OnClick = btnDeleteClick
     end
     object seNumberOfParameters: TJvSpinEdit
       Left = 8
@@ -86,10 +88,11 @@ object frameListParameterDefinition: TframeListParameterDefinition
     Enabled = False
     FixedCols = 0
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
-    TabOrder = 1
+    TabOrder = 0
     OnExit = dgParametersExit
     OnSelectCell = dgParametersSelectCell
     OnSetEditText = dgParametersSetEditText
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False

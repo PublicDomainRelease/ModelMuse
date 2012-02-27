@@ -8,7 +8,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
   VertScrollBar.Range = 41
   ActiveControl = btnHelp
   Caption = 'Import Shapefile'
-  ExplicitLeft = -60
   ExplicitWidth = 797
   ExplicitHeight = 580
   PixelsPerInch = 96
@@ -20,7 +19,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     Height = 41
     Align = alBottom
     ParentColor = True
-    TabOrder = 0
+    TabOrder = 1
     DesignSize = (
       789
       41)
@@ -93,12 +92,16 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     Top = 0
     Width = 789
     Height = 505
-    ActivePage = tabFeatures
+    ActivePage = tabOptions
     Align = alClient
-    TabOrder = 1
+    TabOrder = 0
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         781
         472)
@@ -164,7 +167,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Width = 315
         Height = 25
         Caption = 'Set values of enclosed elements'
-        TabOrder = 1
+        TabOrder = 2
         OnClick = cbEnclosedCellsClick
       end
       object cbIntersectedCells: TCheckBox
@@ -173,7 +176,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Width = 331
         Height = 25
         Caption = 'Set values of intersected elements'
-        TabOrder = 2
+        TabOrder = 3
         OnClick = cbEnclosedCellsClick
       end
       object cbInterpolation: TCheckBox
@@ -182,7 +185,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Width = 347
         Height = 25
         Caption = 'Set values of elements by interpolation'
-        TabOrder = 3
+        TabOrder = 4
         OnClick = cbEnclosedCellsClick
       end
       object cbImportGrid: TCheckBox
@@ -191,7 +194,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Width = 161
         Height = 25
         Caption = 'Import grid'
-        TabOrder = 4
+        TabOrder = 5
         OnClick = cbImportGridClick
       end
       object edImportCriterion: TEdit
@@ -201,7 +204,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Height = 26
         Cursor = crIBeam
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 5
+        TabOrder = 7
         Text = 'True'
         OnExit = edImportCriterionExit
       end
@@ -217,7 +220,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         ImageWidth = 0
         ItemHeight = 22
         ItemIndex = 0
-        TabOrder = 6
+        TabOrder = 8
         OnChange = comboJoinObjectsChange
         Items = <
           item
@@ -243,7 +246,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         ImageWidth = 0
         ItemHeight = 22
         ItemIndex = 1
-        TabOrder = 7
+        TabOrder = 10
         Items = <
           item
             Brush.Style = bsClear
@@ -271,7 +274,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Items.Strings = (
           'Elements'
           'Nodes')
-        TabOrder = 8
+        TabOrder = 1
         OnClick = rgEvaluatedAtClick
       end
       object btnImportCriterion: TButton
@@ -281,7 +284,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Height = 33
         Anchors = [akTop, akRight]
         Caption = 'Edit F()...'
-        TabOrder = 9
+        TabOrder = 6
         OnClick = btnImportCriterionClick
       end
       object rgElevationCount: TRadioGroup
@@ -296,7 +299,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           'Zero'
           'One'
           'Two')
-        TabOrder = 10
+        TabOrder = 11
         OnClick = rgElevationCountClick
       end
       object edZ: TRbwEdit
@@ -307,7 +310,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Anchors = [akLeft, akTop, akRight]
         Color = clBtnFace
         Enabled = False
-        TabOrder = 11
+        TabOrder = 12
         Text = '0'
         OnExit = edZExit
       end
@@ -320,7 +323,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Anchors = [akLeft, akTop, akRight]
         Color = clBtnFace
         Enabled = False
-        TabOrder = 12
+        TabOrder = 15
         Text = '0'
         OnExit = edHighZExit
       end
@@ -333,7 +336,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Anchors = [akLeft, akTop, akRight]
         Color = clBtnFace
         Enabled = False
-        TabOrder = 13
+        TabOrder = 17
         Text = '0'
         OnExit = edLowZExit
       end
@@ -345,7 +348,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Anchors = [akTop, akRight]
         Caption = 'Edit F()...'
         Enabled = False
-        TabOrder = 14
+        TabOrder = 13
         OnClick = btnElevFormulaEdit
       end
       object btnHighZ: TButton
@@ -356,7 +359,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Anchors = [akTop, akRight]
         Caption = 'Edit F()...'
         Enabled = False
-        TabOrder = 15
+        TabOrder = 14
         OnClick = btnElevFormulaEdit
       end
       object btnLowZ: TButton
@@ -377,11 +380,15 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Height = 114
         Anchors = [akLeft, akTop, akRight]
         ScrollBars = ssVertical
-        TabOrder = 17
+        TabOrder = 9
       end
     end
     object tabData: TTabSheet
       Caption = 'Data'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlData: TPanel
         Left = 0
         Top = 427
@@ -389,7 +396,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Height = 45
         Align = alBottom
         ParentColor = True
-        TabOrder = 0
+        TabOrder = 1
         object btnAll: TButton
           Left = 6
           Top = 6
@@ -424,7 +431,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Width = 781
         Height = 427
         Align = alClient
-        TabOrder = 1
+        TabOrder = 0
         object dgFields: TRbwDataGrid4
           Left = 1
           Top = 1
@@ -467,6 +474,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -488,6 +496,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -509,6 +518,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -530,6 +540,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
         end
@@ -539,6 +550,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       Caption = 'Features'
       ImageIndex = 2
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlBoundaryCondition: TPanel
         Left = 0
         Top = 0
@@ -584,7 +599,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
             Height = 26
             Style = csDropDownList
             ItemIndex = 0
-            TabOrder = 0
+            TabOrder = 1
             Text = 'none'
             OnChange = comboBoundaryChoiceChange
             Items.Strings = (
@@ -600,7 +615,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
             MinValue = 1.000000000000000000
             Value = 1.000000000000000000
             Enabled = False
-            TabOrder = 1
+            TabOrder = 0
             OnChange = seBoundaryTimeCountChange
           end
         end
@@ -647,6 +662,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -668,6 +684,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -689,6 +706,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -710,6 +728,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
         end
@@ -1038,6 +1057,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   ParentButtonFont = False
                   WordWrapCaptions = False
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = False
                 end
                 item
@@ -1060,6 +1080,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   ParentButtonFont = False
                   WordWrapCaptions = False
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -1082,6 +1103,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   ParentButtonFont = False
                   WordWrapCaptions = False
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end>
               ColWidths = (
@@ -1134,6 +1156,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               TabOrder = 0
               object tabSfrBasic: TTabSheet
                 Caption = 'Basic'
+                ExplicitLeft = 0
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object lblSfrSegmentNumber: TLabel
                   Left = 13
                   Top = 9
@@ -1188,7 +1214,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 37
                   Width = 145
                   Height = 26
-                  TabOrder = 1
+                  TabOrder = 2
                   Text = 'ObjectIntersectLength'
                 end
                 object comboSfrStreambedTop: TComboBox
@@ -1196,21 +1222,21 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 6
                   Width = 145
                   Height = 26
-                  TabOrder = 2
+                  TabOrder = 1
                 end
                 object comboSfrStreamSlope: TComboBox
                   Left = 199
                   Top = 68
                   Width = 145
                   Height = 26
-                  TabOrder = 3
+                  TabOrder = 4
                 end
                 object comboSfrStreambedThickness: TComboBox
                   Left = 607
                   Top = 37
                   Width = 145
                   Height = 26
-                  TabOrder = 4
+                  TabOrder = 3
                 end
                 object comboSfrStreambedKv: TComboBox
                   Left = 607
@@ -1223,6 +1249,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               object tabSfrUnsaturated: TTabSheet
                 Caption = 'Unsaturated'
                 ImageIndex = 1
+                ExplicitLeft = 0
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object lblSaturatedVolumetricWater: TLabel
                   Left = 3
                   Top = 6
@@ -1335,14 +1365,14 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 101
               Width = 145
               Height = 26
-              TabOrder = 2
+              TabOrder = 3
             end
             object comboCenterLake: TComboBox
               Left = 127
               Top = 70
               Width = 145
               Height = 26
-              TabOrder = 3
+              TabOrder = 2
             end
           end
           object jvspModflowDRT: TJvStandardPage
@@ -1405,11 +1435,17 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               object tabDrtNone: TTabSheet
                 Caption = 'tabDrtNone'
                 TabVisible = False
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
               end
               object tabDrtLocation: TTabSheet
                 Caption = 'tabDrtLocation'
                 ImageIndex = 2
                 TabVisible = False
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object lblDrtX: TLabel
                   Left = 3
                   Top = 7
@@ -1481,6 +1517,9 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 Caption = 'tabDrtCell'
                 ImageIndex = 3
                 TabVisible = False
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object lblDrtCol: TLabel
                   Left = 3
                   Top = 7
@@ -1508,7 +1547,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Width = 145
                   Height = 26
                   Style = csDropDown
-                  TabOrder = 0
+                  TabOrder = 2
                   Text = '1'
                   Items.Strings = (
                     'False'
@@ -1542,7 +1581,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Width = 145
                   Height = 26
                   Style = csDropDown
-                  TabOrder = 2
+                  TabOrder = 0
                   Text = '1'
                   Items.Strings = (
                     'False'
@@ -1593,21 +1632,21 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 
                   'Distribute conductivity among sections most nearly parallel to t' +
                   'he grid')
-              TabOrder = 0
+              TabOrder = 2
             end
             object comboHfbHydCond: TComboBox
               Left = 224
               Top = 11
               Width = 145
               Height = 26
-              TabOrder = 1
+              TabOrder = 0
             end
             object comboHfbThickness: TComboBox
               Left = 224
               Top = 36
               Width = 145
               Height = 26
-              TabOrder = 2
+              TabOrder = 1
             end
           end
           object jvspModflowHOB: TJvStandardPage
@@ -1658,7 +1697,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Width = 145
               Height = 26
               ItemIndex = 0
-              TabOrder = 1
+              TabOrder = 2
               Text = 'Observation'
               Items.Strings = (
                 'Observation'
@@ -1670,7 +1709,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 102
               Width = 145
               Height = 22
-              TabOrder = 2
+              TabOrder = 3
               Text = '9999'
               DataType = dtReal
               Max = 1.000000000000000000
@@ -1682,7 +1721,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Width = 338
               Height = 26
               ItemIndex = 1
-              TabOrder = 3
+              TabOrder = 1
               Text = 'Calculate drawdown relative to first head (2)'
               Items.Strings = (
                 'All heads (1)'
@@ -1707,6 +1746,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 HelpType = htKeyword
                 HelpKeyword = 'MNW2_Basic_Tab'
                 Caption = 'Basic'
+                ExplicitLeft = 0
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object lblWellId: TLabel
                   Left = 3
                   Top = 6
@@ -1804,70 +1847,70 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 35
                   Width = 115
                   Height = 26
-                  TabOrder = 1
+                  TabOrder = 2
                 end
                 object comboSpecifyPump: TComboBox
                   Left = 233
                   Top = 67
                   Width = 115
                   Height = 26
-                  TabOrder = 2
+                  TabOrder = 4
                 end
                 object comboZPump: TComboBox
                   Left = 233
                   Top = 99
                   Width = 115
                   Height = 26
-                  TabOrder = 3
+                  TabOrder = 6
                 end
                 object comboMnw2PumplocX: TComboBox
                   Left = 233
                   Top = 131
                   Width = 115
                   Height = 26
-                  TabOrder = 4
+                  TabOrder = 8
                 end
                 object comboMnw2PumplocY: TComboBox
                   Left = 233
                   Top = 163
                   Width = 115
                   Height = 26
-                  TabOrder = 5
+                  TabOrder = 9
                 end
                 object comboMnw2PumplocZ: TComboBox
                   Left = 233
                   Top = 195
                   Width = 115
                   Height = 26
-                  TabOrder = 6
+                  TabOrder = 10
                 end
                 object comboConstrainPumping: TComboBox
                   Left = 653
                   Top = 3
                   Width = 115
                   Height = 26
-                  TabOrder = 7
+                  TabOrder = 1
                 end
                 object comboPartialPenetrationFlag: TComboBox
                   Left = 653
                   Top = 35
                   Width = 115
                   Height = 26
-                  TabOrder = 8
+                  TabOrder = 3
                 end
                 object comboPartialPenetration: TComboBox
                   Left = 653
                   Top = 67
                   Width = 115
                   Height = 26
-                  TabOrder = 9
+                  TabOrder = 5
                 end
                 object comboPumpCap: TComboBox
                   Left = 653
                   Top = 107
                   Width = 115
                   Height = 26
-                  TabOrder = 10
+                  TabOrder = 7
                 end
               end
               object tabLossControls: TTabSheet
@@ -1875,6 +1918,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 HelpKeyword = 'MNW2_Loss_Controls_Tab'
                 Caption = 'Loss Controls'
                 ImageIndex = 1
+                ExplicitLeft = 0
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object lblWellRadius: TLabel
                   Left = 3
                   Top = 6
@@ -1979,6 +2026,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 HelpKeyword = 'MNW2_Discharge_Adjustment_Tab'
                 Caption = 'Discharge Adjustment'
                 ImageIndex = 2
+                ExplicitLeft = 0
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object lblReferenceHead: TLabel
                   Left = 8
                   Top = 6
@@ -2044,6 +2095,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     object tabCoordinateConversion: TTabSheet
       Caption = 'Coordinate Conversion'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object imageUtmZones: TImage
         Left = 8
         Top = 96

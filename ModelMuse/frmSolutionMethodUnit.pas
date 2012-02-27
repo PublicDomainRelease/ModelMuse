@@ -119,6 +119,9 @@ implementation
 
 uses frmGoPhastUnit, GoPhastTypes;
 
+resourcestring
+  StrSolutionMethod = 'solution method';
+
 {$R *.dfm}
 
 { TfrmSolutionMethod }
@@ -206,7 +209,7 @@ end;
 
 function TUndoSolutionOptions.Description: string;
 begin
-  result := 'solution method';
+  result := StrSolutionMethod;
 end;
 
 destructor TUndoSolutionOptions.Destroy;

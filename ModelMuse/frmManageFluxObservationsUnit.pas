@@ -1,17 +1,3 @@
-unit frmManageFluxObservationsUnit;
-
-interface
-
-uses
-  Types, Windows, SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, ExtCtrls,
-  JvListBox, JvCtrls, JvComponent, JvExStdCtrls, JvExComCtrls, ComCtrls,
-  JvComCtrls, frmCustomGoPhastUnit, Buttons, Mask, JvExMask, JvSpin, Grids,
-  RbwDataGrid4, JvEdit, JvExExtCtrls, JvNetscapeSplitter, UndoItems,
-  ModflowPackageSelectionUnit, FluxObservationUnit, RbwParser, JvCombobox,
-  JvListComb, ArgusDataEntry;
-
-type
-  TFluxColumns = (fcName, fcTime, fcValue, fcStatistic, fcStatFlag, fcComment);
 {-----------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
@@ -34,6 +20,22 @@ located at http://jvcl.sourceforge.net
 
 @author(Richard B. Winston <rbwinst@usgs.gov>)
 }
+unit frmManageFluxObservationsUnit;
+
+interface
+
+uses
+  Types, Windows, SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, ExtCtrls,
+  JvListBox, JvCtrls, JvComponent, JvExStdCtrls, JvExComCtrls, ComCtrls,
+  JvComCtrls, frmCustomGoPhastUnit, Buttons, Mask, JvExMask, JvSpin, Grids,
+  RbwDataGrid4, JvEdit, JvExExtCtrls, JvNetscapeSplitter, UndoItems,
+  ModflowPackageSelectionUnit, FluxObservationUnit, RbwParser, JvCombobox,
+  JvListComb, ArgusDataEntry, Mt3dmsFluxObservationsUnit;
+
+type
+  TFluxColumns = (fcName, fcTime, fcValue, fcStatistic, fcStatFlag, fcComment);
+  TMt3dFluxColumns = (fmcName, fmcSpecies, fmcObsType, fmcTime, fmcValue, fmcWeight, fmcComment);
+
   TfrmManageFluxObservations = class(TfrmCustomGoPhast)
     pnlBottom: TPanel;
     btnHelp: TBitBtn;
@@ -43,7 +45,7 @@ located at http://jvcl.sourceforge.net
     pnlMain: TPanel;
     pcMain: TJvPageControl;
     tabObservationsTimes: TTabSheet;
-    lblNumPeriods: TLabel;
+    lblNumObsTimes: TLabel;
     rdgFluxObsTimes: TRbwDataGrid4;
     seNumObsTimes: TJvSpinEdit;
     btnDelete: TButton;
@@ -71,6 +73,14 @@ located at http://jvcl.sourceforge.net
     lblTreatment: TLabel;
     comboTreatment: TComboBox;
     tvFluxObservations: TTreeView;
+    tabMassFlux: TTabSheet;
+    rdeMassFluxMultiValueEdit: TRbwDataEntry;
+    comboMt3dmsSpecies: TJvImageComboBox;
+    rdgConcFluxObsTimes: TRbwDataGrid4;
+    seNumMt3dmsObsTimes: TJvSpinEdit;
+    lblNumMt3dmsObsTimes: TLabel;
+    btnDeleteMt3dmsFlux: TButton;
+    btnInsertMt3dmsFlux: TButton;
     procedure IncBtnClick(Sender: TObject);
     procedure IncAllBtnClick(Sender: TObject);
     procedure ExclBtnClick(Sender: TObject);
@@ -115,11 +125,27 @@ located at http://jvcl.sourceforge.net
     procedure comboTreatmentChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure tvFluxObservationsChange(Sender: TObject; Node: TTreeNode);
+    procedure rdeMassFluxMultiValueEditChange(Sender: TObject);
+    procedure comboMt3dmsSpeciesChange(Sender: TObject);
+    procedure seNumMt3dmsObsTimesChange(Sender: TObject);
+    procedure rdgConcFluxObsTimesBeforeDrawCell(Sender: TObject; ACol,
+      ARow: Integer);
+    procedure rdgConcFluxObsTimesColSize(Sender: TObject; ACol,
+      PriorWidth: Integer);
+    procedure rdgConcFluxObsTimesEndUpdate(Sender: TObject);
+    procedure rdgConcFluxObsTimesExit(Sender: TObject);
+    procedure rdgConcFluxObsTimesHorizontalScroll(Sender: TObject);
+    procedure rdgConcFluxObsTimesSelectCell(Sender: TObject; ACol,
+      ARow: Integer; var CanSelect: Boolean);
+    procedure btnDeleteMt3dmsFluxClick(Sender: TObject);
+    procedure btnInsertMt3dmsFluxClick(Sender: TObject);
+    procedure rdgConcFluxObsTimesSetEditText(Sender: TObject; ACol,
+      ARow: Integer; const Value: string);
   private
     FChobNode: TTreeNode;
     FChobObservations: TFluxObservationGroups;
-    FSelectedGroup: TFluxObservationGroups;
-    FSelectedObservation: TFluxObservationGroup;
+    FSelectedGroup: TCustomFluxObservationGroups;
+    FSelectedObservation: TCustomFluxObservationGroup;
     FChdScreenObjects: TList;
     FSettingObservation: Boolean;
     FUpdatingFormula: Boolean;
@@ -133,12 +159,42 @@ located at http://jvcl.sourceforge.net
     FDrobNode: TTreeNode;
     FRvobNode: TTreeNode;
     FSettingTimeCount: Boolean;
-    procedure SetSelectedObservation(const Value: TFluxObservationGroup);
+    FHeadMassFluxObservations: TList;
+    FWellMassFluxObservations: TList;
+    FDrnMassFluxObservations: TList;
+    FRivMassFluxObservations: TList;
+    FGhbMassFluxObservations: TList;
+    FRchMassFluxObservations: TList;
+    FEvtMassFluxObservations: TList;
+    FMassLoadingMassFluxObservations: TList;
+    FResMassFluxObservations: TList;
+    FLakMassFluxObservations: TList;
+    FDrtMassFluxObservations: TList;
+    FEtsMassFluxObservations: TList;
+    FMassFluxObs: TMassFluxObs;
+    FHeadMassFluxNode: TTreeNode;
+    FWellMassFluxNode: TTreeNode;
+    FDrnMassFluxNode: TTreeNode;
+    FRivMassFluxNode: TTreeNode;
+    FGhbMassFluxNode: TTreeNode;
+    FRchMassFluxNode: TTreeNode;
+    FEVTMassFluxNode: TTreeNode;
+    FMassLoadingMassFluxNode: TTreeNode;
+    FResMassFluxNode: TTreeNode;
+    FLakMassFluxNode: TTreeNode;
+    FEtsMassFluxNode: TTreeNode;
+    FDrtMassFluxNode: TTreeNode;
+    procedure SetSelectedObservation(const Value: TCustomFluxObservationGroup);
     procedure AssignObsNames;
     procedure DisplayFactor;
     procedure UpdateFactor;
     procedure CreateVariables;
-    property SelectedObservation: TFluxObservationGroup
+    procedure LayoutMt3dmsMultiFluxEdits;
+    procedure ReadMassFluxObservations(Package: TModflowPackageSelection;
+      const FluxTypeLabel: string;
+      FluxObservations: TMt3dmsFluxObservationGroups; var ParentNode: TTreeNode);
+    procedure SetSelectedMt3dmsObs(Mt3dmsObs: TMt3dmsFluxObservationGroup);
+    property SelectedObservation: TCustomFluxObservationGroup
       read FSelectedObservation write SetSelectedObservation;
     procedure GetData;
     procedure SetData;
@@ -148,15 +204,23 @@ located at http://jvcl.sourceforge.net
     procedure GetGlobalVariables;
     function CheckFormula(FunctionString: string; ShowError: boolean): boolean;
     procedure AssignFactor(NewFormula: string);
-    procedure InitializeFirstRow;
+    procedure InitializeFirstRow(Grid: TRbwDataGrid4; SpinEdit: TJvSpinEdit);
     procedure CheckErrors;
     procedure LayoutMultiFluxEdits;
+    procedure LayoutMt3dmsFluxEdits;
     procedure AssignValuesToSelectedGridCells(const NewText: string;
       Grid: TRbwDataGrid4; const StartCol, EndCol: integer);
     procedure EnableMultiEditControl(Grid: TRbwDataGrid4; AControl: TControl;
       const StartCol, EndCol: integer);
     procedure SetSelectedGroupAndObservation(TreeView: TTreeView);
     procedure SetStatFlagLabels;
+    procedure SetSelectedFluxObs(FluxObs: TFluxObservationGroup);
+    procedure SetObsNameLength(SpinEdit: TJvSpinEdit);
+    procedure SetObsGridRowCount(SpinEdit: TJvSpinEdit; Grid: TRbwDataGrid4;
+      DeleteButton: TButton);
+    procedure InitializeNewObs(RowIndex, TimeColumn, ValueColumn,
+      CommentColumn: Integer; Grid: TRbwDataGrid4;
+      ObsTime: TCustomFluxObservationItem);
   public
     procedure SetButtons;
   end;
@@ -166,7 +230,19 @@ implementation
 uses
   JvBoxProcs, frmGoPhastUnit, ScreenObjectUnit, Math, GIS_Functions, 
   GoPhastTypes, DataSetUnit, frmFormulaUnit, frmErrorsAndWarningsUnit,
-  PhastModelUnit;
+  PhastModelUnit, Mt3dmsChemSpeciesUnit;
+
+resourcestring
+  StrName = 'Name';
+  StrTime = 'Time';
+  StrObservedValue = 'Observed value';
+  StrComment = 'Comment';
+  StrStatistic = 'Statistic';
+  StrStatFlag = 'StatFlag';
+  StrComponent = 'Component';
+  StrWeight = 'Weight';
+  StrObservationTimeOr = 'Observation Time or Frequency (FluxTimeObs)';
+  StrObservationType = 'Observation type';
 
 {$R *.dfm}
 
@@ -187,6 +263,375 @@ begin
   IncAllBtn.Enabled := not SrcEmpty;
   ExclBtn.Enabled := not DstEmpty and (DstList.SelCount > 0);
   ExclAllBtn.Enabled := not DstEmpty;
+end;
+
+procedure TfrmManageFluxObservations.InitializeNewObs(RowIndex, TimeColumn,
+  ValueColumn, CommentColumn: Integer; Grid: TRbwDataGrid4;
+  ObsTime: TCustomFluxObservationItem);
+begin
+  ObsTime.Index := RowIndex - 1;
+  if Grid.Cells[TimeColumn, RowIndex] = '' then
+  begin
+    ObsTime.Time := 0;
+    Grid.Cells[TimeColumn, RowIndex] := '0';
+  end
+  else
+  begin
+    ObsTime.Time := StrToFloat(Grid.Cells[TimeColumn, RowIndex]);
+  end;
+  if Grid.Cells[ValueColumn, RowIndex] = '' then
+  begin
+    ObsTime.ObservedValue := 0;
+    Grid.Cells[ValueColumn, RowIndex] := '0';
+  end
+  else
+  begin
+    ObsTime.ObservedValue := StrToFloat(Grid.Cells[ValueColumn, RowIndex]);
+  end;
+  if Grid.Cells[CommentColumn, RowIndex] = '' then
+  begin
+    ObsTime.Comment := '';
+    Grid.Cells[CommentColumn, RowIndex] := '';
+  end
+  else
+  begin
+    ObsTime.Comment := Grid.Cells[CommentColumn, RowIndex];
+  end;
+end;
+
+procedure TfrmManageFluxObservations.SetObsGridRowCount(SpinEdit: TJvSpinEdit;
+  Grid: TRbwDataGrid4; DeleteButton: TButton);
+var
+  Index: Integer;
+  ColIndex: Integer;
+  NewRowCount: Integer;
+begin
+  Grid.Enabled := SpinEdit.Enabled;
+  Grid.Invalidate;
+  NewRowCount := Max(1, SpinEdit.AsInteger) + 1;
+  if NewRowCount < Grid.RowCount then
+  begin
+    Grid.BeginUpdate;
+    try
+      for Index := NewRowCount to Grid.RowCount - 1 do
+      begin
+        for ColIndex := 0 to Grid.ColCount - 1 do
+        begin
+          Grid.Cells[ColIndex, Index] := '';
+        end;
+        Grid.Objects[0, Index] := nil;
+      end;
+    finally
+      Grid.EndUpdate;
+    end;
+  end;
+  InitializeFirstRow(Grid, SpinEdit);
+  Grid.RowCount := NewRowCount;
+  DeleteButton.Enabled := SpinEdit.Enabled and (SpinEdit.AsInteger >= 1);
+end;
+
+procedure TfrmManageFluxObservations.SetObsNameLength(SpinEdit: TJvSpinEdit);
+begin
+  if SpinEdit.AsInteger > 0 then
+  begin
+    edObservationName.MaxLength := MaxObservationNameLength - 2
+      - Trunc(Log10(SpinEdit.AsInteger));
+    if Length(edObservationName.Text) > edObservationName.MaxLength then
+    begin
+      edObservationName.Text := Copy(edObservationName.Text, 1,
+        edObservationName.MaxLength);
+      edObservationNameChange(nil);
+    end;
+  end
+  else
+  begin
+    edObservationName.MaxLength := MaxObservationNameLength - 2;
+  end;
+end;
+
+procedure TfrmManageFluxObservations.SetSelectedMt3dmsObs(
+  Mt3dmsObs: TMt3dmsFluxObservationGroup);
+var
+  MaxTimeStringLength: Integer;
+  CurrentObjects: TList;
+  AvailableList: TList;
+  ScreenObject: TScreenObject;
+  TimeString: string;
+  ObsTime: TMt3dmsFluxObservation;
+  Index1: Integer;
+  Index2: Integer;
+  Index3: Integer;
+  Index4: Integer;
+begin
+  seNumMt3dmsObsTimes.Enabled := True;
+  rdgConcFluxObsTimes.Enabled := True;
+  edObservationName.Enabled := True;
+  comboTreatment.Enabled := True;
+  edObservationName.Text := Mt3dmsObs.ObservationName;
+  comboTreatment.ItemIndex := Ord(Mt3dmsObs.Purpose);
+  btnInsertMt3dmsFlux.Enabled := True;
+  SrcList.Enabled := True;
+  DstList.Enabled := True;
+  IncBtn.Enabled := True;
+  IncAllBtn.Enabled := True;
+  ExclBtn.Enabled := True;
+  ExclAllBtn.Enabled := True;
+  CurrentObjects := TList.Create;
+  try
+    for Index1 := 0 to Mt3dmsObs.ObservationFactors.Count - 1 do
+    begin
+      ScreenObject := Mt3dmsObs.ObservationFactors[Index1].
+        ScreenObject as TScreenObject;
+      CurrentObjects.Add(ScreenObject);
+    end;
+    AvailableList := nil;
+
+    if tvFluxObservations.Selected.Parent = FHeadMassFluxNode then
+    begin
+      AvailableList := FHeadMassFluxObservations;
+    end
+    else if tvFluxObservations.Selected.Parent = FWellMassFluxNode then
+    begin
+      AvailableList := FWellMassFluxObservations;
+    end
+    else if tvFluxObservations.Selected.Parent = FDrnMassFluxNode then
+    begin
+      AvailableList := FDrnMassFluxObservations;
+    end
+    else if tvFluxObservations.Selected.Parent = FRivMassFluxNode then
+    begin
+      AvailableList := FRivMassFluxObservations;
+    end
+    else if tvFluxObservations.Selected.Parent = FGhbMassFluxNode then
+    begin
+      AvailableList := FGhbMassFluxObservations;
+    end
+    else if tvFluxObservations.Selected.Parent = FRchMassFluxNode then
+    begin
+      AvailableList := FRchMassFluxObservations;
+    end
+    else if tvFluxObservations.Selected.Parent = FEVTMassFluxNode then
+    begin
+      AvailableList := FEvtMassFluxObservations;
+    end
+    else if tvFluxObservations.Selected.Parent = FMassLoadingMassFluxNode then
+    begin
+      AvailableList := FMassLoadingMassFluxObservations;
+    end
+    else if tvFluxObservations.Selected.Parent = FResMassFluxNode then
+    begin
+      AvailableList := FResMassFluxObservations;
+    end
+    else if tvFluxObservations.Selected.Parent = FLakMassFluxNode then
+    begin
+      AvailableList := FLakMassFluxObservations;
+    end
+    else if tvFluxObservations.Selected.Parent = FEtsMassFluxNode then
+    begin
+      AvailableList := FEtsMassFluxObservations;
+    end
+    else if tvFluxObservations.Selected.Parent = FDrtMassFluxNode then
+    begin
+      AvailableList := FDrtMassFluxObservations;
+    end
+    else
+    begin
+      Assert(False);
+    end;
+    for Index2 := 0 to AvailableList.Count - 1 do
+    begin
+      ScreenObject := AvailableList[Index2];
+      if CurrentObjects.IndexOf(ScreenObject) >= 0 then
+      begin
+        DstList.Items.AddObject(ScreenObject.Name, ScreenObject);
+        if ScreenObject.Selected then
+        begin
+          DstList.Selected[DstList.Count - 1] := True;
+        end;
+      end
+      else
+      begin
+        SrcList.Items.AddObject(ScreenObject.Name, ScreenObject);
+        if ScreenObject.Selected then
+        begin
+          SrcList.Selected[SrcList.Count - 1] := True;
+        end;
+      end;
+    end;
+  finally
+    CurrentObjects.Free;
+  end;
+  for Index3 := 1 to rdgConcFluxObsTimes.RowCount - 1 do
+  begin
+    rdgConcFluxObsTimes.Objects[Ord(fcName), Index3] := nil;
+  end;
+  seNumMt3dmsObsTimes.AsInteger := Mt3dmsObs.ObservationTimes.Count;
+  InitializeFirstRow(rdgConcFluxObsTimes, seNumMt3dmsObsTimes);
+  MaxTimeStringLength := Length(IntToStr(Mt3dmsObs.ObservationTimes.Count));
+  rdgConcFluxObsTimes.BeginUpdate;
+  try
+    for Index4 := 0 to Mt3dmsObs.ObservationTimes.Count - 1 do
+    begin
+      ObsTime := Mt3dmsObs.ObservationTimes[Index4];
+      TimeString := IntToStr(Index4 + 1);
+      while Length(TimeString) < MaxTimeStringLength do
+      begin
+        TimeString := '0' + TimeString;
+      end;
+      rdgConcFluxObsTimes.Cells[Ord(fmcName), Index4 + 1] :=
+        Mt3dmsObs.ObservationName + '_' + TimeString;
+      rdgConcFluxObsTimes.ItemIndex[Ord(fmcObsType), Index4 + 1]
+        := Ord(ObsTime.ObservationType);
+      rdgConcFluxObsTimesSetEditText(rdgConcFluxObsTimes,
+        Ord(fmcObsType), Index4 + 1,
+        rdgConcFluxObsTimes.Cells[Ord(fmcObsType), Index4 + 1]);
+      case ObsTime.ObservationType of
+        otTime:
+          begin
+            rdgConcFluxObsTimes.Cells[Ord(fmcTime), Index4 + 1] :=
+              FloatToStr(ObsTime.Time);
+          end;
+        otFrequency:
+          begin
+            rdgConcFluxObsTimes.Cells[Ord(fmcTime), Index4 + 1] :=
+              IntToStr(ObsTime.ObservationFrequency);
+          end;
+        else
+          Assert(False);
+      end;
+
+      rdgConcFluxObsTimes.Cells[Ord(fmcValue), Index4 + 1] :=
+        FloatToStr(ObsTime.ObservedValue);
+      rdgConcFluxObsTimes.Cells[Ord(fmcWeight), Index4 + 1] :=
+        FloatToStr(ObsTime.Weight);
+      rdgConcFluxObsTimes.Cells[Ord(fmcSpecies), Index4 + 1] :=
+        ObsTime.Species;
+      rdgConcFluxObsTimes.Cells[Ord(fmcComment), Index4 + 1] :=
+        ObsTime.Comment;
+      rdgConcFluxObsTimes.Objects[Ord(fmcName), Index4 + 1] := ObsTime;
+    end;
+    rdgConcFluxObsTimes.Invalidate;
+  finally
+    rdgConcFluxObsTimes.EndUpdate;
+  end;
+end;
+
+procedure TfrmManageFluxObservations.SetSelectedFluxObs(
+  FluxObs: TFluxObservationGroup);
+var
+  MaxTimeStringLength: Integer;
+  CurrentObjects: TList;
+  AvailableList: TList;
+  ScreenObject: TScreenObject;
+  TimeString: string;
+  ObsTime: TFluxObservation;
+  Index1: Integer;
+  Index2: Integer;
+  Index3: Integer;
+  Index4: Integer;
+begin
+  seNumObsTimes.Enabled := True;
+  rdgFluxObsTimes.Enabled := True;
+  edObservationName.Enabled := True;
+  comboTreatment.Enabled := True;
+  edObservationName.Text := FluxObs.ObservationName;
+  comboTreatment.ItemIndex := Ord(FluxObs.Purpose);
+  SetStatFlagLabels;
+  btnInsert.Enabled := True;
+  SrcList.Enabled := True;
+  DstList.Enabled := True;
+  IncBtn.Enabled := True;
+  IncAllBtn.Enabled := True;
+  ExclBtn.Enabled := True;
+  ExclAllBtn.Enabled := True;
+  CurrentObjects := TList.Create;
+  try
+    for Index1 := 0 to FluxObs.ObservationFactors.Count - 1 do
+    begin
+      ScreenObject := FluxObs.ObservationFactors[Index1].
+        ScreenObject as TScreenObject;
+      CurrentObjects.Add(ScreenObject);
+    end;
+    AvailableList := nil;
+    if tvFluxObservations.Selected.Parent = FChobNode then
+    begin
+      AvailableList := FChdScreenObjects;
+    end
+    else if tvFluxObservations.Selected.Parent = FDrobNode then
+    begin
+      AvailableList := FDrnScreenObjects;
+    end
+    else if tvFluxObservations.Selected.Parent = FGbobNode then
+    begin
+      AvailableList := FGhbScreenObjects;
+    end
+    else if tvFluxObservations.Selected.Parent = FRvobNode then
+    begin
+      AvailableList := FRivScreenObjects;
+    end
+    else
+    begin
+      Assert(False);
+    end;
+    for Index2 := 0 to AvailableList.Count - 1 do
+    begin
+      ScreenObject := AvailableList[Index2];
+      if CurrentObjects.IndexOf(ScreenObject) >= 0 then
+      begin
+        DstList.Items.AddObject(ScreenObject.Name, ScreenObject);
+        if ScreenObject.Selected then
+        begin
+          DstList.Selected[DstList.Count - 1] := True;
+        end;
+      end
+      else
+      begin
+        SrcList.Items.AddObject(ScreenObject.Name, ScreenObject);
+        if ScreenObject.Selected then
+        begin
+          SrcList.Selected[SrcList.Count - 1] := True;
+        end;
+      end;
+    end;
+  finally
+    CurrentObjects.Free;
+  end;
+  for Index3 := 1 to rdgFluxObsTimes.RowCount - 1 do
+  begin
+    rdgFluxObsTimes.Objects[Ord(fcName), Index3] := nil;
+  end;
+  seNumObsTimes.AsInteger := FluxObs.ObservationTimes.Count;
+  InitializeFirstRow(rdgFluxObsTimes, seNumObsTimes);
+  MaxTimeStringLength := Length(IntToStr(FluxObs.ObservationTimes.Count));
+  rdgFluxObsTimes.BeginUpdate;
+  try
+    for Index4 := 0 to FluxObs.ObservationTimes.Count - 1 do
+    begin
+      ObsTime := FluxObs.ObservationTimes[Index4];
+      TimeString := IntToStr(Index4 + 1);
+      while Length(TimeString) < MaxTimeStringLength do
+      begin
+        TimeString := '0' + TimeString;
+      end;
+      rdgFluxObsTimes.Cells[Ord(fcName), Index4 + 1] :=
+        FluxObs.ObservationName + '_' + TimeString;
+      rdgFluxObsTimes.Cells[Ord(fcTime), Index4 + 1] :=
+        FloatToStr(ObsTime.Time);
+      rdgFluxObsTimes.Cells[Ord(fcValue), Index4 + 1] :=
+        FloatToStr(ObsTime.ObservedValue);
+      rdgFluxObsTimes.Cells[Ord(fcStatistic), Index4 + 1] :=
+        FloatToStr(ObsTime.Statistic);
+      rdgFluxObsTimes.Cells[Ord(fcStatFlag), Index4 + 1] :=
+        rdgFluxObsTimes.Columns[Ord(fcStatFlag)].
+        PickList[Ord(ObsTime.StatFlag)];
+      rdgFluxObsTimes.Cells[Ord(fcComment), Index4 + 1] :=
+        ObsTime.Comment;
+      rdgFluxObsTimes.Objects[Ord(fcName), Index4 + 1] := ObsTime;
+    end;
+    rdgFluxObsTimes.Invalidate;
+  finally
+    rdgFluxObsTimes.EndUpdate;
+  end;
 end;
 
 type TRbwDataGrid4Crack = class(TRbwDataGrid4);
@@ -212,43 +657,50 @@ begin
 end;
 
 procedure TfrmManageFluxObservations.SetSelectedGroupAndObservation(TreeView: TTreeView);
+var
+  AnObject: TObject;
 begin
   btnDeleteObservation.Enabled :=
     (TreeView.Selected <> nil)
     and (TreeView.Selected.Data <> FChobObservations)
     and (TreeView.Selected.Data <> FDrobObservations)
     and (TreeView.Selected.Data <> FGbobObservations)
-    and (TreeView.Selected.Data <> FRvobObservations);
-  rdgFluxObsTimesExit(nil);
+    and (TreeView.Selected.Data <> FRvobObservations)
+
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsHeadMassFluxObservations)
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsWellMassFluxObservations)
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsDrnMassFluxObservations)
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsRivMassFluxObservations)
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsGhbMassFluxObservations)
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsRchMassFluxObservations)
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsEvtMassFluxObservations)
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsMassLoadingMassFluxObservations)
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsResMassFluxObservations)
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsLakMassFluxObservations)
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsDrtMassFluxObservations)
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsEtsMassFluxObservations);
+  if tabObservationsTimes.TabVisible then
+  begin
+    rdgFluxObsTimesExit(nil);
+  end;
   if (TreeView.Selected = nil) then
   begin
     SelectedObservation := nil;
     FSelectedGroup := nil;
   end
-  else if (TreeView.Selected = FChobNode) then
-  begin
-    SelectedObservation := nil;
-    FSelectedGroup := FChobObservations;
-  end
-  else if (TreeView.Selected = FDrobNode) then
-  begin
-    SelectedObservation := nil;
-    FSelectedGroup := FDrobObservations;
-  end
-  else if (TreeView.Selected = FGbobNode) then
-  begin
-    SelectedObservation := nil;
-    FSelectedGroup := FGbobObservations;
-  end
-  else if (TreeView.Selected = FRvobNode) then
-  begin
-    SelectedObservation := nil;
-    FSelectedGroup := FRvobObservations;
-  end
   else
   begin
-    SelectedObservation := TreeView.Selected.Data;
-    FSelectedGroup := TreeView.Selected.Parent.Data;
+    AnObject := TreeView.Selected.Data;
+    if AnObject is TCustomFluxObservationGroups then
+    begin
+      SelectedObservation := nil;
+      FSelectedGroup := TreeView.Selected.Data;
+    end
+    else
+    begin
+      SelectedObservation := TreeView.Selected.Data;
+      FSelectedGroup := TreeView.Selected.Parent.Data;
+    end;
   end;
   DisplayFactor;
 end;
@@ -288,6 +740,76 @@ begin
   comboMultiStatFlag.Width := rdgFluxObsTimes.ColWidths[Ord(fcStatFlag)];
 end;
 
+procedure TfrmManageFluxObservations.LayoutMt3dmsFluxEdits;
+var
+  AColVisible: Boolean;
+  Index: Integer;
+begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;
+  if (rdgConcFluxObsTimes = nil) or (rdeMassFluxMultiValueEdit = nil)
+     or (comboMt3dmsSpecies = nil) then
+  begin
+    Exit;
+  end;
+  AColVisible := False;
+  for Index := Ord(fmcTime) to Ord(fmcWeight) do
+  begin
+    if rdgConcFluxObsTimes.ColVisible[Index] then
+    begin
+      LayoutControls(rdgConcFluxObsTimes, rdeMassFluxMultiValueEdit, nil, Index,
+        rdgConcFluxObsTimes.Margins.Left);
+      rdeMassFluxMultiValueEdit.Width := rdgConcFluxObsTimes.ColWidths[Index];
+      AColVisible := True;
+      break;
+    end;
+  end;
+  if not AColVisible then
+  begin
+    rdeMassFluxMultiValueEdit.Visible := False;
+  end;
+  LayoutControls(rdgConcFluxObsTimes, comboMt3dmsSpecies, nil, Ord(fmcSpecies),
+    rdgConcFluxObsTimes.Margins.Left);
+  comboMt3dmsSpecies.Width := rdgConcFluxObsTimes.ColWidths[Ord(fmcSpecies)];
+end;
+
+procedure TfrmManageFluxObservations.LayoutMt3dmsMultiFluxEdits;
+var
+  AColVisible: Boolean;
+  Index: Integer;
+begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;
+  if (rdgConcFluxObsTimes = nil) or (rdeMassFluxMultiValueEdit = nil)
+     or (comboMt3dmsSpecies = nil) then
+  begin
+    Exit;
+  end;
+  AColVisible := False;
+  for Index := Ord(fmcTime) to Ord(fmcWeight) do
+  begin
+    if rdgConcFluxObsTimes.ColVisible[Index] then
+    begin
+      LayoutControls(rdgConcFluxObsTimes, rdeMassFluxMultiValueEdit, nil, Index,
+        rdgConcFluxObsTimes.Margins.Left);
+      rdeMassFluxMultiValueEdit.Width := rdgConcFluxObsTimes.ColWidths[Index];
+      AColVisible := True;
+      break;
+    end;
+  end;
+  if not AColVisible then
+  begin
+    rdeMassFluxMultiValueEdit.Visible := False;
+  end;
+  LayoutControls(rdgConcFluxObsTimes, comboMt3dmsSpecies, nil, Ord(fmcSpecies),
+    rdgConcFluxObsTimes.Margins.Left);
+  comboMt3dmsSpecies.Width := rdgConcFluxObsTimes.ColWidths[Ord(fmcSpecies)];
+end;
+
 procedure TfrmManageFluxObservations.CheckErrors;
 var
   ErrorIndex: Integer;
@@ -304,14 +826,36 @@ begin
   ErrorRoots := TStringList.Create;
   ErrorMessages := TStringList.Create;
   try
-    FChobObservations.CheckObservationTimes(ErrorRoots,
-      ErrorMessages, fkConstantHead);
-    FDrobObservations.CheckObservationTimes(ErrorRoots,
-      ErrorMessages, fkDrain);
-    FGbobObservations.CheckObservationTimes(ErrorRoots,
-      ErrorMessages, fkGeneralHead);
-    FRvobObservations.CheckObservationTimes(ErrorRoots,
-      ErrorMessages, fkRiver);
+    FChobObservations.CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FDrobObservations.CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FGbobObservations.CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FRvobObservations.CheckObservationTimes(ErrorRoots, ErrorMessages);
+
+    FMassFluxObs.Mt3dmsHeadMassFluxObservations.
+      CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FMassFluxObs.Mt3dmsWellMassFluxObservations.
+      CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FMassFluxObs.Mt3dmsDrnMassFluxObservations.
+      CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FMassFluxObs.Mt3dmsRivMassFluxObservations.
+      CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FMassFluxObs.Mt3dmsGhbMassFluxObservations.
+      CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FMassFluxObs.Mt3dmsRchMassFluxObservations.
+      CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FMassFluxObs.Mt3dmsEvtMassFluxObservations.
+      CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FMassFluxObs.Mt3dmsMassLoadingMassFluxObservations.
+      CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FMassFluxObs.Mt3dmsResMassFluxObservations.
+      CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FMassFluxObs.Mt3dmsLakMassFluxObservations.
+      CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FMassFluxObs.Mt3dmsDrtMassFluxObservations.
+      CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FMassFluxObs.Mt3dmsEtsMassFluxObservations.
+      CheckObservationTimes(ErrorRoots, ErrorMessages);
+
     Assert(ErrorRoots.Count = ErrorMessages.Count);
     for ErrorIndex := 0 to ErrorRoots.Count - 1 do
     begin
@@ -329,18 +873,18 @@ begin
   end;
 end;
 
-procedure TfrmManageFluxObservations.InitializeFirstRow;
+procedure TfrmManageFluxObservations.InitializeFirstRow(Grid: TRbwDataGrid4;
+  SpinEdit: TJvSpinEdit);
+var
+  ColIndex: Integer;
 begin
-  if seNumObsTimes.AsInteger = 0 then
+  if SpinEdit.AsInteger = 0 then
   begin
-    rdgFluxObsTimes.Cells[Ord(fcName), 1] := '';
-    rdgFluxObsTimes.Cells[Ord(fcTime), 1] := '';
-    rdgFluxObsTimes.Cells[Ord(fcValue), 1] := '';
-    rdgFluxObsTimes.Cells[Ord(fcStatistic), 1] := '';
-    rdgFluxObsTimes.Cells[Ord(fcStatFlag), 1] := '';
-    rdgFluxObsTimes.Cells[Ord(fcComment), 1] := '';
-
-    rdgFluxObsTimes.Objects[Ord(fcName), 1] := nil;
+    for ColIndex := 0 to Grid.ColCount - 1 do
+    begin
+      Grid.Cells[ColIndex, 1] := '';
+    end;
+    Grid.Objects[0, 1] := nil;
   end;
 end;
 
@@ -423,6 +967,13 @@ begin
   end;
 end;
 
+procedure TfrmManageFluxObservations.comboMt3dmsSpeciesChange(Sender: TObject);
+begin
+  inherited;
+  AssignValuesToSelectedGridCells(comboMt3dmsSpecies.Text, rdgConcFluxObsTimes,
+    Ord(fmcSpecies), Ord(fmcSpecies));
+end;
+
 procedure TfrmManageFluxObservations.comboMultiStatFlagChange(Sender: TObject);
 begin
   inherited;
@@ -439,23 +990,59 @@ begin
   begin
     FSelectedObservation.Purpose :=
       TObservationPurpose(comboTreatment.ItemIndex);
-    SetStatFlagLabels;
-    if FSelectedObservation.Purpose = ofPredicted then
+    if FSelectedObservation is TFluxObservationGroup then
     begin
-      rdgFluxObsTimes.BeginUpdate;
-      try
-        for Index := 1 to rdgFluxObsTimes.RowCount - 1 do
-        begin
-          if rdgFluxObsTimes.ItemIndex[Ord(fcStatFlag), Index] < 0 then
+      SetStatFlagLabels;
+      if FSelectedObservation.Purpose = ofPredicted then
+      begin
+        rdgFluxObsTimes.BeginUpdate;
+        try
+          for Index := 1 to rdgFluxObsTimes.RowCount - 1 do
           begin
-            rdgFluxObsTimes.ItemIndex[Ord(fcStatFlag), Index] := 0;
+            if rdgFluxObsTimes.ItemIndex[Ord(fcStatFlag), Index] < 0 then
+            begin
+              rdgFluxObsTimes.ItemIndex[Ord(fcStatFlag), Index] := 0;
+            end;
           end;
+          rdgFluxObsTimesExit(nil);
+        finally
+          rdgFluxObsTimes.EndUpdate;
         end;
-        rdgFluxObsTimesExit(nil);
-      finally
-        rdgFluxObsTimes.EndUpdate;
       end;
+    end
+    else
+    begin
+
     end;
+  end;
+end;
+
+procedure TfrmManageFluxObservations.ReadMassFluxObservations(
+  Package: TModflowPackageSelection; const FluxTypeLabel: string;
+  FluxObservations: TMt3dmsFluxObservationGroups;
+  var ParentNode: TTreeNode);
+var
+  Index: Integer;
+  ANode: TTreeNode;
+  Item: TMt3dmsFluxObservationGroup;
+begin
+  if frmGoPhast.PhastModel.PackageIsSelected(
+    frmGoPhast.PhastModel.ModflowPackages.Mt3dmsTransObs)
+    and frmGoPhast.PhastModel.PackageIsSelected(Package) then
+  begin
+    ParentNode := tvFluxObservations.Items.Add(nil, FluxTypeLabel);
+    ParentNode.Data := FluxObservations;
+    for Index := 0 to FluxObservations.Count - 1 do
+    begin
+      Item := FluxObservations[Index];
+      ANode := tvFluxObservations.Items.AddChild(ParentNode,
+        Item.ObservationName);
+      ANode.Data := Item;
+    end;
+  end
+  else
+  begin
+    ParentNode := nil;
   end;
 end;
 
@@ -485,11 +1072,13 @@ begin
   end;
 end;
 
-procedure TfrmManageFluxObservations.seNumObsTimesChange(Sender: TObject);
+procedure TfrmManageFluxObservations.seNumMt3dmsObsTimesChange(Sender: TObject);
 var
   Index: Integer;
-  ObsTime: TFluxObservation;
-  NewRowCount: Integer;
+  ObsTime: TMt3dmsFluxObservation;
+  LocalSelectedObservation: TMt3dmsFluxObservationGroup;
+  Grid: TRbwDataGrid4;
+  SpinEdit: TJvSpinEdit;
 begin
   inherited;
   if FSettingTimeCount then
@@ -498,125 +1087,143 @@ begin
   end;
   FSettingTimeCount := True;
   try
-    if seNumObsTimes.AsInteger > 0 then
+    LocalSelectedObservation := nil;
+    if (FSelectedObservation <> nil) then
     begin
-      edObservationName.MaxLength :=
-        MaxObservationNameLength -2 - Trunc(Log10(seNumObsTimes.AsInteger));
-      if Length(edObservationName.Text) > edObservationName.MaxLength then
+      if SelectedObservation is TMt3dmsFluxObservationGroup then
       begin
-        edObservationName.Text := Copy(edObservationName.Text, 1,
-          edObservationName.MaxLength);
-        edObservationNameChange(nil);
-      end;
-    end
-    else
-    begin
-      edObservationName.MaxLength := MaxObservationNameLength-2;
-    end;
-    rdgFluxObsTimes.Enabled := seNumObsTimes.Enabled;
-    rdgFluxObsTimes.Invalidate;
-    NewRowCount := Max(1, seNumObsTimes.AsInteger) + 1;
-    if NewRowCount < rdgFluxObsTimes.RowCount then
-    begin
-      rdgFluxObsTimes.BeginUpdate;
-      try
-        for Index := NewRowCount to rdgFluxObsTimes.RowCount - 1 do
-        begin
-          rdgFluxObsTimes.Cells[Ord(fcName),Index] := '';
-          rdgFluxObsTimes.Cells[Ord(fcTime),Index] := '';
-          rdgFluxObsTimes.Cells[Ord(fcValue),Index] := '';
-          rdgFluxObsTimes.Cells[Ord(fcStatistic),Index] := '';
-          rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index] := '';
-          rdgFluxObsTimes.Cells[Ord(fcComment),Index] := '';
-          rdgFluxObsTimes.Objects[Ord(fcName),Index] := nil;
-        end;
-      finally
-        rdgFluxObsTimes.EndUpdate;
+        LocalSelectedObservation := TMt3dmsFluxObservationGroup(SelectedObservation);
       end;
     end;
-    if seNumObsTimes.AsInteger = 0 then
+    Grid := rdgConcFluxObsTimes;
+    SpinEdit := seNumMt3dmsObsTimes;
+    if LocalSelectedObservation <> nil then
     begin
-      rdgFluxObsTimes.Cells[Ord(fcName),1] := '';
-      rdgFluxObsTimes.Cells[Ord(fcTime),1] := '';
-      rdgFluxObsTimes.Cells[Ord(fcValue),1] := '';
-      rdgFluxObsTimes.Cells[Ord(fcStatistic),1] := '';
-      rdgFluxObsTimes.Cells[Ord(fcStatFlag),1] := '';
-      rdgFluxObsTimes.Cells[Ord(fcComment),1] := '';
-      rdgFluxObsTimes.Objects[Ord(fcName),1] := nil;
+      SetObsNameLength(SpinEdit);
+      SetObsGridRowCount(SpinEdit, Grid, btnDeleteMt3dmsFlux);
     end;
-    rdgFluxObsTimes.RowCount := NewRowCount;
-    btnDelete.Enabled := seNumObsTimes.Enabled
-      and (seNumObsTimes.AsInteger >= 1);
-    if not FSettingObservation and (FSelectedObservation <> nil) then
+    if (not FSettingObservation) and (LocalSelectedObservation <> nil) then
     begin
-      rdgFluxObsTimes.BeginUpdate;
+      Grid.BeginUpdate;
       try
-        for Index := 1 to seNumObsTimes.AsInteger do
+        for Index := 1 to SpinEdit.AsInteger do
         begin
-          if rdgFluxObsTimes.Objects[Ord(fcName),Index] = nil then
+          if Grid.Objects[Ord(fmcName),Index] = nil then
           begin
-            ObsTime := FSelectedObservation.ObservationTimes.Add;
-            ObsTime.Index := Index-1;
-            rdgFluxObsTimes.Objects[Ord(fcName),Index] := ObsTime;
-            if rdgFluxObsTimes.Cells[Ord(fcTime),Index] = '' then
+            ObsTime := LocalSelectedObservation.ObservationTimes.Add;
+            Grid.Objects[Ord(fmcName),Index] := ObsTime;
+            InitializeNewObs(Index, Ord(fmcTime), Ord(fmcValue), Ord(fmcComment),
+              Grid, ObsTime);
+            Grid.ItemIndex[Ord(fmcObsType),Index] := 0;
+
+            if Grid.Cells[Ord(fmcWeight),Index] = '' then
             begin
-              ObsTime.Time := 0;
-              rdgFluxObsTimes.Cells[Ord(fcTime),Index] := '0';
+              ObsTime.Weight := 0;
+              Grid.Cells[Ord(fmcWeight),Index] := '0';
             end
             else
             begin
-              ObsTime.Time := StrToFloat(rdgFluxObsTimes.Cells[Ord(fcTime),Index]);
+              ObsTime.Weight := StrToFloat(Grid.Cells[Ord(fmcWeight),Index]);
             end;
-
-            if rdgFluxObsTimes.Cells[Ord(fcValue),Index] = '' then
+            if Grid.Cells[Ord(fmcSpecies),Index] = '' then
             begin
-              ObsTime.ObservedValue := 0;
-              rdgFluxObsTimes.Cells[Ord(fcValue),Index] := '0';
-            end
-            else
-            begin
-              ObsTime.ObservedValue := StrToFloat(rdgFluxObsTimes.Cells[Ord(fcValue),Index]);
+              Grid.Cells[Ord(fmcSpecies),Index] :=
+                Grid.Columns[Ord(fmcSpecies)].PickList[0];
             end;
+            ObsTime.Species := Grid.Cells[Ord(fmcSpecies),Index];
+          end;
+        end;
+        for Index := LocalSelectedObservation.ObservationTimes.Count-1
+          downto SpinEdit.AsInteger do
+        begin
+          LocalSelectedObservation.ObservationTimes.Delete(Index);
+        end;
+        InitializeFirstRow(Grid, SpinEdit);
+      finally
+        Grid.EndUpdate;
+      end;
+    end;
+    AssignObsNames;
+  finally
+    FSettingTimeCount := False;
+  end;
+end;
 
-            if rdgFluxObsTimes.Cells[Ord(fcStatistic),Index] = '' then
+procedure TfrmManageFluxObservations.seNumObsTimesChange(Sender: TObject);
+var
+  Index: Integer;
+  ObsTime: TFluxObservation;
+  LocalSelectedObservation: TFluxObservationGroup;
+  Grid: TRbwDataGrid4;
+  SpinEdit: TJvSpinEdit;
+begin
+  inherited;
+  if FSettingTimeCount then
+  begin
+    Exit;
+  end;
+  FSettingTimeCount := True;
+  try
+    LocalSelectedObservation := nil;
+    if (FSelectedObservation <> nil) then
+    begin
+      if SelectedObservation is TFluxObservationGroup then
+      begin
+        LocalSelectedObservation := TFluxObservationGroup(SelectedObservation);
+      end;
+    end;
+    Grid := rdgFluxObsTimes;
+    SpinEdit := seNumObsTimes;
+    if LocalSelectedObservation <> nil then
+    begin
+      SetObsNameLength(SpinEdit);
+      SetObsGridRowCount(SpinEdit, Grid, btnDelete);
+    end;
+
+    if (not FSettingObservation) and (LocalSelectedObservation <> nil) then
+    begin
+      Grid.BeginUpdate;
+      try
+        for Index := 1 to SpinEdit.AsInteger do
+        begin
+          if Grid.Objects[Ord(fcName),Index] = nil then
+          begin
+            ObsTime := LocalSelectedObservation.ObservationTimes.Add;
+            Grid.Objects[Ord(fcName),Index] := ObsTime;
+
+            InitializeNewObs(Index, Ord(fcTime), Ord(fcValue), Ord(fcComment),
+              Grid, ObsTime);
+
+            if Grid.Cells[Ord(fcStatistic),Index] = '' then
             begin
               ObsTime.Statistic := 0;
-              rdgFluxObsTimes.Cells[Ord(fcStatistic),Index] := '0';
+              Grid.Cells[Ord(fcStatistic),Index] := '0';
             end
             else
             begin
-              ObsTime.Statistic := StrToFloat(rdgFluxObsTimes.Cells[Ord(fcStatistic),Index]);
+              ObsTime.Statistic := StrToFloat(Grid.Cells[Ord(fcStatistic),Index]);
             end;
-            if rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index] = '' then
+            if Grid.Cells[Ord(fcStatFlag),Index] = '' then
             begin
               ObsTime.StatFlag := Low(TStatFlag);
-              rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index] :=
-                rdgFluxObsTimes.Columns[Ord(fcStatFlag)].PickList[0];
+              Grid.Cells[Ord(fcStatFlag),Index] :=
+                Grid.Columns[Ord(fcStatFlag)].PickList[0];
             end
             else
             begin
-              ObsTime.StatFlag := TStatFlag(rdgFluxObsTimes.Columns[Ord(fcStatFlag)].
-                PickList.IndexOf(rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index]));
-            end;
-            if rdgFluxObsTimes.Cells[Ord(fcComment),Index] = '' then
-            begin
-              ObsTime.Comment := '';
-              rdgFluxObsTimes.Cells[Ord(fcComment),Index] := '';
-            end
-            else
-            begin
-              ObsTime.Comment := rdgFluxObsTimes.Cells[Ord(fcComment),Index];
+              ObsTime.StatFlag := TStatFlag(Grid.Columns[Ord(fcStatFlag)].
+                PickList.IndexOf(Grid.Cells[Ord(fcStatFlag),Index]));
             end;
           end;
         end;
-        for Index := FSelectedObservation.ObservationTimes.Count-1
-          downto seNumObsTimes.AsInteger do
+        for Index := LocalSelectedObservation.ObservationTimes.Count-1
+          downto SpinEdit.AsInteger do
         begin
-          FSelectedObservation.ObservationTimes.Delete(Index);
+          LocalSelectedObservation.ObservationTimes.Delete(Index);
         end;
-        InitializeFirstRow;
+        InitializeFirstRow(Grid, SpinEdit);
       finally
-        rdgFluxObsTimes.EndUpdate;
+        Grid.EndUpdate;
       end;
     end;
     AssignObsNames;
@@ -632,7 +1239,7 @@ begin
   Undo := TUndoEditFluxObservations.Create;
   try
     Undo.AssignNewObservations(FChobObservations, FDrobObservations,
-      FGbobObservations, FRvobObservations);
+      FGbobObservations, FRvobObservations, FMassFluxObs);
   except
     Undo.Free;
     raise;
@@ -641,15 +1248,11 @@ begin
 end;
 
 procedure TfrmManageFluxObservations.SetSelectedObservation(
-  const Value: TFluxObservationGroup);
+  const Value: TCustomFluxObservationGroup);
 var
   Index: Integer;
-  ScreenObject: TScreenObject;
-  CurrentObjects: TList;
-  AvailableList: TList;
-  ObsTime: TFluxObservation;
-  TimeString: string;
-  MaxTimeStringLength: Integer;
+  FluxObs: TFluxObservationGroup;
+  Mt3dObs: TMt3dmsFluxObservationGroup;
 begin
   edFactorFormulaExit(nil);
   if (FSelectedObservation <> Value) or (Value = nil) then
@@ -669,6 +1272,7 @@ begin
         IncAllBtn.Enabled := False;
         ExclBtn.Enabled := False;
         ExclAllBtn.Enabled := False;
+
         rdgFluxObsTimes.Enabled := False;
         rdgFluxObsTimes.Invalidate;
         seNumObsTimes.Enabled := False;
@@ -681,121 +1285,49 @@ begin
         end;
         seNumObsTimes.AsInteger := 0;
         rdgFluxObsTimes.Invalidate;
+
+        rdgConcFluxObsTimes.Enabled := False;
+        rdgConcFluxObsTimes.Invalidate;
+        seNumMt3dmsObsTimes.Enabled := False;
+        btnInsertMt3dmsFlux.Enabled := False;
+        btnDeleteMt3dmsFlux.Enabled := False;
+        rdgConcFluxObsTimes.Enabled := False;
+        for Index := 1 to rdgConcFluxObsTimes.RowCount - 1 do
+        begin
+          rdgConcFluxObsTimes.Objects[Ord(fmcName),Index] := nil;
+        end;
+        seNumMt3dmsObsTimes.AsInteger := 0;
+        rdgConcFluxObsTimes.Invalidate;
       end
       else
       begin
-        seNumObsTimes.Enabled := True;
-        rdgFluxObsTimes.Enabled := True;
-        edObservationName.Enabled := True;
-        comboTreatment.Enabled := True;
-        edObservationName.Text := FSelectedObservation.ObservationName;
-        comboTreatment.ItemIndex := Ord(FSelectedObservation.Purpose);
-        SetStatFlagLabels;
-
-        btnInsert.Enabled := True;
-        SrcList.Enabled := True;
-        DstList.Enabled := True;
-        IncBtn.Enabled := True;
-        IncAllBtn.Enabled := True;
-        ExclBtn.Enabled := True;
-        ExclAllBtn.Enabled := True;
-
-        CurrentObjects := TList.Create;
-        try
-          for Index := 0 to FSelectedObservation.
-            ObservationFactors.Count - 1 do
-          begin
-            ScreenObject := FSelectedObservation.ObservationFactors[Index].
-              ScreenObject as TScreenObject;
-            CurrentObjects.Add(ScreenObject);
-          end;
-
-          AvailableList := nil;
-          if tvFluxObservations.Selected.Parent = FChobNode then
-          begin
-            AvailableList := FChdScreenObjects;
-          end
-          else if tvFluxObservations.Selected.Parent = FDrobNode then
-          begin
-            AvailableList := FDrnScreenObjects;
-          end
-          else if tvFluxObservations.Selected.Parent = FGbobNode then
-          begin
-            AvailableList := FGhbScreenObjects;
-          end
-          else if tvFluxObservations.Selected.Parent = FRvobNode then
-          begin
-            AvailableList := FRivScreenObjects;
-          end
-          else
-          begin
-            Assert(False);
-          end;
-
-          for Index := 0 to AvailableList.Count - 1 do
-          begin
-            ScreenObject := AvailableList[Index];
-            if CurrentObjects.IndexOf(ScreenObject) >= 0 then
-            begin
-              DstList.Items.AddObject(ScreenObject.Name, ScreenObject);
-              if ScreenObject.Selected then
-              begin
-                DstList.Selected[DstList.Count -1] := True;
-              end;
-            end
-            else
-            begin
-              SrcList.Items.AddObject(ScreenObject.Name, ScreenObject);
-              if ScreenObject.Selected then
-              begin
-                SrcList.Selected[SrcList.Count -1] := True;
-              end;
-            end;
-          end;
-        finally
-          CurrentObjects.Free;
-        end;
-
-        for Index := 1 to rdgFluxObsTimes.RowCount - 1 do
+        if Value is TFluxObservationGroup then
         begin
-          rdgFluxObsTimes.Objects[Ord(fcName),Index] := nil;
-        end;
-        seNumObsTimes.AsInteger := FSelectedObservation.ObservationTimes.Count;
-        InitializeFirstRow;
-        MaxTimeStringLength := Length(IntToStr(FSelectedObservation.ObservationTimes.Count));
-        rdgFluxObsTimes.BeginUpdate;
-        try
-          for Index := 0 to FSelectedObservation.ObservationTimes.Count - 1 do
+          tabObservationsTimes.TabVisible := True;
+          if pcMain.ActivePage = tabMassFlux then
           begin
-            ObsTime := FSelectedObservation.ObservationTimes[Index];
-            TimeString := IntToStr(Index+1);
-            While Length(TimeString) < MaxTimeStringLength do
-            begin
-              TimeString := '0' + TimeString;
-            end;
-            rdgFluxObsTimes.Cells[Ord(fcName),Index+1] :=
-              FSelectedObservation.ObservationName + '_' + TimeString;
-            rdgFluxObsTimes.Cells[Ord(fcTime),Index+1] :=
-              FloatToStr(ObsTime.Time);
-            rdgFluxObsTimes.Cells[Ord(fcValue),Index+1] :=
-              FloatToStr(ObsTime.ObservedValue);
-            rdgFluxObsTimes.Cells[Ord(fcStatistic),Index+1] :=
-              FloatToStr(ObsTime.Statistic);
-            rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index+1] :=
-              rdgFluxObsTimes.Columns[Ord(fcStatFlag)].
-              PickList[Ord(ObsTime.StatFlag)];
-            rdgFluxObsTimes.Cells[Ord(fcComment),Index+1] :=
-              ObsTime.Comment;
-            rdgFluxObsTimes.Objects[Ord(fcName),Index+1] := ObsTime;
+            pcMain.ActivePage := tabObservationsTimes;
           end;
-          rdgFluxObsTimes.Invalidate;
-        finally
-          rdgFluxObsTimes.EndUpdate;
+          tabMassFlux.TabVisible := False;
+          FluxObs := TFluxObservationGroup(Value);
+          SetSelectedFluxObs(FluxObs);
+        end;
+        if Value is TMt3dmsFluxObservationGroup then
+        begin
+          tabMassFlux.TabVisible := True;
+          if pcMain.ActivePage = tabObservationsTimes then
+          begin
+            pcMain.ActivePage := tabMassFlux;
+          end;
+          tabObservationsTimes.TabVisible := False;
+          Mt3dObs := TMt3dmsFluxObservationGroup(Value);
+          SetSelectedMt3dmsObs(Mt3dObs);
         end;
       end;
     finally
       FSettingObservation := False;
       seNumObsTimesChange(nil);
+      seNumMt3dmsObsTimesChange(nil);
     end;
   end;
 end;
@@ -891,52 +1423,51 @@ end;
 
 procedure TfrmManageFluxObservations.btnAddObservationClick(Sender: TObject);
 var
-  Observations: TFluxObservationGroups;
-  ObservationGroup: TFluxObservationGroup;
+  Observations: TCustomFluxObservationGroups;
+  ObservationGroup: TCustomFluxObservationGroup;
   ANode: TTreeNode;
   ObsName: string;
   ParentNode : TTreeNode;
+  NodeList: TList;
 begin
   inherited;
-  if tvFluxObservations.Selected = nil then
-  begin
-    if FChobNode <> nil then
+  NodeList := TList.Create;
+  try
+    NodeList.Add(FChobNode);
+    NodeList.Add(FGbobNode);
+    NodeList.Add(FDrobNode);
+    NodeList.Add(FRvobNode);
+    NodeList.Add(FHeadMassFluxNode);
+    NodeList.Add(FWellMassFluxNode);
+    NodeList.Add(FDrnMassFluxNode);
+    NodeList.Add(FRivMassFluxNode);
+    NodeList.Add(FGhbMassFluxNode);
+    NodeList.Add(FRchMassFluxNode);
+    NodeList.Add(FEVTMassFluxNode);
+    NodeList.Add(FMassLoadingMassFluxNode);
+    NodeList.Add(FResMassFluxNode);
+    NodeList.Add(FLakMassFluxNode);
+    NodeList.Add(FEtsMassFluxNode);
+    NodeList.Add(FDrtMassFluxNode);
+    NodeList.Pack;
+    if (tvFluxObservations.Selected = nil) and (NodeList.Count > 0) then
     begin
-      tvFluxObservations.Selected := FChobNode;
-    end
-    else if FGbobNode <> nil then
+      tvFluxObservations.Selected := NodeList[0];;
+    end;
+    if tvFluxObservations.Selected = nil then
     begin
-      tvFluxObservations.Selected := FGbobNode;
-    end
-    else if FDrobNode <> nil then
+      Exit;
+    end;
+    if NodeList.IndexOf(tvFluxObservations.Selected) >= 0 then
     begin
-      tvFluxObservations.Selected := FDrobNode;
+      ParentNode := tvFluxObservations.Selected;
     end
-    else if FRvobNode <> nil then
+    else
     begin
-      tvFluxObservations.Selected := FRvobNode;
-    end
-  end;
-  Assert(tvFluxObservations.Selected <> nil);
-  if tvFluxObservations.Selected = FChobNode then
-  begin
-    ParentNode := tvFluxObservations.Selected;
-  end
-  else if tvFluxObservations.Selected = FGbobNode then
-  begin
-    ParentNode := tvFluxObservations.Selected;
-  end
-  else if tvFluxObservations.Selected = FDrobNode then
-  begin
-    ParentNode := tvFluxObservations.Selected;
-  end
-  else if tvFluxObservations.Selected = FRvobNode then
-  begin
-    ParentNode := tvFluxObservations.Selected;
-  end
-  else
-  begin
-    ParentNode := tvFluxObservations.Selected.Parent;
+      ParentNode := tvFluxObservations.Selected.Parent;
+    end;
+  finally
+    NodeList.Free;
   end;
 
   if ParentNode = FChobNode then
@@ -955,13 +1486,61 @@ begin
   begin
     ObsName := 'Rvob';
   end
+  else if ParentNode = FHeadMassFluxNode then
+  begin
+    ObsName := 'HMfob';
+  end
+  else if ParentNode = FWellMassFluxNode then
+  begin
+    ObsName := 'WMfob';
+  end
+  else if ParentNode = FDrnMassFluxNode then
+  begin
+    ObsName := 'DnMfob';
+  end
+  else if ParentNode = FRivMassFluxNode then
+  begin
+    ObsName := 'RvMfob';
+  end
+  else if ParentNode = FGhbMassFluxNode then
+  begin
+    ObsName := 'GbMfob';
+  end
+  else if ParentNode = FRchMassFluxNode then
+  begin
+    ObsName := 'RcMfob';
+  end
+  else if ParentNode = FEVTMassFluxNode then
+  begin
+    ObsName := 'EtMfob';
+  end
+  else if ParentNode = FMassLoadingMassFluxNode then
+  begin
+    ObsName := 'MlMfob';
+  end
+  else if ParentNode = FResMassFluxNode then
+  begin
+    ObsName := 'ReMfob';
+  end
+  else if ParentNode = FLakMassFluxNode then
+  begin
+    ObsName := 'LkMfob';
+  end
+  else if ParentNode = FEtsMassFluxNode then
+  begin
+    ObsName := 'EsMfob';
+  end
+  else if ParentNode = FDrtMassFluxNode then
+  begin
+    ObsName := 'DrMfob';
+  end
   else
   begin
     Assert(False);
   end;
 
   Observations := ParentNode.Data;
-  ObservationGroup := Observations.Add;
+  ObservationGroup := Observations.Add as TCustomFluxObservationGroup;
   ANode := tvFluxObservations.Items.AddChild(ParentNode,
     ObservationGroup.ObservationName);
   ObservationGroup.ObservationName := ObsName
@@ -972,14 +1551,17 @@ begin
 end;
 
 procedure TfrmManageFluxObservations.btnDeleteClick(Sender: TObject);
+var
+  LocalSelectedObservation: TFluxObservationGroup;
 begin
   inherited;
+  LocalSelectedObservation := SelectedObservation as TFluxObservationGroup;
   if (rdgFluxObsTimes.SelectedRow >= 1)
     and (rdgFluxObsTimes.SelectedRow <= rdgFluxObsTimes.RowCount)then
   begin
     if seNumObsTimes.AsInteger > 1 then
     begin
-      FSelectedObservation.ObservationTimes.
+      LocalSelectedObservation.ObservationTimes.
         Delete(rdgFluxObsTimes.SelectedRow-1);
       rdgFluxObsTimes.DeleteRow(rdgFluxObsTimes.SelectedRow);
     end
@@ -987,7 +1569,7 @@ begin
     begin
       if rdgFluxObsTimes.Objects[Ord(fcName), rdgFluxObsTimes.SelectedRow] <> nil then
       begin
-        FSelectedObservation.ObservationTimes.
+        LocalSelectedObservation.ObservationTimes.
           Delete(rdgFluxObsTimes.SelectedRow-1);
         rdgFluxObsTimes.Objects[Ord(fcName), rdgFluxObsTimes.SelectedRow] := nil;
       end;
@@ -997,27 +1579,62 @@ begin
   end;
 end;
 
+procedure TfrmManageFluxObservations.btnDeleteMt3dmsFluxClick(Sender: TObject);
+var
+  LocalSelectedObservation: TMt3dmsFluxObservationGroup;
+begin
+  inherited;
+  LocalSelectedObservation := SelectedObservation as TMt3dmsFluxObservationGroup;
+  if (rdgConcFluxObsTimes.SelectedRow >= 1)
+    and (rdgConcFluxObsTimes.SelectedRow <= rdgConcFluxObsTimes.RowCount)then
+  begin
+    if seNumMt3dmsObsTimes.AsInteger > 1 then
+    begin
+      LocalSelectedObservation.ObservationTimes.
+        Delete(rdgConcFluxObsTimes.SelectedRow-1);
+      rdgConcFluxObsTimes.DeleteRow(rdgConcFluxObsTimes.SelectedRow);
+    end
+    else
+    begin
+      if rdgConcFluxObsTimes.Objects[Ord(fmcName), rdgConcFluxObsTimes.SelectedRow] <> nil then
+      begin
+        LocalSelectedObservation.ObservationTimes.
+          Delete(rdgConcFluxObsTimes.SelectedRow-1);
+        rdgConcFluxObsTimes.Objects[Ord(fmcName), rdgConcFluxObsTimes.SelectedRow] := nil;
+      end;
+    end;
+    seNumMt3dmsObsTimes.AsInteger := seNumMt3dmsObsTimes.AsInteger -1;
+    AssignObsNames;
+  end;
+end;
+
 procedure TfrmManageFluxObservations.btnDeleteObservationClick(Sender: TObject);
 var
   ParentNode: TTreeNode;
-  Observations: TFluxObservationGroups;
-  Item: TFluxObservationGroup;
+  Observations: TCustomFluxObservationGroups;
+  Item: TCustomFluxObservationGroup;
   Index: Integer;
+  AnObject: TObject;
 begin
   inherited;
-  Assert((tvFluxObservations.Selected <> nil)
-    and (tvFluxObservations.Selected <> FChobNode)
-    and (tvFluxObservations.Selected <> FGbobNode)
-    and (tvFluxObservations.Selected <> FDrobNode)
-    and (tvFluxObservations.Selected <> FRvobNode));
+  Assert(tvFluxObservations.Selected <> nil);
+  AnObject := tvFluxObservations.Selected.Data;
+  Assert(AnObject is TCustomFluxObservationGroup);
   Item := tvFluxObservations.Selected.Data;
   ParentNode := tvFluxObservations.Selected.Parent;
   Assert(ParentNode <> nil);
   Observations := ParentNode.Data;
   Observations.Remove(Item);
-  for Index := 1 to rdgFluxObsTimes.RowCount - 1 do
+  if Observations is TCustomFluxObservationGroups then
   begin
-    rdgFluxObsTimes.Objects[Ord(fcName),Index] := nil;
+    for Index := 1 to rdgFluxObsTimes.RowCount - 1 do
+    begin
+      rdgFluxObsTimes.Objects[Ord(fcName),Index] := nil;
+    end;
+  end
+  else
+  begin
+
   end;
   tvFluxObservations.Items.Delete(tvFluxObservations.Selected);
   SelectedObservation := nil;
@@ -1100,26 +1717,41 @@ var
   Index: Integer;
   MaxStringLength: Integer;
   TimeString: string;
+  SpinEdit: TJvSpinEdit;
+  Grid: TRbwDataGrid4;
+  NameColumn: Integer;
 begin
-  MaxStringLength := Length(IntToStr(seNumObsTimes.AsInteger));
-  rdgFluxObsTimes.BeginUpdate;
+  if FSelectedObservation is TFluxObservationGroup then
+  begin
+    SpinEdit := seNumObsTimes;
+    Grid := rdgFluxObsTimes;
+    NameColumn := Ord(fcName);
+  end
+  else
+  begin
+    SpinEdit := seNumMt3dmsObsTimes;
+    Grid := rdgConcFluxObsTimes;
+    NameColumn := Ord(fmcName);
+  end;
+  MaxStringLength := Length(IntToStr(SpinEdit.AsInteger));
+  Grid.BeginUpdate;
   try
-    for Index := 1 to seNumObsTimes.AsInteger do
+    for Index := 1 to SpinEdit.AsInteger do
     begin
       TimeString := IntToStr(Index);
       While Length(TimeString) < MaxStringLength do
       begin
         TimeString := '0' + TimeString;
       end;
-      rdgFluxObsTimes.Cells[Ord(fcName), Index] :=
+      Grid.Cells[NameColumn, Index] :=
         edObservationName.Text + '_' + TimeString;
     end;
-    if seNumObsTimes.AsInteger = 0 then
+    if SpinEdit.AsInteger = 0 then
     begin
-      rdgFluxObsTimes.Cells[Ord(fcName), 1] := '';
+      Grid.Cells[NameColumn, 1] := '';
     end;
   finally
-    rdgFluxObsTimes.EndUpdate;
+    Grid.EndUpdate;
   end;
 end;
 
@@ -1152,6 +1784,10 @@ begin
       end;
     end;
   end;
+  if Assigned(Grid.OnExit) then
+  begin
+    Grid.OnExit(Grid);
+  end;
 end;
 
 procedure TfrmManageFluxObservations.btnInsertClick(Sender: TObject);
@@ -1164,6 +1800,18 @@ begin
     seNumObsTimes.AsInteger := seNumObsTimes.AsInteger + 1;
   end;
   seNumObsTimesChange(Sender);
+end;
+
+procedure TfrmManageFluxObservations.btnInsertMt3dmsFluxClick(Sender: TObject);
+begin
+  inherited;
+  if (rdgConcFluxObsTimes.SelectedRow >= 1)
+    and (rdgConcFluxObsTimes.SelectedRow <= rdgConcFluxObsTimes.RowCount)then
+  begin
+    rdgConcFluxObsTimes.InsertRow(rdgConcFluxObsTimes.SelectedRow);
+    seNumMt3dmsObsTimes.AsInteger := seNumMt3dmsObsTimes.AsInteger + 1;
+  end;
+  seNumMt3dmsObsTimesChange(Sender);
 end;
 
 procedure TfrmManageFluxObservations.DisplayFactor;
@@ -1403,25 +2051,76 @@ begin
   FPriorErrors.Duplicates := dupIgnore;
 
   FChobObservations := TFluxObservationGroups.Create(nil);
+  FChobObservations.FluxObservationType := fotHead;
   FChdScreenObjects := TList.Create;
 
   FDrobObservations := TFluxObservationGroups.Create(nil);
+  FDrobObservations.FluxObservationType := fotDrain;
   FDrnScreenObjects := TList.Create;
 
   FGbobObservations := TFluxObservationGroups.Create(nil);
+  FGbobObservations.FluxObservationType := fotGHB;
   FGhbScreenObjects := TList.Create;
 
   FRvobObservations := TFluxObservationGroups.Create(nil);
+  FRvobObservations.FluxObservationType := fotRiver;
   FRivScreenObjects := TList.Create;
 
-  rdgFluxObsTimes.Cells[Ord(fcName),0] := 'Name';
-  rdgFluxObsTimes.Cells[Ord(fcTime),0] := 'Time';
-  rdgFluxObsTimes.Cells[Ord(fcValue),0] := 'Observed value';
-  rdgFluxObsTimes.Cells[Ord(fcStatistic),0] := 'Statistic';
-  rdgFluxObsTimes.Cells[Ord(fcStatFlag),0] := 'StatFlag';
-  rdgFluxObsTimes.Cells[Ord(fcComment),0] := 'Comment';
+  FMassFluxObs.CreateAll;
+//  FMassFluxObs.Mt3dmsHeadMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  FHeadMassFluxObservations := TList.Create;
+
+//  FMassFluxObs.Mt3dmsWellMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  FWellMassFluxObservations := TList.Create;
+
+//  FMassFluxObs.Mt3dmsDrnMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  FDrnMassFluxObservations := TList.Create;
+
+//  FMassFluxObs.Mt3dmsRivMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  FRivMassFluxObservations := TList.Create;
+
+//  FMassFluxObs.Mt3dmsGhbMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  FGhbMassFluxObservations := TList.Create;
+
+//  FMassFluxObs.Mt3dmsRchMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  FRchMassFluxObservations := TList.Create;
+
+//  FMassFluxObs.Mt3dmsEvtMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  FEvtMassFluxObservations := TList.Create;
+
+//  FMassFluxObs.Mt3dmsMassLoadingMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  FMassLoadingMassFluxObservations := TList.Create;
+
+//  FMassFluxObs.Mt3dmsResMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  FResMassFluxObservations := TList.Create;
+
+//  FMassFluxObs.Mt3dmsLakMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  FLakMassFluxObservations := TList.Create;
+
+//  FMassFluxObs.Mt3dmsDrtMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  FDrtMassFluxObservations := TList.Create;
+
+//  FMassFluxObs.Mt3dmsEtsMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  FEtsMassFluxObservations := TList.Create;
+
+  rdgFluxObsTimes.Cells[Ord(fcName),0] := StrName;
+  rdgFluxObsTimes.Cells[Ord(fcTime),0] := StrTime;
+  rdgFluxObsTimes.Cells[Ord(fcValue),0] := StrObservedValue;
+  rdgFluxObsTimes.Cells[Ord(fcStatistic),0] := StrStatistic;
+  rdgFluxObsTimes.Cells[Ord(fcStatFlag),0] := StrStatFlag;
+  rdgFluxObsTimes.Cells[Ord(fcComment),0] := StrComment;
+
+
+  rdgConcFluxObsTimes.Cells[Ord(fmcName),0] := StrName;
+  rdgConcFluxObsTimes.Cells[Ord(fmcSpecies),0] := StrComponent;
+  rdgConcFluxObsTimes.Cells[Ord(fmcObsType),0] := StrObservationType;
+  rdgConcFluxObsTimes.Cells[Ord(fmcTime),0] := StrObservationTimeOr;
+  rdgConcFluxObsTimes.Cells[Ord(fmcValue),0] := StrObservedValue;
+  rdgConcFluxObsTimes.Cells[Ord(fmcWeight),0] := StrWeight;
+  rdgConcFluxObsTimes.Cells[Ord(fmcComment),0] := StrComment;
 
   LayoutMultiFluxEdits;
+  LayoutMt3dmsMultiFluxEdits;
 
   AddGIS_Functions(rparserThreeDFormulaElements,
     frmGoPhast.PhastModel.ModelSelection, eaBlocks);
@@ -1442,6 +2141,31 @@ begin
   FGbobObservations.Free;
   FRivScreenObjects.Free;
   FRvobObservations.Free;
+  FHeadMassFluxObservations.Free;
+  FWellMassFluxObservations.Free;
+  FDrnMassFluxObservations.Free;
+  FRivMassFluxObservations.Free;
+  FGhbMassFluxObservations.Free;
+  FRchMassFluxObservations.Free;
+  FEvtMassFluxObservations.Free;
+  FMassLoadingMassFluxObservations.Free;
+  FResMassFluxObservations.Free;
+  FLakMassFluxObservations.Free;
+  FDrtMassFluxObservations.Free;
+  FEtsMassFluxObservations.Free;
+  FMassFluxObs.Mt3dmsHeadMassFluxObservations.Free;
+  FMassFluxObs.Mt3dmsWellMassFluxObservations.Free;
+  FMassFluxObs.Mt3dmsMassLoadingMassFluxObservations.Free;
+  FMassFluxObs.Mt3dmsGhbMassFluxObservations.Free;
+  FMassFluxObs.Mt3dmsRivMassFluxObservations.Free;
+  FMassFluxObs.Mt3dmsResMassFluxObservations.Free;
+  FMassFluxObs.Mt3dmsRchMassFluxObservations.Free;
+  FMassFluxObs.Mt3dmsDrtMassFluxObservations.Free;
+  FMassFluxObs.Mt3dmsEtsMassFluxObservations.Free;
+  FMassFluxObs.Mt3dmsEvtMassFluxObservations.Free;
+  FMassFluxObs.Mt3dmsDrnMassFluxObservations.Free;
+  FMassFluxObs.Mt3dmsLakMassFluxObservations.Free;
+
 end;
 
 procedure TfrmManageFluxObservations.FormResize(Sender: TObject);
@@ -1473,7 +2197,24 @@ var
   Index: Integer;
   ScreenObject: TScreenObject;
   Column: TRbwColumn4;
+  Mt3dColumn: TRbwColumn4;
+  ChemItem: TChemSpeciesItem;
+  SpeciesIndex: Integer;
 begin
+  Mt3dColumn := rdgConcFluxObsTimes.Columns[Ord(fmcSpecies)];
+  Mt3dColumn.PickList.Clear;
+  for SpeciesIndex := 0 to frmGoPhast.PhastModel.MobileComponents.Count - 1 do
+  begin
+    ChemItem := frmGoPhast.PhastModel.MobileComponents[SpeciesIndex];
+    Mt3dColumn.PickList.Add(ChemItem.Name)
+  end;
+  for SpeciesIndex := 0 to frmGoPhast.PhastModel.ImmobileComponents.Count - 1 do
+  begin
+    ChemItem := frmGoPhast.PhastModel.ImmobileComponents[SpeciesIndex];
+    Mt3dColumn.PickList.Add(ChemItem.Name)
+  end;
+  comboMt3dmsSpecies.Items.Assign(Mt3dColumn.PickList);
+
   Column := rdgFluxObsTimes.Columns[Ord(fcStatFlag)];
   Assert(comboMultiStatFlag.Items.Count = Column.PickList.Count);
   for Index := 0 to Column.PickList.Count - 1 do
@@ -1492,21 +2233,66 @@ begin
       and ScreenObject.ModflowChdBoundary.Used then
     begin
       FChdScreenObjects.Add(ScreenObject);
+      FHeadMassFluxObservations.Add(ScreenObject);
     end;
     if (ScreenObject.ModflowDrnBoundary <> nil)
       and ScreenObject.ModflowDrnBoundary.Used then
     begin
       FDrnScreenObjects.Add(ScreenObject);
+      FDrnMassFluxObservations.Add(ScreenObject);
     end;
     if (ScreenObject.ModflowGhbBoundary <> nil)
       and ScreenObject.ModflowGhbBoundary.Used then
     begin
       FGhbScreenObjects.Add(ScreenObject);
+      FGhbMassFluxObservations.Add(ScreenObject);
     end;
     if (ScreenObject.ModflowRivBoundary <> nil)
       and ScreenObject.ModflowRivBoundary.Used then
     begin
       FRivScreenObjects.Add(ScreenObject);
+      FRivMassFluxObservations.Add(ScreenObject);
+    end;
+    if (ScreenObject.ModflowWellBoundary <> nil)
+      and ScreenObject.ModflowWellBoundary.Used then
+    begin
+      FWellMassFluxObservations.Add(ScreenObject);
+    end;
+    if (ScreenObject.ModflowDrtBoundary <> nil)
+      and ScreenObject.ModflowDrtBoundary.Used then
+    begin
+      FDrtMassFluxObservations.Add(ScreenObject);
+    end;
+    if (ScreenObject.ModflowRchBoundary <> nil)
+      and ScreenObject.ModflowRchBoundary.Used then
+    begin
+      FDrtMassFluxObservations.Add(ScreenObject);
+    end;
+    if (ScreenObject.ModflowEvtBoundary <> nil)
+      and ScreenObject.ModflowEvtBoundary.Used then
+    begin
+      FEvtMassFluxObservations.Add(ScreenObject);
+    end;
+    if (ScreenObject.ModflowEtsBoundary <> nil)
+      and ScreenObject.ModflowEtsBoundary.Used then
+    begin
+      FEtsMassFluxObservations.Add(ScreenObject);
+    end;
+    if (ScreenObject.ModflowResBoundary <> nil)
+      and ScreenObject.ModflowResBoundary.Used then
+    begin
+      FResMassFluxObservations.Add(ScreenObject);
+    end;
+    if (ScreenObject.ModflowLakBoundary <> nil)
+      and ScreenObject.ModflowLakBoundary.Used then
+    begin
+      FLakMassFluxObservations.Add(ScreenObject);
+    end;
+    if (ScreenObject.Mt3dmsConcBoundary <> nil)
+      and ScreenObject.Mt3dmsConcBoundary.Used
+      and ScreenObject.Mt3dmsConcBoundary.MassLoadingBoundary then
+    begin
+      FMassLoadingMassFluxObservations.Add(ScreenObject);
     end;
   end;
 
@@ -1525,6 +2311,66 @@ begin
   FRvobObservations.Assign(frmGoPhast.PhastModel.RiverObservations);
   ReadFluxObservations(frmGoPhast.PhastModel.ModflowPackages.RvobPackage,
     FRvobObservations, FRvobNode);
+
+  FMassFluxObs.Mt3dmsHeadMassFluxObservations.Assign(
+    frmGoPhast.PhastModel.Mt3dmsHeadMassFluxObservations);
+  ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.ChdBoundary,
+    'Specified Head Mass Flux', FMassFluxObs.Mt3dmsHeadMassFluxObservations, FHeadMassFluxNode);
+
+  FMassFluxObs.Mt3dmsWellMassFluxObservations.Assign(
+    frmGoPhast.PhastModel.Mt3dmsWellMassFluxObservations);
+  ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.WelPackage,
+    'Well Mass Flux', FMassFluxObs.Mt3dmsWellMassFluxObservations, FWellMassFluxNode);
+
+  FMassFluxObs.Mt3dmsDrnMassFluxObservations.Assign(
+    frmGoPhast.PhastModel.Mt3dmsDrnMassFluxObservations);
+  ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.DrnPackage,
+    'Drain Mass Flux', FMassFluxObs.Mt3dmsDrnMassFluxObservations, FDrnMassFluxNode);
+
+  FMassFluxObs.Mt3dmsRivMassFluxObservations.Assign(
+    frmGoPhast.PhastModel.Mt3dmsRivMassFluxObservations);
+  ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.RivPackage,
+    'River Mass Flux', FMassFluxObs.Mt3dmsRivMassFluxObservations, FRivMassFluxNode);
+
+  FMassFluxObs.Mt3dmsGhbMassFluxObservations.Assign(
+    frmGoPhast.PhastModel.Mt3dmsGhbMassFluxObservations);
+  ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.GhbBoundary,
+    'GHB Mass Flux', FMassFluxObs.Mt3dmsGhbMassFluxObservations, FGhbMassFluxNode);
+
+  FMassFluxObs.Mt3dmsRchMassFluxObservations.Assign(
+    frmGoPhast.PhastModel.Mt3dmsRchMassFluxObservations);
+  ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.RchPackage,
+    'Recharge Mass Flux', FMassFluxObs.Mt3dmsRchMassFluxObservations, FRchMassFluxNode);
+
+  FMassFluxObs.Mt3dmsEvtMassFluxObservations.Assign(
+    frmGoPhast.PhastModel.Mt3dmsEvtMassFluxObservations);
+  ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.EvtPackage,
+    'EVT Mass Flux', FMassFluxObs.Mt3dmsEvtMassFluxObservations, FEVTMassFluxNode);
+
+  FMassFluxObs.Mt3dmsMassLoadingMassFluxObservations.Assign(
+    frmGoPhast.PhastModel.Mt3dmsMassLoadingMassFluxObservations);
+  ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.Mt3dmsSourceSink,
+    'Mass Loading', FMassFluxObs.Mt3dmsMassLoadingMassFluxObservations, FMassLoadingMassFluxNode);
+
+  FMassFluxObs.Mt3dmsResMassFluxObservations.Assign(
+    frmGoPhast.PhastModel.Mt3dmsResMassFluxObservations);
+  ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.ResPackage,
+    'Resevoir Mass Flux', FMassFluxObs.Mt3dmsResMassFluxObservations, FResMassFluxNode);
+
+  FMassFluxObs.Mt3dmsLakMassFluxObservations.Assign(
+    frmGoPhast.PhastModel.Mt3dmsLakMassFluxObservations);
+  ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.LakPackage,
+    'Lake Mass Flux', FMassFluxObs.Mt3dmsLakMassFluxObservations, FLakMassFluxNode);
+
+  FMassFluxObs.Mt3dmsDrtMassFluxObservations.Assign(
+    frmGoPhast.PhastModel.Mt3dmsDrtMassFluxObservations);
+  ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.DrtPackage,
+    'DRT Mass Flux', FMassFluxObs.Mt3dmsDrtMassFluxObservations, FDrtMassFluxNode);
+
+  FMassFluxObs.Mt3dmsEtsMassFluxObservations.Assign(
+    frmGoPhast.PhastModel.Mt3dmsEtsMassFluxObservations);
+  ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.EtsPackage,
+    'ETS Mass Flux', FMassFluxObs.Mt3dmsEtsMassFluxObservations, FEtsMassFluxNode);
 
   SelectedObservation := nil;
 end;
@@ -1555,11 +2401,161 @@ begin
   SetData;
 end;
 
+procedure TfrmManageFluxObservations.rdeMassFluxMultiValueEditChange(
+  Sender: TObject);
+begin
+  inherited;
+  if csLoading in ComponentState then
+  begin
+    Exit;
+  end;
+  AssignValuesToSelectedGridCells(rdeMassFluxMultiValueEdit.Text,
+    rdgConcFluxObsTimes, Ord(fmcTime), Ord(fmcWeight));
+end;
+
 procedure TfrmManageFluxObservations.rdeMultiValueEditChange(Sender: TObject);
 begin
   inherited;
   AssignValuesToSelectedGridCells(rdeMultiValueEdit.Text, rdgFluxObsTimes,
     Ord(fcTime), Ord(fcStatistic));
+end;
+
+procedure TfrmManageFluxObservations.rdgConcFluxObsTimesBeforeDrawCell(
+  Sender: TObject; ACol, ARow: Integer);
+begin
+  inherited;
+  if not rdgConcFluxObsTimes.Enabled then
+  begin
+    rdgConcFluxObsTimes.Canvas.Brush.Color := clBtnFace;
+  end;
+end;
+
+procedure TfrmManageFluxObservations.rdgConcFluxObsTimesColSize(Sender: TObject;
+  ACol, PriorWidth: Integer);
+begin
+  inherited;
+  LayoutMt3dmsFluxEdits;
+end;
+
+procedure TfrmManageFluxObservations.rdgConcFluxObsTimesEndUpdate(
+  Sender: TObject);
+begin
+  inherited;
+  if not FSettingTimeCount then
+  begin
+    seNumMt3dmsObsTimes.AsInteger := rdgConcFluxObsTimes.RowCount -1;
+  end;
+end;
+
+procedure TfrmManageFluxObservations.rdgConcFluxObsTimesExit(Sender: TObject);
+var
+  Index: Integer;
+  ObsTime: TMt3dmsFluxObservation;
+  AValue: Extended;
+  AnInt: Integer;
+begin
+  inherited;
+
+  for Index := 1 to seNumMt3dmsObsTimes.AsInteger do
+  begin
+    if Index < rdgConcFluxObsTimes.RowCount then
+    begin
+      ObsTime := rdgConcFluxObsTimes.Objects[Ord(fcName),Index] as TMt3dmsFluxObservation;
+      if ObsTime <> nil then
+      begin
+        ObsTime.ObservationType := TObservationType(rdgConcFluxObsTimes.ItemIndex[Ord(fmcObsType),Index]);
+        case ObsTime.ObservationType of
+          otTime:
+            begin
+              if TryStrToFloat(rdgConcFluxObsTimes.Cells[Ord(fmcTime),Index], AValue) then
+              begin
+                ObsTime.Time := AValue;
+              end;
+            end;
+          otFrequency:
+            begin
+              if TryStrToInt(rdgConcFluxObsTimes.Cells[Ord(fmcTime),Index], AnInt) then
+              begin
+                ObsTime.ObservationFrequency := AnInt;
+              end;
+            end;
+          else
+            Assert(false);
+        end;
+        if TryStrToFloat(rdgConcFluxObsTimes.Cells[Ord(fmcValue),Index], AValue) then
+        begin
+          ObsTime.ObservedValue := AValue;
+        end;
+        ObsTime.Species := rdgConcFluxObsTimes.Cells[Ord(fmcSpecies),Index];
+        if TryStrToFloat(rdgConcFluxObsTimes.Cells[Ord(fmcWeight),Index], AValue) then
+        begin
+          ObsTime.Weight := AValue;
+        end;
+        ObsTime.Comment := rdgConcFluxObsTimes.Cells[Ord(fmcComment),Index];
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmManageFluxObservations.rdgConcFluxObsTimesHorizontalScroll(
+  Sender: TObject);
+begin
+  inherited;
+  LayoutMt3dmsFluxEdits;
+end;
+
+procedure TfrmManageFluxObservations.rdgConcFluxObsTimesSelectCell(
+  Sender: TObject; ACol, ARow: Integer; var CanSelect: Boolean);
+begin
+  inherited;
+  EnableMultiEditControl(rdgConcFluxObsTimes, rdeMassFluxMultiValueEdit,
+    Ord(fmcTime), Ord(fmcWeight));
+  EnableMultiEditControl(rdgConcFluxObsTimes, comboMt3dmsSpecies,
+    Ord(fmcSpecies), Ord(fmcSpecies));
+end;
+
+procedure TfrmManageFluxObservations.rdgConcFluxObsTimesSetEditText(
+  Sender: TObject; ACol, ARow: Integer; const Value: string);
+var
+  ItemIndex: Integer;
+  ObservationType: TObservationType;
+  AColumn: TRbwColumn4;
+begin
+  inherited;
+  if (ACol = Ord(fmcObsType)) and (ARow >= rdgConcFluxObsTimes.FixedRows) then
+  begin
+    AColumn := rdgConcFluxObsTimes.Columns[Ord(fmcTime)];
+    ItemIndex := rdgConcFluxObsTimes.ItemIndex[ACol, ARow];
+    if ItemIndex >= 0 then
+    begin
+      ObservationType := TObservationType(ItemIndex);
+      case ObservationType of
+        otTime:
+          begin
+            AColumn.CheckMin := False;
+            rdgConcFluxObsTimes.UseSpecialFormat[Ord(fmcTime), ARow] := False;
+            AColumn.Min := frmGoPhast.PhastModel.ModflowStressPeriods[0].StartTime;
+            AColumn.CheckMin := True;
+          end;
+        otFrequency:
+          begin
+            AColumn.CheckMin := False;
+            rdgConcFluxObsTimes.SpecialFormat[Ord(fmcTime), ARow] := rcf4Integer;
+            rdgConcFluxObsTimes.UseSpecialFormat[Ord(fmcTime), ARow] := True;
+            AColumn.Min := 1;
+            AColumn.CheckMin := True;
+          end;
+        else
+          Assert(False);
+      end;
+    end
+    else
+    begin
+      AColumn.CheckMin := False;
+      rdgConcFluxObsTimes.UseSpecialFormat[Ord(fmcTime), ARow] := False;
+    end;
+  end;
+
 end;
 
 procedure TfrmManageFluxObservations.rdgFluxObsTimesBeforeDrawCell(
@@ -1593,6 +2589,7 @@ procedure TfrmManageFluxObservations.rdgFluxObsTimesExit(Sender: TObject);
 var
   Index: Integer;
   ObsTime: TFluxObservation;
+  AValue: Extended;
 begin
   inherited;
 
@@ -1603,11 +2600,19 @@ begin
       ObsTime := rdgFluxObsTimes.Objects[Ord(fcName),Index] as TFluxObservation;
       if ObsTime <> nil then
       begin
-        ObsTime.Time := StrToFloat(rdgFluxObsTimes.Cells[Ord(fcTime),Index]);
-        ObsTime.ObservedValue := StrToFloat(rdgFluxObsTimes.Cells[Ord(fcValue),Index]);
-        ObsTime.Statistic := StrToFloat(rdgFluxObsTimes.Cells[Ord(fcStatistic),Index]);
-        ObsTime.StatFlag := TStatFlag(rdgFluxObsTimes.Columns[Ord(fcStatFlag)].
-          PickList.IndexOf(rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index]));
+        if TryStrToFloat(rdgFluxObsTimes.Cells[Ord(fcTime),Index], AValue) then
+        begin
+          ObsTime.Time := AValue;
+        end;
+        if TryStrToFloat(rdgFluxObsTimes.Cells[Ord(fcValue),Index], AValue) then
+        begin
+          ObsTime.ObservedValue := AValue;
+        end;
+        if TryStrToFloat(rdgFluxObsTimes.Cells[Ord(fcStatistic),Index], AValue) then
+        begin
+          ObsTime.Statistic := AValue;
+        end;
+        ObsTime.StatFlag := TStatFlag(rdgFluxObsTimes.ItemIndex[Ord(fcStatFlag),Index]);
         ObsTime.Comment := rdgFluxObsTimes.Cells[Ord(fcComment),Index];
       end;
     end;
@@ -1630,6 +2635,8 @@ begin
   EnableMultiEditControl(rdgFluxObsTimes, comboMultiStatFlag,
     Ord(fcStatFlag), Ord(fcStatFlag));
 end;
+
+{ TMassFluxObs }
 
 initialization
   FPriorErrors:= TStringList.Create;

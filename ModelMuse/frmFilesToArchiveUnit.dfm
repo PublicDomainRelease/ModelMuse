@@ -9,11 +9,12 @@ inherited frmFilesToArchive: TfrmFilesToArchive
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 161
+    Top = 153
     Width = 512
     Height = 73
     Align = alBottom
     TabOrder = 0
+    ExplicitTop = 161
     DesignSize = (
       512
       73)
@@ -88,7 +89,7 @@ inherited frmFilesToArchive: TfrmFilesToArchive
     Left = 0
     Top = 0
     Width = 512
-    Height = 161
+    Height = 153
     Align = alClient
     TabOrder = 1
     OnChange = reFilesToSaveChange

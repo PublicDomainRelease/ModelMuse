@@ -120,6 +120,9 @@ implementation
 
 uses frmGoPhastUnit, GoPhastTypes;
 
+resourcestring
+  StrPrintFrequency = 'print frequency';
+
 {$R *.dfm}
 
 { TfrmPrintFrequency }
@@ -716,7 +719,7 @@ end;
 
 function TUndoPrintFrequency.Description: string;
 begin
-  result := 'print frequency';
+  result := StrPrintFrequency;
 end;
 
 destructor TUndoPrintFrequency.Destroy;

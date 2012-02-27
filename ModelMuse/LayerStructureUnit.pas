@@ -7,7 +7,7 @@ uses OrderedCollectionUnit, Classes, GoPhastTypes, SubscriptionUnit,
 
 type
   TIntTypeMethod = (itmLaytype, itmLayavg, itmLayvka);
-  TFloatTypeMethod = (ftmTrpy);
+  TFloatTypeMethod = (ftmTrpy, ftmTrtp, ftmTrpv, ftmDmcoef);
 
   TLayerCollection = class;
 
@@ -55,6 +55,9 @@ type
     FSubNoDelayBedLayers: TSubNoDelayBedLayers;
     FSubDelayBedLayers: TSubDelayBedLayers;
     FWaterTableLayers: TWaterTableLayers;
+    FMt3dmsHorzTransDisp: TRealCollection;
+    FMt3dmsDiffusionCoef: TRealCollection;
+    FMt3dmsVertTransDisp: TRealCollection;
     procedure SetDataArrayName(const NewName : string);
     procedure SetAquiferName(const Value : string);
     procedure SetGrowthMethod(const Value: TGrowthMethod);
@@ -74,6 +77,9 @@ type
     function SubsidenceLayerCount(SubLayers: TCustomSubLayer): integer;
     procedure SetWaterTableLayers(const Value: TWaterTableLayers);
     procedure UpdateChildModels(PriorCount: Integer);
+    procedure SetMt3dmsDiffusionCoef(const Value: TRealCollection);
+    procedure SetMt3dmsHorzTransDisp(const Value: TRealCollection);
+    procedure SetMt3dmsVertTransDisp(const Value: TRealCollection);
   protected
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
   public
@@ -137,6 +143,12 @@ type
       read FSubDelayBedLayers write SetSubDelayBedLayers;
     property WaterTableLayers: TWaterTableLayers read FWaterTableLayers
       write SetWaterTableLayers;
+    property Mt3dmsHorzTransDisp: TRealCollection read FMt3dmsHorzTransDisp
+      write SetMt3dmsHorzTransDisp;
+    property Mt3dmsVertTransDisp: TRealCollection read FMt3dmsVertTransDisp
+      write SetMt3dmsVertTransDisp;
+    property Mt3dmsDiffusionCoef: TRealCollection read FMt3dmsDiffusionCoef
+      write SetMt3dmsDiffusionCoef;
   end;
 
   TLayerStructure = class(TLayerOwnerCollection)
@@ -185,6 +197,9 @@ type
     function DelayCount: integer;
     function NoDelayCount: integer;
     function WaterTableCount: integer;
+    Function TRPT: TOneDRealArray;
+    function TRPV: TOneDRealArray;
+    Function DMCOEF: TOneDRealArray;
   end;
 
 resourcestring
@@ -199,6 +214,7 @@ procedure TLayerGroup.Assign(Source: TPersistent);
 var
   AnotherLayerGroup: TLayerGroup;
 begin
+  // if Assign is updated, update IsSame too.
   inherited;
   AnotherLayerGroup := Source as TLayerGroup;
   if not IsSame(AnotherLayerGroup) then
@@ -227,6 +243,9 @@ begin
     SubNoDelayBedLayers := AnotherLayerGroup.SubNoDelayBedLayers;
     SubDelayBedLayers := AnotherLayerGroup.SubDelayBedLayers;
     WaterTableLayers := AnotherLayerGroup.WaterTableLayers;
+    Mt3dmsHorzTransDisp := AnotherLayerGroup.Mt3dmsHorzTransDisp;
+    Mt3dmsVertTransDisp := AnotherLayerGroup.Mt3dmsVertTransDisp;
+    Mt3dmsDiffusionCoef := AnotherLayerGroup.Mt3dmsDiffusionCoef;
   end;
 end;
 
@@ -238,6 +257,12 @@ end;
 constructor TLayerGroup.Create(Collection: TCollection);
 begin
   inherited;
+  FMt3dmsHorzTransDisp := TRealCollection.Create(Model);
+  FMt3dmsHorzTransDisp.InitialValue := 0.1;
+  FMt3dmsVertTransDisp := TRealCollection.Create(Model);
+  FMt3dmsVertTransDisp.InitialValue := 0.01;
+  FMt3dmsDiffusionCoef := TRealCollection.Create(Model);
+  FMt3dmsDiffusionCoef.InitialValue := 0;
   FLayerCollection:= TLayerCollection.Create(self);
   FSubNoDelayBedLayers := TSubNoDelayBedLayers.Create(Model);
   FSubDelayBedLayers := TSubDelayBedLayers.Create(Model);
@@ -311,6 +336,9 @@ begin
     end;
   end;
   FLayerCollection.Free;
+  FMt3dmsDiffusionCoef.Free;
+  FMt3dmsVertTransDisp.Free;
+  FMt3dmsHorzTransDisp.Free;
   inherited;
 end;
 
@@ -353,7 +381,10 @@ begin
     and AnotherLayerGroup.LayerCollection.IsSame(LayerCollection)
     and AnotherLayerGroup.SubNoDelayBedLayers.IsSame(SubNoDelayBedLayers)
     and AnotherLayerGroup.SubDelayBedLayers.IsSame(SubDelayBedLayers)
-    and AnotherLayerGroup.WaterTableLayers.IsSame(WaterTableLayers);
+    and AnotherLayerGroup.WaterTableLayers.IsSame(WaterTableLayers)
+    and AnotherLayerGroup.Mt3dmsHorzTransDisp.IsSame(Mt3dmsHorzTransDisp)
+    and AnotherLayerGroup.Mt3dmsVertTransDisp.IsSame(Mt3dmsVertTransDisp)
+    and AnotherLayerGroup.Mt3dmsDiffusionCoef.IsSame(Mt3dmsDiffusionCoef)
 end;
 
 function TLayerGroup.LayerCount: integer;
@@ -447,6 +478,7 @@ begin
     begin
       if UpperCase(FAquiferName) = UpperCase(Value) then
       begin
+        // Change case of the data set
         DataArrayName := StringReplace(DataArrayName,
           GenerateNewRoot(FAquiferName),GenerateNewRoot(Value), []);
       end
@@ -458,7 +490,7 @@ begin
         end
         else
         begin
-          DataArrayName := GenerateNewName(Value + '_Bottom');
+          DataArrayName := GenerateNewRoot(Value + '_Bottom');
         end;
       end;
     end;
@@ -488,9 +520,6 @@ var
   DataArray: TDataArray;
   UnitAbove, UnitBelow: TLayerGroup;
   NewFormula: string;
-  Compiler: TRbwParser;
-  Position: Integer;
-  OldNames, NewNames: TStringList;
 begin
   if FDataArrayName <> NewName then
   begin
@@ -502,36 +531,13 @@ begin
         DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
         if DataArray <> nil then
         begin
-          // rename data array.
-          Model.TopGridObserver.StopsTalkingTo(DataArray);
-          DataArray.StopsTalkingTo(Model.ThreeDGridObserver);
-          OldNames := TStringList.Create;
-          NewNames := TStringList.Create;
-          try
-            OldNames.Add(FDataArrayName);
-            NewNames.Add(NewName);
-            Model.UpdateFormulas(OldNames, NewNames);
-          finally
-            NewNames.Free;
-            OldNames.Free;
-          end;
-          DataArray.Name := NewName;
-          Compiler := Model.GetCompiler(DataArray.Orientation,
-            DataArray.EvaluatedAt);
-          Position := Compiler.IndexOfVariable(FDataArrayName);
-          if Position >= 0 then
-          begin
-            Compiler.RenameVariable(Position, NewName);
-          end;
-          Compiler := Model.GetCompiler(dso3D,
-            DataArray.EvaluatedAt);
-          Position := Compiler.IndexOfVariable(FDataArrayName);
-          if Position >= 0 then
-          begin
-            Compiler.RenameVariable(Position, NewName);
-          end;
+          Model.RenameDataArray(DataArray, NewName);
         end
         else
+        begin
+          DataArray := Model.DataArrayManager.GetDataSetByName(NewName);
+        end;
+        if DataArray = nil then
         begin
           // create a new data array.
 
@@ -623,6 +629,21 @@ begin
   PriorCount := FLayerCollection.Count;
   FLayerCollection.Assign(Value);
   UpdateChildModels(PriorCount);
+end;
+
+procedure TLayerGroup.SetMt3dmsDiffusionCoef(const Value: TRealCollection);
+begin
+  FMt3dmsDiffusionCoef.Assign(Value);
+end;
+
+procedure TLayerGroup.SetMt3dmsHorzTransDisp(const Value: TRealCollection);
+begin
+  FMt3dmsHorzTransDisp.Assign(Value);
+end;
+
+procedure TLayerGroup.SetMt3dmsVertTransDisp(const Value: TRealCollection);
+begin
+  FMt3dmsVertTransDisp.Assign(Value);
 end;
 
 procedure TLayerGroup.SetSimulated(const Value: boolean);
@@ -1057,6 +1078,11 @@ begin
   inherited;
 end;
 
+function TLayerStructure.DMCOEF: TOneDRealArray;
+begin
+  Result := FloatArray(ftmDmcoef);
+end;
+
 function TLayerStructure.First: TLayerGroup;
 begin
   result := inherited First as TLayerGroup;
@@ -1082,7 +1108,46 @@ begin
       begin
         Assert(MFLayIndex < LayerCount);
         case Method of
-          ftmTrpy: result[MFLayIndex] := Group.HorizontalAnisotropy;
+          ftmTrpy:
+            begin
+              result[MFLayIndex] := Group.HorizontalAnisotropy;
+            end;
+          ftmTrtp:
+            begin
+              while LayerIndex >= Group.Mt3dmsHorzTransDisp.Count do
+              begin
+                Group.Mt3dmsHorzTransDisp.Add;
+                if LayerIndex > 0 then
+                begin
+                  Group.Mt3dmsHorzTransDisp[LayerIndex].Assign(Group.Mt3dmsHorzTransDisp[LayerIndex-1]);
+                end;
+              end;
+              result[MFLayIndex] := Group.Mt3dmsHorzTransDisp[LayerIndex].Value;
+            end;
+          ftmTrpv:
+            begin
+              while LayerIndex >= Group.Mt3dmsVertTransDisp.Count do
+              begin
+                Group.Mt3dmsVertTransDisp.Add;
+                if LayerIndex > 0 then
+                begin
+                  Group.Mt3dmsVertTransDisp[LayerIndex].Assign(Group.Mt3dmsVertTransDisp[LayerIndex-1]);
+                end;
+              end;
+              result[MFLayIndex] := Group.Mt3dmsVertTransDisp[LayerIndex].Value;
+            end;
+          ftmDmcoef:
+            begin
+              while LayerIndex >= Group.Mt3dmsDiffusionCoef.Count do
+              begin
+                Group.Mt3dmsDiffusionCoef.Add;
+                if LayerIndex > 0 then
+                begin
+                  Group.Mt3dmsDiffusionCoef[LayerIndex].Assign(Group.Mt3dmsDiffusionCoef[LayerIndex-1]);
+                end;
+              end;
+              result[MFLayIndex] := Group.Mt3dmsDiffusionCoef[LayerIndex].Value;
+            end
           else Assert(False);
         end;
         Inc(MFLayIndex);
@@ -1218,6 +1283,16 @@ begin
   end;
 end;
 
+function TLayerStructure.TRPT: TOneDRealArray;
+begin
+  Result := FloatArray(ftmTrtp);
+end;
+
+function TLayerStructure.TRPV: TOneDRealArray;
+begin
+  Result := FloatArray(ftmTrpv);
+end;
+
 function TLayerStructure.Trpy: TOneDRealArray;
 begin
   result := FloatArray(ftmTrpy);
@@ -1281,6 +1356,7 @@ end;
 
 procedure TLayerFraction.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   Fraction := (Source as TLayerFraction).Fraction;
 end;
 
@@ -1312,6 +1388,7 @@ end;
 
 procedure TLayerCollection.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   if not IsSame(Source as TLayerCollection) then
   begin
     inherited;

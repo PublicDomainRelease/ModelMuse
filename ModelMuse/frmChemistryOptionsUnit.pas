@@ -121,6 +121,9 @@ implementation
 
 uses frmGoPhastUnit;
 
+resourcestring
+  StrChemistryOptions = 'chemistry options';
+
 {$R *.dfm}
 
 procedure TfrmChemistryOptions.cbChemistryClick(Sender: TObject);
@@ -220,7 +223,7 @@ end;
 
 function TUndoChemistryOptions.Description: string;
 begin
-  result := 'chemistry options';
+  result := StrChemistryOptions;
 end;
 
 destructor TUndoChemistryOptions.Destroy;

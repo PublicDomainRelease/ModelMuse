@@ -23,7 +23,6 @@ inherited framePackageHob: TframePackageHob
     Anchors = [akLeft, akBottom]
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 13
     TabOrder = 1
     Text = '0'
     DataType = dtReal

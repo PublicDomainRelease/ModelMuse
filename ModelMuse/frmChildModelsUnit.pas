@@ -121,6 +121,9 @@ implementation
 uses
   frmGoPhastUnit, LayerStructureUnit, ScreenObjectUnit, frmDisplayDataUnit;
 
+resourcestring
+  StrChangeChildModels = 'change child models';
+
 {$R *.dfm}
 
 procedure TfrmChildModels.btnAddClick(Sender: TObject);
@@ -680,16 +683,6 @@ begin
     begin
       frmDisplayData.frameHeadObservationResults.UpdateSelectedModel;
     end;
-//    if frmHeadObservationResults <> nil then
-//    begin
-//      ModelIndex := frmHeadObservationResults.comboModels.ItemIndex;
-//      frmHeadObservationResults.GetData;
-//      if ModelIndex < frmHeadObservationResults.comboModels.Items.Count then
-//      begin
-//        frmHeadObservationResults.comboModels.ItemIndex := ModelIndex;
-//        frmHeadObservationResults.comboModelsChange(nil);
-//      end;
-//    end;
   finally
     frmGoPhast.CanDraw := True;
   end;
@@ -718,7 +711,7 @@ end;
 
 function TUndoChildModelChange.Description: string;
 begin
-  result := 'change child models';
+  result := StrChangeChildModels;
 end;
 
 destructor TUndoChildModelChange.Destroy;

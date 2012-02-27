@@ -481,6 +481,7 @@ end;
 
 procedure TGlobalVariableItem.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TGlobalVariableItem then
   begin
     Variable := TGlobalVariableItem(Source).Variable;

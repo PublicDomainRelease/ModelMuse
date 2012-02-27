@@ -47,6 +47,9 @@ uses
   ModelMuseUtilities, DataSetUnit, frmProgressUnit, UndoItems,
   GIS_Functions, CoordinateConversionUnit;
 
+resourcestring
+  StrSampleDigitalEleva = 'sample Digital Elevation Model';
+
 {$R *.dfm}
 
 
@@ -421,7 +424,7 @@ end;
 
 function TUndoImportDemFile.Description: string;
 begin
-  result := 'sample Digital Elevation Model';
+  result := StrSampleDigitalEleva;
 end;
 
 end.

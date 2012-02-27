@@ -7,10 +7,12 @@ uses
   Dialogs, frmCustomGoPhastUnit, ComCtrls, ExtCtrls, StdCtrls, Buttons, Grids,
   RbwDataGrid4, ArgusDataEntry, GoPhastTypes, LayerStructureUnit, ImgList,
   JvExStdCtrls, JvCombobox, JvListComb, UndoItems, RbwController, RbwEdit,
-  RequiredDataSetsUndoUnit, JvCheckBox, Mask, JvExMask, JvSpin, frameSubBedsUnit,
-  ModflowSubsidenceDefUnit;
+  RequiredDataSetsUndoUnit, JvCheckBox, Mask, JvExMask, JvSpin,
+  frameSubBedsUnit, ModflowSubsidenceDefUnit;
                                  
 type
+  TDispersionCols = (drLayerNumber, drHorzTransDisp, drVerTransDisp, drDiffCoef);
+
   TfrmLayers = class(TfrmCustomGoPhast)
     Splitter1: TSplitter;
     pcLayerGroups: TPageControl;
@@ -71,6 +73,10 @@ type
     frameSubDelayBeds: TframeSubBeds;
     tabSWT: TTabSheet;
     frameSwt: TframeSubBeds;
+    tabDispersion: TTabSheet;
+    rdgDispersion: TRbwDataGrid4;
+    pnlMultiEdit: TPanel;
+    rdeMultiDispersionValues: TRbwDataEntry;
     procedure rdeVDiscretizationChange(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
     procedure rdeGrowthRateChange(Sender: TObject);
@@ -104,6 +110,16 @@ type
     procedure rdgSubLayerBoundariesExit(Sender: TObject);
     procedure tvLayerGroupsChange(Sender: TObject; Node: TTreeNode);
     procedure rdeAnisotropyChange(Sender: TObject);
+    procedure rdgDispersionSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure rdgDispersionSetEditText(Sender: TObject; ACol, ARow: Integer;
+      const Value: string);
+    procedure rdgDispersionColSize(Sender: TObject; ACol, PriorWidth: Integer);
+    procedure FormResize(Sender: TObject);
+    procedure rdgDispersionHorizontalScroll(Sender: TObject);
+    procedure rdgDispersionMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure rdeMultiDispersionValuesChange(Sender: TObject);
   private
     FLayerPositions: TOneDIntegerArray;
     FMovingLine: boolean;
@@ -112,9 +128,11 @@ type
     FMouseInPaintBox: boolean;
     FLayerStructure: TLayerStructure;
     FSettingUnit: boolean;
+    // @name contains the selected @link(TLayerGroup)s.
     FSelectedUnits: TList;
     FSelectedTreeNodes: TList;
     FUseSaturatedThickness: Boolean;
+    FEditDiffusion: boolean;
     procedure UpdateSelectedUnitLayers;
     procedure EnableOkButton;
     procedure GetData;
@@ -148,6 +166,9 @@ type
     procedure GetSubsidenceLayers(Sender: TObject;
       var SubLayers: TCustomSubLayer);
     procedure GetNewSubsidenceName(Sender: TObject; var NewName: string);
+    // Set the dispersion values
+    procedure UpdateDispersionValues(ACol, ARow: Integer);
+    procedure LayoutMultiDispersionControl;
     { Private declarations }
   public
     { Public declarations }
@@ -172,6 +193,32 @@ implementation
 
 uses Math, RealListUnit, CursorsFoiledAgain, frmGoPhastUnit,
   ModflowPackagesUnit, frmErrorsAndWarningsUnit, PhastModelUnit, Contnrs;
+
+resourcestring
+  StrChangeLayerStructu = 'change layer structure';
+  StrLayerBoundary = 'Layer boundary';
+  StrHorizontalTransvers = 'Horizontal transverse dispersivity (TRPT)';
+  StrVerticalTransverse = 'Vertical transverse dispersivity (TRPV)';
+  StrDiffusionCoefficien = 'Diffusion coefficient (DMCOEF)';
+  StrHarmonicMean0 = 'Harmonic mean (0)';
+  StrArithmeticMean1 = 'Arithmetic mean (1)';
+  StrLogarithmicMean2 = 'Logarithmic mean (2)';
+  StrArithmeticAndLogar = 'Arithmetic and logarithmic (3)';
+  StrLogarithmicMean1 = 'Logarithmic mean (1)';
+  StrArithmeticAndLogar2 = 'Arithmetic and logarithmic (2)';
+  StrOnlyTheTopLayerC = 'Only the top layer can be unconfined.';
+  StrANonsimulatedLaye = 'A non-simulated layer group can not be next to ano' +
+  'ther non-simulated layer group.';
+  StrTheTopLayerGroup = 'The top layer group must be simulated.';
+  StrTheBottomLayerGro = 'The bottom layer group must be simulated.';
+  StrNewLayerGroup = 'New Layer Group';
+  StrUseInAllLayers = 'Use in all layers';
+  StrNonsimulated = 'Non-simulated';
+  StrConfined = 'Confined';
+  StrUnconfined = 'Unconfined';
+  StrLimitedConvertible = 'Limited convertible';
+  StrFullyConvertible = 'Fully convertible';
+  StrConvertible = 'Convertible';
 
 {$R *.dfm}
 
@@ -243,7 +290,10 @@ begin
   FSelectedTreeNodes:= TList.Create;
   pcLayerGroups.ActivePageIndex := 0;
   FLayerStructure:= TLayerStructure.Create(nil);
-  rdgSubLayerBoundaries.Cells[0,0] := 'Layer boundary';
+  rdgSubLayerBoundaries.Cells[0,0] := StrLayerBoundary;
+  rdgDispersion.Cells[Ord(drHorzTransDisp),0] := StrHorizontalTransvers;
+  rdgDispersion.Cells[Ord(drVerTransDisp),0] := StrVerticalTransverse;
+  rdgDispersion.Cells[Ord(drDiffCoef),0] := StrDiffusionCoefficien;
   frameSubNoDelayBeds.OnGetSelectedSubLayers := GetSubsidenceLayers;
   frameSubDelayBeds.OnGetSelectedSubLayers := GetSubsidenceLayers;
   frameSwt.OnGetSelectedSubLayers := GetSubsidenceLayers;
@@ -263,6 +313,12 @@ begin
   inherited;
 end;
 
+procedure TfrmLayers.FormResize(Sender: TObject);
+begin
+  inherited;
+  LayoutMultiDispersionControl;
+end;
+
 procedure TfrmLayers.SetUpAveragingOptions;
 var
   Packages: TModflowPackages;
@@ -273,26 +329,26 @@ begin
   comboInterblockMethod.Items.Clear;
 
   Item := comboInterblockMethod.Items.Add;
-  Item.Text := 'Harmonic mean (0)';
+  Item.Text := StrHarmonicMean0;
 
   if Packages.BcfPackage.IsSelected then
   begin
     Item := comboInterblockMethod.Items.Add;
-    Item.Text := 'Arithmetic mean (1)';
+    Item.Text := StrArithmeticMean1;
 
     Item := comboInterblockMethod.Items.Add;
-    Item.Text := 'Logarithmic mean (2)';
+    Item.Text := StrLogarithmicMean2;
 
     Item := comboInterblockMethod.Items.Add;
-    Item.Text := 'Arithmetic and logarithmic (3)';
+    Item.Text := StrArithmeticAndLogar;
   end
   else
   begin
     Item := comboInterblockMethod.Items.Add;
-    Item.Text := 'Logarithmic mean (1)';
+    Item.Text := StrLogarithmicMean1;
 
     Item := comboInterblockMethod.Items.Add;
-    Item.Text := 'Arithmetic and logarithmic (2)';
+    Item.Text := StrArithmeticAndLogar2;
   end;
 end;
 
@@ -327,6 +383,8 @@ var
   LayerGroup: TLayerGroup;
   NodeItem: TTreeNode;
 begin
+  FEditDiffusion := not frmGoPhast.PhastModel.AllDispersionMultiDiffusion;
+
   tabNoDelay.TabVisible := frmGoPhast.PhastModel.
     ModflowPackages.SubPackage.IsSelected;
   tabDelay.TabVisible := frmGoPhast.PhastModel.
@@ -398,6 +456,87 @@ begin
   begin
     Assert(False);
   end;
+end;
+
+procedure TfrmLayers.UpdateDispersionValues(ACol, ARow: Integer);
+var
+  ALayerGroup: TLayerGroup;
+  AValue: Double;
+  RowIndex: Integer;
+  Index: Integer;
+  Item: TRealItem;
+  Column: TDispersionCols;
+  SelectIndex: Integer;
+  RealList: TRealList;
+  RealCollection: TRealCollection;
+begin
+  if FSelectedUnits = nil then
+  begin
+    Exit;
+  end;
+  if not FSettingUnit and (ARow > 0) then
+  begin
+    Column := TDispersionCols(ACol);
+    if Column in [drHorzTransDisp..drDiffCoef] then
+    begin
+      RealList := TRealList.Create;
+      try
+        for RowIndex := 1 to rdgDispersion.RowCount - 1 do
+        begin
+          if TryStrToFloat(rdgDispersion.Cells[ACol, RowIndex], AValue) then
+          begin
+            RealList.Add(AValue);
+          end;
+        end;
+        for SelectIndex := 0 to FSelectedUnits.Count - 1 do
+        begin
+          RealCollection := nil;
+          ALayerGroup := FSelectedUnits[SelectIndex];
+          case Column of
+            drHorzTransDisp:
+              begin
+                RealCollection := ALayerGroup.Mt3dmsHorzTransDisp;
+              end;
+            drVerTransDisp:
+              begin
+                RealCollection := ALayerGroup.Mt3dmsVertTransDisp;
+              end;
+            drDiffCoef:
+              begin
+                RealCollection := ALayerGroup.Mt3dmsDiffusionCoef;
+              end;
+          else
+            begin
+              Assert(False);
+            end;
+          end;
+          while RealCollection.Count > RealList.Count do
+          begin
+            RealCollection.Delete(RealCollection.Count - 1);
+          end;
+          for Index := 0 to RealList.Count - 1 do
+          begin
+            if RealCollection.Count > Index then
+            begin
+              Item := RealCollection[Index];
+            end
+            else
+            begin
+              Item := RealCollection.Add;
+            end;
+            Item.Value := RealList[Index];
+          end;
+        end;
+      finally
+        RealList.Free;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmLayers.LayoutMultiDispersionControl;
+begin
+  LayoutControls(rdgDispersion, rdeMultiDispersionValues, nil, rdgDispersion.LeftCol);
 end;
 
 procedure TfrmLayers.GetSubsidenceLayers(Sender: TObject;
@@ -613,7 +752,7 @@ begin
     end;
     if ShowWarning then
     begin
-      MessageDlg('Only the top layer can be unconfined.', mtWarning, [mbOK], 0);
+      MessageDlg(StrOnlyTheTopLayerC, mtWarning, [mbOK], 0);
     end;
   end;
   SimulatedLayer := comboAquiferType.ItemIndex > 0;
@@ -886,6 +1025,18 @@ begin
   end;
 end;
 
+procedure TfrmLayers.rdeMultiDispersionValuesChange(Sender: TObject);
+var
+  ColIndex: Integer;
+begin
+  inherited;
+  for ColIndex := Ord(drHorzTransDisp) to Ord(drDiffCoef) do
+  begin
+    ChangeSelectedCellsInColumn(rdgDispersion, ColIndex,
+      rdeMultiDispersionValues.Text);
+  end;
+end;
+
 procedure TfrmLayers.EnableOkButton;
 var
   Group: TLayerGroup;
@@ -915,8 +1066,7 @@ begin
           if ShouldShowMessage then
           begin
             Beep;
-            MessageDlg('A non-simulated layer group can not be next to '
-              + 'another non-simulated layer group.', mtError, [mbOK], 0);
+            MessageDlg(StrANonsimulatedLaye, mtError, [mbOK], 0);
           end;
         end;
       end;
@@ -926,7 +1076,7 @@ begin
       if ShouldShowMessage then
       begin
         Beep;
-        MessageDlg('The top layer group must be simulated.',
+        MessageDlg(StrTheTopLayerGroup,
           mtError, [mbOK], 0);
       end;
     end;
@@ -936,7 +1086,7 @@ begin
     if ShouldShowMessage then
     begin
       Beep;
-      MessageDlg('The bottom layer group must be simulated.',
+      MessageDlg(StrTheBottomLayerGro,
         mtError, [mbOK], 0);
     end;
   end;
@@ -977,7 +1127,7 @@ begin
   // LayerGroup.AquiferName can not be assigned in LayerGroup.Create
   // because that causes an error if you delete a layer group
   // and then undo the deletion.
-  LayerGroup.AquiferName := 'New Layer Group';
+  LayerGroup.AquiferName := StrNewLayerGroup;
 
   if Position < tvLayerGroups.Items.Count then
   begin
@@ -1109,6 +1259,44 @@ begin
   begin
     SetControlValues;
   end;
+end;
+
+procedure TfrmLayers.rdgDispersionColSize(Sender: TObject; ACol,
+  PriorWidth: Integer);
+begin
+  inherited;
+  LayoutMultiDispersionControl;
+end;
+
+procedure TfrmLayers.rdgDispersionHorizontalScroll(Sender: TObject);
+begin
+  inherited;
+  LayoutMultiDispersionControl;
+end;
+
+procedure TfrmLayers.rdgDispersionMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  inherited;
+  EnableMultiEditControl(rdgDispersion, rdeMultiDispersionValues,
+    [Ord(drHorzTransDisp),Ord(drVerTransDisp),Ord(drDiffCoef)]);
+end;
+
+procedure TfrmLayers.rdgDispersionSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+begin
+  inherited;
+  if (ARow  >= 1) and (ACol = Ord(drDiffCoef)) then
+  begin
+    CanSelect := FEditDiffusion
+  end;
+end;
+
+procedure TfrmLayers.rdgDispersionSetEditText(Sender: TObject; ACol,
+  ARow: Integer; const Value: string);
+begin
+  inherited;
+  UpdateDispersionValues(ACol, ARow);
 end;
 
 procedure TfrmLayers.rdgSubLayerBoundariesExit(Sender: TObject);
@@ -1280,7 +1468,7 @@ var
         begin
           Frame.rdgSubBed.ColCount := 2
             + FirstUnit.LayerCollection.Count+1;
-          Frame.rdgSubBed.Cells[1,0] := 'Use in all layers';
+          Frame.rdgSubBed.Cells[1,0] := StrUseInAllLayers;
           Frame.rdgSubBed.Columns[1].AutoAdjustRowHeights := True;
           Frame.rdgSubBed.Columns[1].WordWrapCaptions := True;
           for ColIndex := Ord(scUseAll) to
@@ -1310,7 +1498,8 @@ var
     for Index := 1 to FSelectedUnits.Count - 1 do
     begin
       SelectedUnit := FSelectedUnits[Index];
-      Same := FirstUnit.LayerCollection.Count = SelectedUnit.LayerCollection.Count;
+      Same := FirstUnit.LayerCollection.Count =
+        SelectedUnit.LayerCollection.Count;
       if not Same then
       begin
         break;
@@ -1599,6 +1788,160 @@ var
     InitializeSubsidenceGrid(frameSwt);
     AssignSubFrame(FirstUnit.WaterTableLayers, frameSwt);
   end;
+  procedure AssignDispersion;
+  var
+    SelectIndex: Integer;
+    RowCount: Integer;
+    DisplayDispersion: Boolean;
+    DispersionSame: Boolean;
+    FirstSimUnit: TLayerGroup;
+    RowIndex: integer;
+    ColIndex: TDispersionCols;
+    RealCollection: TRealCollection;
+  begin
+    DisplayDispersion := frmGoPhast.PhastModel.DispersionSelected;
+    if not DisplayDispersion then
+    begin
+      tabDispersion.TabVisible := False;
+      Exit;
+    end;
+    rdgDispersion.BeginUpdate;
+    try
+      RowCount := -1;
+      for SelectIndex := 0 to FSelectedUnits.Count - 1 do
+      begin
+        SelectedUnit := FSelectedUnits[SelectIndex];
+        if SelectedUnit.Simulated then
+        begin
+          RowCount := Max(SelectedUnit.LayerCount, RowCount);
+        end;
+      end;
+      if RowCount < 0 then
+      begin
+        tabDispersion.Visible := False;
+        Exit;
+      end;
+      tabDispersion.Visible := True;
+      Inc(RowCount);
+      rdgDispersion.RowCount := RowCount;
+      for RowIndex := 1 to rdgDispersion.RowCount - 1 do
+      begin
+        rdgDispersion.Cells[Ord(drLayerNumber), RowIndex] := IntToStr(RowIndex)
+      end;
+
+      DispersionSame := True;
+      FirstSimUnit := nil;
+      for SelectIndex := 0 to FSelectedUnits.Count - 1 do
+      begin
+        SelectedUnit := FSelectedUnits[SelectIndex];
+        if SelectedUnit.Simulated then
+        begin
+          FirstSimUnit := SelectedUnit;
+          break;
+        end;
+      end;
+      if FirstSimUnit.Mt3dmsHorzTransDisp.Count = 0 then
+      begin
+        FirstSimUnit.Mt3dmsHorzTransDisp.Add;
+      end;
+      if FirstSimUnit.Mt3dmsVertTransDisp.Count = 0 then
+      begin
+        FirstSimUnit.Mt3dmsVertTransDisp.Add;
+      end;
+      if FEditDiffusion and (FirstSimUnit.Mt3dmsDiffusionCoef.Count = 0) then
+      begin
+        FirstSimUnit.Mt3dmsDiffusionCoef.Add;
+      end;
+      for SelectIndex := 1 to FSelectedUnits.Count - 1 do
+      begin
+        SelectedUnit := FSelectedUnits[SelectIndex];
+        if SelectedUnit.Simulated and (SelectedUnit <> FirstSimUnit) then
+        begin
+          if SelectedUnit.Mt3dmsHorzTransDisp.Count = 0 then
+          begin
+            SelectedUnit.Mt3dmsHorzTransDisp.Add;
+          end;
+          if SelectedUnit.Mt3dmsVertTransDisp.Count = 0 then
+          begin
+            SelectedUnit.Mt3dmsVertTransDisp.Add;
+          end;
+          if FEditDiffusion
+            and (SelectedUnit.Mt3dmsDiffusionCoef.Count = 0) then
+          begin
+            SelectedUnit.Mt3dmsDiffusionCoef.Add;
+          end;
+          DispersionSame :=
+            FirstSimUnit.Mt3dmsHorzTransDisp.IsSame(
+              SelectedUnit.Mt3dmsHorzTransDisp)
+            and FirstSimUnit.Mt3dmsVertTransDisp.IsSame(
+              SelectedUnit.Mt3dmsVertTransDisp);
+          if DispersionSame and FEditDiffusion then
+          begin
+            DispersionSame := FirstSimUnit.Mt3dmsDiffusionCoef.IsSame(
+              SelectedUnit.Mt3dmsDiffusionCoef);
+          end;
+          if not DispersionSame then
+          begin
+            break;
+          end;
+        end;
+      end;
+      if DispersionSame then
+      begin
+        for RowIndex := 1 to rdgDispersion.RowCount - 1 do
+        begin
+          for ColIndex := drHorzTransDisp to drDiffCoef do
+          begin
+            RealCollection := nil;
+            case ColIndex of
+              drHorzTransDisp:
+                begin
+                  RealCollection := FirstSimUnit.Mt3dmsHorzTransDisp
+                end;
+              drVerTransDisp:
+                begin
+                  RealCollection := FirstSimUnit.Mt3dmsVertTransDisp
+                end;
+              drDiffCoef:
+                begin
+                  if not FEditDiffusion then
+                  begin
+                    rdgDispersion.Cells[Ord(ColIndex), RowIndex] := '';
+                    Continue;
+                  end;
+                  RealCollection := FirstSimUnit.Mt3dmsDiffusionCoef
+                end
+              else
+                begin
+                  Assert(False);
+                end;
+            end;
+            if RealCollection.Count > RowIndex-1 then
+            begin
+              rdgDispersion.Cells[Ord(ColIndex), RowIndex] :=
+                FloatToStr(RealCollection[RowIndex-1].Value)
+            end
+            else
+            begin
+              rdgDispersion.Cells[Ord(ColIndex), RowIndex] := '';
+            end;
+          end;
+        end;
+      end
+      else
+      begin
+        for RowIndex := 1 to rdgDispersion.RowCount - 1 do
+        begin
+          for ColIndex := drHorzTransDisp to drDiffCoef do
+          begin
+            rdgDispersion.Cells[Ord(drHorzTransDisp), RowIndex] := '';
+          end;
+        end;
+      end;
+    finally
+      rdgDispersion.EndUpdate
+    end;
+  end;
 begin
   if csDestroying in ComponentState then Exit;
 
@@ -1640,6 +1983,7 @@ begin
     AssignNoDelayBeds;
     AssignDelayBeds;
     AssignSwtBeds;
+    AssignDispersion;
   finally
     FSettingUnit := False;
   end;
@@ -1702,39 +2046,39 @@ var
 begin
   comboAquiferType.Items.Clear;
   Item := comboAquiferType.Items.Add;
-  Item.Text := 'Non-simulated';
+  Item.Text := StrNonsimulated;
   Item.ImageIndex := 3;
 
   Item := comboAquiferType.Items.Add;
-  Item.Text := 'Confined';
+  Item.Text := StrConfined;
   Item.ImageIndex := 0;
 
   Packages := frmGoPhast.PhastModel.ModflowPackages;
   if Packages.BcfPackage.isSelected then
   begin
     Item := comboAquiferType.Items.Add;
-    Item.Text := 'Unconfined';
+    Item.Text := StrUnconfined;
     Item.ImageIndex := 2;
 
     Item := comboAquiferType.Items.Add;
-    Item.Text := 'Limited convertible';
+    Item.Text := StrLimitedConvertible;
     Item.ImageIndex := 4;
 
     Item := comboAquiferType.Items.Add;
-    Item.Text := 'Fully convertible';
+    Item.Text := StrFullyConvertible;
     Item.ImageIndex := 1;
   end
   else if Packages.HufPackage.isSelected then
   begin
     Item := comboAquiferType.Items.Add;
-    Item.Text := 'Convertible';
+    Item.Text := StrConvertible;
     Item.ImageIndex := 1;
   end
   else if Packages.LpfPackage.isSelected
     or Packages.UpwPackage.isSelected then
   begin
     Item := comboAquiferType.Items.Add;
-    Item.Text := 'Convertible';
+    Item.Text := StrConvertible;
     Item.ImageIndex := 1;
   end
   else
@@ -2011,7 +2355,7 @@ end;
 
 function TUndoDefineLayers.Description: string;
 begin
-  result := 'change layer structure';
+  result := StrChangeLayerStructu;
 end;
 
 destructor TUndoDefineLayers.Destroy;

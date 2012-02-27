@@ -4,6 +4,7 @@ inherited frmLayers: TfrmLayers
   Caption = 'MODFLOW Layer Groups'
   ClientHeight = 424
   ClientWidth = 583
+  OnResize = FormResize
   ExplicitWidth = 591
   ExplicitHeight = 458
   PixelsPerInch = 96
@@ -20,14 +21,18 @@ inherited frmLayers: TfrmLayers
     Top = 0
     Width = 441
     Height = 383
-    ActivePage = tabBasics
+    ActivePage = tabDispersion
     Align = alClient
-    TabOrder = 0
+    TabOrder = 1
     OnChange = pcLayerGroupsChange
     object tabBasics: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'Basics_Tab'
       Caption = 'Basics'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         433
         350)
@@ -116,7 +121,7 @@ inherited frmLayers: TfrmLayers
         ImageWidth = 0
         ItemHeight = 22
         ItemIndex = 0
-        TabOrder = 2
+        TabOrder = 3
         OnChange = comboInterblockMethodChange
         Items = <
           item
@@ -148,7 +153,7 @@ inherited frmLayers: TfrmLayers
         ImageWidth = 0
         ItemHeight = 22
         ItemIndex = 0
-        TabOrder = 3
+        TabOrder = 4
         OnChange = comboVertKMethodChange
         Items = <
           item
@@ -178,7 +183,7 @@ inherited frmLayers: TfrmLayers
         Height = 40
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Compute saturated thickness using starting head (LAYTYP)'
-        TabOrder = 4
+        TabOrder = 2
         WordWrap = True
         OnClick = cbComputeSaturatedThicknessClick
         LinkedControls = <>
@@ -209,6 +214,10 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'Discretization_Tab'
       Caption = 'Discretization'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         433
         350)
@@ -231,7 +240,7 @@ inherited frmLayers: TfrmLayers
         Top = 31
         Width = 57
         Height = 22
-        TabOrder = 0
+        TabOrder = 1
         Text = '1'
         OnChange = rdeVDiscretizationChange
         DataType = dtInteger
@@ -245,7 +254,7 @@ inherited frmLayers: TfrmLayers
         Top = 82
         Width = 57
         Height = 22
-        TabOrder = 1
+        TabOrder = 2
         Text = '1.2'
         OnChange = rdeGrowthRateChange
         OnExit = rdeGrowthRateExit
@@ -270,7 +279,7 @@ inherited frmLayers: TfrmLayers
           'Increase toward middle'
           'Increase toward edges'
           'Custom')
-        TabOrder = 2
+        TabOrder = 3
         OnClick = rgMethodClick
       end
       object pnlDiscritization: TPanel
@@ -280,7 +289,7 @@ inherited frmLayers: TfrmLayers
         Height = 348
         Anchors = [akLeft, akTop, akRight, akBottom]
         BevelOuter = bvNone
-        TabOrder = 3
+        TabOrder = 0
         object Splitter2: TSplitter
           Left = 96
           Top = 41
@@ -299,7 +308,7 @@ inherited frmLayers: TfrmLayers
           FixedCols = 0
           RowCount = 2
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
-          TabOrder = 0
+          TabOrder = 1
           OnExit = rdgSubLayerBoundariesExit
           OnSelectCell = rdgSubLayerBoundariesSelectCell
           OnSetEditText = rdgSubLayerBoundariesSetEditText
@@ -333,6 +342,7 @@ inherited frmLayers: TfrmLayers
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
         end
@@ -343,19 +353,17 @@ inherited frmLayers: TfrmLayers
           Height = 41
           Align = alTop
           BevelOuter = bvNone
-          TabOrder = 1
+          TabOrder = 0
           object Label4: TLabel
             Left = 0
             Top = 0
-            Width = 184
-            Height = 41
+            Width = 179
+            Height = 36
             Align = alClient
             Alignment = taCenter
             Caption = 'Discretization within layer group'
             Layout = tlCenter
             WordWrap = True
-            ExplicitWidth = 179
-            ExplicitHeight = 36
           end
         end
         object pnlPaintboxParent: TPanel
@@ -394,13 +402,13 @@ inherited frmLayers: TfrmLayers
             Align = alBottom
             ColumnCollection = <
               item
-                Value = 33.333333333333330000
+                Value = 33.333333333333340000
               end
               item
-                Value = 33.333333333333330000
+                Value = 33.333333333333340000
               end
               item
-                Value = 33.333333333333330000
+                Value = 33.333333333333340000
               end>
             ControlCollection = <
               item
@@ -583,6 +591,10 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'No_Delay_Beds_Tab'
       Caption = 'No-Delay Beds'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frameSubNoDelayBeds: TframeSubBeds
         Left = 0
         Top = 0
@@ -625,6 +637,10 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'Delay_Beds_Tab'
       Caption = 'Delay Beds'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frameSubDelayBeds: TframeSubBeds
         Left = 0
         Top = 0
@@ -667,6 +683,10 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'SWT_Tab'
       Caption = 'SWT'
       ImageIndex = 4
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frameSwt: TframeSubBeds
         Left = 0
         Top = 0
@@ -704,6 +724,156 @@ inherited frmLayers: TfrmLayers
         end
       end
     end
+    object tabDispersion: TTabSheet
+      HelpType = htKeyword
+      HelpKeyword = 'Dispersion_Tab'
+      Caption = 'Dispersion'
+      ImageIndex = 5
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+      object rdgDispersion: TRbwDataGrid4
+        Left = 0
+        Top = 41
+        Width = 433
+        Height = 309
+        Align = alClient
+        ColCount = 4
+        FixedCols = 1
+        RowCount = 2
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
+        TabOrder = 1
+        OnMouseUp = rdgDispersionMouseUp
+        OnSelectCell = rdgDispersionSelectCell
+        OnSetEditText = rdgDispersionSetEditText
+        ExtendedAutoDistributeText = False
+        AutoMultiEdit = True
+        AutoDistributeText = False
+        AutoIncreaseColCount = False
+        AutoIncreaseRowCount = False
+        SelectedRowOrColumnColor = clAqua
+        UnselectableColor = clBtnFace
+        OnColSize = rdgDispersionColSize
+        ColorRangeSelection = False
+        OnHorizontalScroll = rdgDispersionHorizontalScroll
+        ColorSelectedRow = True
+        Columns = <
+          item
+            AutoAdjustRowHeights = False
+            ButtonCaption = '...'
+            ButtonFont.Charset = DEFAULT_CHARSET
+            ButtonFont.Color = clWindowText
+            ButtonFont.Height = -11
+            ButtonFont.Name = 'Tahoma'
+            ButtonFont.Style = []
+            ButtonUsed = False
+            ButtonWidth = 20
+            CheckMax = False
+            CheckMin = False
+            ComboUsed = False
+            Format = rcf4String
+            LimitToList = False
+            MaxLength = 0
+            ParentButtonFont = False
+            WordWrapCaptions = False
+            WordWrapCells = False
+            CaseSensitivePicklist = False
+            AutoAdjustColWidths = False
+          end
+          item
+            AutoAdjustRowHeights = True
+            ButtonCaption = '...'
+            ButtonFont.Charset = DEFAULT_CHARSET
+            ButtonFont.Color = clWindowText
+            ButtonFont.Height = -11
+            ButtonFont.Name = 'Tahoma'
+            ButtonFont.Style = []
+            ButtonUsed = False
+            ButtonWidth = 20
+            CheckMax = False
+            CheckMin = True
+            ComboUsed = False
+            Format = rcf4Real
+            LimitToList = False
+            MaxLength = 0
+            ParentButtonFont = False
+            WordWrapCaptions = True
+            WordWrapCells = False
+            CaseSensitivePicklist = False
+            AutoAdjustColWidths = True
+          end
+          item
+            AutoAdjustRowHeights = True
+            ButtonCaption = '...'
+            ButtonFont.Charset = DEFAULT_CHARSET
+            ButtonFont.Color = clWindowText
+            ButtonFont.Height = -11
+            ButtonFont.Name = 'Tahoma'
+            ButtonFont.Style = []
+            ButtonUsed = False
+            ButtonWidth = 20
+            CheckMax = False
+            CheckMin = True
+            ComboUsed = False
+            Format = rcf4Real
+            LimitToList = False
+            MaxLength = 0
+            ParentButtonFont = False
+            WordWrapCaptions = True
+            WordWrapCells = False
+            CaseSensitivePicklist = False
+            AutoAdjustColWidths = True
+          end
+          item
+            AutoAdjustRowHeights = True
+            ButtonCaption = '...'
+            ButtonFont.Charset = DEFAULT_CHARSET
+            ButtonFont.Color = clWindowText
+            ButtonFont.Height = -11
+            ButtonFont.Name = 'Tahoma'
+            ButtonFont.Style = []
+            ButtonUsed = False
+            ButtonWidth = 20
+            CheckMax = False
+            CheckMin = True
+            ComboUsed = False
+            Format = rcf4Real
+            LimitToList = False
+            MaxLength = 0
+            ParentButtonFont = False
+            WordWrapCaptions = True
+            WordWrapCells = False
+            CaseSensitivePicklist = False
+            AutoAdjustColWidths = True
+          end>
+        ExplicitTop = 96
+        ExplicitHeight = 254
+      end
+      object pnlMultiEdit: TPanel
+        Left = 0
+        Top = 0
+        Width = 433
+        Height = 41
+        Align = alTop
+        TabOrder = 0
+        object rdeMultiDispersionValues: TRbwDataEntry
+          Left = 59
+          Top = 8
+          Width = 145
+          Height = 22
+          Color = clBtnFace
+          Enabled = False
+          TabOrder = 0
+          Text = '0'
+          OnChange = rdeMultiDispersionValuesChange
+          DataType = dtReal
+          Max = 1.000000000000000000
+          CheckMin = True
+          ChangeDisabledColor = True
+        end
+      end
+    end
   end
   object Panel4: TPanel
     Left = 0
@@ -711,7 +881,7 @@ inherited frmLayers: TfrmLayers
     Width = 583
     Height = 41
     Align = alBottom
-    TabOrder = 1
+    TabOrder = 2
     DesignSize = (
       583
       41)
@@ -760,7 +930,7 @@ inherited frmLayers: TfrmLayers
     Width = 137
     Height = 383
     Align = alLeft
-    TabOrder = 2
+    TabOrder = 0
     object GridPanel1: TGridPanel
       Left = 1
       Top = 350
@@ -769,13 +939,13 @@ inherited frmLayers: TfrmLayers
       Align = alBottom
       ColumnCollection = <
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end>
       ControlCollection = <
         item
@@ -797,7 +967,7 @@ inherited frmLayers: TfrmLayers
         item
           Value = 100.000000000000000000
         end>
-      TabOrder = 0
+      TabOrder = 1
       DesignSize = (
         135
         32)
@@ -898,7 +1068,7 @@ inherited frmLayers: TfrmLayers
       MultiSelect = True
       ReadOnly = True
       StateImages = ilTreeView
-      TabOrder = 1
+      TabOrder = 0
       OnChange = tvLayerGroupsChange
     end
   end
@@ -1191,7 +1361,7 @@ inherited frmLayers: TfrmLayers
       end
       item
       end>
-    Left = 336
+    Left = 432
     Top = 40
   end
   object ilTreeView: TImageList

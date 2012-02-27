@@ -402,7 +402,8 @@ implementation
 
 uses frmGoPhastUnit, frmFormulaUnit, frmConvertChoiceUnit, InterpolationUnit,
   GIS_Functions, PhastModelUnit, frmShowHideObjectsUnit, GlobalVariablesUnit,
-  StrUtils, OrderedCollectionUnit, HufDefinition, LayerStructureUnit;
+  StrUtils, OrderedCollectionUnit, HufDefinition, LayerStructureUnit,
+  SubscriptionUnit;
 
 {$R *.dfm}
 var
@@ -3197,6 +3198,10 @@ begin
 end;
 
 constructor TDataArrayEdit.Create(ADataArray: TDataArray);
+var
+  DataArrayManager: TDataArrayManager;
+  Index: Integer;
+  DataSet: TDataArray;
 begin
   inherited Create;
   FNotifier := TEditorNotifierComponent.Create(self);
@@ -3223,6 +3228,33 @@ begin
   if FDataArray <> nil then
   begin
     FDataArray.FullUseList(FNewUses);
+
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    for Index := 0 to DataArrayManager.DataSetCount - 1 do
+    begin
+      DataSet := DataArrayManager.DataSets[Index];
+      DataSet.Observed := False;
+    end;
+
+
+    for Index := 0 to DataArrayManager.DataSetCount - 1 do
+    begin
+      DataSet := DataArrayManager.DataSets[Index];
+      if DataSet <> FDataArray then
+      begin
+        FDataArray.ObserverList.NotifyOnChange(FDataArray, ckResetObserved);
+        FDataArray.ObserverList.NotifyOnChange(FDataArray, ckCheckDependance);
+        if DataSet.Observed then
+        begin
+          FNewUses.Add(DataSet.Name);
+//          for InnerIndex := 0 to DataArrayManager.DataSetCount - 1 do
+//          begin
+//            DataSet := DataArrayManager.DataSets[InnerIndex];
+//            DataSet.Observed := False;
+//          end;
+        end;
+      end;
+    end;
   end;
 end;
 

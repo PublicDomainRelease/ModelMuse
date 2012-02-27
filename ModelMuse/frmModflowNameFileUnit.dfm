@@ -14,7 +14,7 @@ inherited frmModflowNameFile: TfrmModflowNameFile
     Width = 483
     Height = 305
     Align = alClient
-    TabOrder = 0
+    TabOrder = 1
     DesignSize = (
       483
       305)
@@ -41,19 +41,19 @@ inherited frmModflowNameFile: TfrmModflowNameFile
     object cbFlowPackage: TCheckBox
       Left = 8
       Top = 216
-      Width = 433
+      Width = 449
       Height = 17
       Anchors = [akLeft, akBottom]
-      Caption = 'Flow package other than BCF6, LPF, or HUF2 included'
+      Caption = 'Flow package other than BCF6, LPF, HUF2, or UPW included'
       TabOrder = 1
     end
     object cbSolvers: TCheckBox
       Left = 8
       Top = 239
-      Width = 409
+      Width = 449
       Height = 17
       Anchors = [akLeft, akBottom]
-      Caption = 'Solver other than PCG, GMG, SIP or DE4 included'
+      Caption = 'Solver other than PCG, GMG, SIP, DE4, or NWT included'
       TabOrder = 2
     end
     object btnHelp: TBitBtn
@@ -62,9 +62,12 @@ inherited frmModflowNameFile: TfrmModflowNameFile
       Width = 82
       Height = 34
       Anchors = [akRight, akBottom]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 3
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnOK: TBitBtn
       Left = 305
@@ -72,9 +75,12 @@ inherited frmModflowNameFile: TfrmModflowNameFile
       Width = 82
       Height = 34
       Anchors = [akRight, akBottom]
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 4
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnCancel: TBitBtn
       Left = 393
@@ -82,8 +88,11 @@ inherited frmModflowNameFile: TfrmModflowNameFile
       Width = 82
       Height = 34
       Anchors = [akRight, akBottom]
-      TabOrder = 5
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 5
     end
   end
   object pnlModel: TPanel
@@ -92,7 +101,7 @@ inherited frmModflowNameFile: TfrmModflowNameFile
     Width = 483
     Height = 41
     Align = alTop
-    TabOrder = 1
+    TabOrder = 0
     DesignSize = (
       483
       41)
@@ -111,7 +120,6 @@ inherited frmModflowNameFile: TfrmModflowNameFile
       Height = 26
       Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]
-      ItemHeight = 18
       TabOrder = 0
       OnChange = comboModelChange
     end

@@ -84,6 +84,7 @@ type
     function Last: double;
     // @name moves the number at CurIndex to NewIndex.
     procedure Move(CurIndex, NewIndex: Integer);
+    procedure Reverse;
     // @name sorts the numbers in the @classname in ascending order and
     // sets @Link(Sorted) to true.
     procedure Sort;
@@ -233,6 +234,16 @@ procedure TRealList.Move(CurIndex, NewIndex: Integer);
 begin
   FList.Move(CurIndex, NewIndex);
   FSorted := False;
+end;
+
+procedure TRealList.Reverse;
+var
+  Index: Integer;
+begin
+  for Index := 0 to (Count div 2)-1 do
+  begin
+    FList.Exchange(Index, Count-Index-1);
+  end;
 end;
 
 procedure TRealList.SetItem(Index: integer; const AReal: double);

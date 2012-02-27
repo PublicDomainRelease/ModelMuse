@@ -71,31 +71,12 @@ inherited framePackageUZF: TframePackageUZF
       Height = 21
       Style = csDropDownList
       Enabled = False
-      ItemHeight = 13
       ItemIndex = 0
       TabOrder = 1
       Text = 'Specify vertical hydraulic conductivity'
       Items.Strings = (
         'Specify vertical hydraulic conductivity'
         'Use vertical hydraulic conductivity from flow package')
-    end
-    object cbRouteDischargeToStreamsAndLakes: TCheckBox
-      Left = 16
-      Top = 190
-      Width = 254
-      Height = 17
-      Caption = ' Route discharge to streams and lakes (IRUNFLG)'
-      Enabled = False
-      TabOrder = 2
-    end
-    object cbSimulateEvapotranspiration: TCheckBox
-      Left = 16
-      Top = 214
-      Width = 217
-      Height = 17
-      Caption = 'Simulate evapotranspiration (IETFLG)'
-      Enabled = False
-      TabOrder = 3
     end
     object rdeNumberOfTrailingWaves: TRbwDataEntry
       Left = 16
@@ -104,8 +85,7 @@ inherited framePackageUZF: TframePackageUZF
       Height = 22
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 13
-      TabOrder = 4
+      TabOrder = 3
       Text = '15'
       DataType = dtInteger
       Max = 1.000000000000000000
@@ -120,23 +100,13 @@ inherited framePackageUZF: TframePackageUZF
       Height = 22
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 13
-      TabOrder = 5
+      TabOrder = 4
       Text = '20'
       DataType = dtInteger
       Max = 1.000000000000000000
       Min = 1.000000000000000000
       CheckMin = True
       ChangeDisabledColor = True
-    end
-    object cbPrintSummary: TCheckBox
-      Left = 16
-      Top = 237
-      Width = 446
-      Height = 20
-      Caption = 'Print summary of UZF budget terms'
-      Enabled = False
-      TabOrder = 6
     end
     object rdeSURFDEP: TRbwDataEntry
       Left = 16
@@ -145,8 +115,7 @@ inherited framePackageUZF: TframePackageUZF
       Height = 22
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 13
-      TabOrder = 7
+      TabOrder = 6
       Text = '1'
       DataType = dtReal
       Max = 1.000000000000000000
@@ -154,9 +123,9 @@ inherited framePackageUZF: TframePackageUZF
       ChangeDisabledColor = True
     end
     object rgAssignmentMethod: TRbwRadioGroup
-      Left = 240
+      Left = 216
       Top = 104
-      Width = 293
+      Width = 317
       Height = 80
       Caption = 'Infiltration assignment method'
       Enabled = False
@@ -164,8 +133,28 @@ inherited framePackageUZF: TframePackageUZF
       Items.Strings = (
         'Objects overwrite values of previous objects'
         'Sum values of all objects')
-      TabOrder = 8
+      TabOrder = 2
       WordWrap = True
+    end
+    object chklstOptions: TCheckListBox
+      Left = 16
+      Top = 190
+      Width = 517
+      Height = 67
+      Enabled = False
+      ItemHeight = 13
+      Items.Strings = (
+        ' Route discharge to streams and lakes (IRUNFLG)'
+        'Simulate evapotranspiration (IETFLG)'
+        'Print summary of UZF budget terms (IFTUNIT)'
+        'Specify residual water content (SPECIFYTHTR) (MODFLOW-NWT only)'
+        
+          'Specify initial unsaturated water content (SPECIFYTHTI) (MODFLOW' +
+          '-NWT only)'
+        
+          'Calculate surface leakage (inverse of NOSURFLEAK) (MODFLOW-NWT o' +
+          'nly)')
+      TabOrder = 5
     end
   end
   inherited rcSelectionController: TRbwController
@@ -177,6 +166,7 @@ inherited framePackageUZF: TframePackageUZF
         Control = memoComments
       end
       item
+        Control = chklstOptions
       end
       item
         Control = comboLayerOption
@@ -188,7 +178,6 @@ inherited framePackageUZF: TframePackageUZF
         Control = rdeSURFDEP
       end
       item
-        Control = cbPrintSummary
       end
       item
         Control = rdeNumberOfTrailingWaves
@@ -198,6 +187,12 @@ inherited framePackageUZF: TframePackageUZF
       end
       item
         Control = rdeNumberOfWaveSets
+      end
+      item
+        Control = lblNumberOfWaveSets
+      end
+      item
+        Control = comboVerticalKSource
       end
       item
         Control = lblVerticalKSource

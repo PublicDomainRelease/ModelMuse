@@ -3708,6 +3708,7 @@ begin
       end
       else
       begin
+        Exit;
         Assert(False);
       end;
   

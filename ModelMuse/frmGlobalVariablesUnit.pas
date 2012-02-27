@@ -19,6 +19,10 @@ type
     seGlobalVariableCount: TJvSpinEdit;
     Label1: TLabel;
     btnDelete: TButton;
+    btnImportGlobalVariables: TButton;
+    btnSaveGlobalVariables: TButton;
+    dlgOpenGlobVar: TOpenDialog;
+    dlgSaveGlobalVariables: TSaveDialog;
     procedure seGlobalVariableCountChange(Sender: TObject);
     procedure rdgGlobalVariablesSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
@@ -31,6 +35,8 @@ type
     procedure rdgGlobalVariablesEndUpdate(Sender: TObject);
     procedure rdgGlobalVariablesBeforeDrawCell(Sender: TObject; ACol,
       ARow: Integer);
+    procedure btnImportGlobalVariablesClick(Sender: TObject);
+    procedure btnSaveGlobalVariablesClick(Sender: TObject);
   private
     FInitializingRow: Boolean;
     FNewGlobals: TGlobalVariables;
@@ -66,7 +72,16 @@ type
 
 implementation
 
-uses RbwParser, frmGoPhastUnit, DataSetUnit, PhastModelUnit;
+uses RbwParser, frmGoPhastUnit, DataSetUnit, PhastModelUnit, ReadGlobalsUnit,
+  IntListUnit;
+
+resourcestring
+  StrChangeGlobalVariab = 'change global variables';
+  StrErrorReadingGlobal = 'Error reading global variables file. The following ' +
+  'global variable names from the global variables file are not included in ' +
+  'the model.'#13#10'%s';
+  StrErrorReadingValue = 'Error reading value for global variable %s.';
+
 
 {$R *.dfm}
 
@@ -230,7 +245,7 @@ var
   OK: boolean;
   ColIndex: Integer;
   Variable: TGlobalVariable;
-  Format: TRbwDataType;
+  AFormat: TRbwDataType;
   ItemIndex: integer;
   OldNames: TStringList;
   NewNames: TStringList;
@@ -250,9 +265,8 @@ begin
       end;
       if OK then
       begin
-        Format := TRbwDataType(rdgGlobalVariables.Columns[Ord(gvType)].
-          PickList.IndexOf(rdgGlobalVariables.Cells[Ord(gvType),RowIndex]));
-        if Format in [rdtDouble, rdtInteger] then
+        AFormat := TRbwDataType(rdgGlobalVariables.ItemIndex[Ord(gvType),RowIndex]);
+        if AFormat in [rdtDouble, rdtInteger] then
         begin
           Ok := (rdgGlobalVariables.Cells[Ord(gvValue),RowIndex] <> '')
         end;
@@ -269,7 +283,7 @@ begin
             NewNames.Add(NewName);
           end;
           Variable.Name := NewName;
-          Variable.Format := Format;
+          Variable.Format := AFormat;
           case Variable.Format of
             rdtDouble:
               begin
@@ -328,10 +342,197 @@ begin
   end;
 end;
 
+procedure TfrmGlobalVariables.btnImportGlobalVariablesClick(Sender: TObject);
+var
+  List: TGlobalList;
+  ValIndex: Integer;
+  Item: TGlobalItem;
+  InvalidVariables: TStringList;
+  Variables: TStringList;
+  IntList: TIntegerList;
+  RowIndex: Integer;
+  ItemIndex: Integer;
+  AFormat: TRbwDataType;
+  AFloat: Extended;
+  AnInt: Integer;
+  AValue: string;
+begin
+  inherited;
+  if dlgOpenGlobVar.Execute then
+  begin
+    List := TGlobalList.Create;
+    try
+      if ReadGlobalFile(dlgOpenGlobVar.FileName, List) then
+      begin
+        InvalidVariables := TStringList.Create;
+        Variables := TStringList.Create;
+        IntList := TIntegerList.Create;
+        try
+          Variables.Assign(rdgGlobalVariables.Cols[Ord(gvName)]);
+          Variables.Delete(0);
+          Variables.CaseSensitive := False;
+          for ValIndex := 0 to List.Count - 1 do
+          begin
+            Item := List[ValIndex];
+            RowIndex := Variables.IndexOf(Item.Name) + 1;
+            if RowIndex >= 1 then
+            begin
+              IntList.Add(RowIndex)
+            end
+            else
+            begin
+              InvalidVariables.Add(Item.Name)
+            end;
+          end;
+          if InvalidVariables.Count > 0 then
+          begin
+            Beep;
+            MessageDlg(Format(StrErrorReadingGlobal, [InvalidVariables.Text]),
+              mtError, [mbOK], 0);
+          end
+          else
+          begin
+            for ValIndex := 0 to List.Count - 1 do
+            begin
+              Item := List[ValIndex];
+              RowIndex := IntList[ValIndex];
+              ItemIndex := rdgGlobalVariables.ItemIndex[Ord(gvType), RowIndex];
+              Assert(ItemIndex >= 0);
+              AFormat := TRbwDataType(ItemIndex);
+              case AFormat of
+                rdtDouble:
+                  begin
+                    if TryStrToFloat(Item.Value, AFloat) then
+                    begin
+                      rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] := Item.Value;
+                    end
+                    else
+                    begin
+                      Beep;
+                      MessageDlg(Format(StrErrorReadingValue, [Item.Name]), mtError, [mbOK], 0);
+                      Break;
+                    end;
+                  end;
+                rdtInteger:
+                  begin
+                    if TryStrToInt(Item.Value, AnInt) then
+                    begin
+                      rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] := Item.Value;
+                    end
+                    else
+                    begin
+                      Beep;
+                      MessageDlg(Format(StrErrorReadingValue, [Item.Name]), mtError, [mbOK], 0);
+                      Break;
+                    end;
+                  end;
+                rdtBoolean:
+                  begin
+                    if SameText(Item.Value, 'True') then
+                    begin
+                      rdgGlobalVariables.Checked[Ord(gvValue), RowIndex] := True;
+                    end
+                    else if SameText(Item.Value, 'False') then
+                    begin
+                      rdgGlobalVariables.Checked[Ord(gvValue), RowIndex] := False;
+                    end
+                    else
+                    begin
+                      Beep;
+                      MessageDlg(Format(StrErrorReadingValue, [Item.Name]), mtError, [mbOK], 0);
+                      Break;
+                    end;
+                  end;
+                rdtString:
+                  begin
+                    AValue := Item.Value;
+                    if (Length(AValue) > 0) then
+                    begin
+                      if AValue[1] = '"' then
+                      begin
+                        AValue := Copy(AValue, 2, MaxInt);
+                        if (Length(AValue) > 0) and (AValue[Length(AValue)] = '"') then
+                        begin
+                          AValue := Copy(AValue, 1, Length(AValue)-1);
+                        end;
+                      end;
+                    end;
+                    rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] := AValue;
+                  end;
+                else Assert(False);
+              end;
+            end;
+          end;
+        finally
+          InvalidVariables.Free;
+          Variables.Free;
+          IntList.Free;
+        end;
+
+      end;
+    finally
+      List.Free;
+    end;
+  end;
+end;
+
 procedure TfrmGlobalVariables.btnOKClick(Sender: TObject);
 begin
   inherited;
   SetData;
+end;
+
+procedure TfrmGlobalVariables.btnSaveGlobalVariablesClick(Sender: TObject);
+var
+  GloVar: TStringList;
+  RowIndex: Integer;
+  AString: string;
+  ItemIndex: Integer;
+  AFormat: TRbwDataType;
+  AChar: Char;
+begin
+  inherited;
+  if dlgSaveGlobalVariables.Execute then
+  begin
+    GloVar := TStringList.Create;
+    try
+      AChar := FormatSettings.DecimalSeparator;
+      try
+        FormatSettings.DecimalSeparator := '.';
+        for RowIndex := 1 to rdgGlobalVariables.RowCount - 1 do
+        begin
+          AString := rdgGlobalVariables.Cells[Ord(gvName), RowIndex] + ' ';
+          ItemIndex := rdgGlobalVariables.ItemIndex[Ord(gvType), RowIndex];
+          Assert(ItemIndex >= 0);
+          AFormat := TRbwDataType(ItemIndex);
+          case AFormat of
+            rdtDouble, rdtInteger, rdtString:
+              begin
+                AString := AString + rdgGlobalVariables.Cells[Ord(gvValue), RowIndex];
+              end;
+            rdtBoolean:
+              begin
+                if rdgGlobalVariables.Checked[Ord(gvValue), RowIndex] then
+                begin
+                  AString := AString + 'True';
+                end
+                else
+                begin
+                  AString := AString + 'False';
+                end;
+              end
+            else Assert(False);
+          end;
+          GloVar.Add(AString);
+        end;
+      finally
+        FormatSettings.DecimalSeparator := AChar;
+      end;
+      GloVar.SaveToFile(dlgSaveGlobalVariables.FileName);
+    finally
+      GloVar.Free;
+    end;
+  end;
 end;
 
 procedure TfrmGlobalVariables.FormCreate(Sender: TObject);
@@ -520,7 +721,7 @@ end;
 
 function TUndoGlobalVariables.Description: string;
 begin
-  result := 'change global variables';
+  result := StrChangeGlobalVariab;
 end;
 
 destructor TUndoGlobalVariables.Destroy;

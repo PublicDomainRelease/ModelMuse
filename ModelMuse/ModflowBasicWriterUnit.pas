@@ -33,6 +33,7 @@ resourcestring
   StrWrongExtension = 'File for the initial heads has wrong extension.';
   StrTheFileSDoesNot = 'The file %s does not exist.';
   StrTheFile1sMustH = 'The file %1:s must have an extension equal to "%2:s".';
+  StrLayer0dRow1 = 'Layer: %0:d; Row: %1:d; Column: %2:d';
 
 { TModflowBasicWriter }
 
@@ -67,9 +68,8 @@ begin
             if Bottom > Head then
             begin
               frmErrorsAndWarnings.AddWarning(Model, ErrorString,
-                'Layer: ' + IntToStr(LayerIndex+1)
-                + '; Row: ' + IntToStr(RowIndex+1)
-                + '; Column: ' + IntToStr(ColIndex+1));
+                Format(StrLayer0dRow1,
+                 [LayerIndex+1, RowIndex+1, ColIndex+1]));
             end;
           end;
         end;

@@ -101,6 +101,7 @@ resourcestring
   StrLimitingFactor = 'Limiting factor';
   StrLowerLimit = 'Lower limit';
   StrUpperLimit = 'Upper limit';
+  StrImportMODPATHTime = 'import MODPATH time series';
 
 {$R *.dfm}
 
@@ -119,7 +120,7 @@ end;
 
 function TUndoImportTimeSeries.Description: string;
 begin
-  result := 'import MODPATH time series'
+  result := StrImportMODPATHTime
 end;
 
 destructor TUndoImportTimeSeries.Destroy;
@@ -250,6 +251,7 @@ var
   ARow: Integer;
   ColorParameters: TColorParameters;
 begin
+  Handle;
   if frmGoPhast.PhastModel.ModflowPackages.ModPath.Binary then
   begin
     fedModpathFile.DefaultExt := '.ts_bin';

@@ -1086,60 +1086,68 @@ Var
   XFLD ,  {XLEN1 ,} XLEN2 : smallint;
   WTXT ,  CNOM  : String ;
 Begin
-  Assert(Length(Text) <= 255);
-  VOK  := false   ;
-  //** les Champs DBASE3 ont un nom en MAJUSCULE de 10 car ,
-  //**      padd้ avec des NULLS et non pas des SPACES
-  WTXT := string(Text) ;
-  if WTXT[1] >= 'a' then  WTXT := UpperCase(string(Text)) ;
+  result := 0;
+  try
+    Assert(Length(Text) <= 255);
+    if Text = '' then
+    begin
+      Exit;
+    end;
+    VOK  := false   ;
+    //** les Champs DBASE3 ont un nom en MAJUSCULE de 10 car ,
+    //**      padd้ avec des NULLS et non pas des SPACES
+    WTXT := string(Text) ;
+    if WTXT[1] >= 'a' then  WTXT := UpperCase(string(Text)) ;
 
-  // RBW, Aug. 19, 2004: According the the above comment, spaces are not
-  // allowed in field names.  However, I have not been able to confirm
-  // this restriction and at least one application (Argus ONE) creates
-  // DBASE files (as part of a Shape File) that can contain spaces and
-  // these DBASE files can be used.  Therefore, I have changed the code
-  // below to remove leading and trailing spaces.  Previously, Field names
-  // were truncated at the position of the first space.
+    // RBW, Aug. 19, 2004: According the the above comment, spaces are not
+    // allowed in field names.  However, I have not been able to confirm
+    // this restriction and at least one application (Argus ONE) creates
+    // DBASE files (as part of a Shape File) that can contain spaces and
+    // these DBASE files can be used.  Therefore, I have changed the code
+    // below to remove leading and trailing spaces.  Previously, Field names
+    // were truncated at the position of the first space.
 
-  // RBW July 18, 2008. Some DBASE files contain fields than end with a
-  // space character. so the trimming of names has been eliminated.
-//  WTXT := Trim(WTXT);
-  {XLEN1 := pos( #32 , WTXT ) ;
-  if XLEN1 > 1 then begin
-          dec(XLEN1) ; SetLength(WTXT , XLEN1) ;
-  end ;}
+    // RBW July 18, 2008. Some DBASE files contain fields than end with a
+    // space character. so the trimming of names has been eliminated.
+  //  WTXT := Trim(WTXT);
+    {XLEN1 := pos( #32 , WTXT ) ;
+    if XLEN1 > 1 then begin
+            dec(XLEN1) ; SetLength(WTXT , XLEN1) ;
+    end ;}
 
-  XFLD := 1;
-  while XFLD <= NumFields do begin
-      // est deja  UpperCase( String( FieldStruct[ XFLD ].Fieldname ) )
-// rbw begn change
-//      CNOM := String( FieldStruct[ XFLD ].FieldName ) ;
-      CNOM := string(FieldStruct[ XFLD ].FieldName);
-// rbw begn change
-         //**** ATTENTION , ceci retourne une chaine de 11 CAR
-         //  Y compris le #00 final , ce qui est surprenant !!!!
-         //  Par ailleurs , dans le Header DBASE3 les noms sont
-         //  padd้s avec des #00 , et non pas des #32 , attention
-         //  Pour faire une comparaison correcte , il faut donc
-         //  ้liminer ces #00 du string เ comparer avec WTXT
-         //****
-      //** Alignement des 2 longueurs pour la comparaison **
-      XLEN2 := pos( #00 , CNOM) ;
-      if XLEN2 >= 1 then dec(XLEN2) else XLEN2 := 10 ; // Vraie Longueur utile
-      SetLength(CNOM , XLEN2 )  ;
-      if CNOM = WTXT  then begin
-                VOK := true ;
-                break ; { exit of loop }
-                end ;
-      inc(XFLD);
-  end ;
-  if VOK  then  Result := XFLD  else  Result := 0  ;
-  //** un field not found est un cas normal
-  if FDebugErr and (Result = 0) then
-        ErreurGlobale(10 , 0 ) ;
-  //if FDebugErr and (Result = 0) then
-  //    showmessage('~~FROMNAME~~'+FFileName+'#'+Text+'/'+WTXT+'/'+CNOM+'#'
-  //               +inttostr(XLEN1)+'#'+inttostr(XLEN2)+'#' ) ;
+    XFLD := 1;
+    while XFLD <= NumFields do begin
+        // est deja  UpperCase( String( FieldStruct[ XFLD ].Fieldname ) )
+  // rbw begn change
+  //      CNOM := String( FieldStruct[ XFLD ].FieldName ) ;
+        CNOM := string(FieldStruct[ XFLD ].FieldName);
+  // rbw begn change
+           //**** ATTENTION , ceci retourne une chaine de 11 CAR
+           //  Y compris le #00 final , ce qui est surprenant !!!!
+           //  Par ailleurs , dans le Header DBASE3 les noms sont
+           //  padd้s avec des #00 , et non pas des #32 , attention
+           //  Pour faire une comparaison correcte , il faut donc
+           //  ้liminer ces #00 du string เ comparer avec WTXT
+           //****
+        //** Alignement des 2 longueurs pour la comparaison **
+        XLEN2 := pos( #00 , CNOM) ;
+        if XLEN2 >= 1 then dec(XLEN2) else XLEN2 := 10 ; // Vraie Longueur utile
+        SetLength(CNOM , XLEN2 )  ;
+        if CNOM = WTXT  then begin
+                  VOK := true ;
+                  break ; { exit of loop }
+                  end ;
+        inc(XFLD);
+    end ;
+    if VOK  then  Result := XFLD  else  Result := 0  ;
+  finally
+    //** un field not found est un cas normal
+    if FDebugErr and (Result = 0) then
+          ErreurGlobale(10 , 0 ) ;
+    //if FDebugErr and (Result = 0) then
+    //    showmessage('~~FROMNAME~~'+FFileName+'#'+Text+'/'+WTXT+'/'+CNOM+'#'
+    //               +inttostr(XLEN1)+'#'+inttostr(XLEN2)+'#' ) ;
+  end;
 end;
 
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)

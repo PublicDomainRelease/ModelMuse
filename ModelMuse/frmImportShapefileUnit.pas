@@ -70,6 +70,9 @@ type
   TWelColumns = (welcStartingTime, welcEndingTime, welcParameterName,
     welcPumpingRate);
 
+  TResColumns = (rescStartingTime, rescEndingTime, rescStartingHead,
+    rescEndingHead);
+
   {@abstract(@name is used to undo or redo the import of a Shapefile)}
   TUndoImportShapefile = class(TCustomImportMultipleScreenObjects)
   private
@@ -470,6 +473,7 @@ type
     FInvalidParameterNames: TStringList;
     FCombinedObjectsAllowed: Boolean;
     FObsCount: Integer;
+    CombinedObjects: boolean;
     // @name checks for valid data in @link(dgFields).
     function CheckDataSets: boolean;
     // @name checks that AFormula is a valid formula.
@@ -570,12 +574,14 @@ type
     procedure ImportModflowMnw2Package(AScreenObject: TScreenObject);
     procedure GetTransientParameter(var Param: TModflowTransientListParameter;
       var ParameterName: string; ParameterColumn: Integer; Row: Integer);
-    procedure GetNewBoundaryItem(var AnItem: TCustomModflowBoundaryItem;
+    procedure GetNewOrExistingBoundaryItem(var AnItem: TCustomModflowBoundaryItem;
       const ParameterName: string; var Param: TModflowTransientListParameter;
-      var ParamItem: TModflowParamItem; Boundary: TModflowParamBoundary);
+      var ParamItem: TModflowParamItem; Boundary: TModflowParamBoundary;
+      ItemIndex: integer);
     procedure AddParameterNamesToPickList(ParameterType: TParameterType;
       ParameterColumn: Integer);
     procedure EnableJoinObjects;
+    function GetFieldNumberFromName(CellText: AnsiString): Integer;
     { Private declarations }
   public
     // @name returns @true if the Shapefile is selected.
@@ -614,6 +620,8 @@ uses Math, Contnrs , frmGoPhastUnit, GoPhastTypes, frmProgressUnit,
 
 resourcestring
   StrParameterName = 'Parameter name';
+  StrImportShapeFile = 'import shape file';
+  StrWarningRoot = 'No parameters with the following names exist. Import of the feature will be skipped for the shapes for which these names were specified.';
 
 {$R *.dfm}
 
@@ -1030,6 +1038,18 @@ begin
   end;
 end;
 
+function TfrmImportShapefile.GetFieldNumberFromName(CellText: AnsiString): Integer;
+begin
+  if CellText = '' then
+  begin
+    result := 0;
+  end
+  else
+  begin
+    result := xbShapeDataBase.GetFieldNumberFromName(CellText);
+  end;
+end;
+
 procedure TfrmImportShapefile.EnableJoinObjects;
 begin
   comboJoinObjects.Enabled := FAllowShapesToCombine
@@ -1056,16 +1076,24 @@ begin
   end;
 end;
 
-procedure TfrmImportShapefile.GetNewBoundaryItem(
+procedure TfrmImportShapefile.GetNewOrExistingBoundaryItem(
   var AnItem: TCustomModflowBoundaryItem; const ParameterName: string;
   var Param: TModflowTransientListParameter;
-  var ParamItem: TModflowParamItem; Boundary: TModflowParamBoundary);
+  var ParamItem: TModflowParamItem; Boundary: TModflowParamBoundary;
+  ItemIndex: integer);
 
 begin
   if Param = nil then
   begin
-    AnItem := Boundary.Values.Add
-      as TCustomModflowBoundaryItem;
+    if ItemIndex < Boundary.Values.Count then
+    begin
+      AnItem := Boundary.Values[ItemIndex] as TCustomModflowBoundaryItem;
+    end
+    else
+    begin
+      AnItem := Boundary.Values.Add
+        as TCustomModflowBoundaryItem;
+    end;
   end
   else
   begin
@@ -1075,7 +1103,14 @@ begin
         as TModflowParamItem;
       ParamItem.Param.ParamName := ParameterName;
     end;
-    AnItem := ParamItem.Param.Add as TCustomModflowBoundaryItem;
+    if ItemIndex < ParamItem.Param.Count then
+    begin
+      AnItem := ParamItem.Param[ItemIndex] as TCustomModflowBoundaryItem;
+    end
+    else
+    begin
+      AnItem := ParamItem.Param.Add as TCustomModflowBoundaryItem;
+    end;
   end;
 end;
 
@@ -1106,7 +1141,25 @@ procedure TfrmImportShapefile.AddModflowPackageToImportChoices(APackage: TModflo
 begin
   if frmGoPhast.PhastModel.PackageIsSelected(APackage) then
   begin
-    comboBoundaryChoice.Items.AddObject(APackage.PackageIdentifier, APackage);
+    if comboJoinObjects.ItemIndex = 0 then
+    begin
+      comboBoundaryChoice.Items.AddObject(APackage.PackageIdentifier, APackage);
+    end
+    else
+    begin
+      if (APackage is TSfrPackageSelection)
+        or (APackage is TMultinodeWellSelection)
+        or (APackage is TLakePackageSelection)
+        or (APackage is THobPackageSelection)
+        then
+      begin
+
+      end
+      else
+      begin
+        comboBoundaryChoice.Items.AddObject(APackage.PackageIdentifier, APackage);
+      end;
+    end;
   end;
 end;
 
@@ -1541,9 +1594,14 @@ var
   EvtItem: TEvtItem;
   ExtinctItem: TUzfExtinctDepthItem;
   WaterContentItem: TUzfWaterContentItem;
+  Count: Integer;
+  AValue: Extended;
+  ItemName: string;
+  ValueItem: TValueArrayItem;
 begin
   AScreenObject.CreateUzfBoundary;
   Boundary := AScreenObject.ModflowUzfBoundary;
+  Count := 0;
   for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
   begin
     UseRow := (rdgBoundaryConditions.Cells[Ord(ucStartTime), Index + 1] <> '')
@@ -1559,29 +1617,141 @@ begin
       EndTime := GetRealValueFromText(
         rdgBoundaryConditions.Cells[Ord(scEndTime), Index + 1]);
 
-      Item := Boundary.Values.Add as TRchItem;
+      if Count < Boundary.Values.Count then
+      begin
+        Item := Boundary.Values[Count] as TRchItem;
+      end
+      else
+      begin
+        Item := Boundary.Values.Add as TRchItem;
+      end;
       Item.StartTime := StartTime;
       Item.EndTime := EndTime;
-      Item.RechargeRate := GetRealFormulaFromText(
-        rdgBoundaryConditions.Cells[Ord(ucInfiltration), Index + 1]);
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(ucInfiltration), Index + 1]);
+        ItemName := 'UZF_RechargeRate' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.RechargeRate := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+      end
+      else
+      begin
+        Item.RechargeRate := GetRealFormulaFromText(
+          rdgBoundaryConditions.Cells[Ord(ucInfiltration), Index + 1]);
+      end;
 
-      EvtItem := Boundary.EvapotranspirationDemand.Add as TEvtItem;
+      if Count < Boundary.EvapotranspirationDemand.Count then
+      begin
+        EvtItem := Boundary.EvapotranspirationDemand.Items[Count] as TEvtItem;
+      end
+      else
+      begin
+        EvtItem := Boundary.EvapotranspirationDemand.Add as TEvtItem;
+      end;
       EvtItem.StartTime := StartTime;
       EvtItem.EndTime := EndTime;
-      EvtItem.EvapotranspirationRate := GetRealFormulaFromText(
-        rdgBoundaryConditions.Cells[Ord(ucEvapRate), Index + 1]);
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(ucEvapRate), Index + 1]);
+        ItemName := 'UZF_EvapotranspirationRate' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          EvtItem.EvapotranspirationRate := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+      end
+      else
+      begin
+        EvtItem.EvapotranspirationRate := GetRealFormulaFromText(
+          rdgBoundaryConditions.Cells[Ord(ucEvapRate), Index + 1]);
+      end;
 
-      ExtinctItem := Boundary.ExtinctionDepth.Add as TUzfExtinctDepthItem;
+      if Count < Boundary.ExtinctionDepth.Count then
+      begin
+        ExtinctItem := Boundary.ExtinctionDepth.Items[Count] as TUzfExtinctDepthItem;
+      end
+      else
+      begin
+        ExtinctItem := Boundary.ExtinctionDepth.Add as TUzfExtinctDepthItem;
+      end;
       ExtinctItem.StartTime := StartTime;
       ExtinctItem.EndTime := EndTime;
-      ExtinctItem.UzfExtinctDepth := GetRealFormulaFromText(
-        rdgBoundaryConditions.Cells[Ord(ucExtinctDepth), Index + 1]);
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(ucExtinctDepth), Index + 1]);
+        ItemName := 'UZF_ExtinctionDepth' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          ExtinctItem.UzfExtinctDepth := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+      end
+      else
+      begin
+        ExtinctItem.UzfExtinctDepth := GetRealFormulaFromText(
+          rdgBoundaryConditions.Cells[Ord(ucExtinctDepth), Index + 1]);
+      end;
 
-      WaterContentItem := Boundary.WaterContent.Add as TUzfWaterContentItem;
+      if Count < Boundary.WaterContent.Count then
+      begin
+        WaterContentItem := Boundary.WaterContent.Items[Count] as TUzfWaterContentItem;
+      end
+      else
+      begin
+        WaterContentItem := Boundary.WaterContent.Add as TUzfWaterContentItem;
+      end;
       WaterContentItem.StartTime := StartTime;
       WaterContentItem.EndTime := EndTime;
-      WaterContentItem.UzfWaterContent := GetRealFormulaFromText(
-        rdgBoundaryConditions.Cells[Ord(ucExtinctWaterContent), Index + 1]);
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(ucExtinctWaterContent), Index + 1]);
+        ItemName := 'UZF_WaterContent' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          WaterContentItem.UzfWaterContent := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+      end
+      else
+      begin
+        WaterContentItem.UzfWaterContent := GetRealFormulaFromText(
+          rdgBoundaryConditions.Cells[Ord(ucExtinctWaterContent), Index + 1]);
+      end;
     end;
   end;
 end;
@@ -1590,14 +1760,53 @@ procedure TfrmImportShapefile.ImportModflowHfbPackage(
   AScreenObject: TScreenObject);
 var
   Boundary: THfbBoundary;
+  AValue: Extended;
+  ItemName: string;
+  ValueItem: TValueArrayItem;
 begin
   AScreenObject.CreateHfbBoundary;
   Boundary := AScreenObject.ModflowHfbBoundary;
   Boundary.IsUsed := True;
-  Boundary.HydraulicConductivityFormula :=
-    GetRealFormulaFromText(comboHfbHydCond.Text);
-  Boundary.ThicknessFormula :=
-    GetRealFormulaFromText(comboHfbThickness.Text);
+
+  if CombinedObjects then
+  begin
+    AValue := GetRealValueFromText(comboHfbHydCond.Text);
+    ItemName := 'HFB_HydraulicConductivity';
+    ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+      ItemName);
+    if ValueItem = nil then
+    begin
+      ValueItem := AScreenObject.
+        ImportedValues.Add as TValueArrayItem;
+      ValueItem.Name := ItemName;
+      ValueItem.Values.DataType := rdtDouble;
+      ValueItem.Values.Count := 0;
+      Boundary.HydraulicConductivityFormula := rsObjectImportedValuesR + '("' + ItemName + '")';
+    end;
+    ValueItem.Values.Add(AValue);
+
+    AValue := GetRealValueFromText(comboHfbThickness.Text);
+    ItemName := 'HFB_Thickness';
+    ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+      ItemName);
+    if ValueItem = nil then
+    begin
+      ValueItem := AScreenObject.
+        ImportedValues.Add as TValueArrayItem;
+      ValueItem.Name := ItemName;
+      ValueItem.Values.DataType := rdtDouble;
+      ValueItem.Values.Count := 0;
+      Boundary.ThicknessFormula := rsObjectImportedValuesR + '("' + ItemName + '")';
+    end;
+    ValueItem.Values.Add(AValue);
+  end
+  else
+  begin
+    Boundary.HydraulicConductivityFormula :=
+      GetRealFormulaFromText(comboHfbHydCond.Text);
+    Boundary.ThicknessFormula :=
+      GetRealFormulaFromText(comboHfbThickness.Text);
+  end;
   Boundary.AdjustmentMethod := TAdjustmentMethod(rgAngleAdjustment.ItemIndex);
 end;
 
@@ -1724,7 +1933,7 @@ begin
           end
           else
           begin
-            FieldNumber := xbShapeDataBase.GetFieldNumberFromName(CellText);
+            FieldNumber := GetFieldNumberFromName(CellText);
             FieldStorage := TFieldNumStorage.Create(xbShapeDataBase);
             FieldStorage.FieldNumber := FieldNumber;
             FieldStorage.Formula := string(CellText);
@@ -1767,7 +1976,7 @@ begin
         Item.StartTime := StartTime;
         Item.EndTime := EndTime;
 
-        FieldNumber := xbShapeDataBase.GetFieldNumberFromName(AnsiString(comboSfrReachLength.Text));
+        FieldNumber := GetFieldNumberFromName(AnsiString(comboSfrReachLength.Text));
         if FieldNumber = 0 then
         begin
           // not a field
@@ -2162,14 +2371,22 @@ procedure TfrmImportShapefile.InitializeBoundaryControlsForUZF;
 var
   Index: Integer;
 begin
+  CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspNone;
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := 6;
   AssignColFeatureProperties;
   for Index := Ord(ucStartTime) to Ord(ucEndTime) do
   begin
-    rdgBoundaryConditions.Columns[Index].ComboUsed := True;
-    rdgBoundaryConditions.Columns[Index].Format := rcf4String;
+    rdgBoundaryConditions.Columns[Index].ComboUsed := not CombinedObjects;
+    if CombinedObjects then
+    begin
+      rdgBoundaryConditions.Columns[Index].Format := rcf4Integer;
+    end
+    else
+    begin
+      rdgBoundaryConditions.Columns[Index].Format := rcf4String;
+    end;
     rdgBoundaryConditions.Columns[Index].PickList := FRealFieldNames;
   end;
   for Index := Ord(ucInfiltration) to Ord(ucExtinctWaterContent) do
@@ -2533,25 +2750,77 @@ var
   Item: TResItem;
   AValue: Extended;
   AFormula: string;
+  ItemName: string;
+  ValueItem: TValueArrayItem;
+  Count: Integer;
 begin
   AScreenObject.CreateResBoundary;
+  Count := 0;
   for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
   begin
-    UseRow := (rdgBoundaryConditions.Cells[0, Index + 1] <> '')
-      and (rdgBoundaryConditions.Cells[1, Index + 1] <> '')
+    UseRow := (rdgBoundaryConditions.Cells[Ord(rescStartingTime), Index + 1] <> '')
+      and (rdgBoundaryConditions.Cells[Ord(rescEndingTime), Index + 1] <> '')
       and (rdgBoundaryConditions.Cells[2, Index + 1] <> '')
       and (rdgBoundaryConditions.Cells[3, Index + 1] <> '');
     if UseRow then
     begin
-      Item := AScreenObject.ModflowResBoundary.Values.Add as TResItem;
-      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[0, Index + 1]);
+      if Count < AScreenObject.ModflowResBoundary.Values.Count then
+      begin
+        Item := AScreenObject.ModflowResBoundary.Values.Items[Count] as TResItem;
+      end
+      else
+      begin
+        Item := AScreenObject.ModflowResBoundary.Values.Add as TResItem;
+      end;
+      Inc(Count);
+      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[
+        Ord(rescStartingTime), Index + 1]);
       Item.StartTime := AValue;
-      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[1, Index + 1]);
+      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(rescEndingTime), Index + 1]);
       Item.EndTime := AValue;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[2, Index + 1]);
-      Item.StartHead := AFormula;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[3, Index + 1]);
-      Item.EndHead := AFormula;
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(rescStartingHead), Index + 1]);
+        ItemName := 'RES_StartHead' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.StartHead := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(rescEndingHead), Index + 1]);
+        ItemName := 'RES_EndingHead' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.EndHead := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+      end
+      else
+      begin
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(rescStartingHead), Index + 1]);
+        Item.StartHead := AFormula;
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(rescEndingHead), Index + 1]);
+        Item.EndHead := AFormula;
+      end;
     end;
   end;
 end;
@@ -2567,19 +2836,24 @@ var
   SurfDepthItem: TEtsSurfDepthItem;
   FractItem: TStringValueItem;
   LayerItem: TEvtLayerItem;
-  AnIntValue: string;
+  AnIntFormula: string;
   AFormula: string;
   Boundary: TModflowParamBoundary;
   ParamItem: TModflowParamItem;
   ParameterName: string;
   AnItem: TCustomModflowBoundaryItem;
   Param: TModflowTransientListParameter;
+  Count: integer;
+  ItemName: string;
+  ValueItem: TValueArrayItem;
+  AnIntValue: Integer;
 begin
   AScreenObject.CreateEtsBoundary;
 
   Boundary := AScreenObject.ModflowEtsBoundary;
   ParamItem := nil;
 
+  Count := 0;
   for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
   begin
     UseRow := (rdgBoundaryConditions.Cells[Ord(etscStartingTime), Index + 1] <> '')
@@ -2592,7 +2866,9 @@ begin
       begin
         Continue;
       end;
-      GetNewBoundaryItem(AnItem, ParameterName, Param, ParamItem, Boundary);
+      GetNewOrExistingBoundaryItem(AnItem, ParameterName, Param, ParamItem,
+        Boundary, Count);
+      Inc(Count);
       Item := AnItem as TEvtItem;
 
 //      Item := AScreenObject.ModflowEtsBoundary.Values.Add as TEvtItem;
@@ -2600,10 +2876,34 @@ begin
       Item.StartTime := AValue;
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(etscEndingTime), Index + 1]);
       Item.EndTime := AValue;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(etscRate), Index + 1]);
-      Item.EvapotranspirationRate := AFormula;
+
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(etscRate), Index + 1]);
+        ItemName := 'ETS_EvapotranspirationRate' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.EvapotranspirationRate := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+      end
+      else
+      begin
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(etscRate), Index + 1]);
+        Item.EvapotranspirationRate := AFormula;
+      end;
     end;
   end;
+  Count := 0;
   for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
   begin
     UseRow := (rdgBoundaryConditions.Cells[Ord(etscStartingTime), Index + 1] <> '')
@@ -2619,32 +2919,134 @@ begin
     end;
     if UseRow then
     begin
-      SurfDepthItem := AScreenObject.ModflowEtsBoundary.
-        EtsSurfDepthCollection.Add as TEtsSurfDepthItem;
+      if Count < AScreenObject.ModflowEtsBoundary.
+        EtsSurfDepthCollection.Count then
+      begin
+        SurfDepthItem := AScreenObject.ModflowEtsBoundary.
+          EtsSurfDepthCollection.Items[Count] as TEtsSurfDepthItem;
+      end
+      else
+      begin
+        SurfDepthItem := AScreenObject.ModflowEtsBoundary.
+          EtsSurfDepthCollection.Add as TEtsSurfDepthItem;
+      end;
+      Inc(Count);
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(etscStartingTime), Index + 1]);
       SurfDepthItem.StartTime := AValue;
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(etscEndingTime), Index + 1]);
       SurfDepthItem.EndTime := AValue;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(etscSurface), Index + 1]);
-      SurfDepthItem.EvapotranspirationSurface := AFormula;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(etscDepth), Index + 1]);
-      SurfDepthItem.EvapotranspirationDepth := AFormula;
-      for FractionIndex := 0 to Packages.EtsPackage.SegmentCount - 2 do
-      begin
-        FractItem := SurfDepthItem.DepthFractions.Add as TStringValueItem;
-        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.
-          Cells[Ord(etscDepth)+1 + (FractionIndex * 2), Index + 1]);
-        FractItem.Value := AFormula;
 
-        FractItem := SurfDepthItem.EtFractions.Add as TStringValueItem;
-        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.
-          Cells[Ord(etscDepth)+2 + (FractionIndex * 2), Index + 1]);
-        FractItem.Value := AFormula;
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(etscSurface), Index + 1]);
+        ItemName := 'ETS_EvapotranspirationSurface' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          SurfDepthItem.EvapotranspirationSurface := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(etscDepth), Index + 1]);
+        ItemName := 'ETS_EvapotranspirationDepth' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          SurfDepthItem.EvapotranspirationDepth := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+
+        for FractionIndex := 0 to Packages.EtsPackage.SegmentCount - 2 do
+        begin
+          if FractionIndex < SurfDepthItem.DepthFractions.Count then
+          begin
+            FractItem := SurfDepthItem.DepthFractions.Items[FractionIndex] as TStringValueItem;
+          end
+          else
+          begin
+            FractItem := SurfDepthItem.DepthFractions.Add as TStringValueItem;
+          end;
+          AValue := GetRealValueFromText(rdgBoundaryConditions.
+            Cells[Ord(etscDepth)+1 + (FractionIndex * 2), Index + 1]);
+          ItemName := 'ETS_DepthFraction' + IntToStr(Index) + '_' + IntToStr(FractionIndex+1);
+          ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+            ItemName);
+          if ValueItem = nil then
+          begin
+            ValueItem := AScreenObject.
+              ImportedValues.Add as TValueArrayItem;
+            ValueItem.Name := ItemName;
+            ValueItem.Values.DataType := rdtDouble;
+            ValueItem.Values.Count := 0;
+            FractItem.Value := rsObjectImportedValuesR + '("' + ItemName + '")';
+          end;
+          ValueItem.Values.Add(AValue);
+
+          if FractionIndex < SurfDepthItem.EtFractions.Count then
+          begin
+            FractItem := SurfDepthItem.EtFractions.Items[FractionIndex] as TStringValueItem;
+          end
+          else
+          begin
+            FractItem := SurfDepthItem.EtFractions.Add as TStringValueItem;
+          end;
+          AValue := GetRealValueFromText(rdgBoundaryConditions.
+            Cells[Ord(etscDepth)+2 + (FractionIndex * 2), Index + 1]);
+          ItemName := 'ETS_EtFraction' + IntToStr(Index) + '_' + IntToStr(FractionIndex+1);
+          ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+            ItemName);
+          if ValueItem = nil then
+          begin
+            ValueItem := AScreenObject.
+              ImportedValues.Add as TValueArrayItem;
+            ValueItem.Name := ItemName;
+            ValueItem.Values.DataType := rdtDouble;
+            ValueItem.Values.Count := 0;
+            FractItem.Value := rsObjectImportedValuesR + '("' + ItemName + '")';
+          end;
+          ValueItem.Values.Add(AValue);
+        end;
+      end
+      else
+      begin
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(etscSurface), Index + 1]);
+        SurfDepthItem.EvapotranspirationSurface := AFormula;
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(etscDepth), Index + 1]);
+        SurfDepthItem.EvapotranspirationDepth := AFormula;
+        for FractionIndex := 0 to Packages.EtsPackage.SegmentCount - 2 do
+        begin
+          FractItem := SurfDepthItem.DepthFractions.Add as TStringValueItem;
+          AFormula := GetRealFormulaFromText(rdgBoundaryConditions.
+            Cells[Ord(etscDepth)+1 + (FractionIndex * 2), Index + 1]);
+          FractItem.Value := AFormula;
+
+          FractItem := SurfDepthItem.EtFractions.Add as TStringValueItem;
+          AFormula := GetRealFormulaFromText(rdgBoundaryConditions.
+            Cells[Ord(etscDepth)+2 + (FractionIndex * 2), Index + 1]);
+          FractItem.Value := AFormula;
+        end;
       end;
     end;
   end;
   if Packages.EtsPackage.TimeVaryingLayers then
   begin
+    Count := 0;
     for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
     begin
       UseRow := (rdgBoundaryConditions.Cells[Ord(etscStartingTime), Index + 1] <> '')
@@ -2653,17 +3055,49 @@ begin
         Cells[rdgBoundaryConditions.ColCount - 1, Index + 1] <> '');
       if UseRow then
       begin
-        LayerItem := AScreenObject.ModflowEtsBoundary.
-          EvapotranspirationLayers.Add as TEvtLayerItem;
+        if Count < AScreenObject.ModflowEtsBoundary.
+          EvapotranspirationLayers.Count then
+        begin
+          LayerItem := AScreenObject.ModflowEtsBoundary.
+            EvapotranspirationLayers.Items[Count] as TEvtLayerItem;
+        end
+        else
+        begin
+          LayerItem := AScreenObject.ModflowEtsBoundary.
+            EvapotranspirationLayers.Add as TEvtLayerItem;
+        end;
+        Inc(Count);
         AValue := GetRealValueFromText(
           rdgBoundaryConditions.Cells[Ord(etscStartingTime), Index + 1]);
         LayerItem.StartTime := AValue;
         AValue := GetRealValueFromText(
           rdgBoundaryConditions.Cells[Ord(etscEndingTime), Index + 1]);
         LayerItem.EndTime := AValue;
-        AnIntValue := GetIntegerFormulaFromText(rdgBoundaryConditions.
-          Cells[rdgBoundaryConditions.ColCount - 1, Index + 1]);
-        LayerItem.EvapotranspirationLayer := AnIntValue;
+
+        if CombinedObjects then
+        begin
+          AnIntValue := GetIntegerValueFromText(rdgBoundaryConditions.
+            Cells[Ord(etscRate), Index + 1]);
+          ItemName := 'ETS_Layer' + IntToStr(Index);
+          ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+            ItemName);
+          if ValueItem = nil then
+          begin
+            ValueItem := AScreenObject.
+              ImportedValues.Add as TValueArrayItem;
+            ValueItem.Name := ItemName;
+            ValueItem.Values.DataType := rdtInteger;
+            ValueItem.Values.Count := 0;
+            LayerItem.EvapotranspirationLayer := rsObjectImportedValuesI + '("' + ItemName + '")';
+          end;
+          ValueItem.Values.Add(AnIntValue);
+        end
+        else
+        begin
+          AnIntFormula := GetIntegerFormulaFromText(rdgBoundaryConditions.
+            Cells[rdgBoundaryConditions.ColCount - 1, Index + 1]);
+          LayerItem.EvapotranspirationLayer := AnIntFormula;
+        end;
       end;
     end;
   end;
@@ -2674,26 +3108,34 @@ procedure TfrmImportShapefile.InitializeBoundaryControlsForRES(
 var
   Index: Integer;
 begin
+  CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspNone;
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := 4;
   AssignColFeatureProperties;
-  for Index := 0 to 1 do
+  for Index := Ord(rescStartingTime) to Ord(rescEndingTime) do
   begin
-    rdgBoundaryConditions.Columns[Index].ComboUsed := True;
-    rdgBoundaryConditions.Columns[Index].Format := rcf4String;
+    rdgBoundaryConditions.Columns[Index].ComboUsed := not CombinedObjects;
+    if CombinedObjects then
+    begin
+      rdgBoundaryConditions.Columns[Index].Format := rcf4Integer;
+    end
+    else
+    begin
+      rdgBoundaryConditions.Columns[Index].Format := rcf4String;
+    end;
     rdgBoundaryConditions.Columns[Index].PickList := FRealFieldNames;
   end;
-  for Index := 2 to rdgBoundaryConditions.ColCount - 1 do
+  for Index := Ord(rescStartingHead) to rdgBoundaryConditions.ColCount - 1 do
   begin
     rdgBoundaryConditions.Columns[Index].ComboUsed := True;
     rdgBoundaryConditions.Columns[Index].Format := rcf4String;
     rdgBoundaryConditions.Columns[Index].PickList := FRealFieldAndGlobalVariablesNames;
   end;
-  rdgBoundaryConditions.Cells[0, 0] := StrStartingTime;
-  rdgBoundaryConditions.Cells[1, 0] := StrEndingTime;
-  rdgBoundaryConditions.Cells[2, 0] := StrStartingHead;
-  rdgBoundaryConditions.Cells[3, 0] := StrEndingHead;
+  rdgBoundaryConditions.Cells[Ord(rescStartingTime), 0] := StrStartingTime;
+  rdgBoundaryConditions.Cells[Ord(rescEndingTime), 0] := StrEndingTime;
+  rdgBoundaryConditions.Cells[Ord(rescStartingHead), 0] := StrStartingHead;
+  rdgBoundaryConditions.Cells[Ord(rescEndingHead), 0] := StrEndingHead;
 end;
 
 procedure TfrmImportShapefile.InitializeBoundaryControlsForETS(
@@ -2701,6 +3143,7 @@ procedure TfrmImportShapefile.InitializeBoundaryControlsForETS(
 var
   Index: Integer;
 begin
+  CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspNone;
   rdgBoundaryConditions.Enabled := True;
   if Packages.EtsPackage.TimeVaryingLayers then
@@ -2716,8 +3159,15 @@ begin
   AssignColFeatureProperties;
   for Index := Ord(etscStartingTime) to Ord(etscEndingTime) do
   begin
-    rdgBoundaryConditions.Columns[Index].ComboUsed := True;
-    rdgBoundaryConditions.Columns[Index].Format := rcf4String;
+    rdgBoundaryConditions.Columns[Index].ComboUsed := not CombinedObjects;
+    if CombinedObjects then
+    begin
+      rdgBoundaryConditions.Columns[Index].Format := rcf4Integer;
+    end
+    else
+    begin
+      rdgBoundaryConditions.Columns[Index].Format := rcf4String;
+    end;
     rdgBoundaryConditions.Columns[Index].PickList := FRealFieldNames;
   end;
 
@@ -2766,17 +3216,22 @@ var
   AValue: Extended;
   SurfDepthItem: TEvtSurfDepthItem;
   LayerItem: TEvtLayerItem;
-  AnIntValue: string;
+  AnIntFormula: string;
   AFormula: string;
   ParamItem: TModflowParamItem;
   Boundary: TModflowParamBoundary;
   ParameterName: string;
   Param: TModflowTransientListParameter;
   AnItem: TCustomModflowBoundaryItem;
+  Count: Integer;
+  ItemName: string;
+  ValueItem: TValueArrayItem;
+  AnIntValue: Integer;
 begin
   AScreenObject.CreateEvtBoundary;
   Boundary := AScreenObject.ModflowEvtBoundary;
   ParamItem := nil;
+  Count := 0;
   for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
   begin
     UseRow := (rdgBoundaryConditions.Cells[Ord(evtcStartingTime), Index + 1] <> '')
@@ -2789,18 +3244,42 @@ begin
       begin
         Continue;
       end;
-      GetNewBoundaryItem(AnItem, ParameterName, Param, ParamItem, Boundary);
+      GetNewOrExistingBoundaryItem(AnItem, ParameterName, Param, ParamItem,
+        Boundary, Count);
+      Inc(Count);
       Item := AnItem as TEvtItem;
 
-//      Item := AScreenObject.ModflowEvtBoundary.Values.Add as TEvtItem;
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(evtcStartingTime), Index + 1]);
       Item.StartTime := AValue;
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(evtcEndingTime), Index + 1]);
       Item.EndTime := AValue;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(evtRate), Index + 1]);
-      Item.EvapotranspirationRate := AFormula;
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(evtRate), Index + 1]);
+        ItemName := 'EVT_EvapotranspirationRate' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.EvapotranspirationRate := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+      end
+      else
+      begin
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(evtRate), Index + 1]);
+        Item.EvapotranspirationRate := AFormula;
+      end;
     end;
   end;
+  Count := 0;
   for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
   begin
     UseRow := (rdgBoundaryConditions.Cells[Ord(evtcStartingTime), Index + 1] <> '')
@@ -2809,20 +3288,70 @@ begin
       and (rdgBoundaryConditions.Cells[Ord(evtcDepth), Index + 1] <> '');
     if UseRow then
     begin
-      SurfDepthItem := AScreenObject.ModflowEvtBoundary.
-        EvtSurfDepthCollection.Add as TEvtSurfDepthItem;
+      if Count < AScreenObject.ModflowEvtBoundary.
+        EvtSurfDepthCollection.Count then
+      begin
+        SurfDepthItem := AScreenObject.ModflowEvtBoundary.
+          EvtSurfDepthCollection.Items[Count] as TEvtSurfDepthItem;
+      end
+      else
+      begin
+        SurfDepthItem := AScreenObject.ModflowEvtBoundary.
+          EvtSurfDepthCollection.Add as TEvtSurfDepthItem;
+      end;
+      Inc(Count);
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(evtcStartingTime), Index + 1]);
       SurfDepthItem.StartTime := AValue;
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(evtcEndingTime), Index + 1]);
       SurfDepthItem.EndTime := AValue;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(evtcSurface), Index + 1]);
-      SurfDepthItem.EvapotranspirationSurface := AFormula;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(evtcDepth), Index + 1]);
-      SurfDepthItem.EvapotranspirationDepth := AFormula;
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(evtcSurface), Index + 1]);
+        ItemName := 'EVT_EvapotranspirationSurface' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          SurfDepthItem.EvapotranspirationSurface := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(evtcDepth), Index + 1]);
+        ItemName := 'EVT_EvapotranspirationDepth' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          SurfDepthItem.EvapotranspirationDepth := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+      end
+      else
+      begin
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(evtcSurface), Index + 1]);
+        SurfDepthItem.EvapotranspirationSurface := AFormula;
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(evtcDepth), Index + 1]);
+        SurfDepthItem.EvapotranspirationDepth := AFormula;
+      end;
     end;
   end;
   if rdgBoundaryConditions.ColCount = Ord(evtcLayer)+1 then
   begin
+    Count := 0;
     for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
     begin
       UseRow := (rdgBoundaryConditions.Cells[Ord(evtcStartingTime), Index + 1] <> '')
@@ -2830,17 +3359,49 @@ begin
         and (rdgBoundaryConditions.Cells[Ord(evtcLayer), Index + 1] <> '');
       if UseRow then
       begin
-        LayerItem := AScreenObject.ModflowEvtBoundary.
-          EvapotranspirationLayers.Add as TEvtLayerItem;
+        if Count < AScreenObject.ModflowEvtBoundary.
+          EvapotranspirationLayers.Count then
+        begin
+          LayerItem := AScreenObject.ModflowEvtBoundary.
+            EvapotranspirationLayers.Items[Count] as TEvtLayerItem;
+        end
+        else
+        begin
+          LayerItem := AScreenObject.ModflowEvtBoundary.
+            EvapotranspirationLayers.Add as TEvtLayerItem;
+        end;
+        Inc(Count);
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(evtcStartingTime), Index + 1]);
         LayerItem.StartTime := AValue;
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(evtcEndingTime), Index + 1]);
         LayerItem.EndTime := AValue;
-        AnIntValue := GetIntegerFormulaFromText(rdgBoundaryConditions.
-          Cells[Ord(evtcLayer), Index + 1]);
-        LayerItem.EvapotranspirationLayer := AnIntValue;
+
+        if CombinedObjects then
+        begin
+          AnIntValue := GetIntegerValueFromText(rdgBoundaryConditions.
+            Cells[Ord(evtcLayer), Index + 1]);
+          ItemName := 'EVT_Layer' + IntToStr(Index);
+          ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+            ItemName);
+          if ValueItem = nil then
+          begin
+            ValueItem := AScreenObject.
+              ImportedValues.Add as TValueArrayItem;
+            ValueItem.Name := ItemName;
+            ValueItem.Values.DataType := rdtInteger;
+            ValueItem.Values.Count := 0;
+            LayerItem.EvapotranspirationLayer := rsObjectImportedValuesI + '("' + ItemName + '")';
+          end;
+          ValueItem.Values.Add(AnIntValue);
+        end
+        else
+        begin
+          AnIntFormula := GetIntegerFormulaFromText(rdgBoundaryConditions.
+            Cells[Ord(evtcLayer), Index + 1]);
+          LayerItem.EvapotranspirationLayer := AnIntFormula;
+        end;
       end;
     end;
   end;
@@ -2851,6 +3412,7 @@ procedure TfrmImportShapefile.InitializeBoundaryControlsForEVT(
 var
   Index: Integer;
 begin
+  CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspNone;
   rdgBoundaryConditions.Enabled := True;
   if Packages.EvtPackage.TimeVaryingLayers then
@@ -2862,8 +3424,8 @@ begin
     rdgBoundaryConditions.ColCount := Ord(evtcDepth) + 1;
   end;
   AssignColFeatureProperties;
-  rdgBoundaryConditions.Columns[Ord(evtcStartingTime)].ComboUsed := True;
-  rdgBoundaryConditions.Columns[Ord(evtcEndingTime)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(evtcStartingTime)].ComboUsed := not CombinedObjects;
+  rdgBoundaryConditions.Columns[Ord(evtcEndingTime)].ComboUsed := not CombinedObjects;
   rdgBoundaryConditions.Columns[Ord(evtcParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(evtRate)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(evtcSurface)].ComboUsed := True;
@@ -2873,8 +3435,16 @@ begin
     rdgBoundaryConditions.Columns[Ord(evtcLayer)].ComboUsed := True;
   end;
 
-  rdgBoundaryConditions.Columns[Ord(evtcStartingTime)].Format := rcf4String;
-  rdgBoundaryConditions.Columns[Ord(evtcEndingTime)].Format := rcf4String;
+  if CombinedObjects then
+  begin
+    rdgBoundaryConditions.Columns[Ord(evtcStartingTime)].Format := rcf4Integer;
+    rdgBoundaryConditions.Columns[Ord(evtcEndingTime)].Format := rcf4Integer;
+  end
+  else
+  begin
+    rdgBoundaryConditions.Columns[Ord(evtcStartingTime)].Format := rcf4String;
+    rdgBoundaryConditions.Columns[Ord(evtcEndingTime)].Format := rcf4String;
+  end;
   rdgBoundaryConditions.Columns[Ord(evtcParameterName)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(evtRate)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(evtcSurface)].Format := rcf4String;
@@ -2917,17 +3487,22 @@ var
   Item: TRchItem;
   AValue: Extended;
   LayerItem: TRchLayerItem;
-  AnIntValue: string;
+  AnIntFormula: string;
   AFormula: string;
   ParameterName: string;
   Param: TModflowTransientListParameter;
   AnItem: TCustomModflowBoundaryItem;
   ParamItem: TModflowParamItem;
   Boundary: TModflowParamBoundary;
+  Count: Integer;
+  ItemName: string;
+  ValueItem: TValueArrayItem;
+  AnIntValue: Integer;
 begin
   AScreenObject.CreateRchBoundary;
   Boundary := AScreenObject.ModflowRchBoundary;
   ParamItem := nil;
+  Count := 0;
   for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
   begin
     UseRow := (rdgBoundaryConditions.Cells[Ord(rcStartTime), Index + 1] <> '')
@@ -2941,7 +3516,9 @@ begin
         Continue;
       end;
 
-      GetNewBoundaryItem(AnItem, ParameterName, Param, ParamItem, Boundary);
+      GetNewOrExistingBoundaryItem(AnItem, ParameterName, Param, ParamItem,
+        Boundary, Count);
+      Inc(Count);
       Item := AnItem as TRchItem;
 
       AValue := GetRealValueFromText(rdgBoundaryConditions.
@@ -2950,13 +3527,35 @@ begin
       AValue := GetRealValueFromText(rdgBoundaryConditions.
         Cells[Ord(rcEndTime), Index + 1]);
       Item.EndTime := AValue;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.
-        Cells[Ord(rcFluxRate), Index + 1]);
-      Item.RechargeRate := AFormula;
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(rcFluxRate), Index + 1]);
+        ItemName := 'RCH_RechargeRate' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.RechargeRate := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+      end
+      else
+      begin
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.
+          Cells[Ord(rcFluxRate), Index + 1]);
+        Item.RechargeRate := AFormula;
+      end;
     end;
   end;
   if rdgBoundaryConditions.ColCount = Ord(rcLayer)+1 then
   begin
+    Count := 0;
     for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
     begin
       UseRow := (rdgBoundaryConditions.Cells[Ord(rcStartTime), Index + 1] <> '')
@@ -2964,17 +3563,48 @@ begin
         and (rdgBoundaryConditions.Cells[Ord(rcLayer), Index + 1] <> '');
       if UseRow then
       begin
-        LayerItem := AScreenObject.ModflowRchBoundary.
-          RechargeLayers.Add as TRchLayerItem;
+        if Count < AScreenObject.ModflowRchBoundary.
+          RechargeLayers.Count then
+        begin
+          LayerItem := AScreenObject.ModflowRchBoundary.
+            RechargeLayers.Items[Count] as TRchLayerItem;
+        end
+        else
+        begin
+          LayerItem := AScreenObject.ModflowRchBoundary.
+            RechargeLayers.Add as TRchLayerItem;
+        end;
+        Inc(Count);
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(rcStartTime), Index + 1]);
         LayerItem.StartTime := AValue;
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(rcEndTime), Index + 1]);
         LayerItem.EndTime := AValue;
-        AnIntValue := GetIntegerFormulaFromText(rdgBoundaryConditions.
-          Cells[Ord(rcLayer), Index + 1]);
-        LayerItem.RechargeLayer := AnIntValue;
+        if CombinedObjects then
+        begin
+          AnIntValue := GetIntegerValueFromText(rdgBoundaryConditions.
+            Cells[Ord(rcLayer), Index + 1]);
+          ItemName := 'RCH_Layer' + IntToStr(Index);
+          ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+            ItemName);
+          if ValueItem = nil then
+          begin
+            ValueItem := AScreenObject.
+              ImportedValues.Add as TValueArrayItem;
+            ValueItem.Name := ItemName;
+            ValueItem.Values.DataType := rdtInteger;
+            ValueItem.Values.Count := 0;
+            LayerItem.RechargeLayer := rsObjectImportedValuesI + '("' + ItemName + '")';
+          end;
+          ValueItem.Values.Add(AnIntValue);
+        end
+        else
+        begin
+          AnIntFormula := GetIntegerFormulaFromText(rdgBoundaryConditions.
+            Cells[Ord(rcLayer), Index + 1]);
+          LayerItem.RechargeLayer := AnIntFormula;
+        end;
       end;
     end;
   end;
@@ -2983,6 +3613,7 @@ end;
 procedure TfrmImportShapefile.InitializeBoundaryControlsForRCH(
   Packages: TModflowPackages);
 begin
+  CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspNone;
   rdgBoundaryConditions.Enabled := True;
   if Packages.RchPackage.TimeVaryingLayers then
@@ -2994,16 +3625,25 @@ begin
     rdgBoundaryConditions.ColCount := Ord(rcFluxRate)+1;
   end;
   AssignColFeatureProperties;
-  rdgBoundaryConditions.Columns[Ord(rcStartTime)].ComboUsed := True;
-  rdgBoundaryConditions.Columns[Ord(rcEndTime)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(rcStartTime)].ComboUsed := not CombinedObjects;
+  rdgBoundaryConditions.Columns[Ord(rcEndTime)].ComboUsed := not CombinedObjects;
   rdgBoundaryConditions.Columns[Ord(rcParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(rcFluxRate)].ComboUsed := True;
   if Packages.RchPackage.TimeVaryingLayers then
   begin
     rdgBoundaryConditions.Columns[Ord(rcLayer)].ComboUsed := True;
   end;
-  rdgBoundaryConditions.Columns[Ord(rcStartTime)].Format := rcf4String;
-  rdgBoundaryConditions.Columns[Ord(rcEndTime)].Format := rcf4String;
+
+  if CombinedObjects then
+  begin
+    rdgBoundaryConditions.Columns[Ord(rcStartTime)].Format := rcf4Integer;
+    rdgBoundaryConditions.Columns[Ord(rcEndTime)].Format := rcf4Integer;
+  end
+  else
+  begin
+    rdgBoundaryConditions.Columns[Ord(rcStartTime)].Format := rcf4String;
+    rdgBoundaryConditions.Columns[Ord(rcEndTime)].Format := rcf4String;
+  end;
   rdgBoundaryConditions.Columns[Ord(rcParameterName)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(rcFluxRate)].Format := rcf4String;
   if Packages.RchPackage.TimeVaryingLayers then
@@ -3043,6 +3683,9 @@ var
   Param: TModflowTransientListParameter;
   ParameterName: string;
   AnItem: TCustomModflowBoundaryItem;
+  Count: Integer;
+  ItemName: string;
+  ValueItem: TValueArrayItem;
 begin
   AScreenObject.CreateDrtBoundary;
   AScreenObject.ModflowDrtBoundary.FormulaInterpretation :=
@@ -3089,6 +3732,7 @@ begin
 
   Boundary := AScreenObject.ModflowDrtBoundary;
   ParamItem := nil;
+  Count := 0;
   for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
   begin
     UseRow := (rdgBoundaryConditions.Cells[Ord(dtcStartingTime), Index + 1] <> '')
@@ -3104,20 +3748,78 @@ begin
         Continue;
       end;
 
-      GetNewBoundaryItem(AnItem, ParameterName, Param, ParamItem, Boundary);
+      GetNewOrExistingBoundaryItem(AnItem, ParameterName, Param, ParamItem,
+        Boundary, Count);
+      Inc(Count);
       Item := AnItem as TDrtItem;
 
-//      Item := AScreenObject.ModflowDrtBoundary.Values.Add as TDrtItem;
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(dtcStartingTime), Index + 1]);
       Item.StartTime := AValue;
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(dtcEndingTime), Index + 1]);
       Item.EndTime := AValue;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(dtcElevation), Index + 1]);
-      Item.Elevation := AFormula;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(dtcConductance), Index + 1]);
-      Item.Conductance := AFormula;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(dtcReturnFraction), Index + 1]);
-      Item.ReturnFraction := AFormula;
+
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(dtcElevation), Index + 1]);
+        ItemName := 'DRT_Elevation' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.Elevation := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(dtcConductance), Index + 1]);
+        ItemName := 'DRT_Conductance' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.Conductance := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(dtcReturnFraction), Index + 1]);
+        ItemName := 'DRT_ReturnFraction' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.ReturnFraction := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+      end
+      else
+      begin
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(dtcElevation), Index + 1]);
+        Item.Elevation := AFormula;
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(dtcConductance), Index + 1]);
+        Item.Conductance := AFormula;
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(dtcReturnFraction), Index + 1]);
+        Item.ReturnFraction := AFormula;
+      end;
     end;
   end;
 end;
@@ -3135,13 +3837,16 @@ var
   Param: TModflowTransientListParameter;
   ParameterName: string;
   AnItem: TCustomModflowBoundaryItem;
+  Count: Integer;
+  ItemName: string;
+  ValueItem: TValueArrayItem;
 begin
   AScreenObject.CreateDrnBoundary;
   Boundary := AScreenObject.ModflowDrnBoundary;
   ParamItem := nil;
   AScreenObject.ModflowDrnBoundary.FormulaInterpretation :=
     GetFormulaInterpretation(comboFormulaInterp);
-
+  Count := 0;
   for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
   begin
     UseRow := (rdgBoundaryConditions.Cells[Ord(dcStartingTime), Index + 1] <> '')
@@ -3155,37 +3860,89 @@ begin
       begin
         Continue;
       end;
-      GetNewBoundaryItem(AnItem, ParameterName, Param, ParamItem, Boundary);
+      GetNewOrExistingBoundaryItem(AnItem, ParameterName, Param, ParamItem,
+        Boundary, Count);
+      Inc(Count);
       Item := AnItem as TDrnItem;
 //      Item := AScreenObject.ModflowDrnBoundary.Values.Add as TDrnItem;
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(dcStartingTime), Index + 1]);
       Item.StartTime := AValue;
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(dcEndingTime), Index + 1]);
       Item.EndTime := AValue;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(dcElevation), Index + 1]);
-      Item.Elevation := AFormula;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(dcConductance), Index + 1]);
-      Item.Conductance := AFormula;
+
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(dcElevation), Index + 1]);
+        ItemName := 'DRN_Elevation' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.Elevation := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(dcConductance), Index + 1]);
+        ItemName := 'DRN_Conductance' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.Conductance := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+      end
+      else
+      begin
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(dcElevation), Index + 1]);
+        Item.Elevation := AFormula;
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(dcConductance), Index + 1]);
+        Item.Conductance := AFormula;
+      end;
     end;
   end;
 end;
 
 procedure TfrmImportShapefile.InitializeBoundaryControlsForDRT;
 begin
+  CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspModflowDRT;
   lblConductanceInterpretationDRT.Caption := 'Conductance interpretation';
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := Ord(dtcReturnFraction)+1;
   AssignColFeatureProperties;
-  rdgBoundaryConditions.Columns[Ord(dtcStartingTime)].ComboUsed := True;
-  rdgBoundaryConditions.Columns[Ord(dtcEndingTime)].ComboUsed := True;
+
+  rdgBoundaryConditions.Columns[Ord(dtcStartingTime)].ComboUsed := not CombinedObjects;
+  rdgBoundaryConditions.Columns[Ord(dtcEndingTime)].ComboUsed := not CombinedObjects;
   rdgBoundaryConditions.Columns[Ord(dtcParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(dtcElevation)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(dtcConductance)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(dtcReturnFraction)].ComboUsed := True;
 
-  rdgBoundaryConditions.Columns[Ord(dtcStartingTime)].Format := rcf4String;
-  rdgBoundaryConditions.Columns[Ord(dtcEndingTime)].Format := rcf4String;
+  if CombinedObjects then
+  begin
+    rdgBoundaryConditions.Columns[Ord(dtcStartingTime)].Format := rcf4Integer;
+    rdgBoundaryConditions.Columns[Ord(dtcEndingTime)].Format := rcf4Integer;
+  end
+  else
+  begin
+    rdgBoundaryConditions.Columns[Ord(dtcStartingTime)].Format := rcf4String;
+    rdgBoundaryConditions.Columns[Ord(dtcEndingTime)].Format := rcf4String;
+  end;
   rdgBoundaryConditions.Columns[Ord(dtcParameterName)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(dtcElevation)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(dtcConductance)].Format := rcf4String;
@@ -3224,19 +3981,28 @@ begin
 end;
 procedure TfrmImportShapefile.InitializeBoundaryControlsForDRN;
 begin
+  CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspConductanceInterp;
   lblConductanceInterpretation.Caption := 'Conductance interpretation';
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := Ord(dcConductance) + 1;
   AssignColFeatureProperties;
-  rdgBoundaryConditions.Columns[Ord(dcStartingTime)].ComboUsed := True;
-  rdgBoundaryConditions.Columns[Ord(dcEndingTime)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(dcStartingTime)].ComboUsed := not CombinedObjects;
+  rdgBoundaryConditions.Columns[Ord(dcEndingTime)].ComboUsed := not CombinedObjects;
   rdgBoundaryConditions.Columns[Ord(dcParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(dcElevation)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(dcConductance)].ComboUsed := True;
 
-  rdgBoundaryConditions.Columns[Ord(dcStartingTime)].Format := rcf4String;
-  rdgBoundaryConditions.Columns[Ord(dcEndingTime)].Format := rcf4String;
+  if CombinedObjects then
+  begin
+    rdgBoundaryConditions.Columns[Ord(dcStartingTime)].Format := rcf4Integer;
+    rdgBoundaryConditions.Columns[Ord(dcEndingTime)].Format := rcf4Integer;
+  end
+  else
+  begin
+    rdgBoundaryConditions.Columns[Ord(dcStartingTime)].Format := rcf4String;
+    rdgBoundaryConditions.Columns[Ord(dcEndingTime)].Format := rcf4String;
+  end;
   rdgBoundaryConditions.Columns[Ord(dcParameterName)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(dcElevation)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(dcConductance)].Format := rcf4String;
@@ -3274,13 +4040,16 @@ var
   AnItem: TCustomModflowBoundaryItem;
   ParamItem: TModflowParamItem;
   Boundary: TModflowParamBoundary;
+  Count: Integer;
+  ItemName: string;
+  ValueItem: TValueArrayItem;
 begin
   AScreenObject.CreateRivBoundary;
   Boundary := AScreenObject.ModflowRivBoundary;
   ParamItem := nil;
   AScreenObject.ModflowRivBoundary.FormulaInterpretation :=
     GetFormulaInterpretation(comboFormulaInterp);
-
+  Count := 0;
   for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
   begin
     UseRow := (rdgBoundaryConditions.Cells[Ord(rivcStartingTime), Index + 1] <> '')
@@ -3296,7 +4065,9 @@ begin
         Continue;
       end;
 
-      GetNewBoundaryItem(AnItem, ParameterName, Param, ParamItem, Boundary);
+      GetNewOrExistingBoundaryItem(AnItem, ParameterName, Param, ParamItem,
+        Boundary, Count);
+      Inc(Count);
       Item := AnItem as TRivItem;
 
 //      Item := AScreenObject.ModflowRivBoundary.Values.Add as TRivItem;
@@ -3304,33 +4075,99 @@ begin
       Item.StartTime := AValue;
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(rivcEndingTime), Index + 1]);
       Item.EndTime := AValue;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(rivcBottom), Index + 1]);
-      Item.RiverBottom := AFormula;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(rivcStage), Index + 1]);
-      Item.RiverStage := AFormula;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(rivcConductance), Index + 1]);
-      Item.Conductance := AFormula;
+
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(rivcBottom), Index + 1]);
+        ItemName := 'RIV_Bottom' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.RiverBottom := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(rivcStage), Index + 1]);
+        ItemName := 'RIV_Stage' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.RiverStage := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(rivcConductance), Index + 1]);
+        ItemName := 'RIV_Conductance' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.Conductance := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+      end
+      else
+      begin
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(rivcBottom), Index + 1]);
+        Item.RiverBottom := AFormula;
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(rivcStage), Index + 1]);
+        Item.RiverStage := AFormula;
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(rivcConductance), Index + 1]);
+        Item.Conductance := AFormula;
+      end;
     end;
   end;
 end;
 
 procedure TfrmImportShapefile.InitializeBoundaryControlsForRIV;
 begin
+  CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspConductanceInterp;
   lblConductanceInterpretation.Caption := 'Conductance interpretation';
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := Ord(rivcConductance)+1;
   AssignColFeatureProperties;
 
-  rdgBoundaryConditions.Columns[Ord(rivcStartingTime)].ComboUsed := True;
-  rdgBoundaryConditions.Columns[Ord(rivcEndingTime)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(rivcStartingTime)].ComboUsed := not CombinedObjects;
+  rdgBoundaryConditions.Columns[Ord(rivcEndingTime)].ComboUsed := not CombinedObjects;
   rdgBoundaryConditions.Columns[Ord(rivcParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(rivcBottom)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(rivcStage)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(rivcConductance)].ComboUsed := True;
 
-  rdgBoundaryConditions.Columns[Ord(rivcStartingTime)].Format := rcf4String;
-  rdgBoundaryConditions.Columns[Ord(rivcEndingTime)].Format := rcf4String;
+  if CombinedObjects then
+  begin
+    rdgBoundaryConditions.Columns[Ord(rivcStartingTime)].Format := rcf4Integer;
+    rdgBoundaryConditions.Columns[Ord(rivcEndingTime)].Format := rcf4Integer;
+  end
+  else
+  begin
+    rdgBoundaryConditions.Columns[Ord(rivcStartingTime)].Format := rcf4String;
+    rdgBoundaryConditions.Columns[Ord(rivcEndingTime)].Format := rcf4String;
+  end;
   rdgBoundaryConditions.Columns[Ord(rivcParameterName)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(rivcBottom)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(rivcStage)].Format := rcf4String;
@@ -3370,13 +4207,16 @@ var
   AnItem: TCustomModflowBoundaryItem;
   ParamItem: TModflowParamItem;
   Boundary: TModflowParamBoundary;
+  Count: Integer;
+  ItemName: string;
+  ValueItem: TValueArrayItem;
 begin
   AScreenObject.CreateWelBoundary;
   Boundary := AScreenObject.ModflowWellBoundary;
   ParamItem := nil;
   AScreenObject.ModflowWellBoundary.FormulaInterpretation :=
     GetFormulaInterpretation(comboFormulaInterp);
-
+  Count := 0;
   for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
   begin
     UseRow := (rdgBoundaryConditions.Cells[Ord(welcStartingTime), Index + 1] <> '')
@@ -3390,34 +4230,67 @@ begin
         Continue;
       end;
 
-      GetNewBoundaryItem(AnItem, ParameterName, Param, ParamItem, Boundary);
+      GetNewOrExistingBoundaryItem(AnItem, ParameterName, Param, ParamItem,
+        Boundary, Count);
+      Inc(Count);
       Item := AnItem as TWellItem;
 
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(welcStartingTime), Index + 1]);
       Item.StartTime := AValue;
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(welcEndingTime), Index + 1]);
       Item.EndTime := AValue;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(welcPumpingRate), Index + 1]);
-      Item.PumpingRate := AFormula;
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(welcPumpingRate), Index + 1]);
+        ItemName := 'WEL_PumpingRate' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.PumpingRate := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+      end
+      else
+      begin
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(welcPumpingRate), Index + 1]);
+        Item.PumpingRate := AFormula;
+      end;
     end;
   end;
 end;
 
 procedure TfrmImportShapefile.InitializeBoundaryControlsForWEL;
 begin
+  CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspConductanceInterp;
   lblConductanceInterpretation.Caption := 'Pumping rate interpretation';
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := Ord(welcPumpingRate)+1;
   AssignColFeatureProperties;
   
-  rdgBoundaryConditions.Columns[Ord(welcStartingTime)].ComboUsed := True;
-  rdgBoundaryConditions.Columns[Ord(welcEndingTime)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(welcStartingTime)].ComboUsed := not CombinedObjects;
+  rdgBoundaryConditions.Columns[Ord(welcEndingTime)].ComboUsed := not CombinedObjects;
   rdgBoundaryConditions.Columns[Ord(welcParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(welcPumpingRate)].ComboUsed := True;
 
-  rdgBoundaryConditions.Columns[Ord(welcStartingTime)].Format := rcf4String;
-  rdgBoundaryConditions.Columns[Ord(welcEndingTime)].Format := rcf4String;
+  if CombinedObjects then
+  begin
+    rdgBoundaryConditions.Columns[Ord(welcStartingTime)].Format := rcf4Integer;
+    rdgBoundaryConditions.Columns[Ord(welcEndingTime)].Format := rcf4Integer;
+  end
+  else
+  begin
+    rdgBoundaryConditions.Columns[Ord(welcStartingTime)].Format := rcf4String;
+    rdgBoundaryConditions.Columns[Ord(welcEndingTime)].Format := rcf4String;
+  end;
   rdgBoundaryConditions.Columns[Ord(welcParameterName)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(welcPumpingRate)].Format := rcf4String;
 
@@ -3452,13 +4325,16 @@ var
   AnItem: TCustomModflowBoundaryItem;
   ParamItem: TModflowParamItem;
   Boundary: TModflowParamBoundary;
+  Count: Integer;
+  ItemName: string;
+  ValueItem: TValueArrayItem;
 begin
   AScreenObject.CreateGhbBoundary;
   Boundary := AScreenObject.ModflowGhbBoundary;
   ParamItem := nil;
   AScreenObject.ModflowGhbBoundary.FormulaInterpretation :=
     GetFormulaInterpretation(comboFormulaInterp);
-
+  Count := 0;
   for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
   begin
     UseRow := (rdgBoundaryConditions.Cells[Ord(ghbcStartingTime), Index + 1] <> '')
@@ -3472,7 +4348,9 @@ begin
       begin
         Continue;
       end;
-      GetNewBoundaryItem(AnItem, ParameterName, Param, ParamItem, Boundary);
+      GetNewOrExistingBoundaryItem(AnItem, ParameterName, Param, ParamItem,
+        Boundary, Count);
+      Inc(Count);
       Item := AnItem as TGhbItem;
 
 //      Item := AScreenObject.ModflowGhbBoundary.Values.Add as TGhbItem;
@@ -3480,30 +4358,78 @@ begin
       Item.StartTime := AValue;
       AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(ghbcEndingTime), Index + 1]);
       Item.EndTime := AValue;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(ghbcHead), Index + 1]);
-      Item.BoundaryHead := AFormula;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[Ord(ghbcConductance), Index + 1]);
-      Item.Conductance := AFormula;
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(ghbcHead), Index + 1]);
+        ItemName := 'GHB_BoundaryHead' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.BoundaryHead := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(ghbcConductance), Index + 1]);
+        ItemName := 'GHB_Conductance' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.Conductance := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+      end
+      else
+      begin
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(ghbcHead), Index + 1]);
+        Item.BoundaryHead := AFormula;
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.Cells[
+          Ord(ghbcConductance), Index + 1]);
+        Item.Conductance := AFormula;
+      end;
     end;
   end;
 end;
 
 procedure TfrmImportShapefile.InitializeBoundaryControlsForGHB;
 begin
+  CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspConductanceInterp;
   lblConductanceInterpretation.Caption := 'Conductance interpretation';
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := Ord(ghbcConductance)+1;
   AssignColFeatureProperties;
 
-  rdgBoundaryConditions.Columns[Ord(ghbcStartingTime)].ComboUsed := True;
-  rdgBoundaryConditions.Columns[Ord(ghbcEndingTime)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(ghbcStartingTime)].ComboUsed := not CombinedObjects;
+  rdgBoundaryConditions.Columns[Ord(ghbcEndingTime)].ComboUsed := not CombinedObjects;
   rdgBoundaryConditions.Columns[Ord(ghbcParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(ghbcHead)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(ghbcConductance)].ComboUsed := True;
 
-  rdgBoundaryConditions.Columns[Ord(ghbcStartingTime)].Format := rcf4String;
-  rdgBoundaryConditions.Columns[Ord(ghbcEndingTime)].Format := rcf4String;
+  if CombinedObjects then
+  begin
+    rdgBoundaryConditions.Columns[Ord(ghbcStartingTime)].Format := rcf4Integer;
+    rdgBoundaryConditions.Columns[Ord(ghbcEndingTime)].Format := rcf4Integer;
+  end
+  else
+  begin
+    rdgBoundaryConditions.Columns[Ord(ghbcStartingTime)].Format := rcf4String;
+    rdgBoundaryConditions.Columns[Ord(ghbcEndingTime)].Format := rcf4String;
+  end;
   rdgBoundaryConditions.Columns[Ord(ghbcParameterName)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(ghbcHead)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(ghbcConductance)].Format := rcf4String;
@@ -3530,18 +4456,27 @@ end;
 
 procedure TfrmImportShapefile.InitializeBoundaryControlsForCHD;
 begin
+  CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspNone;
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := Ord(ccEndingHead) + 1;
   AssignColFeatureProperties;
-  rdgBoundaryConditions.Columns[Ord(ccStartingTime)].ComboUsed := True;
-  rdgBoundaryConditions.Columns[Ord(ccEndingTime)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(ccStartingTime)].ComboUsed := not CombinedObjects;
+  rdgBoundaryConditions.Columns[Ord(ccEndingTime)].ComboUsed := not CombinedObjects;;
   rdgBoundaryConditions.Columns[Ord(ccParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(ccStartingHead)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(ccEndingHead)].ComboUsed := True;
 
-  rdgBoundaryConditions.Columns[Ord(ccStartingTime)].Format := rcf4String;
-  rdgBoundaryConditions.Columns[Ord(ccEndingTime)].Format := rcf4String;
+  if CombinedObjects then
+  begin
+    rdgBoundaryConditions.Columns[Ord(ccStartingTime)].Format := rcf4Integer;
+    rdgBoundaryConditions.Columns[Ord(ccEndingTime)].Format := rcf4Integer;
+  end
+  else
+  begin
+    rdgBoundaryConditions.Columns[Ord(ccStartingTime)].Format := rcf4String;
+    rdgBoundaryConditions.Columns[Ord(ccEndingTime)].Format := rcf4String;
+  end;
   rdgBoundaryConditions.Columns[Ord(ccParameterName)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(ccStartingHead)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(ccEndingHead)].Format := rcf4String;
@@ -3573,10 +4508,14 @@ var
   AnItem: TCustomModflowBoundaryItem;
   ParamItem: TModflowParamItem;
   Boundary: TModflowParamBoundary;
+  Count: Integer;
+  ValueItem: TValueArrayItem;
+  ItemName: string;
 begin
   AScreenObject.CreateChdBoundary;
   Boundary := AScreenObject.ModflowChdBoundary;
   ParamItem := nil;
+  Count := 0;
   for Index := 0 to seBoundaryTimeCount.AsInteger - 1 do
   begin
     UseRow := (rdgBoundaryConditions.Cells[Ord(ccStartingTime), Index + 1] <> '')
@@ -3590,7 +4529,9 @@ begin
       begin
         Continue;
       end;
-      GetNewBoundaryItem(AnItem, ParameterName, Param, ParamItem, Boundary);
+      GetNewOrExistingBoundaryItem(AnItem, ParameterName, Param, ParamItem,
+        Boundary, Count);
+      Inc(Count);
       Item := AnItem as TChdItem;
 
       AValue := GetRealValueFromText(rdgBoundaryConditions.
@@ -3599,12 +4540,50 @@ begin
       AValue := GetRealValueFromText(rdgBoundaryConditions.
         Cells[Ord(ccEndingTime), Index + 1]);
       Item.EndTime := AValue;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.
-        Cells[Ord(ccStartingHead), Index + 1]);
-      Item.StartHead := AFormula;
-      AFormula := GetRealFormulaFromText(rdgBoundaryConditions.
-        Cells[Ord(ccEndingHead), Index + 1]);
-      Item.EndHead := AFormula;
+
+      if CombinedObjects then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(ccStartingHead), Index + 1]);
+        ItemName := 'CHD_StartingHead' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.StartHead := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+
+        AValue := GetRealValueFromText(rdgBoundaryConditions.
+          Cells[Ord(ccEndingHead), Index + 1]);
+        ItemName := 'CHD_EndingHead' + IntToStr(Index);
+        ValueItem := AScreenObject.ImportedValues.ValueItemByName(
+          ItemName);
+        if ValueItem = nil then
+        begin
+          ValueItem := AScreenObject.
+            ImportedValues.Add as TValueArrayItem;
+          ValueItem.Name := ItemName;
+          ValueItem.Values.DataType := rdtDouble;
+          ValueItem.Values.Count := 0;
+          Item.EndHead := rsObjectImportedValuesR + '("' + ItemName + '")';
+        end;
+        ValueItem.Values.Add(AValue);
+      end
+      else
+      begin
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.
+          Cells[Ord(ccStartingHead), Index + 1]);
+        Item.StartHead := AFormula;
+        AFormula := GetRealFormulaFromText(rdgBoundaryConditions.
+          Cells[Ord(ccEndingHead), Index + 1]);
+        Item.EndHead := AFormula;
+      end;
     end;
   end;
 end;
@@ -3613,8 +4592,11 @@ procedure TfrmImportShapefile.EnableFeatureImport;
 var
   ShouldEnable: boolean;
 begin
-  ShouldEnable := (comboJoinObjects.ItemIndex = 0)
-    and (comboBoundaryChoice.Items.Count > 1);
+  ShouldEnable := (comboBoundaryChoice.Items.Count > 1);
+  if ShouldEnable and (frmGoPhast.ModelSelection = msPhast) then
+  begin
+    ShouldEnable := (comboJoinObjects.ItemIndex = 0)
+  end;
   if ShouldEnable then
   begin
     case frmGoPhast.ModelSelection of
@@ -3662,7 +4644,7 @@ begin
   AScreenObject.WellBoundary.AllocateByPressureAndMobility := BooleanVariable;
 
   FieldName := AnsiString(comboWellIntervalStyle.Text);
-  FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
+  FieldNumber := GetFieldNumberFromName(FieldName);
   if FieldNumber = 0 then
   begin
     // not a field.
@@ -3707,7 +4689,7 @@ var
   Value: string;
   FieldNumber: Integer;
 begin
-  FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
+  FieldNumber := GetFieldNumberFromName(FieldName);
   if FieldNumber = 0 then
   begin
     // not a field
@@ -3749,12 +4731,12 @@ begin
   end
   else
   begin
-    FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
+    FieldNumber := GetFieldNumberFromName(FieldName);
     FieldStorage := TFieldNumStorage.Create(xbShapeDataBase);
     FieldStorage.FieldNumber := FieldNumber;
     FFieldNumbers.AddObject(string(FieldName), FieldStorage);
   end;
-//  FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
+//  FieldNumber := GetFieldNumberFromName(FieldName);
   if FieldNumber = 0 then
   begin
     if Trim(string(FieldName)) = '' then
@@ -3847,12 +4829,12 @@ begin
   end
   else
   begin
-    FieldNumber := xbShapeDataBase.GetFieldNumberFromName(AnsiString(Text));
+    FieldNumber := GetFieldNumberFromName(AnsiString(Text));
     FieldStorage := TFieldNumStorage.Create(xbShapeDataBase);
     FieldStorage.FieldNumber := FieldNumber;
     FFieldNumbers.AddObject(Text, FieldStorage);
   end;
-//  FieldNumber := xbShapeDataBase.GetFieldNumberFromName(Text);
+//  FieldNumber := GetFieldNumberFromName(Text);
   if FieldNumber <> 0 then
   begin
     if xbShapeDataBase.GetFieldType(FieldNumber) = xbfChar then
@@ -3925,6 +4907,11 @@ var
   CachedPosition: Integer;
   FieldStorage: TFieldNumStorage;
 begin
+  if FieldName = '' then
+  begin
+    result := 0;
+    Exit;
+  end;
   CachedPosition := FFieldNumbers.Indexof(string(FieldName));
   if CachedPosition >= 0 then
   begin
@@ -3933,7 +4920,7 @@ begin
   end
   else
   begin
-    FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
+    FieldNumber := GetFieldNumberFromName(FieldName);
     FieldStorage := TFieldNumStorage.Create(xbShapeDataBase);
     FieldStorage.FieldNumber := FieldNumber;
     FFieldNumbers.AddObject(string(FieldName), FieldStorage);
@@ -3976,12 +4963,12 @@ begin
   end
   else
   begin
-    FieldNumber := xbShapeDataBase.GetFieldNumberFromName(Text);
+    FieldNumber := GetFieldNumberFromName(Text);
     FieldStorage := TFieldNumStorage.Create(xbShapeDataBase);
     FieldStorage.FieldNumber := FieldNumber;
     FFieldNumbers.AddObject(string(Text), FieldStorage);
   end;
-//  FieldNumber := xbShapeDataBase.GetFieldNumberFromName(Text);
+//  FieldNumber := GetFieldNumberFromName(Text);
   if FieldNumber <> 0 then
   begin
     if xbShapeDataBase.GetFieldType(FieldNumber) = xbfChar then
@@ -4062,12 +5049,12 @@ begin
   end
   else
   begin
-    FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
+    FieldNumber := GetFieldNumberFromName(FieldName);
     FieldStorage := TFieldNumStorage.Create(xbShapeDataBase);
     FieldStorage.FieldNumber := FieldNumber;
     FFieldNumbers.AddObject(string(FieldName), FieldStorage);
   end;
-//  FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
+//  FieldNumber := GetFieldNumberFromName(FieldName);
   if FieldNumber = 0 then
   begin
     // not a field
@@ -4103,7 +5090,7 @@ begin
     begin
       ATime := 0;
       FieldName := AnsiString(rdgBoundaryConditions.Cells[0, Index + 1]);
-      FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
+      FieldNumber := GetFieldNumberFromName(FieldName);
       if FieldNumber = 0 then
       begin
         // not a field
@@ -4118,7 +5105,7 @@ begin
       end;
       AValue := 0;
       FieldName := AnsiString(rdgBoundaryConditions.Cells[1, Index + 1]);
-      FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
+      FieldNumber := GetFieldNumberFromName(FieldName);
       if FieldNumber = 0 then
       begin
         // not a field
@@ -4146,7 +5133,7 @@ begin
       FieldName := AnsiString(rdgBoundaryConditions.Cells[2, Index + 1]);
       if FieldName <> '' then
       begin
-        FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
+        FieldNumber := GetFieldNumberFromName(FieldName);
         if FieldNumber = 0 then
         begin
           // not a field
@@ -4183,7 +5170,7 @@ var
   FieldName: AnsiString;
 begin
   FieldName := AnsiString(comboSolutionType.Text);
-  FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
+  FieldNumber := GetFieldNumberFromName(FieldName);
   if FieldNumber = 0 then
   begin
     // not a field.
@@ -4215,6 +5202,8 @@ var
   Index: Integer;
   Item: TTimeItem;
 begin
+  comboBoundaryChoice.Items.Clear;
+  comboBoundaryChoice.Items.Add('none');
   plBoundary.ActivePage := jvspNone;
   Model := frmGoPhast.PhastModel;
   case Model.ModelSelection of
@@ -4579,7 +5568,7 @@ begin
         DataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataSetName);
         Assert(DataSet <> nil);
 //        DataSet := frmGoPhast.PhastModel.DataSets[Position];
-        FieldIndex := xbShapeDataBase.GetFieldNumberFromName(AnsiString(dgFields.
+        FieldIndex := GetFieldNumberFromName(AnsiString(dgFields.
           Cells[0, Index]));
         Assert(FieldIndex >= 1);
         case DataSet.DataType of
@@ -4662,7 +5651,7 @@ begin
       NewDataSetName := GenerateNewName(dgFields.
         Cells[Ord(fgcAttributes), Index]);
 
-      FieldIndex := xbShapeDataBase.GetFieldNumberFromName(AnsiString(
+      FieldIndex := GetFieldNumberFromName(AnsiString(
         dgFields.Cells[Ord(fgcAttributes), Index]));
       Assert(FieldIndex >= 1);
 
@@ -4757,7 +5746,6 @@ var
   SectionIndex: Integer;
   NextStart: integer;
   NewSection: boolean;
-  CombinedObjects: boolean;
   Formula: string;
   ValueIndex: Integer;
   OptionalExtensions: TStringList;
@@ -4772,10 +5760,6 @@ var
   FieldName: string;
   RealFieldNames: TStringList;
   InvalidParametersIndex: Integer;
-const
-  WarningRoot = 'No parameters with the following names exist. '
-    + 'Import of the feature will be skipped for the shapes for which '
-    + ' these names were specified.';
 begin
   FInvalidParameterNames := TStringList.Create;
   try
@@ -5566,7 +6550,7 @@ begin
     end;
     for InvalidParametersIndex := 0 to FInvalidParameterNames.Count - 1 do
     begin
-      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, WarningRoot,
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrWarningRoot,
         FInvalidParameterNames[InvalidParametersIndex]);
     end;
     if FInvalidParameterNames.Count > 0 then
@@ -5861,7 +6845,7 @@ end;
 
 function TUndoImportShapefile.Description: string;
 begin
-  result := 'import shape file';
+  result := StrImportShapeFile;
 end;
 
 destructor TUndoImportShapefile.Destroy;
@@ -6554,6 +7538,7 @@ end;
 procedure TfrmImportShapefile.comboJoinObjectsChange(Sender: TObject);
 begin
   inherited;
+  InitializeBoundaryConditionControls;
   EnableFeatureImport;
 end;
 

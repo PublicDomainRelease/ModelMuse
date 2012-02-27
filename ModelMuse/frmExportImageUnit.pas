@@ -182,6 +182,7 @@ type
     procedure SetStateOfMultipleNodes(BaseNode: PVirtualNode;
       NewState: TCheckState);
     procedure CollapseOtherPanels(Sender: TObject);
+    procedure ApplyMacro(CommentLines: TStringList; CommentSearchKey: string; TextSearchKey: string; var TextToDraw: string);
     { Private declarations }
   public
     { Public declarations }
@@ -203,6 +204,7 @@ const
   StrSP = '%SP';
   StrTS = '%TS';
   StrET = '%ET';
+  StrTrS = '%TrS';
 
 {$R *.dfm}
 
@@ -1078,9 +1080,6 @@ var
   Grid: TCustomModelGrid;
   DataArray: TDataArray;
   CommentLines: TStringList;
-  SearchPosition: Integer;
-  Index: Integer;
-  StressPeriodText: string;
 begin
   PhastModel := frmGoPhast.PhastModel;
   Grid := PhastModel.Grid;
@@ -1125,56 +1124,13 @@ begin
     CommentLines := TStringList.Create;
     try
       CommentLines.Text := DataArray.Comment;
-      SearchPosition := Pos(StrSP, TextToDraw);
-      if SearchPosition > 0 then
-      begin
-        for Index := 0 to CommentLines.Count - 1 do
-        begin
-          StressPeriodText := '?';
-          if Pos(StrStressPeriodLabel, CommentLines[Index]) = 1 then
-          begin
-            StressPeriodText := Trim(Copy(CommentLines[Index],
-              Length(StrStressPeriodLabel), MAXINT));
-            break;
-          end;
-        end;
-        TextToDraw := StringReplace(TextToDraw, StrSP, StressPeriodText,
-          [rfReplaceAll, rfIgnoreCase]);
-      end;
 
-      SearchPosition := Pos(StrTS, TextToDraw);
-      if SearchPosition > 0 then
-      begin
-        for Index := 0 to CommentLines.Count - 1 do
-        begin
-          StressPeriodText := '?';
-          if Pos(StrTimeStepLabel, CommentLines[Index]) = 1 then
-          begin
-            StressPeriodText := Trim(Copy(CommentLines[Index],
-              Length(StrTimeStepLabel), MAXINT));
-            break;
-          end;
-        end;
-        TextToDraw := StringReplace(TextToDraw, StrTS, StressPeriodText,
-          [rfReplaceAll, rfIgnoreCase]);
-      end;
+      ApplyMacro(CommentLines, StrStressPeriodLabel, StrSP, TextToDraw);
+      ApplyMacro(CommentLines, StrTimeStepLabel, StrTS, TextToDraw);
+      ApplyMacro(CommentLines, StrElapsedTimeLabel, StrET, TextToDraw);
+      ApplyMacro(CommentLines, StrTransportStep, StrTrS, TextToDraw);
 
-      SearchPosition := Pos(StrET, TextToDraw);
-      if SearchPosition > 0 then
-      begin
-        for Index := 0 to CommentLines.Count - 1 do
-        begin
-          StressPeriodText := '?';
-          if Pos(StrElapsedTimeLabel, CommentLines[Index]) = 1 then
-          begin
-            StressPeriodText := Trim(Copy(CommentLines[Index],
-              Length(StrElapsedTimeLabel), MAXINT));
-            break;
-          end;
-        end;
-        TextToDraw := StringReplace(TextToDraw, StrET, StressPeriodText,
-          [rfReplaceAll, rfIgnoreCase]);
-      end;
+
     finally
       CommentLines.Free;
     end;
@@ -2759,6 +2715,28 @@ begin
 //    List.Free;
 //  end;
 //  CatPanelGroup.Invalidate;
+end;
+
+procedure TfrmExportImage.ApplyMacro(CommentLines: TStringList; CommentSearchKey: string; TextSearchKey: string; var TextToDraw: string);
+var
+  SearchPosition: Integer;
+  ReplacementText: string;
+  Index: Integer;
+begin
+  SearchPosition := Pos(TextSearchKey, TextToDraw);
+  if SearchPosition > 0 then
+  begin
+    ReplacementText := '?';
+    for Index := 0 to CommentLines.Count - 1 do
+    begin
+      if Pos(CommentSearchKey, CommentLines[Index]) = 1 then
+      begin
+        ReplacementText := Trim(Copy(CommentLines[Index], Length(CommentSearchKey), MAXINT));
+        break;
+      end;
+    end;
+    TextToDraw := StringReplace(TextToDraw, TextSearchKey, ReplacementText, [rfReplaceAll, rfIgnoreCase]);
+  end;
 end;
 
 procedure TfrmExportImage.spdSaveImageTypeChange(Sender: TObject);

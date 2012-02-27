@@ -24,6 +24,9 @@ implementation
 uses ModflowUnitNumbers, ModflowTimeUnit, frmErrorsAndWarningsUnit, 
   frmProgressUnit, Forms;
 
+resourcestring
+  StrStressPeriod0d = 'Stress period: %0:d; Starting Time: %1:g';
+
 { TOutputControlWriter }
 
 constructor TOutputControlWriter.Create(AModel: TCustomModel; EvaluationType: TEvaluationType);
@@ -167,13 +170,15 @@ var
     end;
   end;
 begin
-  if not FOutputControl.HeadOC.PrintInListing
-    and not FOutputControl.HeadOC.SaveInExternalFile
-    and not FOutputControl.DrawdownOC.PrintInListing
-    and not FOutputControl.DrawdownOC.SaveInExternalFile then
-  begin
-    Exit;
-  end;
+//  if not FOutputControl.HeadOC.PrintInListing
+//    and not FOutputControl.HeadOC.SaveInExternalFile
+//    and not FOutputControl.DrawdownOC.PrintInListing
+//    and not FOutputControl.DrawdownOC.SaveInExternalFile
+//    and (FOutputControl.SaveCellFlows = csfNone)
+//    and (FOutputControl.BudgetFrequencyChoice = fcStressPeriods) then
+//  begin
+//    Exit;
+//  end;
 
   StressPeriods := Model.ModflowFullStressPeriods;
 
@@ -228,8 +233,8 @@ begin
       if SetDDREFERENCE
         and (StressPeriod.StressPeriodType = sptTransient) then
       begin
-        WarningMessage := 'Stress period: '+ IntToStr(StressPeriodIndex+1)
-          + '; Starting Time: ' + FloatToStr(StressPeriod.StartTime);
+        WarningMessage := Format(StrStressPeriod0d,
+          [StressPeriodIndex+1, StressPeriod.StartTime]);
         frmErrorsAndWarnings.AddWarning(Model, StressPeriodWarning, WarningMessage);
       end;
 

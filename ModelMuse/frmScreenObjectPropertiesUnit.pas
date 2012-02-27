@@ -23,7 +23,10 @@ uses Windows,
   frameHeadObservationsUnit, frameHfbScreenObjectUnit, Mask, JvExMask, JvSpin,
   ValueArrayStorageUnit, frameIfaceUnit, frameModpathParticlesUnit,
   frameFluxObsUnit, ModflowPackageSelectionUnit, frameScreenObjectMNW2Unit,
-  frameScreenObjectHydmodUnit, CheckLst, frameScreenObjectUnit;
+  frameScreenObjectHydmodUnit, CheckLst, frameScreenObjectUnit,
+  frameScreenObjectSsmUnit, frameCustomCellObservationUnit,
+  frameConcentrationObservationUnit, CustomFrameFluxObsUnit,
+  frameMt3dmsFluxObsUnit;
 
   { TODO : Consider making this a property sheet like the Object Inspector that
   could stay open at all times.  Boundary conditions and vertices might be
@@ -262,6 +265,12 @@ type
     cbLgrAllModels: TCheckBox;
     clbLgrUsedModels: TCheckListBox;
     cbLock: TCheckBox;
+    jvspMT3DMS_SSM: TJvStandardPage;
+    frameMT3DMS_SSM: TframeScreenObjectSsm;
+    jvspMT3DMS_TOB_Conc: TJvStandardPage;
+    frameMt3dmsTobConc: TframeConcentrationObservation;
+    jvspMT3DMS_TOB_Flux: TJvStandardPage;
+    frameMt3dmsFluxObs: TframeMt3dmsFluxObs;
     // @name changes which check image is displayed for the selected item
     // in @link(jvtlModflowBoundaryNavigator).
     procedure jvtlModflowBoundaryNavigatorMouseDown(Sender: TObject;
@@ -442,6 +451,20 @@ type
     procedure cbLgrAllModelsClick(Sender: TObject);
     procedure clbLgrUsedModelsClickCheck(Sender: TObject);
     procedure cbLockClick(Sender: TObject);
+    procedure frameMT3DMSdgModflowBoundaryEndUpdate(Sender: TObject);
+    procedure frameMT3DMSdgModflowBoundarySetEditText(Sender: TObject; ACol,
+      ARow: Integer; const Value: string);
+    procedure frameMT3DMSseNumberOfTimesChange(Sender: TObject);
+    procedure frameMT3DMScbSpecifiedConcentrationClick(Sender: TObject);
+    procedure frameMT3DMScbMassLoadingClick(Sender: TObject);
+    procedure frameMt3dmsTobConcrdgObservationsSetEditText(Sender: TObject;
+      ACol, ARow: Integer; const Value: string);
+    procedure frameMt3dmsTobConcseTimesChange(Sender: TObject);
+    procedure frameHeadObservationsseTimesChange(Sender: TObject);
+    procedure frameMt3dmsFluxObsrdgObservationGroupsSetEditText(Sender: TObject;
+      ACol, ARow: Integer; const Value: string);
+    procedure frameMt3dmsFluxObsrdgObservationGroupsStateChange(Sender: TObject;
+      ACol, ARow: Integer; const Value: TCheckBoxState);
   published
     // Clicking @name closes the @classname without changing anything.
     // See @link(btnCancelClick),
@@ -1245,6 +1268,9 @@ type
     FGbob_Node: TJvPageIndexNode;
     FRvob_Node: TJvPageIndexNode;
     FGage_Node: TJvPageIndexNode;
+    FMt3dmsSsm_Node: TJvPageIndexNode;
+    FMt3dmsTobConc_Node: TJvPageIndexNode;
+    FMt3dmsTobFlux_Node: TJvPageIndexNode;
     // @name is used to store the column that the user last selected
     // in one of the grids for boundary-condition, time-varying stress.
     // For boundary conditions that allow PHAST-style interpolation,
@@ -1373,7 +1399,7 @@ type
 
     {@name tests whether the boundary specified in Grid is
      identical to the one in Boundary.}
-    function BoundaryIsIdentical(const Grid: TRbwDataGrid4;
+    function PhastBoundaryIsIdentical(const Grid: TRbwDataGrid4;
       const UsedTimes: TRealList;
       const Boundary: TCustomPhastBoundaryCollection;
       const ExpressionCol, PhastInterpolateCol: integer): boolean;
@@ -1675,6 +1701,7 @@ type
     procedure CreateDrobNode;
     procedure CreateGbobNode;
     procedure CreateRvobNode;
+    procedure CreateMt3dmsSsmNode;
     procedure GetDrainFluxObservations(const AScreenObjectList: TList);
     procedure GetGhbFluxObservations(const AScreenObjectList: TList);
     procedure GetRiverFluxObservations(const AScreenObjectList: TList);
@@ -1682,7 +1709,6 @@ type
     procedure GetGages(ListOfScreenObjects: TList);
     procedure SetGages(List: TList);
     procedure CreateMnw2Node;
-    procedure StoreMnw2Boundary;
     procedure GetMnw2Boundary(const ScreenObjectList: TList);
     procedure Mnw2Changed(Sender: TObject);
     procedure CreateHydmodNode(AScreenObject: TScreenObject);
@@ -1690,6 +1716,16 @@ type
     procedure GetChildModels(const ScreenObjectList: TList);
     procedure UpdateNonParamCheckBox(Frame: TframeScreenObjectParam; ParamCol,
       ACol, ARow: Integer; const Value: string);
+    procedure GetMt3dmsChemBoundary(ScreenObjectList: TList);
+    procedure GetMt3dmsBoundaryCollection(DataGrid: TRbwDataGrid4;
+      ColumnOffset: Integer; ScreenObjectList: TList;
+      TimeList: TParameterTimeList);
+    procedure StoreMt3dmsChemBoundary;
+    procedure CreateMt3dmsTobConcNode(AScreenObject: TScreenObject);
+    procedure GetMt3dConcObservations(const ScreenObjectList: TList);
+    procedure GetMt3dmsFluxObservations(const AScreenObjectList: TList);
+    procedure CreateMt3dmsTobFluxNode;
+    procedure SetMt3dFluxObs(List: TList);
 
     // @name is set to @true when the @classname has stored values of the
     // @link(TScreenObject)s being edited.
@@ -1862,6 +1898,8 @@ type
     procedure EnableChildModelList(AScreenObject: TScreenObject);
     procedure FillChildModelList;
     procedure GetPositionLockedForAdditionalObject(AScreenObject: TScreenObject);
+    procedure GetCanSelectNode(Node: TTreeNode; var AllowChange: Boolean);
+//    function CanSelectMt3dms: Boolean;
     { Private declarations }
   public
     procedure Initialize;
@@ -1893,7 +1931,12 @@ uses Math, StrUtils, JvToolEdit, frmGoPhastUnit, AbstractGridUnit,
   ModflowUzfUnit, ModflowSfrUnit, ModflowHobUnit, ModflowHfbUnit, 
   LayerStructureUnit, ModpathParticleUnit, IntListUnit, 
   frmManageFluxObservationsUnit, ModflowGageUnit, ModflowMnw2Unit, JvGroupBox,
-  ModflowHydmodUnit, ModelMuseUtilities;
+  ModflowHydmodUnit, ModelMuseUtilities, Mt3dmsChemUnit, Mt3dmsChemSpeciesUnit,
+  Mt3dmsTobUnit, Mt3dmsFluxObservationsUnit;
+
+resourcestring
+  StrConcentrationObserv = 'Concentration Observations: ';
+  StrFluxObserv = 'Flux Observations: ';
 
 {$R *.dfm}
 
@@ -2253,34 +2296,7 @@ procedure TfrmScreenObjectProperties.jvtlModflowBoundaryNavigatorChanging(
   Sender: TObject; Node: TTreeNode; var AllowChange: Boolean);
 begin
   inherited;
-  if (Node = FChob_Node) then
-  begin
-    if (FCHD_Node = nil) or (FCHD_Node.StateIndex = 1) then
-    begin
-      AllowChange := False;
-    end;
-  end
-  else if (Node = FDrob_Node) then
-  begin
-    if (FDRN_Node = nil) or (FDRN_Node.StateIndex = 1) then
-    begin
-      AllowChange := False;
-    end;
-  end
-  else if (Node = FGbob_Node) then
-  begin
-    if (FGHB_Node = nil) or (FGHB_Node.StateIndex = 1) then
-    begin
-      AllowChange := False;
-    end;
-  end
-  else if (Node = FRvob_Node) then
-  begin
-    if (FRIV_Node = nil) or (FRIV_Node.StateIndex = 1) then
-    begin
-      AllowChange := False;
-    end;
-  end;
+  GetCanSelectNode(Node, AllowChange);
 end;
 
 procedure TfrmScreenObjectProperties.jvtlModflowBoundaryNavigatorCustomDrawItem(
@@ -2291,39 +2307,12 @@ var
 begin
   inherited;
   CanSelect := True;
-  if (Node = FChob_Node) then
-  begin
-    if (FCHD_Node = nil) or (FCHD_Node.StateIndex = 1) then
-    begin
-      CanSelect := False;
-    end;
-  end
-  else if (Node = FDrob_Node) then
-  begin
-    if (FDRN_Node = nil) or (FDRN_Node.StateIndex = 1) then
-    begin
-      CanSelect := False;
-    end;
-  end
-  else if (Node = FGbob_Node) then
-  begin
-    if (FGHB_Node = nil) or (FGHB_Node.StateIndex = 1) then
-    begin
-      CanSelect := False;
-    end;
-  end
-  else if (Node = FRvob_Node) then
-  begin
-    if (FRIV_Node = nil) or (FRIV_Node.StateIndex = 1) then
-    begin
-      CanSelect := False;
-    end;
-  end;
+  GetCanSelectNode(Node, CanSelect);
   if not CanSelect then
   begin
     Sender.Canvas.Brush.Color := clBtnFace;
   end;
-  if  Node.Selected then
+  if Node.Selected then
   begin
     Sender.Canvas.Brush.Color := clBlue;
     Sender.Canvas.Font.Color := clWhite;
@@ -2362,11 +2351,19 @@ begin
     if jvtlModflowBoundaryNavigator.Selected = FCHD_Node then
     begin
       StoreChdBoundary;
+      if (FChob_Node <> nil) and (FCHD_Node.StateIndex = 1) then
+      begin
+        FChob_Node.StateIndex := 1;
+      end;
       jvtlModflowBoundaryNavigator.Invalidate;
     end
     else if jvtlModflowBoundaryNavigator.Selected = FGHB_Node then
     begin
       StoreGhbBoundary;
+      if (FGbob_Node <> nil) and (FGHB_Node.StateIndex = 1) then
+      begin
+        FGbob_Node.StateIndex := 1;
+      end;
       jvtlModflowBoundaryNavigator.Invalidate;
     end
     else if jvtlModflowBoundaryNavigator.Selected = FWEL_Node then
@@ -2376,11 +2373,19 @@ begin
     else if jvtlModflowBoundaryNavigator.Selected = FRIV_Node then
     begin
       StoreRivBoundary;
+      if (FRvob_Node <> nil) and (FRIV_Node.StateIndex = 1) then
+      begin
+        FRvob_Node.StateIndex := 1;
+      end;
       jvtlModflowBoundaryNavigator.Invalidate;
     end
     else if jvtlModflowBoundaryNavigator.Selected = FDRN_Node then
     begin
       StoreDrnBoundary;
+      if (FDrob_Node <> nil) and (FDRN_Node.StateIndex = 1) then
+      begin
+        FDrob_Node.StateIndex := 1;
+      end;
       jvtlModflowBoundaryNavigator.Invalidate;
     end
     else if jvtlModflowBoundaryNavigator.Selected = FDRT_Node then
@@ -2409,7 +2414,7 @@ begin
     end
     else if jvtlModflowBoundaryNavigator.Selected = FMNW2_Node then
     begin
-      StoreMnw2Boundary;
+      // do nothing
     end
     else if jvtlModflowBoundaryNavigator.Selected = FSFR_Node then
     begin
@@ -2417,7 +2422,10 @@ begin
     end
     else if jvtlModflowBoundaryNavigator.Selected = FHOB_Node then
     begin
-      frameHeadObservations.seTimes.AsInteger := 0;
+      if jvtlModflowBoundaryNavigator.Selected.StateIndex <= 1 then
+      begin
+        frameHeadObservations.seTimes.AsInteger := 0;
+      end;
     end
     else if jvtlModflowBoundaryNavigator.Selected = FHFB_Node then
     begin
@@ -2452,10 +2460,33 @@ begin
     begin
       // do nothing
     end
+    else if jvtlModflowBoundaryNavigator.Selected = FMt3dmsSsm_Node then
+    begin
+      StoreMt3dmsChemBoundary;
+    end
+    else if jvtlModflowBoundaryNavigator.Selected = FMt3dmsTobConc_Node then
+    begin
+      if jvtlModflowBoundaryNavigator.Selected.StateIndex <= 1 then
+      begin
+        frameMt3dmsTobConc.seTimes.AsInteger := 0;
+      end;
+    end
+    else if jvtlModflowBoundaryNavigator.Selected = FMt3dmsTobFlux_Node then
+    begin
+      // do nothing
+    end
     else
     begin
       Assert(False);
     end;
+//    if (FMt3dms_Node <> nil)
+//      and (FMt3dms_Node.StateIndex <> 1)
+//      and not CanSelectMt3dms then
+//    begin
+//      FMt3dms_Node.StateIndex := 1;
+//      StoreMt3dmsChemBoundary;
+//      jvtlModflowBoundaryNavigator.Invalidate;
+//    end;
   end;
 end;
 
@@ -2557,6 +2588,10 @@ begin
   CreateUzfNode;
   CreateWelNode;
   CreateModpathNode;
+  CreateMt3dmsSsmNode;
+  CreateMt3dmsTobConcNode(AScreenObject);
+  CreateMt3dmsTobFluxNode;
+
   tabLGR.TabVisible := frmGoPhast.PhastModel.LgrUsed;
   SetupChildModelControls(AScreenObject);
   jvplModflowBoundaries.ActivePage := jvspBlank;
@@ -3141,6 +3176,10 @@ begin
       + (frmGoPhast.PhastModel.ModflowPackages.EtsPackage.SegmentCount-1) *2;
   end;
 
+  frameMT3DMS_SSM.dgModflowBoundary.ColCount := 2
+    + frmGoPhast.PhastModel.MobileComponents.Count
+    + frmGoPhast.PhastModel.ImmobileComponents.Count;
+
   frameChdParam.clbParameters.Items.Clear;
   frameGhbParam.clbParameters.Items.Clear;
   frameWellParam.clbParameters.Items.Clear;
@@ -3565,6 +3604,7 @@ begin
     FOldProperties.Clear;
   end;
   FDataEdits.Clear;
+  FCurrentEdit := nil;
 end;
 
 procedure TfrmScreenObjectProperties.FormCreate(Sender: TObject);
@@ -3615,6 +3655,7 @@ begin
     frameScreenObjectSFR.pnlSegmentDownstream.Height) div 2;
 
   frameHeadObservations.InitializeControls;
+  frameMt3dmsTobConc.InitializeControls;
 end;
 
 procedure TfrmScreenObjectProperties.ResetSpecifiedHeadGrid;
@@ -3790,7 +3831,7 @@ begin
   end;
 end;
 
-function TfrmScreenObjectProperties.BoundaryIsIdentical(const Grid:
+function TfrmScreenObjectProperties.PhastBoundaryIsIdentical(const Grid:
   TRbwDataGrid4;
   const UsedTimes: TRealList; const Boundary: TCustomPhastBoundaryCollection;
   const ExpressionCol, PhastInterpolateCol: integer): boolean;
@@ -3949,6 +3990,7 @@ begin
     FillPropertyCollection(FOldProperties, AScreenObjectList);
 
     FScreenObjectList := AScreenObjectList;
+    FScreenObject := nil;
     if AScreenObjectList.Count > 1 then
     begin
 
@@ -3995,7 +4037,6 @@ begin
       GetAdditionalUsedModels(AScreenObjectList);
 
     end;
-    FScreenObject := nil;
     FCanFillTreeView := True;
     if AScreenObjectList.Count > 1 then
     begin
@@ -4031,6 +4072,113 @@ begin
   UpdateSubComponents(self);
   UpdateCurrentEdit;
 //  OutputDebugString('SAMPLING OFF');
+end;
+
+//function TfrmScreenObjectProperties.CanSelectMt3dms: Boolean;
+//begin
+//  if ((FCHD_Node <> nil) and (FCHD_Node.StateIndex <> 1))
+//    or ((FWEL_Node <> nil) and (FWEL_Node.StateIndex <> 1))
+//    or ((FDRN_Node <> nil) and (FDRN_Node.StateIndex <> 1))
+//    or ((FRIV_Node <> nil) and (FRIV_Node.StateIndex <> 1))
+//    or ((FGHB_Node <> nil) and (FGHB_Node.StateIndex <> 1))
+//    or ((FRCH_Node <> nil) and (FRCH_Node.StateIndex <> 1))
+//    or ((FEVT_Node <> nil) and (FEVT_Node.StateIndex <> 1))
+//    or ((FRES_Node <> nil) and (FRES_Node.StateIndex <> 1))
+//    or ((FLAK_Node <> nil) and (FLAK_Node.StateIndex <> 1))
+//    or ((FDRT_Node <> nil) and (FDRT_Node.StateIndex <> 1))
+//    or ((FETS_Node <> nil) and (FETS_Node.StateIndex <> 1)) then
+//  begin
+//    result := True;
+//  end
+//  else
+//  begin
+//    result := False;
+//  end;
+//end;
+
+procedure TfrmScreenObjectProperties.GetCanSelectNode(Node: TTreeNode; var AllowChange: Boolean);
+begin
+  if (Node = FChob_Node) then
+  begin
+    if (FCHD_Node = nil) or (FCHD_Node.StateIndex = 1) then
+    begin
+      AllowChange := False;
+    end;
+  end
+  else if (Node = FDrob_Node) then
+  begin
+    if (FDRN_Node = nil) or (FDRN_Node.StateIndex = 1) then
+    begin
+      AllowChange := False;
+    end;
+  end
+  else if (Node = FGbob_Node) then
+  begin
+    if (FGHB_Node = nil) or (FGHB_Node.StateIndex = 1) then
+    begin
+      AllowChange := False;
+    end;
+  end
+  else if (Node = FRvob_Node) then
+  begin
+    if (FRIV_Node = nil) or (FRIV_Node.StateIndex = 1) then
+    begin
+      AllowChange := False;
+    end
+  else if (Node = FMt3dmsTobFlux_Node) then
+  begin
+    AllowChange := False;
+    if (FCHD_Node <> nil) and (FCHD_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FDRN_Node <> nil) and (FDRN_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FGHB_Node <> nil) and (FGHB_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FRIV_Node <> nil) and (FRIV_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FWEL_Node <> nil) and (FWEL_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FEVT_Node <> nil) and (FEVT_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FMt3dmsSsm_Node <> nil) and (FMt3dmsSsm_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FRES_Node <> nil) and (FRES_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FLAK_Node <> nil) and (FLAK_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FDRT_Node <> nil) and (FDRT_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FETS_Node <> nil) and (FETS_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end;
+  end;
+
+//  end
+//  else if (Node = FMt3dms_Node) then
+//  begin
+//    AllowChange := CanSelectMt3dms;
+  end;
 end;
 
 procedure TfrmScreenObjectProperties.GetPositionLockedForAdditionalObject(AScreenObject: TScreenObject);
@@ -4401,6 +4549,11 @@ begin
     ((FHydmod_Node = nil) or (FHydmod_Node.StateIndex = 1))
     and frmGoPhast.PhastModel.HydmodIsSelected);
 
+  frameMt3dmsTobConc.SetData(FNewProperties,
+    ((FMt3dmsTobConc_Node <> nil) and (FMt3dmsTobConc_Node.StateIndex = 2)),
+    ((FMt3dmsTobConc_Node = nil) or (FMt3dmsTobConc_Node.StateIndex = 1))
+    and frmGoPhast.PhastModel.Mt3dmsTobIsSelected);
+
 end;
 
 procedure TfrmScreenObjectProperties.UpdateVertices;
@@ -4477,6 +4630,7 @@ begin
   GetDrainFluxObservations(AScreenObjectList);
   GetGhbFluxObservations(AScreenObjectList);
   GetRiverFluxObservations(AScreenObjectList);
+  GetMt3dmsFluxObservations(AScreenObjectList);
 end;
 
 procedure TfrmScreenObjectProperties.GetNearestDiversionSegment(var NewText: string);
@@ -4744,6 +4898,40 @@ begin
   SetFluxObservations(List, FDrob_Node, frameDROB, frmGoPhast.PhastModel.DrainObservations);
   SetFluxObservations(List, FGbob_Node, frameGBOB, frmGoPhast.PhastModel.GhbObservations);
   SetFluxObservations(List, FRvob_Node, frameRVOB, frmGoPhast.PhastModel.RiverObservations);
+  SetMt3dFluxObs(List);
+end;
+
+procedure TfrmScreenObjectProperties.SetMt3dFluxObs(List: TList);
+var
+  ObsList: TMt3dFluxGroupList;
+  CheckState: TCheckBoxState;
+begin
+  if FMt3dmsTobFlux_Node = nil then
+  begin
+    Exit;
+  end;
+  ObsList := TMt3dFluxGroupList.Create;
+  try
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsHeadMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsWellMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsDrnMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsRivMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsGhbMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsRchMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsEvtMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsMassLoadingMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsResMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsLakMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsDrtMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsEtsMassFluxObservations);
+
+    Assert(FMt3dmsTobFlux_Node.StateIndex in [1, 2, 3]);
+    CheckState := TCheckBoxState(FMt3dmsTobFlux_Node.StateIndex - 1);
+    frameMt3dmsFluxObs.SetData(List, ObsList, CheckState);
+  finally
+    ObsList.Free;
+  end;
+
 end;
 
 procedure TfrmScreenObjectProperties.SetFluxObservations(List: TList;
@@ -4803,6 +4991,50 @@ begin
   GetFluxObservationsForFrame(FRvob_Node, frmGoPhast.PhastModel.RiverObservations,
     AScreenObjectList, frameRvOB);
 end;
+
+procedure TfrmScreenObjectProperties.GetMt3dmsFluxObservations(
+  const AScreenObjectList: TList);
+var
+  ObsList: TMt3dFluxGroupList;
+  UsedObjectCount: Integer;
+begin
+  if FMt3dmsTobFlux_Node = nil then
+  begin
+    Exit;
+  end;
+  frameMt3dmsFluxObs.InitializeControls;
+  ObsList := TMt3dFluxGroupList.Create;
+  try
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsHeadMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsWellMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsDrnMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsRivMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsGhbMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsRchMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsEvtMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsMassLoadingMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsResMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsLakMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsDrtMassFluxObservations);
+    ObsList.Add(frmGoPhast.PhastModel.Mt3dmsEtsMassFluxObservations);
+    UsedObjectCount := frameMt3dmsFluxObs.GetData(AScreenObjectList, ObsList);
+    if UsedObjectCount = 0 then
+    begin
+      FMt3dmsTobFlux_Node.StateIndex := 1;
+    end
+    else if UsedObjectCount = AScreenObjectList.Count then
+    begin
+      FMt3dmsTobFlux_Node.StateIndex := 2;
+    end
+    else
+    begin
+      FMt3dmsTobFlux_Node.StateIndex := 3;
+    end;
+  finally
+    ObsList.Free;
+  end;
+end;
+
 
 procedure TfrmScreenObjectProperties.GetFluxObservationsForFrame(Node: TJvPageIndexNode;
   FluxObservations: TFluxObservationGroups; const AScreenObjectList: TList;
@@ -6831,8 +7063,8 @@ begin
       end;
       GetBoundaryTimes([BoundaryValue, Solution], UsedTimes);
       BoundaryIndentical := TimesIdentical(dgWell, UsedTimes, Ord(nicTime))
-        and BoundaryIsIdentical(dgWell, UsedTimes, BoundaryValue, Ord(nicBoundaryValue), -1)
-        and BoundaryIsIdentical(dgWell, UsedTimes, Solution, Ord(nicSolution), -1);
+        and PhastBoundaryIsIdentical(dgWell, UsedTimes, BoundaryValue, Ord(nicBoundaryValue), -1)
+        and PhastBoundaryIsIdentical(dgWell, UsedTimes, Solution, Ord(nicSolution), -1);
       if not BoundaryIndentical then
       begin
         ResetWellGrid;
@@ -6908,8 +7140,8 @@ begin
       end;
       GetBoundaryTimes([BoundaryValue, Solution], UsedTimes);
       BoundaryIndentical := TimesIdentical(dgBoundaryRiver, UsedTimes, Ord(nicTime))
-        and BoundaryIsIdentical(dgBoundaryRiver, UsedTimes, BoundaryValue, Ord(nicBoundaryValue), -1)
-        and BoundaryIsIdentical(dgBoundaryRiver, UsedTimes, Solution, Ord(nicSolution), -1);
+        and PhastBoundaryIsIdentical(dgBoundaryRiver, UsedTimes, BoundaryValue, Ord(nicBoundaryValue), -1)
+        and PhastBoundaryIsIdentical(dgBoundaryRiver, UsedTimes, Solution, Ord(nicSolution), -1);
       if not BoundaryIndentical then
       begin
         ResetRiverGrid;
@@ -6955,9 +7187,9 @@ begin
       end;
       GetBoundaryTimes([BoundaryValue, Solution], UsedTimes);
       BoundaryIndentical := TimesIdentical(dgBoundaryLeaky, UsedTimes, Ord(ibcTime))
-        and BoundaryIsIdentical(dgBoundaryLeaky, UsedTimes, BoundaryValue,
+        and PhastBoundaryIsIdentical(dgBoundaryLeaky, UsedTimes, BoundaryValue,
           Ord(ibcBoundaryValue), Ord(ibcBoundaryInterpolate))
-        and BoundaryIsIdentical(dgBoundaryLeaky, UsedTimes, Solution,
+        and PhastBoundaryIsIdentical(dgBoundaryLeaky, UsedTimes, Solution,
           Ord(ibcSolution), Ord(ibcSolutionInterpolate));
       if not BoundaryIndentical then
       begin
@@ -6992,9 +7224,9 @@ begin
       end;
       GetBoundaryTimes([BoundaryValue, Solution], UsedTimes);
       BoundaryIndentical := TimesIdentical(dgBoundaryFlux, UsedTimes, Ord(ibcTime))
-        and BoundaryIsIdentical(dgBoundaryFlux, UsedTimes, BoundaryValue,
+        and PhastBoundaryIsIdentical(dgBoundaryFlux, UsedTimes, BoundaryValue,
           Ord(ibcBoundaryValue), Ord(ibcBoundaryInterpolate))
-        and BoundaryIsIdentical(dgBoundaryFlux, UsedTimes, Solution,
+        and PhastBoundaryIsIdentical(dgBoundaryFlux, UsedTimes, Solution,
           Ord(ibcSolution), Ord(ibcSolutionInterpolate));
       if not BoundaryIndentical then
       begin
@@ -7026,9 +7258,9 @@ begin
       end;
       GetBoundaryTimes([BoundaryValue, Solution], UsedTimes);
       BoundaryIndentical := TimesIdentical(dgSpecifiedHead, UsedTimes, Ord(ibcTime))
-        and BoundaryIsIdentical(dgSpecifiedHead, UsedTimes, BoundaryValue,
+        and PhastBoundaryIsIdentical(dgSpecifiedHead, UsedTimes, BoundaryValue,
           Ord(ibcBoundaryValue), Ord(ibcBoundaryInterpolate))
-        and BoundaryIsIdentical(dgSpecifiedHead, UsedTimes, Solution,
+        and PhastBoundaryIsIdentical(dgSpecifiedHead, UsedTimes, Solution,
           Ord(ibcSolution), Ord(ibcSolutionInterpolate));
       if not BoundaryIndentical then
       begin
@@ -8040,6 +8272,61 @@ begin
     frameRvob, jvspRVOB, frmGoPhast.PhastModel.RiverObservations);
 end;
 
+procedure TfrmScreenObjectProperties.CreateMt3dmsSsmNode;
+var
+  Node: TJvPageIndexNode;
+begin
+  FMt3dmsSsm_Node := nil;
+  if frmGoPhast.PhastModel.Mt3dmsSsmIsSelected then
+  begin
+    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
+      frmGoPhast.PhastModel.ModflowPackages.Mt3dmsSourceSink.PackageIdentifier)
+      as TJvPageIndexNode;
+    Node.PageIndex := jvspMT3DMS_SSM.PageIndex;
+    frameMT3DMS_SSM.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FMt3dmsSsm_Node := Node;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.CreateMt3dmsTobFluxNode;
+var
+  Node: TJvPageIndexNode;
+begin
+  FMt3dmsTobFlux_Node := nil;
+  if frmGoPhast.PhastModel.Mt3dmsTobIsSelected then
+  begin
+    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
+      StrFluxObserv +
+      frmGoPhast.PhastModel.ModflowPackages.Mt3dmsTransObs.PackageIdentifier)
+      as TJvPageIndexNode;
+    Node.PageIndex := jvspMT3DMS_TOB_Flux.PageIndex;
+    frameMt3dmsFluxObs.lblFluxObservations.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FMt3dmsTobFlux_Node := Node;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.CreateMt3dmsTobConcNode;
+var
+  Node: TJvPageIndexNode;
+begin
+  FMt3dmsTobConc_Node := nil;
+  if frmGoPhast.PhastModel.Mt3dmsTobIsSelected
+    and (AScreenObject.ViewDirection = vdTop)
+    and (AScreenObject.Count = 1) then
+  begin
+    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
+      StrConcentrationObserv +
+      frmGoPhast.PhastModel.ModflowPackages.Mt3dmsTransObs.PackageIdentifier)
+      as TJvPageIndexNode;
+    Node.PageIndex := jvspMT3DMS_TOB_Conc.PageIndex;
+    frameMt3dmsTobConc.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FMt3dmsTobConc_Node := Node;
+  end;
+end;
+
 
 procedure TfrmScreenObjectProperties.CreateModpathNode;
 var
@@ -8284,6 +8571,31 @@ begin
     FHOB_Node.StateIndex := Ord(State)+1;
   end;
   frameHeadObservations.GetData(FNewProperties);
+end;
+
+procedure TfrmScreenObjectProperties.GetMt3dConcObservations(const ScreenObjectList: TList);
+var
+  State: TCheckBoxState;
+  ScreenObjectIndex: integer;
+  AScreenObject: TScreenObject;
+  Boundary: TMt3dmsTransObservations;
+begin
+  if not frmGoPhast.PhastModel.Mt3dmsTobIsSelected then
+  begin
+    Exit;
+  end;
+  State := cbUnchecked;
+  for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+  begin
+    AScreenObject := ScreenObjectList[ScreenObjectIndex];
+    Boundary := AScreenObject.Mt3dmsTransObservations;
+    UpdateBoundaryState(Boundary, ScreenObjectIndex, State);
+  end;
+  if FMt3dmsTobConc_Node <> nil then
+  begin
+    FMt3dmsTobConc_Node.StateIndex := Ord(State)+1;
+  end;
+  frameMt3dmsTobConc.GetData(FNewProperties);
 end;
 
 procedure TfrmScreenObjectProperties.UpdateBoundaryState(
@@ -8533,6 +8845,83 @@ begin
       ValuesIdentical := False;
     end
     else
+    begin
+      ValuesIdentical := Values.IsSame(AnotherBoundary.Values);
+    end;
+    if not ValuesIdentical then
+    begin
+      break;
+    end;
+  end;
+  if ValuesIdentical and (Values <> nil) then
+  begin
+    for TimeIndex := 0 to Values.Count - 1 do
+    begin
+      Item := Values[TimeIndex] as TCustomModflowBoundaryItem;
+      RowIndex := TimeList.IndexOfTime(Item.StartTime, Item.EndTime) + 1;
+      Assert(RowIndex >= 1);
+      for BoundaryIndex := 0 to Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
+      begin
+        DataGrid.Cells[ColumnOffset + BoundaryIndex, RowIndex]
+          := Item.BoundaryFormula[BoundaryIndex];
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.GetMt3dmsBoundaryCollection(
+  DataGrid: TRbwDataGrid4; ColumnOffset: Integer; ScreenObjectList: TList;
+  TimeList: TParameterTimeList);
+var
+  RowIndex: Integer;
+  AScreenObject: TScreenObject;
+  Boundary: TMt3dmsConcBoundary;
+  Values: TCustomMF_BoundColl;
+  ValuesIdentical: Boolean;
+  ScreenObjectIndex: Integer;
+  AnotherBoundary: TMt3dmsConcBoundary;
+  TimeIndex: Integer;
+  Item: TCustomModflowBoundaryItem;
+  BoundaryIndex: Integer;
+  FirstIndex: integer;
+  ColIndex: Integer;
+begin
+  FirstIndex := -1;
+  Boundary := nil;
+  for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+  begin
+    AScreenObject := ScreenObjectList[ScreenObjectIndex];
+    Boundary := AScreenObject.Mt3dmsConcBoundary;
+    if (Boundary <> nil) and Boundary.Used then
+    begin
+      FirstIndex := ScreenObjectIndex;
+      break;
+    end;
+  end;
+  if FirstIndex < 0 then
+  begin
+    frameMT3DMS_SSM.seNumberOfTimes.AsInteger := 0;
+    if Assigned(frameMT3DMS_SSM.seNumberOfTimes.OnChange) then
+    begin
+      frameMT3DMS_SSM.seNumberOfTimes.OnChange(frameMT3DMS_SSM.seNumberOfTimes);
+    end;
+    Exit;
+  end;
+  for ColIndex := ColumnOffset to DataGrid.ColCount - 1 do
+  begin
+    for RowIndex := DataGrid.FixedRows to DataGrid.RowCount - 1 do
+    begin
+      DataGrid.Cells[ColIndex,RowIndex] := '';
+    end;
+  end;
+  Assert(Boundary <> nil);
+  Values := Boundary.Values;
+  ValuesIdentical := True;
+  for ScreenObjectIndex := FirstIndex+1 to ScreenObjectList.Count - 1 do
+  begin
+    AScreenObject := ScreenObjectList[ScreenObjectIndex];
+    AnotherBoundary := AScreenObject.Mt3dmsConcBoundary;
+    if (AnotherBoundary <> nil) and AnotherBoundary.Used then
     begin
       ValuesIdentical := Values.IsSame(AnotherBoundary.Values);
     end;
@@ -9150,6 +9539,9 @@ begin
   GetHfbBoundary(AScreenObjectList);
   GetHydmod(AScreenObjectList);
   GetFluxObservations(AScreenObjectList);
+  GetMt3dmsChemBoundary(AScreenObjectList);
+  GetMt3dConcObservations(AScreenObjectList);
+  GetMt3dmsFluxObservations(AScreenObjectList);
   SetSelectedMfBoundaryNode;
   GetChildModels(AScreenObjectList);
 end;
@@ -9538,6 +9930,17 @@ begin
       and not AScreenObject.ModflowEtsBoundary.Used then
     begin
       AScreenObject.ModflowEtsBoundary := nil;
+    end;
+
+    AScreenObject.CreateMt3dmsConcBoundary;
+    frameMT3DMS_SSM.dgModflowBoundary.ColCount := 2
+      + frmGoPhast.PhastModel.MobileComponents.Count
+      + frmGoPhast.PhastModel.ImmobileComponents.Count;
+    frameMT3DMS_SSM.InitializeNoParamFrame(AScreenObject.Mt3dmsConcBoundary);
+    if (AScreenObject.Mt3dmsConcBoundary <> nil)
+      and not AScreenObject.Mt3dmsConcBoundary.Used then
+    begin
+      AScreenObject.Mt3dmsConcBoundary := nil;
     end;
 
     AScreenObject.CreateResBoundary;
@@ -10694,6 +11097,122 @@ begin
   end;
 end;
 
+procedure TfrmScreenObjectProperties.GetMt3dmsChemBoundary(ScreenObjectList: TList);
+var
+  TimeList: TParameterTimeList;
+  ColumnOffset: integer;
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  Boundary: TMt3dmsConcBoundary;
+  Item: TCustomModflowBoundaryItem;
+  Time: TParameterTime;
+  TimeIndex: Integer;
+  Time1: TParameterTime;
+  Time2: TParameterTime;
+  DataGrid: TRbwDataGrid4;
+  State: TCheckBoxState;
+  FoundFirst: boolean;
+begin
+  if not frmGoPhast.PhastModel.Mt3dmsIsSelected then
+  begin
+    Exit;
+  end;
+  TimeList := TParameterTimeList.Create;
+  try
+    State := cbUnchecked;
+    for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+    begin
+      AScreenObject := ScreenObjectList[ScreenObjectIndex];
+      Boundary := AScreenObject.Mt3dmsConcBoundary;
+      UpdateBoundaryState(Boundary, ScreenObjectIndex, State);
+    end;
+   if FMt3dmsSsm_Node <> nil then
+    begin
+      FMt3dmsSsm_Node.StateIndex := Ord(State)+1;
+    end;
+    for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+    begin
+      AScreenObject := ScreenObjectList[ScreenObjectIndex];
+      Boundary := AScreenObject.Mt3dmsConcBoundary;
+      if Boundary <> nil then
+      begin
+        // get all the times associated with the boundary.
+        for TimeIndex := 0 to Boundary.Values.Count - 1 do
+        begin
+          Item := Boundary.Values[TimeIndex] as TCustomModflowBoundaryItem;
+          Time := TParameterTime.Create;
+          Time.StartTime := Item.StartTime;
+          Time.EndTime := Item.EndTime;
+          TimeList.Add(Time);
+        end;
+      end;
+    end;
+    // Sort the times in ascending order.
+    TimeList.Sort;
+    // get rid of duplicate times.
+    for TimeIndex := TimeList.Count - 1 downto 1 do
+    begin
+      Time1 := TimeList[TimeIndex];
+      Time2 := TimeList[TimeIndex - 1];
+      if (Time1.StartTime = Time2.StartTime) and (Time1.EndTime = Time2.EndTime) then
+      begin
+        TimeList.Delete(TimeIndex);
+      end;
+    end;
+
+    // display the times that are left.
+    frameMT3DMS_SSM.seNumberOfTimes.Value := TimeList.Count;
+    DataGrid := frameMT3DMS_SSM.dgModflowBoundary;
+    DataGrid.BeginUpdate;
+    try
+      for TimeIndex := 0 to TimeList.Count - 1 do
+      begin
+        Time := TimeList[TimeIndex];
+        DataGrid.Cells[0, TimeIndex + 1] := FloatToStr(Time.StartTime);
+        DataGrid.Cells[1, TimeIndex + 1] := FloatToStr(Time.EndTime);
+      end;
+
+      ColumnOffset := 2;
+      GetMt3dmsBoundaryCollection(DataGrid, ColumnOffset,
+        ScreenObjectList, TimeList);
+
+    finally
+      DataGrid.EndUpdate;
+    end;
+
+    FoundFirst := False;
+    for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+    begin
+      AScreenObject := ScreenObjectList[ScreenObjectIndex];
+      Boundary := AScreenObject.Mt3dmsConcBoundary;
+      if Boundary <> nil then
+      begin
+        if FoundFirst then
+        begin
+          if frameMT3DMS_SSM.cbSpecifiedConcentration.Checked <> Boundary.SpecifiedConcBoundary then
+          begin
+            frameMT3DMS_SSM.cbSpecifiedConcentration.AllowGrayed := True;
+            frameMT3DMS_SSM.cbSpecifiedConcentration.State := cbGrayed
+          end;
+          if frameMT3DMS_SSM.cbMassLoading.Checked <> Boundary.MassLoadingBoundary then
+          begin
+            frameMT3DMS_SSM.cbMassLoading.AllowGrayed := True;
+            frameMT3DMS_SSM.cbMassLoading.State := cbGrayed
+          end;
+        end
+        else
+        begin
+          frameMT3DMS_SSM.cbSpecifiedConcentration.Checked := Boundary.SpecifiedConcBoundary;
+          frameMT3DMS_SSM.cbMassLoading.Checked := Boundary.MassLoadingBoundary;
+        end;
+      end;
+    end;
+
+  finally
+    TimeList.Free;
+  end;
+end;
+
 procedure TfrmScreenObjectProperties.GetLakBoundary(ScreenObjectList: TList);
 var
   TimeList: TParameterTimeList;
@@ -11742,27 +12261,30 @@ begin
         VariableList.Free;
       end;
     end;
-    if ed = edZ then
+    if CompiledFormula <> nil then
     begin
-      FZFormula := CompiledFormula;
-    end
-    else if ed = edHighZ then
-    begin
-      FHighZFormula := CompiledFormula;
-    end
-    else if ed = edLowZ then
-    begin
-      FLowZFormula := CompiledFormula;
-    end
-    else if (ed = edLeakyHydraulicConductivity) or (ed = edLeakyThickness)
-      or (ed = edRiverHydraulicConductivity) or (ed = edRiverWidth)
-      or (ed = edRiverDepth) or (ed = edRiverBedThickness) then
-    begin
-      // do nothing
-    end
-    else
-    begin
-      Assert(False);
+      if ed = edZ then
+      begin
+        FZFormula := CompiledFormula;
+      end
+      else if ed = edHighZ then
+      begin
+        FHighZFormula := CompiledFormula;
+      end
+      else if ed = edLowZ then
+      begin
+        FLowZFormula := CompiledFormula;
+      end
+      else if (ed = edLeakyHydraulicConductivity) or (ed = edLeakyThickness)
+        or (ed = edRiverHydraulicConductivity) or (ed = edRiverWidth)
+        or (ed = edRiverDepth) or (ed = edRiverBedThickness) then
+      begin
+        // do nothing
+      end
+      else
+      begin
+        Assert(False);
+      end;
     end;
 
   finally
@@ -13001,7 +13523,7 @@ begin
     begin
       Item := FCurrentEdit.InterpValue.Items[Index] as TInterpValuesItem;
       Item.Values.Distance1 :=
-        StrToFloat(framePhastInterpolationData.rdeDistance1.Output);
+        StrToFloat(framePhastInterpolationData.rdeDistance1.Text);
     end;
     AssignPhastInterpolation(DataSet);
   end;
@@ -13030,7 +13552,7 @@ begin
     begin
       Item := FCurrentEdit.InterpValue.Items[Index] as TInterpValuesItem;
       Item.Values.Distance2 :=
-        StrToFloat(framePhastInterpolationData.rdeDistance2.Output);
+        StrToFloat(framePhastInterpolationData.rdeDistance2.Text);
     end;
     AssignPhastInterpolation(DataSet);
   end;
@@ -13060,12 +13582,12 @@ begin
       if framePhastInterpolationData.rdeValue1.DataType = dtReal then
       begin
         Item.Values.RealValue1 :=
-          StrToFloat(framePhastInterpolationData.rdeValue1.Output);
+          StrToFloat(framePhastInterpolationData.rdeValue1.Text);
       end
       else if framePhastInterpolationData.rdeValue1.DataType = dtInteger then
       begin
         Item.Values.IntValue1 :=
-          StrToInt(framePhastInterpolationData.rdeValue1.Output);
+          StrToInt(framePhastInterpolationData.rdeValue1.Text);
       end
       else
       begin
@@ -13101,12 +13623,12 @@ begin
       if framePhastInterpolationData.rdeValue2.DataType = dtReal then
       begin
         Item.Values.RealValue2 :=
-          StrToFloat(framePhastInterpolationData.rdeValue2.Output);
+          StrToFloat(framePhastInterpolationData.rdeValue2.Text);
       end
       else if framePhastInterpolationData.rdeValue2.DataType = dtInteger then
       begin
         Item.Values.IntValue2 :=
-          StrToInt(framePhastInterpolationData.rdeValue2.Output);
+          StrToInt(framePhastInterpolationData.rdeValue2.Text);
       end
       else
       begin
@@ -14243,9 +14765,46 @@ begin
   end;
 end;
 
-procedure TfrmScreenObjectProperties.StoreMnw2Boundary;
+procedure TfrmScreenObjectProperties.StoreMt3dmsChemBoundary;
+var
+  Frame: TframeScreenObjectSsm;
+  Times: TTimeArray;
+  Index: Integer;
+  Item: TScreenObjectEditItem;
+  Boundary: TMt3dmsConcBoundary;
 begin
-
+  if IsLoaded then
+  begin
+    Frame := frameMT3DMS_SSM;
+    GetMF_BoundaryTimes(Times, Frame);
+    for Index := 0 to FNewProperties.Count - 1 do
+    begin
+      Item := FNewProperties[Index];
+      Item.ScreenObject.CreateMt3dmsConcBoundary;
+      Boundary := Item.ScreenObject.Mt3dmsConcBoundary;
+      case Frame.cbSpecifiedConcentration.State of
+        cbUnchecked: Boundary.SpecifiedConcBoundary := False;
+        cbChecked: Boundary.SpecifiedConcBoundary := True;
+        cbGrayed: ;  // do nothing;
+        else Assert(False);
+      end;
+      case Frame.cbMassLoading.State of
+        cbUnchecked: Boundary.MassLoadingBoundary := False;
+        cbChecked: Boundary.MassLoadingBoundary := True;
+        cbGrayed: ;  // do nothing;
+        else Assert(False);
+      end;
+      Assert(Boundary <> nil);
+      if ShouldStoreBoundary(FMt3dmsSsm_Node, Boundary) then
+      begin
+        StoreModflowBoundaryValues(Frame, Times, Boundary);
+      end
+      else if  FMt3dmsSsm_Node.StateIndex = 1 then
+      begin
+        Boundary.Clear;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmScreenObjectProperties.StoreLakBoundary;
@@ -15303,9 +15862,29 @@ procedure TfrmScreenObjectProperties.frameHeadObservationsrdgHeadsSetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
 begin
   inherited;
-  frameHeadObservations.rdgHeadsSetEditText(Sender, ACol, ARow, Value);
+  frameHeadObservations.rdgObservationsSetEditText(Sender, ACol, ARow, Value);
   UpdateNodeState(FHOB_Node);
+end;
 
+procedure TfrmScreenObjectProperties.frameHeadObservationsseTimesChange(
+  Sender: TObject);
+begin
+  inherited;
+  frameHeadObservations.seTimesChange(Sender);
+  if frameHeadObservations.seTimes.asInteger = 0 then
+  begin
+    if IsLoaded  and (FHOB_Node <> nil) then
+    begin
+      if FHOB_Node.StateIndex = 2 then
+      begin
+        FHOB_Node.StateIndex := 1;
+      end;
+    end;
+  end
+  else
+  begin
+    UpdateNodeState(FHOB_Node);
+  end;
 end;
 
 procedure TfrmScreenObjectProperties.frameHfbBoundarybtnEditHfbHydraulicConductivityFormulaClick(
@@ -15417,7 +15996,7 @@ begin
   frameLak.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
     if not frameLak.dgModflowBoundary.DistributingText then
   begin
-    StoreLakBoundary;  
+    StoreLakBoundary;
   end;
 end;
 
@@ -15822,6 +16401,98 @@ begin
     end;
     frameModpathParticles.CreateParticles;
     StoreModPath;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.frameMT3DMScbMassLoadingClick(
+  Sender: TObject);
+begin
+  inherited;
+  frameMT3DMS_SSM.cbMassLoadingClick(Sender);
+  StoreMt3dmsChemBoundary;
+end;
+
+procedure TfrmScreenObjectProperties.frameMT3DMScbSpecifiedConcentrationClick(
+  Sender: TObject);
+begin
+  inherited;
+  frameMT3DMS_SSM.cbSpecifiedConcentrationClick(Sender);
+  StoreMt3dmsChemBoundary;
+end;
+
+procedure TfrmScreenObjectProperties.frameMT3DMSdgModflowBoundaryEndUpdate(
+  Sender: TObject);
+begin
+  inherited;
+  StoreMt3dmsChemBoundary;
+end;
+
+procedure TfrmScreenObjectProperties.frameMT3DMSdgModflowBoundarySetEditText(
+  Sender: TObject; ACol, ARow: Integer; const Value: string);
+begin
+  inherited;
+  UpdateNodeState(FMt3dmsSsm_Node);
+  frameMT3DMS_SSM.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+    if not frameMT3DMS_SSM.dgModflowBoundary.DistributingText then
+  begin
+    StoreMt3dmsChemBoundary;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.frameMt3dmsFluxObsrdgObservationGroupsSetEditText(
+  Sender: TObject; ACol, ARow: Integer; const Value: string);
+begin
+  inherited;
+  if IsLoaded then
+  begin
+    FMt3dmsTobFlux_Node.StateIndex := 2;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.frameMt3dmsFluxObsrdgObservationGroupsStateChange(
+  Sender: TObject; ACol, ARow: Integer; const Value: TCheckBoxState);
+begin
+  inherited;
+  if IsLoaded then
+  begin
+    FMt3dmsTobFlux_Node.StateIndex := 2;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.frameMT3DMSseNumberOfTimesChange(
+  Sender: TObject);
+begin
+  inherited;
+  frameMT3DMS_SSM.seNumberOfTimesChange(Sender);
+  StoreMt3dmsChemBoundary;
+end;
+
+procedure TfrmScreenObjectProperties.frameMt3dmsTobConcrdgObservationsSetEditText(
+  Sender: TObject; ACol, ARow: Integer; const Value: string);
+begin
+  inherited;
+  frameMt3dmsTobConc.rdgObservationsSetEditText(Sender, ACol, ARow, Value);
+  UpdateNodeState(FMt3dmsTobConc_Node);
+end;
+
+procedure TfrmScreenObjectProperties.frameMt3dmsTobConcseTimesChange(
+  Sender: TObject);
+begin
+  inherited;
+  frameMt3dmsTobConc.seTimesChange(Sender);
+  if frameMt3dmsTobConc.seTimes.asInteger = 0 then
+  begin
+    if IsLoaded  and (FMt3dmsTobConc_Node <> nil) then
+    begin
+      if FMt3dmsTobConc_Node.StateIndex = 2 then
+      begin
+        FMt3dmsTobConc_Node.StateIndex := 1;
+      end;
+    end;
+  end
+  else
+  begin
+    UpdateNodeState(FMt3dmsTobConc_Node);
   end;
 end;
 

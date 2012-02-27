@@ -24,12 +24,12 @@ program ModelMuse;
 //  {$ENDIF}
 uses
   FastMM4 in 'FastMM4.pas',
+  FastMove in 'FastCode\FastMove.pas',
   madExcept,
   madLinkDisAsm,
   madListHardware,
   madListProcesses,
   madListModules,
-  FastMove in 'FastCode\FastMove.pas',
   TempFiles in 'TempFiles.pas',
   Forms,
   HTMLHelpViewer,
@@ -255,7 +255,6 @@ uses
   framePackageHobUnit in 'framePackageHobUnit.pas' {framePackageHob: TFrame},
   ModflowHobUnit in 'ModflowHobUnit.pas',
   ClassificationUnit in 'ClassificationUnit.pas',
-  frameHeadObservationsUnit in 'frameHeadObservationsUnit.pas' {frameHeadObservations: TFrame},
   ModflowHOB_WriterUnit in 'ModflowHOB_WriterUnit.pas',
   ValueArrayStorageUnit in 'ValueArrayStorageUnit.pas',
   ModflowHfbUnit in 'ModflowHfbUnit.pas',
@@ -291,7 +290,6 @@ uses
   ModpathNameFileWriterUnit in 'ModpathNameFileWriterUnit.pas',
   FluxObservationUnit in 'FluxObservationUnit.pas',
   frmManageFluxObservationsUnit in 'frmManageFluxObservationsUnit.pas' {frmManageFluxObservations},
-  frameFluxObsUnit in 'frameFluxObsUnit.pas' {frameFluxObs: TFrame},
   frmSpecifyContoursUnit in 'frmSpecifyContoursUnit.pas' {frmSpecifyContours},
   gpc in 'gpc.pas',
   GPC_Classes in 'GPC_Classes.pas',
@@ -391,7 +389,37 @@ uses
   frameModpathEndpointDisplayUnit in 'frameModpathEndpointDisplayUnit.pas' {frameModpathEndpointDisplay: TFrame},
   frameCustomColorUnit in 'frameCustomColorUnit.pas' {frameCustomColor: TFrame},
   frameColorGridUnit in 'frameColorGridUnit.pas' {frameColorGrid: TFrame},
-  frameContourDataUnit in 'frameContourDataUnit.pas' {frameContourData: TFrame};
+  frameContourDataUnit in 'frameContourDataUnit.pas' {frameContourData: TFrame},
+  frameMt3dBasicPkgUnit in 'frameMt3dBasicPkgUnit.pas' {frameMt3dBasicPkg: TFrame},
+  frameGridUnit in 'frameGridUnit.pas' {frameGrid: TFrame},
+  Mt3dmsTimesUnit in 'Mt3dmsTimesUnit.pas',
+  frameMt3dmsGcgPackageUnit in 'frameMt3dmsGcgPackageUnit.pas' {frameMt3dmsGcgPackage: TFrame},
+  frameMt3dmsAdvPkgUnit in 'frameMt3dmsAdvPkgUnit.pas' {frameMt3dmsAdvPkg: TFrame},
+  frameMt3dmsDispersionPkgUnit in 'frameMt3dmsDispersionPkgUnit.pas' {frameMt3dmsDispersionPkg: TFrame},
+  Mt3dmsChemUnit in 'Mt3dmsChemUnit.pas',
+  Mt3dmsChemSpeciesUnit in 'Mt3dmsChemSpeciesUnit.pas',
+  frameMt3dmsChemReactionPkgUnit in 'frameMt3dmsChemReactionPkgUnit.pas' {frameMt3dmsChemReactionPkg: TFrame},
+  Mt3dmsBtnWriterUnit in 'Mt3dmsBtnWriterUnit.pas',
+  frmRunMt3dmsUnit in 'frmRunMt3dmsUnit.pas' {frmRunMt3dms},
+  Mt3dmsAdvWriterUnit in 'Mt3dmsAdvWriterUnit.pas',
+  Mt3dmsDspWriterUnit in 'Mt3dmsDspWriterUnit.pas',
+  Mt3dmsSsmWriterUnit in 'Mt3dmsSsmWriterUnit.pas',
+  frameScreenObjectSsmUnit in 'frameScreenObjectSsmUnit.pas' {frameScreenObjectSsm: TFrame},
+  Mt3dmsRctWriterUnit in 'Mt3dmsRctWriterUnit.pas',
+  Mt3dmsGcgWriterUnit in 'Mt3dmsGcgWriterUnit.pas',
+  frameMt3dmsTransObsPkgUnit in 'frameMt3dmsTransObsPkgUnit.pas' {frameMt3dmsTransObsPkg: TFrame},
+  Mt3dmsTobUnit in 'Mt3dmsTobUnit.pas',
+  frameCustomCellObservationUnit in 'frameCustomCellObservationUnit.pas' {frameCustomCellObservation: TFrame},
+  frameHeadObservationsUnit in 'frameHeadObservationsUnit.pas' {frameHeadObservations: TFrame},
+  frameConcentrationObservationUnit in 'frameConcentrationObservationUnit.pas' {frameConcentrationObservation: TFrame},
+  Mt3dmsFluxObservationsUnit in 'Mt3dmsFluxObservationsUnit.pas',
+  Mt3dmsTobWriterUnit in 'Mt3dmsTobWriterUnit.pas',
+  CustomFrameFluxObsUnit in 'CustomFrameFluxObsUnit.pas' {CustomframeFluxObs: TFrame},
+  frameFluxObsUnit in 'frameFluxObsUnit.pas' {frameFluxObs: TFrame},
+  frameMt3dmsFluxObsUnit in 'frameMt3dmsFluxObsUnit.pas' {frameMt3dmsFluxObs: TFrame},
+  ModflowMt3dmsLinkWriterUnit in 'ModflowMt3dmsLinkWriterUnit.pas',
+  ReadPvalUnit in 'ReadPvalUnit.pas',
+  ReadGlobalsUnit in 'ReadGlobalsUnit.pas';
 
 {$R *.res}
 
@@ -401,6 +429,7 @@ begin
   Application.CreateForm(TfrmGoPhast, frmGoPhast);
   Application.CreateForm(TfrmScreenObjectProperties, frmScreenObjectProperties);
   Application.CreateForm(TfrmProgressMM, frmProgressMM);
+  Application.CreateForm(TfrmRunMt3dms, frmRunMt3dms);
   //  Application.CreateForm(TfrmSelectedObjects, frmSelectedObjects);
   Application.CreateForm(TfrmColors, frmColors);
   Application.Run;

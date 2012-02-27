@@ -794,6 +794,34 @@ uses Math, frmGoPhastUnit, frmSelectedObjectsUnit, frmShowHideObjectsUnit,
   InteractiveTools, PhastDataSets, DataSetUnit, CountObjectsUnit, 
   ModflowSfrReachUnit, frmErrorsAndWarningsUnit, IntListUnit;
 
+resourcestring
+  StrChangeSelection = 'change selection';
+  StrPasteObjects = 'paste object(s)';
+  StrCreateObject = 'create object';
+  StrDeleteObjects = 'delete objects';
+  StrDeleteObject = 'delete object';
+  StrMoveObjects = 'move objects';
+  StrInsertNode = 'insert node';
+  StrTopviewObjectsToFront = 'top-view objects to front';
+  StrTopviewObjectsToBack = 'top-view objects to back';
+  StrTopviewObjectsFor = 'top-view objects forward one';
+  StrTopviewObjectsBac = 'top-view objects back one';
+  StrRearrangeObjects = 'rearrange objects';
+  StrShowOrHideObjects = 'show or hide objects';
+  StrEditObjectProperti = 'edit object properties';
+  StrDeleteSegment = 'delete segment';
+  StrDeleteVertices = 'delete vertices';
+  StrAddPartToObject = 'add part to object';
+  StrMergeObjects = 'merge objects';
+  StrReverseObjectOrder = 'reverse object order';
+  StrCutObjects = 'cut objects';
+  StrCutObject = 'cut object';
+  StrSplitSelectedObjec = 'split selected objects';
+  StrMakeSelectedVertic = 'make selected vertices a separate object';
+  StrSplitObjectAtSele = 'split object at selected vertices';
+  StrLockSelectedObject = 'lock selected objects';
+  StrUnlockSelectedObje = 'unlock selected objects';
+
 { TCustomUpdateScreenObjectDisplayUndo }
 
 procedure TCustomUpdateScreenObjectDisplayUndo.EnableInvertSelection;
@@ -925,7 +953,7 @@ end;
 
 function TUndoChangeSelection.Description: string;
 begin
-  result := 'change selection';
+  result := StrChangeSelection;
 end;
 
 destructor TUndoChangeSelection.Destroy;
@@ -1194,12 +1222,12 @@ begin
   FSectionStarts:= TValueArrayStorage.Create;
   FSectionStarts.Assign(FScreenObject.SectionStarts);
   FUndoEditFluxObservations:= TUndoEditFluxObservations.Create;
-  UpdateObservations;
+//  UpdateObservations;
 end;
 
 function TUndoCreateScreenObject.Description: string;
 begin
-  result := 'create object';
+  result := StrCreateObject;
 end;
 
 destructor TUndoCreateScreenObject.Destroy;
@@ -1311,10 +1339,13 @@ end;
 procedure TUndoCreateScreenObject.UpdateObservations;
 var
   Model: TPhastModel;
+  DummyNewMtsdObs: TMassFluxObs;
 begin
   Model := frmGoPhast.PhastModel;
+  DummyNewMtsdObs.NilAll;
   FUndoEditFluxObservations.AssignNewObservations(Model.HeadFluxObservations,
-    Model.DrainObservations, Model.GhbObservations, Model.RiverObservations);
+    Model.DrainObservations, Model.GhbObservations, Model.RiverObservations,
+    DummyNewMtsdObs);
 end;
 
 procedure TUndoCreateScreenObject.WarnSfrLengthProblem;
@@ -1350,11 +1381,11 @@ function TUndoDeleteScreenObjects.Description: string;
 begin
   if FScreenObjects.Count > 1 then
   begin
-    result := 'delete objects';
+    result := StrDeleteObjects;
   end
   else
   begin
-    result := 'delete object';
+    result := StrDeleteObject;
   end;
 end;
 
@@ -1435,7 +1466,7 @@ end;
 
 function TUndoMoveScreenObject.Description: string;
 begin
-  result := 'move objects'
+  result := StrMoveObjects
 end;
 
 procedure TUndoMoveScreenObject.DoCommand;
@@ -1595,7 +1626,7 @@ end;
 
 function TUndoInsertPoint.Description: string;
 begin
-  result := 'insert node';
+  result := StrInsertNode;
 end;
 
 destructor TUndoInsertPoint.Destroy;
@@ -1729,7 +1760,7 @@ end;
 
 function TUndoToFront.Description: string;
 begin
-  result := 'top-view objects to front';
+  result := StrTopviewObjectsToFront;
 end;
 
 procedure TUndoToFront.DoCommand;
@@ -1811,7 +1842,7 @@ end;
 
 function TUndoToBack.Description: string;
 begin
-  result := 'top-view objects to back';
+  result := StrTopviewObjectsToBack;
 end;
 
 procedure TUndoToBack.DoCommand;
@@ -1858,7 +1889,7 @@ end;
 
 function TUndoMoveUp.Description: string;
 begin
-  result := 'top-view objects forward one';
+  result := StrTopviewObjectsFor;
 end;
 
 procedure TUndoMoveUp.DoCommand;
@@ -1890,7 +1921,7 @@ end;
 
 function TUndoMoveDown.Description: string;
 begin
-  result := 'top-view objects back one';
+  result := StrTopviewObjectsBac;
 end;
 
 procedure TUndoMoveDown.DoCommand;
@@ -1944,7 +1975,7 @@ end;
 
 function TUndoRearrangeScreenObjects.Description: string;
 begin
-  result := 'rearrange objects';
+  result := StrRearrangeObjects;
 end;
 
 destructor TUndoRearrangeScreenObjects.Destroy;
@@ -2015,7 +2046,7 @@ end;
 
 function TUndoShowHideScreenObject.Description: string;
 begin
-  result := 'show or hide objects';
+  result := StrShowOrHideObjects;
 end;
 
 destructor TUndoShowHideScreenObject.Destroy;
@@ -2107,11 +2138,12 @@ begin
   end;
 
   FUndoEditFluxObservations:= TUndoEditFluxObservations.Create;
+//  UpdateObservations;
 end;
 
 function TUndoSetScreenObjectProperties.Description: string;
 begin
-  result := 'edit object properties';
+  result := StrEditObjectProperti;
 end;
 
 destructor TUndoSetScreenObjectProperties.Destroy;
@@ -2266,10 +2298,13 @@ end;
 procedure TUndoSetScreenObjectProperties.UpdateObservations;
 var
   Model: TPhastModel;
+  DummyNewMtsdObs: TMassFluxObs;
 begin
   Model := frmGoPhast.PhastModel;
+  DummyNewMtsdObs.NilAll;
   FUndoEditFluxObservations.AssignNewObservations(Model.HeadFluxObservations,
-    Model.DrainObservations, Model.GhbObservations, Model.RiverObservations);
+    Model.DrainObservations, Model.GhbObservations, Model.RiverObservations,
+    DummyNewMtsdObs);
 end;
 
 { TCustomUpdateScreenObjectUndo }
@@ -2344,7 +2379,7 @@ end;
 
 function TUndoDeleteSegment.Description: string;
 begin
-  result := 'delete segment';
+  result := StrDeleteSegment;
 end;
 
 destructor TUndoDeleteSegment.Destroy;
@@ -2485,7 +2520,7 @@ end;
 
 function TUndoDeleteVertices.Description: string;
 begin
-  result := 'delete vertices';
+  result := StrDeleteVertices;
 end;
 
 destructor TUndoDeleteVertices.Destroy;
@@ -2872,7 +2907,7 @@ end;
 
 function TUndoAddPart.Description: string;
 begin
-  result := 'add part to object';
+  result := StrAddPartToObject;
 end;
 
 procedure TUndoAddPart.DoCommand;
@@ -3189,7 +3224,7 @@ end;
 
 function TUndoMergeObjects.Description: string;
 begin
-  result := 'merge objects';
+  result := StrMergeObjects;
 end;
 
 destructor TUndoMergeObjects.Destroy;
@@ -3270,7 +3305,7 @@ end;
 
 function TUndoReverseVerticies.Description: string;
 begin
-  result := 'reverse object order';
+  result := StrReverseObjectOrder;
 end;
 
 destructor TUndoReverseVerticies.Destroy;
@@ -3402,11 +3437,11 @@ function TUndoCutScreenObjects.Description: string;
 begin
   if FScreenObjects.Count > 1 then
   begin
-    result := 'cut objects';
+    result := StrCutObjects;
   end
   else
   begin
-    result := 'cut object';
+    result := StrCutObject;
   end;
 end;
 
@@ -3433,7 +3468,7 @@ end;
 
 function TUndoPasteScreenObjects.Description: string;
 begin
-  result := 'paste object(s)';
+  result := StrPasteObjects;
 end;
 
 destructor TUndoPasteScreenObjects.Destroy;
@@ -3562,7 +3597,7 @@ end;
 
 function TUndoExplodeScreenObject.Description: string;
 begin
-  result := 'split selected objects';
+  result := StrSplitSelectedObjec;
 end;
 
 constructor TCustomUndoDivideScreenObject.Create;
@@ -3724,7 +3759,7 @@ end;
 
 function TUndoMakeSelectedVerticesNewScreenObject.Description: string;
 begin
-  result := 'make selected vertices a separate object';
+  result := StrMakeSelectedVertic;
 end;
 
 procedure TUndoMakeSelectedVerticesNewScreenObject.Redo;
@@ -3826,7 +3861,7 @@ end;
 
 function TUndoSplitScreenObject.Description: string;
 begin
-  result := 'split object at selected vertices';
+  result := StrSplitObjectAtSele;
 end;
 
 procedure TUndoSplitScreenObject.Redo;
@@ -3919,7 +3954,7 @@ end;
 
 function TUndoLockScreenObjects.Description: string;
 begin
-  result := 'lock selected objects';
+  result := StrLockSelectedObject;
 end;
 
 procedure TUndoLockScreenObjects.DoCommand;
@@ -3939,7 +3974,7 @@ end;
 
 function TUndoUnlockScreenObjects.Description: string;
 begin
-  result := 'unlock selected objects';
+  result := StrUnlockSelectedObje;
 end;
 
 procedure TUndoUnlockScreenObjects.DoCommand;

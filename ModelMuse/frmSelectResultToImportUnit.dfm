@@ -27,7 +27,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Kind = bkHelp
     NumGlyphs = 2
     ParentDoubleBuffered = False
-    TabOrder = 0
+    TabOrder = 5
     OnClick = btnHelpClick
   end
   object btnOK: TBitBtn
@@ -41,7 +41,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Kind = bkOK
     NumGlyphs = 2
     ParentDoubleBuffered = False
-    TabOrder = 1
+    TabOrder = 6
     OnClick = btnOKClick
   end
   object btnCancel: TBitBtn
@@ -54,7 +54,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Kind = bkCancel
     NumGlyphs = 2
     ParentDoubleBuffered = False
-    TabOrder = 2
+    TabOrder = 7
   end
   object comboColorGrid: TComboBox
     Left = 8
@@ -63,7 +63,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akRight, akBottom]
-    TabOrder = 3
+    TabOrder = 2
   end
   object btnSelectAll: TButton
     Left = 8
@@ -72,7 +72,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Height = 47
     Anchors = [akLeft, akBottom]
     Caption = 'Select all data sets'
-    TabOrder = 4
+    TabOrder = 3
     WordWrap = True
     OnClick = btnSelectAllClick
   end
@@ -83,7 +83,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Height = 47
     Anchors = [akLeft, akBottom]
     Caption = 'Deselect all data sets'
-    TabOrder = 5
+    TabOrder = 4
     WordWrap = True
     OnClick = btnSelectNoneClick
   end
@@ -100,7 +100,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
       'Color grid'
       'Contour grid'
       'Neither')
-    TabOrder = 6
+    TabOrder = 1
   end
   object Panel1: TPanel
     AlignWithMargins = True
@@ -111,7 +111,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Align = alTop
     Anchors = [akLeft, akTop, akRight, akBottom]
     BevelOuter = bvNone
-    TabOrder = 7
+    TabOrder = 0
     object splitData: TSplitter
       Left = 0
       Top = 125
@@ -166,6 +166,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
           ParentButtonFont = False
           WordWrapCaptions = False
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = True
         end
         item
@@ -187,6 +188,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
           ParentButtonFont = False
           WordWrapCaptions = True
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = True
         end
         item
@@ -208,6 +210,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
           ParentButtonFont = False
           WordWrapCaptions = False
           WordWrapCells = True
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = True
         end>
       ColWidths = (

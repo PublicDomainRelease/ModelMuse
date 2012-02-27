@@ -132,6 +132,9 @@ implementation
 
 uses frmGoPhastUnit;
 
+resourcestring
+  StrPrintInitial = 'print initial';
+
 {$R *.dfm}
 
 { TfrmPrintInitial }
@@ -224,7 +227,7 @@ end;
 
 function TUndoPrintInitial.Description: string;
 begin
-  result := 'print initial';
+  result := StrPrintInitial;
 end;
 
 destructor TUndoPrintInitial.Destroy;

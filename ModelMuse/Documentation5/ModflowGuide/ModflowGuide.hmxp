@@ -103,7 +103,7 @@
         <config-value name="INSIDE-MODFLOW">INSIDE-MODFLOW</config-value>
       </config-group>
       <config-value name="imageshortcuts_includebaggage">1</config-value>
-      <config-value name="make0include">CHM,ALLMODELS,OPT_ATOC,OPT_BREADTRAIL,OPT_FB,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
+      <config-value name="make0include">CHM,ALLMODELS</config-value>
       <config-value name="make0status">*</config-value>
       <config-value name="make3include">HTML,MODFLOW-NWT,OPT_ATOC,OPT_BREADTRAIL,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
       <config-value name="make3status">*</config-value>
@@ -437,7 +437,6 @@
       <file-mod href="Suggestions_on_Compiling.xml" build="MODFLOW-2000"/>
       <file-mod href="UPW_Upstream_Weighting_Package.xml" build="ALLMODELS,MODFLOW-NWT"/>
       <file-mod href="NWT_Newton_Solver.xml" build="ALLMODELS,MODFLOW-NWT"/>
-      <file-mod href="STR.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR"/>
       <file-mod href="Suggested_input_values_for_the.xml" build="ALLMODELS,MODFLOW-NWT"/>
       <file-mod href="Inside_MODFLOW.xml" build="INSIDE-MODFLOW"/>
       <file-mod href="Basic_Package_Internal.xml" build="INSIDE-MODFLOW"/>

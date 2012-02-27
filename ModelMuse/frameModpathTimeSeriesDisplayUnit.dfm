@@ -273,6 +273,7 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -296,6 +297,7 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -319,6 +321,7 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
         ExplicitHeight = 210

@@ -205,6 +205,7 @@ procedure TSfrSegmentItem.Assign(Source: TPersistent);
 var
   Sfr: TSfrSegmentItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TSfrSegmentItem then
   begin
     Sfr := TSfrSegmentItem(Source);

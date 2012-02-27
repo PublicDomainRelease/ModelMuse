@@ -4,7 +4,7 @@ interface
 
 uses SysUtils, Classes, GoPhastTypes, OrderedCollectionUnit, DataSetUnit,
   ModpathParticleUnit, ModflowBoundaryDisplayUnit, ScreenObjectUnit,
-  ModflowBoundaryUnit;
+  ModflowBoundaryUnit, Mt3dmsChemSpeciesUnit;
 
 Type
   TSelectionType = (stCheckBox, stRadioButton);
@@ -65,6 +65,7 @@ Type
     property SelectionType: TSelectionType read FSelectionType
       write FSelectionType;
     procedure InvalidateAllTimeLists; virtual;
+    procedure InitializeVariables; virtual;
   published
     property IsSelected: boolean read FIsSelected write SetIsSelected;
     property Comments: TStrings read FComments write SetComments;
@@ -254,7 +255,7 @@ Type
     procedure SetUseVerticalFlowCorrection(const Value: boolean);
     procedure SetUseStorageCoefficient(const Value: boolean);
   public
-    procedure InitializeVariables;
+    procedure InitializeVariables; override;
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
@@ -282,7 +283,7 @@ Type
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
-    procedure InitializeVariables;
+    procedure InitializeVariables; override;
   published
     property HDryPrintOption: THDryPrintOption read FHDryPrintOption
       write SetHDryPrintOption stored True;
@@ -301,7 +302,7 @@ Type
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
-    procedure InitializeVariables;
+    procedure InitializeVariables; override;
   published
     property SaveHeads: boolean read FSaveHeads write SetSaveHeads default True;
     property SaveFlows: boolean read FSaveFlows write SetSaveFlows default True;
@@ -341,7 +342,7 @@ Type
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
-    procedure InitializeVariables;
+    procedure InitializeVariables; override;
   published
     property MXITER: integer read FMXITER write SetMXITER default 20;
     property ITER1: integer read FITER1 write SetITER1 default 30;
@@ -390,7 +391,7 @@ Type
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
-    procedure InitializeVariables;
+    procedure InitializeVariables; override;
   published
     property RCLOSE: TRealStorage read FRCLOSE write SetRCLOSE;
     property IITER: integer read FIITER write SetIITER;
@@ -428,7 +429,7 @@ Type
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
-    procedure InitializeVariables;
+    procedure InitializeVariables; override;
   published
     property MXITER: integer read FMXITER write SetMXITER;
     property NPARM: integer read FNPARM write SetNPARM;
@@ -463,7 +464,7 @@ Type
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
-    procedure InitializeVariables;
+    procedure InitializeVariables; override;
   published
     property ITMX: integer read FITMX write SetITMX;
     property MXUP: integer read FMXUP write SetMXUP;
@@ -560,7 +561,7 @@ Type
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
-    procedure InitializeVariables;
+    procedure InitializeVariables; override;
   published
     // @name is HEADTOL.
     property HeadTolerance: TRealStorage read FHeadTolerance write SetHeadTolerance;
@@ -922,6 +923,7 @@ Type
     FMfSfrStreamThickness: TModflowBoundaryDisplayTimeList;
     FPrintFlows: TPrintFlows;
     FGageOverallBudget: boolean;
+    FUseGsflowFormat: boolean;
     procedure SetDleak(const Value: double);
     procedure SetIsfropt(const Value: integer);
     procedure SetIsuzn(const Value: integer);
@@ -1032,9 +1034,11 @@ Type
       NewUseList: TStringList);
     procedure SetPrintFlows(const Value: TPrintFlows);
     procedure SetGageOverallBudget(const Value: boolean);
+    procedure SetUseGsflowFormat(const Value: boolean);
   protected
     procedure SetIsSelected(const Value: boolean); override;
   public
+    procedure InitializeVariables; override;
     procedure ComputeAverages(List: TModflowBoundListOfTimeLists);
     procedure GetDisplayLists(List: TModflowBoundListOfTimeLists);
     procedure Assign(Source: TPersistent); override;
@@ -1156,6 +1160,7 @@ Type
       write SetKinematicRoutingWeight stored True;
     property GageOverallBudget: boolean read FGageOverallBudget
       write SetGageOverallBudget;
+    property UseGsflowFormat: boolean read FUseGsflowFormat write SetUseGsflowFormat;
   end;
 
   TUzfPackageSelection = class(TCustomLayerPackageSelection)
@@ -1172,6 +1177,9 @@ Type
     FMfUzfWaterContent: TModflowBoundaryDisplayTimeList;
     FMfUzfEtDemand: TModflowBoundaryDisplayTimeList;
     FAssignmentMethod: TUpdateMethod;
+    FSpecifyResidualWaterContent: boolean;
+    FCalulateSurfaceLeakage: boolean;
+    FSpecifyInitialWaterContent: boolean;
     procedure SetNumberOfTrailingWaves(const Value: integer);
     procedure SetNumberOfWaveSets(const Value: integer);
     procedure SetRouteDischargeToStreams(const Value: boolean);
@@ -1189,6 +1197,9 @@ Type
     procedure GetMfUzfWaterContentUseList(Sender: TObject;
       NewUseList: TStringList);
     procedure SetAssignmentMethod(const Value: TUpdateMethod);
+    procedure SetCalulateSurfaceLeakage(const Value: boolean);
+    procedure SetSpecifyInitialWaterContent(const Value: boolean);
+    procedure SetSpecifyResidualWaterContent(const Value: boolean);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
@@ -1202,16 +1213,27 @@ Type
     property MfUzfWaterContent: TModflowBoundaryDisplayTimeList
       read FMfUzfWaterContent;
     procedure InvalidateAllTimeLists; override;
+    procedure InitializeVariables; override;
   published
     property VerticalKSource: integer read FVerticalKSource write SetVerticalKSource;
     property RouteDischargeToStreams: boolean read FRouteDischargeToStreams write SetRouteDischargeToStreams;
     property SimulateET: boolean read FSimulateET write SetSimulateET;
     property NumberOfTrailingWaves: integer read FNumberOfTrailingWaves write SetNumberOfTrailingWaves;
     property NumberOfWaveSets: integer read FNumberOfWaveSets write SetNumberOfWaveSets;
+    // IFTUNIT
     property PrintSummary: integer read FPrintSummary write SetPrintSummary;
     property DepthOfUndulations: double read FDepthOfUndulations write SetDepthOfUndulations;
     property AssignmentMethod: TUpdateMethod read FAssignmentMethod
       write SetAssignmentMethod stored True;
+    // SPECIFYTHTR
+    property SpecifyResidualWaterContent: boolean
+      read FSpecifyResidualWaterContent write SetSpecifyResidualWaterContent;
+    // SPECIFYTHTI
+    property SpecifyInitialWaterContent: boolean
+      read FSpecifyInitialWaterContent write SetSpecifyInitialWaterContent;
+    // inverse of NOSURFLEAK
+    property CalulateSurfaceLeakage: boolean read FCalulateSurfaceLeakage
+      write SetCalulateSurfaceLeakage default True;
   end;
 
   THobPackageSelection = class(TModflowPackageSelection)
@@ -1221,7 +1243,7 @@ Type
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
-    procedure InitializeVariables;
+    procedure InitializeVariables; override;
   published
     property DryHead: double read FDryHead write SetDryHead;
   end;
@@ -1283,11 +1305,13 @@ Type
     procedure SetTimeSeriesMaxCount(const Value: integer);
     procedure SetTimeSeriesMethod(const Value: TTimeSeriesMethod);
     procedure SetBackwardsTrackingReleaseTime(const Value: double);
+  protected
+    procedure SetIsSelected(const Value: boolean); override;
   public
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
-    procedure InitializeVariables;
+    procedure InitializeVariables; override;
     function ShouldCreateTimeFile: boolean;
   published
     property MaximumSize: integer read FMaximumSize write SetMaximumSize;
@@ -1393,7 +1417,7 @@ Type
     procedure SetExportCSV2(const Value: boolean);
     procedure SetExportZBLST(const Value: boolean);
   public
-    procedure InitializeVariables;
+    procedure InitializeVariables; override;
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
@@ -1468,6 +1492,8 @@ Type
     FEndTime: double;
     procedure SetStartTime(const Value: double);
     procedure SetEndTime(const Value: double);
+  protected
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
   public
     procedure Assign(Source: TPersistent); override;
   published
@@ -1620,7 +1646,7 @@ Type
     procedure SetSubBinaryOutputChoice(const Value: TSubBinaryOutputChoice);
   public
     procedure Assign(Source: TPersistent); override;
-    procedure InitializeVariables;
+    procedure InitializeVariables; override;
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
   published
@@ -1965,7 +1991,7 @@ Type
     procedure SetSubBinaryOutputChoice(const Value: TSubBinaryOutputChoice);
   public
     procedure Assign(Source: TPersistent); override;
-    procedure InitializeVariables;
+    procedure InitializeVariables; override;
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
   published
@@ -2006,10 +2032,348 @@ Type
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property HYDNOH: double read GetHYDNOH write SetHYDNOH;
-    procedure InitializeVariables;
+    procedure InitializeVariables; override;
   published
     property StoredHYDNOH: TRealStorage read FStoredHYDNOH write SetStoredHYDNOH;
   end;
+
+  TMt3dBasic = class(TModflowPackageSelection)
+  private
+    FMinimumSaturatedFraction: TRealStorage;
+    FInactiveConcentration: TRealStorage;
+    FMassUnit: TStringStorage;
+    procedure SetStoredInactiveConcentration(const Value: TRealStorage);
+    procedure SetStoredMassUnit(const Value: TStringStorage);
+    procedure SetStoredMinimumSaturatedFraction(const Value: TRealStorage);
+    function GetInactiveConcentration: double;
+    function GetMassUnit: string;
+    function GetMinimumSaturatedFraction: double;
+    procedure SetInactiveConcentration(const Value: double);
+    procedure SetMassUnit(const Value: string);
+    procedure SetMinimumSaturatedFraction(const Value: double);
+    procedure Changed(Sender: TObject);
+    procedure UpdateDataSets;
+  protected
+    procedure SetIsSelected(const Value: boolean); override;
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
+    Destructor Destroy; override;
+    procedure InitializeVariables; override;
+    property MassUnit: string read GetMassUnit write SetMassUnit;
+    property InactiveConcentration: double read GetInactiveConcentration
+      write SetInactiveConcentration;
+    property MinimumSaturatedFraction: double read GetMinimumSaturatedFraction
+      write SetMinimumSaturatedFraction;
+  published
+    property StoredMassUnit: TStringStorage read FMassUnit
+      write SetStoredMassUnit;
+    property StoredInactiveConcentration: TRealStorage
+      read FInactiveConcentration write SetStoredInactiveConcentration;
+    property StoredMinimumSaturatedFraction: TRealStorage
+      read FMinimumSaturatedFraction write SetStoredMinimumSaturatedFraction;
+  end;
+
+  TGcgPreconditioner = (gpJacobi, gpSSOR, gpCholesky);
+  TDispersionTensorTreatment = (dtcLump, dtcFull);
+
+  TMt3dmsGCGSolverPackage = class(TModflowPackageSelection)
+  private
+    FPrintoutInterval: integer;
+    FDispersionTensorChoice: TDispersionTensorTreatment;
+    FPreconditionerChoice: TGcgPreconditioner;
+    FMaxOuterIterations: integer;
+    FStoredRelaxationFactor: TRealStorage;
+    FStoredConvergenceCriterion: TRealStorage;
+    FMaxInnerIterations: integer;
+    procedure SetDispersionTensorChoice(const Value: TDispersionTensorTreatment);
+    procedure SetMaxInnerIterations(const Value: integer);
+    procedure SetMaxOuterIterations(const Value: integer);
+    procedure SetPreconditionerChoice(const Value: TGcgPreconditioner);
+    procedure SetPrintoutInterval(const Value: integer);
+    procedure SetStoredConvergenceCriterion(const Value: TRealStorage);
+    procedure SetStoredRelaxationFactor(const Value: TRealStorage);
+    procedure Changed(Sender: TObject);
+    function GetConvergenceCriterion: double;
+    function GetRelaxationFactor: double;
+    procedure SetConvergenceCriterion(const Value: double);
+    procedure SetRelaxationFactor(const Value: double);
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
+    Destructor Destroy; override;
+    procedure InitializeVariables; override;
+    // ACCL
+    property RelaxationFactor: double read GetRelaxationFactor
+      write SetRelaxationFactor;
+    // CCLOSE
+    property ConvergenceCriterion: double read GetConvergenceCriterion
+      write SetConvergenceCriterion;
+  published
+    // MXITER
+    property MaxOuterIterations: integer read FMaxOuterIterations
+      write SetMaxOuterIterations stored True;
+    // ITER1
+    property MaxInnerIterations: integer read FMaxInnerIterations
+      write SetMaxInnerIterations stored True;
+    // ISOLVE
+    property PreconditionerChoice: TGcgPreconditioner read FPreconditionerChoice
+      write SetPreconditionerChoice stored True;
+    // NCRS
+    property DispersionTensorChoice: TDispersionTensorTreatment
+      read FDispersionTensorChoice write SetDispersionTensorChoice stored True;
+    // ACCL
+    property StoredRelaxationFactor: TRealStorage read FStoredRelaxationFactor
+      write SetStoredRelaxationFactor stored True;
+    // CCLOSE
+    property StoredConvergenceCriterion: TRealStorage
+      read FStoredConvergenceCriterion write SetStoredConvergenceCriterion stored True;
+    // IPRGCG
+    property PrintoutInterval: integer read FPrintoutInterval
+      write SetPrintoutInterval stored True;
+  end;
+
+  TAdvectionSolution = (asUltimate, asStandard, asMoc, asMmoc, asHmoc);
+  TWeightingScheme = (wsUpstream, wsCentral);
+  TParticleTrackMethod = (ptmEuler, ptmRungeKutta, ptmHybrid);
+  TParticlePlacementMethod = (ppmRandom, ppmFixed);
+
+  TMt3dmsAdvection = class(TModflowPackageSelection)
+  private
+    FStoredRelCelConcGrad: TRealStorage;
+    FStoredCriticalConcGradient: TRealStorage;
+    FSinkNumberOfParticlePlanes: integer;
+    FSinkParticlePlacementMethod: TParticlePlacementMethod;
+    FNumberOfParticlePlanes: integer;
+    FParticlePlacementMethod: TParticlePlacementMethod;
+    FWeightingScheme: TWeightingScheme;
+    FMaxParticlesPerCell: integer;
+    FLowGradientParticleCount: integer;
+    FAdvectionSolution: TAdvectionSolution;
+    FStoredCourant: TRealStorage;
+    FHighGradientParticleCount: integer;
+    FStoredConcWeight: TRealStorage;
+    FMaximumParticles: integer;
+    FSinkParticleCount: integer;
+    FMinParticlePerCell: integer;
+    FParticleTrackMethod: TParticleTrackMethod;
+    function GetConcWeight: double;
+    function GetCourant: double;
+    function GetCriticalConcGradient: double;
+    function GetRelCelConcGrad: double;
+    procedure SetAdvectionSolution(const Value: TAdvectionSolution);
+    procedure SetConcWeight(const Value: double);
+    procedure SetCourant(const Value: double);
+    procedure SetCriticalConcGradient(const Value: double);
+    procedure SetHighGradientParticleCount(const Value: integer);
+    procedure SetLowGradientParticleCount(const Value: integer);
+    procedure SetMaximumParticles(const Value: integer);
+    procedure SetMaxParticlesPerCell(const Value: integer);
+    procedure SetMinParticlePerCell(const Value: integer);
+    procedure SetNumberOfParticlePlanes(const Value: integer);
+    procedure SetParticlePlacementMethod(const Value: TParticlePlacementMethod);
+    procedure SetParticleTrackMethod(const Value: TParticleTrackMethod);
+    procedure SetRelCelConcGrad(const Value: double);
+    procedure SetSinkNumberOfParticlePlanes(const Value: integer);
+    procedure SetSinkParticleCount(const Value: integer);
+    procedure SetSinkParticlePlacementMethod(
+      const Value: TParticlePlacementMethod);
+    procedure SetStoredConcWeight(const Value: TRealStorage);
+    procedure SetStoredCourant(const Value: TRealStorage);
+    procedure SetStoredCriticalConcGradient(const Value: TRealStorage);
+    procedure SetStoredRelCelConcGrad(const Value: TRealStorage);
+    procedure SetWeightingScheme(const Value: TWeightingScheme);
+    procedure Changed(Sender: TObject);
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
+    Destructor Destroy; override;
+    procedure InitializeVariables; override;
+    // PERCEL
+    property Courant: double read GetCourant write SetCourant;
+    // WD
+    property ConcWeight: double read GetConcWeight write SetConcWeight;
+    // DCEPS
+    property RelCelConcGrad: double read GetRelCelConcGrad
+      write SetRelCelConcGrad;
+    // DCHMOC
+    property CriticalConcGradient: double
+      read GetCriticalConcGradient write SetCriticalConcGradient;
+  published
+    // MIXELM
+    property AdvectionSolution: TAdvectionSolution
+      read FAdvectionSolution write SetAdvectionSolution stored True;
+    // PERCEL
+    property StoredCourant: TRealStorage
+      read FStoredCourant write SetStoredCourant stored True;
+    // MXPART
+    property MaximumParticles: integer
+      read FMaximumParticles write SetMaximumParticles stored True;
+    // NADVFD
+    property WeightingScheme: TWeightingScheme
+      read FWeightingScheme write SetWeightingScheme stored True;
+    // ITRACK
+    property ParticleTrackMethod: TParticleTrackMethod
+      read FParticleTrackMethod write SetParticleTrackMethod stored True;
+    // WD is a concentration weighting factor
+    property StoredConcWeight: TRealStorage
+      read FStoredConcWeight write SetStoredConcWeight;
+    // DCEPS
+    property StoredRelCelConcGrad: TRealStorage
+      read FStoredRelCelConcGrad write SetStoredRelCelConcGrad stored True;
+    // NPLANE
+    property ParticlePlacementMethod: TParticlePlacementMethod
+      read FParticlePlacementMethod write SetParticlePlacementMethod stored True;
+    // NPLANE
+    property NumberOfParticlePlanes: integer
+      read FNumberOfParticlePlanes write SetNumberOfParticlePlanes stored True;
+    // NPL
+    property LowGradientParticleCount: integer
+      read FLowGradientParticleCount write SetLowGradientParticleCount stored True;
+    // NPH
+    property HighGradientParticleCount: integer
+      read FHighGradientParticleCount write SetHighGradientParticleCount stored True;
+    // NPMIN
+    property MinParticlePerCell: integer
+      read FMinParticlePerCell write SetMinParticlePerCell stored True;
+    // NPMAX
+    property MaxParticlesPerCell: integer
+      read FMaxParticlesPerCell write SetMaxParticlesPerCell stored True;
+    // NLSINK
+    property SinkParticlePlacementMethod: TParticlePlacementMethod
+      read FSinkParticlePlacementMethod write SetSinkParticlePlacementMethod stored True;
+    // NLSINK
+    property SinkNumberOfParticlePlanes: integer
+      read FSinkNumberOfParticlePlanes write SetSinkNumberOfParticlePlanes stored True;
+    // NPSINK
+    property SinkParticleCount: integer
+      read FSinkParticleCount write SetSinkParticleCount stored True;
+    // DCHMOC
+    property StoredCriticalConcGradient: TRealStorage
+      read FStoredCriticalConcGradient write SetStoredCriticalConcGradient;
+  end;
+
+  TMt3dmsDispersion = class(TModflowPackageSelection)
+  private
+    FMultiDifussion: boolean;
+    procedure SetMultiDifussion(const Value: boolean);
+    procedure UpdateDataSets;
+  protected
+    procedure SetIsSelected(const Value: boolean); override;
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
+    procedure InitializeVariables; override;
+  published
+    property MultiDifussion: boolean read FMultiDifussion
+      write SetMultiDifussion;
+  end;
+
+  TMt3dmsSourceSinkMixing = class(TModflowPackageSelection)
+  private
+    FConcentrations: TModflowBoundaryDisplayTimeList;
+    procedure InitializeConcentrationDisplay(Sender: TObject);
+    procedure GetConcentrationUseList(Sender: TObject; NewUseList: TStringList);
+  public
+    Constructor Create(Model: TBaseModel);
+    Destructor Destroy; override;
+    property Concentrations: TModflowBoundaryDisplayTimeList
+      read FConcentrations;
+  end;
+
+  TSorptionChoice = (scNone, scLinear, scFreundlich, scLangmuir, scFirstOrderKinetic,
+    scDualDomainNoSorption, scDualDomainWithSorption);
+  TKineticChoice = (kcNone, kcFirstOrder, kcZeroOrder);
+  TOtherInitialConcChoice = (oicDontUse, oicUse);
+
+  TMt3dmsChemReaction = class(TModflowPackageSelection)
+  private
+    FSorptionChoice: TSorptionChoice;
+    FOtherInitialConcChoice: TOtherInitialConcChoice;
+    FKineticChoice: TKineticChoice;
+    procedure SetKineticChoice(const Value: TKineticChoice);
+    procedure SetOtherInitialConcChoice(const Value: TOtherInitialConcChoice);
+    procedure SetSorptionChoice(const Value: TSorptionChoice);
+    procedure UpdateDataSets;
+  protected
+    procedure SetIsSelected(const Value: boolean); override;
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
+    procedure InitializeVariables; override;
+  published
+    // ISOTHM
+    property SorptionChoice: TSorptionChoice read FSorptionChoice
+      write SetSorptionChoice stored True;
+    // IREACT
+    property KineticChoice: TKineticChoice read FKineticChoice
+      write SetKineticChoice stored True;
+    // IGETSC
+    property OtherInitialConcChoice: TOtherInitialConcChoice
+      read FOtherInitialConcChoice write SetOtherInitialConcChoice stored True;
+  end;
+
+  TConcObsResult = (corConc, corConcResid);
+  TMassFluxObsResult = (mfoMassFlux, mfoMassFluxResid);
+  TTransformType = (ltNoConversion, ltLogConverion);
+  TInterpolateObs = (ioNoInterpolation, ioBilinear);
+  TSaveBinary = (sbNoSave, sbSave);
+
+  TMt3dmsTransportObservations = class(TModflowPackageSelection)
+  private
+    FInterpolateObs: TInterpolateObs;
+    FSaveBinary: TSaveBinary;
+    FStoredConcScaleFactor: TRealStorage;
+    FStoredFluxScaleFactor: TRealStorage;
+    FConcObsResult: TConcObsResult;
+    FTransformType: TTransformType;
+    FMassFluxObsResult: TMassFluxObsResult;
+    function GetConcScaleFactor: double;
+    procedure SetConcObsResult(const Value: TConcObsResult);
+    procedure SetConcScaleFactor(const Value: double);
+    procedure SetInterpolateObs(const Value: TInterpolateObs);
+    procedure SetSaveBinary(const Value: TSaveBinary);
+    procedure SetStoredConcScaleFactor(const Value: TRealStorage);
+    procedure SetTransformType(const Value: TTransformType);
+    procedure Changed(Sender: TObject);
+    procedure SetStoredFluxScaleFactor(const Value: TRealStorage);
+    function GetFluxScaleFactor: double;
+    procedure SetFluxScaleFactor(const Value: double);
+    procedure SetMassFluxObsResult(const Value: TMassFluxObsResult);
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
+    procedure InitializeVariables; override;
+    // CScale
+    property ConcScaleFactor: double read GetConcScaleFactor
+      write SetConcScaleFactor;
+    // FScale
+    property FluxScaleFactor: double read GetFluxScaleFactor
+      write SetFluxScaleFactor;
+  published
+    // inSaveObs
+    property SaveBinary: TSaveBinary read FSaveBinary write SetSaveBinary stored True;
+    // CScale
+    property StoredConcScaleFactor: TRealStorage read FStoredConcScaleFactor
+      write SetStoredConcScaleFactor stored True;
+    // iOutCobs
+    property ConcObsResult: TConcObsResult read FConcObsResult
+      write SetConcObsResult stored True;
+    // iConcLOG
+    property TransformType: TTransformType read FTransformType
+      write SetTransformType stored True;
+    // iConcINTP
+    property InterpolateObs: TInterpolateObs read FInterpolateObs
+      write SetInterpolateObs stored True;
+    // FScale
+    property StoredFluxScaleFactor: TRealStorage read FStoredFluxScaleFactor
+      write SetStoredFluxScaleFactor;
+    // iOutFlux
+    property MassFluxObsResult: TMassFluxObsResult read FMassFluxObsResult
+      write SetMassFluxObsResult stored True;
+  end;
+
 
 implementation
 
@@ -2024,7 +2388,8 @@ uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
   ModflowSfrChannelUnit, ModflowSfrEquationUnit, ModflowSfrSegment,
   ModflowSfrUnsatSegment, ModflowMNW2_WriterUnit, ModflowMnw2Unit,
   LayerStructureUnit, ModflowSubsidenceDefUnit, frmGridValueUnit,
-  frmGoPhastUnit, CustomModflowWriterUnit, frmDisplayDataUnit;
+  frmGoPhastUnit, CustomModflowWriterUnit, frmDisplayDataUnit,
+  Mt3dmsSsmWriterUnit, Mt3dmsChemUnit;
 
 resourcestring
   StrLengthUnitsForMod = 'Length units for model are undefined';
@@ -2074,6 +2439,12 @@ destructor TModflowPackageSelection.Destroy;
 begin
   FComments.Free;
   inherited;
+end;
+
+procedure TModflowPackageSelection.InitializeVariables;
+begin
+  IsSelected := False;
+  Comments.Clear;
 end;
 
 procedure TModflowPackageSelection.InvalidateAllTimeLists;
@@ -2235,6 +2606,8 @@ end;
 
 procedure TPcgSelection.InitializeVariables;
 begin
+  inherited;
+  IsSelected := True;
   SelectionType := stRadioButton;
   FIsSelected := True;
   FMXITER := 20;
@@ -3280,6 +3653,7 @@ begin
     PrintFlows := Stream.PrintFlows;
     KinematicRouting := Stream.KinematicRouting;
     GageOverallBudget := Stream.GageOverallBudget;
+    UseGsflowFormat := Stream.UseGsflowFormat;
     if AssignParameterInstances then
     begin
       ParameterInstances := Stream.ParameterInstances;
@@ -3291,16 +3665,7 @@ end;
 constructor TSfrPackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
-  Dleak := 0.0001;
-  Isfropt := 0;
-  Nstrail := 10;
-  Isuzn := 10;
-  Nsfrsets := 30;
-  FKinematicRoutingTolerance := 1e-4;
-  FPrintStreams := True;
-  FPrintFlows := pfListing;
-  FTimeStepsForKinematicRouting := 1;
-  FKinematicRoutingWeight := 1;
+  InitializeVariables;
   FParameterInstances := TSfrParamInstances.Create(Model);
   AssignParameterInstances := True;
   if Model <> nil then
@@ -4252,6 +4617,24 @@ begin
   end;
 end;
 
+procedure TSfrPackageSelection.InitializeVariables;
+begin
+  inherited;
+  Dleak := 0.0001;
+  Isfropt := 0;
+  Nstrail := 10;
+  Isuzn := 10;
+  Nsfrsets := 30;
+  FKinematicRoutingTolerance := 0.0001;
+  FPrintStreams := True;
+  FPrintFlows := pfListing;
+  FTimeStepsForKinematicRouting := 1;
+  FKinematicRoutingWeight := 1;
+  GageOverallBudget := False;
+  UseGsflowFormat := False;
+  KinematicRouting := False;
+end;
+
 procedure TSfrPackageSelection.GetDisplayLists(List: TModflowBoundListOfTimeLists);
 var
   Index: Integer;
@@ -4600,11 +4983,20 @@ begin
   end;
 end;
 
+procedure TSfrPackageSelection.SetUseGsflowFormat(const Value: boolean);
+begin
+  if FUseGsflowFormat <> Value then
+  begin
+    InvalidateModel;
+    FUseGsflowFormat := Value;
+  end;
+end;
+
 function TSfrPackageSelection.StreamConstant: double;
 var
   ModflowOptions: TModflowOptions;
-//  ErrorMessage: string;
 begin
+  frmErrorsAndWarnings.RemoveErrorGroup(FModel, SfrError);
   result := 1;
   ModflowOptions := (FModel as TCustomModel).ModflowOptions;
   case ModflowOptions.LengthUnit of
@@ -4667,6 +5059,7 @@ procedure TSfrParamInstance.Assign(Source: TPersistent);
 var
   AnotherItem: TSfrParamInstance;
 begin
+  // if Assign is updated, update IsSame too.
   AnotherItem := Source as TSfrParamInstance;
   StartTime := AnotherItem.StartTime;
   EndTime := AnotherItem.EndTime;
@@ -4893,6 +5286,9 @@ begin
     PrintSummary := UZF.PrintSummary;
     DepthOfUndulations := UZF.DepthOfUndulations;
     AssignmentMethod := UZF.AssignmentMethod;
+    SpecifyResidualWaterContent := UZF.SpecifyResidualWaterContent;
+    SpecifyInitialWaterContent := UZF.SpecifyInitialWaterContent;
+    CalulateSurfaceLeakage := UZF.CalulateSurfaceLeakage;
   end;
   inherited;
 end;
@@ -4900,13 +5296,7 @@ end;
 constructor TUzfPackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
-//  FAssignmentMethod := umAdd;
-  VerticalKSource := 1;
-  RouteDischargeToStreams := True;
-  SimulateET := True;
-  NumberOfTrailingWaves := 15;
-  NumberOfWaveSets:= 20;
-  FDepthOfUndulations := 1;
+  InitializeVariables;
 
   if Model <> nil then
   begin
@@ -5117,6 +5507,20 @@ begin
   end;
 end;
 
+procedure TUzfPackageSelection.InitializeVariables;
+begin
+  inherited;
+  VerticalKSource := 1;
+  RouteDischargeToStreams := True;
+  SimulateET := True;
+  NumberOfTrailingWaves := 15;
+  NumberOfWaveSets:= 20;
+  FDepthOfUndulations := 1;
+  FSpecifyResidualWaterContent := False;
+  FSpecifyInitialWaterContent := False;
+  FCalulateSurfaceLeakage := True;
+end;
+
 procedure TUzfPackageSelection.InvalidateAllTimeLists;
 begin
   inherited;
@@ -5145,6 +5549,11 @@ begin
       MfUzfInfiltration.Invalidate;
     end;
   end;
+end;
+
+procedure TUzfPackageSelection.SetCalulateSurfaceLeakage(const Value: boolean);
+begin
+  FCalulateSurfaceLeakage := Value;
 end;
 
 procedure TUzfPackageSelection.SetDepthOfUndulations(const Value: double);
@@ -5200,6 +5609,18 @@ begin
     InvalidateModel;
     FSimulateET := Value;
   end;
+end;
+
+procedure TUzfPackageSelection.SetSpecifyInitialWaterContent(
+  const Value: boolean);
+begin
+  FSpecifyInitialWaterContent := Value;
+end;
+
+procedure TUzfPackageSelection.SetSpecifyResidualWaterContent(
+  const Value: boolean);
+begin
+  FSpecifyResidualWaterContent := Value;
 end;
 
 procedure TUzfPackageSelection.SetVerticalKSource(const Value: integer);
@@ -5273,6 +5694,7 @@ end;
 
 procedure TGmgPackageSelection.InitializeVariables;
 begin
+  inherited;
   FRCLOSE.Value := 1E-05;
   FIITER := 100;
   FMXITER := 100;
@@ -5454,6 +5876,7 @@ end;
 
 procedure TSIPPackageSelection.InitializeVariables;
 begin
+  inherited;
   MXITER := 100;
   NPARM := 5;
   ACCL.Value := 1;
@@ -5565,6 +5988,7 @@ end;
 
 procedure TDE4PackageSelection.InitializeVariables;
 begin
+  inherited;
   ITMX := 5;
   MXUP := 0;
   MXLOW := 0;
@@ -5676,6 +6100,7 @@ end;
 
 procedure THobPackageSelection.InitializeVariables;
 begin
+  inherited;
   FDryHead := -1000000;
 end;
 
@@ -5719,6 +6144,8 @@ end;
 
 procedure TLpfSelection.InitializeVariables;
 begin
+  inherited;
+  IsSelected := True;
   FUseCvCorrection := True;
   FUseVerticalFlowCorrection := True;
   FUseSaturatedThickness := False;
@@ -5830,6 +6257,7 @@ end;
 
 procedure TModpathSelection.InitializeVariables;
 begin
+  inherited;
   FMaximumSize := 0;
   FRCH_Source := sapVertical;
   FEVT_Sink := sapVertical;
@@ -5917,6 +6345,15 @@ begin
   begin
     InvalidateModel;
     FEVT_Sink := Value;
+  end;
+end;
+
+procedure TModpathSelection.SetIsSelected(const Value: boolean);
+begin
+  inherited;
+  if FModel <> nil then
+  begin
+    (FModel as TCustomModel).DataArrayManager.UpdateClassifications;
   end;
 end;
 
@@ -6567,6 +7004,7 @@ end;
 
 procedure THufPackageSelection.InitializeVariables;
 begin
+  inherited;
   FSaveFlows := True;
   FSaveHeads := True;
   FReferenceChoice := hrcModelTop;
@@ -6854,6 +7292,7 @@ procedure TSubPrintItem.Assign(Source: TPersistent);
 var
   SourceItem: TSubPrintItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TSubPrintItem then
   begin
     SourceItem := TSubPrintItem(Source);
@@ -6881,22 +7320,24 @@ var
 begin
   if AnotherItem is TSubPrintItem then
   begin
-    SourceItem := TSubPrintItem(AnotherItem);
-    result := (StartTime = SourceItem.StartTime)
-      and (EndTime = SourceItem.EndTime)
-      and (PrintSubsidence = SourceItem.PrintSubsidence)
-      and (SaveSubsidence = SourceItem.SaveSubsidence)
-      and (PrintCompactionByModelLayer = SourceItem.PrintCompactionByModelLayer)
-      and (SaveCompactionByModelLayer = SourceItem.SaveCompactionByModelLayer)
-      and (PrintCompactionByInterbedSystem = SourceItem.PrintCompactionByInterbedSystem)
-      and (SaveCompactionByInterbedSystem = SourceItem.SaveCompactionByInterbedSystem)
-      and (PrintVerticalDisplacement = SourceItem.PrintVerticalDisplacement)
-      and (SaveVerticalDisplacement = SourceItem.SaveVerticalDisplacement)
-      and (PrintCriticalHeadNoDelay = SourceItem.PrintCriticalHeadNoDelay)
-      and (SaveCriticalHeadNoDelay = SourceItem.SaveCriticalHeadNoDelay)
-      and (PrintCriticalHeadDelay = SourceItem.PrintCriticalHeadDelay)
-      and (SaveCriticalHeadDelay = SourceItem.SaveCriticalHeadDelay)
-      and (PrintDelayBudgets = SourceItem.PrintDelayBudgets);
+    Result := inherited;
+    if Result then
+    begin
+      SourceItem := TSubPrintItem(AnotherItem);
+      result := (PrintSubsidence = SourceItem.PrintSubsidence)
+        and (SaveSubsidence = SourceItem.SaveSubsidence)
+        and (PrintCompactionByModelLayer = SourceItem.PrintCompactionByModelLayer)
+        and (SaveCompactionByModelLayer = SourceItem.SaveCompactionByModelLayer)
+        and (PrintCompactionByInterbedSystem = SourceItem.PrintCompactionByInterbedSystem)
+        and (SaveCompactionByInterbedSystem = SourceItem.SaveCompactionByInterbedSystem)
+        and (PrintVerticalDisplacement = SourceItem.PrintVerticalDisplacement)
+        and (SaveVerticalDisplacement = SourceItem.SaveVerticalDisplacement)
+        and (PrintCriticalHeadNoDelay = SourceItem.PrintCriticalHeadNoDelay)
+        and (SaveCriticalHeadNoDelay = SourceItem.SaveCriticalHeadNoDelay)
+        and (PrintCriticalHeadDelay = SourceItem.PrintCriticalHeadDelay)
+        and (SaveCriticalHeadDelay = SourceItem.SaveCriticalHeadDelay)
+        and (PrintDelayBudgets = SourceItem.PrintDelayBudgets);
+    end;
   end
   else
   begin
@@ -6985,9 +7426,8 @@ procedure TSubPrintCollection.ReportErrors;
 var
   Index: Integer;
   PrintChoice: TSubPrintItem;
-//  ErrorRoot: string;
 begin
-//  ErrorRoot = StrInTheSubsidencePa;
+  frmErrorsAndWarnings.RemoveErrorGroup(frmGoPhast.PhastModel, StrInTheSubsidencePa);
   for Index := 0 to Count -1 do
   begin
     PrintChoice := Items[Index];
@@ -7046,6 +7486,7 @@ end;
 
 procedure TSubPackageSelection.InitializeVariables;
 begin
+  inherited;
   FNumberOfNodes := 10;
   FAccelerationParameter1 := 0;
   FAccelerationParameter2 := 1;
@@ -7228,6 +7669,7 @@ end;
 
 procedure ZZoneItem.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   if Source is ZZoneItem then
   begin
     ZoneNumber := ZZoneItem(Source).ZoneNumber;
@@ -7257,6 +7699,7 @@ end;
 
 procedure TCompositeZone.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TCompositeZone then
   begin
     ZoneName := TCompositeZone(Source).ZoneName;
@@ -7307,6 +7750,7 @@ end;
 
 procedure TCompositeZoneItem.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TCompositeZoneItem then
   begin
     CompositeZone := TCompositeZoneItem(Source).CompositeZone;
@@ -7391,6 +7835,7 @@ end;
 
 procedure TZoneBudgetSelect.InitializeVariables;
 begin
+  inherited;
   FExportZBLST := True;
   FExportCSV2 := True;
   FExportCSV := True;
@@ -7551,6 +7996,7 @@ procedure TSwtPrintItem.Assign(Source: TPersistent);
 var
   SourceItem: TSwtPrintItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TSwtPrintItem then
   begin
     SourceItem := TSwtPrintItem(Source);
@@ -7590,35 +8036,38 @@ var
 begin
   if AnotherItem is TSwtPrintItem then
   begin
-    SourceItem := TSwtPrintItem(AnotherItem);
-    result := (StartTime = SourceItem.StartTime)
-      and (EndTime = SourceItem.EndTime)
-      and (PrintSubsidence = SourceItem.PrintSubsidence)
-      and (SaveSubsidence = SourceItem.SaveSubsidence)
-      and (PrintCompactionByModelLayer = SourceItem.PrintCompactionByModelLayer)
-      and (SaveCompactionByModelLayer = SourceItem.SaveCompactionByModelLayer)
-      and (PrintCompactionByInterbedSystem = SourceItem.PrintCompactionByInterbedSystem)
-      and (SaveCompactionByInterbedSystem = SourceItem.SaveCompactionByInterbedSystem)
-      and (PrintVerticalDisplacement = SourceItem.PrintVerticalDisplacement)
-      and (SaveVerticalDisplacement = SourceItem.SaveVerticalDisplacement)
-      and (PrintPreconsolidationStress = SourceItem.PrintPreconsolidationStress)
-      and (SavePreconsolidationStress = SourceItem.SavePreconsolidationStress)
-      and (PrintDeltaPreconsolidationStress = SourceItem.PrintDeltaPreconsolidationStress)
-      and (SaveDeltaPreconsolidationStress = SourceItem.SaveDeltaPreconsolidationStress)
-      and (PrintGeostaticStress = SourceItem.PrintGeostaticStress)
-      and (SaveGeostaticStress = SourceItem.SaveGeostaticStress)
-      and (PrintDeltaGeostaticStress = SourceItem.PrintDeltaGeostaticStress)
-      and (SaveDeltaGeostaticStress = SourceItem.SaveDeltaGeostaticStress)
-      and (PrintEffectiveStress = SourceItem.PrintEffectiveStress)
-      and (SaveEffectiveStress = SourceItem.SaveEffectiveStress)
-      and (PrintDeltaEffectiveStress = SourceItem.PrintDeltaEffectiveStress)
-      and (SaveDeltaEffectiveStress = SourceItem.SaveDeltaEffectiveStress)
-      and (PrintVoidRatio = SourceItem.PrintVoidRatio)
-      and (SaveVoidRatio = SourceItem.SaveVoidRatio)
-      and (PrintThicknessCompressibleSediments = SourceItem.PrintThicknessCompressibleSediments)
-      and (SaveThicknessCompressibleSediments = SourceItem.SaveThicknessCompressibleSediments)
-      and (PrintLayerCenterElevation = SourceItem.PrintLayerCenterElevation)
-      and (SaveLayerCenterElevation = SourceItem.SaveLayerCenterElevation)
+    result := inherited;
+    if result then
+    begin
+
+      SourceItem := TSwtPrintItem(AnotherItem);
+      result := (PrintSubsidence = SourceItem.PrintSubsidence)
+        and (SaveSubsidence = SourceItem.SaveSubsidence)
+        and (PrintCompactionByModelLayer = SourceItem.PrintCompactionByModelLayer)
+        and (SaveCompactionByModelLayer = SourceItem.SaveCompactionByModelLayer)
+        and (PrintCompactionByInterbedSystem = SourceItem.PrintCompactionByInterbedSystem)
+        and (SaveCompactionByInterbedSystem = SourceItem.SaveCompactionByInterbedSystem)
+        and (PrintVerticalDisplacement = SourceItem.PrintVerticalDisplacement)
+        and (SaveVerticalDisplacement = SourceItem.SaveVerticalDisplacement)
+        and (PrintPreconsolidationStress = SourceItem.PrintPreconsolidationStress)
+        and (SavePreconsolidationStress = SourceItem.SavePreconsolidationStress)
+        and (PrintDeltaPreconsolidationStress = SourceItem.PrintDeltaPreconsolidationStress)
+        and (SaveDeltaPreconsolidationStress = SourceItem.SaveDeltaPreconsolidationStress)
+        and (PrintGeostaticStress = SourceItem.PrintGeostaticStress)
+        and (SaveGeostaticStress = SourceItem.SaveGeostaticStress)
+        and (PrintDeltaGeostaticStress = SourceItem.PrintDeltaGeostaticStress)
+        and (SaveDeltaGeostaticStress = SourceItem.SaveDeltaGeostaticStress)
+        and (PrintEffectiveStress = SourceItem.PrintEffectiveStress)
+        and (SaveEffectiveStress = SourceItem.SaveEffectiveStress)
+        and (PrintDeltaEffectiveStress = SourceItem.PrintDeltaEffectiveStress)
+        and (SaveDeltaEffectiveStress = SourceItem.SaveDeltaEffectiveStress)
+        and (PrintVoidRatio = SourceItem.PrintVoidRatio)
+        and (SaveVoidRatio = SourceItem.SaveVoidRatio)
+        and (PrintThicknessCompressibleSediments = SourceItem.PrintThicknessCompressibleSediments)
+        and (SaveThicknessCompressibleSediments = SourceItem.SaveThicknessCompressibleSediments)
+        and (PrintLayerCenterElevation = SourceItem.PrintLayerCenterElevation)
+        and (SaveLayerCenterElevation = SourceItem.SaveLayerCenterElevation)
+    end;
   end
   else
   begin
@@ -7777,17 +8226,13 @@ procedure TSwtPrintCollection.ReportErrors;
 var
   Index: Integer;
   PrintChoice: TSwtPrintItem;
-//  ErrorRoot: string;
 begin
-//  ErrorRoot = StrInTheSubsidenceAn;
+  frmErrorsAndWarnings.RemoveErrorGroup(frmGoPhast.PhastModel, StrInTheSubsidenceAn);
   for Index := 0 to Count -1 do
   begin
     PrintChoice := Items[Index];
     if PrintChoice.StartTime > PrintChoice.EndTime then
     begin
-//      frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrInTheSubsidenceAn,
-//        'StartingTime: ' + FloatToStr(PrintChoice.StartTime)
-//        + '; EndingTime: ' + FloatToStr(PrintChoice.EndTime));
       frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrInTheSubsidenceAn,
         Format(StrStartingTime0g,
           [PrintChoice.StartTime, PrintChoice.EndTime]));
@@ -7953,6 +8398,7 @@ end;
 
 procedure TSwtPackageSelection.InitializeVariables;
 begin
+  inherited;
   FThickResponse := trConstant;
   FCompressionSource := csSpecificStorage;
   FPreconsolidationSource := pcSpecified;
@@ -8068,11 +8514,25 @@ var
   SourceItem: TCustomPrintItem;
 begin
   inherited;
+  // if Assign is updated, update IsSame too.
   if Source is TCustomPrintItem then
   begin
     SourceItem := TCustomPrintItem(Source);
     StartTime := SourceItem.StartTime;
     EndTime := SourceItem.EndTime;
+  end;
+end;
+
+function TCustomPrintItem.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  SourceItem: TCustomPrintItem;
+begin
+  Result := false;
+  if AnotherItem is TCustomPrintItem then
+  begin
+    SourceItem := TCustomPrintItem(AnotherItem);
+    result := (StartTime = SourceItem.StartTime)
+      and (EndTime = SourceItem.EndTime)
   end;
 end;
 
@@ -8107,6 +8567,7 @@ end;
 
 procedure THydPackageSelection.InitializeVariables;
 begin
+  inherited;
   HYDNOH := -1E+20;
 end;
 
@@ -8158,6 +8619,7 @@ end;
 
 procedure TUpwPackageSelection.InitializeVariables;
 begin
+  inherited;
   FHDryPrintOption := hpoPrintHdry;
 end;
 
@@ -8256,6 +8718,7 @@ end;
 
 procedure TNwtPackageSelection.InitializeVariables;
 begin
+  inherited;
   HeadTolerance.Value := 1e-4;
   // The recomended value is 500 with units of m and days
   // The default units in ModelMuse are m and seconds
@@ -8626,6 +9089,865 @@ procedure TTransientZoneCollection.SetItem(Index: integer;
   const Value: TTransientZoneItem);
 begin
   inherited Items[Index] := Value;
+end;
+
+{ TMt3dBasic }
+
+procedure TMt3dBasic.Assign(Source: TPersistent);
+var
+  BasicSource: TMt3dBasic;
+begin
+  if Source is TMt3dBasic then
+  begin
+    BasicSource := TMt3dBasic(Source);
+    StoredMinimumSaturatedFraction :=
+      BasicSource.StoredMinimumSaturatedFraction;
+    StoredInactiveConcentration := BasicSource.StoredInactiveConcentration;
+    StoredMassUnit := BasicSource.StoredMassUnit;
+  end;
+  inherited;
+end;
+
+procedure TMt3dBasic.Changed(Sender: TObject);
+begin
+  InvalidateModel;
+end;
+
+constructor TMt3dBasic.Create(Model: TBaseModel);
+begin
+  inherited;
+  FMinimumSaturatedFraction := TRealStorage.Create;
+  FMinimumSaturatedFraction.OnChange := Changed;
+
+  FInactiveConcentration := TRealStorage.Create;
+  FInactiveConcentration.OnChange := Changed;
+
+  FMassUnit := TStringStorage.Create;
+  FMassUnit.OnChange := Changed;
+
+  InitializeVariables;
+end;
+
+destructor TMt3dBasic.Destroy;
+begin
+  FMassUnit.Free;
+  FInactiveConcentration.Free;
+  FMinimumSaturatedFraction.Free;
+  inherited;
+end;
+
+function TMt3dBasic.GetInactiveConcentration: double;
+begin
+  result := StoredInactiveConcentration.Value;
+end;
+
+function TMt3dBasic.GetMassUnit: string;
+begin
+  result := StoredMassUnit.Value;
+end;
+
+function TMt3dBasic.GetMinimumSaturatedFraction: double;
+begin
+  result := StoredMinimumSaturatedFraction.Value;
+end;
+
+procedure TMt3dBasic.InitializeVariables;
+begin
+  inherited;
+  IsSelected := False;
+  MassUnit := 'g';
+  InactiveConcentration := -1e30;
+  MinimumSaturatedFraction := 0.01;
+end;
+
+procedure TMt3dBasic.SetInactiveConcentration(const Value: double);
+begin
+  StoredInactiveConcentration.Value := Value;
+end;
+
+procedure TMt3dBasic.SetIsSelected(const Value: boolean);
+begin
+  inherited;
+  if FModel <> nil then
+  begin
+    (FModel as TCustomModel).DataArrayManager.UpdateClassifications;
+  end;
+  UpdateDataSets;
+end;
+
+procedure TMt3dBasic.SetStoredInactiveConcentration(const Value: TRealStorage);
+begin
+  FInactiveConcentration.Assign(Value)
+end;
+
+procedure TMt3dBasic.SetStoredMassUnit(const Value: TStringStorage);
+begin
+  FMassUnit.Assign(Value)
+end;
+
+procedure TMt3dBasic.SetStoredMinimumSaturatedFraction(const Value: TRealStorage);
+begin
+  FMinimumSaturatedFraction.Assign(Value)
+end;
+
+procedure TMt3dBasic.UpdateDataSets;
+var
+  LocalModel: TCustomModel;
+begin
+  LocalModel := FModel as TCustomModel;
+  if (LocalModel <> nil) and IsSelected then
+  begin
+    LocalModel.UpdateMt3dmsChemDataSets
+//    MobileComponents.UpdateDataArrays;
+//    ImMobileComponents.UpdateDataArrays;
+    // update diffusion data sets.
+  end;
+end;
+
+procedure TMt3dBasic.SetMassUnit(const Value: string);
+begin
+  StoredMassUnit.Value := Value;
+end;
+
+procedure TMt3dBasic.SetMinimumSaturatedFraction(const Value: double);
+begin
+  StoredMinimumSaturatedFraction.Value := Value;
+end;
+
+{ TMt3dmsGCGSolverPackage }
+
+procedure TMt3dmsGCGSolverPackage.Assign(Source: TPersistent);
+var
+  SourceSolver: TMt3dmsGCGSolverPackage;
+begin
+  if Source is TMt3dmsGCGSolverPackage then
+  begin
+    SourceSolver := TMt3dmsGCGSolverPackage(Source);
+    RelaxationFactor := SourceSolver.RelaxationFactor;
+    ConvergenceCriterion := SourceSolver.ConvergenceCriterion;
+    MaxOuterIterations := SourceSolver.MaxOuterIterations;
+    MaxInnerIterations := SourceSolver.MaxInnerIterations;
+    PreconditionerChoice := SourceSolver.PreconditionerChoice;
+    DispersionTensorChoice := SourceSolver.DispersionTensorChoice;
+    PrintoutInterval := SourceSolver.PrintoutInterval;
+  end;
+  inherited;
+
+end;
+
+procedure TMt3dmsGCGSolverPackage.Changed;
+begin
+  InvalidateModel;
+end;
+
+constructor TMt3dmsGCGSolverPackage.Create(Model: TBaseModel);
+begin
+  inherited;
+  FStoredRelaxationFactor := TRealStorage.Create;
+  FStoredRelaxationFactor.OnChange := Changed;
+  FStoredConvergenceCriterion := TRealStorage.Create;
+  FStoredConvergenceCriterion.OnChange := Changed;
+  InitializeVariables;
+end;
+
+destructor TMt3dmsGCGSolverPackage.Destroy;
+begin
+  FStoredRelaxationFactor.Free;
+  FStoredConvergenceCriterion.Free;
+  inherited;
+end;
+
+function TMt3dmsGCGSolverPackage.GetConvergenceCriterion: double;
+begin
+  result := StoredConvergenceCriterion.Value;
+end;
+
+function TMt3dmsGCGSolverPackage.GetRelaxationFactor: double;
+begin
+  result := StoredRelaxationFactor.Value;
+end;
+
+procedure TMt3dmsGCGSolverPackage.InitializeVariables;
+begin
+  inherited;
+  IsSelected := False;
+  FStoredRelaxationFactor.Value := 1;
+  FStoredConvergenceCriterion.Value := 1e-6;
+  FMaxOuterIterations := 1;
+  FMaxInnerIterations := 200;
+  FPreconditionerChoice := gpCholesky;
+  FDispersionTensorChoice := dtcLump;
+  FPrintoutInterval := 1;
+end;
+
+procedure TMt3dmsGCGSolverPackage.SetConvergenceCriterion(const Value: double);
+begin
+  StoredConvergenceCriterion.Value := Value;
+end;
+
+procedure TMt3dmsGCGSolverPackage.SetDispersionTensorChoice(
+  const Value: TDispersionTensorTreatment);
+begin
+  if FDispersionTensorChoice <> Value then
+  begin
+    FDispersionTensorChoice := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsGCGSolverPackage.SetMaxInnerIterations(const Value: integer);
+begin
+  if FMaxInnerIterations <> Value then
+  begin
+    FMaxInnerIterations := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsGCGSolverPackage.SetMaxOuterIterations(const Value: integer);
+begin
+  if FMaxOuterIterations <> Value then
+  begin
+    FMaxOuterIterations := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsGCGSolverPackage.SetPreconditionerChoice(
+  const Value: TGcgPreconditioner);
+begin
+  if FPreconditionerChoice <> Value then
+  begin
+    FPreconditionerChoice := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsGCGSolverPackage.SetPrintoutInterval(const Value: integer);
+begin
+  if FPrintoutInterval <> Value then
+  begin
+    FPrintoutInterval := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsGCGSolverPackage.SetRelaxationFactor(const Value: double);
+begin
+  StoredRelaxationFactor.Value := Value;
+end;
+
+procedure TMt3dmsGCGSolverPackage.SetStoredConvergenceCriterion(
+  const Value: TRealStorage);
+begin
+  FStoredConvergenceCriterion.Assign(Value);
+end;
+
+procedure TMt3dmsGCGSolverPackage.SetStoredRelaxationFactor(
+  const Value: TRealStorage);
+begin
+  FStoredRelaxationFactor.Assign(Value);
+end;
+
+{ TMt3dmsAdvection }
+
+procedure TMt3dmsAdvection.Assign(Source: TPersistent);
+var
+  AdvSource: TMt3dmsAdvection;
+begin
+  if Source is TMt3dmsAdvection then
+  begin
+    AdvSource := TMt3dmsAdvection(Source);
+    Courant := AdvSource.Courant;
+    ConcWeight := AdvSource.ConcWeight;
+    RelCelConcGrad := AdvSource.RelCelConcGrad;
+    CriticalConcGradient := AdvSource.CriticalConcGradient;
+    AdvectionSolution := AdvSource.AdvectionSolution;
+    MaximumParticles := AdvSource.MaximumParticles;
+    WeightingScheme := AdvSource.WeightingScheme;
+    ParticleTrackMethod := AdvSource.ParticleTrackMethod;
+    StoredConcWeight := AdvSource.StoredConcWeight;
+    StoredRelCelConcGrad := AdvSource.StoredRelCelConcGrad;
+    ParticlePlacementMethod := AdvSource.ParticlePlacementMethod;
+    NumberOfParticlePlanes := AdvSource.NumberOfParticlePlanes;
+    LowGradientParticleCount := AdvSource.LowGradientParticleCount;
+    HighGradientParticleCount := AdvSource.HighGradientParticleCount;
+    MinParticlePerCell := AdvSource.MinParticlePerCell;
+    MaxParticlesPerCell := AdvSource.MaxParticlesPerCell;
+    SinkParticlePlacementMethod := AdvSource.SinkParticlePlacementMethod;
+    SinkNumberOfParticlePlanes := AdvSource.SinkNumberOfParticlePlanes;
+    SinkParticleCount := AdvSource.SinkParticleCount;
+  end;
+  inherited;
+end;
+
+procedure TMt3dmsAdvection.Changed(Sender: TObject);
+begin
+  InvalidateModel;
+end;
+
+constructor TMt3dmsAdvection.Create(Model: TBaseModel);
+begin
+  inherited;
+  FStoredCourant := TRealStorage.Create;
+  FStoredCourant.OnChange := Changed;
+
+  FStoredConcWeight := TRealStorage.Create;
+  FStoredConcWeight.OnChange := Changed;
+
+  FStoredRelCelConcGrad := TRealStorage.Create;
+  FStoredRelCelConcGrad.OnChange := Changed;
+
+  FStoredCriticalConcGradient := TRealStorage.Create;
+  FStoredCriticalConcGradient.OnChange := Changed;
+
+  InitializeVariables;
+end;
+
+destructor TMt3dmsAdvection.Destroy;
+begin
+  FStoredCriticalConcGradient.Free;
+  FStoredRelCelConcGrad.Free;
+  FStoredConcWeight.Free;
+  FStoredCourant.Free;
+  inherited;
+end;
+
+function TMt3dmsAdvection.GetConcWeight: double;
+begin
+  result := StoredConcWeight.Value;
+end;
+
+function TMt3dmsAdvection.GetCourant: double;
+begin
+  result := StoredCourant.Value;
+end;
+
+function TMt3dmsAdvection.GetCriticalConcGradient: double;
+begin
+  result := StoredCriticalConcGradient.Value;
+end;
+
+function TMt3dmsAdvection.GetRelCelConcGrad: double;
+begin
+  result := StoredRelCelConcGrad.Value
+end;
+
+procedure TMt3dmsAdvection.InitializeVariables;
+begin
+  inherited;
+  Courant := 1;
+  ConcWeight := 0.5;
+  RelCelConcGrad := 1e-5;
+  CriticalConcGradient := 0.01;
+  AdvectionSolution := asUltimate;
+  MaximumParticles := 75000;
+  WeightingScheme  := wsUpstream;
+  ParticleTrackMethod := ptmHybrid;
+  ParticlePlacementMethod := ppmRandom;
+  NumberOfParticlePlanes := 1;
+  LowGradientParticleCount := 0;
+  HighGradientParticleCount := 10;
+  MinParticlePerCell := 2;
+  MaxParticlesPerCell := 20;
+  SinkParticlePlacementMethod := ppmRandom;
+  SinkNumberOfParticlePlanes := 1;
+  SinkParticleCount := 10;
+end;
+
+procedure TMt3dmsAdvection.SetAdvectionSolution(
+  const Value: TAdvectionSolution);
+begin
+  if FAdvectionSolution <> Value then
+  begin
+    FAdvectionSolution := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsAdvection.SetConcWeight(const Value: double);
+begin
+  StoredConcWeight.Value := Value;
+end;
+
+procedure TMt3dmsAdvection.SetCourant(const Value: double);
+begin
+  StoredCourant.Value := Value;
+end;
+
+procedure TMt3dmsAdvection.SetCriticalConcGradient(const Value: double);
+begin
+  StoredCriticalConcGradient.Value := Value;
+end;
+
+procedure TMt3dmsAdvection.SetHighGradientParticleCount(const Value: integer);
+begin
+  if FHighGradientParticleCount <> Value then
+  begin
+    FHighGradientParticleCount := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsAdvection.SetLowGradientParticleCount(const Value: integer);
+begin
+  if FLowGradientParticleCount <> Value then
+  begin
+    FLowGradientParticleCount := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsAdvection.SetMaximumParticles(const Value: integer);
+begin
+  if FMaximumParticles <> Value then
+  begin
+    FMaximumParticles := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsAdvection.SetMaxParticlesPerCell(const Value: integer);
+begin
+  if FMaxParticlesPerCell <> Value then
+  begin
+    FMaxParticlesPerCell := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsAdvection.SetMinParticlePerCell(const Value: integer);
+begin
+  if FMinParticlePerCell <> Value then
+  begin
+    FMinParticlePerCell := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsAdvection.SetNumberOfParticlePlanes(const Value: integer);
+begin
+  if FNumberOfParticlePlanes <> Value then
+  begin
+    FNumberOfParticlePlanes := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsAdvection.SetParticlePlacementMethod(
+  const Value: TParticlePlacementMethod);
+begin
+  if FParticlePlacementMethod <> Value then
+  begin
+    FParticlePlacementMethod := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsAdvection.SetParticleTrackMethod(
+  const Value: TParticleTrackMethod);
+begin
+  if FParticleTrackMethod <> Value then
+  begin
+    FParticleTrackMethod := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsAdvection.SetRelCelConcGrad(const Value: double);
+begin
+  StoredRelCelConcGrad.Value := Value;
+end;
+
+procedure TMt3dmsAdvection.SetSinkNumberOfParticlePlanes(const Value: integer);
+begin
+  if FSinkNumberOfParticlePlanes <> Value then
+  begin
+    FSinkNumberOfParticlePlanes := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsAdvection.SetSinkParticleCount(const Value: integer);
+begin
+  if FSinkParticleCount <> Value then
+  begin
+    FSinkParticleCount := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsAdvection.SetSinkParticlePlacementMethod(
+  const Value: TParticlePlacementMethod);
+begin
+  if FSinkParticlePlacementMethod <> Value then
+  begin
+    FSinkParticlePlacementMethod := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsAdvection.SetStoredConcWeight(const Value: TRealStorage);
+begin
+  FStoredConcWeight.Assign(Value);
+end;
+
+procedure TMt3dmsAdvection.SetStoredCourant(const Value: TRealStorage);
+begin
+  FStoredCourant.Assign(Value);
+end;
+
+procedure TMt3dmsAdvection.SetStoredCriticalConcGradient(
+  const Value: TRealStorage);
+begin
+  FStoredCriticalConcGradient.Assign(Value);
+end;
+
+procedure TMt3dmsAdvection.SetStoredRelCelConcGrad(const Value: TRealStorage);
+begin
+  FStoredRelCelConcGrad.Assign(Value);
+end;
+
+procedure TMt3dmsAdvection.SetWeightingScheme(const Value: TWeightingScheme);
+begin
+  if FWeightingScheme <> Value then
+  begin
+    FWeightingScheme := Value;
+    InvalidateModel;
+  end;
+end;
+
+{ TMt3dmsDispersion }
+
+procedure TMt3dmsDispersion.Assign(Source: TPersistent);
+begin
+  if Source is TMt3dmsDispersion then
+  begin
+    MultiDifussion := TMt3dmsDispersion(Source).MultiDifussion;
+  end;
+  inherited;
+end;
+
+constructor TMt3dmsDispersion.Create(Model: TBaseModel);
+begin
+  inherited;
+  InitializeVariables;
+end;
+
+procedure TMt3dmsDispersion.InitializeVariables;
+begin
+  inherited;
+  MultiDifussion := False;
+end;
+
+procedure TMt3dmsDispersion.SetIsSelected(const Value: boolean);
+begin
+  inherited;
+  UpdateDataSets;
+end;
+
+procedure TMt3dmsDispersion.SetMultiDifussion(const Value: boolean);
+begin
+  if FMultiDifussion <> Value then
+  begin
+    FMultiDifussion := Value;
+    InvalidateModel;
+    UpdateDataSets;
+  end;
+end;
+
+procedure TMt3dmsDispersion.UpdateDataSets;
+var
+  LocalModel: TCustomModel;
+begin
+  LocalModel := FModel as TCustomModel;
+  if (LocalModel <> nil) and IsSelected then
+  begin
+    LocalModel.MobileComponents.UpdateDataArrays;
+    // update diffusion data sets.
+  end;
+end;
+
+{ TMt3dmsChemReaction }
+
+procedure TMt3dmsChemReaction.Assign(Source: TPersistent);
+var
+  React: TMt3dmsChemReaction;
+begin
+  if Source is TMt3dmsChemReaction then
+  begin
+    React := TMt3dmsChemReaction(Source);
+    SorptionChoice := React.SorptionChoice;
+    KineticChoice := React.KineticChoice;
+    OtherInitialConcChoice := React.OtherInitialConcChoice;
+  end;
+  inherited;
+end;
+
+constructor TMt3dmsChemReaction.Create(Model: TBaseModel);
+begin
+  inherited;
+  InitializeVariables;
+end;
+
+procedure TMt3dmsChemReaction.InitializeVariables;
+begin
+  inherited;
+  SorptionChoice := scLinear;
+  KineticChoice := kcNone;
+  OtherInitialConcChoice := oicDontUse;
+end;
+
+procedure TMt3dmsChemReaction.SetIsSelected(const Value: boolean);
+begin
+  inherited;
+  UpdateDataSets;
+end;
+
+procedure TMt3dmsChemReaction.SetKineticChoice(const Value: TKineticChoice);
+begin
+  if FKineticChoice <> Value then
+  begin
+    FKineticChoice := Value;
+    InvalidateModel;
+    UpdateDataSets;
+  end;
+end;
+
+procedure TMt3dmsChemReaction.SetOtherInitialConcChoice(
+  const Value: TOtherInitialConcChoice);
+begin
+  if FOtherInitialConcChoice <> Value then
+  begin
+    FOtherInitialConcChoice := Value;
+    InvalidateModel;
+    UpdateDataSets;
+  end;
+end;
+
+procedure TMt3dmsChemReaction.SetSorptionChoice(const Value: TSorptionChoice);
+begin
+  if FSorptionChoice <> Value then
+  begin
+    FSorptionChoice := Value;
+    InvalidateModel;
+    UpdateDataSets;
+  end;
+end;
+
+procedure TMt3dmsChemReaction.UpdateDataSets;
+var
+  LocalModel: TCustomModel;
+begin
+  LocalModel := FModel as TCustomModel;
+  if (LocalModel <> nil) and IsSelected then
+  begin
+    LocalModel.ModflowPackages.Mt3dBasic.UpdateDataSets;
+    // update diffusion data sets.
+  end;
+end;
+
+{ TMt3dmsTransportObservations }
+
+procedure TMt3dmsTransportObservations.Assign(Source: TPersistent);
+var
+  TransObsSource: TMt3dmsTransportObservations;
+begin
+  if Source is TMt3dmsTransportObservations then
+  begin
+    TransObsSource := TMt3dmsTransportObservations(Source);
+    ConcScaleFactor := TransObsSource.ConcScaleFactor;
+    SaveBinary := TransObsSource.SaveBinary;
+    ConcObsResult := TransObsSource.ConcObsResult;
+    TransformType := TransObsSource.TransformType;
+    InterpolateObs := TransObsSource.InterpolateObs;
+    FluxScaleFactor := TransObsSource.FluxScaleFactor;
+    MassFluxObsResult := TransObsSource.MassFluxObsResult;
+
+  end;
+  inherited;
+end;
+
+procedure TMt3dmsTransportObservations.Changed(Sender: TObject);
+begin
+  InvalidateModel;
+end;
+
+constructor TMt3dmsTransportObservations.Create(Model: TBaseModel);
+begin
+  inherited;
+  FStoredConcScaleFactor := TRealStorage.Create;
+  FStoredConcScaleFactor.OnChange := Changed;
+  FStoredFluxScaleFactor := TRealStorage.Create;
+  FStoredFluxScaleFactor.OnChange := Changed;
+  InitializeVariables;
+end;
+
+destructor TMt3dmsTransportObservations.Destroy;
+begin
+  FStoredFluxScaleFactor.Free;
+  FStoredConcScaleFactor.Free;
+  inherited;
+end;
+
+function TMt3dmsTransportObservations.GetConcScaleFactor: double;
+begin
+  Result := StoredConcScaleFactor.Value;
+end;
+
+function TMt3dmsTransportObservations.GetFluxScaleFactor: double;
+begin
+  Result := StoredFluxScaleFactor.Value;
+end;
+
+procedure TMt3dmsTransportObservations.InitializeVariables;
+begin
+  inherited;
+  ConcScaleFactor := 1;
+  FluxScaleFactor := 1;
+  SaveBinary := sbSave;
+  ConcObsResult := corConcResid;
+  TransformType := ltNoConversion;
+  InterpolateObs := ioBilinear;
+  MassFluxObsResult := mfoMassFluxResid;
+end;
+
+procedure TMt3dmsTransportObservations.SetConcObsResult(
+  const Value: TConcObsResult);
+begin
+  if FConcObsResult <> Value then
+  begin
+    FConcObsResult := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsTransportObservations.SetConcScaleFactor(const Value: double);
+begin
+  StoredConcScaleFactor.Value := Value;
+end;
+
+procedure TMt3dmsTransportObservations.SetFluxScaleFactor(const Value: double);
+begin
+  StoredFluxScaleFactor.Value := Value;
+end;
+
+procedure TMt3dmsTransportObservations.SetInterpolateObs(
+  const Value: TInterpolateObs);
+begin
+  if FInterpolateObs <> Value then
+  begin
+    FInterpolateObs := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsTransportObservations.SetMassFluxObsResult(
+  const Value: TMassFluxObsResult);
+begin
+  FMassFluxObsResult := Value;
+end;
+
+procedure TMt3dmsTransportObservations.SetSaveBinary(const Value: TSaveBinary);
+begin
+  if FSaveBinary <> Value then
+  begin
+    FSaveBinary := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TMt3dmsTransportObservations.SetStoredConcScaleFactor(
+  const Value: TRealStorage);
+begin
+  FStoredConcScaleFactor.Assign(Value);
+end;
+
+procedure TMt3dmsTransportObservations.SetStoredFluxScaleFactor(
+  const Value: TRealStorage);
+begin
+  FStoredFluxScaleFactor.Assign(Value);
+end;
+
+procedure TMt3dmsTransportObservations.SetTransformType(
+  const Value: TTransformType);
+begin
+  if FTransformType <> Value then
+  begin
+    FTransformType := Value;
+    InvalidateModel;
+  end;
+end;
+
+{ TMt3dmsSourceSinkMixing }
+
+constructor TMt3dmsSourceSinkMixing.Create(Model: TBaseModel);
+begin
+  inherited;
+  if Model <> nil then
+  begin
+    FConcentrations := TModflowBoundaryDisplayTimeList.Create(Model);
+    Concentrations.OnInitialize := InitializeConcentrationDisplay;
+    Concentrations.OnGetUseList := GetConcentrationUseList;
+    Concentrations.OnTimeListUsed := PackageUsed;
+    Concentrations.Name := StrMT3DMSSSMConcentra;
+    AddTimeList(Concentrations);
+  end;
+end;
+
+destructor TMt3dmsSourceSinkMixing.Destroy;
+begin
+  FConcentrations.Free;
+  inherited;
+end;
+
+procedure TMt3dmsSourceSinkMixing.GetConcentrationUseList(Sender: TObject;
+  NewUseList: TStringList);
+var
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  Item: TCustomModflowBoundaryItem;
+  ValueIndex: Integer;
+  PhastModel: TCustomModel;
+  Boundary: TMt3dmsConcBoundary;
+begin
+  PhastModel := FModel as TCustomModel;
+  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    Boundary := ScreenObject.Mt3dmsConcBoundary;
+    if (Boundary <> nil) and Boundary.Used then
+    begin
+      for ValueIndex := 0 to Boundary.Values.Count -1 do
+      begin
+        Item := Boundary.Values[ValueIndex];
+        UpdateUseList(0, NewUseList, Item);
+      end;
+    end;
+  end;
+end;
+
+procedure TMt3dmsSourceSinkMixing.InitializeConcentrationDisplay(Sender: TObject);
+var
+  SsmWriter: TMt3dmsSsmWriter;
+  List: TModflowBoundListOfTimeLists;
+begin
+  FConcentrations.CreateDataSets;
+
+  List := TModflowBoundListOfTimeLists.Create;
+  SsmWriter := TMt3dmsSsmWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(FConcentrations);
+    SsmWriter.UpdateDisplay(List);
+  finally
+    SsmWriter.Free;
+    List.Free;
+  end;
+  FConcentrations.ComputeAverage;
 end;
 
 end.

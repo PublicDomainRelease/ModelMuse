@@ -13,68 +13,71 @@
         INTEGER,SAVE,POINTER   ::IUZFB22, IUZFB11
         INTEGER,SAVE,POINTER   ::NUZGAG, NUZGAGAR, NUZCL, NUZRW, IGSFLOW
         INTEGER,SAVE,POINTER   ::RTSOLUTE
-        INTEGER,SAVE,  DIMENSION(:),    POINTER :: ITRLSTH
+!        INTEGER,SAVE,  DIMENSION(:),    POINTER :: ITRLSTH
         INTEGER,SAVE,  DIMENSION(:,:),  POINTER :: IRUNBND, IUZFBND
-        INTEGER,SAVE,  DIMENSION(:,:),  POINTER :: IUZLIST, NWAVST
+        INTEGER,SAVE,  DIMENSION(:,:),  POINTER :: IUZLIST !, NWAVST
         INTEGER,SAVE,  DIMENSION(:,:),  POINTER :: IUZHOLD
-        INTEGER,SAVE,  DIMENSION(:,:),  POINTER :: LTRLIT, LTRLST
-        INTEGER,SAVE,  DIMENSION(:,:),  POINTER :: ITRLIT, ITRLST
+!        INTEGER,SAVE,  DIMENSION(:,:),  POINTER :: LTRLIT, LTRLST
+!        INTEGER,SAVE,  DIMENSION(:,:),  POINTER :: ITRLIT, ITRLST
         REAL,   SAVE,POINTER   ::TOTRUNOFF, SURFDEP
-        REAL,   SAVE,  DIMENSION(:),    POINTER :: FBINS
-        REAL,   SAVE,  DIMENSION(:,:),  POINTER :: SEEPOUT, EXCESPP, VKS
-        REAL,   SAVE,  DIMENSION(:,:),  POINTER :: REJ_INF
-        REAL,   SAVE,  DIMENSION(:,:),  POINTER :: TO_CFP
+!        REAL,   SAVE,  DIMENSION(:),    POINTER :: FBINS
+!        REAL,   SAVE,  DIMENSION(:,:),  POINTER :: SEEPOUT, EXCESPP, VKS
+        REAL,   SAVE,  DIMENSION(:,:),  POINTER :: VKS
+!        REAL,   SAVE,  DIMENSION(:,:),  POINTER :: REJ_INF
+!        REAL,   SAVE,  DIMENSION(:,:),  POINTER :: TO_CFP
         REAL,   SAVE,  DIMENSION(:,:),  POINTER :: EPS, THTS, THTI
         REAL,   SAVE,  DIMENSION(:,:),  POINTER :: PETRATE, ROOTDPTH
         REAL,   SAVE,  DIMENSION(:,:),  POINTER :: WCWILT, FINF
-        REAL,   SAVE,  DIMENSION(:,:),  POINTER :: UZFETOUT, GWET
-        DOUBLE PRECISION, SAVE, DIMENSION(:),  POINTER :: CUMUZVOL 
-        DOUBLE PRECISION, SAVE, DIMENSION(:),  POINTER :: UZTSRAT
+        REAL,   SAVE,  DIMENSION(:,:),  POINTER :: UZFETOUT !, GWET
+!        DOUBLE PRECISION, SAVE, DIMENSION(:),  POINTER :: CUMUZVOL 
+!        DOUBLE PRECISION, SAVE, DIMENSION(:),  POINTER :: UZTSRAT
         DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: THTR
-        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: UZFLWT, UZSTOR
-        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: UZDPIT, UZDPST
-        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: UZTHIT, UZTHST
-        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: UZSPIT, UZSPST
-        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: UZFLIT, UZFLST
-        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: DELSTOR
-        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: UZOLSFLX
-        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: HLDUZF
-        DOUBLE PRECISION, SAVE, DIMENSION(:,:,:),POINTER :: UZTOTBAL
-        DOUBLE PRECISION, SAVE, DIMENSION(:,:,:),POINTER :: GRIDSTOR
+!        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: UZFLWT, UZSTOR
+!        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: UZDPIT, UZDPST
+        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: UZTHST
+!        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: UZSPIT, UZSPST
+        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: UZFLST
+!        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: DELSTOR
+!        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: UZOLSFLX
+!        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: HLDUZF
+!        DOUBLE PRECISION, SAVE, DIMENSION(:,:,:),POINTER :: UZTOTBAL
+!        DOUBLE PRECISION, SAVE, DIMENSION(:,:,:),POINTER :: GRIDSTOR
       TYPE GWFUZFTYPE
         INTEGER,     POINTER   ::NUZTOP, IUZFOPT, IRUNFLG, IETFLG, IUZM
         INTEGER,     POINTER   ::IUZFCB1, IUZFCB2, NTRAIL, NWAV, NSETS
         INTEGER,     POINTER   ::IUZFB22, IUZFB11
         INTEGER,     POINTER   ::NUZGAG, NUZGAGAR, NUZCL, NUZRW, IGSFLOW
         INTEGER,     POINTER   ::RTSOLUTE
-        INTEGER,       DIMENSION(:),    POINTER :: ITRLSTH
+!        INTEGER,       DIMENSION(:),    POINTER :: ITRLSTH
         INTEGER,       DIMENSION(:,:),  POINTER :: IRUNBND, IUZFBND
-        INTEGER,       DIMENSION(:,:),  POINTER :: IUZLIST, NWAVST
+        INTEGER,       DIMENSION(:,:),  POINTER :: IUZLIST !, NWAVST
         INTEGER,       DIMENSION(:,:),  POINTER :: IUZHOLD
-        INTEGER,       DIMENSION(:,:),  POINTER :: LTRLIT, LTRLST
-        INTEGER,       DIMENSION(:,:),  POINTER :: ITRLIT, ITRLST
+!        INTEGER,       DIMENSION(:,:),  POINTER :: LTRLIT, LTRLST
+!        INTEGER,       DIMENSION(:,:),  POINTER :: ITRLIT, ITRLST
         REAL,          POINTER            ::TOTRUNOFF, SURFDEP
-        REAL,          DIMENSION(:),    POINTER :: FBINS
-        REAL,          DIMENSION(:,:),  POINTER :: SEEPOUT, EXCESPP, VKS
-        REAL,          DIMENSION(:,:),  POINTER :: REJ_INF
-        REAL,          DIMENSION(:,:),  POINTER :: TO_CFP
+!        REAL,          DIMENSION(:),    POINTER :: FBINS
+!        REAL,          DIMENSION(:,:),  POINTER :: SEEPOUT, EXCESPP, VKS
+        REAL,          DIMENSION(:,:),  POINTER :: VKS
+!        REAL,          DIMENSION(:,:),  POINTER :: REJ_INF
+!        REAL,          DIMENSION(:,:),  POINTER :: TO_CFP
         REAL,          DIMENSION(:,:),  POINTER :: EPS, THTS, THTI
         REAL,          DIMENSION(:,:),  POINTER :: PETRATE, ROOTDPTH
         REAL,          DIMENSION(:,:),  POINTER :: WCWILT, FINF
-        REAL,          DIMENSION(:,:),  POINTER :: UZFETOUT, GWET
-        DOUBLE PRECISION,       DIMENSION(:),  POINTER :: CUMUZVOL
-        DOUBLE PRECISION,       DIMENSION(:),  POINTER :: UZTSRAT
+        REAL,          DIMENSION(:,:),  POINTER :: UZFETOUT !, GWET
+!        DOUBLE PRECISION,       DIMENSION(:),  POINTER :: CUMUZVOL
+!        DOUBLE PRECISION,       DIMENSION(:),  POINTER :: UZTSRAT
         DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: THTR
-        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: UZFLWT, UZSTOR
-        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: UZDPIT, UZDPST
-        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: UZTHIT, UZTHST
-        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: UZSPIT, UZSPST
-        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: UZFLIT, UZFLST
-        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: DELSTOR
-        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: UZOLSFLX
-        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: HLDUZF
-        DOUBLE PRECISION,       DIMENSION(:,:,:),POINTER :: UZTOTBAL
-        DOUBLE PRECISION,       DIMENSION(:,:,:),POINTER :: GRIDSTOR
+!        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: UZFLWT, 
+!        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: 
+!        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: UZDPIT, UZDPST
+        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: UZTHST
+!        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: UZSPIT, UZSPST
+        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: UZFLST
+!        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: DELSTOR
+!        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: UZOLSFLX
+!        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: HLDUZF
+!        DOUBLE PRECISION,       DIMENSION(:,:,:),POINTER :: UZTOTBAL
+!        DOUBLE PRECISION,       DIMENSION(:,:,:),POINTER :: GRIDSTOR
       END TYPE
       TYPE(GWFUZFTYPE), SAVE:: GWFUZFDAT(10)
       END MODULE GWFUZFMODULE
@@ -278,46 +281,46 @@ C7------ALLOCATE SPACE FOR ARRAYS AND INITIALIZE.
       ALLOCATE (THTR(NUZCL,NUZRW))
       THTR = 0.0D0
       ALLOCATE (FINF(NCOL,NROW),PETRATE(NCOL,NROW),UZFETOUT(NCOL,NROW))
-      ALLOCATE (GWET(NCOL,NROW))
+!      ALLOCATE (GWET(NCOL,NROW))
       FINF = 0.0
       PETRATE = 0.0
       UZFETOUT = 0.0
-      GWET = 0.0
-      ALLOCATE (FBINS(52))
-      FBINS = 0.0
+!      GWET = 0.0
+!      ALLOCATE (FBINS(52))
+!      FBINS = 0.0
       ALLOCATE (ROOTDPTH(NCOL,NROW))
       ROOTDPTH = 0.0
       ALLOCATE (WCWILT(NUZCL,NUZRW))
       WCWILT = 0.0
-      ALLOCATE (SEEPOUT(NCOL,NROW), EXCESPP(NCOL,NROW))
-      ALLOCATE (REJ_INF(NCOL,NROW))
-      SEEPOUT = 0.0
-      EXCESPP = 0.0
-      REJ_INF = 0.0
-      ALLOCATE (TO_CFP(NCOL,NROW))
-      TO_CFP = 0.0
+!      ALLOCATE (SEEPOUT(NCOL,NROW), EXCESPP(NCOL,NROW))
+!      ALLOCATE (REJ_INF(NCOL,NROW))
+!      SEEPOUT = 0.0
+!      EXCESPP = 0.0
+!      REJ_INF = 0.0
+!      ALLOCATE (TO_CFP(NCOL,NROW))
+!      TO_CFP = 0.0
       ALLOCATE (IUZLIST(4, NUZGAGAR))
       IUZLIST = 0
-      ALLOCATE (NWAVST(NUZCL,NUZRW))
-      NWAVST = 1
-      ALLOCATE (CUMUZVOL(5))
-      CUMUZVOL = 0.0D0
-      ALLOCATE (UZTSRAT(6))
-      UZTSRAT = 0.0D0
-      ALLOCATE (UZTOTBAL(NCOL,NROW,7))
-      UZTOTBAL = 0.0D0
+!      ALLOCATE (NWAVST(NUZCL,NUZRW))
+!      NWAVST = 1
+!      ALLOCATE (CUMUZVOL(5))
+!      CUMUZVOL = 0.0D0
+!      ALLOCATE (UZTSRAT(6))
+!      UZTSRAT = 0.0D0
+!      ALLOCATE (UZTOTBAL(NCOL,NROW,7))
+!      UZTOTBAL = 0.0D0
 crgn changed allocation 10/23/06
-      ALLOCATE (UZFLWT(NCOL,NROW))
-      UZFLWT = 0.0D0
-      ALLOCATE (UZSTOR(NUZCL,NUZRW))
-      UZSTOR = 0.0D0
-      ALLOCATE (DELSTOR(NUZCL,NUZRW))
-      DELSTOR = 0.0D0
+!      ALLOCATE (UZFLWT(NCOL,NROW))
+!      UZFLWT = 0.0D0
+!      ALLOCATE (UZSTOR(NUZCL,NUZRW))
+!      UZSTOR = 0.0D0
+!      ALLOCATE (DELSTOR(NUZCL,NUZRW))
+!      DELSTOR = 0.0D0
 cdep changed allocation of UZOLSFLX 7/30/08
-      ALLOCATE (UZOLSFLX(NCOL,NROW))
-      UZOLSFLX = 0.0D0
-      ALLOCATE (HLDUZF(NCOL,NROW))
-      HLDUZF = 0.0D0
+!      ALLOCATE (UZOLSFLX(NCOL,NROW))
+!      UZOLSFLX = 0.0D0
+!      ALLOCATE (HLDUZF(NCOL,NROW))
+!      HLDUZF = 0.0D0
       ALLOCATE (IUZHOLD(2, NCOL*NROW))
       nrnc = 1
       DO irhld = 1, NROW
@@ -327,32 +330,32 @@ cdep changed allocation of UZOLSFLX 7/30/08
           nrnc = nrnc + 1
         END DO
       END DO
-      ALLOCATE (ITRLSTH(NWAV))
-      ITRLSTH = 0
-      ALLOCATE (UZDPIT(NWAV,IUZM))
-      UZDPIT = 0.0D0
-      ALLOCATE (UZDPST(NWAV,IUZM))
-      UZDPST = 0.0D0
-      ALLOCATE (UZTHIT(NWAV,IUZM))
-      UZTHIT = 0.0D0
+!      ALLOCATE (ITRLSTH(NWAV))
+!      ITRLSTH = 0
+!      ALLOCATE (UZDPIT(NWAV,IUZM))
+!      UZDPIT = 0.0D0
+!      ALLOCATE (UZDPST(NWAV,IUZM))
+!      UZDPST = 0.0D0
+!      ALLOCATE (UZTHIT(NWAV,IUZM))
+!      UZTHIT = 0.0D0
       ALLOCATE (UZTHST(NWAV,IUZM))
       UZTHST = 0.0D0
-      ALLOCATE (UZSPIT(NWAV,IUZM))
-      UZSPIT = 0.0D0
-      ALLOCATE (UZSPST(NWAV,IUZM))
-      UZSPST = 0.0D0
-      ALLOCATE (UZFLIT(NWAV,IUZM))
-      UZFLIT = 0.0D0
+!      ALLOCATE (UZSPIT(NWAV,IUZM))
+!      UZSPIT = 0.0D0
+!      ALLOCATE (UZSPST(NWAV,IUZM))
+!      UZSPST = 0.0D0
+!      ALLOCATE (UZFLIT(NWAV,IUZM))
+!      UZFLIT = 0.0D0
       ALLOCATE (UZFLST(NWAV,IUZM))
       UZFLST = 0.0
-      ALLOCATE (LTRLIT(NWAV,IUZM))
-      LTRLIT = 0
-      ALLOCATE (LTRLST(NWAV,IUZM))
-      LTRLST = 0
-      ALLOCATE (ITRLIT(NWAV,IUZM))
-      ITRLIT = 0
-      ALLOCATE (ITRLST(NWAV,IUZM))
-      ITRLST = 0
+!      ALLOCATE (LTRLIT(NWAV,IUZM))
+!      LTRLIT = 0
+!      ALLOCATE (LTRLST(NWAV,IUZM))
+!      LTRLST = 0
+!      ALLOCATE (ITRLIT(NWAV,IUZM))
+!      ITRLIT = 0
+!      ALLOCATE (ITRLST(NWAV,IUZM))
+!      ITRLST = 0
 C
 C8------PRINT OPTION CODE WHEN NUZTOP IS WITHIN SPECIFIED RANGE.
       IF ( IUZFOPT.LE.0 ) THEN
@@ -394,13 +397,13 @@ C11-----READ STREAM AND LAKE ARRAY FOR ROUTING OVERLAND FLOW.
 C
 C5B------READ AND SET VALUES FOR SOLUTE ROUTING IN UNSATURATED ZONE
 C
-      IF ( RTSOLUTE.GT.0 ) THEN
-        ALLOCATE(GRIDSTOR(NCOL,NROW,NLAY))   
-        GRIDSTOR = 0.0D0  
-      ELSE
-        ALLOCATE(GRIDSTOR(1,1,1))
-        GRIDSTOR(1,1,1) = 0
-      END IF
+!      IF ( RTSOLUTE.GT.0 ) THEN
+!        ALLOCATE(GRIDSTOR(NCOL,NROW,NLAY))   
+!        GRIDSTOR = 0.0D0  
+!      ELSE
+!        ALLOCATE(GRIDSTOR(1,1,1))
+!        GRIDSTOR(1,1,1) = 0
+!      END IF
 C
 C12-----READ VERTICAL HYDRAULIC CONDUCTIVITY FROM UZF INPUT FILE.
       IF ( IUZFOPT.EQ.1 ) THEN
@@ -719,14 +722,14 @@ C
       END IF 
       range=LOG(fkmax)-LOG(fkmin)
       finc=range/50.0
-      FBINS(1) = LOG(fkmin)
+!      FBINS(1) = LOG(fkmin)
 C
 C30-----BIN INFILTRATION RATES.
-      DO ivol = 2, 51
-        FBINS(ivol) = FBINS(ivol-1)+ finc
-        FBINS(ivol-1) = EXP(FBINS(ivol-1))
-      END DO
-      FBINS(51) = EXP(FBINS(51))
+!      DO ivol = 2, 51
+!        FBINS(ivol) = FBINS(ivol-1)+ finc
+!        FBINS(ivol-1) = EXP(FBINS(ivol-1))
+!      END DO
+!      FBINS(51) = EXP(FBINS(51))
 C
 C31-----SAVE POINTERS FOR GRID AND RETURN.
       CALL SGWF2UZF1PSV(Igrid)
@@ -808,8 +811,8 @@ C5------SET INFILTRATION RATE TO SATURATED VERTICAL K WHEN RATE IS
 C        GREATER THAN K AND ROUTE EXCESS WATER TO STREAM IF 
 C        IRUNFLG IS NOT EQUAL TO ZERO.
               ELSE IF ( FINF(ncck, nrck).GT.VKS(ncck, nrck) ) THEN
-                 EXCESPP(ncck, nrck) =  (FINF(ncck, nrck) - 
-     +                      VKS(ncck, nrck))*DELC(nrck)*DELR(ncck)
+!                 EXCESPP(ncck, nrck) =  (FINF(ncck, nrck) - 
+!     +                      VKS(ncck, nrck))*DELC(nrck)*DELR(ncck)
                  FINF(ncck, nrck) = VKS(ncck, nrck)
               END IF
             END IF
@@ -1024,7 +1027,7 @@ C16B-----SEARCH FOR UPPER MOST ACTIVE CELL WITH A WATER LEVEL.
                   h = DBLE(BOTM(ic,ir,NLAY))
                 END IF
 crgn changed HNEW(ic, ir, il) to h in next line.
-                HLDUZF(ic,ir) = h
+!                HLDUZF(ic,ir) = h
                 IF ( IBOUND(ic, ir, il).LT.0 ) IUZFBND(ic, ir) = 0
                 IF ( IUZFOPT.GT.0 ) THEN
 C
@@ -1046,7 +1049,7 @@ C
 C20-----INITIALIZE UNSATURATED ZONE ARRAYS FOR FIRST STRESS PERIOD.
                   IF ( iflginit.EQ.1 ) THEN
                     IF ( celtop.GT.h ) THEN
-                      UZDPST(1, l) = (celtop-h)
+!                      UZDPST(1, l) = (celtop-h)
 C
 C21-----CALCULATE INITIAL WATER CONTENT AND FLUX IF STEADY STATE.
                       IF ( iss.NE.0 ) THEN
@@ -1075,15 +1078,15 @@ C         TRANSIENT.
 C
 C23-----CALCULATE VOLUME OF WATER STORED IN UNSATURATED ZONE.
                       IF ( top.GT.0.0 ) THEN
-                        IF ( iss.EQ.0 ) UZSTOR(ic, ir) = UZDPST(1, l)
-     +                       *top*width*slen
-                        UZSPST(1, l) = 0.0D0
-                        UZOLSFLX(ic, ir) = UZFLST(1, l)
+!                        IF ( iss.EQ.0 ) UZSTOR(ic, ir) = UZDPST(1, l)
+!     +                       *top*width*slen
+!                        UZSPST(1, l) = 0.0D0
+!                        UZOLSFLX(ic, ir) = UZFLST(1, l)
                       ELSE
-                        UZSTOR(ic, ir) = 0.0D0
+!                        UZSTOR(ic, ir) = 0.0D0
                         UZFLST(1, l) = 0.0D0
-                        UZSPST(1, l) = 0.0D0
-                        UZOLSFLX(ic, ir) = 0.0D0
+!                        UZSPST(1, l) = 0.0D0
+!                        UZOLSFLX(ic, ir) = 0.0D0
                       END IF
 C
 C24-----IF NO UNSATURATED ZONE, SET ARRAY VALUES TO ZERO EXEPT WHEN
@@ -1094,26 +1097,26 @@ C         STEADY STATE, THEN SET UZFLST ARRAY TO INFILRATION RATE.
                       ELSE
                         UZFLST(1, l) = 0.0D0
                       END IF
-                      UZDPST(1, l) = 0.0D0
-                      UZSPST(1, l) = 0.0D0
+!                      UZDPST(1, l) = 0.0D0
+!                      UZSPST(1, l) = 0.0D0
                       UZTHST(1, l) = THTR(ic, ir)
-                      UZSTOR(ic, ir) = 0.0D0
+!                      UZSTOR(ic, ir) = 0.0D0
 cupdate        
-                      UZOLSFLX(ic, ir) = FINF(ic, ir)
+!                      UZOLSFLX(ic, ir) = FINF(ic, ir)
                     END IF
-                    IF( RTSOLUTE.GT.0 ) THEN
-                      DO uzlay = 1, NLAY
-                        GRIDSTOR(ic,ir,uzlay) = 
-     +                     (UZTHST(1, l)-THTR(ic, ir))*
-     +                  (BOTM(ic,ir,uzlay-1)-BOTM(ic,ir,uzlay))
-                      END DO
-                    END IF
+!                    IF( RTSOLUTE.GT.0 ) THEN
+!                      DO uzlay = 1, NLAY
+!                        GRIDSTOR(ic,ir,uzlay) = 
+!     +                     (UZTHST(1, l)-THTR(ic, ir))*
+!     +                  (BOTM(ic,ir,uzlay-1)-BOTM(ic,ir,uzlay))
+!                      END DO
+!                    END IF
 C
 C25-----INITIALIZE ARRAYS FOR A TRANSIENT PERIOD THAT FOLLOWS A
 C         STEADY STATE PERIOD IN STRESS PERIOD 1.
                   ELSE IF ( iflginit.EQ.2 ) THEN
                     IF ( celtop.GT.h ) THEN
-                      UZDPST(1, l) = celtop - h
+!                      UZDPST(1, l) = celtop - h
 C
 C26-----CALCULATE INITIAL WATER CONTENT AND FLUX FROM STEADY STATE
 C         SIMULATION.
@@ -1127,32 +1130,32 @@ C         SIMULATION.
                       IF ( top.LE.0.0 ) top = 0.0
                       IF ( top.LT.1.0E-5 ) UZFLST(1, l) = 0.0D0
                       IF ( top.GT.1.0E-5 ) THEN
-                        UZSTOR(ic, ir) = UZDPST(1, l)*top*width*slen
-                        UZSPST(1, l) = 0.0D0
-                        UZOLSFLX(ic, ir) = UZFLST(1, l)
+!                        UZSTOR(ic, ir) = UZDPST(1, l)*top*width*slen
+!                        UZSPST(1, l) = 0.0D0
+!                        UZOLSFLX(ic, ir) = UZFLST(1, l)
 C
 C27-----IF NO UNSATURATED ZONE, SET ARRAYS VALUES TO ZERO.
                       ELSE
-                        UZSTOR(ic, ir) = 0.0D0
+!                        UZSTOR(ic, ir) = 0.0D0
                         UZFLST(1, l) = 0.0D0
-                        UZSPST(1, l) = 0.0D0
-                        UZOLSFLX(ic, ir) = 0.0D0
+!                        UZSPST(1, l) = 0.0D0
+!                        UZOLSFLX(ic, ir) = 0.0D0
                       END IF
                     ELSE
-                      UZDPST(1, l) = 0.0D0
+!                      UZDPST(1, l) = 0.0D0
                       UZFLST(1, l) = 0.0D0
-                      UZSPST(1, l) = 0.0D0
+!                      UZSPST(1, l) = 0.0D0
                       UZTHST(1, l) = THTR(ic, ir)
-                      UZSTOR(ic, ir) = 0.0D0
-                      UZOLSFLX(ic, ir) = 0.0D0
+!                      UZSTOR(ic, ir) = 0.0D0
+!                      UZOLSFLX(ic, ir) = 0.0D0
                     END IF
-                    IF( RTSOLUTE.GT.0 ) THEN
-                      DO uzlay = 1, NLAY
-                        GRIDSTOR(ic,ir,uzlay) = 
-     +                     (UZTHST(1, l)-THTR(ic, ir))*
-     +                  (BOTM(ic,ir,uzlay-1)-BOTM(ic,ir,uzlay))
-                      END DO
-                    END IF
+!                    IF( RTSOLUTE.GT.0 ) THEN
+!                      DO uzlay = 1, NLAY
+!                        GRIDSTOR(ic,ir,uzlay) = 
+!     +                     (UZTHST(1, l)-THTR(ic, ir))*
+!     +                  (BOTM(ic,ir,uzlay-1)-BOTM(ic,ir,uzlay))
+!                      END DO
+!                    END IF
                   END IF
                 END IF
               END IF
@@ -1231,92 +1234,6 @@ C     ******************************************************************
 C     REMOVE WATER FROM UNSATURATED ZONE CAUSED BY EVAPOTRANSPIRATION
 C     ******************************************************************
 C
-C--------SUBROUTINE CELL_AVERAGE
-      SUBROUTINE CELL_AVERAGE( Depth, Flux, Theta, Cellflux, Celltheta,
-     +                         Numwaves, Nuzc, Nuzr, Il, L, Celtop, H,
-     +                         Cellarea, Iret, Finfact, Thr )
-C     ******************************************************************
-C     AVEARGE WATER CONTENT AND FLUX FOR MT3DMS
-C     ******************************************************************
-      USE GLOBAL,       ONLY: BOTM, IOUT, NLAY
-      USE GWFBASMODULE, ONLY: DELT
-      USE GWFUZFMODULE, ONLY: NWAV, CLOSEZERO, IUZFBND, NWAVST,
-     +                        RTSOLUTE, GRIDSTOR
-      IMPLICIT NONE
-C     ------------------------------------------------------------------
-C     SPECIFICATIONS:
-C     ------------------------------------------------------------------
-C     ARGUMENTS
-C     ------------------------------------------------------------------
-      INTEGER Jpnt, Numwaves, L, IL, nuzc, nuzr, IUZLAY
-      DOUBLE PRECISION Depth(NWAV), Theta(NWAV), Flux(NWAV)
-      DOUBLE PRECISION Celltheta(NWAV), Cellflux(NWAV)
-      DOUBLE PRECISION Celtop, H, Cellarea, Thr
-      REAL Finfact
-C     ------------------------------------------------------------------
-C     LOCAL VARIABLES
-C     ------------------------------------------------------------------
-      DOUBLE PRECISION fm, avwat, avdpt, delstor
-      DOUBLE PRECISION totalwc, ghdif, depthinc, depthsave
-      INTEGER kknt, jj, jk, j, iset, nwavm1, iret, kkntm1,kkntm2
-C     ------------------------------------------------------------------
-C
-C65-----TOTAL WATER CONTENT AND FLUX OVER SPECIFIED DEPTH.
-        IF ( il.GT.0 ) THEN
-          ghdif = Celtop - H
-          totalwc = 0.0
-          iset = 1
-          iret = 0
-          depthsave = 0.0D0
-          Cellflux(1) = finfact 
-          DO kknt =3, NLAY
-            kkntm1 = kknt - 1
-            kkntm2 = kknt - 2
-            depthinc = BOTM(nuzc, nuzr, kkntm2)-
-     +               BOTM(nuzc, nuzr, kkntm1)
-            IF ( depthsave.LT.ghdif ) THEN
-              depthsave = depthsave + depthinc
-              IF ( depthsave.GT.ghdif ) THEN
-                depthsave = ghdif
-                depthinc = BOTM(nuzc, nuzr, kkntm2) - H
-              END IF
-              fm = 0.0D0
-              jj = iset
-              jk = iset + NWAVST(nuzc, nuzr) - 1
-              nwavm1 = jk
-              DO WHILE ( jk.GE.iset )
-                IF ( Depth(jk).LT.depthsave ) jj = jk
-                  jk = jk - 1
-              END DO
-              IF ( jj.GT.iset ) THEN
-                fm = fm + (Theta(jj-1)-thr)
-     +               *(depthsave-Depth(jj))
-                DO j = jj, nwavm1 - 1
-                  fm = fm + (Theta(j)-thr)
-     +                 *(Depth(j)-Depth(j+1))
-                END DO
-                fm = fm + (Theta(nwavm1)-thr)
-     +               *Depth(nwavm1)
-              ELSE
-                fm = fm + (Theta(nwavm1)-thr)*depthsave
-              END IF
-              avwat = fm-totalwc
-              delstor = (avwat-GRIDSTOR(nuzc, nuzr, kkntm1))
-              GRIDSTOR(nuzc, nuzr, kkntm1) = avwat
-              totalwc = fm
-              Celltheta(kkntm1) = thr + avwat/depthinc
-              IF( kkntm1.EQ.2 ) THEN
-                Cellflux(kkntm1) = finfact-delstor/DELT
-                Celltheta(1) = Celltheta(kkntm1)
-              ELSE
-                Cellflux(kkntm1) = Cellflux(kkntm1-1)-delstor/DELT
-              END IF
-              iret = iret + 1
-            END IF   
-          END DO
-        END IF
-C
-      END SUBROUTINE CELL_AVERAGE
 C     
 C-------SUBROUTINE GWF2UZF1DA
       SUBROUTINE GWF2UZF1DA(Igrid)
@@ -1344,20 +1261,20 @@ C     ------------------------------------------------------------------
       DEALLOCATE (GWFUZFDAT(Igrid)%NUZGAGAR)
       DEALLOCATE (GWFUZFDAT(Igrid)%NUZCL)
       DEALLOCATE (GWFUZFDAT(Igrid)%NUZRW)
-      DEALLOCATE (GWFUZFDAT(Igrid)%ITRLSTH)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%ITRLSTH)
       DEALLOCATE (GWFUZFDAT(Igrid)%IRUNBND)
       DEALLOCATE (GWFUZFDAT(Igrid)%IUZFBND)
       DEALLOCATE (GWFUZFDAT(Igrid)%IUZLIST)
-      DEALLOCATE (GWFUZFDAT(Igrid)%NWAVST)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%NWAVST)
       DEALLOCATE (GWFUZFDAT(Igrid)%IUZHOLD)
-      DEALLOCATE (GWFUZFDAT(Igrid)%LTRLIT)
-      DEALLOCATE (GWFUZFDAT(Igrid)%LTRLST)
-      DEALLOCATE (GWFUZFDAT(Igrid)%ITRLIT)
-      DEALLOCATE (GWFUZFDAT(Igrid)%ITRLST)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%LTRLIT)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%LTRLST)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%ITRLIT)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%ITRLST)
       DEALLOCATE (GWFUZFDAT(Igrid)%TOTRUNOFF)
-      DEALLOCATE (GWFUZFDAT(Igrid)%FBINS)
-      DEALLOCATE (GWFUZFDAT(Igrid)%SEEPOUT)
-      DEALLOCATE (GWFUZFDAT(Igrid)%EXCESPP)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%FBINS)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%SEEPOUT)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%EXCESPP)
       DEALLOCATE (GWFUZFDAT(Igrid)%VKS)
       DEALLOCATE (GWFUZFDAT(Igrid)%EPS)
       DEALLOCATE (GWFUZFDAT(Igrid)%THTS)
@@ -1366,30 +1283,30 @@ C     ------------------------------------------------------------------
       DEALLOCATE (GWFUZFDAT(Igrid)%ROOTDPTH)
       DEALLOCATE (GWFUZFDAT(Igrid)%WCWILT)
       DEALLOCATE (GWFUZFDAT(Igrid)%FINF)
-      DEALLOCATE (GWFUZFDAT(Igrid)%DELSTOR)
-      DEALLOCATE (GWFUZFDAT(Igrid)%UZOLSFLX)
-      DEALLOCATE (GWFUZFDAT(Igrid)%HLDUZF)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%DELSTOR)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%UZOLSFLX)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%HLDUZF)
       DEALLOCATE (GWFUZFDAT(Igrid)%UZFETOUT)
-      DEALLOCATE (GWFUZFDAT(Igrid)%GWET)
-      DEALLOCATE (GWFUZFDAT(Igrid)%UZTOTBAL)
-      DEALLOCATE (GWFUZFDAT(Igrid)%CUMUZVOL)
-      DEALLOCATE (GWFUZFDAT(Igrid)%UZTSRAT)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%GWET)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%UZTOTBAL)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%CUMUZVOL)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%UZTSRAT)
       DEALLOCATE (GWFUZFDAT(Igrid)%THTR)
-      DEALLOCATE (GWFUZFDAT(Igrid)%UZFLWT)
-      DEALLOCATE (GWFUZFDAT(Igrid)%UZSTOR)
-      DEALLOCATE (GWFUZFDAT(Igrid)%UZDPIT)
-      DEALLOCATE (GWFUZFDAT(Igrid)%UZDPST)
-      DEALLOCATE (GWFUZFDAT(Igrid)%UZTHIT)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%UZFLWT)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%UZSTOR)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%UZDPIT)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%UZDPST)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%UZTHIT)
       DEALLOCATE (GWFUZFDAT(Igrid)%UZTHST)
-      DEALLOCATE (GWFUZFDAT(Igrid)%UZSPIT)
-      DEALLOCATE (GWFUZFDAT(Igrid)%UZSPST)
-      DEALLOCATE (GWFUZFDAT(Igrid)%UZFLIT)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%UZSPIT)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%UZSPST)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%UZFLIT)
       DEALLOCATE (GWFUZFDAT(Igrid)%UZFLST)
-      DEALLOCATE (GWFUZFDAT(Igrid)%REJ_INF)
-      DEALLOCATE (GWFUZFDAT(Igrid)%TO_CFP)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%REJ_INF)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%TO_CFP)
       DEALLOCATE (GWFUZFDAT(Igrid)%SURFDEP)
       DEALLOCATE (GWFUZFDAT(Igrid)%RTSOLUTE)
-      DEALLOCATE (GWFUZFDAT(Igrid)%GRIDSTOR)
+!      DEALLOCATE (GWFUZFDAT(Igrid)%GRIDSTOR)
 C
       END SUBROUTINE GWF2UZF1DA
 C
@@ -1419,20 +1336,20 @@ C     ------------------------------------------------------------------
       NUZGAGAR=>GWFUZFDAT(Igrid)%NUZGAGAR
       NUZCL=>GWFUZFDAT(Igrid)%NUZCL
       NUZRW=>GWFUZFDAT(Igrid)%NUZRW
-      ITRLSTH=>GWFUZFDAT(Igrid)%ITRLSTH
+!      ITRLSTH=>GWFUZFDAT(Igrid)%ITRLSTH
       IRUNBND=>GWFUZFDAT(Igrid)%IRUNBND
       IUZFBND=>GWFUZFDAT(Igrid)%IUZFBND
       IUZLIST=>GWFUZFDAT(Igrid)%IUZLIST
-      NWAVST=>GWFUZFDAT(Igrid)%NWAVST
+!      NWAVST=>GWFUZFDAT(Igrid)%NWAVST
       IUZHOLD=>GWFUZFDAT(Igrid)%IUZHOLD
-      LTRLIT=>GWFUZFDAT(Igrid)%LTRLIT
-      LTRLST=>GWFUZFDAT(Igrid)%LTRLST
-      ITRLIT=>GWFUZFDAT(Igrid)%ITRLIT
-      ITRLST=>GWFUZFDAT(Igrid)%ITRLST
+!      LTRLIT=>GWFUZFDAT(Igrid)%LTRLIT
+!      LTRLST=>GWFUZFDAT(Igrid)%LTRLST
+!      ITRLIT=>GWFUZFDAT(Igrid)%ITRLIT
+!      ITRLST=>GWFUZFDAT(Igrid)%ITRLST
       TOTRUNOFF=>GWFUZFDAT(Igrid)%TOTRUNOFF
-      FBINS=>GWFUZFDAT(Igrid)%FBINS
-      SEEPOUT=>GWFUZFDAT(Igrid)%SEEPOUT
-      EXCESPP=>GWFUZFDAT(Igrid)%EXCESPP
+!      FBINS=>GWFUZFDAT(Igrid)%FBINS
+!      SEEPOUT=>GWFUZFDAT(Igrid)%SEEPOUT
+!      EXCESPP=>GWFUZFDAT(Igrid)%EXCESPP
       VKS=>GWFUZFDAT(Igrid)%VKS
       EPS=>GWFUZFDAT(Igrid)%EPS
       THTS=>GWFUZFDAT(Igrid)%THTS
@@ -1441,30 +1358,30 @@ C     ------------------------------------------------------------------
       ROOTDPTH=>GWFUZFDAT(Igrid)%ROOTDPTH
       WCWILT=>GWFUZFDAT(Igrid)%WCWILT
       FINF=>GWFUZFDAT(Igrid)%FINF
-      DELSTOR=>GWFUZFDAT(Igrid)%DELSTOR
-      UZOLSFLX=>GWFUZFDAT(Igrid)%UZOLSFLX
-      HLDUZF=>GWFUZFDAT(Igrid)%HLDUZF
+!      DELSTOR=>GWFUZFDAT(Igrid)%DELSTOR
+!      UZOLSFLX=>GWFUZFDAT(Igrid)%UZOLSFLX
+!      HLDUZF=>GWFUZFDAT(Igrid)%HLDUZF
       UZFETOUT=>GWFUZFDAT(Igrid)%UZFETOUT
-      GWET=>GWFUZFDAT(Igrid)%GWET
-      UZTOTBAL=>GWFUZFDAT(Igrid)%UZTOTBAL
-      CUMUZVOL=>GWFUZFDAT(Igrid)%CUMUZVOL
-      UZTSRAT=>GWFUZFDAT(Igrid)%UZTSRAT     
+!      GWET=>GWFUZFDAT(Igrid)%GWET
+!      UZTOTBAL=>GWFUZFDAT(Igrid)%UZTOTBAL
+!      CUMUZVOL=>GWFUZFDAT(Igrid)%CUMUZVOL
+!      UZTSRAT=>GWFUZFDAT(Igrid)%UZTSRAT     
       THTR=>GWFUZFDAT(Igrid)%THTR
-      UZFLWT=>GWFUZFDAT(Igrid)%UZFLWT
-      UZSTOR=>GWFUZFDAT(Igrid)%UZSTOR
-      UZDPIT=>GWFUZFDAT(Igrid)%UZDPIT
-      UZDPST=>GWFUZFDAT(Igrid)%UZDPST
-      UZTHIT=>GWFUZFDAT(Igrid)%UZTHIT
+!      UZFLWT=>GWFUZFDAT(Igrid)%UZFLWT
+!      UZSTOR=>GWFUZFDAT(Igrid)%UZSTOR
+!      UZDPIT=>GWFUZFDAT(Igrid)%UZDPIT
+!      UZDPST=>GWFUZFDAT(Igrid)%UZDPST
+!      UZTHIT=>GWFUZFDAT(Igrid)%UZTHIT
       UZTHST=>GWFUZFDAT(Igrid)%UZTHST
-      UZSPIT=>GWFUZFDAT(Igrid)%UZSPIT
-      UZSPST=>GWFUZFDAT(Igrid)%UZSPST
-      UZFLIT=>GWFUZFDAT(Igrid)%UZFLIT
+!      UZSPIT=>GWFUZFDAT(Igrid)%UZSPIT
+!      UZSPST=>GWFUZFDAT(Igrid)%UZSPST
+!      UZFLIT=>GWFUZFDAT(Igrid)%UZFLIT
       UZFLST=>GWFUZFDAT(Igrid)%UZFLST
-      REJ_INF=>GWFUZFDAT(Igrid)%REJ_INF
-      TO_CFP=>GWFUZFDAT(Igrid)%TO_CFP
+!      REJ_INF=>GWFUZFDAT(Igrid)%REJ_INF
+!      TO_CFP=>GWFUZFDAT(Igrid)%TO_CFP
       SURFDEP=>GWFUZFDAT(Igrid)%SURFDEP
       RTSOLUTE=>GWFUZFDAT(Igrid)%RTSOLUTE
-      GRIDSTOR=>GWFUZFDAT(Igrid)%GRIDSTOR
+!      GRIDSTOR=>GWFUZFDAT(Igrid)%GRIDSTOR
 C
       END SUBROUTINE SGWF2UZF1PNT
 C
@@ -1494,20 +1411,20 @@ C     ------------------------------------------------------------------
       GWFUZFDAT(Igrid)%NUZGAGAR=>NUZGAGAR
       GWFUZFDAT(Igrid)%NUZCL=>NUZCL
       GWFUZFDAT(Igrid)%NUZRW=>NUZRW
-      GWFUZFDAT(Igrid)%ITRLSTH=>ITRLSTH
+!      GWFUZFDAT(Igrid)%ITRLSTH=>ITRLSTH
       GWFUZFDAT(Igrid)%IRUNBND=>IRUNBND
       GWFUZFDAT(Igrid)%IUZFBND=>IUZFBND
       GWFUZFDAT(Igrid)%IUZLIST=>IUZLIST
-      GWFUZFDAT(Igrid)%NWAVST=>NWAVST
+!      GWFUZFDAT(Igrid)%NWAVST=>NWAVST
       GWFUZFDAT(Igrid)%IUZHOLD=>IUZHOLD
-      GWFUZFDAT(Igrid)%LTRLIT=>LTRLIT
-      GWFUZFDAT(Igrid)%LTRLST=>LTRLST
-      GWFUZFDAT(Igrid)%ITRLIT=>ITRLIT
-      GWFUZFDAT(Igrid)%ITRLST=>ITRLST
+!      GWFUZFDAT(Igrid)%LTRLIT=>LTRLIT
+!      GWFUZFDAT(Igrid)%LTRLST=>LTRLST
+!      GWFUZFDAT(Igrid)%ITRLIT=>ITRLIT
+!      GWFUZFDAT(Igrid)%ITRLST=>ITRLST
       GWFUZFDAT(Igrid)%TOTRUNOFF=>TOTRUNOFF
-      GWFUZFDAT(Igrid)%FBINS=>FBINS
-      GWFUZFDAT(Igrid)%SEEPOUT=>SEEPOUT
-      GWFUZFDAT(Igrid)%EXCESPP=>EXCESPP
+!      GWFUZFDAT(Igrid)%FBINS=>FBINS
+!      GWFUZFDAT(Igrid)%SEEPOUT=>SEEPOUT
+!      GWFUZFDAT(Igrid)%EXCESPP=>EXCESPP
       GWFUZFDAT(Igrid)%VKS=>VKS
       GWFUZFDAT(Igrid)%EPS=>EPS
       GWFUZFDAT(Igrid)%THTS=>THTS
@@ -1516,29 +1433,29 @@ C     ------------------------------------------------------------------
       GWFUZFDAT(Igrid)%ROOTDPTH=>ROOTDPTH
       GWFUZFDAT(Igrid)%WCWILT=>WCWILT
       GWFUZFDAT(Igrid)%FINF=>FINF
-      GWFUZFDAT(Igrid)%DELSTOR=>DELSTOR
-      GWFUZFDAT(Igrid)%UZOLSFLX=>UZOLSFLX
-      GWFUZFDAT(Igrid)%HLDUZF=>HLDUZF
+!      GWFUZFDAT(Igrid)%DELSTOR=>DELSTOR
+!      GWFUZFDAT(Igrid)%UZOLSFLX=>UZOLSFLX
+!      GWFUZFDAT(Igrid)%HLDUZF=>HLDUZF
       GWFUZFDAT(Igrid)%UZFETOUT=>UZFETOUT
-      GWFUZFDAT(Igrid)%GWET=>GWET
-      GWFUZFDAT(Igrid)%UZTOTBAL=>UZTOTBAL
-      GWFUZFDAT(Igrid)%CUMUZVOL=>CUMUZVOL
-      GWFUZFDAT(Igrid)%UZTSRAT=>UZTSRAT
+!      GWFUZFDAT(Igrid)%GWET=>GWET
+!      GWFUZFDAT(Igrid)%UZTOTBAL=>UZTOTBAL
+!      GWFUZFDAT(Igrid)%CUMUZVOL=>CUMUZVOL
+!      GWFUZFDAT(Igrid)%UZTSRAT=>UZTSRAT
       GWFUZFDAT(Igrid)%THTR=>THTR
-      GWFUZFDAT(Igrid)%UZFLWT=>UZFLWT
-      GWFUZFDAT(Igrid)%UZSTOR=>UZSTOR
-      GWFUZFDAT(Igrid)%UZDPIT=>UZDPIT
-      GWFUZFDAT(Igrid)%UZDPST=>UZDPST
-      GWFUZFDAT(Igrid)%UZTHIT=>UZTHIT
+!      GWFUZFDAT(Igrid)%UZFLWT=>UZFLWT
+!      GWFUZFDAT(Igrid)%UZSTOR=>UZSTOR
+!      GWFUZFDAT(Igrid)%UZDPIT=>UZDPIT
+!      GWFUZFDAT(Igrid)%UZDPST=>UZDPST
+!      GWFUZFDAT(Igrid)%UZTHIT=>UZTHIT
       GWFUZFDAT(Igrid)%UZTHST=>UZTHST
-      GWFUZFDAT(Igrid)%UZSPIT=>UZSPIT
-      GWFUZFDAT(Igrid)%UZSPST=>UZSPST
-      GWFUZFDAT(Igrid)%UZFLIT=>UZFLIT
+!      GWFUZFDAT(Igrid)%UZSPIT=>UZSPIT
+!      GWFUZFDAT(Igrid)%UZSPST=>UZSPST
+!      GWFUZFDAT(Igrid)%UZFLIT=>UZFLIT
       GWFUZFDAT(Igrid)%UZFLST=>UZFLST
-      GWFUZFDAT(Igrid)%REJ_INF=>REJ_INF
-      GWFUZFDAT(Igrid)%TO_CFP=>TO_CFP
+!      GWFUZFDAT(Igrid)%REJ_INF=>REJ_INF
+!      GWFUZFDAT(Igrid)%TO_CFP=>TO_CFP
       GWFUZFDAT(Igrid)%SURFDEP=>SURFDEP
       GWFUZFDAT(Igrid)%RTSOLUTE=>RTSOLUTE
-      GWFUZFDAT(Igrid)%GRIDSTOR=>GRIDSTOR
+!      GWFUZFDAT(Igrid)%GRIDSTOR=>GRIDSTOR
 C
       END SUBROUTINE SGWF2UZF1PSV

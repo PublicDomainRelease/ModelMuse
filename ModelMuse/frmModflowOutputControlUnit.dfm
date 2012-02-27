@@ -2,16 +2,16 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
   HelpType = htKeyword
   HelpKeyword = 'MODFLOW_Output_Control_Dialog_Box'
   Caption = 'MODFLOW Output Control'
-  ClientHeight = 373
+  ClientHeight = 403
   ClientWidth = 549
   ExplicitWidth = 557
-  ExplicitHeight = 407
+  ExplicitHeight = 437
   PixelsPerInch = 96
   TextHeight = 18
   object JvNetscapeSplitter1: TJvNetscapeSplitter
     Left = 121
     Top = 0
-    Height = 332
+    Height = 362
     Align = alLeft
     Maximized = False
     Minimized = False
@@ -22,11 +22,11 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 332
+    Top = 362
     Width = 549
     Height = 41
     Align = alBottom
-    TabOrder = 0
+    TabOrder = 2
     DesignSize = (
       549
       41)
@@ -40,12 +40,12 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       Kind = bkHelp
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 0
+      TabOrder = 1
       OnClick = btnHelpClick
     end
     object btnOK: TBitBtn
       Left = 373
-      Top = 7
+      Top = 6
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
@@ -53,7 +53,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       Kind = bkOK
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 1
+      TabOrder = 0
       OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
@@ -73,7 +73,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
     Left = 0
     Top = 0
     Width = 121
-    Height = 332
+    Height = 362
     AutoExpand = False
     ShowLines = True
     PageDefault = 0
@@ -82,22 +82,24 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
     HideSelection = False
     Indent = 20
     RowSelect = True
-    TabOrder = 1
+    TabOrder = 0
     Items.NodeData = {
-      03040000002C0000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF000000
+      03050000002C0000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF000000
       00000000000107470065006E006500720061006C002600000000000000000000
       00FFFFFFFFFFFFFFFFFFFFFFFF0100000000000000010448006500610064002E
       0000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF020000000000000001
       08440072006100770064006F0077006E002A0000000000000000000000FFFFFF
-      FFFFFFFFFFFFFFFFFF00000000000000000106420075006400670065007400}
-    Items.Links = {0400000000000000000000000000000000000000}
+      FFFFFFFFFFFFFFFFFF030000000000000001064200750064006700650074002A
+      0000000000000000000000FFFFFFFFFFFFFFFF00000000040000000000000001
+      064D005400330044004D005300}
+    Items.Links = {050000000000000001000000020000000300000004000000}
   end
   object jvPages: TJvPageList
     Left = 131
     Top = 0
     Width = 418
-    Height = 332
-    ActivePage = jvspDrawdown
+    Height = 362
+    ActivePage = jvspMT3DMS
     PropagateEnable = False
     Align = alClient
     OnChange = jvPagesChange
@@ -105,13 +107,13 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       Left = 0
       Top = 0
       Width = 418
-      Height = 332
+      Height = 362
       HelpType = htKeyword
       HelpKeyword = 'General_Pane'
       Caption = 'jvspGeneral'
       DesignSize = (
         418
-        332)
+        362)
       object Comments: TLabel
         Left = 6
         Top = 49
@@ -157,7 +159,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
         Left = 6
         Top = 72
         Width = 409
-        Height = 254
+        Height = 284
         Anchors = [akLeft, akTop, akRight, akBottom]
         TabOrder = 2
       end
@@ -166,7 +168,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       Left = 0
       Top = 0
       Width = 418
-      Height = 332
+      Height = 362
       HelpType = htKeyword
       HelpKeyword = 'Head_and_Drawdown_Panes'
       Caption = 'jvspHead'
@@ -174,7 +176,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
         Left = 0
         Top = 0
         Width = 418
-        Height = 332
+        Height = 362
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clBlack
@@ -186,7 +188,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
         TabOrder = 0
         TabStop = True
         ExplicitWidth = 418
-        ExplicitHeight = 332
+        ExplicitHeight = 362
         inherited lblOutputType: TLabel
           Width = 38
           Caption = 'Head'
@@ -204,6 +206,24 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
           Width = 192
           Caption = 'Listing file format (IHEDFM)'
           ExplicitWidth = 192
+        end
+        inherited comboP: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboREdit: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboFrequency: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboPrintStyle: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboPrintFormat: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboSaveType: TJvImageComboBox
+          ItemIndex = -1
         end
         inherited rcExternalFormat: TRbwController
           ControlList = <
@@ -241,7 +261,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       Left = 0
       Top = 0
       Width = 418
-      Height = 332
+      Height = 362
       HelpType = htKeyword
       HelpKeyword = 'Head_and_Drawdown_Panes'
       Caption = 'jvspDrawdown'
@@ -249,7 +269,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
         Left = 0
         Top = 0
         Width = 418
-        Height = 332
+        Height = 362
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clBlack
@@ -261,7 +281,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
         TabOrder = 0
         TabStop = True
         ExplicitWidth = 418
-        ExplicitHeight = 332
+        ExplicitHeight = 362
         inherited lblOutputType: TLabel
           Width = 74
           Caption = 'Drawdown'
@@ -279,6 +299,24 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
           Width = 193
           Caption = 'Listing file format (IDDNFM)'
           ExplicitWidth = 193
+        end
+        inherited comboP: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboREdit: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboFrequency: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboPrintStyle: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboPrintFormat: TJvImageComboBox
+          ItemIndex = -1
+        end
+        inherited comboSaveType: TJvImageComboBox
+          ItemIndex = -1
         end
         inherited rcExternalFormat: TRbwController
           ControlList = <
@@ -316,7 +354,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       Left = 0
       Top = 0
       Width = 418
-      Height = 332
+      Height = 362
       HelpType = htKeyword
       HelpKeyword = 'Budget_Pane'
       Caption = 'jvspBudget'
@@ -369,7 +407,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
           'None'
           'Binary'
           'Listing')
-        TabOrder = 1
+        TabOrder = 3
         CaptionVisible = True
       end
       object comboFrequency: TJvImageComboBox
@@ -384,7 +422,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
         ImageWidth = 0
         ItemHeight = 22
         ItemIndex = 0
-        TabOrder = 2
+        TabOrder = 1
         Items = <
           item
             Brush.Style = bsClear
@@ -406,7 +444,173 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
         ButtonKind = bkClassic
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
+        TabOrder = 2
+      end
+    end
+    object jvspMT3DMS: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 418
+      Height = 362
+      HelpType = htKeyword
+      HelpKeyword = 'MT3DMS_Pane'
+      Caption = 'jvspMT3DMS'
+      object lblMt3dmsPrintN: TLabel
+        Left = 255
+        Top = 59
+        Width = 11
+        Height = 18
+        Caption = 'N'
+      end
+      object lblMt3dmsPrintWhen: TLabel
+        Left = 6
+        Top = 33
+        Width = 251
+        Height = 18
+        Caption = 'When to print and save data (NPRS)'
+      end
+      object lblMt3dmsPrintConc: TLabel
+        Left = 79
+        Top = 89
+        Width = 318
+        Height = 18
+        Caption = 'Frequency for saving observations (NPROBS)'
+      end
+      object lblMt3dMsPrintMassBalance: TLabel
+        Left = 79
+        Top = 144
+        Width = 327
+        Height = 18
+        Caption = 'Frequency for saving mass balance (NPRMAS)'
+      end
+      object cbMt3dSaveConc: TCheckBox
+        Left = 6
+        Top = 10
+        Width = 395
+        Height = 17
+        Caption = 'Save concentrations to external file (SAVUCN)'
+        TabOrder = 0
+      end
+      object comboSaveMt3msResults: TComboBox
+        Left = 8
+        Top = 54
+        Width = 228
+        Height = 26
+        Style = csDropDownList
+        ItemIndex = 1
+        TabOrder = 1
+        Text = 'at end of simulation'
+        OnChange = comboSaveMt3msResultsChange
+        Items.Strings = (
+          'at specified times'
+          'at end of simulation'
+          'every N transport steps')
+      end
+      object spinMt3dmsPrintN: TJvSpinEdit
+        Left = 272
+        Top = 54
+        Width = 71
+        Height = 26
+        MaxValue = 2147483647.000000000000000000
+        MinValue = 1.000000000000000000
+        Value = 1.000000000000000000
+        TabOrder = 2
+      end
+      object spinMt3dmsPrintObs: TJvSpinEdit
+        Left = 6
+        Top = 86
+        Width = 67
+        Height = 26
+        MaxValue = 2147483647.000000000000000000
+        Value = 1.000000000000000000
         TabOrder = 3
+      end
+      object spinMt3dMsPrintMassBalance: TJvSpinEdit
+        Left = 6
+        Top = 141
+        Width = 67
+        Height = 26
+        MaxValue = 2147483647.000000000000000000
+        Value = 1.000000000000000000
+        TabOrder = 5
+      end
+      object cbSummarizeMassBalance: TCheckBox
+        Left = 6
+        Top = 118
+        Width = 369
+        Height = 17
+        Caption = 'Summarize mass balance (CHKMAS)'
+        TabOrder = 4
+      end
+      inline frameMt3dmsTimes: TframeGrid
+        Left = 0
+        Top = 172
+        Width = 418
+        Height = 190
+        Align = alBottom
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        TabOrder = 6
+        ExplicitTop = 172
+        ExplicitWidth = 418
+        ExplicitHeight = 190
+        inherited Panel: TPanel
+          Top = 149
+          Width = 418
+          ExplicitTop = 149
+          ExplicitWidth = 418
+          inherited lbNumber: TLabel
+            Width = 218
+            Height = 18
+            Caption = 'Number of output times (NPRS)'
+            ExplicitWidth = 218
+            ExplicitHeight = 18
+          end
+          inherited sbAdd: TSpeedButton
+            Left = 310
+            ExplicitLeft = 310
+          end
+          inherited sbInsert: TSpeedButton
+            Left = 339
+            ExplicitLeft = 339
+          end
+          inherited sbDelete: TSpeedButton
+            Left = 368
+            ExplicitLeft = 368
+          end
+          inherited seNumber: TJvSpinEdit
+            Height = 26
+            ExplicitHeight = 26
+          end
+        end
+        inherited Grid: TRbwDataGrid4
+          Width = 418
+          Height = 149
+          Columns = <
+            item
+              AutoAdjustRowHeights = False
+              ButtonCaption = '...'
+              ButtonFont.Charset = DEFAULT_CHARSET
+              ButtonFont.Color = clWindowText
+              ButtonFont.Height = -11
+              ButtonFont.Name = 'Tahoma'
+              ButtonFont.Style = []
+              ButtonUsed = False
+              ButtonWidth = 20
+              CheckMax = False
+              CheckMin = False
+              ComboUsed = False
+              Format = rcf4Real
+              LimitToList = False
+              MaxLength = 0
+              ParentButtonFont = False
+              WordWrapCaptions = False
+              WordWrapCells = False
+              CaseSensitivePicklist = False
+              AutoAdjustColWidths = True
+            end>
+          ExplicitWidth = 418
+          ExplicitHeight = 149
+        end
       end
     end
   end

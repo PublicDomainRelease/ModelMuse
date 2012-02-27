@@ -48,7 +48,7 @@
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
 			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
 			<DCC_DebugDCUs>true</DCC_DebugDCUs>
-			<DCC_Define>DEBUG;FullDebugMode;$(DCC_Define)</DCC_Define>
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 			<DCC_Optimize>false</DCC_Optimize>
 		</PropertyGroup>
 		<ItemGroup>
@@ -482,10 +482,6 @@
 			</DCCReference>
 			<DCCReference Include="ModflowHobUnit.pas"/>
 			<DCCReference Include="ClassificationUnit.pas"/>
-			<DCCReference Include="frameHeadObservationsUnit.pas">
-				<Form>frameHeadObservations</Form>
-				<DesignClass>TFrame</DesignClass>
-			</DCCReference>
 			<DCCReference Include="ModflowHOB_WriterUnit.pas"/>
 			<DCCReference Include="ValueArrayStorageUnit.pas"/>
 			<DCCReference Include="ModflowHfbUnit.pas"/>
@@ -557,10 +553,6 @@
 			<DCCReference Include="FluxObservationUnit.pas"/>
 			<DCCReference Include="frmManageFluxObservationsUnit.pas">
 				<Form>frmManageFluxObservations</Form>
-			</DCCReference>
-			<DCCReference Include="frameFluxObsUnit.pas">
-				<Form>frameFluxObs</Form>
-				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="frmSpecifyContoursUnit.pas">
 				<Form>frmSpecifyContours</Form>
@@ -785,6 +777,80 @@
 				<Form>frameContourData</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
+			<DCCReference Include="frameMt3dBasicPkgUnit.pas">
+				<Form>frameMt3dBasicPkg</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameGridUnit.pas">
+				<Form>frameGrid</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Mt3dmsTimesUnit.pas"/>
+			<DCCReference Include="frameMt3dmsGcgPackageUnit.pas">
+				<Form>frameMt3dmsGcgPackage</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameMt3dmsAdvPkgUnit.pas">
+				<Form>frameMt3dmsAdvPkg</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameMt3dmsDispersionPkgUnit.pas">
+				<Form>frameMt3dmsDispersionPkg</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Mt3dmsChemUnit.pas"/>
+			<DCCReference Include="Mt3dmsChemSpeciesUnit.pas"/>
+			<DCCReference Include="frameMt3dmsChemReactionPkgUnit.pas">
+				<Form>frameMt3dmsChemReactionPkg</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Mt3dmsBtnWriterUnit.pas"/>
+			<DCCReference Include="frmRunMt3dmsUnit.pas">
+				<Form>frmRunMt3dms</Form>
+			</DCCReference>
+			<DCCReference Include="Mt3dmsAdvWriterUnit.pas"/>
+			<DCCReference Include="Mt3dmsDspWriterUnit.pas"/>
+			<DCCReference Include="Mt3dmsSsmWriterUnit.pas"/>
+			<DCCReference Include="frameScreenObjectSsmUnit.pas">
+				<Form>frameScreenObjectSsm</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Mt3dmsRctWriterUnit.pas"/>
+			<DCCReference Include="Mt3dmsGcgWriterUnit.pas"/>
+			<DCCReference Include="frameMt3dmsTransObsPkgUnit.pas">
+				<Form>frameMt3dmsTransObsPkg</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Mt3dmsTobUnit.pas"/>
+			<DCCReference Include="frameCustomCellObservationUnit.pas">
+				<Form>frameCustomCellObservation</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameHeadObservationsUnit.pas">
+				<Form>frameHeadObservations</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameConcentrationObservationUnit.pas">
+				<Form>frameConcentrationObservation</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="Mt3dmsFluxObservationsUnit.pas"/>
+			<DCCReference Include="Mt3dmsTobWriterUnit.pas"/>
+			<DCCReference Include="CustomFrameFluxObsUnit.pas">
+				<Form>CustomframeFluxObs</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameFluxObsUnit.pas">
+				<Form>frameFluxObs</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameMt3dmsFluxObsUnit.pas">
+				<Form>frameMt3dmsFluxObs</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="ModflowMt3dmsLinkWriterUnit.pas"/>
+			<DCCReference Include="ReadPvalUnit.pas"/>
+			<DCCReference Include="ReadGlobalsUnit.pas"/>
 			<None Include="ModelMuse.todo"/>
 			<None Include="ModelSupport_ModelMuse\default.txaPackage"/>
 			<None Include="ModelSupport_ModelMuse\SideLeakyZone\default.txaPackage"/>
@@ -1479,7 +1545,7 @@
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">2</VersionInfo>
-						<VersionInfo Name="MinorVer">12</VersionInfo>
+						<VersionInfo Name="MinorVer">13</VersionInfo>
 						<VersionInfo Name="Release">0</VersionInfo>
 						<VersionInfo Name="Build">0</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
@@ -1493,15 +1559,15 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">U. S. Geological Survey</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">2.12.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">2.13.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright">Public Domain software</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename"/>
 						<VersionInfoKeys Name="ProductName">ModelMuse</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">2.12.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">2.13.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
-						<VersionInfoKeys Name="Last Compile">2011-11-07 14:04</VersionInfoKeys>
+						<VersionInfoKeys Name="Last Compile">2012-02-28 11:09</VersionInfoKeys>
 					</VersionInfoKeys>
 					<Excluded_Packages>
 						<Excluded_Packages Name="$(BDSBIN)\dcloffice2k150.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>

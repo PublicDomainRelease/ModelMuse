@@ -14,7 +14,7 @@ interface
 
 uses Classes, Contnrs, Controls, Forms, RbwParser, Undo, GoPhastTypes, AbstractGridUnit,
   DataSetUnit, PhastDataSets, FluxObservationUnit, FormulaManagerUnit,
-  DisplaySettingsUnit;
+  DisplaySettingsUnit, Mt3dmsFluxObservationsUnit;
 
 type
   {@abstract(@name is an abstract base class used as an ancestor
@@ -686,6 +686,24 @@ type
     procedure Undo; override;
   end;
 
+  TMassFluxObs = record
+    Mt3dmsHeadMassFluxObservations: TMt3dmsFluxObservationGroups;
+    Mt3dmsWellMassFluxObservations: TMt3dmsFluxObservationGroups;
+    Mt3dmsDrnMassFluxObservations: TMt3dmsFluxObservationGroups;
+    Mt3dmsRivMassFluxObservations: TMt3dmsFluxObservationGroups;
+    Mt3dmsGhbMassFluxObservations: TMt3dmsFluxObservationGroups;
+    Mt3dmsRchMassFluxObservations: TMt3dmsFluxObservationGroups;
+    Mt3dmsEvtMassFluxObservations: TMt3dmsFluxObservationGroups;
+    Mt3dmsMassLoadingMassFluxObservations: TMt3dmsFluxObservationGroups;
+    Mt3dmsResMassFluxObservations: TMt3dmsFluxObservationGroups;
+    Mt3dmsLakMassFluxObservations: TMt3dmsFluxObservationGroups;
+    Mt3dmsDrtMassFluxObservations: TMt3dmsFluxObservationGroups;
+    Mt3dmsEtsMassFluxObservations: TMt3dmsFluxObservationGroups;
+    procedure NilAll;
+    procedure CreateAll;
+    procedure FreeAll;
+  end;
+
   TUndoEditFluxObservations = class(TCustomUndo)
   private
     FOldChobObservations: TFluxObservationGroups;
@@ -696,12 +714,17 @@ type
     FNewGbobObservations: TFluxObservationGroups;
     FOldRvobObservations: TFluxObservationGroups;
     FNewRvobObservations: TFluxObservationGroups;
+    FOldMt3dObs: TMassFluxObs;
+    FNewMt3dObs: TMassFluxObs;
+    procedure AssignMt3dObsToModel(MtsdObs: TMassFluxObs);
+    procedure FillMt3dLists(var Mt3dObs: TMassFluxObs);
   protected
     function Description: string; override;
   public
     Constructor Create;
     procedure AssignNewObservations(NewChobObservations, NewDrobObservations,
-      NewGbobObservations, NewRvobObservations: TFluxObservationGroups);
+      NewGbobObservations, NewRvobObservations: TFluxObservationGroups;
+      var NewMtsdObs: TMassFluxObs);
     Destructor Destroy; override;
     procedure DoCommand; override;
     procedure Undo; override;
@@ -726,6 +749,26 @@ uses SysUtils, Math, frmGoPhastUnit, InteractiveTools, frmSubdivideUnit,
   frmGoToUnit, FastGEO, frmShowHideObjectsUnit,
   frmGridValueUnit, PhastModelUnit, frmDisplayDataUnit;
 
+resourcestring
+  StrDeleteRow0dAt = 'delete row %0:d at %1:g.';
+  StrDeleteLayer0dAt = 'delete layer %0:d at %1:g.';
+  StrDeleteColumn0dA = 'delete column %0:d at %1:g.';
+  StrMoveRow0dFrom = 'move row %0:d from %1:g to %2:g.';
+  StrMoveColumn0dFro = 'move column %0:d from %1:g to %2:g.';
+  StrMoveLayer0dFrom = 'move layer %0:d from %1:g to %2:g.';
+  StrAddColumnAtG = 'add column at %g.';
+  StrAddRowAtG = 'add row at %g.';
+  StrAddLayerAtG = 'add layer at %g.';
+  StrChangeAngleFrom0 = 'change angle from %0:g to %1:g.';
+  StrEditGridLines = 'edit grid lines';
+  StrCreateGrid = 'create grid';
+  StrSmoothGrid = 'smooth grid';
+  StrChangeVerticalExag = 'change vertical exaggeration';
+  StrFreeSurface = 'free surface';
+  StrChangeDataSets = 'change data sets';
+  StrEditFluxObservatio = 'edit flux observations';
+  StrChangeImageSetting = 'change image settings';
+
 { TUndoDeleteRow }
 
 constructor TUndoDeleteRow.Create(const ARow: integer);
@@ -738,8 +781,7 @@ end;
 
 function TUndoDeleteRow.Description: string;
 begin
-  result := 'delete row ' + intToStr(FRow) + ' at '
-    + FloatToStr(FRowPosition);
+  result := Format(StrDeleteRow0dAt, [FRow, FRowPosition]);
 end;
 
 procedure TUndoDeleteRow.DoCommand;
@@ -786,8 +828,7 @@ end;
 
 function TUndoDeleteColumn.Description: string;
 begin
-  result := 'delete column ' + intToStr(FColumn) + ' at ' +
-    FloatToStr(FColumnPosition);
+  result := Format(StrDeleteColumn0dA, [FColumn, FColumnPosition]);
 end;
 
 procedure TUndoDeleteColumn.DoCommand;
@@ -876,8 +917,7 @@ end;
 
 function TUndoDeleteLayer.Description: string;
 begin
-  result := 'delete layer ' + intToStr(FLayer) + ' at ' +
-    FloatToStr(FLayerElevation);
+  result := Format(StrDeleteLayer0dAt, [FLayer, FLayerElevation]);
 end;
 
 procedure TUndoDeleteLayer.DoCommand;
@@ -923,8 +963,7 @@ end;
 
 function TUndoMoveRow.Description: string;
 begin
-  result := 'move row ' + IntToStr(FRow) + ' from ' + FloatToStr(FRowPosition)
-    + ' to ' + FloatToStr(FNewRowPosition)
+  result := Format(StrMoveRow0dFrom, [FRow, FRowPosition, FNewRowPosition]);
 end;
 
 procedure TUndoMoveRow.DoCommand;
@@ -961,8 +1000,8 @@ end;
 
 function TUndoMoveColumn.Description: string;
 begin
-  result := 'move column ' + IntToStr(FColumn) + ' from ' +
-    FloatToStr(FColumnPosition) + ' to ' + FloatToStr(FNewColumnPosition)
+  result :=  Format(StrMoveColumn0dFro,
+    [FColumn, FColumnPosition, FNewColumnPosition]);
 end;
 
 procedure TUndoMoveColumn.DoCommand;
@@ -999,8 +1038,8 @@ end;
 
 function TUndoMoveLayer.Description: string;
 begin
-  result := 'move layer ' + IntToStr(FLayer) + ' from ' +
-    FloatToStr(FLayerElevation) + ' to ' + FloatToStr(FNewLayerElevation)
+  result := Format(StrMoveLayer0dFrom,
+    [FLayer, FLayerElevation, FNewLayerElevation]);
 end;
 
 procedure TUndoMoveLayer.DoCommand;
@@ -1039,7 +1078,7 @@ end;
 
 function TUndoAddColumn.Description: string;
 begin
-  result := 'add column at ' + FloatToStr(FColumnPosition)
+  result := Format(StrAddColumnAtG, [FColumnPosition]);
 end;
 
 procedure TUndoAddColumn.DoCommand;
@@ -1086,7 +1125,7 @@ end;
 
 function TUndoAddRow.Description: string;
 begin
-  result := 'add row at ' + FloatToStr(RowPosition)
+  result := Format(StrAddRowAtG, [RowPosition]);
 end;
 
 procedure TUndoAddRow.DoCommand;
@@ -1133,7 +1172,7 @@ end;
 
 function TUndoAddLayer.Description: string;
 begin
-  result := 'add layer at ' + FloatToStr(FLayerElevation)
+  result := Format(StrAddLayerAtG, [FLayerElevation]);
 end;
 
 procedure TUndoAddLayer.DoCommand;
@@ -1381,8 +1420,8 @@ end;
 
 function TUndoSetAngle.Description: string;
 begin
-  result := 'change angle from ' + FloatToStr(FOldAngle / Pi * 180)
-    + ' to ' + FloatToStr(FNewAngle / Pi * 180);
+  result := Format(StrChangeAngleFrom0,
+    [(FOldAngle / Pi * 180), (FNewAngle / Pi * 180)]);
 end;
 
 procedure TUndoSetAngle.DoCommand;
@@ -1546,7 +1585,7 @@ end;
 
 function TUndoEditGridLines.Description: string;
 begin
-  result := 'edit grid lines';
+  result := StrEditGridLines;
 end;
 
 procedure TUndoEditGridLines.DoCommand;
@@ -1616,7 +1655,7 @@ end;
 
 function TUndoSmoothGrid.Description: string;
 begin
-  result := 'smooth grid';
+  result := StrSmoothGrid;
 end;
 
 { TUndoVerticalExaggeration }
@@ -1631,7 +1670,7 @@ end;
 
 function TUndoVerticalExaggeration.Description: string;
 begin
-  result := 'change vertical exaggeration';
+  result := StrChangeVerticalExag;
 end;
 
 procedure TUndoVerticalExaggeration.DoCommand;
@@ -1760,7 +1799,7 @@ end;
 
 function TUndoCreateGrid.Description: string;
 begin
-  result := 'create grid';
+  result := StrCreateGrid;
 end;
 
 procedure TUndoCreateGrid.DoCommand;
@@ -1807,7 +1846,7 @@ end;
 
 function TUndoFreeSurface.Description: string;
 begin
-  result := 'free surface';
+  result := StrFreeSurface;
 end;
 
 procedure TUndoFreeSurface.DoCommand;
@@ -1883,7 +1922,7 @@ end;
 
 function TUndoChangeDataSets.Description: string;
 begin
-  result := 'Change data sets';
+  result := StrChangeDataSets;
 end;
 
 destructor TUndoChangeDataSets.Destroy;
@@ -2426,11 +2465,13 @@ begin
 
   FOldRvobObservations := TFluxObservationGroups.Create(nil);
   FOldRvobObservations.Assign(frmGoPhast.PhastModel.RiverObservations);
+
+  FillMt3dLists(FOldMt3dObs);
 end;
 
 function TUndoEditFluxObservations.Description: string;
 begin
-  result := 'Edit Flux Observations';
+  result := StrEditFluxObservatio;
 end;
 
 destructor TUndoEditFluxObservations.Destroy;
@@ -2443,6 +2484,8 @@ begin
   FNewGbobObservations.Free;
   FOldRvobObservations.Free;
   FNewRvobObservations.Free;
+  FOldMt3dObs.FreeAll;
+  FNewMt3dObs.FreeAll;
   inherited;
 end;
 
@@ -2452,6 +2495,7 @@ begin
   frmGoPhast.PhastModel.DrainObservations := FNewDrobObservations;
   frmGoPhast.PhastModel.GhbObservations := FNewGbobObservations;
   frmGoPhast.PhastModel.RiverObservations := FNewRvobObservations;
+  AssignMt3dObsToModel(FNewMt3dObs)
 end;
 
 procedure TUndoEditFluxObservations.Undo;
@@ -2460,10 +2504,57 @@ begin
   frmGoPhast.PhastModel.DrainObservations := FOldDrobObservations;
   frmGoPhast.PhastModel.GhbObservations := FOldGbobObservations;
   frmGoPhast.PhastModel.RiverObservations := FOldRvobObservations;
+  AssignMt3dObsToModel(FOldMt3dObs)
+end;
+
+procedure TUndoEditFluxObservations.FillMt3dLists(var Mt3dObs: TMassFluxObs);
+begin
+  Mt3dObs.CreateAll;
+  Mt3dObs.Mt3dmsHeadMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsHeadMassFluxObservations);
+  Mt3dObs.Mt3dmsWellMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsWellMassFluxObservations);
+  Mt3dObs.Mt3dmsDrnMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsDrnMassFluxObservations);
+  Mt3dObs.Mt3dmsRivMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsRivMassFluxObservations);
+  Mt3dObs.Mt3dmsGhbMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsGhbMassFluxObservations);
+  Mt3dObs.Mt3dmsRchMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsRchMassFluxObservations);
+  Mt3dObs.Mt3dmsEvtMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsEvtMassFluxObservations);
+  Mt3dObs.Mt3dmsMassLoadingMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsMassLoadingMassFluxObservations);
+  Mt3dObs.Mt3dmsResMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsResMassFluxObservations);
+  Mt3dObs.Mt3dmsLakMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsLakMassFluxObservations);
+  Mt3dObs.Mt3dmsDrtMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsDrtMassFluxObservations);
+  Mt3dObs.Mt3dmsEtsMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsEtsMassFluxObservations);
+end;
+
+procedure TUndoEditFluxObservations.AssignMt3dObsToModel(MtsdObs: TMassFluxObs);
+begin
+  frmGoPhast.PhastModel.Mt3dmsHeadMassFluxObservations :=
+    MtsdObs.Mt3dmsHeadMassFluxObservations;
+  frmGoPhast.PhastModel.Mt3dmsWellMassFluxObservations :=
+    MtsdObs.Mt3dmsWellMassFluxObservations;
+  frmGoPhast.PhastModel.Mt3dmsDrnMassFluxObservations :=
+    MtsdObs.Mt3dmsDrnMassFluxObservations;
+  frmGoPhast.PhastModel.Mt3dmsRivMassFluxObservations :=
+    MtsdObs.Mt3dmsRivMassFluxObservations;
+  frmGoPhast.PhastModel.Mt3dmsGhbMassFluxObservations :=
+    MtsdObs.Mt3dmsGhbMassFluxObservations;
+  frmGoPhast.PhastModel.Mt3dmsRchMassFluxObservations :=
+    MtsdObs.Mt3dmsRchMassFluxObservations;
+  frmGoPhast.PhastModel.Mt3dmsEvtMassFluxObservations :=
+    MtsdObs.Mt3dmsEvtMassFluxObservations;
+  frmGoPhast.PhastModel.Mt3dmsMassLoadingMassFluxObservations :=
+    MtsdObs.Mt3dmsMassLoadingMassFluxObservations;
+  frmGoPhast.PhastModel.Mt3dmsResMassFluxObservations :=
+    MtsdObs.Mt3dmsResMassFluxObservations;
+  frmGoPhast.PhastModel.Mt3dmsLakMassFluxObservations :=
+    MtsdObs.Mt3dmsLakMassFluxObservations;
+  frmGoPhast.PhastModel.Mt3dmsDrtMassFluxObservations :=
+    MtsdObs.Mt3dmsDrtMassFluxObservations;
+  frmGoPhast.PhastModel.Mt3dmsEtsMassFluxObservations :=
+    MtsdObs.Mt3dmsEtsMassFluxObservations;
 end;
 
 procedure TUndoEditFluxObservations.AssignNewObservations(NewChobObservations, NewDrobObservations,
-  NewGbobObservations, NewRvobObservations: TFluxObservationGroups);
+  NewGbobObservations, NewRvobObservations: TFluxObservationGroups;
+  var NewMtsdObs: TMassFluxObs);
 begin
   FNewChobObservations.Free;
   FNewChobObservations := TFluxObservationGroups.Create(nil);
@@ -2480,6 +2571,13 @@ begin
   FNewRvobObservations.Free;
   FNewRvobObservations := TFluxObservationGroups.Create(nil);
   FNewRvobObservations.Assign(NewRvobObservations);
+
+  FNewMt3dObs := NewMtsdObs;
+  if FNewMt3dObs.Mt3dmsHeadMassFluxObservations = nil then
+  begin
+    FillMt3dLists(FNewMt3dObs);
+  end;
+  NewMtsdObs.NilAll;
 end;
 
 { TUndoEditDisplaySettings }
@@ -2495,7 +2593,7 @@ end;
 
 function TUndoEditDisplaySettings.Description: string;
 begin
-  result := 'change image settings';
+  result := StrChangeImageSetting;
 end;
 
 destructor TUndoEditDisplaySettings.Destroy;
@@ -2515,6 +2613,69 @@ procedure TUndoEditDisplaySettings.Undo;
 begin
   inherited;
   frmGoPhast.PhastModel.DisplaySettings.Assign(FOldSettings);
+end;
+
+{ TMassFluxObs }
+
+procedure TMassFluxObs.CreateAll;
+begin
+  Mt3dmsHeadMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  Mt3dmsWellMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  Mt3dmsDrnMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  Mt3dmsRivMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  Mt3dmsGhbMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  Mt3dmsRchMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  Mt3dmsEvtMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  Mt3dmsMassLoadingMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  Mt3dmsResMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  Mt3dmsLakMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  Mt3dmsDrtMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  Mt3dmsEtsMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+
+  Mt3dmsHeadMassFluxObservations.FluxObservationType := mfotHead;
+  Mt3dmsWellMassFluxObservations.FluxObservationType := mfotWell;
+  Mt3dmsDrnMassFluxObservations.FluxObservationType := mfotDrain;
+  Mt3dmsRivMassFluxObservations.FluxObservationType := mfotRiver;
+  Mt3dmsGhbMassFluxObservations.FluxObservationType := mfotGHB;
+  Mt3dmsRchMassFluxObservations.FluxObservationType := mfotRecharge;
+  Mt3dmsEvtMassFluxObservations.FluxObservationType := mfotEVT;
+  Mt3dmsMassLoadingMassFluxObservations.FluxObservationType := mfotMassLoading;
+  Mt3dmsResMassFluxObservations.FluxObservationType := mfotReservoir;
+  Mt3dmsLakMassFluxObservations.FluxObservationType := mfotLake;
+  Mt3dmsDrtMassFluxObservations.FluxObservationType := mfotDRT;
+  Mt3dmsEtsMassFluxObservations.FluxObservationType := mfotETS;
+end;
+
+procedure TMassFluxObs.FreeAll;
+begin
+  Mt3dmsHeadMassFluxObservations.Free;
+  Mt3dmsWellMassFluxObservations.Free;
+  Mt3dmsDrnMassFluxObservations.Free;
+  Mt3dmsRivMassFluxObservations.Free;
+  Mt3dmsGhbMassFluxObservations.Free;
+  Mt3dmsRchMassFluxObservations.Free;
+  Mt3dmsEvtMassFluxObservations.Free;
+  Mt3dmsMassLoadingMassFluxObservations.Free;
+  Mt3dmsResMassFluxObservations.Free;
+  Mt3dmsLakMassFluxObservations.Free;
+  Mt3dmsDrtMassFluxObservations.Free;
+  Mt3dmsEtsMassFluxObservations.Free;
+end;
+
+procedure TMassFluxObs.NilAll;
+begin
+  Mt3dmsHeadMassFluxObservations := nil;
+  Mt3dmsWellMassFluxObservations := nil;
+  Mt3dmsDrnMassFluxObservations := nil;
+  Mt3dmsRivMassFluxObservations := nil;
+  Mt3dmsGhbMassFluxObservations := nil;
+  Mt3dmsRchMassFluxObservations := nil;
+  Mt3dmsEvtMassFluxObservations := nil;
+  Mt3dmsMassLoadingMassFluxObservations := nil;
+  Mt3dmsResMassFluxObservations := nil;
+  Mt3dmsLakMassFluxObservations := nil;
+  Mt3dmsDrtMassFluxObservations := nil;
+  Mt3dmsEtsMassFluxObservations := nil;
 end;
 
 end.

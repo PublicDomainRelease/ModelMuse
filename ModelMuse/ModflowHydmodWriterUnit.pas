@@ -66,6 +66,11 @@ uses
   GoPhastTypes, frmProgressUnit, frmErrorsAndWarningsUnit, FastGEO, Forms, 
   frmGoPhastUnit;
 
+resourcestring
+  StrTheInterpolationAs = 'The interpolation assignment method in HYDMOD pac' +
+  'kage is invalid for the following objects.  The cell method has been used' +
+  ' instead.';
+
 { TModflowHydmodWriter }
 
 constructor TModflowHydmodWriter.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
@@ -200,10 +205,7 @@ begin
           if AssignmentMethod <> HydmodData.AssignmentMethod then
           begin
             frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
-              'The interpolation assignment method in HYDMOD package '
-              + 'is invalid for the following objects.  The cell method has '
-              + 'been used instead.',
-              ScreenObject.Name);
+              StrTheInterpolationAs, ScreenObject.Name);
           end;
         end;
         case AssignmentMethod of

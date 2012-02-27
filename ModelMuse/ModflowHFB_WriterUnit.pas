@@ -83,6 +83,19 @@ uses Math, RbwParser, ModflowUnitNumbers, ModflowHfbUnit, OrderedCollectionUnit,
   frmErrorsAndWarningsUnit, ModflowGridUnit, GIS_Functions, 
   frmProgressUnit, frmFormulaErrorsUnit, Forms;
 
+resourcestring
+  StrInTheHFBPackage = 'In the HFB package, one or more objects do not defin' +
+  'e any barriers.';
+  StrSIsSupposedToDe = '%s is supposed to define a flow barrier but does not' +
+  '.';
+  StrInTheHFBPackage1 = 'In the HFB package, a parameter has been used withou' +
+  't being defined';
+  StrIn0sTheHFBPara = 'In %0:s the HFB parameter has been specified as %1:s ' +
+  'but no such parameter has been defined.';
+  StrNoDefinedBoundarie = 'No defined boundaries for an HFB parameter';
+  StrForTheParameterS = 'For the parameter %s, there are no objects that def' +
+  'ine the location of an HFB barrier';
+
 { TModflowHfb_Writer }
 
 constructor TModflowHfb_Writer.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
@@ -334,6 +347,10 @@ var
     end;
   end;
 begin
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInTheHFBPackage);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInTheHFBPackage1);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNoDefinedBoundarie);
+
   frmProgressMM.AddMessage('Evaluating HFB Package data.');
   FillParameterScreenObjectList;
   PriorSegments := TList.Create;
@@ -387,11 +404,8 @@ begin
         HandleSection;
         if PriorCount = ScreenObjectList.BarrierCount then
         begin
-          frmErrorsAndWarnings.AddWarning(Model,
-            'In the HFB package, one or more objects '
-            + 'do not define any barriers.',
-            ScreenObject.Name
-            + ' is supposed to define a flow barrier but does not.');
+          frmErrorsAndWarnings.AddWarning(Model, StrInTheHFBPackage,
+            Format(StrSIsSupposedToDe, [ScreenObject.Name]));
         end;
       end;
     end;
@@ -693,11 +707,8 @@ begin
       ParamIndex := FParameterScreenObjectList.IndexOf(Boundary.ParameterName);
       if ParamIndex < 0 then
       begin
-        frmErrorsAndWarnings.AddWarning(Model,
-          'In the HFB package, a parameter has been used without being defined',
-          'In ' + ScreenObject.Name + ' the HFB parameter has been specified '
-          + 'as ' + Boundary.ParameterName
-          + ' but no such parameter has been defined.');
+        frmErrorsAndWarnings.AddWarning(Model, StrInTheHFBPackage1,
+          Format(StrIn0sTheHFBPara, [ScreenObject.Name, Boundary.ParameterName]));
         ParamIndex := 0;
       end;
       List := FParameterScreenObjectList.Objects[ParamIndex] as TParamList;
@@ -709,10 +720,8 @@ begin
     List := FParameterScreenObjectList.Objects[Index] as TParamList;
     if List.ScreenObjectCount = 0 then
     begin
-      frmErrorsAndWarnings.AddWarning(Model, 
-        'No defined boundaries for an HFB parameter',
-        'For the parameter ' + FParameterScreenObjectList[Index]
-        + ', there are no objects that define the location of an HFB barrier');
+      frmErrorsAndWarnings.AddWarning(Model, StrNoDefinedBoundarie,
+        Format(StrForTheParameterS, [FParameterScreenObjectList[Index]]) );
     end;
   end;
 end;

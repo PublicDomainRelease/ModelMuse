@@ -11,119 +11,68 @@ inherited frmModflowTime: TfrmModflowTime
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 254
+    Top = 292
     Width = 754
-    Height = 73
+    Height = 35
     Align = alBottom
-    TabOrder = 0
+    TabOrder = 1
     DesignSize = (
       754
-      73)
-    object lblNumPeriods: TLabel
-      Left = 67
-      Top = 10
-      Width = 175
-      Height = 18
-      Caption = 'Number of stress periods'
-    end
-    object lblTimeUnit: TLabel
-      Left = 155
-      Top = 43
-      Width = 127
-      Height = 18
-      Caption = 'Time unit (ITMUNI)'
-    end
+      35)
     object btnCancel: TBitBtn
-      Left = 662
-      Top = 39
+      Left = 666
+      Top = 2
       Width = 83
       Height = 27
       Anchors = [akTop, akRight]
-      TabOrder = 0
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
     object btnOK: TBitBtn
-      Left = 574
-      Top = 39
+      Left = 578
+      Top = 2
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
-      Kind = bkOK
-    end
-    object seNumPeriods: TJvSpinEdit
-      Left = 4
-      Top = 6
-      Width = 57
-      Height = 26
-      CheckMaxValue = False
-      ButtonKind = bkClassic
-      MinValue = 1.000000000000000000
-      Value = 1.000000000000000000
-      TabOrder = 2
-      OnChange = seNumPeriodsChange
-    end
-    object btnDelete: TButton
-      Left = 574
-      Top = 6
-      Width = 82
-      Height = 27
-      Anchors = [akTop, akRight]
-      Caption = 'Delete'
-      TabOrder = 3
-      OnClick = btnDeleteClick
-    end
-    object btnInsert: TButton
-      Left = 662
-      Top = 6
-      Width = 83
-      Height = 27
-      Anchors = [akTop, akRight]
-      Caption = 'Insert'
-      TabOrder = 4
-      OnClick = btnInsertClick
-    end
-    object comboTimeUnit: TJvComboBox
-      Left = 4
-      Top = 40
-      Width = 145
-      Height = 26
-      Style = csDropDownList
-      ItemHeight = 18
-      TabOrder = 5
-      Text = 'seconds (1)'
-      Items.Strings = (
-        'undefined (0)'
-        'seconds (1)'
-        'minutes (2)'
-        'hours (3)'
-        'days (4)'
-        'years (5)')
-      ItemIndex = 1
     end
     object btnHelp: TBitBtn
-      Left = 486
-      Top = 39
+      Left = 490
+      Top = 2
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
-      TabOrder = 6
-      OnClick = btnHelpClick
+      DoubleBuffered = True
       Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 0
+      OnClick = btnHelpClick
     end
   end
-  object PageControl1: TPageControl
+  object pgcMain: TPageControl
     Left = 0
     Top = 0
     Width = 754
-    Height = 254
-    ActivePage = tabEdit
+    Height = 292
+    ActivePage = tabMt3dms
     Align = alClient
-    TabOrder = 1
-    object tabEdit: TTabSheet
-      Caption = 'Edit'
-      TabVisible = False
+    TabOrder = 0
+    OnChange = pgcMainChange
+    object tabModflow: TTabSheet
+      Caption = 'MODFLOW'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlTop: TPanel
         Left = 0
         Top = 0
@@ -172,7 +121,6 @@ inherited frmModflowTime: TfrmModflowTime
           Height = 27
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 18
           TabOrder = 0
           Text = '0'
           OnChange = rdePeriodLengthChange
@@ -188,7 +136,6 @@ inherited frmModflowTime: TfrmModflowTime
           Height = 27
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 18
           TabOrder = 1
           Text = '0'
           OnChange = rdeMaxFirstStepLengthChange
@@ -204,7 +151,6 @@ inherited frmModflowTime: TfrmModflowTime
           Height = 27
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 18
           TabOrder = 2
           Text = '0'
           OnChange = rdeMultiplierChange
@@ -246,7 +192,7 @@ inherited frmModflowTime: TfrmModflowTime
         Left = 0
         Top = 81
         Width = 746
-        Height = 163
+        Height = 137
         Align = alClient
         ColCount = 9
         FixedCols = 1
@@ -290,6 +236,7 @@ inherited frmModflowTime: TfrmModflowTime
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -312,6 +259,7 @@ inherited frmModflowTime: TfrmModflowTime
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -334,6 +282,7 @@ inherited frmModflowTime: TfrmModflowTime
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -356,6 +305,7 @@ inherited frmModflowTime: TfrmModflowTime
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -378,6 +328,7 @@ inherited frmModflowTime: TfrmModflowTime
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -402,6 +353,7 @@ inherited frmModflowTime: TfrmModflowTime
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -427,6 +379,7 @@ inherited frmModflowTime: TfrmModflowTime
               'Transient')
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -449,6 +402,7 @@ inherited frmModflowTime: TfrmModflowTime
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -471,6 +425,7 @@ inherited frmModflowTime: TfrmModflowTime
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
         ColWidths = (
@@ -483,6 +438,325 @@ inherited frmModflowTime: TfrmModflowTime
           64
           64
           64)
+      end
+      object pnlModflowBottom: TPanel
+        Left = 0
+        Top = 218
+        Width = 746
+        Height = 41
+        Align = alBottom
+        TabOrder = 2
+        DesignSize = (
+          746
+          41)
+        object lblNumPeriods: TLabel
+          Left = 67
+          Top = 10
+          Width = 175
+          Height = 18
+          Caption = 'Number of stress periods'
+        end
+        object lblTimeUnit: TLabel
+          Left = 403
+          Top = 9
+          Width = 127
+          Height = 18
+          Caption = 'Time unit (ITMUNI)'
+        end
+        object seNumPeriods: TJvSpinEdit
+          Left = 4
+          Top = 6
+          Width = 57
+          Height = 26
+          CheckMaxValue = False
+          ButtonKind = bkClassic
+          MinValue = 1.000000000000000000
+          Value = 1.000000000000000000
+          TabOrder = 0
+          OnChange = seNumPeriodsChange
+        end
+        object comboTimeUnit: TJvComboBox
+          Left = 252
+          Top = 6
+          Width = 145
+          Height = 26
+          Style = csDropDownList
+          TabOrder = 1
+          Text = 'seconds (1)'
+          Items.Strings = (
+            'undefined (0)'
+            'seconds (1)'
+            'minutes (2)'
+            'hours (3)'
+            'days (4)'
+            'years (5)')
+          ItemIndex = 1
+        end
+        object btnDelete: TButton
+          Left = 574
+          Top = 6
+          Width = 82
+          Height = 27
+          Anchors = [akTop, akRight]
+          Caption = 'Delete'
+          TabOrder = 2
+          OnClick = btnDeleteClick
+        end
+        object btnInsert: TButton
+          Left = 662
+          Top = 6
+          Width = 83
+          Height = 27
+          Anchors = [akTop, akRight]
+          Caption = 'Insert'
+          TabOrder = 3
+          OnClick = btnInsertClick
+        end
+      end
+    end
+    object tabMt3dms: TTabSheet
+      Caption = 'MT3DMS'
+      ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+      inline frameGrid: TframeGrid
+        Left = 0
+        Top = 0
+        Width = 746
+        Height = 259
+        Align = alClient
+        TabOrder = 0
+        ExplicitWidth = 746
+        ExplicitHeight = 259
+        inherited Panel: TPanel
+          Top = 218
+          Width = 746
+          ExplicitTop = 218
+          ExplicitWidth = 746
+          inherited lbNumber: TLabel
+            Width = 200
+            Height = 18
+            Caption = 'Number of MT3DMS periods'
+            ExplicitWidth = 200
+            ExplicitHeight = 18
+          end
+          inherited sbAdd: TSpeedButton
+            Left = 393
+            ExplicitLeft = 393
+          end
+          inherited sbInsert: TSpeedButton
+            Left = 465
+            ExplicitLeft = 465
+          end
+          inherited sbDelete: TSpeedButton
+            Left = 537
+            ExplicitLeft = 537
+          end
+          inherited seNumber: TJvSpinEdit
+            Height = 26
+            ExplicitHeight = 26
+          end
+        end
+        inherited Grid: TRbwDataGrid4
+          Width = 746
+          Height = 218
+          ColCount = 8
+          FixedCols = 1
+          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
+          OnSelectCell = frameGridGridSelectCell
+          Columns = <
+            item
+              AutoAdjustRowHeights = False
+              ButtonCaption = '...'
+              ButtonFont.Charset = DEFAULT_CHARSET
+              ButtonFont.Color = clWindowText
+              ButtonFont.Height = -11
+              ButtonFont.Name = 'Tahoma'
+              ButtonFont.Style = []
+              ButtonUsed = False
+              ButtonWidth = 20
+              CheckMax = False
+              CheckMin = False
+              ComboUsed = False
+              Format = rcf4String
+              LimitToList = False
+              MaxLength = 0
+              ParentButtonFont = False
+              WordWrapCaptions = False
+              WordWrapCells = False
+              CaseSensitivePicklist = False
+              AutoAdjustColWidths = True
+            end
+            item
+              AutoAdjustRowHeights = True
+              ButtonCaption = '...'
+              ButtonFont.Charset = DEFAULT_CHARSET
+              ButtonFont.Color = clWindowText
+              ButtonFont.Height = -11
+              ButtonFont.Name = 'Tahoma'
+              ButtonFont.Style = []
+              ButtonUsed = False
+              ButtonWidth = 20
+              CheckMax = False
+              CheckMin = False
+              ComboUsed = True
+              Format = rcf4String
+              LimitToList = False
+              MaxLength = 0
+              ParentButtonFont = False
+              WordWrapCaptions = True
+              WordWrapCells = False
+              CaseSensitivePicklist = False
+              AutoAdjustColWidths = True
+            end
+            item
+              AutoAdjustRowHeights = True
+              ButtonCaption = '...'
+              ButtonFont.Charset = DEFAULT_CHARSET
+              ButtonFont.Color = clWindowText
+              ButtonFont.Height = -11
+              ButtonFont.Name = 'Tahoma'
+              ButtonFont.Style = []
+              ButtonUsed = False
+              ButtonWidth = 20
+              CheckMax = False
+              CheckMin = False
+              ComboUsed = True
+              Format = rcf4Real
+              LimitToList = False
+              MaxLength = 0
+              ParentButtonFont = False
+              WordWrapCaptions = True
+              WordWrapCells = False
+              CaseSensitivePicklist = False
+              AutoAdjustColWidths = True
+            end
+            item
+              AutoAdjustRowHeights = True
+              ButtonCaption = '...'
+              ButtonFont.Charset = DEFAULT_CHARSET
+              ButtonFont.Color = clWindowText
+              ButtonFont.Height = -11
+              ButtonFont.Name = 'Tahoma'
+              ButtonFont.Style = []
+              ButtonUsed = False
+              ButtonWidth = 20
+              CheckMax = False
+              CheckMin = True
+              ComboUsed = False
+              Format = rcf4Real
+              LimitToList = False
+              MaxLength = 0
+              ParentButtonFont = False
+              WordWrapCaptions = True
+              WordWrapCells = False
+              CaseSensitivePicklist = False
+              AutoAdjustColWidths = True
+            end
+            item
+              AutoAdjustRowHeights = True
+              ButtonCaption = '...'
+              ButtonFont.Charset = DEFAULT_CHARSET
+              ButtonFont.Color = clWindowText
+              ButtonFont.Height = -11
+              ButtonFont.Name = 'Tahoma'
+              ButtonFont.Style = []
+              ButtonUsed = False
+              ButtonWidth = 20
+              CheckMax = False
+              CheckMin = True
+              ComboUsed = False
+              Format = rcf4Integer
+              LimitToList = False
+              MaxLength = 0
+              ParentButtonFont = False
+              WordWrapCaptions = True
+              WordWrapCells = False
+              CaseSensitivePicklist = False
+              AutoAdjustColWidths = True
+            end
+            item
+              AutoAdjustRowHeights = True
+              ButtonCaption = '...'
+              ButtonFont.Charset = DEFAULT_CHARSET
+              ButtonFont.Color = clWindowText
+              ButtonFont.Height = -11
+              ButtonFont.Name = 'Tahoma'
+              ButtonFont.Style = []
+              ButtonUsed = False
+              ButtonWidth = 20
+              CheckMax = False
+              CheckMin = True
+              ComboUsed = False
+              Format = rcf4Real
+              LimitToList = False
+              Max = 1.000000000000000000
+              MaxLength = 0
+              Min = 1.000000000000000000
+              ParentButtonFont = False
+              WordWrapCaptions = True
+              WordWrapCells = False
+              CaseSensitivePicklist = False
+              AutoAdjustColWidths = True
+            end
+            item
+              AutoAdjustRowHeights = True
+              ButtonCaption = '...'
+              ButtonFont.Charset = DEFAULT_CHARSET
+              ButtonFont.Color = clWindowText
+              ButtonFont.Height = -11
+              ButtonFont.Name = 'Tahoma'
+              ButtonFont.Style = []
+              ButtonUsed = False
+              ButtonWidth = 20
+              CheckMax = False
+              CheckMin = True
+              ComboUsed = False
+              Format = rcf4Real
+              LimitToList = False
+              MaxLength = 0
+              ParentButtonFont = False
+              WordWrapCaptions = True
+              WordWrapCells = False
+              CaseSensitivePicklist = False
+              AutoAdjustColWidths = True
+            end
+            item
+              AutoAdjustRowHeights = False
+              ButtonCaption = '...'
+              ButtonFont.Charset = DEFAULT_CHARSET
+              ButtonFont.Color = clWindowText
+              ButtonFont.Height = -11
+              ButtonFont.Name = 'Tahoma'
+              ButtonFont.Style = []
+              ButtonUsed = False
+              ButtonWidth = 20
+              CheckMax = False
+              CheckMin = False
+              ComboUsed = False
+              Format = rcf4Boolean
+              LimitToList = False
+              MaxLength = 0
+              ParentButtonFont = False
+              WordWrapCaptions = True
+              WordWrapCells = False
+              CaseSensitivePicklist = False
+              AutoAdjustColWidths = False
+            end>
+          ExplicitWidth = 746
+          ExplicitHeight = 218
+          ColWidths = (
+            20
+            64
+            64
+            64
+            64
+            64
+            64
+            64)
+        end
       end
     end
   end

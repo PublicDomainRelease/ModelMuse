@@ -522,6 +522,7 @@ const
 
 procedure TEvtItem.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TEvtItem then
   begin
     EvapotranspirationRate := TEvtItem(Source).EvapotranspirationRate;
@@ -1238,6 +1239,7 @@ end;
 
 procedure TEvtLayerItem.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TEvtLayerItem then
   begin
     EvapotranspirationLayer := TEvtLayerItem(Source).EvapotranspirationLayer;
@@ -1554,6 +1556,7 @@ var
 begin
   if Source is TEvtSurfDepthItem then
   begin
+  // if Assign is updated, update IsSame too.
     SourceItem := TEvtSurfDepthItem(Source);
     EvapotranspirationSurface := SourceItem.EvapotranspirationSurface;
     EvapotranspirationDepth := SourceItem.EvapotranspirationDepth;

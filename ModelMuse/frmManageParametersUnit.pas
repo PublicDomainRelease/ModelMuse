@@ -22,6 +22,8 @@ type
     btnOK: TBitBtn;
     btnCancel: TBitBtn;
     btnHelp: TBitBtn;
+    btnImportPval: TButton;
+    dlgOpenPval: TOpenDialog;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure rdgParametersSetEditText(Sender: TObject; ACol, ARow: Integer;
@@ -36,6 +38,7 @@ type
     procedure rdgParametersBeforeDrawCell(Sender: TObject; ACol, ARow: Integer);
     procedure rdgParametersSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
+    procedure btnImportPvalClick(Sender: TObject);
   private
     FSteadyParameters: TModflowSteadyParameters;
     FHufParameters: THufModflowParameters;
@@ -76,7 +79,14 @@ implementation
 
 uses
   Contnrs, frmGoPhastUnit, PhastModelUnit, ModflowDiscretizationWriterUnit,
-  ScreenObjectUnit, frmShowHideObjectsUnit, ModflowPackagesUnit;
+  ScreenObjectUnit, frmShowHideObjectsUnit, ModflowPackagesUnit, ReadPvalUnit,
+  IntListUnit;
+
+resourcestring
+  StrErrorReadingPvalF = 'Error reading Pval file. Check that it is a valid ' +
+  'Pval file.';
+  StrErrorReadingPvalF2 = 'Error reading Pval file. The following parameter n' +
+  'ames from the Pval file are not included in the model.'#13#10'%s';
 
 {$R *.dfm}
 type
@@ -258,6 +268,80 @@ begin
     if result <> 0 then
     begin
       Exit;
+    end;
+  end;
+end;
+
+procedure TfrmManageParameters.btnImportPvalClick(Sender: TObject);
+var
+  PvalList: TParamList;
+  MyList: TStringList;
+  ValIndex: Integer;
+  Item: TParamItem;
+  RowIndex: Integer;
+  IntList: TIntegerList;
+  InvalidParameters: TStringList;
+begin
+  inherited;
+  if dlgOpenPval.Execute then
+  begin
+    PvalList := TParamList.Create;
+    try
+      if ReadPvalFile(dlgOpenPval.FileName, PvalList) then
+      begin
+        MyList := TStringList.Create;
+        IntList := TIntegerList.Create;
+        InvalidParameters := TStringList.Create;
+        try
+          MyList.Assign(rdgParameters.Cols[Ord(pcName)]);
+          MyList.Delete(0);
+          MyList.CaseSensitive := False;
+
+          for ValIndex := 0 to PvalList.Count - 1 do
+          begin
+            Item := PvalList[ValIndex];
+            RowIndex := MyList.IndexOf(Item.Name)+1;
+            if RowIndex >= 1 then
+            begin
+              IntList.Add(RowIndex);
+            end
+            else
+            begin
+              InvalidParameters.Add(Item.Name);
+            end;
+          end;
+          if InvalidParameters.Count > 0 then
+          begin
+            Beep;
+            MessageDlg(Format(StrErrorReadingPvalF2, [InvalidParameters.Text]),
+              mtError, [mbOK], 0);
+          end
+          else
+          begin
+            Assert(IntList.Count = PvalList.Count);
+            for ValIndex := 0 to PvalList.Count - 1 do
+            begin
+              Item := PvalList[ValIndex];
+              RowIndex := IntList[ValIndex];
+              rdgParameters.Cells[Ord(pcValue), RowIndex] :=
+                FloatToStr(Item.Value);
+              rdgParametersSetEditText(rdgParameters, Ord(pcValue), RowIndex,
+                rdgParameters.Cells[Ord(pcValue), RowIndex]);
+            end;
+          end;
+        finally
+          MyList.Free;
+          IntList.Free;
+          InvalidParameters.Free;
+        end;
+      end
+      else
+      begin
+        Beep;
+        MessageDlg(StrErrorReadingPvalF, mtError, [mbOK], 0);
+      end;
+    finally
+      PvalList.Free;
     end;
   end;
 end;

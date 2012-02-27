@@ -13,9 +13,9 @@ type
   //    Column: integer;
   //  end;
   //  )
-  // @member(Layer Layer is the layer in the grid to for this boundary.)
-  // @member(Row Row is the row in the grid to for this boundary.)
-  // @member(Column Column is the column in the grid to for this boundary.)
+  // @member(Layer Layer is the layer in the grid to for this boundary (Zero based).)
+  // @member(Row Row is the row in the grid to for this boundary (Zero based).)
+  // @member(Column Column is the column in the grid to for this boundary (Zero based).)
   TCellLocation = record
     Layer: integer;
     Row: integer;

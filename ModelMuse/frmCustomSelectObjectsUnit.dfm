@@ -13,7 +13,7 @@ inherited frmCustomSelectObjects: TfrmCustomSelectObjects
     Height = 41
     Align = alBottom
     ParentColor = True
-    TabOrder = 0
+    TabOrder = 1
     DesignSize = (
       422
       41)
@@ -57,7 +57,7 @@ inherited frmCustomSelectObjects: TfrmCustomSelectObjects
     Header.Font.Style = []
     Header.MainColumn = -1
     Header.Options = [hoColumnResize, hoDrag]
-    TabOrder = 1
+    TabOrder = 0
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toWheelPanning]
     OnChecking = vstObjectsChecking
     OnFreeNode = vstObjectsFreeNode

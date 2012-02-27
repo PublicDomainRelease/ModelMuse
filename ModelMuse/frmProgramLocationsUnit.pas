@@ -46,10 +46,13 @@ type
     Label1: TLabel;
     JvHTLabel1: TJvHTLabel;
     fedModflowLgr: TJvFilenameEdit;
-    JvHTLabel2: TJvHTLabel;
+    htlblModelMate: TJvHTLabel;
     lblModflowNWT: TLabel;
     htlblModflowNWT: TJvHTLabel;
     fedModflowNWT: TJvFilenameEdit;
+    lblMt3dms: TLabel;
+    htlblMt3dms: TJvHTLabel;
+    fedMt3dms: TJvFilenameEdit;
     procedure fedModflowChange(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
@@ -65,6 +68,11 @@ type
 implementation
 
 uses frmGoPhastUnit, GoPhastTypes;
+
+resourcestring
+  StrThisFileDoesNotE = 'This file does not exist';
+  StrTheNameOfThisPro = 'The name of this program should not be "ModelMuse."';
+  StrChangeProgramLocat = 'change program locations';
 
 {$R *.dfm}
 
@@ -103,6 +111,7 @@ begin
   fedModelMate.FileName := Locations.ModelMateLocation;
   fedModflowLgr.FileName := Locations.ModflowLgrLocation;
   fedModflowNwt.FileName := Locations.ModflowNwtLocation;
+  fedMt3dms.FileName := Locations.Mt3dmsLocation;
 end;
 
 procedure TfrmProgramLocations.SetData;
@@ -120,6 +129,7 @@ begin
     Locations.ModelMateLocation := fedModelMate.FileName;
     Locations.ModflowLgrLocation := fedModflowLgr.FileName;
     Locations.ModflowNwtLocation := fedModflowNwt.FileName;
+    Locations.Mt3dmsLocation := fedMt3dms.FileName;
     Undo := TUndoChangeProgramLocations.Create(Locations);
     frmGoPhast.UndoStack.Submit(Undo);
   finally
@@ -137,18 +147,33 @@ var
   ModflowNwtOK: Boolean;
   function CheckControl(Edit: TJvFilenameEdit): boolean;
   begin
-    if Edit = fedTextEditor then
+    result := ExtractFileName(Edit.FileName) <> 'ModelMuse.exe';
+    if result then
     begin
-      result := FileExists(Edit.FileName) or (Edit.FileName = '')
-        or (LowerCase(Edit.FileName) = 'notepad.exe');
+      if Edit = fedTextEditor then
+      begin
+        result := FileExists(Edit.FileName) or (Edit.FileName = '')
+          or (LowerCase(Edit.FileName) = 'notepad.exe');
+      end
+      else
+      begin
+        result := FileExists(Edit.FileName);
+      end;
+      if not result then
+      begin
+        Edit.Hint := StrThisFileDoesNotE;
+        Edit.ShowHint := True;
+      end;
     end
     else
     begin
-      result := FileExists(Edit.FileName);
+      Edit.Hint := StrTheNameOfThisPro;
+      Edit.ShowHint := True;
     end;
     if result then
     begin
       Edit.Color := clWindow;
+      Edit.ShowHint := False;
     end
     else
     begin
@@ -168,6 +193,7 @@ begin
     or not frmGoPhast.PhastModel.ModPathIsSelected;
   ZoneBudgetOK := CheckControl(fedZonebudget)
     or not frmGoPhast.PhastModel.ZoneBudgetIsSelected;
+  CheckControl(fedMt3dms);
   FileEditorOK := CheckControl(fedTextEditor);
   btnOK.Enabled := ModflowOK and ModflowLgrOK and ModflowNwtOK and ModpathOK
     and ZoneBudgetOK and FileEditorOK;
@@ -187,7 +213,7 @@ end;
 
 function TUndoChangeProgramLocations.Description: string;
 begin
-  result := 'change program locations';
+  result := StrChangeProgramLocat;
 end;
 
 destructor TUndoChangeProgramLocations.Destroy;

@@ -226,6 +226,7 @@ procedure TGhbItem.Assign(Source: TPersistent);
 var
   Ghb: TGhbItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TGhbItem then
   begin
     Ghb := TGhbItem(Source);

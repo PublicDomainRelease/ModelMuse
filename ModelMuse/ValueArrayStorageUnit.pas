@@ -82,9 +82,11 @@ type
     procedure SetItem(Index: Integer; const Value: TValueArrayItem);
   public
     procedure CacheData;
+    procedure RestoreData;
     constructor Create;
     property Items[Index: Integer]: TValueArrayItem read GetItem write SetItem; default;
     function ValuesByName(AName: string): TValueArrayStorage;
+    function ValueItemByName(AName: string): TValueArrayItem;
   end;
 
 implementation
@@ -651,10 +653,44 @@ begin
   result := inherited Items[Index] as TValueArrayItem;
 end;
 
+procedure TValueCollection.RestoreData;
+var
+  Index: Integer;
+begin
+  for Index := 0 to Count - 1 do
+  begin
+    Items[Index].FValues.RestoreData;
+  end;
+end;
+
 procedure TValueCollection.SetItem(Index: Integer;
   const Value: TValueArrayItem);
 begin
   inherited Items[Index] := Value;
+end;
+
+function TValueCollection.ValueItemByName(AName: string): TValueArrayItem;
+var
+  Index: Integer;
+begin
+  result := nil;
+
+  if (FCachedName <> '') and SameText(FCachedName, AName) then
+  begin
+    result := Items[FCachedIndex];
+    Exit;
+  end;
+
+  for Index := 0 to Count - 1 do
+  begin
+    if SameText(Items[Index].Name, AName) then
+    begin
+      result := Items[Index];
+      FCachedName := AName;
+      FCachedIndex := Index;
+      break;
+    end;
+  end;
 end;
 
 function TValueCollection.ValuesByName(AName: string): TValueArrayStorage;
@@ -668,7 +704,7 @@ begin
     result := Items[FCachedIndex].Values;
     Exit;
   end;
-  
+
   for Index := 0 to Count - 1 do
   begin
     if SameText(Items[Index].Name, AName) then

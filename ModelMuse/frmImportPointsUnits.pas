@@ -196,7 +196,8 @@ uses Clipbrd, Contnrs, GoPhastTypes, frmGoPhastUnit, RbwParser,
   OrderedCollectionUnit, RealListUnit, ModflowBoundaryUnit,
   ModflowConstantHeadBoundaryUnit, ModflowGhbUnit, ModflowWellUnit,
   ModflowRivUnit, ModelMuseUtilities, ModflowDrnUnit, AbstractGridUnit,
-  frameHeadObservationsUnit, IntListUnit, framePackageHobUnit, ModflowHobUnit;
+  frameHeadObservationsUnit, IntListUnit, framePackageHobUnit, ModflowHobUnit,
+  frameCustomCellObservationUnit;
 
 {$R *.dfm}
 
@@ -215,6 +216,7 @@ resourcestring
   StrMODFLOWBoundaryCon2 = 'MODFLOW boundary conditions can not be set by int' +
   'erpolation.';
   StrObservationName = 'Observation Name';
+  StrImportPoints = 'import points';
 
 procedure TfrmImportPoints.seRowsChange(Sender: TObject);
 begin
@@ -1224,7 +1226,7 @@ end;
 
 function TUndoImportPoints.Description: string;
 begin
-  result := 'import points';
+  result := StrImportPoints;
 end;
 
 procedure TfrmImportPoints.SetData;

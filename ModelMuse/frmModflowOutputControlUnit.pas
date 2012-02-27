@@ -8,9 +8,14 @@ uses
   JvExControls, JvComponent, ComCtrls, JvExComCtrls, JvPageListTreeView,
   JvExStdCtrls, JvCheckBox, JvExExtCtrls, JvRadioGroup, frameOutputControlUnit,
   ArgusDataEntry, Mask, JvExMask, JvSpin, JvCombobox, JvListComb,
-  JvNetscapeSplitter;
+  JvNetscapeSplitter, Grids, RbwDataGrid4, frameGridUnit, UndoItems,
+  ModflowOutputControlUnit;
 
 type
+//  TMt3dPrintColumns = (mpcName, mpcPrint, mpcStripOrWrap, mpcFormat);
+//  TMt3dPrintRows = (mprName, mprConc, mprParticles, mrpRetardation,
+//    mprDispersionCoef);
+
   TfrmModflowOutputControl = class(TfrmCustomGoPhast)
     pnlBottom: TPanel;
     btnHelp: TBitBtn;
@@ -36,10 +41,26 @@ type
     lblFrequency: TLabel;
     JvNetscapeSplitter1: TJvNetscapeSplitter;
     lblBudget: TLabel;
+    jvspMT3DMS: TJvStandardPage;
+    cbMt3dSaveConc: TCheckBox;
+    frameMt3dmsTimes: TframeGrid;
+    comboSaveMt3msResults: TComboBox;
+    spinMt3dmsPrintN: TJvSpinEdit;
+    lblMt3dmsPrintN: TLabel;
+    lblMt3dmsPrintWhen: TLabel;
+    spinMt3dmsPrintObs: TJvSpinEdit;
+    lblMt3dmsPrintConc: TLabel;
+    lblMt3dMsPrintMassBalance: TLabel;
+    spinMt3dMsPrintMassBalance: TJvSpinEdit;
+    cbSummarizeMassBalance: TCheckBox;
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
     procedure jvPagesChange(Sender: TObject);
+    procedure comboSaveMt3msResultsChange(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
   private
+    FOutputControl: TModflowOutputControl;
+    FMt3dmsOutputControl: TMt3dmsOutputControl;
     procedure GetData;
     procedure SetData;
     { Private declarations }
@@ -47,12 +68,31 @@ type
     { Public declarations }
   end;
 
+  TUndoOutputControl = class(TCustomUndo)
+  private
+    FOldModflowOutputControl: TModflowOutputControl;
+    FNewModflowOutputControl: TModflowOutputControl;
+    FOldMt3dmsOutputControl: TMt3dmsOutputControl;
+    FNewMt3dmsOutputControl: TMt3dmsOutputControl;
+  protected
+    function Description: string; override;
+  public
+    constructor Create(var NewModflowOutputControl: TModflowOutputControl;
+      var NewMt3dmsOutputControl: TMt3dmsOutputControl);
+    destructor Destroy; override;
+    procedure DoCommand; override;
+    procedure Undo; override;
+  end;
+
 var
   frmModflowOutputControl: TfrmModflowOutputControl;
 
 implementation
 
-uses ModflowOutputControlUnit, frmGoPhastUnit;
+uses frmGoPhastUnit, Mt3dmsTimesUnit;
+
+resourcestring
+  StrChangeOutputContro = 'change output control';
 
 {$R *.dfm}
 
@@ -62,6 +102,13 @@ procedure TfrmModflowOutputControl.btnOKClick(Sender: TObject);
 begin
   inherited;
   SetData;
+end;
+
+procedure TfrmModflowOutputControl.comboSaveMt3msResultsChange(Sender: TObject);
+begin
+  inherited;
+  frameMt3dmsTimes.Enabled := comboSaveMt3msResults.ItemIndex = 0;
+  spinMt3dmsPrintN.Enabled := comboSaveMt3msResults.ItemIndex = 2;
 end;
 
 procedure TfrmModflowOutputControl.FormCreate(Sender: TObject);
@@ -79,13 +126,36 @@ begin
   end;
   jvPages.ActivePage := jvspGeneral;
 
+//  rdgPrint.Cells[Ord(mpcName), Ord(mprName)] := '';
+//  rdgPrint.Cells[Ord(mpcName), Ord(mprConc)] := 'Concentration (IFMTCN)';
+//  rdgPrint.Cells[Ord(mpcName), Ord(mprParticles)] := 'Number of particles per cell (IFMTNP)';
+//  rdgPrint.Cells[Ord(mpcName), Ord(mrpRetardation)] := 'Retardation factor (IFMTRF)';
+//  rdgPrint.Cells[Ord(mpcName), Ord(mprDispersionCoef)] := 'Dispersion coefficient (IFMTDP)';
+//
+//  rdgPrint.Cells[Ord(mpcPrint), Ord(mprName)] := 'Print';
+//  rdgPrint.Cells[Ord(mpcStripOrWrap), Ord(mprName)] := 'Strip or wrap';
+//  rdgPrint.Cells[Ord(mpcFormat), Ord(mprName)] := 'Format';
+
+  frameMt3dmsTimes.Grid.Cells[0,0] := 'Output times (TIMPRS)';
+
   GetData;
+end;
+
+procedure TfrmModflowOutputControl.FormDestroy(Sender: TObject);
+begin
+  inherited;
+  FOutputControl.Free;
+  FMt3dmsOutputControl.Free;
 end;
 
 procedure TfrmModflowOutputControl.GetData;
 var
   OutputControl: TModflowOutputControl;
+  index: Integer;
+  Mt3dmsOutputControl: TMt3dmsOutputControl;
+  TimeItem: TOuptputTimeItem;
 begin
+  // MODFLOW
   OutputControl := frmGoPhast.PhastModel.ModflowOutputControl;
   cbPrintInputArrays.Checked := OutputControl.PrintInputArrays;
   rgSaveCellFlows.ItemIndex := Ord(OutputControl.SaveCellFlows);
@@ -97,6 +167,23 @@ begin
 
   comboFrequency.ItemIndex := Ord(OutputControl.BudgetFrequencyChoice);
   spN.AsInteger := OutputControl.BudgetFrequency;
+
+  // MT3DMS
+  Mt3dmsOutputControl := frmGoPhast.PhastModel.Mt3dmsOutputControl;
+  cbMt3dSaveConc.Checked := Mt3dmsOutputControl.SaveConcentrations;
+  comboSaveMt3msResults.ItemIndex := Ord(Mt3dmsOutputControl.OutputFreqChoice);
+  spinMt3dmsPrintN.AsInteger := Mt3dmsOutputControl.PeriodicOutputCount;
+  spinMt3dmsPrintObs.AsInteger := Mt3dmsOutputControl.ObservationFrequency;
+  spinMt3dMsPrintMassBalance.AsInteger := Mt3dmsOutputControl.MassBalanceFrequency;
+  cbSummarizeMassBalance.Checked := Mt3dmsOutputControl.SummarizeMassBalance;
+
+  frameMt3dmsTimes.seNumber.AsInteger := Mt3dmsOutputControl.OutputTimes.Count;
+  for index := 0 to Mt3dmsOutputControl.OutputTimes.Count-1 do
+  begin
+    TimeItem := Mt3dmsOutputControl.OutputTimes[index];
+    frameMt3dmsTimes.Grid.Cells[0, index+1] := FloatToStr(TimeItem.ObservationTime);
+  end;
+  comboSaveMt3msResultsChange(nil);
 end;
 
 procedure TfrmModflowOutputControl.jvPagesChange(Sender: TObject);
@@ -106,21 +193,106 @@ begin
 end;
 
 procedure TfrmModflowOutputControl.SetData;
-var
-  OutputControl: TModflowOutputControl;
+//  function GetMt3dmsPrintCode(ARow: Integer): integer;
+//  begin
+//    if rdgPrint.Checked[Ord(mpcPrint), ARow] then
+//    begin
+//      result := rdgPrint.ItemIndex[Ord(mpcFormat), ARow];
+//      if result = 0 then
+//      begin
+//        result := 12;
+//      end;
+//      if rdgPrint.ItemIndex[Ord(mpcStripOrWrap), ARow] = 1 then
+//      begin
+//        result := -result;
+//      end;
+//    end
+//    else
+//    begin
+//      result := 0;
+//    end;
+//  end;
+  var
+    Index: integer;
+    TimeItem: TOuptputTimeItem;
+  AValue: Extended;
+  Undo: TUndoOutputControl;
 begin
-{ TODO : Need undo/redo here }
-  OutputControl := frmGoPhast.PhastModel.ModflowOutputControl;
-  OutputControl.PrintInputArrays := cbPrintInputArrays.Checked;
-  OutputControl.SaveCellFlows := TCellSaveFormat(rgSaveCellFlows.ItemIndex);
-  OutputControl.PrintInputCellLists := cbPrintInputCellLists.Checked;
-  OutputControl.Compact := cbCompact.Checked;
-  frameHead.SetData(OutputControl.HeadOC);
-  frameDrawdown.SetData(OutputControl.DrawdownOC);
-  OutputControl.Comments.Assign(MemoComments.Lines);
-  OutputControl.BudgetFrequencyChoice :=
+  FOutputControl := TModflowOutputControl.Create(nil);
+
+  FOutputControl.PrintInputArrays := cbPrintInputArrays.Checked;
+  FOutputControl.SaveCellFlows := TCellSaveFormat(rgSaveCellFlows.ItemIndex);
+  FOutputControl.PrintInputCellLists := cbPrintInputCellLists.Checked;
+  FOutputControl.Compact := cbCompact.Checked;
+  frameHead.SetData(FOutputControl.HeadOC);
+  frameDrawdown.SetData(FOutputControl.DrawdownOC);
+  FOutputControl.Comments.Assign(MemoComments.Lines);
+  FOutputControl.BudgetFrequencyChoice :=
     TFrequencyChoice(comboFrequency.ItemIndex);
-  OutputControl.BudgetFrequency := spN.AsInteger;
+  FOutputControl.BudgetFrequency := spN.AsInteger;
+
+  FMt3dmsOutputControl:= TMt3dmsOutputControl.Create(nil);
+  FMt3dmsOutputControl.SaveConcentrations := cbMt3dSaveConc.Checked;
+  FMt3dmsOutputControl.OutputFreqChoice := TMt3dmsOutputFreq(comboSaveMt3msResults.ItemIndex);
+  FMt3dmsOutputControl.PeriodicOutputCount := spinMt3dmsPrintN.AsInteger;
+  FMt3dmsOutputControl.ObservationFrequency := spinMt3dmsPrintObs.AsInteger;
+  FMt3dmsOutputControl.MassBalanceFrequency := spinMt3dMsPrintMassBalance.AsInteger;
+  FMt3dmsOutputControl.SummarizeMassBalance := cbSummarizeMassBalance.Checked;
+
+  for index := 0 to frameMt3dmsTimes.seNumber.AsInteger-1 do
+  begin
+    if TryStrToFloat(frameMt3dmsTimes.Grid.Cells[0, index+1], AValue) then
+    begin
+      TimeItem := FMt3dmsOutputControl.OutputTimes.Add;
+      TimeItem.ObservationTime := AValue
+    end;
+  end;
+
+  Undo := TUndoOutputControl.Create(FOutputControl, FMt3dmsOutputControl);
+  frmGoPhast.UndoStack.Submit(Undo);
+end;
+
+{ TUndoOutputControl }
+
+constructor TUndoOutputControl.Create(
+  var NewModflowOutputControl: TModflowOutputControl;
+  var NewMt3dmsOutputControl: TMt3dmsOutputControl);
+begin
+  FOldModflowOutputControl := TModflowOutputControl.Create(nil);
+  FOldModflowOutputControl.Assign(frmGoPhast.PhastModel.ModflowOutputControl);
+  FNewModflowOutputControl := NewModflowOutputControl;
+  NewModflowOutputControl := nil;
+
+  FOldMt3dmsOutputControl := TMt3dmsOutputControl.Create(nil);
+  FOldMt3dmsOutputControl.Assign(frmGoPhast.PhastModel.Mt3dmsOutputControl);
+  FNewMt3dmsOutputControl := NewMt3dmsOutputControl;
+  NewMt3dmsOutputControl := nil;
+end;
+
+function TUndoOutputControl.Description: string;
+begin
+  Result := StrChangeOutputContro;
+end;
+
+destructor TUndoOutputControl.Destroy;
+begin
+  FNewMt3dmsOutputControl.Free;
+  FOldMt3dmsOutputControl.Free;
+  FNewModflowOutputControl.Free;
+  FOldModflowOutputControl.Free;
+  inherited;
+end;
+
+procedure TUndoOutputControl.DoCommand;
+begin
+  frmGoPhast.PhastModel.ModflowOutputControl := FNewModflowOutputControl;
+  frmGoPhast.PhastModel.Mt3dmsOutputControl := FNewMt3dmsOutputControl;
+end;
+
+procedure TUndoOutputControl.Undo;
+begin
+  frmGoPhast.PhastModel.ModflowOutputControl := FOldModflowOutputControl;
+  frmGoPhast.PhastModel.Mt3dmsOutputControl := FOldMt3dmsOutputControl;
 end;
 
 end.

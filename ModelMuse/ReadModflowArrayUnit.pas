@@ -23,6 +23,12 @@ type
     AFile: TextFile;
   end;
 
+procedure ReadSinglePrecisionMt3dmsBinaryRealArray(AFile: TFileStream;
+  var NTRANS, KSTP, KPER: Integer;
+  var TOTIM: TModflowDouble; var DESC: TModflowDesc;
+  var NCOL, NROW, ILAY: Integer; var AnArray: TModflowDoubleArray;
+  ReadArray: Boolean = True);
+
 // AFile needs to be open before being passed to this procedure.
 // The other variables will be returned from the procedure.
 // Use CheckArrayPrecision to determine the precision before calling
@@ -31,6 +37,12 @@ procedure ReadSinglePrecisionModflowBinaryRealArray(AFile: TFileStream;
   var KSTP, KPER: Integer; var PERTIM, TOTIM: TModflowDouble;
   var DESC: TModflowDesc; var NCOL, NROW, ILAY: Integer;
   var AnArray: TModflowDoubleArray;
+  ReadArray: Boolean = True);
+
+procedure ReadDoublePrecisionMt3dmsBinaryRealArray(AFile: TFileStream;
+  var NTRANS, KSTP, KPER: Integer;
+  var TOTIM: TModflowDouble; var DESC: TModflowDesc;
+  var NCOL, NROW, ILAY: Integer; var AnArray: TModflowDoubleArray;
   ReadArray: Boolean = True);
 
 // AFile needs to be open before being passed to this procedure.
@@ -74,6 +86,8 @@ procedure ReadModflowDoublePrecFluxArray(AFile: TFileStream;
   ReadArray: Boolean = True
   );
 
+function CheckMt3dmsArrayPrecision(AFile: TFileStream): TModflowPrecision;
+
 // Use this function to check the precision of
 // a binary head or drawdown file or other similar files.
 // AFile should be at the beginning of the file when this
@@ -90,7 +104,7 @@ function CheckBudgetPrecision(AFile: TFileStream; out HufFormat: boolean): TModf
 implementation
 
 resourcestring
-  StrUnableToReadFile = 'Unable to read file.';
+  StrUnableToReadFile = 'Unable to read file. Check that the file is an unstructured, non-formatted file. In MODFLOW-2005, this is determined in OPENSPEC.inc';
 
 var
   Dummy: TModflowDouble;
@@ -129,7 +143,8 @@ var
            or (Description = '       THICKNESS')
            or (Description = 'CENTER ELEVATION')
            or (Description = 'GEOSTATIC STRESS')
-           or (Description = 'CHANGE IN G-STRS');
+           or (Description = 'CHANGE IN G-STRS')
+           or (Description = 'CONCENTRATION   ');
   end;
 begin
   Assert(AFile.Position = 0);
@@ -151,6 +166,61 @@ begin
   AFile.Read(KSTP, SizeOf(KSTP));
   AFile.Read(KPER, SizeOf(KPER));
   AFile.Read(PERTIM_Double, SizeOf(PERTIM_Double));
+  AFile.Read(TOTIM_Double, SizeOf(TOTIM_Double));
+  AFile.Read(DESC, SizeOf(DESC));
+  Description := DESC;
+  case result of
+    mpSingle:
+      begin
+        if ValidDescription then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
+      end;
+    mpDouble:
+      begin
+        if not ValidDescription then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
+      end;
+  end;
+  AFile.Position := 0;
+end;
+
+function CheckMt3dmsArrayPrecision(AFile: TFileStream): TModflowPrecision;
+var
+  NTRANS, KSTP, KPER: Integer;
+  TOTIM: TModflowFloat;
+  DESC: TModflowDesc;
+  Description : AnsiString;
+  TOTIM_Double: TModflowDouble;
+  function ValidDescription: boolean;
+  begin
+    // If these values are changed, update the
+    // MODFLOW Online Guide with the new values.
+    result := (Description = 'CONCENTRATION   ');
+  end;
+begin
+  Assert(AFile.Position = 0);
+  AFile.Read(NTRANS, SizeOf(NTRANS));
+  AFile.Read(KSTP, SizeOf(KSTP));
+  AFile.Read(KPER, SizeOf(KPER));
+  AFile.Read(TOTIM, SizeOf(TOTIM));
+  AFile.Read(DESC, SizeOf(DESC));
+  Description := DESC;
+  if ValidDescription then
+  begin
+    result := mpSingle;
+  end
+  else
+  begin
+    result := mpDouble;
+  end;
+  AFile.Position := 0;
+  AFile.Read(NTRANS, SizeOf(NTRANS));
+  AFile.Read(KSTP, SizeOf(KSTP));
+  AFile.Read(KPER, SizeOf(KPER));
   AFile.Read(TOTIM_Double, SizeOf(TOTIM_Double));
   AFile.Read(DESC, SizeOf(DESC));
   Description := DESC;
@@ -340,8 +410,6 @@ var
     Values: array of TModflowDouble;
     ICELL: Integer;
     ValIndex: Integer;
-//    FluxArray: TModflowSingleArray;
-//    LayerIndicatorArray: array of array of integer;
     AValue: TModflowDouble;
   begin
     result := True;
@@ -448,11 +516,6 @@ var
                   Exit;
                 end;
               end;
-//            end
-//            else
-//            begin
-//              result := False;
-//              Exit;
             end;
           end;
         else
@@ -740,6 +803,43 @@ begin
   AFile.Position := 0;
 end;
 
+procedure ReadSinglePrecisionMt3dmsBinaryRealArray(AFile: TFileStream;
+  var NTRANS, KSTP, KPER: Integer;
+  var TOTIM: TModflowDouble; var DESC: TModflowDesc;
+  var NCOL, NROW, ILAY: Integer; var AnArray: TModflowDoubleArray;
+  ReadArray: Boolean = True);
+var
+  ColIndex: Integer;
+  RowIndex: Integer;
+  AValue: TModflowFloat;
+begin
+  AFile.Read(NTRANS, SizeOf(NTRANS));
+  AFile.Read(KSTP, SizeOf(KSTP));
+  AFile.Read(KPER, SizeOf(KPER));
+
+  AFile.Read(AValue, SizeOf(TModflowFloat));
+  TOTIM := AValue;
+  AFile.Read(DESC, SizeOf(DESC));
+  AFile.Read(NCOL, SizeOf(NCOL));
+  AFile.Read(NROW, SizeOf(NROW));
+  AFile.Read(ILAY, SizeOf(ILAY));
+  if ReadArray then
+  begin
+    SetLength(AnArray, NROW, NCOL);
+    for RowIndex := 0 to NROW - 1 do
+    begin
+      for ColIndex := 0 to NCOL - 1 do
+      begin
+        AFile.Read(AValue, SizeOf(TModflowFloat));
+        AnArray[RowIndex, ColIndex] := AValue;
+      end;
+    end;
+  end
+  else
+  begin
+    AFile.Position := AFile.Position + SizeOf(TModflowFloat)*NROW*NCOL;
+  end;
+end;
 
 procedure ReadSinglePrecisionModflowBinaryRealArray(AFile: TFileStream;
   var KSTP, KPER: Integer;
@@ -779,6 +879,41 @@ begin
     AFile.Position := AFile.Position + SizeOf(TModflowFloat)*NROW*NCOL;
   end;
 end;
+
+procedure ReadDoublePrecisionMt3dmsBinaryRealArray(AFile: TFileStream;
+  var NTRANS, KSTP, KPER: Integer;
+  var TOTIM: TModflowDouble; var DESC: TModflowDesc;
+  var NCOL, NROW, ILAY: Integer; var AnArray: TModflowDoubleArray;
+  ReadArray: Boolean = True);
+var
+  ColIndex: Integer;
+  RowIndex: Integer;
+begin
+  AFile.Read(NTRANS, SizeOf(NTRANS));
+  AFile.Read(KSTP, SizeOf(KSTP));
+  AFile.Read(KPER, SizeOf(KPER));
+  AFile.Read(TOTIM, SizeOf(TModflowDouble));
+  AFile.Read(DESC, SizeOf(DESC));
+  AFile.Read(NCOL, SizeOf(NCOL));
+  AFile.Read(NROW, SizeOf(NROW));
+  AFile.Read(ILAY, SizeOf(ILAY));
+  SetLength(AnArray, NROW, NCOL);
+  if ReadArray then
+  begin
+    for RowIndex := 0 to NROW - 1 do
+    begin
+      for ColIndex := 0 to NCOL - 1 do
+      begin
+        AFile.Read(AnArray[RowIndex, ColIndex], SizeOf(TModflowDouble));
+      end;
+    end;
+  end
+  else
+  begin
+    AFile.Position := AFile.Position + SizeOf(TModflowDouble)*NROW*NCOL;
+  end;
+end;
+
 
 procedure ReadDoublePrecisionModflowBinaryRealArray(AFile: TFileStream;
   var KSTP, KPER: Integer;

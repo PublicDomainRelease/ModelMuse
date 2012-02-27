@@ -231,6 +231,9 @@ implementation
 
 uses frmGoPhastUnit, GoPhastTypes;
 
+resourcestring
+  StrTitleAndUnits = 'title and units';
+
 {$R *.dfm}
 
 { TfrmUnits }
@@ -385,7 +388,7 @@ end;
 
 function TUndoTitleAndUnits.Description: string;
 begin
-  result := 'title and units';
+  result := StrTitleAndUnits;
 end;
 
 destructor TUndoTitleAndUnits.Destroy;

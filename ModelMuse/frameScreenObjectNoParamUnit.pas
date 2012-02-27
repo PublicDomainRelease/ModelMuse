@@ -103,7 +103,8 @@ type
     // the @link(TCustomRowOrColumn.PickList) of the
     // @link(TCustomRowOrColumn column) of @link(dgModflowBoundary)
     // specified by Col.
-    procedure GetEndTimes(Col: integer);
+    procedure GetEndTimes(Col: Integer);
+    procedure SetButtonCaptions;
     { Public declarations }
   end;
 
@@ -180,6 +181,7 @@ begin
   GridRect.Top := 1;
   GridRect.Bottom := 1;
   dgModflowBoundary.Selection := GridRect;
+  SetButtonCaptions;
 end;
 
 
@@ -456,6 +458,20 @@ begin
     end;
   end;
   FDeletedCells[ACol, ARow] := Value;
+end;
+
+procedure TframeScreenObjectNoParam.SetButtonCaptions;
+var
+  Index: Integer;
+begin
+  for Index := 0 to dgModflowBoundary.ColCount - 1 do
+  begin
+    if dgModflowBoundary.Columns[Index].ButtonCaption = '...' then
+    begin
+      dgModflowBoundary.Columns[Index].ButtonCaption := 'F()';
+      dgModflowBoundary.Columns[Index].ButtonWidth := 35;
+    end;
+  end;
 end;
 
 end.

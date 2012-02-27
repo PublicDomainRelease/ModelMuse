@@ -861,7 +861,8 @@ side views of the model.}
       expressed in terms of Column and Row coordinates to ones based on real
       world coordinates.  }
     function RotateFromGridCoordinatesToRealWorldCoordinates
-      (const APoint: TPoint2D): TPoint2D;
+      (const APoint: TPoint2D): TPoint2D;  overload;
+    procedure RotateFromGridCoordinatesToRealWorldCoordinates(var X, Y: TFloat); overload;
     { @name is the inverse of
       @link(RotateFromGridCoordinatesToRealWorldCoordinates).}
     function RotateFromRealWorldCoordinatesToGridCoordinates
@@ -2441,6 +2442,8 @@ function TCustomModelGrid.ContourGrid(EvaluatedAt: TEvaluatedAt;
 var
   Local3DGridPoints: TGrid;
   ColIndex, RowIndex, LayIndex: integer;
+  P: TGlCoord;
+  APoint: TPoint2D;
 begin
   result := nil;
   if (ColumnCount <= 0) or (RowCount <= 0) or (LayerCount <= 0) then
@@ -2516,10 +2519,12 @@ begin
           begin
             for LayIndex := 0 to Length(Local3DGridPoints[0,0])-1 do
             begin
-              result[ColIndex,LayIndex].P.x :=
-                Local3DGridPoints[ColIndex,RowIndex,LayIndex].P.X;
-              result[ColIndex,LayIndex].P.y :=
-                Local3DGridPoints[ColIndex,RowIndex,LayIndex].P.Z;
+              P := Local3DGridPoints[ColIndex,RowIndex,LayIndex].P;
+              APoint.X := P.X;
+              APoint.Y := P.Y;
+              APoint:= RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
+              result[ColIndex,LayIndex].P.x := APoint.X;
+              result[ColIndex,LayIndex].P.y := P.Z;
             end;
           end;
           case EvaluatedAt of
@@ -2539,10 +2544,12 @@ begin
           begin
             for LayIndex := 0 to Length(Local3DGridPoints[0,0])-1 do
             begin
-              result[RowIndex,LayIndex].P.x :=
-                Local3DGridPoints[ColIndex,RowIndex,LayIndex].P.Z;
-              result[RowIndex,LayIndex].P.y :=
-                Local3DGridPoints[ColIndex,RowIndex,LayIndex].P.Y;
+              P := Local3DGridPoints[ColIndex,RowIndex,LayIndex].P;
+              APoint.X := P.X;
+              APoint.Y := P.Y;
+              APoint:= RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
+              result[RowIndex,LayIndex].P.x := P.Z;
+              result[RowIndex,LayIndex].P.y := APoint.Y;
             end;
           end;
           case EvaluatedAt of
@@ -2863,6 +2870,18 @@ begin
     temp.Y := Sin(GridAngle) * result.X + Cos(GridAngle) * result.Y;
     result := temp;
   end;
+end;
+
+procedure TCustomModelGrid.RotateFromGridCoordinatesToRealWorldCoordinates(
+  var X, Y: TFloat);
+var
+  APoint: TPoint2D;
+begin
+  APoint.x := X;
+  APoint.y := Y;
+  APoint := RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
+  X := APoint.x;
+  Y := APoint.y;
 end;
 
 function TCustomModelGrid.RotateFromRealWorldCoordinatesToGridCoordinates(
@@ -5112,6 +5131,9 @@ var
   UseString: Boolean;
   TempString: string;
 begin
+  Assert(Layer <= LayerCount);
+  Assert(Row <= RowCount);
+  Assert(Col <= ColumnCount);
   if not DataSet.IsValue[Layer, Row, Col] then
     Exit;
   if not IsActiveOK(DataSet, Layer, Row, Col) then
@@ -5218,6 +5240,10 @@ var
   ColIndex: integer;
 begin
   DataSet.Initialize;
+
+  Assert(LayerCount <= Self.LayerCount + 1);
+  Assert(RowCount <= Self.RowCount + 1);
+  Assert(ColCount <= Self.ColumnCount + 1);
   for LayerIndex := 0 to LayerCount - 1 do
   begin
     for RowIndex := 0 to RowCount - 1 do

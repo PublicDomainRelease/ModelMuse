@@ -16,12 +16,14 @@ type
     FEExtinctionDepths: TList;
     FExtinctionWaterContent : TList;
     procedure CountGages;
-    procedure WriteDataSet1;
+    procedure WriteDataSet1a;
+    procedure WriteDataSet1b;
     procedure WriteDataSet2;
     procedure WriteDataSet3;
     procedure WriteDataSet4;
     procedure WriteDataSet5;
-    procedure WriteDataSet6;
+    procedure WriteDataSet6a;
+    procedure WriteDataSet6b;
     procedure WriteDataSet7;
     procedure WriteDataSet8(var GageStart: integer);
     procedure WriteStressPeriods; reintroduce;
@@ -57,9 +59,6 @@ resourcestring
   ' defined in the following stress periods.';
   StrTheETExtinctionWa = 'The ET extinction water content in the UZF package' +
   ' was not defined in the following stress periods.';
-  StrNoBoundaryConditio = 'No boundary conditions assigned to the %s because' +
-  ' the object does not set the values of either enclosed or intersected cel' +
-  'ls.';
   StrNoTransientDataI = 'No transient data (infiltration and/or evapotranspi' +
   'ration) has been defined.';
 
@@ -90,10 +89,6 @@ var
 begin
   NoAssignmentErrorRoot := Format(StrNoBoundaryConditio,
     [Package.PackageIdentifier]);
-//  NoAssignmentErrorRoot := 'No boundary conditions assigned to the '
-//    + Package.PackageIdentifier
-//    + ' because the object does not '
-//    + 'set the values of either enclosed or intersected cells.';
   frmProgressMM.AddMessage('Evaluating UZF Package data.');
   CountGages;
 
@@ -318,7 +313,36 @@ begin
     CellList, umAssign, False, Dummy);
 end;
 
-procedure TModflowUzfWriter.WriteDataSet1;
+procedure TModflowUzfWriter.WriteDataSet1a;
+var
+  UzfPackage: TUzfPackageSelection;
+begin
+  if Model.ModelSelection = msModflowNWT then
+  begin
+    UzfPackage := Model.ModflowPackages.UzfPackage;
+    if UzfPackage.SpecifyResidualWaterContent
+      or UzfPackage.SpecifyInitialWaterContent
+      or not UzfPackage.CalulateSurfaceLeakage then
+    begin
+      if UzfPackage.SpecifyResidualWaterContent then
+      begin
+        WriteString('SPECIFYTHTR ');
+      end;
+      if UzfPackage.SpecifyInitialWaterContent then
+      begin
+        WriteString('SPECIFYTHTI ');
+      end;
+      if not UzfPackage.CalulateSurfaceLeakage then
+      begin
+        WriteString('NOSURFLEAK ');
+      end;
+      WriteString('# Data set 1a');
+      NewLine;
+    end;
+  end;
+end;
+
+procedure TModflowUzfWriter.WriteDataSet1b;
 var
   NUZTOP: integer;
   IETFLG: integer;
@@ -399,7 +423,14 @@ begin
   end;
   WriteInteger(NUZGAG);
   WriteFloat(SURFDEP);
-  WriteString(' # Data Set 1: NUZTOP IUZFOPT IRUNFLG IETFLG IUZFCB1 IUZFCB2');
+  if Model.ModelSelection = msModflowNWT then
+  begin
+    WriteString(' # Data Set 1b: NUZTOP IUZFOPT IRUNFLG IETFLG IUZFCB1 IUZFCB2');
+  end
+  else
+  begin
+    WriteString(' # Data Set 1: NUZTOP IUZFOPT IRUNFLG IETFLG IUZFCB1 IUZFCB2');
+  end;
   if IUZFOPT > 0 then
   begin
     WriteString(' NTRAIL2 NSETS2');
@@ -446,19 +477,40 @@ begin
   WriteArray(EPS, 0, 'Data Set 5: EPS');
 end;
 
-procedure TModflowUzfWriter.WriteDataSet6;
+procedure TModflowUzfWriter.WriteDataSet6a;
 var
   THTS: TDataArray;
 begin
   THTS := Model.DataArrayManager.GetDataSetByName(StrUzfSaturatedWaterContent);
-  WriteArray(THTS, 0, 'Data Set 6: THTS');
+  if Model.ModelSelection = msModflowNWT then
+  begin
+    WriteArray(THTS, 0, 'Data Set 6a: THTS');
+  end
+  else
+  begin
+    WriteArray(THTS, 0, 'Data Set 6: THTS');
+  end;
+end;
+
+procedure TModflowUzfWriter.WriteDataSet6b;
+var
+  THTR: TDataArray;
+begin
+  if (Model.ModelSelection = msModflowNWT)
+    and Model.ModflowPackages.UzfPackage.SpecifyResidualWaterContent then
+  begin
+    THTR := Model.DataArrayManager.GetDataSetByName(StrUzfReisidualWaterContent);
+    WriteArray(THTR, 0, 'Data Set 6b: THTR');
+  end;
 end;
 
 procedure TModflowUzfWriter.WriteDataSet7;
 var
   THTI: TDataArray;
 begin
-  if Model.ModflowStressPeriods.CompletelyTransient then
+  if Model.ModflowStressPeriods.CompletelyTransient
+    or ((Model.ModelSelection = msModflowNWT)
+      and Model.ModflowPackages.UzfPackage.SpecifyInitialWaterContent) then
   begin
     THTI := Model.DataArrayManager.GetDataSetByName(StrUzfInitialUnsaturatedWaterContent);
     WriteArray(THTI, 0, 'Data Set 7: THTI');
@@ -563,7 +615,15 @@ begin
     end;
 
     frmProgressMM.AddMessage('  Writing Data Set 1.');
-    WriteDataSet1;
+    WriteDataSet1a;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+
+    WriteDataSet1b;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
     begin
@@ -602,8 +662,16 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 6.');
-    WriteDataSet6;
+    frmProgressMM.AddMessage('  Writing Data Set 6a.');
+    WriteDataSet6a;
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage('  Writing Data Set 6b.');
+    WriteDataSet6b;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
     begin

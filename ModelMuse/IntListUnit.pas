@@ -89,6 +89,34 @@ type
     property Sorted: boolean read FSorted write SetSorted;
   end;
 
+  // TIntegerList acts much like TList except that it stores integers
+  // rather than pointers.
+  TInt64List = class(TObject)
+    private
+      FList : TList;
+      procedure SetItem (Index: integer; const AnInteger : Int64);
+      function GetItem (Index: integer): Int64;
+      function GetCount : integer;
+      procedure SetCapacity(ACapacity : Integer);
+      function GetCapacity : integer;
+    public
+      function Add(const AnInteger : Int64): integer;
+      procedure Clear;
+      constructor Create;
+      destructor Destroy; Override;
+      procedure Delete(Index: Integer);
+//      class procedure Error(const Msg: string; Data: Integer); virtual;
+      procedure Exchange(Index1, Index2: Integer);
+      function First: Int64;
+      procedure Insert(Index: Integer; AnInteger : Int64);
+      function Last: Int64;
+      procedure Move(CurIndex, NewIndex: Integer);
+//      procedure Pack;
+      Property Items[Index: integer] : Int64  read GetItem write SetItem; default;
+      property Count : integer read GetCount;
+      property Capacity : integer read GetCapacity write SetCapacity;
+    end;
+
   // @abstract(@name is a list of @link(TIntegerList)s.)
   // @name does not own the @link(TIntegerList)s.
   TIntListList = class(TObject)
@@ -137,6 +165,10 @@ type
   TIntegerClass = class(TObject)
   private
     AnInteger: integer;
+  end;
+
+  TInt64Object = class(TObject)
+    AnInt64: Int64;
   end;
 
 constructor TIntegerList.Create;
@@ -605,7 +637,109 @@ begin
   end;
 end;
 
+{ TInt64List }
 
+function TInt64List.Add(const AnInteger: Int64): integer;
+var
+  AnIntegerObj : TInt64Object;
+begin
+  AnIntegerObj := TInt64Object.Create;
+  AnIntegerObj.AnInt64 := AnInteger;
+  result := FList.Add(AnIntegerObj);
+end;
+
+procedure TInt64List.Clear;
+begin
+  FList.Clear;
+end;
+
+constructor TInt64List.Create;
+begin
+  FList := TObjectList.Create;
+end;
+
+procedure TInt64List.Delete(Index: Integer);
+begin
+  FList.Delete(Index);
+end;
+
+destructor TInt64List.Destroy;
+begin
+  FList.Free;
+  inherited;
+end;
+
+procedure TInt64List.Exchange(Index1, Index2: Integer);
+begin
+  FList.Exchange(Index1, Index2);
+end;
+
+function TInt64List.First: Int64;
+var
+  AnIntegerObj : TInt64Object;
+begin
+  AnIntegerObj := FList.First;
+  result := AnIntegerObj.AnInt64;
+end;
+
+function TInt64List.GetCapacity: integer;
+begin
+  result := FList.Capacity
+end;
+
+function TInt64List.GetCount: integer;
+begin
+  result := FList.Count
+end;
+
+function TInt64List.GetItem(Index: integer): Int64;
+var
+  AnIntegerObj : TInt64Object;
+begin
+  AnIntegerObj := FList.Items[Index];
+  result := AnIntegerObj.AnInt64;
+end;
+
+procedure TInt64List.Insert(Index: Integer; AnInteger: Int64);
+var
+  AnIntegerObj : TInt64Object;
+begin
+  AnIntegerObj := TInt64Object.Create;
+  AnIntegerObj.AnInt64 := AnInteger;
+  FList.Insert(Index, AnIntegerObj);
+end;
+
+function TInt64List.Last: Int64;
+var
+  AnIntegerObj : TInt64Object;
+begin
+  AnIntegerObj := FList.Last;
+  result := AnIntegerObj.AnInt64;
+end;
+
+procedure TInt64List.Move(CurIndex, NewIndex: Integer);
+begin
+  FList.Move(CurIndex, NewIndex);
+end;
+
+procedure TInt64List.SetCapacity(ACapacity: Integer);
+begin
+  if not (FList.Capacity = ACapacity) then
+  begin
+    FList.Capacity := ACapacity
+  end;
+end;
+
+procedure TInt64List.SetItem(Index: integer; const AnInteger: Int64);
+var
+  AnIntegerObj : TInt64Object;
+begin
+  AnIntegerObj := FList.Items[Index];
+  if not ( AnIntegerObj.AnInt64 = AnInteger) then
+  begin
+    AnIntegerObj.AnInt64 := AnInteger;
+  end;
+end;
 
 end.
 

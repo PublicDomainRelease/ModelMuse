@@ -1,30 +1,17 @@
-// @name defines a frame that is used to define the flux observation data
-// for a particular @link(TScreenObject).
 unit frameFluxObsUnit;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Grids, RbwDataGrid4, StdCtrls, FluxObservationUnit;
+  Dialogs, CustomFrameFluxObsUnit, StdCtrls, Grids, RbwDataGrid4,
+  FluxObservationUnit;
 
 type
-  // @name is a frame that is used to define the flux observation data
-  // for a particular @link(TScreenObject).
-  TframeFluxObs = class(TFrame)
-    // @name holds the flux observation data.
-    // The checkbox in column 1 indicates whether the @link(TScreenObject)
-    // being edited is part of the indicated flux observation.
-    // The text is column 2 is the Factor formula.
-    rdgObservationGroups: TRbwDataGrid4;
-    // @name is used to indicate the type of flux observation.
-    lblFluxObservations: TLabel;
-    btnAddOrRemoveFluxObservations: TButton;
+  TframeFluxObs = class(TCustomframeFluxObs)
   private
     { Private declarations }
   public
-    {@name sets the captions in @link(rdgObservationGroups).}
-    procedure InitializeControls;
     // @name returns the number of @link(TScreenObject)s in ListOfScreenObjects
     // that are included in one or more @link(TFluxObservationGroup) in
     // Observations.
@@ -146,14 +133,6 @@ begin
       end;
     end;
   end;
-end;
-
-procedure TframeFluxObs.InitializeControls;
-begin
-  inherited;
-  rdgObservationGroups.Cells[0,0] := 'N';
-  rdgObservationGroups.Cells[1,0] := 'Observation group';
-  rdgObservationGroups.Cells[2,0] := 'Factor';
 end;
 
 procedure TframeFluxObs.SetData(ListOfScreenObjects: TList;

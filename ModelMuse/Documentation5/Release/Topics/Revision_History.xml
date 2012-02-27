@@ -6,12 +6,84 @@
     <header>
       <para styleclass="Heading1"><text styleclass="Heading1" translate="true">Revision History</text></para>
     </header>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.12 Nov. 7, 2011]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.13 Feb. 28, 2012]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Added support for MT3DMS</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">ModelMuse now checks the file date for MODFLOW and related models and warns the user if a more recent version has been released.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Reduced memory usage when importing MODFLOW models that use the UZF package.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">When importing MODFLOW features from Shapefiles, most features can be imported into a single, multi-part object.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">The user can now specify the precision with which contour labels are written.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Added new macro for exporting images; %TrS will be replaced by the transport step.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">The &quot;Run model&quot; button now has a drop down menu next to it which can be used to run MODPATH, ZONEBUDGET or MT3DMS.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">It is now possible to import parameter values from a MODFLOW PVAL file. This can be done either from the Manage Parameters dialog box or from the command line. To import a PVAL file from the command line, add -p &quot;Filename&quot; to the command line where Filename is the full path of the PVAL file. If the path contains any spaces, Filename should be enclosed in double quotes.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">It is now possible to import global variables from a text file. This can be done either from the Global Variables dialog box or from the command line. To import a global variables file from the command line, add -g &quot;Filename&quot; to the command line where Filename is the full path of the global variables file. If the path contains any spaces, Filename should be enclosed in double quotes. Each line of the global variables files must be either empty, start with the # character to identify the line as a comment or list the name and value of an existing global variable. On a line defining a new value for a global variable, the name of the global variable must be at the beginning of the line must be first followed by one or more spaces followed by the value. A period must be used as the decimal separator. For boolean global variables, the value must be either &quot;True&quot; or &quot;False&quot; (without the quotes). For text variables, the value may optionally be enclosed in quotes.  A global variables may also be saved from the Global Variables dialog box.</text></para>
+              </td>
+            </tr>
+          </table></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">When running MODFLOW from ModelMuse, the lines in the batch file to display the listing file now occurs immediately after MODFLOW has finished instead of after the lines to run MODPATH and Zonebudget.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Added option to write SFR package input in the format used by GSFLOW.</text></para>
+              </td>
+            </tr>
+          </table></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">ModelMuse again responds to the mouse wheel.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">ModelMuse now only allows a ModelMuse file to be saved if it has one of the correct extensions.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Access violations that sometimes occured when changing the names of layer groups have been fixed.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">In the MODFLOW Program Locations dialog box, &quot;ModelMuse.exe&quot; is no longer accepted as a valid name for any of the programs.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Undo/Redo capability added for changes to the output control.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">ModelMuse can now import the gage package correctly when a lake gage has an OUTTYPE of 4 or a stream gage has an OUTTYPE of 8.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">ModelMuse now updates user-entered real numbers to the proper format when the the user changes the language settings.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed in bug in which attempting to delete a row from a table in which no row was selected caused an exception.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug in which SFR data was corrupted if ICALC was not specified.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug importing the MNWI package from an existing MODFLOW-2005 model.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that could sometimes prevent the Object Properties dialog box from being displayed when attempting to edit multiple objects.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">In the MODFLOW Time dialog box, attempting to use the Time Step Length Calculator without first specifying the Stress period length and multiplier now generates a warning message to the user instead of a bug report.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">When the user has customized the regional settings to use a decimal separator that is different from the usual one, this no longer causes an error when converting text to floating point values.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">The menus and buttons are now disabled while opening a file.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">When a message box is displayed, the mouse will move to the default button if the user has specified that option in the Windows Control Panel.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">When importing Shapefiles, failing to specify an attribute name or value no longer results in a range check error.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Failing to completely specify information streams in the SFR package now results in an error message instead of a bug report.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug in setting data for SFR when multiple objects are being edited at once.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bugs relating to display of data in MODFLOW-LGR models.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed another bug relating to display of data in MODFLOW-LGR models.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed another bug relating to display of data in MODFLOW-LGR models.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">fixed export of SFR in MODFLOW-NWT or for GSFLOW.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug with setting multiple flux observation values at once not working.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug in storing imported values when splitting objects.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">When reading an exporting a file from the command line, the &quot;arrays&quot; directory will be created as a subdirectory of the directory containing the file even if the full file path is not specified.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">attempting to animate a series of data sets in the Export Image dialog box without first displaying the Display Data dialog box no longer causes access violations.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true"> Fixed bug with reading .ini file when multiple copies of ModelMuse are running.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">fixed export of OC file when the defaults are selected.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Contour lines are now drawn at the correct positions on the front and side views when the grid is rotated.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">(fourth attempt) When more than one instance of ModelMuse was running, sometimes one copy would interfere with the other&apos;s temporary files.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed a bug in which the Data Sets dialog box sometimes did not prevent the user from setting up a formula that caused a data set to depend on itself.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that could cause an assertion failure when coloring the grid with transient data such as the recharge rate.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug in exporting MT3DMS BTN data set A6 when there are more than 40 layers.</text></para>
+              </td>
+            </tr>
+          </table></para>
+        </td>
+      </tr>
+    </table></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.12 Nov. 7, 2011]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">In the Data Visualization dialog box, it is now possible to display linkages between streams in the stream package.</text></para>
@@ -26,8 +98,8 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Strong"><text styleclass="Strong" translate="true">The following dialog boxes have been deleted and their functionality has been moved to the new Data Visualization dialog box: Color Grid, Contour Data, MODPATH Pathline Display, MODPATH Endpoint Display, MODPATH Time Series Display, and Head Observation Results.</text></para>
@@ -37,8 +109,8 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When importing the UZF package from an existing MODFLOW model, NUZTOP is now imported correctly.</text></para>
@@ -60,12 +132,12 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.11 Sept. 27, 2011]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.11 Sept. 27, 2011]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">In LGR models, Streams in the SFR package are now linked between grids.</text></para>
@@ -76,8 +148,8 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When closing a model, the prompt asking the user if they wish to save the model now includes the file name if the file name has been specified.</text></para>
@@ -85,8 +157,8 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that could cause a &quot;List index out of bounds&quot; error when exporting Shapefiles.</text></para>
@@ -105,12 +177,12 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.10.3 Aug. 18, 2011]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.10.3 Aug. 18, 2011]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">SYTP parameters in the HUF package are now written to the PVAL and UCODE template files.</text></para>
@@ -126,20 +198,20 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.10.2 Aug. 2, 2011]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.10.2 Aug. 2, 2011]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Enhancement]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Enhancement]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">NaN is now flagged as an error in ModelMonitor</text></para>
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Undoing certain operations no longer results in a range check error.</text></para>
@@ -150,20 +222,20 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.10.1 Aug. 1, 2011]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.10.1 Aug. 1, 2011]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Change]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Change]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When a message about a new version is displayed, the version numbers of the new version as well as the version that is being used are both displayed.</text></para>
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Importing a feature that allows for a MODFLOW parameter from a Shapefile no longer causes a range check error if no parameter is being imported.</text></para>
@@ -173,12 +245,12 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.10 July 27, 2011]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.10 July 27, 2011]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Added support for MODFLOW-NWT.</text></para>
@@ -189,8 +261,8 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When importing Surfer grid files, the &quot;files of type&quot; is set to the value at which it was set the previous time a Surfer grid file was imported since the program was started.</text></para>
@@ -199,8 +271,8 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that could cause the incorrect text to be replaced in the formula editor when editing a formula.</text></para>
@@ -220,12 +292,12 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.9.1 June 13, 2011]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.9.1 June 13, 2011]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When editing Flow observations, some observations were not saved.</text></para>
@@ -252,12 +324,12 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.9.0.0 June 1, 2011]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.9.0.0 June 1, 2011]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Added support for MODFLOW-LGR</text></para>
@@ -294,8 +366,8 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When creating polygon objects or adding polygon sections to existing objects, clicking on the first point of the polygon will close the polygon instead of continuing it.</text></para>
@@ -308,8 +380,8 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">It is no longer possible to show the Manage Head Observations dialog box before any head observations have been defined. Doing so could cause access violations.</text></para>
@@ -358,12 +430,12 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.8.0.0 Dec.13, 2010]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.8.0.0 Dec.13, 2010]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Data set values can now be exported to a comma-separated value file along with X, Y, Z coordinates.</text></para>
@@ -383,8 +455,8 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed access violations when importing model results into a model and contouring those results.</text></para>
@@ -424,12 +496,12 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.7.0.0 Oct. 5, 2010]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.7.0.0 Oct. 5, 2010]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">ModelMuse now can create a series of bitmaps that can be used to create a video.</text></para>
@@ -440,7 +512,7 @@
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Endpoints can now be exported to a Shapefile.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">TimeSeries can now be exported to a Shapefile.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Images can now be exported as .bmp files as well as .emf files.</text></para>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">The macros &quot;%SP&quot;, &quot;%TS&quot;, and &quot;%ET&quot; can now be used in text on the Export Image dialog box. &#160;They will be replaced by the stress period number, time step number, and elapsed time respectively if those data are in the comment for the data set.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">The macros &quot;%SP&quot;, &quot;%TS&quot;, and &quot;%ET&quot; can now be used in text on the Export Image dialog box.  They will be replaced by the stress period number, time step number, and elapsed time respectively if those data are in the comment for the data set.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Channel cross sections in the SFR package can now be imported from Shapefiles.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When coloring the grid causes a data set to be recalculated, there will be form displaying the steps involved in calculating the values.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When importing SFR data from Shapefiles, formulas can now be used for SLOPE, STRTOP, STRTHICK, STRHC1, THTS, THTI, EPS, and UHC.</text></para>
@@ -452,8 +524,8 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">The elapased time is now included in the data set comment when importing MODFLOW results.</text></para>
@@ -462,8 +534,8 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Postprocessing for Geostatic Stress and changes in Geostatic stress has been fixed.</text></para>
@@ -496,12 +568,12 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.6 Aug. 27, 2010]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.6 Aug. 27, 2010]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Added support for SWT package.</text></para>
@@ -519,8 +591,8 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">The &quot;Object|Edit|Merge Objects&quot; command now operates when very small differences exist between the endpoints of the objects being merged. Previously, the match had to be exact.</text></para>
@@ -530,8 +602,8 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Eliminated an Assertion failure that could occur when editing an object in a new model after having previously closed a previous model without restarting ModelMuse caused an Assertion failure.</text></para>
@@ -565,19 +637,19 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.5 June 24, 2010]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.5 June 24, 2010]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Support for ZONEBUDGET added.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">The Export Image dialog box has been added. It allows the user to export an image of the top, front, or side view of the model as an Enhanced Windows Metafile.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Added support for improved error reporting.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Added new function InterpolatedVertexValues that allows numeric values associated with individual vertices to be interpolated along the length of the object.</text></para>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">Added three new functions ColumnCenter, RowCenter, and LayerCenter. &#160;See help for details.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Added three new functions ColumnCenter, RowCenter, and LayerCenter.  See help for details.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">It is now posssible to copy and paste multiple cells in the parameter grids in the Packages and Programs dialog box.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">The helpfile has increased functionality.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Antialiasing used to improve appearance.</text></para>
@@ -590,16 +662,16 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Data set values are now saved to file with the data set if the data set values are up to date. This improves the speed of opening some large models.</text></para>
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">The number of observations in the Flow observations packages was calculated incorrectly when both observation and predictions were used.</text></para>
@@ -631,12 +703,12 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.4  April 29, 2010]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.4  April 29, 2010]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Added support for sampling DEM files.</text></para>
@@ -650,18 +722,18 @@
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When the MODFLOW Hydrogeologic Units dialog box is closed, it now checks that at least one parameter has been associated with each hydrogeologic unit and that each parameter is associated with at least one hydrogeologic unit.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">The thickness of HUF units is now constrained to be greater than or equal to zero.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Added error message if a MODPATH particle start time was invalid.</text></para>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">Added Epsilon when specifying data values to skip when &#160;coloring the grid.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Added Epsilon when specifying data values to skip when  coloring the grid.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When importing head observations, if the ModelMate interface is active, Statistic and StatFlag are imported too.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">If additional vertices are added to an object that defines head observations, an error message is displayed when attempting to export the HOB input file or plot HOB data on the grid.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When defining a new global variable, default values for the type and value are displayed in the Global Variables dialog box.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Bitmaps that were hidden because the magnification was too high, are now displayed again automatically when the magnification is sufficiently reduced.</text></para>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">The Grid Spacing dialog box now allows negative numbers for the default spacing for columns, rows, and layers. &#160;In MODFLOW models, the default spacing for rows is set to -100 instead of 100.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">The Grid Spacing dialog box now allows negative numbers for the default spacing for columns, rows, and layers.  In MODFLOW models, the default spacing for rows is set to -100 instead of 100.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When tips are turned off, ModelMuse will tell you when it detects new videos on the ModelMuse web site.</text></para>
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Boundary condition times prior to the beginning of the first defined boundary condition are now ignored.</text></para>
@@ -674,8 +746,8 @@
               </td>
             </tr>
           </table></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
-          <para styleclass="Heading3" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Corrected name of the &quot;Select Objects for Editing or Deletion&quot; menu item.</text></para>
@@ -705,7 +777,7 @@
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed calculation of HUF_Kx.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed export of Reference time in the MODPATH response file.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Access violations no longer occur when creating a new object after having closed a previous model and starting a new model.</text></para>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed export of BeginPeriod and BeginStep. &#160;They must both be set to 1 if any stress period in the model is a steady-state stress period.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed export of BeginPeriod and BeginStep.  They must both be set to 1 if any stress period in the model is a steady-state stress period.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed Assertion error in evaluation of MNW2 input.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed import of the RES package from existing models.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed display of UZF transient data sets.</text></para>
@@ -721,7 +793,7 @@
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When the ET Surface and the ET Depth are undefined in the EVT or ETS packages, an error message is displayed instead of the export failing.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Editing an object containing SFR data no longer results in an access violation if the SFR package is not selected.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Editing an object that defines data for the SFR, MNW2, HOB or HFB packages no longer results in deletion of data for those packages when those packages are not selected.</text></para>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">In the Object Properties dialog box, clicking the &quot;Edit F()...&quot; button on the Data Sets tab would cause an Assertion error when no data set was selected. &#160;The button is now disabled when no data set is selected.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">In the Object Properties dialog box, clicking the &quot;Edit F()...&quot; button on the Data Sets tab would cause an Assertion error when no data set was selected.  The button is now disabled when no data set is selected.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">When performing coordinate conversions on Shapefiles, you can no longer select a UTM zone until you have chosen to perform the conversion.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed access violations when opening a model when a model is already open.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">If the flow package corresponding to a flow observation is not selected in the object properties dialog box, attempting to select the flow observation will no longer cause toggling of the selected node.</text></para>
@@ -734,8 +806,8 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.3  March 8, 2010]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.3  March 8, 2010]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Added support for BCF package.</text></para>
@@ -777,16 +849,16 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.2.1.0 January 11, 2010]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.2.1.0 January 11, 2010]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that prevented RunPhast.bat from executing correctly when it was executed by ModelMuse.</text></para>
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.2.0.0 January 7, 2010]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.2.0.0 January 7, 2010]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Added support for MNW2 and MNWI packages.</text></para>
@@ -798,8 +870,8 @@
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Added new filters for coloring and contouring &quot;Active only&quot; and &quot;Values to Ignore&quot;.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Added import of ITT when importing head observations from Shapefiles.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Added import of parameter names when importing CHD, DRN, DRT, ETS, EVT, GHB, RCH, RIV, or WEL from a Shapefile.</text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">New functionality in the MODFLOW Name File dialog box. &#160;If the input for a package is listed in the Name File dialog box, the input file for that package will not be generated by ModelMuse. &#160;See the help for the MODFLOW Name File dialog box for full details.</text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">Multiplier and Zone arrays for transient data are tested to see if they are identical to a previous Multiplier or Zone array for transient data. If so, the previous array is reused. &#160;This saves memory in MODFLOW.</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">New functionality in the MODFLOW Name File dialog box.  If the input for a package is listed in the Name File dialog box, the input file for that package will not be generated by ModelMuse.  See the help for the MODFLOW Name File dialog box for full details.</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Multiplier and Zone arrays for transient data are tested to see if they are identical to a previous Multiplier or Zone array for transient data. If so, the previous array is reused.  This saves memory in MODFLOW.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">When importing points, empty lines and lines starting with &quot;#&quot; are skipped.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Ruler settings are now saved with the file.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Changed &quot;Select Objects of Editing&quot; dialog box to &quot;Select Objects of Editing or Deletion&quot; dialog box along with a change in functionality to allow objects to be deleted with this dialog box.</text></para>
@@ -810,10 +882,10 @@
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused the Delete and Insert buttons for creating or deleting parameter instances to be hidden.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Improved handling of pasting vertex data in the Object Properties dialog box.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that sometimes prevented data set comments from being edited properly.</text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused non parameter data to appear in the Object Properties dialog box for objects that did not have non-parameter data. &#160;The bug occurred if a previous object which did have non-parameter data was edited first.</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused non parameter data to appear in the Object Properties dialog box for objects that did not have non-parameter data.  The bug occurred if a previous object which did have non-parameter data was edited first.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused ModelMuse to hang if there was an error in a data set formula.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug importing UZF gages.</text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug in setting head observation names. &#160;Spaces and quotes are removed.</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug in setting head observation names.  Spaces and quotes are removed.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused COFF to be exported incorrectly if an observation was exactly on a column boundary.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug in which the display of head observations was not changed when an Object was moved.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused head observations imported from an existing MODFLOW model to be imported with the elevation from the wrong cell if ROFF = -0.5 or COFF = 0.5.</text></para>
@@ -821,21 +893,21 @@
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug exporting flow observations when the formula for Factor is complex.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused too much memory to be used when exporting ETS package.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused problems editing ETS data for objects. Added support for displaying endpoints from MODPATH.</text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug exporting gridded data to Shapefile. &#160;Duplicate fieldnames are no longer created.</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug exporting gridded data to Shapefile.  Duplicate fieldnames are no longer created.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed access violation bug in closing the Import Gridded Data dialog box.</text></para>
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.1.1.0 September 2, 2009]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.1.1.0 September 2, 2009]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bugs in importing DIS, LPF, EVT, and ETS files from existing MODFLOW-2005 models.</text></para>
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.1.0.0 August 31, 2009]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.1.0.0 August 31, 2009]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Transient data after the end of the last defined stress period is now ignored.</text></para>
@@ -845,7 +917,7 @@
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Added the ability to specify additions to the batch files that run MODFLOW and PHAST.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">In the Show/Hide Objects dialog box, the selected objects are now displayed with a bold font.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Added a new way to select objects for editing. See the help for &quot;Object|Edit|Select Objects for Editing...&quot;</text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">Added a way to see all the values for a data set and copy them to the clipboard. &#160;See the help for &quot;Data|Display Data Set Values&quot;.</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Added a way to see all the values for a data set and copy them to the clipboard.  See the help for &quot;Data|Display Data Set Values&quot;.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">When importing existing MODFLOW-2005 models, flow observations are now imported.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Reduced memory usage.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Added the ability to export objects as Shapefiles.</text></para>
@@ -872,8 +944,8 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 2.0.0.0 May 1, 2009]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.0.0.0 May 1, 2009]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Renamed ModelMuse</text></para>
@@ -881,16 +953,16 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 1.0.9.0 May 13, 2008]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 1.0.9.0 May 13, 2008]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed but that prevented new wells from being added.</text></para>
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading1" style="text-indent:-18px; margin-right:0px; margin-left:18px; tabstops:none;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 1.0.8.0 Mar. 9, 2007]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading1" style="text-indent:-18px; margin-right:0px; margin-left:18px; tabstops:none;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 1.0.8.0 Mar. 9, 2007]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed &quot;ObjectIntersectArea&quot; function.</text></para>
@@ -898,16 +970,16 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 1.0.7.0 Jan. 16, 2007]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 1.0.7.0 Jan. 16, 2007]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused access violations when editing objects that specified boundary conditions via PHAST-style interpolation.</text></para>
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 1.0.6.0 Dec. 18, 2006]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 1.0.6.0 Dec. 18, 2006]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused access violations when closing GoPhast if a dataset had been deleted and then restored. </text></para>
@@ -915,8 +987,8 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 1.0.5.0 Nov. 15, 2006]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 1.0.5.0 Nov. 15, 2006]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused intersection between objects and cells to be performed incorrectly.</text></para>
@@ -925,8 +997,8 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 1.0.4.0 Sept. 5, 2006 ]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 1.0.4.0 Sept. 5, 2006 ]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused access violations if the user edited the data sets that an object affected and then tried to undo those changes.</text></para>
@@ -934,16 +1006,16 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 1.0.3.0 Aug. 23, 2006]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 1.0.3.0 Aug. 23, 2006]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed the &quot;ObjectIntersectArea&quot; and &quot;ObjectIntersectLength&quot; functions.</text></para>
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 1.0.2.0 Aug. 11, 2006]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 1.0.2.0 Aug. 11, 2006]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Improved rainbow color scheme. </text></para>
@@ -953,8 +1025,8 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 1.0.1.0, May 25, 2006]]></caption></toggle></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 1.0.1.0, May 25, 2006]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that would cause access violations when invalid formulas such as &quot;1 2&quot; were specified.</text></para>
@@ -963,7 +1035,7 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Heading2" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2"><caption translate="true"><![CDATA[Version 1.0.0.0, May 11, 2006]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab/><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 1.0.0.0, May 11, 2006]]></caption></toggle></para>
     <para styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:18px; tabstops:none;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>

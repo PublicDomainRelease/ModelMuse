@@ -8,19 +8,19 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
   PixelsPerInch = 96
   TextHeight = 18
   inherited lblInterpolator: TLabel
-    Top = 69
+    Top = 35
     Anchors = [akLeft, akBottom]
     ExplicitTop = 101
   end
   inherited comboDataSets: TComboBox
-    Width = 535
+    Width = 527
     Anchors = [akLeft, akTop, akRight]
-    ExplicitWidth = 535
+    ExplicitWidth = 527
   end
   inherited comboInterpolators: TComboBox
-    Top = 90
+    Top = 56
     Anchors = [akLeft, akBottom]
-    ExplicitTop = 122
+    ExplicitTop = 56
   end
   inherited cbEnclosedCells: TCheckBox
     Left = 136
@@ -30,42 +30,42 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
     ExplicitTop = -5
   end
   inherited cbIntersectedCells: TCheckBox
-    Top = 122
+    Top = 88
     Anchors = [akLeft, akBottom]
     ExplicitTop = 154
   end
   inherited cbInterpolation: TCheckBox
     Left = 8
-    Top = 154
+    Top = 120
     Anchors = [akLeft, akBottom]
     ExplicitLeft = 8
     ExplicitTop = 186
   end
   inherited rgEvaluatedAt: TRadioGroup
-    Top = 191
+    Top = 157
     Anchors = [akLeft, akBottom]
     ExplicitTop = 223
   end
   inherited btnOK: TBitBtn
-    Top = 203
+    Top = 169
     Anchors = [akLeft, akBottom]
     OnClick = btnOKClick
     ExplicitTop = 235
   end
   inherited btnCancel: TBitBtn
-    Top = 203
+    Top = 169
     Anchors = [akLeft, akBottom]
     ExplicitTop = 235
   end
   inherited btnHelp: TBitBtn
-    Top = 203
+    Top = 169
     Anchors = [akLeft, akBottom]
     ExplicitTop = 235
   end
   object rgFilterMethod: TRadioGroup [11]
     Left = 306
-    Top = 77
-    Width = 237
+    Top = 43
+    Width = 229
     Height = 108
     Anchors = [akLeft, akRight, akBottom]
     Caption = 'Filter method'
@@ -78,12 +78,13 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
       'None')
     TabOrder = 9
     ExplicitTop = 109
+    ExplicitWidth = 237
   end
   object rdgFilesAndDataSets: TRbwDataGrid4 [12]
     Left = 0
     Top = 0
     Width = 571
-    Height = 63
+    Height = 29
     Align = alTop
     Anchors = [akLeft, akTop, akRight, akBottom]
     ColCount = 3
@@ -169,6 +170,7 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
         WordWrapCells = False
         AutoAdjustColWidths = True
       end>
+    ExplicitHeight = 63
   end
   inherited OpenDialogFile: TOpenDialog
     Filter = 'Text files (*.txt)|*.txt|All files (*.*)|*.*'

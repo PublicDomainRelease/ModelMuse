@@ -1585,6 +1585,9 @@ procedure TframeScreenObjectSFR.GetSfrSegments(Boundary: TSfrBoundary; FoundFirs
       end
     end;
   end;
+var
+  Row: Integer;
+  Column: Integer;
 //var
 ////  Row: Integer;
 //  Column: Integer;
@@ -1598,22 +1601,22 @@ begin
     end
     else
     begin
-      ClearTable(dgUp);
-//      for Row := 1 to dgUp.RowCount - 1 do
-//      begin
-//        for Column := 0 to dgUp.ColCount - 1 do
-//        begin
-//          dgUp.Cells[Column, Row] := '';
-//        end;
-//      end;
-      ClearTable(dgDown);
-//      for Row := 1 to dgDown.RowCount - 1 do
-//      begin
-//        for Column := 0 to dgDown.ColCount - 1 do
-//        begin
-//          dgDown.Cells[Column, Row] := '';
-//        end;
-//      end;
+//      ClearTable(dgUp);
+      for Row := 1 to dgUp.RowCount - 1 do
+      begin
+        for Column := Ord(scK) to dgUp.ColCount - 1 do
+        begin
+          dgUp.Cells[Column, Row] := '';
+        end;
+      end;
+//      ClearTable(dgDown);
+      for Row := 1 to dgDown.RowCount - 1 do
+      begin
+        for Column := Ord(scK) to dgDown.ColCount - 1 do
+        begin
+          dgDown.Cells[Column, Row] := '';
+        end;
+      end;
     end;
   end
   else
@@ -1662,7 +1665,7 @@ begin
     end
     else
     begin
-      for TableIndex := 0 to Boundary.ChannelValues.Count - 1 do
+      for TableIndex := 0 to Boundary.ParamIcalc.Count - 1 do
       begin
         Item := Boundary.ParamIcalc.Items[TableIndex];
         Row := TableIndex + 1;
@@ -2742,6 +2745,7 @@ var
   ICalc: integer;
   Valid: Boolean;
   IntValue: integer;
+  NewItem: Boolean;
 begin
   ParamIcalcValues := TSfrParamIcalcCollection.Create(nil, nil, nil);
   try
@@ -2757,18 +2761,19 @@ begin
     begin
       if TryStrToFloat(rdgParameters.Cells[Ord(spicStartTime), RowIndex], StartTime)
         and TryStrToFloat(rdgParameters.Cells[Ord(spicEndTime), RowIndex], EndTime)
-        and (rdgParameters.Cells[Ord(spicIcalc), RowIndex] <> '')
+//        and (rdgParameters.Cells[Ord(spicIcalc), RowIndex] <> '')
         then
       begin
         Valid := True;
         if (rdgParameters.Cells[Ord(spicParameter), RowIndex] <> '')
-          and (rdgParameters.Cells[Ord(spicParameter), RowIndex] <>
-          rdgParameters.Columns[Ord(spicParameter)].PickList[0]) then
+          and (rdgParameters.ItemIndex[Ord(spicParameter), RowIndex] <> 0)
+          then
         begin
           Valid := rdgParameters.Cells[Ord(spicParamInstance), RowIndex] <> ''
         end;
         if Valid then
         begin
+          NewItem := False;
           if RowIndex-1 < ParamIcalcValues.Count then
           begin
             Item := ParamIcalcValues.Items[RowIndex-1];
@@ -2776,11 +2781,12 @@ begin
           else
           begin
             Item := ParamIcalcValues.Add as TSfrParamIcalcItem;
+            NewItem := True;
           end;
           Item.StartTime := StartTime;
           Item.EndTime := EndTime;
-          if rdgParameters.Cells[Ord(spicParameter), RowIndex] =
-            rdgParameters.Columns[Ord(spicParameter)].PickList[0] then
+          if rdgParameters.ItemIndex[Ord(spicParameter), RowIndex] = 0
+            then
           begin
             Item.Param := '';
             Item.ParamInstance := ''
@@ -2798,10 +2804,22 @@ begin
             end;
           end;
 
-          ICalc := rdgParameters.Columns[Ord(spicIcalc)].PickList.IndexOf(
-            rdgParameters.Cells[Ord(spicIcalc), RowIndex]);
-          Assert(ICalc >= 0);
-          Item.ICalc := ICalc;
+          ICalc := rdgParameters.ItemIndex[Ord(spicIcalc), RowIndex];
+          if (ICalc < 0) and NewItem then
+          begin
+            if Item.Index > 0 then
+            begin
+              ICalc := ParamIcalcValues.Items[Item.Index-1].ICalc;
+            end
+            else
+            begin
+              ICalc := 0;
+            end;
+          end;
+          if (ICalc >= 0) then
+          begin
+            Item.ICalc := ICalc;
+          end;
 
           if TryStrToInt(rdgNetwork.Cells[Ord(sncOutflowSegment), RowIndex], IntValue) then
           begin
@@ -3191,7 +3209,8 @@ var
     for RowIndex := 1 to Grid.RowCount - 1 do
     begin
       if TryStrToFloat(Grid.Cells[Ord(scStartTime), RowIndex], StartTime)
-        and TryStrToFloat(Grid.Cells[Ord(scEndTime), RowIndex], EndTime) then
+        and TryStrToFloat(Grid.Cells[Ord(scEndTime), RowIndex], EndTime)
+        then
       begin
         if RowIndex - 1 < Segments.Count then
         begin
@@ -3562,6 +3581,8 @@ var
   FrameCrossSection: TframeCrossSection;
   FrameFlowTable: TframeFlowTable;
   Index: integer;
+  OldRowcount: integer;
+  RowIndex: Integer;
 begin
   FDeletingTime := True;
   try
@@ -3574,7 +3595,26 @@ begin
     end
     else
     begin
+      OldRowcount := rdgParameters.RowCount;
       rdgParameters.RowCount := ItemCount + 1;
+      for RowIndex := OldRowcount to rdgParameters.RowCount - 1 do
+      begin
+        if (RowIndex > 1)
+          and (rdgParameters.Cells[Ord(spicIcalc), RowIndex] = '')
+          then
+        begin
+          if (rdgParameters.Cells[Ord(spicIcalc), RowIndex-1] <> '')
+          then
+          begin
+            rdgParameters.Cells[Ord(spicIcalc), RowIndex] :=
+              rdgParameters.Cells[Ord(spicIcalc), RowIndex-1];
+          end
+          else
+          begin
+            rdgParameters.ItemIndex[Ord(spicIcalc), RowIndex] := 0;
+          end;
+        end;
+      end;
     end;
     if not (csLoading in ComponentState) then
     begin

@@ -26,7 +26,7 @@ inherited frmStartUp: TfrmStartUp
       761
       47)
     object btnNext: TBitBtn
-      Left = 663
+      Left = 655
       Top = 6
       Width = 86
       Height = 33
@@ -53,7 +53,7 @@ inherited frmStartUp: TfrmStartUp
       OnClick = btnNextClick
     end
     object btnDontCreateGrid: TBitBtn
-      Left = 476
+      Left = 468
       Top = 6
       Width = 100
       Height = 33
@@ -68,7 +68,7 @@ inherited frmStartUp: TfrmStartUp
       OnClick = btnDontCreateGridClick
     end
     object btnHelp: TBitBtn
-      Left = 582
+      Left = 574
       Top = 6
       Width = 75
       Height = 33
@@ -87,7 +87,7 @@ inherited frmStartUp: TfrmStartUp
     Top = 0
     Width = 761
     Height = 332
-    ActivePage = tabInitialModflowGrid
+    ActivePage = tabModelChoice
     Align = alClient
     TabOrder = 1
     OnChange = pcStartupChange
@@ -95,10 +95,6 @@ inherited frmStartUp: TfrmStartUp
       HelpType = htKeyword
       HelpKeyword = 'Start_Up_Dialog_Box'
       Caption = 'tabModelChoice'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rgChoice: TRadioGroup
         Left = 0
         Top = 0
@@ -310,10 +306,6 @@ inherited frmStartUp: TfrmStartUp
       HelpKeyword = 'Initial_Grid_Dialog_Box'
       Caption = 'tabInitialModflowGrid'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbInitialGridModflow: TGroupBox
         Left = 0
         Top = 0
@@ -467,6 +459,7 @@ inherited frmStartUp: TfrmStartUp
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -488,6 +481,7 @@ inherited frmStartUp: TfrmStartUp
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
           OnEndUpdate = rdgInitialLayersEndUpdate

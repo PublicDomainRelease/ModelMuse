@@ -810,18 +810,16 @@ begin
                 case FLegend.Values.DataType of
                   rdtDouble:
                     begin
-                      if FLegend.ColoringLimits.LogTransform then
-                      begin
-                        rdgLegend.Cells[0,Index + 1] :=
-                          FloatToStr(FLegend.Values.RealValues[Index]);
+//                      if FLegend.ColoringLimits.LogTransform then
+//                      begin
 //                        rdgLegend.Cells[0,Index + 1] :=
-//                          FloatToStr(Power(10,FLegend.Values.RealValues[Index]));
-                      end
-                      else
-                      begin
+//                          FloatToStr(FLegend.Values.RealValues[Index]);
+//                      end
+//                      else
+//                      begin
                         rdgLegend.Cells[0,Index + 1] :=
                           FloatToStr(FLegend.Values.RealValues[Index]);
-                      end;
+//                      end;
                     end;
                   rdtInteger:
                     begin
@@ -855,8 +853,6 @@ begin
                       begin
                         FLegend.Values.RealValues[Index] :=
                           StrToFloatDef(rdgLegend.Cells[0,Index + 1], 0);
-//                        FLegend.Values.RealValues[Index] := Log10(
-//                          StrToFloatDef(rdgLegend.Cells[0,Index + 1], 1));
                       end
                       else
                       begin

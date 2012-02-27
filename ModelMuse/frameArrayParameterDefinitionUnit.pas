@@ -183,7 +183,7 @@ begin
   ParentForm := ParentCustomGoPhastForm;
   if ParentForm <> nil then
   begin
-    ParentForm.EnableMultiEditControl(Grid, AControl, Col);
+    frmCustomGoPhastUnit.EnableMultiEditControl(Grid, AControl, Col);
   end;
 end;
 

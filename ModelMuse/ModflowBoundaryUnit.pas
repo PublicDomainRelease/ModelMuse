@@ -195,7 +195,7 @@ type
   public
     property Boundary: TCustomMF_BoundColl read FBoundary;
     property Model: TBaseModel read FModel;
-    Constructor Create(AModel: TBaseModel; ABoundary: TCustomMF_BoundColl);
+    Constructor Create(AModel: TBaseModel; ABoundary: TCustomMF_BoundColl); virtual;
     Destructor Destroy; override;
     property TimeLists: TList read FTimeLists;
     procedure AddTimeList(List: TModflowTimeList);
@@ -859,6 +859,7 @@ procedure TCustomModflowBoundaryItem.Assign(Source: TPersistent);
 var
   Item: TCustomModflowBoundaryItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TCustomModflowBoundaryItem then
   begin
     Item := TCustomModflowBoundaryItem(Source);
@@ -937,6 +938,7 @@ procedure TCustomMF_BoundColl.Assign(Source: TPersistent);
 var
   Index: Integer;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TCustomMF_BoundColl then
   begin
     ParamName :=
@@ -1594,15 +1596,9 @@ begin
     begin
       Exit;
     end;
-
-//    if (Item.StartingTime <= StartTime)
-//      and (Item.EndingTime > StartTime) then
-//    begin
-//      result := Item;
-//      Exit;
-//    end;
   end;
-  Assert(result <> nil);
+  // If the result is nil, either there is a bug or the user has made an error
+  // and an appropriate error message should be displayed.
 end;
 
 procedure TCustomMF_ArrayBoundColl.AssignCellsWithItem(
@@ -2019,6 +2015,7 @@ end;
 
 procedure TModflowParamItem.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TModflowParamItem then
   begin
     Param := TModflowParamItem(Source).Param;
@@ -2869,6 +2866,7 @@ begin
   FTimeLists.Free;
   inherited;
 end;
+
 
 { TTimeListModelLinkList }
 

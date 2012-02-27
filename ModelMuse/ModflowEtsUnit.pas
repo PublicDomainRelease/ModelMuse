@@ -720,6 +720,7 @@ procedure TEtsSurfDepthItem.Assign(Source: TPersistent);
 var
   SourceItem: TEtsSurfDepthItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TEtsSurfDepthItem then
   begin
     SourceItem := TEtsSurfDepthItem(Source);
@@ -1606,6 +1607,7 @@ end;
 
 procedure TStringValueItem.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TStringValueItem then
   begin
     Value := TStringValueItem(Source).Value;

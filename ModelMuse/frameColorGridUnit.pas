@@ -370,6 +370,7 @@ var
   VirtNoneNode: PVirtualNode;
   EndTime: Double;
 begin
+  Handle;
   FGettingData := True;
   try
     virttreecomboDataSets.Tree.Clear;
@@ -395,6 +396,7 @@ begin
 
   virttreecomboDataSetsChange(nil);
 
+  comboTime3D.Handle;
   comboTime3D.Text := FloatToStr(frmGoPhast.PhastModel.ThreeDDisplayTime);
 
   GridColors := frmGoPhast.PhastModel.GridColorParameters;
@@ -603,6 +605,7 @@ begin
       + ' (Min value = ' + DataSet.MinValue + ')';
     lblUpperLimit.Caption := StrUpperLimit
       + ' (Max value = ' + DataSet.MaxValue + ')';
+    LegendDataSource := DataSet;
   end
   else if AnObject is TCustomTimeList then
   begin

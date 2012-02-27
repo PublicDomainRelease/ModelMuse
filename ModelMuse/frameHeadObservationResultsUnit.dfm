@@ -14,6 +14,10 @@ object frameHeadObservationResults: TframeHeadObservationResults
     TabOrder = 0
     object tabControls: TTabSheet
       Caption = 'Controls'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblNegativeColor: TLabel
         Left = 3
         Top = 234
@@ -191,6 +195,10 @@ object frameHeadObservationResults: TframeHeadObservationResults
     object tabValues: TTabSheet
       Caption = 'Values (read only)'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgHeadObs: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -231,6 +239,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -252,6 +261,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -273,6 +283,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -294,6 +305,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -315,6 +327,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -336,6 +349,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -357,6 +371,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -378,6 +393,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
       end
@@ -396,7 +412,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
       Width = 180
       Height = 21
       Style = csDropDownList
-      TabOrder = 0
+      TabOrder = 1
       OnChange = comboModelsChange
     end
     object btnHightlightObjects: TButton
@@ -405,7 +421,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
       Width = 221
       Height = 25
       Caption = 'Highlight selected objects'
-      TabOrder = 1
+      TabOrder = 0
       OnClick = btnHightlightObjectsClick
     end
   end

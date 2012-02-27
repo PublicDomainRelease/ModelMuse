@@ -35,7 +35,10 @@ uses
   framePackageHobUnit, framePackageLpfUnit, frameModpathSelectionUnit,
   framePackageHufUnit, HufDefinition, framePackageMnw2Unit, framePackageSubUnit,
   frameZoneBudgetUnit, framePackageSwtUnit, framePkgHydmodUnit,
-  framePackageRCHUnit, framePackageUpwUnit, framePackageNwtUnit;
+  framePackageRCHUnit, framePackageUpwUnit, framePackageNwtUnit,
+  frameMt3dBasicPkgUnit, frameMt3dmsGcgPackageUnit, frameMt3dmsAdvPkgUnit,
+  frameMt3dmsDispersionPkgUnit, Mt3dmsChemSpeciesUnit,
+  frameMt3dmsChemReactionPkgUnit, frameMt3dmsTransObsPkgUnit, Mt3dmsTimesUnit;
 
 type
 
@@ -60,6 +63,7 @@ type
   end;
 
   TFrameNodeLink = class(TObject)
+  public
     Frame: TframePackage;
     Node: TTreeNode;
   end;
@@ -172,6 +176,20 @@ type
     JvNetscapeSplitter6: TJvNetscapeSplitter;
     jvspNWT: TJvStandardPage;
     framePkgNwt: TframePackageNwt;
+    jvspMt3dmsBasic: TJvStandardPage;
+    framePkgMt3dBasic: TframeMt3dBasicPkg;
+    jvspMt3dmsGCG: TJvStandardPage;
+    frameMt3dmsGcgPackage: TframeMt3dmsGcgPackage;
+    jvspMt3dmsAdv: TJvStandardPage;
+    frameMt3dmsAdvPkg: TframeMt3dmsAdvPkg;
+    jvspMt3dmsDsp: TJvStandardPage;
+    frameMt3dmsDispersionPkg: TframeMt3dmsDispersionPkg;
+    jvspMt3dmsSsm: TJvStandardPage;
+    framePkgSSM: TframePackage;
+    jvspMt3dmsRct: TJvStandardPage;
+    framePkgMt3dmsRct: TframeMt3dmsChemReactionPkg;
+    jvspMt3dmsTOB: TJvStandardPage;
+    framePkgMt3dmsTob: TframeMt3dmsTransObsPkg;
     procedure tvPackagesChange(Sender: TObject; Node: TTreeNode);
     procedure btnOKClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject); override;
@@ -256,36 +274,19 @@ type
     procedure SetCurrentPackages(const Value: TModflowPackages);
     procedure NwtSelectedChange(Sender: TObject);
     procedure UpwSelectedChange(Sender: TObject);
+    procedure Mt3dmsGcgSelectedChange(Sender: TObject);
     property CurrentPackages: TModflowPackages read FCurrentPackages
       write SetCurrentPackages;
     procedure StorePackageDataInFrames(Packages: TModflowPackages);
     procedure StoreFrameDataInPackages(Packages: TModflowPackages);
     procedure EnableLpfParameterControls;
+    procedure Mt3dmsBasicSelectedChange(Sender: TObject);
+    procedure CheckMt3dChemSpeciesDefined;
     { Private declarations }
   public
     procedure GetData;
     { Public declarations }
   end;
-
-{  TUndoChangePackageSelection = class(TCustomUndoChangeParameters)
-  private
-    FOldPackages: TModflowPackages;
-    FNewPackages: TModflowPackages;
-    FOldHydroGeologicUnits: THydrogeologicUnits;
-    FOldInterBlockTransmissivity: array of integer;
-    FOldAquiferType: array of integer;
-    procedure UpdateLayerGroupProperties(BcfPackage: TModflowPackageSelection);
-  protected
-    function Description: string; override;
-  public
-    Constructor Create(var NewSteadyParameters: TModflowSteadyParameters;
-      var NewTransientParameters: TModflowTransientListParameters;
-      var SfrParameterInstances: TSfrParamInstances;
-      var NewHufModflowParameters: THufModflowParameters);
-    Destructor Destroy; override;
-    procedure DoCommand; override;
-    procedure Undo; override;
-  end;  }
 
   // @name is used to reversibly change which packages are selected and
   // the properties of those packages.
@@ -296,7 +297,13 @@ type
     FOldHydroGeologicUnits: THydrogeologicUnits;
     FOldInterBlockTransmissivity: array of integer;
     FOldAquiferType: array of integer;
+    FOldMobileComponents: TMobileChemSpeciesCollection;
+    FNewMobileComponents: TMobileChemSpeciesCollection;
+    FOldImmobileComponents: TChemSpeciesCollection;
+    FNewImmobileComponents: TChemSpeciesCollection;
+    FOldMt3dTimes: TMt3dmsTimeCollection;
     procedure UpdateLayerGroupProperties(BcfPackage: TModflowPackageSelection);
+    procedure RecreateMt3dTimeLists;
   protected
     function Description: string; override;
   public
@@ -308,6 +315,7 @@ type
     Destructor Destroy; override;
     procedure DoCommand; override;
     procedure Undo; override;
+    procedure UpdateMt3dmsChemSpecies;
   end;
 
 var
@@ -318,11 +326,59 @@ implementation
 uses Contnrs, JvListComb, frmGoPhastUnit, ScreenObjectUnit,
   ModflowConstantHeadBoundaryUnit, frmShowHideObjectsUnit,
   frameSfrParamInstancesUnit, LayerStructureUnit, frmErrorsAndWarningsUnit, 
-  frmManageFluxObservationsUnit, ModflowSubsidenceDefUnit;
+  frmManageFluxObservationsUnit, ModflowSubsidenceDefUnit, Mt3dmsChemUnit,
+  ModflowTimeUnit;
 
 resourcestring
   StrLPFParameters = 'LPF or NWT Parameters';
-
+  rsChangePackages = 'change packages';
+  StrOneOrMoreVKCBPar = 'One or more VKCB parameters are defined in the LPF ' +
+  'or NWT package but they won''t be used because all the layers are simulat' +
+  'ed.';
+  StrOneOrMoreVKParam = 'One or more VK parameters are defined in the LPF or' +
+  ' NWT package but they won''t be used because there is only one layer in t' +
+  'he model.';
+  StrOneOrMoreVKParam2 = 'One or more VK parameters are defined in the LPF or' +
+  ' NWT package but they won''t be used because vertical anisotropy is used ' +
+  'for all the layers. Check the MODFLOW Layers dialog box if you want to us' +
+  'e vertical anisotropy.';
+  StrOneOrMoreVANIPar = 'One or more VANI parameters are defined in the LPF ' +
+  'or NWT package but they won''t be used because there is only one layer in' +
+  ' the model.';
+  StrOneOrMoreVANIPar2 = 'One or more VANI parameters are defined in the LPF' +
+  ' or NWT package but they won''t be used because vertical hydraulic hydrau' +
+  'lic conductivity is used for all the layers. Check the MODFLOW Layers dia' +
+  'log box if you want to use vertical anisotropy.';
+  StrOneOrMoreSSParam = 'One or more SS parameters are defined in the LPF or' +
+  ' NWT package but they won''t be used because there are no transient stres' +
+  's periods in the model.';
+  StrOneOrMoreSYParam = 'One or more SY parameters are defined in the LPF or' +
+  ' NWT package but they won''t be used because there are no transient stres' +
+  's periods in the model.';
+  StrOneOrMoreSYParam2 = 'One or more SY parameters are defined in the LPF o' +
+  'r NWT package but they won''t be used because all of the layers are confi' +
+  'ned.';
+  StrHKHorizontalHydra = 'HK (horizontal hydraulic conductivity)';
+  StrHANIHorizontalAni = 'HANI (horizontal anisotropy)';
+  StrVKVerticalHydraul = 'VK (vertical hydraulic conductivity)';
+  StrVANIVerticalAniso = 'VANI (vertical anisotropy)';
+  StrSSSpecificStorage = 'SS (specific storage)';
+  StrSYSpecificYield = 'SY (specific yield)';
+  StrSYTPStorageCoeffi = 'SYTP (storage coefficient for the top active cell)';
+  StrKDEPHydraulicCond = 'KDEP (hydraulic conductivity depth-dependence coef' +
+  'ficient)';
+  StrLVDAHorizontalAni = 'LVDA (horizontal anisotropy angle)';
+  StrVKCBVerticalHydra = 'VKCB (vertical hydraulic conductivity of confining' +
+  ' layer)';
+  StrSFRParameters = 'SFR Parameters';
+  StrTheSFRParameterNa = 'The SFR parameter named "%s" can''t be used becaus' +
+  'e no parameter instances are defined for it.';
+  StrNoChemicalSpecies = 'No chemical species defined';
+  StrMT3DMSIsActiveBut = 'MT3DMS is active but no chemical species have been' +
+  ' defined.';
+  StrInOrderToGenerate = 'In order to generate the flow-transport link file ' +
+  'required by MT3DMS, you will need to generate the MODFLOW input files and' +
+  ' run MODFLOW again.';
 
 {$R *.dfm}
 
@@ -413,15 +469,13 @@ begin
       end;
     end;
 
-    frmErrorsAndWarnings.RemoveWarningGroup(frmGoPhast.PhastModel, 'SFR Parameters');
+    frmErrorsAndWarnings.RemoveWarningGroup(frmGoPhast.PhastModel, StrSFRParameters);
     if InvalidParameterNames.Count > 0 then
     begin
       for ParamNameIndex := 0 to InvalidParameterNames.Count - 1 do
       begin
-        frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'SFR Parameters',
-          'The SFR parameter named "' + InvalidParameterNames[ParamNameIndex]
-          + '" can''t be used because no parameter instances are defined '
-          + 'for it.');
+        frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrSFRParameters,
+          Format(StrTheSFRParameterNa, [InvalidParameterNames[ParamNameIndex]]));
       end;
       frmErrorsAndWarnings.Show;
     end;
@@ -533,9 +587,7 @@ begin
   begin
     ShowErrors := True;
     frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
-      'One or more VKCB parameters are defined in the LPF or NWT package '
-      + 'but they won''t be used because'
-      + ' all the layers are simulated.');
+      StrOneOrMoreVKCBPar);
   end;
 
   if VK_Defined and not VerticalHydraulicConductivityUsed then
@@ -544,18 +596,12 @@ begin
     if frmGoPhast.PhastModel.ModflowLayerCount = 1 then
     begin
       frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
-        'One or more VK parameters are defined in the LPF or NWT package '
-        + 'but they won''t be used because'
-        + ' there is only one layer in the model.');
+        StrOneOrMoreVKParam);
     end
     else
     begin
       frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
-        'One or more VK parameters are defined in the LPF or NWT package '
-        + 'but they won''t be used because'
-        + ' vertical anisotropy is used for all the layers. '
-        + 'Check the MODFLOW Layers dialog box if you want to use '
-        + 'vertical anisotropy.');
+        StrOneOrMoreVKParam2);
     end;
   end;
 
@@ -565,18 +611,12 @@ begin
     if frmGoPhast.PhastModel.ModflowLayerCount = 1 then
     begin
       frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
-        'One or more VANI parameters are defined in the LPF or NWT package '
-        + 'but they won''t be used because'
-        + ' there is only one layer in the model.');
+        StrOneOrMoreVANIPar);
     end
     else
     begin
       frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
-        'One or more VANI parameters are defined in the LPF or NWT package '
-        + 'but they won''t be used because'
-        + ' vertical hydraulic hydraulic conductivity is used for all the layers. '
-        + 'Check the MODFLOW Layers dialog box if you want to use '
-        + 'vertical anisotropy.');
+        StrOneOrMoreVANIPar2);
     end;
   end;
 
@@ -584,9 +624,7 @@ begin
   begin
     ShowErrors := True;
     frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
-      'One or more SS parameters are defined in the LPF or NWT package '
-      + 'but they won''t be used because'
-      + ' there are no transient stress periods in the model.');
+      StrOneOrMoreSSParam);
   end;
 
   if SY_Defined and not SpecificYieldUsed then
@@ -595,16 +633,12 @@ begin
     if not frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel then
     begin
       frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
-        'One or more SY parameters are defined in the LPF or NWT package '
-        + 'but they won''t be used because'
-        + ' there are no transient stress periods in the model.');
+        StrOneOrMoreSYParam);
     end
     else
     begin
       frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
-        'One or more SY parameters are defined in the LPF or NWT package '
-        + 'but they won''t be used because'
-        + ' all of the layers are confined.');
+        StrOneOrMoreSYParam2);
     end;
   end;
 
@@ -613,6 +647,23 @@ begin
     frmErrorsAndWarnings.Show;
   end;
 
+end;
+
+procedure TfrmModflowPackages.CheckMt3dChemSpeciesDefined;
+var
+  Model: TPhastModel;
+begin
+  Model := frmGoPhast.PhastModel;
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNoChemicalSpecies);
+  if Model.Mt3dmsIsSelected then
+  begin
+    if (Model.MobileComponents.Count = 0)
+      and (Model.ImmobileComponents.Count = 0) then
+    begin
+      frmErrorsAndWarnings.AddWarning(Model,
+        StrNoChemicalSpecies, StrMT3DMSIsActiveBut);
+    end;
+  end;
 end;
 
 procedure TfrmModflowPackages.btnOKClick(Sender: TObject);
@@ -625,6 +676,7 @@ begin
   inherited;
   CheckLpfParameters;
   CheckSfrParameterInstances;
+  CheckMt3dChemSpeciesDefined;
 
   ModflowPackages := frmGoPhast.PhastModel.ModflowPackages;
   NeedToDefineFluxObservations := False;
@@ -647,9 +699,15 @@ begin
     not ModflowPackages.RvobPackage.IsSelected then
   begin
     NeedToDefineFluxObservations := True;
+  end
+  else if framePkgMt3dmsTob.Selected and
+    not ModflowPackages.Mt3dmsTransObs.IsSelected then
+  begin
+    NeedToDefineFluxObservations := True;
   end;
 
   SetData;
+  CheckMt3dChemSpeciesDefined;
 
   SubPackage := ModflowPackages.SubPackage;
   if SubPackage.IsSelected then
@@ -682,6 +740,11 @@ begin
   begin
     frmGoPhast.acLayersExecute(nil);
   end;
+
+  if frmErrorsAndWarnings.HasMessages then
+  begin
+    frmErrorsAndWarnings.Show;
+  end;
 end;
 
 procedure TfrmModflowPackages.FillHufTree;
@@ -695,40 +758,40 @@ begin
   PriorBaseNode := nil;
 
   ChildNode := tvHufParameterTypes.Items.Add(PriorBaseNode,
-    'HK (horizontal hydraulic conductivity)');
+    StrHKHorizontalHydra);
   ChildNode.Data := Pointer(ptHUF_HK);
   HkNode := ChildNode;
 
   ChildNode := tvHufParameterTypes.Items.Add(PriorBaseNode,
-    'HANI (horizontal anisotropy)');
+    StrHANIHorizontalAni);
   ChildNode.Data := Pointer(ptHUF_HANI);
 
   ChildNode := tvHufParameterTypes.Items.Add(PriorBaseNode,
-    'VK (vertical hydraulic conductivity)');
+    StrVKVerticalHydraul);
   ChildNode.Data := Pointer(ptHUF_VK);
 
   ChildNode := tvHufParameterTypes.Items.Add(PriorBaseNode,
-    'VANI (vertical anisotropy)');
+    StrVANIVerticalAniso);
   ChildNode.Data := Pointer(ptHUF_VANI);
 
   ChildNode := tvHufParameterTypes.Items.Add(PriorBaseNode,
-    'SS (specific storage)');
+    StrSSSpecificStorage);
   ChildNode.Data := Pointer(ptHUF_SS);
 
   ChildNode := tvHufParameterTypes.Items.Add(PriorBaseNode,
-    'SY (specific yield)');
+    StrSYSpecificYield);
   ChildNode.Data := Pointer(ptHUF_SY);
 
   ChildNode := tvHufParameterTypes.Items.Add(PriorBaseNode,
-    'SYTP (storage coefficient for the top active cell)');
+    StrSYTPStorageCoeffi);
   ChildNode.Data := Pointer(ptHUF_SYTP);
 
   ChildNode := tvHufParameterTypes.Items.Add(PriorBaseNode,
-    'KDEP (hydraulic conductivity depth-dependence coefficient)');
+    StrKDEPHydraulicCond);
   ChildNode.Data := Pointer(ptHUF_KDEP);
 
   ChildNode := tvHufParameterTypes.Items.Add(PriorBaseNode,
-    'LVDA (horizontal anisotropy angle)');
+    StrLVDAHorizontalAni);
   ChildNode.Data := Pointer(ptHUF_LVDA);
 
   tvHufParameterTypes.Selected := HkNode;
@@ -745,32 +808,32 @@ begin
   PriorBaseNode := nil;
 
   ChildNode := tvLpfParameterTypes.Items.Add(PriorBaseNode,
-    'HK (horizontal hydraulic conductivity)');
+    StrHKHorizontalHydra);
   ChildNode.Data := Pointer(ptLPF_HK);
   HkNode := ChildNode;
 
   ChildNode := tvLpfParameterTypes.Items.Add(PriorBaseNode,
-    'HANI (horizontal anisotropy)');
+    StrHANIHorizontalAni);
   ChildNode.Data := Pointer(ptLPF_HANI);
 
   ChildNode := tvLpfParameterTypes.Items.Add(PriorBaseNode,
-    'VK (vertical hydraulic conductivity)');
+    StrVKVerticalHydraul);
   ChildNode.Data := Pointer(ptLPF_VK);
 
   ChildNode := tvLpfParameterTypes.Items.Add(PriorBaseNode,
-    'VANI (vertical anisotropy)');
+    StrVANIVerticalAniso);
   ChildNode.Data := Pointer(ptLPF_VANI);
 
   ChildNode := tvLpfParameterTypes.Items.Add(PriorBaseNode,
-    'SS (specific storage)');
+    StrSSSpecificStorage);
   ChildNode.Data := Pointer(ptLPF_SS);
 
   ChildNode := tvLpfParameterTypes.Items.Add(PriorBaseNode,
-    'SY (specific yield)');
+    StrSYSpecificYield);
   ChildNode.Data := Pointer(ptLPF_SY);
 
   ChildNode := tvLpfParameterTypes.Items.Add(PriorBaseNode,
-    'VKCB (vertical hydraulic conductivity of confining layer)');
+    StrVKCBVerticalHydra);
   ChildNode.Data := Pointer(ptLPF_VKCB);
 
   tvLpfParameterTypes.Selected := HkNode;
@@ -862,15 +925,19 @@ procedure TfrmModflowPackages.NwtSelectedChange(Sender: TObject);
 begin
   if framePkgNwt.Selected then
   begin
-    framePkgUpw.Selected := True;
-    framePkgLPF.Selected := False;
-    framePkgBCF.Selected := False;
-    framePkgHuf.Selected := False;
+    if not framePkgUpw.Selected then
+    begin
+      framePkgUpw.Selected := True;
+      framePkgLPF.Selected := False;
+      framePkgBCF.Selected := False;
+      framePkgHuf.Selected := False;
+    end;
   end
   else if framePkgUpw.Selected then
   begin
     framePkgUpw.Selected := False;
-    if not framePkgLPF.Selected and not framePkgBCF.Selected and not framePkgHuf.Selected then
+    if not framePkgLPF.Selected and not framePkgBCF.Selected
+      and not framePkgHuf.Selected then
     begin
       framePkgLpf.Selected := True;
     end;
@@ -881,11 +948,14 @@ procedure TfrmModflowPackages.UpwSelectedChange(Sender: TObject);
 begin
   if framePkgUpw.Selected then
   begin
-    framePkgNwt.Selected := True;
-    framePcg.Selected := False;
-    framePkgSIP.Selected := False;
-    framePkgGMG.Selected := False;
-    framePkgDE4.Selected := False;
+    if not framePkgNwt.Selected then
+    begin
+      framePkgNwt.Selected := True;
+      framePcg.Selected := False;
+      framePkgSIP.Selected := False;
+      framePkgGMG.Selected := False;
+      framePkgDE4.Selected := False;
+    end;
   end
   else if framePkgNwt.Selected then
   begin
@@ -903,7 +973,6 @@ procedure TfrmModflowPackages.framePkgRCHrcSelectionControllerEnabledChange(
   Sender: TObject);
 begin
   inherited;
-//  framePkgRCH.rcSelectionControllerEnabledChange(nil);
   EnableRchModpathOption;
 end;
 
@@ -1103,6 +1172,7 @@ begin
   inherited;
   FFrameNodeLinks := TObjectList.Create;
   framePkgGMG.pcGMG.ActivePageIndex := 0;
+  frameMt3dmsAdvPkg.pcAdvection.ActivePageIndex := 0;
 
 end;
 
@@ -1489,6 +1559,7 @@ begin
     AddNode(StrObservations, StrObservations, PriorNode);
     AddNode(StrOutput, StrOutput, PriorNode);
     AddNode(StrPostProcessors, StrPostProcessors, PriorNode);
+    AddNode(StrMT3DMS, StrMT3DMS, PriorNode);
 
     for Index := 0 to FPackageList.Count - 1 do
     begin
@@ -1511,7 +1582,6 @@ begin
       Link := TFrameNodeLink.Create;
       Link.Frame := Frame;
       Link.Node := ChildNode;
-//      Link.Package := APackage;
       FFrameNodeLinks.Add(Link);
 
       AControl := Frame;
@@ -1566,6 +1636,11 @@ begin
     framePkgDROB.CanSelect := False;
     framePkgGBOB.CanSelect := False;
     framePkgRVOB.CanSelect := False;
+    framePkgMt3dBasic.OnSelectedChange :=  Mt3dmsBasicSelectedChange;
+    frameMt3dmsGcgPackage.CanSelect := False;
+    frameMt3dmsGcgPackage.OnSelectedChange := Mt3dmsGcgSelectedChange;
+    frameMt3dmsAdvPkg.CanSelect := False;
+    frameMt3dmsDispersionPkg.CanSelect := False;
     ReadPackages;
     comboModel.ItemIndex := 0;
     comboModelChange(nil);
@@ -1596,6 +1671,11 @@ begin
     DrnSelectedChange(nil);
     GhbSelectedChange(nil);
     RivSelectedChange(nil);
+
+    framePkgMt3dBasic.GetMt3dmsChemSpecies(
+      frmGoPhast.PhastModel.MobileComponents,
+      frmGoPhast.PhastModel.ImmobileComponents);
+
     pnlModel.Visible := frmGoPhast.PhastModel.LgrUsed;
   finally
     IsLoaded := True;
@@ -1913,9 +1993,57 @@ begin
   else if jvplPackages.ActivePage = jvspNWT then
   begin
     CurrentParameterType := ptUndefined;
+  end
+  else
+  begin
+    CurrentParameterType := ptUndefined;
   end;
 
   HelpKeyword := jvplPackages.ActivePage.HelpKeyword;
+end;
+
+procedure TfrmModflowPackages.Mt3dmsGcgSelectedChange(Sender: TObject);
+begin
+  if frameMt3dmsGcgPackage.Selected <> framePkgMt3dBasic.Selected then
+  begin
+    frameMt3dmsGcgPackage.Selected := framePkgMt3dBasic.Selected;
+  end;
+end;
+
+procedure TfrmModflowPackages.Mt3dmsBasicSelectedChange(Sender: TObject);
+begin
+  frameMt3dmsGcgPackage.CanSelect := framePkgMt3dBasic.Selected;;
+  frameMt3dmsGcgPackage.Selected := framePkgMt3dBasic.Selected;
+
+  frameMt3dmsAdvPkg.CanSelect := framePkgMt3dBasic.Selected;
+  if not frameMt3dmsAdvPkg.CanSelect then
+  begin
+    frameMt3dmsAdvPkg.Selected := False;
+  end;
+
+  frameMt3dmsDispersionPkg.CanSelect := framePkgMt3dBasic.Selected;
+  if not frameMt3dmsDispersionPkg.CanSelect then
+  begin
+    frameMt3dmsDispersionPkg.Selected := False;
+  end;
+
+  framePkgSSM.CanSelect := framePkgMt3dBasic.Selected;
+  if not framePkgSSM.CanSelect then
+  begin
+    framePkgSSM.Selected := False;
+  end;
+
+  framePkgMt3dmsRct.CanSelect := framePkgMt3dBasic.Selected;
+  if not framePkgMt3dmsRct.CanSelect then
+  begin
+    framePkgMt3dmsRct.Selected := False;
+  end;
+
+  framePkgMt3dmsTob.CanSelect := framePkgMt3dBasic.Selected;
+  if not framePkgMt3dmsTob.CanSelect then
+  begin
+    framePkgMt3dmsTob.Selected := False;
+  end;
 end;
 
 function TfrmModflowPackages.NewParameterName: string;
@@ -2068,22 +2196,13 @@ begin
 
   CurrentPackages := nil;
 
-{  Undo := TUndoChangePackageSelection.Create(FSteadyParameters,
-    FTransientListParameters, FSfrParameterInstances, FHufParameters);
-
-  AddPackagesToList(Undo.FNewPackages);
-
-  for Index := 0 to FPackageList.Count - 1 do
-  begin
-    APackage := FPackageList[Index];
-    Frame := APackage.Frame;
-    Assert(Frame <> nil);
-    Frame.SetData(APackage);
-  end; }
-
   Undo := TUndoChangeLgrPackageSelection.Create(FSteadyParameters,
     FTransientListParameters, FSfrParameterInstances, FHufParameters,
     FNewPackages);
+  framePkgMt3dBasic.SetMt3dmsChemSpecies(
+    frmGoPhast.PhastModel.MobileComponents,
+    frmGoPhast.PhastModel.ImmobileComponents);
+  Undo.UpdateMt3dmsChemSpecies;
 
   frmGoPhast.UndoStack.Submit(Undo);
 end;
@@ -2387,6 +2506,26 @@ begin
   Packages.HydmodPackage.Frame := framePkgHydmod;
   FPackageList.Add(Packages.HydmodPackage);
 
+  Packages.Mt3dBasic.Frame := framePkgMt3dBasic;
+  FPackageList.Add(Packages.Mt3dBasic);
+
+  Packages.Mt3dmsAdvection.Frame := frameMt3dmsAdvPkg;
+  FPackageList.Add(Packages.Mt3dmsAdvection);
+
+  Packages.Mt3dmsDispersion.Frame := frameMt3dmsDispersionPkg;
+  FPackageList.Add(Packages.Mt3dmsDispersion);
+
+  Packages.Mt3dmsSourceSink.Frame := framePkgSSM;
+  FPackageList.Add(Packages.Mt3dmsSourceSink);
+
+  Packages.Mt3dmsChemReact.Frame := framePkgMt3dmsRct;
+  FPackageList.Add(Packages.Mt3dmsChemReact);
+
+  Packages.Mt3dmsGCGSolver.Frame := frameMt3dmsGcgPackage;
+  FPackageList.Add(Packages.Mt3dmsGCGSolver);
+
+  Packages.Mt3dmsTransObs.Frame := framePkgMt3dmsTob;
+  FPackageList.Add(Packages.Mt3dmsTransObs);
 end;
 
 procedure TfrmModflowPackages.tvHufParameterTypesChange(Sender: TObject;
@@ -2413,146 +2552,6 @@ begin
   UpdateFlowParamGrid(Node, frameLpfParameterDefinition,
     FSteadyParameters, rbwLpfParamCountController);
 end;
-
-{ TUndoChangePackageSelection }
-
-{constructor TUndoChangePackageSelection.Create(
-  var NewSteadyParameters: TModflowSteadyParameters;
-  var NewTransientParameters: TModflowTransientListParameters;
-  var SfrParameterInstances: TSfrParamInstances;
-  var NewHufModflowParameters: THufModflowParameters);
-var
-  Index: Integer;
-  LayerGroup: TLayerGroup;
-begin
-  inherited Create(NewSteadyParameters, NewTransientParameters,
-    NewHufModflowParameters, SfrParameterInstances);
-
-  SetLength(FOldInterBlockTransmissivity, frmGoPhast.PhastModel.LayerStructure.Count);
-  SetLength(FOldAquiferType, frmGoPhast.PhastModel.LayerStructure.Count);
-  for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
-  begin
-    LayerGroup := frmGoPhast.PhastModel.LayerStructure[Index];
-    FOldInterBlockTransmissivity[Index] := LayerGroup.InterblockTransmissivityMethod;
-    FOldAquiferType[Index] := LayerGroup.AquiferType;
-  end;
-
-  FOldHydroGeologicUnits := THydrogeologicUnits.Create(nil);
-  FOldHydroGeologicUnits.Assign(frmGoPhast.PhastModel.HydrogeologicUnits);
-
-  FOldPackages := TModflowPackages.Create(nil);
-  FNewPackages := TModflowPackages.Create(nil);
-  FOldPackages.Assign(frmGoPhast.PhastModel.ModflowPackages);
-
-//  FNewSfrParameterInstances := SfrParameterInstances;
-//  // TUndoDefineLayers takes ownership of SfrParameterInstances.
-//  SfrParameterInstances := nil;
-
-//  FOldSfrParameterInstances := TSfrParamInstances.Create(nil);
-//  FOldSfrParameterInstances.Assign(
-//    frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances);
-end;
-
-function TUndoChangePackageSelection.Description: string;
-begin
-  result := 'Change packages';
-end;
-
-destructor TUndoChangePackageSelection.Destroy;
-begin
-  FOldHydroGeologicUnits.Free;
-  FOldPackages.Free;
-  FNewPackages.Free;
-//  FOldSfrParameterInstances.Free;
-//  FNewSfrParameterInstances.Free;
-  inherited;
-end;
-
-procedure TUndoChangePackageSelection.DoCommand;
-begin
-  frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := False;
-  try
-    UpdateLayerGroupProperties(FNewPackages.BcfPackage);
-    frmGoPhast.PhastModel.ModflowPackages := FNewPackages;
-  finally
-    frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := True;
-  end;
-//  frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances := FNewSfrParameterInstances;
-  inherited;
-  frmGoPhast.EnableLinkStreams;
-  frmGoPhast.EnableManageFlowObservations;
-  frmGoPhast.EnableManageHeadObservations;
-  frmGoPhast.EnableHufMenuItems;
-end;
-
-procedure TUndoChangePackageSelection.Undo;
-var
-  Index: Integer;
-  LayerGroup: TLayerGroup;
-begin
-  frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := False;
-  try
-    for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
-    begin
-      LayerGroup := frmGoPhast.PhastModel.LayerStructure[Index];
-      LayerGroup.InterblockTransmissivityMethod := FOldInterBlockTransmissivity[Index];
-      LayerGroup.AquiferType := FOldAquiferType[Index];
-    end;
-    frmGoPhast.PhastModel.ModflowPackages := FOldPackages;
-  finally
-    frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := True;
-  end;
-//  frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances := FOldSfrParameterInstances;
-  inherited;
-  frmGoPhast.PhastModel.HydrogeologicUnits.Assign(FOldHydroGeologicUnits);
-  frmGoPhast.EnableLinkStreams;
-  frmGoPhast.EnableHufMenuItems;
-  frmGoPhast.EnableManageFlowObservations;
-  frmGoPhast.EnableManageHeadObservations;
-end;
-
-procedure TUndoChangePackageSelection.UpdateLayerGroupProperties(BcfPackage: TModflowPackageSelection);
-var
-  Index: Integer;
-  LayerGroup: TLayerGroup;
-begin
-  if frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected
-    <> BcfPackage.IsSelected then
-  begin
-    if BcfPackage.IsSelected then
-    begin
-      for Index := 1 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
-      begin
-        LayerGroup := frmGoPhast.PhastModel.LayerStructure[Index];
-        if LayerGroup.InterblockTransmissivityMethod >= 1 then
-        begin
-          LayerGroup.InterblockTransmissivityMethod :=
-            LayerGroup.InterblockTransmissivityMethod + 1;
-        end;
-        if LayerGroup.AquiferType = 1 then
-        begin
-          LayerGroup.AquiferType := 3;
-        end;
-      end;
-    end
-    else
-    begin
-      for Index := 1 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
-      begin
-        LayerGroup := frmGoPhast.PhastModel.LayerStructure[Index];
-        if LayerGroup.InterblockTransmissivityMethod >= 1 then
-        begin
-          LayerGroup.InterblockTransmissivityMethod :=
-            LayerGroup.InterblockTransmissivityMethod - 1;
-        end;
-        if LayerGroup.AquiferType > 1 then
-        begin
-          LayerGroup.AquiferType := 1;
-        end;
-      end;
-    end;
-  end;
-end;}
 
 { TTempPackageItem }
 
@@ -2609,6 +2608,9 @@ begin
   inherited Create(NewSteadyParameters, NewTransientParameters,
     NewHufModflowParameters, SfrParameterInstances);
 
+  FOldMt3dTimes := TMt3dmsTimeCollection.Create(nil);
+  FOldMt3dTimes.Assign(frmGoPhast.PhastModel.Mt3dmsTimes);
+
   // take ownership of NewPackages.
   FNewPackages := NewPackages;
   NewPackages := nil;
@@ -2638,11 +2640,19 @@ begin
       TempParentPackages.Packages.Assign(ChildModel.ModflowPackages);
     end;
   end;
+
+  FOldMobileComponents := TMobileChemSpeciesCollection.Create(nil);
+  FOldMobileComponents.Assign(frmGoPhast.PhastModel.MobileComponents);
+  FNewMobileComponents := TMobileChemSpeciesCollection.Create(nil);
+
+  FOldImmobileComponents := TChemSpeciesCollection.Create(nil);
+  FOldImmobileComponents.Assign(frmGoPhast.PhastModel.ImmobileComponents);
+  FNewImmobileComponents := TChemSpeciesCollection.Create(nil);
 end;
 
 function TUndoChangeLgrPackageSelection.Description: string;
 begin
-  result := 'change packages';
+  result := rsChangePackages;
 end;
 
 destructor TUndoChangeLgrPackageSelection.Destroy;
@@ -2650,6 +2660,11 @@ begin
   FOldHydroGeologicUnits.Free;
   FOldPackages.Free;
   FNewPackages.Free;
+  FOldMobileComponents.Free;
+  FNewMobileComponents.Free;
+  FOldImmobileComponents.Free;
+  FNewImmobileComponents.Free;
+  FOldMt3dTimes.Free;
   inherited;
 end;
 
@@ -2657,29 +2672,95 @@ procedure TUndoChangeLgrPackageSelection.DoCommand;
 var
   ChildIndex: Integer;
   ChildModel: TChildModel;
+  TimeItem: TMt3dmsTimeItem;
+  PhastModel: TPhastModel;
+  Mt3dmsNewlySelected: boolean;
+  OldPackages: TModflowPackages;
+  NewPackages: TModflowPackages;
+  MfStressPeriods: TModflowStressPeriods;
+  FirstStressPeriod: TModflowStressPeriod;
 begin
   inherited;
-  frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := False;
+  PhastModel := frmGoPhast.PhastModel;
+  OldPackages := PhastModel.ModflowPackages;
+  PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := False;
   try
     UpdateLayerGroupProperties(FNewPackages[0].Packages.BcfPackage);
-    frmGoPhast.PhastModel.ModflowPackages := FNewPackages[0].Packages;
-    if frmGoPhast.PhastModel.ModelSelection = msModflowLGR then
+    NewPackages := FNewPackages[0].Packages;
+    Mt3dmsNewlySelected := not OldPackages.Mt3dBasic.IsSelected
+      and NewPackages.Mt3dBasic.IsSelected;
+    PhastModel.ModflowPackages := NewPackages;
+    if PhastModel.ModelSelection = msModflowLGR then
     begin
-      Assert(frmGoPhast.PhastModel.ChildModels.Count = FNewPackages.Count -1);
-      for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+      Assert(PhastModel.ChildModels.Count = FNewPackages.Count -1);
+      for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
       begin
-        ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+        ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+        OldPackages := ChildModel.ModflowPackages;
+        NewPackages := FNewPackages[ChildIndex+1].Packages;
+        if not OldPackages.Mt3dBasic.IsSelected
+          and NewPackages.Mt3dBasic.IsSelected then
+        begin
+          Mt3dmsNewlySelected := True;
+        end;
         ChildModel.ModflowPackages := FNewPackages[ChildIndex+1].Packages;
       end;
     end;
   finally
-    frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := True;
+    PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := True;
   end;
+  PhastModel.MobileComponents := FNewMobileComponents;
+  PhastModel.ImmobileComponents := FNewImmobileComponents;
+
+  if PhastModel.Mt3dmsIsSelected and
+    (PhastModel.Mt3dmsTimes.Count = 0) then
+  begin
+    TimeItem := PhastModel.Mt3dmsTimes.Add;
+    MfStressPeriods := PhastModel.ModflowStressPeriods;
+    FirstStressPeriod := MfStressPeriods[0];
+    TimeItem.StartTime := FirstStressPeriod.StartTime;
+    TimeItem.StepSize := 0;
+    TimeItem.TimeStepMultiplier := FirstStressPeriod.TimeStepMultiplier;
+    TimeItem.MaxStepSize := 0;
+    TimeItem.MaxSteps := MfStressPeriods.NumberOfSteps * 1000;
+    TimeItem.EndTime := MfStressPeriods[MfStressPeriods.Count-1].EndTime;
+  end;
+
+  RecreateMt3dTimeLists;
+
   inherited;
   frmGoPhast.EnableLinkStreams;
   frmGoPhast.EnableManageFlowObservations;
   frmGoPhast.EnableManageHeadObservations;
   frmGoPhast.EnableHufMenuItems;
+  frmGoPhast.EnableMt3dmsMenuItems;
+  if Mt3dmsNewlySelected then
+  begin
+    Beep;
+    MessageDlg(StrInOrderToGenerate, mtInformation, [mbOK], 0);
+  end;
+end;
+
+procedure TUndoChangeLgrPackageSelection.RecreateMt3dTimeLists;
+var
+  LocalModel: TPhastModel;
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  ConcBoundary: TMt3dmsConcBoundary;
+begin
+  LocalModel := frmGoPhast.PhastModel;
+  if (LocalModel <> nil) and not (csDestroying in LocalModel.ComponentState) then
+  begin
+    for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
+    begin
+      ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
+      ConcBoundary := ScreenObject.Mt3dmsConcBoundary;
+      if ConcBoundary <> nil then
+      begin
+        ConcBoundary.CreateTimeLists;
+      end;
+    end;
+  end;
 end;
 
 procedure TUndoChangeLgrPackageSelection.Undo;
@@ -2689,6 +2770,8 @@ var
   ChildIndex: Integer;
   ChildModel: TChildModel;
 begin
+  frmGoPhast.PhastModel.Mt3dmsTimes := FOldMt3dTimes;
+
   frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := False;
   try
     for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
@@ -2710,10 +2793,15 @@ begin
   finally
     frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := True;
   end;
+
+  frmGoPhast.PhastModel.MobileComponents := FOldMobileComponents;
+  frmGoPhast.PhastModel.ImmobileComponents := FOldImmobileComponents;
+  RecreateMt3dTimeLists;
   inherited;
   frmGoPhast.PhastModel.HydrogeologicUnits.Assign(FOldHydroGeologicUnits);
   frmGoPhast.EnableLinkStreams;
   frmGoPhast.EnableHufMenuItems;
+  frmGoPhast.EnableMt3dmsMenuItems;
   frmGoPhast.EnableManageFlowObservations;
   frmGoPhast.EnableManageHeadObservations;
 end;
@@ -2760,6 +2848,12 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TUndoChangeLgrPackageSelection.UpdateMt3dmsChemSpecies;
+begin
+  FNewMobileComponents.Assign(frmGoPhast.PhastModel.MobileComponents);
+  FNewImmobileComponents.Assign(frmGoPhast.PhastModel.ImmobileComponents);
 end;
 
 end.

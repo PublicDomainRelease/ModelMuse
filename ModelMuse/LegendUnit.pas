@@ -756,14 +756,14 @@ begin
     case Values.DataType of
       rdtDouble:
         begin
-          if ColoringLimits.LogTransform then
-          begin
+//          if ColoringLimits.LogTransform then
+//          begin
             LegendText := FloatToStrF(Values.RealValues[Index], ffGeneral, 7, 0);
-          end
-          else
-          begin
-            LegendText := FloatToStrF(Values.RealValues[Index], ffGeneral, 7, 0);
-          end;
+//          end
+//          else
+//          begin
+//            LegendText := FloatToStrF(Values.RealValues[Index], ffGeneral, 7, 0);
+//          end;
         end;
       rdtInteger:
         begin
@@ -840,8 +840,10 @@ procedure TLegend.GetRealNumberLimits(var MinReal, MaxReal: real;
   DataArray: TDataArray);
 var
   MinPositive: Real;
+  Model: TCustomModel;
 begin
-  frmGoPhast.Grid.GetRealMinMax(DataArray, MinReal, MaxReal, MinPositive);
+  Model := DataArray.Model as TCustomModel;
+  Model.Grid.GetRealMinMax(DataArray, MinReal, MaxReal, MinPositive);
   if ColoringLimits.LogTransform then
   begin
     MinReal := MinPositive;

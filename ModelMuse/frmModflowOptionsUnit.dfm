@@ -13,7 +13,7 @@ inherited frmModflowOptions: TfrmModflowOptions
     Top = 0
     Width = 543
     Height = 324
-    ActivePage = TabSheet1
+    ActivePage = TabSheet2
     Align = alClient
     TabOrder = 0
     OnChange = pcOptionsChange
@@ -21,10 +21,6 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpType = htKeyword
       HelpKeyword = 'Description_Tab'
       Caption = 'Description'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         535
         291)
@@ -97,37 +93,33 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpKeyword = 'Options_Tab'
       Caption = 'Options'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         535
         291)
       object Label5: TLabel
         Left = 3
-        Top = 103
+        Top = 87
         Width = 271
         Height = 18
         Caption = 'Head value for inactive cells (HNOFLO)'
       end
       object Label6: TLabel
         Left = 342
-        Top = 154
+        Top = 138
         Width = 127
         Height = 18
         Caption = 'Time unit (ITMUNI)'
       end
       object Label7: TLabel
         Left = 342
-        Top = 103
+        Top = 87
         Width = 145
         Height = 18
         Caption = 'Length unit (LENUNI)'
       end
       object Label8: TLabel
         Left = 3
-        Top = 154
+        Top = 138
         Width = 307
         Height = 18
         Caption = 'Head value for cells that become dry (HDRY)'
@@ -154,7 +146,7 @@ inherited frmModflowOptions: TfrmModflowOptions
           Caption = 'Print the start time, end time, and elapsed time (PRINTTIME)'
           Checked = True
           State = cbChecked
-          TabOrder = 0
+          TabOrder = 1
           LinkedControls = <>
           HotTrackFont.Charset = DEFAULT_CHARSET
           HotTrackFont.Color = clWindowText
@@ -171,7 +163,7 @@ inherited frmModflowOptions: TfrmModflowOptions
           Caption = 'Calculate flow between adjacent constant-head cells (CHTOCH)'
           Checked = True
           State = cbChecked
-          TabOrder = 1
+          TabOrder = 0
           LinkedControls = <>
           HotTrackFont.Charset = DEFAULT_CHARSET
           HotTrackFont.Color = clWindowText
@@ -183,7 +175,7 @@ inherited frmModflowOptions: TfrmModflowOptions
       end
       object rdeHNOFLO: TRbwDataEntry
         Left = 3
-        Top = 126
+        Top = 110
         Width = 145
         Height = 22
         TabOrder = 1
@@ -195,11 +187,11 @@ inherited frmModflowOptions: TfrmModflowOptions
       end
       object comboTimeUnit: TJvComboBox
         Left = 342
-        Top = 177
+        Top = 161
         Width = 145
         Height = 26
         Style = csDropDownList
-        TabOrder = 2
+        TabOrder = 4
         Text = 'seconds (1)'
         OnChange = comboTimeUnitChange
         Items.Strings = (
@@ -213,11 +205,11 @@ inherited frmModflowOptions: TfrmModflowOptions
       end
       object comboLengthUnit: TJvComboBox
         Left = 342
-        Top = 126
+        Top = 110
         Width = 145
         Height = 26
         Style = csDropDownList
-        TabOrder = 3
+        TabOrder = 2
         Text = 'meters (2)'
         OnChange = comboLengthUnitChange
         Items.Strings = (
@@ -229,10 +221,10 @@ inherited frmModflowOptions: TfrmModflowOptions
       end
       object rdeHDRY: TRbwDataEntry
         Left = 3
-        Top = 177
+        Top = 161
         Width = 145
         Height = 22
-        TabOrder = 4
+        TabOrder = 3
         Text = '-2e20'
         OnExit = rdeHDRYExit
         DataType = dtReal
@@ -241,14 +233,16 @@ inherited frmModflowOptions: TfrmModflowOptions
       end
       object cbOpenInTextEditor: TJvCheckBox
         Left = 3
-        Top = 208
-        Width = 361
-        Height = 18
+        Top = 193
+        Width = 286
+        Height = 32
         Caption = 'Open listing file in text editor when model is done.'
         Checked = True
         State = cbChecked
         TabOrder = 5
+        WordWrap = True
         LinkedControls = <>
+        AutoSize = False
         HotTrackFont.Charset = DEFAULT_CHARSET
         HotTrackFont.Color = clWindowText
         HotTrackFont.Height = 17
@@ -265,16 +259,23 @@ inherited frmModflowOptions: TfrmModflowOptions
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 6
       end
+      object edMasUnit: TLabeledEdit
+        Left = 342
+        Top = 218
+        Width = 145
+        Height = 26
+        EditLabel.Width = 127
+        EditLabel.Height = 18
+        EditLabel.Caption = 'Mass unit (MUNIT)'
+        MaxLength = 4
+        TabOrder = 7
+      end
     end
     object tabWetting: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'Wetting_Tab'
       Caption = 'Wetting'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblWetFact: TLabel
         Left = 8
         Top = 35
@@ -321,7 +322,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         HelpContext = 290
         Color = clBtnFace
         Enabled = False
-        TabOrder = 0
+        TabOrder = 1
         Text = '0.5'
         DataType = dtReal
         Max = 1.000000000000000000
@@ -338,7 +339,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
         Enabled = False
-        TabOrder = 1
+        TabOrder = 2
       end
       object comboWettingEquation: TJvImageComboBox
         Left = 8
@@ -354,7 +355,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         ImageWidth = 0
         ItemHeight = 22
         ItemIndex = 0
-        TabOrder = 2
+        TabOrder = 3
         Items = <
           item
             Brush.Style = bsClear
@@ -373,7 +374,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         Width = 153
         Height = 17
         Caption = 'Wetting active'
-        TabOrder = 3
+        TabOrder = 0
         OnClick = cbWettingClick
       end
     end
@@ -384,7 +385,7 @@ inherited frmModflowOptions: TfrmModflowOptions
     Width = 543
     Height = 41
     Align = alBottom
-    TabOrder = 1
+    TabOrder = 2
     DesignSize = (
       543
       41)
@@ -452,7 +453,7 @@ inherited frmModflowOptions: TfrmModflowOptions
     Width = 543
     Height = 41
     Align = alBottom
-    TabOrder = 2
+    TabOrder = 1
     DesignSize = (
       543
       41)

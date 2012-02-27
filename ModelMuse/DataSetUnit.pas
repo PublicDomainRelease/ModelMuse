@@ -599,7 +599,7 @@ type
       NewEvaluatedAt: TEvaluatedAt; NewDataType: TRbwDataType;
       var NeedToInvalidate: boolean);
     procedure UpdateWithName(const AName: string); override;
-    procedure RestoreUpToDataStatus;
+    procedure RestoreUpToDateStatus;
     Procedure SetModelToNil;
     procedure RefreshUseList;
     function ColorGridValueOK(const Layer, Row, Col: integer): boolean;
@@ -1674,24 +1674,6 @@ begin
       end;
       UpdateFrmDisplayData(True);
     end;
-//    if Grid.ThreeDContourDataSet = self then
-//    begin
-//      if frmContourData = nil then
-//      begin
-//        frmContourData := TfrmContourData.Create(nil);
-//      end;
-//      frmContourData.LegendDataSource := self;
-//      UpdateFrmContourData(True);
-//    end;
-//    if Grid.ThreeDDataSet = self then
-//    begin
-//      if frmGridColor = nil then
-//      begin
-//        frmGridColor := TfrmGridColor.Create(nil);
-//      end;
-//      frmGridColor.LegendDataSource := self;
-//      UpdateFrmGridColor(True);
-//    end;
   end;
 end;
 
@@ -2602,6 +2584,13 @@ begin
 
   FCleared := False;
   UpToDate := True;
+  if FreeStack then
+  begin
+    if (frmDisplayData <> nil) and frmDisplayData.ShouldUpdate then
+    begin
+      frmDisplayData.UpdateLabelsAndLegend;
+    end;
+  end;
   CheckIfUniform;
   UpdateDialogBoxes;
 end;
@@ -3187,7 +3176,7 @@ end;
 
 procedure TDataArray.SetContourLimits(const Value: TColoringLimits);
 begin
-  FContourLimits.Assign(Value) ;
+  FContourLimits.Assign(Value);
 end;
 
 function TDataArray.GetBooleanData(const Layer, Row, Col: integer): boolean;
@@ -3938,29 +3927,17 @@ begin
           or (Grid.ThreeDDataSet = self) then
         begin
           frmDisplayData.frameColorGrid.LegendDataSource := self;
-          frmDisplayData.UpdateLabelsAndLegend;
+          frmDisplayData.ShouldUpdate := True;
+//          frmDisplayData.UpdateLabelsAndLegend;
         end;
-      end;
-//      if (frmGridColor <> nil) then
-//      begin
-//        if (Grid.TopDataSet = self)
-//          or (Grid.FrontDataSet = self)
-//          or (Grid.SideDataSet = self)
-//          or (Grid.ThreeDDataSet = self) then
-//        begin
-//          frmGridColor.LegendDataSource := self;
-//          frmGridColor.UpdateLabelsAndLegend;
-//        end;
-//      end;
-      if frmDisplayData <> nil then
-      begin
         if (Grid.TopContourDataSet = self)
           or (Grid.FrontContourDataSet = self)
           or (Grid.SideContourDataSet = self)
           or (Grid.ThreeDContourDataSet = self) then
         begin
           frmDisplayData.frameContourData.LegendDataSource := self;
-          frmDisplayData.UpdateLabelsAndLegend;
+          frmDisplayData.ShouldUpdate := True;
+//          frmDisplayData.UpdateLabelsAndLegend;
         end;
       end;
     end;
@@ -4615,13 +4592,14 @@ begin
   end;
 end;
 
-procedure TDataArray.RestoreUpToDataStatus;
+procedure TDataArray.RestoreUpToDateStatus;
 begin
   inherited;
   if FReadDataFromFile then
   begin
     UpToDate := True;
     FReadDataFromFile := False;
+    CacheData;
   end;
 end;
 
@@ -4965,9 +4943,63 @@ begin
 end;
 
 procedure TCustomSparseDataSet.SetDimensions(const SetToZero: boolean);
+var
+  NumberOfLayers: Integer;
+  NumberOfRows: Integer;
+  NumberOfColumns: Integer;
+  LocalModel: TCustomModel;
+  Grid: TCustomModelGrid;
 begin
   // don't call inherited.
+  // Do this instead.
+
+  if SetToZero then
+  begin
+    NumberOfLayers := 0;
+    NumberOfRows := 0;
+    NumberOfColumns := 0;
+    FLayerCount := NumberOfLayers;
+    FRowCount := NumberOfRows;
+    FColumnCount := NumberOfColumns;
+  end
+  else
+  begin
+    Grid := nil;
+    LocalModel := Model as TCustomModel;
+    if LocalModel <> nil then
+    begin
+      Grid := LocalModel.Grid;
+    end;
+    if Grid <> nil then
+    begin
+      case EvaluatedAt of
+        eaBlocks:
+          begin
+            NumberOfLayers := Grid.LayerCount;
+            NumberOfRows := Grid.RowCount;
+            NumberOfColumns := Grid.ColumnCount;
+          end;
+        eaNodes:
+          begin
+            NumberOfLayers := Grid.LayerCount+1;
+            NumberOfRows := Grid.RowCount+1;
+            NumberOfColumns := Grid.ColumnCount+1;
+          end;
+      end;
+    end
+    else
+    begin
+      GetRequiredDimensions(NumberOfLayers, NumberOfRows, NumberOfColumns);
+    end;
+  end;
+  NumberOfLayers := Math.Max(NumberOfLayers, 0);
+  NumberOfRows := Math.Max(NumberOfRows, 0);
+  NumberOfColumns := Math.Max(NumberOfColumns, 0);
+
+  UpdateDimensions(NumberOfLayers, NumberOfRows, NumberOfColumns);
+
 //  inherited;
+
   if FAnnotation <> nil then
   begin
     FAnnotation.Clear;
@@ -5878,6 +5910,10 @@ begin
       then
     begin
       Result := 'MODFLOW Multinode Well';
+    end
+    else if Name = StrMT3DMSSSMConcentra then
+    begin
+      Result := 'MT3DMS Sink and Source Mixing';
     end
     else
     begin

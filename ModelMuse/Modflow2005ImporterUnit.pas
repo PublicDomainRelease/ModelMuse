@@ -18442,6 +18442,10 @@ begin
                     Lake.FluxCondGage := True;
                     Lake.DeltaGage := True;
                   end;
+                4:
+                  begin
+                    Lake.Gage4 := True;
+                  end;
                 else Assert(False);
               end;
               break;
@@ -18507,6 +18511,10 @@ begin
                 7:
                   begin
                     SfrGage.Gage7 := True;
+                  end;
+                8:
+                  begin
+                    FModel.ModflowPackages.SfrPackage.GageOverallBudget := True;
                   end;
               end;
               break;
@@ -22155,7 +22163,7 @@ begin
     Inc(FCurrentWell);
     Readln(FImporter.FFile, FMnwiArray[FCurrentWell].WellID);
     FMnwiArray[FCurrentWell].WellID := Trim(FMnwiArray[FCurrentWell].WellID);
-    Read(FImporter.FFile, DummyInteger); // UNIT_Number
+    Read(FImporter.FFile, DummyDouble); // UNIT_Number
     Read(FImporter.FFile, FMnwiArray[FCurrentWell].QNDflag);
     Read(FImporter.FFile, FMnwiArray[FCurrentWell].QBHflag);
     Read(FImporter.FFile, DummyDouble); // CONCflag
@@ -22167,7 +22175,7 @@ begin
     Inc(FCurrentWell);
     Readln(FImporter.FFile, FMnwiArray[FCurrentWell].WellID);
     FMnwiArray[FCurrentWell].WellID := Trim(FMnwiArray[FCurrentWell].WellID);
-    Read(FImporter.FFile, DummyInteger); // UNIT_Number
+    Read(FImporter.FFile, DummyDouble); // UNIT_Number
     Read(FImporter.FFile, FMnwiArray[FCurrentWell].QNDflag);
     Read(FImporter.FFile, FMnwiArray[FCurrentWell].QBHflag);
     Readln(FImporter.FFile);

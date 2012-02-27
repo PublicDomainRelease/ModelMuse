@@ -5,7 +5,6 @@ inherited frmModflowPackages: TfrmModflowPackages
   ClientHeight = 566
   ClientWidth = 792
   OnResize = FormResize
-  ExplicitLeft = -63
   ExplicitWidth = 800
   ExplicitHeight = 600
   PixelsPerInch = 96
@@ -28,12 +27,10 @@ inherited frmModflowPackages: TfrmModflowPackages
     Top = 0
     Width = 605
     Height = 525
-    ActivePage = jvspModpath
+    ActivePage = jvspSFR
     PropagateEnable = False
     Align = alClient
     OnChange = jvplPackagesChange
-    ExplicitWidth = 597
-    ExplicitHeight = 495
     object jvspLPF: TJvStandardPage
       Left = 0
       Top = 0
@@ -42,8 +39,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'LPF_Layer_Property_Flow_Package'
       Caption = 'LPF (Layer Property Flow)'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       object splitLprParameter: TJvNetscapeSplitter
         Left = 121
         Top = 291
@@ -83,7 +78,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         ExplicitLeft = 131
         ExplicitTop = 291
         ExplicitWidth = 474
-        ExplicitHeight = 204
+        ExplicitHeight = 234
         inherited pnlParameterCount: TPanel
           Top = 186
           Width = 474
@@ -96,16 +91,18 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 18
           end
           inherited btnDelete: TBitBtn
-            Left = 388
-            Top = 6
+            Left = 361
+            Top = 9
             Enabled = True
+            TabOrder = 1
             OnClick = frameParameterDefinition_btnDeleteClick
-            ExplicitLeft = 388
-            ExplicitTop = 6
+            ExplicitLeft = 361
+            ExplicitTop = 9
           end
           inherited seNumberOfParameters: TJvSpinEdit
             Height = 26
             Enabled = True
+            TabOrder = 0
             OnChange = frameParameterDefinition_seNumberOfParametersChange
             ExplicitHeight = 26
           end
@@ -134,6 +131,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -155,6 +153,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -176,6 +175,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -197,6 +197,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
           ExplicitWidth = 468
@@ -234,7 +235,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alTop
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
+        ExplicitWidth = 605
         ExplicitHeight = 281
         inherited lblComments: TLabel
           Width = 76
@@ -279,8 +280,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'HUF2_Hydrogeologic_Unit_Flow'
       Caption = 'jvspHUF'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       object JvNetscapeSplitter4: TJvNetscapeSplitter
         Left = 0
         Top = 275
@@ -315,7 +314,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alTop
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
+        ExplicitWidth = 605
         DesignSize = (
           605
           275)
@@ -333,7 +332,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         end
         inherited memoComments: TMemo
           Width = 574
-          ExplicitWidth = 566
+          ExplicitWidth = 574
         end
         inherited cbSaveHeads: TCheckBox
           Width = 409
@@ -382,7 +381,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         ReadOnly = True
         TabOrder = 1
         OnChange = tvHufParameterTypesChange
-        ExplicitHeight = 210
       end
       inline frameHufParameterDefinition: TframeListParameterDefinition
         Left = 131
@@ -395,13 +393,10 @@ inherited frmModflowPackages: TfrmModflowPackages
         TabStop = True
         ExplicitLeft = 131
         ExplicitTop = 285
-        ExplicitWidth = 466
-        ExplicitHeight = 210
+        ExplicitWidth = 474
         inherited pnlParameterCount: TPanel
           Width = 474
-          TabOrder = 1
-          ExplicitTop = 162
-          ExplicitWidth = 466
+          ExplicitWidth = 474
           inherited lblNumParameters: TLabel
             Width = 156
             Height = 18
@@ -409,15 +404,17 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 18
           end
           inherited btnDelete: TBitBtn
-            Left = 370
+            Left = 361
             Top = 9
             Enabled = True
+            TabOrder = 1
             OnClick = frameParameterDefinition_btnDeleteClick
-            ExplicitLeft = 362
+            ExplicitLeft = 361
             ExplicitTop = 9
           end
           inherited seNumberOfParameters: TJvSpinEdit
             Height = 26
+            TabOrder = 0
             OnChange = frameParameterDefinition_seNumberOfParametersChange
             ExplicitHeight = 26
           end
@@ -425,9 +422,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited dgParameters: TRbwDataGrid4
           Width = 468
           Enabled = True
-          TabOrder = 0
-          ExplicitWidth = 460
-          ExplicitHeight = 156
+          ExplicitWidth = 468
         end
       end
     end
@@ -439,8 +434,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'CHD_Time_Variant_Specified_Head'
       Caption = 'CHD (Time-Variant Specified-Head Package)'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgCHD: TframePackage
         Left = 0
         Top = 0
@@ -449,7 +442,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alTop
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
+        ExplicitWidth = 605
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -494,7 +487,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited pnlParameterCount: TPanel
           Top = 316
           Width = 605
-          TabOrder = 1
           ExplicitTop = 316
           ExplicitWidth = 605
           inherited lblNumParameters: TLabel
@@ -504,12 +496,16 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 18
           end
           inherited btnDelete: TBitBtn
-            Left = 525
+            Left = 491
+            Top = 9
+            TabOrder = 1
             OnClick = frameParameterDefinition_btnDeleteClick
-            ExplicitLeft = 525
+            ExplicitLeft = 491
+            ExplicitTop = 9
           end
           inherited seNumberOfParameters: TJvSpinEdit
             Height = 26
+            TabOrder = 0
             OnChange = frameParameterDefinition_seNumberOfParametersChange
             ExplicitHeight = 26
           end
@@ -517,7 +513,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited dgParameters: TRbwDataGrid4
           Width = 599
           Height = 310
-          TabOrder = 0
           ExplicitWidth = 599
           ExplicitHeight = 310
         end
@@ -531,8 +526,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'GHB_General_Head_Boundary_Package'
       Caption = 'GHB (General Head Boundary)'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgGHB: TframePackage
         Left = 0
         Top = 0
@@ -541,7 +534,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alTop
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
+        ExplicitWidth = 605
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -586,7 +579,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited pnlParameterCount: TPanel
           Top = 316
           Width = 605
-          TabOrder = 1
           ExplicitTop = 316
           ExplicitWidth = 605
           inherited lblNumParameters: TLabel
@@ -596,9 +588,9 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 18
           end
           inherited btnDelete: TBitBtn
-            Left = 525
+            Left = 491
             OnClick = frameParameterDefinition_btnDeleteClick
-            ExplicitLeft = 525
+            ExplicitLeft = 491
           end
           inherited seNumberOfParameters: TJvSpinEdit
             Height = 26
@@ -609,7 +601,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited dgParameters: TRbwDataGrid4
           Width = 599
           Height = 310
-          TabOrder = 0
           ExplicitWidth = 599
           ExplicitHeight = 310
         end
@@ -623,8 +614,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'PCG_Preconditioned_Conjugate_Gradiant'
       Caption = 'PCG (Preconditioned Conjugate-Gradient)'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePCG: TframePCG
         Left = 0
         Top = 0
@@ -634,8 +623,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Anchors = [akLeft, akTop, akBottom]
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         DesignSize = (
           605
           525)
@@ -808,197 +797,197 @@ inherited frmModflowPackages: TfrmModflowPackages
             item
               Value = 9.090909016528925000
             end>
-          ExplicitTop = 194
+          ExplicitTop = 224
           ExplicitWidth = 589
           ExplicitHeight = 301
           inherited lblPCGMaxOuter: TLabel
             Left = 3
             Top = 6
-            Width = 310
-            Height = 18
+            Width = 315
+            Height = 21
             ExplicitLeft = 3
             ExplicitTop = 6
             ExplicitWidth = 289
             ExplicitHeight = 18
           end
           inherited rdePCGMaxOuter: TRbwDataEntry
-            Left = 319
+            Left = 324
             Top = 3
-            Width = 259
+            Width = 262
             Height = 21
-            ExplicitLeft = 319
+            ExplicitLeft = 324
             ExplicitTop = 3
-            ExplicitWidth = 259
+            ExplicitWidth = 262
             ExplicitHeight = 21
           end
           inherited lblPCGMaxInner: TLabel
             Left = 3
             Top = 33
-            Width = 310
-            Height = 18
+            Width = 315
+            Height = 21
             ExplicitLeft = 3
             ExplicitTop = 33
             ExplicitWidth = 273
             ExplicitHeight = 18
           end
           inherited rdePCGMaxInner: TRbwDataEntry
-            Left = 319
+            Left = 324
             Top = 30
-            Width = 259
+            Width = 262
             Height = 21
-            ExplicitLeft = 319
+            ExplicitLeft = 324
             ExplicitTop = 30
-            ExplicitWidth = 259
+            ExplicitWidth = 262
             ExplicitHeight = 21
           end
           inherited lblPCGMethod: TLabel
             Left = 3
             Top = 61
-            Width = 310
-            Height = 17
+            Width = 315
+            Height = 20
             ExplicitLeft = 3
             ExplicitTop = 61
             ExplicitWidth = 296
             ExplicitHeight = 18
           end
           inherited comboPCGPrecondMeth: TJvImageComboBox
-            Left = 319
+            Left = 324
             Top = 57
-            Width = 259
+            Width = 262
             Height = 26
             DroppedWidth = 266
-            ExplicitLeft = 319
+            ExplicitLeft = 324
             ExplicitTop = 57
-            ExplicitWidth = 259
+            ExplicitWidth = 262
             ExplicitHeight = 26
           end
           inherited lblPCGMaxChangeHead: TLabel
             Left = 3
             Top = 87
-            Width = 310
-            Height = 18
+            Width = 315
+            Height = 21
             ExplicitLeft = 3
             ExplicitTop = 87
             ExplicitWidth = 261
             ExplicitHeight = 18
           end
           inherited rdePCGMaxHeadChange: TRbwDataEntry
-            Left = 319
+            Left = 324
             Top = 84
-            Width = 259
+            Width = 262
             Height = 21
-            ExplicitLeft = 319
+            ExplicitLeft = 324
             ExplicitTop = 84
-            ExplicitWidth = 259
+            ExplicitWidth = 262
             ExplicitHeight = 21
           end
           inherited lblPCGMaxResidual: TLabel
             Left = 3
             Top = 114
-            Width = 310
-            Height = 18
+            Width = 315
+            Height = 21
             ExplicitLeft = 3
             ExplicitTop = 114
             ExplicitWidth = 210
             ExplicitHeight = 18
           end
           inherited rdePCGMaxResChange: TRbwDataEntry
-            Left = 319
+            Left = 324
             Top = 111
-            Width = 259
+            Width = 262
             Height = 21
-            ExplicitLeft = 319
+            ExplicitLeft = 324
             ExplicitTop = 111
-            ExplicitWidth = 259
+            ExplicitWidth = 262
             ExplicitHeight = 21
           end
           inherited lblPCGRelaxation: TLabel
             Left = 3
             Top = 141
-            Width = 310
-            Height = 18
+            Width = 315
+            Height = 21
             ExplicitLeft = 3
             ExplicitTop = 141
             ExplicitWidth = 220
             ExplicitHeight = 18
           end
           inherited rdePCGRelax: TRbwDataEntry
-            Left = 319
+            Left = 324
             Top = 138
-            Width = 259
+            Width = 262
             Height = 21
-            ExplicitLeft = 319
+            ExplicitLeft = 324
             ExplicitTop = 138
-            ExplicitWidth = 259
+            ExplicitWidth = 262
             ExplicitHeight = 21
           end
           inherited lblPCGMaxEigen: TLabel
             Left = 3
             Top = 169
-            Width = 310
-            Height = 17
+            Width = 315
+            Height = 20
             ExplicitLeft = 3
             ExplicitTop = 169
             ExplicitWidth = 320
             ExplicitHeight = 18
           end
           inherited comboPCGEigenValue: TJvImageComboBox
-            Left = 319
+            Left = 324
             Top = 165
-            Width = 259
+            Width = 262
             Height = 26
             DroppedWidth = 266
-            ExplicitLeft = 319
+            ExplicitLeft = 324
             ExplicitTop = 165
-            ExplicitWidth = 259
+            ExplicitWidth = 262
             ExplicitHeight = 26
           end
           inherited lblPCGPrintInterval: TLabel
             Left = 3
             Top = 195
-            Width = 310
-            Height = 18
+            Width = 315
+            Height = 21
             ExplicitLeft = 3
             ExplicitTop = 195
             ExplicitWidth = 184
             ExplicitHeight = 18
           end
           inherited rdePCGPrintInt: TRbwDataEntry
-            Left = 319
+            Left = 324
             Top = 192
-            Width = 259
+            Width = 262
             Height = 21
-            ExplicitLeft = 319
+            ExplicitLeft = 324
             ExplicitTop = 192
-            ExplicitWidth = 259
+            ExplicitWidth = 262
             ExplicitHeight = 21
           end
           inherited lblPCGPrintControl: TLabel
             Left = 3
             Top = 223
-            Width = 310
-            Height = 17
+            Width = 315
+            Height = 20
             ExplicitLeft = 3
             ExplicitTop = 223
             ExplicitWidth = 189
             ExplicitHeight = 18
           end
           inherited comboPCGPrint: TJvImageComboBox
-            Left = 319
+            Left = 324
             Top = 219
-            Width = 259
+            Width = 262
             Height = 26
             DroppedWidth = 266
-            ExplicitLeft = 319
+            ExplicitLeft = 324
             ExplicitTop = 219
-            ExplicitWidth = 259
+            ExplicitWidth = 262
             ExplicitHeight = 26
           end
           inherited lblPCGDampingFactor: TLabel
             Left = 3
             Top = 249
-            Width = 310
-            Height = 18
+            Width = 315
+            Height = 21
             Caption = 'Steady-state damping factor (DAMPPCG):'
             ExplicitLeft = 3
             ExplicitTop = 249
@@ -1006,33 +995,33 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 18
           end
           inherited rdePCGDamp: TRbwDataEntry
-            Left = 319
+            Left = 324
             Top = 246
-            Width = 259
+            Width = 262
             Height = 21
-            ExplicitLeft = 319
+            ExplicitLeft = 324
             ExplicitTop = 246
-            ExplicitWidth = 259
+            ExplicitWidth = 262
             ExplicitHeight = 21
           end
           inherited lblPCGDampPcgT: TLabel
             Left = 3
             Top = 276
-            Width = 310
-            Height = 22
+            Width = 315
+            Height = 25
             ExplicitLeft = 3
             ExplicitTop = 276
             ExplicitWidth = 281
             ExplicitHeight = 18
           end
           inherited rdePCGDampPcgT: TRbwDataEntry
-            Left = 319
+            Left = 324
             Top = 273
-            Width = 259
+            Width = 262
             Height = 25
-            ExplicitLeft = 319
+            ExplicitLeft = 324
             ExplicitTop = 273
-            ExplicitWidth = 259
+            ExplicitWidth = 262
             ExplicitHeight = 25
           end
         end
@@ -1082,8 +1071,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'WEL_Well_Package_Pane'
       Caption = 'jvspWEL'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgWEL: TframePackage
         Left = 0
         Top = 0
@@ -1092,7 +1079,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alTop
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
+        ExplicitWidth = 605
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -1137,7 +1124,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited pnlParameterCount: TPanel
           Top = 316
           Width = 605
-          TabOrder = 1
           ExplicitTop = 316
           ExplicitWidth = 605
           inherited lblNumParameters: TLabel
@@ -1147,9 +1133,9 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 18
           end
           inherited btnDelete: TBitBtn
-            Left = 525
+            Left = 491
             OnClick = frameParameterDefinition_btnDeleteClick
-            ExplicitLeft = 525
+            ExplicitLeft = 491
           end
           inherited seNumberOfParameters: TJvSpinEdit
             Height = 26
@@ -1160,7 +1146,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited dgParameters: TRbwDataGrid4
           Width = 599
           Height = 310
-          TabOrder = 0
           ExplicitWidth = 599
           ExplicitHeight = 310
         end
@@ -1174,8 +1159,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'RIV_River_Package'
       Caption = 'jvspRIV'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgRIV: TframePackage
         Left = 0
         Top = 0
@@ -1184,7 +1167,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alTop
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
+        ExplicitWidth = 605
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -1229,7 +1212,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited pnlParameterCount: TPanel
           Top = 316
           Width = 605
-          TabOrder = 1
           ExplicitTop = 316
           ExplicitWidth = 605
           inherited lblNumParameters: TLabel
@@ -1239,9 +1221,9 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 18
           end
           inherited btnDelete: TBitBtn
-            Left = 525
+            Left = 491
             OnClick = frameParameterDefinition_btnDeleteClick
-            ExplicitLeft = 525
+            ExplicitLeft = 491
           end
           inherited seNumberOfParameters: TJvSpinEdit
             Height = 26
@@ -1252,7 +1234,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited dgParameters: TRbwDataGrid4
           Width = 599
           Height = 310
-          TabOrder = 0
           ExplicitWidth = 599
           ExplicitHeight = 310
         end
@@ -1266,8 +1247,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'DRN_Drain_Package_Pane'
       Caption = 'jvspDRN'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgDRN: TframePackage
         Left = 0
         Top = 0
@@ -1276,7 +1255,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alTop
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
+        ExplicitWidth = 605
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -1321,7 +1300,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited pnlParameterCount: TPanel
           Top = 316
           Width = 605
-          TabOrder = 1
           ExplicitTop = 316
           ExplicitWidth = 605
           inherited lblNumParameters: TLabel
@@ -1331,9 +1309,9 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 18
           end
           inherited btnDelete: TBitBtn
-            Left = 525
+            Left = 491
             OnClick = frameParameterDefinition_btnDeleteClick
-            ExplicitLeft = 525
+            ExplicitLeft = 491
           end
           inherited seNumberOfParameters: TJvSpinEdit
             Height = 26
@@ -1344,7 +1322,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited dgParameters: TRbwDataGrid4
           Width = 599
           Height = 310
-          TabOrder = 0
           ExplicitWidth = 599
           ExplicitHeight = 310
         end
@@ -1358,8 +1335,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'DRT_Drain_Return_Package_Pane'
       Caption = 'jvspDRT'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgDRT: TframePackage
         Left = 0
         Top = 0
@@ -1368,7 +1343,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alTop
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
+        ExplicitWidth = 605
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -1413,7 +1388,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited pnlParameterCount: TPanel
           Top = 316
           Width = 605
-          TabOrder = 1
           ExplicitTop = 316
           ExplicitWidth = 605
           inherited lblNumParameters: TLabel
@@ -1423,9 +1397,9 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 18
           end
           inherited btnDelete: TBitBtn
-            Left = 525
+            Left = 491
             OnClick = frameParameterDefinition_btnDeleteClick
-            ExplicitLeft = 525
+            ExplicitLeft = 491
           end
           inherited seNumberOfParameters: TJvSpinEdit
             Height = 26
@@ -1436,7 +1410,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited dgParameters: TRbwDataGrid4
           Width = 599
           Height = 310
-          TabOrder = 0
           ExplicitWidth = 599
           ExplicitHeight = 310
         end
@@ -1450,8 +1423,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'RCH_Recharge_Package_Pane'
       Caption = 'jvspRCH'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgRCH: TframePackageRCH
         Left = 0
         Top = 0
@@ -1460,7 +1431,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alTop
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
+        ExplicitWidth = 605
         ExplicitHeight = 249
         inherited lblComments: TLabel
           Width = 76
@@ -1545,7 +1516,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited pnlParameterCount: TPanel
           Top = 228
           Width = 605
-          TabOrder = 1
           ExplicitTop = 228
           ExplicitWidth = 605
           inherited lblNumParameters: TLabel
@@ -1555,9 +1525,9 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 18
           end
           inherited btnDelete: TBitBtn
-            Left = 525
+            Left = 491
             OnClick = frameParameterDefinition_btnDeleteClick
-            ExplicitLeft = 525
+            ExplicitLeft = 491
           end
           inherited seNumberOfParameters: TJvSpinEdit
             Height = 26
@@ -1568,7 +1538,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited dgParameters: TRbwDataGrid4
           Width = 599
           Height = 222
-          TabOrder = 0
           ExplicitWidth = 599
           ExplicitHeight = 222
         end
@@ -1582,8 +1551,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'EVT_Evapotranspiration_Package'
       Caption = 'jvspEVT'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgEVT: TframePackageTransientLayerChoice
         Left = 0
         Top = 0
@@ -1592,7 +1559,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alTop
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
+        ExplicitWidth = 605
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -1665,7 +1632,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited pnlParameterCount: TPanel
           Top = 276
           Width = 605
-          TabOrder = 1
           ExplicitTop = 276
           ExplicitWidth = 605
           inherited lblNumParameters: TLabel
@@ -1675,9 +1641,9 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 18
           end
           inherited btnDelete: TBitBtn
-            Left = 525
+            Left = 491
             OnClick = frameParameterDefinition_btnDeleteClick
-            ExplicitLeft = 525
+            ExplicitLeft = 491
           end
           inherited seNumberOfParameters: TJvSpinEdit
             Height = 26
@@ -1688,7 +1654,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited dgParameters: TRbwDataGrid4
           Width = 599
           Height = 270
-          TabOrder = 0
           ExplicitWidth = 599
           ExplicitHeight = 270
         end
@@ -1702,8 +1667,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'ETS_Evapotranspiration_Segments_Package'
       Caption = 'jvspETS'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgETS: TframeEtsPackage
         Left = 0
         Top = 0
@@ -1712,7 +1675,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alTop
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
+        ExplicitWidth = 605
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -1800,7 +1763,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited pnlParameterCount: TPanel
           Top = 251
           Width = 605
-          TabOrder = 1
           ExplicitTop = 251
           ExplicitWidth = 605
           inherited lblNumParameters: TLabel
@@ -1810,9 +1772,9 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 18
           end
           inherited btnDelete: TBitBtn
-            Left = 525
+            Left = 491
             OnClick = frameParameterDefinition_btnDeleteClick
-            ExplicitLeft = 525
+            ExplicitLeft = 491
           end
           inherited seNumberOfParameters: TJvSpinEdit
             Height = 26
@@ -1823,7 +1785,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited dgParameters: TRbwDataGrid4
           Width = 599
           Height = 245
-          TabOrder = 0
           ExplicitWidth = 599
           ExplicitHeight = 245
         end
@@ -1837,8 +1798,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'RES_Reservoir_Package_Pane'
       Caption = 'jvspRES'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgRES: TframePackageRes
         Left = 0
         Top = 0
@@ -1847,8 +1806,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -1870,7 +1829,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited pnLayerOption: TPanel
           Top = 449
           Width = 605
-          ExplicitTop = 419
+          ExplicitTop = 449
           ExplicitWidth = 605
           inherited lblLayerOption: TLabel
             Top = 5
@@ -1936,8 +1895,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'LAK_Lake_Package_Pane'
       Caption = 'jvspLAK'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgLAK: TframePackageLAK
         Left = 0
         Top = 0
@@ -1946,8 +1903,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -2009,19 +1966,19 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited rdeTheta: TRbwDataEntry
           Top = 392
           Width = 146
-          ExplicitTop = 362
+          ExplicitTop = 392
           ExplicitWidth = 146
         end
         inherited rdeIterations: TRbwDataEntry
           Top = 420
           Width = 146
-          ExplicitTop = 390
+          ExplicitTop = 420
           ExplicitWidth = 146
         end
         inherited rdeConvergenceCriterion: TRbwDataEntry
           Top = 448
           Width = 146
-          ExplicitTop = 418
+          ExplicitTop = 448
           ExplicitWidth = 146
         end
         inherited cbPrintLake: TCheckBox
@@ -2031,7 +1988,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited rdeSurfDepth: TRbwDataEntry
           Top = 472
           Width = 146
-          ExplicitTop = 442
+          ExplicitTop = 472
           ExplicitWidth = 146
         end
         inherited rcSelectionController: TRbwController
@@ -2080,8 +2037,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'SFR_Stream_Flow_Routing_Package'
       Caption = 'jvspSFR'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       object pcSFR: TJvPageControl
         Left = 0
         Top = 0
@@ -2091,12 +2046,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         ClientBorderWidth = 0
-        ExplicitWidth = 597
-        ExplicitHeight = 495
         object tabSfrGeneral: TTabSheet
           Caption = 'General'
-          ExplicitWidth = 597
-          ExplicitHeight = 470
           inline framePkgSFR: TframePackageSFR
             Left = 0
             Top = 0
@@ -2105,8 +2056,8 @@ inherited frmModflowPackages: TfrmModflowPackages
             Align = alClient
             TabOrder = 0
             TabStop = True
-            ExplicitWidth = 597
-            ExplicitHeight = 470
+            ExplicitWidth = 605
+            ExplicitHeight = 500
             inherited lblComments: TLabel
               Width = 76
               Height = 18
@@ -2253,7 +2204,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               ItemIndex = 1
               Text = 'Print flows in listing file'
               ExplicitLeft = 6
-              ExplicitTop = 162
+              ExplicitTop = 192
               ExplicitWidth = 219
               ExplicitHeight = 26
             end
@@ -2269,7 +2220,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Top = 293
               Anchors = [akLeft, akBottom]
               ExplicitLeft = 6
-              ExplicitTop = 263
+              ExplicitTop = 293
             end
             inherited rdeNstrail: TRbwDataEntry
               Left = 6
@@ -2277,7 +2228,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Height = 18
               Anchors = [akLeft, akBottom]
               ExplicitLeft = 6
-              ExplicitTop = 287
+              ExplicitTop = 317
               ExplicitHeight = 18
             end
             inherited rdeNsfrsets: TRbwDataEntry
@@ -2286,7 +2237,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Height = 18
               Anchors = [akLeft, akBottom]
               ExplicitLeft = 6
-              ExplicitTop = 310
+              ExplicitTop = 340
               ExplicitHeight = 18
             end
             inherited rdeIsuzn: TRbwDataEntry
@@ -2295,7 +2246,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Height = 18
               Anchors = [akLeft, akBottom]
               ExplicitLeft = 6
-              ExplicitTop = 333
+              ExplicitTop = 363
               ExplicitHeight = 18
             end
             inherited cbIRTFLG: TCheckBox
@@ -2313,7 +2264,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Height = 18
               Anchors = [akLeft, akBottom]
               ExplicitLeft = 6
-              ExplicitTop = 379
+              ExplicitTop = 409
               ExplicitHeight = 18
             end
             inherited rdeWeight: TRbwDataEntry
@@ -2322,7 +2273,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Height = 18
               Anchors = [akLeft, akBottom]
               ExplicitLeft = 6
-              ExplicitTop = 401
+              ExplicitTop = 431
               ExplicitHeight = 18
             end
             inherited rdeFLWTOL: TRbwDataEntry
@@ -2331,8 +2282,14 @@ inherited frmModflowPackages: TfrmModflowPackages
               Height = 18
               Anchors = [akLeft, akBottom]
               ExplicitLeft = 6
-              ExplicitTop = 423
+              ExplicitTop = 453
               ExplicitHeight = 18
+            end
+            inherited cbUseGsflowFormat: TCheckBox
+              Left = 408
+              Top = 196
+              ExplicitLeft = 408
+              ExplicitTop = 196
             end
             inherited rcSelectionController: TRbwController
               ControlList = <
@@ -2359,6 +2316,9 @@ inherited frmModflowPackages: TfrmModflowPackages
                 end
                 item
                   Control = framePkgSFR.cbGage8
+                end
+                item
+                  Control = framePkgSFR.cbUseGsflowFormat
                 end>
               OnEnabledChange = framePkgSFRrcSelectionControllerEnabledChange
             end
@@ -2367,6 +2327,9 @@ inherited frmModflowPackages: TfrmModflowPackages
         object tabSfrParameters: TTabSheet
           Caption = 'Parameters'
           ImageIndex = 1
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object splitSFR: TSplitter
             Left = 0
             Top = 257
@@ -2390,7 +2353,6 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited pnlParameterCount: TPanel
               Top = 209
               Width = 605
-              TabOrder = 1
               ExplicitTop = 209
               ExplicitWidth = 605
               inherited lblNumParameters: TLabel
@@ -2401,9 +2363,9 @@ inherited frmModflowPackages: TfrmModflowPackages
                 ExplicitHeight = 18
               end
               inherited btnDelete: TBitBtn
-                Left = 525
+                Left = 491
                 OnClick = frameSFRParameterDefinitionbtnDeleteClick
-                ExplicitLeft = 525
+                ExplicitLeft = 491
               end
               inherited seNumberOfParameters: TJvSpinEdit
                 Left = 6
@@ -2416,7 +2378,6 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited dgParameters: TRbwDataGrid4
               Width = 599
               Height = 203
-              TabOrder = 0
               OnSelectCell = frameSFRParameterDefinitiondgParametersSelectCell
               OnSetEditText = frameSFRParameterDefinitiondgParametersSetEditText
               ExplicitWidth = 599
@@ -2445,8 +2406,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'UZF_Unsaturated_Zone_Flow_Package'
       Caption = 'jvspUZF'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgUZF: TframePackageUZF
         Left = 0
         Top = 0
@@ -2455,8 +2414,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         DesignSize = (
           605
           525)
@@ -2476,115 +2435,104 @@ inherited frmModflowPackages: TfrmModflowPackages
         end
         inherited memoComments: TMemo
           Width = 584
-          Height = 158
+          Height = 91
           Anchors = [akLeft, akTop, akRight, akBottom]
           ExplicitWidth = 584
-          ExplicitHeight = 158
+          ExplicitHeight = 91
         end
         inherited pnLayerOption: TPanel
-          Top = 182
+          Top = 159
           Width = 605
-          Height = 343
-          ExplicitTop = 152
+          Height = 366
+          ExplicitTop = 159
           ExplicitWidth = 605
-          ExplicitHeight = 343
+          ExplicitHeight = 366
           inherited lblLayerOption: TLabel
-            Top = 6
             Width = 357
             Height = 18
             Caption = 'Recharge and discharge location option (NUZTOP) '
-            ExplicitTop = 6
             ExplicitWidth = 357
             ExplicitHeight = 18
           end
           inherited lblVerticalKSource: TLabel
-            Top = 57
+            Top = 56
             Width = 336
             Height = 18
             Caption = 'Vertical hydraulic conductivity source (IUZFOPT) '
-            ExplicitTop = 57
+            ExplicitTop = 56
             ExplicitWidth = 336
             ExplicitHeight = 18
           end
           inherited lblNumberOfTrailingWaves: TLabel
-            Top = 112
+            Top = 111
             Width = 251
             Height = 18
             Caption = 'Number of trailing waves (NTRAIL2) '
-            ExplicitTop = 112
+            ExplicitTop = 111
             ExplicitWidth = 251
             ExplicitHeight = 18
           end
           inherited lblNumberOfWaveSets: TLabel
-            Top = 161
+            Top = 160
             Width = 225
             Height = 18
             Caption = 'Number of wave sets (NSETS2) '
-            ExplicitTop = 161
+            ExplicitTop = 160
             ExplicitWidth = 225
             ExplicitHeight = 18
           end
           inherited lblSURFDEP: TLabel
-            Top = 282
+            Top = 322
             Width = 506
             Height = 18
-            ExplicitTop = 282
+            ExplicitTop = 322
             ExplicitWidth = 506
             ExplicitHeight = 18
           end
           inherited comboLayerOption: TComboBox
-            Top = 27
+            Top = 26
             Height = 26
-            ExplicitTop = 27
+            ExplicitTop = 26
             ExplicitHeight = 26
           end
           inherited comboVerticalKSource: TComboBox
-            Top = 80
+            Top = 79
             Width = 449
             Height = 26
-            ExplicitTop = 80
+            ExplicitTop = 79
             ExplicitWidth = 449
             ExplicitHeight = 26
           end
-          inherited cbRouteDischargeToStreamsAndLakes: TCheckBox
-            Top = 210
-            Width = 449
-            Caption = 'Route discharge to streams and lakes (IRUNFLG)'
-            ExplicitTop = 210
-            ExplicitWidth = 449
-          end
-          inherited cbSimulateEvapotranspiration: TCheckBox
-            Top = 233
-            Width = 335
-            ExplicitTop = 233
-            ExplicitWidth = 335
-          end
           inherited rdeNumberOfTrailingWaves: TRbwDataEntry
-            Top = 133
-            ExplicitTop = 133
+            Top = 132
+            ExplicitTop = 132
           end
           inherited rdeNumberOfWaveSets: TRbwDataEntry
-            Top = 182
-            ExplicitTop = 182
-          end
-          inherited cbPrintSummary: TCheckBox
-            Top = 256
-            Width = 585
-            Caption = 'Print summary of UZF budget terms (IFTUNIT)'
-            ExplicitTop = 256
-            ExplicitWidth = 585
+            Top = 181
+            ExplicitTop = 181
           end
           inherited rdeSURFDEP: TRbwDataEntry
-            Top = 303
-            ExplicitTop = 303
+            Top = 343
+            ExplicitTop = 343
           end
           inherited rgAssignmentMethod: TRbwRadioGroup
-            Left = 297
-            Top = 112
+            Left = 271
+            Top = 111
+            Width = 329
             Height = 92
-            ExplicitLeft = 297
-            ExplicitTop = 112
+            ExplicitLeft = 271
+            ExplicitTop = 111
+            ExplicitWidth = 329
             ExplicitHeight = 92
+          end
+          inherited chklstOptions: TCheckListBox
+            Top = 209
+            Width = 584
+            Height = 107
+            ItemHeight = 18
+            ExplicitTop = 209
+            ExplicitWidth = 584
+            ExplicitHeight = 107
           end
         end
         inherited rcSelectionController: TRbwController
@@ -2596,18 +2544,19 @@ inherited frmModflowPackages: TfrmModflowPackages
               Control = framePkgUZF.memoComments
             end
             item
+              Control = framePkgUZF.chklstOptions
+            end
+            item
               Control = framePkgUZF.comboLayerOption
             end
             item
               Control = framePkgUZF.lblLayerOption
             end
             item
-              Control = framePkgUZF.cbRouteDischargeToStreamsAndLakes
+              Control = framePkgUZF.rdeSURFDEP
             end
             item
-              Control = framePkgUZF.cbSimulateEvapotranspiration
-            end
-            item
+              Control = framePkgUZF.lblSURFDEP
             end
             item
               Control = framePkgUZF.rdeNumberOfTrailingWaves
@@ -2619,19 +2568,16 @@ inherited frmModflowPackages: TfrmModflowPackages
               Control = framePkgUZF.rdeNumberOfWaveSets
             end
             item
-              Control = framePkgUZF.rgAssignmentMethod
-            end
-            item
               Control = framePkgUZF.lblNumberOfWaveSets
             end
             item
-              Control = framePkgUZF.cbPrintSummary
+              Control = framePkgUZF.comboVerticalKSource
             end
             item
-              Control = framePkgUZF.rdeSURFDEP
+              Control = framePkgUZF.lblVerticalKSource
             end
             item
-              Control = framePkgUZF.lblSURFDEP
+              Control = framePkgUZF.rgAssignmentMethod
             end>
           OnEnabledChange = framePkgUZFrcSelectionControllerEnabledChange
         end
@@ -2645,8 +2591,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'GMG_Geometric_Multigrid_Package'
       Caption = 'jvspGMG'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgGMG: TframeGMG
         Left = 0
         Top = 0
@@ -2655,8 +2599,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         DesignSize = (
           605
           525)
@@ -2674,9 +2618,9 @@ inherited frmModflowPackages: TfrmModflowPackages
         end
         inherited memoComments: TMemo
           Width = 584
-          Height = 191
+          Height = 169
           ExplicitWidth = 584
-          ExplicitHeight = 191
+          ExplicitHeight = 169
         end
         inherited pcGMG: TJvPageControl
           Top = 240
@@ -2684,12 +2628,12 @@ inherited frmModflowPackages: TfrmModflowPackages
           Height = 285
           ExplicitTop = 240
           ExplicitWidth = 605
-          ExplicitHeight = 255
+          ExplicitHeight = 285
           inherited tabControlAndPrint: TTabSheet
             ExplicitLeft = 4
             ExplicitTop = 29
             ExplicitWidth = 597
-            ExplicitHeight = 222
+            ExplicitHeight = 252
             DesignSize = (
               597
               252)
@@ -2936,8 +2880,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'SIP_Strongly_Implicit_Procedure_Package'
       Caption = 'jvspSIP'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgSIP: TframeSIP
         Left = 0
         Top = 0
@@ -2946,8 +2888,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         DesignSize = (
           605
           525)
@@ -3027,34 +2969,34 @@ inherited frmModflowPackages: TfrmModflowPackages
         end
         inherited rdeSipMxiter: TRbwDataEntry
           Top = 189
-          ExplicitTop = 159
+          ExplicitTop = 189
         end
         inherited rdeSipNparm: TRbwDataEntry
           Top = 217
-          ExplicitTop = 187
+          ExplicitTop = 217
         end
         inherited rdeSipAccl: TRbwDataEntry
           Top = 253
-          ExplicitTop = 223
+          ExplicitTop = 253
         end
         inherited rdeSipHclose: TRbwDataEntry
           Top = 281
-          ExplicitTop = 251
+          ExplicitTop = 281
         end
         inherited comboSipIpcalc: TJvImageComboBox
           Top = 309
           Height = 28
           ItemHeight = 22
-          ExplicitTop = 279
+          ExplicitTop = 309
           ExplicitHeight = 28
         end
         inherited rdeSipWseed: TRbwDataEntry
           Top = 345
-          ExplicitTop = 315
+          ExplicitTop = 345
         end
         inherited rdeSipIprsip: TRbwDataEntry
           Top = 377
-          ExplicitTop = 347
+          ExplicitTop = 377
         end
         inherited rcSelectionController: TRbwController
           ControlList = <
@@ -3093,8 +3035,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'DE4_Direct_Solver_Package_Pane'
       Caption = 'jvspDE4'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgDE4: TframeDE4
         Left = 0
         Top = 0
@@ -3103,8 +3043,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -3199,25 +3139,25 @@ inherited frmModflowPackages: TfrmModflowPackages
           Left = 454
           Top = 197
           ExplicitLeft = 454
-          ExplicitTop = 167
+          ExplicitTop = 197
         end
         inherited rdeDe4Mxup: TRbwDataEntry
           Left = 454
           Top = 229
           ExplicitLeft = 454
-          ExplicitTop = 199
+          ExplicitTop = 229
         end
         inherited rdeDe4Mxlow: TRbwDataEntry
           Left = 454
           Top = 257
           ExplicitLeft = 454
-          ExplicitTop = 227
+          ExplicitTop = 257
         end
         inherited rdeDe4Mxbw: TRbwDataEntry
           Left = 454
           Top = 289
           ExplicitLeft = 454
-          ExplicitTop = 259
+          ExplicitTop = 289
         end
         inherited comboDe4Ifreq: TJvImageComboBox
           Left = 360
@@ -3243,7 +3183,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Text = 'Nonlinear flow equations (3)'
             end>
           ExplicitLeft = 360
-          ExplicitTop = 286
+          ExplicitTop = 316
           ExplicitWidth = 239
           ExplicitHeight = 28
         end
@@ -3255,7 +3195,7 @@ inherited frmModflowPackages: TfrmModflowPackages
           DroppedWidth = 272
           ItemHeight = 22
           ExplicitLeft = 360
-          ExplicitTop = 319
+          ExplicitTop = 349
           ExplicitWidth = 241
           ExplicitHeight = 28
         end
@@ -3263,19 +3203,19 @@ inherited frmModflowPackages: TfrmModflowPackages
           Left = 454
           Top = 377
           ExplicitLeft = 454
-          ExplicitTop = 347
+          ExplicitTop = 377
         end
         inherited rdeDe4Hclose: TRbwDataEntry
           Left = 454
           Top = 409
           ExplicitLeft = 454
-          ExplicitTop = 379
+          ExplicitTop = 409
         end
         inherited rdeRdeIprd4: TRbwDataEntry
           Left = 454
           Top = 437
           ExplicitLeft = 454
-          ExplicitTop = 407
+          ExplicitTop = 437
         end
         inherited rcSelectionController: TRbwController
           ControlList = <
@@ -3323,8 +3263,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'HOB_Head_Observation_Package'
       Caption = 'jvspHOB'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgHOB: TframePackageHob
         Left = 0
         Top = 0
@@ -3333,8 +3271,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -3363,7 +3301,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         end
         inherited rdeDryHead: TRbwDataEntry
           Top = 494
-          ExplicitTop = 464
+          ExplicitTop = 494
         end
         inherited rcSelectionController: TRbwController
           ControlList = <
@@ -3387,8 +3325,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'HFB_Horizontal_Flow_Barrier_Package'
       Caption = 'jvspHFB'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgHFB: TframePackage
         Left = 0
         Top = 0
@@ -3397,7 +3333,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alTop
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
+        ExplicitWidth = 605
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -3442,7 +3378,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited pnlParameterCount: TPanel
           Top = 316
           Width = 605
-          TabOrder = 1
           ExplicitTop = 316
           ExplicitWidth = 605
           inherited lblNumParameters: TLabel
@@ -3452,9 +3387,9 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 18
           end
           inherited btnDelete: TBitBtn
-            Left = 525
+            Left = 491
             OnClick = frameParameterDefinition_btnDeleteClick
-            ExplicitLeft = 525
+            ExplicitLeft = 491
           end
           inherited seNumberOfParameters: TJvSpinEdit
             Height = 26
@@ -3466,7 +3401,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited dgParameters: TRbwDataGrid4
           Width = 599
           Height = 310
-          TabOrder = 0
           ExplicitWidth = 599
           ExplicitHeight = 310
         end
@@ -3480,8 +3414,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'MODPATH'
       Caption = 'jvspModpath'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline frameModpath: TframeModpathSelection
         Left = 0
         Top = 0
@@ -3490,8 +3422,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -3511,7 +3443,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited pcModpath: TPageControl
           Height = 386
           ActivePage = frameModpath.tabResponse
-          ExplicitHeight = 356
+          ExplicitHeight = 386
           inherited tabInput: TTabSheet
             ExplicitLeft = 4
             ExplicitTop = 29
@@ -3562,7 +3494,7 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitLeft = 4
             ExplicitTop = 29
             ExplicitWidth = 592
-            ExplicitHeight = 331
+            ExplicitHeight = 353
             inherited lblMaxTime: TLabel
               Top = 120
               Width = 160
@@ -3651,12 +3583,14 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
             inherited rdeErrorTolerance: TRbwDataEntry
               Width = 110
+              TabOrder = 2
               ExplicitWidth = 110
             end
             inherited cbSummarize: TCheckBox
               Left = 307
               Top = 38
               Width = 270
+              TabOrder = 3
               ExplicitLeft = 307
               ExplicitTop = 38
               ExplicitWidth = 270
@@ -3674,7 +3608,7 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitLeft = 4
             ExplicitTop = 29
             ExplicitWidth = 592
-            ExplicitHeight = 323
+            ExplicitHeight = 331
             inherited lblTimeMethod: TLabel
               Width = 185
               Height = 18
@@ -3768,8 +3702,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'CHOB_Specified_Head_Flow_Observations'
       Caption = 'jvspCHOB'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgCHOB: TframePackage
         Left = 0
         Top = 0
@@ -3778,8 +3710,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -3818,8 +3750,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'DROB_Drain_Observation_Package'
       Caption = 'jvspDROB'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgDROB: TframePackage
         Left = 0
         Top = 0
@@ -3828,8 +3758,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -3868,8 +3798,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'GBOB_General_Head_Boundary_Observations'
       Caption = 'jvspGBOB'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgGBOB: TframePackage
         Left = 0
         Top = 0
@@ -3878,8 +3806,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -3918,8 +3846,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'RVOB_River_Observation_Package'
       Caption = 'jvspRVOB'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgRVOB: TframePackage
         Left = 0
         Top = 0
@@ -3928,8 +3854,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -3968,8 +3894,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'MNW2_Multi_Node_Well_Package'
       Caption = 'jvspMNW2'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgMnw2: TframePackageMnw2
         Left = 0
         Top = 0
@@ -3978,8 +3902,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -4010,7 +3934,7 @@ inherited frmModflowPackages: TfrmModflowPackages
           Top = 390
           Height = 28
           ItemHeight = 22
-          ExplicitTop = 360
+          ExplicitTop = 390
           ExplicitHeight = 28
         end
         inherited gbMnwiOptions: TGroupBox
@@ -4056,8 +3980,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'BCF_Block-Centered_Flow_Package'
       Caption = 'jvspBCF'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgBCF: TframePackage
         Left = 0
         Top = 0
@@ -4066,8 +3988,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -4106,8 +4028,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'SUB_Subsidence_and_Aquifer_Sys'
       Caption = 'jvspSUB'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgSUB: TframePackageSub
         Left = 0
         Top = 0
@@ -4116,8 +4036,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -4138,7 +4058,7 @@ inherited frmModflowPackages: TfrmModflowPackages
           Width = 605
           Height = 406
           ExplicitWidth = 605
-          ExplicitHeight = 376
+          ExplicitHeight = 406
           inherited tabControls: TTabSheet
             ExplicitLeft = 4
             ExplicitTop = 29
@@ -4206,7 +4126,7 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitLeft = 4
             ExplicitTop = 29
             ExplicitWidth = 597
-            ExplicitHeight = 343
+            ExplicitHeight = 373
             inherited lblNumExportPeriods: TLabel
               Left = 67
               Top = 348
@@ -4317,8 +4237,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'ZONEBUDGET'
       Caption = 'jvspZoneBudget'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline frameZoneBudget: TframeZoneBudget
         Left = 0
         Top = 0
@@ -4329,8 +4247,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Width = 206
           Height = 18
@@ -4423,8 +4341,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'SWT_Package'
       Caption = 'jvspSWT'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgSwt: TframePackageSwt
         Left = 0
         Top = 0
@@ -4433,8 +4349,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Top = 55
           Width = 76
@@ -4464,7 +4380,7 @@ inherited frmModflowPackages: TfrmModflowPackages
           Height = 389
           ExplicitTop = 136
           ExplicitWidth = 605
-          ExplicitHeight = 359
+          ExplicitHeight = 389
           inherited tabControls: TTabSheet
             ExplicitLeft = 4
             ExplicitTop = 29
@@ -4553,7 +4469,7 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitLeft = 4
             ExplicitTop = 29
             ExplicitWidth = 597
-            ExplicitHeight = 326
+            ExplicitHeight = 356
             inherited sbAdd: TSpeedButton
               Left = 505
               Top = 357
@@ -4613,6 +4529,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4634,6 +4551,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4668,6 +4586,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                     '10G11.4')
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4689,6 +4608,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4710,6 +4630,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4731,6 +4652,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4752,6 +4674,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4773,6 +4696,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4794,6 +4718,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4815,6 +4740,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4836,6 +4762,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4857,6 +4784,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4878,6 +4806,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4899,6 +4828,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4920,6 +4850,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4941,6 +4872,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4962,6 +4894,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -4983,6 +4916,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -5004,6 +4938,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -5025,6 +4960,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -5046,6 +4982,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -5067,6 +5004,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -5088,6 +5026,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -5109,6 +5048,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -5130,6 +5070,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -5151,6 +5092,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -5172,6 +5114,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end
                 item
@@ -5193,6 +5136,7 @@ inherited frmModflowPackages: TfrmModflowPackages
                   ParentButtonFont = False
                   WordWrapCaptions = True
                   WordWrapCells = False
+                  CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end>
               ExplicitTop = 204
@@ -5268,8 +5212,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'HYD_HYDMOD_Package'
       Caption = 'jvspHydmod'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgHydmod: TframePkgHydmod
         Left = 0
         Top = 0
@@ -5278,8 +5220,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -5308,7 +5250,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         end
         inherited rdeHYDNOH: TRbwDataEntry
           Top = 492
-          ExplicitTop = 462
+          ExplicitTop = 492
         end
         inherited rcSelectionController: TRbwController
           ControlList = <
@@ -5335,8 +5277,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'UPW_Upstream_Weighting_Package_Pane'
       Caption = 'jvspUPW'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       object JvNetscapeSplitter6: TJvNetscapeSplitter
         Left = 0
         Top = 192
@@ -5357,7 +5297,7 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alTop
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
+        ExplicitWidth = 605
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -5403,8 +5343,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'NWT_Newton_Solver_Package_Pane'
       Caption = 'jvspNWT'
-      ExplicitWidth = 597
-      ExplicitHeight = 495
       inline framePkgNwt: TframePackageNwt
         Left = 0
         Top = 0
@@ -5413,8 +5351,8 @@ inherited frmModflowPackages: TfrmModflowPackages
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 597
-        ExplicitHeight = 495
+        ExplicitWidth = 605
+        ExplicitHeight = 525
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -5436,12 +5374,12 @@ inherited frmModflowPackages: TfrmModflowPackages
           Height = 368
           OnChange = framePkgNwtpcNWTChange
           ExplicitWidth = 605
-          ExplicitHeight = 338
+          ExplicitHeight = 368
           inherited tabBasic: TTabSheet
             ExplicitLeft = 4
             ExplicitTop = 29
             ExplicitWidth = 597
-            ExplicitHeight = 305
+            ExplicitHeight = 335
             inherited lblSolverMethod: TLabel
               Left = 127
               Width = 168
@@ -5998,6 +5936,1015 @@ inherited frmModflowPackages: TfrmModflowPackages
         end
       end
     end
+    object jvspMt3dmsBasic: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 605
+      Height = 525
+      HelpType = htKeyword
+      HelpKeyword = 'BTN_Basic_Transport_Package'
+      Caption = 'jvspMt3dmsBasic'
+      inline framePkgMt3dBasic: TframeMt3dBasicPkg
+        Left = 0
+        Top = 0
+        Width = 605
+        Height = 525
+        Align = alClient
+        TabOrder = 0
+        TabStop = True
+        ExplicitWidth = 605
+        ExplicitHeight = 525
+        inherited lblComments: TLabel
+          Width = 294
+          Height = 18
+          Caption = 'Comments (first two lines are the Heading)'
+          ExplicitWidth = 294
+          ExplicitHeight = 18
+        end
+        inherited lblPackage: TLabel
+          Width = 78
+          Height = 18
+          ExplicitWidth = 78
+          ExplicitHeight = 18
+        end
+        inherited lblInactiveConcentration: TLabel
+          Top = 150
+          Width = 278
+          Height = 18
+          ExplicitTop = 150
+          ExplicitWidth = 278
+          ExplicitHeight = 18
+        end
+        inherited lblMinimumSaturatedFraction: TLabel
+          Width = 259
+          Height = 18
+          ExplicitWidth = 259
+          ExplicitHeight = 18
+        end
+        inherited pnlSpecies: TPanel
+          Top = 202
+          Width = 605
+          Height = 323
+          ExplicitTop = 202
+          ExplicitWidth = 605
+          ExplicitHeight = 323
+          inherited Splitter1: TSplitter
+            Left = 300
+            Height = 321
+            ExplicitLeft = 300
+            ExplicitHeight = 321
+          end
+          inherited frameGridImmobile: TframeGrid
+            Left = 305
+            Width = 299
+            Height = 321
+            ExplicitLeft = 305
+            ExplicitWidth = 299
+            ExplicitHeight = 321
+            inherited Panel: TPanel
+              Top = 280
+              Width = 299
+              ExplicitTop = 280
+              ExplicitWidth = 299
+              inherited lbNumber: TLabel
+                Width = 55
+                Height = 18
+                ExplicitWidth = 55
+                ExplicitHeight = 18
+              end
+              inherited seNumber: TJvSpinEdit
+                Height = 26
+                ExplicitHeight = 26
+              end
+            end
+            inherited Grid: TRbwDataGrid4
+              Width = 299
+              Height = 280
+              Columns = <
+                item
+                  AutoAdjustRowHeights = True
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4String
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = False
+                  WordWrapCells = False
+                  CaseSensitivePicklist = False
+                  AutoAdjustColWidths = True
+                end>
+              ExplicitWidth = 299
+              ExplicitHeight = 280
+            end
+          end
+          inherited frameGridMobile: TframeGrid
+            Width = 299
+            Height = 321
+            ExplicitWidth = 299
+            ExplicitHeight = 321
+            inherited Panel: TPanel
+              Top = 280
+              Width = 299
+              ExplicitTop = 280
+              ExplicitWidth = 299
+              inherited lbNumber: TLabel
+                Width = 55
+                Height = 18
+                ExplicitWidth = 55
+                ExplicitHeight = 18
+              end
+              inherited seNumber: TJvSpinEdit
+                Height = 26
+                ExplicitHeight = 26
+              end
+            end
+            inherited Grid: TRbwDataGrid4
+              Width = 299
+              Height = 280
+              Columns = <
+                item
+                  AutoAdjustRowHeights = True
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4String
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = False
+                  WordWrapCells = False
+                  CaseSensitivePicklist = False
+                  AutoAdjustColWidths = True
+                end>
+              ExplicitWidth = 299
+              ExplicitHeight = 280
+            end
+          end
+        end
+        inherited edMassUnit: TLabeledEdit
+          Width = 65
+          Height = 26
+          EditLabel.Width = 127
+          EditLabel.Height = 18
+          EditLabel.ExplicitLeft = 84
+          EditLabel.ExplicitTop = 123
+          EditLabel.ExplicitWidth = 127
+          EditLabel.ExplicitHeight = 18
+          ExplicitWidth = 65
+          ExplicitHeight = 26
+        end
+        inherited memoComments: TMemo
+          Width = 574
+          ExplicitWidth = 574
+        end
+        inherited rcSelectionController: TRbwController
+          ControlList = <
+            item
+              Control = framePkgMt3dBasic.lblComments
+            end
+            item
+              Control = framePkgMt3dBasic.memoComments
+            end
+            item
+              Control = framePkgMt3dBasic.edMassUnit
+            end
+            item
+              Control = framePkgMt3dBasic.rdeInactiveConcentration
+            end
+            item
+              Control = framePkgMt3dBasic.rdeMinimumSaturatedFraction
+            end
+            item
+              Control = framePkgMt3dBasic.frameGridMobile
+            end
+            item
+              Control = framePkgMt3dBasic.frameGridImmobile
+            end>
+        end
+      end
+    end
+    object jvspMt3dmsGCG: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 605
+      Height = 525
+      HelpType = htKeyword
+      HelpKeyword = 'GCG_Generalized_Conjugate_Grad'
+      Caption = 'jvspMt3dmsGCG'
+      inline frameMt3dmsGcgPackage: TframeMt3dmsGcgPackage
+        Left = 0
+        Top = 0
+        Width = 605
+        Height = 525
+        Align = alClient
+        TabOrder = 0
+        TabStop = True
+        ExplicitWidth = 605
+        ExplicitHeight = 525
+        inherited lblComments: TLabel
+          Width = 76
+          Height = 18
+          ExplicitWidth = 76
+          ExplicitHeight = 18
+        end
+        inherited lblPackage: TLabel
+          Width = 78
+          Height = 18
+          ExplicitWidth = 78
+          ExplicitHeight = 18
+        end
+        inherited lblMaxOuter: TLabel
+          Width = 309
+          Height = 18
+          ExplicitWidth = 309
+          ExplicitHeight = 18
+        end
+        inherited lblMaxInner: TLabel
+          Width = 293
+          Height = 18
+          ExplicitWidth = 293
+          ExplicitHeight = 18
+        end
+        inherited lblPreconditioner: TLabel
+          Width = 173
+          Height = 18
+          ExplicitWidth = 173
+          ExplicitHeight = 18
+        end
+        inherited lblDispersion: TLabel
+          Width = 251
+          Height = 18
+          ExplicitWidth = 251
+          ExplicitHeight = 18
+        end
+        inherited lblRelaxationFactor: TLabel
+          Width = 174
+          Height = 18
+          ExplicitWidth = 174
+          ExplicitHeight = 18
+        end
+        inherited lblConvergence: TLabel
+          Width = 234
+          Height = 18
+          ExplicitWidth = 234
+          ExplicitHeight = 18
+        end
+        inherited lblPrintoutInterval: TLabel
+          Width = 181
+          Height = 18
+          ExplicitWidth = 181
+          ExplicitHeight = 18
+        end
+        inherited memoComments: TMemo
+          Width = 574
+          ExplicitWidth = 574
+        end
+        inherited spinMaxOuter: TJvSpinEdit
+          Height = 26
+          ExplicitHeight = 26
+        end
+        inherited spinMaxInner: TJvSpinEdit
+          Height = 26
+          ExplicitHeight = 26
+        end
+        inherited comboPreconditioner: TComboBox
+          Width = 259
+          Height = 26
+          ExplicitWidth = 259
+          ExplicitHeight = 26
+        end
+        inherited comboDispersion: TComboBox
+          Width = 425
+          Height = 26
+          ExplicitWidth = 425
+          ExplicitHeight = 26
+        end
+        inherited spinPrintoutInterval: TJvSpinEdit
+          Height = 26
+          ExplicitHeight = 26
+        end
+        inherited rcSelectionController: TRbwController
+          ControlList = <
+            item
+              Control = frameMt3dmsGcgPackage.lblComments
+            end
+            item
+              Control = frameMt3dmsGcgPackage.memoComments
+            end
+            item
+              Control = frameMt3dmsGcgPackage.spinMaxOuter
+            end
+            item
+              Control = frameMt3dmsGcgPackage.spinMaxInner
+            end
+            item
+              Control = frameMt3dmsGcgPackage.comboPreconditioner
+            end
+            item
+              Control = frameMt3dmsGcgPackage.comboDispersion
+            end
+            item
+              Control = frameMt3dmsGcgPackage.rdeConvergence
+            end
+            item
+              Control = frameMt3dmsGcgPackage.spinPrintoutInterval
+            end>
+        end
+      end
+    end
+    object jvspMt3dmsAdv: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 605
+      Height = 525
+      HelpType = htKeyword
+      HelpKeyword = 'ADV_Advection_Package_Pane'
+      Caption = 'jvspMt3dmsAdv'
+      inline frameMt3dmsAdvPkg: TframeMt3dmsAdvPkg
+        Left = 0
+        Top = 0
+        Width = 605
+        Height = 525
+        Align = alClient
+        TabOrder = 0
+        TabStop = True
+        ExplicitWidth = 605
+        ExplicitHeight = 525
+        DesignSize = (
+          605
+          525)
+        inherited lblComments: TLabel
+          Width = 76
+          Height = 18
+          ExplicitWidth = 76
+          ExplicitHeight = 18
+        end
+        inherited lblPackage: TLabel
+          Width = 78
+          Height = 18
+          ExplicitWidth = 78
+          ExplicitHeight = 18
+        end
+        inherited memoComments: TMemo
+          Width = 574
+          ExplicitWidth = 574
+        end
+        inherited pcAdvection: TPageControl
+          Top = 157
+          Width = 605
+          Height = 368
+          ExplicitTop = 157
+          ExplicitWidth = 605
+          ExplicitHeight = 368
+          inherited tabAdvection1: TTabSheet
+            ExplicitLeft = 4
+            ExplicitTop = 29
+            ExplicitWidth = 597
+            ExplicitHeight = 335
+            inherited lbllMethod: TLabel
+              Top = 6
+              Width = 189
+              Height = 36
+              WordWrap = True
+              ExplicitTop = 6
+              ExplicitWidth = 189
+              ExplicitHeight = 36
+            end
+            inherited lblParticleTracking: TLabel
+              Top = 51
+              Width = 251
+              Height = 18
+              ExplicitTop = 51
+              ExplicitWidth = 251
+              ExplicitHeight = 18
+            end
+            inherited lbNumCellsParticle: TLabel
+              Left = 2
+              Top = 115
+              Width = 434
+              Height = 36
+              WordWrap = True
+              ExplicitLeft = 2
+              ExplicitTop = 115
+              ExplicitWidth = 434
+              ExplicitHeight = 36
+            end
+            inherited lblMaxParticlesCount: TLabel
+              Left = 2
+              Top = 157
+              Width = 370
+              Height = 18
+              ExplicitLeft = 2
+              ExplicitTop = 157
+              ExplicitWidth = 370
+              ExplicitHeight = 18
+            end
+            inherited lblConcWeight: TLabel
+              Left = 2
+              Top = 189
+              Width = 321
+              Height = 18
+              ExplicitLeft = 2
+              ExplicitTop = 189
+              ExplicitWidth = 321
+              ExplicitHeight = 18
+            end
+            inherited lblNegConcGrad: TLabel
+              Left = 2
+              Top = 217
+              Width = 348
+              Height = 18
+              ExplicitLeft = 2
+              ExplicitTop = 217
+              ExplicitWidth = 348
+              ExplicitHeight = 18
+            end
+            inherited lblInitParticlesSmall: TLabel
+              Left = 2
+              Top = 245
+              Width = 475
+              Height = 18
+              ExplicitLeft = 2
+              ExplicitTop = 245
+              ExplicitWidth = 475
+              ExplicitHeight = 18
+            end
+            inherited lblInitParticlesLarge: TLabel
+              Left = 2
+              Top = 277
+              Width = 477
+              Height = 18
+              ExplicitLeft = 2
+              ExplicitTop = 277
+              ExplicitWidth = 477
+              ExplicitHeight = 18
+            end
+            inherited Label12: TLabel
+              Top = 83
+              Width = 210
+              Height = 18
+              ExplicitTop = 83
+              ExplicitWidth = 210
+              ExplicitHeight = 18
+            end
+            inherited comboAdvSolScheme: TComboBox
+              Left = 240
+              Width = 350
+              Height = 26
+              ItemIndex = 3
+              Text = 'Modified method of characterisitics MMOC (2)'
+              ExplicitLeft = 240
+              ExplicitWidth = 350
+              ExplicitHeight = 26
+            end
+            inherited comboParticleTrackingAlg: TComboBox
+              Top = 48
+              Height = 26
+              ExplicitTop = 48
+              ExplicitHeight = 26
+            end
+            inherited adeMaxParticleMovement: TRbwDataEntry
+              Top = 112
+              ExplicitTop = 112
+            end
+            inherited adeConcWeight: TRbwDataEntry
+              Top = 186
+              ExplicitTop = 186
+            end
+            inherited adeNeglSize: TRbwDataEntry
+              Top = 214
+              ExplicitTop = 214
+            end
+            inherited comboAdvWeightingScheme: TComboBox
+              Left = 360
+              Top = 80
+              Width = 230
+              Height = 26
+              ExplicitLeft = 360
+              ExplicitTop = 80
+              ExplicitWidth = 230
+              ExplicitHeight = 26
+            end
+            inherited spinMaxParticlesCount: TJvSpinEdit
+              Top = 154
+              Height = 26
+              ExplicitTop = 154
+              ExplicitHeight = 26
+            end
+            inherited spinInitParticlesSmall: TJvSpinEdit
+              Top = 242
+              Height = 26
+              ExplicitTop = 242
+              ExplicitHeight = 26
+            end
+            inherited spinInitParticlesLarge: TJvSpinEdit
+              Top = 274
+              Height = 26
+              ExplicitTop = 274
+              ExplicitHeight = 26
+            end
+          end
+          inherited tabAdvection2: TTabSheet
+            ExplicitLeft = 4
+            ExplicitTop = 29
+            ExplicitWidth = 593
+            ExplicitHeight = 303
+            inherited lblInitParticlePlacement: TLabel
+              Width = 323
+              Height = 18
+              ExplicitWidth = 323
+              ExplicitHeight = 18
+            end
+            inherited lblInitParticlePlanes: TLabel
+              Top = 35
+              Width = 361
+              Height = 18
+              ExplicitTop = 35
+              ExplicitWidth = 361
+              ExplicitHeight = 18
+            end
+            inherited lblMinParticles: TLabel
+              Left = 2
+              Top = 67
+              Width = 400
+              Height = 18
+              ExplicitLeft = 2
+              ExplicitTop = 67
+              ExplicitWidth = 400
+              ExplicitHeight = 18
+            end
+            inherited lblMaxParticles: TLabel
+              Left = 2
+              Top = 99
+              Width = 309
+              Height = 18
+              ExplicitLeft = 2
+              ExplicitTop = 99
+              ExplicitWidth = 309
+              ExplicitHeight = 18
+            end
+            inherited lblSinkParticlePlacement: TLabel
+              Left = 2
+              Top = 131
+              Width = 317
+              Height = 18
+              ExplicitLeft = 2
+              ExplicitTop = 131
+              ExplicitWidth = 317
+              ExplicitHeight = 18
+            end
+            inherited lblSinkParticlePlanes: TLabel
+              Left = 2
+              Top = 163
+              Width = 385
+              Height = 18
+              ExplicitLeft = 2
+              ExplicitTop = 163
+              ExplicitWidth = 385
+              ExplicitHeight = 18
+            end
+            inherited lblSinkParticleN: TLabel
+              Left = 2
+              Top = 195
+              Width = 404
+              Height = 18
+              ExplicitLeft = 2
+              ExplicitTop = 195
+              ExplicitWidth = 404
+              ExplicitHeight = 18
+            end
+            inherited lblCritConcGrad: TLabel
+              Left = 2
+              Top = 227
+              Width = 347
+              Height = 18
+              ExplicitLeft = 2
+              ExplicitTop = 227
+              ExplicitWidth = 347
+              ExplicitHeight = 18
+            end
+            inherited comboInitPartPlace: TComboBox
+              Left = 421
+              Width = 108
+              Height = 26
+              ExplicitLeft = 421
+              ExplicitWidth = 108
+              ExplicitHeight = 26
+            end
+            inherited comboInitPartSinkChoice: TComboBox
+              Left = 421
+              Top = 128
+              Width = 108
+              Height = 26
+              ExplicitLeft = 421
+              ExplicitTop = 128
+              ExplicitWidth = 108
+              ExplicitHeight = 26
+            end
+            inherited adeCritRelConcGrad: TRbwDataEntry
+              Left = 421
+              Top = 224
+              Width = 108
+              ExplicitLeft = 421
+              ExplicitTop = 224
+              ExplicitWidth = 108
+            end
+            inherited spinInitParticlePlanes: TJvSpinEdit
+              Left = 421
+              Top = 32
+              Width = 108
+              Height = 26
+              ExplicitLeft = 421
+              ExplicitTop = 32
+              ExplicitWidth = 108
+              ExplicitHeight = 26
+            end
+            inherited spinMinParticles: TJvSpinEdit
+              Left = 421
+              Top = 64
+              Width = 108
+              Height = 26
+              ExplicitLeft = 421
+              ExplicitTop = 64
+              ExplicitWidth = 108
+              ExplicitHeight = 26
+            end
+            inherited spinMaxParticles: TJvSpinEdit
+              Left = 421
+              Top = 96
+              Width = 108
+              Height = 26
+              ExplicitLeft = 421
+              ExplicitTop = 96
+              ExplicitWidth = 108
+              ExplicitHeight = 26
+            end
+            inherited spinSinkParticlePlanes: TJvSpinEdit
+              Left = 421
+              Top = 160
+              Width = 108
+              Height = 26
+              ExplicitLeft = 421
+              ExplicitTop = 160
+              ExplicitWidth = 108
+              ExplicitHeight = 26
+            end
+            inherited spinSinkParticleN: TJvSpinEdit
+              Left = 421
+              Top = 192
+              Width = 108
+              Height = 26
+              ExplicitLeft = 421
+              ExplicitTop = 192
+              ExplicitWidth = 108
+              ExplicitHeight = 26
+            end
+          end
+        end
+        inherited rcSelectionController: TRbwController
+          ControlList = <
+            item
+              Control = frameMt3dmsAdvPkg.lblComments
+            end
+            item
+              Control = frameMt3dmsAdvPkg.memoComments
+            end
+            item
+              Control = frameMt3dmsAdvPkg.comboAdvSolScheme
+            end
+            item
+              Control = frameMt3dmsAdvPkg.comboAdvWeightingScheme
+            end
+            item
+              Control = frameMt3dmsAdvPkg.adeMaxParticleMovement
+            end
+            item
+              Control = frameMt3dmsAdvPkg.spinMaxParticlesCount
+            end>
+        end
+      end
+    end
+    object jvspMt3dmsDsp: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 605
+      Height = 525
+      HelpType = htKeyword
+      HelpKeyword = 'DSP_Dispersion_Package_Pane'
+      Caption = 'jvspMt3dmsDsp'
+      inline frameMt3dmsDispersionPkg: TframeMt3dmsDispersionPkg
+        Left = 0
+        Top = 0
+        Width = 605
+        Height = 525
+        Align = alClient
+        TabOrder = 0
+        TabStop = True
+        ExplicitWidth = 605
+        ExplicitHeight = 525
+        inherited lblComments: TLabel
+          Width = 76
+          Height = 18
+          ExplicitWidth = 76
+          ExplicitHeight = 18
+        end
+        inherited lblPackage: TLabel
+          Width = 78
+          Height = 18
+          ExplicitWidth = 78
+          ExplicitHeight = 18
+        end
+        inherited memoComments: TMemo
+          Width = 574
+          ExplicitWidth = 574
+        end
+        inherited cbMultiDiffusion: TCheckBox
+          Width = 545
+          Height = 44
+          ExplicitWidth = 545
+          ExplicitHeight = 44
+        end
+        inherited rcSelectionController: TRbwController
+          ControlList = <
+            item
+              Control = frameMt3dmsDispersionPkg.lblComments
+            end
+            item
+              Control = frameMt3dmsDispersionPkg.memoComments
+            end
+            item
+              Control = frameMt3dmsDispersionPkg.cbMultiDiffusion
+            end>
+        end
+      end
+    end
+    object jvspMt3dmsSsm: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 605
+      Height = 525
+      HelpType = htKeyword
+      HelpKeyword = 'SSM_Sink__Source_Mixing_Packag'
+      Caption = 'jvspMt3dmsSsm'
+      inline framePkgSSM: TframePackage
+        Left = 0
+        Top = 0
+        Width = 605
+        Height = 525
+        Align = alClient
+        TabOrder = 0
+        TabStop = True
+        ExplicitWidth = 605
+        ExplicitHeight = 525
+        inherited lblComments: TLabel
+          Width = 76
+          Height = 18
+          ExplicitWidth = 76
+          ExplicitHeight = 18
+        end
+        inherited lblPackage: TLabel
+          Width = 78
+          Height = 18
+          ExplicitWidth = 78
+          ExplicitHeight = 18
+        end
+        inherited memoComments: TMemo
+          Width = 574
+          Height = 463
+          ExplicitWidth = 574
+          ExplicitHeight = 463
+        end
+        inherited rcSelectionController: TRbwController
+          ControlList = <
+            item
+              Control = framePkgSSM.lblComments
+            end
+            item
+              Control = framePkgSSM.memoComments
+            end>
+        end
+      end
+    end
+    object jvspMt3dmsRct: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 605
+      Height = 525
+      HelpType = htKeyword
+      HelpKeyword = 'RCT_Chemical_Reactions_Package'
+      Caption = 'jvspMt3dmsRctPkg'
+      inline framePkgMt3dmsRct: TframeMt3dmsChemReactionPkg
+        Left = 0
+        Top = 0
+        Width = 605
+        Height = 525
+        Align = alClient
+        TabOrder = 0
+        TabStop = True
+        ExplicitWidth = 605
+        ExplicitHeight = 525
+        DesignSize = (
+          605
+          525)
+        inherited lblComments: TLabel
+          Width = 76
+          Height = 18
+          ExplicitWidth = 76
+          ExplicitHeight = 18
+        end
+        inherited lblPackage: TLabel
+          Width = 78
+          Height = 18
+          ExplicitWidth = 78
+          ExplicitHeight = 18
+        end
+        inherited lblSorptionChoice: TLabel
+          Width = 182
+          Height = 18
+          ExplicitWidth = 182
+          ExplicitHeight = 18
+        end
+        inherited lblKineticChoice: TLabel
+          Width = 169
+          Height = 18
+          ExplicitWidth = 169
+          ExplicitHeight = 18
+        end
+        inherited memoComments: TMemo
+          Width = 574
+          ExplicitWidth = 574
+        end
+        inherited comboSorptionChoice: TJvImageComboBox
+          Height = 26
+          ExplicitHeight = 26
+        end
+        inherited comboKineticChoice: TJvImageComboBox
+          Height = 26
+          ExplicitHeight = 26
+        end
+        inherited cbInitialConcChoice: TCheckBox
+          Width = 561
+          ExplicitWidth = 561
+        end
+        inherited rcSelectionController: TRbwController
+          ControlList = <
+            item
+              Control = framePkgMt3dmsRct.lblComments
+            end
+            item
+              Control = framePkgMt3dmsRct.memoComments
+            end
+            item
+              Control = framePkgMt3dmsRct.comboSorptionChoice
+            end
+            item
+              Control = framePkgMt3dmsRct.comboKineticChoice
+            end
+            item
+              Control = framePkgMt3dmsRct.cbInitialConcChoice
+            end>
+        end
+      end
+    end
+    object jvspMt3dmsTOB: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 605
+      Height = 525
+      HelpType = htKeyword
+      HelpKeyword = 'TOB_Transport_Observation_Pack'
+      Caption = 'jvspMt3dmsTOB'
+      inline framePkgMt3dmsTob: TframeMt3dmsTransObsPkg
+        Left = 0
+        Top = 0
+        Width = 605
+        Height = 525
+        Align = alClient
+        TabOrder = 0
+        TabStop = True
+        ExplicitWidth = 605
+        ExplicitHeight = 525
+        DesignSize = (
+          605
+          525)
+        inherited lblComments: TLabel
+          Width = 76
+          Height = 18
+          ExplicitWidth = 76
+          ExplicitHeight = 18
+        end
+        inherited lblPackage: TLabel
+          Width = 78
+          Height = 18
+          ExplicitWidth = 78
+          ExplicitHeight = 18
+        end
+        inherited memoComments: TMemo
+          Width = 574
+          ExplicitWidth = 574
+        end
+        inherited grpbxConcentrationObservations: TGroupBox
+          inherited lblConcScaleFactor: TLabel
+            Width = 247
+            Height = 18
+            ExplicitWidth = 247
+            ExplicitHeight = 18
+          end
+          inherited lblSaveType: TLabel
+            Top = 70
+            Width = 373
+            Height = 18
+            ExplicitTop = 70
+            ExplicitWidth = 373
+            ExplicitHeight = 18
+          end
+          inherited rdeConcScaleFactor: TRbwDataEntry
+            Top = 42
+            ExplicitTop = 42
+          end
+          inherited comboSaveConcType: TJvImageComboBox
+            Height = 28
+            ItemHeight = 22
+            ExplicitHeight = 28
+          end
+          inherited cbLogTransform: TCheckBox
+            Top = 125
+            ExplicitTop = 125
+          end
+          inherited cbInterpolate: TCheckBox
+            Top = 149
+            ExplicitTop = 149
+          end
+        end
+        inherited grpbxMassFluxObservations: TGroupBox
+          inherited lblMassFluxScaleFactor: TLabel
+            Width = 212
+            Height = 18
+            ExplicitWidth = 212
+            ExplicitHeight = 18
+          end
+          inherited lblSaveMassFluxType: TLabel
+            Width = 330
+            Height = 18
+            ExplicitWidth = 330
+            ExplicitHeight = 18
+          end
+          inherited comboSaveMassFluxType: TJvImageComboBox
+            Height = 28
+            ItemHeight = 22
+            ExplicitHeight = 28
+          end
+        end
+        inherited rcSelectionController: TRbwController
+          ControlList = <
+            item
+              Control = framePkgMt3dmsTob.lblComments
+            end
+            item
+              Control = framePkgMt3dmsTob.memoComments
+            end
+            item
+              Control = framePkgMt3dmsTob.cbSaveBinary
+            end
+            item
+              Control = framePkgMt3dmsTob.rdeConcScaleFactor
+            end
+            item
+              Control = framePkgMt3dmsTob.comboSaveConcType
+            end
+            item
+              Control = framePkgMt3dmsTob.cbLogTransform
+            end
+            item
+              Control = framePkgMt3dmsTob.cbInterpolate
+            end
+            item
+              Control = framePkgMt3dmsTob.rdeMassFluxScaleFactor
+            end
+            item
+              Control = framePkgMt3dmsTob.comboSaveMassFluxType
+            end>
+        end
+      end
+    end
   end
   object pnlBottom: TPanel
     Left = 0
@@ -6007,8 +6954,6 @@ inherited frmModflowPackages: TfrmModflowPackages
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitTop = 495
-    ExplicitWidth = 784
     DesignSize = (
       792
       41)
@@ -6024,7 +6969,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      ExplicitLeft = 443
     end
     object btnOK: TBitBtn
       Left = 565
@@ -6038,7 +6982,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
-      ExplicitLeft = 557
     end
     object btnCancel: TBitBtn
       Left = 679
@@ -6051,7 +6994,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       NumGlyphs = 2
       ParentDoubleBuffered = False
       TabOrder = 2
-      ExplicitLeft = 671
     end
   end
   object pnlLeft: TPanel
@@ -6061,7 +7003,6 @@ inherited frmModflowPackages: TfrmModflowPackages
     Height = 525
     Align = alLeft
     TabOrder = 0
-    ExplicitHeight = 495
     object pnlModel: TPanel
       Left = 1
       Top = 1
@@ -6100,7 +7041,6 @@ inherited frmModflowPackages: TfrmModflowPackages
       TabOrder = 1
       OnChange = tvPackagesChange
       OnMouseUp = tvPackagesMouseUp
-      ExplicitHeight = 429
     end
   end
   object rbwLpfParamCountController: TRbwController
@@ -6117,7 +7057,7 @@ inherited frmModflowPackages: TfrmModflowPackages
       item
         Control = frameLpfParameterDefinition.seNumberOfParameters
       end>
-    Left = 192
+    Left = 72
     Top = 216
   end
   object ilCheckImages: TImageList
@@ -6541,7 +7481,7 @@ inherited frmModflowPackages: TfrmModflowPackages
       item
         Control = frameHfbParameterDefinition.seNumberOfParameters
       end>
-    Left = 192
+    Left = 48
     Top = 256
   end
 end

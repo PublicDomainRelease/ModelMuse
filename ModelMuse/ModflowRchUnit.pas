@@ -341,6 +341,7 @@ const
 
 procedure TRchItem.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TRchItem then
   begin
     RechargeRate := TRchItem(Source).RechargeRate;
@@ -1026,6 +1027,7 @@ end;
 
 procedure TRchLayerItem.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TRchLayerItem then
   begin
     RechargeLayer := TRchLayerItem(Source).RechargeLayer;

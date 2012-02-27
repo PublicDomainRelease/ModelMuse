@@ -113,7 +113,6 @@ procedure TModflowRCH_Writer.UpdateDisplay(
   TimeLists: TModflowBoundListOfTimeLists);
 var
   List: TValueCellList;
-//  ParameterValues: TValueCellList;
   ParameterValues: TList;
   ParametersUsed: TStringList;
   TimeIndex: Integer;

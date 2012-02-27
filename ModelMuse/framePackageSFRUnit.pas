@@ -30,6 +30,7 @@ type
     comboPrintStreams: TComboBox;
     lblPrintStreams: TLabel;
     cbGage8: TCheckBox;
+    cbUseGsflowFormat: TCheckBox;
     procedure rcSelectionControllerEnabledChange(Sender: TObject);
     procedure cbSfrUnsatflowClick(Sender: TObject);
     procedure cbIRTFLGClick(Sender: TObject);
@@ -161,6 +162,7 @@ begin
   begin
     SFR.KinematicRoutingWeight := RealValue;
   end;
+  SFR.UseGsflowFormat := cbUseGsflowFormat.Checked;
 end;
 
 procedure TframePackageSFR.EnableUnsatControls;
@@ -203,6 +205,7 @@ begin
   rdeNUMTIM.Text := IntToStr(SFR.TimeStepsForKinematicRouting);
   rdeFLWTOL.Text := FloatToStr(SFR.KinematicRoutingTolerance);
   rdeWeight.Text := FloatToStr(SFR.KinematicRoutingWeight);
+  cbUseGsflowFormat.Checked := SFR.UseGsflowFormat;
 end;
 
 function TframePackageSFR.CalculateISFROPT: integer;

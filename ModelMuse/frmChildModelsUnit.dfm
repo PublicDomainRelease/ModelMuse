@@ -15,7 +15,6 @@ inherited frmChildModels: TfrmChildModels
     Height = 456
     Align = alLeft
     TabOrder = 0
-    ExplicitHeight = 400
     object tvChildModels: TTreeView
       Left = 1
       Top = 1
@@ -27,7 +26,6 @@ inherited frmChildModels: TfrmChildModels
       TabOrder = 0
       OnChange = tvChildModelsChange
       OnChanging = tvChildModelsChanging
-      ExplicitHeight = 357
     end
     object Panel3: TPanel
       Left = 1
@@ -36,7 +34,6 @@ inherited frmChildModels: TfrmChildModels
       Height = 41
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 358
       object btnAdd: TSpeedButton
         Left = 23
         Top = 6
@@ -108,13 +105,8 @@ inherited frmChildModels: TfrmChildModels
     ActivePage = tabSolution
     Align = alClient
     TabOrder = 1
-    ExplicitHeight = 400
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 367
       DesignSize = (
         350
         423)
@@ -208,10 +200,6 @@ inherited frmChildModels: TfrmChildModels
     object tabDiscretization: TTabSheet
       Caption = 'Discretization'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 381
       object rdgDiscretization: TRbwDataGrid4
         Left = 0
         Top = 27
@@ -257,6 +245,7 @@ inherited frmChildModels: TfrmChildModels
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -278,6 +267,7 @@ inherited frmChildModels: TfrmChildModels
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -299,9 +289,9 @@ inherited frmChildModels: TfrmChildModels
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
-        ExplicitHeight = 354
         RowHeights = (
           24
           24
@@ -338,10 +328,6 @@ inherited frmChildModels: TfrmChildModels
     object tabSolution: TTabSheet
       Caption = 'Solution'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 367
       DesignSize = (
         350
         423)
@@ -483,7 +469,6 @@ inherited frmChildModels: TfrmChildModels
     Height = 91
     Align = alBottom
     TabOrder = 2
-    ExplicitTop = 400
     DesignSize = (
       471
       91)
@@ -497,7 +482,7 @@ inherited frmChildModels: TfrmChildModels
       Kind = bkHelp
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 0
+      TabOrder = 1
       OnClick = btnHelpClick
     end
     object btnOK: TBitBtn
@@ -510,7 +495,7 @@ inherited frmChildModels: TfrmChildModels
       Kind = bkOK
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 1
+      TabOrder = 2
       OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
@@ -523,7 +508,7 @@ inherited frmChildModels: TfrmChildModels
       Kind = bkCancel
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 2
+      TabOrder = 3
     end
     object cbSaveBFH: TCheckBox
       Left = 1
@@ -533,7 +518,7 @@ inherited frmChildModels: TfrmChildModels
       Caption = 
         'Save BFH boundary conditions (IUPBHSV, IUPBFSV, IUCBHSV, IUCBFSV' +
         ')'
-      TabOrder = 3
+      TabOrder = 0
       WordWrap = True
     end
   end

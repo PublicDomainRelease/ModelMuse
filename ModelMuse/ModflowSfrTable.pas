@@ -144,6 +144,7 @@ procedure TSfrTablelItem.Assign(Source: TPersistent);
 var
   Sfr: TSfrTablelItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TSfrTablelItem then
   begin
     Sfr := TSfrTablelItem(Source);
@@ -429,6 +430,7 @@ procedure TSfrTableRowItem.Assign(Source: TPersistent);
 var
   SfrTableRowItem: TSfrTableRowItem;
 begin
+  // if Assign is updated, update IsSame too.
   if (Source is TSfrTableRowItem) then
   begin
     SfrTableRowItem := TSfrTableRowItem(Source);

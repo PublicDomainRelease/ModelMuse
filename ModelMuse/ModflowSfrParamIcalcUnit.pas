@@ -78,6 +78,7 @@ procedure TSfrParamIcalcItem.Assign(Source: TPersistent);
 var
   Sfr : TSfrParamIcalcItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TSfrParamIcalcItem then
   begin
     Sfr := TSfrParamIcalcItem(Source);

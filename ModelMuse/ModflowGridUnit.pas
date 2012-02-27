@@ -168,13 +168,18 @@ implementation
 uses GR32_Polygons, BigCanvasMethods, frmGoPhastUnit, SparseArrayUnit,
   ModelMuseUtilities, LayerStructureUnit, FastGEO,
   ModflowDiscretizationWriterUnit, PhastModelUnit, frmErrorsAndWarningsUnit, 
-  IsosurfaceUnit;
+  IsosurfaceUnit, CustomModflowWriterUnit;
 
 resourcestring
   StrColumns = 'columns';
   StrRows = 'rows';
   StrTheWidthOfOneOr = 'The width of one or more %s is zero.';
   StrColumnDRow = 'Column = %d; Row = %d; Layer = %d';
+  StrTheRatioBetweenTh = 'The ratio between the widths of two adjacent %s ex' +
+  'ceeds the recommended maximum of 1.5';
+  StrOneOrMoreCellsHa = 'One or more cells have ratios of row to column widt' +
+  'h that exceed the recommended maximum of 10.';
+  StrColumn0dRow1 = 'Column %0:d, Row %1:d';
 
 procedure ReadReal2DArray(const Reader: TReader;
   var Positions: TTwoDRealArray; const Count1, Count2: integer);
@@ -597,24 +602,42 @@ procedure TModflowGrid.Write1DArray(const Comment: string;
   const AnArray: TOneDRealArray; const DiscretizationWriter: TObject;
   const Reverse: boolean);
 var
-  DisWriter: TModflowDiscretizationWriter;
+  DisWriter: TCustomModflowWriter;
   Index: Integer;
   NewLineNeeded: boolean;
 begin
-  DisWriter := DiscretizationWriter as TModflowDiscretizationWriter;
+  DisWriter := DiscretizationWriter as TCustomModflowWriter;
   if IsUniform(AnArray) then
   begin
-    DisWriter.WriteString('CONSTANT');
     if Reverse then
     begin
-      DisWriter.WriteFloat(-AnArray[0]);
+      DisWriter.WriteConstantU2DREL(Comment, -AnArray[0]);
     end
     else
     begin
-      DisWriter.WriteFloat(AnArray[0]);
+      DisWriter.WriteConstantU2DREL(Comment, AnArray[0]);
     end;
-    DisWriter.WriteString(' # ' + Comment);
-    DisWriter.NewLine;
+//    case DisWriter.ArrayWritingFormat of
+//      awfModflow:
+//        begin
+//          DisWriter.WriteString('CONSTANT');
+//          if Reverse then
+//          begin
+//            DisWriter.WriteFloat(-AnArray[0]);
+//          end
+//          else
+//          begin
+//            DisWriter.WriteFloat(AnArray[0]);
+//          end;
+//        end;
+//      awfMt3dms:
+//        begin
+//
+//        end;
+//      else Assert(False);
+//    end;
+//    DisWriter.WriteString(' # ' + Comment);
+//    DisWriter.NewLine;
   end
   else
   begin
@@ -683,20 +706,21 @@ end;
 procedure TModflowGrid.WriteALayerArray(const DiscretizationWriter: TObject;
   const LayerIndex: integer; const Comment: string);
 var
-  DisWriter: TModflowDiscretizationWriter;
+  DisWriter: TCustomModflowWriter;
   Elevations: TThreeDRealArray;
   RowIndex: Integer;
   ColIndex: Integer;
   NewLineNeeded: boolean;
 begin
   Elevations := LayerElevations;
-  DisWriter := DiscretizationWriter as TModflowDiscretizationWriter;
+  DisWriter := DiscretizationWriter as TCustomModflowWriter;
   if IsLayerUniform(LayerIndex) then
   begin
-    DisWriter.WriteString('CONSTANT');
-    DisWriter.WriteFloat(Elevations[0,0,LayerIndex]);
-    DisWriter.WriteString(' # ' + Comment);
-    DisWriter.NewLine;
+    DisWriter.WriteConstantU2DREL(Comment, Elevations[0,0,LayerIndex]);
+//    DisWriter.WriteString('CONSTANT');
+//    DisWriter.WriteFloat(Elevations[0,0,LayerIndex]);
+//    DisWriter.WriteString(' # ' + Comment);
+//    DisWriter.NewLine;
   end
   else
   begin
@@ -816,8 +840,7 @@ begin
     Stop := Length(AnArray)
   end;
 
-  WarningString := 'The ratio between the widths of two adjacent '
-    + WarningRoot + ' exceeds the recommended maximum of 1.5';
+  WarningString := Format(StrTheRatioBetweenTh, [WarningRoot]);
   for Index := Start+1 to Stop - 1 do
   begin
     if (AnArray[Index-1] <> 0) and (AnArray[Index] <> 0) then
@@ -1449,19 +1472,20 @@ begin
   GetMinAndMax(RowWidths, MaxRow, MinRow, MaxRowIndex, MinRowIndex);
   MaxRow := -MaxRow;
   MinRow := -MinRow;
-  WarningString := 'One or more cells have ratios of row to column width that '
-    + 'exceed the recommended maximum of 10.';
+  WarningString := StrOneOrMoreCellsHa;
   if (MinCol <> 0) and (MaxRow/MinCol > 10) then
   begin
     frmErrorsAndWarnings.AddWarning(FModel, WarningString,
-      'Column ' + IntToStr(MinColIndex+1) + ', '
-      + 'Row ' + IntToStr(MaxRowIndex+1));
+      Format(StrColumn0dRow1, [MinColIndex+1, MaxRowIndex+1]));
+//      'Column ' + IntToStr(MinColIndex+1) + ', '
+//      + 'Row ' + IntToStr(MaxRowIndex+1));
   end;
   if (MinRow <> 0) and (MaxCol/MinRow > 10) then
   begin
     frmErrorsAndWarnings.AddWarning(FModel, WarningString,
-      'Column ' + IntToStr(MaxColIndex+1) + ', '
-      + 'Row ' + IntToStr(MinRowIndex+1));
+      Format(StrColumn0dRow1, [MaxColIndex+1, MinRowIndex+1]));
+//      'Column ' + IntToStr(MaxColIndex+1) + ', '
+//      + 'Row ' + IntToStr(MinRowIndex+1));
   end;
 end;
 
@@ -1947,6 +1971,11 @@ begin
     begin
       SetLength(FLayerElevations,ColumnCount,RowCount,LayerCount+1);
     end;
+  end
+  else
+  begin
+    result := 0;
+    Exit;
   end;
   Assert((Column >= 0) and (Row >= 0) and (Layer >= 0));
   Assert((Column < ColumnCount) and (Row < RowCount) and (Layer < LayerCount+1));

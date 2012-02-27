@@ -388,8 +388,8 @@ begin
             break;
           end;
         end;
-        WriteString(FixedFormattedReal(ExportedStartHead, 10));
-        WriteString(FixedFormattedReal(ExportedEndHead, 10));
+        WriteF10Float(ExportedStartHead);
+        WriteF10Float(ExportedEndHead);
         WriteString(' # Data Set 7, Stress period');
         WriteInteger(Index + 1);
         WriteString(': Ststage Endstage');

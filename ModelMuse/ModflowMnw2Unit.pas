@@ -595,6 +595,7 @@ var
   Mnw: TMnw2TimeItem;
   Index: integer;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TMnw2TimeItem then
   begin
     Mnw := TMnw2TimeItem(Source);
@@ -2236,6 +2237,7 @@ procedure TMnw2SpatialItem.Assign(Source: TPersistent);
 var
   SpatialSource: TMnw2SpatialItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TMnw2SpatialItem then
   begin
     SpatialSource := TMnw2SpatialItem(Source);
@@ -2887,6 +2889,7 @@ procedure TLiftItem.Assign(Source: TPersistent);
 var
   SourceLift: TLiftItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TLiftItem then
   begin
     SourceLift := TLiftItem(Source);
@@ -3232,6 +3235,7 @@ procedure TVerticalScreen.Assign(Source: TPersistent);
 var
   SourceScreen: TVerticalScreen;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TVerticalScreen then
   begin
     SourceScreen := TVerticalScreen(Source);

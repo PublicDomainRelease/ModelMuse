@@ -53,6 +53,7 @@ inherited frmManageParameters: TfrmManageParameters
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -74,6 +75,7 @@ inherited frmManageParameters: TfrmManageParameters
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -95,6 +97,7 @@ inherited frmManageParameters: TfrmManageParameters
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -116,6 +119,7 @@ inherited frmManageParameters: TfrmManageParameters
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -137,6 +141,7 @@ inherited frmManageParameters: TfrmManageParameters
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -158,6 +163,7 @@ inherited frmManageParameters: TfrmManageParameters
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
   end
@@ -240,7 +246,7 @@ inherited frmManageParameters: TfrmManageParameters
       Kind = bkOK
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 3
+      TabOrder = 4
       OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
@@ -254,7 +260,7 @@ inherited frmManageParameters: TfrmManageParameters
       Kind = bkCancel
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 4
+      TabOrder = 5
     end
     object btnHelp: TBitBtn
       Left = 204
@@ -266,8 +272,22 @@ inherited frmManageParameters: TfrmManageParameters
       Kind = bkHelp
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 2
+      TabOrder = 3
       OnClick = btnHelpClick
     end
+    object btnImportPval: TButton
+      Left = 8
+      Top = 46
+      Width = 121
+      Height = 33
+      Caption = 'Import Pval file'
+      TabOrder = 2
+      OnClick = btnImportPvalClick
+    end
+  end
+  object dlgOpenPval: TOpenDialog
+    Filter = 'Pval files (*.pval)|*.pval|All files|*.*'
+    Left = 168
+    Top = 48
   end
 end

@@ -205,6 +205,7 @@ uses
 resourcestring
   StrMultiplier = '_Multiplier';
   StrZone = '_Zone';
+  StrHydrogeologicUnit = 'Hydrogeologic unit = %0:s; Parameter = %1:s';
 
 { THufUsedParameters }
 
@@ -212,6 +213,7 @@ procedure THufUsedParameter.Assign(Source: TPersistent);
 var
   OtherParam: THufUsedParameter;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is THufUsedParameter then
   begin
     OtherParam := THufUsedParameter(Source);
@@ -356,8 +358,8 @@ end;
 
 function THufUsedParameter.Description: string;
 begin
-  result := 'Hydrogeologic unit = ' + HufUnit.HufName
-    + '; Parameter = ' + ParameterName;
+  result := Format(StrHydrogeologicUnit,
+    [HufUnit.HufName, ParameterName]);
 end;
 
 destructor THufUsedParameter.Destroy;
@@ -647,6 +649,7 @@ var
   OtherUnit: THydrogeologicUnit;
   Index: TPrintParam;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is THydrogeologicUnit then
   begin
     OtherUnit := THydrogeologicUnit(Source);

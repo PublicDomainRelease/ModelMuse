@@ -46,6 +46,10 @@ inherited frmGridValue: TfrmGridValue
     TabOrder = 2
     object tabCurrentData: TTabSheet
       Caption = 'Current Data'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         398
         434)
@@ -206,6 +210,10 @@ inherited frmGridValue: TfrmGridValue
     object tabAllDataSets: TTabSheet
       Caption = 'All Data Sets'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         398
         434)
@@ -307,6 +315,10 @@ inherited frmGridValue: TfrmGridValue
     object tabPathline: TTabSheet
       Caption = 'Pathline'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgPathline: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -347,6 +359,7 @@ inherited frmGridValue: TfrmGridValue
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -368,6 +381,7 @@ inherited frmGridValue: TfrmGridValue
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -389,6 +403,7 @@ inherited frmGridValue: TfrmGridValue
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -410,6 +425,7 @@ inherited frmGridValue: TfrmGridValue
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
       end
@@ -417,6 +433,10 @@ inherited frmGridValue: TfrmGridValue
     object tabEndPoint: TTabSheet
       Caption = 'End Point'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgEndPoints: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -457,6 +477,7 @@ inherited frmGridValue: TfrmGridValue
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -478,6 +499,7 @@ inherited frmGridValue: TfrmGridValue
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -499,6 +521,7 @@ inherited frmGridValue: TfrmGridValue
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
       end

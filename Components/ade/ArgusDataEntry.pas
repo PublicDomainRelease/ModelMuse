@@ -51,7 +51,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls;
+  StdCtrls, AppEvnts;
 
 {$ifdef CONDITIONALEXPRESSIONS}
   {$if CompilerVersion>=20}
@@ -94,6 +94,8 @@ type
     FChangeDisabledColor: boolean;
     FDisabledColor: TColor;
     FEnabledColor: TColor;
+    FDecimalDelimiter: Char;
+    FAppEvents: TApplicationEvents;
     function GetText: TCaption;
     procedure SetText(const Value: TCaption);
 //    function GetDecChar : char;
@@ -170,6 +172,7 @@ type
     procedure ChangeColor;
     {ChangeColor changes the color of the control depending on whether the
      control is enabled or not and the ChangeDisabledColor property.}
+     procedure SettingsChanged(Sender: TObject; Flag: Integer; const Section: string; var Result: Longint);
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -582,6 +585,13 @@ begin
   FChangeDisabledColor := True;
   FDisabledColor := clBtnFace;
   FEnabledColor := Color;
+  {$IFDEF Delphi_2009_UP}
+  FDecimalDelimiter := FormatSettings.DecimalSeparator;
+  {$ELSE}
+  FDecimalDelimiter := DecimalSeparator;
+  {$ENDIF}
+  FAppEvents := TApplicationEvents.Create(self);
+  FAppEvents.OnSettingChange := SettingsChanged;
 end;
 
 
@@ -970,6 +980,26 @@ begin
   begin
     SetTextBuf(PChar(NewValue));
     Change;
+  end;
+end;
+
+procedure TArgusDataEntry.SettingsChanged(Sender: TObject; Flag: Integer;
+  const Section: string; var Result: Integer);
+var
+  DecSep: Char;
+begin
+  {$IFDEF Delphi_2009_UP}
+  DecSep := FormatSettings.DecimalSeparator;
+  {$ELSE}
+  DecSep := DecimalSeparator;
+  {$ENDIF}
+  if (DecSep <> FDecimalDelimiter) then
+  begin
+    if (DataType = dtReal) then
+    begin
+      Text := StringReplace(Text, FDecimalDelimiter, DecSep, [rfReplaceAll]);
+    end;
+    FDecimalDelimiter := DecSep;
   end;
 end;
 

@@ -292,7 +292,8 @@ type
       write SetVisibleObjects;
     property ContourFont: TFont read FContourFont write SetContourFont;
     property LabelContours: boolean read FLabelContours write FLabelContours;
-    property SfrStreamLinkPlot: TSfrStreamLinkPlot read FSfrStreamLinkPlot write SetSfrStreamLinkPlot;
+    property SfrStreamLinkPlot: TSfrStreamLinkPlot read FSfrStreamLinkPlot
+      write SetSfrStreamLinkPlot;
   end;
 
   { @name is a collection of @link(TDisplaySettingsItem)s.

@@ -26,6 +26,7 @@ inherited frameArrayParameterDefinition: TframeArrayParameterDefinition
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -47,6 +48,7 @@ inherited frameArrayParameterDefinition: TframeArrayParameterDefinition
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -68,6 +70,7 @@ inherited frameArrayParameterDefinition: TframeArrayParameterDefinition
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = False
       end
       item
@@ -89,6 +92,7 @@ inherited frameArrayParameterDefinition: TframeArrayParameterDefinition
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = False
       end>
     ExplicitTop = 60

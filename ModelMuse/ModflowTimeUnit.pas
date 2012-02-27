@@ -105,6 +105,7 @@ type
       read GetItems write SetItems; default;
     // @name writes the stress periods to the MODFLOW discretization file.
     procedure WriteStressPeriods(const DiscretizationWriter: TObject);
+    procedure WriteMt3dmsStressPeriods(const Mt3dmsBasicWriter: TObject);
     // @name returns true if any stress period in the model is transient.
     function TransientModel: boolean;
     // @name returns @true if every stress period is transient.
@@ -127,13 +128,16 @@ function GetNumberOfTimeSteps(const PerLength, MaxFirstTimeStepLength,
 implementation
 
 uses RTLConsts, Math, PhastModelUnit, ModflowDiscretizationWriterUnit, 
-  frmErrorsAndWarningsUnit;
+  frmErrorsAndWarningsUnit, Mt3dmsBtnWriterUnit, Mt3dmsTimesUnit,
+  ModflowPackageSelectionUnit;
 
 resourcestring
   StrUnusualUseOfDrawd = 'Unusual use of Drawdown reference option';
   StrTheFirstAndOnlyS = 'The first and only stress period in the model is '
     + 'also used as a reference period for computing drawdown.  Drawdown will '
     + 'always be zero under these conditions.';
+  StrInStressPeriodD = 'In stress period %d, a transient stress period is us' +
+  'ed as a reference stress period for computing drawdown.';
 
 { TModflowStressPeriod }
 
@@ -519,44 +523,93 @@ begin
   end;
 end;
 
-procedure TModflowStressPeriods.WriteStressPeriods(
-  const DiscretizationWriter: TObject);
+procedure TModflowStressPeriods.WriteMt3dmsStressPeriods(
+  const Mt3dmsBasicWriter: TObject);
 var
-  DisWriter: TModflowDiscretizationWriter;
+  Mt3dmsBtnWriter: TMt3dmsBtnWriter;
   Index: Integer;
   StressPeriod: TModflowStressPeriod;
+  Mt3dmsTime: TMt3dmsTimeItem;
+  Mt3dmsAdvection: TMt3dmsAdvection;
+  SSFlag: Boolean;
 begin
-  DisWriter := DiscretizationWriter as TModflowDiscretizationWriter;
+  Mt3dmsBtnWriter := Mt3dmsBasicWriter as TMt3dmsBtnWriter;
   for Index := 0 to Count - 1 do
   begin
     StressPeriod := Items[Index];
-    DisWriter.WriteFloat(StressPeriod.PeriodLength);
-    DisWriter.WriteInteger(StressPeriod.NumberOfSteps);
-    DisWriter.WriteFloat(StressPeriod.TimeStepMultiplier);
+    Mt3dmsBtnWriter.WriteF10Float(StressPeriod.PeriodLength);
+    Mt3dmsBtnWriter.WriteI10Integer(
+      StressPeriod.NumberOfSteps, 'MT3DMS Basic, NSTP');
+    Mt3dmsBtnWriter.WriteF10Float(StressPeriod.TimeStepMultiplier);
+
+
+    Mt3dmsAdvection :=  Mt3dmsBtnWriter.Model.ModflowPackages.Mt3dmsAdvection;
+    if not Mt3dmsAdvection.IsSelected
+      or (Mt3dmsAdvection.AdvectionSolution <> asStandard) then
+    begin
+      SSFlag := False;
+    end
+    else
+    begin
+      Mt3dmsTime := Mt3dmsBtnWriter.Model.Mt3dmsTimes.GetItemFromTime(StressPeriod.StartTime);
+      if Mt3dmsTime = nil then
+      begin
+        frmErrorsAndWarnings.AddError(Mt3dmsBtnWriter.Model, StrTimeDataForMT3DMS,
+          Format(StrNoTimeDataHasBee, [StressPeriod.Index+1]) );
+        Exit;
+      end;
+      SSFlag :=  Mt3dmsTime.SteadyState;
+    end;
+    if SSFlag then
+    begin
+      Mt3dmsBtnWriter.WriteString(' SSTATE');
+    end;
+
+    Mt3dmsBtnWriter.WriteString(
+      ' # Data Set 21: PERLEN NSTP TSMULT SSflag (Stress period '
+      + IntToStr(Index+1) + ')');
+    Mt3dmsBtnWriter.NewLine;
+    Mt3dmsBtnWriter.WriteDataSet22(StressPeriod);
+    Mt3dmsBtnWriter.WriteDataSet23(StressPeriod);
+  end;
+end;
+
+procedure TModflowStressPeriods.WriteStressPeriods(
+  const DiscretizationWriter: TObject);
+var
+  Mt3dmsBtnWriter: TModflowDiscretizationWriter;
+  Index: Integer;
+  StressPeriod: TModflowStressPeriod;
+begin
+  Mt3dmsBtnWriter := DiscretizationWriter as TModflowDiscretizationWriter;
+  for Index := 0 to Count - 1 do
+  begin
+    StressPeriod := Items[Index];
+    Mt3dmsBtnWriter.WriteFloat(StressPeriod.PeriodLength);
+    Mt3dmsBtnWriter.WriteInteger(StressPeriod.NumberOfSteps);
+    Mt3dmsBtnWriter.WriteFloat(StressPeriod.TimeStepMultiplier);
     case StressPeriod.StressPeriodType of
-      sptSteadyState: DisWriter.WriteString(' SS');
-      sptTransient: DisWriter.WriteString(' TR');
+      sptSteadyState: Mt3dmsBtnWriter.WriteString(' SS');
+      sptTransient: Mt3dmsBtnWriter.WriteString(' TR');
       else Assert(False);
     end;
-    DisWriter.WriteString(' # PERLEN NSTP TSMULT Ss/tr (Stress period '
+    Mt3dmsBtnWriter.WriteString(' # PERLEN NSTP TSMULT Ss/tr (Stress period '
       + IntToStr(Index+1) + ')');
-    DisWriter.NewLine;
+    Mt3dmsBtnWriter.NewLine;
 
     if (Count = 1) then
     begin
       if StressPeriod.DrawDownReference then
       begin
-        frmErrorsAndWarnings.AddWarning(DisWriter.Model,
+        frmErrorsAndWarnings.AddWarning(Mt3dmsBtnWriter.Model,
           StrUnusualUseOfDrawd, StrTheFirstAndOnlyS);
       end;
     end;
     if StressPeriod.DrawDownReference
       and (StressPeriod.StressPeriodType = sptTransient) then
     begin
-      frmErrorsAndWarnings.AddWarning(DisWriter.Model, StrUnusualUseOfDrawd,
-        'In stress period ' + IntToStr(Index+1) + ', a transient stress '
-        + 'period is used as a reference stress period for '
-        + 'computing drawdown.');
+      frmErrorsAndWarnings.AddWarning(Mt3dmsBtnWriter.Model, StrUnusualUseOfDrawd,
+        Format(StrInStressPeriodD, [Index+1]));
     end;
   end;
 end;

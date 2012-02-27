@@ -80,6 +80,10 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
     TabOrder = 0
     object tabObservations: TTabSheet
       Caption = 'Observations'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgObservations: TRbwDataGrid4
         Left = 0
         Top = 41
@@ -403,6 +407,10 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
     object tabFilters: TTabSheet
       Caption = 'Filters'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgRowFilter: TRbwRowDataGrid
         Left = 0
         Top = 0

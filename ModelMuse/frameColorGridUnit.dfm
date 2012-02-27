@@ -3,9 +3,13 @@ inherited frameColorGrid: TframeColorGrid
   ExplicitWidth = 608
   inherited pcChoices: TPageControl
     Width = 608
-    ExplicitWidth = 621
+    ActivePage = tabSelection
+    ExplicitWidth = 608
     inherited tabSelection: TTabSheet
-      ExplicitWidth = 613
+      ExplicitLeft = 4
+      ExplicitTop = 24
+      ExplicitWidth = 600
+      ExplicitHeight = 400
       DesignSize = (
         600
         400)
@@ -27,18 +31,28 @@ inherited frameColorGrid: TframeColorGrid
       end
       inherited reComment: TJvRichEdit
         Width = 587
+        TabOrder = 4
         ExplicitWidth = 587
       end
       inherited comboColorScheme: TComboBox
         Width = 480
-        ExplicitWidth = 493
+        TabOrder = 6
+        ExplicitWidth = 480
       end
       inherited seCycles: TJvSpinEdit
         Left = 494
-        ExplicitLeft = 507
+        TabOrder = 7
+        ExplicitLeft = 494
+      end
+      inherited jsColorExponent: TJvxSlider
+        Top = 357
+        TabOrder = 8
+      end
+      inherited seColorExponent: TJvSpinEdit
+        TabOrder = 9
       end
       inherited cbLogTransform: TCheckBox
-        TabOrder = 9
+        TabOrder = 10
       end
       inherited udDataSets: TJvUpDown
         Left = 473
@@ -51,6 +65,9 @@ inherited frameColorGrid: TframeColorGrid
         ExplicitWidth = 16
         ExplicitHeight = 21
       end
+      inherited rgUpdateLimitChoice: TRadioGroup
+        TabOrder = 5
+      end
       inherited virttreecomboDataSets: TRbwStringTreeCombo
         Tree.OnGetNodeDataSize = virttreecomboDataSetsTreeGetNodeDataSize
         Text = '0'
@@ -59,14 +76,12 @@ inherited frameColorGrid: TframeColorGrid
       object udTime: TJvUpDown
         Left = 579
         Top = 25
-        Width = 16
+        Width = 17
         Height = 21
         Anchors = [akTop, akRight]
-        Associate = comboTime3D
         Max = 0
-        TabOrder = 10
+        TabOrder = 3
         OnChangingEx = udTimeChangingEx
-        ExplicitLeft = 592
       end
       object comboTime3D: TJvComboBox
         Left = 494
@@ -74,19 +89,25 @@ inherited frameColorGrid: TframeColorGrid
         Width = 85
         Height = 21
         Anchors = [akTop, akRight]
-        TabOrder = 8
+        TabOrder = 2
         Text = '0'
         OnChange = comboTime3DChange
       end
     end
     inherited tabFilters: TTabSheet
-      ExplicitWidth = 613
+      ExplicitLeft = 4
+      ExplicitTop = 24
+      ExplicitWidth = 600
+      ExplicitHeight = 400
       DesignSize = (
         600
         400)
     end
     inherited tabLegend: TTabSheet
-      ExplicitWidth = 613
+      ExplicitLeft = 4
+      ExplicitTop = 24
+      ExplicitWidth = 600
+      ExplicitHeight = 400
       inherited imLegend: TImage
         Width = 382
         ExplicitWidth = 395

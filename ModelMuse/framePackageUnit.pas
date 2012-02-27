@@ -116,15 +116,14 @@ end;
 
 procedure TframePackage.SetSelected(const Value: boolean);
 begin
-  if FSelected <> Value then
-  begin
-    FSelected := Value;
-    if Assigned(FOnSelectedChange) then
-    begin
-      FOnSelectedChange(self);
-    end;
-  end;
+  // FOnSelectedChange should be called even if
+  // FSelected has not changed.
+  FSelected := Value;
   rcSelectionController.Enabled := Value;
+  if Assigned(FOnSelectedChange) then
+  begin
+    FOnSelectedChange(self);
+  end;
   SetNodeStateIndex;
 end;
 

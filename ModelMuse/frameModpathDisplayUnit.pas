@@ -215,6 +215,7 @@ var
   ARow: Integer;
   MaxTime: Double;
 begin
+  Handle;
   if frmGoPhast.PhastModel.ModflowPackages.ModPath.Binary then
   begin
     fedModpathFile.DefaultExt := '.path_bin';

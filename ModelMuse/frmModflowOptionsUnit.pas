@@ -93,6 +93,7 @@ type
     pnlModel: TPanel;
     lblModel: TLabel;
     comboModel: TComboBox;
+    edMasUnit: TLabeledEdit;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure rdeHNOFLOExit(Sender: TObject);
@@ -123,10 +124,14 @@ type
   private
     FNewOptionsCollection: TModelOptionsCollection;
     FOldOptionsCollection: TModelOptionsCollection;
+    FOldMassUnits: string;
+    FNewMassUnits: string;
+    procedure SetMassUnit(MassUnit: string);
   protected
     function Description: string; override;
   public
-    Constructor Create(var NewOptionsCollection: TModelOptionsCollection);
+    Constructor Create(var NewOptionsCollection: TModelOptionsCollection;
+      const MassUnit: string);
     destructor Destroy; override;
     procedure DoCommand; override;
     procedure Undo; override;
@@ -139,6 +144,9 @@ implementation
 
 uses frmGoPhastUnit, frmErrorsAndWarningsUnit, 
   LayerStructureUnit, TimeUnit, GoPhastTypes;
+
+resourcestring
+  StrGeneralOptions = 'general options';
 
 {$R *.dfm}
 
@@ -185,6 +193,7 @@ begin
   comboTimeUnit.ItemIndex := ModflowOptions.TimeUnit;
   comboLengthUnit.ItemIndex := ModflowOptions.LengthUnit;
   cbOpenInTextEditor.Checked := ModflowOptions.OpenInTextEditor;
+  edMasUnit.Text := frmGoPhast.PhastModel.ModflowPackages.Mt3dBasic.MassUnit;
   cbWettingClick(nil);
   comboModel.ItemIndex := 0;
   comboModelChange(nil);
@@ -397,25 +406,27 @@ var
   Undo: TUndoGeneralOptions;
 begin
   CurrentOptions := nil;
-  Undo:= TUndoGeneralOptions.Create({FModflowOptions, FWettingOptions,}
-    FModelOptionsCollection);
+  Undo:= TUndoGeneralOptions.Create(FModelOptionsCollection, edMasUnit.Text);
   frmGoPhast.UndoStack.Submit(Undo);
 end;
 
 { TUndoGeneralOptions }
 
-constructor TUndoGeneralOptions.Create(var NewOptionsCollection: TModelOptionsCollection);
+constructor TUndoGeneralOptions.Create(
+  var NewOptionsCollection: TModelOptionsCollection; const MassUnit: string);
 begin
   inherited Create;
   FNewOptionsCollection := NewOptionsCollection;
   NewOptionsCollection := nil;
 
   FOldOptionsCollection := TModelOptionsCollection.Create(frmGoPhast.PhastModel);
+  FOldMassUnits := frmGoPhast.PhastModel.ModflowPackages.Mt3dBasic.MassUnit;
+  FNewMassUnits := MassUnit;
 end;
 
 function TUndoGeneralOptions.Description: string;
 begin
-  result := 'general options'
+  result := StrGeneralOptions
 end;
 
 destructor TUndoGeneralOptions.Destroy;
@@ -429,6 +440,7 @@ procedure TUndoGeneralOptions.DoCommand;
 begin
   inherited;
   FNewOptionsCollection.AssignOptionsToModels;
+  SetMassUnit(FNewMassUnits);
   UpdatedRequiredDataSets;
 end;
 
@@ -436,7 +448,21 @@ procedure TUndoGeneralOptions.Undo;
 begin
   inherited;
   FOldOptionsCollection.AssignOptionsToModels;
+  SetMassUnit(FOldMassUnits);
   UpdatedRequiredDataSets;
+end;
+
+procedure TUndoGeneralOptions.SetMassUnit(MassUnit: string);
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  frmGoPhast.PhastModel.ModflowPackages.Mt3dBasic.MassUnit := MassUnit;
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    ChildModel.ModflowPackages.Mt3dBasic.MassUnit := MassUnit;
+  end;
 end;
 
 { TModelOptions }

@@ -119,7 +119,7 @@ type
     property UzfExtinctDepth: string read GetUzfExtinctDepth write SetUzfExtinctDepth;
   end;
 
-  // @name represents a MODFLOW UZF Extinction Depth for one time interval.
+  // @name represents a MODFLOW UZF Extinction water content for one time interval.
   // @name is stored by @link(TUzfWaterContentCollection).
   TUzfWaterContentItem = class(TCustomModflowBoundaryItem)
   private
@@ -161,7 +161,7 @@ type
     Destructor Destroy; override;
   end;
 
-  // @name represents MODFLOW Evapotranspiration boundaries
+  // @name represents MODFLOW UZF extinction depth
   // for a series of time intervals.
   TUzfExtinctionDepthCollection = class(TCustomMF_ArrayBoundColl)
   private
@@ -199,7 +199,7 @@ type
     Destructor Destroy; override;
   end;
 
-  // @name represents MODFLOW Evapotranspiration boundaries
+  // @name represents MODFLOW UZF water content boundaries
   // for a series of time intervals.
   TUzfWaterContentCollection = class(TCustomMF_ArrayBoundColl)
   private
@@ -779,6 +779,7 @@ end;
 
 procedure TUzfExtinctDepthItem.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TUzfExtinctDepthItem then
   begin
     UzfExtinctDepth := TUzfExtinctDepthItem(Source).UzfExtinctDepth;
@@ -868,6 +869,7 @@ end;
 
 procedure TUzfWaterContentItem.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TUzfWaterContentItem then
   begin
     UzfWaterContent := TUzfWaterContentItem(Source).UzfWaterContent;

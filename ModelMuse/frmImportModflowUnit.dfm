@@ -62,7 +62,7 @@ inherited frmImportModflow: TfrmImportModflow
     Top = 40
     Width = 96
     Height = 22
-    TabOrder = 1
+    TabOrder = 2
     Text = '0'
     DataType = dtReal
     Max = 1.000000000000000000
@@ -73,7 +73,7 @@ inherited frmImportModflow: TfrmImportModflow
     Top = 8
     Width = 96
     Height = 22
-    TabOrder = 2
+    TabOrder = 1
     Text = '0'
     DataType = dtReal
     Max = 1.000000000000000000
@@ -136,7 +136,6 @@ inherited frmImportModflow: TfrmImportModflow
     ParentFont = True
     SimplePanel = True
     UseSystemFont = False
-    ExplicitWidth = 454
   end
   object pbProgress: TProgressBar
     AlignWithMargins = True
@@ -146,8 +145,6 @@ inherited frmImportModflow: TfrmImportModflow
     Height = 29
     Margins.Bottom = 0
     Align = alBottom
-    TabOrder = 8
-    ExplicitLeft = 0
-    ExplicitWidth = 454
+    TabOrder = 7
   end
 end

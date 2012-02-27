@@ -43,12 +43,15 @@ type
       var AllowChange: Boolean);
     procedure tvpglstMainCustomDrawItem(Sender: TCustomTreeView;
       Node: TTreeNode; State: TCustomDrawState; var DefaultDraw: Boolean);
+    procedure frameContourDatavirttreecomboDataSetsChange(Sender: TObject);
   private
+    FShouldUpdate: Boolean;
     procedure SetData;
     { Private declarations }
   public
     procedure GetData;
     procedure SetPage(Page: TPostPages);
+    property ShouldUpdate: Boolean read FShouldUpdate write FShouldUpdate;
     procedure UpdateLabelsAndLegend;
     { Public declarations }
   end;
@@ -85,6 +88,15 @@ procedure TfrmDisplayData.FormCreate(Sender: TObject);
 begin
   inherited;
   AdjustFormPosition(dpRight);
+  Handle;
+  tvpglstMain.Handle;
+end;
+
+procedure TfrmDisplayData.frameContourDatavirttreecomboDataSetsChange(
+  Sender: TObject);
+begin
+  inherited;
+  frameContourData.virttreecomboDataSetsChange(Sender);
 end;
 
 procedure TfrmDisplayData.GetData;
@@ -95,13 +107,36 @@ var
   LocalPackages: TModflowPackages;
   SfrSelected: Boolean;
   HeadObsSelected: Boolean;
+//  Node: TTreeNode;
 begin
+  Handle;
+  tvpglstMain.Handle;
   LocalModel := frmGoPhast.PhastModel;
   ModflowSelected := LocalModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
   LocalPackages := LocalModel.ModflowPackages;
   ModpathSelected := ModflowSelected and LocalPackages.ModPath.IsSelected;
   SfrSelected := ModflowSelected and LocalPackages.SfrPackage.IsSelected;
   HeadObsSelected := ModflowSelected and LocalPackages.HobPackage.IsSelected;
+
+//  if tvpglstMain.Items.Count = 0 then
+//  begin
+//    Node := tvpglstMain.Items.Add(nil, 'Color Grid');
+//    TJvPageIndexNode(Node).PageIndex := 5;
+//    Node := tvpglstMain.Items.Add(Node, 'Contour Data');
+//    TJvPageIndexNode(Node).PageIndex := 6;
+//    Node := tvpglstMain.Items.Add(Node, 'MODPATH Pathlines');
+//    TJvPageIndexNode(Node).PageIndex := 0;
+//    Node := tvpglstMain.Items.Add(Node, 'MODPATH EndPoints');
+//    TJvPageIndexNode(Node).PageIndex := 4;
+//    Node := tvpglstMain.Items.Add(Node, 'MODPATH Time Series');
+//    TJvPageIndexNode(Node).PageIndex := 3;
+//    Node := tvpglstMain.Items.Add(Node, 'Head Observation Results');
+//    TJvPageIndexNode(Node).PageIndex := 2;
+//    Node := tvpglstMain.Items.Add(Node, 'Stream Links');
+//    TJvPageIndexNode(Node).PageIndex := 1;
+//  end;
+  Assert(Ord(High(TPostPages)) = tvpglstMain.Items.Count-1);
+
   tvpglstMain.Items[Ord(ppPathline)].Enabled :=
     ModpathSelected or (LocalModel.PathLines.Lines.Count > 0);
   tvpglstMain.Items[Ord(ppEndPoints)].Enabled :=
@@ -120,6 +155,9 @@ begin
   frameModpathEndpointDisplay1.GetData;
   frameColorGrid.GetData;
   frameContourData.GetData;
+
+//  frameColorGrid.UpdateLabelsAndLegend;
+//  frameContourData.UpdateLabelsAndLegend;
 end;
 
 procedure TfrmDisplayData.pglstMainChange(Sender: TObject);
@@ -190,6 +228,7 @@ procedure TfrmDisplayData.UpdateLabelsAndLegend;
 begin
   frameColorGrid.UpdateLabelsAndLegend;
   frameContourData.UpdateLabelsAndLegend;
+  ShouldUpdate := False;
 end;
 
 end.

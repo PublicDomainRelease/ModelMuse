@@ -64,6 +64,9 @@ implementation
 
 uses frmGoPhastUnit, JvLinkLabelTools;
 
+resourcestring
+  StrChangedFilesToArc = 'changed files to archive';
+
 {$R *.dfm}
 
 procedure TfrmFilesToArchive.btnAddFilesClick(Sender: TObject);
@@ -294,7 +297,7 @@ end;
 
 function TUndoFilesToArchive.Description: string;
 begin
-  result := 'changed files to archive';
+  result := StrChangedFilesToArc;
 end;
 
 destructor TUndoFilesToArchive.Destroy;

@@ -79,6 +79,10 @@ uses DataSetUnit, RbwParser, frmGoPhastUnit,
   frmGridValueUnit, contnrs, ScreenObjectUnit,
   ModflowPackagesUnit, frmDisplayDataUnit;
 
+resourcestring
+  StrChangeModelSelecti = 'change model selection';
+  StrChangeParameters = 'Change parameters';
+
 constructor TCustomCreateRequiredDataSetsUndo.Create;
 begin
   FNewSteadyModflowParameterDataSets := TList.Create;
@@ -229,7 +233,7 @@ end;
 
 function TUndoModelSelectionChange.Description: string;
 begin
-  result := 'change model selection';
+  result := StrChangeModelSelecti;
 end;
 
 procedure TUndoModelSelectionChange.DoCommand;
@@ -310,7 +314,7 @@ end;
 
 function TCustomUndoChangeParameters.Description: string;
 begin
-  result := 'Change parameters';
+  result := StrChangeParameters;
 end;
 
 destructor TCustomUndoChangeParameters.Destroy;

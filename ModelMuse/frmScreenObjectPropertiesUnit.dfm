@@ -22,7 +22,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
     Top = 0
     Width = 786
     Height = 513
-    ActivePage = tabBoundaries
+    ActivePage = tabModflowBoundaryConditions
     Align = alClient
     TabHeight = 28
     TabOrder = 0
@@ -31,6 +31,10 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       HelpType = htKeyword
       HelpKeyword = 'Properties_Tab'
       Caption = 'Properties'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         778
         475)
@@ -92,7 +96,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Width = 225
         Height = 30
         Caption = 'Set object line color'
-        TabOrder = 7
+        TabOrder = 6
         OnClick = btnColorClick
       end
       object btnFillColor: TButton
@@ -101,7 +105,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Width = 225
         Height = 30
         Caption = 'Set object fill color'
-        TabOrder = 9
+        TabOrder = 8
         OnClick = btnColorClick
       end
       object cbIntersectedCells: TCheckBox
@@ -111,7 +115,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Height = 31
         AllowGrayed = True
         Caption = 'Set values of intersected cells'
-        TabOrder = 11
+        TabOrder = 10
         OnClick = cbIntersectedCellsClick
       end
       object cbEnclosedCells: TCheckBox
@@ -121,7 +125,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Height = 31
         AllowGrayed = True
         Caption = 'Set values of enclosed cells'
-        TabOrder = 10
+        TabOrder = 9
         OnClick = cbEnclosedCellsClick
       end
       object cbFillColor: TCheckBox
@@ -131,7 +135,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Height = 31
         AllowGrayed = True
         Caption = 'Color object interior'
-        TabOrder = 8
+        TabOrder = 7
         OnClick = cbFillColorClick
       end
       object cbLineColor: TCheckBox
@@ -141,7 +145,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Height = 31
         AllowGrayed = True
         Caption = 'Color object line'
-        TabOrder = 6
+        TabOrder = 5
         OnClick = cbLineColorClick
       end
       object edName: TEdit
@@ -150,7 +154,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Width = 377
         Height = 27
         Cursor = crIBeam
-        TabOrder = 3
+        TabOrder = 2
         OnExit = edNameExit
       end
       object edHighZ: TRbwEdit
@@ -162,7 +166,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Anchors = [akLeft, akTop, akRight]
         Color = clBtnFace
         Enabled = False
-        TabOrder = 17
+        TabOrder = 16
         Text = '0'
         OnExit = edHighZExit
       end
@@ -187,7 +191,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Anchors = [akTop, akRight]
         Caption = 'Edit F()...'
         Enabled = False
-        TabOrder = 14
+        TabOrder = 13
         OnClick = btnFormulaClick
       end
       object btnHighZ: TButton
@@ -198,7 +202,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Anchors = [akTop, akRight]
         Caption = 'Edit F()...'
         Enabled = False
-        TabOrder = 16
+        TabOrder = 15
         OnClick = btnFormulaClick
       end
       object btnLowZ: TButton
@@ -209,7 +213,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Anchors = [akTop, akRight]
         Caption = 'Edit F()...'
         Enabled = False
-        TabOrder = 18
+        TabOrder = 17
         OnClick = btnFormulaClick
       end
       object cbInterpolation: TCheckBox
@@ -219,7 +223,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Height = 31
         AllowGrayed = True
         Caption = 'Set values of cells by interpolation'
-        TabOrder = 12
+        TabOrder = 11
         OnClick = cbInterpolationClick
       end
       object rdeGridCellSize: TRbwDataEntry
@@ -230,7 +234,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Cursor = crIBeam
         Color = clBtnFace
         Enabled = False
-        TabOrder = 5
+        TabOrder = 4
         Text = '1'
         OnExit = rdeGridCellSizeExit
         DataType = dtReal
@@ -250,7 +254,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
           'Zero'
           'One'
           'Two')
-        TabOrder = 13
+        TabOrder = 12
         OnClick = rgElevationCountClick
       end
       object cbSetGridCellSize: TCheckBox
@@ -259,7 +263,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Width = 281
         Height = 31
         Caption = 'Use to set grid element size'
-        TabOrder = 4
+        TabOrder = 3
         OnClick = cbSetGridCellSizeClick
       end
       object rgEvaluatedAt: TRadioGroup
@@ -284,7 +288,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Anchors = [akLeft, akTop, akRight]
         Color = clBtnFace
         Enabled = False
-        TabOrder = 15
+        TabOrder = 14
         Text = '0'
         OnExit = edZExit
       end
@@ -398,6 +402,10 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
     object tabLGR: TTabSheet
       Caption = 'LGR'
       ImageIndex = 7
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Splitter1: TSplitter
         Left = 0
         Top = 243
@@ -452,9 +460,9 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         object lblLgrChildModel: TLabel
           Left = 4
           Top = 8
-          Width = 228
+          Width = 357
           Height = 19
-          Caption = 'Define boundary of child model'
+          Caption = 'Define boundary of child model (2D objects only)'
         end
         object clbChildModels: TJvxCheckListBox
           AlignWithMargins = True
@@ -477,6 +485,10 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       HelpKeyword = 'Data_Sets_Tab'
       Caption = 'Data Sets'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object gbPhastInterpolation: TGroupBox
         Left = 0
         Top = 299
@@ -749,6 +761,10 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       HelpKeyword = 'PHAST_Boundary_Conditions_Tab'
       Caption = 'PHAST Boundary Conditions'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pcPhastBoundaries: TJvPageList
         Left = 0
         Top = 201
@@ -850,6 +866,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = False
               end
               item
@@ -872,6 +889,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -894,6 +912,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -916,6 +935,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = True
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -938,6 +958,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = True
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -960,6 +981,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = True
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end>
             ColWidths = (
@@ -1025,6 +1047,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = False
               end
               item
@@ -1047,6 +1070,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -1069,6 +1093,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -1091,6 +1116,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = True
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -1113,6 +1139,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = True
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -1135,6 +1162,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = True
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end>
             ColWidths = (
@@ -1267,6 +1295,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = False
               end
               item
@@ -1289,6 +1318,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -1311,6 +1341,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = True
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -1333,6 +1364,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = True
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -1355,6 +1387,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = True
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -1377,6 +1410,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = True
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end>
             ColWidths = (
@@ -1576,6 +1610,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = False
               end
               item
@@ -1598,6 +1633,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -1620,6 +1656,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -1642,6 +1679,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end>
             ColWidths = (
@@ -1840,6 +1878,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = False
               end
               item
@@ -1862,6 +1901,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -1884,6 +1924,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end>
           end
@@ -1941,6 +1982,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = False
               end
               item
@@ -1963,6 +2005,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -1985,6 +2028,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end
               item
@@ -2007,6 +2051,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end>
             ColWidths = (
@@ -2226,6 +2271,10 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       HelpKeyword = 'MODFLOW_Features_Tab'
       Caption = 'MODFLOW Features'
       ImageIndex = 4
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object JvNetscapeSplitter1: TJvNetscapeSplitter
         Left = 185
         Top = 0
@@ -2270,7 +2319,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Top = 0
         Width = 583
         Height = 475
-        ActivePage = jvspModpath
+        ActivePage = jvspMT3DMS_TOB_Flux
         PropagateEnable = False
         Align = alClient
         OnChange = jvplModflowBoundariesChange
@@ -2391,6 +2440,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -2413,6 +2463,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -2435,6 +2486,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -2457,6 +2509,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end>
                 OnEndUpdate = frameChdParamdgModflowBoundaryEndUpdate
@@ -2591,6 +2644,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -2613,6 +2667,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -2635,6 +2690,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -2657,6 +2713,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end>
                 OnEndUpdate = frameGhbParamdgModflowBoundaryEndUpdate
@@ -2791,6 +2848,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -2813,6 +2871,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -2835,6 +2894,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end>
                 OnEndUpdate = frameWellParamdgModflowBoundaryEndUpdate
@@ -2969,6 +3029,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -2991,6 +3052,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -3013,6 +3075,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -3035,6 +3098,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -3057,6 +3121,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end>
                 OnEndUpdate = frameRivParamdgModflowBoundaryEndUpdate
@@ -3195,6 +3260,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -3217,6 +3283,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -3239,6 +3306,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -3261,6 +3329,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end>
                 OnEndUpdate = frameDrnParamdgModflowBoundaryEndUpdate
@@ -3399,6 +3468,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -3421,6 +3491,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -3443,6 +3514,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -3465,6 +3537,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -3487,6 +3560,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end>
                 OnEndUpdate = frameDrtParamdgModflowBoundaryEndUpdate
@@ -3540,11 +3614,17 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               object tabDrtNone: TTabSheet
                 Caption = 'tabDrtNone'
                 TabVisible = False
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
               end
               object tabDrtObject: TTabSheet
                 Caption = 'tabDrtObject'
                 ImageIndex = 1
                 TabVisible = False
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object comboDrtReturnObject: TComboBox
                   Left = 3
                   Top = -1
@@ -3560,6 +3640,9 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 Caption = 'tabDrtLocation'
                 ImageIndex = 2
                 TabVisible = False
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object lblDrtX: TLabel
                   Left = 3
                   Top = 7
@@ -3634,6 +3717,9 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 Caption = 'tabDrtCell'
                 ImageIndex = 3
                 TabVisible = False
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object lblDrtCol: TLabel
                   Left = 3
                   Top = 7
@@ -3822,6 +3908,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -3844,6 +3931,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -3866,6 +3954,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -3888,6 +3977,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = False
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = False
                   end>
                 OnEndUpdate = frameRchParamdgModflowBoundaryEndUpdate
@@ -4015,6 +4105,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -4037,6 +4128,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -4059,6 +4151,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end>
                 OnEndUpdate = frameEvtParamdgModflowBoundaryEndUpdate
@@ -4183,6 +4276,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -4205,6 +4299,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -4227,6 +4322,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end>
                 OnEndUpdate = frameEtsParamdgModflowBoundaryEndUpdate
@@ -4337,6 +4433,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -4359,6 +4456,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -4381,6 +4479,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -4403,6 +4502,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = False
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = False
                   end>
                 OnEndUpdate = frameResdgModflowBoundaryEndUpdate
@@ -4596,6 +4696,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -4618,6 +4719,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -4640,6 +4742,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -4662,6 +4765,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = False
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = False
                   end
                   item
@@ -4684,6 +4788,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = False
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = False
                   end
                   item
@@ -4706,6 +4811,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = False
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = False
                   end
                   item
@@ -4728,6 +4834,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = False
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = False
                   end
                   item
@@ -4750,6 +4857,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = False
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = False
                   end>
                 OnEndUpdate = frameLakdgModflowBoundaryEndUpdate
@@ -4940,11 +5048,9 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited tabTime: TTabSheet
                 ExplicitLeft = 4
                 ExplicitTop = 30
-                ExplicitWidth = 575
-                ExplicitHeight = 441
+                ExplicitWidth = 553
+                ExplicitHeight = 472
                 inherited pnlParamTop: TPanel
-                  Width = 575
-                  ExplicitWidth = 575
                   inherited lblParameterChoices: TLabel
                     Width = 76
                     Height = 19
@@ -4969,8 +5075,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   end
                 end
                 inherited rdgParameters: TRbwDataGrid4
-                  Width = 575
-                  Height = 343
+                  Height = 374
                   Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
                   Columns = <
                     item
@@ -4993,6 +5098,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end
                     item
@@ -5015,6 +5121,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end
                     item
@@ -5037,6 +5144,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end
                     item
@@ -5059,6 +5167,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end
                     item
@@ -5087,16 +5196,14 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         'Table (4)')
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end>
-                  ExplicitWidth = 575
-                  ExplicitHeight = 343
+                  ExplicitHeight = 374
                 end
                 inherited pnlParamBottom: TPanel
-                  Top = 400
-                  Width = 575
-                  ExplicitTop = 400
-                  ExplicitWidth = 575
+                  Top = 431
+                  ExplicitTop = 431
                   inherited lblParametersCount: TLabel
                     Width = 119
                     Height = 19
@@ -5114,9 +5221,11 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 HelpKeyword = 'Network_Tab'
                 ExplicitLeft = 4
                 ExplicitTop = 30
-                ExplicitWidth = 553
-                ExplicitHeight = 472
+                ExplicitWidth = 575
+                ExplicitHeight = 441
                 inherited pnlNetwork: TPanel
+                  Width = 575
+                  ExplicitWidth = 575
                   inherited lblSegment: TLabel
                     Width = 59
                     Height = 19
@@ -5126,14 +5235,15 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   inherited comboMultiIprior: TJvImageComboBox
                     Height = 29
                     ItemHeight = 23
-                    ItemIndex = -1
                     ExplicitHeight = 29
                   end
                 end
                 inherited rdgNetwork: TRbwDataGrid4
-                  Height = 415
+                  Width = 575
+                  Height = 384
                   OnButtonClick = frameScreenObjectSFRrdgNetworkButtonClick
-                  ExplicitHeight = 415
+                  ExplicitWidth = 575
+                  ExplicitHeight = 384
                 end
               end
               inherited tabFlows: TTabSheet
@@ -5166,6 +5276,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end
                     item
@@ -5188,6 +5299,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end
                     item
@@ -5210,6 +5322,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end
                     item
@@ -5232,6 +5345,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end
                     item
@@ -5254,6 +5368,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end
                     item
@@ -5276,6 +5391,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end>
                   ExplicitHeight = 415
@@ -5322,6 +5438,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5344,6 +5461,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5366,6 +5484,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5388,6 +5507,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5410,6 +5530,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5432,6 +5553,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5454,6 +5576,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end>
                   end
@@ -5494,6 +5617,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5516,6 +5640,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5538,6 +5663,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5560,6 +5686,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5582,6 +5709,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5604,6 +5732,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5626,6 +5755,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end>
                     ExplicitHeight = 201
@@ -5682,6 +5812,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5704,6 +5835,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5726,6 +5858,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5748,6 +5881,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = True
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end>
                     ExplicitHeight = 304
@@ -5797,6 +5931,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end
                     item
@@ -5819,6 +5954,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end
                     item
@@ -5841,6 +5977,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end
                     item
@@ -5863,6 +6000,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end
                     item
@@ -5885,6 +6023,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end
                     item
@@ -5907,6 +6046,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ParentButtonFont = False
                       WordWrapCaptions = True
                       WordWrapCells = False
+                      CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end>
                   ExplicitHeight = 415
@@ -5961,6 +6101,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = False
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end
                       item
@@ -5983,6 +6124,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                         ParentButtonFont = False
                         WordWrapCaptions = False
                         WordWrapCells = False
+                        CaseSensitivePicklist = False
                         AutoAdjustColWidths = True
                       end>
                     ExplicitHeight = 313
@@ -6111,7 +6253,9 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
               end
               inherited tabGage: TTabSheet
+                ExplicitLeft = 0
                 ExplicitTop = 30
+                ExplicitWidth = 0
                 ExplicitHeight = 472
                 inherited gbObservationTypes: TGroupBox
                   Width = 630
@@ -6241,6 +6385,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -6263,6 +6408,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -6285,6 +6431,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -6307,6 +6454,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -6329,6 +6477,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end
                   item
@@ -6351,6 +6500,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ParentButtonFont = False
                     WordWrapCaptions = True
                     WordWrapCells = False
+                    CaseSensitivePicklist = False
                     AutoAdjustColWidths = True
                   end>
                 OnEndUpdate = frameScreenObjectUZFdgModflowBoundaryEndUpdate
@@ -6423,6 +6573,85 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             TabStop = True
             ExplicitWidth = 583
             ExplicitHeight = 475
+            inherited pcData: TJvPageControl
+              Width = 583
+              Height = 341
+              ExplicitWidth = 583
+              ExplicitHeight = 341
+              inherited tabTimes: TTabSheet
+                ExplicitLeft = 4
+                ExplicitTop = 30
+                ExplicitWidth = 575
+                ExplicitHeight = 307
+                inherited Panel5: TPanel
+                  Width = 575
+                  Height = 41
+                  ExplicitWidth = 575
+                  ExplicitHeight = 41
+                  inherited rdeMultiValueEdit: TRbwDataEntry
+                    Height = 29
+                    ExplicitHeight = 29
+                  end
+                  inherited comboMultiStatFlag: TJvImageComboBox
+                    Height = 29
+                    ItemHeight = 23
+                    ExplicitHeight = 29
+                  end
+                end
+                inherited Panel2: TPanel
+                  Top = 231
+                  Width = 575
+                  ExplicitTop = 231
+                  ExplicitWidth = 575
+                  inherited lblNumberOfTimes: TLabel
+                    Width = 119
+                    Height = 19
+                    ExplicitWidth = 119
+                    ExplicitHeight = 19
+                  end
+                  inherited seTimes: TJvSpinEdit
+                    Height = 27
+                    OnChange = frameHeadObservationsseTimesChange
+                    ExplicitHeight = 27
+                  end
+                end
+                inherited rdgObservations: TRbwDataGrid4
+                  Top = 41
+                  Width = 575
+                  Height = 190
+                  OnSetEditText = frameHeadObservationsrdgHeadsSetEditText
+                  ExplicitTop = 41
+                  ExplicitWidth = 575
+                  ExplicitHeight = 190
+                end
+              end
+              inherited tabLayers: TTabSheet
+                ExplicitLeft = 4
+                ExplicitTop = 30
+                ExplicitWidth = 560
+                ExplicitHeight = 182
+                inherited Panel4: TPanel
+                  Top = 106
+                  ExplicitTop = 231
+                  ExplicitWidth = 575
+                  inherited lblNumberOfLayers: TLabel
+                    Width = 125
+                    Height = 19
+                    ExplicitWidth = 125
+                    ExplicitHeight = 19
+                  end
+                  inherited seLayers: TJvSpinEdit
+                    Height = 27
+                    ExplicitHeight = 27
+                  end
+                end
+                inherited rdgLayers: TRbwDataGrid4
+                  Height = 71
+                  ExplicitWidth = 575
+                  ExplicitHeight = 196
+                end
+              end
+            end
             inherited pnlCaption: TPanel
               Width = 583
               ExplicitWidth = 583
@@ -6431,8 +6660,10 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Width = 583
               ExplicitWidth = 583
               inherited lblTreatment: TLabel
+                Top = 0
                 Width = 72
                 Height = 19
+                ExplicitTop = 0
                 ExplicitWidth = 72
                 ExplicitHeight = 19
               end
@@ -6449,74 +6680,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited comboTreatment: TComboBox
                 Height = 27
                 ExplicitHeight = 27
-              end
-            end
-            inherited pcData: TJvPageControl
-              Width = 583
-              Height = 336
-              ExplicitWidth = 583
-              ExplicitHeight = 336
-              inherited tabTimes: TTabSheet
-                ExplicitLeft = 4
-                ExplicitTop = 30
-                ExplicitWidth = 575
-                ExplicitHeight = 302
-                inherited Panel5: TPanel
-                  Width = 575
-                  ExplicitWidth = 575
-                  inherited comboMultiStatFlag: TJvImageComboBox
-                    Height = 29
-                    ItemHeight = 23
-                    ExplicitHeight = 29
-                  end
-                end
-                inherited Panel2: TPanel
-                  Top = 226
-                  Width = 575
-                  ExplicitTop = 226
-                  ExplicitWidth = 575
-                  inherited lblNumberOfTimes: TLabel
-                    Width = 119
-                    Height = 19
-                    ExplicitWidth = 119
-                    ExplicitHeight = 19
-                  end
-                  inherited seTimes: TJvSpinEdit
-                    Height = 27
-                    ExplicitHeight = 27
-                  end
-                end
-                inherited rdgHeads: TRbwDataGrid4
-                  Width = 575
-                  Height = 191
-                  OnSetEditText = frameHeadObservationsrdgHeadsSetEditText
-                  ExplicitWidth = 575
-                  ExplicitHeight = 191
-                end
-              end
-              inherited tabLayers: TTabSheet
-                ExplicitLeft = 4
-                ExplicitTop = 30
-                ExplicitWidth = 560
-                ExplicitHeight = 177
-                inherited Panel4: TPanel
-                  Top = 101
-                  ExplicitTop = 101
-                  inherited lblNumberOfLayers: TLabel
-                    Width = 125
-                    Height = 19
-                    ExplicitWidth = 125
-                    ExplicitHeight = 19
-                  end
-                  inherited seLayers: TJvSpinEdit
-                    Height = 27
-                    ExplicitHeight = 27
-                  end
-                end
-                inherited rdgLayers: TRbwDataGrid4
-                  Height = 66
-                  ExplicitHeight = 66
-                end
               end
             end
           end
@@ -7036,19 +7199,20 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               ExplicitHeight = 19
             end
             inherited rdgObservationGroups: TRbwDataGrid4
+              Top = 64
               Width = 577
-              Height = 440
-              FixedCols = 0
-              TabOrder = 1
+              Height = 408
               OnSetEditText = frameCHOBrdgObservationGroupsSetEditText
               OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
               OnStateChange = frameCHOBrdgObservationGroupsStateChange
+              ExplicitTop = 64
               ExplicitWidth = 577
-              ExplicitHeight = 440
+              ExplicitHeight = 408
             end
             inherited btnAddOrRemoveFluxObservations: TButton
-              TabOrder = 0
+              Top = 33
               OnClick = frameFluxObsbtnAddOrRemoveFluxObservationsClick
+              ExplicitTop = 33
             end
           end
         end
@@ -7082,8 +7246,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             inherited rdgObservationGroups: TRbwDataGrid4
               Width = 577
               Height = 440
-              FixedCols = 0
-              TabOrder = 1
               OnSetEditText = frameDROBrdgObservationGroupsSetEditText
               OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
               OnStateChange = frameDROBrdgObservationGroupsStateChange
@@ -7091,7 +7253,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               ExplicitHeight = 440
             end
             inherited btnAddOrRemoveFluxObservations: TButton
-              TabOrder = 0
               OnClick = frameFluxObsbtnAddOrRemoveFluxObservationsClick
             end
           end
@@ -7124,19 +7285,20 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               ExplicitHeight = 19
             end
             inherited rdgObservationGroups: TRbwDataGrid4
+              Top = 64
               Width = 577
-              Height = 440
-              FixedCols = 0
-              TabOrder = 1
+              Height = 409
               OnSetEditText = frameGBOBrdgObservationGroupsSetEditText
               OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
               OnStateChange = frameGBOBrdgObservationGroupsStateChange
+              ExplicitTop = 64
               ExplicitWidth = 577
-              ExplicitHeight = 440
+              ExplicitHeight = 409
             end
             inherited btnAddOrRemoveFluxObservations: TButton
-              TabOrder = 0
+              Top = 33
               OnClick = frameFluxObsbtnAddOrRemoveFluxObservationsClick
+              ExplicitTop = 33
             end
           end
         end
@@ -7170,8 +7332,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             inherited rdgObservationGroups: TRbwDataGrid4
               Width = 577
               Height = 440
-              FixedCols = 0
-              TabOrder = 1
               OnSetEditText = frameRVOBrdgObservationGroupsSetEditText
               OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
               OnStateChange = frameRVOBrdgObservationGroupsStateChange
@@ -7179,7 +7339,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               ExplicitHeight = 440
             end
             inherited btnAddOrRemoveFluxObservations: TButton
-              TabOrder = 0
               OnClick = frameFluxObsbtnAddOrRemoveFluxObservationsClick
             end
           end
@@ -7329,9 +7488,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ExplicitTop = 29
                 ExplicitWidth = 601
                 ExplicitHeight = 393
-                inherited comboLossType: TJvImageComboBox
-                  ItemIndex = -1
-                end
                 inherited edPartialPenetration: TJvComboEdit
                   OnButtonClick = frameScreenObjectSFRjceButtonClick
                 end
@@ -7538,6 +7694,262 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             end
           end
         end
+        object jvspMT3DMS_SSM: TJvStandardPage
+          Left = 0
+          Top = 0
+          Width = 583
+          Height = 475
+          HelpType = htKeyword
+          HelpKeyword = 'SSM_Sink__Source_Mixing_Packa2'
+          Caption = 'jvspMT3DMS_SSM'
+          inline frameMT3DMS_SSM: TframeScreenObjectSsm
+            Left = 0
+            Top = 0
+            Width = 583
+            Height = 475
+            Align = alClient
+            TabOrder = 0
+            TabStop = True
+            ExplicitWidth = 583
+            ExplicitHeight = 475
+            inherited pnlBottom: TPanel
+              Top = 429
+              Width = 583
+              ExplicitTop = 429
+              ExplicitWidth = 583
+              inherited lblNumTimes: TLabel
+                Width = 119
+                Height = 19
+                ExplicitWidth = 119
+                ExplicitHeight = 19
+              end
+              inherited seNumberOfTimes: TJvSpinEdit
+                Height = 27
+                OnChange = frameMT3DMSseNumberOfTimesChange
+                ExplicitHeight = 27
+              end
+              inherited btnDelete: TBitBtn
+                Left = 495
+                ExplicitLeft = 495
+              end
+              inherited btnInsert: TBitBtn
+                Left = 411
+                ExplicitLeft = 411
+              end
+            end
+            inherited pnlTop: TPanel
+              Width = 583
+              ExplicitWidth = 583
+              inherited pnlCaption: TPanel
+                Width = 581
+                ExplicitWidth = 581
+              end
+              inherited cbSpecifiedConcentration: TCheckBox
+                OnClick = frameMT3DMScbSpecifiedConcentrationClick
+              end
+              inherited cbMassLoading: TCheckBox
+                OnClick = frameMT3DMScbMassLoadingClick
+              end
+            end
+            inherited pnlGrid: TPanel
+              Width = 583
+              Height = 353
+              ExplicitWidth = 583
+              ExplicitHeight = 353
+              inherited pnlEditGrid: TPanel
+                Width = 581
+                ExplicitWidth = 581
+                inherited lblFormula: TLabel
+                  Width = 59
+                  Height = 19
+                  ExplicitWidth = 59
+                  ExplicitHeight = 19
+                end
+              end
+              inherited dgModflowBoundary: TRbwDataGrid4
+                Width = 581
+                Height = 301
+                OnSetEditText = frameMT3DMSdgModflowBoundarySetEditText
+                OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
+                OnEndUpdate = frameMT3DMSdgModflowBoundaryEndUpdate
+                ExplicitWidth = 581
+                ExplicitHeight = 301
+              end
+            end
+          end
+        end
+        object jvspMT3DMS_TOB_Conc: TJvStandardPage
+          Left = 0
+          Top = 0
+          Width = 583
+          Height = 475
+          HelpType = htKeyword
+          HelpKeyword = 'Concentration_Observations_TOB'
+          Caption = 'jvspMT3DMS_TOB_Conc'
+          inline frameMt3dmsTobConc: TframeConcentrationObservation
+            Left = 0
+            Top = 0
+            Width = 583
+            Height = 475
+            Align = alClient
+            TabOrder = 0
+            ExplicitWidth = 583
+            ExplicitHeight = 475
+            inherited pcData: TJvPageControl
+              Width = 583
+              Height = 376
+              ExplicitWidth = 583
+              ExplicitHeight = 376
+              inherited tabTimes: TTabSheet
+                ExplicitTop = 30
+                ExplicitWidth = 575
+                ExplicitHeight = 342
+                inherited Panel5: TPanel
+                  Width = 575
+                  Height = 41
+                  ExplicitWidth = 575
+                  ExplicitHeight = 41
+                  inherited rdeMultiValueEdit: TRbwDataEntry
+                    Height = 29
+                    ExplicitHeight = 29
+                  end
+                  inherited comboSpeciesNames: TComboBox
+                    Height = 27
+                    ExplicitHeight = 27
+                  end
+                end
+                inherited Panel2: TPanel
+                  Top = 266
+                  Width = 575
+                  ExplicitTop = 266
+                  ExplicitWidth = 575
+                  inherited lblNumberOfTimes: TLabel
+                    Width = 119
+                    Height = 19
+                    ExplicitWidth = 119
+                    ExplicitHeight = 19
+                  end
+                  inherited seTimes: TJvSpinEdit
+                    Height = 27
+                    OnChange = frameMt3dmsTobConcseTimesChange
+                    ExplicitHeight = 27
+                  end
+                end
+                inherited rdgObservations: TRbwDataGrid4
+                  Top = 41
+                  Width = 575
+                  Height = 225
+                  OnSetEditText = frameMt3dmsTobConcrdgObservationsSetEditText
+                  ExplicitTop = 41
+                  ExplicitWidth = 575
+                  ExplicitHeight = 225
+                end
+              end
+              inherited tabLayers: TTabSheet
+                ExplicitTop = 30
+                ExplicitHeight = 217
+                inherited Panel4: TPanel
+                  Top = 141
+                  ExplicitTop = 266
+                  ExplicitWidth = 575
+                  inherited lblNumberOfLayers: TLabel
+                    Width = 125
+                    Height = 19
+                    ExplicitWidth = 125
+                    ExplicitHeight = 19
+                  end
+                  inherited seLayers: TJvSpinEdit
+                    Height = 27
+                    ExplicitHeight = 27
+                  end
+                end
+                inherited rdgLayers: TRbwDataGrid4
+                  Height = 106
+                  ExplicitWidth = 575
+                  ExplicitHeight = 231
+                end
+              end
+            end
+            inherited pnlCaption: TPanel
+              Width = 583
+              ExplicitWidth = 583
+            end
+            inherited pnlName: TPanel
+              Width = 583
+              ExplicitWidth = 583
+              inherited lblTreatment: TLabel
+                Top = 5
+                Width = 72
+                Height = 19
+                ExplicitTop = 5
+                ExplicitWidth = 72
+                ExplicitHeight = 19
+              end
+              inherited edObsName: TLabeledEdit
+                Height = 27
+                EditLabel.Width = 131
+                EditLabel.Height = 19
+                EditLabel.ExplicitTop = 5
+                EditLabel.ExplicitWidth = 131
+                EditLabel.ExplicitHeight = 19
+                ExplicitHeight = 27
+              end
+              inherited comboTreatment: TComboBox
+                Height = 27
+                ExplicitHeight = 27
+              end
+            end
+          end
+        end
+        object jvspMT3DMS_TOB_Flux: TJvStandardPage
+          Left = 0
+          Top = 0
+          Width = 583
+          Height = 475
+          HelpType = htKeyword
+          HelpKeyword = 'Flux_Observations_TOB_Transpor'
+          Caption = 'jvspMT3DMS_TOB_Flux'
+          inline frameMt3dmsFluxObs: TframeMt3dmsFluxObs
+            Left = 0
+            Top = 0
+            Width = 583
+            Height = 475
+            Align = alClient
+            TabOrder = 0
+            TabStop = True
+            ExplicitLeft = -4
+            ExplicitTop = 2
+            ExplicitWidth = 583
+            ExplicitHeight = 475
+            inherited lblFluxObservations: TLabel
+              AlignWithMargins = True
+              Left = 3
+              Width = 125
+              Height = 19
+              Margins.Top = 8
+              Align = alTop
+              ExplicitLeft = 3
+              ExplicitWidth = 125
+              ExplicitHeight = 19
+            end
+            inherited rdgObservationGroups: TRbwDataGrid4
+              Top = 64
+              Width = 577
+              Height = 408
+              OnSetEditText = frameMt3dmsFluxObsrdgObservationGroupsSetEditText
+              OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
+              OnStateChange = frameMt3dmsFluxObsrdgObservationGroupsStateChange
+              ExplicitTop = 64
+              ExplicitWidth = 577
+              ExplicitHeight = 408
+            end
+            inherited btnAddOrRemoveFluxObservations: TButton
+              Top = 33
+              OnClick = frameFluxObsbtnAddOrRemoveFluxObservationsClick
+              ExplicitTop = 33
+            end
+          end
+        end
       end
     end
     object tabNodes: TTabSheet
@@ -7545,6 +7957,10 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       HelpKeyword = 'Vertices_Tab'
       Caption = 'Vertices'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object dgVerticies: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -7595,6 +8011,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -7616,6 +8033,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -7638,6 +8056,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -7660,6 +8079,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -7682,6 +8102,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
         OnEndUpdate = dgVerticiesEndUpdate
@@ -7694,6 +8115,10 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       ImageIndex = 8
       ParentShowHint = False
       ShowHint = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgVertexValues: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -7732,6 +8157,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end
           item
@@ -7753,6 +8179,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end
           item
@@ -7774,6 +8201,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end
           item
@@ -7795,6 +8223,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end
           item
@@ -7816,6 +8245,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end>
       end
@@ -7825,6 +8255,10 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       HelpKeyword = 'Imported_Data_Tab'
       Caption = 'Imported Data'
       ImageIndex = 5
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgImportedData: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -7866,6 +8300,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -7887,6 +8322,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
       end
@@ -7896,6 +8332,10 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       HelpKeyword = 'Comments_Tab'
       Caption = 'Comments'
       ImageIndex = 6
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         778
         475)
@@ -8005,36 +8445,36 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
     Top = 64
   end
   object rparserTopFormulaElements: TRbwParser
-    Left = 168
-    Top = 64
+    Left = 48
+    Top = 96
   end
   object rparserFrontFormulaElements: TRbwParser
-    Left = 200
-    Top = 96
+    Left = 48
+    Top = 240
   end
   object rparserSideFormulaElements: TRbwParser
-    Left = 256
-    Top = 104
+    Left = 48
+    Top = 384
   end
   object rparserThreeDFormulaElements: TRbwParser
-    Left = 312
-    Top = 104
+    Left = 48
+    Top = 288
   end
   object rparserTopFormulaNodes: TRbwParser
-    Left = 168
-    Top = 96
+    Left = 128
+    Top = 168
   end
   object rparserFrontFormulaNodes: TRbwParser
-    Left = 200
-    Top = 96
+    Left = 48
+    Top = 192
   end
   object rparserSideFormulaNodes: TRbwParser
-    Left = 232
-    Top = 96
+    Left = 48
+    Top = 144
   end
   object rparserThreeDFormulaNodes: TRbwParser
-    Left = 264
-    Top = 96
+    Left = 48
+    Top = 336
   end
   object ilCheckImages: TImageList
     Left = 136

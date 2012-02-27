@@ -28,7 +28,8 @@ uses Windows, Types, GuiSettingsUnit, SysUtils, Classes, Contnrs, Controls,
   ModelMateClassesUnit, ModflowHobUnit, EZDSLHsh, FormulaManagerUnit,
   PathlineReader, LegendUnit, DisplaySettingsUnit, ModflowCellUnit,
   ModflowGageUnit, ModflowHeadObsResults, GR32, AxCtrls, Generics.Collections,
-  Generics.Defaults;
+  Generics.Defaults, Mt3dmsTimesUnit, Mt3dmsChemSpeciesUnit,
+  Mt3dmsFluxObservationsUnit;
 
 const
   // @name is the name of the @link(TDataArray) that specifies whether an
@@ -170,6 +171,9 @@ const
   rsResKv = 'Reservoir_Hydraulic_Conductivity';
   rsResBedThickness = 'Reservoir_Bed_Thickness';
   rsResClassificaton = 'Reservoir';
+  rsBulkDensity = 'Bulk_Density';
+  rsImmobPorosity = 'Immobile_Domain_Porosity';
+  rsMT3DMS_Layer_Thickness = 'MT3DMS_Layer_Thickness';
 
   rsLakeID = 'Lake_ID';
   rsLakeLeakance = 'Lakebed_Leakance';
@@ -267,6 +271,7 @@ const
   StrP = 'P';
   StrCellToWellConductance = 'Cell to Well Conductance';
   StrPartialPenetration = 'Partial Penetration Fraction';
+  StrMT3DMSSSMConcentra = 'MT3DMS SSM Concentration';
 
   StrUzfLandSurface = 'Land_Surface';
   StrUzfLayer = 'UZF_Layer';
@@ -276,6 +281,7 @@ const
   StrUzfBrooksCoreyEpsilon = 'Brooks_Corey_Epsilon';
   StrUzfSaturatedWaterContent = 'Saturated_Water_Content';
   StrUzfInitialUnsaturatedWaterContent = 'Initial_Unsaturated_Water_Content';
+  StrUzfReisidualWaterContent = 'Residual_Water_Content';
   StrUzfGage_1_and_2 = 'UZF_Gage_1_and_2';
   StrUzfGage3 = 'UZF_Gage3';
   StrHydrology = 'Hydrology';
@@ -284,6 +290,7 @@ const
 
   StrModpathZone = 'Modpath_Zone';
   StrHufReferenceSurface = 'HUF_Reference_Surface';
+  StrMT3DMS = 'MT3DMS';
 
 resourcestring
   WetError = 'The wetting option is active but '
@@ -348,6 +355,7 @@ type
     FModelMateLocation: string;
     FModflowLgrLocation: string;
     FModflowNwtLocation: string;
+    FMt3dmsLocation: string;
     function GetTextEditorLocation: string;
     procedure SetModflowLocation(const Value: string);
     function RemoveQuotes(const Value: string): string;
@@ -358,6 +366,7 @@ type
     procedure SetModelMateLocation(const Value: string);
     procedure SetModflowLgrLocation(const Value: string);
     procedure SetModflowNwtLocation(const Value: string);
+    procedure SetMt3dmsLocation(const Value: string);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create;
@@ -381,6 +390,8 @@ type
       write SetModflowLgrLocation;
     property ModflowNwtLocation: string read FModflowNwtLocation
       write SetModflowNwtLocation;
+    property Mt3dmsLocation: string read FMt3dmsLocation
+      write SetMt3dmsLocation;
   end;
 
   {
@@ -1260,6 +1271,8 @@ that affects the model output should also have a comment. }
     // @name is used to store @link(TDataArray)s that have been deleted
     // so that they can be restored later.
     FDeletedDataSets: TList;
+    FDispersivityIndex: Integer;
+    FPorosityIndex: Integer;
     // See @link(DataSetCount).
     function GetDataSetCount: integer;
     // See @link(DataSets).
@@ -1354,80 +1367,8 @@ that affects the model output should also have a comment. }
       read GetChildDataArrayManagerCount;
     property ChildDataArrayManagers[Index: integer]: TDataArrayManager
       read GetChildDataArrayManager;
+    procedure UpdateClassifications;
   end;
-
-//  TStreamsToPlot = (stpNone, stpAll, stpVisible, stpSelected);
-//
-//  TSfrStreamPlot = class(TObject)
-//    StreamObject: TScreenObject;
-//    Segment: Integer;
-//    OutflowSegment: integer;
-//    DiversionSegment: integer;
-//  end;
-//
-//  TLakePlot = class(TObject)
-//    LakeObject: TScreenObject;
-//    LakeId: Integer;
-//  end;
-//
-//  TSfrStreamPlotComparer = class(TComparer<TSfrStreamPlot>)
-//    function Compare(const Left, Right: TSfrStreamPlot): Integer; override;
-//  end;
-//
-//  TSfrStreamPlotList = class(TObjectList<TSfrStreamPlot>)
-//  private
-//    procedure Sort;
-//  end;
-//
-//  TSfrLakePlotComparer = class(TComparer<TLakePlot>)
-//    function Compare(const Left, Right: TLakePlot): Integer; override;
-//  end;
-//
-//  TLakePlotList = class(TObjectList<TLakePlot>)
-//  private
-//    procedure Sort;
-//  end;
-//
-//  TSfrStreamLinkPlot = class(TGoPhastPersistent)
-//  private
-//    FPlotStreamConnections: boolean;
-//    FStreamsToPlot: TStreamsToPlot;
-//    FPlotDiversions: boolean;
-//    FStreamColor: TColor;
-//    FDiversionColor: TColor;
-//    FTimeToPlot: TDateTime;
-//    FPlotUnconnected: Boolean;
-//    FUnconnectedColor: TColor;
-//    procedure SetDiversionColor(const Value: TColor);
-//    procedure SetPlotDiversions(const Value: boolean);
-//    procedure SetPlotStreamConnections(const Value: boolean);
-//    procedure SetStreamColor(const Value: TColor);
-//    procedure SetStreamsToPlot(const Value: TStreamsToPlot);
-//    procedure SetTimeToPlot(const Value: TDateTime);
-//    procedure SetPlotUnconnected(const Value: Boolean);
-//    procedure SetUnconnectedColor(const Value: TColor);
-//  public
-//    procedure GetObjectsToPlot(StreamList: TSfrStreamPlotList;
-//      LakeList: TLakePlotList);
-//    Constructor Create(Model: TBaseModel);
-//    procedure Assign(Source: TPersistent); override;
-//  published
-//    property PlotStreamConnections: boolean read FPlotStreamConnections
-//      write SetPlotStreamConnections default True;
-//    property PlotDiversions: boolean read FPlotDiversions
-//      write SetPlotDiversions default True;
-//    property PlotUnconnected: Boolean read FPlotUnconnected
-//      write SetPlotUnconnected default True;
-//    property StreamColor: TColor read FStreamColor
-//      write SetStreamColor default clBlue;
-//    property DiversionColor: TColor read FDiversionColor
-//      write SetDiversionColor default clLime;
-//    property UnconnectedColor: TColor read FUnconnectedColor
-//      write SetUnconnectedColor default clRed;
-//    property StreamsToPlot: TStreamsToPlot read FStreamsToPlot
-//      write SetStreamsToPlot;
-//    property TimeToPlot: TDateTime read FTimeToPlot write SetTimeToPlot;
-//  end;
 
   TChildModelCollection = class;
 
@@ -1568,6 +1509,18 @@ that affects the model output should also have a comment. }
     FModflowOptions: TModflowOptions;
     FNameFileWriter: TObject;
     FHeadObsResults: THeadObsCollection;
+    FMt3dmsHeadMassFluxObservations: TMt3dmsFluxObservationGroups;
+    FMt3dmsMassLoadingMassFluxObservations: TMt3dmsFluxObservationGroups;
+    FMt3dmsGhbMassFluxObservations: TMt3dmsFluxObservationGroups;
+    FMt3dmsRivMassFluxObservations: TMt3dmsFluxObservationGroups;
+    FMt3dmsWellMassFluxObservations: TMt3dmsFluxObservationGroups;
+    FMt3dmsResMassFluxObservations: TMt3dmsFluxObservationGroups;
+    FMt3dmsRchMassFluxObservations: TMt3dmsFluxObservationGroups;
+    FMt3dmsDrtMassFluxObservations: TMt3dmsFluxObservationGroups;
+    FMt3dmsEtsMassFluxObservations: TMt3dmsFluxObservationGroups;
+    FMt3dmsEvtMassFluxObservations: TMt3dmsFluxObservationGroups;
+    FMt3dmsDrnMassFluxObservations: TMt3dmsFluxObservationGroups;
+    FMt3dmsLakMassFluxObservations: TMt3dmsFluxObservationGroups;
     procedure SetAlternateFlowPackage(const Value: boolean);
     procedure SetAlternateSolver(const Value: boolean);
     procedure SetBatchFileAdditionsAfterModel(const Value: TStrings);
@@ -1625,6 +1578,52 @@ that affects the model output should also have a comment. }
     procedure ExportSfrPackage(const FileName: string);
     procedure EvaluateSfrPackage;
     procedure ExportUzfPackage(const FileName: string);
+    function Mt3dMSUsed(Sender: TObject): boolean;
+    function Mt3dMSBulkDensityUsed(Sender: TObject): boolean;
+    function Mt3dMSImmobPorosityUsed(Sender: TObject): boolean;
+    procedure SetMt3dmsOutputControl(const Value: TMt3dmsOutputControl); virtual; abstract;
+    function GetMt3dmsOutputControl: TMt3dmsOutputControl; virtual; abstract;
+    function GetMt3dmsTimes: TMt3dmsTimeCollection; virtual; abstract;
+    procedure SetMt3dmsTimes(const Value: TMt3dmsTimeCollection); virtual; abstract;
+    function LongitudinalDispersionUsed(Sender: TObject): boolean;
+    procedure UpdateMt3dmsActive(Sender: TObject);
+    function CountStepsInMt3dExport: Integer;
+    procedure SetMt3dmsHeadMassFluxObservations(
+      const Value: TMt3dmsFluxObservationGroups);
+    function StoreHeadMassFluxObservations: Boolean;
+    procedure SetMt3dmsDrnMassFluxObservations(
+      const Value: TMt3dmsFluxObservationGroups);
+    procedure SetMt3dmsDrtMassFluxObservations(
+      const Value: TMt3dmsFluxObservationGroups);
+    procedure SetMt3dmsEtsMassFluxObservations(
+      const Value: TMt3dmsFluxObservationGroups);
+    procedure SetMt3dmsEvtMassFluxObservations(
+      const Value: TMt3dmsFluxObservationGroups);
+    procedure SetMt3dmsGhbMassFluxObservations(
+      const Value: TMt3dmsFluxObservationGroups);
+    procedure SetMt3dmsLakMassFluxObservations(
+      const Value: TMt3dmsFluxObservationGroups);
+    procedure SetMt3dmsMassLoadingMassFluxObservations(
+      const Value: TMt3dmsFluxObservationGroups);
+    procedure SetMt3dmsRchMassFluxObservations(
+      const Value: TMt3dmsFluxObservationGroups);
+    procedure SetMt3dmsResMassFluxObservations(
+      const Value: TMt3dmsFluxObservationGroups);
+    procedure SetMt3dmsRivMassFluxObservations(
+      const Value: TMt3dmsFluxObservationGroups);
+    procedure SetMt3dmsWellMassFluxObservations(
+      const Value: TMt3dmsFluxObservationGroups);
+    function StoreDrnMassFluxObservations: Boolean;
+    function StoreDrtMassFluxObservations: Boolean;
+    function StoreEtsMassFluxObservations: Boolean;
+    function StoreEvtMassFluxObservations: Boolean;
+    function StoreGhbMassFluxObservations: Boolean;
+    function StoreLakMassFluxObservations: Boolean;
+    function StoreMassLoadingMassFluxObservations: Boolean;
+    function StoreRchMassFluxObservations: Boolean;
+    function StoreResMassFluxObservations: Boolean;
+    function StoreRivMassFluxObservations: Boolean;
+    function StoreWellMassFluxObservations: Boolean;
   var
     LakWriter: TObject;
     SfrWriter: TObject;
@@ -1718,7 +1717,12 @@ that affects the model output should also have a comment. }
     procedure SetShowContourLabels(const Value: boolean);  virtual; abstract;
     function GetContourFont: TFont;  virtual; abstract;
     function GetShowContourLabels: boolean; virtual; abstract;
+    function GetImmobileComponents: TChemSpeciesCollection; virtual; abstract;
+    function GetMobileComponents: TMobileChemSpeciesCollection; virtual; abstract;
+    procedure SetImmobileComponents(const Value: TChemSpeciesCollection); virtual; abstract;
+    procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection); virtual; abstract;
   public
+    function IndexOfMt3dmsSpeciesName(const AChemSpecies: string): integer;
     property Gages: TStringList read FGages;
     function StoreHeadObsResults: boolean;
     function TestModpathOK: Boolean;
@@ -1873,6 +1877,7 @@ that affects the model output should also have a comment. }
     function UzfPackageUsed(Sender: TObject): boolean; virtual;
     function UzfUnsatVertKUsed(Sender: TObject): boolean; virtual;
     function UzfInitialInfiltrationUsed(Sender: TObject): boolean; virtual;
+    function UzfResidualWaterContentUsed(Sender: TObject): boolean; virtual;
 
     property TransientMultiplierArrays: TList read FTransientMultiplierArrays;
     property TransientZoneArrays: TList read FTransientZoneArrays;
@@ -1917,6 +1922,7 @@ that affects the model output should also have a comment. }
     procedure ExportModpathModel(FileName: string;
       RunModel, NewBudgetFile: boolean; EmbeddedExport: boolean = False);
     procedure ExportZoneBudgetModel(FileName: string; RunModel, EmbeddedExport: boolean);
+    procedure ExportMt3dmsModel(const FileName: string; RunModel: Boolean);
 
 
     // @name is the @link(TCustomTimeList) for
@@ -2023,6 +2029,11 @@ that affects the model output should also have a comment. }
     property ModflowOutputControl: TModflowOutputControl
       read GetModflowOutputControl write SetModflowOutputControl;
 
+    property Mt3dmsOutputControl: TMt3dmsOutputControl
+      read GetMt3dmsOutputControl write SetMt3dmsOutputControl;
+    property Mt3dmsTimes: TMt3dmsTimeCollection read GetMt3dmsTimes
+      write SetMt3dmsTimes;
+
     // @name stores the @link(TDataArray)s in GoPhast.
     property DataSetList: TDataSetCollection read GetDataSetCollection
       write FDataSetCollection;
@@ -2111,6 +2122,7 @@ that affects the model output should also have a comment. }
     procedure InvalidateMfUzfEtDemand(Sender: TObject);
     procedure InvalidateMfUzfExtinctionDepth(Sender: TObject);
     procedure InvalidateMfUzfWaterContent(Sender: TObject);
+    procedure InvalidateMt3dmsChemSources(Sender: TObject);
     property NameFileWriter: TObject read FNameFileWriter write SetNameFileWriter;
     function ModflowLayerCount: integer; virtual;
     function ModflowConfiningBedCount: integer; virtual;
@@ -2123,6 +2135,9 @@ that affects the model output should also have a comment. }
     function Chani: TOneDIntegerArray; virtual;
     Function Layvka: TOneDIntegerArray; virtual;
     function Trpy: TOneDRealArray; virtual;
+    Function TRPT: TOneDRealArray; virtual;
+    function TRPV: TOneDRealArray; virtual;
+    Function DMCOEF: TOneDRealArray; virtual;
     function GetLayerGroupByLayer(const Layer: integer): TLayerGroup; virtual;
     function ModflowLayerBottomDescription(const LayerID: integer): string; virtual;
     // @name converts a MODFLOW model layer (starting at 1) to the
@@ -2152,7 +2167,9 @@ that affects the model output should also have a comment. }
       const ZoomBox: TQrbwZoomBox2); virtual;
     procedure InvalidateMfHobHeads(Sender: TObject);
     property ContourFont: TFont read GetContourFont write SetContourFont;
-    property ShowContourLabels: boolean read GetShowContourLabels write SetShowContourLabels default True;
+    property ShowContourLabels: boolean read GetShowContourLabels
+      write SetShowContourLabels default True;
+    procedure UpdateMt3dmsChemDataSets; virtual; abstract;
   published
     // @name defines the grid used with PHAST.
     property PhastGrid: TPhastGrid read FPhastGrid write SetPhastGrid;
@@ -2182,6 +2199,54 @@ that affects the model output should also have a comment. }
     property RiverObservations: TFluxObservationGroups
       read FRiverObservations write SetRiverObservations
       stored StoreRiverObservations;
+    property Mt3dmsHeadMassFluxObservations: TMt3dmsFluxObservationGroups
+      read FMt3dmsHeadMassFluxObservations write SetMt3dmsHeadMassFluxObservations
+      stored StoreHeadMassFluxObservations;
+
+    property Mt3dmsWellMassFluxObservations: TMt3dmsFluxObservationGroups
+      read FMt3dmsWellMassFluxObservations write SetMt3dmsWellMassFluxObservations
+      stored StoreWellMassFluxObservations;
+
+    property Mt3dmsDrnMassFluxObservations: TMt3dmsFluxObservationGroups
+      read FMt3dmsDrnMassFluxObservations write SetMt3dmsDrnMassFluxObservations
+      stored StoreDrnMassFluxObservations;
+
+    property Mt3dmsRivMassFluxObservations: TMt3dmsFluxObservationGroups
+      read FMt3dmsRivMassFluxObservations write SetMt3dmsRivMassFluxObservations
+      stored StoreRivMassFluxObservations;
+
+    property Mt3dmsGhbMassFluxObservations: TMt3dmsFluxObservationGroups
+      read FMt3dmsGhbMassFluxObservations write SetMt3dmsGhbMassFluxObservations
+      stored StoreGhbMassFluxObservations;
+
+    property Mt3dmsRchMassFluxObservations: TMt3dmsFluxObservationGroups
+      read FMt3dmsRchMassFluxObservations write SetMt3dmsRchMassFluxObservations
+      stored StoreRchMassFluxObservations;
+
+    property Mt3dmsEvtMassFluxObservations: TMt3dmsFluxObservationGroups
+      read FMt3dmsEvtMassFluxObservations write SetMt3dmsEvtMassFluxObservations
+      stored StoreEvtMassFluxObservations;
+
+    property Mt3dmsMassLoadingMassFluxObservations: TMt3dmsFluxObservationGroups
+      read FMt3dmsMassLoadingMassFluxObservations write SetMt3dmsMassLoadingMassFluxObservations
+      stored StoreMassLoadingMassFluxObservations;
+
+    property Mt3dmsResMassFluxObservations: TMt3dmsFluxObservationGroups
+      read FMt3dmsResMassFluxObservations write SetMt3dmsResMassFluxObservations
+      stored StoreResMassFluxObservations;
+
+    property Mt3dmsLakMassFluxObservations: TMt3dmsFluxObservationGroups
+      read FMt3dmsLakMassFluxObservations write SetMt3dmsLakMassFluxObservations
+      stored StoreLakMassFluxObservations;
+
+    property Mt3dmsDrtMassFluxObservations: TMt3dmsFluxObservationGroups
+      read FMt3dmsDrtMassFluxObservations write SetMt3dmsDrtMassFluxObservations
+      stored StoreDrtMassFluxObservations;
+
+    property Mt3dmsEtsMassFluxObservations: TMt3dmsFluxObservationGroups
+      read FMt3dmsEtsMassFluxObservations write SetMt3dmsEtsMassFluxObservations
+      stored StoreEtsMassFluxObservations;
+
     property HydrogeologicUnits: THydrogeologicUnits read FHydrogeologicUnits
       write SetHydrogeologicUnits stored StoreHydrogeologicUnits;
     property FilesToArchive: TStrings read FFilesToArchive
@@ -2197,6 +2262,10 @@ that affects the model output should also have a comment. }
       write SetGlobalVariables;
     property HeadObsResults: THeadObsCollection read GetHeadObsResults
       write SetHeadObsResults stored StoreHeadObsResults;
+    property MobileComponents: TMobileChemSpeciesCollection
+      read GetMobileComponents write SetMobileComponents;
+    property ImmobileComponents: TChemSpeciesCollection
+      read GetImmobileComponents write SetImmobileComponents;
   end;
 
   TMapping = record
@@ -2411,6 +2480,10 @@ that affects the model output should also have a comment. }
     FContourFont: TFont;
     FShowContourLabels: Boolean;
     FSfrStreamLinkPlot: TSfrStreamLinkPlot;
+    FMt3dmsOutputControl: TMt3dmsOutputControl;
+    FMt3dmsTimes: TMt3dmsTimeCollection;
+    FImmobileComponents: TChemSpeciesCollection;
+    FMobileComponents: TMobileChemSpeciesCollection;
     // See @link(Exaggeration).
     function GetExaggeration: double;
     // See @link(OwnsScreenObjects).
@@ -2583,6 +2656,7 @@ that affects the model output should also have a comment. }
     function GetCombinedDisplayRow: integer;
     function UpwIsSelected: Boolean;
     procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot);
+    function SsmIsSelected: Boolean;
   protected
     procedure SetFileName(const Value: string); override;
     function GetFormulaManager: TFormulaManager; override;
@@ -2646,7 +2720,17 @@ that affects the model output should also have a comment. }
     procedure SetShowContourLabels(const Value: boolean);  override;
     function GetContourFont: TFont;  override;
     function GetShowContourLabels: boolean; override;
+    procedure SetMt3dmsOutputControl(const Value: TMt3dmsOutputControl); override;
+    function GetMt3dmsOutputControl: TMt3dmsOutputControl; override;
+    function GetMt3dmsTimes: TMt3dmsTimeCollection; override;
+    procedure SetMt3dmsTimes(const Value: TMt3dmsTimeCollection); override;
+    function GetImmobileComponents: TChemSpeciesCollection; override;
+    function GetMobileComponents: TMobileChemSpeciesCollection; override;
+    procedure SetImmobileComponents(const Value: TChemSpeciesCollection); override;
+    procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection); override;
   public
+    function TobIsSelected: Boolean;
+    procedure RenameDataArray(DataArray: TDataArray; const NewName: string);
     procedure DrawHeadObservations(const BitMap: TBitmap32;
       const ZoomBox: TQRbwZoomBox2); override;
     procedure DrawSfrStreamLinkages(const BitMap: TBitmap32;
@@ -2659,6 +2743,7 @@ that affects the model output should also have a comment. }
     function UzfPackageUsed(Sender: TObject): boolean; override;
     function UzfUnsatVertKUsed(Sender: TObject): boolean; override;
     function UzfInitialInfiltrationUsed(Sender: TObject): boolean; override;
+    function UzfResidualWaterContentUsed(Sender: TObject): boolean; override;
     procedure InvalidateMapping;
     procedure UpdateChildGrids;
     procedure UpdateDataSetConnections;
@@ -2689,6 +2774,9 @@ that affects the model output should also have a comment. }
     // TDataArray.OnDataSetUsed) in MODFLOW models for @link(TDataArray)s
     // that define the top of the model and the bottom of @link(TLayerGroup)s.
     function ModelLayerDataArrayUsed(Sender: TObject): boolean;
+    function Mt3dMsInitialConcUsed(Sender: TObject): boolean;
+    function ModDispDataArrayUsed(Sender: TObject): boolean;
+    function Mt3dMsSorbImmobInitialConcUsed(Sender: TObject): boolean;
     // @name is the event handler for @link(TDataArray.OnDataSetUsed
     // TDataArray.OnDataSetUsed) in MODFLOW models for @link(TDataArray)s
     // related to the SUB and SWT packages.
@@ -3046,6 +3134,9 @@ that affects the model output should also have a comment. }
     function LpfIsSelected: Boolean;
     function Mnw2IsSelected: Boolean;
     function MODPATHIsSelected: Boolean;
+    function Mt3dmsIsSelected: Boolean;
+    function Mt3dmsSsmIsSelected: Boolean;
+    function Mt3dmsTobIsSelected: Boolean;
     function PcgIsSelected: Boolean;
     function RchIsSelected: Boolean;
     function ResIsSelected: Boolean;
@@ -3073,6 +3164,17 @@ that affects the model output should also have a comment. }
     procedure UpdateCombinedDisplayColumn;
     procedure UpdateCombinedDisplayRow;
     procedure UpdateCombinedDisplayLayer;
+    function DispersionSelected: boolean;
+    function AnyDispersionMultiDiffusion: boolean;
+    function AllDispersionMultiDiffusion: boolean;
+    function AnyMt3dSorbImmobConc: boolean;
+    function AnyMt3dSorbParameter: boolean;
+    function AnyMt3dReactions: Boolean;
+    procedure UpdateMt3dmsChemDataSets; override;
+    function Mt3dMsFirstSorbParamUsed(Sender: TObject): boolean;
+    function Mt3dMsSecondSorbParamUsed(Sender: TObject): boolean;
+    function Mt3dmsReactionRateDisolvedUsed(Sender: TObject): boolean;
+    function Mt3dmsReactionRateSorbedUsed(Sender: TObject): boolean;
   published
     // The following properties are obsolete.
 
@@ -3215,6 +3317,8 @@ that affects the model output should also have a comment. }
     property ObservationPurpose;
     property ModflowTransientParameters;
     property ModflowOutputControl;
+    property Mt3dmsOutputControl;
+    property Mt3dmsTimes;
     property DataSetList;
     property CombinedDisplayColumn: integer read GetCombinedDisplayColumn
       write SetCombinedDisplayColumn;
@@ -3413,6 +3517,14 @@ that affects the model output should also have a comment. }
     procedure SetShowContourLabels(const Value: boolean);  override;
     function GetContourFont: TFont;  override;
     function GetShowContourLabels: boolean; override;
+    procedure SetMt3dmsOutputControl(const Value: TMt3dmsOutputControl); override;
+    function GetMt3dmsOutputControl: TMt3dmsOutputControl; override;
+    function GetMt3dmsTimes: TMt3dmsTimeCollection; override;
+    procedure SetMt3dmsTimes(const Value: TMt3dmsTimeCollection); override;
+    function GetImmobileComponents: TChemSpeciesCollection; override;
+    function GetMobileComponents: TMobileChemSpeciesCollection; override;
+    procedure SetImmobileComponents(const Value: TChemSpeciesCollection); override;
+    procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection); override;
   public
     property CanUpdateGrid: Boolean read FCanUpdateGrid write SetCanUpdateGrid;
     function LayerGroupUsed(LayerGroup: TLayerGroup): boolean; override;
@@ -3454,6 +3566,9 @@ that affects the model output should also have a comment. }
     function Chani: TOneDIntegerArray; override;
     Function Layvka: TOneDIntegerArray; override;
     function Trpy: TOneDRealArray; override;
+    Function TRPT: TOneDRealArray; override;
+    function TRPV: TOneDRealArray; override;
+    Function DMCOEF: TOneDRealArray; override;
     function GetLayerGroupByLayer(const Layer: integer): TLayerGroup; override;
     function ModflowLayerBottomDescription(const LayerID: integer): string; override;
     Function ModflowLayerToDataSetLayer(ModflowLayer: integer): integer; override;
@@ -3462,6 +3577,7 @@ that affects the model output should also have a comment. }
     procedure AdjustCellPosition(ACellAssignment: TCellAssignment); overload; override;
     procedure AdjustDataArray(ADataArray: TDataArray); override;
     function DefaultModflowOutputFileName: string; override;
+    procedure UpdateMt3dmsChemDataSets; override;
   published
     property ModelName: string read FModelName write SetModelName;
     property Discretization: TChildDiscretizationCollection
@@ -4887,9 +5003,150 @@ const
   //        report.
   //      Bug fix: In the PHAST Print Frequency dialog box, it is no longer
   //        possible to delete all the columns in the table.
+  //    '2.12.0.1' Enhancement: ModelMuse now checks the file date for MODFLOW
+  //        and related models and warns the user if a more recent version has
+  //        been released.
+  //      Bug fix: ModelMuse again responds to the mouse wheel.
+  //    '2.12.0.2' Bug fix: ModelMuse now only allows a ModelMuse file to be
+  //        saved if it has one of the correct extensions.
+  //      Bug fix: Access violations that sometimes occured when changing
+  //        the names of layer groups have been fixed.
+  //      Bug fix: In the MODFLOW Program Locations dialog box, "ModelMuse.exe"
+  //        is no longer accepted as a valid name for any of the programs.
+  //      Bug fix: Undo/Redo capability added for changes to the output control.
+  //      Bug fix: ModelMuse can now import the gage package correctly when
+  //        a lake gage has an OUTTYPE of 4 or a stream gage has an OUTTYPE
+  //        of 8.
+  //      Bug fix: ModelMuse now updates user-entered real numbers to the
+  //        proper format when the the user changes the language settings.
+  //      Bug fix: (bug not in released version) In MODFLOW-NWT models,
+  //        switching to use the NWT or UPW packages no longer causes a stack
+  //        overflow.
+  //      Bug fix: Fixed in bug in which attempting to delete a row from a
+  //        table in which no row was selected caused an exception.
+  //      Bug fix: Fixed bug in which SFR data was corrupted if ICALC was not
+  //        specified.
+  //    '2.12.0.3' Enhancement: Reduced memory usage when importing MODFLOW
+  //        models that use the UZF package.
+  //      Enhancement: When importing MODFLOW features from Shapefiles,
+  //        most features can be imported into a single, multi-part object.
+  //      Bug fix: Fixed bug importing the MNWI package from an existing
+  //        MODFLOW-2005 model.
+  //      Bug fix: Fixed bug that could sometimes prevent the Object Properties
+  //        dialog box from being displayed when attempting to edit
+  //        multiple objects.
+  //      Bug fix: In the MODFLOW Time dialog box, attempting to use the
+  //        Time Step Length Calculator without first specifying the Stress
+  //        period length and multiplier now generates a warning message to the
+  //        user instead of a bug report.
+  //      Change: When running MODFLOW from ModelMuse, the lines in the batch
+  //        file to display the listing file now occurs immediately after
+  //        MODFLOW has finished instead of after the lines to run MODPATH
+  //        and Zonebudget.
+  //    '2.12.0.4' Bug fix: When the user has customized the regional settings
+  //        to use a decimal separator that is different from the usual one,
+  //        this no longer causes an error when converting text to
+  //        floating point values.
+  //    '2.12.0.5' Enhancement: The user can now specify the precision with
+  //        which contour labels are written.
+  //    '2.12.0.6' Bug fix: The menus and buttons are now disabled while
+  //        opening a file.
+  //      Bug fix: Fixed bug importing model results.
+  //        (bug not in released version.)
+  //    '2.12.0.7' Bug fix: When a message box is displayed, the mouse will
+  //        move to the default button if the user has specified that option
+  //        in the Windows Control Panel.
+  //    '2.12.0.8' Bug fix: When importing Shapefiles, failing to specify
+  //        an attribute name or value no longer results in a range check error.
+  //    '2.12.0.9' Failing to completely specify information streams in the
+  //        SFR package now results in an error message instead of a bug report.
+  //      Bug fix: Fixed bug in setting data for SFR when multiple objects
+  //        are being edited at once.
+  //    '2.12.0.10' Enhancement: added support for MT3DMS.
+  //      Bug fix: Fixed bugs relating to display of data in MODFLOW-LGR models.
+  //    '2.12.0.11' Bug fix: Fixed another bug relating to display of data in
+  //        MODFLOW-LGR models.
+  //    '2.12.0.12' Bug fix: Fixed another bug relating to display of data in
+  //        MODFLOW-LGR models.
+  //      Change: Added option to write SFR package input in the format used
+  //        by GSFLOW.
+  //    '2.12.0.13' Bug fix: fixed export of SFR in MODFLOW-NWT or for GSFLOW.
+  //    '2.12.0.14' Enhancement: Added help for MT3DMS.
+  //    '2.12.0.15' Fixed bugs in generation of MT3DMS files.
+    //      Bug not in released version.
+  //    '2.12.0.16' Fixed MT3DMS bugs.  Bugs not in released version.
+  //    '2.12.0.17' Bug fix: Fixed bug with setting multiple flux observation
+  //        values at once not working.
+  //      Bug fix: Fixed bug in storing imported values when splitting objects.
+  //    '2.12.0.18' Enhancement: Added new macro for exporting images; %TrS
+  //        will be replaced by the transport step.
+  //    '2.12.0.19' Bug fix: When reading an exporting a file from the command
+  //        line, the "arrays" directory will be created as a subdirectory
+  //        of the directory containing the file even if the full file path
+  //        is not specified.
+  //    '2.12.0.20' Bug fix: attempting to animate a series of data sets in
+  //        the Export Image dialog box without first displaying the
+  //        Display Data dialog box no longer causes access violations.
+  //    '2.12.0.21' Bug fix:  Fixed bug with reading .ini file when multiple
+  //        copies of ModelMuse are running.
+  //    '2.12.0.22' Bug fix: When more than one instance of ModelMuse was
+  //        running, sometimes one copy would not detect that another copy
+  //        was running and would try to delete it's temporary files. That
+  //        should no longer happen.
+  //    '2.12.0.23' Bug fix: (second attempt) When more than one instance of
+  //        ModelMuse was running, sometimes one copy would interfere with the
+  //        other's temporary files.
+  //      Bug fix: fixed export of OC file when the defaults are selected.
+  //    '2.12.0.24' Bug fix: (third attempt) When more than one instance of
+  //        ModelMuse was running, sometimes one copy would interfere with the
+  //        other's temporary files.
+  //    '2.12.0.25' Enhancement: The "Run model" button now has a drop down
+  //        menu next to it which can be used to run MODPATH, ZONEBUDGET or
+  //        MT3DMS.
+  //      Enhancement: It is now possible to import parameter values from a
+  //        MODFLOW PVAL file. This can be done either from the
+  //        Manage Parameters dialog box or from the command line. To import
+  //        a PVAL file from the command line, add -p "Filename" to the
+  //        command line where Filename
+  //        is the full path of the PVAL file. If the path contains any spaces,
+  //        Filename should be enclosed in double quotes.
+  //      Enhancement: It is now possible to import global variables from a
+  //        text file. This can be done either from the
+  //        Global Variables dialog box or from the command line. To import
+  //        a global variables file from the command line, add -g "Filename"
+  //        to the command line where Filename
+  //        is the full path of the global variables file. If the path contains
+  //        any spaces, Filename should be enclosed in double quotes.
+  //        Each line of the global variables files must be either empty,
+  //        start with the # character to identify the line as a comment or
+  //        list the name and value of an existing global variable.
+  //        On a line defining a new value for a global variable, the name
+  //        of the global variable must be at the beginning of the line
+  //        must be first followed by one or more spaces followed by the value.
+  //        A period must be used as the decimal separator. For boolean
+  //        global variables, the value must be either "True" or "False"
+  //        (without the quotes). For text variables, the value may optionally
+  //        be enclosed in quotes.  A global variables may also be saved from
+  //        the Global Variables dialog box.
+  //    '2.12.0.26' Bug fix: Contour lines are now drawn at the correct
+  //        positions on the front and side views when the grid is rotated.
+  //      Bug fix: (fourth attempt) When more than one instance of
+  //        ModelMuse was running, sometimes one copy would interfere with the
+  //        other's temporary files.
+  //      Bug fix: Fixed a bug in which the Data Sets dialog box sometimes
+  //        did not prevent the user from setting up a formula that caused
+  //        a data set to depend on itself.
+  //    '2.12.0.27' Bug fix: Fixed bug that could cause an assertion failure
+  //        when coloring the grid with transient data such as the recharge
+  //        rate.
+  //      Bug fix (not in released version); global variable and .pval files
+  //        weren't being imported correctly.
+  //    '2.12.0.28' Fixed bug in exporting MT3DMS BTN data set A6 when there
+  //        are more than 40 layers.
+  //    '2.13.0.0' No additional changes.
 
-
-  ModelVersion = '2.12.0.0';
+const
+  ModelVersion = '2.13.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -4935,6 +5192,13 @@ const
   StrSwtVoidRatioOut = '.SwtVoidRatioOut';
   StrSwtThickCompSedOut = '.SwtThickCompSedOut';
   StrSwtLayerCentElevOut = '.SwtLayerCentElevOut';
+  StrMt3dConcFile = '.ucn';
+  StrMtName = '.mt_nam';
+  strMtObs = '.mto';
+
+
+  StrMT3DMSActive = 'MT3DMS_Active';
+  STR_MT3DMS_Observation_Locations = 'MT3DMS_Observation_Locations';
 
   MaxString12 = 12;
   MaxString20 = 20;
@@ -4968,33 +5232,78 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   ModflowHydmodWriterUnit, IniFileUtilities, TempFiles, AbExcept,
   ModflowLakUnit, ModflowLgr_WriterUnit, ModflowNWT_WriterUnit,
   ModflowUPW_WriterUnit, frmCustomGoPhastUnit, ModflowSfrParamIcalcUnit,
-  BigCanvasMethods;
+  BigCanvasMethods, Mt3dmsBtnWriterUnit, Mt3dmsAdvWriterUnit,
+  Mt3dmsDspWriterUnit, Mt3dmsSsmWriterUnit, Mt3dmsRctWriterUnit,
+  Mt3dmsGcgWriterUnit, Mt3dmsTobWriterUnit, ModflowMt3dmsLinkWriterUnit;
 
 resourcestring
+  StrMpathDefaultPath = 'C:\WRDAPP\Mpath.5_0\setup\Mpathr5_0.exe';
+  StrModflowDefaultPath = 'C:\WRDAPP\MF2005.1_8\Bin\mf2005.exe';
+  StrPhastDefaultPath = 'C:\Program Files\USGS\phast-1.5.1\bin\phast.bat';
+  StrPhastDefaultPath64 = 'C:\Program Files (x86)\USGS\phast-1.5.1\bin\phast.bat';
+  StrZoneBudgetDefaultPath = 'C:\WRDAPP\Zonbud.3_01\Bin\zonbud.exe';
+  StrModelMateDefaultPath = 'C:\WRDAPP\ModelMate_0_23_1\Bin\ModelMate.exe';
+  strModflowLgrDefaultPath = 'C:\WRDAPP\mflgr.1_2\bin\mflgr.exe';
+  strModflowNwtDefaultPath = 'C:\WRDAPP\MODFLOW-NWT_1.0.4\bin\MODFLOW-NWT.exe';
+
   StrProgramLocations = 'Program Locations';
   StrMODFLOW2005 = 'MODFLOW-2005';
   StrTextEditor = 'Text Editor';
   StrMODPATH = 'MODPATH';
   StrModelMonitor = 'ModelMonitor';
-  StrMpathDefaultPath = 'C:\WRDAPP\Mpath.5_0\setup\Mpathr5_0.exe';
-  StrModflowDefaultPath = 'C:\WRDAPP\MF2005.1_8\Bin\mf2005.exe';
   StrModelMonitorDefaultPath = 'ModelMonitor.exe';
   StrPHAST = 'PHAST';
-  StrPhastDefaultPath = 'C:\Program Files\USGS\phast-1.5.1\bin\phast.bat';
-  StrZoneBudgetDefaultPath = 'C:\WRDAPP\Zonbud.3_01\Bin\zonbud.exe';
-  StrModelMateDefaultPath = 'C:\WRDAPP\ModelMate_0_23_1\Bin\ModelMate.exe';
   StrModelMate = 'ModelMate';
   StrAnyTimesAfterThe = 'Any times after the end of the last defined stress ' +
   'period will be ignored.';
   StrAnyTimesBeforeThe = 'Any times before the beginning of the first define' +
   'd stress period will be ignored.';
-  strModflowLgrDefaultPath = 'C:\WRDAPP\mflgr.1_2\bin\mflgr.exe';
   strModflowLgr = 'MODFLOW-LGR';
-  strModflowNwtDefaultPath = 'C:\WRDAPP\MODFLOW-NWT_1.01\bin\MODFLOW-NWT.exe';
   strModflowNWT = 'MODFLOW-NWT';
   StrAtLeastOneConvert = 'At least one layer must be convertible.';
   StrAtLeastOneUnconfConvert = 'At least one layer must be unconfined or ful' +
   'ly convertible.';
+  StrSorryNoFilesToA = 'Sorry, no files to archive.';
+  StrDOfTheFilesThat = '%d of the files that were to be archived can not be ' +
+  'found.';
+  StrTheRemainingFiles = 'The remaining files will be archived.';
+  StrErrorSavingArchive = 'Error saving archive.  The archive may be too big' +
+  '.';
+  StrErrorSavingArchive2 = 'Error saving archive. The disk may not have suffi' +
+  'cient space for the archive.';
+  StrYourModelMateFile = 'Your ModelMate file contains the following unused ' +
+  'parameters. Do you want to delete them?';
+  StrYourModelMateFile2 = 'Your ModelMate file contains %d unused parameters.' +
+  ' Do you want to delete them?';
+  StrYourModelMateFile3 = 'Your ModelMate file contains the following unused ' +
+  '%s. Do you want to delete them?';
+  StrYourModelMateFile4 = 'Your ModelMate file contains %0:d unused $1:s. Do' +
+  ' you want to delete them?';
+  StrOneOrMore0sFro = 'One or more %0:s from the ModelMate file are not pres' +
+  'ent in the ModelMuse file and have been ignored. If an %1:s has been rena' +
+  'med, change the %2:s name so that it matches in ModelMuse and ModelMate a' +
+  'nd then try importing again.';
+  StrObservation = 'observation';
+  StrObservations = 'observations';
+  StrPrediction = 'prediction';
+  StrPredictions = 'predictions';
+  StrOneOrMoreParamete = 'One or more parameters from the ModelMate file are' +
+  ' not present in the ModelMuse file and have been ignored. If a parameter ' +
+  'has been renamed, change the parameter name so that it matches in ModelMu' +
+  'se and ModelMate and then try importing again.';
+  StrYourModelHasSTi = 'Your model has %d time steps. Do you want to continu' +
+  'e?';
+  StrMODPATHRequiresTha = 'MODPATH requires that the heads and flows be save' +
+  'd for every time step of the model. That isn''t the case for this model. ' +
+  'Do you want to export the MODPATH input anyway?';
+//  StrMT3DMS5 = 'MT3DMS-5';
+  strMt3dmsDefaultPath = 'C:\mt3dms5\bin\mt3dms5b.exe';
+  StrTheBeginningOfThe = 'The beginning of the first stress period is %0:g. ' +
+  'The first defined time is  %1:g. The following objects have defined times' +
+  ' before the beginning of the first stress period.';
+  StrTheEndOfTheLast = 'The end of the last stress period is %0:g. The last ' +
+  'defined time is %1:g. The following objects have defined times before the' +
+  ' beginning of the first stress period.';
 
 const
   StrAndNegatedAtCons = ' and negated at constant head cell';
@@ -5013,6 +5322,18 @@ const
 
 const
   UcodeDelimiter = '@';
+
+function DefaultPhastPath: string;
+begin
+  if IsWOW64 then
+  begin
+    result := StrPhastDefaultPath64;
+  end
+  else
+  begin
+    result := StrPhastDefaultPath
+  end;
+end;
 
 function GenerateNewRoot(const Root: string): string;
 var
@@ -5362,6 +5683,28 @@ begin
 end;
 
 
+function TPhastModel.AllDispersionMultiDiffusion: boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := not ModflowPackages.Mt3dmsDispersion.IsSelected
+    or ModflowPackages.Mt3dmsDispersion.MultiDifussion;
+  if Result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      result := not ChildModel.ModflowPackages.Mt3dmsDispersion.IsSelected
+        or ChildModel.ModflowPackages.Mt3dmsDispersion.MultiDifussion;
+      if not result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
 procedure TPhastModel.AllowChildGridUpdates;
 var
   ChildModel: TChildModel;
@@ -5374,6 +5717,94 @@ begin
     begin
       ChildModel := ChildModels[Index].ChildModel;
       ChildModel.CanUpdateGrid := True;
+    end;
+  end;
+end;
+
+function TPhastModel.AnyDispersionMultiDiffusion: boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.Mt3dmsDispersion.IsSelected
+    and ModflowPackages.Mt3dmsDispersion.MultiDifussion;
+  if not Result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      result := ChildModel.ModflowPackages.Mt3dmsDispersion.IsSelected
+        and ChildModel.ModflowPackages.Mt3dmsDispersion.MultiDifussion;
+      if result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.AnyMt3dReactions: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.Mt3dmsChemReact.IsSelected
+    and (ModflowPackages.Mt3dmsChemReact.KineticChoice <> kcNone);
+  if not Result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      result := ChildModel.ModflowPackages.Mt3dmsChemReact.IsSelected
+        and (ChildModel.ModflowPackages.Mt3dmsChemReact.KineticChoice <> kcNone);
+      if result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.AnyMt3dSorbImmobConc: boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.Mt3dmsChemReact.IsSelected
+    and (ModflowPackages.Mt3dmsChemReact.OtherInitialConcChoice = oicUse);
+  if not Result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      result := ChildModel.ModflowPackages.Mt3dmsChemReact.IsSelected
+        and (ChildModel.ModflowPackages.Mt3dmsChemReact.OtherInitialConcChoice = oicUse);
+      if result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.AnyMt3dSorbParameter: boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.Mt3dmsChemReact.IsSelected
+    and (ModflowPackages.Mt3dmsChemReact.SorptionChoice <> scNone);
+  if not Result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      result := ChildModel.ModflowPackages.Mt3dmsChemReact.IsSelected
+        and (ChildModel.ModflowPackages.Mt3dmsChemReact.SorptionChoice <> scNone);
+      if result then
+      begin
+        Exit;
+      end;
     end;
   end;
 end;
@@ -5433,6 +5864,10 @@ begin
     ObservationPurpose := SourceModel.ObservationPurpose;
     ModflowTransientParameters := SourceModel.ModflowTransientParameters;
     ModflowOutputControl := SourceModel.ModflowOutputControl;
+    Mt3dmsOutputControl := SourceModel.Mt3dmsOutputControl;
+    Mt3dmsTimes := SourceModel.Mt3dmsTimes;
+    MobileComponents := SourceModel.MobileComponents;
+    ImmobileComponents := SourceModel.ImmobileComponents;
     DataSetList := SourceModel.DataSetList;
     SfrStreamLinkPlot := SourceModel.SfrStreamLinkPlot;
   end;
@@ -5603,6 +6038,8 @@ begin
   end;
 
   FModflowOutputControl := TModflowOutputControl.Create(Self);
+  FMt3dmsOutputControl := TMt3dmsOutputControl.Create(Self);
+  FMt3dmsTimes:= TMt3dmsTimeCollection.Create(Self);
 
   FModflowSteadyParameters:= TModflowSteadyParameters.Create(Self);
   FModflowTransientParameters := TModflowTransientListParameters.Create(self);
@@ -5623,6 +6060,10 @@ begin
   FShowContourLabels := True;
 
   FSfrStreamLinkPlot := TSfrStreamLinkPlot.Create(self);
+
+  FImmobileComponents := TChemSpeciesCollection.Create(Self);
+  FMobileComponents := TMobileChemSpeciesCollection.Create(Self);
+
 end;
 
 procedure TPhastModel.CreateArchive(const FileName: string; const ArchiveCommand: string = '');
@@ -5663,7 +6104,7 @@ begin
     if ArchiveFiles.Count = 0 then
     begin
       Beep;
-      MessageDlg('Sorry, no files to archive.', mtInformation, [mbOK], 0);
+      MessageDlg(StrSorryNoFilesToA, mtInformation, [mbOK], 0);
     end
     else
     begin
@@ -5672,9 +6113,8 @@ begin
       begin
         if DeletedFiles.Count > 10 then
         begin
-          ErrorMessage := IntToStr(DeletedFiles.Count)
-            + ' of the files that were to be archived can not be found.'
-            + sLineBreak + sLineBreak + 'The remaining files will be archived.';
+          ErrorMessage := Format(StrDOfTheFilesThat, [DeletedFiles.Count])
+            + sLineBreak + sLineBreak + StrTheRemainingFiles;
         end
         else
         begin
@@ -5713,15 +6153,12 @@ begin
             // long integer, TAbZipper doesn't handle it properly in
             // TAbZipArchive.SaveArchive and raises an EInvalidCast.
             Beep;
-            MessageDlg('Error saving archive.  The archive may be too big.',
-              mtError, [mbOK], 0);
+            MessageDlg(StrErrorSavingArchive, mtError, [mbOK], 0);
           end;
           on E: EAbZipSpanOverwrite do
           begin
             Beep;
-            MessageDlg('Error saving archive.  '
-              + 'The disk may not have sufficient space for the archive.',
-              mtError, [mbOK], 0);
+            MessageDlg(StrErrorSavingArchive2, mtError, [mbOK], 0);
           end;
         end;
       finally
@@ -5810,6 +6247,9 @@ begin
       FClearing := False;
     end;
 
+    FImmobileComponents.Free;
+    FMobileComponents.Free;
+
     FSfrStreamLinkPlot.Free;
     FChildModels.Free;
     FTimeSeries.Free;
@@ -5823,6 +6263,8 @@ begin
 
     FModflowTransientParameters.Free;
     FModflowSteadyParameters.Free;
+    FMt3dmsTimes.Free;
+    FMt3dmsOutputControl.Free;
     FModflowOutputControl.Free;
     FModflowFullStressPeriods.Free;
     FModflowStressPeriods.Free;
@@ -6258,6 +6700,44 @@ begin
   end;
 end;
 
+function TPhastModel.SsmIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.Mt3dmsSourceSink.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.Mt3dmsSourceSink.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.TobIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.Mt3dmsTransObs.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.Mt3dmsTransObs.IsSelected;
+      end;
+    end;
+  end;
+end;
+
 procedure TPhastModel.InternalClear;
 var
   Index: Integer;
@@ -6338,6 +6818,7 @@ begin
   ModflowTransientParameters.Clear;
   GlobalVariables.Clear;
   ModflowOutputControl.Initialize;
+  Mt3dmsOutputControl.Initialize;
 
   HydrogeologicUnits.Clear;
   FHufParameters.Clear;
@@ -6346,6 +6827,19 @@ begin
   DrainObservations.Clear;
   GhbObservations.Clear;
   RiverObservations.Clear;
+  Mt3dmsHeadMassFluxObservations.Clear;
+  Mt3dmsWellMassFluxObservations.Clear;
+  Mt3dmsDrnMassFluxObservations.Clear;
+  Mt3dmsRivMassFluxObservations.Clear;
+  Mt3dmsGhbMassFluxObservations.Clear;
+  Mt3dmsRchMassFluxObservations.Clear;
+  Mt3dmsEvtMassFluxObservations.Clear;
+  Mt3dmsMassLoadingMassFluxObservations.Clear;
+  Mt3dmsResMassFluxObservations.Clear;
+  Mt3dmsLakMassFluxObservations.Clear;
+  Mt3dmsDrtMassFluxObservations.Clear;
+  Mt3dmsEtsMassFluxObservations.Clear;
+
   FilesToArchive.Clear;
   ModelFileName := '';
   ModelInputFiles.Clear;
@@ -6366,6 +6860,11 @@ begin
   begin
     ContourFont := GlobalFont;
   end;
+  FImmobileComponents.Clear;
+  FMobileComponents.Clear;
+
+  Mt3dmsTimes.Clear;
+  ModflowStressPeriods.Clear;
 
   Invalidate;
   inherited;
@@ -6484,6 +6983,44 @@ begin
   Invalidate;
 end;
 
+procedure TPhastModel.RenameDataArray(DataArray: TDataArray;
+  const NewName: string);
+var
+  OldNames: TStringList;
+  Compiler: TRbwParser;
+  NewNames: TStringList;
+  OldName: TComponentName;
+  Position: Integer;
+begin
+  OldName := DataArray.Name;
+  // rename data array.
+  TopGridObserver.StopsTalkingTo(DataArray);
+  DataArray.StopsTalkingTo(ThreeDGridObserver);
+  OldNames := TStringList.Create;
+  NewNames := TStringList.Create;
+  try
+    OldNames.Add(OldName);
+    NewNames.Add(NewName);
+    UpdateFormulas(OldNames, NewNames);
+  finally
+    NewNames.Free;
+    OldNames.Free;
+  end;
+  DataArray.Name := NewName;
+  Compiler := GetCompiler(DataArray.Orientation, DataArray.EvaluatedAt);
+  Position := Compiler.IndexOfVariable(OldName);
+  if Position >= 0 then
+  begin
+    Compiler.RenameVariable(Position, NewName);
+  end;
+  Compiler := GetCompiler(dso3D, DataArray.EvaluatedAt);
+  Position := Compiler.IndexOfVariable(OldName);
+  if Position >= 0 then
+  begin
+    Compiler.RenameVariable(Position, NewName);
+  end;
+end;
+
 function TPhastModel.IndexOfScreenObject(const AScreenObject: TScreenObject):
   integer;
 begin
@@ -6552,6 +7089,11 @@ begin
   result := FHufParameters;
 end;
 
+function TPhastModel.GetImmobileComponents: TChemSpeciesCollection;
+begin
+  Result := FImmobileComponents;
+end;
+
 //function TPhastModel.GetLeft: integer;
 //begin
 //  if GuiSettings = nil then
@@ -6599,6 +7141,12 @@ end;
 procedure TPhastModel.SetHufParameters(const Value: THufModflowParameters);
 begin
   FHufParameters.Assign(Value);
+end;
+
+procedure TPhastModel.SetImmobileComponents(
+  const Value: TChemSpeciesCollection);
+begin
+  FImmobileComponents.Assign(Value);
 end;
 
 procedure TPhastModel.SetLayerStructure(const Value: TLayerStructure);
@@ -6728,6 +7276,11 @@ begin
   result := (FTimeSeries <> nil) and (FTimeSeries.FileName <> '');
 end;
 
+function TPhastModel.GetMobileComponents: TMobileChemSpeciesCollection;
+begin
+  result := FMobileComponents;
+end;
+
 function TPhastModel.GetModelSelection: TModelSelection;
 begin
   result := FModelSelection;
@@ -6756,6 +7309,16 @@ end;
 function TPhastModel.GetModflowTransientParameters: TModflowTransientListParameters;
 begin
   result := FModflowTransientParameters;
+end;
+
+function TPhastModel.GetMt3dmsOutputControl: TMt3dmsOutputControl;
+begin
+  result := FMt3dmsOutputControl;
+end;
+
+function TPhastModel.GetMt3dmsTimes: TMt3dmsTimeCollection;
+begin
+  result := FMt3dmsTimes;
 end;
 
 function TPhastModel.GetNeedToRecalculateFrontCellColors: boolean;
@@ -6865,6 +7428,12 @@ begin
   begin
     GuiSettings.MagnificationTop := Value
   end;
+end;
+
+procedure TPhastModel.SetMobileComponents(
+  const Value: TMobileChemSpeciesCollection);
+begin
+  FMobileComponents.Assign(Value);
 end;
 
 procedure TPhastModel.SetModelMateProject(const Value: TProject);
@@ -7001,6 +7570,7 @@ begin
     begin
       InvalidateScreenObjects;
     end;
+    DataArrayManager.UpdateClassifications;
     Invalidate;
   end;
 end;
@@ -7058,6 +7628,16 @@ procedure TPhastModel.SetModflowTransientParameters(
   const Value: TModflowTransientListParameters);
 begin
   FModflowTransientParameters.Assign(Value);
+end;
+
+procedure TPhastModel.SetMt3dmsOutputControl(const Value: TMt3dmsOutputControl);
+begin
+  FMt3dmsOutputControl.Assign(Value);
+end;
+
+procedure TPhastModel.SetMt3dmsTimes(const Value: TMt3dmsTimeCollection);
+begin
+  FMt3dmsTimes.Assign(Value);
 end;
 
 procedure TPhastModel.SetNeedToRecalculateFrontCellColors(const Value: boolean);
@@ -8307,6 +8887,40 @@ begin
   end;
 end;
 
+procedure TCustomModel.UpdateMt3dmsActive(Sender: TObject);
+const
+  SetToFalse = 'Set to false because the cell is inactive in MODFLOW';
+var
+  Mt3dmsActive: TDataArray;
+  ActiveDataArray: TDataArray;
+  ColIndex: Integer;
+  RowIndex: Integer;
+  LayerIndex: Integer;
+begin
+  Mt3dmsActive := DataArrayManager.GetDataSetByName(StrMT3DMSActive);
+  if Mt3dmsActive <> nil then
+  begin
+    ActiveDataArray := DataArrayManager.GetDataSetByName(rsActive);
+    ActiveDataArray.Initialize;
+    for ColIndex := 0 to ModflowGrid.ColumnCount - 1 do
+    begin
+      for RowIndex := 0 to ModflowGrid.RowCount - 1 do
+      begin
+        for LayerIndex := 0 to ModflowGrid.LayerCount -1 do
+        begin
+          if Mt3dmsActive.BooleanData[LayerIndex, RowIndex, ColIndex]
+            and not ActiveDataArray.BooleanData[LayerIndex, RowIndex, ColIndex] then
+          begin
+            Mt3dmsActive.BooleanData[LayerIndex, RowIndex, ColIndex] := False;
+            Mt3dmsActive.Annotation[LayerIndex, RowIndex, ColIndex] := SetToFalse;
+          end;
+        end;
+      end;
+    end;
+
+  end;
+end;
+
 procedure TCustomModel.UpdateLakeId(Sender: TObject);
 var
   LakeIdArray: TDataArray;
@@ -8481,6 +9095,7 @@ var
   PhastModel: TPhastModel;
   ChildIndex: Integer;
   ResKvArray: TDataArray;
+  Mt3dActiveArray: TDataArray;
 begin
   LakeIdArray := FDataArrayManager.GetDataSetByName(rsLakeID);
   ActiveArray := FDataArrayManager.GetDataSetByName(rsActive);
@@ -8488,6 +9103,12 @@ begin
   SpecifiedHeadArray := FDataArrayManager.GetDataSetByName(rsModflowSpecifiedHead);
   ModPathZoneArray := FDataArrayManager.GetDataSetByName(StrModpathZone);
   ResKvArray := FDataArrayManager.GetDataSetByName(rsResKv);
+  Mt3dActiveArray := FDataArrayManager.GetDataSetByName(StrMT3DMSActive);
+
+  if Mt3dActiveArray <> nil then
+  begin
+    Mt3dActiveArray.OnPostInitialize := UpdateMt3dmsActive;
+  end;
 
   if ResKvArray <> nil then
   begin
@@ -8869,6 +9490,21 @@ begin
   end;
 end;
 
+function TPhastModel.UzfResidualWaterContentUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited UzfResidualWaterContentUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.UzfResidualWaterContentUsed(Sender);
+    end;
+  end;
+end;
+
 function TPhastModel.UzfUnsatVertKUsed(Sender: TObject): boolean;
 var
   ChildIndex: Integer;
@@ -9212,6 +9848,26 @@ begin
   begin
     ChildModel := ChildModels[Index].ChildModel;
     ChildModel.CanUpdateGrid := False;
+  end;
+end;
+
+function TPhastModel.DispersionSelected: boolean;
+var
+  ChildIndex: integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.Mt3dmsDispersion.IsSelected;
+  if not Result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      result := ChildModel.ModflowPackages.Mt3dmsDispersion.IsSelected;
+      if result then
+      begin
+        Exit;
+      end;
+    end;
   end;
 end;
 
@@ -10086,6 +10742,25 @@ begin
   end;
 end;
 
+function TPhastModel.Mt3dmsIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.Mt3dBasic.IsSelected;
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.Mt3dBasic.IsSelected;
+      end;
+    end;
+  end;
+end;
+
 function TPhastModel.MODPATHIsSelected: Boolean;
 var
   ChildIndex: Integer;
@@ -10116,6 +10791,273 @@ begin
     begin
       result := result or
         ChildModels[ChildIndex].ChildModel.ModpathUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.ModDispDataArrayUsed(Sender: TObject): boolean;
+var
+  DataArray: TDataArray;
+  function DataArrayUsed(ChemSpecies: TMobileChemSpeciesCollection): boolean;
+  var
+    Index: Integer;
+    AChemItem: TMobileChemSpeciesItem;
+  begin
+    result := False;
+    for Index := 0 to ChemSpecies.Count - 1 do
+    begin
+      AChemItem := ChemSpecies[Index];
+      result := AChemItem.DiffusionCoefDataArrayName = DataArray.Name;
+      if result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+begin
+  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    and ModflowPackages.Mt3dBasic.IsSelected
+    and AnyDispersionMultiDiffusion;
+  if result then
+  begin
+    DataArray := Sender as TDataArray;
+    result := DataArrayUsed(MobileComponents);
+  end;
+end;
+
+function TPhastModel.Mt3dMsInitialConcUsed(Sender: TObject): boolean;
+var
+  DataArray: TDataArray;
+  function DataArrayUsed(ChemSpecies: TCustomChemSpeciesCollection): boolean;
+  var
+    Index: Integer;
+    AChemItem: TChemSpeciesItem;
+  begin
+    result := False;
+    for Index := 0 to ChemSpecies.Count - 1 do
+    begin
+      AChemItem := ChemSpecies[Index];
+      result := AChemItem.InitialConcDataArrayName = DataArray.Name;
+      if result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+begin
+  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    and ModflowPackages.Mt3dBasic.IsSelected;
+  if result then
+  begin
+    DataArray := Sender as TDataArray;
+    result := DataArrayUsed(MobileComponents)
+      or DataArrayUsed(ImmobileComponents);
+  end;
+end;
+
+function TPhastModel.Mt3dMsFirstSorbParamUsed(Sender: TObject): boolean;
+var
+  DataArray: TDataArray;
+  function DataArrayUsed(ChemSpecies: TCustomChemSpeciesCollection): boolean;
+  var
+    Index: Integer;
+    AChemItem: TChemSpeciesItem;
+  begin
+    result := False;
+    for Index := 0 to ChemSpecies.Count - 1 do
+    begin
+      AChemItem := ChemSpecies[Index];
+      result := AChemItem.FirstSorbParamDataArrayName = DataArray.Name;
+      if result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+begin
+  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    and ModflowPackages.Mt3dBasic.IsSelected
+    and ModflowPackages.Mt3dmsChemReact.IsSelected
+    and (ModflowPackages.Mt3dmsChemReact.SorptionChoice <> scNone);
+  if result then
+  begin
+    DataArray := Sender as TDataArray;
+    result := DataArrayUsed(MobileComponents)
+      or DataArrayUsed(ImmobileComponents);
+  end;
+end;
+
+function TPhastModel.Mt3dMsSecondSorbParamUsed(Sender: TObject): boolean;
+var
+  DataArray: TDataArray;
+  function DataArrayUsed(ChemSpecies: TCustomChemSpeciesCollection): boolean;
+  var
+    Index: Integer;
+    AChemItem: TChemSpeciesItem;
+  begin
+    result := False;
+    for Index := 0 to ChemSpecies.Count - 1 do
+    begin
+      AChemItem := ChemSpecies[Index];
+      result := AChemItem.SecondSorbParamDataArrayName = DataArray.Name;
+      if result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+begin
+  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    and ModflowPackages.Mt3dBasic.IsSelected
+    and ModflowPackages.Mt3dmsChemReact.IsSelected
+    and (ModflowPackages.Mt3dmsChemReact.SorptionChoice <> scNone);
+  if result then
+  begin
+    DataArray := Sender as TDataArray;
+    result := DataArrayUsed(MobileComponents)
+      or DataArrayUsed(ImmobileComponents);
+  end;
+end;
+
+function TPhastModel.Mt3dmsReactionRateDisolvedUsed(Sender: TObject): boolean;
+var
+  DataArray: TDataArray;
+  function DataArrayUsed(ChemSpecies: TCustomChemSpeciesCollection): boolean;
+  var
+    Index: Integer;
+    AChemItem: TChemSpeciesItem;
+  begin
+    result := False;
+    for Index := 0 to ChemSpecies.Count - 1 do
+    begin
+      AChemItem := ChemSpecies[Index];
+      result := AChemItem.ReactionRateDisolvedDataArrayName = DataArray.Name;
+      if result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+begin
+  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    and ModflowPackages.Mt3dBasic.IsSelected
+    and ModflowPackages.Mt3dmsChemReact.IsSelected
+    and (ModflowPackages.Mt3dmsChemReact.KineticChoice <> kcNone);
+  if result then
+  begin
+    DataArray := Sender as TDataArray;
+    result := DataArrayUsed(MobileComponents)
+      or DataArrayUsed(ImmobileComponents);
+  end;
+end;
+
+function TPhastModel.Mt3dmsReactionRateSorbedUsed(Sender: TObject): boolean;
+var
+  DataArray: TDataArray;
+  function DataArrayUsed(ChemSpecies: TCustomChemSpeciesCollection): boolean;
+  var
+    Index: Integer;
+    AChemItem: TChemSpeciesItem;
+  begin
+    result := False;
+    for Index := 0 to ChemSpecies.Count - 1 do
+    begin
+      AChemItem := ChemSpecies[Index];
+      result := AChemItem.ReactionRateSorbedDataArrayName = DataArray.Name;
+      if result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+begin
+  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    and ModflowPackages.Mt3dBasic.IsSelected
+    and ModflowPackages.Mt3dmsChemReact.IsSelected
+    and (ModflowPackages.Mt3dmsChemReact.KineticChoice <> kcNone);
+  if result then
+  begin
+    DataArray := Sender as TDataArray;
+    result := DataArrayUsed(MobileComponents)
+      or DataArrayUsed(ImmobileComponents);
+  end;
+end;
+
+
+function TPhastModel.Mt3dMsSorbImmobInitialConcUsed(Sender: TObject): boolean;
+var
+  DataArray: TDataArray;
+  function DataArrayUsed(ChemSpecies: TCustomChemSpeciesCollection): boolean;
+  var
+    Index: Integer;
+    AChemItem: TChemSpeciesItem;
+  begin
+    result := False;
+    for Index := 0 to ChemSpecies.Count - 1 do
+    begin
+      AChemItem := ChemSpecies[Index];
+      result := AChemItem.SorbOrImmobInitialConcDataArrayName = DataArray.Name;
+      if result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+begin
+  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    and ModflowPackages.Mt3dBasic.IsSelected
+    and ModflowPackages.Mt3dmsChemReact.IsSelected
+    and (ModflowPackages.Mt3dmsChemReact.OtherInitialConcChoice = oicUse);
+  if result then
+  begin
+    DataArray := Sender as TDataArray;
+    result := DataArrayUsed(MobileComponents)
+      or DataArrayUsed(ImmobileComponents);
+  end;
+end;
+
+function TPhastModel.Mt3dmsSsmIsSelected: Boolean;
+var
+  ChildIndex: integer;
+  ChildModel: TChildModel;
+begin
+  result := Mt3dmsIsSelected;
+  if result then
+  begin
+    result := ModflowPackages.Mt3dmsSourceSink.IsSelected;
+    if not result and LgrUsed then
+    begin
+      for ChildIndex := 0 to ChildModels.Count - 1 do
+      begin
+        ChildModel := ChildModels[ChildIndex].ChildModel;
+        if ChildModel <> nil then
+        begin
+          result := result or ChildModel.ModflowPackages.Mt3dmsSourceSink.IsSelected;
+        end;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.Mt3dmsTobIsSelected: Boolean;
+var
+  ChildIndex: integer;
+  ChildModel: TChildModel;
+begin
+  result := Mt3dmsIsSelected;
+  if result then
+  begin
+    result := ModflowPackages.Mt3dmsTransObs.IsSelected;
+    if not result and LgrUsed then
+    begin
+      for ChildIndex := 0 to ChildModels.Count - 1 do
+      begin
+        ChildModel := ChildModels[ChildIndex].ChildModel;
+        if ChildModel <> nil then
+        begin
+          result := result or ChildModel.ModflowPackages.Mt3dmsTransObs.IsSelected;
+        end;
+      end;
     end;
   end;
 end;
@@ -10347,6 +11289,9 @@ var
   AScreenObject: TScreenObject;
   LakeIDArray: TDataArray;
   ModflowLakBoundary: TLakBoundary;
+  SfrBoundary: TSfrBoundary;
+  ParamItem: TSfrParamIcalcItem;
+  SegItem: TCustomModflowBoundaryItem;
 begin
   if (Grid.GridAngle <> 0)
     and FileVersionEqualOrEarlier('2.6.0.3')
@@ -10429,6 +11374,29 @@ begin
     and not ModflowPackages.NwtPackage.IsSelected then
   begin
     ModflowPackages.NwtPackage.FluxTolerance.Value := 0.06;
+  end;
+
+  if FileVersionEqualOrEarlier('2.12.0.1') then
+  begin
+    for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
+    begin
+      AScreenObject := ScreenObjects[ScreenObjectIndex];
+      SfrBoundary := AScreenObject.ModflowSfrBoundary;
+      if SfrBoundary <> nil then
+      begin
+        while SfrBoundary.ParamIcalc.Count < SfrBoundary.SegmentFlows.Count do
+        begin
+          ParamItem := SfrBoundary.ParamIcalc.Add as TSfrParamIcalcItem;
+          if ParamItem.Index > 0 then
+          begin
+            ParamItem.Assign(SfrBoundary.ParamIcalc.Items[ParamItem.Index-1]);
+          end;
+          SegItem := SfrBoundary.SegmentFlows.Items[ParamItem.Index];
+          ParamItem.StartTime := SegItem.StartTime;
+          ParamItem.EndTime := SegItem.EndTime;
+        end;
+      end;
+    end;
   end;
 
 end;
@@ -10930,16 +11898,12 @@ begin
       begin
         if ParameterList.Count <= 10 then
         begin
-          AMessage := 'Your ModelMate file contains the following unused parameters. '
-            + 'Do you want to delete them?' + sLineBreak + sLineBreak
+          AMessage := StrYourModelMateFile + sLineBreak + sLineBreak
             + ParameterList.Text
         end
         else
         begin
-          AMessage := 'Your ModelMate file contains '
-            + IntToStr(ParameterList.Count)
-            + ' unused parameters. '
-            + 'Do you want to delete them?'
+          AMessage := Format(StrYourModelMateFile2, [ParameterList.Count])
         end;
         if (MessageDlg(AMessage,
           mtInformation, [mbYes, mbNo], 0) = mrYes) then
@@ -10995,17 +11959,13 @@ begin
       begin
         if ObservationList.Count <= 10 then
         begin
-          AMessage := 'Your ModelMate file contains the following unused '
-            + DepType + '. '
-            + 'Do you want to delete them?' + sLineBreak + sLineBreak
+          AMessage := Format(StrYourModelMateFile3, [DepType])
+            + sLineBreak + sLineBreak
             + ObservationList.Text;
         end
         else
         begin
-          AMessage := 'Your ModelMate file contains '
-            + IntToStr(ObservationList.Count)
-            + ' unused '+ DepType + '. '
-            + 'Do you want to delete them?'
+          AMessage := Format(StrYourModelMateFile4, [ObservationList.Count, DepType])
         end;
         if (MessageDlg(AMessage,
           mtInformation, [mbYes, mbNo], 0) = mrYes) then
@@ -11049,6 +12009,12 @@ begin
   finally
     ObservationList.Free;
   end;
+end;
+
+procedure TPhastModel.UpdateMt3dmsChemDataSets;
+begin
+  MobileComponents.UpdateDataArrays;
+  ImMobileComponents.UpdateDataArrays;
 end;
 
 function TPhastModel.FileVersionEqualOrEarlier(TestVersion: string): boolean;
@@ -11275,7 +12241,9 @@ var
   Index: Integer;
   DepSet: TDepSet;
   Method: TMultiObsMethod;
-  ObsVersion: string;
+  ObsVersionSingular: string;
+  ObsVersionPlural: string;
+  WarningMessage: string;
 begin
   // flux observations
   ObservationList.CaseSensitive := False;
@@ -11390,16 +12358,23 @@ begin
         if ObservationList.Count > 0 then
         begin
           case ObservationPurpose of
-            ofObserved: ObsVersion := 'observation';
-            ofPredicted: ObsVersion := 'prediction';
+            ofObserved:
+              begin
+                ObsVersionSingular := StrObservation;
+                ObsVersionPlural := StrObservations;
+              end;
+
+            ofPredicted:
+              begin
+                ObsVersionSingular := StrPrediction;
+                ObsVersionPlural := StrPredictions;
+              end
             else Assert(False);
           end;
           Beep;
-          MessageDlg('One or more ' + ObsVersion + 's from the '
-            + 'ModelMate file are not present in the ModelMuse '
-            + 'file and have been ignored. If an ' + ObsVersion + ' has been '
-            + 'renamed, change the ' + ObsVersion + ' name so that it matches '
-            + 'in ModelMuse and ModelMate and then try importing again.' + sLineBreak + sLineBreak
+          WarningMessage := Format(StrOneOrMore0sFro,
+            [ObsVersionPlural, ObsVersionSingular, ObsVersionSingular]);
+          MessageDlg(WarningMessage + sLineBreak + sLineBreak
             + ObservationList.Text, mtWarning, [mbOK], 0);
         end;
       end;
@@ -11443,11 +12418,7 @@ begin
         if ParameterList.Count > 0 then
         begin
           Beep;
-          MessageDlg('One or more parameters from the '
-            + 'ModelMate file are not present in the ModelMuse '
-            + 'file and have been ignored. If a parameter has been '
-            + 'renamed, change the parameter name so that it matches '
-            + 'in ModelMuse and ModelMate and then try importing again.' + sLineBreak + sLineBreak
+          MessageDlg(StrOneOrMoreParamete + sLineBreak + sLineBreak
             + ParameterList.Text, mtWarning, [mbOK], 0);
         end;
       end;
@@ -12285,8 +13256,9 @@ begin
   LakeIdArray := FDataArrayManager.GetDataSetByName(rsLakeID);
   DischargeRoutingArray := FDataArrayManager.GetDataSetByName(StrUzfDischargeRouting);
 
-  if ModflowPackages.SfrPackage.IsSelected
-    or ModflowPackages.LakPackage.IsSelected then
+  if (ModflowPackages <> nil) and
+    (ModflowPackages.SfrPackage.IsSelected
+    or ModflowPackages.LakPackage.IsSelected) then
   begin
     if DischargeRoutingArray <> nil then
     begin
@@ -12312,6 +13284,11 @@ begin
       end;
     end;
   end;
+end;
+
+function TCustomModel.DMCOEF: TOneDRealArray;
+begin
+  result := LayerStructure.DMCOEF;
 end;
 
 procedure TCustomModel.DrawHeadObservations(const BitMap: TBitmap32;
@@ -12872,6 +13849,35 @@ begin
   ModflowPackages.UzfPackage.MfUzfWaterContent.Invalidate;
 end;
 
+function TCustomModel.CountStepsInMt3dExport: Integer;
+begin
+  result := 1;
+  if ModflowPackages.Mt3dmsAdvection.IsSelected then
+  begin
+    Inc(result);
+  end;
+  if ModflowPackages.Mt3dmsDispersion.IsSelected then
+  begin
+    Inc(result);
+  end;
+  if ModflowPackages.Mt3dmsSourceSink.IsSelected then
+  begin
+    Inc(result);
+  end;
+  if ModflowPackages.Mt3dmsChemReact.IsSelected then
+  begin
+    Inc(result);
+  end;
+  if ModflowPackages.Mt3dmsGCGSolver.IsSelected then
+  begin
+    Inc(result);
+  end;
+  if ModflowPackages.Mt3dmsTransObs.IsSelected then
+  begin
+    Inc(result);
+  end;
+end;
+
 function TCustomModel.CountStepsInExport: Integer;
 var
   HufParam: THufUsedParameter;
@@ -12890,7 +13896,7 @@ begin
   // 5. Zone Arrays,
   // 6. Multiplier Arrays
   result := 3;
-  result := result + ModflowPackages.SelectedPackageCount;
+  result := result + ModflowPackages.SelectedModflowPackageCount;
   if ModflowPackages.SfrPackage.IsSelected or ModflowPackages.LakPackage.IsSelected then
   begin
     // gages
@@ -12974,8 +13980,7 @@ begin
   end;
   if StepCount > 1000 then
   begin
-    if MessageDlg('Your model has ' + IntToStr(StepCount)
-      + ' time steps. Do you want to continue?',
+    if MessageDlg(Format(StrYourModelHasSTi, [StepCount]),
       mtWarning, [mbYes, mbNo], 0) <> mrYes then
     begin
       result := False;
@@ -12992,6 +13997,13 @@ end;
 procedure TCustomModel.InvalidateMfWellPumpage(Sender: TObject);
 begin
   ModflowPackages.WelPackage.MfWellPumpage.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMt3dmsChemSources(Sender: TObject);
+begin
+  // this needs to change.
+  { TODO 1 -cMT3DMS : This needs to change }
+//  Assert(False);
 end;
 
 procedure TPhastModel.InvalidateModflowBoundaries;
@@ -13789,6 +14801,14 @@ begin
   else if APackage = frmGoPhast.PhastModel.ModflowPackages.UpwPackage then
   begin
     result := UpwIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.Mt3dmsTransObs then
+  begin
+    result := TobIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.Mt3dmsSourceSink then
+  begin
+    result := SsmIsSelected;
   end
   else
   begin
@@ -15065,6 +16085,7 @@ begin
     ModelMateLocation := SourceLocations.ModelMateLocation;
     ModflowLgrLocation := SourceLocations.ModflowLgrLocation;
     ModflowNwtLocation := SourceLocations.ModflowNwtLocation;
+    Mt3dmsLocation := SourceLocations.Mt3dmsLocation;
   end
   else
   begin
@@ -15078,10 +16099,11 @@ var
 begin
   FModflowLocation := StrModflowDefaultPath;
   FModPathLocation := StrMpathDefaultPath;
-  PhastLocation := StrPhastDefaultPath;
+  PhastLocation := DefaultPhastPath;
   ZoneBudgetLocation := StrZoneBudgetDefaultPath;
   ModflowLgrLocation := strModflowLgrDefaultPath;
   ModflowNwtLocation := strModflowNwtDefaultPath;
+  Mt3dmsLocation := strMt3dmsDefaultPath;
   ADirectory := GetCurrentDir;
   try
     SetCurrentDir(ExtractFileDir(ParamStr(0)));
@@ -15104,7 +16126,7 @@ begin
   ModPathLocation := IniFile.ReadString(StrProgramLocations, StrMODPATH,
     StrMpathDefaultPath);
   PhastLocation := IniFile.ReadString(StrProgramLocations, StrPHAST,
-    StrPhastDefaultPath);
+    DefaultPhastPath);
   ZoneBudgetLocation := IniFile.ReadString(StrProgramLocations, StrZonebudget,
     StrZoneBudgetDefaultPath);
   ModelMateLocation := IniFile.ReadString(StrProgramLocations, StrModelMate,
@@ -15113,6 +16135,8 @@ begin
     strModflowLgrDefaultPath);
   ModflowNwtLocation := IniFile.ReadString(StrProgramLocations, strModflowNWT,
     strModflowNwtDefaultPath);
+  Mt3dmsLocation := IniFile.ReadString(StrProgramLocations, StrMT3DMS,
+    strMt3dmsDefaultPath);
 
   ADirectory := GetCurrentDir;
   try
@@ -15187,6 +16211,11 @@ begin
   FModPathLocation := RemoveQuotes(Value);
 end;
 
+procedure TProgramLocations.SetMt3dmsLocation(const Value: string);
+begin
+  FMt3dmsLocation := RemoveQuotes(Value);;
+end;
+
 procedure TProgramLocations.SetPhastLocation(const Value: string);
 begin
   FPhastLocation := RemoveQuotes(Value);
@@ -15208,6 +16237,7 @@ begin
   IniFile.WriteString(StrProgramLocations, StrModelMate, ModelMateLocation);
   IniFile.WriteString(StrProgramLocations, strModflowLgr, ModflowLgrLocation);
   IniFile.WriteString(StrProgramLocations, strModflowNWT, ModflowNwtLocation);
+  IniFile.WriteString(StrProgramLocations, StrMT3DMS, Mt3dmsLocation);
 end;
 
 { TDataSetClassification }
@@ -15268,10 +16298,6 @@ begin
   FrpThreeDFormulaCompilerNodes := TRbwParser.Create(self);
   FParsers.Add(FrpThreeDFormulaCompilerNodes);
 
-//  FDataSetsToCache:= TList.Create;
-//  FDataSets := TObjectList.Create;
-//  FBoundaryDataSets := TObjectList.Create;
-//  FDataSetFunctions := TStringList.Create;
   FModflowNameFileLines := TStringList.Create;
   FBatchFileAdditionsBeforeModel := TStringList.Create;
   FBatchFileAdditionsAfterModel := TStringList.Create;
@@ -15289,12 +16315,47 @@ begin
   FDrainObservations.FluxObservationType := fotDrain;
   FGhbObservations.FluxObservationType := fotGHB;
 
+  FMt3dmsHeadMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
+  FMt3dmsHeadMassFluxObservations.FluxObservationType := mfotHead;
+
+  FMt3dmsWellMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
+  FMt3dmsWellMassFluxObservations.FluxObservationType := mfotWell;
+
+  FMt3dmsMassLoadingMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
+  FMt3dmsMassLoadingMassFluxObservations.FluxObservationType := mfotMassLoading;
+
+  FMt3dmsGhbMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
+  FMt3dmsGhbMassFluxObservations.FluxObservationType := mfotGHB;
+
+  FMt3dmsRivMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
+  FMt3dmsRivMassFluxObservations.FluxObservationType := mfotRiver;
+
+  FMt3dmsResMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
+  FMt3dmsResMassFluxObservations.FluxObservationType := mfotReservoir;
+
+  FMt3dmsRchMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
+  FMt3dmsRchMassFluxObservations.FluxObservationType := mfotRecharge;
+
+  FMt3dmsDrtMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
+  FMt3dmsDrtMassFluxObservations.FluxObservationType := mfotDRT;
+
+  FMt3dmsEtsMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
+  FMt3dmsEtsMassFluxObservations.FluxObservationType := mfotETS;
+
+  FMt3dmsEvtMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
+  FMt3dmsEvtMassFluxObservations.FluxObservationType := mfotEVT;
+
+  FMt3dmsDrnMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
+  FMt3dmsDrnMassFluxObservations.FluxObservationType := mfotDrain;
+
+  FMt3dmsLakMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
+  FMt3dmsLakMassFluxObservations.FluxObservationType := mfotLake;
+
   FHydrogeologicUnits := THydrogeologicUnits.Create(self);
   FFilesToArchive := TStringList.Create;
   FModelInputFiles := TStringList.Create;
   FModflowWettingOptions := TWettingOptions.Create(Self);
   FGlobalVariables := TGlobalVariables.Create(self);
-//  FChangedDataArrayNames := TStringList.Create;
 
   FTopGridObserver:= TObserver.Create(nil);
   FThreeDGridObserver:= TObserver.Create(nil);
@@ -15341,6 +16402,20 @@ begin
   FBatchFileAdditionsAfterModel.Free;
   FBatchFileAdditionsBeforeModel.Free;
   FModflowNameFileLines.Free;
+
+  FMt3dmsHeadMassFluxObservations.Free;
+  FMt3dmsWellMassFluxObservations.Free;
+  FMt3dmsMassLoadingMassFluxObservations.Free;
+  FMt3dmsGhbMassFluxObservations.Free;
+  FMt3dmsRivMassFluxObservations.Free;
+  FMt3dmsResMassFluxObservations.Free;
+  FMt3dmsRchMassFluxObservations.Free;
+  FMt3dmsDrtMassFluxObservations.Free;
+  FMt3dmsEtsMassFluxObservations.Free;
+  FMt3dmsEvtMassFluxObservations.Free;
+  FMt3dmsDrnMassFluxObservations.Free;
+  FMt3dmsLakMassFluxObservations.Free;
+
   FHeadFluxObservations.Free;
   FRiverObservations.Free;
   FDrainObservations.Free;
@@ -15383,15 +16458,23 @@ begin
     or (ModflowOutputControl.HeadOC.FrequencyChoice <> fcTimeSteps) then
   begin
     Beep;
-    if (MessageDlg('MODPATH requires that the heads and flows be saved for '
-      + 'every time step of the model. That isn''t the case for this model. '
-      + 'Do you want to export the MODPATH input anyway?',
+    if (MessageDlg(StrMODPATHRequiresTha,
       mtWarning, [mbYes, mbNo], 0, mbNo) <> mrYes) then
     begin
       frmGoPhast.miOutputControlClick(nil);
       result := false;
     end;
   end;
+end;
+
+function TCustomModel.TRPT: TOneDRealArray;
+begin
+  result := LayerStructure.TRPT;
+end;
+
+function TCustomModel.TRPV: TOneDRealArray;
+begin
+  result := LayerStructure.TRPV;
 end;
 
 function TCustomModel.EquilibriumPhasesUsed(Sender: TObject): boolean;
@@ -15583,11 +16666,83 @@ begin
   FModflowWettingOptions.Assign(Value);
 end;
 
+procedure TCustomModel.SetMt3dmsDrnMassFluxObservations(
+  const Value: TMt3dmsFluxObservationGroups);
+begin
+  FMt3dmsDrnMassFluxObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetMt3dmsDrtMassFluxObservations(
+  const Value: TMt3dmsFluxObservationGroups);
+begin
+  FMt3dmsDrtMassFluxObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetMt3dmsEtsMassFluxObservations(
+  const Value: TMt3dmsFluxObservationGroups);
+begin
+  FMt3dmsEtsMassFluxObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetMt3dmsEvtMassFluxObservations(
+  const Value: TMt3dmsFluxObservationGroups);
+begin
+  FMt3dmsEvtMassFluxObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetMt3dmsGhbMassFluxObservations(
+  const Value: TMt3dmsFluxObservationGroups);
+begin
+  FMt3dmsGhbMassFluxObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetMt3dmsHeadMassFluxObservations(
+  const Value: TMt3dmsFluxObservationGroups);
+begin
+  FMt3dmsHeadMassFluxObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetMt3dmsLakMassFluxObservations(
+  const Value: TMt3dmsFluxObservationGroups);
+begin
+  FMt3dmsLakMassFluxObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetMt3dmsMassLoadingMassFluxObservations(
+  const Value: TMt3dmsFluxObservationGroups);
+begin
+  FMt3dmsMassLoadingMassFluxObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetMt3dmsRchMassFluxObservations(
+  const Value: TMt3dmsFluxObservationGroups);
+begin
+  FMt3dmsRchMassFluxObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetMt3dmsResMassFluxObservations(
+  const Value: TMt3dmsFluxObservationGroups);
+begin
+  FMt3dmsResMassFluxObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetMt3dmsRivMassFluxObservations(
+  const Value: TMt3dmsFluxObservationGroups);
+begin
+  FMt3dmsRivMassFluxObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetMt3dmsWellMassFluxObservations(
+  const Value: TMt3dmsFluxObservationGroups);
+begin
+  FMt3dmsWellMassFluxObservations.Assign(Value);
+end;
+
 procedure TCustomModel.SetNameFileWriter(const Value: TObject);
 begin
   if Assigned(Value) then
   begin
-    Assert(Value is TNameFileWriter);
+    Assert(Value is TCustomNameFileWriter);
   end;
   FNameFileWriter := Value;
 end;
@@ -15656,6 +16811,7 @@ begin
   FModflowOptions.Clear;
   FDataArrayManager.ClearDataSetsToCache;
   ClearAllTimeLists;
+
 end;
 
 function TCustomModel.GetCompiler(const Orientation: TDataSetOrientation;
@@ -16521,6 +17677,8 @@ begin
   FDataSets := TObjectList.Create;
   FBoundaryDataSets := TObjectList.Create;
   FDeletedDataSets := TObjectList.Create;
+  FDispersivityIndex := -1;
+  FPorosityIndex := -1;
 end;
 
 procedure TDataArrayManager.CreateInitialBoundaryDataSets;
@@ -16716,6 +17874,7 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
       end;
       DataArray.AssociatedDataSets := FDataArrayCreationRecords[
         Index].AssociatedDataSets;
+      DataArray.Classification := FDataArrayCreationRecords[Index].Classification;
     end;
   end;
 
@@ -16771,7 +17930,7 @@ procedure TDataArrayManager.DefinePackageDataArrays;
 var
   Index: integer;
 begin
-  SetLength(FDataArrayCreationRecords, 62);
+  SetLength(FDataArrayCreationRecords, 68);
   Index := 0;
 
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
@@ -16837,6 +17996,7 @@ begin
   FDataArrayCreationRecords[Index].Min := 0;
   Inc(Index);
 
+  FPorosityIndex := Index;
   FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
@@ -16875,12 +18035,21 @@ begin
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsLong_Dispersivity;
   FDataArrayCreationRecords[Index].Formula := '10.';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ChemistryUsed;
+  FDispersivityIndex := Index;
+  if (FCustomModel = nil) or (FCustomModel.ModelSelection = msPhast) then
+  begin
+    FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  end
+  else
+  begin
+    FDataArrayCreationRecords[Index].Classification := StrMT3DMS;
+  end;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.LongitudinalDispersionUsed;
+
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-longitudinal_dispersivity';
+    'PHAST: MEDIA-longitudinal_dispersivity; '#13#10'MT3DMS: Dispersion Package Data Sets C1: AL';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
   FDataArrayCreationRecords[Index].Min := 0;
@@ -17264,6 +18433,19 @@ begin
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: THTI';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrUzfReisidualWaterContent;
+  FDataArrayCreationRecords[Index].Formula := '0.2';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfInitialInfiltrationUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: THTR';
   NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -17676,7 +18858,70 @@ begin
     'SWT: PCS (data set 15)';
   Inc(Index);
 
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtBoolean;
+  FDataArrayCreationRecords[Index].Name := STR_MT3DMS_Observation_Locations;
+  FDataArrayCreationRecords[Index].Formula := 'False';
+  FDataArrayCreationRecords[Index].Classification := StrMT3DMS;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Mt3dMSUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'MT3DMS Basic Package Data Sets 18 and 19';
+  Inc(Index);
 
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtBoolean;
+  FDataArrayCreationRecords[Index].Name := StrMT3DMSActive;
+  FDataArrayCreationRecords[Index].Formula := rsActive;
+  FDataArrayCreationRecords[Index].Classification := StrMT3DMS;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Mt3dMSUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'MT3DMS Basic Package Data Sets 12: ICBUND';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsBulkDensity;
+  FDataArrayCreationRecords[Index].Formula := '2000000';
+  FDataArrayCreationRecords[Index].Classification := StrMT3DMS;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Mt3dMSBulkDensityUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'MT3DMS Chemical Reaction Package Data Set E2A: RHOB';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsImmobPorosity;
+  FDataArrayCreationRecords[Index].Formula := '0.2';
+  FDataArrayCreationRecords[Index].Classification := StrMT3DMS;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Mt3dMSImmobPorosityUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'MT3DMS Chemical Reaction Package Data Set E2B: PRSITY2';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsMT3DMS_Layer_Thickness;
+  FDataArrayCreationRecords[Index].Formula :=StrLayerHeight;
+  FDataArrayCreationRecords[Index].Classification := StrMT3DMS;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Mt3dMSUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'MT3DMS Basic package DZ data set 10';
+  Inc(Index);
 
   Assert(Length(FDataArrayCreationRecords) = Index);
 end;
@@ -18081,6 +19326,64 @@ begin
   end;
 end;
 
+procedure TDataArrayManager.UpdateClassifications;
+var
+  DataArray: TDataArray;
+  Packages: TModflowPackages;
+begin
+  if FDispersivityIndex >= 0 then
+  begin
+    if FCustomModel.ModelSelection = msPhast then
+    begin
+      FDataArrayCreationRecords[FDispersivityIndex].Classification := StrHydrology;
+    end
+    else
+    begin
+      FDataArrayCreationRecords[FDispersivityIndex].Classification := StrMT3DMS;
+    end;
+    DataArray := GetDataSetByName(FDataArrayCreationRecords[FDispersivityIndex].Name);
+    if DataArray <> nil then
+    begin
+      DataArray.Classification :=
+        FDataArrayCreationRecords[FDispersivityIndex].Classification;
+    end;
+  end;
+
+  if FPorosityIndex >= 0 then
+  begin
+    if FCustomModel.ModelSelection = msPhast then
+    begin
+      FDataArrayCreationRecords[FPorosityIndex].Classification := StrHydrology;
+    end
+    else
+    begin
+      Packages := FCustomModel.ModflowPackages;
+      if Packages.Mt3dBasic.IsSelected and Packages.ModPath.IsSelected then
+      begin
+        FDataArrayCreationRecords[FPorosityIndex].Classification := StrModpath + ' \ ' + StrMt3dms;
+      end
+      else if Packages.Mt3dBasic.IsSelected then
+      begin
+        FDataArrayCreationRecords[FPorosityIndex].Classification := StrMt3dms;
+      end
+      else if Packages.ModPath.IsSelected then
+      begin
+        FDataArrayCreationRecords[FPorosityIndex].Classification := StrModpath;
+      end
+      else
+      begin
+        FDataArrayCreationRecords[FPorosityIndex].Classification := StrHydrology;
+      end;
+    end;
+    DataArray := GetDataSetByName(FDataArrayCreationRecords[FPorosityIndex].Name);
+    if DataArray <> nil then
+    begin
+      DataArray.Classification :=
+        FDataArrayCreationRecords[FPorosityIndex].Classification;
+    end;
+  end;
+end;
+
 procedure TDataArrayManager.UpdateDataSetDimensions;
 var
   Index: integer;
@@ -18177,6 +19480,18 @@ begin
     GlobalVariables := SourceModel.GlobalVariables;
     ModflowOptions := SourceModel.ModflowOptions;
     HeadObsResults := SourceModel.HeadObsResults;
+    Mt3dmsHeadMassFluxObservations := SourceModel.Mt3dmsHeadMassFluxObservations;
+    Mt3dmsWellMassFluxObservations := SourceModel.Mt3dmsWellMassFluxObservations;
+    Mt3dmsDrnMassFluxObservations := SourceModel.Mt3dmsDrnMassFluxObservations;
+    Mt3dmsRivMassFluxObservations := SourceModel.Mt3dmsRivMassFluxObservations;
+    Mt3dmsGhbMassFluxObservations := SourceModel.Mt3dmsGhbMassFluxObservations;
+    Mt3dmsRchMassFluxObservations := SourceModel.Mt3dmsRchMassFluxObservations;
+    Mt3dmsEvtMassFluxObservations := SourceModel.Mt3dmsEvtMassFluxObservations;
+    Mt3dmsMassLoadingMassFluxObservations := SourceModel.Mt3dmsMassLoadingMassFluxObservations;
+    Mt3dmsResMassFluxObservations := SourceModel.Mt3dmsResMassFluxObservations;
+    Mt3dmsLakMassFluxObservations := SourceModel.Mt3dmsLakMassFluxObservations;
+    Mt3dmsDrtMassFluxObservations := SourceModel.Mt3dmsDrtMassFluxObservations;
+    Mt3dmsEtsMassFluxObservations := SourceModel.Mt3dmsEtsMassFluxObservations;
   end
   else
   begin
@@ -18274,8 +19589,9 @@ end;
 function TCustomModel.PorosityUsed(Sender: TObject): boolean;
 begin
   result := (ModelSelection = msPhast)
-    or (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
-    and ModflowPackages.ModPath.IsSelected;
+    or ((ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    and (ModflowPackages.ModPath.IsSelected
+    or ModflowPackages.Mt3dBasic.IsSelected));
 end;
 
 function TCustomModel.SpecificStorageUsed(Sender: TObject): boolean;
@@ -18357,6 +19673,23 @@ begin
   result := ModflowUsed(Sender) and ModflowPackages.UzfPackage.IsSelected;
 end;
 
+function TCustomModel.UzfResidualWaterContentUsed(Sender: TObject): boolean;
+begin
+  result := UzfPackageUsed(Sender);
+  if result then
+  begin
+    if (Sender <> nil) and (Sender is TUndoChangeLgrPackageSelection) then
+    begin
+      result := True;
+    end
+    else
+    begin
+      result := ModflowPackages.UzfPackage.SpecifyResidualWaterContent
+        and (ModelSelection = msModflowNWT);
+    end;
+  end;
+end;
+
 function TCustomModel.UzfUnsatVertKUsed(Sender: TObject): boolean;
 begin
   result := UzfPackageUsed(Sender) and
@@ -18387,7 +19720,8 @@ begin
     end
     else
     begin
-      result := ModflowStressPeriods.CompletelyTransient;
+      result := ModflowStressPeriods.CompletelyTransient or
+        (ModflowPackages.UzfPackage.SpecifyInitialWaterContent and (ModelSelection = msModflowNWT));
     end;
   end;
 end;
@@ -18498,6 +19832,31 @@ begin
   result := FDrainObservations.Count > 0;
 end;
 
+function TCustomModel.StoreDrnMassFluxObservations: Boolean;
+begin
+  result := FMt3dmsDrnMassFluxObservations.Count > 0;
+end;
+
+function TCustomModel.StoreDrtMassFluxObservations: Boolean;
+begin
+  result := FMt3dmsDrtMassFluxObservations.Count > 0;
+end;
+
+function TCustomModel.StoreEtsMassFluxObservations: Boolean;
+begin
+  result := FMt3dmsEtsMassFluxObservations.Count > 0;
+end;
+
+function TCustomModel.StoreEvtMassFluxObservations: Boolean;
+begin
+  result := FMt3dmsEvtMassFluxObservations.Count > 0;
+end;
+
+function TCustomModel.StoreGhbMassFluxObservations: Boolean;
+begin
+  result := FMt3dmsGhbMassFluxObservations.Count > 0;
+end;
+
 function TCustomModel.StoreGhbObservations: Boolean;
 begin
   result := FGhbObservations.Count > 0;
@@ -18506,6 +19865,11 @@ end;
 function TCustomModel.StoreHeadFluxObservations: Boolean;
 begin
   result := FHeadFluxObservations.Count > 0;
+end;
+
+function TCustomModel.StoreHeadMassFluxObservations: Boolean;
+begin
+  result := FMt3dmsHeadMassFluxObservations.Count > 0;
 end;
 
 function TCustomModel.StoreHeadObsResults: boolean;
@@ -18518,9 +19882,39 @@ begin
   result := FHydrogeologicUnits.Count > 0;
 end;
 
+function TCustomModel.StoreLakMassFluxObservations: Boolean;
+begin
+  result := FMt3dmsLakMassFluxObservations.Count > 0;
+end;
+
+function TCustomModel.StoreMassLoadingMassFluxObservations: Boolean;
+begin
+  result := FMt3dmsMassLoadingMassFluxObservations.Count > 0;
+end;
+
+function TCustomModel.StoreRchMassFluxObservations: Boolean;
+begin
+  result := FMt3dmsRchMassFluxObservations.Count > 0;
+end;
+
+function TCustomModel.StoreResMassFluxObservations: Boolean;
+begin
+  result := FMt3dmsResMassFluxObservations.Count > 0;
+end;
+
 function TCustomModel.StoreRiverObservations: Boolean;
 begin
   result := FRiverObservations.Count > 0;
+end;
+
+function TCustomModel.StoreRivMassFluxObservations: Boolean;
+begin
+  result := FMt3dmsRivMassFluxObservations.Count > 0;
+end;
+
+function TCustomModel.StoreWellMassFluxObservations: Boolean;
+begin
+  result := FMt3dmsWellMassFluxObservations.Count > 0;
 end;
 
 function TCustomModel.WetDryUsed(Sender: TObject): boolean;
@@ -18615,6 +20009,32 @@ begin
     and (ModflowPackages.SwtPackage.PreconsolidationSource = pcSpecified);
 end;
 
+function TCustomModel.LongitudinalDispersionUsed(Sender: TObject): boolean;
+begin
+  result := ChemistryUsed(Sender)
+    or (Mt3dMSUsed(Sender) and ModflowPackages.Mt3dmsDispersion.IsSelected);
+end;
+
+function TCustomModel.Mt3dMSBulkDensityUsed(Sender: TObject): boolean;
+begin
+  result := Mt3dMSUsed(Sender) and ModflowPackages.Mt3dmsChemReact.IsSelected
+    and (ModflowPackages.Mt3dmsChemReact.SorptionChoice in [scLinear,
+    scFreundlich, scLangmuir, scFirstOrderKinetic, scDualDomainWithSorption]);
+end;
+
+function TCustomModel.Mt3dMSImmobPorosityUsed(Sender: TObject): boolean;
+begin
+  result := Mt3dMSUsed(Sender) and ModflowPackages.Mt3dmsChemReact.IsSelected
+    and (ModflowPackages.Mt3dmsChemReact.SorptionChoice in
+    [scDualDomainNoSorption, scDualDomainWithSorption]);
+end;
+
+function TCustomModel.Mt3dMSUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    and ModflowPackages.Mt3dBasic.IsSelected;
+end;
+
 function TCustomModel.Trpy: TOneDRealArray;
 begin
   result := LayerStructure.Trpy;
@@ -18703,6 +20123,20 @@ begin
     TransientZoneArrays, FCachedZoneArrayIndex);
 end;
 
+function TCustomModel.IndexOfMt3dmsSpeciesName(
+  const AChemSpecies: string): integer;
+begin
+  result := MobileComponents.IndexOfName(AChemSpecies);
+  if result < 0 then
+  begin
+    result := ImmobileComponents.IndexOfName(AChemSpecies);
+    if result >= 0 then
+    begin
+      result := result + MobileComponents.Count;
+    end;
+  end;
+end;
+
 procedure TCustomModel.UpdateModflowFullStressPeriods;
 var
   TimeList: TRealList;
@@ -18721,6 +20155,7 @@ var
   OutOfEndRangeScreenObjects: TStringList;
   ErrorMessage: string;
   SpressPeriodCount: Integer;
+  MtTime: TMt3dmsTimeItem;
 //  StartTimeIndex: integer;
 begin
   if FUpdatingFullStressPeriods then
@@ -18745,6 +20180,14 @@ begin
     end;
     TestFirstTime := TimeList[0];
     LastTestTime := TimeList[TimeList.Count-1];
+
+    for TimeIndex := 0 to Mt3dmsTimes.Count - 1 do
+    begin
+      MtTime := Mt3dmsTimes[TimeIndex];
+      TimeList.AddUnique(MtTime.StartTime);
+      TimeList.AddUnique(MtTime.EndTime)
+    end;
+
     OutOfStartRangeScreenObjects := TStringList.Create;
     OutOfEndRangeScreenObjects := TStringList.Create;
     try
@@ -18799,16 +20242,12 @@ begin
 
       if DeletedTimes then
       begin
-        ErrorMessage := 'The beginning of the first stress period is '
-          + FloatToStr(StressPeriod.StartTime)
-          + '. The first defined time is '
-          + FloatToStr(FirstTime) + '. The following objects '
-          + 'have defined times before the beginning of the first stress period.';
+        ErrorMessage := Format(StrTheBeginningOfThe,
+          [StressPeriod.StartTime, FirstTime]);
         OutOfStartRangeScreenObjects.Insert(0, ErrorMessage);
 
         frmErrorsAndWarnings.AddWarning(self,
           StrAnyTimesBeforeThe, OutOfStartRangeScreenObjects.Text);
-          ;
       end;
 
       TimeIndex := 0;
@@ -18848,11 +20287,8 @@ begin
       EndTime := TimeList[TimeList.Count -1];
       if EndTime > StressPeriod.EndTime then
       begin
-        ErrorMessage := 'The end of the last stress period is '
-          + FloatToStr(StressPeriod.EndTime)
-          + '. The last defined time is '
-          + FloatToStr(EndTime) + '. The following objects '
-          + 'have defined times before the beginning of the first stress period.';
+        ErrorMessage := Format(StrTheEndOfTheLast,
+          [StressPeriod.EndTime, EndTime]);
         OutOfEndRangeScreenObjects.Insert(0, ErrorMessage);
         frmErrorsAndWarnings.AddWarning(self,
           StrAnyTimesAfterThe,OutOfEndRangeScreenObjects.Text);
@@ -19488,7 +20924,7 @@ begin
 
       ListFileNames := TStringList.Create;
       try
-        ListFileName := (NameFileWriter as TNameFileWriter).ListFileName;
+        ListFileName := (NameFileWriter as TCustomNameFileWriter).ListFileName;
         ListFileNames.Add(ListFileName);
 
         BatchFileLocation := WriteModflowBatchFile(
@@ -19648,6 +21084,7 @@ var
   ChildNameFile: string;
   WriterList: TSfrWriterList;
   ParentPhastModel: TPhastModel;
+  LinkWriter: TModflowMt3dmsLinkWriter;
 begin
   Assert(Assigned(NameFileWriter));
   LocalNameWriter := NameFileWriter as TNameFileWriter;
@@ -19891,6 +21328,17 @@ begin
       if ModflowPackages.UpwPackage.IsSelected then
       begin
         frmProgressMM.StepIt;
+      end;
+
+      LinkWriter := TModflowMt3dmsLinkWriter.Create(self, etExport);
+      try
+        LinkWriter.WriteFile(FileName);
+      finally
+        LinkWriter.Free;
+      end;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
       end;
 
       ChdWriter := TModflowCHD_Writer.Create(self, etExport);
@@ -20274,23 +21722,6 @@ begin
         frmProgressMM.StepIt;
       end;
 
-//      UzfWriter := TModflowUzfWriter.Create(Self, etExport);
-//      try
-//        UzfWriter.WriteFile(FileName, FGageUnitNumber);
-//      finally
-//        UzfWriter.Free;
-//      end;
-//      FDataArrayManager.CacheDataArrays;
-//      Application.ProcessMessages;
-//      if not frmProgressMM.ShouldContinue then
-//      begin
-//        Exit;
-//      end;
-//      if ModflowPackages.UzfPackage.IsSelected then
-//      begin
-//        frmProgressMM.StepIt;
-//      end;
-
       SubWriter := TModflowSUB_Writer.Create(Self, etExport);
       try
         SubWriter.WriteFile(FileName);
@@ -20388,31 +21819,7 @@ begin
       LocalNameWriter.SaveNameFile(FileName);
     finally
       SetCurrentNameFileWriter(nil);
-//      Gages.Free;
     end;
-
-//    Application.ProcessMessages;
-//    if not frmProgressMM.ShouldContinue then
-//    begin
-//      Exit;
-//    end;
-//
-//    BatchFileLocation := WriteModflowBatchFile(
-//      ProgramLocations,
-//      ChangeFileExt(FileName, '.nam'), ListFileName,
-//      ModflowOptions.OpenInTextEditor, BatchFileAdditionsBeforeModel,
-//      BatchFileAdditionsAfterModel);
-//
-//    Application.ProcessMessages;
-//    if not frmProgressMM.ShouldContinue then
-//    begin
-//      Exit;
-//    end;
-//
-//    if RunModel then
-//    begin
-//      WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
-//    end;
   finally
     UpdateCurrentModel(SelectedModel);
   end;
@@ -20501,6 +21908,149 @@ begin
       FreeAndNil(frmProgressMM);
     end;
 //    ReclaimMemory;
+  end;
+end;
+
+procedure TCustomModel.ExportMt3dmsModel(const FileName: string;
+  RunModel: Boolean);
+var
+  NumberOfSteps: integer;
+  Mt3dmsBtnWriter: TMt3dmsBtnWriter;
+  Mt3dmsAdvWriter: TMt3dmsAdvWriter;
+  Mt3dmsDspWriter: TMt3dmsDspWriter;
+  Mt3dmsSsmWriter: TMt3dmsSsmWriter;
+  Mt3dmsRctWriter: TMt3dmsRctWriter;
+  Mt3dmsGcgWriter: TMt3dmsGcgWriter;
+  Mt3dmsTobWriter: TMt3dmsTobWriter;
+  LocalNameWriter: TMt3dmsNameWriter;
+  ListFileNames : TStringList;
+  ListFileName: string;
+  BatchFileLocation: string;
+begin
+  if frmProgressMM = nil then
+  begin
+    frmProgressMM := TfrmProgressMM.Create(nil);
+  end;
+  try
+    frmFormulaErrors.DelayShowing := True;
+    try
+      frmProgressMM.Prefix := 'File ';
+      frmProgressMM.Caption := 'Exporting MT3DMS input files';
+      frmProgressMM.btnAbort.Visible := True;
+      frmProgressMM.ShouldContinue := True;
+      frmProgressMM.Show;
+
+      NumberOfSteps := CountStepsInMt3dExport;
+
+      frmProgressMM.pbProgress.Max := NumberOfSteps;
+      frmProgressMM.pbProgress.Position := 0;
+
+      if not PrepareModflowFullStressPeriods then
+      begin
+        Exit;
+      end;
+
+      Assert(Assigned(NameFileWriter));
+      LocalNameWriter := NameFileWriter as TMt3dmsNameWriter;
+      SetCurrentNameFileWriter(LocalNameWriter);
+      UpdateCurrentModel(self);
+      try
+        SetCurrentDir(ExtractFileDir(FileName));
+
+        Mt3dmsBtnWriter := TMt3dmsBtnWriter.Create(Self, etExport);
+        try
+          Mt3dmsBtnWriter.WriteFile(FileName);
+        finally
+          Mt3dmsBtnWriter.Free;
+        end;
+
+        Mt3dmsAdvWriter := TMt3dmsAdvWriter.Create(Self, etExport);
+        try
+          Mt3dmsAdvWriter.WriteFile(FileName);
+        finally
+          Mt3dmsAdvWriter.Free;
+        end;
+
+        Mt3dmsDspWriter := TMt3dmsDspWriter.Create(Self, etExport);
+        try
+          Mt3dmsDspWriter.WriteFile(FileName);
+        finally
+          Mt3dmsDspWriter.Free;
+        end;
+
+        Mt3dmsSsmWriter := TMt3dmsSsmWriter.Create(Self, etExport);
+        try
+          Mt3dmsSsmWriter.WriteFile(FileName);
+        finally
+          Mt3dmsSsmWriter.Free;
+        end;
+
+        Mt3dmsRctWriter := TMt3dmsRctWriter.Create(Self, etExport);
+        try
+          Mt3dmsRctWriter.WriteFile(FileName);
+        finally
+          Mt3dmsRctWriter.Free;
+        end;
+
+        Mt3dmsGcgWriter := TMt3dmsGcgWriter.Create(Self, etExport);
+        try
+          Mt3dmsGcgWriter.WriteFile(FileName);
+        finally
+          Mt3dmsGcgWriter.Free;
+        end;
+
+        Mt3dmsTobWriter := TMt3dmsTobWriter.Create(Self, etExport);
+        try
+          Mt3dmsTobWriter.WriteFile(FileName, ObservationPurpose);
+        finally
+          Mt3dmsTobWriter.Free;
+        end;
+
+        LocalNameWriter.SaveNameFile(FileName);
+
+        ListFileNames := TStringList.Create;
+        try
+          ListFileName := LocalNameWriter.ListFileName;
+          ListFileNames.Add(ListFileName);
+
+          BatchFileLocation := WriteMt3dmsBatchFile(
+            ProgramLocations,
+            ChangeFileExt(FileName, StrMtName), ListFileNames,
+            ModflowOptions.OpenInTextEditor);
+        finally
+          ListFileNames.Free;
+        end;
+
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      if RunModel then
+      begin
+        RunAProgram('"' + BatchFileLocation + '"');
+      end;
+
+      finally
+        UpdateCurrentModel(SelectedModel);
+        SetCurrentNameFileWriter(nil);
+      end;
+
+    finally
+      frmProgressMM.btnAbort.Visible := False;
+      frmProgressMM.Hide;
+      if frmProgressMM.Owner = nil then
+      begin
+        FreeAndNil(frmProgressMM);
+      end;
+      frmFormulaErrors.DelayShowing := False;
+    end;
+  except on E: EFCreateError do
+    begin
+      Beep;
+      MessageDlg(E.Message, mtError, [mbOK], 0);
+    end;
   end;
 end;
 
@@ -20863,6 +22413,8 @@ end;
 
 procedure TChildModelItem.Assign(Source: TPersistent);
 begin
+  // if Assign is updated, update IsSame too.
+
   if Source is TChildModelItem then
   begin
     ChildModel.Assign(TChildModelItem(Source).ChildModel);
@@ -20901,6 +22453,7 @@ var
 begin
     // When editing this section, be sure to edit TChildModelEdit
     // and TChildModel too
+
   result := AnotherItem is TChildModelItem;
   if result then
   begin
@@ -21904,6 +23457,11 @@ begin
   inherited;
 end;
 
+function TChildModel.DMCOEF: TOneDRealArray;
+begin
+  Result := ConvertRealParentArray(inherited DMCOEF);
+end;
+
 function TChildModel.EdgeIndex: integer;
 var
   PhastModel: TPhastModel;
@@ -22020,6 +23578,18 @@ begin
   result := ParentModel.GetHufParameters;
 end;
 
+function TChildModel.GetImmobileComponents: TChemSpeciesCollection;
+begin
+  if ParentModel = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ParentModel.GetImmobileComponents;
+  end;
+end;
+
 function TChildModel.GetLayerGroupByLayer(const Layer: integer): TLayerGroup;
 begin
   result := inherited GetLayerGroupByLayer(ChildLayerToParentLayer(Layer));
@@ -22037,9 +23607,28 @@ begin
   end;
 end;
 
+function TChildModel.GetMobileComponents: TMobileChemSpeciesCollection;
+begin
+  if ParentModel = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ParentModel.GetMobileComponents;
+  end;
+end;
+
 function TChildModel.GetModelSelection: TModelSelection;
 begin
-  result := ParentModel.GetModelSelection;
+  if ParentModel = nil then
+  begin
+    result := msUndefined;
+  end
+  else
+  begin
+    result := ParentModel.GetModelSelection;
+  end;
 end;
 
 function TChildModel.GetModflowFullStressPeriods: TModflowStressPeriods;
@@ -22065,6 +23654,16 @@ end;
 function TChildModel.GetModflowTransientParameters: TModflowTransientListParameters;
 begin
   result := ParentModel.GetModflowTransientParameters;
+end;
+
+function TChildModel.GetMt3dmsOutputControl: TMt3dmsOutputControl;
+begin
+  result := ParentModel.GetMt3dmsOutputControl;
+end;
+
+function TChildModel.GetMt3dmsTimes: TMt3dmsTimeCollection;
+begin
+  result := ParentModel.GetMt3dmsTimes
 end;
 
 function TChildModel.GetObservationPurpose: TObservationPurpose;
@@ -22372,6 +23971,12 @@ begin
   ParentModel.SetHufParameters(Value);
 end;
 
+procedure TChildModel.SetImmobileComponents(
+  const Value: TChemSpeciesCollection);
+begin
+  ParentModel.SetImmobileComponents(Value);
+end;
+
 procedure TChildModel.SetLayerStructure(const Value: TLayerStructure);
 begin
   ParentModel.SetLayerStructure(Value);
@@ -22393,6 +23998,12 @@ begin
     FMaxIterations := Value;
     Invalidate;
   end;
+end;
+
+procedure TChildModel.SetMobileComponents(
+  const Value: TMobileChemSpeciesCollection);
+begin
+  ParentModel.SetMobileComponents(Value);
 end;
 
 procedure TChildModel.SetModelName(const Value: string);
@@ -22426,6 +24037,16 @@ procedure TChildModel.SetModflowTransientParameters(
   const Value: TModflowTransientListParameters);
 begin
   ParentModel.SetModflowTransientParameters(Value);
+end;
+
+procedure TChildModel.SetMt3dmsOutputControl(const Value: TMt3dmsOutputControl);
+begin
+  ParentModel.SetMt3dmsOutputControl(Value);
+end;
+
+procedure TChildModel.SetMt3dmsTimes(const Value: TMt3dmsTimeCollection);
+begin
+  ParentModel.SetMt3dmsTimes(Value);
 end;
 
 procedure TChildModel.SetObservationPurpose(const Value: TObservationPurpose);
@@ -22480,6 +24101,16 @@ end;
 function TChildModel.StoreHydrogeologicUnits: Boolean;
 begin
   result := False;
+end;
+
+function TChildModel.TRPT: TOneDRealArray;
+begin
+  Result := ConvertRealParentArray(inherited TRPT);
+end;
+
+function TChildModel.TRPV: TOneDRealArray;
+begin
+  Result := ConvertRealParentArray(inherited TRPV);
 end;
 
 function TChildModel.Trpy: TOneDRealArray;
@@ -22605,6 +24236,11 @@ begin
     LocalParent.InvalidateMapping;
     LocalParent.InvalidateSegments;
   end;
+end;
+
+procedure TChildModel.UpdateMt3dmsChemDataSets;
+begin
+  ParentModel.UpdateMt3dmsChemDataSets
 end;
 
 procedure TChildModel.WriteFluxClosureCriterion(Writer: TWriter);
@@ -23190,6 +24826,7 @@ procedure TChildDiscretization.Assign(Source: TPersistent);
 var
   SourceChildDiscretization: TChildDiscretization;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TChildDiscretization then
   begin
     SourceChildDiscretization := TChildDiscretization(Source);
@@ -23310,6 +24947,7 @@ var
   SourceCollection: TChildDiscretizationCollection;
 begin
   inherited;
+  // if Assign is updated, update IsSame too.
   if Source is TChildDiscretizationCollection then
   begin
     BeginUpdate;
@@ -23408,6 +25046,8 @@ procedure TChildModelEdit.Assign(Source: TPersistent);
 var
   SourceItem: TChildModelEdit;
 begin
+  // if Assign is updated, update IsSame too.
+
     // When editing this section, be sure to edit TChildModel
     // and TChildModelItem too
   if Source is TChildModelEdit then
@@ -23497,6 +25137,7 @@ var
 begin
     // When editing this section, be sure to edit TChildModel
     // and TChildModelItem too
+
   result := AnotherItem is TChildModelEdit;
   if result then
   begin
@@ -23613,198 +25254,11 @@ begin
   FModel := AModel;
 end;
 
-{ TStreamLinkPlot }
-
-//procedure TSfrStreamLinkPlot.Assign(Source: TPersistent);
-//var
-//  SourceStreamLink: TSfrStreamLinkPlot;
-//begin
-//  if Source is TSfrStreamLinkPlot then
-//  begin
-//    SourceStreamLink := TSfrStreamLinkPlot(Source);
-//    PlotStreamConnections := SourceStreamLink.PlotStreamConnections;
-//    PlotDiversions := SourceStreamLink.PlotDiversions;
-//    StreamColor := SourceStreamLink.StreamColor;
-//    DiversionColor := SourceStreamLink.DiversionColor;
-//    StreamsToPlot := SourceStreamLink.StreamsToPlot;
-//    TimeToPlot := SourceStreamLink.TimeToPlot;
-//    PlotUnconnected := SourceStreamLink.PlotUnconnected;
-//    UnconnectedColor := SourceStreamLink.UnconnectedColor;
-//  end
-//  else
-//  begin
-//    inherited;
-//  end;
-//end;
-//
-//constructor TSfrStreamLinkPlot.Create(Model: TBaseModel);
-//begin
-//  inherited;
-//  FStreamColor := clBlue;
-//  FDiversionColor := clLime;
-//  FUnconnectedColor := clRed;
-//  FPlotStreamConnections := True;
-//  FPlotDiversions := True;
-//  FPlotUnconnected := True;
-//end;
-//
-//procedure TSfrStreamLinkPlot.GetObjectsToPlot(StreamList: TSfrStreamPlotList;
-//  LakeList: TLakePlotList);
-//var
-//  LocalModel: TPhastModel;
-//  Index : integer;
-//  ScreenObject: TScreenObject;
-//  SfrBoundary: TSfrBoundary;
-//  Item: TSfrParamIcalcItem;
-//  StreamPlot: TSfrStreamPlot;
-//  LakBoundary: TLakBoundary;
-//  Lake: TLakePlot;
-//begin
-//  StreamList.Clear;
-//  LakeList.Clear;
-//  if StreamsToPlot <> stpNone then
-//  begin
-//    LocalModel := FModel as TPhastModel;
-//    if not LocalModel.SfrIsSelected then
-//    begin
-//      Exit;
-//    end;
-//    for Index := 0 to LocalModel.ScreenObjectCount - 1 do
-//    begin
-//      ScreenObject := LocalModel.ScreenObjects[Index];
-//      if ScreenObject.Deleted then
-//      begin
-//        Continue;
-//      end;
-//      case StreamsToPlot of
-//        stpVisible:
-//          begin
-//            if not ScreenObject.Visible then
-//            begin
-//              Continue;
-//            end;
-//          end;
-//        stpSelected:
-//          begin
-//            if not ScreenObject.Selected then
-//            begin
-//              Continue;
-//            end;
-//          end;
-//      end;
-//      SfrBoundary := ScreenObject.ModflowBoundaries.ModflowSfrBoundary;
-//      if SfrBoundary <> nil then
-//      begin
-//        Item := SfrBoundary.ParamIcalc.GetItemByStartTime(TimeToPlot);
-//        if Item <> nil then
-//        begin
-//          StreamPlot := TSfrStreamPlot.Create;
-//          StreamPlot.StreamObject := ScreenObject;
-//          StreamPlot.Segment := SfrBoundary.SegementNumber;
-//          StreamPlot.OutflowSegment := Item.OutflowSegment;
-//          StreamPlot.DiversionSegment := Item.DiversionSegment;
-//          StreamList.Add(StreamPlot);
-//        end;
-//      end;
-//      if LocalModel.LakIsSelected then
-//      begin
-//        LakBoundary := ScreenObject.ModflowBoundaries.ModflowLakBoundary;
-//        if LakBoundary <> nil then
-//        begin
-//          Lake := TLakePlot.Create;
-//          Lake.LakeObject := ScreenObject;
-//          Lake.LakeId := LakBoundary.LakeID;
-//          LakeList.Add(Lake);
-//        end;
-//      end;
-//    end;
-//    StreamList.Sort;
-//    LakeList.Sort;
-//  end;
-//end;
-//
-//procedure TSfrStreamLinkPlot.SetDiversionColor(const Value: TColor);
-//begin
-//  SetColorProperty(FDiversionColor, Value);
-//end;
-//
-//procedure TSfrStreamLinkPlot.SetPlotDiversions(const Value: boolean);
-//begin
-//  SetBooleanProperty(FPlotDiversions, Value);
-//end;
-//
-//procedure TSfrStreamLinkPlot.SetPlotStreamConnections(const Value: boolean);
-//begin
-//  SetBooleanProperty(FPlotStreamConnections, Value);
-//end;
-//
-//procedure TSfrStreamLinkPlot.SetPlotUnconnected(const Value: Boolean);
-//begin
-//  SetBooleanProperty(FPlotUnconnected, Value);
-//end;
-//
-//procedure TSfrStreamLinkPlot.SetStreamColor(const Value: TColor);
-//begin
-//  SetColorProperty(FStreamColor, Value);
-//end;
-//
-//procedure TSfrStreamLinkPlot.SetStreamsToPlot(const Value: TStreamsToPlot);
-//begin
-//  if FStreamsToPlot <> Value then
-//  begin
-//    FStreamsToPlot := Value;
-//  end;
-//end;
-//
-//procedure TSfrStreamLinkPlot.SetTimeToPlot(const Value: TDateTime);
-//begin
-//  SetDataTimeProperty(FTimeToPlot, Value);
-//end;
-//
-//procedure TSfrStreamLinkPlot.SetUnconnectedColor(const Value: TColor);
-//begin
-//  SetColorProperty(FUnconnectedColor, Value);
-//end;
-
-{ TStreamPlotList }
-
-//procedure TSfrStreamPlotList.Sort;
-//var
-//  Comparer: IComparer<TSfrStreamPlot>;
-//begin
-//  Comparer:= TSfrStreamPlotComparer.Create;
-//  inherited Sort(Comparer);
-//end;
-
-{ TLakePlotList }
-
-//procedure TLakePlotList.Sort;
-//var
-//  Comparer: IComparer<TLakePlot>;
-//begin
-//  Comparer:= TSfrLakePlotComparer.Create;
-//  inherited Sort(Comparer);
-//end;
-
-{ TSfrStreamPlotComparer }
-
-//function TSfrStreamPlotComparer.Compare(const Left,
-//  Right: TSfrStreamPlot): Integer;
-//begin
-//  result := Left.Segment - Right.Segment;
-//end;
-
-{ TSfrLakePlotComparer }
-
-//function TSfrLakePlotComparer.Compare(const Left, Right: TLakePlot): Integer;
-//begin
-//  result := Left.LakeId - Right.LakeId;
-//end;
-
 initialization
   RegisterClass(TPhastModel);
   RegisterClass(TChildModel);
 
 end.
+
 
 

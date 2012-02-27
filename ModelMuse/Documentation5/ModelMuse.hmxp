@@ -83,7 +83,7 @@
       </tablestyleclass>
     </styleclasses>
     <config-group name="project">
-      <config-value name="title" translate="true">ModelMuse—A Graphical User Interface for MODFLOW-2005, MODFLOW-LGR, and PHAST</config-value>
+      <config-value name="title" translate="true">ModelMuse—A Graphical User Interface for MODFLOW-2005, MODFLOW-LGR, MODFLOW-NWT, MT3DMS and PHAST version 1.</config-value>
       <config-value name="author" translate="true">Richard B. Winston</config-value>
       <config-value name="copyright" translate="true">© &lt;%YEAR%&gt; &lt;%AUTHOR%&gt;</config-value>
       <config-value name="versionmajor">1</config-value>
@@ -95,7 +95,7 @@
       <config-value name="deffont">font-family:'MS Sans Serif'; font-size:8pt; color:#000000;</config-value>
       <config-value name="contents"></config-value>
       <config-value name="topicprefix"></config-value>
-      <config-value name="autohelpstart">3638</config-value>
+      <config-value name="autohelpstart">3659</config-value>
       <config-value name="autohelpincrement">1</config-value>
       <config-value name="autohelpanchor">1</config-value>
       <config-value name="searchpath">.\;.\Used Images\;.\ScreenShots\;.\ModflowGuide\</config-value>
@@ -538,6 +538,15 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Add_or_remove_flux_observation" value="3507"/>
       <helpcontext-number href="Additional_Options_Tab_Newton_" value="3629"/>
       <helpcontext-number href="Additive_Parameters" value="3310"/>
+      <helpcontext-number href="ADV_Advection_Package_Pane" value="3641"/>
+      <helpcontext-number href="ADV_Advection_Package_Pane#DCEPS" value="3658"/>
+      <helpcontext-number href="ADV_Advection_Package_Pane#MIXELM" value="3652"/>
+      <helpcontext-number href="ADV_Advection_Package_Pane#NADVFD" value="3653"/>
+      <helpcontext-number href="ADV_Advection_Package_Pane#NPH" value="3656"/>
+      <helpcontext-number href="ADV_Advection_Package_Pane#NPL" value="3659"/>
+      <helpcontext-number href="ADV_Advection_Package_Pane#NPLANE" value="3657"/>
+      <helpcontext-number href="ADV_Advection_Package_Pane#PERCEL" value="3654"/>
+      <helpcontext-number href="ADV_Advection_Package_Pane#TVD" value="3655"/>
       <helpcontext-number href="Appendix_1_ModelMonitor" value="3487"/>
       <helpcontext-number href="ArcCos" value="1310"/>
       <helpcontext-number href="ArcCosh" value="1320"/>
@@ -569,6 +578,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Boundary_Conditions3" value="3060"/>
       <helpcontext-number href="Boundary_Conditions4" value="3210"/>
       <helpcontext-number href="Boundary_Conditions5" value="2600"/>
+      <helpcontext-number href="BTN_Basic_Transport_Package" value="3640"/>
       <helpcontext-number href="Budget_Pane" value="2530"/>
       <helpcontext-number href="Case" value="560"/>
       <helpcontext-number href="CaseB" value="570"/>
@@ -594,6 +604,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="ColumnWidth" value="440"/>
       <helpcontext-number href="Comments_Tab" value="3566"/>
       <helpcontext-number href="Comparison_of_Objects_and_Shap" value="3483"/>
+      <helpcontext-number href="Concentration_Observations_TOB" value="3650"/>
       <helpcontext-number href="Conductance_Interpretation" value="3330"/>
       <helpcontext-number href="Contour_Data_Dialog_Box" value="3489"/>
       <helpcontext-number href="Copy" value="1170"/>
@@ -643,6 +654,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Description_Tab" value="2460"/>
       <helpcontext-number href="Discretization_Tab" value="2440"/>
       <helpcontext-number href="Discretization_Tab#Vertical_discretization" value="3600"/>
+      <helpcontext-number href="Dispersion_Tab" value="3638"/>
       <helpcontext-number href="Distance" value="700"/>
       <helpcontext-number href="Drawing_the_Grid" value="220"/>
       <helpcontext-number href="DRN_Drain_Package_Pane" value="2670"/>
@@ -651,6 +663,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="DROB_Drain_ObservationObjects" value="3470"/>
       <helpcontext-number href="DRT_Drain_Return_Package_Pane" value="2680"/>
       <helpcontext-number href="DRT_Object_Pane" value="1970"/>
+      <helpcontext-number href="DSP_Dispersion_Package_Pane" value="3642"/>
       <helpcontext-number href="Edit" value="1630"/>
       <helpcontext-number href="Editing_Objects" value="1530"/>
       <helpcontext-number href="Editing_the_Grid" value="1660"/>
@@ -686,6 +699,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Flow_Table_Tab" value="2150"/>
       <helpcontext-number href="Flows_Tab" value="2110"/>
       <helpcontext-number href="Flows_Tab#FLOW" value="3597"/>
+      <helpcontext-number href="Flux_Observations_TOB_Transpor" value="3651"/>
       <helpcontext-number href="For_MODFLOW_Experts" value="3433"/>
       <helpcontext-number href="Formula_Diagram" value="3375"/>
       <helpcontext-number href="Formula_Editor" value="1810"/>
@@ -705,6 +719,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Gage_Tab" value="3370"/>
       <helpcontext-number href="GBOB_General_Head_Boundary_Observations" value="3466"/>
       <helpcontext-number href="GBOB_General_Head_Boundary_ObsObjects" value="3471"/>
+      <helpcontext-number href="GCG_Generalized_Conjugate_Grad" value="3645"/>
       <helpcontext-number href="General_Pane" value="2510"/>
       <helpcontext-number href="Generate_Grid_Dialog_Box" value="1700"/>
       <helpcontext-number href="Generating_Grids" value="190"/>
@@ -846,6 +861,8 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="MODFLOW_Packages_Dialog_Box" value="2540"/>
       <helpcontext-number href="MODFLOW_Program_Locations_Dialog_Box" value="2810"/>
       <helpcontext-number href="MODFLOW_Time_Dialog_Box" value="2490"/>
+      <helpcontext-number href="MODFLOW_Time_Dialog_Box#MT3DMS" value="3647"/>
+      <helpcontext-number href="MODFLOW_Time_Dialog_Box#TTSMULT" value="3661"/>
       <helpcontext-number href="MODFLOW-LGR" value="3605"/>
       <helpcontext-number href="MODPATH" value="3461"/>
       <helpcontext-number href="MODPATH#ReferenceTime" value="3463"/>
@@ -855,6 +872,9 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="MODPATH_MODPATH_Object_Options" value="3462"/>
       <helpcontext-number href="MODPATH_Time_Series_Display" value="3544"/>
       <helpcontext-number href="More_PHAST_Options" value="2990"/>
+      <helpcontext-number href="MT3DMS" value="3639"/>
+      <helpcontext-number href="MT3DMS_Pane" value="3648"/>
+      <helpcontext-number href="MT3DMS_Pane#TIMPRS" value="3662"/>
       <helpcontext-number href="MultiInterpolate" value="850"/>
       <helpcontext-number href="Multiplier_and_Zone_Arrays" value="3300"/>
       <helpcontext-number href="Navigation" value="3486"/>
@@ -939,6 +959,8 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="RadToDeg" value="1400"/>
       <helpcontext-number href="RCH_Object_Pane" value="2020"/>
       <helpcontext-number href="RCH_Recharge_Package_Pane" value="2640"/>
+      <helpcontext-number href="RCT_Chemical_Reactions_Package" value="3644"/>
+      <helpcontext-number href="RCT_Chemical_Reactions_Package#ISOTHM" value="3660"/>
       <helpcontext-number href="Rearrange_Objects_Dialog_Box" value="2210"/>
       <helpcontext-number href="Rectangles" value="1510"/>
       <helpcontext-number href="References_Cited" value="3270"/>
@@ -1037,6 +1059,8 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="SqrI" value="910"/>
       <helpcontext-number href="SqrR" value="920"/>
       <helpcontext-number href="Sqrt" value="930"/>
+      <helpcontext-number href="SSM_Sink__Source_Mixing_Packa2" value="3649"/>
+      <helpcontext-number href="SSM_Sink__Source_Mixing_Packag" value="3643"/>
       <helpcontext-number href="Start_Up_Dialog_Box" value="100"/>
       <helpcontext-number href="Steady_Flow_Dialog_Box" value="2860"/>
       <helpcontext-number href="Straight-Lines" value="1500"/>
@@ -1069,6 +1093,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Time_Tab" value="2090"/>
       <helpcontext-number href="Time_Tab#ICALC" value="2100"/>
       <helpcontext-number href="Title_and_Units_Dialog_Box" value="2820"/>
+      <helpcontext-number href="TOB_Transport_Observation_Pack" value="3646"/>
       <helpcontext-number href="Top_Front_and_Side_Views" value="130"/>
       <helpcontext-number href="Trig" value="1300"/>
       <helpcontext-number href="Trim" value="1280"/>

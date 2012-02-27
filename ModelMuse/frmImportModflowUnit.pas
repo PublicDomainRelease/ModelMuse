@@ -43,6 +43,16 @@ implementation
 uses JclSysUtils, Modflow2005ImporterUnit, frmShowHideObjectsUnit,
   frmDisplayDataUnit;
 
+resourcestring
+  StrTheMODFLOWNameFil = 'The MODFLOW Name file appears to be invalid';
+  StrSWasNotFound = '%s was not found.';
+  StrNoLISTFileWasFou = 'No LIST file was found in the MODFLOW Name file.';
+  StrThereWasAnErrorR = 'There was an error reading the MODFLOW input files.' +
+  '  Check %s for error messages.';
+  StrTheListingFile = 'The listing file, "%s", was not found.';
+  StrTheNameOfTheMODF = 'The name of the MODFLOW Name file can not contain a' +
+  'ny spaces.';
+
 procedure TfrmImportModflow.btnOKClick(Sender: TObject);
 var
   ModflowImporterName: string;
@@ -65,9 +75,17 @@ begin
     if not FileExists(ModflowImporterName) then
     begin
       Beep;
-      MessageDlg(ModflowImporterName + ' was not found.', mtError, [mbOK], 0);
+      MessageDlg(Format(StrSWasNotFound, [ModflowImporterName]), mtError, [mbOK], 0);
       Exit;
     end;
+
+    if Pos(' ', ExtractFileName(edNameFile.FileName)) > 0 then
+    begin
+      Beep;
+      MessageDlg(StrTheNameOfTheMODF, mtError, [mbOK], 0);
+      Exit;
+    end;
+
     XOrigin := StrToFloat(rdeX.Text);
     YOrigin := StrToFloat(rdeY.Text);
     GridAngle := StrToFloat(rdeGridAngle.Text) * Pi/180;
@@ -84,11 +102,21 @@ begin
         if (Length(ALine) > 0) and (ALine[1] <> '#') then
         begin
           LineContents.DelimitedText := UpperCase(ALine);
-          Assert(LineContents.Count >= 1);
+          if LineContents.Count = 0 then
+          begin
+            Beep;
+            MessageDlg(StrTheMODFLOWNameFil, mtError, [mbOK], 0);
+            Exit;
+          end;
           if Trim(LineContents[0]) = 'LIST' then
           begin
             LineContents.DelimitedText := ALine;
-            Assert(LineContents.Count >= 3);
+            if LineContents.Count < 3 then
+            begin
+              Beep;
+              MessageDlg(StrTheMODFLOWNameFil, mtError, [mbOK], 0);
+              Exit;
+            end;
             ListFileName := LineContents[2];
             break;
           end;
@@ -101,8 +129,7 @@ begin
     if ListFileName = '' then
     begin
       Beep;
-      MessageDlg('No LIST file was found in the name file.',
-        mtError, [mbOK], 0);
+      MessageDlg(StrNoLISTFileWasFou, mtError, [mbOK], 0);
       Exit;
     end;
     SetCurrentDir(ExtractFileDir(edNameFile.FileName));
@@ -114,15 +141,14 @@ begin
     if not FReadModflowInputProperly then
     begin
       Beep;
-      MessageDlg('There was an error reading the MODFLOW input files.  '
-        + 'Check ' + ListFileName + ' for error messages.',
+      MessageDlg(Format(StrThereWasAnErrorR, [ListFileName]),
         mtError, [mbOK], 0);
       Exit;
     end;
     if not FileExists(ListFileName) then
     begin
       Beep;
-      MessageDlg('The listing file, "' + ListFileName + '", was not found.',
+      MessageDlg(Format(StrTheListingFile, [ListFileName]),
         mtError, [mbOK], 0);
       Exit;
     end;

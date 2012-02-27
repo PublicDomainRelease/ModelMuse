@@ -92,6 +92,16 @@ const
   BFH_Fluxes                = 'BFH_Fluxes';
   StrNWT                    = 'NWT';
   StrUPW                    = 'UPW';
+  StrBTN                    = 'BTN';
+  StrADV                    = 'ADV';
+  StrDSP                    = 'DSP';
+  StrSSM                    = 'SSM';
+  StrRCT                    = 'RCT';
+  StrGCG                    = 'GCG';
+  StrTOB                    = 'TOB';
+  StrLMT6                   = 'LMT6';
+  StrFTL                    = 'FTL';
+  StrCNF                    = 'CNF';
 
   Solvers: array[0..4] of string = (StrPCG, StrGMG, StrSIP, StrDE4, StrNWT);
   FlowPackages: array[0..3] of string = (StrLPF, StrHUF2, StrBCF, StrUPW);
@@ -165,6 +175,26 @@ type
   public
     constructor Create(Model: TBaseModel);
   end;
+
+const
+  Mt3dList = 16;
+  Mt3dBtn = 1;
+  Mt3dFtl = 10;
+  Mt3dAdv = 2;
+  Mt3dDsp = 3;
+  Mt3dSSM = 4;
+  Mt3dRct = 8;
+  Mt3dGcg = 9;
+  Mt3dTob = 7;
+  Mt3dCnf = 17;
+  Mt3dUcnMobileStart = 201;
+  Mt3dUcnImmobileStart = 301;
+  Mt3dObsStart = 401;
+  Mt3dMassStart = 601;
+
+  Mt3dTob_inConcObs = 21;
+  Mt3dTob_inFluxObs = 22;
+  Mt3dTob_inSaveObs = 23;
 
 implementation
 
@@ -243,6 +273,37 @@ const
   // If the reserved unit numbers are changed, the documentation
   // for the MODFLOW Name File dialog box must be updated.
 
+  // 100 In MT3DMS, this is equivalent to INTERNAL in MF2005.
+  // 101 In MT3DMS, data arranged in block format
+  // 102 In MT3DMS, data arranged in zone format
+  // 103 In MT3DMS, data arranged in list-directed or free format.
+
+{
+  MT3DMS Input/Output Files       File Type     Preserved Unit
+  Output Listing File*            LIST          16
+  Package Options
+  Basic Transport*                BTN           1
+  Flow-Transport Link*            FTL           10
+  Advection                       ADV           2
+  Dispersion                      DSP           3
+  Sink/Source Mixing              SSM           4
+  Reaction                        RCT           8
+  Generalized Conjugate Gradient  GCG           9
+  Transport Observation           TOB           7
+  HSS Time-Varying Source         HSS           13
+  Output Files
+  Model Configuration File        CNF           17
+  Unformatted Concentration File
+  (dissolved phase)
+                                  UCN           200+species index
+  Unformatted Concentration File
+  (sorbed/immobile phase)
+                                  UCN           300+species index
+  Concentrations Observation File OBS           400+species index
+  Mass Budget Summary File        MAS           600+species index
+  *Note: these files are always required for every simulation.
+}
+
   SubSUB_Out = 110;
   SubCOM_ML_Out = 111;
   SubCOM_IS_Out = 112;
@@ -271,7 +332,8 @@ const
   BFH_Flux = 132;
   NWT_Unit = 133;
   UPW_Unit = 134;
-
+  LMT6_Unit = 135;
+  FTL_Unit = 136;
 
 
 
@@ -413,6 +475,8 @@ begin
   AddItem(BFH_Fluxes, BFH_Flux);
 
   AddItem(StrUPW ,UPW_Unit);
+  AddItem(StrLMT6, LMT6_Unit);
+  AddItem(StrFTL, FTL_Unit);
 
 
 

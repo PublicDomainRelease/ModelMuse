@@ -268,6 +268,7 @@ var
   ContourColors: TColorParameters;
   VirtNoneNode: PVirtualNode;
 begin
+  Handle;
   FGettingData := True;
   try
     cbLabelContours.Checked := frmGoPhast.PhastModel.ShowContourLabels;

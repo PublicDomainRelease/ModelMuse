@@ -312,6 +312,7 @@ procedure TDrtItem.Assign(Source: TPersistent);
 var
   Drt: TDrtItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TDrtItem then
   begin
     Drt := TDrtItem(Source);

@@ -248,6 +248,7 @@ object frameModpathDisplay: TframeModpathDisplay
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -271,6 +272,7 @@ object frameModpathDisplay: TframeModpathDisplay
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -294,6 +296,7 @@ object frameModpathDisplay: TframeModpathDisplay
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
       end

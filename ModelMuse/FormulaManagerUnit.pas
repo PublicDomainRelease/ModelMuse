@@ -368,6 +368,10 @@ begin
                     begin
                       RemoveHfbModflowBoundarySubscription(self, Subject, OldSubscriptions[VariableIndex]);
                     end
+                    else if PRemoveEvent = Addr(GlobalDummyHandleSubscription) then
+                    begin
+                      GlobalDummyHandleSubscription(self, Subject, OldSubscriptions[VariableIndex]);
+                    end
                     else
                     begin
                       Assert(False);

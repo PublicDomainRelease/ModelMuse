@@ -1,8 +1,8 @@
 inherited frmGoPhast: TfrmGoPhast
   Left = 91
   Top = 50
-  Width = 752
-  Height = 607
+  Width = 773
+  Height = 566
   HelpType = htKeyword
   HelpKeyword = 'Main_Window'
   VertScrollBar.Range = 157
@@ -16,15 +16,16 @@ inherited frmGoPhast: TfrmGoPhast
   OnDeactivate = FormDeactivate
   OnKeyUp = FormKeyUp
   OnMouseMove = pnlLowerRightMouseMove
+  OnMouseWheel = FormMouseWheel
   OnResize = FormResize
-  ExplicitWidth = 752
-  ExplicitHeight = 607
+  ExplicitWidth = 773
+  ExplicitHeight = 566
   PixelsPerInch = 96
   TextHeight = 18
   object splitHoriz: TJvNetscapeSplitter
     Left = 0
-    Top = 382
-    Width = 744
+    Top = 342
+    Width = 765
     Height = 10
     Cursor = crVSplit
     Hint = 'Click and drag to resize the windows.'
@@ -40,16 +41,16 @@ inherited frmGoPhast: TfrmGoPhast
   object pnlTop: TPanel
     Left = 0
     Top = 68
-    Width = 744
-    Height = 314
+    Width = 765
+    Height = 274
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 1
     object splitVertTop: TJvNetscapeSplitter
-      Left = 505
+      Left = 526
       Top = 0
-      Height = 314
+      Height = 274
       Hint = 'Click and drag to resize the windows.'
       Align = alRight
       MinSize = 1
@@ -64,38 +65,38 @@ inherited frmGoPhast: TfrmGoPhast
     inline frameTopView: TframeView
       Left = 0
       Top = 0
-      Width = 505
-      Height = 314
+      Width = 526
+      Height = 274
       HorzScrollBar.Range = 36
       VertScrollBar.Range = 40
       Align = alClient
       TabOrder = 0
       TabStop = True
-      ExplicitWidth = 505
-      ExplicitHeight = 314
+      ExplicitWidth = 526
+      ExplicitHeight = 274
       inherited rulVertical: TRbwRuler
-        Height = 260
+        Height = 220
         ExplicitTop = 39
         ExplicitHeight = 173
       end
       inherited Panel1: TPanel
-        Width = 505
-        ExplicitWidth = 505
+        Width = 526
+        ExplicitWidth = 526
         inherited rulHorizontal: TRbwRuler
-          Width = 456
+          Width = 477
           ExplicitWidth = 351
         end
       end
       inherited ZoomBox: TQRbwZoomBox2
-        Width = 456
-        Height = 260
+        Width = 477
+        Height = 220
         Image32.Top = 0
-        Image32.Width = 456
-        Image32.Height = 260
-        Image32.ExplicitWidth = 456
-        Image32.ExplicitHeight = 260
-        ExplicitWidth = 456
-        ExplicitHeight = 260
+        Image32.Width = 477
+        Image32.Height = 220
+        Image32.ExplicitWidth = 477
+        Image32.ExplicitHeight = 220
+        ExplicitWidth = 477
+        ExplicitHeight = 220
       end
       inherited OrderMenu: TPopupMenu
         Left = 80
@@ -103,21 +104,21 @@ inherited frmGoPhast: TfrmGoPhast
       end
     end
     inline frameSideView: TframeView
-      Left = 515
+      Left = 536
       Top = 0
       Width = 229
-      Height = 314
+      Height = 274
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alRight
       TabOrder = 1
       TabStop = True
-      ExplicitLeft = 515
+      ExplicitLeft = 536
       ExplicitWidth = 229
-      ExplicitHeight = 314
+      ExplicitHeight = 274
       inherited rulVertical: TRbwRuler
         Left = 180
-        Height = 260
+        Height = 220
         Align = alRight
         RulerPosition = rpRight
         ExplicitLeft = 194
@@ -151,17 +152,17 @@ inherited frmGoPhast: TfrmGoPhast
       inherited ZoomBox: TQRbwZoomBox2
         Left = 0
         Width = 180
-        Height = 260
+        Height = 220
         ExaggerationDirection = edHorizontal
         HorizontalDirection = hdLeft
         Image32.Top = 0
         Image32.Width = 180
-        Image32.Height = 260
+        Image32.Height = 220
         Image32.ExplicitWidth = 180
-        Image32.ExplicitHeight = 260
+        Image32.ExplicitHeight = 220
         ExplicitLeft = 0
         ExplicitWidth = 180
-        ExplicitHeight = 260
+        ExplicitHeight = 220
       end
       inherited OrderMenu: TPopupMenu
         Left = 48
@@ -171,8 +172,8 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 392
-    Width = 744
+    Top = 352
+    Width = 765
     Height = 133
     Align = alBottom
     BevelOuter = bvNone
@@ -183,7 +184,7 @@ inherited frmGoPhast: TfrmGoPhast
     TabOrder = 2
     OnMouseMove = pnlLowerRightMouseMove
     object splitVertBottom: TJvNetscapeSplitter
-      Left = 505
+      Left = 526
       Top = 0
       Height = 133
       Hint = 'Click and drag to resize the windows.'
@@ -199,14 +200,14 @@ inherited frmGoPhast: TfrmGoPhast
     inline frameFrontView: TframeView
       Left = 0
       Top = 0
-      Width = 505
+      Width = 526
       Height = 133
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alClient
       TabOrder = 0
       TabStop = True
-      ExplicitWidth = 505
+      ExplicitWidth = 526
       ExplicitHeight = 133
       inherited rulVertical: TRbwRuler
         Top = 0
@@ -216,11 +217,11 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited Panel1: TPanel
         Top = 79
-        Width = 505
+        Width = 526
         Align = alBottom
         TabOrder = 1
         ExplicitTop = 79
-        ExplicitWidth = 505
+        ExplicitWidth = 526
         inherited ModelCube: TRbwModelCube
           Hint = 
             'Click to change row|Click to change the selected row forward or ' +
@@ -230,7 +231,7 @@ inherited frmGoPhast: TfrmGoPhast
           Selection2 = 0.010000000000000000
         end
         inherited rulHorizontal: TRbwRuler
-          Width = 456
+          Width = 477
           RulerMajorTickLength = -10
           RulerMinorTickLength = -5
           RulerTextPosition = tpInside
@@ -241,21 +242,21 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited ZoomBox: TQRbwZoomBox2
         Top = 0
-        Width = 456
+        Width = 477
         Height = 79
         TabOrder = 0
         Image32.Top = 0
-        Image32.Width = 456
+        Image32.Width = 477
         Image32.Height = 79
-        Image32.ExplicitWidth = 456
+        Image32.ExplicitWidth = 477
         Image32.ExplicitHeight = 79
         ExplicitTop = 0
-        ExplicitWidth = 456
+        ExplicitWidth = 477
         ExplicitHeight = 79
       end
     end
     inline frame3DView: Tframe3DView
-      Left = 515
+      Left = 536
       Top = 0
       Width = 229
       Height = 133
@@ -265,7 +266,7 @@ inherited frmGoPhast: TfrmGoPhast
       ParentDoubleBuffered = False
       TabOrder = 1
       TabStop = True
-      ExplicitLeft = 515
+      ExplicitLeft = 536
       ExplicitWidth = 229
       ExplicitHeight = 133
       inherited glWidModelView: TGLWidget
@@ -278,8 +279,8 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object sbMain: TStatusBar
     Left = 0
-    Top = 525
-    Width = 744
+    Top = 485
+    Width = 765
     Height = 28
     Hint = 'Drag with the mouse to resize status bar panels'
     Panels = <
@@ -306,7 +307,7 @@ inherited frmGoPhast: TfrmGoPhast
   object cbControlBar: TControlBar
     Left = 0
     Top = 0
-    Width = 744
+    Width = 765
     Height = 68
     Align = alTop
     AutoSize = True
@@ -316,7 +317,7 @@ inherited frmGoPhast: TfrmGoPhast
     TabOrder = 0
     OnMouseMove = pnlLowerRightMouseMove
     object tbarEdit: TToolBar
-      Left = 162
+      Left = 185
       Top = 2
       Width = 149
       Height = 28
@@ -372,7 +373,7 @@ inherited frmGoPhast: TfrmGoPhast
     object tbarFile: TToolBar
       Left = 11
       Top = 2
-      Width = 138
+      Width = 161
       Height = 28
       ButtonHeight = 23
       Caption = 'File'
@@ -400,25 +401,78 @@ inherited frmGoPhast: TfrmGoPhast
         Action = acFileSave
         OnMouseMove = pnlLowerRightMouseMove
       end
-      object tbRun: TToolButton
+      object btnRunModel: TJvArrowButton
         Left = 69
         Top = 0
+        Width = 37
+        Height = 23
         Action = acExportPhastInputFile
+        ArrowWidth = 12
+        Flat = True
+        FillFont.Charset = DEFAULT_CHARSET
+        FillFont.Color = clWindowText
+        FillFont.Height = -11
+        FillFont.Name = 'Tahoma'
+        FillFont.Style = []
+        Glyph.Data = {
+          36050000424D3605000000000000360400002800000010000000100000000100
+          0800000000000001000000000000000000000001000000000000000000000000
+          80000080000000808000800000008000800080800000C0C0C000C0DCC000F0CA
+          A6000020400000206000002080000020A0000020C0000020E000004000000040
+          20000040400000406000004080000040A0000040C0000040E000006000000060
+          20000060400000606000006080000060A0000060C0000060E000008000000080
+          20000080400000806000008080000080A0000080C0000080E00000A0000000A0
+          200000A0400000A0600000A0800000A0A00000A0C00000A0E00000C0000000C0
+          200000C0400000C0600000C0800000C0A00000C0C00000C0E00000E0000000E0
+          200000E0400000E0600000E0800000E0A00000E0C00000E0E000400000004000
+          20004000400040006000400080004000A0004000C0004000E000402000004020
+          20004020400040206000402080004020A0004020C0004020E000404000004040
+          20004040400040406000404080004040A0004040C0004040E000406000004060
+          20004060400040606000406080004060A0004060C0004060E000408000004080
+          20004080400040806000408080004080A0004080C0004080E00040A0000040A0
+          200040A0400040A0600040A0800040A0A00040A0C00040A0E00040C0000040C0
+          200040C0400040C0600040C0800040C0A00040C0C00040C0E00040E0000040E0
+          200040E0400040E0600040E0800040E0A00040E0C00040E0E000800000008000
+          20008000400080006000800080008000A0008000C0008000E000802000008020
+          20008020400080206000802080008020A0008020C0008020E000804000008040
+          20008040400080406000804080008040A0008040C0008040E000806000008060
+          20008060400080606000806080008060A0008060C0008060E000808000008080
+          20008080400080806000808080008080A0008080C0008080E00080A0000080A0
+          200080A0400080A0600080A0800080A0A00080A0C00080A0E00080C0000080C0
+          200080C0400080C0600080C0800080C0A00080C0C00080C0E00080E0000080E0
+          200080E0400080E0600080E0800080E0A00080E0C00080E0E000C0000000C000
+          2000C0004000C0006000C0008000C000A000C000C000C000E000C0200000C020
+          2000C0204000C0206000C0208000C020A000C020C000C020E000C0400000C040
+          2000C0404000C0406000C0408000C040A000C040C000C040E000C0600000C060
+          2000C0604000C0606000C0608000C060A000C060C000C060E000C0800000C080
+          2000C0804000C0806000C0808000C080A000C080C000C080E000C0A00000C0A0
+          2000C0A04000C0A06000C0A08000C0A0A000C0A0C000C0A0E000C0C00000C0C0
+          2000C0C04000C0C06000C0C08000C0C0A000F0FBFF00A4A0A000808080000000
+          FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF000707070707A4
+          070707070707070707070707070707FAA40707070707070707070707070707FA
+          FAA407070707070707070707070707FAFAFAA4070707070707070707070707FA
+          FAFAFAA40707070707070707070707FAFAFAFAFAA407070707070707070707FA
+          FAFAFAFAFAA4070707070707070707FAFAFAFAFAFAFAA40707070707070707FA
+          FAFAFAFAFAFAFA0707070707070707FAFAFAFAFAFAFA070707070707070707FA
+          FAFAFAFAFA07070707070707070707FAFAFAFAFA0707070707070707070707FA
+          FAFAFA070707070707070707070707FAFAFA07070707070707070707070707FA
+          FA0707070707070707070707070707FA07070707070707070707}
+        PressBoth = False
       end
       object tbImportModelResults: TToolButton
-        Left = 92
+        Left = 106
         Top = 0
         Action = acImportModelResults
       end
       object tbPrint: TToolButton
-        Left = 115
+        Left = 129
         Top = 0
         Action = acExportImage
         OnMouseMove = pnlLowerRightMouseMove
       end
     end
     object tbarEditScreenObjects: TToolBar
-      Left = 324
+      Left = 347
       Top = 2
       Width = 231
       Height = 28
@@ -533,9 +587,9 @@ inherited frmGoPhast: TfrmGoPhast
       end
     end
     object tbarView: TToolBar
-      Left = 568
+      Left = 591
       Top = 2
-      Width = 170
+      Width = 165
       Height = 28
       ButtonHeight = 23
       Caption = 'Navigate'
@@ -1008,9 +1062,11 @@ inherited frmGoPhast: TfrmGoPhast
         object miExportModpath: TMenuItem
           Action = acExportModpath
         end
-        object ZONEBUDGETInputFiles1: TMenuItem
-          Caption = '&ZONEBUDGET Input Files'
-          OnClick = ZONEBUDGETInputFiles1Click
+        object miZONEBUDGETInputFiles: TMenuItem
+          Action = acExportZoneBudget
+        end
+        object miRunMt3dms: TMenuItem
+          Action = acRunMt3dms
         end
         object miShapefile: TMenuItem
           Caption = '&Shapefile'
@@ -1142,6 +1198,10 @@ inherited frmGoPhast: TfrmGoPhast
         Caption = 'Delete Image'
         HelpContext = 3520
         OnClick = miDeleteImageClick
+      end
+      object miClearUndoRedostack: TMenuItem
+        Caption = 'Clear Undo/Redo stack'
+        OnClick = miClearUndoRedostackClick
       end
     end
     object miGrid: TMenuItem
@@ -2568,10 +2628,20 @@ inherited frmGoPhast: TfrmGoPhast
       ImageIndex = 87
       OnExecute = acDisplayDataExecute
     end
+    object acRunMt3dms: TAction
+      Category = 'File'
+      Caption = 'MT3DMS Input Files'
+      OnExecute = acRunMt3dmsExecute
+    end
+    object acExportZoneBudget: TAction
+      Category = 'File'
+      Caption = '&ZONEBUDGET Input Files'
+      OnExecute = miZONEBUDGETInputFilesClick
+    end
   end
   object ilDisabledImageList: TImageList
-    Left = 200
-    Top = 152
+    Left = 104
+    Top = 128
     Bitmap = {
       494C010148004A00040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003001000001002000000000000030
@@ -5166,8 +5236,8 @@ inherited frmGoPhast: TfrmGoPhast
     Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     Title = 'Save ModelMuse file'
     OnTypeChange = sdSaveDialogTypeChange
-    Left = 272
-    Top = 80
+    Left = 416
+    Top = 152
   end
   object odOpenDialog: TOpenDialog
     DefaultExt = 'gpt'
@@ -5209,8 +5279,8 @@ inherited frmGoPhast: TfrmGoPhast
     Filter = 'MODFLOW Name Files (*.nam)|*.nam|All Files (*.*)|*.*'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     Title = 'Save MODFLOW input files'
-    Left = 208
-    Top = 112
+    Left = 176
+    Top = 160
   end
   object ilImageList: TImageList
     Left = 176
@@ -8265,8 +8335,8 @@ inherited frmGoPhast: TfrmGoPhast
     Filter = 'MODPATH Name Files (*.mpn)|*.mpn|All Files (*.*)|*.*'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     Title = 'Save MODPATH input files'
-    Left = 240
-    Top = 112
+    Left = 176
+    Top = 216
   end
   object odModelMate: TOpenDialog
     DefaultExt = '.mtc'
@@ -8283,16 +8353,16 @@ inherited frmGoPhast: TfrmGoPhast
       '*'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     Title = 'Save ZONEBUDGET input files'
-    Left = 280
-    Top = 112
+    Left = 272
+    Top = 120
   end
   object sdModelMate: TSaveDialog
     OnClose = sdModelMateClose
     OnShow = sdModelMateShow
     DefaultExt = '.mtc'
     Filter = 'ModelMate Files (*.mtc)|*.mtc'
-    Left = 312
-    Top = 112
+    Left = 264
+    Top = 168
   end
   object menuGridLineChoice: TPopupMenu
     Images = ilImageList
@@ -8320,8 +8390,8 @@ inherited frmGoPhast: TfrmGoPhast
     Filter = 'Shapefiles|*.shp'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing]
     Title = 'Export Contours'
-    Left = 376
-    Top = 112
+    Left = 264
+    Top = 216
   end
   object sdModflowLgr: TSaveDialog
     OnClose = sdModflowInputClose
@@ -8332,12 +8402,39 @@ inherited frmGoPhast: TfrmGoPhast
       'm)|*.nam|All Files (*.*)|*.*'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     Title = 'Save MODFLOW-LGR input files'
-    Left = 408
-    Top = 112
+    Left = 336
+    Top = 176
   end
   object hntMeasure: TJvHint
     AutoHide = False
     Left = 400
     Top = 72
+  end
+  object dlgSaveMt3dms: TSaveDialog
+    OnClose = dlgSaveMt3dmsClose
+    OnShow = dlgSaveMt3dmsShow
+    DefaultExt = '.mt_nam'
+    Filter = 'MT3DMS Name Files (*.mt_nam)|*.mt_nam|All Files (*.*)|*.*'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
+    Title = 'Save MT3DMS input files'
+    Left = 336
+    Top = 232
+  end
+  object pmExportModel: TPopupMenu
+    Alignment = paCenter
+    Left = 560
+    Top = 72
+    object miExportModpathPopUp: TMenuItem
+      Action = acExportModpath
+      Caption = 'Export MODPATH Input Files'
+    end
+    object miExportZoneBudgetPopup: TMenuItem
+      Action = acExportZoneBudget
+      Caption = 'Export &ZONEBUDGET Input Files'
+    end
+    object miRunMt3dmsPopup: TMenuItem
+      Action = acRunMt3dms
+      Caption = 'Export MT3DMS Input Files'
+    end
   end
 end

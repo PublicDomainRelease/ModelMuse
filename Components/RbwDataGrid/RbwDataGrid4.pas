@@ -41,7 +41,7 @@ interface
 
 uses
   Windows, StdCtrls, Graphics, Classes, Grids, SysUtils, Messages, Types,
-  Controls, Forms, Clipbrd, Buttons;
+  Controls, Forms, Clipbrd, Buttons, AppEvnts;
 
 const
   // @name represents the size of a check box.
@@ -291,6 +291,8 @@ type
     procedure SetWordWrapCaptions(const Value: boolean);
     // See @link(WordWrapCells).
     procedure SetWordWrapCells(const Value: boolean);
+    function GetCaseSensitivePicklist: boolean;
+    procedure SetCaseSensitivePicklist(const Value: boolean);
   protected
     // @name checks that all the cells in the @classname have values
     // that are between @link(Max) and @link(Min)
@@ -382,6 +384,8 @@ type
     // @name determines whether or not word-wrapping will be applied to
     // the text of cells that are NOT captions.
     property WordWrapCells: boolean read FWordWrapCells write SetWordWrapCells;
+    property CaseSensitivePicklist: boolean read GetCaseSensitivePicklist
+      write SetCaseSensitivePicklist;
   end;
 
   TRbwColumn4 = class(TCustomRowOrColumn)
@@ -510,6 +514,8 @@ type
     FDistributingText: Boolean;
     FAutoMultiEdit: boolean;
     FExtendedAutoDistributeText: boolean;
+    FDecimalSeparator: Char;
+    FAppEvents: TApplicationEvents;
     function CollectionItem(const ACol, ARow: Longint):
       TCustomRowOrColumn; virtual; abstract;
     function GetCellVisible(ACol, ARow: Integer): boolean;
@@ -661,6 +667,7 @@ type
     procedure AddRangeSelection(Selection: TGridRect);
     property ItemIndex[const ACol, ARow: integer]: integer read GetItemIndex
       write SetItemIndex;
+    procedure SettingsChanged(Sender: TObject; Flag: Integer; const Section: string; var Result: Longint);
   published
     property ExtendedAutoDistributeText: boolean
       read FExtendedAutoDistributeText write SetExtendedAutoDistributeText;
@@ -1450,7 +1457,7 @@ begin
         end;
       end;
       ResizeSpecialFormat;
-      if TempRow < RowCount then
+      if (TempRow >= FixedRows) and (TempRow < RowCount) then
       begin
         Row := TempRow;
         TStringGrid(Self).Row := TempRow;
@@ -2050,6 +2057,11 @@ begin
   begin
     result := FButtonFont;
   end;
+end;
+
+function TCustomRowOrColumn.GetCaseSensitivePicklist: boolean;
+begin
+  result := (FPicklist as TStringList).CaseSensitive;
 end;
 
 procedure TCustomRowOrColumn.SetButtonFont(const Value: TFont);
@@ -2985,6 +2997,13 @@ begin
   Options := [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine,
       goRangeSelect];
   Options := Options + [goAlwaysShowEditor];
+  {$IFDEF Delphi_2009_UP}
+  FDecimalSeparator := FormatSettings.DecimalSeparator;
+  {$ELSE}
+  FDecimalSeparator := DecimalSeparator;
+  {$ENDIF}
+  FAppEvents := TApplicationEvents.Create(self);
+  FAppEvents.OnSettingChange := SettingsChanged;
 end;
 
 procedure TCustomRBWDataGrid.SetdgRow(const Value: integer);
@@ -3389,6 +3408,11 @@ begin
   begin
     Grid.Invalidate;
   end;
+end;
+
+procedure TCustomRowOrColumn.SetCaseSensitivePicklist(const Value: boolean);
+begin
+  (FPicklist as TStringList).CaseSensitive := Value;
 end;
 
 procedure TCustomRowOrColumn.SetCellAlignment(const Value: TAlignment);
@@ -4043,7 +4067,7 @@ begin
       Exit;
     end;
     ColumnOrRow.CheckCell(ACol, ARow);
-    if ColumnOrRow.LimitToList then
+    if ColumnOrRow.ComboUsed and ColumnOrRow.LimitToList then
     begin
       if ColumnOrRow.PickList.IndexOf(Value) < 0 then
       begin
@@ -4053,7 +4077,8 @@ begin
     case GetCellFormat(ACol, ARow) of
       rcf4String:
         begin
-          if not ColumnOrRow.LimitToList and (ColumnOrRow.MaxLength > 0)
+          if not (ColumnOrRow.ComboUsed and ColumnOrRow.LimitToList)
+            and (ColumnOrRow.MaxLength > 0)
             and (Length(Value) > ColumnOrRow.MaxLength) then
           begin
             inherited SetEditText(ACol, ARow,
@@ -4543,6 +4568,40 @@ begin
       SetEditText(ACol, ARow, Cells[ACol, ARow]);
       Invalidate;
     end;
+  end;
+end;
+
+procedure TCustomRBWDataGrid.SettingsChanged(Sender: TObject; Flag: Integer;
+  const Section: string; var Result: Integer);
+var
+  DecSep: Char;
+  ColIndex: Integer;
+  RowIndex: Integer;
+begin
+  {$IFDEF Delphi_2009_UP}
+  DecSep := FormatSettings.DecimalSeparator;
+  {$ELSE}
+  DecSep := DecimalSeparator;
+  {$ENDIF}
+  if FDecimalSeparator <> DecSep then
+  begin
+    BeginUpdate;
+    try
+      for ColIndex := FixedCols to ColCount - 1 do
+      begin
+        for RowIndex := FixedRows to RowCount - 1 do
+        begin
+          if GetCellFormat(ColIndex, RowIndex) = rcf4Real then
+          begin
+            Cells[ColIndex,RowIndex] := StringReplace(Cells[ColIndex,RowIndex],
+              FDecimalSeparator, DecSep, [rfReplaceAll]);
+          end;
+        end;
+      end;
+    finally
+      EndUpdate;
+    end;
+    FDecimalSeparator := DecSep;
   end;
 end;
 

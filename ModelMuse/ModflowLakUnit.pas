@@ -262,6 +262,7 @@ procedure TLakItem.Assign(Source: TPersistent);
 var
   Lak: TLakItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TLakItem then
   begin
     Lak := TLakItem(Source);

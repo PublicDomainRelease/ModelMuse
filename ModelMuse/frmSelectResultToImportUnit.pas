@@ -14,7 +14,7 @@ uses
 
 type
   TModflowResultFormat = (mrBinary, mrAscii, mrFlux, mrHufAscii, mrHufBinary,
-    mrHufFlux, mfSubBinary);
+    mrHufFlux, mfSubBinary, mfMt3dConc);
 
   TModelColumns = (mcModelName, mcUse, mcFileName);
 
@@ -126,6 +126,7 @@ type
   private
     FPeriods: TIntegerList;
     FSteps: TIntegerList;
+    FTransportSteps: TIntegerList;
     FDescriptions: TStringList;
     FFileStream: TFileStream;
     FFileVariable: TFileVariable;
@@ -133,6 +134,7 @@ type
     FAskedUser: Boolean;
     FCreateNewDataSet: Boolean;
     FMaxPeriod: Integer;
+    FMaxTrans: integer;
     FMaxStep: Integer;
     FMaxLayer: Integer;
     FGrid: TModflowGrid;
@@ -144,12 +146,12 @@ type
     function OpenResultFile(AFileName: string;out Precision: TModflowPrecision;
       out HufFormat: boolean): boolean;
     procedure ReadArray(var AnArray: TModflowDoubleArray;
-      var EndReached: Boolean; var KPER, KSTP, ILAY: Integer;
+      var EndReached: Boolean; var NTRANS, KPER, KSTP, ILAY: Integer;
       var TOTIM: TModflowDouble;
       var Description: string; Precision: TModflowPrecision;
       ShouldReadArray: boolean);
     procedure CreateOrRetrieveLayerDataSet(const Description: string;
-      KSTP, KPER, ILAY: integer; TOTIM: TModflowDouble;
+      NTRANS, KSTP, KPER, ILAY: integer; TOTIM: TModflowDouble;
       out LayerData: TDataArray; out OldComment: string; NewDataSets: TList;
       ScreenObjectsToDelete: TScreenObjectList; FileNames: string;
       AModel: TCustomModel; DataArrayForm: TDataArrayForm = dafLayer);
@@ -160,7 +162,7 @@ type
       ValuesToIgnore: TOneDRealArray; AModel: TCustomModel;
       out MinMaxAssigned: boolean);
     procedure CreateOrRetrieve3DDataSet(Description: string;
-      KPER, KSTP: integer; TOTIM: TModflowDouble;
+      NTRANS, KPER, KSTP: integer; TOTIM: TModflowDouble;
       LayerNumbers: TIntegerList; LayerDataSets: TList;
       out New3DArray: TDataArray; out OldComment: string; FluxData: boolean;
       NewDataSets: TList; FileNames: string; AModel: TCustomModel);
@@ -194,7 +196,7 @@ type
       const Description: string);
     procedure AssignWaterTable(NewDataSets: TList; OldComments: TStringList;
       DataSetNames: TStringList; ScreenObjectsToDelete: TScreenObjectList;
-      NewCreateScreenObjects: TList; KPER: Integer;
+      NewCreateScreenObjects: TList; NTRANS, KPER: Integer;
       WaterTableArray: TModflowDoubleArray; KSTP: Integer;
       const Description: string; ValuesToIgnore: TOneDRealArray;
       TOTIM: TModflowDouble; FileNames: string; AModel: TCustomModel);
@@ -227,11 +229,23 @@ uses Math, frmGoPhastUnit, RbwParser,
   GIS_Functions, ValueArrayStorageUnit, ModelMuseUtilities, 
   frmUpdateDataSetsUnit, UndoItemsScreenObjects,
   InterpolationUnit, HufDefinition, ModflowTimeUnit,
-  frmGridValueUnit, shlobj, activex, AnsiStrings, frmDisplayDataUnit;
+  frmGridValueUnit, shlobj, activex, AnsiStrings, frmDisplayDataUnit,
+  Mt3dmsChemSpeciesUnit;
 
 resourcestring
   StrHead = 'Head';
   StrTheFileCouldNotB = 'The file could not be read.';
+  StrImportModelResults = 'import model results';
+  StrTheNumberOfRowsOrColumns = 'The number of rows or columns in the data s' +
+  'et doesn''t match the number of rows or columns in the grid.';
+  StrFileIsEmpty = 'File is empty.';
+  StrTheNumberOfLayersOrCol = 'The number of layers or columns in the data s' +
+  'et doesn''t match the number of layers or columns in the grid.';
+  StrTheNumberOfRows = 'The number of rows, columns, or layers in the data s' +
+  'et doesn''t match the number of rows, columns, or layers in the grid.';
+  StrTheNumberOfHydrogeologic = 'The number of rows, columns, or hydrogeolog' +
+  'ic units in the data set doesn''t match the number of rows, columns, or h' +
+  'ydrogeologic units in the grid.';
 
 const
   StrModelResults = 'Model Results';
@@ -253,10 +267,19 @@ begin
   end;
 end;
 
+function PaddedFloatToStr(Value: double): string;
+begin
+  result := FloatToStr(Value);
+  while Length(result) < 15 do
+  begin
+    result := '_' + result;
+  end;
+end;
+
 { TfrmSelectResultToImport }
 
 procedure TfrmSelectResultToImport.CreateOrRetrieveLayerDataSet(
-  const Description: string; KSTP, KPER, ILAY: integer;
+  const Description: string; NTRANS, KSTP, KPER, ILAY: integer;
   TOTIM: TModflowDouble;
   out LayerData: TDataArray; out OldComment: string; NewDataSets: TList;
   ScreenObjectsToDelete: TScreenObjectList; FileNames: string;
@@ -272,9 +295,13 @@ var
   ParentLayerData: TDataArray;
 begin
   NewName := TitleCase(Description);
-  NewName := ValidName(NewName);
   NewName := NewName + '_P' + PaddedIntToStr(KPER, FMaxPeriod) +
     '_S' + PaddedIntToStr(KSTP, FMaxStep);
+  if FResultFormat = mfMt3dConc then
+  begin
+    NewName := NewName + '_TS' + PaddedIntToStr(NTRANS, FMaxTrans);;
+  end;
+  NewName := ValidName(NewName);
   case DataArrayForm of
     dafLayer:
       begin
@@ -378,6 +405,11 @@ begin
       + sLineBreak + StrStressPeriodLabel + IntToStr(KPER)
       + sLineBreak + StrTimeStepLabel + IntToStr(KSTP)
       + sLineBreak + StrElapsedTimeLabel + FloatToStr(TOTIM);
+    if FResultFormat = mfMt3dConc then
+    begin
+      ParentLayerData.Comment := ParentLayerData.Comment
+        + sLineBreak + StrTransportStep + IntToStr(NTRANS)
+    end;
     case DataArrayForm of
       dafLayer:
         begin
@@ -406,6 +438,11 @@ begin
         + sLineBreak + StrStressPeriodLabel + IntToStr(KPER)
         + sLineBreak + StrTimeStepLabel + IntToStr(KSTP)
         + sLineBreak + StrElapsedTimeLabel + FloatToStr(TOTIM);
+      if FResultFormat = mfMt3dConc then
+      begin
+        ParentLayerData.Comment := ParentLayerData.Comment
+          + sLineBreak + StrTransportStep + IntToStr(NTRANS)
+      end;
     end;
     case DataArrayForm of
       dafLayer:
@@ -520,11 +557,14 @@ var
   AFileName: string;
   Extension: string;
 begin
+  FMaxTrans := -1;
   try
     odSelectFiles.FileName := DefaultFileName(frmGoPhast.PhastModel);
+    SetCurrentDir(ExtractFileDir(odSelectFiles.FileName));
     result := odSelectFiles.Execute;
     if result then
     begin
+      Screen.Cursor := crHourGlass;
       rdgModels.BeginUpdate;
       try
           if frmGoPhast.PhastModel.LgrUsed then
@@ -565,6 +605,7 @@ begin
           end;
       finally
         rdgModels.EndUpdate;
+        Screen.Cursor := crDefault;
       end;
     end;
   except on E: EInOutError do
@@ -841,7 +882,7 @@ begin
 end;
 
 procedure TfrmSelectResultToImport.CreateOrRetrieve3DDataSet(Description: string;
-  KPER, KSTP: integer; TOTIM: TModflowDouble; LayerNumbers: TIntegerList;
+  NTRANS, KPER, KSTP: integer; TOTIM: TModflowDouble; LayerNumbers: TIntegerList;
   LayerDataSets: TList; out New3DArray: TDataArray; out OldComment: string; FluxData: boolean;
   NewDataSets: TList; FileNames: string; AModel: TCustomModel);
 var
@@ -858,9 +899,13 @@ var
   Parent3DArray: TDataArray;
 begin
   NewName := TitleCase(Description);
-  NewName := ValidName(NewName);
   NewName := NewName + '_P' + PaddedIntToStr(KPER, FMaxPeriod) +
     '_S' + PaddedIntToStr(KSTP, FMaxStep);
+  if FResultFormat = mfMt3dConc then
+  begin
+    NewName := NewName + '_TS' + PaddedIntToStr(NTRANS, FMaxTrans);
+  end;
+  NewName := ValidName(NewName);
 
   DefaultName := NewName;
   NamePosition := FNewDefaultDataSetNames.IndexOf(DefaultName);
@@ -931,6 +976,11 @@ begin
       + sLineBreak + StrStressPeriodLabel + IntToStr(KPER)
       + sLineBreak + StrTimeStepLabel + IntToStr(KSTP)
       + sLineBreak + StrElapsedTimeLabel + FloatToStr(TOTIM);
+      if FResultFormat = mfMt3dConc then
+      begin
+        Parent3DArray.Comment := Parent3DArray.Comment
+          + sLineBreak + StrTransportStep + IntToStr(NTRANS)
+      end;
   end;
   if Grid.LayerCount = 1 then
   begin
@@ -1135,6 +1185,11 @@ var
   ParentArray: TDataArray;
   FileNames: string;
   AParentArray: TDataArray;
+  UndoCreateObject: TUndoCreateScreenObject;
+  Mt3dComponentName: string;
+  LastCharIndex: Integer;
+  CharIndex: Integer;
+  NTRANS: Integer;
 begin
   inherited;
   FModifiedParentDataSets.Clear;
@@ -1146,6 +1201,7 @@ begin
   ScreenObjectsToDelete := TScreenObjectList.Create;
   NewCreateScreenObjects := TList.Create;
   FileNames := '';
+  Mt3dComponentName := '';
   for RowIndex := 1 to rdgModels.RowCount - 1 do
   begin
     if rdgModels.Checked[Ord(mcUse), RowIndex] then
@@ -1157,6 +1213,23 @@ begin
         FileNames := FileNames + sLineBreak;
       end;
       FileNames := FileNames + AFileName;
+      if (FResultFormat = mfMt3dConc) and (Mt3dComponentName = '') then
+      begin
+        AFileName := ChangeFileExt(ExtractFileName(AFileName), '');
+        LastCharIndex := Length(AFileName);
+        if (LastCharIndex > 1) and (Copy(AFileName, LastCharIndex-1, 2) = '_S') then
+        begin
+          LastCharIndex := LastCharIndex -2;
+        end;
+        for CharIndex := LastCharIndex downto 1 do
+        begin
+          if AFileName[CharIndex] = '_' then
+          begin
+            Mt3dComponentName := ' ' + Copy(AFileName, CharIndex+1, MAXINT);
+            break;
+          end;
+        end;
+      end;
     end;
   end;
   try
@@ -1199,6 +1272,11 @@ begin
           begin
             SetLength(ValuesToIgnore, 0);
           end
+          else if FResultFormat = mfMt3dConc then
+          begin
+            SetLength(ValuesToIgnore, 1);
+            ValuesToIgnore[0] := AModel.ModflowPackages.Mt3dBasic.InactiveConcentration;
+          end
           else
           begin
             SetLength(ValuesToIgnore, 2);
@@ -1217,16 +1295,17 @@ begin
           for Index := 0 to LastItem do
           begin
             case FResultFormat of
-              mrBinary, mrAscii:
+              mrBinary, mrAscii, mfMt3dConc:
                 begin
                   if Index = 0 then
                   begin
                     ReadArray(AnArray, EndReached,
-                      KPER, KSTP, ILAY, TOTIM, Description, Precision,
+                      NTRANS, KPER, KSTP, ILAY, TOTIM, Description, Precision,
                       clData.Checked[Index]);
                   end;
                   While (KPER = FPeriods[Index])
                     and (KSTP = FSteps[Index])
+                    and (NTRANS = FTransportSteps[Index])
                     and (Description = FDescriptions[Index])
                     and not EndReached do
                   begin
@@ -1246,7 +1325,7 @@ begin
                           end;
                           AssignWaterTableArray(WaterTableArray,
                             ILAY, LayerArray, ValuesToIgnore, Description);
-                          CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
+                          CreateOrRetrieveLayerDataSet(Description, NTRANS, KSTP, KPER, ILAY,
                             TOTIM, LayerData, OldComment, NewDataSets,
                             ScreenObjectsToDelete, FileNames, AModel);
                           CreateScreenObject(ILAY-1, AModel, ScreenObject);
@@ -1266,7 +1345,7 @@ begin
                           if ILAY = FGrid.LayerCount then
                           begin
                             Inc(Count);
-                            CreateOrRetrieve3DDataSet(Description, KPER, KSTP, TOTIM,
+                            CreateOrRetrieve3DDataSet(Description, NTRANS, KPER, KSTP, TOTIM,
                               LayerNumbers, LayerDataSets, New3DArray, OldComment,
                               False, NewDataSets, FileNames, AModel);
                             UpdateOldComments(OldComments, New3DArray, OldComment);
@@ -1277,14 +1356,15 @@ begin
                             AssignLimits(MinValues, MaxValues, New3DArray,
                               ValuesToIgnore);
                           end;
-                          NewCreateScreenObjects.Add(
-                            TUndoCreateScreenObject.Create(ScreenObject));
+                          UndoCreateObject := TUndoCreateScreenObject.Create(ScreenObject);
+                          UndoCreateObject.UpdateObservations;
+                          NewCreateScreenObjects.Add(UndoCreateObject);
                         end
                       end;
                       if clData.Checked[Index] then
                       begin
                         AssignWaterTable(NewDataSets, OldComments, DataSetNames,
-                          ScreenObjectsToDelete, NewCreateScreenObjects, KPER,
+                          ScreenObjectsToDelete, NewCreateScreenObjects, NTRANS, KPER,
                           WaterTableArray, KSTP, Description, ValuesToIgnore,
                           TOTIM, FileNames, AModel);
                       end;
@@ -1306,7 +1386,8 @@ begin
                       begin
                         AssignWaterTableArray(WaterTableArray, ILAY, AnArray,
                           ValuesToIgnore, Description);
-                        CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
+                        CreateOrRetrieveLayerDataSet(
+                          Description+Mt3dComponentName, NTRANS, KSTP, KPER, ILAY,
                           TOTIM, LayerData, OldComment, NewDataSets,
                           ScreenObjectsToDelete, FileNames, AModel);
                         CreateScreenObject(ILAY-1, AModel, ScreenObject);
@@ -1325,7 +1406,8 @@ begin
                         if ILAY = FGrid.LayerCount then
                         begin
                           Inc(Count);
-                          CreateOrRetrieve3DDataSet(Description, KPER, KSTP, TOTIM,
+                          CreateOrRetrieve3DDataSet(
+                            Description+Mt3dComponentName, NTRANS, KPER, KSTP, TOTIM,
                             LayerNumbers, LayerDataSets, New3DArray, OldComment,
                             False, NewDataSets, FileNames, AModel);
                           UpdateOldComments(OldComments, New3DArray, OldComment);
@@ -1337,12 +1419,15 @@ begin
                             ValuesToIgnore);
 
                         end;
-                        NewCreateScreenObjects.Add(
-                          TUndoCreateScreenObject.Create(ScreenObject));
+                        UndoCreateObject := TUndoCreateScreenObject.Create(ScreenObject);
+                        UndoCreateObject.UpdateObservations;
+                        NewCreateScreenObjects.Add(UndoCreateObject);
+//                        NewCreateScreenObjects.Add(
+//                          TUndoCreateScreenObject.Create(ScreenObject));
                         if ILAY = FGrid.LayerCount then
                         begin
                           AssignWaterTable(NewDataSets, OldComments, DataSetNames,
-                            ScreenObjectsToDelete, NewCreateScreenObjects, KPER,
+                            ScreenObjectsToDelete, NewCreateScreenObjects, NTRANS, KPER,
                             WaterTableArray, KSTP, Description, ValuesToIgnore,
                             TOTIM, FileNames, AModel);
                         end;
@@ -1353,13 +1438,13 @@ begin
                     if ILAY = FGrid.LayerCount then
                     begin
                       ReadArray(AnArray, EndReached,
-                        KPER, KSTP, ILAY, TOTIM, Description, Precision,
+                        NTRANS, KPER, KSTP, ILAY, TOTIM, Description, Precision,
                         (LastItem <> Index) and clData.Checked[Index+1])
                     end
                     else
                     begin
                       ReadArray(AnArray, EndReached,
-                        KPER, KSTP, ILAY, TOTIM, Description, Precision,
+                        NTRANS, KPER, KSTP, ILAY, TOTIM, Description, Precision,
                         clData.Checked[Index])
                     end;
                   end;
@@ -1373,7 +1458,7 @@ begin
                     for LayerIndex := 0 to Abs(NLAY) - 1 do
                     begin
                       ILAY := AModel.ModflowLayerToDataSetLayer(LayerIndex+1)+1;
-                      CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
+                      CreateOrRetrieveLayerDataSet(Description, NTRANS, KSTP, KPER, ILAY,
                         TOTIM, LayerData, OldComment, NewDataSets,
                         ScreenObjectsToDelete, FileNames, AModel);
                       CreateScreenObject(ILAY-1, AModel, ScreenObject);
@@ -1385,11 +1470,14 @@ begin
                       DataSetNames.AddObject(LayerData.Name, LayerData);
                       MinValues.Add(LayerData.Limits.LowerLimit.RealLimitValue);
                       MaxValues.Add(LayerData.Limits.UpperLimit.RealLimitValue);
-                      NewCreateScreenObjects.Add(
-                        TUndoCreateScreenObject.Create(ScreenObject))
+                      UndoCreateObject := TUndoCreateScreenObject.Create(ScreenObject);
+                      UndoCreateObject.UpdateObservations;
+                      NewCreateScreenObjects.Add(UndoCreateObject);
+//                      NewCreateScreenObjects.Add(
+//                        TUndoCreateScreenObject.Create(ScreenObject))
                     end;
                     Inc(Count);
-                    CreateOrRetrieve3DDataSet(Description, KPER, KSTP, TOTIM,
+                    CreateOrRetrieve3DDataSet(Description, NTRANS, KPER, KSTP, TOTIM,
                       LayerNumbers, LayerDataSets, New3DArray, OldComment, True,
                       NewDataSets, FileNames, AModel);
                     UpdateOldComments(OldComments, New3DArray, OldComment);
@@ -1404,7 +1492,7 @@ begin
               mrHufAscii, mrHufBinary:
                 begin
                   ReadArray(AnArray, EndReached,
-                    KPER, KSTP, ILAY, TOTIM, Description, Precision,
+                    NTRANS, KPER, KSTP, ILAY, TOTIM, Description, Precision,
                     clData.Checked[Index]);
                   Assert((KPER = FPeriods[Index])
                     and (KSTP = FSteps[Index])
@@ -1415,7 +1503,7 @@ begin
                   begin
                     HGU := AModel.HydrogeologicUnits[ILAY-1];
                     Description := Description + ' ' + HGU.HufName;
-                    CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
+                    CreateOrRetrieveLayerDataSet(Description, NTRANS, KSTP, KPER, ILAY, TOTIM,
                       LayerData, OldComment, NewDataSets,
                       ScreenObjectsToDelete, FileNames, AModel);
                     CreateScreenObject(-1, AModel, ScreenObject);
@@ -1426,8 +1514,11 @@ begin
                     Inc(Count);
                     ParentArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(LayerData.Name);
                     comboColorGrid.Items.Objects[Count] := ParentArray;
-                    NewCreateScreenObjects.Add(
-                      TUndoCreateScreenObject.Create(ScreenObject))
+                    UndoCreateObject := TUndoCreateScreenObject.Create(ScreenObject);
+                    UndoCreateObject.UpdateObservations;
+                    NewCreateScreenObjects.Add(UndoCreateObject);
+//                    NewCreateScreenObjects.Add(
+//                      TUndoCreateScreenObject.Create(ScreenObject))
                   end;
                 end;
               mrHufFlux:
@@ -1444,7 +1535,7 @@ begin
                     ILAY := LayerIndex+1;
                     HGU := AModel.HydrogeologicUnits[ILAY-1];
                     LayerDescription := Description + ' ' + HGU.HufName;
-                    CreateOrRetrieveLayerDataSet(LayerDescription, KSTP, KPER, ILAY,
+                    CreateOrRetrieveLayerDataSet(LayerDescription, NTRANS, KSTP, KPER, ILAY,
                       TOTIM, LayerData, OldComment, NewDataSets,
                       ScreenObjectsToDelete, FileNames, AModel);
                     CreateScreenObject(-1, AModel, ScreenObject);
@@ -1455,20 +1546,23 @@ begin
                     Inc(Count);
                     ParentArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(LayerData.Name);
                     comboColorGrid.Items.Objects[Count] := ParentArray;
-                    NewCreateScreenObjects.Add(
-                      TUndoCreateScreenObject.Create(ScreenObject))
+                    UndoCreateObject := TUndoCreateScreenObject.Create(ScreenObject);
+                    UndoCreateObject.UpdateObservations;
+                    NewCreateScreenObjects.Add(UndoCreateObject);
+//                    NewCreateScreenObjects.Add(
+//                      TUndoCreateScreenObject.Create(ScreenObject))
                   end;
                 end;
               mfSubBinary:
                 begin
                   ReadArray(AnArray, EndReached,
-                    KPER, KSTP, ILAY, TOTIM, Description, Precision,
+                    NTRANS, KPER, KSTP, ILAY, TOTIM, Description, Precision,
                     clData.Checked[Index]);
                   Description := SubsidenceDescription(Description, ILAY);
                   if clData.Checked[Index] then
                   begin
                     Inc(Count);
-                    CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
+                    CreateOrRetrieveLayerDataSet(Description, NTRANS, KSTP, KPER, ILAY, TOTIM,
                       LayerData, OldComment, NewDataSets, ScreenObjectsToDelete,
                       FileNames, AModel, dafSubsidence);
                     ParentArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(LayerData.Name);
@@ -1601,6 +1695,12 @@ begin
 end;
 
 procedure TfrmSelectResultToImport.FormCreate(Sender: TObject);
+var
+  FilterDescriptions: TStringList;
+  FileExtensions: TStringList;
+  index: Integer;
+  SubsidenceDescriptions: TStringList;
+  SubsidenceExtensions: TStringList;
 begin
   inherited;
   FModifiedParentDataSets:= TList.Create;
@@ -1615,43 +1715,180 @@ begin
 
   FPeriods := TIntegerList.Create;
   FSteps := TIntegerList.Create;
+  FTransportSteps := TIntegerList.Create;
+
   FDescriptions := TStringList.Create;
   FAskedUser := False;
   SetDefaultDisplayOption;
+
+  FilterDescriptions := TStringList.Create;
+  FileExtensions := TStringList.Create;
+  SubsidenceDescriptions := TStringList.Create;
+  SubsidenceExtensions := TStringList.Create;
+  try
+    FilterDescriptions.Add('Formatted head files');
+    FileExtensions.Add(StrFhd);
+
+    FilterDescriptions.Add('Formatted drawdown files');
+    FileExtensions.Add(StrFdn);
+
+    FilterDescriptions.Add('Binary head files');
+    FileExtensions.Add(StrBhd);
+
+    FilterDescriptions.Add('Binary drawdown files');
+    FileExtensions.Add(StrBdn);
+
+    FilterDescriptions.Add('Binary flow files');
+    FileExtensions.Add(StrCbcExt);
+
+    FilterDescriptions.Add('Formatted HUF head files');
+    FileExtensions.Add(StrHuffhd);
+
+    FilterDescriptions.Add('Binary HUF head files');
+    FileExtensions.Add(StrHufbhd);
+
+    FilterDescriptions.Add('HUF flow files');
+    FileExtensions.Add(StrHufflow);
+
+    FilterDescriptions.Add('MT3DMS Concentration file');
+    FileExtensions.Add(StrMt3dConcFile);
+
+    SubsidenceDescriptions.Add('Combined SUB output file');
+    SubsidenceExtensions.Add(StrSubOut);
+
+    SubsidenceDescriptions.Add('Combined SWT output file');
+    SubsidenceExtensions.Add(StrSwtOut);
+
+    SubsidenceDescriptions.Add('SUB Subsidence');
+    SubsidenceExtensions.Add(StrSubSubOut);
+
+    SubsidenceDescriptions.Add('SUB Compaction by model layer');
+    SubsidenceExtensions.Add(StrSubComMlOut);
+
+    SubsidenceDescriptions.Add('SUB Compaction by interbed system');
+    SubsidenceExtensions.Add(StrSubComIsOut);
+
+    SubsidenceDescriptions.Add('SUB Vertical displacement');
+    SubsidenceExtensions.Add(StrSubVdOut);
+
+    SubsidenceDescriptions.Add('SUB Critical head for no-delay interbeds');
+    SubsidenceExtensions.Add(StrSubNdCritHeadOut);
+
+    SubsidenceDescriptions.Add('SUB Critical head for delay interbeds');
+    SubsidenceExtensions.Add(StrSubDCritHeadOut);
+
+    SubsidenceDescriptions.Add('SWT Subsidence');
+    SubsidenceExtensions.Add(StrSwtSubOut);
+
+    SubsidenceDescriptions.Add('SWT Compaction by model layer');
+    SubsidenceExtensions.Add(StrSwtComMLOut);
+
+    SubsidenceDescriptions.Add('SWT Compaction by interbed system');
+    SubsidenceExtensions.Add(StrSwtComIsOut);
+
+    SubsidenceDescriptions.Add('SWT Vertical displacement');
+    SubsidenceExtensions.Add(StrSwtVDOut);
+
+    SubsidenceDescriptions.Add('SWT Preconsolidation stress');
+    SubsidenceExtensions.Add(StrSwtDeltaPreConStrOu);
+
+    SubsidenceDescriptions.Add('SWT Change in preconsolidation stress');
+    SubsidenceExtensions.Add(StrSwtDeltaPreConStrOu);
+
+    SubsidenceDescriptions.Add('SWT Geostatic stress');
+    SubsidenceExtensions.Add(StrSwtGeoStatOut);
+
+    SubsidenceDescriptions.Add('SWT Change in geostatic stress');
+    SubsidenceExtensions.Add(StrSwtDeltaGeoStatOut);
+
+    SubsidenceDescriptions.Add('SWT Effective stress');
+    SubsidenceExtensions.Add(StrSwtEffStressOut);
+
+    SubsidenceDescriptions.Add('SWT Change in effective stress');
+    SubsidenceExtensions.Add(StrSwtDeltaEffStressOu);
+
+    SubsidenceDescriptions.Add('SWT Void ratio');
+    SubsidenceExtensions.Add(StrSwtVoidRatioOut);
+
+    SubsidenceDescriptions.Add('SWT Thickness of compressible sediments');
+    SubsidenceExtensions.Add(StrSwtThickCompSedOut);
+
+    SubsidenceDescriptions.Add('SWT Layer-center elevation');
+    SubsidenceExtensions.Add(StrSwtLayerCentElevOut);
+
+    odSelectFiles.Filter := 'Common supported file types|*' + FileExtensions[0];
+    for index := 1 to FileExtensions.Count - 1 do
+    begin
+      odSelectFiles.Filter := odSelectFiles.Filter
+        + ';*' + FileExtensions[index];
+    end;
+
+    odSelectFiles.Filter := odSelectFiles.Filter + '|Subsidence files|*' + SubsidenceExtensions[0];
+    for index := 1 to SubsidenceExtensions.Count - 1 do
+    begin
+      odSelectFiles.Filter := odSelectFiles.Filter
+        + ';*' + SubsidenceExtensions[index];
+    end;
+
+    Assert(FileExtensions.Count = FilterDescriptions.Count);
+    for index := 0 to FileExtensions.Count - 1 do
+    begin
+      odSelectFiles.Filter := odSelectFiles.Filter
+        + '|' + FilterDescriptions[index]
+        + '(*' + FileExtensions[index] + ')|*' + FileExtensions[index];
+    end;
+
+    Assert(SubsidenceExtensions.Count = SubsidenceDescriptions.Count);
+    for index := 0 to SubsidenceExtensions.Count - 1 do
+    begin
+      odSelectFiles.Filter := odSelectFiles.Filter
+        + '|' + SubsidenceDescriptions[index]
+        + '(*' + SubsidenceExtensions[index] + ')|*' + SubsidenceExtensions[index];
+    end;
+  finally
+    FilterDescriptions.Free;
+    FileExtensions.Free;
+    SubsidenceDescriptions.Free;
+    SubsidenceExtensions.Free;
+  end;
 
   // The next time this is changed, it should be reorganized to read the
   // file extensions and descriptions from an array and then
   // construct the filter from that.
 
-  odSelectFiles.Filter := 'All supported file types|*'
-    + StrBhd + ';*' + StrBdn
-    + ';*' + StrFhd
-    + ';*' + StrFdn
-    + ';*' + StrCbcExt
-    + ';*' + StrHuffhd
-    + ';*' + StrHufbhd
-    + ';*' + StrHufflow
-    + ';*' + StrSubOut
-    + ';*' + StrSwtOut
-    + ';*' + StrSubSubOut
-    + ';*' + StrSubComMlOut
-    + ';*' + StrSubComIsOut
-    + ';*' + StrSubVdOut
-    + ';*' + StrSubNdCritHeadOut
-    + ';*' + StrSubDCritHeadOut
-    + ';*' + StrSwtSubOut
-    + ';*' + StrSwtComMLOut
-    + ';*' + StrSwtComIsOut
-    + ';*' + StrSwtVDOut
-    + ';*' + StrSwtPreConStrOut
-    + ';*' + StrSwtDeltaPreConStrOu
-    + ';*' + StrSwtGeoStatOut
-    + ';*' + StrSwtDeltaGeoStatOut
-    + ';*' + StrSwtEffStressOut
-    + ';*' + StrSwtDeltaEffStressOu
-    + ';*' + StrSwtVoidRatioOut
-    + ';*' + StrSwtThickCompSedOut
-    + ';*' + StrSwtLayerCentElevOut + '|'
+{
+    odSelectFiles.Filter := 'All supported file types|*'
+      + StrBhd + ';*' + StrBdn
+      + ';*' + StrFhd
+      + ';*' + StrFdn
+      + ';*' + StrCbcExt
+      + ';*' + StrHuffhd
+      + ';*' + StrHufbhd
+      + ';*' + StrHufflow
+      + ';*' + StrSubOut
+      + ';*' + StrSwtOut
+      + ';*' + StrSubSubOut
+      + ';*' + StrSubComMlOut
+      + ';*' + StrSubComIsOut
+      + ';*' + StrSubVdOut
+      + ';*' + StrSubNdCritHeadOut
+      + ';*' + StrSubDCritHeadOut
+      + ';*' + StrSwtSubOut
+      + ';*' + StrSwtComMLOut
+      + ';*' + StrSwtComIsOut
+      + ';*' + StrSwtVDOut
+      + ';*' + StrSwtPreConStrOut
+      + ';*' + StrSwtDeltaPreConStrOu
+      + ';*' + StrSwtGeoStatOut
+      + ';*' + StrSwtDeltaGeoStatOut
+      + ';*' + StrSwtEffStressOut
+      + ';*' + StrSwtDeltaEffStressOu
+      + ';*' + StrSwtVoidRatioOut
+      + ';*' + StrSwtThickCompSedOut
+      + ';*' + StrSwtLayerCentElevOut
+      + ';*' + StrMt3dConcFile
+
+    + '|'
 
     + 'Formatted head files (*' + StrFhd + ')|*' + StrFhd + '|'
     + 'Formatted drawdown files (*' + StrFdn + ')|*' + StrFdn + '|'
@@ -1681,7 +1918,9 @@ begin
     + 'SWT Change in effective stress (*' + StrSwtDeltaEffStressOu + ')|*' + StrSwtDeltaEffStressOu + '|'
     + 'SWT Void ratio (*' + StrSwtVoidRatioOut + ')|*' + StrSwtVoidRatioOut + '|'
     + 'SWT Thickness of compressible sediments (*' + StrSwtThickCompSedOut + ')|*' + StrSwtThickCompSedOut + '|'
-    + 'SWT Layer-center elevation (*' + StrSwtLayerCentElevOut + ')|*' + StrSwtLayerCentElevOut
+    + 'SWT Layer-center elevation (*' + StrSwtLayerCentElevOut + ')|*' + StrSwtLayerCentElevOut + '|'
+    + 'MT3DMS Concentration file (*' + StrMt3dConcFile + ')|*' + StrMt3dConcFile
+    }
 end;
 
 procedure TfrmSelectResultToImport.FormDestroy(Sender: TObject);
@@ -1689,6 +1928,7 @@ begin
   inherited;
   FPeriods.Free;
   FSteps.Free;
+  FTransportSteps.Free;
   FDescriptions.Free;
   FNewDataSetNames.Free;
   FNewDefaultDataSetNames.Free;
@@ -1705,10 +1945,11 @@ var
   Extension: string;
   Index: Integer;
   Position: integer;
+  AChemSpecies: TChemSpeciesItem;
 begin
   inherited;
   Dialog := Sender as TOpenDialog;
-  if (Dialog.FilterIndex > 1) and (Dialog.FileName <> '') then
+  if (Dialog.FilterIndex > 2) and (Dialog.FileName <> '') then
   begin
     Position := 1;
     for Index := 0 to Dialog.FilterIndex*2 - 2 do
@@ -1727,8 +1968,35 @@ begin
       Extension := Copy(Extension, 1, Position-1);
     end;
 
-    NewFileName :=
-      ChangeFileExt(Dialog.FileName, Extension);
+    if SameText(Extension, StrMt3dConcFile) then
+    begin
+      NewFileName :=
+        ChangeFileExt(Dialog.FileName, '');
+      if frmGoPhast.PhastModel.MobileComponents.Count > 0 then
+      begin
+        AChemSpecies := frmGoPhast.PhastModel.MobileComponents[0];
+      end
+      else if frmGoPhast.PhastModel.ImmobileComponents.Count > 0 then
+      begin
+        AChemSpecies := frmGoPhast.PhastModel.ImmobileComponents[0];
+      end
+      else
+      begin
+        AChemSpecies := nil;
+      end;
+      if AChemSpecies <> nil then
+      begin
+        NewFileName := NewFileName + '_' + AChemSpecies.Name;
+      end;
+      NewFileName :=
+        ChangeFileExt(NewFileName, Extension);
+    end
+    else
+    begin
+      NewFileName :=
+        ChangeFileExt(Dialog.FileName, Extension);
+    end;
+
     Dialog.FileName := NewFileName;
     UpdateDialogBoxFileName(Dialog, NewFileName);
   end;
@@ -1741,6 +2009,7 @@ var
   AnArray: TModflowDoubleArray;
   A3DArray: T3DTModflowArray;
   KPER: Integer;
+  NTRANS: integer;
   PERTIM: TModflowDouble;
   TOTIM: TModflowDouble;
   DESC: TModflowDesc;
@@ -1775,6 +2044,10 @@ var
 
     result := Description + HufName + ': Period: ' + IntToStr(KPER)
       + '; Step: ' + IntToStr(KSTP);
+    if FResultFormat = mfMt3dConc then
+    begin
+      result := result + '; Transport Step: ' + IntToStr(NTRANS);
+    end;
     if TOTIM >= 0 then
     begin
       result := result + '; Total Time: ' + FloatToStr(TOTIM);
@@ -1787,6 +2060,7 @@ var
     begin
       FPeriods.Add(KPER);
       FSteps.Add(KSTP);
+      FTransportSteps.Add(NTRANS);
       FDescriptions.Add(TitleCase(Trim(Description)));
       clData.Items.Add(Item);
     end;
@@ -1834,6 +2108,31 @@ begin
       end;
 
       case FResultFormat of
+        mfMt3dConc:
+          begin
+            while FFileStream.Position < FFileStream.Size do
+            begin
+              case Precision of
+                mpSingle:
+                  ReadSinglePrecisionMt3dmsBinaryRealArray(FFileStream, NTRANS, KSTP, KPER,
+                    TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
+                mpDouble:
+                  ReadDoublePrecisionMt3dmsBinaryRealArray(FFileStream, NTRANS, KSTP, KPER,
+                    TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
+                else Assert(False);
+              end;
+              RecordItem(string(DESC));
+              if (AModel.ModflowGrid.RowCount <> NROW)
+                or (AModel.ModflowGrid.ColumnCount <> NCOL) then
+              begin
+                Beep;
+                MessageDlg(StrTheNumberOfRowsOrColumns,
+                  mtError, [mbOK], 0);
+                result := False;
+                break;
+              end;
+            end;
+          end;
         mrBinary:
           begin
             while FFileStream.Position < FFileStream.Size do
@@ -1848,14 +2147,13 @@ begin
                 else Assert(False);
               end;
               RecordItem(string(DESC));
-              if AModel.ModflowGrid.RowCount = 1 then
+              if (AModel.ModflowGrid.RowCount = 1) then
               begin
                 if (AModel.ModflowLayerCount <> NROW)
                   or (AModel.ModflowGrid.ColumnCount <> NCOL) then
                 begin
                   Beep;
-                  MessageDlg('The number of layers or columns in the data set doesn''t'
-                    + ' match the number of layers or columns in the grid.',
+                  MessageDlg(StrTheNumberOfLayersOrCol,
                     mtError, [mbOK], 0);
                   result := False;
                   break;
@@ -1867,8 +2165,7 @@ begin
                   or (AModel.ModflowGrid.ColumnCount <> NCOL) then
                 begin
                   Beep;
-                  MessageDlg('The number of rows or columns in the data set doesn''t'
-                    + ' match the number of rows or columns in the grid.',
+                  MessageDlg(StrTheNumberOfRowsOrColumns,
                     mtError, [mbOK], 0);
                   result := False;
                   break;
@@ -1889,8 +2186,7 @@ begin
                   or (AModel.ModflowGrid.ColumnCount <> NCOL) then
                 begin
                   Beep;
-                  MessageDlg('The number of layers or columns in the data set doesn''t'
-                    + ' match the number of layers or columns in the grid.',
+                  MessageDlg(StrTheNumberOfLayersOrCol,
                     mtError, [mbOK], 0);
                   result := False;
                   break;
@@ -1902,8 +2198,7 @@ begin
                   or (AModel.ModflowGrid.ColumnCount <> NCOL) then
                 begin
                   Beep;
-                  MessageDlg('The number of rows or columns in the data set doesn''t'
-                    + ' match the number of rows or columns in the grid.',
+                  MessageDlg(StrTheNumberOfRowsOrColumns,
                     mtError, [mbOK], 0);
                   result := False;
                   break;
@@ -1932,8 +2227,7 @@ begin
                 or (AModel.ModflowLayerCount <> Abs(NLAY)) then
               begin
                 Beep;
-                MessageDlg('The number of rows, columns, or layers in the data set doesn''t'
-                  + ' match the number of rows, columns, or layers in the grid.',
+                MessageDlg(StrTheNumberOfRows,
                   mtError, [mbOK], 0);
                 result := False;
                 break;
@@ -1951,8 +2245,7 @@ begin
                 or (AModel.ModflowGrid.ColumnCount <> NCOL) then
               begin
                 Beep;
-                MessageDlg('The number of rows or columns in the data set doesn''t'
-                  + ' match the number of rows or columns in the grid.',
+                MessageDlg(StrTheNumberOfRowsOrColumns,
                   mtError, [mbOK], 0);
                 result := False;
                 break;
@@ -1977,8 +2270,7 @@ begin
                 or (AModel.ModflowGrid.ColumnCount <> NCOL) then
               begin
                 Beep;
-                MessageDlg('The number of rows or columns in the data set doesn''t'
-                  + ' match the number of rows or columns in the grid.',
+                MessageDlg(StrTheNumberOfRowsOrColumns,
                   mtError, [mbOK], 0);
                 result := False;
                 break;
@@ -2010,8 +2302,7 @@ begin
                 or (AModel.HydrogeologicUnits.Count <> Abs(NLAY)) then
               begin
                 Beep;
-                MessageDlg('The number of rows, columns, or hydrogeologic units in the data set doesn''t'
-                  + ' match the number of rows, columns, or hydrogeologic units in the grid.',
+                MessageDlg(StrTheNumberOfHydrogeologic,
                   mtError, [mbOK], 0);
                 result := False;
                 break;
@@ -2039,8 +2330,7 @@ begin
                 or (AModel.ModflowGrid.ColumnCount <> NCOL) then
               begin
                 Beep;
-                MessageDlg('The number of rows or columns in the data set doesn''t'
-                  + ' match the number of rows or columns in the grid.',
+                MessageDlg(StrTheNumberOfRowsOrColumns,
                   mtError, [mbOK], 0);
                 result := False;
                 break;
@@ -2063,7 +2353,7 @@ begin
   if clData.Items.Count = 0 then
   begin
     Beep;
-    MessageDlg('File is empty.', mtError, [mbOK], 0);
+    MessageDlg(StrFileIsEmpty, mtError, [mbOK], 0);
     result := False;
   end;
   if clData.Items.Count >= 1 then
@@ -2092,7 +2382,7 @@ end;
 procedure TfrmSelectResultToImport.AssignWaterTable(NewDataSets: TList;
   OldComments: TStringList; DataSetNames: TStringList;
   ScreenObjectsToDelete: TScreenObjectList; NewCreateScreenObjects: TList;
-  KPER: Integer; WaterTableArray: TModflowDoubleArray; KSTP: Integer;
+  NTRANS, KPER: Integer; WaterTableArray: TModflowDoubleArray; KSTP: Integer;
   const Description: string; ValuesToIgnore: TOneDRealArray;
   TOTIM: TModflowDouble; FileNames: string; AModel: TCustomModel);
 var
@@ -2100,10 +2390,11 @@ var
   OldComment: string;
   ScreenObject: TScreenObject;
   MinMaxAssigned: Boolean;
+  UndoCreateObject: TUndoCreateScreenObject;
 begin
   if Description = StrHead then
   begin
-    CreateOrRetrieveLayerDataSet('Water Table', KSTP, KPER, -1, TOTIM,
+    CreateOrRetrieveLayerDataSet('Water Table', NTRANS, KSTP, KPER, -1, TOTIM,
       WaterTableData, OldComment, NewDataSets, ScreenObjectsToDelete, FileNames,
       AModel, dafWaterTable);
     CreateScreenObject(-1, AModel, ScreenObject);
@@ -2111,7 +2402,10 @@ begin
       ValuesToIgnore, AModel, MinMaxAssigned);
     UpdateOldComments(OldComments, WaterTableData, OldComment);
     DataSetNames.AddObject(WaterTableData.Name, WaterTableData);
-    NewCreateScreenObjects.Add(TUndoCreateScreenObject.Create(ScreenObject));
+    UndoCreateObject := TUndoCreateScreenObject.Create(ScreenObject);
+    UndoCreateObject.UpdateObservations;
+    NewCreateScreenObjects.Add(UndoCreateObject);
+//    NewCreateScreenObjects.Add(TUndoCreateScreenObject.Create(ScreenObject));
   end;
 end;
 
@@ -2166,13 +2460,29 @@ end;
 procedure TfrmSelectResultToImport.AdjustTotalTime(var TOTIM: TModflowDouble);
 var
   FirstStressPeriod: TModflowStressPeriod;
+  ShouldAdjust: Boolean;
+  SP_Index: Integer;
+  StressPeriod: TModflowStressPeriod;
 begin
   if frmGoPhast.PhastModel.ModflowStressPeriods.Count > 1 then
   begin
     FirstStressPeriod := frmGoPhast.PhastModel.ModflowStressPeriods[0];
     if FirstStressPeriod.StressPeriodType = sptSteadyState then
     begin
-      TOTIM := TOTIM - FirstStressPeriod.PeriodLength;
+      ShouldAdjust := True;
+      for SP_Index := 1 to frmGoPhast.PhastModel.ModflowStressPeriods.Count - 1 do
+      begin
+        StressPeriod := frmGoPhast.PhastModel.ModflowStressPeriods[SP_Index];
+        if StressPeriod.StressPeriodType = sptSteadyState then
+        begin
+          ShouldAdjust := False;
+          break;
+        end;
+      end;
+      if ShouldAdjust then
+      begin
+        TOTIM := TOTIM - FirstStressPeriod.PeriodLength;
+      end;
     end;
   end;
 end;
@@ -2303,7 +2613,7 @@ begin
 end;
 
 procedure TfrmSelectResultToImport.ReadArray(var AnArray: TModflowDoubleArray;
-  var EndReached: Boolean; var KPER, KSTP, ILAY: Integer;
+  var EndReached: Boolean; var NTRANS, KPER, KSTP, ILAY: Integer;
   var TOTIM: TModflowDouble;
   var Description: string; Precision: TModflowPrecision; ShouldReadArray: boolean);
 var
@@ -2314,7 +2624,34 @@ var
   NCOL: Integer;
 
 begin
+  NTRANS := 0;
   case FResultFormat of
+    mfMt3dConc:
+      begin
+        if FFileStream.Position < FFileStream.Size then
+        begin
+          case Precision of
+            mpSingle:
+              ReadSinglePrecisionMt3dmsBinaryRealArray(FFileStream, NTRANS, KSTP,
+                KPER, TOTIM, DESC, NCOL, NROW, ILAY, AnArray,
+                ShouldReadArray);
+            mpDouble:
+              ReadDoublePrecisionMt3dmsBinaryRealArray(FFileStream, NTRANS, KSTP,
+                KPER, TOTIM, DESC, NCOL, NROW, ILAY, AnArray,
+                ShouldReadArray);
+            else Assert(False);
+          end;
+          Description := string(Trim(DESC));
+          if NTRANS > FMaxTrans then
+          begin
+            FMaxTrans := NTRANS;
+          end;
+        end
+        else
+        begin
+          EndReached := True;
+        end;
+      end;
     mrBinary, mrHufBinary, mfSubBinary:
       begin
         if FFileStream.Position < FFileStream.Size then
@@ -2365,7 +2702,7 @@ begin
   Precision := mpSingle;
   Extension := ExtractFileExt(AFileName);
   if (SameText(Extension, StrBdn))
-    or (CompareText(Extension, StrBhd) = 0) then
+    or (SameText(Extension, StrBhd)) then
   begin
     FResultFormat := mrBinary;
   end
@@ -2474,6 +2811,10 @@ begin
   begin
     FResultFormat := mfSubBinary;
   end
+  else if (SameText(Extension, StrMt3dConcFile)) then
+  begin
+    FResultFormat := mfMt3dConc;
+  end
   else
   begin
     result := False;
@@ -2491,6 +2832,11 @@ begin
       begin
         FFileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
         Precision := CheckArrayPrecision(FFileStream);
+      end;
+    mfMt3dConc:
+      begin
+        FFileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
+        Precision := CheckMt3dmsArrayPrecision(FFileStream);
       end;
     mrFlux, mrHufFlux:
       begin
@@ -2648,6 +2994,11 @@ begin
         end;
       else Assert(False);
     end;
+//    if frmDisplayData = nil then
+//    begin
+//      Application.CreateForm(TfrmDisplayData, frmDisplayData);
+//    end;
+//    UpdateFrmDisplayData(True);
   end;
 
   FContainedUndos := TObjectList.Create;
@@ -2683,7 +3034,7 @@ end;
 
 function TUndoImportModelResults.Description: string;
 begin
-  result := 'import model results';
+  result := StrImportModelResults;
 end;
 
 destructor TUndoImportModelResults.Destroy;

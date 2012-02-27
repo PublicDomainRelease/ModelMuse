@@ -107,6 +107,9 @@ implementation
 uses
   frmGoPhastUnit, OrderedCollectionUnit, PhastModelUnit;
 
+resourcestring
+  StrChangeHydrogeologic = 'change hydrogeologic units';
+
 {$R *.dfm}
 
 function TfrmHUF_Layers.CheckHuf: boolean;
@@ -980,7 +983,7 @@ end;
 
 function TUndoHufLayers.Description: string;
 begin
-  result := 'change hydrogeologic units';
+  result := StrChangeHydrogeologic;
 end;
 
 destructor TUndoHufLayers.Destroy;

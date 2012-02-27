@@ -453,7 +453,15 @@ begin
 end;
 
 procedure TfrmGridValue.GetSelectedDataArray(var OtherDataSet: TDataArray);
+var
+  Grid: TCustomModelGrid;
 begin
+  Grid := frmGoPhast.PhastModel.SelectedModel.Grid;
+  if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
+  begin
+    OtherDataSet := nil;
+    Exit;
+  end;
   OtherDataSet := frmGoPhast.PhastModel.SelectedModel.DataArrayManager.
     GetDataSetByName(virttreecomboDataSets.Text);
 end;

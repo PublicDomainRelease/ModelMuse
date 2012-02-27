@@ -68,6 +68,9 @@ implementation
 
 uses frmGoPhastUnit, ModflowSfrParamIcalcUnit;
 
+resourcestring
+  StrAssignStreamLinkag = 'assign stream linkages';
+
 {$R *.dfm}
 
 { TStreamLinkageChangeItem }
@@ -143,7 +146,7 @@ end;
 
 function TUndoChangeStreamLinkages.Description: string;
 begin
-  result := 'assign stream linkages';
+  result := StrAssignStreamLinkag;
 end;
 
 destructor TUndoChangeStreamLinkages.Destroy;

@@ -106,6 +106,9 @@ uses frmCustomGoPhastUnit, ClassificationUnit, PhastModelUnit, FastGEO,
   ConvexHullUnit, GPC_Classes, gpc, RbwParser, StrUtils,
   frmErrorsAndWarningsUnit, GIS_Functions, ModelMuseUtilities, frmGoPhastUnit;
 
+resourcestring
+  StrDataSet0sOb = ' Data set = %0:s; Object = %1:s';
+
 const
   StrFormulaTruncatedTo = 'Formula truncated to 254 characters';
 
@@ -1143,9 +1146,8 @@ begin
               if Length(Formula) > 254 then
               begin
                 frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
-                  StrFormulaTruncatedTo,
-                  ' Data set = ' + DataArray.Name
-                  + '; Object = ' + AScreenObject.Name);
+                  StrFormulaTruncatedTo, Format(StrDataSet0sOb,
+                  [DataArray.Name, AScreenObject.Name]));
                 FShowWarning := True;
               end;
             end;
@@ -1260,9 +1262,8 @@ begin
             if Length(Formula) > 254 then
             begin
               frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
-                StrFormulaTruncatedTo,
-                ' Data set = ' + DataArray.Name
-                + '; Object = ' + AScreenObject.Name);
+                StrFormulaTruncatedTo, Format(StrDataSet0sOb,
+                [DataArray.Name, AScreenObject.Name]));
               FShowWarning := True;
             end;
           end;

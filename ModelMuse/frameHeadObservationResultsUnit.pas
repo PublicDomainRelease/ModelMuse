@@ -127,6 +127,8 @@ resourcestring
   'sults. Do you want to import it?';
   StrTheFileSHasADiMultiple = 'The following files %s have a different date '
   + 'than the imported results. Do you want to import them?';
+  StrChangeHeadResultP = 'change head result parameters';
+  StrImportHeadResults = 'import head results';
 
 
 type
@@ -351,14 +353,14 @@ end;
 
 function TUndoChangeHeadObsResults.Description: string;
 begin
-  result := 'change head result parameters';
+  result := StrChangeHeadResultP;
 end;
 
 { TUndoImportChangeHeadObsResults }
 
 function TUndoImportChangeHeadObsResults.Description: string;
 begin
-  result := 'import head results';
+  result := StrImportHeadResults;
 end;
 
 
@@ -555,6 +557,7 @@ end;
 
 procedure TframeHeadObservationResults.GetData;
 begin
+  Handle;
   FCurrentModelLink := nil;
   UpdateChildModels;
   CurrentModelLink := ObsLinkList[0];

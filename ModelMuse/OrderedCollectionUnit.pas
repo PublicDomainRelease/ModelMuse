@@ -367,6 +367,7 @@ var
     end;
   end;
 begin
+  // if Assign is updated, update IsSame too.
   AnotherOrderedCollection := Source as TOrderedCollection;
   if not IsSame(AnotherOrderedCollection) then
   begin
@@ -545,6 +546,7 @@ procedure TModflowParameter.Assign(Source: TPersistent);
 Var
   SourceParameter: TModflowParameter;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TModflowParameter then
   begin
     SourceParameter := TModflowParameter(Source);

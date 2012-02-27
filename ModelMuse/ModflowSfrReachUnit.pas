@@ -269,6 +269,7 @@ procedure TSfrItem.Assign(Source: TPersistent);
 var
   Sfr: TSfrItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TSfrItem then
   begin
     Sfr := TSfrItem(Source);

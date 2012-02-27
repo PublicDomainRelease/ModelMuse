@@ -54,6 +54,8 @@ resourcestring
   StrErrorInCHDPackage = 'Error in CHD package';
   StrTheCHDPackageIsA = 'The CHD package is active but no CHD boundaries are' +
   ' assigned';
+  StrTheFollowingCHDOb = 'The following CHD observation names may be valid f' +
+  'or MODFLOW but they are not valid for UCODE.';
 
 { TModflowCHD_Writer }
 
@@ -384,7 +386,7 @@ end;
 
 function TModflowCHD_Writer.ObsNameWarningString: string;
 begin
-  result := 'The following CHD observation names may be valid for MODFLOW but they are not valid for UCODE.';
+  result := StrTheFollowingCHDOb;
 end;
 
 function TModflowCHD_Writer.Package: TModflowPackageSelection;

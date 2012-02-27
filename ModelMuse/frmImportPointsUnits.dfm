@@ -76,7 +76,10 @@ inherited frmImportPoints: TfrmImportPoints
     ExplicitWidth = 573
     object tabControls: TTabSheet
       Caption = 'Controls'
+      ExplicitLeft = 0
+      ExplicitTop = 0
       ExplicitWidth = 565
+      ExplicitHeight = 0
       object pnlRadioGroups: TPanel
         Left = 192
         Top = 0
@@ -279,6 +282,10 @@ inherited frmImportPoints: TfrmImportPoints
     object tabData: TTabSheet
       Caption = 'Data'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlDataTabControls: TPanel
         Left = 0
         Top = 365
@@ -374,6 +381,7 @@ inherited frmImportPoints: TfrmImportPoints
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -395,6 +403,7 @@ inherited frmImportPoints: TfrmImportPoints
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
         OnEndUpdate = dgDataEndUpdate

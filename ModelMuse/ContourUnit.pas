@@ -229,15 +229,11 @@ begin
             LabelLocations.AddPoint(CenterX, CenterY, Pointer(1));
 
             LabelObject := TLabel.Create;
-            LabelObject.Value := FloatToStr(Value);
+            LabelObject.Value := FloatToStrF(Value, ffGeneral, 7, 0);
             ASize := Bitmap.TextExtent(LabelObject.Value);
             LabelObject.X := CenterX - ASize.cx div 2;
             LabelObject.Y := CenterY - ASize.cy div 2;
             Labels.Add(LabelObject);
-
-//            ALabel := FloatToStr(Value);
-//            ASize := Bitmap.TextExtent(ALabel);
-//            Bitmap.Textout(CenterX - ASize.cx div 2, CenterY - ASize.cy div 2, FloatToStr(Value));
           end;
         end;
       end;

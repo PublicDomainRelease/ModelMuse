@@ -149,6 +149,7 @@ procedure TModflowSteadyParameter.Assign(Source: TPersistent);
 Var
   SourceParameter: TModflowSteadyParameter;
 begin
+  // if Assign is updated, update IsSame too.
   inherited;
   if Source is TModflowSteadyParameter then
   begin

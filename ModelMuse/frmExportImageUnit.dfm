@@ -44,23 +44,23 @@ inherited frmExportImage: TfrmExportImage
       TabOrder = 0
       object cpAnimation: TCategoryPanel
         Top = 416
-        Height = 30
+        Height = 386
         Caption = 'Animation'
-        Collapsed = True
         TabOrder = 2
         OnExpand = cpAnimationExpand
-        ExpandedHeight = 386
+        ExplicitWidth = 247
         object pnlAnimation: TPanel
           Left = 5
           Top = 0
           Width = 240
-          Height = 0
+          Height = 360
           Align = alRight
           BevelOuter = bvNone
           TabOrder = 0
+          ExplicitHeight = 0
           object JvNetscapeSplitter1: TJvNetscapeSplitter
             Left = 0
-            Top = -225
+            Top = 135
             Width = 240
             Height = 10
             Cursor = crVSplit
@@ -75,11 +75,12 @@ inherited frmExportImage: TfrmExportImage
           end
           object Panel1: TPanel
             Left = 0
-            Top = -84
+            Top = 276
             Width = 240
             Height = 84
             Align = alBottom
-            TabOrder = 0
+            TabOrder = 1
+            ExplicitTop = -84
             object rgDisplayChoice: TRadioGroup
               Left = 3
               Top = 6
@@ -139,7 +140,7 @@ inherited frmExportImage: TfrmExportImage
           end
           object rdgDataSets: TRbwDataGrid4
             Left = 0
-            Top = -215
+            Top = 145
             Width = 240
             Height = 131
             Align = alBottom
@@ -147,7 +148,7 @@ inherited frmExportImage: TfrmExportImage
             FixedCols = 1
             RowCount = 2
             Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowMoving, goEditing, goAlwaysShowEditor]
-            TabOrder = 1
+            TabOrder = 0
             ExtendedAutoDistributeText = False
             AutoMultiEdit = True
             AutoDistributeText = True
@@ -177,6 +178,7 @@ inherited frmExportImage: TfrmExportImage
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = False
               end
               item
@@ -198,8 +200,10 @@ inherited frmExportImage: TfrmExportImage
                 ParentButtonFont = False
                 WordWrapCaptions = False
                 WordWrapCells = False
+                CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end>
+            ExplicitTop = -215
             ColWidths = (
               19
               64)
@@ -237,14 +241,16 @@ inherited frmExportImage: TfrmExportImage
         Collapsed = True
         TabOrder = 1
         OnExpand = cpTextExpand
+        ExplicitWidth = 247
         ExpandedHeight = 386
         object pnlText: TPanel
           Left = 0
           Top = 0
-          Width = 245
+          Width = 228
           Height = 0
           Align = alClient
           TabOrder = 0
+          ExplicitWidth = 245
           object lblTitle: TLabel
             Left = 11
             Top = 2
@@ -331,14 +337,16 @@ inherited frmExportImage: TfrmExportImage
         Caption = 'View'
         TabOrder = 0
         OnExpand = cpViewExpand
+        ExplicitWidth = 247
         object Panel3: TPanel
           Left = 0
           Top = 0
-          Width = 245
+          Width = 228
           Height = 360
           Align = alClient
           Caption = 'pnlText'
           TabOrder = 0
+          ExplicitWidth = 245
           object lblSelectedView: TLabel
             Left = 3
             Top = 15
@@ -460,7 +468,7 @@ inherited frmExportImage: TfrmExportImage
     Width = 721
     Height = 71
     Align = alBottom
-    TabOrder = 1
+    TabOrder = 2
     DesignSize = (
       721
       71)
@@ -481,7 +489,7 @@ inherited frmExportImage: TfrmExportImage
       Kind = bkHelp
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 5
+      TabOrder = 4
       OnClick = btnHelpClick
     end
     object btnClose: TBitBtn
@@ -494,7 +502,7 @@ inherited frmExportImage: TfrmExportImage
       Kind = bkClose
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 6
+      TabOrder = 7
       OnClick = btnCloseClick
     end
     object btnSaveSettings: TButton
@@ -503,7 +511,7 @@ inherited frmExportImage: TfrmExportImage
       Width = 87
       Height = 58
       Caption = 'Save settings'
-      TabOrder = 1
+      TabOrder = 0
       WordWrap = True
       OnClick = btnSaveSettingsClick
     end
@@ -513,7 +521,7 @@ inherited frmExportImage: TfrmExportImage
       Width = 195
       Height = 26
       AutoComplete = False
-      TabOrder = 0
+      TabOrder = 5
       Text = '(none)'
       OnChange = comboSavedSettingsChange
       OnCloseUp = comboSavedSettingsCloseUp
@@ -542,7 +550,7 @@ inherited frmExportImage: TfrmExportImage
         3393333777333777337333333999993333333333377777333333}
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 3
+      TabOrder = 2
       OnClick = btnRefreshClick
     end
     object btnManageSettings: TButton
@@ -551,7 +559,7 @@ inherited frmExportImage: TfrmExportImage
       Width = 87
       Height = 58
       Caption = 'Manage settings'
-      TabOrder = 2
+      TabOrder = 1
       WordWrap = True
       OnClick = btnManageSettingsClick
     end
@@ -578,7 +586,7 @@ inherited frmExportImage: TfrmExportImage
         93337FFFF7737777733300000033333333337777773333333333}
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 4
+      TabOrder = 6
       OnClick = btnSaveImageClick
       HotTrackFont.Charset = ANSI_CHARSET
       HotTrackFont.Color = clWindowText
@@ -610,7 +618,7 @@ inherited frmExportImage: TfrmExportImage
         93337FFFF7737777733300000033333333337777773333333333}
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 7
+      TabOrder = 3
       OnClick = JvBitBtn1Click
       HotTrackFont.Charset = ANSI_CHARSET
       HotTrackFont.Color = clWindowText
@@ -626,7 +634,7 @@ inherited frmExportImage: TfrmExportImage
     Width = 462
     Height = 448
     Align = alClient
-    TabOrder = 2
+    TabOrder = 1
     object imagePreview: TImage
       Left = 4
       Top = -1

@@ -127,6 +127,7 @@ resourcestring
   'observations in the file and the observations in this model. Do you want ' +
   'to import those that do match?';
   StrListingFile = 'Listing file';
+  StrEditHeadObservatio = 'edit head observations';
 
 {$R *.dfm}
 
@@ -1163,7 +1164,7 @@ end;
 
 function TUndoSetHeadObs.Description: string;
 begin
-  result := 'edit head observations';
+  result := StrEditHeadObservatio;
 end;
 
 procedure InitializeSortOrder;

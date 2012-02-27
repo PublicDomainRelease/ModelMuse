@@ -165,6 +165,7 @@ procedure TResItem.Assign(Source: TPersistent);
 var
   Res: TResItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TResItem then
   begin
     Res := TResItem(Source);

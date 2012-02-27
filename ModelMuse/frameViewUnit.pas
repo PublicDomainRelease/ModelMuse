@@ -172,8 +172,6 @@ type
     procedure HideAllOthersClick(Sender: TObject);
     procedure ShowAll1Click(Sender: TObject);
     procedure miMergeObjectsClick(Sender: TObject);
-    procedure FrameMouseWheel(Sender: TObject; Shift: TShiftState;
-      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure ZoomBoxMagnificationChanged(Sender: TObject);
     procedure ModelCubeMouseEnter(Sender: TObject);
     procedure ModelCubeMouseLeave(Sender: TObject);
@@ -201,7 +199,6 @@ type
     FNeedToRedraw: Boolean;
 {$ENDIF}
     FPreviousMagnification: double;
-    FLastMoveTime: TDateTime;
     FPaintingNeeded: Boolean;
     procedure UpdateStatusBarCoordinates(APoint: TPoint2D);
     procedure UpdateStatusBarForTopBlockDataSet(Column, Row, X, Y: Integer; const Location: TPoint2D);
@@ -576,6 +573,12 @@ uses GR32_Polygons, frmGoPhastUnit, CursorsFoiledAgain, Math, RbwParser,
   InteractiveTools, frmSetSpacingUnit, frmSubdivideUnit, BigCanvasMethods,
   frmRulerOptionsUnit, PhastModelUnit, frmGridValueUnit, EdgeDisplayUnit,
   CustomModflowWriterUnit, frmProgressUnit;
+
+resourcestring
+  StrTheSImageCanNo = 'The %s  image can not be shown at this magnification.' +
+  ' When the magnification is reduced, you can display it again.';
+  StrSorryTheViewWas = 'Sorry; the view was zoomed in too far.  I''ve had to' +
+  ' zoom out a bit';
 
 const
   SelectedCellsColor = clSilver;
@@ -1150,10 +1153,7 @@ begin
               Item.CanShow := False;
               if Item.DisplayMessage then
               begin
-                MessageDlg('The ' + Item.Name
-                  + ' image can not be shown at this magnification. '
-                  + 'When the magnification is reduced, '
-                  + 'it will be displayed again.',
+                MessageDlg(Format(StrTheSImageCanNo, [Item.Name]),
                   mtInformation, [mbOK], 0);
                 Item.DisplayMessage := False;
               end;
@@ -1773,8 +1773,7 @@ begin
     ZoomBox.Image32.Invalidate;
     Beep;
   end;
-  MessageDlg('Sorry; the view was zoomed in too far.  '
-    + 'I''ve had to zoom out a bit', mtInformation, [mbOK], 0);
+  MessageDlg(StrSorryTheViewWas, mtInformation, [mbOK], 0);
 end;
 
 procedure TframeView.InvalidateScreenObjectCoordinates;
@@ -2056,80 +2055,6 @@ begin
   frmGoPhast.UndoStack.Submit(UndoMoveUp);
 end;
 
-procedure TframeView.FrameMouseWheel(Sender: TObject; Shift: TShiftState;
-  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
-const
-  TenthOfASecond = 1/24/3600/10;
-var
-  ctrl : TWinControl;
-  APoint: TPoint;
-  Increment: Integer;
-begin
-  ctrl := FindVCLWindow(MousePos) ;
-  if (ctrl <> nil) then
-  begin
-    if (ctrl.Parent is TQRbwZoomBox2) then
-    begin
-      APoint := ctrl.ScreenToClient(MousePos);
-      Handled := True;
-      if WheelDelta > 0 then
-      begin
-        ZoomInTool.MouseUp(Sender, mbLeft, Shift, APoint.X, APoint.Y);
-      end
-      else
-      begin
-        ZoomOutTool.MouseUp(Sender, mbLeft, Shift, APoint.X, APoint.Y);
-      end;
-    end
-    else
-    begin
-      if (frmGoPhast.FCubeControl <> nil) then
-      begin
-        if Now - FLastMoveTime < TenthOfASecond then
-        begin
-          Exit;
-        end;
-        FLastMoveTime := Now;
-        if ssShift in Shift then
-        begin
-          Increment := 10;
-        end
-        else
-        begin
-          Increment := 1;
-        end;
-        case frmGoPhast.FCubeControl.SelectedFace of
-          faTop:
-            begin
-              frmGoPhast.PhastModel.CombinedDisplayLayer :=
-                frmGoPhast.PhastModel.CombinedDisplayLayer
-                - Sign(WheelDelta)*Increment;
-              frmGoPhast.sbMain.Panels[1].Text := 'Selected Layer: '
-                + IntToStr(frmGoPhast.PhastModel.SelectedLayer + 1);
-            end;
-          faFront:
-            begin
-              frmGoPhast.PhastModel.CombinedDisplayRow :=
-                frmGoPhast.PhastModel.CombinedDisplayRow
-                - Sign(WheelDelta)*Increment;
-              frmGoPhast.sbMain.Panels[1].Text := 'Selected Row: '
-                + IntToStr(frmGoPhast.PhastModel.SelectedRow + 1);
-            end;
-          faSide:
-            begin
-              frmGoPhast.PhastModel.CombinedDisplayColumn :=
-                frmGoPhast.PhastModel.CombinedDisplayColumn
-                + Sign(WheelDelta)*Increment;
-              frmGoPhast.sbMain.Panels[1].Text := 'Selected Col: '
-                + IntToStr(frmGoPhast.PhastModel.SelectedColumn + 1);
-            end;
-          else Assert(False);
-        end;
-      end;
-    end;
-  end;
-end;
-
 procedure TframeView.BackOneClick(Sender: TObject);
 var
   UndoMoveDown: TUndoMoveDown;
@@ -2318,7 +2243,7 @@ begin
   end;
 
   Layer := frmGoPhast.PhastModel.SelectedModel.Grid.Nearest2DCellElevation(Col,
-    frmGoPhast.PhastModel.SelectedRow, APoint.Y);
+    frmGoPhast.PhastModel.SelectedModel.SelectedRow, APoint.Y);
   case EvaluatedAt of
     eaBlocks:
       begin
@@ -2333,7 +2258,7 @@ begin
         if frmGoPhast.PhastModel.SelectedModel.Grid.LayerDirection = ldBottomToTop then
         begin
           if APoint.Y > frmGoPhast.PhastModel.SelectedModel.Grid.CellElevation[Col,
-            frmGoPhast.PhastModel.SelectedRow, Layer] then
+            frmGoPhast.PhastModel.SelectedModel.SelectedRow, Layer] then
           begin
             NeighborLayer := Layer + 1;
           end
@@ -2345,7 +2270,7 @@ begin
         else
         begin
           if APoint.Y > frmGoPhast.PhastModel.SelectedModel.Grid.CellElevation[Col,
-            frmGoPhast.PhastModel.SelectedRow, Layer] then
+            frmGoPhast.PhastModel.SelectedModel.SelectedRow, Layer] then
           begin
             NeighborLayer := Layer - 1;
           end
@@ -2410,7 +2335,8 @@ var
 begin
     // @name gets the row and layer numbers of the element containing APoint;
     // APoint must be on a side view of the model.
-  if (frmGoPhast.PhastModel.SelectedModel.Grid.RowCount <= 0) or (frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount <= 0) then
+  if (frmGoPhast.PhastModel.SelectedModel.Grid.RowCount <= 0)
+    or (frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount <= 0) then
   begin
     Layer := -1;
     Row := -1;
@@ -2488,7 +2414,7 @@ begin
   end;
 
   Layer := frmGoPhast.PhastModel.SelectedModel.Grid.Nearest2DCellElevation(
-    frmGoPhast.PhastModel.SelectedColumn, Row, APoint.X);
+    frmGoPhast.PhastModel.SelectedModel.SelectedColumn, Row, APoint.X);
 
   case EvaluatedAt of
     eaBlocks:
@@ -2503,7 +2429,7 @@ begin
         if frmGoPhast.PhastModel.SelectedModel.Grid.LayerDirection = ldBottomToTop then
         begin
           if APoint.X > frmGoPhast.PhastModel.SelectedModel.Grid.CellElevation[
-            frmGoPhast.PhastModel.SelectedColumn, Row, Layer] then
+            frmGoPhast.PhastModel.SelectedModel.SelectedColumn, Row, Layer] then
           begin
             NeighborLayer := Layer + 1;
           end
@@ -2515,7 +2441,7 @@ begin
         else
         begin
           if APoint.X > frmGoPhast.PhastModel.SelectedModel.Grid.CellElevation[
-            frmGoPhast.PhastModel.SelectedColumn, Row, Layer] then
+            frmGoPhast.PhastModel.SelectedModel.SelectedColumn, Row, Layer] then
           begin
             NeighborLayer := Layer - 1;
           end

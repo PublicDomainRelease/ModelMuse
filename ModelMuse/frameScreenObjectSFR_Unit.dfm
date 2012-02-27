@@ -10,7 +10,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
     Top = 0
     Width = 561
     Height = 506
-    ActivePage = tabTime
+    ActivePage = tabNetwork
     Align = alClient
     TabOrder = 0
     object tabBasic: TTabSheet
@@ -525,6 +525,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -546,6 +547,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -567,6 +569,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -588,6 +591,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -615,6 +619,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               'Table (4)')
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
         ColWidths = (
@@ -832,6 +837,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -853,6 +859,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -875,6 +882,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -897,6 +905,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -923,6 +932,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               'Diverted amount is overflow (-3)')
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
         ColWidths = (
@@ -984,6 +994,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1005,6 +1016,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1026,6 +1038,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1047,6 +1060,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1068,6 +1082,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1089,6 +1104,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
       end
@@ -1188,6 +1204,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -1209,6 +1226,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -1230,6 +1248,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -1251,6 +1270,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -1272,6 +1292,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -1293,6 +1314,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -1314,6 +1336,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
         end
@@ -1402,6 +1425,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -1423,6 +1447,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -1444,6 +1469,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -1465,6 +1491,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -1486,6 +1513,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -1507,6 +1535,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -1528,6 +1557,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
         end
@@ -1639,6 +1669,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -1660,6 +1691,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -1681,6 +1713,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -1702,6 +1735,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = True
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
         end
@@ -1815,6 +1849,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1836,6 +1871,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1857,6 +1893,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1878,6 +1915,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1899,6 +1937,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1920,6 +1959,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
       end
@@ -2024,6 +2064,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -2045,6 +2086,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
         end

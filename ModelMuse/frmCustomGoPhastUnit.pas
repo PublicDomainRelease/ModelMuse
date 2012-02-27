@@ -73,11 +73,6 @@ type
     // are in Column and that are selected to NewState.
     procedure ChangeSelectedCellsStateInColumn(Grid: TRbwDataGrid4;
       const Column: integer; const NewState: TCheckBoxState);
-    // @name checks all the cells in Grid that are in Col.  If at least one
-    // such cell is selected, AControl will be enabled. Otherwise, it will be
-    // disabled.
-    procedure EnableMultiEditControl(Grid: TRbwDataGrid4; AControl: TControl;
-      Col: integer);
     // If the Application.MainForm has been assigned,
     // @name sets the color, font, and icon used in the form
     // to be the same as in Application.MainForm via a call to
@@ -89,7 +84,15 @@ type
   { Public declarations }
   end;
 
-// @name sets the Left and Width of Control and ALabel so that they are
+  // @name checks all the cells in Grid that are in Col.  If at least one
+  // such cell is selected, AControl will be enabled. Otherwise, it will be
+  // disabled.
+  procedure EnableMultiEditControl(Grid: TRbwDataGrid4; AControl: TControl;
+    Col: integer); overload;
+  procedure EnableMultiEditControl(Grid: TRbwDataGrid4; AControl: TControl;
+    Cols: array of integer); overload;
+
+  // @name sets the Left and Width of Control and ALabel so that they are
 // lined up over Column in Grid. ALabel.Alignment should be taCenter.
 procedure LayoutControls(Grid: TRbwDataGrid4; Control: TControl;
   ALabel: TLabel; Column: Integer; ControlOffSet: integer = 0);
@@ -630,6 +633,7 @@ end;
 
 procedure TfrmCustomGoPhast.FormShow(Sender: TObject);
 begin
+  GetFormatSettings;
   EnsureFormVisible;
   FixGridEditorPosition(Self);
 end;
@@ -906,7 +910,7 @@ begin
   end;
 end;
 
-procedure TfrmCustomGoPhast.EnableMultiEditControl(Grid: TRbwDataGrid4;
+procedure EnableMultiEditControl(Grid: TRbwDataGrid4;
   AControl: TControl; Col: integer);
 var
   ShouldEnable: boolean;
@@ -923,6 +927,35 @@ begin
   end;
   AControl.Enabled := ShouldEnable;
 end;
+
+procedure EnableMultiEditControl(Grid: TRbwDataGrid4; AControl: TControl;
+  Cols: array of integer); overload;
+var
+  ShouldEnable: boolean;
+  RowIndex: Integer;
+  ColIndex: Integer;
+  Col: Integer;
+begin
+  ShouldEnable := False;
+  for RowIndex := Grid.FixedRows to Grid.RowCount -1 do
+  begin
+    for ColIndex := 0 to Length(Cols) - 1 do
+    begin
+      Col := Cols[ColIndex];
+      ShouldEnable := Grid.IsSelectedCell(Col,RowIndex);
+      if ShouldEnable then
+      begin
+        break;
+      end;
+    end;
+    if ShouldEnable then
+    begin
+      break;
+    end;
+  end;
+  AControl.Enabled := ShouldEnable;
+end;
+
 
 procedure TfrmCustomGoPhast.ChangeSelectedCellsInColumn(Grid: TRbwDataGrid4;
   const Column: integer; const NewText: string);

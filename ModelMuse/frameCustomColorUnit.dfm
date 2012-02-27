@@ -10,15 +10,11 @@ object frameCustomColor: TframeCustomColor
     Top = 0
     Width = 570
     Height = 428
-    ActivePage = tabSelection
+    ActivePage = tabLegend
     Align = alClient
     TabOrder = 0
     object tabSelection: TTabSheet
       Caption = 'Selection'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         562
         400)
@@ -86,7 +82,7 @@ object frameCustomColor: TframeCustomColor
         Font.Style = []
         ParentFont = False
         ReadOnly = True
-        TabOrder = 1
+        TabOrder = 2
       end
       object comboColorScheme: TComboBox
         Left = 8
@@ -97,7 +93,7 @@ object frameCustomColor: TframeCustomColor
         Anchors = [akLeft, akRight, akBottom]
         DropDownCount = 12
         ItemIndex = 0
-        TabOrder = 2
+        TabOrder = 4
         Text = 'Rainbow'
         OnChange = comboColorSchemeChange
         Items.Strings = (
@@ -124,7 +120,7 @@ object frameCustomColor: TframeCustomColor
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
         Anchors = [akRight, akBottom]
-        TabOrder = 3
+        TabOrder = 5
         OnChange = seCyclesChange
         OnKeyUp = seCyclesKeyUp
       end
@@ -135,7 +131,7 @@ object frameCustomColor: TframeCustomColor
         Height = 40
         Increment = 2
         MaxValue = 200
-        TabOrder = 4
+        TabOrder = 6
         Value = 40
         Anchors = [akLeft, akBottom]
         OnChange = jsColorExponentChange
@@ -151,7 +147,7 @@ object frameCustomColor: TframeCustomColor
         ValueType = vtFloat
         Value = 0.400000000000000000
         Anchors = [akLeft, akBottom]
-        TabOrder = 5
+        TabOrder = 7
         OnChange = seColorExponentChange
       end
       object cbLogTransform: TCheckBox
@@ -161,14 +157,14 @@ object frameCustomColor: TframeCustomColor
         Height = 17
         Anchors = [akLeft, akBottom]
         Caption = 'Log transform'
-        TabOrder = 6
+        TabOrder = 8
       end
       object udDataSets: TJvUpDown
         Left = 479
         Top = 28
         Width = 17
         Height = 25
-        TabOrder = 0
+        TabOrder = 1
         OnChangingEx = udDataSetsChangingEx
       end
       object rgUpdateLimitChoice: TRadioGroup
@@ -182,7 +178,7 @@ object frameCustomColor: TframeCustomColor
         Items.Strings = (
           'Update limits and legend (default)'
           'Retain limits and legend (animations)')
-        TabOrder = 7
+        TabOrder = 3
       end
       object virttreecomboDataSets: TRbwStringTreeCombo
         Left = 8
@@ -230,17 +226,13 @@ object frameCustomColor: TframeCustomColor
           EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
           EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00}
         NumGlyphs = 2
-        TabOrder = 8
+        TabOrder = 0
         OnChange = virttreecomboDataSetsChange
       end
     end
     object tabFilters: TTabSheet
       Caption = 'Filters'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         562
         400)
@@ -288,16 +280,18 @@ object frameCustomColor: TframeCustomColor
         Height = 35
         HorzScrollBar.Range = 188
         VertScrollBar.Range = 30
-        TabOrder = 0
+        TabOrder = 1
         TabStop = True
         ExplicitLeft = 299
         ExplicitTop = 24
         inherited rdeLimit: TRbwDataEntry
           Height = 28
+          TabOrder = 0
           ExplicitHeight = 28
         end
         inherited comboBoolLimit: TComboBox
           Left = 89
+          TabOrder = 1
           ExplicitLeft = 89
         end
       end
@@ -308,7 +302,7 @@ object frameCustomColor: TframeCustomColor
         Height = 35
         HorzScrollBar.Range = 188
         VertScrollBar.Range = 30
-        TabOrder = 1
+        TabOrder = 0
         TabStop = True
         ExplicitLeft = 8
         ExplicitTop = 24
@@ -365,6 +359,7 @@ object frameCustomColor: TframeCustomColor
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
         OnEndUpdate = rdgValuesToIgnoreEndUpdate
@@ -377,7 +372,7 @@ object frameCustomColor: TframeCustomColor
         CheckMinValue = True
         ButtonKind = bkClassic
         Anchors = [akLeft, akBottom]
-        TabOrder = 4
+        TabOrder = 5
         OnChange = seNumberOfValuesToIgnoreChange
       end
       object rdeEpsilon: TRbwDataEntry
@@ -385,7 +380,7 @@ object frameCustomColor: TframeCustomColor
         Top = 112
         Width = 145
         Height = 22
-        TabOrder = 5
+        TabOrder = 4
         Text = '0'
         DataType = dtReal
         Max = 1.000000000000000000
@@ -397,10 +392,6 @@ object frameCustomColor: TframeCustomColor
       Caption = 'Legend'
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object imLegend: TImage
         Left = 218
         Top = 0
@@ -464,7 +455,7 @@ object frameCustomColor: TframeCustomColor
           Value = 1.000000000000000000
           Enabled = False
           Anchors = [akLeft, akBottom]
-          TabOrder = 1
+          TabOrder = 2
           OnChange = seLegendRowsChange
         end
         object rdgLegend: TRbwDataGrid4
@@ -478,7 +469,7 @@ object frameCustomColor: TframeCustomColor
           Enabled = False
           FixedCols = 0
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
-          TabOrder = 2
+          TabOrder = 1
           OnSetEditText = rdgLegendSetEditText
           ExtendedAutoDistributeText = False
           AutoMultiEdit = True
@@ -510,6 +501,7 @@ object frameCustomColor: TframeCustomColor
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
           OnEndUpdate = rdgLegendEndUpdate

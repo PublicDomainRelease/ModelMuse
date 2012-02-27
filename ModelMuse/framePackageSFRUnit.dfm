@@ -127,7 +127,7 @@ inherited framePackageSFR: TframePackageSFR
       
         'Specify some streambed properties by reach (can'#39't inactivate str' +
         'eams)')
-    TabOrder = 3
+    TabOrder = 5
   end
   object comboPrintStreams: TComboBox [14]
     Left = 16
@@ -136,8 +136,7 @@ inherited framePackageSFR: TframePackageSFR
     Height = 21
     Style = csDropDownList
     Enabled = False
-    ItemHeight = 13
-    TabOrder = 4
+    TabOrder = 3
     Items.Strings = (
       'Don'#39't print flows'
       'Print flows in listing file'
@@ -150,7 +149,7 @@ inherited framePackageSFR: TframePackageSFR
     Height = 17
     Caption = 'Gage overall stream budget (OUTTYPE = 8)'
     Enabled = False
-    TabOrder = 5
+    TabOrder = 14
     OnClick = cbIRTFLGClick
   end
   object rdeDLEAK: TRbwDataEntry [16]
@@ -160,7 +159,6 @@ inherited framePackageSFR: TframePackageSFR
     Height = 18
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 13
     TabOrder = 6
     Text = '0'
     DataType = dtReal
@@ -175,7 +173,6 @@ inherited framePackageSFR: TframePackageSFR
     Height = 17
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 13
     TabOrder = 7
     Text = '0'
     DataType = dtInteger
@@ -190,7 +187,6 @@ inherited framePackageSFR: TframePackageSFR
     Height = 17
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 13
     TabOrder = 8
     Text = '0'
     DataType = dtInteger
@@ -205,7 +201,6 @@ inherited framePackageSFR: TframePackageSFR
     Height = 17
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 13
     TabOrder = 9
     Text = '0'
     DataType = dtInteger
@@ -232,7 +227,6 @@ inherited framePackageSFR: TframePackageSFR
     Height = 16
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 13
     TabOrder = 11
     Text = '1'
     DataType = dtInteger
@@ -248,7 +242,6 @@ inherited framePackageSFR: TframePackageSFR
     Height = 16
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 13
     TabOrder = 12
     Text = '1'
     DataType = dtReal
@@ -265,13 +258,22 @@ inherited framePackageSFR: TframePackageSFR
     Height = 16
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 13
     TabOrder = 13
     Text = '0'
     DataType = dtReal
     Max = 1.000000000000000000
     CheckMin = True
     ChangeDisabledColor = True
+  end
+  object cbUseGsflowFormat: TCheckBox [24]
+    Left = 328
+    Top = 144
+    Width = 185
+    Height = 17
+    Anchors = [akLeft, akBottom]
+    Caption = 'Use GSFLOW format'
+    Enabled = False
+    TabOrder = 4
   end
   inherited rcSelectionController: TRbwController
     ControlList = <
@@ -298,6 +300,9 @@ inherited framePackageSFR: TframePackageSFR
       end
       item
         Control = cbGage8
+      end
+      item
+        Control = cbUseGsflowFormat
       end>
     OnEnabledChange = rcSelectionControllerEnabledChange
   end

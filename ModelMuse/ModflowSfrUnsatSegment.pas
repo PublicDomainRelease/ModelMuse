@@ -189,6 +189,7 @@ procedure TSfrUnsatSegmentItem.Assign(Source: TPersistent);
 var
   Sfr: TSfrUnsatSegmentItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TSfrUnsatSegmentItem then
   begin
     Sfr := TSfrUnsatSegmentItem(Source);

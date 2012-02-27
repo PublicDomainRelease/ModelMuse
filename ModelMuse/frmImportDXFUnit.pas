@@ -55,6 +55,9 @@ implementation
 uses frmGoPhastUnit, GoPhastTypes, DataSetUnit, 
   RbwParser, UndoItems, frmProgressUnit, frmDataSetsUnits, ModelMuseUtilities, FastGEO;
 
+resourcestring
+  StrImportDXFFile = 'import DXF file';
+
 {$R *.dfm}
 
 procedure TfrmImportDXF.Think(const Sender: TObject; Message: string);
@@ -300,7 +303,7 @@ end;
 
 function TUndoImportDXFFile.Description: string;
 begin
-  result := 'import DXF file';
+  result := StrImportDXFFile;
 end;
 
 end.

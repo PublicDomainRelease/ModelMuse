@@ -238,6 +238,7 @@ procedure TRivItem.Assign(Source: TPersistent);
 var
   Riv: TRivItem;
 begin
+  // if Assign is updated, update IsSame too.
   if Source is TRivItem then
   begin
     Riv := TRivItem(Source);
