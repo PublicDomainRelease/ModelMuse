@@ -46,6 +46,11 @@ implementation
 uses
   IntListUnit;
 
+resourcestring
+  StrZoneName = 'Zone name';
+  StrAtLeastOneOutput = 'At least one output file for ZONEBUDGET must be sel' +
+  'ected';
+
 {$R *.dfm}
 
 { TframeZoneBudget }
@@ -145,7 +150,7 @@ end;
 procedure TframeZoneBudget.Loaded;
 begin
   inherited;
-  rdgCompositeZones.Cells[0,0] := 'Zone name';
+  rdgCompositeZones.Cells[0,0] := StrZoneName;
 end;
 
 procedure TframeZoneBudget.UpdateSpinEdit;
@@ -194,7 +199,7 @@ begin
     begin
       if rdgCompositeZones.Cells[0,Index] = '' then
       begin
-        rdgCompositeZones.Cells[0,Index] := 'CZ' + IntToStr(Index);
+        rdgCompositeZones.Cells[0,Index] := Format('CZ%d', [Index]);
       end;
     end;
   end
@@ -307,7 +312,7 @@ begin
       and not cbExportCsv2.Checked then
     begin
       Beep;
-      MessageDlg('At least one output file for ZONEBUDGET must be selected',
+      MessageDlg(StrAtLeastOneOutput,
         mtError, [mbOK], 0);
     end;
 

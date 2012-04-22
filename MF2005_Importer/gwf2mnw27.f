@@ -1794,8 +1794,8 @@ c
 !        write(iout,*) 
         do iread=1,ITMP
 c  read data set 4a
-c  read WELLNAME and then backspace to check for PUMPCAP
-         read(in,*) WELLNAME
+c  read WELLNAME & Qdes and then backspace to check for PUMPCAP
+         read(in,*) WELLNAME,qdes
          write(iout,*) 'WELLNAME:'
          write(iout,*) WELLNAME
          backspace(in)
@@ -1830,8 +1830,15 @@ c   continue reading data set 4a
             write(iout,*) 
      &         Qdes,(MNW2(30+IAUX,MNWID),IAUX=1,NAUX)
           else
-            read(in,*) WELLNAME,Qdes,Cprime,
+c-lfk:  Only read Cprime for recharge/injection well (Qdes.gt.0.0)
+            if (Qdes.gt.0.0) then
+              read(in,*) WELLNAME,Qdes,Cprime,
      &                 (MNW2(30+IAUX,MNWID),IAUX=1,NAUX)
+	        Cprime = 0
+            else
+              read(in,*) WELLNAME,Qdes,
+     &                 (MNW2(30+IAUX,MNWID),IAUX=1,NAUX)
+            end if
             write(iout,*) 'Qdes,Cprime,AUX,IAUX=1,NAUX:'
             write(iout,*) Qdes,Cprime,
      &                 (MNW2(30+IAUX,MNWID),IAUX=1,NAUX)
@@ -1844,8 +1851,15 @@ c   continue reading data set 4a
             write(iout,*) Qdes,CapMult,
      &                 (MNW2(30+IAUX,MNWID),IAUX=1,NAUX)
           else
-            read(in,*) WELLNAME,Qdes,CapMult,Cprime,
+c-lfk:  Only read Cprime for recharge/injection well (Qdes.gt.0.0)
+            if (Qdes.gt.0.0) then
+              read(in,*) WELLNAME,Qdes,CapMult,Cprime,
      &                 (MNW2(30+IAUX,MNWID),IAUX=1,NAUX)
+            else
+              read(in,*) WELLNAME,Qdes,CapMult,
+     &                 (MNW2(30+IAUX,MNWID),IAUX=1,NAUX)
+	        Cprime = 0
+            end if
             write(iout,*) 
      &        'Qdes,CapMult,Cprime,AUX,IAUX=1,NAUX:'
             write(iout,*) Qdes,CapMult,Cprime,

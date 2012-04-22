@@ -47,6 +47,9 @@ type
     property Expression: TExpression read GetExpression;
     property Formula: string read GetFormula{ write SetFormula};
     property Parser: TRbwParser read FParser write SetParser;
+    // if @name is called with new events, be sure to update
+    // @link(RemoveSubscriptions), @link(RestoreSubscriptions), and
+    // @link(FixSubscriptions).
     procedure AddSubscriptionEvents(OnRemoveSubscription,
       OnRestoreSubscription: TChangeSubscription; Subject: TObject);
   end;
@@ -87,7 +90,7 @@ implementation
 uses
   frmGoPhastUnit, DataSetUnit, ScreenObjectUnit, ModflowBoundaryUnit, 
   ModflowEtsUnit, ModflowSfrTable, SubscriptionUnit, GIS_Functions,
-  PhastModelUnit, Math, ModflowHfbUnit;
+  PhastModelUnit, Math, ModflowHfbUnit, Mt3dmsChemUnit;
 
 { TFormulaObject }
 
@@ -228,6 +231,10 @@ begin
                 else if RestoreEvent = Addr(RestoreHfbModflowBoundarySubscription) then
                 begin
                   RestoreHfbModflowBoundarySubscription(self, Subject, UsedVariables[VariableIndex]);
+                end
+                else if RestoreEvent = Addr(Mt3dmsStringValueRestoreSubscription) then
+                begin
+                  Mt3dmsStringValueRestoreSubscription(self, Subject, UsedVariables[VariableIndex])
                 end
                 else
                 begin
@@ -372,6 +379,10 @@ begin
                     begin
                       GlobalDummyHandleSubscription(self, Subject, OldSubscriptions[VariableIndex]);
                     end
+                    else if PRemoveEvent = Addr(Mt3dmsStringValueRemoveSubscription) then
+                    begin
+                      Mt3dmsStringValueRemoveSubscription(self, Subject, OldSubscriptions[VariableIndex]);
+                    end
                     else
                     begin
                       Assert(False);
@@ -468,6 +479,10 @@ begin
               else if RestoreEvent = Addr(RestoreHfbModflowBoundarySubscription) then
               begin
                 RestoreHfbModflowBoundarySubscription(self, Subject, FNewSubscriptions[VariableIndex]);
+              end
+              else if RestoreEvent = Addr(Mt3dmsStringValueRestoreSubscription) then
+              begin
+                Mt3dmsStringValueRestoreSubscription(self, Subject, FNewSubscriptions[VariableIndex]);
               end
               else
               begin

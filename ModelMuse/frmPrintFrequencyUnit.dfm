@@ -144,6 +144,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -166,6 +167,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -188,6 +190,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -219,6 +222,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
           'end')
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
     ColWidths = (

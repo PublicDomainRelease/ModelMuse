@@ -84,6 +84,14 @@ implementation
 
 uses StrUtils, Wininet, Forms, IOUtils;
 
+resourcestring
+  StrForkFailed = 'fork failed';
+  StrFailedToEstablish = 'Failed to establish an internet connection.';
+  StrUnableToOpenInter = 'Unable to open Internet connection';
+  StrUnableToOpenURL = 'Unable to open URL: %s';
+  StrFailedToCloseURL = 'Failed to close URL';
+  StrFailedToCloseInte = 'Failed to close Internet connection';
+
 {$IFDEF LINUX}
 
 function LaunchURL(Browser: string; const URL: string): pid_t;
@@ -96,7 +104,7 @@ begin
   case Result of
     -1:
       begin
-        raise Exception.Create('fork failed');
+        raise Exception.Create(StrForkFailed);
       end;
 
     0:
@@ -318,7 +326,7 @@ begin
   result := False;
   if InternetAttemptConnect(0) <> ERROR_SUCCESS then
   begin
-    raise EInternetConnectionError.Create('Failed to establish an internet connection.');
+    raise EInternetConnectionError.Create(StrFailedToEstablish);
   end;
 
 //  AppName := ExtractFileName(Application.Name);
@@ -326,14 +334,14 @@ begin
     INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
   if Connection = nil then
   begin
-    raise EInternetConnectionError.Create('Unable to open Internet connection');;
+    raise EInternetConnectionError.Create(StrUnableToOpenInter);;
   end;
 
   try
     URL := InternetOpenUrl(Connection, PChar(URL_String), nil, 0, 0, 0);
     if URL = nil then
     begin
-      raise EInternetConnectionError.Create('Unable to open URL: ' + URL_String);
+      raise EInternetConnectionError.Create(Format(StrUnableToOpenURL, [URL_String]));
     end;
     try
       Stream := TMemoryStream.Create;
@@ -357,13 +365,13 @@ begin
     finally
       if not InternetCloseHandle(URL) then
       begin
-        raise EInternetConnectionError.Create('Failed to close URL');
+        raise EInternetConnectionError.Create(StrFailedToCloseURL);
       end
     end;
   finally
     if not InternetCloseHandle(Connection) then
     begin
-      raise EInternetConnectionError.Create('Failed to close Internet connection');
+      raise EInternetConnectionError.Create(StrFailedToCloseInte);
     end
   end;
 end;

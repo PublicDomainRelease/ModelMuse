@@ -44,6 +44,21 @@ uses
 
 resourcestring
   StrImportSurferGridF = 'import Surfer grid file';
+  StrX = 'X';
+  StrY = 'Y';
+  StrZ = 'Z';
+  StrMinimum = 'Minimum';
+  StrMaximum = 'Maximum';
+  CommentStr = 'Minimum X %0g' + sLineBreak
+    + 'Maximum X %1g' + sLineBreak
+    + 'Minimum Y %2g' + sLineBreak
+    + 'Maximum Y %3g' + sLineBreak
+    + 'Minimum Z %4g' + sLineBreak
+    + 'Maximum Z %5g' + sLineBreak;
+  StrImportedFromSurfer = 'Imported from Surfer Grid files';
+
+const
+  StrGrdZ = '_Grd_Z';
 
 {$R *.dfm}
 
@@ -68,11 +83,11 @@ begin
   inherited;
   rdgLimits.BeginUpdate;
   try
-    rdgLimits.Cells[1,0] := 'X';
-    rdgLimits.Cells[2,0] := 'Y';
-    rdgLimits.Cells[3,0] := 'Z';
-    rdgLimits.Cells[0,1] := 'Minimum';
-    rdgLimits.Cells[0,2] := 'Maximum';
+    rdgLimits.Cells[1,0] := StrX;
+    rdgLimits.Cells[2,0] := StrY;
+    rdgLimits.Cells[3,0] := StrZ;
+    rdgLimits.Cells[0,1] := StrMinimum;
+    rdgLimits.Cells[0,2] := StrMaximum;
   finally
     rdgLimits.EndUpdate;
   end;
@@ -145,13 +160,6 @@ begin
 end;
 
 procedure TfrmImportSurferGrdFile.SetData;
-const
-  CommentStr = 'Minimum X %0g' + sLineBreak
-    + 'Maximum X %1g' + sLineBreak
-    + 'Minimum Y %2g' + sLineBreak
-    + 'Maximum Y %3g' + sLineBreak
-    + 'Minimum Z %4g' + sLineBreak
-    + 'Maximum Z %5g' + sLineBreak;
 var
   DataSetName: string;
   DataSet: TDataArray;
@@ -173,7 +181,7 @@ begin
   try
     NewDataSets := TList.Create;
     try
-      MakeNewDataSet(NewDataSets, '_Grd_Z', 'Imported from Surfer Grid files',
+      MakeNewDataSet(NewDataSets, StrGrdZ, StrImportedFromSurfer,
         comboDataSets.ItemIndex = 0);
       DataSetName := comboDataSets.Text;
       DataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataSetName);

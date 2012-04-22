@@ -1,13 +1,17 @@
       MODULE GWFUZFMODULE
-        CHARACTER(LEN=64),PARAMETER :: Version_uzf =
-     +'$Id: gwf2uzf1.f 4531 2008-08-21 23:36:16Z rniswon $'
+        CHARACTER(LEN=64) :: Version_uzf
         REAL,PARAMETER :: CLOSEZERO=1.0E-15
         DOUBLE PRECISION,PARAMETER :: NEARZERO=1.0D-30
         DOUBLE PRECISION,PARAMETER :: ZEROD15=1.0D-15, ZEROD9=1.0D-09
         DOUBLE PRECISION,PARAMETER :: ZEROD6=1.0D-06
         DOUBLE PRECISION,PARAMETER :: ZEROD7=1.0D-07
         INTEGER         ,PARAMETER :: IRUNBIG = 10000
+        INTEGER,SAVE,POINTER :: NUMCELLS, TOTCELLS, Iseepsupress, IPRCNT
+        INTEGER,SAVE,POINTER :: ITHTIFLG, ITHTRFLG
         DOUBLE PRECISION,SAVE :: THETAB, FLUXB, FLUXHLD2
+        DOUBLE PRECISION,SAVE,DIMENSION(:),POINTER :: CHECKTIME
+        INTEGER,SAVE,DIMENSION(:),POINTER :: MORE
+        INTEGER,SAVE,DIMENSION(:,:),POINTER :: LAYNUM
         INTEGER,SAVE,POINTER   ::NUZTOP, IUZFOPT, IRUNFLG, IETFLG, IUZM
         INTEGER,SAVE,POINTER   ::IUZFCB1, IUZFCB2, NTRAIL, NWAV, NSETS
         INTEGER,SAVE,POINTER   ::IUZFB22, IUZFB11
@@ -25,13 +29,14 @@
         REAL,   SAVE,  DIMENSION(:,:),  POINTER :: VKS
 !        REAL,   SAVE,  DIMENSION(:,:),  POINTER :: REJ_INF
 !        REAL,   SAVE,  DIMENSION(:,:),  POINTER :: TO_CFP
-        REAL,   SAVE,  DIMENSION(:,:),  POINTER :: EPS, THTS, THTI
+        REAL,   SAVE,  DIMENSION(:,:),  POINTER :: EPS, THTS, THTI, THTR
         REAL,   SAVE,  DIMENSION(:,:),  POINTER :: PETRATE, ROOTDPTH
         REAL,   SAVE,  DIMENSION(:,:),  POINTER :: WCWILT, FINF
         REAL,   SAVE,  DIMENSION(:,:),  POINTER :: UZFETOUT !, GWET
+        REAL,   SAVE,  DIMENSION(:,:),  POINTER :: FNETEXFIL
 !        DOUBLE PRECISION, SAVE, DIMENSION(:),  POINTER :: CUMUZVOL 
 !        DOUBLE PRECISION, SAVE, DIMENSION(:),  POINTER :: UZTSRAT
-        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: THTR
+!        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: THTR
 !        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: UZFLWT, UZSTOR
 !        DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: UZDPIT, UZDPST
         DOUBLE PRECISION, SAVE, DIMENSION(:,:),POINTER :: UZTHST
@@ -48,6 +53,11 @@
         INTEGER,     POINTER   ::IUZFB22, IUZFB11
         INTEGER,     POINTER   ::NUZGAG, NUZGAGAR, NUZCL, NUZRW, IGSFLOW
         INTEGER,     POINTER   ::RTSOLUTE
+        INTEGER,     POINTER   ::NUMCELLS, TOTCELLS, Iseepsupress,IPRCNT
+        INTEGER,     POINTER   ::ITHTIFLG, ITHTRFLG
+        DOUBLE PRECISION,DIMENSION(:),  POINTER :: CHECKTIME
+        INTEGER,DIMENSION(:),POINTER :: MORE
+        INTEGER,DIMENSION(:,:),POINTER :: LAYNUM
 !        INTEGER,       DIMENSION(:),    POINTER :: ITRLSTH
         INTEGER,       DIMENSION(:,:),  POINTER :: IRUNBND, IUZFBND
         INTEGER,       DIMENSION(:,:),  POINTER :: IUZLIST !, NWAVST
@@ -60,13 +70,14 @@
         REAL,          DIMENSION(:,:),  POINTER :: VKS
 !        REAL,          DIMENSION(:,:),  POINTER :: REJ_INF
 !        REAL,          DIMENSION(:,:),  POINTER :: TO_CFP
-        REAL,          DIMENSION(:,:),  POINTER :: EPS, THTS, THTI
+        REAL,          DIMENSION(:,:),  POINTER :: EPS, THTS, THTI, THTR
         REAL,          DIMENSION(:,:),  POINTER :: PETRATE, ROOTDPTH
         REAL,          DIMENSION(:,:),  POINTER :: WCWILT, FINF
         REAL,          DIMENSION(:,:),  POINTER :: UZFETOUT !, GWET
+        REAL,          DIMENSION(:,:),  POINTER :: FNETEXFIL
 !        DOUBLE PRECISION,       DIMENSION(:),  POINTER :: CUMUZVOL
 !        DOUBLE PRECISION,       DIMENSION(:),  POINTER :: UZTSRAT
-        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: THTR
+!        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: THTR
 !        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: UZFLWT, 
 !        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: 
 !        DOUBLE PRECISION,       DIMENSION(:,:),POINTER :: UZDPIT, UZDPST
@@ -88,11 +99,11 @@ C-------SUBROUTINE GWF2UZF1AR
 C     ******************************************************************
 C     ALLOCATE ARRAY STORAGE FOR UNSATURATED FLOW, RECHARGE, AND ET
 C     READ AND CHECK VARIABLES THAT REMAIN CONSTANT
-C     VERSION 1.3:  June 20, 2007
+!--------REVISED FOR MODFLOW-2005 RELEASE 1.9, FEBRUARY 6, 2012
 C     ******************************************************************
       USE GWFUZFMODULE
       USE GLOBAL,       ONLY: NCOL, NROW, NLAY, IOUT, ITRSS, ISSFLG, 
-     +                        DELR, DELC, IBOUND
+     +                        DELR, DELC, IBOUND, LBOTM, BOTM
       USE GLOBAL,       ONLY: ITMUNI, LENUNI
       USE GWFLPFMODULE, ONLY: SCLPF=>SC2, LAYTYP
       USE GWFBCFMODULE, ONLY: SC1, SC2, LAYCON
@@ -112,10 +123,11 @@ C     ------------------------------------------------------------------
       INTEGER istart, istop, lloc, ivol, numactive, ic, ir
       INTEGER ibndflg, ichld, iflgbnd, igage, igunit, irhld, isyflg, 
      +        iuzcol, iuzflg, iuzlay, iuzopt, iuzrow, l, ncck, ncth, 
-     +        nlth, nrck, nrnc, nrth, i, icheck
-      REAL r, sy, fkmin, fkmax, range, finc
+     +        nlth, nrck, nrnc, nrth, i, icheck, kkrch, k, NPP, MXVL,
+     +        llocsave
+      REAL r, sy, fkmin, fkmax, range, finc, thick
       CHARACTER(LEN=200) line
-      CHARACTER(LEN=24) aname(7)
+      CHARACTER(LEN=24) aname(8)
       DATA aname(1)/' AREAL EXTENT OF UZ FLOW'/
       DATA aname(2)/' ROUTING OVERLAND RUNOFF'/
       DATA aname(3)/' SATURATED WATER CONTENT'/
@@ -123,11 +135,23 @@ C     ------------------------------------------------------------------
       DATA aname(5)/'    BROOKS-COREY EPSILON'/
       DATA aname(6)/'    SATURATED VERTICAL K'/
       DATA aname(7)/'    UZ CELL BOTTOM ELEV.'/
+      DATA aname(8)/'  RESIDUAL WATER CONTENT'/
 C     ------------------------------------------------------------------
+      Version_uzf =
+     +'$Id: gwf2uzf1_NWT.f 4021 2011-12-05 21:16:07Z rniswon $'
+      ALLOCATE(NUMCELLS, TOTCELLS, Iseepsupress, IPRCNT)
+      Iseepsupress = 0   ! Iseepsupress =1 means seepout not calculated
+      NUMCELLS = NCOL*NROW
+      TOTCELLS = NUMCELLS*NLAY
+      IPRCNT = 0
+      ALLOCATE (LAYNUM(NCOL,NROW))
       ALLOCATE (NUZTOP, IUZFOPT, IRUNFLG, IETFLG, IUZM)
       ALLOCATE (IUZFCB1, IUZFCB2, NTRAIL, NWAV, NSETS, IUZFB22, IUZFB11)
       ALLOCATE (NUZGAG, NUZGAGAR, NUZCL, NUZRW, TOTRUNOFF)
       ALLOCATE (SURFDEP,IGSFLOW, RTSOLUTE)
+      ALLOCATE (ITHTIFLG, ITHTRFLG)
+      ITHTIFLG = 0
+      ITHTRFLG = 0
 C
 C1------IDENTIFY PACKAGE AND INITIALIZE.
       WRITE (IOUT, *) 'UZF:'
@@ -135,6 +159,49 @@ C1------IDENTIFY PACKAGE AND INITIALIZE.
 ! 9001 FORMAT (1X, /' UZF1 -- UNSATURATED FLOW PACKAGE, VERSION 1.2', 
 !     +        ', 01/14/2006', /, 9X, 'INPUT READ FROM UNIT', I3)
       CALL URDCOM(In, IOUT, line)
+! Check for alternate input.
+      CALL UPARLSTAL(IN,IOUT,LINE,NPP,MXVL)
+      lloc = 1
+      CALL URWORD(LINE,LLOC,ISTART,ISTOP,1,I,R,IOUT,IN)
+      IF(LINE(ISTART:ISTOP).EQ.'SPECIFYTHTR') THEN
+        ITHTRFLG = 1
+        WRITE(iout,*) 'SPECIFYTHTR:'
+!        WRITE(IOUT,'(A)')' RESIDUAL WATER CONTENT (THTR) WILL BE READ ',
+!     +                ' AND USED FOR THE FIRST TRANSIENT STRESS PERIOD'
+!        WRITE(iout,*)
+        llocsave = lloc
+      ELSE
+!        WRITE(iout,*)
+!        WRITE(IOUT,'(A)')' RESIDUAL WATER CONTENT (THTR) WILL BE ',
+!     +              ' CALCULATED AS THE DIFFERENCE BETWEEN THTS AND SY'
+!        WRITE(iout,*)
+        llocsave = 1
+      END IF
+      lloc = llocsave
+      CALL URWORD(LINE,LLOC,ISTART,ISTOP,1,I,R,IOUT,IN)
+      IF(LINE(ISTART:ISTOP).EQ.'SPECIFYTHTI') THEN
+         ITHTIFLG = 1
+         WRITE(iout,*) 'SPECIFYTHTI:'
+!         WRITE(IOUT,'(A)')' INITIAL WATER CONTENT (THTI) WILL BE READ ',
+!     +                ' FOR THE FIRST SS OR TR STRESS PERIOD'
+!         WRITE(iout,*)
+         llocsave = lloc
+      ELSE
+!         WRITE(iout,*)
+!         WRITE(IOUT,'(A)') ' INITIAL WATER CONTENT (THTI) WILL BE ',
+!     +                   ' CALCULATED BASED ON THE SS INFILTRATION RATE'
+!         WRITE(iout,*)
+      END IF
+      lloc = llocsave
+      CALL URWORD(LINE,LLOC,ISTART,ISTOP,1,I,R,IOUT,IN)
+      IF(LINE(ISTART:ISTOP).EQ.'NOSURFLEAK') THEN
+         Iseepsupress = 1
+         WRITE(iout,*) 'NOSURFLEAK:'
+!         WRITE(IOUT,'(A)')' SURFACE LEAKAGE WILL NOT BE SIMULATED '
+!         WRITE(iout,*)
+      END IF
+      IF ( ITHTIFLG.GT.0 .OR. ITHTRFLG.GT.0 .OR. Iseepsupress.GT.0 ) 
+     +     CALL URDCOM(In, IOUT, line)
       lloc = 1
       CALL URWORD(line, lloc, istart, istop, 2, NUZTOP, r, IOUT, In)
       CALL URWORD(line, lloc, istart, istop, 2, IUZFOPT, r, IOUT, In)
@@ -172,7 +239,7 @@ C2------READ UNSATURATED FLOW FLAGS WHEN IUZFOPT IS GREATER THAN ZERO.
 !      CALL URWORD(line, lloc, istart, istop, 2, RTSOLUTE, r, IOUT, In)
 C
 C3------CHECK FOR ERRORS.
-      IF ( SURFDEP.LT.ZEROD6 ) SURFDEP = 1.0
+      IF ( SURFDEP.LT.ZEROD6 ) SURFDEP = ZEROD6
       IF ( IUZFOPT.GT.2 ) THEN
         WRITE (IOUT, 9002)
  9002   FORMAT (//' VERTICAL FLOW IN VADOSE ZONE IS ', 
@@ -231,21 +298,16 @@ C3------CHECK FOR ERRORS.
 !        RETURN
 !      END IF
 C4------ALLOCATE SPACE FOR UNSATURATED FLOW.
-      IUZM = 1
-      NWAV = 1
-      NUZCL = 1
-      NUZRW = 1
       ALLOCATE (IUZFBND(NCOL,NROW))
       IUZFBND = 0
-      IRUNBND = 0
 C
 C10-----READ IN BOUNDARY ARRAY FOR UNSATURATED FLOW. 
       CALL U2DINT(IUZFBND, aname(1), NROW, NCOL, 0, In, IOUT)
 !     ALLOCATE ONLY CELLS THAT HAVE A NON-ZERO VALUE FOR IUZFBND
       NUMACTIVE = 0
-      DO IR = 1, NROW
-        DO IC = 1, NCOL
-          IF ( IUZFBND(IC,IR).NE.0 ) NUMACTIVE = NUMACTIVE + 1
+      DO ir = 1, NROW
+        DO ic = 1, NCOL
+          IF ( IUZFBND(ic, ir).GT.0 ) NUMACTIVE = NUMACTIVE + 1
         END DO
       END DO
       IF ( IUZFOPT.EQ.1 .OR. IUZFOPT.EQ.2 ) THEN
@@ -262,7 +324,7 @@ C      UNSATURATED ZONE
         NUZCL = 1
         NUZRW = 1
       END IF
-C
+      ALLOCATE (CHECKTIME(NWAV), MORE(NWAV))
 C6------CALCULATE SPACE USED FOR LISTING UNSATURATED MOISTURE PROFILES.
       IF ( NUZGAG.GT.0 ) THEN
         NUZGAGAR = NUZGAG
@@ -279,7 +341,7 @@ C7------ALLOCATE SPACE FOR ARRAYS AND INITIALIZE.
       THTI = 0.0
       TOTRUNOFF = 0.0
       ALLOCATE (THTR(NUZCL,NUZRW))
-      THTR = 0.0D0
+      THTR = 0.0
       ALLOCATE (FINF(NCOL,NROW),PETRATE(NCOL,NROW),UZFETOUT(NCOL,NROW))
 !      ALLOCATE (GWET(NCOL,NROW))
       FINF = 0.0
@@ -389,10 +451,12 @@ C
 C11-----READ STREAM AND LAKE ARRAY FOR ROUTING OVERLAND FLOW.
       IF ( IRUNFLG.GT.0 ) THEN
         ALLOCATE(IRUNBND(NCOL,NROW)) 
+        IRUNBND = 0
         CALL U2DINT(IRUNBND, aname(2), NROW, NCOL, 0, 
      +                                In, IOUT)
       ELSE
         ALLOCATE(IRUNBND(1,1)) 
+        IRUNBND = 0
       END IF
 C
 C5B------READ AND SET VALUES FOR SOLUTE ROUTING IN UNSATURATED ZONE
@@ -412,9 +476,8 @@ C
 C13-----CHECK FOR ERRORS IN VERTICAL HYDRAULIC CONDUCTIVITY
         DO nrck = 1, NROW
           DO ncck = 1, NCOL
-            iflgbnd = 0
-            IF ( IUZFBND(ncck, nrck).GT.0 ) THEN
-              iflgbnd = 1
+            iflgbnd = 1
+            IF ( IUZFBND(ncck, nrck).NE.0 ) THEN
               IF ( VKS(ncck, nrck).LT.CLOSEZERO ) THEN
 !                WRITE (IOUT, 9013) nrck, ncck
 ! 9013           FORMAT (1X/, 'SATURATED VERTICAL K FOR CELL AT ROW ', 
@@ -438,18 +501,30 @@ C15-----READ SATURATED WATER CONTENT FOR UNSATURATED ZONE ASSUMING IT
 C       IS CONSTANT THROUGHOUT VERTICAL COLUMN.
         CALL U2DREL(THTS, aname(3), NUZRW, NUZCL, 0, In, IOUT)
 C
+        IF ( ITHTRFLG.GT.0 )THEN
+          CALL U2DREL(THTR, aname(8), NUZRW, NUZCL, 0, In, IOUT)
+        END IF
+C
+C15-----READ AIR ENTRY PRESSURE FOR UNSATURATED ZONE ASSUMING IT
+C       IS CONSTANT THROUGHOUT VERTICAL COLUMN.
+!        CALL U2DREL(AIR_ENTRY, aname(3), NUZRW, NUZCL, 0, In, IOUT)
+C
+C
+C15-----READ AIR ENTRY PRESSURE FOR UNSATURATED ZONE ASSUMING IT
+C       IS CONSTANT THROUGHOUT VERTICAL COLUMN.
+!        CALL U2DREL(H_ROOT, aname(3), NUZRW, NUZCL, 0, In, IOUT)
+C
 C16-----READ INITIAL WATER CONTENT FOR UNSATURATED ZONE ASSUMING IT
 C         IS CONSTANT THROUGHOUT VERTICAL COLUMN. DO NOT READ
 C         INITIAL WATER CONTENT IF PERIOD IS STEADY STATE.
-        IF ( ISSFLG(1).EQ.0 ) CALL U2DREL(THTI, aname(4), NUZRW, NUZCL, 
-     +       0, In, IOUT)
+        IF ( ISSFLG(1).EQ.0 .OR. ITHTIFLG.GT.0 )  
+     +       CALL U2DREL(THTI, aname(4), NUZRW, NUZCL, 0, In, IOUT)
 C
-C17-----CHECK FOR ERROS IN EPS, THTS, AND THTI ARRAYS.
+C17-----CHECK FOR ERRORS IN EPS, THTS, AND THTI ARRAYS.
         DO nrck = 1, NUZRW
           DO ncck = 1, NUZCL
-            iflgbnd = 0
-            IF ( IUZFBND(ncck, nrck).GT.0 ) THEN
-              iflgbnd = 1
+            iflgbnd = 1
+            IF ( IUZFBND(ncck, nrck).GT.0 ) THEN            
               IF ( THTS(ncck, nrck).LT.CLOSEZERO ) THEN
 !                WRITE (IOUT, 9014) nrck, ncck, THTS(ncck, nrck)
 ! 9014           FORMAT (1X/, 'SATURATED WATER CONTENT FOR CELL ', 
@@ -486,10 +561,10 @@ C
 C18-----COMPUTE RESIDUAL WATER CONTENT (THTR) FOR ALL UNSATURATED CELLS
 C       AS THE DIFFERENCE BETWEEN SATURATED WATER CONTENT AND SPECIFIC
 C       YIELD OF UPPERMOST ACTIVE LAYER.
-        IF ( IUZFOPT.GT.0 .AND. ITRSS.NE.0 ) THEN
+        IF ( IUZFOPT.GT.0 .AND. ITRSS.NE.0 .AND. ITHTRFLG.EQ.0 ) THEN
           DO nrth = 1, NROW
             isyflg = 1
-            DO ncth = 1, NCOL
+            DO ncth = 1, NCOL 
               iuzflg = IUZFBND(ncth, nrth)
               IF ( iuzflg.GT.0 ) THEN
                 nlth = 1
@@ -502,11 +577,12 @@ C       YIELD OF UPPERMOST ACTIVE LAYER.
 C
 C19-----SPECIFIC YIELD IS STORAGE CAPACITY DIVIDED BY AREA OF MODEL CELL.
                 IF ( ibndflg.GT.0 ) THEN                        
+                  sy = 0.0
                   IF ( Iunitlpf.GT.0 ) THEN
                     IF ( LAYTYP(nlth).GT.0 ) THEN
 C use LPF SC2, Iunitlpf>0
                       sy = SCLPF(ncth, nrth, nlth)/
-     +                      (DELR(ncth)*DELC(nrth))
+     +                     (DELR(ncth)*DELC(nrth))
                     ELSE
                       WRITE (IOUT, 9017) nlth, ncth, nrth 
 9017                  FORMAT(1X,'PROGRAM TERMINATED-LAYTYP IN LPF '
@@ -516,19 +592,24 @@ C use LPF SC2, Iunitlpf>0
      +                       , 'COMPUTING RESIDUAL WATER CONTENT-- '
      +                       , 'CELL LAYER,ROW,COLUMN: ',3I5) 
                      CALL USTOP(' ')
-                    END IF                    
-                  ELSE IF ( Iunitbcf.GT.0 ) THEN
-                    IF ( LAYCON(nlth).EQ.1 ) THEN
-C use BCF SC1 always
-                      sy = SC1(ncth, nrth, nlth)/(DELR(ncth)*DELC(nrth))
+                    END IF 
+                  ELSE IF ( Iunitbcf.GT.0 ) THEN                
+                    IF ( LAYCON(nlth).LT.2 ) THEN
+                      sy = SC1(ncth, nrth, nlth)/
+     +                     (DELR(ncth)*DELC(nrth))
                     ELSE
-C use BCF SC2, Iunitbcf>0
-                      sy = SC2(ncth, nrth, nlth)/(DELR(ncth)*DELC(nrth))
+                      kkrch = 0
+                      DO k = 1, nlth
+                        IF(LAYCON(K).EQ.3 .OR. LAYCON(K).EQ.2)
+     +                   kkrch = kkrch + 1
+                      END DO
+                      sy = SC2(ncth, nrth, kkrch)/
+     +                     (DELR(ncth)*DELC(nrth))
                     END IF
                   ELSE IF ( Iunithuf.GT.0 ) THEN 
                     sy = SC2HUF(ncth, nrth)
                   END IF
-                  IF ( sy.GT.0 ) THEN
+                  IF ( sy.GT.0.0 ) THEN
                     isyflg = 1
                     THTR(ncth, nrth) = THTS(ncth, nrth) - sy
                   ELSE
@@ -538,11 +619,21 @@ C use BCF SC2, Iunitbcf>0
                 ELSE IF ( ibndflg.EQ.0 ) THEN
                   isyflg = 0
                 END IF
+                test = (THTI(ncth, nrth)-THTR(ncth, nrth))
+                IF ( test.LT.CLOSEZERO ) THTI(ncth,nrth) = 
+     +               THTR(ncth,nrth)
+                test = (THTS(ncth, nrth)-THTR(ncth, nrth))
+                IF ( test.LT.CLOSEZERO ) THEN
+                  WRITE (IOUT, 9028) nrth, ncth
+                  IUZFBND(ncth, nrth) = 0
+                END IF
               ELSE
                 THTR(ncth, nrth) = 0.0D0
               END IF
-              test = (THTI(ncth, nrth)-THTR(ncth, nrth))
-              IF ( test.LT.CLOSEZERO ) THTI(ncth,nrth) = THTR(ncth,nrth)
+9028  FORMAT (1X/, 'SATURATED WATER CONTENT FOR UPPERMOST ACTIVE ', 
+     +                  'CELL AT ROW ', I5, ', COL. ', I5, ' IS LESS ', 
+     +                  'THAN OR EQUAL TO RESIDUAL WATER CONTENT-- ',
+     +                  'SETTING UNSATURATED FLOW IN CELL TO INACTIVE')
 C
 C20-----IF SPECIFIC YIELD IS 0 FOR UPPERMOST ACTIVE CELL AT COLUMN J
 C       AND ROW I OR IF ALL LAYERS AT CELL ARE INACTIVE, SET
@@ -742,38 +833,42 @@ C     ******************************************************************
 C     ASSIGN SATURATED VERTICAL HYDRAULIC CONDUCTIVITY ARRAY 
 C     (VKS) IN UZF TO EQUAL VERTICAL HYDRAULIC CONDUCTIVITY IN LAYER-
 C     PROPERTY FLOW PACKAGE
-C     VERSION 1.3:  June 20, 2007
+!--------REVISED FOR MODFLOW-2005 RELEASE 1.9, FEBRUARY 6, 2012
 C     ******************************************************************
 C
 C-------SUBROUTINE GWF2UZF1RP
-      SUBROUTINE GWF2UZF1RP(In, Kkper, Igrid)
+      SUBROUTINE GWF2UZF1RP(In, Kkper, Iunitsfr, Igrid)
 C     ******************************************************************
 C     READ AND CHECK VARIABLES EACH STRESS PERIOD 
-C     VERSION 1.3:  June 20, 2007
+!--------REVISED FOR MODFLOW-2005 RELEASE 1.9, FEBRUARY 6, 2012
 C     ******************************************************************
       USE GWFUZFMODULE
       USE GLOBAL,       ONLY: NCOL, NROW, NLAY, IOUT, ISSFLG, IBOUND, 
-     +                        HNEW, DELR, DELC, BOTM
+     +                        HNEW, DELR, DELC, BOTM, LBOTM
+      USE GWFSFRMODULE,ONLY:RECHSAVE
       IMPLICIT NONE
 C     -----------------------------------------------------------------
 C     SPECIFICATIONS:
 C     -----------------------------------------------------------------
 C     ARGUMENTS
 C     -----------------------------------------------------------------
-      INTEGER In, Kkper, Igrid
+      INTEGER In, Kkper, Iunitsfr, Igrid
 C     -----------------------------------------------------------------
 C     LOCAL VARIABLES
 C     -----------------------------------------------------------------
       DOUBLE PRECISION h
-      REAL bottom, celtop, slen, width, etdpth, surfinf, surfpotet, top
-      INTEGER ibdflg, ic, iflginit, il, ilay, ill, ir, iss, jk, l, ncck,
-     +        nrck, nuzf, numcells, ll, uzlay, land
+      DOUBLE PRECISION thtrcell
+      DOUBLE PRECISION bottom, celtop, slen, width, etdpth, surfinf
+      DOUBLE PRECISION thick, surfpotet, top
+      INTEGER ic, iflginit, il, ilay, ill, ir, iss, jk, l, ncck,
+     +        nrck, nuzf, ll, uzlay, land, nlayp1
       CHARACTER(LEN=24) aname(4)
       DATA aname(1)/' AREAL INFILTRATION RATE'/
       DATA aname(2)/'                 ET RATE'/
       DATA aname(3)/'     ET EXTINCTION DEPTH'/
       DATA aname(4)/'EXTINCTION WATER CONTENT'/
 C     -----------------------------------------------------------------
+      nlayp1 = NLAY + 1
 C
 C1------SET POINTERS FOR THE CURRENT GRID.
       CALL SGWF2UZF1PNT(Igrid)
@@ -783,7 +878,6 @@ C2------READ INFILTRATION RATES FOR UZF CELLS AT THE BEGINNING OF EACH
 C       STRESS PERIOD.
       iss = ISSFLG(Kkper)
       iflginit = 0
-      numcells = NCOL*NROW
       READ (In, *) nuzf
       WRITE (IOUT, *) 'nuzf1:'
       WRITE (IOUT, *) nuzf
@@ -875,9 +969,43 @@ C10-----CHECK FOR NEGATIVE ET EXTINCTION DEPTH.
 !     +                  'ZERO-- SETTING DEPTH TO ONE ')
                 ROOTDPTH(ncck, nrck) = 1.0
               END IF
+!   RGN 6/22/09. Add coded to find upper-most active layer
+              il = 0
+              IF ( NUZTOP.EQ.1 .OR. NUZTOP.EQ.2 ) THEN
+                il = IUZFBND(ncck, nrck)
+                IF ( il.GT.0 ) THEN
+                  IF ( IBOUND(ncck, nrck, il).LT.1 ) il = 0
+                END IF
+              ELSE IF ( NUZTOP.EQ.3 ) THEN
+                ill = 1
+                il = 0
+                DO WHILE ( ill.LT.nlayp1 )
+                  IF ( IBOUND(ncck, nrck, ill).GT.0 ) THEN
+                    il = ill
+                    EXIT
+                  ELSE IF ( IBOUND(ncck, nrck, ill).LT.0 ) THEN
+                    EXIT
+                  END IF
+CRGN made il = 0 when all layers for column are inactive 2/21/08
+                  ill = ill + 1
+                END DO
+              END IF
+              land = ABS(IUZFBND(ncck, nrck))
+!
+              IF ( il.GT.0 .AND. land.GT.0 ) THEN
+                thick = BOTM(ncck, nrck,LBOTM(land)-1)-
+     +                  BOTM(ncck, nrck,LBOTM(il))
+                IF ( ROOTDPTH(ncck, nrck).GT.0.99*thick ) THEN
+                  ROOTDPTH(ncck, nrck) = 0.99*thick
+                  WRITE (IOUT, 222) nrck, ncck
+                END IF
+              END IF
             END DO
           END DO
         END IF
+  222 FORMAT('***WARNING*** ET EXTINCTION DEPTH IS BELOW LAYER BOTTOM',/
+     +       'RESETTING DEPTH TO 90% OF CELL THICKNESS FOR ROW ',I7,
+     +       ' COLUMN ',I7)
 C
 C11-----SKIP READING OF EXTINCTION WATER CONTENT ARRAY WHEN 
 C         IUZFOPT IS ZERO.
@@ -924,35 +1052,25 @@ C13B-----SEARCH FOR UPPERMOST ACTIVE CELL.
           IF ( IUZFBND(ic, ir).NE.0 ) THEN
             il = 0
             IF ( NUZTOP.EQ.1 .OR. NUZTOP.EQ.2 ) THEN
-              il = IUZFBND(ic, ir)
+              il = ABS(IUZFBND(ic, ir))
               IF ( il.GT.0 ) THEN
-                IF ( IBOUND(ic, ir, il).LE.0 ) il = 0
+                IF ( IBOUND(ic, ir, il).LT.1 ) il = 0
               ELSE
                 il = 0
               END IF
               IF ( IL.EQ.0 ) IUZFBND(ic, ir) = 0
             ELSE IF ( NUZTOP.EQ.3 ) THEN
               ill = 1
-              ibdflg = 1
-              DO WHILE ( ibdflg.EQ.1 )
-                IF ( IBOUND(ic, ir, ill).LT.0 ) THEN
-                  ibdflg = 1
-                  il = 0
-                ELSE IF ( IBOUND(ic, ir, ill).EQ.0 ) THEN
-                  ibdflg = 1
-                ELSE IF ( IBOUND(ic, ir, ill).GT.0 ) THEN
-                  ibdflg = 0
+              il = 0
+              DO WHILE ( ill.LT.nlayp1 )
+                IF ( IBOUND(ic, ir, ill).GT.0 ) THEN
                   il = ill
-                END IF
-                IF ( ill.EQ.NLAY .AND. ibdflg.EQ.1 ) THEN
-                  ibdflg = 0
-                  il = NLAY
+                  EXIT
+                ELSE IF ( IBOUND(ic, ir, ill).LT.0 ) THEN
+                  EXIT
                 END IF
                 ill = ill + 1
               END DO
-! RGN commented next line to simulate unsaturated flow in a portion of the model.
-!              IF ( IL.EQ.NLAY .AND. IBOUND(ic, ir, iL).LE.0 ) 
-!     +             IUZFBND(ic, ir) = 0
             END IF
           END IF
         END DO
@@ -971,7 +1089,7 @@ C15------SET FLAGS FOR STEADY STATE OR TRANSIENT SIMULATIONS.
       END IF
       IF ( iflginit.GE.1 ) THEN
         l = 0
-        DO ll = 1, numcells
+        DO ll = 1, NUMCELLS
           ir = IUZHOLD(1, ll)
           ic = IUZHOLD(2, ll)
           IF ( IUZFBND(ic,ir).GT.0 ) THEN
@@ -979,30 +1097,23 @@ C15------SET FLAGS FOR STEADY STATE OR TRANSIENT SIMULATIONS.
 C
 C16-----SEARCH FOR UPPERMOST ACTIVE CELL.
             IF ( IUZFBND(ic, ir).GT.0 ) THEN
-              il = 0 !rsr, added to be sure il is set
+              il = 0 
               IF ( NUZTOP.EQ.1 .OR. NUZTOP.EQ.2 ) THEN
-              il = IUZFBND(ic, ir)
+                il = IUZFBND(ic, ir)
                 IF ( il.GT.0 ) THEN
-                  IF ( IBOUND(ic, ir, il).LE.0 ) il = 0
+                  IF ( IBOUND(ic, ir, il).LT.1 ) il = 0
                 ELSE
                   il = 0
                 END IF
               ELSE IF ( NUZTOP.EQ.3 ) THEN
                 ill = 1
-                ibdflg = 1
-                DO WHILE ( ibdflg.EQ.1 )
-                  IF ( IBOUND(ic, ir, ill).LT.0 ) THEN
-                    ibdflg = 1
-                    il = 0
-                  ELSE IF ( IBOUND(ic, ir, ill).EQ.0 ) THEN
-                    ibdflg = 1
-                  ELSE IF ( IBOUND(ic, ir, ill).GT.0 ) THEN
-                    ibdflg = 0
+                il = 0
+                DO WHILE ( ill.LT.nlayp1 )
+                  IF ( IBOUND(ic, ir, ill).GT.0 ) THEN
                     il = ill
-                  END IF
-                  IF ( ill.EQ.NLAY .AND. ibdflg.EQ.1 ) THEN
-                    ibdflg = 0
-                    il = NLAY
+                    EXIT
+                  ELSE IF ( IBOUND(ic, ir, ill).LT.0 ) THEN
+                    EXIT
                   END IF
                   ill = ill + 1
                 END DO
@@ -1012,29 +1123,35 @@ C16B-----SEARCH FOR UPPER MOST ACTIVE CELL WITH A WATER LEVEL.
               ilay = il
               IF ( il.GT.0 ) THEN
                 IF ( IBOUND(ic, ir, il).GT.0 ) THEN
-                  TOPCELL: DO WHILE ( ilay.LE.NLAY )
+                  TOPCELL: DO WHILE ( ilay.LT.nlayp1 )
 !                    IF ( HNEW(ic, ir, ilay).LE.BOTM(ic,ir,ilay) ) THEN
 !                      ilay = ilay + 1
- !                   ELSE
+!                    ELSE
                       EXIT TOPCELL
 !                    END IF
                   END DO TOPCELL
                 END IF
-                IF ( ilay.LE.NLAY ) THEN
+                IF ( ilay.LT.nlayp1 ) THEN
                   il = ilay
                   h = HNEW(ic, ir, il)
                 ELSE
                   h = DBLE(BOTM(ic,ir,NLAY))
                 END IF
+                land = ABS(IUZFBND(ic, ir))
 crgn changed HNEW(ic, ir, il) to h in next line.
-!                HLDUZF(ic,ir) = h
+!                HLDUZF(ic, ir) = h
                 IF ( IBOUND(ic, ir, il).LT.0 ) IUZFBND(ic, ir) = 0
                 IF ( IUZFOPT.GT.0 ) THEN
 C
 C17-----SET CELL TOP, LENGTH, WIDTH AND WATER TABLE ELEVATION.
                   slen = DELC(ir) 
                   width = DELR(ic) 
-                  celtop = BOTM(ic, ir, 0) - 0.5 * SURFDEP
+! RGN changed BOTM(ic, ir, 0) to BOTM(ic, ir, land-1) 1/28/2010
+                  IF ( land.GT.0 ) THEN
+                    celtop = BOTM(ic, ir, land-1) - 0.5 * SURFDEP
+                  ELSE
+                    celtop = BOTM(ic, ir, 0) - 0.5 * SURFDEP
+                  END IF
 C
 C18-----SKIP IF CELL IS OUTSIDE ACTIVE BOUNDARY OR IS NOT WATER TABLE.
 ! commented next line out to simulate unsat. flow over a portio of area.
@@ -1042,8 +1159,9 @@ C18-----SKIP IF CELL IS OUTSIDE ACTIVE BOUNDARY OR IS NOT WATER TABLE.
 C
 C19-----INITIALIZE UZTHST ARRAY TO RESIDUAL WATER CONTENT.
 
+                  thtrcell = THTR(ic, ir)
                   DO jk = 1, NWAV
-                    UZTHST(jk, l) = THTR(ic, ir)
+                    UZTHST(jk, l) = thtrcell
                   END DO
 C
 C20-----INITIALIZE UNSATURATED ZONE ARRAYS FOR FIRST STRESS PERIOD.
@@ -1053,28 +1171,36 @@ C20-----INITIALIZE UNSATURATED ZONE ARRAYS FOR FIRST STRESS PERIOD.
 C
 C21-----CALCULATE INITIAL WATER CONTENT AND FLUX IF STEADY STATE.
                       IF ( iss.NE.0 ) THEN
-                        UZFLST(1, l) = FINF(ic, ir)
-                        UZTHST(1, l) = (((UZFLST(1, l)/VKS(ic,ir))**
-     +                    (1.0/EPS(ic,ir)))*(THTS(ic,ir)-THTR(ic,ir)))
-     +                                 + THTR(ic, ir)
-                        top = UZTHST(1, l) - THTR(ic, ir)
-                        IF ( UZTHST(1, l)-THTR(ic, ir).LT.0.0D0 )
-     +                       UZTHST(1, l)=THTR(ic, ir)
+                        IF ( ITHTIFLG.GT.0 ) THEN
+                          top = THTI(ic, ir) - thtrcell
+                          IF ( top.LT.0.0 ) top = 0.0
+                          UZFLST(1, l) = VKS(ic,ir)*
+     +                       (top/(THTS(ic,ir)-thtrcell))**EPS(ic,ir)
+                          UZTHST(1, l) = THTI(ic, ir)
+                        ELSE
+                          UZFLST(1, l) = FINF(ic, ir)
+                          UZTHST(1, l) = (((UZFLST(1, l)/VKS(ic,ir))**
+     +                    (1.0/EPS(ic,ir)))*(THTS(ic,ir)-thtrcell))
+     +                                 + thtrcell
+                          top = UZTHST(1, l) - thtrcell  
+                        END IF
+                        IF ( UZTHST(1, l)-thtrcell.LT.0.0D0 )
+     +                       UZTHST(1, l) = thtrcell
 C
 C22-----SET INITIAL WATER CONTENT TO THTI AND CALCULATE FLUX IF 
 C         TRANSIENT.
                       ELSE
                         UZTHST(1, l) = THTI(ic, ir)
-                        top = UZTHST(1, l) - THTR(ic, ir)
-                        IF ( top.LE.0.0 ) top = 0.0
+                        top = UZTHST(1, l) - thtrcell
+                        IF ( top.LT.0.0 ) top = 0.0
                         IF ( top.GT.0.0 ) THEN
-                          bottom = (THTS(ic, ir)-THTR(ic, ir))
+                          bottom = THTS(ic, ir) - thtrcell
                           UZFLST(1, l) = VKS(ic, ir)*(top/bottom)
      +                                   **EPS(ic, ir)
                         END IF
                       END IF
-                      IF ( UZTHST(1, l).LT.THTR(ic, ir) ) UZTHST(1, l)
-     +                     = THTR(ic, ir)
+                      IF ( UZTHST(1, l).LT.thtrcell ) UZTHST(1, l)
+     +                     = thtrcell
 C
 C23-----CALCULATE VOLUME OF WATER STORED IN UNSATURATED ZONE.
                       IF ( top.GT.0.0 ) THEN
@@ -1099,7 +1225,7 @@ C         STEADY STATE, THEN SET UZFLST ARRAY TO INFILRATION RATE.
                       END IF
 !                      UZDPST(1, l) = 0.0D0
 !                      UZSPST(1, l) = 0.0D0
-                      UZTHST(1, l) = THTR(ic, ir)
+                      UZTHST(1, l) = thtrcell
 !                      UZSTOR(ic, ir) = 0.0D0
 cupdate        
 !                      UZOLSFLX(ic, ir) = FINF(ic, ir)
@@ -1121,13 +1247,21 @@ C
 C26-----CALCULATE INITIAL WATER CONTENT AND FLUX FROM STEADY STATE
 C         SIMULATION.
                       IF ( UZFLST(1, l).LT.0.0D0 ) UZFLST(1, l) = 0.0D0
-                      UZTHST(1, l) = (((UZFLST(1, l)/VKS(ic,ir))**
-     +                    (1.0/EPS(ic,ir)))*(THTS(ic,ir)-THTR(ic,ir)))
-     +                             + THTR(ic, ir)
-                      IF ( UZTHST(1, l).LT.THTR(ic, ir) ) UZTHST(1, l)
-     +                     = THTR(ic, ir)
-                      top = UZTHST(1, l) - THTR(ic, ir)
-                      IF ( top.LE.0.0 ) top = 0.0
+                      IF ( ITHTIFLG.GT.0 ) THEN
+                        top = THTI(ic, ir) - thtrcell
+                        IF ( top.LT.0.0 ) top = 0.0
+                        UZFLST(1, l) = VKS(ic,ir)*
+     +                     (top/(THTS(ic,ir)-thtrcell))**EPS(ic,ir)
+                        UZTHST(1, l) = THTI(ic, ir)
+                      ELSE
+                        UZTHST(1, l) = (((UZFLST(1, l)/VKS(ic,ir))**
+     +                    (1.0/EPS(ic,ir)))*(THTS(ic,ir)-thtrcell))
+     +                             + thtrcell
+                      END IF
+                      IF ( UZTHST(1, l).LT.thtrcell ) UZTHST(1, l)
+     +                     = thtrcell
+                      top = UZTHST(1, l) - thtrcell
+                      IF ( top.LT.0.0 ) top = 0.0
                       IF ( top.LT.1.0E-5 ) UZFLST(1, l) = 0.0D0
                       IF ( top.GT.1.0E-5 ) THEN
 !                        UZSTOR(ic, ir) = UZDPST(1, l)*top*width*slen
@@ -1145,7 +1279,7 @@ C27-----IF NO UNSATURATED ZONE, SET ARRAYS VALUES TO ZERO.
 !                      UZDPST(1, l) = 0.0D0
                       UZFLST(1, l) = 0.0D0
 !                      UZSPST(1, l) = 0.0D0
-                      UZTHST(1, l) = THTR(ic, ir)
+                      UZTHST(1, l) = thtrcell
 !                      UZSTOR(ic, ir) = 0.0D0
 !                      UZOLSFLX(ic, ir) = 0.0D0
                     END IF
@@ -1319,6 +1453,9 @@ C     ARGUMENTS
 C     ------------------------------------------------------------------
       INTEGER Igrid
 C     ------------------------------------------------------------------
+      MORE=>GWFUZFDAT(Igrid)%MORE
+      CHECKTIME=>GWFUZFDAT(Igrid)%CHECKTIME
+      LAYNUM=>GWFUZFDAT(Igrid)%LAYNUM
       NUZTOP=>GWFUZFDAT(Igrid)%NUZTOP
       IUZFOPT=>GWFUZFDAT(Igrid)%IUZFOPT
       IRUNFLG=>GWFUZFDAT(Igrid)%IRUNFLG
@@ -1382,6 +1519,13 @@ C     ------------------------------------------------------------------
       SURFDEP=>GWFUZFDAT(Igrid)%SURFDEP
       RTSOLUTE=>GWFUZFDAT(Igrid)%RTSOLUTE
 !      GRIDSTOR=>GWFUZFDAT(Igrid)%GRIDSTOR
+      FNETEXFIL=>GWFUZFDAT(Igrid)%FNETEXFIL
+      NUMCELLS=>GWFUZFDAT(Igrid)%NUMCELLS
+      TOTCELLS=>GWFUZFDAT(Igrid)%TOTCELLS
+      Iseepsupress=>GWFUZFDAT(Igrid)%Iseepsupress  
+      IPRCNT=>GWFUZFDAT(Igrid)%IPRCNT   
+      ITHTIFLG=>GWFUZFDAT(Igrid)%ITHTIFLG
+      ITHTRFLG=>GWFUZFDAT(Igrid)%ITHTRFLG
 C
       END SUBROUTINE SGWF2UZF1PNT
 C
@@ -1394,6 +1538,9 @@ C     ARGUMENTS
 C     ------------------------------------------------------------------
       INTEGER Igrid
 C     ------------------------------------------------------------------
+      GWFUZFDAT(Igrid)%MORE=>MORE
+      GWFUZFDAT(Igrid)%CHECKTIME=>CHECKTIME
+      GWFUZFDAT(Igrid)%LAYNUM=>LAYNUM
       GWFUZFDAT(Igrid)%NUZTOP=>NUZTOP
       GWFUZFDAT(Igrid)%IUZFOPT=>IUZFOPT
       GWFUZFDAT(Igrid)%IRUNFLG=>IRUNFLG
@@ -1457,5 +1604,12 @@ C     ------------------------------------------------------------------
       GWFUZFDAT(Igrid)%SURFDEP=>SURFDEP
       GWFUZFDAT(Igrid)%RTSOLUTE=>RTSOLUTE
 !      GWFUZFDAT(Igrid)%GRIDSTOR=>GRIDSTOR
+      GWFUZFDAT(Igrid)%FNETEXFIL=>FNETEXFIL
+      GWFUZFDAT(Igrid)%NUMCELLS=>NUMCELLS
+      GWFUZFDAT(Igrid)%TOTCELLS=>TOTCELLS
+      GWFUZFDAT(Igrid)%Iseepsupress=>Iseepsupress
+      GWFUZFDAT(Igrid)%IPRCNT=>IPRCNT
+      GWFUZFDAT(Igrid)%ITHTIFLG=>ITHTIFLG
+      GWFUZFDAT(Igrid)%ITHTRFLG=>ITHTRFLG
 C
       END SUBROUTINE SGWF2UZF1PSV

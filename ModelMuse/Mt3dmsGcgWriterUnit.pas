@@ -20,6 +20,11 @@ implementation
 uses
   ModflowUnitNumbers, frmProgressUnit;
 
+resourcestring
+  StrWritingMT3DMSGcgP = 'Writing MT3DMS gcg Package input.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+
 { TMt3dmsGcgWriter }
 
 class function TMt3dmsGcgWriter.Extension: string;
@@ -81,17 +86,13 @@ begin
   end;
 
   // write to MT3DMS name file.
-  WriteToMt3dMsNameFile(StrGCG, Mt3dGcg,
-    NameOfFile);
-//  WriteToNameFile(StrBAS, Model.UnitNumbers.UnitNumber(StrBAS),
-//    NameOfFile, foInput);
+  WriteToMt3dMsNameFile(StrGCG, Mt3dGcg, NameOfFile);
 
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage('Writing MT3DMS gcg Package input.');
+    frmProgressMM.AddMessage(StrWritingMT3DMSGcgP);
 
-
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -99,7 +100,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
   finally
     CloseFile;

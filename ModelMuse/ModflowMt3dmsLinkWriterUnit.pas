@@ -19,6 +19,9 @@ implementation
 uses
   ModflowUnitNumbers, frmProgressUnit, SysUtils;
 
+resourcestring
+  StrWritingLMT6Package = 'Writing LMT6 Package input.';
+
 { TModflowMt3dmsLinkWriter }
 
 class function TModflowMt3dmsLinkWriter.Extension: string;
@@ -53,7 +56,7 @@ begin
 
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage('Writing LMT6 Package input.');
+    frmProgressMM.AddMessage(StrWritingLMT6Package);
 
     WriteString('OUTPUT_FILE_NAME ');
     WriteString(ExtractFileName(FtlFileName));

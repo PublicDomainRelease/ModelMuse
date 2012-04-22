@@ -32,6 +32,8 @@ type
     ProjectName: string;
     HDry: real;
     HNoFlow: real;
+    StopError: Boolean;
+    StopErrorCriterion: double;
     property Description: TStrings read FDescription write SetDescription;
     procedure AssignOptionsToModel;
     procedure AssignModel(AModel: TCustomModel);
@@ -94,6 +96,9 @@ type
     lblModel: TLabel;
     comboModel: TComboBox;
     edMasUnit: TLabeledEdit;
+    cbStopError: TJvCheckBox;
+    lbl1: TLabel;
+    rdeStopErrorCriterion: TRbwDataEntry;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure rdeHNOFLOExit(Sender: TObject);
@@ -107,6 +112,7 @@ type
     procedure cbWettingClick(Sender: TObject);
     procedure pcOptionsChange(Sender: TObject);
     procedure comboModelChange(Sender: TObject);
+    procedure cbStopErrorClick(Sender: TObject);
   private
     FCurrentOptions: TModelOptions;
     FModelOptionsCollection: TModelOptionsCollection;
@@ -198,6 +204,10 @@ begin
   comboModel.ItemIndex := 0;
   comboModelChange(nil);
 
+  cbStopError.Checked := ModflowOptions.StopError;
+  rdeStopErrorCriterion.Text := FloatToStr(ModflowOptions.StopErrorCriterion);
+  cbStopErrorClick(nil);
+
   if not frmGoPhast.PhastModel.LgrUsed then
   begin
     NewHeight := Height - pnlModel.Height;
@@ -214,6 +224,12 @@ begin
   begin
     tabWetting.TabVisible := True;
   end;
+end;
+
+procedure TfrmModflowOptions.cbStopErrorClick(Sender: TObject);
+begin
+  inherited;
+  rdeStopErrorCriterion.Enabled := cbStopError.Checked;
 end;
 
 procedure TfrmModflowOptions.cbWettingClick(Sender: TObject);
@@ -383,6 +399,12 @@ begin
       FCurrentOptions.WettingEquation := comboWettingEquation.ItemIndex;
       FCurrentOptions.OpenInTextEditor := cbOpenInTextEditor.Checked;
       FCurrentOptions.Description := memoComments.Lines;
+      FCurrentOptions.StopError := cbStopError.Checked;
+      if TryStrToFloat(rdeStopErrorCriterion.Text, AValue) then
+      begin
+        FCurrentOptions.StopErrorCriterion := AValue;
+      end;
+//      FCurrentOptions.
     end;
     FCurrentOptions := Value;
     if FCurrentOptions <> nil then
@@ -397,6 +419,9 @@ begin
       comboWettingEquation.ItemIndex := FCurrentOptions.WettingEquation;
       cbOpenInTextEditor.Checked := FCurrentOptions.OpenInTextEditor;
       memoComments.Lines := FCurrentOptions.Description;
+      cbStopError.Checked := FCurrentOptions.StopError;
+      cbStopErrorClick(nil);
+      rdeStopErrorCriterion.Text := FloatToStr(FCurrentOptions.StopErrorCriterion);
     end;
   end;
 end;
@@ -468,46 +493,58 @@ end;
 { TModelOptions }
 
 procedure TModelOptions.AssignModel(AModel: TCustomModel);
+var
+  Options: TModflowOptions;
+//var
+//  Options
 begin
   Model := AModel;
-  CalculateFlow := Model.ModflowOptions.ComputeFluxesBetweenConstantHeadCells;
-  PrintTime := Model.ModflowOptions.PrintTime;
-  InitialHeadsFile := Model.ModflowOptions.InitialHeadFileName;
+  Options := Model.ModflowOptions;
+  CalculateFlow := Options.ComputeFluxesBetweenConstantHeadCells;
+  PrintTime := Options.PrintTime;
+  InitialHeadsFile := Options.InitialHeadFileName;
   WettingActive := Model.ModflowWettingOptions.WettingActive;
   WettingFactor := Model.ModflowWettingOptions.WettingFactor;
   WettingIterations := Model.ModflowWettingOptions.WettingIterations;
   WettingEquation := Model.ModflowWettingOptions.WettingEquation;
 
-  OpenInTextEditor := Model.ModflowOptions.OpenInTextEditor;
-  Description := Model.ModflowOptions.Description;
-  LengthUnit := Model.ModflowOptions.LengthUnit;
-  TimeUnit := Model.ModflowOptions.TimeUnit;
-  ProjectDate := Model.ModflowOptions.ProjectDate;
-  Modeler := Model.ModflowOptions.Modeler;
-  ProjectName := Model.ModflowOptions.ProjectName;
-  HDry := Model.ModflowOptions.HDry;
-  HNoFlow := Model.ModflowOptions.HNoFlow;
+  OpenInTextEditor := Options.OpenInTextEditor;
+  Description := Options.Description;
+  LengthUnit := Options.LengthUnit;
+  TimeUnit := Options.TimeUnit;
+  ProjectDate := Options.ProjectDate;
+  Modeler := Options.Modeler;
+  ProjectName := Options.ProjectName;
+  HDry := Options.HDry;
+  HNoFlow := Options.HNoFlow;
+  StopError := Options.StopError;
+  StopErrorCriterion := Options.StopErrorCriterion;
 end;
 
 procedure TModelOptions.AssignOptionsToModel;
+var
+  Options: TModflowOptions;
 begin
-  Model.ModflowOptions.ComputeFluxesBetweenConstantHeadCells := CalculateFlow;
-  Model.ModflowOptions.PrintTime := PrintTime;
-  Model.ModflowOptions.InitialHeadFileName := InitialHeadsFile;
+  Options := Model.ModflowOptions;
+  Options.ComputeFluxesBetweenConstantHeadCells := CalculateFlow;
+  Options.PrintTime := PrintTime;
+  Options.InitialHeadFileName := InitialHeadsFile;
   Model.ModflowWettingOptions.WettingActive := WettingActive;
   Model.ModflowWettingOptions.WettingFactor := WettingFactor;
   Model.ModflowWettingOptions.WettingIterations := WettingIterations;
   Model.ModflowWettingOptions.WettingEquation := WettingEquation;
 
-  Model.ModflowOptions.OpenInTextEditor := OpenInTextEditor;
-  Model.ModflowOptions.Description := Description;
-  Model.ModflowOptions.LengthUnit := LengthUnit;
-  Model.ModflowOptions.TimeUnit := TimeUnit;
-  Model.ModflowOptions.ProjectDate := ProjectDate;
-  Model.ModflowOptions.Modeler := Modeler;
-  Model.ModflowOptions.ProjectName := ProjectName;
-  Model.ModflowOptions.HDry := HDry;
-  Model.ModflowOptions.HNoFlow := HNoFlow;
+  Options.OpenInTextEditor := OpenInTextEditor;
+  Options.Description := Description;
+  Options.LengthUnit := LengthUnit;
+  Options.TimeUnit := TimeUnit;
+  Options.ProjectDate := ProjectDate;
+  Options.Modeler := Modeler;
+  Options.ProjectName := ProjectName;
+  Options.HDry := HDry;
+  Options.HNoFlow := HNoFlow;
+  Options.StopError := StopError;
+  Options.StopErrorCriterion := StopErrorCriterion;
 end;
 
 constructor TModelOptions.Create(Collection: TCollection);

@@ -622,6 +622,176 @@ resourcestring
   StrParameterName = 'Parameter name';
   StrImportShapeFile = 'import shape file';
   StrWarningRoot = 'No parameters with the following names exist. Import of the feature will be skipped for the shapes for which these names were specified.';
+  StrImport = 'Import';
+  StrDataSet = 'Data Set';
+  StrInterpolation = 'Interpolation';
+  StrTheShpFileS = 'The ".shp" file "%s" does not exist.';
+  StrTheDbfFileS = 'The ".dbf" file "%s" does not exist.  Do you want to jus' +
+  't import the geometry of the shapes in the shape file';
+  StrReadingShapeGeomet = 'Reading Shape Geometry File';
+  StrReadingShape1 = 'Reading shape 1';
+  StrNumberOfShapes = 'Number of shapes = %s';
+  StrNoneOfTheFieldsI = 'None of the fields in "%s" can be imported.  Do you' +
+  ' want to just import the geometry of the shapes in the shape file';
+  StrNone = 'None';
+  StrTheShapesCanNotB = 'The shapes can not be combined because the followin' +
+  'g shapes have multiple parts.';
+  StrDataSets = 'Data Sets';
+  StrSPECIFIC = 'SPECIFIC';
+  StrDIRECT = 'DIRECT';
+  StrTOTAL = 'TOTAL';
+  StrNONE_UC = 'NONE';
+  StrTHIEM = 'THIEM';
+  StrSKIN = 'SKIN';
+  StrGENERAL = 'GENERAL';
+  StrSPECIFYCWC = 'SPECIFYCWC';
+  StrUZFRechargeRated = 'UZF_RechargeRate%d';
+  StrUZFEvapotranspirati = 'UZF_EvapotranspirationRate%d';
+  StrUZFExtinctionDepth = 'UZF_ExtinctionDepth%d';
+  StrUZFWaterContentd = 'UZF_WaterContent%d';
+  StrHFBHydraulicConduct = 'HFB_HydraulicConductivity';
+  StrHFBThickness = 'HFB_Thickness';
+  StrInfiltrationRate = 'Infiltration rate';
+  StrEvapoTranspiration = 'Evapo- transpiration demand';
+  StrETExctinctionDepth = 'ET exctinction depth';
+  StrETExctinctionWater = 'ET exctinction water content';
+  StrMinimumStage = 'Minimum stage';
+  StrMaximumStage = 'Maximum stage';
+  StrPrecipitation = 'Precipitation';
+  StrEvaporation = 'Evaporation';
+  StrOverlandRunoff = 'Overland runoff';
+  StrWithdrawal = 'Withdrawal';
+  StrOutflowSegments = 'Outflow Segments';
+  StrICALC = 'ICALC';
+  StrFLOW = 'FLOW';
+  StrDiversionSegments = 'Diversion Segments';
+  StrIPRIOR = 'IPRIOR';
+  StrPTSW = 'PTSW';
+  StrETSW = 'ETSW';
+  StrRUNOFF = 'RUNOFF';
+  StrROUGHCH = 'ROUGHCH';
+  StrROUGHBK = 'ROUGHBK';
+  StrCDPTH = 'CDPTH';
+  StrFDPTH = 'FDPTH';
+  StrAWDTH = 'AWDTH';
+  StrBWDTH = 'BWDTH';
+  StrHCOND1 = 'HCOND1';
+  StrTHICKM1 = 'THICKM1';
+  StrELEVUP = 'ELEVUP';
+  StrWIDTH1 = 'WIDTH1';
+  StrDEPTH1 = 'DEPTH1';
+  StrHCOND2 = 'HCOND2';
+  StrTHICKM2 = 'THICKM2';
+  StrELEVDN = 'ELEVDN';
+  StrWIDTH2 = 'WIDTH2';
+  StrDEPTH2 = 'DEPTH2';
+  StrXCPT1 = 'XCPT1';
+  StrXCPT2 = 'XCPT2';
+  StrXCPT3 = 'XCPT3';
+  StrXCPT4 = 'XCPT4';
+  StrXCPT5 = 'XCPT5';
+  StrXCPT6 = 'XCPT6';
+  StrXCPT7 = 'XCPT7';
+  StrXCPT8 = 'XCPT8';
+  StrZCPT1 = 'ZCPT1';
+  StrZCPT2 = 'ZCPT2';
+  StrZCPT3 = 'ZCPT3';
+  StrZCPT4 = 'ZCPT4';
+  StrZCPT5 = 'ZCPT5';
+  StrZCPT6 = 'ZCPT6';
+  StrZCPT7 = 'ZCPT7';
+  StrZCPT8 = 'ZCPT8';
+  StrTime = 'Time';
+  StrObservedHead = 'Observed head';
+  StrStatistic = 'Statistic';
+  StrStatFlag = 'Stat Flag';
+  StrRESStartHeadd = 'RES_StartHead%d';
+  StrRESEndingHeadd = 'RES_EndingHead%d';
+  StrETSEvapotranspirati = 'ETS_EvapotranspirationRate%d';
+  StrETSEvapotranspiratiS = 'ETS_EvapotranspirationSurface%d';
+  StrETSEvapotranspiratiD = 'ETS_EvapotranspirationDepth%d';
+  StrETSDepthFraction0 = 'ETS_DepthFraction%0:d_%1:d';
+  StrETSEtFraction0d = 'ETS_EtFraction%0:d_%1:d';
+  StrETSLayerd = 'ETS_Layer%d';
+  StrEvapoTranspirationR = 'Evapo- transpiration rate';
+  StrEvapoTranspirationS = 'Evapo- transpiration surface';
+  StrEvapoTranspirationDe = 'Evapo- transpiration depth';
+  StrFractionalDepthD = 'Fractional depth %d';
+  StrFractionalRateD = 'Fractional rate %d';
+  StrEvapoTranspirationL = 'Evapo- transpiration layer';
+  StrEVTEvapotranspirati = 'EVT_EvapotranspirationRate%d';
+  StrEVTEvapotranspiratiS = 'EVT_EvapotranspirationSurface%d';
+  StrEVTEvapotranspiratiD = 'EVT_EvapotranspirationDepth%d';
+  StrEVTLayerd = 'EVT_Layer%d';
+  StrRCHLayerd = 'RCH_Layer%d';
+  StrRechargeRate = 'Recharge rate';
+  StrRechargeLayer = 'Recharge layer';
+  StrDRTElevationd = 'DRT_Elevation%d';
+  StrDRTConductanced = 'DRT_Conductance%d';
+  StrDRTReturnFractiond = 'DRT_ReturnFraction%d';
+  StrDRNElevationd = 'DRN_Elevation%d';
+  StrDRNConductanced = 'DRN_Conductance%d';
+  StrConductanceInterpre = 'Conductance interpretation';
+  StrElevation = 'Elevation';
+  StrReturnFraction = 'Return fraction';
+  StrRIVBottomd = 'RIV_Bottom%d';
+  StrRIVStaged = 'RIV_Stage%d';
+  StrRIVConductanced = 'RIV_Conductance%d';
+  StrWELPumpingRated = 'WEL_PumpingRate%d';
+  StrPumpingRateInterpr = 'Pumping rate interpretation';
+  StrGHBBoundaryHeadd = 'GHB_BoundaryHead%d';
+  StrGHBConductanced = 'GHB_Conductance%d';
+  StrCHDStartingHeadd = 'CHD_StartingHead%d';
+  StrCHDEndingHeadd = 'CHD_EndingHead%d';
+  StrELEVATION_UC = 'ELEVATION';
+  StrDEPTH_UC = 'DEPTH';
+  StrSPECIFIED_UC = 'SPECIFIED';
+  StrASSOCIATED_UC = 'ASSOCIATED';
+  StrSpecifiedHead = 'Specified head';
+  StrFluxBoundary = 'Flux boundary';
+  StrLeakyBoundary = 'Leaky boundary';
+  StrRiverBoundary = 'River boundary';
+  StrWellBoundary = 'Well boundary';
+  StrTheShapefileAppear = 'The Shapefile appears not to contain grid informa' +
+  'tion.';
+  StrCreatingGrid = 'Creating Grid';
+  Str0OutOfD = '0 out of %d.';
+  StrShape = 'Shape ';
+  StrUnableToImportGri = 'Unable to import grid.';
+  StrHasBeenSelected = '" has been selected for two or more fields that are ' +
+  'being imported.  You need to correct this before continuing.';
+  Str0sContainsInte = '"%0:s" contains integers but %1:s does not.  You need' +
+  ' to correct this before continuing.';
+  Str0sContainsReal = '"%0:s" contains real numbers but %1:s does not.  You ' +
+  'need to correct this before continuing.';
+  Str0sContainsBool = '"%0:s" contains booleans but %1:s does not.  You need' +
+  ' to correct this before continuing.';
+  Str0sContainsStri = '"%0:s" contains strings but %1:s does not.  You need ' +
+  'to correct this before continuing.';
+  StrCreatedFromShapefi = 'Created from Shapefile Attribute';
+  StrCreatingObjects = 'Creating Objects';
+  StrObject0dOutOf = 'Object %0:d out of %1:d.  Point %2:d out of %3:d.';
+  StrAssigningFormulas = 'Assigning Formulas';
+  Str0OutOf0d = '0 out of %0:d.';
+  StrFormula = 'Formula ';
+  StrDObjectsWereInva = '%d objects were invalid because they cross themselv' +
+  'es and have been skipped.  Do you want to see the numbers of the ones tha' +
+  't have been skipped?';
+  StrDObjectsHadAttri = '%d objects had attributes that could not be read in' +
+  'to ModelMuse properly. They have been skipped.  Do you want to see the nu' +
+  'mbers of the ones that have been skipped?';
+  StrReadingShapeD = 'Reading shape %s';
+  StrSorryImportingThe = 'Sorry. Importing the grid while performing a coord' +
+  'inate conversion is not allowed.';
+  StrCoordinatesOfFirst = 'Coordinates of first point = (%0:g, %1:g).';
+  StrShapeNS = 'Shape%d';
+  StrOneOrMoreOfYour = 'One or more of your data points appear to has invali' +
+  'd coordinates. Coordinate conversion can not be performed on this shape f' +
+  'ile.';
+  StrHead = 'Head';
+  StrSolution = 'Solution';
+  StrFlux = 'Flux';
+  StrPumpingRange = 'Pumping Range;';
 
 {$R *.dfm}
 
@@ -746,9 +916,9 @@ begin
   pcImportShape.ActivePageIndex := 0;
 
   dgFields.Cells[Ord(fgcAttributes), 0] := StrAttribute;
-  dgFields.Cells[Ord(fgcImport), 0] := 'Import';
-  dgFields.Cells[Ord(fgcDataSet), 0] := 'Data Set';
-  dgFields.Cells[Ord(fgcInterpolator), 0] := 'Interpolation';
+  dgFields.Cells[Ord(fgcImport), 0] := StrImport;
+  dgFields.Cells[Ord(fgcDataSet), 0] := StrDataSet;
+  dgFields.Cells[Ord(fgcInterpolator), 0] := StrInterpolation;
   dgFields.ColWidths[Ord(fgcDataSet)] := 120;
 
   pcSFR.ActivePageIndex := 0;
@@ -822,16 +992,15 @@ begin
       begin
         Beep;
         result := False;
-        MessageDlg('The ".shp" file "' + FGeometryFileName
-          + '" does not exist.', mtError, [mbOK], 0);
+        MessageDlg(Format(StrTheShpFileS, [FGeometryFileName]),
+           mtError, [mbOK], 0);
         Exit;
       end;
       if not FileExists(FDataBaseFileName) then
       begin
         Beep;
-        if MessageDlg('The ".dbf" file "' + FDataBaseFileName
-          + '" does not exist.  Do you want to just import the geometry '
-          + 'of the shapes in the shape file',
+        if MessageDlg(Format(StrTheDbfFileS, [FDataBaseFileName]),
+
           mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
         begin
           result := False;
@@ -842,9 +1011,9 @@ begin
       FGeometryFile := TShapefileGeometryReader.Create;
       frmProgressMM.pbProgress.Max := 1000;
       frmProgressMM.pbProgress.Position := 0;
-      frmProgressMM.Caption := 'Reading Shape Geometry File';
+      frmProgressMM.Caption := StrReadingShapeGeomet;
       frmProgressMM.PopupParent := self;
-      frmProgressMM.ProgressLabelCaption := 'Reading shape 1';
+      frmProgressMM.ProgressLabelCaption := StrReadingShape1;
       FShapeCount := 0;
       frmProgressMM.Show;
       try
@@ -853,8 +1022,8 @@ begin
       finally
         frmProgressMM.Hide;
       end;
-      lblNumShapes.Caption := 'Number of shapes = '
-        + IntToStrFormatted(FGeometryFile.Count);
+      lblNumShapes.Caption := Format(StrNumberOfShapes,
+        [IntToStrFormatted(FGeometryFile.Count)]);
 
       cbImportObjectsClick(nil);
 
@@ -884,11 +1053,8 @@ begin
               ValidFields.Add(string(xbShapeDataBase.GetFieldName(Index)))
             end;
           end;
-          if (ValidFields.Count = 0) and (MessageDlg('None of the fields in '
-            + FDataBaseFileName
-            + '" can be imported.  Do you want to just import the geometry '
-            + 'of the shapes in the shape file',
-            mtConfirmation, [mbYes, mbNo], 0) <> mrYes) then
+          if (ValidFields.Count = 0) and (MessageDlg(Format(StrNoneOfTheFieldsI,
+            [FDataBaseFileName]), mtConfirmation, [mbYes, mbNo], 0) <> mrYes) then
           begin
             result := False;
             Exit;
@@ -971,7 +1137,7 @@ begin
           begin
             dgFields.Cells[Ord(fgcAttributes), Index + 1] := ValidFields[Index];
             dgFields.Cells[Ord(fgcDataSet), Index + 1] := rsNewDataSet;
-            dgFields.Cells[Ord(fgcInterpolator), Index + 1] := 'None';
+            dgFields.Cells[Ord(fgcInterpolator), Index + 1] := StrNone;
           end;
           FilesOK := True;
           FShouldEnableImportGrid := cbEnclosedCells.Enabled;
@@ -1002,8 +1168,7 @@ begin
               FAllowShapesToCombine := False;
               if memoMultipleParts.Lines.Count = 0 then
               begin
-                memoMultipleParts.Lines.Add('The shapes can not be combined ' +
-                  'because the following shapes have multiple parts.');
+                memoMultipleParts.Lines.Add(StrTheShapesCanNotB);
               end;
               memoMultipleParts.Lines.Add(IntToStr(ShapeIndex+1));
             end;
@@ -1177,13 +1342,13 @@ begin
     begin
       case DataArray.DataType of
         rdtDouble:
-          Parser.CreateVariable(DataArray.Name, 'Data Sets', 0, TRealVariable);
+          Parser.CreateVariable(DataArray.Name, StrDataSets, 0, TRealVariable);
         rdtInteger:
-          Parser.CreateVariable(DataArray.Name, 'Data Sets', 0, TIntegerVariable);
+          Parser.CreateVariable(DataArray.Name, StrDataSets, 0, TIntegerVariable);
         rdtBoolean:
-          Parser.CreateVariable(DataArray.Name, 'Data Sets', False, TBooleanVariable);
+          Parser.CreateVariable(DataArray.Name, StrDataSets, False, TBooleanVariable);
         rdtString:
-          Parser.CreateVariable(DataArray.Name, 'Data Sets', '', TStringVariable);
+          Parser.CreateVariable(DataArray.Name, StrDataSets, '', TStringVariable);
       end;
     end;
   end;
@@ -1236,7 +1401,7 @@ begin
   OldProperties := nil;
   if dgFields.Cells[Ord(fgcInterpolator), Index] <> '' then
   begin
-    InterpolatorIndex := dgFields.Columns[Ord(fgcInterpolator)].PickList.IndexOf(dgFields.Cells[Ord(fgcInterpolator), Index]);
+    InterpolatorIndex := dgFields.ItemIndex[Ord(fgcInterpolator), Index];
     if InterpolatorIndex < 0 then
     begin
       if DataSet.TwoDInterpolator <> nil then
@@ -1253,7 +1418,8 @@ begin
     end
     else
     begin
-      AType := TInterpolatorType(dgFields.Columns[Ord(fgcInterpolator)].PickList.Objects[InterpolatorIndex]);
+      AType := TInterpolatorType(dgFields.Columns[Ord(fgcInterpolator)].
+        PickList.Objects[InterpolatorIndex]);
       if AType = nil then
       begin
         if DataSet.TwoDInterpolator <> nil then
@@ -1314,15 +1480,15 @@ begin
   else
   begin
     Text := UpperCase(GetStringValueFromText(combo.Text));
-    if Text = 'SPECIFIC' then
+    if Text = StrSPECIFIC then
     begin
       result := fiSpecific;
     end
-    else if Text = 'DIRECT' then
+    else if Text = StrDIRECT then
     begin
       result := fiDirect;
     end
-    else if Text = 'TOTAL' then
+    else if Text = StrTOTAL then
     begin
       result := fiTotal;
     end
@@ -1358,23 +1524,23 @@ begin
 
   LossTypeString := GetStringValueFromText(comboMnw2LossType.Text);
   LossTypeString := UpperCase(Trim(LossTypeString));
-  if LossTypeString = 'NONE' then
+  if LossTypeString = StrNONE_UC then
   begin
     Boundary.LossType := mltNone;
   end
-  else if LossTypeString = 'THIEM' then
+  else if LossTypeString = StrTHIEM then
   begin
     Boundary.LossType := mltThiem;
   end
-  else if LossTypeString = 'SKIN' then
+  else if LossTypeString = StrSKIN then
   begin
     Boundary.LossType := mltSkin;
   end
-  else if LossTypeString = 'GENERAL' then
+  else if LossTypeString = StrGENERAL then
   begin
     Boundary.LossType := mltEquation;
   end
-  else if LossTypeString = 'SPECIFYCWC' then
+  else if LossTypeString = StrSPECIFYCWC then
   begin
     Boundary.LossType := mtlSpecify;
   end;
@@ -1631,7 +1797,7 @@ begin
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(ucInfiltration), Index + 1]);
-        ItemName := 'UZF_RechargeRate' + IntToStr(Index);
+        ItemName := Format(StrUZFRechargeRated, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -1665,7 +1831,7 @@ begin
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(ucEvapRate), Index + 1]);
-        ItemName := 'UZF_EvapotranspirationRate' + IntToStr(Index);
+        ItemName := Format(StrUZFEvapotranspirati, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -1675,7 +1841,8 @@ begin
           ValueItem.Name := ItemName;
           ValueItem.Values.DataType := rdtDouble;
           ValueItem.Values.Count := 0;
-          EvtItem.EvapotranspirationRate := rsObjectImportedValuesR + '("' + ItemName + '")';
+          EvtItem.EvapotranspirationRate := rsObjectImportedValuesR
+            + '("' + ItemName + '")';
         end;
         ValueItem.Values.Add(AValue);
       end
@@ -1699,7 +1866,7 @@ begin
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(ucExtinctDepth), Index + 1]);
-        ItemName := 'UZF_ExtinctionDepth' + IntToStr(Index);
+        ItemName := Format(StrUZFExtinctionDepth, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -1733,7 +1900,7 @@ begin
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(ucExtinctWaterContent), Index + 1]);
-        ItemName := 'UZF_WaterContent' + IntToStr(Index);
+        ItemName := Format(StrUZFWaterContentd, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -1771,7 +1938,7 @@ begin
   if CombinedObjects then
   begin
     AValue := GetRealValueFromText(comboHfbHydCond.Text);
-    ItemName := 'HFB_HydraulicConductivity';
+    ItemName := StrHFBHydraulicConduct;
     ValueItem := AScreenObject.ImportedValues.ValueItemByName(
       ItemName);
     if ValueItem = nil then
@@ -1786,7 +1953,7 @@ begin
     ValueItem.Values.Add(AValue);
 
     AValue := GetRealValueFromText(comboHfbThickness.Text);
-    ItemName := 'HFB_Thickness';
+    ItemName := StrHFBThickness;
     ValueItem := AScreenObject.ImportedValues.ValueItemByName(
       ItemName);
     if ValueItem = nil then
@@ -2397,10 +2564,10 @@ begin
   end;
   rdgBoundaryConditions.Cells[Ord(ucStartTime), 0] := StrStartingTime;
   rdgBoundaryConditions.Cells[Ord(ucEndTime), 0] := StrEndingTime;
-  rdgBoundaryConditions.Cells[Ord(ucInfiltration), 0] := 'Infiltration rate';
-  rdgBoundaryConditions.Cells[Ord(ucEvapRate), 0] := 'Evapo- transpiration demand';
-  rdgBoundaryConditions.Cells[Ord(ucExtinctDepth), 0] := 'ET exctinction depth';
-  rdgBoundaryConditions.Cells[Ord(ucExtinctWaterContent), 0] := 'ET exctinction water content';
+  rdgBoundaryConditions.Cells[Ord(ucInfiltration), 0] := StrInfiltrationRate;
+  rdgBoundaryConditions.Cells[Ord(ucEvapRate), 0] := StrEvapoTranspiration;
+  rdgBoundaryConditions.Cells[Ord(ucExtinctDepth), 0] := StrETExctinctionDepth;
+  rdgBoundaryConditions.Cells[Ord(ucExtinctWaterContent), 0] := StrETExctinctionWater;
 
 end;
 
@@ -2418,10 +2585,11 @@ var
   TimeIndex: Integer;
   StressPeriod: TModflowStressPeriod;
   Index: Integer;
-const
-  ColumnNames : array[2..7] of string = ('Minimum stage', 'Maximum stage',
-    'Precipitation', 'Evaporation', 'Overland runoff', 'Withdrawal');
+//var
+//  ColumnNames : array[2..7] of string;// = ('Minimum stage', 'Maximum stage',
+////    'Precipitation', 'Evaporation', 'Overland runoff', 'Withdrawal');
 begin
+//  ColumnNames := ('Minimum stage', 'Maximum stage', 'Precipitation', 'Evaporation', 'Overland runoff', 'Withdrawal');
   plBoundary.ActivePage := jvspModflowLAK;
 
   comboLakeID.Items := FIntegerFieldNames;
@@ -2458,10 +2626,16 @@ begin
   end;
   rdgBoundaryConditions.Columns[Ord(scEndTime)].PickList.AddStrings(FRealFieldNames);
 
-  for Index := 2 to 7 do
+  rdgBoundaryConditions.Cells[Ord(lcMinStage), 0] := StrMinimumStage;
+  rdgBoundaryConditions.Cells[Ord(lcMaxStage), 0] := StrMaximumStage;
+  rdgBoundaryConditions.Cells[Ord(lcPrecip), 0] := StrPrecipitation;
+  rdgBoundaryConditions.Cells[Ord(lcEvap), 0] := StrEvaporation;
+  rdgBoundaryConditions.Cells[Ord(lcRunoff), 0] := StrOverlandRunoff;
+  rdgBoundaryConditions.Cells[Ord(lcWithdrawl), 0] := StrWithdrawal;
+
+  for Index := Ord(lcMinStage) to Ord(lcWithdrawl) do
   begin
     rdgBoundaryConditions.Columns[Index].WordWrapCaptions := True;
-    rdgBoundaryConditions.Cells[Index, 0] := ColumnNames[Index];
     rdgBoundaryConditions.Columns[Index].ComboUsed := True;
     rdgBoundaryConditions.Columns[Index].Format := rcf4String;
     rdgBoundaryConditions.Columns[Index].PickList := FRealFieldAndGlobalVariablesNames;
@@ -2513,202 +2687,202 @@ begin
   end;
   rdgBoundaryConditions.Columns[Ord(scEndTime)].PickList.AddStrings(FRealFieldAndGlobalVariablesNames);
 
-  rdgBoundaryConditions.Cells[Ord(scIcalc), 0] := 'ICALC';
+  rdgBoundaryConditions.Cells[Ord(scIcalc), 0] := StrICALC;
   rdgBoundaryConditions.Columns[Ord(scIcalc)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scIcalc)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scIcalc)].PickList := FIntegerFieldNames;
 
-  rdgBoundaryConditions.Cells[Ord(scFlow), 0] := 'FLOW';
+  rdgBoundaryConditions.Cells[Ord(scFlow), 0] := StrFLOW;
   rdgBoundaryConditions.Columns[Ord(scFlow)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scFlow)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scFlow)].PickList := FRealFieldAndGlobalVariablesNames;
 
-  rdgBoundaryConditions.Cells[Ord(scOutflowSegment), 0] := 'Outflow Segments';
+  rdgBoundaryConditions.Cells[Ord(scOutflowSegment), 0] := StrOutflowSegments;
   rdgBoundaryConditions.Columns[Ord(scOutflowSegment)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scOutflowSegment)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scOutflowSegment)].PickList := FIntegerFieldNames;
 
-  rdgBoundaryConditions.Cells[Ord(scDiversionSegment), 0] := 'Diversion Segments';
+  rdgBoundaryConditions.Cells[Ord(scDiversionSegment), 0] := StrDiversionSegments;
   rdgBoundaryConditions.Columns[Ord(scDiversionSegment)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scDiversionSegment)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scDiversionSegment)].PickList := FIntegerFieldNames;
 
-  rdgBoundaryConditions.Cells[Ord(scIprior), 0] := 'IPRIOR';
+  rdgBoundaryConditions.Cells[Ord(scIprior), 0] := StrIPRIOR;
   rdgBoundaryConditions.Columns[Ord(scIprior)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scIprior)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scIprior)].PickList := FIntegerFieldNames;
 
-  rdgBoundaryConditions.Cells[Ord(scPtsw), 0] := 'PTSW';
+  rdgBoundaryConditions.Cells[Ord(scPtsw), 0] := StrPTSW;
   rdgBoundaryConditions.Columns[Ord(scPtsw)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scPtsw)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scPtsw)].PickList := FRealFieldAndGlobalVariablesNames;
 
-  rdgBoundaryConditions.Cells[Ord(scEtsw), 0] := 'ETSW';
+  rdgBoundaryConditions.Cells[Ord(scEtsw), 0] := StrETSW;
   rdgBoundaryConditions.Columns[Ord(scEtsw)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scEtsw)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scEtsw)].PickList := FRealFieldAndGlobalVariablesNames;
 
-  rdgBoundaryConditions.Cells[Ord(scRunoff), 0] := 'RUNOFF';
+  rdgBoundaryConditions.Cells[Ord(scRunoff), 0] := StrRUNOFF;
   rdgBoundaryConditions.Columns[Ord(scRunoff)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scRunoff)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scRunoff)].PickList := FRealFieldAndGlobalVariablesNames;
 
-  rdgBoundaryConditions.Cells[Ord(scRoughCh), 0] := 'ROUGHCH';
+  rdgBoundaryConditions.Cells[Ord(scRoughCh), 0] := StrROUGHCH;
   rdgBoundaryConditions.Columns[Ord(scRoughCh)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scRoughCh)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scRoughCh)].PickList := FRealFieldAndGlobalVariablesNames;
 
-  rdgBoundaryConditions.Cells[Ord(scRoughBk), 0] := 'ROUGHBK';
+  rdgBoundaryConditions.Cells[Ord(scRoughBk), 0] := StrROUGHBK;
   rdgBoundaryConditions.Columns[Ord(scRoughBk)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scRoughBk)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scRoughBk)].PickList := FRealFieldAndGlobalVariablesNames;
 
-  rdgBoundaryConditions.Cells[Ord(scCdpth), 0] := 'CDPTH';
+  rdgBoundaryConditions.Cells[Ord(scCdpth), 0] := StrCDPTH;
   rdgBoundaryConditions.Columns[Ord(scCdpth)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scCdpth)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scCdpth)].PickList := FRealFieldAndGlobalVariablesNames;
 
-  rdgBoundaryConditions.Cells[Ord(scFdpth), 0] := 'FDPTH';
+  rdgBoundaryConditions.Cells[Ord(scFdpth), 0] := StrFDPTH;
   rdgBoundaryConditions.Columns[Ord(scFdpth)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scFdpth)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scFdpth)].PickList := FRealFieldAndGlobalVariablesNames;
 
-  rdgBoundaryConditions.Cells[Ord(scAwdth), 0] := 'AWDTH';
+  rdgBoundaryConditions.Cells[Ord(scAwdth), 0] := StrAWDTH;
   rdgBoundaryConditions.Columns[Ord(scAwdth)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scAwdth)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scAwdth)].PickList := FRealFieldAndGlobalVariablesNames;
 
-  rdgBoundaryConditions.Cells[Ord(edBwdth), 0] := 'BWDTH';
+  rdgBoundaryConditions.Cells[Ord(edBwdth), 0] := StrBWDTH;
   rdgBoundaryConditions.Columns[Ord(edBwdth)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(edBwdth)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(edBwdth)].PickList := FRealFieldAndGlobalVariablesNames;
 
-  rdgBoundaryConditions.Cells[Ord(scHcond1), 0] := 'HCOND1';
+  rdgBoundaryConditions.Cells[Ord(scHcond1), 0] := StrHCOND1;
   rdgBoundaryConditions.Columns[Ord(scHcond1)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scHcond1)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scHcond1)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scThickM1), 0] := 'THICKM1';
+  rdgBoundaryConditions.Cells[Ord(scThickM1), 0] := StrTHICKM1;
   rdgBoundaryConditions.Columns[Ord(scThickM1)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scThickM1)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scThickM1)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scElevUp), 0] := 'ELEVUP';
+  rdgBoundaryConditions.Cells[Ord(scElevUp), 0] := StrELEVUP;
   rdgBoundaryConditions.Columns[Ord(scElevUp)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scElevUp)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scElevUp)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scWidth1), 0] := 'WIDTH1';
+  rdgBoundaryConditions.Cells[Ord(scWidth1), 0] := StrWIDTH1;
   rdgBoundaryConditions.Columns[Ord(scWidth1)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scWidth1)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scWidth1)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scDepth1), 0] := 'DEPTH1';
+  rdgBoundaryConditions.Cells[Ord(scDepth1), 0] := StrDEPTH1;
   rdgBoundaryConditions.Columns[Ord(scDepth1)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scDepth1)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scDepth1)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scHcond2), 0] := 'HCOND2';
+  rdgBoundaryConditions.Cells[Ord(scHcond2), 0] := StrHCOND2;
   rdgBoundaryConditions.Columns[Ord(scHcond2)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scHcond2)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scHcond2)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scThickM2), 0] := 'THICKM2';
+  rdgBoundaryConditions.Cells[Ord(scThickM2), 0] := StrTHICKM2;
   rdgBoundaryConditions.Columns[Ord(scThickM2)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scThickM2)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scThickM2)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scElevDn), 0] := 'ELEVDN';
+  rdgBoundaryConditions.Cells[Ord(scElevDn), 0] := StrELEVDN;
   rdgBoundaryConditions.Columns[Ord(scElevDn)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scElevDn)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scElevDn)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scWidth2), 0] := 'WIDTH2';
+  rdgBoundaryConditions.Cells[Ord(scWidth2), 0] := StrWIDTH2;
   rdgBoundaryConditions.Columns[Ord(scWidth2)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scWidth2)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scWidth2)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scDepth2), 0] := 'DEPTH2';
+  rdgBoundaryConditions.Cells[Ord(scDepth2), 0] := StrDEPTH2;
   rdgBoundaryConditions.Columns[Ord(scDepth2)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scDepth2)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scDepth2)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scDist1), 0] := 'XCPT1';
+  rdgBoundaryConditions.Cells[Ord(scDist1), 0] := StrXCPT1;
   rdgBoundaryConditions.Columns[Ord(scDist1)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scDist1)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scDist1)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scDist2), 0] := 'XCPT2';
+  rdgBoundaryConditions.Cells[Ord(scDist2), 0] := StrXCPT2;
   rdgBoundaryConditions.Columns[Ord(scDist2)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scDist2)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scDist2)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scDist3), 0] := 'XCPT3';
+  rdgBoundaryConditions.Cells[Ord(scDist3), 0] := StrXCPT3;
   rdgBoundaryConditions.Columns[Ord(scDist3)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scDist3)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scDist3)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scDist4), 0] := 'XCPT4';
+  rdgBoundaryConditions.Cells[Ord(scDist4), 0] := StrXCPT4;
   rdgBoundaryConditions.Columns[Ord(scDist4)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scDist4)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scDist4)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scDist5), 0] := 'XCPT5';
+  rdgBoundaryConditions.Cells[Ord(scDist5), 0] := StrXCPT5;
   rdgBoundaryConditions.Columns[Ord(scDist5)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scDist5)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scDist5)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scDist6), 0] := 'XCPT6';
+  rdgBoundaryConditions.Cells[Ord(scDist6), 0] := StrXCPT6;
   rdgBoundaryConditions.Columns[Ord(scDist6)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scDist6)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scDist6)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scDist7), 0] := 'XCPT7';
+  rdgBoundaryConditions.Cells[Ord(scDist7), 0] := StrXCPT7;
   rdgBoundaryConditions.Columns[Ord(scDist7)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scDist7)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scDist7)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scDist8), 0] := 'XCPT8';
+  rdgBoundaryConditions.Cells[Ord(scDist8), 0] := StrXCPT8;
   rdgBoundaryConditions.Columns[Ord(scDist8)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scDist8)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scDist8)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scZ1), 0] := 'ZCPT1';
+  rdgBoundaryConditions.Cells[Ord(scZ1), 0] := StrZCPT1;
   rdgBoundaryConditions.Columns[Ord(scZ1)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scZ1)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scZ1)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scZ2), 0] := 'ZCPT2';
+  rdgBoundaryConditions.Cells[Ord(scZ2), 0] := StrZCPT2;
   rdgBoundaryConditions.Columns[Ord(scZ2)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scZ2)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scZ2)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scZ3), 0] := 'ZCPT3';
+  rdgBoundaryConditions.Cells[Ord(scZ3), 0] := StrZCPT3;
   rdgBoundaryConditions.Columns[Ord(scZ3)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scZ3)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scZ3)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scZ4), 0] := 'ZCPT4';
+  rdgBoundaryConditions.Cells[Ord(scZ4), 0] := StrZCPT4;
   rdgBoundaryConditions.Columns[Ord(scZ4)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scZ4)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scZ4)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scZ5), 0] := 'ZCPT5';
+  rdgBoundaryConditions.Cells[Ord(scZ5), 0] := StrZCPT5;
   rdgBoundaryConditions.Columns[Ord(scZ5)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scZ5)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scZ5)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scZ6), 0] := 'ZCPT6';
+  rdgBoundaryConditions.Cells[Ord(scZ6), 0] := StrZCPT6;
   rdgBoundaryConditions.Columns[Ord(scZ6)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scZ6)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scZ6)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scZ7), 0] := 'ZCPT7';
+  rdgBoundaryConditions.Cells[Ord(scZ7), 0] := StrZCPT7;
   rdgBoundaryConditions.Columns[Ord(scZ7)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scZ7)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scZ7)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
-  rdgBoundaryConditions.Cells[Ord(scZ8), 0] := 'ZCPT8';
+  rdgBoundaryConditions.Cells[Ord(scZ8), 0] := StrZCPT8;
   rdgBoundaryConditions.Columns[Ord(scZ8)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scZ8)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scZ8)].PickList := FRealFieldGlobalsAndDataSetsNames;
@@ -2736,10 +2910,10 @@ begin
   rdgBoundaryConditions.Columns[3].Format := rcf4String;
   rdgBoundaryConditions.Columns[3].PickList := FIntegerFieldNames;
 
-  rdgBoundaryConditions.Cells[0, 0] := 'Time';
-  rdgBoundaryConditions.Cells[1, 0] := 'Observed head';
-  rdgBoundaryConditions.Cells[2, 0] := 'Statistic';
-  rdgBoundaryConditions.Cells[3, 0] := 'Stat Flag';
+  rdgBoundaryConditions.Cells[0, 0] := StrTime;
+  rdgBoundaryConditions.Cells[1, 0] := StrObservedHead;
+  rdgBoundaryConditions.Cells[2, 0] := StrStatistic;
+  rdgBoundaryConditions.Cells[3, 0] := StrStatFlag;
 end;
 
 procedure TfrmImportShapefile.ImportModflowResPackage(
@@ -2782,7 +2956,7 @@ begin
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(rescStartingHead), Index + 1]);
-        ItemName := 'RES_StartHead' + IntToStr(Index);
+        ItemName := Format(StrRESStartHeadd, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -2798,7 +2972,7 @@ begin
 
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(rescEndingHead), Index + 1]);
-        ItemName := 'RES_EndingHead' + IntToStr(Index);
+        ItemName := Format(StrRESEndingHeadd, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -2881,7 +3055,7 @@ begin
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(etscRate), Index + 1]);
-        ItemName := 'ETS_EvapotranspirationRate' + IntToStr(Index);
+        ItemName := Format(StrETSEvapotranspirati, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -2931,16 +3105,18 @@ begin
           EtsSurfDepthCollection.Add as TEtsSurfDepthItem;
       end;
       Inc(Count);
-      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(etscStartingTime), Index + 1]);
+      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[
+        Ord(etscStartingTime), Index + 1]);
       SurfDepthItem.StartTime := AValue;
-      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(etscEndingTime), Index + 1]);
+      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[
+        Ord(etscEndingTime), Index + 1]);
       SurfDepthItem.EndTime := AValue;
 
       if CombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(etscSurface), Index + 1]);
-        ItemName := 'ETS_EvapotranspirationSurface' + IntToStr(Index);
+        ItemName := Format(StrETSEvapotranspiratiS, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -2956,7 +3132,7 @@ begin
 
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(etscDepth), Index + 1]);
-        ItemName := 'ETS_EvapotranspirationDepth' + IntToStr(Index);
+        ItemName := Format(StrETSEvapotranspiratiD, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -2982,7 +3158,7 @@ begin
           end;
           AValue := GetRealValueFromText(rdgBoundaryConditions.
             Cells[Ord(etscDepth)+1 + (FractionIndex * 2), Index + 1]);
-          ItemName := 'ETS_DepthFraction' + IntToStr(Index) + '_' + IntToStr(FractionIndex+1);
+          ItemName := Format(StrETSDepthFraction0, [Index, FractionIndex]);
           ValueItem := AScreenObject.ImportedValues.ValueItemByName(
             ItemName);
           if ValueItem = nil then
@@ -3006,7 +3182,7 @@ begin
           end;
           AValue := GetRealValueFromText(rdgBoundaryConditions.
             Cells[Ord(etscDepth)+2 + (FractionIndex * 2), Index + 1]);
-          ItemName := 'ETS_EtFraction' + IntToStr(Index) + '_' + IntToStr(FractionIndex+1);
+          ItemName := Format(StrETSEtFraction0d, [Index, FractionIndex+1]);
           ValueItem := AScreenObject.ImportedValues.ValueItemByName(
             ItemName);
           if ValueItem = nil then
@@ -3078,7 +3254,7 @@ begin
         begin
           AnIntValue := GetIntegerValueFromText(rdgBoundaryConditions.
             Cells[Ord(etscRate), Index + 1]);
-          ItemName := 'ETS_Layer' + IntToStr(Index);
+          ItemName := Format(StrETSLayerd, [Index]);
           ValueItem := AScreenObject.ImportedValues.ValueItemByName(
             ItemName);
           if ValueItem = nil then
@@ -3088,7 +3264,8 @@ begin
             ValueItem.Name := ItemName;
             ValueItem.Values.DataType := rdtInteger;
             ValueItem.Values.Count := 0;
-            LayerItem.EvapotranspirationLayer := rsObjectImportedValuesI + '("' + ItemName + '")';
+            LayerItem.EvapotranspirationLayer :=
+              rsObjectImportedValuesI + '("' + ItemName + '")';
           end;
           ValueItem.Values.Add(AnIntValue);
         end
@@ -3190,20 +3367,20 @@ begin
   rdgBoundaryConditions.Cells[Ord(etscStartingTime), 0] := StrStartingTime;
   rdgBoundaryConditions.Cells[Ord(etscEndingTime), 0] := StrEndingTime;
   rdgBoundaryConditions.Cells[Ord(etscParameterName), 0] := StrParameterName;
-  rdgBoundaryConditions.Cells[Ord(etscRate), 0] := 'Evapo- transpiration rate';
-  rdgBoundaryConditions.Cells[Ord(etscSurface), 0] := 'Evapo- transpiration surface';
-  rdgBoundaryConditions.Cells[Ord(etscDepth), 0] := 'Evapo- transpiration depth';
+  rdgBoundaryConditions.Cells[Ord(etscRate), 0] := StrEvapoTranspirationR;
+  rdgBoundaryConditions.Cells[Ord(etscSurface), 0] := StrEvapoTranspirationS;
+  rdgBoundaryConditions.Cells[Ord(etscDepth), 0] := StrEvapoTranspirationDe;
   for Index := 0 to (Packages.EtsPackage.SegmentCount - 2) do
   begin
     rdgBoundaryConditions.Cells[Ord(etscDepth)+1 + (Index * 2), 0] :=
-      'Fractional depth ' + IntToStr(Index + 1);
+      Format(StrFractionalDepthD, [Index + 1]);
     rdgBoundaryConditions.Cells[Ord(etscDepth)+2 + (Index * 2), 0] :=
-      'Fractional rate ' + IntToStr(Index + 1);
+      Format(StrFractionalRateD, [Index + 1]);
   end;
   if Packages.EtsPackage.TimeVaryingLayers then
   begin
     rdgBoundaryConditions.Cells[rdgBoundaryConditions.ColCount - 1, 0] :=
-      'Evapo- transpiration layer';
+      StrEvapoTranspirationL;
   end;
 end;
 
@@ -3257,7 +3434,7 @@ begin
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(evtRate), Index + 1]);
-        ItemName := 'EVT_EvapotranspirationRate' + IntToStr(Index);
+        ItemName := Format(StrEVTEvapotranspirati, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -3300,15 +3477,17 @@ begin
           EvtSurfDepthCollection.Add as TEvtSurfDepthItem;
       end;
       Inc(Count);
-      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(evtcStartingTime), Index + 1]);
+      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[
+        Ord(evtcStartingTime), Index + 1]);
       SurfDepthItem.StartTime := AValue;
-      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(evtcEndingTime), Index + 1]);
+      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[
+        Ord(evtcEndingTime), Index + 1]);
       SurfDepthItem.EndTime := AValue;
       if CombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(evtcSurface), Index + 1]);
-        ItemName := 'EVT_EvapotranspirationSurface' + IntToStr(Index);
+        ItemName := Format(StrEVTEvapotranspiratiS, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -3318,13 +3497,14 @@ begin
           ValueItem.Name := ItemName;
           ValueItem.Values.DataType := rdtDouble;
           ValueItem.Values.Count := 0;
-          SurfDepthItem.EvapotranspirationSurface := rsObjectImportedValuesR + '("' + ItemName + '")';
+          SurfDepthItem.EvapotranspirationSurface :=
+            rsObjectImportedValuesR + '("' + ItemName + '")';
         end;
         ValueItem.Values.Add(AValue);
 
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(evtcDepth), Index + 1]);
-        ItemName := 'EVT_EvapotranspirationDepth' + IntToStr(Index);
+        ItemName := Format(StrEVTEvapotranspiratiD, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -3334,7 +3514,8 @@ begin
           ValueItem.Name := ItemName;
           ValueItem.Values.DataType := rdtDouble;
           ValueItem.Values.Count := 0;
-          SurfDepthItem.EvapotranspirationDepth := rsObjectImportedValuesR + '("' + ItemName + '")';
+          SurfDepthItem.EvapotranspirationDepth :=
+            rsObjectImportedValuesR + '("' + ItemName + '")';
         end;
         ValueItem.Values.Add(AValue);
       end
@@ -3382,7 +3563,7 @@ begin
         begin
           AnIntValue := GetIntegerValueFromText(rdgBoundaryConditions.
             Cells[Ord(evtcLayer), Index + 1]);
-          ItemName := 'EVT_Layer' + IntToStr(Index);
+          ItemName := Format(StrEVTLayerd, [Index]);
           ValueItem := AScreenObject.ImportedValues.ValueItemByName(
             ItemName);
           if ValueItem = nil then
@@ -3392,7 +3573,8 @@ begin
             ValueItem.Name := ItemName;
             ValueItem.Values.DataType := rdtInteger;
             ValueItem.Values.Count := 0;
-            LayerItem.EvapotranspirationLayer := rsObjectImportedValuesI + '("' + ItemName + '")';
+            LayerItem.EvapotranspirationLayer :=
+              rsObjectImportedValuesI + '("' + ItemName + '")';
           end;
           ValueItem.Values.Add(AnIntValue);
         end
@@ -3470,12 +3652,12 @@ begin
   rdgBoundaryConditions.Cells[Ord(evtcStartingTime), 0] := StrStartingTime;
   rdgBoundaryConditions.Cells[Ord(evtcEndingTime), 0] := StrEndingTime;
   rdgBoundaryConditions.Cells[Ord(evtcParameterName), 0] := StrParameterName;
-  rdgBoundaryConditions.Cells[Ord(evtRate), 0] := 'Evapo- transpiration rate';
-  rdgBoundaryConditions.Cells[Ord(evtcSurface), 0] := 'Evapo- transpiration surface';
-  rdgBoundaryConditions.Cells[Ord(evtcDepth), 0] := 'Evapo- transpiration depth';
+  rdgBoundaryConditions.Cells[Ord(evtRate), 0] := StrEvapoTranspirationR;
+  rdgBoundaryConditions.Cells[Ord(evtcSurface), 0] := StrEvapoTranspirationS;
+  rdgBoundaryConditions.Cells[Ord(evtcDepth), 0] := StrEvapoTranspirationDe;
   if Packages.EvtPackage.TimeVaryingLayers then
   begin
-    rdgBoundaryConditions.Cells[Ord(evtcLayer), 0] := 'Evapo- transpiration layer';
+    rdgBoundaryConditions.Cells[Ord(evtcLayer), 0] := StrEvapoTranspirationL;
   end;
 end;
 
@@ -3531,7 +3713,7 @@ begin
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(rcFluxRate), Index + 1]);
-        ItemName := 'RCH_RechargeRate' + IntToStr(Index);
+        ItemName := Format('RCH_RechargeRate%d', [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -3585,7 +3767,7 @@ begin
         begin
           AnIntValue := GetIntegerValueFromText(rdgBoundaryConditions.
             Cells[Ord(rcLayer), Index + 1]);
-          ItemName := 'RCH_Layer' + IntToStr(Index);
+          ItemName := Format(StrRCHLayerd, [Index]);
           ValueItem := AScreenObject.ImportedValues.ValueItemByName(
             ItemName);
           if ValueItem = nil then
@@ -3662,10 +3844,10 @@ begin
   rdgBoundaryConditions.Cells[Ord(rcStartTime), 0] := StrStartingTime;
   rdgBoundaryConditions.Cells[Ord(rcEndTime), 0] := StrEndingTime;
   rdgBoundaryConditions.Cells[Ord(rcParameterName), 0] := StrParameterName;
-  rdgBoundaryConditions.Cells[Ord(rcFluxRate), 0] := 'Recharge rate';
+  rdgBoundaryConditions.Cells[Ord(rcFluxRate), 0] := StrRechargeRate;
   if Packages.RchPackage.TimeVaryingLayers then
   begin
-    rdgBoundaryConditions.Cells[Ord(rcLayer), 0] := 'Recharge layer';
+    rdgBoundaryConditions.Cells[Ord(rcLayer), 0] := StrRechargeLayer;
   end;
 end;
 
@@ -3762,7 +3944,7 @@ begin
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(dtcElevation), Index + 1]);
-        ItemName := 'DRT_Elevation' + IntToStr(Index);
+        ItemName := Format(StrDRTElevationd, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -3778,7 +3960,7 @@ begin
 
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(dtcConductance), Index + 1]);
-        ItemName := 'DRT_Conductance' + IntToStr(Index);
+        ItemName := Format(StrDRTConductanced, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -3794,7 +3976,7 @@ begin
 
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(dtcReturnFraction), Index + 1]);
-        ItemName := 'DRT_ReturnFraction' + IntToStr(Index);
+        ItemName := Format(StrDRTReturnFractiond, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -3874,7 +4056,7 @@ begin
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(dcElevation), Index + 1]);
-        ItemName := 'DRN_Elevation' + IntToStr(Index);
+        ItemName := Format(StrDRNElevationd, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -3890,7 +4072,7 @@ begin
 
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(dcConductance), Index + 1]);
-        ItemName := 'DRN_Conductance' + IntToStr(Index);
+        ItemName := Format(StrDRNConductanced, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -3921,7 +4103,7 @@ procedure TfrmImportShapefile.InitializeBoundaryControlsForDRT;
 begin
   CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspModflowDRT;
-  lblConductanceInterpretationDRT.Caption := 'Conductance interpretation';
+  lblConductanceInterpretationDRT.Caption := StrConductanceInterpre;
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := Ord(dtcReturnFraction)+1;
   AssignColFeatureProperties;
@@ -3959,9 +4141,9 @@ begin
   rdgBoundaryConditions.Cells[Ord(dtcStartingTime), 0] := StrStartingTime;
   rdgBoundaryConditions.Cells[Ord(dtcEndingTime), 0] := StrEndingTime;
   rdgBoundaryConditions.Cells[Ord(dtcParameterName), 0] := StrParameterName;
-  rdgBoundaryConditions.Cells[Ord(dtcElevation), 0] := 'Elevation';
+  rdgBoundaryConditions.Cells[Ord(dtcElevation), 0] := StrElevation;
   rdgBoundaryConditions.Cells[Ord(dtcConductance), 0] := StrConductance;
-  rdgBoundaryConditions.Cells[Ord(dtcReturnFraction), 0] := 'Return fraction';
+  rdgBoundaryConditions.Cells[Ord(dtcReturnFraction), 0] := StrReturnFraction;
   
   while comboFormulaInterpDRT.Items.Count > 3 do
   begin
@@ -3983,7 +4165,7 @@ procedure TfrmImportShapefile.InitializeBoundaryControlsForDRN;
 begin
   CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspConductanceInterp;
-  lblConductanceInterpretation.Caption := 'Conductance interpretation';
+  lblConductanceInterpretation.Caption := StrConductanceInterpre;
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := Ord(dcConductance) + 1;
   AssignColFeatureProperties;
@@ -4071,16 +4253,18 @@ begin
       Item := AnItem as TRivItem;
 
 //      Item := AScreenObject.ModflowRivBoundary.Values.Add as TRivItem;
-      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(rivcStartingTime), Index + 1]);
+      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[
+        Ord(rivcStartingTime), Index + 1]);
       Item.StartTime := AValue;
-      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[Ord(rivcEndingTime), Index + 1]);
+      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[
+        Ord(rivcEndingTime), Index + 1]);
       Item.EndTime := AValue;
 
       if CombinedObjects then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(rivcBottom), Index + 1]);
-        ItemName := 'RIV_Bottom' + IntToStr(Index);
+        ItemName := Format(StrRIVBottomd, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -4096,7 +4280,7 @@ begin
 
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(rivcStage), Index + 1]);
-        ItemName := 'RIV_Stage' + IntToStr(Index);
+        ItemName := Format(StrRIVStaged, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -4112,7 +4296,7 @@ begin
 
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(rivcConductance), Index + 1]);
-        ItemName := 'RIV_Conductance' + IntToStr(Index);
+        ItemName := Format(StrRIVConductanced, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -4146,7 +4330,7 @@ procedure TfrmImportShapefile.InitializeBoundaryControlsForRIV;
 begin
   CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspConductanceInterp;
-  lblConductanceInterpretation.Caption := 'Conductance interpretation';
+  lblConductanceInterpretation.Caption := StrConductanceInterpre;
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := Ord(rivcConductance)+1;
   AssignColFeatureProperties;
@@ -4243,7 +4427,7 @@ begin
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(welcPumpingRate), Index + 1]);
-        ItemName := 'WEL_PumpingRate' + IntToStr(Index);
+        ItemName := Format(StrWELPumpingRated, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -4271,7 +4455,7 @@ procedure TfrmImportShapefile.InitializeBoundaryControlsForWEL;
 begin
   CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspConductanceInterp;
-  lblConductanceInterpretation.Caption := 'Pumping rate interpretation';
+  lblConductanceInterpretation.Caption := StrPumpingRateInterpr;
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := Ord(welcPumpingRate)+1;
   AssignColFeatureProperties;
@@ -4362,7 +4546,7 @@ begin
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(ghbcHead), Index + 1]);
-        ItemName := 'GHB_BoundaryHead' + IntToStr(Index);
+        ItemName := Format(StrGHBBoundaryHeadd, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -4378,7 +4562,7 @@ begin
 
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(ghbcConductance), Index + 1]);
-        ItemName := 'GHB_Conductance' + IntToStr(Index);
+        ItemName := Format(StrGHBConductanced, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -4409,7 +4593,7 @@ procedure TfrmImportShapefile.InitializeBoundaryControlsForGHB;
 begin
   CombinedObjects := comboJoinObjects.ItemIndex = 1;
   plBoundary.ActivePage := jvspConductanceInterp;
-  lblConductanceInterpretation.Caption := 'Conductance interpretation';
+  lblConductanceInterpretation.Caption := StrConductanceInterpre;
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := Ord(ghbcConductance)+1;
   AssignColFeatureProperties;
@@ -4545,7 +4729,7 @@ begin
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(ccStartingHead), Index + 1]);
-        ItemName := 'CHD_StartingHead' + IntToStr(Index);
+        ItemName := Format(StrCHDStartingHeadd, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -4561,7 +4745,7 @@ begin
 
         AValue := GetRealValueFromText(rdgBoundaryConditions.
           Cells[Ord(ccEndingHead), Index + 1]);
-        ItemName := 'CHD_EndingHead' + IntToStr(Index);
+        ItemName := Format(StrCHDEndingHeadd, [Index]);
         ValueItem := AScreenObject.ImportedValues.ValueItemByName(
           ItemName);
         if ValueItem = nil then
@@ -4657,11 +4841,11 @@ begin
   else
   begin
     WellElevationFormat := UpperCase(xbShapeDataBase.GetFieldStr(FieldName));
-    if Pos('ELEVATION', WellElevationFormat) > 0 then
+    if Pos(StrELEVATION_UC, WellElevationFormat) > 0 then
     begin
       AScreenObject.WellBoundary.WellElevationFormat := wefElevation;
     end
-    else if Pos('DEPTH', WellElevationFormat) > 0 then
+    else if Pos(StrDEPTH_UC, WellElevationFormat) > 0 then
     begin
       AScreenObject.WellBoundary.WellElevationFormat := wefDepth;
     end;
@@ -5183,11 +5367,11 @@ begin
   else
   begin
     SolutionType := UpperCase(xbShapeDataBase.GetFieldStr(FieldName));
-    if Pos('SPECIFIED', SolutionType) > 0 then
+    if Pos(StrSPECIFIED_UC, SolutionType) > 0 then
     begin
       AScreenObject.SpecifiedHeadBoundary.SolutionType := stSpecified;
     end
-    else if Pos('ASSOCIATED', SolutionType) > 0 then
+    else if Pos(StrASSOCIATED_UC, SolutionType) > 0 then
     begin
       AScreenObject.SpecifiedHeadBoundary.SolutionType := stAssociated;
     end;
@@ -5213,11 +5397,11 @@ begin
       end;
     msPhast:
       begin
-        comboBoundaryChoice.Items.Add('Specified head');
-        comboBoundaryChoice.Items.Add('Flux boundary');
-        comboBoundaryChoice.Items.Add('Leaky boundary');
-        comboBoundaryChoice.Items.Add('River boundary');
-        comboBoundaryChoice.Items.Add('Well boundary');
+        comboBoundaryChoice.Items.Add(StrSpecifiedHead);
+        comboBoundaryChoice.Items.Add(StrFluxBoundary);
+        comboBoundaryChoice.Items.Add(StrLeakyBoundary);
+        comboBoundaryChoice.Items.Add(StrRiverBoundary);
+        comboBoundaryChoice.Items.Add(StrWellBoundary);
 
         rdgBoundaryConditions.Cells[0,0] := 'Time';
 
@@ -5319,16 +5503,15 @@ var
   procedure NoGrid;
   begin
     Beep;
-    MessageDlg('The Shapefile appears not to contain grid information.',
-      mtInformation, [mbOK], 0);
+    MessageDlg(StrTheShapefileAppear, mtInformation, [mbOK], 0);
   end;
 begin
-  frmProgressMM.Caption := 'Creating Grid';
+  frmProgressMM.Caption := StrCreatingGrid;
   frmProgressMM.pbProgress.Max := FGeometryFile.Count;
   frmProgressMM.pbProgress.Position := 0;
-  frmProgressMM.ProgressLabelCaption := '0 out of '
-    + IntToStr(frmProgressMM.pbProgress.Max) + '.';
-  frmProgressMM.Prefix := 'Shape ';
+  frmProgressMM.ProgressLabelCaption := Format(Str0OutOfD,
+    [frmProgressMM.pbProgress.Max]);
+  frmProgressMM.Prefix := StrShape;
   frmProgressMM.PopupParent := self;
   frmProgressMM.Show;
 
@@ -5502,7 +5685,7 @@ begin
     end;
     if (XCount.Count = 0) or (YCount.Count = 0) then
     begin
-      MessageDlg('Unable to import grid.', mtInformation, [mbOK], 0);
+      MessageDlg(StrUnableToImportGri, mtInformation, [mbOK], 0);
     end
     else
     begin
@@ -5559,9 +5742,7 @@ begin
         if Position >= 0 then
         begin
           Beep;
-          MessageDlg('"' + DataSetName + '" has been selected for two '
-            + 'or more fields that are being imported.  You need to '
-            + 'correct this before continuing.', mtWarning, [mbOK], 0);
+          MessageDlg('"' + DataSetName + StrHasBeenSelected, mtWarning, [mbOK], 0);
           Exit;
         end;
         UsedDataSets.Add(DataSetName);
@@ -5578,10 +5759,9 @@ begin
                 or (xbShapeDataBase.GetFieldDecimals(FieldIndex) <> 0) then
               begin
                 Beep;
-                MessageDlg('"' + DataSetName + '" contains integers but '
-                  + dgFields.Cells[Ord(fgcAttributes), Index]
-                  + ' does not.  You need to '
-                  + 'correct this before continuing.', mtWarning, [mbOK], 0);
+                MessageDlg(Format(Str0sContainsInte,
+                  [DataSetName, dgFields.Cells[Ord(fgcAttributes), Index]]),
+                  mtWarning, [mbOK], 0);
                 Exit;
               end;
             end;
@@ -5590,10 +5770,9 @@ begin
               if xbShapeDataBase.GetFieldType(FieldIndex) <> xbfNumber then
               begin
                 Beep;
-                MessageDlg('"' + DataSetName + '" contains real numbers but '
-                  + dgFields.Cells[Ord(fgcAttributes), Index]
-                  + ' does not.  You need to '
-                  + 'correct this before continuing.', mtWarning, [mbOK], 0);
+                MessageDlg(Format(Str0sContainsReal,
+                  [DataSetName, dgFields.Cells[Ord(fgcAttributes), Index]]),
+                  mtWarning, [mbOK], 0);
                 Exit;
               end;
             end;
@@ -5602,10 +5781,9 @@ begin
               if xbShapeDataBase.GetFieldType(FieldIndex) <> xbfLogic then
               begin
                 Beep;
-                MessageDlg('"' + DataSetName + '" contains booleans but '
-                  + dgFields.Cells[Ord(fgcAttributes), Index]
-                  + ' does not.  You need to '
-                  + 'correct this before continuing.', mtWarning, [mbOK], 0);
+                MessageDlg(Format(Str0sContainsBool,
+                  [DataSetName, dgFields.Cells[Ord(fgcAttributes), Index]]),
+                  mtWarning, [mbOK], 0);
                 Exit;
               end;
             end;
@@ -5614,10 +5792,9 @@ begin
               if xbShapeDataBase.GetFieldType(FieldIndex) <> xbfChar then
               begin
                 Beep;
-                MessageDlg('"' + DataSetName + '" contains strings but '
-                  + dgFields.Cells[Ord(fgcAttributes), Index]
-                  + ' does not.  You need to '
-                  + 'correct this before continuing.', mtWarning, [mbOK], 0);
+                MessageDlg(Format(Str0sContainsStri,
+                  [DataSetName, dgFields.Cells[Ord(fgcAttributes), Index]]),
+                  mtWarning, [mbOK], 0);
                 Exit;
               end;
             end;
@@ -5687,7 +5864,7 @@ begin
       DataSet := frmGoPhast.PhastModel.DataArrayManager.CreateNewDataArray(TDataArray,
         NewDataSetName, NewFormula, [], NewDataType,
         TEvaluatedAt(rgEvaluatedAt.ItemIndex), dsoTop,
-        strDefaultClassification + '|Created from Shapefile Attribute');
+        strDefaultClassification + '|' + StrCreatedFromShapefi);
 
       NewDataSets.Add(DataSet);
 
@@ -5696,8 +5873,9 @@ begin
       NewProperties.Free;
       OldProperties.Free;
 
-      DataSet.UpdateDimensions(frmGoPhast.Grid.LayerCount,
-        frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
+      frmGoPhast.PhastModel.UpdateDataArrayDimensions(DataSet);
+//      DataSet.UpdateDimensions(frmGoPhast.Grid.LayerCount,
+//        frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
 
       dgFields.Cells[Ord(fgcDataSet), Index] := NewDataSetName;
     end;
@@ -5760,6 +5938,11 @@ var
   FieldName: string;
   RealFieldNames: TStringList;
   InvalidParametersIndex: Integer;
+  PriorPoint: TPoint2D;
+  ElevFormula: string;
+  HighElevFormula: string;
+  LowElevFormula: string;
+  TestCompiler: TRbwParser;
 begin
   FInvalidParameterNames := TStringList.Create;
   try
@@ -5840,6 +6023,9 @@ begin
           ImportCriterionExpression := rpShapeCompiler.CurrentExpression;
           Assert(ImportCriterionExpression.ResultType = rdtBoolean);
 
+          ElevFormula := '';
+          HighElevFormula := '';
+          LowElevFormula := '';
           case rgElevationCount.ItemIndex of
             0:
               begin
@@ -5858,6 +6044,24 @@ begin
                 end;
                 ZExpression := rpShapeCompiler.CurrentExpression;
                 Assert(ZExpression.ResultType in [rdtDouble, rdtInteger]);
+                ElevFormula := AFormula;
+                if frmGoPhast.PhastModel.GetObserverByName(ElevFormula)
+                  <> nil then
+                begin
+                  ZExpression := nil;
+                end
+                else
+                begin
+                  TestCompiler := frmGoPhast.PhastModel.GetCompiler(dsoTop,
+                    TEvaluatedAt(rgEvaluatedAt.ItemIndex));
+                  try
+                    TestCompiler.Compile(AFormula);
+                    ZExpression := nil;
+                  except on E: ERbwParserError do
+                    // do nothing
+                  end;
+                end;
+
 
                 HighZExpression := nil;
                 LowZExpression := nil;
@@ -5875,6 +6079,24 @@ begin
                 end;
                 HighZExpression := rpShapeCompiler.CurrentExpression;
                 Assert(HighZExpression.ResultType in [rdtDouble, rdtInteger]);
+                HighElevFormula := AFormula;
+                if frmGoPhast.PhastModel.GetObserverByName(HighElevFormula)
+                  <> nil then
+                begin
+                  HighZExpression := nil;
+                end
+                else
+                begin
+                  TestCompiler := frmGoPhast.PhastModel.GetCompiler(dsoTop,
+                    TEvaluatedAt(rgEvaluatedAt.ItemIndex));
+                  try
+                    TestCompiler.Compile(AFormula);
+                    HighZExpression := nil;
+                  except on E: ERbwParserError do
+                    // do nothing
+                  end;
+                end;
+
 
                 AFormula := edLowZ.Text;
                 GlobalDecompileType := dcNormal;
@@ -5885,6 +6107,23 @@ begin
                 end;
                 LowZExpression := rpShapeCompiler.CurrentExpression;
                 Assert(LowZExpression.ResultType in [rdtDouble, rdtInteger]);
+                LowElevFormula := AFormula;
+                if frmGoPhast.PhastModel.GetObserverByName(LowElevFormula)
+                  <> nil then
+                begin
+                  LowZExpression := nil;
+                end
+                else
+                begin
+                  TestCompiler := frmGoPhast.PhastModel.GetCompiler(dsoTop,
+                    TEvaluatedAt(rgEvaluatedAt.ItemIndex));
+                  try
+                    TestCompiler.Compile(AFormula);
+                    LowZExpression := nil;
+                  except on E: ERbwParserError do
+                    // do nothing
+                  end;
+                end;
               end;
             else
               begin
@@ -5905,12 +6144,12 @@ begin
 
           if cbImportObjects.Checked then
           begin
-            frmProgressMM.Caption := 'Creating Objects';
+            frmProgressMM.Caption := StrCreatingObjects;
             frmProgressMM.pbProgress.Max := FGeometryFile.Count;
             frmProgressMM.pbProgress.Position := 0;
-            frmProgressMM.ProgressLabelCaption := '0 out of '
-              + IntToStr(frmProgressMM.pbProgress.Max) + '.';
-            frmProgressMM.Prefix := 'Shape ';
+            frmProgressMM.ProgressLabelCaption := Format(Str0OutOfD,
+              [frmProgressMM.pbProgress.Max]);
+            frmProgressMM.Prefix := StrShape;
             frmProgressMM.PopupParent := self;
             frmProgressMM.Show;
 
@@ -5955,18 +6194,41 @@ begin
                         ecZero: ; // do nothing
                         ecOne:
                           begin
-                            AScreenObject.ElevationFormula :=
-                              rsObjectImportedValuesR
-                              + '("' + StrImportedElevations + '")';
+                            if ZExpression = nil then
+                            begin
+                              AScreenObject.ElevationFormula := ElevFormula;
+                            end
+                            else
+                            begin
+                              AScreenObject.ElevationFormula :=
+                                rsObjectImportedValuesR
+                                + '("' + StrImportedElevations + '")';
+                            end;
                           end;
                         ecTwo:
                           begin
-                            AScreenObject.HigherElevationFormula :=
-                              rsObjectImportedValuesR
-                              + '("' + StrImportedHigherElev + '")';
-                            AScreenObject.LowerElevationFormula :=
-                              rsObjectImportedValuesR
-                              + '("' + StrImportedLowerEleva + '")';
+                            if HighZExpression = nil then
+                            begin
+                              AScreenObject.HigherElevationFormula :=
+                                HighElevFormula
+                            end
+                            else
+                            begin
+                              AScreenObject.HigherElevationFormula :=
+                                rsObjectImportedValuesR
+                                + '("' + StrImportedHigherElev + '")';
+                            end;
+                            if LowZExpression = nil then
+                            begin
+                              AScreenObject.LowerElevationFormula
+                                := LowElevFormula;
+                            end
+                            else
+                            begin
+                              AScreenObject.LowerElevationFormula :=
+                                rsObjectImportedValuesR
+                                + '("' + StrImportedLowerEleva + '")';
+                            end;
                           end;
                         else Assert(False);
                       end;
@@ -6205,36 +6467,65 @@ begin
                       ecZero: ; // do nothing
                       ecOne:
                         begin
-                          ZExpression.Evaluate;
-                          if CombinedObjects then
+                          if ZExpression = nil then
                           begin
-                            AScreenObject.ImportedSectionElevations.Add
-                              (ZExpression.DoubleResult);
+                            AScreenObject.ElevationFormula := ElevFormula;
                           end
                           else
                           begin
-                            AScreenObject.ElevationFormula
-                              := ZExpression.Decompile;
-  //                            := FortranFloatToStr(ZExpression.DoubleResult);
+                            ZExpression.Evaluate;
+                            if CombinedObjects then
+                            begin
+                              AScreenObject.ImportedSectionElevations.Add
+                                (ZExpression.DoubleResult);
+                            end
+                            else
+                            begin
+                              AScreenObject.ElevationFormula
+                                := ZExpression.Decompile;
+    //                            := FortranFloatToStr(ZExpression.DoubleResult);
+                            end;
                           end;
                         end;
                       ecTwo:
                         begin
-                          HighZExpression.Evaluate;
-                          LowZExpression.Evaluate;
-                          if CombinedObjects then
+                          if HighZExpression = nil then
                           begin
-                            AScreenObject.ImportedHigherSectionElevations.Add
-                              (HighZExpression.DoubleResult);
-                            AScreenObject.ImportedLowerSectionElevations.Add
-                              (LowZExpression.DoubleResult);
+                            AScreenObject.HigherElevationFormula
+                                := HighElevFormula;
                           end
                           else
                           begin
-                            AScreenObject.HigherElevationFormula
-                              := HighZExpression.Decompile;
+                            HighZExpression.Evaluate;
+                            if CombinedObjects then
+                            begin
+                              AScreenObject.ImportedHigherSectionElevations.Add
+                                (HighZExpression.DoubleResult);
+                            end
+                            else
+                            begin
+                              AScreenObject.HigherElevationFormula
+                                := HighZExpression.Decompile;
+                            end;
+                          end;
+                          if LowZExpression = nil then
+                          begin
                             AScreenObject.LowerElevationFormula
-                              := LowZExpression.Decompile;
+                                := LowElevFormula;
+                          end
+                          else
+                          begin
+                            LowZExpression.Evaluate;
+                            if CombinedObjects then
+                            begin
+                              AScreenObject.ImportedLowerSectionElevations.Add
+                                (LowZExpression.DoubleResult);
+                            end
+                            else
+                            begin
+                              AScreenObject.LowerElevationFormula
+                                := LowZExpression.Decompile;
+                            end;
                           end;
                         end;
                       else Assert(False)
@@ -6265,6 +6556,8 @@ begin
                     end;
                     AScreenObject.BeginUpdate;
                     try
+                    PriorPoint.x := 0;
+                    PriorPoint.y := 0;
                     for PointIndex := 0 to ShapeObject.FNumPoints - 1 do
                     begin
                       NewSection := (PointIndex = NextStart) or (PointIndex = 0);
@@ -6294,12 +6587,22 @@ begin
                           CentralMeridian, X, Y);
                         PointRecord.X := X;
                         PointRecord.Y := Y;
-                        AScreenObject.AddPoint(PointRecord, NewSection);
+                        if NewSection or (PriorPoint.x <> PointRecord.x)
+                          or (PriorPoint.y <> PointRecord.y) then
+                        begin
+                          AScreenObject.AddPoint(PointRecord, NewSection);
+                        end;
+                        PriorPoint := PointRecord;
                       end
                       else
                       begin
-                        AScreenObject.AddPoint(ConvertPoint(ShapePoint),
-                          NewSection);
+                        PointRecord := ConvertPoint(ShapePoint);
+                        if NewSection or (PriorPoint.x <> PointRecord.x)
+                          or (PriorPoint.y <> PointRecord.y) then
+                        begin
+                          AScreenObject.AddPoint(PointRecord, NewSection);
+                        end;
+                        PriorPoint := PointRecord;
                       end;
                       if CombinedObjects and NewSection and (PointIndex > 0) then
                       begin
@@ -6331,11 +6634,10 @@ begin
                       end;
                       if (PointIndex mod 100) = 99 then
                       begin
-                        frmProgressMM.ProgressLabelCaption :=
-                          'Object ' + IntToStr(Index+1)
-                          + ' out of ' + IntToStr(frmProgressMM.pbProgress.Max)
-                          + '.  Point ' + IntToStr(PointIndex + 1) + ' out of '
-                          + IntToStr(ShapeObject.FNumPoints) + '.';
+                        frmProgressMM.ProgressLabelCaption := Format(
+                          StrObject0dOutOf,
+                          [Index+1, frmProgressMM.pbProgress.Max,
+                          PointIndex + 1, ShapeObject.FNumPoints]);
                         Application.ProcessMessages;
                       end;
                     end;
@@ -6390,7 +6692,7 @@ begin
                     end;
                   end;
 
-                  frmProgressMM.Caption := 'Assigning Formulas';
+                  frmProgressMM.Caption := StrAssigningFormulas;
                   frmProgressMM.pbProgress.Position := 0;
 
                   if ScreenObjectList.Count = 1 then
@@ -6398,9 +6700,9 @@ begin
                     AScreenObject := ScreenObjectList[0];
 
                     frmProgressMM.pbProgress.Max := DataSets.Count;
-                    frmProgressMM.ProgressLabelCaption := '0 out of '
-                      + IntToStr(frmProgressMM.pbProgress.Max) + '.';
-                    frmProgressMM.Prefix := 'Formula ';
+                    frmProgressMM.ProgressLabelCaption := Format(Str0OutOf0d,
+                      [frmProgressMM.pbProgress.Max]);
+                    frmProgressMM.Prefix := StrFormula;
                     frmProgressMM.PopupParent := self;
                     frmProgressMM.Show;
                     Application.ProcessMessages;
@@ -6500,10 +6802,7 @@ begin
         if InvalidObjectNumbers.Count > 0 then
         begin
           Beep;
-          if MessageDlg(IntToStr(InvalidObjectNumbers.Count) +
-            ' objects were invalid because they cross '
-            + 'themselves and have been skipped.  Do you want to see the numbers '
-            + 'of the ones that have been skipped?',
+          if MessageDlg(Format(StrDObjectsWereInva, [InvalidObjectNumbers.Count]),
             mtWarning, [mbYes, mbNo], 0)= mrYes then
           begin
             ErrorString := '';
@@ -6520,10 +6819,7 @@ begin
         if InvalidFormulaNumbers <> nil then
         begin
           Beep;
-          if MessageDlg(IntToStr(InvalidFormulaNumbers.Count) +
-            ' objects had attributes that could not be read into ModelMuse properly. '
-            + 'They have been skipped.  Do you want to see the numbers '
-            + 'of the ones that have been skipped?',
+          if MessageDlg(Format(StrDObjectsHadAttri, [InvalidFormulaNumbers.Count]),
             mtWarning, [mbYes, mbNo], 0)= mrYes then
           begin
             ErrorString := '';
@@ -6640,7 +6936,7 @@ begin
         dgFields.Cells[Ord(fgcDataSet),ARow]);
       DataType := DataArray.DataType;
     end;
-    dgFields.Columns[Ord(fgcInterpolator)].PickList.Add('None');
+    dgFields.Columns[Ord(fgcInterpolator)].PickList.Add(StrNone);
     for Index := 0 to List.Count - 1 do
     begin
       AType := List[Index];
@@ -7089,7 +7385,7 @@ begin
   frmProgressMM.pbProgress.Position
     := Round(frmProgressMM.pbProgress.Max * FractionDone);
   Inc(FShapeCount);
-  frmProgressMM.ProgressLabelCaption := 'Reading shape ' + IntToStrFormatted(FShapeCount);
+  frmProgressMM.ProgressLabelCaption := Format(StrReadingShapeD, [IntToStrFormatted(FShapeCount)]);
   if (FShapeCount mod 100 = 0) or (FractionDone = 1) then
   begin
     Application.ProcessMessages;
@@ -7117,8 +7413,7 @@ begin
     begin
       cbImportGrid.Checked := False;
       Beep;
-      MessageDlg('Sorry. Importing the grid while performing '
-        + 'a coordinate conversion is not allowed.', mtInformation, [mbOK], 0);
+      MessageDlg(StrSorryImportingThe, mtInformation, [mbOK], 0);
     end;
   end;
   Error := False;
@@ -7138,9 +7433,8 @@ begin
     ShapeObject := FGeometryFile[0];
     if ShapeObject.FNumPoints > 0 then
     begin
-      lblCoordinates.Caption := 'Coordinates of first point = ('
-        + FloatToStr(ShapeObject.FPoints[0].X) + ', '
-        + FloatToStr(ShapeObject.FPoints[0].Y) + ').';
+      lblCoordinates.Caption := Format(StrCoordinatesOfFirst,
+        [ShapeObject.FPoints[0].X, ShapeObject.FPoints[0].Y]);
       Zone := LatLongToUTM_Zone(ShapeObject.FPoints[0].X,
         ShapeObject.FPoints[0].Y);
       seZoneNumber.Value := Zone;
@@ -7148,7 +7442,7 @@ begin
 
     for Index := 1 to 10 do
     begin
-      AName := 'Shape' + IntToStr(Index);
+      AName := Format(StrShapeNS, [Index]);
       Component := self.FindComponent(AName);
       Shape := Component as TShape;
       ShapeObject := FGeometryFile[Random(FGeometryFile.Count)];
@@ -7183,9 +7477,7 @@ begin
     if Error then
     begin
       Beep;
-      MessageDlg('One or more of your data points appear to has invalid '
-        + 'coordinates. Coordinate conversion can not be performed on this '
-        + 'shape file.', mtWarning, [mbOK], 0);
+      MessageDlg(StrOneOrMoreOfYour, mtWarning, [mbOK], 0);
       cbCoordinateConversion.Checked := False;
     end;
 
@@ -7194,7 +7486,7 @@ begin
   begin
     for Index := 1 to 10 do
     begin
-      AName := 'Shape' + IntToStr(Index);
+      AName := Format(StrShapeNS, [Index]);
       Component := self.FindComponent(AName);
       Shape := Component as TShape;
       Shape.Visible := False;
@@ -7329,33 +7621,33 @@ begin
           1: //specified head
             begin
               plBoundary.ActivePage := jvspPhastSpecifiedHead;
-              rdgBoundaryConditions.Cells[1,0] := 'Head';
-              rdgBoundaryConditions.Cells[2,0] := 'Solution';
+              rdgBoundaryConditions.Cells[1,0] := StrHead;
+              rdgBoundaryConditions.Cells[2,0] := StrSolution;
             end;
           2: //specified flux
             begin
               plBoundary.ActivePage := jvspNone;
-              rdgBoundaryConditions.Cells[1,0] := 'Flux';
-              rdgBoundaryConditions.Cells[2,0] := 'Solution';
+              rdgBoundaryConditions.Cells[1,0] := StrFlux;
+              rdgBoundaryConditions.Cells[2,0] := StrSolution;
             end;
           3: //Leaky
             begin
               plBoundary.ActivePage := jvspPhastLeaky;
-              rdgBoundaryConditions.Cells[1,0] := 'Head';
-              rdgBoundaryConditions.Cells[2,0] := 'Solution';
+              rdgBoundaryConditions.Cells[1,0] := StrHead;
+              rdgBoundaryConditions.Cells[2,0] := StrSolution;
             end;
           4: //River
             begin
               plBoundary.ActivePage := jvspPhastRiver;
-              rdgBoundaryConditions.Cells[1,0] := 'Head';
-              rdgBoundaryConditions.Cells[2,0] := 'Solution';
+              rdgBoundaryConditions.Cells[1,0] := StrHead;
+              rdgBoundaryConditions.Cells[2,0] := StrSolution;
               FCombinedObjectsAllowed := False;
             end;
           5: //Well
             begin
               plBoundary.ActivePage := jvspPhastWell;
-              rdgBoundaryConditions.Cells[1,0] := 'Pumping Range;';
-              rdgBoundaryConditions.Cells[2,0] := 'Solution';
+              rdgBoundaryConditions.Cells[1,0] := StrPumpingRange;
+              rdgBoundaryConditions.Cells[2,0] := StrSolution;
               FCombinedObjectsAllowed := False;
             end;
           else

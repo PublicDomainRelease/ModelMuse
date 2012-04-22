@@ -37,7 +37,7 @@ implementation
 uses
   GoPhastTypes, Mt3dmsChemUnit, frmProgressUnit, frmErrorsAndWarningsUnit,
   ModflowUnitNumbers, ModflowCellUnit, ModflowGridUnit, Mt3dmsChemSpeciesUnit,
-  DataSetUnit, RbwParser;
+  DataSetUnit, RbwParser, ModflowPackagesUnit;
 
 resourcestring
   StrUnspecifiedSSMData = 'Unspecified SSM data';
@@ -50,6 +50,15 @@ resourcestring
   'included because the number of sources or sinks for the package is zero. ' +
   'You need to specify the source or sink concentration for the sources and ' +
   'sinks to be included.';
+  StrEvaluatingSSMPacka = 'Evaluating SSM Package data.';
+  StrEvaluatingS = '    Evaluating %s.';
+  StrWritingRechar = '      Writing Recharge Concentration';
+  StrWritingEvapot = '      Writing Evapotranspiration Concentration';
+  StrWritingPoint = '      Writing Point Source Concentrations';
+  StrWritingSSMPackage = 'Writing SSM Package input.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingStressP = '    Writing Stress Period %d';
 
 { TMt3dmsSsmWriter }
 
@@ -198,7 +207,7 @@ var
 begin
   NoAssignmentErrorRoot := Format(StrNoBoundaryConditio,
     [Package.PackageIdentifier]);
-  frmProgressMM.AddMessage('Evaluating SSM Package data.');
+  frmProgressMM.AddMessage(StrEvaluatingSSMPacka);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, NoAssignmentErrorRoot);
 
   for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
@@ -215,7 +224,7 @@ begin
     Boundary := ScreenObject.Mt3dmsConcBoundary;
     if Boundary <> nil then
     begin
-      frmProgressMM.AddMessage('    Evaluating ' + ScreenObject.Name + '.');
+      frmProgressMM.AddMessage(Format(StrEvaluatingS, [ScreenObject.Name]));
       if not ScreenObject.SetValuesOfEnclosedCells
         and not ScreenObject.SetValuesOfIntersectedCells then
       begin
@@ -425,7 +434,7 @@ procedure TMt3dmsSsmWriter.WriteDataSets3and4(StressPeriod: integer);
 begin
   if Model.ModflowPackages.RchPackage.IsSelected then
   begin
-    frmProgressMM.AddMessage('      Writing Recharge Concentration');
+    frmProgressMM.AddMessage(StrWritingRechar);
     // Data set 3
     WriteI10Integer(1, 'SSM package, INCRCH');
     WriteString(' # Data set 3: INCRCH');
@@ -440,7 +449,7 @@ procedure TMt3dmsSsmWriter.WriteDataSets5and6(StressPeriod: integer);
 begin
   if Model.ModflowPackages.EvtPackage.IsSelected then
   begin
-    frmProgressMM.AddMessage('      Writing Evapotranspiration Concentration');
+    frmProgressMM.AddMessage(StrWritingEvapot);
     // Data set 5
     WriteI10Integer(1, 'SSM package, INCEVT');
     WriteString(' # Data set 5: INCEVT');
@@ -470,7 +479,7 @@ var
   ActiveDataArray: TDataArray;
   TestLayer: Integer;
 begin
-  frmProgressMM.AddMessage('      Writing Point Source Concentrations');
+  frmProgressMM.AddMessage(StrWritingPoint);
   // Data set 7
   NSS := FBoundaryCellsPerStressPeriod[StressPeriod];
   WriteI10Integer(NSS, 'SSM package, NSS');
@@ -654,7 +663,7 @@ begin
   begin
     Exit;
   end;
-  frmProgressMM.AddMessage('Writing SSM Package input.');
+  frmProgressMM.AddMessage(StrWritingSSMPackage);
   Evaluate;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
@@ -675,7 +684,7 @@ begin
   OpenFile(NameOfFile);
   try
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -683,7 +692,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -702,15 +711,30 @@ end;
 procedure TMt3dmsSsmWriter.WriteStressPeriods;
 var
   TimeIndex: Integer;
+  NSS: Integer;
+  Packages: TModflowPackages;
 begin
   if Values.Count = 0 then
   begin
-    frmErrorsAndWarnings.AddError(Model, StrUnspecifiedSSMData,
-      StrRechageConc);
+    Packages := Model.ModflowPackages;
+
+    if Packages.RchPackage.IsSelected or Packages.EvtPackage.IsSelected then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrUnspecifiedSSMData,
+        StrRechageConc);
+    end;
+    for TimeIndex := 0 to Model.ModflowFullStressPeriods.Count - 1 do
+    begin
+      NSS := 0;
+      WriteI10Integer(NSS, 'SSM package, NSS');
+      WriteString(' # Data set 7: NSS');
+      NewLine;
+    end;
   end;
+
   for TimeIndex := 0 to Values.Count - 1 do
   begin
-    frmProgressMM.AddMessage('    Writing Stress Period ' + IntToStr(TimeIndex+1));
+    frmProgressMM.AddMessage(Format(StrWritingStressP, [TimeIndex+1]));
 
     WriteDataSets3and4(TimeIndex);
     Application.ProcessMessages;

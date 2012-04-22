@@ -21,7 +21,7 @@ inherited frmLayers: TfrmLayers
     Top = 0
     Width = 441
     Height = 383
-    ActivePage = tabDispersion
+    ActivePage = tabBasics
     Align = alClient
     TabOrder = 1
     OnChange = pcLayerGroupsChange
@@ -29,10 +29,6 @@ inherited frmLayers: TfrmLayers
       HelpType = htKeyword
       HelpKeyword = 'Basics_Tab'
       Caption = 'Basics'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         433
         350)
@@ -214,10 +210,6 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'Discretization_Tab'
       Caption = 'Discretization'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         433
         350)
@@ -314,9 +306,9 @@ inherited frmLayers: TfrmLayers
           OnSetEditText = rdgSubLayerBoundariesSetEditText
           ExtendedAutoDistributeText = False
           AutoMultiEdit = True
-          AutoDistributeText = False
+          AutoDistributeText = True
           AutoIncreaseColCount = False
-          AutoIncreaseRowCount = False
+          AutoIncreaseRowCount = True
           SelectedRowOrColumnColor = clAqua
           UnselectableColor = clBtnFace
           ColorRangeSelection = False
@@ -345,6 +337,7 @@ inherited frmLayers: TfrmLayers
               CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
+          OnEndUpdate = rdgSubLayerBoundariesEndUpdate
         end
         object Panel2: TPanel
           Left = 0
@@ -357,13 +350,15 @@ inherited frmLayers: TfrmLayers
           object Label4: TLabel
             Left = 0
             Top = 0
-            Width = 179
-            Height = 36
+            Width = 184
+            Height = 41
             Align = alClient
             Alignment = taCenter
             Caption = 'Discretization within layer group'
             Layout = tlCenter
             WordWrap = True
+            ExplicitWidth = 179
+            ExplicitHeight = 36
           end
         end
         object pnlPaintboxParent: TPanel
@@ -591,10 +586,6 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'No_Delay_Beds_Tab'
       Caption = 'No-Delay Beds'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       inline frameSubNoDelayBeds: TframeSubBeds
         Left = 0
         Top = 0
@@ -624,6 +615,7 @@ inherited frmLayers: TfrmLayers
         end
         inherited rdgSubBed: TRbwDataGrid4
           Width = 433
+          AutoDistributeText = True
           ExplicitWidth = 433
         end
         inherited seCount: TJvSpinEdit
@@ -637,10 +629,6 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'Delay_Beds_Tab'
       Caption = 'Delay Beds'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       inline frameSubDelayBeds: TframeSubBeds
         Left = 0
         Top = 0
@@ -670,6 +658,7 @@ inherited frmLayers: TfrmLayers
         end
         inherited rdgSubBed: TRbwDataGrid4
           Width = 433
+          AutoDistributeText = True
           ExplicitWidth = 433
         end
         inherited seCount: TJvSpinEdit
@@ -683,10 +672,6 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'SWT_Tab'
       Caption = 'SWT'
       ImageIndex = 4
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       inline frameSwt: TframeSubBeds
         Left = 0
         Top = 0
@@ -716,6 +701,7 @@ inherited frmLayers: TfrmLayers
         end
         inherited rdgSubBed: TRbwDataGrid4
           Width = 433
+          AutoDistributeText = True
           ExplicitWidth = 433
         end
         inherited seCount: TJvSpinEdit
@@ -729,10 +715,6 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'Dispersion_Tab'
       Caption = 'Dispersion'
       ImageIndex = 5
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgDispersion: TRbwDataGrid4
         Left = 0
         Top = 41
@@ -749,7 +731,7 @@ inherited frmLayers: TfrmLayers
         OnSetEditText = rdgDispersionSetEditText
         ExtendedAutoDistributeText = False
         AutoMultiEdit = True
-        AutoDistributeText = False
+        AutoDistributeText = True
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = False
         SelectedRowOrColumnColor = clAqua
@@ -847,8 +829,6 @@ inherited frmLayers: TfrmLayers
             CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
-        ExplicitTop = 96
-        ExplicitHeight = 254
       end
       object pnlMultiEdit: TPanel
         Left = 0

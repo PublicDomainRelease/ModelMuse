@@ -189,6 +189,67 @@ type
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
   end;
 
+  TLakeTableItem = class(TPhastCollectionItem)
+  private
+    FSurfaceArea: double;
+    FVolume: double;
+    FStage: double;
+    procedure SetStage(const Value: double);
+    procedure SetSurfaceArea(const Value: double);
+    procedure SetVolume(const Value: double);
+    procedure ReadStage(Reader: TReader);
+    procedure WriteStage(Writer: TWriter);
+    procedure ReadVolume(Reader: TReader);
+    procedure WriteVolume(Writer: TWriter);
+    procedure ReadSurfaceArea(Reader: TReader);
+    procedure WriteSurfaceArea(Writer: TWriter);
+  protected
+    procedure DefineProperties(Filer: TFiler); override;
+  public
+    procedure Assign(Source: TPersistent); override;
+  published
+    property Stage: double read FStage write SetStage;
+    property Volume: double read FVolume write SetVolume;
+    property SurfaceArea: double read FSurfaceArea write SetSurfaceArea;
+  end;
+
+  TLakeTable = class(TPhastCollection)
+  private
+    function GetItems(Index: integer): TLakeTableItem;
+    procedure SetItems(Index: integer; const Value: TLakeTableItem);
+  public
+    constructor Create(Model: TBaseModel);
+    property Items[Index: integer]: TLakeTableItem read GetItems
+      write SetItems; default;
+    function Add: TLakeTableItem;
+  end;
+
+  TLakeTableChoice = (lctInternal, lctExternal);
+
+  TExternalLakeTable = class(TGoPhastPersistent)
+  private
+    FLakeTableChoice: TLakeTableChoice;
+    FLakeTable: TLakeTable;
+    FFullLakeTableFileName: string;
+    procedure SetLakeTable(const Value: TLakeTable);
+    procedure SetLakeTableChoice(const Value: TLakeTableChoice);
+    procedure SetFullLakeTableFileName(const Value: string);
+    function GetLakeTableFileName: string;
+    procedure SetLakeTableFileName(const Value: string);
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
+    property FullLakeTableFileName: string read FFullLakeTableFileName
+      write SetFullLakeTableFileName;
+  published
+    property LakeTableChoice: TLakeTableChoice read FLakeTableChoice
+      write SetLakeTableChoice;
+    property LakeTableFileName: string read GetLakeTableFileName
+      write SetLakeTableFileName;
+    property LakeTable: TLakeTable read FLakeTable write SetLakeTable;
+  end;
+
   TLakBoundary = class(TModflowBoundary)
   private
     FSill: double;
@@ -201,6 +262,7 @@ type
     FStandardGage: boolean;
     FDeltaGage: boolean;
     FGage4: boolean;
+    FExternalLakeTable: TExternalLakeTable;
     procedure SetCenterLake(const Value: integer);
     procedure SetInitialStage(const Value: double);
     procedure SetSill(const Value: double);
@@ -212,6 +274,7 @@ type
     procedure SetStandardGage(const Value: boolean);
     function GetOutType: integer;
     procedure SetGage4(const Value: boolean);
+    procedure SetExternalLakeTable(const Value: TExternalLakeTable);
   protected
     procedure AssignCells(BoundaryStorage: TCustomBoundaryStorage;
       ValueTimeList: TList; AModel: TBaseModel); override;
@@ -240,6 +303,7 @@ type
     property FluxCondGage: boolean read FFluxCondGage write SetFluxCondGage;
     property DeltaGage: boolean read FDeltaGage write SetDeltaGage;
     property Gage4: boolean read FGage4 write SetGage4;
+    property ExternalLakeTable: TExternalLakeTable read FExternalLakeTable write SetExternalLakeTable;
   end;
 
 implementation
@@ -247,6 +311,20 @@ implementation
 uses RbwParser, ScreenObjectUnit, PhastModelUnit, ModflowTimeUnit,
   ModflowTransientListParameterUnit, TempFiles, 
   frmFormulaErrorsUnit, frmGoPhastUnit;
+
+resourcestring
+  StrEvaporationForThe = '(evaporation for the Lake package)';
+  StrPrecipitationForT = '(precipitation for the Lake package)';
+  StrRunoffForTheLake = '(runoff for the Lake package)';
+  StrMinimumStageForT = '(minimum stage for the Lake package)';
+  StrMaximumStageForT = '(maximum stage for the Lake package)';
+  StrWithdrawalForThe = '(withdrawal for the Lake package)';
+  StrMinimumStage = 'Minimum stage';
+  StrMaximumStage = 'Maximum stage';
+  StrPrecipitaton = 'Precipitaton';
+  StrEvaporation = 'Evaporation';
+  StrOverlandRunoff = 'Overland runoff';
+  StrWithdrawal = 'Withdrawal';
 
 const
   MinimumStagePosition = 0;
@@ -355,7 +433,7 @@ begin
     begin
       LocalScreenObject := ScreenObject as TScreenObject;
       frmFormulaErrors.AddFormulaError(LocalScreenObject.Name,
-        '(evaporation for the Lake package)',
+        StrEvaporationForThe,
         Evaporation, E.Message);
       Evaporation := '0.';
       result := ConvertString(Evaporation);
@@ -468,7 +546,7 @@ begin
     begin
       LocalScreenObject := ScreenObject as TScreenObject;
       frmFormulaErrors.AddFormulaError(LocalScreenObject.Name,
-        '(precipitation for the Lake package)',
+        StrPrecipitationForT,
         Precipitation, E.Message);
       Precipitation := '0.';
       result := ConvertString(Precipitation);
@@ -503,7 +581,7 @@ begin
     begin
       LocalScreenObject := ScreenObject as TScreenObject;
       frmFormulaErrors.AddFormulaError(LocalScreenObject.Name,
-        '(runoff for the Lake package)',
+        StrRunoffForTheLake,
         OverlandRunoff, E.Message);
       OverlandRunoff := '0.';
       result := ConvertString(OverlandRunoff);
@@ -578,7 +656,7 @@ begin
     begin
       LocalScreenObject := ScreenObject as TScreenObject;
       frmFormulaErrors.AddFormulaError(LocalScreenObject.Name,
-        '(minimum stage for the Lake package)',
+        StrMinimumStageForT,
         MinimumStage, E.Message);
       MinimumStage := '0.';
       result := ConvertString(MinimumStage);
@@ -596,7 +674,7 @@ begin
     begin
       LocalScreenObject := ScreenObject as TScreenObject;
       frmFormulaErrors.AddFormulaError(LocalScreenObject.Name,
-        '(maximum stage for the Lake package)',
+        StrMaximumStageForT,
         MaximumStage, E.Message);
       MaximumStage := '0.';
       result := ConvertString(MaximumStage);
@@ -614,7 +692,7 @@ begin
     begin
       LocalScreenObject := ScreenObject as TScreenObject;
       frmFormulaErrors.AddFormulaError(LocalScreenObject.Name,
-        '(withdrawal for the Lake package)',
+        StrWithdrawalForThe,
         Withdrawal, E.Message);
       Withdrawal := '0.';
       result := ConvertString(Withdrawal);
@@ -1151,6 +1229,7 @@ begin
     FluxCondGage := Lake.FluxCondGage;
     DeltaGage := Lake.DeltaGage;
     Gage4 := Lake.Gage4;
+    ExternalLakeTable := Lake.ExternalLakeTable;
   end;
   inherited;
 end;
@@ -1221,6 +1300,7 @@ constructor TLakBoundary.Create(Model: TBaseModel; ScreenObject: TObject);
 begin
   inherited;
   FSubLakes:= TList.Create;
+  FExternalLakeTable := TExternalLakeTable.Create(Model);
 end;
 
 procedure TLakBoundary.DeleteSubLake(Index: integer);
@@ -1230,6 +1310,7 @@ end;
 
 destructor TLakBoundary.Destroy;
 begin
+  FExternalLakeTable.Free;
   FSubLakes.Free;
   inherited;
 end;
@@ -1297,6 +1378,11 @@ begin
     FDeltaGage := Value;
     InvalidateModel;
   end;
+end;
+
+procedure TLakBoundary.SetExternalLakeTable(const Value: TExternalLakeTable);
+begin
+  FExternalLakeTable.Assign(Value);
 end;
 
 procedure TLakBoundary.SetFluxCondGage(const Value: boolean);
@@ -1492,18 +1578,18 @@ begin
   FEvaporationData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FOverlandRunoffData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FWithdrawalData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FMinimumStageData.NonParamDescription := 'Minimum stage';
-  FMinimumStageData.ParamDescription := ' minimum stage';
-  FMaximumStageData.NonParamDescription := 'Maximum stage';
-  FMaximumStageData.ParamDescription := ' maximum stage';
-  FPrecipitationData.NonParamDescription := 'Precipitaton';
-  FPrecipitationData.ParamDescription := ' precipitaton';
-  FEvaporationData.NonParamDescription := 'Evaporation';
-  FEvaporationData.ParamDescription := ' evaporation';
-  FOverlandRunoffData.NonParamDescription := 'Overland runoff';
-  FOverlandRunoffData.ParamDescription := ' overland runoff';
-  FWithdrawalData.NonParamDescription := 'Withdrawal';
-  FWithdrawalData.ParamDescription := ' withdrawal';
+  FMinimumStageData.NonParamDescription := StrMinimumStage;
+  FMinimumStageData.ParamDescription := ' ' + LowerCase(StrMinimumStage);
+  FMaximumStageData.NonParamDescription := StrMaximumStage;
+  FMaximumStageData.ParamDescription := ' ' + LowerCase(StrMaximumStage);
+  FPrecipitationData.NonParamDescription := StrPrecipitaton;
+  FPrecipitationData.ParamDescription := ' ' + LowerCase(StrPrecipitaton);
+  FEvaporationData.NonParamDescription := StrEvaporation;
+  FEvaporationData.ParamDescription := ' ' + LowerCase(StrEvaporation);
+  FOverlandRunoffData.NonParamDescription := StrOverlandRunoff;
+  FOverlandRunoffData.ParamDescription := ' ' + LowerCase(StrOverlandRunoff);
+  FWithdrawalData.NonParamDescription := StrWithdrawal;
+  FWithdrawalData.ParamDescription := ' ' + LowerCase(StrWithdrawal);
   FMinimumStageData.DataType := rdtDouble;
   FMaximumStageData.DataType := rdtDouble;
   FPrecipitationData.DataType := rdtDouble;
@@ -1527,6 +1613,190 @@ begin
   FOverlandRunoffData.Free;
   FWithdrawalData.Free;
   inherited;
+end;
+
+{ TLakeTableItem }
+
+procedure TLakeTableItem.Assign(Source: TPersistent);
+var
+  SourceItem: TLakeTableItem;
+begin
+  if Source is TLakeTableItem then
+  begin
+    SourceItem := TLakeTableItem(Source);
+    Stage := SourceItem.Stage;
+    Volume := SourceItem.Volume;
+    SurfaceArea := SourceItem.SurfaceArea;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+procedure TLakeTableItem.DefineProperties(Filer: TFiler);
+begin
+  inherited DefineProperties(Filer);
+  Filer.DefineProperty('Stage', ReadStage, WriteStage, Stage = 0);
+  Filer.DefineProperty('Volume', ReadVolume, WriteVolume, Volume = 0);
+  Filer.DefineProperty('SurfaceArea', ReadSurfaceArea, WriteSurfaceArea,
+    SurfaceArea = 0);
+end;
+
+procedure TLakeTableItem.ReadStage(Reader: TReader);
+begin
+  Stage := Reader.ReadFloat;
+end;
+
+procedure TLakeTableItem.ReadSurfaceArea(Reader: TReader);
+begin
+  SurfaceArea := Reader.ReadFloat;
+end;
+
+procedure TLakeTableItem.ReadVolume(Reader: TReader);
+begin
+  Volume := Reader.ReadFloat;
+end;
+
+procedure TLakeTableItem.SetStage(const Value: double);
+begin
+  SetRealProperty(FStage, Value);
+end;
+
+procedure TLakeTableItem.SetSurfaceArea(const Value: double);
+begin
+  SetRealProperty(FSurfaceArea, Value);
+end;
+
+procedure TLakeTableItem.SetVolume(const Value: double);
+begin
+  SetRealProperty(FVolume, Value);
+end;
+
+procedure TLakeTableItem.WriteStage(Writer: TWriter);
+begin
+  Writer.WriteFloat(Stage);
+end;
+
+procedure TLakeTableItem.WriteSurfaceArea(Writer: TWriter);
+begin
+  Writer.WriteFloat(SurfaceArea);
+end;
+
+procedure TLakeTableItem.WriteVolume(Writer: TWriter);
+begin
+  Writer.WriteFloat(Volume);
+end;
+
+{ TLakeTable }
+
+function TLakeTable.Add: TLakeTableItem;
+begin
+  result := inherited Add as TLakeTableItem;
+end;
+
+constructor TLakeTable.Create(Model: TBaseModel);
+begin
+  inherited Create(TLakeTableItem, Model);
+end;
+
+function TLakeTable.GetItems(Index: integer): TLakeTableItem;
+begin
+  result := inherited Items[Index] as TLakeTableItem
+end;
+
+procedure TLakeTable.SetItems(Index: integer; const Value: TLakeTableItem);
+begin
+  inherited Items[Index] := Value;
+end;
+
+{ TExternalLakeTable }
+
+procedure TExternalLakeTable.Assign(Source: TPersistent);
+var
+  SourceLakeTable: TExternalLakeTable;
+begin
+  if Source is TExternalLakeTable then
+  begin
+    SourceLakeTable := TExternalLakeTable(Source);
+    LakeTableChoice := SourceLakeTable.LakeTableChoice;
+    FullLakeTableFileName := SourceLakeTable.FullLakeTableFileName;
+    LakeTableFileName := SourceLakeTable.FullLakeTableFileName;
+    LakeTable := SourceLakeTable.LakeTable;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+constructor TExternalLakeTable.Create(Model: TBaseModel);
+begin
+  inherited;
+  FLakeTable := TLakeTable.Create(Model);
+  FLakeTableChoice := lctInternal;
+end;
+
+destructor TExternalLakeTable.Destroy;
+begin
+  FLakeTable.Free;
+  inherited;
+end;
+
+function TExternalLakeTable.GetLakeTableFileName: string;
+var
+  LocalModel: TPhastModel;
+begin
+  if Model = nil then
+  begin
+    result := FullLakeTableFileName;
+  end
+  else
+  begin
+    LocalModel := Model as TPhastModel;
+    result := ExtractRelativePath(LocalModel.ModelFileName, FullLakeTableFileName);
+  end;
+end;
+
+procedure TExternalLakeTable.SetLakeTable(const Value: TLakeTable);
+begin
+  FLakeTable.Assign(Value);
+end;
+
+procedure TExternalLakeTable.SetLakeTableChoice(const Value: TLakeTableChoice);
+begin
+  if FLakeTableChoice <> Value then
+  begin
+    FLakeTableChoice := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TExternalLakeTable.SetLakeTableFileName(const Value: string);
+var
+  LocalModel: TPhastModel;
+  CurDir: string;
+begin
+  if Model = nil then
+  begin
+//    FullLakeTableFileName := Value;
+  end
+  else
+  begin
+    LocalModel := Model as TPhastModel;
+    CurDir := GetCurrentDir;
+    try
+      SetCurrentDir(ExtractFileDir(LocalModel.ModelFileName));
+      FullLakeTableFileName := ExpandFileName(Value);
+    finally
+      SetCurrentDir(CurDir);
+    end;
+  end;
+end;
+
+procedure TExternalLakeTable.SetFullLakeTableFileName(const Value: string);
+begin
+  SetStringProperty(FFullLakeTableFileName, Value);
 end;
 
 end.

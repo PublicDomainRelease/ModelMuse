@@ -58,6 +58,9 @@ implementation
 
 uses frmImportBitmapUnit;
 
+resourcestring
+  StrZ = 'Z';
+
 {$R *.dfm}
 
 { TfrmPixelPoint }
@@ -72,11 +75,11 @@ begin
       end;
     vdFront:
       begin
-        lblY.Caption := 'Z';
+        lblY.Caption := StrZ;
       end;
     vdSide:
       begin
-        lblX.Caption := 'Z';
+        lblX.Caption := StrZ;
       end;
   else
     Assert(False);

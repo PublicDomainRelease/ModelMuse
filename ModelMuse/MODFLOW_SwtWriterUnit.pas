@@ -53,6 +53,18 @@ resourcestring
   StrNoSWTLayersDefine = 'No SWT layers defined';
   StrInTheSWTPackage = 'In the SWT package, no systems of interbeds have bee' +
   'n defined in the MODFLOW Layer Groups dialog box.';
+  StrWritingSWTPackage = 'Writing SWT Package input.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSet3 = '  Writing Data Set 3.';
+  StrWritingDataSet4 = '  Writing Data Set 4.';
+  StrWritingDataSet5 = '  Writing Data Set 5.';
+  StrWritingDataSet6 = '  Writing Data Set 6.';
+  StrWritingDataSets7to13 = '  Writing Data Sets 7 to 13.';
+  StrWritingDataSet14 = '  Writing Data Set 14.';
+  StrWritingDataSet15 = '  Writing Data Set 15.';
+  StrWritingDataSet16 = '  Writing Data Set 16.';
+  StrWritingDataSet17 = '  Writing Data Set 17.';
 
 { TModflowSWT_Writer }
 
@@ -790,11 +802,11 @@ begin
   RetrieveArrays;
   OpenFile(FNameOfFile);
   try
-    frmProgressMM.AddMessage('Writing SWT Package input.');
+    frmProgressMM.AddMessage(StrWritingSWTPackage);
 
     WriteDataSet0;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -802,7 +814,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -810,7 +822,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage(StrWritingDataSet3);
     WriteDataSet3;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -818,7 +830,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage(StrWritingDataSet4);
     WriteDataSet4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -826,7 +838,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage(StrWritingDataSet5);
     WriteDataSet5;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -834,7 +846,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 6.');
+    frmProgressMM.AddMessage(StrWritingDataSet6);
     WriteDataSet6;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -842,7 +854,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 7 to 13.');
+    frmProgressMM.AddMessage(StrWritingDataSets7to13);
     WriteDataSets7to13;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -852,7 +864,7 @@ begin
 
     if FSwtPackage.PreconsolidationSource = pcOffsets then
     begin
-      frmProgressMM.AddMessage('  Writing Data Set 14.');
+      frmProgressMM.AddMessage(StrWritingDataSet14);
       WriteDataSet14;
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
@@ -863,7 +875,7 @@ begin
 
     if FSwtPackage.PreconsolidationSource = pcSpecified then
     begin
-      frmProgressMM.AddMessage('  Writing Data Set 15.');
+      frmProgressMM.AddMessage(StrWritingDataSet15);
       WriteDataSet15;
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
@@ -874,7 +886,7 @@ begin
 
     if FSwtPackage.PrintChoices.Count > 0 then
     begin
-      frmProgressMM.AddMessage('  Writing Data Set 16.');
+      frmProgressMM.AddMessage(StrWritingDataSet16);
       WriteDataSet16;
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
@@ -882,7 +894,7 @@ begin
         Exit;
       end;
 
-      frmProgressMM.AddMessage('  Writing Data Set 17.');
+      frmProgressMM.AddMessage(StrWritingDataSet17);
       WriteDataSet17;
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
@@ -890,34 +902,6 @@ begin
         Exit;
       end;
     end;
-//
-//    frmProgress.AddMessage('  Writing Data Set 9.');
-//    WriteDataSet9;
-//    if not frmProgress.ShouldContinue then
-//    begin
-//      Exit;
-//    end;
-//
-//    frmProgress.AddMessage('  Writing Data Sets 10 to 14.');
-//    WriteDataSets10to14;
-//    if not frmProgress.ShouldContinue then
-//    begin
-//      Exit;
-//    end;
-//
-//    frmProgress.AddMessage('  Writing Data Set 15.');
-//    WriteDataSet15;
-//    if not frmProgress.ShouldContinue then
-//    begin
-//      Exit;
-//    end;
-//
-//    frmProgress.AddMessage('  Writing Data Set 16.');
-//    WriteDataSet16;
-//    if not frmProgress.ShouldContinue then
-//    begin
-//      Exit;
-//    end;
 
   finally
     CloseFile;

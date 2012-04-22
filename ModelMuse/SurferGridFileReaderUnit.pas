@@ -69,6 +69,13 @@ procedure ReadSurferAsciiFile(FileName: string; out SurferGrid: TSurfer6Grid);
 
 implementation
 
+resourcestring
+  StrSIsNotASurferG = '%s is not a Surfer grid file.';
+  StrSIsNotASurfer6 = '%s is not a Surfer 6 grid file.';
+  StrErrorReadingS = 'Error reading %s.';
+  StrSIsNotASurferA = '%s is not a Surfer ASCII grid file.';
+  StrSIsNotASurfer7 = '%s is not a Surfer 7 grid file.';
+
 function SurferFileType(const FileName: string): TSurferFileType;
 var
   GrdFile: TFileStream;
@@ -94,7 +101,7 @@ begin
     end
     else
     begin
-      raise EGrdReadError.Create(FileName + ' is not a Surfer grid file.');
+      raise EGrdReadError.Create(Format(StrSIsNotASurferG, [FileName]));
     end;
   finally
     GrdFile.Free;
@@ -120,11 +127,11 @@ begin
     GrdFile.Read(SurferGrid.Header, SizeOf(SurferGrid.Header));
     if SurferGrid.Header.ID <> 'DSBB' then
     begin
-      raise EGrdReadError.Create(FileName + ' is not a Surfer 6 grid file.');
+      raise EGrdReadError.Create(Format(StrSIsNotASurfer6, [FileName]));
     end;
     if (SurferGrid.Header.nx <= 1) or (SurferGrid.Header.ny <= 1) then
     begin
-      raise EGrdReadError.Create('Error reading ' + FileName + '.');
+      raise EGrdReadError.Create(Format(StrErrorReadingS, [FileName]));
     end;
     SetLength(ZValues, SurferGrid.Header.nx * SurferGrid.Header.ny);
     GrdFile.Read(ZValues[0], Length(ZValues)*sizeof(single));
@@ -189,11 +196,11 @@ begin
     ReadLn(GrdFile, SurferGrid.Header.Zlo, SurferGrid.Header.Zhi);
     if SurferGrid.Header.ID <> 'DSAA' then
     begin
-      raise EGrdReadError.Create(FileName + ' is not a Surfer ASCII grid file.');
+      raise EGrdReadError.Create(Format(StrSIsNotASurferA, [FileName]));
     end;
     if (SurferGrid.Header.nx <= 1) or (SurferGrid.Header.ny <= 1) then
     begin
-      raise EGrdReadError.Create('Error reading ' + FileName + '.');
+      raise EGrdReadError.Create(Format(StrErrorReadingS, [FileName]));
     end;
     SetLength(ZValues, SurferGrid.Header.nx * SurferGrid.Header.ny);
     for Index := 0 to SurferGrid.Header.nx*SurferGrid.Header.ny - 1 do
@@ -252,7 +259,7 @@ begin
     GrdFile.Read(Header, SizeOf(Header));
     if Header.ID <> $42525344 then
     begin
-      raise EGrdReadError.Create(FileName + ' is not a Surfer 7 grid file.');
+      raise EGrdReadError.Create(Format(StrSIsNotASurfer7, [FileName]));
     end;
     GrdFile.Position := GrdFile.Position + Header.Size;
     While GrdFile.Position < GrdFile.Size do

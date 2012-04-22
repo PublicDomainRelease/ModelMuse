@@ -4,7 +4,7 @@ inherited frmPointValues: TfrmPointValues
   Caption = 'Vertex Values'
   ClientWidth = 367
   ExplicitWidth = 375
-  ExplicitHeight = 268
+  ExplicitHeight = 260
   PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
@@ -14,8 +14,6 @@ inherited frmPointValues: TfrmPointValues
     Height = 42
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 192
-    ExplicitWidth = 468
     object btnHelp: TBitBtn
       Left = 97
       Top = 6
@@ -102,6 +100,7 @@ inherited frmPointValues: TfrmPointValues
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -123,9 +122,8 @@ inherited frmPointValues: TfrmPointValues
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
-    ExplicitWidth = 468
-    ExplicitHeight = 192
   end
 end

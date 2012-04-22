@@ -49,6 +49,26 @@ uses
 
 resourcestring
   StrSampleDigitalEleva = 'sample Digital Elevation Model';
+  StrReadingS = 'Reading %s';
+  StrThereWasAnErrorR = 'There was an error reading the DEM file.  Please ch' +
+  'eck that the format of the DEM is a format that ModelMuse supports.  Chec' +
+  'k the ModelMuse help to see what formats ModelMuse supports.  For further' +
+  ' assistance contact rbwinst@usgs.gov.';
+  StrImportingData = 'Importing data';
+  StrYouMustCreateThe = 'You must create the grid before importing a Digital' +
+  ' Elevation Model.';
+  StrElement = 'element';
+  StrElementCenter = 'element center';
+  StrCell = 'cell';
+  StrNode = 'node';
+  StrCellCenter = 'cell center';
+  StrLowestPointInS = 'Lowest point in %s';
+  StrHighestPointInS = 'Highest point in %s';
+  StrAverageOfPointsIn = 'Average of points in %s';
+  StrPointClosestToS = 'Point closest to %s';
+  StrProgress = 'Progress';
+  StrSampledFromDEMFil = 'Sampled from DEM files using ';
+  StrNoneOfThePointsI = 'None of the points in the DEM are inside the grid.';
 
 {$R *.dfm}
 
@@ -77,13 +97,14 @@ begin
   FractionDone := (FDemIndex + FractionDone)/(OpenDialogFile.Files.Count+1);
   frmProgressMM.pbProgress.Position
     := Round(frmProgressMM.pbProgress.Max * FractionDone);
-  frmProgressMM.ProgressLabelCaption := 'Reading ' + OpenDialogFile.Files[FDemIndex];
+  frmProgressMM.ProgressLabelCaption :=
+    Format(StrReadingS, [OpenDialogFile.Files[FDemIndex]]);
   Application.ProcessMessages;
 end;
 
 procedure TfrmImportDEM.DisplayCornerCoordinates;
 const
-  FormatString = '(%g, %g)';
+  FormatString = '(%0:g, %1:g)';
 var
   DemIndex: Integer;
   DemReader: TDemReader;
@@ -139,17 +160,14 @@ begin
     (OpenDialogFile.Files.Count+1);
   frmProgressMM.pbProgress.Position
     := Round(frmProgressMM.pbProgress.Max * FractionDone);
-  frmProgressMM.ProgressLabelCaption := 'Importing data';
+  frmProgressMM.ProgressLabelCaption := StrImportingData;
   Application.ProcessMessages;
 end;
 
 procedure TfrmImportDEM.InvalidDem;
 begin
   Beep;
-  MessageDlg('There was an error reading the DEM file.  Please check that the '
-    + 'format of the DEM is a format that ModelMuse supports.  Check the '
-    + 'ModelMuse help to see what formats ModelMuse supports.  For further '
-    + 'assistance contact rbwinst@usgs.gov.', mtError, [mbOK], 0);
+  MessageDlg(StrThereWasAnErrorR, mtError, [mbOK], 0);
 end;
 
 function TfrmImportDEM.GetData: boolean;
@@ -165,12 +183,11 @@ begin
   end
   else
   begin
-    MessageDlg('You must create the grid before importing '
-      + 'a Digital Elevation Model.', mtInformation, [mbOK], 0);
+    MessageDlg(StrYouMustCreateThe, mtInformation, [mbOK], 0);
   end;
   if result then
   begin
-  GetDataSets;
+    GetDataSets;
     GetInterpolators;
     UpdateEvalAt;
     SetCheckBoxCaptions;
@@ -210,28 +227,31 @@ begin
         case EvalAt of
           eaBlocks:
             begin
-              NodeElemString := 'element';
-              CenterString := 'element center'
+              NodeElemString := StrElement;
+              CenterString := StrElementCenter
             end;
           eaNodes:
             begin
-              NodeElemString := 'cell';
-              CenterString := 'node';
+              NodeElemString := StrCell;
+              CenterString := StrNode;
             end;
         end;
       end;
     msModflow, msModflowLGR, msModflowNWT:
       begin
-        NodeElemString := 'cell';
-        CenterString := 'cell center'
+        NodeElemString := StrCell;
+        CenterString := StrCellCenter
       end;
     else Assert(False);
   end;
-  rgFilterMethod.Items[Ord(imLowest)] := 'Lowest point in ' + NodeElemString;
-  rgFilterMethod.Items[Ord(imHighest)] := 'Highest point in ' + NodeElemString;
+  rgFilterMethod.Items[Ord(imLowest)] :=
+    Format(StrLowestPointInS, [NodeElemString]);
+  rgFilterMethod.Items[Ord(imHighest)] :=
+    Format(StrHighestPointInS, [NodeElemString]);
   rgFilterMethod.Items[Ord(imAverage)] :=
-    'Average of points in ' + NodeElemString;
-  rgFilterMethod.Items[Ord(imClosest)] := 'Point closest to ' + CenterString;
+    Format(StrAverageOfPointsIn, [NodeElemString]);
+  rgFilterMethod.Items[Ord(imClosest)] :=
+    Format(StrPointClosestToS, [CenterString]);
 end;
 
 procedure TfrmImportDEM.SetData;
@@ -260,7 +280,7 @@ var
   IgnoreValue: Integer;
   APoint3D: TPoint3D;
 begin
-  frmProgressMM.Caption := 'Progress';
+  frmProgressMM.Caption := StrProgress;
   frmProgressMM.Show;
   try
     Grid := frmGoPhast.PhastModel.Grid;
@@ -328,11 +348,12 @@ begin
       NewDataSets := TList.Create;
       try
         MakeNewDataSet(NewDataSets, '_DEM_Elevation',
-          strDefaultClassification + '|Sampled from DEM files using '
+          strDefaultClassification + '|' + StrSampledFromDEMFil
           + LowerCase(rgFilterMethod.Items[rgFilterMethod.ItemIndex]),
           comboDataSets.ItemIndex = 0);
         DataSetName := comboDataSets.Text;
-        DataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataSetName);
+        DataSet := frmGoPhast.PhastModel.DataArrayManager.
+          GetDataSetByName(DataSetName);
         Assert(DataSet <> nil);
         ScreenObjectList := TList.Create;
         try
@@ -375,8 +396,7 @@ begin
           if AScreenObject.Count = 0 then
           begin
             Beep;
-            MessageDlg('None of the points in the DEM are inside the grid.',
-              mtError, [mbOK], 0);
+            MessageDlg(StrNoneOfThePointsI, mtError, [mbOK], 0);
             AScreenObject.Free;
           end
           else

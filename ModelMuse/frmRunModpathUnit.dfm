@@ -3,7 +3,7 @@ object frmRunModpath: TfrmRunModpath
   Top = 0
   BorderStyle = bsNone
   Caption = 'frmRunModpath'
-  ClientHeight = 31
+  ClientHeight = 60
   ClientWidth = 331
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -31,5 +31,13 @@ object frmRunModpath: TfrmRunModpath
     Height = 17
     Caption = 'Create new composite budget file'
     TabOrder = 1
+  end
+  object comboModelSelection: TComboBox
+    Left = 8
+    Top = 29
+    Width = 241
+    Height = 21
+    Style = csDropDownList
+    TabOrder = 2
   end
 end

@@ -45,6 +45,23 @@ const
 
 resourcestring
   StrNoVKparameter = 'No VK parameter defined for the following hydrogeologic units';
+  StrWritingDataSet6 = '  Writing Data Set 6 for %s';
+  StrWritingDataSet7 = '  Writing Data Set 7 for %s';
+  StrWritingDataSet8 = '  Writing Data Set 8 for %s';
+  StrWritingHUF2Package = 'Writing HUF2 Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSet3 = '  Writing Data Set 3.';
+  StrWritingDataSet4 = '  Writing Data Set 4.';
+  StrWritingDataSet5 = '  Writing Data Set 5.';
+  StrWritingDataSet9 = '  Writing Data Set 9.';
+  StrWritingDataSets10and11 = '  Writing Data Sets 10 and 11.';
+  StrWritingDataSet12 = '  Writing Data Set 12.';
+  StrCheckingElevation = '  Checking elevations.';
+  GapWarning = 'Gap between hydrogeologic units';
+  OverlapWarning = 'Overlap between hydrogeologic units';
+  WarningFormat = 'Column: %0:d; Row: %1:d; Higher unit: %2:s; Lower unit: %3:s';
 
 type
   THguSort = class(TObject)
@@ -87,9 +104,6 @@ var
   DataArrayManager: TDataArrayManager;
 const
   Epsilon = 1e-4;
-  GapWarning = 'Gap between hydrogeologic units';
-  OverlapWarning = 'Overlap between hydrogeologic units';
-  WarningFormat = 'Column: %d; Row: %d; Higher unit: %s; Lower unit: %s';
 begin
   DataArrayManager := Model.DataArrayManager;
   ActiveDataArray := DataArrayManager.GetDataSetByName(rsActive);
@@ -644,11 +658,11 @@ begin
   for UnitIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
   begin
     HGU := Model.HydrogeologicUnits[UnitIndex];
-    frmProgressMM.AddMessage('  Writing Data Set 6 for ' + HGU.HufName);
+    frmProgressMM.AddMessage(Format(StrWritingDataSet6, [HGU.HufName]));
     WriteDataSet6(HGU);
-    frmProgressMM.AddMessage('  Writing Data Set 7 for ' + HGU.HufName);
+    frmProgressMM.AddMessage(Format(StrWritingDataSet7, [HGU.HufName]));
     WriteDataSet7(HGU);
-    frmProgressMM.AddMessage('  Writing Data Set 8 for ' + HGU.HufName);
+    frmProgressMM.AddMessage(Format(StrWritingDataSet8, [HGU.HufName]));
     WriteDataSet8(HGU);
   end;
 end;
@@ -668,8 +682,8 @@ begin
     FNameOfFile, foInput);
   OpenFile(FNameOfFile);
   try
-    frmProgressMM.AddMessage('Writing HUF2 Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingHUF2Package);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -677,7 +691,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -685,7 +699,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -693,7 +707,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage(StrWritingDataSet3);
     WriteDataSet3;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -701,7 +715,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage(StrWritingDataSet4);
     WriteDataSet4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -709,7 +723,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage(StrWritingDataSet5);
     WriteDataSet5;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -724,7 +738,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 9.');
+    frmProgressMM.AddMessage(StrWritingDataSet9);
     WriteDataSet9;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -732,7 +746,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 10 and 11.');
+    frmProgressMM.AddMessage(StrWritingDataSets10and11);
     WriteDataSets10and11;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -740,7 +754,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 12.');
+    frmProgressMM.AddMessage(StrWritingDataSet12);
     WriteDataSet12;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -748,7 +762,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Checking elevations.');
+    frmProgressMM.AddMessage(StrCheckingElevation);
     CheckElevations;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then

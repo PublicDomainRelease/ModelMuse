@@ -12,14 +12,8 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
     ActivePage = tabBasic
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 466
-    ExplicitHeight = 357
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         457
         370)
@@ -69,6 +63,13 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
         Caption = 'Cycles'
         ExplicitLeft = 352
       end
+      object lblModelSelection: TLabel
+        Left = 3
+        Top = 327
+        Width = 73
+        Height = 13
+        Caption = 'Model selection'
+      end
       object fedModpathFile: TJvFilenameEdit
         Left = 2
         Top = 29
@@ -83,7 +84,6 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
         OnChange = fedModpathFileChange
-        ExplicitWidth = 449
       end
       object comboTimeToPlot: TComboBox
         Left = 3
@@ -143,7 +143,6 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
           'Light Blue to Dark Blue'
           'Modified Spectral Scheme'
           'Stepped Sequential')
-        ExplicitWidth = 449
       end
       object jsColorExponent: TJvxSlider
         Left = 3
@@ -160,7 +159,7 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
         Left = 156
         Top = 285
         Width = 65
-        Height = 26
+        Height = 21
         ButtonKind = bkClassic
         Increment = 0.010000000000000000
         MaxValue = 2.000000000000000000
@@ -173,7 +172,7 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
         Left = 350
         Top = 285
         Width = 101
-        Height = 26
+        Height = 21
         ButtonKind = bkClassic
         MaxValue = 2147483647.000000000000000000
         MinValue = 1.000000000000000000
@@ -181,16 +180,21 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
         Anchors = [akTop, akRight]
         TabOrder = 8
         OnChange = seCyclesChange
-        ExplicitLeft = 351
+      end
+      object comboModelSelection: TComboBox
+        Left = 3
+        Top = 346
+        Width = 241
+        Height = 21
+        Style = csDropDownList
+        TabOrder = 9
+        Visible = False
+        OnChange = comboModelSelectionChange
       end
     end
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         457
         370)
@@ -324,7 +328,6 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
             CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
-        ExplicitHeight = 210
       end
     end
   end

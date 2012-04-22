@@ -57,6 +57,12 @@ uses frmGoPhastUnit, GoPhastTypes, DataSetUnit,
 
 resourcestring
   StrImportDXFFile = 'import DXF file';
+  StrTheDxfFileS = 'The ".dxf" file "%s" does not exist.';
+  StrProgress = 'Progress';
+  StrImportedFromDXFFi = 'Imported from DXF files';
+  StrObject = 'Object ';
+  StrDObjectsWereInva = '%d objects were invalid because they cross themselv' +
+  'es and have been skipped.';
 
 {$R *.dfm}
 
@@ -78,14 +84,14 @@ begin
     begin
       result := False;
       Beep;
-      MessageDlg('The ".dxf" file "' + FDxfName + '" does not exist.',
+      MessageDlg(Format(StrTheDxfFileS, [FDxfName]),
         mtError, [mbOK], 0);
       Exit;
     end;
     Caption := Caption + ' - ' + FDxfName;
     GetDataSets;
     frmProgressMM.PopupParent := self;
-    frmProgressMM.Caption := 'Progress';
+    frmProgressMM.Caption := StrProgress;
     frmProgressMM.Show;
     try
       FDxfObject := DXF_Object.Create(name);
@@ -152,7 +158,7 @@ begin
     NewDataSets := TList.Create;
     try
       MakeNewDataSet(NewDataSets, '_DXF_Z',
-        strDefaultClassification + '|Imported from DXF files',
+        strDefaultClassification + '|' + StrImportedFromDXFFi,
         comboDataSets.ItemIndex = 0);
       EntityCount := 0;
       for LayerIndex := 0 to FDxfObject.layer_lists.Count - 1 do
@@ -168,16 +174,17 @@ begin
         end;
       end;
       frmProgressMM.Caption := '';
-      frmProgressMM.Prefix := 'Object ';
+      frmProgressMM.Prefix := StrObject;
       frmProgressMM.PopupParent := self;
       frmProgressMM.Show;
       frmProgressMM.pbProgress.Max := EntityCount;
       frmProgressMM.pbProgress.Position := 0;
-      frmProgressMM.ProgressLabelCaption := '0 out of '
-        + IntToStr(EntityCount) + '.';
+      frmProgressMM.ProgressLabelCaption :=
+        Format('0 out of %d.', [EntityCount]);
       DataArrayName := comboDataSets.Text;
 
-      DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataArrayName);
+      DataArray := frmGoPhast.PhastModel.DataArrayManager.
+        GetDataSetByName(DataArrayName);
       Assert(DataArray <> nil);
       ScreenObjectList := TList.Create;
       //MultipleParts := false;
@@ -280,8 +287,7 @@ begin
   if InvalidPointCount > 0 then
   begin
     Beep;
-    MessageDlg(IntToStr(InvalidPointCount) + ' objects were invalid because they cross '
-      + 'themselves and have been skipped.',
+    MessageDlg(Format(StrDObjectsWereInva, [InvalidPointCount]),
       mtWarning, [mbOK], 0);
   end;
 end;

@@ -85,6 +85,12 @@ implementation
 uses frmErrorsAndWarningsUnit, OrderedCollectionUnit, ModflowUnitNumbers, 
   frmProgressUnit, Forms, frmGoPhastUnit;
 
+resourcestring
+  StrWritingSPackageI = 'Writing %s Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
+
 { TCustomMultZoneWriter }
 
 function TCustomMultZoneWriter.UsesHufParam(UsedParam: THufUsedParameter;
@@ -305,8 +311,8 @@ begin
   WriteToNameFile(FileType, FileUnit, FNameOfFile, foInput);
   OpenFile(FileName(AFileName));
   try
-    frmProgressMM.AddMessage('Writing ' + FileType + ' Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(Format(StrWritingSPackageI, [FileType]));
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -314,7 +320,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -322,7 +328,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 2 and 3.');
+    frmProgressMM.AddMessage(StrWritingDataSets2and3);
     WriteDataSets2And3;
   finally
     CloseFile;

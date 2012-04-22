@@ -20,7 +20,6 @@ inherited frameScreenObjectCondParam: TframeScreenObjectCondParam
       Width = 145
       Height = 21
       Style = csDropDownList
-      ItemHeight = 13
       TabOrder = 3
       Items.Strings = (
         'Calculated'

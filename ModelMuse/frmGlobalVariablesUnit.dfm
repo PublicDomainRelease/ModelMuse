@@ -16,7 +16,6 @@ inherited frmGlobalVariables: TfrmGlobalVariables
     Align = alBottom
     ParentColor = True
     TabOrder = 1
-    ExplicitTop = 120
     object Label1: TLabel
       Left = 71
       Top = 11
@@ -215,7 +214,6 @@ inherited frmGlobalVariables: TfrmGlobalVariables
         AutoAdjustColWidths = True
       end>
     OnEndUpdate = rdgGlobalVariablesEndUpdate
-    ExplicitHeight = 156
     ColWidths = (
       64
       80

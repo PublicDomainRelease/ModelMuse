@@ -35,6 +35,13 @@ type
 
 implementation
 
+resourcestring
+  StrStartTime = 'Start time';
+  StrEndTime = 'End time';
+  StrInstanceName = 'Instance Name';
+  StrTheNamesOfParamet = 'The names of parameter instances must be unique. Y' +
+  'ou should correct the name "';
+
 {$R *.dfm}
 
 procedure TframeSfrParamInstances.btnDeleteFlowTableRowClick(Sender: TObject);
@@ -63,9 +70,9 @@ end;
 constructor TframeSfrParamInstances.Create(AOwner: TComponent);
 begin
   inherited;
-  rdgSfrParamInstances.Cells[Ord(sicStartTime), 0] := 'Start time';
-  rdgSfrParamInstances.Cells[Ord(sicEndTime), 0] := 'End time';
-  rdgSfrParamInstances.Cells[Ord(sicInstanceName), 0] := 'Instance Name';
+  rdgSfrParamInstances.Cells[Ord(sicStartTime), 0] := StrStartTime;
+  rdgSfrParamInstances.Cells[Ord(sicEndTime), 0] := StrEndTime;
+  rdgSfrParamInstances.Cells[Ord(sicInstanceName), 0] := StrInstanceName;
 end;
 
 procedure TframeSfrParamInstances.rdgSfrParamInstancesEndUpdate(
@@ -136,9 +143,7 @@ begin
         rdgSfrParamInstances.Selection := NewSelection;
         AName := rdgSfrParamInstances.Cells[Ord(sicInstanceName), Index+1];
         Beep;
-        MessageDlg('The names of parameter instances must be unique. '
-          + 'You should correct the name "' + AName + '."', mtError,
-          [mbOK], 0);
+        MessageDlg(StrTheNamesOfParamet + AName + '."', mtError, [mbOK], 0);
         ErrorFound := True;
         rdgSfrParamInstances.SetFocus;
         Exit;

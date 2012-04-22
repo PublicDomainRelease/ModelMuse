@@ -38,7 +38,8 @@ uses
   framePackageRCHUnit, framePackageUpwUnit, framePackageNwtUnit,
   frameMt3dBasicPkgUnit, frameMt3dmsGcgPackageUnit, frameMt3dmsAdvPkgUnit,
   frameMt3dmsDispersionPkgUnit, Mt3dmsChemSpeciesUnit,
-  frameMt3dmsChemReactionPkgUnit, frameMt3dmsTransObsPkgUnit, Mt3dmsTimesUnit;
+  frameMt3dmsChemReactionPkgUnit, frameMt3dmsTransObsPkgUnit, Mt3dmsTimesUnit,
+  framePackagePcgnUnit;
 
 type
 
@@ -190,6 +191,8 @@ type
     framePkgMt3dmsRct: TframeMt3dmsChemReactionPkg;
     jvspMt3dmsTOB: TJvStandardPage;
     framePkgMt3dmsTob: TframeMt3dmsTransObsPkg;
+    jvspPCGN: TJvStandardPage;
+    framePackagePcgn: TframePackagePcgn;
     procedure tvPackagesChange(Sender: TObject; Node: TTreeNode);
     procedure btnOKClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject); override;
@@ -379,6 +382,7 @@ resourcestring
   StrInOrderToGenerate = 'In order to generate the flow-transport link file ' +
   'required by MT3DMS, you will need to generate the MODFLOW input files and' +
   ' run MODFLOW again.';
+  FormatStr = 'Number of %s parameters';
 
 {$R *.dfm}
 
@@ -1790,8 +1794,6 @@ var
   RowIndex: Integer;
   ActiveGrid: TRbwDataGrid4;
   ActiveFrame: TframeListParameterDefinition;
-const
-  FormatStr = 'Number of %s parameters';
 begin
   ActiveFrame := ParameterFrame;
   ActiveGrid := ParameterFrame.dgParameters;
@@ -1991,6 +1993,10 @@ begin
     CurrentParameterType := ptHFB;
   end
   else if jvplPackages.ActivePage = jvspNWT then
+  begin
+    CurrentParameterType := ptUndefined;
+  end
+  else if jvplPackages.ActivePage = jvspPCGN then
   begin
     CurrentParameterType := ptUndefined;
   end
@@ -2436,6 +2442,9 @@ begin
 
   Packages.PcgPackage.Frame := framePCG;
   FPackageList.Add(Packages.PcgPackage);
+
+  Packages.PcgnPackage.Frame := framePackagePcgn;
+  FPackageList.Add(Packages.PcgnPackage);
 
   Packages.Mnw2Package.Frame := framePkgMnw2;
   FPackageList.Add(Packages.Mnw2Package);

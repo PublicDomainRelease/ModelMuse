@@ -138,6 +138,15 @@ implementation
 uses Math, Contnrs, frmGoPhastUnit, GoPhastTypes, frmGoToUnit, DataSetUnit,
   RbwParser, LayerStructureUnit, PhastModelUnit, ModelMuseUtilities;
 
+resourcestring
+  StrInitialGrid = 'Initial Grid';
+  StrFinish = 'Finish';
+  StrLayerGroupName = 'Layer group name';
+  StrBottomElevation = 'Bottom elevation';
+  StrUpperAquifer = 'Upper Aquifer';
+  StrMiddleAquifer = 'Middle Aquifer';
+  StrLowerAquifer = 'Lower Aquifer';
+
 
 {$R *.dfm}
 
@@ -154,8 +163,8 @@ begin
         case rgChoice.ItemIndex of
           0,1: // The user has chosen to create a new model. Go to the next page.
             begin
-              Caption := 'Initial Grid';
-              btnNext.Caption := 'Finish';
+              Caption := StrInitialGrid;
+              btnNext.Caption := StrFinish;
               btnDontCreateGrid.Visible := True;
               btnDontCreateGrid.Left := btnNext.Left - btnDontCreateGrid.Width - 8;
               btnHelp.Left := btnDontCreateGrid.Left - btnHelp.Width - 8;
@@ -262,15 +271,15 @@ begin
     rgChoice.ItemIndex := DefaultItemCount;
   end;
 
-  rdgInitialLayers.Cells[0,0] := 'Layer group name';
-  rdgInitialLayers.Cells[1,0] := 'Bottom elevation';
+  rdgInitialLayers.Cells[0,0] := StrLayerGroupName;
+  rdgInitialLayers.Cells[1,0] := StrBottomElevation;
   rdgInitialLayers.Cells[0,1] := StrModelTop;
   rdgInitialLayers.Cells[1,1] := '0';
-  rdgInitialLayers.Cells[0,2] := 'Upper Aquifer';
+  rdgInitialLayers.Cells[0,2] := StrUpperAquifer;
   rdgInitialLayers.Cells[1,2] := '-10';
-  rdgInitialLayers.Cells[0,3] := 'Middle Aquifer';
+  rdgInitialLayers.Cells[0,3] := StrMiddleAquifer;
   rdgInitialLayers.Cells[1,3] := '-20';
-  rdgInitialLayers.Cells[0,4] := 'Lower Aquifer';
+  rdgInitialLayers.Cells[0,4] := StrLowerAquifer;
   rdgInitialLayers.Cells[1,4] := '-30';
 
   rdgInitialLayers.Col := 1;

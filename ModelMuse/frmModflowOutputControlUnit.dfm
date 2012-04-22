@@ -99,7 +99,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
     Top = 0
     Width = 418
     Height = 362
-    ActivePage = jvspMT3DMS
+    ActivePage = jvspDrawdown
     PropagateEnable = False
     Align = alClient
     OnChange = jvPagesChange
@@ -207,24 +207,6 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
           Caption = 'Listing file format (IHEDFM)'
           ExplicitWidth = 192
         end
-        inherited comboP: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboREdit: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboFrequency: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboPrintStyle: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboPrintFormat: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboSaveType: TJvImageComboBox
-          ItemIndex = -1
-        end
         inherited rcExternalFormat: TRbwController
           ControlList = <
             item
@@ -299,24 +281,6 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
           Width = 193
           Caption = 'Listing file format (IDDNFM)'
           ExplicitWidth = 193
-        end
-        inherited comboP: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboREdit: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboFrequency: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboPrintStyle: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboPrintFormat: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboSaveType: TJvImageComboBox
-          ItemIndex = -1
         end
         inherited rcExternalFormat: TRbwController
           ControlList = <
@@ -544,17 +508,17 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       end
       inline frameMt3dmsTimes: TframeGrid
         Left = 0
-        Top = 172
+        Top = 200
         Width = 418
-        Height = 190
+        Height = 162
         Align = alBottom
         Anchors = [akLeft, akTop, akRight, akBottom]
         TabOrder = 6
-        ExplicitTop = 172
+        ExplicitTop = 200
         ExplicitWidth = 418
-        ExplicitHeight = 190
+        ExplicitHeight = 162
         inherited Panel: TPanel
-          Top = 149
+          Top = 121
           Width = 418
           ExplicitTop = 149
           ExplicitWidth = 418
@@ -584,7 +548,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
         end
         inherited Grid: TRbwDataGrid4
           Width = 418
-          Height = 149
+          Height = 121
           Columns = <
             item
               AutoAdjustRowHeights = False

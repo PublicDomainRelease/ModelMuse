@@ -82,6 +82,12 @@ implementation
 
 uses Clipbrd;
 
+resourcestring
+  StrObjects = 'Objects';
+  StrDataSets = 'Data Sets';
+  StrFormulas = 'Formulas';
+  StrErrorMessages = 'Error Messages';
+
 {$R *.dfm}
 
 var
@@ -143,10 +149,10 @@ end;
 procedure TfrmFormulaErrors.FormCreate(Sender: TObject);
 begin
   inherited;
-  sgErrors.Cells[0, 0] := 'Objects';
-  sgErrors.Cells[1, 0] := 'Data Sets';
-  sgErrors.Cells[2, 0] := 'Formulas';
-  sgErrors.Cells[3, 0] := 'Error Messages';
+  sgErrors.Cells[0, 0] := StrObjects;
+  sgErrors.Cells[1, 0] := StrDataSets;
+  sgErrors.Cells[2, 0] := StrFormulas;
+  sgErrors.Cells[3, 0] := StrErrorMessages;
   sgErrors.ColWidths[3] := 130;
   FormResize(nil);
   FErrorCount := 0;

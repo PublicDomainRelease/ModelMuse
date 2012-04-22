@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, Grids, RbwDataGrid4, StdCtrls, ExtCtrls, JvSpin, JvExControls,
   JvxSlider, ComCtrls, JvExComCtrls, JvUpDown, Mask, JvExMask, JvToolEdit,
-  frameModpathDisplayUnit, UndoItems, PathlineReader, RealListUnit;
+  frameModpathDisplayUnit, UndoItems, PathlineReader, RealListUnit,
+  PhastModelUnit;
 
 type
   TTimeSeriesLimits = (tslNone, tslColors, tslLayer, tslRow, tslColumn);
@@ -22,10 +23,11 @@ type
     FExistingTimeSeries: TTimeSeriesReader;
     FNewTimeSeries: TTimeSeriesReader;
     FImportedNewFile: Boolean;
+    FModel: TCustomModel;
     procedure ForceRedraw;
     procedure EnableMenuItems;
   public
-    Constructor Create(var NewTimeSeries: TTimeSeriesReader;
+    Constructor Create(Model: TCustomModel; var NewTimeSeries: TTimeSeriesReader;
       ImportedNewFile: boolean);
     Destructor Destroy; override;
     function Description: string; override;
@@ -55,6 +57,8 @@ type
     rgShow2D: TRadioGroup;
     rgColorBy: TRadioGroup;
     rdgLimits: TRbwDataGrid4;
+    comboModelSelection: TComboBox;
+    lblModelSelection: TLabel;
     procedure rdgLimitsSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure rdgLimitsSetEditText(Sender: TObject; ACol, ARow: Integer;
@@ -74,9 +78,11 @@ type
     procedure seCyclesChange(Sender: TObject);
     procedure jsColorExponentChanged(Sender: TObject);
     procedure comboTimeToPlotChange(Sender: TObject);
+    procedure comboModelSelectionChange(Sender: TObject);
   protected
     procedure Loaded; override;
   private
+    FTimeSeriesList: TimeSeriesObjectList;
     procedure AssignTimesToComboBox(Times: TRealList);
     procedure ReadIntLimit(IntLimits: TShowIntegerLimit;
       ALimitRow: TTimeSeriesLimits);
@@ -86,6 +92,8 @@ type
   public
     procedure GetData;
     procedure SetData;
+    constructor Create(Owner: TComponent); override;
+    destructor Destroy; override;
     { Public declarations }
   end;
 
@@ -107,12 +115,13 @@ resourcestring
 
 { TUndoImportTimeSeries }
 
-constructor TUndoImportTimeSeries.Create(var NewTimeSeries: TTimeSeriesReader;
+constructor TUndoImportTimeSeries.Create(Model: TCustomModel; var NewTimeSeries: TTimeSeriesReader;
   ImportedNewFile: boolean);
 begin
+  FModel := Model;
   FImportedNewFile := ImportedNewFile;
-  FExistingTimeSeries:= TTimeSeriesReader.Create;
-  FExistingTimeSeries.Assign(frmGoPhast.PhastModel.TimeSeries);
+  FExistingTimeSeries:= TTimeSeriesReader.Create(Model);
+  FExistingTimeSeries.Assign(Model.TimeSeries);
   // Take ownership of NewTimeSeries.
   FNewTimeSeries := NewTimeSeries;
   NewTimeSeries := nil;
@@ -132,14 +141,14 @@ end;
 
 procedure TUndoImportTimeSeries.DoCommand;
 begin
-  frmGoPhast.PhastModel.TimeSeries := FNewTimeSeries;
+  FModel.TimeSeries := FNewTimeSeries;
   EnableMenuItems;
   ForceRedraw;
 end;
 
 procedure TUndoImportTimeSeries.ForceRedraw;
 begin
-  frmGoPhast.PhastModel.TimeSeries.Invalidate;
+  FModel.TimeSeries.Invalidate;
   frmGoPhast.frame3DView.glWidModelView.Invalidate;
 
   frmGoPhast.frameTopView.ModelChanged := True;
@@ -152,7 +161,7 @@ end;
 
 procedure TUndoImportTimeSeries.Undo;
 begin
-  frmGoPhast.PhastModel.TimeSeries := FExistingTimeSeries;
+  FModel.TimeSeries := FExistingTimeSeries;
   EnableMenuItems;
   ForceRedraw;
   inherited;
@@ -160,9 +169,26 @@ begin
 end;
 
 procedure TUndoImportTimeSeries.EnableMenuItems;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   frmGoPhast.miTimeSeriestoShapefile.Enabled :=
     frmGoPhast.PhastModel.TimeSeries.Series.Count > 0;
+  if not frmGoPhast.miTimeSeriestoShapefile.Enabled
+    and frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      frmGoPhast.miTimeSeriestoShapefile.Enabled :=
+        ChildModel.TimeSeries.Series.Count > 0;
+      if frmGoPhast.miTimeSeriestoShapefile.Enabled then
+      begin
+        break;
+      end;
+    end;
+  end;
 end;
 
 { TframeModpathTimeSeriesDisplay }
@@ -196,52 +222,8 @@ begin
   pbColorScheme.Invalidate;
 end;
 
-procedure TframeModpathTimeSeriesDisplay.comboTimeToPlotChange(Sender: TObject);
-begin
-  udTimeToPlot.Position := 0;
-end;
-
-procedure TframeModpathTimeSeriesDisplay.fedModpathFileBeforeDialog(
-  Sender: TObject; var AName: string; var AAction: Boolean);
-begin
-  if AName = '' then
-  begin
-    if frmGoPhast.sdModpathInput.FileName <> '' then
-    begin
-      AName := ChangeFileExt(frmGoPhast.sdModpathInput.FileName,
-        fedModpathFile.DefaultExt);
-    end
-    else if frmGoPhast.sdModflowInput.FileName <> '' then
-    begin
-      AName := ChangeFileExt(frmGoPhast.sdModflowInput.FileName,
-        fedModpathFile.DefaultExt);
-    end
-    else if frmGoPhast.sdSaveDialog.FileName <> '' then
-    begin
-      AName := ChangeFileExt(frmGoPhast.sdSaveDialog.FileName,
-        fedModpathFile.DefaultExt);
-    end;
-  end;
-end;
-
-procedure TframeModpathTimeSeriesDisplay.fedModpathFileChange(Sender: TObject);
-var
-  TimeSeries: TTimeSeriesReader;
-begin
-  if FileExists(fedModpathFile.FileName) then
-  begin
-    TimeSeries := TTimeSeriesReader.Create;
-    try
-      TimeSeries.FileName := fedModpathFile.FileName;
-      TimeSeries.ReadFile;
-      AssignTimesToComboBox(TimeSeries.Times);
-    finally
-      TimeSeries.Free;
-    end;
-  end;
-end;
-
-procedure TframeModpathTimeSeriesDisplay.GetData;
+procedure TframeModpathTimeSeriesDisplay.comboModelSelectionChange(
+  Sender: TObject);
 var
   TimeSeries : TTimeSeriesReader;
   Times: TRealList;
@@ -250,9 +232,11 @@ var
   ALimitRow: TTimeSeriesLimits;
   ARow: Integer;
   ColorParameters: TColorParameters;
+  LocalModel: TCustomModel;
 begin
-  Handle;
-  if frmGoPhast.PhastModel.ModflowPackages.ModPath.Binary then
+  LocalModel := comboModelSelection.Items.Objects[
+    comboModelSelection.ItemIndex] as TCustomModel;
+  if LocalModel.ModflowPackages.ModPath.Binary then
   begin
     fedModpathFile.DefaultExt := '.ts_bin';
   end
@@ -260,7 +244,9 @@ begin
   begin
     fedModpathFile.DefaultExt := '.ts';
   end;
-  TimeSeries := frmGoPhast.PhastModel.TimeSeries;
+
+  TimeSeries := FTimeSeriesList[comboModelSelection.ItemIndex];
+
   fedModpathFile.FileName := TimeSeries.FileName;
   Times := TimeSeries.Times;
   AssignTimesToComboBox(Times);
@@ -295,6 +281,110 @@ begin
   seCycles.AsInteger := ColorParameters.ColorCycles;
   seColorExponent.Value := ColorParameters.ColorExponent;
   jsColorExponent.Value := Round(ColorParameters.ColorExponent*100);
+
+end;
+
+procedure TframeModpathTimeSeriesDisplay.comboTimeToPlotChange(Sender: TObject);
+begin
+  udTimeToPlot.Position := 0;
+end;
+
+constructor TframeModpathTimeSeriesDisplay.Create(Owner: TComponent);
+begin
+  inherited;
+  FTimeSeriesList := TimeSeriesObjectList.Create;
+end;
+
+destructor TframeModpathTimeSeriesDisplay.Destroy;
+begin
+  FTimeSeriesList.Free;
+  inherited;
+end;
+
+procedure TframeModpathTimeSeriesDisplay.fedModpathFileBeforeDialog(
+  Sender: TObject; var AName: string; var AAction: Boolean);
+begin
+  if AName = '' then
+  begin
+    if frmGoPhast.sdModpathInput.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdModpathInput.FileName,
+        fedModpathFile.DefaultExt);
+    end
+    else if frmGoPhast.sdModflowInput.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdModflowInput.FileName,
+        fedModpathFile.DefaultExt);
+    end
+    else if frmGoPhast.sdSaveDialog.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdSaveDialog.FileName,
+        fedModpathFile.DefaultExt);
+    end;
+  end;
+end;
+
+procedure TframeModpathTimeSeriesDisplay.fedModpathFileChange(Sender: TObject);
+var
+  TimeSeries: TTimeSeriesReader;
+begin
+  if FileExists(fedModpathFile.FileName) then
+  begin
+    TimeSeries := TTimeSeriesReader.Create(frmGoPhast.PhastModel);
+    try
+      TimeSeries.FileName := fedModpathFile.FileName;
+      TimeSeries.ReadFile;
+      AssignTimesToComboBox(TimeSeries.Times);
+    finally
+      TimeSeries.Free;
+    end;
+  end;
+end;
+
+procedure TframeModpathTimeSeriesDisplay.GetData;
+var
+  TimeSeries : TTimeSeriesReader;
+  LocalTimeSeries: TTimeSeriesReader;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  Handle;
+  if frmGoPhast.PhastModel.ModflowPackages.ModPath.Binary then
+  begin
+    fedModpathFile.DefaultExt := '.ts_bin';
+  end
+  else
+  begin
+    fedModpathFile.DefaultExt := '.ts';
+  end;
+  TimeSeries := frmGoPhast.PhastModel.TimeSeries;
+
+  FTimeSeriesList.Clear;
+  comboModelSelection.Items.Clear;
+  LocalTimeSeries := TTimeSeriesReader.Create(frmGoPhast.PhastModel);
+  FTimeSeriesList.Add(LocalTimeSeries);
+  LocalTimeSeries.Assign(TimeSeries);
+  comboModelSelection.Items.AddObject(frmGoPhast.PhastModel.DisplayName, frmGoPhast.PhastModel);
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    comboModelSelection.Visible := True;
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      comboModelSelection.Items.AddObject(ChildModel.DisplayName, ChildModel);
+      LocalTimeSeries := TTimeSeriesReader.Create(ChildModel);
+      FTimeSeriesList.Add(LocalTimeSeries);
+      TimeSeries := ChildModel.TimeSeries;
+      LocalTimeSeries.Assign(TimeSeries);
+    end;
+  end
+  else
+  begin
+    comboModelSelection.Visible := False;
+  end;
+  lblModelSelection.Visible := comboModelSelection.Visible;
+  comboModelSelection.ItemIndex := 0;
+  comboModelSelectionChange(nil);
 
 end;
 
@@ -452,11 +542,14 @@ var
   ARow: Integer;
   ColorParameters: TColorParameters;
   Undo: TUndoImportTimeSeries;
+  LocalModel: TCustomModel;
 begin
   ImportedNewFile := False;
-  Grid := frmGoPhast.ModflowGrid;
-  ExistingTimeSeries := frmGoPhast.PhastModel.TimeSeries;
-  TimeSeries := TTimeSeriesReader.Create;
+  LocalModel := comboModelSelection.Items.Objects[comboModelSelection.ItemIndex] as TCustomModel;
+
+  Grid := LocalModel.ModflowGrid;
+  ExistingTimeSeries := LocalModel.TimeSeries;
+  TimeSeries := TTimeSeriesReader.Create(LocalModel);
   try
     TimeSeries.Assign(ExistingTimeSeries);
 
@@ -523,7 +616,7 @@ begin
       ColorParameters.ColorExponent := seColorExponent.Value;
     end;
 
-    Undo := TUndoImportTimeSeries.Create(TimeSeries, ImportedNewFile);
+    Undo := TUndoImportTimeSeries.Create(LocalModel, TimeSeries, ImportedNewFile);
     frmGoPhast.UndoStack.Submit(Undo);
   finally
     TimeSeries.Free

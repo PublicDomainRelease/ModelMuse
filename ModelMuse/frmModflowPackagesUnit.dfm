@@ -27,7 +27,7 @@ inherited frmModflowPackages: TfrmModflowPackages
     Top = 0
     Width = 605
     Height = 525
-    ActivePage = jvspSFR
+    ActivePage = jvspLAK
     PropagateEnable = False
     Align = alClient
     OnChange = jvplPackagesChange
@@ -640,390 +640,87 @@ inherited frmModflowPackages: TfrmModflowPackages
           ExplicitWidth = 78
           ExplicitHeight = 18
         end
+        inherited lblPCGMaxOuter: TLabel
+          Width = 289
+          Height = 18
+          ExplicitWidth = 289
+          ExplicitHeight = 18
+        end
+        inherited lblPCGMaxInner: TLabel
+          Width = 273
+          Height = 18
+          ExplicitWidth = 273
+          ExplicitHeight = 18
+        end
+        inherited lblPCGMethod: TLabel
+          Width = 296
+          Height = 18
+          ExplicitWidth = 296
+          ExplicitHeight = 18
+        end
+        inherited lblPCGMaxChangeHead: TLabel
+          Width = 261
+          Height = 18
+          ExplicitWidth = 261
+          ExplicitHeight = 18
+        end
+        inherited lblPCGMaxResidual: TLabel
+          Width = 210
+          Height = 18
+          ExplicitWidth = 210
+          ExplicitHeight = 18
+        end
+        inherited lblPCGRelaxation: TLabel
+          Width = 220
+          Height = 18
+          ExplicitWidth = 220
+          ExplicitHeight = 18
+        end
+        inherited lblPCGMaxEigen: TLabel
+          Width = 320
+          Height = 18
+          ExplicitWidth = 320
+          ExplicitHeight = 18
+        end
+        inherited lblPCGPrintInterval: TLabel
+          Width = 184
+          Height = 18
+          ExplicitWidth = 184
+          ExplicitHeight = 18
+        end
+        inherited lblPCGPrintControl: TLabel
+          Width = 189
+          Height = 18
+          ExplicitWidth = 189
+          ExplicitHeight = 18
+        end
+        inherited lblPCGDampingFactor: TLabel
+          Width = 207
+          Height = 18
+          ExplicitWidth = 207
+          ExplicitHeight = 18
+        end
+        inherited lblPCGDampPcgT: TLabel
+          Width = 281
+          Height = 18
+          ExplicitWidth = 281
+          ExplicitHeight = 18
+        end
         inherited memoComments: TMemo
           Width = 584
-          Height = 154
           ExplicitWidth = 584
-          ExplicitHeight = 154
         end
-        inherited gpPCG: TGridPanel
-          Top = 224
-          Width = 589
-          Height = 301
-          Anchors = [akLeft, akRight, akBottom]
-          BevelOuter = bvNone
-          ControlCollection = <
-            item
-              Column = 0
-              Control = framePCG.lblPCGMaxOuter
-              Row = 0
-            end
-            item
-              Column = 1
-              Control = framePCG.rdePCGMaxOuter
-              Row = 0
-            end
-            item
-              Column = 0
-              Control = framePCG.lblPCGMaxInner
-              Row = 1
-            end
-            item
-              Column = 1
-              Control = framePCG.rdePCGMaxInner
-              Row = 1
-            end
-            item
-              Column = 0
-              Control = framePCG.lblPCGMethod
-              Row = 2
-            end
-            item
-              Column = 1
-              Control = framePCG.comboPCGPrecondMeth
-              Row = 2
-            end
-            item
-              Column = 0
-              Control = framePCG.lblPCGMaxChangeHead
-              Row = 3
-            end
-            item
-              Column = 1
-              Control = framePCG.rdePCGMaxHeadChange
-              Row = 3
-            end
-            item
-              Column = 0
-              Control = framePCG.lblPCGMaxResidual
-              Row = 4
-            end
-            item
-              Column = 1
-              Control = framePCG.rdePCGMaxResChange
-              Row = 4
-            end
-            item
-              Column = 0
-              Control = framePCG.lblPCGRelaxation
-              Row = 5
-            end
-            item
-              Column = 1
-              Control = framePCG.rdePCGRelax
-              Row = 5
-            end
-            item
-              Column = 0
-              Control = framePCG.lblPCGMaxEigen
-              Row = 6
-            end
-            item
-              Column = 1
-              Control = framePCG.comboPCGEigenValue
-              Row = 6
-            end
-            item
-              Column = 0
-              Control = framePCG.lblPCGPrintInterval
-              Row = 7
-            end
-            item
-              Column = 1
-              Control = framePCG.rdePCGPrintInt
-              Row = 7
-            end
-            item
-              Column = 0
-              Control = framePCG.lblPCGPrintControl
-              Row = 8
-            end
-            item
-              Column = 1
-              Control = framePCG.comboPCGPrint
-              Row = 8
-            end
-            item
-              Column = 0
-              Control = framePCG.lblPCGDampingFactor
-              Row = 9
-            end
-            item
-              Column = 1
-              Control = framePCG.rdePCGDamp
-              Row = 9
-            end
-            item
-              Column = 0
-              Control = framePCG.lblPCGDampPcgT
-              Row = 10
-            end
-            item
-              Column = 1
-              Control = framePCG.rdePCGDampPcgT
-              Row = 10
-            end>
-          RowCollection = <
-            item
-              Value = 9.090596132233804000
-            end
-            item
-              Value = 9.090596132233804000
-            end
-            item
-              Value = 9.090596132233804000
-            end
-            item
-              Value = 9.090505226272480000
-            end
-            item
-              Value = 9.090573405743471000
-            end
-            item
-              Value = 9.090573405743474000
-            end
-            item
-              Value = 9.090537043449851000
-            end
-            item
-              Value = 9.093295381593441000
-            end
-            item
-              Value = 9.090909107438017000
-            end
-            item
-              Value = 9.090909016528925000
-            end
-            item
-              Value = 9.090909016528925000
-            end>
-          ExplicitTop = 224
-          ExplicitWidth = 589
-          ExplicitHeight = 301
-          inherited lblPCGMaxOuter: TLabel
-            Left = 3
-            Top = 6
-            Width = 315
-            Height = 21
-            ExplicitLeft = 3
-            ExplicitTop = 6
-            ExplicitWidth = 289
-            ExplicitHeight = 18
-          end
-          inherited rdePCGMaxOuter: TRbwDataEntry
-            Left = 324
-            Top = 3
-            Width = 262
-            Height = 21
-            ExplicitLeft = 324
-            ExplicitTop = 3
-            ExplicitWidth = 262
-            ExplicitHeight = 21
-          end
-          inherited lblPCGMaxInner: TLabel
-            Left = 3
-            Top = 33
-            Width = 315
-            Height = 21
-            ExplicitLeft = 3
-            ExplicitTop = 33
-            ExplicitWidth = 273
-            ExplicitHeight = 18
-          end
-          inherited rdePCGMaxInner: TRbwDataEntry
-            Left = 324
-            Top = 30
-            Width = 262
-            Height = 21
-            ExplicitLeft = 324
-            ExplicitTop = 30
-            ExplicitWidth = 262
-            ExplicitHeight = 21
-          end
-          inherited lblPCGMethod: TLabel
-            Left = 3
-            Top = 61
-            Width = 315
-            Height = 20
-            ExplicitLeft = 3
-            ExplicitTop = 61
-            ExplicitWidth = 296
-            ExplicitHeight = 18
-          end
-          inherited comboPCGPrecondMeth: TJvImageComboBox
-            Left = 324
-            Top = 57
-            Width = 262
-            Height = 26
-            DroppedWidth = 266
-            ExplicitLeft = 324
-            ExplicitTop = 57
-            ExplicitWidth = 262
-            ExplicitHeight = 26
-          end
-          inherited lblPCGMaxChangeHead: TLabel
-            Left = 3
-            Top = 87
-            Width = 315
-            Height = 21
-            ExplicitLeft = 3
-            ExplicitTop = 87
-            ExplicitWidth = 261
-            ExplicitHeight = 18
-          end
-          inherited rdePCGMaxHeadChange: TRbwDataEntry
-            Left = 324
-            Top = 84
-            Width = 262
-            Height = 21
-            ExplicitLeft = 324
-            ExplicitTop = 84
-            ExplicitWidth = 262
-            ExplicitHeight = 21
-          end
-          inherited lblPCGMaxResidual: TLabel
-            Left = 3
-            Top = 114
-            Width = 315
-            Height = 21
-            ExplicitLeft = 3
-            ExplicitTop = 114
-            ExplicitWidth = 210
-            ExplicitHeight = 18
-          end
-          inherited rdePCGMaxResChange: TRbwDataEntry
-            Left = 324
-            Top = 111
-            Width = 262
-            Height = 21
-            ExplicitLeft = 324
-            ExplicitTop = 111
-            ExplicitWidth = 262
-            ExplicitHeight = 21
-          end
-          inherited lblPCGRelaxation: TLabel
-            Left = 3
-            Top = 141
-            Width = 315
-            Height = 21
-            ExplicitLeft = 3
-            ExplicitTop = 141
-            ExplicitWidth = 220
-            ExplicitHeight = 18
-          end
-          inherited rdePCGRelax: TRbwDataEntry
-            Left = 324
-            Top = 138
-            Width = 262
-            Height = 21
-            ExplicitLeft = 324
-            ExplicitTop = 138
-            ExplicitWidth = 262
-            ExplicitHeight = 21
-          end
-          inherited lblPCGMaxEigen: TLabel
-            Left = 3
-            Top = 169
-            Width = 315
-            Height = 20
-            ExplicitLeft = 3
-            ExplicitTop = 169
-            ExplicitWidth = 320
-            ExplicitHeight = 18
-          end
-          inherited comboPCGEigenValue: TJvImageComboBox
-            Left = 324
-            Top = 165
-            Width = 262
-            Height = 26
-            DroppedWidth = 266
-            ExplicitLeft = 324
-            ExplicitTop = 165
-            ExplicitWidth = 262
-            ExplicitHeight = 26
-          end
-          inherited lblPCGPrintInterval: TLabel
-            Left = 3
-            Top = 195
-            Width = 315
-            Height = 21
-            ExplicitLeft = 3
-            ExplicitTop = 195
-            ExplicitWidth = 184
-            ExplicitHeight = 18
-          end
-          inherited rdePCGPrintInt: TRbwDataEntry
-            Left = 324
-            Top = 192
-            Width = 262
-            Height = 21
-            ExplicitLeft = 324
-            ExplicitTop = 192
-            ExplicitWidth = 262
-            ExplicitHeight = 21
-          end
-          inherited lblPCGPrintControl: TLabel
-            Left = 3
-            Top = 223
-            Width = 315
-            Height = 20
-            ExplicitLeft = 3
-            ExplicitTop = 223
-            ExplicitWidth = 189
-            ExplicitHeight = 18
-          end
-          inherited comboPCGPrint: TJvImageComboBox
-            Left = 324
-            Top = 219
-            Width = 262
-            Height = 26
-            DroppedWidth = 266
-            ExplicitLeft = 324
-            ExplicitTop = 219
-            ExplicitWidth = 262
-            ExplicitHeight = 26
-          end
-          inherited lblPCGDampingFactor: TLabel
-            Left = 3
-            Top = 249
-            Width = 315
-            Height = 21
-            Caption = 'Steady-state damping factor (DAMPPCG):'
-            ExplicitLeft = 3
-            ExplicitTop = 249
-            ExplicitWidth = 296
-            ExplicitHeight = 18
-          end
-          inherited rdePCGDamp: TRbwDataEntry
-            Left = 324
-            Top = 246
-            Width = 262
-            Height = 21
-            ExplicitLeft = 324
-            ExplicitTop = 246
-            ExplicitWidth = 262
-            ExplicitHeight = 21
-          end
-          inherited lblPCGDampPcgT: TLabel
-            Left = 3
-            Top = 276
-            Width = 315
-            Height = 25
-            ExplicitLeft = 3
-            ExplicitTop = 276
-            ExplicitWidth = 281
-            ExplicitHeight = 18
-          end
-          inherited rdePCGDampPcgT: TRbwDataEntry
-            Left = 324
-            Top = 273
-            Width = 262
-            Height = 25
-            ExplicitLeft = 324
-            ExplicitTop = 273
-            ExplicitWidth = 262
-            ExplicitHeight = 25
-          end
+        inherited comboPCGPrecondMeth: TJvImageComboBox
+          Height = 26
+          ExplicitHeight = 26
+        end
+        inherited comboPCGEigenValue: TJvImageComboBox
+          Height = 26
+          ExplicitHeight = 26
+        end
+        inherited comboPCGPrint: TJvImageComboBox
+          Height = 26
+          ExplicitHeight = 26
         end
         inherited rcSelectionController: TRbwController
           ControlList = <
@@ -1059,6 +756,12 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
             item
               Control = framePCG.rdePCGDampPcgT
+            end
+            item
+              Control = framePCG.rbIHCOFADD_0
+            end
+            item
+              Control = framePCG.rbIHCOFADD_1
             end>
         end
       end
@@ -1913,31 +1616,31 @@ inherited frmModflowPackages: TfrmModflowPackages
         end
         inherited lblTheta: TLabel
           Left = 168
-          Top = 395
+          Top = 306
           Width = 39
           Height = 18
           ExplicitLeft = 168
-          ExplicitTop = 373
+          ExplicitTop = 306
           ExplicitWidth = 39
           ExplicitHeight = 18
         end
         inherited lblIterations: TLabel
           Left = 168
-          Top = 423
+          Top = 334
           Width = 286
           Height = 18
           ExplicitLeft = 168
-          ExplicitTop = 401
+          ExplicitTop = 334
           ExplicitWidth = 286
           ExplicitHeight = 18
         end
         inherited lblConvergenceCriterion: TLabel
           Left = 168
-          Top = 451
+          Top = 362
           Width = 235
           Height = 18
           ExplicitLeft = 168
-          ExplicitTop = 429
+          ExplicitTop = 362
           ExplicitWidth = 235
           ExplicitHeight = 18
         end
@@ -1949,47 +1652,55 @@ inherited frmModflowPackages: TfrmModflowPackages
         end
         inherited lblSurfDepth: TLabel
           Left = 168
-          Top = 475
+          Top = 386
           Width = 340
           Height = 18
           ExplicitLeft = 168
-          ExplicitTop = 453
+          ExplicitTop = 386
           ExplicitWidth = 340
           ExplicitHeight = 18
         end
         inherited memoComments: TMemo
           Width = 584
-          Height = 324
+          Height = 235
           ExplicitWidth = 584
-          ExplicitHeight = 324
+          ExplicitHeight = 235
         end
         inherited rdeTheta: TRbwDataEntry
-          Top = 392
+          Top = 303
           Width = 146
-          ExplicitTop = 392
+          ExplicitTop = 303
           ExplicitWidth = 146
         end
         inherited rdeIterations: TRbwDataEntry
-          Top = 420
+          Top = 331
           Width = 146
-          ExplicitTop = 420
+          ExplicitTop = 331
           ExplicitWidth = 146
         end
         inherited rdeConvergenceCriterion: TRbwDataEntry
-          Top = 448
+          Top = 359
           Width = 146
-          ExplicitTop = 448
+          ExplicitTop = 359
           ExplicitWidth = 146
         end
         inherited cbPrintLake: TCheckBox
-          Top = 500
-          ExplicitTop = 500
+          Top = 411
+          ExplicitTop = 411
         end
         inherited rdeSurfDepth: TRbwDataEntry
-          Top = 472
+          Top = 383
           Width = 146
-          ExplicitTop = 472
+          ExplicitTop = 383
           ExplicitWidth = 146
+        end
+        inherited rgBathymetry: TRadioGroup
+          Top = 434
+          Width = 345
+          Height = 75
+          ExplicitTop = 434
+          ExplicitWidth = 345
+          ExplicitHeight = 75
         end
         inherited rcSelectionController: TRbwController
           ControlList = <
@@ -2025,6 +1736,9 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
             item
               Control = framePkgLAK.lblSurfDepth
+            end
+            item
+              Control = framePkgLAK.rgBathymetry
             end>
         end
       end
@@ -3563,11 +3277,13 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboTrackingDirection: TJvImageComboBox
               Height = 28
               ItemHeight = 22
+              TabOrder = 9
               ExplicitHeight = 28
             end
             inherited comboWeakSinkTreatment: TJvImageComboBox
               Height = 28
               ItemHeight = 22
+              TabOrder = 10
               ExplicitHeight = 28
             end
             inherited comboWhichEndpoints: TJvImageComboBox
@@ -6941,6 +6657,239 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
             item
               Control = framePkgMt3dmsTob.comboSaveMassFluxType
+            end>
+        end
+      end
+    end
+    object jvspPCGN: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 605
+      Height = 525
+      Caption = 'jvspPCGN'
+      inline framePackagePcgn: TframePackagePcgn
+        Left = 0
+        Top = 0
+        Width = 605
+        Height = 525
+        Align = alClient
+        TabOrder = 0
+        TabStop = True
+        ExplicitWidth = 605
+        ExplicitHeight = 525
+        inherited lblComments: TLabel
+          Width = 76
+          Height = 18
+          ExplicitWidth = 76
+          ExplicitHeight = 18
+        end
+        inherited lblPackage: TLabel
+          Width = 78
+          Height = 18
+          ExplicitWidth = 78
+          ExplicitHeight = 18
+        end
+        inherited memoComments: TMemo
+          Width = 574
+          ExplicitWidth = 574
+        end
+        inherited pcControls: TPageControl
+          Width = 605
+          Height = 368
+          ExplicitWidth = 605
+          ExplicitHeight = 368
+          inherited tabBasic: TTabSheet
+            ExplicitLeft = 4
+            ExplicitTop = 29
+            ExplicitWidth = 592
+            ExplicitHeight = 360
+            inherited lblIter_mo: TLabel
+              Width = 389
+              Height = 18
+              ExplicitWidth = 389
+              ExplicitHeight = 18
+            end
+            inherited lblIter_mi: TLabel
+              Width = 368
+              Height = 18
+              ExplicitWidth = 368
+              ExplicitHeight = 18
+            end
+            inherited lblCLOSE_R: TLabel
+              Width = 429
+              Height = 18
+              ExplicitWidth = 429
+              ExplicitHeight = 18
+            end
+            inherited lblClose_H: TLabel
+              Width = 409
+              Height = 18
+              ExplicitWidth = 409
+              ExplicitHeight = 18
+            end
+            inherited lblRelax: TLabel
+              Width = 216
+              Height = 18
+              ExplicitWidth = 216
+              ExplicitHeight = 18
+            end
+            inherited lblIfill: TLabel
+              Width = 281
+              Height = 18
+              ExplicitWidth = 281
+              ExplicitHeight = 18
+            end
+            inherited seIter_mo: TJvSpinEdit
+              Height = 26
+              ExplicitHeight = 26
+            end
+            inherited seIter_mi: TJvSpinEdit
+              Height = 26
+              ExplicitHeight = 26
+            end
+            inherited seIfill: TJvSpinEdit
+              Height = 26
+              ExplicitHeight = 26
+            end
+          end
+          inherited tabNonLinear: TTabSheet
+            ExplicitLeft = 4
+            ExplicitTop = 29
+            ExplicitWidth = 597
+            ExplicitHeight = 335
+            inherited lblDampingMode: TLabel
+              Width = 180
+              Height = 18
+              ExplicitWidth = 180
+              ExplicitHeight = 18
+            end
+            inherited lblDamp: TLabel
+              Width = 251
+              Height = 18
+              ExplicitWidth = 251
+              ExplicitHeight = 18
+            end
+            inherited lblDamp_Lb: TLabel
+              Width = 238
+              Height = 18
+              ExplicitWidth = 238
+              ExplicitHeight = 18
+            end
+            inherited lblDamp_D: TLabel
+              Width = 325
+              Height = 18
+              ExplicitWidth = 325
+              ExplicitHeight = 18
+            end
+            inherited lblChglimit: TLabel
+              Width = 247
+              Height = 18
+              ExplicitWidth = 247
+              ExplicitHeight = 18
+            end
+            inherited lblAcnvg: TLabel
+              Width = 208
+              Height = 18
+              ExplicitWidth = 208
+              ExplicitHeight = 18
+            end
+            inherited lblChvg_Lb: TLabel
+              Width = 361
+              Height = 18
+              ExplicitWidth = 361
+              ExplicitHeight = 18
+            end
+            inherited lblMcnvg: TLabel
+              Width = 443
+              Height = 18
+              ExplicitWidth = 443
+              ExplicitHeight = 18
+            end
+            inherited lblRate_C: TLabel
+              Width = 317
+              Height = 18
+              ExplicitWidth = 317
+              ExplicitHeight = 18
+            end
+            inherited lblIpunit: TLabel
+              Width = 349
+              Height = 18
+              ExplicitWidth = 349
+              ExplicitHeight = 18
+            end
+            inherited comboDampingMode: TJvImageComboBox
+              Height = 28
+              ItemHeight = 22
+              ExplicitHeight = 28
+            end
+            inherited comboAcnvg: TJvImageComboBox
+              Height = 28
+              ItemHeight = 22
+              ExplicitHeight = 28
+            end
+            inherited seMcnvg: TJvSpinEdit
+              Height = 26
+              ExplicitHeight = 26
+            end
+            inherited comboIpunit: TJvImageComboBox
+              Height = 28
+              ItemHeight = 22
+              ExplicitHeight = 28
+            end
+          end
+        end
+        inherited rcSelectionController: TRbwController
+          ControlList = <
+            item
+              Control = framePackagePcgn.lblComments
+            end
+            item
+              Control = framePackagePcgn.memoComments
+            end
+            item
+              Control = framePackagePcgn.seIter_mo
+            end
+            item
+              Control = framePackagePcgn.seIter_mi
+            end
+            item
+              Control = framePackagePcgn.rdeCLOSE_R
+            end
+            item
+              Control = framePackagePcgn.rdeClose_H
+            end
+            item
+              Control = framePackagePcgn.rdeRelax
+            end
+            item
+              Control = framePackagePcgn.seIfill
+            end
+            item
+              Control = framePackagePcgn.cbUnit_pc
+            end
+            item
+              Control = framePackagePcgn.cbUnit_ts
+            end
+            item
+              Control = framePackagePcgn.comboDampingMode
+            end
+            item
+              Control = framePackagePcgn.rdeDamp
+            end
+            item
+              Control = framePackagePcgn.rdeDamp_Lb
+            end
+            item
+              Control = framePackagePcgn.rdeRate_D
+            end
+            item
+              Control = framePackagePcgn.rdeChglimit
+            end
+            item
+              Control = framePackagePcgn.comboAcnvg
+            end
+            item
+              Control = framePackagePcgn.comboIpunit
             end>
         end
       end

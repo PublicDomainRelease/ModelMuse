@@ -23,6 +23,30 @@ type
     AFile: TextFile;
   end;
 
+  THydModData = class(TObject)
+  private
+    FTimes: Array of TModflowDouble;
+    FLabels: TStringList;
+    FValues: TModflowDoubleArray;
+    FTimeUnit: integer;
+    function GetValue(LabelIndex, TimeIndex: integer): TModflowDouble;
+    function GetLabel(Index: integer): string;
+    function GetLabelCount: integer;
+    function GetTimeCount: integer;
+    function GetTime(Index: Integer): double;
+  public
+    constructor Create;
+    Destructor Destroy; override;
+    procedure ReadFile(const FileName: string);
+    property TimeCount: integer Read GetTimeCount;
+    property Labels[Index: integer]: string read GetLabel;
+    property LabelCount: integer read GetLabelCount;
+    property Values[LabelIndex, TimeIndex: integer]: TModflowDouble read GetValue;
+    property TimeUnit: integer Read FTimeUnit;
+    property Times[Index: Integer]: double read GetTime;
+    function IndexOfLabel(const ALabel: string): integer;
+  end;
+
 procedure ReadSinglePrecisionMt3dmsBinaryRealArray(AFile: TFileStream;
   var NTRANS, KSTP, KPER: Integer;
   var TOTIM: TModflowDouble; var DESC: TModflowDesc;
@@ -516,6 +540,11 @@ var
                   Exit;
                 end;
               end;
+            end
+            else
+            begin
+              result := False;
+              Exit;
             end;
           end;
         else
@@ -1387,6 +1416,125 @@ begin
     end;
   end;
   ReadLn(F.AFile);
+end;
+
+{ THydModData }
+
+constructor THydModData.Create;
+begin
+  FLabels := TStringList.Create;
+end;
+
+destructor THydModData.Destroy;
+begin
+  FLabels.Free;
+end;
+
+function THydModData.GetLabel(Index: integer): string;
+begin
+  result := FLabels[Index];
+end;
+
+function THydModData.GetLabelCount: integer;
+begin
+  result := FLabels.Count;
+end;
+
+function THydModData.GetTime(Index: Integer): double;
+begin
+  result := FTimes[Index]
+end;
+
+function THydModData.GetTimeCount: integer;
+begin
+  result := Length(FTimes);
+end;
+
+function THydModData.GetValue(LabelIndex, TimeIndex: integer): TModflowDouble;
+begin
+  result := FValues[LabelIndex, TimeIndex];
+end;
+
+function THydModData.IndexOfLabel(const ALabel: string): integer;
+begin
+  result := FLabels.IndexOf(ALabel);
+end;
+
+procedure THydModData.ReadFile(const FileName: string);
+var
+  FileStream: TFileStream;
+  NHYDTOT: integer;
+  Precision: TModflowPrecision;
+  TimeLabel: Array[0..3] of AnsiChar;
+  HydLabel:Array[0..19] of AnsiChar;
+  Index: Integer;
+  RecordLength: Integer;
+  RecordCount: integer;
+  TimeIndex: Integer;
+  HydIndex: Integer;
+  ASingle: TModflowFloat;
+  ADouble: TModflowDouble;
+begin
+  FileStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite,
+    fmShareDenyWrite);
+  try
+    FileStream.Read(NHYDTOT, SizeOf(NHYDTOT));
+    if NHYDTOT < 0 then
+    begin
+      Precision := mpDouble;
+      NHYDTOT := -NHYDTOT;
+    end
+    else
+    begin
+      Precision := mpSingle;
+    end;
+    FLabels.Capacity := NHYDTOT;
+    FileStream.Read(FTimeUnit, SizeOf(FTimeUnit));
+    FileStream.Read(TimeLabel, SizeOf(TimeLabel));
+    for Index := 0 to NHYDTOT - 1 do
+    begin
+      FileStream.Read(HydLabel, SizeOf(HydLabel));
+      FLabels.Add(Trim(string(HydLabel)));
+    end;
+
+    RecordLength := 0;
+    case Precision of
+      mpSingle: RecordLength := (1+FLabels.Count)*SizeOf(TModflowFloat);
+      mpDouble: RecordLength := (1+FLabels.Count)*SizeOf(TModflowDouble);
+      else Assert(False);
+    end;
+    RecordCount := (FileStream.Size - FileStream.Position) div RecordLength;
+    SetLength(FValues, FLabels.Count, RecordCount);
+    SetLength(FTimes, RecordCount);
+    for TimeIndex := 0 to RecordCount - 1 do
+    begin
+      case Precision of
+        mpSingle:
+          begin
+            FileStream.Read(ASingle, SizeOf(ASingle));
+            FTimes[TimeIndex] := ASingle;
+            for HydIndex := 0 to FLabels.Count - 1 do
+            begin
+              FileStream.Read(ASingle, SizeOf(ASingle));
+              FValues[HydIndex, TimeIndex] := ASingle;
+            end;
+          end;
+        mpDouble:
+          begin
+            FileStream.Read(ADouble, SizeOf(ADouble));
+            FTimes[TimeIndex] := ADouble;
+            for HydIndex := 0 to FLabels.Count - 1 do
+            begin
+              FileStream.Read(ADouble, SizeOf(ADouble));
+              FValues[HydIndex, TimeIndex] := ADouble;
+            end;
+          end;
+      end;
+    end;
+
+  finally
+    FileStream.Free;
+  end;
 end;
 
 end.

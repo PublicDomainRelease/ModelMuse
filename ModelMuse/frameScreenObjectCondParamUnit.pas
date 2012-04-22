@@ -24,6 +24,11 @@ implementation
 uses
   ModflowBoundaryUnit;
 
+resourcestring
+  StrSPerUnitLength = '%s  per unit length or area';
+  StrTotalSPerLayer = 'Total %s (per layer)';
+  StrTotalS = ' total %s (per layer)';
+
 {$R *.dfm}
 
 { TframeScreenObjectCondParam }
@@ -43,9 +48,9 @@ begin
   end;
   result := DirectCaption;
   case FormulaInterp of
-    fiSpecific: result := result + ' per unit length or area';
+    fiSpecific: result := Format(StrSPerUnitLength, [result]);
     fiDirect: ;
-    fiTotal: result := 'Total ' + LowerCase(result);
+    fiTotal: result := Format(StrTotalSPerLayer, [LowerCase(result)]);
     else Assert(False);
   end;
 end;
@@ -68,9 +73,9 @@ begin
     FormulaInterp := TFormulaInterpretation(comboFormulaInterp.ItemIndex);
   end;
   case FormulaInterp of
-    fiSpecific: result := result + ' per unit length or area';
+    fiSpecific: result := Format(StrSPerUnitLength, [result]);
     fiDirect: ;
-    fiTotal: result := ' total ' + result;
+    fiTotal: result := Format(StrTotalS, [result]);
     else Assert(False);
   end;
 end;

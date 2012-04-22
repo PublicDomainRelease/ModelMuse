@@ -39,6 +39,22 @@ uses
 {$ENDIF}
   TypInfo;
 
+resourcestring
+  StrInvalidXMLAnsiStri = 'Invalid XML AnsiString encoding';
+  StrInvalidBinaryValue = 'Invalid Binary values in XML';
+  StrNotAVallidObject = 'Not a vallid object XML stream';
+  StrNoBinaryEndFound = 'No Binary End found';
+  StrUnknownDataType = 'Unknown DataType';
+  StrNoCollectionFound = 'No Collection found';
+  StrNoCollectionItemEN = 'No CollectionItem END found';
+  StrNoEndOfCollection = 'No end of Collection found';
+  StrNoListFound = 'No List found';
+  StrNoListItemEndFoun = 'No ListItem End found';
+  StrNoEndOfListFound = 'No end of List found';
+  StrNameOfPropertyEmp = 'Name of Property Empty';
+  StrNoPropertieENDFou = 'No propertie END found';
+  StrInvalidXMLObjectS = 'Invalid XML object stream';
+
 const
   CrLf = #13#10;
 
@@ -230,7 +246,7 @@ var
   S: AnsiString;
   procedure Error;
   begin
-    raise Exception.Create('Invalid XML AnsiString encoding');
+    raise Exception.Create(StrInvalidXMLAnsiStri);
   end;
 
 begin
@@ -642,7 +658,7 @@ var
   Buffer: array[0..255] of AnsiChar;
 begin
   Count := HexToBin(PAnsiChar(aStr), Buffer, SizeOf(Buffer));
-  if Count = 0 then raise Exception.Create('Invalid Binary values in XML');
+  if Count = 0 then raise Exception.Create(StrInvalidBinaryValue);
   FBinStream.Write(Buffer, Count);
 end;
 
@@ -675,7 +691,7 @@ var
     else if ElementNameIs(scInline) then
       isInline := true
     else
-      raise Exception.Create('Not a vallid object XML stream');
+      raise Exception.Create(StrNotAVallidObject);
     ClassName  := Parser.ValueOf('Type');
     ObjectName := Parser.ValueOf('Name');
     Order      := Parser.ValueOf('Order');
@@ -719,7 +735,7 @@ var
           Parser.ReadNextElement; // this must be the end of the ListItem
           if (not Parser.EndFound) or
              (not (AnsiStrings.AnsiCompareText(scBinaryItem, Parser.ElementName) = 0)) then
-            raise Exception.Create('No Binary End found');
+            raise Exception.Create(StrNoBinaryEndFound);
           Parser.ReadNextElement; // this must be the next item or the end of the list
         end;
         Writer.WriteBinary(Bin.CopyTo);
@@ -810,7 +826,7 @@ var
         end;
 //        Raise Exception.Create('Not yet implemented');
       else
-        Raise Exception.Create('Unknown DataType');
+        Raise Exception.Create(StrUnknownDataType);
     end;
   end;
 
@@ -820,7 +836,7 @@ var
     Parser.ReadNextElement; // this must the begin of the collection
     if (Parser.EndFound) or
        (not (AnsiStrings.AnsiCompareText(scCollection, Parser.ElementName) = 0)) then
-      raise Exception.Create('No Collection found');
+      raise Exception.Create(StrNoCollectionFound);
     Writer.WriteValue(vaCollection);
     Parser.ReadNextElement;
     if not Parser.EndFound then
@@ -839,7 +855,7 @@ var
           end;
           if (not Parser.EndFound) or
              (not (AnsiStrings.AnsiCompareText(scCollectionItem, Parser.ElementName) = 0)) then
-            raise Exception.Create('No CollectionItem END found');
+            raise Exception.Create(StrNoCollectionItemEN);
           Parser.ReadNextElement;
         finally
           Writer.WriteListEnd;
@@ -850,7 +866,7 @@ var
     // this must be the end of the collection
     if (not Parser.EndFound) or
        (not (AnsiStrings.AnsiCompareText(scCollection, Parser.ElementName) = 0)) then
-      raise Exception.Create('No end of Collection found');
+      raise Exception.Create(StrNoEndOfCollection);
     Parser.EndFound := false;
   end;
 
@@ -860,7 +876,7 @@ var
     Parser.ReadNextElement;
     if (Parser.EndFound) or
        (not (AnsiStrings.AnsiCompareText(scList, Parser.ElementName) = 0)) then
-      raise Exception.Create('No List found');
+      raise Exception.Create(StrNoListFound);
 
     Writer.WriteListBegin;
     Parser.ReadNextElement; // this must be the end of the propertie
@@ -875,7 +891,7 @@ var
         Parser.ReadNextElement; // this must be the end of the ListItem
         if (not Parser.EndFound) or
            (not (AnsiStrings.AnsiCompareText(scListItem, Parser.ElementName) = 0)) then
-          raise Exception.Create('No ListItem End found');
+          raise Exception.Create(StrNoListItemEndFoun);
         Parser.ReadNextElement; // this must be the next item or the end of the list
       end;
     end;
@@ -883,7 +899,7 @@ var
     Writer.WriteListEnd;
     if (not Parser.EndFound) or
        (not (AnsiStrings.AnsiCompareText(scList, Parser.ElementName) = 0)) then
-      raise Exception.Create('No end of List found');
+      raise Exception.Create(StrNoEndOfListFound);
     Parser.EndFound := false;
   end;
 
@@ -894,13 +910,13 @@ var
   begin
     PropName := Parser.ValueOf('Name');
     if PropName = '' then
-      raise Exception.Create('Name of Property Empty');
+      raise Exception.Create(StrNameOfPropertyEmp);
     Writer.WriteStr(PropName);
     ConvertValue;
     Parser.ReadNextElement; // this must be the end of the propertie
     if (not (Parser.EndFound)) or
        (not (AnsiStrings.AnsiCompareText(scPropertie, Parser.ElementName) = 0)) then
-      raise Exception.Create('No propertie END found');
+      raise Exception.Create(StrNoPropertieENDFou);
     Parser.EndFound := false;
   end;
 
@@ -913,7 +929,7 @@ var
         ConvertProperty;
     until (Parser.EndFound);
     if not (AnsiStrings.AnsiCompareText(scProperties, Parser.ElementName) = 0) then
-      raise Exception.Create('Invalid XML object stream');
+      raise Exception.Create(StrInvalidXMLObjectS);
     Parser.EndFound := false;
     Writer.WriteListEnd;
   end;
@@ -927,7 +943,7 @@ var
         ConvertObject;
     until (Parser.EndFound);
     if not (AnsiStrings.AnsiCompareText(scComponents, Parser.ElementName) = 0) then
-      raise Exception.Create('Invalid XML object stream');
+      raise Exception.Create(StrInvalidXMLObjectS);
     Parser.EndFound := false;
     Writer.WriteListEnd;
   end;
@@ -950,7 +966,7 @@ var
         end;
       until (Parser.EndFound);
       if not (AnsiStrings.AnsiCompareText(ItemName, Parser.ElementName) = 0) then
-        raise Exception.Create('Invalid XML object stream');
+        raise Exception.Create(StrInvalidXMLObjectS);
       Parser.EndFound := false;
     end;
   end;

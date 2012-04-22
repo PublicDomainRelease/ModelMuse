@@ -10,7 +10,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
     Top = 0
     Width = 561
     Height = 506
-    ActivePage = tabNetwork
+    ActivePage = tabGage
     Align = alClient
     TabOrder = 0
     object tabBasic: TTabSheet
@@ -393,6 +393,10 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       HelpKeyword = 'Time_Tab'
       Caption = 'Time'
       ImageIndex = 7
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlParamTop: TPanel
         Left = 0
         Top = 0
@@ -725,6 +729,10 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
     object tabNetwork: TTabSheet
       Caption = 'Network'
       ImageIndex = 9
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlNetwork: TPanel
         Left = 0
         Top = 0
@@ -948,6 +956,10 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       HelpKeyword = 'Flows_Tab'
       Caption = 'Flows'
       ImageIndex = 6
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object dgFlowTimes: TRbwDataGrid4
         Left = 0
         Top = 57
@@ -1142,6 +1154,10 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       HelpType = htKeyword
       HelpKeyword = 'Segment_Tab'
       Caption = 'Segment'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Splitter1: TSplitter
         Left = 0
         Top = 209
@@ -1599,6 +1615,10 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       HelpKeyword = 'Channel_Tab'
       Caption = 'Channel'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Splitter3: TSplitter
         Left = 379
         Top = 0
@@ -1780,7 +1800,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Exaggeration = 1.000000000000000000
         HorizontalDirection = hdRight
         Image32.Left = 0
-        Image32.Top = 0
+        Image32.Top = 68
         Image32.Width = 553
         Image32.Height = 109
         Image32.Anchors = [akLeft, akBottom]
@@ -1791,6 +1811,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Image32.Scale = 1.000000000000000000
         Image32.ScaleMode = smNormal
         Image32.TabOrder = 0
+        Image32.ExplicitTop = 0
         ImmediateResize = True
         Magnification = 1.000000000000000000
         VerticalDirection = vdUp
@@ -1804,6 +1825,10 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       HelpKeyword = 'Equation_Tab'
       Caption = 'Equation'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object dgSfrEquation: TRbwDataGrid4
         Left = 0
         Top = 57
@@ -1998,6 +2023,10 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       HelpKeyword = 'Flow_Table_Tab'
       Caption = 'Flow Table'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Splitter2: TSplitter
         Left = 208
         Top = 0
@@ -2132,7 +2161,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Exaggeration = 1.000000000000000000
           HorizontalDirection = hdRight
           Image32.Left = 0
-          Image32.Top = 0
+          Image32.Top = 108
           Image32.Width = 269
           Image32.Height = 149
           Image32.Anchors = [akLeft, akBottom]
@@ -2143,6 +2172,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Image32.Scale = 1.000000000000000000
           Image32.ScaleMode = smNormal
           Image32.TabOrder = 0
+          Image32.ExplicitTop = 0
           ImmediateResize = True
           Magnification = 1.000000000000000000
           VerticalDirection = vdUp
@@ -2162,7 +2192,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Exaggeration = 1.000000000000000000
           HorizontalDirection = hdRight
           Image32.Left = 0
-          Image32.Top = 0
+          Image32.Top = 108
           Image32.Width = 270
           Image32.Height = 149
           Image32.Anchors = [akLeft, akBottom]
@@ -2173,6 +2203,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Image32.Scale = 1.000000000000000000
           Image32.ScaleMode = smNormal
           Image32.TabOrder = 0
+          Image32.ExplicitTop = 0
           ImmediateResize = True
           Magnification = 1.000000000000000000
           VerticalDirection = vdUp
@@ -2494,6 +2525,148 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             FFFFFFFFFFFFFFFFF000}
           TabOrder = 3
           OnChange = rdeSegmentNumberChange
+        end
+      end
+    end
+    object tabExternalFlowFile: TTabSheet
+      Caption = 'External Flow File'
+      ImageIndex = 10
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+      inline frameExternalFileValues: TframeGrid
+        Left = 0
+        Top = 145
+        Width = 553
+        Height = 333
+        Align = alClient
+        Enabled = False
+        TabOrder = 1
+        ExplicitTop = 145
+        ExplicitWidth = 553
+        ExplicitHeight = 333
+        inherited Panel: TPanel
+          Top = 292
+          Width = 553
+          ExplicitTop = 292
+          ExplicitWidth = 553
+          inherited sbAdd: TSpeedButton
+            Left = 288
+            ExplicitLeft = 288
+          end
+          inherited sbInsert: TSpeedButton
+            Left = 342
+            ExplicitLeft = 342
+          end
+          inherited sbDelete: TSpeedButton
+            Left = 395
+            ExplicitLeft = 395
+          end
+        end
+        inherited Grid: TRbwDataGrid4
+          Width = 553
+          Height = 292
+          Color = clBtnFace
+          ColCount = 2
+          Columns = <
+            item
+              AutoAdjustRowHeights = False
+              ButtonCaption = '...'
+              ButtonFont.Charset = DEFAULT_CHARSET
+              ButtonFont.Color = clWindowText
+              ButtonFont.Height = -11
+              ButtonFont.Name = 'Tahoma'
+              ButtonFont.Style = []
+              ButtonUsed = False
+              ButtonWidth = 20
+              CheckMax = False
+              CheckMin = False
+              ComboUsed = False
+              Format = rcf4Real
+              LimitToList = False
+              MaxLength = 0
+              ParentButtonFont = False
+              WordWrapCaptions = False
+              WordWrapCells = False
+              CaseSensitivePicklist = False
+              AutoAdjustColWidths = True
+            end
+            item
+              AutoAdjustRowHeights = False
+              ButtonCaption = '...'
+              ButtonFont.Charset = DEFAULT_CHARSET
+              ButtonFont.Color = clWindowText
+              ButtonFont.Height = -11
+              ButtonFont.Name = 'Tahoma'
+              ButtonFont.Style = []
+              ButtonUsed = False
+              ButtonWidth = 20
+              CheckMax = False
+              CheckMin = True
+              ComboUsed = False
+              Format = rcf4Real
+              LimitToList = False
+              MaxLength = 0
+              ParentButtonFont = False
+              WordWrapCaptions = False
+              WordWrapCells = False
+              CaseSensitivePicklist = False
+              AutoAdjustColWidths = True
+            end>
+          ExplicitWidth = 553
+          ExplicitHeight = 292
+        end
+      end
+      object pnlFlowFile: TPanel
+        Left = 0
+        Top = 0
+        Width = 553
+        Height = 145
+        Align = alTop
+        TabOrder = 0
+        object lblExternalFileName: TLabel
+          Left = 3
+          Top = 95
+          Width = 86
+          Height = 13
+          Caption = 'External file name'
+        end
+        object rgExternalFlowChoice: TRadioGroup
+          Left = 9
+          Top = 3
+          Width = 185
+          Height = 86
+          Caption = 'External flow choice'
+          ItemIndex = 0
+          Items.Strings = (
+            'None'
+            'External file'
+            'ModelMuse data')
+          TabOrder = 0
+          OnClick = rgExternalFlowChoiceClick
+        end
+        object rgReferenceTimeChoice: TRadioGroup
+          Left = 200
+          Top = 3
+          Width = 185
+          Height = 86
+          Caption = 'Reference time choice'
+          Enabled = False
+          Items.Strings = (
+            'Time = 0'
+            'Beginning of model')
+          TabOrder = 1
+        end
+        object fedExternalFileName: TJvFilenameEdit
+          Left = 3
+          Top = 111
+          Width = 547
+          Height = 21
+          DisabledColor = clBtnFace
+          Filter = 'Text and .sfr_ff (*.txt;*.sfr_ff)|*.txt;*.tab|All Files|*.*'
+          Enabled = False
+          TabOrder = 2
         end
       end
     end

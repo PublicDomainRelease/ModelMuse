@@ -83,6 +83,21 @@ implementation
 uses
   Math, ScreenObjectUnit, frmGoPhastUnit;
 
+resourcestring
+  StrZScaleFactor = 'Z scale factor';
+  StrZCenter = 'Z center';
+  StrZOffset = 'Z offset';
+  StrYScaleFactor = 'Y scale factor';
+  StrYCenter = 'Y center';
+  StrYOffset = 'Y offset';
+  StrScale = 'scale';
+  StrRotate = 'rotate';
+  StrMove = 'move';
+  StrObjects = ' objects';
+  FormatChange1 = '%0:s%1:s';
+  FormatChange2 = '%0:s and %1:s%2:s';
+  Change3 = 'scale, rotate, and move objects';
+
 {$R *.dfm}
 
 procedure TfrmScaleRotateMove.btnOKClick(Sender: TObject);
@@ -407,18 +422,18 @@ begin
       end;
     vdFront:
       begin
-        lblYScale.Caption := 'Z scale factor';
-        lblYCenter.Caption := 'Z center';
-        lblMoveY.Caption := 'Z offset';
+        lblYScale.Caption := StrZScaleFactor;
+        lblYCenter.Caption := StrZCenter;
+        lblMoveY.Caption := StrZOffset;
       end;
     vdSide:
       begin
-        lblXScale.Caption := 'Y scale factor';
-        lblXCenter.Caption := 'Y center';
-        lblMoveX.Caption := 'Y offset';
-        lblYScale.Caption := 'Z scale factor';
-        lblYCenter.Caption := 'Z center';
-        lblMoveY.Caption := 'Z offset';
+        lblXScale.Caption := StrYScaleFactor;
+        lblXCenter.Caption := StrYCenter;
+        lblMoveX.Caption := StrYOffset;
+        lblYScale.Caption := StrZScaleFactor;
+        lblYCenter.Caption := StrZCenter;
+        lblMoveY.Caption := StrZOffset;
       end;
     else Assert(False);
   end;
@@ -548,29 +563,30 @@ begin
   try
     if (XScale <> 1) or (YScale <> 1) then
     begin
-      Descriptions.Add('scale');
+      Descriptions.Add(StrScale);
     end;
     if Angle <> 0 then
     begin
-      Descriptions.Add('rotate');
+      Descriptions.Add(StrRotate);
     end;
     if (XOffset <> 0) or (YOffset <> 0) then
     begin
-      Descriptions.Add('move');
+      Descriptions.Add(StrMove);
     end;
     Assert(Descriptions.Count > 0);
     case Descriptions.Count of
       1:
         begin
-          FDescription := Descriptions[0] + ' objects';
+          FDescription := Format(FormatChange1, [Descriptions[0], StrObjects]);
         end;
       2:
         begin
-          FDescription := Descriptions[0] + ' and ' + Descriptions[1] + ' objects';
+          FDescription := Format(FormatChange2,
+            [Descriptions[0], Descriptions[1], StrObjects]);
         end;
       3:
         begin
-          FDescription := 'scale, rotate, and move objects';
+          FDescription := Change3;
         end;
     else
       Assert(False);

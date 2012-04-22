@@ -16,6 +16,7 @@
           <para styleclass="Strong" style="margin-left:0px;"><text styleclass="Strong" translate="true">Show endpoints: </text><text styleclass="Normal" translate="true">If this checkbox is checked, the endpoints will be displayed.</text></para>
           <para styleclass="Strong" style="margin-left:0px;"><text styleclass="Strong" translate="true">Limit to current column, row and layer in 2D views: </text><text styleclass="Normal" translate="true">If this checkbox is checked, only those endpoints that are in the current layer (top view), current row (front view) or current column (side view) will be displayed. Checking this checkbox helps keep the display from being hard to understand because too many endpoints are displayed.</text></para>
           <para styleclass="Normal" style="margin-left:0px;"><snippet src="Color_Schemes"/></para>
+          <para styleclass="Normal" style="margin-left:0px;"><text styleclass="Normal" translate="true">If the model has one or more child models, you must choose the correct model in </text><text styleclass="Strong" translate="true">Model selection</text><text styleclass="Normal" translate="true">.</text></para>
         </td>
       </tr>
     </table></para>

@@ -292,6 +292,11 @@ type
       write SetMassLoadingBoundary;
   end;
 
+procedure Mt3dmsStringValueRemoveSubscription(Sender: TObject; Subject: TObject;
+  const AName: string);
+
+procedure Mt3dmsStringValueRestoreSubscription(Sender: TObject; Subject: TObject;
+  const AName: string);
 
 
 implementation

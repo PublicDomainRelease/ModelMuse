@@ -91,13 +91,20 @@ type
 resourcestring
   ChannelRoughnessError = 'SFR Channel roughness is less than or equal to zero.';
   BankRoughnessError = 'SFR Bank roughness is less than or equal to zero.';
-  IDError = 'Object: %s; Time: %g.';
+  IDError = 'Object: %0:s; Time: %1:g.';
 
 implementation
 
 uses Contnrs, DataSetUnit, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit,
   ModflowSfrUnit, frmFormulaErrorsUnit, frmErrorsAndWarningsUnit,
   frmGoPhastUnit;
+
+resourcestring
+  StrChannelRougnnessF = '(Channel rougnness for the SFR package)';
+  StrBankRoughnessFor = '(bank roughness for the SFR package)';
+  StrCrossSectionXFor = '(cross section X for the SFR package)';
+  StrCrossSectionZFor = '(cross section Z for the SFR package)';
+  StrChannelRoughnessNo = 'Channel Roughness not used';
 
 const
   ChannelRoughnessPosition = 0;
@@ -548,13 +555,13 @@ begin
     if ICALC in [1,2] then
     begin
       Formula := CurrentItem.ChannelRoughness;
-      CurrentRecord.ChannelRoughnessAnnotation := 'Assigned by '
-        + ScrObj.Name + ' with formula = "' + Formula + '."';
+      CurrentRecord.ChannelRoughnessAnnotation := Format(StrAssignedBy0sWit,
+        [ScrObj.Name, Formula]);
     end
     else
     begin
       Formula := '0';
-      CurrentRecord.ChannelRoughnessAnnotation := 'Channel Roughness not used';
+      CurrentRecord.ChannelRoughnessAnnotation := StrChannelRoughnessNo;
     end;
     Expression := nil;
     try
@@ -566,7 +573,7 @@ begin
     except on E: ERbwParserError do
       begin
         frmFormulaErrors.AddFormulaError(ScrObj.Name,
-          '(Channel rougnness for the SFR package)',
+          StrChannelRougnnessF,
           Formula, E.Message);
 
         CurrentItem.ChannelRoughness := '0.';
@@ -586,8 +593,8 @@ begin
     if ICALC = 2 then
     begin
       Formula := CurrentItem.BankRoughness;
-      CurrentRecord.BankRoughnessAnnotation := 'Assigned by '
-        + ScrObj.Name + ' with formula = "' + Formula + '."';
+      CurrentRecord.BankRoughnessAnnotation := Format(StrAssignedBy0sWit,
+        [ScrObj.Name, Formula]);
       try
         Compiler.Compile(Formula);
         Expression := Compiler.CurrentExpression;
@@ -597,7 +604,7 @@ begin
       except on E: ERbwParserError do
         begin
           frmFormulaErrors.AddFormulaError(ScrObj.Name,
-            '(bank roughness for the SFR package)',
+            StrBankRoughnessFor,
             Formula, E.Message);
 
           CurrentItem.BankRoughness := '0.';
@@ -617,8 +624,8 @@ begin
       for XSIndex := 0 to 7 do
       begin
         Formula := CurrentItem.X[XSIndex];
-        CurrentRecord.XAnnotation[XSIndex] := 'Assigned by '
-          + ScrObj.Name + ' with formula = "' + Formula + '."';
+        CurrentRecord.XAnnotation[XSIndex] := Format(StrAssignedBy0sWit,
+        [ScrObj.Name, Formula]);
         try
           Compiler.Compile(Formula);
           Expression := Compiler.CurrentExpression;
@@ -628,7 +635,7 @@ begin
         except on E: ERbwParserError do
           begin
             frmFormulaErrors.AddFormulaError(ScrObj.Name,
-              '(cross section X for the SFR package)',
+              StrCrossSectionXFor,
               Formula, E.Message);
 
             CurrentItem.X[XSIndex] := '0.';
@@ -641,8 +648,8 @@ begin
         CurrentRecord.X[XSIndex] := Expression.DoubleResult;
 
         Formula := CurrentItem.Z[XSIndex];
-        CurrentRecord.ZAnnotation[XSIndex] := 'Assigned by '
-          + ScrObj.Name + ' with formula = "' + Formula + '."';
+        CurrentRecord.ZAnnotation[XSIndex] := Format(StrAssignedBy0sWit,
+          [ScrObj.Name, Formula]);
         try
           Compiler.Compile(Formula);
           Expression := Compiler.CurrentExpression;
@@ -652,7 +659,7 @@ begin
         except on E: ERbwParserError do
           begin
             frmFormulaErrors.AddFormulaError(ScrObj.Name,
-              '(cross section Z for the SFR package)',
+              StrCrossSectionZFor,
               Formula, E.Message);
 
             CurrentItem.Z[XSIndex] := '0.';

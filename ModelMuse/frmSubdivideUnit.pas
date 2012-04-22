@@ -200,6 +200,10 @@ implementation
 
 uses frmGoPhastUnit, UndoItems, FastGEO;
 
+resourcestring
+  StrClickOnGridAndDr = 'Click on grid and drag to subdivide elements';
+  StrClickOnGridAndDrCell = 'Click on grid and drag to subdivide cells';
+
 {$R *.dfm}
 
 { TfrmSubdivide }
@@ -566,11 +570,11 @@ begin
     msUndefined: Assert(False);
     msPhast:
       begin
-        result := 'Click on grid and drag to subdivide elements';
+        result := StrClickOnGridAndDr;
       end;
     msModflow, msModflowLGR, msModflowNWT:
       begin
-        result := 'Click on grid and drag to subdivide cells';
+        result := StrClickOnGridAndDrCell;
       end;
     else Assert(False);
   end;

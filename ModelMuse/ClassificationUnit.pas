@@ -213,6 +213,10 @@ begin
               Position := SortedObjects.IndexOfObject(ClassificationObject);
               Assert(Position >= 0);
               LayerGroupPositions.Add(Position);
+//            end
+//            else
+//            begin
+//              LayerGroupPositions.Add(-1);
             end;
           end;
           LayerGroupPositions.Sort;

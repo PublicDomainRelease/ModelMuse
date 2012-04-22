@@ -24,6 +24,10 @@ inherited framePackageSwt: TframePackageSwt
     TabOrder = 1
     object tabControls: TTabSheet
       Caption = 'Controls'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         551
         336)
@@ -319,6 +323,7 @@ inherited framePackageSwt: TframePackageSwt
         RowCount = 6
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
         TabOrder = 0
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
@@ -348,6 +353,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -369,6 +375,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -403,6 +410,7 @@ inherited framePackageSwt: TframePackageSwt
               '10G11.4')
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
       end
@@ -420,6 +428,7 @@ inherited framePackageSwt: TframePackageSwt
         TabOrder = 1
         OnMouseUp = rdgOutputMouseUp
         OnSelectCell = rdgOutputSelectCell
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
@@ -450,6 +459,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -471,6 +481,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -505,6 +516,7 @@ inherited framePackageSwt: TframePackageSwt
               '10G11.4')
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -526,6 +538,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -547,6 +560,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -568,6 +582,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -589,6 +604,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -610,6 +626,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -631,6 +648,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -652,6 +670,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -673,6 +692,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -694,6 +714,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -715,6 +736,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -736,6 +758,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -757,6 +780,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -778,6 +802,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -799,6 +824,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -820,6 +846,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -841,6 +868,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -862,6 +890,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -883,6 +912,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -904,6 +934,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -925,6 +956,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -946,6 +978,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -967,6 +1000,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -988,6 +1022,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1009,6 +1044,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1030,6 +1066,7 @@ inherited framePackageSwt: TframePackageSwt
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
         OnEndUpdate = rdgOutputEndUpdate

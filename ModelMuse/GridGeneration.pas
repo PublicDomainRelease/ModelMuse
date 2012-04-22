@@ -48,14 +48,31 @@ function GenerateGrid(out ErrorMessage: string;
   const SmoothColumns, SmoothRows, SmoothLayers: boolean;
   const SmoothingCriterion: double): boolean;
 
-resourcestring
-  StrToGenerateAGrid = 'To generate a grid, you need at least one ' +
-    'grid-definition polygon on the top view of the model';
+function GenGridErrorMessage: string;
+//resourcestring
+//  StrToGenerateAGrid = 'To generate a grid, you need at least one ' +
+//    'grid-definition polygon on the top view of the model';
 
 implementation
 
 uses frmGoPhastUnit, ScreenObjectUnit, AbstractGridUnit, GoPhastTypes, Math,
   Contnrs, RealListUnit, frmGoToUnit, frmSmoothGridUnit, UndoItems, FastGEO;
+
+resourcestring
+  StrFailedToGenerateG = 'Failed to generate grid';
+  StrToGenerateAGridPhast = 'To generate a grid, you need at least one grid-' +
+  'definition polygon on the top view of the model and one grid-definition o' +
+  'bject on the side view.';
+  StrToGenerateAGridModflow = 'To generate a grid, you need at least one gri' +
+  'd-definition polygon on the top view of the model.';
+  StrGridGenerationCancColumn = 'Grid generation canceled because only one ' +
+  'column boundary would have been created.';
+  StrGridGenerationCancRow = 'Grid generation canceled because only one row ' +
+  'boundary would have been created.';
+  StrGridGenerationCancLayer = 'Grid generation canceled because only one la' +
+  'yer boundary would have been created.  This probably means that you need ' +
+  'to create an object on the front or side view of the model in which you s' +
+  'pecify the cell size.';
 
 type
   TZone = class(TObject)
@@ -416,6 +433,19 @@ begin
   SetSidePosition(YCoordinate, ZCoordinate);
 end;
 
+function GenGridErrorMessage: string;
+begin
+  //      ErrorMessage := StrToGenerateAGrid;
+  if frmGoPhast.ModelSelection = msPhast then
+  begin
+    result := StrToGenerateAGridPhast;
+  end
+  else
+  begin
+    result := StrToGenerateAGridModflow;
+  end;
+end;
+
 function GenerateGrid(out ErrorMessage: string;
   const SpecifyGridAngle: boolean; const SpecifiedGridAngle: real;
   const SmoothColumns, SmoothRows, SmoothLayers: boolean;
@@ -494,7 +524,7 @@ var
     end;
   end;
 begin
-  ErrorMessage := 'Failed to generate grid';
+  ErrorMessage := StrFailedToGenerateG;
   result := False;
   DomainList := TList.Create;
   OutlineList := TList.Create;
@@ -519,14 +549,7 @@ begin
     // test if it is possible to generate the grid.
     if OutlineList.Count = 0 then
     begin
-      ErrorMessage := StrToGenerateAGrid;
-
-      if frmGoPhast.ModelSelection = msPhast then
-      begin
-        ErrorMessage := ErrorMessage
-          + ' and one grid-definition object on the side view';
-      end;
-      ErrorMessage := ErrorMessage + '.';
+      ErrorMessage := GenGridErrorMessage;
       Exit;
     end;
 
@@ -716,24 +739,19 @@ begin
 
         if ColumnPositions.Count <= 1 then
         begin
-          ErrorMessage := 'Grid generation canceled because only one column '
-            + 'boundary would have been created.';
+          ErrorMessage := StrGridGenerationCancColumn;
           Exit;
         end;
         if RowPositions.Count <= 1 then
         begin
-          ErrorMessage := 'Grid generation canceled because only one row '
-            + 'boundary would have been created.';
+          ErrorMessage := StrGridGenerationCancRow;
           Exit;
         end;
         if frmGoPhast.ModelSelection = msPhast then
         begin
           if LayerPositions.Count <= 1 then
           begin
-            ErrorMessage := 'Grid generation canceled because only one layer '
-              + 'boundary would have been created.  This probably means that '
-              + 'you need to create an object on the front or side view of '
-              + 'the model in which you specify the cell size.';
+            ErrorMessage := StrGridGenerationCancLayer;
             Exit;
           end;
         end;

@@ -9,6 +9,73 @@ uses Classes, RbwParser, RealListUnit, OrderedCollectionUnit, ModflowCellUnit,
 
 type
   TGageLocation = (glNone, glFirst, glLast, glAll);
+
+  {@name tells how the external flow file is specified.
+  ffcNone = no external flow file.
+  ffcFileName = an external file created by the user.
+  ffcSpecify = the data is stored in ModelMuse.
+  }
+  TFlowFileChoice = (ffcNone, ffcFileName, ffcSpecify);
+
+  {For external flow files whose data is stored in ModelMuse, @name indicates
+  what to use as the reference time.}
+  TFlowFileReferenceTime = (ffrtModelMuseZero, ffrtStartOfModel);
+
+  {When an external flow file has its data stored in ModelMuse,
+  @name represents one line of the data.}
+  TFlowFileItem = class(TPhastCollectionItem)
+  private
+    FTime: double;
+    FInflow: double;
+    procedure SetInflow(const Value: double);
+    procedure SetTime(const Value: double);
+  public
+    procedure Assign(Source: TPersistent); override;
+  published
+    property Time: double read FTime write SetTime;
+    property Inflow: double read FInflow write SetInflow;
+  end;
+
+  TFlowFileCollection = class(TPhastCollection)
+  private
+    function GetItem(index: Integer): TFlowFileItem;
+    procedure SetItem(index: Integer; const Value: TFlowFileItem);
+  public
+    function Add: TFlowFileItem;
+    constructor Create(Model: TBaseModel);
+    property Items[index: Integer]: TFlowFileItem read GetItem write SetItem; default;
+  end;
+
+  TExternalFlowProperties = class(TGoPhastPersistent)
+  private
+    FFlowFileData: TFlowFileCollection;
+    FFullFlowFileName: string;
+    FFlowFileChoice: TFlowFileChoice;
+    FReferenceTimeChoice: TFlowFileReferenceTime;
+    function GetReferenceTimeChoice: TFlowFileReferenceTime;
+    function SaveFlowFileData: Boolean;
+    procedure SetFlowFileChoice(const Value: TFlowFileChoice);
+    procedure SetFlowFileData(const Value: TFlowFileCollection);
+    procedure SetFullFlowFileName(const Value: string);
+    procedure SetReferenceTimeChoice(const Value: TFlowFileReferenceTime);
+    function GetFlowFileName: string;
+    procedure SetFlowFileName(const Value: string);
+  public
+    procedure Assign(Source: TPersistent); override;
+    constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
+    procedure Clear;
+    property FullFlowFileName: string read FFullFlowFileName write SetFullFlowFileName;
+  published
+    property FlowFileChoice: TFlowFileChoice read FFlowFileChoice
+      write SetFlowFileChoice;
+    property ReferenceTimeChoice: TFlowFileReferenceTime
+      read GetReferenceTimeChoice write SetReferenceTimeChoice;
+    property FlowFileData: TFlowFileCollection read FFlowFileData
+      write SetFlowFileData stored SaveFlowFileData;
+    property FlowFileName: string read GetFlowFileName write SetFlowFileName;
+  end;
+
   // @name represents the MODFLOW Stream Flow Routing boundaries associated with
   // a single @link(TScreenObject).
   //
@@ -37,6 +104,7 @@ type
     FGage6: boolean;
     FGage7: boolean;
     FGageLocation: TGageLocation;
+    FExternalFlow: TExternalFlowProperties;
     procedure SetSegementNumber(const Value: integer);
     procedure SetChannelValues(const Value: TSfrChannelCollection);
     procedure SetUpstreamSegmentValues(const Value: TSfrSegmentCollection);
@@ -60,6 +128,7 @@ type
     procedure SetGage3(const Value: boolean);
     function GetOutTypes: TByteSet;
     procedure SetGageLocation(const Value: TGageLocation);
+    procedure SetExternalFlow(const Value: TExternalFlowProperties);
   protected
     // @name fills ValueTimeList with a series of TObjectLists - one for
     // each stress period.  Each such TObjectList is filled with
@@ -125,6 +194,7 @@ type
     property Gage7: boolean read FGage7 write SetGage7;
     property GageLocation: TGageLocation read FGageLocation
       write SetGageLocation;
+    property ExternalFlow: TExternalFlowProperties read FExternalFlow write SetExternalFlow;
   end;
 
 resourcestring
@@ -132,7 +202,8 @@ resourcestring
 
 implementation
 
-uses Contnrs, DataSetUnit, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit;
+uses Contnrs, DataSetUnit, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit,
+  SysUtils;
 
 { TSfrBoundary }
 
@@ -171,6 +242,7 @@ begin
     Gage6 := Sfr.Gage6;
     Gage7 := Sfr.Gage7;
     GageLocation := Sfr.GageLocation;
+    ExternalFlow := Sfr.ExternalFlow;
   end;
   inherited;
 end;
@@ -258,10 +330,12 @@ begin
   FTableCollection := TSfrTableCollection.Create(self, Model, ScreenObject);
   FSegmentFlows := TSfrSegmentFlowCollection.Create(self, Model, ScreenObject);
   FEquationValues := TSfrEquationCollection.Create(self, Model, ScreenObject);
+  FExternalFlow := TExternalFlowProperties.Create(Model);
 end;
 
 destructor TSfrBoundary.Destroy;
 begin
+  FExternalFlow.Free;
   FEquationValues.Free;
   FSegmentFlows.Free;
   FTableCollection.Free;
@@ -275,13 +349,39 @@ begin
 end;
 
 procedure TSfrBoundary.EvaluateArrayBoundaries(AModel: TBaseModel);
+var
+  LocalModel: TCustomModel;
+  FirstUsedTime: Double;
+  LastUsedTime: Double;
+  Item: TCustomModflowBoundaryItem;
 begin
   inherited;
   ChannelValues.EvaluateBoundaries(AModel);
   UpstreamSegmentValues.EvaluateArrayBoundaries(AModel);
   DownstreamSegmentValues.EvaluateArrayBoundaries(AModel);
+  LocalModel := AModel as TCustomModel;
+  if (UpstreamUnsatSegmentValues.Count > 0)
+    or (DownstreamUnsatSegmentValues.Count > 0) then
+  begin
+    FirstUsedTime := LocalModel.ModflowFullStressPeriods[0].StartTime;
+    LastUsedTime := LocalModel.ModflowFullStressPeriods[
+      LocalModel.ModflowFullStressPeriods.Count - 1].EndTime;
+    if UpstreamUnsatSegmentValues.Count > 0 then
+    begin
+      Item := UpstreamUnsatSegmentValues[0];
+      Item.StartTime := FirstUsedTime;
+      Item.EndTime := LastUsedTime;
+    end;
+    if DownstreamUnsatSegmentValues.Count > 0 then
+    begin
+      Item := DownstreamUnsatSegmentValues[0];
+      Item.StartTime := FirstUsedTime;
+      Item.EndTime := LastUsedTime;
+    end;
+  end;
   UpstreamUnsatSegmentValues.EvaluateArrayBoundaries(AModel);
   DownstreamUnsatSegmentValues.EvaluateArrayBoundaries(AModel);
+
   EquationValues.EvaluateBoundaries;
   TableCollection.EvaluateBoundaries;
   SegmentFlows.EvaluateBoundaries;
@@ -385,6 +485,11 @@ end;
 procedure TSfrBoundary.SetEquationValues(const Value: TSfrEquationCollection);
 begin
   FEquationValues.Assign(Value);
+end;
+
+procedure TSfrBoundary.SetExternalFlow(const Value: TExternalFlowProperties);
+begin
+  FExternalFlow.Assign(Value);
 end;
 
 procedure TSfrBoundary.SetGage0(const Value: boolean);
@@ -600,6 +705,219 @@ begin
     or TableCollection.Used
     or SegmentFlows.Used
     or EquationValues.Used;
+end;
+
+{ TFlowFileItem }
+
+procedure TFlowFileItem.Assign(Source: TPersistent);
+var
+  SourceItem: TFlowFileItem;
+begin
+  if Source is TFlowFileItem then
+  begin
+    SourceItem := TFlowFileItem(Source);
+    Time := SourceItem.Time;
+    Inflow := SourceItem.Inflow;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+procedure TFlowFileItem.SetInflow(const Value: double);
+begin
+  SetRealProperty(FInflow, Value);
+end;
+
+procedure TFlowFileItem.SetTime(const Value: double);
+begin
+  SetRealProperty(FTime, Value);
+end;
+
+{ TFlowFileCollection }
+
+function TFlowFileCollection.Add: TFlowFileItem;
+begin
+  result := inherited Add as TFlowFileItem;
+end;
+
+constructor TFlowFileCollection.Create(Model: TBaseModel);
+begin
+  inherited Create(TFlowFileItem, Model);
+end;
+
+function TFlowFileCollection.GetItem(index: Integer): TFlowFileItem;
+begin
+  result := inherited Items[Index] as TFlowFileItem;
+end;
+
+procedure TFlowFileCollection.SetItem(index: Integer;
+  const Value: TFlowFileItem);
+begin
+  inherited Items[Index] := Value;
+end;
+
+{ TExternalFlowProperties }
+
+procedure TExternalFlowProperties.Assign(Source: TPersistent);
+var
+  SourceProp: TExternalFlowProperties;
+begin
+  if Source is TExternalFlowProperties then
+  begin
+    SourceProp := TExternalFlowProperties(Source);
+    FlowFileChoice := SourceProp.FlowFileChoice;
+    ReferenceTimeChoice := SourceProp.ReferenceTimeChoice;
+    FlowFileData := SourceProp.FlowFileData;
+    FullFlowFileName := SourceProp.FullFlowFileName;
+    FlowFileName := SourceProp.FlowFileName;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+procedure TExternalFlowProperties.Clear;
+begin
+  FFlowFileData.Clear;
+  FFullFlowFileName := '';
+  FFlowFileChoice := ffcNone;
+  FReferenceTimeChoice := ffrtModelMuseZero;
+end;
+
+constructor TExternalFlowProperties.Create(Model: TBaseModel);
+begin
+  inherited;
+  FFlowFileData := TFlowFileCollection.Create(Model);
+  Clear;
+end;
+
+destructor TExternalFlowProperties.Destroy;
+begin
+  FFlowFileData.Free;
+  inherited;
+end;
+
+//function TExternalFlowProperties.GetFlowFileChoice: TFlowFileChoice;
+//begin
+//  result := FFlowFileChoice;
+//  case FFlowFileChoice of
+//    ffcNone: result := FFlowFileChoice;
+//    ffcFileName:
+//      begin
+//        if FlowFileName = '' then
+//        begin
+//          result := ffcNone;
+//        end
+//        else
+//        begin
+//          result := FFlowFileChoice;
+//        end;
+//      end;
+//    ffcSpecify:
+//      begin
+//        if FFlowFileData.Count = 0 then
+//        begin
+//          result := ffcNone;
+//        end
+//        else
+//        begin
+//          result := FFlowFileChoice;
+//        end;
+//      end;
+//    else Assert(False);
+//  end;
+//end;
+
+function TExternalFlowProperties.GetFlowFileName: string;
+var
+  LocalModel: TPhastModel;
+begin
+  if Model = nil then
+  begin
+    result := FullFlowFileName;
+  end
+  else
+  begin
+    LocalModel := Model as TPhastModel;
+    result := ExtractRelativePath(LocalModel.ModelFileName, FullFlowFileName);
+  end;
+end;
+
+function TExternalFlowProperties.GetReferenceTimeChoice: TFlowFileReferenceTime;
+begin
+  if FFlowFileChoice = ffcFileName then
+  begin
+    Result := ffrtStartOfModel;
+  end
+  else
+  begin
+    Result := FReferenceTimeChoice;
+  end;
+end;
+
+function TExternalFlowProperties.SaveFlowFileData: Boolean;
+begin
+  result := (FlowFileChoice = ffcSpecify) and (FFlowFileData.Count > 0);
+end;
+
+procedure TExternalFlowProperties.SetFlowFileChoice(
+  const Value: TFlowFileChoice);
+begin
+  if FFlowFileChoice <> Value then
+  begin
+    InvalidateModel;
+    FFlowFileChoice := Value;
+  end;
+end;
+
+procedure TExternalFlowProperties.SetFlowFileData(
+  const Value: TFlowFileCollection);
+begin
+  FFlowFileData.Assign(Value);
+end;
+
+procedure TExternalFlowProperties.SetFlowFileName(const Value: string);
+var
+  LocalModel: TPhastModel;
+  CurDir: string;
+begin
+  if Model = nil then
+  begin
+//    FullFlowFileName := Value;
+  end
+  else
+  begin
+    LocalModel := Model as TPhastModel;
+    CurDir := GetCurrentDir;
+    try
+      SetCurrentDir(ExtractFileDir(LocalModel.ModelFileName));
+      FullFlowFileName := ExpandFileName(Value);
+    finally
+      SetCurrentDir(CurDir);
+    end;
+  end;
+end;
+
+procedure TExternalFlowProperties.SetFullFlowFileName(const Value: string);
+begin
+  if FFullFlowFileName <> Value then
+  begin
+    InvalidateModel;
+    FFullFlowFileName := Value;
+  end;
+end;
+
+procedure TExternalFlowProperties.SetReferenceTimeChoice(
+  const Value: TFlowFileReferenceTime);
+begin
+  if FReferenceTimeChoice <> Value then
+  begin
+    InvalidateModel;
+    FReferenceTimeChoice := Value;
+  end;
 end;
 
 end.

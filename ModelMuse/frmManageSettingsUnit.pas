@@ -39,6 +39,9 @@ implementation
 uses
   frmGoPhastUnit, UndoItems;
 
+resourcestring
+  StrName = 'Name';
+
 {$R *.dfm}
 
 { TfrmManageSettings }
@@ -79,7 +82,7 @@ end;
 procedure TfrmManageSettings.FormCreate(Sender: TObject);
 begin
   inherited;
-  rdgSettings.Cells[0,0] := 'Name';
+  rdgSettings.Cells[0,0] := StrName;
   FDisplaySettings := TDisplaySettingsCollection.Create(nil);
   GetData;
 end;

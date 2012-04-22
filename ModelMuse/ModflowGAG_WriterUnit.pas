@@ -24,6 +24,9 @@ uses Contnrs , RbwParser, GoPhastTypes, ModflowCellUnit, ModflowUnitNumbers,
   frmProgressUnit, DataSetUnit, frmGoPhastUnit, ScreenObjectUnit, 
   SubscriptionUnit;
 
+resourcestring
+  StrWritingGAGEPackage = 'Writing GAGE Package input.';
+
 { TModflowGAG_Writer }
 
 procedure TModflowGAG_Writer.Evaluate(var StartUnitNumber: integer;
@@ -136,9 +139,9 @@ begin
       List.Add(DataArray);
       DataArray.Orientation := dso3D;
       DataArray.EvaluatedAt := eaBlocks;
-      DataArray.UpdateDimensions(Model.Grid.LayerCount,
-        Model.Grid.RowCount, Model.Grid.ColumnCount);
       DataArray.DataType := rdtBoolean;
+      DataArray.UpdateDimensions(Model.Grid.LayerCount,
+        Model.Grid.RowCount, Model.Grid.ColumnCount, True);
     end;
 
     for Index := 0 to Model.ScreenObjectCount - 1 do
@@ -215,7 +218,7 @@ begin
   Evaluate(StartUnitNumber, Gages);
   if Gages.Count > 0 then
   begin
-    frmProgressMM.AddMessage('Writing GAGE Package input.');
+    frmProgressMM.AddMessage(StrWritingGAGEPackage);
     NUMGAGES := Gages.Count;
     Gages.Insert(0, IntToStr(NUMGAGES));
     WriteToNameFile(StrGAG, Model.UnitNumbers.UnitNumber(StrGAG),

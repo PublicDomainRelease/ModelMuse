@@ -95,6 +95,16 @@ resourcestring
   StrNoDefinedBoundarie = 'No defined boundaries for an HFB parameter';
   StrForTheParameterS = 'For the parameter %s, there are no objects that def' +
   'ine the location of an HFB barrier';
+  StrHydraulicConductiv = '(hydraulic conductivity for the HFB package)';
+  StrThicknessForTheH = '(thickness for the HFB package)';
+  StrEvaluatingHFBPacka = 'Evaluating HFB Package data.';
+  StrWritingHFB6Package = 'Writing HFB6 Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
+  StrWritingDataSet4 = '  Writing Data Set 4.';
+  StrWritingDataSet5 = '  Writing Data Set 5.';
+  StrWritingDataSet6 = '  Writing Data Set 6.';
 
 { TModflowHfb_Writer }
 
@@ -157,7 +167,7 @@ var
       except on E: ERbwParserError do
         begin
           frmFormulaErrors.AddFormulaError(ScreenObject.Name,
-            '(hydraulic conductivity for the HFB package)',
+            StrHydraulicConductiv,
             ScreenObject.ModflowHfbBoundary.HydraulicConductivityFormula,
             E.Message);
 
@@ -177,7 +187,7 @@ var
       except on E: ERbwParserError do
         begin
           frmFormulaErrors.AddFormulaError(ScreenObject.Name,
-            '(thickness for the HFB package)',
+            StrThicknessForTheH,
             ScreenObject.ModflowHfbBoundary.ThicknessFormula,
             E.Message);
 
@@ -351,7 +361,7 @@ begin
   frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInTheHFBPackage1);
   frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNoDefinedBoundarie);
 
-  frmProgressMM.AddMessage('Evaluating HFB Package data.');
+  frmProgressMM.AddMessage(StrEvaluatingHFBPacka);
   FillParameterScreenObjectList;
   PriorSegments := TList.Create;
   SubsequentSegments := TList.Create;
@@ -615,8 +625,8 @@ begin
   end;
   OpenFile(FileName(AFileName));
   try
-    frmProgressMM.AddMessage('Writing HFB6 Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingHFB6Package);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -624,7 +634,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -632,7 +642,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 2 and 3.');
+    frmProgressMM.AddMessage(StrWritingDataSets2and3);
     WriteDataSets2and3;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -640,7 +650,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage(StrWritingDataSet4);
     WriteDataSet4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -648,7 +658,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage(StrWritingDataSet5);
     WriteDataSet5;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -656,7 +666,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 6.');
+    frmProgressMM.AddMessage(StrWritingDataSet6);
     WriteDataSet6;
   finally
     CloseFile;

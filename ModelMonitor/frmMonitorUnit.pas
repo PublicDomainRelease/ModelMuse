@@ -23,7 +23,7 @@ uses
   JvImageList, TeEngine, Series, TeeProcs, Chart, ComCtrls, Buttons,
   JvToolEdit, AppEvnts, RealListUnit, JvHtControls, JvPageList,
   JvExControls, JvExStdCtrls, JvExMask, Mask, JvExComCtrls,
-  JvComCtrls, JvRichEdit;
+  JvComCtrls, JvRichEdit, JvComponentBase, JvCreateProcess;
 
 type
   TStatusChange = (scOK, scWarning, scError, scNone);
@@ -129,6 +129,8 @@ type
     JvHTLabel1: TJvHTLabel;
     lblVersion: TLabel;
     treeNavigation: TJvTreeView;
+    jvcpRunModel: TJvCreateProcess;
+    btnStopModel: TBitBtn;
     procedure btnRunClick(Sender: TObject);
     procedure timerReadOutputTimer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -140,12 +142,16 @@ type
     procedure timerStartFromCommandParametersTimer(Sender: TObject);
     procedure SetPageStatus(APage: TJvStandardPage; Status: TStatusChange);
     procedure treeNavigationClick(Sender: TObject);
+    procedure jvcpRunModelRead(Sender: TObject; const S: string;
+      const StartsOnNewLine: Boolean);
+    procedure jvcpRunModelTerminate(Sender: TObject; ExitCode: Cardinal);
+    procedure btnStopModelClick(Sender: TObject);
   private
     FListFilesNames: TStringList;
     FListFileHandlers: TList;
     FErrorPositions: TIntegerDynArray;
     FWarningPositions: TIntegerDynArray;
-    FMonitorTextReader: TStringFileStream;
+//    FMonitorTextReader: TStringFileStream;
     FLineCount: Integer;
     FShouldAbort: Boolean;
     FModelFinished: Boolean;
@@ -153,7 +159,7 @@ type
     FReading1: Boolean;
     FReading2: Boolean;
     {$IFDEF MakeBatchFile}
-    FOutFile: string;
+//    FOutFile: string;
     {$ENDIF}
     FAlreadyStarted: Boolean;
     FPercentRate: TRealList;
@@ -161,11 +167,13 @@ type
     FActivated: Boolean;
     FStartPlotTime: TDateTime;
     FDone: Boolean;
+    FPriorSolving: Boolean;
+    FPriorLine: string;
     procedure GetListFile(AFileName: string; ListFiles: TStringList);
     procedure FindStart(RichEdit: TJvRichEdit; PositionInLine: integer;
       out SelStart: integer);
     procedure CreateFileReaders;
-    function WinExecAndWait32(FileName: string; Visibility: Integer): Longword;
+//    function WinExecAndWait32(FileName: string; Visibility: Integer): Longword;
     procedure HandleMonitorFileLine(ALine: string);
     procedure ReadCommandLine;
     function ListFileReadersFinished: boolean;
@@ -192,62 +200,63 @@ resourcestring
   StrStartModel = 'Re-Start model';
   StrFIRSTENTRYINNAME = 'FIRST ENTRY IN NAME FILE MUST BE "LIST".';
   StrFAILEDTOMEETSOLVE = 'FAILED TO MEET SOLVER CONVERGENCE CRITERIA';
+  StrNoListFileInName = 'No list file in name file.';
 
 {$R *.dfm}
 
 // from http://www.swissdelphicenter.ch/torry/showcode.php?id=93                                 
-function TfrmMonitor.WinExecAndWait32(FileName: string; Visibility: Integer): Longword;
-var { by Pat Ritchey }
-  zAppName: array[0..512] of Char;
-  zCurDir: array[0..255] of Char;
-  WorkDir: string;
-  StartupInfo: TStartupInfo;
-  ProcessInfo: TProcessInformation;
-begin
-  StrPCopy(zAppName, FileName);
-  GetDir(0, WorkDir);
-  StrPCopy(zCurDir, WorkDir);
-  FillChar(StartupInfo, SizeOf(StartupInfo), #0);
-  StartupInfo.cb          := SizeOf(StartupInfo);
-  StartupInfo.dwFlags     := STARTF_USESHOWWINDOW;
-  StartupInfo.wShowWindow := Visibility;
-  if not CreateProcess(nil,
-    zAppName, // pointer to command line string
-    nil, // pointer to process security attributes
-    nil, // pointer to thread security attributes
-    False, // handle inheritance flag
-    CREATE_NEW_CONSOLE or // creation flags
-    NORMAL_PRIORITY_CLASS,
-    nil, //pointer to new environment block
-    nil, // pointer to current directory name
-    StartupInfo, // pointer to STARTUPINFO
-    ProcessInfo) // pointer to PROCESS_INF
-    then Result := WAIT_FAILED
-  else
-  begin
-    repeat
-      if FShouldAbort then
-      begin
-        TerminateProcess(ProcessInfo.hProcess,0);
-        break;
-      end;
-      Application.ProcessMessages;
-      Sleep(50);
-    until WaitForSingleObject(ProcessInfo.hProcess, 100) <> WAIT_TIMEOUT;
-    if not GetExitCodeProcess(ProcessInfo.hProcess, Result) then
-    begin
-      RaiseLastOSError;
-    end;
-    CloseHandle(ProcessInfo.hProcess);
-    CloseHandle(ProcessInfo.hThread);
-  end;
-end; { WinExecAndWait32 }
+//function TfrmMonitor.WinExecAndWait32(FileName: string; Visibility: Integer): Longword;
+//var { by Pat Ritchey }
+//  zAppName: array[0..512] of Char;
+//  zCurDir: array[0..255] of Char;
+//  WorkDir: string;
+//  StartupInfo: TStartupInfo;
+//  ProcessInfo: TProcessInformation;
+//begin
+//  StrPCopy(zAppName, FileName);
+//  GetDir(0, WorkDir);
+//  StrPCopy(zCurDir, WorkDir);
+//  FillChar(StartupInfo, SizeOf(StartupInfo), #0);
+//  StartupInfo.cb          := SizeOf(StartupInfo);
+//  StartupInfo.dwFlags     := STARTF_USESHOWWINDOW;
+//  StartupInfo.wShowWindow := Visibility;
+//  if not CreateProcess(nil,
+//    zAppName, // pointer to command line string
+//    nil, // pointer to process security attributes
+//    nil, // pointer to thread security attributes
+//    False, // handle inheritance flag
+//    CREATE_NEW_CONSOLE or // creation flags
+//    NORMAL_PRIORITY_CLASS,
+//    nil, //pointer to new environment block
+//    nil, // pointer to current directory name
+//    StartupInfo, // pointer to STARTUPINFO
+//    ProcessInfo) // pointer to PROCESS_INF
+//    then Result := WAIT_FAILED
+//  else
+//  begin
+//    repeat
+//      if FShouldAbort then
+//      begin
+//        TerminateProcess(ProcessInfo.hProcess,0);
+//        break;
+//      end;
+//      Application.ProcessMessages;
+//      Sleep(50);
+//    until WaitForSingleObject(ProcessInfo.hProcess, 100) <> WAIT_TIMEOUT;
+//    if not GetExitCodeProcess(ProcessInfo.hProcess, Result) then
+//    begin
+//      RaiseLastOSError;
+//    end;
+//    CloseHandle(ProcessInfo.hProcess);
+//    CloseHandle(ProcessInfo.hThread);
+//  end;
+//end; { WinExecAndWait32 }
 
 
 procedure TfrmMonitor.AppEventsIdle(Sender: TObject;
   var Done: Boolean);
 var
-  ALine: AnsiString;
+//  ALine: AnsiString;
   FileReaderIndex: Integer;
   ListHandler: TListFileHandler;
 begin
@@ -260,7 +269,7 @@ begin
       ListHandler.HandleListingFile;
     end;
 
-    while (FOutFile <> '') and FileExists(FOutFile)
+{    while (FOutFile <> '') and FileExists(FOutFile)
       and (FMonitorTextReader <> nil)
       and not FMonitorTextReader.EOF  do
     begin
@@ -282,7 +291,7 @@ begin
         timerReadOutput.Enabled := False;
         FreeAndNil(FMonitorTextReader);
         Exit;
-    end;
+    end; }
     Application.ProcessMessages;
   finally
     FReading1 := False;
@@ -306,18 +315,27 @@ begin
   end;
 end;
 
+procedure TfrmMonitor.btnStopModelClick(Sender: TObject);
+begin
+  if jvcpRunModel.State <> psReady then
+  begin
+    jvcpRunModel.Terminate;
+    timerReadOutput.Enabled := False;
+  end;
+end;
+
 procedure TfrmMonitor.btnRunClick(Sender: TObject);
 var
   CommandLine: string;
   FileDir: string;
   FileName: string;
-  NormalTermination: Boolean;
+//  NormalTermination: Boolean;
   Index: Integer;
   {$IFDEF MakeBatchFile}
-  BatFile: TStringList;
-  ProcessExitCode: Cardinal;
+//  BatFile: TStringList;
+//  ProcessExitCode: Cardinal;
   ListHandler: TListFileHandler;
-  Dummy: Boolean;
+//  Dummy: Boolean;
   {$ENDIF}
 begin
   if timerReadOutput.Enabled then
@@ -381,27 +399,27 @@ begin
     FileDir := IncludeTrailingPathDelimiter(FileDir);
     CommandLine := CommandLine + ' ' + FileName;
     {$IFDEF MakeBatchFile}
-    FOutFile := FileDir + StrMFOuttxt;
-    if FileExists(FOutFile) then
-    begin
-      DeleteFile(FOutFile);
-    end;
-    if LowerCase(ExtractFileExt(jvfeModelName.FileName)) <> '.bat' then
-    begin
-      CommandLine := CommandLine + ' >' + StrMFOuttxt;
-      BatFile := TStringList.Create;
-      try
-        BatFile.Add(CommandLine);
-        CommandLine := FileDir + 'MF_Run.bat';
-        BatFile.SaveToFile(CommandLine);
-      finally
-        BatFile.Free;
-      end;
-    end;
-    If Pos(' ', CommandLine) > 0 then
-    begin
-      CommandLine := '"' + CommandLine + '"';
-    end;
+//    FOutFile := FileDir + StrMFOuttxt;
+//    if FileExists(FOutFile) then
+//    begin
+//      DeleteFile(FOutFile);
+//    end;
+//    if LowerCase(ExtractFileExt(jvfeModelName.FileName)) <> '.bat' then
+//    begin
+//      CommandLine := CommandLine + ' >' + StrMFOuttxt;
+//      BatFile := TStringList.Create;
+//      try
+//        BatFile.Add(CommandLine);
+//        CommandLine := FileDir + 'MF_Run.bat';
+//        BatFile.SaveToFile(CommandLine);
+//      finally
+//        BatFile.Free;
+//      end;
+//    end;
+//    If Pos(' ', CommandLine) > 0 then
+//    begin
+//      CommandLine := '"' + CommandLine + '"';
+//    end;
     {$ENDIF}
     FListFilesNames.Clear;
     FListFileHandlers.Clear;
@@ -409,7 +427,7 @@ begin
     if FListFilesNames.Count = 0 then
     begin
       Beep;
-      MessageDlg('No list file in name file.', mtError, [mbOK], 0);
+      MessageDlg(StrNoListFileInName, mtError, [mbOK], 0);
       Exit;
     end;
 
@@ -437,7 +455,11 @@ begin
 
     treeNavigation.AutoExpand := True;
     timerReadOutput.Enabled := True;
-    ProcessExitCode := WinExecAndWait32(CommandLine, SW_SHOW);
+    jvcpRunModel.CommandLine := CommandLine;
+    FStartTime := Now;
+    btnStopModel.Enabled := True;
+    jvcpRunModel.Run;
+{    ProcessExitCode := WinExecAndWait32(CommandLine, SW_SHOW);
     if ProcessExitCode <> 0 then
     begin
       AppEventsIdle(Sender, Dummy);
@@ -452,6 +474,7 @@ begin
       end;
     end;
 
+{
     lblModelDone.Visible := True;
 
     AppEventsIdle(Sender, Dummy);
@@ -492,6 +515,7 @@ begin
     btnRun.Glyph := jilBigFaces.Items[3].Bitmap;
     FStartTime := Now;
     FModelFinished := True;
+    }
   end;
 end;
 
@@ -503,7 +527,7 @@ begin
   begin
     // wait
   end;
-  FreeAndNil(FMonitorTextReader);
+//  FreeAndNil(FMonitorTextReader);
 end;
 
 type
@@ -549,7 +573,7 @@ procedure TfrmMonitor.FormDestroy(Sender: TObject);
 begin
   FPercentCumulative.Free;
   FPercentRate.Free;
-  FreeAndNil(FMonitorTextReader);
+//  FreeAndNil(FMonitorTextReader);
   FListFilesNames.Free;
   FListFileHandlers.Free;
 end;
@@ -557,6 +581,67 @@ end;
 procedure TfrmMonitor.FormShow(Sender: TObject);
 begin
   timerStartFromCommandParameters.Enabled := True;
+end;
+
+procedure TfrmMonitor.jvcpRunModelRead(Sender: TObject; const S: string;
+  const StartsOnNewLine: Boolean);
+begin
+  if FPriorSolving and (S = '') then
+  begin
+    Exit
+  end;
+  HandleMonitorFileLine(S);
+  FPriorSolving := Pos('Solving', S) > 0;
+end;
+
+procedure TfrmMonitor.jvcpRunModelTerminate(Sender: TObject;
+  ExitCode: Cardinal);
+var
+  Dummy: Boolean;
+  NormalTermination: Boolean;
+  Index: Integer;
+begin
+  btnStopModel.Enabled := False;
+  lblModelDone.Visible := True;
+
+  AppEventsIdle(Sender, Dummy);
+
+  while not FShouldAbort and {(FMonitorTextReader <> nil) and
+    ((FMonitorTextReader.Position < FMonitorTextReader.Size-1)
+    or not FMonitorTextReader.EOF) and} not ListFileReadersFinished do
+  begin
+    Application.ProcessMessages;
+    Sleep(20);
+  end;
+
+  FDone := True;
+
+  NormalTermination := False;
+  for Index := 0 to reMonitor.Lines.Count - 1 do
+  begin
+    if Pos(StrNormalTermination, reMonitor.Lines[Index]) > 0 then
+    begin
+      NormalTermination := True;
+      break;
+    end;
+  end;
+
+  if not FShouldAbort and not NormalTermination then
+  begin
+    lblMonitor.Caption := 'Screen output' + sLineBreak
+      + 'Program failed to terminate normally';
+    lblMonitor.Font.Color := clRed;
+    lblMonitor.Font.Style := [fsBold];
+    SetPageStatus(tabMonitor, scError);
+    StatusChanged(nil, scError);
+  end;
+
+  lblModelDone.Visible := False;
+
+  btnRun.Caption := StrStartModel;
+  btnRun.Glyph := jilBigFaces.Items[3].Bitmap;
+  FStartTime := Now;
+  FModelFinished := True;
 end;
 
 procedure TfrmMonitor.jvfeModelNameChange(Sender: TObject);
@@ -679,15 +764,15 @@ var
   ModelCaption: string;
   ANode: TTreeNode;
 begin
-  if FOutFile = '' then
-  begin
-    FreeAndNil(FMonitorTextReader);
-  end;
-  if (FMonitorTextReader = nil) and FileExists(FOutFile) then
-  begin
-    FMonitorTextReader := TStringFileStream.Create(FOutFile,
-      fmOpenRead or fmShareDenyNone);
-  end;
+//  if FOutFile = '' then
+//  begin
+//    FreeAndNil(FMonitorTextReader);
+//  end;
+//  if (FMonitorTextReader = nil) and FileExists(FOutFile) then
+//  begin
+//    FMonitorTextReader := TStringFileStream.Create(FOutFile,
+//      fmOpenRead or fmShareDenyNone);
+//  end;
 
   if FListFileHandlers.Count = FListFilesNames.Count then
   begin
@@ -741,11 +826,23 @@ var
   ErrorIndex: Integer;
   AnErrorMessage: string;
 begin
-  if (FOutFile = '') then
+//  if (FOutFile = '') then
+//  begin
+//    Exit;
+//  end;
+  if (FPriorLine <> '') and (Pos(FPriorLine, ALine) > 0) then
+  begin
+    reMonitor.Lines[reMonitor.Lines.Count-1] := ALine;
+  end
+  else
+  begin
+    reMonitor.Lines.Add(ALine);
+  end;
+  FPriorLine := ALine;
+  if Trim(ALine) = '' then
   begin
     Exit;
   end;
-  reMonitor.Lines.Add(ALine);
   Position := Pos(StrNormalTermination, ALine);
   if Position > 0 then
   begin
@@ -913,8 +1010,8 @@ procedure TfrmMonitor.timerReadOutputTimer(Sender: TObject);
 const
   TimeOutTime = 1/24/3600;
 var
-  ALine: AnsiString;
-  ATime: TDateTime;
+//  ALine: AnsiString;
+//  ATime: TDateTime;
   FileReaderIndex: Integer;
   ListHandler : TListFileHandler;
 begin
@@ -931,31 +1028,31 @@ begin
       ListHandler.ReadListingFileLines;
     end;
 
-    if (FMonitorTextReader = nil) then
-    begin
-      Exit;
-    end
-    else
-    begin
-      ATime := Now;
-      while not FMonitorTextReader.EOF do
-      begin
-        if (FOutFile = '') then
-        begin
-          Exit;
-        end;
-        ALine := FMonitorTextReader.ReadLn;
-        if (ALine <> '') or not FMonitorTextReader.EOF then
-        begin
-          HandleMonitorFileLine(string(ALine));
-        end;
-        Application.ProcessMessages;
-        if Now - ATime > TimeOutTime then
-        begin
-          break;
-        end;
-      end;
-    end;
+//    if (FMonitorTextReader = nil) then
+//    begin
+//      Exit;
+//    end
+//    else
+//    begin
+//      ATime := Now;
+//      while not FMonitorTextReader.EOF do
+//      begin
+//        if (FOutFile = '') then
+//        begin
+//          Exit;
+//        end;
+//        ALine := FMonitorTextReader.ReadLn;
+//        if (ALine <> '') or not FMonitorTextReader.EOF then
+//        begin
+//          HandleMonitorFileLine(string(ALine));
+//        end;
+//        Application.ProcessMessages;
+//        if Now - ATime > TimeOutTime then
+//        begin
+//          break;
+//        end;
+//      end;
+//    end;
     Application.ProcessMessages;
   finally
     FReading2 := False;

@@ -56,6 +56,12 @@ resourcestring
   ' assigned';
   StrTheFollowingCHDOb = 'The following CHD observation names may be valid f' +
   'or MODFLOW but they are not valid for UCODE.';
+  StrWritingCHDPackage = 'Writing CHD Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+  StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
 
 { TModflowCHD_Writer }
 
@@ -204,8 +210,8 @@ begin
   end;
   OpenFile(FileName(AFileName));
   try
-    frmProgressMM.AddMessage('Writing CHD Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingCHDPackage);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -213,7 +219,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -221,7 +227,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -229,7 +235,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 3 and 4.');
+    frmProgressMM.AddMessage(StrWritingDataSets3and4);
     WriteDataSets3And4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -237,7 +243,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 5 to 7.');
+    frmProgressMM.AddMessage(StrWritingDataSets5to7);
     WriteDataSets5To7;
   finally
     CloseFile;

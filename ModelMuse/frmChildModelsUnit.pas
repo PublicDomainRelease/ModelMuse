@@ -123,6 +123,10 @@ uses
 
 resourcestring
   StrChangeChildModels = 'change child models';
+  StrChild = 'Child ';
+  StrLayerGroup = 'Layer group';
+  StrLayer = 'Layer';
+  StrChildModelDiscreti = 'Child model discretization';
 
 {$R *.dfm}
 
@@ -133,7 +137,7 @@ var
 begin
   inherited;
   Edit := FChildModels.Add as TChildModelEdit;
-  Edit.ModelName := 'Child ' + IntToStr(FChildModels.Count);
+  Edit.ModelName := StrChild + IntToStr(FChildModels.Count);
   Edit.Discretization.BottomLayerGroup :=
     frmGoPhast.PhastModel.LayerStructure.Last;
   Edit.Discretization.BottomLayerInUnit := Edit.Discretization.
@@ -261,9 +265,9 @@ begin
     end;
   end;
 
-  rdgDiscretization.Cells[Ord(dsLayerGroup),0] := 'Layer group';
-  rdgDiscretization.Cells[Ord(dsParentLayer),0] := 'Layer';
-  rdgDiscretization.Cells[Ord(dsDiscretization),0] := 'Child model discretization';
+  rdgDiscretization.Cells[Ord(dsLayerGroup),0] := StrLayerGroup;
+  rdgDiscretization.Cells[Ord(dsParentLayer),0] := StrLayer;
+  rdgDiscretization.Cells[Ord(dsDiscretization),0] := StrChildModelDiscreti;
 
   GetData;
 end;

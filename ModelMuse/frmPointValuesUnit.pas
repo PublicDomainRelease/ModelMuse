@@ -57,6 +57,8 @@ uses
 
 resourcestring
   StrChangeVertexValues = 'change vertex values';
+  StrKey = 'Key';
+  StrValue = 'Value';
 
 {$R *.dfm}
 
@@ -77,8 +79,8 @@ end;
 procedure TfrmPointValues.FormCreate(Sender: TObject);
 begin
   inherited;
-  rdgValues.Cells[Ord(pvcName),0] := 'Key';
-  rdgValues.Cells[Ord(pvcValue),0] := 'Value';
+  rdgValues.Cells[Ord(pvcName),0] := StrKey;
+  rdgValues.Cells[Ord(pvcValue),0] := StrValue;
 end;
 
 procedure TfrmPointValues.FormDestroy(Sender: TObject);

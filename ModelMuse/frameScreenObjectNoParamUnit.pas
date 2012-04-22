@@ -113,6 +113,10 @@ implementation
 uses OrderedCollectionUnit, frmGoPhastUnit, ModflowTimeUnit,
   frmCustomGoPhastUnit, GoPhastTypes;
 
+resourcestring
+  StrYouNeedToSelectA = 'You need to select a row in the grid before clickin' +
+  'g the Insert button.';
+
 {$R *.dfm}
 
 { TframeScreenObjectParam }
@@ -192,8 +196,7 @@ begin
     or (dgModflowBoundary.SelectedRow >= dgModflowBoundary.RowCount) then
   begin
     Beep;
-    MessageDlg('You need to select a row in the grid before clicking the '
-      + 'Insert button.', mtInformation, [mbOK], 0);
+    MessageDlg(StrYouNeedToSelectA, mtInformation, [mbOK], 0);
     Exit;
   end;
   if (seNumberOfTimes.AsInteger > 0) then

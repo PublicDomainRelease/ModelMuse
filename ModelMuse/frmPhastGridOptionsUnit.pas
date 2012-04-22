@@ -78,6 +78,8 @@ uses frmGoPhastUnit;
 
 resourcestring
   StrGridOptions = 'grid options';
+  StrYouMustCheckAtLe = 'You must check at least one of the chemical dimensi' +
+  'ons check boxes.';
 
 {$R *.dfm}
 
@@ -132,8 +134,7 @@ begin
     or clbChemistryDimensions.Checked[2]) then
   begin
     Beep;
-    MessageDlg('You must check at least one of the chemical dimensions check '
-      + 'boxes.', mtError, [mbOK], 0);
+    MessageDlg(StrYouMustCheckAtLe, mtError, [mbOK], 0);
     Exit;
   end;
   SetData;

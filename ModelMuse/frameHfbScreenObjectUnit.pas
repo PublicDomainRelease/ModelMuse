@@ -43,6 +43,11 @@ implementation
 uses ScreenObjectUnit, GoPhastTypes, ModflowHfbUnit, frmGoPhastUnit,
   ModflowParameterUnit, OrderedCollectionUnit;
 
+resourcestring
+  StrNone = 'none';
+  StrBarrierHydraulicCoFact = 'Barrier hydraulic conductivity factor';
+  StrBarrierHydraulicCo = 'Barrier hydraulic conductivity';
+
 {$R *.dfm}
 
 procedure TframeHfbScreenObject.GetData(List: TScreenObjectEditCollection);
@@ -58,7 +63,7 @@ var
 begin
   comboHfbParameters.Items.Clear;
   Item := comboHfbParameters.Items.Add;
-  Item.Text := 'none';
+  Item.Text := StrNone;
   for Index := 0 to frmGoPhast.PhastModel.ModflowSteadyParameters.Count - 1 do
   begin
     Param := frmGoPhast.PhastModel.ModflowSteadyParameters[Index];
@@ -239,11 +244,11 @@ procedure TframeHfbScreenObject.comboHfbParametersChange(Sender: TObject);
 begin
   if comboHfbParameters.ItemIndex > 0 then
   begin
-    lblHydraulicConductivity.Caption := 'Barrier hydraulic conductivity factor'
+    lblHydraulicConductivity.Caption := StrBarrierHydraulicCoFact
   end
   else
   begin
-    lblHydraulicConductivity.Caption := 'Barrier hydraulic conductivity'
+    lblHydraulicConductivity.Caption := StrBarrierHydraulicCo
   end;
 end;
 

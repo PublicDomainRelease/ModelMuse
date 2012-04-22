@@ -507,10 +507,19 @@ type
     procedure InvalidateDisplay; override;
   end;
 
+resourcestring
+  StrEvapoTranspirationSurf = 'Evapo- transpiration surface';
+  StrEvapoTranspirationDepth = 'Evapo- transpiration depth';
+
 implementation
 
 uses RbwParser, ScreenObjectUnit, PhastModelUnit, ModflowTimeUnit,
   ModflowTransientListParameterUnit, frmGoPhastUnit, TempFiles;
+
+resourcestring
+  StrEvapoTranspirationRate = 'Evapo- transpiration rate';
+  StrEvapoTranspiratioMult = ' evapo- transpiration rate multiplier';
+  StrEvapoTranspirationLayer = 'Evapo- transpiration layer';
 
 const
   RatePosition = 0;
@@ -2267,8 +2276,8 @@ procedure TEvtTimeListLink.CreateTimeLists;
 begin
   inherited;
   FEvapotranspirationRateData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FEvapotranspirationRateData.NonParamDescription := 'Evapo- transpiration rate';
-  FEvapotranspirationRateData.ParamDescription := ' evapo- transpiration rate multiplier';
+  FEvapotranspirationRateData.NonParamDescription := StrEvapoTranspirationRate;
+  FEvapotranspirationRateData.ParamDescription := StrEvapoTranspiratioMult;
   AddTimeList(FEvapotranspirationRateData);
   if Model <> nil then
   begin
@@ -2288,8 +2297,8 @@ procedure TEvtLayerTimeListLink.CreateTimeLists;
 begin
   inherited;
   FEvapotranspirationLayerData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FEvapotranspirationLayerData.NonParamDescription := 'Evapo- transpiration layer';
-  FEvapotranspirationLayerData.ParamDescription := ' evapo- transpiration layer';
+  FEvapotranspirationLayerData.NonParamDescription := StrEvapoTranspirationLayer;
+  FEvapotranspirationLayerData.ParamDescription := ' ' + LowerCase(StrEvapoTranspirationLayer);
   FEvapotranspirationLayerData.DataType := rdtInteger;
   AddTimeList(FEvapotranspirationLayerData);
   if Model <> nil then
@@ -2313,12 +2322,12 @@ var
 begin
   inherited;
   FEvapotranspirationSurfaceData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FEvapotranspirationSurfaceData.NonParamDescription := 'Evapo- transpiration surface';
-  FEvapotranspirationSurfaceData.ParamDescription := ' evapo- transpiration surface';
+  FEvapotranspirationSurfaceData.NonParamDescription := StrEvapoTranspirationSurf;
+  FEvapotranspirationSurfaceData.ParamDescription := ' '+ LowerCase(StrEvapoTranspirationSurf);
   AddTimeList(FEvapotranspirationSurfaceData);
   FEvapotranspirationDepthData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FEvapotranspirationDepthData.NonParamDescription := 'Evapo- transpiration depth';
-  FEvapotranspirationDepthData.ParamDescription := ' evapo- transpiration depth';
+  FEvapotranspirationDepthData.NonParamDescription := StrEvapoTranspirationDepth;
+  FEvapotranspirationDepthData.ParamDescription := ' ' + LowerCase(StrEvapoTranspirationDepth);
   AddTimeList(FEvapotranspirationDepthData);
   if Model <> nil then
   begin

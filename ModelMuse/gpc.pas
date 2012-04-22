@@ -48,13 +48,13 @@ unit gpc;
 
 interface
 uses
-  Windows;
+  Windows {$IFDEF UseFastGeo}, FastGeo {$ENDIF};
 //===========================================================================
 //                               Constants
 //===========================================================================
 
 const
-  Version      = 'GPC_VERSION "2.30"';
+  Version      = 'GPC_VERSION "2.32"';
   GPC_EPSILON  : double =  2.2204460492503131E-16;  { from float.h }
 
 //===========================================================================
@@ -71,10 +71,14 @@ type
     GPC_UNION                               { Union                             }
   );
 
+  {$IFDEF UseFastGeo}
+  Tgpc_vertex= TPoint2D;
+  {$ELSE}
   Tgpc_vertex = record                      { Polygon vertex structure          }
     x : double;                             { Vertex x component                }
     y : double;                             { vertex y component                }
   end;
+  {$ENDIF}
 
   Pgpc_vertex_array = ^Tgpc_vertex_array;   { Helper Type for indexing          }
   Tgpc_vertex_array = array[0.. MaxInt div sizeof(Tgpc_vertex) - 1] of Tgpc_vertex;
@@ -144,6 +148,9 @@ implementation
 uses
   SysUtils,
   Math;
+
+resourcestring
+  StrGpcMallocFailure = 'gpc malloc failure: %s';
 
 
 
@@ -347,7 +354,7 @@ end;
 procedure MALLOC(var p : pointer; b : integer; s : string);
 begin
   GetMem(p, b); if (p = nil) and (b <> 0) then
-    raise Exception.Create(Format('gpc malloc failure: %s', [s]));
+    raise Exception.Create(Format(StrGpcMallocFailure, [s]));
 end;
 
 

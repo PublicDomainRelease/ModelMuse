@@ -348,6 +348,7 @@ type
     function Count: integer;
     property Items[Index: integer]: TCellElementSegmentList
       read GetItem; default;
+    procedure InvalidateAll;
   end;
 
   TIntersectionLocation = record
@@ -555,30 +556,30 @@ type
     // @name is the @link(TScreenObject) for which this
     // @classname will be used.
     FScreenObject: TScreenObject;
-    procedure AssignValuesToFrontDataSet(const Grid: TCustomModelGrid;
+    procedure AssignValuesToFrontDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); virtual; abstract;
-    procedure AssignValuesToSideDataSet(const Grid: TCustomModelGrid;
+    procedure AssignValuesToSideDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); virtual; abstract;
-    procedure AssignValuesToTopDataSet(const Grid: TCustomModelGrid;
+    procedure AssignValuesToTopDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment;
       AssignmentLocation: TAssignmentLocation = alAll); virtual; abstract;
-    procedure UpdateFrontSegments(const Grid: TCustomModelGrid;
+    procedure UpdateFrontSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);virtual; abstract;
-    procedure UpdateSideSegments(const Grid: TCustomModelGrid;
+    procedure UpdateSideSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt); virtual;abstract;
     function GetCompiler(const Orientation: TDataSetOrientation): TRbwParser;
-    procedure GetFrontCellsToAssign(const Grid: TCustomModelGrid;
+    procedure GetFrontCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); virtual; abstract;
-    procedure GetSideCellsToAssign(const Grid: TCustomModelGrid;
+    procedure GetSideCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); virtual; abstract;
-    procedure GetTopCellsToAssign(const Grid: TCustomModelGrid;
+    procedure GetTopCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); virtual; abstract;
@@ -668,7 +669,7 @@ type
     // @name indicates the model for which this delegate will be used.
     property ModelSelection: TModelSelection read FModelSelection;
     property SelectedCells: TSelectedCells read FSelectedCells;
-    procedure AssignSelectedCells(const Grid: TCustomModelGrid; AModel: TBaseModel); virtual; abstract;
+    procedure AssignSelectedCells(AModel: TBaseModel); virtual; abstract;
   end;
 
   TCustomScreenObjectDelegateClass = class of TCustomScreenObjectDelegate;
@@ -2135,15 +2136,15 @@ view. }
     procedure UpdateBox;
     //@name updates the contents of @link(Segments) when
     // @link(ViewDirection) = @link(TViewDirection vdFront).
-    procedure UpdateFrontSegments(const Grid: TCustomModelGrid;
+    procedure UpdateFrontSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);
     //@name updates the contents of @link(Segments) when
     // @link(ViewDirection) = @link(TViewDirection vdSide).
-    procedure UpdateSideSegments(const Grid: TCustomModelGrid;
+    procedure UpdateSideSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);
     //@name updates the contents of @link(Segments) when
     // @link(ViewDirection) = @link(TViewDirection vdTop).
-    procedure UpdateTopSegments(const Grid: TCustomModelGrid;
+    procedure UpdateTopSegments(
       const EvaluatedAt: TEvaluatedAt; const PointsRotated: boolean;
       var RotatedPoints: TEdgePointArray; AModel: TBaseModel);
     // @name is used when accessing vertices to raise an exception if
@@ -2250,7 +2251,7 @@ view. }
     procedure GetInterpDistance(const InterpValue: TInterpValuesItem;
       var Distance: Double; const DataSet: TDataArray;
       const LayerIndex, RowIndex, ColIndex: Integer);
-    procedure AssignTopDataSetValues(const Grid: TCustomModelGrid;
+    procedure AssignTopDataSetValues(
       Expression: TExpression; const DataSetFunction: string;
       Compiler: TRbwParser; UsedVariables: TStringList;
       OtherData: TObject; const DataSet: TDataArray; AModel: TBaseModel;
@@ -2317,6 +2318,8 @@ view. }
     procedure Assign3DElevationsFromTop(const Compiler: TRbwParser;
       const SparseArray: T3DSparseRealArray; AModel: TBaseModel);
     procedure Draw1ElevPhast(const Direction: TViewDirection;
+      const Bitmap32: TBitmap32; const DrawAsSelected: Boolean);
+    procedure Draw1ElevSutra(const Direction: TViewDirection;
       const Bitmap32: TBitmap32; const DrawAsSelected: Boolean);
     procedure SetImportedValues(const Value: TValueCollection);
     procedure SetModflowHfbBoundary(const Value: THfbBoundary);
@@ -2401,6 +2404,8 @@ view. }
     procedure Draw2ElevModflow(const Direction: TViewDirection;
       const Bitmap32: TBitmap32; AModel: TBaseModel);
     procedure Draw2ElevPhast(const Direction: TViewDirection;
+      const Bitmap32: TBitmap32);
+    procedure Draw2ElevSutra(const Direction: TViewDirection;
       const Bitmap32: TBitmap32);
     procedure SetValueStorageField(const Value: TValueArrayStorage;
       var StoredValues: TValueArrayStorage);
@@ -2581,6 +2586,12 @@ view. }
     procedure RestoreSubscriptionToList(List: TList; const AName: string;
       Sender: TObject; Subscriptions: TObjectList);
     function GetTestDataArray(const DataSet: TDataArray): TDataArray;
+    procedure AddTopGridSegments(AModel: TBaseModel; const EvaluatedAt: TEvaluatedAt;
+      DataSetList2: TList; Expression1: TExpression; LayerLimit: Integer;
+      DataSetList1: TList; VariableList2: TList; const PointsRotated: Boolean;
+      VariableList1: TList;
+      var RotatedPoints: TEdgePointArray; Expression2: TExpression);
+    procedure AddTopMeshSegments(AModel: TBaseModel; const EvaluatedAt: TEvaluatedAt);
   protected
     {
      @name is true during @link(TScreenObjectItem.UpdateScreenObject).}
@@ -2625,7 +2636,7 @@ view. }
     // @name is only used when @link(ViewDirection)
     // = @link(TViewDirection vdFront).
     // See @link(AssignValuesToPhastDataSet).
-    procedure AssignValuesToFrontPhastDataSet(const Grid: TCustomModelGrid;
+    procedure AssignValuesToFrontDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment);
     // @name initializes variables needed by the formula for the
@@ -2634,7 +2645,7 @@ view. }
     // @name is only used when @link(ViewDirection)
     // = @link(TViewDirection vdSide).
     // See @link(AssignValuesToPhastDataSet).
-    procedure AssignValuesToSidePhastDataSet(const Grid: TCustomModelGrid;
+    procedure AssignValuesToSideDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment);
     // @name initializes variables needed by the formula for the
@@ -2643,7 +2654,7 @@ view. }
     // @name is only used when @link(ViewDirection)
     // = @link(TViewDirection vdTop).
     // See @link(AssignValuesToPhastDataSet).
-    procedure AssignValuesToTopPhastDataSet(const Grid: TCustomModelGrid;
+    procedure AssignValuesToTopDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel);
     // @name returns an integer that indicates what type of PHAST boundary
     // condition, if any, is specified by this @classname.
@@ -2758,7 +2769,7 @@ view. }
     // system. TempMinX, TempMinY, TempMaxX, TempMaxY are set to the minimum
     // and maximum X and Y coordinates of any of the points in the @classname
     //  in the Grid coordinate system.
-    procedure RotatePoints(const Grid: TCustomModelGrid;
+    procedure RotatePoints(AModel: TBaseModel;
       out RotatedPoints: TEdgePointArray;
       out TempMinX, TempMinY, TempMaxX, TempMaxY: double);
     // See @link(ElevationFormula).
@@ -2926,8 +2937,8 @@ view. }
     // @Link(AssignValuesToFrontPhastDataSet),
     // or @Link(AssignValuesToSidePhastDataSet)
     // to do most of the work.
-    procedure AssignValuesToPhastDataSet(const Grid: TCustomModelGrid;
-      const DataSet: TDataArray; AModel: TBaseModel; UseLgrEdgeCells: TLgrCellTreatment); virtual;
+    procedure AssignValuesToDataSet(const DataSet: TDataArray;
+      AModel: TBaseModel; UseLgrEdgeCells: TLgrCellTreatment); virtual;
     // @name is the number of boundary @link(BoundaryDataSets) affected
     // by the @classname.
     function BoundaryDataSetCount: integer;
@@ -3067,7 +3078,7 @@ having them take care of the subscriptions. }
     // ClosestLocation will be set to that location.
     // Anisotropy is taken into account when computing the distance.
     function DistanceToScreenObject(const Location: TPoint2D;
-      out ClosestLocation: TPoint2D; const Anisotropy: real): real;
+      out ClosestLocation: TPoint2D; const Anisotropy: real; out SectionIndex: integer): real;
     // @name is the primary routine for drawing a @classname.  Bitmap32 is the
     // TBitmap32 on which the @link(TScreenObject) should be drawn.  Direction
     // is the direction from which the @classname will be viewed.
@@ -3225,7 +3236,7 @@ having them take care of the subscriptions. }
     // Distance and ClosestLocation are changed if and only
     // if @name returns @True.
     function IsAnyPointCloser(const Location: TPoint2D;
-      var Distance: real; out ClosestLocation: TPoint2D;
+      var Distance: real; out ClosestLocation: TPoint2D; var SectionIndex: integer;
       const Anisotropy: real): boolean;
     function GetMfBoundary(ParamType: TParameterType): TModflowParamBoundary;
     // @name returns a MODFLOW cell where @classname is located.
@@ -3864,13 +3875,13 @@ SectionStarts.}
       const Compiler: TRbwParser; const Annotation: string;
       var Expression: TExpression; const OtherData: TObject;
       SectionIndex: integer; ShouldZero: boolean); override;
-    procedure AssignValuesToFrontDataSet(const Grid: TCustomModelGrid;
+    procedure AssignValuesToFrontDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);override;
-    procedure AssignValuesToSideDataSet(const Grid: TCustomModelGrid;
+    procedure AssignValuesToSideDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); override;
-    procedure AssignValuesToTopDataSet(const Grid: TCustomModelGrid;
+    procedure AssignValuesToTopDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); override;
     function BoundaryType: integer; override;
@@ -3882,29 +3893,29 @@ SectionStarts.}
       const OtherData: TObject): string; override;
     procedure OtherIndex(const LayerOrRow, RowOrColumn: integer;
       out First, Last: integer; const DataSet: TDataArray); override;
-    procedure UpdateFrontSegments(const Grid: TCustomModelGrid;
+    procedure UpdateFrontSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);override;
-    procedure UpdateSideSegments(const Grid: TCustomModelGrid;
+    procedure UpdateSideSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);override;
   protected
-    procedure GetSideCellsToAssign(const Grid: TCustomModelGrid;
+    procedure GetSideCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
-    procedure GetFrontCellsToAssign(const Grid: TCustomModelGrid;
+    procedure GetFrontCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
-    procedure GetTopCellsToAssign(const Grid: TCustomModelGrid;
+    procedure GetTopCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
-    procedure GetCellsToAssign(const Grid: TCustomModelGrid;
+    procedure GetCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const EvaluatedAt: TEvaluatedAt; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
   public
-    procedure AssignSelectedCells(const Grid: TCustomModelGrid; AModel: TBaseModel); override;
+    procedure AssignSelectedCells(AModel: TBaseModel); override;
     procedure InitializeExpression(out Compiler: TRbwParser;
       out DataSetFormula: string; out Expression: TExpression;
       const DataSet: TDataArray; const OtherData: TObject); override;
@@ -3924,7 +3935,7 @@ SectionStarts.}
     procedure AssignColAndRowIndicies(
       var ColIndex, RowIndex, LayerIndex : Integer;
   const HorizontalIndex1, HorizontalIndex2, PerpendicularIndex: Integer);
-    procedure AssignParallellLimits(const Grid: TCustomModelGrid;
+    procedure AssignParallellLimits(AModel: TBaseModel;
       out FirstParallelIndexA, LastParallelIndexA,
       FirstParallelIndexB, LastParallelIndexB: Integer);
     function FindLayer(const ColOrRow: integer; const Location: TEdgePoint;
@@ -3965,7 +3976,7 @@ SectionStarts.}
       Grid: TCustomModelGrid;
       out SectionIndex: integer): boolean;
     function GetPerpendiularLimit(const Grid: TCustomModelGrid): integer;
-    procedure AssignValuesToDataSet(const Grid: TCustomModelGrid;
+    procedure AssignValuesToDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
     procedure UpdateHorizontalRangeOfCellsToCheck(
@@ -3982,9 +3993,9 @@ SectionStarts.}
       const RowIndex: integer): boolean;
     function GetCellOutlines(const Grid: TCustomModelGrid;
       const RowOrCol: integer): T2DRealPointArray;
-    procedure UpdateSegments(const Grid: TCustomModelGrid;
+    procedure UpdateSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);
-    procedure GetCellsToAssign(const Grid: TCustomModelGrid;
+    procedure GetCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const EvaluatedAt: TEvaluatedAt; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; Orientation: TDataSetOrientation;
@@ -3995,15 +4006,15 @@ SectionStarts.}
     function DataSetUsed(const DataSet: TDataArray;
       var OtherData: TObject; AModel: TBaseModel): boolean; override;
   protected
-    procedure GetFrontCellsToAssign(const Grid: TCustomModelGrid;
+    procedure GetFrontCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
-    procedure GetSideCellsToAssign(const Grid: TCustomModelGrid;
+    procedure GetSideCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
-    procedure GetTopCellsToAssign(const Grid: TCustomModelGrid;
+    procedure GetTopCellsToAssign(
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
@@ -4011,20 +4022,20 @@ SectionStarts.}
     procedure InitializeExpression(out Compiler: TRbwParser;
       out DataSetFunction: string; out Expression: TExpression;
       const DataSet: TDataArray; const OtherData: TObject); override;
-    procedure AssignSelectedCells(const Grid: TCustomModelGrid; AModel: TBaseModel); override;
-    procedure AssignValuesToFrontDataSet(const Grid: TCustomModelGrid;
+    procedure AssignSelectedCells(AModel: TBaseModel); override;
+    procedure AssignValuesToFrontDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);override;
-    procedure AssignValuesToSideDataSet(const Grid: TCustomModelGrid;
+    procedure AssignValuesToSideDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); override;
-    procedure AssignValuesToTopDataSet(const Grid: TCustomModelGrid;
+    procedure AssignValuesToTopDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); override;
     constructor Create(ScreenObject: TScreenObject); override;
-    procedure UpdateFrontSegments(const Grid: TCustomModelGrid;
+    procedure UpdateFrontSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt); override;
-    procedure UpdateSideSegments(const Grid: TCustomModelGrid;
+    procedure UpdateSideSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);override;
     destructor Destroy; override;
   end;
@@ -4388,7 +4399,17 @@ uses Math, UndoItemsScreenObjects, BigCanvasMethods,
   GIS_Functions, frmFormulaErrorsUnit, SparseArrayUnit, ModelMuseUtilities,
   InteractiveTools, PhastModelUnit, CountObjectsUnit, GlobalVariablesUnit,
   IntListUnit, frmGoPhastUnit, IsosurfaceUnit, TempFiles, LayerStructureUnit,
-  gpc, frmGridValueUnit, frmErrorsAndWarningsUnit;
+  gpc, frmGridValueUnit, frmErrorsAndWarningsUnit, SutraMeshUnit;
+
+resourcestring
+  StrInvalidVertex0 = 'Invalid vertex (#%0:d) in "%1:s". %2:s';
+  StrErrorInObjectS = 'Error in object %s.';
+  StrInvalidDataType = 'Invalid data type.';
+  StrElevationFormula = '(X, Y, or Z coordinate formula)';
+  StrLowerXYOrZCo = '(Lower X, Y, or Z coordinate formula)';
+  StrHigherXYOrZC = '(Higher X, Y, or Z coordinate formula)';
+  Str0sTreatedAs1s = '%0:s treated as %1:s';
+  StrInvalidFormula = 'Invalid Formula';
 
 const
   SquareSize = 3;
@@ -4399,9 +4420,9 @@ const
     + 'an unamed data set in Object "%s" '
     + 'has been replaced by the maximum  single-precision real number.';
   ErrorMessageFormulaNamed = 'An invalid value assigned by a formula for '
-    + 'Data Set "&s" in Object "%s" '
+    + 'Data Set "%0:s" in Object "%1:s" '
     + 'has been replaced by the maximum  single-precision real number.';
-  ErrorString ='Layer: %d; Row: %d; Column: %d .';
+  ErrorString ='Layer: %0:d; Row: %1:d; Column: %2:d.';
   StrNoEdgeOfAnObject = sLineBreak + 'No edge of an object may cross another edge of '
     + 'the same object unless the two edges are in different "sections" of the '
     + 'object.';
@@ -5424,10 +5445,8 @@ begin
                 and not PointsNearlyTheSame(IntersectPoint,
                 Points[FLastSubPolygon.FStart]) then
               begin
-                raise EScreenObjectError.Create('Invalid vertex (#'
-                  + IntToStr(Count+1)
-                  + ') in "' + Name + '". '
-                  + StrNoEdgeOfAnObject);
+                raise EScreenObjectError.Create(Format(StrInvalidVertex0,
+                  [Count+1, Name, StrNoEdgeOfAnObject]));
               end;
             end;
           end;
@@ -6034,7 +6053,7 @@ begin
       // Get the coordinates of the points.
 
       Grid := (AModel as TCustomModel).Grid;
-      RotatePoints(Grid, RotatedPoints, TempMinX, TempMinY, TempMaxX, TempMaxY);
+      RotatePoints(AModel, RotatedPoints, TempMinX, TempMinY, TempMaxX, TempMaxY);
       GetColumns(Grid, TempMinX, TempMaxX,
         FirstCol, LastCol);
 
@@ -6627,7 +6646,7 @@ begin
         end;
 
         try
-          Delegate.AssignSelectedCells(LocalModel.Grid, LocalModel);
+          Delegate.AssignSelectedCells(LocalModel);
           CellsToDraw := Delegate.SelectedCells;
           if CellsToDraw.HasCells then
           begin
@@ -6757,6 +6776,12 @@ begin
           Draw1ElevModflow(Direction, Bitmap32, DrawAsSelected,
             (Model as TPhastModel).SelectedModel);
         end;
+      {$IFDEF Sutra}
+      msSutra:
+        begin
+          Draw1ElevSutra(Direction, Bitmap32, DrawAsSelected);
+        end
+      {$ENDIF}
       else
         Assert(False);
     end;
@@ -9317,6 +9342,733 @@ begin
   end;
 end;
 
+procedure TScreenObject.AddTopMeshSegments(AModel: TBaseModel; const EvaluatedAt: TEvaluatedAt);
+var
+  Node: TSutraNode2D;
+  IntIndex: Integer;
+  Segment2D: TSegment2D;
+  Element: TSutraElement2D;
+  ElementIndex: Integer;
+  SectionIndex: Integer;
+  Mesh2D: TSutraMesh2D;
+  PointIndex: Integer;
+  Segment: TCellElementSegment;
+  IntsectSegs: TSegment2DArray;
+  NodeIndex: Integer;
+  IntsectSeg: TSegment2D;
+  Mesh: TSutraMesh3D;
+begin
+  { TODO -cSUTRA : Still need to deal with 1D and 2D objects }
+  Mesh := (Model as TCustomModel).SutraMesh;
+  Mesh2D := Mesh.Mesh2D;
+  for SectionIndex := 0 to SectionCount - 1 do
+  begin
+    if SectionLength[SectionIndex] = 1 then
+    begin
+      Segment2D[1] := Points[SectionStart[SectionIndex]];
+      Segment2D[2] := Segment2D[1];
+      case EvaluatedAt of
+        eaBlocks:
+          begin
+            for ElementIndex := 0 to Mesh2D.Elements.Count - 1 do
+            begin
+              Element := Mesh2D.Elements[ElementIndex];
+              if Element.IsInside(Segment2D[1]) then
+              begin
+                Segment := TCellElementSegment.Create(self);
+                Segment.FSegment := Segment2D;
+                Segment.Col := Element.ElementNumber;
+                Segment.Row := 0;
+                Segment.Layer := 0;
+                Segment.StartPosition := epFirst;
+                Segment.EndPosition := epLast;
+                Segment.VertexIndex := SectionStart[SectionIndex];
+                Segment.SectionIndex := SectionIndex;
+                FSegments.Add(Segment);
+              end;
+            end;
+          end;
+        eaNodes:
+          begin
+            for NodeIndex := 0 to Mesh2D.Nodes.Count - 1 do
+            begin
+              Node := Mesh2D.Nodes[NodeIndex];
+              if Node.IsInsideCell(Segment2D[1]) then
+              begin
+                Segment := TCellElementSegment.Create(self);
+                Segment.FSegment := Segment2D;
+                Segment.Col := Node.Number;
+                Segment.Row := 0;
+                Segment.Layer := 0;
+                Segment.StartPosition := epFirst;
+                Segment.EndPosition := epLast;
+                Segment.VertexIndex := SectionStart[SectionIndex];
+                Segment.SectionIndex := SectionIndex;
+                FSegments.Add(Segment);
+              end;
+            end;
+          end;
+      else
+        Assert(False);
+      end;
+    end
+    else
+    begin
+      for PointIndex := SectionStart[SectionIndex] to
+        SectionEnd[SectionIndex] - 1 do
+      begin
+        Segment2D[1] := Points[PointIndex];
+        Segment2D[2] := Points[PointIndex + 1];
+        case EvaluatedAt of
+          eaBlocks:
+            begin
+              for ElementIndex := 0 to Mesh2D.Elements.Count - 1 do
+              begin
+                Element := Mesh2D.Elements[ElementIndex];
+                if Element.Intersection(Segment2D, IntsectSeg) then
+                begin
+                  Segment := TCellElementSegment.Create(self);
+                  Segment.FSegment := IntsectSeg;
+                  Segment.Col := Element.ElementNumber;
+                  Segment.Row := 0;
+                  Segment.Layer := 0;
+                  if IsEqual(IntsectSeg[1], Segment2D[1], Epsilon) then
+                  begin
+                    Segment.StartPosition := epFirst;
+                  end
+                  else if IsEqual(IntsectSeg[1], Segment2D[2], Epsilon) then
+                  begin
+                    Segment.StartPosition := epLast;
+                  end
+                  else
+                  begin
+                    Segment.StartPosition := epMiddle;
+                  end;
+                  if IsEqual(IntsectSeg[2], Segment2D[1], Epsilon) then
+                  begin
+                    Segment.EndPosition := epFirst;
+                  end
+                  else if IsEqual(IntsectSeg[2], Segment2D[2], Epsilon) then
+                  begin
+                    Segment.EndPosition := epLast;
+                  end
+                  else
+                  begin
+                    Segment.EndPosition := epMiddle;
+                  end;
+                  Segment.VertexIndex := PointIndex;
+                  Segment.SectionIndex := SectionIndex;
+                  FSegments.Add(Segment);
+                end;
+              end;
+            end;
+          eaNodes:
+            begin
+              for NodeIndex := 0 to Mesh2D.Nodes.Count - 1 do
+              begin
+                Node := Mesh2D.Nodes[NodeIndex];
+                if Node.CellIntersection(Segment2D, IntsectSegs) then
+                begin
+                  for IntIndex := 0 to Length(IntsectSegs) - 1 do
+                  begin
+                    IntsectSeg := IntsectSegs[IntIndex];
+                    Segment := TCellElementSegment.Create(self);
+                    Segment.FSegment := IntsectSeg;
+                    Segment.Col := Node.Number;
+                    Segment.Row := 0;
+                    Segment.Layer := 0;
+                    if IsEqual(IntsectSeg[1], Segment2D[1], Epsilon) then
+                    begin
+                      Segment.StartPosition := epFirst;
+                    end
+                    else if IsEqual(IntsectSeg[1], Segment2D[2], Epsilon) then
+                    begin
+                      Segment.StartPosition := epLast;
+                    end
+                    else
+                    begin
+                      Segment.StartPosition := epMiddle;
+                    end;
+                    if IsEqual(IntsectSeg[2], Segment2D[1], Epsilon) then
+                    begin
+                      Segment.EndPosition := epFirst;
+                    end
+                    else if IsEqual(IntsectSeg[2], Segment2D[2], Epsilon) then
+                    begin
+                      Segment.EndPosition := epLast;
+                    end
+                    else
+                    begin
+                      Segment.EndPosition := epMiddle;
+                    end;
+                    Segment.VertexIndex := PointIndex;
+                    Segment.SectionIndex := SectionIndex;
+                    FSegments.Add(Segment);
+                  end;
+                end;
+              end;
+            end;
+        else
+          Assert(False);
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TScreenObject.AddTopGridSegments(AModel: TBaseModel; const EvaluatedAt: TEvaluatedAt;
+  DataSetList2: TList; Expression1: TExpression; LayerLimit: Integer;
+  DataSetList1: TList; VariableList2: TList; const PointsRotated: Boolean;
+  VariableList1: TList;
+  var RotatedPoints: TEdgePointArray; Expression2: TExpression);
+var
+  LocalModel: TCustomModel;
+  Grid: TCustomModelGrid;
+  PreviousPoint: TEdgePoint;
+  TempMaxY: Double;
+  LastElevationIndex: Integer;
+  APoint: TEdgePoint;
+  TempMaxX: Double;
+  ElevationIndex: Integer;
+  ACell: T2DTopCell;
+  PointIndex: Integer;
+  Position: TEdgePosition;
+  TempMinY: Double;
+  FirstRow: Integer;
+  GridMinX: Double;
+  GridMinY: Double;
+  ASegment: TCellElementSegment;
+  SectionIndex: Integer;
+  Point2: TEdgePoint;
+  FirstElevationIndex: Integer;
+  RealPoint: TPoint2D;
+  FirstCol: Integer;
+  TempMinX: Double;
+  Point1: TEdgePoint;
+  Col2: Integer;
+  Col1: Integer;
+  TempPoints2: TEdgePointArray;
+  LastRow: Integer;
+  TempPoints1: TEdgePointArray;
+  Row2: Integer;
+  NewPoint: TEdgePoint;
+  RowIndex: Integer;
+  Temp: Double;
+  EndSection: Boolean;
+  LastCol: Integer;
+  GridMaxY: Double;
+  ColIndex: Integer;
+  GridMaxX: Double;
+  Index: Integer;
+  Row1: Integer;
+  IncreasingY: Boolean;
+  IncreasingX: Boolean;
+  Procedure AddSomeSegments;
+  var
+    Eps: double;
+    BlockTop: double;
+    BlockBottom: double;
+    Elevation1: double;
+    Elevation2: double;
+  begin
+    BlockBottom := 0;
+    BlockTop := 0;
+    if ElevationCount in [ecOne, ecTwo] then
+    begin
+      case LocalModel.ModelSelection of
+        msPhast:
+          begin
+            case EvaluatedAt of
+              eaBlocks:
+                begin
+                  BlockBottom := LocalModel.
+                    PhastGrid.LayerElevation[ElevationIndex];
+                  BlockTop := LocalModel.
+                    PhastGrid.LayerElevation[ElevationIndex+1];
+                end;
+              eaNodes:
+                begin
+                  if ElevationIndex > 0 then
+                  begin
+                    BlockBottom := LocalModel.
+                      PhastGrid.LayerCenter(ElevationIndex-1);
+                  end
+                  else
+                  begin
+                    BlockBottom := LocalModel.
+                      PhastGrid.LayerElevation[ElevationIndex];
+                  end;
+                  if ElevationIndex < LocalModel.
+                      PhastGrid.LayerCount then
+                  begin
+                    BlockTop := LocalModel.
+                      PhastGrid.LayerCenter(ElevationIndex);
+                  end
+                  else
+                  begin
+                    BlockTop := LocalModel.
+                      PhastGrid.LayerElevation[ElevationIndex];
+                  end;
+                end;
+              else Assert(False);
+            end;
+          end;
+        msModflow, msModflowLGR, msModflowNWT:
+          begin
+            Assert(EvaluatedAt = eaBlocks);
+            BlockTop := LocalModel.ModflowGrid.
+              LayerElevations[ASegment.Col, ASegment.Row, ElevationIndex];
+            BlockBottom := LocalModel.ModflowGrid.
+              LayerElevations[ASegment.Col, ASegment.Row, ElevationIndex+1];
+          end;
+        else Assert(False);
+      end;
+    end;
+
+    if ElevationCount in [ecOne, ecTwo] then
+    begin
+      UpdateUsedVariables(VariableList1, DataSetList1,
+        ElevationIndex, ASegment.Row, ASegment.Col);
+      UpdateCurrentScreenObject(self);
+      UpdateGlobalLocations(ASegment.Col, ASegment.Row, ElevationIndex,
+        EvaluatedAt, LocalModel);
+      UpdateCurrentSegment(ASegment);
+      UpdateCurrentSection(ASegment.SectionIndex);
+      if ElevationCount = ecOne then
+      begin
+        FCurrentValues := ImportedSectionElevations;
+      end
+      else
+      begin
+        FCurrentValues := ImportedHigherSectionElevations;
+      end;
+      Expression1.Evaluate;
+      Elevation1 := Expression1.DoubleResult;
+    end
+    else
+    begin
+      Elevation1 := 0;
+    end;
+
+    if ElevationCount = ecTwo then
+    begin
+      UpdateUsedVariables(VariableList2, DataSetList2,
+        ElevationIndex, ASegment.Row, ASegment.Col);
+
+      UpdateCurrentScreenObject(self);
+      UpdateGlobalLocations(ASegment.Col, ASegment.Row, ElevationIndex,
+        EvaluatedAt, LocalModel);
+      UpdateCurrentSegment(ASegment);
+      UpdateCurrentSection(ASegment.SectionIndex);
+      FCurrentValues := ImportedLowerSectionElevations;
+      Expression2.Evaluate;
+      Elevation2 := Expression2.DoubleResult;
+    end
+    else
+    begin
+      Elevation2 := 0;
+    end;
+
+    case ElevationCount of
+      ecZero:
+        begin
+//            FSegments.Add(ASegment);
+        end;
+      ecOne:
+        begin
+          if (BlockTop >= Elevation1) and (BlockBottom <= Elevation1) then
+          begin
+//            FSegments.Add(ASegment);
+          end
+          else
+          begin
+            FreeAndNil(ASegment);
+          end;
+        end;
+      ecTwo:
+        begin
+          Eps := Max(Abs(BlockTop), Abs(BlockBottom))/10E12;
+          if ((BlockTop > Elevation2+Eps)
+            or ((BlockTop = Elevation2) and (ASegment.Layer = 0)))
+            and (BlockBottom < Elevation1-Eps) then
+          begin
+//            FSegments.Add(ASegment);
+          end
+          else
+          begin
+            FreeAndNil(ASegment);
+          end;
+        end;
+      else Assert(false);
+    end;
+
+    if (ASegment <> nil) and (LocalModel is TPhastModel)
+      and TPhastModel(LocalModel).LgrUsed then
+    begin
+      AddTopSubSegments(ASegment, AModel);
+    end;
+
+    if ASegment <> nil  then
+    begin
+      FSegments.Add(ASegment);
+    end;
+  end;
+begin
+  LocalModel := AModel as TCustomModel;
+  Grid := LocalModel.Grid;
+  case EvaluatedAt of
+    eaBlocks:
+      begin
+        LayerLimit := Grid.LayerCount - 1;
+      end;
+    eaNodes:
+      begin
+        LayerLimit := Grid.LayerCount;
+      end;
+  else
+    Assert(False);
+  end;
+  if not PointsRotated then
+  begin
+    // Get the coordinates of the points after rotating them to the grid
+    // coordinate system.
+    RotatePoints(AModel, RotatedPoints, TempMinX, TempMinY, TempMaxX, TempMaxY);
+  end;
+  // Get the box outlining the grid.
+  if Grid.ColumnCount >= 0 then
+  begin
+    GridMaxX := Grid.ColumnPosition[Grid.ColumnCount];
+    GridMinX := Grid.ColumnPosition[0];
+  end
+  else
+  begin
+    GridMaxX := 0;
+    GridMinX := 0;
+  end;
+  if GridMinX > GridMaxX then
+  begin
+    Temp := GridMinX;
+    GridMinX := GridMaxX;
+    GridMaxX := Temp;
+  end;
+  if Grid.RowCount >= 0 then
+  begin
+    GridMaxY := Grid.RowPosition[Grid.RowCount];
+    GridMinY := Grid.RowPosition[0];
+  end
+  else
+  begin
+    GridMaxY := 0;
+    GridMinY := 0;
+  end;
+  if GridMinY > GridMaxY then
+  begin
+    Temp := GridMinY;
+    GridMinY := GridMaxY;
+    GridMaxY := Temp;
+  end;
+  SectionIndex := 0;
+  // loop over vertices in the TScreenObject
+  for Index := 0 to Count - 1 do
+  begin
+    Assert(SectionIndex < SectionCount);
+    if (Index > SectionStart[SectionIndex]) then
+    begin
+      PreviousPoint := APoint;
+    end;
+    APoint := RotatedPoints[Index];
+    if (SectionLength[SectionIndex] = 1) then
+    begin
+      Inc(SectionIndex);
+      // store the value of the cell at the first vertex.
+      if (APoint.X >= GridMinX) and (APoint.X <= GridMaxX)
+        and (APoint.Y >= GridMinY) and (APoint.Y <= GridMaxY) then
+      begin
+        ColIndex := GetACol(Grid, APoint.X);
+        if (EvaluatedAt = eaBlocks) and (ColIndex = Grid.ColumnCount) then
+        begin
+          Dec(ColIndex);
+        end;
+        RowIndex := GetARow(Grid, APoint.Y);
+        if (EvaluatedAt = eaBlocks) and (RowIndex = Grid.RowCount) then
+        begin
+          Dec(RowIndex);
+        end;
+        FirstElevationIndex := 0;
+        LastElevationIndex := LayerLimit;
+        for ElevationIndex := FirstElevationIndex to LastElevationIndex do
+        begin
+          // point segment, top view, MODFLOW or PHAST
+          ASegment := TCellElementSegment.Create(Self);
+          ASegment.X1 := APoint.X;
+          ASegment.X2 := APoint.X;
+          ASegment.Y1 := APoint.Y;
+          ASegment.Y2 := APoint.Y;
+          ASegment.Col := ColIndex;
+          ASegment.Row := RowIndex;
+          ASegment.Layer := ElevationIndex;
+          ASegment.VertexIndex := Index;
+          ASegment.StartPosition := epFirst;
+          ASegment.EndPosition := epLast;
+          ASegment.SectionIndex := SectionIndex - 1;
+          AddSomeSegments;
+        end;
+      end;
+    end
+    else
+    begin
+      EndSection := False;
+      if (Index = SectionStart[SectionIndex]) then
+      begin
+        Continue;
+      end;
+      if (Index = SectionEnd[SectionIndex]) then
+      begin
+        Inc(SectionIndex);
+        EndSection := True;
+      end;
+      // get a line segment and store the values of cells along it.
+      FirstCol := GetACol(Grid, PreviousPoint.X);
+      LastCol := GetACol(Grid, APoint.X);
+      FirstRow := GetARow(Grid, PreviousPoint.Y);
+      LastRow := GetARow(Grid, APoint.Y);
+      PointIndex := 0;
+      // get points on line segment that intersect the column lines.
+      SetLength(TempPoints1, Abs(LastCol - FirstCol) + Abs(LastRow - FirstRow) + 4);
+      PreviousPoint.Position := epFirst;
+      TempPoints1[PointIndex] := PreviousPoint;
+      Inc(PointIndex);
+      if (PreviousPoint.X <> APoint.X) then
+      begin
+        IncreasingX := APoint.X > PreviousPoint.X;
+        if LastCol >= FirstCol then
+        begin
+          Col1 := FirstCol;
+          Col2 := LastCol;
+        end
+        else
+        begin
+          Col1 := LastCol;
+          Col2 := FirstCol;
+        end;
+        if (Col1 >= 0) and (Col2 >= 0) then
+        begin
+          for ColIndex := Col1 to Col2 do
+          begin
+            if ((ColIndex = 0) or (ColIndex = Grid.ColumnCount + 1)) then
+            begin
+              if (ColIndex = 0) then
+              begin
+                if IncreasingX then
+                begin
+                  Position := epFirst;
+                end
+                else
+                begin
+                  Position := epLast;
+                end;
+              end
+              else
+              begin
+                if IncreasingX then
+                begin
+                  Position := epLast;
+                end
+                else
+                begin
+                  Position := epFirst;
+                end;
+              end;
+            end
+            else
+            begin
+              Position := epMiddle;
+            end;
+            AddPointFromColumn(ColIndex, Grid, PreviousPoint, APoint,
+              TempPoints1, PointIndex, Position);
+          end;
+        end;
+      end
+      else
+      begin
+        Col1 := FirstCol;
+        Col2 := LastCol;
+      end;
+      // get points on line segment that intersect the row lines.
+      if (PreviousPoint.Y <> APoint.Y) then
+      begin
+        IncreasingY := APoint.Y > PreviousPoint.Y;
+        if LastRow >= FirstRow then
+        begin
+          Row1 := FirstRow;
+          Row2 := LastRow;
+        end
+        else
+        begin
+          Row1 := LastRow;
+          Row2 := FirstRow;
+        end;
+        if (Row1 >= 0) and (Row2 >= 0) then
+        begin
+          for RowIndex := Row1 to Row2 do
+          begin
+            if ((RowIndex = 0) or (RowIndex = Grid.RowCount + 1)) then
+            begin
+              if RowIndex = 0 then
+              begin
+                if IncreasingY then
+                begin
+                  Position := epFirst;
+                end
+                else
+                begin
+                  Position := epLast;
+                end;
+              end
+              else
+              begin
+                if IncreasingY then
+                begin
+                  Position := epLast;
+                end
+                else
+                begin
+                  Position := epFirst;
+                end;
+              end;
+            end
+            else
+            begin
+              Position := epMiddle;
+            end;
+            AddPointFromRow(RowIndex, Grid, PreviousPoint, APoint,
+              TempPoints1, PointIndex, Position);
+          end;
+        end;
+      end
+      else
+      begin
+        Row1 := FirstRow;
+        Row2 := LastRow;
+      end;
+      APoint.Position := epLast;
+      TempPoints1[PointIndex] := APoint;
+      Inc(PointIndex);
+      // Sort the points.
+      SortPoints(TempPoints1, TempPoints2, APoint, PreviousPoint, PointIndex);
+      // Get cells.
+      case EvaluatedAt of
+        eaBlocks:
+          begin
+            for PointIndex := 1 to Length(TempPoints2) - 1 do
+            begin
+              Point2 := TempPoints2[PointIndex];
+              Point1 := TempPoints2[PointIndex - 1];
+              NewPoint.X := (Point1.X + Point2.X) / 2;
+              NewPoint.Y := (Point1.Y + Point2.Y) / 2;
+              if (NewPoint.X >= GridMinX) and (NewPoint.X <= GridMaxX)
+                and (NewPoint.Y >= GridMinY) and (NewPoint.Y <= GridMaxY) then
+              begin
+                RealPoint.X := NewPoint.X;
+                RealPoint.Y := NewPoint.Y;
+                ACell := Grid.TopContainingCell(RealPoint, EvaluatedAt,
+                  False, Col1, Col2, Row1, Row2);
+                FirstElevationIndex := 0;
+                LastElevationIndex := LayerLimit;
+                for ElevationIndex := FirstElevationIndex to LastElevationIndex do
+                begin
+                  // line segments in elements, top view, MODFLOW or PHAST
+                  ASegment := TCellElementSegment.Create(Self);
+                  ASegment.X2 := Point2.X;
+                  ASegment.X1 := Point1.X;
+                  ASegment.Y2 := Point2.Y;
+                  ASegment.Y1 := Point1.Y;
+                  ASegment.Col := ACell.Col;
+                  ASegment.Row := ACell.Row;
+                  ASegment.Layer := ElevationIndex;
+                  ASegment.VertexIndex := Index - 1;
+                  ASegment.StartPosition := Point1.Position;
+                  ASegment.EndPosition := Point2.Position;
+                  if PointIndex = 1 then
+                  begin
+                    ASegment.StartPosition := epFirst;
+                  end;
+                  if PointIndex = Length(TempPoints2) - 1 then
+                  begin
+                    ASegment.StartPosition := epLast;
+                  end;
+                  if EndSection then
+                  begin
+                    ASegment.SectionIndex := SectionIndex - 1;
+                  end
+                  else
+                  begin
+                    ASegment.SectionIndex := SectionIndex;
+                  end;
+                  AddSomeSegments;
+                end;
+              end;
+            end;
+          end;
+        eaNodes:
+          begin
+            for PointIndex := 1 to Length(TempPoints2) - 1 do
+            begin
+              Point2 := TempPoints2[PointIndex];
+              Point1 := TempPoints2[PointIndex - 1];
+              NewPoint.X := (Point1.X + Point2.X) / 2;
+              NewPoint.Y := (Point1.Y + Point2.Y) / 2;
+              if (NewPoint.X >= GridMinX) and (NewPoint.X <= GridMaxX)
+                and (NewPoint.Y >= GridMinY) and (NewPoint.Y <= GridMaxY) then
+              begin
+                RealPoint.X := NewPoint.X;
+                RealPoint.Y := NewPoint.Y;
+                ACell := Grid.TopContainingCell(RealPoint, EvaluatedAt,
+                  False, Col1, Col2, Row1, Row2);
+                FirstElevationIndex := 0;
+                LastElevationIndex := LayerLimit;
+                for ElevationIndex := FirstElevationIndex to LastElevationIndex do
+                begin
+                  // line segment nodes, top view, PHAST
+                  ASegment := TCellElementSegment.Create(Self);
+                  ASegment.X2 := Point2.X;
+                  ASegment.X1 := Point1.X;
+                  ASegment.Y2 := Point2.Y;
+                  ASegment.Y1 := Point1.Y;
+                  ASegment.Col := ACell.Col;
+                  ASegment.Row := ACell.Row;
+                  ASegment.Layer := ElevationIndex;
+                  ASegment.VertexIndex := Index - 1;
+                  ASegment.StartPosition := Point1.Position;
+                  ASegment.EndPosition := Point2.Position;
+                  if PointIndex = 0 then
+                  begin
+                    ASegment.StartPosition := epFirst;
+                  end;
+                  if PointIndex = Length(TempPoints2) - 1 then
+                  begin
+                    ASegment.StartPosition := epLast;
+                  end;
+                  if EndSection then
+                  begin
+                    ASegment.SectionIndex := SectionIndex - 1;
+                  end
+                  else
+                  begin
+                    ASegment.SectionIndex := SectionIndex;
+                  end;
+                  AddSomeSegments;
+                end;
+              end;
+            end;
+          end;
+      else
+        Assert(False);
+      end;
+    end;
+  end;
+end;
+
 procedure TScreenObject.RestoreLowerElevationSubscription(Sender: TObject;
   const AName: string);
 var
@@ -9608,7 +10360,7 @@ var
   ScreenObjectFunction: string;
 begin
   ScreenObjectFunction := ElevationFormula;
-  frmFormulaErrors.AddFormulaError(Name, '(Elevation Formula)',
+  frmFormulaErrors.AddFormulaError(Name, StrElevationFormula,
     ScreenObjectFunction, ErrorMessage);
   ScreenObjectFunction := '0';
   ElevationFormula := '1';
@@ -9625,7 +10377,7 @@ var
   ScreenObjectFunction: string;
 begin
   ScreenObjectFunction := LowerElevationFormula;
-  frmFormulaErrors.AddFormulaError(Name, '(Lower Elevation Formula)',
+  frmFormulaErrors.AddFormulaError(Name, StrLowerXYOrZCo,
     ScreenObjectFunction, ErrorMessage);
   ScreenObjectFunction := '0';
   LowerElevationFormula := '1';
@@ -9642,7 +10394,7 @@ var
   ScreenObjectFunction: string;
 begin
   ScreenObjectFunction := HigherElevationFormula;
-  frmFormulaErrors.AddFormulaError(Name, '(Higher Elevation Formula)',
+  frmFormulaErrors.AddFormulaError(Name, StrHigherXYOrZC,
     ScreenObjectFunction, ErrorMessage);
   ScreenObjectFunction := '0';
   HigherElevationFormula := '1';
@@ -10516,6 +11268,12 @@ begin
         begin
           Draw2ElevModflow(Direction, Bitmap32, (Model as TPhastModel).SelectedModel);
         end;
+      {$IFDEF Sutra}
+      msSutra:
+        begin
+          Draw2ElevSutra(Direction, Bitmap32);
+        end
+      {$ENDIF}
       else
         Assert(False)
     end;
@@ -10614,6 +11372,11 @@ begin
     FEvaluatedAt := Value;
     InvalidateModel;
     SetFormulaParsers;
+    FSegModelAssoc.InvalidateAll;
+    if FSegments <> nil then
+    begin
+      FSegments.UpToDate := False;
+    end;
     Invalidate;
   end;
 end;
@@ -11915,14 +12678,16 @@ end;
 //  FLinkedChildModels.Assign(Value);
 //end;
 
-procedure TScreenObject.RotatePoints(const Grid: TCustomModelGrid;
+procedure TScreenObject.RotatePoints(AModel: TBaseModel;
   out RotatedPoints: TEdgePointArray;
   out TempMinX, TempMinY, TempMaxX, TempMaxY: double);
 var
   Index: integer;
   APoint: TPoint2D;
   EdgePoint: TEdgePoint;
+  Grid: TCustomModelGrid;
 begin
+  Grid := (AModel as TCustomModel).Grid;
   SetLength(RotatedPoints, Count);
   TempMinX := 0;
   TempMinY := 0;
@@ -11930,8 +12695,15 @@ begin
   TempMaxY := 0;
   for Index := 0 to Count - 1 do
   begin
-    APoint := Grid.
-      RotateFromRealWorldCoordinatesToGridCoordinates(Points[Index]);
+    if Grid = nil then
+    begin
+      APoint := Points[Index];
+    end
+    else
+    begin
+      APoint := Grid.
+        RotateFromRealWorldCoordinatesToGridCoordinates(Points[Index]);
+    end;
     EdgePoint.X := APoint.X;
     EdgePoint.Y := APoint.Y;
     RotatedPoints[Index] := EdgePoint;
@@ -12630,181 +13402,21 @@ begin
   end;
 end;
 
-procedure TScreenObject.UpdateTopSegments(const Grid: TCustomModelGrid;
+procedure TScreenObject.UpdateTopSegments(
   const EvaluatedAt: TEvaluatedAt; const PointsRotated: boolean;
   var RotatedPoints: TEdgePointArray; AModel: TBaseModel);
 var
-  GridMaxX, GridMinX, GridMaxY, GridMinY, Temp: double;
-  Index: integer;
-  APoint, PreviousPoint, Point1, Point2, NewPoint: TEdgePoint;
-  ColIndex, RowIndex: integer;
-  FirstElevationIndex: integer;
-  LastElevationIndex: integer;
-  ElevationIndex: integer;
-  ASegment: TCellElementSegment;
-  FirstRow, LastRow, FirstCol, LastCol: integer;
-  TempPoints1, TempPoints2: TEdgePointArray;
-  Position: TEdgePosition;
-  ACell: T2DTopCell;
-  PointIndex: integer;
-  Col1, Col2, Row1, Row2: integer;
-  RealPoint: TPoint2D;
   LayerLimit: integer;
-  TempMinX, TempMinY, TempMaxX, TempMaxY: double;
-  IncreasingX, IncreasingY: boolean;
-  SectionIndex: integer;
-  EndSection: boolean;
   Expression1: TExpression;
   Expression2: TExpression;
   TempFormula: string;
   Compiler: TRbwParser;
-  Elevation1: double;
-  Elevation2: double;
   LocalModel: TCustomModel;
-  BlockTop: double;
-  BlockBottom: double;
   VariableList1, DataSetList1: TList;
   VariableList2, DataSetList2: TList;
-  Procedure AddSomeSegments;
-  var
-    Eps: double;
-  begin
-    BlockBottom := 0;
-    BlockTop := 0;
-    if ElevationCount in [ecOne, ecTwo] then
-    begin
-      case LocalModel.ModelSelection of
-        msPhast:
-          begin
-            case EvaluatedAt of
-              eaBlocks:
-                begin
-                  BlockBottom := LocalModel.
-                    PhastGrid.LayerElevation[ElevationIndex];
-                  BlockTop := LocalModel.
-                    PhastGrid.LayerElevation[ElevationIndex+1];
-                end;
-              eaNodes:
-                begin
-                  if ElevationIndex > 0 then
-                  begin
-                    BlockBottom := LocalModel.
-                      PhastGrid.LayerCenter(ElevationIndex-1);
-                  end
-                  else
-                  begin
-                    BlockBottom := LocalModel.
-                      PhastGrid.LayerElevation[ElevationIndex];
-                  end;
-                  if ElevationIndex < LocalModel.
-                      PhastGrid.LayerCount then
-                  begin
-                    BlockTop := LocalModel.
-                      PhastGrid.LayerCenter(ElevationIndex);
-                  end
-                  else
-                  begin
-                    BlockTop := LocalModel.
-                      PhastGrid.LayerElevation[ElevationIndex];
-                  end;
-                end;
-              else Assert(False);
-            end;
-          end;
-        msModflow, msModflowLGR, msModflowNWT:
-          begin
-            Assert(EvaluatedAt = eaBlocks);
-            BlockTop := LocalModel.ModflowGrid.
-              LayerElevations[ASegment.Col, ASegment.Row, ElevationIndex];
-            BlockBottom := LocalModel.ModflowGrid.
-              LayerElevations[ASegment.Col, ASegment.Row, ElevationIndex+1];
-          end;
-        else Assert(False);
-      end;
-    end;
-
-    if ElevationCount in [ecOne, ecTwo] then
-    begin
-      UpdateUsedVariables(VariableList1, DataSetList1,
-        ElevationIndex, ASegment.Row, ASegment.Col);
-      UpdateCurrentScreenObject(self);
-      UpdateGlobalLocations(ASegment.Col, ASegment.Row, ElevationIndex,
-        EvaluatedAt, LocalModel);
-      UpdateCurrentSegment(ASegment);
-      UpdateCurrentSection(ASegment.SectionIndex);
-      if ElevationCount = ecOne then
-      begin
-        FCurrentValues := ImportedSectionElevations;
-      end
-      else
-      begin
-        FCurrentValues := ImportedHigherSectionElevations;
-      end;
-      Expression1.Evaluate;
-      Elevation1 := Expression1.DoubleResult;
-    end;
-
-    if ElevationCount = ecTwo then
-    begin
-      UpdateUsedVariables(VariableList2, DataSetList2,
-        ElevationIndex, ASegment.Row, ASegment.Col);
-
-      UpdateCurrentScreenObject(self);
-      UpdateGlobalLocations(ASegment.Col, ASegment.Row, ElevationIndex,
-        EvaluatedAt, LocalModel);
-      UpdateCurrentSegment(ASegment);
-      UpdateCurrentSection(ASegment.SectionIndex);
-      FCurrentValues := ImportedLowerSectionElevations;
-      Expression2.Evaluate;
-      Elevation2 := Expression2.DoubleResult;
-    end;
-
-    case ElevationCount of
-      ecZero:
-        begin
-//            FSegments.Add(ASegment);
-        end;
-      ecOne:
-        begin
-          if (BlockTop >= Elevation1) and (BlockBottom <= Elevation1) then
-          begin
-//            FSegments.Add(ASegment);
-          end
-          else
-          begin
-            FreeAndNil(ASegment);
-          end;
-        end;
-      ecTwo:
-        begin
-          Eps := Max(Abs(BlockTop), Abs(BlockBottom))/10E12;
-          if ((BlockTop > Elevation2+Eps)
-            or ((BlockTop = Elevation2) and (ASegment.Layer = 0)))
-            and (BlockBottom < Elevation1-Eps) then
-          begin
-//            FSegments.Add(ASegment);
-          end
-          else
-          begin
-            FreeAndNil(ASegment);
-          end;
-        end;
-      else Assert(false);
-    end;
-
-    if (ASegment <> nil) and (LocalModel is TPhastModel)
-      and TPhastModel(LocalModel).LgrUsed then
-    begin
-      AddTopSubSegments(ASegment, AModel);
-    end;
-
-    if ASegment <> nil  then
-    begin
-      FSegments.Add(ASegment);
-    end;
-  end;
+  Grid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
 begin
-  { TODO : Consider eliminating Grid from the parameter list and getting Grid from LocalModel. }
   VariableList1 := TList.Create;
   DataSetList1 := TList.Create;
   VariableList2 := TList.Create;
@@ -12846,385 +13458,23 @@ begin
     end;
     // get rid of the existing TCellElementSegments.
     FSegments.Clear;
-    Assert(Grid = LocalModel.Grid);
+    Grid := LocalModel.Grid;
 
     // set the maximum layer to be tested.
     LayerLimit := -1;
     if Grid = nil then
     begin
-      Exit;
-    end;
-    case EvaluatedAt of
-      eaBlocks:
-        begin
-          LayerLimit := Grid.LayerCount - 1;
-        end;
-      eaNodes:
-        begin
-          LayerLimit := Grid.LayerCount;
-        end;
-    else
-      Assert(False);
-    end;
-
-    if not PointsRotated then
-    begin
-      // Get the coordinates of the points after rotating them to the grid
-      // coordinate system.
-      RotatePoints(Grid, RotatedPoints, TempMinX, TempMinY, TempMaxX,
-        TempMaxY);
-    end;
-
-    // Get the box outlining the grid.
-    if Grid.ColumnCount >= 0 then
-    begin
-      GridMaxX := Grid.ColumnPosition[Grid.ColumnCount];
-      GridMinX := Grid.ColumnPosition[0];
+      Mesh := LocalModel.SutraMesh;
+      if Mesh <> nil then
+      begin
+        AddTopMeshSegments(AModel, EvaluatedAt);
+      end;
     end
     else
     begin
-      GridMaxX := 0;
-      GridMinX := 0;
-    end;
-    if GridMinX > GridMaxX then
-    begin
-      Temp := GridMinX;
-      GridMinX := GridMaxX;
-      GridMaxX := Temp;
-    end;
-
-    if Grid.RowCount >= 0 then
-    begin
-      GridMaxY := Grid.RowPosition[Grid.RowCount];
-      GridMinY := Grid.RowPosition[0];
-    end
-    else
-    begin
-      GridMaxY := 0;
-      GridMinY := 0;
-    end;
-    if GridMinY > GridMaxY then
-    begin
-      Temp := GridMinY;
-      GridMinY := GridMaxY;
-      GridMaxY := Temp;
-    end;
-
-    SectionIndex := 0;
-    // loop over vertices in the TScreenObject
-    for Index := 0 to Count - 1 do
-    begin
-      Assert(SectionIndex < SectionCount);
-      if (Index > SectionStart[SectionIndex]) then
-      begin
-        PreviousPoint := APoint;
-      end;
-      APoint := RotatedPoints[Index];
-      if (SectionLength[SectionIndex] = 1) then
-      begin
-        Inc(SectionIndex);
-        // store the value of the cell at the first vertex.
-        if (APoint.X >= GridMinX) and (APoint.X <= GridMaxX)
-          and (APoint.Y >= GridMinY) and (APoint.Y <= GridMaxY) then
-        begin
-          ColIndex := GetACol(Grid, APoint.X);
-          if (EvaluatedAt = eaBlocks) and (ColIndex = Grid.ColumnCount) then
-          begin
-            Dec(ColIndex);
-          end;
-          RowIndex := GetARow(Grid, APoint.Y);
-          if (EvaluatedAt = eaBlocks) and (RowIndex = Grid.RowCount) then
-          begin
-            Dec(RowIndex);
-          end;
-
-          FirstElevationIndex := 0;
-          LastElevationIndex := LayerLimit;
-          for ElevationIndex := FirstElevationIndex to LastElevationIndex do
-          begin
-            // point segment, top view, MODFLOW or PHAST
-            ASegment := TCellElementSegment.Create(Self);
-            ASegment.X1 := APoint.X;
-            ASegment.X2 := APoint.X;
-            ASegment.Y1 := APoint.Y;
-            ASegment.Y2 := APoint.Y;
-            ASegment.Col := ColIndex;
-            ASegment.Row := RowIndex;
-            ASegment.Layer := ElevationIndex;
-            ASegment.VertexIndex := Index;
-            ASegment.StartPosition := epFirst;
-            ASegment.EndPosition := epLast;
-            ASegment.SectionIndex := SectionIndex -1;
-
-            AddSomeSegments;
-          end;
-        end;
-      end
-      else
-      begin
-        EndSection := False;
-        if (Index = SectionStart[SectionIndex]) then
-        begin
-          Continue;
-        end;
-        if (Index = SectionEnd[SectionIndex]) then
-        begin
-          Inc(SectionIndex);
-          EndSection := True;
-        end;
-        // get a line segment and store the values of cells along it.
-        FirstCol := GetACol(Grid, PreviousPoint.X);
-        LastCol := GetACol(Grid, APoint.X);
-
-        FirstRow := GetARow(Grid, PreviousPoint.Y);
-        LastRow := GetARow(Grid, APoint.Y);
-
-        PointIndex := 0;
-        // get points on line segment that intersect the column lines.
-        SetLength(TempPoints1, Abs(LastCol - FirstCol) + Abs(LastRow -
-          FirstRow) + 4);
-        PreviousPoint.Position := epFirst;
-        TempPoints1[PointIndex] := PreviousPoint;
-        Inc(PointIndex);
-        if (PreviousPoint.X <> APoint.X) then
-        begin
-          IncreasingX := APoint.X > PreviousPoint.X;
-          if LastCol >= FirstCol then
-          begin
-            Col1 := FirstCol;
-            Col2 := LastCol;
-          end
-          else
-          begin
-            Col1 := LastCol;
-            Col2 := FirstCol;
-          end;
-          if (Col1 >= 0) and (Col2 >= 0) then
-          begin
-            for ColIndex := Col1 to Col2 do
-            begin
-              if ((ColIndex = 0) or (ColIndex = Grid.ColumnCount+1)) then
-              begin
-                if (ColIndex = 0) then
-                begin
-                  if IncreasingX then
-                  begin
-                    Position := epFirst;
-                  end
-                  else
-                  begin
-                    Position := epLast;
-                  end;
-                end
-                else
-                begin
-                  if IncreasingX then
-                  begin
-                    Position := epLast;
-                  end
-                  else
-                  begin
-                    Position := epFirst;
-                  end;
-                end;
-              end
-              else
-              begin
-                Position := epMiddle;
-              end;
-
-              AddPointFromColumn(ColIndex, Grid,
-                PreviousPoint, APoint, TempPoints1, PointIndex, Position);
-            end;
-          end;
-        end
-        else
-        begin
-          Col1 := FirstCol;
-          Col2 := LastCol;
-        end;
-
-        // get points on line segment that intersect the row lines.
-        if (PreviousPoint.Y <> APoint.Y) then
-        begin
-          IncreasingY := APoint.Y > PreviousPoint.Y;
-          if LastRow >= FirstRow then
-          begin
-            Row1 := FirstRow;
-            Row2 := LastRow;
-          end
-          else
-          begin
-            Row1 := LastRow;
-            Row2 := FirstRow;
-          end;
-          if (Row1 >= 0) and (Row2 >= 0) then
-          begin
-            for RowIndex := Row1 to Row2 do
-            begin
-              if ((RowIndex = 0) or (RowIndex = Grid.RowCount+1)) then
-              begin
-                if RowIndex = 0 then
-                begin
-                  if IncreasingY then
-                  begin
-                    Position := epFirst;
-                  end
-                  else
-                  begin
-                    Position := epLast;
-                  end;
-                end
-                else
-                begin
-                  if IncreasingY then
-                  begin
-                    Position := epLast;
-                  end
-                  else
-                  begin
-                    Position := epFirst;
-                  end;
-                end;
-              end
-              else
-              begin
-                Position := epMiddle;
-              end;
-
-              AddPointFromRow(RowIndex, Grid, PreviousPoint,
-                APoint, TempPoints1, PointIndex, Position);
-            end;
-          end;
-        end
-        else
-        begin
-          Row1 := FirstRow;
-          Row2 := LastRow;
-        end;
-        APoint.Position := epLast;
-        TempPoints1[PointIndex] := APoint;
-        Inc(PointIndex);
-
-        // Sort the points.
-        SortPoints(TempPoints1, TempPoints2, APoint, PreviousPoint,
-          PointIndex);
-
-        // Get cells.
-        case EvaluatedAt of
-          eaBlocks:
-            begin
-              for PointIndex := 1 to Length(TempPoints2) - 1 do
-              begin
-                Point2 := TempPoints2[PointIndex];
-                Point1 := TempPoints2[PointIndex - 1];
-                NewPoint.X := (Point1.X + Point2.X) / 2;
-                NewPoint.Y := (Point1.Y + Point2.Y) / 2;
-                if (NewPoint.X >= GridMinX) and (NewPoint.X <= GridMaxX)
-                  and (NewPoint.Y >= GridMinY) and (NewPoint.Y <= GridMaxY) then
-                begin
-                  RealPoint.X := NewPoint.X;
-                  RealPoint.Y := NewPoint.Y;
-                  ACell := Grid.TopContainingCell(RealPoint, EvaluatedAt,
-                    False, Col1, Col2, Row1, Row2);
-
-                  FirstElevationIndex := 0;
-                  LastElevationIndex := LayerLimit;
-                  for ElevationIndex := FirstElevationIndex to
-                    LastElevationIndex do
-                  begin
-                    // line segments in elements, top view, MODFLOW or PHAST
-                    ASegment := TCellElementSegment.Create(Self);
-                    ASegment.X2 := Point2.X;
-                    ASegment.X1 := Point1.X;
-                    ASegment.Y2 := Point2.Y;
-                    ASegment.Y1 := Point1.Y;
-                    ASegment.Col := ACell.Col;
-                    ASegment.Row := ACell.Row;
-                    ASegment.Layer := ElevationIndex;
-                    ASegment.VertexIndex := Index - 1;
-                    ASegment.StartPosition := Point1.Position;
-                    ASegment.EndPosition := Point2.Position;
-                    if PointIndex = 1 then
-                    begin
-                      ASegment.StartPosition := epFirst;
-                    end;
-                    if PointIndex = Length(TempPoints2) - 1 then
-                    begin
-                      ASegment.StartPosition := epLast;
-                    end;
-                    if EndSection then
-                    begin
-                      ASegment.SectionIndex := SectionIndex-1;
-                    end
-                    else
-                    begin
-                      ASegment.SectionIndex := SectionIndex;
-                    end;
-                    AddSomeSegments;
-                  end;
-                end;
-              end;
-            end;
-          eaNodes:
-            begin
-              for PointIndex := 1 to Length(TempPoints2) - 1 do
-              begin
-                Point2 := TempPoints2[PointIndex];
-                Point1 := TempPoints2[PointIndex - 1];
-                NewPoint.X := (Point1.X + Point2.X) / 2;
-                NewPoint.Y := (Point1.Y + Point2.Y) / 2;
-
-                if (NewPoint.X >= GridMinX) and (NewPoint.X <= GridMaxX)
-                  and (NewPoint.Y >= GridMinY) and (NewPoint.Y <= GridMaxY) then
-                begin
-                  RealPoint.X := NewPoint.X;
-                  RealPoint.Y := NewPoint.Y;
-                  ACell := Grid.TopContainingCell(RealPoint, EvaluatedAt,
-                    False, Col1, Col2, Row1, Row2);
-
-                  FirstElevationIndex := 0;
-                  LastElevationIndex := LayerLimit;
-                  for ElevationIndex := FirstElevationIndex to
-                    LastElevationIndex do
-                  begin
-                    // line segment nodes, top view, PHAST
-                    ASegment := TCellElementSegment.Create(Self);
-                    ASegment.X2 := Point2.X;
-                    ASegment.X1 := Point1.X;
-                    ASegment.Y2 := Point2.Y;
-                    ASegment.Y1 := Point1.Y;
-                    ASegment.Col := ACell.Col;
-                    ASegment.Row := ACell.Row;
-                    ASegment.Layer := ElevationIndex;
-                    ASegment.VertexIndex := Index - 1;
-                    ASegment.StartPosition := Point1.Position;
-                    ASegment.EndPosition := Point2.Position;
-                    if PointIndex = 0 then
-                    begin
-                      ASegment.StartPosition := epFirst;
-                    end;
-                    if PointIndex = Length(TempPoints2) - 1 then
-                    begin
-                      ASegment.StartPosition := epLast;
-                    end;
-                    if EndSection then
-                    begin
-                      ASegment.SectionIndex := SectionIndex-1;
-                    end
-                    else
-                    begin
-                      ASegment.SectionIndex := SectionIndex;
-                    end;
-                    AddSomeSegments;
-                  end;
-                end;
-              end;
-            end;
-        else
-          Assert(False);
-        end;
-      end;
+      AddTopGridSegments(AModel, EvaluatedAt, DataSetList2, Expression1,
+        LayerLimit, DataSetList1, VariableList2, PointsRotated,
+        VariableList1, RotatedPoints, Expression2);
     end;
     FSegments.UpToDate := True;
   finally
@@ -13235,7 +13485,7 @@ begin
   end;
 end;
 
-procedure TScreenObject.AssignValuesToTopPhastDataSet(const Grid: TCustomModelGrid;
+procedure TScreenObject.AssignValuesToTopDataSet(
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel);
 var
   DataSetFunction: string;
@@ -13255,7 +13505,7 @@ begin
     try
       InitializeExpression(Compiler, DataSetFunction, Expression, DataSet,
         OtherData);
-      AssignTopDataSetValues(Grid, Expression, DataSetFunction, Compiler,
+      AssignTopDataSetValues(Expression, DataSetFunction, Compiler,
         UsedVariables, OtherData, DataSet, AModel);
     finally
       UsedVariables.Free;
@@ -13329,9 +13579,11 @@ var
   Variable: TCustomValue;
 //  DataSetIndex: integer;
   AnotherDataSet: TDataArray;
+  LocalModel: TCustomModel;
 begin
   UpdateGlobalLocations(Column, Row, Layer, DataSet.EvaluatedAt, DataSet.Model);
 
+  LocalModel := (DataSet.Model as TCustomModel);
   for VarIndex := 0 to UsedVariables.Count - 1 do
   begin
     VarName := UsedVariables[VarIndex];
@@ -13340,7 +13592,7 @@ begin
     begin
 
       Variable := Compiler.Variables[VarPosition];
-      AnotherDataSet := (FModel as TPhastModel).DataArrayManager.GetDataSetByName(VarName);
+      AnotherDataSet := LocalModel.DataArrayManager.GetDataSetByName(VarName);
       if AnotherDataSet <> nil then
       begin
   //      AnotherDataSet := (FModel as TPhastModel).DataSets[DataSetIndex];
@@ -13396,13 +13648,13 @@ var
   VarPosition: integer;
   Variable: TCustomValue;
   AnotherDataSet: TDataArray;
-  Model: TPhastModel;
+  Model: TCustomModel;
   GlobalVariable: TGlobalVariable;
 begin
   if Expression = nil then
     Exit;
   UsedVariables.Assign(Expression.VariablesUsed);
-  Model := FModel as TPhastModel;
+  Model := DataSet.Model as TCustomModel;
   for VarIndex := 0 to UsedVariables.Count - 1 do
   begin
     VarName := UsedVariables[VarIndex];
@@ -13888,31 +14140,31 @@ begin
   end;
 end;
 
-procedure TScreenObject.UpdateFrontSegments(const Grid: TCustomModelGrid;
+procedure TScreenObject.UpdateFrontSegments(AModel: TBaseModel;
   const EvaluatedAt: TEvaluatedAt);
 begin
-  Delegate.UpdateFrontSegments(Grid, EvaluatedAt);
+  Delegate.UpdateFrontSegments(AModel, EvaluatedAt);
 end;
 
-procedure TScreenObject.AssignValuesToFrontPhastDataSet(
-  const Grid: TCustomModelGrid; const DataSet: TDataArray; OtherData: TObject;
+procedure TScreenObject.AssignValuesToFrontDataSet(
+  const DataSet: TDataArray; OtherData: TObject;
   AModel: TBaseModel; UseLgrEdgeCells: TLgrCellTreatment);
 begin
-  Delegate.AssignValuesToFrontDataSet(Grid, DataSet, OtherData, AModel,
+  Delegate.AssignValuesToFrontDataSet(DataSet, OtherData, AModel,
     UseLgrEdgeCells);
 end;
 
-procedure TScreenObject.UpdateSideSegments(const Grid: TCustomModelGrid;
+procedure TScreenObject.UpdateSideSegments(AModel: TBaseModel;
   const EvaluatedAt: TEvaluatedAt);
 begin
-  Delegate.UpdateSideSegments(Grid, EvaluatedAt);
+  Delegate.UpdateSideSegments(AModel, EvaluatedAt);
 end;
 
-procedure TScreenObject.AssignValuesToSidePhastDataSet(const Grid: TCustomModelGrid;
+procedure TScreenObject.AssignValuesToSideDataSet(
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment);
 begin
-  Delegate.AssignValuesToSideDataSet(Grid, DataSet, OtherData, AModel,
+  Delegate.AssignValuesToSideDataSet(DataSet, OtherData, AModel,
     UseLgrEdgeCells);
 end;
 
@@ -14420,15 +14672,11 @@ begin
   FGpcPolygons := TGpcPolygonClass.Create;
   FGpcPolygons.NumberOfContours := ClosedSectionCount;
   ClosedSectionCount := 0;
-//  if SubPolygonCount = 0 then
-//  begin
-//    CreateSubPolygons;
-//  end;
+
   for SectionIndex := 0 to SectionCount - 1 do
   begin
     if SectionClosed[SectionIndex] then
     begin
-//      SubPolygon := SubPolygons[SectionIndex];
       FGpcPolygons.VertexCount[ClosedSectionCount] := SectionLength[SectionIndex] - 1;
       for VertexIndex := SectionStart[SectionIndex] to
         SectionStart[SectionIndex] + SectionLength[SectionIndex] - 2 do
@@ -14958,7 +15206,7 @@ begin
   begin
     if FSegments.FGettingSegments then
     begin
-      raise EScreenObjectError.Create(Format('Error in object %s.', [Name]));
+      raise EScreenObjectError.Create(Format(StrErrorInObjectS, [Name]));
     end;
     FSegments.FGettingSegments := True;
     try
@@ -14966,23 +15214,17 @@ begin
       case ViewDirection of
         vdTop:
           begin
-            RotatePoints(TCustomModel(AModel).Grid, RotatedPoints,
+            RotatePoints(AModel, RotatedPoints,
               TempMinX, TempMinY, TempMaxX, TempMaxY);
-            UpdateTopSegments(
-              TCustomModel(AModel).Grid,
-              EvaluatedAt, True, RotatedPoints, AModel);
+            UpdateTopSegments( EvaluatedAt, True, RotatedPoints, AModel);
           end;
         vdFront:
           begin
-            UpdateFrontSegments(
-              TCustomModel(AModel).Grid,
-              EvaluatedAt);
+            UpdateFrontSegments(AModel, EvaluatedAt);
           end;
         vdSide:
           begin
-            UpdateSideSegments(
-              TCustomModel(AModel).Grid,
-              EvaluatedAt);
+            UpdateSideSegments(AModel, EvaluatedAt);
           end;
       end;
     finally
@@ -15088,13 +15330,19 @@ begin
 end;
 
 procedure TScreenObject.SetDeleted(const Value: boolean);
+var
+  Grid: TCustomModelGrid;
 begin
   if FDeleted <> Value then
   begin
     InvalidateModel;
     FDeleted := Value;
     Selected := False;
-    (FModel as TPhastModel).Grid.NeedToRecalculateCellColors;
+    Grid := (FModel as TPhastModel).Grid;
+    if Grid <> nil then
+    begin
+      Grid.NeedToRecalculateCellColors;
+    end;
     UpToDate := False;
     NotifyGuiOfChange(self);
   end;
@@ -15258,11 +15506,12 @@ begin
 end;
 
 function TScreenObject.IsAnyPointCloser(const Location: TPoint2D;
-  var Distance: real; out ClosestLocation: TPoint2D;
+  var Distance: real; out ClosestLocation: TPoint2D; var SectionIndex: integer;
   const Anisotropy: real): boolean;
 var
   SubPolygon: TSubPolygon;
   Index: Integer;
+  CloserLocation: Boolean;
 begin
   result := False;
   if IsOutsideBoxPlusBuffer(Location, Distance, Anisotropy) then
@@ -15276,9 +15525,14 @@ begin
 
   for Index := 0 to SubPolygonCount - 1 do
   begin
-    SubPolygon := SubPolygons[Index]   ;
-    result := IsAnyPointInSubPolygonCloser(Location, Distance,
+    SubPolygon := SubPolygons[Index];
+    CloserLocation := IsAnyPointInSubPolygonCloser(Location, Distance,
       ClosestLocation, Anisotropy, SubPolygon);
+    if CloserLocation then
+    begin
+      SectionIndex := Index;
+    end;
+    result := result or CloserLocation;
   end;
 end;
 
@@ -17281,13 +17535,14 @@ end;
 //end;
 
 function TScreenObject.DistanceToScreenObject(const Location: TPoint2D;
-  out ClosestLocation: TPoint2D; const Anisotropy: real): real;
+  out ClosestLocation: TPoint2D; const Anisotropy: real; out SectionIndex: integer): real;
 var
   Index: integer;
   FirstPoint: TPoint2D;
   SecondPoint: TPoint2D;
   temp: real;
   TempLocation: TPoint2D;
+  LocalSectionIndex: Integer;
 begin
   { TODO :
 TScreenObject.DistanceToScreenObject is a bottleneck.
@@ -17297,30 +17552,52 @@ Try using a range tree or other data structure to increase speed. }
   begin
     ClosestLocation := Points[0];
     result := PointToPointDist(ClosestLocation, Location, Anisotropy);
+    SectionIndex := 0;
   end
   else if (Count > MaxPointsInSubPolygon) then
   begin
     ClosestLocation := Points[0];
     result := PointToPointDist(ClosestLocation, Location, Anisotropy);
-    IsAnyPointCloser(Location, result, ClosestLocation, Anisotropy);
+    IsAnyPointCloser(Location, result, ClosestLocation, SectionIndex, Anisotropy);
   end
   else
   begin
+    LocalSectionIndex := 0;
     FirstPoint := Points[0];
     SecondPoint := Points[1];
     result := MinDistPointLine(Location, FirstPoint,
-      SecondPoint, ClosestLocation, Anisotropy);
-    for Index := 1 to Count - 2 do
+      FirstPoint, ClosestLocation, Anisotropy);
+    SectionIndex := 0;
+    for Index := 0 to Count - 1 do
     begin
+
+      if (SectionEnd[LocalSectionIndex] = Index)
+        and (SectionStart[LocalSectionIndex] <> Index) then
+      begin
+        Inc(LocalSectionIndex);
+        Continue;
+      end;
       FirstPoint := Points[Index];
-      SecondPoint := Points[Index + 1];
+      if (SectionEnd[LocalSectionIndex] = Index) then
+      begin
+        SecondPoint := FirstPoint;
+      end
+      else
+      begin
+        SecondPoint := Points[Index + 1];
+      end;
       temp := MinDistPointLine(Location, FirstPoint, SecondPoint,
         TempLocation, Anisotropy);
       if temp < result then
       begin
         result := temp;
         ClosestLocation := TempLocation;
+        SectionIndex := LocalSectionIndex;
       end;
+      if (SectionEnd[LocalSectionIndex] = Index) then
+      begin
+        Inc(LocalSectionIndex);
+      end
     end;
   end;
 end;
@@ -17891,6 +18168,7 @@ begin
       NextStart := 0;
       ScreenObject.BeginUpdate;
       try
+        ScreenObject.Capacity := Points.Count;
         for Index := 0 to Points.Count - 1 do
         begin
           NewPart := Index = NextStart;
@@ -18193,7 +18471,7 @@ var
   Limits: TGridLimit;
   RotatedLocation: TPoint2D;
   FirstPoint, SecondPoint: TPoint2D;
-  GridOutline: TPolygon2D;
+  ModelOutline: TPolygon2D;
   GridEdgeSegment: TSegment2D;
   SearchCircle: TCircle;
   ICnt: Integer;
@@ -18284,7 +18562,7 @@ begin
       Assert(FEndPoints <> nil);
     end;
 
-    if FScreenObject.ViewDirection = vdTop then
+    if (FScreenObject.ViewDirection = vdTop) and (frmGoPhast.Grid <> nil) then
     begin
       RotatedLocation := frmGoPhast.Grid.
         RotateFromRealWorldCoordinatesToGridCoordinates(Location);
@@ -18394,7 +18672,21 @@ begin
       FRangeTree := TRbwRangeTree.Create(LeafList);
     end;
 
-    Limits := frmGoPhast.Grid.GridLimits(FScreenObject.ViewDirection);
+    if frmGoPhast.PhastModel.SelectedModel.Grid <> nil then
+    begin
+      Limits := frmGoPhast.PhastModel.SelectedModel.
+        Grid.GridLimits(FScreenObject.ViewDirection);
+    end
+    else if frmGoPhast.PhastModel.SelectedModel.SutraMesh <> nil then
+    begin
+      Limits := frmGoPhast.PhastModel.SelectedModel.
+        SutraMesh.MeshLimits(FScreenObject.ViewDirection)
+    end
+    else
+    begin
+      result := nil;
+      Exit;
+    end;
     case FScreenObject.ViewDirection of
       vdTop:
         begin
@@ -18434,26 +18726,35 @@ begin
     // the grid, the distance between the point and the closest
     // segment may be large which results in a large search interval.
     // To decrease the search interval, find the area of intersection
-    // between a circle centered at the search point and the grid
+    // between a circle centered at the search point and the grid or mesh
     // outline.
-    GridOutline := frmGoPhast.PhastModel.SelectedModel.Grid.GridOutline(FScreenObject.ViewDirection);
-    for PointIndex := 0 to Length(GridOutline) - 1 do
+    if frmGoPhast.PhastModel.SelectedModel.Grid <> nil then
     begin
-      GridOutline[PointIndex].y := GridOutline[PointIndex].y * Anisotropy;
+      ModelOutline := frmGoPhast.PhastModel.SelectedModel.
+        Grid.GridOutline(FScreenObject.ViewDirection);
+    end
+    else
+    begin
+      Assert(frmGoPhast.PhastModel.SelectedModel.SutraMesh <> nil);
+      ModelOutline := frmGoPhast.PhastModel.SelectedModel.
+        SutraMesh.MeshBox(FScreenObject.ViewDirection);
     end;
-//    GridOutline := frmGoPhast.Grid.GridOutline(FScreenObject.ViewDirection);
-    if not PointInConvexPolygon(Location, GridOutline) then
+    for PointIndex := 0 to Length(ModelOutline) - 1 do
+    begin
+      ModelOutline[PointIndex].y := ModelOutline[PointIndex].y * Anisotropy;
+    end;
+    if not PointInConvexPolygon(Location, ModelOutline) then
     begin
       // define the search circle.
       SearchCircle.x := Location.x;
       SearchCircle.y := Location.y{*Anisotropy};
       SearchCircle.Radius := FMinDistance;
       // interesect the last edge with the circle.
-      GridEdgeSegment[1] := GridOutline[3];
-      GridEdgeSegment[2] := GridOutline[0];
+      GridEdgeSegment[1] := ModelOutline[Length(ModelOutline)-1];
+      GridEdgeSegment[2] := ModelOutline[0];
       GridEdgeSegment[1].y := GridEdgeSegment[1].y*Anisotropy;
       GridEdgeSegment[2].y := GridEdgeSegment[2].y*Anisotropy;
-      SetLength(IntersectionArray,8);
+      SetLength(IntersectionArray,Length(ModelOutline)*2);
       PolyCount := 0;
       IntersectionPoint(GridEdgeSegment,SearchCircle, ICnt, I1,I2);
       if ICnt >= 1 then
@@ -18467,10 +18768,10 @@ begin
         IntersectionArray[PolyCount-1] := I2;
       end;
       // intersect the remaining edges with the circle.
-      for PolyIndex := 1 to Length(GridOutline) - 1 do
+      for PolyIndex := 1 to Length(ModelOutline) - 1 do
       begin
-        GridEdgeSegment[1] := GridOutline[PolyIndex-1];
-        GridEdgeSegment[2] := GridOutline[PolyIndex];
+        GridEdgeSegment[1] := ModelOutline[PolyIndex-1];
+        GridEdgeSegment[2] := ModelOutline[PolyIndex];
         GridEdgeSegment[1].y := GridEdgeSegment[1].y*Anisotropy;
         GridEdgeSegment[2].y := GridEdgeSegment[2].y*Anisotropy;
         IntersectionPoint(GridEdgeSegment,SearchCircle, ICnt, I1,I2);
@@ -18725,7 +19026,7 @@ end;
 function TCellElementSegment.FirstPointRealCoord(ViewDirection: TViewDirection): TPoint2D;
 begin
   result := FSegment[1];;
-  if ViewDirection = vdTop then
+  if (ViewDirection = vdTop) and (frmGoPhast.Grid <> nil) then
   begin
     result := frmGoPhast.Grid.
       RotateFromGridCoordinatesToRealWorldCoordinates(result);
@@ -18779,7 +19080,7 @@ end;
 function TCellElementSegment.SecondPointRealCoord(ViewDirection: TViewDirection): TPoint2D;
 begin
   result := FSegment[2];
-  if ViewDirection = vdTop then
+  if (ViewDirection = vdTop) and (frmGoPhast.Grid <> nil) then
   begin
     result := frmGoPhast.Grid.
       RotateFromGridCoordinatesToRealWorldCoordinates(result);
@@ -19329,7 +19630,7 @@ begin
     and (DataSet.Datatype = rdtDouble));
   if not ResultTypeOK then
   begin
-    raise EInvalidDataType.Create('Invalid data type.');
+    raise EInvalidDataType.Create(StrInvalidDataType);
   end;
 end;
 
@@ -19870,13 +20171,15 @@ begin
   end;
 end;
 
-procedure TPhastDelegate.AssignSelectedCells(const Grid: TCustomModelGrid;
+procedure TPhastDelegate.AssignSelectedCells(
   AModel: TBaseModel);
 var
   CellList: TCellAssignmentList;
   Index: Integer;
   Cell: TCellAssignment;
+  Grid: TCustomModelGrid;
 begin
+  Grid := (AModel as TCustomModel).Grid;
   CellList := TCellAssignmentList.Create;
   try
     case FScreenObject.EvaluatedAt of
@@ -19892,7 +20195,7 @@ begin
         end;
       else Assert(False);
     end;
-    GetCellsToAssign(Grid, '', nil, FScreenObject.EvaluatedAt, CellList, alAll,
+    GetCellsToAssign('', nil, FScreenObject.EvaluatedAt, CellList, alAll,
       AModel);
     for Index := 0 to CellList.Count - 1 do
     begin
@@ -19905,7 +20208,7 @@ begin
   end;
 end;
 
-procedure TPhastDelegate.AssignValuesToFrontDataSet(const Grid: TCustomModelGrid;
+procedure TPhastDelegate.AssignValuesToFrontDataSet(
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 var
@@ -19935,7 +20238,7 @@ begin
           OtherData);
 
         InitializeVariables(UsedVariables, DataSet, Expression, Compiler);
-        GetFrontCellsToAssign(Grid, DataSetFunction, OtherData, DataSet,
+        GetFrontCellsToAssign(DataSetFunction, OtherData, DataSet,
           CellList, alAll, AModel);
         FScreenObject.UpdateImportedValues(DataSet);
         for AssignmentIndex := 0 to CellList.Count - 1 do
@@ -19958,7 +20261,7 @@ begin
   end;
 end;
 
-procedure TPhastDelegate.AssignValuesToSideDataSet(const Grid: TCustomModelGrid;
+procedure TPhastDelegate.AssignValuesToSideDataSet(
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 var
@@ -19987,7 +20290,7 @@ begin
           OtherData);
 
         InitializeVariables(UsedVariables, DataSet, Expression, Compiler);
-        GetSideCellsToAssign(Grid, DataSetFunction, OtherData, DataSet,
+        GetSideCellsToAssign(DataSetFunction, OtherData, DataSet,
           CellList, alAll, AModel);
         FScreenObject.UpdateImportedValues(DataSet);
         for AssignmentIndex := 0 to CellList.Count - 1 do
@@ -20010,7 +20313,7 @@ begin
   end;
 end;
 
-procedure TPhastDelegate.AssignValuesToTopDataSet(const Grid: TCustomModelGrid;
+procedure TPhastDelegate.AssignValuesToTopDataSet(
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 var
@@ -20039,7 +20342,7 @@ begin
           OtherData);
 
         InitializeVariables(UsedVariables, DataSet, Expression, Compiler);
-        GetTopCellsToAssign(Grid, DataSetFunction, OtherData, DataSet,
+        GetTopCellsToAssign(DataSetFunction, OtherData, DataSet,
           CellList, alAll, AModel);
         FScreenObject.UpdateImportedValues(DataSet);
         for AssignmentIndex := 0 to CellList.Count - 1 do
@@ -20074,11 +20377,14 @@ begin
   FSelectedCells := TSelectedCells.Create;
 end;
 
-procedure TPhastDelegate.GetCellsToAssign(const Grid: TCustomModelGrid;
+procedure TPhastDelegate.GetCellsToAssign(
   const DataSetFunction: string; OtherData: TObject;
   const EvaluatedAt: TEvaluatedAt; CellList: TCellAssignmentList;
   AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
+var
+  Grid: TCustomModelGrid;
 begin
+  Grid := (AModel as TCustomModel).Grid;
   Assert(CellList.Count = 0);
   if (Grid.ColumnCount <= 0) or (Grid.RowCount <= 0)
     or (Grid.LayerCount <= 0) then
@@ -20086,17 +20392,17 @@ begin
     Exit;
   end;
   case FScreenObject.ViewDirection of
-    vdTop: GetTopCellsToAssign(Grid, DataSetFunction, OtherData,
+    vdTop: GetTopCellsToAssign(DataSetFunction, OtherData,
       nil, CellList, AssignmentLocation, AModel);
-    vdFront: GetFrontCellsToAssign(Grid, DataSetFunction, OtherData,
+    vdFront: GetFrontCellsToAssign(DataSetFunction, OtherData,
       nil, CellList, AssignmentLocation, AModel);
-    vdSide: GetSideCellsToAssign(Grid, DataSetFunction, OtherData,
+    vdSide: GetSideCellsToAssign(DataSetFunction, OtherData,
       nil, CellList, AssignmentLocation, AModel);
     else Assert(False);
   end;
 end;
 
-procedure TPhastDelegate.GetFrontCellsToAssign(const Grid: TCustomModelGrid;
+procedure TPhastDelegate.GetFrontCellsToAssign(
   const DataSetFunction: string; OtherData: TObject;
   const DataSet: TDataArray; CellList: TCellAssignmentList;
   AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
@@ -20133,7 +20439,7 @@ var
   AssignmentMethod: TAssignmentMethod;
 begin
   Assert(CellList.Count = 0);
-  LocalGrid := Grid as TPhastGrid;
+  LocalGrid := (AModel as TCustomModel).PhastGrid;
   IAnnotation := IntersectAnnotation(DataSetFunction, OtherData);
   EAnnotation := EncloseAnnotation(DataSetFunction, OtherData);
   UpdateCurrentScreenObject(FScreenObject);
@@ -20157,11 +20463,11 @@ begin
     case EvalAt of
       eaBlocks:
         begin
-          RowLimit := Grid.RowCount - 1;
+          RowLimit := LocalGrid.RowCount - 1;
         end;
       eaNodes:
         begin
-          RowLimit := Grid.RowCount;
+          RowLimit := LocalGrid.RowCount;
         end;
     else
       Assert(False);
@@ -20176,23 +20482,23 @@ begin
       TempMinY := FScreenObject.MinY;
       TempMaxX := FScreenObject.MaxX;
       TempMaxY := FScreenObject.MaxY;
-      FScreenObject.GetColumns(Grid, TempMinX, TempMaxX, FirstCol, LastCol);
-      if FirstCol > Grid.ColumnCount then
+      FScreenObject.GetColumns(LocalGrid, TempMinX, TempMaxX, FirstCol, LastCol);
+      if FirstCol > LocalGrid.ColumnCount then
       begin
-        FirstCol := Grid.ColumnCount;
+        FirstCol := LocalGrid.ColumnCount;
       end;
-      if LastCol > Grid.ColumnCount then
+      if LastCol > LocalGrid.ColumnCount then
       begin
-        LastCol := Grid.ColumnCount;
+        LastCol := LocalGrid.ColumnCount;
       end;
-      FScreenObject.GetLayers(Grid, TempMinY, TempMaxY, FirstLayer, LastLayer);
-      if FirstLayer > Grid.LayerCount then
+      FScreenObject.GetLayers(LocalGrid, TempMinY, TempMaxY, FirstLayer, LastLayer);
+      if FirstLayer > LocalGrid.LayerCount then
       begin
-        FirstLayer := Grid.LayerCount;
+        FirstLayer := LocalGrid.LayerCount;
       end;
-      if LastLayer > Grid.LayerCount then
+      if LastLayer > LocalGrid.LayerCount then
       begin
-        LastLayer := Grid.LayerCount;
+        LastLayer := LocalGrid.LayerCount;
       end;
       // Find the cells inside the screen object and assign values to them.
       for ColIndex := FirstCol to LastCol do
@@ -20202,12 +20508,12 @@ begin
           case FScreenObject.EvaluatedAt of
             eaBlocks:
               begin
-                CellLocation3D := Grid.ThreeDElementCenter(
+                CellLocation3D := LocalGrid.ThreeDElementCenter(
                   ColIndex, 0, LayerIndex);
               end;
             eaNodes:
               begin
-                CellLocation3D := Grid.ThreeDElementCorner(
+                CellLocation3D := LocalGrid.ThreeDElementCorner(
                    ColIndex, 0, LayerIndex);
               end;
           else
@@ -20460,7 +20766,7 @@ begin
   end;
 end;
 
-procedure TPhastDelegate.GetSideCellsToAssign(const Grid: TCustomModelGrid;
+procedure TPhastDelegate.GetSideCellsToAssign(
   const DataSetFunction: string; OtherData: TObject; const DataSet: TDataArray;
   CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
   AModel: TBaseModel);
@@ -20497,7 +20803,7 @@ var
   AssignmentMethod: TAssignmentMethod;
 begin
   Assert(CellList.Count = 0);
-  LocalGrid := Grid as TPhastGrid;
+  LocalGrid := (AModel as TCustomModel).PhastGrid;
   IAnnotation := IntersectAnnotation(DataSetFunction, OtherData);
   EAnnotation := EncloseAnnotation(DataSetFunction, OtherData);
   UpdateCurrentScreenObject(FScreenObject);
@@ -20521,11 +20827,11 @@ begin
     case EvalAt of
       eaBlocks:
         begin
-          ColumnLimit := Grid.ColumnCount - 1;
+          ColumnLimit := LocalGrid.ColumnCount - 1;
         end;
       eaNodes:
         begin
-          ColumnLimit := Grid.ColumnCount;
+          ColumnLimit := LocalGrid.ColumnCount;
         end;
     else
       Assert(False);
@@ -20544,23 +20850,23 @@ begin
       TempMinY := FScreenObject.MinX;
       TempMaxX := FScreenObject.MaxY;
       TempMaxY := FScreenObject.MaxX;
-      FScreenObject.GetRows(Grid, TempMinX, TempMaxX, FirstRow, LastRow);
-      if FirstRow > Grid.RowCount then
+      FScreenObject.GetRows(LocalGrid, TempMinX, TempMaxX, FirstRow, LastRow);
+      if FirstRow > LocalGrid.RowCount then
       begin
-        FirstRow := Grid.RowCount;
+        FirstRow := LocalGrid.RowCount;
       end;
-      if LastRow > Grid.RowCount then
+      if LastRow > LocalGrid.RowCount then
       begin
-        LastRow := Grid.RowCount;
+        LastRow := LocalGrid.RowCount;
       end;
-      FScreenObject.GetLayers(Grid, TempMinY, TempMaxY, FirstLayer, LastLayer);
-      if FirstLayer > Grid.LayerCount then
+      FScreenObject.GetLayers(LocalGrid, TempMinY, TempMaxY, FirstLayer, LastLayer);
+      if FirstLayer > LocalGrid.LayerCount then
       begin
-        FirstLayer := Grid.LayerCount;
+        FirstLayer := LocalGrid.LayerCount;
       end;
-      if LastLayer > Grid.LayerCount then
+      if LastLayer > LocalGrid.LayerCount then
       begin
-        LastLayer := Grid.LayerCount;
+        LastLayer := LocalGrid.LayerCount;
       end;
       //
       // Find the cells inside the screen object and color them.
@@ -20571,12 +20877,12 @@ begin
           case FScreenObject.EvaluatedAt of
             eaBlocks:
               begin
-                CellLocation3D := Grid.ThreeDElementCenter(
+                CellLocation3D := LocalGrid.ThreeDElementCenter(
                   0, RowIndex, LayerIndex);
               end;
             eaNodes:
               begin
-                CellLocation3D := Grid.ThreeDElementCorner(
+                CellLocation3D := LocalGrid.ThreeDElementCorner(
                   0, RowIndex, LayerIndex);
               end;
           else
@@ -20829,7 +21135,7 @@ begin
   end;
 end;
 
-procedure TPhastDelegate.GetTopCellsToAssign(const Grid: TCustomModelGrid;
+procedure TPhastDelegate.GetTopCellsToAssign(
   const DataSetFunction: string; OtherData: TObject; const DataSet: TDataArray;
   CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
   AModel: TBaseModel);
@@ -20869,7 +21175,7 @@ var
 begin
   Assert(CellList <> nil);
   Assert(CellList.Count = 0);
-  LocalGrid := Grid as TPhastGrid;
+  LocalGrid := (AModel as TCustomModel).PhastGrid;
   IAnnotation := IntersectAnnotation(DataSetFunction, OtherData);
   EAnnotation := EncloseAnnotation(DataSetFunction, OtherData);
   UpdateCurrentScreenObject(FScreenObject);
@@ -20907,7 +21213,7 @@ begin
       and (FScreenObject.ElevationCount <> ecZero)))
       and FScreenObject.Closed then
     begin
-      FScreenObject.RotatePoints(Grid, RotatedPoints,
+      FScreenObject.RotatePoints(AModel, RotatedPoints,
         TempMinX, TempMinY, TempMaxX, TempMaxY);
 
       // Get the coordinates of the points.
@@ -20950,7 +21256,7 @@ begin
           end;
           APoint.x := CellLocation3D.X;
           APoint.y := CellLocation3D.Y;
-          APoint := Grid.
+          APoint := LocalGrid.
             RotateFromGridCoordinatesToRealWorldCoordinates(APoint);
           if FScreenObject.IsPointInside(APoint.X,
             APoint.Y, SectionIndex) then
@@ -21154,7 +21460,7 @@ begin
                         ((FScreenObject.TopElevation >= LowerBound)
                         and ((FScreenObject.BottomElevation < UpperBound)
                         or  ((FScreenObject.BottomElevation = UpperBound)
-                        and (ASegment.Layer = Grid.LayerCount-1)))) then
+                        and (ASegment.Layer = LocalGrid.LayerCount-1)))) then
                       begin
                         CellList.Add(TCellAssignment.Create(ASegment.Layer,
                           ASegment.Row, ASegment.Col, ASegment,
@@ -21167,7 +21473,7 @@ begin
                         ((FScreenObject.TopElevation >= LowerBound)
                         and ((FScreenObject.BottomElevation < UpperBound)
                         or  ((FScreenObject.BottomElevation = UpperBound)
-                        and (ASegment.Layer = Grid.LayerCount)))) then
+                        and (ASegment.Layer = LocalGrid.LayerCount)))) then
                       begin
                         CellList.Add(TCellAssignment.Create(ASegment.Layer,
                           ASegment.Row, ASegment.Col, ASegment,
@@ -21353,7 +21659,7 @@ begin
         rdtDouble));
       if not ResultTypeOK then
       begin
-        raise EInvalidDataType.Create('Invalid data type.');
+        raise EInvalidDataType.Create(StrInvalidDataType);
       end;
     end;
   end
@@ -21479,7 +21785,7 @@ begin
   end;
 end;
 
-procedure TPhastDelegate.UpdateFrontSegments(const Grid: TCustomModelGrid;
+procedure TPhastDelegate.UpdateFrontSegments(AModel: TBaseModel;
   const EvaluatedAt: TEvaluatedAt);
 var
   RotatedPoints: TEdgePointArray;
@@ -21503,7 +21809,9 @@ var
   IncreasingX, IncreasingY: boolean;
   SectionIndex: integer;
   EndSection: Boolean;
+  Grid: TCustomModelGrid;
 begin
+  Grid := (AModel as TCustomModel).Grid;
   FScreenObject.FSegments.Clear;
   RowLimit := -1;
   case EvaluatedAt of
@@ -21879,7 +22187,7 @@ begin
   FScreenObject.FSegments.UpToDate := True;
 end;
 
-procedure TPhastDelegate.UpdateSideSegments(const Grid: TCustomModelGrid;
+procedure TPhastDelegate.UpdateSideSegments(AModel: TBaseModel;
   const EvaluatedAt: TEvaluatedAt);
 var
   RotatedPoints: TEdgePointArray;
@@ -21903,7 +22211,9 @@ var
   IncreasingX, IncreasingY: boolean;
   SectionIndex: integer;
   EndSection: boolean;
+  Grid: TCustomModelGrid;
 begin
+  Grid := (AModel as TCustomModel).Grid;
   FScreenObject.FSegments.Clear;
   ColumnLimit := -1;
   case EvaluatedAt of
@@ -22401,27 +22711,27 @@ begin
 //  result := not result;
 end;
 
-procedure TModflowDelegate.AssignValuesToFrontDataSet(const Grid: TCustomModelGrid;
+procedure TModflowDelegate.AssignValuesToFrontDataSet(
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 begin
-  AssignValuesToDataSet(Grid, DataSet, OtherData, AModel, UseLgrEdgeCells,
+  AssignValuesToDataSet(DataSet, OtherData, AModel, UseLgrEdgeCells,
     AssignmentLocation);
 end;
 
-procedure TModflowDelegate.AssignValuesToSideDataSet(const Grid: TCustomModelGrid;
+procedure TModflowDelegate.AssignValuesToSideDataSet(
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 begin
-  AssignValuesToDataSet(Grid, DataSet, OtherData, AModel, UseLgrEdgeCells,
+  AssignValuesToDataSet(DataSet, OtherData, AModel, UseLgrEdgeCells,
     AssignmentLocation);
 end;
 
-procedure TModflowDelegate.AssignValuesToTopDataSet(const Grid: TCustomModelGrid;
+procedure TModflowDelegate.AssignValuesToTopDataSet(
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 begin
-  AssignValuesToDataSet(Grid, DataSet, OtherData, AModel,
+  AssignValuesToDataSet(DataSet, OtherData, AModel,
     UseLgrEdgeCells, AssignmentLocation);
 end;
 
@@ -22505,13 +22815,15 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.AssignSelectedCells(const Grid: TCustomModelGrid;
+procedure TModflowDelegate.AssignSelectedCells(
   AModel: TBaseModel);
 var
   CellList: TCellAssignmentList;
   Index: Integer;
   Cell: TCellAssignment;
+  Grid: TCustomModelGrid;
 begin
+  Grid := (AModel as TCustomModel).Grid;
   if FScreenObject.EvaluatedAt = eaNodes then
   begin
     FSelectedCells.SetExtents(0,0,0);
@@ -22532,7 +22844,7 @@ begin
         end;
       else Assert(False);
     end;
-    GetCellsToAssign(Grid, '', nil, eaBlocks, CellList, alAll, dso3D, AModel);
+    GetCellsToAssign('', nil, eaBlocks, CellList, alAll, dso3D, AModel);
     for Index := 0 to CellList.Count - 1 do
     begin
       Cell := CellList[Index];
@@ -22544,7 +22856,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.AssignValuesToDataSet(const Grid: TCustomModelGrid;
+procedure TModflowDelegate.AssignValuesToDataSet(
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 var
@@ -22614,7 +22926,7 @@ begin
             end;
             frmFormulaErrors.AddFormulaError(FScreenObject.Name,
               DataObject.AlternateName, DataObject.DataSetFunction,
-              DataObject.DataSetFunction + ' treated as ' + NewFormula );
+              Format(Str0sTreatedAs1s, [DataObject.DataSetFunction, NewFormula]));
             DataObject.DataSetFunction := NewFormula;
             InitializeExpression(Compiler, DataSetFunction, Expression, DataSet,
               OtherData);
@@ -22623,7 +22935,7 @@ begin
       end;
 
       InitializeVariables(UsedVariables, DataSet, Expression, Compiler);
-      GetCellsToAssign(Grid, DataSetFunction, OtherData,
+      GetCellsToAssign(DataSetFunction, OtherData,
         DataSet.EvaluatedAt, CellList, AssignmentLocation, DataSet.Orientation,
         AModel);
       FScreenObject.UpdateImportedValues(DataSet);
@@ -22698,7 +23010,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.AssignParallellLimits(const Grid: TCustomModelGrid;
+procedure TModflowDelegate.AssignParallellLimits(AModel: TBaseModel;
   out FirstParallelIndexA, LastParallelIndexA,
   FirstParallelIndexB, LastParallelIndexB: Integer);
 var
@@ -22707,11 +23019,13 @@ var
   TempMinY: double;
   TempMaxY: double;
   RotatedPoints: TEdgePointArray;
+  Grid: TCustomModelGrid;
 begin
+  Grid := (AModel as TCustomModel).Grid;
   case FScreenObject.ViewDirection of
     vdTop:
       begin
-        FScreenObject.RotatePoints(Grid, RotatedPoints,
+        FScreenObject.RotatePoints(AModel, RotatedPoints,
           TempMinX, TempMinY, TempMaxX, TempMaxY);
         FScreenObject.GetColumns(Grid, TempMinX, TempMaxX,
           FirstParallelIndexA, LastParallelIndexA);
@@ -22846,7 +23160,7 @@ begin
   inherited;
 end;
 
-procedure TModflowDelegate.GetCellsToAssign(const Grid: TCustomModelGrid;
+procedure TModflowDelegate.GetCellsToAssign(
   const DataSetFunction: string; OtherData: TObject;
   const EvaluatedAt: TEvaluatedAt; CellList: TCellAssignmentList;
   AssignmentLocation: TAssignmentLocation; Orientation: TDataSetOrientation;
@@ -22875,6 +23189,7 @@ var
   LowerLimit, UpperLimit: double;
   AssignmentMethod: TAssignmentMethod;
   Segments: TCellElementSegmentList;
+  Grid: TCustomModelGrid;
   procedure GetCellBounds;
   begin
     case FScreenObject.ViewDirection of
@@ -22899,6 +23214,7 @@ var
     end;
   end;
 begin
+  Grid :=  (AModel as TCustomModel).Grid;
   Assert(CellList.Count = 0);
   if (Grid.ColumnCount <= 0) or (Grid.RowCount <= 0)
     or (Grid.LayerCount <=0) then
@@ -22929,7 +23245,7 @@ begin
       and (FScreenObject.ElevationCount <> ecZero)))
       and FScreenObject.Closed then
     begin
-      AssignParallellLimits(Grid,
+      AssignParallellLimits(AModel,
         FirstParallelIndexA, LastParallelIndexA,
         FirstParallelIndexB, LastParallelIndexB);
       // Find the cells inside the screen object and assign values to them.
@@ -23171,7 +23487,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.GetSideCellsToAssign(const Grid: TCustomModelGrid;
+procedure TModflowDelegate.GetSideCellsToAssign(
   const DataSetFunction: string; OtherData: TObject; const DataSet: TDataArray;
   CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
   AModel: TBaseModel);
@@ -23190,11 +23506,11 @@ begin
     EvalAt := DataSet.EvaluatedAt;
     Orientation := DataSet.Orientation;
   end;
-  GetCellsToAssign(Grid, DataSetFunction, OtherData, EvalAt, CellList,
+  GetCellsToAssign(DataSetFunction, OtherData, EvalAt, CellList,
     AssignmentLocation, Orientation, AModel);
 end;
 
-procedure TModflowDelegate.GetTopCellsToAssign(const Grid: TCustomModelGrid;
+procedure TModflowDelegate.GetTopCellsToAssign(
   const DataSetFunction: string; OtherData: TObject; const DataSet: TDataArray;
   CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
   AModel: TBaseModel);
@@ -23214,7 +23530,7 @@ begin
     EvalAt := DataSet.EvaluatedAt;
     Orientation := DataSet.Orientation;
   end;
-  GetCellsToAssign(Grid, DataSetFunction, OtherData, EvalAt, CellList,
+  GetCellsToAssign(DataSetFunction, OtherData, EvalAt, CellList,
     AssignmentLocation, Orientation, AModel);
 end;
 
@@ -23271,7 +23587,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.GetFrontCellsToAssign(const Grid: TCustomModelGrid;
+procedure TModflowDelegate.GetFrontCellsToAssign(
   const DataSetFunction: string; OtherData: TObject; const DataSet: TDataArray;
   CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
   AModel: TBaseModel);
@@ -23290,7 +23606,7 @@ begin
     EvalAt := DataSet.EvaluatedAt;
     Orientation := DataSet.Orientation;
   end;
-  GetCellsToAssign(Grid, DataSetFunction, OtherData, EvalAt, CellList,
+  GetCellsToAssign(DataSetFunction, OtherData, EvalAt, CellList,
     AssignmentLocation, Orientation, AModel);
 end;
 
@@ -23804,13 +24120,13 @@ begin
         begin
           NameToDisplay := DataSet.Name;
           frmFormulaErrors.AddFormulaError(FScreenObject.Name,
-            NameToDisplay, DataSetFunction, 'Invalid Formula');
+            NameToDisplay, DataSetFunction, StrInvalidFormula);
         end
         else
         begin
           NameToDisplay := DataObject.AlternateName;
           frmFormulaErrors.AddFormulaError(FScreenObject.Name,
-            NameToDisplay, DataSetFunction, 'Invalid Formula');
+            NameToDisplay, DataSetFunction, StrInvalidFormula);
         end;
         DataSetFunction := '0';
         Compiler.Compile(DataSetFunction);
@@ -23830,8 +24146,8 @@ begin
       and (TypeToCheck = rdtDouble));
     if not ResultTypeOK then
     begin
-      raise EInvalidDataType.Create('Invalid data type.');
-    end; 
+      raise EInvalidDataType.Create(StrInvalidDataType);
+    end;
   end;
 end;
 
@@ -23846,10 +24162,10 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.UpdateFrontSegments(const Grid: TCustomModelGrid;
+procedure TModflowDelegate.UpdateFrontSegments(AModel: TBaseModel;
       const EvaluatedAt: TEvaluatedAt);
 begin
-  UpdateSegments(Grid, EvaluatedAt);
+  UpdateSegments(AModel, EvaluatedAt);
 end;
 
 procedure TModflowDelegate.AddFrontSideSubSegments(
@@ -24768,7 +25084,7 @@ begin
 
 end;
 
-procedure TModflowDelegate.UpdateSegments(const Grid: TCustomModelGrid;
+procedure TModflowDelegate.UpdateSegments(AModel: TBaseModel;
   const EvaluatedAt: TEvaluatedAt);
 var
   RotatedPoints: TEdgePointArray;
@@ -24818,6 +25134,7 @@ var
   SecIndex: integer;
   IncrementedSectionIndex: Boolean;
   SegList: TCellElementSegmentList;
+  Grid: TCustomModelGrid;
   procedure AssignEpsilon;
   var
     MinX, MaxX, MinY, MaxY: Real;
@@ -25095,6 +25412,7 @@ var
     end
   end;
 begin
+  Grid := (AModel as TCustomModel).Grid;
   FScreenObject.FSegments.Clear;
   Assert(EvaluatedAt = eaBlocks);
 
@@ -25657,10 +25975,7 @@ begin
         begin
           SegList := FScreenObject.FSegModelAssoc[Index];
           SegList.FHigher3DElevationsNeedsUpdating := True;
-//          SegList.FLower3DElevationsNeedsUpdating := True;
         end;
-//        FScreenObject.FHigher3DElevationsNeedsUpdating := True;
-//        FScreenObject.FSegments.FHigher3DElevationsNeedsUpdating := True;
       end;
     ecTwo:
       begin
@@ -25670,19 +25985,15 @@ begin
           SegList.FHigher3DElevationsNeedsUpdating := True;
           SegList.FLower3DElevationsNeedsUpdating := True;
         end;
-//        FScreenObject.FHigher3DElevationsNeedsUpdating := True;
-//        FScreenObject.FLower3DElevationsNeedsUpdating := True;
-//        FScreenObject.FSegments.FHigher3DElevationsNeedsUpdating := True;
-//        FScreenObject.FSegments.FLower3DElevationsNeedsUpdating := True;
       end;
     else Assert(False);
   end;
 end;
 
-procedure TModflowDelegate.UpdateSideSegments(const Grid: TCustomModelGrid;
+procedure TModflowDelegate.UpdateSideSegments(AModel: TBaseModel;
   const EvaluatedAt: TEvaluatedAt);
 begin
-  UpdateSegments(Grid, EvaluatedAt);
+  UpdateSegments(AModel, EvaluatedAt);
 end;
 
 { TScreenObject }
@@ -26083,7 +26394,7 @@ procedure TScreenObject.InitializeExpression(out Compiler: TRbwParser;
       and (DataSet.Datatype = rdtDouble));
     if not ResultTypeOK then
     begin
-      raise EInvalidDataType.Create('Invalid data type.');
+      raise EInvalidDataType.Create(StrInvalidDataType);
     end;
   end;
 var
@@ -26148,7 +26459,7 @@ begin
         rdtDouble));
       if not ResultTypeOK then
       begin
-        raise EInvalidDataType.Create('Invalid data type.');
+        raise EInvalidDataType.Create(StrInvalidDataType);
       end;
     end;
   end
@@ -26682,7 +26993,7 @@ begin
   ResultTypeOK := Expression.ResultType in [rdtInteger, rdtDouble];
   if not ResultTypeOK then
   begin
-    raise EInvalidDataType.Create('Invalid data type.');
+    raise EInvalidDataType.Create(StrInvalidDataType);
   end;
 end;
 
@@ -26735,7 +27046,7 @@ begin
             OtherData.Compiler := Compiler;
             OtherData.DataSetFunction := DataSetFunction;
             OtherData.AlternateName := DataSet.Name;
-            Delegate.AssignValuesToTopDataSet(Grid, DataSet, OtherData,
+            Delegate.AssignValuesToTopDataSet(DataSet, OtherData,
               AModel, UseLgrEdgeCells, AssignmentLocation);
           finally
             OtherData.Free;
@@ -26747,7 +27058,7 @@ begin
           try
             OtherData.Compiler := Compiler;
             OtherData.DataSetFunction := DataSetFunction;
-            Delegate.AssignValuesToFrontDataSet(Grid, DataSet, OtherData,
+            Delegate.AssignValuesToFrontDataSet(DataSet, OtherData,
               AModel, UseLgrEdgeCells, AssignmentLocation);
           finally
             OtherData.Free;
@@ -26759,7 +27070,7 @@ begin
           try
             OtherData.Compiler := Compiler;
             OtherData.DataSetFunction := DataSetFunction;
-            Delegate.AssignValuesToSideDataSet(Grid, DataSet, OtherData,
+            Delegate.AssignValuesToSideDataSet(DataSet, OtherData,
               AModel, UseLgrEdgeCells, AssignmentLocation);
           finally
             OtherData.Free;
@@ -26775,8 +27086,8 @@ begin
   end
 end;
 
-procedure TScreenObject.AssignValuesToPhastDataSet(const Grid: TCustomModelGrid;
-  const DataSet: TDataArray; AModel: TBaseModel; UseLgrEdgeCells: TLgrCellTreatment);
+procedure TScreenObject.AssignValuesToDataSet(const DataSet: TDataArray;
+  AModel: TBaseModel; UseLgrEdgeCells: TLgrCellTreatment);
 var
   OtherData: TObject;
   InterpValue: TInterpValuesItem;
@@ -26897,10 +27208,10 @@ begin
     end;
 
     case ViewDirection of
-      vdTop: AssignValuesToTopPhastDataSet(Grid, DataSet, OtherData, AModel);
-      vdFront: AssignValuesToFrontPhastDataSet(Grid, DataSet, OtherData, AModel,
+      vdTop: AssignValuesToTopDataSet(DataSet, OtherData, AModel);
+      vdFront: AssignValuesToFrontDataSet(DataSet, OtherData, AModel,
         UseLgrEdgeCells);
-      vdSide: AssignValuesToSidePhastDataSet(Grid, DataSet, OtherData, AModel,
+      vdSide: AssignValuesToSideDataSet(DataSet, OtherData, AModel,
         UseLgrEdgeCells);
       else
         begin
@@ -27597,11 +27908,11 @@ procedure TScreenObject.GetCellsToAssign(const Grid: TCustomModelGrid;
 begin
   Assert(CellList.Count = 0);
   case ViewDirection of
-    vdTop: Delegate.GetTopCellsToAssign(Grid, DataSetFunction, OtherData,
+    vdTop: Delegate.GetTopCellsToAssign(DataSetFunction, OtherData,
       DataSet, CellList, AssignmentLocation, AModel);
-    vdFront: Delegate.GetFrontCellsToAssign(Grid, DataSetFunction, OtherData,
+    vdFront: Delegate.GetFrontCellsToAssign(DataSetFunction, OtherData,
       DataSet, CellList, AssignmentLocation, AModel);
-    vdSide: Delegate.GetSideCellsToAssign(Grid, DataSetFunction, OtherData,
+    vdSide: Delegate.GetSideCellsToAssign(DataSetFunction, OtherData,
       DataSet, CellList, AssignmentLocation, AModel);
     else Assert(False);
   end;
@@ -27711,7 +28022,7 @@ begin
   LocalDelegate := Delegate as TModflowDelegate;
   ModflowGrid := (AModel as TCustomModel).ModflowGrid;
   try
-    LocalDelegate.AssignSelectedCells(ModflowGrid, AModel);
+    LocalDelegate.AssignSelectedCells(AModel);
     if LocalDelegate.SelectedCells.HasCells then
     begin
       PointCapacity := 5;
@@ -28704,7 +29015,7 @@ begin
   LocalDelegate := Delegate as TPhastDelegate;
   PhastGrid := (Model as TPhastModel).PhastGrid;
   try
-    LocalDelegate.AssignSelectedCells(PhastGrid, Model);
+    LocalDelegate.AssignSelectedCells(Model);
     if DrawAsSelected then
     begin
       LineWidth := 2;
@@ -29133,6 +29444,12 @@ begin
   end;
 end;
 
+procedure TScreenObject.Draw1ElevSutra(const Direction: TViewDirection;
+  const Bitmap32: TBitmap32; const DrawAsSelected: Boolean);
+begin
+  // incomplete
+end;
+
 procedure TScreenObject.Draw2ElevPhast(const Direction: TViewDirection;
   const Bitmap32: TBitmap32);
 var
@@ -29203,7 +29520,7 @@ begin
   LocalDelegate := Delegate as TPhastDelegate;
   PhastGrid := (Model as TPhastModel).PhastGrid;
   try
-    LocalDelegate.AssignSelectedCells(PhastGrid, Model);
+    LocalDelegate.AssignSelectedCells(Model);
     if LocalDelegate.SelectedCells.HasCells then
     begin
       PointCapacity := 5;
@@ -29863,6 +30180,12 @@ begin
   end;
 end;
 
+procedure TScreenObject.Draw2ElevSutra(const Direction: TViewDirection;
+  const Bitmap32: TBitmap32);
+begin
+  // incomplete
+end;
+
 procedure TScreenObject.Draw2ElevModflow(const Direction: TViewDirection;
   const Bitmap32: TBitmap32; AModel: TBaseModel);
 var
@@ -29883,7 +30206,7 @@ begin
   LocalModel := AModel as TCustomModel;
   ModflowGrid := LocalModel.ModflowGrid;
   try
-    LocalDelegate.AssignSelectedCells(ModflowGrid, LocalModel);
+    LocalDelegate.AssignSelectedCells(LocalModel);
     if LocalDelegate.SelectedCells.HasCells then
     begin
       SegmentList := TList.Create;
@@ -30909,7 +31232,7 @@ begin
   end;
 end;
 
-procedure TScreenObject.AssignTopDataSetValues(const Grid: TCustomModelGrid;
+procedure TScreenObject.AssignTopDataSetValues(
   Expression: TExpression; const DataSetFunction: string; Compiler: TRbwParser;
   UsedVariables: TStringList; OtherData: TObject; const DataSet: TDataArray;
   AModel: TBaseModel; AssignmentLocation: TAssignmentLocation = alAll);
@@ -30921,7 +31244,7 @@ begin
   CellList := TCellAssignmentList.Create;
   try
     InitializeVariables(UsedVariables, DataSet, Expression, Compiler);
-    Delegate.GetTopCellsToAssign(Grid, DataSetFunction, OtherData, DataSet,
+    Delegate.GetTopCellsToAssign(DataSetFunction, OtherData, DataSet,
       CellList, AssignmentLocation, AModel);
     for AssignmentIndex := 0 to CellList.Count - 1 do
     begin
@@ -34455,6 +34778,18 @@ begin
     finally
       FCachedValue := result;
     end;
+  end;
+end;
+
+procedure TAssociateList.InvalidateAll;
+var
+  Index: Integer;
+  SegList: TCellElementSegmentList;
+begin
+  for Index := 0 to FList.Count - 1 do
+  begin
+    SegList := FList[Index];
+    SegList.UpToDate := False;
   end;
 end;
 

@@ -22,7 +22,6 @@ inherited frmImportPoints: TfrmImportPoints
     Align = alBottom
     ParentColor = True
     TabOrder = 0
-    ExplicitWidth = 573
     DesignSize = (
       570
       49)
@@ -70,15 +69,14 @@ inherited frmImportPoints: TfrmImportPoints
     Top = 0
     Width = 570
     Height = 444
-    ActivePage = tabControls
+    ActivePage = tabData
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 573
     object tabControls: TTabSheet
       Caption = 'Controls'
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 565
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object pnlRadioGroups: TPanel
         Left = 192
@@ -252,7 +250,6 @@ inherited frmImportPoints: TfrmImportPoints
         Align = alClient
         Caption = 'pnlData'
         TabOrder = 1
-        ExplicitWidth = 216
         object jvclbDataSets: TJvxCheckListBox
           Left = 1
           Top = 26
@@ -263,7 +260,6 @@ inherited frmImportPoints: TfrmImportPoints
           ItemHeight = 18
           TabOrder = 0
           OnClickCheck = jvclbDataSetsClickCheck
-          ExplicitWidth = 214
           InternalVersion = 202
         end
         object pnlLabelDataSets: TPanel
@@ -275,17 +271,12 @@ inherited frmImportPoints: TfrmImportPoints
           Caption = 'Data sets'
           ParentColor = True
           TabOrder = 1
-          ExplicitWidth = 214
         end
       end
     end
     object tabData: TTabSheet
       Caption = 'Data'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlDataTabControls: TPanel
         Left = 0
         Top = 365

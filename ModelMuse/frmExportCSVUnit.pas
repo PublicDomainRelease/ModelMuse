@@ -36,7 +36,8 @@ type
     procedure GetData;
     procedure SetData;
     function SelectDataArrays(DataArray: TDataArray): boolean;
-    procedure GetOrientationAndEvalAt(var EvaluatedAt: TEvaluatedAt; var Orientation: TDataSetOrientation);
+    procedure GetOrientationAndEvalAt(var EvaluatedAt: TEvaluatedAt;
+      var Orientation: TDataSetOrientation);
     procedure WriteString(const Value: String);
     procedure NewLine;
     { Private declarations }
@@ -52,6 +53,14 @@ implementation
 uses
   Contnrs, ClassificationUnit, frmGoPhastUnit, PhastModelUnit, AbstractGridUnit,
   CustomModflowWriterUnit, RbwParser;
+
+resourcestring
+  StrYouMustDefineThe = 'You must define the grid before you can export data' +
+  '.';
+  StrNoDataSetsHaveBe = 'No data sets have been selected. Do you want to jus' +
+  't export the coordinates?';
+  StrXYColumn = '"X", "Y", "Column", "Row"';
+  StrXYZColu = '"X", "Y", "Z", "Column", "Row", "Layer"';
 
 {$R *.dfm}
 
@@ -235,8 +244,7 @@ begin
     or (Grid.RowCount = 0)
     or (Grid.LayerCount = 0) then
   begin
-    MessageDlg('You must define the grid before you can export data.',
-      mtError, [mbOK], 0);
+    MessageDlg(StrYouMustDefineThe, mtError, [mbOK], 0);
     Exit;
   end;
   Screen.Cursor := crHourGlass;
@@ -258,7 +266,8 @@ begin
               NodeData.ClassificationObject).DataArray;
             if LocalModel <> frmGoPhast.PhastModel then
             begin
-              ADataArray := LocalModel.DataArrayManager.GetDataSetByName(ADataArray.Name);
+              ADataArray := LocalModel.DataArrayManager.
+                GetDataSetByName(ADataArray.Name);
               Assert(ADataArray <> nil);
             end;
             DataArrayList.Add(ADataArray);
@@ -269,8 +278,7 @@ begin
     end;
     if DataArrayList.Count = 0 then
     begin
-      if (MessageDlg('No data sets have been selected. '
-        + 'Do you want to just export the coordinates?',
+      if (MessageDlg(StrNoDataSetsHaveBe,
         mtConfirmation, [mbYes, mbNo], 0) <> mrYes) then
       begin
         Exit;
@@ -280,16 +288,17 @@ begin
     begin
       GetOrientationAndEvalAt(EvaluatedAt, Orientation);
       try
-        FFileStream := TFileStream.Create(sdSaveCSV.FileName, fmCreate or fmShareDenyWrite);
+        FFileStream := TFileStream.Create(sdSaveCSV.FileName,
+          fmCreate or fmShareDenyWrite);
         try
           case Orientation of
             dsoTop:
               begin
-                WriteString('"X", "Y", "Column", "Row"');
+                WriteString(StrXYColumn);
               end;
             dso3D:
               begin
-                WriteString('"X", "Y", "Z", "Column", "Row", "Layer"');
+                WriteString(StrXYZColu);
               end;
             else Assert(False)
           end;
@@ -403,7 +412,8 @@ begin
   end;
   ModalResult := mrOK;
 end;
-procedure TfrmExportCSV.GetOrientationAndEvalAt(var EvaluatedAt: TEvaluatedAt; var Orientation: TDataSetOrientation);
+procedure TfrmExportCSV.GetOrientationAndEvalAt(var EvaluatedAt: TEvaluatedAt;
+  var Orientation: TDataSetOrientation);
 begin
   Orientation := dso3D;
   case rgOrientation.ItemIndex of

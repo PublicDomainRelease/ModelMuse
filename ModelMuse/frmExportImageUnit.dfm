@@ -44,23 +44,23 @@ inherited frmExportImage: TfrmExportImage
       TabOrder = 0
       object cpAnimation: TCategoryPanel
         Top = 416
-        Height = 386
+        Height = 30
         Caption = 'Animation'
+        Collapsed = True
         TabOrder = 2
         OnExpand = cpAnimationExpand
-        ExplicitWidth = 247
+        ExpandedHeight = 386
         object pnlAnimation: TPanel
           Left = 5
           Top = 0
           Width = 240
-          Height = 360
+          Height = 0
           Align = alRight
           BevelOuter = bvNone
           TabOrder = 0
-          ExplicitHeight = 0
           object JvNetscapeSplitter1: TJvNetscapeSplitter
             Left = 0
-            Top = 135
+            Top = -225
             Width = 240
             Height = 10
             Cursor = crVSplit
@@ -75,12 +75,11 @@ inherited frmExportImage: TfrmExportImage
           end
           object Panel1: TPanel
             Left = 0
-            Top = 276
+            Top = -84
             Width = 240
             Height = 84
             Align = alBottom
             TabOrder = 1
-            ExplicitTop = -84
             object rgDisplayChoice: TRadioGroup
               Left = 3
               Top = 6
@@ -140,7 +139,7 @@ inherited frmExportImage: TfrmExportImage
           end
           object rdgDataSets: TRbwDataGrid4
             Left = 0
-            Top = 145
+            Top = -215
             Width = 240
             Height = 131
             Align = alBottom
@@ -203,7 +202,6 @@ inherited frmExportImage: TfrmExportImage
                 CaseSensitivePicklist = False
                 AutoAdjustColWidths = True
               end>
-            ExplicitTop = -215
             ColWidths = (
               19
               64)
@@ -241,16 +239,14 @@ inherited frmExportImage: TfrmExportImage
         Collapsed = True
         TabOrder = 1
         OnExpand = cpTextExpand
-        ExplicitWidth = 247
         ExpandedHeight = 386
         object pnlText: TPanel
           Left = 0
           Top = 0
-          Width = 228
+          Width = 245
           Height = 0
           Align = alClient
           TabOrder = 0
-          ExplicitWidth = 245
           object lblTitle: TLabel
             Left = 11
             Top = 2
@@ -337,16 +333,14 @@ inherited frmExportImage: TfrmExportImage
         Caption = 'View'
         TabOrder = 0
         OnExpand = cpViewExpand
-        ExplicitWidth = 247
         object Panel3: TPanel
           Left = 0
           Top = 0
-          Width = 228
+          Width = 245
           Height = 360
           Align = alClient
           Caption = 'pnlText'
           TabOrder = 0
-          ExplicitWidth = 245
           object lblSelectedView: TLabel
             Left = 3
             Top = 15

@@ -19,17 +19,23 @@ inherited frmSubdivide: TfrmSubdivide
     Top = 192
     Width = 91
     Height = 33
-    TabOrder = 0
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 0
   end
   object btnOK: TBitBtn
     Left = 525
     Top = 192
     Width = 91
     Height = 33
+    DoubleBuffered = True
+    Kind = bkOK
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 1
     OnClick = btnOKClick
-    Kind = bkOK
   end
   object btnHelp: TBitBtn
     Left = 429
@@ -37,9 +43,12 @@ inherited frmSubdivide: TfrmSubdivide
     Width = 91
     Height = 33
     HelpType = htKeyword
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 2
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
   object GroupBox1: TGroupBox
     Left = 7
@@ -85,7 +94,6 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
-      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 0
       OnChange = seCol1Changed
@@ -97,7 +105,6 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
-      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 1
       OnChange = seCol2Changed
@@ -159,6 +166,7 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
+      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 0
       OnChange = seRow1Changed
@@ -170,6 +178,7 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
+      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 1
       OnChange = seRow2Changed
@@ -231,7 +240,6 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
-      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 0
       OnChange = seLayer1Changed
@@ -243,7 +251,6 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
-      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 1
       OnChange = seLayer2Changed

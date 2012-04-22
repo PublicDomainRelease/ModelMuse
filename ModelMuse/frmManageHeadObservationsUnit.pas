@@ -128,6 +128,9 @@ resourcestring
   'to import those that do match?';
   StrListingFile = 'Listing file';
   StrEditHeadObservatio = 'edit head observations';
+  StrTheManageHeadObse = 'The Manage Head Observations dialog box can not be' +
+  ' displayed until some head observations have been defined in one or more ' +
+  'objects.';
 
 {$R *.dfm}
 
@@ -721,9 +724,7 @@ begin
     if FObsEdits.Count = 0 then
     begin
       Beep;
-      MessageDlg('The Manage Head Observations dialog box can not be displayed '
-        + 'until some head observations have been defined in one or more objects.',
-        mtWarning, [mbOK], 0);
+      MessageDlg(StrTheManageHeadObse, mtWarning, [mbOK], 0);
       ModalResult := mrCancel;
     end;
   finally

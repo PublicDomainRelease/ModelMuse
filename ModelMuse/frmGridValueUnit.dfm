@@ -20,7 +20,7 @@ inherited frmGridValue: TfrmGridValue
     Kind = bkHelp
     NumGlyphs = 2
     ParentDoubleBuffered = False
-    TabOrder = 0
+    TabOrder = 1
     OnClick = btnHelpClick
   end
   object btnClose: TBitBtn
@@ -33,7 +33,7 @@ inherited frmGridValue: TfrmGridValue
     Kind = bkClose
     NumGlyphs = 2
     ParentDoubleBuffered = False
-    TabOrder = 1
+    TabOrder = 2
   end
   object pcDataDisplay: TPageControl
     Left = 0
@@ -43,13 +43,9 @@ inherited frmGridValue: TfrmGridValue
     ActivePage = tabCurrentData
     Align = alTop
     Anchors = [akLeft, akTop, akRight, akBottom]
-    TabOrder = 2
+    TabOrder = 0
     object tabCurrentData: TTabSheet
       Caption = 'Current Data'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         398
         434)
@@ -63,7 +59,7 @@ inherited frmGridValue: TfrmGridValue
         ExplicitTop = 310
       end
       object lblHigher3rdDimensionCoordinate: TLabel
-        Left = 3
+        Left = 8
         Top = 386
         Width = 227
         Height = 18
@@ -174,7 +170,7 @@ inherited frmGridValue: TfrmGridValue
         Height = 17
         Anchors = [akLeft, akBottom]
         Caption = 'Show selected object 3rd dimension coordinates'
-        TabOrder = 0
+        TabOrder = 3
       end
       object memoExplanation: TMemo
         Left = 8
@@ -184,7 +180,7 @@ inherited frmGridValue: TfrmGridValue
         Anchors = [akLeft, akTop, akRight, akBottom]
         ReadOnly = True
         ScrollBars = ssVertical
-        TabOrder = 1
+        TabOrder = 2
         OnKeyUp = memoExplanationKeyUp
       end
       object edCellValue: TEdit
@@ -194,7 +190,7 @@ inherited frmGridValue: TfrmGridValue
         Height = 26
         Anchors = [akLeft, akTop, akRight]
         ReadOnly = True
-        TabOrder = 2
+        TabOrder = 1
         OnKeyUp = edCellValueKeyUp
       end
       object comboModel: TComboBox
@@ -203,17 +199,13 @@ inherited frmGridValue: TfrmGridValue
         Width = 145
         Height = 26
         Style = csDropDownList
-        TabOrder = 3
+        TabOrder = 0
         OnChange = comboModelChange
       end
     end
     object tabAllDataSets: TTabSheet
       Caption = 'All Data Sets'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         398
         434)
@@ -238,7 +230,7 @@ inherited frmGridValue: TfrmGridValue
         Height = 26
         Anchors = [akLeft, akTop, akRight]
         ReadOnly = True
-        TabOrder = 0
+        TabOrder = 1
         OnKeyUp = edCellValueKeyUp
       end
       object memoSelectExplanation: TMemo
@@ -249,7 +241,7 @@ inherited frmGridValue: TfrmGridValue
         Anchors = [akLeft, akTop, akRight, akBottom]
         ReadOnly = True
         ScrollBars = ssVertical
-        TabOrder = 1
+        TabOrder = 2
         OnKeyUp = memoExplanationKeyUp
       end
       object btnUpdate: TButton
@@ -259,7 +251,7 @@ inherited frmGridValue: TfrmGridValue
         Height = 25
         Anchors = [akLeft, akBottom]
         Caption = 'Update'
-        TabOrder = 2
+        TabOrder = 3
         OnClick = btnUpdateClick
       end
       object virttreecomboDataSets: TRbwStringTreeCombo
@@ -308,17 +300,13 @@ inherited frmGridValue: TfrmGridValue
           EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
           EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00}
         NumGlyphs = 2
-        TabOrder = 3
+        TabOrder = 0
         OnChange = virttreecomboDataSetsChange
       end
     end
     object tabPathline: TTabSheet
       Caption = 'Pathline'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgPathline: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -433,10 +421,6 @@ inherited frmGridValue: TfrmGridValue
     object tabEndPoint: TTabSheet
       Caption = 'End Point'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgEndPoints: TRbwDataGrid4
         Left = 0
         Top = 0

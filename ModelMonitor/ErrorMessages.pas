@@ -150,6 +150,11 @@ begin
     ErrorValues.Add('MNW1 and MNW2 cannot both be active in the same grid');
     ErrorValues.Add('MNW1 and MNW2 cannot both be active in the same simulation');
     ErrorValues.Add('Failure to converge');
+    ErrorValues.Add('NSTACK too small in index');
+    ErrorValues.Add('ELEVATION OF STREAM OUTLET MUST BE GREATER THAN OR EQUAL TO THE LOWEST ELEVATION OF THE LAKE.');
+    ErrorValues.Add('If the BCF Package is used and unsaturated flow is active then ISFROPT must equal 3 or 5.');
+    ErrorValues.Add('Streambed has lower altitude than GW cell bottom. Model stopping');
+    ErrorValues.Add('STOPPING SIMULATION');
     ErrorValues.Add(' NaN');
 
     // MODFLOW-NWT
@@ -214,6 +219,16 @@ begin
     WarningValues.Add('MXLGRITER EXCEEDED FOR GRID NUMBER');
     WarningValues.Add('CHECK BUDGET OF PARENT GRID TO ASSESS QUALITY OF THE LGR SOLUTION');
     WarningValues.Add('INITIAL WATER CONTENT IS LESS THAN RESIDUAL WATER CONTENT FOR STREAM SEGMENT');
+    WarningValues.Add('A NEGATIVE VALUE FOR FLOW WAS SPECIFIED IN A SFR TABULAR INFLOW FILE. VALUE WILL BE RESET TO ZERO');
+    WarningValues.Add(' ***Warning in SFR2*** ');
+    WarningValues.Add('Fraction of diversion for each cell in group sums to a value greater than one.');
+    WarningValues.Add('NEGATIVE LAKE OUTFLOW NOT ALLOWED;');
+    WarningValues.Add('PET DIFF ERROR');
+    WarningValues.Add('FAILURE TO MEET SOLVER CONVERGENCE CRITERIA');
+    WarningValues.Add('CONTINUING EXECUTION');
+    WarningValues.Add('OMITTED BECAUSE IBOUND=0 FOR CELL(S) IN MODEL LAYER');
+    WarningValues.Add('REQUIRED FOR MULTILAYER INTERPOLATION');
+    WarningValues.Add('For the cells listed below, one of two conditions exist');
 
     // MODFLOW-NWT
     WarningValues.Add('*** WARNING *** NEGATIVE LAKE OUTFLOW NOT ALLOWED;');

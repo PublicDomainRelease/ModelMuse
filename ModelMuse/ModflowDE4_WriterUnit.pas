@@ -20,6 +20,9 @@ implementation
 
 uses ModflowUnitNumbers, PhastModelUnit, frmProgressUnit;
 
+resourcestring
+  StrWritingDE4Package = 'Writing DE4 Package input.';
+
 { TDe4Writer }
 
 class function TDe4Writer.Extension: string;
@@ -75,7 +78,7 @@ begin
   WriteToNameFile('DE4', Model.UnitNumbers.UnitNumber(StrDE4), NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage('Writing DE4 Package input.');
+    frmProgressMM.AddMessage(StrWritingDE4Package);
     WriteDataSet0;
     WriteDataSet1;
     WriteDataSet2;

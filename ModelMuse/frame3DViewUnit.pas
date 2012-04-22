@@ -98,7 +98,11 @@ implementation
 
 {$R *.dfm}
 
-uses frmGoPhastUnit, CursorsFoiledAgain, Math, OpenGL12x, frmColorsUnit;
+uses frmGoPhastUnit, CursorsFoiledAgain, Math, OpenGL12x, frmColorsUnit,
+  PhastModelUnit;
+
+resourcestring
+  StrErrorInRenderS = 'Error in Render'#13'%s';
 
 const
   PanFactor = 0.25;
@@ -283,6 +287,8 @@ var
   errorCode: TGLuint;
   XMove, YMove, ZMove: single;
   light_position: array[0..3] of GLfloat;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
   //  Colors: array[0..3] of TGLint;
   //const
   //  XY = 40.0;
@@ -387,8 +393,18 @@ begin
   frmGoPhast.PhastModel.Grid.Draw3D;
 
   frmGoPhast.PhastModel.PathLines.Draw3D;
-  frmGoPhast.PhastModel.EndPoints.Draw3D;
   frmGoPhast.PhastModel.TimeSeries.Draw3D;
+  frmGoPhast.PhastModel.EndPoints.Draw3D;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.PathLines.Draw3D;
+      ChildModel.TimeSeries.Draw3D;
+      ChildModel.EndPoints.Draw3D;
+    end;
+  end;
 
   if frmGoPhast.tb3DObjects.Down then
   begin
@@ -416,13 +432,10 @@ begin
     Beep;
   glPopMatrix;
 
-//  glFlush;
-
   errorCode := glGetError;
 
   if errorCode <> GL_NO_ERROR then
     Beep;
-  //raise Exception.Create('Error in Render'#13 + gluErrorString(errorCode));
 end;
 
 procedure Tframe3DView.glWidModelViewResize(Sender: TObject);
@@ -453,7 +466,7 @@ begin
 
   errorCode := glGetError;
   if errorCode <> GL_NO_ERROR then
-    raise Exception.Create('Error in Render'#13 + gluErrorString(errorCode));
+    raise Exception.Create(Format(StrErrorInRenderS, [gluErrorString(errorCode)]));
 end;
 
 end.

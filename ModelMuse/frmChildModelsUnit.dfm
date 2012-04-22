@@ -102,7 +102,7 @@ inherited frmChildModels: TfrmChildModels
     Top = 0
     Width = 358
     Height = 456
-    ActivePage = tabSolution
+    ActivePage = tabBasic
     Align = alClient
     TabOrder = 1
     object tabBasic: TTabSheet
@@ -200,6 +200,10 @@ inherited frmChildModels: TfrmChildModels
     object tabDiscretization: TTabSheet
       Caption = 'Discretization'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgDiscretization: TRbwDataGrid4
         Left = 0
         Top = 27
@@ -328,6 +332,10 @@ inherited frmChildModels: TfrmChildModels
     object tabSolution: TTabSheet
       Caption = 'Solution'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         350
         423)

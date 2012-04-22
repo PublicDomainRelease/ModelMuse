@@ -45,6 +45,7 @@ inherited frameZoneBudget: TframeZoneBudget
     RowCount = 2
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
     TabOrder = 1
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
@@ -73,6 +74,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -95,6 +97,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -117,6 +120,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -139,6 +143,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -161,6 +166,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -183,6 +189,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -205,6 +212,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -227,6 +235,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -249,6 +258,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -271,6 +281,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -293,6 +304,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -315,6 +327,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -337,6 +350,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -359,6 +373,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -381,6 +396,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -403,6 +419,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -425,6 +442,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -447,6 +465,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -469,6 +488,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -491,6 +511,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -513,6 +534,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -535,6 +557,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -557,6 +580,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -579,6 +603,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -601,6 +626,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -623,6 +649,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -645,6 +672,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -667,6 +695,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -689,6 +718,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -711,6 +741,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -733,6 +764,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -755,6 +787,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -777,6 +810,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -799,6 +833,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -821,6 +856,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -843,6 +879,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -865,6 +902,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -887,6 +925,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -909,6 +948,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -931,6 +971,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -953,6 +994,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -975,6 +1017,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -997,6 +1040,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -1019,6 +1063,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -1041,6 +1086,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -1063,6 +1109,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -1085,6 +1132,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -1107,6 +1155,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -1129,6 +1178,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -1151,6 +1201,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -1173,6 +1224,7 @@ inherited frameZoneBudget: TframeZoneBudget
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
     OnEndUpdate = rdgCompositeZonesEndUpdate

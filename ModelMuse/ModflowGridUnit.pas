@@ -174,7 +174,7 @@ resourcestring
   StrColumns = 'columns';
   StrRows = 'rows';
   StrTheWidthOfOneOr = 'The width of one or more %s is zero.';
-  StrColumnDRow = 'Column = %d; Row = %d; Layer = %d';
+  StrColumnDRow = 'Column = %0:d; Row = %1:d; Layer = %2:d';
   StrTheRatioBetweenTh = 'The ratio between the widths of two adjacent %s ex' +
   'ceeds the recommended maximum of 1.5';
   StrOneOrMoreCellsHa = 'One or more cells have ratios of row to column widt' +
@@ -760,6 +760,10 @@ var
   LayerIndex: Integer;
 begin
   result := nil;
+  if (ColumnCount < 0) or (RowCount < 0) or (LayerCount < 0) then
+  begin
+    Exit;
+  end;
   UpdateCellPoints;
   if CellPoints = nil then
   begin
@@ -872,7 +876,7 @@ var
 begin
   ErrorString := 'The top of one or more cells is below its bottom.';
   Elevations := LayerElevations;
-  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  DataArrayManager := (Model as TCustomModel).DataArrayManager;
   Active := DataArrayManager.GetDataSetByName(rsActive);
   Active.Initialize;
   for LayerIndex := 1 to LayerCount - 1 do
@@ -1638,6 +1642,10 @@ var
   LayerIndex: Integer;
 begin
   result := nil;
+  if (ColumnCount < 0) or (RowCount < 0) or (LayerCount < 0) then
+  begin
+    Exit;
+  end;
   UpdateCellPoints;
   if CellPoints = nil then
   begin

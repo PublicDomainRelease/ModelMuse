@@ -165,10 +165,11 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
     DataArray.AssociatedDataSets :=
       DataArrayManager.FDataArrayCreationRecords[Index].AssociatedDataSets;
   end;
-  if (DataArray <> nil) and (Model.Grid <> nil) then
+  if (DataArray <> nil) {and (Model.Grid <> nil)} then
   begin
-    DataArray.UpdateDimensions(Model.Grid.LayerCount, Model.Grid.RowCount,
-      Model.Grid.ColumnCount);
+    Model.UpdateDataArrayDimensions(DataArray);
+//    DataArray.UpdateDimensions(Model.Grid.LayerCount, Model.Grid.RowCount,
+//      Model.Grid.ColumnCount);
   end;
   Model.UpdateDataArrayParameterUsed;
   if Model is TPhastModel then

@@ -114,20 +114,27 @@ implementation
 
 uses Contnrs;
 
+resourcestring
+  StrN = 'N';
+  StrX = 'X';
+  StrY = 'Y';
+  StrZ = 'Z';
+  StrReleaseTrackingT = 'Release (tracking) time';
+
 { TframeModpathParticles }
 
 constructor TframeModpathParticles.Create(AOwner: TComponent);
 begin
   inherited;
   FParticleStorage := TParticleStorage.Create(nil);
-  rdgSpecific.Cells[0,0] := 'N';
-  rdgSpecific.Cells[1,0] := 'X';
-  rdgSpecific.Cells[2,0] := 'Y';
-  rdgSpecific.Cells[3,0] := 'Z';
+  rdgSpecific.Cells[0,0] := StrN;
+  rdgSpecific.Cells[1,0] := StrX;
+  rdgSpecific.Cells[2,0] := StrY;
+  rdgSpecific.Cells[3,0] := StrZ;
   rdgReleaseTimes.BeginUpdate;
   try
-    rdgReleaseTimes.Cells[0,0] := 'N';
-    rdgReleaseTimes.Cells[1,0] := 'Release (tracking) time';
+    rdgReleaseTimes.Cells[0,0] := StrN;
+    rdgReleaseTimes.Cells[1,0] := StrReleaseTrackingT;
     NumberSpecificGridRows;
   finally
     rdgReleaseTimes.EndUpdate;

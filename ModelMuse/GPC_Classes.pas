@@ -65,12 +65,16 @@ type
 
 implementation
 
+resourcestring
+  StrGpcMallocFailure = 'gpc malloc failure: %s';
+  StrSDoesNotExist = '%s does not exist.';
+
 procedure MALLOC(var p : pointer; b : integer; s : string);
 begin
   GetMem(p, b);
   if (p = nil) and (b <> 0) then
   begin
-    raise EGpcException.Create(Format('gpc malloc failure: %s', [s]));
+    raise EGpcException.Create(Format(StrGpcMallocFailure, [s]));
   end;
 end;
 { TGpcPolygonClass }
@@ -172,7 +176,7 @@ begin
   end
   else
   begin
-    raise EGpcException.Create(FileName + ' does not exist.');
+    raise EGpcException.Create(Format(StrSDoesNotExist, [FileName]));
   end;
 end;
 

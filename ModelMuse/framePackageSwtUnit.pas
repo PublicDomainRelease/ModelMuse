@@ -88,6 +88,45 @@ implementation
 uses
   Math, frmCustomGoPhastUnit, frmGoPhastUnit, ModflowTimeUnit, GoPhastTypes;
 
+resourcestring
+  StrPrint = 'Print';
+  StrFormat = 'Format';
+  StrLayercenterElevati = 'Layer-center elevation (IZCFL IZCFM)';
+  StrGeostaticStressIG = 'Geostatic stress (IGLFL IGLFM)';
+  StrEffectiveStressIE = 'Effective stress (IESTFL IESTFM)';
+  StrPreconsolidationStr = 'Preconsolidation stress (IPCSFL IPCSFM)';
+  StrInitialEquivalentS = 'Initial equivalent storage properties (ISTFL ISTF' +
+  'M)';
+  StrPrintSubsidenceIf = 'Print subsidence (Ifm1, Ifl1)';
+  StrSaveSubsidenceIfl = 'Save subsidence (Ifl2)';
+  StrPrintCompactionBy = 'Print compaction by model layer (Ifm2, Ifl3)';
+  StrSaveCompactionByM = 'Save compaction by model layer (Ifl4)';
+  StrPrintCompactionBySystem = 'Print compaction by interbed system (Ifm3, I' +
+  'fl5)';
+  StrSaveCompactionByISystem = 'Save compaction by interbed system (Ifl6)';
+  StrPrintVerticalDispl = 'Print vertical displacement (Ifm4, Ifl7)';
+  StrSaveVerticalDispla = 'Save vertical displacement (Ifl8)';
+  StrPrintPreconsolidati = 'Print preconsolidation stress (Ifm5, Ifl9)';
+  StrSavePreconsolidatio = 'Save preconsolidation stress (Ifl10)';
+  StrPrintChangeInPrec = 'Print change in preconsolidation stress (Ifm6, Ifl' +
+  '11)';
+  StrSaveChangeInPreco = 'Save change in preconsolidation stress (Ifl12)';
+  StrPrintGeostaticStre = 'Print geostatic stress (Ifm7, Ifl13)';
+  StrSaveGeostaticStres = 'Save geostatic stress (Ifl14)';
+  StrPrintChangeInGeos = 'Print change in geostatic stress (Ifm8, Ifl15)';
+  StrSaveChangeInGeost = 'Save change in geostatic stress (Ifl16)';
+  StrPrintEffectiveStre = 'Print effective stress (Ifm9, Ifl17)';
+  StrSaveEffectiveStres = 'Save effective stress (Ifl18)';
+  StrPrintChangeInEffe = 'Print change in effective stress (Ifm10, Ifl19)';
+  StrSaveChangeInEffec = 'Save change in effective stress (Ifl20)';
+  StrPrintVoidRatioIf = 'Print void ratio (Ifm11, Ifl21)';
+  StrSaveVoidRatioIfl = 'Save void ratio (Ifl22)';
+  StrPrintThicknessOfC = 'Print thickness of compressible sediments (Ifm12, ' +
+  'Ifl23)';
+  StrSaveThicknessOfCo = 'Save thickness of compressible sediments (Ifl24)';
+  StrPrintLayercenterE = 'Print layer-center elevation (Ifm13, Ifl25)';
+  StrSaveLayercenterEl = 'Save layer-center elevation (Ifl26)';
+
 {$R *.dfm}
 
 const
@@ -118,14 +157,14 @@ begin
   try
     rdgInitialPrintChoices.FixedCols := 1;
 
-    rdgInitialPrintChoices.Cells[Ord(ipcPrint), Ord(iprLabel)] := 'Print';
-    rdgInitialPrintChoices.Cells[Ord(ipcFormat), Ord(iprLabel)] := 'Format';
+    rdgInitialPrintChoices.Cells[Ord(ipcPrint), Ord(iprLabel)] := StrPrint;
+    rdgInitialPrintChoices.Cells[Ord(ipcFormat), Ord(iprLabel)] := StrFormat;
 
-    rdgInitialPrintChoices.Cells[Ord(iprLabel), Ord(iprLayerCenterElev)] := 'Layer-center elevation (IZCFL IZCFM)';
-    rdgInitialPrintChoices.Cells[Ord(iprLabel), Ord(iprGeostaticStress)] := 'Geostatic stress (IGLFL IGLFM)';
-    rdgInitialPrintChoices.Cells[Ord(iprLabel), Ord(iprEffectiveStress)] := 'Effective stress (IESTFL IESTFM)';
-    rdgInitialPrintChoices.Cells[Ord(iprLabel), Ord(iprPreconsolidationStress)] := 'Preconsolidation stress (IPCSFL IPCSFM)';
-    rdgInitialPrintChoices.Cells[Ord(iprLabel), Ord(iprStorage)] := 'Initial equivalent storage properties (ISTFL ISTFM)';
+    rdgInitialPrintChoices.Cells[Ord(iprLabel), Ord(iprLayerCenterElev)] := StrLayercenterElevati;
+    rdgInitialPrintChoices.Cells[Ord(iprLabel), Ord(iprGeostaticStress)] := StrGeostaticStressIG;
+    rdgInitialPrintChoices.Cells[Ord(iprLabel), Ord(iprEffectiveStress)] := StrEffectiveStressIE;
+    rdgInitialPrintChoices.Cells[Ord(iprLabel), Ord(iprPreconsolidationStress)] := StrPreconsolidationStr;
+    rdgInitialPrintChoices.Cells[Ord(iprLabel), Ord(iprStorage)] := StrInitialEquivalentS;
   finally
     rdgInitialPrintChoices.EndUpdate;
   end;
@@ -134,34 +173,34 @@ begin
   try
     rdgOutput.Cells[Ord(swocStartTime), 0] := StrStartingTime;
     rdgOutput.Cells[Ord(swocEndTime), 0] := StrEndingTime;
-    rdgOutput.Cells[Ord(swocPrintSubsidence), 0] := 'Print subsidence (Ifm1, Ifl1)';
-    rdgOutput.Cells[Ord(swocSaveSubsidence), 0] := 'Save subsidence (Ifl2)';
-    rdgOutput.Cells[Ord(swocPrintCompactionByLayer), 0] := 'Print compaction by model layer (Ifm2, Ifl3)';
-    rdgOutput.Cells[Ord(swocSaveCompactionByLayer), 0] := 'Save compaction by model layer (Ifl4)';
-    rdgOutput.Cells[Ord(swocPrintCompactionBySystem), 0] := 'Print compaction by interbed system (Ifm3, Ifl5)';
-    rdgOutput.Cells[Ord(swocSaveCompactionBySystem), 0] := 'Save compaction by interbed system (Ifl6)';
-    rdgOutput.Cells[Ord(swocPrintVerticalDisplacement), 0] := 'Print vertical displacement (Ifm4, Ifl7)';
-    rdgOutput.Cells[Ord(swocSaveVerticalDisplacement), 0] := 'Save vertical displacement (Ifl8)';
-    rdgOutput.Cells[Ord(swocPrintPreconsolidationStress), 0] := 'Print preconsolidation stress (Ifm5, Ifl9)';
-    rdgOutput.Cells[Ord(swocSavePreconsolidationStress), 0] := 'Save preconsolidation stress (Ifl10)';
-    rdgOutput.Cells[Ord(swocPrintDeltaPreconsolidationStress), 0] := 'Print change in preconsolidation stress (Ifm6, Ifl11)';
-    rdgOutput.Cells[Ord(swocSaveDeltaPreconsolidationStress), 0] := 'Save change in preconsolidation stress (Ifl12)';
-    rdgOutput.Cells[Ord(swocPrintGeostaticStress), 0] := 'Print geostatic stress (Ifm7, Ifl13)';
-    rdgOutput.Cells[Ord(swocSaveGeostaticStress), 0] := 'Save geostatic stress (Ifl14)';
-    rdgOutput.Cells[Ord(swocPrintDeltaGeostaticStress), 0] := 'Print change in geostatic stress (Ifm8, Ifl15)';
-    rdgOutput.Cells[Ord(swocSaveDeltaGeostaticStress), 0] := 'Save change in geostatic stress (Ifl16)';
-    rdgOutput.Cells[Ord(swocPrintEffectiveStress), 0] := 'Print effective stress (Ifm9, Ifl17)';
-    rdgOutput.Cells[Ord(swocSaveEffectiveStress), 0] := 'Save effective stress (Ifl18)';
-    rdgOutput.Cells[Ord(swocPrintDeltaEffectiveStress), 0] := 'Print change in effective stress (Ifm10, Ifl19)';
-    rdgOutput.Cells[Ord(swocSaveDeltaEffectiveStress), 0] := 'Save change in effective stress (Ifl20)';
-    rdgOutput.Cells[Ord(swocPrintVoidRatio), 0] := 'Print void ratio (Ifm11, Ifl21)';
-    rdgOutput.Cells[Ord(swocSaveVoidRatio), 0] := 'Save void ratio (Ifl22)';
-    rdgOutput.Cells[Ord(swocPrintCompressibleBedThickness), 0] := 'Print thickness of compressible sediments (Ifm12, Ifl23)';
-    rdgOutput.Cells[Ord(swocSaveCompressibleBedThickness), 0] := 'Save thickness of compressible sediments (Ifl24)';
-    rdgOutput.Cells[Ord(swocPrintLayerCenterElevation), 0] := 'Print layer-center elevation (Ifm13, Ifl25)';
-    rdgOutput.Cells[Ord(swocSaveLayerCenterElevation), 0] := 'Save layer-center elevation (Ifl26)';
+    rdgOutput.Cells[Ord(swocPrintSubsidence), 0] := StrPrintSubsidenceIf;
+    rdgOutput.Cells[Ord(swocSaveSubsidence), 0] := StrSaveSubsidenceIfl;
+    rdgOutput.Cells[Ord(swocPrintCompactionByLayer), 0] := StrPrintCompactionBy;
+    rdgOutput.Cells[Ord(swocSaveCompactionByLayer), 0] := StrSaveCompactionByM;
+    rdgOutput.Cells[Ord(swocPrintCompactionBySystem), 0] := StrPrintCompactionBySystem;
+    rdgOutput.Cells[Ord(swocSaveCompactionBySystem), 0] := StrSaveCompactionByISystem;
+    rdgOutput.Cells[Ord(swocPrintVerticalDisplacement), 0] := StrPrintVerticalDispl;
+    rdgOutput.Cells[Ord(swocSaveVerticalDisplacement), 0] := StrSaveVerticalDispla;
+    rdgOutput.Cells[Ord(swocPrintPreconsolidationStress), 0] := StrPrintPreconsolidati;
+    rdgOutput.Cells[Ord(swocSavePreconsolidationStress), 0] := StrSavePreconsolidatio;
+    rdgOutput.Cells[Ord(swocPrintDeltaPreconsolidationStress), 0] := StrPrintChangeInPrec;
+    rdgOutput.Cells[Ord(swocSaveDeltaPreconsolidationStress), 0] := StrSaveChangeInPreco;
+    rdgOutput.Cells[Ord(swocPrintGeostaticStress), 0] := StrPrintGeostaticStre;
+    rdgOutput.Cells[Ord(swocSaveGeostaticStress), 0] := StrSaveGeostaticStres;
+    rdgOutput.Cells[Ord(swocPrintDeltaGeostaticStress), 0] := StrPrintChangeInGeos;
+    rdgOutput.Cells[Ord(swocSaveDeltaGeostaticStress), 0] := StrSaveChangeInGeost;
+    rdgOutput.Cells[Ord(swocPrintEffectiveStress), 0] := StrPrintEffectiveStre;
+    rdgOutput.Cells[Ord(swocSaveEffectiveStress), 0] := StrSaveEffectiveStres;
+    rdgOutput.Cells[Ord(swocPrintDeltaEffectiveStress), 0] := StrPrintChangeInEffe;
+    rdgOutput.Cells[Ord(swocSaveDeltaEffectiveStress), 0] := StrSaveChangeInEffec;
+    rdgOutput.Cells[Ord(swocPrintVoidRatio), 0] := StrPrintVoidRatioIf;
+    rdgOutput.Cells[Ord(swocSaveVoidRatio), 0] := StrSaveVoidRatioIfl;
+    rdgOutput.Cells[Ord(swocPrintCompressibleBedThickness), 0] := StrPrintThicknessOfC;
+    rdgOutput.Cells[Ord(swocSaveCompressibleBedThickness), 0] := StrSaveThicknessOfCo;
+    rdgOutput.Cells[Ord(swocPrintLayerCenterElevation), 0] := StrPrintLayercenterE;
+    rdgOutput.Cells[Ord(swocSaveLayerCenterElevation), 0] := StrSaveLayercenterEl;
 
-    rdgOutput.Cells[Ord(swocStartTime), FormatRow] := 'Format';
+    rdgOutput.Cells[Ord(swocStartTime), FormatRow] := StrFormat;
 
 
     for ColIndex := 0 to rdgOutput.ColCount - 1 do

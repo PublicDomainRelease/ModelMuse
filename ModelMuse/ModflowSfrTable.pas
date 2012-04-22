@@ -132,6 +132,11 @@ uses Contnrs, DataSetUnit, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit,
   ModflowSfrUnit, frmFormulaErrorsUnit, frmErrorsAndWarningsUnit, 
   frmGoPhastUnit, ModflowSfrChannelUnit;
 
+resourcestring
+  StrFlowTableFlowFor = '(flow table flow for the SFR package)';
+  StrFlowTableDepthFo = '(flow table depth for the SFR package)';
+  StrFlowTableWidthFo = '(flow table width for the SFR package)';
+
 const
   FlowPosition = 0;
   DepthPosition = 1;
@@ -299,8 +304,8 @@ begin
       CurrentRowItem := CurrentItem.SfrTable.Items[RowIndex];
       Expression := nil;
       Formula := CurrentRowItem.Flow;
-      CurrentRecord.FlowAnnotation := 'Assigned by '
-        + ScrObj.Name + ' with formula = "' + Formula + '."';
+      CurrentRecord.FlowAnnotation := Format(StrAssignedBy0sWit,
+        [ScrObj.Name, Formula]);
       try
         Compiler.Compile(Formula);
         Expression := Compiler.CurrentExpression;
@@ -310,7 +315,7 @@ begin
       except on E: ERbwParserError do
         begin
           frmFormulaErrors.AddFormulaError(ScrObj.Name,
-            '(flow table flow for the SFR package)',
+            StrFlowTableFlowFor,
             Formula, E.Message);
 
           CurrentRowItem.Flow := '0.';
@@ -323,8 +328,8 @@ begin
       CurrentRecord.Flow := Expression.DoubleResult;
 
       Formula := CurrentRowItem.Depth;
-      CurrentRecord.DepthAnnotation := 'Assigned by '
-        + ScrObj.Name + ' with formula = "' + Formula + '."';
+      CurrentRecord.DepthAnnotation := Format(StrAssignedBy0sWit,
+        [ScrObj.Name, Formula]);
       try
         Compiler.Compile(Formula);
         Expression := Compiler.CurrentExpression;
@@ -334,7 +339,7 @@ begin
       except on E: ERbwParserError do
         begin
           frmFormulaErrors.AddFormulaError(ScrObj.Name,
-            '(flow table depth for the SFR package)',
+            StrFlowTableDepthFo,
             Formula, E.Message);
 
           CurrentRowItem.Depth := '0.';
@@ -347,8 +352,8 @@ begin
       CurrentRecord.Depth := Expression.DoubleResult;
 
       Formula := CurrentRowItem.Width;
-      CurrentRecord.WidthAnnotation := 'Assigned by '
-        + ScrObj.Name + ' with formula = "' + Formula + '."';
+      CurrentRecord.WidthAnnotation := Format(StrAssignedBy0sWit,
+        [ScrObj.Name, Formula]);
       try
         Compiler.Compile(Formula);
         Expression := Compiler.CurrentExpression;
@@ -358,7 +363,7 @@ begin
       except on E: ERbwParserError do
         begin
           frmFormulaErrors.AddFormulaError(ScrObj.Name,
-            '(flow table width for the SFR package)',
+            StrFlowTableWidthFo,
             Formula, E.Message);
 
           CurrentRowItem.Width := '0.';

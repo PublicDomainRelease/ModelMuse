@@ -30,13 +30,17 @@ implementation
 
 {$R *.dfm}
 
+resourcestring
+  StrX = 'X';
+  StrZ = 'Z';
+
 { TframeCrossSection }
 
 constructor TframeCrossSection.Create(AOwner: TComponent);
 begin
   inherited;
-  dg8Point.Cells[Ord(s8pX),0] := 'X';
-  dg8Point.Cells[Ord(s8pZ),0] := 'Z';
+  dg8Point.Cells[Ord(s8pX),0] := StrX;
+  dg8Point.Cells[Ord(s8pZ),0] := StrZ;
 end;
 
 end.

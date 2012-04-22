@@ -18,8 +18,11 @@ inherited frmSetSpacing: TfrmSetSpacing
     Width = 91
     Height = 33
     Anchors = [akTop, akRight]
-    TabOrder = 0
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 0
   end
   object btnOK: TBitBtn
     Left = 406
@@ -27,10 +30,13 @@ inherited frmSetSpacing: TfrmSetSpacing
     Width = 91
     Height = 33
     Anchors = [akTop, akRight]
+    DoubleBuffered = True
     Enabled = False
+    Kind = bkOK
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 2
     OnClick = btnOKClick
-    Kind = bkOK
   end
   object btnHelp: TBitBtn
     Left = 309
@@ -38,9 +44,12 @@ inherited frmSetSpacing: TfrmSetSpacing
     Width = 91
     Height = 33
     Anchors = [akTop, akRight]
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 1
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
   object gbColumns: TGroupBox
     Left = 8
@@ -112,7 +121,6 @@ inherited frmSetSpacing: TfrmSetSpacing
       Cursor = crIBeam
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 18
       TabOrder = 3
       Text = '0'
       OnChange = rdeChange
@@ -192,7 +200,6 @@ inherited frmSetSpacing: TfrmSetSpacing
       Cursor = crIBeam
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 18
       TabOrder = 3
       Text = '0'
       OnChange = rdeChange
@@ -272,7 +279,6 @@ inherited frmSetSpacing: TfrmSetSpacing
       Cursor = crIBeam
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 18
       TabOrder = 3
       Text = '0'
       OnChange = rdeChange

@@ -20,6 +20,8 @@ Type
     FHDry: real;
     FOpenInTextEditor: boolean;
     FInitialHeadFileName: string;
+    FStoredStopErrorCriterion: TRealStorage;
+    FStopError: Boolean;
     procedure InvalidateModel;
     procedure SetComputeFluxesBetweenConstantHeadCells(const Value: boolean);
     procedure SetDescription(const Value: TStrings);
@@ -33,6 +35,10 @@ Type
     procedure SetHDry(const Value: real);
     procedure SetOpenInTextEditor(const Value: boolean);
     procedure SetInitialHeadFileName(const Value: string);
+    procedure SetStopError(const Value: Boolean);
+    procedure SetStopErrorCriterion(const Value: double);
+    procedure SetStoredStopErrorCriterion(const Value: TRealStorage);
+    function GetStopErrorCriterion: double;
   protected
     // @name stores a value for @link(HNoFlow) when @link(HNoFlow) is zero.
     procedure DefineProperties(Filer: TFiler); override;
@@ -45,6 +51,7 @@ Type
     constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure Clear;
+    property StopErrorCriterion: double read GetStopErrorCriterion write SetStopErrorCriterion;
   published
     property ComputeFluxesBetweenConstantHeadCells: boolean
       read FComputeFluxesBetweenConstantHeadCells
@@ -62,6 +69,8 @@ Type
       write SetOpenInTextEditor default True;
     property InitialHeadFileName: string read FInitialHeadFileName
       write SetInitialHeadFileName;
+    property StopError: Boolean read FStopError write SetStopError;
+    property StoredStopErrorCriterion: TRealStorage read FStoredStopErrorCriterion write SetStoredStopErrorCriterion;
   end;
 
   TWettingOptions = class(TPersistent)
@@ -116,6 +125,8 @@ begin
     TimeUnit := SourceModel.TimeUnit;
     OpenInTextEditor := SourceModel.OpenInTextEditor;
     InitialHeadFileName := SourceModel.InitialHeadFileName;
+    StopError := SourceModel.StopError;
+    StopErrorCriterion := SourceModel.StopErrorCriterion;
   end
   else
   begin
@@ -127,6 +138,7 @@ constructor TModflowOptions.Create(Model: TBaseModel);
 begin
   inherited Create;
   FDescription := TStringList.Create;
+  FStoredStopErrorCriterion := TRealStorage.Create;
   Clear;
   FModel := Model;
   if Assigned(FModel) then
@@ -148,8 +160,14 @@ end;
 
 destructor TModflowOptions.Destroy;
 begin
+  FStoredStopErrorCriterion.Free;
   FDescription.Free;
   inherited;
+end;
+
+function TModflowOptions.GetStopErrorCriterion: double;
+begin
+  result := FStoredStopErrorCriterion.Value;
 end;
 
 procedure TModflowOptions.Clear;
@@ -166,6 +184,8 @@ begin
   FComputeFluxesBetweenConstantHeadCells := True;
   FOpenInTextEditor := True;
   FInitialHeadFileName := '';
+  StopError := False;
+  StopErrorCriterion := 1;
 end;
 
 procedure TModflowOptions.InvalidateModel;
@@ -280,6 +300,26 @@ begin
     FProjectName := Value;
     InvalidateModel;
   end;
+end;
+
+procedure TModflowOptions.SetStopError(const Value: Boolean);
+begin
+  if FStopError <> Value then
+  begin
+    FStopError := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TModflowOptions.SetStopErrorCriterion(const Value: double);
+begin
+  FStoredStopErrorCriterion.Value := Value;
+end;
+
+procedure TModflowOptions.SetStoredStopErrorCriterion(
+  const Value: TRealStorage);
+begin
+  FStoredStopErrorCriterion.Assign(Value);
 end;
 
 procedure TModflowOptions.SetTimeUnit(const Value: integer);

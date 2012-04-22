@@ -95,9 +95,11 @@ type
     // @name returns the proper IPRN for specifying whether to print an
     // integer input array
     function IPRN_Integer: integer;
+    function IPRN_Mt3dms_Integer: integer;
     // @name returns the proper IPRN for specifying whether to print an
     // real number input array
     function IPRN_Real: integer;
+    function IPRN_Mt3dms_Real: integer;
     // @name retrieves the proper unit number for the cell-by-cell flow
     // file.
     procedure GetFlowUnitNumber(var UnitNumber: Integer);
@@ -728,11 +730,11 @@ procedure SetCurrentNameFileWriter(NameFileWriter: TCustomNameFileWriter);
 
 resourcestring
   StrObservationFactor = '(Observation factor for the ' + sLineBreak + '%s)';
+  StrNoValueAssigned = 'No value assigned';
 
 const
   // @name is the comment assigned to locations in a @link(TDataArray) where
   // no value has been assigned but a value is still needed.
-  StrNoValueAssigned = 'No value assigned';
   StrDATABINARY = 'DATA(BINARY)';
   StrDATA = 'DATA';
   StrArrays = 'arrays';
@@ -743,7 +745,7 @@ implementation
 uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmGoPhastUnit,
   frmProgressUnit, GlobalVariablesUnit, frmFormulaErrorsUnit, GIS_Functions,
   ZoneBudgetWriterUnit, ModelMuseUtilities, SparseDataSets, SparseArrayUnit,
-  RealListUnit, ModflowMultiplierZoneWriterUnit;
+  RealListUnit, ModflowMultiplierZoneWriterUnit, IOUtils;
 
 resourcestring
   StrTheFollowingParame = 'The following %s parameters are being skipped ' +
@@ -767,8 +769,8 @@ resourcestring
   StrStressPeriod0d = 'Stress Period %0:d';
   StrErrorFlowObservatEarly = 'Error; Flow Observation = %0:s Early Times = ' +
   '%1:s';
-  StrErrorFlowObservatLate = 'Error; Flow Observation = %0:s Late Times = %1' +
-  ':s';
+  StrErrorFlowObservatLate = 'Error; Flow Observation = %0:s Late Times = ' +
+  '%1:s';
   EarlyTimeWarning = '%s flow observation times earlier than the beginning of the first stress period will be ignored.';
   LateTimeWarning = '%s flow observation times later than the end of the last stress period will be ignored.';
   MissingFile = 'One or more files that you specified in the MODFLOW Name '
@@ -781,6 +783,13 @@ resourcestring
   StrTheFlowtransportL = 'The flow-transport link file, %s, does not exist. ' +
   'Run MODFLOW again to correct the problem.';
   StrMissingFtlFile = 'Missing *.ftl file.';
+  StrWritingS = '    Writing %s';
+  StrWriting0sFor = '    Writing %0:s for Layer %1:d';
+  StrWritingArray = '    Writing array';
+  StrEvaluatingS = '  Evaluating %s';
+  StrWritingParamter = '    Writing paramter: %s';
+  StrWritingStressPer = '  Writing Stress Period %d';
+  StrLayer0dRow1 = 'Layer: %0:d; Row: %1:d; Column: %2:d';
 
 var
 //  NameFile: TStringList;
@@ -1252,8 +1261,7 @@ begin
       end;
       if not OkValue then
       begin
-        Error := Format('Layer: %d; Row: %d; Column: %d',
-          [LayerIndex+1, RowIndex+1,ColIndex+1]);
+        Error := Format(StrLayer0dRow1, [LayerIndex+1, RowIndex+1,ColIndex+1]);
         case ErrorType of
           etError: frmErrorsAndWarnings.AddError(Model, ErrorOrWarningMessage, Error);
           etWarning: frmErrorsAndWarnings.
@@ -1391,16 +1399,16 @@ var
 begin
   if ArrayName <> '' then
   begin
-    frmProgressMM.AddMessage('    Writing ' + ArrayName);
+    frmProgressMM.AddMessage(Format(StrWritingS, [ArrayName]));
   end
   else if DataArray.Name <> '' then
   begin
-    frmProgressMM.AddMessage('    Writing ' + DataArray.Name
-      + ' for Layer ' + IntToStr(LayerIndex+1));
+    frmProgressMM.AddMessage(Format(StrWriting0sFor,
+      [DataArray.Name, LayerIndex+1]));
   end
   else
   begin
-    frmProgressMM.AddMessage('    Writing array');
+    frmProgressMM.AddMessage(StrWritingArray);
   end;
 
   Uniform := CheckArrayUniform(LayerIndex, DataArray);
@@ -1634,6 +1642,15 @@ begin
   begin
     FileName := ExtractFileName(FileName);
   end;
+  if Pos(' ', FileName) > 0 then
+  begin
+    if not FileExists(FileName) then
+    begin
+      TFile.Create(FileName).Free;
+    end;
+    FileName := ExtractShortPathName(FileName);
+  end;
+
   Line := Ftype + ' ' + IntToStr(UnitNumber) + ' ' + FileName;
   case Option of
     foNone: ;// do nothing
@@ -1671,6 +1688,30 @@ begin
   else
   begin
     result := -1;
+  end;
+end;
+
+function TCustomModflowWriter.IPRN_Mt3dms_Integer: integer;
+begin
+  if Model.ModflowOutputControl.PrintInputArrays then
+  begin
+    result := 5;
+  end
+  else
+  begin
+    result := 0;
+  end;
+end;
+
+function TCustomModflowWriter.IPRN_Mt3dms_Real: integer;
+begin
+  if Model.ModflowOutputControl.PrintInputArrays then
+  begin
+    result := 12;
+  end
+  else
+  begin
+    result := 0;
   end;
 end;
 
@@ -1966,8 +2007,8 @@ begin
         frmErrorsAndWarnings.AddError(Model, NoAssignmentErrorRoot,
           ScreenObject.Name);
       end;
-      frmProgressMM.AddMessage('  Evaluating '
-        + ScreenObject.Name);
+      frmProgressMM.AddMessage(Format(StrEvaluatingS,
+        [ScreenObject.Name]));
       Boundary.GetCellValues(FValues, FParamValues, Model);
     end;
   end;
@@ -2387,7 +2428,7 @@ begin
       Assert(ParamValues.Count > 0);
       // Data set 3
       PARNAM := Param.ParameterName;
-      frmProgressMM.AddMessage('    Writing paramter: ' + PARNAM);
+      frmProgressMM.AddMessage(Format(StrWritingParamter, [PARNAM]));
       if Length(PARNAM) > 10 then
       begin
         SetLength(PARNAM, 10);
@@ -2470,7 +2511,7 @@ begin
       begin
         Exit;
       end;
-      frmProgressMM.AddMessage('  Writing Stress Period ' + IntToStr(TimeIndex+1));
+      frmProgressMM.AddMessage(Format(StrWritingStressPer, [TimeIndex+1]));
       ParametersUsed := TStringList.Create;
       try
         RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
@@ -2651,11 +2692,13 @@ var
   MultItem: TTransientMultItem;
   TransMultWriter: TTransientArrayWriter;
   ZoneItem: TTransientZoneItem;
+  DummyAnnotation: string;
 begin
   if CellList.Count = 0 then
   begin
     Exit;
   end;
+  DummyAnnotation := 'none';
   MultiplierArray := TDataArray.Create(Model);
   ZoneArray:= TDataArray.Create(Model);
   try
@@ -2692,9 +2735,12 @@ begin
     ZoneArray.DataType := rdtBoolean;
 
     MultiplierArray.UpdateDimensions(1, Model.ModflowGrid.RowCount,
-      Model.ModflowGrid.ColumnCount);
+      Model.ModflowGrid.ColumnCount, True);
     ZoneArray.UpdateDimensions(1, Model.ModflowGrid.RowCount,
-      Model.ModflowGrid.ColumnCount);
+      Model.ModflowGrid.ColumnCount, True);
+
+    MultiplierArray.UpToDate := True;
+    ZoneArray.UpToDate := True;
 
     // initialize multiplier and zone arrays.
     for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
@@ -2703,6 +2749,8 @@ begin
       begin
         MultiplierArray.RealData[0,RowIndex,ColIndex] := 0;
         ZoneArray.BooleanData[0,RowIndex,ColIndex] := False;
+        MultiplierArray.Annotation[0,RowIndex,ColIndex] := DummyAnnotation;
+        ZoneArray.Annotation[0,RowIndex,ColIndex] := DummyAnnotation;
       end;
     end;
 
@@ -2727,6 +2775,7 @@ begin
     end;
 
     MultiplierArray.UpToDate := True;
+    ZoneArray.UpToDate := True;
     if ParameterType in [ptRCH, ptEVT, ptETS] then
     begin
       Model.AdjustDataArray(MultiplierArray);
@@ -3024,7 +3073,7 @@ begin
       begin
         SetLength(PARNAM, 10);
       end;
-      frmProgressMM.AddMessage('    Writing parameter: ' + PARNAM);
+      frmProgressMM.AddMessage(Format(StrWritingParamter, [PARNAM]));
       GetNumCellsAndNumInstances(ParameterValues, NUMINST, NCLU);
       if NCLU > 0 then
       begin
@@ -3388,6 +3437,7 @@ var
   AnObject: TObject;
   ListIndex: integer;
   CellListIndex: Integer;
+  DummyAnnotation: string;
   procedure AssignCellValues(CellList: TValueCellList);
   var
     CellIndex: Integer;
@@ -3437,6 +3487,7 @@ var
     end;
   end;
 begin
+  DummyAnnotation := 'none';
   ExportArray := TDataArray.Create(Model);
   try
     IntDefaultValue := Round(DefaultValue);
@@ -3444,11 +3495,14 @@ begin
     ExportArray.EvaluatedAt := eaBlocks;
     ExportArray.DataType := DataType;
     ExportArray.UpdateDimensions(1, Model.ModflowGrid.RowCount,
-      Model.ModflowGrid.ColumnCount);
+      Model.ModflowGrid.ColumnCount, True);
+    ExportArray.UpToDate := True;
+
     for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
     begin
       for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
       begin
+        ExportArray.Annotation[0, RowIndex, ColIndex] := DummyAnnotation;
         case DataType of
           rdtDouble:
             begin

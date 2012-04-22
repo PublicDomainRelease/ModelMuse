@@ -142,6 +142,7 @@ object frameSfrParamInstances: TframeSfrParamInstances
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -163,6 +164,7 @@ object frameSfrParamInstances: TframeSfrParamInstances
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -184,6 +186,7 @@ object frameSfrParamInstances: TframeSfrParamInstances
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
     OnEndUpdate = rdgSfrParamInstancesEndUpdate

@@ -58,10 +58,13 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="5" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="6" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.usgs.gov/tm/2006/tm6a19/" target="_blank" styleclass="Citation" translate="true">Niswonger, R.G., Prudic, D.E., and Regan, R.S., 2006, Documentation of the Unsaturated-Zone Flow (UZF1) Package for modeling unsaturated flow between the land surface and the water table with MODFLOW-2005: U.S. Geological Techniques and Methods Book 6, Chapter A19, 62 p. </link></li>
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="filelink" href="readme_UZF.pdf" styleclass="Normal" translate="true">readme_UZF.pdf</link></li>
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="filelink" href="NWT_release.txt" styleclass="Normal" translate="true">release.txt for MODFLOW-NWT</link></li>
+          </list>
+          <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="LAK_SFR_UZF_updates_MF2005.txt" styleclass="Citation" style="font-style:normal;" translate="true">LAK_SFR_UZF_updates_MF2005.txt</link></li>
           </list>
         </td>
       </tr>
@@ -78,14 +81,14 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="6" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
           </list>
         </td>
@@ -95,7 +98,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Other Notes</text></para>
         </td>
         <td>
-          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="New Materials" translate="true">When the UZF package is used, the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" styleclass="New Materials" translate="true">RCH</link><text styleclass="New Materials" translate="true">, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" styleclass="New Materials" translate="true">EVT</link><text styleclass="New Materials" translate="true">, and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" styleclass="New Materials" translate="true">ETS</link><text styleclass="New Materials" translate="true"> packages should not normally be used because the UZF simulates recharge and evapotranspiration. &#160;However, MODFLOW does not prevent UZF being used in conjunction with the the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" styleclass="New Materials" translate="true">RCH</link><text styleclass="New Materials" translate="true">, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" styleclass="New Materials" translate="true">EVT</link><text styleclass="New Materials" translate="true">, and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" styleclass="New Materials" translate="true">ETS</link><text styleclass="New Materials" translate="true"> packages.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Because the UZF package can simulate both ground-water flow, infiltration, and evapotranspiration, it is a combination of a ground-water flow package and a boundary condition package.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Because the UZF1 Package delays recharge to the water table, changes in stress do not necessarily correspond to the beginning of a stress period. Consequently, caution should be used when simulating time steps that increase during a stress period (specifying the variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DIS" anchor="TSMULT" styleclass="Normal" translate="true">TSMULT</link><text styleclass="Normal" translate="true">&gt;1.0 in the data input for the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DIS" styleclass="Normal" translate="true">Discretization</link><text styleclass="Normal" translate="true"> file; Harbaugh, 2005) because water percolating through the unsaturated zone may reach the water table at the end of a stress period, when the time step length is a maximum.</text></li>
@@ -136,7 +139,7 @@
           <para styleclass="Heading2_atoc_"><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><text styleclass="Heading2_atoc_" translate="true">Data Set 1a</text><conditional-text type="END"/></para>
         </td>
         <td style="width:700px;">
-          <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><text styleclass="Normal" translate="true">[</text><text styleclass="Keywords" translate="true">SPECIFYTHTR</text><text styleclass="Normal" translate="true">] [</text><text styleclass="Keywords" translate="true">SPECIFYTHTI</text><text styleclass="Normal" translate="true">] [</text><text styleclass="Keywords" translate="true">NOSURFLEAK</text><text styleclass="Normal" translate="true">]</text></para>
+          <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><text styleclass="Normal" translate="true">[</text><text styleclass="Keywords" translate="true">SPECIFYTHTR</text><text styleclass="Normal" translate="true">] [</text><text styleclass="Keywords" translate="true">SPECIFYTHTI</text><text styleclass="Normal" translate="true">] [</text><text styleclass="Keywords" translate="true">NOSURFLEAK</text><text styleclass="Normal" translate="true">]</text></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
@@ -161,7 +164,7 @@
                 <para styleclass="Keywords" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">key word for inactivating calculation of surface leakage.</text></para>
+                      <para styleclass="Normal"><anchor id="NOSURFLEAK" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">key word for inactivating calculation of surface leakage.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -169,12 +172,12 @@
             </tr>
           </table></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Note that the keywords must be entered in the order shown. For example, if keywords “</text><text styleclass="Keywords" translate="true">SPECIFYTHTR</text><text styleclass="Normal" translate="true">” and “</text><text styleclass="Keywords" translate="true">NOSURFLEAK</text><text styleclass="Normal" translate="true">” are specified, then “</text><text styleclass="Keywords" translate="true">SPECIFYTHTR</text><text styleclass="Normal" translate="true">” &#160;must precede “</text><text styleclass="Keywords" translate="true">NOSURFLEAK</text><text styleclass="Normal" translate="true">”. Alternatively, if only “</text><text styleclass="Keywords" translate="true">SPECIFYTHTI</text><text styleclass="Normal" translate="true">” &#160;is specified, then the other two keywords should not be specified.</text><conditional-text type="END"/></para>
-          <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Normal" translate="true">Data set 1a can only be specified in MODFLOW-NWT.</text><conditional-text type="END"/></para>
+          <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Normal" translate="true">Data set 1a can only be specified in MODFLOW-2005 and MODFLOW-NWT.</text><conditional-text type="END"/></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
         <td style="width:76px;">
-          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 1</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><text styleclass="Heading2_atoc_" translate="true">b</text><conditional-text type="END"/></para>
+          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 1</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><text styleclass="Heading2_atoc_" translate="true">b</text><conditional-text type="END"/></para>
         </td>
         <td style="width:700px;">
           <para styleclass="Normal"><text styleclass="Normal" translate="true">NUZTOP IUZFOPT IRUNFLG IETFLG IUZFCB1 IUZFCB2 </text><text styleclass="New Materials" translate="true">[</text><text styleclass="Normal" translate="true">NTRAIL2 NSETS2</text><text styleclass="New Materials" translate="true">]</text><text styleclass="Normal" translate="true"> NUZGAG SURFDEP</text></para>
@@ -222,7 +225,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">An integer value used as a flag for writing ground-water recharge, ET, and ground-water discharge to land surface rates to a separate unformatted file using subroutine UBUDSV. If IUZFCB1&gt;0, it is the unit number to which the cell-by-cell rates will be written when “SAVE BUDGET” or a non-zero value for ICBCFL is specified in </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" styleclass="Normal" translate="true">Output Control</link><text styleclass="Normal" translate="true">. </text></para>
+                      <para styleclass="Normal"><anchor id="IUZFCB1" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">An integer value used as a flag for writing ground-water recharge, ET, and ground-water discharge to land surface rates to a separate unformatted file using subroutine UBUDSV. If IUZFCB1&gt;0, it is the unit number to which the cell-by-cell rates will be written when “SAVE BUDGET” or a non-zero value for ICBCFL is specified in </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" styleclass="Normal" translate="true">Output Control</link><text styleclass="Normal" translate="true">. </text></para>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">If IUZFCB1 is specified as a negative value, then infiltration and unsaturated zone ET are printed to unformatted files using UBUDSV. If IUZFCB1 is specified as a positive value, then only groundwater budget items calculated by UZF are printed, including recharge, groundwater discharge to land surface, and groundwater ET, and excludes infiltration and unsaturated zone ET.</text></para>
                       <para styleclass="Normal"><text styleclass="New Materials" translate="true">UBUDSV records cell-by-cell flow terms for each cell in the grid. In other packages, UBUDSV is called when the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" anchor="COMPACT_BUDGET" styleclass="New Materials" translate="true">COMPACT BUDGET</link><text styleclass="New Materials" translate="true"> option is not used.</text></para>
                     </td>
@@ -232,9 +235,9 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">An integer value used as a flag for writing ground-water recharge, ET, and ground-water discharge to land surface rates to a separate unformatted file using module UBDSV3. If IUZFCB2&gt;0, it is the unit number to which cell-by-cell rates will be written when “SAVE BUDGET” or a non-zero value for ICBCFL is specified in </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" styleclass="Normal" translate="true">Output Control</link><text styleclass="Normal" translate="true">. If IUZFCB2</text><text styleclass="Normal" style="font-family:Symbol;" translate="true">£</text><text styleclass="Normal" translate="true">0, cell-by-cell rates will not be written to file.</text></para>
+                      <para styleclass="Normal"><anchor id="IUZFCB2" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">An integer value used as a flag for writing ground-water recharge, ET, and ground-water discharge to land surface rates to a separate unformatted file using module UBDSV3. If IUZFCB2&gt;0, it is the unit number to which cell-by-cell rates will be written when “SAVE BUDGET” or a non-zero value for ICBCFL is specified in </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" styleclass="Normal" translate="true">Output Control</link><text styleclass="Normal" translate="true">. If IUZFCB2</text><text styleclass="Normal" style="font-family:Symbol;" translate="true">£</text><text styleclass="Normal" translate="true">0, cell-by-cell rates will not be written to file.</text></para>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">If IUZFCB2 is specified as a negative value, then infiltration and unsaturated zone ET are printed to unformatted files using UBDSV3, respectively. If IUZFCB2 is specified as a positive value, then only groundwater budget items calculated by UZF are printed, including recharge, groundwater discharge to land surface, and groundwater ET, and excludes infiltration and unsaturated zone ET.</text></para>
-                      <para styleclass="Normal"><text styleclass="New Materials" translate="true">UBDSV3 records cell-by-cell flow terms as a 2-d array of flow values and optionally a 2-d array of layer numbers. In other packages, UBUDSV is called when the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" anchor="COMPACT_BUDGET" styleclass="New Materials" translate="true">COMPACT BUDGET</link><text styleclass="New Materials" translate="true"> option is used.</text></para>
+                      <para styleclass="Normal"><text styleclass="New Materials" translate="true">UBDSV3 records cell-by-cell flow terms as a 2-d array of flow values and optionally a 2-d array of layer numbers. In other packages, UBDSV3 is called when the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" anchor="COMPACT_BUDGET" styleclass="New Materials" translate="true">COMPACT BUDGET</link><text styleclass="New Materials" translate="true"> option is used.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -242,7 +245,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">An integer value equal to the number of trailing waves used to define the water-content profile following a decrease in the infiltration rate. The number of trailing waves varies depending on the problem, but a range between 10 and 20 is usually adequate. More trailing waves may decrease mass-balance error and will increase computational requirements and memory usage.</text></para>
+                      <para styleclass="Normal"><anchor id="NTRAIL2" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">An integer value equal to the number of trailing waves used to define the water-content profile following a decrease in the infiltration rate. The number of trailing waves varies depending on the problem, but a range between 10 and 20 is usually adequate. More trailing waves may decrease mass-balance error and will increase computational requirements and memory usage.</text></para>
                       <para styleclass="Normal"><snippet src="UZF_Note_2"/></para>
                     </td>
                   </tr>
@@ -251,7 +254,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">An integer value equal to the number of wave sets used to simulate multiple infiltration periods. The number of wave sets should be set to 20 for most problems involving time varying infiltration. The total number of waves allowed within an unsaturated zone cell is equal to NTRAIL2*NSETS2. An error will occur if the number of waves in a cell exceeds this value.</text></para>
+                      <para styleclass="Normal"><anchor id="NSETS2" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">An integer value equal to the number of wave sets used to simulate multiple infiltration periods. The number of wave sets should be set to 20 for most problems involving time varying infiltration. The total number of waves allowed within an unsaturated zone cell is equal to NTRAIL2*NSETS2. An error will occur if the number of waves in a cell exceeds this value.</text></para>
                       <para styleclass="Normal"><snippet src="UZF_Note_2"/></para>
                     </td>
                   </tr>
@@ -358,7 +361,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="width:76px;">
-          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 6</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><text styleclass="Heading2_atoc_" translate="true">a</text><conditional-text type="END"/></para>
+          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 6</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><text styleclass="Heading2_atoc_" translate="true">a</text><conditional-text type="END"/></para>
         </td>
         <td style="width:700px;">
           <para styleclass="Normal"><text styleclass="Normal" translate="true">THTS (NCOL, NROW) -- </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Array_Reading_Utility_Modules" styleclass="Normal" translate="true">U2DREL</link></para>
@@ -374,15 +377,15 @@
       </tr>
       <tr style="vertical-align:top">
         <td colspan="2" style="width:700px;">
-          <para styleclass="Heading2_atoc_"><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><text styleclass="Normal" translate="true">If the keyword </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="SPECIFYTHTR" styleclass="Keywords" translate="true">SPECIFYTHTR</link><text styleclass="Normal" translate="true"> is specified, read data set 6b.</text><conditional-text type="END"/><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Normal" translate="true">&#32;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="SPECIFYTHTR" styleclass="Keywords" translate="true">SPECIFYTHTR</link><text styleclass="Normal" translate="true"> can only be specified in MODFLOW-NWT.</text><conditional-text type="END"/></para>
+          <para styleclass="Heading2_atoc_"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><text styleclass="Normal" translate="true">If the keyword </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="SPECIFYTHTR" styleclass="Keywords" translate="true">SPECIFYTHTR</link><text styleclass="Normal" translate="true"> is specified, read data set 6b.</text><conditional-text type="END"/><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Normal" translate="true">&#32;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="SPECIFYTHTR" styleclass="Keywords" translate="true">SPECIFYTHTR</link><text styleclass="Normal" translate="true"> can only be specified in MODFLOW-2005 and MODFLOW-NWT.</text><conditional-text type="END"/></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
         <td style="width:76px;">
-          <para styleclass="Heading2_atoc_"><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><text styleclass="Heading2_atoc_" translate="true">Data Set 6b</text><conditional-text type="END"/></para>
+          <para styleclass="Heading2_atoc_"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><text styleclass="Heading2_atoc_" translate="true">Data Set 6b</text><conditional-text type="END"/></para>
         </td>
         <td style="width:700px;">
-          <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><text styleclass="Normal" translate="true">[THTR (NCOL, NROW)] -- U2DREL</text></para>
+          <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><text styleclass="Normal" translate="true">[THTR (NCOL, NROW)] -- U2DREL</text></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[THTR]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
@@ -396,7 +399,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td colspan="2">
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">THTI should not be specified for simulations with a steady-state stress period</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><text styleclass="Heading2_atoc_" translate="true">&#32;</text><text styleclass="Normal" translate="true">unless the keyword </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="SPECIFYTHTI" styleclass="Keywords" translate="true">SPECIFYTHTI</link><text styleclass="Normal" translate="true"> is specified</text><conditional-text type="END"/><text styleclass="Normal" translate="true">.</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Normal" translate="true">&#32;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="SPECIFYTHTI" styleclass="Keywords" translate="true">SPECIFYTHTI</link><text styleclass="Normal" translate="true"> can only be specified in MODFLOW-NWT.</text><conditional-text type="END"/></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">THTI should not be specified for simulations with a steady-state stress period</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><text styleclass="Heading2_atoc_" translate="true">&#32;</text><text styleclass="Normal" translate="true">unless the keyword </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="SPECIFYTHTI" styleclass="Keywords" translate="true">SPECIFYTHTI</link><text styleclass="Normal" translate="true"> is specified</text><conditional-text type="END"/><text styleclass="Normal" translate="true">.</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Normal" translate="true">&#32;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="SPECIFYTHTI" styleclass="Keywords" translate="true">SPECIFYTHTI</link><text styleclass="Normal" translate="true"> can only be specified in MODFLOW-2005 and MODFLOW-NWT.</text><conditional-text type="END"/></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -434,7 +437,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">An integer value equal to the row number of the cell that unsaturated-zone information will be printed for each time step. The variable is not used when IFTUNIT is negative.</text></para>
+                      <para styleclass="Normal"><anchor id="IUZROW" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">An integer value equal to the row number of the cell that unsaturated-zone information will be printed for each time step. The variable is not used when IFTUNIT is negative.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -442,7 +445,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">An integer value equal to the column number of the cell that unsaturated-zone information will be printed for each time step. The variable is not used when IFTUNIT is negative.</text></para>
+                      <para styleclass="Normal"><anchor id="IUZCOL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">An integer value equal to the column number of the cell that unsaturated-zone information will be printed for each time step. The variable is not used when IFTUNIT is negative.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -450,7 +453,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">An integer value equal to the unit number of the output file. A positive value is for output of individual cells whereas a negative value is for output that is summed over all model cells. The summed output includes applied infiltration, runoff, actual infiltration, ground-water discharge to land surface, ET from the unsaturated zone, ET from ground water, recharge, and change in unsaturated-zone storage.</text></para>
+                      <para styleclass="Normal"><anchor id="IFTUNIT" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">An integer value equal to the unit number of the output file. A positive value is for output of individual cells whereas a negative value is for output that is summed over all model cells. The summed output includes applied infiltration, runoff, actual infiltration, ground-water discharge to land surface, ET from the unsaturated zone, ET from ground water, recharge, and change in unsaturated-zone storage.</text></para>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">Note 5: A unique unit number for IFTUNIT must be specified for each line or record in item 8 and each number must match that used in the MODFLOW name file as Ftype “DATA” file types and file names (see Harbaugh, 2005).</text></para>
                     </td>
                   </tr>
@@ -507,7 +510,7 @@
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">An array of positive real values used to define the infiltration rates (LT</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">-1</text><text styleclass="Normal" translate="true">) at land surface for each vertical column of cells.</text></para>
+                <para styleclass="Normal"><anchor id="FINF" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">An array of positive real values used to define the infiltration rates (LT</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">-1</text><text styleclass="Normal" translate="true">) at land surface for each vertical column of cells.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Note 6: If FINF is specified as being greater than the vertical hydraulic conductivity then FINF is set equal to the vertical unsaturated hydraulic conductivity. Excess water is routed to streams or lakes when </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="IRUNFLG" styleclass="Normal" translate="true">IRUNFLG</link><text styleclass="Normal" translate="true"> is not zero, and if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" styleclass="Normal" translate="true">SFR2</link><text styleclass="Normal" translate="true"> or </text><link displaytype="text" defaultstyle="true" type="topiclink" href="LAK" styleclass="Normal" translate="true">LAK3</link><text styleclass="Normal" translate="true"> is active.</text></para>
               </td>
             </tr>
@@ -549,7 +552,7 @@
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">An array of positive real values used to define the ET demand rates (L</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Normal" translate="true">T</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">-1</text><text styleclass="Normal" translate="true">) within the ET extinction depth interval for each vertical column of cells.</text></para>
+                <para styleclass="Normal"><anchor id="PET" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">An array of positive real values used to define the ET demand rates (L</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Normal" translate="true">T</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">-1</text><text styleclass="Normal" translate="true">) within the ET extinction depth interval for each vertical column of cells.</text></para>
               </td>
             </tr>
           </table></para>
@@ -585,7 +588,7 @@
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">An array of positive real values used to define the ET extinction depths.</text></para>
+                <para styleclass="Normal"><anchor id="EXTDP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">An array of positive real values used to define the ET extinction depths.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Note 7: The quantity of ET removed from a cell is limited by the volume of water stored in the unsaturated zone above the extinction depth. If ground water is within the ET extinction depth, then the rate removed is based on a linear decrease in the maximum rate at land surface and zero at the ET extinction depth. The linear decrease is the same method used in the Evapotranspiration Package (McDonald and Harbaugh, 1988, chap. 10).</text></para>
               </td>
             </tr>
@@ -622,7 +625,7 @@
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">An array of positive real values used to define the extinction water content below which ET cannot be removed from the unsaturated zone.</text></para>
+                <para styleclass="Normal"><anchor id="EXTWC" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">An array of positive real values used to define the extinction water content below which ET cannot be removed from the unsaturated zone.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Note 8: EXTWC must have a value between (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="THTS" styleclass="Normal" translate="true">THTS</link><text styleclass="Normal" translate="true">-Sy) and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="THTS" styleclass="Normal" translate="true">THTS</link><text styleclass="Normal" translate="true">, where Sy is the specific yield specified in either the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" styleclass="Normal" translate="true">LPF</link><text styleclass="Normal" translate="true"> or </text><link displaytype="text" defaultstyle="true" type="topiclink" href="BCF" styleclass="Normal" translate="true">BCF</link><text styleclass="Normal" translate="true"> Package.</text></para>
               </td>
             </tr>

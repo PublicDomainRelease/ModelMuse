@@ -49,6 +49,7 @@ type
     FMt3dmsSourceSink: TMt3dmsSourceSinkMixing;
     FMt3dmsChemReaction: TMt3dmsChemReaction;
     FMt3dmsTransObs: TMt3dmsTransportObservations;
+    FPcgnPackage: TPcgnSelection;
     procedure SetChdBoundary(const Value: TChdPackage);
     procedure SetLpfPackage(const Value: TLpfSelection);
     procedure SetPcgPackage(const Value: TPcgSelection);
@@ -90,6 +91,7 @@ type
     procedure SetMt3dmsSourceSink(const Value: TMt3dmsSourceSinkMixing);
     procedure SetMt3dmsChemReaction(const Value: TMt3dmsChemReaction);
     procedure SetMt3dmsTransObs(const Value: TMt3dmsTransportObservations);
+    procedure SetPcgnPackage(const Value: TPcgnSelection);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Model: TBaseModel);
@@ -104,6 +106,7 @@ type
     property GhbBoundary: TGhbPackage read FGhbBoundary write SetGhbBoundary;
     property LpfPackage: TLpfSelection read FLpfPackage write SetLpfPackage;
     property PcgPackage: TPcgSelection read FPcgPackage write SetPcgPackage;
+    property PcgnPackage: TPcgnSelection read FPcgnPackage write SetPcgnPackage;
     property WelPackage: TWellPackage read FWelPackage write SetWelPackage;
     property RivPackage: TRivPackage read FRivPackage write SetRivPackage;
     property DrnPackage: TDrnPackage read FDrnPackage write SetDrnPackage;
@@ -254,6 +257,7 @@ begin
     ChdBoundary := SourcePackages.ChdBoundary;
     LpfPackage := SourcePackages.LpfPackage;
     PcgPackage := SourcePackages.PcgPackage;
+    PcgnPackage := SourcePackages.PcgnPackage;
     GhbBoundary := SourcePackages.GhbBoundary;
     WelPackage := SourcePackages.WelPackage;
     RivPackage := SourcePackages.RivPackage;
@@ -323,6 +327,12 @@ begin
     StrPCGPreconditioned;
   FPcgPackage.Classification := StrSolver;
   FPcgPackage.SelectionType := stRadioButton;
+
+  FPcgnPackage := TPcgnSelection.Create(Model);
+  FPcgnPackage.PackageIdentifier :=
+    'PCGN: Preconditioned Conjugate Gradient Solver with Improved Nonlinear Control';
+  FPcgnPackage.Classification := StrSolver;
+  FPcgnPackage.SelectionType := stRadioButton;
 
   FGhbBoundary := TGhbPackage.Create(Model);
   FGhbBoundary.PackageIdentifier := StrGHBGeneralHeadBo;
@@ -538,6 +548,7 @@ begin
   FChdBoundary.Free;
   FHufPackage.Free;
   FLpfPackage.Free;
+  FPcgnPackage.Free;
   FPcgPackage.Free;
   FModPath.Free;
   FMnw2Package.Free;
@@ -554,6 +565,7 @@ begin
   GhbBoundary.InitializeVariables;
   LpfPackage.InitializeVariables;
   PcgPackage.InitializeVariables;
+  PcgnPackage.InitializeVariables;
   RchPackage.InitializeVariables;
   EvtPackage.InitializeVariables;
   EtsPackage.InitializeVariables;
@@ -604,6 +616,10 @@ begin
     Inc(Result);
   end;
   if PcgPackage.IsSelected then
+  begin
+    Inc(Result);
+  end;
+  if PcgnPackage.IsSelected then
   begin
     Inc(Result);
   end;
@@ -898,6 +914,11 @@ end;
 procedure TModflowPackages.SetNwtPackage(const Value: TNwtPackageSelection);
 begin
   FNwtPackage.Assign(Value);
+end;
+
+procedure TModflowPackages.SetPcgnPackage(const Value: TPcgnSelection);
+begin
+  FPcgnPackage.Assign(Value);
 end;
 
 procedure TModflowPackages.SetPcgPackage(const Value: TPcgSelection);

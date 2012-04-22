@@ -9,7 +9,6 @@ uses
 
 type
   TframePCG = class(TframePackage)
-    gpPCG: TGridPanel;
     lblPCGMaxOuter: TLabel;
     rdePCGMaxOuter: TRbwDataEntry;
     lblPCGMaxInner: TLabel;
@@ -32,6 +31,9 @@ type
     rdePCGDamp: TRbwDataEntry;
     lblPCGDampPcgT: TLabel;
     rdePCGDampPcgT: TRbwDataEntry;
+    gbIHCOFADD: TGroupBox;
+    rbIHCOFADD_0: TRadioButton;
+    rbIHCOFADD_1: TRadioButton;
     procedure comboPCGPrecondMethChange(Sender: TObject);
   private
     procedure EnableNpbol;
@@ -90,6 +92,11 @@ begin
   comboPCGPrint.ItemIndex := Ord(SourcePkg.MUTPCG);
   rdePCGDamp.Text := FloatToStr(SourcePkg.DAMPPCG.Value);
   rdePCGDampPcgT.Text := FloatToStr(SourcePkg.DAMPPCGT.Value);
+  case SourcePkg.IHCOFADD of
+    dcoConvertWhenSurrounded: rbIHCOFADD_0.Checked := True;
+    dcoConvertWhenNoFlow: rbIHCOFADD_1.Checked := True;
+    else Assert(False);
+  end;
   EnableNpbol;
   EnableRelax;
 end;
@@ -136,6 +143,16 @@ begin
   if TryStrToFloat(rdePCGDampPcgT.Text, FloatValue) then
   begin
      SourcePkg.DAMPPCGT.Value := FloatValue;
+  end;
+  if rbIHCOFADD_0.Checked then
+  begin
+    SourcePkg.IHCOFADD := dcoConvertWhenSurrounded;
+    Assert(not rbIHCOFADD_1.Checked);
+  end
+  else
+  begin
+    SourcePkg.IHCOFADD := dcoConvertWhenNoFlow;
+    Assert(rbIHCOFADD_1.Checked);
   end;
 end;
 

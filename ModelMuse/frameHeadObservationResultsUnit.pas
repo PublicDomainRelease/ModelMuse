@@ -129,6 +129,14 @@ resourcestring
   + 'than the imported results. Do you want to import them?';
   StrChangeHeadResultP = 'change head result parameters';
   StrImportHeadResults = 'import head results';
+  StrObservationName = 'Observation Name';
+  StrX = 'X';
+  StrY = 'Y';
+  StrTime = 'Time';
+  StrObservedValue = 'Observed Value';
+  StrSimulatedValue = 'Simulated Value';
+  StrResidual = 'Residual';
+  StrObjectName = 'Object Name';
 
 
 type
@@ -601,14 +609,14 @@ begin
 
   rdgHeadObs.BeginUpdate;
   try
-    rdgHeadObs.Cells[Ord(ocName),0] := 'Observation Name';
-    rdgHeadObs.Cells[Ord(ocX),0] := 'X';
-    rdgHeadObs.Cells[Ord(ocY),0] := 'Y';
-    rdgHeadObs.Cells[Ord(ocTime),0] := 'Time';
-    rdgHeadObs.Cells[Ord(ocObserved),0] := 'Observed Value';
-    rdgHeadObs.Cells[Ord(ocSimulated),0] := 'Simulated Value';
-    rdgHeadObs.Cells[Ord(ocResidual),0] := 'Residual';
-    rdgHeadObs.Cells[Ord(ocObjectName),0] := 'Object Name';
+    rdgHeadObs.Cells[Ord(ocName),0] := StrObservationName;
+    rdgHeadObs.Cells[Ord(ocX),0] := StrX;
+    rdgHeadObs.Cells[Ord(ocY),0] := StrY;
+    rdgHeadObs.Cells[Ord(ocTime),0] := StrTime;
+    rdgHeadObs.Cells[Ord(ocObserved),0] := StrObservedValue;
+    rdgHeadObs.Cells[Ord(ocSimulated),0] := StrSimulatedValue;
+    rdgHeadObs.Cells[Ord(ocResidual),0] := StrResidual;
+    rdgHeadObs.Cells[Ord(ocObjectName),0] := StrObjectName;
   finally
     rdgHeadObs.EndUpdate;
   end;

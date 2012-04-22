@@ -5,9 +5,12 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frameScreenObjectNoParamUnit, Grids, RbwDataGrid4, StdCtrls,
-  ArgusDataEntry, Buttons, Mask, JvExMask, JvSpin, ExtCtrls;
+  ArgusDataEntry, Buttons, Mask, JvExMask, JvSpin, ExtCtrls, ComCtrls,
+  JvToolEdit;
 
 type
+  TBathColumn = (bcStage, bcVolume, bcSurfaceArea);
+
   TframeScreenObjectLAK = class(TframeScreenObjectNoParam)
     lblInitialStage: TLabel;
     rdeInitialStage: TRbwDataEntry;
@@ -22,11 +25,21 @@ type
     cbGagFluxAndCond: TCheckBox;
     cbGagDelta: TCheckBox;
     cbGage4: TCheckBox;
+    pcLake: TPageControl;
+    tabLakeProperties: TTabSheet;
+    tabBathymetry: TTabSheet;
+    rdgLakeTable: TRbwDataGrid4;
+    pnlBathChoice: TPanel;
+    rgBathChoice: TRadioGroup;
+    feLakeBathymetry: TJvFilenameEdit;
     procedure rdeCenterLakeChange(Sender: TObject);
     procedure cbGagStandardClick(Sender: TObject);
     procedure cbGagFluxAndCondClick(Sender: TObject);
     procedure cbGagDeltaClick(Sender: TObject);
     procedure cbGage4Click(Sender: TObject);
+    procedure rgBathChoiceClick(Sender: TObject);
+  protected
+    procedure Loaded; override;
   private
     { Private declarations }
   public
@@ -36,6 +49,11 @@ type
 implementation
 
 {$R *.dfm}
+
+resourcestring
+  StrStage = 'Stage';
+  StrVolume = 'Volume';
+  StrSurfaceArea = 'Surface Area';
 
 procedure TframeScreenObjectLAK.cbGagDeltaClick(Sender: TObject);
 begin
@@ -63,6 +81,22 @@ begin
   cbGagDelta.Enabled := cbGagStandard.State <> cbUnchecked;
 end;
 
+procedure TframeScreenObjectLAK.Loaded;
+begin
+  inherited;
+  if not (csDesigning in ComponentState) then
+  begin
+    pnlBottom.Parent := tabLakeProperties;
+    pnlGrid.Parent := tabLakeProperties;
+    pnlGrid.Align := alClient;
+    pcLake.ActivePageIndex := 0;
+    rdgLakeTable.Cells[Ord(bcStage), 0] := StrStage;
+    rdgLakeTable.Cells[Ord(bcVolume), 0] := StrVolume;
+    rdgLakeTable.Cells[Ord(bcSurfaceArea), 0] := StrSurfaceArea;
+  end;
+
+end;
+
 procedure TframeScreenObjectLAK.rdeCenterLakeChange(Sender: TObject);
 var
   CenterLakeID: integer;
@@ -79,6 +113,21 @@ begin
   else
   begin
     rdeSill.Enabled := False;
+  end;
+end;
+
+procedure TframeScreenObjectLAK.rgBathChoiceClick(Sender: TObject);
+begin
+  inherited;
+  feLakeBathymetry.Enabled := rgBathChoice.ItemIndex = 1;
+  rdgLakeTable.Enabled := rgBathChoice.ItemIndex = 0;
+  if rdgLakeTable.Enabled then
+  begin
+    rdgLakeTable.Color := clWindow;
+  end
+  else
+  begin
+    rdgLakeTable.Color := clBtnFace;
   end;
 end;
 

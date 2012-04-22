@@ -98,6 +98,12 @@ resourcestring
   StrTheEvapotranspirati = 'The Evapotranspiration Segments package is activ' +
   'e but no evapotranspiration segments have been defined for any stress per' +
   'iod.';
+  StrWritingETSPackage = 'Writing ETS Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
+  StrWritingDataSets4to11 = '  Writing Data Sets 4 to 11.';
+  StrWritingStressP = '    Writing Stress Period %d';
 
 function TModflowETS_Writer.CellType: TValueCellType;
 begin
@@ -538,7 +544,6 @@ begin
   end;
   FEtsPackage.MultiplierArrayNames.Clear;
   FEtsPackage.ZoneArrayNames.Clear;
-//  frmProgress.AddMessage('Evaluating ETS Package data.');
   FNameOfFile := FileName(AFileName);
   WriteToNameFile(StrETS, Model.UnitNumbers.UnitNumber(StrETS),
     FNameOfFile, foInput);
@@ -551,8 +556,8 @@ begin
   ClearTimeLists(Model);
   OpenFile(FileName(AFileName));
   try
-    frmProgressMM.AddMessage('Writing ETS Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingETSPackage);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -560,7 +565,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -568,7 +573,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 2 and 3.');
+    frmProgressMM.AddMessage(StrWritingDataSets2and3);
     WriteDataSets2And3;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -576,7 +581,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 4 to 11.');
+    frmProgressMM.AddMessage(StrWritingDataSets4to11);
     WriteDataSets4To11;
   finally
     CloseFile;
@@ -705,8 +710,7 @@ begin
       begin
         Exit;
       end;
-      frmProgressMM.AddMessage('    Writing Stress Period '
-        + IntToStr(TimeIndex+1));
+      frmProgressMM.AddMessage(Format(StrWritingStressP, [TimeIndex+1]));
       ParametersUsed := TStringList.Create;
       try
         RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,

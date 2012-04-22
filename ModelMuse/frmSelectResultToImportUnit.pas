@@ -234,7 +234,7 @@ uses Math, frmGoPhastUnit, RbwParser,
 
 resourcestring
   StrHead = 'Head';
-  StrTheFileCouldNotB = 'The file could not be read.';
+  StrTheFileCouldNotB = 'The file could not be read.' + sLineBreak + '"%s"';
   StrImportModelResults = 'import model results';
   StrTheNumberOfRowsOrColumns = 'The number of rows or columns in the data s' +
   'et doesn''t match the number of rows or columns in the grid.';
@@ -246,13 +246,72 @@ resourcestring
   StrTheNumberOfHydrogeologic = 'The number of rows, columns, or hydrogeolog' +
   'ic units in the data set doesn''t match the number of rows, columns, or h' +
   'ydrogeologic units in the grid.';
+  StrReadFrom0sOn = 'read from: "%0:s" on %1:s'
+    + sLineBreak + 'Stress Period: %2:d'
+    + sLineBreak + 'Time Step: %3:d'
+    + sLineBreak + 'Elapsed Time: %4:g';
+  StrLayer = 'Layer: ';
+  StrSystem = 'System: ';
+  StrChildLayer = 'Child Layer: ';
+  StrChildSystem = 'Child System: ';
+  StrAtLeastOneOfThe = 'At least one of the result files does not exist.';
+  StrTheFileYouAreTry = 'The file you are trying to read appears to have mor' +
+  'e simulated layers than does your model. Aborting data import.';
+  StrMinimumValueG = 'Minimum value: %g';
+  StrMaximumValueG = 'Maximum value: %g';
+  StrModel = 'Model';
+  StrImportData = 'Import Data';
+  StrFileName = 'FileName';
+  StrFormattedHeadFiles = 'Formatted head files';
+  StrFormattedDrawdownF = 'Formatted drawdown files';
+  StrBinaryHeadFiles = 'Binary head files';
+  StrBinaryDrawdownFile = 'Binary drawdown files';
+  StrBinaryFlowFiles = 'Binary flow files';
+  StrFormattedHUFHeadF = 'Formatted HUF head files';
+  StrBinaryHUFHeadFile = 'Binary HUF head files';
+  StrHUFFlowFiles = 'HUF flow files';
+  StrMT3DMSConcentration = 'MT3DMS Concentration file';
+  StrCombinedSUBOutput = 'Combined SUB output file';
+  StrCombinedSWTOutput = 'Combined SWT output file';
+  StrSUBSubsidence = 'SUB Subsidence';
+  StrSUBCompactionByMo = 'SUB Compaction by model layer';
+  StrSUBCompactionByIn = 'SUB Compaction by interbed system';
+  StrSUBVerticalDisplac = 'SUB Vertical displacement';
+  StrSUBCriticalHeadFo = 'SUB Critical head for no-delay interbeds';
+  StrSUBCriticalHeadFoDelay = 'SUB Critical head for delay interbeds';
+  StrSWTSubsidence = 'SWT Subsidence';
+  StrSWTCompactionByMo = 'SWT Compaction by model layer';
+  StrSWTCompactionByIn = 'SWT Compaction by interbed system';
+  StrSWTVerticalDisplac = 'SWT Vertical displacement';
+  StrSWTPreconsolidation = 'SWT Preconsolidation stress';
+  StrSWTChangeInPrecon = 'SWT Change in preconsolidation stress';
+  StrSWTGeostaticStress = 'SWT Geostatic stress';
+  StrSWTChangeInGeosta = 'SWT Change in geostatic stress';
+  StrSWTEffectiveStress = 'SWT Effective stress';
+  StrSWTChangeInEffect = 'SWT Change in effective stress';
+  StrSWTVoidRatio = 'SWT Void ratio';
+  StrSWTThicknessOfCom = 'SWT Thickness of compressible sediments';
+  StrSWTLayercenterEle = 'SWT Layer-center elevation';
+  StrCommonSupportedFil = 'Common supported file types|*';
+  StrSubsidenceFiles = '|Subsidence files|*';
+  Str0s1sPeriod2 = '%0:s%1:s: Period: %2:d; Step: %3:d';
+  Str0sTransportStep = '%0:s; Transport Step: %1:d';
+  Str0sTotalTime1 = '%0:s; Total Time: %1:g';
+  StrSDoesNotExist = '%s does not exist.';
+  StrSIsEmpty = '%s is empty.';
+  StrErrorReadingS = 'Error reading %s.';
+  StrWaterTable = 'Water Table';
+  StrObject = '_Object';
+  StrTheFileTypeMustB = 'The file type must be one of the file types recogni' +
+  'zed by ModelMuse. The recognized file types are displayed in the "files o' +
+  'f type" combo box in the "Open File" dialog box.';
 
 const
   StrModelResults = 'Model Results';
   StrLayerData = StrModelResults + '|Layer Data';
   StrThreeDData = StrModelResults + '|3D Data';
-  StrSystem = StrModelResults + '|System';
-  StrWaterTable = StrModelResults + '|Water Table';
+  KSystem = StrModelResults + '|System';
+  KWaterTable = StrModelResults + '|Water Table';
 
 {$R *.dfm}
 
@@ -286,7 +345,7 @@ procedure TfrmSelectResultToImport.CreateOrRetrieveLayerDataSet(
   AModel: TCustomModel; DataArrayForm: TDataArrayForm = dafLayer);
 var
   NewName: string;
-  Grid: TModflowGrid;
+//  Grid: TModflowGrid;
   CreateNewDataSet: boolean;
   Index: Integer;
   ScreenObject: TScreenObject;
@@ -352,30 +411,33 @@ begin
       FortranFloatToStr(AModel.ModflowOptions.HNoFlow);
     LayerData.TwoInterpolatorClass := TLinearSfrpackInterpolator.ClassName;
 
-    Grid := frmGoPhast.PhastModel.ModflowGrid;
-    LayerData.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-      Grid.ColumnCount);
+//    Grid := frmGoPhast.PhastModel.ModflowGrid;
+    frmGoPhast.PhastModel.UpdateDataArrayDimensions(LayerData);
+//    LayerData.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+//      Grid.ColumnCount);
     LayerData.EvaluatedAt := eaBlocks;
     case DataArrayForm of
       dafLayer: LayerData.Classification := StrLayerData;
-      dafSystem: LayerData.Classification := StrSystem;
+      dafSystem: LayerData.Classification := KSystem;
       dafSubsidence: LayerData.Classification := StrLayerData;
-      dafWaterTable: LayerData.Classification := StrWaterTable;
+      dafWaterTable: LayerData.Classification := KWaterTable;
     end;
 
     LayerData.OnDataSetUsed := frmGoPhast.PhastModel.ModelResultsRequired;
     frmGoPhast.PhastModel.CreateVariables(LayerData);
     LayerData := AModel.DataArrayManager.GetDataSetByName(NewName);
-    Grid := AModel.ModflowGrid;
-    LayerData.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-      Grid.ColumnCount);
+//    Grid := AModel.ModflowGrid;
+    frmGoPhast.PhastModel.UpdateDataArrayDimensions(LayerData);
+//    LayerData.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+//      Grid.ColumnCount);
   end
   else
   begin
     LayerData := AModel.DataArrayManager.GetDataSetByName(NewName);
-    Grid := AModel.ModflowGrid;
-    LayerData.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-      Grid.ColumnCount);
+//    Grid := AModel.ModflowGrid;
+    frmGoPhast.PhastModel.UpdateDataArrayDimensions(LayerData);
+//    LayerData.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+//      Grid.ColumnCount);
     for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
     begin
       ScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
@@ -400,11 +462,8 @@ begin
   OldComment := ParentLayerData.Comment;
   if LayerData = ParentLayerData then
   begin
-    ParentLayerData.Comment := 'read from: "' + FileNames
-      + '" on ' + DateTimeToStr(Now)
-      + sLineBreak + StrStressPeriodLabel + IntToStr(KPER)
-      + sLineBreak + StrTimeStepLabel + IntToStr(KSTP)
-      + sLineBreak + StrElapsedTimeLabel + FloatToStr(TOTIM);
+    ParentLayerData.Comment := Format(StrReadFrom0sOn,
+      [FileNames, DateTimeToStr(Now), KPER, KSTP, TOTIM]);
     if FResultFormat = mfMt3dConc then
     begin
       ParentLayerData.Comment := ParentLayerData.Comment
@@ -414,12 +473,12 @@ begin
       dafLayer:
         begin
           ParentLayerData.Comment := ParentLayerData.Comment
-            + sLineBreak + 'Layer: ' + IntToStr(ILAY);
+            + sLineBreak + StrLayer + IntToStr(ILAY);
         end;
       dafSystem:
         begin
           ParentLayerData.Comment := ParentLayerData.Comment
-            + sLineBreak + 'System: ' + IntToStr(ILAY);
+            + sLineBreak + StrSystem + IntToStr(ILAY);
         end;
       dafSubsidence, dafWaterTable:
         begin
@@ -433,11 +492,8 @@ begin
   begin
     if ParentLayerData.Comment = '' then
     begin
-      ParentLayerData.Comment := 'read from: "' + FileNames
-        + '" on ' + DateTimeToStr(Now)
-        + sLineBreak + StrStressPeriodLabel + IntToStr(KPER)
-        + sLineBreak + StrTimeStepLabel + IntToStr(KSTP)
-        + sLineBreak + StrElapsedTimeLabel + FloatToStr(TOTIM);
+      ParentLayerData.Comment := Format(StrReadFrom0sOn,
+        [FileNames, DateTimeToStr(Now), KPER, KSTP, TOTIM]);
       if FResultFormat = mfMt3dConc then
       begin
         ParentLayerData.Comment := ParentLayerData.Comment
@@ -448,12 +504,12 @@ begin
       dafLayer:
         begin
           ParentLayerData.Comment := ParentLayerData.Comment
-            + sLineBreak + 'Child Layer: ' + IntToStr(ILAY);
+            + sLineBreak + StrChildLayer + IntToStr(ILAY);
         end;
       dafSystem:
         begin
           ParentLayerData.Comment := ParentLayerData.Comment
-            + sLineBreak + 'Child System: ' + IntToStr(ILAY);
+            + sLineBreak + StrChildSystem + IntToStr(ILAY);
         end;
       dafSubsidence, dafWaterTable:
         begin
@@ -612,7 +668,7 @@ begin
     begin
       result := False;
       Beep;
-      MessageDlg(Format(StrTheFileCouldNotB + #13#10 + '"%s"',
+      MessageDlg(Format(StrTheFileCouldNotB,
         [E.message]), mtError, [mbOK], 0);
     end;
   end;
@@ -938,25 +994,28 @@ begin
     AModel.AddDataSet(New3DArray);
     New3DArray.DataType := rdtDouble;
     New3DArray.Orientation := dso3D;
-    Grid := frmGoPhast.PhastModel.ModflowGrid;
-    New3DArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-      Grid.ColumnCount);
+//    Grid := frmGoPhast.PhastModel.ModflowGrid;
+    frmGoPhast.PhastModel.UpdateDataArrayDimensions(New3DArray);
+//    New3DArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+//      Grid.ColumnCount);
     New3DArray.EvaluatedAt := eaBlocks;
     New3DArray.Classification := StrThreeDData;
     New3DArray.OnDataSetUsed := AModel.ModelResultsRequired;
     AModel.CreateVariables(New3DArray);
     New3DArray := AModel.DataArrayManager.GetDataSetByName(NewName);
     Grid := AModel.ModflowGrid;
-    New3DArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-      Grid.ColumnCount);
+    frmGoPhast.PhastModel.UpdateDataArrayDimensions(New3DArray);
+//    New3DArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+//      Grid.ColumnCount);
   end
   else
   begin
     New3DArray := AModel.DataArrayManager.GetDataSetByName(NewName);
     New3DArray.Orientation := dso3D;
     Grid := AModel.ModflowGrid;
-    New3DArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-      Grid.ColumnCount);
+    frmGoPhast.PhastModel.UpdateDataArrayDimensions(New3DArray);
+//    New3DArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+//      Grid.ColumnCount);
   end;
   AdjustTotalTime(TOTIM);
   if New3DArray.Model = frmGoPhast.PhastModel then
@@ -971,16 +1030,13 @@ begin
   OldComment := Parent3DArray.Comment;
   if (Parent3DArray = New3DArray) or (Parent3DArray.Comment = '') then
   begin
-    Parent3DArray.Comment := 'read from: "' + FileNames
-      + '" on ' + DateTimeToStr(Now)
-      + sLineBreak + StrStressPeriodLabel + IntToStr(KPER)
-      + sLineBreak + StrTimeStepLabel + IntToStr(KSTP)
-      + sLineBreak + StrElapsedTimeLabel + FloatToStr(TOTIM);
-      if FResultFormat = mfMt3dConc then
-      begin
-        Parent3DArray.Comment := Parent3DArray.Comment
-          + sLineBreak + StrTransportStep + IntToStr(NTRANS)
-      end;
+    Parent3DArray.Comment := Format(StrReadFrom0sOn,
+      [FileNames, DateTimeToStr(Now), KPER, KSTP, TOTIM]);
+    if FResultFormat = mfMt3dConc then
+    begin
+      Parent3DArray.Comment := Parent3DArray.Comment
+        + sLineBreak + StrTransportStep + IntToStr(NTRANS)
+    end;
   end;
   if Grid.LayerCount = 1 then
   begin
@@ -1051,8 +1107,7 @@ begin
       and not FileExists(rdgModels.Cells[Ord(mcFileName), RowIndex]) then
     begin
       Beep;
-      MessageDlg('At least one of the result files does not exist.',
-        mtError, [mbOK], 0);
+      MessageDlg(StrAtLeastOneOfThe, mtError, [mbOK], 0);
       ModalResult := mrNone;
       rdgModels.Row := RowIndex;
       rdgModels.Col := Ord(mcUse);
@@ -1375,9 +1430,7 @@ begin
                       if ILAY > FMaxLayer then
                       begin
                         Beep;
-                        MessageDlg('The file you are trying to read appears to have '
-                          + 'more simulated layers than does your model. '
-                          + 'Aborting data import.', mtError, [mbOK], 0);
+                        MessageDlg(StrTheFileYouAreTry, mtError, [mbOK], 0);
                         Exit;
                       end;
                       // not a cross section
@@ -1615,10 +1668,10 @@ begin
     begin
       AParentArray := FModifiedParentDataSets[Index];
       AParentArray.Comment := AParentArray.Comment
-        + sLineBreak + 'Minimum value: '
-        + FloatToStr(AParentArray.Limits.LowerLimit.RealLimitValue)
-        + sLineBreak + 'Maximum value: '
-        + FloatToStr(AParentArray.Limits.UpperLimit.RealLimitValue);
+        + sLineBreak + Format(StrMinimumValueG,
+        [AParentArray.Limits.LowerLimit.RealLimitValue])
+        + sLineBreak + Format(StrMaximumValueG,
+        [AParentArray.Limits.UpperLimit.RealLimitValue]);
     end;
     FFormulaAssigners.AssignFinalFormulas;
     UndoImportResults := TUndoImportModelResults.Create(NewDataSets,
@@ -1706,9 +1759,9 @@ begin
   FModifiedParentDataSets:= TList.Create;
   FFormulaAssigners := TFormulaAssignerList.Create;
 
-  rdgModels.Cells[Ord(mcModelName), 0] := 'Model';
-  rdgModels.Cells[Ord(mcUse), 0] := 'Import Data';
-  rdgModels.Cells[Ord(mcFileName), 0] := 'FileName';
+  rdgModels.Cells[Ord(mcModelName), 0] := StrModel;
+  rdgModels.Cells[Ord(mcUse), 0] := StrImportData;
+  rdgModels.Cells[Ord(mcFileName), 0] := StrFileName;
 
   FNewDataSetNames:= TStringList.Create;
   FNewDefaultDataSetNames:= TStringList.Create;
@@ -1726,104 +1779,104 @@ begin
   SubsidenceDescriptions := TStringList.Create;
   SubsidenceExtensions := TStringList.Create;
   try
-    FilterDescriptions.Add('Formatted head files');
+    FilterDescriptions.Add(StrFormattedHeadFiles);
     FileExtensions.Add(StrFhd);
 
-    FilterDescriptions.Add('Formatted drawdown files');
+    FilterDescriptions.Add(StrFormattedDrawdownF);
     FileExtensions.Add(StrFdn);
 
-    FilterDescriptions.Add('Binary head files');
+    FilterDescriptions.Add(StrBinaryHeadFiles);
     FileExtensions.Add(StrBhd);
 
-    FilterDescriptions.Add('Binary drawdown files');
+    FilterDescriptions.Add(StrBinaryDrawdownFile);
     FileExtensions.Add(StrBdn);
 
-    FilterDescriptions.Add('Binary flow files');
+    FilterDescriptions.Add(StrBinaryFlowFiles);
     FileExtensions.Add(StrCbcExt);
 
-    FilterDescriptions.Add('Formatted HUF head files');
+    FilterDescriptions.Add(StrFormattedHUFHeadF);
     FileExtensions.Add(StrHuffhd);
 
-    FilterDescriptions.Add('Binary HUF head files');
+    FilterDescriptions.Add(StrBinaryHUFHeadFile);
     FileExtensions.Add(StrHufbhd);
 
-    FilterDescriptions.Add('HUF flow files');
+    FilterDescriptions.Add(StrHUFFlowFiles);
     FileExtensions.Add(StrHufflow);
 
-    FilterDescriptions.Add('MT3DMS Concentration file');
+    FilterDescriptions.Add(StrMT3DMSConcentration);
     FileExtensions.Add(StrMt3dConcFile);
 
-    SubsidenceDescriptions.Add('Combined SUB output file');
+    SubsidenceDescriptions.Add(StrCombinedSUBOutput);
     SubsidenceExtensions.Add(StrSubOut);
 
-    SubsidenceDescriptions.Add('Combined SWT output file');
+    SubsidenceDescriptions.Add(StrCombinedSWTOutput);
     SubsidenceExtensions.Add(StrSwtOut);
 
-    SubsidenceDescriptions.Add('SUB Subsidence');
+    SubsidenceDescriptions.Add(StrSUBSubsidence);
     SubsidenceExtensions.Add(StrSubSubOut);
 
-    SubsidenceDescriptions.Add('SUB Compaction by model layer');
+    SubsidenceDescriptions.Add(StrSUBCompactionByMo);
     SubsidenceExtensions.Add(StrSubComMlOut);
 
-    SubsidenceDescriptions.Add('SUB Compaction by interbed system');
+    SubsidenceDescriptions.Add(StrSUBCompactionByIn);
     SubsidenceExtensions.Add(StrSubComIsOut);
 
-    SubsidenceDescriptions.Add('SUB Vertical displacement');
+    SubsidenceDescriptions.Add(StrSUBVerticalDisplac);
     SubsidenceExtensions.Add(StrSubVdOut);
 
-    SubsidenceDescriptions.Add('SUB Critical head for no-delay interbeds');
+    SubsidenceDescriptions.Add(StrSUBCriticalHeadFo);
     SubsidenceExtensions.Add(StrSubNdCritHeadOut);
 
-    SubsidenceDescriptions.Add('SUB Critical head for delay interbeds');
+    SubsidenceDescriptions.Add(StrSUBCriticalHeadFoDelay);
     SubsidenceExtensions.Add(StrSubDCritHeadOut);
 
-    SubsidenceDescriptions.Add('SWT Subsidence');
+    SubsidenceDescriptions.Add(StrSWTSubsidence);
     SubsidenceExtensions.Add(StrSwtSubOut);
 
-    SubsidenceDescriptions.Add('SWT Compaction by model layer');
+    SubsidenceDescriptions.Add(StrSWTCompactionByMo);
     SubsidenceExtensions.Add(StrSwtComMLOut);
 
-    SubsidenceDescriptions.Add('SWT Compaction by interbed system');
+    SubsidenceDescriptions.Add(StrSWTCompactionByIn);
     SubsidenceExtensions.Add(StrSwtComIsOut);
 
-    SubsidenceDescriptions.Add('SWT Vertical displacement');
+    SubsidenceDescriptions.Add(StrSWTVerticalDisplac);
     SubsidenceExtensions.Add(StrSwtVDOut);
 
-    SubsidenceDescriptions.Add('SWT Preconsolidation stress');
+    SubsidenceDescriptions.Add(StrSWTPreconsolidation);
     SubsidenceExtensions.Add(StrSwtDeltaPreConStrOu);
 
-    SubsidenceDescriptions.Add('SWT Change in preconsolidation stress');
+    SubsidenceDescriptions.Add(StrSWTChangeInPrecon);
     SubsidenceExtensions.Add(StrSwtDeltaPreConStrOu);
 
-    SubsidenceDescriptions.Add('SWT Geostatic stress');
+    SubsidenceDescriptions.Add(StrSWTGeostaticStress);
     SubsidenceExtensions.Add(StrSwtGeoStatOut);
 
-    SubsidenceDescriptions.Add('SWT Change in geostatic stress');
+    SubsidenceDescriptions.Add(StrSWTChangeInGeosta);
     SubsidenceExtensions.Add(StrSwtDeltaGeoStatOut);
 
-    SubsidenceDescriptions.Add('SWT Effective stress');
+    SubsidenceDescriptions.Add(StrSWTEffectiveStress);
     SubsidenceExtensions.Add(StrSwtEffStressOut);
 
-    SubsidenceDescriptions.Add('SWT Change in effective stress');
+    SubsidenceDescriptions.Add(StrSWTChangeInEffect);
     SubsidenceExtensions.Add(StrSwtDeltaEffStressOu);
 
-    SubsidenceDescriptions.Add('SWT Void ratio');
+    SubsidenceDescriptions.Add(StrSWTVoidRatio);
     SubsidenceExtensions.Add(StrSwtVoidRatioOut);
 
-    SubsidenceDescriptions.Add('SWT Thickness of compressible sediments');
+    SubsidenceDescriptions.Add(StrSWTThicknessOfCom);
     SubsidenceExtensions.Add(StrSwtThickCompSedOut);
 
-    SubsidenceDescriptions.Add('SWT Layer-center elevation');
+    SubsidenceDescriptions.Add(StrSWTLayercenterEle);
     SubsidenceExtensions.Add(StrSwtLayerCentElevOut);
 
-    odSelectFiles.Filter := 'Common supported file types|*' + FileExtensions[0];
+    odSelectFiles.Filter := StrCommonSupportedFil + FileExtensions[0];
     for index := 1 to FileExtensions.Count - 1 do
     begin
       odSelectFiles.Filter := odSelectFiles.Filter
         + ';*' + FileExtensions[index];
     end;
 
-    odSelectFiles.Filter := odSelectFiles.Filter + '|Subsidence files|*' + SubsidenceExtensions[0];
+    odSelectFiles.Filter := odSelectFiles.Filter + StrSubsidenceFiles + SubsidenceExtensions[0];
     for index := 1 to SubsidenceExtensions.Count - 1 do
     begin
       odSelectFiles.Filter := odSelectFiles.Filter
@@ -1852,75 +1905,6 @@ begin
     SubsidenceExtensions.Free;
   end;
 
-  // The next time this is changed, it should be reorganized to read the
-  // file extensions and descriptions from an array and then
-  // construct the filter from that.
-
-{
-    odSelectFiles.Filter := 'All supported file types|*'
-      + StrBhd + ';*' + StrBdn
-      + ';*' + StrFhd
-      + ';*' + StrFdn
-      + ';*' + StrCbcExt
-      + ';*' + StrHuffhd
-      + ';*' + StrHufbhd
-      + ';*' + StrHufflow
-      + ';*' + StrSubOut
-      + ';*' + StrSwtOut
-      + ';*' + StrSubSubOut
-      + ';*' + StrSubComMlOut
-      + ';*' + StrSubComIsOut
-      + ';*' + StrSubVdOut
-      + ';*' + StrSubNdCritHeadOut
-      + ';*' + StrSubDCritHeadOut
-      + ';*' + StrSwtSubOut
-      + ';*' + StrSwtComMLOut
-      + ';*' + StrSwtComIsOut
-      + ';*' + StrSwtVDOut
-      + ';*' + StrSwtPreConStrOut
-      + ';*' + StrSwtDeltaPreConStrOu
-      + ';*' + StrSwtGeoStatOut
-      + ';*' + StrSwtDeltaGeoStatOut
-      + ';*' + StrSwtEffStressOut
-      + ';*' + StrSwtDeltaEffStressOu
-      + ';*' + StrSwtVoidRatioOut
-      + ';*' + StrSwtThickCompSedOut
-      + ';*' + StrSwtLayerCentElevOut
-      + ';*' + StrMt3dConcFile
-
-    + '|'
-
-    + 'Formatted head files (*' + StrFhd + ')|*' + StrFhd + '|'
-    + 'Formatted drawdown files (*' + StrFdn + ')|*' + StrFdn + '|'
-    + 'Binary head files (*' + StrBhd + ')|*' + StrBhd + '|'
-    + 'Binary drawdown files (*' + StrBdn + ')|*' + StrBdn + '|'
-    + 'Binary flow files (*' + StrCbcExt + ')|*' + StrCbcExt + '|'
-    + 'Formatted HUF head files (*' + StrHuffhd + ')|*' + StrHuffhd + '|'
-    + 'Binary HUF head files (*' + StrHufbhd + ')|*' + StrHufbhd + '|'
-    + 'HUF flow files (*' + StrHufflow + ')|*' + StrHufflow + '|'
-    + 'Combined SUB output file (*' + StrSubOut + ')|*' + StrSubOut + '|'
-    + 'Combined SWT output file (*' + StrSwtOut + ')|*' + StrSwtOut + '|'
-    + 'SUB Subsidence (*' + StrSubSubOut + ')|*' + StrSubSubOut + '|'
-    + 'SUB Compaction by model layer (*' + StrSubComMlOut + ')|*' + StrSubComMlOut + '|'
-    + 'SUB Compaction by interbed system (*' + StrSubComIsOut + ')|*' + StrSubComIsOut + '|'
-    + 'SUB Vertical displacement (*' + StrSubVdOut + ')|*' + StrSubVdOut + '|'
-    + 'SUB Critical head for no-delay interbeds (*' + StrSubNdCritHeadOut + ')|*' + StrSubNdCritHeadOut + '|'
-    + 'SUB Critical head for delay interbeds (*' + StrSubDCritHeadOut + ')|*' + StrSubDCritHeadOut + '|'
-    + 'SWT Subsidence (*' + StrSwtSubOut + ')|*' + StrSwtSubOut + '|'
-    + 'SWT Compaction by model layer (*' + StrSwtComMLOut + ')|*' + StrSwtComMLOut + '|'
-    + 'SWT Compaction by interbed system (*' + StrSwtComIsOut + ')|*' + StrSwtComIsOut + '|'
-    + 'SWT Vertical displacement (*' + StrSwtVDOut + ')|*' + StrSwtVDOut + '|'
-    + 'SWT Preconsolidation stress (*' + StrSwtPreConStrOut + ')|*' + StrSwtPreConStrOut + '|'
-    + 'SWT Change in preconsolidation stress (*' + StrSwtDeltaPreConStrOu + ')|*' + StrSwtDeltaPreConStrOu + '|'
-    + 'SWT Geostatic stress (*' + StrSwtGeoStatOut + ')|*' + StrSwtGeoStatOut + '|'
-    + 'SWT Change in geostatic stress (*' + StrSwtDeltaGeoStatOut + ')|*' + StrSwtDeltaGeoStatOut + '|'
-    + 'SWT Effective stress (*' + StrSwtEffStressOut + ')|*' + StrSwtEffStressOut + '|'
-    + 'SWT Change in effective stress (*' + StrSwtDeltaEffStressOu + ')|*' + StrSwtDeltaEffStressOu + '|'
-    + 'SWT Void ratio (*' + StrSwtVoidRatioOut + ')|*' + StrSwtVoidRatioOut + '|'
-    + 'SWT Thickness of compressible sediments (*' + StrSwtThickCompSedOut + ')|*' + StrSwtThickCompSedOut + '|'
-    + 'SWT Layer-center elevation (*' + StrSwtLayerCentElevOut + ')|*' + StrSwtLayerCentElevOut + '|'
-    + 'MT3DMS Concentration file (*' + StrMt3dConcFile + ')|*' + StrMt3dConcFile
-    }
 end;
 
 procedure TfrmSelectResultToImport.FormDestroy(Sender: TObject);
@@ -1937,8 +1921,6 @@ begin
 end;
 
 procedure TfrmSelectResultToImport.odSelectFilesTypeChange(Sender: TObject);
-//const
-//  CB_FILENAME_ID = 1148;
 var
   Dialog: TOpenDialog;
   NewFileName: string;
@@ -2042,15 +2024,15 @@ var
       HufName := '';
     end;
 
-    result := Description + HufName + ': Period: ' + IntToStr(KPER)
-      + '; Step: ' + IntToStr(KSTP);
+    result := Format(Str0s1sPeriod2,
+      [Description, HufName, KPER, KSTP]);
     if FResultFormat = mfMt3dConc then
     begin
-      result := result + '; Transport Step: ' + IntToStr(NTRANS);
+      result := Format(Str0sTransportStep, [result, NTRANS]);
     end;
     if TOTIM >= 0 then
     begin
-      result := result + '; Total Time: ' + FloatToStr(TOTIM);
+      result := Format(Str0sTotalTime1, [result, TOTIM]);
     end;
   end;
   procedure RecordItem(Description: String);
@@ -2073,7 +2055,7 @@ begin
       begin
         result := False;
         Beep;
-        MessageDlg(AFileName + ' does not exist.', mtError, [mbOK], 0);
+        MessageDlg(Format(StrSDoesNotExist, [AFileName]), mtError, [mbOK], 0);
         Exit;
       end;
 
@@ -2083,7 +2065,7 @@ begin
         begin
           result := False;
           Beep;
-          MessageDlg(AFileName + ' is empty.', mtError, [mbOK], 0);
+          MessageDlg(Format(StrSIsEmpty, [AFileName]), mtError, [mbOK], 0);
           Exit;
         end;
       finally
@@ -2102,7 +2084,7 @@ begin
         begin
           result := False;
           Beep;
-          MessageDlg('Error reading ' + AFileName + '.', mtError, [mbOK], 0);
+          MessageDlg(Format(StrErrorReadingS, [AFileName]), mtError, [mbOK], 0);
           Exit;
         end;
       end;
@@ -2114,11 +2096,11 @@ begin
             begin
               case Precision of
                 mpSingle:
-                  ReadSinglePrecisionMt3dmsBinaryRealArray(FFileStream, NTRANS, KSTP, KPER,
-                    TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
+                  ReadSinglePrecisionMt3dmsBinaryRealArray(FFileStream, NTRANS,
+                    KSTP, KPER, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
                 mpDouble:
-                  ReadDoublePrecisionMt3dmsBinaryRealArray(FFileStream, NTRANS, KSTP, KPER,
-                    TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
+                  ReadDoublePrecisionMt3dmsBinaryRealArray(FFileStream, NTRANS,
+                    KSTP, KPER, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
                 else Assert(False);
               end;
               RecordItem(string(DESC));
@@ -2139,11 +2121,11 @@ begin
             begin
               case Precision of
                 mpSingle:
-                  ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
-                    PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
+                  ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP,
+                    KPER, PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
                 mpDouble:
-                  ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
-                    PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
+                  ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP,
+                    KPER, PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
                 else Assert(False);
               end;
               RecordItem(string(DESC));
@@ -2394,7 +2376,7 @@ var
 begin
   if Description = StrHead then
   begin
-    CreateOrRetrieveLayerDataSet('Water Table', NTRANS, KSTP, KPER, -1, TOTIM,
+    CreateOrRetrieveLayerDataSet(StrWaterTable, NTRANS, KSTP, KPER, -1, TOTIM,
       WaterTableData, OldComment, NewDataSets, ScreenObjectsToDelete, FileNames,
       AModel, dafWaterTable);
     CreateScreenObject(-1, AModel, ScreenObject);
@@ -2550,7 +2532,7 @@ var
   Root: string;
   ExistingObjectCount: Integer;
 begin
-  Root := LayerData.Name + '_Object';
+  Root := LayerData.Name + StrObject;
   ExistingObjectCount := frmGoPhast.PhastModel.
     NumberOfLargestScreenObjectsStartingWith(Root);
   Inc(ExistingObjectCount);
@@ -2819,10 +2801,7 @@ begin
   begin
     result := False;
     Beep;
-    MessageDlg('The file type must be one of the file types recognized '
-      + 'by ModelMuse. The recognized file types are displayed in the '
-      + '"files of type" combo box in the "Open File" dialog box.',
-      mtError, [mbOK], 0);
+    MessageDlg(StrTheFileTypeMustB, mtError, [mbOK], 0);
     Exit;
   end;
 

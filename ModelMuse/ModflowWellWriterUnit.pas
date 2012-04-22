@@ -39,6 +39,14 @@ implementation
 
 uses ModflowUnitNumbers, frmErrorsAndWarningsUnit, frmProgressUnit, Forms;
 
+resourcestring
+  StrWritingWELPackage = 'Writing WEL Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+  StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
+
 { TModflowWEL_Writer }
 
 function TModflowWEL_Writer.CellType: TValueCellType;
@@ -56,60 +64,6 @@ function TModflowWEL_Writer.GetBoundary(
 begin
   result := ScreenObject.ModflowWellBoundary;
 end;
-
-{procedure TModflowWEL_Writer.ListEvaluate;
-var
-  ScreenObjectIndex: Integer;
-  ScreenObject: TScreenObject;
-  ParamIndex: Integer;
-  List: TList;
-  // ultimately convert Boundary to a TModflowBoundary
-  Boundary: TMfWellBoundary;
-  NoAssignmentErrorRoot: string;
-begin
-  NoAssignmentErrorRoot := 'No boundary conditions assigned to the '
-    + Package.PackageIdentifier
-    + ' because the object does not '
-    + 'set the values of either enclosed or intersected cells.';
-  frmProgress.AddMessage('Evaluating '
-    + Package.PackageIdentifier + ' data.');
-  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
-  begin
-    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
-    if ScreenObject.Deleted then
-    begin
-      Continue;
-    end;
-    Boundary := GetBoundary(ScreenObject) as TMfWellBoundary;
-    if Boundary <> nil then
-    begin
-      if not ScreenObject.SetValuesOfEnclosedCells
-        and not ScreenObject.SetValuesOfIntersectedCells then
-      begin
-        frmErrorsAndWarnings.AddError(NoAssignmentErrorRoot, ScreenObject.Name);
-      end;
-      frmProgress.AddMessage('  Evaluating '
-        + ScreenObject.Name);
-      Boundary.GetCellListValues(Values, ParamValues);
-    end;
-  end;
-  for ParamIndex := 0 to FParamValues.Count - 1 do
-  begin
-    List := FParamValues.Objects[ParamIndex] as TList;
-    While List.Count > Values.Count do
-    begin
-      Values.Add(TValueCellList.Create(CellType))
-    end;
-  end;
-  for ParamIndex := 0 to FParamValues.Count - 1 do
-  begin
-    List := FParamValues.Objects[ParamIndex] as TList;
-    While List.Count < Values.Count do
-    begin
-      List.Add(TValueCellList.Create(CellType))
-    end;
-  end;
-end;   }
 
 function TModflowWEL_Writer.Package: TModflowPackageSelection;
 begin
@@ -226,8 +180,8 @@ begin
   ClearTimeLists(Model);
   OpenFile(FileName(AFileName));
   try
-    frmProgressMM.AddMessage('Writing WEL Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingWELPackage);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -235,7 +189,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -243,7 +197,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -251,7 +205,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 3 and 4.');
+    frmProgressMM.AddMessage(StrWritingDataSets3and4);
     WriteDataSets3And4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -259,7 +213,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 5 to 7.');
+    frmProgressMM.AddMessage(StrWritingDataSets5to7);
     WriteDataSets5To7;
   finally
     CloseFile;

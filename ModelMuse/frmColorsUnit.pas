@@ -135,6 +135,9 @@ implementation
 
 uses frmGoPhastUnit;
 
+resourcestring
+  StrDoYouWantToApply = 'Do you want to apply the values you have specified?';
+
 {$R *.dfm}
 
 procedure TfrmColors.ApplyData;
@@ -235,8 +238,8 @@ end;
 procedure TfrmColors.FormHide(Sender: TObject);
 begin
   inherited;
-  if Modified and (MessageDlg('Do you want to apply the values '
-    + 'you have specified?', mtInformation, [mbYes, mbNo], 0) = mrYes) then
+  if Modified and (MessageDlg(StrDoYouWantToApply, mtInformation,
+    [mbYes, mbNo], 0) = mrYes) then
   begin
     ApplyData;
   end;

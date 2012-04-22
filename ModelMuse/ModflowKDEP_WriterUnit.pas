@@ -29,6 +29,15 @@ uses PhastModelUnit, OrderedCollectionUnit, ModflowUnitNumbers,
   frmProgressUnit, DataSetUnit, HufDefinition, frmErrorsAndWarningsUnit,
   ModflowParameterUnit, Forms;
 
+resourcestring
+  StrWritingKDEPFileIn = 'Writing KDEP file input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+  NoClusters = 'The following parameters in the HUF2 package are not used with '
+    + 'any hydrogeologic units.';
+
 { TModflowKDEP_Writer }
 
 class function TModflowKDEP_Writer.Extension: string;
@@ -78,9 +87,6 @@ begin
 end;
 
 procedure TModflowKDEP_Writer.WriteDataSets3and4;
-const
-  NoClusters = 'The following parameters in the HUF2 package are not used with '
-    + 'any hydrogeologic units.';
 var
   UsedParameters: TList;
   UsedHufUnits: TList;
@@ -211,8 +217,8 @@ begin
     FNameOfFile, foInput);
   OpenFile(FNameOfFile);
   try
-    frmProgressMM.AddMessage('Writing KDEP Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingKDEPFileIn);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -220,7 +226,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -228,7 +234,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -236,7 +242,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 3 and 4.');
+    frmProgressMM.AddMessage(StrWritingDataSets3and4);
     WriteDataSets3and4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then

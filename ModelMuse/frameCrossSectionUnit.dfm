@@ -16,6 +16,7 @@ object frameCrossSection: TframeCrossSection
     RowCount = 9
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
     TabOrder = 0
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
@@ -44,6 +45,7 @@ object frameCrossSection: TframeCrossSection
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -65,6 +67,7 @@ object frameCrossSection: TframeCrossSection
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
   end

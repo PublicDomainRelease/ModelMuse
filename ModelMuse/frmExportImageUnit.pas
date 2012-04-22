@@ -198,7 +198,20 @@ uses
   CompressedImageUnit, frameViewUnit, PhastModelUnit, frmGoToUnit,
   UndoItems, frmManageSettingsUnit,
   UndoItemsScreenObjects, ClassificationUnit, frmProgressUnit,
-  frmErrorsAndWarningsUnit, Clipbrd, RbwParser, frmDisplayDataUnit;
+  frmErrorsAndWarningsUnit, Clipbrd, RbwParser, frmDisplayDataUnit,
+  SutraMeshUnit;
+
+resourcestring
+  StrProgress = 'Progress';
+  StrSHasTheWrongTyp = '%s has the wrong type of data. Only data sets with r' +
+  'eal numbers can be contoured.';
+  StrDisplayingS = 'Displaying %s';
+  StrYouMustEnterANam = 'You must enter a name for these settings to save th' +
+  'em.  Type the name in the "Saved settings" box.';
+  StrDoYouWantToSave = 'Do you want to save the current image settings.';
+  StrTheSImageCanNot = 'The %s image can not be shown at this magnification.' +
+  ' When the magnification is reduced, it will be displayed again.';
+  StrDataSets = 'Data Sets';
 
 const
   StrSP = '%SP';
@@ -257,7 +270,8 @@ begin
   try
     for Index := 1 to rdgDataSets.RowCount - 1 do
     begin
-      DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rdgDataSets.Cells[1, Index]);
+      DataArray := frmGoPhast.PhastModel.DataArrayManager.
+        GetDataSetByName(rdgDataSets.Cells[1, Index]);
       if DataArray <> nil then
       begin
         DataSetList.Add(DataArray);
@@ -276,21 +290,21 @@ begin
     end;
 
     PriorDataArray := nil;
-    frmProgressMM.Caption := 'Progress';
+    frmProgressMM.Caption := StrProgress;
     frmProgressMM.Show;
     for Index := 0 to DataSetList.Count - 1 do
     begin
       CurrentTime := Now;
       DataArray := DataSetList[Index];
-      if (rgDisplayChoice.ItemIndex = 1) and (DataArray.DataType <> rdtDouble) then
+      if (rgDisplayChoice.ItemIndex = 1)
+        and (DataArray.DataType <> rdtDouble) then
       begin
         Beep;
-        MessageDlg(DataArray.Name +
-        ' has the wrong type of data. Only data sets with real numbers '
-        + 'can be contoured.', mtError, [mbOK], 0);
+        MessageDlg(Format(StrSHasTheWrongTyp, [DataArray.Name]),
+          mtError, [mbOK], 0);
         Exit;
       end;
-      frmProgressMM.Caption := 'Displaying ' + DataArray.Name;
+      frmProgressMM.Caption := Format(StrDisplayingS, [DataArray.Name]);
       Application.ProcessMessages;
       case rgDisplayChoice.ItemIndex of
         0:
@@ -506,9 +520,7 @@ begin
   if (comboSavedSettings.ItemIndex = 0) or (comboSavedSettings.Text = '') then
   begin
     Beep;
-    MessageDlg('You must enter a name for these settings to save them.  '
-    + 'Type the name in the "Saved settings" box.',
-      mtError, [mbOK], 0);
+    MessageDlg(StrYouMustEnterANam, mtError, [mbOK], 0);
   end
   else
   begin
@@ -605,8 +617,8 @@ begin
   if FQuerySaveSettings then
   begin
     FQuerySaveSettings := False;
-    if (MessageDlg('Do you want to save the current image settings.',
-      mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
+    if (MessageDlg(StrDoYouWantToSave, mtConfirmation,
+      [mbYes, mbNo], 0) = mrYes) then
     begin
       btnSaveSettingsClick(nil);
     end;
@@ -809,22 +821,25 @@ begin
     PhastModel := frmGoPhast.PhastModel;
     Grid := PhastModel.Grid;
     ShowLegend := False;
-    case ViewDirection of
-      vdTop:
-        begin
-          ShowLegend := (Grid.TopDataSet <> nil)
-            or (PhastModel.EdgeDisplay <> nil);
-        end;
-      vdFront:
-        begin
-          ShowLegend := (Grid.FrontDataSet <> nil);
-        end;
-      vdSide:
-        begin
-          ShowLegend := (Grid.SideDataSet <> nil);
-        end;
-    else
-      Assert(False);
+    if Grid <> nil then
+    begin
+      case ViewDirection of
+        vdTop:
+          begin
+            ShowLegend := (Grid.TopDataSet <> nil)
+              or (PhastModel.EdgeDisplay <> nil);
+          end;
+        vdFront:
+          begin
+            ShowLegend := (Grid.FrontDataSet <> nil);
+          end;
+        vdSide:
+          begin
+            ShowLegend := (Grid.SideDataSet <> nil);
+          end;
+      else
+        Assert(False);
+      end;
     end;
     if ShowLegend then
     begin
@@ -843,6 +858,7 @@ var
   LocalModel: TPhastModel;
   ChildIndex: Integer;
   ChildModel: TChildModel;
+  Mesh: TSutraMesh3D;
 begin
   if FModelImage = nil then
   begin
@@ -866,25 +882,37 @@ begin
     DrawBackgroundImages(FModelImage);
 
     LocalModel := frmGoPhast.PhastModel;
-    LocalModel.Grid.DrawColoredGridLines := cbShowColoredGridLines.Checked;
-    if LocalModel.LgrUsed then
+    if LocalModel.Grid = nil then
     begin
-      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      Mesh := LocalModel.SutraMesh;
+      if Mesh <> nil then
       begin
-        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
-        ChildModel.Grid.DrawColoredGridLines := cbShowColoredGridLines.Checked;
+        Mesh.Draw(FModelImage, ViewDirection);
       end;
-    end;
-    try
-      frmGoPhast.Grid.Draw(FModelImage, ViewDirection);
-    finally
-      frmGoPhast.Grid.DrawColoredGridLines := True;
+    end
+    else
+    begin
+
+      LocalModel.Grid.DrawColoredGridLines := cbShowColoredGridLines.Checked;
       if LocalModel.LgrUsed then
       begin
         for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
         begin
           ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
-          ChildModel.Grid.DrawColoredGridLines := True;
+          ChildModel.Grid.DrawColoredGridLines := cbShowColoredGridLines.Checked;
+        end;
+      end;
+      try
+        frmGoPhast.Grid.Draw(FModelImage, ViewDirection);
+      finally
+        frmGoPhast.Grid.DrawColoredGridLines := True;
+        if LocalModel.LgrUsed then
+        begin
+          for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+          begin
+            ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+            ChildModel.Grid.DrawColoredGridLines := True;
+          end;
         end;
       end;
     end;
@@ -1180,9 +1208,11 @@ begin
           HorizontalSizeInches := HorizontalSize / 25.4;
           HorizontalResolution := GetDeviceCaps(DC, HORZRES);
 //          HorizontalResolution := 1920;
-          RealHorizontalPixelsPerInch := (HorizontalResolution / HorizontalSizeInches);
+          RealHorizontalPixelsPerInch :=
+            (HorizontalResolution / HorizontalSizeInches);
 
-          RealPixelsPerInch := Min(RealVerticalPixelsPerInch, RealHorizontalPixelsPerInch);
+          RealPixelsPerInch :=
+            Min(RealVerticalPixelsPerInch, RealHorizontalPixelsPerInch);
         finally
           ReleaseDC(0, DC);
         end;
@@ -1198,7 +1228,8 @@ begin
           MetaFileCanvas := TMetaFileCanvas.Create(MetaFile, 0);
           try
             FRightOffset := 0;
-            DrawOutsideItems(CanvasHeight, CanvasWidth, DrawingRect, MetaFileCanvas);
+            DrawOutsideItems(CanvasHeight, CanvasWidth,
+              DrawingRect, MetaFileCanvas);
           finally
             MetaFileCanvas.Free;
           end;
@@ -1262,10 +1293,8 @@ begin
           Item.CanShow := False;
           if Item.DisplayMessage then
           begin
-            MessageDlg('The ' + Item.Name
-              + ' image can not be shown at this magnification. '
-              + 'When the magnification is reduced, '
-              + 'it will be displayed again.', mtInformation, [mbOK], 0);
+            MessageDlg( Format(StrTheSImageCanNot, [Item.Name]),
+              mtInformation, [mbOK], 0);
             Item.DisplayMessage := False;
           end;
         end;
@@ -1963,36 +1992,39 @@ var
   Is3DSelected: boolean;
 begin
   PhastModel := frmGoPhast.PhastModel;
-  Is3DSelected := (PhastModel.Grid.ThreeDDataSet <> nil);
-  if frmGoPhast.Grid.NeedToRecalculateTopCellColors then
+  if PhastModel.Grid <> nil then
   begin
-    frmGoPhast.Grid.ResetTopCellColors;
-    frmGoPhast.Grid.UpdateCellColors(vdTop);
+    Is3DSelected := (PhastModel.Grid.ThreeDDataSet <> nil);
+    if frmGoPhast.Grid.NeedToRecalculateTopCellColors then
+    begin
+      frmGoPhast.Grid.ResetTopCellColors;
+      frmGoPhast.Grid.UpdateCellColors(vdTop);
+    end;
+    if frmGoPhast.Grid.NeedToRecalculateFrontCellColors then
+    begin
+      frmGoPhast.Grid.ResetFrontCellColors;
+      frmGoPhast.Grid.UpdateCellColors(vdFront);
+    end;
+    if frmGoPhast.Grid.NeedToRecalculateSideCellColors then
+    begin
+      frmGoPhast.Grid.ResetSideCellColors;
+      frmGoPhast.Grid.UpdateCellColors(vdSide);
+    end;
+    frmGoPhast.acColoredGrid.Enabled :=
+      (frmGoPhast.Grid.ThreeDDataSet <> nil)
+      or (frmGoPhast.PhastModel.EdgeDisplay <> nil);
+    if not frmGoPhast.acColoredGrid.Enabled then
+    begin
+      frmGoPhast.acColoredGrid.Checked := False;
+      frmGoPhast.tb3DColors.Down := False;
+    end;
+    if frmGoPhast.acColoredGrid.Enabled and not Is3DSelected then
+    begin
+      frmGoPhast.acColoredGrid.Checked := True;
+      frmGoPhast.tb3DColors.Down := True;
+    end;
+    frmGoPhast.PhastModel.Grid.GridChanged;
   end;
-  if frmGoPhast.Grid.NeedToRecalculateFrontCellColors then
-  begin
-    frmGoPhast.Grid.ResetFrontCellColors;
-    frmGoPhast.Grid.UpdateCellColors(vdFront);
-  end;
-  if frmGoPhast.Grid.NeedToRecalculateSideCellColors then
-  begin
-    frmGoPhast.Grid.ResetSideCellColors;
-    frmGoPhast.Grid.UpdateCellColors(vdSide);
-  end;
-  frmGoPhast.acColoredGrid.Enabled :=
-    (frmGoPhast.Grid.ThreeDDataSet <> nil)
-    or (frmGoPhast.PhastModel.EdgeDisplay <> nil);
-  if not frmGoPhast.acColoredGrid.Enabled then
-  begin
-    frmGoPhast.acColoredGrid.Checked := False;
-    frmGoPhast.tb3DColors.Down := False;
-  end;
-  if frmGoPhast.acColoredGrid.Enabled and not Is3DSelected then
-  begin
-    frmGoPhast.acColoredGrid.Checked := True;
-    frmGoPhast.tb3DColors.Down := True;
-  end;
-  frmGoPhast.PhastModel.Grid.GridChanged;
 end;
 
 procedure TfrmExportImage.vstDataSetsChecked(Sender: TBaseVirtualTree;
@@ -2182,21 +2214,24 @@ begin
     PhastModel := frmGoPhast.PhastModel;
     Grid := PhastModel.Grid;
     ShowLegend := False;
-    case ViewDirection of
-      vdTop:
-        begin
-          ShowLegend := (Grid.TopContourDataSet <> nil);
-        end;
-      vdFront:
-        begin
-          ShowLegend := (Grid.FrontContourDataSet <> nil);
-        end;
-      vdSide:
-        begin
-          ShowLegend := (Grid.SideContourDataSet <> nil);
-        end;
-    else
-      Assert(False);
+    if Grid <> nil then
+    begin
+      case ViewDirection of
+        vdTop:
+          begin
+            ShowLegend := (Grid.TopContourDataSet <> nil);
+          end;
+        vdFront:
+          begin
+            ShowLegend := (Grid.FrontContourDataSet <> nil);
+          end;
+        vdSide:
+          begin
+            ShowLegend := (Grid.SideContourDataSet <> nil);
+          end;
+      else
+        Assert(False);
+      end;
     end;
     if ShowLegend then
     begin
@@ -2373,7 +2408,7 @@ begin
   if FQuerySaveSettings then
   begin
     FQuerySaveSettings := False;
-    if (MessageDlg('Do you want to save the current image settings.',
+    if (MessageDlg(StrDoYouWantToSave,
       mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
     begin
       btnSaveSettingsClick(nil);
@@ -2388,7 +2423,7 @@ end;
 procedure TfrmExportImage.FormCreate(Sender: TObject);
 begin
   inherited;
-  rdgDataSets.Cells[1,0] := 'Data Sets';
+  rdgDataSets.Cells[1,0] := StrDataSets;
   FDataSetDummyObjects := TObjectList.Create;
   FCanDraw := False;
 
@@ -2458,7 +2493,11 @@ begin
 
   GetDataSets;
 
-  if frmGoPhast.Grid.ThreeDDataSet <> nil then
+  if frmGoPhast.Grid = nil then
+  begin
+    rgDisplayChoice.ItemIndex := 0;
+  end
+  else if frmGoPhast.Grid.ThreeDDataSet <> nil then
   begin
     rgDisplayChoice.ItemIndex := 0;
   end
@@ -2696,28 +2735,10 @@ begin
     CatPanelGroup.ScrollInView(APanel);
     CatPanelGroup.VertScrollBar.Visible := False;
   end;
-
-
-//  List := TList.Create;
-//  try
-//    List.Add(cpView);
-//    List.Add(cpText);
-//    List.Add(cpAnimation);
-//    for Index := 0 to List.Count - 1 do
-//    begin
-//      CatPanel := List[Index];
-//      if CatPanel <> Sender then
-//      begin
-//        CatPanel.Collapsed := True;
-//      end;
-//    end;
-//  finally
-//    List.Free;
-//  end;
-//  CatPanelGroup.Invalidate;
 end;
 
-procedure TfrmExportImage.ApplyMacro(CommentLines: TStringList; CommentSearchKey: string; TextSearchKey: string; var TextToDraw: string);
+procedure TfrmExportImage.ApplyMacro(CommentLines: TStringList;
+  CommentSearchKey: string; TextSearchKey: string; var TextToDraw: string);
 var
   SearchPosition: Integer;
   ReplacementText: string;
@@ -2731,11 +2752,13 @@ begin
     begin
       if Pos(CommentSearchKey, CommentLines[Index]) = 1 then
       begin
-        ReplacementText := Trim(Copy(CommentLines[Index], Length(CommentSearchKey), MAXINT));
+        ReplacementText := Trim(Copy(CommentLines[Index],
+          Length(CommentSearchKey), MAXINT));
         break;
       end;
     end;
-    TextToDraw := StringReplace(TextToDraw, TextSearchKey, ReplacementText, [rfReplaceAll, rfIgnoreCase]);
+    TextToDraw := StringReplace(TextToDraw, TextSearchKey,
+      ReplacementText, [rfReplaceAll, rfIgnoreCase]);
   end;
 end;
 

@@ -198,7 +198,10 @@ const
   StartHeadPosition = 0;
   EndHeadPosition = 1;
 
-
+resourcestring
+  FormatString =
+    'Assigned by interpolation between the starting head of %0:f at '
+    + 't = %1:f (%2:s) and the ending head of %3:f at t = %4:f (%5:s).';
 
 
 { TChdItem }
@@ -491,10 +494,6 @@ end;
 
 procedure TChdBoundary.AssignCells(BoundaryStorage: TCustomBoundaryStorage;
   ValueTimeList: TList; AModel: TBaseModel);
-const
-  FormatString =
-    'Assigned by interpolation between the starting head of %f at '
-    + 't = %f (%s) and the ending head of %f at t = %f (%s).';
 var
   Cell: TCHD_Cell;
   BoundaryValues: TChdRecord;

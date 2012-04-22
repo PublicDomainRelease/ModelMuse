@@ -6,9 +6,10 @@ unit frmGoToUnit;
 interface
 
 uses
-  UndoItemsScreenObjects, SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, frmCustomGoPhastUnit, ComCtrls, Buttons, CompressedImageUnit,
-  ExtCtrls, Spin, ArgusDataEntry, Mask, JvExMask, JvSpin, AbstractGridUnit;
+  UndoItemsScreenObjects, SysUtils, Types, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, frmCustomGoPhastUnit, ComCtrls, Buttons,
+  CompressedImageUnit, ExtCtrls, Spin, ArgusDataEntry, Mask, JvExMask, JvSpin,
+  AbstractGridUnit;
 
 type
   {@abstract(@name is used to move the viewpoint to a selected position,
@@ -167,6 +168,10 @@ implementation
 
 uses frmGoPhastUnit, GoPhastTypes, ScreenObjectUnit,
   DataSetUnit, FastGEO, PhastModelUnit;
+
+resourcestring
+  StrElement = 'Element';
+  StrBlock = 'Block';
 
 {$R *.dfm}
 
@@ -387,6 +392,8 @@ begin
               frmGoPhast.ModflowGrid.SelectedRow, APoint.Y);
             SetGridSpinEditValue(seLayer,Layer+1);
           end;
+        else
+          Assert(False);
       end;
     end
     else
@@ -629,8 +636,8 @@ begin
   tabCell.Visible := seCol.Enabled;
   case frmGoPhast.ModelSelection of
     msUndefined: Assert(False);
-    msPhast: tabCell.Caption := 'Element';
-    msModflow, msModflowLGR, msModflowNWT: tabCell.Caption := 'Block';
+    msPhast: tabCell.Caption := StrElement;
+    msModflow, msModflowLGR, msModflowNWT: tabCell.Caption := StrBlock;
     else Assert(False);
   end;
 end;

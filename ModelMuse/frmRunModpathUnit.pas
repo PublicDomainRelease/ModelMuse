@@ -10,6 +10,7 @@ type
   TfrmRunModpath = class(TCustomExtendedDialog)
     cbRun: TCheckBox;
     cbForceCBF: TCheckBox;
+    comboModelSelection: TComboBox;
   private
     { Private declarations }
   public

@@ -216,6 +216,10 @@ implementation
 uses PhastModelUnit, ScreenObjectUnit, ModflowTimeUnit, TempFiles, 
   frmGoPhastUnit;
 
+resourcestring
+  StrConductance = 'Conductance';
+  StrConductanceMultipl = ' conductance multiplier';
+
 const
   HeadPosition = 0;
   ConductancePosition = 1;
@@ -1053,9 +1057,9 @@ begin
   FBoundaryHeadData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FConductanceData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FBoundaryHeadData.NonParamDescription := StrBoundaryHead;
-  FBoundaryHeadData.ParamDescription := ' boundary head';
-  FConductanceData.NonParamDescription := 'Conductance';
-  FConductanceData.ParamDescription := ' conductance multiplier';
+  FBoundaryHeadData.ParamDescription := ' ' + LowerCase(StrBoundaryHead);
+  FConductanceData.NonParamDescription := StrConductance;
+  FConductanceData.ParamDescription := StrConductanceMultipl;
   if Model <> nil then
   begin
     LocalModel := Model as TCustomModel;

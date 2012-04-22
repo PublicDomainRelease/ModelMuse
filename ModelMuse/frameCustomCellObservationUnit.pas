@@ -92,6 +92,10 @@ implementation
 uses
   GoPhastTypes, Math;
 
+resourcestring
+  StrLayer = 'Layer';
+  StrWeight = 'Weight';
+
 {$R *.dfm}
 
 { TframeCustomCellObservation }
@@ -173,41 +177,9 @@ end;
 type TRbwDataGrid4Crack = class(TRbwDataGrid4);
 
 procedure TframeCustomCellObservation.comboTreatmentChange(Sender: TObject);
-//var
-//  Purpose: TObservationPurpose;
-//  Index: Integer;
 begin
   FChanged := True;
   TRbwDataGrid4Crack(rdgObservations).HideEditor;
-//  if comboTreatment.ItemIndex >= 0 then
-//  begin
-//    Purpose := TObservationPurpose(comboTreatment.ItemIndex)
-//  end
-//  else
-//  begin
-//    Purpose := ofObserved;
-//  end;
-//  case Purpose of
-//    ofObserved, ofInacative:
-//      begin
-//        rdgHeads.Columns[Ord(hocStatFlag)].PickList := ObservationStatFlagLabels;
-//        comboMultiStatFlag.Items.Assign(ObservationStatFlagLabels);
-//      end;
-//    ofPredicted:
-//      begin
-//        rdgHeads.Columns[Ord(hocStatFlag)].PickList := PredictionStatFlagLabels;
-//        comboMultiStatFlag.Items.Assign(PredictionStatFlagLabels);
-//        for Index := 1 to rdgHeads.RowCount - 1 do
-//        begin
-//          if (rdgHeads.Cells[Ord(hocStatFlag), Index] <> '')
-//            and (rdgHeads.ItemIndex[Ord(hocStatFlag), Index] < 0) then
-//          begin
-//            rdgHeads.ItemIndex[Ord(hocStatFlag), Index] := 0;
-//          end;
-//        end;
-//      end;
-//    else Assert(False);
-//  end;
 end;
 
 procedure TframeCustomCellObservation.DeleteSelectedRow(rdgGrid: TRbwDataGrid4;
@@ -286,8 +258,8 @@ procedure TframeCustomCellObservation.InitializeControls;
 begin
   pcData.ActivePageIndex := 0;
 
-  rdgLayers.Cells[Ord(hlLayer),0] := 'Layer';
-  rdgLayers.Cells[Ord(hlFraction),0] := 'Weight';
+  rdgLayers.Cells[Ord(hlLayer),0] := StrLayer;
+  rdgLayers.Cells[Ord(hlFraction),0] := StrWeight;
 
   comboTreatment.ItemIndex := 0;
   lblTreatment.Top := comboTreatment.Top - lblTreatment.Height - 2;
@@ -341,10 +313,6 @@ procedure TframeCustomCellObservation.rdgObservationsSelectCell(Sender: TObject;
   ARow: Integer; var CanSelect: Boolean);
 begin
   CanSelect := seTimes.AsInteger > 0;
-//  EnableMultiEditControl(rdgHeads, rdeMultiValueEdit,
-//    Ord(hocTime), Ord(hocStatistic));
-//  EnableMultiEditControl(rdgHeads, comboMultiStatFlag,
-//    Ord(hocStatFlag), Ord(hocStatFlag));
 end;
 
 procedure TframeCustomCellObservation.rdgObservationsSetEditText(Sender: TObject; ACol,
@@ -436,7 +404,6 @@ begin
       end;
     end;
     EnableDeleteButton(btnDeleteValue, seTimes);
-//    rgMultiObsMethod.Enabled := seTimes.AsInteger > 1;
     rdgObservations.Invalidate;
   finally
     FDeletingTime := False;

@@ -123,7 +123,7 @@ begin
         if Count = 0 then
         begin
           Beep;
-          MessageDlg(StrToGenerateAGrid, mtError, [mbOK], 0);
+          MessageDlg(GenGridErrorMessage, mtError, [mbOK], 0);
           ModalResult := mrCancel;
         end;
       end;
@@ -135,7 +135,12 @@ procedure TfrmGenerateGrid.SetData;
 var
   ErrorMessage: string;
 begin
-  if GenerateGrid(ErrorMessage, not cbSpecifyGridAngle.Checked, DegToRad(strToFloat(rdeGridAngle.Text)), cbSmoothGrid.Checked and cbColumns.Checked, cbSmoothGrid.Checked and cbRows.Checked, cbSmoothGrid.Checked and cbLayers.Checked, StrToFloat(rdeCriterion.Text)) then
+  if GenerateGrid(ErrorMessage, not cbSpecifyGridAngle.Checked,
+    DegToRad(strToFloat(rdeGridAngle.Text)),
+    cbSmoothGrid.Checked and cbColumns.Checked,
+    cbSmoothGrid.Checked and cbRows.Checked,
+    cbSmoothGrid.Checked and cbLayers.Checked,
+    StrToFloat(rdeCriterion.Text)) then
   begin
     with frmGoPhast.frame3DView do
     begin

@@ -479,6 +479,17 @@ procedure Register;
 
 implementation
 
+resourcestring
+  StrErrorAttemptToCr = 'Error: attempt to create a TOtreeNode with an inval' +
+  'id range.';
+  StrErrorNoDataPoint = 'Error: No data points in OctTree.';
+  StrInvalidPointIndex = 'Invalid point index < 0.';
+  StrInvalidPointIndex2 = 'Invalid point index >= Count.';
+  StrTheMaximumNumberO = 'The maximum number of points in an Octtree must be' +
+  ' greater than zero.';
+  StrYouMustSetTheNum = 'You must set the number of points before adding any' +
+  ' points to a Octtree.';
+
 type
   TSelectNode = class(TObject)
     Distance: double;
@@ -548,8 +559,7 @@ begin
   Create(ATree);
   if not ((x_min <= x_max) and (y_min <= y_max) and (z_min <= z_max)) then
   begin
-    raise EOTreeError.Create('Error: attempt to create a TOtreeNode with '
-      + 'an invalid range.');
+    raise EOTreeError.Create(StrErrorAttemptToCr);
   end;
   FParent := ParentNode;
   FXMin := x_min;
@@ -1432,7 +1442,7 @@ begin
   end
   else
   begin
-    raise EOTreeError.Create('Error: No data points in OctTree.');
+    raise EOTreeError.Create(StrErrorNoDataPoint);
   end;
 end;
 
@@ -1546,7 +1556,7 @@ begin
   end
   else
   begin
-    raise EOTreeError.Create('Error: No data points in OctTree.');
+    raise EOTreeError.Create(StrErrorNoDataPoint);
   end;
 end;
 
@@ -1567,11 +1577,11 @@ var
 begin
   if Index < 0 then
   begin
-    raise EOTreeError.Create('Invalid point index < 0.');
+    raise EOTreeError.Create(StrInvalidPointIndex);
   end;
   if Index >= Count then
   begin
-    raise EOTreeError.Create('Invalid point index >= Count.');
+    raise EOTreeError.Create(StrInvalidPointIndex2);
   end;
   OPoint := FOTreeNode.Points[Index];
   result.X := OPoint.X;
@@ -2153,16 +2163,14 @@ begin
   begin
     if Value <= 0 then
     begin
-      raise EOTreeError.Create('The maximum number of points in an Octtree '
-        + 'must be greater than zero.');
+      raise EOTreeError.Create(StrTheMaximumNumberO);
     end;
     FMaxPoints := Value;
     SetLength(FOTreeNode.FPts, FMaxPoints);
   end
   else
   begin
-    raise EOTreeError.Create('You must set the number of points before adding '
-      + 'any points to a Octtree.');
+    raise EOTreeError.Create(StrYouMustSetTheNum);
   end;
 
 end;

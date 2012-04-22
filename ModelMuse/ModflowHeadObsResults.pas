@@ -328,7 +328,14 @@ begin
   end;
   HeadFile := TStringList.Create;
   try
-    HeadFile.LoadFromFile(FileName);
+    try
+      HeadFile.LoadFromFile(FileName);
+    except on EFOpenError do
+      begin
+        CantOpenFileMessage(FileName);
+        Exit;
+      end;
+    end;
     if HeadFile.Count = 0 then
     begin
       Beep;

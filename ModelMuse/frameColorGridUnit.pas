@@ -59,6 +59,11 @@ uses
   RbwParser, frmProgressUnit, LegendUnit, Contnrs, RealListUnit,
   ClassificationUnit;
 
+resourcestring
+  StrProgress = 'Progress';
+  StrMinValueS = ' (Min value = %s)';
+  StrMaxValueS = ' (Max value = %s)';
+
 {$R *.dfm}
 
 { TframeColorGrid }
@@ -86,7 +91,7 @@ begin
   if AnObject <> nil then
   begin
     frmProgressMM.btnAbort.Visible := False;
-    frmProgressMM.Caption := 'Progress';
+    frmProgressMM.Caption := StrProgress;
     frmProgressMM.Show;
 
     DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
@@ -359,9 +364,16 @@ end;
 
 procedure TframeColorGrid.GetBoundaryConditions;
 begin
-  FillVirtStrTreeWithBoundaryConditions(frmGoPhast.Grid.ThreeDDataSet,
-    frmGoPhast.PhastModel.ThreeDTimeList, frmGoPhast.PhastModel.EdgeDisplay,
-    FBoundaryClassifications, FEdgeEdits, virttreecomboDataSets.Tree);
+  if frmGoPhast.Grid = nil then
+  begin
+
+  end
+  else
+  begin
+    FillVirtStrTreeWithBoundaryConditions(frmGoPhast.Grid.ThreeDDataSet,
+      frmGoPhast.PhastModel.ThreeDTimeList, frmGoPhast.PhastModel.EdgeDisplay,
+      FBoundaryClassifications, FEdgeEdits, virttreecomboDataSets.Tree);
+  end;
 end;
 
 procedure TframeColorGrid.GetData;
@@ -414,7 +426,14 @@ end;
 
 function TframeColorGrid.GetSelectedArray: TDataArray;
 begin
-  result := frmGoPhast.Grid.ThreeDDataSet;
+  if frmGoPhast.Grid = nil then
+  begin
+    result :=  nil;
+  end
+  else
+  begin
+    result := frmGoPhast.Grid.ThreeDDataSet;
+  end;
 end;
 
 procedure TframeColorGrid.HandleLimitChoice(DataSet: TDataArray);
@@ -602,9 +621,9 @@ begin
   begin
     DataSet := TDataArray(AnObject);
     lblLowerLimit.Caption := StrLowerLimit
-      + ' (Min value = ' + DataSet.MinValue + ')';
+      + Format(StrMinValueS, [DataSet.MinValue]);
     lblUpperLimit.Caption := StrUpperLimit
-      + ' (Max value = ' + DataSet.MaxValue + ')';
+      + Format(StrMaxValueS, [DataSet.MaxValue]);
     LegendDataSource := DataSet;
   end
   else if AnObject is TCustomTimeList then
@@ -613,18 +632,18 @@ begin
     if TryStrToFloat(comboTime3D.Text, ATime) then
     begin
       lblLowerLimit.Caption := StrLowerLimit
-        + ' (Min value = ' + TimeList.MinValue(ATime) + ')';
+        + Format(StrMinValueS, [TimeList.MinValue(ATime)]);
       lblUpperLimit.Caption := StrUpperLimit
-        + ' (Max value = ' + TimeList.MaxValue(ATime) + ')';
+        + Format(StrMaxValueS, [TimeList.MaxValue(ATime)]);
     end;
   end
   else
   begin
     GridDisplay := AnObject as TEdgeDisplayEdit;
     lblLowerLimit.Caption := StrLowerLimit
-      + ' (Min value = ' + GridDisplay.Edge.MinValue + ')';
+      + Format(StrMinValueS, [GridDisplay.Edge.MinValue]);
     lblUpperLimit.Caption := StrUpperLimit
-      + ' (Max value = ' + GridDisplay.Edge.MaxValue + ')';
+      + Format(StrMaxValueS, [GridDisplay.Edge.MaxValue]);
   end;
 end;
 

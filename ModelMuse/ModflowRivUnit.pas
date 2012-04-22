@@ -1114,11 +1114,11 @@ begin
   FRiverStageData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FConductanceData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FRiverStageData.NonParamDescription := StrRiverStage;
-  FRiverStageData.ParamDescription := ' river stage';
+  FRiverStageData.ParamDescription := ' ' + LowerCase(StrRiverStage);
   FConductanceData.NonParamDescription := StrConductance;
-  FConductanceData.ParamDescription := ' conductance multiplier';
+  FConductanceData.ParamDescription := StrConductanceMultipl;
   FRiverBottomData.NonParamDescription := StrRiverBottom;
-  FRiverBottomData.ParamDescription := ' river bottom';
+  FRiverBottomData.ParamDescription := ' ' + LowerCase(StrRiverBottom);
   if Model <> nil then
   begin
     LocalModel := Model as TCustomModel;

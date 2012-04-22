@@ -59,6 +59,12 @@ implementation
 uses Contnrs, ClassificationUnit, frmGoPhastUnit, DataSetUnit, RbwParser,
   GoPhastTypes, PhastModelUnit;
 
+resourcestring
+  StrParentModel = 'Parent model';
+  StrLayer = 'Layer';
+  StrRow = 'Row';
+  StrColumn = 'Column';
+
 procedure TfrmDataSetValues.btnCopyClick(Sender: TObject);
 var
   Grid: TRbwDataGrid4;
@@ -105,11 +111,11 @@ begin
   case frmGoPhast.ModelSelection of
     msPhast, msModflow, msModflowNWT:
       begin
-        comboModel.Items.AddObject('Parent model', frmGoPhast.PhastModel)
+        comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel)
       end;
     msModflowLGR:
       begin
-        comboModel.Items.AddObject('Parent model', frmGoPhast.PhastModel);
+        comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel);
         for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
         begin
           ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
@@ -183,7 +189,7 @@ begin
   case DataArray.Orientation of
     dsoTop, dso3D:
       begin
-        lblLayer.Caption := 'Layer';
+        lblLayer.Caption := StrLayer;
         for LayerIndex := 0 to DataArray.LayerCount - 1 do
         begin
           lbLayers.Items.Add(IntToStr(LayerIndex+1));
@@ -247,7 +253,7 @@ begin
       end;
     dsoFront:
       begin
-        lblLayer.Caption := 'Row';
+        lblLayer.Caption := StrRow;
         lbLayers.Items.Add('1');
         APage := TTabSheet.Create(self);
 
@@ -308,7 +314,7 @@ begin
       end;
     dsoSide:
       begin
-        lblLayer.Caption := 'Column';
+        lblLayer.Caption := StrColumn;
         lbLayers.Items.Add('1');
         APage := TTabSheet.Create(self);
 
@@ -397,7 +403,8 @@ begin
   GetNodeCaption(Node, CellText, Sender);
 end;
 
-procedure TfrmDataSetValues.SetSelectedNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+procedure TfrmDataSetValues.SetSelectedNode(Sender: TBaseVirtualTree;
+  Node: PVirtualNode);
 begin
   SelectOnlyLeaves(Node, treecomboDataSets, Sender, FSelectedVirtNode);
 end;

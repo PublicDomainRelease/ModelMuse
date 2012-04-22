@@ -155,6 +155,10 @@ implementation
 uses RbwParser, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit, TempFiles, 
   frmGoPhastUnit;
 
+resourcestring
+  StrStartingStage = 'Starting stage';
+  StrEndingStage = 'Ending stage';
+
 const
   StartPosition = 0;
   EndPosition = 1;
@@ -707,10 +711,10 @@ begin
   inherited;
   FResIDData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FEndHeadData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FResIDData.NonParamDescription := 'Starting stage';
-  FResIDData.ParamDescription := ' starting stage';
-  FEndHeadData.NonParamDescription := 'Ending stage';
-  FEndHeadData.ParamDescription := ' ending stage';
+  FResIDData.NonParamDescription := StrStartingStage;
+  FResIDData.ParamDescription := ' ' + LowerCase(StrStartingStage);
+  FEndHeadData.NonParamDescription := StrEndingStage;
+  FEndHeadData.ParamDescription := ' ' + LowerCase(StrEndingStage);
   FResIDData.DataType := rdtInteger;
   AddTimeList(FResIDData);
   AddTimeList(FEndHeadData);

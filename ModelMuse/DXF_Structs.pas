@@ -593,6 +593,16 @@ implementation
 uses
   DXF_read, DXF_write;
 
+resourcestring
+  StrThisVersionOnlyHa = 'This version only handles %d ATTRIBs';
+  StrBlockReferenceSN = 'Block reference %s not found';
+  StrShouldntCallThis = 'Shouldn''t call this for non triangular facets';
+  StrEntityListIDMisma = 'Entity list ID mismatch';
+  StrAttemptedToAddTwo = 'Attempted to add two lists with same name';
+  StrAttemptedToCreate = 'Attempted to create layer with existing name';
+  StrAttemptedToAddLay = 'Attempted to add layer with existing name';
+  StrAttemptedToAddToUnnamed = 'Attempted to add to unnamed layer';
+
 procedure draw_cross(acanvas:TCanvas; p1:TPoint);
 var pa,pb : TPoint;
 begin
@@ -1035,7 +1045,7 @@ begin
   inherited create(OCSaxis,p,col);
 //  init_OCS_WCS_matrix(OCSaxis);
   num_attribs := numatts;
-  if num_attribs>max_attribs then raise Exception.Create('This version only handles '+IntToStr(max_attribs)+' ATTRIBs');
+  if num_attribs>max_attribs then raise Exception.Create(Format(StrThisVersionOnlyHa, [max_attribs]));
   for lp1:=0 to num_attribs-1 do attribs[lp1] := atts[lp1];
 end;
 
@@ -1088,7 +1098,7 @@ begin
     end;
   end // this bit every subsequent time
   else result := blockptr;
-  if result=nil then raise Exception.Create('Block reference '+ string(blockname) +' not found');
+  if result=nil then raise Exception.Create(Format(StrBlockReferenceSN, [string(blockname)]));
 end;
 
 procedure Insert_.Draw(acanvas:TCanvas; map_fn:coord_convert; OCS:pM);
@@ -1543,7 +1553,7 @@ function CustomPolyline_.triangle_centre : Point3D;
 var s,t : integer;
 begin
   if numvertices<>3 then
-    raise Exception.Create('Shouldn''t call this for non triangular facets');
+    raise Exception.Create(StrShouldntCallThis);
     s := 1; t := 2;
   result := p1_plus_p2(polypoints[0],p1_plus_p2(polypoints[s],polypoints[t]));
   result := p1_x_n(result,1/3);
@@ -1995,7 +2005,7 @@ begin
     el.parent_layer := self;
     i  := entity_lists.Add(el);
     if i<>entity_names.Add(entity.ClassName) then
-      raise Exception.Create('Entity list ID mismatch');
+      raise Exception.Create(StrEntityListIDMisma);
     // This has never been raised yet, but might as well be sure.
   end;
   entity_lists[i].add_entity_to_list(entity);
@@ -2008,11 +2018,11 @@ procedure DXF_Layer.add_entity_list(elist:Entity_List);
 var i : integer;
 begin
   i := entity_names.IndexOf(String(elist.name));
-  if i<>-1 then raise Exception.create('Attempted to add two lists with same name');
+  if i<>-1 then raise Exception.create(StrAttemptedToAddTwo);
   elist.parent_layer := self;
   i  := entity_lists.Add(elist);
   if i<>entity_names.Add(String(elist.Name)) then
-    raise Exception.Create('Entity list ID mismatch');
+    raise Exception.Create(StrEntityListIDMisma);
 end;
 
 function DXF_Layer.num_lists : integer;
@@ -2035,7 +2045,7 @@ begin
     result.parent_layer := self;
     inx    := entity_lists.Add(result);
     if inx<>entity_names.Add(String(aname)) then
-      raise Exception.Create('Entity list ID mismatch');
+      raise Exception.Create(StrEntityListIDMisma);
   end
   else result := entity_lists[inx];
 end;
@@ -2101,7 +2111,7 @@ var lp1 : integer;
 begin
   for lp1:=0 to layer_lists.Count-1 do begin
     if layer_lists[lp1].name=aname then begin
-      if not DUPs_OK then raise DXF_Exception.Create('Attempted to create layer with existing name');
+      if not DUPs_OK then raise DXF_Exception.Create(StrAttemptedToCreate);
       result := layer_lists[lp1];
       exit;
     end;
@@ -2115,7 +2125,7 @@ var lp1  : integer;
 begin
   for lp1:=0 to layer_lists.Count-1 do
     if layer_lists[lp1].name=layer.name then
-      raise DXF_Exception.Create('Attempted to add layer with existing name');
+      raise DXF_Exception.Create(StrAttemptedToAddLay);
   layer_lists.Add(layer);
   result := True;
 end;
@@ -2141,7 +2151,7 @@ begin
       result := true;
       exit;
     end;
-  raise DXF_Exception.Create('Attempted to add to unnamed layer');
+  raise DXF_Exception.Create(StrAttemptedToAddToUnnamed);
 end;
 
 function DXF_Object.create_or_find_layer(aname:AnsiString) : DXF_Layer;

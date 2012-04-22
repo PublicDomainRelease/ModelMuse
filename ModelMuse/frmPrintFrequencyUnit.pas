@@ -122,6 +122,31 @@ uses frmGoPhastUnit, GoPhastTypes;
 
 resourcestring
   StrPrintFrequency = 'print frequency';
+  StrOutput = 'Output';
+  StrOutputFile = 'Output file';
+  StrTime = 'Time';
+  StrFlowRatesInBounda = 'Flow rates in boundary condition cells';
+  StrComponents = 'Components';
+  StrFlowBalance = 'Flow balance';
+  StrForceChemistryPrin = 'Force chemistry print';
+  StrHDFChemisty = 'HDF chemisty';
+  StrHDFHeads = 'HDF heads';
+  StrHDFVelocities = 'HDF velocities';
+  StrHeads = 'Heads';
+  StrProgressStatistics = 'Progress statistics';
+  StrRestart = 'Restart';
+  StrRestartFile = 'restart file';
+  StrVelocities = 'Velocities';
+  StrWells = 'Wells';
+  StrXYZChemistry = 'XYZ chemistry';
+  StrXYZComponents = 'XYZ components';
+  StrXYZHeads = 'XYZ heads';
+  StrXYZVelocities = 'XYZ velocities';
+  StrXYZWells = 'XYZ wells';
+  StrBoundaryConditions = 'Boundary conditions';
+  StrEndOfPeriodDefaul = 'End of period default';
+  StrTimeFormat = 'Time = %s';
+  StrUnits = 'Units';
 
 {$R *.dfm}
 
@@ -131,51 +156,48 @@ procedure TfrmPrintFrequency.FormCreate(Sender: TObject);
 begin
   inherited;
   Constraints.MinWidth := Width;
-  rdgPrintFrequency.Cells[0, Ord(pfrName)] := 'Output';
-  rdgPrintFrequency.Cells[1, Ord(pfrName)] := 'Output file';
-  rdgPrintFrequency.Cells[0, Ord(pfrTime)] := 'Time';
-  rdgPrintFrequency.Cells[0, Ord(pfrFlowRate)] :=
-    'Flow rates in boundary condition cells';
+  rdgPrintFrequency.Cells[0, Ord(pfrName)] := StrOutput;
+  rdgPrintFrequency.Cells[1, Ord(pfrName)] := StrOutputFile;
+  rdgPrintFrequency.Cells[0, Ord(pfrTime)] := StrTime;
+  rdgPrintFrequency.Cells[0, Ord(pfrFlowRate)] := StrFlowRatesInBounda;
   rdgPrintFrequency.Cells[1, Ord(pfrFlowRate)] := '*.O.bcf';
-  rdgPrintFrequency.Cells[0, Ord(pfrComponents)] := 'Components';
+  rdgPrintFrequency.Cells[0, Ord(pfrComponents)] := StrComponents;
   rdgPrintFrequency.Cells[1, Ord(pfrComponents)] := '*.O.comps';
   rdgPrintFrequency.Cells[0, Ord(pfrConductance)] := StrConductance;
   rdgPrintFrequency.Cells[1, Ord(pfrConductance)] := '*.O.kd';
-  rdgPrintFrequency.Cells[0, Ord(pfrFlowBalance)] := 'Flow balance';
+  rdgPrintFrequency.Cells[0, Ord(pfrFlowBalance)] := StrFlowBalance;
   rdgPrintFrequency.Cells[1, Ord(pfrFlowBalance)] := '*.O.bal';
-  rdgPrintFrequency.Cells[0, Ord(pfrChemPrint)] := 'Force chemistry print';
+  rdgPrintFrequency.Cells[0, Ord(pfrChemPrint)] := StrForceChemistryPrin;
   rdgPrintFrequency.Cells[1, Ord(pfrChemPrint)] := '*.O.chem';
-  rdgPrintFrequency.Cells[0, Ord(pfrHDFChem)] := 'HDF chemisty';
+  rdgPrintFrequency.Cells[0, Ord(pfrHDFChem)] := StrHDFChemisty;
   rdgPrintFrequency.Cells[1, Ord(pfrHDFChem)] := '*.h5';
-  rdgPrintFrequency.Cells[0, Ord(pfrHDFHeads)] := 'HDF heads';
+  rdgPrintFrequency.Cells[0, Ord(pfrHDFHeads)] := StrHDFHeads;
   rdgPrintFrequency.Cells[1, Ord(pfrHDFHeads)] := '*.h5';
-  rdgPrintFrequency.Cells[0, Ord(pfrHDFVelocity)] := 'HDF velocities';
+  rdgPrintFrequency.Cells[0, Ord(pfrHDFVelocity)] := StrHDFVelocities;
   rdgPrintFrequency.Cells[1, Ord(pfrHDFVelocity)] := '*.h5';
-  rdgPrintFrequency.Cells[0, Ord(pfrHeads)] := 'Heads';
+  rdgPrintFrequency.Cells[0, Ord(pfrHeads)] := StrHeads;
   rdgPrintFrequency.Cells[1, Ord(pfrHeads)] := '*.O.head';
-  rdgPrintFrequency.Cells[0, Ord(pfrProgress)] := 'Progress statistics';
+  rdgPrintFrequency.Cells[0, Ord(pfrProgress)] := StrProgressStatistics;
   rdgPrintFrequency.Cells[1, Ord(pfrProgress)] := '*.O.log';
-  rdgPrintFrequency.Cells[0, Ord(pfrRestart)] := 'Restart';
-  rdgPrintFrequency.Cells[1, Ord(pfrRestart)] := 'restart file';
-  rdgPrintFrequency.Cells[0, Ord(pfrVelocities)] := 'Velocities';
+  rdgPrintFrequency.Cells[0, Ord(pfrRestart)] := StrRestart;
+  rdgPrintFrequency.Cells[1, Ord(pfrRestart)] := StrRestartFile;
+  rdgPrintFrequency.Cells[0, Ord(pfrVelocities)] := StrVelocities;
   rdgPrintFrequency.Cells[1, Ord(pfrVelocities)] := '*.O.vel';
-  rdgPrintFrequency.Cells[0, Ord(pfrWells)] := 'Wells';
+  rdgPrintFrequency.Cells[0, Ord(pfrWells)] := StrWells;
   rdgPrintFrequency.Cells[1, Ord(pfrWells)] := '*.O.wel';
-  rdgPrintFrequency.Cells[0, Ord(pfrXYZChem)] := 'XYZ chemistry';
+  rdgPrintFrequency.Cells[0, Ord(pfrXYZChem)] := StrXYZChemistry;
   rdgPrintFrequency.Cells[1, Ord(pfrXYZChem)] := '*.xyz.chem';
-  rdgPrintFrequency.Cells[0, Ord(pfrXYZComponents)] := 'XYZ components';
+  rdgPrintFrequency.Cells[0, Ord(pfrXYZComponents)] := StrXYZComponents;
   rdgPrintFrequency.Cells[1, Ord(pfrXYZComponents)] := '*.xyz.comps';
-  rdgPrintFrequency.Cells[0, Ord(pfrXYZHeads)] := 'XYZ heads';
+  rdgPrintFrequency.Cells[0, Ord(pfrXYZHeads)] := StrXYZHeads;
   rdgPrintFrequency.Cells[1, Ord(pfrXYZHeads)] := '*.xyz.head';
-  rdgPrintFrequency.Cells[0, Ord(pfrXYZVelocities)] := 'XYZ velocities';
+  rdgPrintFrequency.Cells[0, Ord(pfrXYZVelocities)] := StrXYZVelocities;
   rdgPrintFrequency.Cells[1, Ord(pfrXYZVelocities)] := '*.xyz.vel';
-  rdgPrintFrequency.Cells[0, Ord(pfrXYZWells)] := 'XYZ wells';
+  rdgPrintFrequency.Cells[0, Ord(pfrXYZWells)] := StrXYZWells;
   rdgPrintFrequency.Cells[1, Ord(pfrXYZWells)] := '*.xyz.wel';
-  rdgPrintFrequency.Cells[0, Ord(pfrBoundaryConditions)] :=
-    'Boundary conditions';
+  rdgPrintFrequency.Cells[0, Ord(pfrBoundaryConditions)] := StrBoundaryConditions;
   rdgPrintFrequency.Cells[1, Ord(pfrBoundaryConditions)] := '*.O.probdef';
-  rdgPrintFrequency.Cells[0, Ord(pfrDefault)] :=
-    'End of period default';
+  rdgPrintFrequency.Cells[0, Ord(pfrDefault)] := StrEndOfPeriodDefaul;
   rdgPrintFrequency.Cells[1, Ord(pfrDefault)] := '*.*';
   //  rdgPrintFrequencyNew.Cells[0, Ord(pfrSaveFinalHeads)] := 'Save final heads';
   //  rdgPrintFrequencyNew.Cells[1, Ord(pfrSaveFinalHeads)] := '*.head.dat';
@@ -267,9 +289,9 @@ begin
       PrintFreq.SaveFinalHeads; }
     rdgPrintFrequency.Cells[TimeIndex*2 + 2, Ord(pfrTime)] :=
       FloatToStr(PrintFreq.Time);
-    rdgPrintFrequency.Cells[TimeIndex*2 + 2, Ord(pfrName)] := 'Time = '
-      + rdgPrintFrequency.Cells[TimeIndex*2 + 2, Ord(pfrTime)];
-    rdgPrintFrequency.Cells[TimeIndex*2 + 3, Ord(pfrName)] := 'Units';
+    rdgPrintFrequency.Cells[TimeIndex*2 + 2, Ord(pfrName)] := Format(StrTimeFormat,
+      [rdgPrintFrequency.Cells[TimeIndex*2 + 2, Ord(pfrTime)]]);
+    rdgPrintFrequency.Cells[TimeIndex*2 + 3, Ord(pfrName)] := StrUnits;
 
     for RowIndex := pfrFlowRate to pfrXYZWells do
     begin
@@ -424,9 +446,9 @@ begin
   rdgPrintFrequency.Checked[ACol, Ord(pfrDefault)] :=
     PrintFreq.EndOfPeriodDefault;
   rdgPrintFrequency.Cells[ACol, Ord(pfrTime)] := FloatToStr(PrintFreq.Time);
-  rdgPrintFrequency.Cells[ACol, Ord(pfrName)] := 'Time = '
-    + rdgPrintFrequency.Cells[ACol, Ord(pfrTime)];
-  rdgPrintFrequency.Cells[ACol+1, Ord(pfrName)] := 'Units';
+  rdgPrintFrequency.Cells[ACol, Ord(pfrName)] := Format(StrTimeFormat,
+    [rdgPrintFrequency.Cells[ACol, Ord(pfrTime)]]);
+  rdgPrintFrequency.Cells[ACol+1, Ord(pfrName)] := StrUnits;
 
   for RowIndex := pfrFlowRate to pfrXYZWells do
   begin
@@ -686,7 +708,7 @@ begin
   end;
   if (ARow = Ord(pfrTime)) and not Odd(ACol) then
   begin
-    rdgPrintFrequency.Cells[ACol, Ord(pfrName)] := 'Time = ' + Value;
+    rdgPrintFrequency.Cells[ACol, Ord(pfrName)] := Format(StrTimeFormat, [Value]);
   end;
   if (ACol >= rdgPrintFrequency.FixedCols) and
     (ARow >= rdgPrintFrequency.FixedRows)

@@ -7,7 +7,7 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
   ExplicitWidth = 631
   ExplicitHeight = 277
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object gbScale: TJvGroupBox
     Left = 8
     Top = 8
@@ -16,14 +16,13 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
     Caption = 'Scale'
     TabOrder = 0
     Checkable = True
-    Checked = True
     PropagateEnable = True
     OnCheckBoxClick = EnableOk
     object lblXScale: TLabel
       Left = 8
       Top = 20
-      Width = 86
-      Height = 17
+      Width = 95
+      Height = 18
       Margins.Left = 8
       Caption = 'X scale factor'
       Enabled = False
@@ -31,8 +30,8 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
     object lblYScale: TLabel
       Left = 152
       Top = 20
-      Width = 86
-      Height = 17
+      Width = 93
+      Height = 18
       Margins.Left = 8
       Caption = 'Y scale factor'
       Enabled = False
@@ -45,7 +44,6 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
       Margins.Left = 8
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 17
       TabOrder = 1
       Text = '1'
       OnChange = rdeXScaleChange
@@ -75,7 +73,6 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
       Margins.Left = 8
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 17
       TabOrder = 3
       Text = '1'
       OnChange = rdeXScaleChange
@@ -93,14 +90,13 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
     Caption = 'Rotate'
     TabOrder = 1
     Checkable = True
-    Checked = True
     PropagateEnable = True
     OnCheckBoxClick = EnableOk
     object lblAngle: TLabel
       Left = 8
       Top = 20
-      Width = 225
-      Height = 17
+      Width = 246
+      Height = 18
       Margins.Left = 8
       Caption = 'Angle of rotation (counterclockwise)'
       Enabled = False
@@ -113,7 +109,6 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
       Margins.Left = 8
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 17
       TabOrder = 1
       Text = '0'
       OnChange = rdeAngleChange
@@ -130,14 +125,13 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
     Caption = 'Move'
     TabOrder = 2
     Checkable = True
-    Checked = True
     PropagateEnable = True
     OnCheckBoxClick = EnableOk
     object lblMoveX: TLabel
       Left = 8
       Top = 20
-      Width = 48
-      Height = 17
+      Width = 53
+      Height = 18
       Margins.Left = 8
       Caption = 'X offset'
       Enabled = False
@@ -145,8 +139,8 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
     object lblMoveY: TLabel
       Left = 152
       Top = 20
-      Width = 48
-      Height = 17
+      Width = 51
+      Height = 18
       Margins.Left = 8
       Caption = 'Y offset'
       Enabled = False
@@ -159,7 +153,6 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
       Margins.Left = 8
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 17
       TabOrder = 1
       Text = '0'
       OnChange = rdeMoveXChange
@@ -175,7 +168,6 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
       Margins.Left = 8
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 17
       TabOrder = 2
       Text = '0'
       OnChange = rdeMoveYChange
@@ -189,27 +181,36 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
     Top = 200
     Width = 91
     Height = 33
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 3
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
   object btnOK: TBitBtn
     Left = 424
     Top = 200
     Width = 91
     Height = 33
+    DoubleBuffered = True
     Enabled = False
+    Kind = bkOK
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 4
     OnClick = btnOKClick
-    Kind = bkOK
   end
   object btnCancel: TBitBtn
     Left = 524
     Top = 200
     Width = 91
     Height = 33
-    TabOrder = 5
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 5
   end
   object gbCenter: TGroupBox
     Left = 317
@@ -221,8 +222,8 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
     object lblXCenter: TLabel
       Left = 8
       Top = 53
-      Width = 55
-      Height = 17
+      Width = 62
+      Height = 18
       Margins.Left = 8
       Caption = 'X Center'
       Enabled = False
@@ -230,8 +231,8 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
     object lblYCenter: TLabel
       Left = 152
       Top = 53
-      Width = 55
-      Height = 17
+      Width = 60
+      Height = 18
       Margins.Left = 8
       Caption = 'Y Center'
       Enabled = False
@@ -240,7 +241,7 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
       Left = 8
       Top = 20
       Width = 145
-      Height = 27
+      Height = 28
       Margins.Left = 8
       Style = csOwnerDrawVariable
       ButtonStyle = fsLighter
@@ -249,7 +250,7 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
       Enabled = False
       ImageHeight = 0
       ImageWidth = 0
-      ItemHeight = 21
+      ItemHeight = 22
       ItemIndex = 0
       TabOrder = 0
       OnChange = comboCenterOfRotationChange
@@ -273,7 +274,6 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
       Margins.Left = 8
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 17
       TabOrder = 1
       Text = '0'
       DataType = dtReal
@@ -288,7 +288,6 @@ inherited frmScaleRotateMove: TfrmScaleRotateMove
       Margins.Left = 8
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 17
       TabOrder = 2
       Text = '0'
       DataType = dtReal

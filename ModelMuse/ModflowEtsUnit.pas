@@ -310,6 +310,9 @@ implementation
 uses ScreenObjectUnit, PhastModelUnit, ModflowTimeUnit, TempFiles, 
   ModflowTransientListParameterUnit, frmGoPhastUnit;
 
+resourcestring
+  StrFractionalRateS = 'Fractional rate %s';
+
 const
   SurfacePosition = 0;
   DepthPosition = 1;
@@ -1063,8 +1066,8 @@ begin
     FractionIndex := IntToStr(Count div 2);
     if Odd(Count)  then
     begin
-      TimeList.NonParamDescription := 'Fractional rate ' + FractionIndex;
-      TimeList.ParamDescription := ' fractional rate ' + FractionIndex;
+      TimeList.NonParamDescription := Format(StrFractionalRateS, [FractionIndex]);
+      TimeList.ParamDescription := ' ' + LowerCase(TimeList.NonParamDescription);
       ListOfEtFractionLists.Add(TimeList);
       if Model <> nil then
       begin
@@ -1946,12 +1949,12 @@ procedure TEtsSurfDepthTimeListLink.CreateTimeLists;
 begin
   inherited;
   FEvapotranspirationSurfaceData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FEvapotranspirationSurfaceData.NonParamDescription := 'Evapo- transpiration surface';
-  FEvapotranspirationSurfaceData.ParamDescription := ' evapo- transpiration surface';
+  FEvapotranspirationSurfaceData.NonParamDescription := StrEvapoTranspirationSurf;
+  FEvapotranspirationSurfaceData.ParamDescription := ' '+ LowerCase(StrEvapoTranspirationSurf);
   AddTimeList(FEvapotranspirationSurfaceData);
   FEvapotranspirationDepthData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FEvapotranspirationDepthData.NonParamDescription := 'Evapo- transpiration depth';
-  FEvapotranspirationDepthData.ParamDescription := ' evapo- transpiration depth';
+  FEvapotranspirationDepthData.NonParamDescription := StrEvapoTranspirationDepth;
+  FEvapotranspirationDepthData.ParamDescription := ' ' + LowerCase(StrEvapoTranspirationDepth);
   AddTimeList(FEvapotranspirationDepthData);
   if Model <> nil then
   begin

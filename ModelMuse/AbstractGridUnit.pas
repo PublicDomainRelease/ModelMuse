@@ -397,16 +397,13 @@ side views of the model.}
     procedure DrawOrdinaryTopColumns(const BitMap: TBitmap32;
       const ZoomBox: TQRbwZoomBox2);
     procedure InitializeMinMax(const Layer, Row, Col: integer;
-      DataSet: TDataArray; var MinMaxInitialized: boolean; var RMin, RMax,
-      RMinPositive: real; var IMin, IMax: integer; var BMin, BMax: boolean;
-      var SMin, SMax: string);
+      DataSet: TDataArray; var MinMaxInitialized: boolean; var MinMax: TMinMax;
+      StringValues: TStringList);
     procedure UpdateMinMax(const Layer, Row, Col: integer; DataSet: TDataArray;
-      var MinMaxInitialized: boolean; var RMin, RMax, RMinPositive: real;
-      var IMin, IMax: integer; var BMin, BMax: boolean; var SMin, SMax: string;
+      var MinMaxInitialized: boolean;  var MinMax: TMinMax;
       StringValues: TStringList);
     procedure SetMinMax(DataSet: TDataArray; var MinMaxInitialized: boolean;
-      var RMin, RMax, RMinPositive: real; var IMin, IMax: integer; var BMin,
-      BMax: boolean; var SMin, SMax: string; StringValues: TStringList;
+      var MinMax: TMinMax; StringValues: TStringList;
       LayerCount, RowCount, ColCount: integer);
     procedure GetCounts(DataSet: TDataArray; var LayerCount, RowCount,
       ColCount: integer);
@@ -417,11 +414,7 @@ side views of the model.}
     procedure SetOnSelectedRowChange(const Value: TNotifyEvent);
     procedure CalculateMinMax(DataSet: TDataArray;
       var MinMaxInitialized: Boolean;
-      var LayerCount, RowCount, ColCount: Integer;
-      var LogRMin, LogRMax: Double;
-      var RMinPositive, RMin, RMax: Real; var IMin, IMax: Integer;
-      var BMin, BMax: Boolean; var SMin, SMax: string;
-      StringValues: TStringList);
+      var MinMax: TMinMax; StringValues: TStringList);
     function GetThreeDGridObserver: TObserver;
     function GetCanDraw: boolean;
   protected
@@ -643,11 +636,10 @@ side views of the model.}
       ChildModel: TBaseModel): TDataArray;
   public
     property Model: TBaseModel read FModel;
-    procedure GetRealMinMax(DataSet: TDataArray; var RMin, RMax,
-      RMinPositive: real);
-    procedure GetIntegerMinMax(DataSet: TDataArray; var IMin, IMax: integer);
-    procedure GetBooleanMinMax(DataSet: TDataArray; var BMin, BMax: boolean);
-    procedure GetStringMinMax(DataSet: TDataArray; var SMin, SMax: string);
+    procedure GetRealMinMax(DataSet: TDataArray; var MinMax: TMinMax);
+    procedure GetIntegerMinMax(DataSet: TDataArray; var MinMax: TMinMax);
+    procedure GetBooleanMinMax(DataSet: TDataArray; var MinMax: TMinMax);
+    procedure GetStringMinMax(DataSet: TDataArray; var MinMax: TMinMax);
     property Drawing3DGrid: boolean read FDrawing3DGrid;
     // @name creates and caches a @link(T2DGrid) which can then be used
     // in drawing contour lines in @link(TContourCreator.DrawContour).
@@ -1032,6 +1024,8 @@ side views of the model.}
       read GetCellCoordinates;
     property ElementCoordinates[Col, Row, Layer: integer]: T3DElementCoordinates
       read GetElementCoordinates;
+    procedure GetMinMax(var MinMax: TMinMax; DataSet: TDataArray;
+      StringValues: TStringList);
   published
     { @name is the number of columns in the grid.
       Each column has a width that is greater than or equal to 0.}
@@ -1139,12 +1133,20 @@ var
   // (@link(TCustomModelGrid.SelectedLayer)).
   ExistingLayerSelectionCellColor: TColor;
 
-  
+resourcestring
+  StrInvalidLayerNumber = 'Invalid layer number';
+
 implementation
 
 uses GR32_Polygons, Math, RealListUnit, frmGoPhastUnit, BigCanvasMethods,
   ModelMuseUtilities, PhastDataSets, ScreenObjectUnit, PhastModelUnit, InteractiveTools,
   EdgeDisplayUnit, ZLib, IntListUnit, PathlineReader;
+
+resourcestring
+  StrInvalidColumnNumbe = 'Invalid column number';
+  StrInvalidRowNumber = 'Invalid row number';
+  StrColumnWidthsMustB = 'Column widths must be greater than or equal to 0.';
+  StrRowWidthsMustBeG = 'Row widths must be greater than or equal to 0.';
 
 const
   // @name is the number of OpenGL display lists used to display the grid.
@@ -1932,7 +1934,7 @@ function TCustomModelGrid.GetColumnPosition(const Column: integer): real;
 begin
   if (Column < 0) or (Column > ColumnCount) then
   begin
-    raise EInvalidGrid.Create('Invalid column number');
+    raise EInvalidGrid.Create(StrInvalidColumnNumbe);
   end;
   result := FColumnPositions[Column];
 end;
@@ -2629,7 +2631,7 @@ function TCustomModelGrid.GetRowPosition(const Row: integer): real;
 begin
   if (Row < 0) or (Row > RowCount) then
   begin
-    raise EInvalidGrid.Create('Invalid row number');
+    raise EInvalidGrid.Create(StrInvalidRowNumber);
   end;
   result := FRowPositions[Row];
 end;
@@ -2689,11 +2691,11 @@ begin
   end;
   if (Column < 0) or (Column >= ColumnLimit) then
   begin
-    raise EInvalidGrid.Create('Invalid column number');
+    raise EInvalidGrid.Create(StrInvalidColumnNumbe);
   end;
   if (Row < 0) or (Row >= RowLimit) then
   begin
-    raise EInvalidGrid.Create('Invalid row number');
+    raise EInvalidGrid.Create(StrInvalidRowNumber);
   end;
   Result := FTopCellColors[Column, Row];
 
@@ -2982,7 +2984,7 @@ procedure TCustomModelGrid.SetColumnPosition(const Column: integer;
 begin
   if (Column < 0) or (Column > ColumnCount) then
   begin
-    raise EInvalidGrid.Create('Invalid column number');
+    raise EInvalidGrid.Create(StrInvalidColumnNumbe);
   end;
   if FColumnPositions[Column] <> Value then
   begin
@@ -3045,8 +3047,7 @@ var
 begin
   if Value < 0 then
   begin
-    raise
-      EInvalidGrid.Create('Column widths must be greater than or equal to 0.');
+    raise EInvalidGrid.Create(StrColumnWidthsMustB);
   end;
   Delta := ColumnWidth[Column] - Value;
   for Index := Column + 1 to ColumnCount do
@@ -3428,7 +3429,7 @@ procedure TCustomModelGrid.SetRowPosition(const Row: integer;
 begin
   if (Row < 0) or (Row > RowCount) then
   begin
-    raise EInvalidGrid.Create('Invalid row number');
+    raise EInvalidGrid.Create(StrInvalidRowNumber);
   end;
   if FRowPositions[Row] <> Value then
   begin
@@ -3487,7 +3488,7 @@ var
 begin
   if Value < 0 then
   begin
-    raise EInvalidGrid.Create('Row widths must be greater than or equal to 0.');
+    raise EInvalidGrid.Create(StrRowWidthsMustBeG);
   end;
   FNeedToRecalculateTopCellColors := True;
   FNeedToRecalculateSideCellColors := True;
@@ -3544,11 +3545,11 @@ begin
   end;
   if (Column < 0) or (Column >= ColumnLimit) then
   begin
-    raise EInvalidGrid.Create('Invalid column number');
+    raise EInvalidGrid.Create(StrInvalidColumnNumbe);
   end;
   if (Row < 0) or (Row >= RowLimit) then
   begin
-    raise EInvalidGrid.Create('Invalid row number');
+    raise EInvalidGrid.Create(StrInvalidRowNumber);
   end;
   FTopCellColors[Column, Row] := Value;
 end;
@@ -4089,11 +4090,11 @@ begin
   end;
   if (Column < 0) or (Column >= ColumnLimit) then
   begin
-    raise EInvalidGrid.Create('Invalid column number');
+    raise EInvalidGrid.Create(StrInvalidColumnNumbe);
   end;
   if (Layer < 0) or (Layer >= LayerLimit) then
   begin
-    raise EInvalidGrid.Create('Invalid layer number');
+    raise EInvalidGrid.Create(StrInvalidLayerNumber);
   end;
   Result := FFrontCellColors[Column, Layer];
 end;
@@ -4208,17 +4209,39 @@ begin
   end;
 end;
 
+procedure TCustomModelGrid.GetMinMax(var MinMax: TMinMax; DataSet: TDataArray;
+  StringValues: TStringList);
+var
+  MinMaxInitialized: Boolean;
+  LayerCount, RowCount, ColCount: integer;
+begin
+  Assert(DataSet <> nil);
+  Assert(FModel = DataSet.Model);
+  DataSet.Initialize;
+  GetCounts(DataSet, LayerCount, RowCount, ColCount);
+  if (LayerCount = 0) or (RowCount = 0) or (ColCount = 0) then
+  begin
+    Exit;
+  end;
+
+  MinMax.RMinPositive := 0;
+  MinMaxInitialized := False;
+  StringValues.Sorted := True;
+  StringValues.Duplicates := dupIgnore;
+  StringValues.CaseSensitive := True;
+  StringValues.Capacity := LayerCount*RowCount*ColCount;
+  CalculateMinMax(DataSet, MinMaxInitialized, MinMax, StringValues);
+end;
+
 procedure TCustomModelGrid.CalculateMinMax(DataSet: TDataArray;
   var MinMaxInitialized: Boolean;
-  var LayerCount, RowCount, ColCount: Integer;
-  var LogRMin, LogRMax: Double;
-  var RMinPositive, RMin, RMax: Real; var IMin, IMax: Integer;
-  var BMin, BMax: Boolean; var SMin, SMax: string; StringValues: TStringList);
+  var MinMax: TMinMax; StringValues: TStringList);
 var
   ChildIndex: Integer;
   ChildModel: TChildModel;
   LocalPhastModel: TPhastModel;
   LocalDataArray: TDataArray;
+  LayerCount, RowCount, ColCount: Integer;
 begin
   if FModel is TChildModel then
   begin
@@ -4235,13 +4258,17 @@ begin
       LocalPhastModel.ThreeDTimeList.Initialize;
     end;
     LocalDataArray := LocalPhastModel.Grid.ThreeDDataSet;
+    if (LocalDataArray = nil)
+      or ((DataSet.Model = LocalDataArray.Model) and (DataSet <> LocalDataArray)) then
+    begin
+      Exit;
+    end;
     LocalDataArray.Initialize;
     LocalPhastModel.Grid.GetCounts(LocalDataArray, LayerCount, RowCount, ColCount);
     if (LayerCount > 0) and (RowCount > 0) and (ColCount > 0) then
     begin
       LocalPhastModel.Grid.SetMinMax(LocalDataArray, MinMaxInitialized,
-        RMin, RMax, RMinPositive, IMin, IMax, BMin, BMax, SMin, SMax,
-        StringValues, LayerCount, RowCount, ColCount);
+        MinMax, StringValues, LayerCount, RowCount, ColCount);
     end;
     for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
     begin
@@ -4258,27 +4285,34 @@ begin
         if (LayerCount > 0) and (RowCount > 0) and (ColCount > 0) then
         begin
           ChildModel.Grid.SetMinMax(LocalDataArray, MinMaxInitialized,
-            RMin, RMax, RMinPositive, IMin, IMax, BMin, BMax, SMin, SMax,
-            StringValues, LayerCount, RowCount, ColCount);
+            MinMax, StringValues, LayerCount, RowCount, ColCount);
         end;
       end;
     end;
+  end
+  else
+  begin
     GetCounts(DataSet, LayerCount, RowCount, ColCount);
-  end
-  else
-  begin
-    SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive, IMin, IMax,
-      BMin, BMax, SMin, SMax, StringValues, LayerCount, RowCount, ColCount);
+    SetMinMax(DataSet, MinMaxInitialized, MinMax, StringValues,
+      LayerCount, RowCount, ColCount);
   end;
-  if DataSet.Limits.LogTransform and (RMinPositive > 0) then
+  if DataSet.Limits.LogTransform and (MinMax.RMinPositive > 0) then
   begin
-    LogRMin := Log10(RMinPositive);
-    LogRMax := Log10(RMax);
+    MinMax.LogRMin := Log10(MinMax.RMinPositive);
+    MinMax.LogRMax := Log10(MinMax.RMax);
   end
   else
   begin
-    LogRMin := 0;
-    LogRMax := 0;
+    MinMax.LogRMin := 0;
+    MinMax.LogRMax := 0;
+  end;
+  if DataSet.Datatype = rdtString then
+  begin
+    if StringValues.Count > 0 then
+    begin
+      MinMax.SMin := StringValues[0];
+      MinMax.SMax := StringValues[StringValues.Count-1];
+    end;
   end;
 end;
 
@@ -4717,11 +4751,11 @@ begin
   end;
   if (Column < 0) or (Column >= ColumnLimit) then
   begin
-    raise EInvalidGrid.Create('Invalid column number');
+    raise EInvalidGrid.Create(StrInvalidColumnNumbe);
   end;
   if (Layer < 0) or (Layer >= LayerLimit) then
   begin
-    raise EInvalidGrid.Create('Invalid layer number');
+    raise EInvalidGrid.Create(StrInvalidLayerNumber);
   end;
   FFrontCellColors[Column, Layer] := Value;
 end;
@@ -4913,11 +4947,11 @@ begin
   end;
   if (Row < 0) or (Row >= RowLimit) then
   begin
-    raise EInvalidGrid.Create('Invalid row number');
+    raise EInvalidGrid.Create(StrInvalidRowNumber);
   end;
   if (Layer < 0) or (Layer >= LayerLimit) then
   begin
-    raise EInvalidGrid.Create('Invalid layer number');
+    raise EInvalidGrid.Create(StrInvalidLayerNumber);
   end;
   Result := FSideCellColors[Row, Layer];
 end;
@@ -4955,11 +4989,11 @@ begin
   end;
   if (Row < 0) or (Row >= RowLimit) then
   begin
-    raise EInvalidGrid.Create('Invalid row number');
+    raise EInvalidGrid.Create(StrInvalidRowNumber);
   end;
   if (Layer < 0) or (Layer >= LayerLimit) then
   begin
-    raise EInvalidGrid.Create('Invalid layer number');
+    raise EInvalidGrid.Create(StrInvalidLayerNumber);
   end;
   FSideCellColors[Row, Layer] := Value;
 end;
@@ -5034,9 +5068,11 @@ begin
 end;
 
 procedure TCustomModelGrid.InitializeMinMax(const Layer, Row, Col: integer;
-  DataSet: TDataArray; var MinMaxInitialized: boolean;
-  var RMin, RMax, RMinPositive: real; var IMin, IMax: integer;
-  var BMin, BMax: boolean; var SMin, SMax: string);
+  DataSet: TDataArray; var MinMaxInitialized: boolean; var MinMax: TMinMax;
+  StringValues: TStringList);
+var
+  UseString: Boolean;
+  TempString: string;
 begin
   if not DataSet.IsValue[Layer, Row, Col] then
     Exit;
@@ -5048,72 +5084,100 @@ begin
   case DataSet.Datatype of
     rdtDouble:
       begin
-        RMin := DataSet.RealData[Layer, Row, Col];
-        RMax := RMin;
+        MinMax.RMin := DataSet.RealData[Layer, Row, Col];
+        MinMax.RMax := MinMax.RMin;
         if DataSet.Limits.LowerLimit.UseLimit then
         begin
-          RMin := DataSet.Limits.LowerLimit.RealLimitValue;
+          MinMax.RMin := DataSet.Limits.LowerLimit.RealLimitValue;
         end;
         if DataSet.Limits.UpperLimit.UseLimit then
         begin
-          RMax := DataSet.Limits.UpperLimit.RealLimitValue;
+          MinMax.RMax := DataSet.Limits.UpperLimit.RealLimitValue;
         end;
-        if RMin > 0 then
+        if MinMax.RMin > 0 then
         begin
-          RMinPositive := RMin;
+          MinMax.RMinPositive := MinMax.RMin;
         end;
       end;
     rdtInteger:
       begin
         if DataSet.DisplayRealValue then
         begin
-          RMin := DataSet.RealData[Layer, Row, Col];
-          RMax := Rmin;
+          MinMax.RMin := DataSet.RealData[Layer, Row, Col];
+          MinMax.RMax := MinMax.RMin;
           if DataSet.Limits.LowerLimit.UseLimit then
           begin
-            RMin := DataSet.Limits.LowerLimit.IntegerLimitValue;
+            MinMax.RMin := DataSet.Limits.LowerLimit.IntegerLimitValue;
           end;
           if DataSet.Limits.UpperLimit.UseLimit then
           begin
-            RMax := DataSet.Limits.UpperLimit.IntegerLimitValue;
+            MinMax.RMax := DataSet.Limits.UpperLimit.IntegerLimitValue;
           end;
         end
         else
         begin
-          IMin := DataSet.IntegerData[Layer, Row, Col];
-          IMax := IMin;
+          MinMax.IMin := DataSet.IntegerData[Layer, Row, Col];
+          MinMax.IMax := MinMax.IMin;
           if DataSet.Limits.LowerLimit.UseLimit then
           begin
-            IMin := DataSet.Limits.LowerLimit.IntegerLimitValue;
+            MinMax.IMin := DataSet.Limits.LowerLimit.IntegerLimitValue;
           end;
           if DataSet.Limits.UpperLimit.UseLimit then
           begin
-            IMax := DataSet.Limits.UpperLimit.IntegerLimitValue;
+            MinMax.IMax := DataSet.Limits.UpperLimit.IntegerLimitValue;
           end;
         end;
       end;
     rdtBoolean:
       begin
-        BMin := False;
-        BMax := True;
+        MinMax.BMin := False;
+        MinMax.BMax := True;
         if DataSet.Limits.LowerLimit.UseLimit then
         begin
-          BMin := DataSet.Limits.LowerLimit.BooleanLimitValue;
+          MinMax.BMin := DataSet.Limits.LowerLimit.BooleanLimitValue;
         end;
         if DataSet.Limits.UpperLimit.UseLimit then
         begin
-          BMax := DataSet.Limits.UpperLimit.BooleanLimitValue;
+          MinMax.BMax := DataSet.Limits.UpperLimit.BooleanLimitValue;
         end;
       end;
     rdtString:
       begin
+        UseString := True;
+        TempString := DataSet.StringData[Layer, Row, Col];
+        if DataSet.Limits.UpperLimit.UseLimit then
+        begin
+          if TempString > DataSet.Limits.UpperLimit.StringLimitValue then
+          begin
+            UseString := False;
+          end;
+        end;
         if DataSet.Limits.LowerLimit.UseLimit then
         begin
-          SMin := DataSet.Limits.LowerLimit.StringLimitValue;
+          if TempString < DataSet.Limits.LowerLimit.StringLimitValue then
+          begin
+            UseString := False;
+          end;
+        end;
+        if UseString then
+        begin
+          StringValues.Add(TempString);
+        end;
+        if DataSet.Limits.LowerLimit.UseLimit then
+        begin
+          MinMax.SMin := DataSet.Limits.LowerLimit.StringLimitValue;
+        end
+        else
+        begin
+          MinMax.SMin := TempString;
         end;
         if DataSet.Limits.UpperLimit.UseLimit then
         begin
-          SMax := DataSet.Limits.UpperLimit.StringLimitValue;
+          MinMax.SMax := DataSet.Limits.UpperLimit.StringLimitValue;
+        end
+        else
+        begin
+          MinMax.SMax := TempString;
         end;
       end;
   else
@@ -5122,9 +5186,8 @@ begin
 end;
 
 procedure TCustomModelGrid.UpdateMinMax(const Layer, Row, Col: integer;
-  DataSet: TDataArray; var MinMaxInitialized: boolean;
-  var RMin, RMax, RMinPositive: real; var IMin, IMax: integer;
-  var BMin, BMax: boolean; var SMin, SMax: string; StringValues: TStringList);
+  DataSet: TDataArray; var MinMaxInitialized: boolean; var MinMax: TMinMax;
+  StringValues: TStringList);
 var
   RTemp: Double;
   ITemp: Integer;
@@ -5142,8 +5205,8 @@ begin
     Exit;
   if not MinMaxInitialized then
   begin
-    InitializeMinMax(Layer, Row, Col, DataSet, MinMaxInitialized,
-      RMin, RMax, RMinPositive, IMin, IMax, BMin, BMax, SMin, SMax);
+    InitializeMinMax(Layer, Row, Col, DataSet, MinMaxInitialized, MinMax,
+      StringValues);
   end
   else
   begin
@@ -5151,20 +5214,20 @@ begin
       rdtDouble:
         begin
           RTemp := DataSet.RealData[Layer, Row, Col];
-          if (RTemp > RMax) and not DataSet.Limits.UpperLimit.UseLimit then
+          if (RTemp > MinMax.RMax) and not DataSet.Limits.UpperLimit.UseLimit then
           begin
-            RMax := RTemp;
+            MinMax.RMax := RTemp;
           end
-          else if (RTemp < RMin) and not DataSet.Limits.LowerLimit.UseLimit
+          else if (RTemp < MinMax.RMin) and not DataSet.Limits.LowerLimit.UseLimit
             then
           begin
-            RMin := RTemp;
+            MinMax.RMin := RTemp;
           end;
           if (RTemp > 0) then
           begin
-            if (RMinPositive = 0) or (RTemp < RMinPositive) then
+            if (MinMax.RMinPositive = 0) or (RTemp < MinMax.RMinPositive) then
             begin
-              RMinPositive := RTemp;
+              MinMax.RMinPositive := RTemp;
             end;
           end;
         end;
@@ -5173,27 +5236,27 @@ begin
           if DataSet.DisplayRealValue then
           begin
             RTemp := DataSet.RealData[Layer, Row, Col];
-            if (RTemp > RMax) and not DataSet.Limits.UpperLimit.UseLimit then
+            if (RTemp > MinMax.RMax) and not DataSet.Limits.UpperLimit.UseLimit then
             begin
-              RMax := RTemp;
+              MinMax.RMax := RTemp;
             end
-            else if (RTemp < RMin) and not DataSet.Limits.LowerLimit.UseLimit
+            else if (RTemp < MinMax.RMin) and not DataSet.Limits.LowerLimit.UseLimit
               then
             begin
-              RMin := RTemp;
+              MinMax.RMin := RTemp;
             end;
           end
           else
           begin
             ITemp := DataSet.IntegerData[Layer, Row, Col];
-            if (ITemp > IMax) and not DataSet.Limits.UpperLimit.UseLimit then
+            if (ITemp > MinMax.IMax) and not DataSet.Limits.UpperLimit.UseLimit then
             begin
-              IMax := ITemp;
+              MinMax.IMax := ITemp;
             end
-            else if (ITemp < IMin) and not DataSet.Limits.LowerLimit.UseLimit
+            else if (ITemp < MinMax.IMin) and not DataSet.Limits.LowerLimit.UseLimit
               then
             begin
-              IMin := ITemp;
+              MinMax.IMin := ITemp;
             end;
           end;
         end;
@@ -5207,14 +5270,14 @@ begin
           TempString := DataSet.StringData[Layer, Row, Col];
           if DataSet.Limits.UpperLimit.UseLimit then
           begin
-            if TempString > SMax then
+            if TempString > DataSet.Limits.UpperLimit.StringLimitValue then
             begin
               UseString := False;
             end;
           end;
           if DataSet.Limits.LowerLimit.UseLimit then
           begin
-            if TempString < SMin then
+            if TempString < DataSet.Limits.LowerLimit.StringLimitValue then
             begin
               UseString := False;
             end;
@@ -5231,8 +5294,7 @@ begin
 end;
 
 procedure TCustomModelGrid.SetMinMax(DataSet: TDataArray;
-  var MinMaxInitialized: boolean; var RMin, RMax, RMinPositive: real;
-  var IMin, IMax: integer; var BMin, BMax: boolean; var SMin, SMax: string;
+  var MinMaxInitialized: boolean; var MinMax: TMinMax;
   StringValues: TStringList; LayerCount, RowCount, ColCount: integer);
 var
   LayerIndex: integer;
@@ -5251,78 +5313,61 @@ begin
       for ColIndex := 0 to ColCount - 1 do
       begin
         UpdateMinMax(LayerIndex, RowIndex, ColIndex, DataSet,
-          MinMaxInitialized, RMin, RMax, RMinPositive, IMin, IMax,
-          BMin, BMax, SMin, SMax, StringValues);
+          MinMaxInitialized, MinMax, StringValues);
       end;
     end;
   end;
 end;
 
-procedure TCustomModelGrid.GetRealMinMax(DataSet: TDataArray;
-  var RMin, RMax, RMinPositive: real);
+procedure TCustomModelGrid.GetRealMinMax(DataSet: TDataArray; var MinMax: TMinMax);
 var
   LayerCount, RowCount, ColCount: integer;
   MinMaxInitialized: boolean;
-  IMin, IMax: integer;
-  BMin, BMax: boolean;
-  SMin, SMax: string;
   StringValues: TStringList;
 begin
   Assert(DataSet.DataType = rdtDouble);
   GetCounts(DataSet, LayerCount, RowCount, ColCount);
   MinMaxInitialized := False;
   StringValues := nil;
-  SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
-    IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
+  SetMinMax(DataSet, MinMaxInitialized, MinMax, StringValues,
     LayerCount, RowCount, ColCount);
 end;
 
 procedure TCustomModelGrid.GetIntegerMinMax(DataSet: TDataArray;
-  var IMin, IMax: integer);
+  var MinMax: TMinMax);
 var
   LayerCount, RowCount, ColCount: integer;
   MinMaxInitialized: boolean;
-  RMin, RMax, RMinPositive: real;
-  BMin, BMax: boolean;
-  SMin, SMax: string;
   StringValues: TStringList;
 begin
   Assert(DataSet.DataType = rdtInteger);
   GetCounts(DataSet, LayerCount, RowCount, ColCount);
   MinMaxInitialized := False;
   StringValues := nil;
-  SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
-    IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
+  SetMinMax(DataSet, MinMaxInitialized, MinMax, StringValues,
     LayerCount, RowCount, ColCount);
 end;
 
 procedure TCustomModelGrid.GetBooleanMinMax(DataSet: TDataArray;
-  var BMin, BMax: boolean);
+  var MinMax: TMinMax);
 var
   LayerCount, RowCount, ColCount: integer;
   MinMaxInitialized: boolean;
-  RMin, RMax, RMinPositive: real;
-  IMin, IMax: integer;
-  SMin, SMax: string;
   StringValues: TStringList;
 begin
   Assert(DataSet.DataType = rdtBoolean);
   GetCounts(DataSet, LayerCount, RowCount, ColCount);
   MinMaxInitialized := False;
   StringValues := nil;
-  SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
-    IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
+  SetMinMax(DataSet, MinMaxInitialized, MinMax, StringValues,
     LayerCount, RowCount, ColCount);
 end;
 
 procedure TCustomModelGrid.GetStringMinMax(DataSet: TDataArray;
-  var SMin, SMax: string);
+  var MinMax: TMinMax);
 var
   LayerCount, RowCount, ColCount: integer;
   MinMaxInitialized: boolean;
-  RMin, RMax, RMinPositive: real;
-  IMin, IMax: integer;
-  BMin, BMax: boolean;
   StringValues: TStringList;
 begin
   Assert(DataSet.DataType = rdtString);
@@ -5331,8 +5376,7 @@ begin
 
   StringValues := TStringList.Create;
   try
-    SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
-      IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
+    SetMinMax(DataSet, MinMaxInitialized, MinMax, StringValues,
       LayerCount, RowCount, ColCount);
 
   finally
@@ -5530,48 +5574,43 @@ var
   DataSet: TDataArray;
   LayerCount, RowCount, ColCount: integer;
   LayerIndex, RowIndex, ColIndex: integer;
-  RMin, RMax, RTemp, RMinPositive: real;
-  IMin, IMax, ITemp: integer;
-  BMin, BMax, BTemp: boolean;
-  SMin, SMax, STemp: string;
+  RTemp: real;
+  ITemp: integer;
+  BTemp: boolean;
+  STemp: string;
   SIndex: integer;
-//  UseString: boolean;
   StringValues: TStringList;
-//  TempString: string;
-  MinMaxInitialized: boolean;
-  LogRMin: double;
-  LogRMax: double;
   LogRTemp: double;
-//  LocalModel: TCustomModel;
   ChildIndex: Integer;
   ChildModel: TChildModel;
   LocalPhastModel: TPhastModel;
+  MinMax: TMinMax;
 begin
-  RMinPositive := 0;
-  MinMaxInitialized := False;
   StringValues := TStringList.Create;
   try
-    StringValues.Sorted := True;
-    StringValues.Duplicates := dupIgnore;
-    StringValues.CaseSensitive := True;
+    DataSet := nil;
+    case ViewDirection of
+      vdTop: DataSet := TopDataSet;
+      vdFront: DataSet := FrontDataSet;
+      vdSide: DataSet := SideDataSet;
+      else Assert(False);
+    end;
+    if DataSet = nil then
+      Exit;
+
+    Assert(FModel = DataSet.Model);
+    DataSet.Initialize;
+    GetCounts(DataSet, LayerCount, RowCount, ColCount);
+    if (LayerCount = 0) or (RowCount = 0) or (ColCount = 0) then
+    begin
+      Exit;
+    end;
+
+    GetMinMax(MinMax, DataSet, StringValues);
+
     case ViewDirection of
       vdTop:
         begin
-          DataSet := TopDataSet;
-
-          if DataSet = nil then
-            Exit;
-          Assert(FModel = DataSet.Model);
-          DataSet.Initialize;
-          GetCounts(DataSet, LayerCount, RowCount, ColCount);
-          if (LayerCount = 0) or (RowCount = 0) or (ColCount = 0) then
-          begin
-            Exit;
-          end;
-
-          CalculateMinMax(DataSet, MinMaxInitialized, LayerCount, RowCount,
-            ColCount, LogRMin, LogRMax, RMinPositive, RMin, RMax, IMin, IMax,
-            BMin, BMax, SMin, SMax, StringValues);
           if LayerCount > 1 then
           begin
             LayerIndex := SelectedLayer;
@@ -5599,11 +5638,11 @@ begin
                     begin
                       TopCellColors[ColIndex, RowIndex] := clWhite;
                     end
-                    else if (RMax = RMin) then
+                    else if (MinMax.RMax = MinMax.RMin) then
                     begin
                       RTemp := DataSet.RealData
                         [LayerIndex, RowIndex, ColIndex];
-                      if RTemp = RMin then
+                      if RTemp = MinMax.RMin then
                       begin
                         TopCellColors[ColIndex, RowIndex] :=
                           GridFracToRainbow(0.5);
@@ -5613,20 +5652,20 @@ begin
                     begin
                       RTemp := DataSet.RealData
                         [LayerIndex, RowIndex, ColIndex];
-                      if (RTemp >= RMin) and (RTemp <= RMax) then
+                      if (RTemp >= MinMax.RMin) and (RTemp <= MinMax.RMax) then
                       begin
                         if DataSet.Limits.LogTransform  then
                         begin
-                          Assert(RMinPositive > 0);
+                          Assert(MinMax.RMinPositive > 0);
                           Assert(RTemp > 0);
                           LogRTemp := Log10(RTemp);
                           TopCellColors[ColIndex, RowIndex] :=
-                            GridFracToRainbow((LogRMax - LogRTemp) / (LogRMax - LogRMin));
+                            GridFracToRainbow((MinMax.LogRMax - LogRTemp) / (MinMax.LogRMax - MinMax.LogRMin));
                         end
                         else
                         begin
                           TopCellColors[ColIndex, RowIndex] :=
-                            GridFracToRainbow((RMax - RTemp) / (RMax - RMin));
+                            GridFracToRainbow((MinMax.RMax - RTemp) / (MinMax.RMax - MinMax.RMin));
                         end;
                       end;
                     end;
@@ -5647,11 +5686,11 @@ begin
                       begin
                         TopCellColors[ColIndex, RowIndex] := clWhite;
                       end
-                      else if (RMax = RMin) then
+                      else if (MinMax.RMax = MinMax.RMin) then
                       begin
                         RTemp := DataSet.RealData
                           [LayerIndex, RowIndex, ColIndex];
-                        if RTemp = RMin then
+                        if RTemp = MinMax.RMin then
                         begin
                           TopCellColors[ColIndex, RowIndex] :=
                             GridFracToRainbow(0.5);
@@ -5661,10 +5700,10 @@ begin
                       begin
                         RTemp := DataSet.RealData
                           [LayerIndex, RowIndex, ColIndex];
-                        if (RTemp >= RMin) and (RTemp <= RMax) then
+                        if (RTemp >= MinMax.RMin) and (RTemp <= MinMax.RMax) then
                         begin
                           TopCellColors[ColIndex, RowIndex] :=
-                            GridFracToRainbow((RMax - RTemp) / (RMax - RMin));
+                            GridFracToRainbow((MinMax.RMax - RTemp) / (MinMax.RMax - MinMax.RMin));
                         end;
                       end;
                     end
@@ -5682,11 +5721,11 @@ begin
                       begin
                         TopCellColors[ColIndex, RowIndex] := clWhite;
                       end
-                      else if (IMax = IMin) then
+                      else if (MinMax.IMax = MinMax.IMin) then
                       begin
                         ITemp := DataSet.IntegerData
                           [LayerIndex, RowIndex, ColIndex];
-                        if ITemp = IMin then
+                        if ITemp = MinMax.IMin then
                         begin
                           TopCellColors[ColIndex, RowIndex] :=
                             GridFracToRainbow(0.5);
@@ -5696,10 +5735,10 @@ begin
                       begin
                         ITemp := DataSet.IntegerData
                           [LayerIndex, RowIndex, ColIndex];
-                        if (ITemp >= IMin) and (ITemp <= IMax) then
+                        if (ITemp >= MinMax.IMin) and (ITemp <= MinMax.IMax) then
                         begin
                           TopCellColors[ColIndex, RowIndex] :=
-                            GridFracToRainbow((IMax - ITemp) / (IMax - IMin));
+                            GridFracToRainbow((MinMax.IMax - ITemp) / (MinMax.IMax - MinMax.IMin));
                         end;
                       end;
                     end;
@@ -5718,11 +5757,11 @@ begin
                     begin
                       TopCellColors[ColIndex, RowIndex] := clWhite;
                     end
-                    else if BMax = Bmin then
+                    else if MinMax.BMax = MinMax.BMin then
                     begin
                       BTemp := DataSet.BooleanData
                         [LayerIndex, RowIndex, ColIndex];
-                      if BTemp = Bmin then
+                      if BTemp = MinMax.BMin then
                       begin
                         TopCellColors[ColIndex, RowIndex] :=
                           GridFracToRainbow(0.5);
@@ -5789,32 +5828,6 @@ begin
         end;
       vdFront:
         begin
-          DataSet := FrontDataSet;
-          if DataSet = nil then
-            Exit;
-          DataSet.Initialize;
-          GetCounts(DataSet, LayerCount, RowCount, ColCount);
-          if (LayerCount = 0) or (RowCount = 0) or (ColCount = 0) then
-          begin
-            Exit;
-          end;
-          CalculateMinMax(DataSet, MinMaxInitialized, LayerCount, RowCount,
-            ColCount, LogRMin, LogRMax, RMinPositive, RMin, RMax, IMin, IMax,
-            BMin, BMax, SMin, SMax, StringValues);
-
-//          SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
-//            IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
-//            LayerCount, RowCount, ColCount);
-//          if DataSet.Limits.LogTransform and (RMinPositive > 0) then
-//          begin
-//            LogRMin := Log10(RMinPositive);
-//            LogRMax := Log10(RMax);
-//          end
-//          else
-//          begin
-//            LogRMin := 0.;
-//            LogRMax := 0.;
-//          end;
           if RowCount > 1 then
           begin
             RowIndex := SelectedRow;
@@ -5842,11 +5855,11 @@ begin
                     begin
                       FrontCellColors[ColIndex, LayerIndex] := clWhite;
                     end
-                    else if (RMax = RMin) then
+                    else if (MinMax.RMax = MinMax.RMin) then
                     begin
                       RTemp := DataSet.RealData
                         [LayerIndex, RowIndex, ColIndex];
-                      if RTemp = RMin then
+                      if RTemp = MinMax.RMin then
                       begin
                         FrontCellColors[ColIndex, LayerIndex] :=
                           GridFracToRainbow(0.5);
@@ -5856,20 +5869,20 @@ begin
                     begin
                       RTemp := DataSet.RealData
                         [LayerIndex, RowIndex, ColIndex];
-                      if (RTemp >= RMin) and (RTemp <= RMax) then
+                      if (RTemp >= MinMax.RMin) and (RTemp <= MinMax.RMax) then
                       begin
                         if DataSet.Limits.LogTransform  then
                         begin
-                          Assert(RMinPositive > 0);
+                          Assert(MinMax.RMinPositive > 0);
                           Assert(RTemp > 0);
                           LogRTemp := Log10(RTemp);
                           FrontCellColors[ColIndex, LayerIndex] :=
-                            GridFracToRainbow((LogRMax - LogRTemp) / (LogRMax - LogRMin));
+                            GridFracToRainbow((MinMax.LogRMax - LogRTemp) / (MinMax.LogRMax - MinMax.LogRMin));
                         end
                         else
                         begin
                           FrontCellColors[ColIndex, LayerIndex] :=
-                            GridFracToRainbow((RMax - RTemp) / (RMax - RMin));
+                            GridFracToRainbow((MinMax.RMax - RTemp) / (MinMax.RMax - MinMax.RMin));
                         end;
                       end;
                     end;
@@ -5890,11 +5903,11 @@ begin
                       begin
                         FrontCellColors[ColIndex, LayerIndex] := clWhite;
                       end
-                      else if (RMax = RMin) then
+                      else if (MinMax.RMax = MinMax.RMin) then
                       begin
                         RTemp := DataSet.RealData
                           [LayerIndex, RowIndex, ColIndex];
-                        if RTemp = RMin then
+                        if RTemp = MinMax.RMin then
                         begin
                           FrontCellColors[ColIndex, LayerIndex] :=
                             GridFracToRainbow(0.5);
@@ -5904,10 +5917,10 @@ begin
                       begin
                         RTemp := DataSet.RealData
                           [LayerIndex, RowIndex, ColIndex];
-                        if (RTemp >= RMin) and (RTemp <= RMax) then
+                        if (RTemp >= MinMax.RMin) and (RTemp <= MinMax.RMax) then
                         begin
                           FrontCellColors[ColIndex, LayerIndex] :=
-                            GridFracToRainbow((RMax - RTemp) / (RMax - RMin));
+                            GridFracToRainbow((MinMax.RMax - RTemp) / (MinMax.RMax - MinMax.RMin));
                         end;
                       end;
                     end
@@ -5925,11 +5938,11 @@ begin
                       begin
                         FrontCellColors[ColIndex, LayerIndex] := clWhite;
                       end
-                      else if (IMax = IMin) then
+                      else if (MinMax.IMax = MinMax.IMin) then
                       begin
                         ITemp := DataSet.IntegerData
                           [LayerIndex, RowIndex, ColIndex];
-                        if ITemp = IMin then
+                        if ITemp = MinMax.IMin then
                         begin
                           FrontCellColors[ColIndex, LayerIndex] :=
                             GridFracToRainbow(0.5);
@@ -5939,10 +5952,10 @@ begin
                       begin
                         ITemp := DataSet.IntegerData
                           [LayerIndex, RowIndex, ColIndex];
-                        if (ITemp >= IMin) and (ITemp <= IMax) then
+                        if (ITemp >= MinMax.IMin) and (ITemp <= MinMax.IMax) then
                         begin
                           FrontCellColors[ColIndex, LayerIndex] :=
-                            GridFracToRainbow((IMax - ITemp) / (IMax - IMin));
+                            GridFracToRainbow((MinMax.IMax - ITemp) / (MinMax.IMax - MinMax.IMin));
                         end;
                       end;
                     end;
@@ -5961,11 +5974,11 @@ begin
                     begin
                       FrontCellColors[ColIndex, LayerIndex] := clWhite;
                     end
-                    else if BMax = Bmin then
+                    else if MinMax.BMax = MinMax.BMin then
                     begin
                       BTemp := DataSet.BooleanData
                         [LayerIndex, RowIndex, ColIndex];
-                      if BTemp = Bmin then
+                      if BTemp = MinMax.BMin then
                       begin
                         FrontCellColors[ColIndex, LayerIndex] :=
                           GridFracToRainbow(0.5);
@@ -6032,31 +6045,6 @@ begin
         end;
       vdSide:
         begin
-          DataSet := SideDataSet;
-          if DataSet = nil then
-            Exit;
-          DataSet.Initialize;
-          GetCounts(DataSet, LayerCount, RowCount, ColCount);
-          if (LayerCount = 0) or (RowCount = 0) or (ColCount = 0) then
-          begin
-            Exit;
-          end;
-          CalculateMinMax(DataSet, MinMaxInitialized, LayerCount, RowCount,
-            ColCount, LogRMin, LogRMax, RMinPositive, RMin, RMax, IMin, IMax,
-            BMin, BMax, SMin, SMax, StringValues);
-//          SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
-//            IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
-//            LayerCount, RowCount, ColCount);
-//          if DataSet.Limits.LogTransform and (RMinPositive > 0) then
-//          begin
-//            LogRMin := Log10(RMinPositive);
-//            LogRMax := Log10(RMax);
-//          end
-//          else
-//          begin
-//            LogRMin := 0.;
-//            LogRMax := 0.;
-//          end;
           if ColCount > 1 then
           begin
             ColIndex := SelectedColumn;
@@ -6084,11 +6072,11 @@ begin
                     begin
                       SideCellColors[RowIndex, LayerIndex] := clWhite;
                     end
-                    else if (RMax = RMin) then
+                    else if (MinMax.RMax = MinMax.RMin) then
                     begin
                       RTemp := DataSet.RealData
                         [LayerIndex, RowIndex, ColIndex];
-                      if RTemp = RMin then
+                      if RTemp = MinMax.RMin then
                       begin
                         SideCellColors[RowIndex, LayerIndex] :=
                           GridFracToRainbow(0.5);
@@ -6098,20 +6086,20 @@ begin
                     begin
                       RTemp := DataSet.RealData
                         [LayerIndex, RowIndex, ColIndex];
-                      if (RTemp >= RMin) and (RTemp <= RMax) then
+                      if (RTemp >= MinMax.RMin) and (RTemp <= MinMax.RMax) then
                       begin
                        if DataSet.Limits.LogTransform  then
                         begin
-                          Assert(RMinPositive > 0);
+                          Assert(MinMax.RMinPositive > 0);
                           Assert(RTemp > 0);
                           LogRTemp := Log10(RTemp);
                           SideCellColors[RowIndex, LayerIndex]  :=
-                            GridFracToRainbow((LogRMax - LogRTemp) / (LogRMax - LogRMin));
+                            GridFracToRainbow((MinMax.LogRMax - LogRTemp) / (MinMax.LogRMax - MinMax.LogRMin));
                         end
                         else
                         begin
                           SideCellColors[RowIndex, LayerIndex] :=
-                            GridFracToRainbow((RMax - RTemp) / (RMax - RMin));
+                            GridFracToRainbow((MinMax.RMax - RTemp) / (MinMax.RMax - MinMax.RMin));
                         end;
                       end;
                     end;
@@ -6132,11 +6120,11 @@ begin
                       begin
                         SideCellColors[RowIndex, LayerIndex] := clWhite;
                       end
-                      else if (RMax = RMin) then
+                      else if (MinMax.RMax = MinMax.RMin) then
                       begin
                         RTemp := DataSet.RealData
                           [LayerIndex, RowIndex, ColIndex];
-                        if RTemp = RMin then
+                        if RTemp = MinMax.RMin then
                         begin
                           SideCellColors[RowIndex, LayerIndex] :=
                             GridFracToRainbow(0.5);
@@ -6146,10 +6134,10 @@ begin
                       begin
                         RTemp := DataSet.RealData
                           [LayerIndex, RowIndex, ColIndex];
-                        if (RTemp >= RMin) and (RTemp <= RMax) then
+                        if (RTemp >= MinMax.RMin) and (RTemp <= MinMax.RMax) then
                         begin
                           SideCellColors[RowIndex, LayerIndex] :=
-                            GridFracToRainbow((RMax - RTemp) / (RMax - RMin));
+                            GridFracToRainbow((MinMax.RMax - RTemp) / (MinMax.RMax - MinMax.RMin));
                         end;
                       end;
                     end
@@ -6167,11 +6155,11 @@ begin
                       begin
                         SideCellColors[RowIndex, LayerIndex] := clWhite;
                       end
-                      else if (IMax = IMin) then
+                      else if (MinMax.IMax = MinMax.IMin) then
                       begin
                         ITemp := DataSet.IntegerData
                           [LayerIndex, RowIndex, ColIndex];
-                        if ITemp = IMin then
+                        if ITemp = MinMax.IMin then
                         begin
                           SideCellColors[RowIndex, LayerIndex] :=
                             GridFracToRainbow(0.5);
@@ -6181,10 +6169,10 @@ begin
                       begin
                         ITemp := DataSet.IntegerData
                           [LayerIndex, RowIndex, ColIndex];
-                        if (ITemp >= IMin) and (ITemp <= IMax) then
+                        if (ITemp >= MinMax.IMin) and (ITemp <= MinMax.IMax) then
                         begin
                           SideCellColors[RowIndex, LayerIndex] :=
-                            GridFracToRainbow((IMax - ITemp) / (IMax - IMin));
+                            GridFracToRainbow((MinMax.IMax - ITemp) / (MinMax.IMax - MinMax.IMin));
                         end;
                       end;
                     end;
@@ -6203,11 +6191,11 @@ begin
                     begin
                       SideCellColors[RowIndex, LayerIndex] := clWhite;
                     end
-                    else if BMax = Bmin then
+                    else if MinMax.BMax = MinMax.BMin then
                     begin
                       BTemp := DataSet.BooleanData
                         [LayerIndex, RowIndex, ColIndex];
-                      if BTemp = Bmin then
+                      if BTemp = MinMax.BMin then
                       begin
                         SideCellColors[RowIndex, LayerIndex] :=
                           GridFracToRainbow(0.5);
@@ -6447,18 +6435,17 @@ var
   DataSet: TDataArray;
   LayerCount, RowCount, ColCount: integer;
   LayerIndex, RowIndex, ColIndex: integer;
-  RMin, RMax, RTemp, RMinPositive: real;
-  IMin, IMax, ITemp: integer;
-  BMin, BMax, BTemp: boolean;
-  SMin, SMax, STemp: string;
+  RTemp: real;
+  ITemp: integer;
+  BTemp: boolean;
+  STemp: string;
   SIndex: integer;
   StringValues: TStringList;
   MinMaxInitialized: boolean;
-  LogRMin: double;
-  LogRMax: double;
   LogRTemp: double;
+  MinMax: TMinMax;
 begin
-  RMinPositive := 0;
+  MinMax.RMinPositive := 0;
   MinMaxInitialized := False;
   StringValues := TStringList.Create;
   try
@@ -6476,19 +6463,18 @@ begin
       Exit;
     end;
 
-    SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
-      IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
+    SetMinMax(DataSet, MinMaxInitialized, MinMax, StringValues,
       LayerCount, RowCount, ColCount);
 
-    if DataSet.Limits.LogTransform and (RMinPositive > 0) then
+    if DataSet.Limits.LogTransform and (MinMax.RMinPositive > 0) then
     begin
-      LogRMin := Log10(RMinPositive);
-      LogRMax := Log10(RMax);
+      MinMax.LogRMin := Log10(MinMax.RMinPositive);
+      MinMax.LogRMax := Log10(MinMax.RMax);
     end
     else
     begin
-      LogRMin := 0;
-      LogRMax := 0;
+      MinMax.LogRMin := 0;
+      MinMax.LogRMax := 0;
     end;
     for LayerIndex := 0 to LayerCount - 1 do
     begin
@@ -6511,11 +6497,11 @@ begin
                 begin
                   CellColors[LayerIndex, RowIndex, ColIndex] := clWhite;
                 end
-                else if (RMax = RMin) then
+                else if (MinMax.RMax = MinMax.RMin) then
                 begin
                   RTemp := DataSet.RealData
                     [LayerIndex, RowIndex, ColIndex];
-                  if RTemp = RMin then
+                  if RTemp = MinMax.RMin then
                   begin
                     CellColors[LayerIndex, RowIndex, ColIndex] :=
                       GridFracToRainbow(0.5);
@@ -6529,20 +6515,20 @@ begin
                 begin
                   RTemp := DataSet.RealData
                     [LayerIndex, RowIndex, ColIndex];
-                  if (RTemp >= RMin) and (RTemp <= RMax) then
+                  if (RTemp >= MinMax.RMin) and (RTemp <= MinMax.RMax) then
                   begin
                     if DataSet.Limits.LogTransform then
                     begin
-                      Assert(RMinPositive > 0);
+                      Assert(MinMax.RMinPositive > 0);
                       Assert(RTemp > 0);
                       LogRTemp := Log10(RTemp);
                       CellColors[LayerIndex, RowIndex, ColIndex] :=
-                        GridFracToRainbow((LogRMax - LogRTemp) / (LogRMax - LogRMin));
+                        GridFracToRainbow((MinMax.LogRMax - LogRTemp) / (MinMax.LogRMax - MinMax.LogRMin));
                     end
                     else
                     begin
                       CellColors[LayerIndex, RowIndex, ColIndex] :=
-                        GridFracToRainbow((RMax - RTemp) / (RMax - RMin));
+                        GridFracToRainbow((MinMax.RMax - RTemp) / (MinMax.RMax - MinMax.RMin));
                     end;
                   end
                   else
@@ -6567,11 +6553,11 @@ begin
                   begin
                     CellColors[LayerIndex, RowIndex, ColIndex] := clWhite;
                   end
-                  else if (RMax = RMin) then
+                  else if (MinMax.RMax = MinMax.RMin) then
                   begin
                     RTemp := DataSet.RealData
                       [LayerIndex, RowIndex, ColIndex];
-                    if RTemp = RMin then
+                    if RTemp = MinMax.RMin then
                     begin
                       CellColors[LayerIndex, RowIndex, ColIndex] :=
                         GridFracToRainbow(0.5);
@@ -6585,10 +6571,10 @@ begin
                   begin
                     RTemp := DataSet.RealData
                       [LayerIndex, RowIndex, ColIndex];
-                    if (RTemp >= RMin) and (RTemp <= RMax) then
+                    if (RTemp >= MinMax.RMin) and (RTemp <= MinMax.RMax) then
                     begin
                       CellColors[LayerIndex, RowIndex, ColIndex] :=
-                        GridFracToRainbow((RMax - RTemp) / (RMax - RMin));
+                        GridFracToRainbow((MinMax.RMax - RTemp) / (MinMax.RMax - MinMax.RMin));
                     end
                     else
                     begin
@@ -6610,11 +6596,11 @@ begin
                   begin
                     CellColors[LayerIndex, RowIndex, ColIndex] := clWhite;
                   end
-                  else if (IMax = IMin) then
+                  else if (MinMax.IMax = MinMax.IMin) then
                   begin
                     ITemp := DataSet.IntegerData
                       [LayerIndex, RowIndex, ColIndex];
-                    if ITemp = IMin then
+                    if ITemp = MinMax.IMin then
                     begin
                       CellColors[LayerIndex, RowIndex, ColIndex] :=
                         GridFracToRainbow(0.5);
@@ -6628,10 +6614,10 @@ begin
                   begin
                     ITemp := DataSet.IntegerData
                       [LayerIndex, RowIndex, ColIndex];
-                    if (ITemp >= IMin) and (ITemp <= IMax) then
+                    if (ITemp >= MinMax.IMin) and (ITemp <= MinMax.IMax) then
                     begin
                       CellColors[LayerIndex, RowIndex, ColIndex] :=
-                        GridFracToRainbow((IMax - ITemp) / (IMax - IMin));
+                        GridFracToRainbow((MinMax.IMax - ITemp) / (MinMax.IMax - MinMax.IMin));
                     end
                     else
                     begin
@@ -6654,11 +6640,11 @@ begin
                 begin
                   CellColors[LayerIndex, RowIndex, ColIndex] := clWhite;
                 end
-                else if BMax = Bmin then
+                else if MinMax.BMax = MinMax.BMin then
                 begin
                   BTemp := DataSet.BooleanData
                     [LayerIndex, RowIndex, ColIndex];
-                  if BTemp = Bmin then
+                  if BTemp = MinMax.BMin then
                   begin
                     CellColors[LayerIndex, RowIndex, ColIndex] :=
                       GridFracToRainbow(0.5);

@@ -130,7 +130,47 @@ resourcestring
   StrNotAssigned = ': (not assigned)';
   StrHigher = 'Higher ';
   StrLower = 'Lower ';
-  StrPriorVertex = 'Prior vertex number ';
+  StrPriorVertex = 'Prior vertex number %s';
+  StrParentModel = 'Parent model';
+  StrDataSetValuesNeed = 'Data set values need to be updated.';
+  StrTheMouseIsNotOve = 'The mouse is not over the grid.';
+  StrTheDataSetDoesNo = 'The data set does not have a value at the current l' +
+  'ocation.';
+  StrLayerD = 'Layer: %d';
+  StrRowD = 'Row: %d';
+  StrColumn = 'Column: %d';
+  StrLayerHeightG = 'Layer height: %g';
+  StrRowWidthG = 'Row width: %g';
+  StrColumnWidthG = 'Column width: %g';
+  StrLayerHeight = 'Layer height:';
+  StrRowWidth = 'Row width:';
+  StrColumnWidth = 'Column width:';
+  StrLayer = 'Layer';
+  StrRow = 'Row';
+  StrColumn1 = 'Column';
+  Str0s1s2gOn = '%0:s %1:s: %2:g on %3:s %4:d';
+  StrZcoordinate = 'Z-coordinate';
+  StrYcoordinate = 'Y-coordinate';
+  StrXcoordinate = 'X-coordinate';
+  StrSection = 'Section = ?';
+  StrSectionD = 'Section %d';
+  StrSelectedObjectMu = 'Selected object: (multiple objects)';
+  StrSection1 = 'Section';
+  StrSelectedObjectNo = 'Selected object: (none)';
+  StrFirst = 'First';
+  StrLast = 'Last';
+  StrClosest = 'Closest';
+  StrX = 'X';
+  StrY = 'Y';
+  StrZ = 'Z';
+  StrXPrime = 'X''';
+  StrYPrime = 'Y''';
+  StrLocalZ = 'Local Z';
+  StrTime = 'Time';
+  StrTimeStep = 'Time step';
+  StrStart = 'Start';
+  StrEnd = 'End';
+  StrZone = 'Zone';
 
 {$R *.dfm}
 
@@ -199,13 +239,13 @@ begin
   FDataSetDummyObjects := TObjectList.Create;
 
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowNWT:
+    msPhast, msModflow, msModflowNWT {$IFDEF SUTRA}, msSutra {$ENDIF}:
       begin
-        comboModel.Items.AddObject('Parent model', frmGoPhast.PhastModel)
+        comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel)
       end;
     msModflowLGR:
       begin
-        comboModel.Items.AddObject('Parent model', frmGoPhast.PhastModel);
+        comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel);
         for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
         begin
           ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
@@ -215,7 +255,8 @@ begin
     else
       Assert(False);
   end;
-  comboModel.ItemIndex := comboModel.Items.IndexOfObject(frmGoPhast.PhastModel.SelectedModel);
+  comboModel.ItemIndex := comboModel.Items.IndexOfObject(
+    frmGoPhast.PhastModel.SelectedModel);
 
   InitializePathlineGrid;
   InitializeEndpointGrid;
@@ -263,7 +304,7 @@ begin
   if not OtherDataSet.UpToDate then
   begin
     edSelectValue.Text := '';
-    memoSelectExplanation.Text := 'Data set values need to be updated.';
+    memoSelectExplanation.Text := StrDataSetValuesNeed;
     btnUpdate.Enabled := True;
     Exit;
   end;
@@ -271,7 +312,7 @@ begin
   if (Layer < 0) or (Row < 0) or (Column < 0) then
   begin
     edSelectValue.Text := '';
-    memoSelectExplanation.Text := 'The mouse is not over the grid.';
+    memoSelectExplanation.Text := StrTheMouseIsNotOve;
     Exit;
   end;
 
@@ -300,8 +341,7 @@ begin
   if not OtherDataSet.IsValue[Layer, Row, Column] then
   begin
     edSelectValue.Text := '';
-    memoSelectExplanation.Text := 'The data set does not have a value '
-      + 'at the current location.';
+    memoSelectExplanation.Text := StrTheDataSetDoesNo;
     Exit;
   end;
 
@@ -345,12 +385,13 @@ begin
   FColumn := Column;
   FRow := Row;
   FLayer := Layer;
-  lblLayer.Caption := 'Layer: ' + IntToStr(Layer+1);
-  lblRow.Caption := 'Row: ' + IntToStr(Row+1);
-  lblColumn.Caption := 'Column: ' + IntToStr(Column+1);
+  lblLayer.Caption := Format(StrLayerD, [(Layer+1)]);
+  lblRow.Caption := Format(StrRowD, [(Row+1)]);
+  lblColumn.Caption := Format(StrColumn, [(Column+1)]);
   lblDataSet.Caption := DataSetName;
   edCellValue.Text := CellValue;
-  if (Explanation <> StrNoValueAssigned) and (Pos(StrNoValueAssigned, Explanation) > 0) then
+  if (Explanation <> StrNoValueAssigned)
+    and (Pos(StrNoValueAssigned, Explanation) > 0) then
   begin
     Explanation := StringReplace(Explanation, StrNoValueAssigned, '', []);
   end;
@@ -362,7 +403,8 @@ begin
   begin
     if DataSetName <> '' then
     begin
-      DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataSetName)
+      DataArray := frmGoPhast.PhastModel.DataArrayManager.
+        GetDataSetByName(DataSetName)
     end
     else
     begin
@@ -381,15 +423,15 @@ begin
     RowWidth := GetRowWidth(Row);
     LayerHeight := GetLayerHeight(Column, Row, Layer);
 
-    lblLayerHeight.Caption := 'Layer height: ' + FloatToStr(LayerHeight);
-    lblRowWidth.Caption := 'Row width:'  + FloatToStr(RowWidth);
-    lblColumnWidth.Caption := 'Column width: ' + FloatToStr(ColumnWidth);
+    lblLayerHeight.Caption := Format(StrLayerHeightG, [LayerHeight]);
+    lblRowWidth.Caption := Format(StrRowWidthG, [RowWidth]);
+    lblColumnWidth.Caption := Format(StrColumnWidthG, [ColumnWidth]);
   end
   else
   begin
-    lblLayerHeight.Caption := 'Layer height:';
-    lblRowWidth.Caption := 'Row width:';
-    lblColumnWidth.Caption := 'Column width:';
+    lblLayerHeight.Caption := StrLayerHeight;
+    lblRowWidth.Caption := StrRowWidth;
+    lblColumnWidth.Caption := StrColumnWidth;
   end;
   
   UpdateScreenObjectInfo(Column, Row, Layer, Location, Model);
@@ -457,6 +499,11 @@ var
   Grid: TCustomModelGrid;
 begin
   Grid := frmGoPhast.PhastModel.SelectedModel.Grid;
+  if Grid = nil then
+  begin
+    OtherDataSet := nil;
+    Exit;
+  end;
   if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
   begin
     OtherDataSet := nil;
@@ -513,19 +560,19 @@ var
             begin
               VarIndex := 0;
               MaxCount := Grid.LayerCount;
-              VarLabel := 'Layer ';
+              VarLabel := StrLayer;
             end;
           vdFront:
             begin
               VarIndex := 1;
               MaxCount := Grid.RowCount;
-              VarLabel := 'Row ';
+              VarLabel := StrRow;
             end;
           vdSide:
             begin
               VarIndex := 2;
               MaxCount := Grid.ColumnCount;
-              VarLabel := 'Column ';
+              VarLabel := StrColumn1;
             end;
           else
             Assert(False);
@@ -536,13 +583,13 @@ var
         begin
           Indicies[VarIndex] := LayRowColIndex;
           if FSelectedScreenObject.
-            IsHigher3DElevationAssigned(Indicies[2], Indicies[1], Indicies[0], LocalModel) then
+            IsHigher3DElevationAssigned(Indicies[2], Indicies[1],
+            Indicies[0], LocalModel) then
           begin
             Value := FSelectedScreenObject.
               Higher3DElevations[LocalModel][Indicies[0], Indicies[1], Indicies[2]];
-            lblHigher3rdDimensionCoordinate.Caption :=
-              ExtraText + DirectionText + ': ' + FloatToStr(Value)
-              + ' on ' + VarLabel + IntToStr(LayRowColIndex+1);
+            lblHigher3rdDimensionCoordinate.Caption := Format(Str0s1s2gOn,
+              [ExtraText, DirectionText, Value, VarLabel, LayRowColIndex+1]);
             FoundValue := True;
             break;
           end
@@ -595,19 +642,19 @@ var
             begin
               VarIndex := 0;
               MaxCount := Grid.LayerCount;
-              VarLabel := 'Layer ';
+              VarLabel := StrLayer;
             end;
           vdFront:
             begin
               VarIndex := 1;
               MaxCount := Grid.RowCount;
-              VarLabel := 'Row ';
+              VarLabel := StrRow;
             end;
           vdSide:
             begin
               VarIndex := 2;
               MaxCount := Grid.ColumnCount;
-              VarLabel := 'Column ';
+              VarLabel := StrColumn1;
             end;
           else
             Assert(False);
@@ -618,13 +665,13 @@ var
         begin
           Indicies[VarIndex] := LayRowColIndex;
           if FSelectedScreenObject.
-            IsLower3DElevationAssigned(Indicies[2], Indicies[1], Indicies[0], LocalModel) then
+            IsLower3DElevationAssigned(Indicies[2], Indicies[1],
+            Indicies[0], LocalModel) then
           begin
             Value := FSelectedScreenObject.
               Lower3DElevations[LocalModel][Indicies[0], Indicies[1], Indicies[2]];
-            lblLower3rdDimensionCoordinate.Caption :=
-              ExtraText + DirectionText + ': ' + FloatToStr(Value)
-              + ' on ' + VarLabel + IntToStr(LayRowColIndex+1);
+            lblLower3rdDimensionCoordinate.Caption := Format(Str0s1s2gOn,
+              [ExtraText, DirectionText, Value, VarLabel, LayRowColIndex+1]);
             FoundValue := True;
             break;
           end
@@ -665,47 +712,50 @@ begin
       case FSelectedScreenObject.ViewDirection of
         vdTop:
           begin
-            DirectionText := 'Z-coordinate';
+            DirectionText := StrZcoordinate;
             if (Segment <> nil) and (Segment.Col = Column)
               and (Segment.Row = Row) then
             begin
-              lblVertex.Caption := StrPriorVertex + IntToStr(Segment.VertexIndex + 1);
-              lblSection.Caption := 'Section ' + IntToStr(Segment.SectionIndex + 1);
+              lblVertex.Caption := Format(StrPriorVertex,
+                ['= ' + IntToStr(Segment.VertexIndex + 1)]);
+              lblSection.Caption := Format(StrSectionD, [Segment.SectionIndex + 1]);
             end
             else
             begin
-              lblVertex.Caption := StrPriorVertex +' = ?';
-              lblSection.Caption := 'Section = ?';
+              lblVertex.Caption := Format(StrPriorVertex, ['= ?']);
+              lblSection.Caption := StrSection;
             end;
           end;
         vdFront:
           begin
-            DirectionText := 'Y-coordinate';
+            DirectionText := StrYcoordinate;
             if (Segment <> nil) and (Segment.Col = Column)
               and (Segment.Layer = Layer) then
             begin
-              lblVertex.Caption := StrPriorVertex + IntToStr(Segment.VertexIndex + 1);
-              lblSection.Caption := 'Section ' + IntToStr(Segment.SectionIndex + 1);
+              lblVertex.Caption := Format(StrPriorVertex,
+                ['= ' + IntToStr(Segment.VertexIndex + 1)]);
+              lblSection.Caption := Format(StrSectionD, [Segment.SectionIndex + 1]);
             end
             else
             begin
-              lblVertex.Caption := StrPriorVertex +' = ?';
-              lblSection.Caption := 'Section = ?';
+              lblVertex.Caption := Format(StrPriorVertex, ['= ?']);
+              lblSection.Caption := StrSection;
             end;
           end;
         vdSide:
           begin
-            DirectionText := 'X-coordinate';
+            DirectionText := StrXcoordinate;
             if (Segment <> nil)
               and (Segment.Row = Row) and (Segment.Layer = Layer) then
             begin
-              lblVertex.Caption := StrPriorVertex + IntToStr(Segment.VertexIndex + 1);
-              lblSection.Caption := 'Section ' + IntToStr(Segment.SectionIndex + 1);
+              lblVertex.Caption := Format(StrPriorVertex,
+                ['= ' + IntToStr(Segment.VertexIndex + 1)]);
+              lblSection.Caption := Format(StrSectionD, [Segment.SectionIndex + 1]);
             end
             else
             begin
-              lblVertex.Caption := StrPriorVertex +' = ?';
-              lblSection.Caption := 'Section = ?';
+              lblVertex.Caption := Format(StrPriorVertex, ['= ?']);
+              lblSection.Caption := StrSection;
             end;
           end;
       else
@@ -744,19 +794,19 @@ begin
   end
   else if frmGoPhast.PhastModel.SelectedScreenObjectCount > 1 then
   begin
-    lblSelectedObject.Caption := StrSelectedObject + ': (multiple objects)';
+    lblSelectedObject.Caption := StrSelectedObjectMu;
     lblHigher3rdDimensionCoordinate.Caption := StrHigher3rdDimension;
     lblLower3rdDimensionCoordinate.Caption := StrLower3rdDimension;
-    lblVertex.Caption := StrPriorVertex;
-    lblSection.Caption := 'Section';
+    lblVertex.Caption := Format(StrPriorVertex, ['']);
+    lblSection.Caption := StrSection1;
   end
   else
   begin
-    lblSelectedObject.Caption := StrSelectedObject + ': (none)';
+    lblSelectedObject.Caption := StrSelectedObjectNo;
     lblHigher3rdDimensionCoordinate.Caption := StrHigher3rdDimension;
     lblLower3rdDimensionCoordinate.Caption := StrLower3rdDimension;
-    lblVertex.Caption := StrPriorVertex;
-    lblSection.Caption := 'Section';
+    lblVertex.Caption := Format(StrPriorVertex, ['']);
+    lblSection.Caption := StrSection1;
   end;
 end;
 
@@ -900,29 +950,51 @@ begin
       rdgEndPoints.BeginUpdate;
       try
         begin
-          rdgEndPoints.Cells[Ord(epcStart), Ord(eprZone)] := IntToStr(AnEndPoint.StartZoneCode);
-          rdgEndPoints.Cells[Ord(epcStart), Ord(eprColumn)] := IntToStr(AnEndPoint.StartColumn);
-          rdgEndPoints.Cells[Ord(epcStart), Ord(eprRow)] := IntToStr(AnEndPoint.StartRow);
-          rdgEndPoints.Cells[Ord(epcStart), Ord(eprLayer)] := IntToStr(AnEndPoint.StartLayer);
-          rdgEndPoints.Cells[Ord(epcStart), Ord(eprX)] := FloatToStr(AnEndPoint.StartX);
-          rdgEndPoints.Cells[Ord(epcStart), Ord(eprY)] := FloatToStr(AnEndPoint.StartY);
-          rdgEndPoints.Cells[Ord(epcStart), Ord(eprZ)] := FloatToStr(AnEndPoint.StartZ);
-          rdgEndPoints.Cells[Ord(epcStart), Ord(eprXPrime)] := FloatToStr(AnEndPoint.StartXPrime);
-          rdgEndPoints.Cells[Ord(epcStart), Ord(eprYPrime)] := FloatToStr(AnEndPoint.StartYPrime);
-          rdgEndPoints.Cells[Ord(epcStart), Ord(eprLocalZ)] := FloatToStr(AnEndPoint.StartLocalZ);
-          rdgEndPoints.Cells[Ord(epcStart), Ord(eprTimeStep)] := IntToStr(AnEndPoint.StartTimeStep);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprZone)] :=
+            IntToStr(AnEndPoint.StartZoneCode);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprColumn)] :=
+            IntToStr(AnEndPoint.StartColumn);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprRow)] :=
+            IntToStr(AnEndPoint.StartRow);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprLayer)] :=
+            IntToStr(AnEndPoint.StartLayer);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprX)] :=
+            FloatToStr(AnEndPoint.StartX);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprY)] :=
+            FloatToStr(AnEndPoint.StartY);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprZ)] :=
+            FloatToStr(AnEndPoint.StartZ);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprXPrime)] :=
+            FloatToStr(AnEndPoint.StartXPrime);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprYPrime)] :=
+            FloatToStr(AnEndPoint.StartYPrime);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprLocalZ)] :=
+            FloatToStr(AnEndPoint.StartLocalZ);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprTimeStep)] :=
+            IntToStr(AnEndPoint.StartTimeStep);
 
-          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprZone)] := IntToStr(AnEndPoint.EndZoneCode);
-          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprColumn)] := IntToStr(AnEndPoint.EndColumn);
-          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprRow)] := IntToStr(AnEndPoint.EndRow);
-          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprLayer)] := IntToStr(AnEndPoint.EndLayer);
-          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprX)] := FloatToStr(AnEndPoint.EndX);
-          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprY)] := FloatToStr(AnEndPoint.EndY);
-          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprZ)] := FloatToStr(AnEndPoint.EndZ);
-          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprXPrime)] := FloatToStr(AnEndPoint.EndXPrime);
-          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprYPrime)] := FloatToStr(AnEndPoint.EndYPrime);
-          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprLocalZ)] := FloatToStr(AnEndPoint.EndLocalZ);
-          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprTimeStep)] := IntToStr(AnEndPoint.EndTimeStep);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprZone)] :=
+            IntToStr(AnEndPoint.EndZoneCode);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprColumn)] :=
+            IntToStr(AnEndPoint.EndColumn);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprRow)] :=
+            IntToStr(AnEndPoint.EndRow);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprLayer)] :=
+            IntToStr(AnEndPoint.EndLayer);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprX)] :=
+            FloatToStr(AnEndPoint.EndX);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprY)] :=
+            FloatToStr(AnEndPoint.EndY);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprZ)] :=
+            FloatToStr(AnEndPoint.EndZ);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprXPrime)] :=
+            FloatToStr(AnEndPoint.EndXPrime);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprYPrime)] :=
+            FloatToStr(AnEndPoint.EndYPrime);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprLocalZ)] :=
+            FloatToStr(AnEndPoint.EndLocalZ);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprTimeStep)] :=
+            IntToStr(AnEndPoint.EndTimeStep);
         end;
       finally
         rdgEndPoints.EndUpdate;
@@ -1049,17 +1121,28 @@ begin
           for ColIndex := Ord(plcFirst) to Ord(plcClosest) do
           begin
             APathLinePoint := List[ColIndex];
-            rdgPathline.Cells[ColIndex, Ord(plrX)] := FloatToStr(APathLinePoint.X);
-            rdgPathline.Cells[ColIndex, Ord(plrY)] := FloatToStr(APathLinePoint.Y);
-            rdgPathline.Cells[ColIndex, Ord(plrZ)] := FloatToStr(APathLinePoint.Z);
-            rdgPathline.Cells[ColIndex, Ord(plrXPrime)] := FloatToStr(APathLinePoint.XPrime);
-            rdgPathline.Cells[ColIndex, Ord(plrYPrime)] := FloatToStr(APathLinePoint.YPrime);
-            rdgPathline.Cells[ColIndex, Ord(plrLocalZ)] := FloatToStr(APathLinePoint.LocalZ);
-            rdgPathline.Cells[ColIndex, Ord(plrTime)] := FloatToStr(APathLinePoint.AbsoluteTime);
-            rdgPathline.Cells[ColIndex, Ord(plrColumn)] := IntToStr(APathLinePoint.Column);
-            rdgPathline.Cells[ColIndex, Ord(plrRow)] := IntToStr(APathLinePoint.Row);
-            rdgPathline.Cells[ColIndex, Ord(plrLayer)] := IntToStr(APathLinePoint.Layer);
-            rdgPathline.Cells[ColIndex, Ord(plrTimeStep)] := IntToStr(APathLinePoint.TimeStep);
+            rdgPathline.Cells[ColIndex, Ord(plrX)] :=
+              FloatToStr(APathLinePoint.X);
+            rdgPathline.Cells[ColIndex, Ord(plrY)] :=
+              FloatToStr(APathLinePoint.Y);
+            rdgPathline.Cells[ColIndex, Ord(plrZ)] :=
+              FloatToStr(APathLinePoint.Z);
+            rdgPathline.Cells[ColIndex, Ord(plrXPrime)] :=
+              FloatToStr(APathLinePoint.XPrime);
+            rdgPathline.Cells[ColIndex, Ord(plrYPrime)] :=
+              FloatToStr(APathLinePoint.YPrime);
+            rdgPathline.Cells[ColIndex, Ord(plrLocalZ)] :=
+              FloatToStr(APathLinePoint.LocalZ);
+            rdgPathline.Cells[ColIndex, Ord(plrTime)] :=
+              FloatToStr(APathLinePoint.AbsoluteTime);
+            rdgPathline.Cells[ColIndex, Ord(plrColumn)] :=
+              IntToStr(APathLinePoint.Column);
+            rdgPathline.Cells[ColIndex, Ord(plrRow)] :=
+              IntToStr(APathLinePoint.Row);
+            rdgPathline.Cells[ColIndex, Ord(plrLayer)] :=
+              IntToStr(APathLinePoint.Layer);
+            rdgPathline.Cells[ColIndex, Ord(plrTimeStep)] :=
+              IntToStr(APathLinePoint.TimeStep);
           end;
         finally
           rdgPathline.EndUpdate;
@@ -1088,37 +1171,37 @@ end;
 
 procedure TfrmGridValue.InitializePathlineGrid;
 begin
-  rdgPathline.Cells[Ord(plcFirst), 0] := 'First';
-  rdgPathline.Cells[Ord(plcLast), 0] := 'Last';
-  rdgPathline.Cells[Ord(plcClosest), 0] := 'Closest';
-  rdgPathline.Cells[0, Ord(plrX)] := 'X';
-  rdgPathline.Cells[0, Ord(plrY)] := 'Y';
-  rdgPathline.Cells[0, Ord(plrZ)] := 'Z';
-  rdgPathline.Cells[0, Ord(plrXPrime)] := 'X''';
-  rdgPathline.Cells[0, Ord(plrYPrime)] := 'Y''';
-  rdgPathline.Cells[0, Ord(plrLocalZ)] := 'Local Z';
-  rdgPathline.Cells[0, Ord(plrTime)] := 'Time';
-  rdgPathline.Cells[0, Ord(plrColumn)] := 'Column';
-  rdgPathline.Cells[0, Ord(plrRow)] := 'Row';
-  rdgPathline.Cells[0, Ord(plrLayer)] := 'Layer';
-  rdgPathline.Cells[0, Ord(plrTimeStep)] := 'Time step';
+  rdgPathline.Cells[Ord(plcFirst), 0] := StrFirst;
+  rdgPathline.Cells[Ord(plcLast), 0] := StrLast;
+  rdgPathline.Cells[Ord(plcClosest), 0] := StrClosest;
+  rdgPathline.Cells[0, Ord(plrX)] := StrX;
+  rdgPathline.Cells[0, Ord(plrY)] := StrY;
+  rdgPathline.Cells[0, Ord(plrZ)] := StrZ;
+  rdgPathline.Cells[0, Ord(plrXPrime)] := StrXPrime;
+  rdgPathline.Cells[0, Ord(plrYPrime)] := StrYPrime;
+  rdgPathline.Cells[0, Ord(plrLocalZ)] := StrLocalZ;
+  rdgPathline.Cells[0, Ord(plrTime)] := StrTime;
+  rdgPathline.Cells[0, Ord(plrColumn)] := StrColumn1;
+  rdgPathline.Cells[0, Ord(plrRow)] := StrRow;
+  rdgPathline.Cells[0, Ord(plrLayer)] := StrLayer;
+  rdgPathline.Cells[0, Ord(plrTimeStep)] := StrTimeStep;
 end;
 
 procedure TfrmGridValue.InitializeEndpointGrid;
 begin
-  rdgEndPoints.Cells[Ord(epcStart), 0] := 'Start';
-  rdgEndPoints.Cells[Ord(epcEnd), 0] := 'End';
-  rdgEndPoints.Cells[0, Ord(eprZone)] := 'Zone';
-  rdgEndPoints.Cells[0, Ord(eprX)] := 'X';
-  rdgEndPoints.Cells[0, Ord(eprY)] := 'Y';
-  rdgEndPoints.Cells[0, Ord(eprZ)] := 'Z';
-  rdgEndPoints.Cells[0, Ord(eprXPrime)] := 'X''';
-  rdgEndPoints.Cells[0, Ord(eprYPrime)] := 'Y''';
-  rdgEndPoints.Cells[0, Ord(eprLocalZ)] := 'Local Z';
-  rdgEndPoints.Cells[0, Ord(eprColumn)] := 'Column';
-  rdgEndPoints.Cells[0, Ord(eprRow)] := 'Row';
-  rdgEndPoints.Cells[0, Ord(eprLayer)] := 'Layer';
-  rdgEndPoints.Cells[0, Ord(eprTimeStep)] := 'Time step';
+  rdgEndPoints.Cells[Ord(epcStart), 0] := StrStart;
+  rdgEndPoints.Cells[Ord(epcEnd), 0] := StrEnd;
+  rdgEndPoints.Cells[0, Ord(eprZone)] := StrZone;
+  rdgEndPoints.Cells[0, Ord(eprX)] := StrX;
+  rdgEndPoints.Cells[0, Ord(eprY)] := StrY;
+  rdgEndPoints.Cells[0, Ord(eprZ)] := StrZ;
+  rdgEndPoints.Cells[0, Ord(eprXPrime)] := StrXPrime;
+  rdgEndPoints.Cells[0, Ord(eprYPrime)] := StrYPrime;
+  rdgEndPoints.Cells[0, Ord(eprLocalZ)] := StrLocalZ;
+  rdgEndPoints.Cells[0, Ord(eprColumn)] := StrColumn1;
+  rdgEndPoints.Cells[0, Ord(eprRow)] := StrRow;
+  rdgEndPoints.Cells[0, Ord(eprLayer)] := StrLayer;
+  rdgEndPoints.Cells[0, Ord(eprTimeStep)] := StrTimeStep;
 end;
 
 procedure TfrmGridValue.UpdatedSelectedObject;

@@ -5150,13 +5150,15 @@ var
   StartPoint: TPoint2D;
   ClosestLocation: TPoint2D;
   PointDistance: real;
+  SectionIndex: integer;
 begin
   StartPoint.x := ZoomBox.X(FStartX);
   StartPoint.Y := ZoomBox.Y(FStartY);
 
   ClosestLocation := FCurrentScreenObject.Points[0];
   PointDistance := Distance(ClosestLocation, StartPoint);
-  FCurrentScreenObject.IsAnyPointCloser(StartPoint, PointDistance, ClosestLocation, 1);
+  FCurrentScreenObject.IsAnyPointCloser(StartPoint, PointDistance,
+    ClosestLocation, SectionIndex, 1);
 
   XOffset := APoint.X - ClosestLocation.X;
   YOffset := APoint.Y - ClosestLocation.Y;

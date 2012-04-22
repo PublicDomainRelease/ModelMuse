@@ -105,6 +105,16 @@ implementation
 uses
   ModpathParticleUnit, frmGoPhastUnit, ModflowTimeUnit;
 
+resourcestring
+  StrN = 'N';
+  StrTime = 'Time';
+  StrStopComputingPathsMax = 'Stop computing paths after a specified maximum' +
+  ' time';
+  StrMaximumTime = 'Maximum time';
+  StrStopComputingPathsSpec = 'Stop computing paths after a specified tracki' +
+  'ng time';
+  StrMaximumTrackingTim = 'Maximum tracking time';
+
 {$R *.dfm}
 
 { TframeModpathSelection }
@@ -150,8 +160,8 @@ end;
 constructor TframeModpathSelection.Create(AOwner: TComponent);
 begin
   inherited;
-  rdgTimes.Cells[0,0] := 'N';
-  rdgTimes.Cells[1,0] := 'Time';
+  rdgTimes.Cells[0,0] := StrN;
+  rdgTimes.Cells[1,0] := StrTime;
 end;
 
 procedure TframeModpathSelection.GetData(Package: TModflowPackageSelection);
@@ -169,14 +179,14 @@ begin
     if not frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel then
     begin
       cbStopAfterMaxTime.Caption :=
-        'Stop computing paths after a specified maximum time';
-      lblMaxTime.Caption := 'Maximum time';
+        StrStopComputingPathsMax;
+      lblMaxTime.Caption := StrMaximumTime;
     end
     else
     begin
       cbStopAfterMaxTime.Caption :=
-        'Stop computing paths after a specified tracking time';
-      lblMaxTime.Caption := 'Maximum tracking time';
+        StrStopComputingPathsSpec;
+      lblMaxTime.Caption := StrMaximumTrackingTim;
     end;
     comboTrackingDirection.ItemIndex := Ord(ModpathSource.TrackingDirection);
     EnableTimeControls;

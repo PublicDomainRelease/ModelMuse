@@ -63,6 +63,12 @@ implementation
 
 uses GR32, ContourUnit, Math;
 
+resourcestring
+  StrN = 'N';
+  StrContourValue = 'Contour value';
+  StrLineThicknessPixe = 'Line thickness (pixels)';
+  StrContourColor = 'Contour color';
+
 {$R *.dfm}
 
 type
@@ -87,10 +93,10 @@ procedure TfrmSpecifyContours.FormCreate(Sender: TObject);
 begin
   inherited;
   FContourColors := TColorParameters.Create;
-  rdgContourData.Cells[Ord(ccN),0] := 'N';
-  rdgContourData.Cells[Ord(ccValue),0] := 'Contour value';
-  rdgContourData.Cells[Ord(ccThickness),0] := 'Line thickness (pixels)';
-  rdgContourData.Cells[Ord(ccColor),0] := 'Contour color';
+  rdgContourData.Cells[Ord(ccN),0] := StrN;
+  rdgContourData.Cells[Ord(ccValue),0] := StrContourValue;
+  rdgContourData.Cells[Ord(ccThickness),0] := StrLineThicknessPixe;
+  rdgContourData.Cells[Ord(ccColor),0] := StrContourColor;
 end;
 
 procedure TfrmSpecifyContours.FormDestroy(Sender: TObject);

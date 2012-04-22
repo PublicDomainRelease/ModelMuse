@@ -627,12 +627,14 @@ inherited frmFormula: TfrmFormula
         AlignWithMargins = True
         Left = 4
         Top = 4
-        Width = 193
-        Height = 16
+        Width = 227
+        Height = 33
         Align = alClient
         Alignment = taCenter
         Caption = 'Double-click to insert into formula'
         WordWrap = True
+        ExplicitWidth = 193
+        ExplicitHeight = 16
       end
     end
     object tvItems: TTreeView

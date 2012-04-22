@@ -25,6 +25,16 @@ uses
   Forms, frmErrorsAndWarningsUnit, ModflowUnitNumbers, CustomModflowWriterUnit,
   frmProgressUnit, LayerStructureUnit;
 
+resourcestring
+  StrWritingUPWPackage = 'Writing UPW Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSet3 = '  Writing Data Set 3.';
+  StrWritingDataSet4 = '  Writing Data Set 4.';
+  StrWritingDataSet5 = '  Writing Data Set 5.';
+  StrWritingDataSet6 = '  Writing Data Set 6.';
+
 { TModflowLPF_Writer }
 
 class function TModflowUPW_Writer.Extension: string;
@@ -102,8 +112,8 @@ begin
     NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage('Writing UPW Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingUPWPackage);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -111,7 +121,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -119,7 +129,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -127,7 +137,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage(StrWritingDataSet3);
     WriteDataSet3;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -135,7 +145,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage(StrWritingDataSet4);
     WriteDataSet4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -143,7 +153,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage(StrWritingDataSet5);
     WriteDataSet5;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -151,7 +161,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 6.');
+    frmProgressMM.AddMessage(StrWritingDataSet6);
     WriteDataSet6;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then

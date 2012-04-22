@@ -982,6 +982,7 @@ uses Contnrs, ScreenObjectUnit, frmGoPhastUnit, frmDataSetsUnits,
 
 resourcestring
   StrSetByPHASTstyleI = 'Set by PHAST-style interpolation';
+  StrMixtureFormulaFor = 'Mixture formula for: %s';
 
 { T3DSparseInterpolationDirectionArray }
 
@@ -1342,25 +1343,28 @@ var
   RowIndex: Integer;
 begin
   FIsUniform := iuUnknown;
-  GetLimits(ColLimit, RowLimit, LayerLimit);
-  for LayerIndex := 0 to LayerLimit do
+  if Model.ModelSelection = msPhast then
   begin
-    for RowIndex := 0 to RowLimit do
+    GetLimits(ColLimit, RowLimit, LayerLimit);
+    for LayerIndex := 0 to LayerLimit do
     begin
-      for ColIndex := 0 to ColLimit do
+      for RowIndex := 0 to RowLimit do
       begin
-        if IsValue[LayerIndex, RowIndex, ColIndex] then
+        for ColIndex := 0 to ColLimit do
         begin
-          if IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
+          if IsValue[LayerIndex, RowIndex, ColIndex] then
+          begin
+            if IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
+            begin
+              FIsUniform := iuFalse;
+              Exit;
+            end;
+          end
+          else
           begin
             FIsUniform := iuFalse;
             Exit;
           end;
-        end
-        else
-        begin
-          FIsUniform := iuFalse;
-          Exit;
         end;
       end;
     end;
@@ -1403,7 +1407,7 @@ begin
     if Stack.IndexOf(Name) >= 0 then
     begin
       UpToDate := True;
-      raise ECircularReference.Create('Circular reference in ' + Name);
+      raise ECircularReference.Create(Format(StrCircularReferenceI, [Name]));
     end;
     Position := Stack.Add(Name);
 
@@ -1426,15 +1430,14 @@ begin
         AScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
         if not AScreenObject.Deleted then
         begin
-          AScreenObject.AssignValuesToPhastDataSet(
-            frmGoPhast.Grid, self, FModel, lctUse);
+          AScreenObject.AssignValuesToDataSet(self, FModel, lctUse);
         end;
       end;
 
       PostInitialize;
 
-      CheckIfUniform;
       UpToDate := True;
+      CheckIfUniform;
       UpdateDialogBoxes;
     end
     else
@@ -1473,22 +1476,25 @@ var
   Direction: TInterpolationDirection;
 begin
   inherited;
-  DecompressionStream.Read(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
+  if Model.ModelSelection = msPhast then
   begin
+    DecompressionStream.Read(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
     DecompressionStream.Read(LayerIndex, SizeOf(LayerIndex));
     DecompressionStream.Read(RowIndex, SizeOf(RowIndex));
     DecompressionStream.Read(ColIndex, SizeOf(ColIndex));
-    DecompressionStream.Read(IsInterpolated, SizeOf(IsInterpolated));
-    IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] := IsInterpolated;
-    if IsInterpolated then
-    begin
-      DecompressionStream.Read(Distance, SizeOf(Distance));
-      CellDistance1[LayerIndex, RowIndex, ColIndex] := Distance;
-      DecompressionStream.Read(Distance, SizeOf(Distance));
-      CellDistance2[LayerIndex, RowIndex, ColIndex] := Distance;
-      DecompressionStream.Read(Direction, SizeOf(Direction));
-      CellInterpolationDirection[LayerIndex, RowIndex, ColIndex] := Direction;
+      DecompressionStream.Read(IsInterpolated, SizeOf(IsInterpolated));
+      IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] := IsInterpolated;
+      if IsInterpolated then
+      begin
+        DecompressionStream.Read(Distance, SizeOf(Distance));
+        CellDistance1[LayerIndex, RowIndex, ColIndex] := Distance;
+        DecompressionStream.Read(Distance, SizeOf(Distance));
+        CellDistance2[LayerIndex, RowIndex, ColIndex] := Distance;
+        DecompressionStream.Read(Direction, SizeOf(Direction));
+        CellInterpolationDirection[LayerIndex, RowIndex, ColIndex] := Direction;
+      end;
     end;
   end;
 end;
@@ -1594,31 +1600,34 @@ var
   Direction: TInterpolationDirection;
 begin
   inherited;
-  CountValues(LayerLimit, RowLimit, ColLimit, Count);
-  Stream.Write(Count, SizeOf(Count));
-  if Count > 0 then
+  if Model.ModelSelection = msPhast then
   begin
-    for LayerIndex := 0 to LayerLimit do
+    CountValues(LayerLimit, RowLimit, ColLimit, Count);
+    Stream.Write(Count, SizeOf(Count));
+    if Count > 0 then
     begin
-      for RowIndex := 0 to RowLimit do
+      for LayerIndex := 0 to LayerLimit do
       begin
-        for ColIndex := 0 to ColLimit do
+        for RowIndex := 0 to RowLimit do
         begin
-          if IsValue[LayerIndex, RowIndex, ColIndex] then
+          for ColIndex := 0 to ColLimit do
           begin
-            Stream.Write(LayerIndex, SizeOf(LayerIndex));
-            Stream.Write(RowIndex, SizeOf(RowIndex));
-            Stream.Write(ColIndex, SizeOf(ColIndex));
-            IsInterp := IsInterpolatedCell[LayerIndex, RowIndex, ColIndex];
-            Stream.Write(IsInterp, SizeOf(IsInterp));
-            if IsInterp then
+            if IsValue[LayerIndex, RowIndex, ColIndex] then
             begin
-              Distance := CellDistance1[LayerIndex, RowIndex, ColIndex];
-              Stream.Write(Distance, SizeOf(Distance));
-              Distance := CellDistance2[LayerIndex, RowIndex, ColIndex];
-              Stream.Write(Distance, SizeOf(Distance));
-              Direction := CellInterpolationDirection[LayerIndex, RowIndex, ColIndex];
-              Stream.Write(Direction, SizeOf(Direction));
+              Stream.Write(LayerIndex, SizeOf(LayerIndex));
+              Stream.Write(RowIndex, SizeOf(RowIndex));
+              Stream.Write(ColIndex, SizeOf(ColIndex));
+              IsInterp := IsInterpolatedCell[LayerIndex, RowIndex, ColIndex];
+              Stream.Write(IsInterp, SizeOf(IsInterp));
+              if IsInterp then
+              begin
+                Distance := CellDistance1[LayerIndex, RowIndex, ColIndex];
+                Stream.Write(Distance, SizeOf(Distance));
+                Distance := CellDistance2[LayerIndex, RowIndex, ColIndex];
+                Stream.Write(Distance, SizeOf(Distance));
+                Direction := CellInterpolationDirection[LayerIndex, RowIndex, ColIndex];
+                Stream.Write(Direction, SizeOf(Direction));
+            end;
             end;
           end;
         end;
@@ -1868,7 +1877,7 @@ var
   NumberOfColumns: integer;
 begin
   inherited;
-  if SetToZero then
+  if SetToZero or (Model.ModelSelection <> msPhast) then
   begin
     NumberOfLayers := 0;
     NumberOfRows := 0;
@@ -1883,7 +1892,7 @@ begin
   SetLength(FCellInterpolationDirection, NumberOfLayers, NumberOfRows,
     NumberOfColumns);
   SetLength(FIsInterpolatedCell, NumberOfLayers, NumberOfRows, NumberOfColumns);
-  if not SetToZero then
+  if not (SetToZero or (Model.ModelSelection <> msPhast)) then
   begin
     InitializePhastArrays;
   end;
@@ -1892,9 +1901,12 @@ end;
 procedure TArrayPhastDataSet.SetIsInterpolatedCell(const ALay, ARow,
   ACol: integer; const Value: boolean);
 begin
-  if DimensionsChanged then
-    SetDimensions(False);
-  FIsInterpolatedCell[ALay, ARow, ACol] := Value;
+  if Model.ModelSelection = msPhast then
+  begin
+    if DimensionsChanged then
+      SetDimensions(False);
+    FIsInterpolatedCell[ALay, ARow, ACol] := Value;
+  end;
 //  UpdateEvalTime;
 end;
 
@@ -1903,14 +1915,17 @@ var
   LayIndex, RowIndex, ColIndex: integer;
   NumberOfLayers, NumberOfRows, NumberOfColumns: integer;
 begin
-  GetRequiredDimensions(NumberOfLayers, NumberOfRows, NumberOfColumns);
-  for LayIndex := 0 to NumberOfLayers - 1 do
+  if Model.ModelSelection = msPhast then
   begin
-    for RowIndex := 0 to NumberOfRows - 1 do
+    GetRequiredDimensions(NumberOfLayers, NumberOfRows, NumberOfColumns);
+    for LayIndex := 0 to NumberOfLayers - 1 do
     begin
-      for ColIndex := 0 to NumberOfColumns - 1 do
+      for RowIndex := 0 to NumberOfRows - 1 do
       begin
-        FIsInterpolatedCell[LayIndex, RowIndex, ColIndex] := False;
+        for ColIndex := 0 to NumberOfColumns - 1 do
+        begin
+          FIsInterpolatedCell[LayIndex, RowIndex, ColIndex] := False;
+        end;
       end;
     end;
   end;
@@ -2074,7 +2089,7 @@ begin
         ResultTypeOK := Expression.ResultType in [rdtInteger, rdtDouble];
         if not ResultTypeOK then
         begin
-          raise EInvalidDataType.Create('Invalid data type.');
+          raise EInvalidDataType.Create(StrInvalidDataType);
         end;
       end
       else
@@ -2222,7 +2237,7 @@ begin
                   except on E: ERbwParserError do
                     begin
                       frmFormulaErrors.AddFormulaError('',
-                        'Mixture formula for: ' + Name ,
+                        Format(StrMixtureFormulaFor, [Name]),
                         MixtureFormula, E.Message);
                       MixtureFormula := '0.5';
                       
@@ -2293,18 +2308,21 @@ var
   FractionalValue: double;
 begin
   inherited ReadData(DecompressionStream);
-  DecompressionStream.Read(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
+  if Model.ModelSelection = msPhast then
   begin
-    DecompressionStream.Read(LayerIndex, SizeOf(LayerIndex));
-    DecompressionStream.Read(RowIndex, SizeOf(RowIndex));
-    DecompressionStream.Read(ColIndex, SizeOf(ColIndex));
-    DecompressionStream.Read(Value, SizeOf(Value));
-    CellValue1[LayerIndex, RowIndex, ColIndex] := Value;
-    DecompressionStream.Read(Value, SizeOf(Value));
-    CellValue2[LayerIndex, RowIndex, ColIndex] := Value;
-    DecompressionStream.Read(FractionalValue, SizeOf(FractionalValue));
-    Fraction[LayerIndex, RowIndex, ColIndex] := FractionalValue;
+    DecompressionStream.Read(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      DecompressionStream.Read(LayerIndex, SizeOf(LayerIndex));
+      DecompressionStream.Read(RowIndex, SizeOf(RowIndex));
+      DecompressionStream.Read(ColIndex, SizeOf(ColIndex));
+      DecompressionStream.Read(Value, SizeOf(Value));
+      CellValue1[LayerIndex, RowIndex, ColIndex] := Value;
+      DecompressionStream.Read(Value, SizeOf(Value));
+      CellValue2[LayerIndex, RowIndex, ColIndex] := Value;
+      DecompressionStream.Read(FractionalValue, SizeOf(FractionalValue));
+      Fraction[LayerIndex, RowIndex, ColIndex] := FractionalValue;
+    end;
   end;
 end;
 
@@ -2336,7 +2354,7 @@ var
   NumberOfRows: integer;
   NumberOfColumns: integer;
 begin
-  if SetToZero then
+  if SetToZero or (Model.ModelSelection <> msPhast) then
   begin
     NumberOfLayers := 0;
     NumberOfRows := 0;
@@ -2391,25 +2409,10 @@ var
   FractionalValue: double;
 begin
   inherited StoreData(Stream);
-  GetLimits(ColLimit, RowLimit, LayerLimit);
-  Count := 0;
-  for LayerIndex := 0 to LayerLimit do
+  if Model.ModelSelection = msPhast then
   begin
-    for RowIndex := 0 to RowLimit do
-    begin
-      for ColIndex := 0 to ColLimit do
-      begin
-        if IsValue[LayerIndex, RowIndex, ColIndex]
-          and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
-        begin
-          Inc(Count);
-        end;
-      end;
-    end;
-  end;
-  Stream.Write(Count, SizeOf(Count));
-  if Count > 0 then
-  begin
+    GetLimits(ColLimit, RowLimit, LayerLimit);
+    Count := 0;
     for LayerIndex := 0 to LayerLimit do
     begin
       for RowIndex := 0 to RowLimit do
@@ -2419,15 +2422,33 @@ begin
           if IsValue[LayerIndex, RowIndex, ColIndex]
             and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
           begin
-            Stream.Write(LayerIndex, SizeOf(LayerIndex));
-            Stream.Write(RowIndex, SizeOf(RowIndex));
-            Stream.Write(ColIndex, SizeOf(ColIndex));
-            Value := CellValue1[LayerIndex, RowIndex, ColIndex];
-            Stream.Write(Value, SizeOf(Value));
-            Value := CellValue2[LayerIndex, RowIndex, ColIndex];
-            Stream.Write(Value, SizeOf(Value));
-            FractionalValue := Fraction[LayerIndex, RowIndex, ColIndex];
-            Stream.Write(FractionalValue, SizeOf(FractionalValue));
+            Inc(Count);
+          end;
+        end;
+      end;
+    end;
+    Stream.Write(Count, SizeOf(Count));
+    if Count > 0 then
+    begin
+      for LayerIndex := 0 to LayerLimit do
+      begin
+        for RowIndex := 0 to RowLimit do
+        begin
+          for ColIndex := 0 to ColLimit do
+          begin
+            if IsValue[LayerIndex, RowIndex, ColIndex]
+              and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
+            begin
+              Stream.Write(LayerIndex, SizeOf(LayerIndex));
+              Stream.Write(RowIndex, SizeOf(RowIndex));
+              Stream.Write(ColIndex, SizeOf(ColIndex));
+              Value := CellValue1[LayerIndex, RowIndex, ColIndex];
+              Stream.Write(Value, SizeOf(Value));
+              Value := CellValue2[LayerIndex, RowIndex, ColIndex];
+              Stream.Write(Value, SizeOf(Value));
+              FractionalValue := Fraction[LayerIndex, RowIndex, ColIndex];
+              Stream.Write(FractionalValue, SizeOf(FractionalValue));
+            end;
           end;
         end;
       end;
@@ -2596,16 +2617,19 @@ var
   Value: double;
 begin
   inherited ReadData(DecompressionStream);
-  DecompressionStream.Read(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
+  if Model.ModelSelection = msPhast then
   begin
-    DecompressionStream.Read(LayerIndex, SizeOf(LayerIndex));
-    DecompressionStream.Read(RowIndex, SizeOf(RowIndex));
-    DecompressionStream.Read(ColIndex, SizeOf(ColIndex));
-    DecompressionStream.Read(Value, SizeOf(Value));
-    CellValue1[LayerIndex, RowIndex, ColIndex] := Value;
-    DecompressionStream.Read(Value, SizeOf(Value));
-    CellValue2[LayerIndex, RowIndex, ColIndex] := Value;
+    DecompressionStream.Read(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      DecompressionStream.Read(LayerIndex, SizeOf(LayerIndex));
+      DecompressionStream.Read(RowIndex, SizeOf(RowIndex));
+      DecompressionStream.Read(ColIndex, SizeOf(ColIndex));
+      DecompressionStream.Read(Value, SizeOf(Value));
+      CellValue1[LayerIndex, RowIndex, ColIndex] := Value;
+      DecompressionStream.Read(Value, SizeOf(Value));
+      CellValue2[LayerIndex, RowIndex, ColIndex] := Value;
+    end;
   end;
 end;
 
@@ -2637,7 +2661,7 @@ var
   NumberOfRows: integer;
   NumberOfColumns: integer;
 begin
-  if SetToZero then
+  if SetToZero or (Model.ModelSelection <> msPhast) then
   begin
     NumberOfLayers := 0;
     NumberOfRows := 0;
@@ -2683,25 +2707,10 @@ var
   Value: double;
 begin
   inherited StoreData(Stream);
-  GetLimits(ColLimit, RowLimit, LayerLimit);
-  Count := 0;
-  for LayerIndex := 0 to LayerLimit do
+  if Model.ModelSelection = msPhast then
   begin
-    for RowIndex := 0 to RowLimit do
-    begin
-      for ColIndex := 0 to ColLimit do
-      begin
-        if IsValue[LayerIndex, RowIndex, ColIndex]
-          and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
-        begin
-          Inc(Count);
-        end;
-      end;
-    end;
-  end;
-  Stream.Write(Count, SizeOf(Count));
-  if Count > 0 then
-  begin
+    GetLimits(ColLimit, RowLimit, LayerLimit);
+    Count := 0;
     for LayerIndex := 0 to LayerLimit do
     begin
       for RowIndex := 0 to RowLimit do
@@ -2711,13 +2720,31 @@ begin
           if IsValue[LayerIndex, RowIndex, ColIndex]
             and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
           begin
-            Stream.Write(LayerIndex, SizeOf(LayerIndex));
-            Stream.Write(RowIndex, SizeOf(RowIndex));
-            Stream.Write(ColIndex, SizeOf(ColIndex));
-            Value := CellValue1[LayerIndex, RowIndex, ColIndex];
-            Stream.Write(Value, SizeOf(Value));
-            Value := CellValue2[LayerIndex, RowIndex, ColIndex];
-            Stream.Write(Value, SizeOf(Value));
+            Inc(Count);
+          end;
+        end;
+      end;
+    end;
+    Stream.Write(Count, SizeOf(Count));
+    if Count > 0 then
+    begin
+      for LayerIndex := 0 to LayerLimit do
+      begin
+        for RowIndex := 0 to RowLimit do
+        begin
+          for ColIndex := 0 to ColLimit do
+          begin
+            if IsValue[LayerIndex, RowIndex, ColIndex]
+              and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
+            begin
+              Stream.Write(LayerIndex, SizeOf(LayerIndex));
+              Stream.Write(RowIndex, SizeOf(RowIndex));
+              Stream.Write(ColIndex, SizeOf(ColIndex));
+              Value := CellValue1[LayerIndex, RowIndex, ColIndex];
+              Stream.Write(Value, SizeOf(Value));
+              Value := CellValue2[LayerIndex, RowIndex, ColIndex];
+              Stream.Write(Value, SizeOf(Value));
+            end;
           end;
         end;
       end;
@@ -2906,7 +2933,7 @@ begin
     if Stack.IndexOf(Name) >= 0 then
     begin
       UpToDate := True;
-      raise ECircularReference.Create('Circular reference in ' + Name);
+      raise ECircularReference.Create(Format(StrCircularReferenceI, [Name]));
     end;
     Stack.Add(Name);
 
@@ -2920,8 +2947,7 @@ begin
       AScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
       if not AScreenObject.Deleted then
       begin
-        AScreenObject.AssignValuesToPhastDataSet(
-          frmGoPhast.PhastGrid, self, FModel, lctUse);
+        AScreenObject.AssignValuesToDataSet(self, FModel, lctUse);
       end;
     end;
   finally
@@ -3011,9 +3037,12 @@ end;
 procedure TSparseArrayPhastInterpolationDataSet.SetIsInterpolatedCell(
   const ALay, ARow, ACol: integer; const Value: boolean);
 begin
-  if DimensionsChanged then
-    SetDimensions(False);
-  FIsInterpolatedCell[ALay, ARow, ACol] := Value;
+  if Model.ModelSelection = msPhast then
+  begin
+    if DimensionsChanged then
+      SetDimensions(False);
+    FIsInterpolatedCell[ALay, ARow, ACol] := Value;
+  end;
 //  UpdateEvalTime;
 end;
 
@@ -3111,16 +3140,19 @@ var
   Value: double;
 begin
   inherited ReadData(DecompressionStream);
-  DecompressionStream.Read(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
+  if Model.ModelSelection = msPhast then
   begin
-    DecompressionStream.Read(LayerIndex, SizeOf(LayerIndex));
-    DecompressionStream.Read(RowIndex, SizeOf(RowIndex));
-    DecompressionStream.Read(ColIndex, SizeOf(ColIndex));
-    DecompressionStream.Read(Value, SizeOf(Value));
-    CellValue1[LayerIndex, RowIndex, ColIndex] := Value;
-    DecompressionStream.Read(Value, SizeOf(Value));
-    CellValue2[LayerIndex, RowIndex, ColIndex] := Value;
+    DecompressionStream.Read(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      DecompressionStream.Read(LayerIndex, SizeOf(LayerIndex));
+      DecompressionStream.Read(RowIndex, SizeOf(RowIndex));
+      DecompressionStream.Read(ColIndex, SizeOf(ColIndex));
+      DecompressionStream.Read(Value, SizeOf(Value));
+      CellValue1[LayerIndex, RowIndex, ColIndex] := Value;
+      DecompressionStream.Read(Value, SizeOf(Value));
+      CellValue2[LayerIndex, RowIndex, ColIndex] := Value;
+    end;
   end;
 end;
 
@@ -3212,25 +3244,10 @@ var
   Value: double;
 begin
   inherited StoreData(Stream);
-  GetLimits(ColLimit, RowLimit, LayerLimit);
-  Count := 0;
-  for LayerIndex := 0 to LayerLimit do
+  if Model.ModelSelection = msPhast then
   begin
-    for RowIndex := 0 to RowLimit do
-    begin
-      for ColIndex := 0 to ColLimit do
-      begin
-        if IsValue[LayerIndex, RowIndex, ColIndex]
-          and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
-        begin
-          Inc(Count);
-        end;
-      end;
-    end;
-  end;
-  Stream.Write(Count, SizeOf(Count));
-  if Count > 0 then
-  begin
+    GetLimits(ColLimit, RowLimit, LayerLimit);
+    Count := 0;
     for LayerIndex := 0 to LayerLimit do
     begin
       for RowIndex := 0 to RowLimit do
@@ -3240,13 +3257,31 @@ begin
           if IsValue[LayerIndex, RowIndex, ColIndex]
             and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
           begin
-            Stream.Write(LayerIndex, SizeOf(LayerIndex));
-            Stream.Write(RowIndex, SizeOf(RowIndex));
-            Stream.Write(ColIndex, SizeOf(ColIndex));
-            Value := CellValue1[LayerIndex, RowIndex, ColIndex];
-            Stream.Write(Value, SizeOf(Value));
-            Value := CellValue2[LayerIndex, RowIndex, ColIndex];
-            Stream.Write(Value, SizeOf(Value));
+            Inc(Count);
+          end;
+        end;
+      end;
+    end;
+    Stream.Write(Count, SizeOf(Count));
+    if Count > 0 then
+    begin
+      for LayerIndex := 0 to LayerLimit do
+      begin
+        for RowIndex := 0 to RowLimit do
+        begin
+          for ColIndex := 0 to ColLimit do
+          begin
+            if IsValue[LayerIndex, RowIndex, ColIndex]
+              and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
+            begin
+              Stream.Write(LayerIndex, SizeOf(LayerIndex));
+              Stream.Write(RowIndex, SizeOf(RowIndex));
+              Stream.Write(ColIndex, SizeOf(ColIndex));
+              Value := CellValue1[LayerIndex, RowIndex, ColIndex];
+              Stream.Write(Value, SizeOf(Value));
+              Value := CellValue2[LayerIndex, RowIndex, ColIndex];
+              Stream.Write(Value, SizeOf(Value));
+            end;
           end;
         end;
       end;
@@ -3380,18 +3415,21 @@ var
   FractionalValue: double;
 begin
   inherited ReadData(DecompressionStream);
-  DecompressionStream.Read(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
+  if Model.ModelSelection = msPhast then
   begin
-    DecompressionStream.Read(LayerIndex, SizeOf(LayerIndex));
-    DecompressionStream.Read(RowIndex, SizeOf(RowIndex));
-    DecompressionStream.Read(ColIndex, SizeOf(ColIndex));
-    DecompressionStream.Read(Value, SizeOf(Value));
-    CellValue1[LayerIndex, RowIndex, ColIndex] := Value;
-    DecompressionStream.Read(Value, SizeOf(Value));
-    CellValue2[LayerIndex, RowIndex, ColIndex] := Value;
-    DecompressionStream.Read(FractionalValue, SizeOf(FractionalValue));
-    Fraction[LayerIndex, RowIndex, ColIndex] := FractionalValue;
+    DecompressionStream.Read(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      DecompressionStream.Read(LayerIndex, SizeOf(LayerIndex));
+      DecompressionStream.Read(RowIndex, SizeOf(RowIndex));
+      DecompressionStream.Read(ColIndex, SizeOf(ColIndex));
+      DecompressionStream.Read(Value, SizeOf(Value));
+      CellValue1[LayerIndex, RowIndex, ColIndex] := Value;
+      DecompressionStream.Read(Value, SizeOf(Value));
+      CellValue2[LayerIndex, RowIndex, ColIndex] := Value;
+      DecompressionStream.Read(FractionalValue, SizeOf(FractionalValue));
+      Fraction[LayerIndex, RowIndex, ColIndex] := FractionalValue;
+    end;
   end;
 end;
 
@@ -3497,25 +3535,10 @@ var
   FractionalValue: Double;
 begin
   inherited StoreData(Stream);
-  GetLimits(ColLimit, RowLimit, LayerLimit);
-  Count := 0;
-  for LayerIndex := 0 to LayerLimit do
+  if Model.ModelSelection = msPhast then
   begin
-    for RowIndex := 0 to RowLimit do
-    begin
-      for ColIndex := 0 to ColLimit do
-      begin
-        if IsValue[LayerIndex, RowIndex, ColIndex]
-          and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
-        begin
-          Inc(Count);
-        end;
-      end;
-    end;
-  end;
-  Stream.Write(Count, SizeOf(Count));
-  if Count > 0 then
-  begin
+    GetLimits(ColLimit, RowLimit, LayerLimit);
+    Count := 0;
     for LayerIndex := 0 to LayerLimit do
     begin
       for RowIndex := 0 to RowLimit do
@@ -3525,15 +3548,33 @@ begin
           if IsValue[LayerIndex, RowIndex, ColIndex]
             and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
           begin
-            Stream.Write(LayerIndex, SizeOf(LayerIndex));
-            Stream.Write(RowIndex, SizeOf(RowIndex));
-            Stream.Write(ColIndex, SizeOf(ColIndex));
-            Value := CellValue1[LayerIndex, RowIndex, ColIndex];
-            Stream.Write(Value, SizeOf(Value));
-            Value := CellValue2[LayerIndex, RowIndex, ColIndex];
-            Stream.Write(Value, SizeOf(Value));
-            FractionalValue := Fraction[LayerIndex, RowIndex, ColIndex];
-            Stream.Write(FractionalValue, SizeOf(FractionalValue));
+            Inc(Count);
+          end;
+        end;
+      end;
+    end;
+    Stream.Write(Count, SizeOf(Count));
+    if Count > 0 then
+    begin
+      for LayerIndex := 0 to LayerLimit do
+      begin
+        for RowIndex := 0 to RowLimit do
+        begin
+          for ColIndex := 0 to ColLimit do
+          begin
+            if IsValue[LayerIndex, RowIndex, ColIndex]
+              and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
+            begin
+              Stream.Write(LayerIndex, SizeOf(LayerIndex));
+              Stream.Write(RowIndex, SizeOf(RowIndex));
+              Stream.Write(ColIndex, SizeOf(ColIndex));
+              Value := CellValue1[LayerIndex, RowIndex, ColIndex];
+              Stream.Write(Value, SizeOf(Value));
+              Value := CellValue2[LayerIndex, RowIndex, ColIndex];
+              Stream.Write(Value, SizeOf(Value));
+              FractionalValue := Fraction[LayerIndex, RowIndex, ColIndex];
+              Stream.Write(FractionalValue, SizeOf(FractionalValue));
+            end;
           end;
         end;
       end;
@@ -3785,13 +3826,13 @@ begin
           DataSet := BoundaryCollection.GetDataSet(BoundaryCondition.Time);
           if DataSet.DimensionsChanged then
           begin
-            DataSet.UpdateDimensions(frmGoPhast.Grid.LayerCount,
-              frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
+            frmGoPhast.PhastModel.UpdateDataArrayDimensions(DataSet);
+//            DataSet.UpdateDimensions(frmGoPhast.Grid.LayerCount,
+//              frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
             DataSet.SetDimensions(False);
           end;
 
-          AScreenObject.AssignValuesToPhastDataSet(
-            frmGoPhast.PhastGrid, DataSet, Model, lctUse);
+          AScreenObject.AssignValuesToDataSet(DataSet, Model, lctUse);
         end;
       end;
     end;

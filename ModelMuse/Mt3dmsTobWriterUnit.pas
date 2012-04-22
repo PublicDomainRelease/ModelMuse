@@ -94,6 +94,16 @@ resourcestring
   'incorrectly assigned';
   StrTheFollowingMASSF = 'The following MASS Flux observation names may be v' +
   'alid for MT3DMS but they are not valid for UCODE.';
+  StrMT3DMSMassFluxObs = 'MT3DMS Mass Flux Observation';
+  StrWritingTOBPackage = 'Writing TOB Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSet6 = '  Writing Data Set 6.';
+  StrWritingDataSets7to9 = '  Writing Data Sets 7 to 9.';
+  StrWritingDataSet3 = '  Writing Data Set 3.';
+  StrWritingDataSet4and5 = '  Writing Data Sets 4 and 5.';
+  Str0sDefinedByObje = '%0:s defined by object %1:s';
 
 
 { TMt3dmsTobWriter }
@@ -246,8 +256,8 @@ begin
 
   OpenFile(FNameOfFile);
   try
-    frmProgressMM.AddMessage('Writing TOB Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingTOBPackage);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -255,7 +265,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -263,7 +273,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -426,7 +436,8 @@ begin
     on E: ERbwParserError do
     begin
       ScreenObject := ObsFactor.ScreenObject as TScreenObject;
-      frmFormulaErrors.AddFormulaError(ScreenObject.Name, Format(StrObservationFactor, ['MT3DMS Mass Flux Observation']), Expression.Decompile, E.Message);
+      frmFormulaErrors.AddFormulaError(ScreenObject.Name,
+        Format(StrObservationFactor, [StrMT3DMSMassFluxObs]), Expression.Decompile, E.Message);
       ObsFactor.Factor := '1.';
       Compiler := Model.rpThreeDFormulaCompiler;
       TempFormula := ObsFactor.Factor;
@@ -682,8 +693,8 @@ begin
   if not UcodeObsNameOK(COBSNAM) then
   begin
     ScreenObject := Observations.ScreenObject as TScreenObject;
-    frmErrorsAndWarnings.AddWarning(Model, ConcObsNameWarning, COBSNAM
-      + ' defined by object ' + ScreenObject.Name);
+    frmErrorsAndWarnings.AddWarning(Model, ConcObsNameWarning,
+      Format(Str0sDefinedByObje, [COBSNAM, ScreenObject.Name]));
   end;
   if CellList.Count > 1 then
   begin
@@ -1032,7 +1043,7 @@ var
   FScale: Double;
   iOutFlux: Integer;
 begin
-  frmProgressMM.AddMessage('  Writing Data Set 6.');
+  frmProgressMM.AddMessage(StrWritingDataSet6);
   // write data set 6
   nFluxGroup := FFluxObsList.Count;
   FScale := FTobPackage.FluxScaleFactor;
@@ -1047,7 +1058,7 @@ begin
     Exit;
   end;
 
-  frmProgressMM.AddMessage('  Writing Data Sets 7 to 9.');
+  frmProgressMM.AddMessage(StrWritingDataSets7to9);
   for Index := 0 to FFluxObsList.Count - 1 do
   begin
     // Write data sets 7, 8, and 9
@@ -1067,7 +1078,7 @@ var
   iConcLOG: Integer;
   iConcINTP: Integer;
 begin
-  frmProgressMM.AddMessage('  Writing Data Set 3.');
+  frmProgressMM.AddMessage(StrWritingDataSet3);
   CScale := FTobPackage.ConcScaleFactor;
   iOutCobs := Ord(FTobPackage.ConcObsResult);
   iConcLOG := Ord(FTobPackage.TransformType);
@@ -1081,7 +1092,7 @@ begin
   WriteString(' # Data Set 3: nConcObs, CScale, iOutCobs, iConcLOG, iConcINTP');
   NewLine;
 
-  frmProgressMM.AddMessage('  Writing Data Set 4 and 5.');
+  frmProgressMM.AddMessage(StrWritingDataSet4and5);
   for Index := 0 to FObservations.Count - 1 do
   begin
     WriteDatSets4and5(Index);

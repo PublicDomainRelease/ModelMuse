@@ -32,7 +32,7 @@
         </td>
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">The Basic package is used to specify certain data used in all models. These include</text></para>
-          <list id="7" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="15" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">the locations of active, inactive, and specified head cells,</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">the head stored in inactive cells, and</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">the initial heads in all cells.</text></li>
@@ -44,10 +44,11 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/usgspubs/ofr/ofr200092" target="_blank" styleclass="Citation" translate="true">Harbaugh, A.W., Banta, E.R., Hill, M.C., and McDonald, M.G., 2000, MODFLOW-2000, the U.S. Geological Survey modular ground-water model -- User guide to modularization concepts and the Ground-Water Flow Process: U.S. Geological Survey Open-File Report 00-92, 121 p.</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="release.txt" styleclass="Normal" translate="true">release.txt</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.usgs.gov/tm/2005/tm6A16/" target="_blank" styleclass="Citation" translate="true">Harbaugh, A.W., 2005, MODFLOW-2005, the U.S. Geological Survey modular ground-water model -- the Ground-Water Flow Process: U.S. Geological Survey Techniques and Methods 6-A16, variously p.</link></li>
+            <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="RevisedMF2005Input.pdf" styleclass="Normal" translate="true">RevisedMF2005Input.pdf</link></li>
           </list>
         </td>
       </tr>
@@ -56,7 +57,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Related Packages</text></para>
         </td>
         <td>
-          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="17" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="CHOB" styleclass="Normal" translate="true">Specified-Head Flow Observation</link><text styleclass="Normal" translate="true"> input file</text></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="FHB" styleclass="Normal" translate="true">Flow and Head Boundary package</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="CHD" styleclass="Normal" translate="true">Time-Variant Specified-Head package</link></li>
@@ -68,13 +69,13 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="18" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="19" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
           </list>
         </td>
@@ -84,7 +85,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Other Notes</text></para>
         </td>
         <td>
-          <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="20" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The Basic package input file is required in all models.</text></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="BAS6" anchor="IBOUND" styleclass="Normal" translate="true">IBOUND</link><text styleclass="Normal" translate="true"> may require special treatment in some cases.</text></li>
             <li styleclass="Normal"><text styleclass="New Materials" translate="true">Specified heads specified in the Basic package can be overridden by those specified in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CHD" styleclass="New Materials" translate="true">Time-Variant Specified-Head</link><text styleclass="New Materials" translate="true"> package and the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="FHB" styleclass="New Materials" translate="true">Flow and Head Boundary</link><text styleclass="New Materials" translate="true"> package.</text></li>
@@ -134,6 +135,7 @@
                 <para styleclass="Normal"><text styleclass="Keywords" translate="true">FREE</text><text styleclass="Normal" translate="true"> indicates that free format is used for input variables throughout the Basic Package and other packages as indicated in their input instructions. Be sure that all variables read using free format have a non-blank value and that a comma or at least one blank separates all adjacent values.</text></para>
                 <para styleclass="Normal"><text styleclass="Keywords" translate="true">PRINTTIME</text><text styleclass="Normal" translate="true"> indicates that the start time, end time, and elapsed time required to execute MODFLOW-2000 are to be written to the global output file. &#160;When the program is used in batch mode, these times are determined and written for each simulation, that is, for each name file listed in modflow.bf. &#160;This capability is expected to be particularly useful in evaluating performance of the program in different serial- and parallel-processing environments.</text></para>
                 <para styleclass="Normal"><text styleclass="Keywords" translate="true">SHOWPROGRESS</text><text styleclass="Normal" translate="true"> indicates that the stress period, time step, and the equation currently being solved should be displayed on the monitor. &#160;Unfortunately, support for this option is processor-dependent; as a result, when this option is selected on some systems, lines showing progress will not be overwritten by subsequent lines. &#160;In these cases, use of this option will cause the display to scroll as the progress line is updated. (MODFLOW-2000 only)</text></para>
+                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005"/><text styleclass="Keywords" translate="true">STOPERROR</text><text styleclass="Normal" translate="true"> is an optional keyword that can be specified in the options list. &#160;The real number, STOPER, must follow the keyword. &#160;STOPER is a percent discrepancy that is compared to the budget percent discrepancy when the solver convergence criteria are not met. &#160;Execution will continue unless the budget percent discrepancy is greater than STOPER. (MODFLOW-2005 only)</text><conditional-text type="END"/></para>
               </td>
             </tr>
           </table></para>
@@ -151,7 +153,7 @@
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><anchor id="IBOUND" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">IBOUND—is the boundary variable. One value is read for every model cell. Usually, these values are read a layer at a time; however, when the XSECTION option is specified, a single variable for the cross section is read. Note that although IBOUND is read as one or more two-dimensional variables, it is stored internally as a three-dimensional variable.</text></para>
-                <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                <list id="21" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">If IBOUND(J,I,K) &lt; 0, cell J,I,K has a constant head.</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">If IBOUND(J,I,K) = 0, cell J,I,K is inactive.</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">If IBOUND(J,I,K) &gt; 0, cell J,I,K is active.</text></li>

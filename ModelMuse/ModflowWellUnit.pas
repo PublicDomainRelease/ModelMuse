@@ -204,6 +204,9 @@ implementation
 uses ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit, TempFiles, 
   frmGoPhastUnit, GIS_Functions;
 
+resourcestring
+  StrPumpingRateMultip = ' pumping rate multiplier';
+
 const
   PumpingRatePosition = 0;  
 
@@ -949,7 +952,7 @@ begin
   inherited;
   FPumpingRateData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FPumpingRateData.NonParamDescription := StrPumpingRate;
-  FPumpingRateData.ParamDescription := ' pumping rate multiplier';
+  FPumpingRateData.ParamDescription := StrPumpingRateMultip;
   if Model <> nil then
   begin
     FPumpingRateData.OnInvalidate := (Model as TCustomModel).InvalidateMfWellPumpage;

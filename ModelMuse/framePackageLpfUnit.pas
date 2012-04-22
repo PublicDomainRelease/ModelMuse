@@ -27,11 +27,25 @@ var
 
 implementation
 
+resourcestring
+  StrInterpretVariableS = 'Interpret variable Ss and SS parameters as storag' +
+  'e coefficient rather than specific storage (STORAGECOEFFICIENT)';
+  StrUseCellThicknessT = 'Use cell thickness to compute vertical conductance' +
+  ' in unconfined cells (CONSTANTCV)';
+  StrInDesignatedConfin = 'In designated confined layers; starting heads wil' +
+  'l be used to compute cell thickness (THICKSTRT)';
+  StrUseVerticalConduct = 'Use vertical conductance correction (inverse of N' +
+  'OCVCORRECTION)';
+  StrUseVerticalFlowCo = 'Use vertical flow correction under dewatered condi' +
+  'tions (inverse of NOVFC)';
+  StrSkipCheckingThatA = 'Skip checking that a value is defined for all cell' +
+  's when parameters are used to define layer data (NOPARCHECK)';
+
 {$R *.dfm}
 
 type
   TLpfOptionRows = (lorStorageCoefficient, lorThikStrt, lorConstantCV, 
-    lorNoCvCorrection, lorNoVFC);
+    lorNoCvCorrection, lorNoVFC, lorNoParCheck);
 
 
 { TframePackageLpf }
@@ -57,6 +71,7 @@ begin
   rdgOptions.Checked[0, Ord(lorThikStrt)] := LpfPackage.UseSaturatedThickness;
   rdgOptions.Checked[0, Ord(lorNoCvCorrection)] := LpfPackage.UseCvCorrection;
   rdgOptions.Checked[0, Ord(lorNoVFC)] := LpfPackage.UseVerticalFlowCorrection;
+  rdgOptions.Checked[0, Ord(lorNoParCheck)] := LpfPackage.NoParCheck;
 
 end;
 
@@ -65,17 +80,21 @@ begin
   inherited;
   FrameResize(self);
   rdgOptions.Cells[0, Ord(lorStorageCoefficient)] :=
-    'Interpret variable Ss and SS parameters as storage coefficient rather than specific storage (STORAGECOEFFICIENT)';
+    StrInterpretVariableS;
   rdgOptions.Cells[0, Ord(lorConstantCV)] :=
-    'Use cell thickness to compute vertical conductance in unconfined cells (CONSTANTCV)';
+    StrUseCellThicknessT;
 
 // ModelMuse determines the designated layers by those in which LAYTYP < 0
   rdgOptions.Cells[0, Ord(lorThikStrt)] :=
-    'In designated confined layers; starting heads will be used to compute cell thickness (THICKSTRT)';
+    StrInDesignatedConfin;
   rdgOptions.Cells[0, Ord(lorNoCvCorrection)] :=
-    'Use vertical conductance correction (inverse of NOCVCORRECTION)';
+    StrUseVerticalConduct;
   rdgOptions.Cells[0, Ord(lorNoVFC)] :=
-    'Use vertical flow correction under dewatered conditions (inverse of NOVFC)';
+    StrUseVerticalFlowCo;
+
+  rdgOptions.Cells[0, Ord(lorNoParCheck)] :=
+    StrSkipCheckingThatA;
+
 end;
 
 procedure TframePackageLpf.rdgOptionsVerticalScroll(Sender: TObject);
@@ -97,6 +116,7 @@ begin
   LpfPackage.UseSaturatedThickness := rdgOptions.Checked[0, Ord(lorThikStrt)];
   LpfPackage.UseCvCorrection := rdgOptions.Checked[0, Ord(lorNoCvCorrection)];
   LpfPackage.UseVerticalFlowCorrection := rdgOptions.Checked[0, Ord(lorNoVFC)];
+  LpfPackage.NoParCheck := rdgOptions.Checked[0, Ord(lorNoParCheck)];
 end;
 
 end.

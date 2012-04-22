@@ -22,6 +22,9 @@ implementation
 
 uses ModflowUnitNumbers, PhastModelUnit, frmProgressUnit;
 
+resourcestring
+  StrWritingNWTPackage = 'Writing NWT Package input.';
+
 { TNwtWriter }
 
 class function TNwtWriter.Extension: string;
@@ -205,7 +208,7 @@ begin
     NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage('Writing NWT Package input.');
+    frmProgressMM.AddMessage(StrWritingNWTPackage);
     WriteDataSet0;
     WriteDataSet1;
     WriteDataSet2a;

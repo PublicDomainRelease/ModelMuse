@@ -29,25 +29,34 @@ inherited frmSpecifyContours: TfrmSpecifyContours
       Top = 76
       Width = 91
       Height = 33
-      TabOrder = 1
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 1
     end
     object btnOK: TBitBtn
       Left = 109
       Top = 76
       Width = 91
       Height = 33
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
     object btnHelp: TBitBtn
       Left = 12
       Top = 76
       Width = 91
       Height = 33
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object GridPanel1: TGridPanel
       Left = 171
@@ -57,13 +66,13 @@ inherited frmSpecifyContours: TfrmSpecifyContours
       BevelOuter = bvNone
       ColumnCollection = <
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end>
       ControlCollection = <
         item
@@ -90,7 +99,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
         135
         32)
       object sbAddRow: TSpeedButton
-        Left = 10
+        Left = 11
         Top = 5
         Width = 23
         Height = 22
@@ -108,11 +117,10 @@ inherited frmSpecifyContours: TfrmSpecifyContours
         ParentShowHint = False
         ShowHint = True
         OnClick = sbAddRowClick
-        ExplicitLeft = 11
         ExplicitTop = 6
       end
       object sbInsertRow: TSpeedButton
-        Left = 54
+        Left = 56
         Top = 5
         Width = 23
         Height = 22
@@ -130,11 +138,10 @@ inherited frmSpecifyContours: TfrmSpecifyContours
         ParentShowHint = False
         ShowHint = True
         OnClick = sbInsertRowClick
-        ExplicitLeft = 56
         ExplicitTop = 6
       end
       object sbDeleteRow: TSpeedButton
-        Left = 100
+        Left = 101
         Top = 5
         Width = 23
         Height = 22
@@ -214,6 +221,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
     TabOrder = 1
     OnMouseUp = rdgContourDataMouseUp
     OnSelectCell = rdgContourDataSelectCell
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
@@ -246,6 +254,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -267,6 +276,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -288,6 +298,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -309,6 +320,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
     OnEndUpdate = rdgContourDataEndUpdate
@@ -327,7 +339,6 @@ inherited frmSpecifyContours: TfrmSpecifyContours
       Height = 22
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 18
       TabOrder = 0
       Text = '2'
       OnChange = rdeLineThicknessChange

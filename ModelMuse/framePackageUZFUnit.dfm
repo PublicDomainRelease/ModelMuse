@@ -147,13 +147,9 @@ inherited framePackageUZF: TframePackageUZF
         ' Route discharge to streams and lakes (IRUNFLG)'
         'Simulate evapotranspiration (IETFLG)'
         'Print summary of UZF budget terms (IFTUNIT)'
-        'Specify residual water content (SPECIFYTHTR) (MODFLOW-NWT only)'
-        
-          'Specify initial unsaturated water content (SPECIFYTHTI) (MODFLOW' +
-          '-NWT only)'
-        
-          'Calculate surface leakage (inverse of NOSURFLEAK) (MODFLOW-NWT o' +
-          'nly)')
+        'Specify residual water content (SPECIFYTHTR)'
+        'Specify initial unsaturated water content (SPECIFYTHTI)'
+        'Calculate surface leakage (inverse of NOSURFLEAK)')
       TabOrder = 5
     end
   end

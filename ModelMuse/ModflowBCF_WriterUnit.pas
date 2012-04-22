@@ -32,6 +32,10 @@ uses
   ModflowUnitNumbers, frmProgressUnit, GoPhastTypes, 
   DataSetUnit, Forms;
 
+resourcestring
+  StrWritingDataForL = '  Writing data for layer %d.';
+  StrWritingBCFPackage = 'Writing BCF Package input.';
+
 { TModflowBCF_Writer }
 
 class function TModflowBCF_Writer.Extension: string;
@@ -136,8 +140,8 @@ begin
   begin
     if Model.IsLayerSimulated(LayerIndex) then
     begin
-        frmProgressMM.AddMessage('  Writing data for layer '
-          + IntToStr(LayerIndex+1) + '.');
+        frmProgressMM.AddMessage(Format(StrWritingDataForL,
+          [LayerIndex+1]));
         Group := Model.GetLayerGroupByLayer(LayerIndex);
 
         AquiferType := Group.AquiferType;
@@ -200,7 +204,7 @@ begin
     NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage('Writing BCF Package input.');
+    frmProgressMM.AddMessage(StrWritingBCFPackage);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then

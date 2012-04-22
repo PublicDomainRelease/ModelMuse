@@ -43,6 +43,9 @@ Type
       ParamType: TParameterType; DataIndex: integer; const DisplayName: string);
     procedure UpdateUseList(DataIndex: integer; NewUseList: TStringList;
       Item: TCustomModflowBoundaryItem);
+    procedure OnValueChanged(Sender: TObject);
+    procedure SetIntegerProperty(var Field: integer; const Value: integer);
+    procedure SetBooleanProperty(var Field: boolean; const Value: boolean);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
@@ -249,11 +252,13 @@ Type
     FUseVerticalFlowCorrection: boolean;
     FUseStorageCoefficient: boolean;
     FMultZoneArraysExported: boolean;
+    FNoParCheck: Boolean;
     procedure SetUseConstantCV(const Value: boolean);
     procedure SetUseCvCorrection(const Value: boolean);
     procedure SetUseSaturatedThickness(const Value: boolean);
     procedure SetUseVerticalFlowCorrection(const Value: boolean);
     procedure SetUseStorageCoefficient(const Value: boolean);
+    procedure SetNoParCheck(const Value: Boolean);
   public
     procedure InitializeVariables; override;
     procedure Assign(Source: TPersistent); override;
@@ -271,6 +276,7 @@ Type
       write SetUseVerticalFlowCorrection default True;
     property UseStorageCoefficient: boolean read FUseStorageCoefficient
       write SetUseStorageCoefficient;
+    property NoParCheck: Boolean read FNoParCheck write SetNoParCheck;
   end;
 
   THDryPrintOption = (hpoDontPrintHdry, hpoPrintHdry);
@@ -313,6 +319,7 @@ Type
   TPcgMethod = (pmCholesky, pmPolynomial);
   TPcgPrintSelection = (ppsAll, ppsIterations, ppsNone, ppsFail);
   TPcgEstimateMaxEigenvalue = (peeEstimate, peeDontEstimate);
+  TPcgDryConvertOption = (dcoConvertWhenSurrounded, dcoConvertWhenNoFlow);
 
   TPcgSelection = class(TModflowPackageSelection)
   private
@@ -327,6 +334,7 @@ Type
     FITER1: integer;
     FIPRPCG: integer;
     FDAMPPCGT: TRealStorage;
+    FIHCOFADD: TPcgDryConvertOption;
     procedure SetDAMPPCG(const Value: TRealStorage);
     procedure SetHCLOSE(const Value: TRealStorage);
     procedure SetIPRPCG(const Value: integer);
@@ -338,6 +346,7 @@ Type
     procedure SetRCLOSE(const Value: TRealStorage);
     procedure SetRELAX(const Value: TRealStorage);
     procedure SetDAMPPCGT(const Value: TRealStorage);
+    procedure SetIHCOFADD(const Value: TPcgDryConvertOption);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
@@ -355,6 +364,110 @@ Type
     property MUTPCG: TPcgPrintSelection read FMUTPCG write SetMUTPCG;
     property DAMPPCG: TRealStorage read FDAMPPCG write SetDAMPPCG;
     property DAMPPCGT: TRealStorage read FDAMPPCGT write SetDAMPPCGT;
+    property IHCOFADD: TPcgDryConvertOption read FIHCOFADD write SetIHCOFADD;
+  end;
+
+  TDamping = (dOrdinary, dAdaptive, dEnhanced);
+  TConvergenceMode = (cmStandard, cmAdaptive, cmEnhanced);
+  TProgressReporting = (prNone, prListing, prExternal);
+
+  TPcgnSelection = class(TModflowPackageSelection)
+  private
+    FADAMP: TDamping;
+    FITER_MI: integer;
+    FCHGLIMIT: TRealStorage;
+    FCLOSE_R: TRealStorage;
+    FITER_MO: integer;
+    FRELAX: TRealStorage;
+    FRATE_C: TRealStorage;
+    FUNIT_TS: boolean;
+    FCLOSE_H: TRealStorage;
+    FRATE_D: TRealStorage;
+    FCNVG_LB: TRealStorage;
+    FUNIT_PC: boolean;
+    FDAMP_LB: TRealStorage;
+    FDAMP: TRealStorage;
+    FMCNVG: integer;
+    FIFILL: integer;
+    FIPUNIT: TProgressReporting;
+    FACNVG: TConvergenceMode;
+    procedure SetACNVG(const Value: TConvergenceMode);
+    procedure SetADAMP(const Value: TDamping);
+    procedure SetCHGLIMIT(const Value: TRealStorage);
+    procedure SetCLOSE_H(const Value: TRealStorage);
+    procedure SetCLOSE_R(const Value: TRealStorage);
+    procedure SetCNVG_LB(const Value: TRealStorage);
+    procedure SetDAMP(const Value: TRealStorage);
+    procedure SetDAMP_LB(const Value: TRealStorage);
+    procedure SetIFILL(const Value: integer);
+    procedure SetIPUNIT(const Value: TProgressReporting);
+    procedure SetITER_MI(const Value: integer);
+    procedure SetITER_MO(const Value: integer);
+    procedure SetMCNVG(const Value: integer);
+    procedure SetRATE_C(const Value: TRealStorage);
+    procedure SetRATE_D(const Value: TRealStorage);
+    procedure SetRELAX(const Value: TRealStorage);
+    procedure SetUNIT_PC(const Value: boolean);
+    procedure SetUNIT_TS(const Value: boolean);
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
+    Destructor Destroy; override;
+    procedure InitializeVariables; override;
+  published
+    // Line 1 variables
+
+    // the maximum number of Picard (outer) iterations allowed
+    property ITER_MO: integer read FITER_MO write SetITER_MO;
+    //the maximum number of PCG (inner) iterations allowed
+    property ITER_MI: integer read FITER_MI write SetITER_MI;
+    //  the residual-based stopping criterion for iteration.
+    property CLOSE_R: TRealStorage read FCLOSE_R write SetCLOSE_R;
+    //  the head-based stopping criterion for iteration.
+    property CLOSE_H: TRealStorage read FCLOSE_H write SetCLOSE_H;
+
+    // Line 2 variables
+
+    // relaxation parameter
+    property RELAX: TRealStorage read FRELAX write SetRELAX;
+    // fill level of the MIC preconditioner
+    property IFILL: integer read FIFILL write SetIFILL;
+    // integer variable: UNIT_PC is the unit number of an optional output file
+    // where progress for the inner PCG iteration can be written.
+    property UNIT_PC: boolean read FUNIT_PC write SetUNIT_PC;
+    // integer variable: UNIT_TS is the unit number of an optional output file
+    // where the actual time in the PCG solver is accumulated.
+    property UNIT_TS: boolean read FUNIT_TS write SetUNIT_TS;
+
+    // Line 3 variables - used only if ITER_MO > 1
+
+    // ADAMP, integer variable: ADAMP defines the mode of damping
+    // applied to the linear solution.
+    property ADAMP: TDamping read FADAMP write SetADAMP;
+    // DAMP restricts the damping parameter Theta
+    property DAMP: TRealStorage read FDAMP write SetDAMP;
+    // DAMP_LB, real variable: DAMP_LB represents a bound placed on Theta
+    property DAMP_LB: TRealStorage read FDAMP_LB write SetDAMP_LB;
+    // RATE_D, rate parameter
+    property RATE_D: TRealStorage read FRATE_D write SetRATE_D;
+    // This variable limits the maximum head change applicable to the
+    // updated hydraulic heads in a Picard iteration.
+    property CHGLIMIT: TRealStorage read FCHGLIMIT write SetCHGLIMIT;
+
+    // Line 4 variables - used only if ITER_MO > 1
+
+    // ACNVG defines the mode of convergence applied to the PCG solver.
+    property ACNVG: TConvergenceMode read FACNVG write SetACNVG;
+    // CNVG_LB is the minimum value that the relative convergence epsilon
+    //  is allowed to take under the self-adjusting convergence option.
+    property CNVG_LB: TRealStorage read FCNVG_LB write SetCNVG_LB;
+    // MCNVG increases the relative PCG convergence criteria by
+    // a power equal to MCNVG
+    property MCNVG: integer read FMCNVG write SetMCNVG;
+    // this option results in variable enhancement of epsilon.
+    property RATE_C: TRealStorage read FRATE_C write SetRATE_C;
+    // Variable IPUNIT enables progress reporting for the Picard iteration.
+    property IPUNIT: TProgressReporting read FIPUNIT write SetIPUNIT;
   end;
 
   TGmgPackageSelection = class(TModflowPackageSelection)
@@ -521,8 +634,6 @@ Type
     FBackFlag: integer;
     FContinueNWT: Boolean;
     procedure SetRealProperty(Field, NewValue: TRealStorage);
-    procedure SetIntegerProperty(var Field: integer; NewValue: integer);
-    procedure SetBooleanProperty(var Field: Boolean; NewValue: Boolean);
     procedure SetAccelMethod(const Value: TNewtonAccelMethod);
     procedure SetApplyReducedPrecondition(
       const Value: TNewtonApplyReducedPrecondition);
@@ -803,6 +914,8 @@ Type
     property TableStages: integer read FTableStages write SetTableStages default 15;
   end;
 
+  TExternalLakeChoice = (elcNone, elcAll);
+
   TLakePackageSelection = class(TModflowPackageSelection)
   private
     FPrintLakes: boolean;
@@ -810,23 +923,31 @@ Type
     FConvergenceCriterion: double;
     FTheta: double;
     FSurfDepth: TRealStorage;
+    FExternalLakeChoice: TExternalLakeChoice;
     procedure SetConvergenceCriterion(const Value: double);
     procedure SetNumberOfIterations(const Value: integer);
     procedure SetPrintLakes(const Value: boolean);
     procedure SetTheta(const Value: double);
     procedure SetSurfDepth(const Value: TRealStorage);
+    procedure SetExternalLakeChoice(const Value: TExternalLakeChoice);
   protected
     procedure SetIsSelected(const Value: boolean); override;
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
+    procedure InitializeVariables; override;
   published
-    property ConvergenceCriterion: double read FConvergenceCriterion write SetConvergenceCriterion;
-    property NumberOfIterations: integer read FNumberOfIterations write SetNumberOfIterations default 100;
-    property PrintLakes: boolean read FPrintLakes write SetPrintLakes default True;
+    property ConvergenceCriterion: double read FConvergenceCriterion
+      write SetConvergenceCriterion;
+    property NumberOfIterations: integer read FNumberOfIterations
+      write SetNumberOfIterations default 100;
+    property PrintLakes: boolean read FPrintLakes write SetPrintLakes
+      default True;
     property Theta: double read FTheta write SetTheta;
     property SurfDepth: TRealStorage read FSurfDepth write SetSurfDepth;
+    property ExternalLakeChoice: TExternalLakeChoice read FExternalLakeChoice
+      write SetExternalLakeChoice;
   end;
 
   TSfrParamInstance = class(TOrderedItem)
@@ -2401,6 +2522,7 @@ resourcestring
   'ckage for Water-Table Aquifers, one or more starting time is after the en' +
   'ding time';
   StrStartingTime0g = 'StartingTime: %:0g; EndingTime: %1:g';
+  StrXYOrZCoordinat = 'X, Y, or Z coordinate formula';
 
 
 { TModflowPackageSelection }
@@ -2470,10 +2592,30 @@ begin
   (FModel as TCustomModel).RemoveTimeList(TimeList);
 end;
 
+procedure TModflowPackageSelection.SetBooleanProperty(var Field: boolean;
+  const Value: boolean);
+begin
+  if Field <> Value then
+  begin
+    Field := Value;
+    InvalidateModel;
+  end;
+end;
+
 procedure TModflowPackageSelection.SetComments(const Value: TStrings);
 begin
   FComments.Assign(Value);
   InvalidateModel;
+end;
+
+procedure TModflowPackageSelection.SetIntegerProperty(var Field: integer;
+  const Value: integer);
+begin
+  if Field <> Value then
+  begin
+    Field := Value;
+    InvalidateModel;
+  end;
 end;
 
 procedure TModflowPackageSelection.SetIsSelected(const Value: boolean);
@@ -2515,8 +2657,8 @@ begin
   except on E: ErbwParserError do
     begin
       ScreenObject := Item.ScreenObject as TScreenObject;
-      frmFormulaErrors.AddFormulaError(ScreenObject.Name, StrModflowSfrReachLength,
-        Formula, E.Message);
+      frmFormulaErrors.AddFormulaError(ScreenObject.Name,
+        StrModflowSfrReachLength, Formula, E.Message);
       Formula := '0';
       Parser.Compile(Formula);
     end;
@@ -2543,7 +2685,7 @@ begin
     Parser.Compile(Formula);
   except on E: ErbwParserError do
     begin
-      frmFormulaErrors.AddFormulaError(ScreenObject.Name, 'Elevation formula',
+      frmFormulaErrors.AddFormulaError(ScreenObject.Name, StrXYOrZCoordinat,
         Formula, E.Message);
       Formula := '0';
       Parser.Compile(Formula);
@@ -2579,6 +2721,7 @@ begin
     MUTPCG := PcgSource.MUTPCG;
     DAMPPCG := PcgSource.DAMPPCG;
     DAMPPCGT := PcgSource.DAMPPCGT;
+    IHCOFADD := PcgSource.IHCOFADD;
   end;
   inherited;
 end;
@@ -2618,6 +2761,7 @@ begin
   FIPRPCG := 1;
   FDAMPPCG.Value := 1;
   FDAMPPCGT.Value := 1;
+  FIHCOFADD := dcoConvertWhenSurrounded;
 end;
 
 procedure TPcgSelection.SetDAMPPCG(const Value: TRealStorage);
@@ -2643,6 +2787,15 @@ begin
   if FHCLOSE.Value <> Value.Value then
   begin
     FHCLOSE.Assign(Value);
+    InvalidateModel;
+  end;
+end;
+
+procedure TPcgSelection.SetIHCOFADD(const Value: TPcgDryConvertOption);
+begin
+  if FIHCOFADD <> Value then
+  begin
+    FIHCOFADD := Value;
     InvalidateModel;
   end;
 end;
@@ -3352,6 +3505,7 @@ begin
     SurfDepth := Lake.SurfDepth;
     PrintLakes := Lake.PrintLakes;
     Theta := Lake.Theta;
+    ExternalLakeChoice := Lake.ExternalLakeChoice;
   end;
   inherited;
 end;
@@ -3359,12 +3513,8 @@ end;
 constructor TLakePackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
-  FTheta := 0.5;
-  FConvergenceCriterion := 0.00001;
-  FNumberOfIterations := 100;
   FSurfDepth := TRealStorage.Create;
-  FSurfDepth.Value := 0.2;
-  FPrintLakes := True;
+  InitializeVariables;
 end;
 
 destructor TLakePackageSelection.Destroy;
@@ -3373,12 +3523,33 @@ begin
   inherited;
 end;
 
+procedure TLakePackageSelection.InitializeVariables;
+begin
+  inherited;
+  FTheta := 0.5;
+  FConvergenceCriterion := 0.00001;
+  FNumberOfIterations := 100;
+  FSurfDepth.Value := 0.2;
+  FPrintLakes := True;
+  FExternalLakeChoice := elcNone;
+end;
+
 procedure TLakePackageSelection.SetConvergenceCriterion(const Value: double);
 begin
   if FConvergenceCriterion <> Value then
   begin
     InvalidateModel;
     FConvergenceCriterion := Value;
+  end;
+end;
+
+procedure TLakePackageSelection.SetExternalLakeChoice(
+  const Value: TExternalLakeChoice);
+begin
+  if FExternalLakeChoice <> Value then
+  begin
+    InvalidateModel;
+    FExternalLakeChoice := Value;
   end;
 end;
 
@@ -6127,6 +6298,7 @@ begin
     UseCvCorrection := LpfSource.UseCvCorrection;
     UseVerticalFlowCorrection := LpfSource.UseVerticalFlowCorrection;
     UseStorageCoefficient := LpfSource.UseStorageCoefficient;
+    NoParCheck := LpfSource.NoParCheck;
   end;
   inherited;
 end;
@@ -6151,6 +6323,16 @@ begin
   FUseSaturatedThickness := False;
   FUseConstantCV := False;
   FUseStorageCoefficient := False;
+  FNoParCheck := False;
+end;
+
+procedure TLpfSelection.SetNoParCheck(const Value: Boolean);
+begin
+  if FNoParCheck <> Value then
+  begin
+    InvalidateModel;
+    FNoParCheck := Value;
+  end;
 end;
 
 procedure TLpfSelection.SetUseConstantCV(const Value: boolean);
@@ -8790,16 +8972,6 @@ begin
   SetRealProperty(FBackTol , Value);
 end;
 
-procedure TNwtPackageSelection.SetBooleanProperty(var Field: Boolean;
-  NewValue: Boolean);
-begin
-  if Field <> NewValue then
-  begin
-    Field := NewValue;
-    InvalidateModel;
-  end;
-end;
-
 procedure TNwtPackageSelection.SetCorrectForCellBottom(const Value: integer);
 begin
   SetIntegerProperty(FCorrectForCellBottom , Value);
@@ -8864,16 +9036,6 @@ procedure TNwtPackageSelection.SetInnerHeadClosureCriterion(
   const Value: TRealStorage);
 begin
   SetRealProperty(FInnerHeadClosureCriterion , Value);
-end;
-
-procedure TNwtPackageSelection.SetIntegerProperty(var Field: integer;
-  NewValue: integer);
-begin
-  if Field <> NewValue then
-  begin
-    Field := NewValue;
-    InvalidateModel;
-  end;
 end;
 
 procedure TNwtPackageSelection.SetLevel(const Value: integer);
@@ -9948,6 +10110,217 @@ begin
     List.Free;
   end;
   FConcentrations.ComputeAverage;
+end;
+
+{ TPcgnSelection }
+
+procedure TPcgnSelection.Assign(Source: TPersistent);
+var
+  PcgnSource: TPcgnSelection;
+begin
+  if Source is TPcgnSelection then
+  begin
+    PcgnSource := TPcgnSelection(Source);
+    ITER_MO := PcgnSource.ITER_MO;
+    ITER_MI := PcgnSource.ITER_MI;
+    CLOSE_R := PcgnSource.CLOSE_R;
+    CLOSE_H := PcgnSource.CLOSE_H;
+    RELAX := PcgnSource.RELAX;
+    IFILL := PcgnSource.IFILL;
+    UNIT_PC := PcgnSource.UNIT_PC;
+    UNIT_TS := PcgnSource.UNIT_TS;
+    ADAMP := PcgnSource.ADAMP;
+    DAMP := PcgnSource.DAMP;
+    DAMP_LB := PcgnSource.DAMP_LB;
+    RATE_D := PcgnSource.RATE_D;
+    CHGLIMIT := PcgnSource.CHGLIMIT;
+    ACNVG := PcgnSource.ACNVG;
+    CNVG_LB := PcgnSource.CNVG_LB;
+    MCNVG := PcgnSource.MCNVG;
+    RATE_C := PcgnSource.RATE_C;
+    IPUNIT := PcgnSource.IPUNIT;
+  end;
+  inherited;
+end;
+
+constructor TPcgnSelection.Create(Model: TBaseModel);
+begin
+  inherited;
+  FCHGLIMIT := TRealStorage.Create;
+  FCHGLIMIT.OnChange := OnValueChanged;
+
+  FCLOSE_R := TRealStorage.Create;
+  FCLOSE_R.OnChange := OnValueChanged;
+
+  FRELAX := TRealStorage.Create;
+  FRELAX.OnChange := OnValueChanged;
+
+  FRATE_C := TRealStorage.Create;
+  FRATE_C.OnChange := OnValueChanged;
+
+  FCLOSE_H := TRealStorage.Create;
+  FCLOSE_H.OnChange := OnValueChanged;
+
+  FRATE_D := TRealStorage.Create;
+  FRATE_D.OnChange := OnValueChanged;
+
+  FCNVG_LB := TRealStorage.Create;
+  FCNVG_LB.OnChange := OnValueChanged;
+
+  FDAMP_LB := TRealStorage.Create;
+  FDAMP_LB.OnChange := OnValueChanged;
+
+  FDAMP := TRealStorage.Create;
+  FDAMP.OnChange := OnValueChanged;
+
+  InitializeVariables;
+end;
+
+destructor TPcgnSelection.Destroy;
+begin
+  FDAMP.Free;
+  FDAMP_LB.Free;
+  FCNVG_LB.Free;
+  FRATE_D.Free;
+  FCLOSE_H.Free;
+  FRATE_C.Free;
+  FRELAX.Free;
+  FCLOSE_R.Free;
+  FCHGLIMIT.Free;
+  inherited;
+end;
+
+procedure TPcgnSelection.InitializeVariables;
+begin
+  inherited;
+  ITER_MO := 50;
+  ITER_MI := 20;
+  CLOSE_R.Value := 0.001;
+  CLOSE_H.Value := 0.00001;
+
+  RELAX.Value := 0.99;
+  IFILL := 0;
+  UNIT_PC := False;
+  UNIT_TS := False;
+
+  ADAMP := dOrdinary;
+  DAMP.Value := 0.5;
+  DAMP_LB.Value := 0.1;
+  RATE_D.Value := 0.05;
+  CHGLIMIT.Value := 0;
+
+  ACNVG := cmStandard;
+  CNVG_LB.Value := 0.01;
+  MCNVG := 2;
+  RATE_C.Value := 0.1;
+  IPUNIT := prListing;
+end;
+
+procedure TPcgnSelection.SetACNVG(const Value: TConvergenceMode);
+begin
+  if FACNVG <> Value then
+  begin
+    FACNVG := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TPcgnSelection.SetADAMP(const Value: TDamping);
+begin
+  if FADAMP <> Value then
+  begin
+    FADAMP := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TPcgnSelection.SetCHGLIMIT(const Value: TRealStorage);
+begin
+  FCHGLIMIT.Assign(Value);
+end;
+
+procedure TPcgnSelection.SetCLOSE_H(const Value: TRealStorage);
+begin
+  FCLOSE_H.Assign(Value);
+end;
+
+procedure TPcgnSelection.SetCLOSE_R(const Value: TRealStorage);
+begin
+  FCLOSE_R.Assign(Value);
+end;
+
+procedure TPcgnSelection.SetCNVG_LB(const Value: TRealStorage);
+begin
+  FCNVG_LB.Assign(Value);
+end;
+
+procedure TPcgnSelection.SetDAMP(const Value: TRealStorage);
+begin
+  FDAMP.Assign(Value);
+end;
+
+procedure TPcgnSelection.SetDAMP_LB(const Value: TRealStorage);
+begin
+  FDAMP_LB.Assign(Value);
+end;
+
+procedure TPcgnSelection.SetIFILL(const Value: integer);
+begin
+  SetIntegerProperty(FIFILL, Value);
+end;
+
+procedure TPcgnSelection.SetIPUNIT(const Value: TProgressReporting);
+begin
+  if FIPUNIT <> Value then
+  begin
+    FIPUNIT := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TPcgnSelection.SetITER_MI(const Value: integer);
+begin
+  SetIntegerProperty(FITER_MI, Value);
+end;
+
+procedure TPcgnSelection.SetITER_MO(const Value: integer);
+begin
+  SetIntegerProperty(FITER_MO, Value);
+end;
+
+procedure TPcgnSelection.SetMCNVG(const Value: integer);
+begin
+  SetIntegerProperty(FMCNVG, Value);
+end;
+
+procedure TPcgnSelection.SetRATE_C(const Value: TRealStorage);
+begin
+  FRATE_C.Assign(Value);
+end;
+
+procedure TPcgnSelection.SetRATE_D(const Value: TRealStorage);
+begin
+  FRATE_D.Assign(Value);
+end;
+
+procedure TPcgnSelection.SetRELAX(const Value: TRealStorage);
+begin
+  FRELAX.Assign(Value);
+end;
+
+procedure TPcgnSelection.SetUNIT_PC(const Value: boolean);
+begin
+  SetBooleanProperty(FUNIT_PC, Value);
+end;
+
+procedure TPcgnSelection.SetUNIT_TS(const Value: boolean);
+begin
+  SetBooleanProperty(FUNIT_TS, Value);
+end;
+
+procedure TModflowPackageSelection.OnValueChanged(Sender: TObject);
+begin
+  InvalidateModel;
 end;
 
 end.

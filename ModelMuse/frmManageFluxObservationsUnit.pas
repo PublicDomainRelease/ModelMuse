@@ -243,6 +243,21 @@ resourcestring
   StrWeight = 'Weight';
   StrObservationTimeOr = 'Observation Time or Frequency (FluxTimeObs)';
   StrObservationType = 'Observation type';
+  StrErrorTheFormulaI = 'Error: the formula is does not result in a real num' +
+  'ber';
+  StrSpecifiedHeadMass = 'Specified Head Mass Flux';
+  StrWellMassFlux = 'Well Mass Flux';
+  StrDrainMassFlux = 'Drain Mass Flux';
+  StrRiverMassFlux = 'River Mass Flux';
+  StrGHBMassFlux = 'GHB Mass Flux';
+  StrRechargeMassFlux = 'Recharge Mass Flux';
+  StrEVTMassFlux = 'EVT Mass Flux';
+  StrMassLoading = 'Mass Loading';
+  StrResevoirMassFlux = 'Resevoir Mass Flux';
+  StrLakeMassFlux = 'Lake Mass Flux';
+  StrDRTMassFlux = 'DRT Mass Flux';
+  StrETSMassFlux = 'ETS Mass Flux';
+  StrErrorInFormulaS = 'Error in formula: %s';
 
 {$R *.dfm}
 
@@ -925,7 +940,7 @@ begin
       if ShowError then
       begin
         Beep;
-        MessageDlg('Error in formula: ' + E.Message, mtError, [mbOK], 0);
+        MessageDlg(Format(StrErrorInFormulaS, [E.Message]), mtError, [mbOK], 0);
       end;
       result := False;
       Exit;
@@ -940,7 +955,7 @@ begin
     if ShowError then
     begin
       Beep;
-      MessageDlg('Error: the formula is does not result in a real number',
+      MessageDlg(StrErrorTheFormulaI,
         mtError, [mbOK], 0);
     end;
     result := False;
@@ -2315,62 +2330,62 @@ begin
   FMassFluxObs.Mt3dmsHeadMassFluxObservations.Assign(
     frmGoPhast.PhastModel.Mt3dmsHeadMassFluxObservations);
   ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.ChdBoundary,
-    'Specified Head Mass Flux', FMassFluxObs.Mt3dmsHeadMassFluxObservations, FHeadMassFluxNode);
+    StrSpecifiedHeadMass, FMassFluxObs.Mt3dmsHeadMassFluxObservations, FHeadMassFluxNode);
 
   FMassFluxObs.Mt3dmsWellMassFluxObservations.Assign(
     frmGoPhast.PhastModel.Mt3dmsWellMassFluxObservations);
   ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.WelPackage,
-    'Well Mass Flux', FMassFluxObs.Mt3dmsWellMassFluxObservations, FWellMassFluxNode);
+    StrWellMassFlux, FMassFluxObs.Mt3dmsWellMassFluxObservations, FWellMassFluxNode);
 
   FMassFluxObs.Mt3dmsDrnMassFluxObservations.Assign(
     frmGoPhast.PhastModel.Mt3dmsDrnMassFluxObservations);
   ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.DrnPackage,
-    'Drain Mass Flux', FMassFluxObs.Mt3dmsDrnMassFluxObservations, FDrnMassFluxNode);
+    StrDrainMassFlux, FMassFluxObs.Mt3dmsDrnMassFluxObservations, FDrnMassFluxNode);
 
   FMassFluxObs.Mt3dmsRivMassFluxObservations.Assign(
     frmGoPhast.PhastModel.Mt3dmsRivMassFluxObservations);
   ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.RivPackage,
-    'River Mass Flux', FMassFluxObs.Mt3dmsRivMassFluxObservations, FRivMassFluxNode);
+    StrRiverMassFlux, FMassFluxObs.Mt3dmsRivMassFluxObservations, FRivMassFluxNode);
 
   FMassFluxObs.Mt3dmsGhbMassFluxObservations.Assign(
     frmGoPhast.PhastModel.Mt3dmsGhbMassFluxObservations);
   ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.GhbBoundary,
-    'GHB Mass Flux', FMassFluxObs.Mt3dmsGhbMassFluxObservations, FGhbMassFluxNode);
+    StrGHBMassFlux, FMassFluxObs.Mt3dmsGhbMassFluxObservations, FGhbMassFluxNode);
 
   FMassFluxObs.Mt3dmsRchMassFluxObservations.Assign(
     frmGoPhast.PhastModel.Mt3dmsRchMassFluxObservations);
   ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.RchPackage,
-    'Recharge Mass Flux', FMassFluxObs.Mt3dmsRchMassFluxObservations, FRchMassFluxNode);
+    StrRechargeMassFlux, FMassFluxObs.Mt3dmsRchMassFluxObservations, FRchMassFluxNode);
 
   FMassFluxObs.Mt3dmsEvtMassFluxObservations.Assign(
     frmGoPhast.PhastModel.Mt3dmsEvtMassFluxObservations);
   ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.EvtPackage,
-    'EVT Mass Flux', FMassFluxObs.Mt3dmsEvtMassFluxObservations, FEVTMassFluxNode);
+    StrEVTMassFlux, FMassFluxObs.Mt3dmsEvtMassFluxObservations, FEVTMassFluxNode);
 
   FMassFluxObs.Mt3dmsMassLoadingMassFluxObservations.Assign(
     frmGoPhast.PhastModel.Mt3dmsMassLoadingMassFluxObservations);
   ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.Mt3dmsSourceSink,
-    'Mass Loading', FMassFluxObs.Mt3dmsMassLoadingMassFluxObservations, FMassLoadingMassFluxNode);
+    StrMassLoading, FMassFluxObs.Mt3dmsMassLoadingMassFluxObservations, FMassLoadingMassFluxNode);
 
   FMassFluxObs.Mt3dmsResMassFluxObservations.Assign(
     frmGoPhast.PhastModel.Mt3dmsResMassFluxObservations);
   ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.ResPackage,
-    'Resevoir Mass Flux', FMassFluxObs.Mt3dmsResMassFluxObservations, FResMassFluxNode);
+    StrResevoirMassFlux, FMassFluxObs.Mt3dmsResMassFluxObservations, FResMassFluxNode);
 
   FMassFluxObs.Mt3dmsLakMassFluxObservations.Assign(
     frmGoPhast.PhastModel.Mt3dmsLakMassFluxObservations);
   ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.LakPackage,
-    'Lake Mass Flux', FMassFluxObs.Mt3dmsLakMassFluxObservations, FLakMassFluxNode);
+    StrLakeMassFlux, FMassFluxObs.Mt3dmsLakMassFluxObservations, FLakMassFluxNode);
 
   FMassFluxObs.Mt3dmsDrtMassFluxObservations.Assign(
     frmGoPhast.PhastModel.Mt3dmsDrtMassFluxObservations);
   ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.DrtPackage,
-    'DRT Mass Flux', FMassFluxObs.Mt3dmsDrtMassFluxObservations, FDrtMassFluxNode);
+    StrDRTMassFlux, FMassFluxObs.Mt3dmsDrtMassFluxObservations, FDrtMassFluxNode);
 
   FMassFluxObs.Mt3dmsEtsMassFluxObservations.Assign(
     frmGoPhast.PhastModel.Mt3dmsEtsMassFluxObservations);
   ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.EtsPackage,
-    'ETS Mass Flux', FMassFluxObs.Mt3dmsEtsMassFluxObservations, FEtsMassFluxNode);
+    StrETSMassFlux, FMassFluxObs.Mt3dmsEtsMassFluxObservations, FEtsMassFluxNode);
 
   SelectedObservation := nil;
 end;

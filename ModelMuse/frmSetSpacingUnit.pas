@@ -231,6 +231,9 @@ implementation
 
 uses frmGoPhastUnit, UndoItems, FastGEO;
 
+resourcestring
+  StrClickOnGridAndDr = 'Click on grid and drag to set grid spacing';
+
 {$R *.dfm}
 
 { TfrmSetSpacing }
@@ -902,7 +905,7 @@ end;
 
 function TSpacingGridTool.GetHint: string;
 begin
-  result := 'Click on grid and drag to set grid spacing';
+  result := StrClickOnGridAndDr;
 end;
 
 procedure TSpacingGridTool.MouseDown(Sender: TObject; Button: TMouseButton;

@@ -111,7 +111,7 @@ end;
 
 procedure TModpathMainFileWriter.WriteDataSet5;
 var
-  LayerIndex: Integer;
+//  LayerIndex: Integer;
   LayerGroup: TLayerGroup;
   Index: Integer;
   Layer: Integer;
@@ -121,18 +121,18 @@ begin
   PorosityArray := Model.DataArrayManager.GetDataSetByName(rsPorosity);
   LayerCount := 0;
   Layer := -1;
-  for Index := 1 to Model.LayerStructure.Count - 1 do
+  for Index := 0 to Model.Grid.LayerCount - 1 do
   begin
-    LayerGroup := Model.LayerStructure[Index];
+    LayerGroup := Model.GetLayerGroupByLayer(Index);
     if LayerGroup.Simulated then
     begin
-      for LayerIndex := 0 to LayerGroup.ModflowLayerCount - 1 do
+//      for LayerIndex := 0 to LayerGroup.ModflowLayerCount - 1 do
       begin
         Inc(LayerCount);
         Inc(Layer);
         WriteArray(PorosityArray, Layer, 'Data Set 5: POR' + ' Layer '
           + IntToStr(LayerCount) + ': '
-          + Model.ModflowLayerBottomDescription(LayerCount));
+          + LayerGroup.AquiferName);
       end;
     end
     else
@@ -140,7 +140,7 @@ begin
       Inc(Layer);
       WriteArray(PorosityArray, Layer, 'Data Set 5: PorCB' + ' Layer '
         + IntToStr(LayerCount) + ': '
-        + Model.ModflowLayerBottomDescription(LayerCount));
+        + LayerGroup.AquiferName);
     end;
   end;
 end;
@@ -180,20 +180,21 @@ end;
 
 procedure TModpathMainFileWriter.WriteDataSet3;
 var
-  LayerIndex: Integer;
+//  LayerIndex: Integer;
   LAYCON: Integer;
   LayerGroup: TLayerGroup;
   Index: Integer;
   LayerCount: Integer;
 begin
   LayerCount := 0;
-  for Index := 1 to Model.LayerStructure.Count - 1 do
+
+  for Index := 0 to Model.Grid.LayerCount - 1 do
   begin
-    LayerGroup := Model.LayerStructure[Index];
-    if LayerGroup.Simulated then
+    if Model.IsLayerSimulated(Index) then
     begin
+      LayerGroup := Model.GetLayerGroupByLayer(Index);
       LAYCON := LayerGroup.AquiferType;
-      for LayerIndex := 0 to LayerGroup.ModflowLayerCount - 1 do
+//      for LayerIndex := 0 to LayerGroup.ModflowLayerCount - 1 do
       begin
         WriteInteger(LAYCON);
         Inc(LayerCount);

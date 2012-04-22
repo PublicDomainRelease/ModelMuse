@@ -23,6 +23,9 @@ implementation
 
 uses ModflowUnitNumbers, PhastModelUnit, frmProgressUnit;
 
+resourcestring
+  StrWritingGMGPackage = 'Writing GMG Package input.';
+
 { TGmgWriter }
 
 class function TGmgWriter.Extension: string;
@@ -114,7 +117,7 @@ begin
   WriteToNameFile('GMG', Model.UnitNumbers.UnitNumber(StrGMG), NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage('Writing GMG Package input.');
+    frmProgressMM.AddMessage(StrWritingGMGPackage);
     WriteDataSet0;
     WriteDataSet1;
     WriteDataSet2;

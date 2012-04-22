@@ -104,6 +104,10 @@ uses Contnrs, Math, frmGoPhastUnit, RealListUnit, IntListUnit, GoPhastTypes;
 
 resourcestring
   StrTimeControl = 'time control';
+  StrTimeStepLength = 'Time step length';
+  StrSomeOfTheEndingT = 'Some of the ending times in the table are not uniqu' +
+  'e. Only the first of the stress-periods with a non-unique ending time wil' +
+  'l be used.  Do you want to continue?';
 
 {$R *.dfm}
 
@@ -134,7 +138,7 @@ end;
 procedure TfrmTimeControl.FormCreate(Sender: TObject);
 begin
   inherited;
-  dgTime.Cells[Ord(tcStepSize), 0] := 'Time step length';
+  dgTime.Cells[Ord(tcStepSize), 0] := StrTimeStepLength;
   dgTime.Cells[Ord(tcEndingTime), 0] := StrEndingTime;      
   seTimeCount.MaxValue := MAXINT;
   dgTime.ColWidths[0] := 20;
@@ -313,9 +317,7 @@ begin
     end
     else
     begin
-      result := MessageDlg('Some of the ending times in the table are not '
-        + 'unique. Only the first of the stress-periods with a non-unique '
-        + 'ending time will be used.  Do you want to continue?',
+      result := MessageDlg(StrSomeOfTheEndingT,
         mtInformation, [mbYes, mbNo], 0) = mrYes;
       if result then
       begin

@@ -220,7 +220,37 @@ type
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 implementation
 
-///////////////////////////////////////////////////////////////////////////////
+//////////
+
+resourcestring
+  StrInvalidFloatingPoi = 'Invalid Floating point conversion';
+  StrInvalidIntegerConv = 'Invalid Integer conversion';
+  StrCannotReferenceAn = 'Cannot reference an undefined BLOCK';
+  StrUserAborted = 'User aborted';
+  StrDXFReadErrorWar = ': DXF read error warning.  Press OK to ignore error.';
+  StrReadingDXFFile = 'Reading DXF file...';
+  StrPolylineContainedM = 'Polyline contained more than %d vertices';
+  StrErrorReadingPOINT = 'Error reading POINT entity';
+  StrErrorReadingINSERT = 'Error reading INSERT entity';
+  StrErrorReadingTEXTE = 'Error reading TEXT entity';
+  StrErrorReadingLINEE = 'Error reading LINE entity';
+  StrErrorReadingPOLYLI = 'Error reading POLYLINE entity';
+  StrErrorReading3DFACE = 'Error reading 3DFACE entity';
+  StrErrorReadingSOLID = 'Error reading SOLID entity';
+  StrErrorReadingARCEn = 'Error reading ARC entity';
+  StrErrorReadingCIRCLE = 'Error reading CIRCLE entity';
+  StrErrorReadingATTDEF = 'Error reading ATTDEF entity';
+  StrErrorReadingATTRIB = 'Error reading ATTRIB entity';
+  StrNoEntitiesOrInval = 'No Entities or invalid Entities section in DXF fil' +
+  'e';
+  StrNoBlocksOrInvalid = 'No Blocks or invalid Blocks section in DXF file';
+  StrNoHeaderOrInvalid = 'No Header or invalid Header section in DXF file';
+  StrNoLayersOrInvalid = 'No Layers or invalid Tables section in DXF file';
+  StrFileContainedNoMa = 'File contained no Max/Min extents. Scanning...';
+  StrDXFReadError = ': DXF Read Error';
+
+
+/////////////////////////////////////////////////////////////////////
 // abstract_entity implementation
 // used when reading vertexes - just to make sure all flags are reset
 // quicker than using create/destroy for each vertex.
@@ -258,8 +288,19 @@ begin
 {  if (DXF_Layers<>nil) then
     for lp1 := 0 to DXF_Layers.count-1 do DXF_Layer(DXF_Layers[lp1]).Free;}
   DXF_Layers.Free;
-  CloseFile(IO_chan);
-  FreeMem(pBuf,SizeOfBuf);
+  try
+    CloseFile(IO_chan);
+  except on E: EInOutError do
+    // ErrorCode = 103 means the file was not opened.
+    if E.ErrorCode <> 103 then
+    begin
+      raise
+    end;
+  end;
+  if Assigned(pBuf) then
+  begin
+    FreeMem(pBuf,SizeOfBuf);
+  end;
   TempInsertList.Free;
   Inherited Destroy;
 end;
@@ -388,13 +429,13 @@ begin Result:=fLine end;
 function DXF_Reader.ValDbl: double;
 begin
   Val(string(fLine),Result,ec);
-  If ec<>0 then raise DXF_read_exception.Create('Invalid Floating point conversion',line_num);
+  If ec<>0 then raise DXF_read_exception.Create(StrInvalidFloatingPoi,line_num);
 end;
 
 function DXF_Reader.ValInt: integer;
 begin
   Val(string(fLine),Result,ec);
-  If ec<>0 then raise DXF_read_exception.Create('Invalid Integer conversion',line_num);
+  If ec<>0 then raise DXF_read_exception.Create(StrInvalidIntegerConv,line_num);
 end;
 
 function DXF_Reader.code_and_string(var group:integer; var s:AnsiString) : boolean;
@@ -514,7 +555,7 @@ begin
       try
         Insert.update_block_links(block_list);
       except
-        raise DXF_read_exception.Create('Cannot reference an undefined BLOCK', -1);
+        raise DXF_read_exception.Create(StrCannotReferenceAn, -1);
       end;
   end;
   finally
@@ -688,11 +729,10 @@ begin
     except
       on E:DXF_read_exception do begin
         stopped_thinking;
-        if MessageDlg(E.message + ': DXF read error warning.  '
-          + 'Press OK to ignore error.',
+        if MessageDlg(E.message + StrDXFReadErrorWar,
           mtError, [mbOK, mbCancel], 0) = mrCancel then
-          raise DXF_read_exception.Create('User aborted',-1);
-        thinking('Reading DXF file...');
+          raise DXF_read_exception.Create(StrUserAborted,-1);
+        thinking(StrReadingDXFFile);
       end;
       on E:Exception do Showmessage(E.Message);
     end;
@@ -851,7 +891,7 @@ begin
           entity.Free;
           entity := nil;
 
-          raise DXF_read_exception.Create('Cannot reference an undefined BLOCK'+StrEOL+StrEOL+
+          raise DXF_read_exception.Create(StrCannotReferenceAn+StrEOL+StrEOL+
           '(File may not have been saved with BLOCKs)'+ StrEOL,line_num);
         end;
       end;
@@ -903,8 +943,8 @@ begin
               ent3.Free;
               ent3 := nil;
               ent1.Free; ent2.Free;
-              raise DXF_read_exception.Create('Polyline contained more than '+
-                IntToStr(max_vertices_per_polyline)+' vertices',line_num);
+              raise DXF_read_exception.Create(Format(StrPolylineContainedM,
+                [max_vertices_per_polyline]),line_num);
             end;
           end
           else
@@ -975,35 +1015,35 @@ begin
   exit; // next bit only when vertices overflow
 vertex_overflow:
   ent1.Free; ent2.Free;
-  raise DXF_read_exception.Create('Polyline contained more than '+
-    IntToStr(max_vertices_per_polyline)+' vertices',line_num);
+  raise DXF_read_exception.Create(Format(StrPolylineContainedM,
+    [max_vertices_per_polyline]),line_num);
 end;
 
 function DXF_Reader.read_entity(s,endstr:AnsiString; var entity:DXF_Entity; var layer:integer) : boolean;
 begin
   entity := nil; result := false;
   if (s='POINT') then begin if not general_purpose_read(Point_,entity,layer) then
-    raise DXF_read_exception.Create('Error reading POINT entity',line_num); end
+    raise DXF_read_exception.Create(StrErrorReadingPOINT,line_num); end
   else if (s='INSERT') then begin if not read_insert(entity,layer) then
-    raise DXF_read_exception.Create('Error reading INSERT entity',line_num); end
+    raise DXF_read_exception.Create(StrErrorReadingINSERT,line_num); end
   else if (s='TEXT') then begin if not general_purpose_read(Text_,entity,layer) then
-    raise DXF_read_exception.Create('Error reading TEXT entity',line_num); end
+    raise DXF_read_exception.Create(StrErrorReadingTEXTE,line_num); end
   else if (s='LINE') then begin if not general_purpose_read(Line_,entity,layer) then
-    raise DXF_read_exception.Create('Error reading LINE entity',line_num); end
+    raise DXF_read_exception.Create(StrErrorReadingLINEE,line_num); end
   else if (s='POLYLINE') then begin if not read_polyline(entity,layer) then
-    raise DXF_read_exception.Create('Error reading POLYLINE entity',line_num); end
+    raise DXF_read_exception.Create(StrErrorReadingPOLYLI,line_num); end
   else if (s='3DFACE') then begin if not general_purpose_read(Face3D_,entity,layer) then
-    raise DXF_read_exception.Create('Error reading 3DFACE entity',line_num); end
+    raise DXF_read_exception.Create(StrErrorReading3DFACE,line_num); end
   else if (s='SOLID') then begin if not general_purpose_read(Solid_,entity,layer) then
-    raise DXF_read_exception.Create('Error reading SOLID entity',line_num); end
+    raise DXF_read_exception.Create(StrErrorReadingSOLID,line_num); end
   else if (s='CIRCLE') then begin if not general_purpose_read(Circle_,entity,layer) then
-    raise DXF_read_exception.Create('Error reading CIRCLE entity',line_num); end
+    raise DXF_read_exception.Create(StrErrorReadingCIRCLE,line_num); end
   else if (s='ARC') then begin if not general_purpose_read(Arc_,entity,layer) then
-    raise DXF_read_exception.Create('Error reading ARC entity',line_num); end
+    raise DXF_read_exception.Create(StrErrorReadingARCEn,line_num); end
   else if (s='ATTDEF') then begin if not general_purpose_read(AttDef_,entity,layer) then
-    raise DXF_read_exception.Create('Error reading ATTDEF entity',line_num); end
+    raise DXF_read_exception.Create(StrErrorReadingATTDEF,line_num); end
   else if (s='ATTRIB') then begin if not general_purpose_read(Attrib_,entity,layer) then
-    raise DXF_read_exception.Create('Error reading ATTRIB entity',line_num); end
+    raise DXF_read_exception.Create(StrErrorReadingATTRIB,line_num); end
   else if (s=endstr) then result := true
   else if skipped<>nil then Skipped.Add(string(s));
 end;
@@ -1014,34 +1054,34 @@ function DXF_Reader.read_file : boolean;
 var lp1 : integer;
 begin
   result := true;
-  thinking('Reading DXF file...');
+  thinking(StrReadingDXFFile);
   try
     mark_position;
     if not (move_to_header_section and read_header) then begin
-      Thinking('No Header or invalid Header section in DXF file');
+      Thinking(StrNoHeaderOrInvalid);
       Sleep(message_delay_ms);
       goto_marked_position;
     end;
     mark_position;
     if not (move_to_tables_section and read_tables) then begin
-      Thinking('No Layers or invalid Tables section in DXF file');
+      Thinking(StrNoLayersOrInvalid);
       Sleep(message_delay_ms);
       goto_marked_position;
     end;
     mark_position;
     if not (move_to_blocks_section and read_blocks) then begin
-      Thinking('No Blocks or invalid Blocks section in DXF file');
+      Thinking(StrNoBlocksOrInvalid);
       Sleep(message_delay_ms);
       goto_marked_position;
     end;
     mark_position;
-    thinking('Reading DXF file...');
+    thinking(StrReadingDXFFile);
     if not (move_to_entity_section and read_entities) then
-      raise DXF_read_exception.Create('No Entities or invalid Entities section in DXF file',-1);
+      raise DXF_read_exception.Create(StrNoEntitiesOrInval,-1);
   except
     on E:DXF_read_exception do begin
       stopped_thinking;
-      MessageDlg(E.message + ': DXF Read Error', mtWarning, [mbOK], 0);
+      MessageDlg(E.message + StrDXFReadError, mtWarning, [mbOK], 0);
     end;
     on E:EAccessViolation do begin
       stopped_thinking;
@@ -1049,7 +1089,7 @@ begin
     end;
   end;
   if p1_eq_p2_3D(min_extents,origin3D) or p1_eq_p2_3D(max_extents,origin3D) then begin
-    thinking('File contained no Max/Min extents. Scanning...');
+    thinking(StrFileContainedNoMa);
     sleep(message_delay_ms); // just a delay to let the message be visible
     for lp1:=0 to DXF_layers.count-1 do
       DXF_Layer(DXF_Layers[lp1]).max_min_extents(max_extents,min_extents);

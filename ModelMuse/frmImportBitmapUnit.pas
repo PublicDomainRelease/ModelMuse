@@ -12,7 +12,7 @@ uses
   GR32, // TBitmap32, and TFloatRect are declared in GR32.
   SysUtils, Types, Classes, Variants, Graphics, Controls, Forms,
   Dialogs, StdCtrls, frmCustomGoPhastUnit, Grids, RbwDataGrid4, 
-  ExtCtrls, Buttons, CompressedImageUnit, ZoomBox2, {LinarBitmap,} Mask, JvExMask,
+  ExtCtrls, Buttons, CompressedImageUnit, ZoomBox2, Mask, JvExMask,
   JvSpin, pngimage;
 
 type
@@ -161,6 +161,19 @@ uses frmPixelPointUnit, GoPhastTypes, frmGoPhastUnit, BigCanvasMethods,
 resourcestring
   StrUnableToReadWorld = 'Unable to read world file. Check that the world fi' +
   'le is properly formatted.';
+  StrThereWasAnErrorR = 'There was an error reading the file.  The file may ' +
+  'be corrupt, it may be open in another program or there may be a bug in Mo' +
+  'delMuse. Please contact rbwinst@usgs.gov for futher help with this proble' +
+  'm.';
+  StrPixelX = 'Pixel X';
+  StrPixelY = 'Pixel Y';
+  StrPixelZ = 'Pixel Z';
+  StrX = 'X';
+  StrY = 'Y';
+  StrZ = 'Z';
+  StrClickOnTheImageA = 'Click on the image and assign real-world coordinate' +
+  's to the points you clicked or fill in the information in the table.';
+  StrEditBitMap = 'Edit BitMap';
 
 {$R *.dfm}
 
@@ -186,24 +199,24 @@ begin
   case TViewDirection(rgViewDirection.ItemIndex) of
     vdTop:
       begin
-        dgPoints.Cells[Ord(pcPixelX), 0] := 'Pixel X';
-        dgPoints.Cells[Ord(pcPixelY), 0] := 'Pixel Y';
-        dgPoints.Cells[Ord(pcRealWorldX), 0] := 'X';
-        dgPoints.Cells[Ord(pcRealWorldY), 0] := 'Y';
+        dgPoints.Cells[Ord(pcPixelX), 0] := StrPixelX;
+        dgPoints.Cells[Ord(pcPixelY), 0] := StrPixelY;
+        dgPoints.Cells[Ord(pcRealWorldX), 0] := StrX;
+        dgPoints.Cells[Ord(pcRealWorldY), 0] := StrY;
       end;
     vdFront:
       begin
-        dgPoints.Cells[Ord(pcPixelX), 0] := 'Pixel X';
-        dgPoints.Cells[Ord(pcPixelY), 0] := 'Pixel Z';
-        dgPoints.Cells[Ord(pcRealWorldX), 0] := 'X';
-        dgPoints.Cells[Ord(pcRealWorldY), 0] := 'Z';
+        dgPoints.Cells[Ord(pcPixelX), 0] := StrPixelX;
+        dgPoints.Cells[Ord(pcPixelY), 0] := StrPixelZ;
+        dgPoints.Cells[Ord(pcRealWorldX), 0] := StrX;
+        dgPoints.Cells[Ord(pcRealWorldY), 0] := StrZ;
       end;
     vdSide:
       begin
-        dgPoints.Cells[Ord(pcPixelX), 0] := 'Pixel Z';
-        dgPoints.Cells[Ord(pcPixelY), 0] := 'Pixel Y';
-        dgPoints.Cells[Ord(pcRealWorldX), 0] := 'Z';
-        dgPoints.Cells[Ord(pcRealWorldY), 0] := 'Y';
+        dgPoints.Cells[Ord(pcPixelX), 0] := StrPixelZ;
+        dgPoints.Cells[Ord(pcPixelY), 0] := StrPixelY;
+        dgPoints.Cells[Ord(pcRealWorldX), 0] := StrZ;
+        dgPoints.Cells[Ord(pcRealWorldY), 0] := StrY;
       end;
   else
     Assert(False);
@@ -294,10 +307,7 @@ var
   begin
     FreeAndNil(FBitMap);
     Beep;
-    MessageDlg('There was an error reading the file.  The file may be '
-      + 'corrupt or there may be a bug in ModelMuse. Please contact '
-      +  'rbwinst@usgs.gov for futher help with this problem.',
-      mtError, [mbOK], 0);
+    MessageDlg(StrThereWasAnErrorR, mtError, [mbOK], 0);
   end;
 begin
   inherited;
@@ -333,14 +343,28 @@ there is no loss in resolution at higher magnifications. }
     end
     else if (CompareText(Extension, '.bmp') = 0) then
     begin
-      FBitMap.LoadFromFile(FImageFileName);
+      try
+        FBitMap.LoadFromFile(FImageFileName);
+      except on EFOpenError do
+        begin
+          CantOpenFileMessage(FImageFileName);
+          Exit;
+        end;
+      end;
     end
     else if (CompareText(Extension, '.jpg') = 0)
       or (CompareText(Extension, '.jpeg') = 0) then
     begin
       jpegImage := TJPEGImage.Create;
       try
-        jpegImage.LoadFromFile(FImageFileName);
+        try
+          jpegImage.LoadFromFile(FImageFileName);
+        except on EFOpenError do
+          begin
+            CantOpenFileMessage(FImageFileName);
+            Exit;
+          end;
+        end;
         FBitMap.Assign(jpegImage);
       finally
         jpegImage.Free
@@ -350,7 +374,14 @@ there is no loss in resolution at higher magnifications. }
     begin
       png := TPngImage.Create;
       try
-        png.LoadFromFile(FImageFileName);
+        try
+          png.LoadFromFile(FImageFileName);
+        except on EFOpenError do
+          begin
+            CantOpenFileMessage(FImageFileName);
+            Exit;
+          end;
+        end;
         FBitMap.Assign(png);
       finally
         png.Free;
@@ -358,14 +389,28 @@ there is no loss in resolution at higher magnifications. }
     end
     else if (CompareText(Extension, '.pcx') = 0) then
     begin
-      LoadFromFileX(FImageFileName, FBitMap);
+      try
+        LoadFromFileX(FImageFileName, FBitMap);
+      except on EFOpenError do
+        begin
+          CantOpenFileMessage(FImageFileName);
+          Exit;
+        end;
+      end;
     end
     else if (CompareText(Extension, '.tif') = 0)
       or (CompareText(Extension, '.tiff') = 0) then
     begin
       TiffImage := TTIFFGraphic.Create;
       try
-        TiffImage.LoadFromFile(FImageFileName);
+        try
+          TiffImage.LoadFromFile(FImageFileName);
+        except on EFOpenError do
+          begin
+            CantOpenFileMessage(FImageFileName);
+            Exit;
+          end;
+        end;
         FBitMap.Assign(TiffImage);
       finally
         TiffImage.Free;
@@ -419,9 +464,7 @@ there is no loss in resolution at higher magnifications. }
     EnableOKButton;
     if not btnOK.Enabled then
     begin
-      MessageDlg('Click on the image and assign real-world coordinates to the '
-        + 'points you clicked or fill in the information in the table.',
-        mtInformation, [mbOK], 0);
+      MessageDlg(StrClickOnTheImageA, mtInformation, [mbOK], 0);
     end;
   end;
 end;
@@ -437,7 +480,7 @@ var
   Index: integer;
   MeasurementPoint: TMeasurementPointItem;
 begin
-  Caption := 'Edit BitMap';
+  Caption := StrEditBitMap;
   Assert(ABitmapItem <> nil);
   FBitmapItem := ABitmapItem;
   FBitMap.Free;
@@ -723,7 +766,14 @@ begin
   end;
   WorldFile := TStringList.Create;
   try
-    WorldFile.LoadFromFile(FileName);
+    try
+      WorldFile.LoadFromFile(FileName);
+    except on EFOpenError do
+      begin
+        CantOpenFileMessage(FileName);
+        Exit;
+      end;
+    end;
     try
       case FileType of
         wftCAD:

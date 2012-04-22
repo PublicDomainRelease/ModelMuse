@@ -394,6 +394,7 @@ begin
       end;
 
       LocalCount := ReadCompInt(DecompressionStream);
+      Assert(LocalCount = FCachedCount);
       for CellIndex := 0 to LocalCount - 1 do
       begin
         ValueCell := FValueCellType.Create;

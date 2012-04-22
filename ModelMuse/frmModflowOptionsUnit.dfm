@@ -2,28 +2,30 @@ inherited frmModflowOptions: TfrmModflowOptions
   HelpType = htKeyword
   HelpKeyword = 'MODFLOW_Options_Dialog_Box'
   Caption = 'MODFLOW Options'
-  ClientHeight = 406
+  ClientHeight = 486
   ClientWidth = 543
   ExplicitWidth = 551
-  ExplicitHeight = 440
+  ExplicitHeight = 520
   PixelsPerInch = 96
   TextHeight = 18
   object pcOptions: TPageControl
     Left = 0
     Top = 0
     Width = 543
-    Height = 324
+    Height = 404
     ActivePage = TabSheet2
     Align = alClient
     TabOrder = 0
     OnChange = pcOptionsChange
+    ExplicitHeight = 384
     object TabSheet1: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'Description_Tab'
       Caption = 'Description'
+      ExplicitHeight = 351
       DesignSize = (
         535
-        291)
+        371)
       object Label3: TLabel
         Left = 8
         Top = 1
@@ -81,11 +83,12 @@ inherited frmModflowOptions: TfrmModflowOptions
         Left = 12
         Top = 130
         Width = 520
-        Height = 152
+        Height = 232
         Anchors = [akLeft, akTop, akRight, akBottom]
         ScrollBars = ssBoth
         TabOrder = 3
         WordWrap = False
+        ExplicitHeight = 212
       end
     end
     object TabSheet2: TTabSheet
@@ -93,53 +96,66 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpKeyword = 'Options_Tab'
       Caption = 'Options'
       ImageIndex = 1
+      ExplicitHeight = 351
       DesignSize = (
         535
-        291)
+        371)
       object Label5: TLabel
-        Left = 3
-        Top = 87
-        Width = 271
+        Left = 154
+        Top = 111
+        Width = 275
         Height = 18
-        Caption = 'Head value for inactive cells (HNOFLO)'
+        Caption = 'Head value for inactive cells (HNOFLO) '
       end
       object Label6: TLabel
-        Left = 342
-        Top = 138
+        Left = 151
+        Top = 265
         Width = 127
         Height = 18
+        Margins.Left = 0
         Caption = 'Time unit (ITMUNI)'
       end
       object Label7: TLabel
-        Left = 342
-        Top = 87
+        Left = 151
+        Top = 233
         Width = 145
         Height = 18
+        Margins.Left = 0
         Caption = 'Length unit (LENUNI)'
       end
       object Label8: TLabel
-        Left = 3
-        Top = 138
-        Width = 307
+        Left = 154
+        Top = 143
+        Width = 311
         Height = 18
-        Caption = 'Head value for cells that become dry (HDRY)'
+        Caption = 'Head value for cells that become dry (HDRY) '
       end
       object lblInitialHeads: TLabel
         Left = 3
-        Top = 237
+        Top = 320
         Width = 299
         Height = 18
         Caption = 'Binary file containing initial heads (optional)'
+      end
+      object lbl1: TLabel
+        Left = 95
+        Top = 167
+        Width = 419
+        Height = 36
+        Caption = 
+          'Budget percent discrepancy that will cause execution to stop (ST' +
+          'OPER) '
+        WordWrap = True
       end
       object GroupBox1: TGroupBox
         Left = 3
         Top = 3
         Width = 529
-        Height = 78
+        Height = 102
         Caption = 'Basic package options'
         TabOrder = 0
         object cbPRINTTIME: TJvCheckBox
-          Left = 8
+          Left = 3
           Top = 43
           Width = 437
           Height = 18
@@ -156,8 +172,8 @@ inherited frmModflowOptions: TfrmModflowOptions
           HotTrackFont.Style = []
         end
         object cbCHTOCH: TJvCheckBox
-          Left = 8
-          Top = 20
+          Left = 3
+          Top = 19
           Width = 461
           Height = 18
           Caption = 'Calculate flow between adjacent constant-head cells (CHTOCH)'
@@ -172,10 +188,32 @@ inherited frmModflowOptions: TfrmModflowOptions
           HotTrackFont.Pitch = fpVariable
           HotTrackFont.Style = []
         end
+        object cbStopError: TJvCheckBox
+          Left = 3
+          Top = 67
+          Width = 508
+          Height = 32
+          Caption = 
+            'Continue running even if the solver closure criteria are not met' +
+            '. (STOPERROR)'
+          Checked = True
+          State = cbChecked
+          TabOrder = 2
+          WordWrap = True
+          OnClick = cbStopErrorClick
+          LinkedControls = <>
+          AutoSize = False
+          HotTrackFont.Charset = DEFAULT_CHARSET
+          HotTrackFont.Color = clWindowText
+          HotTrackFont.Height = 17
+          HotTrackFont.Name = 'Microsoft Sans Serif'
+          HotTrackFont.Pitch = fpVariable
+          HotTrackFont.Style = []
+        end
       end
       object rdeHNOFLO: TRbwDataEntry
         Left = 3
-        Top = 110
+        Top = 111
         Width = 145
         Height = 22
         TabOrder = 1
@@ -186,12 +224,12 @@ inherited frmModflowOptions: TfrmModflowOptions
         ChangeDisabledColor = True
       end
       object comboTimeUnit: TJvComboBox
-        Left = 342
-        Top = 161
+        Left = 3
+        Top = 261
         Width = 145
         Height = 26
         Style = csDropDownList
-        TabOrder = 4
+        TabOrder = 6
         Text = 'seconds (1)'
         OnChange = comboTimeUnitChange
         Items.Strings = (
@@ -204,12 +242,12 @@ inherited frmModflowOptions: TfrmModflowOptions
         ItemIndex = 1
       end
       object comboLengthUnit: TJvComboBox
-        Left = 342
-        Top = 110
+        Left = 3
+        Top = 229
         Width = 145
         Height = 26
         Style = csDropDownList
-        TabOrder = 2
+        TabOrder = 5
         Text = 'meters (2)'
         OnChange = comboLengthUnitChange
         Items.Strings = (
@@ -221,10 +259,10 @@ inherited frmModflowOptions: TfrmModflowOptions
       end
       object rdeHDRY: TRbwDataEntry
         Left = 3
-        Top = 161
+        Top = 139
         Width = 145
         Height = 22
-        TabOrder = 3
+        TabOrder = 2
         Text = '-2e20'
         OnExit = rdeHDRYExit
         DataType = dtReal
@@ -233,14 +271,13 @@ inherited frmModflowOptions: TfrmModflowOptions
       end
       object cbOpenInTextEditor: TJvCheckBox
         Left = 3
-        Top = 193
-        Width = 286
-        Height = 32
+        Top = 206
+        Width = 366
+        Height = 18
         Caption = 'Open listing file in text editor when model is done.'
         Checked = True
         State = cbChecked
-        TabOrder = 5
-        WordWrap = True
+        TabOrder = 4
         LinkedControls = <>
         AutoSize = False
         HotTrackFont.Charset = DEFAULT_CHARSET
@@ -252,23 +289,38 @@ inherited frmModflowOptions: TfrmModflowOptions
       end
       object feInitialHeads: TJvFilenameEdit
         Left = 3
-        Top = 258
+        Top = 341
         Width = 484
         Height = 26
         Filter = 'Binary head files (*.bhd)|*.bhd'
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 6
+        TabOrder = 8
       end
       object edMasUnit: TLabeledEdit
-        Left = 342
-        Top = 218
+        Left = 3
+        Top = 293
         Width = 145
         Height = 26
         EditLabel.Width = 127
         EditLabel.Height = 18
         EditLabel.Caption = 'Mass unit (MUNIT)'
+        LabelPosition = lpRight
         MaxLength = 4
         TabOrder = 7
+      end
+      object rdeStopErrorCriterion: TRbwDataEntry
+        Left = 3
+        Top = 174
+        Width = 86
+        Height = 22
+        Color = clBtnFace
+        Enabled = False
+        TabOrder = 3
+        Text = '0'
+        DataType = dtReal
+        Max = 1.000000000000000000
+        CheckMin = True
+        ChangeDisabledColor = True
       end
     end
     object tabWetting: TTabSheet
@@ -276,6 +328,7 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpKeyword = 'Wetting_Tab'
       Caption = 'Wetting'
       ImageIndex = 2
+      ExplicitHeight = 351
       object lblWetFact: TLabel
         Left = 8
         Top = 35
@@ -381,11 +434,12 @@ inherited frmModflowOptions: TfrmModflowOptions
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 365
+    Top = 445
     Width = 543
     Height = 41
     Align = alBottom
     TabOrder = 2
+    ExplicitTop = 425
     DesignSize = (
       543
       41)
@@ -449,11 +503,12 @@ inherited frmModflowOptions: TfrmModflowOptions
   end
   object pnlModel: TPanel
     Left = 0
-    Top = 324
+    Top = 404
     Width = 543
     Height = 41
     Align = alBottom
     TabOrder = 1
+    ExplicitTop = 384
     DesignSize = (
       543
       41)

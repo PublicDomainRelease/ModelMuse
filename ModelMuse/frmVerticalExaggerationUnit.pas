@@ -51,6 +51,10 @@ implementation
 
 uses Math, frmGoPhastUnit, UndoItems, AbstractGridUnit;
 
+resourcestring
+  StrTheVerticalExagger = 'The Vertical exaggeration must be a positive numb' +
+  'er.';
+
 {$R *.dfm}
 
 { TfrmVerticalExaggeration }
@@ -86,7 +90,7 @@ begin
   if VE = 0 then
   begin
     Beep;
-    MessageDlg('The Vertical exaggeration must be a positive number.',
+    MessageDlg(StrTheVerticalExagger,
       mtError, [mbOK], 0);
     Exit;
   end;

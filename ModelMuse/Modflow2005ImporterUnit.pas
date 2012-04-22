@@ -8,7 +8,8 @@ uses Windows, SubscriptionUnit, SysUtils, Classes, Contnrs, JclSysUtils,
 
 type
   TProgressHandler = procedure(Position, Total: integer) of object;
-  TModelType = (mtParent, mtChild); 
+
+  TModelType = (mtParent, mtChild);
 
 {
 Import the MODFLOW-2005 model whose name file is ListFileName.
@@ -397,6 +398,7 @@ Type
     FComputeVkUsingCellThickness: Boolean;
     FComputeThicknessUsingStartingHead: Boolean;
     FNoVerticalFlowCorrection: Boolean;
+    FNoParameterCheck: boolean;
     LAYTYP: array of integer;
     LAYAVG: array of integer;
     CHANI: array of double;
@@ -423,6 +425,7 @@ Type
     FSpecificYieldConst: TRealConstantRecordArray;
     FWetDryConst: TRealConstantRecordArray;
     FStorageCoefficientConst: TRealConstantRecordArray;
+    FNoCvCorrection: Boolean;
     procedure ReadDataSet1;
     procedure ReadDataSet1Options;
     procedure ReadDataSets2to6;
@@ -628,8 +631,29 @@ Type
     DAMPPCG: double;
     DAMPPCGT: double;
     NPCOND: integer;
+    IHCOFADD: integer;
     procedure ReadDataSet1;
     procedure ReadDataSet2;
+  protected
+    procedure ReadData(const ALabel: string); override;
+    procedure HandlePackage; override;
+  public
+    Constructor Create(Importer: TModflow2005Importer);
+  end;
+
+  TPcgnImporter = class (TSolverImporter)
+  private
+    ITER_MO, ITER_MI: integer;
+    CLOSE_R, CLOSE_H: double;
+    RELAX: double;
+    IFILL, UNIT_PC, UNIT_TS: integer;
+    ADAMP: integer;
+    DAMP, DAMP_LB, RATE_D, CHGLIMIT: double;
+    ACNVG: integer;
+    CNVG_LB: double;
+    MCNVG: integer;
+    RATE_C: double;
+    IPUNIT: integer;
   protected
     procedure ReadData(const ALabel: string); override;
     procedure HandlePackage; override;
@@ -1075,6 +1099,7 @@ Type
     FStrt: T3DDoubleArray;
     FConstantStrt : TRealConstantRecordArray;
     FSpecifiedHeadsList: TList;
+    STOPER: double;
     procedure ImportInitialHead;
     procedure ImportActiveCells;
     procedure ReadHeading(var AHeading: string);
@@ -1738,6 +1763,11 @@ Type
     property Items[Index: integer]: TFlowTableItem read GetItem;  default;
   end;
 
+  TInflowRecord = record
+    Time: double;
+    Inflow: double;
+  end;
+
   TSegment = class(TArrayMember)
     NSEG: integer;
     ICALC: integer;
@@ -1775,6 +1805,7 @@ Type
     UHC2: double;
     TableX: array[0..7] of double;
     TableZ: array[0..7] of double;
+    InflowValues: array of TInflowRecord;
     FFlowTable: TFlowTableArray;
     Constructor Create; override;
     Destructor Destroy; override;
@@ -1863,6 +1894,8 @@ Type
     NUMTIM: integer;
     WEIGHT: double;
     FLWTOL: double;
+    NUMTAB: integer;
+    MAXVAL: integer;
     FSegmentStorage: TList;
     FItemStorage: TList;
     procedure ReadBasicData;
@@ -1908,6 +1941,8 @@ Type
     procedure CreateParamInstances(ParameterSegments: TIntegerList);
     function DefaultInstanceName(StressPeriodIndex: integer): string;
     procedure AssignParameterSegmentProperties(PriorSegNumber: Integer);
+    procedure ReadExternalFlows;
+    procedure AssignExternalFlows(Segment: TSegment);
   protected
     procedure ReadData(const ALabel: string); override;
     procedure HandlePackage; override;
@@ -2105,6 +2140,14 @@ Type
       read GetLakeValueArray; default;
   end;
 
+  TLakeBathRecord = record
+    Depth: double;
+    Volume: double;
+    Area: double;
+  end;
+
+  TLakeBathArray = array[0..150] of TLakeBathRecord;
+
   TLakImporter = class(TTransientArrayImporter)
   private
     NLAKES: integer;
@@ -2113,6 +2156,7 @@ Type
     SSCNCR: double;
     SURFDEPTH: double;
     Stages: array of double;
+    LakeTables: array of TLakeBathArray;
     MinStages: array of double;
     MaxStages: array of double;
     NSOL: integer;
@@ -2132,6 +2176,7 @@ Type
     FCurrentLakeValues: Integer;
     FCurrentStressPeriodValues: TLakeValueArray;
     FPriorStressPeriodValues: TLakeValueArray;
+    FTABLEINPUT: boolean;
     procedure ReadDataSet9bNoAugmentation;
     procedure ReadDataSet9bWithAugmentation;
     procedure ReadDataSet9aNoLimits;
@@ -2150,8 +2195,9 @@ Type
     procedure ReadLakeStageAndLimits;
     procedure ReadTransientControls;
     procedure ReadTheta;
-    procedure ReadDataSet1;
+    procedure ReadDataSet1b;
     procedure DefineLakeOutlines;
+    procedure ReadLakeTable;
   protected
     procedure ReadData(const ALabel: string); override;
     procedure HandlePackage; override;
@@ -2274,6 +2320,12 @@ Type
     ConstThti: double;
     THTI: T2DDoubleArray;
     FUzfPackage: TUzfPackageSelection;
+    SPECIFYTHTR: boolean;
+    SPECIFYTHTI: boolean;
+    NOSURFLEAK: boolean;
+    IsConstThtr: boolean;
+    ConstThtr: double;
+    THTR: T2DDoubleArray;
     procedure CreateInfiltrationDataArray(StressPeriodIndex: integer);
     procedure CreateETDataArray(StressPeriodIndex: integer);
     procedure CreateExtinctionDepthDataArray(StressPeriodIndex: integer);
@@ -2855,7 +2907,6 @@ var
   GlobalCellCenterScreenObject: TScreenObject = nil;
   GlobalModelType: TModelType;
   LayerString: string;
-
 procedure ImportModflow2005(const ListFileName: string;
   XOrigin, YOrigin, GridAngle: double; textHandler: TTextHandler;
   ProgressHandler: TProgressHandler; ModelType: TModelType);
@@ -2964,6 +3015,7 @@ begin
   FPackageIdentifiers.AddObject('GMG:', TGmgImporter.Create(self));
   FPackageIdentifiers.AddObject('SIP:', TSipImporter.Create(self));
   FPackageIdentifiers.AddObject('PCG:', TPcgImporter.Create(self));
+  FPackageIdentifiers.AddObject('PCGN:', TPcgnImporter.Create(self));
   FGageImporter := TGageImporter.Create(self, LakImporter, SfrImporter);
   FPackageIdentifiers.AddObject('GAG:', FGageImporter);
   FPackageIdentifiers.AddObject('OC:', nil);
@@ -4424,6 +4476,7 @@ begin
   // IFREFM is not used but you need to read it to get to IPRTIM.
   Read(FImporter.FFile, DummyInteger); // IFREFM
   Read(FImporter.FFile, IPRTIM);
+  Read(FImporter.FFile, STOPER);
 
   FChtoch := (ICHFLG <> 0);
   FPrintTime := (IPRTIM <> 0);
@@ -4781,6 +4834,8 @@ begin
   FModel.ModflowOptions.ComputeFluxesBetweenConstantHeadCells := FChtoch;
   FModel.ModflowOptions.PrintTime := FPrintTime;
   FModel.ModflowOptions.HNoFlow := FHNoFlo;
+  FModel.ModflowOptions.StopError := (STOPER <> 0);
+  FModel.ModflowOptions.StopErrorCriterion := STOPER;
 
   ImportInitialHead;
   ImportActiveCells;
@@ -4834,7 +4889,7 @@ begin
   begin
     ReadHeading(FHeading2);
   end
-  else if ALabel = 'IXSEC, ICHFLG, IFREFM, IPRTIM:' then
+  else if ALabel = 'IXSEC, ICHFLG, IFREFM, IPRTIM, STOPER:' then
   begin
     ReadDataSet1;
   end
@@ -6123,7 +6178,19 @@ begin
   FModel.ModflowOptions.HDry := HDRY;
   LpfPackage.UseConstantCV := FComputeVkUsingCellThickness;
   LpfPackage.UseSaturatedThickness := FComputeThicknessUsingStartingHead;
-  LpfPackage.UseCvCorrection := not FNoVerticalFlowCorrection;
+  LpfPackage.UseCvCorrection := not FNoCvCorrection;
+  LpfPackage.UseVerticalFlowCorrection := not FNoVerticalFlowCorrection;
+  LpfPackage.UseStorageCoefficient := FStorageCoefficientChoice;
+  LpfPackage.NoParCheck := FNoParameterCheck;
+{
+    FStorageCoefficientChoice: Boolean;
+    FComputeVkUsingCellThickness: Boolean;
+    FComputeThicknessUsingStartingHead: Boolean;
+    FNoVerticalFlowCorrection: Boolean;
+    FNoParameterCheck: boolean;
+
+}
+
 end;
 
 procedure TArrayImporter.InitializeConstArray(
@@ -6406,17 +6473,23 @@ var
   ICONCV: Integer;
   ISFAC: Integer;
   NOCVCO: Integer;
+  NOPCHK: integer;
+  NOVFC: integer;
 begin
   Read(FImporter.FFile, ISFAC);
   Read(FImporter.FFile, ICONCV);
   Read(FImporter.FFile, ITHFLG);
   Read(FImporter.FFile, NOCVCO);
+  Read(FImporter.FFile, NOVFC);
+  Read(FImporter.FFile, NOPCHK);
   Readln(FImporter.FFile);
   FProgressHandler(FilePos(FImporter.FFile));
   FStorageCoefficientChoice := ISFAC <> 0;
   FComputeVkUsingCellThickness := ICONCV <> 0;
   FComputeThicknessUsingStartingHead := ITHFLG <> 0;
-  FNoVerticalFlowCorrection := NOCVCO <> 0;
+  FNoCvCorrection := (NOCVCO <> 0);
+  FNoVerticalFlowCorrection := NOVFC <> 0;
+  FNoParameterCheck := (NOPCHK <> 0);
 end;
 
 procedure TLpfImporter.ReadDataSet1;
@@ -6474,7 +6547,7 @@ begin
   begin
     ReadDataSet1;
   end
-  else if ALabel = 'ISFAC, ICONCV, ITHFLG, NOCVCO:' then
+  else if ALabel = 'ISFAC, ICONCV, ITHFLG, NOCVCO, NOVFC, NOPCHK:' then
   begin
     ReadDataSet1Options;
   end
@@ -6867,6 +6940,11 @@ begin
   end;
   PcgPackage.DAMPPCG.Value := DAMPPCG;
   PcgPackage.DAMPPCGT.Value := DAMPPCGT;
+  if IHCOFADD <> 0 then
+  begin
+    IHCOFADD := 1;
+  end;
+  PcgPackage.IHCOFADD := TPcgDryConvertOption(IHCOFADD);
 end;
 
 procedure TPcgImporter.ReadDataSet2;
@@ -6888,6 +6966,7 @@ begin
   Read(FImporter.FFile, MXITER);
   Read(FImporter.FFile, ITER1);
   Read(FImporter.FFile, NPCOND);
+  Read(FImporter.FFile, IHCOFADD);
   ReadLn(FImporter.FFile);
   FProgressHandler(FilePos(FImporter.FFile));
 end;
@@ -6895,7 +6974,7 @@ end;
 procedure TPcgImporter.ReadData(const ALabel: string);
 begin
   inherited;
-  if ALabel = 'MXITER, ITER1, NPCOND:' then
+  if ALabel = 'MXITER, ITER1, NPCOND, IHCOFADD:' then
   begin
     ReadDataSet1;
   end
@@ -12563,6 +12642,54 @@ begin
   inherited;
 end;
 
+procedure TSfrImporter.AssignExternalFlows(Segment: TSegment);
+var
+  ExternalFlow: TExternalFlowProperties;
+  FlowIndex: Integer;
+  FlowFileData: TFlowFileCollection;
+  FlowItem: TFlowFileItem;
+begin
+  ExternalFlow := FSfrBoundary.ExternalFlow;
+  if Length(Segment.InflowValues) > 0 then
+  begin
+    ExternalFlow.FlowFileChoice := ffcSpecify;
+    ExternalFlow.ReferenceTimeChoice := ffrtStartOfModel;
+    FlowFileData := ExternalFlow.FlowFileData;
+    FlowFileData.Capacity := Length(Segment.InflowValues);
+    for FlowIndex := 0 to Length(Segment.InflowValues) - 1 do
+    begin
+      FlowItem := FlowFileData.Add;
+      FlowItem.Time := Segment.InflowValues[FlowIndex].Time;
+      FlowItem.Inflow := Segment.InflowValues[FlowIndex].Inflow;
+    end;
+  end
+  else
+  begin
+    ExternalFlow.FlowFileChoice := ffcNone;
+  end;
+end;
+
+procedure TSfrImporter.ReadExternalFlows;
+var
+  SEGNUM: Integer;
+  NUMVAL: Integer;
+  ValIndex: Integer;
+  IUNIT: Integer;
+begin
+  Read(FImporter.FFile, SEGNUM);
+  Assert(FCurrentSegment.NSEG = SEGNUM);
+  Read(FImporter.FFile, NUMVAL);
+  SetLength(FCurrentSegment.InflowValues, NUMVAL);
+  Read(FImporter.FFile, IUNIT);
+  readln(FImporter.FFile);
+  for ValIndex := 0 to NUMVAL - 1 do
+  begin
+    Read(FImporter.FFile, FCurrentSegment.InflowValues[ValIndex].Time);
+    Read(FImporter.FFile, FCurrentSegment.InflowValues[ValIndex].Inflow);
+    readln(FImporter.FFile);
+  end;
+end;
+
 procedure TSfrImporter.AssignParameterSegmentProperties(PriorSegNumber: Integer);
 var
   ICalcItem: TSfrParamIcalcItem;
@@ -12611,6 +12738,7 @@ begin
           AssignUpstreamValues(IcalcIndex, StressPeriodIndex, Segment);
           AssignDownstreamValues(Segment, StressPeriodIndex, IcalcIndex);
           AssignUnsatValues(Segment, StressPeriodIndex, IcalcIndex);
+          AssignExternalFlows(Segment);
         end;
       end;
     end;
@@ -12697,6 +12825,7 @@ begin
       AssignUpstreamValues(IcalcIndex, StressPeriodIndex, Segment);
       AssignDownstreamValues(Segment, StressPeriodIndex, IcalcIndex);
       AssignUnsatValues(Segment, StressPeriodIndex, IcalcIndex);
+      AssignExternalFlows(Segment);
     end;
   end;
 end;
@@ -13726,6 +13855,13 @@ begin
       Readln(FImporter.FFile);
       FProgressHandler(FilePos(FImporter.FFile));
     end
+    else if ALabel = 'NUMTAB,MAXVAL:' then
+    begin
+      Read(FImporter.FFile, NUMTAB);
+      Read(FImporter.FFile, MAXVAL);
+      Readln(FImporter.FFile);
+      FProgressHandler(FilePos(FImporter.FFile));
+    end
     else if ALabel = 'KRCH IRCH JRCH ISEG IREACH:' then
     begin
       Inc(FCurrentReachIndex);
@@ -13895,6 +14031,10 @@ begin
     else if (ALabel = 'Iname:') then
     begin
       ReadInstanceNameForStressPeriod;
+    end
+    else if (ALabel = 'SEGNUM NUMVAL IUNIT:') then
+    begin
+      ReadExternalFlows;
     end
     else
     begin
@@ -14756,6 +14896,7 @@ begin
   FCurrentStressPeriod := -1;
   FLakeStressPeriodValues := TLakeStressPeriodValues.Create;
   FPriorStressPeriodValues := nil;
+  FTABLEINPUT := False;
 end;
 
 procedure TLakImporter.DefineLakeOutlines;
@@ -14827,6 +14968,22 @@ begin
   inherited;
 end;
 
+procedure TLakImporter.ReadLakeTable;
+var
+  LM: Integer;
+  LineIndex: Integer;
+begin
+  Read(FImporter.FFile, LM);
+  for LineIndex := 0 to 150 do
+  begin
+    Read(FImporter.FFile, LakeTables[LM - 1][LineIndex].Depth);
+    Read(FImporter.FFile, LakeTables[LM - 1][LineIndex].Volume);
+    Read(FImporter.FFile, LakeTables[LM - 1][LineIndex].Area);
+    ReadLn(FImporter.FFile);
+  end;
+  FProgressHandler(FilePos(FImporter.FFile));
+end;
+
 procedure TLakImporter.CreateBoundary(ScreenObject: TScreenObject);
 begin
   ScreenObject.CreateLakBoundary;
@@ -14862,6 +15019,11 @@ var
   BottomFormula: string;
   LakeIdDataArray: TDataArray;
   DataArrayIndex: Integer;
+  ExternalLakeTable: TExternalLakeTable;
+  ExternalLakeUnitNumber: Integer;
+  LakeTable: TLakeTable;
+  LineIndex: Integer;
+  LakeBathItem: TLakeTableItem;
 begin
   if FCurrentStressPeriod < FModel.ModflowStressPeriods.Count-1 then
   begin
@@ -14871,6 +15033,14 @@ begin
   FLakPackage := FModel.ModflowPackages.LakPackage;
   FLakPackage.IsSelected := True;
   FLakPackage.Comments := FComments;
+  if FTABLEINPUT then
+  begin
+    FLakPackage.ExternalLakeChoice := elcAll;
+  end
+  else
+  begin
+    FLakPackage.ExternalLakeChoice := elcNone;
+  end;
   FLakPackage.Theta := THETA;
   FLakPackage.NumberOfIterations := NSSITR;
   FLakPackage.ConvergenceCriterion := SSCNCR;
@@ -14936,6 +15106,21 @@ begin
         LakeIdDataArray := FModel.DataArrayManager.GetDataSetByName(rsLakeID);
         DataArrayIndex := ScreenObject.AddDataSet(LakeIdDataArray);
         ScreenObject.DataSetFormulas[DataArrayIndex] := IntToStr(LakeID);
+
+        if FTABLEINPUT then
+        begin
+          ExternalLakeTable := LakeBoundary.ExternalLakeTable;
+          ExternalLakeTable.LakeTableChoice := lctInternal;
+          LakeTable := ExternalLakeTable.LakeTable;
+          LakeTable.Capacity := 151;
+          for LineIndex := 0 to Length(LakeTables[LakeIndex]) -1 do
+          begin
+            LakeBathItem := LakeTable.Add;
+            LakeBathItem.Stage := LakeTables[LakeIndex][LineIndex].Depth;
+            LakeBathItem.Volume := LakeTables[LakeIndex][LineIndex].Volume;
+            LakeBathItem.SurfaceArea := LakeTables[LakeIndex][LineIndex].Area;
+          end;
+        end;
 
         LakeItem := nil;
         for TimeIndex := 0 to FLakeStressPeriodValues.ArrayLength - 1 do
@@ -15049,7 +15234,7 @@ begin
 
 end;
 
-procedure TLakImporter.ReadDataSet1;
+procedure TLakImporter.ReadDataSet1b;
 var
 //  ILKCB: Integer;
   NLAY: Integer;
@@ -15064,6 +15249,14 @@ begin
   SetLength(Stages, NLAKES);
   SetLength(MinStages, NLAKES);
   SetLength(MaxStages, NLAKES);
+  if FTABLEINPUT then
+  begin
+    SetLength(LakeTables, NLAKES);
+  end
+  else
+  begin
+    SetLength(LakeTables, 0);
+  end;
 
   NLAY := FModel.ModflowLayerCount;
   NROW := FGrid.RowCount;
@@ -15386,9 +15579,13 @@ end;
 procedure TLakImporter.ReadData(const ALabel: string);
 begin
   inherited;
-  if ALabel = 'NLAKES,ILKCB:' then
+  if ALabel = 'TABLEINPUT:' then
   begin
-    ReadDataSet1;
+    FTABLEINPUT := True;
+  end
+  else if ALabel = 'NLAKES,ILKCB:' then
+  begin
+    ReadDataSet1b;
   end
   else if ALabel = 'THETA:' then
   begin
@@ -15405,6 +15602,10 @@ begin
   else if ALabel = 'LM,STAGES(LM):' then
   begin
     ReadLakeStage;
+  end
+  else if ALabel = 'L1, DEPTHTABLE, VOLUMETABLE, AREATABLE:' then
+  begin
+    ReadLakeTable;
   end
   else if ALabel = 'NSOL:' then
   begin
@@ -17413,6 +17614,9 @@ begin
   FEtExtinctWaterContentStressPeriods:= TArrayStressPeriodArray.Create;
   FGages:= TUzfGageArray.Create;
   FCurrentGage := -1;
+  SPECIFYTHTR := False;
+  SPECIFYTHTI := False;
+  NOSURFLEAK := False;
 end;
 
 procedure TUzfImporter.CreateBoundary(ScreenObject: TScreenObject);
@@ -17558,6 +17762,10 @@ begin
   FUzfPackage.IsSelected := True;
   FUzfPackage.Comments := FComments;
 
+  FUzfPackage.SpecifyResidualWaterContent := SPECIFYTHTR;
+  FUzfPackage.SpecifyInitialWaterContent := SPECIFYTHTI;
+  FUzfPackage.CalulateSurfaceLeakage := not NOSURFLEAK;
+
   if NUZTOP < 1 then
   begin
     NUZTOP := 1;
@@ -17632,16 +17840,31 @@ begin
     AssignVariableRealValues('Imported_THTS', THTS);
   end;
 
-  if Length(THTI) > 0 then
+  DataArray := FModel.DataArrayManager.GetDataSetByName(StrUzfInitialUnsaturatedWaterContent);
+  if DataArray <> nil then
   begin
-    DataArray := FModel.DataArrayManager.GetDataSetByName(StrUzfInitialUnsaturatedWaterContent);
     if IsConstThti then
     begin
       DataArray.Formula := FortranFloatToStr(ConstThti);
     end
     else
     begin
+      Assert(Length(THTI) > 0);
       AssignVariableRealValues('Imported_THTI', THTI);
+    end;
+  end;
+
+  DataArray := FModel.DataArrayManager.GetDataSetByName(StrUzfReisidualWaterContent);
+  if DataArray <> nil then
+  begin
+    if IsConstThtr then
+    begin
+      DataArray.Formula := FortranFloatToStr(ConstThtr);
+    end
+    else
+    begin
+      Assert(Length(THTR) > 0);
+      AssignVariableRealValues('Imported_THTR', THTR);
     end;
   end;
 
@@ -18084,6 +18307,18 @@ begin
     FProgressHandler(FilePos(FImporter.FFile));
     FGages.ArrayLength := NUZGAG;
   end
+  else if ALabel = 'SPECIFYTHTR:' then
+  begin
+    SPECIFYTHTR := True;
+  end
+  else if ALabel = 'SPECIFYTHTI:' then
+  begin
+    SPECIFYTHTI := True;
+  end
+  else if ALabel = 'NOSURFLEAK:' then
+  begin
+    NOSURFLEAK := True;
+  end
   else if ALabel = 'SURFDEP:' then
   begin
     Read(FImporter.FFile, SURFDEP);
@@ -18213,6 +18448,11 @@ begin
       IsConstThti := True;
       ConstThti := Value;
     end
+    else if ID = 'RESIDUAL WATER CONTENT' then
+    begin
+      IsConstThtr := True;
+      ConstThtr := Value;
+    end
     else if ID = 'AREAL INFILTRATION RATE' then
     begin
       ReadRealConstantArrayItem(Value, FConstantInfiltration);
@@ -18262,6 +18502,12 @@ begin
       IsConstThti := False;
       SetLength(THTI, FGrid.RowCount, FGrid.ColumnCount);
       Read2DRealArray(THTI);
+    end
+    else if ID = 'RESIDUAL WATER CONTENT' then
+    begin
+      IsConstThtr := False;
+      SetLength(THTR, FGrid.RowCount, FGrid.ColumnCount);
+      Read2DRealArray(THTR);
     end
     else if ID = 'AREAL INFILTRATION RATE' then
     begin
@@ -18352,6 +18598,7 @@ begin
   FModel.ModflowPackages.GmgPackage.IsSelected := False;
   FModel.ModflowPackages.SipPackage.IsSelected := False;
   FModel.ModflowPackages.De4Package.IsSelected := False;
+  FModel.ModflowPackages.PcgnPackage.IsSelected := False;
 end;
 
 procedure TSolverImporter.HandlePackage;
@@ -24411,6 +24658,137 @@ end;
 function THydmodLocationArray.GetLocations(Index: integer): THydModLocation;
 begin
   result := Objects[Index] as THydModLocation;
+end;
+
+{ TPcgnImporter }
+
+constructor TPcgnImporter.Create(Importer: TModflow2005Importer);
+begin
+  inherited Create(Importer, 'PCGN:');
+end;
+
+procedure TPcgnImporter.HandlePackage;
+var
+  PcgnPackage: TPcgnSelection;
+begin
+  inherited;
+  PcgnPackage := FModel.ModflowPackages.PcgnPackage;
+  PcgnPackage.IsSelected := True;
+  PcgnPackage.Comments := FComments;
+
+
+  PcgnPackage.ITER_MO := ITER_MO;
+  PcgnPackage.ITER_MI := ITER_MI;
+  PcgnPackage.CLOSE_R.Value := CLOSE_R;
+  PcgnPackage.CLOSE_H.Value := CLOSE_H;
+
+  PcgnPackage.RELAX.Value := RELAX;
+  if IFILL < 0 then
+  begin
+    IFILL := 0;
+  end;
+  if IFILL > 1 then
+  begin
+    IFILL := 1;
+  end;
+  PcgnPackage.IFILL := IFILL;
+  PcgnPackage.UNIT_PC := UNIT_PC <> 0;
+  PcgnPackage.UNIT_TS := UNIT_TS <> 0;
+
+  if ITER_MO > 0 then
+  begin
+    if ADAMP < 0 then
+    begin
+      ADAMP := 0;
+    end;
+    if ADAMP > 2 then
+    begin
+      ADAMP := 2;
+    end;
+    PcgnPackage.ADAMP := TDamping(ADAMP);
+    PcgnPackage.DAMP.Value := DAMP;
+    PcgnPackage.DAMP_LB.Value := DAMP_LB;
+    PcgnPackage.RATE_D.Value := RATE_D;
+    PcgnPackage.CHGLIMIT.Value := CHGLIMIT;
+
+    if ACNVG < 0 then
+    begin
+      ACNVG := 0;
+    end;
+    if ACNVG > 2 then
+    begin
+      ACNVG := 2;
+    end;
+    PcgnPackage.ACNVG := TConvergenceMode(ACNVG);
+    PcgnPackage.CNVG_LB.Value := CNVG_LB;
+    if MCNVG < 1 then
+    begin
+      MCNVG := 1;
+    end;
+    if MCNVG > 6 then
+    begin
+      MCNVG := 6;
+    end;
+    PcgnPackage.MCNVG := MCNVG;
+    PcgnPackage.RATE_C.Value := RATE_C;
+    if IPUNIT < -1 then
+    begin
+      IPUNIT := -1;
+    end;
+    if IPUNIT > 1 then
+    begin
+      IPUNIT := 1;
+    end;
+    Inc(IPUNIT);
+    PcgnPackage.IPUNIT := TProgressReporting(IPUNIT);
+  end;
+end;
+
+procedure TPcgnImporter.ReadData(const ALabel: string);
+begin
+  inherited;
+  if ALabel = 'ITER_MO, ITER_MI, CLOSE_R, CLOSE_H:' then
+  begin
+    Read(FImporter.FFile, ITER_MO);
+    Read(FImporter.FFile, ITER_MI);
+    Read(FImporter.FFile, CLOSE_R);
+    Read(FImporter.FFile, CLOSE_H);
+    ReadLn(FImporter.FFile);
+    FProgressHandler(FilePos(FImporter.FFile));
+  end
+  else if ALabel = 'RELAX, IFILL, UNIT_PC, UNIT_TS:' then
+  begin
+    Read(FImporter.FFile, RELAX);
+    Read(FImporter.FFile, IFILL);
+    Read(FImporter.FFile, UNIT_PC);
+    Read(FImporter.FFile, UNIT_TS);
+    ReadLn(FImporter.FFile);
+    FProgressHandler(FilePos(FImporter.FFile));
+  end
+  else if ALabel = 'ADAMP, DAMP, DAMP_LB, RATE_D, CHGLIMIT:' then
+  begin
+    Read(FImporter.FFile, ADAMP);
+    Read(FImporter.FFile, DAMP);
+    Read(FImporter.FFile, DAMP_LB);
+    Read(FImporter.FFile, RATE_D);
+    Read(FImporter.FFile, CHGLIMIT);
+    ReadLn(FImporter.FFile);
+    FProgressHandler(FilePos(FImporter.FFile));
+  end
+  else if ALabel = 'ACNVG, CNVG_LB, MCNVG, RATE_C, IPUNIT:' then
+  begin
+    Read(FImporter.FFile, ACNVG);
+    Read(FImporter.FFile, CNVG_LB);
+    Read(FImporter.FFile, MCNVG);
+    Read(FImporter.FFile, RATE_C);
+    Read(FImporter.FFile, IPUNIT);
+    ReadLn(FImporter.FFile);
+    FProgressHandler(FilePos(FImporter.FFile));
+  end
+  else
+  begin
+    Assert(False);
+  end;
 end;
 
 end.

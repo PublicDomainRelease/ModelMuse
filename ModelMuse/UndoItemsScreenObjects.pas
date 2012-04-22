@@ -821,6 +821,7 @@ resourcestring
   StrSplitObjectAtSele = 'split object at selected vertices';
   StrLockSelectedObject = 'lock selected objects';
   StrUnlockSelectedObje = 'unlock selected objects';
+  WarningRootReachLength = 'SFR Reach Length is zero.';
 
 { TCustomUpdateScreenObjectDisplayUndo }
 
@@ -868,8 +869,6 @@ end;
 
 procedure TCustomUpdateScreenObjectDisplayUndo.WarnSfrLengthProblems(
   List: TList);
-const
-  WarningRoot = 'SFR Reach Length is zero.';
 var
   ScreenObjectIndex: Integer;
   AScreenObject: TScreenObject;
@@ -881,7 +880,8 @@ begin
     Exit;
   end;
 
-  frmErrorsAndWarnings.RemoveWarningGroup(frmGoPhast.PhastModel, WarningRoot);
+  frmErrorsAndWarnings.RemoveWarningGroup(frmGoPhast.PhastModel,
+    WarningRootReachLength);
   ErrorFound := False;
   for ScreenObjectIndex := 0 to List.Count - 1 do
   begin
@@ -905,7 +905,7 @@ begin
     begin
       ErrorFound := True;
       frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
-        WarningRoot, AScreenObject.Name);
+        WarningRootReachLength, AScreenObject.Name);
       Continue;
     end;
 
@@ -918,7 +918,7 @@ begin
     begin
       ErrorFound := True;
       frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
-        WarningRoot, AScreenObject.Name);
+        WarningRootReachLength, AScreenObject.Name);
     end;
   end;
   if ErrorFound then

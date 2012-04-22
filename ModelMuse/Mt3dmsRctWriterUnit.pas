@@ -36,6 +36,15 @@ resourcestring
   StrSInTheMT3DMSRCT = '%s in the MT3DMS RCT package';
   StrRHOBLayerD = 'Data Set 2A: RHOB Layer: %d';
   StrPRSITY2LayerD = 'Data Set 2B: PRSITY2 Layer: %d';
+  StrWritingMT3DMSRCTP = 'Writing MT3DMS RCT Package input.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2A = '  Writing Data Set 2A.';
+  StrWritingDataSet2B = '  Writing Data Set 2B.';
+  StrWritingDataSet2C = '  Writing Data Set 2C.';
+  StrWritingDataSet3 = '  Writing Data Set 3.';
+  StrWritingDataSet4 = '  Writing Data Set 4.';
+  StrWritingDataSet5 = '  Writing Data Set 5.';
+  StrWritingDataSet6 = '  Writing Data Set 6.';
 
 { TMt3dmsRctWriter }
 
@@ -327,9 +336,9 @@ begin
   // PackageGeneratedExternally needs to be updated for MT3DMS
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage('Writing MT3DMS RCT Package input.');
+    frmProgressMM.AddMessage(StrWritingMT3DMSRCTP);
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -337,7 +346,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2A.');
+    frmProgressMM.AddMessage(StrWritingDataSet2A);
     WriteDataSet2A;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -345,7 +354,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2B.');
+    frmProgressMM.AddMessage(StrWritingDataSet2B);
     WriteDataSet2B;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -353,7 +362,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2C.');
+    frmProgressMM.AddMessage(StrWritingDataSet2C);
     WriteDataSet2C;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -361,7 +370,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage(StrWritingDataSet3);
     WriteDataSet3;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -369,7 +378,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage(StrWritingDataSet4);
     WriteDataSet4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -378,7 +387,7 @@ begin
     end;
 
 
-    frmProgressMM.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage(StrWritingDataSet5);
     WriteDataSet5;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -387,7 +396,7 @@ begin
     end;
 
 
-    frmProgressMM.AddMessage('  Writing Data Set 6.');
+    frmProgressMM.AddMessage(StrWritingDataSet6);
     WriteDataSet6;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then

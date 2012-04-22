@@ -96,8 +96,14 @@ type
 
 implementation
 
+resourcestring
+  StrXMLStreamReadErro = 'XML Stream read error';
+
 
 { TrwXMLParser }
+
+
+
 const
   BufferSize= 4096;
 
@@ -170,7 +176,7 @@ begin
   I := fInputStream.Read(C,1);
   result := C;
   if I = 0 then
-    raise Exception.Create('XML Stream read error');
+    raise Exception.Create(StrXMLStreamReadErro);
 end;
 
 function  TrwXMLParser.CheckNextChar : AnsiChar;
@@ -182,7 +188,7 @@ begin
   CharBack;
   result := C;
   if I = 0 then
-    raise Exception.Create('XML Stream read error');
+    raise Exception.Create(StrXMLStreamReadErro);
 end;
 
 procedure TrwXMLParser.CharBack;
@@ -215,7 +221,7 @@ begin
       C := GetNextChar;
     until (C = '=') or (C < #32);
     if C < #32 then
-      raise Exception.Create('XML stream read Error');
+      raise Exception.Create(StrXMLStreamReadErro);
   end;
   while (C <> '"') do // remove all spaces
     C := GetNextChar;
@@ -235,7 +241,7 @@ begin
     end;
   until (C = '"') or (C < #32);       
   if C < #32 then
-    raise Exception.Create('XML stream read Error');
+    raise Exception.Create(StrXMLStreamReadErro);
 end;
 
 

@@ -68,7 +68,7 @@ type
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
     // @name checks that the observations times are valid.
-    // If some or not, description of the errors will be
+    // If some are not, a description of the errors will be
     // added to ErrorRoots and ErrorMessages
     procedure CheckObservationTimes(ErrorRoots, ErrorMessages: TStringList);
     function FluxObsType: TMt3dmsFluxObsType;

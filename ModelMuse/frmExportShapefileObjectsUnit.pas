@@ -108,6 +108,8 @@ uses frmCustomGoPhastUnit, ClassificationUnit, PhastModelUnit, FastGEO,
 
 resourcestring
   StrDataSet0sOb = ' Data set = %0:s; Object = %1:s';
+  StrAreYouSureYouWan = 'Are you sure you want to overwrite the existing Sha' +
+  'pefile?';
 
 const
   StrFormulaTruncatedTo = 'Formula truncated to 254 characters';
@@ -126,7 +128,7 @@ begin
       or FileExists(ChangeFileExt(sdShapefile.FileName, '.shx'))
       or FileExists(ChangeFileExt(sdShapefile.FileName, '.dbf')) then
     begin
-      if MessageDlg('Are you sure you want to overwrite the existing Shapefile?',
+      if MessageDlg(StrAreYouSureYouWan,
         mtWarning, [mbYes, mbNo], 0) <> mrYes then
       begin
         Exit;
@@ -204,7 +206,8 @@ var
 //  ShapeFileWriter: TShapefileGeometryWriter;
 begin
   FShowWarning := False;
-  frmErrorsAndWarnings.RemoveWarningGroup(frmGoPhast.PhastModel, StrFormulaTruncatedTo);
+  frmErrorsAndWarnings.RemoveWarningGroup(frmGoPhast.PhastModel,
+    StrFormulaTruncatedTo);
 
   try
     InitializeDataBase;
@@ -711,7 +714,8 @@ var
 const
   MaximumFieldNameLength = 10;
 begin
-  FieldName := AnsiString(UpperCase(FFieldDefinitions[DataArrayIndex].DataArray.Name));
+  FieldName := AnsiString(UpperCase(
+    FFieldDefinitions[DataArrayIndex].DataArray.Name));
   if Length(FieldName) > MaximumFieldNameLength then
   begin
     SetLength(FieldName, MaximumFieldNameLength);
@@ -1047,7 +1051,8 @@ begin
         else
         begin
           Formula := AnsiString(AScreenObject.DataSetFormulas[APosition]);
-          ImportedValues := GetImportedValuesFromFormula(DataArray, AScreenObject, string(Formula));
+          ImportedValues := GetImportedValuesFromFormula(DataArray,
+            AScreenObject, string(Formula));
           if (ImportedValues <> nil)
             and (ImportedValues.Count = AScreenObject.SectionCount) then
           begin

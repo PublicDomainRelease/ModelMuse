@@ -605,8 +605,8 @@ C   IF CONVERTIBLE LAYER GET PRIMARY STORAGE
                 KK = KK + 1
               END IF
             END DO UPLAY
-            IF(LTHUF(K).NE.0) THEN
-              IF ( K.GT.0 ) THEN
+            IF ( K.GT.0 ) THEN
+              IF(LTHUF(K).NE.0) THEN
 ! TRICK SUBROUTINE TO THINK UPERMOST LAYER IS UNCONFINED
                 TOP=BOTM(J,I,LBOTM(K)-1)
                 BOT=BOTM(J,I,LBOTM(K))

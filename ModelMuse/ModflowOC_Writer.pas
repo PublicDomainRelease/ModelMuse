@@ -26,6 +26,13 @@ uses ModflowUnitNumbers, ModflowTimeUnit, frmErrorsAndWarningsUnit,
 
 resourcestring
   StrStressPeriod0d = 'Stress period: %0:d; Starting Time: %1:g';
+  StrWritingDataSet2 = '    Writing Data Set 2 for stress period %0:d; time s' +
+  'tep %1:d';
+  StrWritingDataSet3 = '    Writing Data Set 3 for stress period %0:d; time ' +
+  'step %1:d';
+  StrWritingOutputContr = 'Writing Output Control input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
 
 { TOutputControlWriter }
 
@@ -242,9 +249,8 @@ begin
         or ShouldExportCellBudget or ShouldExportOverallBudget then
       begin
         // Data set 2
-        frmProgressMM.AddMessage('    Writing Data Set 2 for stress period '
-          + IntToStr(StressPeriodIndex+1)
-          + '; time step ' + IntToStr(TimeStepIndex+1));
+        frmProgressMM.AddMessage(Format(StrWritingDataSet2,
+          [StressPeriodIndex+1, TimeStepIndex+1]));
         IPEROC := StressPeriodIndex + 1;
         ITSOC := TimeStepIndex + 1;
 
@@ -259,9 +265,8 @@ begin
         NewLine;
 
         // Data set 3
-        frmProgressMM.AddMessage('    Writing Data Set 3 for stress period '
-          + IntToStr(StressPeriodIndex+1)
-          + '; time step ' + IntToStr(TimeStepIndex+1));
+        frmProgressMM.AddMessage(Format(StrWritingDataSet3,
+          [StressPeriodIndex+1, TimeStepIndex+1]));
         if ShouldExportHead and FOutputControl.HeadOC.PrintInListing then
         begin
           WriteString('     PRINT HEAD');
@@ -307,10 +312,10 @@ begin
   WriteToNameFile(StrOC, Model.UnitNumbers.UnitNumber(StrOC), FNameOfFile, foInput);
   OpenFile(FNameOfFile);
   try
-    frmProgressMM.AddMessage('Writing Output Control input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingOutputContr);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     WriteDataSets2and3;
   finally

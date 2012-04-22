@@ -198,6 +198,10 @@ uses
   GoPhastTypes, ScreenObjectUnit, frmGoPhastUnit, ModflowTimeUnit,
   frmCustomGoPhastUnit, ModflowMNW2_WriterUnit;
 
+resourcestring
+  StrWellScreenTopZTo = 'Well screen top (ZTop)';
+  StrWellScreenBottom = 'Well screen bottom (ZBottom)';
+
 {$R *.dfm}
 
 { TframeScreenObjectMNW2 }
@@ -1021,8 +1025,8 @@ begin
       end;
 //      rdgVerticalScreens.Columns[ColIndex].AutoAdjustColWidths := True;
     end;
-    rdgVerticalScreens.Cells[Ord(vsZTop), 0] := 'Well screen top (ZTop)';
-    rdgVerticalScreens.Cells[Ord(vsZBot), 0] := 'Well screen bottom (ZBottom)';
+    rdgVerticalScreens.Cells[Ord(vsZTop), 0] := StrWellScreenTopZTo;
+    rdgVerticalScreens.Cells[Ord(vsZBot), 0] := StrWellScreenBottom;
     rdgVerticalScreens.Cells[Ord(vsRw), 0] := lblWellRadius.Caption;
     rdgVerticalScreens.Cells[Ord(vsRSkin), 0] := lblSkinRadius.Caption;
     rdgVerticalScreens.Cells[Ord(vsKSkin), 0] := lblKSkin.Caption;

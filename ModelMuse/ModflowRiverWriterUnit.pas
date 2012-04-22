@@ -46,9 +46,15 @@ uses ModflowTimeUnit, frmErrorsAndWarningsUnit,
 resourcestring
   StrInTheFollowingRiv = 'In the following river cells, the stage is below t' +
   'he river bottom.';
-  StrLayerDRowDC = 'Layer: %d, Row %d, Column %d';
+  StrLayerDRowDC = 'Layer: %0:d, Row %1:d, Column %2:d';
   StrTheFollowingRiver = 'The following River observation names may be valid' +
   ' for MODFLOW but they are not valid for UCODE.';
+  StrWritingRIVPackage = 'Writing RIV Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+  StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
 
 { TModflowRIV_Writer }
 
@@ -226,8 +232,8 @@ begin
   end;
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage('Writing RIV Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingRIVPackage);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -235,7 +241,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -243,7 +249,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -251,7 +257,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 3 and 4.');
+    frmProgressMM.AddMessage(StrWritingDataSets3and4);
     WriteDataSets3And4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -259,7 +265,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 5 to 7.');
+    frmProgressMM.AddMessage(StrWritingDataSets5to7);
     WriteDataSets5To7;
   finally
     CloseFile;

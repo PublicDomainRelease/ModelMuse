@@ -68,6 +68,11 @@ implementation
 
 {$R *.dfm}
 
+resourcestring
+  StrFlow = 'Flow';
+  StrDepth = 'Depth';
+  StrWidth = 'Width';
+
 { TFrame23 }
 
 procedure TframeFlowTable.btnDeleteFlowTableRowClick(Sender: TObject);
@@ -93,9 +98,9 @@ end;
 constructor TframeFlowTable.Create(AOwner: TComponent);
 begin
   inherited;
-  dgSfrTable.Cells[Ord(stcFlow),0] := 'Flow';
-  dgSfrTable.Cells[Ord(stcDepth),0] := 'Depth';
-  dgSfrTable.Cells[Ord(stcWidth),0] := 'Width';
+  dgSfrTable.Cells[Ord(stcFlow),0] := StrFlow;
+  dgSfrTable.Cells[Ord(stcDepth),0] := StrDepth;
+  dgSfrTable.Cells[Ord(stcWidth),0] := StrWidth;
 end;
 
 procedure TframeFlowTable.EnableDelete;

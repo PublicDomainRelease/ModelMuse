@@ -63,6 +63,11 @@ resourcestring
     ' zones after zone 0';
   StrTheBudgetFileRequ = 'The budget file required by ZONEBUDGET is absent. '
     + 'Try running MODFLOW again.';
+  StrWritingZONEBUDGETZ = 'Writing ZONEBUDGET Zone File input.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSet3 = '  Writing Data Set 3.';
+  StrWritingZONEBUDGETR = 'Writing ZONEBUDGET Response file.';
 
 { TZoneBudgetWriter }
 
@@ -201,8 +206,8 @@ begin
 
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage('Writing ZONEBUDGET Zone File input.');
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingZONEBUDGETZ);
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -210,8 +215,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('Writing Zone File input.');
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -219,8 +223,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('Writing Zone File input.');
-    frmProgressMM.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage(StrWritingDataSet3);
     WriteDataSet3;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -326,7 +329,7 @@ begin
   FNameOfFile := FileName(AFileName);
   Model.AddFileToArchive(FNameOfFile);
 
-  frmProgressMM.AddMessage('Writing ZONEBUDGET Response file.');
+  frmProgressMM.AddMessage(StrWritingZONEBUDGETR);
   OpenFile(FNameOfFile);
   try
     WriteResponse1;

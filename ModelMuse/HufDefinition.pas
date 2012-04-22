@@ -313,15 +313,16 @@ begin
       begin
         DataArray := DataArrayManager.CreateNewDataArray(TDataArray, LayerName,
           Formula, StandardLock, DataType, eaBlocks, dsoTop, StrHUF);
-        if frmGoPhast.Grid = nil then
-        begin
-          DataArray.UpdateDimensions(0,0,0);
-        end
-        else
-        begin
-          DataArray.UpdateDimensions(frmGoPhast.Grid.LayerCount,
-            frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
-        end;
+        frmGoPhast.PhastModel.UpdateDataArrayDimensions(DataArray);
+//        if frmGoPhast.Grid = nil then
+//        begin
+//          DataArray.UpdateDimensions(0,0,0);
+//        end
+//        else
+//        begin
+//          DataArray.UpdateDimensions(frmGoPhast.Grid.LayerCount,
+//            frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
+//        end;
 
 //        DataArray.OnNameChange := LocalModel.DataArrayNameChange;
 
@@ -769,15 +770,16 @@ begin
   begin
     DataArray := DataArrayManager.CreateNewDataArray(TDataArray, LayerName,
       '0.', StandardLock, rdtDouble, eaBlocks, dsoTop, StrHUF);
-    if frmGoPhast.Grid = nil then
-    begin
-      DataArray.UpdateDimensions(0,0,0);
-    end
-    else
-    begin
-      DataArray.UpdateDimensions(frmGoPhast.Grid.LayerCount,
-        frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
-    end;
+    frmGoPhast.PhastModel.UpdateDataArrayDimensions(DataArray);
+//    if frmGoPhast.Grid = nil then
+//    begin
+//      DataArray.UpdateDimensions(0,0,0);
+//    end
+//    else
+//    begin
+//      DataArray.UpdateDimensions(frmGoPhast.Grid.LayerCount,
+//        frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
+//    end;
 //    DataArray := TDataArray.Create(LocalModel);
 //    DataArray.UpdateWithName(LayerName);
 //    DataArray.OnNameChange := LocalModel.DataArrayNameChange;

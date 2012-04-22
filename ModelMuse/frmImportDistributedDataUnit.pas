@@ -113,6 +113,10 @@ uses frmGoPhastUnit, DataSetUnit, ScreenObjectUnit, UndoItemsScreenObjects,
   GoPhastTypes, UndoItems, GIS_Functions, RbwParser, FastGEO, PhastModelUnit,
   ModelMuseUtilities;
 
+resourcestring
+  StrDataSets = 'Data Sets';
+  StrFilePath = 'File Path';
+
 {$R *.dfm}
 
 procedure TfrmImportDistributedData.EnableOK;
@@ -807,7 +811,14 @@ begin
           for DataSetIndex := 0 to BlockDataSetFiles.Count - 1 do
           begin
             ValueIndex := 0;
-            DataValues.LoadFromFile(BlockDataSetFiles[DataSetIndex]);
+            try
+              DataValues.LoadFromFile(BlockDataSetFiles[DataSetIndex]);
+            except on EFOpenError do
+              begin
+                CantOpenFileMessage(BlockDataSetFiles[DataSetIndex]);
+                Exit;
+              end;
+            end;
 
             DataSet := BlockDataSetFiles.Objects[DataSetIndex] as TDataArray;
             case DataSet.DataType of
@@ -991,7 +1002,14 @@ begin
           for DataSetIndex := 0 to NodeDataSetFiles.Count - 1 do
           begin
             ValueIndex := 0;
-            DataValues.LoadFromFile(NodeDataSetFiles[DataSetIndex]);
+            try
+              DataValues.LoadFromFile(NodeDataSetFiles[DataSetIndex]);
+            except on EFOpenError do
+              begin
+                CantOpenFileMessage(NodeDataSetFiles[DataSetIndex]);
+                Exit;
+              end;
+            end;
 
             DataSet := NodeDataSetFiles.Objects[DataSetIndex] as TDataArray;
             case DataSet.DataType of
@@ -1077,8 +1095,8 @@ begin
   inherited;
   dgDataSets.FixedColor := Color;
 //  dgDataSets.ButtonColor := Color;
-  dgDataSets.Cells[0, 0] := 'Data Sets';
-  dgDataSets.Cells[1, 0] := 'File Path';
+  dgDataSets.Cells[0, 0] := StrDataSets;
+  dgDataSets.Cells[1, 0] := StrFilePath;
   GetData;
 end;
 

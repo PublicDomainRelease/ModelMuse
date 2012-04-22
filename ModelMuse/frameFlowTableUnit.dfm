@@ -42,6 +42,7 @@ object frameFlowTable: TframeFlowTable
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
     TabOrder = 1
     OnSetEditText = dgSfrTableSetEditText
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
@@ -70,6 +71,7 @@ object frameFlowTable: TframeFlowTable
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = False
       end
       item
@@ -91,6 +93,7 @@ object frameFlowTable: TframeFlowTable
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = False
       end
       item
@@ -112,6 +115,7 @@ object frameFlowTable: TframeFlowTable
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = False
       end>
   end
@@ -123,8 +127,7 @@ object frameFlowTable: TframeFlowTable
     Anchors = [akRight, akBottom]
     Cancel = True
     Caption = '&Insert'
-    TabOrder = 2
-    OnClick = btnInsertFlowTableRowClick
+    DoubleBuffered = True
     Glyph.Data = {
       F6000000424DF600000000000000760000002800000010000000100000000100
       0400000000008000000000000000000000001000000000000000000000000000
@@ -134,6 +137,9 @@ object frameFlowTable: TframeFlowTable
       FF0FFFFF0FFFFFFFFF0FFFFF00000000000FF0FF0CCCCCCCCC0F000F0CCCCCCC
       CC0FF0FF0CCCCCCCCC0FFFFF00000000000FFFFF0FFFFFFFFF0FFFFF0FFFFFFF
       FF0FFFFF0FFFFFFFFF0FFFFF00000000000FFFFFFFFFFFFFFFFF}
+    ParentDoubleBuffered = False
+    TabOrder = 2
+    OnClick = btnInsertFlowTableRowClick
   end
   object btnDeleteFlowTableRow: TBitBtn
     Left = 91
@@ -143,9 +149,8 @@ object frameFlowTable: TframeFlowTable
     Anchors = [akRight, akBottom]
     Cancel = True
     Caption = '&Delete'
+    DoubleBuffered = True
     Enabled = False
-    TabOrder = 3
-    OnClick = btnDeleteFlowTableRowClick
     Glyph.Data = {
       36030000424D3603000000000000360000002800000010000000100000000100
       18000000000000030000120B0000120B00000000000000000000FFFFFFFFFFFF
@@ -173,5 +178,8 @@ object frameFlowTable: TframeFlowTable
       000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       FFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+    ParentDoubleBuffered = False
+    TabOrder = 3
+    OnClick = btnDeleteFlowTableRowClick
   end
 end

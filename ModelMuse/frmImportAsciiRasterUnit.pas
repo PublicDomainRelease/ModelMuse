@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomImportSimpleFileUnit, StdCtrls, Buttons, ExtCtrls, FastGEO, 
-  frmImportShapefileUnit, AbstractGridUnit, GoPhastTypes, Grids, RbwDataGrid4;
+  frmImportShapefileUnit, AbstractGridUnit, GoPhastTypes, Grids, RbwDataGrid4,
+  PhastModelUnit;
 
 type
 
@@ -20,6 +21,7 @@ type
   TfrmImportAsciiRaster = class(TfrmCustomImportSimpleFile)
     rgFilterMethod: TRadioGroup;
     rdgFilesAndDataSets: TRbwDataGrid4;
+    comboModel: TComboBox;
     procedure btnOKClick(Sender: TObject);
     procedure rdgFilesAndDataSetsButtonClick(Sender: TObject; ACol,
       ARow: Integer);
@@ -57,6 +59,24 @@ resourcestring
   StrTheLocationsInS = 'The locations in %s that have data are different fro' +
   'm the locations in %s that have data.';
   StrImportASCIIRaster = 'import ASCII raster file';
+  StrFileName = 'File name';
+  StrDataSet = 'Data set';
+  StrTheFileSDoesN = 'The file "%s" does not exist.';
+  StrTheFileSIsNot = 'The file "%s" is not an ASCII raster file.';
+  StrNoneImportAllS = 'None (import all %s points)';
+  StrMultipleFiles = ' - multiple files';
+  StrElement = 'element';
+  StrElementCenter = 'element center';
+  StrCell = 'cell';
+  StrNode = 'node';
+  StrCellCenter = 'cell center';
+  StrLowestPointInS = 'Lowest point in %s';
+  StrHighestPointInS = 'Highest point in %s';
+  StrAverageOfPointsIn = 'Average of points in %s';
+  StrPointClosestToS = 'Point closest to %s';
+  StrImportedFromAnAS = 'Imported from an ASCII Raster file';
+  StrSampledFromAnASCI = 'Sampled from an ASCII Raster file';
+  StrProgress = 'Progress';
 
 {$R *.dfm}
 
@@ -79,8 +99,8 @@ end;
 procedure TfrmImportAsciiRaster.FormCreate(Sender: TObject);
 begin
   inherited;
-  rdgFilesAndDataSets.Cells[Ord(gcFileName), 0] := 'File name';
-  rdgFilesAndDataSets.Cells[Ord(gcDataSet), 0] := 'Data set';
+  rdgFilesAndDataSets.Cells[Ord(gcFileName), 0] := StrFileName;
+  rdgFilesAndDataSets.Cells[Ord(gcDataSet), 0] := StrDataSet;
 end;
 
 function TfrmImportAsciiRaster.GetData: boolean;
@@ -89,6 +109,10 @@ var
   FileHeader: TRasterHeader;
   NumberOfPoints: double;
   FileIndex: Integer;
+  Model: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  Number: string;
 begin
   UpdateEvalAt;
 
@@ -109,7 +133,7 @@ begin
         begin
           result := False;
           Beep;
-          MessageDlg('The file "' + FAsciiRasterFileName + '" does not exist.',
+          MessageDlg(Format(StrTheFileSDoesN, [FAsciiRasterFileName]),
             mtError, [mbOK], 0);
           Exit;
         end;
@@ -121,8 +145,7 @@ begin
           if not result then
           begin
             Beep;
-            MessageDlg('The file "' + FAsciiRasterFileName
-              + '" is not an ASCII raster file.',
+            MessageDlg(Format(StrTheFileSIsNot, [FAsciiRasterFileName]),
               mtError, [mbOK], 0);
             Exit;
           end
@@ -130,9 +153,8 @@ begin
           begin
             FileHeader := AsciiReader.FileHeader;
             NumberOfPoints := FileHeader.NumberOfColumns * FileHeader.NumberOfRows;
-            rgFilterMethod.Items[4] := Format('None (import all '
-              + FloatToStrF(NumberOfPoints, ffNumber, 15, 0)
-              + ' points)', [NumberOfPoints]);
+            Number := FloatToStrF(NumberOfPoints, ffNumber, 15, 0);
+            rgFilterMethod.Items[4] := Format(StrNoneImportAllS, [Number]);
           end;
         finally
           AsciiReader.Free;
@@ -155,7 +177,7 @@ begin
     end
     else
     begin
-      Caption := Caption + ' - multiple files';
+      Caption := Caption + StrMultipleFiles;
       rdgFilesAndDataSets.Visible := True;
       lblDataSet.Visible := False;
       comboDataSets.Visible := False;
@@ -164,6 +186,22 @@ begin
     end;
     GetDataSets;
     comboInterpolators.ItemIndex := 1;
+
+    Model := frmGoPhast.PhastModel;
+    comboModel.Items.AddObject(Model.DisplayName, Model);
+    if Model.LgrUsed then
+    begin
+      for ChildIndex := 0 to Model.ChildModels.Count - 1 do
+      begin
+        ChildModel := Model.ChildModels[ChildIndex].ChildModel;
+        comboModel.Items.AddObject(ChildModel.DisplayName, ChildModel);
+      end;
+    end
+    else
+    begin
+      comboModel.Enabled := False;
+    end;
+    comboModel.ItemIndex := 0;
   end;
 end;
 
@@ -218,28 +256,31 @@ begin
         case EvalAt of
           eaBlocks:
             begin
-              NodeElemString := 'element';
-              CenterString := 'element center'
+              NodeElemString := StrElement;
+              CenterString := StrElementCenter
             end;
           eaNodes:
             begin
-              NodeElemString := 'cell';
-              CenterString := 'node';
+              NodeElemString := StrCell;
+              CenterString := StrNode;
             end;
         end;
       end;
     msModflow, msModflowLGR, msModflowNWT:
       begin
-        NodeElemString := 'cell';
-        CenterString := 'cell center'
+        NodeElemString := StrCell;
+        CenterString := StrCellCenter
       end;
     else Assert(False);
   end;
-  rgFilterMethod.Items[Ord(imLowest)] := 'Lowest point in ' + NodeElemString;
-  rgFilterMethod.Items[Ord(imHighest)] := 'Highest point in ' + NodeElemString;
+  rgFilterMethod.Items[Ord(imLowest)] :=
+    Format(StrLowestPointInS, [NodeElemString]);
+  rgFilterMethod.Items[Ord(imHighest)] :=
+    Format(StrHighestPointInS, [NodeElemString]);
   rgFilterMethod.Items[Ord(imAverage)] :=
-    'Average of points in ' + NodeElemString;
-  rgFilterMethod.Items[Ord(imClosest)] := 'Point closest to ' + CenterString;
+    Format(StrAverageOfPointsIn, [NodeElemString]);
+  rgFilterMethod.Items[Ord(imClosest)] :=
+    Format(StrPointClosestToS, [CenterString]);
 end;
 
 procedure TfrmImportAsciiRaster.SetData;
@@ -260,6 +301,7 @@ var
   DataSetCount: Integer;
   DataSetIndex: Integer;
   APoint: TPoint2D;
+//  LocalModel: TCustomModel;
   function ConvertPoint(const A3D_Point: TPoint3D): TPoint2D;
   begin
     result.X := A3D_Point.X;
@@ -267,6 +309,7 @@ var
   end;
 begin
 //  OutputDebugString('SAMPLING ON');
+  LocalModel := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
   AScreenObject := nil;
   try
     frmGoPhast.PhastModel.BeginScreenObjectUpdate;
@@ -306,14 +349,14 @@ begin
           case TEvaluatedAt(rgEvaluatedAt.ItemIndex) of
             eaBlocks:
               begin
-                AScreenObject.Capacity := frmGoPhast.PhastModel.Grid.ColumnCount
-                  * frmGoPhast.PhastModel.Grid.RowCount;
+                AScreenObject.Capacity := LocalModel.Grid.ColumnCount
+                  * LocalModel.Grid.RowCount;
               end;
             eaNodes:
               begin
                 AScreenObject.Capacity :=
-                  (frmGoPhast.PhastModel.Grid.ColumnCount+1)
-                  * (frmGoPhast.PhastModel.Grid.RowCount + 1);
+                  (LocalModel.Grid.ColumnCount+1)
+                  * (LocalModel.Grid.RowCount + 1);
               end;
             else
               Assert(False);
@@ -330,14 +373,15 @@ begin
               if DataSetCount = 1 then
               begin
                 MakeNewDataSet(NewDataSets, '',
-                  strDefaultClassification + '|Imported from an ASCII Raster file',
+                  strDefaultClassification + '|' + StrImportedFromAnAS,
                   comboDataSets.ItemIndex = 0);
               end
               else
               begin
-                FAsciiRasterFileName := rdgFilesAndDataSets.Cells[Ord(gcFileName), DataSetIndex+1];
+                FAsciiRasterFileName := rdgFilesAndDataSets.Cells[
+                  Ord(gcFileName), DataSetIndex+1];
                 MakeNewDataSet(NewDataSets, '',
-                  strDefaultClassification + '|Imported from an ASCII Raster file',
+                  strDefaultClassification + '|' + StrImportedFromAnAS,
                   rdgFilesAndDataSets.ItemIndex[Ord(gcDataSet), DataSetIndex+1] = 0,
                   FAsciiRasterFileName);
               end;
@@ -347,14 +391,14 @@ begin
               if DataSetCount = 1 then
               begin
                 MakeNewDataSet(NewDataSets, '',
-                  strDefaultClassification + '|Sampled from an ASCII Raster file',
+                  strDefaultClassification + '|'+ StrSampledFromAnASCI,
                   comboDataSets.ItemIndex = 0);
               end
               else
               begin
                 FAsciiRasterFileName := rdgFilesAndDataSets.Cells[Ord(gcFileName), DataSetIndex+1];
                 MakeNewDataSet(NewDataSets, '',
-                  strDefaultClassification + '|Sampled from an ASCII Raster file',
+                  strDefaultClassification + '|'+ StrSampledFromAnASCI,
                   rdgFilesAndDataSets.ItemIndex[Ord(gcDataSet), DataSetIndex+1] = 0,
                   FAsciiRasterFileName);
               end;
@@ -381,7 +425,7 @@ begin
               begin
                 try
                   frmProgressMM.PopupParent := self;
-                  frmProgressMM.Caption := 'Progress';
+                  frmProgressMM.Caption := StrProgress;
                   frmProgressMM.Show;
                   try
                     AsciiReader.ReadAsciiRaster(FValues, frmProgressMM.pbProgress);
@@ -423,8 +467,8 @@ begin
               end
               else
               begin
-                if (frmGoPhast.Grid.ColumnCount <= 0)
-                  or (frmGoPhast.Grid.RowCount <= 0) then
+                if (LocalModel.Grid.ColumnCount <= 0)
+                  or (LocalModel.Grid.RowCount <= 0) then
                 begin
                   AScreenObject.Free;
                   Beep;
@@ -444,11 +488,11 @@ begin
                 AsciiReader.OnReadPoint := HandleARasterPoint;
                 EvalAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
                 ImportMethod := TImportMethod(rgFilterMethod.ItemIndex);
-                Grid := frmGoPhast.Grid;
+                Grid := LocalModel.Grid;
                 InitializeArrays(ImportMethod);
 
                 frmProgressMM.PopupParent := self;
-                frmProgressMM.Caption := 'Progress';
+                frmProgressMM.Caption := StrProgress;
                 frmProgressMM.Show;
                 try
                   AsciiReader.ReadAsciiRaster(frmProgressMM.pbProgress);
@@ -479,6 +523,13 @@ begin
             DA_Position := AScreenObject.AddDataSet(DataArray);
             AScreenObject.DataSetFormulas[DA_Position] :=
               rsObjectImportedValuesR + '("' + DataArray.Name + '")';
+
+            if LocalModel <> frmGoPhast.PhastModel then
+            begin
+              AScreenObject.UsedModels.AddModel(LocalModel);
+              AScreenObject.UsedModels.UsedWithAllModels := False;
+            end;
+
           end;
           ScreenObjectList.Add(AScreenObject);
 

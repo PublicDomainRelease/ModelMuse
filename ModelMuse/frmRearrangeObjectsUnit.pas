@@ -80,13 +80,16 @@ implementation
 
 uses frmGoPhastUnit, ScreenObjectUnit, CursorsFoiledAgain;
 
+resourcestring
+  StrObjects = 'Objects';
+
 {$R *.dfm}
 
 procedure TfrmRearrangeObjects.FormCreate(Sender: TObject);
 begin
   inherited;
   sgObjects.ColWidths[1] := 300;
-  sgObjects.Cells[1, 0] := 'Objects';
+  sgObjects.Cells[1, 0] := StrObjects;
   lblInstructions.Width := pnlInstructions.Width - 2*lblInstructions.Left; 
   GetData;
 end;

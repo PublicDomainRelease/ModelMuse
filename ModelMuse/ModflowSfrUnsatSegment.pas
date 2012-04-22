@@ -177,6 +177,13 @@ implementation
 uses Contnrs, DataSetUnit, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit,
   ModflowSfrUnit, TempFiles, frmGoPhastUnit;
 
+resourcestring
+  StrInitialWaterConten = 'Initial water content';
+  StrSaturatedWaterCont = 'Saturated water content';
+  StrBrooksCoreyExponen = 'Brooks-Corey exponent';
+  StrMaximumVerticalK = 'Maximum vertical K';
+  StrMaximumVerticalK_LC = ' maximum vertical K';
+
 const
   SaturatedWaterContentPosition = 0;
   InitialWaterContentPosition = 1;
@@ -1037,14 +1044,14 @@ begin
   FInitialWaterContentData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FSaturatedWaterContentData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FVerticalSaturatedKData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FInitialWaterContentData.NonParamDescription := 'Initial water content';
-  FInitialWaterContentData.ParamDescription := ' initial water content';
-  FSaturatedWaterContentData.NonParamDescription := 'Saturated water content';
-  FSaturatedWaterContentData.ParamDescription := ' saturated water content';
-  FBrooksCoreyExponentData.NonParamDescription := 'Brooks-Corey exponent';
-  FBrooksCoreyExponentData.ParamDescription := ' Brooks-Corey exponent';
-  FVerticalSaturatedKData.NonParamDescription := 'Maximum vertical K';
-  FVerticalSaturatedKData.ParamDescription := ' maximum vertical K';
+  FInitialWaterContentData.NonParamDescription := StrInitialWaterConten;
+  FInitialWaterContentData.ParamDescription := ' ' + LowerCase(StrInitialWaterConten);
+  FSaturatedWaterContentData.NonParamDescription := StrSaturatedWaterCont;
+  FSaturatedWaterContentData.ParamDescription := ' ' + LowerCase(StrSaturatedWaterCont);
+  FBrooksCoreyExponentData.NonParamDescription := StrBrooksCoreyExponen;
+  FBrooksCoreyExponentData.ParamDescription := ' ' + StrBrooksCoreyExponen;
+  FVerticalSaturatedKData.NonParamDescription := StrMaximumVerticalK;
+  FVerticalSaturatedKData.ParamDescription := StrMaximumVerticalK_LC;
   if Model <> nil then
   begin
   end;

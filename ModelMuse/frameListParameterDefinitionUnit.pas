@@ -55,6 +55,12 @@ implementation
 
 {$R *.dfm}
 
+resourcestring
+  StrName = 'Name';
+  StrValue = 'Value';
+  StrUseZone = 'Use Zone';
+  StrUseMultiplier = 'Use Multiplier';
+
 procedure TframeListParameterDefinition.btnDeleteClick(Sender: TObject);
 begin
   if seNumberOfParameters.AsInteger in [0,1] then
@@ -173,12 +179,12 @@ end;
 procedure TframeListParameterDefinition.Loaded;
 begin
   inherited;
-  dgParameters.Cells[Ord(pcName),0] := 'Name';
-  dgParameters.Cells[Ord(pcValue),0] := 'Value';
+  dgParameters.Cells[Ord(pcName),0] := StrName;
+  dgParameters.Cells[Ord(pcValue),0] := StrValue;
   if dgParameters.ColCount > 2 then
   begin
-    dgParameters.Cells[Ord(pcUseZone),0] := 'Use Zone';
-    dgParameters.Cells[Ord(pcUseMultiplier),0] := 'Use Multiplier';
+    dgParameters.Cells[Ord(pcUseZone),0] := StrUseZone;
+    dgParameters.Cells[Ord(pcUseMultiplier),0] := StrUseMultiplier;
 
     dgParameters.ColWidths[Ord(pcUseZone)] :=
       dgParameters.ColWidths[Ord(pcUseZone)] + 40;

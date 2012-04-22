@@ -26,14 +26,22 @@ type
 implementation
 
 uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmProgressUnit, Forms, 
-  RbwParser, GoPhastTypes;
+  RbwParser, GoPhastTypes, ModflowOptionsUnit;
 
 resourcestring
   StrFileForTheInitial = 'File for the initial heads does not exist.';
   StrWrongExtension = 'File for the initial heads has wrong extension.';
   StrTheFileSDoesNot = 'The file %s does not exist.';
-  StrTheFile1sMustH = 'The file %1:s must have an extension equal to "%2:s".';
+  StrTheFile1sMustH = 'The file %0:s must have an extension equal to "%1:s".';
   StrLayer0dRow1 = 'Layer: %0:d; Row: %1:d; Column: %2:d';
+  StrWritingBasicPackag = 'Writing Basic Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSet3 = '  Writing Data Set 3.';
+  StrWritingDataSet4 = '  Writing Data Set 4.';
+  StrCheckingStarting = '  Checking starting heads.';
+  StrInitialHeadIsBelo = 'Initial Head is below the bottom of the layer.';
 
 { TModflowBasicWriter }
 
@@ -46,7 +54,7 @@ var
   ActiveArray: TDataArray;
   Active: boolean;
 begin
-  ErrorString := 'Initial Head is below the bottom of the layer.';
+  ErrorString := StrInitialHeadIsBelo;
   DataArray := Model.DataArrayManager.GetDataSetByName(rsModflow_Initial_Head);
   DataArray.Initialize;
   ActiveArray := Model.DataArrayManager.GetDataSetByName(rsActive);
@@ -106,10 +114,16 @@ const
 var
   CHTOCH: boolean;
   PRINTTIME: boolean;
+  ModflowOptions: TModflowOptions;
+  StopError: Boolean;
+  StopErrorCriterion: Double;
 //  SHOWPROGRESS: boolean;
 begin
-  CHTOCH := Model.ModflowOptions.ComputeFluxesBetweenConstantHeadCells;
-  PRINTTIME := Model.ModflowOptions.PrintTime;
+  ModflowOptions := Model.ModflowOptions;
+  CHTOCH := ModflowOptions.ComputeFluxesBetweenConstantHeadCells;
+  PRINTTIME := ModflowOptions.PrintTime;
+  StopError := ModflowOptions.StopError;
+  StopErrorCriterion := ModflowOptions.StopErrorCriterion;
 //  SHOWPROGRESS := PhastModel.ModflowOptions.ShowProgress;
   if FREE then
   begin
@@ -126,6 +140,11 @@ begin
   if PRINTTIME then
   begin
     WriteString('PRINTTIME ');
+  end;
+  if StopError then
+  begin
+    WriteString('STOPERROR ');
+    WriteFloat(StopErrorCriterion);
   end;
 //  if SHOWPROGRESS then
 //  begin
@@ -147,12 +166,14 @@ var
   LayerIndex: Integer;
   RowIndex: Integer;
   ColIndex: Integer;
+  DummyAnnotation: string;
 begin
   TempArray := nil;
   try
     DataArray := Model.DataArrayManager.GetDataSetByName(rsActive);
     if Model is TChildModel then
     begin
+      DummyAnnotation := 'none';
       LocalChildModel := TChildModel(Model);
       EdgeValue := LocalChildModel.EdgeIndex;
 
@@ -162,7 +183,11 @@ begin
       TempArray.EvaluatedAt := eaBlocks;
       TempArray.Orientation := dso3D;
       TempArray.UpdateDimensions(DataArray.LayerCount,
-        DataArray.RowCount, DataArray.ColumnCount);
+        DataArray.RowCount, DataArray.ColumnCount, True);
+
+      TempArray.UpToDate := True;
+      // force internal arrays to be resized.
+      TempArray.IntegerData[0,0,0];
 
       for LayerIndex := 0 to DataArray.LayerCount - 1 do
       begin
@@ -178,6 +203,7 @@ begin
             begin
               TempArray.IntegerData[LayerIndex, RowIndex, ColIndex] := 0;
             end;
+            TempArray.Annotation[LayerIndex, RowIndex, ColIndex] := DummyAnnotation;
           end;
           TempArray.IntegerData[LayerIndex, RowIndex, 0] := EdgeValue;
           TempArray.IntegerData[LayerIndex, RowIndex,
@@ -319,8 +345,8 @@ begin
     FNameOfFile, foInput);
   OpenFile(FNameOfFile);
   try
-    frmProgressMM.AddMessage('Writing Basic Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingBasicPackag);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -328,7 +354,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -336,7 +362,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -344,7 +370,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage(StrWritingDataSet3);
     WriteDataSet3;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -352,7 +378,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage(StrWritingDataSet4);
     WriteDataSet4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -360,7 +386,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Checking starting heads.');
+    frmProgressMM.AddMessage(StrCheckingStarting);
     CheckStartingHeads;
   finally
     CloseFile;

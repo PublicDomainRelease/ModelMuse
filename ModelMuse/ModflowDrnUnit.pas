@@ -1012,10 +1012,10 @@ begin
   inherited;
   FElevationData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FConductanceData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FElevationData.NonParamDescription := 'Elevation';
-  FElevationData.ParamDescription := ' elevation';
-  FConductanceData.NonParamDescription := 'Conductance';
-  FConductanceData.ParamDescription := ' conductance multiplier';
+  FElevationData.NonParamDescription := StrElevation;
+  FElevationData.ParamDescription := ' ' + LowerCase(StrElevation);
+  FConductanceData.NonParamDescription := StrConductance;
+  FConductanceData.ParamDescription := StrConductanceMultipl;
   if Model <> nil then
   begin
     LocalModel := Model as TCustomModel;

@@ -502,6 +502,15 @@ C20-----SET ALL FLAGS FOR OUTPUT CONTROL TO "FALSE".
       OCFLGS(N,I)=.FALSE.
   385 CONTINUE
   390 CONTINUE
+C the following initialization of the NTSSUM array was removed from the
+C block IF construct immediatly below and placed here so that it would
+C be executed even if ISUBOC is not greater than zero.
+C Stan Leake, July 14, 2010
+       NTSSUM(1)=0
+       IF(NPER.GT.1) THEN
+        DO 415 N=2,NPER
+        NTSSUM(N)=NTSSUM(N-1)+NSTP(N-1)
+  415   CONTINUE
 C
 C21-----READ FORMATS AND UNIT NUMBERS OUTPUT FLAGS.
       IF(ISUBOC.GT.0) THEN
@@ -535,11 +544,6 @@ C21-----READ FORMATS AND UNIT NUMBERS OUTPUT FLAGS.
 !     &            '     UNIT FOR SAVING NO-DELAY CRITICAL HEAD IS',I4/
 !     &            '    DELAY CRITICAL HEAD PRINT FORMAT IS NUMBER',I4/
 !     &            '        UNIT FOR SAVING DELAY CRITICAL HEAD IS',I4)
-       NTSSUM(1)=0
-       IF(NPER.GT.1) THEN
-        DO 415 N=2,NPER
-        NTSSUM(N)=NTSSUM(N-1)+NSTP(N-1)
-  415   CONTINUE
        ENDIF
 	 WRITE(IOUT,*) 'ISP1, ISP2, JTS1, JTS2, (IFL(II), II=1,13):'
        DO 450 NOCLIN=1,ISUBOC

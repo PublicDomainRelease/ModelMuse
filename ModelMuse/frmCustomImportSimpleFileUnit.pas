@@ -12,7 +12,7 @@ uses
   Dialogs, StdCtrls, frmCustomGoPhastUnit, Buttons, ExtCtrls,
   Grids, IntListUnit, ScreenObjectUnit, DXF_Structs, DXF_read, DXF_Utils,
   frmImportShapefileUnit, FastGEO, AbstractGridUnit, GoPhastTypes,
-  ValueArrayStorageUnit;
+  ValueArrayStorageUnit, PhastModelUnit;
 
 type
   TImportMethod = (imLowest, imHighest, imAverage, imClosest);
@@ -83,6 +83,7 @@ type
     MaxX: Real;
     MinY: Real;
     MaxY: Real;
+    LocalModel: TCustomModel;
     procedure GetGridMinMax;
     procedure HandleAPoint(APoint3D: TPoint3D; ImportMethod: TImportMethod; EvalAt: TEvaluatedAt; Grid: TCustomModelGrid);
     // @name updates the contents of rgEvaluatedAt to the appropriate
@@ -130,8 +131,7 @@ resourcestring
 implementation
 
 uses frmGoPhastUnit, DataSetUnit,
-  RbwParser, UndoItems, frmProgressUnit, frmDataSetsUnits, ModelMuseUtilities,
-  PhastModelUnit;
+  RbwParser, UndoItems, frmProgressUnit, frmDataSetsUnits, ModelMuseUtilities;
 
 {$R *.dfm}
 
@@ -150,7 +150,9 @@ var
   DataSet: TDataArray;
   AType: TInterpolatorType;
   Interpolator: TCustom2DInterpolater;
-
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildDataSet: TDataArray;
 begin
   Assert(SizeOf(TObject) = SizeOf(TInterpolatorType));
 //  if comboDataSets.ItemIndex = 0 then
@@ -183,8 +185,19 @@ begin
       end;
     end;
 
-    DataSet.UpdateDimensions(frmGoPhast.Grid.LayerCount,
-      frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
+    frmGoPhast.PhastModel.UpdateDataArrayDimensions(DataSet);
+
+    if frmGoPhast.PhastModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+        ChildDataSet := ChildModel.DataArrayManager.GetDataSetByName(DataSet.Name);
+        ChildModel.UpdateDataArrayDimensions(ChildDataSet);
+      end;
+    end;
+//    DataSet.UpdateDimensions(frmGoPhast.Grid.LayerCount,
+//      frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
     NewDataSets.add(DataSet);
 
     comboDataSets.Items[0] := NewDataSetName;
@@ -298,7 +311,11 @@ var
   Grid: TCustomModelGrid;
   EvalAt: TEvaluatedAt;
 begin
-  Grid := frmGoPhast.PhastModel.Grid;
+  if LocalModel = nil then
+  begin
+    LocalModel := frmGoPhast.PhastModel;
+  end;
+  Grid := LocalModel.Grid;
   EvalAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
   case EvalAt of
     eaBlocks:
@@ -467,7 +484,11 @@ var
     end;
   end;
 begin
-  Grid := frmGoPhast.PhastModel.Grid;
+  if LocalModel = nil then
+  begin
+    LocalModel := frmGoPhast.PhastModel;
+  end;
+  Grid := LocalModel.Grid;
   MinX := Grid.ColumnPosition[0];
   MaxX := Grid.ColumnPosition[Grid.ColumnCount];
   EnsureMinMax(MinX, MaxX);

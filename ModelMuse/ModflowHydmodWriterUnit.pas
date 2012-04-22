@@ -20,6 +20,8 @@ type
     FAssignmentMethod: TAssignmentMethod;
     FLayer: integer;
     FHydLabel: string;
+    FCellIndex: integer;
+    function GetHydLabel: string;
     Procedure Write(Writer: TModflowHydmodWriter); virtual; abstract;
   end;
 
@@ -63,13 +65,16 @@ implementation
 
 uses
   frmModflowNameFileUnit, ModflowUnitNumbers, ScreenObjectUnit,
-  GoPhastTypes, frmProgressUnit, frmErrorsAndWarningsUnit, FastGEO, Forms, 
+  GoPhastTypes, frmProgressUnit, frmErrorsAndWarningsUnit, FastGEO, Forms,
   frmGoPhastUnit;
 
 resourcestring
   StrTheInterpolationAs = 'The interpolation assignment method in HYDMOD pac' +
   'kage is invalid for the following objects.  The cell method has been used' +
   ' instead.';
+  StrWritingHYDMODPacka = 'Writing HYDMOD Package input.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
 
 { TModflowHydmodWriter }
 
@@ -108,6 +113,8 @@ var
   ReachIndex: Integer;
   SegmentReach: TSegmentReach;
   SfrLocation: THydSfrModCell;
+  SubIndex: Integer;
+  SfrIndex: Integer;
   procedure InitializeCheckArray;
   var
     RowIndex: Integer;
@@ -229,6 +236,14 @@ begin
                     Location.FAssignmentMethod := amCell;
                     Location.FLayer := ACell.Layer + 1;
                     Location.FHydLabel := HydmodData.HydrographLabel;
+                    if CellList.Count > 1 then
+                    begin
+                      Location.FCellIndex := CellIndex;
+                    end
+                    else
+                    begin
+                      Location.FCellIndex := -1;
+                    end;
                   end;
                   if HydmodData.Drawdown then
                   begin
@@ -241,6 +256,14 @@ begin
                     Location.FAssignmentMethod := amCell;
                     Location.FLayer := ACell.Layer + 1;
                     Location.FHydLabel := HydmodData.HydrographLabel;
+                    if CellList.Count > 1 then
+                    begin
+                      Location.FCellIndex := CellIndex;
+                    end
+                    else
+                    begin
+                      Location.FCellIndex := -1;
+                    end;
                   end;
                 end;
               end;
@@ -250,6 +273,15 @@ begin
               begin
                 HydmodData.SubLayerNumbers(IntArray);
                 InitializeCheckArray;
+
+                if (CellList.Count > 1) or (Length(IntArray) > 1) then
+                begin
+                  SubIndex := 0;
+                end
+                else
+                begin
+                  SubIndex := -1;
+                end;
                 for CellIndex := 0 to CellList.Count - 1 do
                 begin
                   ACell := CellList[CellIndex];
@@ -271,6 +303,7 @@ begin
                         Location.FAssignmentMethod := amCell;
                         Location.FLayer := IntArray[LayerIndex];
                         Location.FHydLabel := HydmodData.HydrographLabel;
+                        Location.FCellIndex := SubIndex;
                       end;
                       if HydmodData.SubCompaction then
                       begin
@@ -283,6 +316,7 @@ begin
                         Location.FAssignmentMethod := amCell;
                         Location.FLayer := IntArray[LayerIndex];
                         Location.FHydLabel := HydmodData.HydrographLabel;
+                        Location.FCellIndex := SubIndex;
                       end;
                       if HydmodData.SubSubsidence then
                       begin
@@ -295,11 +329,14 @@ begin
                         Location.FAssignmentMethod := amCell;
                         Location.FLayer := IntArray[LayerIndex];
                         Location.FHydLabel := HydmodData.HydrographLabel;
+                        Location.FCellIndex := SubIndex;
                       end;
+                      Inc(SubIndex);
                     end;
                   end;
                 end;
               end;
+              SfrIndex := 0;
               if Model.ModflowPackages.SfrPackage.IsSelected
                 and (HydmodData.SfrStage or HydmodData.SfrInFlow
                 or HydmodData.SfrOutFlow or HydmodData.SfrAquiferExchange) then
@@ -327,6 +364,7 @@ begin
                         SfrLocation.FAssignmentMethod := amCell;
                         SfrLocation.FLayer := ACell.Layer+1;
                         SfrLocation.FHydLabel := HydmodData.HydrographLabel;
+                        SfrLocation.FCellIndex := SfrIndex;
                       end;
                       if HydmodData.SfrInFlow then
                       begin
@@ -339,6 +377,7 @@ begin
                         SfrLocation.FAssignmentMethod := amCell;
                         SfrLocation.FLayer := ACell.Layer+1;
                         SfrLocation.FHydLabel := HydmodData.HydrographLabel;
+                        SfrLocation.FCellIndex := SfrIndex;
                       end;
                       if HydmodData.SfrOutFlow then
                       begin
@@ -351,6 +390,7 @@ begin
                         SfrLocation.FAssignmentMethod := amCell;
                         SfrLocation.FLayer := ACell.Layer+1;
                         SfrLocation.FHydLabel := HydmodData.HydrographLabel;
+                        SfrLocation.FCellIndex := SfrIndex;
                       end;
                       if HydmodData.SfrAquiferExchange then
                       begin
@@ -363,7 +403,9 @@ begin
                         SfrLocation.FAssignmentMethod := amCell;
                         SfrLocation.FLayer := ACell.Layer+1;
                         SfrLocation.FHydLabel := HydmodData.HydrographLabel;
+                        SfrLocation.FCellIndex := SfrIndex;
                       end;
+                      Inc(SfrIndex);
                     end;
                   end;
                 end;
@@ -387,6 +429,14 @@ begin
                     Location.FAssignmentMethod := amInterpolate;
                     Location.FLayer := ACell.Layer + 1;
                     Location.FHydLabel := HydmodData.HydrographLabel;
+                    if CellList.Count > 1 then
+                    begin
+                      Location.FCellIndex := CellIndex;
+                    end
+                    else
+                    begin
+                      Location.FCellIndex := -1;
+                    end;
                   end;
                   if HydmodData.Drawdown then
                   begin
@@ -399,6 +449,14 @@ begin
                     Location.FAssignmentMethod := amInterpolate;
                     Location.FLayer := ACell.Layer + 1;
                     Location.FHydLabel := HydmodData.HydrographLabel;
+                    if CellList.Count > 1 then
+                    begin
+                      Location.FCellIndex := CellIndex;
+                    end
+                    else
+                    begin
+                      Location.FCellIndex := -1;
+                    end;
                   end;
                 end;
               end;
@@ -408,6 +466,14 @@ begin
               begin
                 HydmodData.SubLayerNumbers(IntArray);
                 InitializeCheckArray;
+                if (CellList.Count > 1) or (Length(IntArray) > 1) then
+                begin
+                  SubIndex := 0;
+                end
+                else
+                begin
+                  SubIndex := -1;
+                end;
                 for CellIndex := 0 to CellList.Count - 1 do
                 begin
                   ACell := CellList[CellIndex];
@@ -427,6 +493,7 @@ begin
                         Location.FAssignmentMethod := amInterpolate;
                         Location.FLayer := IntArray[LayerIndex];
                         Location.FHydLabel := HydmodData.HydrographLabel;
+                        Location.FCellIndex := SubIndex;
                       end;
                       if HydmodData.SubCompaction then
                       begin
@@ -439,6 +506,7 @@ begin
                         Location.FAssignmentMethod := amInterpolate;
                         Location.FLayer := IntArray[LayerIndex];
                         Location.FHydLabel := HydmodData.HydrographLabel;
+                        Location.FCellIndex := SubIndex;
                       end;
                       if HydmodData.SubSubsidence then
                       begin
@@ -451,7 +519,9 @@ begin
                         Location.FAssignmentMethod := amInterpolate;
                         Location.FLayer := IntArray[LayerIndex];
                         Location.FHydLabel := HydmodData.HydrographLabel;
+                        Location.FCellIndex := SubIndex;
                       end;
+                      Inc(SubIndex);
                     end;
                   end;
                 end
@@ -550,8 +620,8 @@ begin
   end;
   OpenFile(FNameOfFile);
   try
-    frmProgressMM.AddMessage('Writing HYDMOD Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingHYDMODPacka);
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -559,7 +629,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
   finally
     CloseFile;
@@ -602,7 +672,7 @@ begin
   KLAY := FLayer;
   XL := FSegment;
   YL := FReach;
-  HYDLBL := ' ' + FHydLabel;
+  HYDLBL := GetHydLabel;
   Writer.WriteString(PCKG);
   Writer.WriteString(ARR);
   Writer.WriteString(INTYP);
@@ -650,7 +720,7 @@ begin
   KLAY := FLayer;
   XL := FXl;
   YL := FYl;
-  HYDLBL := ' ' + FHydLabel;
+  HYDLBL := GetHydLabel;
   Writer.WriteString(PCKG);
   Writer.WriteString(ARR);
   Writer.WriteString(INTYP);
@@ -660,6 +730,28 @@ begin
   Writer.WriteString(HYDLBL);
   Writer.WriteString(' # Data Set 2: PCKG ARR INTYP KLAY XL YL HYDLBL');
   Writer.NewLine;
+end;
+
+{ TCustomHydModItem }
+
+function TCustomHydModItem.GetHydLabel: string;
+var
+  HYDLBL_Root: string;
+begin
+  if FCellIndex < 0 then
+  begin
+    result := FHydLabel;
+  end
+  else
+  begin
+    HYDLBL_Root := FHydLabel;
+    while Length(HYDLBL_Root + IntToStr(FCellIndex+1)) > 14 do
+    begin
+      HYDLBL_Root := Copy(HYDLBL_Root, 1, Length(HYDLBL_Root)-1);
+    end;
+    result := ' ' + HYDLBL_Root + IntToStr(FCellIndex+1);
+  end;
+  result := StringReplace(result, ' ', '_', [rfReplaceAll, rfIgnoreCase]);
 end;
 
 end.

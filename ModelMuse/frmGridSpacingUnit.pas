@@ -184,6 +184,9 @@ uses frmGoPhastUnit, AbstractGridUnit, UndoItems, CursorsFoiledAgain;
 resourcestring
   StrChildGridsCanNot = ' Child grids can not be edited directly. Instead you'
     + ' must edit the parent grid to change the child grid.';
+  StrColumnPositions = 'Column Positions';
+  StrRowPositions = 'Row Positions';
+  StrLayerElevations = 'Layer Elevations';
 
 {$R *.dfm}
 
@@ -224,18 +227,18 @@ end;
 procedure TfrmGridSpacing.GetData(Model: TCustomModel);
 begin
   SetGrid(Model.Grid.ColumnPositions, dgColumns, seColumns);
-  FColHeading := 'Column Positions';
+  FColHeading := StrColumnPositions;
   dgColumns.Cells[1, 0] := FColHeading;
 
   SetGrid(Model.Grid.RowPositions, dgRows, seRows);
-  FRowHeading := 'Row Positions';
+  FRowHeading := StrRowPositions;
   dgRows.Cells[1, 0] := FRowHeading;
 
   if frmGoPhast.ModelSelection = msPhast then
   begin
     tabLayers.TabVisible := True;
     SetGrid(Model.PhastGrid.LayerElevations, dgLayers, seLayers);
-    FLayerHeading := 'Layer Elevations';
+    FLayerHeading := StrLayerElevations;
     dgLayers.Cells[1, 0] := FLayerHeading;
   end
   else
@@ -445,7 +448,14 @@ begin
     begin
       ALine := Trim(Lines[Index]);
       TabPos := Pos(#9, ALine);
-      CommaPos := Pos(',', ALine);
+      if FormatSettings.DecimalSeparator = ',' then
+      begin
+        CommaPos := -1;
+      end
+      else
+      begin
+        CommaPos := Pos(',', ALine);
+      end;
       SpacePos := Pos(' ', ALine);
       while (TabPos > 0) or (CommaPos > 0) or (SpacePos > 0) do
       begin
@@ -476,7 +486,15 @@ begin
         ALine := Trim(Copy(ALine, MinPos + 1, MAXINT));
 
         TabPos := Pos(#9, ALine);
-        CommaPos := Pos(',', ALine);
+        if FormatSettings.DecimalSeparator = ',' then
+        begin
+          CommaPos := -1;
+        end
+        else
+        begin
+          CommaPos := Pos(',', ALine);
+        end;
+//        CommaPos := Pos(',', ALine);
         SpacePos := Pos(' ', ALine);
       end;
       if ALine <> '' then
@@ -505,11 +523,17 @@ procedure TfrmGridSpacing.dgSetEditText(Sender: TObject; ACol,
   ARow: Integer; const Value: String);
 var
   DataGrid: TRbwDataGrid4;
+  ShouldSplit: Boolean;
 begin
   inherited;
   DataGrid := Sender as TRbwDataGrid4;
-  if (Pos(#10, Value) > 0) or (Pos(#13, Value) > 0) or (Pos(' ', Value) > 0)
-    or (Pos(',', Value) > 0) or (Pos(#9, Value) > 0) then
+  ShouldSplit := (Pos(#10, Value) > 0) or (Pos(#13, Value) > 0) or (Pos(' ', Value) > 0)
+    or (Pos(#9, Value) > 0);
+  if FormatSettings.DecimalSeparator <>',' then
+  begin
+    ShouldSplit := ShouldSplit or (Pos(',', Value) > 0);
+  end;
+  if ShouldSplit then
   begin
     PasteMultipleCells(DataGrid, ARow, Value);
   end;

@@ -3,7 +3,7 @@ unit PathlineReader;
 interface
 
 uses Windows, Classes, SysUtils, GoPhastTypes, ColorSchemes, Graphics, GR32,
-  OpenGL12x, RealListUnit, QuadtreeClass;
+  OpenGL12x, RealListUnit, QuadtreeClass, Generics.Collections;
 
 type
   TShowChoice = (scAll, scSpecified, scStart, scEnd);
@@ -214,6 +214,7 @@ type
     FTopQuadTree: TRbwQuadTree;
     FFrontQuadTree: TRbwQuadTree;
     FSideQuadTree: TRbwQuadTree;
+    FModel: TBaseModel;
     class var
       FPathlineGLIndex: TGLuint;
       FListInitialized: boolean;
@@ -231,7 +232,7 @@ type
     class property PathlineGLIndex: TGLuint read GetPathlineGLIndex;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create;
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure ReadFile;
     procedure Draw(Orientation: TDataSetOrientation; const BitMap: TBitmap32);
@@ -247,6 +248,8 @@ type
     property MaxTime: double read FMaxTime write SetMaxTime;
     property MinTime: double read FMinTime write SetMinTime;
   end;
+
+  TPathLinesObjectList = TObjectList<TPathLineReader>;
 
   TEndpointShowChoice = (escAll, escSpecified);
   TWhereToPlot = (wtpStart, wtpEnd);
@@ -453,6 +456,7 @@ type
     FTopQuadTree: TRbwQuadTree;
     FFrontQuadTree: TRbwQuadTree;
     FSideQuadTree: TRbwQuadTree;
+    FModel: TBaseModel;
     class var
       FListInitialized: Boolean;
       FPathlineGLIndex: Cardinal;
@@ -475,7 +479,7 @@ type
     class property EndPointGLIndex: TGLuint read GetEndPointGLIndex;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create;
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure ReadFile;
     procedure Draw(Orientation: TDataSetOrientation; const BitMap: TBitmap32);
@@ -501,6 +505,8 @@ type
     property MaxEndZone: integer read FMaxEndZone write SetMaxEndZone;
     property Points: TEndPoints read FPoints write SetPoints;
   end;
+
+  TEndPointObjectList = TObjectList<TEndPointReader>;
 
   TTimeSeriesDisplayLimits = class(TPersistent)
   private
@@ -656,6 +662,7 @@ type
     FTimeSeriesGLIndex: array of TGLuint;
     FRecordedTimeSeries: array of Boolean;
     FRealList: TRealList;
+    FModel: TBaseModel;
     procedure SetFileDate(const Value: TDateTime);
     procedure SetLines(const Value: TTimeSeriesCollection);
     procedure SetMaxTime(const Value: double);
@@ -674,7 +681,7 @@ type
     procedure SetTimes(const Value: TRealList);
   public
     procedure Assign(Source: TPersistent); override;
-    constructor Create;
+    constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure ReadFile;
     procedure Draw(Orientation: TDataSetOrientation; const BitMap: TBitmap32);
@@ -695,6 +702,7 @@ type
     property TimeIndex: integer read FTimeIndex write SetTimeIndex;
   end;
 
+  TimeSeriesObjectList = TObjectList<TTimeSeriesReader>;
 
 implementation
 
@@ -834,9 +842,10 @@ begin
   inherited;
 end;
 
-constructor TPathLineReader.Create;
+constructor TPathLineReader.Create(Model: TBaseModel);
 begin
-  inherited;
+  inherited Create;
+  FModel := Model;
   FLines := TPathLines.Create;
   FTopQuadTree := TRbwQuadTree.Create(nil);
   FFrontQuadTree := TRbwQuadTree.Create(nil);
@@ -877,7 +886,7 @@ begin
   begin
     Exit;
   end;
-  Grid := frmGoPhast.ModflowGrid;
+  Grid := (FModel as TCustomModel).ModflowGrid;
   if Grid = nil then
   begin
     Exit;
@@ -1032,7 +1041,7 @@ begin
     begin
       Exit;
     end;
-    Grid := frmGoPhast.ModflowGrid;
+    Grid := (FModel as TCustomModel).ModflowGrid;
     if Grid = nil then
     begin
       Exit;
@@ -1088,7 +1097,7 @@ begin
   begin
     Exit;
   end;
-  Grid := frmGoPhast.ModflowGrid;
+  Grid := (FModel as TCustomModel).ModflowGrid;
   if Grid = nil then
   begin
     Exit;
@@ -1185,7 +1194,7 @@ procedure TPathLineReader.GetMinMaxValues(var MaxValue: Double; var MinValue: Do
 var
   Grid: TModflowGrid;
 begin
-  Grid := frmGoPhast.ModflowGrid;
+  Grid := (FModel as TCustomModel).ModflowGrid;
   if ColorLimits.UseLimit then
   begin
     MinValue := ColorLimits.MinColorLimit;
@@ -1356,7 +1365,7 @@ var
     Assert(APoint.FColumn >= 1);
   end;
 begin
-  Grid := frmGoPhast.ModflowGrid;
+  Grid := (FModel as TCustomModel).ModflowGrid;
   if Grid = nil then
   begin
     Exit;
@@ -2394,9 +2403,10 @@ begin
   inherited;
 end;
 
-constructor TEndPointReader.Create;
+constructor TEndPointReader.Create(Model: TBaseModel);
 begin
-  inherited;
+  inherited Create;
+  FModel := Model;
   FTopQuadTree := TRbwQuadTree.Create(nil);
   FFrontQuadTree := TRbwQuadTree.Create(nil);
   FSideQuadTree := TRbwQuadTree.Create(nil);
@@ -2433,7 +2443,7 @@ begin
   begin
     Exit;
   end;
-  Grid := frmGoPhast.ModflowGrid;
+  Grid := (FModel as TCustomModel).ModflowGrid;
   if Grid = nil then
   begin
     Exit;
@@ -2609,7 +2619,7 @@ begin
     begin
       Exit;
     end;
-    Grid := frmGoPhast.ModflowGrid;
+    Grid := (FModel as TCustomModel).ModflowGrid;
     if Grid = nil then
     begin
       Exit;
@@ -2641,7 +2651,7 @@ procedure TEndPointReader.GetMinMaxValues(var MaxValue, MinValue: Double);
 var
   Grid: TModflowGrid;
 begin
-  Grid := frmGoPhast.ModflowGrid;
+  Grid := (FModel as TCustomModel).ModflowGrid;
   if ColorLimits.UseLimit then
   begin
     MinValue := ColorLimits.MinColorLimit;
@@ -2787,7 +2797,7 @@ var
 begin
   Column := J -1;
   Row := I -1;
-  Layer := frmGoPhast.PhastModel.ModflowLayerToDataSetLayer(K);
+  Layer := (Grid.Model as TCustomModel).ModflowLayerToDataSetLayer(K);
   if (Column < Grid.ColumnCount) and (Row < Grid.RowCount)
     and (Layer < Grid.LayerCount) then
   begin
@@ -2893,7 +2903,7 @@ var
     APoint.ReleaseTime := ReleaseTime;
   end;
 begin
-  Grid := frmGoPhast.ModflowGrid;
+  Grid := (FModel as TCustomModel).ModflowGrid;
   if Grid = nil then
   begin
     Exit;
@@ -3047,7 +3057,7 @@ begin
   begin
     Exit;
   end;
-  Grid := frmGoPhast.ModflowGrid;
+  Grid := (FModel as TCustomModel).ModflowGrid;
   if Grid = nil then
   begin
     Exit;
@@ -3379,9 +3389,10 @@ begin
   end;
 end;
 
-constructor TTimeSeriesReader.Create;
+constructor TTimeSeriesReader.Create(Model: TBaseModel);
 begin
-  inherited;
+  inherited Create;
+  FModel := Model;
   FRealList := nil;
   FSeries:= TTimeSeriesCollection.Create;
 end;
@@ -3422,7 +3433,8 @@ begin
   begin
     Exit;
   end;
-  Grid := frmGoPhast.ModflowGrid;
+
+  Grid := (FModel as TCustomModel).ModflowGrid;
   if Grid = nil then
   begin
     Exit;
@@ -3530,7 +3542,7 @@ begin
     begin
       Exit;
     end;
-    Grid := frmGoPhast.ModflowGrid;
+    Grid := (FModel as TCustomModel).ModflowGrid;
     if Grid = nil then
     begin
       Exit;
@@ -3667,7 +3679,7 @@ procedure TTimeSeriesReader.GetMinMaxValues(var MaxValue, MinValue: Double);
 var
   Grid: TModflowGrid;
 begin
-  Grid := frmGoPhast.ModflowGrid;
+  Grid := (FModel as TCustomModel).ModflowGrid;
   if ColorLimits.UseLimit then
   begin
     MinValue := ColorLimits.MinColorLimit;
@@ -3930,7 +3942,7 @@ var
     Assert(APoint.FColumn >= 1);
   end;
 begin
-  Grid := frmGoPhast.ModflowGrid;
+  Grid := (FModel as TCustomModel).ModflowGrid;
   if Grid = nil then
   begin
     Exit;
@@ -4091,7 +4103,7 @@ begin
   begin
     Exit;
   end;
-  Grid := frmGoPhast.ModflowGrid;
+  Grid := (FModel as TCustomModel).ModflowGrid;
   if Grid = nil then
   begin
     Exit;

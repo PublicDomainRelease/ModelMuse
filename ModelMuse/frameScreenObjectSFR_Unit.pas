@@ -10,7 +10,7 @@ uses
   Mask, JvExMask, JvSpin, frameFlowTableUnit, JvPageList, JvExControls,
   frameCrossSectionUnit, Buttons, ZoomBox2, JvExStdCtrls, JvCombobox,
   JvListComb, RbwParser, UndoItemsScreenObjects, ModflowSfrUnit, JvToolEdit,
-  GoPhastTypes, JvPageListTreeView, frameScreenObjectUnit;
+  GoPhastTypes, JvPageListTreeView, frameScreenObjectUnit, frameGridUnit;
 
 type
   TFrameClass = class of TFrame;
@@ -128,6 +128,13 @@ type
     rdeNetwork: TRbwDataEntry;
     comboMultiIprior: TJvImageComboBox;
     rdgNetwork: TRbwDataGrid4;
+    tabExternalFlowFile: TTabSheet;
+    frameExternalFileValues: TframeGrid;
+    pnlFlowFile: TPanel;
+    rgExternalFlowChoice: TRadioGroup;
+    rgReferenceTimeChoice: TRadioGroup;
+    fedExternalFileName: TJvFilenameEdit;
+    lblExternalFileName: TLabel;
     procedure dgTableTimeSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure dgSfrRoughSelectCell(Sender: TObject; ACol, ARow: Integer;
@@ -205,6 +212,7 @@ type
       const Value: string);
     procedure comboMultiIpriorChange(Sender: TObject);
     procedure rdeNetworkChange(Sender: TObject);
+    procedure rgExternalFlowChoiceClick(Sender: TObject);
 
   private
     FGettingData: boolean;
@@ -276,6 +284,8 @@ type
     procedure UpdateKCaption;
     procedure LayoutMultiRowNetworkControls;
     procedure AssignMultipleIPrior(NewText: string; ColIndex: Integer);
+    procedure GetExternalFlows(Boundary: TSfrBoundary);
+    procedure SetExternalFlowFile(Boundary: TSfrBoundary);
   protected
     procedure Loaded; override;
   private
@@ -306,11 +316,39 @@ uses Math, BigCanvasMethods, ModflowSfrFlows,
   ModflowTimeUnit, ModflowTransientListParameterUnit, OrderedCollectionUnit,
   frmCustomGoPhastUnit, ModflowSfrParamIcalcUnit, ModflowPackageSelectionUnit;
 
-const
+resourcestring
   StrStartingTime = 'Starting time';
   StrEndingTime = 'Ending time';
   StrHydraulicConductivi = 'Hydraulic conductivity';
   StrHydraulicCondMult = 'Hydraulic conductivity multiplier';
+  StrTime = 'Time';
+  StrInflow = 'Inflow';
+  StrSorryThatChoiceI = 'Sorry, that choice is not allowed.';
+  StrStreambedThickness = 'Streambed thickness';
+  StrStreambedElevation = 'Streambed elevation';
+  StrStreamWidth = 'Stream width';
+  StrStreamDepth = 'Stream depth';
+  StrChannelRoughness = 'Channel roughness';
+  StrBankRoughness = 'Bank roughness';
+  StrOutflowSegmentOUT = 'Outflow segment (OUTSEG)';
+  StrDiversionSegmentI = 'Diversion segment (IUPSEG)';
+  StrDiversionPriority = 'Diversion priority (IPRIOR)';
+  StrDepthCoefficient = 'Depth coefficient';
+  StrDepthExponent = 'Depth exponent';
+  StrWidthCoefficient = 'Width coefficient';
+  StrWidthExponent = 'Width exponent';
+  StrFlowIntoUpstreamE = 'Flow into upstream end (FLOW)';
+  StrPrecipitationVolume = 'Precipitation volume (PTSW)';
+  StrEvapotranspirationV = 'Evapotranspiration volume (ETSW)';
+  StrRunoffVolumeRUNOF = 'Runoff volume (RUNOFF)';
+  StrParameter = 'Parameter';
+  StrParameterInstance = 'Parameter instance';
+  StrStageCalculationI = 'Stage calculation (ICALC)';
+  StrSorryICALCMustBe = 'Sorry, ICALC must be the same for all stress period' +
+  's when unsaturated flow beneath a stream is simulated.';
+  StrSorryICALCCanNot = 'Sorry, ICALC can not be changed to 1 or 2 after the' +
+  ' first stress period when unsaturated flow beneath streams is simulated.';
+  StrNone = 'none';
 
 {$R *.dfm}
 
@@ -412,6 +450,8 @@ begin
   begin
     rdgParameters.Columns[Index].ComboUsed := True;
   end;
+  frameExternalFileValues.Grid.Cells[0,0] := StrTime;
+  frameExternalFileValues.Grid.Cells[1,0] := StrInflow;
 end;
 
 procedure TframeScreenObjectSFR.rdeChannelFormulaChange(Sender: TObject);
@@ -779,11 +819,32 @@ begin
           rdgParameters.OnSetEditText(Sender,Ord(spicIcalc), ARow,
             rdgParameters.Cells[Ord(spicIcalc), ARow]);
           Beep;
-          MessageDlg('Sorry, that choice is not allowed.', mtInformation,
-            [mbOK], 0);
+          MessageDlg(StrSorryThatChoiceI, mtInformation, [mbOK], 0);
         end;
       end;
     end;
+  end;
+end;
+
+procedure TframeScreenObjectSFR.rgExternalFlowChoiceClick(Sender: TObject);
+begin
+  inherited;
+  fedExternalFileName.Enabled := rgExternalFlowChoice.ItemIndex = 1;
+  frameExternalFileValues.Enabled := rgExternalFlowChoice.ItemIndex = 2;
+  rgReferenceTimeChoice.Enabled := frameExternalFileValues.Enabled;
+  if fedExternalFileName.Enabled then
+  begin
+    rgReferenceTimeChoice.Enabled := False;
+    rgReferenceTimeChoice.ItemIndex := 1;
+  end;
+  if frameExternalFileValues.Enabled then
+  begin
+    frameExternalFileValues.Grid.Color := clWindow;
+    rgReferenceTimeChoice.ItemIndex := 0;
+  end
+  else
+  begin
+    frameExternalFileValues.Grid.Color := clBtnFace;
   end;
 end;
 
@@ -965,10 +1026,10 @@ var
     dg.Cells[Ord(scStartTime),0]     := StrStartingTime;
     dg.Cells[Ord(scEndTime),0]       := StrEndingTime;
     dg.Cells[Ord(scK),0]             := StrHydraulicConductivi;
-    dg.Cells[Ord(scBedThickness),0]  := 'Streambed thickness';
-    dg.Cells[Ord(scBedElevation),0]  := 'Streambed elevation';
-    dg.Cells[Ord(scStreamWidth),0]   := 'Stream width';
-    dg.Cells[Ord(scStreamDepth),0]   := 'Stream depth';
+    dg.Cells[Ord(scBedThickness),0]  := StrStreambedThickness;
+    dg.Cells[Ord(scBedElevation),0]  := StrStreambedElevation;
+    dg.Cells[Ord(scStreamWidth),0]   := StrStreamWidth;
+    dg.Cells[Ord(scStreamDepth),0]   := StrStreamDepth;
   end;
 begin
   inherited;
@@ -980,21 +1041,21 @@ begin
 
   dgSfrRough.Cells[Ord(srStartTime),0]    := StrStartingTime;
   dgSfrRough.Cells[Ord(srEndTime),0]      := StrEndingTime;
-  dgSfrRough.Cells[Ord(srChannelRough),0] := 'Channel roughness';
-  dgSfrRough.Cells[Ord(srBankRough),0]    := 'Bank roughness';
+  dgSfrRough.Cells[Ord(srChannelRough),0] := StrChannelRoughness;
+  dgSfrRough.Cells[Ord(srBankRough),0]    := StrBankRoughness;
 
   rdgNetwork.Cells[Ord(sncStartTime),0]    := StrStartingTime;
   rdgNetwork.Cells[Ord(sncEndtime),0]      := StrEndingTime;
-  rdgNetwork.Cells[Ord(sncOutflowSegment),0] := 'Outflow segment (OUTSEG)';
-  rdgNetwork.Cells[Ord(sncDiversionSegment),0]    := 'Diversion segment (IUPSEG)';
-  rdgNetwork.Cells[Ord(sncIprior),0]    := 'Diversion priority (IPRIOR)';
+  rdgNetwork.Cells[Ord(sncOutflowSegment),0] := StrOutflowSegmentOUT;
+  rdgNetwork.Cells[Ord(sncDiversionSegment),0]    := StrDiversionSegmentI;
+  rdgNetwork.Cells[Ord(sncIprior),0]    := StrDiversionPriority;
 
   dgSfrEquation.Cells[Ord(seStartTime),0]  := StrStartingTime;
   dgSfrEquation.Cells[Ord(seEndTime),0]    := StrEndingTime;
-  dgSfrEquation.Cells[Ord(seDepthCoeff),0] := 'Depth coefficient';
-  dgSfrEquation.Cells[Ord(seDepthExp),0]   := 'Depth exponent';
-  dgSfrEquation.Cells[Ord(seWidthCoeff),0] := 'Width coefficient';
-  dgSfrEquation.Cells[Ord(seWidthExp),0]   := 'Width exponent';
+  dgSfrEquation.Cells[Ord(seDepthCoeff),0] := StrDepthCoefficient;
+  dgSfrEquation.Cells[Ord(seDepthExp),0]   := StrDepthExponent;
+  dgSfrEquation.Cells[Ord(seWidthCoeff),0] := StrWidthCoefficient;
+  dgSfrEquation.Cells[Ord(seWidthExp),0]   := StrWidthExponent;
 
   dgTableTime.Cells[Ord(sttStartTime),0]    := StrStartingTime;
   dgTableTime.Cells[Ord(sttEndTime),0]      := StrEndingTime;
@@ -1005,16 +1066,16 @@ begin
   dgFlowTimes.ColWidths[Ord(sfcRunoff)] := 100;
   dgFlowTimes.Cells[Ord(sfcStartTime),0] := StrStartingTime;
   dgFlowTimes.Cells[Ord(sfcEndTime),0] := StrEndingTime;
-  dgFlowTimes.Cells[Ord(sfcFlow),0] := 'Flow into upstream end (FLOW)';
-  dgFlowTimes.Cells[Ord(sfcPrecip),0] := 'Precipitation volume (PTSW)';
-  dgFlowTimes.Cells[Ord(sfcEvap),0] := 'Evapotranspiration volume (ETSW)';
-  dgFlowTimes.Cells[Ord(sfcRunoff),0] := 'Runoff volume (RUNOFF)';
+  dgFlowTimes.Cells[Ord(sfcFlow),0] := StrFlowIntoUpstreamE;
+  dgFlowTimes.Cells[Ord(sfcPrecip),0] := StrPrecipitationVolume;
+  dgFlowTimes.Cells[Ord(sfcEvap),0] := StrEvapotranspirationV;
+  dgFlowTimes.Cells[Ord(sfcRunoff),0] := StrRunoffVolumeRUNOF;
 
   rdgParameters.Cells[Ord(spicStartTime),0]  := StrStartingTime;
   rdgParameters.Cells[Ord(spicEndTime),0]    := StrEndingTime;
-  rdgParameters.Cells[Ord(spicParameter),0] := 'Parameter';
-  rdgParameters.Cells[Ord(spicParamInstance),0] := 'Parameter instance';
-  rdgParameters.Cells[Ord(spicIcalc),0]   := 'Stage calculation (ICALC)';
+  rdgParameters.Cells[Ord(spicParameter),0] := StrParameter;
+  rdgParameters.Cells[Ord(spicParamInstance),0] := StrParameterInstance;
+  rdgParameters.Cells[Ord(spicIcalc),0]   := StrStageCalculationI;
 
   // TempLayer is used for painting the selected and old screen objects.
   TempLayer := zbChannel.Image32.Layers.Add(TPositionedLayer) as
@@ -1028,6 +1089,88 @@ begin
   TempLayer := zbFlowWidthTable.Image32.Layers.Add(TPositionedLayer) as
     TPositionedLayer;
   TempLayer.OnPaint := PaintFlowWidth;
+end;
+
+procedure TframeScreenObjectSFR.SetExternalFlowFile(Boundary: TSfrBoundary);
+var
+  FlowItem: TFlowFileItem;
+  Inflow: Double;
+  FlowTime: Double;
+  RowIndex: Integer;
+  Grid: TRbwDataGrid4;
+  ItemIndex: Integer;
+  ExternalFlow: TExternalFlowProperties;
+begin
+  if tabExternalFlowFile.TabVisible then
+  begin
+    ExternalFlow := Boundary.ExternalFlow;
+    ExternalFlow.FlowFileChoice := TFlowFileChoice(rgExternalFlowChoice.ItemIndex);
+    case ExternalFlow.FlowFileChoice of
+      ffcNone:
+        begin
+          ExternalFlow.Clear;
+        end;
+      ffcFileName:
+        begin
+          ExternalFlow.ReferenceTimeChoice := ffrtStartOfModel;
+          ExternalFlow.FlowFileData.Clear;
+          ExternalFlow.FullFlowFileName := fedExternalFileName.FileName;
+        end;
+      ffcSpecify:
+        begin
+          ExternalFlow.ReferenceTimeChoice := TFlowFileReferenceTime(rgReferenceTimeChoice.ItemIndex);
+          ExternalFlow.FullFlowFileName := '';
+          Grid := frameExternalFileValues.Grid;
+          ItemIndex := 0;
+          for RowIndex := 1 to frameExternalFileValues.Grid.RowCount - 1 do
+          begin
+            if TryStrToFloat(Grid.Cells[0, RowIndex], FlowTime) and TryStrToFloat(Grid.Cells[1, RowIndex], Inflow) then
+            begin
+              if ExternalFlow.FlowFileData.Count > ItemIndex then
+              begin
+                FlowItem := ExternalFlow.FlowFileData[ItemIndex];
+              end
+              else
+              begin
+                FlowItem := ExternalFlow.FlowFileData.Add;
+              end;
+              FlowItem.Time := FlowTime;
+              FlowItem.Inflow := Inflow;
+              Inc(ItemIndex);
+            end;
+          end;
+          while ExternalFlow.FlowFileData.Count > ItemIndex do
+          begin
+            ExternalFlow.FlowFileData.Delete(ExternalFlow.FlowFileData.Count - 1);
+          end;
+        end;
+    else
+      Assert(False);
+    end;
+  end;
+end;
+
+procedure TframeScreenObjectSFR.GetExternalFlows(Boundary: TSfrBoundary);
+var
+  FlowItem: TFlowFileItem;
+  ExternalFlow: TExternalFlowProperties;
+  FlowIndex: Integer;
+begin
+  if tabExternalFlowFile.TabVisible then
+  begin
+    ExternalFlow := Boundary.ExternalFlow;
+    rgExternalFlowChoice.ItemIndex := Ord(ExternalFlow.FlowFileChoice);
+    rgExternalFlowChoiceClick(nil);
+    rgReferenceTimeChoice.ItemIndex := Ord(ExternalFlow.ReferenceTimeChoice);
+    fedExternalFileName.FileName := ExternalFlow.FullFlowFileName;
+    frameExternalFileValues.seNumber.AsInteger := ExternalFlow.FlowFileData.Count;
+    for FlowIndex := 0 to ExternalFlow.FlowFileData.Count - 1 do
+    begin
+      FlowItem := ExternalFlow.FlowFileData[FlowIndex];
+      frameExternalFileValues.Grid.Cells[0, FlowIndex + 1] := FloatToStr(FlowItem.Time);
+      frameExternalFileValues.Grid.Cells[1, FlowIndex + 1] := FloatToStr(FlowItem.Inflow);
+    end;
+  end;
 end;
 
 procedure TframeScreenObjectSFR.AssignMultipleIPrior(NewText: string; ColIndex: Integer);
@@ -1104,17 +1247,11 @@ begin
     Beep;
     if FirstChangeMade then
     begin
-      MessageDlg(
-        'Sorry, ICALC must be the same for all stress periods when '
-        + 'unsaturated flow beneath a stream is simulated.',
-        mtInformation, [mbOK], 0);
+      MessageDlg(StrSorryICALCMustBe, mtInformation, [mbOK], 0);
     end;
     if SecondChangeMade then
     begin
-      MessageDlg(
-        'Sorry, ICALC can not be changed to 1 or 2 after the first stress '
-        + 'period when unsaturated flow beneath streams is simulated.',
-        mtInformation, [mbOK], 0);
+      MessageDlg(StrSorryICALCCanNot, mtInformation, [mbOK], 0);
     end;
   end;
   finally
@@ -1239,9 +1376,9 @@ begin
   GetEndTimes(rdgParameters, Ord(spicEndTime));
 
   rdgParameters.Columns[Ord(spicParameter)].PickList.Clear;
-  rdgParameters.Columns[Ord(spicParameter)].PickList.Add('none');
+  rdgParameters.Columns[Ord(spicParameter)].PickList.Add(StrNone);
   comboParameterChoices.Items.Clear;
-  comboParameterChoices.Items.Add.Text := 'none';
+  comboParameterChoices.Items.Add.Text := StrNone;
   for Index := 0 to frmGoPhast.PhastModel.ModflowTransientParameters.Count - 1 do
   begin
     Param := frmGoPhast.PhastModel.ModflowTransientParameters[Index];
@@ -1269,6 +1406,12 @@ begin
   dgDown.Selection := ARect;
   dgSfrRough.Selection := ARect;
   dgSfrEquation.Selection := ARect;
+
+  rgExternalFlowChoice.ItemIndex := 0;
+  rgReferenceTimeChoice.ItemIndex := 0;
+  fedExternalFileName.FileName := '';
+  ClearTable(frameExternalFileValues.Grid);
+
 end;
 
 procedure TframeScreenObjectSFR.ClearTable(Grid: TStringGrid);
@@ -3333,6 +3476,7 @@ begin
       begin
         Item := UpUnsat[0] as TSfrUnsatSegmentItem;
       end;
+
       Item.StartTime := 0;
       Item.EndTime := 0;
       Item.SaturatedWaterContent := THTS1;
@@ -3477,6 +3621,8 @@ begin
       SetSfrEquation(Boundary);
       SetSfrFlowTable(Boundary);
       SetUnsaturatedValues(Boundary);
+      SetExternalFlowFile(Boundary);
+
       if rgGages.ItemIndex >= 0 then
       begin
         Boundary.GageLocation := TGageLocation(rgGages.ItemIndex);
@@ -3901,6 +4047,7 @@ begin
   dgSfrEquation.BeginUpdate;
   dgTableTime.BeginUpdate;
   rdgNetwork.BeginUpdate;
+  frameExternalFileValues.Grid.BeginUpdate;
   FGettingData := True;
   try
     FoundFirst := False;
@@ -3958,6 +4105,8 @@ begin
       ClearTable(FrameFlowTable.dgSfrTable);
     end;
 
+    tabExternalFlowFile.TabVisible := List.Count = 1;
+
     rdeSegmentNumber.Enabled := True;
     for Index := 0 to List.Count - 1 do
     begin
@@ -3983,6 +4132,7 @@ begin
         GetSfrEquation(Boundary, FoundFirst);
         GetSfrFlowTable(Boundary, FoundFirst);
         GetUnsaturatedValues(Boundary, FoundFirst);
+        GetExternalFlows(Boundary);
 
         FoundFirst := True;
       end;
@@ -4180,6 +4330,7 @@ begin
     UpdateKCaption;
   finally
     FGettingData := False;
+    frameExternalFileValues.Grid.EndUpdate;
     rdgNetwork.EndUpdate;
     rdgParameters.EndUpdate;
     dgFlowTimes.EndUpdate;

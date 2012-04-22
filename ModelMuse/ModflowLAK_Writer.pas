@@ -3,7 +3,7 @@ unit ModflowLAK_Writer;
 interface
 
 uses SysUtils, Classes, PhastModelUnit, CustomModflowWriterUnit,
-  ModflowPackageSelectionUnit, ModflowTimeUnit;
+  ModflowPackageSelectionUnit, ModflowTimeUnit, ModflowLakUnit;
 
 type
   TModflowLAK_Writer = class(TCustomPackageWriter)
@@ -11,10 +11,12 @@ type
     // @name contains all the @link(TScreenObject)s that define lakes.
     FLakeList: TList;
     FNameOfFile: string;
+    FPackage: TLakePackageSelection;
     procedure Evaluate;
-    procedure WriteDataSet1;
+    procedure WriteDataSet1a;
+    procedure WriteDataSet1b;
     procedure WriteDataSet2;
-    procedure WriteDataSet3;
+    procedure WriteDataSet3(var StartUnitNumber: integer);
     procedure WriteDataSets4To9;
     procedure WriteLakeDefinitions;
     procedure WriteDataSet5;
@@ -32,15 +34,42 @@ type
       var StartUnitNumber: integer; Lines: TStrings);
   end;
 
+  TExternalBathymetryFileWriter = class(TCustomModflowWriter)
+  private
+    FExternalBathymetry: TExternalLakeTable;
+    FScreenObject: TObject;
+    FFileName: string;
+    FLakeID: Integer;
+  protected
+    class function Extension: string; override;
+    constructor Create(AModel: TCustomModel;
+      ExternalBathymetry: TExternalLakeTable;
+      ScreenObject: TObject; LakeID: integer); reintroduce;
+    procedure WriteFile(const AFileName: string);
+  end;
+
 implementation
 
 uses ModflowUnitNumbers, ScreenObjectUnit, frmErrorsAndWarningsUnit,
-  ModflowLakUnit, DataSetUnit, frmProgressUnit, Forms;
+  DataSetUnit, frmProgressUnit, Forms;
 
 resourcestring
   DupNameErrorMessage = 'The following Lakes have the same Lake ID.';
   InvalidCenterLake = 'The follow lakes have invalid center lake numbers.';
-  StrSAndS = '%s and %s';
+  StrSAndS = '%0:s and %1:s';
+  StrTheLakeBathymetry = 'The Lake bathymetry table must have exactly 151 en' +
+  'tries. The lakes defined by the following objects have too many or too fe' +
+  'w entries.';
+  StrLakeBathymetryFile = 'Lake Bathymetry file does not exist.';
+  StrTheLakeBathymetry2 = 'The lake bathymetry file (%0:s) specified in objec' +
+  't %1:s does not exist';
+  StrEvaluatingLAKPacka = 'Evaluating LAK Package data.';
+  StrWritingLAKPackage = 'Writing LAK Package input.';
+  StrWritingDataSet1a = '  Writing Data Set 1a.';
+  StrWritingDataSet1b = '  Writing Data Set 1b.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSet3 = '  Writing Data Set 3.';
+  StrWritingDataSets4to9 = '  Writing Data Sets 4 to 9.';
 
 { TModflowLAK_Writer }
 
@@ -74,7 +103,12 @@ var
   TempList: TList;
   SubLakeIndex: Integer;
 begin
-  frmProgressMM.AddMessage('Evaluating LAK Package data.');
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, DupNameErrorMessage);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, InvalidCenterLake);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheLakeBathymetry);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrLakeBathymetryFile);
+
+  frmProgressMM.AddMessage(StrEvaluatingLAKPacka);
   TempList := TList.Create;
   try
     for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
@@ -172,7 +206,16 @@ begin
   result := Model.ModflowPackages.LakPackage;
 end;
 
-procedure TModflowLAK_Writer.WriteDataSet1;
+procedure TModflowLAK_Writer.WriteDataSet1a;
+begin
+  if FPackage.ExternalLakeChoice = elcAll then
+  begin
+    WriteString('TABLEINPUT # DataSet 1a');
+    NewLine;
+  end;
+end;
+
+procedure TModflowLAK_Writer.WriteDataSet1b;
 var
   NLAKES: integer;
   ILKCB: integer;
@@ -182,7 +225,7 @@ begin
 
   WriteInteger(NLAKES);
   WriteInteger(ILKCB);
-  WriteString(' # DataSet 1: NLAKES ILKCB');
+  WriteString(' # DataSet 1b: NLAKES ILKCB');
   NewLine;
 end;
 
@@ -214,7 +257,7 @@ begin
   NewLine;
 end;
 
-procedure TModflowLAK_Writer.WriteDataSet3;
+procedure TModflowLAK_Writer.WriteDataSet3(var StartUnitNumber: integer);
 var
   STAGES, SSMN, SSMX: double;
   FirstPeriodIsSteadyState: boolean;
@@ -222,6 +265,10 @@ var
   ScreenObject: TScreenObject;
   Lake: TLakBoundary;
   LakeTime: TLakItem;
+  IUNITLAKTAB: integer;
+  LakeTableFileName: string;
+  BathymWriter: TExternalBathymetryFileWriter;
+  BathymFileName: string;
 begin
   FirstPeriodIsSteadyState :=
     Model.ModflowFullStressPeriods[0].StressPeriodType = sptSteadyState;
@@ -230,6 +277,43 @@ begin
     ScreenObject := FLakeList[LakeIndex];
     Assert(ScreenObject.ModflowLakBoundary <> nil);
     Lake := ScreenObject.ModflowLakBoundary;
+    if FPackage.ExternalLakeChoice = elcAll then
+    begin
+      IUNITLAKTAB := StartUnitNumber;
+      case Lake.ExternalLakeTable.LakeTableChoice of
+        lctInternal:
+          begin
+            BathymFileName := ChangeFileExt(FNameOfFile, '');
+            BathymFileName := TExternalBathymetryFileWriter.FileName(BathymFileName) + IntToStr(Lake.TrueLakeID);
+            WriteToNameFile(StrData, StartUnitNumber, BathymFileName, foInput, False);
+            BathymWriter := TExternalBathymetryFileWriter.Create(Model,
+              Lake.ExternalLakeTable, ScreenObject, Lake.TrueLakeID);
+            try
+              BathymWriter.WriteFile(BathymFileName);
+            finally
+              BathymWriter.Free;
+            end;
+          end;
+        lctExternal:
+          begin
+            LakeTableFileName := ExtractRelativePath(FNameOfFile,
+              Lake.ExternalLakeTable.FullLakeTableFileName);
+            if not FileExists(LakeTableFileName) then
+            begin
+              frmErrorsAndWarnings.AddError(Model,StrLakeBathymetryFile,
+                Format(StrTheLakeBathymetry2,
+                [LakeTableFileName, ScreenObject.Name]));
+            end;
+            WriteToNameFile(StrData, StartUnitNumber, LakeTableFileName, foInput, True);
+          end
+        else Assert(False);
+      end;
+      Inc(StartUnitNumber);
+    end
+    else
+    begin
+      IUNITLAKTAB := -1;
+    end;
     STAGES := Lake.InitialStage;
     WriteFloat(STAGES);
     if FirstPeriodIsSteadyState then
@@ -240,11 +324,27 @@ begin
 
       WriteFloat(SSMN);
       WriteFloat(SSMX);
+      if IUNITLAKTAB > 0 then
+      begin
+        WriteInteger(IUNITLAKTAB);
+      end;
       WriteString(' # DataSet 3: STAGES SSMN SSMX');
+      if IUNITLAKTAB > 0 then
+      begin
+        WriteString(' IUNITLAKTAB');
+      end;
     end
     else
     begin
+      if IUNITLAKTAB > 0 then
+      begin
+        WriteInteger(IUNITLAKTAB);
+      end;
       WriteString(' # DataSet 3: STAGES');
+      if IUNITLAKTAB > 0 then
+      begin
+        WriteString(' IUNITLAKTAB');
+      end;
     end;
     NewLine;
   end;
@@ -492,6 +592,7 @@ begin
   begin
     Exit;
   end;
+  FPackage := Package as TLakePackageSelection;
   FNameOfFile := FileName(AFileName);
   WriteToNameFile(StrLAK, Model.UnitNumbers.UnitNumber(StrLAK), FNameOfFile, foInput);
   Application.ProcessMessages;
@@ -502,16 +603,24 @@ begin
   Evaluate;
   OpenFile(FileName(AFileName));
   try
-    frmProgressMM.AddMessage('Writing LAK Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
-    WriteDataSet1;
+    frmProgressMM.AddMessage(StrWritingLAKPackage);
+    frmProgressMM.AddMessage(StrWritingDataSet1a);
+    WriteDataSet1a;
       Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet1b);
+    WriteDataSet1b;
+      Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -519,15 +628,15 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage(StrWritingDataSet3);
     Application.ProcessMessages;
-    WriteDataSet3;
+    WriteDataSet3(StartUnitNumber);
     if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 4 to 9.');
+    frmProgressMM.AddMessage(StrWritingDataSets4to9);
     WriteDataSets4To9;
   finally
     CloseFile;
@@ -582,6 +691,52 @@ begin
   WriteDataSet5;
   WriteDataSet6;
   WriteDataSets7And8;
+end;
+
+{ TExternalBathymetryFileWriter }
+
+constructor TExternalBathymetryFileWriter.Create(AModel: TCustomModel;
+  ExternalBathymetry: TExternalLakeTable; ScreenObject: TObject; LakeID: integer);
+begin
+  inherited Create(AModel, etExport);
+  FExternalBathymetry := ExternalBathymetry;
+  Assert(ScreenObject is TScreenObject);
+  FScreenObject := ScreenObject;
+  FLakeID := LakeID;
+end;
+
+class function TExternalBathymetryFileWriter.Extension: string;
+begin
+  result := '.lak_bath';
+end;
+
+procedure TExternalBathymetryFileWriter.WriteFile(const AFileName: string);
+var
+  LakeTable: TLakeTable;
+  index: Integer;
+  Item: TLakeTableItem;
+begin
+  Assert(FExternalBathymetry.LakeTableChoice = lctInternal);
+  LakeTable := FExternalBathymetry.LakeTable;
+  if LakeTable.Count <> 151 then
+  begin
+    frmErrorsAndWarnings.AddError(Model, StrTheLakeBathymetry,
+      (FScreenObject as TScreenObject).Name);
+  end;
+  FFileName := FileName(AFileName) + IntToStr(FLakeID);
+  OpenFile(FFileName);
+  try
+    for index := 0 to LakeTable.Count - 1 do
+    begin
+      Item := LakeTable[index];
+      WriteFloat(Item.Stage);
+      WriteFloat(Item.Volume);
+      WriteFloat(Item.SurfaceArea);
+      NewLine;
+    end;
+  finally
+    CloseFile;
+  end;
 end;
 
 end.

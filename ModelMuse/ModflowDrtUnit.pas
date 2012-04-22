@@ -301,6 +301,9 @@ implementation
 uses PhastModelUnit, ScreenObjectUnit, ModflowTimeUnit, FastGEO, GIS_Functions,
   TempFiles, frmGoPhastUnit;
 
+resourcestring
+  StrReturnFraction = 'Return fraction';
+
 const
   ElevationPosition = 0;
   ConductancePosition = 1;
@@ -1409,12 +1412,12 @@ begin
   FElevationData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FConductanceData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FReturnFractionData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FElevationData.NonParamDescription := 'Elevation';
-  FElevationData.ParamDescription := ' elevation';
-  FConductanceData.NonParamDescription := 'Conductance';
-  FConductanceData.ParamDescription := ' conductance multiplier';
-  FReturnFractionData.NonParamDescription := 'Return fraction';
-  FReturnFractionData.ParamDescription := ' return fraction';
+  FElevationData.NonParamDescription := StrElevation;
+  FElevationData.ParamDescription := ' ' + LowerCase(StrElevation);
+  FConductanceData.NonParamDescription := StrConductance;
+  FConductanceData.ParamDescription := StrConductanceMultipl;
+  FReturnFractionData.NonParamDescription := StrReturnFraction;
+  FReturnFractionData.ParamDescription := ' ' + LowerCase(StrReturnFraction);
   FReturnFractionData.Max := 1;
   FReturnFractionData.Min := 0;
   FReturnFractionData.CheckMax := True;

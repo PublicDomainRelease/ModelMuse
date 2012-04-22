@@ -120,6 +120,7 @@ type
     procedure rdgDispersionMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure rdeMultiDispersionValuesChange(Sender: TObject);
+    procedure rdgSubLayerBoundariesEndUpdate(Sender: TObject);
   private
     FLayerPositions: TOneDIntegerArray;
     FMovingLine: boolean;
@@ -197,8 +198,8 @@ uses Math, RealListUnit, CursorsFoiledAgain, frmGoPhastUnit,
 resourcestring
   StrChangeLayerStructu = 'change layer structure';
   StrLayerBoundary = 'Layer boundary';
-  StrHorizontalTransvers = 'Horizontal transverse dispersivity (TRPT)';
-  StrVerticalTransverse = 'Vertical transverse dispersivity (TRPV)';
+  StrHorizontalTransvers = 'Horizontal transverse dispersivity ratio (TRPT)';
+  StrVerticalTransverse = 'Vertical transverse dispersivity ratio (TRPV)';
   StrDiffusionCoefficien = 'Diffusion coefficient (DMCOEF)';
   StrHarmonicMean0 = 'Harmonic mean (0)';
   StrArithmeticMean1 = 'Arithmetic mean (1)';
@@ -219,6 +220,9 @@ resourcestring
   StrLimitedConvertible = 'Limited convertible';
   StrFullyConvertible = 'Fully convertible';
   StrConvertible = 'Convertible';
+  StrAquiferNamesMustS = 'Aquifer names must start with a letter.';
+  StrThisNameIsTooSim = 'This name is too similar to the name of another aqu' +
+  'ifer.';
 
 {$R *.dfm}
 
@@ -890,18 +894,52 @@ procedure TfrmLayers.edNameChange(Sender: TObject);
 var
   SelectedUnit: TLayerGroup;
   TreeNode: TTreeNode;
+  Index: Integer;
+  UsedNames: TStringList;
+  ALayerGroup: TLayerGroup;
+  TestName: string;
+  FirstChar: Char;
+  SelStart: Integer;
 begin
   inherited;
   if (not FSettingUnit) and (FSelectedUnits.Count > 0) then
   begin
-    if edName.Text <> '' then
-    begin
-      Assert(FSelectedUnits.Count = 1);
-      SelectedUnit := FSelectedUnits[0];
-      SelectedUnit.AquiferName := edName.Text;
+    UsedNames := TStringList.Create;
+    try
+      UsedNames.CaseSensitive := False;
+      for Index := 1 to FLayerStructure.Count - 1 do
+      begin
+        ALayerGroup := FLayerStructure[Index];
+        if FSelectedUnits.IndexOf(ALayerGroup) < 0 then
+        begin
+          UsedNames.Add(GenerateNewName(ALayerGroup.AquiferName));
+        end;
+      end;
+      if edName.Text <> '' then
+      begin
+        FirstChar := edName.Text[1];
+        if not CharInSet(FirstChar, ['A'..'Z', 'a'..'z', '_']) then
+        begin
+          SelStart := edName.SelStart;
+          edName.Text := '_' + edName.Text;
+          edName.SelStart := SelStart+1;
+        end;
+        TestName := GenerateNewName(edName.Text);
+        if UsedNames.IndexOf(TestName) >= 0 then
+        begin
+          Beep;
+          MessageDlg(StrThisNameIsTooSim, mtWarning, [mbOK], 0);
+          Exit;
+        end;
+        Assert(FSelectedUnits.Count = 1);
+        SelectedUnit := FSelectedUnits[0];
+        SelectedUnit.AquiferName := edName.Text;
+      end;
+      TreeNode := FSelectedTreeNodes[0];
+      TreeNode.Text := edName.Text;
+    finally
+      UsedNames.Free;
     end;
-    TreeNode := FSelectedTreeNodes[0];
-    TreeNode.Text := edName.Text;
   end;
 end;
 
@@ -1297,6 +1335,22 @@ procedure TfrmLayers.rdgDispersionSetEditText(Sender: TObject; ACol,
 begin
   inherited;
   UpdateDispersionValues(ACol, ARow);
+end;
+
+procedure TfrmLayers.rdgSubLayerBoundariesEndUpdate(Sender: TObject);
+var
+  NewDiscretization: Integer;
+begin
+  inherited;
+  if rdgSubLayerBoundaries.Enabled then
+  begin
+    NewDiscretization := rdgSubLayerBoundaries.RowCount;
+  end
+  else
+  begin
+    NewDiscretization := 1
+  end;
+  rdeVDiscretization.Text := IntToStr(NewDiscretization);
 end;
 
 procedure TfrmLayers.rdgSubLayerBoundariesExit(Sender: TObject);

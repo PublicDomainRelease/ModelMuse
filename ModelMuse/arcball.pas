@@ -173,14 +173,14 @@ function QuaternionConjugate(Q: TQuaternion): TQuaternion; assembler;
   // returns the conjugate of a quaternion
   // EAX contains address of Q
   // EDX contains address of result
-{
+
 begin
   result.ImagPart[X] := -Q.ImagPart[X];
   result.ImagPart[Y] := -Q.ImagPart[Y];
   result.ImagPart[Z] := -Q.ImagPart[Z];
   result.RealPart := Q.RealPart;
 end;
-}
+{
 asm
               FLD DWORD PTR [EAX]
               FCHS
@@ -197,6 +197,7 @@ asm
               MOV EAX, [EAX + 12]
               MOV [EDX + 12], EAX
 end;
+}
 
 //Defines a unit Quaternion
 procedure QuaternionOne(var Q: TQuaternion);
@@ -593,3 +594,5 @@ begin
 end;
 
 end.
+
+

@@ -195,6 +195,7 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
           ParentButtonFont = False
           WordWrapCaptions = True
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = True
         end
         item
@@ -216,6 +217,7 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
           ParentButtonFont = False
           WordWrapCaptions = True
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = True
         end
         item
@@ -237,6 +239,7 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
           ParentButtonFont = False
           WordWrapCaptions = True
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = True
         end>
     end

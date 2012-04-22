@@ -95,7 +95,7 @@
       <config-value name="deffont">font-family:'MS Sans Serif'; font-size:8pt; color:#000000;</config-value>
       <config-value name="contents"></config-value>
       <config-value name="topicprefix"></config-value>
-      <config-value name="autohelpstart">3659</config-value>
+      <config-value name="autohelpstart">3665</config-value>
       <config-value name="autohelpincrement">1</config-value>
       <config-value name="autohelpanchor">1</config-value>
       <config-value name="searchpath">.\;.\Used Images\;.\ScreenShots\;.\ModflowGuide\</config-value>
@@ -688,6 +688,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Export_Objects_to_Shapefile" value="3521"/>
       <helpcontext-number href="Export_Shapefile_Dialog_Box" value="3384"/>
       <helpcontext-number href="Exporting_an_Image_of_the_Mode" value="3578"/>
+      <helpcontext-number href="External_Flow_File" value="3665"/>
       <helpcontext-number href="FactorialI" value="710"/>
       <helpcontext-number href="FactorialR" value="720"/>
       <helpcontext-number href="Figure_19" value="3280"/>
@@ -791,6 +792,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="IntPower" value="750"/>
       <helpcontext-number href="IntToText" value="1190"/>
       <helpcontext-number href="LAK_Lake_Package_Pane" value="2720"/>
+      <helpcontext-number href="LAK_Lake_Package_Pane#TABLEINPUT" value="3668"/>
       <helpcontext-number href="LAK_Object_Pane" value="2010"/>
       <helpcontext-number href="Layer" value="470"/>
       <helpcontext-number href="LayerBoundaryPosition" value="480"/>
@@ -919,6 +921,10 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Options_Tab" value="2470"/>
       <helpcontext-number href="Options_Tab#HDRY" value="3390"/>
       <helpcontext-number href="Options_Tab#HNOFLO" value="3388"/>
+      <helpcontext-number href="Options_Tab#ITMUNI" value="3667"/>
+      <helpcontext-number href="Options_Tab#LENUNI" value="3666"/>
+      <helpcontext-number href="Options_Tab#STOPER" value="3664"/>
+      <helpcontext-number href="Options_Tab#STOPERROR" value="3663"/>
       <helpcontext-number href="Output" value="3581"/>
       <helpcontext-number href="Parameter_Names_and_Values" value="3320"/>
       <helpcontext-number href="Parameters_Tab" value="3517"/>
@@ -1562,6 +1568,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <file-mod href="InterpolatedVertexValue.xml" build="CHM,HTML,HXS,HLP,DEMO,USER2,USER3"/>
       <file-mod href="_Legend_Tab.xml"/>
       <file-mod href="LinkToManageParameters.xml"/>
+      <file-mod href="External_Flow_File.xml" build="CHM,DEMO,HLP,HTML,HXS,USER2,USER3"/>
     </file>
     <file href="Topics/Invisible/*.xml" build="ALL" filetype="topic"/>
     <file href="Baggage/*.*" build="ALL" filetype="baggage"/>

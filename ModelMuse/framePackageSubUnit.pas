@@ -78,6 +78,26 @@ implementation
 uses
   GoPhastTypes, frmCustomGoPhastUnit, frmGoPhastUnit, ModflowTimeUnit;
 
+resourcestring
+  StrPrintSubsidenceIf = 'Print subsidence (Ifm1, Ifl1)';
+  StrSaveSubsidenceIfl = 'Save subsidence (Ifl2)';
+  StrPrintCompactionBy = 'Print compaction by model layer (Ifm2, Ifl3)';
+  StrSaveCompactionByM = 'Save compaction by model layer (Ifl4)';
+  StrPrintCompactionByIB = 'Print compaction by interbed system (Ifm3, Ifl5)';
+  StrSaveCompactionByIB = 'Save compaction by interbed system (Ifl6)';
+  StrPrintVerticalDispl = 'Print vertical displacement (Ifm4, Ifl7)';
+  StrSaveVerticalDispla = 'Save vertical displacement (Ifl8)';
+  StrPrintCriticalHead = 'Print critical head for no-delay interbeds (Ifm5, ' +
+  'Ifl9)';
+  StrSaveCriticalHeadF = 'Save critical head for no-delay interbeds (Ifl10)';
+  StrPrintCriticalHeadDelay = 'Print critical head for delay interbeds (Ifm6' +
+  ', Ifl11)';
+  StrSaveCriticalHeadFDelay = 'Save critical head for delay interbeds (Ifl12' +
+  ')';
+  StrPrintVolumetricBud = 'Print volumetric budget for delay interbeds (Ifl1' +
+  '3)';
+  StrFormat = 'Format';
+
 {$R *.dfm}
 
 const
@@ -293,21 +313,21 @@ begin
 
   rdgOutput.Cells[Ord(socStartTime), 0] := StrStartingTime;
   rdgOutput.Cells[Ord(socEndTime), 0] := StrEndingTime;
-  rdgOutput.Cells[Ord(socPrintSubsidence), 0] := 'Print subsidence (Ifm1, Ifl1)';
-  rdgOutput.Cells[Ord(socSaveSubsidence), 0] := 'Save subsidence (Ifl2)';
-  rdgOutput.Cells[Ord(socPrintCompactModelLayer), 0] := 'Print compaction by model layer (Ifm2, Ifl3)';
-  rdgOutput.Cells[Ord(socSaveCompactModelLayer), 0] := 'Save compaction by model layer (Ifl4)';
-  rdgOutput.Cells[Ord(socPrintCompactByInterbedSystem), 0] := 'Print compaction by interbed system (Ifm3, Ifl5)';
-  rdgOutput.Cells[Ord(socSaveCompactByInterbedSystem), 0] := 'Save compaction by interbed system (Ifl6)';
-  rdgOutput.Cells[Ord(socPrintVerticalDisplacement), 0] := 'Print vertical displacement (Ifm4, Ifl7)';
-  rdgOutput.Cells[Ord(socSaveVerticalDisplacement), 0] := 'Save vertical displacement (Ifl8)';
-  rdgOutput.Cells[Ord(socPrintNoDelayPreconsolidationHead), 0] := 'Print critical head for no-delay interbeds (Ifm5, Ifl9)';
-  rdgOutput.Cells[Ord(socSaveNoDelayPreconsolidationHead), 0] := 'Save critical head for no-delay interbeds (Ifl10)';
-  rdgOutput.Cells[Ord(socPrintDelayPreconsolidationHead), 0] := 'Print critical head for delay interbeds (Ifm6, Ifl11)';
-  rdgOutput.Cells[Ord(socSaveDelayPreconsolidationHead), 0] := 'Save critical head for delay interbeds (Ifl12)';
-  rdgOutput.Cells[Ord(socPrintDelayInterbedBudget), 0] := 'Print volumetric budget for delay interbeds (Ifl13)';
+  rdgOutput.Cells[Ord(socPrintSubsidence), 0] := StrPrintSubsidenceIf;
+  rdgOutput.Cells[Ord(socSaveSubsidence), 0] := StrSaveSubsidenceIfl;
+  rdgOutput.Cells[Ord(socPrintCompactModelLayer), 0] := StrPrintCompactionBy;
+  rdgOutput.Cells[Ord(socSaveCompactModelLayer), 0] := StrSaveCompactionByM;
+  rdgOutput.Cells[Ord(socPrintCompactByInterbedSystem), 0] := StrPrintCompactionByIB;
+  rdgOutput.Cells[Ord(socSaveCompactByInterbedSystem), 0] := StrSaveCompactionByIB;
+  rdgOutput.Cells[Ord(socPrintVerticalDisplacement), 0] := StrPrintVerticalDispl;
+  rdgOutput.Cells[Ord(socSaveVerticalDisplacement), 0] := StrSaveVerticalDispla;
+  rdgOutput.Cells[Ord(socPrintNoDelayPreconsolidationHead), 0] := StrPrintCriticalHead;
+  rdgOutput.Cells[Ord(socSaveNoDelayPreconsolidationHead), 0] := StrSaveCriticalHeadF;
+  rdgOutput.Cells[Ord(socPrintDelayPreconsolidationHead), 0] := StrPrintCriticalHeadDelay;
+  rdgOutput.Cells[Ord(socSaveDelayPreconsolidationHead), 0] := StrSaveCriticalHeadFDelay;
+  rdgOutput.Cells[Ord(socPrintDelayInterbedBudget), 0] := StrPrintVolumetricBud;
 
-  rdgOutput.Cells[Ord(socStartTime), FormatRow] := 'Format';
+  rdgOutput.Cells[Ord(socStartTime), FormatRow] := StrFormat;
 
   pcSub.ActivePageIndex := 0;
 

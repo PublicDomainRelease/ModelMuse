@@ -88,6 +88,16 @@ uses Contnrs, DataSetUnit, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit,
   ModflowSfrUnit, frmFormulaErrorsUnit, frmErrorsAndWarningsUnit, GoPhastTypes, 
   frmGoPhastUnit, ModflowSfrChannelUnit;
 
+resourcestring
+  StrDepthCoefficientF = '(depth coefficient for the SFR package)';
+  StrDepthExponentFor = '(depth exponent for the SFR package)';
+  StrWidthCoefficientF = '(width coefficient for the SFR package)';
+  StrWidthExponentFor = '(width exponent for the SFR package)';
+  StrDepthCoefficientNot = 'DepthCoefficient not used';
+  StrDepthExponentNotUs = 'DepthExponent not used';
+  StrWidthCoefficientNot = 'WidthCoefficient not used';
+  StrWidthExponentNotUs = 'WidthExponent not used';
+
 const
   DepthCoefficientPosition = 0;
   DepthExponentPosition = 1;
@@ -374,8 +384,8 @@ begin
     begin
       Expression := nil;
       Formula := CurrentItem.DepthCoefficient;
-      CurrentRecord.DepthCoefficientAnnotation := 'Assigned by '
-        + ScrObj.Name + ' with formula = "' + Formula + '."';
+      CurrentRecord.DepthCoefficientAnnotation := Format(StrAssignedBy0sWit,
+        [ScrObj.Name, Formula]);
       try
         Compiler.Compile(Formula);
         Expression := Compiler.CurrentExpression;
@@ -385,7 +395,7 @@ begin
       except on E: ERbwParserError do
         begin
           frmFormulaErrors.AddFormulaError(ScrObj.Name,
-            '(depth coefficient for the SFR package)',
+            StrDepthCoefficientF,
             Formula, E.Message);
 
           CurrentItem.DepthCoefficient := '0.';
@@ -398,8 +408,8 @@ begin
       CurrentRecord.DepthCoefficient := Expression.DoubleResult;
 
       Formula := CurrentItem.DepthExponent;
-      CurrentRecord.DepthExponentAnnotation := 'Assigned by '
-        + ScrObj.Name + ' with formula = "' + Formula + '."';
+      CurrentRecord.DepthExponentAnnotation := Format(StrAssignedBy0sWit,
+        [ScrObj.Name, Formula]);
       try
         Compiler.Compile(Formula);
         Expression := Compiler.CurrentExpression;
@@ -409,7 +419,7 @@ begin
       except on E: ERbwParserError do
         begin
           frmFormulaErrors.AddFormulaError(ScrObj.Name,
-            '(depth exponent for the SFR package)',
+            StrDepthExponentFor,
             Formula, E.Message);
 
           CurrentItem.DepthExponent := '0.';
@@ -422,8 +432,8 @@ begin
       CurrentRecord.DepthExponent := Expression.DoubleResult;
 
       Formula := CurrentItem.WidthCoefficient;
-      CurrentRecord.WidthCoefficientAnnotation := 'Assigned by '
-        + ScrObj.Name + ' with formula = "' + Formula + '."';
+      CurrentRecord.WidthCoefficientAnnotation := Format(StrAssignedBy0sWit,
+        [ScrObj.Name, Formula]);
       try
         Compiler.Compile(Formula);
         Expression := Compiler.CurrentExpression;
@@ -433,7 +443,7 @@ begin
       except on E: ERbwParserError do
         begin
           frmFormulaErrors.AddFormulaError(ScrObj.Name,
-            '(width coefficient for the SFR package)',
+            StrWidthCoefficientF,
             Formula, E.Message);
 
           CurrentItem.WidthCoefficient := '0.';
@@ -446,8 +456,8 @@ begin
       CurrentRecord.WidthCoefficient := Expression.DoubleResult;
 
       Formula := CurrentItem.WidthExponent;
-      CurrentRecord.WidthExponentAnnotation := 'Assigned by '
-        + ScrObj.Name + ' with formula = "' + Formula + '."';
+      CurrentRecord.WidthExponentAnnotation := Format(StrAssignedBy0sWit,
+        [ScrObj.Name, Formula]);
       try
         Compiler.Compile(Formula);
         Expression := Compiler.CurrentExpression;
@@ -457,7 +467,7 @@ begin
       except on E: ERbwParserError do
         begin
           frmFormulaErrors.AddFormulaError(ScrObj.Name,
-            '(width exponent for the SFR package)',
+            StrWidthExponentFor,
             Formula, E.Message);
 
           CurrentItem.WidthExponent := '0.';
@@ -475,10 +485,10 @@ begin
       CurrentRecord.DepthExponent := 0;
       CurrentRecord.WidthCoefficient := 0;
       CurrentRecord.WidthExponent := 0;
-      CurrentRecord.DepthCoefficientAnnotation := 'DepthCoefficient not used';
-      CurrentRecord.DepthExponentAnnotation := 'DepthExponent not used';
-      CurrentRecord.WidthCoefficientAnnotation := 'WidthCoefficient not used';
-      CurrentRecord.WidthExponentAnnotation := 'WidthExponent not used';
+      CurrentRecord.DepthCoefficientAnnotation := StrDepthCoefficientNot;
+      CurrentRecord.DepthExponentAnnotation := StrDepthExponentNotUs;
+      CurrentRecord.WidthCoefficientAnnotation := StrWidthCoefficientNot;
+      CurrentRecord.WidthExponentAnnotation := StrWidthExponentNotUs;
     end;
 
     FTimeValues[Index] := CurrentRecord;

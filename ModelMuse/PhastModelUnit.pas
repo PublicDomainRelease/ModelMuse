@@ -1,4 +1,4 @@
-{@abstract(
+﻿{@abstract(
 The main purpose of @name is to provide classes used in saving a
 PHAST model to a stream and reading a PHAST model from a stream.)
 @Link(TPhastModel) does this by making the significant features of a model
@@ -29,7 +29,7 @@ uses Windows, Types, GuiSettingsUnit, SysUtils, Classes, Contnrs, Controls,
   PathlineReader, LegendUnit, DisplaySettingsUnit, ModflowCellUnit,
   ModflowGageUnit, ModflowHeadObsResults, GR32, AxCtrls, Generics.Collections,
   Generics.Defaults, Mt3dmsTimesUnit, Mt3dmsChemSpeciesUnit,
-  Mt3dmsFluxObservationsUnit;
+  Mt3dmsFluxObservationsUnit, SutraMeshUnit;
 
 const
   // @name is the name of the @link(TDataArray) that specifies whether an
@@ -1421,7 +1421,7 @@ that affects the model output should also have a comment. }
     // See @link(PhastGrid).
     procedure SetPhastGrid(const Value: TPhastGrid);
     procedure UpdateDischargeRouting(Sender: TObject);
-    function AlwaysUsed(Sender: TObject): boolean;
+//    function AlwaysUsed(Sender: TObject): boolean;
     function AquiferPropertiesUsed(Sender: TObject): boolean; virtual;
     function KyUsed(Sender: TObject): boolean; virtual;
     function KzUsed(Sender: TObject): boolean; virtual;
@@ -1478,6 +1478,8 @@ that affects the model output should also have a comment. }
     function SwtSelected(Sender: TObject): boolean; virtual;
     function SwtOffsetsUsed(Sender: TObject): boolean; virtual;
     function SwtSpecifiedUsed(Sender: TObject): boolean; virtual;
+    function SutraUsed(Sender: TObject): boolean; virtual;
+    function ModflowOrPhastUsed(Sender: TObject): boolean; virtual;
     function IndenticalTransientArray(DataArray: TDataArray; DataArrays: TList;
       var CachedIndex: integer): TDataArray;
     // See @link(TimeLists).
@@ -1500,7 +1502,7 @@ that affects the model output should also have a comment. }
       ParameterType: TParameterType);
     procedure UpdateLpfDataArrayParameterUsed(const DataArrayName: string;
       ParameterType: TParameterType);
-    function PrepareModflowFullStressPeriods: Boolean;
+    function PrepareModflowFullStressPeriods(ShowWarning: boolean): Boolean;
     function CountStepsInExport: Integer;
     procedure GetDefaultOutputFileExtension(var Extension: string);
 
@@ -1521,6 +1523,7 @@ that affects the model output should also have a comment. }
     FMt3dmsEvtMassFluxObservations: TMt3dmsFluxObservationGroups;
     FMt3dmsDrnMassFluxObservations: TMt3dmsFluxObservationGroups;
     FMt3dmsLakMassFluxObservations: TMt3dmsFluxObservationGroups;
+    FSutraMesh: TSutraMesh3D;
     procedure SetAlternateFlowPackage(const Value: boolean);
     procedure SetAlternateSolver(const Value: boolean);
     procedure SetBatchFileAdditionsAfterModel(const Value: TStrings);
@@ -1623,7 +1626,17 @@ that affects the model output should also have a comment. }
     function StoreRchMassFluxObservations: Boolean;
     function StoreResMassFluxObservations: Boolean;
     function StoreRivMassFluxObservations: Boolean;
-    function StoreWellMassFluxObservations: Boolean;
+    function StoreWellMassFluxObservations: boolean;
+    procedure SetPathLine(const Value: TPathLineReader);
+    function GetPathLine: TPathLineReader;
+    function StorePathLine: boolean;
+    function StoreTimeSeries: boolean;
+    procedure SetTimeSeries(const Value: TTimeSeriesReader);
+    function GetTimeSeries: TTimeSeriesReader;
+    function StoreEndPoints: boolean;
+    function GetEndPoints: TEndPointReader;
+    procedure SetEndPoints(const Value: TEndPointReader);
+    procedure SetSutraMesh(const Value: TSutraMesh3D);
   var
     LakWriter: TObject;
     SfrWriter: TObject;
@@ -1654,6 +1667,9 @@ that affects the model output should also have a comment. }
     FTemplate: TStringList;
     FGageUnitNumber: integer;
     FGages: TStringList;
+    FPathLine: TPathLineReader;
+    FTimeSeries: TTimeSeriesReader;
+    FEndPoints: TEndPointReader;
   strict private
     FHfbWriter: TObject;
     FMfHobHeads: THobDisplayTimeList;
@@ -1676,13 +1692,13 @@ that affects the model output should also have a comment. }
     function GetScreenObjectCount: integer;virtual;abstract;
     function GetModflowSteadyParameters: TModflowSteadyParameters;virtual;abstract;
     procedure SetModflowSteadyParameters(const Value: TModflowSteadyParameters);virtual;abstract;
-    function GetModelSelection: TModelSelection;virtual;abstract;
+//    function GetModelSelection: TModelSelection;virtual;abstract;
     // Among other things, if @link(OnModelSelectionChange)
     // is assigned, @name calls @link(TfrmGoPhast.ModelSelectionChange
     // TfrmGoPhast.ModelSelectionChange).  @name also changes
     // the functions that are available. and sets @Link(TObserver)s
     // for the @link(Grid).
-    procedure SetModelSelection(const Value: TModelSelection);
+    procedure SetModelSelection(const Value: TModelSelection); override;
     // @name causes the grid to not be colored by any @link(TDataArray).
     function GetLayerStructure: TLayerStructure;virtual;abstract;
     procedure SetLayerStructure(const Value: TLayerStructure);virtual;abstract;
@@ -1719,16 +1735,19 @@ that affects the model output should also have a comment. }
     function GetShowContourLabels: boolean; virtual; abstract;
     function GetImmobileComponents: TChemSpeciesCollection; virtual; abstract;
     function GetMobileComponents: TMobileChemSpeciesCollection; virtual; abstract;
-    procedure SetImmobileComponents(const Value: TChemSpeciesCollection); virtual; abstract;
-    procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection); virtual; abstract;
+    procedure SetImmobileComponents(const Value: TChemSpeciesCollection);
+      virtual; abstract;
+    procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection);
+      virtual; abstract;
   public
+    procedure UpdateDataArrayDimensions(DataArray: TDataArray);
     function IndexOfMt3dmsSpeciesName(const AChemSpecies: string): integer;
     property Gages: TStringList read FGages;
     function StoreHeadObsResults: boolean;
     function TestModpathOK: Boolean;
     property ModflowLocation: string read GetModflowLocation write SetModflowLocation;
     procedure ExportSeparateLgrModel(const FileName: string;
-      RunModel, ExportModpath, ExportZoneBudget: boolean);
+      RunModel, ExportModpath, ExportZoneBudget, ShowWarning: boolean);
     // @name returns the name of the most likely output file from which
     // model results will be imported.  If heads were saved, the name of the
     // file containing heads will be returned.
@@ -1918,11 +1937,12 @@ that affects the model output should also have a comment. }
     function FixFileName(AFileName: string): string;
     // @name exports the input files for MODFLOW and optionally runs MODFLOW.
     procedure ExportModflowModel(const FileName: string;
-      RunModel, ExportModpath, NewBudgetFileForModpath, ExportZoneBudget: boolean);
+      RunModel, ExportModpath, NewBudgetFileForModpath, ExportZoneBudget,
+      ShowWarning: boolean);
     procedure ExportModpathModel(FileName: string;
       RunModel, NewBudgetFile: boolean; EmbeddedExport: boolean = False);
     procedure ExportZoneBudgetModel(FileName: string; RunModel, EmbeddedExport: boolean);
-    procedure ExportMt3dmsModel(const FileName: string; RunModel: Boolean);
+    procedure ExportMt3dmsModel(const FileName: string; RunModel, ShowWarning: Boolean);
 
 
     // @name is the @link(TCustomTimeList) for
@@ -1991,9 +2011,6 @@ that affects the model output should also have a comment. }
       write FThreeDTimeList;
     property ModflowSteadyParameters: TModflowSteadyParameters
       read GetModflowSteadyParameters write SetModflowSteadyParameters;
-
-    property ModelSelection: TModelSelection read GetModelSelection
-      write SetModelSelection;
 
     property LayerStructure: TLayerStructure read GetLayerStructure
       write SetLayerStructure;
@@ -2170,6 +2187,7 @@ that affects the model output should also have a comment. }
     property ShowContourLabels: boolean read GetShowContourLabels
       write SetShowContourLabels default True;
     procedure UpdateMt3dmsChemDataSets; virtual; abstract;
+    procedure GenerateSutraMesh(var ErrorMessage: string);
   published
     // @name defines the grid used with PHAST.
     property PhastGrid: TPhastGrid read FPhastGrid write SetPhastGrid;
@@ -2266,6 +2284,22 @@ that affects the model output should also have a comment. }
       read GetMobileComponents write SetMobileComponents;
     property ImmobileComponents: TChemSpeciesCollection
       read GetImmobileComponents write SetImmobileComponents;
+    // @name stores MODPATH pathline data.
+    // @name is used only in MODFLOW models.
+    property PathLines: TPathLineReader read GetPathLine write SetPathLine
+      stored StorePathLine;
+    // @name is retained for backwards compatibility. See @link(PathLines).
+    property PathLine: TPathLineReader read GetPathLine write SetPathLine
+      stored False;
+    // @name stores MODPATH times series data.
+    // @name is used only in MODFLOW models.
+    property TimeSeries: TTimeSeriesReader read GetTimeSeries
+      write SetTimeSeries stored StoreTimeSeries;
+    // @name stores MODPATH endpoint data.
+    // @name is used only in MODFLOW models.
+    property EndPoints: TEndPointReader read GetEndPoints Write SetEndPoints
+      stored StoreEndPoints;
+    property SutraMesh: TSutraMesh3D read FSutraMesh write SetSutraMesh stored False;
   end;
 
   TMapping = record
@@ -2458,9 +2492,6 @@ that affects the model output should also have a comment. }
     FModelMateProject: TProject;
     FFormulaManager: TFormulaManager;
     FHufParameters: THufModflowParameters;
-    FPathLine: TPathLineReader;
-    FEndPoints: TEndPointReader;
-    FTimeSeries: TTimeSeriesReader;
     FColorLegend: TLegend;
     FContourLegend: TLegend;
     FDisplaySettings: TDisplaySettingsCollection;
@@ -2586,15 +2617,6 @@ that affects the model output should also have a comment. }
     procedure EnsureModelMateObsGroup(Project: TProject; GroupName: string;
       PlotSymbol: integer);
     function PhastUsed(Sender: TObject): boolean;
-    procedure SetPathLine(const Value: TPathLineReader);
-    function GetPathLine: TPathLineReader;
-    function StorePathLine: Boolean;
-    function GetEndPoints: TEndPointReader;
-    procedure SetEndPoints(const Value: TEndPointReader);
-    function StoreEndPoints: Boolean;
-    procedure SetTimeSeries(const Value: TTimeSeriesReader);
-    function StoreTimeSeries: Boolean;
-    function GetTimeSeries: TTimeSeriesReader;
     procedure CreateInitialDataSetsForPhastTimeLists;
     procedure SetDisplaySettings(const Value: TDisplaySettingsCollection);
     procedure SetChildModels(const Value: TChildModelCollection);
@@ -2729,6 +2751,7 @@ that affects the model output should also have a comment. }
     procedure SetImmobileComponents(const Value: TChemSpeciesCollection); override;
     procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection); override;
   public
+    function LakBathymetryUsed: Boolean;
     function TobIsSelected: Boolean;
     procedure RenameDataArray(DataArray: TDataArray; const NewName: string);
     procedure DrawHeadObservations(const BitMap: TBitmap32;
@@ -3151,7 +3174,7 @@ that affects the model output should also have a comment. }
     function ZoneBudgetIsSelected: Boolean;
     function PackageIsSelected(APackage: TObject): Boolean;
     procedure ExportModflowLgrModel(const FileName: string;
-      RunModel, ExportModpath, ExportZoneBudget: boolean);
+      RunModel, ExportModpath, ExportZoneBudget, ShowWarning: boolean);
     procedure AdjustDataArray(ADataArray: TDataArray); override;
     function RchTimeVaryingLayers: boolean;
     function EvtTimeVaryingLayers: boolean;
@@ -3253,25 +3276,6 @@ that affects the model output should also have a comment. }
     property Title: TStrings read FTitle write SetTitle stored True;
     // @name stores the default units in PHAST.
     property Units: TUnits read FUnits write SetUnits;
-
-
-    // @name stores MODPATH pathline data.
-    // @name is used only in MODFLOW models.
-    property PathLines: TPathLineReader read GetPathLine write SetPathLine
-      stored StorePathLine;
-    // @name is retained for backwards compatibility. See @link(PathLines).
-    property PathLine: TPathLineReader read GetPathLine write SetPathLine
-      stored False;
-    // @name stores MODPATH endpoint data.
-    // @name is used only in MODFLOW models.
-    property EndPoints: TEndPointReader read GetEndPoints Write SetEndPoints
-      stored StoreEndPoints;
-    // @name stores MODPATH times series data.
-    // @name is used only in MODFLOW models.
-    property TimeSeries: TTimeSeriesReader read GetTimeSeries
-      write SetTimeSeries stored StoreTimeSeries;
-
-
     // @name represents a series of bitmaps that can be displayed on
     // the top, front, or side view of the model.
     // @name is used in both PHAST and MODFLOW models.
@@ -5144,9 +5148,64 @@ const
   //    '2.12.0.28' Fixed bug in exporting MT3DMS BTN data set A6 when there
   //        are more than 40 layers.
   //    '2.13.0.0' No additional changes.
+  //    '2.13.0.1' Bug fix: Fixed a bug that would cause interpolation to fail
+  //        if an object did not intersect the grid.
+  //    '2.13.0.2' Enhancement: added support for running MODPATH with
+  //        a child model in MODFLOW-LGR.
+  //    '2.13.0.3' Enhancement: added support for visualizing MODPATH output
+  //        with a child model in MODFLOW-LGR.
+  //    '2.13.0.4' Bug fix: Fixed labeling of contours when contouring
+  //        data sets whose data type is Text.
+  //      Bug fix: fixed labels for TRPT and TRPV in MT3DMS.
+  //      Bug fix: fixed export of SSM package when no source or sink
+  //        concentrations have been defined.
+  //    '2.13.0.5' Bug fix: Fixed bug that would cause an error if the user
+  //        attempted to display data set values before generating the grid.
+  //       Bug fix: Fixed a bug that would cause an error if the user attempted
+  //         to give an aquifer a name that started with a number or a name
+  //         that was too similar to the name of another aquifer.
+  //    '2.13.0.6' Change: In the hydmod package, The name of each observation
+  //         has a unique number added to the end of the label.
+  //    '2.13.0.7' Bug fix: fixed bug that prevented the LPF options
+  //         STORAGECOEFFICIENT and CONSTANTCV from being used simultaneously.
+  //       Enhancement: Added support for the new STOPERROR option in the
+  //         MODFLOW Basic package.
+  //       Enhancement: Added support for the new NOPARCHECK option in the
+  //         MODFLOW LPF package.
+  //       Enhancement: Added support for the PCGN solver.
+  //       Change: Changed SFR package to use new SFR format for MODFLOW-2000.
+  //       Enhancement: Added IFACE to SFR input.
+  //       Bug fix: fixed a bug that would cause range-check errors in certain
+  //         MODFLOW-LGR models.
+  //    '2.13.0.8' Bug fix: Fixed bug that would sometimes cause invalid SFR
+  //         input files to be created when unsaturated flow was simulated
+  //         beneath streams.
+  //       Enhancement: When importing ASCII raster files into a MODFLOW-LGR
+  //         model, it is now possible to specify the grid to use
+  //         for the imported data.
+  //       Bug fix: fixed bug that would sometimes cause the assigning data
+  //         set values to fail in a MODFLOW-LGR model.
+  //    '2.13.0.9' Change: Reduced memory usage.
+  //       Bug fix: Checking elevations in MODFLOW-LGR child models no longer
+  //         results in a range check error.
+  //       Bug fix: Fixed problem with reading invalid files.
+  //    '2.13.0.10' Bug fix: Previously, attempting to display the
+  //         "Show or Hide Objects" dialog box would sometimes cause an error.
+  //       Bug fix: In MODFLOW-LGR models, the legend displayed when
+  //         coloring or contouring would not reflect more extreme values
+  //         displayed in a child grid.
+  //       Enhancement: You can now export grid data to a Shapefile for
+  //         MODFLOW-LGR child grids.
+  //    '2.13.0.11' Bug fix: Fixed export of IFMTCN, IFMTNP, IFMTRF,
+  //         and IFMTDP in the MT3DMS basic transport package.
+  //       Enhancement: You can now use the command line option -mte to export
+  //         just the MT3DMS input files.
+  //    '2.13.0.12' Bug fix: when importing a Shapefile to a multipart object,
+  //         formulas for the Z-coordinate can now be imported properly.
+  //    '2.14.0.0' No additional changes.
 
 const
-  ModelVersion = '2.13.0.0';
+  ModelVersion = '2.14.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -5234,7 +5293,8 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   ModflowUPW_WriterUnit, frmCustomGoPhastUnit, ModflowSfrParamIcalcUnit,
   BigCanvasMethods, Mt3dmsBtnWriterUnit, Mt3dmsAdvWriterUnit,
   Mt3dmsDspWriterUnit, Mt3dmsSsmWriterUnit, Mt3dmsRctWriterUnit,
-  Mt3dmsGcgWriterUnit, Mt3dmsTobWriterUnit, ModflowMt3dmsLinkWriterUnit;
+  Mt3dmsGcgWriterUnit, Mt3dmsTobWriterUnit, ModflowMt3dmsLinkWriterUnit,
+  QuadMeshGenerator, MeshRenumbering, ModflowPCGN_WriterUnit;
 
 resourcestring
   StrMpathDefaultPath = 'C:\WRDAPP\Mpath.5_0\setup\Mpathr5_0.exe';
@@ -5277,7 +5337,7 @@ resourcestring
   ' Do you want to delete them?';
   StrYourModelMateFile3 = 'Your ModelMate file contains the following unused ' +
   '%s. Do you want to delete them?';
-  StrYourModelMateFile4 = 'Your ModelMate file contains %0:d unused $1:s. Do' +
+  StrYourModelMateFile4 = 'Your ModelMate file contains %0:d unused %1:s. Do' +
   ' you want to delete them?';
   StrOneOrMore0sFro = 'One or more %0:s from the ModelMate file are not pres' +
   'ent in the ModelMuse file and have been ignored. If an %1:s has been rena' +
@@ -5304,6 +5364,13 @@ resourcestring
   StrTheEndOfTheLast = 'The end of the last stress period is %0:g. The last ' +
   'defined time is %1:g. The following objects have defined times before the' +
   ' beginning of the first stress period.';
+  StrNoObjects = 'The mesh was not created because no objects define the ele' +
+  'ment size on the top view of the model.';
+  StrNoPolygons = 'The mesh was not created because no polygons define the e' +
+  'lement size on the top view of the model.';
+  StrInvalidTimesForMT = 'Invalid times for MT3DMS';
+  StrTheStressPeriodsD = 'The stress periods defined for MT3DMS are not with' +
+  'in the stress periods defined for MODFLOW.';
 
 const
   StrAndNegatedAtCons = ' and negated at constant head cell';
@@ -6051,7 +6118,6 @@ begin
   CreateInitialDataSetsForPhastTimeLists;
   CreatePhastTimeListGroups;
 
-//  ModelSelection := msPhast;
   FDataArrayManager.CreateInitialDataSets;
 
   FContourFont := TFont.Create;
@@ -6252,9 +6318,6 @@ begin
 
     FSfrStreamLinkPlot.Free;
     FChildModels.Free;
-    FTimeSeries.Free;
-    FEndPoints.Free;
-    FPathLine.Free;
     FHufParameters.Free;
 
     FModelMateProject.Free;
@@ -6413,15 +6476,6 @@ begin
   FinalizeWetDry(Sender);
 end;
 
-function TPhastModel.GetPathLine: TPathLineReader;
-begin
-  if (FPathLine = nil) then
-  begin
-    FPathLine := TPathLineReader.Create;
-  end;
-  result := FPathLine;
-end;
-
 function TPhastModel.GetProgramLocations: TProgramLocations;
 begin
   result := FProgramLocations;
@@ -6573,6 +6627,7 @@ var
   Index: Integer;
   Dist: Double;
   OutFlowLocation: TPoint2D;
+  SectionIndex: Integer;
 begin
   OutFlowLocation := TestScreenObject.Points[TestScreenObject.Count - 1];
   NearestStream := nil;
@@ -6636,7 +6691,7 @@ begin
         and AScreenObject.ModflowLakBoundary.Used then
       begin
         TestDist := AScreenObject.DistanceToScreenObject(
-          OutFlowLocation, TestLocation, 1);
+          OutFlowLocation, TestLocation, 1, SectionIndex);
         if (NearestStream = nil) or (TestDist < Dist) then
         begin
           if Tolerance > 0 then
@@ -6853,9 +6908,6 @@ begin
   FormulaManager.Clear;
   FDisplaySettings.Clear;
 
-  FreeAndNil(FPathline);
-  FreeAndNil(FEndPoints);
-  FreeAndNil(FTimeSeries);
   if GlobalFont <> nil then
   begin
     ContourFont := GlobalFont;
@@ -7057,15 +7109,6 @@ begin
   FCachedScreenObjectIndex := result;
 end;
 
-procedure TPhastModel.SetPathLine(const Value: TPathLineReader);
-begin
-  if FPathLine = nil then
-  begin
-    FPathLine :=  TPathLineReader.Create;
-  end;
-  FPathLine.Assign(Value);
-end;
-
 procedure TCustomModel.SetPhastGrid(const Value: TPhastGrid);
 begin
   FPhastGrid.Assign(Value);
@@ -7200,42 +7243,6 @@ begin
   end;
 end;
 
-//function TPhastModel.GetMagnificationFront: double;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.MagnificationFront;
-//  end;
-//end;
-
-//function TPhastModel.GetMagnificationSide: double;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.MagnificationSide;
-//  end;
-//end;
-
-//function TPhastModel.GetMagnificationTop: double;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.MagnificationTop;
-//  end;
-//end;
-
 function TPhastModel.PhastUsed(Sender: TObject): boolean;
 begin
   result := ModelSelection = msPhast;
@@ -7259,21 +7266,6 @@ end;
 function TPhastModel.StoreChildModels: Boolean;
 begin
   result := FChildModels.Count > 0;
-end;
-
-function TPhastModel.StoreEndPoints: Boolean;
-begin
-  result := (FEndPoints <> nil) and (FEndPoints.FileName <> '');
-end;
-
-function TPhastModel.StorePathLine: Boolean;
-begin
-  result := (FPathLine <> nil) and (FPathLine.FileName <> '');
-end;
-
-function TPhastModel.StoreTimeSeries: Boolean;
-begin
-  result := (FTimeSeries <> nil) and (FTimeSeries.FileName <> '');
 end;
 
 function TPhastModel.GetMobileComponents: TMobileChemSpeciesCollection;
@@ -7488,6 +7480,12 @@ begin
           ModflowGrid.TopGridObserver := nil;
           ModflowGrid.ThreeDGridObserver := nil;
         end;
+      {$IFDEF SUTRA}
+      msSutra:
+        begin
+
+        end
+      {$ENDIF}
       else Assert(False);
     end;
     FModelSelection := Value;
@@ -7508,6 +7506,12 @@ begin
         begin
           FGrid := ModflowGrid;
         end;
+      {$IFDEF SUTRA}
+      msSutra:
+        begin
+          FGrid := nil;
+        end
+      {$ENDIF}
       else Assert(False);
     end;
     if (FModelSelection <> msModflowNWT) then
@@ -7549,22 +7553,19 @@ begin
     end;
     if not (csReading in ComponentState) and not (csDestroying in ComponentState) then
     begin
-      FDataArrayManager.CreateInitialDataSets;
+      if (frmGoPhast.PhastModel <> nil)
+        and not (csReading in frmGoPhast.PhastModel.ComponentState)
+        and not (csDestroying in frmGoPhast.PhastModel.ComponentState) then
+      begin
+        FDataArrayManager.CreateInitialDataSets;
+      end;
     end;
 
 
     for Index := 0 to FDataArrayManager.DataSetCount - 1 do
     begin
       DataSet := FDataArrayManager.DataSets[Index] as TDataArray;
-      if Grid <> nil then
-      begin
-        DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-          Grid.ColumnCount);
-      end
-      else
-      begin
-        DataSet.UpdateDimensions(-1, -1, -1);
-      end;
+      UpdateDataArrayDimensions(DataSet);
     end;
     if not (csDestroying in ComponentState) then
     begin
@@ -7704,15 +7705,6 @@ begin
   end;
 end;
 
-function TPhastModel.GetEndPoints: TEndPointReader;
-begin
-  if (FEndPoints = nil) then
-  begin
-    FEndPoints := TEndPointReader.Create;
-  end;
-  result := FEndPoints;
-end;
-
 function TPhastModel.GetExaggeration: double;
 begin
   result := 1;
@@ -7724,15 +7716,6 @@ begin
   begin
     result := frmGoPhast.frameSideView.ZoomBox.Exaggeration;
   end;
-end;
-
-procedure TPhastModel.SetEndPoints(const Value: TEndPointReader);
-begin
-  if FEndPoints = nil then
-  begin
-    FEndPoints :=  TEndPointReader.Create;
-  end;
-  FEndPoints.Assign(Value);
 end;
 
 procedure TPhastModel.SetExaggeration(Value: double);
@@ -8299,13 +8282,15 @@ begin
       end;
       AddDataSet(ADataSet);
       CreateVariables(ADataSet);
-      ADataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-        Grid.ColumnCount);
+      UpdateDataArrayDimensions(ADataSet);
+//      ADataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+//        Grid.ColumnCount);
     end
     else
     begin
-      ExistingDataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-        Grid.ColumnCount);
+      UpdateDataArrayDimensions(ExistingDataSet);
+//      ExistingDataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+//        Grid.ColumnCount);
 
       TempCompiler := GetCompiler(ExistingDataSet.Orientation,
         ExistingDataSet.EvaluatedAt);
@@ -8537,15 +8522,6 @@ begin
   Invalidate;
 end;
 
-procedure TPhastModel.SetTimeSeries(const Value: TTimeSeriesReader);
-begin
-  if FTimeSeries = nil then
-  begin
-    FTimeSeries := TTimeSeriesReader.Create
-  end;
-  FTimeSeries.Assign(Value);
-end;
-
 function TPhastModel.ScreenObjectClass: TScreenObjectClass;
 begin
   result := TScreenObject;
@@ -8760,17 +8736,9 @@ begin
     msPhast: result := 'PHAST';
     msModflow, msModflowNWT: result := 'MODFLOW';
     msModflowLGR: result := 'Parent model';
+    {$IFDEF SUTRA} msSutra: result := 'SUTRA'; {$ENDIF}
     else Assert(False);
   end;
-end;
-
-function TPhastModel.GetTimeSeries: TTimeSeriesReader;
-begin
-  if (FTimeSeries = nil) then
-  begin
-    FTimeSeries := TTimeSeriesReader.Create;
-  end;
-  result := FTimeSeries;
 end;
 
 function TPhastModel.GetTimeListByName(const AName: string): TCustomTimeList;
@@ -10419,6 +10387,27 @@ begin
   end;
 end;
 
+function TPhastModel.LakBathymetryUsed: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.LakPackage.IsSelected
+    and (ModflowPackages.LakPackage.ExternalLakeChoice = elcAll);
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or (ChildModel.ModflowPackages.LakPackage.IsSelected
+          and (ChildModel.ModflowPackages.LakPackage.ExternalLakeChoice = elcAll));
+      end;
+    end;
+  end;
+end;
+
 function TPhastModel.LgrUsed: boolean;
 begin
   result := (ModelSelection in [msModflowLGR])
@@ -11293,7 +11282,7 @@ var
   ParamItem: TSfrParamIcalcItem;
   SegItem: TCustomModflowBoundaryItem;
 begin
-  if (Grid.GridAngle <> 0)
+  if (Grid <> nil) and (Grid.GridAngle <> 0)
     and FileVersionEqualOrEarlier('2.6.0.3')
     and (FormulaManager.FunctionUsed(StrVertexInterpolate)
     or FormulaManager.FunctionUsed(StrNodeInterpolate)) then
@@ -11314,7 +11303,7 @@ begin
       ModpathZone.Invalidate;
     end;
   end;
-  if (Grid.GridAngle <> 0)
+  if (Grid <> nil) and (Grid.GridAngle <> 0)
     and FileVersionEqualOrEarlier('2.7.0.9')
     and FormulaManager.FunctionUsed(StrInterpolatedVertexValues) then
   begin
@@ -11358,7 +11347,7 @@ begin
     end;
   end;
   // angles
-  if (Grid.GridAngle <> 0)
+  if (Grid <> nil) and (Grid.GridAngle <> 0)
     and FileVersionEqualOrEarlier('2.9.1.9')
     and (FormulaManager.FunctionUsed(ObjectCurrentSegmentAngle)
     or FormulaManager.FunctionUsed(ObjectDegrees)
@@ -13957,7 +13946,7 @@ begin
   end;
 end;
 
-function TCustomModel.PrepareModflowFullStressPeriods: Boolean;
+function TCustomModel.PrepareModflowFullStressPeriods(ShowWarning: boolean): Boolean;
 var
   StressPeriod: TModflowStressPeriod;
   Index: Integer;
@@ -13972,18 +13961,21 @@ begin
     Exit;
   end;
   frmProgressMM.StepIt;
-  StepCount := 0;
-  for Index := 0 to ModflowFullStressPeriods.Count - 1 do
+  if ShowWarning then
   begin
-    StressPeriod := ModflowFullStressPeriods.Items[Index];
-    StepCount := StepCount + StressPeriod.NumberOfSteps;
-  end;
-  if StepCount > 1000 then
-  begin
-    if MessageDlg(Format(StrYourModelHasSTi, [StepCount]),
-      mtWarning, [mbYes, mbNo], 0) <> mrYes then
+    StepCount := 0;
+    for Index := 0 to ModflowFullStressPeriods.Count - 1 do
     begin
-      result := False;
+      StressPeriod := ModflowFullStressPeriods.Items[Index];
+      StepCount := StepCount + StressPeriod.NumberOfSteps;
+    end;
+    if StepCount > 1000 then
+    begin
+      if MessageDlg(Format(StrYourModelHasSTi, [StepCount]),
+        mtWarning, [mbYes, mbNo], 0) <> mrYes then
+      begin
+        result := False;
+      end;
     end;
   end;
 end;
@@ -16393,6 +16385,7 @@ begin
 //  FBoundaryDataSets.Free;
 //  FDataSets.Free;
 //  FDataSetsToCache.Free;
+  FSutraMesh.Free;
   FModflowWettingOptions.Free;
   FFilesToArchive.Free;
   FModelInputFiles.Free;
@@ -16436,6 +16429,9 @@ begin
   FModflowOptions.Free;
   FHeadObsResults.Free;
   FGages.Free;
+  FPathLine.Free;
+  FTimeSeries.Free;
+  FEndPoints.Free;
   inherited;
 end;
 
@@ -16615,6 +16611,15 @@ begin
   FSideTimeList := Value;
 end;
 
+procedure TCustomModel.SetSutraMesh(const Value: TSutraMesh3D);
+begin
+  if FSutraMesh = nil then
+  begin
+    FSutraMesh := TSutraMesh3D.Create(self);
+  end;
+  FSutraMesh.Assign(Value);
+end;
+
 procedure TCustomModel.SetTopTimeList(const Value: TCustomTimeList);
 begin
   FTopTimeList := Value;
@@ -16775,6 +16780,10 @@ var
   Index: Integer;
   DataSet: TDataArray;
 begin
+  if FSutraMesh <> nil then
+  begin
+    FSutraMesh.Clear;
+  end;
   if PhastGrid <> nil then
   begin
     if PhastGrid.TopGridObserver <> nil then
@@ -16811,13 +16820,182 @@ begin
   FModflowOptions.Clear;
   FDataArrayManager.ClearDataSetsToCache;
   ClearAllTimeLists;
+  FreeAndNil(FPathline);
+  FreeAndNil(FTimeSeries);
+  FreeAndNil(FEndPoints);
+end;
 
+procedure TCustomModel.GenerateSutraMesh(var ErrorMessage: string);
+var
+  List: TList;
+  ScreenObjectIndex: integer;
+  ScreenObject: TScreenObject;
+  Area: double;
+  BiggestIndex: Integer;
+  ObjectArea: Real;
+  MeshCreator: TQuadMeshCreator;
+  SectionIndex: Integer;
+  NodeIndex: Integer;
+  ABoundary: TBoundary;
+  ANode: TNode;
+  FirstNode: TNode;
+  SutraNode: TSutraNode2D;
+  AdjustIndex: Integer;
+  MeshNode: INode;
+  ElementIndex: Integer;
+  SutraElement: TSutraElement2D;
+  MeshElement: IElement;
+  StartIndex: Integer;
+  EndIndex: Integer;
+begin
+  ErrorMessage := '';
+  List := TList.Create;
+  try
+    for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
+    begin
+      ScreenObject := ScreenObjects[ScreenObjectIndex];
+      if ScreenObject.CellSizeUsed and (ScreenObject.ViewDirection = vdTop)
+        and not ScreenObject.Deleted then
+      begin
+        List.Add(ScreenObject);
+      end;
+    end;
+    if List.Count = 0 then
+    begin
+      ErrorMessage := StrNoObjects;
+      Exit;
+    end;
+    Area := 0;
+    BiggestIndex := -1;
+    for ScreenObjectIndex := 0 to List.Count - 1 do
+    begin
+      ScreenObject := List[ScreenObjectIndex];
+      ObjectArea := ScreenObject.ScreenObjectArea;
+      if ObjectArea > Area then
+      begin
+        Area := ObjectArea;
+        BiggestIndex := ScreenObjectIndex;
+      end;
+    end;
+    if BiggestIndex < 0 then
+    begin
+      ErrorMessage := StrNoPolygons;
+      Exit;
+    end;
+
+    if BiggestIndex > 0 then
+    begin
+      List.Exchange(0, BiggestIndex);
+    end;
+
+    MeshCreator := TQuadMeshCreator.Create;
+    try
+      MeshCreator.NodeAdjustmentMethod := namGiuliani;
+      for ScreenObjectIndex := 0 to List.Count - 1 do
+      begin
+        ScreenObject := List[ScreenObjectIndex];
+        for SectionIndex := 0 to ScreenObject.SectionCount - 1 do
+        begin
+          ABoundary := MeshCreator.AddBoundary(ScreenObject.CellSize);
+          FirstNode := nil;
+          StartIndex := ScreenObject.SectionStart[SectionIndex];
+          EndIndex := ScreenObject.SectionEnd[SectionIndex];
+          if ScreenObject.SectionClosed[SectionIndex] then
+          begin
+            Dec(EndIndex);
+          end;
+          for NodeIndex := StartIndex to EndIndex do
+          begin
+            ANode := TNode.Create(MeshCreator, ScreenObject.CellSize);
+            ANode.Location := ScreenObject.Points[NodeIndex];
+            if FirstNode = nil then
+            begin
+              FirstNode := ANode;
+            end;
+            ABoundary.AddNode(ANode);
+          end;
+          if ScreenObject.SectionClosed[SectionIndex] then
+          begin
+            ABoundary.AddNode(FirstNode);
+          end;
+        end;
+      end;
+
+      MeshCreator.GenerateMesh;
+      for AdjustIndex := 1 to 10 do
+      begin
+        MeshCreator.AdjustNodes;
+      end;
+
+      if FSutraMesh = nil then
+      begin
+        FSutraMesh := TSutraMesh3D.Create(self);
+      end;
+      FSutraMesh.BeginUpdate;
+      try
+        FSutraMesh.Clear;
+        FSutraMesh.Mesh2D.Nodes.Capacity := MeshCreator.NodeCount;
+        FSutraMesh.Mesh2D.Elements.Capacity := MeshCreator.ElementCount;
+        for NodeIndex := 0 to MeshCreator.NodeCount - 1 do
+        begin
+          SutraNode := FSutraMesh.Mesh2D.Nodes.Add;
+          MeshNode := MeshCreator.Nodes[NodeIndex];
+          SutraNode.AssignINode(MeshNode);
+        end;
+        for ElementIndex := 0 to MeshCreator.ElementCount - 1 do
+        begin
+          SutraElement := FSutraMesh.Mesh2D.Elements.Add;
+          MeshElement := MeshCreator.Elements[ElementIndex];
+          SutraElement.AssignIElement(MeshElement);
+        end;
+      finally
+        FSutraMesh.EndUpdate;
+      end;
+      frmGoPhast.InvalidateGrid;
+
+    finally
+      MeshCreator.Free;
+    end;
+
+  finally
+    List.Free;
+  end;
+end;
+
+procedure TCustomModel.UpdateDataArrayDimensions(DataArray: TDataArray);
+begin
+  if Grid <> nil then
+  begin
+    DataArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount, Grid.ColumnCount);
+  end
+  {$IFDEF Sutra}
+  else if (FModelSelection = msSutra) and (SutraMesh <> nil) then
+  begin
+    case DataArray.EvaluatedAt of
+      eaBlocks:
+        DataArray.UpdateDimensions(1, 1, SutraMesh.Elements.Count);
+      eaNodes:
+        DataArray.UpdateDimensions(1, 1, SutraMesh.Nodes.Count);
+    else
+      Assert(False);
+    end;
+  end
+  {$ENDIF}
+  else
+  begin
+    DataArray.UpdateDimensions(-1, -1, -1);
+  end;
 end;
 
 function TCustomModel.GetCompiler(const Orientation: TDataSetOrientation;
       const EvaluatedAt: TEvaluatedAt): TRbwParser;
 begin
   result := nil;
+
+  {$IFDEF Sutra}
+//  Assert(ModelSelection <> msSutra);
+  { TODO -cSUTRA : Need to get TRbwParser for SUTRA }
+  {$ENDIF}
 
   case EvaluatedAt of
     eaBlocks:
@@ -17867,11 +18045,12 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
     end;
     if DataArray <> nil then
     begin
-      if FCustomModel.Grid <> nil then
-      begin
-        DataArray.UpdateDimensions(FCustomModel.Grid.LayerCount, FCustomModel.Grid.RowCount,
-          FCustomModel.Grid.ColumnCount);
-      end;
+      FCustomModel.UpdateDataArrayDimensions(DataArray);
+//      if FCustomModel.Grid <> nil then
+//      begin
+//        DataArray.UpdateDimensions(FCustomModel.Grid.LayerCount, FCustomModel.Grid.RowCount,
+//          FCustomModel.Grid.ColumnCount);
+//      end;
       DataArray.AssociatedDataSets := FDataArrayCreationRecords[
         Index].AssociatedDataSets;
       DataArray.Classification := FDataArrayCreationRecords[Index].Classification;
@@ -17879,7 +18058,7 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
   end;
 
   DataArray := GetDataSetByName(rsActive);
-  if not Assigned(DataArray.OnUpToDateSet) then
+  if (DataArray <> nil) and not Assigned(DataArray.OnUpToDateSet) then
   begin
     DataArray.OnUpToDateSet := FCustomModel.OnActiveDataSetChanged;
   end;
@@ -17939,7 +18118,7 @@ begin
   FDataArrayCreationRecords[Index].Name := rsActive;
   FDataArrayCreationRecords[Index].Formula := 'True';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.AlwaysUsed;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ModflowOrPhastUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
@@ -18442,7 +18621,7 @@ begin
   FDataArrayCreationRecords[Index].Name := StrUzfReisidualWaterContent;
   FDataArrayCreationRecords[Index].Formula := '0.2';
   FDataArrayCreationRecords[Index].Classification := strUzfClassification;
-  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfInitialInfiltrationUsed;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfResidualWaterContentUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: THTR';
@@ -19113,7 +19292,7 @@ var
   ChildDataArray: TDataArray;
   DeletedIndex: Integer;
   TestDataArray: TDataArray;
-  ChildGrid: TCustomModelGrid;
+//  ChildGrid: TCustomModelGrid;
 begin
   for Index := 0 to AddedDataSetList.Count - 1 do
   begin
@@ -19155,9 +19334,10 @@ begin
             DataArray.DataType, DataArray.EvaluatedAt, DataArray.Orientation,
             DataArray.Classification);
           ChildDataArray.AssignProperties(DataArray);
-          ChildGrid := ChildManager.FCustomModel.Grid;
-          ChildDataArray.UpdateDimensions(ChildGrid.LayerCount,
-            ChildGrid.RowCount, ChildGrid.ColumnCount);
+          ChildManager.FCustomModel.UpdateDataArrayDimensions(ChildDataArray);
+//          ChildGrid := ChildManager.FCustomModel.Grid;
+//          ChildDataArray.UpdateDimensions(ChildGrid.LayerCount,
+//            ChildGrid.RowCount, ChildGrid.ColumnCount);
         end;
         DataArray.TalksTo(ChildDataArray);
         NewAddedList.Add(ChildDataArray);
@@ -19392,44 +19572,49 @@ var
   Manager: TDataArrayManager;
 begin
   Grid := FCustomModel.Grid;
-  if Grid = nil then
-  begin
+//  if Grid = nil then
+//  begin
+//    for Index := 0 to LocalCount - 1 do
+//    begin
+//      DataSet := DataSets[Index];
+//      DataSet.UpdateDimensions(-1, -1, -1);
+//    end;
+//    for Index := 0 to BoundaryDataSetCount - 1 do
+//    begin
+//      DataSet := BoundaryDataSets[Index];
+//      DataSet.UpdateDimensions(-1, -1, -1);
+//    end;
+//    for Index := 0 to FDeletedDataSets.Count - 1 do
+//    begin
+//      DataSet := FDeletedDataSets[Index];
+//      DataSet.UpdateDimensions(-1, -1, -1);
+//    end;
+//  end
+//  else
+//  begin
     for Index := 0 to LocalCount - 1 do
     begin
       DataSet := DataSets[Index];
-      DataSet.UpdateDimensions(-1, -1, -1);
+      FCustomModel.UpdateDataArrayDimensions(DataSet);
+//      DataSet.UpdateDimensions(Grid.LayerCount,
+//        Grid.RowCount, Grid.ColumnCount);
     end;
     for Index := 0 to BoundaryDataSetCount - 1 do
     begin
       DataSet := BoundaryDataSets[Index];
-      DataSet.UpdateDimensions(-1, -1, -1);
+      FCustomModel.UpdateDataArrayDimensions(DataSet);
+//      DataSet.UpdateDimensions(Grid.LayerCount,
+//        Grid.RowCount, Grid.ColumnCount);
     end;
     for Index := 0 to FDeletedDataSets.Count - 1 do
     begin
       DataSet := FDeletedDataSets[Index];
-      DataSet.UpdateDimensions(-1, -1, -1);
+      FCustomModel.UpdateDataArrayDimensions(DataSet);
+//      DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+//        Grid.ColumnCount);
     end;
-  end
-  else
+  if Grid <> nil then
   begin
-    for Index := 0 to LocalCount - 1 do
-    begin
-      DataSet := DataSets[Index];
-      DataSet.UpdateDimensions(Grid.LayerCount,
-        Grid.RowCount, Grid.ColumnCount);
-    end;
-    for Index := 0 to BoundaryDataSetCount - 1 do
-    begin
-      DataSet := BoundaryDataSets[Index];
-      DataSet.UpdateDimensions(Grid.LayerCount,
-        Grid.RowCount, Grid.ColumnCount);
-    end;
-    for Index := 0 to FDeletedDataSets.Count - 1 do
-    begin
-      DataSet := FDeletedDataSets[Index];
-      DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-        Grid.ColumnCount);
-    end;
     Grid.NeedToRecalculateTopCellColors := True;
     Grid.NeedToRecalculateFrontCellColors := True;
     Grid.NeedToRecalculateSideCellColors := True;
@@ -19444,15 +19629,15 @@ begin
   end;
 end;
 
-function TCustomModel.AlwaysUsed(Sender: TObject): boolean;
-begin
-  result := True;
-end;
+//function TCustomModel.AlwaysUsed(Sender: TObject): boolean;
+//begin
+//  result := True;
+//end;
 
 function TCustomModel.AquiferPropertiesUsed(Sender: TObject): boolean;
 begin
-  result := (ModelSelection = msPhast)
-    or not ModflowPackages.HufPackage.IsSelected;
+  result := ModflowOrPhastUsed(Sender) and ((ModelSelection = msPhast)
+    or not ModflowPackages.HufPackage.IsSelected);
 end;
 
 procedure TCustomModel.Assign(Source: TPersistent);
@@ -19506,9 +19691,10 @@ end;
 
 function TCustomModel.KyUsed(Sender: TObject): boolean;
 begin
-  result := (ModelSelection = msPhast)
+  result := ModflowOrPhastUsed(Sender)
+    and ((ModelSelection = msPhast)
     or ModflowPackages.LpfPackage.IsSelected
-    or ModflowPackages.UpwPackage.IsSelected
+    or ModflowPackages.UpwPackage.IsSelected)
 end;
 
 function TCustomModel.KzUsed(Sender: TObject): boolean;
@@ -19523,7 +19709,7 @@ var
 begin
   result := True;
   case ModelSelection of
-    msUndefined: result := True;
+    msUndefined: result := False;
     msPhast: result := True;
     msModflow, msModflowLGR, msModflowNWT:
       begin
@@ -19582,6 +19768,7 @@ begin
           end;
         end;
       end;
+    {$IFDEF SUTRA} msSutra: result := False; {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -19612,7 +19799,8 @@ begin
         begin
           result := False;
         end;
-      end
+      end;
+    {$IFDEF SUTRA} msSutra: result := False; {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -19635,6 +19823,21 @@ end;
 function TCustomModel.SurfacesUsed(Sender: TObject): boolean;
 begin
   result := ChemistryUsed(Sender) and ChemistryOptions.UseSurfaceAssemblages;
+end;
+
+function TCustomModel.SutraUsed(Sender: TObject): boolean;
+begin
+  {$IFDEF Sutra}
+  result := (ModelSelection = msSutra)
+  {$ELSE}
+  result := False;
+  {$ENDIF}
+end;
+
+function TCustomModel.ModflowOrPhastUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection in [msPhast, msModflow, msModflowLGR,
+    msModflowNWT])
 end;
 
 function TCustomModel.ExchangeUsed(Sender: TObject): boolean;
@@ -19685,7 +19888,7 @@ begin
     else
     begin
       result := ModflowPackages.UzfPackage.SpecifyResidualWaterContent
-        and (ModelSelection = msModflowNWT);
+        and (ModelSelection in [msModflow, msModflowNWT]);
     end;
   end;
 end;
@@ -19721,7 +19924,8 @@ begin
     else
     begin
       result := ModflowStressPeriods.CompletelyTransient or
-        (ModflowPackages.UzfPackage.SpecifyInitialWaterContent and (ModelSelection = msModflowNWT));
+        (ModflowPackages.UzfPackage.SpecifyInitialWaterContent
+        and (ModelSelection in [msModflow, msModflowNWT]));
     end;
   end;
 end;
@@ -19957,7 +20161,7 @@ begin
   result := False;
   case ModelSelection of
     msUndefined: result := False;
-    msPhast: result := False;
+    msPhast {$IFDEF SUTRA}, msSutra {$ENDIF}: result := False;
     msModflow, msModflowLGR, msModflowNWT:
       begin
         if ModflowPackages.BcfPackage.IsSelected then
@@ -20156,6 +20360,7 @@ var
   ErrorMessage: string;
   SpressPeriodCount: Integer;
   MtTime: TMt3dmsTimeItem;
+  OutOfRangeMt3dTime: Boolean;
 //  StartTimeIndex: integer;
 begin
   if FUpdatingFullStressPeriods then
@@ -20181,11 +20386,34 @@ begin
     TestFirstTime := TimeList[0];
     LastTestTime := TimeList[TimeList.Count-1];
 
+    OutOfRangeMt3dTime := False;
     for TimeIndex := 0 to Mt3dmsTimes.Count - 1 do
     begin
       MtTime := Mt3dmsTimes[TimeIndex];
-      TimeList.AddUnique(MtTime.StartTime);
-      TimeList.AddUnique(MtTime.EndTime)
+      if (MtTime.StartTime >= TestFirstTime)
+        and (MtTime.StartTime <= LastTestTime) then
+      begin
+        TimeList.AddUnique(MtTime.StartTime);
+      end
+      else
+      begin
+        OutOfRangeMt3dTime := True;
+      end;
+      if (MtTime.EndTime >= TestFirstTime)
+        and (MtTime.EndTime <= LastTestTime) then
+      begin
+        TimeList.AddUnique(MtTime.EndTime);
+      end
+      else
+      begin
+        OutOfRangeMt3dTime := True;
+      end;
+    end;
+
+    if OutOfRangeMt3dTime then
+    begin
+      frmErrorsAndWarnings.AddWarning(self,
+        StrInvalidTimesForMT, StrTheStressPeriodsD);
     end;
 
     OutOfStartRangeScreenObjects := TStringList.Create;
@@ -20729,7 +20957,7 @@ begin
 end;
 
 procedure TPhastModel.ExportModflowLgrModel(const FileName: string;
-  RunModel, ExportModpath, ExportZoneBudget: boolean);
+  RunModel, ExportModpath, ExportZoneBudget, ShowWarning: boolean);
 var
   NumberOfSteps: Integer;
   BatchFileLocation: string;
@@ -20763,7 +20991,7 @@ begin
       frmProgressMM.pbProgress.Max := NumberOfSteps;
       frmProgressMM.pbProgress.Position := 0;
 
-      if not PrepareModflowFullStressPeriods then
+      if not PrepareModflowFullStressPeriods(ShowWarning) then
       begin
         Exit;
       end;
@@ -20864,7 +21092,7 @@ begin
 end;
 
 procedure TCustomModel.ExportModflowModel(const FileName: string; RunModel,
-  ExportModpath, NewBudgetFileForModpath, ExportZoneBudget: boolean);
+  ExportModpath, NewBudgetFileForModpath, ExportZoneBudget, ShowWarning: boolean);
 var
   NumberOfSteps: Integer;
   BatchFileLocation: string;
@@ -20890,7 +21118,7 @@ begin
       frmProgressMM.pbProgress.Max := NumberOfSteps;
       frmProgressMM.pbProgress.Position := 0;
 
-      if not PrepareModflowFullStressPeriods then
+      if not PrepareModflowFullStressPeriods(ShowWarning) then
       begin
         Exit;
       end;
@@ -21085,6 +21313,7 @@ var
   WriterList: TSfrWriterList;
   ParentPhastModel: TPhastModel;
   LinkWriter: TModflowMt3dmsLinkWriter;
+  PcgnWriter: TPcgnWriter;
 begin
   Assert(Assigned(NameFileWriter));
   LocalNameWriter := NameFileWriter as TNameFileWriter;
@@ -21158,6 +21387,22 @@ begin
         Exit;
       end;
       if ModflowPackages.PcgPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      PcgnWriter := TPcgnWriter.Create(self, etExport);
+      try
+        PcgnWriter.WriteFile(FileName);
+      finally
+        PcgnWriter.Free;
+      end;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.PcgnPackage.IsSelected then
       begin
         frmProgressMM.StepIt;
       end;
@@ -21912,7 +22157,7 @@ begin
 end;
 
 procedure TCustomModel.ExportMt3dmsModel(const FileName: string;
-  RunModel: Boolean);
+  RunModel, ShowWarning: Boolean);
 var
   NumberOfSteps: integer;
   Mt3dmsBtnWriter: TMt3dmsBtnWriter;
@@ -21945,7 +22190,7 @@ begin
       frmProgressMM.pbProgress.Max := NumberOfSteps;
       frmProgressMM.pbProgress.Position := 0;
 
-      if not PrepareModflowFullStressPeriods then
+      if not PrepareModflowFullStressPeriods(ShowWarning) then
       begin
         Exit;
       end;
@@ -22055,7 +22300,7 @@ begin
 end;
 
 procedure TCustomModel.ExportSeparateLgrModel(const FileName: string;
-  RunModel, ExportModpath, ExportZoneBudget: boolean);
+  RunModel, ExportModpath, ExportZoneBudget, ShowWarning: boolean);
 var
   IUPBHSV: Integer;
   IUPBFSV: Integer;
@@ -22085,7 +22330,7 @@ begin
       frmProgressMM.pbProgress.Max := CountStepsInExport;
       frmProgressMM.pbProgress.Position := 0;
 
-      if not PrepareModflowFullStressPeriods then
+      if not PrepareModflowFullStressPeriods(ShowWarning) then
       begin
         Exit;
       end;
@@ -25254,11 +25499,79 @@ begin
   FModel := AModel;
 end;
 
+procedure TCustomModel.SetPathLine(const Value: TPathLineReader);
+begin
+  if FPathLine = nil then
+  begin
+    FPathLine := TPathLineReader.Create(self);
+  end;
+  FPathLine.Assign(Value);
+end;
+
+function TCustomModel.GetPathLine: TPathLineReader;
+begin
+  if (FPathLine = nil) then
+  begin
+    FPathLine := TPathLineReader.Create(self);
+  end;
+  result := FPathLine;
+end;
+
+function TCustomModel.StorePathLine: boolean;
+begin
+  result := (FPathLine <> nil) and (FPathLine.FileName <> '');
+end;
+
+function TCustomModel.StoreTimeSeries: boolean;
+begin
+  result := (FTimeSeries <> nil) and (FTimeSeries.FileName <> '');
+end;
+
+procedure TCustomModel.SetTimeSeries(const Value: TTimeSeriesReader);
+begin
+  if FTimeSeries = nil then
+  begin
+    FTimeSeries := TTimeSeriesReader.Create(self);
+  end;
+  FTimeSeries.Assign(Value);
+end;
+
+function TCustomModel.GetTimeSeries: TTimeSeriesReader;
+begin
+  if (FTimeSeries = nil) then
+  begin
+    FTimeSeries := TTimeSeriesReader.Create(self);
+  end;
+  result := FTimeSeries;
+end;
+
+function TCustomModel.StoreEndPoints: boolean;
+begin
+  result := (FEndPoints <> nil) and (FEndPoints.FileName <> '');
+end;
+
+function TCustomModel.GetEndPoints: TEndPointReader;
+begin
+  if (FEndPoints = nil) then
+  begin
+    FEndPoints := TEndPointReader.Create(self);
+  end;
+  result := FEndPoints;
+end;
+
+procedure TCustomModel.SetEndPoints(const Value: TEndPointReader);
+begin
+  if FEndPoints = nil then
+  begin
+    FEndPoints := TEndPointReader.Create(self);
+  end;
+  FEndPoints.Assign(Value);
+end;
+
 initialization
+
   RegisterClass(TPhastModel);
   RegisterClass(TChildModel);
 
 end.
-
-
 

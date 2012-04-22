@@ -19,6 +19,21 @@ implementation
 uses ModflowUnitNumbers, frmProgressUnit, Forms, FastGEO, ModelMuseUtilities,
   frmGoPhastUnit, ModflowOptionsUnit;
 
+resourcestring
+  StrWritingDiscretizati = 'Writing Discretization Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSet3 = '  Writing Data Set 3.';
+  StrWritingDataSet4 = '  Writing Data Set 4.';
+  StrCheckingColumnWi = '  Checking column widths.';
+  StrCheckingRowHeigh = '  Checking row height.';
+  StrCheckingRowToCo = '  Checking row to column size ratios.';
+  StrWritingDataSet5 = '  Writing Data Set 5.';
+  StrWritingDataSet6 = '  Writing Data Set 6.';
+  StrCheckingElevation = '  Checking elevations.';
+  StrWritingDataSet7 = '  Writing Data Set 7.';
+
 { TModflowDiscretizationWriter }
 
 class function TModflowDiscretizationWriter.Extension: string;
@@ -39,14 +54,14 @@ begin
     NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage('Writing Discretization Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingDiscretizati);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
 
     // data set 2
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     Model.WriteLAYCB(self);
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -55,7 +70,7 @@ begin
     end;
 
     // data set 3
-    frmProgressMM.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage(StrWritingDataSet3);
     Model.ModflowGrid.WriteDELR(self);
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -64,7 +79,7 @@ begin
     end;
 
     // data set 4
-    frmProgressMM.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage(StrWritingDataSet4);
     Model.ModflowGrid.WriteDELC(self);
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -72,7 +87,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Checking column widths.');
+    frmProgressMM.AddMessage(StrCheckingColumnWi);
     Model.ModflowGrid.CheckColumnWidths;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -80,7 +95,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Checking row height.');
+    frmProgressMM.AddMessage(StrCheckingRowHeigh);
     Model.ModflowGrid.CheckRowHeights;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -88,7 +103,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Checking row to column size ratios.');
+    frmProgressMM.AddMessage(StrCheckingRowToCo);
     Model.ModflowGrid.CheckRowToColumnRatios;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -97,7 +112,7 @@ begin
     end;
 
     // data set 5
-    frmProgressMM.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage(StrWritingDataSet5);
     Model.ModflowGrid.WriteTOP(self);
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -107,7 +122,7 @@ begin
     Model.DataArrayManager.CacheDataArrays;
 
     // data set 6
-    frmProgressMM.AddMessage('  Writing Data Set 6.');
+    frmProgressMM.AddMessage(StrWritingDataSet6);
     Model.ModflowGrid.WriteBOTM(self, Model);
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -116,7 +131,7 @@ begin
     end;
     Model.DataArrayManager.CacheDataArrays;
 
-    frmProgressMM.AddMessage('  Checking elevations.');
+    frmProgressMM.AddMessage(StrCheckingElevation);
     Model.ModflowGrid.CheckElevations;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -125,7 +140,7 @@ begin
     end;
 
     // data set 7
-    frmProgressMM.AddMessage('  Writing Data Set 7.');
+    frmProgressMM.AddMessage(StrWritingDataSet7);
     Model.ModflowFullStressPeriods.WriteStressPeriods(self);
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then

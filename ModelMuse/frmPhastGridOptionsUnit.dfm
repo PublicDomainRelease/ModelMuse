@@ -32,7 +32,6 @@ inherited frmPhastGridOptions: TfrmPhastGridOptions
       'Y'
       'Z')
     TabOrder = 0
-    ExplicitWidth = 283
   end
   object rgPrintOrientation: TRadioGroup
     Left = 8
@@ -46,7 +45,6 @@ inherited frmPhastGridOptions: TfrmPhastGridOptions
       'XY'
       'XZ')
     TabOrder = 1
-    ExplicitWidth = 283
   end
   object btnOK: TBitBtn
     Left = 104

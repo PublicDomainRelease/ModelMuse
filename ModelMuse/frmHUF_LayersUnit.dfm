@@ -31,13 +31,13 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       Align = alBottom
       ColumnCollection = <
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end>
       ControlCollection = <
         item
@@ -302,10 +302,6 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       HelpKeyword = 'Parameters_Tab'
       Caption = 'Parameters'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgParameters: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -347,6 +343,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -376,6 +373,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
               'SYTP ')
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end
           item
@@ -397,6 +395,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -418,10 +417,9 @@ inherited frmHUF_Layers: TfrmHUF_Layers
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
-        ExplicitLeft = 2
-        ExplicitTop = 2
       end
     end
     object tabPrint: TTabSheet

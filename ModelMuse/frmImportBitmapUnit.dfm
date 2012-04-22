@@ -9,8 +9,6 @@ inherited frmImportBitmap: TfrmImportBitmap
   VertScrollBar.Range = 98
   ActiveControl = btnSelectImage
   Caption = 'Import Image'
-  ExplicitLeft = -86
-  ExplicitTop = -33
   ExplicitWidth = 800
   ExplicitHeight = 594
   PixelsPerInch = 96
@@ -174,13 +172,13 @@ inherited frmImportBitmap: TfrmImportBitmap
       BevelOuter = bvNone
       ColumnCollection = <
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end>
       ControlCollection = <
         item
@@ -207,7 +205,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         135
         32)
       object sbAddRow: TSpeedButton
-        Left = 10
+        Left = 11
         Top = 5
         Width = 23
         Height = 22
@@ -225,11 +223,10 @@ inherited frmImportBitmap: TfrmImportBitmap
         ParentShowHint = False
         ShowHint = True
         OnClick = sbAddRowClick
-        ExplicitLeft = 11
         ExplicitTop = 6
       end
       object sbInsertRow: TSpeedButton
-        Left = 54
+        Left = 56
         Top = 5
         Width = 23
         Height = 22
@@ -247,11 +244,10 @@ inherited frmImportBitmap: TfrmImportBitmap
         ParentShowHint = False
         ShowHint = True
         OnClick = sbInsertRowClick
-        ExplicitLeft = 56
         ExplicitTop = 6
       end
       object sbDeleteRow: TSpeedButton
-        Left = 100
+        Left = 101
         Top = 5
         Width = 23
         Height = 22
@@ -334,6 +330,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -355,6 +352,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -376,6 +374,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -397,6 +396,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -418,6 +418,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
     OnEndUpdate = dgPointsEndUpdate

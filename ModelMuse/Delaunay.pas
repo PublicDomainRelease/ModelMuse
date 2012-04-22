@@ -171,6 +171,10 @@ implementation
 uses
   Math, FastGEO, TripackProcedures;
 
+resourcestring
+  StrErrorInTRMESH = 'Error in TRMESH';
+  StrErrorInTRLIST2 = 'Error in TRLIST2';
+
 function GetLimitsAndEpsilon(const X, Y: TFloatArray;
   out XMax, XMin, YMax, YMin: double): double;
 var
@@ -260,7 +264,7 @@ begin
   TRMESH(N, XArray, YArray, LIST, LPTR, LEND, LNEW, NEAR, NEXT, DIST, IER);
   if IER <> 0 then
   begin
-    Raise TDelaunayException.Create('Error in TRMESH');
+    Raise TDelaunayException.Create(StrErrorInTRMESH);
   end;
   NT := 2*N-5;
   SetLength(LTRI, NT, NROW);
@@ -270,7 +274,7 @@ begin
   Assert(Length(LTRI) >= NT);
   if IER <> 0 then
   begin
-    Raise TDelaunayException.Create('Error in TRLIST2');
+    Raise TDelaunayException.Create(StrErrorInTRLIST2);
   end;
   AVoronoiDiagram.Free;
   LocalEpsilon := GetLimitsAndEpsilon(XArray, YArray, XMax, XMin, YMax, YMin);

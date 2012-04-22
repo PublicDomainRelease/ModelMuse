@@ -32,26 +32,35 @@ inherited frmSelectObjects: TfrmSelectObjects
       Top = 134
       Width = 108
       Height = 33
-      TabOrder = 6
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 6
     end
     object btnOK: TBitBtn
       Left = 116
       Top = 134
       Width = 108
       Height = 33
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 5
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnHelp: TBitBtn
       Left = 4
       Top = 134
       Width = 108
       Height = 33
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 4
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnSelectAll: TButton
       Left = 4
@@ -169,10 +178,6 @@ inherited frmSelectObjects: TfrmSelectObjects
     object tabSide: TTabSheet
       Caption = 'Side'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lvSide: TListView
         Left = 0
         Top = 0

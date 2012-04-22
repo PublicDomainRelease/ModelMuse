@@ -2,7 +2,7 @@ unit ModflowGageUnit;
 
 interface
 
-uses Classes, GoPhastTypes, ModflowBoundaryUnit;
+uses Classes, GoPhastTypes, ModflowBoundaryUnit, SysUtils;
 
 Type
   TStreamGage = class(TGoPhastPersistent)
@@ -41,6 +41,9 @@ implementation
 
 uses
   RbwParser, ScreenObjectUnit, DataSetUnit, PhastModelUnit;
+
+resourcestring
+  StrAssignedByS = 'Assigned by %s';
 
 { TStreamGage }
 
@@ -115,7 +118,7 @@ begin
         end;
         LocalModel.AdjustCellPosition(Cell);
       end;
-      Annotation := 'Assigned by ' + ScreenObject.Name;
+      Annotation := Format(StrAssignedByS, [ScreenObject.Name]);
       if Gage0 then
       begin
         DataArray := DataSets[0];

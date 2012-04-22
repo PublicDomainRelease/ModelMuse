@@ -103,6 +103,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -124,6 +125,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -145,6 +147,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -166,6 +169,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
   end

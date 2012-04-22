@@ -28,6 +28,7 @@ type
     ilCheckImages: TImageList;
     rgExportObjectType: TRadioGroup;
     rgHfbDimensions: TRadioGroup;
+    comboModel: TComboBox;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure tvExportItemsMouseDown(Sender: TObject; Button: TMouseButton;
@@ -60,7 +61,7 @@ type
     procedure ExportElementShapes(DataSets, TimeLists: TList);
     procedure ExportHfbShapes(Edits: TList);
     procedure Assign2DShapeGeometry(Shape: TShapeObject; ColIndex,
-      RowIndex: Integer; LocalGrid: TCustomModelGrid; EvaluatedAt: TEvaluatedAt);
+      RowIndex: Integer; EvaluatedAt: TEvaluatedAt);
     function GetShapeType: Integer;
     // A side effect of @name is to add the data sets in
     // the @link(TCustomTimeList)s in "TimeLists" to "DataSets".
@@ -75,7 +76,7 @@ type
     procedure Export2DNodeShapes(DataSets: TList);
     procedure Export3DNodeShapes(DataSets: TList);
     procedure Assign3DShapeGeometry(Shape: TShapeObject; ColIndex,
-      RowIndex, LayerIndex: Integer; LocalGrid: TCustomModelGrid; EvaluatedAt: TEvaluatedAt);
+      RowIndex, LayerIndex: Integer; EvaluatedAt: TEvaluatedAt);
     procedure Assign3DID_Fields(ID, ColIndex, RowIndex, LayerIndex: Integer;
       ShapeDataBase: TXBase);
     procedure Assign3DDataSetValuesToDataBase(DataSets: TList;
@@ -83,6 +84,7 @@ type
       RowIndex, LayerIndex: integer; ShapeDataBase: TXBase);
     procedure Export2DElementShapes(DataSets: TList);
     procedure Export3DElementShapes(DataSets: TList);
+    procedure GetModels;
     { Private declarations }
   public
     { Public declarations }
@@ -100,6 +102,15 @@ uses Math, DataSetUnit, ClassificationUnit, PhastModelUnit, frmGoPhastUnit,
   PhastDataSets, RealListUnit, ModflowTimeUnit,
   TimeUnit, FastGEO, RbwParser, EdgeDisplayUnit, ModelMuseUtilities,
   frameCustomColorUnit;
+
+resourcestring
+  StrSAlreadyExists = '%s already exists.  Do you want to replace it?';
+  StrParentModel = 'Parent model';
+  StrElementShapefileN = '&Element Shapefile name';
+  StrNodeShapefileName = '&Node Shapefile name';
+  StrCellShapefileName = '&Cell Shapefile name';
+  StrCellCornerShapefi = '&Cell-Corner Shapefile name';
+  StrMODFLOWHorizontalF = 'MODFLOW Horizontal Flow Barrier';
 
 {$R *.dfm}
 
@@ -317,6 +328,7 @@ end;
 
 procedure TfrmExportShapefile.GetData;
 begin
+  GetModels;
   GetDataSets;
   GetBoundaryConditions;
   InitializeNodeStates;
@@ -363,14 +375,13 @@ begin
   end;
 
   ShapeFileName := jfeNodes.FileName;
-  if FileExists(ShapeFileName) and (MessageDlg(ShapeFileName
-    + ' already exists.  Do you want to replace it?',
+  if FileExists(ShapeFileName)
+    and (MessageDlg(Format(StrSAlreadyExists, [ShapeFileName]),
     mtInformation, [mbYes, mbNo], 0) <> mrYes) then
   begin
     Exit;
   end;
 
-  LocalGrid := frmGoPhast.Grid;
   LayerLimit := LocalGrid.LayerCount+1;
 
   Fields := TStringList.Create;
@@ -410,14 +421,13 @@ begin
   end;
 
   ShapeFileName := jfeElements.FileName;
-  if FileExists(ShapeFileName) and (MessageDlg(ShapeFileName
-    + ' already exists.  Do you want to replace it?',
+  if FileExists(ShapeFileName)
+    and (MessageDlg(Format(StrSAlreadyExists, [ShapeFileName]),
     mtInformation, [mbYes, mbNo], 0) <> mrYes) then
   begin
     Exit;
   end;
 
-  LocalGrid := frmGoPhast.Grid;
   LayerLimit := LocalGrid.LayerCount;
 
   Fields := TStringList.Create;
@@ -476,14 +486,12 @@ begin
   end;
 
   ShapeFileName := jfeHorizontalFlowBarrier.FileName;
-  if FileExists(ShapeFileName) and (MessageDlg(ShapeFileName
-    + ' already exists.  Do you want to replace it?',
+  if FileExists(ShapeFileName)
+    and (MessageDlg(Format(StrSAlreadyExists, [ShapeFileName]),
     mtInformation, [mbYes, mbNo], 0) <> mrYes) then
   begin
     Exit;
   end;
-
-  LocalGrid := frmGoPhast.Grid;
 
   Names := TStringList.Create;
   Fields := TStringList.Create;
@@ -650,8 +658,7 @@ begin
 end;
 
 procedure TfrmExportShapefile.Assign2DShapeGeometry(Shape: TShapeObject;
-  ColIndex: Integer; RowIndex: Integer;  LocalGrid: TCustomModelGrid;
-  EvaluatedAt: TEvaluatedAt);
+  ColIndex: Integer; RowIndex: Integer; EvaluatedAt: TEvaluatedAt);
 var
   APoint: TPoint2D;
 begin
@@ -744,8 +751,7 @@ begin
 end;
 
 procedure TfrmExportShapefile.Assign3DShapeGeometry(Shape: TShapeObject;
-  ColIndex, RowIndex, LayerIndex: Integer;  LocalGrid: TCustomModelGrid;
-  EvaluatedAt: TEvaluatedAt);
+  ColIndex, RowIndex, LayerIndex: Integer; EvaluatedAt: TEvaluatedAt);
 var
   APoint: T3DRealPoint;
   Cell: T3DCellCoordinates;
@@ -765,8 +771,10 @@ begin
         SetLength(Shape.FZArray, 1);
         SetLength(Shape.FMArray, 1);
         case EvaluatedAt of
-          eaBlocks: APoint := LocalGrid.RotatedThreeDElementCenter(ColIndex, RowIndex, LayerIndex);
-          eaNodes: APoint := LocalGrid.RotatedThreeDElementCorner(ColIndex, RowIndex, LayerIndex);
+          eaBlocks: APoint := LocalGrid.RotatedThreeDElementCenter(
+            ColIndex, RowIndex, LayerIndex);
+          eaNodes: APoint := LocalGrid.RotatedThreeDElementCorner(
+            ColIndex, RowIndex, LayerIndex);
           else Assert(False);
         end;
         
@@ -794,13 +802,15 @@ begin
               Shape.FParts[2] := 20;
               Shape.FPartTypes[2] := ptTriangleStrip;
 
-              Element := LocalGrid.ElementCoordinates[ColIndex, RowIndex, LayerIndex];
+              Element := LocalGrid.ElementCoordinates[
+                ColIndex, RowIndex, LayerIndex];
 
               Shape.FPoints[0] := ConvertPoint(Element.TopCenter);
               Shape.FZArray[0] := Element.TopCenter.Z;
               for PointIndex := 0 to 7 do
               begin
-                Shape.FPoints[PointIndex+1] := ConvertPoint(Element.TopEdge[PointIndex]);
+                Shape.FPoints[PointIndex+1] :=
+                  ConvertPoint(Element.TopEdge[PointIndex]);
                 Shape.FZArray[PointIndex+1] := Element.TopEdge[PointIndex].Z;
               end;
               Shape.FPoints[9] := ConvertPoint(Element.TopEdge[0]);
@@ -810,18 +820,24 @@ begin
               Shape.FZArray[10] := Element.BottomCenter.Z;
               for PointIndex := 0 to 7 do
               begin
-                Shape.FPoints[PointIndex+11] := ConvertPoint(Element.BottomEdge[PointIndex]);
-                Shape.FZArray[PointIndex+11] := Element.BottomEdge[PointIndex].Z;
+                Shape.FPoints[PointIndex+11] :=
+                  ConvertPoint(Element.BottomEdge[PointIndex]);
+                Shape.FZArray[PointIndex+11] :=
+                  Element.BottomEdge[PointIndex].Z;
               end;
               Shape.FPoints[19] := ConvertPoint(Element.BottomEdge[0]);
               Shape.FZArray[19] := Element.BottomEdge[0].Z;
 
               for PointIndex := 0 to 7 do
               begin
-                Shape.FPoints[PointIndex*2+20] := ConvertPoint(Element.TopEdge[PointIndex]);
-                Shape.FZArray[PointIndex*2+20] := Element.TopEdge[PointIndex].Z;
-                Shape.FPoints[PointIndex*2+21] := ConvertPoint(Element.BottomEdge[PointIndex]);
-                Shape.FZArray[PointIndex*2+21] := Element.BottomEdge[PointIndex].Z;
+                Shape.FPoints[PointIndex*2+20] :=
+                  ConvertPoint(Element.TopEdge[PointIndex]);
+                Shape.FZArray[PointIndex*2+20] :=
+                  Element.TopEdge[PointIndex].Z;
+                Shape.FPoints[PointIndex*2+21] :=
+                  ConvertPoint(Element.BottomEdge[PointIndex]);
+                Shape.FZArray[PointIndex*2+21] :=
+                  Element.BottomEdge[PointIndex].Z;
               end;
               Shape.FPoints[36] := ConvertPoint(Element.TopEdge[0]);
               Shape.FZArray[36] := Element.TopEdge[0].Z;
@@ -949,7 +965,7 @@ begin
     LayerCharacters := 0;
   end;
   Fields.Add('ID=N');
-  LocalGrid := frmGoPhast.Grid;
+//  LocalGrid := frmGoPhast.Grid;
   for Index := 0 to DataSets.Count - 1 do
   begin
     DataArray := DataSets[Index];
@@ -1008,7 +1024,8 @@ begin
             begin
               SuffixStr := AnsiString(IntToStr(SuffixInt));
               Inc(SuffixInt);
-              RootName := AnsiString(Copy(string(RootName), 1, 9 - LayerCharacters-Length(SuffixStr)))
+              RootName := AnsiString(Copy(string(RootName), 1,
+                9 - LayerCharacters-Length(SuffixStr)))
                 + SuffixStr;
             end;
           end;
@@ -1073,7 +1090,8 @@ begin
           DataArray := TimeList.Items[DataSetIndex];
           DataSets.Add(DataArray);
           RootName := AnsiString(UpperCase(TimeList.Name));
-          RootName := AnsiString(StringReplace(string(RootName), ' ', '_', [rfReplaceAll]));
+          RootName := AnsiString(StringReplace(string(RootName),
+            ' ', '_', [rfReplaceAll]));
           if Length(RootName) > 8 - LayerCharacters - TimeCharacters then
           begin
             SetLength(RootName, 8 - LayerCharacters - TimeCharacters);
@@ -1102,7 +1120,8 @@ begin
             begin
               FieldName := TimeRoot + 'L' + AnsiString(IntToStr(LayerIndex));
               FieldName := FixShapeFileFieldName(FieldName);
-              Fields.AddObject(string(FieldName + '=' + FieldFormat), DataArray);
+              Fields.AddObject(string(FieldName + '='
+                + FieldFormat), DataArray);
             end;
           end;
         end;
@@ -1200,7 +1219,8 @@ var
 begin
   ShapeFileWriter := TShapefileGeometryWriter.Create(ShapeType, True);
   try
-    ShapeFileWriter.Capacity := LocalGrid.RowCount * LocalGrid.ColumnCount * LocalGrid.LayerCount;
+    ShapeFileWriter.Capacity := LocalGrid.RowCount * LocalGrid.ColumnCount
+      * LocalGrid.LayerCount;
     Assert(LocalGrid.ColumnDirection = cdWestToEast);
     ID := 0;
     for LayerIndex := 0 to LocalGrid.LayerCount - 1 do
@@ -1213,7 +1233,7 @@ begin
           Shape := TShapeObject.Create;
           Shape.FShapeType := ShapeType;
           ShapeFileWriter.AddShape(Shape);
-          Assign3DShapeGeometry(Shape, ColIndex, RowIndex, LayerIndex, LocalGrid, eaBlocks);
+          Assign3DShapeGeometry(Shape, ColIndex, RowIndex, LayerIndex, eaBlocks);
           Assign3DID_Fields(ID, ColIndex, RowIndex, LayerIndex, ShapeDataBase);
           ShapeDataBase.PostChanges;
         end;
@@ -1228,7 +1248,8 @@ begin
         begin
           for ColIndex := 0 to LocalGrid.ColumnCount - 1 do
           begin
-            Assign3DDataSetValuesToDataBase(DataSets, DataSetIndex, Names, ColIndex, RowIndex, LayerIndex, ShapeDataBase);
+            Assign3DDataSetValuesToDataBase(DataSets, DataSetIndex, Names,
+              ColIndex, RowIndex, LayerIndex, ShapeDataBase);
             ShapeDataBase.PostChanges;
             if (RowIndex < LocalGrid.RowCount - 1)
               or (ColIndex < LocalGrid.ColumnCount - 1)
@@ -1248,6 +1269,34 @@ begin
   finally
     ShapeFileWriter.Free;
   end;
+end;
+
+procedure TfrmExportShapefile.GetModels;
+var
+  ChildModel: TChildModel;
+  ChildIndex: Integer;
+begin
+  case frmGoPhast.ModelSelection of
+    msPhast, msModflow, msModflowNWT:
+      begin
+        comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel);
+        comboModel.Visible := False;
+      end;
+    msModflowLGR:
+      begin
+        comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel);
+        for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+        begin
+          ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+          comboModel.Items.AddObject(ChildModel.ModelName, ChildModel);
+        end;
+        comboModel.Visible := True;
+      end;
+  else
+    Assert(False);
+  end;
+  comboModel.ItemIndex := comboModel.Items.IndexOfObject(
+    frmGoPhast.PhastModel.SelectedModel);
 end;
 
 
@@ -1274,7 +1323,7 @@ begin
         Shape := TShapeObject.Create;
         Shape.FShapeType := ShapeType;
         ShapeFileWriter.AddShape(Shape);
-        Assign2DShapeGeometry(Shape, ColIndex, RowIndex, LocalGrid, eaBlocks);
+        Assign2DShapeGeometry(Shape, ColIndex, RowIndex, eaBlocks);
         Assign2DID_Fields(ID, ColIndex, RowIndex, ShapeDataBase);
         ShapeDataBase.PostChanges;
       end;
@@ -1286,7 +1335,8 @@ begin
       begin
         for ColIndex := 0 to LocalGrid.ColumnCount - 1 do
         begin
-          Assign2DDataSetValuesToDataBase(DataSets, DataSetIndex, Names, LayerLimit, ColIndex, RowIndex, ShapeDataBase);
+          Assign2DDataSetValuesToDataBase(DataSets, DataSetIndex, Names,
+            LayerLimit, ColIndex, RowIndex, ShapeDataBase);
           ShapeDataBase.PostChanges;
           if (RowIndex < LocalGrid.RowCount - 1)
             or (ColIndex < LocalGrid.ColumnCount - 1) then
@@ -1393,7 +1443,8 @@ var
 begin
   ShapeFileWriter := TShapefileGeometryWriter.Create(ShapeType, True);
   try
-    ShapeFileWriter.Capacity := (LocalGrid.RowCount + 1) * (LocalGrid.ColumnCount + 1) * (LocalGrid.LayerCount + 1);
+    ShapeFileWriter.Capacity := (LocalGrid.RowCount + 1)
+      * (LocalGrid.ColumnCount + 1) * (LocalGrid.LayerCount + 1);
     Assert(LocalGrid.ColumnDirection = cdWestToEast);
     ID := 0;
     for LayerIndex := 0 to LocalGrid.LayerCount do
@@ -1406,7 +1457,7 @@ begin
           Shape := TShapeObject.Create;
           Shape.FShapeType := ShapeType;
           ShapeFileWriter.AddShape(Shape);
-          Assign3DShapeGeometry(Shape, ColIndex, RowIndex, LayerIndex, LocalGrid, eaNodes);
+          Assign3DShapeGeometry(Shape, ColIndex, RowIndex, LayerIndex, eaNodes);
           Assign3DID_Fields(ID, ColIndex, RowIndex, LayerIndex, ShapeDataBase);
           ShapeDataBase.PostChanges;
         end;
@@ -1422,7 +1473,8 @@ begin
         begin
           for ColIndex := 0 to LocalGrid.ColumnCount do
           begin
-            Assign3DDataSetValuesToDataBase(DataSets, DataSetIndex, Names, ColIndex, RowIndex, LayerIndex, ShapeDataBase);
+            Assign3DDataSetValuesToDataBase(DataSets, DataSetIndex,
+              Names, ColIndex, RowIndex, LayerIndex, ShapeDataBase);
             ShapeDataBase.PostChanges;
             if (RowIndex < LocalGrid.RowCount)
               or (ColIndex < LocalGrid.ColumnCount)
@@ -1456,7 +1508,8 @@ var
 begin
   ShapeFileWriter := TShapefileGeometryWriter.Create(ShapeType, True);
   try
-    ShapeFileWriter.Capacity := (LocalGrid.RowCount + 1) * (LocalGrid.ColumnCount + 1);
+    ShapeFileWriter.Capacity := (LocalGrid.RowCount + 1)
+      * (LocalGrid.ColumnCount + 1);
     Assert(LocalGrid.ColumnDirection = cdWestToEast);
     ID := 0;
     for RowIndex := 0 to LocalGrid.RowCount do
@@ -1467,7 +1520,7 @@ begin
         Shape := TShapeObject.Create;
         Shape.FShapeType := ShapeType;
         ShapeFileWriter.AddShape(Shape);
-        Assign2DShapeGeometry(Shape, ColIndex, RowIndex, LocalGrid, eaNodes);
+        Assign2DShapeGeometry(Shape, ColIndex, RowIndex, eaNodes);
         Assign2DID_Fields(ID, ColIndex, RowIndex, ShapeDataBase);
         ShapeDataBase.PostChanges;
       end;
@@ -1480,9 +1533,11 @@ begin
       begin
         for ColIndex := 0 to LocalGrid.ColumnCount do
         begin
-          Assign2DDataSetValuesToDataBase(DataSets, DataSetIndex, Names, LayerLimit, ColIndex, RowIndex, ShapeDataBase);
+          Assign2DDataSetValuesToDataBase(DataSets, DataSetIndex, Names,
+            LayerLimit, ColIndex, RowIndex, ShapeDataBase);
           ShapeDataBase.PostChanges;
-          if (RowIndex < LocalGrid.RowCount) or (ColIndex < LocalGrid.ColumnCount) then
+          if (RowIndex < LocalGrid.RowCount)
+            or (ColIndex < LocalGrid.ColumnCount) then
           begin
             ShapeDataBase.GotoNext;
           end;
@@ -1511,13 +1566,13 @@ begin
       end;
     msPhast:
       begin
-        lblElements.Caption := '&Element Shapefile name';
-        lblNodes.Caption := '&Node Shapefile name';
+        lblElements.Caption := StrElementShapefileN;
+        lblNodes.Caption := StrNodeShapefileName;
       end;
     msModflow, msModflowLGR, msModflowNWT:
       begin
-        lblElements.Caption := '&Cell Shapefile name';
-        lblNodes.Caption := '&Cell-Corner Shapefile name';
+        lblElements.Caption := StrCellShapefileName;
+        lblNodes.Caption := StrCellCornerShapefi;
       end;
   else
     Assert(False);
@@ -1533,8 +1588,8 @@ begin
   ShapeDataBase.UpdFieldInt('ID', ID);
 end;
 
-procedure TfrmExportShapefile.Assign3DID_Fields(ID, ColIndex, RowIndex, LayerIndex: Integer;
-  ShapeDataBase: TXBase);
+procedure TfrmExportShapefile.Assign3DID_Fields(ID,
+  ColIndex, RowIndex, LayerIndex: Integer; ShapeDataBase: TXBase);
 begin
   ShapeDataBase.AppendBlank;
   ShapeDataBase.UpdFieldInt('ROW', RowIndex + 1);
@@ -1555,15 +1610,32 @@ var
   HfbEdits: TList;
   DataArray: TDataArray;
   TimeList: TCustomTimeList;
+  LocalModel: TCustomModel;
+  TimeLists: TStringList;
+  TimeListIndex: Integer;
+  EdgeDisplay: TEdgeDisplayEdit;
 begin
   Screen.Cursor := crHourGlass;
   try
+    LocalModel := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
+    LocalGrid := LocalModel.Grid;
     NodeDataSets := TList.Create;
     NodeTimeLists := TList.Create;
     ElementDataSets := TList.Create;
     ElementTimeLists := TList.Create;
     HfbEdits:= TList.Create;
+    TimeLists := TStringList.Create;
     try
+      if LocalModel <> frmGoPhast.PhastModel then
+      begin
+        for TimeListIndex := 0 to LocalModel.TimeListCount - 1 do
+        begin
+          TimeList := LocalModel.TimeLists[TimeListIndex];
+          Assert(TimeList.Name <> '');
+          TimeLists.AddObject(TimeList.Name, TimeList);
+        end;
+        TimeLists.Sort;
+      end;
       for Index := 0 to tvExportItems.Items.Count - 1 do
       begin
         Node := tvExportItems.Items[Index];
@@ -1577,6 +1649,11 @@ begin
           else if (AnObject is TDataArray) then
           begin
             DataArray := TDataArray(AnObject);
+            if LocalModel <> frmGoPhast.PhastModel then
+            begin
+              DataArray := LocalModel.DataArrayManager.
+                GetDataSetByName(DataArray.Name)
+            end;
             case DataArray.EvaluatedAt of
               eaBlocks: ElementDataSets.Add(DataArray);
               eaNodes: NodeDataSets.Add(DataArray);
@@ -1586,6 +1663,13 @@ begin
           else if (AnObject is TCustomTimeList) then
           begin
             TimeList := TCustomTimeList(AnObject);
+            if LocalModel <> frmGoPhast.PhastModel then
+            begin
+              TimeListIndex := TimeLists.IndexOf(TimeList.Name);
+              Assert(TimeListIndex >= 0);
+              TimeList := TimeLists.Objects[TimeListIndex] as TCustomTimeList;
+            end;
+            TimeList.Initialize;
             if TimeList is TPhastTimeList then
             begin
               NodeTimeLists.Add(TimeList);
@@ -1597,8 +1681,12 @@ begin
           end
           else
           begin
-            Assert(AnObject is TEdgeDisplayEdit);
-            HfbEdits.Add(AnObject)
+            EdgeDisplay := AnObject as TEdgeDisplayEdit;
+            if LocalModel <> frmGoPhast.PhastModel then
+            begin
+              EdgeDisplay.Edge := LocalModel.HfbDisplayer;
+            end;
+            HfbEdits.Add(EdgeDisplay)
           end;
         end;
       end;
@@ -1606,6 +1694,7 @@ begin
       ExportElementShapes(ElementDataSets, ElementTimeLists);
       ExportHfbShapes(HfbEdits);
     finally
+      TimeLists.Free;
       ElementDataSets.Free;
       ElementTimeLists.Free;
       NodeDataSets.Free;
@@ -1681,7 +1770,7 @@ begin
     end;
     FEdgeEdits.Clear;
     List := TStringList.Create;
-    DataSetClassifications.AddObject('MODFLOW Horizontal Flow Barrier', List);
+    DataSetClassifications.AddObject(StrMODFLOWHorizontalF, List);
     for Index := 0 to frmGoPhast.PhastModel.
       HfbDisplayer.RealValueTypeCount - 1 do
     begin

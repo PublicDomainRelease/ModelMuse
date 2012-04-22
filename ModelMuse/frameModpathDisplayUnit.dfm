@@ -2,27 +2,23 @@ object frameModpathDisplay: TframeModpathDisplay
   Left = 0
   Top = 0
   Width = 465
-  Height = 312
+  Height = 350
   TabOrder = 0
   object pcMain: TPageControl
     Left = 0
     Top = 0
     Width = 465
-    Height = 312
+    Height = 350
     ActivePage = tabBasic
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 467
-    ExplicitHeight = 327
+    ExplicitHeight = 333
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitHeight = 305
       DesignSize = (
         457
-        284)
+        322)
       object lblModpathFile: TLabel
         Left = 8
         Top = 8
@@ -69,6 +65,13 @@ object frameModpathDisplay: TframeModpathDisplay
         Height = 13
         Caption = 'lblMaxTime'
       end
+      object lblModelSelection: TLabel
+        Left = 8
+        Top = 273
+        Width = 73
+        Height = 13
+        Caption = 'Model selection'
+      end
       object fedModpathFile: TJvFilenameEdit
         Left = 8
         Top = 29
@@ -82,7 +85,6 @@ object frameModpathDisplay: TframeModpathDisplay
         DialogOptions = [ofHideReadOnly, ofFileMustExist]
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
-        ExplicitWidth = 440
       end
       object cbShowPathlines: TCheckBox
         Left = 8
@@ -125,7 +127,6 @@ object frameModpathDisplay: TframeModpathDisplay
           'Light Blue to Dark Blue'
           'Modified Spectral Scheme'
           'Stepped Sequential')
-        ExplicitWidth = 440
       end
       object jsColorExponent: TJvxSlider
         Left = 3
@@ -142,7 +143,7 @@ object frameModpathDisplay: TframeModpathDisplay
         Left = 159
         Top = 241
         Width = 65
-        Height = 26
+        Height = 21
         ButtonKind = bkClassic
         Increment = 0.010000000000000000
         MaxValue = 2.000000000000000000
@@ -155,26 +156,31 @@ object frameModpathDisplay: TframeModpathDisplay
         Left = 345
         Top = 241
         Width = 101
-        Height = 26
+        Height = 21
         ButtonKind = bkClassic
         MaxValue = 2147483647.000000000000000000
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
         Anchors = [akTop, akRight]
         TabOrder = 6
-        ExplicitLeft = 347
+      end
+      object comboModelSelection: TComboBox
+        Left = 8
+        Top = 292
+        Width = 241
+        Height = 21
+        Style = csDropDownList
+        TabOrder = 7
+        Visible = False
+        OnChange = comboModelSelectionChange
       end
     end
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         457
-        284)
+        322)
       object rgShow2D: TRadioGroup
         Left = 3
         Top = 3
@@ -210,7 +216,7 @@ object frameModpathDisplay: TframeModpathDisplay
         Left = 146
         Top = 125
         Width = 306
-        Height = 155
+        Height = 193
         Anchors = [akLeft, akTop, akBottom]
         ColCount = 3
         FixedCols = 0

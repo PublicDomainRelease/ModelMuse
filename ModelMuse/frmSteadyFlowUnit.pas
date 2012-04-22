@@ -157,6 +157,8 @@ uses frmGoPhastUnit;
 
 resourcestring
   StrSteadyFlow = 'steady flow';
+  StrInvalidS = 'Invalid %s';
+  StrInvalid0sOr1s = 'Invalid %0:s or %1:s';
 
 {$R *.dfm}
 
@@ -251,24 +253,24 @@ begin
     try
       if StrToFloat(rdeHeadTolerance.Text) = 0 then
       begin
-        ErrorMessages.Add('Invalid ' + lblHeadTolerance.Caption);
+        ErrorMessages.Add(Format(StrInvalidS, [lblHeadTolerance.Caption]));
       end;
       if StrToFloat(rdeFlowBalanceTolerance.Text) = 0 then
       begin
-        ErrorMessages.Add('Invalid ' + lblFlowBalanceTolerance.Caption);
+        ErrorMessages.Add(Format(StrInvalidS, [lblFlowBalanceTolerance.Caption]));
       end;
       if not cbDefaultMinTimeStep.Checked
         and not cbDefaultMaxTimeStep.Checked
         and (StrToFloat(rdeMinTimeStep.Text) > StrToFloat(rdeMaxTimeStep.Text))
           then
       begin
-        ErrorMessages.Add('Invalid ' + lblMinTimeStep.Caption
-          + ' or ' + lblMaxTimeStep.Caption);
+        ErrorMessages.Add(Format(StrInvalid0sOr1s,
+          [lblMinTimeStep.Caption, lblMaxTimeStep.Caption]));
       end;
       if not cbDefaultHeadChangeLimit.Checked
         and (StrToFloat(rdeHeadChangeLimit.Text) = 0) then
       begin
-        ErrorMessages.Add('Invalid ' + lblHeadChangeLimit.Caption);
+        ErrorMessages.Add(Format(StrInvalidS, [lblHeadChangeLimit.Caption]));
       end;
       result := ErrorMessages.Count = 0;
       if not result then

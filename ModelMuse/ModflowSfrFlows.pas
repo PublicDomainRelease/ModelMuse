@@ -85,6 +85,12 @@ uses Contnrs, DataSetUnit, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit,
   ModflowSfrUnit, frmFormulaErrorsUnit, frmErrorsAndWarningsUnit, GoPhastTypes, 
   frmGoPhastUnit, ModflowSfrChannelUnit;
 
+resourcestring
+  StrFlowForTheSFRPa = '(flow for the SFR package)';
+  StrPrecipitationForT = '(precipitation for the SFR package)';
+  StrEvaptotranspiration = '(evaptotranspiration for the SFR package)';
+  StrRunoffForTheSFR = '(runoff for the SFR package)';
+
 const
   FlowPosition = 0;
   PrecipitationPosition = 1;
@@ -372,8 +378,8 @@ begin
 
     Expression := nil;
     Formula := CurrentItem.Flow;
-    CurrentRecord.FlowAnnotation := 'Assigned by '
-      + ScrObj.Name + ' with formula = "' + Formula + '."';
+    CurrentRecord.FlowAnnotation := Format(StrAssignedBy0sWit,
+        [ScrObj.Name, Formula]);
     try
       Compiler.Compile(Formula);
       Expression := Compiler.CurrentExpression;
@@ -383,7 +389,7 @@ begin
     except on E: ERbwParserError do
       begin
         frmFormulaErrors.AddFormulaError(ScrObj.Name,
-          '(flow for the SFR package)',
+          StrFlowForTheSFRPa,
           Formula, E.Message);
 
         CurrentItem.Flow := '0.';
@@ -396,8 +402,8 @@ begin
     CurrentRecord.Flow := Expression.DoubleResult;
 
     Formula := CurrentItem.Precipitation;
-    CurrentRecord.PrecipitationAnnotation := 'Assigned by '
-      + ScrObj.Name + ' with formula = "' + Formula + '."';
+    CurrentRecord.PrecipitationAnnotation := Format(StrAssignedBy0sWit,
+        [ScrObj.Name, Formula]);
     try
       Compiler.Compile(Formula);
       Expression := Compiler.CurrentExpression;
@@ -407,7 +413,7 @@ begin
     except on E: ERbwParserError do
       begin
         frmFormulaErrors.AddFormulaError(ScrObj.Name,
-          '(precipitation for the SFR package)',
+          StrPrecipitationForT,
           Formula, E.Message);
 
         CurrentItem.Precipitation := '0.';
@@ -420,8 +426,8 @@ begin
     CurrentRecord.Precipitation := Expression.DoubleResult;
 
     Formula := CurrentItem.Evapotranspiration;
-    CurrentRecord.EvapotranspirationAnnotation := 'Assigned by '
-      + ScrObj.Name + ' with formula = "' + Formula + '."';
+    CurrentRecord.EvapotranspirationAnnotation := Format(StrAssignedBy0sWit,
+        [ScrObj.Name, Formula]);
     try
       Compiler.Compile(Formula);
       Expression := Compiler.CurrentExpression;
@@ -431,7 +437,7 @@ begin
     except on E: ERbwParserError do
       begin
         frmFormulaErrors.AddFormulaError(ScrObj.Name,
-          '(evaptotranspiration for the SFR package)',
+          StrEvaptotranspiration,
           Formula, E.Message);
 
         CurrentItem.Evapotranspiration := '0.';
@@ -444,8 +450,8 @@ begin
     CurrentRecord.Evapotranspiration := Expression.DoubleResult;
 
     Formula := CurrentItem.Runnoff;
-    CurrentRecord.RunnoffAnnotation := 'Assigned by '
-      + ScrObj.Name + ' with formula = "' + Formula + '."';
+    CurrentRecord.RunnoffAnnotation := Format(StrAssignedBy0sWit,
+        [ScrObj.Name, Formula]);
     try
       Compiler.Compile(Formula);
       Expression := Compiler.CurrentExpression;
@@ -455,7 +461,7 @@ begin
     except on E: ERbwParserError do
       begin
         frmFormulaErrors.AddFormulaError(ScrObj.Name,
-          '(runoff for the SFR package)',
+          StrRunoffForTheSFR,
           Formula, E.Message);
 
         CurrentItem.Runnoff := '0.';

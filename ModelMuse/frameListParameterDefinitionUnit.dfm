@@ -123,6 +123,7 @@ object frameListParameterDefinition: TframeListParameterDefinition
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -144,6 +145,7 @@ object frameListParameterDefinition: TframeListParameterDefinition
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
     OnEndUpdate = dgParametersEndUpdate

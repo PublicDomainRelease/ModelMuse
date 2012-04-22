@@ -7,6 +7,10 @@ interface
 uses
   Windows, SysUtils, Graphics, OpenGL12x, GoPhastTypes;
 
+resourcestring
+  StrSorryItLooksLike = 'Sorry. It looks like some other program has locked ' +
+  '%s. You will need to close the other program.';
+
 // @abstract(@name gets the red, green, and blue components from a TColor
 // in a form suitable for use with OpenGL.)
 procedure ExtractColorComponents(const AColor: TColor;
@@ -75,9 +79,14 @@ function FileLength(fileName : string) : Int64;
 
 function IsWOW64: Boolean;
 
+procedure CantOpenFileMessage(AFileName: string);
+
 implementation
 
-uses ColorSchemes, JvCreateProcess, AnsiStrings;
+uses ColorSchemes, JvCreateProcess, AnsiStrings, Dialogs;
+
+resourcestring
+  StrBadProcessHandle = 'Bad process handle';
 
 function FileLength(fileName : string) : Int64;
  var
@@ -343,11 +352,17 @@ begin
   if Assigned(IsWow64Process) then
   begin
     if not IsWow64Process(GetCurrentProcess, IsWow64Result) then
-      raise Exception.Create('Bad process handle');
+      raise Exception.Create(StrBadProcessHandle);
     Result := IsWow64Result;
   end
   else
     Result := False;
+end;
+
+procedure CantOpenFileMessage(AFileName: string);
+begin
+  Beep;
+  MessageDlg(Format(StrSorryItLooksLike, [AFileName]), mtError, [mbOK], 0);
 end;
 
 end.

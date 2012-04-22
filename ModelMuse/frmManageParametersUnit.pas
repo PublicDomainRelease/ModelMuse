@@ -87,6 +87,12 @@ resourcestring
   'Pval file.';
   StrErrorReadingPvalF2 = 'Error reading Pval file. The following parameter n' +
   'ames from the Pval file are not included in the model.'#13#10'%s';
+  StrName = 'Name';
+  StrPackage = 'Package';
+  StrType = 'Type';
+  StrValue = 'Value';
+  StrMultiplierArray = 'Multiplier Array';
+  StrZoneArray = 'Zone Array';
 
 {$R *.dfm}
 type
@@ -369,12 +375,12 @@ begin
 
   rdgParameters.BeginUpdate;
   try
-    rdgParameters.Cells[Ord(pcName), 0] := 'Name';
-    rdgParameters.Cells[Ord(pcPackage), 0] := 'Package';
-    rdgParameters.Cells[Ord(pcType), 0] := 'Type';
-    rdgParameters.Cells[Ord(pcValue), 0] := 'Value';
-    rdgParameters.Cells[Ord(pcMult), 0] := 'Multiplier Array';
-    rdgParameters.Cells[Ord(pcZone), 0] := 'Zone Array';
+    rdgParameters.Cells[Ord(pcName), 0] := StrName;
+    rdgParameters.Cells[Ord(pcPackage), 0] := StrPackage;
+    rdgParameters.Cells[Ord(pcType), 0] := StrType;
+    rdgParameters.Cells[Ord(pcValue), 0] := StrValue;
+    rdgParameters.Cells[Ord(pcMult), 0] := StrMultiplierArray;
+    rdgParameters.Cells[Ord(pcZone), 0] := StrZoneArray;
   finally
     rdgParameters.EndUpdate;
   end;

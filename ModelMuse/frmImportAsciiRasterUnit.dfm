@@ -1,71 +1,79 @@
 inherited frmImportAsciiRaster: TfrmImportAsciiRaster
   Width = 579
-  Height = 286
+  Height = 314
   HelpKeyword = 'Import_ASCII_Raster_File'
   Caption = 'Import ASCII Raster File'
   ExplicitWidth = 579
-  ExplicitHeight = 286
+  ExplicitHeight = 314
   PixelsPerInch = 96
   TextHeight = 18
-  inherited lblInterpolator: TLabel
-    Top = 35
+  inherited lblDataSet: TLabel
+    Top = -21
     Anchors = [akLeft, akBottom]
-    ExplicitTop = 101
+    ExplicitTop = 13
+  end
+  inherited lblInterpolator: TLabel
+    Top = 31
+    Anchors = [akLeft, akBottom]
+    ExplicitTop = 65
   end
   inherited comboDataSets: TComboBox
-    Width = 527
-    Anchors = [akLeft, akTop, akRight]
-    ExplicitWidth = 527
+    Top = 3
+    Width = 519
+    Anchors = [akLeft, akBottom]
+    ExplicitTop = 3
+    ExplicitWidth = 519
   end
   inherited comboInterpolators: TComboBox
-    Top = 56
+    Top = 52
     Anchors = [akLeft, akBottom]
-    ExplicitTop = 56
+    ExplicitTop = 52
   end
   inherited cbEnclosedCells: TCheckBox
-    Left = 136
-    Top = -5
+    Left = 132
+    Top = -26
+    Anchors = [akLeft, akBottom]
     Visible = False
-    ExplicitLeft = 136
-    ExplicitTop = -5
+    ExplicitLeft = 132
+    ExplicitTop = -26
   end
   inherited cbIntersectedCells: TCheckBox
-    Top = 88
+    Top = 84
     Anchors = [akLeft, akBottom]
-    ExplicitTop = 154
+    ExplicitTop = 84
   end
   inherited cbInterpolation: TCheckBox
     Left = 8
-    Top = 120
+    Top = 116
     Anchors = [akLeft, akBottom]
     ExplicitLeft = 8
-    ExplicitTop = 186
+    ExplicitTop = 116
   end
   inherited rgEvaluatedAt: TRadioGroup
-    Top = 157
+    Top = 181
     Anchors = [akLeft, akBottom]
-    ExplicitTop = 223
+    ExplicitTop = 181
   end
   inherited btnOK: TBitBtn
-    Top = 169
+    Top = 193
     Anchors = [akLeft, akBottom]
     OnClick = btnOKClick
-    ExplicitTop = 235
+    ExplicitTop = 193
   end
   inherited btnCancel: TBitBtn
-    Top = 169
+    Top = 193
     Anchors = [akLeft, akBottom]
-    ExplicitTop = 235
+    ExplicitTop = 193
   end
   inherited btnHelp: TBitBtn
-    Top = 169
+    Top = 193
     Anchors = [akLeft, akBottom]
-    ExplicitTop = 235
+    ExplicitTop = 193
   end
   object rgFilterMethod: TRadioGroup [11]
     Left = 306
-    Top = 43
-    Width = 229
+    Top = 39
+    Width = 213
     Height = 108
     Anchors = [akLeft, akRight, akBottom]
     Caption = 'Filter method'
@@ -77,16 +85,12 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
       'Point closest to cell center'
       'None')
     TabOrder = 9
-    ExplicitTop = 109
-    ExplicitWidth = 237
   end
   object rdgFilesAndDataSets: TRbwDataGrid4 [12]
-    Left = 0
+    Left = 440
     Top = 0
-    Width = 571
-    Height = 29
-    Align = alTop
-    Anchors = [akLeft, akTop, akRight, akBottom]
+    Width = 131
+    Height = 150
     ColCount = 3
     DefaultColWidth = 20
     FixedCols = 1
@@ -124,6 +128,7 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = False
       end
       item
@@ -146,6 +151,7 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -168,9 +174,18 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
-    ExplicitHeight = 63
+  end
+  object comboModel: TComboBox [13]
+    Left = 8
+    Top = 153
+    Width = 281
+    Height = 26
+    Style = csDropDownList
+    Anchors = [akLeft, akBottom]
+    TabOrder = 11
   end
   inherited OpenDialogFile: TOpenDialog
     Filter = 'Text files (*.txt)|*.txt|All files (*.*)|*.*'

@@ -253,6 +253,7 @@ resourcestring
   StrAllObjects = 'All Objects';
   StrSetGridCellSize = 'Set Grid Cell Size';
   StrSetGridElementSize = 'Set Grid Element Size';
+  StrSetMeshElementSize = 'Set Mesh Element Size';
   StrDataSets = 'Data Sets';
   StrPhastBoundaryConditions = 'PHAST Boundary Conditions';
   StrSpecifiedHeadPhast = 'Specified Head';
@@ -347,6 +348,12 @@ begin
           begin
             Data.Caption := StrSetGridCellSize;
           end;
+        {$IFDEF Sutra}
+        msSutra:
+          begin
+            Data.Caption := StrSetMeshElementSize
+          end
+        {$ENDIF}
         else Assert(False);
       end;
       Node.CheckType := ctTriStateCheckBox;

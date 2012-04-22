@@ -332,6 +332,11 @@ uses RbwParser, ScreenObjectUnit, PhastModelUnit, ModflowTimeUnit,
   ModflowTransientListParameterUnit, frmGoPhastUnit, TempFiles,
   AbstractGridUnit;
 
+resourcestring
+  StrRechargeLayer = 'Recharge layer';
+  StrRechargeRate = 'Recharge rate';
+  StrRechargeRateMulti = ' recharge rate multiplier';
+
 const
   StrAssignedFromTheCe = 'assigned from the cell''s layer';
   RechPosition = 0;
@@ -1519,8 +1524,8 @@ procedure TRchLayerTimeListLink.CreateTimeLists;
 begin
   inherited;
   FRechargeLayerData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FRechargeLayerData.NonParamDescription := 'Recharge layer';
-  FRechargeLayerData.ParamDescription := ' recharge layer';
+  FRechargeLayerData.NonParamDescription := StrRechargeLayer;
+  FRechargeLayerData.ParamDescription := ' ' + LowerCase(StrRechargeLayer);
   FRechargeLayerData.DataType := rdtInteger;
   AddTimeList(FRechargeLayerData);
   if Model <> nil then
@@ -1541,8 +1546,8 @@ procedure TRchTimeListLink.CreateTimeLists;
 begin
   inherited;
   FRechargeRateData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FRechargeRateData.NonParamDescription := 'Recharge rate';
-  FRechargeRateData.ParamDescription := ' recharge rate multiplier';
+  FRechargeRateData.NonParamDescription := StrRechargeRate;
+  FRechargeRateData.ParamDescription := StrRechargeRateMulti;
   AddTimeList(FRechargeRateData);
   if Model <> nil then
   begin

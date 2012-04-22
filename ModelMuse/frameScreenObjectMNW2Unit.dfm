@@ -30,6 +30,10 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
       HelpType = htKeyword
       HelpKeyword = 'MNW2_Basic_Tab'
       Caption = 'Basic'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         601
         393)
@@ -233,6 +237,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         end
         inherited comboLocationChoice: TJvImageComboBox
           Left = 173
+          ItemIndex = -1
           OnChange = framePumpLocationMethodcomboLocationChoiceChange
           ExplicitLeft = 173
         end
@@ -552,6 +557,10 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
       HelpKeyword = 'MNW2_Discharge_Adjustment_Tab'
       Caption = 'Discharge Adjustment'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         601
         393)
@@ -685,6 +694,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -706,6 +716,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
         OnEndUpdate = rdgLiftTableEndUpdate
@@ -746,6 +757,10 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
       HelpKeyword = 'MNW2_Pumping_Rate_Tab'
       Caption = 'Pumping Rate'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgTimeTable: TRbwDataGrid4
         Left = 0
         Top = 65
@@ -791,6 +806,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -812,6 +828,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -833,6 +850,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -854,6 +872,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -875,6 +894,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -900,6 +920,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
               'Fraction')
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -921,6 +942,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -942,6 +964,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
         OnEndUpdate = rdgTimeTableEndUpdate
@@ -1061,6 +1084,10 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
       HelpKeyword = 'Well_Screens'
       Caption = 'Well Screens'
       ImageIndex = 4
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Panel3: TPanel
         Left = 0
         Top = 352
@@ -1149,6 +1176,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1170,6 +1198,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1191,6 +1220,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1212,6 +1242,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1233,6 +1264,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1254,6 +1286,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1275,6 +1308,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1296,6 +1330,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -1317,6 +1352,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
         OnEndUpdate = rdgVerticalScreensEndUpdate

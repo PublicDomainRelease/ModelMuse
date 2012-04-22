@@ -152,6 +152,15 @@ uses
 
 resourcestring
   StrImportGriddedData = 'import gridded data';
+  StrColumns = 'Columns';
+  StrRows = 'Rows';
+  StrLayers = 'Layers';
+  StrLayerD = 'Layer %d';
+  StrN = 'N';
+  StrRow = 'Row';
+  StrColumn = 'Column';
+  StrLayer = 'Layer';
+  StrValuesToIgnore = 'Values to ignore';
 
 {$R *.dfm}
 
@@ -386,8 +395,8 @@ begin
   case DataSet.Orientation of
     dsoTop:
       begin
-        lblColumns.Caption := 'Columns';
-        lblRows.Caption := 'Rows';
+        lblColumns.Caption := StrColumns;
+        lblRows.Caption := StrRows;
         InitializeTabSheetFor2DGriddedData(DataSet);
         Grid := FGrids[0];
         Grid.ExtendedAutoDistributeText := cbMultipleDataRows.Checked;
@@ -434,8 +443,8 @@ begin
       end;
     dsoFront:
       begin
-        lblColumns.Caption := 'Columns';
-        lblRows.Caption := 'Layers';
+        lblColumns.Caption := StrColumns;
+        lblRows.Caption := StrLayers;
         InitializeTabSheetFor2DGriddedData(DataSet);
         Grid := FGrids[0];
         Grid.ExtendedAutoDistributeText := cbMultipleDataRows.Checked;
@@ -482,8 +491,8 @@ begin
       end;
     dsoSide:
       begin
-        lblColumns.Caption := 'Rows';
-        lblRows.Caption := 'Layers';
+        lblColumns.Caption := StrRows;
+        lblRows.Caption := StrLayers;
         InitializeTabSheetFor2DGriddedData(DataSet);
         Grid := FGrids[0];
         Grid.ExtendedAutoDistributeText := cbMultipleDataRows.Checked;
@@ -530,8 +539,8 @@ begin
       end;
     dso3D:
       begin
-        lblColumns.Caption := 'Columns';
-        lblRows.Caption := 'Rows';
+        lblColumns.Caption := StrColumns;
+        lblRows.Caption := StrRows;
         LayerLimit := 0;
         case DataSet.EvaluatedAt of
           eaBlocks:
@@ -558,7 +567,7 @@ begin
         end;
         for Index := 0 to pcGriddedData.PageCount - 1 do
         begin
-          pcGriddedData.Pages[Index].Caption := 'Layer ' + IntToStr(Index + 1);
+          pcGriddedData.Pages[Index].Caption := Format(StrLayerD, [Index + 1]);
           if Index < FGrids.Count then
           begin
             Grid := FGrids[Index];
@@ -1548,9 +1557,9 @@ begin
       dsoTop:
         begin
           rdgList.ColCount := 4;
-          rdgList.Cells[0, 0] := 'N';
-          rdgList.Cells[1, 0] := 'Row';
-          rdgList.Cells[2, 0] := 'Column';
+          rdgList.Cells[0, 0] := StrN;
+          rdgList.Cells[1, 0] := StrRow;
+          rdgList.Cells[2, 0] := StrColumn;
           rdgList.Cells[3, 0] := DataSet.Name;
 
           rdgList.Columns[1].Format := rcf4Integer;
@@ -1570,9 +1579,9 @@ begin
       dsoFront:
         begin
           rdgList.ColCount := 4;
-          rdgList.Cells[0, 0] := 'N';
-          rdgList.Cells[1, 0] := 'Layer';
-          rdgList.Cells[2, 0] := 'Column';
+          rdgList.Cells[0, 0] := StrN;
+          rdgList.Cells[1, 0] := StrLayer;
+          rdgList.Cells[2, 0] := StrColumn;
           rdgList.Cells[3, 0] := DataSet.Name;
 
           rdgList.Columns[1].Format := rcf4Integer;
@@ -1592,9 +1601,9 @@ begin
       dsoSide:
         begin
           rdgList.ColCount := 4;
-          rdgList.Cells[0, 0] := 'N';
-          rdgList.Cells[1, 0] := 'Layer';
-          rdgList.Cells[2, 0] := 'Row';
+          rdgList.Cells[0, 0] := StrN;
+          rdgList.Cells[1, 0] := StrLayer;
+          rdgList.Cells[2, 0] := StrRow;
           rdgList.Cells[3, 0] := DataSet.Name;
 
           rdgList.Columns[1].Format := rcf4Integer;
@@ -1614,10 +1623,10 @@ begin
       dso3D:
         begin
           rdgList.ColCount := 5;
-          rdgList.Cells[0, 0] := 'N';
-          rdgList.Cells[1, 0] := 'Layer';
-          rdgList.Cells[2, 0] := 'Row';
-          rdgList.Cells[3, 0] := 'Column';
+          rdgList.Cells[0, 0] := StrN;
+          rdgList.Cells[1, 0] := StrLayer;
+          rdgList.Cells[2, 0] := StrRow;
+          rdgList.Cells[3, 0] := StrColumn;
           rdgList.Cells[4, 0] := DataSet.Name;
 
           rdgList.Columns[1].Format := rcf4Integer;
@@ -1748,7 +1757,7 @@ begin
   FGrids := TObjectList.Create;
   FStoredClassifications := TObjectList.Create;
 
-  rdgIgnoreValues.Cells[0,0] := 'Values to ignore';
+  rdgIgnoreValues.Cells[0,0] := StrValuesToIgnore;
   GetData;
 end;
 

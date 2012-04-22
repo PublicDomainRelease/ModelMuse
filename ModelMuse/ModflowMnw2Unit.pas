@@ -40,7 +40,8 @@ type
     FMnw2Array: TMnw2Array;
     function GetMnw2Array: TMnw2Array;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
+    procedure Restore(DecompressionStream: TDecompressionStream;
+      Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -587,6 +588,9 @@ resourcestring
     + 'less than the well radius';
   MnwSkinKError = 'One or more MNW2 wells has a skin hydraulic conductivity that is '
     + 'less than or equal to zero.);';
+  StrErrorInFormulaFor = 'Error in formula for %s in MNW2 data';
+  StrIncorrectResultTyp = 'Incorrect result type in formula for %s in MNW2 d' +
+  'ata';
 
 { TMnw2Item }
 
@@ -680,8 +684,7 @@ begin
             ErrorMessage := 'Qfrcmx';
           else Assert(False);
         end;
-        ErrorMessage := 'Error in formula for ' + ErrorMessage
-          + ' in MNW2 data';
+        ErrorMessage := Format(StrErrorInFormulaFor, [ErrorMessage]);
 
         frmFormulaErrors.AddFormulaError(ObjectName, '', Formula, ErrorMessage);
         Formula := '0';
@@ -706,8 +709,7 @@ begin
           ErrorMessage := 'Qfrcmx';
         else Assert(False);
       end;
-      ErrorMessage := 'Incorrect result type in formula for ' + ErrorMessage
-        + ' in MNW2 data';
+      ErrorMessage := Format(StrIncorrectResultTyp, [ErrorMessage]);
 
       frmFormulaErrors.AddFormulaError(ObjectName, '', Formula, ErrorMessage);
       Formula := '0';

@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, Grids, RbwDataGrid4, StdCtrls, ExtCtrls, JvSpin, JvExControls,
-  JvxSlider, Mask, JvExMask, JvToolEdit, ComCtrls, UndoItems, PathlineReader;
+  JvxSlider, Mask, JvExMask, JvToolEdit, ComCtrls, UndoItems, PathlineReader,
+  PhastModelUnit;
 
 type
   TPathlineLimits = (plNone, plColors, plLayer, plRow, plColumn, plTime);
@@ -27,10 +28,11 @@ type
     FExistingPathLines: TPathLineReader;
     FNewPathLines: TPathLineReader;
     FImportedNewFile: Boolean;
+    FModel: TCustomModel;
     procedure ForceRedraw;
     procedure EnableMenuItems;
   public
-    Constructor Create(var NewPathLine: TPathLineReader;
+    Constructor Create(Model: TCustomModel; var NewPathLine: TPathLineReader;
       ImportedNewFile: boolean);
     Destructor Destroy; override;
     function Description: string; override;
@@ -58,6 +60,8 @@ type
     rgShow2D: TRadioGroup;
     rgColorBy: TRadioGroup;
     rdgLimits: TRbwDataGrid4;
+    comboModelSelection: TComboBox;
+    lblModelSelection: TLabel;
     procedure pbColorSchemePaint(Sender: TObject);
     procedure rgColorByClick(Sender: TObject);
     procedure comboColorSchemeChange(Sender: TObject);
@@ -72,9 +76,11 @@ type
       const Value: TCheckBoxState);
     procedure fedModpathFileBeforeDialog(Sender: TObject; var AName: string;
       var AAction: Boolean);
+    procedure comboModelSelectionChange(Sender: TObject);
   protected
     procedure Loaded; override;
   private
+    FPathLines: TPathLinesObjectList;
     procedure ReadIntLimit(IntLimits: TShowIntegerLimit;
       ALimitRow: TPathlineLimits);
     procedure ReadFloatLimits(FloatLimits: TShowFloatLimit;
@@ -87,6 +93,8 @@ type
   public
     procedure GetData;
     procedure SetData;
+    constructor Create(Owner: TComponent); override;
+    destructor Destroy; override;
     { Public declarations }
   end;
 
@@ -112,11 +120,12 @@ resourcestring
 
 { TUndoImportPathline }
 
-constructor TUndoImportPathline.Create(var NewPathLine: TPathLineReader;
+constructor TUndoImportPathline.Create(Model: TCustomModel; var NewPathLine: TPathLineReader;
   ImportedNewFile: boolean);
 begin
+  FModel := Model;
   FImportedNewFile := ImportedNewFile;
-  FExistingPathLines:= TPathLineReader.Create;
+  FExistingPathLines:= TPathLineReader.Create(Model);
   FExistingPathLines.Assign(frmGoPhast.PhastModel.PathLines);
   // Take ownership of NewPathLine.
   FNewPathLines := NewPathLine;
@@ -144,27 +153,44 @@ end;
 
 procedure TUndoImportPathline.DoCommand;
 begin
-  frmGoPhast.PhastModel.PathLines := FNewPathLines;
+  FModel.PathLines := FNewPathLines;
   EnableMenuItems;
   ForceRedraw;
 end;
 
 procedure TUndoImportPathline.Undo;
 begin
-  frmGoPhast.PhastModel.PathLines := FExistingPathLines;
+  FModel.PathLines := FExistingPathLines;
   EnableMenuItems;
   ForceRedraw;
 end;
 
 procedure TUndoImportPathline.EnableMenuItems;
+var
+  ChildIndex: integer;
+  ChildModel: TChildModel;
 begin
   frmGoPhast.miPathlinestoShapefile.Enabled :=
     frmGoPhast.PhastModel.PathLines.Lines.Count > 0;
+  if not frmGoPhast.miPathlinestoShapefile.Enabled
+    and frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      frmGoPhast.miPathlinestoShapefile.Enabled :=
+        ChildModel.PathLines.Lines.Count > 0;
+      if frmGoPhast.miPathlinestoShapefile.Enabled then
+      begin
+        break;
+      end;
+    end;
+  end;
 end;
 
 procedure TUndoImportPathline.ForceRedraw;
 begin
-  frmGoPhast.PhastModel.PathLines.Invalidate;
+  FModel.PathLines.Invalidate;
   frmGoPhast.frame3DView.glWidModelView.Invalidate;
 
   frmGoPhast.frameTopView.ModelChanged := True;
@@ -183,30 +209,7 @@ begin
   pbColorScheme.Invalidate;
 end;
 
-procedure TframeModpathDisplay.fedModpathFileBeforeDialog(Sender: TObject;
-  var AName: string; var AAction: Boolean);
-begin
-  if AName = '' then
-  begin
-    if frmGoPhast.sdModpathInput.FileName <> '' then
-    begin
-      AName := ChangeFileExt(frmGoPhast.sdModpathInput.FileName,
-        fedModpathFile.DefaultExt);
-    end
-    else if frmGoPhast.sdModflowInput.FileName <> '' then
-    begin
-      AName := ChangeFileExt(frmGoPhast.sdModflowInput.FileName,
-        fedModpathFile.DefaultExt);
-    end
-    else if frmGoPhast.sdSaveDialog.FileName <> '' then
-    begin
-      AName := ChangeFileExt(frmGoPhast.sdSaveDialog.FileName,
-        fedModpathFile.DefaultExt);
-    end;
-  end;
-end;
-
-procedure TframeModpathDisplay.GetData;
+procedure TframeModpathDisplay.comboModelSelectionChange(Sender: TObject);
 var
   PathLines: TPathLineReader;
   Limits: TPathLineDisplayLimits;
@@ -214,9 +217,11 @@ var
   ALimitRow: TPathlineLimits;
   ARow: Integer;
   MaxTime: Double;
+  LocalModel: TCustomModel;
 begin
-  Handle;
-  if frmGoPhast.PhastModel.ModflowPackages.ModPath.Binary then
+  LocalModel := comboModelSelection.Items.Objects[
+    comboModelSelection.ItemIndex] as TCustomModel;
+  if LocalModel.ModflowPackages.ModPath.Binary then
   begin
     fedModpathFile.DefaultExt := '.path_bin';
   end
@@ -224,7 +229,8 @@ begin
   begin
     fedModpathFile.DefaultExt := '.path';
   end;
-  PathLines := frmGoPhast.PhastModel.PathLines;
+  PathLines := FPathLines[comboModelSelection.ItemIndex];
+
   fedModpathFile.FileName := PathLines.FileName;
   if PathLines.Lines.TestGetMaxTime(MaxTime) then
   begin
@@ -264,6 +270,88 @@ begin
   seCycles.AsInteger := ColorParameters.ColorCycles;
   seColorExponent.Value := ColorParameters.ColorExponent;
   jsColorExponent.Value := Round(ColorParameters.ColorExponent*100);
+end;
+
+constructor TframeModpathDisplay.Create(Owner: TComponent);
+begin
+  inherited;
+  FPathLines := TPathLinesObjectList.Create;
+end;
+
+destructor TframeModpathDisplay.Destroy;
+begin
+  FPathLines.Free;
+  inherited;
+end;
+
+procedure TframeModpathDisplay.fedModpathFileBeforeDialog(Sender: TObject;
+  var AName: string; var AAction: Boolean);
+begin
+  if AName = '' then
+  begin
+    if frmGoPhast.sdModpathInput.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdModpathInput.FileName,
+        fedModpathFile.DefaultExt);
+    end
+    else if frmGoPhast.sdModflowInput.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdModflowInput.FileName,
+        fedModpathFile.DefaultExt);
+    end
+    else if frmGoPhast.sdSaveDialog.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdSaveDialog.FileName,
+        fedModpathFile.DefaultExt);
+    end;
+  end;
+end;
+
+procedure TframeModpathDisplay.GetData;
+var
+  PathLines: TPathLineReader;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  LocalPathLines: TPathLineReader;
+begin
+  Handle;
+
+  if frmGoPhast.PhastModel.ModflowPackages.ModPath.Binary then
+  begin
+    fedModpathFile.DefaultExt := '.path_bin';
+  end
+  else
+  begin
+    fedModpathFile.DefaultExt := '.path';
+  end;
+  PathLines := frmGoPhast.PhastModel.PathLines;
+
+  FPathLines.Clear;
+  comboModelSelection.Items.Clear;
+  LocalPathLines := TPathLineReader.Create(frmGoPhast.PhastModel);
+  FPathLines.Add(LocalPathLines);
+  LocalPathLines.Assign(PathLines);
+  comboModelSelection.Items.AddObject(frmGoPhast.PhastModel.DisplayName, frmGoPhast.PhastModel);
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    comboModelSelection.Visible := True;
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      comboModelSelection.Items.AddObject(ChildModel.DisplayName, ChildModel);
+      LocalPathLines := TPathLineReader.Create(ChildModel);
+      FPathLines.Add(LocalPathLines);
+      PathLines := ChildModel.PathLines;
+      LocalPathLines.Assign(PathLines);
+    end;
+  end
+  else
+  begin
+    comboModelSelection.Visible := False;
+  end;
+  lblModelSelection.Visible := comboModelSelection.Visible;
+  comboModelSelection.ItemIndex := 0;
+  comboModelSelectionChange(nil);
 end;
 
 procedure TframeModpathDisplay.jsColorExponentChange(Sender: TObject);
@@ -435,6 +523,7 @@ var
   ColorLimits: TPathlineColorLimits;
   ImportedNewFile: Boolean;
   ARow: Integer;
+  LocalModel: TCustomModel;
 begin
   inherited;
 
@@ -449,8 +538,12 @@ begin
   end;
 
   ImportedNewFile := False;
-  ExistingPathLines := frmGoPhast.PhastModel.PathLines;
-  PathLine := TPathLineReader.Create;
+
+  LocalModel := comboModelSelection.Items.Objects[
+    comboModelSelection.ItemIndex] as TCustomModel;
+
+  ExistingPathLines := LocalModel.PathLines;
+  PathLine := TPathLineReader.Create(LocalModel);
   try
     PathLine.Assign(ExistingPathLines);
 
@@ -521,7 +614,7 @@ begin
       ColorParameters.ColorExponent := seColorExponent.Value;
     end;
 
-    Undo := TUndoImportPathline.Create(PathLine, ImportedNewFile);
+    Undo := TUndoImportPathline.Create(LocalModel, PathLine, ImportedNewFile);
     frmGoPhast.UndoStack.Submit(Undo);
   finally
     PathLine.Free;

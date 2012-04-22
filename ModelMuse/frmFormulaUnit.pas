@@ -308,6 +308,11 @@ implementation
 uses Contnrs, GIS_Functions, IntListUnit, frmGoPhastUnit, GlobalVariablesUnit,
   PhastModelUnit, DataSetUnit;
 
+resourcestring
+  StrErrorAppendingRTF = 'Error appending RTF data.';
+  StrDataSets = 'Data Sets';
+  StrFunctions = 'Functions';
+
 {$R *.dfm}
 
 var
@@ -363,7 +368,7 @@ procedure AppendToRichEdit(const source: TStringList; destination : TRichEdit) ;
        SFF_SELECTION or SF_RTF or SFF_PLAINRTF, LPARAM(@rtfStream)
      ) ;
      if rtfStream.dwError <> $0000 then
-       raise Exception.Create('Error appending RTF data.') ;
+       raise Exception.Create(StrErrorAppendingRTF) ;
    finally
      sourceStream.Free;
      destination.Lines.EndUpdate;
@@ -909,7 +914,7 @@ procedure TfrmFormula.FormCreate(Sender: TObject);
 begin
   inherited;
   jreFormula.DoubleBuffered := False;
-  DataSetGroupName := 'Data Sets';
+  DataSetGroupName := StrDataSets;
 
   Constraints.MinWidth := Width;
   pnlMain.Constraints.MinWidth := pnlMain.Width;
@@ -984,7 +989,7 @@ begin
 
     CreateNodesForVariables;
 
-    FFunctions := tvItems.Items.Add(nil, 'Functions');
+    FFunctions := tvItems.Items.Add(nil, StrFunctions);
     for Index := 0 to FunctionNames.Count - 1 do
     begin
       ParentNode := FFunctions;

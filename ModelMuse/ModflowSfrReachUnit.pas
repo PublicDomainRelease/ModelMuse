@@ -252,6 +252,21 @@ implementation
 uses Contnrs, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit,
   ModflowSfrUnit, TempFiles, frmGoPhastUnit;
 
+resourcestring
+  StrReachLength = 'Reach length';
+  StrLGRReachLength = 'LGR Reach length';
+  StrLGRReachLengthLc = ' LGR reach length';
+  StrStreambedThickness = 'Streambed thickness';
+  StrStreambedElevation = 'Streambed elevation';
+  StrHydraulicConductivi = 'Hydraulic conductivity';
+  StrHydraulicConductivMult = ' Hydraulic conductivity multiplier';
+  StrSlope = 'Slope';
+  StrSaturatedWaterCont = 'Saturated water content';
+  StrInitialWaterConten = 'Initial water content';
+  StrBrooksCoreyExponen = 'Brooks-Corey exponent';
+  StrMaximumVerticalUns = 'Maximum vertical unsaturated hydraulic conductivi' +
+  'ty';
+
 const
   ReachLengthPosition = 0;
   HydraulicConductivityPosition = 1;
@@ -1806,26 +1821,26 @@ begin
   FInitialWaterContent := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FBrooksCoreyExponent := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FVerticalK := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FReachLength.NonParamDescription := 'Reach length';
-  FReachLength.ParamDescription := ' reach length';
-  FLgrReachLength.NonParamDescription := 'LGR Reach length';
-  FLgrReachLength.ParamDescription := ' LGR reach length';
-  FStreamBedThicknessData.NonParamDescription := 'Streambed thickness';
-  FStreamBedThicknessData.ParamDescription := ' streambed thickness';
-  FStreamBedElevationData.NonParamDescription := 'Streambed elevation';
-  FStreamBedElevationData.ParamDescription := ' streambed elevation';
-  FHydraulicConductivityData.NonParamDescription := 'Hydraulic conductivity';
-  FHydraulicConductivityData.ParamDescription := ' Hydraulic conductivity multiplier';
-  FStreamSlopeData.NonParamDescription := 'Slope';
-  FStreamSlopeData.ParamDescription := ' slope';
-  FSaturatedWaterContent.NonParamDescription := 'Saturated water content';
-  FSaturatedWaterContent.ParamDescription := ' saturated water content';
-  FInitialWaterContent.NonParamDescription := 'Initial water content';
-  FInitialWaterContent.ParamDescription := ' initial water content';
-  FBrooksCoreyExponent.NonParamDescription := 'Brooks-Corey exponent';
-  FBrooksCoreyExponent.ParamDescription := ' Brooks-Corey exponent';
-  FVerticalK.NonParamDescription := 'Maximum vertical unsaturated hydraulic conductivity';
-  FVerticalK.ParamDescription := ' maximum vertical unsaturated hydraulic conductivity';
+  FReachLength.NonParamDescription := StrReachLength;
+  FReachLength.ParamDescription := ' ' + LowerCase(StrReachLength);
+  FLgrReachLength.NonParamDescription := StrLGRReachLength;
+  FLgrReachLength.ParamDescription := StrLGRReachLengthLc;
+  FStreamBedThicknessData.NonParamDescription := StrStreambedThickness;
+  FStreamBedThicknessData.ParamDescription := ' ' + LowerCase(StrStreambedThickness);
+  FStreamBedElevationData.NonParamDescription := StrStreambedElevation;
+  FStreamBedElevationData.ParamDescription := ' ' + LowerCase(StrStreambedElevation);
+  FHydraulicConductivityData.NonParamDescription := StrHydraulicConductivi;
+  FHydraulicConductivityData.ParamDescription := StrHydraulicConductivMult;
+  FStreamSlopeData.NonParamDescription := StrSlope;
+  FStreamSlopeData.ParamDescription := ' ' + LowerCase(StrSlope);
+  FSaturatedWaterContent.NonParamDescription := StrSaturatedWaterCont;
+  FSaturatedWaterContent.ParamDescription := ' ' + LowerCase(StrSaturatedWaterCont);
+  FInitialWaterContent.NonParamDescription := StrInitialWaterConten;
+  FInitialWaterContent.ParamDescription := ' ' + LowerCase(StrInitialWaterConten);
+  FBrooksCoreyExponent.NonParamDescription := StrBrooksCoreyExponen;
+  FBrooksCoreyExponent.ParamDescription := ' ' + StrBrooksCoreyExponen;
+  FVerticalK.NonParamDescription := StrMaximumVerticalUns;
+  FVerticalK.ParamDescription := ' ' + LowerCase(StrMaximumVerticalUns);
   AddTimeList(FReachLength);
   AddTimeList(FHydraulicConductivityData);
   AddTimeList(FStreamBedThicknessData);

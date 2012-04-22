@@ -734,6 +734,9 @@ uses Math, Contnrs, ScreenObjectUnit, PhastModelUnit, ModflowGridUnit,
   frmFormulaErrorsUnit, frmGoPhastUnit, SparseArrayUnit, GlobalVariablesUnit,
   GIS_Functions, IntListUnit, ModflowCellUnit, frmProgressUnit, Dialogs;
 
+resourcestring
+  StrInvalidResultType = 'Invalid result type';
+
 function SortBoundaryItems(Item1, Item2: pointer): integer;
 var
   Bound1: TCustomModflowBoundaryItem;
@@ -1387,7 +1390,7 @@ begin
         if not (Expression.ResultType in [rdtDouble, rdtInteger]) then
         begin
           frmFormulaErrors.AddFormulaError(AScreenObject.Name, '',
-            ErrorFormula, 'Invalid result type');
+            ErrorFormula, StrInvalidResultType);
           Formula := '0';
           Compiler.Compile(Formula);
           // send error message
@@ -1872,8 +1875,8 @@ begin
             Formula, LocalModel, UseLgrEdgeCells, AssignmentLocation);
         except on E: ErbwParserError do
           begin
-            frmFormulaErrors.AddFormulaError(LocalScreenObject.Name, Name, Formula,
-              E.Message);
+            frmFormulaErrors.AddFormulaError(LocalScreenObject.Name, Name,
+              Formula, E.Message);
             Formula := '0';
             BoundaryValues[Index].Formula := Formula;
             LocalScreenObject.AssignValuesToModflowDataSet(Grid, DataArray,

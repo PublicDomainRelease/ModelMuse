@@ -24,28 +24,68 @@ type
     property Fraction: real read FFraction write SetFraction;
   end;
 
+  TCustomLayerGroup = class;
   TLayerGroup = class;
 
   TLayerCollection  = class(TCollection)
   Private
-    FLayerGroup: TLayerGroup;
+    FLayerGroup: TCustomLayerGroup;
     procedure InvalidateModel;
     procedure Sort;
   public
     function IsSame(AnotherLayerCollection: TLayerCollection): boolean;
     procedure Assign(Source: TPersistent); override;
-    constructor Create(LayerGroup: TLayerGroup);
+    constructor Create(LayerGroup: TCustomLayerGroup);
   end;
 
+  TCustomLayerStructure = class;
   TLayerStructure = class;
 
-  TLayerGroup = class(TOrderedItem)
+  TCustomLayerGroup = class(TOrderedItem)
   private
     FDataArrayName: string;
     FAquiferName: string;
     FGrowthMethod: TGrowthMethod;
-    FGrowthRate: Real;
+    FGrowthRate: real;
     FLayerCollection: TLayerCollection;
+    procedure SetDataArrayName(const NewName: string);
+    procedure SetAquiferName(const Value: string);
+    procedure SetGrowthMethod(const Value: TGrowthMethod);
+    procedure SetGrowthRate(const Value: real);
+  protected
+    procedure SetLayerCollection(const Value: TLayerCollection); virtual;
+    function Collection: TCustomLayerStructure;
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    procedure Loaded; virtual;
+    function StoreLayerCollection: boolean; virtual;
+  public
+    procedure Assign(Source: TPersistent); override;
+    constructor Create(Collection: TCollection); override;
+    Destructor Destroy; override;
+    function LayerCount: integer; virtual;
+  published
+    property DataArrayName: string read FDataArrayName write SetDataArrayName;
+    property AquiferName: string read FAquiferName write SetAquiferName;
+    {
+    When a layer group is split into more than one layer, @name defines
+    how the thickness of those layers is specified.
+    }
+    property GrowthMethod: TGrowthMethod read FGrowthMethod
+      write SetGrowthMethod;
+    {
+    When @link(GrowthMethod) is  @link(TGrowthMethod gmUp),
+    @link(TGrowthMethod gmDown),
+    @link(TGrowthMethod gmMiddle), or @link(TGrowthMethod gmEdge),
+    @name is used to help define
+    how the thickness of those layers is calculated.
+    }
+    property GrowthRate: real read FGrowthRate write SetGrowthRate;
+    property LayerCollection: TLayerCollection read FLayerCollection
+      write SetLayerCollection stored StoreLayerCollection;
+  end;
+
+  TLayerGroup = class(TCustomLayerGroup)
+  private
     FSimulated: boolean;
     FAquiferType: integer;
     FInterblockTransmissivityMethod: integer;
@@ -58,17 +98,10 @@ type
     FMt3dmsHorzTransDisp: TRealCollection;
     FMt3dmsDiffusionCoef: TRealCollection;
     FMt3dmsVertTransDisp: TRealCollection;
-    procedure SetDataArrayName(const NewName : string);
-    procedure SetAquiferName(const Value : string);
-    procedure SetGrowthMethod(const Value: TGrowthMethod);
-    procedure SetGrowthRate(const Value: Real);
-    procedure SetLayerCollection(const Value: TLayerCollection);
     procedure SetSimulated(const Value: boolean);
     procedure SetAquiferType(const Value: integer);
-    procedure Loaded;
     procedure SetInterblockTransmissivityMethod(const Value: integer);
     procedure SetVerticalHydraulicConductivityMethod(const Value: integer);
-    function Collection: TLayerStructure;
     procedure SetUseStartingHeadForSaturatedThickness(const Value: boolean);
     function GetSimulated: boolean;
     procedure SetHorizontalAnisotropy(const Value: double);
@@ -81,12 +114,15 @@ type
     procedure SetMt3dmsHorzTransDisp(const Value: TRealCollection);
     procedure SetMt3dmsVertTransDisp(const Value: TRealCollection);
   protected
+    procedure Loaded; override;
+    procedure SetLayerCollection(const Value: TLayerCollection); override;
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    function StoreLayerCollection: boolean; override;
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Collection: TCollection); override;
     Destructor Destroy; override;
-    function LayerCount: integer;
+    function LayerCount: integer; override;
     function ModflowLayerCount: integer;
     procedure WriteLAYCB(const DiscretizationWriter: TObject);
     function SubsidenceDefined: boolean;
@@ -95,8 +131,7 @@ type
     function NoDelayCount: integer;
     function WaterTableCount: integer;
   published
-    property AquiferName : string read FAquiferName write SetAquiferName;
-    {@name can take on the following values:
+    { @name can take on the following values:
      @unorderedlist(
        @item(0, confined)
        @item(1, convertible in LPF and HUF, Unconfined in BCF)
@@ -106,19 +141,6 @@ type
       2 and 3 are not defined for LPF and HUF.
     }
     property AquiferType: integer read FAquiferType write SetAquiferType;
-    property DataArrayName :  string read FDataArrayName write SetDataArrayName;
-    // When a layer group is split into more than one layer, @name defines
-    // how the thickness of those layers is specified.
-    property GrowthMethod: TGrowthMethod read FGrowthMethod
-      write SetGrowthMethod;
-    // When @link(GrowthMethod) is  @link(TGrowthMethod gmUp),
-    // @link(TGrowthMethod gmDown),
-    // @link(TGrowthMethod gmMiddle), or @link(TGrowthMethod gmEdge),
-    // @name is used to help define
-    // how the thickness of those layers is calculated.
-    property GrowthRate: Real read FGrowthRate write SetGrowthRate;
-    property LayerCollection: TLayerCollection read FLayerCollection
-      write SetLayerCollection stored FSimulated;
     property Simulated: boolean read GetSimulated write SetSimulated;
     // @name represents the first digit of Ltype in the BCF package
     // and LAYAVG in the LPF package. @name is not used in the HUF package.
@@ -151,7 +173,17 @@ type
       write SetMt3dmsDiffusionCoef;
   end;
 
-  TLayerStructure = class(TLayerOwnerCollection)
+  TSutraLayerGroup = class(TCustomLayerGroup)
+
+  end;
+
+  TCustomLayerStructure = class(TLayerOwnerCollection)
+  public
+    function LayerCount: integer;
+    procedure Loaded; virtual;
+  end;
+
+  TLayerStructure = class(TCustomLayerStructure)
   Private
     FSimulatedNotifier: TObserver;
     FAquiferTypeNotifier: TObserver;
@@ -159,7 +191,7 @@ type
     function IntegerArray(Method: TIntTypeMethod): TOneDIntegerArray;
     function FloatArray(Method: TFloatTypeMethod): TOneDRealArray;
   public
-    function First: TLayerGroup;
+//    function First: TLayerGroup;
     function Last: TLayerGroup;
     function NonSimulatedLayersPresent: boolean;
     procedure AssignAssociatedInputDataSets;
@@ -168,8 +200,7 @@ type
     destructor Destroy; override;
     property LayerGroups[const Index: integer]: TLayerGroup
       read GetLayerGroup; default;
-    function LayerCount: integer;
-    procedure Loaded;
+    procedure Loaded; override;
     function ModflowLayerCount: integer;
     function ModflowConfiningBedCount: integer;
     procedure WriteLAYCB(const DiscretizationWriter: TObject);
@@ -202,6 +233,10 @@ type
     Function DMCOEF: TOneDRealArray;
   end;
 
+  TSutraLayerStructure = class(TCustomLayerStructure)
+    constructor Create(Model: TBaseModel);
+  end;
+
 resourcestring
   StrLayerDefinition = 'Layer Definition';
 
@@ -219,20 +254,8 @@ begin
   AnotherLayerGroup := Source as TLayerGroup;
   if not IsSame(AnotherLayerGroup) then
   begin
-    // It is important for AquiferName to be assigned after DataArrayName
-    // because if AquiferName has changed, DataArrayName will
-    // need to be changed too and that change should not be overwritten
-    // by another assignment to DataArrayName.
-    if AnotherLayerGroup.DataArrayName <> '' then
-    begin
-      DataArrayName := AnotherLayerGroup.DataArrayName;
-    end;
-    AquiferName := AnotherLayerGroup.AquiferName;
-    GrowthMethod := AnotherLayerGroup.GrowthMethod;
-    GrowthRate := AnotherLayerGroup.GrowthRate;
     AquiferType := AnotherLayerGroup.AquiferType;
     Simulated := AnotherLayerGroup.Simulated;
-    LayerCollection := AnotherLayerGroup.LayerCollection;
     InterblockTransmissivityMethod :=
       AnotherLayerGroup.InterblockTransmissivityMethod;
     VerticalHydraulicConductivityMethod :=
@@ -249,11 +272,6 @@ begin
   end;
 end;
 
-function TLayerGroup.Collection: TLayerStructure;
-begin
-  result := inherited Collection as TLayerStructure;
-end;
-
 constructor TLayerGroup.Create(Collection: TCollection);
 begin
   inherited;
@@ -263,13 +281,11 @@ begin
   FMt3dmsVertTransDisp.InitialValue := 0.01;
   FMt3dmsDiffusionCoef := TRealCollection.Create(Model);
   FMt3dmsDiffusionCoef.InitialValue := 0;
-  FLayerCollection:= TLayerCollection.Create(self);
   FSubNoDelayBedLayers := TSubNoDelayBedLayers.Create(Model);
   FSubDelayBedLayers := TSubDelayBedLayers.Create(Model);
   FWaterTableLayers := TWaterTableLayers.Create(Model);
 //  AquiferName := 'New Layer Group';
 //  AquiferName := '';
-  FGrowthRate := 1.2;
   FHorizontalAnisotropy := 1;
   FSimulated := True;
 end;
@@ -298,7 +314,7 @@ begin
     Model := Collection.Model as TPhastModel;
     if not (csDestroying in Model.ComponentState) then
     begin
-      DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
+      DataArray := Model.DataArrayManager.GetDataSetByName(DataArrayName);
       if DataArray <> nil then
       begin
         DataArray.Lock := [];
@@ -335,7 +351,6 @@ begin
       end;
     end;
   end;
-  FLayerCollection.Free;
   FMt3dmsDiffusionCoef.Free;
   FMt3dmsVertTransDisp.Free;
   FMt3dmsHorzTransDisp.Free;
@@ -364,34 +379,33 @@ function TLayerGroup.IsSame(AnotherItem: TOrderedItem): boolean;
 var
   AnotherLayerGroup : TLayerGroup;
 begin
-  AnotherLayerGroup := AnotherItem as TLayerGroup;
-  result := (AnotherLayerGroup.AquiferName = AquiferName)
-    and (AnotherLayerGroup.DataArrayName = DataArrayName)
-    and (AnotherLayerGroup.GrowthMethod = GrowthMethod)
-    and (AnotherLayerGroup.GrowthRate = GrowthRate)
-    and (AnotherLayerGroup.Simulated = Simulated)
-    and (AnotherLayerGroup.AquiferType = AquiferType)
-    and (AnotherLayerGroup.InterblockTransmissivityMethod =
-      InterblockTransmissivityMethod)
-    and (AnotherLayerGroup.VerticalHydraulicConductivityMethod =
-      VerticalHydraulicConductivityMethod)
-    and (AnotherLayerGroup.UseStartingHeadForSaturatedThickness =
-      UseStartingHeadForSaturatedThickness)
-    and (AnotherLayerGroup.HorizontalAnisotropy = HorizontalAnisotropy)
-    and AnotherLayerGroup.LayerCollection.IsSame(LayerCollection)
-    and AnotherLayerGroup.SubNoDelayBedLayers.IsSame(SubNoDelayBedLayers)
-    and AnotherLayerGroup.SubDelayBedLayers.IsSame(SubDelayBedLayers)
-    and AnotherLayerGroup.WaterTableLayers.IsSame(WaterTableLayers)
-    and AnotherLayerGroup.Mt3dmsHorzTransDisp.IsSame(Mt3dmsHorzTransDisp)
-    and AnotherLayerGroup.Mt3dmsVertTransDisp.IsSame(Mt3dmsVertTransDisp)
-    and AnotherLayerGroup.Mt3dmsDiffusionCoef.IsSame(Mt3dmsDiffusionCoef)
+  result := inherited;
+  if result then
+  begin
+    AnotherLayerGroup := AnotherItem as TLayerGroup;
+    result := (AnotherLayerGroup.Simulated = Simulated)
+      and (AnotherLayerGroup.AquiferType = AquiferType)
+      and (AnotherLayerGroup.InterblockTransmissivityMethod =
+        InterblockTransmissivityMethod)
+      and (AnotherLayerGroup.VerticalHydraulicConductivityMethod =
+        VerticalHydraulicConductivityMethod)
+      and (AnotherLayerGroup.UseStartingHeadForSaturatedThickness =
+        UseStartingHeadForSaturatedThickness)
+      and (AnotherLayerGroup.HorizontalAnisotropy = HorizontalAnisotropy)
+      and AnotherLayerGroup.SubNoDelayBedLayers.IsSame(SubNoDelayBedLayers)
+      and AnotherLayerGroup.SubDelayBedLayers.IsSame(SubDelayBedLayers)
+      and AnotherLayerGroup.WaterTableLayers.IsSame(WaterTableLayers)
+      and AnotherLayerGroup.Mt3dmsHorzTransDisp.IsSame(Mt3dmsHorzTransDisp)
+      and AnotherLayerGroup.Mt3dmsVertTransDisp.IsSame(Mt3dmsVertTransDisp)
+      and AnotherLayerGroup.Mt3dmsDiffusionCoef.IsSame(Mt3dmsDiffusionCoef)
+  end;
 end;
 
 function TLayerGroup.LayerCount: integer;
 begin
   if Simulated then
   begin
-    result := LayerCollection.Count + 1;
+    result := inherited;
   end
   else
   begin
@@ -400,16 +414,8 @@ begin
 end;
 
 procedure TLayerGroup.Loaded;
-var
-  Model: TPhastModel;
-  DataArray: TDataArray;
 begin
-  Model := Collection.Model as TPhastModel;
-  DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
-  Assert( DataArray <> nil);
-  Model.TopGridObserver.TalksTo(DataArray);
-  DataArray.TalksTo(Model.ThreeDGridObserver);
-  Model.ThreeDGridObserver.StopsTalkingTo(DataArray);
+  inherited;
   SubNoDelayBedLayers.Loaded;
   SubDelayBedLayers.Loaded;
   WaterTableLayers.Loaded;
@@ -469,36 +475,6 @@ begin
   end;
 end;
 
-procedure TLayerGroup.SetAquiferName(const Value : string);
-begin
-  Assert(Value <> '');
-  if FAquiferName <> Value then
-  begin
-    if Collection.Model <> nil then
-    begin
-      if UpperCase(FAquiferName) = UpperCase(Value) then
-      begin
-        // Change case of the data set
-        DataArrayName := StringReplace(DataArrayName,
-          GenerateNewRoot(FAquiferName),GenerateNewRoot(Value), []);
-      end
-      else
-      begin
-        if Index = 0 then
-        begin
-          DataArrayName := GenerateNewName(Value);
-        end
-        else
-        begin
-          DataArrayName := GenerateNewRoot(Value + '_Bottom');
-        end;
-      end;
-    end;
-    FAquiferName := Value;
-    InvalidateModel;
-  end;
-end;
-
 procedure TLayerGroup.SetAquiferType(const Value: integer);
 var
   Notifier: TObserver;
@@ -510,96 +486,6 @@ begin
     Notifier := (Collection as TLayerStructure).AquiferTypeNotifier;
     Notifier.UpToDate := False;
     Notifier.UpToDate := True;
-    InvalidateModel;
-  end;
-end;
-
-procedure TLayerGroup.SetDataArrayName(const NewName : string);
-var
-  Model: TPhastModel;
-  DataArray: TDataArray;
-  UnitAbove, UnitBelow: TLayerGroup;
-  NewFormula: string;
-begin
-  if FDataArrayName <> NewName then
-  begin
-    if Collection.Model <> nil then
-    begin
-      Model := Collection.Model as TPhastModel;
-      if not (csLoading in Model.ComponentState) then
-      begin
-        DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
-        if DataArray <> nil then
-        begin
-          Model.RenameDataArray(DataArray, NewName);
-        end
-        else
-        begin
-          DataArray := Model.DataArrayManager.GetDataSetByName(NewName);
-        end;
-        if DataArray = nil then
-        begin
-          // create a new data array.
-
-          // First get formula for new layer.
-          if Collection.Count = 1 then
-          begin
-            NewFormula := '0';
-          end
-          else if Index <= 0 then
-          begin
-            // No unit can be inserted above the top of the model.
-            Assert(False);
-          end
-          else if Index = Collection.Count -1 then
-          begin
-            UnitAbove := Collection.Items[Index-1] as TLayerGroup;
-            NewFormula := UnitAbove.DataArrayName + ' - 1';
-          end
-          else
-          begin
-            UnitAbove := Collection.Items[Index-1] as TLayerGroup;
-            UnitBelow := Collection.Items[Index+1] as TLayerGroup;
-            NewFormula := '(' + UnitAbove.DataArrayName + ' + '
-              + UnitBelow.DataArrayName + ') / 2';
-          end;
-
-          // create new data array.
-          DataArray := Model.DataArrayManager.CreateNewDataArray(TDataArray, NewName, NewFormula,
-            [dcName, dcType, dcOrientation, dcEvaluatedAt], rdtDouble,
-            eaBlocks, dsoTop, StrLayerDefinition);
-          DataArray.OnDataSetUsed := Model.ModelLayerDataArrayUsed;
-
-          Collection.AddOwnedDataArray(DataArray);
-        end;
-        Model.TopGridObserver.TalksTo(DataArray);
-        DataArray.TalksTo(Model.ThreeDGridObserver);
-        Model.ThreeDGridObserver.StopsTalkingTo(DataArray);
-
-        DataArray.UpdateDimensions(Model.Grid.LayerCount,
-          Model.Grid.RowCount, Model.Grid.ColumnCount);
-      end;
-    end;
-    FDataArrayName := NewName;
-    InvalidateModel;
-  end;
-end;
-
-
-procedure TLayerGroup.SetGrowthMethod(const Value: TGrowthMethod);
-begin
-  if FGrowthMethod <> Value then
-  begin
-    FGrowthMethod := Value;
-    InvalidateModel;
-  end;
-end;
-
-procedure TLayerGroup.SetGrowthRate(const Value: Real);
-begin
-  if FGrowthRate <> Value then
-  begin
-    FGrowthRate := Value;
     InvalidateModel;
   end;
 end;
@@ -624,10 +510,10 @@ end;
 
 procedure TLayerGroup.SetLayerCollection(const Value: TLayerCollection);
 var
-  PriorCount: Integer;
+  PriorCount: integer;
 begin
-  PriorCount := FLayerCollection.Count;
-  FLayerCollection.Assign(Value);
+  PriorCount := LayerCollection.Count;
+  inherited;
   UpdateChildModels(PriorCount);
 end;
 
@@ -662,7 +548,7 @@ begin
     Notifier := (Collection as TLayerStructure).SimulatedNotifier;
     Notifier.UpToDate := False;
     Notifier.UpToDate := True;
-    UpdateChildModels(FLayerCollection.Count);
+    UpdateChildModels(LayerCollection.Count);
     InvalidateModel;
   end;
 end;
@@ -702,6 +588,11 @@ begin
   FWaterTableLayers.Assign(Value);
 end;
 
+function TLayerGroup.StoreLayerCollection: boolean;
+begin
+  result := FSimulated;
+end;
+
 function TLayerGroup.SubsidenceDefined: boolean;
 begin
   result := Simulated and
@@ -728,7 +619,7 @@ var
   PhastModel: TPhastModel;
 begin
   PhastModel := Model as TPhastModel;
-  if (PhastModel <> nil) and (PriorCount <> FLayerCollection.Count) then
+  if (PhastModel <> nil) and (PriorCount <> LayerCollection.Count) then
   begin
     for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
     begin
@@ -933,20 +824,6 @@ begin
   result := IntegerArray(itmLayavg);
 end;
 
-function TLayerStructure.LayerCount: integer;
-var
-  Index: Integer;
-  LayerGroup: TLayerGroup;
-begin
-  result := 0;
-  // Skip the top of the model: it doesn't count.
-  for Index := 1 to Count - 1 do
-  begin
-    LayerGroup := Items[Index] as TLayerGroup;
-    result := result + LayerGroup.LayerCount;
-  end;
-end;
-
 function TLayerStructure.Laytyp: TOneDIntegerArray;
 begin
   result := IntegerArray(itmLaytype);
@@ -958,13 +835,8 @@ begin
 end;
 
 procedure TLayerStructure.Loaded;
-var
-  Index: Integer;
 begin
-  for Index := 0 to Count - 1 do
-  begin
-    LayerGroups[Index].Loaded;
-  end;
+  inherited;
   AssignAssociatedInputDataSets;
 end;
 
@@ -1083,10 +955,10 @@ begin
   Result := FloatArray(ftmDmcoef);
 end;
 
-function TLayerStructure.First: TLayerGroup;
-begin
-  result := inherited First as TLayerGroup;
-end;
+//function TLayerStructure.First: TLayerGroup;
+//begin
+//  result := inherited First as TLayerGroup;
+//end;
 
 function TLayerStructure.FloatArray(Method: TFloatTypeMethod): TOneDRealArray;
 var
@@ -1396,7 +1268,7 @@ begin
   Sort;
 end;
 
-constructor TLayerCollection.Create(LayerGroup: TLayerGroup);
+constructor TLayerCollection.Create(LayerGroup: TCustomLayerGroup);
 begin
   inherited Create(TLayerFraction);
   Assert(LayerGroup <> nil);
@@ -1457,5 +1329,233 @@ begin
   end;
 end;
 
-end.
+procedure TCustomLayerGroup.Assign(Source: TPersistent);
+var
+  AnotherLayerGroup: TCustomLayerGroup;
+begin
+  // if Assign is updated, update IsSame too.
+  inherited;
+  AnotherLayerGroup := Source as TCustomLayerGroup;
+  if not IsSame(AnotherLayerGroup) then
+  begin
+    // It is important for AquiferName to be assigned after DataArrayName
+    // because if AquiferName has changed, DataArrayName will
+    // need to be changed too and that change should not be overwritten
+    // by another assignment to DataArrayName.
+    if AnotherLayerGroup.DataArrayName <> '' then
+    begin
+      DataArrayName := AnotherLayerGroup.DataArrayName;
+    end;
+    AquiferName := AnotherLayerGroup.AquiferName;
+    GrowthMethod := AnotherLayerGroup.GrowthMethod;
+    GrowthRate := AnotherLayerGroup.GrowthRate;
+    LayerCollection := AnotherLayerGroup.LayerCollection;
+  end;
+end;
 
+function TCustomLayerGroup.Collection: TCustomLayerStructure;
+begin
+  result := inherited Collection as TCustomLayerStructure;
+end;
+
+procedure TCustomLayerGroup.SetDataArrayName(const NewName: string);
+var
+  Model: TPhastModel;
+  DataArray: TDataArray;
+  UnitAbove, UnitBelow: TLayerGroup;
+  NewFormula: string;
+begin
+  if FDataArrayName <> NewName then
+  begin
+    if Collection.Model <> nil then
+    begin
+      Model := Collection.Model as TPhastModel;
+      if not(csLoading in Model.ComponentState) then
+      begin
+        DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
+        if DataArray <> nil then
+        begin
+          Model.RenameDataArray(DataArray, NewName);
+        end
+        else
+        begin
+          DataArray := Model.DataArrayManager.GetDataSetByName(NewName);
+        end;
+        if DataArray = nil then
+        begin
+          // create a new data array.
+          // First get formula for new layer.
+          if Collection.Count = 1 then
+          begin
+            NewFormula := '0';
+          end
+          else if Index <= 0 then
+          begin
+            // No unit can be inserted above the top of the model.
+            Assert(False);
+          end
+          else if Index = Collection.Count - 1 then
+          begin
+            UnitAbove := Collection.Items[Index - 1] as TLayerGroup;
+            NewFormula := UnitAbove.DataArrayName + ' - 1';
+          end
+          else
+          begin
+            UnitAbove := Collection.Items[Index - 1] as TLayerGroup;
+            UnitBelow := Collection.Items[Index + 1] as TLayerGroup;
+            NewFormula := '(' + UnitAbove.DataArrayName + ' + ' +
+              UnitBelow.DataArrayName + ') / 2';
+          end;
+          // create new data array.
+          DataArray := Model.DataArrayManager.CreateNewDataArray(TDataArray,
+            NewName, NewFormula, [dcName, dcType, dcOrientation, dcEvaluatedAt],
+            rdtDouble, eaBlocks, dsoTop, StrLayerDefinition);
+          DataArray.OnDataSetUsed := Model.ModelLayerDataArrayUsed;
+          Collection.AddOwnedDataArray(DataArray);
+        end;
+        Model.TopGridObserver.TalksTo(DataArray);
+        DataArray.TalksTo(Model.ThreeDGridObserver);
+        Model.ThreeDGridObserver.StopsTalkingTo(DataArray);
+        Model.UpdateDataArrayDimensions(DataArray);
+        // DataArray.UpdateDimensions(Model.Grid.LayerCount,
+        // Model.Grid.RowCount, Model.Grid.ColumnCount);
+      end;
+    end;
+    FDataArrayName := NewName;
+    InvalidateModel;
+  end;
+end;
+
+constructor TCustomLayerGroup.Create(Collection: TCollection);
+begin
+  inherited;
+  FLayerCollection:= TLayerCollection.Create(self);
+  FGrowthRate := 1.2;
+end;
+
+destructor TCustomLayerGroup.Destroy;
+begin
+  FLayerCollection.Free;
+  inherited;
+end;
+
+function TCustomLayerGroup.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  AnotherLayerGroup : TCustomLayerGroup;
+begin
+  AnotherLayerGroup := AnotherItem as TCustomLayerGroup;
+  result := (AnotherLayerGroup.AquiferName = AquiferName)
+    and (AnotherLayerGroup.DataArrayName = DataArrayName)
+    and (AnotherLayerGroup.GrowthMethod = GrowthMethod)
+    and (AnotherLayerGroup.GrowthRate = GrowthRate)
+    and AnotherLayerGroup.LayerCollection.IsSame(LayerCollection)
+end;
+
+function TCustomLayerGroup.LayerCount: integer;
+begin
+  result := LayerCollection.Count + 1;
+end;
+
+procedure TCustomLayerGroup.Loaded;
+var
+  Model: TPhastModel;
+  DataArray: TDataArray;
+begin
+  Model := Collection.Model as TPhastModel;
+  DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
+  Assert( DataArray <> nil);
+  Model.TopGridObserver.TalksTo(DataArray);
+  DataArray.TalksTo(Model.ThreeDGridObserver);
+  Model.ThreeDGridObserver.StopsTalkingTo(DataArray);
+end;
+
+procedure TCustomLayerGroup.SetAquiferName(const Value: string);
+begin
+  Assert(Value <> '');
+  if FAquiferName <> Value then
+  begin
+    if Collection.Model <> nil then
+    begin
+      if UpperCase(FAquiferName) = UpperCase(Value) then
+      begin
+        // Change case of the data set
+        DataArrayName := StringReplace(DataArrayName,
+          GenerateNewRoot(FAquiferName), GenerateNewRoot(Value), []);
+      end
+      else
+      begin
+        if Index = 0 then
+        begin
+          DataArrayName := GenerateNewName(Value);
+        end
+        else
+        begin
+          DataArrayName := GenerateNewRoot(Value + '_Bottom');
+        end;
+      end;
+    end;
+    FAquiferName := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TCustomLayerGroup.SetGrowthMethod(const Value: TGrowthMethod);
+begin
+  if FGrowthMethod <> Value then
+  begin
+    FGrowthMethod := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TCustomLayerGroup.SetGrowthRate(const Value: real);
+begin
+  if FGrowthRate <> Value then
+  begin
+    FGrowthRate := Value;
+    InvalidateModel;
+  end;
+end;
+
+function TCustomLayerGroup.StoreLayerCollection: boolean;
+begin
+  result := True;
+end;
+
+procedure TCustomLayerGroup.SetLayerCollection(const Value: TLayerCollection);
+begin
+  FLayerCollection.Assign(Value);
+end;
+
+function TCustomLayerStructure.LayerCount: integer;
+var
+  Index: integer;
+  LayerGroup: TCustomLayerGroup;
+begin
+  Result := 0;
+  // Skip the top of the model: it doesn't count.
+  for Index := 1 to Count - 1 do
+  begin
+    LayerGroup := Items[Index] as TCustomLayerGroup;
+    Result := Result + LayerGroup.LayerCount;
+  end;
+end;
+
+procedure TCustomLayerStructure.Loaded;
+var
+  Index: Integer;
+begin
+  for Index := 0 to Count - 1 do
+  begin
+    (Items[Index] as TCustomLayerGroup).Loaded;
+  end;
+end;
+
+{ TSutraLayerStructure }
+
+constructor TSutraLayerStructure.Create(Model: TBaseModel);
+begin
+  inherited Create(TSutraLayerGroup, Model);
+end;
+
+end.

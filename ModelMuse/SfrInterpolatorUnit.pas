@@ -64,6 +64,16 @@ implementation
 
 uses TripackProcedures, SfrProcedures;
 
+resourcestring
+  StrAtLeastThreePoint = 'At least three points must be defined.';
+  StrErrorInTRMESHThe = 'Error in TRMESH: the first three nodes are collinea' +
+  'r.';
+  StrErrorInTRMESHInv = 'Error in TRMESH: invalid triangulation.';
+  StrErrorInTRMESHDup = 'Error in TRMESH: duplicate nodes encountered.';
+  StrErrorInZGRADGIE = 'Error in ZGRADG:  IER = %0:d, NIT = %1:d';
+  StrErrorInINTRCOIER = 'Error in INTRCO, IER = %0:d X = %1:g Y = %2:g';
+  StrErrorInINTRC1IER = 'Error in INTRC1, IER = %0:d X = %1:g Y = %2:g';
+
 procedure TSfrInterpolator.Finalize;
 begin
   SetLength(FX, 0);
@@ -103,7 +113,7 @@ begin
   N := Length(X);
   if N < 3 then
   begin
-    raise ESfrError.Create('At least three points must be defined.');
+    raise ESfrError.Create(StrAtLeastThreePoint);
   end;
 
   // If possible, make sure the first three points are not colinear.
@@ -155,18 +165,15 @@ begin
 
   IF (IER = -2) THEN
   begin
-    raise ESfrError.Create(
-      'Error in TRMESH: the first three nodes are collinear.');
+    raise ESfrError.Create(StrErrorInTRMESHThe);
   end
   ELSE IF (IER = -4) THEN
   begin
-    raise ESfrError.Create(
-      'Error in TRMESH: invalid triangulation.');
+    raise ESfrError.Create(StrErrorInTRMESHInv);
   end
   ELSE IF (IER > 0) THEN
   begin
-    raise ESfrError.Create(
-      'Error in TRMESH: duplicate nodes encountered.');
+    raise ESfrError.Create(StrErrorInTRMESHDup);
   END
   else if (IER <> 0) then
   begin
@@ -225,9 +232,7 @@ begin
                   GRAD, IER);
       IF (IER < 0) THEN
       BEGIN
-        raise ESfrError.Create(
-          'Error in ZGRADG:  IER = '
-          + IntToStr(IER) + ', NIT = ' + IntToStr(NITZ));
+        raise ESfrError.Create(Format(StrErrorInZGRADGIE, [IER, NITZ]));
       END;
     end
     ELSE
@@ -262,8 +267,7 @@ begin
   INTRC0 (X, Y, 0, nil, N, FX, FY, FZ, LIST,LPTR, LEND, IST,result, IER);
   if IER < 0 then
   begin
-    raise ESfrError.Create('Error in INTRCO, IER = ' + IntToStr(IER)
-      + ' X = ' + FloatToStr(X) + ' Y = ' + FloatToStr(Y));
+    raise ESfrError.Create(Format(StrErrorInINTRCOIER, [IER, X, Y]));
   end;
 end;
 
@@ -276,8 +280,7 @@ begin
     SIGMA, GRAD, False, IST, result ,PZX,PZY, IER);
   if IER < 0 then
   begin
-    raise ESfrError.Create('Error in INTRC1, IER = ' + IntToStr(IER)
-      + ' X = ' + FloatToStr(X) + ' Y = ' + FloatToStr(Y));
+    raise ESfrError.Create(Format(StrErrorInINTRC1IER, [IER, X, Y]));
   end;
 end;
 

@@ -7,16 +7,16 @@ C     ALLOCATE ARRAY STORAGE FOR STREAMS
 C     INITIALIZE VARIABLES FOR SFR PACKAGES
 C     READ STREAM DATA THAT IS CONSTANT FOR ENTIRE SIMULATION:
 C     REACH DATA AND PARAMETER DEFINITIONS
-C     VERSION  7.1.01: February 15, 2009
+!--------REVISED FOR MODFLOW-2005 RELEASE 1.9, FEBRUARY 6, 2012
 C     ******************************************************************
 C     SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GWFSFRMODULE
       USE GLOBAL,       ONLY: IOUT, IBOUND, BOTM, STRT, DELR, DELC,
-     +                        ITRSS
-      USE GWFLPFMODULE, ONLY: SC2LPF=>SC2
+     +                        ITRSS,NCOL,NROW  !CJM added ncol and nrow
+      USE GWFLPFMODULE, ONLY: SC2LPF=>SC2, LAYTYP
       USE GWFBCFMODULE, ONLY: SC1, SC2, LAYCON
-      USE GWFHUFMODULE, ONLY: SC2HUF
+      USE GWFHUFMODULE, ONLY: SC2HUF, LTHUF
       IMPLICIT NONE
       INTRINSIC ABS, DBLE
 C     ------------------------------------------------------------------
@@ -28,16 +28,20 @@ C     ------------------------------------------------------------------
 C     LOCAL VARIABLES
 C     ------------------------------------------------------------------
       CHARACTER*200 line
+!IFACE
+      CHARACTER*8 face
+      INTEGER iface,ndash
       INTEGER lloc, istart, istop, nparseg, i, ii, nlst, lb, ichk, icalc
       INTEGER nseg, nreach, krch, irch, jrch, jseg, ireach, ksfropt
       INTEGER krck, irck, jrck, jsegck, ireachck, kkptflg, ib
       INTEGER lstsum, lstbeg, numinst, idum(1), ip, iterp, mstrmar
-      INTEGER nssar, nstrmar, nsegdim
+      INTEGER nssar, nstrmar, Ltyp, NPP, MXVL, IRFG, ITRFLG
+      INTEGER k, kkrch
       REAL r, seglen, sumlen, thsslpe, thislpe, uhcslpe, rchlen, dist
       REAL epsslpe
 C     ------------------------------------------------------------------
       Version_sfr =
-     +'$Id: gwf2sfr7.f 1128 2009-09-28 22:25:56Z rniswon $'
+     +'$Id: gwf2sfr7.f 2359 2011-12-29 00:41:23Z rniswon $'
       iterp = 1
       idum(1) = 0
       ALLOCATE (NSS, NSTRM,TOTSPFLOW)
@@ -46,28 +50,73 @@ C     ------------------------------------------------------------------
       ALLOCATE (NUZST, NSTOTRL, NUMAVE)
       ALLOCATE (ITMP, IRDFLG, IPTFLG, NP)
       ALLOCATE (CONST, DLEAK, IRTFLG, NUMTIM, WEIGHT, FLWTOL)
+      ALLOCATE (NSEGDIM)
       ALLOCATE (SFRRATIN, SFRRATOUT)
       ALLOCATE (STRMDELSTOR_CUM, STRMDELSTOR_RATE)
 C1------IDENTIFY PACKAGE AND INITIALIZE NSTRM.
       WRITE (IOUT, *) 'SFR:'
 !      WRITE (IOUT, 9001) In
-! 9001 FORMAT (1X, /1X, 'SFR7 -- STREAMFLOW ROUTING PACKAGE, VERSION 7.2'
-!     +        ,', 02/03/2009', /, 9X, 'INPUT READ FROM UNIT', I4)
+! 9001 FORMAT (1X, /, ' SFR7 -- STREAMFLOW ROUTING PACKAGE, '
+!     +        ,'VERSION 1.0.4, 2012-02-06', /, 9X, 
+!     +         'INPUT READ FROM UNIT', I4)
 C
 C2------READ COMMENT RECORDS, NSTRM, NSS, NSFRPAR, NPARSEG, CONST,
 C         DLEAK, ISTCB1, ISTCB2.
-      CALL URDCOM(In, IOUT, line)
-      lloc = 1
       ISFROPT = 0
       IUZT = 0
       IRTFLG = 0
       NUMTIM = 1
+      NSEGDIM = 1
       FLWTOL = 1.0E-4
       STRMDELSTOR_CUM = 0.0E0
       STRMDELSTOR_RATE = 0.0E0
       SFRRATIN = 0.0
       SFRRATOUT = 0.0
       TOTSPFLOW = 0.0D0
+      NUMTAB = 0
+      MAXVAL = 1
+      IRFG = 0
+      MXVL = 0
+      NPP = 0
+      ITRFLG = 0
+      lloc = 1
+      CALL URDCOM(In, IOUT, line)
+! Check for alternate input (replacement for setting NSTRM<0).
+      CALL UPARLSTAL(IN,IOUT,LINE,NPP,MXVL)
+      lloc = 1
+      CALL URWORD(LINE,LLOC,ISTART,ISTOP,1,I,R,IOUT,IN)
+      IF(LINE(ISTART:ISTOP).EQ.'REACHINPUT') THEN
+         IRFG = 1
+!         WRITE(IOUT,32)
+!   32  FORMAT(1X,I10,' Some stream information will be read by reach. ',
+!     +                'This option replaces NSTRM<0')
+!      ELSE
+!         WRITE(IOUT,'(A)') ' Segment information will not be ',
+!     +                     ' read by reach'
+      END IF
+      CALL URWORD(LINE,LLOC,ISTART,ISTOP,1,I,R,IOUT,IN)
+      IF(LINE(ISTART:ISTOP).EQ.'TRANSROUTE') THEN
+        ITRFLG = 1
+      END IF
+      IF ( ITRFLG.EQ.1 .OR. IRFG.EQ.1 ) READ(IN,'(A)') LINE
+! Check keyword for tabular inflow rates.
+      CALL UPARLSTAL(IN,IOUT,LINE,NPP,MXVL)
+      lloc = 1
+      CALL URWORD(LINE,LLOC,ISTART,ISTOP,1,I,R,IOUT,IN)
+      IF(LINE(ISTART:ISTOP).EQ.'TABFILES') THEN
+         CALL URWORD(LINE,LLOC,ISTART,ISTOP,2,NUMTAB,R,IOUT,IN)
+         IF(NUMTAB.LT.0) NUMTAB=0
+         CALL URWORD(LINE,LLOC,ISTART,ISTOP,2,MAXVAL,R,IOUT,IN)
+         IF(MAXVAL.LT.0) MAXVAL=0
+         WRITE(IOUT,*) 'NUMTAB,MAXVAL:'
+         WRITE(IOUT,*) NUMTAB,MAXVAL
+!   31    FORMAT(1X,I10,' Specifed inflow files will be read ',
+!     +                 'with a maximum of ',I10,' row entries per file')
+         READ(IN,'(A)') LINE
+!      ELSE
+!         WRITE(IOUT,'(A)') ' No specifed inflow files'
+      END IF
+      lloc = 1
       CALL URWORD(line, lloc, istart, istop, 2, NSTRM, r, IOUT, In)
       CALL URWORD(line, lloc, istart, istop, 2, NSS, r, IOUT, In)
       CALL URWORD(line, lloc, istart, istop, 2, NSFRPAR, r, IOUT, In)
@@ -80,17 +129,26 @@ C         DLEAK, ISTCB1, ISTCB2.
 	1 ISTCB1, ISTCB2:'
 	WRITE(IOUT, *) NSTRM, NSS, NSFRPAR, NPARSEG, CONST, DLEAK, 
 	1   ISTCB1, ISTCB2
+      IF ( NSTRM.LT.0 ) THEN
+!        WRITE(IOUT, 9036)
+! 9036   FORMAT (//, 'NSTRM IS NEGATIVE AND THIS METHOD FOR ',
+!     +          'SPECIFYING INFORMATION BY REACH HAS BEEN REPLACED BY ',
+!     +          'THE KEYWORD OPTION "REACHINPUT"--PROGRAM STOPPING ',/)
+!        CALL USTOP(' ')
+        IRFG = 1
+        NSTRM = ABS(NSTRM)
+      END IF
 C
 C3------READ ISFROPT FLAGS WHEN NSTRM IS LESS THAN ZERO.
-      IF ( NSTRM.LT.0 ) THEN
+      IF ( IRFG.GT.0 ) THEN
         IF ( NSFRPAR.GT.0 ) THEN
 !          WRITE(IOUT, 9002)
-! 9002     FORMAT (//, 'NSTRM IS NEGATIVE AND NSFRPAR IS GREATER THAN ',
-!     +          'ZERO ', /1X , ' ALTERNATE SFR7 OPTIONS DO NOT ',
-!     +          'SUPPORT PARAMETERS--PROGRAM STOPPING ',/)
+! 9002  FORMAT (//, 'KEYWORD "REACHINPUT" IS SPECIFIED AND NSFRPAR IS ',
+!     +  'GREATER THAN  ZERO ', /1X , ' ALTERNATE SFR7 OPTIONS DO NOT ',
+!     +  'SUPPORT PARAMETERS--PROGRAM STOPPING ',/)
           CALL USTOP(' ')
         END IF
-        NSTRM = ABS(NSTRM)
+!        NSTRM = ABS(NSTRM)
         CALL URWORD(line, lloc, istart, istop, 2, ISFROPT, r, IOUT, In)
 	  WRITE(IOUT, *) 'ISFROPT:'
 	  WRITE(IOUT, *) ISFROPT
@@ -107,21 +165,23 @@ C4------READ UNSATURATED FLOW VARIABLES WHEN ISFROPT GREATER THAN 1.
 	    WRITE(IOUT, *) NSTRAIL, ISUZN, NSFRSETS
         END IF
 !4b-----Data read for transient routing.
-        CALL URWORD(line, lloc, istart, istop, 2, IRTFLG, r, IOUT, In)
-        IF ( IRTFLG .GT. 0 ) THEN
-          NUMTIM = 1
-          WEIGHT = 1.0
-          FLWTOL = 1.0D-6
-          CALL URWORD(line, lloc, istart, istop, 2, NUMTIM, r, IOUT, In)
-          CALL URWORD(line, lloc, istart, istop, 3, i, WEIGHT, IOUT, In)
-          CALL URWORD(line, lloc, istart, istop, 3, i, FLWTOL, IOUT, In)
-          IF ( NUMTIM.LT.1 ) NUMTIM = 1
-          IF ( WEIGHT.LT.0.0 .OR. WEIGHT.GT.1.0 ) WEIGHT=1.0
-          IF ( FLWTOL.LT.0.0 ) FLWTOL=0.0
-        ELSE
-          NUMTIM = 1
-          WEIGHT = 1.0
-          FLWTOL = 0.0
+        IF ( ITRFLG.EQ.1 ) THEN
+          CALL URWORD(line, lloc, istart, istop, 2, IRTFLG, r, IOUT, In)
+          IF ( IRTFLG .GT. 0 ) THEN
+            NUMTIM = 1
+            WEIGHT = 1.0
+            FLWTOL = 1.0D-6
+            CALL URWORD(line, lloc, istart, istop,2,NUMTIM, r, IOUT, In)
+            CALL URWORD(line, lloc, istart, istop,3,i, WEIGHT, IOUT, In)
+            CALL URWORD(line, lloc, istart, istop,3,i, FLWTOL, IOUT, In)
+            IF ( NUMTIM.LT.1 ) NUMTIM = 1
+            IF ( WEIGHT.LT.0.0 .OR. WEIGHT.GT.1.0 ) WEIGHT=1.0
+            IF ( FLWTOL.LT.1.0e-6 ) FLWTOL=1.0e-6
+          ELSE
+            NUMTIM = 1
+            WEIGHT = 1.0
+            FLWTOL = 1.0e-6
+          END IF
         END IF
 	  WRITE(IOUT, *) 'IRTFLG, NUMTIM, WEIGHT, FLWTOL:'
 	  WRITE(IOUT, *) IRTFLG, NUMTIM, WEIGHT, FLWTOL
@@ -132,13 +192,31 @@ C4------READ UNSATURATED FLOW VARIABLES WHEN ISFROPT GREATER THAN 1.
         nparseg = 0
       END IF
       IF ( nparseg.LT.0 ) nparseg = 0
-
+      IF ( Iunitbcf.GT.0 ) THEN
+        IF ( ISFROPT.EQ.2 .OR. ISFROPT.EQ.4 ) THEN
+          WRITE(IOUT, 9045)
+ 9045  FORMAT (//, 'If the BCF Package is used and unsaturated ',
+     +  'flow is active then ISFROPT must equal 3 or 5. ',
+     +  '--PROGRAM STOPPING ',/)
+          CALL USTOP(' ')
+        END IF
+      END IF
       nssar = 1
       IF (NSS.GT.0) nssar = NSS
       nstrmar = 1
       IF (NSTRM.GT.0) nstrmar = NSTRM
-      nsegdim = NSS + nparseg
+! RGN put NSEGDIM into module for FMP 10/15/11
+      NSEGDIM = NSS + nparseg
       IF (nsegdim.LT.1) nsegdim = 1
+!IFACE
+!4c-----Look for IFACE Flag
+      iface=0
+      CALL URWORD(line,lloc,istart,istop,1,i,r,IOUT,In)
+      IF(line(istart:istop).EQ.'IFACE') THEN
+        iface=1
+!        WRITE ( IOUT, '(1X,A)')
+!     +    'IFACE values will be read from reach records'
+      END IF
 C
 C5------CALCULATE SPACE NEEDED FOR TABULATED DISCHARGE VERSUS FLOW
 C         AND WIDTH RELATIONS.
@@ -153,20 +231,40 @@ Cdep  changed DSTROT to FXLKOT
       STRIN = 0.0
       STROUT = 0.0
       FXLKOT = 0.0
-      ALLOCATE (STRM(30,nstrmar), ISTRM(5,nstrmar))
+!IFACE -- 6th element of ISTRM is for IFACE
+      ALLOCATE (STRM(30,nstrmar), ISTRM(6,nstrmar))
       ALLOCATE (HSTRM(nstrmar,NUMTIM), HWDTH(nstrmar,NUMTIM))
       ALLOCATE (QSTRM(nstrmar,NUMTIM))
       ALLOCATE (HWTPRM(nstrmar,NUMTIM))
+      ALLOCATE (DVRCH(nstrmar),DVEFF(nstrmar))        !cjm
+      ALLOCATE (DVRCELL(500,2,nss))  !cjm
+      ALLOCATE (RECHSAVE(NCOL,NROW),DVRPERC(NCOL,NROW))   !cjm
+      ALLOCATE (FNETSEEP(NCOL,NROW)) !rgn printing net recharge in UZF
       STRM = 0.0
       HSTRM = 0.0
       QSTRM = 0.0
       HWDTH = 0.0
       HWTPRM = 0.0
       ISTRM = 0
+      DVRCH = 0       !cjm
+      DVEFF = 0.0     !cjm
+      DVRCELL = 0     !cjm
+      RECHSAVE = 0.0  !cjm
+      DVRPERC = 0.0   !cjm
+      FNETSEEP = 0.0  !rgn
       ALLOCATE (SEG(26,nsegdim), ISEG(4,nsegdim), IDIVAR(2,nsegdim))
 Cdep  allocate space for stream outflow derivatives for lake package
       ALLOCATE (DLKOTFLW(200,nssar), SLKOTFLW(200,nssar))
       ALLOCATE (DLKSTAGE(200,nssar))
+      IF ( NUMTAB.GT.0 ) THEN
+        ALLOCATE (TABFLOW(MAXVAL,NSS), TABTIME(MAXVAL,NSS))
+      ELSE
+        ALLOCATE (TABFLOW(1,1), TABTIME(1,1))
+      END IF 
+      ALLOCATE (ISFRLIST(3,nssar))
+      TABFLOW = 0.0
+      TABTIME = 0.0
+      ISFRLIST = 0
       SEG = 0.0
       ISEG = 0
       IDIVAR = 0
@@ -288,6 +386,13 @@ C
       SFRUZBD = 0.0
 C
 C10-----READ AND PRINT DATA FOR EACH STREAM REACH. 
+!IFACE
+      ndash=50
+      face=' '
+      if(iface.eq.1) then
+        face='   IFACE'
+        ndash=ndash+8
+      end if
 C
 C11-----READ AND WRITE DATA FOR EACH REACH ON BASIS OF ISFROPT.
       nseg = 0
@@ -304,39 +409,130 @@ C11-----READ AND WRITE DATA FOR EACH REACH ON BASIS OF ISFROPT.
      
       DO ii = 1, NSTRM
         IF ( ISFROPT.EQ.0 ) THEN
-          READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii)
+!IFACE
+          IF(iface.eq.1) THEN
+            READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii),
+     +                 ISTRM(6, ii)
+          ELSE
+            READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii)
+          END IF
         ELSE IF ( ISFROPT.EQ.1 ) THEN
-          READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii), 
+          IF (iface.eq.1) THEN
+            READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii), 
+     +                 STRM(3, ii), STRM(2, ii), STRM(8, ii), 
+     +                 STRM(6, ii), ISTRM(6, ii)
+          ELSE
+            READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii), 
      +                 STRM(3, ii), STRM(2, ii), STRM(8, ii), 
      +                 STRM(6, ii)
+          END IF
           STRM(4, ii) = STRM(3, ii) - STRM(8, ii)
+          IF ( Iunitlpf.GT.0 ) THEN
+            Ltyp = LAYTYP(krch)
+          ELSEIF ( Iunitbcf.GT.0 ) THEN
+            Ltyp = LAYCON(krch)
+          ELSEIF ( Iunithuf.GT.0 ) THEN
+            Ltyp = LTHUF(krch)
+          END IF
+          IF ( Ltyp.GT.0  .AND. IBOUND(jrch,irch,krch).GT.0 ) THEN 
+            IF ( STRM(4, ii).LT.BOTM(jrch,irch,krch) ) THEN
+              write(iout,*)
+              write(iout,*)'Streambed has lower altitude than ',
+     +                      'GW cell bottom. Model stopping '
+              write(iout,*)'Segment: ',jseg,' Reach: ',ireach
+              write(iout,*)'Layer: ',krch,' Row: ',irch,' Col: ',jrch
+              write(iout,*)'Streambed bottom altitude: ',STRM(4, ii)
+              write(iout,*)'Cell bottom altitude: ',BOTM(jrch,irch,krch)
+              CALL USTOP('')
+            END IF
+          END IF
           IF ( STRM(2, ii).LE.0.0 ) THEN
             WRITE (IOUT, 9017) jseg, ireach
             CALL USTOP(' ')
           END IF
         ELSE IF ( ISFROPT.EQ.2 ) THEN
-          READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii), 
+!IFACE
+          IF (iface.eq.1) THEN
+            READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii), 
+     +                 STRM(3, ii), STRM(2, ii), STRM(8, ii), 
+     +                 STRM(6, ii), THTS(ii), THTI(ii), EPS(ii),
+     +                 ISTRM(6, ii)
+          ELSE
+            READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii), 
      +                 STRM(3, ii), STRM(2, ii), STRM(8, ii), 
      +                 STRM(6, ii), THTS(ii), THTI(ii), EPS(ii)
+          END IF
           STRM(4, ii) = STRM(3, ii) - STRM(8, ii)
+          IF ( Iunitlpf.GT.0 ) THEN
+            Ltyp = LAYTYP(krch)
+          ELSEIF ( Iunitbcf.GT.0 ) THEN
+            Ltyp = LAYCON(krch)
+          ELSEIF ( Iunithuf.GT.0 ) THEN
+            Ltyp = LTHUF(krch)
+          END IF
+          IF ( Ltyp.GT.0  .AND. IBOUND(jrch,irch,krch).GT.0 ) THEN
+            IF ( STRM(4, ii).LT.BOTM(jrch,irch,krch) ) THEN
+              write(iout,*)
+              write(iout,*)'Streambed has lower altitude than ',
+     +                    'GW cell bottom. Model stopping '
+              write(iout,*)'Segment: ',jseg,' Reach: ',ireach
+              write(iout,*)'Layer: ',krch,' Row: ',irch,' Col: ',jrch
+              write(iout,*)'Streambed bottom altitude: ',STRM(4, ii)
+              write(iout,*)'Cell bottom altitude: ',BOTM(jrch,irch,krch)
+              CALL USTOP('')
+            END IF
+          END IF
           IF ( STRM(2, ii).LE.0.0 ) THEN
             WRITE (IOUT, 9017) jseg, ireach
             CALL USTOP(' ')
           END IF
         ELSE IF ( ISFROPT.EQ.3 ) THEN
-          READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii), 
+!IFACE
+          IF (iface.eq.1) THEN
+            READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii), 
+     +                 STRM(3, ii), STRM(2, ii), STRM(8, ii), 
+     +                 STRM(6, ii), THTS(ii), THTI(ii), EPS(ii),
+     +                 UHC(ii), ISTRM(6, ii)
+          ELSE
+            READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii), 
      +                 STRM(3, ii), STRM(2, ii), STRM(8, ii), 
      +                 STRM(6, ii), THTS(ii), THTI(ii), EPS(ii), UHC(ii)
+          END IF
           STRM(4, ii) = STRM(3, ii) - STRM(8, ii)
+          IF ( Iunitlpf.GT.0 ) THEN
+            Ltyp = LAYTYP(krch)
+          ELSEIF ( Iunitbcf.GT.0 ) THEN
+            Ltyp = LAYCON(krch)
+          ELSEIF ( Iunithuf.GT.0 ) THEN
+            Ltyp = LTHUF(krch)
+          END IF
+          IF ( Ltyp.GT.0 .AND. IBOUND(jrch,irch,krch).GT.0 ) THEN
+            IF ( STRM(4, ii).LT.BOTM(jrch,irch,krch) ) THEN
+              write(iout,*)
+              write(iout,*)'Streambed has lower altitude than ',
+     +                      'GW cell bottom. Model stopping '
+              write(iout,*)'Segment: ',jseg,' Reach: ',ireach
+              write(iout,*)'Layer: ',krch,' Row: ',irch,' Col: ',jrch
+              write(iout,*)'Streambed bottom altitude: ',STRM(4, ii)
+              write(iout,*)'Cell bottom altitude: ',BOTM(jrch,irch,krch)
+              CALL USTOP('')
+            END IF
+          END IF
           IF ( STRM(2, ii).LE.0.0 ) THEN
             WRITE (IOUT, 9017) jseg, ireach
             CALL USTOP(' ')
           END IF
         ELSE IF ( ISFROPT.EQ.4 .OR. ISFROPT.EQ.5 ) THEN
-          READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii)
+!IFACE
+          IF (iface.eq.1) THEN
+            READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii),
+     +                 ISTRM(6, ii)
+          ELSE
+            READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii)
+          END IF
         END IF
         IF ( IUZT.EQ.1 ) THEN
-          IF ( STRT(jrch, irch, krch).LE.BOTM(jrch, irch, krch) )
+          IF ( IBOUND(jrch, irch, krch).LE.0 )
      +      WRITE (IOUT, 9018) ireach, jseg
         END IF
  9017   FORMAT (//, ' ***ERROR***  SLOPE IS SPECIFIED LESS THAN OR ', 
@@ -356,7 +552,11 @@ C        AND SPECIFIC YIELD WHEN UNSATURATED FLOW IS ACTIVE.
               THTR(ii) = THTS(ii) - SC2LPF(jrch, irch, krch)
      +                   /(DELR(jrch)*DELC(irch))
             ELSE IF ( Iunitbcf.GT.0 ) THEN
-              IF ( LAYCON(krch).EQ.1 ) THEN
+              IF ( LAYCON(krch).LT.2 ) THEN
+                kkrch = 0
+                DO k = 1, krch
+                IF(LAYCON(K).EQ.3 .OR. LAYCON(K).EQ.2)kkrch = kkrch + 1
+                END DO
                 THTR(ii) = THTS(ii) - SC1(jrch, irch, krch)
      +                   /(DELR(jrch)*DELC(irch))
               ELSE
@@ -371,23 +571,10 @@ C        AND SPECIFIC YIELD WHEN UNSATURATED FLOW IS ACTIVE.
           THTR(ii) = 0.0
         END IF
 !        IF ( ISFROPT.EQ.0 ) THEN
-!          WRITE (IOUT, 9019) krch, irch, jrch, jseg, ireach, STRM(1, ii)
 !        ELSE IF ( ISFROPT.EQ.1 ) THEN
-!          WRITE (IOUT, 9020) krch, irch, jrch, jseg, ireach, STRM(1, ii)
-!     +                       , STRM(3, ii), STRM(2, ii), STRM(8, ii), 
-!     +                       STRM(6, ii)
 !        ELSE IF ( ISFROPT.EQ.2 ) THEN
-!          WRITE (IOUT, 9021) krch, irch, jrch, jseg, ireach, STRM(1, ii)
-!     +                       , STRM(3, ii), STRM(2, ii), STRM(8, ii), 
-!     +                       STRM(6, ii), THTS(ii), THTI(ii), THTR(ii), 
-!     +                       EPS(ii)
 !        ELSE IF ( ISFROPT.EQ.3 ) THEN
-!          WRITE (IOUT, 9022) krch, irch, jrch, jseg, ireach, STRM(1, ii)
-!     +                       , STRM(3, ii), STRM(2, ii), STRM(8, ii), 
-!     +                       STRM(6, ii), THTS(ii), THTI(ii), THTR(ii), 
-!     +                       EPS(ii), UHC(ii)
 !        ELSE IF ( ISFROPT.EQ.4 .OR. ISFROPT.EQ.5 ) THEN
-!          WRITE (IOUT, 9019) krch, irch, jrch, jseg, ireach, STRM(1, ii)
 !        END IF
 ! 9019   FORMAT (2X, I5, 2I7, I8, I9, 3X, 1PE11.4)
 ! 9020   FORMAT (2X, I6, 2I7, I8, I9, 3X, 1PE11.4, 2X, 1PE11.4, 2X, 
@@ -499,11 +686,16 @@ C         AND SPECIFIC YIELD WHEN UNSATURATED FLOW IS ACTIVE.
                     THTR(irch) = THTS(irch) - SC2LPF(jrck, irck, krck)
      +                         /(DELR(jrck)*DELC(irck))
                   ELSE IF ( Iunitbcf.GT.0 ) THEN
-                    IF( LAYCON(krck).EQ.1 ) THEN
+                    IF( LAYCON(krck).EQ.0 ) THEN
                       THTR(irch) = THTS(irch) - SC1(jrck, irck, krck)
      +                         /(DELR(jrck)*DELC(irck))
                     ELSE
-                      THTR(irch) = THTS(irch) - SC2(jrck, irck, krck)
+                      kkrch = 0
+                      DO k = 1, krch
+                        IF(LAYCON(K).EQ.3 .OR. LAYCON(K).EQ.2)
+     +                   kkrch = kkrch + 1
+                      END DO
+                      THTR(irch) = THTS(irch) - SC2(jrck, irck, kkrch)
      +                         /(DELR(jrck)*DELC(irck))
                     END IF
                   ELSE IF( Iunithuf.GT.0 ) THEN
@@ -702,23 +894,28 @@ C     VERSION  7.1: JUNE 29, 2006
 C     ******************************************************************
 C
 C-------SUBROUTINE GWF2SFR7RP
-      SUBROUTINE GWF2SFR7RP(In, Iunitgwt, Iunitlak, Kkper, Nsol, Iouts,
+      SUBROUTINE GWF2SFR7RP(In, Iunitgwt, Iunitlak, Kkper, Kkstp, Nsol,
+     +                      Iouts, Iunitbcf, Iunitlpf, Iunithuf, 
      +                      Igrid)
 C     ******************************************************************
 C     READ STREAM DATA FOR STRESS PERIOD
-C     VERSION  7.1.01: February 15, 2009
+!--------REVISED FOR MODFLOW-2005 RELEASE 1.9, FEBRUARY 6, 2012
 C     Compute three new tables for lake outflow
 C     ******************************************************************
       USE GWFSFRMODULE
       USE GLOBAL,       ONLY: IOUT, ISSFLG, IBOUND, BOTM, HNEW, NLAY
       USE PARAMMODULE,  ONLY: MXPAR, PARTYP, IACTIVE, IPLOC
+      USE GWFLPFMODULE, ONLY: LAYTYP
+      USE GWFBCFMODULE, ONLY: LAYCON
+      USE GWFHUFMODULE, ONLY: LTHUF
       IMPLICIT NONE
 C     ------------------------------------------------------------------
 C     SPECIFICATIONS:
 C     ------------------------------------------------------------------
 C     ARGUMENTS
 C     ------------------------------------------------------------------
-      INTEGER Kkper, In, Iunitgwt, Iunitlak, Nsol, Iouts, Igrid
+      INTEGER Kkper, Kkstp, In, Iunitgwt, Iunitlak, Nsol, Iouts, Igrid
+      Integer Iunitbcf, Iunitlpf, Iunithuf
 C     ------------------------------------------------------------------
 C     LOCAL VARIABLES
 C     ------------------------------------------------------------------
@@ -731,7 +928,8 @@ C     ------------------------------------------------------------------
       INTEGER i, ic, icalc, ichk, icp, iflginit, ii, ik, il, ilay, ip,
      +        ipt, ir, irch, irp, isoptflg, iss, istep, istsg, iwvcnt,
      +        jj, jk, k5, k6, k7, kk, ksfropt, kss, ktot, l, lstbeg,
-     +        nseg, nstrpts
+     +        nseg, nstrpts,krck,irck,jrck,ireachck, j, numval, iunit,
+     +        Ltyp
 C     ------------------------------------------------------------------
 C
 C-------SET POINTERS FOR CURRENT GRID.
@@ -949,6 +1147,7 @@ C18-----COMPUTE STREAM REACH VARIABLES.
         irch = 1
         ksfropt = 0
         DO nseg = 1, NSS
+          ireachck = ISTRM(5, irch)
           icalc = ISEG(1, nseg)
           seglen = SEG(1, nseg)
           runoff = SEG(3, nseg)
@@ -969,6 +1168,9 @@ C19-----COMPUTE VARIABLES NEEDED FOR STREAM LEAKAGE.
             thkslpe = (SEG(7, nseg)-SEG(12, nseg))/seglen
           END IF
           DO ii = 1, ISEG(4, nseg)
+            krck = ISTRM(1, irch)
+            irck = ISTRM(2, irch)
+            jrck = ISTRM(3, irch)
             rchlen = STRM(1, irch)
             dist = sumlen + (0.5*rchlen)
             STRM(12, irch) = runoff*(rchlen/seglen)             
@@ -978,6 +1180,27 @@ C19-----COMPUTE VARIABLES NEEDED FOR STREAM LEAKAGE.
               STRM(2, irch) = elslpe
               STRM(3, irch) = SEG(8, nseg) - (elslpe*dist)
               STRM(4, irch) = STRM(3, irch) - avthk
+              IF ( Iunitlpf.GT.0 ) THEN
+                Ltyp = LAYTYP(krck)
+              ELSEIF ( Iunitbcf.GT.0 ) THEN
+                Ltyp = LAYCON(krck)
+              ELSEIF ( Iunithuf.GT.0 ) THEN
+                Ltyp = LTHUF(krck)
+              END IF
+              IF ( Ltyp.GT.0 .AND. IBOUND(jrck,irck,krck).GT.0 ) THEN
+                IF ( STRM(4, irch).LT.BOTM(jrck,irck,krck) ) THEN
+                  write(iout,*)'Streambed has lower altitude than ',
+     +                      'GW cell bottom. Model stopping '
+                  write(iout,*)'Segment: ',nseg,' Reach: ',ireachck
+                  write(iout,*)'Layer: ',krck,' Row: ',irck,' Col: ',
+     +                          jrck
+                  write(iout,*)'Streambed bottom altitude: ',
+     +                          STRM(4, irch)
+                  write(iout,*)'Cell bottom altitude: ',
+     +                        BOTM(jrck,irck,krck)
+                  CALL USTOP('')
+                END IF
+              END IF
               STRM(6, irch) = avhc
               STRM(8, irch) = avthk 
 C20-----COMPUTE STREAMBED ELEVATION AND STREAM WIDTH FOR BEGINNING
@@ -1202,13 +1425,13 @@ C        IN FARM PROCESS.
             sumlen = 0.0
             DO irch = 1, NSTRM
               IF( IDIVAR(1, ISTRM(4, irch)).EQ.IDIVAR(1, nseg) ) THEN
-                icalc = ISEG(1, nseg)  !rsr, icalc needs a value
+                icalc = ISEG(1, nseg)  
                 rchlen = STRM(1, irch)
                 dist = sumlen + (0.5 * rchlen)
                 sumlen = sumlen + rchlen
                 ic = ISTRM(3, irch)
                 ir = ISTRM(2, irch)
-                updiff = 0.0   !rsr, added to make sure updiff has a value
+                updiff = 0.0   
                 IF( ISTRM(5, irch).EQ.1 ) updiff = BOTM(ic, ir, 0) -
      +                                    SEG(8, ISTRM(4, irch))
                 dndiff = SEG(13, ISTRM(4, irch))
@@ -1289,9 +1512,8 @@ C
 C31-----SKIP IF CELL IS OUTSIDE ACTIVE BOUNDARY OR IS NOT WATER TABLE.
 Cdep
 C31B-----SEARCH FOR UPPER MOST ACTIVE CELL IN STREAM REACH.
-          ilay = il   !rsr, moved before IF to be sure ilay has a value
+          ilay = il   
           IF ( IBOUND(ic, ir, il).GT.0 ) THEN
-!rsr        ilay = il
             TOPCELL: DO WHILE ( ilay.LE.NLAY )
               IF ( HNEW(ic, ir, ilay).LE.BOTM(ic,ir,ilay) ) THEN
                 ilay = ilay + 1
@@ -1464,6 +1686,39 @@ C        LAKES ARE COMPUTED IN THE LAKE PACKAGE.
 !      IF ( Iunitlak.GT.0 ) THEN
 !        CALL GWF2SFR7LAKOUTFLW(1)
 !      END IF
+CC45-----READ TABLES FOR SPECIFIED INFLOWS
+      IF ( Kkper.EQ.1 ) THEN
+        IF ( NUMTAB.GT.0 ) THEN
+          DO i=1,NUMTAB
+! segment number, number of rows, unit number
+            READ(In,*)ISFRLIST(1,i),ISFRLIST(2,i),ISFRLIST(3,i)
+	      WRITE(iout, *) 'SEGNUM NUMVAL IUNIT:'
+	      WRITE(iout, *) ISFRLIST(1,i),ISFRLIST(2,i),ISFRLIST(3,i)
+!            WRITE(iout,9033)ISFRLIST(1,i),ISFRLIST(3,i)
+!            WRITE(iout,9031)
+            numval = ISFRLIST(2,i)
+            iunit = ISFRLIST(3,i)
+            DO j = 1, numval
+              READ(iunit,*)TABTIME(j,ISFRLIST(1,i)),
+     +                     TABFLOW(j,ISFRLIST(1,i))
+              IF ( TABFLOW(j,ISFRLIST(1,i)).LT.0.0 ) THEN
+                TABFLOW(j,ISFRLIST(1,i)) = 0.0
+!                WRITE(IOUT,9029)
+              END IF
+              WRITE(IOUT,*)TABTIME(j,ISFRLIST(1,i)),
+     +                        TABFLOW(j,ISFRLIST(1,i))
+!              WRITE(IOUT,9032)TABTIME(j,ISFRLIST(1,i)),
+!     +                        TABFLOW(j,ISFRLIST(1,i))
+            END DO
+          END DO
+        END IF
+      END IF
+ 9029 FORMAT('A NEGATIVE VALUE FOR FLOW WAS SPECIFIED IN A ',
+     +        'SFR TABULAR INFLOW FILE. VALUE WILL BE RESET TO ZERO')
+ 9033 FORMAT('TABULAR INFLOWS WERE READ FOR SEGMENT ',I6,/
+     +       'FROM FILE UNIT NUMBER ',I6,/)
+ 9031 FORMAT(10X,'TIMES',20X,'INFLOWS')
+ 9032 FORMAT(5X,F20.10,1X,F20.10)
 C
 C45-----RETURN.
       RETURN
@@ -1545,11 +1800,13 @@ C-------SUBROUTINE SGWF2SFR7RDSEG
      +                          Nischk, Ichk, Kkper, Nsol)
 C     ******************************************************************
 C     READ STREAM SEGMENT DATA -- parameters or non parameters
-C     VERSION  7.1: JUNE 29, 2006
+!--------REVISED FOR MODFLOW-2005 RELEASE 1.9, FEBRUARY 6, 2012
 C     ******************************************************************
       USE GWFSFRMODULE, ONLY: NSS, MAXPTS, ISFROPT, IDIVAR, IOTSG, ISEG,
-     +                        SEG, XSEC, QSTAGE, CONCQ, CONCRUN, CONCPPT
+     +                        SEG, XSEC, QSTAGE, CONCQ, CONCRUN,CONCPPT,
+     +                        DVRCH, DVRCELL, RECHSAVE, DVEFF, DVRPERC  !cjm (added DVRCH, DVRCELL and RECHSAVE)
       USE GLOBAL,       ONLY: IOUT
+      USE GWFRCHMODULE,ONLY: RECH  !cjm
       IMPLICIT NONE
 C     ------------------------------------------------------------------
 C     SPECIFICATIONS:
@@ -1563,7 +1820,8 @@ C     ------------------------------------------------------------------
 C     LOCAL VARIABLES
 C     ------------------------------------------------------------------
       INTEGER icalc, idum, ii, iqseg, isol, iupseg, jj, jk, lstend, n, 
-     +        noutseg, nseg, nstrpts
+     +        noutseg, nseg, nstrpts, numcell, i  !cjm (added numcell and i)
+      REAL dum, totdum
 C     ------------------------------------------------------------------
 C
 C1------READ STREAM SEGMENT DATA.
@@ -1574,7 +1832,8 @@ C2------ONLY READ FIRST 4 VARIABLES TO DETERMINE VALUE OF IUPSEG.
         READ (In, *) n, icalc, noutseg, iupseg
         write (IOUT, *) 'n, icalc, noutseg, iupseg:'
         write (IOUT, *) n, icalc, noutseg, iupseg
-        IF ( n.GT.NSS .OR. n.LT.1 ) THEN
+!       IF ( n.GT.NSS .OR. n.LT.1 ) THEN  !cjm (commented this line out)
+        IF ( n.GT.NSS .OR. n.EQ.0 ) THEN              !cjm
           WRITE (IOUT, 9001) n
  9001     FORMAT (1X, /1X, 'SEGMENT NUMBER (NSEG) OUT OF RANGE: ', I6)
           IF ( Ichk.NE.0 ) THEN
@@ -1585,6 +1844,14 @@ C2------ONLY READ FIRST 4 VARIABLES TO DETERMINE VALUE OF IUPSEG.
  9003       FORMAT (1X, 'READING ENTRY ', I6, ' OF ITEM 4A')
           END IF
           CALL USTOP(' ')
+        END IF
+C        
+C2a-----DETERMINE IF SEGMENT OUTFLOW WILL BE DIVERTED TO RECHARGE MF CELLS  !cjm
+        IF ( N.LT.0 ) THEN
+          N = ABS(N)
+          DVRCH(N) = 1
+	  ELSE              !cjm 20090708
+	    DVRCH(N) = 0       !cjm 20090708
         END IF
 C
 C3------DETERMINE WHERE DATA ARE STORED.
@@ -1999,6 +2266,8 @@ C10-----READ DATA SET 4G FOR SEGMENT IF SOLUTES SPECIFIED.
           END DO
         END IF
 C
+C10b----READ CELL INDECES THAT RECEIVE RECHARGE: i,1 = ROW, i,2 = COL  !cjm
+! REW. I have skipped this because it is undocumented and appears to be buggy.
       END DO
 C
 C11-----RETURN.
@@ -2009,7 +2278,7 @@ C-------SUBROUTINE SGWF2SFR7PARMOV
       SUBROUTINE SGWF2SFR7PARMOV(In, Iunitgwt, Nsol)
 C     ******************************************************************
 C     MOVE STREAM PARAMETER DATA INTO ACTIVE SEGMENTS
-C     VERSION  7.1: JUNE 29, 2006
+!--------REVISED FOR MODFLOW-2005 RELEASE 1.9, FEBRUARY 6, 2012
 C     ******************************************************************
       USE GWFSFRMODULE, ONLY: IDIVAR, IOTSG, ISEG, SEG, XSEC, QSTAGE, 
      +                        CONCQ, CONCRUN, CONCPPT, NSEGCK
@@ -2333,6 +2602,11 @@ C     ------------------------------------------------------------------
       DEALLOCATE (GWFSFRDAT(IGRID)%CONST)
       DEALLOCATE (GWFSFRDAT(IGRID)%DLEAK)
       DEALLOCATE (GWFSFRDAT(IGRID)%IOTSG)
+      DEALLOCATE (GWFSFRDAT(IGRID)%DVRCH)     !cjm
+      DEALLOCATE (GWFSFRDAT(IGRID)%DVEFF)     !cjm
+      DEALLOCATE (GWFSFRDAT(IGRID)%DVRCELL)   !cjm
+      DEALLOCATE (GWFSFRDAT(IGRID)%RECHSAVE)  !cjm
+      DEALLOCATE (GWFSFRDAT(IGRID)%DVRPERC)  !cjm
       DEALLOCATE (GWFSFRDAT(IGRID)%NSEGCK)
       DEALLOCATE (GWFSFRDAT(IGRID)%ITRLSTH)
       DEALLOCATE (GWFSFRDAT(IGRID)%ISEG)
@@ -2394,6 +2668,11 @@ C     ------------------------------------------------------------------
       DEALLOCATE (GWFSFRDAT(IGRID)%STRMDELSTOR_CUM)
       DEALLOCATE (GWFSFRDAT(IGRID)%STRMDELSTOR_RATE)
       DEALLOCATE (GWFSFRDAT(IGRID)%TOTSPFLOW)
+      DEALLOCATE (GWFSFRDAT(IGRID)%TABFLOW)
+      DEALLOCATE (GWFSFRDAT(IGRID)%TABTIME)
+      DEALLOCATE (GWFSFRDAT(IGRID)%ISFRLIST)
+      DEALLOCATE (GWFSFRDAT(IGRID)%FNETSEEP)
+      DEALLOCATE (GWFSFRDAT(IGRID)%NSEGDIM)
 C
       END SUBROUTINE GWF2SFR7DA
 C
@@ -2433,6 +2712,11 @@ C     ------------------------------------------------------------------
       FLWTOL=>GWFSFRDAT(IGRID)%FLWTOL
       IRTFLG=>GWFSFRDAT(IGRID)%IRTFLG
       IOTSG=>GWFSFRDAT(IGRID)%IOTSG
+      DVRCH=>GWFSFRDAT(IGRID)%DVRCH        !cjm
+      DVEFF=>GWFSFRDAT(IGRID)%DVEFF        !cjm
+      DVRCELL=>GWFSFRDAT(IGRID)%DVRCELL    !cjm
+      RECHSAVE=>GWFSFRDAT(IGRID)%RECHSAVE  !cjm
+      DVRPERC=>GWFSFRDAT(IGRID)%DVRPERC  !cjm
       NSEGCK=>GWFSFRDAT(IGRID)%NSEGCK
       ITRLSTH=>GWFSFRDAT(IGRID)%ITRLSTH
       ISEG=>GWFSFRDAT(IGRID)%ISEG
@@ -2494,6 +2778,11 @@ C     ------------------------------------------------------------------
       STRMDELSTOR_CUM=>GWFSFRDAT(IGRID)%STRMDELSTOR_CUM
       STRMDELSTOR_RATE=>GWFSFRDAT(IGRID)%STRMDELSTOR_RATE
       TOTSPFLOW=>GWFSFRDAT(IGRID)%TOTSPFLOW     
+      TABFLOW=>GWFSFRDAT(IGRID)%TABFLOW
+      TABTIME=>GWFSFRDAT(IGRID)%TABTIME
+      ISFRLIST=>GWFSFRDAT(IGRID)%ISFRLIST
+      FNETSEEP=>GWFSFRDAT(IGRID)%FNETSEEP
+      NSEGDIM=>GWFSFRDAT(IGRID)%NSEGDIM
 C
       END SUBROUTINE SGWF2SFR7PNT
 C
@@ -2533,6 +2822,11 @@ C     ------------------------------------------------------------------
       GWFSFRDAT(IGRID)%FLWTOL=>FLWTOL
       GWFSFRDAT(IGRID)%IRTFLG=>IRTFLG
       GWFSFRDAT(IGRID)%IOTSG=>IOTSG
+      GWFSFRDAT(IGRID)%DVRCH=>DVRCH        !cjm
+      GWFSFRDAT(IGRID)%DVEFF=>DVEFF        !cjm
+      GWFSFRDAT(IGRID)%DVRCELL=>DVRCELL    !cjm
+      GWFSFRDAT(IGRID)%DVRPERC=>DVRPERC  !cjm
+      GWFSFRDAT(IGRID)%RECHSAVE=>RECHSAVE  !cjm
       GWFSFRDAT(IGRID)%NSEGCK=>NSEGCK
       GWFSFRDAT(IGRID)%ITRLSTH=>ITRLSTH
       GWFSFRDAT(IGRID)%ISEG=>ISEG
@@ -2594,5 +2888,10 @@ C     ------------------------------------------------------------------
       GWFSFRDAT(IGRID)%STRMDELSTOR_CUM=>STRMDELSTOR_CUM
       GWFSFRDAT(IGRID)%STRMDELSTOR_RATE=>STRMDELSTOR_RATE
       GWFSFRDAT(IGRID)%TOTSPFLOW=>TOTSPFLOW
+      GWFSFRDAT(IGRID)%TABFLOW=>TABFLOW
+      GWFSFRDAT(IGRID)%TABTIME=>TABTIME
+      GWFSFRDAT(IGRID)%ISFRLIST=>ISFRLIST
+      GWFSFRDAT(IGRID)%FNETSEEP=>FNETSEEP
+      GWFSFRDAT(IGRID)%NSEGDIM=>NSEGDIM
 C
       END SUBROUTINE SGWF2SFR7PSV

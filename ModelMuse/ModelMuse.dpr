@@ -3,8 +3,6 @@ program ModelMuse;
 // The following option allows up to 3Gb of memory to be used.
 {$SetPEFlags $20}
 
-
-
 //  FastMM4 in 'FastMM4.pas',
 //  FastMove in 'FastCode\FastMove.pas',
 //  FastCode in 'FastCode\FastCode.pas',
@@ -25,6 +23,7 @@ program ModelMuse;
 uses
   FastMM4 in 'FastMM4.pas',
   FastMove in 'FastCode\FastMove.pas',
+  FastcodeCPUID in 'FastCode\FastcodeCPUID.pas',
   madExcept,
   madLinkDisAsm,
   madListHardware,
@@ -419,7 +418,13 @@ uses
   frameMt3dmsFluxObsUnit in 'frameMt3dmsFluxObsUnit.pas' {frameMt3dmsFluxObs: TFrame},
   ModflowMt3dmsLinkWriterUnit in 'ModflowMt3dmsLinkWriterUnit.pas',
   ReadPvalUnit in 'ReadPvalUnit.pas',
-  ReadGlobalsUnit in 'ReadGlobalsUnit.pas';
+  ReadGlobalsUnit in 'ReadGlobalsUnit.pas',
+  frmExportModpathShapefileUnit in 'frmExportModpathShapefileUnit.pas' {frmExportModpathShapefile},
+  SutraMeshUnit in 'SutraMeshUnit.pas',
+  MeshRenumbering in 'MeshRenumbering.pas',
+  QuadMeshGenerator in 'QuadMeshGenerator.pas',
+  ModflowPCGN_WriterUnit in 'ModflowPCGN_WriterUnit.pas',
+  framePackagePcgnUnit in 'framePackagePcgnUnit.pas' {framePackagePcgn: TFrame};
 
 {$R *.res}
 
@@ -429,7 +434,6 @@ begin
   Application.CreateForm(TfrmGoPhast, frmGoPhast);
   Application.CreateForm(TfrmScreenObjectProperties, frmScreenObjectProperties);
   Application.CreateForm(TfrmProgressMM, frmProgressMM);
-  Application.CreateForm(TfrmRunMt3dms, frmRunMt3dms);
   //  Application.CreateForm(TfrmSelectedObjects, frmSelectedObjects);
   Application.CreateForm(TfrmColors, frmColors);
   Application.Run;

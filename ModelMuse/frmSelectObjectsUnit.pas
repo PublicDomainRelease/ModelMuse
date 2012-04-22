@@ -117,6 +117,9 @@ implementation
 uses frmGoPhastUnit, ScreenObjectUnit, GoPhastTypes, UndoItemsScreenObjects, 
   Windows;
 
+resourcestring
+  StrYourModelHasNoOb = 'Your model has no objects.';
+
 {$R *.dfm}
 
 { TfrmSelectObjects }
@@ -180,7 +183,7 @@ begin
     tabSide.TabVisible := lvSide.Items.Count <> 0;
     if not (tabTop.TabVisible or tabFront.TabVisible or tabSide.TabVisible) then
     begin
-      MessageDlg('Your model has no objects.', mtInformation, [mbOK], 0);
+      MessageDlg(StrYourModelHasNoOb, mtInformation, [mbOK], 0);
       Exit;
     end;
   finally
@@ -293,7 +296,7 @@ begin
     end;
   end;
 
-  lblCount.Caption := 'Selected objects = ' + IntToStr(Count)
+  lblCount.Caption := Format('Selected objects = %d', [Count]);
 end;
 
 function TfrmSelectObjects.GetCurrentListView: TListView;

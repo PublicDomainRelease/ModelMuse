@@ -47,6 +47,7 @@ resourcestring
   StrWeight = 'Weight';
   StrTimeTimeObs = 'Time or frequency (TimeObs)';
   StrObservationMethod = 'Observation method';
+  StrWeightPrLayer = 'Weight (prLayer)';
 
 {$R *.dfm}
 
@@ -270,7 +271,7 @@ begin
   rdgObservations.Cells[Ord(cocConcentration),0] := StrConcentration;
   rdgObservations.Cells[Ord(cocWeight),0] := StrWeight;
   rdgObservations.Cells[Ord(cocComment),0] := StrComment;
-  rdgLayers.Cells[Ord(hlFraction),0] := 'Weight (prLayer)';
+  rdgLayers.Cells[Ord(hlFraction),0] := StrWeightPrLayer;
 
 end;
 

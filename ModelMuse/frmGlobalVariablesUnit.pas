@@ -81,6 +81,11 @@ resourcestring
   'global variable names from the global variables file are not included in ' +
   'the model.'#13#10'%s';
   StrErrorReadingValue = 'Error reading value for global variable %s.';
+  StrName = 'Name';
+  StrType = 'Type';
+  StrValue = 'Value';
+  StrComment = 'Comment';
+  StrNewGlobalVariable = 'NewGlobalVariable';
 
 
 {$R *.dfm}
@@ -539,10 +544,10 @@ procedure TfrmGlobalVariables.FormCreate(Sender: TObject);
 begin
   inherited;
   VariableNames := TStringList.Create;
-  rdgGlobalVariables.Cells[0,0] := 'Name';
-  rdgGlobalVariables.Cells[1,0] := 'Type';
-  rdgGlobalVariables.Cells[2,0] := 'Value';
-  rdgGlobalVariables.Cells[3,0] := 'Comment';
+  rdgGlobalVariables.Cells[0,0] := StrName;
+  rdgGlobalVariables.Cells[1,0] := StrType;
+  rdgGlobalVariables.Cells[2,0] := StrValue;
+  rdgGlobalVariables.Cells[3,0] := StrComment;
   FNewGlobals := TGlobalVariables.Create(nil);
   GetData;
 end;
@@ -554,8 +559,8 @@ begin
   VariableNames.Free;
 end;
 
-function TfrmGlobalVariables.GenerateNewName(Root: string = 'NewGlobalVariable'; const
-  CurrentRow: integer = -1): string;
+function TfrmGlobalVariables.GenerateNewName(Root: string = 'NewGlobalVariable';
+  const CurrentRow: integer = -1): string;
 var
   Names: TStringList;
   Index: integer;
@@ -563,7 +568,7 @@ begin
   Root := Trim(Root);
   if Root = '' then
   begin
-    Root := 'NewGlobalVariable';
+    Root := StrNewGlobalVariable;
   end;
 
   // This function generates a name for a data set that is valid
@@ -658,29 +663,35 @@ begin
       GlobalVariable := FNewGlobals[Index];
       rdgGlobalVariables.Cells[Ord(gvName), RowIndex] := GlobalVariable.Name;
       rdgGlobalVariables.Cells[Ord(gvType), RowIndex] :=
-        rdgGlobalVariables.Columns[Ord(gvType)].PickList[Ord(GlobalVariable.Format)];
+        rdgGlobalVariables.Columns[Ord(gvType)].PickList[
+        Ord(GlobalVariable.Format)];
       UpdateSpecialFormat(RowIndex);
       case GlobalVariable.Format of
         rdtDouble:
           begin
-            rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] := FloatToStr(GlobalVariable.RealValue);
+            rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] :=
+              FloatToStr(GlobalVariable.RealValue);
           end;
         rdtInteger:
           begin
-            rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] := IntToStr(GlobalVariable.IntegerValue);
+            rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] :=
+              IntToStr(GlobalVariable.IntegerValue);
           end;
         rdtBoolean:
           begin
             rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] := '';
-            rdgGlobalVariables.Checked[Ord(gvValue), RowIndex] := GlobalVariable.BooleanValue;
+            rdgGlobalVariables.Checked[Ord(gvValue), RowIndex] :=
+              GlobalVariable.BooleanValue;
           end;
         rdtString:
           begin
-            rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] := GlobalVariable.StringValue;
+            rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] :=
+              GlobalVariable.StringValue;
           end;
         else Assert(False);
       end;
-      rdgGlobalVariables.Cells[Ord(gvComment), RowIndex] := GlobalVariable.Comment;
+      rdgGlobalVariables.Cells[Ord(gvComment), RowIndex] :=
+        GlobalVariable.Comment;
     end;
   finally
     rdgGlobalVariables.EndUpdate;

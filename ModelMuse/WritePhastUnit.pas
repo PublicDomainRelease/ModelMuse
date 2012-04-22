@@ -2070,8 +2070,7 @@ begin
               then
             begin
               frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
-                StrNoBoundaryConditio,
-                StrYouMustSpecifyAt);
+                StrNoBoundaryConditio, StrYouMustSpecifyAt);
             end;
 
             WriteLeakyBoundary(Input, TopLeakyZones, FrontLeakyZones,

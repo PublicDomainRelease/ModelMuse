@@ -768,6 +768,15 @@ resourcestring
   StrChangeDataSets = 'change data sets';
   StrEditFluxObservatio = 'edit flux observations';
   StrChangeImageSetting = 'change image settings';
+  StrRedoS = 'Redo %s';
+  StrUndoS = 'Undo %s';
+  StrSubdivide = ' subdivide ';
+  StrLayerD = '%0:s layer %1:d, ';
+  Str0sLayers1d2 = '%0:s layers %1:d-%2:d, ';
+  Str0sRow1d = '%0:s row %1:d, ';
+  Str0sRows1d2d = '%0:s rows %1:d-%2:d, ';
+  Str0sColumn1d = '%0:s column %1:d, ';
+  Str0sColumns1d2 = '%0:s columns %1:d-%2:d, ';
 
 { TUndoDeleteRow }
 
@@ -867,7 +876,7 @@ end;
 
 function TCustomUndo.GetRedoDescription: string;
 begin
-  result := 'Redo ' + Description;
+  result := Format(StrRedoS, [Description]);
 end;
 
 function TCustomUndo.GetRedoMenuText: string;
@@ -877,17 +886,17 @@ end;
 
 function TCustomUndo.GetShortRedoDescription: string;
 begin
-  result := 'Redo ' + Description;
+  result := Format(StrRedoS, [Description]);
 end;
 
 function TCustomUndo.GetShortUndoDescription: string;
 begin
-  result := 'Undo ' + Description;
+  result := Format(StrUndoS, [Description]);
 end;
 
 function TCustomUndo.GetUndoDescription: string;
 begin
-  result := 'Undo ' + Description;
+  result := Format(StrUndoS, [Description]);
 end;
 
 function TCustomUndo.GetUndoMenuText: string;
@@ -1214,44 +1223,38 @@ end;
 
 function TUndoSubdivide.Description: string;
 begin
-  result := ' subdivide ';
+  result := StrSubdivide;
   if LayerCount > 1 then
   begin
     if FirstLayer = LastLayer then
     begin
-      result :=
-        result + 'layer ' + IntToStr(FirstLayer+1) + ', ';
+      result := Format(StrLayerD, [result, FirstLayer+1]);
     end
     else
     begin
-      result := result + 'layers ' + IntToStr(FirstLayer+1) + '-' +
-        IntToStr(LastLayer+1) + ', ';
+      result := Format(Str0sLayers1d2, [result, FirstLayer+1, LastLayer+1]);
     end;
   end;
   if RowCount > 1 then
   begin
     if FirstRow = LastRow then
     begin
-      result := result
-        + 'row ' + IntToStr(FirstRow+1) + ', ';
+      result := Format(Str0sRow1d, [result, FirstRow+1]);
     end
     else
     begin
-      result := result + 'rows ' + IntToStr(FirstRow+1) + '-' +
-        IntToStr(LastRow+1) + ', ';
+      result := Format(Str0sRows1d2d, [result, FirstRow+1, LastRow+1]);
     end;
   end;
   if ColumnCount > 1 then
   begin
     if FirstColumn = LastColumn then
     begin
-      result
-        := result + 'column ' + IntToStr(FirstColumn+1) + ', ';
+      result := Format(Str0sColumn1d, [result, FirstColumn+1]);
     end
     else
     begin
-      result := result + 'columns ' + IntToStr(FirstColumn+1) + '-' +
-        IntToStr(LastColumn+1) + ', ';
+      result := Format(Str0sColumns1d2, [result, FirstColumn+1, LastColumn+1]);
     end;
   end;
   SetLength(result, Length(result) - 2);
@@ -1982,8 +1985,10 @@ begin
       end;
 
       DataStorage.AssignToDataSet(ShouldInvalidateDataArray[Index]);
-      DataStorage.FDataSet.UpdateDimensions(frmGoPhast.Grid.LayerCount,
-        frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
+
+      frmGoPhast.PhastModel.UpdateDataArrayDimensions(DataStorage.FDataSet);
+//      DataStorage.FDataSet.UpdateDimensions(frmGoPhast.Grid.LayerCount,
+//        frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
   //    frmGoPhast.PhastModel.CreateVariables(DataStorage.FDataSet);
     end;
 
@@ -2007,23 +2012,26 @@ begin
     // make sure that if the orientation of the data set has
     // changed that the data sets that are used to color the
     // grid are still valid.
-    if (frmGoPhast.Grid.TopDataSet <> nil)
-      and not (frmGoPhast.Grid.TopDataSet.Orientation
-      in [dsoTop, dso3D]) then
+    if (frmGoPhast.Grid <> nil) then
     begin
-      frmGoPhast.Grid.TopDataSet := nil;
-    end;
-    if (frmGoPhast.Grid.FrontDataSet <> nil)
-      and not (frmGoPhast.Grid.FrontDataSet.Orientation
-      in [dsoFront, dso3D]) then
-    begin
-      frmGoPhast.Grid.FrontDataSet := nil;
-    end;
-    if (frmGoPhast.Grid.SideDataSet <> nil)
-      and not (frmGoPhast.Grid.SideDataSet.Orientation
-      in [dsoSide, dso3D]) then
-    begin
-      frmGoPhast.Grid.SideDataSet := nil;
+      if (frmGoPhast.Grid.TopDataSet <> nil)
+        and not (frmGoPhast.Grid.TopDataSet.Orientation
+        in [dsoTop, dso3D]) then
+      begin
+        frmGoPhast.Grid.TopDataSet := nil;
+      end;
+      if (frmGoPhast.Grid.FrontDataSet <> nil)
+        and not (frmGoPhast.Grid.FrontDataSet.Orientation
+        in [dsoFront, dso3D]) then
+      begin
+        frmGoPhast.Grid.FrontDataSet := nil;
+      end;
+      if (frmGoPhast.Grid.SideDataSet <> nil)
+        and not (frmGoPhast.Grid.SideDataSet.Orientation
+        in [dsoSide, dso3D]) then
+      begin
+        frmGoPhast.Grid.SideDataSet := nil;
+      end;
     end;
 
     if UpdateObjectDisplay and (frmShowHideObjects <> nil) then
@@ -2069,10 +2077,20 @@ var
   DataStorage: TPhastDataSetStorage;
   DataArrayManager: TDataArrayManager;
 begin
-  FTopDataSet := frmGoPhast.PhastModel.Grid.TopDataSet;
-  FFrontDataSet := frmGoPhast.PhastModel.Grid.FrontDataSet;
-  FSideDataSet := frmGoPhast.PhastModel.Grid.SideDataSet;
-  F3DDataSet := frmGoPhast.PhastModel.Grid.ThreeDDataSet;
+  if frmGoPhast.PhastModel.Grid <> nil then
+  begin
+    FTopDataSet := frmGoPhast.PhastModel.Grid.TopDataSet;
+    FFrontDataSet := frmGoPhast.PhastModel.Grid.FrontDataSet;
+    FSideDataSet := frmGoPhast.PhastModel.Grid.SideDataSet;
+    F3DDataSet := frmGoPhast.PhastModel.Grid.ThreeDDataSet;
+  end
+  else
+  begin
+    FTopDataSet := nil;
+    FFrontDataSet := nil;
+    FSideDataSet := nil;
+    F3DDataSet := nil;
+  end;
 
   DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
   for Index := 0 to DataArrayManager.DataSetCount -1 do

@@ -200,7 +200,7 @@
           <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|MODPATH Input Files</text></para>
         </td>
         <td style="width:405px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Creates the input files for MODPATH version 5 and optionally executes MODPATH. &#160;The user may also choose whether or not to force MODPATH to create a new composite budget file. The composite budget file will always be created if it does not exist or if it is older than the corresponding MODFLOW budget file.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Creates the input files for MODPATH version 5 and optionally executes MODPATH. &#160;The user may also choose whether or not to force MODPATH to create a new composite budget file. The composite budget file will always be created if it does not exist or if it is older than the corresponding MODFLOW budget file. If the model has one or more child models, the user must select either the parent model or a child model for which MODPATH will be run.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -248,7 +248,7 @@
           <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Shapefile|Pathlines to Shapefile</text></para>
         </td>
         <td style="width:405px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Pathlines from MODPATH are exported to a 3D Shapefile. Each pathline is exported as a separate shape.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Pathlines from MODPATH are exported to a 3D Shapefile. Each pathline is exported as a separate shape. If the model has one or more child models, you must select the model that has the pathlines you want to export.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -256,7 +256,7 @@
           <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Shapefile|Endpoints at Starting Locations to Shapefile</text></para>
         </td>
         <td style="width:405px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Endpoints from MODPATH are exported to a 3D Shapefile. Each particle will be exported as a separate shape plotted at its starting location.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Endpoints from MODPATH are exported to a 3D Shapefile. Each particle will be exported as a separate shape plotted at its starting location. If the model has one or more child models, you must select the model that has the endpoints you want to export.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -264,7 +264,7 @@
           <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Shapefile|Endpoints at Ending Locations to Shapefile</text></para>
         </td>
         <td style="width:405px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Endpoints from MODPATH are exported to a 3D Shapefile. Each particle will be exported as a separate shape plotted at its ending location.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Endpoints from MODPATH are exported to a 3D Shapefile. Each particle will be exported as a separate shape plotted at its ending location. If the model has one or more child models, you must select the model that has the endpoints you want to export.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -272,7 +272,7 @@
           <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Shapefile|Time Series to Shapefile</text></para>
         </td>
         <td style="width:405px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Times series from MODPATH are exported to a 3D Shapefile. &#160;All the particles at each time point will be part of the same shape.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Times series from MODPATH are exported to a 3D Shapefile. &#160;All the particles at each time point will be part of the same shape. If the model has one or more child models, you must select the model that has the time series you want to export.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">

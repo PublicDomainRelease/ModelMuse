@@ -24,7 +24,7 @@ inherited frmGoPhast: TfrmGoPhast
   TextHeight = 18
   object splitHoriz: TJvNetscapeSplitter
     Left = 0
-    Top = 342
+    Top = 361
     Width = 765
     Height = 10
     Cursor = crVSplit
@@ -42,7 +42,7 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 0
     Top = 68
     Width = 765
-    Height = 274
+    Height = 293
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
@@ -50,7 +50,7 @@ inherited frmGoPhast: TfrmGoPhast
     object splitVertTop: TJvNetscapeSplitter
       Left = 526
       Top = 0
-      Height = 274
+      Height = 293
       Hint = 'Click and drag to resize the windows.'
       Align = alRight
       MinSize = 1
@@ -66,16 +66,16 @@ inherited frmGoPhast: TfrmGoPhast
       Left = 0
       Top = 0
       Width = 526
-      Height = 274
+      Height = 293
       HorzScrollBar.Range = 36
       VertScrollBar.Range = 40
       Align = alClient
       TabOrder = 0
       TabStop = True
       ExplicitWidth = 526
-      ExplicitHeight = 274
+      ExplicitHeight = 293
       inherited rulVertical: TRbwRuler
-        Height = 220
+        Height = 239
         ExplicitTop = 39
         ExplicitHeight = 173
       end
@@ -89,7 +89,7 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited ZoomBox: TQRbwZoomBox2
         Width = 477
-        Height = 220
+        Height = 239
         Image32.Top = 0
         Image32.Width = 477
         Image32.Height = 220
@@ -107,7 +107,7 @@ inherited frmGoPhast: TfrmGoPhast
       Left = 536
       Top = 0
       Width = 229
-      Height = 274
+      Height = 293
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alRight
@@ -115,10 +115,10 @@ inherited frmGoPhast: TfrmGoPhast
       TabStop = True
       ExplicitLeft = 536
       ExplicitWidth = 229
-      ExplicitHeight = 274
+      ExplicitHeight = 293
       inherited rulVertical: TRbwRuler
         Left = 180
-        Height = 220
+        Height = 239
         Align = alRight
         RulerPosition = rpRight
         ExplicitLeft = 194
@@ -152,7 +152,7 @@ inherited frmGoPhast: TfrmGoPhast
       inherited ZoomBox: TQRbwZoomBox2
         Left = 0
         Width = 180
-        Height = 220
+        Height = 239
         ExaggerationDirection = edHorizontal
         HorizontalDirection = hdLeft
         Image32.Top = 0
@@ -172,7 +172,7 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 352
+    Top = 371
     Width = 765
     Height = 133
     Align = alBottom
@@ -279,7 +279,7 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object sbMain: TStatusBar
     Left = 0
-    Top = 485
+    Top = 504
     Width = 765
     Height = 28
     Hint = 'Drag with the mouse to resize status bar panels'
@@ -303,6 +303,7 @@ inherited frmGoPhast: TfrmGoPhast
     OnMouseMove = sbMainMouseMove
     OnMouseUp = sbMainMouseUp
     OnDrawPanel = sbMainDrawPanel
+    ExplicitTop = 485
   end
   object cbControlBar: TControlBar
     Left = 0
@@ -1620,6 +1621,10 @@ inherited frmGoPhast: TfrmGoPhast
         GroupIndex = 1
         RadioItem = True
       end
+      object SUTRA1: TMenuItem
+        Action = acSutraActive
+        GroupIndex = 1
+      end
       object N7: TMenuItem
         Caption = '-'
         GroupIndex = 1
@@ -2496,7 +2501,7 @@ inherited frmGoPhast: TfrmGoPhast
     object acShowAllGridLines: TAction
       Category = 'View'
       AutoCheck = True
-      Caption = 'Show all'
+      Caption = 'Show All'
       Checked = True
       GroupIndex = 2
       ImageIndex = 71
@@ -2505,7 +2510,7 @@ inherited frmGoPhast: TfrmGoPhast
     object acShowExteriorGridLines: TAction
       Category = 'View'
       AutoCheck = True
-      Caption = 'Show exterior'
+      Caption = 'Show Exterior'
       GroupIndex = 2
       ImageIndex = 78
       OnExecute = SetGridLineDrawingChoice
@@ -2513,7 +2518,7 @@ inherited frmGoPhast: TfrmGoPhast
     object acShowActiveGridLines: TAction
       Category = 'View'
       AutoCheck = True
-      Caption = 'Show active'
+      Caption = 'Show Active'
       GroupIndex = 2
       ImageIndex = 80
       OnExecute = SetGridLineDrawingChoice
@@ -2521,7 +2526,7 @@ inherited frmGoPhast: TfrmGoPhast
     object acShowActiveEdge: TAction
       Category = 'View'
       AutoCheck = True
-      Caption = 'Show active edge'
+      Caption = 'Show Active Edge'
       GroupIndex = 2
       ImageIndex = 79
       OnExecute = SetGridLineDrawingChoice
@@ -2637,6 +2642,15 @@ inherited frmGoPhast: TfrmGoPhast
       Category = 'File'
       Caption = '&ZONEBUDGET Input Files'
       OnExecute = miZONEBUDGETInputFilesClick
+    end
+    object acSutraActive: TAction
+      Category = 'Model'
+      Caption = 'SUTRA'
+      GroupIndex = 1
+      HelpContext = 2390
+      HelpKeyword = 'Model'
+      Hint = 'Make SUTRA the selected model type'
+      OnExecute = acSutraActiveExecute
     end
   end
   object ilDisabledImageList: TImageList
@@ -8386,6 +8400,8 @@ inherited frmGoPhast: TfrmGoPhast
     end
   end
   object sdShapefile: TSaveDialog
+    OnClose = sdShapefileClose
+    OnShow = sdShapefileShow
     DefaultExt = '.shp'
     Filter = 'Shapefiles|*.shp'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing]

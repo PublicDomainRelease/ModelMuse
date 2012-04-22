@@ -12,14 +12,10 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
     ActivePage = tabBasic
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 468
-    ExplicitHeight = 317
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 284
+      ExplicitLeft = 8
+      ExplicitTop = 28
       DesignSize = (
         468
         331)
@@ -62,6 +58,13 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         Caption = 'Cycles'
         ExplicitLeft = 356
       end
+      object lblModelSelection: TLabel
+        Left = 8
+        Top = 273
+        Width = 73
+        Height = 13
+        Caption = 'Model selection'
+      end
       object fedModpathFile: TJvFilenameEdit
         Left = 8
         Top = 29
@@ -75,7 +78,6 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         DialogOptions = [ofHideReadOnly, ofFileMustExist]
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
-        ExplicitWidth = 449
       end
       object cbShowPathlines: TCheckBox
         Left = 8
@@ -118,7 +120,6 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
           'Light Blue to Dark Blue'
           'Modified Spectral Scheme'
           'Stepped Sequential')
-        ExplicitWidth = 449
       end
       object jsColorExponent: TJvxSlider
         Left = 8
@@ -135,7 +136,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         Left = 164
         Top = 232
         Width = 65
-        Height = 26
+        Height = 21
         ButtonKind = bkClassic
         Increment = 0.010000000000000000
         MaxValue = 2.000000000000000000
@@ -148,7 +149,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         Left = 365
         Top = 232
         Width = 101
-        Height = 26
+        Height = 21
         ButtonKind = bkClassic
         MaxValue = 2147483647.000000000000000000
         MinValue = 1.000000000000000000
@@ -156,16 +157,21 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         Anchors = [akTop, akRight]
         TabOrder = 6
         OnChange = seCyclesChange
-        ExplicitLeft = 357
+      end
+      object comboModelSelection: TComboBox
+        Left = 8
+        Top = 292
+        Width = 241
+        Height = 21
+        Style = csDropDownList
+        TabOrder = 7
+        Visible = False
+        OnChange = comboModelSelectionChange
       end
     end
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 284
       DesignSize = (
         468
         331)

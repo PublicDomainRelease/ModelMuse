@@ -4,20 +4,21 @@ inherited frmManageSettings: TfrmManageSettings
   Caption = 'Manage Image Settings'
   ClientWidth = 341
   ExplicitWidth = 349
-  ExplicitHeight = 268
+  ExplicitHeight = 260
   PixelsPerInch = 96
   TextHeight = 18
   object rdgSettings: TRbwDataGrid4
     Left = 0
     Top = 0
     Width = 341
-    Height = 152
+    Height = 144
     Align = alClient
     ColCount = 1
     FixedCols = 0
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
     TabOrder = 0
     OnSetEditText = rdgSettingsSetEditText
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = False
     AutoIncreaseColCount = False
@@ -46,12 +47,13 @@ inherited frmManageSettings: TfrmManageSettings
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 152
+    Top = 144
     Width = 341
     Height = 82
     Align = alBottom
@@ -73,9 +75,12 @@ inherited frmManageSettings: TfrmManageSettings
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnOK: TBitBtn
       Left = 149
@@ -84,9 +89,12 @@ inherited frmManageSettings: TfrmManageSettings
       Height = 33
       Anchors = [akTop, akRight]
       Caption = '&OK'
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnCancel: TBitBtn
       Left = 244
@@ -95,8 +103,11 @@ inherited frmManageSettings: TfrmManageSettings
       Height = 33
       Anchors = [akTop, akRight]
       Caption = '&Cancel'
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
     object btnDelete: TBitBtn
       Left = 149
@@ -106,8 +117,7 @@ inherited frmManageSettings: TfrmManageSettings
       Anchors = [akTop, akRight]
       Caption = '&Delete'
       Default = True
-      TabOrder = 3
-      OnClick = btnDeleteClick
+      DoubleBuffered = True
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
         18000000000000030000120B0000120B00000000000000000000FF00FFFF00FF
@@ -135,6 +145,9 @@ inherited frmManageSettings: TfrmManageSettings
         FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
         FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF
         00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF}
+      ParentDoubleBuffered = False
+      TabOrder = 3
+      OnClick = btnDeleteClick
     end
   end
 end

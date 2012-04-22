@@ -179,6 +179,7 @@ uses
 resourcestring
   StrValuesToIgnore = 'Values to ignore';
   StrValues = 'Values';
+  StrNone = 'none';
 
 {$R *.dfm}
 
@@ -385,7 +386,7 @@ procedure TframeCustomColor.FinalizeList(List: TStringList);
 begin
   List.Sort;
   List.Sorted := False;
-  List.Insert(0, 'none');
+  List.Insert(0, StrNone);
 end;
 
 procedure TframeCustomColor.FrameResize(Sender: TObject);
@@ -810,16 +811,8 @@ begin
                 case FLegend.Values.DataType of
                   rdtDouble:
                     begin
-//                      if FLegend.ColoringLimits.LogTransform then
-//                      begin
-//                        rdgLegend.Cells[0,Index + 1] :=
-//                          FloatToStr(FLegend.Values.RealValues[Index]);
-//                      end
-//                      else
-//                      begin
-                        rdgLegend.Cells[0,Index + 1] :=
-                          FloatToStr(FLegend.Values.RealValues[Index]);
-//                      end;
+                      rdgLegend.Cells[0,Index + 1] :=
+                        FloatToStr(FLegend.Values.RealValues[Index]);
                     end;
                   rdtInteger:
                     begin

@@ -17,6 +17,7 @@
 (*                                                                       *)
 (*************************************************************************)
 
+// Modified by Richard B. Winston rbwinst@usgs.gov
 
 unit FastGEO;
 
@@ -8560,6 +8561,7 @@ function Clip(const Segment:TSegment2D; const Quadix:TQuadix2D; out CSegment:TSe
 var
   Pos : Integer;
 begin
+  // Modified by Richard B. Winston
   if not Intersect(Segment,Quadix) then
   begin
     Result := False;
@@ -8573,21 +8575,42 @@ begin
 
   if Intersect(Segment[1].x,Segment[1].y, Segment[2].x,Segment[2].y,Quadix[2].x,Quadix[2].y,Quadix[3].x,Quadix[3].y,CSegment[Pos].x,CSegment[Pos].y) then
     Inc(Pos);
+  if (Pos = 3) and IsEqual(CSegment[1], CSegment[2], Epsilon) then
+  begin
+    Dec(Pos);
+  end;
 
   if (Pos < 3) then
-  if Intersect(Segment[1].x,Segment[1].y,Segment[2].x,Segment[2].y,Quadix[3].x,Quadix[3].y,Quadix[4].x,Quadix[4].y,CSegment[Pos].x,CSegment[Pos].y) then
-    Inc(Pos);
+  begin
+    if Intersect(Segment[1].x,Segment[1].y,Segment[2].x,Segment[2].y,Quadix[3].x,Quadix[3].y,Quadix[4].x,Quadix[4].y,CSegment[Pos].x,CSegment[Pos].y) then
+      Inc(Pos);
+    if (Pos = 3) and IsEqual(CSegment[1], CSegment[2], Epsilon) then
+    begin
+      Dec(Pos);
+    end;
+  end;
 
   if (Pos < 3) then
-  if Intersect(Segment[1].x,Segment[1].y,Segment[2].x,Segment[2].y,Quadix[4].x,Quadix[4].y,Quadix[1].x,Quadix[1].y,CSegment[Pos].x,CSegment[Pos].y) then
-    Inc(Pos);
+  begin
+    if Intersect(Segment[1].x,Segment[1].y,Segment[2].x,Segment[2].y,Quadix[4].x,Quadix[4].y,Quadix[1].x,Quadix[1].y,CSegment[Pos].x,CSegment[Pos].y) then
+      Inc(Pos);
+    if (Pos = 3) and IsEqual(CSegment[1], CSegment[2], Epsilon) then
+    begin
+      Dec(Pos);
+    end;
+  end;
 
   if Pos = 2 then
   begin
     if PointInQuadix(Segment[1],Quadix) then
     CSegment[Pos]:= Segment[1]
+    else if PointInQuadix(Segment[2],Quadix) then
+    CSegment[Pos]:= Segment[2]
     else
-    CSegment[Pos]:= Segment[2];
+    begin
+      Result := False;
+      Exit;
+    end;
   end;
   Result := True;
 end;

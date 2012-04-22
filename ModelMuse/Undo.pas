@@ -173,6 +173,10 @@ procedure DisableUndoToolButtons(UndoButton, RedoButton: TToolButton);
 
 implementation
 
+resourcestring
+  StrErrorAccessToSt = 'Error - access to stack only allowed through Submit ' +
+  'and Clear';
+
 Type
   // use this to get access to MouseLeave.
   TControlCrack = class(TControl);
@@ -482,8 +486,7 @@ end;
 
 procedure TUndoStack.HiddenProcExcept;
 begin
-  raise
-    EHiddenProc.Create('Error - access to stack only allowed through Submit and Clear');
+  raise EHiddenProc.Create(StrErrorAccessToSt);
 end;
 
 function TUndoStack.Add(Item: Pointer): Integer;

@@ -1,13 +1,13 @@
 inherited frameScreenObjectLAK: TframeScreenObjectLAK
   Width = 463
-  Height = 417
+  Height = 567
   ExplicitWidth = 463
-  ExplicitHeight = 417
+  ExplicitHeight = 567
   inherited pnlBottom: TPanel
-    Top = 160
+    Top = 310
     Width = 463
     Height = 257
-    ExplicitTop = 160
+    ExplicitTop = 310
     ExplicitWidth = 463
     ExplicitHeight = 257
     DesignSize = (
@@ -54,8 +54,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
       Top = 77
       Width = 65
       Height = 22
-      ItemHeight = 13
-      TabOrder = 3
+      TabOrder = 6
       Text = '0'
       DataType = dtReal
       Max = 1.000000000000000000
@@ -66,7 +65,6 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
       Top = 45
       Width = 65
       Height = 22
-      ItemHeight = 13
       TabOrder = 4
       Text = '0'
       OnChange = rdeCenterLakeChange
@@ -82,7 +80,6 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
       Height = 22
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 13
       TabOrder = 5
       Text = '0'
       DataType = dtReal
@@ -94,8 +91,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
       Top = 45
       Width = 65
       Height = 22
-      ItemHeight = 13
-      TabOrder = 6
+      TabOrder = 3
       Text = '1'
       DataType = dtInteger
       Max = 1.000000000000000000
@@ -166,6 +162,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
   end
   inherited pnlTop: TPanel
     Width = 463
+    Caption = ''
     ExplicitWidth = 463
     inherited pnlCaption: TPanel
       Width = 461
@@ -174,16 +171,17 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
   end
   inherited pnlGrid: TPanel
     Width = 463
-    Height = 135
+    Height = 96
+    Align = alTop
     ExplicitWidth = 463
-    ExplicitHeight = 135
+    ExplicitHeight = 96
     inherited pnlEditGrid: TPanel
       Width = 461
       ExplicitWidth = 461
     end
     inherited dgModflowBoundary: TRbwDataGrid4
       Width = 461
-      Height = 83
+      Height = 44
       ColCount = 8
       Columns = <
         item
@@ -205,6 +203,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           ParentButtonFont = False
           WordWrapCaptions = True
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = True
         end
         item
@@ -226,6 +225,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           ParentButtonFont = False
           WordWrapCaptions = True
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = True
         end
         item
@@ -247,6 +247,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           ParentButtonFont = False
           WordWrapCaptions = True
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = True
         end
         item
@@ -268,6 +269,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           ParentButtonFont = False
           WordWrapCaptions = False
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = False
         end
         item
@@ -289,6 +291,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           ParentButtonFont = False
           WordWrapCaptions = False
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = False
         end
         item
@@ -310,6 +313,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           ParentButtonFont = False
           WordWrapCaptions = False
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = False
         end
         item
@@ -331,6 +335,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           ParentButtonFont = False
           WordWrapCaptions = False
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = False
         end
         item
@@ -352,10 +357,154 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           ParentButtonFont = False
           WordWrapCaptions = False
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = False
         end>
       ExplicitWidth = 461
-      ExplicitHeight = 83
+      ExplicitHeight = 44
+    end
+  end
+  object pcLake: TPageControl
+    Left = 0
+    Top = 121
+    Width = 463
+    Height = 189
+    ActivePage = tabBathymetry
+    Align = alClient
+    TabOrder = 3
+    object tabLakeProperties: TTabSheet
+      Caption = 'Lake Properties'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+    end
+    object tabBathymetry: TTabSheet
+      Caption = 'Bathymetry'
+      ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+      object rdgLakeTable: TRbwDataGrid4
+        Left = 0
+        Top = 105
+        Width = 455
+        Height = 56
+        Align = alClient
+        ColCount = 3
+        FixedCols = 0
+        RowCount = 152
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
+        TabOrder = 1
+        ExtendedAutoDistributeText = False
+        AutoMultiEdit = False
+        AutoDistributeText = False
+        AutoIncreaseColCount = False
+        AutoIncreaseRowCount = False
+        SelectedRowOrColumnColor = clAqua
+        UnselectableColor = clBtnFace
+        ColorRangeSelection = False
+        ColorSelectedRow = True
+        Columns = <
+          item
+            AutoAdjustRowHeights = True
+            ButtonCaption = '...'
+            ButtonFont.Charset = DEFAULT_CHARSET
+            ButtonFont.Color = clWindowText
+            ButtonFont.Height = -11
+            ButtonFont.Name = 'Tahoma'
+            ButtonFont.Style = []
+            ButtonUsed = False
+            ButtonWidth = 20
+            CheckMax = False
+            CheckMin = True
+            ComboUsed = False
+            Format = rcf4Real
+            LimitToList = False
+            MaxLength = 0
+            ParentButtonFont = False
+            WordWrapCaptions = True
+            WordWrapCells = False
+            CaseSensitivePicklist = False
+            AutoAdjustColWidths = True
+          end
+          item
+            AutoAdjustRowHeights = True
+            ButtonCaption = '...'
+            ButtonFont.Charset = DEFAULT_CHARSET
+            ButtonFont.Color = clWindowText
+            ButtonFont.Height = -11
+            ButtonFont.Name = 'Tahoma'
+            ButtonFont.Style = []
+            ButtonUsed = False
+            ButtonWidth = 20
+            CheckMax = False
+            CheckMin = True
+            ComboUsed = False
+            Format = rcf4Real
+            LimitToList = False
+            MaxLength = 0
+            ParentButtonFont = False
+            WordWrapCaptions = True
+            WordWrapCells = False
+            CaseSensitivePicklist = False
+            AutoAdjustColWidths = True
+          end
+          item
+            AutoAdjustRowHeights = True
+            ButtonCaption = '...'
+            ButtonFont.Charset = DEFAULT_CHARSET
+            ButtonFont.Color = clWindowText
+            ButtonFont.Height = -11
+            ButtonFont.Name = 'Tahoma'
+            ButtonFont.Style = []
+            ButtonUsed = False
+            ButtonWidth = 20
+            CheckMax = False
+            CheckMin = True
+            ComboUsed = False
+            Format = rcf4Real
+            LimitToList = False
+            MaxLength = 0
+            ParentButtonFont = False
+            WordWrapCaptions = True
+            WordWrapCells = False
+            CaseSensitivePicklist = False
+            AutoAdjustColWidths = True
+          end>
+      end
+      object pnlBathChoice: TPanel
+        Left = 0
+        Top = 0
+        Width = 455
+        Height = 105
+        Align = alTop
+        TabOrder = 0
+        object rgBathChoice: TRadioGroup
+          Left = 5
+          Top = 3
+          Width = 185
+          Height = 54
+          Caption = 'Bathymetry Choice'
+          ItemIndex = 0
+          Items.Strings = (
+            'Internal'
+            'External')
+          TabOrder = 0
+          OnClick = rgBathChoiceClick
+        end
+        object feLakeBathymetry: TJvFilenameEdit
+          Left = 5
+          Top = 63
+          Width = 445
+          Height = 21
+          DisabledColor = clBtnFace
+          Filter = '(*.lak_bath, *.txt)|*.lak_bath;*.txt|All files (*.*)|*.*'
+          Enabled = False
+          TabOrder = 1
+        end
+      end
     end
   end
 end

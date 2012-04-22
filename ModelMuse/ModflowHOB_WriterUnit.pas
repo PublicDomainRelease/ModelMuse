@@ -70,6 +70,11 @@ resourcestring
   StrHeadObservationLayAssigned = 'Head Observation Layer Weight incorrectly assigne' +
   'd';
   Str0sDefinedByObje = '%0:s defined by object %1:s';
+  StrWritingHOBPackage = 'Writing HOB Package input.';
+  StrEvaluatingData = 'Evaluating data.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSets3to6 = '  Writing Data Sets 3 to 6.';
 
 { TModflowHobWriter }
 
@@ -371,8 +376,8 @@ begin
     Exit;
   end;
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrHeadObservationsError);
-  frmProgressMM.AddMessage('Writing HOB Package input.');
-  frmProgressMM.AddMessage('Evaluating data.');
+  frmProgressMM.AddMessage(StrWritingHOBPackage);
+  frmProgressMM.AddMessage(StrEvaluatingData);
   Evaluate(Purpose);
   NameOfFile := FileName(AFileName);
   WriteToNameFile(StrHOB, Model.UnitNumbers.UnitNumber(StrHOB), NameOfFile, foInput);
@@ -383,7 +388,7 @@ begin
   end;
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -391,7 +396,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -399,7 +404,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 3 to 6.');
+    frmProgressMM.AddMessage(StrWritingDataSets3to6);
     WriteDataSet2;
 
     FStartingTimes := TRealList.Create;

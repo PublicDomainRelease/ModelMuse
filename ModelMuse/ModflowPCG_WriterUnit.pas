@@ -20,6 +20,9 @@ implementation
 
 uses ModflowUnitNumbers, PhastModelUnit, frmProgressUnit;
 
+resourcestring
+  StrWritingPCGPackage = 'Writing PCG Package input.';
+
 { TPcgWriter }
 
 class function TPcgWriter.Extension: string;
@@ -40,7 +43,8 @@ begin
   WriteInteger(PCG.MXITER);
   WriteInteger(PCG.ITER1);
   WriteInteger(Ord(PCG.NPCOND)+1);
-  WriteString(' # MXITER, ITER1, NPCOND');
+  WriteInteger(Ord(PCG.IHCOFADD));
+  WriteString(' # MXITER, ITER1, NPCOND, IHCOFADD');
   NewLine;
 end;
 
@@ -86,7 +90,7 @@ begin
     NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage('Writing PCG Package input.');
+    frmProgressMM.AddMessage(StrWritingPCGPackage);
     WriteDataSet0;
     WriteDataSet1;
     WriteDataSet2;

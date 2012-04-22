@@ -5,7 +5,6 @@ inherited frmExportShapefileObjects: TfrmExportShapefileObjects
   ClientWidth = 617
   OnResize = FormResize
   ExplicitWidth = 625
-  ExplicitHeight = 240
   PixelsPerInch = 96
   TextHeight = 18
   object Splitter1: TSplitter [0]

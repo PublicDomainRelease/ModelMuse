@@ -109,6 +109,18 @@ uses
 
 resourcestring
   StrChangeHydrogeologic = 'change hydrogeologic units';
+  StrNoHydrogeologicUni = 'No hydrogeologic units have been defined.  Are yo' +
+  'u sure you want to close the dialog box?';
+  StrNoParametersHaveB = 'No parameters have been associated with the follow' +
+  'ing Hydrogeologic units.  Are you sure you want to close the dialog box? ' +
+  '%0:s%0:s%1:s';
+  StrTheFollowingParame = 'The following parameters are not associated with ' +
+  'any Hydrogeologic units.  Are you sure you want to close the dialog box? ' +
+  '%0:s%0:s%1:s';
+  StrParameters = 'Parameters';
+  StrType = 'Type';
+  StrUseZone = 'Use Zone';
+  StrUseMultiplier = 'Use Multiplier';
 
 {$R *.dfm}
 
@@ -123,8 +135,7 @@ var
 begin
   if FHydrogeologicUnits.Count = 0 then
   begin
-    result := MessageDlg('No hydrogeologic units have been defined.  '
-      +'Are you sure you want to close the dialog box?',
+    result := MessageDlg(StrNoHydrogeologicUni,
       mtConfirmation, [mbYes, mbNo], 0) = mrYes;
   end
   else
@@ -142,12 +153,8 @@ begin
       end;
       if Names.Count  > 0 then
       begin
-        result := MessageDlg('No parameters have been associated '
-          +'with the following Hydrogeologic units.  '
-          +'Are you sure you want to close the dialog box?'
-          + sLineBreak + sLineBreak
-          + Names.Text,
-          mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+        result := MessageDlg(Format(StrNoParametersHaveB,
+          [sLineBreak, Names.Text]), mtConfirmation, [mbYes, mbNo], 0) = mrYes;
       end;
     finally
       Names.Free;
@@ -176,12 +183,8 @@ begin
         end;
         if Names.Count  > 0 then
         begin
-          result := MessageDlg('The following parameters are not associated '
-            +'with any Hydrogeologic units.  '
-            +'Are you sure you want to close the dialog box?'
-            + sLineBreak + sLineBreak
-            + Names.Text,
-            mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+          result := MessageDlg(Format(StrTheFollowingParame,
+            [sLineBreak, Names.Text]), mtConfirmation, [mbYes, mbNo], 0) = mrYes;
         end;
       finally
         Names.Free;
@@ -313,10 +316,10 @@ begin
   inherited;
   pcMain.ActivePageIndex := 0;
   rdgParameters.EditorMode := False;
-  rdgParameters.Cells[Ord(hpgcName),0] := 'Parameters';
-  rdgParameters.Cells[Ord(hpgcType),0] := 'Type';
-  rdgParameters.Cells[Ord(hpgcUseZone),0] := 'Use Zone';
-  rdgParameters.Cells[Ord(hpgcUseMultiplier),0] := 'Use Multiplier';
+  rdgParameters.Cells[Ord(hpgcName),0] := StrParameters;
+  rdgParameters.Cells[Ord(hpgcType),0] := StrType;
+  rdgParameters.Cells[Ord(hpgcUseZone),0] := StrUseZone;
+  rdgParameters.Cells[Ord(hpgcUseMultiplier),0] := StrUseMultiplier;
   FHydrogeologicUnits:= THydrogeologicUnits.Create(nil);
   FSelectedUnits:= TList.Create;
   FSelectedTreeNodes:= TList.Create;

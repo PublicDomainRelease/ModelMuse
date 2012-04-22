@@ -436,6 +436,15 @@ procedure Register;
 
 implementation
 
+resourcestring
+  StrErrorNoDataPoint = 'Error: No data points in QuadTree.';
+  StrInvalidPointIndex = 'Invalid point index < 0.';
+  StrInvalidPointIndex2 = 'Invalid point index >= Count.';
+  StrTheMaximumNumberO = 'The maximum number of points in a Quadtree must be' +
+  ' greater than zero.';
+  StrYouMustSetTheNum = 'You must set the number of points before adding any' +
+  ' points to a Quadtree.';
+
 type
   TSelectNode = class(TObject)
     Distance: double;
@@ -1148,7 +1157,7 @@ begin
   end
   else
   begin
-    raise EQTreeError.Create('Error: No data points in QuadTree.');
+    raise EQTreeError.Create(StrErrorNoDataPoint);
   end;
 end;
 
@@ -1254,7 +1263,7 @@ begin
   end
   else
   begin
-    raise EQTreeError.Create('Error: No data points in QuadTree.');
+    raise EQTreeError.Create(StrErrorNoDataPoint);
   end;
 end;
 
@@ -1275,11 +1284,11 @@ var
 begin
   if Index < 0 then
   begin
-    raise EQTreeError.Create('Invalid point index < 0.');
+    raise EQTreeError.Create(StrInvalidPointIndex);
   end;
   if Index >= Count then
   begin
-    raise EQTreeError.Create('Invalid point index >= Count.');
+    raise EQTreeError.Create(StrInvalidPointIndex2);
   end;
   QPoint := FQTreeNode.Points[Index];
   result.X := QPoint.X;
@@ -1711,16 +1720,14 @@ begin
   begin
     if Value <= 0 then
     begin
-      raise EQTreeError.Create('The maximum number of points in a Quadtree '
-        + 'must be greater than zero.');
+      raise EQTreeError.Create(StrTheMaximumNumberO);
     end;
     FMaxPoints := Value;
     SetLength(FQTreeNode.FPts, FMaxPoints);
   end
   else
   begin
-    raise EQTreeError.Create('You must set the number of points before adding '
-      + 'any points to a Quadtree.');
+    raise EQTreeError.Create(StrYouMustSetTheNum);
   end;
 
 end;

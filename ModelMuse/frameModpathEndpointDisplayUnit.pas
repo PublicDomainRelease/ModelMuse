@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, Grids, RbwDataGrid4, StdCtrls, ExtCtrls, JvSpin, JvExControls,
   JvxSlider, Mask, JvExMask, JvToolEdit, ComCtrls, frameModpathDisplayUnit,
-  PathlineReader, UndoItems;
+  PathlineReader, UndoItems, PhastModelUnit;
 
 type
   TEndLimits = (elNone, elColors, elStartLayer, elStartRow, elStartColumn, elStartZone,
@@ -38,10 +38,11 @@ type
     FExistingEndPoints: TEndPointReader;
     FNewEndPoints: TEndPointReader;
     FImportedNewFile: Boolean;
+    FModel: TCustomModel;
     procedure ForceRedraw;
     procedure EnableMenuItems;
   public
-    Constructor Create(var NewEndPoints: TEndPointReader; ImportedNewFile: boolean);
+    Constructor Create(Model: TCustomModel; var NewEndPoints: TEndPointReader; ImportedNewFile: boolean);
     Destructor Destroy; override;
     function Description: string; override;
     procedure DoCommand; override;
@@ -68,6 +69,8 @@ type
     rgWhereToPlot: TRadioGroup;
     rgColorBy: TRadioGroup;
     rdgLimits: TRbwDataGrid4;
+    comboModelSelection: TComboBox;
+    lblModelSelection: TLabel;
     procedure rdgLimitsSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure rdgLimitsSetEditText(Sender: TObject; ACol, ARow: Integer;
@@ -83,9 +86,11 @@ type
     procedure seCyclesChange(Sender: TObject);
     procedure fedModpathFileBeforeDialog(Sender: TObject; var AName: string;
       var AAction: Boolean);
+    procedure comboModelSelectionChange(Sender: TObject);
   protected
     procedure Loaded; override;
   private
+    FEndPointsList: TEndPointObjectList;
     procedure SetIntLimit(LimitRow: TEndLimits; DefaultLimit: integer;
       IntLimit: TShowIntegerLimit);
     procedure SetFloatLimit(LimitRow: TEndLimits; DefaultLimit: Double;
@@ -96,6 +101,8 @@ type
   public
     procedure GetData;
     procedure SetData;
+    constructor Create(Owner: TComponent); override;
+    destructor Destroy; override;
     { Public declarations }
   end;
 
@@ -118,11 +125,12 @@ resourcestring
 
 { TUndoImportEndpoints }
 
-constructor TUndoImportEndpoints.Create(var NewEndPoints: TEndPointReader;
+constructor TUndoImportEndpoints.Create(Model: TCustomModel; var NewEndPoints: TEndPointReader;
   ImportedNewFile: boolean);
 begin
+  FModel := Model;
   FImportedNewFile := ImportedNewFile;
-  FExistingEndPoints:= TEndPointReader.Create;
+  FExistingEndPoints:= TEndPointReader.Create(Model);
   FExistingEndPoints.Assign(frmGoPhast.PhastModel.EndPoints);
   // Take ownership of NewEndPoints.
   FNewEndPoints := NewEndPoints;
@@ -150,14 +158,14 @@ end;
 
 procedure TUndoImportEndpoints.DoCommand;
 begin
-  frmGoPhast.PhastModel.EndPoints := FNewEndPoints;
+  FModel.EndPoints := FNewEndPoints;
   EnableMenuItems;
   ForceRedraw;
 end;
 
 procedure TUndoImportEndpoints.ForceRedraw;
 begin
-  frmGoPhast.PhastModel.EndPoints.Invalidate;
+  FModel.EndPoints.Invalidate;
   frmGoPhast.frame3DView.glWidModelView.Invalidate;
 
   frmGoPhast.frameTopView.ModelChanged := True;
@@ -170,17 +178,34 @@ end;
 
 procedure TUndoImportEndpoints.Undo;
 begin
-  frmGoPhast.PhastModel.EndPoints := FExistingEndPoints;
+  FModel.EndPoints := FExistingEndPoints;
   EnableMenuItems;
   ForceRedraw;
 end;
 
 procedure TUndoImportEndpoints.EnableMenuItems;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled :=
     frmGoPhast.PhastModel.EndPoints.Points.Count > 0;
+  if not frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled
+    and frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled :=
+        ChildModel.EndPoints.Points.Count > 0;
+      if frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled then
+      begin
+        break;
+      end;
+    end;
+  end;
   frmGoPhast.miEndpointsatEndingLocationstoShapefile.Enabled :=
-    frmGoPhast.PhastModel.EndPoints.Points.Count > 0;
+    frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled;
 end;
 
 { TframeModpathEndpointDisplay }
@@ -190,39 +215,19 @@ begin
   pbColorScheme.Invalidate;
 end;
 
-procedure TframeModpathEndpointDisplay.fedModpathFileBeforeDialog(
-  Sender: TObject; var AName: string; var AAction: Boolean);
-begin
-  if AName = '' then
-  begin
-    if frmGoPhast.sdModpathInput.FileName <> '' then
-    begin
-      AName := ChangeFileExt(frmGoPhast.sdModpathInput.FileName,
-        fedModpathFile.DefaultExt);
-    end
-    else if frmGoPhast.sdModflowInput.FileName <> '' then
-    begin
-      AName := ChangeFileExt(frmGoPhast.sdModflowInput.FileName,
-        fedModpathFile.DefaultExt);
-    end
-    else if frmGoPhast.sdSaveDialog.FileName <> '' then
-    begin
-      AName := ChangeFileExt(frmGoPhast.sdSaveDialog.FileName,
-        fedModpathFile.DefaultExt);
-    end;
-  end;
-end;
-
-procedure TframeModpathEndpointDisplay.GetData;
+procedure TframeModpathEndpointDisplay.comboModelSelectionChange(
+  Sender: TObject);
 var
   EndPoints: TEndPointReader;
   Limits: TEndPointDisplayLimits;
   ColorParameters: TColorParameters;
   ALimitRow: TEndLimits;
   ARow: Integer;
+  LocalModel: TCustomModel;
 begin
-  Handle;
-  if frmGoPhast.PhastModel.ModflowPackages.ModPath.Binary then
+  LocalModel := comboModelSelection.Items.Objects[
+    comboModelSelection.ItemIndex] as TCustomModel;
+  if LocalModel.ModflowPackages.ModPath.Binary then
   begin
     fedModpathFile.DefaultExt := '.end_bin';
   end
@@ -230,7 +235,7 @@ begin
   begin
     fedModpathFile.DefaultExt := '.end';
   end;
-  EndPoints := frmGoPhast.PhastModel.EndPoints;
+  EndPoints := FEndPointsList[comboModelSelection.ItemIndex];
   fedModpathFile.FileName := EndPoints.FileName;
 
   cbShowPathlines.Checked := EndPoints.Visible;
@@ -269,6 +274,88 @@ begin
   seCycles.AsInteger := ColorParameters.ColorCycles;
   seColorExponent.Value := ColorParameters.ColorExponent;
   jsColorExponent.Value := Round(ColorParameters.ColorExponent*100);
+end;
+
+constructor TframeModpathEndpointDisplay.Create(Owner: TComponent);
+begin
+  inherited;
+  FEndPointsList := TEndPointObjectList.Create;
+end;
+
+destructor TframeModpathEndpointDisplay.Destroy;
+begin
+  FEndPointsList.Free;
+  inherited;
+end;
+
+procedure TframeModpathEndpointDisplay.fedModpathFileBeforeDialog(
+  Sender: TObject; var AName: string; var AAction: Boolean);
+begin
+  if AName = '' then
+  begin
+    if frmGoPhast.sdModpathInput.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdModpathInput.FileName,
+        fedModpathFile.DefaultExt);
+    end
+    else if frmGoPhast.sdModflowInput.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdModflowInput.FileName,
+        fedModpathFile.DefaultExt);
+    end
+    else if frmGoPhast.sdSaveDialog.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdSaveDialog.FileName,
+        fedModpathFile.DefaultExt);
+    end;
+  end;
+end;
+
+procedure TframeModpathEndpointDisplay.GetData;
+var
+  EndPoints: TEndPointReader;
+  LocalEndPoints: TEndPointReader;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  Handle;
+  if frmGoPhast.PhastModel.ModflowPackages.ModPath.Binary then
+  begin
+    fedModpathFile.DefaultExt := '.end_bin';
+  end
+  else
+  begin
+    fedModpathFile.DefaultExt := '.end';
+  end;
+  EndPoints := frmGoPhast.PhastModel.EndPoints;
+
+  FEndPointsList.Clear;
+  comboModelSelection.Items.Clear;
+  LocalEndPoints := TEndPointReader.Create(frmGoPhast.PhastModel);
+  FEndPointsList.Add(LocalEndPoints);
+  LocalEndPoints.Assign(EndPoints);
+  comboModelSelection.Items.AddObject(frmGoPhast.PhastModel.DisplayName, frmGoPhast.PhastModel);
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    comboModelSelection.Visible := True;
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      comboModelSelection.Items.AddObject(ChildModel.DisplayName, ChildModel);
+      LocalEndPoints := TEndPointReader.Create(ChildModel);
+      FEndPointsList.Add(LocalEndPoints);
+      EndPoints := ChildModel.EndPoints;
+      LocalEndPoints.Assign(EndPoints);
+    end;
+  end
+  else
+  begin
+    comboModelSelection.Visible := False;
+  end;
+  lblModelSelection.Visible := comboModelSelection.Visible;
+  comboModelSelection.ItemIndex := 0;
+  comboModelSelectionChange(nil);
+
 end;
 
 procedure TframeModpathEndpointDisplay.jsColorExponentChanged(Sender: TObject);
@@ -443,12 +530,15 @@ var
   ColorLimits: TEndPointColorLimits;
   ImportedNewFile: Boolean;
   ARow: Integer;
+  LocalModel: TCustomModel;
 begin
   inherited;
+  LocalModel := comboModelSelection.Items.Objects[
+    comboModelSelection.ItemIndex] as TCustomModel;
   ImportedNewFile := False;
-  Grid := frmGoPhast.ModflowGrid;
-  ExistingEndPoints := frmGoPhast.PhastModel.EndPoints;
-  EndPoints := TEndPointReader.Create;
+  Grid := LocalModel.ModflowGrid;
+  ExistingEndPoints := LocalModel.EndPoints;
+  EndPoints := TEndPointReader.Create(LocalModel);
   try
     EndPoints.Assign(ExistingEndPoints);
 
@@ -527,7 +617,7 @@ begin
       ColorParameters.ColorExponent := seColorExponent.Value;
     end;
 
-    Undo := TUndoImportEndPoints.Create(EndPoints, ImportedNewFile);
+    Undo := TUndoImportEndPoints.Create(LocalModel, EndPoints, ImportedNewFile);
     frmGoPhast.UndoStack.Submit(Undo);
   finally
     EndPoints.Free;

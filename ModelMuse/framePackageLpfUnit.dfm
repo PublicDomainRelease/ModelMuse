@@ -22,9 +22,11 @@ inherited framePackageLpf: TframePackageLpf
     ColCount = 1
     Enabled = False
     FixedCols = 0
+    RowCount = 6
     FixedRows = 0
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
     TabOrder = 1
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = False
     AutoIncreaseColCount = False
@@ -54,6 +56,7 @@ inherited framePackageLpf: TframePackageLpf
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = True
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
     ColWidths = (

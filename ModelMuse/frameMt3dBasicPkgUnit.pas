@@ -43,6 +43,10 @@ implementation
 
 {$R *.dfm}
 
+resourcestring
+  StrMobileSpecies = 'Mobile Species';
+  StrImmobileSpecies = 'Immobile Species';
+
 { TframeMt3dBasicPkg }
 
 procedure TframeMt3dBasicPkg.GetData(Package: TModflowPackageSelection);
@@ -55,8 +59,8 @@ begin
   rdeInactiveConcentration.Text := FloatToStr(BasicPackage.InactiveConcentration);
   rdeMinimumSaturatedFraction.Text := FloatToStr(BasicPackage.MinimumSaturatedFraction);
 
-  frameGridMobile.Grid.Cells[0,0] := 'Mobile Species';
-  frameGridImmobile.Grid.Cells[0,0] := 'Immobile Species';
+  frameGridMobile.Grid.Cells[0,0] := StrMobileSpecies;
+  frameGridImmobile.Grid.Cells[0,0] := StrImmobileSpecies;
 end;
 
 procedure TframeMt3dBasicPkg.SetData(Package: TModflowPackageSelection);

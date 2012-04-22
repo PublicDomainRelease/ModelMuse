@@ -18,8 +18,10 @@ type
     function GetOutFlowSegment(Index: integer): integer;
   public
     procedure Assign(Source: TPersistent); override;
-    property ScreenObject: TScreenObject read FScreenObject write SetScreenObject;
-    property NewOutFlowSegment: integer read FNewOutFlowSegment write SetNewOutFlowSegment;
+    property ScreenObject: TScreenObject read FScreenObject
+      write SetScreenObject;
+    property NewOutFlowSegment: integer read FNewOutFlowSegment
+      write SetNewOutFlowSegment;
     property OldOutFlowSegments[Index: integer]: integer read GetOutFlowSegment;
   end;
 
@@ -29,7 +31,8 @@ type
     procedure SetItems(Index: integer; const Value: TStreamLinkageChangeItem);
   public
     Constructor Create;
-    property Items[Index: integer]: TStreamLinkageChangeItem read GetItems write SetItems;
+    property Items[Index: integer]: TStreamLinkageChangeItem read GetItems
+      write SetItems;
     function Add: TStreamLinkageChangeItem;
   end;
 
@@ -70,6 +73,7 @@ uses frmGoPhastUnit, ModflowSfrParamIcalcUnit;
 
 resourcestring
   StrAssignStreamLinkag = 'assign stream linkages';
+  StrNoOutflowSegmentN = 'No outflow segment numbers were changed.';
 
 {$R *.dfm}
 
@@ -305,7 +309,7 @@ begin
     else
     begin
       Beep;
-      MessageDlg('No outflow segment numbers were changed.', mtInformation,
+      MessageDlg(StrNoOutflowSegmentN, mtInformation,
         [mbOK], 0);
     end;
   finally

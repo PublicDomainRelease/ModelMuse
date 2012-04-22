@@ -459,6 +459,7 @@ object frameModpathParticles: TframeModpathParticles
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -481,6 +482,7 @@ object frameModpathParticles: TframeModpathParticles
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -503,6 +505,7 @@ object frameModpathParticles: TframeModpathParticles
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -525,6 +528,7 @@ object frameModpathParticles: TframeModpathParticles
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
           OnEndUpdate = rdgSpecificEndUpdate
@@ -694,6 +698,7 @@ object frameModpathParticles: TframeModpathParticles
           ParentButtonFont = False
           WordWrapCaptions = False
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = True
         end
         item
@@ -715,6 +720,7 @@ object frameModpathParticles: TframeModpathParticles
           ParentButtonFont = False
           WordWrapCaptions = True
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = True
         end>
       OnEndUpdate = rdgReleaseTimesEndUpdate

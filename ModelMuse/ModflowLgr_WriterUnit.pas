@@ -29,6 +29,9 @@ implementation
 uses
   Forms, frmProgressUnit, SysUtils, ModflowUnitNumbers, LayerStructureUnit;
 
+resourcestring
+  StrWritingLGRControl = 'Writing LGR control file.';
+
 { TLgrWriter }
 
 class function TLgrWriter.Extension: string;
@@ -241,7 +244,7 @@ var
   PhastModel: TPhastModel;
   ChildIndex: Integer;
 begin
-  frmProgressMM.AddMessage('Writing LGR control file.');
+  frmProgressMM.AddMessage(StrWritingLGRControl);
 
   FParentNameFile := ChangeFileExt(AFileName, '.nam');
   FNameOfFile := FileName(AFileName);

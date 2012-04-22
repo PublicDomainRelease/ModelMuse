@@ -15,6 +15,7 @@ const
   StrMULT = 'MULT';
   StrCHD = 'CHD';
   StrPCG = 'PCG';
+  StrPCGN = 'PCGN';
   StrGHB = 'GHB';
   StrWEL = 'WEL';
   StrRIV = 'RIV';
@@ -103,7 +104,7 @@ const
   StrFTL                    = 'FTL';
   StrCNF                    = 'CNF';
 
-  Solvers: array[0..4] of string = (StrPCG, StrGMG, StrSIP, StrDE4, StrNWT);
+  Solvers: array[0..5] of string = (StrPCG, StrPCGN, StrGMG, StrSIP, StrDE4, StrNWT);
   FlowPackages: array[0..3] of string = (StrLPF, StrHUF2, StrBCF, StrUPW);
 
 
@@ -195,8 +196,6 @@ const
   Mt3dTob_inConcObs = 21;
   Mt3dTob_inFluxObs = 22;
   Mt3dTob_inSaveObs = 23;
-
-implementation
 
 const
 {
@@ -334,11 +333,16 @@ const
   UPW_Unit = 134;
   LMT6_Unit = 135;
   FTL_Unit = 136;
+  PCGN_Unit = 137;
+  PCGN_UNIT_PC = 138;
+  PCGN_UNIT_TS = 139;
+  PCGN_IPUNIT  = 140;
 
 
 
   GageOutputStartUnit = 205;
 
+implementation
 
 { TUnitNumbers }
 
@@ -393,6 +397,7 @@ begin
   AddItem(StrMULT, MultUnit);
   AddItem(StrCHD, CHD_Unit);
   AddItem(StrPCG, PCG_Unit);
+  AddItem(StrPCGN, PCGN_Unit);
   AddItem(StrNWT, NWT_Unit);
   AddItem(StrGHB, GHB_Unit);
   AddItem(StrWEL, WEL_Unit);

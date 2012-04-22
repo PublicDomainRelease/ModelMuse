@@ -55,29 +55,11 @@ type
     scWell);
 
 procedure TfrmSearch.GetData;
-//var
-//  Index: integer;
-//  DataSet: TDataArray;
 begin
-//  clbChoice.Items.Add('Cell Size');
-//  clbChoice.Items.Add('Specified Head');
-//  clbChoice.Items.Add('Flux');
-//  clbChoice.Items.Add('Leaky');
-//  clbChoice.Items.Add('River');
-//  clbChoice.Items.Add('Well');
-//
-//  for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
-//  begin
-//    DataSet := frmGoPhast.PhastModel.DataSets[Index];
-//    clbChoice.Items.AddObject(DataSet.Name, DataSet);
-//  end;
-
-
   vstObjects.Clear;
   NilBaseNodes;
   UpdateScreenObjects;
   RefreshListOfObjects;
-
 end;
 
 procedure TfrmSearch.HandleChecked(AScreenObject: TScreenObject);
@@ -86,7 +68,6 @@ begin
   if not AScreenObject.Selected then
   begin
     FListOfObjects.Add(AScreenObject);
-//    FCount := FUndoShowHide.AddScreenObjectToChange(AScreenObject);
   end;
 end;
 
@@ -96,7 +77,6 @@ begin
   if AScreenObject.Selected then
   begin
     FListOfObjects.Remove(AScreenObject);
-//    FCount := FUndoShowHide.AddScreenObjectToChange(AScreenObject);
   end;
 end;
 
@@ -105,134 +85,6 @@ begin
   inherited;
   GetData;
 end;
-
-//procedure TfrmSearch.SetData;
-//var
-//  Index: integer;
-//  AScreenObject, FirstScreenObject: TScreenObject;
-//  ViewDirection: TViewDirection;
-//  BoundaryIndex: TSearchChoice;
-//  GoToNextScreenObject: boolean;
-//  DataSetIndex: integer;
-//  DataSet: TDataArray;
-//  Undo: TUndoChangeSelection;
-//  XCoordinate, YCoordinate: double;
-//begin
-//  FirstScreenObject := nil;
-//  ViewDirection := TViewDirection(rgDirecton.ItemIndex);
-//
-//  Undo := TUndoChangeSelection.Create;
-//
-//  for Index := frmGoPhast.PhastModel.ScreenObjectCount - 1 downto 0 do
-//  begin
-//    AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
-//
-//    if AScreenObject.Deleted then
-//    begin
-//      Continue;
-//    end;
-//
-//    if AScreenObject.ViewDirection <> ViewDirection then
-//    begin
-//      AScreenObject.Selected := False;
-//      Continue;
-//    end;
-//
-//    if clbChoice.Checked[Ord(scCellSize)] then
-//    begin
-//      if AScreenObject.CellSizeUsed then
-//      begin
-//        AScreenObject.Selected := True;
-//        FirstScreenObject := AScreenObject;
-//        Continue;
-//      end;
-//    end;
-//
-//    GoToNextScreenObject := False;
-//    for BoundaryIndex := scSpecifiedHead to High(TSearchChoice) do
-//    begin
-//      if clbChoice.Checked[Ord(BoundaryIndex)] then
-//      begin
-//        if Ord(AScreenObject.BoundaryTypeUsed) = Ord(BoundaryIndex) then
-//        begin
-//          AScreenObject.Selected := True;
-//          FirstScreenObject := AScreenObject;
-//          GoToNextScreenObject := True;
-//          break;
-//        end;
-//      end;
-//    end;
-//
-//    if GoToNextScreenObject then
-//    begin
-//      Continue;
-//    end;
-//
-//    for DataSetIndex := Ord(High(TSearchChoice)) + 1 to clbChoice.Items.Count - 1
-//      do
-//    begin
-//      if clbChoice.Checked[DataSetIndex] then
-//      begin
-//        DataSet := clbChoice.Items.Objects[DataSetIndex] as TDataArray;
-//        if AScreenObject.IndexOfDataSet(DataSet) >= 0 then
-//        begin
-//          AScreenObject.Selected := True;
-//          FirstScreenObject := AScreenObject;
-//          GoToNextScreenObject := True;
-//          break;
-//        end;
-//      end;
-//    end;
-//
-//    if GoToNextScreenObject then
-//    begin
-//      Continue;
-//    end;
-//
-//    AScreenObject.Selected := False;
-//  end;
-//
-//  if FirstScreenObject = nil then
-//  begin
-//    Beep;
-//    MessageDlg('No objects were found that meet the selection criteria.',
-//      mtInformation, [mbOK], 0);
-//  end
-//  else
-//  begin
-//    XCoordinate := FirstScreenObject.Points[0].X;
-//    YCoordinate := FirstScreenObject.Points[0].Y;
-//    case FirstScreenObject.ViewDirection of
-//      vdTop:
-//        begin
-//          SetTopPosition(XCoordinate, YCoordinate);
-//        end;
-//      vdFront:
-//        begin
-//          SetFrontPosition(XCoordinate, YCoordinate);
-//        end;
-//      vdSide:
-//        begin
-//          SetSidePosition(YCoordinate, XCoordinate);
-//        end;
-//    else
-//      Assert(False);
-//    end;
-//    ModalResult := mrOK;
-//  end;
-//
-//  Undo.SetPostSelection;
-//
-//  if Undo.SelectionChanged then
-//  begin
-//    frmGoPhast.UndoStack.Submit(Undo);
-//  end
-//  else
-//  begin
-//    Undo.Free;
-//  end;
-//
-//end;
 
 function TfrmSearch.ShouldCheckBoxBeChecked(
   ScreenObject: TScreenObject): boolean;

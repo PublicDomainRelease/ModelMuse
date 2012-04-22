@@ -93,6 +93,7 @@ uses frmGoPhastUnit, Mt3dmsTimesUnit;
 
 resourcestring
   StrChangeOutputContro = 'change output control';
+  StrOutputTimesTIMPRS = 'Output times (TIMPRS)';
 
 {$R *.dfm}
 
@@ -126,17 +127,7 @@ begin
   end;
   jvPages.ActivePage := jvspGeneral;
 
-//  rdgPrint.Cells[Ord(mpcName), Ord(mprName)] := '';
-//  rdgPrint.Cells[Ord(mpcName), Ord(mprConc)] := 'Concentration (IFMTCN)';
-//  rdgPrint.Cells[Ord(mpcName), Ord(mprParticles)] := 'Number of particles per cell (IFMTNP)';
-//  rdgPrint.Cells[Ord(mpcName), Ord(mrpRetardation)] := 'Retardation factor (IFMTRF)';
-//  rdgPrint.Cells[Ord(mpcName), Ord(mprDispersionCoef)] := 'Dispersion coefficient (IFMTDP)';
-//
-//  rdgPrint.Cells[Ord(mpcPrint), Ord(mprName)] := 'Print';
-//  rdgPrint.Cells[Ord(mpcStripOrWrap), Ord(mprName)] := 'Strip or wrap';
-//  rdgPrint.Cells[Ord(mpcFormat), Ord(mprName)] := 'Format';
-
-  frameMt3dmsTimes.Grid.Cells[0,0] := 'Output times (TIMPRS)';
+  frameMt3dmsTimes.Grid.Cells[0,0] := StrOutputTimesTIMPRS;
 
   GetData;
 end;
@@ -193,25 +184,6 @@ begin
 end;
 
 procedure TfrmModflowOutputControl.SetData;
-//  function GetMt3dmsPrintCode(ARow: Integer): integer;
-//  begin
-//    if rdgPrint.Checked[Ord(mpcPrint), ARow] then
-//    begin
-//      result := rdgPrint.ItemIndex[Ord(mpcFormat), ARow];
-//      if result = 0 then
-//      begin
-//        result := 12;
-//      end;
-//      if rdgPrint.ItemIndex[Ord(mpcStripOrWrap), ARow] = 1 then
-//      begin
-//        result := -result;
-//      end;
-//    end
-//    else
-//    begin
-//      result := 0;
-//    end;
-//  end;
   var
     Index: integer;
     TimeItem: TOuptputTimeItem;

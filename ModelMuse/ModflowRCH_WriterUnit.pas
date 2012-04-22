@@ -44,8 +44,13 @@ resourcestring
   StrNoRechargeDefined = 'No recharge defined';
   StrTheRechargePackage = 'The recharge package is active but no recharge ha' +
   's been defined for any stress period.';
-
-const
+  StrWritingRCHPackage = 'Writing RCH Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+  StrWritingDataSets5to8 = '  Writing Data Sets 5 to 8.';
+  StrWritingStressP = '    Writing Stress Period %d';
   ErrorRoot = 'One or more %s parameters have been eliminated '
     + 'because there are no cells associated with them.';
 
@@ -296,7 +301,6 @@ begin
   end;
   FRchPackage.MultiplierArrayNames.Clear;
   FRchPackage.ZoneArrayNames.Clear;
-//  frmProgress.AddMessage('Evaluating RCH Package data.');
   FNameOfFile := FileName(AFileName);
   WriteToNameFile(StrRCH, Model.UnitNumbers.UnitNumber(StrRCH),
     FNameOfFile, foInput);
@@ -309,8 +313,8 @@ begin
   ClearTimeLists(Model);
   OpenFile(FileName(AFileName));
   try
-    frmProgressMM.AddMessage('Writing RCH Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingRCHPackage);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -318,7 +322,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -326,7 +330,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -334,7 +338,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 3 and 4.');
+    frmProgressMM.AddMessage(StrWritingDataSets3and4);
     WriteDataSets3And4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -342,7 +346,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 5 to 8.');
+    frmProgressMM.AddMessage(StrWritingDataSets5to8);
     WriteDataSets5To8;
   finally
     CloseFile;
@@ -400,7 +404,7 @@ begin
       begin
         Exit;
       end;
-      frmProgressMM.AddMessage('    Writing Stress Period ' + IntToStr(TimeIndex+1));
+      frmProgressMM.AddMessage(Format(StrWritingStressP, [TimeIndex+1]));
       ParametersUsed := TStringList.Create;
       try
         RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,

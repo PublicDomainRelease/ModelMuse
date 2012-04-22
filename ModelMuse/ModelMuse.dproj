@@ -32,7 +32,7 @@
 			<DCC_UnitSearchPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;D:\jedi\338\jcl\lib\d10\debug;D:\jedi\340\jcl\lib\d10\debug;D:\Colab\GWModelTools\ModelMuse\FastCode;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
-			<DCC_Define>LogMemoryLeakDetailToFile;AutoPatchRTL;madExcept;$(DCC_Define)</DCC_Define>
+			<DCC_Define>LogMemoryLeakDetailToFile;AutoPatchRTL;madExcept;UseFastGeo;$(DCC_Define)</DCC_Define>
 			<DCC_K>false</DCC_K>
 			<DCC_N>true</DCC_N>
 			<DCC_S>false</DCC_S>
@@ -48,7 +48,7 @@
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
 			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
 			<DCC_DebugDCUs>true</DCC_DebugDCUs>
-			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+			<DCC_Define>DEBUG;SUTRA;$(DCC_Define)</DCC_Define>
 			<DCC_Optimize>false</DCC_Optimize>
 		</PropertyGroup>
 		<ItemGroup>
@@ -57,6 +57,7 @@
 			</DelphiCompile>
 			<DCCReference Include="FastMM4.pas"/>
 			<DCCReference Include="FastCode\FastMove.pas"/>
+			<DCCReference Include="FastCode\FastcodeCPUID.pas"/>
 			<DCCReference Include="TempFiles.pas"/>
 			<DCCReference Include="frmGoPhastUnit.pas">
 				<Form>frmGoPhast</Form>
@@ -851,6 +852,17 @@
 			<DCCReference Include="ModflowMt3dmsLinkWriterUnit.pas"/>
 			<DCCReference Include="ReadPvalUnit.pas"/>
 			<DCCReference Include="ReadGlobalsUnit.pas"/>
+			<DCCReference Include="frmExportModpathShapefileUnit.pas">
+				<Form>frmExportModpathShapefile</Form>
+			</DCCReference>
+			<DCCReference Include="SutraMeshUnit.pas"/>
+			<DCCReference Include="MeshRenumbering.pas"/>
+			<DCCReference Include="QuadMeshGenerator.pas"/>
+			<DCCReference Include="ModflowPCGN_WriterUnit.pas"/>
+			<DCCReference Include="framePackagePcgnUnit.pas">
+				<Form>framePackagePcgn</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
 			<None Include="ModelMuse.todo"/>
 			<None Include="ModelSupport_ModelMuse\default.txaPackage"/>
 			<None Include="ModelSupport_ModelMuse\SideLeakyZone\default.txaPackage"/>
@@ -1545,7 +1557,7 @@
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">2</VersionInfo>
-						<VersionInfo Name="MinorVer">13</VersionInfo>
+						<VersionInfo Name="MinorVer">14</VersionInfo>
 						<VersionInfo Name="Release">0</VersionInfo>
 						<VersionInfo Name="Build">0</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
@@ -1559,15 +1571,15 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">U. S. Geological Survey</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">2.13.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">2.14.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright">Public Domain software</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename"/>
 						<VersionInfoKeys Name="ProductName">ModelMuse</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">2.13.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">2.14.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
-						<VersionInfoKeys Name="Last Compile">2012-02-28 11:09</VersionInfoKeys>
+						<VersionInfoKeys Name="Last Compile">2012-04-23 10:02</VersionInfoKeys>
 					</VersionInfoKeys>
 					<Excluded_Packages>
 						<Excluded_Packages Name="$(BDSBIN)\dcloffice2k150.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>

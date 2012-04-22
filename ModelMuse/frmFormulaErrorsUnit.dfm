@@ -145,6 +145,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -166,6 +167,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -187,6 +189,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = True
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -208,6 +211,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = True
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
     RowHeights = (

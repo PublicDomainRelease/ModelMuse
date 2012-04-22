@@ -416,8 +416,11 @@ end;
 procedure TColumnSelector.DisplayColumn;
 begin
   // Display the column that is selected.
-  frmGoPhast.sbMain.Panels[1].Text := 'Selected Col: '
-    + IntToStr(frmGoPhast.Grid.SelectedColumn + 1);
+  if frmGoPhast.Grid <> nil then
+  begin
+    frmGoPhast.sbMain.Panels[1].Text := 'Selected Col: '
+      + IntToStr(frmGoPhast.Grid.SelectedColumn + 1);
+  end;
 end;
 
 procedure TColumnSelector.ItemChange(Sender: TObject);

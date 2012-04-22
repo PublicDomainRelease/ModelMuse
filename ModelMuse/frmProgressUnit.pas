@@ -68,6 +68,10 @@ var
 
 implementation
 
+resourcestring
+  ProgressCaption = '%0:s%1:d out of %2:d.';
+  StrAttemptingToAbort = 'Attempting to abort; please wait.';
+
 {$R *.dfm}
 
 const
@@ -78,8 +82,8 @@ const
 procedure TfrmProgressMM.StepIt;
 begin
   pbProgress.StepIt;
-  ProgressLabelCaption := Prefix + IntToStr(pbProgress.Position) + ' out of '
-    + IntToStr(pbProgress.Max) + '.';
+  ProgressLabelCaption := Format(ProgressCaption,
+    [Prefix, pbProgress.Position, pbProgress.Max]);
 end;
 
 procedure TfrmProgressMM.AddMessage(const AMessage: string;
@@ -103,7 +107,7 @@ procedure TfrmProgressMM.btnAbortClick(Sender: TObject);
 begin
   inherited;
   FShouldContinue := False;
-  memoMessages.Lines.Add('Attempting to abort; please wait.');
+  memoMessages.Lines.Add(StrAttemptingToAbort);
 end;
 
 procedure TfrmProgressMM.FormShow(Sender: TObject);

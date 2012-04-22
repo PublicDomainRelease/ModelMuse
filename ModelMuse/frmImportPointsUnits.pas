@@ -217,6 +217,19 @@ resourcestring
   'erpolation.';
   StrObservationName = 'Observation Name';
   StrImportPoints = 'import points';
+  StrYouHaveNotSelecte = 'You have not selected a data set on the "Controls"' +
+  ' tab.';
+  StrYouHaveChoosenTo = 'You have choosen to set values of data sets using i' +
+  'nterpolation but interpolation is not used in one or more of the data set' +
+  's for which you are importing values.  Do you want to import the data any' +
+  'way?';
+  StrNumberOfZFormulas = 'Number of Z formulas';
+  StrNumberOfYFormulas = 'Number of Y formulas';
+  StrNumberOfXFormulas = 'Number of X formulas';
+  StrInvalidDataInRow = 'Invalid data in row %d.';
+  StrReadingData = 'Reading Data';
+  StrProgress = 'Progress';
+  StrNone = 'none';
 
 procedure TfrmImportPoints.seRowsChange(Sender: TObject);
 begin
@@ -413,20 +426,6 @@ begin
        frmGoPhast.ModelSelection, True, False);
   cbIntersectedCells.Caption := rsSetValueOfIntersected + NodeElemString;
   cbInterpolation.Caption := rsSetValueOf + NodeElemString + rsByInterpolation;
-//  case rgEvaluatedAt.ItemIndex of
-//    0: // elements
-//      begin
-//        cbIntersectedCells.Caption := rsSetValueOfIntersectedElements;
-//        cbInterpolation.Caption := rsSetValueOfElementsByInterpolation;
-//      end;
-//    1: // cells
-//      begin
-//        cbIntersectedCells.Caption := rsSetValueOfIntersectedNodes;
-//        cbInterpolation.Caption := rsSetValueOfNodesByInterpolation;
-//      end;
-//  else
-//    Assert(False);
-//  end;
 end;
 
 procedure TfrmImportPoints.EnableOkButton;
@@ -570,9 +569,9 @@ procedure TfrmImportPoints.rgViewDirectionClick(Sender: TObject);
 begin
   inherited;
   case rgViewDirection.ItemIndex of
-    0: rgElevationCount.Caption := 'Number of Z formulas';
-    1: rgElevationCount.Caption := 'Number of Y formulas';
-    2: rgElevationCount.Caption := 'Number of X formulas';
+    0: rgElevationCount.Caption := StrNumberOfZFormulas;
+    1: rgElevationCount.Caption := StrNumberOfYFormulas;
+    2: rgElevationCount.Caption := StrNumberOfXFormulas;
     else Assert(False);
   end;
 
@@ -910,7 +909,7 @@ begin
       if cbImportAsSingleObject.Checked then
       begin
         Beep;
-        MessageDlg('Invalid data in row ' + IntToStr(RowIndex) + '.', mtError, [mbOK], 0);
+        MessageDlg(Format(StrInvalidDataInRow, [RowIndex]), mtError, [mbOK], 0);
         InvalidRow := True;
       end
       else
@@ -951,7 +950,8 @@ begin
   Values := TRealList.Create;
   IntValues := TIntegerList.Create;
   try
-    Package := comboBoundaryChoice.Items.Objects[comboBoundaryChoice.ItemIndex] as TModflowPackageSelection;
+    Package := comboBoundaryChoice.Items.Objects[comboBoundaryChoice.ItemIndex]
+      as TModflowPackageSelection;
     Packages := frmGoPhast.PhastModel.ModflowPackages;
     for ColIndex := FRequiredCols to dgData.ColCount - 1 do
     begin
@@ -1067,7 +1067,8 @@ begin
 
     BoundaryItem := nil;
     HobItem := nil;
-    AParam := comboParameter.Items.Objects[comboParameter.ItemIndex] as TModflowTransientListParameter;
+    AParam := comboParameter.Items.Objects[comboParameter.ItemIndex]
+      as TModflowTransientListParameter;
     if AParam = nil then
     begin
       if ABoundary <> nil then
@@ -1176,7 +1177,7 @@ begin
   begin
     if not frmProgressMM.Visible then
     begin
-      frmProgressMM.Caption := 'Reading Data';
+      frmProgressMM.Caption := StrReadingData;
     end;
     if Position < Max then
     begin
@@ -1374,7 +1375,7 @@ begin
       begin
         ScreenObjectList.Capacity := seRows.AsInteger;
       end;
-      frmProgressMM.Caption := 'Progress';
+      frmProgressMM.Caption := StrProgress;
       frmProgressMM.pbProgress.Max := dgData.RowCount-1;
       frmProgressMM.pbProgress.Position := 0;
       frmProgressMM.PopupParent := frmGoPhast;
@@ -1734,10 +1735,7 @@ begin
         DataSet := dgData.Objects[ColIndex, 0] as TDataArray;
         if DataSet.TwoDInterpolator = nil then
         begin
-          if (MessageDlg('You have choosen to set values of data sets '
-            + 'using interpolation but interpolation is not used '
-            + 'in one or more of the data sets for which you are '
-            + 'importing values.  Do you want to import the data anyway?',
+          if (MessageDlg(StrYouHaveChoosenTo,
             mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
           begin
             break;
@@ -1775,7 +1773,7 @@ begin
   if not DataSetSelected then
   begin
     Beep;
-    MessageDlg('You have not selected a data set on the "Controls" tab.',
+    MessageDlg(StrYouHaveNotSelecte,
       MtWarning, [mbOK], 0);
   end;
   if OpenDialogImportFile.Execute then
@@ -1785,7 +1783,14 @@ begin
       Lines := TStringList.Create;
       try
         FImportFileName := OpenDialogImportFile.FileName;
-        Lines.LoadFromFile(FImportFileName);
+        try
+          Lines.LoadFromFile(FImportFileName);
+        except on EFOpenError do
+          begin
+            CantOpenFileMessage(FImportFileName);
+            Exit;
+          end;
+        end;
         for Index := Lines.Count - 1 downto 0 do
         begin
           if (Length(Lines[Index]) = 0) or (Lines[Index][1] = '#') then
@@ -1872,7 +1877,7 @@ begin
     Packages := frmGoPhast.PhastModel.ModflowPackages;
     comboParameter.Enabled := True;
     comboParameter.Items.Clear;
-    comboParameter.Items.Add('none');
+    comboParameter.Items.Add(StrNone);
     comboParameter.ItemIndex := 0;
     TransientParameters := frmGoPhast.PhastModel.ModflowTransientParameters;
     for ParameterIndex := 0 to TransientParameters.Count - 1 do

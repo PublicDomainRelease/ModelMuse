@@ -192,6 +192,14 @@ implementation
 uses Contnrs, DataSetUnit, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit,
   ModflowSfrUnit, TempFiles, frmGoPhastUnit;
 
+resourcestring
+  StrStreambedThickness = 'Streambed thickness';
+  StrStreambedElevation = 'Streambed elevation';
+  StrHydraulicConductivi = 'Hydraulic conductivity';
+  StrHydraulicConductivMult = ' Hydraulic conductivity multiplier';
+  StrStreamWidth = 'Stream width';
+  StrStreamDepth = 'Stream depth';
+
 const
   HydraulicConductivityPosition = 0;
   StreamBedThicknessPosition = 1;
@@ -1240,16 +1248,16 @@ begin
   FStreamBedElevationData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FStreamWidthData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FStreamDepthData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FStreamBedThicknessData.NonParamDescription := 'Streambed thickness';
-  FStreamBedThicknessData.ParamDescription := ' streambed thickness';
-  FStreamBedElevationData.NonParamDescription := 'Streambed elevation';
-  FStreamBedElevationData.ParamDescription := ' streambed elevation';
-  FHydraulicConductivityData.NonParamDescription := 'Hydraulic conductivity';
-  FHydraulicConductivityData.ParamDescription := ' Hydraulic conductivity multiplier';
-  FStreamWidthData.NonParamDescription := 'Stream width';
-  FStreamWidthData.ParamDescription := ' stream width';
-  FStreamDepthData.NonParamDescription := 'Stream depth';
-  FStreamDepthData.ParamDescription := ' stream depth';
+  FStreamBedThicknessData.NonParamDescription := StrStreambedThickness;
+  FStreamBedThicknessData.ParamDescription := ' ' + LowerCase(StrStreambedThickness);
+  FStreamBedElevationData.NonParamDescription := StrStreambedElevation;
+  FStreamBedElevationData.ParamDescription := ' ' + LowerCase(StrStreambedElevation);
+  FHydraulicConductivityData.NonParamDescription := StrHydraulicConductivi;
+  FHydraulicConductivityData.ParamDescription := StrHydraulicConductivMult;
+  FStreamWidthData.NonParamDescription := StrStreamWidth;
+  FStreamWidthData.ParamDescription := ' ' + LowerCase(StrStreamWidth);
+  FStreamDepthData.NonParamDescription := StrStreamDepth;
+  FStreamDepthData.ParamDescription := ' ' + LowerCase(StrStreamDepth);
   if Model <> nil then
   begin
   end;

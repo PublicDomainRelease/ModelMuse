@@ -122,10 +122,6 @@ inherited frmDataSets: TfrmDataSets
     TabOrder = 1
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         312
         371)
@@ -420,7 +416,6 @@ inherited frmDataSets: TfrmDataSets
           Width = 245
           Height = 34
           Caption = 'Use PHAST-style interpolation for all cells'
-          TabOrder = 0
           WordWrap = True
           OnClick = framePhastInterpolationcbPhastInterpolationClick
           AutoSize = False
@@ -472,7 +467,6 @@ inherited frmDataSets: TfrmDataSets
           Width = 272
           Height = 78
           Columns = 2
-          TabOrder = 1
           OnClick = framePhastInterpolationrgInterpolationDirectionClick
           ExplicitLeft = 12
           ExplicitTop = 43

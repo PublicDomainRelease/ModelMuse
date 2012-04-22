@@ -268,6 +268,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -290,6 +291,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
   end

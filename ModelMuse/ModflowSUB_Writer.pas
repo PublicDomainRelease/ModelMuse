@@ -117,6 +117,16 @@ resourcestring
   '"Model|Packages and Programs" dialog box.';
   StrModelMuseDoesNotC = 'ModelMuse does not currently support the use of th' +
   'e Subsidence package in MODFLOW-LGR.';
+  StrWritingSUBPackage = 'Writing SUB Package input.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSet3 = '  Writing Data Set 3.';
+  StrWritingDataSet4 = '  Writing Data Set 4.';
+  StrWritingDataSets5to8 = '  Writing Data Sets 5 to 8.';
+  StrWritingDataSet9 = '  Writing Data Set 9.';
+  StrWritingDataSets10to14 = '  Writing Data Sets 10 to 14.';
+  StrWritingDataSet15 = '  Writing Data Set 15.';
+  StrWritingDataSet16 = '  Writing Data Set 16.';
 
 function TMaterialZone.ID: Integer;
 begin
@@ -215,7 +225,7 @@ begin
     MaterialZoneArray.Orientation := dsoTop;
     MaterialZoneArray.DataType := rdtInteger;
     MaterialZoneArray.EvaluatedAt := eaBlocks;
-    MaterialZoneArray.UpdateDimensions(1, VK_Array.RowCount, VK_Array.ColumnCount);
+    MaterialZoneArray.UpdateDimensions(1, VK_Array.RowCount, VK_Array.ColumnCount, True);
     for RowIndex := 0 to VK_Array.RowCount - 1 do
     begin
       for ColIndex := 0 to VK_Array.ColumnCount - 1 do
@@ -921,11 +931,11 @@ begin
   end;
   OpenFile(FNameOfFile);
   try
-    frmProgressMM.AddMessage('Writing SUB Package input.');
+    frmProgressMM.AddMessage(StrWritingSUBPackage);
 
     WriteDataSet0;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -933,7 +943,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -941,7 +951,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage(StrWritingDataSet3);
     WriteDataSet3;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -949,7 +959,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage(StrWritingDataSet4);
     WriteDataSet4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -957,7 +967,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 5 to 8.');
+    frmProgressMM.AddMessage(StrWritingDataSets5to8);
     WriteDataSets5to8;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -965,7 +975,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 9.');
+    frmProgressMM.AddMessage(StrWritingDataSet9);
     WriteDataSet9;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -973,7 +983,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 10 to 14.');
+    frmProgressMM.AddMessage(StrWritingDataSets10to14);
     WriteDataSets10to14;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -981,7 +991,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 15.');
+    frmProgressMM.AddMessage(StrWritingDataSet15);
     WriteDataSet15;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -989,7 +999,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 16.');
+    frmProgressMM.AddMessage(StrWritingDataSet16);
     WriteDataSet16;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then

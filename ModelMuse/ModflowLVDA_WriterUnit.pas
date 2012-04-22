@@ -31,6 +31,12 @@ resourcestring
   StrParameter0Simulated = 'Parameter %0:s is not applied to any cells.  Che' +
   'ck that %1:s is set to "True" in at least one simulated unit.';
   StrParameterZonesNot = 'Parameter zones not defined.';
+  StrWritingDataSet8 = '  Writing Data Set 8 for parameter: %s';
+  StrWritingDataSet9 = '  Writing Data Set 9 for parameter: %s';
+  StrWritingLVDAPackage = 'Writing LVDA Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
 
 { TModflowLVDA_Writer }
 
@@ -140,7 +146,7 @@ begin
       end;
 
       // Data set 8
-      frmProgressMM.AddMessage('  Writing Data Set 8 for parameter: ' + PARNAM);
+      frmProgressMM.AddMessage(Format(StrWritingDataSet8, [PARNAM]));
       WriteString(PARNAM);
       WriteString(PARTYP);
       WriteFloat(PARVAL);
@@ -151,7 +157,7 @@ begin
       Model.WritePValAndTemplate(PARNAM,PARVAL);
 
       // Data set 9
-      frmProgressMM.AddMessage('  Writing Data Set 9 for parameter: ' + PARNAM);
+      frmProgressMM.AddMessage(Format(StrWritingDataSet9, [PARNAM]));
       for ClusterIndex := 0 to NCLU - 1 do
       begin
         if Param.UseZone then
@@ -222,8 +228,8 @@ begin
     FNameOfFile, foInput);
   OpenFile(FNameOfFile);
   try
-    frmProgressMM.AddMessage('Writing LVDA Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingLVDAPackage);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -231,7 +237,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -239,7 +245,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 2 and 3.');
+    frmProgressMM.AddMessage(StrWritingDataSets2and3);
     WriteDataSets2and3;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then

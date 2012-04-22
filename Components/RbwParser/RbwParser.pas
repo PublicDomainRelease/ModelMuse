@@ -1968,6 +1968,77 @@ implementation
 
 uses Math, StrUtils;
 
+resourcestring
+  StrErrorARootNameM = 'Error: A root name must be supplied when generating ' +
+  'a variable name.';
+  StrErrorVariablesMus = 'Error: Variables must be named.';
+  StrErrorSIsIlleg = 'Error: "%s" is illegal. The first character of a varia' +
+  'ble name must be a letter or an underscore.';
+  StrErrorSIsIlleg2 = 'Error: "%s" is illegal.  Variable names may only inclu' +
+  'de letters, digits, or the underscore symbol.';
+  StrErrorAVariableNa = 'Error: A Variable named "%s" already exists.';
+  StrEmptyFormula = 'empty formula';
+  StrErrorUnterminated = 'Error: Unterminated string';
+  StrErrorUnmatchedPar = 'Error: Unmatched parentheses';
+  StrErrorAttemptToUsB = 'Error: attempt to use %s as a Boolean.';
+  StrErrorAttemptToUsR = 'Error: attempt to use %s as a Real.';
+  StrErrorAttemptToUsI = 'Error: attempt to use %s as an Integer.';
+  StrErrorAttemptToUsS = 'Error: attempt to use %s as a String.';
+  StrErrorTheStackIs = 'Error: The Stack is empty.';
+  StrAReal = 'a Real';
+  StrAnInteger = 'an Integer';
+  StrABoolean = 'a Boolean';
+  StrAString = 'a String';
+  StrErrorThe0sFunc = 'Error: the %0:s function requires %1:d arguments but ' +
+  'none were supplied.';
+  StrErrorThe0sFuncOpt = 'Error: the %0:s function requires between %1:d and' +
+  ' %2:d arguments but none were supplied.';
+  StrErrorThe0sFunc2 = 'Error: the %0:s function requires at least %1:d argu' +
+  'ments but %2:d were supplied.';
+  StrErrorTheSFuncti3 = 'Error: the %s function requires at most %1:d argume' +
+  'nts but %2:d were supplied.';
+  StrErrorThe0sFunc4 = 'Error: the %0:s function requires at least %1:d argu' +
+  'ments but %2:d were supplied.';
+  StrErrorInArgumentNu = 'Error in argument number %0:d of %1:s %2:s; %3:s';
+  StrParsingErrorCheck = 'Parsing Error; Check that no function or variable ' +
+  'names have been misspelled.';
+  StrErrorInParsingS = 'Error in parsing "%s" sign.';
+  StrErrorInParsingSOp = 'Error in parsing "%s" operator.';
+  StrErrorInParsing02 = 'Error in parsing "%0:1s" operator because %1:s is u' +
+  'ndefined.';
+  StrErrorInParsing03 = 'Error in parsing "%0:s" operator because of an erro' +
+  'r in %1:s.';
+  StrTheSOperatorMu = 'The "%s" operator must have at least one argument.';
+  StrErrorInParsing0 = 'Error in parsing "%0:s" operator; It is not possible' +
+  ' to apply the "%0:s" operator to %1:s.';
+  StrErrorInParsingThe = 'Error in parsing the "%0:s" operator.  Check to ma' +
+  'ke sure that all the variables in the formula have been defined.';
+  StrErrorInParsing04 = 'Error in parsing "%0:s" operator because %1:s and %' +
+  '2:s are undefined.  Check to make sure that all the variables in the form' +
+  'ula have been defined.';
+  StrErrorInParsing05 = 'Error in parsing "%0:s" operator because %1:s is un' +
+  'defined.  Check to make sure that all the variables in the formula have b' +
+  'een defined.';
+  StrErrorInParsing06 = 'Error in parsing "%0:s" operator; It is not possibl' +
+  'e to apply the "%0:s" operator to %1:s and %2:s.';
+  StrError0sNotRe = 'Error: "%0:s" not recognized or the arguments for "%0:s' +
+  '" are not of the correct types.';
+  StrError0sCanNot = 'Error: %0:s can not be assigned to %1:s variable.';
+  StrFactorialForValues = 'Factorial for values greater than 12 can not be c' +
+  'omputed by the Factorial function';
+  StrFactorialForValues170 = 'Factorial for values greater than 170 can not be ' +
+  'computed by the FactorialR function';
+  StrSCanNotBeConver = '%s can not be converted to a real number.';
+  StrErrorTheFunction = 'Error: The function is of the incorrect type.';
+  StrDIsOutOfRange = '%d is out of range.';
+  StrErrorAFunctionNa = 'Error: A function named %s already exists.';
+  StrErrorUnableToEva = 'Error: Unable to evaluate %0:s function when the fi' +
+  'rst argument evaluates to %1:d because the first argument must always be ' +
+  'positive.';
+  StrErrorUnableToEva2 = 'Error: Unable to evaluate %0:s function when the f' +
+  'irst argument evaluates to %1:d because the number of arguments supplied ' +
+  'to the function was %2:d instead of at least %3:d.';
+
 const
   ValidCharacters = ['A'..'Z', 'a'..'z', '0'..'9', '_'];
   ValidFirstCharacters = ['A'..'Z', 'a'..'z', '_'];
@@ -2039,8 +2110,7 @@ begin
   result := root;
   if Length(result) < 1 then
   begin
-    raise ERbwParserError.Create('Error: A root name must be supplied when '
-      + 'generating a variable name.');
+    raise ERbwParserError.Create(StrErrorARootNameM);
   end;
   for Index := 1 to Length(result) do
   begin
@@ -2070,7 +2140,7 @@ var
 begin
   if Length(VariableName) < 1 then
   begin
-    raise ERbwParserError.Create('Error: Variables must be named.');
+    raise ERbwParserError.Create(StrErrorVariablesMus);
   end;
   {$IFDEF Delphi_2009_UP}
   if not CharInSet(VariableName[1], ValidFirstCharacters) then
@@ -2078,10 +2148,7 @@ begin
   if not (VariableName[1] in ValidFirstCharacters) then
   {$ENDIF}
   begin
-    raise ERbwParserError.Create('Error: "'
-      + VariableName + '" is illegal. '
-      +
-      'The first character of a variable name must be a letter or an underscore.');
+    raise ERbwParserError.Create(Format(StrErrorSIsIlleg, [VariableName]));
   end;
   for Index := 2 to Length(VariableName) do
   begin
@@ -2091,9 +2158,7 @@ begin
     if not (VariableName[Index] in ValidCharacters) then
     {$ENDIF}
     begin
-      raise ERbwParserError.Create('Error: "'
-        + VariableName + '" is illegal.  Variable names may only include '
-        + 'letters, digits, or the underscore symbol.');
+      raise ERbwParserError.Create(Format(StrErrorSIsIlleg2, [VariableName]));
     end;
   end;
 end;
@@ -2344,19 +2409,19 @@ begin
   case DataType of
     rdtDouble:
       begin
-        result := 'a Real';
+        result := StrAReal;
       end;
     rdtInteger:
       begin
-        result := 'an Integer';
+        result := StrAnInteger;
       end;
     rdtBoolean:
       begin
-        result := 'a Boolean';
+        result := StrABoolean;
       end;
     rdtString:
       begin
-        result := 'a String';
+        result := StrAString;
       end;
   else
     Assert(False);
@@ -2434,8 +2499,7 @@ function TRbwParser.CreateVariable(const Name, Classification: string;
 begin
   if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
   begin
-    raise ErbwParserError.CreateMode('Error: A Variable named ' + Name +
-      ' already exists', 1);
+    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [Name]), 1);
   end;
   result := VariableClass.Create(Name);
   result.Classification := Classification;
@@ -2456,8 +2520,7 @@ function TRbwParser.CreateVariable(const Name, Classification: string;
 begin
   if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
   begin
-    raise ErbwParserError.CreateMode('Error: A Variable named ' + Name +
-      ' already exists', 1);
+    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [Name]), 1);
   end;
   result := VariableClass.Create(Name);
   result.Classification := Classification;
@@ -2479,8 +2542,7 @@ function TRbwParser.CreateVariable(const Name, Classification: string;
 begin
   if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
   begin
-    raise ErbwParserError.CreateMode('Error: A Variable named ' + Name +
-      ' already exists', 1);
+    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [Name]), 1);
   end;
   result := VariableClass.Create(Name);
   result.Classification := Classification;
@@ -2507,8 +2569,7 @@ function TRbwParser.CreateVariable(const Name, Classification: string;
 begin
   if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
   begin
-    raise ErbwParserError.CreateMode('Error: A Variable named ' + Name +
-      ' already exists', 1);
+    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [Name]), 1);
   end;
   result := VariableClass.Create(Name);
   result.Classification := Classification;
@@ -2606,7 +2667,7 @@ begin
   if AString = '' then
   begin
     result := -1;
-    raise ERbwParserError.Create('empty formula');
+    raise ERbwParserError.Create(StrEmptyFormula);
     Exit;
   end;
 
@@ -2667,7 +2728,7 @@ begin
           if IsStringConstantA then
           begin
             // raise error: unterminated string
-            raise ErbwParserError.Create('Error: Unterminated string');
+            raise ErbwParserError.Create(StrErrorUnterminated);
           end
           else
           begin
@@ -2917,13 +2978,13 @@ begin
           end;
           if Level < 0 then
           begin
-            raise ErbwParserError.Create('Error: Unmatched parentheses');
+            raise ErbwParserError.Create(StrErrorUnmatchedPar);
           end;
         end;
       end;
       if Level <> 0 then
       begin
-        raise ErbwParserError.Create('Error: Unmatched parentheses');
+        raise ErbwParserError.Create(StrErrorUnmatchedPar);
       end;
       FCurrentExpression := Tokens.Compile(FFunctions, FVariables,
         self.SpecialImplementorList);
@@ -3084,8 +3145,7 @@ begin
     Position := FVariables.IndexOf(NewName);
     if (Position >= 0) and (Position <> Index) then
     begin
-      raise ErbwParserError.CreateMode('Error: A Variable named ' + NewName +
-        ' already exists', 1);
+      raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [NewName]), 1);
     end;
     AVariable := FVariables.Objects[Index] as TCustomValue;
     FVariables.Delete(Index);
@@ -3304,9 +3364,8 @@ function TConstant.BooleanResult: boolean;
 begin
   if ResultType <> rdtBoolean then
   begin
-    raise ErbwParserError.Create('Error: attempt to use '
-      + DataTypeToString(ResultType)
-      + ' as a Boolean.');
+    raise ErbwParserError.Create(Format(StrErrorAttemptToUsB,
+      [DataTypeToString(ResultType)]));
   end;
   result := PBoolean(FResult)^;
 end;
@@ -3342,9 +3401,8 @@ function TConstant.DoubleResult: double;
 begin
   if not (ResultType in [rdtDouble, rdtInteger]) then
   begin
-    raise ErbwParserError.Create('Error: attempt to use '
-      + DataTypeToString(ResultType)
-      + ' as a Real.');
+    raise ErbwParserError.Create(Format(StrErrorAttemptToUsR,
+      [DataTypeToString(ResultType)]));
   end;
   if ResultType = rdtInteger then
   begin
@@ -3362,9 +3420,8 @@ function TConstant.IntegerResult: Integer;
 begin
   if ResultType <> rdtInteger then
   begin
-    raise ErbwParserError.Create('Error: attempt to use '
-      + DataTypeToString(ResultType)
-      + ' as an Integer.');
+    raise ErbwParserError.Create(Format(StrErrorAttemptToUsI,
+      [DataTypeToString(ResultType)]));
   end;
   result := PInteger(FResult)^;
 end;
@@ -3388,9 +3445,8 @@ function TConstant.StringResult: string;
 begin
   if ResultType <> rdtString then
   begin
-    raise ErbwParserError.Create('Error: attempt to use '
-      + DataTypeToString(ResultType)
-      + ' as a String.');
+    raise ErbwParserError.Create(Format(StrErrorAttemptToUsS,
+      [DataTypeToString(ResultType)]));
   end;
   result := ResultString;
 end;
@@ -3507,7 +3563,7 @@ var
 begin
   if FList.Count = 0 then
   begin
-    raise ERangeError.Create('Error: The Stack is empty.');
+    raise ERangeError.Create(StrErrorTheStackIs);
   end;
   LastPointer := FList[FList.Count - 1];
   result := LastPointer^;
@@ -3722,22 +3778,15 @@ begin
 
                   if PriorExpression.FOptionalArguments = 0 then
                   begin
-                    raise ErbwParserError.Create('Error: the '
-                      + PriorExpression.FName
-                      + ' function requires '
-                      + IntToStr(Length(PriorExpression.Data))
-                      + ' arguments but none were supplied.');
+                    raise ErbwParserError.Create(Format(StrErrorThe0sFunc,
+                      [PriorExpression.FName, Length(PriorExpression.Data)]));
                   end
                   else
                   begin
-                    raise ErbwParserError.Create('Error: the '
-                      + PriorExpression.FName
-                      + ' function requires between '
-                      + IntToStr(Length(PriorExpression.Data) -
-                      PriorExpression.FOptionalArguments)
-                      + ' and '
-                      + IntToStr(Length(PriorExpression.Data))
-                      + ' arguments but none were supplied.');
+                    raise ErbwParserError.Create(Format(StrErrorThe0sFuncOpt,
+                      [PriorExpression.FName,
+                      Length(PriorExpression.Data) - PriorExpression.FOptionalArguments,
+                      Length(PriorExpression.Data)]));
                   end;
 
                 end;
@@ -3749,13 +3798,10 @@ begin
                   if (Length(PriorExpression.Data)
                     - 1 > VariableList.Count) then
                   begin
-                    raise ErbwParserError.Create('Error: the '
-                      + PriorExpression.FName
-                      + ' function requires at least '
-                      + IntToStr(Length(PriorExpression.Data) - 1)
-                      + ' arguments but '
-                      + IntToStr(VariableList.Count)
-                      + ' were supplied.');
+                    raise ErbwParserError.Create(Format(StrErrorThe0sFunc2,
+                      [PriorExpression.FName,
+                      Length(PriorExpression.Data) - 1,
+                      VariableList.Count]));
                   end;
                   PriorExpression.ResetDataLength(VariableList.Count);
                 end
@@ -3763,26 +3809,20 @@ begin
                 begin
                   if (Length(PriorExpression.Data) < VariableList.Count) then
                   begin
-                    raise ErbwParserError.Create('Error: the '
-                      + PriorExpression.FName
-                      + ' function requires at most '
-                      + IntToStr(Length(PriorExpression.Data))
-                      + ' arguments but '
-                      + IntToStr(VariableList.Count)
-                      + ' were supplied.');
+                    raise ErbwParserError.Create(Format(StrErrorTheSFuncti3,
+                      [PriorExpression.FName,
+                      Length(PriorExpression.Data),
+                      VariableList.Count]));
                   end;
                   if (Length(PriorExpression.Data)
                     - PriorExpression.FOptionalArguments > VariableList.Count)
                       then
                   begin
-                    raise ErbwParserError.Create('Error: the '
-                      + PriorExpression.FName
-                      + ' function requires at least '
-                      + IntToStr(Length(PriorExpression.Data) -
-                      PriorExpression.FOptionalArguments)
-                      + ' arguments but '
-                      + IntToStr(VariableList.Count)
-                      + ' were supplied.');
+                    raise ErbwParserError.Create(Format(StrErrorThe0sFunc4,
+                      [PriorExpression.FName,
+                      Length(PriorExpression.Data) -
+                      PriorExpression.FOptionalArguments,
+                      VariableList.Count]));
                   end;
                 end;
                 VarIndex2 := -1;
@@ -3796,13 +3836,11 @@ begin
                   end;
                 except on E: ERbwParserError do
                   begin
-                    raise ERbwParserError.Create('Error in argument number '
-                      + IntToStr(VarIndex2 + 1)
-                      + ' of '
-                      + PriorExpression.Name
-                      + Strings[Index]
-                      + '; '
-                      + E.Message);
+                    raise ERbwParserError.Create(Format(StrErrorInArgumentNu,
+                      [VarIndex2 + 1,
+                      PriorExpression.Name,
+                      Strings[Index],
+                      E.Message]));
                   end;
                 end;
                 VariableList.Free;
@@ -3837,8 +3875,7 @@ begin
                   VariableList.Free;
                   VariableList := nil;
                   Objects[Index] := nil;
-                  raise ErbwParserError.Create('Parsing Error; Check that no '
-                    + 'function or variable names have been misspelled.');
+                  raise ErbwParserError.Create(StrParsingErrorCheck);
                 end;
               end;
 
@@ -3872,8 +3909,7 @@ begin
           VariableList.Free;
           VariableList := nil;
           Objects[0] := nil;
-          raise ErbwParserError.Create('Parsing Error; Check that no '
-            + 'function or variable names have been misspelled.');
+          raise ErbwParserError.Create(StrParsingErrorCheck);
         end;
         ResultConstant := VariableList[0];
         if ResultConstant is TExpression then
@@ -4219,7 +4255,7 @@ begin
       begin
         if (Index < 0) then
         begin
-          raise ErbwParserError.Create('Error in parsing "+ Token + " sign.');
+          raise ErbwParserError.Create(Format(StrErrorInParsingS, [Token]));
         end;
         result := (Objects[Index - 1] = nil);
       end;
@@ -4239,34 +4275,29 @@ var
 begin
   if (Objects[Index] <> nil) or (Index + 1 >= Count) then
   begin
-    raise ErbwParserError.Create('Error in parsing "'
-      + string(OperatorDefinition.OperatorName) + '" operator.');
+    raise ErbwParserError.Create(Format(StrErrorInParsingSOp,
+      [string(OperatorDefinition.OperatorName)]));
   end;
 
-  if not OperatorDefinition.SignOperator or IsSign(Index, string(OperatorDefinition.OperatorName)) then
+  if not OperatorDefinition.SignOperator or
+    IsSign(Index, string(OperatorDefinition.OperatorName)) then
   begin
     if (Objects[Index + 1] = nil) then
     begin
-      raise ErbwParserError.Create('Error in parsing "'
-        + string(OperatorDefinition.OperatorName) + '" operator '
-        + 'because '
-        + Strings[Index + 1]
-        + ' is undefined.');
+      raise ErbwParserError.Create(Format(StrErrorInParsing02,
+        [string(OperatorDefinition.OperatorName), Strings[Index + 1]]));
     end;
     try
       AnArgument := Objects[Index + 1] as TConstant;
     except on EInvalidCast do
-      raise ErbwParserError.Create('Error in parsing "'
-        + string(OperatorDefinition.OperatorName) + '" operator '
-        + 'because of an error in'
-        + Strings[Index + 1]
-        + '.');
+      raise ErbwParserError.Create(Format(StrErrorInParsing03,
+        [string(OperatorDefinition.OperatorName),
+        Strings[Index + 1]]));
     end;
     if (OperatorDefinition.ArgumentDefinitions.Count < 1) then
     begin
-      raise ErbwParserError.Create('the "'
-        + string(OperatorDefinition.OperatorName)
-        + '" operator must have at least one argument.');
+      raise ErbwParserError.Create(Format(StrTheSOperatorMu,
+        [string(OperatorDefinition.OperatorName)]));
     end;
     UsedDef := nil;
     for DefIndex := 0 to OperatorDefinition.ArgumentDefinitions.Count - 1 do
@@ -4280,10 +4311,9 @@ begin
     end;
     if (UsedDef = nil) then
     begin
-      raise ErbwParserError.Create('Error in parsing "'
-        + string(OperatorDefinition.OperatorName) + '" operator;'
-        + ' It is not possible to apply the "' + string(OperatorDefinition.OperatorName)
-        + '" operator to ' + DataTypeToString(AnArgument.ResultType) + '.');
+      raise ErbwParserError.Create(Format(StrErrorInParsing0,
+        [string(OperatorDefinition.OperatorName),
+        DataTypeToString(AnArgument.ResultType)]));
     end;
     Assert((AnArgument <> nil)
       and (AnArgument.ResultType = UsedDef.FirstArgumentType));
@@ -4406,10 +4436,8 @@ var
 begin
   if (Objects[Index] <> nil) or (Index + 1 >= Count) or (Index - 1 < 0) then
   begin
-    raise ErbwParserError.Create('Error in parsing "'
-      + string(OperatorDefinition.OperatorName) + '" operator.  '
-      + 'Check to make sure that all the variables in the formula have '
-      + 'been defined.');
+    raise ErbwParserError.Create(Format(StrErrorInParsingThe,
+      [string(OperatorDefinition.OperatorName)]));
   end;
   PriorArgument := Objects[Index - 1] as TConstant;
   SubsequentArgument := Objects[Index + 1] as TConstant;
@@ -4417,35 +4445,22 @@ begin
   begin
     if ((PriorArgument = nil) and (SubsequentArgument = nil)) then
     begin
-      raise ErbwParserError.Create('Error in parsing "'
-        + string(OperatorDefinition.OperatorName) + '" operator '
-        + 'because '
-        + Strings[Index - 1]
-        + ' and '
-        + Strings[Index + 1]
-        + ' are undefined.  '
-        + 'Check to make sure that all the variables in the formula have '
-        + 'been defined.');
+      raise ErbwParserError.Create(Format(StrErrorInParsing04,
+        [string(OperatorDefinition.OperatorName),
+        Strings[Index - 1],
+        Strings[Index + 1]]));
     end
     else if (PriorArgument = nil) then
     begin
-      raise ErbwParserError.Create('Error in parsing "'
-        + string(OperatorDefinition.OperatorName) + '" operator '
-        + 'because '
-        + Strings[Index - 1]
-        + ' is undefined.  '
-        + 'Check to make sure that all the variables in the formula have '
-        + 'been defined.');
+      raise ErbwParserError.Create(Format(StrErrorInParsing05,
+        [string(OperatorDefinition.OperatorName),
+        Strings[Index - 1]]));
     end
     else
     begin
-      raise ErbwParserError.Create('Error in parsing "'
-        + string(OperatorDefinition.OperatorName) + '" operator '
-        + 'because '
-        + Strings[Index + 1]
-        + ' is undefined.  '
-        + 'Check to make sure that all the variables in the formula have '
-        + 'been defined.');
+      raise ErbwParserError.Create(Format(StrErrorInParsing05,
+        [string(OperatorDefinition.OperatorName),
+        Strings[Index + 1]]));
     end;
   end;
   UsedDef := nil;
@@ -4462,12 +4477,10 @@ begin
   end;
   if UsedDef = nil then
   begin
-    raise ErbwParserError.Create('Error in parsing "'
-      + string(OperatorDefinition.OperatorName) + '" operator;'
-      + ' It is not possible to apply the "'
-      + string(OperatorDefinition.OperatorName) + '" operator to '
-      + DataTypeToString(PriorArgument.ResultType) + ' and '
-      + DataTypeToString(SubsequentArgument.ResultType) + '.');
+    raise ErbwParserError.Create(Format(StrErrorInParsing06,
+      [string(OperatorDefinition.OperatorName),
+      DataTypeToString(PriorArgument.ResultType),
+      DataTypeToString(SubsequentArgument.ResultType)]));
   end;
   AnExpression := nil;
   case UsedDef.CreationMethod of
@@ -5532,9 +5545,7 @@ begin
         Token := Strings[Index];
         if (Token <> '(') and (Token <> ',') and (Token <> ')') then
         begin
-          raise ErbwParserError.Create('Error: "' + Token + '" not recognized '
-            + 'or the arguments for "' + Token
-            + '" are not of the correct types.');
+          raise ErbwParserError.Create(Format(StrError0sNotRe, [Token]));
         end;
       end
       else
@@ -5679,10 +5690,9 @@ begin
   end
   else
   begin
-    raise ErbwParserError.Create('Error: ' + DataTypeToString(Value.ResultType)
-      + ' can not be assigned to '
-      + DataTypeToString(Data[Index].DataType)
-      + ' variable.');
+    raise ErbwParserError.Create(Format(StrError0sCanNot,
+      [DataTypeToString(Value.ResultType),
+      DataTypeToString(Data[Index].DataType)]));
   end;
 
 end;
@@ -6232,8 +6242,7 @@ begin
   end
   else if StartValue > 12 then
   begin
-    raise EIntOverflow.Create('Factorial for values greater than 12 '
-      + 'can not be computed by the Factorial function');
+    raise EIntOverflow.Create(StrFactorialForValues);
   end
   else
   begin
@@ -6259,8 +6268,7 @@ begin
   end
   else if StartValue > 170 then
   begin
-    raise EOverflow.Create('Factorial for values greater than 170 '
-      + 'can not be computed by the FactorialR function');
+    raise EOverflow.Create(StrFactorialForValues170);
   end
   else
   begin
@@ -6617,8 +6625,7 @@ begin
   Val(AString, result, Code);
   if Code <> 0 then
   begin
-    raise EConvertError.Create(AString +
-      ' can not be converted to a real number.');
+    raise EConvertError.Create(Format(StrSCanNotBeConver, [AString]));
   end;
 end;
 {$WARNINGS ON}
@@ -7148,8 +7155,7 @@ function TFunctionClass.GetBFunctionAddr: TrbwBooleanFunction;
 begin
   if FunctionRecord.ResultType <> rdtBoolean then
   begin
-    raise ErbwParserError.Create(
-      'Error: The function is of the incorrect type.');
+    raise ErbwParserError.Create(StrErrorTheFunction);
   end;
   result := FunctionRecord.BFunctionAddr;
 end;
@@ -7163,8 +7169,7 @@ function TFunctionClass.GetIFunctionAddr: TrbwIntegerFunction;
 begin
   if FunctionRecord.ResultType <> rdtInteger then
   begin
-    raise ErbwParserError.Create(
-      'Error: The function is of the incorrect type.');
+    raise ErbwParserError.Create(StrErrorTheFunction);
   end;
   result := FunctionRecord.IFunctionAddr;
 end;
@@ -7178,7 +7183,7 @@ function TFunctionClass.GetInputDataTypes(const Index: integer): TRbwDataType;
 begin
   if (Index < 0) or (Index >= InputDataCount) then
   begin
-    raise ERangeError.Create(IntToStr(Index) + ' is out of range.');
+    raise ERangeError.Create(Format(StrDIsOutOfRange, [Index]));
   end;
   result := FunctionRecord.InputDataTypes[Index];
 end;
@@ -7207,8 +7212,7 @@ function TFunctionClass.GetRFunctionAddr: TrbwRealFunction;
 begin
   if FunctionRecord.ResultType <> rdtDouble then
   begin
-    raise ErbwParserError.Create(
-      'Error: The function is of the incorrect type.');
+    raise ErbwParserError.Create(StrErrorTheFunction);
   end;
   result := FunctionRecord.RFunctionAddr;
 end;
@@ -7217,8 +7221,7 @@ function TFunctionClass.GetSFunctionAddr: TrbwStringFunction;
 begin
   if FunctionRecord.ResultType <> rdtString then
   begin
-    raise ErbwParserError.Create(
-      'Error: The function is of the incorrect type.');
+    raise ErbwParserError.Create(StrErrorTheFunction);
   end;
   result := FunctionRecord.SFunctionAddr;
 end;
@@ -7263,7 +7266,7 @@ procedure TFunctionClass.SetInputDataTypes(const Index: integer;
 begin
   if (Index < 0) or (Index >= InputDataCount) then
   begin
-    raise ERangeError.Create(IntToStr(Index) + ' is out of range.');
+    raise ERangeError.Create(Format(StrDIsOutOfRange, [Index]));
   end;
   FunctionRecord.InputDataTypes[Index] := Value;
 end;
@@ -7343,9 +7346,8 @@ begin
   except on EStringListError do
     begin
       AFunctionClass.Free;
-      raise ErbwParserError.Create('Error: A function named ' +
-        FunctionRecord.Name
-        + ' already exists.');
+      raise ErbwParserError.Create(Format(StrErrorAFunctionNa,
+        [FunctionRecord.Name]));
     end;
   end;
 end;
@@ -8218,20 +8220,14 @@ begin
     end;
     if (SelectIndex <= 0) then
     begin
-      raise ERbwParserError.Create('Error: Unable to evaluate ' + Name
-        + ' function when the first argument evaluates to '
-        + IntToStr(SelectIndex)
-        + ' because the first argument must always be positive.');
+      raise ERbwParserError.Create(Format(StrErrorUnableToEva,
+        [Name, SelectIndex]));
     end;
 
     if (SelectIndex >= ArrayLength) then
     begin
-      raise ERbwParserError.Create('Error: Unable to evaluate ' + Name
-        + ' function when the first argument evaluates to '
-        + IntToStr(SelectIndex)
-        + ' because the number of arguments supplied to the function was '
-        + IntToStr(ArrayLength) + ' instead of at least '
-        + InttoStr(SelectIndex + 1) + '.');
+      raise ERbwParserError.Create(Format(StrErrorUnableToEva2,
+        [Name, SelectIndex, ArrayLength, SelectIndex + 1]));
     end;
 
     if Data[SelectIndex].Datum = nil then

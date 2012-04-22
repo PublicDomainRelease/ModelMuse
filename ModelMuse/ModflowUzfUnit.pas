@@ -373,6 +373,12 @@ implementation
 uses RbwParser, ScreenObjectUnit, PhastModelUnit, ModflowTimeUnit,
   ModflowTransientListParameterUnit, TempFiles, frmGoPhastUnit;
 
+resourcestring
+  StrEvapoTranspiration = 'Evapo- transpiration demand';
+  StrETExtinctionDepth = 'ET extinction depth';
+  StrETExtinctionWater = 'ET extinction water content';
+  StrInfiltrationRate = 'Infiltration rate';
+
 { TUzfRateCollection }
 
 const
@@ -1606,7 +1612,7 @@ procedure TUzfEvtTimeListLink.CreateTimeLists;
 begin
   inherited;
   EvapotranspirationRateData.NonParamDescription :=
-    'Evapo- transpiration demand';
+    StrEvapoTranspiration;
   if Model <> nil then
   begin
     EvapotranspirationRateData.OnInvalidate :=
@@ -1620,8 +1626,8 @@ procedure TUzfExtinctionDepthTimeListLink.CreateTimeLists;
 begin
   inherited;
   FExtinctionDepthData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FExtinctionDepthData.NonParamDescription := 'ET extinction depth';
-  FExtinctionDepthData.ParamDescription := ' ET extinction depth multiplier';
+  FExtinctionDepthData.NonParamDescription := StrETExtinctionDepth;
+  FExtinctionDepthData.ParamDescription := ' ' + StrETExtinctionDepth;
   AddTimeList(FExtinctionDepthData);
   if Model <> nil then
   begin
@@ -1641,8 +1647,8 @@ procedure TUzfWaterContentTimeListLink.CreateTimeLists;
 begin
   inherited;
   FWaterContentData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FWaterContentData.NonParamDescription := 'ET extinction water content';
-  FWaterContentData.ParamDescription := ' ET extinction water content multiplier';
+  FWaterContentData.NonParamDescription := StrETExtinctionWater;
+  FWaterContentData.ParamDescription := ' ' + StrETExtinctionWater;
   AddTimeList(FWaterContentData);
   if Model <> nil then
   begin
@@ -1661,7 +1667,7 @@ end;
 procedure TUzfInfiltrationRateTimeListLink.CreateTimeLists;
 begin
   inherited;
-  RechargeRateData.NonParamDescription := 'Infiltration rate';
+  RechargeRateData.NonParamDescription := StrInfiltrationRate;
   if Model <> nil then
   begin
     RechargeRateData.OnInvalidate := (Model as TCustomModel).InvalidateMfUzfInfiltration;

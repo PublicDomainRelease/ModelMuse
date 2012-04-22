@@ -21,7 +21,6 @@ inherited frmTimeControl: TfrmTimeControl
     Align = alBottom
     ParentColor = True
     TabOrder = 1
-    ExplicitWidth = 405
     DesignSize = (
       408
       106)
@@ -155,6 +154,7 @@ inherited frmTimeControl: TfrmTimeControl
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = False
       end
       item
@@ -177,6 +177,7 @@ inherited frmTimeControl: TfrmTimeControl
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = False
       end
       item
@@ -199,9 +200,9 @@ inherited frmTimeControl: TfrmTimeControl
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = False
       end>
-    ExplicitWidth = 405
     RowHeights = (
       24
       24)
@@ -214,7 +215,6 @@ inherited frmTimeControl: TfrmTimeControl
     Align = alTop
     ParentColor = True
     TabOrder = 2
-    ExplicitWidth = 405
     object rdeLength: TRbwDataEntry
       Left = 136
       Top = 6

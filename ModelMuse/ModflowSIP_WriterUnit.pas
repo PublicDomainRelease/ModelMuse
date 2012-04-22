@@ -20,6 +20,9 @@ implementation
 
 uses ModflowUnitNumbers, PhastModelUnit, frmProgressUnit;
 
+resourcestring
+  StrWritingSIPPackage = 'Writing SIP Package input.';
+
 { TSipWriter }
 
 class function TSipWriter.Extension: string;
@@ -73,7 +76,7 @@ begin
   WriteToNameFile('SIP', Model.UnitNumbers.UnitNumber(StrSIP), NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage('Writing SIP Package input.');
+    frmProgressMM.AddMessage(StrWritingSIPPackage);
     WriteDataSet0;
     WriteDataSet1;
     WriteDataSet2;

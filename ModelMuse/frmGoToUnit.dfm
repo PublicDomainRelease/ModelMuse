@@ -21,11 +21,13 @@ inherited frmGoTo: TfrmGoTo
     Align = alClient
     TabOrder = 0
     OnChange = pcMainChange
-    ExplicitHeight = 232
     object tabPosition: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'The_Position_Tab'
       Caption = 'Position'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 199
       DesignSize = (
         288
@@ -303,7 +305,6 @@ inherited frmGoTo: TfrmGoTo
     Align = alBottom
     ParentColor = True
     TabOrder = 1
-    ExplicitTop = 232
     object btnCancel: TBitBtn
       Left = 197
       Top = 40

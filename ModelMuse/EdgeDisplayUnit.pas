@@ -202,6 +202,9 @@ implementation
 uses Math, frmGoPhastUnit, AbstractGridUnit,
   BigCanvasMethods, PhastModelUnit, frmDisplayDataUnit;
 
+resourcestring
+  StrAverageOfSeveralV = 'Average of several values:';
+
 { TCustomModflowGridEdgeDisplay }
 
 procedure TCustomModflowGridEdgeDisplay.Add(EdgeFeature: TCustomModflowGridEdgeFeature);
@@ -397,7 +400,7 @@ begin
     end
     else if Annotations.Count > 1 then
     begin
-      Annotations.Insert(0, 'Average of several values:');
+      Annotations.Insert(0, StrAverageOfSeveralV);
       result := Annotations.Text
     end;
   finally

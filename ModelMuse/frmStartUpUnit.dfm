@@ -306,6 +306,10 @@ inherited frmStartUp: TfrmStartUp
       HelpKeyword = 'Initial_Grid_Dialog_Box'
       Caption = 'tabInitialModflowGrid'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object gbInitialGridModflow: TGroupBox
         Left = 0
         Top = 0

@@ -62,6 +62,27 @@ resourcestring
   'ions or modify the MT3DMS source code and recompile to overcome this limi' +
   'tation. Another option is to use the TOB package. The limitation does not '
   + 'apply to observations specified through the TOB package.';
+  StrWritingMT3DMSBTNP = 'Writing MT3DMS BTN Package input.';
+  StrWritingDataSets1and2 = '  Writing Data Sets 1 and 2.';
+  StrWritingDataSet3 = '  Writing Data Set 3.';
+  StrWritingDataSet4 = '  Writing Data Set 4.';
+  StrWritingDataSet5 = '  Writing Data Set 5.';
+  StrWritingDataSet6 = '  Writing Data Set 6.';
+  StrWritingDataSet7 = '  Writing Data Set 7.';
+  StrWritingDataSet8 = '  Writing Data Set 8.';
+  StrWritingDataSet9 = '  Writing Data Set 9.';
+  StrWritingDataSet10 = '  Writing Data Set 10.';
+  StrWritingDataSet11 = '  Writing Data Set 11.';
+  StrWritingDataSet12 = '  Writing Data Set 12.';
+  StrWritingDataSet13 = '  Writing Data Set 13.';
+  StrWritingDataSet14 = '  Writing Data Set 14.';
+  StrWritingDataSet15 = '  Writing Data Set 15.';
+  StrWritingDataSet16 = '  Writing Data Set 16.';
+  StrWritingDataSet17 = '  Writing Data Set 17.';
+  StrWritingDataSet18 = '  Writing Data Set 18.';
+  StrWritingDataSet19 = '  Writing Data Set 19.';
+  StrWritingDataSet20 = '  Writing Data Set 20.';
+  StrWritingDataSet21 = '  Writing Data Set 21.';
 
 { TMt3dmsBtnWriter }
 
@@ -185,10 +206,10 @@ var
   SAVUCN: string;
   Mt3dmsOutputControl: TMt3dmsOutputControl;
 begin
-  IFMTCN := IPRN_Real;
-  IFMTNP := IPRN_Integer;
-  IFMTRF := IPRN_Real;
-  IFMTDP := IPRN_Real;
+  IFMTCN := IPRN_Mt3dms_Real;
+  IFMTNP := IPRN_Mt3dms_Integer;
+  IFMTRF := IPRN_Mt3dms_Real;
+  IFMTDP := IPRN_Mt3dms_Real;
   Mt3dmsOutputControl := Model.Mt3dmsOutputControl;
   if Mt3dmsOutputControl.SaveConcentrations then
   begin
@@ -615,8 +636,8 @@ begin
 
   OpenFile(FNameOfFile);
   try
-    frmProgressMM.AddMessage('Writing MT3DMS BTN Package input.');
-    frmProgressMM.AddMessage('  Writing Data Sets 1 and 2.');
+    frmProgressMM.AddMessage(StrWritingMT3DMSBTNP);
+    frmProgressMM.AddMessage(StrWritingDataSets1and2);
     WriteDataSets1And2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -624,7 +645,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage(StrWritingDataSet3);
     WriteDataSet3;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -632,7 +653,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage(StrWritingDataSet4);
     WriteDataSet4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -640,7 +661,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage(StrWritingDataSet5);
     WriteDataSet5;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -649,7 +670,7 @@ begin
     end;
 
 
-    frmProgressMM.AddMessage('  Writing Data Set 6.');
+    frmProgressMM.AddMessage(StrWritingDataSet6);
     WriteDataSet6;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -658,7 +679,7 @@ begin
     end;
 
     // data set 7
-    frmProgressMM.AddMessage('  Writing Data Set 7.');
+    frmProgressMM.AddMessage(StrWritingDataSet7);
     Model.ModflowGrid.WriteDELR(self);
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -667,7 +688,7 @@ begin
     end;
 
     // data set 8
-    frmProgressMM.AddMessage('  Writing Data Set 8.');
+    frmProgressMM.AddMessage(StrWritingDataSet8);
     Model.ModflowGrid.WriteDELC(self);
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -676,7 +697,7 @@ begin
     end;
 
     // data set 9
-    frmProgressMM.AddMessage('  Writing Data Set 9.');
+    frmProgressMM.AddMessage(StrWritingDataSet9);
     Model.ModflowGrid.WriteTOP(self);
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -685,7 +706,7 @@ begin
     end;
     Model.DataArrayManager.CacheDataArrays;
 
-    frmProgressMM.AddMessage('  Writing Data Set 10.');
+    frmProgressMM.AddMessage(StrWritingDataSet10);
     WriteDataSet10;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -693,7 +714,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 11.');
+    frmProgressMM.AddMessage(StrWritingDataSet11);
     WriteDataSet11;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -701,7 +722,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 12.');
+    frmProgressMM.AddMessage(StrWritingDataSet12);
     WriteDataSet12;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -709,7 +730,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 13.');
+    frmProgressMM.AddMessage(StrWritingDataSet13);
     WriteDataSet13;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -717,7 +738,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 14.');
+    frmProgressMM.AddMessage(StrWritingDataSet14);
     WriteDataSet14;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -725,7 +746,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 15.');
+    frmProgressMM.AddMessage(StrWritingDataSet15);
     WriteDataSet15;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -733,7 +754,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 16.');
+    frmProgressMM.AddMessage(StrWritingDataSet16);
     WriteDataSet16;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -741,7 +762,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 17.');
+    frmProgressMM.AddMessage(StrWritingDataSet17);
     WriteDataSet17;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -749,7 +770,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 18.');
+    frmProgressMM.AddMessage(StrWritingDataSet18);
     WriteDataSet18;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -757,7 +778,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 19.');
+    frmProgressMM.AddMessage(StrWritingDataSet19);
     WriteDataSet19;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -765,7 +786,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 20.');
+    frmProgressMM.AddMessage(StrWritingDataSet20);
     WriteDataSet20;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -773,7 +794,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 21.');
+    frmProgressMM.AddMessage(StrWritingDataSet21);
     WriteDataSet21to23;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then

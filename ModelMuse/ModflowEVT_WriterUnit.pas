@@ -131,6 +131,13 @@ resourcestring
   StrNoEvapotranspiratio = 'No evapotranspiration defined';
   StrTheEvapotranspirati = 'The Evapotranspiration package is active but no ' +
   'evapotranspiration has been defined for any stress period.';
+  StrWritingEVTPackage = 'Writing EVT Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+  StrWritingDataSets5to10 = '  Writing Data Sets 5 to 10.';
+  StrWritingStressP = '    Writing Stress Period %d';
 
 procedure TModflowEVT_Writer.UpdateDisplay(
   TimeLists: TModflowBoundListOfTimeLists);
@@ -363,7 +370,6 @@ begin
   end;
   FEvtPackage.MultiplierArrayNames.Clear;
   FEvtPackage.ZoneArrayNames.Clear;
-//  frmProgress.AddMessage('Evaluating EVT Package data.');
   FNameOfFile := FileName(AFileName);
   WriteToNameFile(StrEVT, Model.UnitNumbers.UnitNumber(StrEVT),
     FNameOfFile, foInput);
@@ -376,8 +382,8 @@ begin
   ClearTimeLists(Model);
   OpenFile(FileName(AFileName));
   try
-    frmProgressMM.AddMessage('Writing EVT Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingEVTPackage);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -385,7 +391,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -393,7 +399,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -401,7 +407,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 3 and 4.');
+    frmProgressMM.AddMessage(StrWritingDataSets3and4);
     WriteDataSets3And4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -409,7 +415,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 5 to 10.');
+    frmProgressMM.AddMessage(StrWritingDataSets5to10);
     WriteDataSets5To10;
   finally
     CloseFile;
@@ -498,7 +504,7 @@ begin
       begin
         Exit;
       end;
-      frmProgressMM.AddMessage('    Writing Stress Period ' + IntToStr(TimeIndex+1));
+      frmProgressMM.AddMessage(Format(StrWritingStressP, [TimeIndex+1]));
       ParametersUsed := TStringList.Create;
       try
         RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,

@@ -158,6 +158,10 @@ implementation
 uses GR32_Polygons, RealListUnit, frmGoPhastUnit, BigCanvasMethods, 
   ContourUnit;
 
+resourcestring
+  StrLayerThicknessesMu = 'Layer thicknesses must be greater than or equal t' +
+  'o 0.';
+
 { TPhastGrid }
 
 procedure TPhastGrid.AddLayer(const Value: real);
@@ -211,7 +215,7 @@ function TPhastGrid.GetLayerElevation(const Layer: integer): real;
 begin
   if (Layer < 0) or (Layer > LayerCount) then
   begin
-    raise EInvalidGrid.Create('Invalid layer number');
+    raise EInvalidGrid.Create(StrInvalidLayerNumber);
   end;
   result := FLayerElevations[Layer];
 end;
@@ -334,7 +338,7 @@ procedure TPhastGrid.SetLayerElevation(const Layer: integer;
 begin
   if (Layer < 0) or (Layer > LayerCount) then
   begin
-    raise EInvalidGrid.Create('Invalid layer number');
+    raise EInvalidGrid.Create(StrInvalidLayerNumber);
   end;
   if FLayerElevations[Layer] <> Value then
   begin
@@ -404,8 +408,7 @@ begin
     frmGoPhast.InvalidateModel;
     if Value < 0 then
     begin
-      raise
-        EInvalidGrid.Create('Column widths must be greater than or equal to 0.');
+      raise EInvalidGrid.Create(StrLayerThicknessesMu);
     end;
     Delta := LayerElevation[Layer] - Value;
     for Index := Layer + 1 to LayerCount do

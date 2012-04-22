@@ -153,7 +153,7 @@ var
   ParticleLines: TParticleLines;
   LocalModel: TCustomModel;
 begin
-  LocalModel := Model.SelectedModel;
+  LocalModel := Model;
   SetLength(FParticleGrid, LocalModel.Grid.LayerCount,
     LocalModel.Grid.RowCount, LocalModel.Grid.ColumnCount);
   for Index := 0 to LocalModel.ScreenObjectCount - 1 do

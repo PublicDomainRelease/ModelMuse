@@ -56,6 +56,10 @@ resourcestring
   StrErrorReadingYOrig = 'Error reading Y origin';
   StrErrorReadingCellS = 'Error reading cell size';
   StrErrorReadingNoDat = 'Error reading No-Data-Value';
+  StrSDoesNotExist = '%s does not exist.';
+  StrErrorCallingTAscii = 'Error calling TAsciiRasterReader.ReadValues';
+  StrErrorReadingDataV = 'Error reading data value for row = %0:d, column = ' +
+  '%1:d';
 
 { TAsciiRasterReader }
 
@@ -65,7 +69,7 @@ var
 begin
   if not FileExists(FileName) then
   begin
-    raise EAsciiRasterError.Create(FileName + ' does not exist');
+    raise EAsciiRasterError.Create(Format(StrSDoesNotExist, [FileName]));
   end;
   AssignFile(RasterFile, FileName);
   try
@@ -278,7 +282,7 @@ var
 begin
   if(not Assigned(Values)) and not (Assigned(OnReadPoint)) then
   begin
-    raise EAsciiRasterError.Create('Error calling TAsciiRasterReader.ReadValues');
+    raise EAsciiRasterError.Create(StrErrorCallingTAscii);
   end;
   Lines := TStringList.Create;
   try
@@ -307,8 +311,8 @@ begin
         try
           AValue := FortranStrToFloat(AString);
         except on EConvertError do
-          raise EAsciiRasterError.Create('Error reading data value for row = '
-            + IntToStr(RowIndex + 1) + ', colum = ' + IntToStr(ColIndex + 1));
+          raise EAsciiRasterError.Create(Format(StrErrorReadingDataV,
+            [RowIndex + 1, ColIndex + 1]));
         end;
         if AValue <> RasterHeader.IgnoreValue then
         begin
@@ -376,7 +380,7 @@ begin
   FFileName := Value;
   if not FileExists(FFileName) then
   begin
-    raise EAsciiRasterError.Create(FileName + ' does not exist');
+    raise EAsciiRasterError.Create(Format(StrSDoesNotExist, [FileName]));
   end;
 end;
 
@@ -388,7 +392,7 @@ var
 begin
   if not FileExists(FileName) then
   begin
-    raise EAsciiRasterError.Create(FileName + ' does not exist');
+    raise EAsciiRasterError.Create(Format(StrSDoesNotExist, [FileName]));
   end;
 
   // Determine if the NODATA_VALUE should be read.

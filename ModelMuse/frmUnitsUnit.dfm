@@ -9,8 +9,6 @@ inherited frmUnits: TfrmUnits
   VertScrollBar.Range = 28
   ActiveControl = memoTitle
   Caption = 'PHAST Title and Units'
-  ExplicitLeft = 0
-  ExplicitTop = -210
   ExplicitWidth = 745
   ExplicitHeight = 666
   PixelsPerInch = 96
@@ -183,7 +181,6 @@ inherited frmUnits: TfrmUnits
     ScrollBars = ssBoth
     TabOrder = 1
     WordWrap = False
-    ExplicitWidth = 715
   end
   object btnOK: TBitBtn
     Left = 528

@@ -59,6 +59,10 @@ uses
   frmErrorsAndWarningsUnit, frmProgressUnit, PhastModelUnit, LegendUnit,
   frmSpecifyContoursUnit, ClassificationUnit, Math;
 
+resourcestring
+  StrMinValueS = ' (Min value = %s)';
+  StrMaxValueS = ' (Max value = %s)';
+
 {$R *.dfm}
 
 { TframeContourData }
@@ -304,7 +308,15 @@ end;
 
 function TframeContourData.GetSelectedArray: TDataArray;
 begin
-  result := frmGoPhast.Grid.ThreeDContourDataSet;
+  if frmGoPhast.Grid = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := frmGoPhast.Grid.ThreeDContourDataSet;
+  end;
+
 end;
 
 procedure TframeContourData.HandleLimitChoice(DataSet: TDataArray);
@@ -453,9 +465,9 @@ begin
   begin
     DataSet := TDataArray(AnObject);
     lblLowerLimit.Caption := StrLowerLimit
-      + ' (Min value = ' + DataSet.MinValue + ')';
+      + Format(StrMinValueS, [DataSet.MinValue]);
     lblUpperLimit.Caption := StrUpperLimit
-      + ' (Max value = ' + DataSet.MaxValue + ')';
+      + Format(StrMaxValueS, [DataSet.MaxValue]);
   end;
 end;
 

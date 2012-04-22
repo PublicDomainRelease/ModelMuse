@@ -233,6 +233,9 @@ uses frmGoPhastUnit, GoPhastTypes;
 
 resourcestring
   StrTitleAndUnits = 'title and units';
+  StrLineDOfTheTitle = 'Line %d of the title contains a semicolon.  This is ' +
+  'invalid because the semicolon is the line continuation character in PHAST' +
+  '.';
 
 {$R *.dfm}
 
@@ -253,10 +256,8 @@ begin
     begin
       result := False;
       Beep;
-      MessageDlg('Line ' + IntToStr(LineIndex + 1)
-        + ' of the title contains a semicolon.  '
-        + 'This is invalid because the semicolon is the line continuation '
-        + 'character in PHAST.', mtError, [mbOK], 0);
+      MessageDlg(Format(StrLineDOfTheTitle, [LineIndex + 1]),
+        mtError, [mbOK], 0);
       Exit;
     end;
   end;

@@ -65,13 +65,13 @@ inherited frmImportDEM: TfrmImportDEM
   object memoCorners: TMemo [13]
     Left = 319
     Top = 85
-    Width = 208
+    Width = 184
     Height = 247
     Anchors = [akLeft, akTop, akRight]
     ScrollBars = ssBoth
     TabOrder = 10
     WordWrap = False
-    ExplicitWidth = 240
+    ExplicitWidth = 192
   end
   object cbIgnore: TCheckBox [14]
     Left = 8

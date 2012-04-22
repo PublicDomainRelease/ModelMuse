@@ -41,7 +41,7 @@ implementation
 {$R *.dfm}
 
 uses JclSysUtils, Modflow2005ImporterUnit, frmShowHideObjectsUnit,
-  frmDisplayDataUnit;
+  frmDisplayDataUnit, ModelMuseUtilities;
 
 resourcestring
   StrTheMODFLOWNameFil = 'The MODFLOW Name file appears to be invalid';
@@ -52,6 +52,7 @@ resourcestring
   StrTheListingFile = 'The listing file, "%s", was not found.';
   StrTheNameOfTheMODF = 'The name of the MODFLOW Name file can not contain a' +
   'ny spaces.';
+  StrReadingStressPerio = 'Reading Stress Period %s';
 
 procedure TfrmImportModflow.btnOKClick(Sender: TObject);
 var
@@ -95,7 +96,14 @@ begin
     LineContents := TStringList.Create;
     try
       LineContents.Delimiter := ' ';
-      NameFile.LoadFromFile(edNameFile.FileName);
+      try
+        NameFile.LoadFromFile(edNameFile.FileName);
+      except on EFOpenError do
+        begin
+          CantOpenFileMessage(edNameFile.FileName);
+          Exit;
+        end;
+      end;
       for Index := 0 to NameFile.Count - 1 do
       begin
         ALine := NameFile[Index];
@@ -194,7 +202,7 @@ begin
   begin
     SPStart := SpPos + Length(SP);
     StressPeriod := Trim(Copy(Text, SPStart, TsPos-SPStart));
-    sbStatusBar.SimpleText := 'Reading Stress Period ' + StressPeriod;
+    sbStatusBar.SimpleText := Format(StrReadingStressPerio, [StressPeriod]);
   end
   else
   begin

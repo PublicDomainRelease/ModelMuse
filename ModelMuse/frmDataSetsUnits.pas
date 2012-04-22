@@ -405,6 +405,20 @@ uses frmGoPhastUnit, frmFormulaUnit, frmConvertChoiceUnit, InterpolationUnit,
   StrUtils, OrderedCollectionUnit, HufDefinition, LayerStructureUnit,
   SubscriptionUnit;
 
+resourcestring
+  StrNone = 'none';
+  StrErrorThereAppears = 'Error: There appears to be a cirular reference to ' +
+  '"%s" in this formula.  Do you wish to restore the old formula';
+  StrErrorThereAppearsC = 'Error: There appears to be a cirular reference to ' +
+  '"%s" in this formula.';
+  StrIfYouHaveAnyUnus = 'If you have any unused objects, now might be a good' +
+  ' time to delete them.';
+  StrErrorForFormulaFo = 'Error for formula for data set "%0:s"; %1:s';
+  StrDoYouWishToDoYo = 'Do you wish to Do you wish to restore the old formul' +
+  'a?';
+  StrSMixtureFormula = '%s Mixture Formula';
+  StrDefinedByParamet = '%s (defined by parameters)';
+
 {$R *.dfm}
 var
   frmDataSets: TfrmDataSets = nil;
@@ -472,7 +486,7 @@ var
 begin
   comboInterpolation.Items.Clear;
   Item := comboInterpolation.Items.Add;
-  Item.Text := 'none';
+  Item.Text := StrNone;
   for Index := 0 to FInterpolatorList.Count - 1 do
   begin
     InterpolatorType := FInterpolatorList[Index];
@@ -781,11 +795,8 @@ begin
                     Beep;
                     if OldFormulaOK then
                     begin
-                      if MessageDlg(
-                        'Error: There appears to be a cirular reference to "'
-                        + Used[Index] + '" in this formula.  Do you wish to '
-                        + 'restore the old formula', mtError,
-                        [mbYes, mbNo], 0) = mrYes then
+                      if MessageDlg(Format(StrErrorThereAppears, [Used[Index]]),
+                        mtError, [mbYes, mbNo], 0) = mrYes then
                       begin
                         FSelectedEdit.Formula := OldFormula;
                         CreateFormula(FSelectedEdit);
@@ -793,12 +804,9 @@ begin
                     end
                     else
                     begin
-                      MessageDlg(
-                        'Error: There appears to be a cirular reference to "'
-                        + Used[Index] + '" in this formula.', mtError,
-                        [mbOK], 0)
+                      MessageDlg(Format(StrErrorThereAppearsC, [Used[Index]]),
+                        mtError, [mbOK], 0)
                     end;
-
                     Exit;
                   end
                 end;
@@ -885,7 +893,7 @@ begin
       begin
         Assert(False);
       end;
-    msPhast:
+    msPhast {$IFDEF SUTRA}, msSutra {$ENDIF}:
       begin
         comboOrientation.Items[1].Brush.Color := clWhite;
         comboOrientation.Items[2].Brush.Color := clWhite;
@@ -895,6 +903,8 @@ begin
         comboOrientation.Items[1].Brush.Color := clBtnFace;
         comboOrientation.Items[2].Brush.Color := clBtnFace;
       end;
+    else
+      Assert(False);
   end;
   tabPHAST.TabVisible := frmGoPhast.ModelSelection = msPhast;
 end;
@@ -938,10 +948,17 @@ begin
     FArrayEdits := TObjectList.Create;
   end;
   FArrayEdits.Clear;
-  SelectedDataArray := frmGoPhast.Grid.ThreeDDataSet;
-  if SelectedDataArray = nil then
+  if frmGoPhast.Grid <> nil then
   begin
-    SelectedDataArray := frmGoPhast.Grid.ThreeDContourDataSet;
+    SelectedDataArray := frmGoPhast.Grid.ThreeDDataSet;
+    if SelectedDataArray = nil then
+    begin
+      SelectedDataArray := frmGoPhast.Grid.ThreeDContourDataSet;
+    end;
+  end
+  else
+  begin
+    SelectedDataArray := nil;
   end;
   if SelectedDataArray = nil then
   begin
@@ -1105,9 +1122,7 @@ begin
       if DataSetsDeleted then
       begin
         Beep;
-        MessageDlg('If you have any unused objects, '
-          + 'now might be a good time to delete them.',
-          mtInformation, [mbOK], 0);
+        MessageDlg(StrIfYouHaveAnyUnus, mtInformation, [mbOK], 0);
       end;
     end
     else
@@ -1382,9 +1397,8 @@ begin
           except on E: ErbwParserError do
             begin
               sbStatusBar.Color := clRed;
-              ErrorMessage := 'Error for formula for data set "'
-                + DataEdit.Name
-                + '"; ' + E.Message;
+              ErrorMessage := Format(StrErrorForFormulaFo,
+                [DataEdit.Name, E.Message]);
               sbStatusBar.SimpleText := ErrorMessage;
               DataEdit.Expression := nil;
               DataEdit.Formula := AFormula;
@@ -1392,8 +1406,7 @@ begin
               if OldFormulaOK then
               begin
                 ErrorMessage := ErrorMessage + sLineBreak + sLineBreak
-                  + 'Do you wish to Do you wish to '
-                  + 'restore the old formula?';
+                  + StrDoYouWishToDoYo;
                  if MessageDlg(ErrorMessage, mtError,
                    [mbYes, mbNo], 0) = mrYes then
                  begin
@@ -1431,11 +1444,8 @@ begin
                   Beep;
                   if OldFormulaOK then
                   begin
-                    if MessageDlg(
-                      'Error: There appears to be a cirular reference to "'
-                      + Used[Index] + '" in this formula.  Do you wish to '
-                      + 'restore the old formula?', mtError,
-                      [mbYes, mbNo], 0) = mrYes then
+                    if MessageDlg(Format(StrErrorThereAppears, [Used[Index]]),
+                      mtError, [mbYes, mbNo], 0) = mrYes then
                     begin
                       DataEdit.Formula := OldFormula;
                       CreateFormula(DataEdit);
@@ -1443,10 +1453,8 @@ begin
                   end
                   else
                   begin
-                    MessageDlg(
-                      'Error: There appears to be a cirular reference to "'
-                      + Used[Index] + '" in this formula.', mtError,
-                      [mbOK], 0);
+                    MessageDlg(Format(StrErrorThereAppearsC, [Used[Index]]),
+                      mtError, [mbOK], 0);
                   end;
 
                   Exit;
@@ -1881,7 +1889,7 @@ begin
           PopUpParent := self;
           Lock := [dcType];
 
-          GetData(FSelectedEdit.Name + ' Mixture Formula',
+          GetData(Format(StrSMixtureFormula, [FSelectedEdit.Name]),
             result.ResultType, ResultType, FDefaultConvertChoice,
             Lock);
           ButtonCenter.X := btnOK.Width div 2;
@@ -1918,9 +1926,8 @@ begin
     begin
       Beep;
       sbStatusBar.Color := clRed;
-      sbStatusBar.SimpleText := 'Error for mixture formula for data set "'
-        + FSelectedEdit.Name
-        + '"; ' + E.Message;
+      sbStatusBar.SimpleText := Format(StrErrorForFormulaFo,
+        [FSelectedEdit.Name, E.Message]);
       result := nil;
       Exit;
     end;
@@ -2507,9 +2514,8 @@ begin
       DataArrayEdit.Expression := nil;
       Beep;
       sbStatusBar.Color := clRed;
-      sbStatusBar.SimpleText := 'Error for formula for data set "'
-        + DataArrayEdit.Name
-        + '"; ' + E.Message;
+      sbStatusBar.SimpleText := Format(StrErrorForFormulaFo,
+        [DataArrayEdit.Name, E.Message]);
       Exit;
     end;
   else
@@ -2633,8 +2639,9 @@ begin
         or not (dcOrientation in FSelectedEdit.DataArray.Lock);
 
       comboEvaluatedAt.ItemIndex := Ord(FSelectedEdit.EvaluatedAt);
-      comboEvaluatedAt.Enabled := (frmGoPhast.ModelSelection = msPhast) and
-        ((FSelectedEdit.DataArray = nil)
+      comboEvaluatedAt.Enabled := (frmGoPhast.ModelSelection
+        in [msPhast {$IFDEF Sutra}, msSutra {$ENDIF}])
+        and ((FSelectedEdit.DataArray = nil)
         or not (dcEvaluatedAt in FSelectedEdit.DataArray.Lock));
 
       edUnits.Text := FSelectedEdit.Units;
@@ -3127,11 +3134,8 @@ begin
                   if Expression.UsesVariable(DataArrayEdit.Variable) then
                   begin
                     Beep;
-                    if MessageDlg(
-                      'Error: There appears to be a cirular reference to "'
-                      + Used[Index] + '" in this formula.  Do you wish to '
-                      + 'restore the old formula', mtError,
-                      [mbYes, mbNo], 0) = mrYes then
+                    if MessageDlg(Format(StrErrorThereAppears, [Used[Index]]),
+                      mtError, [mbYes, mbNo], 0) = mrYes then
                     begin
                       framePhastInterpolation.edMixFormula.Text := OldFormula;
                       CreateMixtureFormula;
@@ -3193,7 +3197,7 @@ begin
   result := DataArray.Name;
   if DataArray.ParameterUsed then
   begin
-    result := result + ' (defined by parameters)';
+    result := Format(StrDefinedByParamet, [result]);
   end;
 end;
 

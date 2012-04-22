@@ -65,6 +65,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end
           item
@@ -86,6 +87,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end
           item
@@ -107,6 +109,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end
           item
@@ -128,6 +131,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end>
         OnEndUpdate = rdgListEndUpdate
@@ -414,6 +418,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
           ParentButtonFont = False
           WordWrapCaptions = True
           WordWrapCells = False
+          CaseSensitivePicklist = False
           AutoAdjustColWidths = True
         end>
       OnEndUpdate = rdgIgnoreValuesEndUpdate

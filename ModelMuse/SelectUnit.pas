@@ -155,13 +155,16 @@ implementation
 
 uses BigCanvasMethods;
 
+resourcestring
+  StrCantAddPoint = 'Can''t add point';
+
 { TLine }
 
 procedure TLine.AddPoint(const APoint: TPoint);
 begin
   if not FCanAdjustBounds then
   begin
-    raise Exception.Create('Can''t add point');
+    raise Exception.Create(StrCantAddPoint);
   end;
   if Length(FPoints) <= Count then
   begin

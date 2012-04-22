@@ -38,6 +38,13 @@ implementation
 uses ModflowTimeUnit, frmErrorsAndWarningsUnit,
   ModflowTransientListParameterUnit, ModflowUnitNumbers, frmProgressUnit, Forms;
 
+resourcestring
+  StrWritingDRNPackage = 'Writing DRN Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSets2and3 = '  Writing Data Sets 2 and 3.';
+  StrWritingDataSets4to6 = '  Writing Data Sets 4 to 6.';
+
 { TModflowDRT_Writer }
 
 function TModflowDRT_Writer.CellType: TValueCellType;
@@ -180,8 +187,8 @@ begin
   ClearTimeLists(Model);
   OpenFile(FileName(AFileName));
   try
-    frmProgressMM.AddMessage('Writing DRN Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingDRNPackage);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -189,7 +196,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -197,7 +204,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 2 and 3.');
+    frmProgressMM.AddMessage(StrWritingDataSets2and3);
     WriteDataSets2And3;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -205,7 +212,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 4 to 6.');
+    frmProgressMM.AddMessage(StrWritingDataSets4to6);
     WriteDataSets4To6;
   finally
     CloseFile;

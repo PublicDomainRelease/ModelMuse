@@ -61,6 +61,21 @@ resourcestring
   ' was not defined in the following stress periods.';
   StrNoTransientDataI = 'No transient data (infiltration and/or evapotranspi' +
   'ration) has been defined.';
+  StrEvaluatingUZFPacka = 'Evaluating UZF Package data.';
+  StrEvaluatingS = '    Evaluating %s.';
+  StrWritingUZFPackage = 'Writing UZF Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSet3 = '  Writing Data Set 3.';
+  StrWritingDataSet4 = '  Writing Data Set 4.';
+  StrWritingDataSet5 = '  Writing Data Set 5.';
+  StrWritingDataSet6 = '  Writing Data Set 6a.';
+  StrWritingDataSet6b = '  Writing Data Set 6b.';
+  StrWritingDataSet7 = '  Writing Data Set 7.';
+  StrWritingDataSet8 = '  Writing Data Set 8.';
+  StrWritingDataSets9to16 = '  Writing Data Sets 9 to 16.';
+  StrWritingStressP = '    Writing Stress Period %d';
 
 { TModflowUzfWriter }
 
@@ -89,7 +104,7 @@ var
 begin
   NoAssignmentErrorRoot := Format(StrNoBoundaryConditio,
     [Package.PackageIdentifier]);
-  frmProgressMM.AddMessage('Evaluating UZF Package data.');
+  frmProgressMM.AddMessage(StrEvaluatingUZFPacka);
   CountGages;
 
   for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
@@ -106,7 +121,7 @@ begin
     Boundary := ScreenObject.ModflowUzfBoundary;
     if Boundary <> nil then
     begin
-      frmProgressMM.AddMessage('    Evaluating ' + ScreenObject.Name + '.');
+      frmProgressMM.AddMessage(Format(StrEvaluatingS, [ScreenObject.Name]));
       if not ScreenObject.SetValuesOfEnclosedCells
         and not ScreenObject.SetValuesOfIntersectedCells then
       begin
@@ -317,7 +332,7 @@ procedure TModflowUzfWriter.WriteDataSet1a;
 var
   UzfPackage: TUzfPackageSelection;
 begin
-  if Model.ModelSelection = msModflowNWT then
+  if Model.ModelSelection in [msModflowNWT, msModflow] then
   begin
     UzfPackage := Model.ModflowPackages.UzfPackage;
     if UzfPackage.SpecifyResidualWaterContent
@@ -423,7 +438,7 @@ begin
   end;
   WriteInteger(NUZGAG);
   WriteFloat(SURFDEP);
-  if Model.ModelSelection = msModflowNWT then
+  if Model.ModelSelection in [msModflowNWT, msModflow] then
   begin
     WriteString(' # Data Set 1b: NUZTOP IUZFOPT IRUNFLG IETFLG IUZFCB1 IUZFCB2');
   end
@@ -482,7 +497,7 @@ var
   THTS: TDataArray;
 begin
   THTS := Model.DataArrayManager.GetDataSetByName(StrUzfSaturatedWaterContent);
-  if Model.ModelSelection = msModflowNWT then
+  if Model.ModelSelection in [msModflowNWT, msModflow] then
   begin
     WriteArray(THTS, 0, 'Data Set 6a: THTS');
   end
@@ -496,7 +511,7 @@ procedure TModflowUzfWriter.WriteDataSet6b;
 var
   THTR: TDataArray;
 begin
-  if (Model.ModelSelection = msModflowNWT)
+  if (Model.ModelSelection in [msModflowNWT, msModflow])
     and Model.ModflowPackages.UzfPackage.SpecifyResidualWaterContent then
   begin
     THTR := Model.DataArrayManager.GetDataSetByName(StrUzfReisidualWaterContent);
@@ -509,7 +524,7 @@ var
   THTI: TDataArray;
 begin
   if Model.ModflowStressPeriods.CompletelyTransient
-    or ((Model.ModelSelection = msModflowNWT)
+    or ((Model.ModelSelection in [msModflowNWT, msModflow])
       and Model.ModflowPackages.UzfPackage.SpecifyInitialWaterContent) then
   begin
     THTI := Model.DataArrayManager.GetDataSetByName(StrUzfInitialUnsaturatedWaterContent);
@@ -586,8 +601,7 @@ begin
   begin
     Exit;
   end;
-  frmProgressMM.AddMessage('Writing UZF Package input.');
-//  frmProgress.AddMessage('  Evaluating data.');
+  frmProgressMM.AddMessage(StrWritingUZFPackage);
   Evaluate;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
@@ -606,7 +620,7 @@ begin
   WriteGagesToNameFile(AFileName, GageStart);
   OpenFile(NameOfFile);
   try
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -614,7 +628,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1a;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -630,7 +644,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -638,7 +652,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage(StrWritingDataSet3);
     WriteDataSet3;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -646,7 +660,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage(StrWritingDataSet4);
     WriteDataSet4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -654,7 +668,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage(StrWritingDataSet5);
     WriteDataSet5;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -662,7 +676,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 6a.');
+    frmProgressMM.AddMessage(StrWritingDataSet6);
     WriteDataSet6a;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -670,7 +684,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 6b.');
+    frmProgressMM.AddMessage(StrWritingDataSet6b);
     WriteDataSet6b;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -678,7 +692,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 7.');
+    frmProgressMM.AddMessage(StrWritingDataSet7);
     WriteDataSet7;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -686,7 +700,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 8.');
+    frmProgressMM.AddMessage(StrWritingDataSet8);
     WriteDataSet8(GageStart);
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -694,7 +708,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 9 to 16.');
+    frmProgressMM.AddMessage(StrWritingDataSets9to16);
     WriteStressPeriods;
   finally
     CloseFile;
@@ -735,7 +749,7 @@ begin
     begin
       Exit;
     end;
-    frmProgressMM.AddMessage('    Writing Stress Period ' + IntToStr(TimeIndex+1));
+    frmProgressMM.AddMessage(Format(StrWritingStressP, [TimeIndex+1]));
 
     // data set 9
     WriteInteger(0);

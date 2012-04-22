@@ -92,7 +92,7 @@ resourcestring
   InvalidFractionError =
     'The deactivation pumping rate and reactivation pumping rate '
     + 'should both be between 0 and 1.';
-  StrObjectSStartin = 'Object = %s; Starting time = %g';
+  StrObjectSStartin = 'Object = %0:s; Starting time = %1:g';
   LossTypeError = 'In the MNW2 package, a LOSSTYPE of "NONE" is only '
     + 'valid if the well has only one cell. Objects in which this is violated'
     + ' are listed below.';
@@ -104,6 +104,16 @@ resourcestring
   StrNoMultinodeWellsD = 'No Multinode wells defined.';
   StrTheMNW2PackageIs = 'The MNW2 package is active but no multinode wells h' +
   'ave been defined.';
+  StrEvaluatingMNWIPack = 'Evaluating MNWI Package data.';
+  StrEvaluatingS = '    Evaluating %s';
+  StrEvaluatingMNW2Pack = 'Evaluating MNW2 Package data.';
+  StrWritingMNW2Package = 'Writing MNW2 Package input.';
+  StrWritingDataSet0 = '  Writing Data Set 0.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
+  StrWritingMNWIPackage = 'Writing MNWI Package input.';
+  StrWritingDataSet3 = '  Writing Data Set 3.';
 
 { TModflowMNW2_Writer }
 
@@ -133,7 +143,7 @@ var
   ScreenObject: TScreenObject;
   Boundary: TMnw2Boundary;
 begin
-  frmProgressMM.AddMessage('Evaluating MNWI Package data.');
+  frmProgressMM.AddMessage(StrEvaluatingMNWIPack);
   for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin
     if not frmProgressMM.ShouldContinue then
@@ -150,7 +160,7 @@ begin
     begin
       Continue;
     end;
-    frmProgressMM.AddMessage('    Evaluating ' + ScreenObject.Name);
+    frmProgressMM.AddMessage(Format(StrEvaluatingS, [ScreenObject.Name]));
     if Boundary.SaveMnwiInfo
       or Boundary.SaveExternalFlows
       or Boundary.SaveInternalFlows then
@@ -170,7 +180,7 @@ var
   Item: TCustomModflowBoundaryItem;
   StressPeriod: TModflowStressPeriod;
 begin
-  frmProgressMM.AddMessage('Evaluating MNW2 Package data.');
+  frmProgressMM.AddMessage(StrEvaluatingMNW2Pack);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoMultinodeWellsD);
   Dummy := TStringList.Create;
   try
@@ -202,7 +212,7 @@ begin
         Model.ModflowFullStressPeriods.Count-1];
       Item.EndTime := StressPeriod.EndTime;
 
-      frmProgressMM.AddMessage('    Evaluating ' + ScreenObject.Name);
+      frmProgressMM.AddMessage(Format(StrEvaluatingS, [ScreenObject.Name]));
       Boundary.GetCellValues(FValues, Dummy, Model);
       if (FValues.Count >= 1) then
       begin
@@ -520,8 +530,8 @@ begin
   end;
   OpenFile(FNameOfFile);
   try
-    frmProgressMM.AddMessage('Writing MNW2 Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage(StrWritingMNW2Package);
+    frmProgressMM.AddMessage(StrWritingDataSet0);
     WriteDataSet0;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -529,7 +539,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -537,7 +547,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -545,7 +555,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Sets 3 and 4.');
+    frmProgressMM.AddMessage(StrWritingDataSets3and4);
     WriteDataSets3and4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -581,7 +591,7 @@ begin
 
     OpenFile(NameOfMnwiFile);
     try
-      frmProgressMM.AddMessage('Writing MNWI Package input.');
+      frmProgressMM.AddMessage(StrWritingMNWIPackage);
       WriteMnwiDataSet1(AFileName);
       WriteMnwiDataSet2;
       WriteMnwiDataSet3(StartUnitNumber, AFileName);
@@ -608,7 +618,7 @@ var
 begin
   AFileName := ExtractFileName(AFileName);
   AFileName := ChangeFileExt(AFileName, '');
-  frmProgressMM.AddMessage('  Writing Data Set 3.');
+  frmProgressMM.AddMessage(StrWritingDataSet3);
   for WellIndex := 0 to FMnwiWells.Count - 1 do
   begin
     Boundary := FMnwiWells[WellIndex];
@@ -656,7 +666,7 @@ procedure TModflowMNW2_Writer.WriteMnwiDataSet2;
 var
   MNWOBS: Integer;
 begin
-  frmProgressMM.AddMessage('  Writing Data Set 2.');
+  frmProgressMM.AddMessage(StrWritingDataSet2);
 
   MNWOBS := FMnwiWells.Count;
   WriteInteger(MNWOBS);
@@ -671,7 +681,7 @@ var
   BYNDflag: Integer;
   OutputFileName: string;
 begin
-  frmProgressMM.AddMessage('  Writing Data Set 1.');
+  frmProgressMM.AddMessage(StrWritingDataSet1);
   AFileName := ExtractFileName(AFileName);
   AFileName := ChangeFileExt(AFileName, '');
   if FMnwPackage.CreateWellFile then

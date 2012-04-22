@@ -445,50 +445,68 @@ begin
                 end;
               rdtString:
                 begin
-                  if ColoringLimits.UpperLimit.UseLimit then
-                  begin
-                    MaxString := ColoringLimits.UpperLimit.StringLimitValue;
-                  end
-                  else
-                  begin
-                    MaxString := DataArray.MaxString;
-                  end;
+                  StringValues := TStringList.Create;
+                  try
+                    GetStringValues(StringValues, DataArray);
 
-                  if ColoringLimits.LowerLimit.UseLimit then
-                  begin
-                    MinString := ColoringLimits.LowerLimit.StringLimitValue;
-                  end
-                  else
-                  begin
-                    MinString := DataArray.MinString;
-                  end;
+                    if ColoringLimits.UpperLimit.UseLimit then
+                    begin
+                      MaxString := ColoringLimits.UpperLimit.StringLimitValue;
+                    end
+                    else
+                    begin
+                      if StringValues.Count > 0 then
+                      begin
+                        MaxString := StringValues[StringValues.Count-1];
+                      end
+                      else
+                      begin
+                        MaxString := DataArray.MaxString;
+                      end;
+                    end;
 
-                  if MaxString = MinString then
-                  begin
-                    Values.Clear;
-                    Values.Add(MaxString);
-                  end
-                  else
-                  begin
-                    StringValues := TStringList.Create;
-                    try
-                      GetStringValues(StringValues, DataArray);
+                    if ColoringLimits.LowerLimit.UseLimit then
+                    begin
+                      MinString := ColoringLimits.LowerLimit.StringLimitValue;
+                    end
+                    else
+                    begin
+                      if StringValues.Count > 0 then
+                      begin
+                        MinString := StringValues[0];
+                      end
+                      else
+                      begin
+                        MinString := DataArray.MinString;
+                      end;
+                    end;
 
+                    if MaxString = MinString then
+                    begin
+                      Values.Clear;
+                      Values.Add(MaxString);
+                    end
+                    else
+                    begin
                       MinInteger := 0;
                       MaxInteger := StringValues.Count -1;
 
                       Range := MaxInteger-MinInteger;
                       IntegerIntervals := Min(Range,IntervalCount);
                       Values.Count := Min(Range,IntervalCount)+1;
+                      if IntegerIntervals = 0 then
+                      begin
+                        IntegerIntervals := 1;
+                      end;
                       for Index := 0 to Values.Count -1 do
                       begin
                         StringPos := MinInteger
                           + (Range div IntegerIntervals) * Index;
                         Values.StringValues[Index] := StringValues[StringPos];
                       end;
-                    finally
-                      StringValues.Free;
                     end;
+                  finally
+                    StringValues.Free;
                   end;
                 end;
               else Assert(False)
@@ -591,15 +609,18 @@ end;
 procedure TLegend.GetStringValues(StringValues: TStringList;
   DataArray: TDataArray);
 var
-  RowIndex: Integer;
-  LayerIndex: Integer;
-  ColIndex: Integer;
   MaxString: string;
   MinString: string;
   StringPos: Integer;
   Index: Integer;
+  Model: TCustomModel;
+  MinMax: TMinMax;
 begin
-  DataArray.Initialize;
+  Model := DataArray.Model as TCustomModel;
+
+  Model.Grid.GetMinMax(MinMax, DataArray, StringValues);
+
+//  DataArray.Initialize;
 
   if ColoringLimits.UpperLimit.UseLimit then
   begin
@@ -607,7 +628,7 @@ begin
   end
   else
   begin
-    MaxString := DataArray.MaxString;
+    MaxString := MinMax.SMax;
   end;
 
   if ColoringLimits.LowerLimit.UseLimit then
@@ -616,46 +637,53 @@ begin
   end
   else
   begin
-    MinString := DataArray.MinString;
+    MinString := MinMax.SMin;
   end;
 
-  StringValues.Clear;
-  StringValues.CaseSensitive := False;
-  StringValues.Duplicates := dupIgnore;
-  StringValues.Sorted := True;
-  StringValues.Capacity := DataArray.LayerCount
-    * DataArray.RowCount * DataArray.ColumnCount;
-  for LayerIndex := 0 to DataArray.LayerCount - 1 do
+//  StringValues.Clear;
+//  StringValues.CaseSensitive := False;
+//  StringValues.Duplicates := dupIgnore;
+//  StringValues.Sorted := True;
+//  StringValues.Capacity := DataArray.LayerCount
+//    * DataArray.RowCount * DataArray.ColumnCount;
+//  for LayerIndex := 0 to DataArray.LayerCount - 1 do
+//  begin
+//    for RowIndex := 0 to DataArray.RowCount - 1 do
+//    begin
+//      for ColIndex := 0 to DataArray.ColumnCount - 1 do
+//      begin
+//        if DataArray.IsValue[LayerIndex, RowIndex, ColIndex] then
+//        begin
+//          StringValues.Add(DataArray.StringData[LayerIndex, RowIndex, ColIndex]);
+//        end;
+//      end;
+//    end;
+//  end;
+
+  if StringValues.Count > 0 then
   begin
-    for RowIndex := 0 to DataArray.RowCount - 1 do
+    if StringValues[StringValues.Count -1] <> MaxString then
     begin
-      for ColIndex := 0 to DataArray.ColumnCount - 1 do
+      if not StringValues.Find(MaxString, StringPos) then
       begin
-        if DataArray.IsValue[LayerIndex, RowIndex, ColIndex] then
-        begin
-          StringValues.Add(DataArray.StringData[LayerIndex, RowIndex, ColIndex]);
-        end;
+        Dec(StringPos)
+      end;
+      Assert(StringPos >= -1);
+      for Index := StringValues.Count -1 downto StringPos + 1 do
+      begin
+        StringValues.Delete(Index);
       end;
     end;
-  end;
 
-  if StringValues[StringValues.Count -1] <> MaxString then
-  begin
-    StringPos := StringValues.IndexOf(MaxString);
+    StringValues.Find(MinString, StringPos);
+  //  StringPos := StringValues.IndexOf(MinString);
     Assert(StringPos >= 0);
-    for Index := StringValues.Count -1 downto StringPos + 1 do
+    if StringPos > 0 then
     begin
-      StringValues.Delete(Index);
-    end;
-  end;
-
-  StringPos := StringValues.IndexOf(MinString);
-  Assert(StringPos >= 0);
-  if StringPos > 0 then
-  begin
-    for Index := StringPos-1 downto 0 do
-    begin
-      StringValues.Delete(Index);
+      for Index := StringPos-1 downto 0 do
+      begin
+        StringValues.Delete(Index);
+      end;
     end;
   end;
 end;
@@ -839,43 +867,54 @@ end;
 procedure TLegend.GetRealNumberLimits(var MinReal, MaxReal: real;
   DataArray: TDataArray);
 var
-  MinPositive: Real;
   Model: TCustomModel;
+  MinMax: TMinMax;
+  StringList: TStringList;
 begin
   Model := DataArray.Model as TCustomModel;
-  Model.Grid.GetRealMinMax(DataArray, MinReal, MaxReal, MinPositive);
+
+  StringList := TStringList.Create;
+  try
+    Model.Grid.GetMinMax(MinMax, DataArray, StringList);
+  finally
+    StringList.Free;
+  end;
+
+//  Model.Grid.GetRealMinMax(DataArray, MinMax);
+  MaxReal := MinMax.RMax;
   if ColoringLimits.LogTransform then
   begin
-    MinReal := MinPositive;
+    MinReal := MinMax.RMinPositive;
+  end
+  else
+  begin
+    MinReal := MinMax.RMin;
   end;
-//  if ColoringLimits.UpperLimit.UseLimit then
-//  begin
-//    MaxReal := ColoringLimits.UpperLimit.RealLimitValue;
-//  end
-//  else
-//  begin
-//    MaxReal := DataArray.MaxReal;
-//  end;
-//  if ColoringLimits.LowerLimit.UseLimit then
-//  begin
-//    MinReal := ColoringLimits.LowerLimit.RealLimitValue;
-//  end
-//  else
-//  begin
-//    MinReal := DataArray.MinReal;
-//  end;
 end;
 
 procedure TLegend.GetIntegerLimits(var MinInteger, MaxInteger: Integer;
   DataArray: TDataArray);
+var
+  Model: TCustomModel;
+  MinMax: TMinMax;
+  StringList: TStringList;
 begin
+  Model := DataArray.Model as TCustomModel;
+
+  StringList := TStringList.Create;
+  try
+    Model.Grid.GetMinMax(MinMax, DataArray, StringList);
+  finally
+    StringList.Free;
+  end;
+
   if ColoringLimits.UpperLimit.UseLimit then
   begin
     MaxInteger := ColoringLimits.UpperLimit.IntegerLimitValue;
   end
   else
   begin
-    MaxInteger := DataArray.MaxInteger;
+    MaxInteger := MinMax.IMax
   end;
   if ColoringLimits.LowerLimit.UseLimit then
   begin
@@ -883,7 +922,7 @@ begin
   end
   else
   begin
-    MinInteger := DataArray.MinInteger;
+    MinInteger := MinMax.IMin
   end;
 end;
 

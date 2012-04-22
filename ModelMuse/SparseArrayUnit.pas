@@ -103,6 +103,9 @@ type
 
 implementation
 
+resourcestring
+  StrIndexOutOfBounds = 'Index out of bounds: %d';
+
 const
   SPAIndexMask: array[TSPAQuantum] of Byte = (15, 255);
   SPASecShift: array[TSPAQuantum] of Byte = (4, 8);
@@ -256,8 +259,7 @@ var
   secIndex: Word;
 begin
   if (Index shr secShift >= High(Word)) then
-    raise EStringSparseListError.Create('Index out of bounds: '
-      + IntToStr(Index));
+    raise EStringSparseListError.Create(Format(StrIndexOutOfBounds, [Index]));
   { Expand Section Directory if necessary. }
   secIndex := Index shr secShift; { Unsigned shift }
   if secIndex >= slotsInDir then

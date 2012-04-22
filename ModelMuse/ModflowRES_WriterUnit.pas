@@ -46,6 +46,18 @@ resourcestring
   StrNoReservoirsDefine = 'No reservoirs defined';
   StrTheReservoirPackag = 'The Reservoir package is selected but no reservoi' +
   'rs have been defined.';
+  StrEndingHeadForThe = '(Ending head for the %s)';
+  StrStartingHeadForT = '(Starting head for the %s)';
+  StrEvaluatingRESPacka = 'Evaluating RES Package data.';
+  StrWritingStressP = '    Writing Stress Period %d';
+  StrWritingRESPackage = 'Writing RES Package input.';
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSet3 = '  Writing Data Set 3.';
+  StrWritingDataSet4 = '  Writing Data Set 4.';
+  StrWritingDataSet5 = '  Writing Data Set 5.';
+  StrWritingDataSet6 = '  Writing Data Set 6.';
+  StrWritingDataSet7 = '  Writing Data Set 7.';
 
 { TModflowRES_Writer }
 
@@ -59,7 +71,7 @@ var
   Index: Integer;
   AScreenObject: TScreenObject;
 begin
-  frmProgressMM.AddMessage('Evaluating RES Package data.');
+  frmProgressMM.AddMessage(StrEvaluatingRESPacka);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoReservoirsDefine);
   NRES := 0;
   for Index := 0 to Model.ScreenObjectCount - 1 do
@@ -285,8 +297,8 @@ begin
           begin
             ScreenObject := Reservoir.ScreenObject as TScreenObject;
             frmFormulaErrors.AddFormulaError(ScreenObject.Name,
-              '(Ending head for the ' + sLineBreak
-              + Package.PackageIdentifier + ')',
+              Format(StrEndingHeadForThe,
+              [sLineBreak+Package.PackageIdentifier]),
               TempFormula, E.Message);
 
             ResItem.EndHead := '0.';
@@ -306,7 +318,7 @@ begin
           begin
             Exit;
           end;
-          frmProgressMM.AddMessage('    Writing Stress Period ' + IntToStr(TimeIndex+1));
+          frmProgressMM.AddMessage(Format(StrWritingStressP, [TimeIndex+1]));
           ResItem := Reservoir.Values[TimeIndex] as TResItem;
 
           TempFormula := ResItem.StartHead;
@@ -318,9 +330,9 @@ begin
             begin
               ScreenObject := Reservoir.ScreenObject as TScreenObject;
               frmFormulaErrors.AddFormulaError(ScreenObject.Name,
-                '(Starting head for the ' + sLineBreak
-                + Package.PackageIdentifier + ')',
-              TempFormula, E.Message);
+                Format(StrStartingHeadForT,
+                [sLineBreak+ Package.PackageIdentifier]),
+                TempFormula, E.Message);
 
               ResItem.StartHead := '0.';
               TempFormula := ResItem.StartHead;
@@ -340,9 +352,9 @@ begin
             begin
               ScreenObject := Reservoir.ScreenObject as TScreenObject;
               frmFormulaErrors.AddFormulaError(ScreenObject.Name,
-                '(Ending head for the ' + sLineBreak
-                + Package.PackageIdentifier + ')',
-              TempFormula, E.Message);
+                Format(StrEndingHeadForThe,
+                [sLineBreak+Package.PackageIdentifier]),
+                TempFormula, E.Message);
 
               ResItem.EndHead := '0.';
               TempFormula := ResItem.EndHead;
@@ -429,8 +441,8 @@ begin
   OpenFile(FileName(AFileName));
   try
 //    WriteDataSet0;
-    frmProgressMM.AddMessage('Writing RES Package input.');
-    frmProgressMM.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage(StrWritingRESPackage);
+    frmProgressMM.AddMessage(StrWritingDataSet1);
     WriteDataSet1;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -438,7 +450,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage(StrWritingDataSet2);
     WriteDataSet2;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -446,7 +458,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage(StrWritingDataSet3);
     WriteDataSet3;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -454,7 +466,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage(StrWritingDataSet4);
     WriteDataSet4;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -462,7 +474,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage(StrWritingDataSet5);
     WriteDataSet5;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -470,7 +482,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 6.');
+    frmProgressMM.AddMessage(StrWritingDataSet6);
     WriteDataSet6;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -478,7 +490,7 @@ begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage('  Writing Data Set 7.');
+    frmProgressMM.AddMessage(StrWritingDataSet7);
     WriteDataSet7;
   finally
     CloseFile;

@@ -112,6 +112,7 @@ inherited frmExportShapefile: TfrmExportShapefile
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
   end
@@ -213,7 +214,7 @@ inherited frmExportShapefile: TfrmExportShapefile
     ImageKind = ikCustom
     NumGlyphs = 2
     Anchors = [akLeft, akTop, akRight]
-    TabOrder = 6
+    TabOrder = 7
     Text = 'JvFilenameEdit1'
   end
   object btnCancel: TBitBtn
@@ -230,7 +231,7 @@ inherited frmExportShapefile: TfrmExportShapefile
   end
   object btnOK: TBitBtn
     Left = 278
-    Top = 499
+    Top = 501
     Width = 82
     Height = 34
     Anchors = [akTop, akRight]
@@ -238,7 +239,7 @@ inherited frmExportShapefile: TfrmExportShapefile
     Kind = bkOK
     NumGlyphs = 2
     ParentDoubleBuffered = False
-    TabOrder = 8
+    TabOrder = 11
     OnClick = btnOKClick
   end
   object btnHelp: TBitBtn
@@ -251,7 +252,7 @@ inherited frmExportShapefile: TfrmExportShapefile
     Kind = bkHelp
     NumGlyphs = 2
     ParentDoubleBuffered = False
-    TabOrder = 7
+    TabOrder = 8
     OnClick = btnHelpClick
   end
   object rgExportObjectType: TRadioGroup
@@ -281,6 +282,15 @@ inherited frmExportShapefile: TfrmExportShapefile
     Items.Strings = (
       '2D polylines'
       '3D triangle strips')
+    TabOrder = 6
+  end
+  object comboModel: TComboBox
+    Left = 8
+    Top = 501
+    Width = 170
+    Height = 26
+    Style = csDropDownList
+    Anchors = [akLeft, akTop, akRight]
     TabOrder = 10
   end
   object ilCheckImages: TImageList

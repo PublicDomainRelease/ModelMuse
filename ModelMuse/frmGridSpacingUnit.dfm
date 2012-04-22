@@ -20,15 +20,11 @@ inherited frmGridSpacing: TfrmGridSpacing
     Top = 129
     Width = 447
     Height = 287
-    ActivePage = tabLayers
+    ActivePage = tabColumns
     Align = alClient
     TabOrder = 0
     object tabColumns: TTabSheet
       Caption = 'Columns (X'#39')'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlColumns: TPanel
         Left = 0
         Top = 173
@@ -124,6 +120,7 @@ inherited frmGridSpacing: TfrmGridSpacing
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end
           item
@@ -145,6 +142,7 @@ inherited frmGridSpacing: TfrmGridSpacing
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end>
         RowHeights = (
@@ -158,10 +156,6 @@ inherited frmGridSpacing: TfrmGridSpacing
     object tabRows: TTabSheet
       Caption = 'Rows (Y'#39')'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlRows: TPanel
         Left = 0
         Top = 173
@@ -257,6 +251,7 @@ inherited frmGridSpacing: TfrmGridSpacing
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end
           item
@@ -278,9 +273,9 @@ inherited frmGridSpacing: TfrmGridSpacing
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end>
-        ExplicitTop = 2
         RowHeights = (
           24
           24
@@ -292,10 +287,6 @@ inherited frmGridSpacing: TfrmGridSpacing
     object tabLayers: TTabSheet
       Caption = 'Layers (Z)'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlLayers: TPanel
         Left = 0
         Top = 173
@@ -391,6 +382,7 @@ inherited frmGridSpacing: TfrmGridSpacing
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end
           item
@@ -412,6 +404,7 @@ inherited frmGridSpacing: TfrmGridSpacing
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end>
         RowHeights = (

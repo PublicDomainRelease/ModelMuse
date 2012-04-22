@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, framePackageUnit, StdCtrls, ArgusDataEntry, JvExStdCtrls, JvCheckBox,
-  ModflowPackageSelectionUnit, RbwController;
+  ModflowPackageSelectionUnit, RbwController, ExtCtrls;
 
 type
   TframePackageLAK = class(TframePackage)
@@ -18,6 +18,7 @@ type
     cbPrintLake: TCheckBox;
     rdeSurfDepth: TRbwDataEntry;
     lblSurfDepth: TLabel;
+    rgBathymetry: TRadioGroup;
   private
     { Private declarations }
   public
@@ -43,6 +44,7 @@ begin
   rdeConvergenceCriterion.Text := FloatToStr(Lake.ConvergenceCriterion);
   rdeSurfDepth.Text := FloatToStr(Lake.SurfDepth.Value);
   cbPrintLake.Checked := Lake.PrintLakes;
+  rgBathymetry.ItemIndex := Ord(Lake.ExternalLakeChoice);
 end;
 
 procedure TframePackageLAK.SetData(Package: TModflowPackageSelection);
@@ -56,6 +58,7 @@ begin
   Lake.ConvergenceCriterion := StrToFloat(rdeConvergenceCriterion.Text);
   Lake.SurfDepth.Value := StrToFloat(rdeSurfDepth.Text);
   Lake.PrintLakes := cbPrintLake.Checked;
+  Lake.ExternalLakeChoice := TExternalLakeChoice(rgBathymetry.ItemIndex);
 end;
 
 end.

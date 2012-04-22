@@ -199,6 +199,11 @@ implementation
 
 uses Math, ZLib, LinRegression, frmGoPhastUnit;
 
+resourcestring
+  StrTheSImageCanNot = 'The %s image can not be shown at this magnification ' +
+  'and has been turned off. You can turn it back on later after decreasing t' +
+  'he magnification.';
+
 { TCompressedBitmap }
 
 procedure TCompressedBitmap.LoadFromCompressedStream(Stream: TStream);
@@ -400,11 +405,7 @@ var
   procedure ShowErrorMessage;
   begin
     Beep;
-    MessageDlg('The ' + Name
-      + ' image can not be shown at this magnification '
-      + 'and has been turned off. You can turn it back on later '
-      + 'after decreasing the magnification.',
-      mtInformation, [mbOK], 0);
+    MessageDlg(Format(StrTheSImageCanNot, [Name]), mtInformation, [mbOK], 0);
   end;
 begin
     // @name will draw an imported image () on a bitmap (Dest)

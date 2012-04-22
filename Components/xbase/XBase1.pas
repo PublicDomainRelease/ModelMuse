@@ -389,6 +389,10 @@ Type
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
 Implementation
 
+resourcestring
+  StrSizeOfRecordsToo = 'Size of records too large in %s. Try using fewer or' +
+  ' smaller fields.';
+
 Const
   //... valeurs de THeader.VersionNumber = TYPE de fichier DBASE
   dB3     = $03;
@@ -2425,9 +2429,8 @@ begin
    // rbw begin change
    if W9_RECLEN > High(Word) then
    begin
-     raise EXBaseException.Create('Size of records too large in '
-       + my_FFileName
-       + '. Try using fewer or smaller fields.');
+     raise EXBaseException.Create(Format(StrSizeOfRecordsToo,
+       [my_FFileName]));
    end;
    // rbw end change
                 // en principe = 32 + 32 * XFLD1 + 1 ( because byte $0D

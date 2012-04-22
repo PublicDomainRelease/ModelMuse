@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
-<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+<topic template="Default" lasteditedby="rbwinst-pr" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
   <title translate="true">SFR: Stream-Flow Routing Package Pane</title>
   <body>
     <header>
@@ -18,6 +18,7 @@
     <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="Equation_Tab" styleclass="Normal" style="font-weight:bold;" translate="true">Equation</link><text styleclass="Normal" translate="true"> tab</text></para>
     <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="Flow_Table_Tab" styleclass="Normal" style="font-weight:bold;" translate="true">Flow Table</link><text styleclass="Normal" translate="true"> tab</text></para>
     <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="Unsaturated_Tab" styleclass="Normal" style="font-weight:bold;" translate="true">Unsaturated</link><text styleclass="Normal" translate="true"> tab</text></para>
+    <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="External_Flow_File" styleclass="Strong" translate="true">External Flow File</link><text styleclass="Normal" translate="true"> tab</text></para>
     <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="Gage_Tab" styleclass="Normal" style="font-weight:bold;" translate="true">Gage</link><text styleclass="Normal" translate="true"> tab</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">If the UZF package is being used, any objects used to define streams in the SFR package would typically also be used to specify the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Data_Sets_Required_by_MODFLOW" anchor="Discharge_Routing" styleclass="Table Cell" translate="true">Discharge_Routing</link><text styleclass="Table Cell" translate="true"> data set.</text></para>
   </body>

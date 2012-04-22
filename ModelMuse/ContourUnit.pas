@@ -55,6 +55,7 @@ type
     FEvaluatedAt: TEvaluatedAt;
     FLabelLocations: TRbwQuadTree;
     FLabels: TLabelObjectList;
+    FContourLabel: string;
     procedure ExtractSegments(const GridSquare: TGridSquare);
     procedure ConvertAndDrawSegments(Sender: TObject;
       const SegmentArray: TLine2DArray);
@@ -65,6 +66,7 @@ type
     property Grid: T2DGrid read FGrid write FGrid;
     property LineThickness: single read FLineThickness write FLineThickness;
     property Value: TFloat read FValue write FValue;
+    property ContourLabel: string read FContourLabel write FContourLabel;
     property ZoomBox: TQRbwZoomBox2 read FZoomBox write FZoomBox;
     property LabelLocations: TRbwQuadTree read FLabelLocations write FLabelLocations;
     property Labels: TLabelObjectList read FLabels write FLabels;
@@ -119,14 +121,14 @@ type
     // @name calls @link(TContourCreator.DrawContour) for each memeber of
     // ContourValues.
     procedure CreateAndDrawContours(const ContourValues,
-      LineThicknesses: TOneDRealArray; const ContourColors: TArrayOfColor32);
+      LineThicknesses: TOneDRealArray; const ContourColors: TArrayOfColor32; ContourLabels: TStringList);
     // @name initializes the @link(TDataArray)s and then calls
     // @link(AssignGridValues) and @link(CreateAndDrawContours).
     // @name is called if @link(TContours.SpecifyContours
     // DataSet.Contours.SpecifyContours) is true;
     procedure DrawContours(const ContourValues, LineThicknesses: TOneDRealArray;
       const ContourColors: TArrayOfColor32; SelectedColRowLayer: integer;
-        ViewDirection: TViewDirection); overload;
+        ViewDirection: TViewDirection; ContourLabels: TStringList); overload;
     // @name updates MinValue and MaxValue base on limits
     // in @link(DataSet).ContourLimits.
     procedure GetSpecifiedMinMax(var MinValue: Double; var MaxValue: Double;
@@ -229,7 +231,8 @@ begin
             LabelLocations.AddPoint(CenterX, CenterY, Pointer(1));
 
             LabelObject := TLabel.Create;
-            LabelObject.Value := FloatToStrF(Value, ffGeneral, 7, 0);
+//            LabelObject.Value := FloatToStrF(Value, ffGeneral, 7, 0);
+            LabelObject.Value := ContourLabel;
             ASize := Bitmap.TextExtent(LabelObject.Value);
             LabelObject.X := CenterX - ASize.cx div 2;
             LabelObject.Y := CenterY - ASize.cy div 2;
@@ -536,7 +539,8 @@ end;
 
 procedure TMultipleContourCreator.DrawContours(const ContourValues,
   LineThicknesses: TOneDRealArray; const ContourColors: TArrayOfColor32;
-  SelectedColRowLayer: integer; ViewDirection: TViewDirection);
+  SelectedColRowLayer: integer; ViewDirection: TViewDirection;
+  ContourLabels: TStringList);
 var
   DSValues: TStringList;
   MinValue, MaxValue: double;
@@ -561,7 +565,7 @@ begin
   end;
   Assert(Length(ContourValues) = Length(LineThicknesses));
   Assert(Length(ContourValues) = Length(ContourColors));
-  CreateAndDrawContours(ContourValues, LineThicknesses, ContourColors);
+  CreateAndDrawContours(ContourValues, LineThicknesses, ContourColors, ContourLabels);
 end;
 
 procedure TCustomContourCreator.AssignGridValues(out MinValue, MaxValue: double;
@@ -778,9 +782,9 @@ procedure TMultipleContourCreator.DrawContours(SelectedColRowLayer: integer;
   ColorParameters: TColorParameters; ViewDirection: TViewDirection);
 var
   DSValues: TStringList;
-  ContourValues: TOneDRealArray;
-  LineThicknesses: TOneDRealArray;
-  ContourColors: TArrayOfColor32;
+  ContourValues, NewContourValues: TOneDRealArray;
+  LineThicknesses, NewLineThicknesses: TOneDRealArray;
+  ContourColors, NewContourColors: TArrayOfColor32;
   MaxValue: double;
   MinValue: double;
   Index: Integer;
@@ -789,6 +793,13 @@ var
   SmallestContour: double;
   LargestContour: double;
   RequiredSize: integer;
+  ContourLabels: TStringList;
+  ContourIndex: Integer;
+  DupLabels: TStringList;
+  ALabel, NextLabel: string;
+  LabelStart: Integer;
+  LabelEnd: Integer;
+  MidLabelPostion: Integer;
 begin
   Assert(Assigned(ActiveDataSet));
   Assert(Assigned(DataSet));
@@ -827,16 +838,19 @@ begin
       ContourValues := Contours.ContourValues;
       LineThicknesses := Contours.LineThicknesses;
       ContourColors := Contours.ContourColors;
+      ContourLabels := Contours.ContourStringValues;
 
       DrawContours(ContourValues, LineThicknesses,
-        ContourColors, SelectedColRowLayer, ViewDirection);
+        ContourColors, SelectedColRowLayer, ViewDirection, ContourLabels);
       Exit;
     end;
 
     DataSet.Initialize;
     ActiveDataSet.Initialize;
 
+
     DSValues := TStringList.Create;
+    ContourLabels := TStringList.Create;
     try
       AssignGridValues(MinValue, MaxValue, SelectedColRowLayer, DSValues,
         ViewDirection);
@@ -861,6 +875,51 @@ begin
             ContourValues);
           GetContourColorsAndThicknesses(DesiredSpacing, RequiredSize,
             LineThicknesses, ContourColors, ContourValues, ColorParameters);
+          if DataSet.DataType = rdtString then
+          begin
+            DupLabels := TStringList.Create;
+            try
+              DupLabels.Duplicates := dupIgnore;
+              DupLabels.Sorted := True;
+              for ContourIndex := 0 to Length(ContourValues) - 1 do
+              begin
+                ALabel := DSValues[Round(ContourValues[ContourIndex])];
+                ContourLabels.Add(ALabel);
+                DupLabels.Add(ALabel);
+              end;
+              if DupLabels.Count <> ContourLabels.Count then
+              begin
+                SetLength(NewLineThicknesses, DupLabels.Count);
+                SetLength(NewContourColors, DupLabels.Count);
+                SetLength(NewContourValues, DupLabels.Count);
+                for Index := 0 to DupLabels.Count - 1 do
+                begin
+                  ALabel := DupLabels[Index];
+                  LabelStart := ContourLabels.IndexOf(ALabel);
+                  if Index < DupLabels.Count - 1 then
+                  begin
+                    NextLabel := DupLabels[Index+1];
+                    LabelEnd := ContourLabels.IndexOf(NextLabel)-1;
+                  end
+                  else
+                  begin
+                    LabelEnd := ContourLabels.Count - 1;
+                  end;
+                  MidLabelPostion := (LabelStart + LabelEnd) div 2;
+                  NewLineThicknesses[Index] := LineThicknesses[MidLabelPostion];
+                  NewContourColors[Index] := ContourColors[MidLabelPostion];
+                  NewContourValues[Index] := ContourValues[MidLabelPostion];
+                end;
+                LineThicknesses := NewLineThicknesses;
+                ContourValues := NewContourValues;
+                ContourColors := NewContourColors;
+                ContourLabels.Assign(DupLabels);
+              end;
+            finally
+              DupLabels.Free;
+            end;
+
+          end;
         end;
       end
       else
@@ -870,7 +929,7 @@ begin
         SetLength(ContourValues,0);
       end;
 
-      CreateAndDrawContours(ContourValues, LineThicknesses, ContourColors);
+      CreateAndDrawContours(ContourValues, LineThicknesses, ContourColors, ContourLabels);
       Contours := TContours.Create;
       try
         Assert(Length(ContourValues) = Length(LineThicknesses));
@@ -885,6 +944,7 @@ begin
       end;
     finally
       DSValues.Free;
+      ContourLabels.Free;
     end;
   finally
 //    if frmContourData <> nil then
@@ -950,7 +1010,10 @@ begin
   ContourValues[Length(ContourValues) - 1] := LargestContour;
 end;
 
-procedure TMultipleContourCreator.GetContouringParameters(var RequiredSize: Integer; MinValue: Double; MaxValue: Double; var DesiredSpacing: Double; var SmallestContour: Double; var LargestContour: Double);
+procedure TMultipleContourCreator.GetContouringParameters(
+  var RequiredSize: Integer; MinValue: Double; MaxValue: Double;
+  var DesiredSpacing: Double; var SmallestContour: Double;
+  var LargestContour: Double);
 var
   UsedMin: Double;
   UsedMax: Double;
@@ -991,7 +1054,7 @@ end;
 procedure TMultipleContourCreator.GetSpecifiedMinMax(var MinValue: Double; var MaxValue: Double; DSValues: TStringList);
 var
   StringValue: string;
-  Position: Integer;
+  StringPos: integer;
 begin
   case DataSet.DataType of
     rdtDouble:
@@ -1021,24 +1084,31 @@ begin
         if DataSet.ContourLimits.UpperLimit.UseLimit then
         begin
           StringValue := DataSet.ContourLimits.UpperLimit.StringLimitValue;
-          MaxValue := DSValues.IndexOf(StringValue);
-          if MaxValue < 0 then
+          if not DSValues.Find(StringValue, StringPos) then
           begin
-            Position := DSValues.Add(StringValue);
-            MaxValue := Position - 0.5;
-            DSValues.Delete(Position);
+            Dec(StringPos)
           end;
+          MaxValue := StringPos
+//          MaxValue := DSValues.IndexOf(StringValue);
+//          if MaxValue < 0 then
+//          begin
+//            Position := DSValues.Add(StringValue);
+//            MaxValue := Position - 0.5;
+//            DSValues.Delete(Position);
+//          end;
         end;
         if DataSet.ContourLimits.LowerLimit.UseLimit then
         begin
           StringValue := DataSet.ContourLimits.LowerLimit.StringLimitValue;
-          MinValue := DSValues.IndexOf(StringValue);
-          if MinValue < 0 then
-          begin
-            Position := DSValues.Add(StringValue);
-            MinValue := Position + 0.5;
-            DSValues.Delete(Position);
-          end;
+          DSValues.Find(StringValue, StringPos);
+          MinValue := StringPos
+//          MinValue := DSValues.IndexOf(StringValue);
+//          if MinValue < 0 then
+//          begin
+//            Position := DSValues.Add(StringValue);
+//            MinValue := Position + 0.5;
+//            DSValues.Delete(Position);
+//          end;
         end;
       end;
     rdtBoolean:
@@ -1343,7 +1413,7 @@ end;
 
 procedure TMultipleContourCreator.CreateAndDrawContours(
   const ContourValues, LineThicknesses: TOneDRealArray;
-  const ContourColors: TArrayOfColor32);
+  const ContourColors: TArrayOfColor32; ContourLabels: TStringList);
 var
   ContourIndex: Integer;
   ContourCreator: TContourCreator;
@@ -1369,6 +1439,16 @@ begin
     begin
       AValue := ContourValues[ContourIndex];
       ContourCreator.Value := AValue;
+
+      if ContourLabels.Count = 0 then
+      begin
+        ContourCreator.ContourLabel := FloatToStrF(AValue, ffGeneral, 7, 0);
+      end
+      else
+      begin
+        ContourCreator.ContourLabel := ContourLabels[ContourIndex];
+      end;
+
       ContourCreator.Color := ContourColors[ContourIndex];
       ContourCreator.LineThickness := LineThicknesses[ContourIndex];
       if frmGoPhast.PhastModel.ShowContourLabels then

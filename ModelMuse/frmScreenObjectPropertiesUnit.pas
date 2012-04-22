@@ -1928,8 +1928,8 @@ uses Math, StrUtils, JvToolEdit, frmGoPhastUnit, AbstractGridUnit,
   ModflowConstantHeadBoundaryUnit, ModflowTransientListParameterUnit,
   ModflowGhbUnit, ModflowDrtUnit, ModflowRchUnit, ModflowEvtUnit,
   ModflowEtsUnit, ModflowLakUnit, frameCrossSectionUnit, frameFlowTableUnit,
-  ModflowUzfUnit, ModflowSfrUnit, ModflowHobUnit, ModflowHfbUnit, 
-  LayerStructureUnit, ModpathParticleUnit, IntListUnit, 
+  ModflowUzfUnit, ModflowSfrUnit, ModflowHobUnit, ModflowHfbUnit,
+  LayerStructureUnit, ModpathParticleUnit, IntListUnit,
   frmManageFluxObservationsUnit, ModflowGageUnit, ModflowMnw2Unit, JvGroupBox,
   ModflowHydmodUnit, ModelMuseUtilities, Mt3dmsChemUnit, Mt3dmsChemSpeciesUnit,
   Mt3dmsTobUnit, Mt3dmsFluxObservationsUnit;
@@ -1937,6 +1937,98 @@ uses Math, StrUtils, JvToolEdit, frmGoPhastUnit, AbstractGridUnit,
 resourcestring
   StrConcentrationObserv = 'Concentration Observations: ';
   StrFluxObserv = 'Flux Observations: ';
+  StrUseToSetGridElem = 'Use to set grid element size';
+  StrGridElementSize = 'Grid element size';
+  StrUseToSetGridCell = 'Use to set grid cell size';
+  StrGridCellSize = 'Grid cell size';
+  StrUseToSetMeshElem = 'Use to set mesh element size';
+  StrMeshElementSize = 'Mesh element size';
+  StrNumberOfZFormulas = 'Number of Z formulas';
+  StrNumberOfYFormulas = 'Number of Y formulas';
+  StrNumberOfXFormulas = 'Number of X formulas';
+  StrObjEditing = 'The object or objects you are editing will not '
+        + 'affect the values of any data set because neither enclosed nor '
+        + 'intersected elements or nodes will have their values set by the '
+        + 'object or objects and element and node values will not be set by '
+        + 'interpolation.  '
+        + sLineBreak + sLineBreak
+        + 'Is this really what you want?';
+  StrYouAreAttemptingT = 'You are attempting to specify the value of a data ' +
+  'set by interpolation but at least one of the data sets, %s, does not have' +
+  ' an interpolator assigned.'#13#10'Is this really what you want?';
+  StrErrorIn0sRow = 'Error in %0:s Row: %1:d Column: %2:d. %3:s';
+  StrNoParameter = 'no parameter';
+  StrFormulaForSDat = 'Formula for "%s" data set';
+  StrFormula = 'Formula';
+  StrVertexNumbers = 'Vertex numbers';
+  StrIfMoreThanOneObj = 'If more than one object is being edited, vertices c' +
+  'an not be edited.';
+  StrSorryThisFunction = 'Sorry, This function can only be performed when a ' +
+  'single object is being edited.';
+  StrThereIsNoOtherSt = 'There is no other stream or lake';
+  StrLowerZcoordinate = 'Lower Z-coordinate';
+  StrLowerYcoordinate = 'Lower Y-coordinate';
+  StrLowerXcoordinate = 'Lower X-coordinate';
+  StrHigherZcoordinate = 'Higher Z-coordinate';
+  StrHigherYcoordinate = 'Higher Y-coordinate';
+  StrHigherXcoordinate = 'Higher X-coordinate';
+  StrZcoordinate = 'Z-coordinate';
+  StrYcoordinate = 'Y-coordinate';
+  StrXcoordinate = 'X-coordinate';
+  StrTime = 'Time';
+  StrSolution = 'Solution';
+  StrHead = 'Head';
+  StrAssociatedSolution = 'Associated solution';
+  StrInterpolateHead = 'Interpolate head';
+  StrInterpolateSolution = 'Interpolate solution';
+  StrFlux = 'Flux';
+  StrInterpolateFlux = 'Interpolate flux';
+  StrSectionNumber = 'Section Number';
+  StrNewSection = 'New section';
+  StrX = 'X';
+  StrY = 'Y';
+  StrGAGEForS = 'GAGE: for %s';
+  StrErrorThereAppears = 'Error: There appears to be a cirular reference to ' +
+  '"%0:s" in the formula for %1:s.  Do you wish to restore the old formula';
+  StrErrorThereAppearsNoRevert = 'Error: There appears to be a cirular refer' +
+  'ence to %0:s"" in the formula for %1:s.';
+  StrErrorInFormulaS = 'Error in formula: %s';
+  StrErrorInMixtureFor = 'Error in mixture formula for the data set "%0:s ' +
+  '%1:s": ';
+  StrTheFormulaYouEnte = 'The formula you entered is does not return the cor' +
+  'rect data type.  It will be automatically converted.';
+  StrErrorInFormulaFor = 'Error in formula for the data set "%0:s": %1:s';
+  StrSThisMightBeD = '%s '#13#10'This might be due to a circular reference. ' +
+  ' Do you wish to restore the old formula?';
+  StrSThisMightBeDNoRevert = '%s '#13#10'This might be due to a circular ref' +
+  'erence.';
+  StrYouMustSpecifyNod = 'You must specify nodes or elements before editing ' +
+  'the formula.';
+  StrErrorTheFormulaI = 'Error: the formula is does not result in a real num' +
+  'ber';
+  StrThisObjectWillNo = 'This object will no longer set the properties of 2D' +
+  ' data sets that are used in its elevation formula(s) either directly or i' +
+  'ndirectly.';
+  StrTheseObjectsWillN = 'These objects will no longer set the properties of' +
+  ' 2D data sets that are used in their elevation formula(s) either directly' +
+  ' or indirectly.';
+  StrSpecifiedHead = 'Specified head';
+  StrSpecifiedFlux = 'Specified flux';
+  StrLeakyBoundaryHead = 'Leaky boundary head';
+  StrRiver = 'River';
+  StrWellRate = 'Well rate';
+  StrInterpolated = 'Interpolated';
+  StrFirstValue = 'First Value';
+  StrSecondValue = 'Second Value';
+  StrFirstElevation = 'First Elevation';
+  StrSecondElevation = 'Second Elevation';
+  StrFirstDepth = 'First Depth';
+  StrSecondDepth = 'Second Depth';
+  StrSpecifiedSolution = 'Specified solution';
+  StrErrorThereAppearsCirc = 'Error: There appears to be an error or a cirul' +
+  'ar reference in this formula.  Do you wish to restore the old formula';
+  StrErrorThereAppears2 = 'Error: There appears to be a cirular reference to' +
+  ' "%s" in this formula.  Do you wish to restore the old formula';
 
 {$R *.dfm}
 
@@ -2630,9 +2722,9 @@ begin
   FCurrentEdit := nil;
 
   case AScreenObject.ViewDirection of
-    vdTop: rgElevationCount.Caption := 'Number of Z formulas';
-    vdFront: rgElevationCount.Caption := 'Number of Y formulas';
-    vdSide: rgElevationCount.Caption := 'Number of X formulas';
+    vdTop: rgElevationCount.Caption := StrNumberOfZFormulas;
+    vdFront: rgElevationCount.Caption := StrNumberOfYFormulas;
+    vdSide: rgElevationCount.Caption := StrNumberOfXFormulas;
     else Assert(False);
   end;
 
@@ -2647,7 +2739,8 @@ begin
   IsLoaded := False;
   InitializeGridObjects;
   seBoundaryTimes.Value := 1;
-  rgEvaluatedAt.Enabled := frmGoPhast.PhastModel.ModelSelection = msPhast;
+  rgEvaluatedAt.Enabled := frmGoPhast.PhastModel.ModelSelection in
+    [msPhast {$IFDEF Sutra}, msSutra {$ENDIF}];
 
   rgEvaluatedAt.Items[Ord(eaBlocks)] := EvalAtToString(eaBlocks,
     frmGoPhast.PhastModel.ModelSelection, True, True);
@@ -2920,14 +3013,7 @@ begin
         cbIntersectedCells.SetFocus;
       end;
 
-      if MessageDlg('The object or objects you are editing will not '
-        + 'affect the values of any data set because neither enclosed nor '
-        + 'intersected elements or nodes will have their values set by the '
-        + 'object or objects and element and node values will not be set by '
-        + 'interpolation.  '
-        + sLineBreak + sLineBreak
-        + 'Is this really what you want?', mtWarning,
-        [mbYes, mbNo], 0, mbNo) = mrNo then
+      if MessageDlg(StrObjEditing, mtWarning, [mbYes, mbNo], 0, mbNo) = mrNo then
       begin
         Exit;
       end;
@@ -2968,13 +3054,8 @@ begin
           if DataSet.TwoDInterpolator = nil then
           begin
             Beep;
-            if MessageDlg('You are attempting to specify the value of a data '
-              + 'set by interpolation but at least one of the data sets, '
-              +  DataSet.Name
-              + ', does not have an interpolator assigned.'
-              + sLineBreak + sLineBreak
-              + 'Is this really what you want?', mtWarning,
-              [mbYes, mbNo], 0, mbNo) = mrNo then
+            if MessageDlg(Format(StrYouAreAttemptingT, [DataSet.Name]),
+              mtWarning, [mbYes, mbNo], 0, mbNo) = mrNo then
             begin
               Exit;
             end
@@ -3075,10 +3156,9 @@ begin
         except on E: Exception do
           begin
             Beep;
-            MessageDlg('Error in ' + rgBoundaryType.Items[rgBoundaryType.ItemIndex]
-              + ' Row: ' + IntToStr(Row + 1) + ' Column: ' + IntToStr(Col)
-              + '. ' + E.Message, mtError,
-              [mbOK], 0);
+            MessageDlg(Format(StrErrorIn0sRow,
+              [rgBoundaryType.Items[rgBoundaryType.ItemIndex],
+              Row + 1, Col, E.Message]), mtError,[mbOK], 0);
             Exit;
           end;
         end;
@@ -3190,15 +3270,15 @@ begin
   frameEvtParam.clbParameters.Items.Clear;
   frameEtsParam.clbParameters.Items.Clear;
 
-  frameChdParam.clbParameters.Items.Add('no parameter');
-  frameGhbParam.clbParameters.Items.Add('no parameter');
-  frameWellParam.clbParameters.Items.Add('no parameter');
-  frameRivParam.clbParameters.Items.Add('no parameter');
-  frameDrnParam.clbParameters.Items.Add('no parameter');
-  frameDrtParam.clbParameters.Items.Add('no parameter');
-  frameRchParam.clbParameters.Items.Add('no parameter');
-  frameEvtParam.clbParameters.Items.Add('no parameter');
-  frameEtsParam.clbParameters.Items.Add('no parameter');
+  frameChdParam.clbParameters.Items.Add(StrNoParameter);
+  frameGhbParam.clbParameters.Items.Add(StrNoParameter);
+  frameWellParam.clbParameters.Items.Add(StrNoParameter);
+  frameRivParam.clbParameters.Items.Add(StrNoParameter);
+  frameDrnParam.clbParameters.Items.Add(StrNoParameter);
+  frameDrtParam.clbParameters.Items.Add(StrNoParameter);
+  frameRchParam.clbParameters.Items.Add(StrNoParameter);
+  frameEvtParam.clbParameters.Items.Add(StrNoParameter);
+  frameEtsParam.clbParameters.Items.Add(StrNoParameter);
 
   for Index := 0 to frmGoPhast.PhastModel.ModflowTransientParameters.Count - 1 do
   begin
@@ -3795,12 +3875,12 @@ begin
   UpdateCurrentEdit;
   if (tvDataSets.Selected <> nil) and (tvDataSets.Selected.Data <> nil) then
   begin
-    lblDataSetFormula.Caption := 'Formula for "' + tvDataSets.Selected.Text
-      + '" data set'
+    lblDataSetFormula.Caption := Format(StrFormulaForSDat,
+      [tvDataSets.Selected.Text]);
   end
   else
   begin
-    lblDataSetFormula.Caption := 'Formula';
+    lblDataSetFormula.Caption := StrFormula;
   end;
 end;
 
@@ -4390,7 +4470,7 @@ begin
         begin
           rdgVertexValues.ColWidths[ColIndex] :=
             rdgVertexValues.DefaultColWidth;
-          rdgVertexValues.Cells[0, 0] := 'Vertex numbers';
+          rdgVertexValues.Cells[0, 0] := StrVertexNumbers;
           rdgVertexValues.Cells[ColIndex, 0] := Keys[ColIndex - 1];
           AColumn := rdgVertexValues.Columns[ColIndex];
           AColumn.AutoAdjustColWidths := True;
@@ -4572,8 +4652,7 @@ begin
       if FNewProperties.Count <> 1 then
       begin
         Beep;
-        MessageDlg('If more than one object is being edited, vertices '
-          + 'can not be edited.', mtError, [mbOK], 0);
+        MessageDlg(StrIfMoreThanOneObj, mtError, [mbOK], 0);
         Exit;
       end;
       Assert(FNewProperties.Count = 1);
@@ -4644,14 +4723,14 @@ var
   TestLocation: TPoint2D;
   TestDist: Double;
   NearestLake: TScreenObject;
+  SectionIndex: Integer;
 begin
   if FScreenObject = nil then
   begin
     if FScreenObjectList.Count <> 1 then
     begin
       Beep;
-      MessageDlg('Sorry, This function can only be performed when '
-        +'a single object is being edited.', mtError, [mbOK], 0);
+      MessageDlg(StrSorryThisFunction, mtError, [mbOK], 0);
       Exit;
     end;
     Assert(FScreenObjectList.Count = 1);
@@ -4700,7 +4779,7 @@ begin
          and AScreenObject.ModflowLakBoundary.Used then
       begin
         TestDist := AScreenObject.DistanceToScreenObject(
-          InFlowLocation, TestLocation, 1);
+          InFlowLocation, TestLocation, 1, SectionIndex);
         if (NearestStream = nil) or (TestDist < Dist) then
         begin
           Dist := TestDist;
@@ -4713,7 +4792,7 @@ begin
   if NearestStream = nil then
   begin
     Beep;
-    MessageDlg('There is no other stream or lake', mtInformation, [mbOK], 0);
+    MessageDlg(StrThereIsNoOtherSt, mtInformation, [mbOK], 0);
   end
   else
   begin
@@ -4741,8 +4820,7 @@ begin
     if FScreenObjectList.Count <> 1 then
     begin
       Beep;
-      MessageDlg('Sorry, This function can only be performed when '
-        +'a single object is being edited.', mtError, [mbOK], 0);
+      MessageDlg(StrSorryThisFunction, mtError, [mbOK], 0);
       Exit;
     end;
     Assert(FScreenObjectList.Count = 1);
@@ -4758,7 +4836,7 @@ begin
   if (NearestStream = nil) and (NearestLake = nil) then
   begin
     Beep;
-    MessageDlg('There is no other stream or lake', mtInformation, [mbOK], 0);
+    MessageDlg(StrThereIsNoOtherSt, mtInformation, [mbOK], 0);
   end
   else
   begin
@@ -5459,15 +5537,15 @@ begin
   case AScreenObject.ViewDirection of
     vdTop:
       begin
-        result := 'Lower Z-coordinate';
+        result := StrLowerZcoordinate;
       end;
     vdFront:
       begin
-        result := 'Lower Y-coordinate';
+        result := StrLowerYcoordinate;
       end;
     vdSide:
       begin
-        result := 'Lower X-coordinate';
+        result := StrLowerXcoordinate;
       end;
   else
     begin
@@ -5482,15 +5560,15 @@ begin
   case AScreenObject.ViewDirection of
     vdTop:
       begin
-        result := 'Higher Z-coordinate';
+        result := StrHigherZcoordinate;
       end;
     vdFront:
       begin
-        result := 'Higher Y-coordinate';
+        result := StrHigherYcoordinate;
       end;
     vdSide:
       begin
-        result := 'Higher X-coordinate';
+        result := StrHigherXcoordinate;
       end;
   else
     begin
@@ -5505,15 +5583,15 @@ begin
   case AScreenObject.ViewDirection of
     vdTop:
       begin
-        result := 'Z-coordinate';
+        result := StrZcoordinate;
       end;
     vdFront:
       begin
-        result := 'Y-coordinate';
+        result := StrYcoordinate;
       end;
     vdSide:
       begin
-        result := 'X-coordinate';
+        result := StrXcoordinate;
       end;
   else
     begin
@@ -5588,7 +5666,8 @@ begin
   ValueStorage.CacheData;
 end;
 
-procedure TfrmScreenObjectProperties.SetDisabledElevationFormulas(FirstScreenObject: TScreenObject);
+procedure TfrmScreenObjectProperties.SetDisabledElevationFormulas(
+  FirstScreenObject: TScreenObject);
 var
   EvalAt: TEvaluatedAt;
 begin
@@ -5602,15 +5681,18 @@ begin
   end;
   if not edZ.Enabled then
   begin
-    edZ.Text := frmGoPhast.PhastModel.DefaultElevationFormula(FirstScreenObject.ViewDirection, EvalAt);
+    edZ.Text := frmGoPhast.PhastModel.DefaultElevationFormula(
+      FirstScreenObject.ViewDirection, EvalAt);
   end;
   if not edHighZ.Enabled then
   begin
-    edHighZ.Text := frmGoPhast.PhastModel.DefaultHigherElevationFormula(FirstScreenObject.ViewDirection);
+    edHighZ.Text := frmGoPhast.PhastModel.DefaultHigherElevationFormula(
+      FirstScreenObject.ViewDirection);
   end;
   if not edLowZ.Enabled then
   begin
-    edLowZ.Text := frmGoPhast.PhastModel.DefaultLowerElevationFormula(FirstScreenObject.ViewDirection);
+    edLowZ.Text := frmGoPhast.PhastModel.DefaultLowerElevationFormula(
+      FirstScreenObject.ViewDirection);
   end;
 end;
 
@@ -6407,129 +6489,6 @@ begin
     FFillingDataSetTreeView := False;
   end;
 
-{
-  if FDataEdits.Count = 0 then
-  begin
-    Exit;
-  end;
-  FFillingDataSetTreeView := True;
-  NodeList := TList.Create;
-  ClassifiedDataSets := TStringList.Create;
-  try
-    frmGoPhast.PhastModel.ClassifyDataSets(ClassifiedDataSets);
-    Assert(ClassifiedDataSets.Count> 0);
-    Assert(ClassifiedDataSets[0] = StrDataSets);
-    ClassifiedDataSets.Delete(0);
-    Assert(ClassifiedDataSets.IndexOf(StrDataSets) < 0);
-    if tvDataSets.Selected = nil then
-    begin
-      SelectedEdit := nil;
-    end
-    else
-    begin
-      SelectedEdit := tvDataSets.Selected.Data
-    end;
-    FCurrentEdit := nil;
-    tvDataSets.Items.Clear;
-    for Index := 0 to FDataEdits.Count - 1 do
-    begin
-      Edit := FDataEdits[Index];
-
-      CheckIfDataSetCanBeEdited(CreateNode, Edit, ListOfScreenObjects);
-      // If the data set can not be validly set by
-      // one or more of the TScreenObject's,
-      // don't create a node on tvDataSets for it.
-
-      Position := ClassifiedDataSets.IndexOfObject(Edit.DataArray);
-      Assert(Position >= 0);
-      if not CreateNode then
-      begin
-        ClassifiedDataSets.Delete(Position);
-      end;
-    end;
-    for Index := ClassifiedDataSets.Count - 1 downto 0 do
-    begin
-      if ClassifiedDataSets.Objects[Index] = nil then
-      begin
-        ClassifiedDataSets.Delete(Index);
-      end
-      else
-      begin
-        break;
-      end;
-    end;
-    for Index := ClassifiedDataSets.Count - 2 downto 0 do
-    begin
-      if (ClassifiedDataSets.Objects[Index] = nil)
-        and (ClassifiedDataSets.Objects[Index+1] = nil) then
-      begin
-        Classification := ClassifiedDataSets[Index+1];
-        TabCount2 := Length(Classification) - Length(Trim(Classification));
-        Classification := ClassifiedDataSets[Index];
-        TabCount1 := Length(Classification) - Length(Trim(Classification));
-        if TabCount1 >= TabCount2 then
-        begin
-          ClassifiedDataSets.Delete(Index);
-        end;
-      end;
-    end;
-
-    for Index := 0 to ClassifiedDataSets.Count - 1 do
-    begin
-      Classification := ClassifiedDataSets[Index];
-      Assert(Length(Classification) > 0);
-      TabCount := Length(Classification) - Length(Trim(Classification));
-      Classification := Trim(Classification);
-      Indentation := TabCount -1;
-      Assert(Indentation >= 0);
-      if NodeList.Count > Indentation then
-      begin
-        NodeList.Count := Indentation;
-      end;
-      if NodeList.Count > 0 then
-      begin
-        ParentNode := NodeList.Last;
-      end
-      else
-      begin
-        ParentNode := nil;
-      end;
-      DataArray := ClassifiedDataSets.Objects[Index] as TDataArray;
-      if DataArray = nil then
-      begin
-        Node := tvDataSets.Items.AddChild(ParentNode,Classification);
-        NodeList.Add(Node);
-      end
-      else
-      begin
-        Edit := nil;
-        for EditIndex := 0 to FDataEdits.Count - 1 do
-        begin
-          TempEdit := FDataEdits[EditIndex];
-          if TempEdit.DataArray = DataArray then
-          begin
-            Edit := TempEdit;
-            break;
-          end;
-        end;
-        Assert(Edit <> nil);
-
-        Node := tvDataSets.Items.AddChildObject(ParentNode, DataArray.Name, Edit);
-        Node.StateIndex := Ord(Edit.Used) + 1;
-        Edit.Node := Node;
-        if SelectedEdit = Edit then
-        begin
-          tvDataSets.Selected := Node;
-        end;
-      end;
-    end;
-    UpdateDataSetTreeViewNodeStates;
-  finally
-    ClassifiedDataSets.Free;
-    NodeList.Free;
-    FFillingDataSetTreeView := False;
-  end;
-}
 end;
 
 procedure TfrmScreenObjectProperties.CreateDataSetEdits(ListOfScreenObjects: TList);
@@ -7893,9 +7852,9 @@ end;
 
 procedure TfrmScreenObjectProperties.InitializePhastWellGrid;
 begin
-  dgWell.Cells[Ord(nicTime), 0] := 'Time';
+  dgWell.Cells[Ord(nicTime), 0] := StrTime;
   dgWell.Cells[Ord(nicBoundaryValue), 0] := StrPumpingRate;
-  dgWell.Cells[Ord(nicSolution), 0] := 'Solution';
+  dgWell.Cells[Ord(nicSolution), 0] := StrSolution;
   dgWell.Cells[Ord(nicTime), 1] := '0';
   dgWell.Row := 1;
   dgWell.Column := 2;
@@ -7907,9 +7866,9 @@ end;
 
 procedure TfrmScreenObjectProperties.InitializePhastRiverBoundaryGrid;
 begin
-  dgBoundaryRiver.Cells[Ord(nicTime), 0] := 'Time';
-  dgBoundaryRiver.Cells[Ord(nicBoundaryValue), 0] := 'Head';
-  dgBoundaryRiver.Cells[Ord(nicSolution), 0] := 'Associated solution';
+  dgBoundaryRiver.Cells[Ord(nicTime), 0] := StrTime;
+  dgBoundaryRiver.Cells[Ord(nicBoundaryValue), 0] := StrHead;
+  dgBoundaryRiver.Cells[Ord(nicSolution), 0] := StrAssociatedSolution;
   dgBoundaryRiver.Cells[Ord(nicTime), 1] := '0';
   dgBoundaryRiver.Col := 2;
   dgBoundaryRiver.RowHeights[0] := dgBoundaryRiver.RowHeights[0] * 2;
@@ -7921,12 +7880,12 @@ end;
 
 procedure TfrmScreenObjectProperties.InitializePhastLeakyBoundaryGrid;
 begin
-  dgBoundaryLeaky.Cells[Ord(ibcTime), 0] := 'Time';
-  dgBoundaryLeaky.Cells[Ord(ibcBoundaryValue), 0] := 'Head';
-  dgBoundaryLeaky.Cells[Ord(ibcBoundaryInterpolate), 0] := 'Interpolate head';
-  dgBoundaryLeaky.Cells[Ord(ibcSolution), 0] := 'Associated solution';
+  dgBoundaryLeaky.Cells[Ord(ibcTime), 0] := StrTime;
+  dgBoundaryLeaky.Cells[Ord(ibcBoundaryValue), 0] := StrHead;
+  dgBoundaryLeaky.Cells[Ord(ibcBoundaryInterpolate), 0] := StrInterpolateHead;
+  dgBoundaryLeaky.Cells[Ord(ibcSolution), 0] := StrAssociatedSolution;
   dgBoundaryLeaky.Cells[Ord(ibcSolutionInterpolate), 0]
-    := 'Interpolate solution';
+    := StrInterpolateSolution;
   dgBoundaryLeaky.Cells[Ord(ibcTime), 1] := '0';
   dgBoundaryLeaky.Col := 2;
   dgBoundaryLeaky.RowHeights[0] := dgBoundaryLeaky.RowHeights[0] * 2;
@@ -7938,12 +7897,12 @@ end;
 
 procedure TfrmScreenObjectProperties.InitializePhastSpecifiedFluxGrid;
 begin
-  dgBoundaryFlux.Cells[Ord(ibcTime), 0] := 'Time';
-  dgBoundaryFlux.Cells[Ord(ibcBoundaryValue), 0] := 'Flux';
-  dgBoundaryFlux.Cells[Ord(ibcBoundaryInterpolate), 0] := 'Interpolate flux';
-  dgBoundaryFlux.Cells[Ord(ibcSolution), 0] := 'Associated solution';
+  dgBoundaryFlux.Cells[Ord(ibcTime), 0] := StrTime;
+  dgBoundaryFlux.Cells[Ord(ibcBoundaryValue), 0] := StrFlux;
+  dgBoundaryFlux.Cells[Ord(ibcBoundaryInterpolate), 0] := StrInterpolateFlux;
+  dgBoundaryFlux.Cells[Ord(ibcSolution), 0] := StrAssociatedSolution;
   dgBoundaryFlux.Cells[Ord(ibcSolutionInterpolate), 0]
-    := 'Interpolate Solution';
+    := StrInterpolateSolution;
   dgBoundaryFlux.Cells[Ord(ibcTime), 1] := '0';
   dgBoundaryFlux.Col := 2;
   dgBoundaryFlux.RowHeights[0] := dgBoundaryFlux.RowHeights[0] * 2;
@@ -7955,12 +7914,12 @@ end;
 
 procedure TfrmScreenObjectProperties.InitializePhastSpecifiedHeadGrid;
 begin
-  dgSpecifiedHead.Cells[Ord(ibcTime), 0] := 'Time';
-  dgSpecifiedHead.Cells[Ord(ibcBoundaryValue), 0] := 'Head';
-  dgSpecifiedHead.Cells[Ord(ibcBoundaryInterpolate), 0] := 'Interpolate head';
-  dgSpecifiedHead.Cells[Ord(ibcSolution), 0] := 'Associated solution';
+  dgSpecifiedHead.Cells[Ord(ibcTime), 0] := StrTime;
+  dgSpecifiedHead.Cells[Ord(ibcBoundaryValue), 0] := StrHead;
+  dgSpecifiedHead.Cells[Ord(ibcBoundaryInterpolate), 0] := StrInterpolateHead;
+  dgSpecifiedHead.Cells[Ord(ibcSolution), 0] := StrAssociatedSolution;
   dgSpecifiedHead.Cells[Ord(ibcSolutionInterpolate), 0]
-    := 'Interpolate solution';
+    := StrInterpolateSolution;
   dgSpecifiedHead.Cells[Ord(ibcTime), 1] := '0';
   dgSpecifiedHead.Col := 2;
   dgSpecifiedHead.RowHeights[0] := dgSpecifiedHead.RowHeights[0] * 2;
@@ -7972,10 +7931,10 @@ end;
 
 procedure TfrmScreenObjectProperties.InitializeVertexGrid;
 begin
-  dgVerticies.Cells[Ord(vcSection), 0] := 'Section Number';
-  dgVerticies.Cells[Ord(vcX), 0] := 'X';
-  dgVerticies.Cells[Ord(vcY), 0] := 'Y';
-  dgVerticies.Cells[Ord(vcNewSection), 0] := 'New section';
+  dgVerticies.Cells[Ord(vcSection), 0] := StrSectionNumber;
+  dgVerticies.Cells[Ord(vcX), 0] := StrX;
+  dgVerticies.Cells[Ord(vcY), 0] := StrY;
+  dgVerticies.Cells[Ord(vcNewSection), 0] := StrNewSection;
 end;
 
 procedure TfrmScreenObjectProperties.SetSelectedMfBoundaryNode;
@@ -8370,9 +8329,9 @@ begin
   if frmGoPhast.PhastModel.SfrIsSelected then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
-      'GAGE: for ' + StringReplace(
+      Format(StrGAGEForS, [StringReplace(
       frmGoPhast.PhastModel.ModflowPackages.SfrPackage.PackageIdentifier,
-      ':', '', [rfReplaceAll]))
+      ':', '', [rfReplaceAll])]))
       as TJvPageIndexNode;
     Node.PageIndex := jvspGAGE.PageIndex;
     lblGageCaption.Caption := Node.Text;
@@ -8962,7 +8921,14 @@ var
   BoundaryIndex: Integer;
   FirstIndex: integer;
   ColIndex: Integer;
+  ExternalLakeTable: TExternalLakeTable;
+  BathItem: TLakeTableItem;
+  Index: integer;
 begin
+  frameLak.tabBathymetry.TabVisible := (ScreenObjectList.Count = 1)
+    and frmGoPhast.PhastModel.LakBathymetryUsed;
+  frameLak.tabLakeProperties.TabVisible := frameLak.tabBathymetry.TabVisible;
+  frameLak.pcLake.ActivePageIndex := 0;
   FirstIndex := -1;
   Boundary := nil;
   for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
@@ -9116,6 +9082,34 @@ begin
   else
   begin
     frameLak.rdeLakeID.Text := '';
+  end;
+
+  if frameLak.tabBathymetry.TabVisible then
+  begin
+    AScreenObject := ScreenObjectList[0];
+    Boundary := AScreenObject.ModflowLakBoundary;
+    if (Boundary <> nil) and Boundary.Used then
+    begin
+      ExternalLakeTable := Boundary.ExternalLakeTable;
+      frameLak.rgBathChoice.ItemIndex := Ord(ExternalLakeTable.LakeTableChoice);
+      frameLak.feLakeBathymetry.FileName := ExternalLakeTable.FullLakeTableFileName;
+      frameLak.rdgLakeTable.BeginUpdate;
+      try
+        for Index := 0 to ExternalLakeTable.LakeTable.Count - 1 do
+        begin
+          if Index + 1 = frameLak.rdgLakeTable.RowCount then
+          begin
+            Break;
+          end;
+          BathItem := ExternalLakeTable.LakeTable[Index];
+          frameLak.rdgLakeTable.Cells[Ord(bcStage), Index+1] := FloatToStr(BathItem.Stage);
+          frameLak.rdgLakeTable.Cells[Ord(bcVolume), Index+1] := FloatToStr(BathItem.Volume);
+          frameLak.rdgLakeTable.Cells[Ord(bcSurfaceArea), Index+1] := FloatToStr(BathItem.SurfaceArea);
+        end;
+      finally
+        frameLak.rdgLakeTable.EndUpdate;
+      end;
+    end;
   end;
 end;
 
@@ -10316,12 +10310,8 @@ begin
         Beep;
         if OldFormulaOK then
         begin
-          if MessageDlg(
-            'Error: There appears to be a cirular reference to "'
-            + VariableName + '" in the formula for '
-            + DSetName + '.  Do you wish to '
-            + 'restore the old formula', mtError,
-            [mbYes, mbNo], 0) = mrYes then
+          if MessageDlg(Format(StrErrorThereAppears, [VariableName, DSetName]),
+            mtError, [mbYes, mbNo], 0) = mrYes then
           begin
             Edit.Formula := OldFormula;
             CreateFormula(EditIndex, OldFormula);
@@ -10329,11 +10319,8 @@ begin
         end
         else
         begin
-          MessageDlg(
-            'Error: There appears to be a cirular reference to "'
-            + VariableName + '" in the formula for '
-            + DSetName + '.', mtError,
-            [mbOK], 0)
+          MessageDlg(Format(StrErrorThereAppearsNoRevert,
+            [VariableName, DSetName]), mtError, [mbOK], 0)
         end;
         Exit;
       end;
@@ -11595,8 +11582,8 @@ begin
   except on E: ERbwParserError do
     begin
       Beep;
-      raise ERbwParserError.Create('Error in formula: '
-        + E.Message);
+      raise ERbwParserError.Create(Format(StrErrorInFormulaS,
+        [E.Message]));
       Exit;
     end
   end;
@@ -11709,9 +11696,8 @@ begin
       begin
         Beep;
         Edit := FDataEdits[DataSetIndex];
-        MessageDlg('Error in mixture formula for the data set "'
-          + Edit.DataArray.Name + '": '
-          + E.Message, mtError, [mbOK], 0);
+        MessageDlg(Format(StrErrorInMixtureFor,
+          [Edit.DataArray.Name, E.Message]), mtError, [mbOK], 0);
         Exit;
       end
     end;
@@ -11724,8 +11710,7 @@ begin
     begin
       // If the formula is not OK, try to fix it.
       Beep;
-      MessageDlg('The formula you entered is does not return '
-        + 'the correct data type.  It will be automatically converted.',
+      MessageDlg(StrTheFormulaYouEnte,
         mtError, [mbOK], 0);
       Formula := AdjustFormula(Formula, result.ResultType, ResultType);
       TempCompiler.Compile(Formula);
@@ -11765,9 +11750,8 @@ begin
       begin
         Edit.Expression := nil;
         Beep;
-        MessageDlg('Error in formula for the data set "'
-          + Edit.DataArray.Name + '": '
-          + E.Message, mtError, [mbOK], 0);
+        MessageDlg(Format(StrErrorInFormulaFor,
+          [Edit.DataArray.Name, E.Message]), mtError, [mbOK], 0);
         Exit;
       end
     end;
@@ -11783,9 +11767,8 @@ begin
         begin
           Edit.Expression := nil;
           Beep;
-          MessageDlg('Error in formula for the data set "'
-            + Edit.DataArray.Name + '": '
-            + E.Message, mtError, [mbOK], 0);
+          MessageDlg(Format(StrErrorInFormulaFor,
+            [Edit.DataArray.Name, E.Message]), mtError, [mbOK], 0);
           Exit;
         end
       end;
@@ -11807,9 +11790,7 @@ begin
       if ShowError then
       begin
         Beep;
-        MessageDlg('The formula you entered is does not return '
-          + 'the correct data type.  It will be automatically converted.',
-          mtError, [mbOK], 0);
+        MessageDlg(StrTheFormulaYouEnte, mtError, [mbOK], 0);
       end;
       Formula := AdjustFormula(Formula, CompiledFormula.ResultType, ResultType);
       TempCompiler.Compile(Formula);
@@ -12066,10 +12047,8 @@ begin
               Beep;
               if OldFormulaOK then
               begin
-                if MessageDlg(E.Message + sLineBreak
-                  + 'This might be due to a circular reference.  Do you wish to '
-                  + 'restore the old formula?', mtError, [mbYes, mbNo], 0) =
-                    mrYes then
+                if MessageDlg(Format(StrSThisMightBeD, [E.Message]), mtError,
+                  [mbYes, mbNo], 0) = mrYes then
                 begin
                   NewEditIndex := GetDataSetIndexByName(DSName);
                   reDataSetFormula.Text := OldFormula;
@@ -12078,9 +12057,8 @@ begin
               end
               else
               begin
-                MessageDlg(E.Message + sLineBreak
-                  + 'This might be due to a circular reference.', mtError,
-                    [mbOK], 0)
+                MessageDlg(Format(StrSThisMightBeDNoRevert, [E.Message]),
+                  mtError, [mbOK], 0)
               end;
             end;
             Exit;
@@ -12176,9 +12154,7 @@ begin
       If IsLoaded then
       begin
         Beep;
-        MessageDlg(
-          'You must specify nodes or elements before editing the formula.',
-          mtInformation, [mbOK], 0);
+        MessageDlg( StrYouMustSpecifyNod, mtInformation, [mbOK], 0);
       end;
     end
     else
@@ -12214,8 +12190,8 @@ begin
             begin
               ed.Color := clRed;
               Beep;
-              MessageDlg('Error in formula: '
-                + E.Message, mtError, [mbOK], 0);
+              MessageDlg(Format(StrErrorInFormulaS, [E.Message]),
+                mtError, [mbOK], 0);
               Exit;
             end;
           end;
@@ -12229,8 +12205,8 @@ begin
           begin
             ed.Color := clRed;
             Beep;
-            MessageDlg('Error in formula: '
-              + E.Message, mtError, [mbOK], 0);
+            MessageDlg(Format(StrErrorInFormulaS, [E.Message]),
+              mtError, [mbOK], 0);
             Exit;
           end
         end;
@@ -12241,8 +12217,7 @@ begin
         begin
           ed.Color := clRed;
           Beep;
-          MessageDlg('Error: the formula is does not result in a real number',
-            mtError, [mbOK], 0);
+          MessageDlg(StrErrorTheFormulaI, mtError, [mbOK], 0);
           Exit;
         end
         else
@@ -12505,8 +12480,7 @@ begin
   if Compiler = nil then
   begin
     Beep;
-    MessageDlg('You must specify nodes or elements before editing the formula.',
-      mtInformation, [mbOK], 0);
+    MessageDlg(StrYouMustSpecifyNod, mtInformation, [mbOK], 0);
     Exit;
   end;
 
@@ -12565,7 +12539,6 @@ begin
         end;
       end;
 
-
       for VarIndex := 0 to Compiler.VariableCount - 1 do
       begin
         AVar := Compiler.Variables[VarIndex];
@@ -12617,7 +12590,7 @@ begin
     except on E: ErbwParserError do
       begin
         Beep;
-        MessageDlg('Error in formula: ' + E.Message, mtError, [mbOK], 0);
+        MessageDlg(Format(StrErrorInFormulaS, [E.Message]), mtError, [mbOK], 0);
         Exit;
       end
     end;
@@ -12628,8 +12601,7 @@ begin
     begin
       ed.Color := clRed;
       Beep;
-      MessageDlg('Error: the formula is does not result in a real number',
-        mtError, [mbOK], 0);
+      MessageDlg(StrErrorTheFormulaI, mtError, [mbOK], 0);
       Exit;
     end
     else
@@ -13169,17 +13141,11 @@ begin
       Beep;
       if FNewProperties.Count = 1 then
       begin
-        MessageDlg('This object will no longer set the properties of 2D '
-          + 'data sets that are used in its '
-          + 'elevation formula(s) either directly or indirectly.',
-          mtWarning, [mbOK], 0);
+        MessageDlg(StrThisObjectWillNo, mtWarning, [mbOK], 0);
       end
       else
       begin
-        MessageDlg('These objects will no longer set the properties of 2D '
-          + 'data sets that are used in their '
-          + 'elevation formula(s) either directly or indirectly.',
-          mtWarning, [mbOK], 0);
+        MessageDlg(StrTheseObjectsWillN, mtWarning, [mbOK], 0);
       end;
 
     end;
@@ -13278,32 +13244,23 @@ begin
   case frmGoPhast.ModelSelection of
     msUndefined, msPhast:
       begin
-        cbSetGridCellSize.Caption := 'Use to set grid element size';
-        lblGridCellSize.Caption := 'Grid element size';
+        cbSetGridCellSize.Caption := StrUseToSetGridElem;
+        lblGridCellSize.Caption := StrGridElementSize;
       end;
     msModflow, msModflowLGR, msModflowNWT:
       begin
-        cbSetGridCellSize.Caption := 'Use to set grid cell size';
-        lblGridCellSize.Caption := 'Grid cell size';
+        cbSetGridCellSize.Caption := StrUseToSetGridCell;
+        lblGridCellSize.Caption := StrGridCellSize;
       end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        cbSetGridCellSize.Caption := StrUseToSetMeshElem;
+        lblGridCellSize.Caption := StrMeshElementSize;
+      end;
+    {$ENDIF}
     else Assert(False);
   end;
-//  case rgEvaluatedAt.ItemIndex of
-//    0: // elements
-//      begin
-//        cbEnclosedCells.Caption := rsSetValueOfEnclosedElements;
-//        cbIntersectedCells.Caption := rsSetValueOfIntersectedElements;
-//        cbInterpolation.Caption := rsSetValueOfElementsByInterpolation;
-//      end;
-//    1: // cells
-//      begin
-//        cbEnclosedCells.Caption := rsSetValueOfEnclosedNodes;
-//        cbIntersectedCells.Caption := rsSetValueOfIntersectedNodes;
-//        cbInterpolation.Caption := rsSetValueOfNodesByInterpolation;
-//      end;
-//  else
-//    Assert(False);
-//  end;
 end;
 
 procedure TfrmScreenObjectProperties.rgEvaluatedAtClick(Sender: TObject);
@@ -13978,7 +13935,7 @@ begin
     except on E: ErbwParserError do
       begin
         Beep;
-        MessageDlg('Error in formula: ' + E.Message, mtError, [mbOK], 0);
+        MessageDlg(Format(StrErrorInFormulaS, [E.Message]), mtError, [mbOK], 0);
         Exit;
       end
     end;
@@ -13989,8 +13946,7 @@ begin
     begin
       ed.Color := clRed;
       Beep;
-      MessageDlg('Error: the formula is does not result in a real number',
-        mtError, [mbOK], 0);
+      MessageDlg(StrErrorTheFormulaI, mtError, [mbOK], 0);
       Exit;
     end
     else
@@ -14464,12 +14420,12 @@ begin
       begin
         if FBoundaryCol = Ord(ibcBoundaryInterpolate) then
         begin
-          gbBoundaryPhastInterpolation.Caption := 'Specified head';
+          gbBoundaryPhastInterpolation.Caption := StrSpecifiedHead;
           MixtureAllowed := False;
         end
         else if FBoundaryCol = Ord(ibcSolutionInterpolate) then
         begin
-          gbBoundaryPhastInterpolation.Caption := 'Solution';
+          gbBoundaryPhastInterpolation.Caption := StrSolution;
           MixtureAllowed := True;
         end
         else
@@ -14481,12 +14437,12 @@ begin
       begin
         if FBoundaryCol = Ord(ibcBoundaryInterpolate) then
         begin
-          gbBoundaryPhastInterpolation.Caption := 'Specified flux';
+          gbBoundaryPhastInterpolation.Caption := StrSpecifiedFlux;
           MixtureAllowed := False;
         end
         else if FBoundaryCol = Ord(ibcSolutionInterpolate) then
         begin
-          gbBoundaryPhastInterpolation.Caption := 'Associated solution';
+          gbBoundaryPhastInterpolation.Caption := StrAssociatedSolution;
           MixtureAllowed := True;
         end
         else
@@ -14498,12 +14454,12 @@ begin
       begin
         if FBoundaryCol = Ord(ibcBoundaryInterpolate) then
         begin
-          gbBoundaryPhastInterpolation.Caption := 'Leaky boundary head';
+          gbBoundaryPhastInterpolation.Caption := StrLeakyBoundaryHead;
           MixtureAllowed := False;
         end
         else if FBoundaryCol = Ord(ibcSolutionInterpolate) then
         begin
-          gbBoundaryPhastInterpolation.Caption := 'Associated solution';
+          gbBoundaryPhastInterpolation.Caption := StrAssociatedSolution;
           MixtureAllowed := True;
         end
         else
@@ -14515,12 +14471,12 @@ begin
       begin
         if FBoundaryCol = Ord(nicBoundaryValue) then
         begin
-          gbBoundaryPhastInterpolation.Caption := 'River';
+          gbBoundaryPhastInterpolation.Caption := StrRiver;
           MixtureAllowed := False;
         end
         else if FBoundaryCol = Ord(nicSolution) then
         begin
-          gbBoundaryPhastInterpolation.Caption := 'Associated solution';
+          gbBoundaryPhastInterpolation.Caption := StrAssociatedSolution;
           MixtureAllowed := True;
         end
         else
@@ -14532,12 +14488,12 @@ begin
       begin
         if FBoundaryCol = Ord(nicBoundaryValue) then
         begin
-          gbBoundaryPhastInterpolation.Caption := 'Well rate';
+          gbBoundaryPhastInterpolation.Caption := StrWellRate;
           MixtureAllowed := False;
         end
         else if FBoundaryCol = Ord(nicSolution) then
         begin
-          gbBoundaryPhastInterpolation.Caption := 'Solution';
+          gbBoundaryPhastInterpolation.Caption := StrSolution;
           MixtureAllowed := True;
         end
         else
@@ -14614,7 +14570,7 @@ begin
         begin
           Canvas.Brush.Color := FixedColor;
           Canvas.FillRect(Rect);
-          Canvas.TextRect(Rect, Rect.Left + 2, Rect.Top + 2, 'Interpolated');
+          Canvas.TextRect(Rect, Rect.Left + 2, Rect.Top + 2, StrInterpolated);
         end;
       end;
     end;
@@ -14690,22 +14646,22 @@ begin
     -1:
       begin
         // Elevation
-        dgWellElevations.Cells[Ord(wicFirst), 0] := 'First Value';
-        dgWellElevations.Cells[Ord(wicSecond), 0] := 'Second Value';
+        dgWellElevations.Cells[Ord(wicFirst), 0] := StrFirstValue;
+        dgWellElevations.Cells[Ord(wicSecond), 0] := StrSecondValue;
         rdeWellLandSurfaceDatum.Enabled := True;
       end;
     0:
       begin
         // Elevation
-        dgWellElevations.Cells[Ord(wicFirst), 0] := 'First Elevation';
-        dgWellElevations.Cells[Ord(wicSecond), 0] := 'Second Elevation';
+        dgWellElevations.Cells[Ord(wicFirst), 0] := StrFirstElevation;
+        dgWellElevations.Cells[Ord(wicSecond), 0] := StrSecondElevation;
         rdeWellLandSurfaceDatum.Enabled := False;
       end;
     1:
       begin
         // Depth
-        dgWellElevations.Cells[Ord(wicFirst), 0] := 'First Depth';
-        dgWellElevations.Cells[Ord(wicSecond), 0] := 'Second Depth';
+        dgWellElevations.Cells[Ord(wicFirst), 0] := StrFirstDepth;
+        dgWellElevations.Cells[Ord(wicSecond), 0] := StrSecondDepth;
         rdeWellLandSurfaceDatum.Enabled := True;
       end;
   else
@@ -14819,6 +14775,12 @@ var
   DataSetIndex: integer;
   DataArray: TDataArray;
   Edit: TScreenObjectDataEdit;
+  ItemIndex: integer;
+  Stage: double;
+  Volume: double;
+  SurfaceArea: double;
+  ExternalLakeTable: TExternalLakeTable;
+  BathItem: TLakeTableItem;
 begin
   if IsLoaded then
   begin
@@ -14925,7 +14887,41 @@ begin
         end;
       end;
     end;
+    if frameLak.tabBathymetry.TabVisible then
+    begin
+      Item := FNewProperties[0];
+      Item.ScreenObject.CreateLakBoundary;
+      Boundary := Item.ScreenObject.ModflowLakBoundary;
+      Assert(Boundary <> nil);
 
+      ExternalLakeTable := Boundary.ExternalLakeTable;
+      ExternalLakeTable.LakeTableChoice := TLakeTableChoice(frameLak.rgBathChoice.ItemIndex);
+      ExternalLakeTable.FullLakeTableFileName := frameLak.feLakeBathymetry.FileName;
+      ItemIndex := 0;
+      for Index := 1 to frameLak.rdgLakeTable.RowCount - 1 do
+      begin
+        if TryStrToFloat(frameLak.rdgLakeTable.Cells[Ord(bcStage), Index], Stage)
+          and TryStrToFloat(frameLak.rdgLakeTable.Cells[Ord(bcVolume), Index], Volume)
+          and TryStrToFloat(frameLak.rdgLakeTable.Cells[Ord(bcSurfaceArea), Index], SurfaceArea)
+          then
+        begin
+
+          if ItemIndex < ExternalLakeTable.LakeTable.Count then
+          begin
+            BathItem := ExternalLakeTable.LakeTable[ItemIndex];
+          end
+          else
+          begin
+            BathItem := ExternalLakeTable.LakeTable.Add;
+          end;
+
+          BathItem.Stage := Stage;
+          BathItem.Volume := Volume;
+          BathItem.SurfaceArea := SurfaceArea;
+          Inc(ItemIndex);
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -17172,15 +17168,15 @@ begin
   case comboSolutionType.ItemIndex of
     Ord(stAssociated):
       begin
-        NewTitle := 'Associated solution';
+        NewTitle := StrAssociatedSolution;
       end;
     Ord(stSpecified):
       begin
-        NewTitle := 'Specified solution';
+        NewTitle := StrSpecifiedSolution;
       end;
   else
     begin
-      NewTitle := 'Solution';
+      NewTitle := StrSolution;
     end;
   end;
 
@@ -17291,10 +17287,7 @@ begin
             begin
               framePhastInterpolationData.edMixFormula.Color := clRed;
               Beep;
-              if MessageDlg(
-                'Error: There appears to be an error or a cirular reference '
-                + 'in this formula.  Do you wish to '
-                + 'restore the old formula', mtError,
+              if MessageDlg(StrErrorThereAppearsCirc, mtError,
                 [mbYes, mbNo], 0) = mrYes then
               begin
                 framePhastInterpolationData.edMixFormula.Text :=
@@ -17420,10 +17413,7 @@ begin
       if TempUsesList3.IndexOf(DSName) >= 0 then
       begin
         Beep;
-        if MessageDlg(
-          'Error: There appears to be a cirular reference to "'
-          + Used[Index] + '" in this formula.  Do you wish to '
-          + 'restore the old formula', mtError,
+        if MessageDlg(Format(StrErrorThereAppears2, [Used[Index]]), mtError,
           [mbYes, mbNo], 0) = mrYes then
         begin
           framePhastInterpolationData.edMixFormula.Text :=

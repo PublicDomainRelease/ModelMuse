@@ -79,12 +79,14 @@ type
   protected
     function GetVariablesUsed: TStringList; override;
   end;
-
-  // @name adds a series of (mostly) GIS function to Parser.
-// The functions are defined in the initialization section.
-// In addition, one descendant of TSelectExpression is defined in the
-// implementation section and added to RbwParser.SpecialImplentorList.
-// @param(Parser is the TRbwParser to which the GIS functions will be added.)
+{
+ @name adds a series of (mostly) GIS function to Parser.
+ The functions are defined in the initialization section.
+ In addition, several descendants of TSelectExpression
+ or TExpression are defined in the
+ implementation section and added to RbwParser.SpecialImplentorList.
+ @param(Parser is the TRbwParser to which the GIS functions will be added.)
+}
 procedure AddGIS_Functions(const Parser: TRbwParser;
   ModelSelection: TModelSelection; EvalAt: TEvaluatedAt);
 
@@ -165,7 +167,17 @@ resourcestring
   StrInSVANIParamete = 'In %s, VANI parameters are defined even though that ' +
   'hydrogeologic unit used vertical hydraulic conductivity and vertical anis' +
   'otropy. The VANI parameters will be ignored.';
-  StrLayerDRowDCo = 'Layer %d, Row %d, Column %d';
+  StrLayerDRowDCo = 'Layer %0:d, Row %1:d, Column %2:d';
+  StrTheDataAccessedTh = 'The data accessed through %s are not real numbers.';
+  StrTheDataAccessedThInt = 'The data accessed through %s are not integers.';
+  StrTheDataAccessedThBoole = 'The data accessed through %s are not booleans' +
+  '.';
+  StrTheDataAccessedThStr = 'The data accessed through %s are not text.';
+  StrTheSFunctionCan = 'The %s function can only be used with objects.';
+  StrThe0sFunctionIs = 'The %0:s function is used but no values have been as' +
+  'signed to individual nodes.';
+  StrInvalidKeyIn0s = 'Invalid key in %0:s function.';
+  StrObject0sInvali = 'Object: %0:s; invalid key: %1:s';
 
 var  
   SpecialImplementors: TList;
@@ -378,8 +390,7 @@ begin
         end;
       eaNodes:
         begin
-          if (Item <> ActiveOnLayerSpecialImplementor)
-            {and (Item <> HighestActiveLayerSpecialImplementor)} then
+          if (Item <> ActiveOnLayerSpecialImplementor) then
           begin
             Parser.SpecialImplementorList.Add(Item);
           end;
@@ -991,19 +1002,16 @@ begin
     result := 0;
     if (GlobalCurrentSegment = nil) or (GlobalCurrentScreenObject = nil) then
     begin
-        frmErrorsAndWarnings.AddWarning(GlobalCurrentModel, 'The '
-          + StrInterpolatedVertexValues
-          + ' function can only be used with objects.',
-          '');
+        frmErrorsAndWarnings.AddWarning(GlobalCurrentModel,
+          Format(StrTheSFunctionCan,
+          [ StrInterpolatedVertexValues]), '');
         frmErrorsAndWarnings.Show;
     end
     else
     begin
-        frmErrorsAndWarnings.AddWarning(GlobalCurrentModel, 'The '
-          + StrInterpolatedVertexValues + ' function is used '
-          + 'but no values have been assigned to individual nodes.',
-          'Object: ' + GlobalCurrentScreenObject.Name
-          + '; invalid key: ' + VertexValueName);
+        frmErrorsAndWarnings.AddWarning(GlobalCurrentModel,
+          Format(StrThe0sFunctionIs, [StrInterpolatedVertexValues]),
+          Format(StrObject0sInvali, [GlobalCurrentScreenObject.Name, VertexValueName]));
         frmErrorsAndWarnings.Show;
     end;
   end
@@ -1044,10 +1052,10 @@ begin
       if AfterPosition = -1 then
       begin
         result := 0;
-        frmErrorsAndWarnings.AddWarning(GlobalCurrentModel, 'Invalid key in '
-          + StrInterpolatedVertexValues + ' function.',
-          'Object: ' + GlobalCurrentScreenObject.Name
-          + '; invalid key: ' + VertexValueName);
+        frmErrorsAndWarnings.AddWarning(GlobalCurrentModel,
+          Format(StrInvalidKeyIn0s, [StrInterpolatedVertexValues]),
+          Format(StrObject0sInvali, [GlobalCurrentScreenObject.Name,
+          VertexValueName]));
         frmErrorsAndWarnings.Show;
       end
       else
@@ -2218,12 +2226,14 @@ begin
     if ImportedValues <> nil then
     begin
       Index := GlobalSection;
-      Assert(Index >= 0);
+      if Index < 0 then
+      begin
+        Exit;
+      end;
       Assert(Index < ImportedValues.Count);
       if ImportedValues.DataType <> rdtDouble then
       begin
-        ErrorMessage := 'The data accessed through '
-          + rsObjectImportedValuesR + 'are not real numbers.';
+        ErrorMessage := Format(StrTheDataAccessedTh, [rsObjectImportedValuesR]);
         if ImportedName <> '' then
         begin
           ErrorMessage := ErrorMessage + ' (' + ImportedName + ')';
@@ -2249,12 +2259,14 @@ begin
     if ImportedValues <> nil then
     begin
       Index := GlobalSection;
-      Assert(Index >= 0);
+      if Index < 0 then
+      begin
+        Exit;
+      end;
       Assert(Index < ImportedValues.Count);
       if ImportedValues.DataType <> rdtInteger then
       begin
-        ErrorMessage := 'The data accessed through '
-          + rsObjectImportedValuesI + 'are not integers.';
+        ErrorMessage := Format(StrTheDataAccessedThInt, [rsObjectImportedValuesI]);
         if ImportedName <> '' then
         begin
           ErrorMessage := ErrorMessage + ' (' + ImportedName + ')';
@@ -2281,12 +2293,15 @@ begin
     if ImportedValues <> nil then
     begin
       Index := GlobalSection;
-      Assert(Index >= 0);
+      if Index < 0 then
+      begin
+        Exit;
+      end;
       Assert(Index < ImportedValues.Count);
       if ImportedValues.DataType <> rdtBoolean then
       begin
-        ErrorMessage := 'The data accessed through '
-          + rsObjectImportedValuesB + 'are not booleans.';
+        ErrorMessage := Format(StrTheDataAccessedThBoole,
+          [rsObjectImportedValuesB]);
         if ImportedName <> '' then
         begin
           ErrorMessage := ErrorMessage + ' (' + ImportedName + ')';
@@ -2312,12 +2327,15 @@ begin
     if ImportedValues <> nil then
     begin
       Index := GlobalSection;
-      Assert(Index >= 0);
+      if Index < 0 then
+      begin
+        Exit;
+      end;
       Assert(Index < ImportedValues.Count);
       if ImportedValues.DataType <> rdtString then
       begin
-        ErrorMessage := 'The data accessed through '
-          + rsObjectImportedValuesT + 'are not text.';
+        ErrorMessage := Format(StrTheDataAccessedThStr,
+          [rsObjectImportedValuesT]);
         if ImportedName <> '' then
         begin
           ErrorMessage := ErrorMessage + ' (' + ImportedName + ')';

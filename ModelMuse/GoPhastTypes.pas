@@ -63,6 +63,16 @@ type
   // @name is a 3D array of @link(T3DRealPoint)s.
   T3DRealPointArray3 = array of array of array of T3DRealPoint;
 
+  // @name records the minimum and maximum values assigned to a data set.
+  TMinMax = record
+    LogRMin, LogRMax: Double;
+    RMinPositive, RMin, RMax: Real;
+    IMin, IMax: Integer;
+    BMin, BMax: Boolean;
+    SMin, SMax: string;
+  end;
+
+
   // @name is used to indicate which view of the model the cursor
   // is over.
   TCursorGrid = (cgNone, cgTop, cgFront, cgSide);
@@ -182,7 +192,8 @@ type
 
   // @name is used to indicate what type of model is active.
   // The type of model should never be set to msUndefined.
-  TModelSelection = (msUndefined, msPhast, msModflow, msModflowLGR, msModflowNWT);
+  TModelSelection = (msUndefined, msPhast, msModflow, msModflowLGR,
+    msModflowNWT {$IFDEF SUTRA}, msSutra {$ENDIF});
 
   //  @name is used to indicate how the spacing of layers within a unit
   // is specified.
@@ -246,6 +257,8 @@ type
     procedure SetBooleanProperty(var AField: boolean; const NewValue: boolean);
     procedure SetIntegerProperty(var AField: integer; const NewValue: integer);
     procedure SetStringProperty(var AField: string; const NewValue: string);
+    procedure BeginUpdate; virtual;
+    procedure EndUpdate; virtual;
   public
     procedure InvalidateModel;
     function Model: TBaseModel;
@@ -329,6 +342,7 @@ type
     procedure SetColorProperty(var AField: TColor; const NewValue: TColor);
     procedure SetDataTimeProperty(var AField: TDateTime; const NewValue: TDateTime);
   public
+    property Model: TBaseModel read FModel;
     Constructor Create(Model: TBaseModel);
   end;
 
@@ -340,6 +354,8 @@ type
     // See @link(UpToDate).
     procedure SetUpToDate(const Value : boolean); virtual;
     function GetDisplayName: string; virtual; abstract;
+    function GetModelSelection: TModelSelection; virtual; abstract;
+    procedure SetModelSelection(const Value: TModelSelection); virtual; abstract;
   public
     // Call @name to indicate that the model has changed in some important
     // respect.  The user will be prompted to save the model when closing.
@@ -349,6 +365,10 @@ type
     // See @link(Invalidate).
     property UpToDate: boolean read FUpToDate write SetUpToDate;
     property DisplayName: string read GetDisplayName;
+  published
+    property ModelSelection: TModelSelection read GetModelSelection
+      write SetModelSelection;
+
   end;
 
   TLayerSort = class(TObject)
@@ -377,6 +397,12 @@ const
   #)
   }
   BlankSpaces = '      ';
+
+  // @name is the section name in the ini file that holds the
+  // names of the most recently opened files.
+  MRU_Section = 'MostRecentlyUsed';
+
+resourcestring
   {@name is used as the default name for a new data set.
 
   @longcode(#
@@ -438,10 +464,6 @@ const
   // frmImportShapefileUnit.TfrmImportShapefile.SetCheckBoxCaptions)
   rsByInterpolation = ' by interpolation';
 
-  // @name is the section name in the ini file that holds the
-  // names of the most recently opened files.
-  MRU_Section = 'MostRecentlyUsed';
-
   StrLowerLimit = 'Lower limit';
   StrUpperLimit = 'Upper limit';
   StrObjectIntersectLength = 'ObjectIntersectLength';
@@ -453,12 +475,15 @@ const
   StrEndingTime = 'Ending time';
   StrPumpingRate = 'Pumping rate';
   StrConductance = 'Conductance';
+  StrConductanceMultipl = ' conductance multiplier';
   StrRiverStage = 'River stage';
   StrRiverBottom = 'River bottom';
   StrBoundaryHead = 'Boundary head';
   StrDrainElevation = 'Drain elevation';
   StrStartingHead = 'Starting head';
   StrEndingHead = 'Ending head';
+  StrElevation = 'Elevation';
+
 
   StrVariance = 'Variance (0)';
   StrStdDev = 'Standard dev. (1)';
@@ -468,7 +493,13 @@ const
 
   // @name represents the characters used to define the end of a line.
   EndOfLine = sLineBreak;
+  StrStressPeriodLabel = 'Stress Period: ';
+  StrTimeStepLabel = 'Time Step: ';
+  StrElapsedTimeLabel = 'Elapsed Time: ';
+  StrTransportStep = 'Transport Step: ';
+  StrParentModel = 'Parent model';
 
+const
   // On Linux, @name is used to control the access permissions of files.
   // @name has no effect in Windows.
 {$IFDEF MSWINDOWS}
@@ -477,15 +508,8 @@ const
   ReadWritePermissions = S_IREAD or S_IWRITE or S_IRGRP or S_IWGRP or S_IROTH;
 {$ENDIF}
 
-  clTransparent32: TColor32 = 0;
+  clTransparent32 : TColor32 = 0;
   SelectEpsilon = 5;
-
-  StrStressPeriodLabel = 'Stress Period: ';
-  StrTimeStepLabel = 'Time Step: ';
-  StrElapsedTimeLabel = 'Elapsed Time: ';
-  StrTransportStep = 'Transport Step: ';
-  StrParentModel = 'Parent model';
-
 
 var
   ObservationStatFlagLabels: TStringList = nil;
@@ -503,7 +527,8 @@ resourcestring
   StrErrorObjectEarlyTimes = 'Error; Object = %0:s Early Times = %1:s';
   StrErrorObjectLateTimes = 'Error; Object = %0:s Late Times = %1:s';
   StrObjectS = 'Object: %s';
-  StrObjectSTimeG = 'Object: %s; Time: %g';
+  StrObjectSTimeG = 'Object: %0:s; Time: %1:g';
+  StrAssignedBy0sWit = 'Assigned by %0:s with formula = "%1:s."';
 
 implementation
 
@@ -700,7 +725,7 @@ function EvalAtToString(const Eval: TEvaluatedAt; const Model: TModelSelection;
 begin
   result := '';
   case Model of
-    msUndefined, msPhast:
+    msUndefined, msPhast {$IFDEF SUTRA}, msSutra {$ENDIF}:
       begin
         case Eval of
           eaBlocks:
@@ -768,6 +793,16 @@ end;
 
 { TPhastCollectionItem }
 
+procedure TPhastCollectionItem.BeginUpdate;
+begin
+  // do nothing;
+end;
+
+procedure TPhastCollectionItem.EndUpdate;
+begin
+  // do nothing;
+end;
+
 procedure TPhastCollectionItem.InvalidateModel;
 var
   PhastCollection: TPhastCollection;
@@ -829,8 +864,13 @@ procedure TPhastCollectionItem.SetBooleanProperty(var AField: boolean;
 begin
   if AField <> NewValue then
   begin
-    AField := NewValue;
-    InvalidateModel;
+    BeginUpdate;
+    try
+      AField := NewValue;
+      InvalidateModel;
+    finally
+      EndUpdate;
+    end;
   end;
 end;
 
@@ -839,8 +879,13 @@ procedure TPhastCollectionItem.SetIntegerProperty(var AField: integer;
 begin
   if AField <> NewValue then
   begin
-    AField := NewValue;
-    InvalidateModel;
+    BeginUpdate;
+    try
+      AField := NewValue;
+      InvalidateModel;
+    finally
+      EndUpdate;
+    end;
   end;
 end;
 
@@ -849,8 +894,13 @@ procedure TPhastCollectionItem.SetRealProperty(var AField: double;
 begin
   if AField <> NewValue then
   begin
-    AField := NewValue;
-    InvalidateModel;
+    BeginUpdate;
+    try
+      AField := NewValue;
+      InvalidateModel;
+    finally
+      EndUpdate;
+    end;
   end;
 end;
 
@@ -859,8 +909,13 @@ procedure TPhastCollectionItem.SetStringProperty(var AField: string;
 begin
   if AField <> NewValue then
   begin
-    AField := NewValue;
-    InvalidateModel;
+    BeginUpdate;
+    try
+      AField := NewValue;
+      InvalidateModel;
+    finally
+      EndUpdate;
+    end;
   end;
 end;
 

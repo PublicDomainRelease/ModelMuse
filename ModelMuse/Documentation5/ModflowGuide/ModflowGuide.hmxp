@@ -103,7 +103,7 @@
         <config-value name="INSIDE-MODFLOW">INSIDE-MODFLOW</config-value>
       </config-group>
       <config-value name="imageshortcuts_includebaggage">1</config-value>
-      <config-value name="make0include">CHM,ALLMODELS</config-value>
+      <config-value name="make0include">CHM,ALLMODELS,INSIDE-MODFLOW,OPT_ATOC,OPT_BREADTRAIL,OPT_COMMENTS,OPT_FB,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
       <config-value name="make0status">*</config-value>
       <config-value name="make3include">HTML,MODFLOW-NWT,OPT_ATOC,OPT_BREADTRAIL,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
       <config-value name="make3status">*</config-value>
@@ -427,7 +427,6 @@
       <file-mod href="CRCH.xml" build="ALLMODELS,MODFLOW-CFP"/>
       <file-mod href="COC.xml" build="ALLMODELS,MODFLOW-CFP"/>
       <file-mod href="GMG.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-LGR"/>
-      <file-mod href="MNW2.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/>
       <file-mod href="MNWI.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/>
       <file-mod href="LMG.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005"/>
       <file-mod href="LMT6.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/>
@@ -443,6 +442,8 @@
       <file-mod href="Hydrogeologic_Unit_Flow_Package_Internal.xml" build="INSIDE-MODFLOW"/>
       <file-mod href="Layer_Property_Flow_Package_Internal.xml" build="INSIDE-MODFLOW"/>
       <file-mod href="Stream_Flow_Routing_Package_Internal.xml" build="INSIDE-MODFLOW"/>
+      <file-mod href="Unsaturated_Zone_Flow_Package.xml" build="INSIDE-MODFLOW"/>
+      <file-mod href="Lake_Bathymetry_File.xml" build="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/>
     </file>
     <file href="Topics/Invisible/*.xml" build="ALL" filetype="topic">
       <file-mod href="Daflow_linkage.xml" build="ALLMODELS,MODFLOW-2000"/>

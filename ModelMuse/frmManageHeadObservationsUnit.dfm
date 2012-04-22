@@ -80,10 +80,6 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
     TabOrder = 0
     object tabObservations: TTabSheet
       Caption = 'Observations'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgObservations: TRbwDataGrid4
         Left = 0
         Top = 41
@@ -129,6 +125,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -154,6 +151,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
               'Inactive')
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -178,6 +176,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
               'Heads and Drawdowns')
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -199,6 +198,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -220,6 +220,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -241,6 +242,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -262,6 +264,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -289,6 +292,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
               'Sq. rt. of weight (4)')
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -310,6 +314,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
         ColWidths = (
@@ -463,6 +468,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
           end
           item
             AutoAdjustRowHeights = False
@@ -483,6 +489,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
           end
           item
             AutoAdjustRowHeights = False
@@ -507,6 +514,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
               'Inactive')
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
           end
           item
             AutoAdjustRowHeights = False
@@ -530,6 +538,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
               'Heads and Drawdowns')
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
           end
           item
             AutoAdjustRowHeights = False
@@ -550,6 +559,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
           end
           item
             AutoAdjustRowHeights = False
@@ -570,6 +580,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
           end
           item
             AutoAdjustRowHeights = False
@@ -590,6 +601,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
           end
           item
             AutoAdjustRowHeights = False
@@ -610,6 +622,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
           end
           item
             AutoAdjustRowHeights = False
@@ -630,6 +643,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
           end
           item
             AutoAdjustRowHeights = False
@@ -650,6 +664,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+            CaseSensitivePicklist = False
           end>
         ColWidths = (
           64

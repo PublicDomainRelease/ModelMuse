@@ -22,6 +22,10 @@ inherited frameModpathSelection: TframeModpathSelection
     TabOrder = 1
     object tabInput: TTabSheet
       Caption = 'Input file options'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblEndingTime: TLabel
         Left = 154
         Top = 172
@@ -67,7 +71,6 @@ inherited frameModpathSelection: TframeModpathSelection
         Height = 22
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
         TabOrder = 0
         Text = '0'
         DataType = dtInteger
@@ -154,7 +157,6 @@ inherited frameModpathSelection: TframeModpathSelection
         Height = 22
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
         TabOrder = 5
         Text = '0'
         DataType = dtReal
@@ -170,7 +172,6 @@ inherited frameModpathSelection: TframeModpathSelection
         Height = 22
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
         TabOrder = 6
         Text = '0'
         DataType = dtReal
@@ -183,6 +184,10 @@ inherited frameModpathSelection: TframeModpathSelection
     object tabResponse: TTabSheet
       Caption = 'Response file options'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblMaxTime: TLabel
         Left = 371
         Top = 119
@@ -244,7 +249,6 @@ inherited frameModpathSelection: TframeModpathSelection
         Top = 282
         Width = 164
         Height = 13
-        Margins.Bottom = 3
         Caption = 'Release time (backwards tracking)'
       end
       object cbStopAfterMaxTime: TCheckBox
@@ -263,7 +267,6 @@ inherited frameModpathSelection: TframeModpathSelection
         Top = 139
         Width = 80
         Height = 22
-        ItemHeight = 13
         TabOrder = 1
         Text = '0'
         DataType = dtReal
@@ -337,7 +340,6 @@ inherited frameModpathSelection: TframeModpathSelection
         Top = 306
         Width = 80
         Height = 22
-        ItemHeight = 13
         TabOrder = 4
         Text = '0'
         DataType = dtReal
@@ -362,7 +364,6 @@ inherited frameModpathSelection: TframeModpathSelection
         Top = 139
         Width = 96
         Height = 22
-        ItemHeight = 13
         TabOrder = 6
         Text = '2'
         DataType = dtInteger
@@ -413,7 +414,6 @@ inherited frameModpathSelection: TframeModpathSelection
         Top = 38
         Width = 145
         Height = 22
-        ItemHeight = 13
         TabOrder = 9
         Text = '0'
         DataType = dtReal
@@ -462,7 +462,6 @@ inherited frameModpathSelection: TframeModpathSelection
         Height = 22
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
         TabOrder = 13
         Text = '0'
         DataType = dtInteger
@@ -475,7 +474,6 @@ inherited frameModpathSelection: TframeModpathSelection
         Top = 306
         Width = 80
         Height = 22
-        ItemHeight = 13
         TabOrder = 14
         Text = '0'
         DataType = dtReal
@@ -609,6 +607,7 @@ inherited frameModpathSelection: TframeModpathSelection
           RowCount = 2
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
           TabOrder = 0
+          ExtendedAutoDistributeText = False
           AutoMultiEdit = True
           AutoDistributeText = True
           AutoIncreaseColCount = False
@@ -638,6 +637,7 @@ inherited frameModpathSelection: TframeModpathSelection
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end
             item
@@ -659,6 +659,7 @@ inherited frameModpathSelection: TframeModpathSelection
               ParentButtonFont = False
               WordWrapCaptions = False
               WordWrapCells = False
+              CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
           OnEndUpdate = rdgTimesEndUpdate
@@ -711,7 +712,6 @@ inherited frameModpathSelection: TframeModpathSelection
         Top = 88
         Width = 145
         Height = 22
-        ItemHeight = 13
         TabOrder = 2
         Text = '1'
         DataType = dtReal
@@ -724,7 +724,6 @@ inherited frameModpathSelection: TframeModpathSelection
         Top = 140
         Width = 145
         Height = 22
-        ItemHeight = 13
         TabOrder = 3
         Text = '1000'
         DataType = dtInteger

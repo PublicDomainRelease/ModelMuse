@@ -956,6 +956,12 @@ implementation
 uses
   Math;
 
+resourcestring
+  StrThereWasAnErrorA = 'There was an error adjusting the column width.';
+  StrAttemptingToRetrie = 'Attempting to retrieve an invalid column';
+  StrErrorDeletingRow = 'Error deleting Row >= RowCount.';
+  StrErrorDeletingCol = 'Error deleting Col >= ColCount.';
+
 var
   DummyIntValue : integer;
 
@@ -1018,10 +1024,8 @@ begin
           (LocalGrid as TRbwDataGrid4).AdjustColWidths(ACol);
         except on E:Exception do
           begin
-            raise EColWidthError.Create(
-              'There was an error adjusting the column width '
-              + #13#10
-              + E.Message);
+            raise EColWidthError.Create(StrThereWasAnErrorA
+              + sLineBreak + E.Message);
           end;
         end;
       end;
@@ -1058,7 +1062,7 @@ function TRbwDataGridColumns4.GetItems(Index: Integer): TRbwColumn4;
 begin
   if (Index < 0) or (Index >= Count) then
   begin
-    raise EInvalidColumn.Create('Attempting to retrieve an invalid column');
+    raise EInvalidColumn.Create(StrAttemptingToRetrie);
   end;
   Result := inherited Items[Index] as TRbwColumn4;
 end;
@@ -1413,7 +1417,7 @@ begin
     end;
     if ARow >= RowCount then
     begin
-      Raise ERangeError.Create('Error deleting Row >= RowCount.');
+      Raise ERangeError.Create(StrErrorDeletingRow);
     end;
     FDeletingRow := True;
     try
@@ -2770,7 +2774,7 @@ begin
   end;
   if ACol >= ColCount then
   begin
-    Raise ERangeError.Create('Error deleting Col >= ColCount.');
+    Raise ERangeError.Create(StrErrorDeletingCol);
   end;
   TempColumns := TAutoAdjustColumns.Create(nil, TAutoAdjustColumn);
   try
