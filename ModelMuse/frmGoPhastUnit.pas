@@ -1812,7 +1812,12 @@ resourcestring
 const
   DividerWidth = 2;
 
-  Mf2005Date = 41001; // 40169;
+var
+  // @name represents the date of the current version of
+  // MODFLOW-2005. It is set in the initialization section.
+  Mf2005Date: TDateTime;
+
+const
   MfNwtDate = 40933; //40907;//40819;
   MfLgrDate = 40315;
   Modpath5Date = 39748;
@@ -9623,6 +9628,10 @@ begin
     end;
   end;
 end;
+
+initialization
+  Mf2005Date := EncodeDate(2012,4,24);
+
 
 end.
 

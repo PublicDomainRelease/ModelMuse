@@ -376,6 +376,7 @@ begin
 
   // Set the selected layer.
   frmGoPhast.ModflowGrid.SelectedLayer := 0;
+  frmGoPhast.PhastModel.DataArrayManager.CreateInitialDataSets;
   InitializeView(ModelXWidth, ModelYWidth, ModelHeight);
 end;
 
@@ -548,6 +549,7 @@ begin
   ModelHeight := LayerCount * LayerHeight;
 
   InitializeView(ModelXWidth, ModelYWidth, ModelHeight);
+  frmGoPhast.PhastModel.DataArrayManager.CreateInitialDataSets;
 end;
 
 procedure TfrmStartUp.pcStartupChange(Sender: TObject);

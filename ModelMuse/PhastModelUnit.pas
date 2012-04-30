@@ -5203,9 +5203,22 @@ const
   //    '2.13.0.12' Bug fix: when importing a Shapefile to a multipart object,
   //         formulas for the Z-coordinate can now be imported properly.
   //    '2.14.0.0' No additional changes.
+  //    '2.14.0.1' Enhancement: Added the ability to export
+  //         .png and .jpg images.
+  //       Bug fix: Importing model results for MODFLOW-LGR model and
+  //         contouring them no longer causes a range-check error.
+  //    '2.14.0.2' Bug fix: Fixed bug that caused access violations when
+  //         importing results from a MODFLOW-LGR child model but not the
+  //         MODFLOW-LGR parent model.
+  //       Bug fix: Fixed bug in which the Kz data set was not created when
+  //         a MODFLOW model was first created.
+  //       Bug fix: Fixed bug that sometimes caused invalid elevation formulas
+  //         in objects created by importing ShapeFiles.
+  //    '2.14.1.0' Change: Date for the current version of MODFLOW-2005
+  //         changed to the date for MODFLOW-2005 version 1.9.01.
 
 const
-  ModelVersion = '2.14.0.0';
+  ModelVersion = '2.14.1.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];

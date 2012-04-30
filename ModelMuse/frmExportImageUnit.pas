@@ -199,7 +199,7 @@ uses
   UndoItems, frmManageSettingsUnit,
   UndoItemsScreenObjects, ClassificationUnit, frmProgressUnit,
   frmErrorsAndWarningsUnit, Clipbrd, RbwParser, frmDisplayDataUnit,
-  SutraMeshUnit;
+  SutraMeshUnit, pngimage, jpeg;
 
 resourcestring
   StrProgress = 'Progress';
@@ -1186,6 +1186,8 @@ var
   RealHorizontalPixelsPerInch: double;
   WidthToDraw: Integer;
   HeightToDraw: Integer;
+  Png: TPngImage;
+  Jpeg: TJPEGImage;
 const
   MillimeterPerInchTimes100 = 2540;
 begin
@@ -1197,17 +1199,13 @@ begin
         DC := GetDC(0);
         try
           VerticalSize := GetDeviceCaps(DC, VERTSIZE);
-//          VerticalSize := 180;
           VerticalSizeInches := VerticalSize / 25.4;
           VerticalResolution := GetDeviceCaps(DC, VERTRES);
-//          VerticalResolution := 1080;
           RealVerticalPixelsPerInch := (VerticalResolution / VerticalSizeInches);
 
           HorizontalSize := GetDeviceCaps(DC, HORZSIZE);
-//          HorizontalSize := 320;
           HorizontalSizeInches := HorizontalSize / 25.4;
           HorizontalResolution := GetDeviceCaps(DC, HORZRES);
-//          HorizontalResolution := 1920;
           RealHorizontalPixelsPerInch :=
             (HorizontalResolution / HorizontalSizeInches);
 
@@ -1240,11 +1238,9 @@ begin
         try
           WidthToDraw := seImageWidth.AsInteger
             + ((CanvasWidth - DrawingRect.Right) + DrawingRect.Left);
-//          MetaFile.MMWidth := WidthToDraw;
           MetaFile.MMWidth := Trunc(WidthToDraw * Factor);
           HeightToDraw := seImageHeight.AsInteger
             + ((CanvasHeight - DrawingRect.Bottom) + DrawingRect.Top);
-//          MetaFile.MMHeight := HeightToDraw;
           MetaFile.MMHeight := Trunc(HeightToDraw * Factor);
           MetaFileCanvas := TMetaFileCanvas.Create(MetaFile, 0);
           try
@@ -1252,7 +1248,6 @@ begin
           finally
             MetaFileCanvas.Free;
           end;
-//          imagePreview.Picture.Assign(MetaFile);
           MetaFile.SaveToFile(FileName);
         finally
           MetaFile.Free;
@@ -1266,6 +1261,26 @@ begin
           ABitMap.SaveToFile(FileName);
         finally
           ABitMap.Free;
+        end;
+      end;
+    3:
+      begin
+        Png := TPngImage.Create;
+        try
+          Png.Assign(imagePreview.Picture.Graphic);
+          Png.SaveToFile(FileName);
+        finally
+          Png.Free;
+        end;
+      end;
+    4:
+      begin
+        Jpeg := TJPEGImage.Create;
+        try
+          Jpeg.Assign(imagePreview.Picture.Graphic);
+          Jpeg.SaveToFile(FileName);
+        finally
+          Jpeg.Free;
         end;
       end;
   end;
@@ -2768,6 +2783,8 @@ begin
   case spdSaveImage.FilterIndex of
     1: spdSaveImage.DefaultExt := '.emf';
     2: spdSaveImage.DefaultExt := '.bmp';
+    3: spdSaveImage.DefaultExt := '.png';
+    4: spdSaveImage.DefaultExt := '.jpg';
     else Assert(False);
   end;
   if spdSaveImage.FileName <> '' then

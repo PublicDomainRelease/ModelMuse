@@ -390,6 +390,9 @@ type
     comboWellTolerance: TComboBox;
     rpShapeCompiler: TRbwParser;
     memoMultipleParts: TMemo;
+    pnlDataTop: TPanel;
+    cbSelect: TCheckBox;
+    comboInterpolaters: TComboBox;
     // @name edits the formula in @link(edImportCriterion).
     procedure btnImportCriterionClick(Sender: TObject);
     // @name sets all the checkboxes to checked
@@ -451,6 +454,11 @@ type
     procedure edLowZExit(Sender: TObject);
     procedure rgElevationCountClick(Sender: TObject);
     procedure comboDrainReturnLocationMethodChange(Sender: TObject);
+    procedure dgFieldsColSize(Sender: TObject; ACol, PriorWidth: Integer);
+    procedure dgFieldsMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure cbSelectClick(Sender: TObject);
+    procedure comboInterpolatersChange(Sender: TObject);
   private
     FGeometryFileName: string;
     FIndexFileName: string;
@@ -582,6 +590,7 @@ type
       ParameterColumn: Integer);
     procedure EnableJoinObjects;
     function GetFieldNumberFromName(CellText: AnsiString): Integer;
+    procedure Fill_comboInterpolaters;
     { Private declarations }
   public
     // @name returns @true if the Shapefile is selected.
@@ -925,6 +934,8 @@ begin
 
   InitializeBoundaryConditionControls;
   EnableFeatureImport;
+  Fill_comboInterpolaters;
+
 end;
 
 procedure TfrmImportShapefile.FormDestroy(Sender: TObject);
@@ -1201,6 +1212,28 @@ begin
       Close;
     end;
   end;
+end;
+
+procedure TfrmImportShapefile.Fill_comboInterpolaters;
+var
+  List: TList;
+  AType: TInterpolatorType;
+  Index: integer;
+begin
+  comboInterpolaters.Items.Add(StrNone);
+  Assert(SizeOf(TObject) = SizeOf(TInterpolatorType));
+  List := TList.Create;
+  try
+    AddInterpolatorsToList(List);
+    for Index := 0 to List.Count - 1 do
+    begin
+      AType := List[Index];
+      comboInterpolaters.Items.Add(AType.InterpolatorName);
+    end;
+  finally
+    List.Free;
+  end;
+  comboInterpolaters.ItemIndex := 0;
 end;
 
 function TfrmImportShapefile.GetFieldNumberFromName(CellText: AnsiString): Integer;
@@ -5983,6 +6016,7 @@ begin
         FieldNames := TStringList.Create;
         RealFieldNames := TStringList.Create;
         try
+          RealFieldNames.CaseSensitive := False;
           rpShapeCompiler.ClearVariables;
           rpShapeCompiler.ClearExpressions;
           CreateVariables(rpShapeCompiler);
@@ -6045,20 +6079,23 @@ begin
                 ZExpression := rpShapeCompiler.CurrentExpression;
                 Assert(ZExpression.ResultType in [rdtDouble, rdtInteger]);
                 ElevFormula := AFormula;
-                if frmGoPhast.PhastModel.GetObserverByName(ElevFormula)
-                  <> nil then
+                if RealFieldNames.IndexOf(AFormula) < 0 then
                 begin
-                  ZExpression := nil;
-                end
-                else
-                begin
-                  TestCompiler := frmGoPhast.PhastModel.GetCompiler(dsoTop,
-                    TEvaluatedAt(rgEvaluatedAt.ItemIndex));
-                  try
-                    TestCompiler.Compile(AFormula);
+                  if frmGoPhast.PhastModel.GetObserverByName(ElevFormula)
+                    <> nil then
+                  begin
                     ZExpression := nil;
-                  except on E: ERbwParserError do
-                    // do nothing
+                  end
+                  else
+                  begin
+                    TestCompiler := frmGoPhast.PhastModel.GetCompiler(dsoTop,
+                      TEvaluatedAt(rgEvaluatedAt.ItemIndex));
+                    try
+                      TestCompiler.Compile(AFormula);
+                      ZExpression := nil;
+                    except on E: ERbwParserError do
+                      // do nothing
+                    end;
                   end;
                 end;
 
@@ -6080,20 +6117,23 @@ begin
                 HighZExpression := rpShapeCompiler.CurrentExpression;
                 Assert(HighZExpression.ResultType in [rdtDouble, rdtInteger]);
                 HighElevFormula := AFormula;
-                if frmGoPhast.PhastModel.GetObserverByName(HighElevFormula)
-                  <> nil then
+                if RealFieldNames.IndexOf(HighElevFormula) < 0 then
                 begin
-                  HighZExpression := nil;
-                end
-                else
-                begin
-                  TestCompiler := frmGoPhast.PhastModel.GetCompiler(dsoTop,
-                    TEvaluatedAt(rgEvaluatedAt.ItemIndex));
-                  try
-                    TestCompiler.Compile(AFormula);
+                  if frmGoPhast.PhastModel.GetObserverByName(HighElevFormula)
+                    <> nil then
+                  begin
                     HighZExpression := nil;
-                  except on E: ERbwParserError do
-                    // do nothing
+                  end
+                  else
+                  begin
+                    TestCompiler := frmGoPhast.PhastModel.GetCompiler(dsoTop,
+                      TEvaluatedAt(rgEvaluatedAt.ItemIndex));
+                    try
+                      TestCompiler.Compile(AFormula);
+                      HighZExpression := nil;
+                    except on E: ERbwParserError do
+                      // do nothing
+                    end;
                   end;
                 end;
 
@@ -6108,20 +6148,23 @@ begin
                 LowZExpression := rpShapeCompiler.CurrentExpression;
                 Assert(LowZExpression.ResultType in [rdtDouble, rdtInteger]);
                 LowElevFormula := AFormula;
-                if frmGoPhast.PhastModel.GetObserverByName(LowElevFormula)
-                  <> nil then
+                if RealFieldNames.IndexOf(LowElevFormula) < 0 then
                 begin
-                  LowZExpression := nil;
-                end
-                else
-                begin
-                  TestCompiler := frmGoPhast.PhastModel.GetCompiler(dsoTop,
-                    TEvaluatedAt(rgEvaluatedAt.ItemIndex));
-                  try
-                    TestCompiler.Compile(AFormula);
+                  if frmGoPhast.PhastModel.GetObserverByName(LowElevFormula)
+                    <> nil then
+                  begin
                     LowZExpression := nil;
-                  except on E: ERbwParserError do
-                    // do nothing
+                  end
+                  else
+                  begin
+                    TestCompiler := frmGoPhast.PhastModel.GetCompiler(dsoTop,
+                      TEvaluatedAt(rgEvaluatedAt.ItemIndex));
+                    try
+                      TestCompiler.Compile(AFormula);
+                      LowZExpression := nil;
+                    except on E: ERbwParserError do
+                      // do nothing
+                    end;
                   end;
                 end;
               end;
@@ -6934,7 +6977,10 @@ begin
     begin
       DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(
         dgFields.Cells[Ord(fgcDataSet),ARow]);
-      DataType := DataArray.DataType;
+      if DataArray <> nil then
+      begin
+        DataType := DataArray.DataType;
+      end;
     end;
     dgFields.Columns[Ord(fgcInterpolator)].PickList.Add(StrNone);
     for Index := 0 to List.Count - 1 do
@@ -7056,6 +7102,14 @@ begin
   rdgBoundaryConditions.RowCount := seBoundaryTimeCount.AsInteger + 1;
 end;
 
+procedure TfrmImportShapefile.dgFieldsColSize(Sender: TObject; ACol,
+  PriorWidth: Integer);
+begin
+  inherited;
+  LayoutControls(dgFields, cbSelect, nil, Ord(fgcImport), 3);
+  LayoutControls(dgFields, comboInterpolaters, nil, Ord(fgcInterpolator));
+end;
+
 procedure TfrmImportShapefile.dgFieldsDrawCell(Sender: TObject; ACol,
   ARow: Integer; Rect: TRect; State: TGridDrawState);
 var
@@ -7086,6 +7140,14 @@ begin
         dgFields.Cells[ACol, ARow]);
     end;
   end;
+end;
+
+procedure TfrmImportShapefile.dgFieldsMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  inherited;
+  EnableMultiEditControl(dgFields, cbSelect, Ord(fgcImport));
+  EnableMultiEditControl(dgFields, comboInterpolaters, Ord(fgcInterpolator));
 end;
 
 procedure TfrmImportShapefile.dgFieldsSelectCell(Sender: TObject; ACol,
@@ -7827,6 +7889,27 @@ begin
 end;
 
 
+procedure TfrmImportShapefile.comboInterpolatersChange(Sender: TObject);
+var
+  RowIndex: Integer;
+  CanSelect: Boolean;
+begin
+  inherited;
+  for RowIndex := 1 to dgFields.RowCount - 1 do
+  begin
+    if dgFields.IsSelectedCell(Ord(fgcInterpolator), RowIndex) then
+    begin
+      CanSelect := True;
+      dgFieldsSelectCell(dgFields, Ord(fgcInterpolator), RowIndex, CanSelect);
+      if CanSelect and (dgFields.Columns[Ord(fgcInterpolator)].
+        PickList.IndexOf(comboInterpolaters.Text) >= 0) then
+      begin
+        dgFields.Cells[Ord(fgcInterpolator), RowIndex] := comboInterpolaters.Text
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmImportShapefile.comboJoinObjectsChange(Sender: TObject);
 begin
   inherited;
@@ -8244,6 +8327,20 @@ begin
   EnableJoinObjects;
   comboVisibility.Enabled := cbImportObjects.Checked;
   EnableOK;
+end;
+
+procedure TfrmImportShapefile.cbSelectClick(Sender: TObject);
+var
+  RowIndex: Integer;
+begin
+  inherited;
+  for RowIndex := 1 to dgFields.RowCount - 1 do
+  begin
+    if dgFields.IsSelectedCell(Ord(fgcImport), RowIndex) then
+    begin
+      dgFields.Checked[Ord(fgcImport), RowIndex] := cbSelect.Checked;
+    end;
+  end;
 end;
 
 { TValueBool }

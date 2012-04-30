@@ -6,6 +6,7 @@ inherited frmExportImage: TfrmExportImage
   ClientWidth = 721
   ShowHint = True
   OnClose = FormClose
+  ExplicitTop = -77
   ExplicitWidth = 729
   ExplicitHeight = 553
   PixelsPerInch = 96
@@ -650,7 +651,10 @@ inherited frmExportImage: TfrmExportImage
   end
   object spdSaveImage: TSavePictureDialog
     DefaultExt = '.emf'
-    Filter = 'Enhanced Metafiles (*.emf)|*.emf|Bitmaps (*.bmp)|*.bmp'
+    Filter = 
+      'Enhanced Metafiles (*.emf)|*.emf|Bitmaps (*.bmp)|*.bmp|Portable ' +
+      'Network Graphics (*.png)|*.png|Joint Photographic Experts Group ' +
+      'image (*.jpg)|*.jpg'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     OnTypeChange = spdSaveImageTypeChange
     Left = 304

@@ -21,7 +21,7 @@ inherited frmStartUp: TfrmStartUp
     Align = alBottom
     BevelOuter = bvNone
     ParentColor = True
-    TabOrder = 0
+    TabOrder = 1
     DesignSize = (
       761
       47)
@@ -49,7 +49,7 @@ inherited frmStartUp: TfrmStartUp
       Layout = blGlyphRight
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 1
+      TabOrder = 2
       OnClick = btnNextClick
     end
     object btnDontCreateGrid: TBitBtn
@@ -78,7 +78,7 @@ inherited frmStartUp: TfrmStartUp
       Kind = bkHelp
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 2
+      TabOrder = 1
       OnClick = btnHelpClick
     end
   end
@@ -89,7 +89,7 @@ inherited frmStartUp: TfrmStartUp
     Height = 332
     ActivePage = tabModelChoice
     Align = alClient
-    TabOrder = 1
+    TabOrder = 0
     OnChange = pcStartupChange
     object tabModelChoice: TTabSheet
       HelpType = htKeyword
@@ -187,7 +187,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          TabOrder = 4
+          TabOrder = 3
           Text = '100'
           DataType = dtReal
           Max = 1.000000000000000000
@@ -200,7 +200,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          TabOrder = 3
+          TabOrder = 1
           Text = '100'
           DataType = dtReal
           Max = 1.000000000000000000
@@ -213,7 +213,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          TabOrder = 2
+          TabOrder = 4
           Text = '5'
           DataType = dtInteger
           Max = 2.000000000000000000
@@ -227,7 +227,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          TabOrder = 1
+          TabOrder = 2
           Text = '10'
           DataType = dtInteger
           Max = 2.000000000000000000
@@ -306,10 +306,6 @@ inherited frmStartUp: TfrmStartUp
       HelpKeyword = 'Initial_Grid_Dialog_Box'
       Caption = 'tabInitialModflowGrid'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbInitialGridModflow: TGroupBox
         Left = 0
         Top = 0
@@ -372,7 +368,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          TabOrder = 3
+          TabOrder = 2
           Text = '100'
           DataType = dtReal
           Max = 1.000000000000000000
@@ -385,7 +381,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          TabOrder = 2
+          TabOrder = 5
           Text = '3'
           OnChange = rdeModflowLayerCountChange
           DataType = dtInteger
@@ -400,7 +396,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          TabOrder = 1
+          TabOrder = 3
           Text = '10'
           DataType = dtInteger
           Max = 1.000000000000000000
@@ -414,7 +410,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          TabOrder = 0
+          TabOrder = 1
           Text = '10'
           DataType = dtInteger
           Max = 1.000000000000000000
@@ -432,7 +428,7 @@ inherited frmStartUp: TfrmStartUp
           ColCount = 2
           FixedCols = 0
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
-          TabOrder = 5
+          TabOrder = 0
           OnSelectCell = rdgInitialLayersSelectCell
           ExtendedAutoDistributeText = False
           AutoMultiEdit = True

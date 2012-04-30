@@ -321,7 +321,7 @@ resourcestring
   StrWithdrawalForThe = '(withdrawal for the Lake package)';
   StrMinimumStage = 'Minimum stage';
   StrMaximumStage = 'Maximum stage';
-  StrPrecipitaton = 'Precipitaton';
+  StrPrecipitation = 'Precipitation';
   StrEvaporation = 'Evaporation';
   StrOverlandRunoff = 'Overland runoff';
   StrWithdrawal = 'Withdrawal';
@@ -1582,8 +1582,8 @@ begin
   FMinimumStageData.ParamDescription := ' ' + LowerCase(StrMinimumStage);
   FMaximumStageData.NonParamDescription := StrMaximumStage;
   FMaximumStageData.ParamDescription := ' ' + LowerCase(StrMaximumStage);
-  FPrecipitationData.NonParamDescription := StrPrecipitaton;
-  FPrecipitationData.ParamDescription := ' ' + LowerCase(StrPrecipitaton);
+  FPrecipitationData.NonParamDescription := StrPrecipitation;
+  FPrecipitationData.ParamDescription := ' ' + LowerCase(StrPrecipitation);
   FEvaporationData.NonParamDescription := StrEvaporation;
   FEvaporationData.ParamDescription := ' ' + LowerCase(StrEvaporation);
   FOverlandRunoffData.NonParamDescription := StrOverlandRunoff;

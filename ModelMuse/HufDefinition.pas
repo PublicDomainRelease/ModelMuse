@@ -313,7 +313,7 @@ begin
       begin
         DataArray := DataArrayManager.CreateNewDataArray(TDataArray, LayerName,
           Formula, StandardLock, DataType, eaBlocks, dsoTop, StrHUF);
-        frmGoPhast.PhastModel.UpdateDataArrayDimensions(DataArray);
+        LocalModel.UpdateDataArrayDimensions(DataArray);
 //        if frmGoPhast.Grid = nil then
 //        begin
 //          DataArray.UpdateDimensions(0,0,0);
@@ -770,7 +770,7 @@ begin
   begin
     DataArray := DataArrayManager.CreateNewDataArray(TDataArray, LayerName,
       '0.', StandardLock, rdtDouble, eaBlocks, dsoTop, StrHUF);
-    frmGoPhast.PhastModel.UpdateDataArrayDimensions(DataArray);
+    LocalModel.UpdateDataArrayDimensions(DataArray);
 //    if frmGoPhast.Grid = nil then
 //    begin
 //      DataArray.UpdateDimensions(0,0,0);

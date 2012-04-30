@@ -424,7 +424,8 @@ uses
   MeshRenumbering in 'MeshRenumbering.pas',
   QuadMeshGenerator in 'QuadMeshGenerator.pas',
   ModflowPCGN_WriterUnit in 'ModflowPCGN_WriterUnit.pas',
-  framePackagePcgnUnit in 'framePackagePcgnUnit.pas' {framePackagePcgn: TFrame};
+  framePackagePcgnUnit in 'framePackagePcgnUnit.pas' {framePackagePcgn: TFrame},
+  frameDiscretizationUnit in 'frameDiscretizationUnit.pas' {frameDiscretization: TFrame};
 
 {$R *.res}
 

@@ -427,7 +427,7 @@ begin
     frmGoPhast.PhastModel.CreateVariables(LayerData);
     LayerData := AModel.DataArrayManager.GetDataSetByName(NewName);
 //    Grid := AModel.ModflowGrid;
-    frmGoPhast.PhastModel.UpdateDataArrayDimensions(LayerData);
+    AModel.UpdateDataArrayDimensions(LayerData);
 //    LayerData.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
 //      Grid.ColumnCount);
   end
@@ -435,7 +435,7 @@ begin
   begin
     LayerData := AModel.DataArrayManager.GetDataSetByName(NewName);
 //    Grid := AModel.ModflowGrid;
-    frmGoPhast.PhastModel.UpdateDataArrayDimensions(LayerData);
+    AModel.UpdateDataArrayDimensions(LayerData);
 //    LayerData.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
 //      Grid.ColumnCount);
     for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
@@ -810,6 +810,7 @@ begin
       SkipReal := ParentLayerData.Limits.RealValuesToSkip.Add as TSkipReal;
       SkipReal.RealValue := ValuesToIgnore[IgnoreIndex];
     end;
+    ParentLayerData.ContourLimits := ParentLayerData.Limits;
   end
   else
   begin
@@ -827,6 +828,7 @@ begin
         SkipReal.RealValue := ValuesToIgnore[IgnoreIndex];
       end;
     end;
+    ParentLayerData.ContourLimits := ParentLayerData.Limits;
   end;
 end;
 
@@ -991,7 +993,7 @@ begin
     NewDataSets.Add(New3DArray);
     New3DArray.UpDateWithName(NewName);
 //    New3DArray.OnNameChange := frmGoPhast.PhastModel.DataArrayNameChange;
-    AModel.AddDataSet(New3DArray);
+    frmGoPhast.PhastModel.AddDataSet(New3DArray);
     New3DArray.DataType := rdtDouble;
     New3DArray.Orientation := dso3D;
 //    Grid := frmGoPhast.PhastModel.ModflowGrid;
@@ -1001,10 +1003,11 @@ begin
     New3DArray.EvaluatedAt := eaBlocks;
     New3DArray.Classification := StrThreeDData;
     New3DArray.OnDataSetUsed := AModel.ModelResultsRequired;
-    AModel.CreateVariables(New3DArray);
+    frmGoPhast.PhastModel.CreateVariables(New3DArray);
+
     New3DArray := AModel.DataArrayManager.GetDataSetByName(NewName);
     Grid := AModel.ModflowGrid;
-    frmGoPhast.PhastModel.UpdateDataArrayDimensions(New3DArray);
+    AModel.UpdateDataArrayDimensions(New3DArray);
 //    New3DArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
 //      Grid.ColumnCount);
   end
@@ -1013,7 +1016,7 @@ begin
     New3DArray := AModel.DataArrayManager.GetDataSetByName(NewName);
     New3DArray.Orientation := dso3D;
     Grid := AModel.ModflowGrid;
-    frmGoPhast.PhastModel.UpdateDataArrayDimensions(New3DArray);
+    AModel.UpdateDataArrayDimensions(New3DArray);
 //    New3DArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
 //      Grid.ColumnCount);
   end;
@@ -1162,6 +1165,7 @@ begin
       SkipReal := ParentArray.Limits.RealValuesToSkip.Add as TSkipReal;
       SkipReal.RealValue := ValuesToIgnore[IgnoreIndex];
     end;
+    ParentArray.ContourLimits := ParentArray.Limits;
   end
   else
   begin
@@ -1182,6 +1186,7 @@ begin
         SkipReal.RealValue := ValuesToIgnore[IgnoreIndex];
       end;
     end;
+    ParentArray.ContourLimits := ParentArray.Limits;
   end;
   ParentArray.Limits.Update;
   MinValues.Clear;

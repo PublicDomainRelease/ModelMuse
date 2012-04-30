@@ -1,0 +1,81 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!-- saved from url=(0029)http://www.helpandmanual.com/ -->
+<head>
+<title>ModelMuse Release</title>
+<!-- Premium Pack Version 1.40 Template design Copyright (c) 2008-2011 by Tim Green -->
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+<script type="text/javascript" src="release_navigation.js"></script>
+<script type="text/javascript" src="jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="mobileInit.js"></script>
+<script type="text/javascript">
+var IE6 = /msie 6|MSIE 6/.test(navigator.userAgent);
+var frSpace = /Opera|opera/.test(navigator.userAgent) ? "5" : "2";
+// Normal init for good browsers
+var wkResize = "";
+var WebKit = /WebKit|webkit/.test(navigator.userAgent);
+wkResize = (WebKit && ("workaround" == "workaround")) ? 'noresize="noresize"' : "";
+if (!IE6) {
+    var defaulttopic="revision_history.htm";
+    if (location.href.lastIndexOf("?") > 0) defaulttopic=location.href.substring(location.href.lastIndexOf("?")+1,location.href.length).replace(/:/g,"");
+
+    document.write('<frameset name="hmframeset" id="hmframeset" cols="280,*" border="6" frameborder="1" framespacing="'+frSpace+'">');
+    if (document.getElementById) {
+    document.write('<frame name="hmnavigation" id="hmnavigation" src="release_content_dyn.html" title="Navigation frame"'+wkResize+' />'); }
+    else {
+    document.write('<frame name="hmnavigation" id="hmnavigation" src="release_content_static.html" title="Navigation frame"'+wkResize+' />'); }
+    
+    document.write('<frame name="hmcontent" id="hmcontent" src="' + defaulttopic + '" title="Content frame" />');
+    document.write('</frameset>');
+
+    }
+// Special init for IE6
+else {
+    var defaulttopic="revision_history.htm";
+    if (location.href.lastIndexOf("?") > 0) defaulttopic=location.href.substring(location.href.lastIndexOf("?")+1,location.href.length).replace(/:/g,"");
+
+    document.write('<frameset name="hmframeset" id="hmframeset" cols="280,*" frameborder="1" framespacing="1">');
+    if (document.getElementById) {
+    document.write('<frame name="hmnavigation" id="hmnavigation" src="release_content_dyn.html" title="Navigation frame" scrolling="yes" noresize="noresize" />'); }
+    else {
+    document.write('<frame name="hmnavigation" id="hmnavigation" src="release_content_static.html" title="Navigation frame" scrolling="yes" noresize="noresize" />'); }
+    
+    document.write('<frame name="hmcontent" id="hmcontent" src="' + defaulttopic + '" title="Content frame" />');
+    document.write('</frameset>');
+
+}
+$(document).ready(function() {
+   if (!document.all) {
+      mobDat = {
+      iOSalert : "Use two fingers to scroll contents and topics on iPad and iPhone!",
+      aOSalert : "Sorry, this online help is not compatible with your mobile browser!",
+      aOSredirect : "",
+      mobRedirect : "",
+      iPhRedirect : "",
+      iPdRedirect : ""
+      }
+   mobInit(mobDat);
+} else {
+   if (false){
+      setTimeout(function() {hmnavigation.location = "release_content_dyn.html"}, 200);
+      }
+   }
+});
+</script>
+</head>
+<noscript>
+
+  <frameset cols="280,*" frameborder="0" framespacing="0">
+    <frame name="hmnavigation" id="hmnavigation" src="release_content_static.html" title="Navigation frame" scrolling="yes" />
+    <frame name="hmcontent" id="hmcontent" src="revision_history.htm" title="Content frame" />
+    <noframes>
+    <body>
+      <p>This page requires frames<br /><a href="release_content_static.html">Click here to view the table of contents without frames</a></p>
+    </body>
+    </noframes>
+  </frameset>
+
+</noscript>
+</html>

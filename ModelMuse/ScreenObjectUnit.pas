@@ -4403,7 +4403,8 @@ uses Math, UndoItemsScreenObjects, BigCanvasMethods,
 
 resourcestring
   StrInvalidVertex0 = 'Invalid vertex (#%0:d) in "%1:s". %2:s';
-  StrErrorInObjectS = 'Error in object %s.';
+  StrErrorInObjectS = 'Error in object %s. There is a circular reference in '
+  + 'a formula defining the third dimension of the object.';
   StrInvalidDataType = 'Invalid data type.';
   StrElevationFormula = '(X, Y, or Z coordinate formula)';
   StrLowerXYOrZCo = '(Lower X, Y, or Z coordinate formula)';
@@ -31248,6 +31249,7 @@ begin
       CellList, AssignmentLocation, AModel);
     for AssignmentIndex := 0 to CellList.Count - 1 do
     begin
+//      try
       CellAssignment := CellList[AssignmentIndex];
       UpdateCurrentSegment(CellAssignment.Segment);
       UpdateCurrentSection(CellAssignment.Section);
@@ -31255,6 +31257,10 @@ begin
       AssignCellValue(UsedVariables, DataSet, CellAssignment.Layer,
         CellAssignment.Row, CellAssignment.Column, Compiler,
         CellAssignment.Annotation, Expression, OtherData);
+//      except
+//        ShowMessage(IntToStr(AssignmentIndex));
+//
+//      end;
     end;
   finally
     CellList.Free;

@@ -47,6 +47,7 @@ type
     FAquiferName: string;
     FGrowthMethod: TGrowthMethod;
     FGrowthRate: real;
+    {@name defines the layer or layers in @classname.}
     FLayerCollection: TLayerCollection;
     procedure SetDataArrayName(const NewName: string);
     procedure SetAquiferName(const Value: string);
@@ -80,6 +81,7 @@ type
     how the thickness of those layers is calculated.
     }
     property GrowthRate: real read FGrowthRate write SetGrowthRate;
+    {@name defines the layer or layers in @classname.}
     property LayerCollection: TLayerCollection read FLayerCollection
       write SetLayerCollection stored StoreLayerCollection;
   end;
