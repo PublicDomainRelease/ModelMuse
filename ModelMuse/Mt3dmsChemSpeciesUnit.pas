@@ -574,7 +574,7 @@ begin
   result := -1;
   for index := 0 to Count - 1 do
   begin
-    if CompareText(Items[index].Name, AName) = 0 then
+    if AnsiCompareText(Items[index].Name, AName) = 0 then
     begin
       result := index;
       exit;

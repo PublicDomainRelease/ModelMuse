@@ -10,7 +10,7 @@ interface
 
 uses
   Windows, SysUtils, Types, Classes, Variants, Graphics, Controls, Forms,
-  Dialogs, GLWidget, arcball;
+  Dialogs, GLWidget, arcball, OpenGL12x;
 
 type
   {@abstract(@name is used to encapsulate the interaction with the 3D view
@@ -80,6 +80,11 @@ type
     FZScale: double;
     // @name stores @link(FZoomFactor) at the beginning of a zooming operation.
     FZStart: double;
+    FListsCreated: Boolean;
+    FAxesGLIndex: GLuint;
+    FAxesCreated: Boolean;
+    procedure RecordAxes;
+    procedure DrawAxes;
     { Private declarations }
   public
     // @name creates an instance of @classname.
@@ -98,7 +103,7 @@ implementation
 
 {$R *.dfm}
 
-uses frmGoPhastUnit, CursorsFoiledAgain, Math, OpenGL12x, frmColorsUnit,
+uses frmGoPhastUnit, CursorsFoiledAgain, Math, frmColorsUnit,
   PhastModelUnit;
 
 resourcestring
@@ -110,6 +115,7 @@ const
   ViewAngle = 45; // in degrees.
   nearPosition = 1;
   farPosition = 1E3;
+  ThinLine = 1.0;
 
 { Tframe3DView }
 
@@ -161,6 +167,39 @@ begin
   FZoomFactor := 1;
   FTheBall.RestoreDefaultOrientation;
   glWidModelView.Invalidate;
+end;
+
+procedure Tframe3DView.DrawAxes;
+begin
+  if not FAxesCreated then
+  begin
+    RecordAxes;
+  end;
+
+
+  glPushMatrix;
+  glLoadIdentity;
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix;
+  glLoadIdentity;
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix;
+  try
+    glTranslatef(-0.8, -0.8, -0.8);
+    glscalef(glWidModelView.ClientHeight/Max(1,glWidModelView.ClientWidth), 1, 1);
+    glMultMatrixf(@FTheBall.Matrix);
+
+    glCallList(FAxesGLIndex);
+
+  finally
+    glPopMatrix;
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix;
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix;
+  end;
+
+
 end;
 
 
@@ -413,6 +452,7 @@ begin
     frmGoPhast.PhastModel.DrawScreenObjects3D;
     glPopMatrix;
   end;
+
   glPopMatrix;
 
   glLineWidth(2);
@@ -424,6 +464,10 @@ begin
 
   //  glDisable(GL_LIGHTING);
   FTheBall.Render;
+
+  DrawAxes;
+
+
   //  glEnable(GL_LIGHTING);
   glEnable(GL_DEPTH_TEST);
   errorCode := glGetError;
@@ -467,6 +511,52 @@ begin
   errorCode := glGetError;
   if errorCode <> GL_NO_ERROR then
     raise Exception.Create(Format(StrErrorInRenderS, [gluErrorString(errorCode)]));
+end;
+
+procedure Tframe3DView.RecordAxes;
+var
+  X, Y, Z: single;
+  X2, Y2, Z2: single;
+begin
+  if not FListsCreated then
+  begin
+    FAxesGLIndex := glGenLists(1);
+    FListsCreated := True;
+  end;
+
+  glNewList(FAxesGLIndex, GL_COMPILE);
+  try
+
+    glLineWidth(ThinLine);
+    glBegin(GL_LINES);
+    try
+      X := 0.0;
+      Y := 0.0;
+      Z := 0.0;
+      X2 := 0.2;
+      Y2 := 0.2;
+      Z2 := 0.2;
+
+      glColor3f(0.0, 0.0, 1.0);
+      glVertex3f(X, Y, Z);
+      glVertex3f(X2, Y, Z);
+
+      glColor3f(0.0, 1.0, 0.0);
+      glVertex3f(X, Y, Z);
+      glVertex3f(X, Y2, Z);
+
+      glColor3f(1.0, 0.0, 0.0);
+      glVertex3f(X, Y, Z);
+      glVertex3f(X, Y, Z2);
+    finally
+      glEnd;
+    end;
+
+  finally
+    glEndList;
+  end;
+  FAxesCreated := True;
+
 end;
 
 end.

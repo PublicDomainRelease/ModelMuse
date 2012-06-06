@@ -259,6 +259,9 @@ Type
     // See @link(edName).
     procedure edNameExit(Sender: TObject);
     procedure reCommentExit(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure reCommentEnter(Sender: TObject);
   private
     { @name is the @link(TCustom2DInterpolater) of the currently
       selected @link(TDataArray).
@@ -385,6 +388,8 @@ Type
     procedure UpdateOkVariables(VariablePosition: Integer;
       const VariableName: string; var OK_Var: TOK_Variables);
     procedure InitializeOK_Variables(var OK_Var: TOK_Variables; EvaluatedAt: TEvaluatedAt);
+    procedure FillCompilerList(CompilerList: TList);
+    procedure ClearVariables;
     { Private declarations }
   protected
     // @name is the TDataArrayEdit that is currently being edited.
@@ -398,12 +403,15 @@ Type
 // @name adds all the available @link(TCustom2DInterpolater)s to List.
 procedure AddInterpolatorsToList(const List: TList);
 
+var
+  frmDataSets: TfrmDataSets = nil;
+
 implementation
 
 uses frmGoPhastUnit, frmFormulaUnit, frmConvertChoiceUnit, InterpolationUnit,
   GIS_Functions, PhastModelUnit, frmShowHideObjectsUnit, GlobalVariablesUnit,
   StrUtils, OrderedCollectionUnit, HufDefinition, LayerStructureUnit,
-  SubscriptionUnit;
+  SubscriptionUnit, Menus;
 
 resourcestring
   StrNone = 'none';
@@ -420,8 +428,6 @@ resourcestring
   StrDefinedByParamet = '%s (defined by parameters)';
 
 {$R *.dfm}
-var
-  frmDataSets: TfrmDataSets = nil;
 
 procedure AddNewInterpolator(const List: TList; const AType: TInterpolatorType);
 begin
@@ -438,6 +444,20 @@ begin
   AddNewInterpolator(List, TNearest2DInterpolator);
   AddNewInterpolator(List, TInvDistSqPoint2DInterpolator);
   AddNewInterpolator(List, TInvDistSq2DInterpolator);
+end;
+
+procedure TfrmDataSets.FormActivate(Sender: TObject);
+begin
+  inherited;
+  SelectedEdit := nil;
+  GetData;
+end;
+
+procedure TfrmDataSets.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  inherited;
+  Release;
+  frmDataSets := nil;
 end;
 
 procedure TfrmDataSets.FormCreate(Sender: TObject);
@@ -863,14 +883,7 @@ var
 begin
   CompilerList := TList.Create;
   try
-    CompilerList.Add(rpFrontFormulaCompiler);
-    CompilerList.Add(rpFrontFormulaCompilerNodes);
-    CompilerList.Add(rpSideFormulaCompiler);
-    CompilerList.Add(rpSideFormulaCompilerNodes);
-    CompilerList.Add(rpThreeDFormulaCompiler);
-    CompilerList.Add(rpThreeDFormulaCompilerNodes);
-    CompilerList.Add(rpTopFormulaCompiler);
-    CompilerList.Add(rpTopFormulaCompilerNodes);
+    FillCompilerList(CompilerList);
     frmGoPhast.PhastModel.RefreshGlobalVariables(CompilerList);
   finally
     CompilerList.Free;
@@ -914,6 +927,7 @@ begin
   FLoading := True;
   try
     InitializeControls;
+    ClearVariables;
     GetGlobalVariables;
 
     FillDataSetsTreeView;
@@ -1138,6 +1152,7 @@ procedure TfrmDataSets.btnOKClick(Sender: TObject);
 begin
   inherited;
   SetData;
+  SelectedEdit := nil;
 end;
 
 procedure TfrmDataSets.comboEvaluatedAtChange(Sender: TObject);
@@ -1283,7 +1298,7 @@ begin
   FInterpolatorList.Free;
   FArrayEdits.Free;
 
-  Assert(frmDataSets = self);
+//  Assert(frmDataSets = self);
   frmDataSets := nil;
   inherited;
 end;
@@ -2039,6 +2054,37 @@ begin
   FLoading := False;
 end;
 
+procedure TfrmDataSets.ClearVariables;
+var
+  CompilerList: TList;
+  Compiler: TRbwParser;
+  index: Integer;
+begin
+  CompilerList := TList.Create;
+  try
+    FillCompilerList(CompilerList);
+    for index := 0 to CompilerList.Count - 1 do
+    begin
+      Compiler := CompilerList[index];
+      Compiler.ClearVariables;
+    end;
+  finally
+    CompilerList.Free;
+  end;
+end;
+
+procedure TfrmDataSets.FillCompilerList(CompilerList: TList);
+begin
+  CompilerList.Add(rpFrontFormulaCompiler);
+  CompilerList.Add(rpFrontFormulaCompilerNodes);
+  CompilerList.Add(rpSideFormulaCompiler);
+  CompilerList.Add(rpSideFormulaCompilerNodes);
+  CompilerList.Add(rpThreeDFormulaCompiler);
+  CompilerList.Add(rpThreeDFormulaCompilerNodes);
+  CompilerList.Add(rpTopFormulaCompiler);
+  CompilerList.Add(rpTopFormulaCompilerNodes);
+end;
+
 procedure TfrmDataSets.InitializeOK_Variables(var OK_Var: TOK_Variables; EvaluatedAt: TEvaluatedAt);
 var
   GeoUnit: TLayerGroup;
@@ -2736,6 +2782,12 @@ begin
   end;
 end;
 
+procedure TfrmDataSets.reCommentEnter(Sender: TObject);
+begin
+  inherited;
+  frmGoPhast.acSelectAllTop.ShortCut := 0
+end;
+
 procedure TfrmDataSets.reCommentExit(Sender: TObject);
 begin
   inherited;
@@ -2744,6 +2796,7 @@ begin
     Exit;
   end;
   SelectedEdit.Comment := reComment.Text;
+  frmGoPhast.acSelectAllTop.ShortCut := ShortCut(Ord('A'), [ssCtrl]);
 end;
 
 procedure TfrmDataSets.reDefaultFormulaExit(Sender: TObject);
@@ -2984,7 +3037,7 @@ end;
 procedure TfrmDataSets.btnCancelClick(Sender: TObject);
 begin
   inherited;
-  frmGoPhast.PhastModel.UpToDate := FPriorModelUpToDate;
+//  frmGoPhast.PhastModel.UpToDate := FPriorModelUpToDate;
 end;
 
 procedure TfrmDataSets.framePhastInterpolationedMixFormulaChange(
@@ -3241,13 +3294,13 @@ begin
     end;
 
 
+    FDataArray.ObserverList.NotifyOnChange(FDataArray, ckResetObserved);
+    FDataArray.ObserverList.NotifyOnChange(FDataArray, ckCheckDependance);
     for Index := 0 to DataArrayManager.DataSetCount - 1 do
     begin
       DataSet := DataArrayManager.DataSets[Index];
       if DataSet <> FDataArray then
       begin
-        FDataArray.ObserverList.NotifyOnChange(FDataArray, ckResetObserved);
-        FDataArray.ObserverList.NotifyOnChange(FDataArray, ckCheckDependance);
         if DataSet.Observed then
         begin
           FNewUses.Add(DataSet.Name);

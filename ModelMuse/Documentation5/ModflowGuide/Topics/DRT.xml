@@ -306,6 +306,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">Condfact—is the factor used to calculate drain hydraulic conductance from the parameter value. The conductance (L</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">2</text><text styleclass="Normal" translate="true">/T) is the product of Condfact and the parameter value.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">See also &quot;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="Frequently_Asked_Questions" anchor="Conductance" styleclass="Normal" translate="true">What is conductance?</link><text styleclass="Normal" translate="true">&quot;</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -373,6 +374,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">Cond—is the hydraulic conductance of the interface between the aquifer and the drain.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">See also &quot;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="Frequently_Asked_Questions" anchor="Conductance" styleclass="Normal" translate="true">What is conductance?</link><text styleclass="Normal" translate="true">&quot;</text></para>
                     </td>
                   </tr>
                 </table></para>

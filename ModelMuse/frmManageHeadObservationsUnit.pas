@@ -152,7 +152,7 @@ var
 begin
   P1 := Item1;
   P2 := Item2;
-  result := CompareText(P1.ObsGroupName, P2.ObsGroupName);
+  result := AnsiCompareText(P1.ObsGroupName, P2.ObsGroupName);
 end;
 
 function CompareObsPred(Item1, Item2: Pointer): Integer;
@@ -179,7 +179,7 @@ var
 begin
   P1 := Item1;
   P2 := Item2;
-  result := CompareText(P1.ObjectName, P2.ObjectName);
+  result := AnsiCompareText(P1.ObjectName, P2.ObjectName);
 end;
 
 function CompareValue(Item1, Item2: Pointer): Integer;
@@ -224,7 +224,7 @@ var
 begin
   P1 := Item1;
   P2 := Item2;
-  result := CompareText(P1.ObsName, P2.ObsName);
+  result := AnsiCompareText(P1.ObsName, P2.ObsName);
 end;
 
 function CompareObservations(Item1, Item2: Pointer): Integer;
@@ -367,7 +367,7 @@ begin
       ObsEdit := FObsEdits[EditIndex];
       if rdgRowFilter.Cells[Ord(fcLow), Ord(frName)] <> '' then
       begin
-        if CompareText(ObsEdit.ObsGroupName,
+        if AnsiCompareText(ObsEdit.ObsGroupName,
           rdgRowFilter.Cells[Ord(fcLow), Ord(frName)]) < 0 then
         begin
           Continue;
@@ -375,7 +375,7 @@ begin
       end;
       if rdgRowFilter.Cells[Ord(fcHigh), Ord(frName)] <> '' then
       begin
-        if CompareText(ObsEdit.ObsGroupName,
+        if AnsiCompareText(ObsEdit.ObsGroupName,
           rdgRowFilter.Cells[Ord(fcHigh), Ord(frName)]) > 0 then
         begin
           Continue;
@@ -441,7 +441,7 @@ begin
 
       if rdgRowFilter.Cells[Ord(fcLow), Ord(frObjName)] <> '' then
       begin
-        if CompareText(ObsEdit.ObjectName,
+        if AnsiCompareText(ObsEdit.ObjectName,
           rdgRowFilter.Cells[Ord(fcLow), Ord(frObjName)]) < 0 then
         begin
           Continue;
@@ -449,7 +449,7 @@ begin
       end;
       if rdgRowFilter.Cells[Ord(fcHigh), Ord(frObjName)] <> '' then
       begin
-        if CompareText(ObsEdit.ObjectName,
+        if AnsiCompareText(ObsEdit.ObjectName,
           rdgRowFilter.Cells[Ord(fcHigh), Ord(frObjName)]) > 0 then
         begin
           Continue;
@@ -521,7 +521,7 @@ begin
 
       if rdgRowFilter.Cells[Ord(fcLow), Ord(frObsName)] <> '' then
       begin
-        if CompareText(ObsEdit.ObsName,
+        if AnsiCompareText(ObsEdit.ObsName,
           rdgRowFilter.Cells[Ord(fcLow), Ord(frObsName)]) < 0 then
         begin
           Continue;
@@ -529,7 +529,7 @@ begin
       end;
       if rdgRowFilter.Cells[Ord(fcHigh), Ord(frObsName)] <> '' then
       begin
-        if CompareText(ObsEdit.ObsName,
+        if AnsiCompareText(ObsEdit.ObsName,
           rdgRowFilter.Cells[Ord(fcHigh), Ord(frObsName)]) > 0 then
         begin
           Continue;
@@ -593,7 +593,7 @@ procedure TfrmManageHeadObservations.edObsGroupNameChange(Sender: TObject);
 begin
   inherited;
   ChangeSelectedCellsInColumn(rdgObservations, Ord(ocObsGroupName),
-    edObsGroupName.Text);
+    string(AnsiString(edObsGroupName.Text)));
 end;
 
 procedure TfrmManageHeadObservations.FormCreate(Sender: TObject);
@@ -904,7 +904,13 @@ begin
           ObsEdit := rdgObservations.Objects[
             0, ARow] as TObsEdit;
           ObsEdit.ObsGroupName
-            := rdgObservations.Cells[Ord(ocObsGroupName), ARow];
+            := string(AnsiString(rdgObservations.Cells[Ord(ocObsGroupName), ARow]));
+          if rdgObservations.Cells[Ord(ocObsGroupName), ARow]
+            <> ObsEdit.ObsGroupName then
+          begin
+            rdgObservations.Cells[Ord(ocObsGroupName), ARow]
+              := ObsEdit.ObsGroupName;
+          end;
 
           FLoaded := False;
           try
@@ -915,8 +921,12 @@ begin
               if ObsEdit.ScreenObject = AnotherObsEdit.ScreenObject then
               begin
                 AnotherObsEdit.ObsGroupName := ObsEdit.ObsGroupName;
-                rdgObservations.Cells[Ord(ocObsGroupName), RowIndex] :=
-                  ObsEdit.ObsGroupName;
+                if rdgObservations.Cells[Ord(ocObsGroupName), RowIndex]
+                  <> string(AnsiString(ObsEdit.ObsGroupName)) then
+                begin
+                  rdgObservations.Cells[Ord(ocObsGroupName), RowIndex] :=
+                    string(AnsiString(ObsEdit.ObsGroupName));
+                end;
               end;
             end;
           finally

@@ -27,7 +27,7 @@ object frameScreenObjectHydmod: TframeScreenObjectHydmod
     Top = 64
     Width = 208
     Height = 21
-    TabOrder = 1
+    TabOrder = 2
     OnExit = edHYDLBLExit
   end
   object rgINTYP: TRadioGroup
@@ -40,7 +40,7 @@ object frameScreenObjectHydmod: TframeScreenObjectHydmod
     Items.Strings = (
       'Cell value'
       'Interpolated value')
-    TabOrder = 2
+    TabOrder = 1
   end
   object gbBasic: TGroupBox
     Left = 8
@@ -68,7 +68,7 @@ object frameScreenObjectHydmod: TframeScreenObjectHydmod
     Width = 297
     Height = 230
     Caption = 'Subsidence package data'
-    TabOrder = 4
+    TabOrder = 5
     object lblLayerGroup: TLabel
       Left = 2
       Top = 96
@@ -131,7 +131,7 @@ object frameScreenObjectHydmod: TframeScreenObjectHydmod
       ImageWidth = 0
       ItemHeight = 17
       ItemIndex = -1
-      TabOrder = 2
+      TabOrder = 3
       OnChange = comboNoDelayBedChange
       Items = <>
     end
@@ -141,7 +141,7 @@ object frameScreenObjectHydmod: TframeScreenObjectHydmod
       Width = 135
       Height = 81
       ItemHeight = 13
-      TabOrder = 3
+      TabOrder = 2
     end
   end
   object gbSFR: TGroupBox
@@ -150,7 +150,7 @@ object frameScreenObjectHydmod: TframeScreenObjectHydmod
     Width = 301
     Height = 110
     Caption = 'SFR package data'
-    TabOrder = 5
+    TabOrder = 4
     object clbSFR: TCheckListBox
       Left = 2
       Top = 15

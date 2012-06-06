@@ -31,13 +31,13 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       Align = alBottom
       ColumnCollection = <
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end>
       ControlCollection = <
         item
@@ -59,7 +59,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
         item
           Value = 100.000000000000000000
         end>
-      TabOrder = 0
+      TabOrder = 1
       DesignSize = (
         135
         32)
@@ -163,7 +163,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       Indent = 20
       MultiSelect = True
       ReadOnly = True
-      TabOrder = 1
+      TabOrder = 0
       OnChange = tvHufLayersChange
     end
   end
@@ -172,7 +172,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
     Top = 0
     Width = 383
     Height = 312
-    ActivePage = tabParameters
+    ActivePage = Properties
     Align = alClient
     TabOrder = 1
     OnChange = pcMainChange
@@ -302,6 +302,10 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       HelpKeyword = 'Parameters_Tab'
       Caption = 'Parameters'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgParameters: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -453,7 +457,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
           'Vertical hydraulic conductivity (VK)'
           'Specific storage (SS)'
           'Specific yield (SY)')
-        TabOrder = 0
+        TabOrder = 1
       end
       object comboPrintFormat: TJvImageComboBox
         Left = 2
@@ -467,7 +471,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
         ImageWidth = 0
         ItemHeight = 22
         ItemIndex = 0
-        TabOrder = 1
+        TabOrder = 0
         OnChange = comboPrintFormatChange
         Items = <
           item

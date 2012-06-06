@@ -426,10 +426,15 @@ type
   { class type of the @link(TIDList) type. }
   TIDListClass = class of TIDList;
 
+  function Crc32(const AString: AnsiString): Cardinal; overload;
+  function Crc32(const AString: string): Cardinal; overload;
+
 implementation
 
 uses
-  UnitCRC;
+  JclMath;
+
+
 
 resourcestring
   strNoItem        = 'T{Name}{ID}List: Item not assigned.';
@@ -447,6 +452,25 @@ const
   CMinimumTableSize = 16;
 
 { TBaseList }
+
+function Crc32(const AString: AnsiString): Cardinal;
+var
+  ByteArray: array of Byte;
+begin
+  SetLength(ByteArray, Length(AString)*SizeOf(AnsiChar));
+  Move(AString[1], ByteArray[0], Length(ByteArray));
+  result := Crc32(ByteArray, Length(ByteArray));
+end;
+
+function Crc32(const AString: string): Cardinal;
+var
+  ByteArray: array of Byte;
+begin
+  SetLength(ByteArray, ByteLength(AString));
+  Move(AString[1], ByteArray[0], Length(ByteArray));
+  result := Crc32(ByteArray, Length(ByteArray));
+end;
+
 
 procedure TBaseList.Add(Item: TBaseItem);
   procedure RaiseNoItem;
@@ -1220,7 +1244,7 @@ end;
 
 function TNameIDList.HashName(const Name: AnsiString): Longword;
 begin
-  Result := UnitCRC.CRC32(Name);
+  Result := CRC32(Name);
 end;
 
 procedure TNameIDList.SetMinimumSize(const Value: Integer);
@@ -1438,7 +1462,7 @@ end;
 
 function TNameList.HashName(const Name: AnsiString): Longword;
 begin
-  Result := UnitCRC.CRC32(Name);
+  Result := CRC32(Name);
 end;
 
 

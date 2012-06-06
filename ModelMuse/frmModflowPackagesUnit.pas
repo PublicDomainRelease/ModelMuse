@@ -728,6 +728,7 @@ begin
   if NeedToDefineFluxObservations then
   begin
     Hide;
+//    frmGoPhast.miManageFluxObservationsClick(nil);
     ShowAForm(TfrmManageFluxObservations);
   end;
 
@@ -1936,7 +1937,7 @@ begin
   begin
     CurrentParameterType := ptGhb;
   end
-  else if jvplPackages.ActivePage = jvspLPF then
+  else if (jvplPackages.ActivePage = jvspLPF) or (jvplPackages.ActivePage = jvspUPW) then
   begin
     if tvLpfParameterTypes.Selected = nil then
     begin

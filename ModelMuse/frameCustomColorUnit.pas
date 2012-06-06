@@ -8,7 +8,7 @@ uses
   SsButtonEd, RbwStringTreeCombo, StdCtrls, ComCtrls, JvExComCtrls, JvUpDown,
   JvExControls, JvxSlider, Mask, JvExMask, JvSpin, JvExStdCtrls, JvRichEdit,
   VirtualTrees, DataSetUnit, LegendUnit, RbwParser, ClassificationUnit,
-  EdgeDisplayUnit;
+  EdgeDisplayUnit, SubscriptionUnit;
 
 type
   TEdgeDisplayEdit = class(TObject)
@@ -121,8 +121,8 @@ type
     FUpdatingLegend: Boolean;
     FStartTime: TDateTime;
     procedure UpdateLegendAfterDelay;
-    function GetLegendDataSource: TPersistent;
-    procedure SetLegendDataSource(const Value: TPersistent);
+    function GetLegendDataSource: TObserver;
+    procedure SetLegendDataSource(const Value: TObserver);
     function CanColorDataSet(DataArray: TDataArray): boolean;
     { Private declarations }
   protected
@@ -158,7 +158,7 @@ type
     procedure UpdateLegend;
     procedure Loaded; override;
   public
-    property LegendDataSource: TPersistent read GetLegendDataSource
+    property LegendDataSource: TObserver read GetLegendDataSource
       write SetLegendDataSource;
     procedure ResetTreeText;
     property SelectedVirtNode: PVirtualNode read FSelectedVirtNode;
@@ -400,7 +400,7 @@ begin
     FDataSetDummyObjects, GetSelectedArray, CanColorDataSet);
 end;
 
-function TframeCustomColor.GetLegendDataSource: TPersistent;
+function TframeCustomColor.GetLegendDataSource: TObserver;
 begin
   if FLegend = nil then
   begin
@@ -670,7 +670,7 @@ begin
   end;
 end;
 
-procedure TframeCustomColor.SetLegendDataSource(const Value: TPersistent);
+procedure TframeCustomColor.SetLegendDataSource(const Value: TObserver);
 begin
   if FLegend <> nil then
   begin
@@ -796,6 +796,10 @@ begin
           vamNoLegend: Exit;
           vamAutomatic:
             begin
+              if not FLegend.ValueSource.UpToDate then
+              begin
+                Exit;
+              end;
               FLegend.AutoAssignValues;
               case FLegend.Values.DataType of
                 rdtDouble: rdgLegend.Columns[0].Format := rcf4Real;

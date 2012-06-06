@@ -107,6 +107,10 @@ inherited frmChildModels: TfrmChildModels
     TabOrder = 1
     object tabBasic: TTabSheet
       Caption = 'Basic'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         350
         423)
@@ -461,7 +465,7 @@ inherited frmChildModels: TfrmChildModels
         Width = 344
         Height = 54
         Anchors = [akLeft, akTop, akRight]
-        Caption = 'Coupling method'
+        Caption = 'Coupling method (MXLGRITER)'
         Items.Strings = (
           'One way'
           'Two way')

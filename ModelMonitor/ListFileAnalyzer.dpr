@@ -7,7 +7,8 @@ uses
   ModflowIdentifiersUnit in 'ModflowIdentifiersUnit.pas',
   ErrorMessages in 'ErrorMessages.pas',
   frameFileListHandlerUnit in 'frameFileListHandlerUnit.pas' {frameFileListHandler: TFrame},
-  ExtractObservationsUnit in 'ExtractObservationsUnit.pas';
+  ExtractObservationsUnit in 'ExtractObservationsUnit.pas',
+  BMSearch in 'BMSearch.pas';
 
 {$R *.res}
 

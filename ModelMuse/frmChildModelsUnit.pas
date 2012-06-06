@@ -205,13 +205,20 @@ end;
 procedure TfrmChildModels.edModelNameChange(Sender: TObject);
 var
   Edit: TChildModelEdit;
+  AName: AnsiString;
+//  AName
 begin
   inherited;
   if tvChildModels.Selected <> nil then
   begin
     Edit := tvChildModels.Selected.Data;
-    Edit.ModelName := edModelName.Text;
-    tvChildModels.Selected.Text := edModelName.Text;
+    AName := AnsiString(edModelName.Text);
+    Edit.ModelName := string(AName);
+    tvChildModels.Selected.Text := string(AName);
+    if edModelName.Text <> string(AName) then
+    begin
+      edModelName.Text := string(AName);
+    end;
   end;
 end;
 

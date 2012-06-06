@@ -467,10 +467,8 @@ type
     }
   TCustomInteractiveTool = class(TComponent)
   private
-    // @name: TCursor;
     // See @link(Cursor).
     FCursor: TCursor;
-    // @name: @link(TViewDirection).
     // See @link(ViewDirection);
     FViewDirection: TViewDirection;
     // See @link(ViewDirection).
@@ -572,7 +570,7 @@ uses GR32_Polygons, frmGoPhastUnit, CursorsFoiledAgain, Math, RbwParser,
   frmScreenObjectPropertiesUnit, UndoItemsScreenObjects, frmGridAngleUnit,
   InteractiveTools, frmSetSpacingUnit, frmSubdivideUnit, BigCanvasMethods,
   frmRulerOptionsUnit, PhastModelUnit, frmGridValueUnit, EdgeDisplayUnit,
-  CustomModflowWriterUnit, frmProgressUnit, SutraMeshUnit;
+  CustomModflowWriterUnit, frmProgressUnit, SutraMeshUnit, frmDisplayDataUnit;
 
 resourcestring
   StrTheSImageCanNo = 'The %s  image can not be shown at this magnification.' +
@@ -593,7 +591,7 @@ const
   SelectedCellsColor = clSilver;
   MaxGridCorners = 4;
 var
-  FMouseIsDown: boolean;
+  GlobalMouseIsDown: boolean;
 
   { TframeTop }
 
@@ -1203,6 +1201,15 @@ begin
       if frmGoPhast.Grid <> nil then
       begin
         frmGoPhast.Grid.Draw(FBitMap32, ViewDirection);
+        if (frmGoPhast.Grid.ThreeDDataSet <> nil)
+          or (frmGoPhast.Grid.ThreeDContourDataSet <> nil) then
+        begin
+          if frmDisplayData = nil then
+          begin
+            Application.CreateForm(TfrmDisplayData, frmDisplayData);
+          end;
+          UpdateFrmDisplayData(True);
+        end;
       end;
 
       {$IFDEF Sutra}
@@ -3711,7 +3718,7 @@ end;
 
 function TCustomInteractiveTool.GetMouseIsDown: boolean;
 begin
-  result := FMouseIsDown;
+  result := GlobalMouseIsDown;
 end;
 
 procedure TCustomInteractiveTool.GetRowCol(APoint: TPoint2D; out Row,
@@ -3729,7 +3736,7 @@ end;
 procedure TCustomInteractiveTool.MouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  FMouseIsDown := True;
+  GlobalMouseIsDown := True;
 end;
 
 procedure TCustomInteractiveTool.MouseMove(Sender: TObject;
@@ -3741,7 +3748,7 @@ end;
 procedure TCustomInteractiveTool.MouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  FMouseIsDown := False;
+  GlobalMouseIsDown := False;
 end;
 
 procedure TCustomInteractiveTool.DrawOnBitMap32(Sender: TObject;

@@ -404,7 +404,7 @@ begin
 
     Inc(Row);
     Assert(Row < dgCredit.RowCount);
-    dgCredit.Cells[0, Row] := 'EZDSL: EASY DATA STRUCTURES LIBRARY FOR DELPHI';
+    dgCredit.Cells[0, Row] := 'GetClosestPrime function in HashTableFacadeUnit.pas';
     dgCredit.Cells[1, Row] := 'Julian M Bucknall';
     dgCredit.Cells[2, Row] := 'http://www.boyet.com/FixedArticles/EZDSL.html';
 
@@ -431,11 +431,11 @@ begin
 //    dgCredit.Cells[1, Row] := 'SoftComplete Development';
 //    dgCredit.Cells[2, Row] := 'http://www.softcomplete.com/freeware.asp';
 
-    Inc(Row);
-    Assert(Row < dgCredit.RowCount);
-    dgCredit.Cells[0, Row] := 'UnitList.pas, UnitCRC.pas';
-    dgCredit.Cells[1, Row] := 'ContinuIT BV';
-    dgCredit.Cells[2, Row] := 'http://www.continuit.nl/index.php?LANGUAGE=EN&PAGE=FREEWARE';
+//    Inc(Row);
+//    Assert(Row < dgCredit.RowCount);
+//    dgCredit.Cells[0, Row] := 'UnitList.pas, UnitCRC.pas';
+//    dgCredit.Cells[1, Row] := 'ContinuIT BV';
+//    dgCredit.Cells[2, Row] := 'http://www.continuit.nl/index.php?LANGUAGE=EN&PAGE=FREEWARE';
 
 //    Inc(Row);
 //    Assert(Row < dgCredit.RowCount);

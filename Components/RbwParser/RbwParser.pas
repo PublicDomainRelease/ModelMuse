@@ -14,6 +14,9 @@ interface
   {$if CompilerVersion>=20}
     {$DEFINE Delphi_2009_UP}
   {$ifend}
+  {$if CompilerVersion>=21}
+    {$DEFINE Delphi_XE_UP}
+  {$ifend}
 {$endif}
 
 uses
@@ -1966,7 +1969,11 @@ var
 
 implementation
 
-uses Math, StrUtils;
+uses
+{$IFDEF Delphi_XE_UP}
+  Character,
+{$ENDIF}
+  Math, StrUtils;
 
 resourcestring
   StrErrorARootNameM = 'Error: A root name must be supplied when generating ' +
@@ -1976,6 +1983,8 @@ resourcestring
   'ble name must be a letter or an underscore.';
   StrErrorSIsIlleg2 = 'Error: "%s" is illegal.  Variable names may only inclu' +
   'de letters, digits, or the underscore symbol.';
+  StrErrorSIsIlleg3 = 'Error: "%s" is illegal.  Variable names may only inclu' +
+  'de letters, digits, or the underscore symbol. The first character may not be a digit.';
   StrErrorAVariableNa = 'Error: A Variable named "%s" already exists.';
   StrEmptyFormula = 'empty formula';
   StrErrorUnterminated = 'Error: Unterminated string';
@@ -2135,32 +2144,41 @@ end;
 {$WARNINGS ON}
 
 procedure ValidateVariableName(const VariableName: string);
+{$IFNDEF Delphi_XE_UP}
 var
   Index: integer;
+{$ENDIF}
 begin
   if Length(VariableName) < 1 then
   begin
     raise ERbwParserError.Create(StrErrorVariablesMus);
   end;
-  {$IFDEF Delphi_2009_UP}
-  if not CharInSet(VariableName[1], ValidFirstCharacters) then
-  {$ELSE}
-  if not (VariableName[1] in ValidFirstCharacters) then
-  {$ENDIF}
+  {$IFDEF Delphi_XE_UP}
+  if not IsValidIdent(VariableName, False) then
   begin
-    raise ERbwParserError.Create(Format(StrErrorSIsIlleg, [VariableName]));
+    raise ERbwParserError.Create(Format(StrErrorSIsIlleg3, [VariableName]));
   end;
-  for Index := 2 to Length(VariableName) do
-  begin
+  {$ELSE}
     {$IFDEF Delphi_2009_UP}
-    if not CharInSet(VariableName[Index], ValidCharacters) then
+    if not CharInSet(VariableName[1], ValidFirstCharacters) then
     {$ELSE}
-    if not (VariableName[Index] in ValidCharacters) then
+    if not (VariableName[1] in ValidFirstCharacters) then
     {$ENDIF}
     begin
-      raise ERbwParserError.Create(Format(StrErrorSIsIlleg2, [VariableName]));
+      raise ERbwParserError.Create(Format(StrErrorSIsIlleg, [VariableName]));
     end;
-  end;
+    for Index := 2 to Length(VariableName) do
+    begin
+      {$IFDEF Delphi_2009_UP}
+      if not CharInSet(VariableName[Index], ValidCharacters) then
+      {$ELSE}
+      if not (VariableName[Index] in ValidCharacters) then
+      {$ENDIF}
+      begin
+        raise ERbwParserError.Create(Format(StrErrorSIsIlleg2, [VariableName]));
+      end;
+    end;
+  {$ENDIF}
 end;
 
 type
@@ -2270,7 +2288,9 @@ type
 const
   Digits: set of AnsiChar = ['0'..'9'];
   Parenthesis: set of AnsiChar = ['(', ')'];
-  WhiteSpace: set of AnsiChar = [' ', #9, #10, #13];
+{$IFNDEF DELPHI_XE_UP}
+  WhiteSpace: set of AnsiChar = [' ', #9, #10, #13, #32];
+{$ENDIF}
 
 var
   OperatorList: TObjectList;
@@ -2654,7 +2674,7 @@ var
   LastPosition: integer;
   LineIndex: integer;
   ALine: string;
-  IsWhiteSpace: boolean;
+  IsWhiteSpaceChar: boolean;
   OperatorIndex: integer;
   Operator: string;
   TestString: string;
@@ -2756,7 +2776,7 @@ begin
           // LastPosition is one space before the beginning of the current token.
           LastPosition := 0;
           ALine := Trim(ALine);
-          IsWhiteSpace := True;
+          IsWhiteSpaceChar := True;
           Skip := 0;
           for Index := 1 to Length(ALine) do
           begin
@@ -2769,26 +2789,30 @@ begin
               Continue;
             end;
             // test if this character is white space.
+            {$IFDEF Delphi_XE_UP}
+            if IsWhiteSpace(ALine, Index) then
+            {$ELSE}
             {$IFDEF Delphi_2009_UP}
             if CharInSet(ALine[Index], WhiteSpace) then
             {$ELSE}
             if ALine[Index] in WhiteSpace then
             {$ENDIF}
+            {$ENDIF}
             begin
               // if this character is white space, but the previous character wasn't
               // white space, the last character must be the end of a token.
-              if not IsWhiteSpace then
+              if not IsWhiteSpaceChar then
               begin
                 Tokens.Add(copy(ALine, LastPosition + 1, Index - LastPosition -
                   1));
               end;
-              IsWhiteSpace := True;
+              IsWhiteSpaceChar := True;
               LastPosition := Index;
               Continue;
             end
             else
             begin
-              IsWhiteSpace := False;
+              IsWhiteSpaceChar := False;
             end;
             // The current character is not white space.
             // Add parentheses to the tokens.
@@ -2859,25 +2883,6 @@ begin
                   try
                     InternalStrToFloat(Copy(ALine, LastPosition + 1, Index -
                         LastPosition));
-//                    {$IFDEF Delphi_2009_UP}
-//                    OldDecimalSeparator := FormatSettings.DecimalSeparator;
-//                    {$ELSE}
-//                    OldDecimalSeparator := DecimalSeparator;
-//                    {$ENDIF}
-//                    try
-//                      {$IFDEF Delphi_2009_UP}
-//                      FormatSettings.DecimalSeparator := '.';
-//                      {$ELSE}
-//                      DecimalSeparator := '.';
-//                      {$ENDIF}
-//                      StrToFloat();
-//                    finally
-//                      {$IFDEF Delphi_2009_UP}
-//                      FormatSettings.DecimalSeparator := OldDecimalSeparator;
-//                      {$ELSE}
-//                      DecimalSeparator := OldDecimalSeparator;
-//                      {$ENDIF}
-//                    end;
                     break;
                   except on EConvertError do
                     begin
@@ -2914,26 +2919,6 @@ begin
                 try
                   InternalStrToFloat(Copy(ALine, LastPosition + 1, Index -
                       LastPosition));
-//                  {$IFDEF Delphi_2009_UP}
-//                  OldDecimalSeparator := FormatSettings.DecimalSeparator;
-//                  {$ELSE}
-//                  OldDecimalSeparator := DecimalSeparator;
-//                  {$ENDIF}
-//                  try
-//                    {$IFDEF Delphi_2009_UP}
-//                    FormatSettings.DecimalSeparator := '.';
-//                    {$ELSE}
-//                    DecimalSeparator := '.';
-//                    {$ENDIF}
-//                    StrToFloat(Copy(ALine, LastPosition + 1, Index -
-//                      LastPosition));
-//                  finally
-//                    {$IFDEF Delphi_2009_UP}
-//                    FormatSettings.DecimalSeparator := OldDecimalSeparator;
-//                    {$ELSE}
-//                    DecimalSeparator := OldDecimalSeparator;
-//                    {$ENDIF}
-//                  end;
                   break;
                 except on EConvertError do
                   begin
@@ -3001,7 +2986,6 @@ begin
       begin
         result := FExpressions.AddObject(AString, FCurrentExpression);
         FCachedFindResult := result;
-        //FCurrentExpression.MakeLinkedList(nil);
       end;
 
     finally
@@ -3788,7 +3772,6 @@ begin
                       Length(PriorExpression.Data) - PriorExpression.FOptionalArguments,
                       Length(PriorExpression.Data)]));
                   end;
-
                 end;
               end
               else
@@ -3938,26 +3921,6 @@ begin
           result := TExpression.Create('Dummy',
             ResultConstant.ResultType, SpecialImplementorList);
           SetResultFromConstant(ResultConstant, result);
-//          case result.ResultType of
-//            rdtDouble:
-//              begin
-//                PDouble(result.FResult)^ := PDouble(ResultConstant.FResult)^;
-//              end;
-//            rdtInteger:
-//              begin
-//                PInteger(result.FResult)^ := PInteger(ResultConstant.FResult)^;
-//              end;
-//            rdtBoolean:
-//              begin
-//                PBoolean(result.FResult)^ := PBoolean(ResultConstant.FResult)^;
-//              end;
-//            rdtString:
-//              begin
-//                result.ResultString := ResultConstant.ResultString;
-//              end;
-//          else
-//            Assert(False);
-//          end;
           result.FUserName := ResultConstant.Decompile;
           ResultConstant.Free;
         end;

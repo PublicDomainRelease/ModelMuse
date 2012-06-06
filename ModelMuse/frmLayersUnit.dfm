@@ -5,7 +5,6 @@ inherited frmLayers: TfrmLayers
   ClientHeight = 424
   ClientWidth = 583
   OnResize = FormResize
-  ExplicitLeft = -51
   ExplicitWidth = 591
   ExplicitHeight = 458
   PixelsPerInch = 96
@@ -22,7 +21,7 @@ inherited frmLayers: TfrmLayers
     Top = 0
     Width = 441
     Height = 383
-    ActivePage = tabDiscretization
+    ActivePage = tabBasics
     Align = alClient
     TabOrder = 1
     OnChange = pcLayerGroupsChange
@@ -218,7 +217,7 @@ inherited frmLayers: TfrmLayers
         Height = 350
         Align = alClient
         TabOrder = 0
-        ExplicitTop = -1
+        ExplicitHeight = 350
         inherited lbl1: TLabel
           Width = 149
           Height = 18
@@ -233,29 +232,29 @@ inherited frmLayers: TfrmLayers
         end
         inherited pnlDiscritization: TPanel
           Height = 348
-          ExplicitHeight = 349
+          ExplicitHeight = 348
           inherited spl1: TSplitter
             Height = 307
+            ExplicitHeight = 307
           end
           inherited rdgSubLayerBoundaries: TRbwDataGrid4
             Height = 307
-            ExplicitWidth = 97
-            ExplicitHeight = 308
+            ExplicitHeight = 307
           end
           inherited pnl1: TPanel
-            ExplicitWidth = 185
             inherited lbl3: TLabel
+              Width = 185
+              Height = 41
               ExplicitWidth = 179
               ExplicitHeight = 36
             end
           end
           inherited pnlPaintboxParent: TPanel
             Height = 307
-            OnResize = nil
-            ExplicitLeft = 100
-            ExplicitHeight = 308
+            ExplicitHeight = 307
             inherited pbSubLayers: TPaintBox
               Height = 275
+              ExplicitHeight = 275
             end
             inherited grdpnl1: TGridPanel
               Top = 275
@@ -275,13 +274,13 @@ inherited frmLayers: TfrmLayers
                   Control = frameDiscretization.sbDeleteLine
                   Row = 0
                 end>
-              ExplicitTop = 276
+              ExplicitTop = 275
             end
           end
         end
         inherited rgMethod: TRadioGroup
           Height = 232
-          ExplicitHeight = 233
+          ExplicitHeight = 232
         end
       end
     end
@@ -623,13 +622,13 @@ inherited frmLayers: TfrmLayers
       Align = alBottom
       ColumnCollection = <
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end>
       ControlCollection = <
         item

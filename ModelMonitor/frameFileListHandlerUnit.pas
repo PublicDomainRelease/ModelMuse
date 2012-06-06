@@ -16,7 +16,7 @@ type
     FCount: integer;
     { Private declarations }
   public
-    Memo: TMemo;
+    Memo: TRichEdit;
     ListFile: TFileIndex;
     LineCountToRead: TJvSpinEdit;
     procedure Initialize;
@@ -25,6 +25,7 @@ type
     destructor Destroy; override;
     procedure AddLines;
     procedure InsertLines;
+    procedure GoToLine(LineNumber: Integer);
     { Public declarations }
   end;
 
@@ -119,23 +120,30 @@ begin
   Memo.SetFocus;
 end;
 
+procedure TframeFileListHandler.GoToLine(LineNumber: Integer);
+begin
+  FCount := LineCountToRead.AsInteger;
+  Memo.Lines.BeginUpdate;
+  try
+    ListFile.ReadLines(Memo.Lines, LineNumber, FCount);
+  finally
+    Memo.Lines.EndUpdate;
+  end;
+  FCount := Memo.Lines.Count;
+end;
+
 procedure TframeFileListHandler.redtIndexDblClick(Sender: TObject);
 var
   StartIndex: Integer;
+  LineNumber: Integer;
 begin
   Assert(Memo <> nil);
   Assert(ListFile <> nil);
   Assert(LineCountToRead <> nil);
   StartIndex := FLineNumbers[redtIndex.ActiveLineNo];
   FStartPosition := Max(0, StartIndex - 10);
-  FCount := LineCountToRead.AsInteger;
-  Memo.Lines.BeginUpdate;
-  try
-    ListFile.ReadLines(Memo.Lines, FStartPosition, FCount);
-  finally
-    Memo.Lines.EndUpdate;
-  end;
-  FCount := Memo.Lines.Count;
+  LineNumber := FStartPosition;
+  GoToLine(LineNumber);
   Memo.CaretPos := Point(0,StartIndex-FStartPosition);
   Memo.SelLength := 2;
   Memo.SetFocus;

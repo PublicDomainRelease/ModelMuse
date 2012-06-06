@@ -20,7 +20,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="34" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="18" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.usgs.gov/tm/2006/tm6a12/" target="_blank" styleclass="Citation" translate="true">Mehl, S.W. and Hill, M.C., 2005, MODFLOW-2005, the U.S. Geological Survey modular ground-water model -- documentation of shared node local grid refinement (LGR) and the Boundary Flow and Head (BFH) Package: U.S. Geological Survey Techniques and Methods 6-A12, 68 p.</link></li>
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.usgs.gov/tm/2007/06A21/" target="_blank" styleclass="Citation" translate="true">Mehl, S.W. and Hill, M.C., 2007, MODFLOW-2005, the U.S. Geological Survey modular ground-water model -- documentation of the multiple-refined-areas capability of local grid refinement (LGR) and the Boundary Flow and Head (BFH) Package: U.S. Geological Survey Techniques and Methods 6-A21. 13 p.</link></li>
           </list>
@@ -31,7 +31,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Related Packages</text></para>
         </td>
         <td>
-          <list id="35" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="19" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="BFH_-_Boundary_Flow_and_Head_P" styleclass="Normal" translate="true">BFH</link><text styleclass="Normal" translate="true"> Package</text></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" styleclass="Normal" translate="true">SFR</link><text styleclass="Normal" translate="true"> Package</text></li>
           </list>
@@ -132,7 +132,7 @@
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">GRIDSTATUS is a character variable and indicates whether the file listed in NAME FILE corresponds to a parent or child grid.</text></para>
-                <list id="36" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                <list id="20" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">If GRIDSTATUS = </text><text styleclass="Keywords" translate="true">PARENTONLY</text><text styleclass="Normal" translate="true">, then it is a parent grid </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">Name File</link><text styleclass="Normal" translate="true">.</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">If GRIDSTATUS = </text><text styleclass="Keywords" translate="true">CHILDONLY</text><text styleclass="Normal" translate="true">, then it is a child grid </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">Name File</link><text styleclass="Normal" translate="true">.</text></li>
                 </list>
@@ -202,7 +202,7 @@
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">GRIDSTATUS is a character variable and indicates whether the file listed in NAME FILE corresponds to a parent or child grid.</text></para>
-                <list id="37" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                <list id="21" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">If GRIDSTATUS = </text><text styleclass="Keywords" translate="true">PARENTONLY</text><text styleclass="Normal" translate="true">, then it is a parent grid </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">Name File</link><text styleclass="Normal" translate="true">.</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">If GRIDSTATUS = </text><text styleclass="Keywords" translate="true">CHILDONLY</text><text styleclass="Normal" translate="true">, then it is a child grid </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">Name File</link><text styleclass="Normal" translate="true">.</text></li>
                 </list>
@@ -226,7 +226,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">ISHFLG is a flag indicating whether heads from the parent grid simulation should be used as the starting head for the child grid simulation. These heads apply to the interior of the child, not the boundary.</text></para>
-                      <list id="38" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="22" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISHFLG = 1, then use results of the parent grid simulation as the starting head for the child grid. In the cells of the child grid that overlap the parent grid, the heads of the corresponding parent cell are used. No interpolation is applied. For steady-state simulations, this can provide a good initial guess which can reduce computational time. For transient simulations, this overwrites the initial condition of the child model defined in </text><link displaytype="text" defaultstyle="true" type="topiclink" href="BAS6" anchor="STRT" styleclass="Normal" translate="true">STRT</link><text styleclass="Normal" translate="true"> of the Basic Package input file (Harbaugh, 2005) and, therefore, is not recommended.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISHFLG = 0, then use the heads defined in </text><link displaytype="text" defaultstyle="true" type="topiclink" href="BAS6" anchor="STRT" styleclass="Normal" translate="true">STRT</link><text styleclass="Normal" translate="true"> of the Basic Package for the child grid.</text></li>
                       </list>
@@ -245,7 +245,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">IUCBHSV – A number greater than zero that corresponds to the unit number where the boundary heads are saved for later use by the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="BFH_-_Boundary_Flow_and_Head_P" styleclass="Normal" translate="true">BFH</link><text styleclass="Normal" translate="true"> Package for independent simulations. A file with this unit number needs to be opened in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">Name File</link><text styleclass="Normal" translate="true"> of the child model. A value of zero indicates that the file is not written. For the child model, these are the coupling boundary conditions (see Appendix 2 of Mehl and Hill, 2005).</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">IUCBHSV – A number greater than zero that corresponds to the unit number where the boundary heads are saved for later use by the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="BFH_-_Boundary_Flow_and_Head_P" styleclass="Normal" translate="true">BFH</link><text styleclass="Normal" translate="true"> Package for independent simulations. A file with this unit number needs to be opened in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">Name File</link><text styleclass="Normal" translate="true"> of the child model. A value of zero indicates that the file is not written. For the child model, these are the coupling boundary conditions (see Appendix 2 of Mehl and Hill, 2005). </text><text styleclass="New Materials" translate="true">Note: the boundary heads are only saved if two-way coupling is used. (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="LGR_Control_File" styleclass="New Materials" translate="true">MXLGRITER</link><text styleclass="New Materials" translate="true"> &gt; 1)</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -253,7 +253,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">IUCBFSV – A number greater than zero that corresponds to the unit number where the boundary fluxes are saved for later use by the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="BFH_-_Boundary_Flow_and_Head_P" styleclass="Normal" translate="true">BFH</link><text styleclass="Normal" translate="true"> Package for independent simulations. A file with this unit number needs to be opened in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">Name File</link><text styleclass="Normal" translate="true"> of the child model. A value of zero indicates that the file is not written. For the child model, these are the complementary boundary conditions (see Appendix 2 of Mehl and Hill, 2005).</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">IUCBFSV – A number greater than zero that corresponds to the unit number where the boundary fluxes are saved for later use by the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="BFH_-_Boundary_Flow_and_Head_P" styleclass="Normal" translate="true">BFH</link><text styleclass="Normal" translate="true"> Package for independent simulations. A file with this unit number needs to be opened in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">Name File</link><text styleclass="Normal" translate="true"> of the child model. A value of zero indicates that the file is not written. For the child model, these are the complementary boundary conditions (see Appendix 2 of Mehl and Hill, 2005). &#160;</text><text styleclass="New Materials" translate="true">Note: the boundary fluxes are only saved if two-way coupling is used. (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="LGR_Control_File" styleclass="New Materials" translate="true">MXLGRITER</link><text styleclass="New Materials" translate="true"> &gt; 1)</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -276,7 +276,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">MXLGRITER is the maximum number of LGR iterations; 20 iterations are sufficient for most problems. See Closure Criteria for LGR Iterations section of the report by Mehl and Hill (2005). Set MXLGRITER to 1 for a one-way coupling.</text></para>
+                      <para styleclass="Normal"><anchor id="MXLGRITER" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">MXLGRITER is the maximum number of LGR iterations; 20 iterations are sufficient for most problems. See Closure Criteria for LGR Iterations section of the report by Mehl and Hill (2005). Set MXLGRITER to 1 for a one-way coupling.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -285,7 +285,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="IOUTLGR" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">IOUTLGR is a flag that controls printing from LGR iterations of the maximum head and flux change. For the maximum head change, the head value and corresponding layer, row, and column of the child grid is listed. For the maximum flux change, the flux value and corresponding layer, row, and column of the parent grid is listed. </text></para>
-                      <list id="39" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="23" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IOUTLGR &lt; 0, output is written to the screen. </text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IOUTLGR &gt; 0, output is written to the child listing file. </text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IOUTLGR = 0, no results are written.</text></li>

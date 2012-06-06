@@ -353,7 +353,7 @@ begin
               ValueLength := Length(StringValue);
               Compressor.Write(ValueLength, SizeOf(ValueLength));
               Compressor.WriteBuffer(Pointer(StringValue)^,
-                Length(StringValue) * SizeOf(Char));
+                ByteLength(StringValue));
             end;
           end;
       end;

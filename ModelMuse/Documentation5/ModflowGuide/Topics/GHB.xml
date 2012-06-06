@@ -316,6 +316,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">Condfact—is the factor used to calculate hydraulic conductance from the parameter value. The conductance is the product of Condfact and the parameter value.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">See also &quot;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="Frequently_Asked_Questions" anchor="Conductance" styleclass="Normal" translate="true">What is conductance?</link><text styleclass="Normal" translate="true">&quot;</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -383,6 +384,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">Cond—is the hydraulic conductance of the interface between the aquifer cell and the boundary.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">See also &quot;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="Frequently_Asked_Questions" anchor="Conductance" styleclass="Normal" translate="true">What is conductance?</link><text styleclass="Normal" translate="true">&quot;</text></para>
                     </td>
                   </tr>
                 </table></para>

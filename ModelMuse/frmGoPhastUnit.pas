@@ -344,6 +344,9 @@ type
     miRunMt3dmsPopup: TMenuItem;
     acSutraActive: TAction;
     SUTRA1: TMenuItem;
+    acSutraLayers: TAction;
+    N10: TMenuItem;
+    SUTRALayerGroups1: TMenuItem;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -454,6 +457,7 @@ type
     procedure acSutraActiveExecute(Sender: TObject);
     procedure sdShapefileShow(Sender: TObject);
     procedure sdShapefileClose(Sender: TObject);
+    procedure acSutraLayersExecute(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -1707,7 +1711,7 @@ uses
   frmImportAsciiRasterUnit, CustomModflowWriterUnit, ModflowUnitNumbers,
   ZoneBudgetWriterUnit, ModflowHobUnit, frmDisplayDataUnit, IOUtils,
   ReadPvalUnit, ModflowParameterUnit, OrderedCollectionUnit, ReadGlobalsUnit,
-  GlobalVariablesUnit, SutraMeshUnit;
+  GlobalVariablesUnit, SutraMeshUnit, frmSutraLayersUnit;
 
 resourcestring
   StrModelMate = 'ModelMate';
@@ -1805,6 +1809,10 @@ resourcestring
   StrCombinedModel = 'Combined model';
   StrMODFLOW = 'MODFLOW';
   StrThisModelDoesntH = 'This model doesn''t have any images.';
+  StrTheXmlFileYouAr = 'The .xml file you are trying to open is not a valid ' +
+  'file for ModelMuse.';
+  StrSorryTheFileName = 'Sorry. The file name must be in ASCII characters. ' +
+  'Please try again.';
 
 
 {$R *.dfm}
@@ -1816,13 +1824,15 @@ var
   // @name represents the date of the current version of
   // MODFLOW-2005. It is set in the initialization section.
   Mf2005Date: TDateTime;
+  ModelMateDate: TDateTime;
+  MfNwtDate: TDateTime;
 
 const
-  MfNwtDate = 40933; //40907;//40819;
+//  MfNwtDate = 40933; //40907;//40819;
   MfLgrDate = 40315;
   Modpath5Date = 39748;
   zonebudDate = 39925;
-  ModelMateDate = 40669;
+//  ModelMateDate = 40669;
   M53dmsDate = 40230;
 
 var
@@ -2422,6 +2432,13 @@ begin
   end;
   if sdZonebudgetInput.Execute then
   begin
+    if sdZonebudgetInput.FileName <>
+      string(AnsiString(sdZonebudgetInput.FileName)) then
+    begin
+      Beep;
+      MessageDlg(StrSorryTheFileName, mtError, [mbOK], 0);
+      Exit;
+    end;
     if not TestZoneBudgetLocationOK or not ZoneBudgetUpToDate then
     begin
       Exit;
@@ -2506,6 +2523,7 @@ begin
 
   {$IFNDEF SUTRA}
   acSutraActive.Visible := False;
+  acSutraLayers.Visible := False;
   {$ENDIF}
 
   frameTopView.miEditSelectedObjects.Action := acEditSelecteObjects;
@@ -3884,6 +3902,12 @@ begin
     UndoStack.Submit(TUndoModelSelectionChange.Create(msSutra));
   end;
   {$ENDIF}
+end;
+
+procedure TfrmGoPhast.acSutraLayersExecute(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmSutraLayers);
 end;
 
 procedure TfrmGoPhast.acDisplayDataExecute(Sender: TObject);
@@ -6289,7 +6313,11 @@ end;
 
 procedure TfrmGoPhast.acEditDataSetsExecute(Sender: TObject);
 begin
-  ShowAForm(TfrmDataSets);
+  if frmDataSets = nil then
+  begin
+    frmDataSets := TfrmDataSets.Create(nil);
+  end;
+  frmDataSets.Show;
 end;
 
 procedure TfrmGoPhast.UpdateDataSetDimensions;
@@ -6397,6 +6425,7 @@ end;
 function TfrmGoPhast.GetCanDraw: boolean;
 begin
   result := FCanDraw and not FReadingFile
+    and (PhastModel <> nil)
     and (PhastModel.DataSetUpdateCount = 0)
     and (FSupressDrawing = 0);
 end;
@@ -6535,6 +6564,14 @@ end;
 procedure TfrmGoPhast.miManageFluxObservationsClick(Sender: TObject);
 begin
   inherited;
+//  if PhastModel.Mt3dmsIsSelected
+//    and (PhastModel.MobileComponents.Count = 0)
+//    and (PhastModel.ImmobileComponents.Count = 0) then
+//  begin
+//    Beep;
+//    MessageDlg(StrYouMustDefineAtL, mtError, [mbOK], 0);
+//    Exit;
+//  end;
   ShowAForm(TfrmManageFluxObservations);
 end;
 
@@ -7212,7 +7249,13 @@ begin
                 end;
               ffXML:
                 begin
-                  rwObjectXMLToBinary(FFileStream, TempStream);
+                  try
+                    rwObjectXMLToBinary(FFileStream, TempStream);
+                  except
+                    Beep;
+                    MessageDlg(StrTheXmlFileYouAr, mtError, [mbOK], 0);
+                    Exit;
+                  end;
                 end;
               ffZLib:
                 begin
@@ -7439,6 +7482,12 @@ procedure TfrmGoPhast.acFileSaveAsExecute(Sender: TObject);
 begin
   if sdSaveDialog.Execute then
   begin
+    if sdSaveDialog.FileName <> string(AnsiString(sdSaveDialog.FileName)) then
+    begin
+      Beep;
+      MessageDlg(StrSorryTheFileName, mtError, [mbOK], 0);
+      Exit;
+    end;
     acFileSaveExecute(Sender);
     Caption := StrModelName + ': ' + sdSaveDialog.FileName;
     sdPhastInput.FileName := ChangeFileExt(sdSaveDialog.FileName,
@@ -8234,6 +8283,12 @@ begin
   InitializeModflowInputDialog;
   if sdModflowInput.Execute then
   begin
+    if sdModflowInput.FileName <> string(AnsiString(sdModflowInput.FileName)) then
+    begin
+      Beep;
+      MessageDlg(StrSorryTheFileName, mtError, [mbOK], 0);
+      Exit;
+    end;
     if sdModflowInput.FileName <>
       PhastModel.FixFileName(sdModflowInput.FileName) then
     begin
@@ -8396,6 +8451,12 @@ begin
   sdModelMate.FileName := PhastModel.ModelMateProjectFileName;
   if sdModelMate.Execute then
   begin
+    if sdModelMate.FileName <> string(AnsiString(sdModelMate.FileName)) then
+    begin
+      Beep;
+      MessageDlg(StrSorryTheFileName, mtError, [mbOK], 0);
+      Exit;
+    end;
     if not DirectoryExists(ExtractFileDir(sdModelMate.FileName)) then
     begin
       Beep;
@@ -8561,6 +8622,12 @@ begin
   end;
   if sdModpathInput.Execute then
   begin
+    if sdModpathInput.FileName <> string(AnsiString(sdModpathInput.FileName)) then
+    begin
+      Beep;
+      MessageDlg(StrSorryTheFileName, mtError, [mbOK], 0);
+      Exit;
+    end;
     if not TestModpathLocationOK or not ModpathUpToDate then
     begin
       Exit;
@@ -8616,6 +8683,12 @@ begin
   end;
   if sdPhastInput.Execute then
   begin
+    if sdPhastInput.FileName <> string(AnsiString(sdPhastInput.FileName)) then
+    begin
+      Beep;
+      MessageDlg(StrSorryTheFileName, mtError, [mbOK], 0);
+      Exit;
+    end;
     // remove multiple file extensions
     FileName := ChangeFileExt(sdPhastInput.FileName, '');
     FileName := ChangeFileExt(FileName, '');
@@ -9011,6 +9084,12 @@ begin
   InitializeModflowLgrInputDialog;
   if sdModflowLgr.Execute then
   begin
+    if sdModflowLgr.FileName <> string(AnsiString(sdModflowLgr.FileName)) then
+    begin
+      Beep;
+      MessageDlg(StrSorryTheFileName, mtError, [mbOK], 0);
+      Exit;
+    end;
     if sdModflowLgr.FileName <>
       PhastModel.FixFileName(sdModflowLgr.FileName) then
     begin
@@ -9174,6 +9253,12 @@ begin
 
   if dlgSaveMt3dms.Execute then
   begin
+    if dlgSaveMt3dms.FileName <> string(AnsiString(dlgSaveMt3dms.FileName)) then
+    begin
+      Beep;
+      MessageDlg(StrSorryTheFileName, mtError, [mbOK], 0);
+      Exit;
+    end;
     if not TestMt3dmsLocationOK or not Mt3dmsUpToDate then
     begin
       Exit;
@@ -9631,6 +9716,8 @@ end;
 
 initialization
   Mf2005Date := EncodeDate(2012,4,24);
+  ModelMateDate := EncodeDate(2012,6,4);
+  MfNwtDate := EncodeDate(2012,5,14);
 
 
 end.

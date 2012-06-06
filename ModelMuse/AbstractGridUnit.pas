@@ -1392,6 +1392,8 @@ begin
   begin
     Exit;
   end;
+  // Force update of cell elevations.
+//  HighestElevation;
   case ViewDirection of
     vdTop:
       begin
@@ -1408,6 +1410,15 @@ begin
   else
     Assert(False);
   end;
+//  if (ThreeDDataSet <> nil)
+//    or (ThreeDContourDataSet <> nil) then
+//  begin
+//    if frmDisplayData = nil then
+//    begin
+//      Application.CreateForm(TfrmDisplayData, frmDisplayData);
+//    end;
+//    UpdateFrmDisplayData(True);
+//  end;
 end;
 
 function ConvertTop2D_Point(const ZoomBox: TQRbwZoomBox2;
@@ -7363,11 +7374,15 @@ begin
     end;
   end;
 
+//  // Force update of cell elevations.
+//  HighestElevation;
+
   if frmGoPhast.tbShell.Down and
     (FNeedToRedraw3d or not FRecordedShell) then
   begin
     // Record display lists of the
     // grid shell, Side, Front, and Top.
+
     RecordShell;
     FRecordedShell := True;
   end;
@@ -7455,7 +7470,7 @@ begin
   result := FDraw3DAllowed and (ColumnCount >= 1) and (RowCount >= 1)
     and (LayerCount >= 1)
     and (FLayerUpdate = 0) and (FColumnUpdate = 0) and (FGridUpdate = 0)
-    and (FRowUpdate = 0) and frmGoPhast.CanDraw;
+    and (FRowUpdate = 0) and (frmGoPhast <> nil) and frmGoPhast.CanDraw;
 end;
 
 procedure TCustomModelGrid.ViewsChanged;

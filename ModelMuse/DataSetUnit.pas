@@ -484,7 +484,8 @@ type
     FTempFileName: string;
     // When values are beginning to be assigned to a @classname,
     // @name is set to to the current time.
-    procedure UpdateDialogBoxes;
+//    procedure UpdateDialogBoxes;
+
     // See @link(EvaluatedAt).
     procedure SetEvaluatedAt(const Value: TEvaluatedAt); virtual;
     procedure DefineProperties(Filer: TFiler); override;
@@ -494,11 +495,13 @@ type
     // @name returns the dimensions of the @classname.
     procedure GetLimits(out ColLimit, RowLimit, LayerLimit: Integer);
     // @name reads the data that has been previously stored in a temporary file.
+    // @seealso(StoreData)
     procedure ReadData(DecompressionStream: TDecompressionStream); virtual;
     // @name returns the dimensions of the @classname and the number of values
     // stored in the @classname.
     procedure CountValues(out LayerLimit, RowLimit, ColLimit, Count: Integer);
     // @name stores the data in @classname to a temporary file.
+    // @seealso(ReadData)
     procedure StoreData(Stream: TStream); virtual;
     // @name restores the dimensions of the @classname to what they should be.
     procedure RestoreArraySize;
@@ -1696,24 +1699,24 @@ begin
   end;
 end;
 
-procedure TDataArray.UpdateDialogBoxes;
-var
-  Grid: TCustomModelGrid;
-begin
-  Grid := (FModel as TCustomModel).Grid;
-  if Grid <> nil then
-  begin
-    if (Grid.ThreeDContourDataSet = self)
-      or (Grid.ThreeDContourDataSet = self) then
-    begin
-      if frmDisplayData = nil then
-      begin
-        Application.CreateForm(TfrmDisplayData, frmDisplayData);
-      end;
-      UpdateFrmDisplayData(True);
-    end;
-  end;
-end;
+//procedure TDataArray.UpdateDialogBoxes;
+//var
+//  Grid: TCustomModelGrid;
+//begin
+//  Grid := (FModel as TCustomModel).Grid;
+//  if Grid <> nil then
+//  begin
+//    if (Grid.ThreeDDataSet = self)
+//      or (Grid.ThreeDContourDataSet = self) then
+//    begin
+//      if frmDisplayData = nil then
+//      begin
+//        Application.CreateForm(TfrmDisplayData, frmDisplayData);
+//      end;
+//      UpdateFrmDisplayData(True);
+//    end;
+//  end;
+//end;
 
 procedure TDataArray.UpdateNotifiers;
 var
@@ -2630,7 +2633,7 @@ begin
     end;
   end;
   CheckIfUniform;
-  UpdateDialogBoxes;
+//  UpdateDialogBoxes;
 end;
 
 procedure TDataArray.Invalidate;
@@ -4359,7 +4362,7 @@ begin
 
                 rdtBoolean: BoooleanValues[Count] :=
                   BooleanData[LayerIndex, RowIndex, ColIndex];
-                    
+
                 rdtString: StringValues.Add(
                   StringData[LayerIndex, RowIndex, ColIndex]);
                 Else Assert(False);
@@ -4374,13 +4377,14 @@ begin
     UnicodeKey := -1;
     Stream.Write(UnicodeKey, SizeOf(UnicodeKey));
     Stream.Write(AnnCount, SizeOf(AnnCount));
+//    LocalAnnotatations.SaveToStream(Stream);
     for Index := 0 to LocalAnnotatations.Count - 1 do
     begin
       LocalAnnotation := LocalAnnotatations[Index];
       AnnSize := Length(LocalAnnotation);
       Stream.Write(AnnSize, SizeOf(AnnSize));
       Stream.WriteBuffer(Pointer(LocalAnnotation)^,
-        Length(LocalAnnotation) * SizeOf(Char));
+        ByteLength(LocalAnnotation));
     end;
     Stream.Write(Count, SizeOf(Count));
     if Count > 0 then
@@ -4395,12 +4399,13 @@ begin
         rdtBoolean: Stream.Write(BoooleanValues[0], Count*SizeOf(Boolean));
         rdtString:
           begin
+//            StringValues.SaveToStream(Stream);
             for Index := 0 to StringValues.Count - 1 do
             begin
               StringValue := StringValues[Index];
               ValueLength := Length(StringValue);
               Stream.Write(ValueLength, SizeOf(ValueLength));
-              Stream.WriteBuffer(Pointer(StringValue)^, Length(StringValue) * SizeOf(Char));
+              Stream.WriteBuffer(Pointer(StringValue)^, ByteLength(StringValue));
             end;
           end;
         else Assert(False);
@@ -4997,7 +5002,7 @@ begin
   PostInitialize;
 
   UpToDate := True;
-  UpdateDialogBoxes;
+//  UpdateDialogBoxes;
 end;
 
 procedure TCustomSparseDataSet.Invalidate;

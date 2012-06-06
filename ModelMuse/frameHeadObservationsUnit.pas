@@ -25,6 +25,7 @@ type
     procedure rgMultiObsMethodClick(Sender: TObject);
     procedure rdgObservationsSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean); override;
+    procedure edObsNameExit(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -97,6 +98,12 @@ begin
       end;
     else Assert(False);
   end;
+end;
+
+procedure TframeHeadObservations.edObsNameExit(Sender: TObject);
+begin
+  inherited;
+  edObsName.Text := string(AnsiString(edObsName.Text));
 end;
 
 procedure TframeHeadObservations.GetData(List: TScreenObjectEditCollection);

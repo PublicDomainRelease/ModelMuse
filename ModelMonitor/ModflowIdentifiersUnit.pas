@@ -3,12 +3,12 @@ unit ModflowIdentifiersUnit;
 interface
 
 uses
-  Classes;
+  Classes, ErrorMessages;
 
 var
-  PackageIdentifiers: TStringList;
-  ObsIdentifiers: TStringList;
-  BoundaryIdentifiers: TStringList;
+  PackageIdentifiers: TAnsiStringList;
+  ObsIdentifiers: TAnsiStringList;
+  BoundaryIdentifiers: TAnsiStringList;
 
 const
   StressPeriodID1 = 'STRESS PERIOD NO. ';
@@ -30,7 +30,7 @@ implementation
 
 Procedure InitializePackageIdentifiers;
 begin
-  PackageIdentifiers := TStringList.Create;
+  PackageIdentifiers := TAnsiStringList.Create;
   PackageIdentifiers.Add('BAS -- BASIC PACKAGE');
   PackageIdentifiers.Add('BCF -- BLOCK-CENTERED FLOW PACKAGE');
   PackageIdentifiers.Add('CHD -- TIME-VARIANT SPECIFIED-HEAD OPTION');
@@ -75,7 +75,7 @@ end;
 
 Procedure InitializeObsIdentifiers;
 begin
-  ObsIdentifiers:= TStringList.Create;
+  ObsIdentifiers:= TAnsiStringList.Create;
   ObsIdentifiers.Add(StrHEADANDDRAWDOWNOB);
   ObsIdentifiers.Add('CONSTANT HEAD FLOW OBSERVATIONS');
   ObsIdentifiers.Add('DRAIN FLOW OBSERVATIONS');
@@ -86,7 +86,7 @@ end;
 
 procedure InitializeBoundaryIdentifiers;
 begin
-  BoundaryIdentifiers := TStringList.Create;
+  BoundaryIdentifiers := TAnsiStringList.Create;
   BoundaryIdentifiers.Add('REUSING ');
   BoundaryIdentifiers.Add('WELL NO.  LAYER   ROW   COL   STRESS RATE');
   BoundaryIdentifiers.Add('DRAIN NO.  LAYER   ROW   COL     DRAIN EL.  CONDUCTANCE');

@@ -290,7 +290,7 @@ begin
   begin
     Assert(FSelectedTreeNodes.Count = 1);
     HufUnit := FSelectedUnits[0];
-    HufUnit.HufName := edHydrogeologicUnitName.Text;
+    HufUnit.HufName := string(AnsiString(edHydrogeologicUnitName.Text));
     Node := FSelectedTreeNodes[0];
     Node.Text := HufUnit.HufName;
   end;

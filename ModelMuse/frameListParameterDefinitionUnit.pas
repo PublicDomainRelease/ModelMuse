@@ -152,18 +152,32 @@ procedure TframeListParameterDefinition.dgParametersSetEditText(Sender: TObject;
 var
   Parameter: TModflowParameter;
   NewValue: double;
+  NewStringValue: AnsiString;
 begin
   inherited;
   Parameter := dgParameters.Objects[0,ARow] as TModflowParameter;
   if Parameter = nil then
   begin
+
+    if (ARow > 0) and (TParameterColumns(ACol) = pcName) then
+    begin
+      NewStringValue := AnsiString(Value);
+      if string(NewStringValue) <> Value then
+      begin
+        dgParameters.Cells[ACol,ARow] := string(NewStringValue);
+      end;
+    end;
     Exit;
   end;
   
   case TParameterColumns(ACol) of
     pcName:
       begin
-        Parameter.ParameterName := Value;
+        Parameter.ParameterName := string(AnsiString(Value));
+        if Parameter.ParameterName <> Value then
+        begin
+          dgParameters.Cells[0,ARow] := Parameter.ParameterName;
+        end;
       end;
     pcValue:
       begin

@@ -3,7 +3,7 @@ unit LegendUnit;
 interface
 
 uses Classes, GoPhastTypes, ColorSchemes, DataSetUnit, ValueArrayStorageUnit,
-  Math, Graphics, SysUtils, EdgeDisplayUnit, Types;
+  Math, Graphics, SysUtils, EdgeDisplayUnit, Types, SubscriptionUnit;
 
 type
   TLegendType = (ltColor, ltContour);
@@ -17,7 +17,7 @@ type
     FLegendType: TLegendType;
     FValues: TValueArrayStorage;
     FValueAssignmentMethod: TValueAssignmentMethod;
-    FValueSource: TPersistent;
+    FValueSource: TObserver;
     FEdgeDataToPlot: integer;
     FFractions: TValueArrayStorage;
     StringValues: TStringList;
@@ -26,7 +26,7 @@ type
     procedure SetLegendType(const Value: TLegendType);
     procedure SetValues(const Value: TValueArrayStorage);
     procedure SetValueAssignmentMethod(const Value: TValueAssignmentMethod);
-    procedure SetValueSource(const Value: TPersistent);
+    procedure SetValueSource(const Value: TObserver);
     procedure HasChanged(Sender: TObject);
     procedure SetEdgeDataToPlot(const Value: integer);
     procedure GetStringValues(StringValues: TStringList; DataArray: TDataArray);
@@ -41,7 +41,7 @@ type
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
-    property ValueSource: TPersistent read FValueSource write SetValueSource;
+    property ValueSource: TObserver read FValueSource write SetValueSource;
     procedure AutoAssignValues;
     procedure AssignFractions;
     procedure Draw(Canvas: TCanvas; StartX, StartY: integer;
@@ -978,7 +978,7 @@ begin
   FValues.Assign(Value);
 end;
 
-procedure TLegend.SetValueSource(const Value: TPersistent);
+procedure TLegend.SetValueSource(const Value: TObserver);
 begin
   if FValueSource <> Value then
   begin

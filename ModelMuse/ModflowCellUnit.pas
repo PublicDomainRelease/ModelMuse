@@ -155,7 +155,7 @@ var
 begin
   StringLength := Length(Value);
   WriteCompInt(Stream, StringLength);
-  Stream.WriteBuffer(Pointer(Value)^, StringLength * SizeOf(Char));
+  Stream.WriteBuffer(Pointer(Value)^, ByteLength(Value));
 end;
 
 function ReadCompStringSimple(Stream: TStream): string;
@@ -358,14 +358,10 @@ end;
 
 procedure TValueCellList.Restore(Start: integer = 0);
 var
-//  TempFile: TTempFileStream;
   DecompressionStream: TDecompressionStream;
   ValueCell: TValueCell;
-//  Index: Integer;
   LocalCount : integer;
-//  CacheFileName: string;
   CellIndex: Integer;
-//  SumOfLocalCounts: integer;
   Annotations: TStringList;
   StringIndex: Integer;
   StringCount: Integer;

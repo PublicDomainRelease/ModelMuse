@@ -103,9 +103,9 @@ type
 implementation
 
 uses
-  UnitCRC, Contnrs, LayerStructureUnit, ModflowSubsidenceDefUnit, DataSetUnit,
+  Contnrs, LayerStructureUnit, ModflowSubsidenceDefUnit, DataSetUnit,
   GoPhastTypes, RbwParser, ModflowUnitNumbers, frmProgressUnit,
-  frmErrorsAndWarningsUnit, Forms;
+  frmErrorsAndWarningsUnit, Forms, JclMath;
 
 resourcestring
   StrSubsidenceNotSuppo = 'Subsidence not supported with MODFLOW-LGR';
@@ -129,8 +129,12 @@ resourcestring
   StrWritingDataSet16 = '  Writing Data Set 16.';
 
 function TMaterialZone.ID: Integer;
+var
+  ByteArray: array of Byte;
 begin
-  result := Integer(CRC32(self, SizeOf(TMaterialZone)));
+  SetLength(ByteArray, SizeOf(TMaterialZone));
+  Move(self, ByteArray[0], SizeOf(TMaterialZone));
+  result := Integer(CRC32(ByteArray, SizeOf(TMaterialZone)));
 end;
 
 class operator TMaterialZone.NotEqual(Var1, Var2: TMaterialZone): boolean;
@@ -501,7 +505,7 @@ begin
         StrTheRestartFileSav);
     end;
     WriteToNameFile(StrDATABINARY, IDREST,
-      ReadRestartFileName, foInput, True);
+      ReadRestartFileName, foInputAlreadyExists, True);
   end;
 
   WriteInteger(ISUBCB);

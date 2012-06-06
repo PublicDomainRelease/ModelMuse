@@ -25,11 +25,11 @@ uses Windows, Types, GuiSettingsUnit, SysUtils, Classes, Contnrs, Controls,
   ModflowTransientListParameterUnit, GlobalVariablesUnit, OrderedCollectionUnit,
   ModflowBoundaryDisplayUnit, ModflowBoundaryUnit, ClassificationUnit,
   ModflowHfbDisplayUnit, EdgeDisplayUnit, ModflowUnitNumbers, HufDefinition,
-  ModelMateClassesUnit, ModflowHobUnit, EZDSLHsh, FormulaManagerUnit,
+  ModelMateClassesUnit, ModflowHobUnit, FormulaManagerUnit,
   PathlineReader, LegendUnit, DisplaySettingsUnit, ModflowCellUnit,
   ModflowGageUnit, ModflowHeadObsResults, GR32, AxCtrls, Generics.Collections,
   Generics.Defaults, Mt3dmsTimesUnit, Mt3dmsChemSpeciesUnit,
-  Mt3dmsFluxObservationsUnit, SutraMeshUnit;
+  Mt3dmsFluxObservationsUnit, SutraMeshUnit, HashTableFacadeUnit;
 
 const
   // @name is the name of the @link(TDataArray) that specifies whether an
@@ -295,6 +295,7 @@ const
 resourcestring
   WetError = 'The wetting option is active but '
     + 'no layers of the proper type have been specified.';
+  StrNewDataSet = 'NewDataSet';
 const
   WettableLayers = [1,3];
 
@@ -1265,7 +1266,7 @@ that affects the model output should also have a comment. }
     // @name is used to store @link(TDataArray)s that are related to
     // boundary conditions but which do not vary with time.
     FBoundaryDataSets: TObjectList;
-    FDataSetLookUpList: THashTable;
+    FDataSetLookUpList: THashTableFacade;
     FRiverDataSets: TList;
     FStoreCachedData: boolean;
     // @name is used to store @link(TDataArray)s that have been deleted
@@ -1637,6 +1638,8 @@ that affects the model output should also have a comment. }
     function GetEndPoints: TEndPointReader;
     procedure SetEndPoints(const Value: TEndPointReader);
     procedure SetSutraMesh(const Value: TSutraMesh3D);
+    procedure RenameOldVerticalLeakance; virtual;
+//    procedure UpdateDataSets;
   var
     LakWriter: TObject;
     SfrWriter: TObject;
@@ -1740,6 +1743,10 @@ that affects the model output should also have a comment. }
     procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection);
       virtual; abstract;
   public
+    procedure RenameDataArray(DataArray: TDataArray; const NewName: string);
+    // When a @link(TDataArray) or global variable is renamed, @name is
+    // called to update all the formulas with the new names.
+    procedure UpdateFormulas(OldNames, NewNames: TStringList);
     procedure UpdateDataArrayDimensions(DataArray: TDataArray);
     function IndexOfMt3dmsSpeciesName(const AChemSpecies: string): integer;
     property Gages: TStringList read FGages;
@@ -2515,6 +2522,7 @@ that affects the model output should also have a comment. }
     FMt3dmsTimes: TMt3dmsTimeCollection;
     FImmobileComponents: TChemSpeciesCollection;
     FMobileComponents: TMobileChemSpeciesCollection;
+    FSutraLayerStructure: TSutraLayerStructure;
     // See @link(Exaggeration).
     function GetExaggeration: double;
     // See @link(OwnsScreenObjects).
@@ -2679,6 +2687,9 @@ that affects the model output should also have a comment. }
     function UpwIsSelected: Boolean;
     procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot);
     function SsmIsSelected: Boolean;
+    function GetSutraLayerStructure: TSutraLayerStructure;
+    procedure SetSutraLayerStructure(const Value: TSutraLayerStructure);
+    procedure RenameOldVerticalLeakance; override;
   protected
     procedure SetFileName(const Value: string); override;
     function GetFormulaManager: TFormulaManager; override;
@@ -2750,14 +2761,16 @@ that affects the model output should also have a comment. }
     function GetMobileComponents: TMobileChemSpeciesCollection; override;
     procedure SetImmobileComponents(const Value: TChemSpeciesCollection); override;
     procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection); override;
+    procedure SetModelSelection(const Value: TModelSelection); override;
   public
     function LakBathymetryUsed: Boolean;
     function TobIsSelected: Boolean;
-    procedure RenameDataArray(DataArray: TDataArray; const NewName: string);
+//    procedure RenameDataArray(DataArray: TDataArray; const NewName: string);
     procedure DrawHeadObservations(const BitMap: TBitmap32;
       const ZoomBox: TQRbwZoomBox2); override;
     procedure DrawSfrStreamLinkages(const BitMap: TBitmap32;
       const ZoomBox: TQRbwZoomBox2);
+    // Update relationships of parent grid with child grids.
     procedure UpdateMapping;
     function InitialWaterTableUsed(Sender: TObject): boolean; override;
     function ReservoirLayerUsed(Sender: TObject): boolean; override;
@@ -2784,7 +2797,7 @@ that affects the model output should also have a comment. }
     procedure FixOldModel;
     // When a @link(TDataArray) or global variable is renamed, @name is
     // called to update all the formulas with the new names.
-    procedure UpdateFormulas(OldNames, NewNames: TStringList);
+//    procedure UpdateFormulas(OldNames, NewNames: TStringList);
     // @name is used when determining what data sets or global variables are
     // used when evaluating the formula for a MODFLOW boundary condition.
     // The names of all the @link(TDataArray)s and global variables are added
@@ -3335,6 +3348,9 @@ that affects the model output should also have a comment. }
     property ShowContourLabels;
     property SfrStreamLinkPlot: TSfrStreamLinkPlot read FSfrStreamLinkPlot
       write SetSfrStreamLinkPlot;
+    property SutraLayerStructure: TSutraLayerStructure read GetSutraLayerStructure
+      write SetSutraLayerStructure {$IFNDEF Sutra} stored False {$ENDIF};
+
   end;
 
   TChildDiscretization = class(TOrderedItem)
@@ -3700,7 +3716,7 @@ that affects the model output should also have a comment. }
 
   // @name generates a name for a data set that is valid
   // and does not conflict with the names of any existing data sets.
-  function GenerateNewName( Root: string = 'NewDataSet';
+  function GenerateNewName( Root: string = '';
     InvalidNames: TStringList = nil; Connector: string = ''): string;
 
   {@name is used to generate a valid name from one that may be invalid.
@@ -3709,8 +3725,9 @@ that affects the model output should also have a comment. }
   function GenerateNewRoot(const Root: string): string;
 
 
-const
+resourcestring
   StrGlobalVariables = 'Global Variables';
+const
   StrNotepadexe = 'Notepad.exe';
 
   StrModelName = 'ModelMuse';
@@ -5216,17 +5233,66 @@ const
   //         in objects created by importing ShapeFiles.
   //    '2.14.1.0' Change: Date for the current version of MODFLOW-2005
   //         changed to the date for MODFLOW-2005 version 1.9.01.
+  //    '2.14.1.1' Bug fix: In order to prevent range check errors, it is no
+  //         longer possible to display the Manage Flux Observations dialog box
+  //         when MT3D has been selected unless at least one chemical species
+  //         has been defined.
+  //       Enhancement: The "Data Sets" dialog box can now remain open
+  //         while the user works with other parts of ModelMuse. However, it
+  //         can not remain open when the Object Properties dialog box is open
+  //         so if the user attempts to open the Object Properties dialog box,
+  //         The Edit Data Sets dialog box will automatically close.
+  //       Bug fix: Specifying values of Stress period length,
+  //         time step multiplier, and initial time step size that would cause
+  //         the number of time steps to exceed the limits of a 32-bit signed
+  //         integer causes an error message to the user rather than a bug
+  //         report.
+  //       Bug fix: In the object properties dialog box, clicking the button
+  //         for the formula editor when editing the formula for the Factor
+  //         in an MT3DMS Flux observation, no longer causes an
+  //         Assertion failure.
+  //       Bug fix: In the MODFLOW Packages and Programs dialog box, changing
+  //         the number of parameters in the UPW package no longer causes an
+  //         Assertion failure.
+  //       Enhancement: Tab ordering has been improved.
+  //    '2.14.1.2' Bug fix: Importing models containing the UZF package
+  //         in which ET is not simulated, now works properly.
+  //       Enhancement: X, Y, and Z axes are now drawn in the 3D view.
+  //       Bug fix: Fixed bug that caused empty .bfh_head and .bfh_flux files
+  //         to be created in MODFLOW-LGR models when one-way coupling is used.
+  //       Bug fix: Merely selecting a data set in the Data Visualization
+  //         dialog box no longer causes the data set values to be calculated.
+  //         The user must now click "Apply" to cause the data set values to be
+  //         calculated.
+  //       Bug fix: Fixed bug importing the Subsidence package
+  //         from existing models.
+  //    '2.14.1.3' no real change.
+  //    '2.14.1.4' Enhancement: Added support for importing the concentration
+  //         in MT3DMS associated with a sink or source package.
+  //       Change: In MODFLOW models using the BCF package, the
+  //         "Vertical_Conductance" data set is renamed "Vertical_Leakance".
+  //       Enhancement: Reduced the time required to open the Edit Data Sets
+  //         dialog box in models with large numbers of data sets.
+  //    '2.15.0.0' Bug fix: Fixed bug in importing Shapefiles that could
+  //         allow an object to have one or more Z-formulas when setting
+  //         the value of a layer definition data set.
+  //       Enhancement: Added partial support for Unicode. Complete support
+  //         is not possible because the groundwater models do not currently
+  //         support Unicode.
+  //       Change: The extension for MT3DMS configuration file changed from
+  //         ._cnf to .cnf to facilitate viewing the output in Model Viewer.
 
 const
-  ModelVersion = '2.14.1.0';
+  ModelVersion = '2.15.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
   StrHUF = 'HUF2';
   StrTop = '_Top';
-  StrThickness = '_Thickness';
+  StrHufThickness = '_Thickness';
   StrConfinedStorageCoe = 'Confined_Storage_Coefficient';
-  StrVerticalConductance = 'Vertical_Conductance';
+//  StrVerticalConductance = 'Vertical_Conductance';
+  StrVerticalConductance = 'Vertical_Leakance';
   StrTransmissivity = 'Transmissivity';
   StrZonebudget = 'ZoneBudget';
   StrZones = 'Zones';
@@ -5267,6 +5333,7 @@ const
   StrMt3dConcFile = '.ucn';
   StrMtName = '.mt_nam';
   strMtObs = '.mto';
+  StrSUTRAMeshTop = 'SUTRA_Mesh_Top';
 
 
   StrMT3DMSActive = 'MT3DMS_Active';
@@ -5307,17 +5374,17 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   BigCanvasMethods, Mt3dmsBtnWriterUnit, Mt3dmsAdvWriterUnit,
   Mt3dmsDspWriterUnit, Mt3dmsSsmWriterUnit, Mt3dmsRctWriterUnit,
   Mt3dmsGcgWriterUnit, Mt3dmsTobWriterUnit, ModflowMt3dmsLinkWriterUnit,
-  QuadMeshGenerator, MeshRenumbering, ModflowPCGN_WriterUnit;
+  QuadMeshGenerator, MeshRenumbering, ModflowPCGN_WriterUnit, Character;
 
 resourcestring
   StrMpathDefaultPath = 'C:\WRDAPP\Mpath.5_0\setup\Mpathr5_0.exe';
-  StrModflowDefaultPath = 'C:\WRDAPP\MF2005.1_8\Bin\mf2005.exe';
+  StrModflowDefaultPath = 'C:\WRDAPP\MF2005.1_9\Bin\mf2005.exe';
   StrPhastDefaultPath = 'C:\Program Files\USGS\phast-1.5.1\bin\phast.bat';
   StrPhastDefaultPath64 = 'C:\Program Files (x86)\USGS\phast-1.5.1\bin\phast.bat';
   StrZoneBudgetDefaultPath = 'C:\WRDAPP\Zonbud.3_01\Bin\zonbud.exe';
-  StrModelMateDefaultPath = 'C:\WRDAPP\ModelMate_0_23_1\Bin\ModelMate.exe';
+  StrModelMateDefaultPath = 'C:\WRDAPP\ModelMate_1_0_1\Bin\ModelMate.exe';
   strModflowLgrDefaultPath = 'C:\WRDAPP\mflgr.1_2\bin\mflgr.exe';
-  strModflowNwtDefaultPath = 'C:\WRDAPP\MODFLOW-NWT_1.0.4\bin\MODFLOW-NWT.exe';
+  strModflowNwtDefaultPath = 'C:\WRDAPP\MODFLOW-NWT_1.0.5\bin\MODFLOW-NWT.exe';
 
   StrProgramLocations = 'Program Locations';
   StrMODFLOW2005 = 'MODFLOW-2005';
@@ -5384,8 +5451,6 @@ resourcestring
   StrInvalidTimesForMT = 'Invalid times for MT3DMS';
   StrTheStressPeriodsD = 'The stress periods defined for MT3DMS are not with' +
   'in the stress periods defined for MODFLOW.';
-
-const
   StrAndNegatedAtCons = ' and negated at constant head cell';
   StrAndMadePositiveA = ' and made positive at constant head cell';
   StrValueOfZeroConver = 'Value of zero converted to 1 at active cell.';
@@ -5397,9 +5462,6 @@ const
 const
   StatFlagStrings : array[Low(TStatFlag)..High(TStatFlag)] of string
     = ('VAR', 'SD', 'CV', 'WT', 'SQRWT');
-
-
-
 const
   UcodeDelimiter = '@';
 
@@ -5416,26 +5478,36 @@ begin
 end;
 
 function GenerateNewRoot(const Root: string): string;
+  function Alpha(C: Char): Boolean; inline;
+  begin
+    Result := TCharacter.IsLetter(C) or (C = '_');
+  end;
+
+  function AlphaNumeric(C: Char): Boolean; inline;
+  begin
+    Result := TCharacter.IsLetterOrDigit(C) or (C = '_');
+  end;
 var
   Index: integer;
 begin
   result := Trim(Root);
   Assert(result <> '');
-  if not CharInSet(result[1], ['A'..'Z', 'a'..'z', '_']) then
+  IsValidIdent(result, False);
+  if not Alpha(result[1]) then
   begin
     result[1] := '_';
   end;
 
   for Index := 2 to Length(result) do
   begin
-    if not CharInSet(result[Index], ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
+    if not AlphaNumeric(result[Index]) then
     begin
       result[Index] := '_';
     end;
   end;
 end;
 
-function GenerateNewName(Root: string = 'NewDataSet';
+function GenerateNewName(Root: string = '';
   InvalidNames: TStringList = nil; Connector: string = ''): string;
 var
   Names: TStringList;
@@ -5447,7 +5519,7 @@ begin
   Root := Trim(Root);
   if Root = '' then
   begin
-    Root := 'NewDataSet';
+    Root := StrNewDataSet;
   end;
   Root := GenerateNewRoot(Root);
 
@@ -6018,8 +6090,10 @@ end;
 constructor TPhastModel.Create(AnOwner: TComponent);
 var
   ChangeNotifier: IChangeNotifier;
+//  LayerGroup: TSutraLayerGroup;
 begin
   inherited;
+
   FSaveBfhBoundaryConditions := True;
   FSaveDataSetValues := sdsvAlways;
   FSelectedModel := self;
@@ -6142,6 +6216,12 @@ begin
 
   FImmobileComponents := TChemSpeciesCollection.Create(Self);
   FMobileComponents := TMobileChemSpeciesCollection.Create(Self);
+
+  {$IFDEF Sutra}
+  FSutraLayerStructure:= TSutraLayerStructure.Create(Self);
+//  LayerGroup := FSutraLayerStructure.Add as TSutraLayerGroup;
+//  LayerGroup.AquiferName := 'SUTRA_Mesh_Top';
+  {$ENDIF}
 
 end;
 
@@ -6463,6 +6543,8 @@ begin
     FContourLegend.Free;
     FDisplaySettings.Free;
     FContourFont.Free;
+
+    FSutraLayerStructure.Free;
   finally
     FreeAndNil(frmFileProgress);
   end;
@@ -6612,22 +6694,41 @@ end;
 function TPhastModel.ModelLayerDataArrayUsed(Sender: TObject): boolean;
 var
   Index: Integer;
-  Group: TLayerGroup;
+  Group: TCustomLayerGroup;
   DataArray: TDataArray;
 begin
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT]);
-  if result then
-  begin
-    DataArray := Sender as TDataArray;
-    for Index := 0 to LayerStructure.Count - 1 do
-    begin
-      Group := LayerStructure[Index];
-      result := (Group.DataArrayName = DataArray.Name);
-      if result then
+  Result := False;
+  case ModelSelection of
+    msUndefined, msPhast: Exit;
+    msModflow, msModflowLGR, msModflowNWT:
       begin
-        Exit;
+        DataArray := Sender as TDataArray;
+        for Index := 0 to LayerStructure.Count - 1 do
+        begin
+          Group := LayerStructure[Index];
+          result := (Group.DataArrayName = DataArray.Name);
+          if result then
+          begin
+            Exit;
+          end;
+        end;
       end;
-    end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        DataArray := Sender as TDataArray;
+        for Index := 0 to SutraLayerStructure.Count - 1 do
+        begin
+          Group := SutraLayerStructure[Index];
+          result := (Group.DataArrayName = DataArray.Name);
+          if result then
+          begin
+            Exit;
+          end;
+        end;
+      end;
+    {$ENDIF}
+    else Assert(False);
   end;
 end;
 
@@ -7048,7 +7149,42 @@ begin
   Invalidate;
 end;
 
-procedure TPhastModel.RenameDataArray(DataArray: TDataArray;
+procedure TPhastModel.RenameOldVerticalLeakance;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  Index: integer;
+  ADataSet, ChildDataArray: TDataArray;
+begin
+  if FileVersionEqualOrEarlier('2.14.1.3') then
+  begin
+    inherited;
+    if ChildModels.Count > 0 then
+    begin
+      for ChildIndex := 0 to ChildModels.Count - 1 do
+      begin
+        ChildModel := ChildModels[ChildIndex].ChildModel;
+        ChildModel.RenameOldVerticalLeakance
+      end;
+      for Index := 0 to FDataArrayManager.DataSetCount - 1 do
+      begin
+        ADataSet := FDataArrayManager[Index];
+        for ChildIndex := 0 to ChildModels.Count - 1 do
+        begin
+          ChildModel := ChildModels[ChildIndex].ChildModel;
+          ChildDataArray := ChildModel.DataArrayManager.GetDataSetByName(ADataSet.Name);
+          Assert(ChildDataArray <> nil);
+          ChildDataArray.AssignProperties(ADataSet);
+          ChildDataArray.Formula := ADataSet.Formula;
+          ChildDataArray.Limits := ADataSet.Limits;
+          ChildDataArray.ContourLimits := ADataSet.ContourLimits;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TCustomModel.RenameDataArray(DataArray: TDataArray;
   const NewName: string);
 var
   OldNames: TStringList;
@@ -7470,6 +7606,34 @@ begin
   end;
 end;
 
+procedure TPhastModel.SetModelSelection(const Value: TModelSelection);
+    {$IFDEF SUTRA}
+var
+  LayerGroup: TSutraLayerGroup;
+    {$ENDIF}
+begin
+  inherited;
+  case Value of
+    msUndefined: ;
+    msPhast: ;
+    msModflow: ;
+    msModflowLGR: ;
+    msModflowNWT: ;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        if FSutraLayerStructure.Count = 0 then
+        begin
+          LayerGroup := FSutraLayerStructure.Add as TSutraLayerGroup;
+          LayerGroup.AquiferName := StrSUTRAMeshTop;
+        end
+      end
+    {$ENDIF}
+    else Assert(False);
+  end;
+
+end;
+
 procedure TCustomModel.SetModelSelection(const Value: TModelSelection);
 var
   Index: Integer;
@@ -7830,6 +7994,11 @@ end;
 function TPhastModel.GetSomeSegmentsUpToDate: boolean;
 begin
   result := FSomeSegmentsUpToDate;
+end;
+
+function TPhastModel.GetSutraLayerStructure: TSutraLayerStructure;
+begin
+  result := FSutraLayerStructure
 end;
 
 //function TPhastModel.GetTopX: double;
@@ -8441,6 +8610,17 @@ begin
   end;
 end;
 
+//procedure TPhastModel.UpdateDataSets;
+//var
+//  index: integer;
+//begin
+//  inherited;
+//  for index := 0 to ChildModels.Count - 1 do
+//  begin
+//    ChildModels[index].ChildModel.UpdateDataSets;
+//  end;
+//end;
+
 function TPhastModel.GetSaveBfhBoundaryConditions: boolean;
 begin
   result := FSaveBfhBoundaryConditions
@@ -8771,7 +8951,7 @@ begin
   end;
 end;
 
-procedure TPhastModel.UpdateFormulas(OldNames, NewNames: TStringList);
+procedure TCustomModel.UpdateFormulas(OldNames, NewNames: TStringList);
 var
   CompilerList: TList;
   CompilerIndex: Integer;
@@ -10985,6 +11165,47 @@ begin
   end;
 end;
 
+procedure TCustomModel.RenameOldVerticalLeakance;
+const
+  OldVerticalConductance = 'Vertical_Conductance';
+var
+  DataArray: TDataArray;
+  VarIndex: Integer;
+  DA: TDataArray;
+  CompilerIndex: Integer;
+  CompilerList: TList;
+  Compiler: TRbwParser;
+begin
+  DataArray := DataArrayManager.GetDataSetByName(OldVerticalConductance);
+  if DataArray <> nil then
+  begin
+    DA := DataArrayManager.GetDataSetByName(StrVerticalConductance);
+    if DA <> nil then
+    begin
+      DataArrayManager.ExtractDataSet(DA);
+      CompilerList := TList.Create;
+      try
+        FillCompilerList(CompilerList);
+        for CompilerIndex := 0 to CompilerList.Count - 1 do
+        begin
+          Compiler := CompilerList[CompilerIndex];
+          VarIndex := Compiler.IndexOfVariable(DA.Name);
+          if VarIndex >= 0 then
+          begin
+            Compiler.RemoveVariable(Compiler.Variables[VarIndex] as TCustomVariable);
+          end;
+        end;
+      finally
+        CompilerList.Free;
+      end;
+      RenameDataArray(DataArray, StrVerticalConductance);
+      DataArray.OnDataSetUsed := DA.OnDataSetUsed;
+      DA.Free;
+    end;
+  end;
+//  end;
+end;
+
 
 function TPhastModel.Mt3dMsSorbImmobInitialConcUsed(Sender: TObject): boolean;
 var
@@ -11294,7 +11515,38 @@ var
   SfrBoundary: TSfrBoundary;
   ParamItem: TSfrParamIcalcItem;
   SegItem: TCustomModflowBoundaryItem;
+//  ChildIndex: Integer;
+//  ChildModel: TChildModel;
+//  Index: integer;
+//  ADataSet, ChildDataArray: TDataArray;
 begin
+   RenameOldVerticalLeakance;
+
+//  if FileVersionEqualOrEarlier('2.14.1.3') then
+//  begin
+//    RenameOldVerticalLeakance;
+//
+//    for ChildIndex := 0 to ChildModels.Count - 1 do
+//    begin
+//      ChildModel := ChildModels[ChildIndex].ChildModel;
+//      ChildModel.RenameOldVerticalLeakance
+//    end;
+//    for Index := 0 to FDataArrayManager.DataSetCount - 1 do
+//    begin
+//      ADataSet := FDataArrayManager[Index];
+//      for ChildIndex := 0 to ChildModels.Count - 1 do
+//      begin
+//        ChildModel := ChildModels[ChildIndex].ChildModel;
+//        ChildDataArray := ChildModel.DataArrayManager.GetDataSetByName(ADataSet.Name);
+//        Assert(ChildDataArray <> nil);
+//        ChildDataArray.AssignProperties(ADataSet);
+//        ChildDataArray.Formula := ADataSet.Formula;
+//        ChildDataArray.Limits := ADataSet.Limits;
+//        ChildDataArray.ContourLimits := ADataSet.ContourLimits;
+//      end;
+//    end;
+//  end;
+
   if (Grid <> nil) and (Grid.GridAngle <> 0)
     and FileVersionEqualOrEarlier('2.6.0.3')
     and (FormulaManager.FunctionUsed(StrVertexInterpolate)
@@ -12642,6 +12894,11 @@ end;
 procedure TPhastModel.SetSomeSegmentsUpToDate(const Value: boolean);
 begin
   FSomeSegmentsUpToDate := Value;
+end;
+
+procedure TPhastModel.SetSutraLayerStructure(const Value: TSutraLayerStructure);
+begin
+  FSutraLayerStructure.Assign(Value);
 end;
 
 procedure TPhastModel.SetSaveBfhBoundaryConditions(const Value: boolean);
@@ -19233,7 +19490,7 @@ begin
   end;
   if FDataSetLookUpList = nil then
   begin
-    FDataSetLookUpList := THashTable.Create(false);
+    FDataSetLookUpList := THashTableFacade.Create;
     FDataSetLookUpList.IgnoreCase := True;
     FDataSetLookUpList.TableSize := Max(211, DataSetCount*2-1);
     for Index := 0 to LocalCount - 1 do
@@ -19242,8 +19499,14 @@ begin
       FDataSetLookUpList.Insert(DataArray.Name, DataArray)
     end;
   end;
-  FDataSetLookUpList.Search(DataSetName, APointer);
-  result := APointer;
+  if FDataSetLookUpList.Search(DataSetName, APointer) then
+  begin
+    result := APointer;
+  end
+  else
+  begin
+    result := nil;
+  end;
 end;
 
 function TDataArrayManager.LocalCount: integer;
@@ -19894,15 +20157,15 @@ begin
   result := UzfPackageUsed(Sender);
   if result then
   begin
-    if (Sender <> nil) and (Sender is TUndoChangeLgrPackageSelection) then
-    begin
-      result := True;
-    end
-    else
-    begin
+//    if (Sender <> nil) and (Sender is TUndoChangeLgrPackageSelection) then
+//    begin
+//      result := True;
+//    end
+//    else
+//    begin
       result := ModflowPackages.UzfPackage.SpecifyResidualWaterContent
-        and (ModelSelection in [msModflow, msModflowNWT]);
-    end;
+        and (ModelSelection in [msModflow, {msModflowLGR,} msModflowNWT]);
+//    end;
   end;
 end;
 
@@ -19930,16 +20193,16 @@ begin
   result := UzfPackageUsed(Sender);
   if result then
   begin
-    if (Sender <> nil) and (Sender is TUndoChangeLgrPackageSelection) then
-    begin
-      result := True;
-    end
-    else
-    begin
+//    if (Sender <> nil) and (Sender is TUndoChangeLgrPackageSelection) then
+//    begin
+//      result := True;
+//    end
+//    else
+//    begin
       result := ModflowStressPeriods.CompletelyTransient or
         (ModflowPackages.UzfPackage.SpecifyInitialWaterContent
-        and (ModelSelection in [msModflow, msModflowNWT]));
-    end;
+        and (ModelSelection in [msModflow, {msModflowLGR,} msModflowNWT]));
+//    end;
   end;
 end;
 
@@ -22374,13 +22637,13 @@ begin
         SetCurrentNameFileWriter(ANameFileWriter);
         if self is TChildModel then
         begin
-          ANameFileWriter.WriteToNameFile('BFH', IUPBHSV, HeadFile, foInput);
-          ANameFileWriter.WriteToNameFile(StrDATA, IUPBFSV, FlowFile, foInput);
+          ANameFileWriter.WriteToNameFile('BFH', IUPBHSV, HeadFile, foInputAlreadyExists);
+          ANameFileWriter.WriteToNameFile(StrDATA, IUPBFSV, FlowFile, foInputAlreadyExists);
         end
         else
         begin
-          ANameFileWriter.WriteToNameFile(StrDATA, IUPBHSV, HeadFile, foInput);
-          ANameFileWriter.WriteToNameFile('BFH', IUPBFSV, FlowFile, foInput);
+          ANameFileWriter.WriteToNameFile(StrDATA, IUPBHSV, HeadFile, foInputAlreadyExists);
+          ANameFileWriter.WriteToNameFile('BFH', IUPBFSV, FlowFile, foInputAlreadyExists);
         end;
 
         FPValFile.Clear;

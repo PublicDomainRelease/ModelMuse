@@ -1,8 +1,12 @@
 inherited frameArrayParameterDefinition: TframeArrayParameterDefinition
+  inherited pnlParameterCount: TPanel
+    TabOrder = 2
+  end
   inherited dgParameters: TRbwDataGrid4
     Top = 60
     Height = 129
     ColCount = 4
+    TabOrder = 1
     OnMouseUp = dgParametersMouseUp
     OnColSize = dgParametersColSize
     OnHorizontalScroll = dgParametersHorizontalScroll
@@ -105,7 +109,7 @@ inherited frameArrayParameterDefinition: TframeArrayParameterDefinition
     Height = 57
     Align = alTop
     BevelOuter = bvNone
-    TabOrder = 2
+    TabOrder = 0
     object lblParamValue: TLabel
       Left = 24
       Top = 8

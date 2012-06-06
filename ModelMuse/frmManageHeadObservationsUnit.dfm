@@ -80,6 +80,10 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
     TabOrder = 0
     object tabObservations: TTabSheet
       Caption = 'Observations'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgObservations: TRbwDataGrid4
         Left = 0
         Top = 41
@@ -89,7 +93,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
         ColCount = 9
         FixedCols = 0
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
-        TabOrder = 0
+        TabOrder = 1
         OnExit = rdgObservationsExit
         OnMouseUp = rdgObservationsMouseUp
         OnSelectCell = rdgObservationsSelectCell
@@ -335,7 +339,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
         Height = 41
         Align = alTop
         BevelOuter = bvNone
-        TabOrder = 1
+        TabOrder = 0
         object edObsGroupName: TEdit
           Left = 8
           Top = 9

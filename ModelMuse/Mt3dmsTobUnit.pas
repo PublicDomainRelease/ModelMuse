@@ -462,7 +462,7 @@ begin
   for ItemIndex := Count - 1 downto 0 do
   begin
     AnItem := Items[ItemIndex] as TMt3dmsTobItem;
-    if CompareText(SpeciesName, AnItem.SpeciesName) = 0 then
+    if AnsiCompareText(SpeciesName, AnItem.SpeciesName) = 0 then
     begin
       Delete(ItemIndex);
     end;
@@ -574,7 +574,7 @@ begin
   for ItemIndex := 0 to Count - 1 do
   begin
     AnItem := Items[ItemIndex] as TMt3dmsTobItem;
-    if CompareText(OldSpeciesName, AnItem.SpeciesName) = 0 then
+    if AnsiCompareText(OldSpeciesName, AnItem.SpeciesName) = 0 then
     begin
       AnItem.SpeciesName := NewSpeciesName;
     end;

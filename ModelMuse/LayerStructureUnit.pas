@@ -53,6 +53,7 @@ type
     procedure SetAquiferName(const Value: string);
     procedure SetGrowthMethod(const Value: TGrowthMethod);
     procedure SetGrowthRate(const Value: real);
+    function EvalAt: TEvaluatedAt; virtual;
   protected
     procedure SetLayerCollection(const Value: TLayerCollection); virtual;
     function Collection: TCustomLayerStructure;
@@ -176,6 +177,8 @@ type
   end;
 
   TSutraLayerGroup = class(TCustomLayerGroup)
+  protected
+    function EvalAt: TEvaluatedAt; override;
 
   end;
 
@@ -236,7 +239,13 @@ type
   end;
 
   TSutraLayerStructure = class(TCustomLayerStructure)
+  private
+    function GetLayerGroup(const Index: integer): TSutraLayerGroup;
+  published
+  public
     constructor Create(Model: TBaseModel);
+    property LayerGroups[const Index: integer]: TSutraLayerGroup
+      read GetLayerGroup; default;
   end;
 
 resourcestring
@@ -1360,11 +1369,16 @@ begin
   result := inherited Collection as TCustomLayerStructure;
 end;
 
+function TCustomLayerGroup.EvalAt: TEvaluatedAt;
+begin
+  result := eaBlocks
+end;
+
 procedure TCustomLayerGroup.SetDataArrayName(const NewName: string);
 var
   Model: TPhastModel;
   DataArray: TDataArray;
-  UnitAbove, UnitBelow: TLayerGroup;
+  UnitAbove, UnitBelow: TCustomLayerGroup;
   NewFormula: string;
 begin
   if FDataArrayName <> NewName then
@@ -1398,20 +1412,20 @@ begin
           end
           else if Index = Collection.Count - 1 then
           begin
-            UnitAbove := Collection.Items[Index - 1] as TLayerGroup;
+            UnitAbove := Collection.Items[Index - 1] as TCustomLayerGroup;
             NewFormula := UnitAbove.DataArrayName + ' - 1';
           end
           else
           begin
-            UnitAbove := Collection.Items[Index - 1] as TLayerGroup;
-            UnitBelow := Collection.Items[Index + 1] as TLayerGroup;
+            UnitAbove := Collection.Items[Index - 1] as TCustomLayerGroup;
+            UnitBelow := Collection.Items[Index + 1] as TCustomLayerGroup;
             NewFormula := '(' + UnitAbove.DataArrayName + ' + ' +
               UnitBelow.DataArrayName + ') / 2';
           end;
           // create new data array.
           DataArray := Model.DataArrayManager.CreateNewDataArray(TDataArray,
             NewName, NewFormula, [dcName, dcType, dcOrientation, dcEvaluatedAt],
-            rdtDouble, eaBlocks, dsoTop, StrLayerDefinition);
+            rdtDouble, EvalAt, dsoTop, StrLayerDefinition);
           DataArray.OnDataSetUsed := Model.ModelLayerDataArrayUsed;
           Collection.AddOwnedDataArray(DataArray);
         end;
@@ -1558,6 +1572,19 @@ end;
 constructor TSutraLayerStructure.Create(Model: TBaseModel);
 begin
   inherited Create(TSutraLayerGroup, Model);
+end;
+
+function TSutraLayerStructure.GetLayerGroup(
+  const Index: integer): TSutraLayerGroup;
+begin
+  result := Items[Index] as TSutraLayerGroup;
+end;
+
+{ TSutraLayerGroup }
+
+function TSutraLayerGroup.EvalAt: TEvaluatedAt;
+begin
+  result := eaNodes;
 end;
 
 end.

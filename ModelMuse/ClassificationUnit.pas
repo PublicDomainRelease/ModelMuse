@@ -146,7 +146,7 @@ begin
     String2 := List[Index2];
     ExtractDigits(String1, Digits1);
     ExtractDigits(String2, Digits2);
-    result := CompareText(String1, String2);
+    result := AnsiCompareText(String1, String2);
     if result = 0 then
     begin
       if Digits1 = '' then

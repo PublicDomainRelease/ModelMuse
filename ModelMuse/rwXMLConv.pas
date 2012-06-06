@@ -42,7 +42,7 @@ uses
 resourcestring
   StrInvalidXMLAnsiStri = 'Invalid XML AnsiString encoding';
   StrInvalidBinaryValue = 'Invalid Binary values in XML';
-  StrNotAVallidObject = 'Not a vallid object XML stream';
+  StrNotAVallidObject = 'Not a valid object XML stream';
   StrNoBinaryEndFound = 'No Binary End found';
   StrUnknownDataType = 'Unknown DataType';
   StrNoCollectionFound = 'No Collection found';
@@ -52,7 +52,7 @@ resourcestring
   StrNoListItemEndFoun = 'No ListItem End found';
   StrNoEndOfListFound = 'No end of List found';
   StrNameOfPropertyEmp = 'Name of Property Empty';
-  StrNoPropertieENDFou = 'No propertie END found';
+  StrNoPropertieENDFou = 'No property END found';
   StrInvalidXMLObjectS = 'Invalid XML object stream';
 
 const

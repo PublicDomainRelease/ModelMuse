@@ -6,6 +6,9 @@ inherited frameHeadObservations: TframeHeadObservations
     ExplicitTop = 134
     ExplicitHeight = 216
     inherited tabTimes: TTabSheet
+      ExplicitLeft = 4
+      ExplicitTop = 24
+      ExplicitWidth = 560
       ExplicitHeight = 188
       inherited Panel5: TPanel
         inherited rdeMultiValueEdit: TRbwDataEntry
@@ -63,6 +66,9 @@ inherited frameHeadObservations: TframeHeadObservations
       end
     end
     inherited tabLayers: TTabSheet
+      ExplicitLeft = 4
+      ExplicitTop = 24
+      ExplicitWidth = 560
       ExplicitHeight = 188
       inherited Panel4: TPanel
         Top = 112
@@ -70,7 +76,6 @@ inherited frameHeadObservations: TframeHeadObservations
       end
       inherited rdgLayers: TRbwDataGrid4
         Height = 77
-        ExplicitTop = 38
         ExplicitHeight = 77
       end
     end

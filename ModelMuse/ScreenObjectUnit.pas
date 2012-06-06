@@ -4487,6 +4487,7 @@ var
   ScreenObject2: TScreenObject;
   Name1, Name2: string;
   Number1, Number2: string;
+  N1, N2: Int64;
   procedure ProcessName(var AName, ANumber: string);
   const
     Digits = ['0'..'9'];
@@ -4533,7 +4534,42 @@ begin
     end
     else
     begin
-      result := StrToInt(Number1) - StrToInt(Number2);
+      result := Length(Number1) - Length(Number2);
+      if result = 0 then
+      begin
+        while (not TryStrToInt64(Number1, N1))
+          or (not TryStrToInt64(Number2, N2)) do
+        begin
+          N1 := StrToInt64(Copy(Number1, 1, 15));
+          N2 := StrToInt64(Copy(Number2, 1, 15));
+          result := Sign(N1 - N2);
+          if Result = 0 then
+          begin
+            Number1 := Copy(Number1, 16, MAXINT);
+            Number2 := Copy(Number2, 16, MAXINT);
+            if Number1 = Number2 then
+            begin
+              Result := 0;
+              Exit;
+            end
+            else if Number1 = '' then
+            begin
+              result := -1;
+              Exit;
+            end
+            else if Number2 = '' then
+            begin
+              result := 1;
+              Exit;
+            end
+          end
+          else
+          begin
+            Exit;
+          end;
+        end;
+        result := Sign(N1 - N2);
+      end;
     end;
   end;
 end;
@@ -17815,33 +17851,33 @@ begin
 end;
 
 class function TScreenObject.ValidName(const OriginalName: string): string;
-var
-  Index: integer;
-  AChar: Char;
+//var
+//  Index: integer;
+//  AChar: Char;
 begin
-  result :=  Trim(OriginalName);
-  for Index := 1 to Length(result) do
-  begin
-    AChar := result[Index];
-    if Index = 1 then
-    begin
-      if not CharInSet(AChar, ['_', 'a'..'z', 'A'..'Z']) then
-      begin
-        result[Index] := '_';
-      end;
-    end
-    else
-    begin
-      if not CharInSet(AChar, ['_', 'a'..'z', 'A'..'Z', '0'..'9']) then
-      begin
-        result[Index] := '_';
-      end;
-    end;
-  end;
-  if result = '' then
-  begin
-    result := '_';
-  end
+  result :=  GoPhastTypes.ValidName(OriginalName);
+//  for Index := 1 to Length(result) do
+//  begin
+//    AChar := result[Index];
+//    if Index = 1 then
+//    begin
+//      if not CharInSet(AChar, ['_', 'a'..'z', 'A'..'Z']) then
+//      begin
+//        result[Index] := '_';
+//      end;
+//    end
+//    else
+//    begin
+//      if not CharInSet(AChar, ['_', 'a'..'z', 'A'..'Z', '0'..'9']) then
+//      begin
+//        result[Index] := '_';
+//      end;
+//    end;
+//  end;
+//  if result = '' then
+//  begin
+//    result := '_';
+//  end
 end;
 
 procedure TScreenObject.SetUpToDate(const Value: boolean);
@@ -34439,7 +34475,7 @@ begin
   if result then
   begin
     AnotherPointValue := TPointValue(AnotherItem);
-    result := (CompareText(Name, AnotherPointValue.Name) = 0)
+    result := (AnsiCompareText(Name, AnotherPointValue.Name) = 0)
       and (Value = AnotherPointValue.Value);
   end;
 end;
@@ -34503,7 +34539,7 @@ begin
   for Index := 0 to Values.Count - 1 do
   begin
     Item := Values.Items[Index] as TPointValue;
-    if CompareText(Item.Name, AName) = 0 then
+    if AnsiCompareText(Item.Name, AName) = 0 then
     begin
       result := Index;
       Exit;

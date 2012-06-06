@@ -141,8 +141,8 @@ procedure TframeScreenObjectHydmod.edHYDLBLExit(Sender: TObject);
 var
   NewText: string;
 begin
-  NewText := StringReplace(Trim(edHYDLBL.Text),
-    ' ', '_', [rfReplaceAll, rfIgnoreCase]);
+  NewText := string(AnsiString(StringReplace(Trim(edHYDLBL.Text),
+    ' ', '_', [rfReplaceAll, rfIgnoreCase])));
   if edHYDLBL.Text <> NewText then
   begin
     edHYDLBL.Text := NewText

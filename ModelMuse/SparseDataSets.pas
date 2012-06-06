@@ -333,7 +333,7 @@ end;
 
 destructor T2DSparsePointerArray.Destroy;
 begin
-  FData.ForAll(@FreeSparsePointerItem);
+  FData.ForAll(FreeSparsePointerItem);
   FData.Free;
   inherited;
 end;
@@ -432,7 +432,7 @@ end;
 
 destructor T3DSparsePointerArray.Destroy;
 begin
-  FData.ForAll(@Free2DSparsePointerItem);
+  FData.ForAll(Free2DSparsePointerItem);
   FData.Free;
   inherited;
 end;

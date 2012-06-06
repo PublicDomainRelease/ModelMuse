@@ -25,6 +25,8 @@ type
     procedure rdgSfrParamInstancesSelectCell(Sender: TObject; ACol,
       ARow: Integer; var CanSelect: Boolean);
     procedure rdgSfrParamInstancesEndUpdate(Sender: TObject);
+    procedure rdgSfrParamInstancesSetEditText(Sender: TObject; ACol,
+      ARow: Integer; const Value: string);
   private
     ErrorFound: boolean;
     { Private declarations }
@@ -158,6 +160,21 @@ procedure TframeSfrParamInstances.rdgSfrParamInstancesSelectCell(
   Sender: TObject; ACol, ARow: Integer; var CanSelect: Boolean);
 begin
   CanSelect := seInstanceCount.AsInteger > 0;
+end;
+
+procedure TframeSfrParamInstances.rdgSfrParamInstancesSetEditText(
+  Sender: TObject; ACol, ARow: Integer; const Value: string);
+var
+  NewValue: AnsiString;
+begin
+  if (ARow > 0) and (ACol = Ord(sicInstanceName)) then
+  begin
+    NewValue := AnsiString(Value);
+    if string(NewValue) <> Value then
+    begin
+      rdgSfrParamInstances.Cells[ACol, ARow] := string(NewValue);
+    end;
+  end;
 end;
 
 procedure TframeSfrParamInstances.seInstanceCountChange(Sender: TObject);

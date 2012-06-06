@@ -593,6 +593,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Chi_MD_Variables_Tab_Newton_So" value="3631"/>
       <helpcontext-number href="Child_Model_Dialog_Box" value="3598"/>
       <helpcontext-number href="Child_Model_Dialog_Box#IOUTLGR" value="3604"/>
+      <helpcontext-number href="Child_Model_Dialog_Box#MXLGRITER" value="3669"/>
       <helpcontext-number href="CHOB_Specified_Head_Flow_Observations" value="3464"/>
       <helpcontext-number href="CHOB_Specified_Head_Flow_ObsObjects" value="3469"/>
       <helpcontext-number href="Color_Grid_Dialog_Box" value="1870"/>

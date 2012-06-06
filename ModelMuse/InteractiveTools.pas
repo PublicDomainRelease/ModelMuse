@@ -1022,6 +1022,30 @@ uses Math, CursorsFoiledAgain, GR32_Polygons, frmGoPhastUnit, frmSubdivideUnit,
   LayerStructureUnit, DataSetUnit, ZoomBox2, Contnrs, frmPointValuesUnit, 
   Dialogs;
 
+resourcestring
+  StrClickAndDragToZo = 'Click and drag to zoom in';
+  StrClickToZoomIn = 'Click to zoom in';
+  StrClickToZoomOut = 'Click to zoom out';
+  StrClickAndDragToMo = 'Click and drag to move view';
+  StrClickOnGridLineA = 'Click on grid line and drag to move it.';
+  StrClickOnColumnLine = 'Click on column line and drag to move it.';
+  StrClickOnRowLineAn = 'Click on row line and drag to move it.';
+  StrClickOnGridBounda = 'Click on grid boundary to delete it';
+  StrClickOnColumnBoun = 'Click on column boundary to delete it';
+  StrClickOnRowBoundar = 'Click on row boundary to delete it';
+  StrClickAndDragToSe = 'Click and drag to select objects with lasso';
+  StrClickToCreatePoin = 'Click to create point object';
+  StrClickToCreatePoly = 'Click to create polyline object';
+  StrClickToCreatePolygon = 'Click to create polygon object';
+  StrClickToCreateStra = 'Click to create straight line object';
+  StrClickToCreateRect = 'Click to create rectangle object';
+  StrClickToDeleteSegm = 'Click to delete segment';
+  StrClickOnASegmentT = 'Click on a segment to create a new node there.';
+  StrClickOnAVertexTo = 'Click on a vertex to select it';
+  StrClickOnObjectToS = 'Click on object to select it or click and drag';
+  StrClickToChangeSele = 'Click to change selected column, row, and layer.';
+  StrClickToStartMeasu = 'Click to start measuring. Double-click to stop.';
+
 function ConvertSidePoint(APoint: TPoint2D): TPoint2D;
 begin
   result.x := APoint.y;
@@ -1048,10 +1072,10 @@ begin
     result := crArrow;
   end;
 end;
-  
+
 function TZoomTool.GetHint: string;
 begin
-  result := 'Click and drag to zoom in';
+  result := StrClickAndDragToZo;
 end;
   
 procedure TZoomTool.MouseDown(Sender: TObject; Button: TMouseButton;
@@ -1094,7 +1118,7 @@ end;
   
 function TZoomInTool.GetHint: string;
 begin
-  result := 'Click to zoom in';
+  result := StrClickToZoomIn;
 end;
   
 procedure TZoomInTool.MouseUp(Sender: TObject; Button: TMouseButton;
@@ -1138,7 +1162,7 @@ end;
   
 function TZoomOutTool.GetHint: string;
 begin
-  result := 'Click to zoom out';
+  result := StrClickToZoomOut;
 end;
   
 procedure TZoomOutTool.MouseUp(Sender: TObject; Button: TMouseButton;
@@ -1165,7 +1189,7 @@ end;
 
 function TPanTool.GetHint: string;
 begin
-  result := 'Click and drag to move view';
+  result := StrClickAndDragToMo;
 end;
   
 procedure TPanTool.MouseDown(Sender: TObject; Button: TMouseButton;
@@ -1986,14 +2010,14 @@ begin
     msUndefined: Assert(False);
     msPhast:
       begin
-        result := 'Click on grid line and drag to move it.';
+        result := StrClickOnGridLineA;
       end;
     msModflow, msModflowLGR, msModflowNWT:
       begin
         case ViewDirection of
-          vdTop: result := 'Click on grid line and drag to move it.';
-          vdFront: result := 'Click on column line and drag to move it.';
-          vdSide: result := 'Click on row line and drag to move it.';
+          vdTop: result := StrClickOnGridLineA;
+          vdFront: result := StrClickOnColumnLine;
+          vdSide: result := StrClickOnRowLineAn;
           else Assert(False);
         end;
       end
@@ -2334,14 +2358,14 @@ begin
   case frmGoPhast.PhastModel.ModelSelection of
     msPhast:
       begin
-        result := 'Click on grid boundary to delete it';
+        result := StrClickOnGridBounda;
       end;
     msModflow, msModflowLGR, msModflowNWT:
       begin
         case ViewDirection of
-          vdTop: result := 'Click on grid boundary to delete it';
-          vdFront: result := 'Click on column boundary to delete it';
-          vdSide: result := 'Click on row boundary to delete it';
+          vdTop: result := StrClickOnGridBounda;
+          vdFront: result := StrClickOnColumnBoun;
+          vdSide: result := StrClickOnRowBoundar;
         else
           Assert(False);
         end;
@@ -2693,7 +2717,7 @@ end;
   
 function TLassoTool.GetHint: string;
 begin
-  result := 'Click and drag to select objects with lasso';
+  result := StrClickAndDragToSe;
 end;
   
 procedure TLassoTool.MouseDown(Sender: TObject; Button: TMouseButton;
@@ -3592,7 +3616,7 @@ end;
 
 function TCreatePointScreenObjectTool.GetHint: string;
 begin
-  result := 'Click to create point object';
+  result := StrClickToCreatePoin;
 end;
 {$ENDREGION}
 
@@ -3776,11 +3800,11 @@ function TCreateLineScreenObjectTool.GetHint: string;
 begin
   if frmGoPhast.tbLine.Down then
   begin
-    result := 'Click to create polyline object';
+    result := StrClickToCreatePoly;
   end
   else if frmGoPhast.tbPolygon.Down then
   begin
-    result := 'Click to create polygon object';
+    result := StrClickToCreatePolygon;
   end
   else
   begin
@@ -4002,7 +4026,7 @@ end;
 
 function TCreateStraightLineScreenObjectTool.GetHint: string;
 begin
-  result := 'Click to create straight line object';
+  result := StrClickToCreateStra;
 end;
 {$ENDREGION}
 
@@ -4233,7 +4257,7 @@ end;
 
 function TCreateRectangleScreenObjectTool.GetHint: string;
 begin
-  result := 'Click to create rectangle object';
+  result := StrClickToCreateRect;
 end;
 {$ENDREGION}
 
@@ -4512,7 +4536,7 @@ end;
   
 function TDeleteSegmentTool.GetHint: string;
 begin
-  result := 'Click to delete segment';
+  result := StrClickToDeleteSegm;
 end;
 {$ENDREGION}
 
@@ -4551,7 +4575,7 @@ end;
   
 function TInsertPointTool.GetHint: string;
 begin
-  result := 'Click on a segment to create a new node there.';
+  result := StrClickOnASegmentT;
 end;
   
 procedure TInsertPointTool.SetCursorAtLocation(const X, Y: Integer);
@@ -5141,7 +5165,7 @@ end;
 
 function TSelectPointTool.GetHint: string;
 begin
-  result := 'Click on a vertex to select it';
+  result := StrClickOnAVertexTo;
 end;
 
 procedure TSelectPointTool.GetOffset(const APoint: TPoint2D; out XOffset,
@@ -5368,7 +5392,7 @@ end;
   
 function TSelectScreenObjectTool.GetHint: string;
 begin
-  result := 'Click on object to select it or click and drag';
+  result := StrClickOnObjectToS;
 end;
 {$ENDREGION}
 
@@ -5680,7 +5704,7 @@ end;
 
 function TColRowLayerSelectorTool.GetHint: string;
 begin
-  result := 'Click to change selected column, row, and layer.';
+  result := StrClickToChangeSele;
 end;
 
 procedure TColRowLayerSelectorTool.MouseMove(Sender: TObject;
@@ -6326,7 +6350,7 @@ end;
 
 function TRulerTool.GetHint: string;
 begin
-  result := 'Click to start measuring. Double-click to stop.'
+  result := StrClickToStartMeasu
 end;
 
 procedure TRulerTool.MouseMove(Sender: TObject; Shift: TShiftState; X,

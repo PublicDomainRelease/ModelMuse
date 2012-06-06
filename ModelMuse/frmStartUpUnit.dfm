@@ -87,7 +87,7 @@ inherited frmStartUp: TfrmStartUp
     Top = 0
     Width = 761
     Height = 332
-    ActivePage = tabModelChoice
+    ActivePage = tabInitialModflowGrid
     Align = alClient
     TabOrder = 0
     OnChange = pcStartupChange
@@ -485,6 +485,7 @@ inherited frmStartUp: TfrmStartUp
               AutoAdjustColWidths = True
             end>
           OnEndUpdate = rdgInitialLayersEndUpdate
+          ExplicitLeft = 464
         end
       end
     end

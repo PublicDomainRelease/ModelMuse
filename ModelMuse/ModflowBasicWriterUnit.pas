@@ -290,7 +290,7 @@ begin
     if SameText(ExtractFileExt(Model.ModflowOptions.InitialHeadFileName), StrBhd) then
     begin
       WriteToNameFile(StrDATABINARY, UnitNumber, RelativeFileName,
-        foInput, True);
+        foInputAlreadyExists, True);
     end
     else
     begin

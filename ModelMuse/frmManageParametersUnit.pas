@@ -150,7 +150,7 @@ var
 begin
   P1 := Item1;
   P2 := Item2;
-  result := CompareText(P1.ParameterName, P2.ParameterName);
+  result := AnsiCompareText(P1.ParameterName, P2.ParameterName);
 end;
 
 function ComparePackages(Item1, Item2: Pointer): Integer;
@@ -162,7 +162,7 @@ begin
   P2 := Item2;
   Pkg1 := ParamRecords[P1.ParameterType].Package;
   Pkg2 := ParamRecords[P2.ParameterType].Package;
-  result := CompareText(Pkg1, Pkg2);
+  result := AnsiCompareText(Pkg1, Pkg2);
 end;
 
 function CompareTypes(Item1, Item2: Pointer): Integer;
@@ -174,7 +174,7 @@ begin
   P2 := Item2;
   Type1 := ParamRecords[P1.ParameterType].PType;
   Type2 := ParamRecords[P2.ParameterType].PType;
-  result := CompareText(Type1, Type2);
+  result := AnsiCompareText(Type1, Type2);
 end;
 
 function CompareValues(Item1, Item2: Pointer): Integer;
@@ -847,7 +847,7 @@ begin
           begin
             AParam := rdgParameters.Objects[Ord(pcName), ARow]
               as TModflowParameter;
-            NewName := rdgParameters.Cells[Ord(pcName), ARow];
+            NewName := string(AnsiString(rdgParameters.Cells[Ord(pcName), ARow]));
             if AParam.ParameterType = ptSFR then
             begin
               FSfrParamInstances.UpdateParamName(AParam.ParameterName, NewName);

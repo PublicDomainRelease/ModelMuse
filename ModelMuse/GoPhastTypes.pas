@@ -534,7 +534,7 @@ implementation
 
 
 {$IFNDEF Testing}
-uses PhastModelUnit;
+uses PhastModelUnit, Character;
 {$ENDIF}
 
 function SortLayerSorts(Item1, Item2: Pointer): Integer;
@@ -813,33 +813,52 @@ begin
 end;
 
 function ValidName(const OriginalName: string): string;
+  function Alpha(C: Char): Boolean; inline;
+  begin
+    Result := TCharacter.IsLetter(C) or (C = '_');
+  end;
+
+  function AlphaNumeric(C: Char): Boolean; inline;
+  begin
+    Result := TCharacter.IsLetterOrDigit(C) or (C = '_');
+  end;
 var
   Index: integer;
   AChar: Char;
 begin
   result :=  Trim(OriginalName);
-  for Index := 1 to Length(result) do
-  begin
-    AChar := result[Index];
-    if Index = 1 then
+  try
+    if IsValidIdent(Result, False) then
     begin
-      if not CharInSet(AChar, ['_', 'a'..'z', 'A'..'Z']) then
-      begin
-        result[Index] := '_';
-      end;
+      Exit;
     end
     else
     begin
-      if not CharInSet(AChar, ['_', 'a'..'z', 'A'..'Z', '0'..'9']) then
+      for Index := 1 to Length(result) do
       begin
-        result[Index] := '_';
+        AChar := result[Index];
+        if Index = 1 then
+        begin
+          if not Alpha(AChar) then
+          begin
+            result[Index] := '_';
+          end;
+        end
+        else
+        begin
+          if not AlphaNumeric(AChar) then
+          begin
+            result[Index] := '_';
+          end;
+        end;
       end;
     end;
+  finally
+    if result = '' then
+    begin
+      result := '_';
+    end
   end;
-  if result = '' then
-  begin
-    result := '_';
-  end
 end;
 
 function RightCopy(const Source: string; LengthToCopy: integer): string;

@@ -98,10 +98,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         781
         472)
@@ -576,10 +572,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       Caption = 'Features'
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlBoundaryCondition: TPanel
         Left = 0
         Top = 0
@@ -1182,10 +1174,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               TabOrder = 0
               object tabSfrBasic: TTabSheet
                 Caption = 'Basic'
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblSfrSegmentNumber: TLabel
                   Left = 13
                   Top = 9
@@ -1275,10 +1263,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               object tabSfrUnsaturated: TTabSheet
                 Caption = 'Unsaturated'
                 ImageIndex = 1
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblSaturatedVolumetricWater: TLabel
                   Left = 3
                   Top = 6
@@ -1461,17 +1445,11 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               object tabDrtNone: TTabSheet
                 Caption = 'tabDrtNone'
                 TabVisible = False
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
               end
               object tabDrtLocation: TTabSheet
                 Caption = 'tabDrtLocation'
                 ImageIndex = 2
                 TabVisible = False
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblDrtX: TLabel
                   Left = 3
                   Top = 7
@@ -1543,9 +1521,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 Caption = 'tabDrtCell'
                 ImageIndex = 3
                 TabVisible = False
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblDrtCol: TLabel
                   Left = 3
                   Top = 7
@@ -1772,10 +1747,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 HelpType = htKeyword
                 HelpKeyword = 'MNW2_Basic_Tab'
                 Caption = 'Basic'
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblWellId: TLabel
                   Left = 3
                   Top = 6
@@ -1944,10 +1915,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 HelpKeyword = 'MNW2_Loss_Controls_Tab'
                 Caption = 'Loss Controls'
                 ImageIndex = 1
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblWellRadius: TLabel
                   Left = 3
                   Top = 6
@@ -2052,10 +2019,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 HelpKeyword = 'MNW2_Discharge_Adjustment_Tab'
                 Caption = 'Discharge Adjustment'
                 ImageIndex = 2
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblReferenceHead: TLabel
                   Left = 8
                   Top = 6
@@ -2121,10 +2084,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     object tabCoordinateConversion: TTabSheet
       Caption = 'Coordinate Conversion'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object imageUtmZones: TImage
         Left = 8
         Top = 96

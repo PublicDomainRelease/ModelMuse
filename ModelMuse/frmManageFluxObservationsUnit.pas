@@ -228,7 +228,7 @@ type
 implementation
 
 uses
-  JvBoxProcs, frmGoPhastUnit, ScreenObjectUnit, Math, GIS_Functions, 
+  JvBoxProcs, frmGoPhastUnit, ScreenObjectUnit, Math, GIS_Functions,
   GoPhastTypes, DataSetUnit, frmFormulaUnit, frmErrorsAndWarningsUnit,
   PhastModelUnit, Mt3dmsChemSpeciesUnit;
 
@@ -258,6 +258,9 @@ resourcestring
   StrDRTMassFlux = 'DRT Mass Flux';
   StrETSMassFlux = 'ETS Mass Flux';
   StrErrorInFormulaS = 'Error in formula: %s';
+  StrYouMustDefineAtL = 'You must define at least one chemical species in th' +
+  'e MT3DMS BTN package before this dialog box can be displayed. Chemical sp' +
+  'ecies are defined in the MODFLOW Packages and Programs dialog box.';
 
 {$R *.dfm}
 
@@ -2022,7 +2025,7 @@ begin
   if (FSelectedObservation <> nil) then
   begin
     Assert(tvFluxObservations.Selected.Data = FSelectedObservation);
-    FSelectedObservation.ObservationName := edObservationName.Text;
+    FSelectedObservation.ObservationName := string(AnsiString(edObservationName.Text));
     tvFluxObservations.Selected.Text := edObservationName.Text;
     AssignObsNames;
   end;
@@ -2031,7 +2034,8 @@ end;
 procedure TfrmManageFluxObservations.edObservationNameExit(Sender: TObject);
 begin
   inherited;
-  edObservationName.Text := StringReplace(edObservationName.Text, ' ', '_', [rfReplaceAll]);
+  edObservationName.Text := string(AnsiString(StringReplace(edObservationName.Text,
+    ' ', '_', [rfReplaceAll])));
 end;
 
 procedure TfrmManageFluxObservations.CreateVariables;
@@ -2061,7 +2065,19 @@ begin
 end;
 
 procedure TfrmManageFluxObservations.FormCreate(Sender: TObject);
+var
+  PhastModel: TPhastModel;
 begin
+  PhastModel := frmGoPhast.PhastModel;
+  if PhastModel.Mt3dmsIsSelected
+    and (PhastModel.MobileComponents.Count = 0)
+    and (PhastModel.ImmobileComponents.Count = 0) then
+  begin
+    Beep;
+    MessageDlg(StrYouMustDefineAtL, mtError, [mbOK], 0);
+    ModalResult := mrCancel;
+    Exit;
+  end;
   FPriorErrors.Sorted := True;
   FPriorErrors.Duplicates := dupIgnore;
 

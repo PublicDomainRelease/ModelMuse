@@ -24,7 +24,7 @@ inherited frmGoPhast: TfrmGoPhast
   TextHeight = 18
   object splitHoriz: TJvNetscapeSplitter
     Left = 0
-    Top = 342
+    Top = 361
     Width = 765
     Height = 10
     Cursor = crVSplit
@@ -42,7 +42,7 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 0
     Top = 68
     Width = 765
-    Height = 274
+    Height = 293
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
@@ -50,7 +50,7 @@ inherited frmGoPhast: TfrmGoPhast
     object splitVertTop: TJvNetscapeSplitter
       Left = 526
       Top = 0
-      Height = 274
+      Height = 293
       Hint = 'Click and drag to resize the windows.'
       Align = alRight
       MinSize = 1
@@ -66,16 +66,16 @@ inherited frmGoPhast: TfrmGoPhast
       Left = 0
       Top = 0
       Width = 526
-      Height = 274
+      Height = 293
       HorzScrollBar.Range = 36
       VertScrollBar.Range = 40
       Align = alClient
       TabOrder = 0
       TabStop = True
       ExplicitWidth = 526
-      ExplicitHeight = 274
+      ExplicitHeight = 293
       inherited rulVertical: TRbwRuler
-        Height = 220
+        Height = 239
         ExplicitTop = 39
         ExplicitHeight = 173
       end
@@ -89,7 +89,7 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited ZoomBox: TQRbwZoomBox2
         Width = 477
-        Height = 220
+        Height = 239
         Image32.Top = 0
         Image32.Width = 477
         Image32.Height = 220
@@ -107,7 +107,7 @@ inherited frmGoPhast: TfrmGoPhast
       Left = 536
       Top = 0
       Width = 229
-      Height = 274
+      Height = 293
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alRight
@@ -115,10 +115,10 @@ inherited frmGoPhast: TfrmGoPhast
       TabStop = True
       ExplicitLeft = 536
       ExplicitWidth = 229
-      ExplicitHeight = 274
+      ExplicitHeight = 293
       inherited rulVertical: TRbwRuler
         Left = 180
-        Height = 220
+        Height = 239
         Align = alRight
         RulerPosition = rpRight
         ExplicitLeft = 194
@@ -152,7 +152,7 @@ inherited frmGoPhast: TfrmGoPhast
       inherited ZoomBox: TQRbwZoomBox2
         Left = 0
         Width = 180
-        Height = 220
+        Height = 239
         ExaggerationDirection = edHorizontal
         HorizontalDirection = hdLeft
         Image32.Top = 0
@@ -172,7 +172,7 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 352
+    Top = 371
     Width = 765
     Height = 133
     Align = alBottom
@@ -279,7 +279,7 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object sbMain: TStatusBar
     Left = 0
-    Top = 485
+    Top = 504
     Width = 765
     Height = 28
     Hint = 'Drag with the mouse to resize status bar panels'
@@ -303,6 +303,7 @@ inherited frmGoPhast: TfrmGoPhast
     OnMouseMove = sbMainMouseMove
     OnMouseUp = sbMainMouseUp
     OnDrawPanel = sbMainDrawPanel
+    ExplicitTop = 485
   end
   object cbControlBar: TControlBar
     Left = 0
@@ -319,7 +320,7 @@ inherited frmGoPhast: TfrmGoPhast
     object tbarEdit: TToolBar
       Left = 185
       Top = 2
-      Width = 149
+      Width = 145
       Height = 28
       ButtonHeight = 23
       Caption = 'Edit'
@@ -472,9 +473,9 @@ inherited frmGoPhast: TfrmGoPhast
       end
     end
     object tbarEditScreenObjects: TToolBar
-      Left = 347
+      Left = 343
       Top = 2
-      Width = 231
+      Width = 227
       Height = 28
       ButtonHeight = 23
       Caption = 'Edit objects'
@@ -587,7 +588,7 @@ inherited frmGoPhast: TfrmGoPhast
       end
     end
     object tbarView: TToolBar
-      Left = 591
+      Left = 583
       Top = 2
       Width = 165
       Height = 28
@@ -664,7 +665,7 @@ inherited frmGoPhast: TfrmGoPhast
     object tbarEditGrid: TToolBar
       Left = 11
       Top = 34
-      Width = 218
+      Width = 214
       Height = 28
       ButtonHeight = 23
       Caption = 'Grid'
@@ -763,7 +764,7 @@ inherited frmGoPhast: TfrmGoPhast
       end
     end
     object tbarCreateScreenObject: TToolBar
-      Left = 242
+      Left = 238
       Top = 34
       Width = 231
       Height = 28
@@ -877,9 +878,9 @@ inherited frmGoPhast: TfrmGoPhast
       end
     end
     object tbarView3D: TToolBar
-      Left = 486
+      Left = 482
       Top = 34
-      Width = 174
+      Width = 163
       Height = 28
       ButtonHeight = 26
       Caption = '3D View'
@@ -1808,6 +1809,14 @@ inherited frmGoPhast: TfrmGoPhast
         HelpContext = 3540
         OnClick = miPHASTProgramLocationClick
       end
+      object N10: TMenuItem
+        Caption = '-'
+        GroupIndex = 1
+      end
+      object SUTRALayerGroups1: TMenuItem
+        Action = acSutraLayers
+        GroupIndex = 1
+      end
     end
     object miHelp: TMenuItem
       Caption = '&Help'
@@ -2650,6 +2659,11 @@ inherited frmGoPhast: TfrmGoPhast
       HelpKeyword = 'Model'
       Hint = 'Make SUTRA the selected model type'
       OnExecute = acSutraActiveExecute
+    end
+    object acSutraLayers: TAction
+      Category = 'Model'
+      Caption = 'SUTRA Layer Groups'
+      OnExecute = acSutraLayersExecute
     end
   end
   object ilDisabledImageList: TImageList

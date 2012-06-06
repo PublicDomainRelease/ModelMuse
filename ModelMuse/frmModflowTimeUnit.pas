@@ -142,6 +142,9 @@ resourcestring
   'is might be a mistake.';
   StrYouNeedToSelectA = 'You need to select a row in the grid before clickin' +
   'g the Insert button.';
+  StrTheValuesYouSpeci = 'The values you specified for the lenth of a stress' +
+  ' period, maximum time step length and time step multiplier in stress peri' +
+  'od %d result in too large a number of time steps.';
 
 var
   MaxSteps: integer = 100;
@@ -747,8 +750,16 @@ var
   TimeStepMultiplier: double;
 begin
   GetTimePeriodValues(ARow, PerLength, MaxTimeStepLength, TimeStepMultiplier);
-  dgTime.Cells[Ord(tcSteps),ARow] := IntToStr(
-    GetNumberOfTimeSteps(PerLength, MaxTimeStepLength, TimeStepMultiplier));
+  try
+    dgTime.Cells[Ord(tcSteps),ARow] := IntToStr(
+      GetNumberOfTimeSteps(PerLength, MaxTimeStepLength, TimeStepMultiplier));
+  except on E: EIntOverflow do
+    begin
+      dgTime.Cells[Ord(tcSteps),ARow] := IntToStr(MAXINT);
+      Beep;
+      MessageDlg(Format(StrTheValuesYouSpeci, [ARow]), mtError, [mbOK], 0);
+    end;
+  end;
 end;
 
 procedure TfrmModflowTime.dgTimeSetEditText(Sender: TObject; ACol,

@@ -155,7 +155,7 @@ var
 begin
   P1 := Item1;
   P2 := Item2;
-  result := CompareText(P1.ScreenObjectName, P2.ScreenObjectName);
+  result := AnsiCompareText(P1.ScreenObjectName, P2.ScreenObjectName);
 end;
 
 function CompareName(Item1, Item2: Pointer): Integer;
@@ -164,7 +164,7 @@ var
 begin
   P1 := Item1;
   P2 := Item2;
-  result := CompareText(P1.Name, P2.Name);
+  result := AnsiCompareText(P1.Name, P2.Name);
 end;
 
 function CompareObservedValue(Item1, Item2: Pointer): Integer;

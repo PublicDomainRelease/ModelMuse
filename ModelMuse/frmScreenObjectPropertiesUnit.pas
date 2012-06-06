@@ -465,6 +465,8 @@ type
       ACol, ARow: Integer; const Value: string);
     procedure frameMt3dmsFluxObsrdgObservationGroupsStateChange(Sender: TObject;
       ACol, ARow: Integer; const Value: TCheckBoxState);
+    procedure frameHydmodcomboLayerGroupChange(Sender: TObject);
+    procedure frameHydmodcomboNoDelayBedChange(Sender: TObject);
   published
     // Clicking @name closes the @classname without changing anything.
     // See @link(btnCancelClick),
@@ -1932,7 +1934,7 @@ uses Math, StrUtils, JvToolEdit, frmGoPhastUnit, AbstractGridUnit,
   LayerStructureUnit, ModpathParticleUnit, IntListUnit,
   frmManageFluxObservationsUnit, ModflowGageUnit, ModflowMnw2Unit, JvGroupBox,
   ModflowHydmodUnit, ModelMuseUtilities, Mt3dmsChemUnit, Mt3dmsChemSpeciesUnit,
-  Mt3dmsTobUnit, Mt3dmsFluxObservationsUnit;
+  Mt3dmsTobUnit, Mt3dmsFluxObservationsUnit, frmDataSetsUnits;
 
 resourcestring
   StrConcentrationObserv = 'Concentration Observations: ';
@@ -5832,6 +5834,7 @@ var
   Boundary: TLakBoundary;
   AScreenObject: TScreenObject;
 begin
+  Assert(FNewProperties <> nil);
   if (FNewProperties.Count = 1) and (FScreenObjectList <> nil) then
   begin
     AScreenObject := FScreenObjectList[0];
@@ -11641,7 +11644,7 @@ begin
       ResultType := rdtInteger;
     end;
   end
-  else if (DataGrid.Owner is TframeFluxObs) then
+  else if (DataGrid.Owner is TCustomframeFluxObs) then
   begin
     ResultType := rdtDouble;
   end
@@ -13824,6 +13827,7 @@ var
   List: TList;
 begin
   inherited;
+//  frmGoPhast.miManageFluxObservationsClick(nil);
   ShowAForm(TfrmManageFluxObservations);
   if FScreenObject = nil then
   begin
@@ -15921,6 +15925,22 @@ begin
 
 end;
 
+procedure TfrmScreenObjectProperties.frameHydmodcomboLayerGroupChange(
+  Sender: TObject);
+begin
+  inherited;
+  frameHydmod.comboLayerGroupChange(Sender);
+
+end;
+
+procedure TfrmScreenObjectProperties.frameHydmodcomboNoDelayBedChange(
+  Sender: TObject);
+begin
+  inherited;
+  frameHydmod.comboNoDelayBedChange(Sender);
+
+end;
+
 procedure TfrmScreenObjectProperties.frameIfacerbHorizontalClick(
   Sender: TObject);
 var
@@ -17153,6 +17173,10 @@ end;
 procedure TfrmScreenObjectProperties.FormShow(Sender: TObject);
 begin
   inherited;
+  if frmDataSets <> nil then
+  begin
+    frmDataSets.Close;
+  end;
   HelpKeyword := 'Object_Properties_Dialog_Box';
   frameScreenObjectSFR.zbChannel.Image32.Invalidate;
   frameScreenObjectSFR.zbFlowDepthTable.Image32.Invalidate;

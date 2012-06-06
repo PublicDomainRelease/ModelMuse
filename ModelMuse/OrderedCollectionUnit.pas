@@ -1090,7 +1090,7 @@ end;
 procedure TOrderedItem.SetCaseInsensitiveStringProperty(var AField: string;
   NewValue: string);
 begin
-  if CompareText(AField, NewValue) <> 0 then
+  if AnsiCompareText(AField, NewValue) <> 0 then
   begin
     AField := NewValue;
     InvalidateModel;

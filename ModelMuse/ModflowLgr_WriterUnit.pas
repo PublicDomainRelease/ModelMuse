@@ -123,6 +123,10 @@ begin
   WriteString('CHILDONLY # Data set 7 GRIDSTATUS');
   NewLine;
 
+  if True then
+  begin
+
+  end;
   // data set 8
   ISHFLG := Ord(ChildModel.StartingHeadSource);
   WriteInteger(ISHFLG);
@@ -312,15 +316,26 @@ var
   HeadFile: string;
   FlowFile: string;
 begin
-  if AModel.SaveBfhBoundaryConditions then
+  if (AModel is TChildModel)
+    and (TChildModel(AModel).CouplingMethod = cmOneWay) then
   begin
-    IUPBHSV := AModel.UnitNumbers.UnitNumber(BFH_Heads);
-    IUPBFSV := AModel.UnitNumbers.UnitNumber(BFH_Fluxes);
+    // MODFLOW - LGR does not write anything to these
+    // files in child models unless two-way coupling is used.
+    IUPBHSV := 0;
+    IUPBFSV := 0;
   end
   else
   begin
-    IUPBHSV := 0;
-    IUPBFSV := 0;
+    if AModel.SaveBfhBoundaryConditions then
+    begin
+      IUPBHSV := AModel.UnitNumbers.UnitNumber(BFH_Heads);
+      IUPBFSV := AModel.UnitNumbers.UnitNumber(BFH_Fluxes);
+    end
+    else
+    begin
+      IUPBHSV := 0;
+      IUPBFSV := 0;
+    end;
   end;
   WriteInteger(IUPBHSV);
   WriteInteger(IUPBFSV);
@@ -328,10 +343,16 @@ begin
   NewLine;
   NameFile := AModel.FixFileName(AFileName);
   SetCurrentNameFileWriter(AModel.NameFileWriter as TNameFileWriter);
-  HeadFile := ChangeFileExt(NameFile, '.bfh_head');
-  WriteToNameFile(StrDATA, IUPBHSV, HeadFile, foOutput);
-  FlowFile := ChangeFileExt(NameFile, '.bfh_flux');
-  WriteToNameFile(StrDATA, IUPBFSV, FlowFile, foOutput);
+  if IUPBHSV > 0 then
+  begin
+    HeadFile := ChangeFileExt(NameFile, '.bfh_head');
+    WriteToNameFile(StrDATA, IUPBHSV, HeadFile, foOutput);
+  end;
+  if IUPBFSV > 0 then
+  begin
+    FlowFile := ChangeFileExt(NameFile, '.bfh_flux');
+    WriteToNameFile(StrDATA, IUPBFSV, FlowFile, foOutput);
+  end;
 end;
 
 end.

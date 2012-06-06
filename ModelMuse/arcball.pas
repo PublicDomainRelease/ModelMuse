@@ -570,10 +570,13 @@ begin
       glEnd;
 
       DrawArc(FvFrom.Vector, FvTo.Vector);  
+
     glMatrixMode(GL_PROJECTION);
     glPopMatrix;
+
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix;
+
   end;
 
 end;

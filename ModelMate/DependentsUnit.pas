@@ -769,7 +769,7 @@ begin
             AllAtts.Add;
         end;
       AllAtts.Assign(Item.AllAtts); // a TDependentAttributes (a TCollection)
-      //DepCat := Item.DepCat;
+      DepCat := Item.DepCat;
     end
   else
     inherited;

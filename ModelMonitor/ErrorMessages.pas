@@ -2,11 +2,14 @@ unit ErrorMessages;
 
 interface
 
-uses Classes;
+uses Classes, Generics.Collections;
+
+type
+  TAnsiStringList = TList<AnsiString>;
 
 var
-  ErrorValues: TStringList;
-  WarningValues: TStringList;
+  ErrorValues: TAnsiStringList;
+  WarningValues: TAnsiStringList;
 
 implementation
 
@@ -156,6 +159,20 @@ begin
     ErrorValues.Add('Streambed has lower altitude than GW cell bottom. Model stopping');
     ErrorValues.Add('STOPPING SIMULATION');
     ErrorValues.Add(' NaN');
+    ErrorValues.Add('***ERROR: MNW2 PACKAGE DOES NOT SUPPORT');
+    ErrorValues.Add('*** BAD RECORD ENCOUNTERED, PCGN DATA INPUT ***');
+    ErrorValues.Add('***BAD DATA READ, SUBROUTINE PCGNRP***');
+    ErrorValues.Add('UNABLE TO ALLOCATE STORAGE REQUIRED FOR PCG SOLVER');
+    ErrorValues.Add('ERROR ENCOUNTERED IN SUBROUTINE PCGNRP');
+    ErrorValues.Add('ERROR ENCOUNTERED IN SUBROUTINE PCG_INIT');
+    ErrorValues.Add('ERROR ENCOUNTERED IN SUBROUTINE PCG');
+    ErrorValues.Add('DIMENSION MISMATCH DISCOVERED');
+    ErrorValues.Add('UNKNOWN ERROR');
+    ErrorValues.Add('DID NOT CONVERGE');
+    ErrorValues.Add('Allocation error in subroutine PCG_init');
+    ErrorValues.Add('ARRAY DIAG CONTAINS A NEGATIVE ELEMENT AT NODE');
+    ErrorValues.Add('Allocation error in subroutine PCG');
+    ErrorValues.Add('Dimension mismatch in subroutine PCG');
 
     // MODFLOW-NWT
     ErrorValues.Add('THIS WILL CAUSE PROBLEMS IN COMPUTING LAKE STAGE USING THE NEWTON METHOD.');
@@ -189,7 +206,6 @@ begin
     ErrorValues.Add('error in xmdprecl (xmdsfacl)');
     ErrorValues.Add('error in xmdprecd (xmdsfacd)');
     ErrorValues.Add('error in xmdcheck');
-    ErrorValues.Add('***ERROR: MNW2 PACKAGE DOES NOT SUPPORT');
 
     WarningValues.Add('**WARNING**');
     WarningValues.Add('*** WARNING ***');
@@ -229,6 +245,16 @@ begin
     WarningValues.Add('OMITTED BECAUSE IBOUND=0 FOR CELL(S) IN MODEL LAYER');
     WarningValues.Add('REQUIRED FOR MULTILAYER INTERPOLATION');
     WarningValues.Add('For the cells listed below, one of two conditions exist');
+    WarningValues.Add('ISOLATED CELL IS BEING ELIMINATED');
+    WarningValues.Add('INCONSISTANT DATA HAS BEEN ENTERED');
+    WarningValues.Add('PCGN ASSEMBLER HAS DISCOVERED AN ADDITIONAL INACTIVE CELL');
+    WarningValues.Add('***PROVISIONAL CONVERGENCE***');
+    WarningValues.Add('WARNING: RATIO_E NEGATIVE IN SUBROUTINE NONLINEAR');
+    WarningValues.Add('A ZERO PIVOT WAS ENCOUNTERED AT LOCATION');
+    WarningValues.Add('A NEGATIVE PIVOT WAS ENCOUNTERED AT LOCATION');
+    WarningValues.Add('PRECONDITIONED CONJUGATE GRADIENT SOLVER CANNOT');
+    WarningValues.Add('THE DOMAIN INTEGRITY ANALYSIS IS DEFECTIVE');
+    WarningValues.Add('THE DOMAIN INTEGRITY APPEARS TO BE COMPROMIZED');
 
     // MODFLOW-NWT
     WarningValues.Add('*** WARNING *** NEGATIVE LAKE OUTFLOW NOT ALLOWED;');
@@ -241,8 +267,8 @@ begin
 end;
 
 initialization
-  ErrorValues := TStringList.Create;
-  WarningValues := TStringList.Create;
+  ErrorValues := TAnsiStringList.Create;
+  WarningValues := TAnsiStringList.Create;
   AssignErrorStrings;
 
 finalization

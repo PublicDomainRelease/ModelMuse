@@ -8,6 +8,8 @@ uses
   FluxObservationUnit;
 
 type
+  TObsCol = (ocLabel, ocName, ocFormula);
+
   TframeFluxObs = class(TCustomframeFluxObs)
   private
     { Private declarations }
@@ -58,9 +60,9 @@ begin
     for ObsevationIndex := 0 to Observations.Count - 1 do
     begin
       Observation := Observations[ObsevationIndex];
-      rdgObservationGroups.Cells[0,ObsevationIndex+1] :=
+      rdgObservationGroups.Cells[Ord(ocLabel),ObsevationIndex+1] :=
         IntToStr(ObsevationIndex+1);
-      rdgObservationGroups.Cells[1,ObsevationIndex+1] :=
+      rdgObservationGroups.Cells[Ord(ocName),ObsevationIndex+1] :=
         Observation.ObservationName;
       for ScreenObjectIndex := 0 to ListOfScreenObjects.Count - 1 do
       begin
@@ -70,41 +72,41 @@ begin
         ScreenObjectUsed := ScreenObjectPosition >= 0;
         if ScreenObjectIndex = 0 then
         begin
-          rdgObservationGroups.Checked[1,ObsevationIndex+1] := ScreenObjectUsed;
+          rdgObservationGroups.Checked[Ord(ocName),ObsevationIndex+1] := ScreenObjectUsed;
           if ScreenObjectUsed then
           begin
             ObsFactor := Observation.ObservationFactors[ScreenObjectPosition];
-            rdgObservationGroups.Cells[2,ObsevationIndex+1] := ObsFactor.Factor;
+            rdgObservationGroups.Cells[Ord(ocFormula),ObsevationIndex+1] := ObsFactor.Factor;
           end
           else
           begin
-            rdgObservationGroups.Cells[2,ObsevationIndex+1] := '';
+            rdgObservationGroups.Cells[Ord(ocFormula),ObsevationIndex+1] := '';
           end;
         end
         else
         begin
-          if rdgObservationGroups.State[1,ObsevationIndex+1] <> cbGrayed then
+          if rdgObservationGroups.State[Ord(ocName),ObsevationIndex+1] <> cbGrayed then
           begin
-            if rdgObservationGroups.Checked[1,ObsevationIndex+1]
+            if rdgObservationGroups.Checked[Ord(ocName),ObsevationIndex+1]
               <> ScreenObjectUsed then
             begin
               if ScreenObjectUsed then
               begin
                 ObsFactor :=
                   Observation.ObservationFactors[ScreenObjectPosition];
-                rdgObservationGroups.Cells[2,ObsevationIndex+1] :=
+                rdgObservationGroups.Cells[Ord(ocFormula),ObsevationIndex+1] :=
                   ObsFactor.Factor;
               end;
-              rdgObservationGroups.State[1,ObsevationIndex+1] := cbGrayed
+              rdgObservationGroups.State[Ord(ocName),ObsevationIndex+1] := cbGrayed
             end;
           end
           else if ScreenObjectUsed then
           begin
             ObsFactor := Observation.ObservationFactors[ScreenObjectPosition];
-            if rdgObservationGroups.Cells[2,ObsevationIndex+1]
+            if rdgObservationGroups.Cells[Ord(ocFormula),ObsevationIndex+1]
               <> ObsFactor.Factor then
             begin
-              rdgObservationGroups.Cells[2,ObsevationIndex+1] := '';
+              rdgObservationGroups.Cells[Ord(ocFormula),ObsevationIndex+1] := '';
             end;
           end;
         end;
@@ -154,9 +156,9 @@ begin
   begin
     Observation:= Observations[ObsevationIndex];
     Assert(Observation.ObservationName =
-      rdgObservationGroups.Cells[1,ObsevationIndex+1]);
+      rdgObservationGroups.Cells[Ord(ocName),ObsevationIndex+1]);
 
-    ObsState := rdgObservationGroups.CheckState[1, ObsevationIndex+1];
+    ObsState := rdgObservationGroups.CheckState[Ord(ocName), ObsevationIndex+1];
     for ScreenObjectIndex := 0 to ListOfScreenObjects.Count - 1 do
     begin
       ScreenObject := ListOfScreenObjects[ScreenObjectIndex];
@@ -182,10 +184,10 @@ begin
         end;
       end;
       if (ObjectPosition >= 0)
-        and (rdgObservationGroups.Cells[2, ObsevationIndex+1] <> '') then
+        and (rdgObservationGroups.Cells[Ord(ocFormula), ObsevationIndex+1] <> '') then
       begin
         ObsFactor := Observation.ObservationFactors[ObjectPosition];
-        ObsFactor.Factor := rdgObservationGroups.Cells[2, ObsevationIndex+1];
+        ObsFactor.Factor := rdgObservationGroups.Cells[Ord(ocFormula), ObsevationIndex+1];
       end;
     end;
   end;

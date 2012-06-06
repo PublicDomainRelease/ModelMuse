@@ -619,7 +619,9 @@ type
     function RequiredCellWidth(const ACol, ARow: integer): integer;
     procedure SetEnabled(Value: boolean);override;
     procedure TopLeftChanged(); override;
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure KeyUp(var Key: Word; Shift: TShiftState); override;
+    procedure KeyPress(var Key: Char); override;
   public
     function WidthNeededToFitText(const ACol, ARow: Integer): integer;
     procedure SelectAll;
@@ -2282,6 +2284,96 @@ begin
       result := not result;
     end;
   end;
+end;
+
+type
+  TWinControlCrack = class(TWinControl);
+
+procedure TCustomRBWDataGrid.KeyDown(var Key: Word; Shift: TShiftState);
+var
+  ACell: TGridCoord;
+  RowIndex: Integer;
+  ColIndex: Integer;
+  CanSelect: Boolean;
+  ParentForm: TWinControlCrack;
+  function GetParentForm(AControl: TWinControl): TWinControlCrack;
+  begin
+    while (AControl <> nil) and not (AControl is TCustomForm) do
+    begin
+      AControl := AControl.Parent;
+    end;
+    Result := TWinControlCrack(AControl);
+  end;
+begin
+  try
+  if Key = 9 then
+  begin
+    if ssShift in Shift then
+    begin
+      ACell := Selection.TopLeft;
+      for RowIndex := ACell.Y downto  FixedRows do
+      begin
+        for ColIndex := ColCount downto FixedCols do
+        begin
+          if (RowIndex = ACell.Y) and (ColIndex >= ACell.X) then
+          begin
+            Continue;
+          end;
+          CanSelect := True;
+          if Assigned(OnSelectCell) then
+          begin
+            OnSelectCell(self, ColIndex, RowIndex, CanSelect);
+          end;
+          if CanSelect then
+          begin
+            Exit;
+          end;
+        end;
+      end;
+      ParentForm :=  GetParentForm(Parent);
+      if ParentForm <> nil then
+      begin
+        ParentForm.SelectNext(Self, False, True);
+      end;
+    end
+    else
+    begin
+      ACell := Selection.BottomRight;
+      for RowIndex := ACell.Y to RowCount - 1 do
+      begin
+        for ColIndex := FixedCols to ColCount - 1 do
+        begin
+          if (RowIndex = ACell.Y) and (ColIndex <= ACell.X) then
+          begin
+            Continue;
+          end;
+          CanSelect := True;
+          if Assigned(OnSelectCell) then
+          begin
+            OnSelectCell(self, ColIndex, RowIndex, CanSelect);
+          end;
+          if CanSelect then
+          begin
+            Exit;
+          end;
+        end;
+      end;
+      ParentForm :=  GetParentForm(Parent);
+      if ParentForm <> nil then
+      begin
+        ParentForm.SelectNext(Self, True, True);
+      end;
+    end;
+  end;
+  finally
+    inherited;
+  end;
+end;
+
+procedure TCustomRBWDataGrid.KeyPress(var Key: Char);
+begin
+  inherited;
+
 end;
 
 procedure TCustomRBWDataGrid.KeyUp(var Key: Word; Shift: TShiftState);

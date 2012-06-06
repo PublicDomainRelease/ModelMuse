@@ -399,7 +399,14 @@ begin
 end;
 
 procedure TframeScreenObjectMNW2.edWellIdChange(Sender: TObject);
+var
+  NewValue: AnsiString;
 begin
+  NewValue := AnsiString(edWellId.Text);
+  if edWellId.Text <> string(NewValue) then
+  begin
+    edWellId.Text := string(NewValue);
+  end;
   Changed;
 end;
 

@@ -3098,7 +3098,7 @@ inherited frmAbout: TfrmAbout
     Height = 49
     Align = alBottom
     ParentColor = True
-    TabOrder = 1
+    TabOrder = 2
     DesignSize = (
       742
       49)
@@ -3126,7 +3126,7 @@ inherited frmAbout: TfrmAbout
       Kind = bkClose
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 0
+      TabOrder = 1
     end
     object btnGoToWeb: TBitBtn
       Left = 479
@@ -3197,7 +3197,7 @@ inherited frmAbout: TfrmAbout
         00FBFBFBFBFB00FEFEFEFE00F9FDF9FDF9F90000080808080800080808080808
         0800000000000000000000000000000000000000080808080800}
       ParentDoubleBuffered = False
-      TabOrder = 1
+      TabOrder = 0
       OnClick = btnGoToWebClick
     end
   end
@@ -3209,9 +3209,9 @@ inherited frmAbout: TfrmAbout
     Align = alClient
     ColCount = 3
     FixedCols = 0
-    RowCount = 38
+    RowCount = 37
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
-    TabOrder = 2
+    TabOrder = 1
     ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = False
@@ -3241,6 +3241,7 @@ inherited frmAbout: TfrmAbout
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = True
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -3262,6 +3263,7 @@ inherited frmAbout: TfrmAbout
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = True
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -3283,6 +3285,7 @@ inherited frmAbout: TfrmAbout
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = True
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
   end

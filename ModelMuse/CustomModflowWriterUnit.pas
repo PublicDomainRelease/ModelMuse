@@ -16,7 +16,7 @@ uses Types, LayerStructureUnit, ModflowTimeUnit, FluxObservationUnit,
 type
   // @name indicates whether the file in the name file is an input file
   // and output file or undetermined.
-  TFileOption = (foNone, foInput, foOutput);
+  TFileOption = (foNone, foInput, foOutput, foInputAlreadyExists);
 
   {@name is used in @link(TCustomModflowWriter.CheckArray)
    @value(cvmGreater If the value in the array is greater than
@@ -790,6 +790,8 @@ resourcestring
   StrWritingParamter = '    Writing paramter: %s';
   StrWritingStressPer = '  Writing Stress Period %d';
   StrLayer0dRow1 = 'Layer: %0:d; Row: %1:d; Column: %2:d';
+  StrInputFileDoesNot = 'Input file does not exist.';
+  StrTheRequiredInputF = 'The required input file "%s" does not exist.';
 
 var
 //  NameFile: TStringList;
@@ -1633,6 +1635,13 @@ class procedure TCustomModflowWriter.WriteToNameFile(const Ftype: string;
 var
   Line: string;
 begin
+  Assert(CurrentNameFileWriter <> nil);
+  if (Option = foInputAlreadyExists) and not FileExists(FileName) then
+  begin
+    frmErrorsAndWarnings.AddError(CurrentNameFileWriter.Model,
+      StrInputFileDoesNot,
+      Format(StrTheRequiredInputF, [FileName]));
+  end;
   if UnitNumber > MaxUnitNumber then
   begin
     MaxUnitNumber := UnitNumber;
@@ -1654,7 +1663,7 @@ begin
   Line := Ftype + ' ' + IntToStr(UnitNumber) + ' ' + FileName;
   case Option of
     foNone: ;// do nothing
-    foInput:
+    foInput, foInputAlreadyExists:
       begin
         Line := Line + ' ' + 'OLD';
       end;
@@ -1662,8 +1671,9 @@ begin
       begin
         Line := Line + ' ' + 'REPLACE';
       end;
+    else
+      Assert(False);
   end;
-  Assert(CurrentNameFileWriter <> nil);
   CurrentNameFileWriter.NameFile.Add(Line);
 end;
 
@@ -4121,7 +4131,7 @@ begin
     Exit;
   end;
 
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, ObsNameWarningString);;
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, ObsNameWarningString);
 
   // count the number of cell groups for which flux observations are listed
   NQ_Pkg := 0;
@@ -4703,6 +4713,7 @@ begin
   FNameFile := TStringList.Create;
   SetCurrentNameFileWriter(self);
   InitilizeNameFile(FileName, FListFileName);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInputFileDoesNot);
 end;
 
 destructor TCustomNameFileWriter.Destroy;
@@ -4741,7 +4752,7 @@ begin
       Format(StrTheFlowtransportL, [FtlFileName]));
   end;
   WriteToMt3dMsNameFile(StrFTL, Mt3dFtl, FtlFileName);
-  WriteToMt3dMsNameFile(StrDATA, Mt3dCnf, ChangeFileExt(OutputListFileName, '._cnf'));
+  WriteToMt3dMsNameFile(StrDATA, Mt3dCnf, ChangeFileExt(OutputListFileName, '.cnf'));
 end;
 
 procedure TCustomNameFileWriter.SaveNameFile(AFileName: string);

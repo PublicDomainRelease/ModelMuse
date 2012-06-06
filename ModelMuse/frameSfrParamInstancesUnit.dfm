@@ -13,7 +13,7 @@ object frameSfrParamInstances: TframeSfrParamInstances
     Height = 64
     Align = alBottom
     BevelOuter = bvNone
-    TabOrder = 0
+    TabOrder = 2
     DesignSize = (
       451
       64)
@@ -113,6 +113,7 @@ object frameSfrParamInstances: TframeSfrParamInstances
     TabOrder = 1
     OnExit = rdgSfrParamInstancesExit
     OnSelectCell = rdgSfrParamInstancesSelectCell
+    OnSetEditText = rdgSfrParamInstancesSetEditText
     ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = True
@@ -199,6 +200,6 @@ object frameSfrParamInstances: TframeSfrParamInstances
     Align = alTop
     BevelOuter = bvNone
     Caption = 'pnlLabel'
-    TabOrder = 2
+    TabOrder = 0
   end
 end

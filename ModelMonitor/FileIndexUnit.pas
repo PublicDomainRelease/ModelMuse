@@ -16,27 +16,44 @@ type
     FPositions: TIntList;
     FFileName: string;
     FOnProgress: TOnProgress;
+    FCurrentStartLine: integer;
+    FAbort: Boolean;
+    FOnStartLineChange: TNotifyEvent;
     function GetLine(Index: integer): string;
     function GetLineCount: integer;
     procedure SetFileName(const Value: string);
+    procedure SetOnStartLineChange(const Value: TNotifyEvent);
   public
     Constructor Create;
     property FileName: string read FFileName write SetFileName;
     Destructor Destroy; override;
-    property Line[Index: integer]: string read GetLine;
+    property Line[Index: integer]: string read GetLine; default;
     procedure ReadLines(Lines: TStrings; StartLine, Count: integer);
     property LineCount: integer read GetLineCount;
     function ReadLine: string;
     property OnProgress: TOnProgress read FOnProgress write FOnProgress;
+    procedure GoToStart;
+    property CurrentStartLine: integer read FCurrentStartLine;
+    procedure Abort;
+    property OnStartLineChange: TNotifyEvent read FOnStartLineChange write SetOnStartLineChange;
   end;
 
 implementation
 
+uses
+  Forms;
+
 { TFileIndex }
+
+procedure TFileIndex.Abort;
+begin
+  FAbort := True;
+end;
 
 constructor TFileIndex.Create;
 begin
   FPositions := TIntList.Create;
+  FCurrentStartLine := -1;
 end;
 
 destructor TFileIndex.Destroy;
@@ -56,6 +73,12 @@ end;
 function TFileIndex.GetLineCount: integer;
 begin
   result := FPositions.Count;
+end;
+
+procedure TFileIndex.GoToStart;
+begin
+  FFile.BaseStream.Position := 0;
+  FFile.DiscardBufferedData;
 end;
 
 function TFileIndex.ReadLine: string;
@@ -79,6 +102,11 @@ begin
       break;
     end;
   end;
+  if FCurrentStartLine <> StartLine then
+  begin
+    FCurrentStartLine := StartLine;
+    FOnStartLineChange(self);
+  end;
 end;
 
 procedure TFileIndex.SetFileName(const Value: string);
@@ -90,6 +118,7 @@ var
   NewPerMil: Int64;
   Divider: Int64;
 begin
+  FAbort := False;
   LineEndLength := Length(sLineBreak);
   FFileName := Value;
   FreeAndNil(FFile);
@@ -100,6 +129,10 @@ begin
   PerMil := 0;
   while not FFile.EndOfStream do
   begin
+    if FAbort then
+    begin
+      break;
+    end;
     FPositions.Add(PriorPosition);
     ALine := FFile.ReadLine;
     PriorPosition  := PriorPosition + Length(ALine) + LineEndLength;
@@ -110,11 +143,17 @@ begin
       begin
         PerMil := NewPerMil;
         OnProgress(self, PerMil);
+        Application.ProcessMessages;
       end;
     end;
   end;
   FFile.BaseStream.Position := 0;
   FFile.DiscardBufferedData;
+end;
+
+procedure TFileIndex.SetOnStartLineChange(const Value: TNotifyEvent);
+begin
+  FOnStartLineChange := Value;
 end;
 
 end.

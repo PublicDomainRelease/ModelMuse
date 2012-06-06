@@ -565,7 +565,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
           inherited rdeDistance1: TRbwDataEntry
             Top = 68
             Height = 30
-            TabOrder = 4
+            TabOrder = 3
             OnExit = framePhastInterpolationDatardeDistance1Exit
             ExplicitTop = 68
             ExplicitHeight = 30
@@ -2224,7 +2224,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Height = 73
               Caption = 'Interp. dir. or mixture'
               Columns = 2
-              TabOrder = 2
               OnClick = framePhastInterpolationBoundariesrgInterpolationDirectionClick
               ExplicitLeft = 8
               ExplicitWidth = 233
@@ -2235,7 +2234,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Top = 32
               Width = 193
               Height = 27
-              TabOrder = 1
+              TabOrder = 2
               OnExit = framePhastInterpolationBoundariesedMixFormulaExit
               ExplicitLeft = 256
               ExplicitTop = 32
@@ -2246,7 +2245,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Left = 377
               Top = 1
               Anchors = [akTop, akRight]
-              TabOrder = 0
+              TabOrder = 1
               OnClick = btnFormulaClick
               ExplicitLeft = 377
               ExplicitTop = 1
@@ -2272,10 +2271,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       HelpKeyword = 'MODFLOW_Features_Tab'
       Caption = 'MODFLOW Features'
       ImageIndex = 4
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object JvNetscapeSplitter1: TJvNetscapeSplitter
         Left = 185
         Top = 0
@@ -2320,7 +2315,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Top = 0
         Width = 583
         Height = 475
-        ActivePage = jvspSFR
+        ActivePage = jvspHYDMOD
         PropagateEnable = False
         Align = alClient
         OnChange = jvplModflowBoundariesChange
@@ -2365,21 +2360,22 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ExplicitHeight = 19
               end
               inherited seNumberOfTimes: TJvSpinEdit
-                Top = 6
                 Height = 27
+                TabOrder = 2
                 OnChange = frameChdParamseNumberOfTimesChange
-                ExplicitTop = 6
                 ExplicitHeight = 27
               end
               inherited btnDelete: TBitBtn
                 Left = 476
                 Top = 3
+                TabOrder = 1
                 ExplicitLeft = 476
                 ExplicitTop = 3
               end
               inherited btnInsert: TBitBtn
                 Left = 388
                 Top = 3
+                TabOrder = 0
                 ExplicitLeft = 388
                 ExplicitTop = 3
               end
@@ -2417,7 +2413,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 Width = 581
                 Height = 285
                 ColCount = 4
-                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
+                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
                 OnSetEditText = frameChdParamdgModflowBoundarySetEditText
                 OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
                 Columns = <
@@ -2621,7 +2617,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 Width = 581
                 Height = 250
                 ColCount = 4
-                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
+                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
                 OnSetEditText = frameGhbParamdgModflowBoundarySetEditText
                 OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
                 Columns = <
@@ -2825,7 +2821,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited dgModflowBoundary: TRbwDataGrid4
                 Width = 581
                 Height = 250
-                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
+                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
                 OnSetEditText = frameWellParamdgModflowBoundarySetEditText
                 OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
                 Columns = <
@@ -3006,7 +3002,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 Width = 581
                 Height = 250
                 ColCount = 5
-                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
+                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
                 OnSetEditText = frameRivParamdgModflowBoundarySetEditText
                 OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
                 Columns = <
@@ -3237,7 +3233,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 Width = 581
                 Height = 250
                 ColCount = 4
-                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
+                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
                 OnSetEditText = frameDrnParamdgModflowBoundarySetEditText
                 OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
                 Columns = <
@@ -3445,7 +3441,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 Width = 581
                 Height = 168
                 ColCount = 5
-                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
+                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
                 OnSetEditText = frameDrtParamdgModflowBoundarySetEditText
                 OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
                 Columns = <
@@ -3885,7 +3881,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 Width = 581
                 Height = 285
                 ColCount = 4
-                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
+                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
                 OnSetEditText = frameRchParamdgModflowBoundarySetEditText
                 OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
                 Columns = <
@@ -4082,7 +4078,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited dgModflowBoundary: TRbwDataGrid4
                 Width = 581
                 Height = 285
-                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
+                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
                 OnSetEditText = frameEvtParamdgModflowBoundarySetEditText
                 OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
                 Columns = <
@@ -4203,6 +4199,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 Top = 10
                 Height = 27
                 Value = 1.000000000000000000
+                TabOrder = 2
                 OnChange = frameEtsParamseNumberOfTimesChange
                 ExplicitLeft = 9
                 ExplicitTop = 10
@@ -4211,12 +4208,14 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited btnDelete: TBitBtn
                 Left = 479
                 Top = 7
+                TabOrder = 1
                 ExplicitLeft = 479
                 ExplicitTop = 7
               end
               inherited btnInsert: TBitBtn
                 Left = 395
                 Top = 7
+                TabOrder = 0
                 ExplicitLeft = 395
                 ExplicitTop = 7
               end
@@ -4253,7 +4252,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited dgModflowBoundary: TRbwDataGrid4
                 Width = 581
                 Height = 285
-                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
+                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
                 OnSetEditText = frameEtsParamdgModflowBoundarySetEditText
                 OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
                 Columns = <
@@ -4410,7 +4409,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 Width = 581
                 Height = 352
                 ColCount = 4
-                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
+                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
                 OnSetEditText = frameResdgModflowBoundarySetEditText
                 OnButtonClick = frameResdgModflowBoundaryButtonClick
                 Columns = <
@@ -4673,7 +4672,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited dgModflowBoundary: TRbwDataGrid4
                 Width = 581
                 Height = 141
-                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
+                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
                 OnSetEditText = frameLakdgModflowBoundarySetEditText
                 OnButtonClick = frameResdgModflowBoundaryButtonClick
                 Columns = <
@@ -4876,7 +4875,17 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               ExplicitTop = 218
               ExplicitWidth = 583
               ExplicitHeight = 0
+              inherited tabLakeProperties: TTabSheet
+                ExplicitLeft = 4
+                ExplicitTop = 30
+                ExplicitWidth = 455
+                ExplicitHeight = 155
+              end
               inherited tabBathymetry: TTabSheet
+                ExplicitLeft = 4
+                ExplicitTop = 30
+                ExplicitWidth = 575
+                ExplicitHeight = 155
                 inherited rdgLakeTable: TRbwDataGrid4
                   Width = 575
                   Height = 50
@@ -4886,6 +4895,10 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 inherited pnlBathChoice: TPanel
                   Width = 575
                   ExplicitWidth = 575
+                  inherited feLakeBathymetry: TJvFilenameEdit
+                    Height = 27
+                    ExplicitHeight = 27
+                  end
                 end
               end
             end
@@ -4912,12 +4925,14 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             inherited pcSFR: TPageControl
               Width = 583
               Height = 475
+              ActivePage = frameScreenObjectSFR.tabBasic
               OnChange = frameScreenObjectSFRpcSFRChange
               ExplicitWidth = 583
               ExplicitHeight = 475
               inherited tabBasic: TTabSheet
                 ExplicitTop = 30
-                ExplicitHeight = 472
+                ExplicitWidth = 575
+                ExplicitHeight = 441
                 inherited Label1: TLabel
                   Width = 186
                   Height = 19
@@ -4926,9 +4941,9 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
                 inherited gReachProperties: TGroupBox
                   Left = 2
-                  Width = 567
+                  Width = 589
                   ExplicitLeft = 2
-                  ExplicitWidth = 567
+                  ExplicitWidth = 589
                   inherited lblStreamTop: TLabel
                     Top = 55
                     Width = 186
@@ -5065,9 +5080,15 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ExplicitHeight = 27
                   end
                 end
+                inherited pnlCaption: TPanel
+                  Width = 575
+                  ExplicitWidth = 575
+                end
               end
               inherited tabTime: TTabSheet
+                ExplicitLeft = 4
                 ExplicitTop = 30
+                ExplicitWidth = 553
                 ExplicitHeight = 472
                 inherited pnlParamTop: TPanel
                   inherited lblParameterChoices: TLabel
@@ -5095,7 +5116,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
                 inherited rdgParameters: TRbwDataGrid4
                   Height = 374
-                  Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
+                  Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
                   Columns = <
                     item
                       AutoAdjustRowHeights = True
@@ -5233,6 +5254,14 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     Height = 27
                     ExplicitHeight = 27
                   end
+                  inherited btnInserParameters: TBitBtn
+                    Left = 393
+                    ExplicitLeft = 393
+                  end
+                  inherited btnDeleteParameters: TBitBtn
+                    Left = 481
+                    ExplicitLeft = 481
+                  end
                 end
               end
               inherited tabNetwork: TTabSheet
@@ -5262,11 +5291,13 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
               end
               inherited tabFlows: TTabSheet
+                ExplicitLeft = 4
                 ExplicitTop = 30
+                ExplicitWidth = 553
                 ExplicitHeight = 472
                 inherited dgFlowTimes: TRbwDataGrid4
                   Height = 415
-                  Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
+                  Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
                   OnButtonClick = frameResdgModflowBoundaryButtonClick
                   Columns = <
                     item
@@ -5419,14 +5450,16 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
               end
               inherited tabSegment: TTabSheet
+                ExplicitLeft = 4
                 ExplicitTop = 30
+                ExplicitWidth = 553
                 ExplicitHeight = 472
                 inherited Splitter1: TSplitter
                   ExplicitWidth = 575
                 end
                 inherited pnlSegmentUpstream: TPanel
                   inherited dgUp: TRbwDataGrid4
-                    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
+                    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
                     OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
                     Columns = <
                       item
@@ -5605,7 +5638,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   ExplicitHeight = 255
                   inherited dgDown: TRbwDataGrid4
                     Height = 201
-                    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
+                    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
                     OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
                     Columns = <
                       item
@@ -5782,7 +5815,9 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
               end
               inherited tabChannel: TTabSheet
+                ExplicitLeft = 4
                 ExplicitTop = 30
+                ExplicitWidth = 553
                 ExplicitHeight = 472
                 inherited Splitter3: TSplitter
                   Height = 363
@@ -5798,7 +5833,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   ExplicitHeight = 363
                   inherited dgSfrRough: TRbwDataGrid4
                     Height = 304
-                    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
+                    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
                     OnButtonClick = frameResdgModflowBoundaryButtonClick
                     Columns = <
                       item
@@ -5906,15 +5941,18 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
                 inherited zbChannel: TQRbwZoomBox2
                   Top = 363
+                  Image32.Top = 0
                   ExplicitTop = 363
                 end
               end
               inherited tabEquation: TTabSheet
+                ExplicitLeft = 4
                 ExplicitTop = 30
+                ExplicitWidth = 553
                 ExplicitHeight = 472
                 inherited dgSfrEquation: TRbwDataGrid4
                   Height = 415
-                  Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
+                  Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
                   OnButtonClick = frameResdgModflowBoundaryButtonClick
                   Columns = <
                     item
@@ -6067,7 +6105,9 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
               end
               inherited tabTable: TTabSheet
+                ExplicitLeft = 4
                 ExplicitTop = 30
+                ExplicitWidth = 553
                 ExplicitHeight = 472
                 inherited Splitter2: TSplitter
                   Height = 315
@@ -6083,7 +6123,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   ExplicitHeight = 315
                   inherited dgTableTime: TRbwDataGrid4
                     Height = 313
-                    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect]
+                    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goTabs]
                     Columns = <
                       item
                         AutoAdjustRowHeights = False
@@ -6148,14 +6188,20 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       Row = 0
                     end>
                   ExplicitTop = 315
+                  inherited zbFlowDepthTable: TQRbwZoomBox2
+                    Image32.Top = 0
+                  end
+                  inherited zbFlowWidthTable: TQRbwZoomBox2
+                    Image32.Top = 0
+                  end
                 end
               end
               inherited tabUnsaturatedProperties: TTabSheet
                 ExplicitTop = 30
                 ExplicitHeight = 472
                 inherited gbUnsatUpstream: TGroupBox
-                  Width = 780
-                  ExplicitWidth = 780
+                  Width = 802
+                  ExplicitWidth = 802
                   inherited Label6: TLabel
                     Width = 316
                     Height = 19
@@ -6202,8 +6248,8 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   end
                 end
                 inherited gbUnsatDownstream: TGroupBox
-                  Width = 780
-                  ExplicitWidth = 780
+                  Width = 802
+                  ExplicitWidth = 802
                   inherited Label20: TLabel
                     Width = 316
                     Height = 19
@@ -6251,6 +6297,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
               end
               inherited tabExternalFlowFile: TTabSheet
+                ExplicitLeft = 4
                 ExplicitTop = 30
                 ExplicitWidth = 553
                 ExplicitHeight = 472
@@ -6259,8 +6306,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   ExplicitHeight = 327
                   inherited Panel: TPanel
                     Top = 286
-                    ExplicitTop = 255
-                    ExplicitWidth = 575
+                    ExplicitTop = 286
                     inherited lbNumber: TLabel
                       Width = 57
                       Height = 19
@@ -6286,11 +6332,11 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   end
                   inherited Grid: TRbwDataGrid4
                     Height = 286
+                    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
                     ExplicitHeight = 286
                   end
                 end
                 inherited pnlFlowFile: TPanel
-                  ExplicitWidth = 575
                   inherited lblExternalFileName: TLabel
                     Width = 129
                     Height = 19
@@ -6368,8 +6414,10 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ExplicitHeight = 19
               end
               inherited seNumberOfTimes: TJvSpinEdit
+                Top = 9
                 Height = 27
                 OnChange = frameScreenObjectUZFseNumberOfTimesChange
+                ExplicitTop = 9
                 ExplicitHeight = 27
               end
               inherited btnDelete: TBitBtn
@@ -6412,7 +6460,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 Width = 581
                 Height = 230
                 ColCount = 6
-                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
+                Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
                 OnSetEditText = frameScreenObjectUZFdgModflowBoundarySetEditText
                 OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
                 Columns = <
@@ -6697,6 +6745,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
                 inherited rdgLayers: TRbwDataGrid4
                   Height = 71
+                  ExplicitTop = 35
                   ExplicitHeight = 71
                 end
               end
@@ -6781,7 +6830,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             end
             inherited pnlCaption: TPanel
               Width = 583
-              TabOrder = 5
               ExplicitWidth = 583
             end
             inherited edHydraulicConductivity: TRbwEdit
@@ -6791,6 +6839,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             end
             inherited edBarrierThickness: TRbwEdit
               Height = 27
+              TabOrder = 4
               ExplicitHeight = 27
             end
             inherited btnEditHfbHydraulicConductivityFormula: TButton
@@ -6801,6 +6850,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             end
             inherited btnEditHfbThicknessyFormula: TButton
               Top = 89
+              TabOrder = 5
               OnClick = frameHfbBoundarybtnEditHfbThicknessyFormulaClick
               ExplicitTop = 89
             end
@@ -6849,7 +6899,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               end
               inherited rbFront: TJvRadioButton
                 Top = 111
-                TabOrder = 6
                 OnClick = frameIfacerbHorizontalClick
                 HotTrackFont.Pitch = fpVariable
                 ExplicitTop = 111
@@ -6857,7 +6906,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited rbRight: TJvRadioButton
                 Left = 102
                 Top = 87
-                TabOrder = 8
                 OnClick = frameIfacerbHorizontalClick
                 HotTrackFont.Pitch = fpVariable
                 ExplicitLeft = 102
@@ -7252,6 +7300,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Top = 64
               Width = 577
               Height = 408
+              Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
               OnSetEditText = frameCHOBrdgObservationGroupsSetEditText
               OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
               OnStateChange = frameCHOBrdgObservationGroupsStateChange
@@ -7296,6 +7345,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             inherited rdgObservationGroups: TRbwDataGrid4
               Width = 577
               Height = 440
+              Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
               OnSetEditText = frameDROBrdgObservationGroupsSetEditText
               OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
               OnStateChange = frameDROBrdgObservationGroupsStateChange
@@ -7338,6 +7388,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Top = 64
               Width = 577
               Height = 409
+              Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
               OnSetEditText = frameGBOBrdgObservationGroupsSetEditText
               OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
               OnStateChange = frameGBOBrdgObservationGroupsStateChange
@@ -7382,6 +7433,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             inherited rdgObservationGroups: TRbwDataGrid4
               Width = 577
               Height = 440
+              Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
               OnSetEditText = frameRVOBrdgObservationGroupsSetEditText
               OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
               OnStateChange = frameRVOBrdgObservationGroupsStateChange
@@ -7619,6 +7671,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 inherited rdgTimeTable: TRbwDataGrid4
                   Width = 575
                   Height = 314
+                  Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
                   OnButtonClick = frameResdgModflowBoundaryButtonClick
                   ExplicitWidth = 575
                   ExplicitHeight = 314
@@ -7721,11 +7774,13 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited comboLayerGroup: TJvImageComboBox
                 Height = 29
                 ItemHeight = 23
+                OnChange = frameHydmodcomboLayerGroupChange
                 ExplicitHeight = 29
               end
               inherited comboNoDelayBed: TJvImageComboBox
                 Height = 29
                 ItemHeight = 23
+                OnChange = frameHydmodcomboNoDelayBedChange
                 ExplicitHeight = 29
               end
               inherited clbLayer: TCheckListBox
@@ -7982,6 +8037,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Top = 64
               Width = 577
               Height = 408
+              Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
               OnSetEditText = frameMt3dmsFluxObsrdgObservationGroupsSetEditText
               OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
               OnStateChange = frameMt3dmsFluxObsrdgObservationGroupsStateChange

@@ -588,7 +588,7 @@ begin
   for Index := 0 to Count - 1 do
   begin
     Item := Items[Index];
-    if CompareText(ParameterName, Item.ParameterName) = 0 then
+    if AnsiCompareText(ParameterName, Item.ParameterName) = 0 then
     begin
       result := Item;
       break;
@@ -901,7 +901,7 @@ begin
   if Model <> nil then
   begin
     CreateOrRenameDataArray(FTopArrayName, StrTop, NewHufName, Model);
-    CreateOrRenameDataArray(FThickessArrayName, StrThickness, NewHufName, Model);
+    CreateOrRenameDataArray(FThickessArrayName, StrHufThickness, NewHufName, Model);
     LocalModel := Model as TCustomModel;
     DataArray := LocalModel.DataArrayManager.GetDataSetByName(FThickessArrayName);
     Assert(DataArray <> nil);

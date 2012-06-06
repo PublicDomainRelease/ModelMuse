@@ -23,7 +23,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
     Top = 22
     Width = 609
     Height = 426
-    ActivePage = tabPumpingRate
+    ActivePage = tabBasic
     Align = alClient
     TabOrder = 1
     object tabBasic: TTabSheet
@@ -122,7 +122,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         Width = 224
         Height = 17
         Caption = 'Constrain pumping (Qlimit)'
-        TabOrder = 2
+        TabOrder = 5
         OnClick = cbConstrainPumpingClick
       end
       object cbPartialPenetrationFlag: TCheckBox
@@ -131,7 +131,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         Width = 321
         Height = 17
         Caption = 'Correct for partial penetration (PPFLAG)'
-        TabOrder = 3
+        TabOrder = 6
         OnClick = cbPartialPenetrationFlagClick
       end
       object cbPumpCap: TCheckBox
@@ -140,7 +140,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         Width = 377
         Height = 17
         Caption = 'Adjust discharge for changes in lift (PUMPCAP)'
-        TabOrder = 4
+        TabOrder = 8
         OnClick = cbPumpCapClick
       end
       object cbSpecifyPump: TCheckBox
@@ -149,7 +149,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         Width = 224
         Height = 17
         Caption = 'Specify pump (PUMPLOC)'
-        TabOrder = 5
+        TabOrder = 2
         OnClick = cbSpecifyPumpClick
       end
       object edPartialPenetration: TJvComboEdit
@@ -178,7 +178,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
           F000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFF
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
           FFFFFFFFFFFFFFFFF000}
-        TabOrder = 6
+        TabOrder = 7
         OnChange = edPartialPenetrationChange
       end
       inline framePumpLocationMethod: TframeLocationMethod
@@ -194,7 +194,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         Font.Name = 'Arial'
         Font.Style = []
         ParentFont = False
-        TabOrder = 7
+        TabOrder = 4
         TabStop = True
         ExplicitLeft = -4
         ExplicitTop = 121
@@ -237,7 +237,6 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         end
         inherited comboLocationChoice: TJvImageComboBox
           Left = 173
-          ItemIndex = -1
           OnChange = framePumpLocationMethodcomboLocationChoiceChange
           ExplicitLeft = 173
         end
@@ -249,7 +248,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         Height = 22
         Color = clBtnFace
         Enabled = False
-        TabOrder = 8
+        TabOrder = 3
         Text = '0'
         OnChange = edWellIdChange
         DataType = dtReal
@@ -271,7 +270,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
           Caption = 
             'Save flows between each well node and the aquifer to a separate ' +
             'file (QNDflag)'
-          TabOrder = 0
+          TabOrder = 1
           OnClick = cbSaveExternalClick
         end
         object cbSaveInternal: TCheckBox
@@ -280,7 +279,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
           Width = 550
           Height = 17
           Caption = 'Save intraborehole flows to a separate file (QBHflag)'
-          TabOrder = 1
+          TabOrder = 2
           OnClick = cbSaveInternalClick
         end
         object cbSaveMnwiBasic: TCheckBox
@@ -289,7 +288,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
           Width = 278
           Height = 17
           Caption = 'Save well fluxes and head'
-          TabOrder = 2
+          TabOrder = 0
           OnClick = cbSaveMnwiBasicClick
         end
       end
@@ -664,7 +663,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         FixedCols = 0
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
-        TabOrder = 4
+        TabOrder = 5
         ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = True
@@ -730,7 +729,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         MaxValue = 25.000000000000000000
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
-        TabOrder = 5
+        TabOrder = 7
         OnChange = seLiftTableRowsChange
       end
       object btnInsertLift: TButton
@@ -739,7 +738,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         Width = 75
         Height = 25
         Caption = 'Insert'
-        TabOrder = 6
+        TabOrder = 4
         OnClick = btnInsertLiftClick
       end
       object btnDeleteLift: TButton
@@ -748,7 +747,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         Width = 75
         Height = 25
         Caption = 'Delete'
-        TabOrder = 7
+        TabOrder = 6
         OnClick = btnDeleteLiftClick
       end
     end
@@ -771,7 +770,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         FixedCols = 0
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
-        TabOrder = 0
+        TabOrder = 1
         OnMouseUp = rdgTimeTableMouseUp
         OnSelectCell = rdgTimeTableSelectCell
         OnSetEditText = rdgTimeTableSetEditText
@@ -985,7 +984,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         Height = 41
         Align = alBottom
         BevelOuter = bvNone
-        TabOrder = 1
+        TabOrder = 2
         object lblTimeTableRows: TLabel
           Left = 79
           Top = 9
@@ -1031,7 +1030,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         Height = 65
         Align = alTop
         BevelOuter = bvNone
-        TabOrder = 2
+        TabOrder = 0
         object lblFormula: TLabel
           Left = 136
           Top = 3
@@ -1095,7 +1094,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         Height = 41
         Align = alBottom
         BevelOuter = bvNone
-        TabOrder = 0
+        TabOrder = 2
         object Label1: TLabel
           Left = 79
           Top = 9
@@ -1364,7 +1363,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
         Height = 97
         Align = alTop
         BevelOuter = bvNone
-        TabOrder = 2
+        TabOrder = 0
         object Label2: TLabel
           AlignWithMargins = True
           Left = 3

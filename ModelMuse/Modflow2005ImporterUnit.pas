@@ -3193,24 +3193,24 @@ begin
 end;
 
 function TPackageImporter.FixArrayName(const ArrayName: string): string;
-var
-  Index: Integer;
+//var
+//  Index: Integer;
 begin
-  result := ArrayName;
-  if (Length(result) > 0) then
-  begin
-    if not CharInSet(result[1], ['A'..'Z', 'a'..'z', '_']) then
-    begin
-      result := '_' + result;
-    end;
-    for Index := 2 to Length(result) do
-    begin
-      if not CharInSet(result[Index], ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
-      begin
-        result[Index] := '_';
-      end;
-    end;
-  end;
+  result := GoPhastTypes.ValidName(ArrayName);
+//  if (Length(result) > 0) then
+//  begin
+//    if not CharInSet(result[1], ['A'..'Z', 'a'..'z', '_']) then
+//    begin
+//      result := '_' + result;
+//    end;
+//    for Index := 2 to Length(result) do
+//    begin
+//      if not CharInSet(result[Index], ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
+//      begin
+//        result[Index] := '_';
+//      end;
+//    end;
+//  end;
 end;
 
 procedure TPackageImporter.HandlePackage;
@@ -8128,7 +8128,7 @@ begin
   for Index := 0 to ArrayLength - 1 do
   begin
     Param := Params[Index];
-    if CompareText(Param.PARNAM, ParamName) = 0 then
+    if AnsiCompareText(Param.PARNAM, ParamName) = 0 then
     begin
       result := Param;
       Exit;
@@ -11461,7 +11461,7 @@ begin
   for Index := 0 to ArrayLength - 1 do
   begin
     Instance := Instances[Index];
-    if CompareText(Instance.Name, InstanceName) = 0 then
+    if AnsiCompareText(Instance.Name, InstanceName) = 0 then
     begin
       result := Instance;
       Exit;
@@ -14201,7 +14201,7 @@ begin
   for Index := 0 to ArrayLength - 1 do
   begin
     Instance := Instances[Index];
-    if CompareText(Instance.Name, InstanceName) = 0 then
+    if AnsiCompareText(Instance.Name, InstanceName) = 0 then
     begin
       result := Instance;
       Exit;
@@ -17952,6 +17952,8 @@ begin
         + GetStressPeriodString(StressPeriodIndex);
     end;
 
+    AssignInfiltation(NewItemsNeeded, Boundary, InfiltrationItem,
+      InfiltrationName, StressPeriodIndex);
     if FUzfPackage.SimulateET then
     begin
       if not FReuseET[StressPeriodIndex] then
@@ -17972,8 +17974,6 @@ begin
           + GetStressPeriodString(StressPeriodIndex);
       end;
 
-      AssignInfiltation(NewItemsNeeded, Boundary, InfiltrationItem,
-        InfiltrationName, StressPeriodIndex);
       AssignEt(NewItemsNeeded, Boundary, EvtItem,
         EtName, StressPeriodIndex);
       AssignExtinctionDepth(NewItemsNeeded, Boundary, ExtinctDepthItem,
@@ -22519,12 +22519,9 @@ end;
 procedure TSubImporter.ImportMaterialZone(DelayItem: TSubDelayBedLayerItem;
   Index: Integer; var ScreenObject: TScreenObject);
 var
-VKDataArray: TDataArray;
-
-ElastSS: TDataArray;
-
-InelastSS: TDataArray;
-
+  VKDataArray: TDataArray;
+  ElastSS: TDataArray;
+  InelastSS: TDataArray;
   DataArrayName: string;
   ZoneNumber: Integer;
   ColIndex: Integer;
@@ -22568,7 +22565,7 @@ begin
         end
         else
         begin
-          Zone := FMaterialZones[ZoneNumber];
+          Zone := FMaterialZones[ZoneNumber-1];
           ImportedValues[RowIndex, ColIndex] :=
             Zone.VerticalHydraulicConductivity;
         end;
@@ -22594,7 +22591,7 @@ begin
         end
         else
         begin
-          Zone := FMaterialZones[ZoneNumber];
+          Zone := FMaterialZones[ZoneNumber-1];
           ImportedValues[RowIndex, ColIndex] := Zone.ElasticSpecificStorage;
         end;
       end;
@@ -22615,7 +22612,7 @@ begin
         end
         else
         begin
-          Zone := FMaterialZones[ZoneNumber];
+          Zone := FMaterialZones[ZoneNumber-1];
           ImportedValues[RowIndex, ColIndex] := Zone.InelasticSpecificStorage;
         end;
       end;

@@ -3,7 +3,7 @@ unit FormulaManagerUnit;
 interface
 
 uses SysUtils, Classes, Contnrs, RbwParser, IntListUnit, Dialogs,
-  EZDSLHsh;
+  HashTableFacadeUnit;
 
 type
   TChangeSubscription = procedure (Sender: TObject;
@@ -64,7 +64,7 @@ type
   private
     // @name is actually a TObjectList.
     FList: TList;
-    FSortedList: THashTable;
+    FSortedList: THashTableFacade;
     FEmptyFormula: TFormulaObject;
   public
     Constructor Create;
@@ -763,14 +763,14 @@ procedure TFormulaManager.Clear;
 begin
   FList.Clear;
   FSortedList.Free;
-  FSortedList:= THashTable.Create(False);
+  FSortedList:= THashTableFacade.Create;
   FSortedList.IgnoreCase := False;
 end;
 
 constructor TFormulaManager.Create;
 begin
   FList := TObjectList.Create;
-  FSortedList:= THashTable.Create(False);
+  FSortedList:= THashTableFacade.Create;
   FSortedList.IgnoreCase := False;
 end;
 
@@ -922,7 +922,7 @@ begin
   end;
 
   FSortedList.Free;
-  FSortedList:= THashTable.Create(False);
+  FSortedList:= THashTableFacade.Create;
   FSortedList.IgnoreCase := True;
   FSortedList.TableSize := Max(211, FList.Count*2-1);
   for Index := 0 to FList.Count - 1 do

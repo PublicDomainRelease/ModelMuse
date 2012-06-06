@@ -304,7 +304,8 @@ begin
                 Format(StrTheLakeBathymetry2,
                 [LakeTableFileName, ScreenObject.Name]));
             end;
-            WriteToNameFile(StrData, StartUnitNumber, LakeTableFileName, foInput, True);
+            WriteToNameFile(StrData, StartUnitNumber, LakeTableFileName,
+              foInputAlreadyExists, True);
           end
         else Assert(False);
       end;

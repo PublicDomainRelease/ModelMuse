@@ -338,7 +338,6 @@ uses
   framePackageSubUnit in 'framePackageSubUnit.pas' {framePackageSub: TFrame},
   ModflowSUB_Writer in 'ModflowSUB_Writer.pas',
   UnitList in 'UnitList.pas',
-  UnitCRC in 'UnitCRC.pas',
   SurferGridFileReaderUnit in 'SurferGridFileReaderUnit.pas',
   frmImportSurferGrdFileUnitUnit in 'frmImportSurferGrdFileUnitUnit.pas' {frmImportSurferGrdFile},
   frmCustomImportSimpleFileUnit in 'frmCustomImportSimpleFileUnit.pas' {frmCustomImportSimpleFile},
@@ -425,7 +424,9 @@ uses
   QuadMeshGenerator in 'QuadMeshGenerator.pas',
   ModflowPCGN_WriterUnit in 'ModflowPCGN_WriterUnit.pas',
   framePackagePcgnUnit in 'framePackagePcgnUnit.pas' {framePackagePcgn: TFrame},
-  frameDiscretizationUnit in 'frameDiscretizationUnit.pas' {frameDiscretization: TFrame};
+  frameDiscretizationUnit in 'frameDiscretizationUnit.pas' {frameDiscretization: TFrame},
+  frmSutraLayersUnit in 'frmSutraLayersUnit.pas' {frmSutraLayers},
+  HashTableFacadeUnit in 'HashTableFacadeUnit.pas';
 
 {$R *.res}
 

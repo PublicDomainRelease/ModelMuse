@@ -318,7 +318,8 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Condfact—is the factor used to calculate drain hydraulic conductance from the parameter value. The conductance is the product of Condfact and the parameter value.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Condfact—is the factor used to calculate drain hydraulic conductance from the parameter value. The conductance is the product of Condfact and the parameter value. </text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">See also &quot;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="Frequently_Asked_Questions" anchor="Conductance" styleclass="Normal" translate="true">What is conductance?</link><text styleclass="Normal" translate="true">&quot;</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -386,6 +387,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">Cond—is the hydraulic conductance of the interface between the aquifer and the drain.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">See also &quot;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="Frequently_Asked_Questions" anchor="Conductance" styleclass="Normal" translate="true">What is conductance?</link><text styleclass="Normal" translate="true">&quot;</text></para>
                     </td>
                   </tr>
                 </table></para>

@@ -1,16 +1,17 @@
 inherited frmGenerateGrid: TfrmGenerateGrid
   Left = 551
   Top = 437
-  Width = 344
-  Height = 280
+  Width = 347
+  Height = 284
   HelpType = htKeyword
   HelpKeyword = 'Generate_Grid_Dialog_Box'
   HorzScrollBar.Range = 329
   VertScrollBar.Range = 241
   ActiveControl = cbSpecifyGridAngle
   Caption = 'Generate Grid'
-  ExplicitWidth = 344
-  ExplicitHeight = 280
+  ExplicitTop = -7
+  ExplicitWidth = 347
+  ExplicitHeight = 284
   PixelsPerInch = 96
   TextHeight = 18
   object lblGridAngle: TLabel

@@ -10,7 +10,7 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
     Height = 46
     Align = alBottom
     BevelOuter = bvNone
-    TabOrder = 0
+    TabOrder = 2
     DesignSize = (
       320
       46)
@@ -23,9 +23,9 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
     end
     object seNumberOfTimes: TJvSpinEdit
       Left = 8
-      Top = 12
+      Top = 6
       Width = 49
-      Height = 21
+      Height = 33
       ButtonKind = bkClassic
       MaxValue = 2147483647.000000000000000000
       TabOrder = 0
@@ -68,7 +68,7 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
         FFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
       ParentDoubleBuffered = False
-      TabOrder = 1
+      TabOrder = 2
       OnClick = btnDeleteClick
     end
     object btnInsert: TBitBtn
@@ -90,7 +90,7 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
         CC0FF0FF0CCCCCCCCC0FFFFF00000000000FFFFF0FFFFFFFFF0FFFFF0FFFFFFF
         FF0FFFFF0FFFFFFFFF0FFFFF00000000000FFFFFFFFFFFFFFFFF}
       ParentDoubleBuffered = False
-      TabOrder = 2
+      TabOrder = 1
       OnClick = btnInsertClick
     end
   end
@@ -101,7 +101,7 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
     Height = 25
     Align = alTop
     Caption = 'pnlTop'
-    TabOrder = 1
+    TabOrder = 0
     object pnlCaption: TPanel
       Left = 1
       Top = 1
@@ -119,7 +119,7 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
     Width = 320
     Height = 245
     Align = alClient
-    TabOrder = 2
+    TabOrder = 1
     object pnlEditGrid: TPanel
       Left = 1
       Top = 1

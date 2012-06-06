@@ -14,6 +14,10 @@ object frameHeadObservationResults: TframeHeadObservationResults
     TabOrder = 0
     object tabControls: TTabSheet
       Caption = 'Controls'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblNegativeColor: TLabel
         Left = 3
         Top = 234

@@ -4235,7 +4235,8 @@ begin
             Format(StrTheStreamFlowFile2,
             [FlowFileName, Segment.FScreenObject.Name]));
         end;
-        WriteToNameFile(StrData, StartUnitNumber, FlowFileName, foInput, True);
+        WriteToNameFile(StrData, StartUnitNumber, FlowFileName,
+          foInputAlreadyExists, True);
 
       end;
     ffcSpecify:

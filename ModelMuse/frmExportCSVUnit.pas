@@ -472,7 +472,7 @@ procedure TfrmExportCSV.WriteString(const Value: String);
 begin
   if Length(Value) > 0 then
   begin
-    FFileStream.Write(Value[1], Length(Value)*SizeOf(Char));
+    FFileStream.Write(Value[1], ByteLength(Value));
   end;
 end;
 

@@ -53,11 +53,16 @@ type
           TheIndex        Index of item in array
           TheItem         Value of item (i.e pointer element) in section
           Returns: 0 if success, else error code. }
-  TSPAApply = function(TheIndex: Integer; TheItem: Pointer): Integer;
+//  TSPAApply = function(TheIndex: Integer; TheItem: Pointer): Integer;
+  TSPAApply = TFunc<Integer, Pointer, Integer>;
 
   { Enough for up to 12 bits of sec }
   TSecDir = array[0..4095] of Pointer;
   PSecDir = ^TSecDir;
+  TSecDirType = PSecDir;
+
+  TCustomData = Pointer;
+
   { Section size }
   TSPAQuantum = (SPASmall, SPALarge);
 
@@ -67,19 +72,19 @@ type
    array for cases where many of the pointers are nil.)}
   TSparsePointerArray = class(TObject)
   private
-    secDir: PSecDir;
-    slotsInDir: Word;
+    secDir: TSecDirType;
+    slotsInDir: Cardinal;
     indexMask, secShift: Word;
     FHighBound: Integer;
     FSectionSize: Word;
     cachedIndex: Integer;
-    cachedPointer: Pointer;
+    cachedValue: TCustomData;
     { Return item[i], nil if slot outside defined section. }
-    function GetAt(Index: Integer): Pointer;
+    function GetAt(Index: Integer): TCustomData;
     { Return address of item[i], creating slot if necessary. }
     function MakeAt(Index: Integer): PPointer;
     { Store item at item[i], creating slot if necessary. }
-    procedure PutAt(Index: Integer; Item: Pointer);
+    procedure PutAt(Index: Integer; Item: TCustomData);
   public
     constructor Create(Quantum: TSPAQuantum);
     destructor Destroy; override;
@@ -91,14 +96,14 @@ type
       TSparseList.ForAll
 
       See @link(TSPAApply)}
-    function ForAll(ApplyFunction: Pointer {TSPAApply}): Integer;
+    function ForAll(ApplyFunction: TSPAApply): Integer;
 
     { Ratchet down HighBound after a deletion }
     procedure ResetHighBound;
 
     property HighBound: Integer read FHighBound;
     property SectionSize: Word read FSectionSize;
-    property Items[Index: Integer]: Pointer read GetAt write PutAt; default;
+    property Items[Index: Integer]: TCustomData read GetAt write PutAt; default;
   end;
 
 implementation
@@ -113,7 +118,7 @@ const
   { Expand Section Directory to cover at least `newSlots' slots.
     Returns: Possibly updated pointer to the Section Directory. }
 
-function ExpandDir(secDir: PSecDir; var slotsInDir: Word;
+function ExpandDir(secDir: PSecDir; var slotsInDir: Cardinal;
   newSlots: Word): PSecDir;
 begin
   Result := secDir;
@@ -151,7 +156,7 @@ end;
 
 destructor TSparsePointerArray.Destroy;
 var
-  i: Integer;
+  i: Cardinal;
   size: Word;
 begin
   { Scan section directory and free each section that exists. }
@@ -169,26 +174,26 @@ begin
     FreeMem(secDir, slotsInDir * SizeOf(Pointer));
 end;
 
-function TSparsePointerArray.ForAll(ApplyFunction: Pointer): Integer;
+function TSparsePointerArray.ForAll(ApplyFunction: TSPAApply): Integer;
 var
   itemP: PByte; { Pointer to item in section }
   item: Pointer;
-  i, callerBP: Cardinal;
+  i {, callerBP}: Cardinal;
   j, index: Integer;
 begin
   { Scan section directory and scan each section that exists,
-    calling the apply function for each non-nil item.
-    The apply function must be a far local function in the scope of
-    the procedure P calling ForAll.  The trick of setting up the stack
-    frame (taken from TurboVision's TCollection.ForEach) allows the
-    apply function access to P's arguments and local variables and,
-    if P is a method, the instance variables and methods of P's class }
+    calling the apply function for each non-nil item.   }
+//    The apply function must be a far local function in the scope of
+//    the procedure P calling ForAll.  The trick of setting up the stack
+//    frame (taken from TurboVision's TCollection.ForEach) allows the
+//    apply function access to P's arguments and local variables and,
+//    if P is a method, the instance variables and methods of P's class }
   Result := 0;
   i := 0;
-  asm
-    mov   eax,[ebp]                     { Set up stack frame for local }
-    mov   callerBP,eax
-  end;
+//  asm
+//    mov   eax,[ebp]                     { Set up stack frame for local }
+//    mov   callerBP,eax
+//  end;
   while (i < slotsInDir) and (Result = 0) do
   begin
     itemP := secDir^[i];
@@ -200,15 +205,18 @@ begin
       begin
         item := PPointer(itemP)^;
         if item <> nil then
+        begin
           { ret := ApplyFunction(index, item.Ptr); }
-          asm
-            mov   eax,index
-            mov   edx,item
-            push  callerBP
-            call  ApplyFunction
-            pop   ecx
-            mov   @Result,eax
-          end;
+          result := ApplyFunction(index, item);
+//          asm
+//            mov   eax,index
+//            mov   edx,item
+//            push  callerBP
+//            call  ApplyFunction
+//            pop   ecx
+//            mov   @Result,eax
+//          end;
+        end;
         Inc(itemP, SizeOf(Pointer));
         Inc(j);
         Inc(index)
@@ -218,7 +226,7 @@ begin
   end;
 end;
 
-function TSparsePointerArray.GetAt(Index: Integer): Pointer;
+function TSparsePointerArray.GetAt(Index: Integer): TCustomData;
 var
   byteP: PByte;
   secIndex: Cardinal;
@@ -228,7 +236,7 @@ begin
     Section using low order part of index. }
   Assert(Index >= 0);
   if Index = cachedIndex then
-    Result := cachedPointer
+    Result := cachedValue
   else
   begin
     secIndex := Index shr secShift;
@@ -247,7 +255,7 @@ begin
     else
       Result := PPointer(byteP)^;
     cachedIndex := Index;
-    cachedPointer := Result
+    cachedValue := Result
   end
 end;
 
@@ -285,7 +293,7 @@ begin
   cachedIndex := -1
 end;
 
-procedure TSparsePointerArray.PutAt(Index: Integer; Item: Pointer);
+procedure TSparsePointerArray.PutAt(Index: Integer; Item: TCustomData);
 begin
   if (Item <> nil) or (GetAt(Index) <> nil) then
   begin
@@ -299,21 +307,32 @@ procedure TSparsePointerArray.ResetHighBound;
 var
   NewHighBound: Integer;
 
-  function Detector(TheIndex: Integer; TheItem: Pointer): Integer; far;
-  begin
-    if TheIndex > FHighBound then
-      Result := 1
-    else
-    begin
-      Result := 0;
-      if TheItem <> nil then
-        NewHighBound := TheIndex
-    end
-  end;
+//  function Detector(TheIndex: Integer; TheItem: Pointer): Integer; far;
+//  begin
+//    if TheIndex > FHighBound then
+//      Result := 1
+//    else
+//    begin
+//      Result := 0;
+//      if TheItem <> nil then
+//        NewHighBound := TheIndex
+//    end
+//  end;
 
 begin
   NewHighBound := -1;
-  ForAll(@Detector);
+  ForAll(
+    function (TheIndex: Integer; TheItem: Pointer): Integer
+    begin
+      if TheIndex > FHighBound then
+        Result := 1
+      else
+      begin
+        Result := 0;
+        if TheItem <> nil then
+          NewHighBound := TheIndex
+      end
+  end);
   FHighBound := NewHighBound
 end;
 

@@ -15,44 +15,47 @@ object frmMain: TfrmMain
   OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 19
-  object Splitter1: TSplitter
-    Left = 0
-    Top = 291
-    Width = 792
-    Height = 5
-    Cursor = crVSplit
-    Align = alBottom
-    ExplicitTop = 238
-    ExplicitWidth = 426
+  object JvNetscapeSplitter1: TJvNetscapeSplitter
+    Left = 273
+    Top = 73
+    Height = 399
+    Align = alLeft
+    MinSize = 1
+    Maximized = False
+    Minimized = False
+    ButtonCursor = crDefault
+    ExplicitLeft = 280
+    ExplicitTop = 120
+    ExplicitHeight = 100
   end
   object pgcIndex: TPageControl
     Left = 0
-    Top = 296
-    Width = 792
-    Height = 178
-    ActivePage = tabIndex
-    Align = alBottom
+    Top = 73
+    Width = 273
+    Height = 399
+    ActivePage = tabWarnings
+    Align = alLeft
     Images = ilTabFaces
-    TabOrder = 0
+    TabOrder = 1
     object tabIndex: TTabSheet
       Caption = 'Index'
       ImageIndex = -1
       inline frameListing: TframeFileListHandler
         Left = 0
         Top = 0
-        Width = 784
-        Height = 141
+        Width = 265
+        Height = 362
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 784
-        ExplicitHeight = 141
+        ExplicitWidth = 265
+        ExplicitHeight = 362
         inherited redtIndex: TRichEdit
-          Width = 784
-          Height = 141
+          Width = 265
+          Height = 362
           Font.Height = -16
           OnDblClick = frameListingredtIndexDblClick
-          ExplicitWidth = 784
-          ExplicitHeight = 141
+          ExplicitWidth = 265
+          ExplicitHeight = 362
         end
       end
     end
@@ -63,19 +66,17 @@ object frmMain: TfrmMain
       inline frameErrors: TframeFileListHandler
         Left = 0
         Top = 0
-        Width = 784
-        Height = 141
+        Width = 265
+        Height = 362
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 784
-        ExplicitHeight = 141
+        ExplicitWidth = 265
+        ExplicitHeight = 362
         inherited redtIndex: TRichEdit
-          Width = 784
-          Height = 141
-          ExplicitLeft = 3
-          ExplicitTop = -2
-          ExplicitWidth = 784
-          ExplicitHeight = 141
+          Width = 265
+          Height = 362
+          ExplicitWidth = 265
+          ExplicitHeight = 362
         end
       end
     end
@@ -86,30 +87,20 @@ object frmMain: TfrmMain
       inline frameWarning: TframeFileListHandler
         Left = 0
         Top = 0
-        Width = 784
-        Height = 141
+        Width = 265
+        Height = 362
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 784
-        ExplicitHeight = 141
+        ExplicitWidth = 265
+        ExplicitHeight = 362
         inherited redtIndex: TRichEdit
-          Width = 784
-          Height = 141
-          ExplicitWidth = 784
-          ExplicitHeight = 141
+          Width = 265
+          Height = 362
+          ExplicitWidth = 265
+          ExplicitHeight = 362
         end
       end
     end
-  end
-  object ProgressBar1: TProgressBar
-    Left = 0
-    Top = 474
-    Width = 792
-    Height = 21
-    Align = alBottom
-    Max = 1000
-    Step = 1
-    TabOrder = 1
   end
   object Panel1: TPanel
     Left = 0
@@ -117,7 +108,7 @@ object frmMain: TfrmMain
     Width = 792
     Height = 73
     Align = alTop
-    TabOrder = 2
+    TabOrder = 0
     object lblLineCount: TLabel
       Left = 311
       Top = 12
@@ -147,7 +138,7 @@ object frmMain: TfrmMain
         3BB33773333773333773B333333B3333333B7333333733333337}
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 0
+      TabOrder = 2
       WordWrap = True
       OnClick = btnOpenFileClick
     end
@@ -159,7 +150,7 @@ object frmMain: TfrmMain
       Caption = 'Read more lines'
       DoubleBuffered = True
       ParentDoubleBuffered = False
-      TabOrder = 1
+      TabOrder = 3
       WordWrap = True
       OnClick = btnReadMoreLinesClick
     end
@@ -171,7 +162,7 @@ object frmMain: TfrmMain
       Caption = 'Read earlier lines'
       DoubleBuffered = True
       ParentDoubleBuffered = False
-      TabOrder = 2
+      TabOrder = 4
       WordWrap = True
       OnClick = btnReadEarlierLinesClick
     end
@@ -180,40 +171,125 @@ object frmMain: TfrmMain
       Top = 40
       Width = 81
       Height = 27
-      MaxValue = 2147483647.000000000000000000
-      MinValue = 15.000000000000000000
+      Thousands = True
+      MaxValue = 10000.000000000000000000
+      MinValue = 1.000000000000000000
       Value = 1000.000000000000000000
-      TabOrder = 3
+      TabOrder = 6
+    end
+    object btnIndex: TButton
+      Left = 496
+      Top = 10
+      Width = 57
+      Height = 57
+      Caption = 'Index file'
+      Enabled = False
+      TabOrder = 5
+      WordWrap = True
+      OnClick = btnIndexClick
+    end
+    object rdeLineTarget: TRbwDataEntry
+      Left = 559
+      Top = 40
+      Width = 75
+      Height = 22
+      TabOrder = 7
+      Text = '1'
+      Max = 1.000000000000000000
+      Min = 1.000000000000000000
+      CheckMax = True
+      CheckMin = True
+      ChangeDisabledColor = True
+    end
+    object btnGoTo: TButton
+      Left = 559
+      Top = 9
+      Width = 75
+      Height = 25
+      Caption = 'Go to line'
+      Enabled = False
+      TabOrder = 0
+      OnClick = btnGoToClick
+    end
+    object btnAbort: TBitBtn
+      Left = 4
+      Top = 41
+      Width = 101
+      Height = 25
+      DoubleBuffered = True
+      Kind = bkAbort
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 8
+      OnClick = btnAbortClick
+    end
+    object btnFind: TBitBtn
+      Left = 640
+      Top = 9
+      Width = 75
+      Height = 25
+      Caption = 'Find'
+      DoubleBuffered = True
+      Enabled = False
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        04000000000000010000130B0000130B00001000000000000000000000000000
+        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333333333
+        333333333333333333FF33333333333330003FF3FFFFF3333777003000003333
+        300077F777773F333777E00BFBFB033333337773333F7F33333FE0BFBF000333
+        330077F3337773F33377E0FBFBFBF033330077F3333FF7FFF377E0BFBF000000
+        333377F3337777773F3FE0FBFBFBFBFB039977F33FFFFFFF7377E0BF00000000
+        339977FF777777773377000BFB03333333337773FF733333333F333000333333
+        3300333777333333337733333333333333003333333333333377333333333333
+        333333333333333333FF33333333333330003333333333333777333333333333
+        3000333333333333377733333333333333333333333333333333}
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 1
+      OnClick = btnFindClick
     end
   end
   object pgcDisplay: TPageControl
-    Left = 0
+    Left = 283
     Top = 73
-    Width = 792
-    Height = 218
-    ActivePage = tabTable
+    Width = 509
+    Height = 399
+    ActivePage = tabLines
     Align = alClient
-    TabOrder = 3
+    TabOrder = 2
     object tabLines: TTabSheet
       Caption = 'Lines'
       TabVisible = False
-      object memoLines: TMemo
+      object sbLines: TScrollBar
+        Left = 480
+        Top = 0
+        Width = 21
+        Height = 389
+        Align = alRight
+        Kind = sbVertical
+        LargeChange = 10
+        Max = 1000
+        PageSize = 0
+        TabOrder = 1
+        OnScroll = sbLinesScroll
+      end
+      object RichEditLines: TRichEdit
         Left = 0
         Top = 0
-        Width = 784
-        Height = 208
+        Width = 480
+        Height = 389
         Align = alClient
-        Constraints.MinHeight = 20
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
-        Font.Height = -16
+        Font.Height = -13
         Font.Name = 'Courier New'
         Font.Style = []
-        HideSelection = False
         ParentFont = False
         ScrollBars = ssBoth
         TabOrder = 0
         WordWrap = False
+        OnClick = memoLinesClick
       end
     end
     object tabTable: TTabSheet
@@ -223,8 +299,8 @@ object frmMain: TfrmMain
       object rdgTable: TRbwDataGrid4
         Left = 0
         Top = 0
-        Width = 784
-        Height = 208
+        Width = 501
+        Height = 389
         Align = alClient
         ColCount = 4
         FixedCols = 0
@@ -259,6 +335,7 @@ object frmMain: TfrmMain
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -280,6 +357,7 @@ object frmMain: TfrmMain
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -301,6 +379,7 @@ object frmMain: TfrmMain
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end
           item
@@ -322,9 +401,35 @@ object frmMain: TfrmMain
             ParentButtonFont = False
             WordWrapCaptions = True
             WordWrapCells = False
+            CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
       end
+    end
+  end
+  object Panel2: TPanel
+    Left = 0
+    Top = 472
+    Width = 792
+    Height = 23
+    Align = alBottom
+    Caption = 'Panel2'
+    TabOrder = 3
+    object lblFileCount: TLabel
+      Left = 4
+      Top = 2
+      Width = 5
+      Height = 19
+    end
+    object ProgressBar1: TProgressBar
+      Left = 136
+      Top = 1
+      Width = 655
+      Height = 21
+      Align = alRight
+      Max = 1000
+      Step = 1
+      TabOrder = 0
     end
   end
   object OpenDialog1: TOpenDialog
@@ -945,5 +1050,11 @@ object frmMain: TfrmMain
       F8003FF8003FF8003FF8003FFC007FFC007FFC007FFC007FFF83FFFF83FFFF83
       FFFF83FFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000000000000000000000
       000000000000}
+  end
+  object FindDialog1: TFindDialog
+    Options = [frDown, frHideUpDown, frReplace, frReplaceAll]
+    OnFind = FindDialog1Find
+    Left = 424
+    Top = 40
   end
 end

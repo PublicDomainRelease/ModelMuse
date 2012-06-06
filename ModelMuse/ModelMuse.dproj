@@ -649,7 +649,6 @@
 			</DCCReference>
 			<DCCReference Include="ModflowSUB_Writer.pas"/>
 			<DCCReference Include="UnitList.pas"/>
-			<DCCReference Include="UnitCRC.pas"/>
 			<DCCReference Include="SurferGridFileReaderUnit.pas"/>
 			<DCCReference Include="frmImportSurferGrdFileUnitUnit.pas">
 				<Form>frmImportSurferGrdFile</Form>
@@ -867,6 +866,10 @@
 				<Form>frameDiscretization</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
+			<DCCReference Include="frmSutraLayersUnit.pas">
+				<Form>frmSutraLayers</Form>
+			</DCCReference>
+			<DCCReference Include="HashTableFacadeUnit.pas"/>
 			<None Include="ModelMuse.todo"/>
 			<None Include="ModelSupport_ModelMuse\default.txaPackage"/>
 			<None Include="ModelSupport_ModelMuse\SideLeakyZone\default.txaPackage"/>
@@ -1561,8 +1564,8 @@
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">2</VersionInfo>
-						<VersionInfo Name="MinorVer">14</VersionInfo>
-						<VersionInfo Name="Release">1</VersionInfo>
+						<VersionInfo Name="MinorVer">15</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
 						<VersionInfo Name="Build">0</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
@@ -1575,15 +1578,15 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">U. S. Geological Survey</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">2.14.1.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">2.15.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright">Public Domain software</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename"/>
 						<VersionInfoKeys Name="ProductName">ModelMuse</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">2.14.1.0</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">2.15.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
-						<VersionInfoKeys Name="Last Compile">2012-05-01 11:00</VersionInfoKeys>
+						<VersionInfoKeys Name="Last Compile">2012-06-07 13:24</VersionInfoKeys>
 					</VersionInfoKeys>
 					<Excluded_Packages>
 						<Excluded_Packages Name="$(BDSBIN)\dcloffice2k150.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>

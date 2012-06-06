@@ -109,6 +109,7 @@ object frameSubBeds: TframeSubBeds
     TabOrder = 0
     OnSelectCell = rdgSubBedSelectCell
     OnSetEditText = rdgSubBedSetEditText
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = False
     AutoIncreaseColCount = False
@@ -138,6 +139,7 @@ object frameSubBeds: TframeSubBeds
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end
       item
@@ -159,6 +161,7 @@ object frameSubBeds: TframeSubBeds
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = False
       end
       item
@@ -180,6 +183,7 @@ object frameSubBeds: TframeSubBeds
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = False
       end
       item
@@ -201,6 +205,7 @@ object frameSubBeds: TframeSubBeds
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = False
       end
       item
@@ -222,6 +227,7 @@ object frameSubBeds: TframeSubBeds
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = False
       end>
   end

@@ -3,7 +3,7 @@ unit ExtractObservationsUnit;
 interface
 
 uses
-  Classes, SysUtils;
+  Windows, Classes, SysUtils;
 
 type
   TObsRecord = record

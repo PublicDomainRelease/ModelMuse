@@ -23,7 +23,7 @@ uses
   JvImageList, TeEngine, Series, TeeProcs, Chart, ComCtrls, Buttons,
   JvToolEdit, AppEvnts, RealListUnit, JvHtControls, JvPageList,
   JvExControls, JvExStdCtrls, JvExMask, Mask, JvExComCtrls,
-  JvComCtrls, JvRichEdit, JvComponentBase, JvCreateProcess;
+  JvComCtrls, JvRichEdit, JvComponentBase, JvCreateProcess, ErrorMessages;
 
 type
   TStatusChange = (scOK, scWarning, scError, scNone);
@@ -66,6 +66,7 @@ type
     FParentNode: TTreeNode;
     FListingNode: TTreeNode;
     FResultsNode: TTreeNode;
+    FVolBudget: Boolean;
     procedure CreateNewTabSheet(out ATabSheet: TjvStandardPage;
       NewCaption: string; out NewNode: TTreeNode);
     procedure CreateLineSeries(AColor: TColor; ATitle: string;
@@ -77,10 +78,10 @@ type
     function PlotPercentDiscrepancy : boolean;
     procedure IndentifyProblem(ALine: string; var IsProblem: Boolean;
       StatusChangeIndicator: TStatusChange; var Positions: TIntegerDynArray;
-      KeyTerms: TStringList);
+      KeyTerms: TAnsiStringList);
     procedure HandleListFileLine(ALine: string);
     procedure HandleProblem(IsError: Boolean; AColor: TColor;
-      Positions: TIntegerDynArray; EV: TStringList);
+      Positions: TIntegerDynArray; EV: TAnsiStringList);
     function GetPageStatus(APage: TjvStandardPage): TStatusChange;
     procedure SetPageStatus(APage: TjvStandardPage;
       const Value: TStatusChange);
@@ -189,7 +190,7 @@ var
 
 implementation
 
-uses {ShellApi,} ErrorMessages, forceforeground, JvVersionInfo, contnrs;
+uses {ShellApi,} forceforeground, JvVersionInfo, contnrs;
 
 resourcestring
   StrPERCENTDISCREPANCY = 'PERCENT DISCREPANCY =';
@@ -896,7 +897,7 @@ begin
 
     for ErrorIndex := 0 to ErrorValues.Count - 1 do
     begin
-      AnErrorMessage := ErrorValues[ErrorIndex];
+      AnErrorMessage := string(ErrorValues[ErrorIndex]);
       Position := Pos(AnErrorMessage, ALine);
       if Position > 0 then
       begin
@@ -1338,7 +1339,7 @@ begin
 end;
 
 procedure TListFileHandler.HandleProblem(IsError: Boolean; AColor: TColor;
-  Positions: TIntegerDynArray; EV: TStringList);
+  Positions: TIntegerDynArray; EV: TAnsiStringList);
 var
   SelStart: Integer;
   Index: Integer;
@@ -1364,7 +1365,7 @@ end;
 
 procedure TListFileHandler.IndentifyProblem(ALine: string;
   var IsProblem: Boolean; StatusChangeIndicator: TStatusChange;
-  var Positions: TIntegerDynArray; KeyTerms: TStringList);
+  var Positions: TIntegerDynArray; KeyTerms: TAnsiStringList);
 var
   Position: Integer;
   Index: Integer;
@@ -1372,7 +1373,7 @@ begin
   IsProblem := False;
   for Index := 0 to KeyTerms.Count - 1 do
   begin
-    Position := Pos(KeyTerms[Index], ALine);
+    Position := Pos(string(KeyTerms[Index]), ALine);
     Positions[Index] := Position;
     if Position > 0 then
     begin
@@ -1522,19 +1523,36 @@ var
   Cum: Double;
   Rate: Double;
 begin
-  Position := Pos(StrPERCENTDISCREPANCY, ALine);
+  Position :=Pos('UNSATURATED ZONE PACKAGE VOLUMETRIC BUDGET', ALine);
   if Position > 0 then
   begin
-    TestLine := Trim(Copy(ALine, Position + Length(StrPERCENTDISCREPANCY), MAXINT));
-    Position := Pos(StrPERCENTDISCREPANCY, TestLine);
-    Assert(Position > 0);
-    Num1 := Trim(Copy(TestLine, 1, Position - 1));
-    Num2 := Trim(Copy(TestLine, Position + Length(StrPERCENTDISCREPANCY), MAXINT));
-    Cum := StrToFloatDef(Num1, 200);
-    Rate := StrToFloatDef(Num2, 200);
+    FVolBudget := False;
+  end
+  else
+  begin
+    Position := Pos('VOLUMETRIC BUDGET', ALine);
+    if Position > 0 then
+    begin
+      FVolBudget := True;
+    end;
+  end;
 
-    FPercentRate.Add(Rate);
-    FPercentCumulative.Add(Cum);
+  if FVolBudget then
+  begin
+    Position := Pos(StrPERCENTDISCREPANCY, ALine);
+    if Position > 0 then
+    begin
+      TestLine := Trim(Copy(ALine, Position + Length(StrPERCENTDISCREPANCY), MAXINT));
+      Position := Pos(StrPERCENTDISCREPANCY, TestLine);
+      Assert(Position > 0);
+      Num1 := Trim(Copy(TestLine, 1, Position - 1));
+      Num2 := Trim(Copy(TestLine, Position + Length(StrPERCENTDISCREPANCY), MAXINT));
+      Cum := StrToFloatDef(Num1, 200);
+      Rate := StrToFloatDef(Num2, 200);
+
+      FPercentRate.Add(Rate);
+      FPercentCumulative.Add(Cum);
+    end;
   end;
 end;
 
