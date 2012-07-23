@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="93nlsqc6pgofcek_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmImportGriddedDataUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.OrientationToViewDirection(GoPhastTypes.TDataSetOrientation)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.ConvertDataFormat(RbwParser.TRbwDataType)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.frmImportGriddedData" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmImportGriddedDataUnit.frmImportGriddedData" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.comboMethodChange(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.combotreeDataSets" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.lblRows" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.lblColumns" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.lblIgnoreValueCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.seIgnoreValueCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.rdgIgnoreValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.lblNumberOfRows" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.seNumberOfRows" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.lblDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.lblMethod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.comboMethod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.btnCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.sbDeleteRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.sbInsertRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.sbAddRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.GridPanel1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.pnlListControls" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.pcGriddedData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.rdgList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.jvspGrid" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.jvspCellList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.Panel2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.pnlMethodControls" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.jvplCellGrid" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.GetNodeCaption(VirtualTrees.PVirtualNode,ref@System.WideString,VirtualTrees.TBaseVirtualTree)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.SetSelectedNode(VirtualTrees.TBaseVirtualTree,VirtualTrees.PVirtualNode)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.SelectedVirtNode[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.RetrieveSelectedObject(ref@System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.GetGridCount(DataSetUnit.TDataArray,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.FinalizeScreenObjects(Classes.TList,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.InitializeScreenObject(ref@ScreenObjectUnit.TScreenObject,System.Int32,Classes.TList,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.ReadDataFromGrid(RbwDataGrid4.TRbwDataGrid4,DataSetUnit.TDataArray,System.Int32,System.Int32,ref@System.Double,ref@System.Int32,ref@System.Boolean,ref@System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.GetColRowLayerFromGrid(RbwDataGrid4.TRbwDataGrid4,System.Int32,System.Int32,System.Int32,out@System.Int32,out@System.Int32,out@System.Int32,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.AssignValueToScreenObject(ScreenObjectUnit.TScreenObject,System.String,System.Boolean,System.Int32,System.Double,System.Int32,System.Int32,System.Int32,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.GetLocation(ref@FastGEO.TPoint2D,ref@GoPhastTypes.T3DRealPoint,System.Int32,System.Int32,System.Int32,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.GetElevations(ref@ValueArrayStorageUnit.TValueArrayStorage,DataSetUnit.TDataArray,ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.GetValues(ref@ValueArrayStorageUnit.TValueArrayStorage,DataSetUnit.TDataArray,ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.CreateAScreenObject(DataSetUnit.TDataArray,Classes.TList,ref@ScreenObjectUnit.TScreenObject,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.ReadOneRow(DataSetUnit.TDataArray,System.Int32,ref@System.Int32,ref@System.Int32,ref@System.Int32,ref@System.Double,ref@System.Int32,ref@System.Boolean,ref@System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.ReadAnIndex(ref@System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.ReadDataCell(DataSetUnit.TDataArray,System.Int32,System.Int32,ref@System.Double,ref@System.Int32,ref@System.Boolean,ref@System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.ReadARowOfListData(DataSetUnit.TDataArray,System.Int32,out@System.Int32,out@System.Int32,out@System.Double,out@System.Int32,out@System.Boolean,out@System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.IsIgnoredStringValue(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.IsIgnoredBooleanValue(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.IsIgnoredIntegerValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.IsIgnoredRealValue(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.StoreIgnoredValues(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.AssignDataSetValue()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.InitializeGridsForGriddedData(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.InitializeTabSheetFor2DGriddedData(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.InitializeGridForGriddedData(RbwDataGrid4.TRbwDataGrid4,RbwDataGrid4.TRbwColumnFormat4,System.Boolean,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.InitializeGridForCellList(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.FSelectedVirtNode" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.FStoredClassifications" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.FStringIgnoreValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.FBooleanIgnoreValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.FIntegerIgnoreValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.FRealIgnoreValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.FGrids" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.combotreeDataSetsDropDownTreeGetText(VirtualTrees.TBaseVirtualTree,VirtualTrees.PVirtualNode,VirtualTrees.TColumnIndex,VirtualTrees.TVSTTextType,ref@System.WideString)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.combotreeDataSetsDropDownTreeChange(VirtualTrees.TBaseVirtualTree,VirtualTrees.PVirtualNode)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.combotreeDataSetsDropDownTreeGetNodeDataSize(VirtualTrees.TBaseVirtualTree,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.FormResize(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.seIgnoreValueCountChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.rdgIgnoreValuesEndUpdate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.sbDeleteRowClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.sbInsertRowClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.sbAddRowClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.seNumberOfRowsChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.rdgListEndUpdate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TfrmImportGriddedData.FormDestroy(System.Object)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmImportGriddedDataUnit.TUndoImportGriddedData">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TUndoImportGriddedData.Redo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TUndoImportGriddedData.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TUndoImportGriddedData.Description()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportGriddedDataUnit.TUndoImportGriddedData.Undo()" />
+    </reference>
+  </view>
+</nodeSet>

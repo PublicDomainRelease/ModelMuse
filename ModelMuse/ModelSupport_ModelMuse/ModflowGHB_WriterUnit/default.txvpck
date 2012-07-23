@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="q4ost07jol8gv5l_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowGHB_WriterUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.WriteFluxObservationFile(System.String,GoPhastTypes.TObservationPurpose)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.WriteFile(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.ObservationOutputExtension()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.ObservationExtension()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.WriteCell(ModflowCellUnit.TValueCell,System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.WriteParameterCells(ModflowCellUnit.TValueCellList,System.Int32,System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.ParameterType()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.Package()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.GetBoundary(ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.Extension()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.CellType()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.ObservationPackage()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.WriteDataSets5To7()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.WriteDataSets3And4()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.WriteDataSet2()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.WriteDataSet1()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.MXL" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGHB_WriterUnit.TModflowGHB_Writer.NPGHB" />
+    </reference>
+  </view>
+</nodeSet>

@@ -13,28 +13,28 @@ inherited frmGridSpacing: TfrmGridSpacing
   OnKeyPress = FormKeyPress
   ExplicitWidth = 455
   ExplicitHeight = 491
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pcSubdivide: TPageControl
     Left = 0
     Top = 129
-    Width = 447
-    Height = 287
+    Width = 437
+    Height = 276
     ActivePage = tabColumns
     Align = alClient
-    TabOrder = 0
+    TabOrder = 1
     object tabColumns: TTabSheet
       Caption = 'Columns (X'#39')'
       object pnlColumns: TPanel
         Left = 0
-        Top = 173
-        Width = 439
+        Top = 162
+        Width = 429
         Height = 81
         Align = alBottom
         ParentColor = True
         TabOrder = 1
         DesignSize = (
-          439
+          429
           81)
         object lblColNumNodes: TLabel
           Left = 8
@@ -77,8 +77,8 @@ inherited frmGridSpacing: TfrmGridSpacing
       object dgColumns: TRbwDataGrid4
         Left = 0
         Top = 0
-        Width = 439
-        Height = 173
+        Width = 429
+        Height = 162
         Align = alClient
         ColCount = 2
         DefaultColWidth = 200
@@ -158,14 +158,14 @@ inherited frmGridSpacing: TfrmGridSpacing
       ImageIndex = 1
       object pnlRows: TPanel
         Left = 0
-        Top = 173
-        Width = 439
+        Top = 162
+        Width = 429
         Height = 81
         Align = alBottom
         ParentColor = True
-        TabOrder = 0
+        TabOrder = 1
         DesignSize = (
-          439
+          429
           81)
         object lblRowNumNodes: TLabel
           Left = 8
@@ -208,14 +208,14 @@ inherited frmGridSpacing: TfrmGridSpacing
       object dgRows: TRbwDataGrid4
         Left = 0
         Top = 0
-        Width = 439
-        Height = 173
+        Width = 429
+        Height = 162
         Align = alClient
         ColCount = 2
         DefaultColWidth = 200
         FixedCols = 1
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowMoving, goEditing, goTabs, goAlwaysShowEditor]
-        TabOrder = 1
+        TabOrder = 0
         OnKeyUp = dgKeyUp
         OnMouseDown = dgMouseDown
         OnMouseMove = dgMouseMove
@@ -289,14 +289,14 @@ inherited frmGridSpacing: TfrmGridSpacing
       ImageIndex = 2
       object pnlLayers: TPanel
         Left = 0
-        Top = 173
-        Width = 439
+        Top = 162
+        Width = 429
         Height = 81
         Align = alBottom
         ParentColor = True
-        TabOrder = 0
+        TabOrder = 1
         DesignSize = (
-          439
+          429
           81)
         object lblLayNumNodes: TLabel
           Left = 8
@@ -339,14 +339,14 @@ inherited frmGridSpacing: TfrmGridSpacing
       object dgLayers: TRbwDataGrid4
         Left = 0
         Top = 0
-        Width = 439
-        Height = 173
+        Width = 429
+        Height = 162
         Align = alClient
         ColCount = 2
         DefaultColWidth = 200
         FixedCols = 1
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowMoving, goEditing, goTabs, goAlwaysShowEditor]
-        TabOrder = 1
+        TabOrder = 0
         OnKeyUp = dgKeyUp
         OnMouseDown = dgMouseDown
         OnMouseMove = dgMouseMove
@@ -418,50 +418,44 @@ inherited frmGridSpacing: TfrmGridSpacing
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 416
-    Width = 447
+    Top = 405
+    Width = 437
     Height = 41
     Align = alBottom
     ParentColor = True
     TabOrder = 2
     DesignSize = (
-      447
+      437
       41)
     object btnCancel: TBitBtn
-      Left = 349
-      Top = 4
+      Left = 339
+      Top = 2
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
     object btnOK: TBitBtn
-      Left = 252
-      Top = 4
+      Left = 242
+      Top = 2
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
     object btnHelp: TBitBtn
-      Left = 156
-      Top = 4
+      Left = 146
+      Top = 2
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -469,13 +463,13 @@ inherited frmGridSpacing: TfrmGridSpacing
   object pnlDescribe: TPanel
     Left = 0
     Top = 0
-    Width = 447
+    Width = 437
     Height = 129
     Align = alTop
     ParentColor = True
-    TabOrder = 1
+    TabOrder = 0
     DesignSize = (
-      447
+      437
       129)
     object lblDescribe: TLabel
       Left = 8

@@ -19,40 +19,40 @@ inherited framePackageUZF: TframePackageUZF
     ExplicitHeight = 311
     inherited lblLayerOption: TLabel
       Top = 5
-      Width = 240
+      Width = 286
       Caption = 'Recharge and discharge location option (NUZTOP)'
       ExplicitTop = 5
-      ExplicitWidth = 240
+      ExplicitWidth = 286
     end
     object lblVerticalKSource: TLabel [1]
       Left = 16
       Top = 45
-      Width = 231
-      Height = 13
+      Width = 274
+      Height = 16
       Caption = 'Vertical hydraulic conductivity source (IUZFOPT)'
       Enabled = False
     end
     object lblNumberOfTrailingWaves: TLabel [2]
       Left = 16
       Top = 96
-      Width = 172
-      Height = 13
+      Width = 206
+      Height = 16
       Caption = 'Number of trailing waves (NTRAIL2)'
       Enabled = False
     end
     object lblNumberOfWaveSets: TLabel [3]
       Left = 16
       Top = 143
-      Width = 150
-      Height = 13
+      Width = 181
+      Height = 16
       Caption = 'Number of wave sets (NSETS2)'
       Enabled = False
     end
     object lblSURFDEP: TLabel [4]
       Left = 16
       Top = 263
-      Width = 352
-      Height = 13
+      Width = 418
+      Height = 16
       Caption = 
         'The average height of undulations in the land surface altitude (' +
         'SURFDEP)'
@@ -63,12 +63,13 @@ inherited framePackageUZF: TframePackageUZF
       Top = 24
       ExplicitLeft = 16
       ExplicitTop = 24
+      ExplicitHeight = 24
     end
     object comboVerticalKSource: TComboBox
       Left = 16
       Top = 69
       Width = 255
-      Height = 21
+      Height = 24
       Style = csDropDownList
       Enabled = False
       ItemIndex = 0
@@ -122,27 +123,12 @@ inherited framePackageUZF: TframePackageUZF
       CheckMin = True
       ChangeDisabledColor = True
     end
-    object rgAssignmentMethod: TRbwRadioGroup
-      Left = 216
-      Top = 104
-      Width = 317
-      Height = 80
-      Caption = 'Infiltration assignment method'
-      Enabled = False
-      ItemIndex = 1
-      Items.Strings = (
-        'Objects overwrite values of previous objects'
-        'Sum values of all objects')
-      TabOrder = 2
-      WordWrap = True
-    end
     object chklstOptions: TCheckListBox
       Left = 16
       Top = 190
       Width = 517
       Height = 67
       Enabled = False
-      ItemHeight = 13
       Items.Strings = (
         ' Route discharge to streams and lakes (IRUNFLG)'
         'Simulate evapotranspiration (IETFLG)'
@@ -151,6 +137,19 @@ inherited framePackageUZF: TframePackageUZF
         'Specify initial unsaturated water content (SPECIFYTHTI)'
         'Calculate surface leakage (inverse of NOSURFLEAK)')
       TabOrder = 5
+    end
+    object rgAssignmentMethod: TRadioGroup
+      Left = 240
+      Top = 104
+      Width = 293
+      Height = 80
+      Caption = 'Infiltration assignment method'
+      ItemIndex = 1
+      Items.Strings = (
+        'Objects overwrite values of previous objects'
+        'Sum values of all objects')
+      TabOrder = 2
+      WordWrap = True
     end
   end
   inherited rcSelectionController: TRbwController
@@ -194,7 +193,6 @@ inherited framePackageUZF: TframePackageUZF
         Control = lblVerticalKSource
       end
       item
-        Control = rgAssignmentMethod
       end>
   end
 end

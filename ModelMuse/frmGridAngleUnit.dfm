@@ -1,17 +1,17 @@
 inherited frmGridAngle: TfrmGridAngle
   Left = 672
   Top = 486
-  Width = 351
-  Height = 127
+  Width = 356
+  Height = 132
   HelpType = htKeyword
   HelpKeyword = 'Grid_Angle_Dialog_Box'
   HorzScrollBar.Range = 329
   VertScrollBar.Range = 81
   ActiveControl = rdeGridAngle
   Caption = 'Grid Angle'
-  ExplicitWidth = 351
-  ExplicitHeight = 127
-  PixelsPerInch = 96
+  ExplicitWidth = 356
+  ExplicitHeight = 132
+  PixelsPerInch = 120
   TextHeight = 18
   object lblGridAngle: TLabel
     Left = 8
@@ -39,11 +39,9 @@ inherited frmGridAngle: TfrmGridAngle
     Top = 48
     Width = 91
     Height = 33
-    DoubleBuffered = True
     Kind = bkOK
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 3
+    TabOrder = 2
     OnClick = btnOKClick
   end
   object btnCancel: TBitBtn
@@ -51,21 +49,17 @@ inherited frmGridAngle: TfrmGridAngle
     Top = 48
     Width = 89
     Height = 33
-    DoubleBuffered = True
     Kind = bkCancel
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 2
+    TabOrder = 3
   end
   object btnHelp: TBitBtn
     Left = 48
     Top = 48
     Width = 91
     Height = 33
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 1
     OnClick = btnHelpClick
   end

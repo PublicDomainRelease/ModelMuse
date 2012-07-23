@@ -1,25 +1,26 @@
 inherited frmImportDistributedData: TfrmImportDistributedData
   Left = 392
   Top = 183
-  Width = 471
+  Width = 485
   Height = 462
   HelpType = htKeyword
   HelpKeyword = 'Import_Distributed_Data_by_Zone'
   VertScrollBar.Range = 210
   Caption = 'Import Distributed Data by Zone'
   OnResize = FormResize
-  ExplicitWidth = 471
+  ExplicitWidth = 485
   ExplicitHeight = 462
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 463
+    Width = 467
     Height = 169
     Align = alTop
     ParentColor = True
     TabOrder = 0
+    ExplicitWidth = 453
     object lblLowerX: TLabel
       Left = 8
       Top = 12
@@ -75,7 +76,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      TabOrder = 1
+      TabOrder = 0
       Text = '0'
       DataType = dtReal
       Max = 1.000000000000000000
@@ -87,7 +88,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      TabOrder = 0
+      TabOrder = 1
       Text = '0'
       DataType = dtReal
       Max = 1.000000000000000000
@@ -99,7 +100,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      TabOrder = 3
+      TabOrder = 2
       Text = '0'
       DataType = dtReal
       Max = 1.000000000000000000
@@ -111,7 +112,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      TabOrder = 2
+      TabOrder = 3
       Text = '0'
       DataType = dtReal
       Max = 1.000000000000000000
@@ -159,24 +160,24 @@ inherited frmImportDistributedData: TfrmImportDistributedData
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 387
-    Width = 463
+    Top = 376
+    Width = 467
     Height = 41
     Align = alBottom
     ParentColor = True
     TabOrder = 2
+    ExplicitWidth = 453
     DesignSize = (
-      463
+      467
       41)
     object btnOK: TBitBtn
-      Left = 275
+      Left = 265
       Top = 4
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
       Caption = 'OK'
       Default = True
-      DoubleBuffered = True
       Enabled = False
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
@@ -197,32 +198,27 @@ inherited frmImportDistributedData: TfrmImportDistributedData
         0000}
       ModalResult = 1
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
-      Left = 371
+      Left = 361
       Top = 4
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
     object btnHelp: TBitBtn
-      Left = 179
+      Left = 169
       Top = 4
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -230,8 +226,8 @@ inherited frmImportDistributedData: TfrmImportDistributedData
   object dgDataSets: TRbwDataGrid4
     Left = 0
     Top = 169
-    Width = 463
-    Height = 218
+    Width = 467
+    Height = 207
     Align = alClient
     ColCount = 2
     DefaultColWidth = 100
@@ -294,6 +290,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
         CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
+    ExplicitWidth = 453
   end
   object OpenDialogFile: TOpenDialog
     Filter = 'Dat files (*.dat)|*.dat|All fIles (*.*)|*.*'

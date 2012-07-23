@@ -6,9 +6,9 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
   Dialogs, ExtCtrls, ArgusDataEntry, Grids, RbwDataGrid4, frameDisplayLimitUnit,
   SsButtonEd, RbwStringTreeCombo, StdCtrls, ComCtrls, JvExComCtrls, JvUpDown,
-  JvExControls, JvxSlider, Mask, JvExMask, JvSpin, JvExStdCtrls, JvRichEdit,
+  JvExControls, JvxSlider, Mask, JvExMask, JvSpin, JvExStdCtrls,
   VirtualTrees, DataSetUnit, LegendUnit, RbwParser, ClassificationUnit,
-  EdgeDisplayUnit, SubscriptionUnit;
+  EdgeDisplayUnit, SubscriptionUnit, JvRichEdit;
 
 type
   TEdgeDisplayEdit = class(TObject)
@@ -48,7 +48,6 @@ type
     pbColorScheme: TPaintBox;
     lblColorAdjustment: TLabel;
     lblComment: TLabel;
-    reComment: TJvRichEdit;
     // @name displays a list of the different methods for converting
     // a value in the @link(TDataArray) used for coloring the @link(TPhastGrid)
     // to a color.
@@ -84,6 +83,7 @@ type
     seLegendRows: TJvSpinEdit;
     rdgLegend: TRbwDataGrid4;
     timerLegend: TTimer;
+    reComment: TRichEdit;
     procedure seNumberOfValuesToIgnoreChange(Sender: TObject);
     procedure seLegendRowsChange(Sender: TObject);
     // @name gives a preview of the color scheme
@@ -347,7 +347,7 @@ begin
   result := False;
   case DataArray.EvaluatedAt of
     eaBlocks: result := True;
-    eaNodes: result := frmGoPhast.PhastModel.ModelSelection = msPhast;
+    eaNodes: result := frmGoPhast.PhastModel.ModelSelection in [msPhast {$IFDEF SUTRA}, msSutra {$ENDIF}];
     else Assert(False);
   end;
 end;

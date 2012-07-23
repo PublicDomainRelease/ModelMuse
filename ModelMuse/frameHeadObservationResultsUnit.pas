@@ -320,8 +320,8 @@ end;
 
 procedure TCustomUndoChangeHeadObsResults.UpdateGUI;
 begin
-  frmGoPhast.TopGridChanged := True;
-  frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
+  frmGoPhast.TopDiscretizationChanged := True;
+  frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
 
   if frmDisplayData <> nil then
   begin

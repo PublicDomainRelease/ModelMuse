@@ -7,7 +7,7 @@ uses
   Dialogs, frameCustomColorUnit, ExtCtrls, ArgusDataEntry, Grids, RbwDataGrid4,
   frameDisplayLimitUnit, SsButtonEd, RbwStringTreeCombo, StdCtrls, ComCtrls,
   JvExComCtrls, JvUpDown, JvExControls, JvxSlider, Mask, JvExMask, JvSpin,
-  JvExStdCtrls, JvRichEdit, JvCheckBox, DataSetUnit, VirtualTrees;
+  JvExStdCtrls, JvCheckBox, DataSetUnit, VirtualTrees;
 
 type
   TframeContourData = class(TframeCustomColor)

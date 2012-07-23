@@ -1,17 +1,17 @@
 inherited frmPhastGridOptions: TfrmPhastGridOptions
   Left = 558
   Top = 536
-  Width = 316
-  Height = 309
+  Width = 322
+  Height = 315
   HelpType = htKeyword
   HelpKeyword = 'Grid_Options_Dialog_Box'
   HorzScrollBar.Range = 289
   VertScrollBar.Range = 265
   ActiveControl = clbChemistryDimensions
   Caption = 'PHAST Grid Options'
-  ExplicitWidth = 316
-  ExplicitHeight = 309
-  PixelsPerInch = 96
+  ExplicitWidth = 322
+  ExplicitHeight = 315
+  PixelsPerInch = 120
   TextHeight = 18
   object lblChemistrDimensions: TLabel
     Left = 8
@@ -23,7 +23,7 @@ inherited frmPhastGridOptions: TfrmPhastGridOptions
   object clbChemistryDimensions: TCheckListBox
     Left = 8
     Top = 32
-    Width = 292
+    Width = 281
     Height = 81
     Anchors = [akLeft, akTop, akRight]
     ItemHeight = 18
@@ -36,7 +36,7 @@ inherited frmPhastGridOptions: TfrmPhastGridOptions
   object rgPrintOrientation: TRadioGroup
     Left = 8
     Top = 120
-    Width = 292
+    Width = 281
     Height = 105
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Print orientation'
@@ -53,7 +53,6 @@ inherited frmPhastGridOptions: TfrmPhastGridOptions
     Height = 33
     Caption = 'OK'
     Default = True
-    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       04000000000068010000120B0000120B00001000000010000000000000000000
@@ -72,8 +71,7 @@ inherited frmPhastGridOptions: TfrmPhastGridOptions
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 4
+    TabOrder = 3
     OnClick = btnOKClick
   end
   object btnCancel: TBitBtn
@@ -81,21 +79,17 @@ inherited frmPhastGridOptions: TfrmPhastGridOptions
     Top = 232
     Width = 89
     Height = 33
-    DoubleBuffered = True
     Kind = bkCancel
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 3
+    TabOrder = 4
   end
   object btnHelp: TBitBtn
     Left = 8
     Top = 231
     Width = 89
     Height = 33
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 2
     OnClick = btnHelpClick
   end

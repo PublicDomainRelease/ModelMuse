@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="zmoz58jboctbx2q_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowCellUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.WriteCompCell(Classes.TStream,ModflowCellUnit.TCellLocation)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.ReadCompCell(Classes.TStream)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowCellUnit.MaxCondensed" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.WriteCompInt(Classes.TStream,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.ReadCompInt(Classes.TStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.WriteCompReal(Classes.TStream,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.ReadCompReal(Classes.TStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.WriteCompString(Classes.TStream,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.ReadCompString(Classes.TStream,Classes.TStringList)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowCellUnit.TCellLocation">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowCellUnit.TCellLocation.Layer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowCellUnit.TCellLocation.Row" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowCellUnit.TCellLocation.Column" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowCellUnit.TCellLocation.Section" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowCellUnit.TValueCell">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCell.GetIntegerAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCell.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCell.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCell.GetSection()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCell.Create()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowCellUnit.TValueCell.Layer[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowCellUnit.TValueCell.Row[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowCellUnit.TValueCell.Column[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowCellUnit.TValueCell.IntegerValue[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowCellUnit.TValueCell.RealValue[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowCellUnit.TValueCell.RealAnnotation[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowCellUnit.TValueCell.IntegerAnnotation[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowCellUnit.TValueCell.IFace[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowCellUnit.TValueCell.ScreenObject[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCell.SetScreenObject(System.Object)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowCellUnit.TValueCell.Section[]" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowCellUnit.TValueCell.FScreenObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowCellUnit.TValueCell.FIFace" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCell.GetColumn()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCell.GetLayer()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCell.GetRow()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCell.GetIntegerValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCell.GetRealValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCell.GetRealAnnotation(System.Int32)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowCellUnit.TValueCellType">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowCellUnit.TValueCellList">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCellList.SetCount(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCellList.GetItem(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCellList.SetItem(System.Int32,ModflowCellUnit.TValueCell)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCellList.Restore(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCellList.Condense()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCellList.Add(ModflowCellUnit.TValueCell)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCellList.Cache()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCellList.CheckRestore()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCellList.Create(ModflowCellUnit.TValueCellType)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowCellUnit.TValueCellList.Count[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowCellUnit.TValueCellList.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCellList.Destroy()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowCellUnit.TValueCellList.FCachedCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowCellUnit.TValueCellList.FCached" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowCellUnit.TValueCellList.FTempFileNames" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowCellUnit.TValueCellList.FCleared" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowCellUnit.TValueCellList.FValueCellType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowCellUnit.TValueCellList.FCondensedCount" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowCellUnit.TValueCellList.GetCount()" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowCellUnit.TValueCellList.FValueCellType" />
+    </reference>
+  </view>
+</nodeSet>

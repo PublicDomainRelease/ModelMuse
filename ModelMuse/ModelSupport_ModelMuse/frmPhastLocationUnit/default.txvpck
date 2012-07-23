@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="70nue4r2p5ss63l_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmPhastLocationUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastLocationUnit.frmPhastLocation" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmPhastLocationUnit.frmPhastLocation" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmPhastLocationUnit.TfrmPhastLocation">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastLocationUnit.TfrmPhastLocation.lblPhast" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastLocationUnit.TfrmPhastLocation.Panel1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastLocationUnit.TfrmPhastLocation.btnCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastLocationUnit.TfrmPhastLocation.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastLocationUnit.TfrmPhastLocation.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastLocationUnit.TfrmPhastLocation.pnlBottom" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPhastLocationUnit.TfrmPhastLocation.HighlightControls()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPhastLocationUnit.TfrmPhastLocation.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPhastLocationUnit.TfrmPhastLocation.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPhastLocationUnit.TfrmPhastLocation.fedPhastChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPhastLocationUnit.TfrmPhastLocation.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPhastLocationUnit.TfrmPhastLocation.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastLocationUnit.TfrmPhastLocation.fedPhast" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastLocationUnit.TfrmPhastLocation.htlblPhast" />
+    </reference>
+  </view>
+</nodeSet>

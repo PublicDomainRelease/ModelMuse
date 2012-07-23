@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="wnn80hoto0tbbdo_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ObserverProxyU.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ObserverProxyU.TObserverProxy">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ObserverProxyU.TObserverProxy.KindSet[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ObserverProxyU.TObserverProxy.Observer[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxy.NotifyOnRemove(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxy.NotifyOnChange(System.Object,TChangeKind)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxy.NotifyOnAdd(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxy.Clone()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxy.Create(ObserverIntfU.IObjectObserver,ObserverIntfU.TChangeKindSet)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ObserverProxyU.TObserverProxy.FKindSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ObserverProxyU.TObserverProxy.FObserver" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ObserverProxyU.TObserverProxyList">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxyList.IndexOf(ObserverProxyU.TObserverProxy)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ObserverProxyU.TObserverProxyList.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxyList.IndexOf(ObserverIntfU.IObjectObserver)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxyList.Insert(System.Int32,ObserverProxyU.TObserverProxy)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxyList.Detach(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxyList.Delete(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxyList.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxyList.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxyList.Put(System.Int32,ObserverProxyU.TObserverProxy)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxyList.Add(ObserverProxyU.TObserverProxy)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxyList.FreeItem(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverProxyU.TObserverProxyList.Get(System.Int32)" />
+    </reference>
+  </view>
+</nodeSet>

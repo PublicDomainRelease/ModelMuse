@@ -111,8 +111,12 @@ Unit XBase1 ;
 Interface
 
 {$IFDEF MSWINDOWS}
-Uses
-  Types, SysUtils, Classes, Dialogs;
+
+  {$IF CompilerVersion >= 23}
+Uses  Types, SysUtils, Classes, VCL.Dialogs;
+  {$ELSE}
+Uses  Types, SysUtils, Classes, Dialogs;
+  {$IFEND}
 {$ENDIF}
 {$IFDEF LINUX}
 Uses

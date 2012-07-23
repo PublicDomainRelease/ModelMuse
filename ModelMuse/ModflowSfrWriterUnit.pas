@@ -3705,7 +3705,7 @@ var
   InstanceIndex: Integer;
   ParamName: string;
   SubSegIndex: Integer;
-  SfrBoundary: TSfrBoundary;
+//  SfrBoundary: TSfrBoundary;
   SegIndex: Integer;
   ASegment: TSegment;
   SubSeg: TSubSegment;

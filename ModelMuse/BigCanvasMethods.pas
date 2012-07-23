@@ -628,7 +628,7 @@ begin
   if BitMap = nil then Exit;
   SetLength(Points, 5);
   SetTopRange;
-  if IntersectRect(Intersection, ARect, Bounds) then
+  if Gr32.IntersectRect(Intersection, ARect, Bounds) then
   begin
     Points[0] := Intersection.TopLeft;
     Points[1].X := Intersection.Left;

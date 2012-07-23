@@ -3,9 +3,9 @@ inherited frmFilesToArchive: TfrmFilesToArchive
   HelpKeyword = 'Files_to_Archive_Dialog_Box'
   Caption = ' Files To Archive'
   ClientWidth = 512
-  ExplicitWidth = 520
-  ExplicitHeight = 268
-  PixelsPerInch = 96
+  ExplicitWidth = 530
+  ExplicitHeight = 271
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -13,8 +13,7 @@ inherited frmFilesToArchive: TfrmFilesToArchive
     Width = 512
     Height = 73
     Align = alBottom
-    TabOrder = 0
-    ExplicitTop = 161
+    TabOrder = 1
     DesignSize = (
       512
       73)
@@ -34,11 +33,9 @@ inherited frmFilesToArchive: TfrmFilesToArchive
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 0
+      TabOrder = 4
     end
     object btnOK: TBitBtn
       Left = 325
@@ -46,11 +43,9 @@ inherited frmFilesToArchive: TfrmFilesToArchive
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 1
+      TabOrder = 3
       OnClick = btnOKClick
     end
     object btnHelp: TBitBtn
@@ -59,10 +54,8 @@ inherited frmFilesToArchive: TfrmFilesToArchive
       Width = 81
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnHelpClick
     end
@@ -72,7 +65,7 @@ inherited frmFilesToArchive: TfrmFilesToArchive
       Width = 121
       Height = 33
       Caption = 'Create archive'
-      TabOrder = 3
+      TabOrder = 0
       OnClick = btnArchiveClick
     end
     object btnAddFiles: TButton
@@ -81,17 +74,17 @@ inherited frmFilesToArchive: TfrmFilesToArchive
       Width = 75
       Height = 33
       Caption = 'Add files'
-      TabOrder = 4
+      TabOrder = 1
       OnClick = btnAddFilesClick
     end
   end
-  object reFilesToSave: TJvRichEdit
+  object reFilesToSave: TRichEdit
     Left = 0
     Top = 0
     Width = 512
     Height = 153
     Align = alClient
-    TabOrder = 1
+    TabOrder = 0
     OnChange = reFilesToSaveChange
   end
   object sdArchive: TSaveDialog

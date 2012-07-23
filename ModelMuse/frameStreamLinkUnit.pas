@@ -3,9 +3,9 @@ unit frameStreamLinkUnit;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
-  Dialogs, StdCtrls, ExtCtrls, JvExStdCtrls, JvCombobox, JvListComb,
-  PhastModelUnit, UndoItems, DisplaySettingsUnit;
+  System.UITypes, Windows, Messages, SysUtils, Variants, Classes, Graphics,
+  Controls, Forms, Dialogs, StdCtrls, ExtCtrls, JvExStdCtrls, JvCombobox,
+  JvListComb, PhastModelUnit, UndoItems, DisplaySettingsUnit;
 
 type
   TframeStreamLink = class(TFrame)
@@ -184,7 +184,7 @@ begin
   inherited;
   frmGoPhast.PhastModel.SfrStreamLinkPlot := FNewSfrStreamLinkPlot;
   frmGoPhast.frameTopView.ModelChanged := True;
-  frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
+  frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
 end;
 
 procedure TUndoStreamLinks.Undo;
@@ -192,7 +192,7 @@ begin
   inherited;
   frmGoPhast.PhastModel.SfrStreamLinkPlot := FOldSfrStreamLinkPlot;
   frmGoPhast.frameTopView.ModelChanged := True;
-  frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
+  frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
 end;
 
 end.

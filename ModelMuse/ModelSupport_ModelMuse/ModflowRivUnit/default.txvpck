@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="ywkxbo7bqiup84i_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowRivUnit.TRivBoundary">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivBoundary.GetCellValues(Classes.TList,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivBoundary.ModflowParamItemClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivBoundary.BoundaryCollectionClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivBoundary.AssignCells(ModflowBoundaryUnit.TCustomBoundaryStorage,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivBoundary.TestIfObservationsPresent(ref@System.Double,ref@System.Double,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivBoundary.InvalidateDisplay()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowRivUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.ConductancePosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.StagePosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.BottomPosition" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowRivUnit.TRivRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivRecord.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivRecord.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivRecord.RiverBottomAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivRecord.RiverStageAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivRecord.ConductanceAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivRecord.EndingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivRecord.StartingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivRecord.RiverBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivRecord.RiverStage" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivRecord.Conductance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivRecord.Cell" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowRivUnit.TRivStorage">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivStorage.FRivArray" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowRivUnit.TRivStorage.RivArray[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivStorage.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivStorage.Store(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivStorage.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivStorage.GetRivArray()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowRivUnit.TRivItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowRivUnit.TRivItem.Conductance[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowRivUnit.TRivItem.RiverStage[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowRivUnit.TRivItem.RiverBottom[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.BoundaryFormulaCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.SetBoundaryFormula(System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.GetBoundaryFormula(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.RemoveFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.GetPropertyObserver(System.Object,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.CreateFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.AssignObserverEvents(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.GetRiverStage()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.GetRiverBottom()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.GetConductance()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.SetConductance(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.SetRiverStage(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivItem.SetRiverBottom(System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivItem.FConductance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivItem.FRiverStage" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivItem.FRiverBottom" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowRivUnit.TRivCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivCollection.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivCollection.Create(ModflowBoundaryUnit.TModflowBoundary,System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivCollection.SetBoundaryStartAndEndTime(System.Int32,ModflowBoundaryUnit.TCustomModflowBoundaryItem,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivCollection.ItemClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivCollection.TestIfObservationsPresent(ref@System.Double,ref@System.Double,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivCollection.AddSpecificBoundary()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivCollection.AdjustedFormula(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivCollection.AssignCellList(RbwParser.TExpression,System.Object,ModflowBoundaryUnit.TCustomBoundaryStorage,System.Int32,Classes.TList,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivCollection.AssignCellLocation(ModflowBoundaryUnit.TCustomBoundaryStorage,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivCollection.InvalidateRiverBottomData(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivCollection.InvalidateConductanceData(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivCollection.InvalidateStageData(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivCollection.FConductanceData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivCollection.FRiverStageData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRivCollection.FRiverBottomData" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowRivUnit.TRivParamItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRivParamItem.BoundaryClass()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowRivUnit.TRiv_Cell">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowRivUnit.TRiv_Cell.RiverStageAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowRivUnit.TRiv_Cell.RiverBottomAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowRivUnit.TRiv_Cell.ConductanceAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowRivUnit.TRiv_Cell.RiverStage[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowRivUnit.TRiv_Cell.RiverBottom[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowRivUnit.TRiv_Cell.Conductance[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.GetSection()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.GetIntegerAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.GetRealAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.GetRealValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.GetIntegerValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.GetRow()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.GetLayer()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.GetColumn()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.GetRiverStageAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.GetRiverBottomAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.GetConductanceAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.GetRiverBottom()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.GetConductance()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRivUnit.TRiv_Cell.GetRiverStage()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRiv_Cell.StressPeriod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRivUnit.TRiv_Cell.Values" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowRivUnit.TRiv_Cell.Values" />
+    </reference>
+  </view>
+</nodeSet>

@@ -1,8 +1,8 @@
 inherited frmSelectImage: TfrmSelectImage
   Left = 558
   Top = 536
-  Width = 428
-  Height = 164
+  Width = 439
+  Height = 177
   HelpType = htKeyword
   HelpKeyword = 'ImportEdit_Bitmap_Dialog_Box'
   HorzScrollBar.Range = 412
@@ -10,24 +10,23 @@ inherited frmSelectImage: TfrmSelectImage
   ActiveControl = comboBitmaps
   Caption = 'Select image'
   OldCreateOrder = True
-  ExplicitWidth = 428
-  ExplicitHeight = 164
-  PixelsPerInch = 96
-  TextHeight = 17
+  ExplicitWidth = 439
+  ExplicitHeight = 177
+  PixelsPerInch = 120
+  TextHeight = 18
   object lblSelect: TLabel
     Left = 16
     Top = 8
-    Width = 124
-    Height = 17
+    Width = 139
+    Height = 18
     Caption = 'Select image to edit'
   end
   object comboBitmaps: TComboBox
     Left = 16
     Top = 40
     Width = 393
-    Height = 25
+    Height = 26
     Style = csDropDownList
-    ItemHeight = 17
     TabOrder = 0
   end
   object btnOK: TBitBtn
@@ -38,9 +37,6 @@ inherited frmSelectImage: TfrmSelectImage
     Caption = 'OK'
     Default = True
     Enabled = False
-    ModalResult = 1
-    TabOrder = 3
-    OnClick = btnOKClick
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       04000000000068010000120B0000120B00001000000010000000000000000000
@@ -58,23 +54,28 @@ inherited frmSelectImage: TfrmSelectImage
       3338F38F000033333333333333A223333333333333338F830000333333333333
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
+    ModalResult = 1
     NumGlyphs = 2
+    TabOrder = 2
+    OnClick = btnOKClick
   end
   object btnCancel: TBitBtn
     Left = 321
     Top = 88
     Width = 91
     Height = 33
-    TabOrder = 2
     Kind = bkCancel
+    NumGlyphs = 2
+    TabOrder = 3
   end
   object btnHelp: TBitBtn
     Left = 129
     Top = 88
     Width = 91
     Height = 33
+    Kind = bkHelp
+    NumGlyphs = 2
     TabOrder = 1
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
 end

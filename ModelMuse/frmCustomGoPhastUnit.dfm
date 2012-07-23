@@ -19,6 +19,6 @@ object frmCustomGoPhast: TfrmCustomGoPhast
   OnDestroy = FormDestroy
   OnHelp = FormHelp
   OnShow = FormShow
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
 end

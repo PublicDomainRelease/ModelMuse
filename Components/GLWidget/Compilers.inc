@@ -79,6 +79,12 @@
     {$define DELHI.NET_1_UP}
   {$endif DELPHI.NET_1}
 {$else}
+  {$ifdef Win64}
+        {$DEFINE Delphi_2009_UP}
+        {$DEFINE COMPILER_7}
+        {$define DELPHI}
+        {$define DELPHI_7}
+  {$endif}  
   {$ifdef Win32}
     {$ifdef CONDITIONALEXPRESSIONS}
       {$if CompilerVersion>=20}

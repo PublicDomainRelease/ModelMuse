@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="csncegbro2k33gg_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:InitialHeadZone.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:InitialHeadZone.TInitialHeadDataSets">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InitialHeadZone.TInitialHeadDataSets.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InitialHeadZone.TInitialHeadDataSets.FInitialHead" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:InitialHeadZone.TInitialHeadZone">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InitialHeadZone.TInitialHeadZone.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InitialHeadZone.TInitialHeadZone.FInitialHead" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InitialHeadZone.TInitialHeadZone.AssignProperties(System.Int32,System.Int32,System.Int32,ZoneUnit.TCustomDataSets,System.Boolean,System.Boolean,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InitialHeadZone.TInitialHeadZone.Destroy()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:InitialHeadZone.TInitialHeadZoneGroup">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:InitialHeadZone.TInitialHeadZoneGroup.Zones[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InitialHeadZone.TInitialHeadZoneGroup.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InitialHeadZone.TInitialHeadZoneGroup.GetZone(System.Int32)" />
+    </reference>
+  </view>
+</nodeSet>

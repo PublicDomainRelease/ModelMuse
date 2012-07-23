@@ -1236,7 +1236,7 @@ var
   ValuesToIgnore: TOneDRealArray;
   MinMaxAssigned: Boolean;
   TOTIM: TModflowDouble;
-  WaterTableData: TDataArray;
+//  WaterTableData: TDataArray;
   DisplayChoice: TDisplayChoice;
   AModel: TCustomModel;
   AFileName: string;
@@ -2901,20 +2901,20 @@ begin
   FModel := AModel;
   FNewEdgeDisplay := FModel.EdgeDisplay;
   FOldEdgeDisplay := FModel.EdgeDisplay;
-  FNew3DDataSet := FModel.Grid.ThreeDDataSet;
-  FOld3DDataSet := FModel.Grid.ThreeDDataSet;
+  FNew3DDataSet := FModel.ThreeDDataSet;
+  FOld3DDataSet := FModel.ThreeDDataSet;
   FNewThreeDTimeList := FModel.ThreeDTimeList;
   FOldThreeDTimeList := FModel.ThreeDTimeList;
-  FNewTopDataSet := FModel.Grid.TopDataSet;
-  FOldTopDataSet := FModel.Grid.TopDataSet;
+  FNewTopDataSet := FModel.TopDataSet;
+  FOldTopDataSet := FModel.TopDataSet;
   FNewTopTimeList := FModel.TopTimeList;
   FOldTopTimeList := FModel.TopTimeList;
-  FNewFrontDataSet := FModel.Grid.FrontDataSet;
-  FOldFrontDataSet := FModel.Grid.FrontDataSet;
+  FNewFrontDataSet := FModel.FrontDataSet;
+  FOldFrontDataSet := FModel.FrontDataSet;
   FNewFrontTimeList := FModel.FrontTimeList;
   FOldFrontTimeList := FModel.FrontTimeList;
-  FNewSideDataSet := FModel.Grid.SideDataSet;
-  FOldSideDataSet := FModel.Grid.SideDataSet;
+  FNewSideDataSet := FModel.SideDataSet;
+  FOldSideDataSet := FModel.SideDataSet;
   FNewSideTimeList := FModel.SideTimeList;
   FOldSideTimeList := FModel.SideTimeList;
   FNewTopContourDataSet := FModel.Grid.TopContourDataSet;
@@ -3061,19 +3061,19 @@ begin
     SetComments(FNewComments);
 
     FModel.EdgeDisplay := FNewEdgeDisplay;
-    FModel.Grid.ThreeDDataSet := FNew3DDataSet;
+    FModel.ThreeDDataSet := FNew3DDataSet;
     FModel.ThreeDTimeList := FNewThreeDTimeList;
-    FModel.Grid.TopDataSet := FNewTopDataSet;
+    FModel.TopDataSet := FNewTopDataSet;
     FModel.TopTimeList := FNewTopTimeList;
-    FModel.Grid.FrontDataSet := FNewFrontDataSet;
+    FModel.FrontDataSet := FNewFrontDataSet;
     FModel.FrontTimeList := FNewFrontTimeList;
-    FModel.Grid.SideDataSet := FNewSideDataSet;
+    FModel.SideDataSet := FNewSideDataSet;
     FModel.SideTimeList := FNewSideTimeList;
     FModel.Grid.TopContourDataSet := FNewTopContourDataSet;
     FModel.Grid.FrontContourDataSet := FNewFrontContourDataSet;
     FModel.Grid.SideContourDataSet := FNewSideContourDataSet;
     FModel.Grid.ThreeDContourDataSet := FNew3DContourDataSet;
-    FModel.Grid.GridChanged;
+    FModel.DiscretizationChanged;
   finally
     AllowChildGridUpdates;
     frmGoPhast.PhastModel.EndDataSetUpdate;
@@ -3102,19 +3102,19 @@ begin
     SetComments(FOldComments);
 
     FModel.EdgeDisplay := FOldEdgeDisplay;
-    FModel.Grid.ThreeDDataSet := FOld3DDataSet;
+    FModel.ThreeDDataSet := FOld3DDataSet;
     FModel.ThreeDTimeList := FOldThreeDTimeList;
-    FModel.Grid.TopDataSet := FOldTopDataSet;
+    FModel.TopDataSet := FOldTopDataSet;
     FModel.TopTimeList := FOldTopTimeList;
-    FModel.Grid.FrontDataSet := FOldFrontDataSet;
+    FModel.FrontDataSet := FOldFrontDataSet;
     FModel.FrontTimeList := FOldFrontTimeList;
-    FModel.Grid.SideDataSet := FOldSideDataSet;
+    FModel.SideDataSet := FOldSideDataSet;
     FModel.SideTimeList := FOldSideTimeList;
     FModel.Grid.TopContourDataSet := FOldTopContourDataSet;
     FModel.Grid.FrontContourDataSet := FOldFrontContourDataSet;
     FModel.Grid.SideContourDataSet := FOldSideContourDataSet;
     FModel.Grid.ThreeDContourDataSet := FOld3DContourDataSet;
-    FModel.Grid.GridChanged;
+    FModel.DiscretizationChanged;
 
 
     DataArrayManager := FModel.DataArrayManager;

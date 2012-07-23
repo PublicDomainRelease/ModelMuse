@@ -439,7 +439,7 @@ begin
           {$IFDEF Sutra}
           msSutra:
             begin
-              TopCell := frmGoPhast.PhastModel.SutraMesh.TopContainingCell(
+              TopCell := frmGoPhast.PhastModel.Mesh.TopContainingCellOrElement(
                 ClosestLocation, DataSet.EvaluatedAt);
               Cell.Col := TopCell.Col;
               Cell.Row := TopCell.Row;
@@ -600,7 +600,7 @@ begin
   LocalGrid := (DataSet.Model as TCustomModel).Grid;
   if LocalGrid = nil then
   begin
-    LocalMesh := (DataSet.Model as TCustomModel).SutraMesh;
+    LocalMesh := (DataSet.Model as TCustomModel).Mesh;
   end
   else
   begin
@@ -1061,7 +1061,7 @@ begin
         // With MODFLOW, the only 2D data sets are in the top view.
         Assert(DataSet.Orientation = dsoTop);
         Assert(AScreenObject.ViewDirection = vdTop);
-        TopCell := Model.SutraMesh.TopContainingCell(Location,
+        TopCell := Model.Mesh.TopContainingCellOrElement(Location,
           DataSet.EvaluatedAt);
         Cell.Col := TopCell.Col;
         Cell.Row := TopCell.Row;

@@ -4,18 +4,35 @@
 			<MainSource>ModelMonitor.dpr</MainSource>
 			<Base>True</Base>
 			<Config Condition="'$(Config)'==''">Release</Config>
-			<Platform>Win32</Platform>
 			<AppType>Application</AppType>
 			<FrameworkType>VCL</FrameworkType>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-			<ProjectVersion>12.3</ProjectVersion>
+			<ProjectVersion>13.4</ProjectVersion>
+			<Platform Condition="'$(Platform)'==''">Win64</Platform>
+			<TargetedPlatforms>3</TargetedPlatforms>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+			<Base_Win64>true</Base_Win64>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+			<Base_Win32>true</Base_Win32>
+			<CfgParent>Base</CfgParent>
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
 			<Cfg_1>true</Cfg_1>
 			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+			<Cfg_1_Win32>true</Cfg_1_Win32>
+			<CfgParent>Cfg_1</CfgParent>
+			<Cfg_1>true</Cfg_1>
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
@@ -24,15 +41,22 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_DcuOutput>.\$(Config)\$(Platform)</DCC_DcuOutput>
+			<Manifest_File>None</Manifest_File>
+			<Icon_MainIcon>ModelMonitor_Icon1.ico</Icon_MainIcon>
+			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+			<VerInfo_Locale>1033</VerInfo_Locale>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.5.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.5.0.0;Comments=;Last Compile=2012-06-07 12:11</VerInfo_Keys>
+			<VerInfo_MinorVer>5</VerInfo_MinorVer>
+			<DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;VCLTee;$(DCC_Namespace)</DCC_Namespace>
 			<DCC_UnitSearchPath>C:\PROGRA~1\Jedi\jcl\lib\d10\debug;C:\Colab\GWModelTools\ModelMuse\FastCode;C:\Colab\GWModelTools\ModelMuse;D:\Colab\GWModelTools\ModelMuse\FastCode;D:\Colab\GWModelTools\ModelMuse;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-			<DCC_ExeOutput>..\ModelMuse</DCC_ExeOutput>
+			<DCC_ExeOutput>..\ModelMuse\$(Config)\$(Platform)</DCC_ExeOutput>
 			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
-			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_Description>ModelMonitor - public domain U. S. Geological Survey</DCC_Description>
 			<DCC_Define>MakeBatchFile;$(DCC_Define)</DCC_Define>
-			<DCC_UsePackage>rtl;vcl;vclx;dbrtl;vcldb;adortl;vclib;ibxpress;xmlrtl;vclactnband;inet;IntrawebDB_80_100;Intraweb_80_100;IndyCore;IndySystem;dclOfficeXP;VclSmp;IndyProtocols;dsnap;bdertl;teeui;teedb;tee;vcldbx;vclie;OfficeVCL6;VirtualTreesD10;GR32_DSGN_BDS2006;GR32_BDS2006;PanelFramePkg;addbtn95_D10pkg;AdePkg;AsLinkPkg;datagridPkg;ModelCube;RecentFiles;GLWidgetPkg;QuadTreePkg;ZoomBox2Pkg;RbwControllerPackage;RbwDataGridPkg;DynamicCursorPkg;RbwEditPkg;RbwParserPkg2006;RbwRulerPkg;XBasePkg;XBasePkg2006;ZipPkg;activeAppPkg;HyperGrid2006D;Jcl;JclVcl;JvCoreD10R;JvSystemD10R;JvStdCtrlsD10R;JvAppFrmD10R;JvBandsD10R;JvDBD10R;JvDlgsD10R;JvBDED10R;JvCmpD10R;JvCryptD10R;JvCtrlsD10R;JvCustomD10R;JvDockingD10R;JvDotNetCtrlsD10R;JvEDID10R;JvGlobusD10R;JvHMID10R;JvInterpreterD10R;JvJansD10R;JvManagedThreadsD10R;JvMMD10R;JvNetD10R;JvPageCompsD10R;JvPluginD10R;JvPrintPreviewD10R;JvRuntimeDesignD10R;JvTimeFrameworkD10R;JvValidatorsD10R;JvWizardD10R;JvXPCtrlsD10R;jshtmprsPkg2006;StringGrid3d_D2006;siComboBoxPkg2006;RbwDataGridPkg2_2006;RBW95ButtonPkg_2006;StrSetPkg2006;VersionInfoPkg_2006;RBWZoomBoxPkgD2006;ZoomerPkgD2006</DCC_UsePackage>
+			<DCC_UsePackage>rtl;vcl;vclx;dbrtl;vcldb;adortl;vclib;ibxpress;xmlrtl;vclactnband;inet;IntrawebDB_80_100;Intraweb_80_100;IndyCore;IndySystem;dclOfficeXP;VclSmp;IndyProtocols;dsnap;bdertl;teeui;teedb;tee;vcldbx;vclie;OfficeVCL6;VirtualTreesD10;GR32_DSGN_BDS2006;GR32_BDS2006;PanelFramePkg;addbtn95_D10pkg;AdePkg;AsLinkPkg;datagridPkg;ModelCube;RecentFiles;GLWidgetPkg;QuadTreePkg;ZoomBox2Pkg;RbwControllerPackage;RbwDataGridPkg;DynamicCursorPkg;RbwEditPkg;RbwParserPkg2006;RbwRulerPkg;XBasePkg;XBasePkg2006;ZipPkg;activeAppPkg;HyperGrid2006D;Jcl;JclVcl;JvCoreD10R;JvSystemD10R;JvStdCtrlsD10R;JvAppFrmD10R;JvBandsD10R;JvDBD10R;JvDlgsD10R;JvBDED10R;JvCmpD10R;JvCryptD10R;JvCtrlsD10R;JvCustomD10R;JvDockingD10R;JvDotNetCtrlsD10R;JvEDID10R;JvGlobusD10R;JvHMID10R;JvInterpreterD10R;JvJansD10R;JvManagedThreadsD10R;JvMMD10R;JvNetD10R;JvPageCompsD10R;JvPluginD10R;JvPrintPreviewD10R;JvRuntimeDesignD10R;JvTimeFrameworkD10R;JvValidatorsD10R;JvWizardD10R;JvXPCtrlsD10R;jshtmprsPkg2006;StringGrid3d_D2006;siComboBoxPkg2006;RbwDataGridPkg2_2006;RBW95ButtonPkg_2006;StrSetPkg2006;VersionInfoPkg_2006;RBWZoomBoxPkgD2006;ZoomerPkgD2006;$(DCC_UsePackage)</DCC_UsePackage>
 			<DCC_K>false</DCC_K>
 			<DCC_F>false</DCC_F>
 			<DCC_S>false</DCC_S>
@@ -42,18 +66,35 @@
 			<DCC_E>false</DCC_E>
 			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
 		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base_Win64)'!=''">
+			<DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+			<Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+			<Icon_MainIcon>ModelMonitor_Icon1.ico</Icon_MainIcon>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base_Win32)'!=''">
+			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+			<Icon_MainIcon>ModelMonitor_Icon1.ico</Icon_MainIcon>
+			<DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+			<VerInfo_Locale>1033</VerInfo_Locale>
+			<Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 			<DCC_Optimize>false</DCC_Optimize>
 		</PropertyGroup>
 		<ItemGroup>
-			<DelphiCompile Include="ModelMonitor.dpr">
+			<DelphiCompile Include="$(MainSource)">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="..\ModelMuse\FastMM4.pas"/>
@@ -114,14 +155,14 @@
 						<VersionInfoKeys Name="Last Compile">2012-06-07 12:11</VersionInfoKeys>
 					</VersionInfoKeys>
 					<Excluded_Packages>
-						<Excluded_Packages Name="c:\program files\borland\bds\4.0\Bin\dcldbx100.bpl">Borland dbExpress Components</Excluded_Packages>
-						<Excluded_Packages Name="c:\program files\borland\bds\4.0\Bin\dclnet100.bpl">Borland Internet Components</Excluded_Packages>
-						<Excluded_Packages Name="c:\program files\borland\bds\4.0\Bin\dclsoap100.bpl">Borland SOAP Components</Excluded_Packages>
-						<Excluded_Packages Name="c:\program files\borland\bds\4.0\Bin\dcldbxcds100.bpl">Borland SimpleDataset Component (DBX)</Excluded_Packages>
-						<Excluded_Packages Name="C:\Program Files\Synactis\PDF Viewer for Delphi\Delphi 2006\Pdf_Viewer.bpl">File C:\Program Files\Synactis\PDF Viewer for Delphi\Delphi 2006\Pdf_Viewer.bpl not found</Excluded_Packages>
+						<Excluded_Packages Name="$(BDSBIN)\dcloffice2k160.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="$(BDSBIN)\dclofficexp160.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="$(BDSBIN)\bcboffice2k160.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDSBIN)\bcbofficexp160.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
 					</Excluded_Packages>
 				</Delphi.Personality>
 				<Platforms>
+					<Platform value="Win64">True</Platform>
 					<Platform value="Win32">True</Platform>
 				</Platforms>
 			</BorlandProject>

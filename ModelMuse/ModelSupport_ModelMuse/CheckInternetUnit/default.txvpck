@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="w1o7fxflo4vbzfr_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CheckInternetUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.UpdateURL" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.StrInternetCheckDate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.StrTipDate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.StrVideoDisplayed" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CheckInternetUnit.TVersionCompare">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.TVersionCompare.vcExternalNewer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.TVersionCompare.vcExternalOlder" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.TVersionCompare.vcSame" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.TVersionCompare.vcUnknown" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CheckInternetUnit.TCheckInternetThread">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.Execute()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.Create(System.String,IniFiles.TMemIniFile,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.DestroyIniFile()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.UpdateIniFile()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.CheckCurrentUrl()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.GetAppName()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.ShowNewVersionMessage()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.CheckVersion(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.ReadIniFile()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.CheckWeb()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.FLastCheckInternetDate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.FCurrentUrlHasBeenDisplayed" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.FCurrentURL" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.FLastTipDate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.FUpdateText" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.FVideoURLs" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.FAppName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.FBrowser" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.FShowVideos" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.FIniFile" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CheckInternetUnit.TCheckInternetThread.FModelVersion" />
+    </reference>
+  </view>
+</nodeSet>

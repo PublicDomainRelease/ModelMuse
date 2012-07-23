@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="fzlpo0zspslttug_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:IniFileUtilities.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IniFileUtilities.CreateDirectoryAndParents(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IniFileUtilities.GetAppDirectory(Windows.HWND,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IniFileUtilities.AppDataFolderPath(Windows.HWND)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:IniFileUtilities.CSIDL_APPDATA" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:IniFileUtilities.CSIDL_COMMON_APPDATA" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IniFileUtilities.IniFileName(Windows.HWND,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IniFileUtilities.InternetIniFileName(Windows.HWND,System.String)" />
+    </reference>
+  </view>
+</nodeSet>

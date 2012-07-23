@@ -1,17 +1,17 @@
 inherited frmChemistryOptions: TfrmChemistryOptions
   Left = 554
   Top = 516
-  Width = 310
-  Height = 347
+  Width = 317
+  Height = 353
   HelpType = htKeyword
   HelpKeyword = 'Chemistry_Options_Dialog_Box'
   HorzScrollBar.Range = 281
   VertScrollBar.Range = 260
   ActiveControl = cbChemistry
   Caption = 'PHAST Chemistry Options'
-  ExplicitWidth = 310
-  ExplicitHeight = 347
-  PixelsPerInch = 96
+  ExplicitWidth = 317
+  ExplicitHeight = 353
+  PixelsPerInch = 120
   TextHeight = 18
   object lblDiffusivity: TLabel
     Left = 8
@@ -84,7 +84,6 @@ inherited frmChemistryOptions: TfrmChemistryOptions
     Height = 33
     Caption = 'OK'
     Default = True
-    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       04000000000068010000120B0000120B00001000000010000000000000000000
@@ -104,7 +103,6 @@ inherited frmChemistryOptions: TfrmChemistryOptions
       0000}
     ModalResult = 1
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 9
     OnClick = btnOKClick
   end
@@ -113,10 +111,8 @@ inherited frmChemistryOptions: TfrmChemistryOptions
     Top = 268
     Width = 91
     Height = 33
-    DoubleBuffered = True
     Kind = bkCancel
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 10
   end
   object rdeDiffusivity: TRbwDataEntry
@@ -137,10 +133,8 @@ inherited frmChemistryOptions: TfrmChemistryOptions
     Top = 268
     Width = 89
     Height = 33
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 8
     OnClick = btnHelpClick
   end

@@ -22,6 +22,7 @@ type
     comboModel: TComboBox;
     lblModel: TLabel;
     treecomboDataSets: TRbwStringTreeCombo;
+    comboOrientation: TComboBox;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure treecomboDataSetsDropDownTreeChange(Sender: TBaseVirtualTree;
@@ -39,6 +40,7 @@ type
     procedure treecomboDataSets1TreeInitNode(Sender: TBaseVirtualTree;
       ParentNode, Node: PVirtualNode;
       var InitialStates: TVirtualNodeInitStates);
+    procedure comboOrientationChange(Sender: TObject);
   private
     FSelectedVirtNode: PVirtualNode;
     // @name is implemented as a TObjectList.
@@ -84,6 +86,12 @@ procedure TfrmDataSetValues.comboModelChange(Sender: TObject);
 begin
   inherited;
   treecomboDataSetsChange(nil);
+end;
+
+procedure TfrmDataSetValues.comboOrientationChange(Sender: TObject);
+begin
+  inherited;
+  treecomboDataSetsChange(Sender);
 end;
 
 procedure TfrmDataSetValues.FormCreate(Sender: TObject);
@@ -167,6 +175,8 @@ var
   ColumnFormat: TRbwColumnFormat4;
   RowIndex: Integer;
   LocalModel: TCustomModel;
+  RowIndex2: Integer;
+  ColIndex2: Integer;
 begin
   inherited;
   UpdateTreeComboText(SelectedVirtNode, treecomboDataSets);
@@ -187,7 +197,208 @@ begin
   lbLayers.Items.Clear;
   DataArray.Initialize;
   case DataArray.Orientation of
-    dsoTop, dso3D:
+    dso3D:
+      begin
+        case comboOrientation.ItemIndex of
+          0:
+            begin
+              // Layer
+              lblLayer.Caption := StrLayer;
+              for LayerIndex := 0 to DataArray.LayerCount - 1 do
+              begin
+                lbLayers.Items.Add(IntToStr(LayerIndex+1));
+                APage := TTabSheet.Create(self);
+
+                FTempControls.Add(APage);
+                APage.PageControl := pcDataSet;
+                APage.Caption := IntToStr(LayerIndex+1);
+
+                AGrid := TRbwDataGrid4.Create(self);
+                AGrid.Parent := APage;
+                AGrid.Align := alClient;
+                AGrid.ColCount := DataArray.ColumnCount + 1;
+                AGrid.Options := AGrid.Options - [goEditing];
+                AGrid.DefaultColWidth := 10;
+                AGrid.ColorSelectedRow := False;
+                AGrid.AutoMultiEdit := True;
+                ColumnFormat := rcf4Real;
+                case DataArray.DataType of
+                  rdtDouble: ColumnFormat := rcf4Real;
+                  rdtInteger: ColumnFormat := rcf4Integer;
+                  rdtBoolean: ColumnFormat := rcf4Boolean;
+                  rdtString: ColumnFormat := rcf4String;
+                  else Assert(False);
+                end;
+                AGrid.Columns[0].AutoAdjustColWidths := True;
+                for ColIndex := 1 to AGrid.ColCount - 1 do
+                begin
+                  AGrid.Columns[ColIndex].AutoAdjustColWidths := True;
+                  AGrid.Columns[ColIndex].Format := ColumnFormat;
+                  AGrid.Cells[ColIndex,0] := IntToStr(ColIndex);
+                end;
+                AGrid.RowCount := DataArray.RowCount + 1;
+                AGrid.BeginUpdate;
+                try
+                  for RowIndex := 1 to AGrid.RowCount - 1 do
+                  begin
+                    AGrid.Cells[0,RowIndex] := IntToStr(RowIndex);
+                  end;
+                  for ColIndex := 0 to DataArray.ColumnCount - 1 do
+                  begin
+                    for RowIndex := 0 to DataArray.RowCount - 1 do
+                    begin
+                      case DataArray.DataType of
+                        rdtDouble: AGrid.Cells[ColIndex+1,RowIndex+1] :=
+                          FloatToStr(DataArray.RealData[LayerIndex, RowIndex, ColIndex]);
+                        rdtInteger: AGrid.Cells[ColIndex+1,RowIndex+1] :=
+                          IntToStr(DataArray.IntegerData[LayerIndex, RowIndex, ColIndex]);
+                        rdtBoolean: AGrid.Checked[ColIndex+1,RowIndex+1] :=
+                          DataArray.BooleanData[LayerIndex, RowIndex, ColIndex];
+                        rdtString: AGrid.Cells[ColIndex+1,RowIndex+1] :=
+                          DataArray.StringData[LayerIndex, RowIndex, ColIndex];
+                      end;
+                    end;
+                  end;
+                finally
+                  AGrid.EndUpdate;
+                end;
+                APage.TabVisible := False;
+              end
+            end;
+          1:
+            begin
+              // Row
+              lblLayer.Caption := StrRow;
+              for RowIndex := 0 to DataArray.RowCount - 1 do
+              begin
+                lbLayers.Items.Add(IntToStr(RowIndex+1));
+                APage := TTabSheet.Create(self);
+
+                FTempControls.Add(APage);
+                APage.PageControl := pcDataSet;
+                APage.Caption := IntToStr(RowIndex+1);
+
+                AGrid := TRbwDataGrid4.Create(self);
+                AGrid.Parent := APage;
+                AGrid.Align := alClient;
+                AGrid.ColCount := DataArray.ColumnCount + 1;
+                AGrid.Options := AGrid.Options - [goEditing];
+                AGrid.DefaultColWidth := 10;
+                AGrid.ColorSelectedRow := False;
+                AGrid.AutoMultiEdit := True;
+                ColumnFormat := rcf4Real;
+                case DataArray.DataType of
+                  rdtDouble: ColumnFormat := rcf4Real;
+                  rdtInteger: ColumnFormat := rcf4Integer;
+                  rdtBoolean: ColumnFormat := rcf4Boolean;
+                  rdtString: ColumnFormat := rcf4String;
+                  else Assert(False);
+                end;
+                AGrid.Columns[0].AutoAdjustColWidths := True;
+                for ColIndex := 1 to AGrid.ColCount - 1 do
+                begin
+                  AGrid.Columns[ColIndex].AutoAdjustColWidths := True;
+                  AGrid.Columns[ColIndex].Format := ColumnFormat;
+                  AGrid.Cells[ColIndex,0] := IntToStr(ColIndex);
+                end;
+                AGrid.RowCount := DataArray.LayerCount + 1;
+                AGrid.BeginUpdate;
+                try
+                  for RowIndex2 := 1 to AGrid.RowCount - 1 do
+                  begin
+                    AGrid.Cells[0,RowIndex2] := IntToStr(RowIndex2);
+                  end;
+                  for ColIndex := 0 to DataArray.ColumnCount - 1 do
+                  begin
+                    for LayerIndex := 0 to DataArray.LayerCount - 1 do
+                    begin
+                      case DataArray.DataType of
+                        rdtDouble: AGrid.Cells[ColIndex+1,LayerIndex+1] :=
+                          FloatToStr(DataArray.RealData[LayerIndex, RowIndex, ColIndex]);
+                        rdtInteger: AGrid.Cells[ColIndex+1,LayerIndex+1] :=
+                          IntToStr(DataArray.IntegerData[LayerIndex, RowIndex, ColIndex]);
+                        rdtBoolean: AGrid.Checked[ColIndex+1,LayerIndex+1] :=
+                          DataArray.BooleanData[LayerIndex, RowIndex, ColIndex];
+                        rdtString: AGrid.Cells[ColIndex+1,LayerIndex+1] :=
+                          DataArray.StringData[LayerIndex, RowIndex, ColIndex];
+                      end;
+                    end;
+                  end;
+                finally
+                  AGrid.EndUpdate;
+                end;
+                APage.TabVisible := False;
+              end
+            end;
+          2:
+            begin
+              // Column
+              lblLayer.Caption := StrColumn;
+              for ColIndex := 0 to DataArray.ColumnCount - 1 do
+              begin
+                lbLayers.Items.Add(IntToStr(ColIndex+1));
+                APage := TTabSheet.Create(self);
+
+                FTempControls.Add(APage);
+                APage.PageControl := pcDataSet;
+                APage.Caption := IntToStr(ColIndex+1);
+
+                AGrid := TRbwDataGrid4.Create(self);
+                AGrid.Parent := APage;
+                AGrid.Align := alClient;
+                AGrid.ColCount := DataArray.RowCount + 1;
+                AGrid.Options := AGrid.Options - [goEditing];
+                AGrid.DefaultColWidth := 10;
+                AGrid.ColorSelectedRow := False;
+                AGrid.AutoMultiEdit := True;
+                ColumnFormat := rcf4Real;
+                case DataArray.DataType of
+                  rdtDouble: ColumnFormat := rcf4Real;
+                  rdtInteger: ColumnFormat := rcf4Integer;
+                  rdtBoolean: ColumnFormat := rcf4Boolean;
+                  rdtString: ColumnFormat := rcf4String;
+                  else Assert(False);
+                end;
+                AGrid.Columns[0].AutoAdjustColWidths := True;
+                for ColIndex2 := 1 to AGrid.ColCount - 1 do
+                begin
+                  AGrid.Columns[ColIndex2].AutoAdjustColWidths := True;
+                  AGrid.Columns[ColIndex2].Format := ColumnFormat;
+                  AGrid.Cells[ColIndex2,0] := IntToStr(ColIndex2);
+                end;
+                AGrid.RowCount := DataArray.LayerCount + 1;
+                AGrid.BeginUpdate;
+                try
+                  for RowIndex := 1 to AGrid.RowCount - 1 do
+                  begin
+                    AGrid.Cells[0,RowIndex] := IntToStr(RowIndex);
+                  end;
+                  for RowIndex := 0 to DataArray.RowCount - 1 do
+                  begin
+                    for LayerIndex := 0 to DataArray.LayerCount - 1 do
+                    begin
+                      case DataArray.DataType of
+                        rdtDouble: AGrid.Cells[RowIndex+1,LayerIndex+1] :=
+                          FloatToStr(DataArray.RealData[LayerIndex, RowIndex, ColIndex]);
+                        rdtInteger: AGrid.Cells[RowIndex+1,LayerIndex+1] :=
+                          IntToStr(DataArray.IntegerData[LayerIndex, RowIndex, ColIndex]);
+                        rdtBoolean: AGrid.Checked[RowIndex+1,LayerIndex+1] :=
+                          DataArray.BooleanData[LayerIndex, RowIndex, ColIndex];
+                        rdtString: AGrid.Cells[RowIndex+1,LayerIndex+1] :=
+                          DataArray.StringData[LayerIndex, RowIndex, ColIndex];
+                      end;
+                    end;
+                  end;
+                finally
+                  AGrid.EndUpdate;
+                end;
+                APage.TabVisible := False;
+              end
+            end;
+          else Assert(False);
+        end;
+      end;
+    dsoTop:
       begin
         lblLayer.Caption := StrLayer;
         for LayerIndex := 0 to DataArray.LayerCount - 1 do

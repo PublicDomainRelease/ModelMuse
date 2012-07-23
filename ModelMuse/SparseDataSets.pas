@@ -36,14 +36,14 @@ type
     // store a number of pointers.
     FQuantum: TSPAQuantum;
     // See @link(IsValue).
-    function GetIsValue(const Index1, Index2: Integer): boolean;
+    function GetIsValue(const Index1, Index2: NativeInt): boolean;
     // See @link(Items).
-    function GetItems(const Index1, Index2: Integer): Pointer;
+    function GetItems(const Index1, Index2: NativeInt): Pointer;
     // See @link(IsValue).
-    procedure SetIsValue(const Index1, Index2: Integer;
+    procedure SetIsValue(const Index1, Index2: NativeInt;
       const Value: boolean);
     // See @link(Items).
-    procedure SetItems(const Index1, Index2: Integer;
+    procedure SetItems(const Index1, Index2: NativeInt;
       const Value: Pointer);
   public
     // @name removes all items from @classname.
@@ -56,11 +56,11 @@ type
     // @name can be read to see if the item at (Index1, Index2) is non-nil.
     // Setting @name at (Index1, Index2) to @False sets Items[Index1, Index2]
     // to nil. Setting @name at (Index1, Index2) to @true has no effect.
-    property IsValue[const Index1, Index2: Integer]: boolean
+    property IsValue[const Index1, Index2: NativeInt]: boolean
       read GetIsValue write SetIsValue;
     // @name provides access to the pointer stored at location
     // Index1, Index2.
-    property Items[const Index1, Index2: Integer]: Pointer read GetItems
+    property Items[const Index1, Index2: NativeInt]: Pointer read GetItems
       write SetItems; default;
   end;
 
@@ -77,23 +77,23 @@ type
     // store a number of pointers.
     FQuantum: TSPAQuantum;
     // See @link(IsValue).
-    function GetIsValue(const Layer, Row, Col: Integer): boolean;
+    function GetIsValue(const Layer, Row, Col: NativeInt): boolean;
     // See @link(Items).
-    function GetItems(const Layer, Row, Col: Integer): Pointer;
+    function GetItems(const Layer, Row, Col: NativeInt): Pointer;
     // See @link(IsValue).
-    procedure SetIsValue(const Layer, Row, Col: Integer;
+    procedure SetIsValue(const Layer, Row, Col: NativeInt;
       const Value: boolean);
     // See @link(Items).
-    procedure SetItems(const Layer, Row, Col: Integer;
+    procedure SetItems(const Layer, Row, Col: NativeInt;
       const Value: Pointer);
   protected
-    FMinRow: integer;
-    FMaxLayer: integer;
-    FMinLayer: integer;
-    FMaxCol: integer;
-    FMaxRow: integer;
-    FMinCol: integer;
-    procedure UpdateMinMaxPositions(const Col, Row, Layer: Integer);
+    FMinRow: NativeInt;
+    FMaxLayer: NativeInt;
+    FMinLayer: NativeInt;
+    FMaxCol: NativeInt;
+    FMaxRow: NativeInt;
+    FMinCol: NativeInt;
+    procedure UpdateMinMaxPositions(const Col, Row, Layer: NativeInt);
   public
     // @name removes all items from @classname.
     procedure Clear; virtual;
@@ -105,18 +105,18 @@ type
     // @name can be read to see if the item at (Layer, Row, Col) is non-nil.
     // Setting @name at (Layer, Row, Col) to @False sets Items[Layer, Row, Col]
     // to nil. Setting @name at (Layer, Row, Col) to @true has no effect.
-    property IsValue[const Layer, Row, Col: Integer]: boolean
+    property IsValue[const Layer, Row, Col: NativeInt]: boolean
       read GetIsValue write SetIsValue;
     // @name provides access to the pointer stored at location
     // Index1, Index2.
-    property Items[const Layer, Row, Col: Integer]: Pointer read GetItems
+    property Items[const Layer, Row, Col: NativeInt]: Pointer read GetItems
       write SetItems; default;
-    property MinLayer: integer read FMinLayer;
-    property MaxLayer: integer read FMaxLayer;
-    property MinRow: integer read FMinRow;
-    property MaxRow: integer read FMaxRow;
-    property MinCol: integer read FMinCol;
-    property MaxCol: integer read FMaxCol;
+    property MinLayer: NativeInt read FMinLayer;
+    property MaxLayer: NativeInt read FMaxLayer;
+    property MinRow: NativeInt read FMinRow;
+    property MaxRow: NativeInt read FMaxRow;
+    property MinCol: NativeInt read FMinCol;
+    property MaxCol: NativeInt read FMaxCol;
   end;
 
   {@abstract(@name acts like a 2D array of real numbers.  It provides
@@ -126,13 +126,13 @@ type
   T2DSparseRealArray = class(T2DSparsePointerArray)
   private
     // @name is the number of real numbers stored in @classname.
-    FCount: integer;
+    FCount: NativeInt;
     // @name is an array of real-numbers stored in @classname
     FValues: array of double;
     // See @link(Items).
-    function GetItems(const Index1, Index2: Integer): double;
+    function GetItems(const Index1, Index2: NativeInt): double;
     // See @link(Items).
-    procedure SetItems(const Index1, Index2: Integer;
+    procedure SetItems(const Index1, Index2: NativeInt;
       const Value: double);
   public
     // @name removes all the members of @classname.
@@ -143,7 +143,7 @@ type
     // Index1, Index2. Before reading @name, read
     // @link(T2DSparsePointerArray.IsValue) to
     // be sure that a number is stored at Index1, Index2.
-    property Items[const Index1, Index2: Integer]: double read GetItems
+    property Items[const Index1, Index2: NativeInt]: double read GetItems
       write SetItems; default;
   end;
 
@@ -153,9 +153,9 @@ type
     // The address of @name is stored to indicate a value that is @True.
     FTrue: boolean;
     // See @link(Items).
-    function GetItems(const Row, Col: Integer): boolean;
+    function GetItems(const Row, Col: NativeInt): boolean;
     // See @link(Items).
-    procedure SetItems(const Row, Col: Integer; const Value: boolean);
+    procedure SetItems(const Row, Col: NativeInt; const Value: boolean);
   public
     // @name creates an instance of @classname.
     constructor Create(Quantum: TSPAQuantum);
@@ -163,7 +163,7 @@ type
     // Layer, Row, Col. Before reading @name, read
     // @link(T3DSparsePointerArray.IsValue) to
     // be sure that a boolean is stored at Layer, Row, Col.
-    property Items[const Row, Col: Integer]: boolean
+    property Items[const Row, Col: NativeInt]: boolean
       read GetItems write SetItems; default;
   end;
 
@@ -178,9 +178,9 @@ type
     // The address of @name is stored to indicate a value that is @True.
     FTrue: boolean;
     // See @link(Items).
-    function GetItems(const Layer, Row, Col: Integer): boolean;
+    function GetItems(const Layer, Row, Col: NativeInt): boolean;
     // See @link(Items).
-    procedure SetItems(const Layer, Row, Col: Integer; const Value: boolean);
+    procedure SetItems(const Layer, Row, Col: NativeInt; const Value: boolean);
   public
     // @name creates an instance of @classname.
     constructor Create(Quantum: TSPAQuantum);
@@ -188,7 +188,7 @@ type
     // Layer, Row, Col. Before reading @name, read
     // @link(T3DSparsePointerArray.IsValue) to
     // be sure that a boolean is stored at Layer, Row, Col.
-    property Items[const Layer, Row, Col: Integer]: boolean
+    property Items[const Layer, Row, Col: NativeInt]: boolean
       read GetItems write SetItems; default;
   end;
 
@@ -199,23 +199,23 @@ type
   T3DSparseIntegerArray = class(T3DSparsePointerArray)
   private
     // @name is the number of integers stored in @classname.
-    FCount: integer;
+    FCount: NativeInt;
     // @name is an array of integers stored in @classname
-    FValues: array of integer;
+    FValues: array of NativeInt;
     // See @link(Items).
-    function GetItems(const Layer, Row, Col: Integer): integer;
+    function GetItems(const Layer, Row, Col: NativeInt): NativeInt;
     // See @link(Items).
-    procedure SetItems(const Layer, Row, Col: Integer; const Value: integer);
+    procedure SetItems(const Layer, Row, Col: NativeInt; const Value: NativeInt);
   public
     // @name removes all the members of @classname.
     procedure Clear; override;
     // @name creates an instance of @classname.
     constructor Create(Quantum: TSPAQuantum);
-    // @name provides access to the integer stored at location
+    // @name provides access to the NativeInt stored at location
     // Layer, Row, Col. Before reading @name, read
     // @link(T3DSparsePointerArray.IsValue) to
     // be sure that a number is stored at Layer, Row, Col.
-    property Items[const Layer, Row, Col: Integer]: integer read GetItems
+    property Items[const Layer, Row, Col: NativeInt]: NativeInt read GetItems
       write SetItems; default;
   end;
 
@@ -226,22 +226,22 @@ type
   T3DSparseRealArray = class(T3DSparsePointerArray)
   private
     // @name is the number of real numbers stored in @classname.
-    FCount: integer;
+    FCount: NativeInt;
     // @name is an array of real numbers stored in @classname
     FValues: array of double;
     FCached: Boolean;
     FTempFileName: string;
     FCleared: Boolean;
     // See @link(Items).
-    function GetItems(const Layer, Row, Col: Integer): double;
+    function GetItems(const Layer, Row, Col: NativeInt): double;
     // See @link(Items).
-    procedure SetItems(const Layer, Row, Col: Integer;
+    procedure SetItems(const Layer, Row, Col: NativeInt;
       const Value: double);
     procedure StoreData(Compressor: TStream);
     procedure Restore;
     procedure ReadData(DecompressionStream: TStream);
   public
-    procedure RemoveValue(const Layer, Row, Col: Integer);
+    procedure RemoveValue(const Layer, Row, Col: NativeInt);
     // @name removes all the members of @classname.
     procedure Clear; override;
     // @name creates an instance of @classname.
@@ -251,7 +251,7 @@ type
     // Layer, Row, Col. Before reading @name, read
     // @link(T3DSparsePointerArray.IsValue) to
     // be sure that a number is stored at Layer, Row, Col.
-    property Items[const Layer, Row, Col: Integer]: double read GetItems
+    property Items[const Layer, Row, Col: NativeInt]: double read GetItems
       write SetItems; default;
     procedure Cache;
     procedure CheckRestore;
@@ -264,13 +264,13 @@ type
   T3DSparseStringArray = class(T3DSparsePointerArray)
   private
     // @name is the number of strings stored in @classname.
-    FCount: integer;
+    FCount: NativeInt;
     // @name is an array of strings stored in @classname
     FValues: array of string;
     // See @link(Items).
-    function GetItems(const Layer, Row, Col: Integer): string;
+    function GetItems(const Layer, Row, Col: NativeInt): string;
     // See @link(Items).
-    procedure SetItems(const Layer, Row, Col: Integer;
+    procedure SetItems(const Layer, Row, Col: NativeInt;
       const Value: string);
   public
     // @name removes all the members of @classname.
@@ -281,7 +281,7 @@ type
     // Layer, Row, Col. Before reading @name, read
     // @link(T3DSparsePointerArray.IsValue) to
     // be sure that a string is stored at Layer, Row, Col.
-    property Items[const Layer, Row, Col: Integer]: string read GetItems
+    property Items[const Layer, Row, Col: NativeInt]: string read GetItems
       write SetItems; default;
   end;
 
@@ -290,7 +290,7 @@ implementation
 uses
   TempFiles, ZLib;
 
-function FreeSparsePointerItem(TheIndex: Integer; TheItem: Pointer): Integer;
+function FreeSparsePointerItem(TheIndex: NativeInt; TheItem: Pointer): NativeInt;
 var
   SparsePointerArray: TSparsePointerArray;
 begin
@@ -299,7 +299,7 @@ begin
   result := 0;
 end;
 
-function Free2DSparsePointerItem(TheIndex: Integer; TheItem: Pointer): Integer;
+function Free2DSparsePointerItem(TheIndex: NativeInt; TheItem: Pointer): NativeInt;
 var
   SparsePointerArray: T2DSparsePointerArray;
 begin
@@ -319,7 +319,7 @@ end;
 
 procedure T2DSparsePointerArray.Clear;
 var
-  Index: integer;
+  Index: NativeInt;
   SparsePointerArray: TSparsePointerArray;
 begin
   for Index := 0 to FData.HighBound do
@@ -339,7 +339,7 @@ begin
 end;
 
 function T2DSparsePointerArray.GetItems(const Index1,
-  Index2: Integer): Pointer;
+  Index2: NativeInt): Pointer;
 var
   InnerData: TSparsePointerArray;
 begin
@@ -354,7 +354,7 @@ begin
   end;
 end;
 
-procedure T2DSparsePointerArray.SetItems(const Index1, Index2: Integer;
+procedure T2DSparsePointerArray.SetItems(const Index1, Index2: NativeInt;
   const Value: Pointer);
 var
   InnerData: TSparsePointerArray;
@@ -371,12 +371,12 @@ begin
 end;
 
 function T2DSparsePointerArray.GetIsValue(const Index1,
-  Index2: Integer): boolean;
+  Index2: NativeInt): boolean;
 begin
   result := Items[Index1, Index2] <> nil;
 end;
 
-procedure T2DSparsePointerArray.SetIsValue(const Index1, Index2: Integer;
+procedure T2DSparsePointerArray.SetIsValue(const Index1, Index2: NativeInt;
   const Value: boolean);
 begin
   if not Value then
@@ -389,7 +389,7 @@ end;
 
 procedure T3DSparsePointerArray.Clear;
 var
-  Index: integer;
+  Index: NativeInt;
   TwoDSparsePointerArray: T2DSparsePointerArray;
 begin
   FMinLayer := -1;
@@ -413,10 +413,10 @@ begin
   inherited Create;
 
   // Descendants of T3DSparsePointerArray assume that a pointer is the
-  // same size as a longint in their GetItems and SetItems methods.
+  // same size as a NativeInt in their GetItems and SetItems methods.
   // If a change in the size of pointer occurs in the future, that code
   // will need to be updated.
-{$IF SizeOf(longint) <> SizeOf(Pointer)}
+{$IF SizeOf(NativeInt) <> SizeOf(Pointer)}
   Assert(False);
 {$IFEND}
 
@@ -437,12 +437,12 @@ begin
   inherited;
 end;
 
-function T3DSparsePointerArray.GetIsValue(const Layer, Row, Col: Integer): boolean;
+function T3DSparsePointerArray.GetIsValue(const Layer, Row, Col: NativeInt): boolean;
 begin
   result := Items[Layer, Row, Col] <> nil;
 end;
 
-function T3DSparsePointerArray.GetItems(const Layer, Row, Col: Integer): Pointer;
+function T3DSparsePointerArray.GetItems(const Layer, Row, Col: NativeInt): Pointer;
 var
   InnerData: T2DSparsePointerArray;
 begin
@@ -457,7 +457,7 @@ begin
   end;
 end;
 
-procedure T3DSparsePointerArray.SetIsValue(const Layer, Row, Col: Integer; const Value: boolean);
+procedure T3DSparsePointerArray.SetIsValue(const Layer, Row, Col: NativeInt; const Value: boolean);
 begin
   if not Value then
   begin
@@ -465,7 +465,7 @@ begin
   end;
 end;
 
-procedure T3DSparsePointerArray.SetItems(const Layer, Row, Col: Integer; const Value: Pointer);
+procedure T3DSparsePointerArray.SetItems(const Layer, Row, Col: NativeInt; const Value: Pointer);
 var
   InnerData: T2DSparsePointerArray;
 begin
@@ -490,7 +490,7 @@ begin
 end;
 
 function T3DSparseBooleanArray.GetItems(const Layer, Row,
-  Col: Integer): boolean;
+  Col: NativeInt): boolean;
 var
   resultPtr: Pointer;
 begin
@@ -499,7 +499,7 @@ begin
   result := PBoolean(resultPtr)^
 end;
 
-procedure T3DSparseBooleanArray.SetItems(const Layer, Row, Col: Integer;
+procedure T3DSparseBooleanArray.SetItems(const Layer, Row, Col: NativeInt;
   const Value: boolean);
 var
   DataPtr: Pointer;
@@ -530,7 +530,7 @@ begin
   SetLength(FValues, 4);
 end;
 
-procedure T3DSparsePointerArray.UpdateMinMaxPositions(const Col, Row, Layer: Integer);
+procedure T3DSparsePointerArray.UpdateMinMaxPositions(const Col, Row, Layer: NativeInt);
 begin
   Assert(Col >= 0);
   Assert(Row >= 0);
@@ -574,7 +574,7 @@ begin
 end;
 
 function T3DSparseIntegerArray.GetItems(const Layer, Row,
-  Col: Integer): integer;
+  Col: NativeInt): NativeInt;
 var
   resultPtr: Pointer;
 begin
@@ -584,7 +584,7 @@ begin
 end;
 
 procedure T3DSparseIntegerArray.SetItems(const Layer, Row, Col,
-  Value: integer);
+  Value: NativeInt);
 var
   DataPtr: Pointer;
 begin
@@ -681,7 +681,7 @@ begin
 end;
 
 function T3DSparseRealArray.GetItems(const Layer, Row,
-  Col: Integer): double;
+  Col: NativeInt): double;
 var
   resultPtr: Pointer;
 begin
@@ -692,12 +692,12 @@ end;
 
 procedure T3DSparseRealArray.ReadData(DecompressionStream: TStream);
 var
-  ColIndex: Integer;
-  RowIndex: Integer;
-  LayerIndex: Integer;
-  Index: Integer;
+  ColIndex: NativeInt;
+  RowIndex: NativeInt;
+  LayerIndex: NativeInt;
+  Index: NativeInt;
   AValue: double;
-  ACount: Integer;
+  ACount: NativeInt;
 begin
   DecompressionStream.Read(ACount, SizeOf(ACount));
   if ACount > 0 then
@@ -713,7 +713,7 @@ begin
   end;
 end;
 
-procedure T3DSparseRealArray.RemoveValue(const Layer, Row, Col: Integer);
+procedure T3DSparseRealArray.RemoveValue(const Layer, Row, Col: NativeInt);
 begin
   inherited Items[Layer, Row, Col] := nil;
 end;
@@ -742,7 +742,7 @@ begin
 end;
 
 procedure T3DSparseRealArray.SetItems(const Layer, Row,
-  Col: Integer; const Value: double);
+  Col: NativeInt; const Value: double);
 var
   DataPtr: Pointer;
 begin
@@ -775,9 +775,9 @@ end;
 
 procedure T3DSparseRealArray.StoreData(Compressor: TStream);
 var
-  LayerIndex: Integer;
-  RowIndex: Integer;
-  ColIndex: Integer;
+  LayerIndex: NativeInt;
+  RowIndex: NativeInt;
+  ColIndex: NativeInt;
   AValue: Double;
 begin
   Compressor.Write(FCount, SizeOf(FCount));
@@ -819,7 +819,7 @@ begin
 end;
 
 function T3DSparseStringArray.GetItems(const Layer, Row,
-  Col: Integer): string;
+  Col: NativeInt): string;
 var
   resultPtr: Pointer;
 begin
@@ -829,7 +829,7 @@ begin
 end;
 
 procedure T3DSparseStringArray.SetItems(const Layer, Row,
-  Col: Integer; const Value: string);
+  Col: NativeInt; const Value: string);
 var
   DataPtr: Pointer;
 begin
@@ -873,7 +873,7 @@ begin
 end;
 
 function T2DSparseRealArray.GetItems(const Index1,
-  Index2: Integer): double;
+  Index2: NativeInt): double;
 var
   resultPtr: Pointer;
 begin
@@ -882,7 +882,7 @@ begin
   result := FValues[Pred(longint(resultPtr))];
 end;
 
-procedure T2DSparseRealArray.SetItems(const Index1, Index2: Integer;
+procedure T2DSparseRealArray.SetItems(const Index1, Index2: NativeInt;
   const Value: double);
 var
   DataPtr: Pointer;
@@ -913,7 +913,7 @@ begin
   FTrue := True;
 end;
 
-function T2DSparseBooleanArray.GetItems(const Row, Col: Integer): boolean;
+function T2DSparseBooleanArray.GetItems(const Row, Col: NativeInt): boolean;
 var
   resultPtr: Pointer;
 begin
@@ -922,7 +922,7 @@ begin
   result := PBoolean(resultPtr)^
 end;
 
-procedure T2DSparseBooleanArray.SetItems(const Row, Col: Integer;
+procedure T2DSparseBooleanArray.SetItems(const Row, Col: NativeInt;
   const Value: boolean);
 var
   DataPtr: Pointer;
@@ -939,7 +939,7 @@ begin
 end;
 
 initialization
-  Assert(SizeOf(Integer) = SizeOf(Pointer));
+  Assert(SizeOf(NativeInt) = SizeOf(Pointer));
 
 end.
 

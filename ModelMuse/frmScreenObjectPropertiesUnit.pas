@@ -19,7 +19,7 @@ uses Windows,
   JvExComCtrls, JvPageListTreeView, JvxCheckListBox, frameScreenObjectParamUnit,
   ImgList, UndoItemsScreenObjects, frameScreenObjectCondParamUnit,
   frameScreenObjectNoParamUnit, frameScreenObjectLAK_Unit, FluxObservationUnit,
-  frameScreenObjectSFR_Unit, JvComCtrls, JvExStdCtrls, JvRichEdit,
+  frameScreenObjectSFR_Unit, JvComCtrls, JvExStdCtrls,
   frameHeadObservationsUnit, frameHfbScreenObjectUnit, Mask, JvExMask, JvSpin,
   ValueArrayStorageUnit, frameIfaceUnit, frameModpathParticlesUnit,
   frameFluxObsUnit, ModflowPackageSelectionUnit, frameScreenObjectMNW2Unit,
@@ -195,7 +195,6 @@ type
     JvNetscapeSplitter2: TJvNetscapeSplitter;
     Panel1: TPanel;
     lblDataSetFormula: TLabel;
-    reDataSetFormula: TJvRichEdit;
     // @name is used to edit the formula of a data set when the user
     // clicks the button in above @link(reDataSetFormula).
     btnDataSetFormula: TButton;
@@ -271,6 +270,7 @@ type
     frameMt3dmsTobConc: TframeConcentrationObservation;
     jvspMT3DMS_TOB_Flux: TJvStandardPage;
     frameMt3dmsFluxObs: TframeMt3dmsFluxObs;
+    reDataSetFormula: TRichEdit;
     // @name changes which check image is displayed for the selected item
     // in @link(jvtlModflowBoundaryNavigator).
     procedure jvtlModflowBoundaryNavigatorMouseDown(Sender: TObject;
@@ -17178,9 +17178,9 @@ begin
     frmDataSets.Close;
   end;
   HelpKeyword := 'Object_Properties_Dialog_Box';
-  frameScreenObjectSFR.zbChannel.Image32.Invalidate;
-  frameScreenObjectSFR.zbFlowDepthTable.Image32.Invalidate;
-  frameScreenObjectSFR.zbFlowWidthTable.Image32.Invalidate;
+  frameScreenObjectSFR.zbChannel.InvalidateImage32;
+  frameScreenObjectSFR.zbFlowDepthTable.InvalidateImage32;
+  frameScreenObjectSFR.zbFlowWidthTable.InvalidateImage32;
   FCanSetPointsOutOfDate := True;
 end;
 

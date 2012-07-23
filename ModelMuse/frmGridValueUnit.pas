@@ -103,6 +103,7 @@ type
     procedure GetSelectedDataArray(var OtherDataSet: TDataArray);
     procedure InitializePathlineGrid;
     procedure DisplayPathlineData(const Location: TPoint2D);
+    function DiscretizationDefined: Boolean;
     { Private declarations }
   public
     procedure UpdateValue(const Layer, Row, Column: integer;
@@ -121,7 +122,8 @@ implementation
 
 uses Clipbrd, CustomModflowWriterUnit, AbstractGridUnit, frmGoPhastUnit, 
   GIS_Functions, RbwParser, Contnrs, ClassificationUnit,
-  PhastModelUnit, PathlineReader, QuadtreeClass, ZoomBox2, InteractiveTools;
+  PhastModelUnit, PathlineReader, QuadtreeClass, ZoomBox2, InteractiveTools,
+  frmSutraLayersUnit, SutraMeshUnit;
 
 resourcestring
   StrSelectedObject = 'Selected object';
@@ -372,13 +374,13 @@ procedure TfrmGridValue.UpdateValue(const Layer, Row, Column: integer;
   const DataSetName, CellValue: string; Explanation: string;
   const Location: TPoint2D; ViewDirection: TViewDirection);
 var
-  Grid: TCustomModelGrid;
   DataArray: TDataArray;
   EvaluatedAt: TEvaluatedAt;
   ColumnWidth: Double;
   RowWidth: Double;
   LayerHeight: Double;
   Model: TBaseModel;
+//  DiscretizationDefined: Boolean;
 begin
   Model := frmGoPhast.PhastModel.SelectedModel;
   FViewDirection := ViewDirection;
@@ -396,10 +398,7 @@ begin
     Explanation := StringReplace(Explanation, StrNoValueAssigned, '', []);
   end;
   memoExplanation.Text := Explanation;
-
-  Grid := frmGoPhast.Grid;
-  if (Grid <> nil) and (Grid.LayerCount >= 1)
-    and (Grid.RowCount >= 1) and (Grid.ColumnCount >= 1) then
+  if DiscretizationDefined then
   begin
     if DataSetName <> '' then
     begin
@@ -495,25 +494,17 @@ begin
 end;
 
 procedure TfrmGridValue.GetSelectedDataArray(var OtherDataSet: TDataArray);
-var
-  Grid: TCustomModelGrid;
 begin
-  Grid := frmGoPhast.PhastModel.SelectedModel.Grid;
-  if Grid = nil then
+  if DiscretizationDefined then
+  begin
+    OtherDataSet := frmGoPhast.PhastModel.SelectedModel.DataArrayManager.
+      GetDataSetByName(virttreecomboDataSets.Text);
+  end
+  else
   begin
     OtherDataSet := nil;
-    Exit;
   end;
-  if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
-  begin
-    OtherDataSet := nil;
-    Exit;
-  end;
-  OtherDataSet := frmGoPhast.PhastModel.SelectedModel.DataArrayManager.
-    GetDataSetByName(virttreecomboDataSets.Text);
 end;
-
-//procedure TfrmGridValue.
 
 procedure TfrmGridValue.UpdateScreenObjectInfo
   (const Column, Row, Layer: Integer; Location: TPoint2D;
@@ -524,10 +515,80 @@ var
   Segment: TCellElementSegment;
   LocalModel: TCustomModel;
   temp: TFloat;
+  procedure GetDirectionVariables(var VarIndex, MaxCount: Integer;
+    var VarLabel: string);
+  var
+    Grid: TCustomModelGrid;
+  {$IFDEF SUTRA}
+    Mesh: TSutraMesh3D;
+  {$ENDIF}
+  begin
+    VarIndex := -1;
+    MaxCount := 0;
+    VarLabel := '';
+    case frmGoPhast.ModelSelection of
+      msPhast, msModflow, msModflowLGR, msModflowNWT:
+        begin
+          Grid := frmGoPhast.Grid;
+
+          case FSelectedScreenObject.ViewDirection of
+            vdTop:
+              begin
+                VarIndex := 0;
+                MaxCount := Grid.LayerCount;
+                VarLabel := StrLayer;
+              end;
+            vdFront:
+              begin
+                VarIndex := 1;
+                MaxCount := Grid.RowCount;
+                VarLabel := StrRow;
+              end;
+            vdSide:
+              begin
+                VarIndex := 2;
+                MaxCount := Grid.ColumnCount;
+                VarLabel := StrColumn1;
+              end;
+            else
+              Assert(False);
+          end;
+        end;
+      {$IFDEF SUTRA}
+      msSutra:
+        begin
+          Mesh := frmGoPhast.PhastModel.Mesh;
+          case FSelectedScreenObject.ViewDirection of
+            vdTop:
+              begin
+                VarIndex := 0;
+                MaxCount := Mesh.LayerCount;
+                VarLabel := StrLayer;
+              end;
+            vdFront:
+              begin
+                VarIndex := 1;
+                MaxCount := 1;
+                VarLabel := StrRow;
+              end;
+            vdSide:
+              begin
+                VarIndex := 2;
+                MaxCount := Mesh.Mesh2D.Nodes.Count;
+                VarLabel := StrColumn1;
+              end;
+          else
+            Assert(False);
+          end;
+        end;
+      {$ENDIF}
+    else
+      Assert(False);
+    end;
+  end;
   procedure AssignHigherElevLabel(const ExtraText: string);
   var
     Indicies: array[0..2] of Integer;
-    Grid: TCustomModelGrid;
     VarIndex: Integer;
     MaxCount: Integer;
     VarLabel: string;
@@ -549,34 +610,70 @@ var
         Indicies[0] := Layer;
         Indicies[1] := Row;
         Indicies[2] := Column;
+        GetDirectionVariables(VarIndex, MaxCount, VarLabel);
+//        VarIndex := -1;
+//        MaxCount := 0;
+//        VarLabel := '';
+//        case frmGoPhast.ModelSelection of
+//          msPhast, msModflow, msModflowLGR, msModflowNWT:
+//            begin
+//              Grid := frmGoPhast.Grid;
+//
+//              case FSelectedScreenObject.ViewDirection of
+//                vdTop:
+//                  begin
+//                    VarIndex := 0;
+//                    MaxCount := Grid.LayerCount;
+//                    VarLabel := StrLayer;
+//                  end;
+//                vdFront:
+//                  begin
+//                    VarIndex := 1;
+//                    MaxCount := Grid.RowCount;
+//                    VarLabel := StrRow;
+//                  end;
+//                vdSide:
+//                  begin
+//                    VarIndex := 2;
+//                    MaxCount := Grid.ColumnCount;
+//                    VarLabel := StrColumn1;
+//                  end;
+//                else
+//                  Assert(False);
+//              end;
+//            end;
+//          {$IFDEF SUTRA}
+//          msSutra:
+//            begin
+//              Mesh := frmGoPhast.PhastModel.SutraMesh;
+//              case FSelectedScreenObject.ViewDirection of
+//                vdTop:
+//                  begin
+//                    VarIndex := 0;
+//                    MaxCount := Mesh.LayerCount;
+//                    VarLabel := StrLayer;
+//                  end;
+//                vdFront:
+//                  begin
+//                    VarIndex := 1;
+//                    MaxCount := 1;
+//                    VarLabel := StrRow;
+//                  end;
+//                vdSide:
+//                  begin
+//                    VarIndex := 2;
+//                    MaxCount := Mesh.Mesh2D.Nodes.Count;
+//                    VarLabel := StrColumn1;
+//                  end;
+//              else
+//                Assert(False);
+//              end;
+//            end;
+//          {$ENDIF}
+//        else
+//          Assert(False);
+//        end;
 
-        Grid := frmGoPhast.Grid;
-
-        VarIndex := -1;
-        MaxCount := 0;
-        VarLabel := '';
-        case FSelectedScreenObject.ViewDirection of
-          vdTop:
-            begin
-              VarIndex := 0;
-              MaxCount := Grid.LayerCount;
-              VarLabel := StrLayer;
-            end;
-          vdFront:
-            begin
-              VarIndex := 1;
-              MaxCount := Grid.RowCount;
-              VarLabel := StrRow;
-            end;
-          vdSide:
-            begin
-              VarIndex := 2;
-              MaxCount := Grid.ColumnCount;
-              VarLabel := StrColumn1;
-            end;
-          else
-            Assert(False);
-        end;
 
         FoundValue := False;
         for LayRowColIndex := 0 to MaxCount do
@@ -609,7 +706,6 @@ var
   procedure AssignLowerElevLabel(const ExtraText: string);
   var
     Indicies: array[0..2] of Integer;
-    Grid: TCustomModelGrid;
     VarIndex: Integer;
     MaxCount: Integer;
     VarLabel: string;
@@ -632,33 +728,34 @@ var
         Indicies[1] := Row;
         Indicies[2] := Column;
 
-        Grid := frmGoPhast.Grid;
-
-        VarIndex := -1;
-        MaxCount := 0;
-        VarLabel := '';
-        case FSelectedScreenObject.ViewDirection of
-          vdTop:
-            begin
-              VarIndex := 0;
-              MaxCount := Grid.LayerCount;
-              VarLabel := StrLayer;
-            end;
-          vdFront:
-            begin
-              VarIndex := 1;
-              MaxCount := Grid.RowCount;
-              VarLabel := StrRow;
-            end;
-          vdSide:
-            begin
-              VarIndex := 2;
-              MaxCount := Grid.ColumnCount;
-              VarLabel := StrColumn1;
-            end;
-          else
-            Assert(False);
-        end;
+        GetDirectionVariables(VarIndex, MaxCount, VarLabel);
+//        Grid := frmGoPhast.Grid;
+//
+//        VarIndex := -1;
+//        MaxCount := 0;
+//        VarLabel := '';
+//        case FSelectedScreenObject.ViewDirection of
+//          vdTop:
+//            begin
+//              VarIndex := 0;
+//              MaxCount := Grid.LayerCount;
+//              VarLabel := StrLayer;
+//            end;
+//          vdFront:
+//            begin
+//              VarIndex := 1;
+//              MaxCount := Grid.RowCount;
+//              VarLabel := StrRow;
+//            end;
+//          vdSide:
+//            begin
+//              VarIndex := 2;
+//              MaxCount := Grid.ColumnCount;
+//              VarLabel := StrColumn1;
+//            end;
+//          else
+//            Assert(False);
+//        end;
 
         FoundValue := False;
         for LayRowColIndex := 0 to MaxCount do
@@ -822,6 +919,33 @@ begin
     FDataSetDummyObjects, nil, nil);
 end;
 
+function TfrmGridValue.DiscretizationDefined: Boolean;
+var
+  Grid: TCustomModelGrid;
+  {$IFDEF SUTRA}
+  Mesh: TSutraMesh3D;
+  {$ENDIF}
+begin
+  result := False;
+  case frmGoPhast.ModelSelection of
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        Grid := frmGoPhast.Grid;
+        result := (Grid <> nil) and (Grid.LayerCount >= 1)
+          and (Grid.RowCount >= 1) and (Grid.ColumnCount >= 1);
+      end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        Mesh := frmGoPhast.PhastModel.Mesh;
+        result := (Mesh <> nil) and (Mesh.Mesh2D.Nodes.Count > 0);
+      end;
+    {$ENDIF}
+  else
+    Assert(False);
+  end;
+end;
+
 procedure TfrmGridValue.DisplayEndPointData(const Location: TPoint2D);
 var
   AnEndPoint: TEndPoint;
@@ -842,6 +966,13 @@ begin
   begin
     Exit;
   end;
+  {$IFDEF SUTRA}
+  if frmGoPhast.ModelSelection = msSutra then
+  begin
+    tabEndPoint.TabVisible := False;
+    Exit;
+  end;
+  {$ENDIF}
   FPriorEndPointLocation := Location;
   EndPoints := frmGoPhast.PhastModel.EndPoints;
   EndPointQuadTree := nil;
@@ -1042,6 +1173,13 @@ begin
   begin
     Exit;
   end;
+  {$IFDEF SUTRA}
+  if frmGoPhast.ModelSelection = msSutra then
+  begin
+    tabPathline.TabVisible := False;
+    Exit;
+  end;
+  {$ENDIF}
   FPriorLocation := Location;
   PathLines := frmGoPhast.PhastModel.PathLines;
   PathQuadTree := nil;

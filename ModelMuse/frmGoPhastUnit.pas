@@ -347,6 +347,10 @@ type
     acSutraLayers: TAction;
     N10: TMenuItem;
     SUTRALayerGroups1: TMenuItem;
+    tlbMesh: TToolBar;
+    tbCrossSection: TToolButton;
+    acSutraOptions: TAction;
+    SutraOptions1: TMenuItem;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -458,6 +462,10 @@ type
     procedure sdShapefileShow(Sender: TObject);
     procedure sdShapefileClose(Sender: TObject);
     procedure acSutraLayersExecute(Sender: TObject);
+    procedure tbCrossSectionClick(Sender: TObject);
+    procedure acSutraOptionsExecute(Sender: TObject);
+    procedure AllowDrawing(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -1340,8 +1348,8 @@ type
     FCursorY: integer;
     // See @link(FileFormat).
     FFileFormat: TFileFormat;
-    // See @link(FrontGridChanged).
-    FFrontGridChanged: boolean;
+    // See @link(FrontDiscretizationChanged).
+    FFrontDiscretizationChanged: boolean;
     // See @link(FrontScreenObjectsChanged).
     FFrontScreenObjectsChanged: boolean;
     // See @link(PhastModel).
@@ -1358,12 +1366,12 @@ type
     // @name is set to Width in @link(FormCreate) and @link(FormResize).
     // See @link(OldWidth).
     FOldWidth: integer;
-    // See @link(SideGridChanged).
-    FSideGridChanged: boolean;
+    // See @link(SideDiscretizationChanged).
+    FSideDiscretizationChanged: boolean;
     // See @link(SideScreenObjectsChanged).
     FSideScreenObjectsChanged: boolean;
-    // See @link(TopGridChanged).
-    FTopGridChanged: boolean;
+    // See @link(TopDiscretizationChanged).
+    FTopDiscretizationChanged: boolean;
     // See @link(TopScreenObjectsChanged).
     FTopScreenObjectsChanged: boolean;
     // See @link(IniFile).
@@ -1437,18 +1445,18 @@ type
     // It is also used to help draw the subdivide cursor.
     // The cursor is drawn with lines
     // that are parallel to the grid.
-    procedure DrawAddColRowCursor(const AndImage: TBitmap; Angle: real;
+    procedure DrawAddColRowCursor(const AnImage: TBitmap; Angle: real;
       const CursorComponent: TRbwDynamicCursor);
     // @name is used to draw the bitmaps for the
     // move-column or move-row cursor for the top view.
     // The cursor is drawn with lines
     // that are parallel to the grid.
-    procedure DrawMoveColRowCursor(const AndImage: TBitmap; Angle: real;
+    procedure DrawMoveColRowCursor(const AnImage: TBitmap; Angle: real;
       const CursorComponent: TRbwDynamicCursor);
     // @name is used to help draw the bitmaps for the
     // subdivide cursor for the top view.  The cursor is drawn with lines
     // that are parallel to the grid.
-    procedure DrawSubdivideCursor(const AndImage: TBitmap; Angle: real;
+    procedure DrawSubdivideCursor(const AnImage: TBitmap; Angle: real;
       const CursorComponent: TRbwDynamicCursor);
     // @name writes the transport input file for PHAST.
     // The work is delegated to @link(WritePhastInput).
@@ -1527,6 +1535,7 @@ type
     procedure OnAppIdle(Sender: TObject; var Done: Boolean);
   public
     FCubeControl: TRbwModelCube;
+    procedure InvalidateImage32AllViews;
     procedure EnableHufMenuItems;
     procedure EnableMt3dmsMenuItems;
     property ChangingSelection: boolean read FChangingSelection
@@ -1581,8 +1590,8 @@ type
     // @name is used to indicate that a change has been made to the grid
     // in the front view of the model
     // so that the view of the model needs to be redrawn.
-    property FrontGridChanged: boolean read FFrontGridChanged
-      write FFrontGridChanged;
+    property FrontDiscretizationChanged: boolean read FFrontDiscretizationChanged
+      write FFrontDiscretizationChanged;
     // Setting @name to true causes the front view of the model to be redrawn.
     property FrontScreenObjectsChanged: boolean read FFrontScreenObjectsChanged
       write SetFrontScreenObjectsChanged;
@@ -1635,16 +1644,16 @@ type
     // @name is used to indicate that a change has been made to the grid
     // in the side view of the model
     // so that the view of the model needs to be redrawn.
-    property SideGridChanged: boolean read FSideGridChanged
-      write FSideGridChanged;
+    property SideDiscretizationChanged: boolean read FSideDiscretizationChanged
+      write FSideDiscretizationChanged;
     // Setting @name to true causes the side view of the model to be redrawn.
     property SideScreenObjectsChanged: boolean read FSideScreenObjectsChanged
       write SetSideScreenObjectsChanged;
     // @name is used to indicate that a change has been made to the grid
     // in the top view of the model
     // so that the view of the model needs to be redrawn.
-    property TopGridChanged: boolean read FTopGridChanged
-      write FTopGridChanged;
+    property TopDiscretizationChanged: boolean read FTopDiscretizationChanged
+      write FTopDiscretizationChanged;
     // Setting @name to true causes the top view of the model to be redrawn.
     property TopScreenObjectsChanged: boolean read FTopScreenObjectsChanged
       write SetTopScreenObjectsChanged;
@@ -1678,6 +1687,9 @@ const
 implementation
 
 uses
+  {$IFDEF Win64}
+  GR32_Blend,
+  {$ENDIF}
   Math, frmVerticalExaggerationUnit, CursorsFoiledAgain, frmSubdivideUnit,
   frmGridAngleUnit, frmGridSpacingUnit, frmSmoothGridUnit,
   frmAboutUnit, frmHintDelayUnit, UndoItemsScreenObjects,
@@ -1711,7 +1723,7 @@ uses
   frmImportAsciiRasterUnit, CustomModflowWriterUnit, ModflowUnitNumbers,
   ZoneBudgetWriterUnit, ModflowHobUnit, frmDisplayDataUnit, IOUtils,
   ReadPvalUnit, ModflowParameterUnit, OrderedCollectionUnit, ReadGlobalsUnit,
-  GlobalVariablesUnit, SutraMeshUnit, frmSutraLayersUnit;
+  GlobalVariablesUnit, SutraMeshUnit, frmSutraLayersUnit, frmSutraOptionsUnit;
 
 resourcestring
   StrModelMate = 'ModelMate';
@@ -2151,9 +2163,9 @@ begin
     ModflowGrid.OnSelectedLayerChange := frameTopView.ItemChange;
     ModflowGrid.OnSelectedColumnChange := frameSideView.ItemChange;
     ModflowGrid.OnSelectedRowChange := frameFrontView.ItemChange;
-    TopGridChanged := True;
-    FrontGridChanged := True;
-    SideGridChanged := True;
+    TopDiscretizationChanged := True;
+    FrontDiscretizationChanged := True;
+    SideDiscretizationChanged := True;
     InvalidateAllViews;
 //    SetGridLineDrawingChoice;
 
@@ -2480,6 +2492,18 @@ begin
   SecondToolBar.Left := FirstToolBar.Left + FirstToolBar.Width + 13;
 end;
 
+procedure TfrmGoPhast.AllowDrawing(Sender: TObject);
+begin
+  inherited;
+  // This is a work-around for a bug in Graphics32 in Win64;
+  CanDraw := True;
+  timTimer.Enabled := False;
+  timTimer.OnTimer := nil;
+  frameTopView.ZoomBox.InvalidateImage32;
+  frameFrontView.ZoomBox.InvalidateImage32;
+  frameSideView.ZoomBox.InvalidateImage32;
+end;
+
 procedure TfrmGoPhast.NewPosition(Sender: TObject; NewPosition: TPositionStorage);
 begin
   Inc(FSynchronizeCount);
@@ -2522,8 +2546,10 @@ begin
   end;
 
   {$IFNDEF SUTRA}
+  tlbMesh.Visible := False;
   acSutraActive.Visible := False;
   acSutraLayers.Visible := False;
+  acSutraOptions.Visible := False;
   {$ENDIF}
 
   frameTopView.miEditSelectedObjects.Action := acEditSelecteObjects;
@@ -2784,6 +2810,9 @@ begin
   finally
     FCreatingMainForm := false;
   end;
+  {$IFDEF Win64}
+  CanDraw := False;
+  {$ENDIF}
 end;
 
 
@@ -2817,6 +2846,18 @@ When maximizing, make non modal forms (TfrmSelectedObjects,
 TfrmShowHideObjects) stay on top (or else give the user the ability to 
 make them stay on top). See TForm.FormStyle}
   inherited;
+end;
+
+procedure TfrmGoPhast.FormShow(Sender: TObject);
+begin
+  inherited;
+  // This is a work-around for a bug in Graphics32 in Win64;
+  if not CanDraw then
+  begin
+    timTimer.OnTimer := AllowDrawing;
+    timTimer.Interval := 1000;
+    timTimer.Enabled := True;
+  end;
 end;
 
 procedure TfrmGoPhast.tbPanClick(Sender: TObject);
@@ -2977,6 +3018,7 @@ end;
 
 procedure TfrmGoPhast.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(frmGridValue);
 //  OutputDebugString('SAMPLING ON');
   WriteIniFile;
   IniFile.Free;
@@ -3377,7 +3419,7 @@ begin
   SelectDefaultButton;
 end;
 
-procedure TfrmGoPhast.DrawSubdivideCursor(const AndImage: TBitmap;
+procedure TfrmGoPhast.DrawSubdivideCursor(const AnImage: TBitmap;
   Angle: real; const CursorComponent: TRbwDynamicCursor);
 const
   LineSeparation = 5.1;
@@ -3387,7 +3429,7 @@ var
   lsCa, llSa, lsSa, llCa: real;
   procedure DrawLine;
   begin
-    with AndImage.Canvas do
+    with AnImage.Canvas do
     begin
       MoveTo(X1, Y1);
       LineTo(X2, Y2);
@@ -3434,7 +3476,7 @@ begin
   DrawLine;
 end;
 
-procedure TfrmGoPhast.DrawAddColRowCursor(const AndImage: TBitmap;
+procedure TfrmGoPhast.DrawAddColRowCursor(const AnImage: TBitmap;
   Angle: real; const CursorComponent: TRbwDynamicCursor);
 var
   LineLength: real;
@@ -3442,7 +3484,7 @@ var
   llSa, llCa: real;
   procedure DrawLine;
   begin
-    with AndImage.Canvas do
+    with AnImage.Canvas do
     begin
       MoveTo(X1, Y1);
       LineTo(X2, Y2);
@@ -3483,7 +3525,7 @@ begin
   DrawLine;
 end;
 
-procedure TfrmGoPhast.DrawMoveColRowCursor(const AndImage: TBitmap;
+procedure TfrmGoPhast.DrawMoveColRowCursor(const AnImage: TBitmap;
   Angle: real; const CursorComponent: TRbwDynamicCursor);
 const
   LineSeparation = 3.1;
@@ -3496,7 +3538,7 @@ var
   ArrowAngle: real;
   procedure DrawLine;
   begin
-    with AndImage.Canvas do
+    with AnImage.Canvas do
     begin
       MoveTo(X1, Y1);
       LineTo(X2, Y2);
@@ -3705,6 +3747,7 @@ begin
   AList.Add(tbAddPointsToObject);
   AList.Add(tbVertexValue);
   AList.Add(tbMeasure);
+  AList.Add(tbCrossSection);
 end;
 
 procedure TfrmGoPhast.SetButtonsUp(const CurrentButton: TObject);
@@ -3910,6 +3953,12 @@ begin
   ShowAForm(TfrmSutraLayers);
 end;
 
+procedure TfrmGoPhast.acSutraOptionsExecute(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmSutraOptions);
+end;
+
 procedure TfrmGoPhast.acDisplayDataExecute(Sender: TObject);
 begin
   inherited;
@@ -4002,7 +4051,7 @@ begin
   // redraw the top view.
   if frameTopView <> nil then
   begin
-    frameTopView.ZoomBox.Image32.Invalidate;
+    frameTopView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -4011,16 +4060,16 @@ begin
   // redraw the front view.
   if frameFrontView <> nil then
   begin
-    frameFrontView.ZoomBox.Image32.Invalidate;
+    frameFrontView.ZoomBox.InvalidateImage32;
   end;
 end;
 
 procedure TfrmGoPhast.InvalidateGrid;
 begin
   InvalidateDataSets;
-  TopGridChanged := True;
-  FrontGridChanged := True;
-  SideGridChanged := True;
+  TopDiscretizationChanged := True;
+  FrontDiscretizationChanged := True;
+  SideDiscretizationChanged := True;
   if Grid <> nil then
   begin
     Grid.NeedToRecalculateCellColors;
@@ -4361,7 +4410,7 @@ begin
     {$IFDEF SUTRA}
     msSutra:
       begin
-        Mesh := PhastModel.SutraMesh;
+        Mesh := PhastModel.Mesh;
         acDisplayData.Enabled := (Mesh <> nil)
           and (Mesh.Mesh2D.Nodes.Count > 0)
           and (Mesh.Mesh2D.Elements.Count > 0)
@@ -4374,6 +4423,13 @@ begin
   end;
 end;
 
+procedure TfrmGoPhast.InvalidateImage32AllViews;
+begin
+  frameTopView.ZoomBox.InvalidateImage32;
+  frameFrontView.ZoomBox.InvalidateImage32;
+  frameSideView.ZoomBox.InvalidateImage32;
+end;
+
 procedure TfrmGoPhast.ImportGlobalVariablesFile(GloVarFile: string);
 var
   GloVar: TGlobalList;
@@ -4383,6 +4439,7 @@ var
   AFloat: double;
   AnInt: Integer;
   AValue: string;
+  GlobalVariables: TGlobalVariables;
 begin
   if (Length(GloVarFile) > 0) and (GloVarFile[1] = '"') then
   begin
@@ -4398,54 +4455,62 @@ begin
     try
       if ReadGlobalFile(GloVarFile, GloVar) then
       begin
-        for index := 0 to GloVar.Count - 1 do
-        begin
-          Item := GloVar[index];
-          Variable :=  PhastModel.GlobalVariables.GetVariableByName(Item.Name);
-          if Variable <> nil then
+        GlobalVariables := TGlobalVariables.Create(nil);
+        try
+          GlobalVariables.Assign(PhastModel.GlobalVariables);
+          for index := 0 to GloVar.Count - 1 do
           begin
-            case Variable.Format of
-              rdtDouble:
-                begin
-                  if TryStrToFloat(Item.Value, AFloat) then
+            Item := GloVar[index];
+            Variable :=  GlobalVariables.GetVariableByName(Item.Name);
+            if Variable <> nil then
+            begin
+              case Variable.Format of
+                rdtDouble:
                   begin
-                    Variable.RealValue := AFloat;
-                  end
-                end;
-              rdtInteger:
-                if TryStrToInt(Item.Value, AnInt) then
-                begin
-                  Variable.IntegerValue := AnInt;
-                end;
-              rdtBoolean:
-                begin
-                  if SameText(Item.Value, 'True') then
-                  begin
-                    Variable.BooleanValue := True;
-                  end
-                  else if SameText(Item.Value, 'False') then
-                  begin
-                    Variable.BooleanValue := False;
-                  end
-                end;
-              rdtString:
-                begin
-                  AValue := Item.Value;
-                  if (Length(AValue) > 0) then
-                  begin
-                    if AValue[1] = '"' then
+                    if TryStrToFloat(Item.Value, AFloat) then
                     begin
-                      AValue := Copy(AValue, 2, MaxInt);
-                      if (Length(AValue) > 0) and (AValue[Length(AValue)] = '"') then
+                      Variable.RealValue := AFloat;
+                    end
+                  end;
+                rdtInteger:
+                  if TryStrToInt(Item.Value, AnInt) then
+                  begin
+                    Variable.IntegerValue := AnInt;
+                  end;
+                rdtBoolean:
+                  begin
+                    if SameText(Item.Value, 'True') then
+                    begin
+                      Variable.BooleanValue := True;
+                    end
+                    else if SameText(Item.Value, 'False') then
+                    begin
+                      Variable.BooleanValue := False;
+                    end
+                  end;
+                rdtString:
+                  begin
+                    AValue := Item.Value;
+                    if (Length(AValue) > 0) then
+                    begin
+                      if AValue[1] = '"' then
                       begin
-                        AValue := Copy(AValue, 1, Length(AValue)-1);
+                        AValue := Copy(AValue, 2, MaxInt);
+                        if (Length(AValue) > 0) and (AValue[Length(AValue)] = '"') then
+                        begin
+                          AValue := Copy(AValue, 1, Length(AValue)-1);
+                        end;
                       end;
                     end;
+                    Variable.StringValue := AValue;
                   end;
-                  Variable.StringValue := AValue;
-                end;
+              end;
+//              PhastModel.UpdateGlobalVariable(Variable);
             end;
           end;
+          PhastModel.GlobalVariables := GlobalVariables;
+        finally
+          GlobalVariables.Free;
         end;
       end;
     finally
@@ -4955,7 +5020,7 @@ begin
   // redraw the side view.
   if frameSideView <> nil then
   begin
-    frameSideView.ZoomBox.Image32.Invalidate;
+    frameSideView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -5539,7 +5604,7 @@ begin
   FTopScreenObjectsChanged := Value;
   if FTopScreenObjectsChanged and not (csDestroying in ComponentState) then
   begin
-    frameTopView.ZoomBox.Image32.Invalidate;
+    frameTopView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -5743,34 +5808,60 @@ var
   FrameRatio: Real;
   E: Integer;
   D: Integer;
+  Mesh: TSutraMesh3D;
+  Limits: TGridLimit;
+  procedure GetExag;
+  begin
+    result := XWidth / ZHeight;
+    if ((frameFrontView.ZoomBox.Height > 10)
+      and (frameFrontView.ZoomBox.Width > 10)) then
+    begin
+      FrameRatio := frameFrontView.ZoomBox.Width
+        / frameFrontView.ZoomBox.Height;
+      result := result/FrameRatio;
+    end
+    else
+    begin
+      result := result/3;
+    end;
+    E := Floor(Log10(result));
+    D := ceil(result*Power(10, -E));
+    result := D*Power(10, E);
+  end;
 begin
   result := 20;
   LocalGrid := Grid;
-  if (LocalGrid <> nil) and (LocalGrid.LayerCount >= 1)
-    and (LocalGrid.RowCount >= 1) and (LocalGrid.ColumnCount >= 1) then
+  if (LocalGrid <> nil)  then
   begin
-    ZHeight := LocalGrid.HighestElevation - LocalGrid.LowestElevation;
-    if ZHeight > 0 then
+    if (LocalGrid.LayerCount >= 1)
+      and (LocalGrid.RowCount >= 1) and (LocalGrid.ColumnCount >= 1) then
     begin
-      XWidth := LocalGrid.ColumnPosition[LocalGrid.ColumnCount] - LocalGrid.ColumnPosition[0];
-      XWidth := Abs(XWidth);
-      if XWidth > 0 then
+      ZHeight := LocalGrid.HighestElevation - LocalGrid.LowestElevation;
+      if ZHeight > 0 then
       begin
-        result := XWidth / ZHeight;
-        if ((frameFrontView.ZoomBox.Height > 10)
-          and (frameFrontView.ZoomBox.Width > 10)) then
+        XWidth := LocalGrid.ColumnPosition[LocalGrid.ColumnCount] - LocalGrid.ColumnPosition[0];
+        XWidth := Abs(XWidth);
+        if XWidth > 0 then
         begin
-          FrameRatio := frameFrontView.ZoomBox.Width
-            / frameFrontView.ZoomBox.Height;
-          result := result/FrameRatio;
-        end
-        else
-        begin
-          result := result/3;
+          GetExag;
         end;
-        E := Floor(Log10(result));
-        D := ceil(result*Power(10, -E));
-        result := D*Power(10, E);
+      end;
+    end;
+  end
+  else
+  begin
+    Mesh := PhastModel.Mesh;
+    if Mesh <> nil then
+    begin
+      Limits := Mesh.MeshLimits(vdFront);
+      ZHeight := Limits.MaxZ - Limits.MinZ;
+      if ZHeight > 0 then
+      begin
+        XWidth := Limits.MaxX - Limits.MinX;
+        if XWidth > 0 then
+        begin
+          GetExag;
+        end;
       end;
     end;
   end;
@@ -6185,7 +6276,7 @@ begin
   FFrontScreenObjectsChanged := Value;
   if FFrontScreenObjectsChanged  and not (csDestroying in ComponentState) then
   begin
-    frameFrontView.ZoomBox.Image32.Invalidate;
+    frameFrontView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -6307,7 +6398,7 @@ begin
   FSideScreenObjectsChanged := Value;
   if FSideScreenObjectsChanged  and not (csDestroying in ComponentState) then
   begin
-    frameSideView.ZoomBox.Image32.Invalidate;
+    frameSideView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -6323,10 +6414,7 @@ end;
 procedure TfrmGoPhast.UpdateDataSetDimensions;
 begin
   PhastModel.UpdateDataSetDimensions;
-
-  frameTopView.ZoomBox.Image32.Invalidate;
-  frameFrontView.ZoomBox.Image32.Invalidate;
-  frameSideView.ZoomBox.Image32.Invalidate;
+  InvalidateImage32AllViews;
 end;
 
 procedure TfrmGoPhast.UpdateModelSelection;
@@ -6750,6 +6838,10 @@ end;
 
 procedure TfrmGoPhast.InitializeView(ModelXWidth, ModelYWidth,
   ModelHeight: Real);
+var
+  LocalGrid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
+  MeshLimits: TGridLimit;
 begin
   // Set the magnification so that the grid will fill most of the screen.
   frameTopView.ZoomBox.Magnification := 0.9 *
@@ -6762,14 +6854,28 @@ begin
     frameFrontView.ZoomBox.Height /
     (ModelHeight * frameFrontView.ZoomBox.Exaggeration));
 
-  // Make sure the grid is visible on the screen.
-  if (Grid.ColumnCount > 0) and (Grid.RowCount > 0)
-    and (Grid.LayerCount > 0) then
+  LocalGrid := Grid;
+  if LocalGrid <> nil then
   begin
-    MoveToTopCell(Grid, (Grid.ColumnCount - 1) div 2,
-      (Grid.RowCount - 1) div 2);
-    MoveToFrontCell(Grid, (Grid.ColumnCount - 1) div 2,
-      (Grid.LayerCount - 1) div 2);
+    // Make sure the grid is visible on the screen.
+    if (Grid.ColumnCount > 0) and (Grid.RowCount > 0)
+      and (Grid.LayerCount > 0) then
+    begin
+      MoveToTopCell(Grid, (Grid.ColumnCount - 1) div 2,
+        (Grid.RowCount - 1) div 2);
+      MoveToFrontCell(Grid, (Grid.ColumnCount - 1) div 2,
+        (Grid.LayerCount - 1) div 2);
+    end;
+  end
+  else
+  begin
+    Mesh := PhastModel.Mesh;
+    MeshLimits := Mesh.MeshLimits(vdTop);
+    SetTopPosition((MeshLimits.MinX + MeshLimits.MaxX)/2,
+      (MeshLimits.MinY + MeshLimits.MaxY)/2);
+    MeshLimits := Mesh.MeshLimits(vdFront);
+    SetFrontPosition((MeshLimits.MinX + MeshLimits.MaxX)/2,
+      (MeshLimits.MinZ + MeshLimits.MaxZ)/2);
   end;
 
   SynchronizeViews(vdTop);
@@ -6885,9 +6991,7 @@ begin
     and not framesideView.Drawing then
   begin
     timTimer.Enabled := False;
-    frameTopView.ZoomBox.Image32.Invalidate;
-    frameFrontView.ZoomBox.Image32.Invalidate;
-    frameSideView.ZoomBox.Image32.Invalidate;
+    InvalidateImage32AllViews;
   end;
 end;
 
@@ -6919,17 +7023,37 @@ end;
 procedure TfrmGoPhast.RestoreDefault2DView1Click(Sender: TObject);
 var
   ModelXWidth, ModelYWidth, ModelHeight: double;
+  LocalGrid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
+  MeshLimits: TGridLimit;
 begin
   inherited;
-  if (Grid.ColumnCount >= 1) and (Grid.RowCount >= 1)
-    and (Grid.LayerCount >= 1) then
+  LocalGrid := Grid;
+  if LocalGrid <> nil then
   begin
-    ModelXWidth := Abs(Grid.ColumnPosition[0]
-      - Grid.ColumnPosition[Grid.ColumnCount]);
-    ModelYWidth := Abs(Grid.RowPosition[0]
-      - Grid.RowPosition[Grid.RowCount]);
-    ModelHeight := Abs(Grid.HighestElevation - Grid.LowestElevation);
-    InitializeView(ModelXWidth, ModelYWidth, ModelHeight);
+    if (LocalGrid.ColumnCount >= 1) and (LocalGrid.RowCount >= 1)
+      and (LocalGrid.LayerCount >= 1) then
+    begin
+      ModelXWidth := Abs(LocalGrid.ColumnPosition[0]
+        - LocalGrid.ColumnPosition[LocalGrid.ColumnCount]);
+      ModelYWidth := Abs(LocalGrid.RowPosition[0]
+        - LocalGrid.RowPosition[LocalGrid.RowCount]);
+      ModelHeight := Abs(LocalGrid.HighestElevation - LocalGrid.LowestElevation);
+      InitializeView(ModelXWidth, ModelYWidth, ModelHeight);
+    end;
+  end
+  else
+  begin
+    Mesh := PhastModel.Mesh;
+    if Mesh.Mesh2D.Nodes.Count > 0 then
+    begin
+      MeshLimits := Mesh.MeshLimits(vdTop);
+      ModelXWidth := MeshLimits.MaxX - MeshLimits.MinX;
+      ModelYWidth := MeshLimits.MaxY - MeshLimits.MinY;
+      MeshLimits := Mesh.MeshLimits(vdFront);
+      ModelHeight := MeshLimits.MaxZ - MeshLimits.MinZ;
+      InitializeView(ModelXWidth, ModelYWidth, ModelHeight);
+    end;
   end;
 end;
 
@@ -7147,7 +7271,7 @@ var
   Index: Integer;
   DataArrayManager: TDataArrayManager;
   WarningMessage: string;
-  AValue: Boolean;
+//  AValue: Boolean;
 begin
   if not FileExists(FileName) then
   begin
@@ -7391,13 +7515,11 @@ begin
       miTimeSeriestoShapefile.Enabled := PhastModel.TimeSeries.Series.Count > 0;
 
       Application.Title := ExtractFileName(FileName) + ' ' + StrModelName;
-      frameTopView.ZoomBox.Image32.Invalidate;
-      frameFrontView.ZoomBox.Image32.Invalidate;
-      frameSideView.ZoomBox.Image32.Invalidate;
+      InvalidateImage32AllViews;
 
-      TopGridChanged := True;
-      FrontGridChanged := True;
-      SideGridChanged := True;
+      TopDiscretizationChanged := True;
+      FrontDiscretizationChanged := True;
+      SideDiscretizationChanged := True;
       frameTopView.ZoomBoxResize(nil);
       frameFrontView.ZoomBoxResize(nil);
       frameSideView.ZoomBoxResize(nil);
@@ -8361,10 +8483,10 @@ begin
     frmFormulaErrors.sgErrors.BeginUpdate;
     CanDraw := False;
     try
-      PhastModel.Grid.ThreeDDataSet := nil;
-      PhastModel.Grid.TopDataSet := nil;
-      PhastModel.Grid.FrontDataSet := nil;
-      PhastModel.Grid.SideDataSet := nil;
+      PhastModel.ThreeDDataSet := nil;
+      PhastModel.TopDataSet := nil;
+      PhastModel.FrontDataSet := nil;
+      PhastModel.SideDataSet := nil;
       PhastModel.Grid.ThreeDContourDataSet := nil;
       PhastModel.Grid.TopContourDataSet := nil;
       PhastModel.Grid.FrontContourDataSet := nil;
@@ -9132,10 +9254,10 @@ begin
     frmFormulaErrors.sgErrors.BeginUpdate;
     CanDraw := False;
     try
-      PhastModel.Grid.ThreeDDataSet := nil;
-      PhastModel.Grid.TopDataSet := nil;
-      PhastModel.Grid.FrontDataSet := nil;
-      PhastModel.Grid.SideDataSet := nil;
+      PhastModel.ThreeDDataSet := nil;
+      PhastModel.TopDataSet := nil;
+      PhastModel.FrontDataSet := nil;
+      PhastModel.SideDataSet := nil;
       PhastModel.Grid.ThreeDContourDataSet := nil;
       PhastModel.Grid.TopContourDataSet := nil;
       PhastModel.Grid.FrontContourDataSet := nil;
@@ -9350,6 +9472,37 @@ begin
     end;
   end;
 
+end;
+
+procedure TfrmGoPhast.tbCrossSectionClick(Sender: TObject);
+begin
+  {$IFDEF SUTRA}
+  // Toggle the Checked state of the Sender or it's associated action.
+  SetActionChecked(Sender);
+
+  if not (Sender is TToolButton) then
+  begin
+    tbCrossSection.OnMouseDown(tbCrossSection, mbLeft, [ssLeft], 0, 0);
+  end;
+
+  if tbCrossSection.Down then
+  begin
+    // Make sure all buttons except the current one are up.
+    SetButtonsUp(tbCrossSection);
+    // Set the cursors.
+    SetZB_Cursors(crArrow);
+    // Show a rectangle around the selected nodes.
+//    frameTopView.UpdateSelectRectangle;
+//    frameFrontView.UpdateSelectRectangle;
+//    frameSideView.UpdateSelectRectangle;
+    CurrentTool := EditCrossSectionTool;
+  end
+  else
+  begin
+    CurrentTool := nil;
+  end;
+  SelectDefaultButton;
+  {$ENDIF}
 end;
 
 procedure TfrmGoPhast.miShowHideBitmapsClick(Sender: TObject);
@@ -9718,6 +9871,10 @@ initialization
   Mf2005Date := EncodeDate(2012,4,24);
   ModelMateDate := EncodeDate(2012,6,4);
   MfNwtDate := EncodeDate(2012,5,14);
+
+  {$IFDEF Win64}
+  RegisterExpectedMemoryLeak(GR32_Blend.AlphaTable);
+  {$ENDIF}
 
 
 end.

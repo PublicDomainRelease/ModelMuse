@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="qbmg8p5kpvwku9o_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SparseArrayUnit.TSPAQuantum">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SparseArrayUnit.TSPAQuantum.SPASmall" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SparseArrayUnit.TSPAQuantum.SPALarge" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SparseArrayUnit.TSparsePointerArray">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.GetAt(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.cachedPointer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.cachedIndex" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.FSectionSize" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.FHighBound" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.secShift" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.indexMask" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.slotsInDir" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.secDir" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.SectionSize[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.HighBound[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.ResetHighBound()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.ForAll(System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.Create(SparseArrayUnit.TSPAQuantum)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.PutAt(System.Int32,System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SparseArrayUnit.TSparsePointerArray.MakeAt(System.Int32)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SparseArrayUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SparseArrayUnit.SPASecShift" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SparseArrayUnit.SPAIndexMask" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SparseArrayUnit.MakeSec(System.Int32,System.UInt16)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SparseArrayUnit.ExpandDir(SparseArrayUnit.PSecDir,ref@System.UInt16,System.UInt16)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SparseArrayUnit.EStringSparseListError">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SparseArrayUnit.TSPAApply">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+  </view>
+</nodeSet>

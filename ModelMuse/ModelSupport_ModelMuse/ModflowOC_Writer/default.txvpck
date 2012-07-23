@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="kilu0ztwp0jffvq_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowOC_Writer.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowOC_Writer.TOutputControlWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOC_Writer.TOutputControlWriter.WriteFile(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOC_Writer.TOutputControlWriter.Create(PhastModelUnit.TPhastModel)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOC_Writer.TOutputControlWriter.Extension()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOC_Writer.TOutputControlWriter.WriteDataSets2and3()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOC_Writer.TOutputControlWriter.WriteDataSet1()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOC_Writer.TOutputControlWriter.WriteDataSet0()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOC_Writer.TOutputControlWriter.FNameOfFile" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOC_Writer.TOutputControlWriter.FOutputControl" />
+    </reference>
+  </view>
+</nodeSet>

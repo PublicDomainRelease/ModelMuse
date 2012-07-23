@@ -63,7 +63,7 @@ type
 implementation
 
 uses
-  PhastModelUnit, RbwParser, frmGoPhastUnit;
+  PhastModelUnit, RbwParser, frmGoPhastUnit, SutraMeshUnit;
 
 { TLegend }
 
@@ -112,7 +112,7 @@ begin
     case DataArray.DataType of
       rdtDouble:
         begin
-          if Fractions.Count = 1 then
+          if (Fractions.Count = 1) then
           begin
             Fractions.RealValues[0] := 0.5
           end
@@ -155,7 +155,14 @@ begin
                 RealRange := MaxReal - MinReal;
                 for Index := 0 to Values.Count - 1 do
                 begin
-                  AFraction := 1 - (Log10(Values.RealValues[Index]) - MinReal)/RealRange;
+                  if RealRange = 0 then
+                  begin
+                    AFraction := 0.5
+                  end
+                  else
+                  begin
+                    AFraction := 1 - (Log10(Values.RealValues[Index]) - MinReal)/RealRange;
+                  end;
                   if AFraction < 0 then
                   begin
                     AFraction := 0;
@@ -173,7 +180,14 @@ begin
               RealRange := MaxReal - MinReal;
               for Index := 0 to Values.Count - 1 do
               begin
-                AFraction := 1 - (Values.RealValues[Index] - MinReal)/RealRange;
+                if RealRange = 0 then
+                begin
+                  AFraction := 0.5
+                end
+                else
+                begin
+                  AFraction := 1 - (Values.RealValues[Index] - MinReal)/RealRange;
+                end;
                 if AFraction < 0 then
                 begin
                   AFraction := 0;
@@ -189,7 +203,7 @@ begin
         end;
       rdtInteger:
         begin
-          if Fractions.Count = 1 then
+          if (Fractions.Count = 1) then
           begin
             Fractions.RealValues[0] := 0.5
           end
@@ -199,7 +213,14 @@ begin
             IntRange := MaxInteger - MinInteger;
             for Index := 0 to Values.Count - 1 do
             begin
-              AFraction := 1 - (Values.IntValues[Index] - MinInteger)/IntRange;
+              if IntRange = 0 then
+              begin
+                AFraction := 0.5;
+              end
+              else
+              begin
+                AFraction := 1 - (Values.IntValues[Index] - MinInteger)/IntRange;
+              end;
               if AFraction < 0 then
               begin
                 AFraction := 0;
@@ -870,12 +891,25 @@ var
   Model: TCustomModel;
   MinMax: TMinMax;
   StringList: TStringList;
+  Mesh: TSutraMesh3D;
 begin
   Model := DataArray.Model as TCustomModel;
 
   StringList := TStringList.Create;
   try
-    Model.Grid.GetMinMax(MinMax, DataArray, StringList);
+    if Model.Grid <> nil then
+    begin
+      Model.Grid.GetMinMax(MinMax, DataArray, StringList);
+    end
+    else
+    begin
+      Mesh := Model.SutraMesh;
+      if Mesh <> nil then
+      begin
+        Mesh.GetMinMax(MinMax, DataArray, StringList);
+      end;
+    end;
+
   finally
     StringList.Free;
   end;
@@ -903,7 +937,10 @@ begin
 
   StringList := TStringList.Create;
   try
-    Model.Grid.GetMinMax(MinMax, DataArray, StringList);
+    if Model.Grid <> nil then
+    begin
+      Model.Grid.GetMinMax(MinMax, DataArray, StringList);
+    end;
   finally
     StringList.Free;
   end;

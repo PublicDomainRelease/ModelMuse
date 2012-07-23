@@ -363,8 +363,8 @@ begin
   FSphereParticles := TCylSphereDistribution.Create(Model);
   FSphereParticles.FDistributionChoice := pdSphere;
   FSphereParticles.FLayerCount := 5;
-  FCustomParticles := TParticles.Create(Model as TComponent);
-  FReleaseTimes :=  TModpathTimes.Create(Model as TComponent);
+  FCustomParticles := TParticles.Create(Model);
+  FReleaseTimes :=  TModpathTimes.Create(Model);
   FReleaseTimes.Add;
 end;
 

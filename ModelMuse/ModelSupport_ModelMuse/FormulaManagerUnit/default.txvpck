@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="jnn80hotomoetmj_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FormulaManagerUnit.TFormulaManager">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaManager.FixSubscriptions()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaManager.RestoreSubscriptions()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaManager.RemoveSubscriptions(Classes.TStringList,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaManager.ResetFormulas()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaManager.Remove(FormulaManagerUnit.TFormulaObject,FormulaManagerUnit.TChangeSubscription,FormulaManagerUnit.TChangeSubscription,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaManager.Add()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaManager.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaManager.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FormulaManagerUnit.TFormulaManager.FEmptyFormula" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FormulaManagerUnit.TFormulaManager.FSortedList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FormulaManagerUnit.TFormulaManager.FList" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaManager.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaManager.Pack()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaManager.ChangeFormula(ref@FormulaManagerUnit.TFormulaObject,System.String,RbwParser.TRbwParser,FormulaManagerUnit.TChangeSubscription,FormulaManagerUnit.TChangeSubscription,System.Object)" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:FormulaManagerUnit.TFormulaManager.FEmptyFormula" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FormulaManagerUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FormulaManagerUnit.TChangeSubscription">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FormulaManagerUnit.TFormulaObject">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FormulaManagerUnit.TFormulaObject.Expression[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaObject.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaObject.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaObject.Notification(Classes.TComponent,Classes.TOperation)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaObject.DeleteSubscriptionEvents(FormulaManagerUnit.TChangeSubscription,FormulaManagerUnit.TChangeSubscription,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaObject.FixSubscriptions()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaObject.RestoreSubscriptions()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaObject.RemoveSubscriptions(Classes.TStringList,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaObject.GetExpression()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaObject.ResetFormula()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaObject.GetFormula()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaObject.CompileFormula(ref@System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaObject.SetParser(RbwParser.TRbwParser)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaObject.SetFormula(System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FormulaManagerUnit.TFormulaObject.FSubjectList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FormulaManagerUnit.TFormulaObject.FReferenceCountList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FormulaManagerUnit.TFormulaObject.FOnRestoreSubscriptionList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FormulaManagerUnit.TFormulaObject.FOnRemoveSubscriptionList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FormulaManagerUnit.TFormulaObject.FReferenceCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FormulaManagerUnit.TFormulaObject.FNotifies" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FormulaManagerUnit.TFormulaObject.FNewSubscriptions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FormulaManagerUnit.TFormulaObject.FFormula" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FormulaManagerUnit.TFormulaObject.FParser" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FormulaManagerUnit.TFormulaObject.FExpression" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FormulaManagerUnit.TFormulaObject.FPosition" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FormulaManagerUnit.TFormulaObject.AddSubscriptionEvents(FormulaManagerUnit.TChangeSubscription,FormulaManagerUnit.TChangeSubscription,System.Object)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FormulaManagerUnit.TFormulaObject.Parser[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FormulaManagerUnit.TFormulaObject.Formula[]" />
+    </reference>
+  </view>
+</nodeSet>

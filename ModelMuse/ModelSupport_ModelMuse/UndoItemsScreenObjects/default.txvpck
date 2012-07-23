@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="xwn83igno7gdj0i_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditItem.FOwnScreenObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditItem.FScreenObject" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditItem.ScreenObject[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditItem.OwnScreenObject[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditItem.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditItem.Create(Classes.TCollection)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditCollection.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditCollection.OwnScreenObject[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditCollection.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditCollection.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditCollection.Add()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditCollection.GetItems(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditCollection.SetOwnScreenObject(System.Boolean)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TScreenObjectEditCollection.FOwnScreenObject" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TCustomUpdateScreenObjectDisplayUndo">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TCustomUpdateScreenObjectDisplayUndo.FShouldUpdateShowHideObjectsDisplay" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TCustomUpdateScreenObjectDisplayUndo.WarnSfrLengthProblems(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TCustomUpdateScreenObjectDisplayUndo.EnableInvertSelection()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TCustomUpdateScreenObjectDisplayUndo.UpdateShowHideObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TCustomUpdateScreenObjectDisplayUndo.UpdateDisplay()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TCustomUpdateScreenObjectDisplayUndo.FShouldUpdateShowHideObjects" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.ResetVisible(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.SetPostSelection()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.SelectionChanged()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.Redo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.InvalidateImages()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.Description()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.StoreVisible(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.SetSelection(Classes.TList,ref@GoPhastTypes.T2DBoolArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.SetPriorSelection()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.ResetSelection(Classes.TList,GoPhastTypes.T2DBoolArray)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.FUpdateVisible" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.FNewVisibleScreenObjects" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.FOldVisibleScreenObjects" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.FOldSelectedScreenObjects" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.FOldSelectedVertices" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.FNewSelectedVertices" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection.FNewSelectedScreenObjects" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoChangeSelection:UndoItemsScreenObjects.TCustomUpdateScreenObjectDisplayUndo" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TCustomImportMultipleScreenObjects">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TCustomImportMultipleScreenObjects.FNewScreenObjects" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TCustomImportMultipleScreenObjects.UpdateScreenObject(ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TCustomImportMultipleScreenObjects.StoreNewScreenObjects(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TCustomImportMultipleScreenObjects.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TCustomImportMultipleScreenObjects.DeleteNewScreenObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TCustomImportMultipleScreenObjects.UnDeleteNewScreenObjects()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TCustomImportMultipleScreenObjects:UndoItemsScreenObjects.TUndoChangeSelection" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoPasteScreenObjects">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoPasteScreenObjects.Redo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoPasteScreenObjects.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoPasteScreenObjects.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoPasteScreenObjects.StoreNewScreenObjects(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoPasteScreenObjects.Description()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoPasteScreenObjects:UndoItemsScreenObjects.TCustomImportMultipleScreenObjects" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TCustomUpdateScreenObjectUndo">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TCustomUpdateScreenObjectUndo.UpdateSelectionRectangle()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TCustomUpdateScreenObjectUndo.UpdateScreenObject(ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TCustomUpdateScreenObjectUndo:UndoItemsScreenObjects.TUndoChangeSelection" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoCreateScreenObject">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoCreateScreenObject.UpdateObservations()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoCreateScreenObject.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoCreateScreenObject.Redo()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:UndoItemsScreenObjects.TUndoCreateScreenObject.HasBeenUsed[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoCreateScreenObject.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoCreateScreenObject.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoCreateScreenObject.Create(ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoCreateScreenObject.Description()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoCreateScreenObject.WarnSfrLengthProblem()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoCreateScreenObject.FSectionStarts" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoCreateScreenObject.FUndoEditFluxObservations" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoCreateScreenObject.FScreenObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoCreateScreenObject.FHasBeenUsed" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoCreateScreenObject:UndoItemsScreenObjects.TCustomUpdateScreenObjectUndo" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteScreenObjects">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteScreenObjects.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteScreenObjects.Create(ScreenObjectUnit.TScreenObjectList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteScreenObjects.Description()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteScreenObjects.FScreenObjects" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteScreenObjects.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteScreenObjects.Redo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteScreenObjects.DoCommand()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteScreenObjects:UndoItemsScreenObjects.TCustomUpdateScreenObjectUndo" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoCutScreenObjects">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoCutScreenObjects.Redo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoCutScreenObjects.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoCutScreenObjects.Description()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoCutScreenObjects:UndoItemsScreenObjects.TUndoDeleteScreenObjects" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveScreenObject">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveScreenObject.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveScreenObject.Redo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveScreenObject.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveScreenObject.Create(System.Double,System.Double,GoPhastTypes.TViewDirection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveScreenObject.Description()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveScreenObject.Move(System.Double,System.Double,System.Boolean)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveScreenObject.FY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveScreenObject.FX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveScreenObject.FDirection" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveScreenObject.FCanMoveScreenObject" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveScreenObject:UndoItemsScreenObjects.TCustomUpdateScreenObjectUndo" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoInsertPoint">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoInsertPoint.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoInsertPoint.Redo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoInsertPoint.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoInsertPoint.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoInsertPoint.Create(ScreenObjectUnit.TScreenObject,System.Int32,FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoInsertPoint.Description()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoInsertPoint.FPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoInsertPoint.FSectionStarts" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoInsertPoint.FScreenObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoInsertPoint.FPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoInsertPoint.FPoint" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoInsertPoint.FCanInsert" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoInsertPoint:UndoItemsScreenObjects.TCustomUpdateScreenObjectUndo" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TCustomUndoChangeOrder">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TCustomUndoChangeOrder.Redo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TCustomUndoChangeOrder.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TCustomUndoChangeOrder.Create(GoPhastTypes.TViewDirection)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TCustomUndoChangeOrder.FPositions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TCustomUndoChangeOrder.FScreenObjectList" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TCustomUndoChangeOrder:UndoItemsScreenObjects.TCustomUpdateScreenObjectUndo" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoToFront">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoToFront.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoToFront.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoToFront.Description()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoToFront:UndoItemsScreenObjects.TCustomUndoChangeOrder" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoToBack">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoToBack.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoToBack.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoToBack.Description()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoToBack:UndoItemsScreenObjects.TCustomUndoChangeOrder" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveUp">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveUp.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveUp.Description()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveUp:UndoItemsScreenObjects.TUndoToFront" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveDown">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveDown.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveDown.Description()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoMoveDown:UndoItemsScreenObjects.TUndoToBack" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoRearrangeScreenObjects">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoRearrangeScreenObjects.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoRearrangeScreenObjects.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoRearrangeScreenObjects.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoRearrangeScreenObjects.Redo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoRearrangeScreenObjects.DoCommand()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoRearrangeScreenObjects.FNewNames" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoRearrangeScreenObjects.FNewList" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoRearrangeScreenObjects.SetOrder(ScreenObjectUnit.TScreenObjectList,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoRearrangeScreenObjects.Description()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoRearrangeScreenObjects.FNames" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoRearrangeScreenObjects.FList" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoRearrangeScreenObjects:UndoItemsScreenObjects.TCustomUpdateScreenObjectUndo" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoShowHideScreenObject">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoShowHideScreenObject.Redo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoShowHideScreenObject.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoShowHideScreenObject.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoShowHideScreenObject.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoShowHideScreenObject.AddScreenObjectToChange(ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoShowHideScreenObject.ToggleVisibility()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoShowHideScreenObject.Description()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoShowHideScreenObject.FScreenObjectsToChange" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoShowHideScreenObject.Undo()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoShowHideScreenObject:UndoItemsScreenObjects.TUndoChangeSelection" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.Create(Classes.TList,ref@UndoItemsScreenObjects.TScreenObjectEditCollection,ref@UndoItemsScreenObjects.TScreenObjectEditCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.DoCommand()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.FSetCellsColor" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.ResetScreenObjectDataSetSubscriptions()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.Description()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.FUndoEditFluxObservations" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.FListOfScreenObjects" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.FExistingScreenObjects" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.FOldScreenObjects" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.FNewScreenObjects" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.UpdateObservations()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.Destroy()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties:UndoItemsScreenObjects.TCustomUpdateScreenObjectDisplayUndo" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.FExistingScreenObjects" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.FOldScreenObjects" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:UndoItemsScreenObjects.TUndoSetScreenObjectProperties.FNewScreenObjects" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteSegment">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteSegment.FEdge" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteSegment.FSections" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteSegment.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteSegment.Redo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteSegment.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteSegment.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteSegment.Create(ScreenObjectUnit.TScreenObject,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteSegment.Description()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteSegment.FSetPropertiesOfEnclosed" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteSegment.FScreenObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteSegment.FSelectedVertices" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteSegment.FPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteSegment.FNewScreenObject" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteSegment:UndoItemsScreenObjects.TCustomUpdateScreenObjectUndo" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoMergeObjects">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMergeObjects.Description()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMergeObjects.ShouldUse()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMergeObjects.Redo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMergeObjects.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMergeObjects.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMergeObjects.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoMergeObjects.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoMergeObjects.FNewPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoMergeObjects.FDeleted" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoMergeObjects.FQuadTree" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoMergeObjects.FOldPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoMergeObjects.FScreenObjects" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoMergeObjects:UndoItemsScreenObjects.TCustomUpdateScreenObjectUndo" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoReverseVerticies">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoReverseVerticies.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoReverseVerticies.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoReverseVerticies.Description()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoReverseVerticies.ReverseObjects()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoReverseVerticies.FScreenObjects" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoReverseVerticies.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoReverseVerticies.DoCommand()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoReverseVerticies:UndoItemsScreenObjects.TCustomUpdateScreenObjectUndo" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteVertices">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteVertices.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteVertices.Redo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteVertices.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteVertices.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteVertices.Create(ScreenObjectUnit.TScreenObjectList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteVertices.Description()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteVertices.FScreenObjects" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteVertices.FSectionStarts" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteVertices.FPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteVertices.FCanDeleteVertices" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoDeleteVertices:UndoItemsScreenObjects.TCustomUpdateScreenObjectUndo" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart.Redo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart.Create(ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart.AddPoint(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart.Description()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart.Count[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart.Capacity[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart.SetCapacity(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart.Grow()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart.FCapacity" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart.FCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart.FNewPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart.FScreenObject" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:UndoItemsScreenObjects.TUndoAddPart:UndoItemsScreenObjects.TCustomUpdateScreenObjectUndo" />
+    </reference>
+  </view>
+</nodeSet>

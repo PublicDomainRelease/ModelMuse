@@ -1134,7 +1134,7 @@ end;
 procedure TCustomMF_ListBoundColl.EvaluateListBoundaries(AModel: TBaseModel);
 var
   ItemIndex: integer;
-  Item: TCustomModflowBoundaryItem;
+//  Item: TCustomModflowBoundaryItem;
   EndOfLastStressPeriod: Double;
   StartOfFirstStressPeriod: Double;
   ObservationsPresent: Boolean;
@@ -1164,7 +1164,7 @@ var
   EliminateIndicies: TIntegerList;
   SectionIndex: Integer;
   SparseArray: T3DSparseBooleanArray;
-  Section: Integer;
+//  Section: Integer;
   Index: Integer;
   Layer: Integer;
   Variables: TList;

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="mxlmn85tpio3x3f_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DXF_Utils.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.BoolToStr(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.Point3DToStr(DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.float_out(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.deallocate_matrix(ref@DXF_Utils.pMatrix)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.allocate_matrix()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.imin(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.imax(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.dmax(System.Double,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.dmin(System.Double,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.min_bound(ref@DXF_Utils.Point3D,DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.max_bound(ref@DXF_Utils.Point3D,DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.RotationAxis(DXF_Utils.Point3D,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.TransformPoint(DXF_Utils.Matrix,DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.CreateTransformation(DXF_Utils.Point3D,DXF_Utils.Point3D,DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.update_transformations(DXF_Utils.pMatrix,DXF_Utils.pMatrix)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DXF_Utils.GlobalTempMatrix" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.MatrixMultiply(DXF_Utils.Matrix,DXF_Utils.Matrix)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.TranslateMatrix(DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.ScaleMatrix(DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.ZRotateMatrix(System.Double,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.YRotateMatrix(System.Double,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.XRotateMatrix(System.Double,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.angle(DXF_Utils.Point3D,DXF_Utils.Point3D,DXF_Utils.Point3D,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.cross(DXF_Utils.Point3D,DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.dot(DXF_Utils.Point3D,DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.set_accuracy(System.Double,DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.p1_x_n(DXF_Utils.Point3D,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.sq_mag3D(DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.sq_dist2D(DXF_Utils.Point3D,DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.sq_dist3D(DXF_Utils.Point3D,DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.dist2D(DXF_Utils.Point3D,DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.dist3D(DXF_Utils.Point3D,DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.mag(DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.normalize(DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.p1_plus_p2(DXF_Utils.Point3D,DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.p1_minus_p2(DXF_Utils.Point3D,DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.p1_eq_p2_2D(DXF_Utils.Point3D,DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.p1_eq_p2_3D(DXF_Utils.Point3D,DXF_Utils.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DXF_Utils.aPoint3D(System.Double,System.Double,System.Double)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DXF_Utils.identity" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DXF_Utils.WCS_Z" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DXF_Utils.WCS_Y" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DXF_Utils.WCS_X" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DXF_Utils.origin3D" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DXF_Utils.GlobalTempMatrix" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DXF_Utils.identity" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DXF_Utils.WCS_Z" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DXF_Utils.WCS_Y" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DXF_Utils.WCS_X" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DXF_Utils.origin3D" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DXF_Utils.Point3D">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DXF_Utils.Point3D.z" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DXF_Utils.Point3D.y" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DXF_Utils.Point3D.x" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DXF_Utils.Point2D">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DXF_Utils.Point2D.y" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DXF_Utils.Point2D.x" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DXF_Utils.Matrix">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DXF_Utils.Matrix.val" />
+    </reference>
+  </view>
+</nodeSet>

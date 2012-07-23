@@ -203,10 +203,6 @@ type
     // It also assigns event handlers for @link(TzbImage32.OnZbMove) and
     // @link(TzbImage32.OnZbUp).
     procedure InitWidget;
-    // @name checks that @link(Image32)
-    // can be drawn and, if so, calls Invalidate
-    // for it.
-    procedure InvalidateImage32;
     {@name calls the inherited @name and then calls @link(Pan).}
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     {@name calls the inherited @name and then calls @link(Pan).}
@@ -236,6 +232,10 @@ type
     property CanZoomOut: boolean read GetCanZoomOut;
     // @name creates an instance of @link(TQRbwZoomBox2).
     constructor Create(AOwner: TComponent); override;
+    // @name checks that @link(Image32)
+    // can be drawn and, if so, calls Invalidate
+    // for it.
+    procedure InvalidateImage32;
     // Set @name to @true to start a panning operation.
     // Set @name to @false to stop a panning operation.
     // See @link(Pan) for what happens during a panning operation.

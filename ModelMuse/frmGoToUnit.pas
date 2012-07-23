@@ -186,8 +186,8 @@ begin
     OriginX := XCoordinate - DeltaX;
     OriginY := YCoordinate - DeltaY;
     frmGoPhast.frameTopView.InvalidateScreenObjectCoordinates;
-    frmGoPhast.TopGridChanged := True;
-    Image32.Invalidate;
+    frmGoPhast.TopDiscretizationChanged := True;
+    InvalidateImage32;
     frmGoPhast.AdjustScales;
     frmGoPhast.SynchronizeViews(vdTop);
   end;
@@ -203,8 +203,8 @@ begin
     OriginX := XCoordinate;
     OriginY := YCoordinate - DeltaY;
     frmGoPhast.frameTopView.InvalidateScreenObjectCoordinates;
-    frmGoPhast.TopGridChanged := True;
-    Image32.Invalidate;
+    frmGoPhast.TopDiscretizationChanged := True;
+    InvalidateImage32;
     frmGoPhast.AdjustScales;
     frmGoPhast.SynchronizeViews(vdTop);
   end;
@@ -221,8 +221,8 @@ begin
     OriginX := XCoordinate - DeltaX;
     OriginY := ZCoordinate - DeltaY;
     frmGoPhast.frameFrontView.InvalidateScreenObjectCoordinates;
-    frmGoPhast.FrontGridChanged := True;
-    Image32.Invalidate;
+    frmGoPhast.FrontDiscretizationChanged := True;
+    InvalidateImage32;
     frmGoPhast.AdjustScales;
     frmGoPhast.SynchronizeViews(vdFront);
   end;
@@ -238,8 +238,8 @@ begin
     OriginX := XCoordinate;
     OriginY := ZCoordinate - DeltaY;
     frmGoPhast.frameFrontView.InvalidateScreenObjectCoordinates;
-    frmGoPhast.FrontGridChanged := True;
-    Image32.Invalidate;
+    frmGoPhast.FrontDiscretizationChanged := True;
+    InvalidateImage32;
     frmGoPhast.AdjustScales;
     frmGoPhast.SynchronizeViews(vdFront);
   end;
@@ -257,8 +257,8 @@ begin
     OriginX := ZCoordinate + DeltaX;
     OriginY := YCoordinate - DeltaY;
     frmGoPhast.frameSideView.InvalidateScreenObjectCoordinates;
-    frmGoPhast.SideGridChanged := True;
-    Image32.Invalidate;
+    frmGoPhast.SideDiscretizationChanged := True;
+    InvalidateImage32;
     frmGoPhast.AdjustScales;
     frmGoPhast.SynchronizeViews(vdSide);
   end;
@@ -275,8 +275,8 @@ begin
     OriginX := ZCoordinate + DeltaX;
     OriginY := YCoordinate - DeltaY;
     frmGoPhast.frameSideView.InvalidateScreenObjectCoordinates;
-    frmGoPhast.SideGridChanged := True;
-    Image32.Invalidate;
+    frmGoPhast.SideDiscretizationChanged := True;
+    InvalidateImage32;
     frmGoPhast.AdjustScales;
     frmGoPhast.SynchronizeViews(vdSide);
   end;

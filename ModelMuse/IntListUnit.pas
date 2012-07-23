@@ -12,12 +12,10 @@ type
     // rather than pointers.)
   TIntegerList = class(TObject)
   private
-    // @name: TList;
     // @name stores instances of TIntegerClass (defined in the implementation
     // section.  Those instances each store one of the values stored in
     // @classname.
     FList: TList;
-    // @name: boolean;
     // @name indicates whether or not the @classname is sorted.
     FSorted: boolean;
     // See @link(Capacity).
@@ -105,13 +103,11 @@ type
       constructor Create;
       destructor Destroy; Override;
       procedure Delete(Index: Integer);
-//      class procedure Error(const Msg: string; Data: Integer); virtual;
       procedure Exchange(Index1, Index2: Integer);
       function First: Int64;
       procedure Insert(Index: Integer; AnInteger : Int64);
       function Last: Int64;
       procedure Move(CurIndex, NewIndex: Integer);
-//      procedure Pack;
       Property Items[Index: integer] : Int64  read GetItem write SetItem; default;
       property Count : integer read GetCount;
       property Capacity : integer read GetCapacity write SetCapacity;
@@ -121,7 +117,6 @@ type
   // @name does not own the @link(TIntegerList)s.
   TIntListList = class(TObject)
   private
-    // @name: TList;
     // @name is an internal TList that holds the @link(TIntegerList)s.
     FList: TList;
     // See @link(Capacity).

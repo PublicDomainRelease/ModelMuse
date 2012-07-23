@@ -23,7 +23,7 @@ uses
   JvImageList, TeEngine, Series, TeeProcs, Chart, ComCtrls, Buttons,
   JvToolEdit, AppEvnts, RealListUnit, JvHtControls, JvPageList,
   JvExControls, JvExStdCtrls, JvExMask, Mask, JvExComCtrls,
-  JvComCtrls, JvRichEdit, JvComponentBase, JvCreateProcess, ErrorMessages;
+  JvComCtrls, JvComponentBase, JvCreateProcess, ErrorMessages;
 
 type
   TStatusChange = (scOK, scWarning, scError, scNone);
@@ -44,7 +44,7 @@ type
   TListFileHandler = class(TObject)
   private
     FFileStream: TStringFileStream;
-    FErrorMessages: TJvRichEdit;
+    FErrorMessages: TRichEdit;
     FBudgetChart: TChart;
     FserCumulative: TLineSeries;
     FserTimeStep: TLineSeries;
@@ -120,7 +120,6 @@ type
     jvfeNameFile: TJvFilenameEdit;
     tabMonitor: TJvStandardPage;
     lblMonitor: TLabel;
-    reMonitor: TJvRichEdit;
     tabAbout: TJvStandardPage;
     ImageLogo: TImage;
     reReference: TRichEdit;
@@ -132,6 +131,7 @@ type
     treeNavigation: TJvTreeView;
     jvcpRunModel: TJvCreateProcess;
     btnStopModel: TBitBtn;
+    reMonitor: TRichEdit;
     procedure btnRunClick(Sender: TObject);
     procedure timerReadOutputTimer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -171,7 +171,7 @@ type
     FPriorSolving: Boolean;
     FPriorLine: string;
     procedure GetListFile(AFileName: string; ListFiles: TStringList);
-    procedure FindStart(RichEdit: TJvRichEdit; PositionInLine: integer;
+    procedure FindStart(RichEdit: TRichEdit; PositionInLine: integer;
       out SelStart: integer);
     procedure CreateFileReaders;
 //    function WinExecAndWait32(FileName: string; Visibility: Integer): Longword;
@@ -660,7 +660,7 @@ begin
   end;
 end;
 
-procedure TfrmMonitor.FindStart(RichEdit: TJvRichEdit; PositionInLine: integer;
+procedure TfrmMonitor.FindStart(RichEdit: TRichEdit; PositionInLine: integer;
   out SelStart: integer);
 var
   LineIndex: Integer;
@@ -826,6 +826,42 @@ var
   SelStart: Integer;
   ErrorIndex: Integer;
   AnErrorMessage: string;
+  procedure SetTextColor(const AText: string;
+    AStatus: TStatusChange);
+  var
+    AColor: TColor;
+    SelStart: integer;
+  begin
+    AColor := clBlack;
+    case AStatus of
+      scWarning:
+        begin
+          AColor := clRed;
+        end;
+      scError:
+        begin
+          AColor := clYellow;
+        end;
+      else Assert(False);
+    end;
+    FindStart(reMonitor, Position, SelStart);
+    reMonitor.SelStart := SelStart;
+    reMonitor.SelLength := Length(AText);
+    reMonitor.SelAttributes.Color := AColor;
+    reMonitor.SelLength := 0;
+    StatusChanged(nil, scError);
+    SetPageStatus(tabMonitor, scError);
+
+    // For TJvRichEdit;
+//    FindStart(reMonitor, Position, SelStart);
+//    reMonitor.SetSelection(SelStart,
+//      SelStart + Length(AText), True);
+//    reMonitor.SelAttributes.BackColor := AColor;
+//    reMonitor.SelAttributes.Color := clWhite;
+//    reMonitor.SetSelection(SelStart, SelStart, True);
+//    StatusChanged(nil, scError);
+//    SetPageStatus(tabMonitor, scError);
+  end;
 begin
 //  if (FOutFile = '') then
 //  begin
@@ -848,51 +884,57 @@ begin
   if Position > 0 then
   begin
     FindStart(reMonitor, Position, SelStart);
-    reMonitor.SetSelection(SelStart,
-      SelStart + Length(StrNormalTermination), True);
-    reMonitor.SelAttributes.BackColor := clGreen;
-    reMonitor.SelAttributes.Color := clWhite;
-    reMonitor.SetSelection(SelStart, SelStart, True);
+    reMonitor.SelStart := SelStart;
+    reMonitor.SelLength := Length(StrNormalTermination);
+//    reMonitor.SetSelection(SelStart,
+//      SelStart + Length(StrNormalTermination), True);
+    reMonitor.SelAttributes.Color := clGreen;
+//    reMonitor.SelAttributes.Color := clWhite;
+    reMonitor.SelLength := 0;
+//    reMonitor.SetSelection(SelStart, SelStart, True);
   end
   else
   begin
     Position := Pos(StrFIRSTENTRYINNAME, ALine);
     if Position > 0 then
     begin
-      FindStart(reMonitor, Position, SelStart);
-      reMonitor.SetSelection(SelStart,
-        SelStart + Length(StrFIRSTENTRYINNAME), True);
-      reMonitor.SelAttributes.BackColor := clRed;
-      reMonitor.SelAttributes.Color := clWhite;
-      reMonitor.SetSelection(SelStart, SelStart, True);
-      StatusChanged(nil, scError);
-      SetPageStatus(tabMonitor, scError);
+      SetTextColor(StrFIRSTENTRYINNAME, scError);
+//      FindStart(reMonitor, Position, SelStart);
+//      reMonitor.SetSelection(SelStart,
+//        SelStart + Length(StrFIRSTENTRYINNAME), True);
+//      reMonitor.SelAttributes.BackColor := clRed;
+//      reMonitor.SelAttributes.Color := clWhite;
+//      reMonitor.SetSelection(SelStart, SelStart, True);
+//      StatusChanged(nil, scError);
+//      SetPageStatus(tabMonitor, scError);
     end;
 
     Position := Pos(StrFailureToConverge, ALine);
     if Position > 0 then
     begin
-      FindStart(reMonitor, Position, SelStart);
-      reMonitor.SetSelection(SelStart,
-        SelStart + Length(StrFailureToConverge), True);
-      reMonitor.SelAttributes.BackColor := clRed;
-      reMonitor.SelAttributes.Color := clWhite;
-      reMonitor.SetSelection(SelStart, SelStart, True);
-      StatusChanged(nil, scError);
-      SetPageStatus(tabMonitor, scError);
+      SetTextColor(StrFailureToConverge, scError);
+//      FindStart(reMonitor, Position, SelStart);
+//      reMonitor.SetSelection(SelStart,
+//        SelStart + Length(StrFailureToConverge), True);
+//      reMonitor.SelAttributes.BackColor := clRed;
+//      reMonitor.SelAttributes.Color := clWhite;
+//      reMonitor.SetSelection(SelStart, SelStart, True);
+//      StatusChanged(nil, scError);
+//      SetPageStatus(tabMonitor, scError);
     end;
 
     Position := Pos(StrFAILEDTOMEETSOLVE, ALine);
     if Position > 0 then
     begin
-      FindStart(reMonitor, Position, SelStart);
-      reMonitor.SetSelection(SelStart,
-        SelStart + Length(StrFAILEDTOMEETSOLVE), True);
-      reMonitor.SelAttributes.BackColor := clRed;
-      reMonitor.SelAttributes.Color := clWhite;
-      reMonitor.SetSelection(SelStart, SelStart, True);
-      StatusChanged(nil, scError);
-      SetPageStatus(tabMonitor, scError);
+      SetTextColor(StrFAILEDTOMEETSOLVE, scError);
+//      FindStart(reMonitor, Position, SelStart);
+//      reMonitor.SetSelection(SelStart,
+//        SelStart + Length(StrFAILEDTOMEETSOLVE), True);
+//      reMonitor.SelAttributes.BackColor := clRed;
+//      reMonitor.SelAttributes.Color := clWhite;
+//      reMonitor.SetSelection(SelStart, SelStart, True);
+//      StatusChanged(nil, scError);
+//      SetPageStatus(tabMonitor, scError);
     end;
 
     for ErrorIndex := 0 to ErrorValues.Count - 1 do
@@ -901,14 +943,15 @@ begin
       Position := Pos(AnErrorMessage, ALine);
       if Position > 0 then
       begin
-        FindStart(reMonitor, Position, SelStart);
-        reMonitor.SetSelection(SelStart,
-          SelStart + Length(AnErrorMessage), True);
-        reMonitor.SelAttributes.BackColor := clRed;
-        reMonitor.SelAttributes.Color := clWhite;
-        reMonitor.SetSelection(SelStart, SelStart, True);
-        StatusChanged(nil, scError);
-        SetPageStatus(tabMonitor, scError);
+        SetTextColor(AnErrorMessage, scError);
+//        FindStart(reMonitor, Position, SelStart);
+//        reMonitor.SetSelection(SelStart,
+//          SelStart + Length(AnErrorMessage), True);
+//        reMonitor.SelAttributes.BackColor := clRed;
+//        reMonitor.SelAttributes.Color := clWhite;
+//        reMonitor.SetSelection(SelStart, SelStart, True);
+//        StatusChanged(nil, scError);
+//        SetPageStatus(tabMonitor, scError);
       end;
     end;
   end;
@@ -1193,7 +1236,7 @@ begin
   FLabel.Caption := 'Errors and warnings in Listing file';
   FLabel.Height := 19;
 
-  FErrorMessages := TJvRichEdit.Create(FPageControl.Owner);
+  FErrorMessages := TRichEdit.Create(FPageControl.Owner);
   FErrorMessages.Parent := FListingTabSheet;
   FErrorMessages.Align := alClient;
   FErrorMessages.WordWrap := False;
@@ -1351,13 +1394,17 @@ begin
       if Positions[Index] > 0 then
       begin
         FindStart(Positions[Index], SelStart);
-        FErrorMessages.SetSelection(SelStart, SelStart + Length(EV[Index]), True);
-        FErrorMessages.SelAttributes.BackColor := AColor;
+        FErrorMessages.SelStart := SelStart;
+        FErrorMessages.SelLength := Length(EV[Index]);
+//        FErrorMessages.SetSelection(SelStart, SelStart + Length(EV[Index]), True);
+        FErrorMessages.SelAttributes.Color := AColor;
+//        FErrorMessages.SelAttributes.BackColor := AColor;
         if AColor = clRed then
         begin
           FErrorMessages.SelAttributes.Color := clWhite;
         end;
-        FErrorMessages.SetSelection(SelStart, SelStart, True);
+        FErrorMessages.SelLength := 0;
+//        FErrorMessages.SetSelection(SelStart, SelStart, True);
       end;
     end;
   end;

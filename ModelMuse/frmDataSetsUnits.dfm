@@ -12,26 +12,27 @@ inherited frmDataSets: TfrmDataSets
   OnClose = FormClose
   ExplicitWidth = 656
   ExplicitHeight = 507
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 19
   object Splitter1: TSplitter
-    Left = 323
+    Left = 313
     Top = 0
     Width = 5
-    Height = 405
+    Height = 394
     Align = alRight
     ExplicitLeft = 325
+    ExplicitHeight = 405
   end
   object pnlButtons: TPanel
     Left = 0
-    Top = 405
-    Width = 648
+    Top = 394
+    Width = 638
     Height = 41
     Align = alBottom
     ParentColor = True
     TabOrder = 2
     DesignSize = (
-      648
+      638
       41)
     object btnOK: TBitBtn
       Left = 432
@@ -41,7 +42,6 @@ inherited frmDataSets: TfrmDataSets
       Anchors = [akTop, akRight]
       Caption = 'Apply'
       Default = True
-      DoubleBuffered = True
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         0400000000006801000000000000000000001000000000000000000000000000
@@ -61,7 +61,6 @@ inherited frmDataSets: TfrmDataSets
         0000}
       ModalResult = 1
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 3
       OnClick = btnOKClick
     end
@@ -71,10 +70,8 @@ inherited frmDataSets: TfrmDataSets
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkClose
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 4
       OnClick = btnCancelClick
     end
@@ -102,18 +99,16 @@ inherited frmDataSets: TfrmDataSets
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnHelpClick
     end
   end
   object sbStatusBar: TStatusBar
     Left = 0
-    Top = 446
-    Width = 648
+    Top = 435
+    Width = 638
     Height = 27
     Panels = <>
     ParentColor = True
@@ -122,8 +117,8 @@ inherited frmDataSets: TfrmDataSets
   object tvDataSets: TTreeView
     Left = 0
     Top = 0
-    Width = 323
-    Height = 405
+    Width = 313
+    Height = 394
     Align = alClient
     HideSelection = False
     Indent = 21
@@ -134,18 +129,22 @@ inherited frmDataSets: TfrmDataSets
     OnChange = tvDataSetsChange
   end
   object pcDataSets: TJvPageControl
-    Left = 328
+    Left = 318
     Top = 0
     Width = 320
-    Height = 405
-    ActivePage = tabBasic
+    Height = 394
+    ActivePage = tabComment
     Align = alRight
     TabOrder = 1
     object tabBasic: TTabSheet
       Caption = 'Basic'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         312
-        371)
+        360)
       object lblName: TLabel
         Left = 3
         Top = 3
@@ -156,7 +155,7 @@ inherited frmDataSets: TfrmDataSets
       object lblType: TLabel
         Left = 3
         Top = 61
-        Width = 36
+        Width = 35
         Height = 19
         Caption = 'Type'
       end
@@ -170,7 +169,7 @@ inherited frmDataSets: TfrmDataSets
       object lblEvaluatedAt: TLabel
         Left = 2
         Top = 121
-        Width = 90
+        Width = 89
         Height = 19
         Caption = 'Evaluated At'
       end
@@ -355,11 +354,11 @@ inherited frmDataSets: TfrmDataSets
         TabOrder = 7
         OnClick = btnEditFormulaClick
       end
-      object reDefaultFormula: TJvRichEdit
-        Left = 3
+      object reDefaultFormula: TRichEdit
+        Left = 2
         Top = 271
         Width = 275
-        Height = 89
+        Height = 86
         Anchors = [akLeft, akTop, akRight, akBottom]
         TabOrder = 8
         OnExit = reDefaultFormulaExit
@@ -404,21 +403,21 @@ inherited frmDataSets: TfrmDataSets
         inherited lblValue1: TLabel
           Left = 184
           Top = 128
-          Width = 55
+          Width = 54
           Height = 19
           ExplicitLeft = 184
           ExplicitTop = 128
-          ExplicitWidth = 55
+          ExplicitWidth = 54
           ExplicitHeight = 19
         end
         inherited lblValue2: TLabel
           Left = 184
           Top = 188
-          Width = 55
+          Width = 54
           Height = 19
           ExplicitLeft = 184
           ExplicitTop = 188
-          ExplicitWidth = 55
+          ExplicitWidth = 54
           ExplicitHeight = 19
         end
         inherited lblMixtureFormula: TLabel
@@ -437,6 +436,7 @@ inherited frmDataSets: TfrmDataSets
           Width = 245
           Height = 34
           Caption = 'Use PHAST-style interpolation for all cells'
+          TabOrder = 0
           WordWrap = True
           OnClick = framePhastInterpolationcbPhastInterpolationClick
           AutoSize = False
@@ -488,6 +488,7 @@ inherited frmDataSets: TfrmDataSets
           Width = 272
           Height = 78
           Columns = 2
+          TabOrder = 1
           OnClick = framePhastInterpolationrgInterpolationDirectionClick
           ExplicitLeft = 12
           ExplicitTop = 43
@@ -521,9 +522,13 @@ inherited frmDataSets: TfrmDataSets
     object tabComment: TTabSheet
       Caption = 'Comment'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Splitter2: TSplitter
         Left = 0
-        Top = 179
+        Top = 168
         Width = 312
         Height = 5
         Cursor = crVSplit
@@ -534,7 +539,7 @@ inherited frmDataSets: TfrmDataSets
         Left = 0
         Top = 0
         Width = 312
-        Height = 179
+        Height = 168
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 0
@@ -542,18 +547,17 @@ inherited frmDataSets: TfrmDataSets
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 306
+          Width = 69
           Height = 19
           Align = alTop
           Caption = 'Comment'
-          ExplicitWidth = 69
         end
-        object reComment: TJvRichEdit
+        object reComment: TRichEdit
           AlignWithMargins = True
           Left = 3
           Top = 28
           Width = 306
-          Height = 148
+          Height = 137
           Align = alClient
           TabOrder = 0
           WordWrap = False
@@ -563,7 +567,7 @@ inherited frmDataSets: TfrmDataSets
       end
       object pnlDescription: TPanel
         Left = 0
-        Top = 184
+        Top = 173
         Width = 312
         Height = 187
         Align = alBottom
@@ -573,11 +577,10 @@ inherited frmDataSets: TfrmDataSets
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 306
+          Width = 164
           Height = 19
           Align = alTop
           Caption = 'Associated model data'
-          ExplicitWidth = 164
         end
         object memoAssociatedDataSets: TMemo
           AlignWithMargins = True

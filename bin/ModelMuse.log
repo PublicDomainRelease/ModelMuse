@@ -1,0 +1,26 @@
+0	 (I)  	Thread ID 6592	Log subsystem started in elapsed time mode.
+15	 (I)  	Thread ID 5412	Service thread started
+421	 (i)  	Thread ID 5412	Temporary rendering context created
+421	 (I)  	Thread ID 5412	Getting OpenGL entry points and extension
+421	 (I)  	Thread ID 5412	
+421	 (i)  	Thread ID 5412	OpenGL rendering context information:
+421	 (i)  	Thread ID 5412	Renderer     : Quadro NVS 295/PCIe/SSE2
+421	 (i)  	Thread ID 5412	Vendor       : NVIDIA Corporation
+421	 (i)  	Thread ID 5412	Version      : 3.3.0
+421	 (i)  	Thread ID 5412	GLSL version : 3.30 NVIDIA via Cg compiler
+421	 (I)  	Thread ID 5412	
+437	 (I)  	Thread ID 5412	Getting OpenGL entry points and extension
+452	 (i)  	Thread ID 5412	Backward compatible core PBuffer context successfully created
+452	 (I)  	Thread ID 5412	Service context successfuly initialized
+17035	 (i)  	Thread ID 6592	Temporary rendering context created
+17035	 (I)  	Thread ID 6592	Getting OpenGL entry points and extension
+17035	 (i)  	Thread ID 6592	Temporary rendering context destroyed
+17051	 (I)  	Thread ID 6592	Getting OpenGL entry points and extension
+17066	 (i)  	Thread ID 6592	Temporary rendering context created
+17066	 (I)  	Thread ID 6592	Getting OpenGL entry points and extension
+17066	 (i)  	Thread ID 6592	Temporary rendering context destroyed
+17066	 (I)  	Thread ID 6592	Getting OpenGL entry points and extension
+17285	 (I)  	Thread ID 5412	Service thread finished
+17300	 (D)  	Thread ID 6592	Service thread destroyed
+17300	 (i)  	Thread ID 6592	Logged fatal errors: 0, errors: 0, warnings: 0, titles: 11, infos: 11, debug info: 1
+17300	 (i)  	Thread ID 6592	Log session shutdown

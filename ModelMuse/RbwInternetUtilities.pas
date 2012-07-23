@@ -11,6 +11,9 @@ uses
 {$IFDEF WIN32}
   Windows, ShellAPI, DdeMan,
 {$ENDIF}
+{$IFDEF WIN64}
+  Windows, ShellAPI, DdeMan,
+{$ENDIF}
   SysUtils, Classes;
 
 
@@ -46,6 +49,22 @@ function LaunchURL(Browser: string; const URL: string): pid_t;
 {$ENDIF}
 
 {$IFDEF WIN32}
+function LaunchURL(var BrowserPath: string; const URL: string): boolean;
+
+// @abstract(@name returns the path for the default browser.)
+// @name only works under Windows.
+function DefaultBrowserPath: string;
+
+{ @abstract(@name is supposed to close a web browser but it is not reliable.)
+  The call to the method must be accomplished with
+  'IExplore' for the Internet Explorer,
+  'Netscape' for the Netscape Communicator and
+  'Opera' for the Opera.
+}
+procedure CloseBrowser(BrowserName: string);
+{$ENDIF}
+
+{$IFDEF WIN64}
 function LaunchURL(var BrowserPath: string; const URL: string): boolean;
 
 // @abstract(@name returns the path for the default browser.)
@@ -127,8 +146,11 @@ end;
 {$ENDIF}
 
 {$IFDEF WIN32}
-
 function GetAppName(Doc: string): string;
+{$ENDIF}
+{$IFDEF WIN64}
+function GetAppName(Doc: string): string;
+{$ENDIF}
 var
   FN, DN, RES: array[0..MAX_PATH] of char;
 begin
@@ -139,7 +161,12 @@ begin
   Result := StrPas(RES);
 end;
 
+{$IFDEF WIN32}
 function GetTempFile(const Extension: string): string;
+{$ENDIF}
+{$IFDEF WIN64}
+function GetTempFile(const Extension: string): string;
+{$ENDIF}
 var
 //  Buffer: PChar;
 //  Buffer: array[0..MAX_PATH] of char;
@@ -157,7 +184,12 @@ begin
 //  FreeMem(Buffer);
 end;
 
+{$IFDEF WIN32}
 function DefaultBrowserPath: string;
+{$ENDIF}
+{$IFDEF WIN64}
+function DefaultBrowserPath: string;
+{$ENDIF}
 var
   temp: string;
 //  f: System.Text;
@@ -196,7 +228,12 @@ begin
   end;
 end;
 
+{$IFDEF WIN32}
 function LaunchURL(var BrowserPath: string; const URL: string): boolean;
+{$ENDIF}
+{$IFDEF WIN64}
+function LaunchURL(var BrowserPath: string; const URL: string): boolean;
+{$ENDIF}
 begin
   Result := True;
   if BrowserPath = '' then
@@ -221,7 +258,12 @@ begin
   ShellExecute(0, 'open', PChar(BrowserPath), PChar(URL), nil, SW_SHOW);
 end;
 
+{$IFDEF WIN32}
 procedure CloseBrowser(BrowserName: string);
+{$ENDIF}
+{$IFDEF WIN64}
+procedure CloseBrowser(BrowserName: string);
+{$ENDIF}
 var
   DDE: TDDEClientConv;
 begin
@@ -244,7 +286,6 @@ begin
     DDE.Free;
   end;
 end;
-{$ENDIF}
 
 function FileNameToURL(const FileName: string): string;
 var
@@ -321,7 +362,7 @@ var
   Connection, URL: HINTERNET;
 //  AppName: string;
   Stream: TMemoryStream;
-  AmountRead: DWord;
+  AmountRead: DWORD;
 begin
   result := False;
   if InternetAttemptConnect(0) <> ERROR_SUCCESS then

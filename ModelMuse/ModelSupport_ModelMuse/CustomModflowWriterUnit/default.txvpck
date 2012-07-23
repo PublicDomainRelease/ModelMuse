@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="0amw08blpd4iofi_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientArrayWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientArrayWriter.EvaluateParameterDefinitions(Classes.TList,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientArrayWriter.UpdateLayerDisplay(ModflowCellUnit.TValueCellList,Classes.TList,System.Int32,ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientArrayWriter.FLayers" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientArrayWriter.UpdateLayerDataSet(Classes.TList,ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientArrayWriter.EvaluateParameterCells(ModflowCellUnit.TValueCellList,ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray,ModflowTransientListParameterUnit.TModflowTransientListParameter)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientArrayWriter.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientArrayWriter.Create(PhastModelUnit.TPhastModel)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientArrayWriter.WriteLayerSelection(ModflowCellUnit.TValueCellList,Classes.TList,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientArrayWriter.WriteLayerArray(Classes.TList,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientArrayWriter.WriteParameterDefinitions(System.String,System.String,System.String,System.String,System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientArrayWriter.WriteParameterCells(ModflowCellUnit.TValueCellList,System.Int32,System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientArrayWriter.Prefix()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientArrayWriter:CustomModflowWriterUnit.TCustomParameterTransientWriter" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CustomModflowWriterUnit.TNameFileWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TNameFileWriter.InitilizeNameFile(System.String,out@System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TNameFileWriter.SaveNameFile(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TNameFileWriter.ClearNameFile()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TNameFileWriter.Extension()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TNameFileWriter.CheckExternalFiles(System.String)" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:CustomModflowWriterUnit.TNameFileWriter:CustomModflowWriterUnit.TCustomModflowWriter" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CustomModflowWriterUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.WriteModPathBatchFile(PhastModelUnit.TProgramLocations,System.String,System.String,System.Boolean,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.WriteModflowBatchFile(PhastModelUnit.TProgramLocations,System.String,System.String,System.Boolean,Classes.TStrings,Classes.TStrings)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.AddOpenListFileLine(System.String,System.Boolean,Classes.TStringList,PhastModelUnit.TProgramLocations)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.NameFile" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.StrDATA" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.StrDATABINARY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.StrNoValueAssigned" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CustomModflowWriterUnit.TFileOption">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TFileOption.foOutput" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TFileOption.foInput" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TFileOption.foNone" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CustomModflowWriterUnit.TUpdateMethod">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TUpdateMethod.umAdd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TUpdateMethod.umAssign" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CustomModflowWriterUnit.TCheckValueMethod">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TCheckValueMethod.cvmLessThan" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TCheckValueMethod.cvmNotEqual" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TCheckValueMethod.cvmEqual" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TCheckValueMethod.cvmGreaterEqual" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TCheckValueMethod.cvmGreater" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TCheckValueMethod.cvmLessThanEqual" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CustomModflowWriterUnit.TErrorType">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TErrorType.etWarning" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TErrorType.etError" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.WriteConstantU2DREL(System.String,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.WriteConstantU2DINT(System.String,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.WriteCommentLine(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.WriteArray(DataSetUnit.TDataArray,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.NewLine()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.Create(PhastModelUnit.TPhastModel)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.CheckArray(DataSetUnit.TDataArray,System.Int32,System.String,CustomModflowWriterUnit.TCheckValueMethod,System.Double,CustomModflowWriterUnit.TErrorType)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.WriteTransient2DArray(System.String,System.Int32,RbwParser.TRbwDataType,System.Double,Classes.TList,ref@DataSetUnit.TDataArray,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.GetFlowUnitNumber(ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.IPRN_Real()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.IPRN_Integer()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.WriteCommentLines(Classes.TStrings)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.Extension()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.FileName(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.OpenFile(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.FreeFormattedReal(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.FixedFormattedReal(System.Double,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.FixedFormattedInteger(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.FortranDecimal(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.CloseFile()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.PhastModel[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.UpdateExportTime()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.WriteHeader(DataSetUnit.TDataArray,System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.FExportTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.FPhastModel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.FFileStream" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.AddNameFileComment(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.WriteToNameFile(System.String,System.Int32,System.String,CustomModflowWriterUnit.TFileOption,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.WriteU2DRELHeader(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.WriteU2DINTHeader(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.WriteIface(GoPhastTypes.TIface)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.WriteString(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.WriteInteger(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.WriteFloat(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomModflowWriter.WriteCrossSectionArray(DataSetUnit.TDataArray,System.String)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CustomModflowWriterUnit.TCustomPackageWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomPackageWriter.IdentifyZoneClusters(ref@System.Int32,ref@GoPhastTypes.TOneDIntegerArray,ref@Types.TBooleanDynArray,System.Int32,ModflowParameterUnit.TModflowSteadyParameter)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomPackageWriter.ExpandString(System.String,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomPackageWriter.UpdateCellDisplay(ModflowCellUnit.TValueCellList,Classes.TList,GoPhastTypes.TByteSet,ModflowTransientListParameterUnit.TModflowTransientListParameter,GoPhastTypes.TByteSet)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomPackageWriter.UpdateNotUsedDisplay(ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomPackageWriter.WriteDataSet0()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomPackageWriter.Package()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomPackageWriter.PackageID_Comment(ModflowPackageSelectionUnit.TModflowPackageSelection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomPackageWriter.SetTimeListsUpToDate(ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists)" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:CustomModflowWriterUnit.TCustomPackageWriter:CustomModflowWriterUnit.TCustomModflowWriter" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CustomModflowWriterUnit.TCustomSolverWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomSolverWriter.SolverFileGeneratedExternally()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:CustomModflowWriterUnit.TCustomSolverWriter:CustomModflowWriterUnit.TCustomPackageWriter" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CustomModflowWriterUnit.TCustomFlowPackageWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomFlowPackageWriter.FlowPackageFileGeneratedExternally()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:CustomModflowWriterUnit.TCustomFlowPackageWriter:CustomModflowWriterUnit.TCustomPackageWriter" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientWriter.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientWriter.Create(PhastModelUnit.TPhastModel)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientWriter.AssignTransient2DArray(ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray,System.Int32,Classes.TList,System.Double,RbwParser.TRbwDataType,CustomModflowWriterUnit.TUpdateMethod)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientWriter.InitializeDisplayArray(ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientWriter.UpdateTransient2DArray(ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray,Classes.TList)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientWriter.Values[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientWriter.Evaluate()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientWriter.FValues" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:CustomModflowWriterUnit.TCustomTransientWriter:CustomModflowWriterUnit.TCustomPackageWriter" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.ParamValues[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.Create(PhastModelUnit.TPhastModel)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.WriteParameterDefinitions(System.String,System.String,System.String,System.String,System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.WriteParameterCells(ModflowCellUnit.TValueCellList,System.Int32,System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.ParameterType()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.ParameterCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.RetrieveParametersForStressPeriod(System.String,System.String,System.Int32,Classes.TStringList,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.Evaluate()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.GetInstanceRoot(System.String,Classes.TList,ref@System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.GetInstanceName(ref@System.String,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.WriteStressPeriods(System.String,System.String,System.String,System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.GetBoundary(ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.GetNumCellsAndNumInstances(Classes.TList,ref@System.Int32,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.CellType()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter.FParamValues" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:CustomModflowWriterUnit.TCustomParameterTransientWriter:CustomModflowWriterUnit.TCustomTransientWriter" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CustomModflowWriterUnit.TCustomListWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomListWriter.WriteParameterDefinitions(System.String,System.String,System.String,System.String,System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomListWriter.WriteCell(ModflowCellUnit.TValueCell,System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomListWriter.GetOption(ref@System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomListWriter.CountParametersAndParameterCells(ref@System.Int32,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomListWriter.CountCells(ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomListWriter.UpdateDisplay(ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists,GoPhastTypes.TByteSet)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TCustomListWriter.WriteStressPeriods(System.String,System.String,System.String,System.String,System.String)" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:CustomModflowWriterUnit.TCustomListWriter:CustomModflowWriterUnit.TCustomParameterTransientWriter" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:CustomModflowWriterUnit.TFluxObsWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TFluxObsWriter.WriteObservationCells(Classes.TList,Classes.TList,ref@RbwParser.TExpression,Classes.TStringList,Classes.TList,ScreenObjectUnit.TScreenObject,FluxObservationUnit.TObservationFactor)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TFluxObsWriter.WriteObservationCell(ModflowCellUnit.TValueCell,Classes.TStringList,ref@RbwParser.TExpression,Classes.TList,Classes.TList,FluxObservationUnit.TObservationFactor)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TFluxObsWriter.WriteZeroConductanceCell(ModflowCellUnit.TValueCell,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TFluxObsWriter.WriteFluxObsFile(System.String,System.String,System.String,System.String,System.String,System.String,FluxObservationUnit.TFluxObservationGroups,GoPhastTypes.TObservationPurpose)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TFluxObsWriter.WriteObservationDataSet5(Classes.TStringList,FluxObservationUnit.TFluxObservationGroup,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TFluxObsWriter.WriteObservationDataSet4(FluxObservationUnit.TFluxObservationGroup,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TFluxObsWriter.ObservationOutputFileName(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TFluxObsWriter.ObservationFileName(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TFluxObsWriter.ObservationOutputExtension()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TFluxObsWriter.ObservationExtension()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:CustomModflowWriterUnit.TFluxObsWriter.ObservationPackage()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:CustomModflowWriterUnit.TFluxObsWriter:CustomModflowWriterUnit.TCustomListWriter" />
+    </reference>
+  </view>
+</nodeSet>

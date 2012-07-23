@@ -615,7 +615,7 @@ begin
   inherited;
   SpacingGridTool.FSettingSpacing := False;
   SpacingGridTool.Layer32.Changed;
-  SpacingGridTool.View.ZoomBox.Image32.Invalidate;
+  SpacingGridTool.View.ZoomBox.InvalidateImage32;
 
 end;
 
@@ -635,9 +635,7 @@ procedure TfrmSetSpacing.FormDestroy(Sender: TObject);
 begin
   inherited;
   SpacingGridTool.FSettingSpacing := False;
-  frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-  frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
-  frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
+  frmGoPhast.InvalidateImage32AllViews;
 end;
 
 procedure TfrmSetSpacing.rdeChange(Sender: TObject);
@@ -668,8 +666,8 @@ begin
       SpacingGridTool.FFirstSpacingColumn := seCol1.AsInteger - 1;
     end;
     SpacingGridTool.Layer32.Changed;
-    frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-    frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+    frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -691,8 +689,8 @@ begin
       SpacingGridTool.FLastSpacingColumn := seCol2.AsInteger - 1;
     end;
     SpacingGridTool.Layer32.Changed;
-    frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-    frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+    frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -714,8 +712,8 @@ begin
       SpacingGridTool.FFirstSpacingRow := seRow1.AsInteger - 1;
     end;
     SpacingGridTool.Layer32.Changed;
-    frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-    frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+    frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -737,8 +735,8 @@ begin
       SpacingGridTool.FLastSpacingRow := seRow2.AsInteger - 1;
     end;
     SpacingGridTool.Layer32.Changed;
-    frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-    frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+    frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -760,8 +758,8 @@ begin
       SpacingGridTool.FFirstSpacingLayer := seLayer1.AsInteger - 1;
     end;
     SpacingGridTool.Layer32.Changed;
-    frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
-    frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
+    frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -783,8 +781,8 @@ begin
       SpacingGridTool.FLastSpacingLayer := seLayer2.AsInteger - 1;
     end;
     SpacingGridTool.Layer32.Changed;
-    frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
-    frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
+    frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -859,7 +857,7 @@ begin
         begin
           FLastSpacingColumn := Column;
           FLastSpacingRow := Row;
-          ZoomBox.Image32.Invalidate;
+          ZoomBox.InvalidateImage32;
         end;
       end;
     vdFront:
@@ -869,7 +867,7 @@ begin
         begin
           FLastSpacingLayer := Layer;
           FLastSpacingColumn := Column;
-          ZoomBox.Image32.Invalidate;
+          ZoomBox.InvalidateImage32;
         end;
       end;
     vdSide:
@@ -879,7 +877,7 @@ begin
         begin
           FLastSpacingLayer := Layer;
           FLastSpacingRow := Row;
-          ZoomBox.Image32.Invalidate;
+          ZoomBox.InvalidateImage32;
         end;
       end;
   else

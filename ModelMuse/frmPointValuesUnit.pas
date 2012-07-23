@@ -320,7 +320,7 @@ begin
     vdSide:
       ZoomBox := frmGoPhast.frameSideView.ZoomBox;
   end;
-  ZoomBox.Image32.Invalidate;
+  ZoomBox.InvalidateImage32;
 end;
 
 end.

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="zql7bp2vp73rwxm_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmPixelPointUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmPixelPointUnit.TfrmPixelPoint">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPixelPointUnit.TfrmPixelPoint.GetData(GoPhastTypes.TViewDirection,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPixelPointUnit.TfrmPixelPoint.SetData()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPixelPointUnit.TfrmPixelPoint.FPixelY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPixelPointUnit.TfrmPixelPoint.FPixelX" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPixelPointUnit.TfrmPixelPoint.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPixelPointUnit.TfrmPixelPoint.rdeY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPixelPointUnit.TfrmPixelPoint.rdeX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPixelPointUnit.TfrmPixelPoint.lblY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPixelPointUnit.TfrmPixelPoint.lblX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPixelPointUnit.TfrmPixelPoint.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPixelPointUnit.TfrmPixelPoint.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPixelPointUnit.TfrmPixelPoint.btnCancel" />
+    </reference>
+  </view>
+</nodeSet>

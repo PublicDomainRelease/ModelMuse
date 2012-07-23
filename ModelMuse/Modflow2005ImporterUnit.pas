@@ -46,6 +46,11 @@ uses ModflowGridUnit, AbstractGridUnit, ScreenObjectUnit, GoPhastTypes,
   HufDefinition, FluxObservationUnit, ModflowMnw2Unit, ModflowSubsidenceDefUnit,
   ModflowHydmodUnit, ContourExport, ModelMuseUtilities;
 
+resourcestring
+  StrErrorInSPackage = 'Error in %s package input. In the first stress perio' +
+  'd, you can not reuse data from a previous stress period.';
+  StrRecharge = 'Recharge';
+
 var
   DummyInteger: integer;
   DummyDouble: Double;
@@ -8295,8 +8300,8 @@ var
   InnerBoundaryIndex: Integer;
   AnotherBoundary: TLocation;
   ACount: integer;
-  RowIndex: Integer;
-  ColIndex: Integer;
+//  RowIndex: Integer;
+//  ColIndex: Integer;
   procedure InitializeTestArray;
   var
     RowIndex: Integer;
@@ -11298,6 +11303,18 @@ begin
     RchBoundary := ScreenObject.ModflowRchBoundary;
     RchItem := nil;
     LayerItem := nil;
+    if FReuseRecharge[0] then
+    begin
+      Beep;
+      MessageDlg(Format(StrErrorInSPackage, [StrRecharge]), mtError, [mbOK], 0);
+      Exit;
+    end;
+    if FRchPackage.TimeVaryingLayers and FReuseLayerIndicator[0] then
+    begin
+      Beep;
+      MessageDlg(Format(StrErrorInSPackage, [StrRecharge]), mtError, [mbOK], 0);
+      Exit;
+    end;
     for StressPeriodIndex := 0 to FModel.ModflowStressPeriods.Count - 1 do
     begin
       NewItemNeeded := not FReuseRecharge[StressPeriodIndex];
@@ -12680,6 +12697,8 @@ begin
   Assert(FCurrentSegment.NSEG = SEGNUM);
   Read(FImporter.FFile, NUMVAL);
   SetLength(FCurrentSegment.InflowValues, NUMVAL);
+  // reading IUNIT here isn't required. In the future, if another variable
+  // follows IUNIT, reading IUNIT would be required.
   Read(FImporter.FFile, IUNIT);
   readln(FImporter.FFile);
   for ValIndex := 0 to NUMVAL - 1 do
@@ -15020,7 +15039,7 @@ var
   LakeIdDataArray: TDataArray;
   DataArrayIndex: Integer;
   ExternalLakeTable: TExternalLakeTable;
-  ExternalLakeUnitNumber: Integer;
+//  ExternalLakeUnitNumber: Integer;
   LakeTable: TLakeTable;
   LineIndex: Integer;
   LakeBathItem: TLakeTableItem;
@@ -16823,6 +16842,18 @@ begin
         // TScreenObjects and assign the formulas for those
         // stress periods using the appropriate multiplier arrays.
 
+//        if FEtsPackage[0] then
+//        begin
+//          Beep;
+//          MessageDlg(Format(StrErrorInSPackage, [StrRecharge]), mtError, [mbOK], 0);
+//          Exit;
+//        end;
+//        if FRchPackage.TimeVaryingLayers and FReuseLayerIndicator[0] then
+//        begin
+//          Beep;
+//          MessageDlg(Format(StrErrorInSPackage, [StrRecharge]), mtError, [mbOK], 0);
+//          Exit;
+//        end;
         // Loop over stress periods
         for StressPeriodIndex := 0 to FStressPeriods.ArrayLength - 1 do
         begin
@@ -16993,8 +17024,8 @@ end;
 procedure TEtsImporter.ReadData(const ALabel: string);
 var
   Handled: Boolean;
-  IETSCB: integer;
-  NPETS: integer;
+//  IETSCB: integer;
+//  NPETS: integer;
   INETSS: integer;
   INETSR: integer;
   INETSX: integer;
@@ -18267,8 +18298,8 @@ end;
 
 procedure TUzfImporter.ReadData(const ALabel: string);
 var
-  IUZFCB1: integer;
-  IUZFCB2: integer;
+//  IUZFCB1: integer;
+//  IUZFCB2: integer;
   Gage: TUzfGage;
   nuzf1: integer;
   nuzf2: integer;

@@ -11,7 +11,7 @@
 
   Other References:
   Zhu, J.Z., Zienkiewciz, O.C. Hinton, E. and Wu, J. 1991. A new approach to
-  the development of autmatic quadrilateral mesh generation. International
+  the development of automatic quadrilateral mesh generation. International
   Journal for Numerical Methods in Engineering. Vol: 849-866.
 
   Giuliani, S. 1982. An algorithm for continuous rezoning of the hydrodynamic
@@ -125,7 +125,7 @@ Type
     function NodesToInsert: integer;
     // @name reverses the direction of this @classname including inserted nodes.
     procedure Reverse;
-    // @name creates a @classname and inserts itelf on the
+    // @name creates a @classname and inserts itself on the
     // @link(TNode.FSegments) of @link(Node1) and @link(Node2).
     constructor Create(Node1, Node2: TNode; SegmentType: TSegmentType;
       Boundary: TBoundary; QuadMeshCreator: TQuadMeshCreator);
@@ -298,7 +298,7 @@ Type
     // If there is more than one boundary, @name joins them together to convert
     // them to a single boundary.
     procedure MakeSingleBoundary;
-    // @name sets the @link(TNode.FNodeType) of the @link@TNodes)s in the
+    // @name sets the @link(TNode.FNodeType) of the @link(TNode)s in the
     // outermost boundary to ntEdge and for the others to ntSubDomain.
     procedure SetNodeTypes;
     procedure AssignOriginalEdgeAngles;

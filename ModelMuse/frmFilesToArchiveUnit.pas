@@ -5,12 +5,11 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ExtCtrls, JvExStdCtrls,
-  JvRichEdit, UndoItems, StrUtils, JvExControls, JvLinkLabel;
+  UndoItems, StrUtils, JvExControls, JvLinkLabel, Vcl.ComCtrls;
 
 type
   TfrmFilesToArchive = class(TfrmCustomGoPhast)
     pnlBottom: TPanel;
-    reFilesToSave: TJvRichEdit;
     btnCancel: TBitBtn;
     btnOK: TBitBtn;
     btnHelp: TBitBtn;
@@ -19,6 +18,7 @@ type
     btnAddFiles: TButton;
     odAddFiles: TOpenDialog;
     JvLinkLabel1: TJvLinkLabel;
+    reFilesToSave: TRichEdit;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
@@ -158,33 +158,70 @@ begin
   OriginalStart := reFilesToSave.SelStart;
   OriginalLength := reFilesToSave.SelLength;
   try
-    reFilesToSave.SetSelection(0,MAXINT,False);
+    reFilesToSave.SelStart := 0;
+    reFilesToSave.SelLength := MaxInt;
+//    reFilesToSave.SetSelection(0,MAXINT,False);
     SelText := reFilesToSave.SelText;
-    reFilesToSave.SelAttributes.BackColor := clWindow;
-    StartPosition := 1;
+    reFilesToSave.SelAttributes.Color := clBlack;
+    StartPosition := 0;
     EndPosition := Pos(EndLine, SelText);
     while EndPosition >= 1 do
     begin
-      reFilesToSave.SetSelection(StartPosition-1,EndPosition-1,False);
+      reFilesToSave.SelStart := StartPosition;
+      reFilesToSave.SelLength := EndPosition-1;
       FileName := Trim(reFilesToSave.SelText);
       if not FileExists(FileName) then
       begin
-        reFilesToSave.SelAttributes.BackColor := clRed;
+        reFilesToSave.SelAttributes.Color := clRed;
       end;
-      StartPosition := EndPosition+1;
-      EndPosition := PosEx(EndLine, SelText, StartPosition);
+      StartPosition := EndPosition;
+      EndPosition := PosEx(EndLine, SelText, StartPosition+1);
     end;
-    
-    reFilesToSave.SetSelection(StartPosition-1,MAXINT,False);
+
+    reFilesToSave.SelStart := StartPosition;
+    reFilesToSave.SelLength := MAXINT;
     FileName := Trim(reFilesToSave.SelText);
     if not FileExists(FileName) then
     begin
-      reFilesToSave.SelAttributes.BackColor := clRed;
+      reFilesToSave.SelAttributes.Color := clRed;
     end;
   finally
     reFilesToSave.SelStart := OriginalStart;
     reFilesToSave.SelLength := OriginalLength;
   end;
+
+// Use for TJvRichEdit
+
+//  OriginalStart := reFilesToSave.SelStart;
+//  OriginalLength := reFilesToSave.SelLength;
+//  try
+//    reFilesToSave.SetSelection(0,MAXINT,False);
+//    SelText := reFilesToSave.SelText;
+//    reFilesToSave.SelAttributes.BackColor := clWindow;
+//    StartPosition := 1;
+//    EndPosition := Pos(EndLine, SelText);
+//    while EndPosition >= 1 do
+//    begin
+//      reFilesToSave.SetSelection(StartPosition-1,EndPosition-1,False);
+//      FileName := Trim(reFilesToSave.SelText);
+//      if not FileExists(FileName) then
+//      begin
+//        reFilesToSave.SelAttributes.BackColor := clRed;
+//      end;
+//      StartPosition := EndPosition+1;
+//      EndPosition := PosEx(EndLine, SelText, StartPosition);
+//    end;
+//
+//    reFilesToSave.SetSelection(StartPosition-1,MAXINT,False);
+//    FileName := Trim(reFilesToSave.SelText);
+//    if not FileExists(FileName) then
+//    begin
+//      reFilesToSave.SelAttributes.BackColor := clRed;
+//    end;
+//  finally
+//    reFilesToSave.SelStart := OriginalStart;
+//    reFilesToSave.SelLength := OriginalLength;
+//  end;
 end;
 
 procedure TfrmFilesToArchive.reFilesToSaveChange(Sender: TObject);

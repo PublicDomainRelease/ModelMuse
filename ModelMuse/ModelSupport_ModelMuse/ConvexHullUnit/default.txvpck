@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="j3myadcppqr3doo_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ConvexHullUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ConvexHullUnit.ConvexHull2(FastGEO.TPolygon2D,out@System.Int32,out@FastGEO.TPolygon2D,FastGEO.TFloat)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ConvexHullUnit.ConvexHull(FastGEO.TPolygon2D,out@FastGEO.TPolygon2D,FastGEO.TFloat)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ConvexHullUnit.CreateHull(FastGEO.TPolygon2D,out@FastGEO.TPolygon2D,Classes.TList,Classes.TList,FastGEO.TFloat)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ConvexHullUnit.DuplicatePoint(Classes.TList,FastGEO.TFloat)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ConvexHullUnit.RightTurnOrStraight(Classes.TList,FastGEO.TFloat)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ConvexHullUnit.EpsilonOrientation(FastGEO.TPoint2D,FastGEO.TPoint2D,FastGEO.TPoint2D,FastGEO.TFloat)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ConvexHullUnit.EpsilonOrientation(FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ConvexHullUnit.ComparePoints(System.Pointer,System.Pointer)" />
+    </reference>
+  </view>
+</nodeSet>

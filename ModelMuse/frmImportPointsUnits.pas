@@ -1247,7 +1247,7 @@ var
   AZ2Col: integer;
   ColIndex: integer;
   ExistingObjectCount: integer;
-  LastValue: string;
+//  LastValue: string;
   ElevValues1: TValueArrayStorage;
   ElevValues2: TValueArrayStorage;
   Item: TValueArrayItem;
@@ -1255,7 +1255,7 @@ var
   FirstPoint: Boolean;
   PointCount: Integer;
   InvalidRow: Boolean;
-  BV: TCustomMF_ListBoundColl;
+//  BV: TCustomMF_ListBoundColl;
   NewScreenObject: Boolean;
   ValueListIndex: Integer;
   VList: TValueArrayStorage;
@@ -1515,6 +1515,7 @@ begin
                   Layer := StrToInt(dgData.Cells[AZ1Col, RowIndex])-1;
                   ACell := Grid.TopContainingCell(APoint,
                     TEvaluatedAt(rgEvaluatedAt.ItemIndex));
+                  Elevation1 := 0;
                   case TEvaluatedAt(rgEvaluatedAt.ItemIndex) of
                     eaBlocks:
                       begin

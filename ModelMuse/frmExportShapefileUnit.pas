@@ -145,7 +145,7 @@ var
 begin
   { TODO : Nearly the same code is use in TfrmFormulaUnit, TFrmGridColor,
   TfrmScreenObjectProperties, and TfrmDataSets. Find a way to combine them. }
-  SelectedDataArray := frmGoPhast.Grid.ThreeDDataSet;
+  SelectedDataArray := frmGoPhast.PhastModel.ThreeDDataSet;
   if SelectedDataArray = nil then
   begin
     SelectedName := '';
@@ -1743,7 +1743,7 @@ var
   EdgeEdit: TEdgeDisplayEdit;
   DataArrayManager: TDataArrayManager;
 begin
-  SelectedDataArray := frmGoPhast.Grid.ThreeDDataSet;
+  SelectedDataArray := frmGoPhast.PhastModel.ThreeDDataSet;
   SelectedTimeList := frmGoPhast.PhastModel.ThreeDTimeList;
 
   PhastBoundaryRootNode := tvExportItems.Items.AddChild(nil,

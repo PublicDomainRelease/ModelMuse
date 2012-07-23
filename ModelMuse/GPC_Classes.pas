@@ -34,7 +34,8 @@ type
     property Vertices[ContourIndex, VertexIndex: integer]: Tgpc_vertex
       read GetVertices write SetVertices;
     Constructor Create;
-    Constructor CreateFromOperation(Operation: Tgpc_op; Subject, Clip: TGpcPolygonClass);
+    Constructor CreateFromOperation(Operation: Tgpc_op;
+      Subject, Clip: TGpcPolygonClass);
     Destructor Destroy; override;
     procedure ReadFromFile(FileName: string; ReadHoles: boolean);
     procedure WriteToFile(FileName: string; WriteHoles: boolean);

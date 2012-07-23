@@ -13,13 +13,13 @@ inherited frmFormula: TfrmFormula
   Position = poOwnerFormCenter
   ExplicitWidth = 787
   ExplicitHeight = 508
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 16
   object Splitter: TSplitter
     Left = 539
     Top = 0
     Width = 5
-    Height = 433
+    Height = 422
     OnCanResize = SplitterCanResize
     ExplicitLeft = 476
     ExplicitHeight = 361
@@ -28,7 +28,7 @@ inherited frmFormula: TfrmFormula
     Left = 0
     Top = 0
     Width = 539
-    Height = 433
+    Height = 422
     Align = alLeft
     ParentColor = True
     TabOrder = 0
@@ -49,14 +49,14 @@ inherited frmFormula: TfrmFormula
     end
     object pnlButtons: TPanel
       Left = 1
-      Top = 199
+      Top = 188
       Width = 537
       Height = 233
       HelpType = htKeyword
       HelpKeyword = 'Number_and_Operator_Buttons'
       Align = alBottom
       ParentColor = True
-      TabOrder = 0
+      TabOrder = 2
       object gbLogicalOperators: TGroupBox
         Left = 8
         Top = 6
@@ -74,7 +74,7 @@ inherited frmFormula: TfrmFormula
           Caption = 'OR'
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 6
+          TabOrder = 3
           OnClick = buttonClick
         end
         object btnAnd: TButton
@@ -88,7 +88,7 @@ inherited frmFormula: TfrmFormula
           Caption = 'AND'
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 5
+          TabOrder = 2
           OnClick = buttonClick
         end
         object btnNot: TButton
@@ -101,7 +101,7 @@ inherited frmFormula: TfrmFormula
           Caption = 'NOT'
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 11
+          TabOrder = 6
           OnClick = buttonClick
         end
         object btnNotEqual: TButton
@@ -114,7 +114,7 @@ inherited frmFormula: TfrmFormula
           Caption = '<>'
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 0
+          TabOrder = 1
           OnClick = buttonClick
         end
         object btnEquals: TButton
@@ -128,7 +128,7 @@ inherited frmFormula: TfrmFormula
           Caption = '='
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 8
+          TabOrder = 0
           OnClick = buttonClick
         end
         object btnGreaterThan: TButton
@@ -141,7 +141,7 @@ inherited frmFormula: TfrmFormula
           Caption = '>'
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 1
+          TabOrder = 4
           OnClick = buttonClick
         end
         object btnLessThan: TButton
@@ -153,7 +153,7 @@ inherited frmFormula: TfrmFormula
           Caption = '<'
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 2
+          TabOrder = 5
           OnClick = buttonClick
         end
         object btnTrue: TButton
@@ -163,7 +163,7 @@ inherited frmFormula: TfrmFormula
           Height = 37
           Margins.Left = 8
           Caption = 'True'
-          TabOrder = 9
+          TabOrder = 10
           OnClick = buttonClick
         end
         object btnFalse: TButton
@@ -172,7 +172,7 @@ inherited frmFormula: TfrmFormula
           Width = 63
           Height = 37
           Caption = 'False'
-          TabOrder = 10
+          TabOrder = 11
           OnClick = buttonClick
         end
         object btnLessEquals: TButton
@@ -184,7 +184,7 @@ inherited frmFormula: TfrmFormula
           Caption = '<='
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 4
+          TabOrder = 9
           OnClick = buttonClick
         end
         object btnGreaterOrEquals: TButton
@@ -197,7 +197,7 @@ inherited frmFormula: TfrmFormula
           Caption = '>='
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 3
+          TabOrder = 8
           OnClick = buttonClick
         end
         object btnXor: TButton
@@ -219,7 +219,7 @@ inherited frmFormula: TfrmFormula
         Width = 150
         Height = 66
         Caption = 'Integer operators'
-        TabOrder = 1
+        TabOrder = 3
         object btnMod: TButton
           Left = 8
           Top = 20
@@ -254,7 +254,7 @@ inherited frmFormula: TfrmFormula
         Width = 156
         Height = 196
         Caption = 'Numbers'
-        TabOrder = 2
+        TabOrder = 1
         object btn7: TButton
           Left = 8
           Top = 20
@@ -292,7 +292,7 @@ inherited frmFormula: TfrmFormula
           Width = 41
           Height = 37
           Caption = '6'
-          TabOrder = 3
+          TabOrder = 5
           OnClick = buttonClick
         end
         object btn5: TButton
@@ -301,7 +301,7 @@ inherited frmFormula: TfrmFormula
           Width = 41
           Height = 37
           Caption = '5'
-          TabOrder = 7
+          TabOrder = 4
           OnClick = buttonClick
         end
         object btn4: TButton
@@ -311,7 +311,7 @@ inherited frmFormula: TfrmFormula
           Height = 37
           Margins.Left = 8
           Caption = '4'
-          TabOrder = 10
+          TabOrder = 3
           OnClick = buttonClick
         end
         object btn1: TButton
@@ -321,7 +321,7 @@ inherited frmFormula: TfrmFormula
           Height = 37
           Margins.Left = 8
           Caption = '1'
-          TabOrder = 5
+          TabOrder = 6
           OnClick = buttonClick
         end
         object btn2: TButton
@@ -330,7 +330,7 @@ inherited frmFormula: TfrmFormula
           Width = 41
           Height = 37
           Caption = '2'
-          TabOrder = 6
+          TabOrder = 7
           OnClick = buttonClick
         end
         object btn3: TButton
@@ -349,7 +349,7 @@ inherited frmFormula: TfrmFormula
           Height = 37
           Margins.Left = 8
           Caption = '0'
-          TabOrder = 4
+          TabOrder = 9
           OnClick = buttonClick
         end
         object btnE: TButton
@@ -358,7 +358,7 @@ inherited frmFormula: TfrmFormula
           Width = 41
           Height = 37
           Caption = 'E'
-          TabOrder = 9
+          TabOrder = 10
           OnClick = buttonClick
         end
         object btnDecimal: TButton
@@ -377,7 +377,7 @@ inherited frmFormula: TfrmFormula
         Width = 104
         Height = 195
         Caption = 'Operators'
-        TabOrder = 3
+        TabOrder = 2
         object btnOpenParen: TButton
           Left = 8
           Top = 20
@@ -410,7 +410,7 @@ inherited frmFormula: TfrmFormula
           Caption = '/'
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 2
+          TabOrder = 3
           OnClick = buttonClick
         end
         object btnMultiply: TButton
@@ -423,7 +423,7 @@ inherited frmFormula: TfrmFormula
           Caption = '*'
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 3
+          TabOrder = 2
           OnClick = buttonClick
         end
         object btnPlus: TButton
@@ -436,7 +436,7 @@ inherited frmFormula: TfrmFormula
           Caption = '+'
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 6
+          TabOrder = 4
           OnClick = buttonClick
         end
         object btnMinus: TButton
@@ -448,7 +448,7 @@ inherited frmFormula: TfrmFormula
           Caption = '-'
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 7
+          TabOrder = 5
           OnClick = buttonClick
         end
         object btnComma: TButton
@@ -458,7 +458,7 @@ inherited frmFormula: TfrmFormula
           Height = 37
           Hint = 'Comma'
           Caption = ', '
-          TabOrder = 4
+          TabOrder = 7
           OnClick = buttonClick
         end
         object btnQuote: TButton
@@ -469,7 +469,7 @@ inherited frmFormula: TfrmFormula
           Hint = 'Quote'
           Margins.Left = 8
           Caption = '"'
-          TabOrder = 5
+          TabOrder = 6
           OnClick = buttonClick
         end
       end
@@ -483,22 +483,21 @@ inherited frmFormula: TfrmFormula
       Align = alTop
       Indent = 19
       ReadOnly = True
-      TabOrder = 1
+      TabOrder = 0
       OnCollapsed = tvFormulaDiagramCollapsed
       OnExpanded = tvFormulaDiagramExpanded
     end
-    object jreFormula: TJvRichEdit
+    object jreFormula: TRichEdit
       Left = 1
       Top = 108
       Width = 537
-      Height = 91
+      Height = 80
       Hint = 'Type formula here'
       HelpType = htKeyword
       HelpKeyword = 'Formula_Text_Box'
       Align = alClient
-      HideSelection = False
       ScrollBars = ssVertical
-      TabOrder = 2
+      TabOrder = 1
       OnChange = jreFormulaChange
       OnDblClick = jreFormulaDblClick
       OnMouseUp = jreFormulaMouseUp
@@ -507,36 +506,33 @@ inherited frmFormula: TfrmFormula
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 433
-    Width = 779
+    Top = 422
+    Width = 769
     Height = 41
     Align = alBottom
     ParentColor = True
-    TabOrder = 1
+    TabOrder = 2
     DesignSize = (
-      779
+      769
       41)
     object btnCancel: TBitBtn
-      Left = 676
-      Top = 5
+      Left = 665
+      Top = 4
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 2
+      TabOrder = 3
     end
     object btnOK: TBitBtn
-      Left = 580
-      Top = 5
+      Left = 570
+      Top = 4
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
       Caption = 'OK'
       Default = True
-      DoubleBuffered = True
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         04000000000068010000120B0000120B00001000000010000000000000000000
@@ -555,33 +551,29 @@ inherited frmFormula: TfrmFormula
         333A333333333333333338330000333333333333333333333333333333333333
         0000}
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 1
+      TabOrder = 2
       OnClick = btnOKClick
     end
     object btnHelp: TBitBtn
-      Left = 484
-      Top = 5
+      Left = 473
+      Top = 4
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 0
+      TabOrder = 1
       OnClick = btnHelpClick
     end
     object btnFunctionHelp: TBitBtn
-      Left = 314
-      Top = 5
+      Left = 303
+      Top = 4
       Width = 163
       Height = 33
       HelpType = htKeyword
       HelpKeyword = 'Function_Help_Button'
       Anchors = [akTop, akRight]
       Caption = '&Function help'
-      DoubleBuffered = True
       Enabled = False
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
@@ -601,24 +593,23 @@ inherited frmFormula: TfrmFormula
         E333333333388FFFFF8333330000333333333333333333333333388888333333
         0000}
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 3
+      TabOrder = 0
       OnClick = btnFunctionHelpClick
     end
   end
   object pnlRight: TPanel
     Left = 544
     Top = 0
-    Width = 235
-    Height = 433
+    Width = 225
+    Height = 422
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
-    TabOrder = 2
+    TabOrder = 1
     object pnlLabelItemTree: TPanel
       Left = 0
       Top = 0
-      Width = 235
+      Width = 225
       Height = 41
       Align = alTop
       ParentColor = True
@@ -627,21 +618,19 @@ inherited frmFormula: TfrmFormula
         AlignWithMargins = True
         Left = 4
         Top = 4
-        Width = 227
-        Height = 33
+        Width = 193
+        Height = 16
         Align = alClient
         Alignment = taCenter
         Caption = 'Double-click to insert into formula'
         WordWrap = True
-        ExplicitWidth = 193
-        ExplicitHeight = 16
       end
     end
     object tvItems: TTreeView
       Left = 0
       Top = 41
-      Width = 235
-      Height = 392
+      Width = 225
+      Height = 381
       Hint = 'Double-click to insert selected item into formula'
       HelpType = htKeyword
       HelpKeyword = 'List_of_Data_Sets_and_Function'

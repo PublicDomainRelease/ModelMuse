@@ -1,60 +1,57 @@
 inherited frmSelectedObjects: TfrmSelectedObjects
   Left = 554
   Top = 516
-  Width = 220
+  Width = 231
   HelpType = htKeyword
   HelpKeyword = 'Selected_Objects_Dialog_Box'
   VertScrollBar.Range = 41
   ActiveControl = lbSelected
   Caption = 'Selected Objects'
   Position = poDesigned
-  ExplicitWidth = 220
-  ExplicitHeight = 274
-  PixelsPerInch = 96
+  ExplicitWidth = 231
+  ExplicitHeight = 271
+  PixelsPerInch = 120
   TextHeight = 18
   object lbSelected: TListBox
     Left = 0
     Top = 0
-    Width = 212
-    Height = 188
+    Width = 213
+    Height = 180
     Align = alClient
-    ItemHeight = 17
+    ItemHeight = 18
     TabOrder = 0
+    ExplicitWidth = 202
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 188
-    Width = 212
+    Top = 180
+    Width = 213
     Height = 46
     Align = alBottom
     ParentColor = True
     TabOrder = 1
-    ExplicitTop = 194
+    ExplicitWidth = 202
     DesignSize = (
-      212
+      213
       46)
     object btnClose: TBitBtn
-      Left = 115
+      Left = 110
       Top = 6
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkClose
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
     end
     object btnHelp: TBitBtn
-      Left = 20
+      Left = 15
       Top = 6
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end

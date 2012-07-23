@@ -16,6 +16,8 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
       Caption = 'Basic'
       ExplicitLeft = 8
       ExplicitTop = 28
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         468
         331)
@@ -172,6 +174,10 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         468
         331)

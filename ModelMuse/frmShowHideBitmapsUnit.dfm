@@ -1,55 +1,59 @@
 inherited frmShowHideBitmaps: TfrmShowHideBitmaps
   Left = 546
   Top = 310
-  Width = 455
+  Width = 482
   HelpType = htKeyword
   HelpKeyword = 'Show_or_Hide_Bitmaps_Dialog_Box'
   VertScrollBar.Range = 45
   ActiveControl = clbBitmaps
   Caption = 'Show or Hide Images'
-  ExplicitWidth = 455
-  ExplicitHeight = 274
-  PixelsPerInch = 96
-  TextHeight = 17
+  ExplicitWidth = 482
+  ExplicitHeight = 271
+  PixelsPerInch = 120
+  TextHeight = 18
   object clbBitmaps: TCheckListBox
     Left = 0
     Top = 0
-    Width = 447
-    Height = 195
+    Width = 464
+    Height = 181
     OnClickCheck = clbBitmapsClickCheck
     Align = alClient
-    ItemHeight = 17
+    ItemHeight = 18
     TabOrder = 0
+    ExplicitWidth = 437
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 195
-    Width = 447
+    Top = 181
+    Width = 464
     Height = 45
     Align = alBottom
     ParentColor = True
     TabOrder = 1
+    ExplicitWidth = 437
     DesignSize = (
-      447
+      464
       45)
     object btnClose: TBitBtn
-      Left = 363
+      Left = 366
       Top = 6
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 0
       Kind = bkClose
+      NumGlyphs = 2
+      TabOrder = 4
     end
     object btnHelp: TBitBtn
-      Left = 274
+      Left = 277
       Top = 6
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 1
-      OnClick = btnHelpClick
       Kind = bkHelp
+      NumGlyphs = 2
+      TabOrder = 3
+      OnClick = btnHelpClick
     end
     object btnShowAll: TButton
       Left = 8
@@ -57,7 +61,7 @@ inherited frmShowHideBitmaps: TfrmShowHideBitmaps
       Width = 75
       Height = 33
       Caption = 'Show all'
-      TabOrder = 2
+      TabOrder = 0
       OnClick = btnShowClick
     end
     object btnShowNone: TButton
@@ -66,7 +70,7 @@ inherited frmShowHideBitmaps: TfrmShowHideBitmaps
       Width = 97
       Height = 33
       Caption = 'Show none'
-      TabOrder = 3
+      TabOrder = 1
       OnClick = btnShowClick
     end
     object btnToggle: TButton
@@ -75,7 +79,7 @@ inherited frmShowHideBitmaps: TfrmShowHideBitmaps
       Width = 75
       Height = 33
       Caption = 'Toggle'
-      TabOrder = 4
+      TabOrder = 2
       OnClick = btnToggleClick
     end
   end

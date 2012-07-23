@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="c6mkc24ppz0pdus_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmTimeControlUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.SortTimes(System.Pointer,System.Pointer)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.LayoutMultiRowEditControl()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.CheckTimes()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.dgTimeSetEditText(System.Object,System.Int32,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.rdeLengthChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.dgTimeMouseUp(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.dgTimeMouseDown(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.dgTimeHorizontalScroll(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.dgTimeColSize(System.Object,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.FormKeyDown(System.Object,ref@System.UInt16,Classes.TShiftState)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.seTimeCountChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.rdeLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.pnlTop" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.lblStartTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.rdeStartTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.dgTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.seTimeCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.pnlBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.lblNumberOfPeriods" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TfrmTimeControl.btnCancel" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmTimeControlUnit.TUndoTimes">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TUndoTimes.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TUndoTimes.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TUndoTimes.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TUndoTimes.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TUndoTimes.FNewTimes" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeControlUnit.TUndoTimes.Description()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TUndoTimes.FOldTimes" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmTimeControlUnit.TTempTime">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TTempTime.TimeStepLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TTempTime.EndingTime" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmTimeControlUnit.TTimeColumns">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TTimeColumns.tcEndingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TTimeColumns.tcStepSize" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeControlUnit.TTimeColumns.tcBlank" />
+    </reference>
+  </view>
+</nodeSet>

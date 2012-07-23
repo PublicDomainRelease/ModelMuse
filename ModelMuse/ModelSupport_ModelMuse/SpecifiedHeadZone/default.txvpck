@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="08np0545ptue6nq_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SpecifiedHeadZone.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadDataSets">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadDataSets.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadDataSets.FTopBoundaryType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadDataSets.FSpecifiedHeads" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadDataSets.FSolutionType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadDataSets.FSideBoundaryType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadDataSets.FFrontBoundaryType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadDataSets.FAssociatedSolutions" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZone">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZone.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZone.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZone.FSpecifiedHeads" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZone.FSolutionType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZone.FAssociatedSolutions" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZone.AssignProperties(System.Int32,System.Int32,System.Int32,ZoneUnit.TCustomDataSets,System.Boolean,System.Boolean,System.Boolean)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZone.FTopBoundaryType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZone.FSideBoundaryType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZone.FFrontBoundaryType" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup.Zones[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup.SolutionTimes[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup.SolutionTimeCount[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup.HeadTimes[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup.HeadTimeCount[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup.EliminateExtraZones()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup.GetZone(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup.GetSolutionTimes(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup.GetSolutionTimeCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup.GetHeadTimes(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup.GetHeadTimeCount()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup.FSolutionTimeList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SpecifiedHeadZone.TSpecifiedHeadZoneGroup.FHeadTimeList" />
+    </reference>
+  </view>
+</nodeSet>

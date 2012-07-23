@@ -1,0 +1,519 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="koo0mru9ogi71yk_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TCustomTimeList">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomTimeList.FModel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomTimeList.FData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomTimeList.FTimes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomTimeList.FDirection" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomTimeList.FLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomTimeList.FName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomTimeList.FOrientation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomTimeList.FUpToDate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomTimeList.FClassification" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomTimeList.FCheckMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomTimeList.FMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomTimeList.FCheckMin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomTimeList.FMin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomTimeList.FDataType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomTimeList.FOnTimeListUsed" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.GetCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.GetItems(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.GetTimes(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.SetItems(System.Int32,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.SetLimits(DataSetUnit.TColoringLimits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.SetName(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.SetOrientation(GoPhastTypes.TDataSetOrientation)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.SetClassification(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.GetClassification()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.SetCheckMax(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.SetCheckMin(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.SetMax(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.SetMin(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.GetUpToDate()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.SetUpToDate(System.Boolean)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomTimeList.OnTimeListUsed[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.UsedByModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.Add(System.Double,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.Clear()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomTimeList.Count[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.Create(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.FirstTimeGreaterThan(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.IndexOf(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.IndexOfDataSet(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.Initialize()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.Invalidate()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomTimeList.Name[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomTimeList.Times[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomTimeList.UpToDate[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomTimeList.Orientation[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.Changed(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.FreeItem(System.Int32)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomTimeList.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomTimeList.Limits[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.UpDateLimits()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomTimeList.Direction[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomTimeList.Classification[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomTimeList.Max[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomTimeList.Min[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomTimeList.CheckMax[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomTimeList.CheckMin[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomTimeList.DataType[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.MaxValue(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomTimeList.MinValue(System.Double)" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TCustomTimeList.FLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TCustomTimeList.FOnTimeListUsed" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.StrUnassigned" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.GenerateNewRoot(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.GenerateNewName(System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.GlobalDataArrayRemoveSubscription(System.Object,System.Object,System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.strDefaultClassification" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.GlobalDataArrayRestoreSubscription(System.Object,System.Object,System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.StrDataSets" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.StrUserDefined" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.StrRequired" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.Stack" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.StrOptional" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.EInvalidDataType">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.EInterpolationException">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.ECircularReference">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TObjectUsedEvent">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TUseListFunction">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TColoringLimit">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TColoringLimit.FBooleanLimitValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TColoringLimit.FDataType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TColoringLimit.FDefaultBooleanLimitValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TColoringLimit.FIntegerLimitValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TColoringLimit.FRealLimitValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TColoringLimit.FStringLimitValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TColoringLimit.FUseLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TColoringLimit.FOnChange" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimit.SetBooleanLimitValue(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimit.SetDataType(RbwParser.TRbwDataType)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimit.SetIntegerLimitValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimit.SetRealLimitValue(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimit.SetStringLimitValue(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimit.SetUseLimit(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimit.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimit.Create()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TColoringLimit.DefaultBooleanLimitValue[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TColoringLimit.OnChange[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TColoringLimit.BooleanLimitValue[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TColoringLimit.DataType[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TColoringLimit.IntegerLimitValue[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TColoringLimit.RealLimitValue[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TColoringLimit.StringLimitValue[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TColoringLimit.UseLimit[]" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TSkipReal">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TSkipReal.FRealValue" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TSkipReal.SetRealValue(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TSkipReal.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TSkipReal.RealValue[]" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TSkipRealCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TSkipRealCollection.Create()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TSkipInteger">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TSkipInteger.FIntegerValue" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TSkipInteger.SetIntegerValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TSkipInteger.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TSkipInteger.IntegerValue[]" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TSkipIntegerCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TSkipIntegerCollection.Create()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TColoringLimits">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TColoringLimits.FLowerLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TColoringLimits.FUpperLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TColoringLimits.FActiveOnly" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TColoringLimits.FIntegerValuesToSkip" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TColoringLimits.FRealValuesToSkip" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TColoringLimits.FStringValuesToSkip" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TColoringLimits.FLogTransform" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.SetLowerLimit(DataSetUnit.TColoringLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.SetUpperLimit(DataSetUnit.TColoringLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.SetActiveOnly(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.SetIntegerValuesToSkip(DataSetUnit.TSkipIntegerCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.SetRealValuesToSkip(DataSetUnit.TSkipRealCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.SetStringValuesToSkip(Classes.TStrings)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.StoreRealSkipValues()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.StoreIntegerSkipValues()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.SetLogTransform(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.Update()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.ValueOk(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.ValueOk(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TColoringLimits.ValueOk(System.String)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TColoringLimits.ActiveOnly[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TColoringLimits.LowerLimit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TColoringLimits.UpperLimit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TColoringLimits.RealValuesToSkip[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TColoringLimits.IntegerValuesToSkip[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TColoringLimits.StringValuesToSkip[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TColoringLimits.LogTransform[]" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TColoringLimits.FIntegerValuesToSkip" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TColoringLimits.FRealValuesToSkip" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TColoringLimits.FLowerLimit" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TColoringLimits.FUpperLimit" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TIsUniform">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TIsUniform.iuTrue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TIsUniform.iuUnknown" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TIsUniform.iuFalse" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TContours">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TContours.FSpecifyContours" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TContours.FLineThicknesses" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TContours.FContourColors" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TContours.FContourValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TContours.FAutomaticColors" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TContours.FLogTransform" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TContours.GetCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TContours.SetCount(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TContours.Create()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TContours.AutomaticColors[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TContours.Count[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TContours.Assign(DataSetUnit.TContours)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TContours.SpecifyContours[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TContours.ContourValues[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TContours.LineThicknesses[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TContours.ContourColors[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TContours.LogTransform[]" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TDataArray">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FCheckMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FCheckMin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FColumnCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FDataArray" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FDataType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FDimensionsChanged" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FEvaluatedAt" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FFormula" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FLayerCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FLock" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FMin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FOrientation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FRowCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FTwoDInterpolator" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FUnits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FUseList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FUseListUpToDate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FVisible" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FOnDataSetUsed" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FTimeList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FClassification" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FOnPostInitialize" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FOnDestroy" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FParameterUsed" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FParameterFormula" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FUniformStringValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FUniformIntegerValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FUniformAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FUniformBooleanValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FUniformRealValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FCachedLayerCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FCachedRowCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FCachedColumnCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FComment" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FAssociatedDataSets" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FMaxValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FMinValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FMinReal" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FMaxReal" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FMinInteger" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FMaxInteger" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FMinBoolean" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FMaxBoolean" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FMinString" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FMaxString" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FContourLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FContours" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FFormulaObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FHash" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetTwoDInterpolatorClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.ResetFormula(RbwParser.TRbwParser,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetFormula(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetLimits(DataSetUnit.TColoringLimits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetLock(GoPhastTypes.TDataLock)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetTwoDInterpolator(DataSetUnit.TCustom2DInterpolater)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetTwoDInterpolatorClass(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetUnits(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetVisible(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.UpdateUseList()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetClassification(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetClassification()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetParameterFormula(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetParameterUsed(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetBoolArray(ref@DataSetUnit.T3DBooleanDataSet)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetStringArray(ref@DataSetUnit.T3DStringDataSet)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetRealArray(ref@DataSetUnit.T3DRealDataSet)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetIntegerArray(ref@DataSetUnit.T3DIntegerDataSet)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetLayerCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetColumnCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetRowCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetComment(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetMaxValue()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetMinValue()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetContourLimits(DataSetUnit.TColoringLimits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.ContourLimitsChanged(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetContours(DataSetUnit.TContours)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetFormula()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.ValueOK(System.Int32,System.Int32,System.Int32,DataSetUnit.TColoringLimits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetHash()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.UpdateSubscriptions(Classes.TStringList,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FIsUniform" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FPhastModel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FCleared" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FDataCached" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FTempFileName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TDataArray.FEvalTime" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetEvaluatedAt(GoPhastTypes.TEvaluatedAt)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetCompiler()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetOrientation(GoPhastTypes.TDataSetOrientation)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.UpdateEvalTime()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetLimits(out@System.Int32,out@System.Int32,out@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.ReadData(ZLib.TDecompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.CountValues(out@System.Int32,out@System.Int32,out@System.Int32,out@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.StoreData(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.RestoreArraySize()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.ChangeAFormula(System.String,ref@System.String,ref@System.Boolean,DataSetUnit.TUseListFunction)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.DimensionsChanged[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetAnnotation(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetBooleanData(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetIntegerData(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetIsValue(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetOwner()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetRealData(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetRequiredDimensions(out@System.Int32,out@System.Int32,out@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetStringData(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetUseList()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.LimitsChanged(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetAnnotation(System.Int32,System.Int32,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetBooleanData(System.Int32,System.Int32,System.Int32,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetDataType(RbwParser.TRbwDataType)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetDimensions(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetIntegerData(System.Int32,System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetIsValue(System.Int32,System.Int32,System.Int32,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetName(Classes.TComponentName)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetRealData(System.Int32,System.Int32,System.Int32,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetStringData(System.Int32,System.Int32,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetUpToDate(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.PostInitialize()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.RestoreData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.CheckRestoreData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.RemoveSubscription(System.Object,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.RestoreSubscription(System.Object,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.SetModelToNil()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.RefreshUseList()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.ColorGridValueOK(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.ContourGridValueOK(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.CheckIfUniform()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.GetMinMaxStoredLimits(out@System.Int32,out@System.Int32,out@System.Int32,out@System.Int32,out@System.Int32,out@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.UpdateMinMaxValues()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.CacheData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.FullClassification()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.Annotation[System.Int32,System.Int32,System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.BooleanData[System.Int32,System.Int32,System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.ColumnCount[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.DisplayRealValue()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.Formula[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.ParameterFormula[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.ParameterUsed[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.FullUseList(Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.Initialize()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.IntegerData[System.Int32,System.Int32,System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.Invalidate()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.IsValue[System.Int32,System.Int32,System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.IsUniform[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.UniformRealValue[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.UniformIntegerValue[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.UniformBooleanValue[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.UniformStringValue[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.UniformAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.LayerCount[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.RealData[System.Int32,System.Int32,System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.RowCount[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.StringData[System.Int32,System.Int32,System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.UpdateDimensions(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.UsedByModel()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.UseList[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.OnDataSetUsed[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.ATimeList[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.OnPostInitialize[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.OnDestroy[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.AssociatedDataSets[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.MaxValue[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.MinValue[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.MinReal[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.MaxReal[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.MinInteger[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.MaxInteger[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.MinBoolean[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.MaxBoolean[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.MinString[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.MaxString[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.Contours[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.RefreshFormula()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.ComputeHash()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.Hash[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TDataArray.IdenticalDataArrayContents(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.Classification[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.CheckMax[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.CheckMin[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.Comment[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.DataType[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.EvaluatedAt[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.Limits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.ContourLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.Lock[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.Max[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.Min[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.Orientation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.TwoInterpolatorClass[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.TwoDInterpolatorClass[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.TwoDInterpolator[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.Units[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TDataArray.Visible[]" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TDataArray.FOnDataSetUsed" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TDataArray.FTimeList" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TDataArray.FContourLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TDataArray.FContours" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TDataArray.FLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TDataArray.FIsUniform" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TDataArray.FTwoDInterpolator" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TDataArrayType">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TInterpolatorType">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TInitializeDataSetInterpolator">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TCustom2DInterpolater">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.FDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.FOnEdit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.FOnFinalize" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.FOnInitialize" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.FillScreenObjectList(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.EvaluateExpression(RbwParser.TRbwParser,ref@RbwParser.TExpression,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.BooleanResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.DataSet[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.Edit()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.Finalize(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.Initialize(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.IntegerResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.InterpolatorName()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.RealResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.SameAs(DataSetUnit.TCustom2DInterpolater)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.ShouldInterpolate()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.StringResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.ValidReturnTypes()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.ValidOrientations()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.OnEdit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.OnFinalize[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.OnInitialize[]" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.FDataSet" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.FOnFinalize" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TCustom2DInterpolater.FOnInitialize" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TInterpolatorClass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TCustomSparseDataSet">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.FBoundaryTypeDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.FAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.FPriorLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.FPriorRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.FPriorCol" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.FPriorResult" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.GetAnnotation(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.GetIsValue(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.SetAnnotation(System.Int32,System.Int32,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.SetDimensions(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.SetIsValue(System.Int32,System.Int32,System.Int32,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.Invalidate()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.Initialize()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.BoundaryTypeDataSet[]" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:DataSetUnit.TCustomSparseDataSet:DataSetUnit.TDataArray" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:DataSetUnit.TCustomSparseDataSet.FBoundaryTypeDataSet" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TRealSparseDataSet">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TRealSparseDataSet.FRealValues" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TRealSparseDataSet.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TRealSparseDataSet.GetIsValue(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TRealSparseDataSet.GetRealData(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TRealSparseDataSet.SetDataType(RbwParser.TRbwDataType)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TRealSparseDataSet.SetDimensions(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TRealSparseDataSet.SetRealData(System.Int32,System.Int32,System.Int32,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TRealSparseDataSet.GetMinMaxStoredLimits(out@System.Int32,out@System.Int32,out@System.Int32,out@System.Int32,out@System.Int32,out@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TRealSparseDataSet.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TRealSparseDataSet.Destroy()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:DataSetUnit.TRealSparseDataSet:DataSetUnit.TCustomSparseDataSet" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DataSetUnit.TIntegerSparseDataSet">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TIntegerSparseDataSet.FIntegerValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DataSetUnit.TIntegerSparseDataSet.FIsBoundary" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TIntegerSparseDataSet.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TIntegerSparseDataSet.GetIntegerData(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TIntegerSparseDataSet.GetIsValue(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TIntegerSparseDataSet.SetDataType(RbwParser.TRbwDataType)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TIntegerSparseDataSet.SetDimensions(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TIntegerSparseDataSet.SetIntegerData(System.Int32,System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TIntegerSparseDataSet.SetIsValue(System.Int32,System.Int32,System.Int32,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TIntegerSparseDataSet.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TIntegerSparseDataSet.Destroy()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DataSetUnit.TIntegerSparseDataSet.IsBoundaryTypeDataSet[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DataSetUnit.TIntegerSparseDataSet.GetMinMaxStoredLimits(out@System.Int32,out@System.Int32,out@System.Int32,out@System.Int32,out@System.Int32,out@System.Int32)" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:DataSetUnit.TIntegerSparseDataSet:DataSetUnit.TCustomSparseDataSet" />
+    </reference>
+  </view>
+</nodeSet>

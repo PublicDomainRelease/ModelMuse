@@ -33,10 +33,12 @@ type
     // and calls @link(SetAppearance).
     procedure FormShow(Sender: TObject);
     procedure btnHelpClick(Sender: TObject);
-    function FormHelp(Command: Word; Data: Integer;
+    function FormHelp(Command: Word; Data: NativeInt;
+//  Data: {$IF CompilerVersion >= 23} NativeInt {$ELSE} Integer {$IFEND};
       var CallHelp: Boolean): Boolean;
     procedure FormDestroy(Sender: TObject); virtual;
   private
+    FCallingHelp: Boolean;
     function CallHelpRouter: boolean;
     procedure DestroyGLSceneViewers(ParentComponent: TComponent);
     procedure EnsureFormVisible;
@@ -219,7 +221,9 @@ begin
 //  result := HelpRouter.HelpJump('', KeyWord);
 end;
 
-function TfrmCustomGoPhast.FormHelp(Command: Word; Data: Integer;
+function TfrmCustomGoPhast.FormHelp(Command: Word;
+  Data: NativeInt ;
+//  Data: {$IF CompilerVersion >= 23} NativeInt {$ELSE} Integer {$IFEND};
   var CallHelp: Boolean): Boolean;
 begin
   if (Command in [HELP_CONTEXT, HELP_INDEX, HELP_FORCEFILE,
@@ -232,9 +236,19 @@ begin
   end
   else
   begin
-    result := True;
-//    result := CallHelpRouter;
-//    CallHelp := False;
+    if FCallingHelp then
+    begin
+      result := True;
+      CallHelp := True;
+    end
+    else
+    begin
+      FCallingHelp := True;
+      result := CallHelpRouter;
+      CallHelp := False;
+      FCallingHelp := False;
+    end;
+//    result := True;
   end;
 end;
 

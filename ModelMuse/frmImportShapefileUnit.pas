@@ -7813,7 +7813,7 @@ begin
       end;
       if FThreeDDataSet = DataSet then
       begin
-        frmGoPhast.PhastModel.Grid.ThreeDDataSet := FThreeDDataSet;
+        frmGoPhast.PhastModel.ThreeDDataSet := FThreeDDataSet;
       end;
     end;
 
@@ -7865,15 +7865,15 @@ begin
     for Index := 0 to FNewDataSets.Count - 1 do
     begin
       DataSet := FNewDataSets[Index];
-      if frmGoPhast.PhastModel.Grid.TopDataSet = DataSet then
+      if frmGoPhast.PhastModel.TopDataSet = DataSet then
       begin
         FTopDataSet := DataSet;
-        frmGoPhast.PhastModel.Grid.TopDataSet := nil;
+        frmGoPhast.PhastModel.TopDataSet := nil;
       end;
-      if frmGoPhast.PhastModel.Grid.ThreeDDataSet = DataSet then
+      if frmGoPhast.PhastModel.ThreeDDataSet = DataSet then
       begin
         FThreeDDataSet := DataSet;
-        frmGoPhast.PhastModel.Grid.ThreeDDataSet := nil;
+        frmGoPhast.PhastModel.ThreeDDataSet := nil;
       end;
     end;
 

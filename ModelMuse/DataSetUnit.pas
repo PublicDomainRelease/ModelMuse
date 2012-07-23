@@ -392,6 +392,7 @@ type
     FMinValue: string;
     FMinReal: double;
     FMaxReal: double;
+    FMinRealPositive: double;
     FMinInteger: Integer;
     FMaxInteger: Integer;
     FMinBoolean: Boolean;
@@ -482,9 +483,6 @@ type
     // @name is the name of the temporary file
     // used to store the @classname data.
     FTempFileName: string;
-    // When values are beginning to be assigned to a @classname,
-    // @name is set to to the current time.
-//    procedure UpdateDialogBoxes;
 
     // See @link(EvaluatedAt).
     procedure SetEvaluatedAt(const Value: TEvaluatedAt); virtual;
@@ -765,6 +763,7 @@ type
     property MinValue: string read GetMinValue;
     property MinReal: double read FMinReal;
     property MaxReal: double read FMaxReal;
+    property MinRealPositive: double read FMinRealPositive;
     property MinInteger: integer read FMinInteger;
     property MaxInteger: integer read FMaxInteger;
     property MinBoolean: boolean read FMinBoolean;
@@ -1547,6 +1546,43 @@ begin
         LocalModel.ModflowGrid.ThreeDContourDataSet := nil
       end;
     end;
+
+    if LocalModel.Mesh <> nil then
+    begin
+      if LocalModel.Mesh.TopDataSet = self then
+      begin
+        LocalModel.Mesh.TopDataSet := nil
+      end;
+//      if LocalModel.Mesh.FrontDataSet = self then
+//      begin
+//        LocalModel.Mesh.FrontDataSet := nil
+//      end;
+//      if LocalModel.Mesh.SideDataSet = self then
+//      begin
+//        LocalModel.Mesh.SideDataSet := nil
+//      end;
+      if LocalModel.Mesh.ThreeDDataSet = self then
+      begin
+        LocalModel.Mesh.ThreeDDataSet := nil
+      end;
+
+//      if LocalModel.Mesh.TopContourDataSet = self then
+//      begin
+//        LocalModel.Mesh.TopContourDataSet := nil
+//      end;
+//      if LocalModel.Mesh.FrontContourDataSet = self then
+//      begin
+//        LocalModel.Mesh.FrontContourDataSet := nil
+//      end;
+//      if LocalModel.Mesh.SideContourDataSet = self then
+//      begin
+//        LocalModel.Mesh.SideContourDataSet := nil
+//      end;
+//      if LocalModel.Mesh.ThreeDContourDataSet = self then
+//      begin
+//        LocalModel.Mesh.ThreeDContourDataSet := nil
+//      end;
+    end;
   end;
 
   FLimits.Free;
@@ -1699,25 +1735,6 @@ begin
   end;
 end;
 
-//procedure TDataArray.UpdateDialogBoxes;
-//var
-//  Grid: TCustomModelGrid;
-//begin
-//  Grid := (FModel as TCustomModel).Grid;
-//  if Grid <> nil then
-//  begin
-//    if (Grid.ThreeDDataSet = self)
-//      or (Grid.ThreeDContourDataSet = self) then
-//    begin
-//      if frmDisplayData = nil then
-//      begin
-//        Application.CreateForm(TfrmDisplayData, frmDisplayData);
-//      end;
-//      UpdateFrmDisplayData(True);
-//    end;
-//  end;
-//end;
-
 procedure TDataArray.UpdateNotifiers;
 var
   LocalModel: TCustomModel;
@@ -1786,6 +1803,18 @@ const
   ErrorMessageFormulaNamed = 'An invalid value assigned by a formula '
     + 'has been replaced by the maximum single-precision  real number in Data Set: %s.';
   ErrorString ='Layer: %d; Row: %d; Column: %d.';
+  ErrorMessageFormulaUnNamedInt = 'An invalid value assigned by a formula '
+    + 'has been replaced by the maximum integer number in an unamed data set.';
+  ErrorMessageFormulaNamedInt = 'An invalid value assigned by a formula '
+    + 'has been replaced by the maximum integer number in Data Set: %s.';
+  ErrorMessageFormulaUnNamedBool = 'An invalid value assigned by a formula '
+    + 'has been replaced by "False" in an unamed data set.';
+  ErrorMessageFormulaNamedBool = 'An invalid value assigned by a formula '
+    + 'has been replaced by "False" in Data Set: %s.';
+  ErrorMessageFormulaUnNamedString = 'An invalid value assigned by a formula '
+    + 'has been replaced by "" in an unamed data set.';
+  ErrorMessageFormulaNamedString = 'An invalid value assigned by a formula '
+    + 'has been replaced by "" in Data Set: %s.';
 var
   ColIndex, RowIndex, LayerIndex: integer;
   Compiler: TRbwParser;
@@ -1814,45 +1843,136 @@ var
   HideProgressForm: Boolean;
   DataArrayManager: TDataArrayManager;
   LocalModel: TCustomModel;
+  ResultOK: Boolean;
+//  AValueInt: Integer;
   procedure GetLimits;
   begin
-    case EvaluatedAt of
-      eaBlocks:
-        begin
-          LayerLimit := LayerCount - 1;
-          RowLimit := RowCount - 1;
-          ColLimit := ColumnCount - 1;
-        end;
-      eaNodes:
-        begin
-          case Orientation of
-            dsoTop:
-              begin
-                LayerLimit := LayerCount - 1;
-                RowLimit := RowCount;
-                ColLimit := ColumnCount;
-              end;
-            dsoFront:
-              begin
-                LayerLimit := LayerCount;
-                RowLimit := RowCount - 1;
-                ColLimit := ColumnCount;
-              end;
-            dsoSide:
-              begin
-                LayerLimit := LayerCount;
-                RowLimit := RowCount;
-                ColLimit := ColumnCount - 1;
-              end;
-            dso3D:
-              begin
-                LayerLimit := LayerCount;
-                RowLimit := RowCount;
-                ColLimit := ColumnCount;
-              end;
-          else
-            Assert(False);
+    {$IFDEF SUTRA}
+    if LocalModel.ModelSelection = msSutra then
+    begin
+      LayerLimit := LayerCount - 1;
+      RowLimit := RowCount - 1;
+      ColLimit := ColumnCount - 1;
+    end
+    else
+    begin
+    {$ENDIF}
+      case EvaluatedAt of
+        eaBlocks:
+          begin
+            LayerLimit := LayerCount - 1;
+            RowLimit := RowCount - 1;
+            ColLimit := ColumnCount - 1;
           end;
+        eaNodes:
+          begin
+            case Orientation of
+              dsoTop:
+                begin
+                  LayerLimit := LayerCount - 1;
+                  RowLimit := RowCount;
+                  ColLimit := ColumnCount;
+                end;
+              dsoFront:
+                begin
+                  LayerLimit := LayerCount;
+                  RowLimit := RowCount - 1;
+                  ColLimit := ColumnCount;
+                end;
+              dsoSide:
+                begin
+                  LayerLimit := LayerCount;
+                  RowLimit := RowCount;
+                  ColLimit := ColumnCount - 1;
+                end;
+              dso3D:
+                begin
+                  LayerLimit := LayerCount;
+                  RowLimit := RowCount;
+                  ColLimit := ColumnCount;
+                end;
+            else
+              Assert(False);
+            end;
+          end;
+      else
+        Assert(False);
+      end;
+    {$IFDEF SUTRA}
+    end;
+    {$ENDIF}
+  end;
+  procedure HandleError;
+  begin
+    ResultOK := False;
+    case DataType of
+      rdtDouble:
+        begin
+          if Name = '' then
+          begin
+            frmErrorsAndWarnings.AddError(Model,
+              ErrorMessageFormulaUnNamed, Format(ErrorString,
+              [LayerIndex+1,RowIndex+1,ColIndex+1] ));
+          end
+          else
+          begin
+            frmErrorsAndWarnings.AddError(Model,
+              Format(ErrorMessageFormulaNamed, [Name]),
+              Format(ErrorString,
+              [LayerIndex+1,RowIndex+1,ColIndex+1]));
+          end;
+          AValue := MaxReal;
+        end;
+      rdtInteger:
+        begin
+          if Name = '' then
+          begin
+            frmErrorsAndWarnings.AddError(Model,
+              ErrorMessageFormulaUnNamedInt, Format(ErrorString,
+              [LayerIndex+1,RowIndex+1,ColIndex+1] ));
+          end
+          else
+          begin
+            frmErrorsAndWarnings.AddError(Model,
+              Format(ErrorMessageFormulaNamedInt, [Name]),
+              Format(ErrorString,
+              [LayerIndex+1,RowIndex+1,ColIndex+1]));
+          end;
+          IntegerData[LayerIndex, RowIndex, ColIndex] := MaxInt;
+        end;
+      rdtBoolean:
+        begin
+          if Name = '' then
+          begin
+            frmErrorsAndWarnings.AddError(Model,
+              ErrorMessageFormulaUnNamedBool, Format(ErrorString,
+              [LayerIndex+1,RowIndex+1,ColIndex+1] ));
+          end
+          else
+          begin
+            frmErrorsAndWarnings.AddError(Model,
+              Format(ErrorMessageFormulaNamedBool, [Name]),
+              Format(ErrorString,
+              [LayerIndex+1,RowIndex+1,ColIndex+1]));
+          end;
+          BooleanData[LayerIndex, RowIndex, ColIndex] := False;
+        end;
+      rdtString:
+        begin
+          if Name = '' then
+          begin
+            frmErrorsAndWarnings.AddError(Model,
+              ErrorMessageFormulaUnNamedString, Format(ErrorString,
+              [LayerIndex+1,RowIndex+1,ColIndex+1] ));
+          end
+          else
+          begin
+            frmErrorsAndWarnings.AddError(Model,
+              Format(ErrorMessageFormulaNamedString, [Name]),
+              Format(ErrorString,
+              [LayerIndex+1,RowIndex+1,ColIndex+1]));
+          end;
+          StringData[0, RowIndex, ColIndex] := '';
         end;
     else
       Assert(False);
@@ -1941,7 +2061,7 @@ begin
                       for ColIndex := 0 to ColLimit do
                       begin
                         CellCenter :=
-                          LocalModel.Grid.TwoDElementCenter(ColIndex,
+                          LocalModel.TwoDElementCenter(ColIndex,
                           RowIndex);
 
                         UpdateGlobalLocations(ColIndex,
@@ -1972,8 +2092,6 @@ begin
                               begin
                                 RealData[0, RowIndex, ColIndex] := AValue;
                               end;
-  //                            RealData[0, RowIndex, ColIndex] :=
-  //                              TwoDInterpolator.RealResult(CellCenter);
                             end;
                           rdtInteger:
                             begin
@@ -2004,7 +2122,7 @@ begin
                       for ColIndex := 0 to ColLimit do
                       begin
                         CellCorner :=
-                          LocalModel.Grid.TwoDElementCorner(ColIndex,
+                          LocalModel.TwoDElementCorner(ColIndex,
                           RowIndex);
                         UpdateGlobalLocations(ColIndex,
                           RowIndex, 0, EvaluatedAt, FModel);
@@ -2034,8 +2152,6 @@ begin
                               begin
                                 RealData[0, RowIndex, ColIndex] := AValue;
                               end;
-  //                            RealData[0, RowIndex, ColIndex] :=
-  //                              TwoDInterpolator.RealResult(CellCorner);
                             end;
                           rdtInteger:
                             begin
@@ -2108,8 +2224,6 @@ begin
                               begin
                                 RealData[LayerIndex, 0, ColIndex] := AValue;
                               end;
-  //                            RealData[LayerIndex, 0, ColIndex] :=
-  //                              TwoDInterpolator.RealResult(CellCenter);
                             end;
                           rdtInteger:
                             begin
@@ -2173,8 +2287,6 @@ begin
                               begin
                                 RealData[LayerIndex, 0, ColIndex] := AValue;
                               end;
-  //                            RealData[LayerIndex, 0, ColIndex] :=
-  //                              TwoDInterpolator.RealResult(CellCorner);
                             end;
                           rdtInteger:
                             begin
@@ -2248,8 +2360,6 @@ begin
                               begin
                                 RealData[LayerIndex, RowIndex, 0] := AValue;
                               end;
-  //                            RealData[LayerIndex, RowIndex, 0] :=
-  //                              TwoDInterpolator.RealResult(CellCenter);
                             end;
                           rdtInteger:
                             begin
@@ -2530,9 +2640,11 @@ begin
                     end;
                   end;
                 end;
+                ResultOK := True;
                 try
                   Expression.Evaluate;
-                except on E: ERbwParserError do
+                except
+                  on E: ERbwParserError do
                   begin
                     ResetFormula(Compiler, E.Message);
                     TempFormula := Formula;
@@ -2540,12 +2652,23 @@ begin
                     Expression := Compiler.CurrentExpression;
                     Expression.Evaluate;
                   end;
+                  on E: EInvalidOp do
+                  begin
+                    HandleError;
+                  end;
+                  on E: EDivByZero do
+                  begin
+                    HandleError;
+                  end;
                 end;
 
                 case Datatype of
                   rdtDouble:
                     begin
-                      AValue := Expression.DoubleResult;
+                      if ResultOK then
+                      begin
+                        AValue := Expression.DoubleResult;
+                      end;
                       if IsInfinite(AValue) or IsNan(AValue) then
                       begin
                         if Name = '' then
@@ -2570,18 +2693,27 @@ begin
                     end;
                   rdtInteger:
                     begin
-                      IntegerData[LayerIndex, RowIndex, ColIndex]
-                        := Expression.IntegerResult;
+                      if ResultOK then
+                      begin
+                        IntegerData[LayerIndex, RowIndex, ColIndex]
+                          := Expression.IntegerResult;
+                      end;
                     end;
                   rdtBoolean:
                     begin
-                      BooleanData[LayerIndex, RowIndex, ColIndex]
-                        := Expression.BooleanResult;
+                      if ResultOK then
+                      begin
+                        BooleanData[LayerIndex, RowIndex, ColIndex]
+                          := Expression.BooleanResult;
+                      end;
                     end;
                   rdtString:
                     begin
-                      StringData[LayerIndex, RowIndex, ColIndex]
-                        := Expression.StringResult;
+                      if ResultOK then
+                      begin
+                        StringData[LayerIndex, RowIndex, ColIndex]
+                          := Expression.StringResult;
+                      end;
                     end;
                 else
                   Assert(False);
@@ -2633,7 +2765,6 @@ begin
     end;
   end;
   CheckIfUniform;
-//  UpdateDialogBoxes;
 end;
 
 procedure TDataArray.Invalidate;
@@ -2692,6 +2823,8 @@ end;
 
 procedure TDataArray.GetRequiredDimensions(out NumberOfLayers, NumberOfRows,
   NumberOfColumns: integer);
+var
+  LocalModel: TCustomModel;
 begin
   NumberOfLayers := FLayerCount;
   NumberOfRows := FRowCount;
@@ -2703,7 +2836,8 @@ begin
       end;
     eaNodes:
       begin
-        if (Model as TCustomModel).ModelSelection = msPhast then
+        LocalModel := Model as TCustomModel;
+        if LocalModel.ModelSelection = msPhast then
         begin
           case Orientation of
             dsoTop:
@@ -2730,7 +2864,16 @@ begin
           else
             Assert(False);
           end;
-        end;
+        end
+//        else if LocalModel.ModelSelection = msSutra then
+//        begin
+//          NumberOfLayers := LocalModel.SutraLayerStructure.NodeLayerCount;
+//          NumberOfRows := 1;
+//          NumberOfColumns := LocalModel.SutraMesh.Mesh2D.Nodes.Count;
+//          FLayerCount := NumberOfLayers;
+//          FRowCount := NumberOfRows;
+//          FColumnCount := NumberOfColumns;
+//        end;
       end;
   else
     begin
@@ -2986,7 +3129,7 @@ begin
       and not LocalModel.Grid.TopContourDataSet.UpToDate) then
     begin
       LocalModel.Grid.NeedToRecalculateTopCellColors := True;
-      frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
+      frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
     end;
     if ((LocalModel.Grid.FrontDataSet <> nil)
       and not LocalModel.Grid.FrontDataSet.UpToDate)
@@ -2994,7 +3137,7 @@ begin
       and not LocalModel.Grid.FrontContourDataSet.UpToDate) then
     begin
       LocalModel.Grid.NeedToRecalculateFrontCellColors := True;
-      frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
+      frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
     end;
     if ((LocalModel.Grid.SideDataSet <> nil)
       and not LocalModel.Grid.SideDataSet.UpToDate)
@@ -3002,15 +3145,15 @@ begin
       and not LocalModel.Grid.SideContourDataSet.UpToDate) then
     begin
       LocalModel.Grid.NeedToRecalculateSideCellColors := True;
-      frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+      frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
     end;
-    if ((LocalModel.Grid.ThreeDDataSet <> nil)
-      and not LocalModel.Grid.ThreeDDataSet.UpToDate)
+    if ((LocalModel.ThreeDDataSet <> nil)
+      and not LocalModel.ThreeDDataSet.UpToDate)
       or ((LocalModel.Grid.ThreeDContourDataSet <> nil)
       and not LocalModel.Grid.ThreeDContourDataSet.UpToDate) then
     begin
       LocalModel.Grid.NeedToRecalculate3DCellColors := True;
-      LocalModel.Grid.GridChanged;
+      LocalModel.DiscretizationChanged;
     end;
   end;
 end;
@@ -3752,6 +3895,7 @@ var
   ColMin: Integer;
   ARealValue: double;
   AnIntValue: Integer;
+  MinimumRealPositive: double;
 begin
   if not UpToDate then
   begin
@@ -3765,6 +3909,7 @@ begin
       begin
         MinimumReal := 0;
         MaximumReal := 0;
+        MinimumRealPositive := 0;
         FirstValue := True;
         if LayerMin >= 0 then
         begin
@@ -3780,6 +3925,10 @@ begin
                   begin
                     MinimumReal := RealData[LayerIndex, RowIndex, ColIndex];
                     MaximumReal := MinimumReal;
+                    if MinimumReal > 0 then
+                    begin
+                      MinimumRealPositive := MinimumReal;
+                    end;
                     FirstValue := False;
                   end
                   else
@@ -3792,6 +3941,11 @@ begin
                     if MaximumReal < ARealValue then
                     begin
                       MaximumReal := ARealValue;
+                    end;
+                    if (MinimumRealPositive > ARealValue)
+                      and (ARealValue > 0) then
+                    begin
+                      MinimumRealPositive := ARealValue;
                     end;
                   end;
                 end;
@@ -3812,6 +3966,7 @@ begin
           FMinValue := FloatToStrF(MinimumReal, ffGeneral, 7, 0);
           FMinReal := MinimumReal;
           FMaxReal := MaximumReal;
+          FMinRealPositive := MinimumRealPositive;
         end;
       end;
     rdtInteger:
@@ -3989,10 +4144,10 @@ begin
     begin
       if (frmDisplayData <> nil) then
       begin
-        if (Grid.TopDataSet = self)
+        if (PhastModel.TopDataSet = self)
           or (Grid.FrontDataSet = self)
           or (Grid.SideDataSet = self)
-          or (Grid.ThreeDDataSet = self) then
+          or (PhastModel.ThreeDDataSet = self) then
         begin
           frmDisplayData.frameColorGrid.LegendDataSource := self;
           frmDisplayData.ShouldUpdate := True;
@@ -4496,22 +4651,35 @@ end;
 
 procedure TDataArray.GetLimits(out ColLimit, RowLimit, LayerLimit: Integer);
 begin
-  case EvaluatedAt of
-    eaBlocks:
-      begin
-        LayerLimit := LayerCount - 1;
-        RowLimit := RowCount - 1;
-        ColLimit := ColumnCount - 1;
-      end;
-    eaNodes:
-      begin
-        LayerLimit := LayerCount;
-        RowLimit := RowCount;
-        ColLimit := ColumnCount;
-      end;
+    {$IFDEF SUTRA}
+  if (Model as TCustomModel).ModelSelection = msSutra then
+  begin
+    LayerLimit := LayerCount - 1;
+    RowLimit := RowCount - 1;
+    ColLimit := ColumnCount - 1;
+  end
   else
-    Assert(False);
+  begin
+   {$ENDIF}
+    case EvaluatedAt of
+      eaBlocks:
+        begin
+          LayerLimit := LayerCount - 1;
+          RowLimit := RowCount - 1;
+          ColLimit := ColumnCount - 1;
+        end;
+      eaNodes:
+        begin
+          LayerLimit := LayerCount;
+          RowLimit := RowCount;
+          ColLimit := ColumnCount;
+        end;
+    else
+      Assert(False);
+    end;
+    {$IFDEF SUTRA}
   end;
+  {$ENDIF}
   case Orientation of
     dsoTop: LayerLimit := 0;
     dsoFront: RowLimit := 0;
@@ -5002,7 +5170,6 @@ begin
   PostInitialize;
 
   UpToDate := True;
-//  UpdateDialogBoxes;
 end;
 
 procedure TCustomSparseDataSet.Invalidate;
@@ -5035,7 +5202,7 @@ var
   LocalModel: TCustomModel;
   Grid: TCustomModelGrid;
   {$IFDEF Sutra}
-  SutraMesh: TSutraMesh2D;
+  Mesh: TSutraMesh2D;
   {$ENDIF}
 begin
   // don't call inherited.
@@ -5059,14 +5226,14 @@ begin
       {$IFDEF Sutra}
       if LocalModel.ModelSelection = msSutra then
       begin
-        SutraMesh := LocalModel.SutraMesh.Mesh2D;
-        if SutraMesh <> nil then
+        Mesh := LocalModel.Mesh.Mesh2D;
+        if Mesh <> nil then
         begin
           NumberOfLayers := 1;
           NumberOfRows := 1;
           case EvaluatedAt of
-            eaBlocks: NumberOfColumns := SutraMesh.Elements.Count;
-            eaNodes: NumberOfColumns := SutraMesh.Nodes.Count;
+            eaBlocks: NumberOfColumns := Mesh.Elements.Count;
+            eaNodes: NumberOfColumns := Mesh.Nodes.Count;
             else Assert(False);
           end;
         end

@@ -8341,9 +8341,9 @@ begin
 end;
 
 procedure InitializeVariables;
-var
-  Index: integer;
-  AFunction: TFunctionClass;
+//var
+//  Index: integer;
+//  AFunction: TFunctionClass;
 begin
   IntToDoubleFunction := TFunctionClass.Create;
   IntToDoubleFunction.InputDataCount := 1;

@@ -2,58 +2,64 @@ inherited frmDeleteImage: TfrmDeleteImage
   HelpType = htKeyword
   HelpKeyword = 'Delete_Image_Dialog_Box'
   Caption = 'Delete Image'
-  PixelsPerInch = 96
+  ClientWidth = 422
+  ExplicitWidth = 440
+  ExplicitHeight = 271
+  PixelsPerInch = 120
   TextHeight = 18
   object clbBitmaps: TCheckListBox
     Left = 0
     Top = 0
-    Width = 434
-    Height = 195
+    Width = 422
+    Height = 181
     Align = alClient
     ItemHeight = 18
     TabOrder = 0
+    ExplicitWidth = 424
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 195
-    Width = 434
+    Top = 181
+    Width = 422
     Height = 45
     Align = alBottom
     ParentColor = True
     TabOrder = 1
-    ExplicitLeft = -13
-    ExplicitWidth = 447
+    ExplicitWidth = 424
     DesignSize = (
-      434
+      422
       45)
     object btnOK: TBitBtn
-      Left = 254
+      Left = 236
       Top = 6
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 0
-      OnClick = btnOKClick
       Kind = bkOK
+      NumGlyphs = 2
+      TabOrder = 1
+      OnClick = btnOKClick
     end
     object BitBtn1: TBitBtn
-      Left = 343
+      Left = 325
       Top = 6
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 1
       Kind = bkCancel
+      NumGlyphs = 2
+      TabOrder = 2
     end
     object btnHelp: TBitBtn
-      Left = 165
+      Left = 147
       Top = 6
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 2
-      OnClick = btnHelpClick
       Kind = bkHelp
+      NumGlyphs = 2
+      TabOrder = 0
+      OnClick = btnHelpClick
     end
   end
 end

@@ -674,9 +674,9 @@ end;
 constructor THydrogeologicUnit.Create(Collection: TCollection);
 begin
   inherited;
-  FPrintItems := TPrintCollection.Create(Model as TComponent);
+  FPrintItems := TPrintCollection.Create(Model);
   FHufUsedParameters := THufUsedParameters.Create(
-    Model as TComponent, self);
+    Model, self);
   FHorizontalAnisotropy := 1;
   FVerticalAnisotropy := 1;
   FPrintFormat := 1;

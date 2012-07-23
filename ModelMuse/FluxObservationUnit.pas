@@ -183,7 +183,7 @@ type
     FObservationFactors: TObservationFactors;
     FPurpose: TObservationPurpose;
     // See @link(ObservationName).
-    procedure SetObservationName(const Value: string);
+    procedure SetObservationName(Value: string);
     // See @link(ObservationFactors).
     procedure SetObservationFactors(const Value: TObservationFactors);
     procedure SetPurpose(const Value: TObservationPurpose);
@@ -773,8 +773,13 @@ begin
   end;
 end;
 
-procedure TCustomFluxObservationGroup.SetObservationName(const Value: string);
+procedure TCustomFluxObservationGroup.SetObservationName(Value: string);
 begin
+  Value := StringReplace(Value, ' ', '_', [rfReplaceAll]);
+  Value := StringReplace(Value, '"', '', [rfReplaceAll]);
+  Value := StringReplace(Value, '''', '', [rfReplaceAll]);
+  Value := StringReplace(Value, '/', '_', [rfReplaceAll]);
+  Value := StringReplace(Value, '\', '_', [rfReplaceAll]);
   if FObservationName <> Value then
   begin
     InvalidateModel;

@@ -1,0 +1,600 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="xqmvfn3dprhd9hn_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TPathLinePoint">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLinePoint.FLayer" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLinePoint.TimeStep[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLinePoint.Column[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLinePoint.Row[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLinePoint.Layer[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLinePoint.Time[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLinePoint.LocalZ[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLinePoint.YPrime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLinePoint.XPrime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLinePoint.Z[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLinePoint.Y[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLinePoint.X[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLinePoint.ShouldShowLine(PathlineReader.TPathLineDisplayLimits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLinePoint.ShouldShow(PathlineReader.TPathLineDisplayLimits,GoPhastTypes.TDataSetOrientation,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLinePoint.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLinePoint.CheckLimits(PathlineReader.TPathLineDisplayLimits)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLinePoint.FYPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLinePoint.FXPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLinePoint.FColumn" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLinePoint.FRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLinePoint.FTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLinePoint.FY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLinePoint.FX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLinePoint.FZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLinePoint.FLocalZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLinePoint.FTimeStep" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TPathLinePoints">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLinePoints.Points[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLinePoints.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLinePoints.GetPoint(System.Int32)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TPathLine">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLine.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLine.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLine.SetPoints(PathlineReader.TPathLinePoints)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLine.FPoints" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLine.Points[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLine.Destroy()" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TPathLine.FPoints" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TPathLines">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLines.Lines[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLines.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLines.GetLine(System.Int32)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TPathLineReader">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineReader.FDisplayLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineReader.FFileDate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineReader.FFile" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineReader.FFileName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineReader.FLines" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineReader.DisplayPathLines[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineReader.ColorParameters[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineReader.ColorLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineReader.MinTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineReader.MaxTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineReader.FileDate[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineReader.FileName[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineReader.Lines[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineReader.DisplayLimits[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.Invalidate()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.Draw3D()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.Draw(GoPhastTypes.TDataSetOrientation,GR32.TBitmap32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.ReadFile()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineReader.PathlineGLIndex[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.Record3DPathLines()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.GetPathlineGLIndex()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.CheckShowLine(PathlineReader.TPathLine)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.GetMinMaxValues(ref@System.Double,ref@System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.GetPointColor(System.Double,System.Double,PathlineReader.TPathLinePoint)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.SetColorParameters(ColorSchemes.TColorParameters)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.SetColorLimits(PathlineReader.TPathlineColorLimits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.SetMinTime(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.SetMaxTime(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.SetDisplayLimits(PathlineReader.TPathLineDisplayLimits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.SetFileDate(System.TDateTime)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineReader.SetLines(PathlineReader.TPathLines)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineReader.FListInitialized" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineReader.FPathlineGLIndex" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineReader.FDrawingPathLines" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineReader.FRecordedPathLines" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineReader.FDisplayPathLines" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineReader.FColorParameters" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineReader.FColorLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineReader.FMinTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineReader.FMaxTime" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TPathLineReader.FLines" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TPathLineReader.FColorLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TPathLineReader.FDisplayLimits" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TEndpointShowChoice">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndpointShowChoice.escSpecified" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndpointShowChoice.escAll" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TWhereToPlot">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TWhereToPlot.wtpEnd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TWhereToPlot.wtpStart" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TEndPointDisplayLimits">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FStartZoneLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FEndColumnLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FEndRowLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FTrackingTimeLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FEndLayerLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FEndZoneLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FReleaseTimeLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FShowChoice" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FStartColumnLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FStartRowLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FStartLayerLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FLimitToCurrentIn2D" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.WhereToPlot[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.TrackingTimeLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.EndZoneLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.EndLayerLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.EndRowLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.EndColumnLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.ReleaseTimeLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.StartZoneLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.StartLayerLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.StartRowLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.StartColumnLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.LimitToCurrentIn2D[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.ShowChoice[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.SetWhereToPlot(PathlineReader.TWhereToPlot)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.SetTrackingTimeLimits(PathlineReader.TShowFloatLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.SetStartZoneLimits(PathlineReader.TShowIntegerLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.SetEndZoneLimits(PathlineReader.TShowIntegerLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.SetEndRowLimits(PathlineReader.TShowIntegerLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.SetEndLayerLimits(PathlineReader.TShowIntegerLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.SetEndColumnLimits(PathlineReader.TShowIntegerLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.SetReleaseTimeLimits(PathlineReader.TShowFloatLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.SetShowChoice(PathlineReader.TEndpointShowChoice)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.SetStartRowLimits(PathlineReader.TShowIntegerLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.SetStartLayerLimits(PathlineReader.TShowIntegerLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.SetStartColumnLimits(PathlineReader.TShowIntegerLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.SetLimitToCurrentIn2D(System.Boolean)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FWhereToPlot" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FWhereToPlot" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FStartZoneLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FEndColumnLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FEndRowLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FTrackingTimeLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FEndLayerLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FEndZoneLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FReleaseTimeLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FShowChoice" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FStartColumnLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FStartRowLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointDisplayLimits.FStartLayerLimits" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TEndPoint">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FEndYPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FEndRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FEndXPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FEndY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FEndX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FEndZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FEndLocalZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FEndTimeStep" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FStartColumn" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FStartYPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FTrackingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FStartRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FStartXPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FEndZoneCode" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FStartY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FEndLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FStartX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FTerminationCode" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FStartZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FStartLocalZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FStartTimeStep" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.ReleaseTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.EndTimeStep[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.TerminationCode[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.StartTimeStep[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.StartLocalZ[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.StartYPrime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.StartXPrime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.StartZ[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.StartY[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.StartX[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.StartLayer[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.StartRow[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.StartColumn[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.StartZoneCode[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.TrackingTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.EndLocalZ[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.EndYPrime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.EndXPrime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.EndZ[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.EndY[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.EndX[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.EndLayer[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.EndRow[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.EndColumn[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoint.EndZoneCode[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPoint.ShouldShow(PathlineReader.TEndPointDisplayLimits,GoPhastTypes.TDataSetOrientation,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPoint.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPoint.CheckLimits(PathlineReader.TEndPointDisplayLimits)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FStartZoneCode" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FReleaseTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FStartLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPoint.FEndColumn" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TEndPoints">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPoints.Points[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPoints.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPoints.GetPoint(System.Int32)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TEndpointColorLimitChoice">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndpointColorLimitChoice.elcStartZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndpointColorLimitChoice.elcStartYPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndpointColorLimitChoice.elcStartXPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndpointColorLimitChoice.elcTrackingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndpointColorLimitChoice.elcReleaseTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndpointColorLimitChoice.elcNone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndpointColorLimitChoice.elcEndZone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndpointColorLimitChoice.elcEndZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndpointColorLimitChoice.elcEndYPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndpointColorLimitChoice.elcEndXPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndpointColorLimitChoice.elcStartZone" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TEndPointColorLimits">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointColorLimits.SetMinColorLimit(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointColorLimits.SetMaxColorLimit(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointColorLimits.SetColoringChoice(PathlineReader.TEndpointColorLimitChoice)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointColorLimits.FMaxColorLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointColorLimits.FUseLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointColorLimits.FMinColorLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointColorLimits.FColoringChoice" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointColorLimits.UseLimit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointColorLimits.MaxColorLimit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointColorLimits.MinColorLimit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointColorLimits.ColoringChoice[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointColorLimits.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointColorLimits.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointColorLimits.SetUseLimit(System.Boolean)" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointColorLimits.FColoringChoice" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TEndPointReader">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.Points[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.MaxEndZone[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.MinEndZone[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.MaxStartZone[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.MinStartZone[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.MaxTrackingTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.MinTrackingTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.MaxReleaseTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.MinReleaseTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.FileName[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.FileDate[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.DisplayLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.DisplayEndPoints[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.ColorParameters[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.ColorLimits[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.Invalidate()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.Draw3D()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.Draw(GoPhastTypes.TDataSetOrientation,GR32.TBitmap32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.ReadFile()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.Create()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TEndPointReader.EndPointGLIndex[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.Record3DEndPoints()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.SetMinStartZone(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.SetMinEndZone(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.SetMaxStartZone(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.SetMaxEndZone(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.SetMinReleaseTime(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.SetMaxReleaseTime(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.SetColorParameters(ColorSchemes.TColorParameters)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.SetTrackingMinTime(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.SetMaxTrackingTime(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.SetColorLimits(PathlineReader.TEndPointColorLimits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.SetDisplayLimits(PathlineReader.TEndPointDisplayLimits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.GetPointColor(System.Double,System.Double,PathlineReader.TEndPoint)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.GetMinMaxValues(ref@System.Double,ref@System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.GetEndPointGLIndex()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.SetFileDate(System.TDateTime)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TEndPointReader.SetPoints(PathlineReader.TEndPoints)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FPathlineGLIndex" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FListInitialized" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FRecordedEndPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FDrawingEndPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FMaxStartZone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FMinEndZone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FMaxEndZone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FMinStartZone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FMaxReleaseTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FMinReleaseTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FColorParameters" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FMinTrackingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FMaxTrackingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FColorLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FDisplayLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FDisplayEndPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.StartZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FFileDate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FFileName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TEndPointReader.FPoints" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointReader.FColorLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointReader.FDisplayLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TEndPointReader.FPoints" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.LayerLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.RowLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.ColumnLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.LimitToCurrentIn2D[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.ShowChoice[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.SetRowLimits(PathlineReader.TShowIntegerLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.SetLimitToCurrentIn2D(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.SetLayerLimits(PathlineReader.TShowIntegerLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.SetColumnLimits(PathlineReader.TShowIntegerLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.SetShowChoice(PathlineReader.TShowChoice)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.FColumnLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.FRowLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.FLimitToCurrentIn2D" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.FLayerLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.FShowChoice" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.FColumnLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.FLayerLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.FShowChoice" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TTimeSeriesDisplayLimits.FRowLimits" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TTimeSeriesPoint">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesPoint.TimeStep[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesPoint.TrackingTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesPoint.LocalZ[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesPoint.Z[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesPoint.Y[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesPoint.X[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesPoint.YPrime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesPoint.XPrime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesPoint.Column[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesPoint.Row[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesPoint.Layer[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesPoint.ParticleIndex[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesPoint.TimeStepIndex[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesPoint.ShouldShowSeries(PathlineReader.TTimeSeriesDisplayLimits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesPoint.ShouldShow(PathlineReader.TTimeSeriesDisplayLimits,GoPhastTypes.TDataSetOrientation,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesPoint.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesPoint.CheckLimits(PathlineReader.TTimeSeriesDisplayLimits)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesPoint.FColumn" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesPoint.FYPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesPoint.FRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesPoint.FXPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesPoint.FY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesPoint.FX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesPoint.FZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesPoint.FLocalZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesPoint.FTimeStep" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesPoint.FTrackingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesPoint.FLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesPoint.FParticleIndex" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesPoint.FTimeStepIndex" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TTimeSeriesPoints">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesPoints.Points[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesPoints.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesPoints.GetPoint(System.Int32)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TTimeSeries">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeries.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeries.SetPoints(PathlineReader.TTimeSeriesPoints)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeries.FPoints" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeries.Points[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeries.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeries.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TTimeSeries.FPoints" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TTimeSeriesCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesCollection.Series[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesCollection.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesCollection.GetLine(System.Int32)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TTimeSeriesColorLimitChoice">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesColorLimitChoice.tscEndZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesColorLimitChoice.tscEndYPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesColorLimitChoice.tscEndXPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesColorLimitChoice.tscStartZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesColorLimitChoice.tscStartYPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesColorLimitChoice.tscStartXPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesColorLimitChoice.tscZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesColorLimitChoice.tscYPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesColorLimitChoice.tscXPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesColorLimitChoice.tscParticleNumber" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesColorLimitChoice.tscNone" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits.UseLimit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits.MaxColorLimit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits.MinColorLimit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits.ColoringChoice[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits.SetUseLimit(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits.SetMinColorLimit(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits.SetMaxColorLimit(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits.SetColoringChoice(PathlineReader.TTimeSeriesColorLimitChoice)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits.FMaxColorLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits.FUseLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits.FMinColorLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits.FColoringChoice" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TTimeSeriesColorLimits.FColoringChoice" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TTimeSeriesReader">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesReader.DisplayLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesReader.TimeIndex[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesReader.MinTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesReader.MaxTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesReader.Series[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesReader.FileDate[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesReader.FileName[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesReader.DisplayTimeSeries[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesReader.ColorParameters[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesReader.ColorLimits[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.Invalidate()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesReader.Times[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesReader.TimeSeriesGLIndex[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TTimeSeriesReader.RecordedTimeSeries[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.Draw3D()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.Draw(GoPhastTypes.TDataSetOrientation,GR32.TBitmap32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.ReadFile()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.GetTimes()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.EnsureGLArrays(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.Record3DTimeSeries(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.GetTimeSeriesGLIndex(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.SetRecordedTimeSeries(System.Int32,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.GetRecordedTimeSeries(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.SetColorParameters(ColorSchemes.TColorParameters)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.SetColorLimits(PathlineReader.TTimeSeriesColorLimits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.SetDisplayLimits(PathlineReader.TTimeSeriesDisplayLimits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.GetPointColor(System.Double,System.Double,PathlineReader.TTimeSeriesPoint)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.CheckShowSeries(PathlineReader.TTimeSeries)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.GetMinMaxValues(ref@System.Double,ref@System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.SetDisplayTimeSeries(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.SetTimeIndex(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.SetMinTime(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.SetMaxTime(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.SetLines(PathlineReader.TTimeSeriesCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TTimeSeriesReader.SetFileDate(System.TDateTime)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesReader.FRealList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesReader.FRecordedTimeSeries" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesReader.FTimeSeriesGLIndex" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesReader.FDrawingTimeSeries" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesReader.FColorParameters" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesReader.FColorLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesReader.FDisplayLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesReader.FDisplayTimeSeries" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesReader.FTimeIndex" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesReader.FMinTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesReader.FMaxTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesReader.FLines" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesReader.FFileDate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TTimeSeriesReader.FFileName" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TTimeSeriesReader.FLines" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TTimeSeriesReader.FColorLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TTimeSeriesReader.FDisplayLimits" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.AssignColor(Graphics.TColor)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.ConvertCoordinates(ModflowGridUnit.TModflowGrid,ref@System.Single,ref@System.Single,ref@FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.ConvertIndicies(System.Int32,System.Int32,ref@System.Int32,ref@System.Int32,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.GetZ(ModflowGridUnit.TModflowGrid,System.Int32,System.Int32,System.Int32,System.Single,ref@System.Single)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TShowChoice">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TShowChoice.scEnd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TShowChoice.scStart" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TShowChoice.scSpecified" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TShowChoice.scAll" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TShowIntegerLimit">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TShowIntegerLimit.EndLimit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TShowIntegerLimit.StartLimit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TShowIntegerLimit.UseLimit[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TShowIntegerLimit.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TShowIntegerLimit.SetUseLimit(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TShowIntegerLimit.SetStartLimit(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TShowIntegerLimit.SetEndLimit(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TShowIntegerLimit.FStartLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TShowIntegerLimit.FUseLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TShowIntegerLimit.FEndLimit" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TShowFloatLimit">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TShowFloatLimit.EndLimit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TShowFloatLimit.StartLimit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TShowFloatLimit.UseLimit[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TShowFloatLimit.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TShowFloatLimit.SetUseLimit(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TShowFloatLimit.SetStartLimit(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TShowFloatLimit.SetEndLimit(System.Double)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TShowFloatLimit.FStartLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TShowFloatLimit.FUseLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TShowFloatLimit.FEndLimit" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TPathLineDisplayLimits">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.FShowChoice" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.FColumnLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.FRowLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.FLayerLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.FLimitToCurrentIn2D" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.TimeLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.LayerLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.RowLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.ColumnLimits[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.LimitToCurrentIn2D[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.ShowChoice[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.SetTimeLimits(PathlineReader.TShowFloatLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.SetShowChoice(PathlineReader.TShowChoice)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.SetRowLimits(PathlineReader.TShowIntegerLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.SetLayerLimits(PathlineReader.TShowIntegerLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.SetColumnLimits(PathlineReader.TShowIntegerLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.SetLimitToCurrentIn2D(System.Boolean)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.FTimeLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.FTimeLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.FShowChoice" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.FColumnLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.FRowLimits" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TPathLineDisplayLimits.FLayerLimits" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TColorLimitChoice">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TColorLimitChoice.clcYPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TColorLimitChoice.clcXPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TColorLimitChoice.clcTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TColorLimitChoice.clcNone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TColorLimitChoice.clcZ" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PathlineReader.TPathlineColorLimits">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathlineColorLimits.SetMaxColorLimit(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathlineColorLimits.SetMinColorLimit(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathlineColorLimits.SetColoringChoice(PathlineReader.TColorLimitChoice)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathlineColorLimits.FUseLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathlineColorLimits.FMinColorLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathlineColorLimits.FMaxColorLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PathlineReader.TPathlineColorLimits.FColoringChoice" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathlineColorLimits.UseLimit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathlineColorLimits.MaxColorLimit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathlineColorLimits.MinColorLimit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PathlineReader.TPathlineColorLimits.ColoringChoice[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathlineColorLimits.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathlineColorLimits.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PathlineReader.TPathlineColorLimits.SetUseLimit(System.Boolean)" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:PathlineReader.TPathlineColorLimits.FColoringChoice" />
+    </reference>
+  </view>
+</nodeSet>

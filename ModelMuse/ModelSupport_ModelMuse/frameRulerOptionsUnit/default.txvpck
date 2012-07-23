@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="q3mhb00ppaa1djn_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameRulerOptionsUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameRulerOptionsUnit.TframeRulerOptions">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameRulerOptionsUnit.TframeRulerOptions.lblPreviewLabel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameRulerOptionsUnit.TframeRulerOptions.lblSampleNumber" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameRulerOptionsUnit.TframeRulerOptions.lblPrecision" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameRulerOptionsUnit.TframeRulerOptions.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameRulerOptionsUnit.TframeRulerOptions.GetData(RbwRuler.TRbwRuler)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameRulerOptionsUnit.TframeRulerOptions.SetPreview()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameRulerOptionsUnit.TframeRulerOptions.FRuler" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameRulerOptionsUnit.TframeRulerOptions.sePrecisionChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameRulerOptionsUnit.TframeRulerOptions.rdePreviewNumberChange(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameRulerOptionsUnit.TframeRulerOptions.seDigits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameRulerOptionsUnit.TframeRulerOptions.sePrecision" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameRulerOptionsUnit.TframeRulerOptions.Label1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameRulerOptionsUnit.TframeRulerOptions.rdePreviewNumber" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameRulerOptionsUnit.TframeRulerOptions.lblPreview" />
+    </reference>
+  </view>
+</nodeSet>

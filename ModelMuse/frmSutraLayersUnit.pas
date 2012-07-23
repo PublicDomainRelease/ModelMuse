@@ -20,7 +20,6 @@ type
     btnHelp: TBitBtn;
     btnOK: TBitBtn;
     btnCancel: TBitBtn;
-    GridPanel1: TGridPanel;
     sbAddUnit: TSpeedButton;
     sbInsertUnit: TSpeedButton;
     sbDeleteUnit: TSpeedButton;
@@ -444,8 +443,6 @@ end;
 procedure TUndoDefineSutraLayers.DoCommand;
 var
   LocalModel: TPhastModel;
-//  Index: Integer;
-//  ChildModel: TChildModel;
 begin
   frmGoPhast.CanDraw := False;
   try
@@ -456,6 +453,11 @@ begin
     LocalModel.SutraLayerStructure.Assign(FNewLayerStructure);
     LocalModel.SutraLayerStructure.NewDataSets := nil;
     UpdatedRequiredDataSets;
+    LocalModel.UpdateDataSetDimensions;
+    if Assigned(LocalModel.Mesh) then
+    begin
+      LocalModel.Mesh.UpdateElevations;
+    end;
 //    for Index := 0 to LocalModel.ChildModels.Count - 1 do
 //    begin
 //      ChildModel := LocalModel.ChildModels[Index].ChildModel;
@@ -469,19 +471,20 @@ begin
 end;
 
 procedure TUndoDefineSutraLayers.Undo;
-//var
-//  Index: Integer;
-//  ChildModel: TChildModel;
-//  NewDis: TChildDiscretizationCollection;
+var
+  LocalModel: TPhastModel;
 begin
   frmGoPhast.CanDraw := False;
   try
     inherited;
-    frmGoPhast.PhastModel.LayerStructure.NewDataSets := FNewDataSets;
-    frmGoPhast.PhastModel.LayerStructure.Assign(FOldLayerStructure);
-    frmGoPhast.PhastModel.LayerStructure.RemoveNewDataSets;
-    frmGoPhast.PhastModel.LayerStructure.NewDataSets := nil;
+    LocalModel := frmGoPhast.PhastModel;
+    LocalModel.LayerStructure.NewDataSets := FNewDataSets;
+    LocalModel.LayerStructure.Assign(FOldLayerStructure);
+    LocalModel.LayerStructure.RemoveNewDataSets;
+    LocalModel.LayerStructure.NewDataSets := nil;
     UpdatedRequiredDataSets;
+    LocalModel.UpdateDataSetDimensions;
+    LocalModel.Mesh.UpdateElevations;
 //    for Index := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
 //    begin
 //      ChildModel := frmGoPhast.PhastModel.ChildModels[Index].ChildModel;

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="46lq6je7q6f1ywh_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.cbGage4Click(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.cbGagDeltaClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.cbGagFluxAndCondClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.cbGagStandardClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.rdeCenterLakeChange(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.cbGage4" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.cbGagDelta" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.cbGagFluxAndCond" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.cbGagStandard" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.gbGage" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.lblLakeID" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.rdeLakeID" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.lblSill" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.rdeSill" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.lblCenterLake" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.rdeCenterLake" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.rdeInitialStage" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectLAK_Unit.TframeScreenObjectLAK.lblInitialStage" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameScreenObjectLAK_Unit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+  </view>
+</nodeSet>

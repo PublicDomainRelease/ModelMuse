@@ -1,26 +1,27 @@
 inherited frmGoTo: TfrmGoTo
   Left = 527
   Top = 253
-  Width = 304
+  Width = 317
   Height = 360
   HelpType = htKeyword
   HelpKeyword = 'Go_To_Dialog_Box'
   VertScrollBar.Range = 82
   ActiveControl = pcMain
   Caption = 'Go To'
-  ExplicitWidth = 304
+  ExplicitWidth = 317
   ExplicitHeight = 360
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pcMain: TPageControl
     Left = 0
     Top = 0
-    Width = 296
-    Height = 244
+    Width = 299
+    Height = 233
     ActivePage = tabCell
     Align = alClient
     TabOrder = 0
     OnChange = pcMainChange
+    ExplicitWidth = 286
     object tabPosition: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'The_Position_Tab'
@@ -30,10 +31,10 @@ inherited frmGoTo: TfrmGoTo
       ExplicitWidth = 0
       ExplicitHeight = 199
       DesignSize = (
-        288
-        211)
+        291
+        200)
       object lblX: TLabel
-        Left = 256
+        Left = 268
         Top = 11
         Width = 11
         Height = 18
@@ -42,7 +43,7 @@ inherited frmGoTo: TfrmGoTo
         ExplicitLeft = 271
       end
       object lblY: TLabel
-        Left = 256
+        Left = 268
         Top = 52
         Width = 9
         Height = 18
@@ -51,7 +52,7 @@ inherited frmGoTo: TfrmGoTo
         ExplicitLeft = 271
       end
       object lblZ: TLabel
-        Left = 256
+        Left = 268
         Top = 92
         Width = 9
         Height = 18
@@ -60,7 +61,7 @@ inherited frmGoTo: TfrmGoTo
         ExplicitLeft = 271
       end
       object lblXPrime: TLabel
-        Left = 256
+        Left = 268
         Top = 132
         Width = 14
         Height = 18
@@ -69,7 +70,7 @@ inherited frmGoTo: TfrmGoTo
         ExplicitLeft = 271
       end
       object lblYPrime: TLabel
-        Left = 256
+        Left = 268
         Top = 172
         Width = 12
         Height = 18
@@ -80,7 +81,7 @@ inherited frmGoTo: TfrmGoTo
       object rdeX: TRbwDataEntry
         Left = 8
         Top = 8
-        Width = 240
+        Width = 253
         Height = 28
         Cursor = crIBeam
         Anchors = [akLeft, akTop, akRight]
@@ -93,7 +94,7 @@ inherited frmGoTo: TfrmGoTo
       object rdeY: TRbwDataEntry
         Left = 8
         Top = 48
-        Width = 240
+        Width = 253
         Height = 28
         Cursor = crIBeam
         Anchors = [akLeft, akTop, akRight]
@@ -106,7 +107,7 @@ inherited frmGoTo: TfrmGoTo
       object rdeZ: TRbwDataEntry
         Left = 8
         Top = 88
-        Width = 240
+        Width = 253
         Height = 28
         Cursor = crIBeam
         Anchors = [akLeft, akTop, akRight]
@@ -119,7 +120,7 @@ inherited frmGoTo: TfrmGoTo
       object rdeXPrime: TRbwDataEntry
         Left = 8
         Top = 128
-        Width = 240
+        Width = 253
         Height = 28
         Cursor = crIBeam
         Anchors = [akLeft, akTop, akRight]
@@ -132,7 +133,7 @@ inherited frmGoTo: TfrmGoTo
       object rdeYPrime: TRbwDataEntry
         Left = 8
         Top = 168
-        Width = 240
+        Width = 253
         Height = 28
         Cursor = crIBeam
         Anchors = [akLeft, akTop, akRight]
@@ -148,56 +149,49 @@ inherited frmGoTo: TfrmGoTo
       HelpKeyword = 'The_Element_Tab'
       Caption = 'Element'
       ImageIndex = 1
+      ExplicitWidth = 278
       DesignSize = (
-        288
-        211)
+        291
+        200)
       object lblCol: TLabel
-        Left = 221
+        Left = 234
         Top = 41
         Width = 53
         Height = 18
         Anchors = [akTop, akRight]
         Caption = 'Column'
+        ExplicitLeft = 221
       end
       object lblRow: TLabel
-        Left = 221
+        Left = 234
         Top = 73
         Width = 31
         Height = 18
         Anchors = [akTop, akRight]
         Caption = 'Row'
+        ExplicitLeft = 221
       end
       object lblLay: TLabel
-        Left = 221
+        Left = 234
         Top = 105
         Width = 39
         Height = 18
         Anchors = [akTop, akRight]
         Caption = 'Layer'
+        ExplicitLeft = 221
       end
       object lblModel: TLabel
-        Left = 221
+        Left = 234
         Top = 12
         Width = 43
         Height = 18
         Anchors = [akTop, akRight]
         Caption = 'Model'
+        ExplicitLeft = 221
       end
       object seCol: TJvSpinEdit
-        Left = 3
+        Left = 16
         Top = 41
-        Width = 212
-        Height = 26
-        ButtonKind = bkClassic
-        MaxValue = 2147483647.000000000000000000
-        MinValue = 1.000000000000000000
-        Value = 1.000000000000000000
-        Anchors = [akTop, akRight]
-        TabOrder = 0
-      end
-      object seRow: TJvSpinEdit
-        Left = 3
-        Top = 72
         Width = 212
         Height = 26
         ButtonKind = bkClassic
@@ -206,10 +200,11 @@ inherited frmGoTo: TfrmGoTo
         Value = 1.000000000000000000
         Anchors = [akTop, akRight]
         TabOrder = 1
+        ExplicitLeft = 3
       end
-      object seLayer: TJvSpinEdit
-        Left = 3
-        Top = 103
+      object seRow: TJvSpinEdit
+        Left = 16
+        Top = 72
         Width = 212
         Height = 26
         ButtonKind = bkClassic
@@ -218,16 +213,31 @@ inherited frmGoTo: TfrmGoTo
         Value = 1.000000000000000000
         Anchors = [akTop, akRight]
         TabOrder = 2
+        ExplicitLeft = 3
+      end
+      object seLayer: TJvSpinEdit
+        Left = 16
+        Top = 103
+        Width = 212
+        Height = 26
+        ButtonKind = bkClassic
+        MaxValue = 2147483647.000000000000000000
+        MinValue = 1.000000000000000000
+        Value = 1.000000000000000000
+        Anchors = [akTop, akRight]
+        TabOrder = 3
+        ExplicitLeft = 3
       end
       object comboModel: TComboBox
         Left = 3
         Top = 9
-        Width = 212
+        Width = 225
         Height = 26
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 3
+        TabOrder = 0
         OnChange = comboModelChange
+        ExplicitWidth = 212
       end
     end
     object tabObject: TTabSheet
@@ -299,33 +309,30 @@ inherited frmGoTo: TfrmGoTo
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 244
-    Width = 296
+    Top = 233
+    Width = 299
     Height = 82
     Align = alBottom
     ParentColor = True
     TabOrder = 1
+    ExplicitWidth = 286
     object btnCancel: TBitBtn
       Left = 197
       Top = 40
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 4
+      TabOrder = 5
     end
     object btnOK: TBitBtn
       Left = 101
       Top = 40
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 5
+      TabOrder = 4
       OnClick = btnOKClick
     end
     object cbSide: TCheckBox
@@ -366,10 +373,8 @@ inherited frmGoTo: TfrmGoTo
       Top = 40
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 3
       OnClick = btnHelpClick
     end

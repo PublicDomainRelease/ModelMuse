@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="mqntdkeroolj0cg_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TProgressProcedure">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TShapeRecordHeader">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeRecordHeader.ContentLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeRecordHeader.RecordNumber" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TNullShapeRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TNullShapeRecord.ShapeType" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TPointShapeRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPointShapeRecord.Y" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPointShapeRecord.X" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPointShapeRecord.ShapeType" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TShapePoint">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapePoint.Y" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapePoint.X" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TMultiPointShapeRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPointShapeRecord.NumPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPointShapeRecord.BoundingBox" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPointShapeRecord.ShapeType" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TMultiPointShapeRecord.BoundingBox" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TPolyLineShapeRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolyLineShapeRecord.NumPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolyLineShapeRecord.NumParts" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolyLineShapeRecord.BoundingBox" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolyLineShapeRecord.ShapeType" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TPolyLineShapeRecord.BoundingBox" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TPolygonShapeRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolygonShapeRecord.NumPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolygonShapeRecord.NumParts" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolygonShapeRecord.BoundingBox" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolygonShapeRecord.ShapeType" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TPolygonShapeRecord.BoundingBox" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TPointMShapeRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPointMShapeRecord.M" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPointMShapeRecord.Y" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPointMShapeRecord.X" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPointMShapeRecord.ShapeType" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TShapePointM">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapePointM.M" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapePointM.Y" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapePointM.X" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TMultiPointMShapeRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPointMShapeRecord.NumPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPointMShapeRecord.BoundingBox" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPointMShapeRecord.ShapeType" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TMultiPointMShapeRecord.BoundingBox" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TPolyLineMShapeRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolyLineMShapeRecord.NumPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolyLineMShapeRecord.NumParts" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolyLineMShapeRecord.BoundingBox" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolyLineMShapeRecord.ShapeType" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TPolyLineMShapeRecord.BoundingBox" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TPolygonMShapeRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolygonMShapeRecord.NumPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolygonMShapeRecord.NumParts" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolygonMShapeRecord.BoundingBox" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolygonMShapeRecord.ShapeType" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TPolygonMShapeRecord.BoundingBox" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TPointZShapeRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPointZShapeRecord.X" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPointZShapeRecord.ShapeType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPointZShapeRecord.M" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPointZShapeRecord.Z" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPointZShapeRecord.Y" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TMultiPointZShapeRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPointZShapeRecord.NumPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPointZShapeRecord.BoundingBox" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPointZShapeRecord.ShapeType" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TMultiPointZShapeRecord.BoundingBox" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TPolyLineZShapeRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolyLineZShapeRecord.NumPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolyLineZShapeRecord.NumParts" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolyLineZShapeRecord.BoundingBox" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolyLineZShapeRecord.ShapeType" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TPolyLineZShapeRecord.BoundingBox" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TPolygonZShapeRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolygonZShapeRecord.NumPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolygonZShapeRecord.NumParts" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolygonZShapeRecord.BoundingBox" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TPolygonZShapeRecord.ShapeType" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TPolygonZShapeRecord.BoundingBox" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord.ZMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord.ZMin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord.Points" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord.PartTypes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord.Parts" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord.NumPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord.NumParts" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord.BoundingBox" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord.ShapeType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord.MArray" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord.MMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord.MMin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord.ZArray" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord.Points" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TMultiPatchShapeRecord.BoundingBox" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TShapeIndexRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeIndexRecord.ContentLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeIndexRecord.Offset" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TShapeObject">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.TShapeObject.UpdateBoundingBox()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.TShapeObject.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeObject.FZMin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeObject.FZMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeObject.FZArray" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeObject.FShapeType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeObject.FPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeObject.FPartTypes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeObject.FParts" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeObject.FNumPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeObject.FNumParts" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeObject.FMMin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeObject.FMMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeObject.FMArray" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapeObject.FBoundingBox" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TShapeObject.FBoundingBox" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TShapeObject.FPoints" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TShapefileGeometryReader">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileGeometryReader.FFileHeader" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.TShapefileGeometryReader.ReadFromFile(System.String,System.String)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ShapefileUnit.TShapefileGeometryReader.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ShapefileUnit.TShapefileGeometryReader.FileHeader[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.TShapefileGeometryReader.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.TShapefileGeometryReader.Create()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ShapefileUnit.TShapefileGeometryReader.Count[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.TShapefileGeometryReader.GetItems(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.TShapefileGeometryReader.GetCount()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileGeometryReader.FOnProgress" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileGeometryReader.FShapeObjects" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ShapefileUnit.TShapefileGeometryReader.OnProgress[]" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TShapefileGeometryReader.FFileHeader" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TShapefileGeometryReader.FOnProgress" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.SetCapacity(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.GetItem(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.GetCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.GetCapacity()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.FOnProgress" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.FShapes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.FShapeType" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.OnProgress[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.WriteToFile(System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.AddShape(ShapefileUnit.TShapeObject)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.Count[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.Capacity[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.Create(System.Int32,System.Boolean)" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ShapefileUnit.TShapefileGeometryWriter.FOnProgress" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TBytePos">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TBytePos.bpByteVal" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TBytePos.bpEndVal" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TDoubleEndianCnvRec">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TDoubleEndianCnvRec.Bytes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TDoubleEndianCnvRec.EndianVal" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TLongintEndianCnvRec">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TLongintEndianCnvRec.Bytes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TLongintEndianCnvRec.EndianVal" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.FileShapeType(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.ConvertInteger(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.ConvertDouble(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.SwapLongIntBytes(ShapefileUnit.PLongintEndianCnvRec,ShapefileUnit.PLongintEndianCnvRec)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ShapefileUnit.SwapDoubleBytes(ShapefileUnit.PDoubleEndianCnvRec,ShapefileUnit.PDoubleEndianCnvRec)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.ptRing" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.ptFirstRing" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.ptInnerRing" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.ptOuterRing" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.ptTriangleFan" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.ptTriangleStrip" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.stMultiPatch" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.stMultipointM" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.stPolygonM" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.stPolyLineM" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.stPointM" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.stMultiPointZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.stPolygonZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.stPolyLineZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.stPointZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.stMultiPoint" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.stPolygon" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.stPolyLine" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.stPoint" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.stNull" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TBoundingBox">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TBoundingBox.Box" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TBoundingBox.YMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TBoundingBox.XMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TBoundingBox.YMin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TBoundingBox.XMin" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ShapefileUnit.TShapefileHeader">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.BoundingBoxMMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.BoundingBoxMMin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.BoundingBoxZMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.BoundingBoxZMin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.BoundingBoxYMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.BoundingBoxXMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.BoundingBoxYMin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.BoundingBoxXMin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.ShapeType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.Version" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.FileLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.Unused5" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.Unused4" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.Unused3" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.Unused2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.Unused1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ShapefileUnit.TShapefileHeader.FileCode" />
+    </reference>
+  </view>
+</nodeSet>

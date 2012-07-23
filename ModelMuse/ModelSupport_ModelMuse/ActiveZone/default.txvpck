@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="81o69bjmoaku4tq_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ActiveZone.TActiveDataSets">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ActiveZone.TActiveDataSets.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ActiveZone.TActiveDataSets.FActive" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ActiveZone.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ActiveZone.TActiveZone">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ActiveZone.TActiveZone.AssignProperties(System.Int32,System.Int32,System.Int32,ZoneUnit.TCustomDataSets,System.Boolean,System.Boolean,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ActiveZone.TActiveZone.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ActiveZone.TActiveZone.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ActiveZone.TActiveZone.FActive" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ActiveZone.TActiveZoneGroup">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ActiveZone.TActiveZoneGroup.GetZone(System.Int32)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ActiveZone.TActiveZoneGroup.Zones[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ActiveZone.TActiveZoneGroup.Create()" />
+    </reference>
+  </view>
+</nodeSet>

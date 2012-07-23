@@ -175,7 +175,7 @@ type
       write SetMt3dmsChemReaction;
     property Mt3dmsTransObs: TMt3dmsTransportObservations read FMt3dmsTransObs
       write SetMt3dmsTransObs;
-    // Assign, Create, Destroy, SelectedPackageCount
+    // Assign, Create, Destroy, SelectedModflowPackageCount
     // and Reset must be updated each time a new package is added.
   end;
 

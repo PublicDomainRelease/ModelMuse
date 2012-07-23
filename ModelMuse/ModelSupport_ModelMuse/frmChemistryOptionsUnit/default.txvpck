@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="qhnah9mwo87u9bp_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmChemistryOptionsUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.rdeDiffusivity" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.lblDiffusivity" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.cbSurface" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.cbSolidSolution" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.cbKinetics" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.cbGasPhases" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.cbExchange" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.cbEquilibriumPhases" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.cbChemistry" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.btnCancel" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.cbChemistryClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmChemistryOptionsUnit.TfrmChemistryOptions.btnOKClick(System.Object)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmChemistryOptionsUnit.TUndoChemistryOptions">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TUndoChemistryOptions.FOldChemistryOptions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TUndoChemistryOptions.FNewSoluteTransport" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TUndoChemistryOptions.FNewDiffusivity" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TUndoChemistryOptions.FNewChemistryOptions" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmChemistryOptionsUnit.TUndoChemistryOptions.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmChemistryOptionsUnit.TUndoChemistryOptions.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmChemistryOptionsUnit.TUndoChemistryOptions.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmChemistryOptionsUnit.TUndoChemistryOptions.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmChemistryOptionsUnit.TUndoChemistryOptions.Description()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TUndoChemistryOptions.FOldSoluteTransport" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmChemistryOptionsUnit.TUndoChemistryOptions.FOldDiffusivity" />
+    </reference>
+  </view>
+</nodeSet>

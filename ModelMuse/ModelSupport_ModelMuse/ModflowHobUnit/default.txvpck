@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="8tkn2qscqw6zjjp_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHobUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHobUnit.THobRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobRecord.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobRecord.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobRecord.HeadAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobRecord.Time" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobRecord.Head" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobRecord.Cell" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHobUnit.TMultiObsMethod">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.TMultiObsMethod.momHeadAndDrawdown" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.TMultiObsMethod.momAllHeads" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHobUnit.THobItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobItem.Comment[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobItem.StatFlag[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobItem.Statistic[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobItem.Time[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobItem.Head[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobItem.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobItem.SetComment(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobItem.SetStatistic(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobItem.SetStatFlag(GoPhastTypes.TStatFlag)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobItem.SetTime(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobItem.SetHead(System.Double)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobItem.FComment" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobItem.FStatistic" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobItem.FStatFlag" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobItem.FTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobItem.FHead" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHobUnit.THobCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobCollection.CountObservationTimes(System.Double,System.Double)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobCollection.ObservationHeads[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobCollection.ObservationColumnOffset[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobCollection.ObservationRowOffset[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobCollection.HobItems[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobCollection.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobCollection.EvaluateHeadObservations()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobCollection.Create(ModflowHobUnit.THobBoundary,System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobCollection.ScreenObject[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobCollection.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobCollection.GetHobItems(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobCollection.FScreenObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobCollection.FObservationColumnOffset" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobCollection.FObservationRowOffset" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobCollection.FObservationHeads" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobCollection.FBoundary" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowHobUnit.THobCollection.FObservationHeads" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowHobUnit.THobCollection.FBoundary" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHobUnit.THob_Cell">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THob_Cell.HeadAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THob_Cell.Time[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THob_Cell.Head[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THob_Cell.GetSection()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THob_Cell.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THob_Cell.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THob_Cell.GetIntegerAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THob_Cell.GetRealAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THob_Cell.GetRealValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THob_Cell.GetIntegerValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THob_Cell.GetRow()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THob_Cell.GetLayer()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THob_Cell.GetColumn()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THob_Cell.GetHeadAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THob_Cell.GetTime()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THob_Cell.GetHead()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THob_Cell.Values" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowHobUnit.THob_Cell.Values" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHobUnit.TObsCellList">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.TObsCellList.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.TObsCellList.Count[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TObsCellList.Add(ModflowHobUnit.THob_Cell)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TObsCellList.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TObsCellList.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TObsCellList.GetItem(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TObsCellList.GetCount()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.TObsCellList.FList" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHobUnit.TMultiHeadItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.TMultiHeadItem.Proportion[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.TMultiHeadItem.Layer[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TMultiHeadItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.TMultiHeadItem.Used[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TMultiHeadItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TMultiHeadItem.SetProportion(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TMultiHeadItem.SetLayer(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.TMultiHeadItem.FUsed" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.TMultiHeadItem.FProportion" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.TMultiHeadItem.FLayer" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHobUnit.TMultiHeadCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.TMultiHeadCollection.MultiHeadItems[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TMultiHeadCollection.Create(ModflowHobUnit.THobBoundary,System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TMultiHeadCollection.GetMultiHeadItem(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.TMultiHeadCollection.FScreenObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.TMultiHeadCollection.FBoundary" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowHobUnit.TMultiHeadCollection.FBoundary" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHobUnit.THobBoundary">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobBoundary.Purpose[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobBoundary.MultiObsMethod[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobBoundary.LayerFractions[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobBoundary.Values[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobBoundary.ObservationName[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobBoundary.CellListCount[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobBoundary.CellLists[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobBoundary.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobBoundary.Used()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobBoundary.ScreenObject[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.THobBoundary.PhastModel[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobBoundary.EvaluateHeadObservations(GoPhastTypes.TObservationPurpose)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobBoundary.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobBoundary.Create(System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobBoundary.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobBoundary.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobBoundary.SetPurpose(GoPhastTypes.TObservationPurpose)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobBoundary.GetCellListCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobBoundary.SetMultiObsMethod(ModflowHobUnit.TMultiObsMethod)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobBoundary.GetCellList(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobBoundary.SetLayerFractions(ModflowHobUnit.TMultiHeadCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobBoundary.SetObservationName(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.THobBoundary.SetValues(ModflowHobUnit.THobCollection)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobBoundary.FPurpose" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobBoundary.FMultiObsMethod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobBoundary.FLayerFractions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobBoundary.FObservationName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobBoundary.FScreenObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobBoundary.FValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.THobBoundary.FPhastModel" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowHobUnit.THobBoundary.FLayerFractions" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowHobUnit.THobBoundary.FValues" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowHobUnit.THobBoundary.FMultiObsMethod" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHobUnit.TObservationTimeList">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.TObservationTimeList.CellLists[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHobUnit.TObservationTimeList.OnInvalidate[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TObservationTimeList.Initialize(ModflowHobUnit.THobCollection,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TObservationTimeList.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TObservationTimeList.Create(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TObservationTimeList.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TObservationTimeList.SetUpToDate(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHobUnit.TObservationTimeList.GetCellList(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.TObservationTimeList.FCellList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHobUnit.TObservationTimeList.FOnInvalidate" />
+    </reference>
+  </view>
+</nodeSet>

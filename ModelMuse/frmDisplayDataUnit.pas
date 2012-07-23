@@ -8,7 +8,7 @@ uses
   ComCtrls, JvExComCtrls, JvPageListTreeView, JvExControls, StdCtrls, Buttons,
   frameHeadObservationResultsUnit, frameModpathDisplayUnit,
   frameModpathTimeSeriesDisplayUnit, frameModpathEndpointDisplayUnit,
-  frameCustomColorUnit, frameColorGridUnit, frameContourDataUnit;
+  frameCustomColorUnit, frameColorGridUnit, frameContourDataUnit, JvRichEdit;
 
 type
   TPostPages = (ppColorGrid, ppContourData, ppPathline, ppEndPoints,
@@ -147,12 +147,14 @@ begin
     HeadObsSelected or (LocalModel.HeadObsResults.Count > 0);
   tvpglstMain.Items[Ord(ppStreamLink)].Enabled := SfrSelected;
 
-
-  frameStreamLink.GetData;
-  frameHeadObservationResults.GetData;
-  frameModpathDisplay.GetData;
-  frameModpathTimeSeriesDisplay.GetData;
-  frameModpathEndpointDisplay1.GetData;
+  if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+  begin
+    frameStreamLink.GetData;
+    frameHeadObservationResults.GetData;
+    frameModpathDisplay.GetData;
+    frameModpathTimeSeriesDisplay.GetData;
+    frameModpathEndpointDisplay1.GetData;
+  end;
   frameColorGrid.GetData;
   frameContourData.GetData;
 
@@ -170,23 +172,38 @@ procedure TfrmDisplayData.SetData;
 begin
   if pglstMain.ActivePage = jvspStreamLinks then
   begin
-    frameStreamLink.SetData;
+    if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+    begin
+      frameStreamLink.SetData;
+    end;
   end
   else if pglstMain.ActivePage = jvspHeadObsResults then
   begin
-    frameHeadObservationResults.SetData;
+    if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+    begin
+      frameHeadObservationResults.SetData;
+    end;
   end
   else if pglstMain.ActivePage = jvspModpathPathline then
   begin
-    frameModpathDisplay.SetData;
+    if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+    begin
+      frameModpathDisplay.SetData;
+    end;
   end
   else if pglstMain.ActivePage = jvspModpathTimeSeries then
   begin
-    frameModpathTimeSeriesDisplay.SetData;
+    if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+    begin
+      frameModpathTimeSeriesDisplay.SetData;
+    end;
   end
   else if pglstMain.ActivePage = jvspModpathEndpoints then
   begin
-    frameModpathEndpointDisplay1.SetData;
+    if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+    begin
+      frameModpathEndpointDisplay1.SetData;
+    end;
   end
   else if pglstMain.ActivePage = jvspColorGrid then
   begin

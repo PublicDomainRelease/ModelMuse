@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="uvlglngtpi942zh_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmFormulaUnit.TfrmFormula">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.gbLogicalOperators" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.jreFormula" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.JvNetscapeSplitter1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.tvFormulaDiagram" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.tvItems" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.Timer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.Splitter" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.rbFormulaParser" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.pnlRight" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.pnlMain" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.pnlLabelItemTree" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.pnlButtons" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.pnlBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnXor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnTrue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnQuote" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnPlus" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnOr" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnOpenParen" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnNotEqual" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnNot" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnMultiply" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnMinus" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnLessThan" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnLessEquals" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnGreaterThan" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnGreaterOrEquals" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnFunctionHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnFalse" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnEquals" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnE" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnDivide" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnDecimal" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnComma" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnCloseParen" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnAnd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btn9" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btn8" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btn7" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btn6" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btn5" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btn4" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btn3" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btn2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btn1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btn0" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.UpdateTreeList()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmFormulaUnit.TfrmFormula.ResultSet[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.RemoveGIS_Functions()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmFormulaUnit.TfrmFormula.Formula[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmFormulaUnit.TfrmFormula.DataSetGroupName[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.RemoveHufSy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.RemoveHufSs()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.RemoveHufKz()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.RemoveHufKy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.RemoveHufKx()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.RemoveHufFunctions()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.RemoveGetVCont()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.RemoveSpecifiedHeadOnLayer()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.RemoveActiveOnLayer()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.IncludeGIS_Functions()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.CreateNodesForVariables()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.RemoveSpecialImplementor(System.TClass)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.GetGlobalVariables()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.MatchStartingParen(RichEdit.TCharRange)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.MatchEndingParen(RichEdit.TCharRange)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.DiagramFormula()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.SetFormula(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.InsertText(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.GetFormula()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.FSetColor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.FUpdating" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.FDiagramObjectStorage" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.FClickSelectionStart" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.FSelectedNode" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.FResultSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.FNewSelectionStart" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.FNewSelectionLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.FLastButton" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.FFunctions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.FFunctionHelpString" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.FDataSetGroupName" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.jreFormulaSelectionChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.jreFormulaMouseUp(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.tvFormulaDiagramExpanded(System.Object,ComCtrls.TTreeNode)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.tvFormulaDiagramCollapsed(System.Object,ComCtrls.TTreeNode)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.FormDestroy(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.tvItemsDblClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.tvItemsChange(System.Object,ComCtrls.TTreeNode)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.TimerSetSelection(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.SplitterCanResize(System.Object,ref@System.Int32,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.jreFormulaDblClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.jreFormulaChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.FormShow(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.buttonClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnFunctionHelpClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.lbltems" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.gbOperators" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.gbNumbers" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnDiv" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.btnMod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TfrmFormula.gbIntegerOperators" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmFormulaUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.PriorSelectedText" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmFormulaUnit.TVariableEdit">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TVariableEdit.Create(RbwParser.TCustomValue)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmFormulaUnit.TVariableEdit.Variable[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TVariableEdit.FullClassification()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmFormulaUnit.TVariableEdit.ClassificationName()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TVariableEdit.FVariable" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmFormulaUnit.TTreeNodeTextStorage">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TTreeNodeTextStorage.ClosedText" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmFormulaUnit.TTreeNodeTextStorage.OpenText" />
+    </reference>
+  </view>
+</nodeSet>

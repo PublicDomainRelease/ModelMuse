@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="yelmk7czpczr8mp_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSelectResultToImportUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.PaddedIntToStr(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.StrThreeDData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.StrLayerData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.StrModelResults" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.frmSelectResultToImport" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmSelectResultToImportUnit.frmSelectResultToImport" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSelectResultToImportUnit.TModflowResultFormat">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TModflowResultFormat.mfSubBinary" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TModflowResultFormat.mrHufFlux" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TModflowResultFormat.mrHufBinary" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TModflowResultFormat.mrHufAscii" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TModflowResultFormat.mrFlux" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TModflowResultFormat.mrAscii" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TModflowResultFormat.mrBinary" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSelectResultToImportUnit.TDataArrayForm">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TDataArrayForm.dafNone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TDataArrayForm.dafSystem" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TDataArrayForm.dafLayer" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.SelectFiles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.SubsidenceDescription(System.String,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.GetShouldIgnore(GoPhastTypes.TOneDRealArray,ReadModflowArrayUnit.TModflowFloat,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.UpdateCombo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.AssignObjectName(ref@ScreenObjectUnit.TScreenObject,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.AssignLimits(RealListUnit.TRealList,RealListUnit.TRealList,DataSetUnit.TDataArray,GoPhastTypes.TOneDRealArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.AskUserIfNewDataSet()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.Assign3DValues(ScreenObjectUnit.TScreenObject,DataSetUnit.TDataArray,ReadModflowArrayUnit.T3DTModflowArray,System.Int32,System.Boolean,GoPhastTypes.TOneDRealArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.Read3DArray(ref@System.Int32,ref@System.Boolean,ref@System.Int32,ref@System.Int32,ref@System.String,ref@ReadModflowArrayUnit.T3DTModflowArray,ReadModflowArrayUnit.TModflowPrecision,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.CloseFiles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.CreateOrRetrieve3DDataSet(System.String,System.Int32,System.Int32,IntListUnit.TIntegerList,Classes.TList,out@DataSetUnit.TDataArray,out@System.String,System.Boolean,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.AssignValues(System.Int32,ScreenObjectUnit.TScreenObject,DataSetUnit.TDataArray,ReadModflowArrayUnit.TModflowDoubleArray,GoPhastTypes.TOneDRealArray,out@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.CreateScreenObject(System.Int32,out@ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.CreateOrRetrieveLayerDataSet(System.String,System.Int32,System.Int32,System.Int32,out@DataSetUnit.TDataArray,out@System.String,Classes.TList,ScreenObjectUnit.TScreenObjectList,frmSelectResultToImportUnit.TDataArrayForm)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.ReadArray(ref@ReadModflowArrayUnit.TModflowDoubleArray,ref@System.Boolean,ref@System.Int32,ref@System.Int32,ref@System.Int32,ref@System.String,ReadModflowArrayUnit.TModflowPrecision)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.OpenResultFile(out@ReadModflowArrayUnit.TModflowPrecision,out@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.DefaultFileName()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FGrid" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FMaxLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FMaxStep" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FMaxPeriod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FCreateNewDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FAskedUser" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FResultFormat" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FFileVariable" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FFileStream" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FDescriptions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FSteps" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FPeriods" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FFileName" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.btnSelectNoneClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.btnSelectAllClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.odSelectFilesTypeChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FormDestroy(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.clDataClickCheck(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.rgDisplayChoice" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.btnSelectNone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.btnSelectAll" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.Label1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.comboColorGrid" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.odSelectFiles" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.btnCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.clData" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmSelectResultToImportUnit.TfrmSelectResultToImport.FResultFormat" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSelectResultToImportUnit.TDisplayChoice">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TDisplayChoice.dcNone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TDisplayChoice.dcContour" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TDisplayChoice.dcColor" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.Create(Classes.TList,Classes.TStringList,Classes.TStringList,DataSetUnit.TDataArray,frmSelectResultToImportUnit.TDisplayChoice)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.Description()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.SetComments(Classes.TStringList)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FNewComments" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FOldComments" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FNewDataSets" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FContainedUndos" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FOldSideTimeList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FOldFrontTimeList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FOldTopTimeList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FOldThreeDTimeList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FOldEdgeDisplay" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FOld3DContourDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FOldSideContourDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FOldFrontContourDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FOldTopContourDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FOld3DDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FOldSideDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FOldFrontDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FOldTopDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FNewSideTimeList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FNewFrontTimeList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FNewTopTimeList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FNewThreeDTimeList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FNewEdgeDisplay" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FNew3DContourDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FNewSideContourDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FNewFrontContourDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FNewTopContourDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FNew3DDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FNewSideDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FNewFrontDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectResultToImportUnit.TUndoImportModelResults.FNewTopDataSet" />
+    </reference>
+  </view>
+</nodeSet>

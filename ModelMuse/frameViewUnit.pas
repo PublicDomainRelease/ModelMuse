@@ -216,6 +216,7 @@ type
       const Location: TPoint2D);
     procedure HideScreenObjects(HideSelected: Boolean);
     procedure AllowBitmapsToBeDisplayed;
+    function GetTopDisplayDataSet: TDataArray;
   public
     FPositionedLayer: TPositionedLayer;
     procedure SelectAll;
@@ -665,6 +666,8 @@ var
   Column, Row, Layer: integer;
   DataSet: TDataArray;
   Grid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
+  FillPanels1And2: Boolean;
 begin
   if (frmGoPhast.PhastModel.ComponentState * [csLoading, csReading]) <> [] then
   begin
@@ -685,38 +688,55 @@ begin
   UpdateStatusBarCoordinates(APoint);
 
   Grid := frmGoPhast.PhastModel.SelectedModel.Grid;
-//  if Grid = nil then
-//  begin
-//    Exit;
-//  end;
+  Mesh := frmGoPhast.PhastModel.Mesh;
   case ViewDirection of
     vdTop:
       begin
-        if Grid = nil then
+        if Grid <> nil then
         begin
-          DataSet := nil;
+          DataSet := Grid.TopDataSet;
+        end
+        else if Mesh <> nil then
+        begin
+          DataSet := Mesh.TopDataSet;
         end
         else
         begin
-          DataSet := Grid.TopDataSet;
+          DataSet := nil;
         end;
         if (DataSet = nil) or (DataSet.EvaluatedAt = eaBlocks) then
         begin
           // Get the column and row containing the current cursor position.
           GetRowCol(APoint, Row, Column);
-          if (Grid = nil) or ((Column >= 0) and (Row >= 0)
-            and (Column < Grid.ColumnCount)
-            and (Row < Grid.RowCount)) then
+          FillPanels1And2 := False;
+          if (Column >= 0) and (Row >= 0) then
           begin
-            // If the cursor is over the grid,
-            // display the column and row number
-            frmGoPhast.sbMain.Panels[1].Text := 'Col: ' + IntToStr(Column + 1)
-              + '; Row: ' + IntToStr(Row + 1);
-            UpdateStatusBarForTopBlockDataSet(Column, Row, X, Y, APoint);
+            if Grid <> nil then
+            begin
+              if (Column < Grid.ColumnCount) and (Row < Grid.RowCount) then
+              begin
+                FillPanels1And2 := True;
+              end;
+            end
+            else if (Mesh <> nil) then
+            begin
+              if (Column < Mesh.Mesh2D.Elements.Count) and (Row < 1) then
+              begin
+                FillPanels1And2 := True;
+              end;
+            end;
+          end;
+          if FillPanels1And2 then
+          begin
+              // If the cursor is over the grid or mesh,
+              // display the column and row number
+              frmGoPhast.sbMain.Panels[1].Text := 'Col: ' + IntToStr(Column + 1)
+                + '; Row: ' + IntToStr(Row + 1);
+              UpdateStatusBarForTopBlockDataSet(Column, Row, X, Y, APoint);
           end
           else
           begin
-            // If the cursor is not over the grid, don't display
+            // If the cursor is not over the grid or mesh, don't display
             // the column and row number or data set value.
             frmGoPhast.sbMain.Panels[1].Text := '';
             frmGoPhast.sbMain.Panels[2].Text := '';
@@ -726,9 +746,25 @@ begin
         begin
           // Get the column and row containing the current cursor position.
           GetNodeRowCol(APoint, Row, Column);
-          if (Column >= 0) and (Row >= 0)
-            and (Column <= Grid.ColumnCount)
-            and (Row <= Grid.RowCount) then
+          FillPanels1And2 := False;
+          if (Column >= 0) and (Row >= 0) then
+          begin
+            if Grid <> nil then
+            begin
+              if (Column <= Grid.ColumnCount) and (Row <= Grid.RowCount) then
+              begin
+                FillPanels1And2 := True;
+              end;
+            end
+            else if (Mesh <> nil) then
+            begin
+              if (Column < Mesh.Mesh2D.Nodes.Count) and (Row < 1) then
+              begin
+                FillPanels1And2 := True;
+              end;
+            end;
+          end;
+          if FillPanels1And2 then
           begin
             // If the cursor is over the grid,
             // display the column and row number
@@ -930,9 +966,7 @@ begin
   end;
   if Value then
   begin
-    frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-    frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
-    frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.InvalidateImage32AllViews;
   end;
 end;
 
@@ -1115,9 +1149,9 @@ function TframeView.GetGridChanged: boolean;
 begin
     // See @link(GridChanged).
   case ViewDirection of
-    vdTop: result := frmGoPhast.TopGridChanged;
-    vdFront: result := frmGoPhast.FrontGridChanged;
-    vdSide: result := frmGoPhast.SideGridChanged;
+    vdTop: result := frmGoPhast.TopDiscretizationChanged;
+    vdFront: result := frmGoPhast.FrontDiscretizationChanged;
+    vdSide: result := frmGoPhast.SideDiscretizationChanged;
   else
     begin
       Assert(False);
@@ -1130,9 +1164,9 @@ procedure TframeView.SetGridChanged(const Value: boolean);
 begin
     // See @link(GridChanged).
   case ViewDirection of
-    vdTop: frmGoPhast.TopGridChanged := Value;
-    vdFront: frmGoPhast.FrontGridChanged := Value;
-    vdSide: frmGoPhast.SideGridChanged := Value;
+    vdTop: frmGoPhast.TopDiscretizationChanged := Value;
+    vdFront: frmGoPhast.FrontDiscretizationChanged := Value;
+    vdSide: frmGoPhast.SideDiscretizationChanged := Value;
   else
     begin
       Assert(False);
@@ -1201,8 +1235,20 @@ begin
       if frmGoPhast.Grid <> nil then
       begin
         frmGoPhast.Grid.Draw(FBitMap32, ViewDirection);
-        if (frmGoPhast.Grid.ThreeDDataSet <> nil)
+        if (frmGoPhast.PhastModel.ThreeDDataSet <> nil)
           or (frmGoPhast.Grid.ThreeDContourDataSet <> nil) then
+        begin
+          if frmDisplayData = nil then
+          begin
+            Application.CreateForm(TfrmDisplayData, frmDisplayData);
+          end;
+          UpdateFrmDisplayData(True);
+        end;
+      end
+      else
+      begin
+        if (frmGoPhast.PhastModel.ThreeDDataSet <> nil)
+          {or (frmGoPhast.Grid.ThreeDContourDataSet <> nil)} then
         begin
           if frmDisplayData = nil then
           begin
@@ -1212,11 +1258,12 @@ begin
         end;
       end;
 
+
       {$IFDEF Sutra}
       if  (frmGoPhast.PhastModel.ModelSelection = msSutra) and
-        (frmGoPhast.PhastModel.SutraMesh <> nil) then
+        (frmGoPhast.PhastModel.Mesh <> nil) then
       begin
-        frmGoPhast.PhastModel.SutraMesh.Draw(FBitMap32, ViewDirection);
+        frmGoPhast.PhastModel.Mesh.Draw(FBitMap32, ViewDirection);
       end;
       {$ENDIF}
 
@@ -1317,7 +1364,7 @@ begin
             begin
               ZoomBox.ZoomBy(0.01);
               GridChanged := True;
-              ZoomBox.Image32.Invalidate;
+              ZoomBox.InvalidateImage32;
               Exit;
             end;
           end;
@@ -1331,7 +1378,7 @@ begin
     ScreenObjectsHaveChanged := False;
     if ShouldUpdate then
     begin
-      ZoomBox.Image32.Invalidate;
+      ZoomBox.InvalidateImage32;
     end;
     FDrawing := False;
   end;
@@ -1385,11 +1432,11 @@ begin
     // It delegates the event to
     // frmGoPhast.@link(TfrmGoPhast.CurrentTool).@link(
     // TCustomInteractiveTool.DoubleClick).
-  with frmGoPhast do
+//  with frmGoPhast do
   begin
-    if (CurrentTool <> nil) then
+    if (frmGoPhast.CurrentTool <> nil) then
     begin
-      CurrentTool.DoubleClick(Sender);
+      frmGoPhast.CurrentTool.DoubleClick(Sender);
     end;
   end;
 end;
@@ -1582,15 +1629,15 @@ begin
       FPaintingLayer := False;
       if frmGoPhast.frameTopView.FNeedToRedraw then
       begin
-        frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
+        frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
       end;
       if frmGoPhast.frameFrontView.FNeedToRedraw then
       begin
-        frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
+        frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
       end;
       if frmGoPhast.frameSideView.FNeedToRedraw then
       begin
-        frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+        frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
       end;
   {$ENDIF}
     end;
@@ -1610,7 +1657,8 @@ begin
     Sleep(20);
   end;
   if (frmGoPhast.PhastModel = nil) or
-    (frmGoPhast.PhastModel.SelectedScreenObjectCount = 0) then
+    (frmGoPhast.PhastModel.SelectedScreenObjectCount = 0)
+    or not frmGoPhast.CanDraw then
   begin
     Exit;
   end;
@@ -1664,21 +1712,44 @@ end;
 
 procedure TframeView.GetNodeRowCol(APoint: TPoint2D; out Row, Column:
   integer);
+var
+  Grid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
+  TopCell: T2DTopCell;
 begin
+  Grid := frmGoPhast.PhastModel.SelectedModel.Grid;
+  if Grid = nil then
+  begin
+    Mesh := frmGoPhast.PhastModel.Mesh;
+    if Mesh = nil then
+    begin
+      Column := -1;
+      Row := -1;
+    end
+    else
+    begin
+      TopCell := Mesh.TopContainingCellOrElement(APoint, eaNodes);
+      Column := TopCell.Col;
+      Row := TopCell.Row;
+    end;
+  end
+  else
+  begin
     // @name returns the column and row numbers of the cell containing APoint;
     // APoint must be on a top view of the model.
     // APoint must be in real-world coordinates not PhastModel.SelectedModel.Grid coordinates.
 
-  APoint :=
-    frmGoPhast.PhastModel.SelectedModel.Grid.RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
-  Column := frmGoPhast.PhastModel.SelectedModel.Grid.NearestColumnPosition(APoint.X);
-  Row := frmGoPhast.PhastModel.SelectedModel.Grid.NearestRowPosition(APoint.Y);
-  if (Column < 0) or (Row < 0)
-    or (Column > frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount)
-    or (Row > frmGoPhast.PhastModel.SelectedModel.Grid.RowCount) then
-  begin
-    Column := -1;
-    Row := -1;
+    APoint :=
+      Grid.RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
+    Column := Grid.NearestColumnPosition(APoint.X);
+    Row := Grid.NearestRowPosition(APoint.Y);
+    if (Column < 0) or (Row < 0)
+      or (Column > Grid.ColumnCount)
+      or (Row > Grid.RowCount) then
+    begin
+      Column := -1;
+      Row := -1;
+    end;
   end;
 end;
 
@@ -1693,7 +1764,7 @@ begin
   Grid := frmGoPhast.PhastModel.SelectedModel.Grid;
   if Grid = nil then
   begin
-    Mesh := frmGoPhast.PhastModel.SelectedModel.SutraMesh;
+    Mesh := frmGoPhast.PhastModel.Mesh;
     if Mesh = nil then
     begin
       Column := -1;
@@ -1701,16 +1772,16 @@ begin
     end
     else
     begin
-      TopCell := Mesh.TopContainingCell(APoint, eaBlocks);
+      TopCell := Mesh.TopContainingCellOrElement(APoint, eaBlocks);
       Column := TopCell.Col;
       Row := TopCell.Row;
     end;
   end
   else
   begin
-      // @name gets the column and row numbers of the element containing APoint;
-      // APoint must be on a top view of the model.
-      // APoint must be in real-world coordinates not grid coordinates.
+    // @name gets the column and row numbers of the element containing APoint;
+    // APoint must be on a top view of the model.
+    // APoint must be in real-world coordinates not grid coordinates.
     if (Grid.ColumnCount <= 0)
       or (Grid.RowCount <= 0) then
     begin
@@ -1826,7 +1897,7 @@ begin
     (ZoomBox.Image32.Height > ZoomBox.Height) then
   begin
     ZoomBox.ZoomBy(0.8);
-    ZoomBox.Image32.Invalidate;
+    ZoomBox.InvalidateImage32;
     Beep;
   end;
   MessageDlg(StrSorryTheViewWas, mtInformation, [mbOK], 0);
@@ -2620,7 +2691,7 @@ begin
   if FDeltaGridAngle <> Value then
   begin
     FDeltaGridAngle := Value;
-    ZoomBox.Image32.Invalidate;
+    ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -2714,6 +2785,39 @@ begin
   end;
   result.X := result.X / MaxGridCorners;
   result.Y := result.Y / MaxGridCorners;
+end;
+
+function TframeView.GetTopDisplayDataSet: TDataArray;
+var
+  Grid: TCustomModelGrid;
+  {$IFDEF SUTRA}
+  Mesh: TSutraMesh3D;
+  {$ENDIF}
+begin
+  result := nil;
+  case frmGoPhast.PhastModel.ModelSelection of
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        Grid := frmGoPhast.PhastModel.SelectedModel.Grid;
+        result := Grid.TopDataSet;
+        if result = nil then
+        begin
+          result := Grid.TopContourDataSet;
+        end;
+      end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        Mesh := frmGoPhast.PhastModel.Mesh;
+        if Mesh <> nil then
+        begin
+          result := Mesh.TopDataSet;
+        end;
+      end;
+    {$ENDIF}
+  else
+    Assert(False);
+  end;
 end;
 
 procedure TframeView.AllowBitmapsToBeDisplayed;
@@ -3169,15 +3273,17 @@ var
   Layer: Integer;
   DataSet: TDataArray;
   TrueLayer: Integer;
+  ShowValue: Boolean;
+  {$IFDEF SUTRA}
+  Mesh: TSutraMesh3D;
+  {$ENDIF}
 begin
   // Display the value of the current data set (if any).
   Layer := frmGoPhast.PhastModel.SelectedLayer;
   TrueLayer := Layer;
-  DataSet := frmGoPhast.Grid.TopDataSet;
-  if DataSet = nil then
-  begin
-    DataSet := frmGoPhast.Grid.TopContourDataSet;
-  end;
+  DataSet := GetTopDisplayDataSet;
+
+
   if (DataSet <> nil) then
   begin
     if DataSet.Orientation = dso3D then
@@ -3196,8 +3302,28 @@ begin
     begin
       NameToDisplay := frmGoPhast.PhastModel.TopTimeList.Name;
     end;
-    if DataSet.IsValue[Layer, Row, Column] and (Layer >= 0)
-      and (Layer <= frmGoPhast.Grid.LayerCount) then
+
+    ShowValue := False;
+    if DataSet.IsValue[Layer, Row, Column] and (Layer >= 0) then
+    begin
+      case frmGoPhast.PhastModel.ModelSelection of
+        msPhast, msModflow, msModflowLGR, msModflowNWT:
+        begin
+          ShowValue := (Layer <= frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount);
+        end;
+        {$IFDEF SUTRA}
+        msSutra:
+        begin
+          Mesh := frmGoPhast.PhastModel.Mesh;
+          ShowValue := (Mesh <> nil) and (Layer <= Mesh.LayerCount);
+        end;
+        {$ENDIF}
+      else
+        Assert(False);
+      end;
+    end;
+
+    if ShowValue then
     begin
       ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer,
         Column, Row, TrueLayer, Location);
@@ -3233,30 +3359,65 @@ var
   Value: double;
   Explanation: string;
   TrueLayer: Integer;
-  Grid: TCustomModelGrid;
+  {$IFDEF SUTRA}
+  Mesh: TSutraMesh3D;
+  {$ENDIF}
+  ShowValue: boolean;
 begin
   HasUpdated := False;
   // Display the value of the current data set (if any).
+
+
   Layer := frmGoPhast.PhastModel.SelectedModel.SelectedLayer;
   TrueLayer := Layer;
-  Grid := frmGoPhast.PhastModel.SelectedModel.Grid;
-  if Grid = nil then
-  begin
-    DataSet := nil;
-  end
-  else
-  begin
-    DataSet := frmGoPhast.PhastModel.SelectedModel.Grid.TopDataSet;
-    if DataSet = nil then
-    begin
-      DataSet := frmGoPhast.PhastModel.SelectedModel.Grid.TopContourDataSet;
-    end;
-  end;
+
+  DataSet := GetTopDisplayDataSet;
+//  DataSet := nil;
+//  case frmGoPhast.PhastModel.ModelSelection of
+//    msPhast, msModflow, msModflowLGR, msModflowNWT:
+//    begin
+//      Grid := frmGoPhast.PhastModel.SelectedModel.Grid;
+//      DataSet := Grid.TopDataSet;
+//      if DataSet = nil then
+//      begin
+//        DataSet := Grid.TopContourDataSet;
+//      end;
+//    end;
+//    {$IFDEF SUTRA}
+//    msSutra:
+//    begin
+//      Mesh := frmGoPhast.PhastModel.Mesh;
+//      if Mesh = nil then
+//      begin
+//        DataSet := nil;
+//      end
+//      else
+//      begin
+//        DataSet := Mesh.TopDataSet;
+//      end;
+//    end;
+//    {$ENDIF}
+//  else
+//    Assert(False);
+//  end;
   if (DataSet <> nil) then
   begin
     if DataSet.Orientation = dso3D then
     begin
-      Layer := frmGoPhast.PhastModel.SelectedModel.SelectedLayer;
+      case frmGoPhast.PhastModel.ModelSelection of
+        msPhast, msModflow, msModflowLGR, msModflowNWT:
+        begin
+          Layer := frmGoPhast.PhastModel.SelectedModel.SelectedLayer;
+        end;
+        {$IFDEF SUTRA}
+        msSutra:
+        begin
+          Layer := frmGoPhast.PhastModel.Mesh.SelectedLayer;
+        end;
+        {$ENDIF}
+      else
+        Assert(False);
+      end;
     end
     else
     begin
@@ -3270,14 +3431,33 @@ begin
     begin
       NameToDisplay := frmGoPhast.PhastModel.TopTimeList.Name;
     end;
-    if DataSet.IsValue[Layer, Row, Column] and (Layer >= 0)
-      and (Layer < frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount) then
+    if DataSet.IsValue[Layer, Row, Column] and (Layer >= 0) then
     begin
-      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer, Column, Row, TrueLayer, Location);
-      HasUpdated := True;
+      ShowValue := False;
+      case frmGoPhast.PhastModel.ModelSelection of
+        msPhast, msModflow, msModflowLGR, msModflowNWT:
+        begin
+          ShowValue := (Layer < frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount);
+        end;
+        {$IFDEF SUTRA}
+        msSutra:
+        begin
+          Mesh := frmGoPhast.PhastModel.Mesh;
+          ShowValue := (Mesh <> nil) and (Layer < Mesh.LayerCount);
+        end;
+        {$ENDIF}
+      else
+        Assert(False);
+      end;
+      if ShowValue then
+      begin
+        ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer, Column, Row, TrueLayer, Location);
+        HasUpdated := True;
+      end;
     end;
   end
-  else if frmGoPhast.PhastModel.SelectedModel.EdgeDisplay <> nil then
+  else if {$IFDEF SUTRA} (frmGoPhast.PhastModel.ModelSelection <> msSutra) and {$ENDIF}
+    (frmGoPhast.PhastModel.SelectedModel.EdgeDisplay <> nil) then
   begin
     EdgeDisplay := frmGoPhast.PhastModel.SelectedModel.EdgeDisplay;
     if EdgeDisplay.Select(X, Y, Layer) then
@@ -3798,17 +3978,17 @@ begin
   if FTopLayer <> nil then
   begin
     FTopLayer.Changed;
-    frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
   end;
   if FFrontLayer <> nil then
   begin
     FFrontLayer.Changed;
-    frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
   end;
   if FSideLayer <> nil then
   begin
     FSideLayer.Changed;
-    frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
   end;
 end;
 

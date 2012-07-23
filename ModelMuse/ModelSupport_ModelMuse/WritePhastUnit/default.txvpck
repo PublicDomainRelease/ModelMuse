@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="dila03xwphmdhfr_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:WritePhastUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteIProperty(Classes.TStringStream,System.String,ZoneUnit.TCustomPhastZone,ZoneUnit.TIProperty,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteFraction(Classes.TStringStream,ZoneUnit.TCustomPhastZone,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteRProperty(Classes.TStringStream,System.String,ZoneUnit.TRProperty)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteSoluteTransport(Classes.TStringStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteTimeControl(Classes.TStringStream,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteRiver(Classes.TStringStream,WriteRiverUnit.TRiverWriter)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WritePropertyName(Classes.TStringStream,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteChemistryIC(Classes.TStringStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteMedia(Classes.TStringStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteEnd(Classes.TStringStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteTitle(Classes.TStringStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteFreeSurface(Classes.TStringStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteTime(Classes.TStringStream,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WritePrintFrequency(Classes.TStringStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WritePrintInitial(Classes.TStringStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WritePhastInput(System.String,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteWells(Classes.TStringStream,WriteWellUnit.TWellWriter)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteUnits(Classes.TStringStream,out@System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteLeakyBoundary(Classes.TStringStream,TopLeakyZone.TTopLeakyZoneGroup,FrontLeakyZone.TFrontLeakyZoneGroup,SideLeakyZone.TSideLeakyZoneGroup)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteSpecifiedFluxes(Classes.TStringStream,SpecifiedFluxTopZone.TSpecifiedFluxTopGroup,SpecifiedFluxFrontZone.TSpecifiedFluxFrontGroup,SpecifiedFluxSideZone.TSpecifiedFluxSideGroup)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteSpecifiedValues(Classes.TStringStream,SpecifiedHeadZone.TSpecifiedHeadZoneGroup)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WritePhastGrid(Classes.TStringStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WritePrintLocations(Classes.TStringStream,PrintChemistryZone.TPrintChemistryZoneGroup,PrintChemistryXYZ_Zone.TPrintChemistryXYZ_ZoneGroup)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteHeadIC(Classes.TStringStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteSteadyFlow(Classes.TStringStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteSolutionMethod(Classes.TStringStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WritePhastUnit.WriteBProperty(Classes.TStringStream,System.String,ZoneUnit.TBProperty)" />
+    </reference>
+  </view>
+</nodeSet>

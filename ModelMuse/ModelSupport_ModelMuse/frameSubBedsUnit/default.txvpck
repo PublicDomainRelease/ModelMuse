@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="7on973lso6pauwf_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameSubBedsUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameSubBedsUnit.TSubColumns">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSubBedsUnit.TSubColumns.fcFirst" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSubBedsUnit.TSubColumns.scUseAll" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSubBedsUnit.TSubColumns.scName" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameSubBedsUnit.TGetSelectedSubLayers">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameSubBedsUnit.TGetNewName">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameSubBedsUnit.TframeSubBeds">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.AssignSubLayerName(ModflowSubsidenceDefUnit.TCustomSubLayer,System.String,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.AssignBooleanProperties(StdCtrls.TCheckBoxState,ModflowSubsidenceDefUnit.TCustomSubLayer,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.FSettingUseAll" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.FOnGetNewName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.FOnGetSelectedSubLayers" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.FOldCount" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.rdgSubBedStateChange(System.Object,System.Int32,System.Int32,StdCtrls.TCheckBoxState)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.rdgSubBedSetEditText(System.Object,System.Int32,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.seCountEnter(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.rdgSubBedSelectCell(System.Object,System.Int32,System.Int32,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.sbDeleteClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.sbInsertClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.sbAddClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.seCountChange(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.sbDelete" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.sbInsert" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.sbAdd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.lblCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.seCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.rdgSubBed" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.OnGetNewName[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.OnGetSelectedSubLayers[]" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.FOnGetNewName" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frameSubBedsUnit.TframeSubBeds.FOnGetSelectedSubLayers" />
+    </reference>
+  </view>
+</nodeSet>

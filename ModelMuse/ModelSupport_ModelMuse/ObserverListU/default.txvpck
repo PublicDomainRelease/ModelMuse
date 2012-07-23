@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="tco3akhgocai61r_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ObserverListU.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverListU.NewObjectObserverlist()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ObserverListU.TListOpKind">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ObserverListU.TListOpKind.lokAdd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ObserverListU.TListOpKind.lokChange" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ObserverListU.TListOpKind.lokRemove" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ObserverListU.IBackdoor">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverListU.IBackdoor.GetObject()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ObserverListU.TObserverlist">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverListU.TObserverlist.NotifyOnRemove(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverListU.TObserverlist.Remove(ObserverIntfU.IObjectObserver)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverListU.TObserverlist.Assign(ObserverIntfU.IObjectObserverlist)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverListU.TObserverlist.GetObject()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverListU.TObserverlist.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverListU.TObserverlist.Destroy()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ObserverListU.TObserverlist.FList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ObserverListU.TObserverlist.FGuardian" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverListU.TObserverlist.Lock()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverListU.TObserverlist.Unlock()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverListU.TObserverlist.DoListOperation(ObserverListU.TListOpKind,System.Object,TChangeKind)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverListU.TObserverlist.AddOrModify(ObserverIntfU.IObjectObserver,ObserverIntfU.TChangeKindSet)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverListU.TObserverlist.Contains(ObserverIntfU.IObjectObserver)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverListU.TObserverlist.NotifyOnAdd(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverListU.TObserverlist.NotifyOnChange(System.Object,TChangeKind)" />
+      <reference referencedUin="delphi:l_impl:src:ModelMuse:ObserverListU.TObserverlist:ObserverListU.IBackdoor" />
+    </reference>
+  </view>
+</nodeSet>

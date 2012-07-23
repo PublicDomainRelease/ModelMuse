@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="01mu30mqpo053fo_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ValueArrayStorageUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.SetIntValues(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.SetDataType(RbwParser.TRbwDataType)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.SetCount(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.SetBooleanValues(System.Int32,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.GetStringValues(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.GetRealValues(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.GetIntValues(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.GetCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.GetBooleanValues(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.FDataType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.FStringValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.FBooleanValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.FRealValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.FIntValues" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.Count[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.DataType[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.Insert(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.Delete(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.Add(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.Add(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.Add(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.Add(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.Add()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.StringValues[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.BooleanValues[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.RealValues[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.IntValues[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.DefineProperties(Classes.TFiler)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.WriteValues(Classes.TWriter)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.ReadValues(Classes.TReader)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.SetStringValues(System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayStorage.SetRealValues(System.Int32,System.Double)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ValueArrayStorageUnit.TValueArrayItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ValueArrayStorageUnit.TValueArrayItem.FName" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ValueArrayStorageUnit.TValueArrayItem.Values[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ValueArrayStorageUnit.TValueArrayItem.Name[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayItem.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayItem.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayItem.SetValues(ValueArrayStorageUnit.TValueArrayStorage)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueArrayItem.SetName(System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ValueArrayStorageUnit.TValueArrayItem.FValues" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ValueArrayStorageUnit.TValueArrayItem.FValues" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ValueArrayStorageUnit.TValueCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueCollection.GetItem(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ValueArrayStorageUnit.TValueCollection.FCachedIndex" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ValueArrayStorageUnit.TValueCollection.FCachedName" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueCollection.ValuesByName(System.String)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ValueArrayStorageUnit.TValueCollection.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueCollection.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ValueArrayStorageUnit.TValueCollection.SetItem(System.Int32,ValueArrayStorageUnit.TValueArrayItem)" />
+    </reference>
+  </view>
+</nodeSet>

@@ -1438,7 +1438,6 @@ begin
 
       UpToDate := True;
       CheckIfUniform;
-//      UpdateDialogBoxes;
     end
     else
     begin
@@ -2960,7 +2959,6 @@ begin
   PostInitialize;
 
   UpToDate := True;
-//  UpdateDialogBoxes;
 
 end;
 

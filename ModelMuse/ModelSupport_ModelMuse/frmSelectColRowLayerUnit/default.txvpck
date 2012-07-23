@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="fjnypi0vo9qy53q_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSelectColRowLayerUnit.TfrmSelectColRowLayer">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectColRowLayerUnit.TfrmSelectColRowLayer.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectColRowLayerUnit.TfrmSelectColRowLayer.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectColRowLayerUnit.TfrmSelectColRowLayer.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectColRowLayerUnit.TfrmSelectColRowLayer.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectColRowLayerUnit.TfrmSelectColRowLayer.seRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectColRowLayerUnit.TfrmSelectColRowLayer.seLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectColRowLayerUnit.TfrmSelectColRowLayer.seCol" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectColRowLayerUnit.TfrmSelectColRowLayer.lblRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectColRowLayerUnit.TfrmSelectColRowLayer.lblLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectColRowLayerUnit.TfrmSelectColRowLayer.lblCol" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectColRowLayerUnit.TfrmSelectColRowLayer.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectColRowLayerUnit.TfrmSelectColRowLayer.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectColRowLayerUnit.TfrmSelectColRowLayer.btnCancel" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSelectColRowLayerUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+  </view>
+</nodeSet>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="ywm6x7eap0px56p_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmGlobalVariablesUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmGlobalVariablesUnit.TGlobalVariableColumns">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TGlobalVariableColumns.gvComment" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TGlobalVariableColumns.gvValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TGlobalVariableColumns.gvType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TGlobalVariableColumns.gvName" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.GenerateNewRoot(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.UpdateSpecialFormat(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.InitializeNewRow(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.GenerateNewName(System.String,System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.OkVariables" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.VariableNames" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.FNewGlobals" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.FInitializingRow" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.rdgGlobalVariablesBeforeDrawCell(System.Object,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.rdgGlobalVariablesEndUpdate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.rdgGlobalVariablesMouseDown(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.FormDestroy(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.btnDeleteClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.rdgGlobalVariablesSetEditText(System.Object,System.Int32,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.rdgGlobalVariablesSelectCell(System.Object,System.Int32,System.Int32,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.seGlobalVariableCountChange(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.btnDelete" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.Label1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.seGlobalVariableCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.rdgGlobalVariables" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.btnCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TfrmGlobalVariables.pnlBottom" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmGlobalVariablesUnit.TUndoGlobalVariables">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TUndoGlobalVariables.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TUndoGlobalVariables.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TUndoGlobalVariables.Description()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TUndoGlobalVariables.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TUndoGlobalVariables.Create(ref@GlobalVariablesUnit.TGlobalVariables,ref@Classes.TStringList,ref@Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGlobalVariablesUnit.TUndoGlobalVariables.UpdateFormulas(Classes.TStringList,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TUndoGlobalVariables.FNewNames" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TUndoGlobalVariables.FOldNames" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TUndoGlobalVariables.FOldGlobalVariables" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGlobalVariablesUnit.TUndoGlobalVariables.FNewGlobalVariables" />
+    </reference>
+  </view>
+</nodeSet>

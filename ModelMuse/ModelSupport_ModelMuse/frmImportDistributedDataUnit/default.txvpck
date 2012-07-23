@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="ygnrgcpwongk0jq_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmImportDistributedDataUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.rdeHigherX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.pnlTop" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.pnlBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.OpenDialogFile" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.lblLowerZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.lblLowerY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.lblLowerX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.lblImportTo" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.lblHigherZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.lblHigherY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.lblHigherX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.comboViewDirection" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.btnCancel" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.ResizeColumns()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.GetDataSets()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.EnableOK()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.FormResize(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.dgDataSetsButtonClicked(System.Object,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.comboViewDirectionChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.dgDataSets" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.rdeLowerZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.rdeLowerY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.rdeLowerX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.rdeHigherZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportDistributedDataUnit.TfrmImportDistributedData.rdeHigherY" />
+    </reference>
+  </view>
+</nodeSet>

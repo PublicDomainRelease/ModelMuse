@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="66ytl3wjn67qrus_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:LayerStructureUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.CompareLayerFractions(System.Pointer,System.Pointer)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.StrLayerDefinition" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:LayerStructureUnit.TIntTypeMethod">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TIntTypeMethod.itmLayvka" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TIntTypeMethod.itmLayavg" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TIntTypeMethod.itmLaytype" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:LayerStructureUnit.TFloatTypeMethod">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TFloatTypeMethod.ftmTrpy" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:LayerStructureUnit.TLayerFraction">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerFraction.Fraction[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerFraction.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerFraction.Collection()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerFraction.IsSame(LayerStructureUnit.TLayerFraction)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerFraction.SetFraction(System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerFraction.InvalidateModel()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerFraction.FFraction" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:LayerStructureUnit.TLayerCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerCollection.Sort()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerCollection.InvalidateModel()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerCollection.FLayerGroup" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerCollection.Create(LayerStructureUnit.TLayerGroup)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerCollection.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerCollection.IsSame(LayerStructureUnit.TLayerCollection)" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:LayerStructureUnit.TLayerCollection.FLayerGroup" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:LayerStructureUnit.TLayerGroup">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerGroup.SubDelayBedLayers[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerGroup.SubNoDelayBedLayers[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerGroup.HorizontalAnisotropy[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerGroup.UseStartingHeadForSaturatedThickness[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerGroup.VerticalHydraulicConductivityMethod[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerGroup.InterblockTransmissivityMethod[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerGroup.Simulated[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerGroup.LayerCollection[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerGroup.GrowthRate[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerGroup.GrowthMethod[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerGroup.DataArrayName[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerGroup.AquiferType[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerGroup.AquiferName[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.NoDelayCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.DelayCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.SubsidenceDefined()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.WriteLAYCB(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.ModflowLayerCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.LayerCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.SubsidenceLayerCount(ModflowSubsidenceDefUnit.TCustomSubLayer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.SetSubNoDelayBedLayers(ModflowSubsidenceDefUnit.TSubNoDelayBedLayers)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.SetSubDelayBedLayers(ModflowSubsidenceDefUnit.TSubDelayBedLayers)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.SetHorizontalAnisotropy(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.GetSimulated()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.SetUseStartingHeadForSaturatedThickness(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.Collection()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.SetVerticalHydraulicConductivityMethod(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.SetInterblockTransmissivityMethod(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.Loaded()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.SetAquiferType(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.SetSimulated(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.SetLayerCollection(LayerStructureUnit.TLayerCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.SetGrowthRate(System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.SetGrowthMethod(GoPhastTypes.TGrowthMethod)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.SetAquiferName(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerGroup.SetDataArrayName(System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerGroup.FSubDelayBedLayers" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerGroup.FSubNoDelayBedLayers" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerGroup.FHorizontalAnisotropy" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerGroup.FUseStartingHeadForSaturatedThickness" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerGroup.FVerticalHydraulicConductivityMethod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerGroup.FInterblockTransmissivityMethod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerGroup.FAquiferType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerGroup.FSimulated" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerGroup.FLayerCollection" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerGroup.FGrowthRate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerGroup.FGrowthMethod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerGroup.FAquiferName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerGroup.FDataArrayName" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:LayerStructureUnit.TLayerGroup.FLayerCollection" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:LayerStructureUnit.TLayerStructure">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.GetLayerGroupByLayer(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.DataSetLayerToModflowLayer(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.ModflowLayerToDataSetLayer(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.Trpy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.Layvka()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.Chani()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.Layavg()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.Laytyp()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.IsLayerSimulated(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.ModflowLayerBottomDescription(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.WriteLAYCB(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.ModflowConfiningBedCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.ModflowLayerCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.Loaded()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.LayerCount()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerStructure.LayerGroups[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.Create(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.AssignAssociatedInputDataSets()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.NonSimulatedLayersPresent()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.FloatArray(LayerStructureUnit.TFloatTypeMethod)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.IntegerArray(LayerStructureUnit.TIntTypeMethod)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.GetLayerGroup(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerStructure.FAquiferTypeNotifier" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:LayerStructureUnit.TLayerStructure.FSimulatedNotifier" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.NoDelayCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.DelayCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.SubsidenceDefined()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:LayerStructureUnit.TLayerStructure.StopTalkingToAnyone()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerStructure.AquiferTypeNotifier[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:LayerStructureUnit.TLayerStructure.SimulatedNotifier[]" />
+    </reference>
+  </view>
+</nodeSet>

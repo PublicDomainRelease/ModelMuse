@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="orkk1yycqpcj04f_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameOutputControlUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameOutputControlUnit.TframeOutputControl">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.SetData(ModflowOutputControlUnit.THeadDrawdownOutputControl)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.GetData(ModflowOutputControlUnit.THeadDrawdownOutputControl)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.Loaded()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.EnableComboFrequency()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.OutputFormat()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.ShowFormat()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.EnableN()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.EnableListingController()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.EnableExternalController()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.cbPrintListingClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.cbSaveExternalClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.adeDChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.adeWChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.comboREditChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.comboPChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.comboFrequencyChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.comboSaveTypeChange(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.comboSaveType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.lblSaveType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.comboPrintFormat" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.comboPrintStyle" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.rcListingFormat" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.lblListinglFormat" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.cbPrintListing" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.cbSaveExternal" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.comboFrequency" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.comboREdit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.comboP" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.rcExternalFormat" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.adeW" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.lblDot" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.adeD" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.lblResult" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.lblExternalFormat" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.spN" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.lblN" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.lblFrequency" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameOutputControlUnit.TframeOutputControl.lblOutputType" />
+    </reference>
+  </view>
+</nodeSet>

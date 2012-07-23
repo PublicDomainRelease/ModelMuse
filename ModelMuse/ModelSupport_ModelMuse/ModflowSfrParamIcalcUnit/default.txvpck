@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="ftmzn1ubpj9sqsr_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrParamIcalcUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.CompareItems(System.Pointer,System.Pointer)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.FParam" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.FICalc" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.IPRIOR[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.DiversionSegment[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.OutflowSegment[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.ICalc[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.ParamInstance[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.Param[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.BoundaryFormulaCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.SetBoundaryFormula(System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.GetBoundaryFormula(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.RemoveFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.GetPropertyObserver(System.Object,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.CreateFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.AssignObserverEvents(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.InvalidateSegmentNumberArray()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.SetOutflowSegment(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.SetIPRIOR(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.SetDiversionSegment(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.GetParamInstance()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.GetParam()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.GetICalc()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.SetParamInstance(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.SetParam(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.SetICalc(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.FDiversionSegment" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.FOutflowSegment" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.FIPRIOR" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcItem.FParamInstance" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcCollection.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcCollection.GetItemByStartTime(System.Double)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcCollection.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcCollection.ParameterUsed(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcCollection.ICalc(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcCollection.IcalcSet()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcCollection.ItemClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcCollection.SetItems(System.Int32,ModflowSfrParamIcalcUnit.TSfrParamIcalcItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrParamIcalcUnit.TSfrParamIcalcCollection.GetItems(System.Int32)" />
+    </reference>
+  </view>
+</nodeSet>

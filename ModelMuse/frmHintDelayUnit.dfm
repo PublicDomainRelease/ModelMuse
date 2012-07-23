@@ -1,23 +1,23 @@
 inherited frmHintDelay: TfrmHintDelay
   Left = 554
   Top = 516
-  Width = 327
-  Height = 123
+  Width = 342
+  Height = 136
   HelpType = htKeyword
   HelpKeyword = 'Hint_Display_Time_Dialog_Box'
   HorzScrollBar.Range = 313
   VertScrollBar.Range = 81
   ActiveControl = rdeHintDelay
   Caption = 'Hint Display Time'
-  ExplicitWidth = 327
-  ExplicitHeight = 123
-  PixelsPerInch = 96
-  TextHeight = 17
+  ExplicitWidth = 342
+  ExplicitHeight = 136
+  PixelsPerInch = 120
+  TextHeight = 18
   object lblHintDisplayTime: TLabel
     Left = 8
     Top = 10
-    Width = 124
-    Height = 17
+    Width = 136
+    Height = 18
     Caption = 'Hint display time (s)'
   end
   object rdeHintDelay: TRbwDataEntry
@@ -26,8 +26,7 @@ inherited frmHintDelay: TfrmHintDelay
     Width = 101
     Height = 28
     Cursor = crIBeam
-    ItemHeight = 17
-    TabOrder = 1
+    TabOrder = 0
     Text = '0'
     DataType = dtReal
     Max = 1.000000000000000000
@@ -38,25 +37,28 @@ inherited frmHintDelay: TfrmHintDelay
     Top = 48
     Width = 89
     Height = 33
-    TabOrder = 0
     Kind = bkCancel
+    NumGlyphs = 2
+    TabOrder = 3
   end
   object btnOK: TBitBtn
     Left = 128
     Top = 48
     Width = 89
     Height = 33
-    TabOrder = 3
-    OnClick = btnOKClick
     Kind = bkOK
+    NumGlyphs = 2
+    TabOrder = 2
+    OnClick = btnOKClick
   end
   object btnHelp: TBitBtn
     Left = 32
     Top = 48
     Width = 89
     Height = 33
-    TabOrder = 2
-    OnClick = btnHelpClick
     Kind = bkHelp
+    NumGlyphs = 2
+    TabOrder = 1
+    OnClick = btnHelpClick
   end
 end

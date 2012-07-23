@@ -4,9 +4,9 @@ inherited frmDataSetValues: TfrmDataSetValues
   Caption = 'Data Set Values'
   ClientHeight = 304
   ClientWidth = 548
-  ExplicitWidth = 556
-  ExplicitHeight = 338
-  PixelsPerInch = 96
+  ExplicitWidth = 566
+  ExplicitHeight = 349
+  PixelsPerInch = 120
   TextHeight = 18
   object Panel1: TPanel
     Left = 0
@@ -38,10 +38,8 @@ inherited frmDataSetValues: TfrmDataSetValues
       Width = 75
       Height = 25
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkClose
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
     end
     object btnHelp: TBitBtn
@@ -50,10 +48,8 @@ inherited frmDataSetValues: TfrmDataSetValues
       Width = 75
       Height = 25
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnHelpClick
     end
@@ -85,11 +81,10 @@ inherited frmDataSetValues: TfrmDataSetValues
       Height = 26
       Tree.Left = 0
       Tree.Top = 0
-      Tree.Width = 312
-      Tree.Height = 206
+      Tree.Width = 302
+      Tree.Height = 195
       Tree.Align = alClient
       Tree.Header.AutoSizeIndex = 0
-      Tree.Header.DefaultHeight = 17
       Tree.Header.Font.Charset = DEFAULT_CHARSET
       Tree.Header.Font.Color = clWindowText
       Tree.Header.Font.Height = -11
@@ -128,6 +123,22 @@ inherited frmDataSetValues: TfrmDataSetValues
       NumGlyphs = 2
       TabOrder = 4
       OnChange = treecomboDataSetsChange
+    end
+    object comboOrientation: TComboBox
+      Left = 89
+      Top = 75
+      Width = 356
+      Height = 26
+      Style = csDropDownList
+      ItemIndex = 0
+      TabOrder = 5
+      Text = 'Layer'
+      Visible = False
+      OnChange = comboOrientationChange
+      Items.Strings = (
+        'Layer'
+        'Row'
+        'Column')
     end
   end
   object pcDataSet: TPageControl

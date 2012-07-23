@@ -1,18 +1,17 @@
 inherited frmGenerateGrid: TfrmGenerateGrid
   Left = 551
   Top = 437
-  Width = 347
-  Height = 284
+  Width = 358
+  Height = 295
   HelpType = htKeyword
   HelpKeyword = 'Generate_Grid_Dialog_Box'
   HorzScrollBar.Range = 329
   VertScrollBar.Range = 241
   ActiveControl = cbSpecifyGridAngle
   Caption = 'Generate Grid'
-  ExplicitTop = -7
-  ExplicitWidth = 347
-  ExplicitHeight = 284
-  PixelsPerInch = 96
+  ExplicitWidth = 358
+  ExplicitHeight = 295
+  PixelsPerInch = 120
   TextHeight = 18
   object lblGridAngle: TLabel
     Left = 128
@@ -51,22 +50,18 @@ inherited frmGenerateGrid: TfrmGenerateGrid
     Top = 208
     Width = 91
     Height = 33
-    DoubleBuffered = True
     Kind = bkCancel
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 4
+    TabOrder = 5
   end
   object btnOK: TBitBtn
     Left = 142
     Top = 208
     Width = 91
     Height = 33
-    DoubleBuffered = True
     Kind = bkOK
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 3
+    TabOrder = 4
     OnClick = btnOKClick
   end
   object btnHelp: TBitBtn
@@ -74,11 +69,9 @@ inherited frmGenerateGrid: TfrmGenerateGrid
     Top = 208
     Width = 91
     Height = 33
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 2
+    TabOrder = 3
     OnClick = btnHelpClick
   end
   object gbGridSmoothing: TGroupBox
@@ -87,7 +80,7 @@ inherited frmGenerateGrid: TfrmGenerateGrid
     Width = 321
     Height = 129
     Caption = 'Grid Smoothing'
-    TabOrder = 5
+    TabOrder = 2
     object lblCriterion: TLabel
       Left = 8
       Top = 92
@@ -105,7 +98,7 @@ inherited frmGenerateGrid: TfrmGenerateGrid
       Checked = True
       Enabled = False
       State = cbChecked
-      TabOrder = 0
+      TabOrder = 1
     end
     object cbSmoothGrid: TCheckBox
       Left = 8
@@ -113,7 +106,7 @@ inherited frmGenerateGrid: TfrmGenerateGrid
       Width = 153
       Height = 31
       Caption = 'Smooth grid '
-      TabOrder = 1
+      TabOrder = 0
       OnClick = cbSmoothGridClick
     end
     object cbRows: TCheckBox

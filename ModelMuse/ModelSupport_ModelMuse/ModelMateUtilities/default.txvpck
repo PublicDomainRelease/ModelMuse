@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="2anemlk1p9f29fr_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModelMateUtilities.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModelMateUtilities.UpdateCurrentProject()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModelMateUtilities.PosCap(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModelMateUtilities.FileBaseName(SysUtils.TFileName,ref@System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModelMateUtilities.AssignCurrentPriorObjects(ModelMateClassesUnit.TProject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModelMateUtilities.AssignCurrentPredObjects(ModelMateClassesUnit.TProject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModelMateUtilities.AssignCurrentParamObjects(ModelMateClassesUnit.TProject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModelMateUtilities.AssignCurrentObsObjects(ModelMateClassesUnit.TProject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModelMateUtilities.AssignCurrentDataObjects(ModelMateClassesUnit.TProject)" />
+    </reference>
+  </view>
+</nodeSet>

@@ -179,7 +179,7 @@ end;
 constructor TSfrTablelItem.Create(Collection: TCollection);
 begin
   inherited;
-  FSfrTable := TSfrTable.Create(Model as TComponent, ScreenObject);
+  FSfrTable := TSfrTable.Create(Model, ScreenObject);
 end;
 
 procedure TSfrTablelItem.CreateFormulaObjects;

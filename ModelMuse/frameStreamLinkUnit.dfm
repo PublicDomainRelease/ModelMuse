@@ -19,8 +19,8 @@ object frameStreamLink: TframeStreamLink
   object lblTimeToPlot: TLabel
     Left = 112
     Top = 200
-    Width = 59
-    Height = 13
+    Width = 73
+    Height = 16
     Caption = ' Time to plot'
   end
   object shpUnconnectedColor: TShape

@@ -2,20 +2,20 @@ inherited frmProgramLocations: TfrmProgramLocations
   HelpType = htKeyword
   HelpKeyword = 'MODFLOW_Program_Locations_Dialog_Box'
   Caption = 'MODFLOW Program Locations'
-  ClientHeight = 526
+  ClientHeight = 541
   ClientWidth = 623
-  ExplicitTop = -87
-  ExplicitWidth = 631
-  ExplicitHeight = 560
-  PixelsPerInch = 96
+  ExplicitWidth = 641
+  ExplicitHeight = 586
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 485
+    Top = 500
     Width = 623
     Height = 41
     Align = alBottom
     TabOrder = 1
+    ExplicitTop = 485
     DesignSize = (
       623
       41)
@@ -25,10 +25,8 @@ inherited frmProgramLocations: TfrmProgramLocations
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -38,10 +36,8 @@ inherited frmProgramLocations: TfrmProgramLocations
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -51,10 +47,8 @@ inherited frmProgramLocations: TfrmProgramLocations
       Width = 83
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
   end
@@ -62,12 +56,13 @@ inherited frmProgramLocations: TfrmProgramLocations
     Left = 0
     Top = 0
     Width = 623
-    Height = 485
+    Height = 500
     Align = alClient
     TabOrder = 0
+    ExplicitHeight = 485
     DesignSize = (
       623
-      485)
+      500)
     object lblModflow: TLabel
       Left = 16
       Top = 17
@@ -88,7 +83,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     object lblTextEditor: TLabel
       Left = 16
       Top = 388
-      Width = 73
+      Width = 71
       Height = 18
       Caption = 'Text editor'
     end
@@ -105,7 +100,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     object lblModpath: TLabel
       Left = 16
       Top = 176
-      Width = 79
+      Width = 77
       Height = 18
       Caption = 'MODPATH'
     end

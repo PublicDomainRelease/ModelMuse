@@ -3,16 +3,12 @@ inherited frameContourData: TframeContourData
   ExplicitHeight = 399
   inherited pcChoices: TPageControl
     Height = 399
-    ActivePage = tabSelection
     ExplicitHeight = 399
     inherited tabSelection: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 24
-      ExplicitWidth = 562
-      ExplicitHeight = 371
+      ExplicitHeight = 368
       DesignSize = (
         562
-        371)
+        368)
       inherited lblColorScheme: TLabel
         Top = 253
         Anchors = [akLeft, akRight, akBottom]
@@ -20,7 +16,6 @@ inherited frameContourData: TframeContourData
       end
       inherited lblCycles: TLabel
         Top = 176
-        ExplicitLeft = 456
         ExplicitTop = 276
       end
       inherited pbColorScheme: TPaintBox
@@ -33,13 +28,6 @@ inherited frameContourData: TframeContourData
         Top = 308
         Anchors = [akLeft, akRight, akBottom]
         ExplicitTop = 308
-      end
-      inherited reComment: TJvRichEdit
-        Width = 551
-        Height = 56
-        TabOrder = 4
-        ExplicitWidth = 551
-        ExplicitHeight = 56
       end
       inherited comboColorScheme: TComboBox
         Top = 222
@@ -87,6 +75,15 @@ inherited frameContourData: TframeContourData
         TabOrder = 1
         ExplicitTop = 20
         ExplicitWidth = 305
+      end
+      inherited reComment: TRichEdit
+        Width = 551
+        Height = 56
+        Font.Charset = ANSI_CHARSET
+        ParentFont = False
+        TabOrder = 4
+        ExplicitWidth = 551
+        ExplicitHeight = 56
       end
       object btnEditContours: TButton
         Left = 443
@@ -141,13 +138,10 @@ inherited frameContourData: TframeContourData
       end
     end
     inherited tabFilters: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 24
-      ExplicitWidth = 562
-      ExplicitHeight = 371
+      ExplicitHeight = 368
       DesignSize = (
         562
-        371)
+        368)
       inherited lblNumberOfValuesToIgnore: TLabel
         Top = 341
         ExplicitTop = 441
@@ -162,20 +156,17 @@ inherited frameContourData: TframeContourData
       end
     end
     inherited tabLegend: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 24
-      ExplicitWidth = 562
-      ExplicitHeight = 371
+      ExplicitHeight = 368
       inherited imLegend: TImage
-        Height = 371
+        Height = 368
         ExplicitHeight = 471
       end
       inherited pnlLegend: TPanel
-        Height = 371
-        ExplicitHeight = 371
+        Height = 368
+        ExplicitHeight = 368
         DesignSize = (
           218
-          371)
+          368)
         inherited lblColorLegendRows: TLabel
           Top = 310
           ExplicitTop = 410

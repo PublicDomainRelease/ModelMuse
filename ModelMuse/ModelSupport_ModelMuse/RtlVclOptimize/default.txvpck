@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="4pntdkerol53p3p_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.FiniWideStringOptimize()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.InitWideStringOptimize()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetWStrSetPtr()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetWStrArrayClrPtr()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetWStrAddRefPtr()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetWStrFromPWCharLenPtr()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetWStrClrPtr()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetNewWideStringPtr()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize._WStrArrayClr(ref@const,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.WStrSet(ref@System.WideString,System.PWideChar)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize._WStrAddRef(ref@System.WideString)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize._WStrFromPWCharLen(ref@System.WideString,System.PWideChar,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize._WStrClr(ref@const)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize._NewWideString(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.WStrError()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.ReleaseFreeWideStrings(System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.CachedSysFreeString(System.PWideChar)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.CachedSysAllocStringLen(System.PWideChar,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.DisposeNode(RtlVclOptimize.PFreeWideString)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.NewNode(ref@RtlVclOptimize.PFreeWideString)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.SysFreeString(RtlVclOptimize.TBStr)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.SysAllocStringLen(RtlVclOptimize.POleStr,System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.oleaut" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.CollectorThreadEvent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.CollectorThreadId" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.CollectorThread" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.FreeWideStringCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.FreeNodeBuffer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.NodeBuffer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.FreeWideStringsSized" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.WideStringCacheActive" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.NodeCriticalSection" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.CriticalSection" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.ReleaseFreeWideStringsTimeout" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.MaxCachedWideStringSize" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.FastTrim(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.FastAnsiStrByteType(System.PAnsiChar,System.UInt32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.FastAnsiByteType(System.String,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.FastWideSameStr(System.WideString,System.WideString)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.FastSameStr(System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.FastAnsiCompareText(System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.FastStrScan(System.PAnsiChar,System.Char)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.FastAnsiStrScan(System.PAnsiChar,System.Char)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize._WStrCmp_WStrEqual()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.ReplaceWStrCmpByWStrEqual(ref@RtlVclOptimize.TLongCall)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize._WStrEqual()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize._LStrCmp_LStrEqual()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.ReplaceLStrCmpByLStrEqual(ref@RtlVclOptimize.TLongCall)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize._LStrEqual()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize._LStrLAsg(ref@const,const)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize._LStrAsg(ref@const,const)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.OrgWStrCmp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.OrgLStrCmp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.overHead" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.rOff" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.skew" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetDynamicMethod(System.TClass,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.InjectCode(System.Pointer,System.Pointer,System.UInt32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.CodeRedirect(System.Pointer,System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetActualAddr(System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.IsWin9xDebugThunk(System.Pointer)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.CurProcess" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.NoLeadBytes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.GetDynaMethodAddr" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.IsLeapYear_END()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.IsLeapYear(System.UInt16)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.WinControlWMPaint(Controls.TWinControl,ref@Messages.TWMPaint)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.LoadResString(System.PResStringRec)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.FindResourceModuleHInstance(System.UInt32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.LoadResStringCacheCritSect" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.LastResModuleInst" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.LastResStringModule" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.LastResStringRecs" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.LoadResourceModule(System.PAnsiChar,System.Boolean)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.MainModuleFilename" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize._SetEq()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetSetEqAddr()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.ReplaceAsmCall(System.Pointer,System.Pointer,System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetAddrGetDynaMethod()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.oldOptimGetDynaMethod()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetDynaMethod()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.DMTSearch(System.Int32,RtlVclOptimize.PPDmt,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.DMTBinSearch(System.UInt16,SysUtils.PWordArray,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.InitDMTBinSearch(RtlVclOptimize.PPDmt)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.SortDMT(SysUtils.PWordArray,System.Int32,System.Int32,System.PPointerArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetFindDynaClassAddr()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetFindDynaInstAddr()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetCallDynaClassAddr()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetCallDynaInstAddr()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.FastFileAgeNew(System.String,out@System.TDateTime)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.FastFileAge(System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.SysUtils_FileAge" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.GetFileAttributesExFunc" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.FastFileSearch(System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.FastFileExists(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.HashUpString(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TObjectList_NotifyEND()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TObjectList_Notify(Contnrs.TObjectList,System.Pointer,Classes.TListNotification)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.QuickSort(Classes.PPointerList,System.Int32,System.Int32,Classes.TListSortCompare)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.FillZeroes32(System.Int32,System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetLStrPos()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetWStrCmp()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetLStrCmp()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetLStrLAsg()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.GetLStrAsg()" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:RtlVclOptimize.NodeBuffer" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TInjectRec">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TInjectRec.Offset" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TInjectRec.Jump" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TAbsoluteIndirectJmp">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TAbsoluteIndirectJmp.OpCode" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TAbsoluteIndirectJmp.Addr" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TWin9xDebugThunk">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TWin9xDebugThunk.Offset" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TWin9xDebugThunk.JMP" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TWin9xDebugThunk.Addr" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TWin9xDebugThunk.PUSH" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TLongCall">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TLongCall.NextCmd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TLongCall.Offset" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TLongCall.Call" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TImportEntry">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TImportEntry.Magic" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TImportEntry.Destination" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TImportEntry.Jmp" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.StrRec">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.StrRec.length" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.StrRec.refCnt" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TFreeWideString">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TFreeWideString.Next" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TFreeWideString.P" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TNodeBufferItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TNodeBufferItem.Next" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TNodeBufferItem.NextFree" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TMetaClass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TMetaClass.ClassType" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TFastList">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastList.Sort(Classes.TListSortCompare)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastList.Exchange(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastList.Last()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastList.Delete(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastList.Insert(System.Int32,System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastList.Put(System.Int32,System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastList.SetCount(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastList.IndexOf(System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastList.Get(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TFastList.FCapacity" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TFastList.FCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TFastList.FList" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TFastStringList">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastStringList.CustomSort(Classes.TStringListSortCompare)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastStringList.QuickSort(System.Int32,System.Int32,Classes.TStringListSortCompare)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastStringList.ExchangeItems(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TFastStringList.FCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TFastStringList.FList" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TOpenList">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TOpenStringList">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TOpenObjectList">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TNameCompItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TNameCompItem.Next" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TNameCompItem.Value" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TNameCompItem.Key" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TNameHashList">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TNameHashList.NameFind(System.String,out@Classes.TComponent)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TNameHashList.FItems" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TNameHashList.FNameCount" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TNameHashList.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TNameHashList.Notify(System.Pointer,Classes.TListNotification)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TNameHashList.NameRemove(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TNameHashList.NameAdd(System.String,Classes.TComponent)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TFastComponent">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastComponent.FindComponent(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastComponent.Destroying()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastComponent.ChangeName(Classes.TComponentName)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastComponent.Notification(Classes.TComponent,Classes.TOperation)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TFastComponent.ReplaceComponentList()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TOpenComponent">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TPrivateComponent">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TPrivateComponent.FDesignInfo" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TPrivateComponent.FFreeNotifies" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TPrivateComponent.FComponents" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TPrivateComponent.FTag" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TPrivateComponent.FName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TPrivateComponent.FOwner" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TPrivateComponent.FComponentState" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:RtlVclOptimize.TPrivateComponent.FComponents" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TDmt">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TDmt.IndexList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TDmt.Count" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TResStringRecCache">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TResStringRecCache.S" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TResStringRecCache.ResInst" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TResStringRecCache.Identifier" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TResStringRecCache.Time" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RtlVclOptimize.TResStringRecCache.Res" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TOpenWinControl">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TCustomActionListFix">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RtlVclOptimize.TCustomActionListFix.Notification(Classes.TComponent,Classes.TOperation)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RtlVclOptimize.TOpenCustomActionList">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+  </view>
+</nodeSet>

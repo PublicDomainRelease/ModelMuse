@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, framePackageLayerChoiceUnit, RbwController, StdCtrls, ExtCtrls,
   ArgusDataEntry, framePackageTransientLayerChoiceUnit,
-  ModflowPackageSelectionUnit, RbwRadioGroup, CheckLst;
+  ModflowPackageSelectionUnit, CheckLst;
 
 type
   TCheckListRows = (clrRouteDischarge, clrET, clrPrint, clrSpecifyResid,
@@ -21,8 +21,8 @@ type
     rdeNumberOfWaveSets: TRbwDataEntry;
     lblSURFDEP: TLabel;
     rdeSURFDEP: TRbwDataEntry;
-    rgAssignmentMethod: TRbwRadioGroup;
     chklstOptions: TCheckListBox;
+    rgAssignmentMethod: TRadioGroup;
   private
     { Private declarations }
   public

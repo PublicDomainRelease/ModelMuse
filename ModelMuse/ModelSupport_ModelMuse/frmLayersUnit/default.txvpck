@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="d4mhb00ppouve1k_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmLayersUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmLayersUnit.TfrmLayers">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.rdeVDiscretizationChange(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.frameSubDelayBeds" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.tabDelay" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.frameSubNoDelayBeds" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.tabNoDelay" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.rdeAnisotropy" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.lblAnisotropy" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.ilTreeView" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.tvLayerGroups" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.cbComputeSaturatedThickness" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.edName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.comboVertKMethod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.comboInterblockMethod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.rconLayerType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.lbVertKMethod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.lblInterblockMethod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.comboAquiferType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.Label5" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.ilCombo" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.sbDeleteLine" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.sbMoveLine" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.sbInsertLine" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.GridPanel2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.sbDeleteUnit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.sbInsertUnit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.sbAddUnit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.GridPanel1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.Panel3" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.Label4" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.Splitter2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.btnCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.Panel4" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.pnlPaintboxParent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.Panel2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.pnlDiscritization" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.rdgSubLayerBoundaries" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.rgMethod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.rdeGrowthRate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.Label3" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.pbSubLayers" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.Label2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.rdeVDiscretization" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.tabDiscretization" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.Label1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.tabBasics" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.pcLayerGroups" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.Splitter1" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.GetNewSubsidenceName(System.Object,ref@System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.GetSubsidenceLayers(System.Object,ref@ModflowSubsidenceDefUnit.TCustomSubLayer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.EnableAnisotropy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.SetUpAveragingOptions()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.SetUpLayerTypeOptions()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.EnableK_Methods()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.EnableComputeSatThick()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.SetControlValues()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.UpdateSelectedUnits()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.FindImageIndex(LayerStructureUnit.TLayerGroup)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.AddNewUnit(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.EnableGrowthRateControl()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.InBox(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.RearrangeValuesInStringGrid()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.ConvertY(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.MoveLine(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.InsertLine(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.DeleteLine(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.StartMove(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.IsOnLine(System.Int32,out@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.SetPbCursor(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.UpdateLayerPositions()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.GetLayerPostions(GoPhastTypes.TRealArray,out@GoPhastTypes.TOneDIntegerArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.UpdateStringGrid()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.SetSpacing(System.Real,GoPhastTypes.TGrowthMethod,System.Int32,out@GoPhastTypes.TRealArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.EnableOkButton()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.UpdateSelectedUnitLayers()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.FUseSaturatedThickness" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.FSelectedTreeNodes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.FSelectedUnits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.FSettingUnit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.FLayerStructure" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.FMouseInPaintBox" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.FMouseY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.FLineBeingMoved" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.FMovingLine" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TfrmLayers.FLayerPositions" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.rdeAnisotropyChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.tvLayerGroupsChange(System.Object,ComCtrls.TTreeNode)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.rdgSubLayerBoundariesExit(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.cbComputeSaturatedThicknessClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.pcLayerGroupsChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.rdgSubLayerBoundariesSelectCell(System.Object,System.Int32,System.Int32,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.comboVertKMethodChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.comboInterblockMethodChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.comboAquiferTypeChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.sbInsertUnitClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.sbAddUnitClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.sbDeleteUnitClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.rdeGrowthRateExit(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.edNameChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.FormDestroy(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.pbSubLayersMouseLeave(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.pbSubLayersMouseEnter(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.pnlPaintboxParentResize(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.pbSubLayersMouseUp(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.pbSubLayersMouseDown(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.pbSubLayersMouseMove(System.Object,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.rdgSubLayerBoundariesSetEditText(System.Object,System.Int32,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.pbSubLayersPaint(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.rgMethodClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.rdeGrowthRateChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TfrmLayers.FormCreate(System.Object)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmLayersUnit.TUndoDefineLayers">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TUndoDefineLayers.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TUndoDefineLayers.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TUndoDefineLayers.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TUndoDefineLayers.Create(ref@LayerStructureUnit.TLayerStructure)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmLayersUnit.TUndoDefineLayers.Description()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TUndoDefineLayers.FNewDataSets" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TUndoDefineLayers.FOldLayerStructure" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmLayersUnit.TUndoDefineLayers.FNewLayerStructure" />
+    </reference>
+  </view>
+</nodeSet>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="epm02kcfp0307cs_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmEndPointDisplayUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.frmEndPointDisplay" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TableCaptions" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmEndPointDisplayUnit.frmEndPointDisplay" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmEndPointDisplayUnit.TEndLimits">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TEndLimits.elStartColumn" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TEndLimits.elStartRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TEndLimits.elStartLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TEndLimits.elColors" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TEndLimits.elNone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TEndLimits.elReleaseTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TEndLimits.elTrackingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TEndLimits.elEndZone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TEndLimits.elEndColumn" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TEndLimits.elEndRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TEndLimits.elEndLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TEndLimits.elStartZone" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.ReadFloatLimits(PathlineReader.TShowFloatLimit,frmEndPointDisplayUnit.TEndLimits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.ReadIntLimit(PathlineReader.TShowIntegerLimit,frmEndPointDisplayUnit.TEndLimits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.SetFloatLimit(frmEndPointDisplayUnit.TEndLimits,System.Double,PathlineReader.TShowFloatLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.SetIntLimit(frmEndPointDisplayUnit.TEndLimits,System.Int32,PathlineReader.TShowIntegerLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.rdgLimitsSetEditText(System.Object,System.Int32,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.seCyclesChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.seColorExponentChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.jsColorExponentChanged(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.comboColorSchemeChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.pbColorSchemePaint(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.rgColorByClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.rgShow2DClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.rdgLimitsStateChange(System.Object,System.Int32,System.Int32,StdCtrls.TCheckBoxState)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.rdgLimitsSelectCell(System.Object,System.Int32,System.Int32,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.seCycles" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.lblCycles" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.seColorExponent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.jsColorExponent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.lblColorAdjustment" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.pbColorScheme" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.comboColorScheme" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.lblColorScheme" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.rdgLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.rgColorBy" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.rgWhereToPlot" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.rgShow2D" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.cbLimitToCurrentIn2D" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.cbShowPathlines" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.fedModpathFile" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.lblModpathFile" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.tabOptions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.tabBasic" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.pcMain" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.btnCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TfrmEndPointDisplay.pnlBottom" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmEndPointDisplayUnit.TUndoImportEndpoints">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TUndoImportEndpoints.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TUndoImportEndpoints.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TUndoImportEndpoints.Description()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TUndoImportEndpoints.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TUndoImportEndpoints.Create(ref@PathlineReader.TEndPointReader,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmEndPointDisplayUnit.TUndoImportEndpoints.ForceRedraw()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TUndoImportEndpoints.FImportedNewFile" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TUndoImportEndpoints.FNewEndPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmEndPointDisplayUnit.TUndoImportEndpoints.FExistingEndPoints" />
+    </reference>
+  </view>
+</nodeSet>

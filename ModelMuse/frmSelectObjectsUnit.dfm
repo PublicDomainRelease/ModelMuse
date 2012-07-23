@@ -1,25 +1,25 @@
 inherited frmSelectObjects: TfrmSelectObjects
   Left = 558
   Top = 411
-  Width = 348
-  Height = 394
+  Width = 363
+  Height = 398
   HelpType = htKeyword
   HelpKeyword = 'Select_Objects_by_Name'
   VertScrollBar.Range = 162
   ActiveControl = btnCancel
   Caption = 'Select Objects by Name'
-  ExplicitWidth = 348
-  ExplicitHeight = 394
-  PixelsPerInch = 96
+  ExplicitWidth = 363
+  ExplicitHeight = 398
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 191
-    Width = 340
-    Height = 169
+    Top = 176
+    Width = 345
+    Height = 177
     Align = alBottom
     ParentColor = True
-    TabOrder = 0
+    TabOrder = 1
     object lblCount: TLabel
       Left = 8
       Top = 6
@@ -32,22 +32,18 @@ inherited frmSelectObjects: TfrmSelectObjects
       Top = 134
       Width = 108
       Height = 33
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 6
+      TabOrder = 8
     end
     object btnOK: TBitBtn
       Left = 116
       Top = 134
       Width = 108
       Height = 33
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 5
+      TabOrder = 7
       OnClick = btnOKClick
     end
     object btnHelp: TBitBtn
@@ -55,11 +51,9 @@ inherited frmSelectObjects: TfrmSelectObjects
       Top = 134
       Width = 108
       Height = 33
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 4
+      TabOrder = 6
       OnClick = btnHelpClick
     end
     object btnSelectAll: TButton
@@ -90,8 +84,8 @@ inherited frmSelectObjects: TfrmSelectObjects
       OnClick = btnToggleClick
     end
     object cbIncludeHiddenObjects: TCheckBox
-      Left = 7
-      Top = 22
+      Left = 8
+      Top = 17
       Width = 305
       Height = 31
       Caption = 'Include hidden objects'
@@ -105,7 +99,7 @@ inherited frmSelectObjects: TfrmSelectObjects
       Top = 94
       Width = 105
       Height = 26
-      TabOrder = 7
+      TabOrder = 5
       Text = 'Search Term'
     end
     object btnSelectByName: TButton
@@ -114,29 +108,28 @@ inherited frmSelectObjects: TfrmSelectObjects
       Width = 220
       Height = 33
       Caption = 'Select Names Containing:'
-      TabOrder = 8
+      TabOrder = 4
       OnClick = btnSelectByNameClick
     end
   end
   object pcObjects: TPageControl
     Left = 0
     Top = 0
-    Width = 340
-    Height = 191
+    Width = 345
+    Height = 176
     ActivePage = tabSide
     Align = alClient
-    TabOrder = 1
+    TabOrder = 0
+    ExplicitWidth = 330
+    ExplicitHeight = 180
     object tabTop: TTabSheet
       Caption = 'Top'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitHeight = 151
       object lvTop: TListView
         Left = 0
         Top = 0
-        Width = 332
-        Height = 158
+        Width = 337
+        Height = 143
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -148,20 +141,18 @@ inherited frmSelectObjects: TfrmSelectObjects
         ViewStyle = vsReport
         OnChange = lvTopChange
         OnDblClick = lvTopDblClick
+        ExplicitHeight = 151
       end
     end
     object tabFront: TTabSheet
       Caption = 'Front'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitHeight = 151
       object lvFront: TListView
         Left = 0
         Top = 0
-        Width = 332
-        Height = 158
+        Width = 337
+        Height = 143
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -173,16 +164,19 @@ inherited frmSelectObjects: TfrmSelectObjects
         ViewStyle = vsReport
         OnChange = lvTopChange
         OnDblClick = lvTopDblClick
+        ExplicitHeight = 151
       end
     end
     object tabSide: TTabSheet
       Caption = 'Side'
       ImageIndex = 2
+      ExplicitWidth = 322
+      ExplicitHeight = 147
       object lvSide: TListView
         Left = 0
         Top = 0
-        Width = 332
-        Height = 158
+        Width = 337
+        Height = 143
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -194,6 +188,8 @@ inherited frmSelectObjects: TfrmSelectObjects
         ViewStyle = vsReport
         OnChange = lvTopChange
         OnDblClick = lvTopDblClick
+        ExplicitWidth = 322
+        ExplicitHeight = 147
       end
     end
   end

@@ -51,7 +51,6 @@ type
     procedure SetCapacity(const Value: integer);
     procedure SetCount(const Value: longint);
   public
-//    function Copy : TVertexList;
     procedure DeleteLast;
     procedure Add(item : TVoronoiVertex);
     property Capacity: integer read FCapacity write SetCapacity;
@@ -73,7 +72,6 @@ type
     procedure SetCount(const Value: longint);
     procedure SetItem(index: Integer; const Value: TDelaunayPoint);
   public
-//    function Copy : TPointList;
     function Last : TDelaunayPoint;
     procedure Add(item : TDelaunayPoint);
     property Capacity : integer read FCapacity write SetCapacity;

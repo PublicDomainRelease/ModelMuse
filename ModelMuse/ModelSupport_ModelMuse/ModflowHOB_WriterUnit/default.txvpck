@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="pwljmfatpb4ptnj_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHOB_WriterUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHOB_WriterUnit.SortLayerSorts(System.Pointer,System.Pointer)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHOB_WriterUnit.TLayerSort">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHOB_WriterUnit.TLayerSort.Proportion" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHOB_WriterUnit.TLayerSort.ActiveCells" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHOB_WriterUnit.TLayerSort.Layer" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.Create(PhastModelUnit.TPhastModel)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.Package()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.Extension()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.WriteDataSet6(ModflowHobUnit.THobBoundary)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.WriteDataSet5(ModflowHobUnit.THobBoundary)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.WriteDataSet4(ModflowHobUnit.THobBoundary,ModflowHobUnit.TObsCellList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.WriteDataSet3(ModflowHobUnit.THobBoundary,ModflowHobUnit.TObsCellList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.WriteDataSet3to6(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.WriteDataSet2()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.WriteDataSet1()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.Evaluate(GoPhastTypes.TObservationPurpose)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.IREFSP" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.FEndTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.FStartTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.FObservations" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.IUHOBSV" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.MAXM" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.MOBS" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.NH" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.WriteFile(System.String,GoPhastTypes.TObservationPurpose)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.UpdateDisplay(ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists,GoPhastTypes.TByteSet,GoPhastTypes.TObservationPurpose)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHOB_WriterUnit.TModflowHobWriter.Destroy()" />
+    </reference>
+  </view>
+</nodeSet>

@@ -102,6 +102,8 @@ begin
   seMcnvg.AsInteger := PcgnPkg.MCNVG;
   rdeRate_C.Text := FloatToStr(PcgnPkg.RATE_C.Value);
   comboIpunit.ItemIndex := Ord(PcgnPkg.IPUNIT);
+
+  lblPackage.Width := ClientWidth - lblPackage.Left - 8;
 end;
 
 procedure TframePackagePcgn.Loaded;

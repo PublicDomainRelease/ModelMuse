@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="xzm05l50pto6q7m_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameArrayParameterDefinitionUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.Loaded()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.SetEnabled(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.EnableMultiEditControl(RbwDataGrid4.TRbwDataGrid4,Controls.TControl,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.ChangeSelectedCellsStateInColumn(RbwDataGrid4.TRbwDataGrid4,System.Int32,StdCtrls.TCheckBoxState)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.ChangeSelectedCellsInColumn(RbwDataGrid4.TRbwDataGrid4,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.ParentCustomGoPhastForm()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.ArrangeMultiEditControls()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.dgParametersMouseUp(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.dgParametersMouseDown(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.dgParametersHorizontalScroll(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.dgParametersColSize(System.Object,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.cbUseMultiplierClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.cbUseZoneClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.rdeParamValueChange(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.cbUseMultiplier" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.cbUseZone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.rdeParamValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.lblParamValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameArrayParameterDefinitionUnit.TframeArrayParameterDefinition.pnlTop" />
+    </reference>
+  </view>
+</nodeSet>

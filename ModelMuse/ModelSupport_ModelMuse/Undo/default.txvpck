@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="lfopv95do7s519i_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:Undo.TUndoStack">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.Exchange(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:Undo.TUndoStack.UndoToolButton[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:Undo.TUndoStack.RedoToolButton[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:Undo.TUndoStack.UndoEvent[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:Undo.TUndoStack.ReDoEvent[]" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.TUndoStack.FMaxItems" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.TUndoStack.FUndoToolButton" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.TUndoStack.FRedoToolButton" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.TUndoStack.FUndoEvent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.TUndoStack.FReDoEvent" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.HiddenProcExcept()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.SetMaxItems(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.GetCurrentItem()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.GetCurrentRedoItem()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.CanUndo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.CanRedo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.UndoClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.RedoClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.UpdateButtons()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.TUndoStack.CurrentUndo" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.Create(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.DeleteAndFree(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.Submit(Undo.TUndoItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.Undo(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.Redo(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.RemoveLastItem()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.SetUndoActions(ActnList.TAction,ActnList.TAction)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.SetUndoMenuItems(Menus.TMenuItem,Menus.TMenuItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.SetUndoToolButtons(ComCtrls.TToolButton,ComCtrls.TToolButton)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:Undo.TUndoStack.MaxItems[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:Undo.TUndoStack.CurrentItem[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:Undo.TUndoStack.CurrentRedoItem[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.Delete(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.Add(System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.Insert(System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoStack.Move(System.Int32,System.Int32)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:Undo.TControlCrack">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:Undo.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.sStackFull" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.DisableUndoMenus(Menus.TMenuItem,Menus.TMenuItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.DisableUndoActions(ActnList.TAction,ActnList.TAction)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.DisableUndoToolButtons(ComCtrls.TToolButton,ComCtrls.TToolButton)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.sUndoDescr" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.sShortUndoDescr" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.sRedoDescr" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.sShortRedoDescr" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.sUndoMenu" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.sRedoMenu" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.sNoUndoDescr" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.sNoRedoDescr" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:Undo.EHiddenProc">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:Undo.TStackStatus">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.TStackStatus.ssFull" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:Undo.TStackStatus.ssNotFull" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:Undo.TUndoItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoItem.GetShortUndoDescription()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoItem.GetRedoDescription()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoItem.GetShortRedoDescription()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoItem.GetUndoMenuText()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoItem.GetRedoMenuText()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoItem.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoItem.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoItem.Redo()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:Undo.TUndoItem.UndoDescription[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:Undo.TUndoItem.ShortUndoDescription[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:Undo.TUndoItem.RedoDescription[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:Undo.TUndoItem.ShortRedoDescription[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:Undo.TUndoItem.UndoMenuText[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:Undo.TUndoItem.RedoMenuText[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:Undo.TUndoItem.GetUndoDescription()" />
+    </reference>
+  </view>
+</nodeSet>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="c3ldvs69qzytx5n_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:framePackageLayerChoiceUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageLayerChoiceUnit.framePackageLayerChoice" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:framePackageLayerChoiceUnit.framePackageLayerChoice" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:framePackageLayerChoiceUnit.TframePackageLayerChoice">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:framePackageLayerChoiceUnit.TframePackageLayerChoice.GetData(ModflowPackageSelectionUnit.TModflowPackageSelection)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageLayerChoiceUnit.TframePackageLayerChoice.comboLayerOption" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageLayerChoiceUnit.TframePackageLayerChoice.lblLayerOption" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageLayerChoiceUnit.TframePackageLayerChoice.pnLayerOption" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:framePackageLayerChoiceUnit.TframePackageLayerChoice.SetData(ModflowPackageSelectionUnit.TModflowPackageSelection)" />
+    </reference>
+  </view>
+</nodeSet>

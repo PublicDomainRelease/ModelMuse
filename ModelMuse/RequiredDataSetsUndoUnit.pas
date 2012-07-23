@@ -99,12 +99,14 @@ end;
 
 procedure TCustomCreateRequiredDataSetsUndo.DoCommand;
 begin
-  frmGoPhast.PhastModel.ModflowSteadyParameters.NewDataSets := FNewSteadyModflowParameterDataSets;
+  frmGoPhast.PhastModel.ModflowSteadyParameters.NewDataSets :=
+    FNewSteadyModflowParameterDataSets;
 end;
 
 procedure TCustomCreateRequiredDataSetsUndo.Undo;
 begin
-  frmGoPhast.PhastModel.ModflowSteadyParameters.NewDataSets := FNewSteadyModflowParameterDataSets;
+  frmGoPhast.PhastModel.ModflowSteadyParameters.NewDataSets :=
+    FNewSteadyModflowParameterDataSets;
 end;
 
 procedure TCustomCreateRequiredDataSetsUndo.UpdateDataArray(Model: TCustomModel; Index: integer);

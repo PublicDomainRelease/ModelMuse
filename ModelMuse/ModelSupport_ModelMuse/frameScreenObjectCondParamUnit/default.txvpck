@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="upkdsrdeqxaq2ih_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameScreenObjectCondParamUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameScreenObjectCondParamUnit.TframeScreenObjectCondParam">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectCondParamUnit.TframeScreenObjectCondParam.ConductanceCaption(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectCondParamUnit.TframeScreenObjectCondParam.ParamColumnCaption(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectCondParamUnit.TframeScreenObjectCondParam.comboFormulaInterp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectCondParamUnit.TframeScreenObjectCondParam.lblConductanceInterpretation" />
+    </reference>
+  </view>
+</nodeSet>

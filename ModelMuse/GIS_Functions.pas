@@ -142,8 +142,6 @@ const
   StrParentLayer = 'ParentLayer';
   StrParentRow = 'ParentRow';
   StrParentColumn = 'ParentColumn';
-
-resourcestring
   ObjectCurrentSegmentAngle = 'ObjectCurrentSegmentAngle';
   ObjectDegrees = 'ObjectCurrentSegmentAngleDegrees';
   ObjectDegreesLimited = 'ObjectCurrentSegmentAngleLimitedDegrees';
@@ -161,7 +159,7 @@ implementation
 uses frmGoPhastUnit, DataSetUnit, FastGEO, LayerStructureUnit, PhastModelUnit,
   ValueArrayStorageUnit, HufDefinition, OrderedCollectionUnit,
   ModflowPackageSelectionUnit, Math, ModflowGridUnit, ModflowParameterUnit,
-  frmErrorsAndWarningsUnit;
+  frmErrorsAndWarningsUnit, SutraMeshUnit, AbstractGridUnit;
 
 resourcestring
   StrInSVANIParamete = 'In %s, VANI parameters are defined even though that ' +
@@ -552,6 +550,13 @@ var
   CC2D: TPoint2D;
   CC3D: T3DRealPoint;
   LocalModel: TCustomModel;
+  {$IFDEF SUTRA}
+  Node: TSutraNode2D;
+  Node3D: TSutraNode3D;
+  Element: TSutraElement2D;
+  ECenter: TPoint2D;
+  Element3D: TSutraElement3D;
+  {$ENDIF}
 begin
   GlobalColumn := Col + 1;
   GlobalRow := Row + 1;
@@ -559,32 +564,76 @@ begin
   UpdateCurrentModel(Model);
   LocalModel := Model as TCustomModel;
 
-  case EvaluatedAt of
-    eaBlocks:
-      begin
-        CC2D := LocalModel.Grid.TwoDElementCenter(Col, Row);
-        GlobalX := CC2D.X;
-        GlobalY := CC2D.Y;
-
-        CC3D := LocalModel.Grid.ThreeDElementCenter(Col, Row, Layer);
-        GlobalZ := CC3D.Z;
-        GlobalXPrime := CC3D.X;
-        GlobalYPrime := CC3D.Y;
-      end;
-    eaNodes:
-      begin
-        CC2D := LocalModel.Grid.TwoDElementCorner(Col, Row);
-        GlobalX := CC2D.X;
-        GlobalY := CC2D.Y;
-
-        CC3D := LocalModel.Grid.ThreeDElementCorner(Col, Row, Layer);
-        GlobalZ := CC3D.Z;
-        GlobalXPrime := CC3D.X;
-        GlobalYPrime := CC3D.Y;
-      end;
+  {$IFDEF SUTRA}
+  if LocalModel.ModelSelection = msSutra then
+  begin
+    case EvaluatedAt of
+      eaBlocks:
+        begin
+          Element := LocalModel.Mesh.Mesh2D.Elements[Col];
+          ECenter := Element.Center;
+          GlobalX := ECenter.X;
+          GlobalY := ECenter.Y;
+          if LocalModel.Mesh.MeshType = mt2D then
+          begin
+            GlobalZ := 0;
+          end
+          else
+          begin
+            Element3D := LocalModel.Mesh.ElementArray[Layer,Col];
+            GlobalZ := Element3D.CenterElevation;
+          end;
+        end;
+      eaNodes:
+        begin
+          Node := LocalModel.Mesh.Mesh2D.Nodes[Col];
+          GlobalX := Node.X;
+          GlobalY := Node.Y;
+          if LocalModel.Mesh.MeshType = mt2D then
+          begin
+            GlobalZ := 0;
+          end
+          else
+          begin
+            Node3D :=  LocalModel.Mesh.NodeArray[Layer,Col];
+            GlobalZ := Node3D.Z;
+          end;
+        end;
+      else Assert(False);
+    end;
+  end
   else
-    Assert(False);
+  begin
+    {$ENDIF}
+    case EvaluatedAt of
+      eaBlocks:
+        begin
+          CC2D := LocalModel.TwoDElementCenter(Col, Row);
+          GlobalX := CC2D.X;
+          GlobalY := CC2D.Y;
+
+          CC3D := LocalModel.Grid.ThreeDElementCenter(Col, Row, Layer);
+          GlobalZ := CC3D.Z;
+          GlobalXPrime := CC3D.X;
+          GlobalYPrime := CC3D.Y;
+        end;
+      eaNodes:
+        begin
+          CC2D := LocalModel.Grid.TwoDElementCorner(Col, Row);
+          GlobalX := CC2D.X;
+          GlobalY := CC2D.Y;
+
+          CC3D := LocalModel.Grid.ThreeDElementCorner(Col, Row, Layer);
+          GlobalZ := CC3D.Z;
+          GlobalXPrime := CC3D.X;
+          GlobalYPrime := CC3D.Y;
+        end;
+    else
+      Assert(False);
+    end;
+  {$IFDEF SUTRA}
   end;
+  {$ENDIF}
 
 end;
 
@@ -835,6 +884,7 @@ end;
 function _CurrentSegmentAngle(Values: array of pointer): double;
 var
   Point1, Point2: TPoint2D;
+  LocalGrid : TCustomModelGrid;
 begin
   if (GlobalCurrentSegment = nil) or (GlobalCurrentScreenObject = nil)
     or (GlobalCurrentScreenObject.Count <= 1) then
@@ -863,7 +913,11 @@ begin
 
     if GlobalCurrentScreenObject.ViewDirection = vdTop then
     begin
-      result := result - (GlobalCurrentModel as TCustomModel).Grid.GridAngle;
+      LocalGrid := (GlobalCurrentModel as TCustomModel).Grid;
+      if LocalGrid <> nil then
+      begin
+        result := result - LocalGrid.GridAngle;
+      end;
     end;
   end;
 end;
@@ -1076,8 +1130,11 @@ begin
           GlobalCurrentSegment.VertexIndex];
         CurrentSegmentStartPoint.X := GlobalCurrentSegment.X1;
         CurrentSegmentStartPoint.Y := GlobalCurrentSegment.Y1;
-        CurrentSegmentStartPoint := frmGoPhast.Grid.
-          RotateFromGridCoordinatesToRealWorldCoordinates(CurrentSegmentStartPoint);
+        if frmGoPhast.Grid <> nil then
+        begin
+          CurrentSegmentStartPoint := frmGoPhast.Grid.
+            RotateFromGridCoordinatesToRealWorldCoordinates(CurrentSegmentStartPoint);
+        end;
         if (BeforePosition = GlobalCurrentSegment.VertexIndex)
           and NearlyTheSame(CurrentSegmentStartPoint.X, Point1.X)
           and NearlyTheSame(CurrentSegmentStartPoint.Y, Point1.Y) then
@@ -1090,8 +1147,11 @@ begin
           GlobalCurrentSegment.VertexIndex+1];
         CurrentSegmentEndPoint.X := GlobalCurrentSegment.X2;
         CurrentSegmentEndPoint.Y := GlobalCurrentSegment.Y2;
-        CurrentSegmentEndPoint := frmGoPhast.Grid.
-          RotateFromGridCoordinatesToRealWorldCoordinates(CurrentSegmentEndPoint);
+        if frmGoPhast.Grid <> nil then
+        begin
+          CurrentSegmentEndPoint := frmGoPhast.Grid.
+            RotateFromGridCoordinatesToRealWorldCoordinates(CurrentSegmentEndPoint);
+        end;
         if (AfterPosition = GlobalCurrentSegment.VertexIndex+1)
           and NearlyTheSame(CurrentSegmentEndPoint.X, Point2.X)
           and NearlyTheSame(CurrentSegmentEndPoint.Y, Point2.Y) then
@@ -1218,6 +1278,7 @@ end;
 function _ColumnCenter(Values: array of pointer): double;
 var
   Col: Integer;
+  LocalGrid : TCustomModelGrid;
 begin
   if Values[0] <> nil then
   begin
@@ -1227,19 +1288,21 @@ begin
   begin
     Col := GlobalColumn - 1;
   end;
-  if (Col < 0) or (Col > TCustomModel(GlobalCurrentModel).Grid.ColumnCount-1) then
+  LocalGrid := TCustomModel(GlobalCurrentModel).Grid;
+  if (Col < 0) or (LocalGrid = nil) or (Col > LocalGrid.ColumnCount-1) then
   begin
     result := 0;
   end
   else
   begin
-    result := TCustomModel(GlobalCurrentModel).Grid.ColumnCenter(Col);
+    result := LocalGrid.ColumnCenter(Col);
   end;
 end;
 
 function _RowCenter(Values: array of pointer): double;
 var
   Row: Integer;
+  LocalGrid : TCustomModelGrid;
 begin
   if Values[0] <> nil then
   begin
@@ -1249,13 +1312,14 @@ begin
   begin
     Row := GlobalRow - 1;
   end;
-  if (Row < 0) or (Row > TCustomModel(GlobalCurrentModel).Grid.RowCount-1) then
+  LocalGrid := TCustomModel(GlobalCurrentModel).Grid;
+  if (Row < 0) or (LocalGrid = nil) or (Row > LocalGrid.RowCount-1) then
   begin
     result := 0;
   end
   else
   begin
-    result := TCustomModel(GlobalCurrentModel).Grid.RowCenter(Row);
+    result := LocalGrid.RowCenter(Row);
   end;
 end;
 
@@ -1394,17 +1458,27 @@ begin
 end;
 
 function GetColumnWidth(Column: Integer): Double;
+var
+  LocalGrid : TCustomModelGrid;
 begin
+  {$IFDEF SUTRA}
+  if frmGoPhast.ModelSelection = msSutra then
+  begin
+    result := 0;
+    Exit;
+  end;
+  {$ENDIF}
+  LocalGrid := TCustomModel(GlobalCurrentModel).Grid;
   case GlobalEvaluatedAt of
     eaBlocks:
       begin
-        if (Column < 0) or (Column >= TCustomModel(GlobalCurrentModel).Grid.ColumnCount) then
+        if (Column < 0) or (Column >= LocalGrid.ColumnCount) then
         begin
           Result := 0;
         end
         else
         begin
-          Result := TCustomModel(GlobalCurrentModel).Grid.ColumnWidth[Column];
+          Result := LocalGrid.ColumnWidth[Column];
         end;
       end;
     eaNodes:
@@ -1454,17 +1528,27 @@ begin
 end;
 
 function GetRowWidth(Row: Integer): Double;
+var
+  LocalGrid : TCustomModelGrid;
 begin
+  {$IFDEF SUTRA}
+  if frmGoPhast.ModelSelection = msSutra then
+  begin
+    result := 0;
+    Exit;
+  end;
+  {$ENDIF}
+  LocalGrid := TCustomModel(GlobalCurrentModel).Grid;
   case GlobalEvaluatedAt of
     eaBlocks:
       begin
-        if (Row < 0) or (Row >= TCustomModel(GlobalCurrentModel).Grid.RowCount) then
+        if (Row < 0) or (Row >= LocalGrid.RowCount) then
         begin
           Result := 0;
         end
         else
         begin
-          Result := TCustomModel(GlobalCurrentModel).Grid.RowWidth[Row];
+          Result := LocalGrid.RowWidth[Row];
         end;
       end;
     eaNodes:
@@ -1618,6 +1702,13 @@ begin
           Result := TCustomModel(GlobalCurrentModel).ModflowGrid.CellThickness[Col, Row, Lay];
         end;
       end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        { TODO -cSUTRA : Need to implement this. }
+        result := 0;
+      end;
+    {$ENDIF}
   else
     Assert(False);
   end;
@@ -1784,7 +1875,16 @@ end;
 function _ColumnPosition(Values: array of pointer): double;
 var
   Column: integer;
+  LocalGrid : TCustomModelGrid;
 begin
+  {$IFDEF SUTRA}
+  if frmGoPhast.ModelSelection = msSutra then
+  begin
+    result := 0;
+    Exit;
+  end;
+  {$ENDIF}
+  LocalGrid := TCustomModel(GlobalCurrentModel).Grid;
   if Values[0] <> nil then
   begin
     Column := PInteger(Values[0])^ - 1;
@@ -1793,20 +1893,29 @@ begin
   begin
     Column := GlobalColumn - 1;
   end;
-  if (Column < 0) or (Column > TCustomModel(GlobalCurrentModel).Grid.ColumnCount) then
+  if (Column < 0) or (Column > LocalGrid.ColumnCount) then
   begin
     Result := 0;
   end
   else
   begin
-    Result := TCustomModel(GlobalCurrentModel).Grid.ColumnPosition[Column];
+    Result := LocalGrid.ColumnPosition[Column];
   end;
 end;
 
 function _RowPosition(Values: array of pointer): double;
 var
   Row: integer;
+  LocalGrid : TCustomModelGrid;
 begin
+  {$IFDEF SUTRA}
+  if frmGoPhast.ModelSelection = msSutra then
+  begin
+    result := 0;
+    Exit;
+  end;
+  {$ENDIF}
+  LocalGrid := TCustomModel(GlobalCurrentModel).Grid;
   if Values[0] <> nil then
   begin
     Row := PInteger(Values[0])^ - 1;
@@ -1815,13 +1924,13 @@ begin
   begin
     Row := GlobalRow - 1;
   end;
-  if (Row < 0) or (Row > TCustomModel(GlobalCurrentModel).Grid.RowCount) then
+  if (Row < 0) or (Row > LocalGrid.RowCount) then
   begin
     Result := 0;
   end
   else
   begin
-    Result := TCustomModel(GlobalCurrentModel).Grid.RowPosition[Row];
+    Result := LocalGrid.RowPosition[Row];
   end;
 end;
 
@@ -1859,6 +1968,12 @@ begin
           Result := LocalGrid.CellElevation[Col, Row, Lay];
         end;
       end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        result := 0;
+      end;
+    {$ENDIF}
   else
     Assert(False);
   end;
@@ -1905,44 +2020,65 @@ var
   Col: integer;
   Row: integer;
   Lay: integer;
-//  InvalidIndex: boolean;
-//  BelowValue: Double;
-//  AboveValue: Double;
 begin
   ExtractColRowLayer(Lay, Row, Col, Values);
   result := GetLayerCenter(Lay, Row, Col);
-//  BelowValue := GetLayerPosition(Lay, Row, Col, InvalidIndex);
-//  if InvalidIndex then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    AboveValue := GetLayerPosition(Lay+1, Row, Col, InvalidIndex);
-//    if InvalidIndex then
-//    begin
-//      result := 0;
-//    end
-//    else
-//    begin
-//      result := (BelowValue + AboveValue)/2;
-//    end;
-//  end;
 end;
 
 function _LayerCount(Values: array of pointer): integer;
+var
+  LocalModel: TCustomModel;
+  LocalGrid: TCustomModelGrid;
+  LocalMesh: TSutraMesh3D;
 begin
-  Result := TCustomModel(GlobalCurrentModel).Grid.LayerCount + 1;
+  LocalModel := TCustomModel(GlobalCurrentModel);
+  LocalGrid := LocalModel.Grid;
+  if LocalGrid <> nil then
+  begin
+    Result := LocalGrid.LayerCount + 1;
+  end
+  else
+  begin
+    LocalMesh := LocalModel.Mesh;
+    if (LocalMesh = nil) or (LocalMesh.MeshType = mt2D) then
+    begin
+      result := 0;
+    end
+    else
+    begin
+      result := LocalMesh.LayerCount;
+    end;
+  end;
 end;
 
 function _RowCount(Values: array of pointer): integer;
+var
+  LocalGrid: TCustomModelGrid;
 begin
-  Result := TCustomModel(GlobalCurrentModel).Grid.RowCount + 1;
+  LocalGrid := TCustomModel(GlobalCurrentModel).Grid;
+  if LocalGrid = nil then
+  begin
+    result := 0;
+  end
+  else
+  begin
+    Result := LocalGrid.RowCount + 1;
+  end;
 end;
 
 function _ColumnCount(Values: array of pointer): integer;
+var
+  LocalGrid: TCustomModelGrid;
 begin
-  Result := TCustomModel(GlobalCurrentModel).Grid.ColumnCount + 1;
+  LocalGrid := TCustomModel(GlobalCurrentModel).Grid;
+  if LocalGrid = nil then
+  begin
+    result := 0;
+  end
+  else
+  begin
+    Result := LocalGrid.ColumnCount + 1;
+  end;
 end;
 
 function _ObjectLength(Values: array of pointer): double;
@@ -2125,7 +2261,8 @@ var
   ArrayLength: integer;
   Column, Row, Layer: integer;
 begin
-  DataArray := TCustomModel(GlobalCurrentModel).DataArrayManager.GetDataSetByName(DataSetName);
+  DataArray := TCustomModel(GlobalCurrentModel).
+    DataArrayManager.GetDataSetByName(DataSetName);
   Assert(DataArray <> nil);
   PushGlobalStack;
   try
@@ -2154,7 +2291,8 @@ var
   DataArray: TDataArray;
   ArrayLength: Integer;
 begin
-  DataArray := TCustomModel(GlobalCurrentModel).DataArrayManager.GetDataSetByName(rsActive);
+  DataArray := TCustomModel(GlobalCurrentModel).
+    DataArrayManager.GetDataSetByName(rsActive);
   Assert(DataArray <> nil);
   PushGlobalStack;
   try
@@ -2376,7 +2514,7 @@ var
 begin
   if Param.UseZone then
   begin
-    ZoneArray := PhastModel.DataArrayManager.GetDataSetByName(Param.ZoneDataSetName);
+    ZoneArray := TCustomModel(GlobalCurrentModel).DataArrayManager.GetDataSetByName(Param.ZoneDataSetName);
     Assert(ZoneArray <> nil);
     PushGlobalStack;
     try
@@ -2423,7 +2561,7 @@ begin
   result := 0;
   AModel := TCustomModel(GlobalCurrentModel);
   Grid := AModel.ModflowGrid;
-  if (Grid.LayerCount -1 <= Layer)
+  if (Grid = nil) or (Grid.LayerCount -1 <= Layer)
     or (Layer < 0) then
   begin
     // VCont for bottom layer is always zero.
@@ -3339,6 +3477,7 @@ var
   PositionDistance: double;
   IsFirstPoint: Boolean;
   IsLastPoint: Boolean;
+  LocalGrid: TCustomModelGrid;
   function EvaluateLength(const X1, Y1, X2, Y2: double): double;
   begin
     result := Sqrt(Sqr(X1 - X2) + Sqr(Y1 - Y2));
@@ -3376,8 +3515,12 @@ begin
     Value1 := AVariable.DoubleResult;
     Point1 := GlobalCurrentScreenObject.Points[
       GlobalCurrentSegment.VertexIndex];
-    Point1 := TCustomModel(GlobalCurrentModel).Grid.
-      RotateFromRealWorldCoordinatesToGridCoordinates(Point1);
+    LocalGrid := TCustomModel(GlobalCurrentModel).Grid;
+    if LocalGrid <> nil then
+    begin
+      Point1 := LocalGrid.
+        RotateFromRealWorldCoordinatesToGridCoordinates(Point1);
+    end;
     IsFirstPoint := False;
     case GlobalCurrentScreenObject.ViewDirection of
       vdTop, vdFront:
@@ -3408,8 +3551,11 @@ begin
     Value2 := AVariable.DoubleResult;
     Point2 := GlobalCurrentScreenObject.Points[
       GlobalCurrentSegment.VertexIndex + 1];
-    Point2 := TCustomModel(GlobalCurrentModel).Grid.
-      RotateFromRealWorldCoordinatesToGridCoordinates(Point2);
+    if LocalGrid <> nil then
+    begin
+      Point2 := LocalGrid.
+        RotateFromRealWorldCoordinatesToGridCoordinates(Point2);
+    end;
     IsLastPoint := False;
     case GlobalCurrentScreenObject.ViewDirection of
       vdTop, vdFront:

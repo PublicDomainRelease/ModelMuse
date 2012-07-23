@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="pwkdbs0bqc2bumh_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:framePackageHobUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageHobUnit.framePackageHob" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:framePackageHobUnit.framePackageHob" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:framePackageHobUnit.TframePackageHob">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:framePackageHobUnit.TframePackageHob.SetData(ModflowPackageSelectionUnit.TModflowPackageSelection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:framePackageHobUnit.TframePackageHob.GetData(ModflowPackageSelectionUnit.TModflowPackageSelection)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageHobUnit.TframePackageHob.lblDryHead" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageHobUnit.TframePackageHob.rdeDryHead" />
+    </reference>
+  </view>
+</nodeSet>

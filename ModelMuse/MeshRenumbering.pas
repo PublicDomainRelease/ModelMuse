@@ -1,5 +1,5 @@
 {
-Based on
+Based on:
 Sloan, S.W., and Randolph, M.F., 1983. Automatic element reordering for
 finite element analysis with frontal solution schemes. International
 Journal for Numerical Methods in Engineering. 19: 1153-1181.
@@ -53,9 +53,6 @@ type
     property ElementCount: Integer read GetElementCount;
     property Elements[Index: Integer]: IElement read GetElement;
   end;
-
-  { TNodeHandler }
-
 
 procedure RenumberMesh(Mesh: IMesh);
 
@@ -473,7 +470,7 @@ begin
       ElementHandler := TElementHandler.Create(Element);
       ElementList.Add(ElementHandler);
     end;
-      
+
     ElementList.Sort(TElementHandlerComparer.Construct(
       function (const L, R: TElementHandler): integer
         var
@@ -499,6 +496,8 @@ begin
   end;
 
 end;
+
+  { TNodeHandler }
 
 procedure TNodeHandler.AssignActiveNodeIncrement;
 var

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="qfnofkvwo4fhgpp_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowTimeUnit.TStressPeriodType">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowTimeUnit.TStressPeriodType.sptTransient" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowTimeUnit.TStressPeriodType.sptSteadyState" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.SetDrawDownReference(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.SetTimeStepMultiplier(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.SetStressPeriodType(ModflowTimeUnit.TStressPeriodType)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.SetStartTime(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.SetPeriodLength(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.SetMaxLengthOfFirstTimeStep(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.SetEndTime(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.InvalidateModel()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.FDrawDownReference" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.FTimeStepMultiplier" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.FStressPeriodType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.FStartTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.FPeriodLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.FMaxLengthOfFirstTimeStep" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.FEndTime" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.TimeStepMultiplier[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.StressPeriodType[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.StartTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.PeriodLength[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.MaxLengthOfFirstTimeStep[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.EndTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.DrawDownReference[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.LengthOfFirstTimeStep()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.NumberOfSteps()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriod.FStressPeriodType" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.GetNumberOfSteps()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.SetItems(System.Int32,ModflowTimeUnit.TModflowStressPeriod)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.GetItems(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.FModel" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.MaxStepsInAnyStressPeriod()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.FillStringsWithEndTimes(Classes.TStrings)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.FillStringsWithStartTimes(Classes.TStrings)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.NumberOfSteps[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.TimeToPeriodAndStep(System.Double,out@System.Int32,out@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.FillPickListWithStartTimes(RbwDataGrid4.TRbwDataGrid4,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.FillPickListWithEndTimes(RbwDataGrid4.TRbwDataGrid4,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.CompletelyTransient()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.TransientModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.WriteStressPeriods(System.Object)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowTimeUnit.TModflowStressPeriods.Items[System.Int32]" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowTimeUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowTimeUnit.StrTheFirstAndOnlyS" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowTimeUnit.StrUnusualUseOfDrawd" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowTimeUnit.GetNumberOfTimeSteps(System.Real,System.Real,System.Real)" />
+    </reference>
+  </view>
+</nodeSet>

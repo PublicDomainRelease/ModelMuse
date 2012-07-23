@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="3ulwd6nup1dfovf_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrTable.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.DepthPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.FlowPosition" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TableRowRestoreSubscription(System.Object,System.Object,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TableRowRemoveSubscription(System.Object,System.Object,System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.WidthPosition" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrTable.TSfrFlowTableItemRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrFlowTableItemRecord.Width" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrFlowTableItemRecord.Depth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrFlowTableItemRecord.Flow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrFlowTableItemRecord.WidthAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrFlowTableItemRecord.DepthAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrFlowTableItemRecord.FlowAnnotation" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrTable.TSfrFlowTableRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrFlowTableRecord.StartingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrFlowTableRecord.SfrFlowTableArray" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrFlowTableRecord.EndingTime" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.UpdateFormula(System.String,SubscriptionUnit.TObserver,ref@FormulaManagerUnit.TFormulaObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.RestoreSubscription(System.Object,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.RemoveSubscription(System.Object,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.GetPropertyObserver(System.Object,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.ResetItemObserver(FormulaManagerUnit.TFormulaObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.CreateFormulaObject()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.SfrTable()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.GetWidth()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.GetFlow()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.GetDepth()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.SetWidth(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.SetFlow(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.SetDepth(System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.FDepthObserver" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.FWidthObserver" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.FFlowObserver" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.FDepth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.FFlow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.FWidth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.FFormulaList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.FObserverList" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.Width[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.Depth[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.Flow[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableRowItem.UpdateFormulaDependencies(System.String,ref@System.String,SubscriptionUnit.TObserver,RbwParser.TRbwParser)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrTable.TSfrTable">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrTable.TSfrTable.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTable.Create(Classes.TComponent,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTable.SetItems(System.Int32,ModflowSfrTable.TSfrTableRowItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTable.GetItems(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrTable.FScreenObject" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrTable.TSfrTablelItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.CreateFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.AssignObserverEvents(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.SetSfrTable(ModflowSfrTable.TSfrTable)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.FSfrTable" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.SfrTable[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.BoundaryFormulaCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.SetBoundaryFormula(System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.GetBoundaryFormula(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.RemoveFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.GetPropertyObserver(System.Object,Classes.TList)" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowSfrTable.TSfrTablelItem.FSfrTable" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrTable.TSfrTableCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableCollection.EvaluateBoundaries()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableCollection.ItemClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableCollection.SetTableTimeValues(System.Int32,ModflowSfrTable.TSfrFlowTableRecord)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableCollection.GetTableTimeValues(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrTable.TSfrTableCollection.FTimeValues" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrTable.TSfrTableCollection.GetRecordForTime(System.Double)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrTable.TSfrTableCollection.TableTimeValues[System.Int32]" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowSfrTable.TSfrTableCollection.FTimeValues" />
+    </reference>
+  </view>
+</nodeSet>

@@ -205,7 +205,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         135
         32)
       object sbAddRow: TSpeedButton
-        Left = 11
+        Left = 10
         Top = 5
         Width = 23
         Height = 22
@@ -223,10 +223,11 @@ inherited frmImportBitmap: TfrmImportBitmap
         ParentShowHint = False
         ShowHint = True
         OnClick = sbAddRowClick
+        ExplicitLeft = 11
         ExplicitTop = 6
       end
       object sbInsertRow: TSpeedButton
-        Left = 56
+        Left = 54
         Top = 5
         Width = 23
         Height = 22
@@ -244,10 +245,11 @@ inherited frmImportBitmap: TfrmImportBitmap
         ParentShowHint = False
         ShowHint = True
         OnClick = sbInsertRowClick
+        ExplicitLeft = 56
         ExplicitTop = 6
       end
       object sbDeleteRow: TSpeedButton
-        Left = 101
+        Left = 100
         Top = 5
         Width = 23
         Height = 22
@@ -455,6 +457,10 @@ inherited frmImportBitmap: TfrmImportBitmap
       Image32.ScaleMode = smNormal
       Image32.TabOrder = 0
       Image32.OnMouseUp = ZoomBoxImage32MouseUp
+      Image32.ExplicitLeft = 0
+      Image32.ExplicitTop = 0
+      Image32.ExplicitWidth = 575
+      Image32.ExplicitHeight = 427
       ImmediateResize = True
       Magnification = 1.000000000000000000
       VerticalDirection = vdUp
@@ -475,8 +481,8 @@ inherited frmImportBitmap: TfrmImportBitmap
   end
   object odWorldFiled: TOpenDialog
     Filter = 
-      'Raster world file (*.tfw;*.tifw;*.jgw;*.jpgw)|*.tfw;*.tifw;*.jgw' +
-      ';*.jpgw|CAD world file (*.wld)|*.wld|All files|*.*'
+      'Raster world file (*.tfw;*.tifw;*.jgw;*.jpgw;*.pgw)|*.tfw;*.tifw' +
+      ';*.jgw;*.jpgw;*.pgw|CAD world file (*.wld)|*.wld|All files|*.*'
     Left = 136
     Top = 88
   end

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="own21ysno0f41fi_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frame3DViewUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.farPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.nearPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.ViewAngle" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.ZOffset" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.PanFactor" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frame3DViewUnit.Tframe3DView">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frame3DViewUnit.Tframe3DView.SetDefaultOrientation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frame3DViewUnit.Tframe3DView.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frame3DViewUnit.Tframe3DView.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.Tframe3DView.FZStart" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.Tframe3DView.FZScale" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.Tframe3DView.FZooming" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.Tframe3DView.FZoomFactor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.Tframe3DView.FYStart" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.Tframe3DView.FYPanStart" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.Tframe3DView.FYPan" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.Tframe3DView.FYOffset" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.Tframe3DView.FXStart" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.Tframe3DView.FXPanStart" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.Tframe3DView.FXPan" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.Tframe3DView.FXOffset" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.Tframe3DView.FTheBall" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.Tframe3DView.FPanning" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frame3DViewUnit.Tframe3DView.glWidModelViewResize(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frame3DViewUnit.Tframe3DView.glWidModelViewRender(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frame3DViewUnit.Tframe3DView.glWidModelViewMouseUp(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frame3DViewUnit.Tframe3DView.glWidModelViewMouseMove(System.Object,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frame3DViewUnit.Tframe3DView.glWidModelViewMouseDown(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frame3DViewUnit.Tframe3DView.glWidModelView" />
+    </reference>
+  </view>
+</nodeSet>

@@ -8,7 +8,6 @@ type
 
   THashTableFacade = class(TObject)
   private
-//    FHashTable: THashTable;
     FJclUnicodeStrHashMap: TJclUnicodeStrHashMap;
     FTableSize: integer;
     function GetIgnoreCase: boolean;
@@ -103,7 +102,6 @@ end;
 
 constructor THashTableFacade.Create;
 begin
-//  FHashTable := THashTable.Create(False);
   FJclUnicodeStrHashMap := TJclUnicodeStrHashMap.Create(StartTableSize, True);
   FTableSize := StartTableSize;
   IgnoreCase := False;

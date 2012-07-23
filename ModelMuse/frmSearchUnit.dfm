@@ -1,34 +1,36 @@
 inherited frmSearch: TfrmSearch
   Left = 631
   Top = 301
-  Width = 422
+  Width = 448
   Height = 579
   HelpType = htKeyword
   HelpKeyword = 'Search_for_Objects_Dialog_Box'
   VertScrollBar.Range = 105
   Caption = 'Search for Objects'
-  ExplicitWidth = 422
+  ExplicitWidth = 448
   ExplicitHeight = 579
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   inherited pnlBottom: TPanel
-    Top = 489
-    Width = 414
+    Top = 478
+    Width = 430
     Height = 56
-    ExplicitTop = 489
-    ExplicitWidth = 414
+    ExplicitTop = 478
+    ExplicitWidth = 404
     ExplicitHeight = 56
     inherited btnClose: TBitBtn
-      Left = 319
+      Left = 321
       Top = 16
-      ExplicitLeft = 319
+      TabOrder = 2
+      ExplicitLeft = 321
       ExplicitTop = 16
     end
     inherited btnHelp: TBitBtn
-      Left = 226
+      Left = 228
       Top = 16
+      TabOrder = 1
       OnClick = btnHelpClick
-      ExplicitLeft = 226
+      ExplicitLeft = 228
       ExplicitTop = 16
     end
     object rgDirecton: TRadioGroup
@@ -43,15 +45,15 @@ inherited frmSearch: TfrmSearch
         'Top'
         'Front'
         'Side')
-      TabOrder = 2
+      TabOrder = 0
       OnClick = rgDirectonClick
     end
   end
   inherited vstObjects: TVirtualStringTree
-    Width = 414
-    Height = 489
+    Width = 430
+    Height = 478
     OnChecked = vstObjectsChecked
-    ExplicitWidth = 414
-    ExplicitHeight = 489
+    ExplicitWidth = 404
+    ExplicitHeight = 478
   end
 end

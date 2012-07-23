@@ -281,16 +281,19 @@ end;
 { TCompressedBitmapItem }
 
 procedure TCompressedBitmapItem.Assign(Source: TPersistent);
+var
+  SourceItem: TCompressedBitmapItem;
 begin
   if Source is TCompressedBitmapItem then
   begin
-    with TCompressedBitmapItem(Source) do
+    SourceItem := TCompressedBitmapItem(Source);
+//    with TCompressedBitmapItem(Source) do
     begin
-      self.Bitmap := Bitmap;
-      self.Name := Name;
-      self.ViewDirection := ViewDirection;
-      self.MeasurementPoints := MeasurementPoints;
-      self.Visible := Visible;
+      self.Bitmap := SourceItem.Bitmap;
+      self.Name := SourceItem.Name;
+      self.ViewDirection := SourceItem.ViewDirection;
+      self.MeasurementPoints := SourceItem.MeasurementPoints;
+      self.Visible := SourceItem.Visible;
     end;
   end
   else
@@ -596,15 +599,18 @@ end;
 { TMeasurementPointItem }
 
 procedure TMeasurementPointItem.Assign(Source: TPersistent);
+var
+  SourceItem: TMeasurementPointItem;
 begin
   if Source is TMeasurementPointItem then
   begin
-    with TMeasurementPointItem(Source) do
+    SourceItem := TMeasurementPointItem(Source);
+//    with TMeasurementPointItem(Source) do
     begin
-      self.PixelX := PixelX;
-      self.PixelY := PixelY;
-      self.X := X;
-      self.Y := Y;
+      self.PixelX := SourceItem.PixelX;
+      self.PixelY := SourceItem.PixelY;
+      self.X := SourceItem.X;
+      self.Y := SourceItem.Y;
     end;
   end
   else

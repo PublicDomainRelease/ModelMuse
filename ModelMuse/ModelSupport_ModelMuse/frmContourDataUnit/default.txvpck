@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="rindi1gwoox3l2k_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmContourDataUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.UpdateFrmContourData()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmContourDataUnit.frmContourData" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmContourDataUnit.frmContourData" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmContourDataUnit.TfrmContourData">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmContourDataUnit.TfrmContourData.btnEditContours" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmContourDataUnit.TfrmContourData.cbSpecifyContours" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.UpdateContours()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.SetMinMaxLabels()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.GetSelectedArray()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.HandleSelectedObject(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.UpdateTopFrontAndSideItems()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.GetData()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmContourDataUnit.TfrmContourData.FContours" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.cbLogTransformClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.virttreecomboDataSetsDropDownTreeGetNodeDataSize(VirtualTrees.TBaseVirtualTree,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.virttreecomboDataSetsDropDownTreeChange(VirtualTrees.TBaseVirtualTree,VirtualTrees.PVirtualNode)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.virttreecomboDataSetsChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.FormDestroy(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.btnEditContoursClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.cbSpecifyContoursClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmContourDataUnit.TfrmContourData.FormCreate(System.Object)" />
+    </reference>
+  </view>
+</nodeSet>

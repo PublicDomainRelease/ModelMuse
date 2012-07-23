@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="hanymhh1pq0ra0i_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrUnit.TSfrBoundary">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.GageLocation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.Gage7[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.Gage6[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.Gage5[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.Gage3[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.Gage2[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.Gage1[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.Gage0[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.ParamIcalc[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.EquationValues[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SegmentFlows[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.TableCollection[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.DownstreamUnsatSegmentValues[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.UpstreamUnsatSegmentValues[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.DownstreamSegmentValues[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.UpstreamSegmentValues[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.ChannelValues[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SegementNumber[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.OutTypes[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.UpdateTimes(RealListUnit.TRealList)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.ISFROPT[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.Used()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.EvaluateArrayBoundaries()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.Create(System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.InvalidateDisplay()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.GetCellValues(Classes.TList,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.InvalidateSegmentNumberArray()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.BoundaryCollectionClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.AssignCells(ModflowBoundaryUnit.TCustomBoundaryStorage,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetGageLocation(ModflowSfrUnit.TGageLocation)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.GetOutTypes()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetGage3(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetGage7(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetGage6(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetGage5(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetGage2(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetGage1(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetGage0(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.InvalidateDisplayTimeLists()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetParamIcalc(ModflowSfrParamIcalcUnit.TSfrParamIcalcCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.GetISFROPT()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetEquationValues(ModflowSfrEquationUnit.TSfrEquationCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetSegmentFlows(ModflowSfrFlows.TSfrSegmentFlowCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetTableCollection(ModflowSfrTable.TSfrTableCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetUpstreamUnsatSegmentValues(ModflowSfrUnsatSegment.TSfrUnsatSegmentCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetDownstreamUnsatSegmentValues(ModflowSfrUnsatSegment.TSfrUnsatSegmentCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetDownstreamSegmentValues(ModflowSfrSegment.TSfrSegmentCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetUpstreamSegmentValues(ModflowSfrSegment.TSfrSegmentCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetChannelValues(ModflowSfrChannelUnit.TSfrChannelCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.SetSegementNumber(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FGageLocation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FGage7" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FGage6" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FGage5" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FGage3" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FGage2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FGage1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FGage0" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FParamIcalc" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FIFSROPT" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FEquationValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FSegmentFlows" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FTableCollection" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FUpstreamUnsatSegmentValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FDownstreamUnsatSegmentValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FDownstreamSegmentValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FUpstreamSegmentValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FChannelValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FSegementNumber" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowSfrUnit.TSfrBoundary.FGageLocation" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.StrIncompleteSFRData" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrUnit.TGageLocation">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TGageLocation.glAll" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TGageLocation.glLast" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TGageLocation.glFirst" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrUnit.TGageLocation.glNone" />
+    </reference>
+  </view>
+</nodeSet>

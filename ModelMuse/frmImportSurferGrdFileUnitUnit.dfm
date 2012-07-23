@@ -1,9 +1,11 @@
 inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
-  Height = 404
+  Width = 578
+  Height = 406
   HelpKeyword = 'Import_Surfer_Grid_File'
   Caption = 'Import Surfer Grid File'
-  ExplicitHeight = 404
-  PixelsPerInch = 96
+  ExplicitWidth = 578
+  ExplicitHeight = 406
+  PixelsPerInch = 120
   TextHeight = 18
   inherited lblDataSet: TLabel
     Top = 136
@@ -22,16 +24,21 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
   end
   inherited comboDataSets: TComboBox
     Top = 160
+    Width = 547
+    TabOrder = 1
     ExplicitTop = 160
+    ExplicitWidth = 547
   end
   inherited comboInterpolators: TComboBox
     Top = 213
+    TabOrder = 2
     ExplicitTop = 213
   end
   inherited cbEnclosedCells: TCheckBox
     Left = 496
     Top = 277
     Width = 41
+    TabOrder = 5
     Visible = False
     ExplicitLeft = 496
     ExplicitTop = 277
@@ -49,19 +56,23 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
   end
   inherited rgEvaluatedAt: TRadioGroup
     Top = 313
+    TabOrder = 6
     ExplicitTop = 313
   end
   inherited btnOK: TBitBtn
     Top = 324
+    TabOrder = 8
     OnClick = btnOKClick
     ExplicitTop = 324
   end
   inherited btnCancel: TBitBtn
     Top = 324
+    TabOrder = 9
     ExplicitTop = 324
   end
   inherited btnHelp: TBitBtn
     Top = 324
+    TabOrder = 7
     ExplicitTop = 324
   end
   object rdgLimits: TRbwDataGrid4 [12]
@@ -73,7 +84,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
     FixedCols = 1
     RowCount = 3
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
-    TabOrder = 9
+    TabOrder = 0
     ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = False

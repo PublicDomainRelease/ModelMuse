@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="tmn7tvruok5q2oj_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:InterpolationUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.SortRecordCompare(System.Pointer,System.Pointer)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:InterpolationUnit.TCustomAnisotropicInterpolator">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:InterpolationUnit.TCustomAnisotropicInterpolator.Anisotropy[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomAnisotropicInterpolator.SameAs(DataSetUnit.TCustom2DInterpolater)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomAnisotropicInterpolator.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomAnisotropicInterpolator.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomAnisotropicInterpolator.InitializeVariablesAndExpression(FastGEO.TPoint2D,ScreenObjectUnit.TScreenObject,ref@RbwParser.TExpression)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomAnisotropicInterpolator.InitializeQuadTreeLimits(QuadTreeClass.TRbwQuadTree,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomAnisotropicInterpolator.SetAnisotropy(System.Real)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TCustomAnisotropicInterpolator.FAnisotropy" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:InterpolationUnit.TInvDistSq2DInterpolator">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TInvDistSq2DInterpolator.RealResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TInvDistSq2DInterpolator.ValidReturnTypes()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TInvDistSq2DInterpolator.InterpolatorName()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:InterpolationUnit.TInvDistSq2DInterpolator:InterpolationUnit.TCustomAnisotropicInterpolator" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:InterpolationUnit.TCustomPoint2DInterpolator">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomPoint2DInterpolator.Finalize(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomPoint2DInterpolator.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomPoint2DInterpolator.StoreData(System.Object,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomPoint2DInterpolator.StoreDataValue(System.Int32,DataSetUnit.TDataArray,FastGEO.TPoint2D,ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomPoint2DInterpolator.SetArraySize(DataSetUnit.TDataArray,System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TCustomPoint2DInterpolator.FStringData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TCustomPoint2DInterpolator.FBooleanData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TCustomPoint2DInterpolator.FIntegerData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TCustomPoint2DInterpolator.FRealData" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:InterpolationUnit.TCustomPoint2DInterpolator:InterpolationUnit.TCustomAnisotropicInterpolator" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:InterpolationUnit.TNearestPoint2DInterpolator">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearestPoint2DInterpolator.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearestPoint2DInterpolator.StringResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearestPoint2DInterpolator.RealResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearestPoint2DInterpolator.IntegerResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearestPoint2DInterpolator.BooleanResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearestPoint2DInterpolator.ValidReturnTypes()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearestPoint2DInterpolator.InterpolatorName()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearestPoint2DInterpolator.Finalize(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearestPoint2DInterpolator.StoreDataValue(System.Int32,DataSetUnit.TDataArray,FastGEO.TPoint2D,ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearestPoint2DInterpolator.StoreData(System.Object,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearestPoint2DInterpolator.SetArraySize(DataSetUnit.TDataArray,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearestPoint2DInterpolator.GetPointerToResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TNearestPoint2DInterpolator.FQuadTree" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:InterpolationUnit.TNearestPoint2DInterpolator:InterpolationUnit.TCustomPoint2DInterpolator" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:InterpolationUnit.TInvDistSqPoint2DInterpolator">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TInvDistSqPoint2DInterpolator.StoreDataValue(System.Int32,DataSetUnit.TDataArray,FastGEO.TPoint2D,ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TInvDistSqPoint2DInterpolator.SetArraySize(DataSetUnit.TDataArray,System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TInvDistSqPoint2DInterpolator.FLocations" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TInvDistSqPoint2DInterpolator.RealResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TInvDistSqPoint2DInterpolator.ValidReturnTypes()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TInvDistSqPoint2DInterpolator.InterpolatorName()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TInvDistSqPoint2DInterpolator.Finalize(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:InterpolationUnit.TInvDistSqPoint2DInterpolator:InterpolationUnit.TCustomPoint2DInterpolator" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator.StringResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator.RealResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator.IntegerResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator.BooleanResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator.InterpolatorName()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator.Finalize(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator.GetNearestScreenObject(FastGEO.TPoint2D,out@FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator.StoreData(System.Object,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator.GetExpression(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator.FListOfTScreenObjects" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator.FQuadTree" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator.FExpression" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator.ValidReturnTypes()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:InterpolationUnit.TNearest2DInterpolator:InterpolationUnit.TCustomAnisotropicInterpolator" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:InterpolationUnit.TCustomSfrpackInterpolator">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomSfrpackInterpolator.StoreData(System.Object,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomSfrpackInterpolator.ValidReturnTypes()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomSfrpackInterpolator.ShouldInterpolate()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TCustomSfrpackInterpolator.FSfrInterpolator" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TCustomSfrpackInterpolator.FValidData" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomSfrpackInterpolator.Finalize(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomSfrpackInterpolator.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TCustomSfrpackInterpolator.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:InterpolationUnit.TCustomSfrpackInterpolator:InterpolationUnit.TCustomAnisotropicInterpolator" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:InterpolationUnit.TLinearSfrpackInterpolator">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TLinearSfrpackInterpolator.InterpolatorName()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TLinearSfrpackInterpolator.RealResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:InterpolationUnit.TLinearSfrpackInterpolator:InterpolationUnit.TCustomSfrpackInterpolator" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:InterpolationUnit.TFittedSurfaceIntepolator">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TFittedSurfaceIntepolator.RealResult(FastGEO.TPoint2D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:InterpolationUnit.TFittedSurfaceIntepolator.InterpolatorName()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:InterpolationUnit.TFittedSurfaceIntepolator:InterpolationUnit.TCustomSfrpackInterpolator" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:InterpolationUnit.TSortRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TSortRecord.Duplicate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TSortRecord.OriginalIndex" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TSortRecord.Value" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:InterpolationUnit.TSortRecord.Location" />
+    </reference>
+  </view>
+</nodeSet>

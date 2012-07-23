@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="9mnnszuuo6rzkzq_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:framePackageUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:framePackageUnit.TframePackage">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:framePackageUnit.TframePackage.OnSelectedChange[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:framePackageUnit.TframePackage.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:framePackageUnit.TframePackage.SelectionType[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:framePackageUnit.TframePackage.Selected[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:framePackageUnit.TframePackage.SetData(ModflowPackageSelectionUnit.TModflowPackageSelection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:framePackageUnit.TframePackage.GetData(ModflowPackageSelectionUnit.TModflowPackageSelection)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:framePackageUnit.TframePackage.CanSelect[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:framePackageUnit.TframePackage.MoveControlsToTab(ComCtrls.TPageControl)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:framePackageUnit.TframePackage.SetSelected(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:framePackageUnit.TframePackage.SetCanSelect(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:framePackageUnit.TframePackage.SetNodeStateIndex()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageUnit.TframePackage.FCanSelect" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageUnit.TframePackage.FOnSelectedChange" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageUnit.TframePackage.FSelectionType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageUnit.TframePackage.FSelected" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageUnit.TframePackage.Node" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageUnit.TframePackage.rcSelectionController" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageUnit.TframePackage.lblPackage" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageUnit.TframePackage.memoComments" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageUnit.TframePackage.lblComments" />
+    </reference>
+  </view>
+</nodeSet>

@@ -357,9 +357,7 @@ end;
 procedure TfrmSubdivide.FormDestroy(Sender: TObject);
 begin
   inherited;
-  frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-  frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
-  frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+  frmGoPhast.InvalidateImage32AllViews;
 end;
 
 procedure TfrmSubdivide.FormShow(Sender: TObject);
@@ -387,8 +385,8 @@ begin
   begin
     SubdivideGridTool.FFirstSubdivideColumn := seCol1.AsInteger - 1;
     SubdivideGridTool.Layer32.Changed;
-    frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-    frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+    frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -399,8 +397,8 @@ begin
   begin
     SubdivideGridTool.FLastSubdivideColumn := seCol2.AsInteger - 1;
     SubdivideGridTool.Layer32.Changed;
-    frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-    frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+    frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -411,8 +409,8 @@ begin
   begin
     SubdivideGridTool.FLastSubdivideLayer := seLayer2.AsInteger - 1;
     SubdivideGridTool.Layer32.Changed;
-    frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
-    frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
+    frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -423,8 +421,8 @@ begin
   begin
     SubdivideGridTool.FFirstSubdivideRow := seRow1.AsInteger - 1;
     SubdivideGridTool.Layer32.Changed;
-    frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-    frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+    frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -435,8 +433,8 @@ begin
   begin
     SubdivideGridTool.FLastSubdivideRow := seRow2.AsInteger - 1;
     SubdivideGridTool.Layer32.Changed;
-    frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-    frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+    frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -447,8 +445,8 @@ begin
   begin
     SubdivideGridTool.FFirstSubdivideLayer := seLayer1.AsInteger - 1;
     SubdivideGridTool.Layer32.Changed;
-    frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
-    frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+    frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
+    frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -524,7 +522,7 @@ begin
         begin
           FLastSubdivideColumn := Column;
           FLastSubdivideRow := Row;
-          ZoomBox.Image32.Invalidate;
+          ZoomBox.InvalidateImage32;
         end;
       end;
     vdFront:
@@ -535,7 +533,7 @@ begin
         begin
           FLastSubdivideLayer := Layer;
           FLastSubdivideColumn := Column;
-          ZoomBox.Image32.Invalidate;
+          ZoomBox.InvalidateImage32;
         end;
       end;
     vdSide:
@@ -546,7 +544,7 @@ begin
         begin
           FLastSubdivideLayer := Layer;
           FLastSubdivideRow := Row;
-          ZoomBox.Image32.Invalidate;
+          ZoomBox.InvalidateImage32;
         end;
       end;
   else
@@ -730,7 +728,7 @@ begin
   inherited;
   SubdivideGridTool.FSubdividing := False;
   SubdivideGridTool.Layer32.Changed;
-  SubdivideGridTool.View.ZoomBox.Image32.Invalidate;
+  SubdivideGridTool.View.ZoomBox.InvalidateImage32;
 
 end;
 

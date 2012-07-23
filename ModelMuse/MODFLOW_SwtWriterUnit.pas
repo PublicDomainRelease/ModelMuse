@@ -410,7 +410,7 @@ var
   PrintChoice: TSwtPrintItem;
   Iun1: Integer;
   SwtFileName: string;
-  AFileName: string;
+//  AFileName: string;
   Iun2: Integer;
   Iun3: Integer;
   Iun4: Integer;

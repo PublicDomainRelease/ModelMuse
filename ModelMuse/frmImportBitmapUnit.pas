@@ -156,7 +156,11 @@ var
 implementation
 
 uses frmPixelPointUnit, GoPhastTypes, frmGoPhastUnit, BigCanvasMethods, 
-  frmWorldFileTypeUnit, frmGoToUnit, jpeg, GraphicEx, Pcx, ModelMuseUtilities;
+  frmWorldFileTypeUnit, frmGoToUnit, jpeg,
+  {$IFDEF Win32}
+  GraphicEx, Pcx,
+  {$ENDIF}
+  ModelMuseUtilities;
 
 resourcestring
   StrUnableToReadWorld = 'Unable to read world file. Check that the world fi' +
@@ -174,6 +178,10 @@ resourcestring
   StrClickOnTheImageA = 'Click on the image and assign real-world coordinate' +
   's to the points you clicked or fill in the information in the table.';
   StrEditBitMap = 'Edit BitMap';
+  StrAllSupportedImage = 'All Supported Image Formats|*.bmp;*.jpg;*.jpeg;*.p' +
+  'ng;*.wmf;*.emf;*.mng;|Bitmaps (*.bmp)|*.bmp|Jpeg images (*.jpg, *.jpeg)|*' +
+  '.jpg;*.jpeg|Portable Network Graphics (*.png)|*.png|Enhanced Windows Meta' +
+  'files (*.emf)|*.emf|Windows Metafiles (*.wmf)|*.wmf';
 
 {$R *.dfm}
 
@@ -248,7 +256,7 @@ begin
     dgPoints.Cells[0,Index] := IntToStr(Index);
   end;
   EnableOKButton;
-  ZoomBox.Image32.Invalidate;
+  ZoomBox.InvalidateImage32;
 end;
 
 procedure TfrmImportBitmap.dgPointsEndUpdate(Sender: TObject);
@@ -261,7 +269,7 @@ procedure TfrmImportBitmap.dgPointsExit(Sender: TObject);
 begin
   inherited;
   EnableOKButton;
-  ZoomBox.Image32.Invalidate;
+  ZoomBox.InvalidateImage32;
 end;
 
 procedure TfrmImportBitmap.EnableOKButton;
@@ -302,7 +310,9 @@ var
   Index: Integer;
   jpegImage: TJPEGImage;
   png: TPngImage;
+{$IFDEF Win32}
   TiffImage: TTIFFGraphic;
+{$ENDIF}
   procedure ShowError;
   begin
     FreeAndNil(FBitMap);
@@ -311,6 +321,9 @@ var
   end;
 begin
   inherited;
+  {$IFNDEF Win32}
+  OpenDialogBitmap.Filter := StrAllSupportedImage;
+  {$ENDIF}
   if OpenDialogBitmap.Execute then
   begin
     FBitMap.Free;
@@ -387,6 +400,7 @@ there is no loss in resolution at higher magnifications. }
         png.Free;
       end;
     end
+{$IFDEF Win32}
     else if (CompareText(Extension, '.pcx') = 0) then
     begin
       try
@@ -416,6 +430,7 @@ there is no loss in resolution at higher magnifications. }
         TiffImage.Free;
       end;
     end
+{$ENDIF}
     else
     begin
       Assert(False);
@@ -436,7 +451,7 @@ there is no loss in resolution at higher magnifications. }
     end;
 
     ZoomBox.Image32.Bitmap.Assign(FBitMap);
-    ZoomBox.Image32.Invalidate;
+    ZoomBox.InvalidateImage32;
     ZoomBox.Width := FBitMap.Width;
     ZoomBox.Height := FBitMap.Height;
 
@@ -448,6 +463,7 @@ there is no loss in resolution at higher magnifications. }
       WorldFileNames.Add(ChangeFileExt(OpenDialogBitmap.FileName, '.tfw'));
       WorldFileNames.Add(ChangeFileExt(OpenDialogBitmap.FileName, '.tifw'));
       WorldFileNames.Add(ChangeFileExt(OpenDialogBitmap.FileName, '.wld'));
+      WorldFileNames.Add(ChangeFileExt(OpenDialogBitmap.FileName, '.pgw'));
       for Index := 0 to WorldFileNames.Count - 1 do
       begin
         WorldFile := WorldFileNames[Index];
@@ -647,7 +663,7 @@ begin
       frmPixelPoint.GetData(TViewDirection(rgViewDirection.ItemIndex), X, Y);
       if frmPixelPoint.ShowModal = mrOK then
       begin
-        ZoomBox.Image32.Invalidate;
+        ZoomBox.InvalidateImage32;
       end;
     finally
       frmPixelPoint.Free;
@@ -737,7 +753,9 @@ begin
   else if (Extension = '.tfw')
     or (Extension = '.tifw')
     or (Extension = '.jgw')
-    or (Extension = '.jpgw') then
+    or (Extension = '.jpgw')
+    or (Extension = '.pgw')
+     then
   begin
     FileType := sftRaster;
   end
@@ -869,7 +887,7 @@ begin
   dgPoints.Cells[Ord(pcRealWorldY), Row] := FloatToStr(RealY);
   NumberRows;
   EnableOKButton;
-  ZoomBox.Image32.Invalidate;
+  ZoomBox.InvalidateImage32;
 end;
 
 procedure TfrmImportBitmap.DrawPointsOnBitMap32(Sender: TObject;

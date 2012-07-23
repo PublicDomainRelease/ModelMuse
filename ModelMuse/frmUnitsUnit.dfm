@@ -2,7 +2,7 @@ inherited frmUnits: TfrmUnits
   Left = 399
   Top = 49
   Width = 745
-  Height = 666
+  Height = 676
   HelpType = htKeyword
   HelpKeyword = 'Title_and_Units_Dialog_Box'
   HorzScrollBar.Range = 723
@@ -10,20 +10,20 @@ inherited frmUnits: TfrmUnits
   ActiveControl = memoTitle
   Caption = 'PHAST Title and Units'
   ExplicitWidth = 745
-  ExplicitHeight = 666
-  PixelsPerInch = 96
+  ExplicitHeight = 676
+  PixelsPerInch = 120
   TextHeight = 18
   object lblTitle: TLabel
     Left = 8
     Top = 8
-    Width = 377
+    Width = 376
     Height = 18
     Caption = 'Title (Only the first two lines will be printed in the output)'
   end
   object lblTimeUnits: TLabel
     Left = 8
     Top = 153
-    Width = 71
+    Width = 70
     Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'Time units'
@@ -39,7 +39,7 @@ inherited frmUnits: TfrmUnits
   object lblVertGridUnits: TLabel
     Left = 8
     Top = 215
-    Width = 120
+    Width = 119
     Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'Vertical grid units'
@@ -179,7 +179,7 @@ inherited frmUnits: TfrmUnits
     Height = 104
     Anchors = [akLeft, akTop, akRight]
     ScrollBars = ssBoth
-    TabOrder = 1
+    TabOrder = 0
     WordWrap = False
   end
   object btnOK: TBitBtn
@@ -190,7 +190,6 @@ inherited frmUnits: TfrmUnits
     Anchors = [akLeft, akBottom]
     Caption = 'OK'
     Default = True
-    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       04000000000068010000120B0000120B00001000000010000000000000000000
@@ -209,8 +208,7 @@ inherited frmUnits: TfrmUnits
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 0
+    TabOrder = 21
     OnClick = btnOKClick
   end
   object btnCancel: TBitBtn
@@ -219,11 +217,9 @@ inherited frmUnits: TfrmUnits
     Width = 91
     Height = 33
     Anchors = [akLeft, akBottom]
-    DoubleBuffered = True
     Kind = bkCancel
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 21
+    TabOrder = 22
   end
   object comboTimeUnits: TComboBox
     Left = 328
@@ -232,7 +228,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 2
+    TabOrder = 1
     Items.Strings = (
       'seconds'
       'minutes'
@@ -247,7 +243,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 3
+    TabOrder = 2
     Items.Strings = (
       'inches'
       'feet'
@@ -264,7 +260,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 4
+    TabOrder = 3
     Items.Strings = (
       'inches'
       'feet'
@@ -281,7 +277,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 5
+    TabOrder = 4
     Items.Strings = (
       'inches'
       'feet'
@@ -298,7 +294,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 6
+    TabOrder = 5
     Items.Strings = (
       'inches'
       'feet'
@@ -315,7 +311,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 7
+    TabOrder = 6
     Items.Strings = (
       'second'
       'minute'
@@ -330,7 +326,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 8
+    TabOrder = 7
     Items.Strings = (
       '1/inches'
       '1/feet'
@@ -347,7 +343,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 9
+    TabOrder = 8
     Items.Strings = (
       'inches'
       'feet'
@@ -364,7 +360,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 10
+    TabOrder = 9
     Items.Strings = (
       'inches'
       'feet'
@@ -381,7 +377,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 11
+    TabOrder = 10
     Items.Strings = (
       'second'
       'minute'
@@ -396,7 +392,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 12
+    TabOrder = 11
     Items.Strings = (
       'inches'
       'feet'
@@ -413,7 +409,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 13
+    TabOrder = 12
     Items.Strings = (
       'second'
       'minute'
@@ -428,7 +424,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 14
+    TabOrder = 13
     Items.Strings = (
       'inches'
       'feet'
@@ -445,7 +441,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 15
+    TabOrder = 14
     Items.Strings = (
       'inches'
       'feet'
@@ -462,7 +458,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 16
+    TabOrder = 15
     Items.Strings = (
       'gallons'
       'inches^3'
@@ -481,7 +477,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 17
+    TabOrder = 16
     Items.Strings = (
       'second'
       'minute'
@@ -496,7 +492,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 18
+    TabOrder = 17
     Items.Strings = (
       'inches'
       'feet'
@@ -513,7 +509,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 19
+    TabOrder = 18
     Items.Strings = (
       'second'
       'minute'
@@ -528,7 +524,7 @@ inherited frmUnits: TfrmUnits
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    TabOrder = 20
+    TabOrder = 19
     Items.Strings = (
       'inches'
       'feet'
@@ -545,11 +541,9 @@ inherited frmUnits: TfrmUnits
     Height = 33
     HelpType = htKeyword
     Anchors = [akLeft, akBottom]
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 22
+    TabOrder = 20
     OnClick = btnHelpClick
   end
 end

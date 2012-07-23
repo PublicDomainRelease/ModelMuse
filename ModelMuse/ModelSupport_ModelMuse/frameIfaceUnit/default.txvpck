@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="s8lc8867qxliybf_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameIfaceUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameIfaceUnit.TframeIface">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameIfaceUnit.TframeIface.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameIfaceUnit.TframeIface.SetIFace(GoPhastTypes.TIface)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.FSettingIFace" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.FIFace" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameIfaceUnit.TframeIface.rbHorizontalClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.glsvViewer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.GLCamera1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.Tube3" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.Tube2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.Tube1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.CentralSphere" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.BackFace" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.RightFace" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.BottomFace" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.TopFace" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.FrontFace" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.GLSphere1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.GLLightSource2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.GLCube1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.LeftFace" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.GLDummyCube1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.glsIface" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.rbHorizontal" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.rbInternal" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.rbBack" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.rbTop" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.rbLeft" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.rbRight" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.rbFront" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.rbBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameIfaceUnit.TframeIface.gbIface" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frameIfaceUnit.TframeIface.IFACE[]" />
+    </reference>
+  </view>
+</nodeSet>

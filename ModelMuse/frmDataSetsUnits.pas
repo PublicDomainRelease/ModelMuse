@@ -13,7 +13,7 @@ uses
   frmCustomGoPhastUnit, Buttons, ExtCtrls, Grids, RbwDataGrid4, RbwParser,
   DataSetUnit, Contnrs, GoPhastTypes, framePhastInterpolationUnit, ComCtrls,
   UndoItems, PhastDataSets, ArgusDataEntry, JvExStdCtrls, JvCombobox,
-  JvListComb, JvRichEdit, RbwEdit, ClassificationUnit, JvExComCtrls, JvComCtrls;
+  JvListComb, RbwEdit, ClassificationUnit, JvExComCtrls, JvComCtrls;
 
 { TODO : Consider making this a property sheet like the object inspector. }
 
@@ -181,18 +181,18 @@ Type
     rdeAnisotropy: TRbwDataEntry;
     lblDefaultFormula: TLabel;
     btnEditFormula: TButton;
-    reDefaultFormula: TJvRichEdit;
     tabPHAST: TTabSheet;
     framePhastInterpolation: TframePhastInterpolation;
     tabComment: TTabSheet;
     Splitter1: TSplitter;
     pnlComment: TPanel;
     Comment: TLabel;
-    reComment: TJvRichEdit;
     pnlDescription: TPanel;
     lblAssociatedDataSets: TLabel;
     memoAssociatedDataSets: TMemo;
     Splitter2: TSplitter;
+    reDefaultFormula: TRichEdit;
+    reComment: TRichEdit;
     // @name adds a new @link(TDataArray) at the end of @link(tvDataSets).
     procedure btnAddClick(Sender: TObject);
     // @name closes the @classname without making any changes to the
@@ -906,12 +906,12 @@ begin
       begin
         Assert(False);
       end;
-    msPhast {$IFDEF SUTRA}, msSutra {$ENDIF}:
+    msPhast:
       begin
         comboOrientation.Items[1].Brush.Color := clWhite;
         comboOrientation.Items[2].Brush.Color := clWhite;
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowNWT {$IFDEF SUTRA}, msSutra {$ENDIF}:
       begin
         comboOrientation.Items[1].Brush.Color := clBtnFace;
         comboOrientation.Items[2].Brush.Color := clBtnFace;
@@ -964,7 +964,7 @@ begin
   FArrayEdits.Clear;
   if frmGoPhast.Grid <> nil then
   begin
-    SelectedDataArray := frmGoPhast.Grid.ThreeDDataSet;
+    SelectedDataArray := frmGoPhast.PhastModel.ThreeDDataSet;
     if SelectedDataArray = nil then
     begin
       SelectedDataArray := frmGoPhast.Grid.ThreeDContourDataSet;
@@ -1240,7 +1240,7 @@ begin
         SelectedEdit.Orientation :=
           TDataSetOrientation(comboOrientation.ItemIndex);
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowNWT {$IFDEF SUTRA}, msSutra {$ENDIF}:
       begin
         case comboOrientation.ItemIndex of
           0,3:

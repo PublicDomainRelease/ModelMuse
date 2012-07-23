@@ -8854,15 +8854,16 @@ end;
 procedure LoadProcAddresses;
 
 var
-  Handle: Cardinal;
+  Handle: HMODULE;
 
 begin
   if GLHandle <> INVALID_MODULEHANDLE then
   begin
-    Handle := Cardinal(GLHandle); // Kylix compatiblilty trick
+//    Handle := Cardinal(GLHandle); // Kylix compatiblilty trick
+    Handle := GLHandle;
 
     glAccum := GetProcAddress(Handle, 'glAccum');
-    glAlphaFunc := GetProcAddress(Handle, 'glAlphaFunc'); 
+    glAlphaFunc := GetProcAddress(Handle, 'glAlphaFunc');
     glAreTexturesResident := GetProcAddress(Handle, 'glAreTexturesResident'); 
     glArrayElement := GetProcAddress(Handle, 'glArrayElement'); 
     glBegin := GetProcAddress(Handle, 'glBegin'); 
@@ -9318,7 +9319,8 @@ begin
 
   if GLUHandle <> INVALID_MODULEHANDLE then
   begin
-    Handle := Cardinal(GLUHandle); // Kylix compatiblilty trick
+//    Handle := Cardinal(GLUHandle); // Kylix compatiblilty trick
+    Handle := GLUHandle;
 
     gluBeginCurve := GetProcAddress(Handle, 'gluBeginCurve');
     gluBeginPolygon := GetProcAddress(Handle, 'gluBeginPolygon'); 
@@ -9351,7 +9353,7 @@ begin
     gluNurbsSurface := GetProcAddress(Handle, 'gluNurbsSurface'); 
     gluOrtho2D := GetProcAddress(Handle, 'gluOrtho2D'); 
     gluPartialDisk := GetProcAddress(Handle, 'gluPartialDisk');
-    gluPerspective := GetProcAddress(Handle, 'gluPerspective'); 
+    gluPerspective := GetProcAddress(Handle, 'gluPerspective');
     gluPickMatrix := GetProcAddress(Handle, 'gluPickMatrix'); 
     gluProject := GetProcAddress(Handle, 'gluProject'); 
     gluPwlCurve := GetProcAddress(Handle, 'gluPwlCurve'); 
@@ -10965,7 +10967,7 @@ var
   AType: DWORD;
 
 begin
-  FillChar(PFDescriptor, SizeOf(PFDescriptor), 0);
+  ZeroMemory(Addr(PFDescriptor), SizeOf(PFDescriptor));
   with PFDescriptor do
   begin
     nSize := SizeOf(PFDescriptor);

@@ -331,9 +331,9 @@ begin
       end;
     end;
   end;
-  frmGoPhast.TopGridChanged := True;
-  frmGoPhast.FrontGridChanged := True;
-  frmGoPhast.SideGridChanged := True;
+  frmGoPhast.TopDiscretizationChanged := True;
+  frmGoPhast.FrontDiscretizationChanged := True;
+  frmGoPhast.SideDiscretizationChanged := True;
   frmGoPhast.frame3DView.glWidModelView.Invalidate;
   (Owner as TframeView).NeedToRecalculateCellColors := True;
 end;
@@ -475,9 +475,9 @@ begin
     end;
   end;
 
-  frmGoPhast.TopGridChanged := True;
-  frmGoPhast.FrontGridChanged := True;
-  frmGoPhast.SideGridChanged := True;
+  frmGoPhast.TopDiscretizationChanged := True;
+  frmGoPhast.FrontDiscretizationChanged := True;
+  frmGoPhast.SideDiscretizationChanged := True;
   frmGoPhast.frame3DView.glWidModelView.Invalidate;
   (Owner as TframeView).NeedToRecalculateCellColors := True;
 end;
@@ -609,9 +609,9 @@ begin
 
     end;
   end;
-  frmGoPhast.TopGridChanged := True;
-  frmGoPhast.FrontGridChanged := True;
-  frmGoPhast.SideGridChanged := True;
+  frmGoPhast.TopDiscretizationChanged := True;
+  frmGoPhast.FrontDiscretizationChanged := True;
+  frmGoPhast.SideDiscretizationChanged := True;
   frmGoPhast.frame3DView.glWidModelView.Invalidate;
   (Owner as TframeView).NeedToRecalculateCellColors := True;
 end;

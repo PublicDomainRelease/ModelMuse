@@ -7,6 +7,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
   Constraints.MinHeight = 432
   Constraints.MinWidth = 444
   OnResize = FormResize
+  ExplicitTop = -59
   ExplicitWidth = 444
   ExplicitHeight = 482
   PixelsPerInch = 96
@@ -158,13 +159,13 @@ inherited frmImportGriddedData: TfrmImportGriddedData
           BevelOuter = bvNone
           ColumnCollection = <
             item
-              Value = 33.333333333333330000
+              Value = 33.333333333333340000
             end
             item
-              Value = 33.333333333333330000
+              Value = 33.333333333333340000
             end
             item
-              Value = 33.333333333333330000
+              Value = 33.333333333333340000
             end>
           ControlCollection = <
             item
@@ -517,7 +518,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       OnClick = btnHelpClick
     end
     object btnOK: TBitBtn
-      Left = 241
+      Left = 240
       Top = 6
       Width = 91
       Height = 33

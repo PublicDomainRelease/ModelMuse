@@ -3,16 +3,12 @@ inherited frameColorGrid: TframeColorGrid
   ExplicitWidth = 608
   inherited pcChoices: TPageControl
     Width = 608
-    ActivePage = tabSelection
     ExplicitWidth = 608
     inherited tabSelection: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 24
       ExplicitWidth = 600
-      ExplicitHeight = 400
       DesignSize = (
         600
-        400)
+        397)
       inherited lblCycles: TLabel
         Left = 494
         ExplicitLeft = 507
@@ -24,15 +20,10 @@ inherited frameColorGrid: TframeColorGrid
       object lblTime: TLabel [6]
         Left = 494
         Top = 4
-        Width = 22
-        Height = 13
+        Width = 29
+        Height = 16
         Anchors = [akTop, akRight]
         Caption = 'Time'
-      end
-      inherited reComment: TJvRichEdit
-        Width = 587
-        TabOrder = 4
-        ExplicitWidth = 587
       end
       inherited comboColorScheme: TComboBox
         Width = 480
@@ -57,13 +48,13 @@ inherited frameColorGrid: TframeColorGrid
       inherited udDataSets: TJvUpDown
         Left = 473
         Top = 25
-        Width = 16
-        Height = 21
+        Width = 20
+        Height = 24
         Associate = virttreecomboDataSets
         ExplicitLeft = 473
         ExplicitTop = 25
-        ExplicitWidth = 16
-        ExplicitHeight = 21
+        ExplicitWidth = 20
+        ExplicitHeight = 24
       end
       inherited rgUpdateLimitChoice: TRadioGroup
         TabOrder = 5
@@ -71,12 +62,17 @@ inherited frameColorGrid: TframeColorGrid
       inherited virttreecomboDataSets: TRbwStringTreeCombo
         Tree.OnGetNodeDataSize = virttreecomboDataSetsTreeGetNodeDataSize
         Text = '0'
-        ExplicitWidth = 481
+        ExplicitWidth = 485
+      end
+      inherited reComment: TRichEdit
+        Width = 587
+        TabOrder = 4
+        ExplicitWidth = 587
       end
       object udTime: TJvUpDown
         Left = 579
         Top = 25
-        Width = 17
+        Width = 21
         Height = 21
         Anchors = [akTop, akRight]
         Max = 0
@@ -87,7 +83,7 @@ inherited frameColorGrid: TframeColorGrid
         Left = 494
         Top = 25
         Width = 85
-        Height = 21
+        Height = 24
         Anchors = [akTop, akRight]
         TabOrder = 2
         Text = '0'
@@ -96,18 +92,18 @@ inherited frameColorGrid: TframeColorGrid
     end
     inherited tabFilters: TTabSheet
       ExplicitLeft = 4
-      ExplicitTop = 24
+      ExplicitTop = 27
       ExplicitWidth = 600
-      ExplicitHeight = 400
+      ExplicitHeight = 397
       DesignSize = (
         600
-        400)
+        397)
     end
     inherited tabLegend: TTabSheet
       ExplicitLeft = 4
-      ExplicitTop = 24
+      ExplicitTop = 27
       ExplicitWidth = 600
-      ExplicitHeight = 400
+      ExplicitHeight = 397
       inherited imLegend: TImage
         Width = 382
         ExplicitWidth = 395

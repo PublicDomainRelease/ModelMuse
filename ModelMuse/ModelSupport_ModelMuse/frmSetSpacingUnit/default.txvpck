@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="2dnlvr50pxuwx7g_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSetSpacingUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.SpacingGridTool" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmSetSpacingUnit.SpacingGridTool" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.EnableOK()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.FReversedRows" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.FReversedLayers" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.FReversedCols" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.FormClose(System.Object,ref@Forms.TCloseAction)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.seLayer2Change(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.seLayer1Change(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.seRow2Change(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.seRow1Change(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.seCol2Change(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.seCol1Change(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.rdeChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.FormDestroy(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.cbRowsClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.cbLayersClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.cbColumnsClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.rdeLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.lblSetLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.seLayer2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.lblThroughLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.seLayer1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.lblFromLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.cbLayers" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.gbLayers" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.rdeRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.lblSetRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.seRow2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.lblThroughRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.seRow1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.lblFromRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.cbRows" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.gbRows" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.rdeCol" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.lblSetCol" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.seCol2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.lblThroughCol" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.seCol1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.lblFromCol" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.cbColumns" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.gbColumns" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TfrmSetSpacing.btnCancel" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.FLastSpacingColumn" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.FFirstSpacingRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.FFirstSpacingLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.FFirstSpacingColumn" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.DrawSetSpacing(GoPhastTypes.TViewDirection,GR32.TBitmap32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.FSettingSpacing" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.MouseUp(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.MouseMove(System.Object,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.MouseDown(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.LastSpacingRow[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.LastSpacingLayer[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.LastSpacingColumn[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.FirstSpacingRow[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.FirstSpacingLayer[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.FirstSpacingColumn[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.DrawOnBitMap32(System.Object,GR32.TBitmap32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.SetSpacingTop(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.SetSpacingSide(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.SetSpacingFront(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.SetGridSpacing()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.GetHint()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.ContinueSetSpacing(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.BeginSetSpacing(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.FLastSpacingRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSetSpacingUnit.TSpacingGridTool.FLastSpacingLayer" />
+    </reference>
+  </view>
+</nodeSet>

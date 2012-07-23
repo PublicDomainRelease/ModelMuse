@@ -126,7 +126,8 @@ type
     procedure RetrieveSelectedObject(var AnObject: TObject);
     property SelectedVirtNode: PVirtualNode read FSelectedVirtNode;
     procedure SetSelectedNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure GetNodeCaption(Node: PVirtualNode; var CellText: string; Sender: TBaseVirtualTree);
+    procedure GetNodeCaption(Node: PVirtualNode; var CellText: string;
+      Sender: TBaseVirtualTree);
     { Private declarations }
   public
     { Public declarations }
@@ -312,7 +313,7 @@ begin
 
   { TODO : Nearly the same code is use in TfrmFormulaUnit,
   TfrmScreenObjectProperties, and TfrmDataSets. Find a way to combine them. }
-  SelectedDataArray := frmGoPhast.Grid.ThreeDDataSet;
+  SelectedDataArray := frmGoPhast.PhastModel.ThreeDDataSet;
   if SelectedDataArray = nil then
   begin
     SelectedName := '';
@@ -1032,7 +1033,9 @@ begin
   end;
 end;
 
-procedure TfrmImportGriddedData.GetLocation(var Point2D: TPoint2D; var APoint: T3DRealPoint; Column: Integer; Row: Integer; Layer: Integer; DataSet: TDataArray);
+procedure TfrmImportGriddedData.GetLocation(var Point2D: TPoint2D;
+  var APoint: T3DRealPoint; Column: Integer; Row: Integer; Layer: Integer;
+  DataSet: TDataArray);
 var
   ViewDirection: TViewDirection;
 begin
@@ -1329,7 +1332,8 @@ begin
   end;
 end;
 
-procedure TfrmImportGriddedData.GetGridCount(DataSet: TDataArray; var Limit: Integer);
+procedure TfrmImportGriddedData.GetGridCount(DataSet: TDataArray;
+  var Limit: Integer);
 begin
   // Gridded data
   Limit := 0;

@@ -32,10 +32,13 @@ type
     FLayerGroup: TCustomLayerGroup;
     procedure InvalidateModel;
     procedure Sort;
+//    function GetItem(Index: Integer): TLayerFraction;
+//    procedure SetItem(Index: Integer; const Value: TLayerFraction);
   public
     function IsSame(AnotherLayerCollection: TLayerCollection): boolean;
     procedure Assign(Source: TPersistent); override;
     constructor Create(LayerGroup: TCustomLayerGroup);
+//    property Items[Index: Integer]: TLayerFraction read GetItem write SetItem; default;
   end;
 
   TCustomLayerStructure = class;
@@ -54,12 +57,16 @@ type
     procedure SetGrowthMethod(const Value: TGrowthMethod);
     procedure SetGrowthRate(const Value: real);
     function EvalAt: TEvaluatedAt; virtual;
+    function GetSimulated: boolean; virtual;
+    procedure SetSimulated(const Value: boolean); virtual;
+    procedure UpdateDataArray(const NewName: string);
   protected
     procedure SetLayerCollection(const Value: TLayerCollection); virtual;
     function Collection: TCustomLayerStructure;
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
     procedure Loaded; virtual;
     function StoreLayerCollection: boolean; virtual;
+    function ShouldCreateDataArray: Boolean; virtual;
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Collection: TCollection); override;
@@ -85,6 +92,7 @@ type
     {@name defines the layer or layers in @classname.}
     property LayerCollection: TLayerCollection read FLayerCollection
       write SetLayerCollection stored StoreLayerCollection;
+    property Simulated: boolean read GetSimulated write SetSimulated;
   end;
 
   TLayerGroup = class(TCustomLayerGroup)
@@ -101,12 +109,12 @@ type
     FMt3dmsHorzTransDisp: TRealCollection;
     FMt3dmsDiffusionCoef: TRealCollection;
     FMt3dmsVertTransDisp: TRealCollection;
-    procedure SetSimulated(const Value: boolean);
+    procedure SetSimulated(const Value: boolean); override;
     procedure SetAquiferType(const Value: integer);
     procedure SetInterblockTransmissivityMethod(const Value: integer);
     procedure SetVerticalHydraulicConductivityMethod(const Value: integer);
     procedure SetUseStartingHeadForSaturatedThickness(const Value: boolean);
-    function GetSimulated: boolean;
+    function GetSimulated: boolean; override;
     procedure SetHorizontalAnisotropy(const Value: double);
     procedure SetSubDelayBedLayers(const Value: TSubDelayBedLayers);
     procedure SetSubNoDelayBedLayers(const Value: TSubNoDelayBedLayers);
@@ -121,6 +129,7 @@ type
     procedure SetLayerCollection(const Value: TLayerCollection); override;
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
     function StoreLayerCollection: boolean; override;
+    function ShouldCreateDataArray: Boolean; override;
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Collection: TCollection); override;
@@ -144,7 +153,6 @@ type
       2 and 3 are not defined for LPF and HUF.
     }
     property AquiferType: integer read FAquiferType write SetAquiferType;
-    property Simulated: boolean read GetSimulated write SetSimulated;
     // @name represents the first digit of Ltype in the BCF package
     // and LAYAVG in the LPF package. @name is not used in the HUF package.
     // However, Ltype and LAYAVG are not defined in exactly the same way
@@ -179,12 +187,12 @@ type
   TSutraLayerGroup = class(TCustomLayerGroup)
   protected
     function EvalAt: TEvaluatedAt; override;
-
+    function ShouldCreateDataArray: Boolean; override;
   end;
 
   TCustomLayerStructure = class(TLayerOwnerCollection)
   public
-    function LayerCount: integer;
+    function LayerCount: integer; virtual;
     procedure Loaded; virtual;
   end;
 
@@ -241,11 +249,13 @@ type
   TSutraLayerStructure = class(TCustomLayerStructure)
   private
     function GetLayerGroup(const Index: integer): TSutraLayerGroup;
-  published
   public
+    function LayerCount: integer; override;
     constructor Create(Model: TBaseModel);
     property LayerGroups[const Index: integer]: TSutraLayerGroup
       read GetLayerGroup; default;
+    function NodeLayerCount: Integer;
+    function ElementLayerCount: Integer;
   end;
 
 resourcestring
@@ -254,7 +264,7 @@ resourcestring
 implementation
 
 uses SysUtils, Math, RbwParser, PhastModelUnit, DataSetUnit,
-  ModflowDiscretizationWriterUnit;
+  ModflowDiscretizationWriterUnit, SutraMeshUnit;
 
 procedure TLayerGroup.Assign(Source: TPersistent);
 var
@@ -597,6 +607,11 @@ end;
 procedure TLayerGroup.SetWaterTableLayers(const Value: TWaterTableLayers);
 begin
   FWaterTableLayers.Assign(Value);
+end;
+
+function TLayerGroup.ShouldCreateDataArray: Boolean;
+begin
+  result := Model.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
 end;
 
 function TLayerGroup.StoreLayerCollection: boolean;
@@ -1286,6 +1301,11 @@ begin
   FLayerGroup := LayerGroup;
 end;
 
+//function TLayerCollection.GetItem(Index: Integer): TLayerFraction;
+//begin
+//  Result := inherited Items[Index] as TLayerFraction;
+//end;
+
 procedure TLayerCollection.InvalidateModel;
 begin
   FLayerGroup.InvalidateModel;
@@ -1316,6 +1336,12 @@ begin
   Frac2 := Item2;
   result := Sign(Frac2.Fraction - Frac1.Fraction);
 end;
+
+//procedure TLayerCollection.SetItem(Index: Integer;
+//  const Value: TLayerFraction);
+//begin
+//  inherited Items[Index] := Value;
+//end;
 
 procedure TLayerCollection.Sort;
 var
@@ -1374,69 +1400,16 @@ begin
   result := eaBlocks
 end;
 
+function TCustomLayerGroup.GetSimulated: boolean;
+begin
+  result := True;
+end;
+
 procedure TCustomLayerGroup.SetDataArrayName(const NewName: string);
-var
-  Model: TPhastModel;
-  DataArray: TDataArray;
-  UnitAbove, UnitBelow: TCustomLayerGroup;
-  NewFormula: string;
 begin
   if FDataArrayName <> NewName then
   begin
-    if Collection.Model <> nil then
-    begin
-      Model := Collection.Model as TPhastModel;
-      if not(csLoading in Model.ComponentState) then
-      begin
-        DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
-        if DataArray <> nil then
-        begin
-          Model.RenameDataArray(DataArray, NewName);
-        end
-        else
-        begin
-          DataArray := Model.DataArrayManager.GetDataSetByName(NewName);
-        end;
-        if DataArray = nil then
-        begin
-          // create a new data array.
-          // First get formula for new layer.
-          if Collection.Count = 1 then
-          begin
-            NewFormula := '0';
-          end
-          else if Index <= 0 then
-          begin
-            // No unit can be inserted above the top of the model.
-            Assert(False);
-          end
-          else if Index = Collection.Count - 1 then
-          begin
-            UnitAbove := Collection.Items[Index - 1] as TCustomLayerGroup;
-            NewFormula := UnitAbove.DataArrayName + ' - 1';
-          end
-          else
-          begin
-            UnitAbove := Collection.Items[Index - 1] as TCustomLayerGroup;
-            UnitBelow := Collection.Items[Index + 1] as TCustomLayerGroup;
-            NewFormula := '(' + UnitAbove.DataArrayName + ' + ' +
-              UnitBelow.DataArrayName + ') / 2';
-          end;
-          // create new data array.
-          DataArray := Model.DataArrayManager.CreateNewDataArray(TDataArray,
-            NewName, NewFormula, [dcName, dcType, dcOrientation, dcEvaluatedAt],
-            rdtDouble, EvalAt, dsoTop, StrLayerDefinition);
-          DataArray.OnDataSetUsed := Model.ModelLayerDataArrayUsed;
-          Collection.AddOwnedDataArray(DataArray);
-        end;
-        Model.TopGridObserver.TalksTo(DataArray);
-        DataArray.TalksTo(Model.ThreeDGridObserver);
-        Model.ThreeDGridObserver.StopsTalkingTo(DataArray);
-        Model.UpdateDataArrayDimensions(DataArray);
-        // DataArray.UpdateDimensions(Model.Grid.LayerCount,
-        // Model.Grid.RowCount, Model.Grid.ColumnCount);
-      end;
-    end;
+    UpdateDataArray(NewName);
     FDataArrayName := NewName;
     InvalidateModel;
   end;
@@ -1472,6 +1445,71 @@ begin
   result := LayerCollection.Count + 1;
 end;
 
+procedure TCustomLayerGroup.UpdateDataArray(const NewName: string);
+var
+  Model: TPhastModel;
+  DataArray: TDataArray;
+  UnitAbove: TCustomLayerGroup;
+  NewFormula: string;
+  UnitBelow: TCustomLayerGroup;
+begin
+  if Collection.Model <> nil then
+  begin
+    Model := Collection.Model as TPhastModel;
+    if not (csLoading in Model.ComponentState) then
+    begin
+      DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
+      if DataArray <> nil then
+      begin
+        Model.RenameDataArray(DataArray, NewName);
+      end
+      else
+      begin
+        DataArray := Model.DataArrayManager.GetDataSetByName(NewName);
+      end;
+      if (DataArray = nil) and ShouldCreateDataArray then
+      begin
+        // create a new data array.
+        // First get formula for new layer.
+        if Collection.Count = 1 then
+        begin
+          NewFormula := '0';
+        end
+        else if Index <= 0 then
+        begin
+          NewFormula := '0.';
+          // No unit can be inserted above the top of the model.
+//          Assert(False);
+        end
+        else if Index = Collection.Count - 1 then
+        begin
+          UnitAbove := Collection.Items[Index - 1] as TCustomLayerGroup;
+          NewFormula := UnitAbove.DataArrayName + ' - 1';
+        end
+        else
+        begin
+          UnitAbove := Collection.Items[Index - 1] as TCustomLayerGroup;
+          UnitBelow := Collection.Items[Index + 1] as TCustomLayerGroup;
+          NewFormula := '(' + UnitAbove.DataArrayName + ' + ' + UnitBelow.DataArrayName + ') / 2';
+        end;
+        // create new data array.
+        DataArray := Model.DataArrayManager.CreateNewDataArray(TDataArray, NewName, NewFormula, [dcName, dcType, dcOrientation, dcEvaluatedAt], rdtDouble, EvalAt, dsoTop, StrLayerDefinition);
+        DataArray.OnDataSetUsed := Model.ModelLayerDataArrayUsed;
+        Collection.AddOwnedDataArray(DataArray);
+      end;
+      if DataArray <> nil then
+      begin
+        Model.TopGridObserver.TalksTo(DataArray);
+        DataArray.TalksTo(Model.ThreeDGridObserver);
+        Model.ThreeDGridObserver.StopsTalkingTo(DataArray);
+        Model.UpdateDataArrayDimensions(DataArray);
+      end;
+    end;
+    // DataArray.UpdateDimensions(Model.Grid.LayerCount,
+    // Model.Grid.RowCount, Model.Grid.ColumnCount);
+  end;
+end;
+
 procedure TCustomLayerGroup.Loaded;
 var
   Model: TPhastModel;
@@ -1479,10 +1517,18 @@ var
 begin
   Model := Collection.Model as TPhastModel;
   DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
-  Assert( DataArray <> nil);
-  Model.TopGridObserver.TalksTo(DataArray);
-  DataArray.TalksTo(Model.ThreeDGridObserver);
-  Model.ThreeDGridObserver.StopsTalkingTo(DataArray);
+  if ShouldCreateDataArray and (DataArray = nil) then
+  begin
+    UpdateDataArray(DataArrayName);
+    DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
+    Assert(DataArray <> nil);
+  end;
+  if DataArray <> nil then
+  begin
+    Model.TopGridObserver.TalksTo(DataArray);
+    DataArray.TalksTo(Model.ThreeDGridObserver);
+    Model.ThreeDGridObserver.StopsTalkingTo(DataArray);
+  end;
 end;
 
 procedure TCustomLayerGroup.SetAquiferName(const Value: string);
@@ -1543,6 +1589,16 @@ begin
   FLayerCollection.Assign(Value);
 end;
 
+procedure TCustomLayerGroup.SetSimulated(const Value: boolean);
+begin
+  // do nothing
+end;
+
+function TCustomLayerGroup.ShouldCreateDataArray: Boolean;
+begin
+  result := True;
+end;
+
 function TCustomLayerStructure.LayerCount: integer;
 var
   Index: integer;
@@ -1574,10 +1630,46 @@ begin
   inherited Create(TSutraLayerGroup, Model);
 end;
 
+function TSutraLayerStructure.ElementLayerCount: Integer;
+begin
+  if (Model as TPhastModel).Mesh.MeshType = mt2D then
+  begin
+    result := 1;
+  end
+  else
+  begin
+    result := inherited LayerCount;
+  end;
+end;
+
 function TSutraLayerStructure.GetLayerGroup(
   const Index: integer): TSutraLayerGroup;
 begin
   result := Items[Index] as TSutraLayerGroup;
+end;
+
+function TSutraLayerStructure.LayerCount: integer;
+begin
+  if (Model as TPhastModel).Mesh.MeshType = mt2D then
+  begin
+    result := 1;
+  end
+  else
+  begin
+    result := inherited;
+  end;
+end;
+
+function TSutraLayerStructure.NodeLayerCount: Integer;
+begin
+  if (Model as TPhastModel).Mesh.MeshType = mt2D then
+  begin
+    result := 1;
+  end
+  else
+  begin
+    result := inherited LayerCount + 1;
+  end;
 end;
 
 { TSutraLayerGroup }
@@ -1587,4 +1679,24 @@ begin
   result := eaNodes;
 end;
 
+function TSutraLayerGroup.ShouldCreateDataArray: Boolean;
+{$IFDEF SUTRA}
+var
+  LocalModel: TCustomModel;
+{$ENDIF}
+begin
+  {$IFDEF SUTRA}
+  Result := (Model.ModelSelection = msSutra);
+  if result then
+  begin
+    LocalModel := Model as TCustomModel;
+    result := (LocalModel.SutraMesh <> nil) and
+      (LocalModel.SutraMesh.MeshType = mt3D);
+  end;
+  {$ELSE}
+  result := False;
+  {$ENDIF}
+end;
+
 end.
+

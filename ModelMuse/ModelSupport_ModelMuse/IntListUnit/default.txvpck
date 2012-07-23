@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="2nkarzjeq2oqfse_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:IntListUnit.TIntegerClass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:IntListUnit.TIntegerClass.AnInteger" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:IntListUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.SortFunction(System.Pointer,System.Pointer)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:IntListUnit.TIntegerList">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:IntListUnit.TIntegerList.Sorted[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.Sort()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.Nearest(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.Move(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.MinValue()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.MaxValue()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.Last()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:IntListUnit.TIntegerList.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.Insert(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.IndexOf(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.First()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.Exchange(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.Error(System.String,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.Delete(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.Create()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:IntListUnit.TIntegerList.Count[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.Clear()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:IntListUnit.TIntegerList.Capacity[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.AddUnique(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.Add(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.Assign(IntListUnit.TIntegerList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.FindClosestPositionInSortedList(System.Int32,ref@System.Int32,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.SetSorted(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.SetItem(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.SetCapacity(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.GetItem(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.GetCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntegerList.GetCapacity()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:IntListUnit.TIntegerList.FSorted" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:IntListUnit.TIntegerList.FList" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:IntListUnit.TIntListList">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:IntListUnit.TIntListList.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntListList.IndexOf(IntListUnit.TIntegerList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntListList.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntListList.Create()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:IntListUnit.TIntListList.Count[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntListList.Clear()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:IntListUnit.TIntListList.Capacity[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntListList.Add(IntListUnit.TIntegerList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntListList.SetItem(System.Int32,IntListUnit.TIntegerList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntListList.SetCapacity(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntListList.GetItem(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntListList.GetCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:IntListUnit.TIntListList.GetCapacity()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:IntListUnit.TIntListList.FList" />
+    </reference>
+  </view>
+</nodeSet>

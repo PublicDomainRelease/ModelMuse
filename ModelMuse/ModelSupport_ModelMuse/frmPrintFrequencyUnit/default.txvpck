@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="8tlcd0qupqwiyzs_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmPrintFrequencyUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.EnableAMultiEditControl(RbwDataGrid4.TRbwDataGrid4,Controls.TControl,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.LayoutMultiEditControls()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.InitializeColumn(System.Int32,PrintFrequency.TPrintFrequencyItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.GetData()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.FDeletingTime" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.rdgPrintFrequencyDistributeTextProgress(System.Object,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.comboUnitsChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.rdeTimeChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.rdgPrintFrequencyMouseUp(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.rdgPrintFrequencyMouseDown(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.rdgPrintFrequencyHorizontalScroll(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.rdgPrintFrequencyColSize(System.Object,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.rdgPrintFrequencySetEditText(System.Object,System.Int32,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.rdgPrintFrequencyBeforeDrawCell(System.Object,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.rdgPrintFrequencySelectCell(System.Object,System.Int32,System.Int32,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.btnInsertClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.btnDeleteClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.btnAddClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.comboUnits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.rdeTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.pnlTop" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.rdgPrintFrequency" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.pnlBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.cbSaveFinalHeads" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.btnInsert" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.btnDelete" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.btnCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintFrequencyUnit.TfrmPrintFrequency.btnAdd" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmPrintFrequencyUnit.TUndoPrintFrequency">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TUndoPrintFrequency.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TUndoPrintFrequency.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TUndoPrintFrequency.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintFrequencyUnit.TUndoPrintFrequency.FNewPrintFrequency" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TUndoPrintFrequency.Description()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintFrequencyUnit.TUndoPrintFrequency.FOldPrintFrequency" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintFrequencyUnit.TUndoPrintFrequency.Undo()" />
+    </reference>
+  </view>
+</nodeSet>

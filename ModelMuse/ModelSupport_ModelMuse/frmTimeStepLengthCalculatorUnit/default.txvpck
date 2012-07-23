@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="1amw08blpelmvql_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmTimeStepLengthCalculatorUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeStepLengthCalculatorUnit.CalculateTimeStepLength(ref@System.Int32,ref@System.Double,ref@System.Double,out@System.Double)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeStepLengthCalculatorUnit.frmTimeStepLengthCalculator" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmTimeStepLengthCalculatorUnit.frmTimeStepLengthCalculator" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator.lblPeriodLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator.lblMultiplier" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator.rdeMultiplier" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator.seNumSteps" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator.lblNumSteps" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator.CalculateLength()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator.seNumStepsChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator.pbArrowPaint(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator.btnCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator.rdeMaxLengthFirstTimeStep" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator.lblMaxLengthFirstTimeStep" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator.pbArrow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmTimeStepLengthCalculatorUnit.TfrmTimeStepLengthCalculator.rdePeriodLength" />
+    </reference>
+  </view>
+</nodeSet>

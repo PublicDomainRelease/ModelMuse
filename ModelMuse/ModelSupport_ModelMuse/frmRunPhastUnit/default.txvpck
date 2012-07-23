@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="jsk42uvcqvyqxvn_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmRunPhastUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRunPhastUnit.frmRunPhast" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmRunPhastUnit.frmRunPhast" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmRunPhastUnit.TfrmRunPhast">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRunPhastUnit.TfrmRunPhast.cbRun" />
+    </reference>
+  </view>
+</nodeSet>

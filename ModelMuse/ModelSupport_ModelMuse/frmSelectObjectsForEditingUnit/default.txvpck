@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="pelmk7czp9kelel_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSelectObjectsForEditingUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.FListOfScreenObjects" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.btnDeleteClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.rgViewDirectionClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.vstObjectsChecked(VirtualTrees.TBaseVirtualTree,VirtualTrees.PVirtualNode)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.btnDelete" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.rgViewDirection" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.ShouldCheckBoxBeChecked(ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.CanSelect(ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.HandleUnchecked(ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.HandleChecked(ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.btnOK" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.UpdateScreenObjectList()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectObjectsForEditingUnit.TfrmSelectObjectsForEditing.SetData()" />
+    </reference>
+  </view>
+</nodeSet>

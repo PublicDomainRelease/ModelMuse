@@ -48,11 +48,11 @@ Begin
   Top := dlgclientrect.bottom;
   Left := 0;
   Show;
-  with dlgrect do
+//  with dlgrect do
     MoveWindow( GetParent( aDlg.handle ),
-                left, top,
-                right-left,
-                bottom - top + height,
+                dlgrect.left, dlgrect.top,
+                dlgrect.right-dlgrect.left,
+                dlgrect.bottom - dlgrect.top + height,
                 true );
 
 end;

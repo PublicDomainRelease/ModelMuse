@@ -979,9 +979,7 @@ begin
   frmGoPhast.FrontScreenObjectsChanged := True;
   frmGoPhast.SideScreenObjectsChanged := True;
 
-  frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-  frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
-  frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+  frmGoPhast.InvalidateImage32AllViews;
 end;
 
 procedure TUndoChangeSelection.Redo;

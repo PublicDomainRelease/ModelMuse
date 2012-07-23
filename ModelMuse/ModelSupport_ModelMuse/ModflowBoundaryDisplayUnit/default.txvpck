@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="pnmpu2jgp0hy27t_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryDisplayUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryDisplayUnit.TOnGetUseList">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray.AddDataArray(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray.ReadData(ZLib.TDecompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray.StoreData(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray.SetUpToDate(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray.SetDimensions(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray.SetCellCount(System.Int32,System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray.GetCellCount(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray.FCount" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray.CellCount[System.Int32,System.Int32,System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray.LabelAsSum()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray.ComputeAverage()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayDataArray.AddDataValue(System.String,System.Double,System.Int32,System.Int32,System.Int32)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList.SetUpToDate(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList.CreateDataSets()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList.LabelAsSum()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList.ComputeAverage()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList.Create(System.Object)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList.OnGetUseList[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList.OnInitialize[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList.Initialize()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList.CreateNewDataSets()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList.FUseList" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList.SetOnInitialize(Classes.TNotifyEvent)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList.FOnGetUseList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList.FOnInitialize" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList.FOnGetUseList" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryDisplayUnit.THobDisplayTimeList">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.THobDisplayTimeList.CreateNewDataSets()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:ModflowBoundaryDisplayUnit.THobDisplayTimeList:ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists.Create()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists.Count[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists.Add(ModflowBoundaryDisplayUnit.TModflowBoundaryDisplayTimeList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists.GetItem(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists.GetCount()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists.FList" />
+    </reference>
+  </view>
+</nodeSet>

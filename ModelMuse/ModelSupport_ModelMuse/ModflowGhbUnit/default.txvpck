@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="0ylmn85tp8g8o0h_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowGhbUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.ConductancePosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.HeadPosition" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowGhbUnit.TGhbRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.TGhbRecord.Cell" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbRecord.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbRecord.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.TGhbRecord.BoundaryHeadAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.TGhbRecord.ConductanceAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.TGhbRecord.EndingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.TGhbRecord.StartingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.TGhbRecord.BoundaryHead" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.TGhbRecord.Conductance" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowGhbUnit.TGhbStorage">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbStorage.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbStorage.GetGhbArray()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowGhbUnit.TGhbStorage.GhbArray[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbStorage.Store(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbStorage.Clear()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.TGhbStorage.FGhbArray" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowGhbUnit.TGhbItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowGhbUnit.TGhbItem.Conductance[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowGhbUnit.TGhbItem.BoundaryHead[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbItem.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbItem.BoundaryFormulaCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbItem.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbItem.SetBoundaryFormula(System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbItem.GetBoundaryFormula(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbItem.RemoveFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbItem.GetPropertyObserver(System.Object,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbItem.CreateFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbItem.AssignObserverEvents(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbItem.GetConductance()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbItem.GetBoundaryHead()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbItem.SetConductance(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbItem.SetBoundaryHead(System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.TGhbItem.FConductance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.TGhbItem.FBoundaryHead" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowGhbUnit.TGhbCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbCollection.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbCollection.Create(ModflowBoundaryUnit.TModflowBoundary,System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbCollection.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbCollection.SetBoundaryStartAndEndTime(System.Int32,ModflowBoundaryUnit.TCustomModflowBoundaryItem,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbCollection.ItemClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbCollection.TestIfObservationsPresent(ref@System.Double,ref@System.Double,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbCollection.AddSpecificBoundary()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbCollection.AdjustedFormula(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbCollection.AssignCellList(RbwParser.TExpression,System.Object,ModflowBoundaryUnit.TCustomBoundaryStorage,System.Int32,Classes.TList,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbCollection.AssignCellLocation(ModflowBoundaryUnit.TCustomBoundaryStorage,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbCollection.InvalidateConductanceData(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbCollection.InvalidateHeadData(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.TGhbCollection.FConductanceData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.TGhbCollection.FBoundaryHeadData" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowGhbUnit.TGhbParamItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbParamItem.BoundaryClass()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowGhbUnit.TGhb_Cell">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.GetRealValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.GetIntegerValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.GetRow()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.GetLayer()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.GetColumn()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.GetConductanceAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.GetBoundaryHeadAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.GetConductance()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.GetBoundaryHead()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.StressPeriod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.Values" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.BoundaryHeadAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.ConductanceAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.BoundaryHead[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.Conductance[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.GetSection()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.GetIntegerAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.GetRealAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowGhbUnit.TGhb_Cell.Values" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowGhbUnit.TGhbBoundary">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbBoundary.InvalidateDisplay()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbBoundary.GetCellValues(Classes.TList,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbBoundary.ModflowParamItemClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbBoundary.BoundaryCollectionClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbBoundary.AssignCells(ModflowBoundaryUnit.TCustomBoundaryStorage,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowGhbUnit.TGhbBoundary.TestIfObservationsPresent(ref@System.Double,ref@System.Double,ref@System.Boolean)" />
+    </reference>
+  </view>
+</nodeSet>

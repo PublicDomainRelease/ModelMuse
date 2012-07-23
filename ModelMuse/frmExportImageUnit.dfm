@@ -6,7 +6,6 @@ inherited frmExportImage: TfrmExportImage
   ClientWidth = 721
   ShowHint = True
   OnClose = FormClose
-  ExplicitTop = -77
   ExplicitWidth = 729
   ExplicitHeight = 553
   PixelsPerInch = 96

@@ -14,7 +14,7 @@ interface
 
 uses Classes, Contnrs, Controls, Forms, RbwParser, Undo, GoPhastTypes, AbstractGridUnit,
   DataSetUnit, PhastDataSets, FluxObservationUnit, FormulaManagerUnit,
-  DisplaySettingsUnit, Mt3dmsFluxObservationsUnit;
+  DisplaySettingsUnit, Mt3dmsFluxObservationsUnit, FastGEO;
 
 type
   {@abstract(@name is an abstract base class used as an ancestor
@@ -743,10 +743,22 @@ type
     procedure Undo; override;
   end;
 
+  TUndoMoveCrossSection = class(TCustomUndo)
+  private
+    FNewLocation: TSegment2D;
+    FOldLocation: TSegment2D;
+  protected
+    function Description: string; override;
+  public
+    Constructor Create(Location: TSegment2D);
+    procedure DoCommand; override;
+    procedure Undo; override;
+  end;
+
 implementation
 
 uses SysUtils, Math, frmGoPhastUnit, InteractiveTools, frmSubdivideUnit,
-  frmGoToUnit, FastGEO, frmShowHideObjectsUnit,
+  frmGoToUnit, frmShowHideObjectsUnit,
   frmGridValueUnit, PhastModelUnit, frmDisplayDataUnit;
 
 resourcestring
@@ -777,6 +789,7 @@ resourcestring
   Str0sRows1d2d = '%0:s rows %1:d-%2:d, ';
   Str0sColumn1d = '%0:s column %1:d, ';
   Str0sColumns1d2 = '%0:s columns %1:d-%2:d, ';
+  StrMoveCrossSection = 'move cross section';
 
 { TUndoDeleteRow }
 
@@ -1631,9 +1644,7 @@ begin
   inherited;
   ChangeView;
   InvalidateGrid;
-  frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-  frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
-  frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+  frmGoPhast.InvalidateImage32AllViews;
 end;
 
 procedure TUndoEditGridLines.Undo;
@@ -1742,10 +1753,10 @@ begin
       frameSideView.ZoomBox.OriginY := frameSideView.ZoomBox.OriginY
         - Temp.Y + SideCenter.Y;
 
-      frmGoPhast.FrontGridChanged := True;
-      frmGoPhast.SideGridChanged := True;
-      frameSideView.ZoomBox.Image32.Invalidate;
-      frameFrontView.ZoomBox.Image32.Invalidate;
+      frmGoPhast.FrontDiscretizationChanged := True;
+      frmGoPhast.SideDiscretizationChanged := True;
+      frameSideView.ZoomBox.InvalidateImage32;
+      frameFrontView.ZoomBox.InvalidateImage32;
       AdjustScales;
     end;
   end;
@@ -2012,25 +2023,25 @@ begin
     // make sure that if the orientation of the data set has
     // changed that the data sets that are used to color the
     // grid are still valid.
-    if (frmGoPhast.Grid <> nil) then
+    if (frmGoPhast.PhastModel <> nil) then
     begin
-      if (frmGoPhast.Grid.TopDataSet <> nil)
-        and not (frmGoPhast.Grid.TopDataSet.Orientation
+      if (frmGoPhast.PhastModel.TopDataSet <> nil)
+        and not (frmGoPhast.PhastModel.TopDataSet.Orientation
         in [dsoTop, dso3D]) then
       begin
-        frmGoPhast.Grid.TopDataSet := nil;
+        frmGoPhast.PhastModel.TopDataSet := nil;
       end;
-      if (frmGoPhast.Grid.FrontDataSet <> nil)
-        and not (frmGoPhast.Grid.FrontDataSet.Orientation
+      if (frmGoPhast.PhastModel.FrontDataSet <> nil)
+        and not (frmGoPhast.PhastModel.FrontDataSet.Orientation
         in [dsoFront, dso3D]) then
       begin
-        frmGoPhast.Grid.FrontDataSet := nil;
+        frmGoPhast.PhastModel.FrontDataSet := nil;
       end;
-      if (frmGoPhast.Grid.SideDataSet <> nil)
-        and not (frmGoPhast.Grid.SideDataSet.Orientation
+      if (frmGoPhast.PhastModel.SideDataSet <> nil)
+        and not (frmGoPhast.PhastModel.SideDataSet.Orientation
         in [dsoSide, dso3D]) then
       begin
-        frmGoPhast.Grid.SideDataSet := nil;
+        frmGoPhast.PhastModel.SideDataSet := nil;
       end;
     end;
 
@@ -2050,19 +2061,19 @@ begin
   SetProperties(FNewDataSets, FDeletedDataSets, FNewDataSetProperties);
   if FDeletedDataSets.IndexOf(FTopDataSet) >= 0 then
   begin
-    frmGoPhast.PhastModel.Grid.TopDataSet := nil;
+    frmGoPhast.PhastModel.TopDataSet := nil;
   end;
   if FDeletedDataSets.IndexOf(FFrontDataSet) >= 0 then
   begin
-    frmGoPhast.PhastModel.Grid.FrontDataSet := nil;
+    frmGoPhast.PhastModel.FrontDataSet := nil;
   end;
   if FDeletedDataSets.IndexOf(FSideDataSet) >= 0 then
   begin
-    frmGoPhast.PhastModel.Grid.SideDataSet := nil;
+    frmGoPhast.PhastModel.SideDataSet := nil;
   end;
   if FDeletedDataSets.IndexOf(F3DDataSet) >= 0 then
   begin
-    frmGoPhast.PhastModel.Grid.ThreeDDataSet := nil;
+    frmGoPhast.PhastModel.ThreeDDataSet := nil;
   end;
   UpdateFrmDisplayData;
 //  UpdateFrmContourData;
@@ -2077,12 +2088,12 @@ var
   DataStorage: TPhastDataSetStorage;
   DataArrayManager: TDataArrayManager;
 begin
-  if frmGoPhast.PhastModel.Grid <> nil then
+  if frmGoPhast.PhastModel <> nil then
   begin
-    FTopDataSet := frmGoPhast.PhastModel.Grid.TopDataSet;
-    FFrontDataSet := frmGoPhast.PhastModel.Grid.FrontDataSet;
-    FSideDataSet := frmGoPhast.PhastModel.Grid.SideDataSet;
-    F3DDataSet := frmGoPhast.PhastModel.Grid.ThreeDDataSet;
+    FTopDataSet := frmGoPhast.PhastModel.TopDataSet;
+    FFrontDataSet := frmGoPhast.PhastModel.FrontDataSet;
+    FSideDataSet := frmGoPhast.PhastModel.SideDataSet;
+    F3DDataSet := frmGoPhast.PhastModel.ThreeDDataSet;
   end
   else
   begin
@@ -2108,19 +2119,19 @@ begin
   SetProperties(FDeletedDataSets, FNewDataSets, FOldDataSetProperties);
   if (FTopDataSet = nil) or (FDeletedDataSets.IndexOf(FTopDataSet) >= 0) then
   begin
-    frmGoPhast.PhastModel.Grid.TopDataSet := FTopDataSet;
+    frmGoPhast.PhastModel.TopDataSet := FTopDataSet;
   end;
   if (FFrontDataSet = nil) or (FDeletedDataSets.IndexOf(FFrontDataSet) >= 0) then
   begin
-    frmGoPhast.PhastModel.Grid.FrontDataSet := FFrontDataSet;
+    frmGoPhast.PhastModel.FrontDataSet := FFrontDataSet;
   end;
   if (FSideDataSet = nil) or (FDeletedDataSets.IndexOf(FSideDataSet) >= 0) then
   begin
-    frmGoPhast.PhastModel.Grid.SideDataSet := FSideDataSet;
+    frmGoPhast.PhastModel.SideDataSet := FSideDataSet;
   end;
   if (F3DDataSet = nil) or (FDeletedDataSets.IndexOf(F3DDataSet) >= 0) then
   begin
-    frmGoPhast.PhastModel.Grid.ThreeDDataSet := F3DDataSet;
+    frmGoPhast.PhastModel.ThreeDDataSet := F3DDataSet;
   end;
   UpdateFrmDisplayData;
 //  UpdateFrmContourData;
@@ -2694,6 +2705,31 @@ begin
   Mt3dmsLakMassFluxObservations := nil;
   Mt3dmsDrtMassFluxObservations := nil;
   Mt3dmsEtsMassFluxObservations := nil;
+end;
+
+{ TUndoMoveCrossSection }
+
+constructor TUndoMoveCrossSection.Create(Location: TSegment2D);
+begin
+  FNewLocation := Location;
+  FOldLocation := frmGoPhast.PhastModel.SutraMesh.CrossSection.Segment;
+end;
+
+function TUndoMoveCrossSection.Description: string;
+begin
+  result := StrMoveCrossSection;
+end;
+
+procedure TUndoMoveCrossSection.DoCommand;
+begin
+  inherited;
+  frmGoPhast.PhastModel.SutraMesh.CrossSection.Segment := FNewLocation;
+end;
+
+procedure TUndoMoveCrossSection.Undo;
+begin
+  inherited;
+  frmGoPhast.PhastModel.SutraMesh.CrossSection.Segment := FOldLocation;
 end;
 
 end.

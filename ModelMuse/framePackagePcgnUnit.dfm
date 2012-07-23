@@ -8,6 +8,7 @@ inherited framePackagePcgn: TframePackagePcgn
     550)
   inherited memoComments: TMemo
     Width = 569
+    ExplicitWidth = 569
   end
   object pcControls: TPageControl [3]
     Left = 0
@@ -20,54 +21,53 @@ inherited framePackagePcgn: TframePackagePcgn
     TabOrder = 1
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 8
       object lblIter_mo: TLabel
         Left = 79
         Top = 19
-        Width = 269
-        Height = 13
+        Width = 325
+        Height = 16
         Caption = 'Maximum number of Picard (outer) iterations (ITER_MO)'
       end
       object lblIter_mi: TLabel
         Left = 79
         Top = 46
-        Width = 254
-        Height = 13
+        Width = 307
+        Height = 16
         Caption = 'Maximum number of PCG (inner) iterations (ITER_MI)'
       end
       object lblCLOSE_R: TLabel
         Left = 79
         Top = 73
-        Width = 293
-        Height = 13
+        Width = 351
+        Height = 16
         Caption = 'The residual-based stopping criterion for iteration (CLOSE_R)'
       end
       object lblClose_H: TLabel
         Left = 79
         Top = 101
-        Width = 280
-        Height = 13
+        Width = 334
+        Height = 16
         Caption = 'The head-based stopping criterion for iteration (CLOSE_H)'
       end
       object lblRelax: TLabel
         Left = 79
         Top = 129
-        Width = 146
-        Height = 13
+        Width = 174
+        Height = 16
         Caption = 'Relaxation parameter (RELAX)'
       end
       object lblIfill: TLabel
         Left = 79
         Top = 157
-        Width = 198
-        Height = 13
+        Width = 236
+        Height = 16
         Caption = 'Fill level of the MIC preconditioner (IFILL)'
       end
       object seIter_mo: TJvSpinEdit
         Left = 3
         Top = 16
         Width = 70
-        Height = 21
+        Height = 24
         CheckMaxValue = False
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -78,7 +78,7 @@ inherited framePackagePcgn: TframePackagePcgn
         Left = 3
         Top = 43
         Width = 70
-        Height = 21
+        Height = 24
         CheckMaxValue = False
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
@@ -132,7 +132,7 @@ inherited framePackagePcgn: TframePackagePcgn
         Left = 3
         Top = 154
         Width = 70
-        Height = 21
+        Height = 24
         MaxValue = 1.000000000000000000
         Value = 1.000000000000000000
         Enabled = False
@@ -160,82 +160,81 @@ inherited framePackagePcgn: TframePackagePcgn
     object tabNonLinear: TTabSheet
       Caption = 'Non-Linear'
       ImageIndex = 1
-      ExplicitLeft = 8
       object lblDampingMode: TLabel
         Left = 143
         Top = 6
-        Width = 116
-        Height = 13
+        Width = 141
+        Height = 16
         Caption = 'Damping mode (ADAMP)'
       end
       object lblDamp: TLabel
         Left = 143
         Top = 32
-        Width = 169
-        Height = 13
+        Width = 204
+        Height = 16
         Caption = 'Damping parameter control (DAMP)'
       end
       object lblDamp_Lb: TLabel
         Left = 143
         Top = 63
-        Width = 154
-        Height = 13
+        Width = 187
+        Height = 16
         Caption = 'Lower limit for DAMP (DAMP_LB)'
       end
       object lblDamp_D: TLabel
         Left = 143
         Top = 95
-        Width = 221
-        Height = 13
+        Width = 263
+        Height = 16
         Caption = 'Rate parameter for adjusting DAMP (RATE_D)'
       end
       object lblChglimit: TLabel
         Left = 143
         Top = 123
-        Width = 168
-        Height = 13
+        Width = 202
+        Height = 16
         Caption = 'Maximum head change (CHGLIMIT)'
       end
       object lblAcnvg: TLabel
         Left = 143
         Top = 151
-        Width = 138
-        Height = 13
+        Width = 164
+        Height = 16
         Caption = 'Convergence mode (ACNVG)'
       end
       object lblChvg_Lb: TLabel
         Left = 143
         Top = 180
-        Width = 245
-        Height = 13
+        Width = 294
+        Height = 16
         Caption = 'Minimum value for relative convergence (CNVG_LB)'
       end
       object lblMcnvg: TLabel
         Left = 143
         Top = 208
-        Width = 300
-        Height = 13
+        Width = 358
+        Height = 16
         Caption = 'Power factor for increasing PCG convergence criteria (MCNVG)'
       end
       object lblRate_C: TLabel
         Left = 143
         Top = 235
-        Width = 218
-        Height = 13
+        Width = 258
+        Height = 16
         Caption = 'Convergence enhancement control (RATE_C)'
       end
       object lblIpunit: TLabel
         Left = 143
         Top = 263
-        Width = 245
-        Height = 13
+        Width = 291
+        Height = 16
         Caption = 'Progress reporting for the Picard iteration (IPUNIT)'
       end
       object comboDampingMode: TJvImageComboBox
         Left = 3
         Top = 3
         Width = 134
-        Height = 23
+        Height = 26
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
         Color = clBtnFace
@@ -243,7 +242,7 @@ inherited framePackagePcgn: TframePackagePcgn
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 17
+        ItemHeight = 20
         ItemIndex = 0
         TabOrder = 0
         Items = <
@@ -326,7 +325,7 @@ inherited framePackagePcgn: TframePackagePcgn
         Left = 3
         Top = 148
         Width = 134
-        Height = 23
+        Height = 26
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
         Color = clBtnFace
@@ -334,7 +333,7 @@ inherited framePackagePcgn: TframePackagePcgn
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 17
+        ItemHeight = 20
         ItemIndex = 0
         TabOrder = 5
         OnChange = comboAcnvgChange
@@ -374,7 +373,7 @@ inherited framePackagePcgn: TframePackagePcgn
         Left = 3
         Top = 205
         Width = 134
-        Height = 21
+        Height = 24
         MaxValue = 6.000000000000000000
         Value = 1.000000000000000000
         Enabled = False
@@ -399,7 +398,7 @@ inherited framePackagePcgn: TframePackagePcgn
         Left = 3
         Top = 260
         Width = 134
-        Height = 23
+        Height = 26
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
         Color = clBtnFace
@@ -407,7 +406,7 @@ inherited framePackagePcgn: TframePackagePcgn
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 17
+        ItemHeight = 20
         ItemIndex = 1
         TabOrder = 9
         Items = <

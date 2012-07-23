@@ -412,6 +412,21 @@ Consider creating descendants that each only handle one view of the model. }
     property StartAngle: double read FStartAngle;
   end;
 
+  {$IFDEF SUTRA}
+  TEditCrossSectionTool = class(TCustomInteractiveTool)
+  private
+    FStartX: integer;
+    FStartY: integer;
+    FPoint1Selected: Boolean;
+    FPoint2Selected: Boolean;
+  public
+    procedure MouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer); override;
+  end;
+  {$ENDIF}
+
   TCustomStoreVerticesTool = class(TCustomInteractiveTool)
   private
     function FindPointInNearbyScreenObject(const APoint: TPoint;
@@ -1004,6 +1019,9 @@ Consider creating descendants that each only handle one view of the model. }
     AddPointPartTool: TAddPointPartTool;
     EditVertexValueTool: TEditVertexValueTool;
     RulerTool: TRulerTool;
+  {$IFDEF SUTRA}
+    EditCrossSectionTool: TEditCrossSectionTool;
+  {$ENDIF}
 
 {$ENDREGION}
 
@@ -1020,7 +1038,7 @@ implementation
 uses Math, CursorsFoiledAgain, GR32_Polygons, frmGoPhastUnit, frmSubdivideUnit,
   frmSetSpacingUnit, frmScreenObjectPropertiesUnit, BigCanvasMethods,
   LayerStructureUnit, DataSetUnit, ZoomBox2, Contnrs, frmPointValuesUnit, 
-  Dialogs;
+  Dialogs, SutraMeshUnit;
 
 resourcestring
   StrClickAndDragToZo = 'Click and drag to zoom in';
@@ -1845,7 +1863,7 @@ end;
 procedure TAddGridBoundaryTool.MouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  ZoomBox.Image32.Invalidate;
+  ZoomBox.InvalidateImage32;
 end;
   
 procedure TAddGridBoundaryTool.MouseUp(Sender: TObject;
@@ -2130,7 +2148,7 @@ begin
   inherited;
   if UseSelectedCursor then
   begin
-    ZoomBox.Image32.Invalidate;
+    ZoomBox.InvalidateImage32;
   end;
   
 end;
@@ -2654,7 +2672,7 @@ procedure TRotateGridTool.MouseMove(Sender: TObject; Shift: TShiftState; X,
 begin
   if (ViewDirection = vdTop) and (ssLeft in Shift) then
   begin
-    ZoomBox.Image32.Invalidate;
+    ZoomBox.InvalidateImage32;
   end;
 end;
   
@@ -2727,7 +2745,7 @@ begin
   FSelectLine.Free;
   FSelectLine := TLine.Create(1000);
   FSelectLine.AddPoint(Point(X, Y));
-  ZoomBox.Image32.Invalidate;
+  ZoomBox.InvalidateImage32;
 end;
   
 procedure TLassoTool.MouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -2744,7 +2762,7 @@ begin
       or (Abs(FSelectLine.Points[FSelectLine.Count - 1].Y - Y) > 10) then
     begin
       FSelectLine.AddPoint(Point(X, Y));
-      ZoomBox.Image32.Invalidate;
+      ZoomBox.InvalidateImage32;
     end;
   end;
 end;
@@ -2762,7 +2780,7 @@ begin
     // Get rid of SelectLine
     FreeAndNil(FSelectLine);
     // redraw
-    ZoomBox.Image32.Invalidate;
+    ZoomBox.InvalidateImage32;
     frmGoPhast.tbSelect.Down := true;
     frmGoPhast.tbSelect.OnMouseDown(frmGoPhast.tbSelect, mbLeft, [], 0, 0);
     frmGoPhast.tbSelectClick(frmGoPhast.tbSelect);
@@ -2909,21 +2927,21 @@ end;
 function TCustomCellSelectionTool.GetEvalAt: TEvaluatedAt;
 begin
   result := eaBlocks;
-  if frmGoPhast.PhastGrid.TopDataSet <> nil then
+  if frmGoPhast.PhastModel.TopDataSet <> nil then
   begin
-    result := frmGoPhast.PhastGrid.TopDataSet.EvaluatedAt;
+    result := frmGoPhast.PhastModel.TopDataSet.EvaluatedAt;
   end;
-  if frmGoPhast.PhastGrid.FrontDataSet <> nil then
+  if frmGoPhast.PhastModel.FrontDataSet <> nil then
   begin
-    result := frmGoPhast.PhastGrid.FrontDataSet.EvaluatedAt;
+    result := frmGoPhast.PhastModel.FrontDataSet.EvaluatedAt;
   end;
-  if frmGoPhast.PhastGrid.SideDataSet <> nil then
+  if frmGoPhast.PhastModel.SideDataSet <> nil then
   begin
-    result := frmGoPhast.PhastGrid.SideDataSet.EvaluatedAt;
+    result := frmGoPhast.PhastModel.SideDataSet.EvaluatedAt;
   end;
-  if frmGoPhast.PhastGrid.ThreeDDataSet <> nil then
+  if frmGoPhast.PhastModel.ThreeDDataSet <> nil then
   begin
-    result := frmGoPhast.PhastGrid.ThreeDDataSet.EvaluatedAt;
+    result := frmGoPhast.PhastModel.ThreeDDataSet.EvaluatedAt;
   end;
 end;
 
@@ -3462,7 +3480,7 @@ begin
   end;
   FPriorCursorX := X;
   FPriorCursorY := Y;
-  ZoomBox.Image32.Invalidate;
+  ZoomBox.InvalidateImage32;
 end;
   
 procedure TCustomCreateScreenObjectTool.SetDefaultElevationFormulas;
@@ -3758,7 +3776,7 @@ begin
       StorePointsOfOtherObjects(CurrentScreenObject);
     end;
     Layer32.Changed;
-    View.ZoomBox.Image32.Invalidate;
+    View.ZoomBox.InvalidateImage32;
   end;
   
 end;
@@ -3825,7 +3843,7 @@ begin
   // redraw to indicate where the screen object would be if you clicked now.
   if (CurrentScreenObject <> nil) and CanAddPoint then
   begin
-    View.ZoomBox.Image32.Invalidate;
+    View.ZoomBox.InvalidateImage32;
   end;
   
   inherited;
@@ -3855,6 +3873,7 @@ var
   YPrimeD: Real;
   XPrimeI: Integer;
   YPrimeI: Integer;
+  GridAngle: real;
 begin
   case View.ViewDirection of
     vdTop:
@@ -3862,23 +3881,31 @@ begin
         YR := APoint.Y - PreviousPoint.Y;
         XR := APoint.X - PreviousPoint.X;
         Angle := ArcTan2(YR, XR);
-        RotatedAngle := Angle - frmGoPhast.Grid.GridAngle;
+        if frmGoPhast.Grid <> nil then
+        begin
+          GridAngle :=  frmGoPhast.Grid.GridAngle
+        end
+        else
+        begin
+          GridAngle := 0;
+        end;
+        RotatedAngle := Angle - GridAngle;
         R := Sqrt(Sqr(XR) + Sqr(YR));
         XPrimeD := Cos(RotatedAngle) * R;
         YPrimeD := Sin(RotatedAngle) * R;
         if Abs(XPrimeD) > Abs(YPrimeD) then
         begin
           APoint.X := PreviousPoint.X +
-            Cos(frmGoPhast.Grid.GridAngle) * XPrimeD;
+            Cos(GridAngle) * XPrimeD;
           APoint.Y := PreviousPoint.Y +
-            Sin(frmGoPhast.Grid.GridAngle) * XPrimeD;
+            Sin(GridAngle) * XPrimeD;
         end
         else
         begin
           APoint.X := PreviousPoint.X -
-            Sin(frmGoPhast.Grid.GridAngle) * YPrimeD;
+            Sin(GridAngle) * YPrimeD;
           APoint.Y := PreviousPoint.Y +
-            Cos(frmGoPhast.Grid.GridAngle) * YPrimeD;
+            Cos(GridAngle) * YPrimeD;
         end;
       end;
     vdFront, vdSide:
@@ -4042,7 +4069,7 @@ begin
   // redraw to indicate where the screen object would be if you clicked now.
   if (CurrentScreenObject <> nil) and CanAddPoint then
   begin
-    View.ZoomBox.Image32.Invalidate;
+    View.ZoomBox.InvalidateImage32;
   end;
   
   inherited;
@@ -4070,6 +4097,7 @@ var
   Angle: Real;
   XR: Real;
   YR: Real;
+  GridAngle: Real;
 begin
   case ViewDirection of
     vdTop:
@@ -4077,18 +4105,26 @@ begin
         YR := ThirdCorner.Y - FirstCorner.Y;
         XR := ThirdCorner.X - FirstCorner.X;
         Angle := ArcTan2(YR, XR);
-        RotatedAngle := Angle - frmGoPhast.Grid.GridAngle;
+        if frmGoPhast.Grid <> nil then
+        begin
+          GridAngle := frmGoPhast.Grid.GridAngle;
+        end
+        else
+        begin
+          GridAngle := 0;
+        end;
+        RotatedAngle := Angle - GridAngle;
         R := SqrT(Sqr(XR) + Sqr(YR));
         XPrime := Cos(RotatedAngle) * R;
         YPrime := Sin(RotatedAngle) * R;
         SecondCorner.X := FirstCorner.X +
-          Cos(frmGoPhast.Grid.GridAngle) * XPrime;
+          Cos(GridAngle) * XPrime;
         SecondCorner.Y := FirstCorner.Y +
-          Sin(frmGoPhast.Grid.GridAngle) * XPrime;
+          Sin(GridAngle) * XPrime;
         FourthCorner.X := FirstCorner.X -
-          Sin(frmGoPhast.Grid.GridAngle) * YPrime;
+          Sin(GridAngle) * YPrime;
         FourthCorner.Y := FirstCorner.Y +
-          Cos(frmGoPhast.Grid.GridAngle) * YPrime;
+          Cos(GridAngle) * YPrime;
       end;
     vdFront, vdSide:
       begin
@@ -4690,13 +4726,13 @@ begin
   // If something is happening, redraw.
   if (FSelectLine <> nil) and not FMovingScreenObjects then
   begin
-    ZoomBox.Image32.Invalidate;
+    ZoomBox.InvalidateImage32;
   end
   else if (FCurrentScreenObject <> nil)
     and FCurrentScreenObject.Selected and FMovingScreenObjects
     and (ssLeft in Shift) then
   begin
-    ZoomBox.Image32.Invalidate;
+    ZoomBox.InvalidateImage32;
   end;
   UpdateCursors;
 end;
@@ -4744,7 +4780,7 @@ begin
     // Get rid of SelectLine
     FreeAndNil(FSelectLine);
     // redraw
-    ZoomBox.Image32.Invalidate;
+    ZoomBox.InvalidateImage32;
   end;
 end;
   
@@ -5227,7 +5263,7 @@ begin
     FSelectLine.Free;
     FSelectLine := TLine.Create(5);
     FSelectLine.AddPoint(Point(X, Y));
-    ZoomBox.Image32.Invalidate;
+    ZoomBox.InvalidateImage32;
   end;
 end;
   
@@ -5241,7 +5277,7 @@ begin
   if (ssLeft in Shift) or FMovingScreenObjects
     or (FSelectLine <> nil) then
   begin
-    ZoomBox.Image32.Invalidate;
+    ZoomBox.InvalidateImage32;
   end;
 end;
   
@@ -5283,7 +5319,7 @@ begin
           // Select screen objects with a rectangle.
           SelectScreenObjectsInGui(ssShift in Shift);
           // redraw
-          ZoomBox.Image32.Invalidate;
+          ZoomBox.InvalidateImage32;
         end;
   
       end;
@@ -5660,7 +5696,7 @@ begin
           FNewColumn := Column;
           FNewRow := Row;
           FShouldDraw := True;
-          ZoomBox.Image32.Invalidate;
+          ZoomBox.InvalidateImage32;
         end
         else
         begin
@@ -5675,7 +5711,7 @@ begin
           FNewLayer := Layer;
           FNewColumn := Column;
           FShouldDraw := True;
-          ZoomBox.Image32.Invalidate;
+          ZoomBox.InvalidateImage32;
         end
         else
         begin
@@ -5690,7 +5726,7 @@ begin
           FNewLayer := Layer;
           FNewRow := Row;
           FShouldDraw := True;
-          ZoomBox.Image32.Invalidate;
+          ZoomBox.InvalidateImage32;
         end
         else
         begin
@@ -6295,7 +6331,7 @@ begin
       FreeAndNil(FLine);
       frmGoPhast.hntMeasure.CancelHint;
     end;
-    ZoomBox.Image32.Invalidate;
+    ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -6327,7 +6363,7 @@ begin
   FreeAndNil(FLine);
   if TempZB <> nil then
   begin
-    TempZB.Image32.Invalidate;
+    TempZB.InvalidateImage32;
   end;
   frmGoPhast.hntMeasure.CancelHint;
   FDoubleClicked := True;
@@ -6368,7 +6404,7 @@ begin
     FLine.Points[FLine.Count-1] := APoint;
     // If the cursor has moved far enough, add another point to the
     // lasso.
-    ZoomBox.Image32.Invalidate;
+    ZoomBox.InvalidateImage32;
     ShowHint;
   end;
 end;
@@ -6392,7 +6428,7 @@ begin
     begin
       TempZB := FLine.ZoomBox;
       FreeAndNil(FLine);
-      TempZB.Image32.Invalidate;
+      TempZB.InvalidateImage32;
     end;
     if FLine = nil then
     begin
@@ -6404,8 +6440,133 @@ begin
       FLine.AddPoint(APoint);
     end
   end;
-  ZoomBox.Image32.Invalidate;
+  ZoomBox.InvalidateImage32;
 end;
+
+{$IFDEF SUTRA}
+{ TEditCrossSectionTool }
+
+procedure TEditCrossSectionTool.MouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var
+  LocalZoomBox: TQRbwZoomBox2;
+  CrossSection: TCrossSection;
+  X1: Integer;
+  X2: Integer;
+  Y1: Integer;
+  Y2: Integer;
+  MinX: Int64;
+  MaxX: Int64;
+  MinY: Int64;
+  MaxY: Int64;
+  Selected: Boolean;
+begin
+  FPoint1Selected := False;
+  FPoint2Selected := False;
+  if (ViewDirection = vdTop)
+    and (frmGoPhast.PhastModel.ModelSelection = msSutra)
+    and (frmGoPhast.PhastModel.SutraMesh <> nil) then
+  begin
+    FStartX := X;
+    FStartY := Y;
+    LocalZoomBox := ZoomBox;
+    CrossSection := frmGoPhast.PhastModel.SutraMesh.CrossSection;
+    Selected := False;
+
+    X1 := LocalZoomBox.XCoord(CrossSection.StartX);
+    X2 := LocalZoomBox.XCoord(CrossSection.EndX);
+    Y1 := LocalZoomBox.YCoord(CrossSection.StartY);
+    Y2 := LocalZoomBox.YCoord(CrossSection.EndY);
+    MinX := Int64(Min(X1, X2)) - SelectEpsilon;
+    MaxX := Int64(Max(X1, X2)) + SelectEpsilon;
+    MinY := Int64(Min(Y1, Y2)) - SelectEpsilon;
+    MaxY := Int64(Max(Y1, Y2)) + SelectEpsilon;
+
+    if IsValueInside(MinX, X, MaxX) and IsValueInside(MinY, Y, MaxY) then
+    begin
+      if (X1 = X2) or (Y1 = Y2) then
+      begin
+        Selected := True;
+      end
+      else
+      begin
+        if Abs(X2 - X1) > Abs(Y2 - Y1) then
+        begin
+          if Abs((X - X1) / (X2 - X1) * (Y2 - Y1) + Y1 - Y) < SelectEpsilon then
+          begin
+            Selected := True;
+          end
+        end
+        else
+        begin
+          if Abs((Y - Y1) / (Y2 - Y1) * (X2 - X1) + X1 - X) < SelectEpsilon then
+          begin
+            Selected := True;
+          end
+        end;
+      end;
+    end;
+    if Selected then
+    begin
+      if (Abs(X - X1) < SelectEpsilon) and (Abs(Y - Y1) < SelectEpsilon)  then
+      begin
+        FPoint1Selected := True;
+        FPoint2Selected := False;
+      end
+      else if (Abs(X - X2) < SelectEpsilon) and (Abs(Y - Y2) < SelectEpsilon)  then
+      begin
+        FPoint2Selected := True;
+        FPoint1Selected := False;
+      end
+      else
+      begin
+        FPoint1Selected := True;
+        FPoint2Selected := True;
+      end;
+    end;
+  end;
+end;
+
+procedure TEditCrossSectionTool.MouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var
+  LocalZoomBox: TQRbwZoomBox2;
+  DeltaX: double;
+  DeltaY: Extended;
+  NewSegment: TSegment2D;
+  Undo: TUndoMoveCrossSection;
+begin
+  inherited;
+  LocalZoomBox := ZoomBox;
+
+  if FPoint1Selected or FPoint2Selected then
+  begin
+    NewSegment := frmGoPhast.PhastModel.SutraMesh.CrossSection.Segment;
+    if FPoint1Selected and FPoint2Selected then
+    begin
+      DeltaX := LocalZoomBox.X(X)-LocalZoomBox.X(FStartX);
+      DeltaY := LocalZoomBox.Y(Y)-LocalZoomBox.Y(FStartY);
+      NewSegment[1].x := NewSegment[1].x + DeltaX;
+      NewSegment[1].y := NewSegment[1].y + DeltaY;
+      NewSegment[2].x := NewSegment[2].x + DeltaX;
+      NewSegment[2].y := NewSegment[2].y + DeltaY;
+    end
+    else if FPoint1Selected then
+    begin
+      NewSegment[1].x := LocalZoomBox.X(X);
+      NewSegment[1].y := LocalZoomBox.Y(Y);
+    end
+    else if FPoint2Selected then
+    begin
+      NewSegment[2].x := LocalZoomBox.X(X);
+      NewSegment[2].y := LocalZoomBox.Y(Y);
+    end;
+    Undo := TUndoMoveCrossSection.Create(NewSegment);
+    frmGoPhast.UndoStack.Submit(Undo);
+  end;
+end;
+  {$ENDIF}
+
 
 initialization
   ZoomTool := TZoomTool.Create(nil);
@@ -6433,6 +6594,9 @@ initialization
   AddPointPartTool := TAddPointPartTool.Create(nil);
   EditVertexValueTool := TEditVertexValueTool.Create(nil);
   RulerTool := TRulerTool.Create(nil);
+  {$IFDEF SUTRA}
+  EditCrossSectionTool:= TEditCrossSectionTool.Create(nil);
+  {$ENDIF}
 
 finalization
   ZoomTool.Free;
@@ -6459,5 +6623,8 @@ finalization
   AddPointPartTool.Free;
   EditVertexValueTool.Free;
   RulerTool.Free;
+  {$IFDEF SUTRA}
+  EditCrossSectionTool.Free;
+  {$ENDIF}
 
 end.

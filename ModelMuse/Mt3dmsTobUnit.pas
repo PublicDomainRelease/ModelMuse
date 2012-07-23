@@ -176,8 +176,8 @@ type
     // @name directly.  Call Free instead.
     Destructor Destroy; override;
     // @name checks that the Purpose parameter matches @link(Purpose)
-    // and, if so, calls @link(TMt3dmsTobCollection.EvaluateHeadObservations
-    // Values.EvaluateHeadObservations)
+    // and, if so, calls @link(TMt3dmsTobCollection.EvaluateConcentrationObservations
+    // Values.EvaluateConcentrationObservations)
     procedure EvaluateConcentrationObservations(Purpose: TObservationPurpose;
       AModel: TBaseModel);
     function Used: boolean; override;

@@ -2569,7 +2569,7 @@ begin
     FrameCrossSection := Page.Controls[0] as TframeCrossSection;
     FrameCrossSection.dg8Point.Invalidate;
 
-    zbChannel.Image32.Invalidate;
+    zbChannel.InvalidateImage32;
   end;
 end;
 
@@ -2584,7 +2584,7 @@ procedure TframeScreenObjectSFR.dgCrossSectionSetEditText(Sender: TObject; ACol,
   ARow: Integer; const Value: string);
 begin
   Edited;
-  zbChannel.Image32.Invalidate;
+  zbChannel.InvalidateImage32;
 end;
 
 procedure TframeScreenObjectSFR.dgDownColSize(Sender: TObject; ACol,
@@ -2636,8 +2636,8 @@ begin
     begin
       TimePeriod := ARow -1;
       jvplTable.ActivePageIndex := TimePeriod;
-      zbFlowDepthTable.Image32.Invalidate;
-      zbFlowWidthTable.Image32.Invalidate;
+      zbFlowDepthTable.InvalidateImage32;
+      zbFlowWidthTable.InvalidateImage32;
 
       Page := jvplTable.ActivePage;
       Assert(Page.ControlCount = 1);
@@ -2670,8 +2670,8 @@ var
   Frame: TframeFlowTable;
 begin
   Edited;
-  zbFlowDepthTable.Image32.Invalidate;
-  zbFlowWidthTable.Image32.Invalidate;
+  zbFlowDepthTable.InvalidateImage32;
+  zbFlowWidthTable.InvalidateImage32;
   if not (Sender is TRbwDataGrid4) then Exit;
   Grid := TRbwDataGrid4(Sender);
   Frame := Grid.Owner as TframeFlowTable;
@@ -2889,6 +2889,7 @@ var
   Valid: Boolean;
   IntValue: integer;
   NewItem: Boolean;
+  SfrItem: TSfrItem;
 begin
   ParamIcalcValues := TSfrParamIcalcCollection.Create(nil, nil, nil);
   try
@@ -2984,6 +2985,9 @@ begin
     if ParamIcalcValues.Count > 0 then
     begin
       Boundary.ParamIcalc := ParamIcalcValues;
+      SfrItem := Boundary.Values.Items[0] as TSfrItem;
+      SfrItem.StartTime := ParamIcalcValues[0].StartTime;
+      SfrItem.EndTime := ParamIcalcValues[ParamIcalcValues.Count-1].EndTime;
     end
     else if FTimesChanged then
     begin

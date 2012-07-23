@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="z0oyvkuio7xrhkk_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:WriteWellUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:WriteWellUnit.TWellWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:WriteWellUnit.TWellWriter.FPumpingRate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:WriteWellUnit.TWellWriter.FSolution" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:WriteWellUnit.TWellWriter.FScreenObjectList" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:WriteWellUnit.TWellWriter.ScreenObjectList[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WriteWellUnit.TWellWriter.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:WriteWellUnit.TWellWriter.Destroy()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:WriteWellUnit.TWellWriter.PumpingRate[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:WriteWellUnit.TWellWriter.Solution[]" />
+    </reference>
+  </view>
+</nodeSet>

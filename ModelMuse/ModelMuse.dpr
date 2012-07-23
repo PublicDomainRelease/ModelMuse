@@ -22,8 +22,6 @@ program ModelMuse;
 //  {$ENDIF}
 uses
   FastMM4 in 'FastMM4.pas',
-  FastMove in 'FastCode\FastMove.pas',
-  FastcodeCPUID in 'FastCode\FastcodeCPUID.pas',
   madExcept,
   madLinkDisAsm,
   madListHardware,
@@ -376,7 +374,9 @@ uses
   framePackageNwtUnit in 'framePackageNwtUnit.pas' {framePackageNwt: TFrame},
   ModflowNWT_WriterUnit in 'ModflowNWT_WriterUnit.pas',
   ModflowUPW_WriterUnit in 'ModflowUPW_WriterUnit.pas',
+  {$IFDEF WIN32}
   Pcx in 'Pcx.pas',
+  {$ENDIF}
   frameScreenObjectUnit in 'frameScreenObjectUnit.pas' {frameScreenObject: TFrame},
   ModflowHeadObsResults in 'ModflowHeadObsResults.pas',
   frameStreamLinkUnit in 'frameStreamLinkUnit.pas' {frameStreamLink: TFrame},
@@ -426,11 +426,17 @@ uses
   framePackagePcgnUnit in 'framePackagePcgnUnit.pas' {framePackagePcgn: TFrame},
   frameDiscretizationUnit in 'frameDiscretizationUnit.pas' {frameDiscretization: TFrame},
   frmSutraLayersUnit in 'frmSutraLayersUnit.pas' {frmSutraLayers},
-  HashTableFacadeUnit in 'HashTableFacadeUnit.pas';
+  HashTableFacadeUnit in 'HashTableFacadeUnit.pas',
+  SutraOptionsUnit in 'SutraOptionsUnit.pas',
+  frmSutraOptionsUnit in 'frmSutraOptionsUnit.pas' {frmSutraOptions};
 
 {$R *.res}
 
 begin
+  // This line is to help ensure consistent results on different machines.
+  // See http://qc.embarcadero.com/wc/qcmain.aspx?d=8399
+  Set8087CW($1332);
+
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TfrmGoPhast, frmGoPhast);

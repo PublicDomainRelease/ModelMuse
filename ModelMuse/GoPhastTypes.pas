@@ -827,6 +827,11 @@ var
   AChar: Char;
 begin
   result :=  Trim(OriginalName);
+  result := StringReplace(result, ' ', '_', [rfReplaceAll]);
+  result := StringReplace(result, '"', '', [rfReplaceAll]);
+  result := StringReplace(result, '''', '', [rfReplaceAll]);
+  result := StringReplace(result, '/', '_', [rfReplaceAll]);
+  result := StringReplace(result, '\', '_', [rfReplaceAll]);
   try
     if IsValidIdent(Result, False) then
     begin

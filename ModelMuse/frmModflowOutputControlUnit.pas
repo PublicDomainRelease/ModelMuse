@@ -12,10 +12,6 @@ uses
   ModflowOutputControlUnit;
 
 type
-//  TMt3dPrintColumns = (mpcName, mpcPrint, mpcStripOrWrap, mpcFormat);
-//  TMt3dPrintRows = (mprName, mprConc, mprParticles, mrpRetardation,
-//    mprDispersionCoef);
-
   TfrmModflowOutputControl = class(TfrmCustomGoPhast)
     pnlBottom: TPanel;
     btnHelp: TBitBtn;

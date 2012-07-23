@@ -3,7 +3,11 @@ unit XBase1PropEd;
 interface
 
 {$IFDEF MSWINDOWS}
+  {$IF CompilerVersion >= 23}
+uses SysUtils, Classes, DesignIntf, DesignEditors, VCL.Dialogs;
+  {$ELSE}
 uses SysUtils, Classes, DesignIntf, DesignEditors, Dialogs;
+  {$IFEND}
 {$ENDIF}
 {$IFDEF LINUX}
 uses SysUtils, Classes, DesignIntf, DesignEditors, QDialogs;

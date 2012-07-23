@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="sunxly5qo9vsdbr_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowDiscretizationWriterUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowDiscretizationWriterUnit.TModflowDiscretizationWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDiscretizationWriterUnit.TModflowDiscretizationWriter.WriteFile(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDiscretizationWriterUnit.TModflowDiscretizationWriter.Extension()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDiscretizationWriterUnit.TModflowDiscretizationWriter.WriteDataSet1()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDiscretizationWriterUnit.TModflowDiscretizationWriter.WriteDataSet0()" />
+    </reference>
+  </view>
+</nodeSet>

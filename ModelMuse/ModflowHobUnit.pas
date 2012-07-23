@@ -1053,6 +1053,8 @@ begin
   Value := StringReplace(Value, ' ', '_', [rfReplaceAll]);
   Value := StringReplace(Value, '"', '', [rfReplaceAll]);
   Value := StringReplace(Value, '''', '', [rfReplaceAll]);
+  Value := StringReplace(Value, '/', '_', [rfReplaceAll]);
+  Value := StringReplace(Value, '\', '_', [rfReplaceAll]);
   if Length(Value) > 12 then
   begin
     Value := Copy(Value, 1, 12);

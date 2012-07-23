@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="2vlwd6nupgayhxh_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmImportPointsUnits.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.rsZ2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.rsY2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.rsX2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.rsZ1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.rsY1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.rsX1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.rsZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.rsY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.rsX" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmImportPointsUnits.TUndoImportPoints">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TUndoImportPoints.Description()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.EnableOkButton()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.SetCheckBoxCaptions()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.UpdateDimensionColumns()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.UpdateDataSets()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.StartTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.FImportFileName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.Z2Col" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.Y2Col" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.X2Col" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.Z1Col" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.Y1Col" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.X1Col" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.ZCol" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.YCol" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.XCol" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.dgDataDistributeTextProgress(System.Object,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.dgDataSetEditText(System.Object,System.Int32,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.seRowsChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.btnOpenFileClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.rgElevationCountClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.dgDataColMoving(System.Object,System.Int32,System.Int32,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.rgViewDirectionClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.rgEvaluatedAtClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.FormKeyUp(System.Object,ref@System.UInt16,Classes.TShiftState)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.jvclbDataSetsClickCheck(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.cbIntersectedCellsClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.seRows" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.cbVisible" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.cbImportAsSingleObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.jvclbDataSets" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.dgData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.tabData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.tabControls" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.rgViewDirection" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.rgEvaluatedAt" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.rgElevationCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.pnlRadioGroups" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.pnlLabelDataSets" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.pnlDataTabControls" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.pnlBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.pcImportPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.OpenDialogImportFile" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.lblRows" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.lblRoot" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.edRoot" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.cbIntersectedCells" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.cbInterpolation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.btnOpenFile" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportPointsUnits.TfrmImportPoints.btnCancel" />
+    </reference>
+  </view>
+</nodeSet>

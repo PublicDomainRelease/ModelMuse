@@ -169,11 +169,12 @@ begin
   frmGoPhast.frame3DView.glWidModelView.Invalidate;
 
   frmGoPhast.frameTopView.ModelChanged := True;
-  frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
+//  frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
   frmGoPhast.frameFrontView.ModelChanged := True;
-  frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
+//  frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
   frmGoPhast.frameSideView.ModelChanged := True;
-  frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+//  frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
+  frmGoPhast.InvalidateImage32AllViews;
 end;
 
 procedure TUndoImportEndpoints.Undo;

@@ -336,7 +336,7 @@ begin
               else
                 Assert(False);
             end;
-            frmGoPhast.Grid.ThreeDDataSet := DataArray;
+            frmGoPhast.PhastModel.ThreeDDataSet := DataArray;
           end;
         1:
           begin
@@ -688,7 +688,7 @@ begin
     for Index := FTextItems.Count - 1 downto 0 do
     begin
       Item := FTextItems[Index];
-      if CanSelect and PtInRect(Item.Rect, Point(X, Y)) then
+      if CanSelect and GR32.PtInRect(Item.Rect, GR32.Point(X, Y)) then
       begin
         CanSelect := False;
         Item.Selected := True;
@@ -884,7 +884,7 @@ begin
     LocalModel := frmGoPhast.PhastModel;
     if LocalModel.Grid = nil then
     begin
-      Mesh := LocalModel.SutraMesh;
+      Mesh := LocalModel.Mesh;
       if Mesh <> nil then
       begin
         Mesh.Draw(FModelImage, ViewDirection);
@@ -1887,7 +1887,7 @@ begin
       TimeList.Initialize;
     end;
     PhastModel.UpdateThreeDTimeDataSet(TimeList, ColorDisplaySettings.Time);
-    ADataArray := PhastModel.Grid.ThreeDDataSet;
+    ADataArray := PhastModel.ThreeDDataSet;
     case TimeList.Orientation of
       dsoTop:
         begin
@@ -1941,42 +1941,42 @@ begin
     end;
     if DataArray = nil then
     begin
-      PhastModel.Grid.ThreeDDataSet := nil;
-      PhastModel.Grid.TopDataSet := nil;
-      PhastModel.Grid.FrontDataSet := nil;
-      PhastModel.Grid.SideDataSet := nil;
+      PhastModel.ThreeDDataSet := nil;
+      PhastModel.TopDataSet := nil;
+      PhastModel.FrontDataSet := nil;
+      PhastModel.SideDataSet := nil;
     end
     else
     begin
       DataArray.Initialize;
       PhastModel.ColorLegend.Assign(ColorDisplaySettings.Legend);
       DataArray.Limits := ColorDisplaySettings.Limits;
-      PhastModel.Grid.ThreeDDataSet := DataArray;
+      PhastModel.ThreeDDataSet := DataArray;
       PhastModel.ThreeDTimeList := nil;
       case DataArray.Orientation of
         dsoTop:
           begin
-            PhastModel.Grid.TopDataSet := DataArray;
-            PhastModel.Grid.FrontDataSet := nil;
-            PhastModel.Grid.SideDataSet := nil;
+            PhastModel.TopDataSet := DataArray;
+            PhastModel.FrontDataSet := nil;
+            PhastModel.SideDataSet := nil;
           end;
         dsoFront:
           begin
-            PhastModel.Grid.TopDataSet := nil;
-            PhastModel.Grid.FrontDataSet := DataArray;
-            PhastModel.Grid.SideDataSet := nil;
+            PhastModel.TopDataSet := nil;
+            PhastModel.FrontDataSet := DataArray;
+            PhastModel.SideDataSet := nil;
           end;
         dsoSide:
           begin
-            PhastModel.Grid.TopDataSet := nil;
-            PhastModel.Grid.FrontDataSet := nil;
-            PhastModel.Grid.SideDataSet := DataArray;
+            PhastModel.TopDataSet := nil;
+            PhastModel.FrontDataSet := nil;
+            PhastModel.SideDataSet := DataArray;
           end;
         dso3D:
           begin
-            PhastModel.Grid.TopDataSet := DataArray;
-            PhastModel.Grid.FrontDataSet := DataArray;
-            PhastModel.Grid.SideDataSet := DataArray;
+            PhastModel.TopDataSet := DataArray;
+            PhastModel.FrontDataSet := DataArray;
+            PhastModel.SideDataSet := DataArray;
           end;
       else
         Assert(False);
@@ -2009,7 +2009,7 @@ begin
   PhastModel := frmGoPhast.PhastModel;
   if PhastModel.Grid <> nil then
   begin
-    Is3DSelected := (PhastModel.Grid.ThreeDDataSet <> nil);
+    Is3DSelected := (PhastModel.ThreeDDataSet <> nil);
     if frmGoPhast.Grid.NeedToRecalculateTopCellColors then
     begin
       frmGoPhast.Grid.ResetTopCellColors;
@@ -2026,7 +2026,7 @@ begin
       frmGoPhast.Grid.UpdateCellColors(vdSide);
     end;
     frmGoPhast.acColoredGrid.Enabled :=
-      (frmGoPhast.Grid.ThreeDDataSet <> nil)
+      (frmGoPhast.PhastModel.ThreeDDataSet <> nil)
       or (frmGoPhast.PhastModel.EdgeDisplay <> nil);
     if not frmGoPhast.acColoredGrid.Enabled then
     begin
@@ -2038,7 +2038,7 @@ begin
       frmGoPhast.acColoredGrid.Checked := True;
       frmGoPhast.tb3DColors.Down := True;
     end;
-    frmGoPhast.PhastModel.Grid.GridChanged;
+    frmGoPhast.PhastModel.DiscretizationChanged;
   end;
 end;
 
@@ -2298,7 +2298,7 @@ begin
     and ((Abs(FStartX - X) > 4) or (Abs(FStartY - Y) > 4)) then
   begin
     ARect := FSelectedItem.Rect;
-    OffSetRect(ARect, X - FStartX, Y - FStartY);
+    GR32.OffSetRect(ARect, X - FStartX, Y - FStartY);
     FSelectedItem.Rect := ARect;
     result := True;
     FQuerySaveSettings := True;
@@ -2349,7 +2349,7 @@ begin
     ARect.Bottom := Y + Extent.cy;
     ACanvas.TextOut(X, Y, ALine);
     Y := Y + Extent.cy;
-    UnionRect(TitleRect, TitleRect, ARect);
+    GR32.UnionRect(TitleRect, TitleRect, ARect);
   end;
   if TitleRect.Bottom > 0 then
   begin
@@ -2512,7 +2512,7 @@ begin
   begin
     rgDisplayChoice.ItemIndex := 0;
   end
-  else if frmGoPhast.Grid.ThreeDDataSet <> nil then
+  else if frmGoPhast.PhastModel.ThreeDDataSet <> nil then
   begin
     rgDisplayChoice.ItemIndex := 0;
   end
@@ -2684,7 +2684,7 @@ begin
     for Index := FTextItems.Count - 1 downto 0 do
     begin
       Item := FTextItems[Index];
-      if CanSelect and PtInRect(Item.Rect, Point(X, Y)) then
+      if CanSelect and GR32.PtInRect(Item.Rect, GR32.Point(X, Y)) then
       begin
         CanSelect := False;
         FSelectedItem := Item;

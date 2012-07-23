@@ -29,7 +29,8 @@ uses Windows, Types, GuiSettingsUnit, SysUtils, Classes, Contnrs, Controls,
   PathlineReader, LegendUnit, DisplaySettingsUnit, ModflowCellUnit,
   ModflowGageUnit, ModflowHeadObsResults, GR32, AxCtrls, Generics.Collections,
   Generics.Defaults, Mt3dmsTimesUnit, Mt3dmsChemSpeciesUnit,
-  Mt3dmsFluxObservationsUnit, SutraMeshUnit, HashTableFacadeUnit;
+  Mt3dmsFluxObservationsUnit, SutraMeshUnit, HashTableFacadeUnit,
+  SutraOptionsUnit;
 
 const
   // @name is the name of the @link(TDataArray) that specifies whether an
@@ -1422,7 +1423,6 @@ that affects the model output should also have a comment. }
     // See @link(PhastGrid).
     procedure SetPhastGrid(const Value: TPhastGrid);
     procedure UpdateDischargeRouting(Sender: TObject);
-//    function AlwaysUsed(Sender: TObject): boolean;
     function AquiferPropertiesUsed(Sender: TObject): boolean; virtual;
     function KyUsed(Sender: TObject): boolean; virtual;
     function KzUsed(Sender: TObject): boolean; virtual;
@@ -1506,6 +1506,7 @@ that affects the model output should also have a comment. }
     function PrepareModflowFullStressPeriods(ShowWarning: boolean): Boolean;
     function CountStepsInExport: Integer;
     procedure GetDefaultOutputFileExtension(var Extension: string);
+    function CheckMt3dTimes(ShowWarning: Boolean): boolean;
 
   private
     FGrid: TCustomModelGrid;
@@ -1525,6 +1526,7 @@ that affects the model output should also have a comment. }
     FMt3dmsDrnMassFluxObservations: TMt3dmsFluxObservationGroups;
     FMt3dmsLakMassFluxObservations: TMt3dmsFluxObservationGroups;
     FSutraMesh: TSutraMesh3D;
+    FSutraOptions: TSutraOptions;
     procedure SetAlternateFlowPackage(const Value: boolean);
     procedure SetAlternateSolver(const Value: boolean);
     procedure SetBatchFileAdditionsAfterModel(const Value: TStrings);
@@ -1639,7 +1641,16 @@ that affects the model output should also have a comment. }
     procedure SetEndPoints(const Value: TEndPointReader);
     procedure SetSutraMesh(const Value: TSutraMesh3D);
     procedure RenameOldVerticalLeakance; virtual;
-//    procedure UpdateDataSets;
+    function GetThreeDDataSet: TDataArray;
+    procedure SetThreeDDataSet(const Value: TDataArray);
+    function GetFrontDataSet: TDataArray;
+    function GetSideDataSet: TDataArray;
+    function GetTopDataSet: TDataArray;
+    procedure SetFrontDataSet(const Value: TDataArray);
+    procedure SetSideDataSet(const Value: TDataArray);
+    procedure SetTopDataSet(const Value: TDataArray);
+    function GetMesh: TSutraMesh3D;
+    procedure SetSutraOptions(const Value: TSutraOptions);
   var
     LakWriter: TObject;
     SfrWriter: TObject;
@@ -1804,7 +1815,7 @@ that affects the model output should also have a comment. }
     // The values is @name should decrease monotonically.
     // For example, if a layer group is divided into 4 uniform layers,
     // @name should return [0.75, 0.5, 0.25].
-    function LayerFractions(LayerGroup: TLayerGroup): TDoubleDynArray; virtual;
+    function LayerFractions(LayerGroup: TCustomLayerGroup): TDoubleDynArray; virtual;
     function LayerCount: integer; virtual;
     procedure UpdateDisplayUseList(NewUseList: TStringList;
       ParamType: TParameterType; DataIndex: integer; const DisplayName: string); virtual; abstract;
@@ -1948,8 +1959,10 @@ that affects the model output should also have a comment. }
       ShowWarning: boolean);
     procedure ExportModpathModel(FileName: string;
       RunModel, NewBudgetFile: boolean; EmbeddedExport: boolean = False);
-    procedure ExportZoneBudgetModel(FileName: string; RunModel, EmbeddedExport: boolean);
-    procedure ExportMt3dmsModel(const FileName: string; RunModel, ShowWarning: Boolean);
+    procedure ExportZoneBudgetModel(FileName: string;
+      RunModel, EmbeddedExport: boolean);
+    procedure ExportMt3dmsModel(const FileName: string;
+      RunModel, ShowWarning: Boolean);
 
 
     // @name is the @link(TCustomTimeList) for
@@ -2195,6 +2208,18 @@ that affects the model output should also have a comment. }
       write SetShowContourLabels default True;
     procedure UpdateMt3dmsChemDataSets; virtual; abstract;
     procedure GenerateSutraMesh(var ErrorMessage: string);
+    property ThreeDDataSet: TDataArray read GetThreeDDataSet
+      write SetThreeDDataSet;
+    property TopDataSet: TDataArray read GetTopDataSet
+      write SetTopDataSet;
+    property FrontDataSet: TDataArray read GetFrontDataSet
+      write SetFrontDataSet;
+    property SideDataSet: TDataArray read GetSideDataSet
+      write SetSideDataSet;
+    procedure DiscretizationChanged;
+    property Mesh: TSutraMesh3D read GetMesh;
+    function TwoDElementCenter(const Column, Row: integer): TPoint2D;
+    function TwoDElementCorner(const Column, Row: integer): TPoint2D;
   published
     // @name defines the grid used with PHAST.
     property PhastGrid: TPhastGrid read FPhastGrid write SetPhastGrid;
@@ -2306,7 +2331,10 @@ that affects the model output should also have a comment. }
     // @name is used only in MODFLOW models.
     property EndPoints: TEndPointReader read GetEndPoints Write SetEndPoints
       stored StoreEndPoints;
-    property SutraMesh: TSutraMesh3D read FSutraMesh write SetSutraMesh stored False;
+    property SutraMesh: TSutraMesh3D read FSutraMesh write SetSutraMesh
+      stored False;
+    property SutraOptions: TSutraOptions read FSutraOptions
+      write SetSutraOptions {$IFNDEF SUTRA} stored False {$ENDIF};
   end;
 
   TMapping = record
@@ -2762,6 +2790,7 @@ that affects the model output should also have a comment. }
     procedure SetImmobileComponents(const Value: TChemSpeciesCollection); override;
     procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection); override;
     procedure SetModelSelection(const Value: TModelSelection); override;
+//    procedure SetGlobalVariables(const Value: TGlobalVariables); override;
   public
     function LakBathymetryUsed: Boolean;
     function TobIsSelected: Boolean;
@@ -2795,9 +2824,6 @@ that affects the model output should also have a comment. }
     // @name updates and invalidates data sets that may have been calculated
     // incorrectly in previous versions of ModelMuse.
     procedure FixOldModel;
-    // When a @link(TDataArray) or global variable is renamed, @name is
-    // called to update all the formulas with the new names.
-//    procedure UpdateFormulas(OldNames, NewNames: TStringList);
     // @name is used when determining what data sets or global variables are
     // used when evaluating the formula for a MODFLOW boundary condition.
     // The names of all the @link(TDataArray)s and global variables are added
@@ -3548,7 +3574,7 @@ that affects the model output should also have a comment. }
   public
     property CanUpdateGrid: Boolean read FCanUpdateGrid write SetCanUpdateGrid;
     function LayerGroupUsed(LayerGroup: TLayerGroup): boolean; override;
-    function LayerFractions(LayerGroup: TLayerGroup): TDoubleDynArray; override;
+    function LayerFractions(LayerGroup: TCustomLayerGroup): TDoubleDynArray; override;
     function LayerCount: integer;  override;
     function FirstOverlappedLayer: integer;
     procedure UpdateDisplayUseList(NewUseList: TStringList;
@@ -4997,7 +5023,7 @@ const
   //      Bug fix: Fixed a bug that caused access violations when the system
   //        color was changed.
   //    '2.11.0.4' Bug fix. Exporting a grid data to a shape file for data sets
-  //        whose names are longer than 10 chanracters now works properly.
+  //        whose names are longer than 10 characters now works properly.
   //    '2.11.0.5' Change: The zone and multiplier arrays files for
   //        RCH, EVT, and ETS are stored in a subdirectory named "arrays."
   //    '2.12.0.0' Change: In the NWT solver, the default value for flux
@@ -5030,7 +5056,7 @@ const
   //      Bug fix: ModelMuse again responds to the mouse wheel.
   //    '2.12.0.2' Bug fix: ModelMuse now only allows a ModelMuse file to be
   //        saved if it has one of the correct extensions.
-  //      Bug fix: Access violations that sometimes occured when changing
+  //      Bug fix: Access violations that sometimes occurred when changing
   //        the names of layer groups have been fixed.
   //      Bug fix: In the MODFLOW Program Locations dialog box, "ModelMuse.exe"
   //        is no longer accepted as a valid name for any of the programs.
@@ -5230,7 +5256,7 @@ const
   //       Bug fix: Fixed bug in which the Kz data set was not created when
   //         a MODFLOW model was first created.
   //       Bug fix: Fixed bug that sometimes caused invalid elevation formulas
-  //         in objects created by importing ShapeFiles.
+  //         in objects created by importing Shapefiles.
   //    '2.14.1.0' Change: Date for the current version of MODFLOW-2005
   //         changed to the date for MODFLOW-2005 version 1.9.01.
   //    '2.14.1.1' Bug fix: In order to prevent range check errors, it is no
@@ -5281,9 +5307,36 @@ const
   //         support Unicode.
   //       Change: The extension for MT3DMS configuration file changed from
   //         ._cnf to .cnf to facilitate viewing the output in Model Viewer.
+  //    '2.15.0.1' Bug fix: Importing a Global Variables file was from the
+  //         command line now works properly.
+  //    '2.15.0.2' Bug fix: fixed a bug that would sometimes cause contouring
+  //         to fail.
+  //       Bug fix: Certain shapefiles that were previously rejected by
+  //         ModelMuse as self-intersecting are now accepted.
+  //       Enhancement: When importing images .pgw files are now accepted as
+  //         a valid world file type.
+  //       Bug fix: Fixed bug in which observation names were allowed
+  //         to include the '/' character even though that character would
+  //         not be processed by MODFLOW correctly.
+  //     '2.15.0.3' Bug fix: Fixed a bug in which attempting to import gridded
+  //         data using an invalid layer caused an error. Invalid layers can no
+  //         longer be specified.
+  //       Enhancement: MT3DMS simulations can now have fewer stress periods
+  //         than the corresponding MODFLOW model.
+  //     '2.15.0.4' Bug fix: Fixed bug that caused incorrect stress periods to
+  //         be exported if the stress periods were changed and the SFR package
+  //         was in used.
+  //       Bug fix: Fixed a bug that could cause interpolation to fail.
+  //     '2.16.0.0' Enhancement: Added 64-bit version for 64-bit operating
+  //         systems.  TIFF and PCX files are not supported in the 64-bit
+  //         version.
+  //       Change: The red background for missing files in the Files to Archive"
+  //         dialog box has been changed to a red font.
+  //       Change: The light blue background for a parenthesis and it's
+  //         match in the formula editor has been changed to a light blue font.
 
 const
-  ModelVersion = '2.15.0.0';
+  ModelVersion = '2.16.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -5458,6 +5511,12 @@ resourcestring
   StrAddedTimes = 'The following objects define times at which stresses ' +
     'change that were not defined as the beginning or ending or stress ' +
     'periods. The stress periods will be adjusted to uses these times.';
+  StrTimesDoNotMatch = 'Times do not match';
+  StrTheFinalTimeSpeci = 'The final time specified in the MT3DMS simulation ' +
+  '(%0:g) is earlier than the final time specified in the MODFLOW simulation' +
+  ' (%1:g). Do you want to stop the MT3DMS simulation when it reaches the ti' +
+  'me you specified for the end of the MT3DMS simulation? ("Cancel" aborts ' +
+  'the export of the MT3DMS files.)';
 
 const
   StatFlagStrings : array[Low(TStatFlag)..High(TStatFlag)] of string
@@ -6333,7 +6392,7 @@ end;
 procedure TPhastModel.GetLayerGroupDataSets(LayerGroupsDataSets: TList);
 var
   DataSet: TDataArray;
-  LayerGroup: TLayerGroup;
+  LayerGroup: TCustomLayerGroup;
   Index: Integer;
 begin
   if (LayerStructure <> nil) and (LayerStructure.Count > 0) then
@@ -6341,6 +6400,17 @@ begin
     for Index := 0 to LayerStructure.Count - 1 do
     begin
       LayerGroup := LayerStructure.LayerGroups[Index];
+      DataSet := FDataArrayManager.GetDataSetByName(LayerGroup.DataArrayName);
+      Assert(DataSet <> nil);
+      LayerGroupsDataSets.Add(DataSet);
+    end;
+  end;
+  if (SutraLayerStructure <> nil) and (SutraLayerStructure.Count > 0)
+    and (SutraMesh <> nil) and (SutraMesh.MeshType = mt3D) then
+  begin
+    for Index := 0 to SutraLayerStructure.Count - 1 do
+    begin
+      LayerGroup := SutraLayerStructure.LayerGroups[Index];
       DataSet := FDataArrayManager.GetDataSetByName(LayerGroup.DataArrayName);
       Assert(DataSet <> nil);
       LayerGroupsDataSets.Add(DataSet);
@@ -6716,14 +6786,18 @@ begin
     {$IFDEF SUTRA}
     msSutra:
       begin
-        DataArray := Sender as TDataArray;
-        for Index := 0 to SutraLayerStructure.Count - 1 do
+        result := (SutraMesh <> nil) and (SutraMesh.MeshType = mt3D);
+        if result then
         begin
-          Group := SutraLayerStructure[Index];
-          result := (Group.DataArrayName = DataArray.Name);
-          if result then
+          DataArray := Sender as TDataArray;
+          for Index := 0 to SutraLayerStructure.Count - 1 do
           begin
-            Exit;
+            Group := SutraLayerStructure[Index];
+            result := (Group.DataArrayName = DataArray.Name);
+            if result then
+            begin
+              Exit;
+            end;
           end;
         end;
       end;
@@ -6920,6 +6994,7 @@ begin
 
   AllObserversStopTalking;
   FLayerStructure.StopTalkingToAnyone;
+//  FSutraLayerStructure.StopTalkingToAnyone;
   for Index := 0 to GlobalVariables.Count - 1 do
   begin
     Variable := GlobalVariables[Index];
@@ -8709,6 +8784,31 @@ begin
   Invalidate;
 end;
 
+procedure TCustomModel.SetThreeDDataSet(const Value: TDataArray);
+begin
+  case ModelSelection of
+    msUndefined:
+      begin
+        Assert(False);
+      end;
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        Grid.ThreeDDataSet := Value;
+      end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        if (Mesh <> nil) then
+        begin
+          Mesh.ThreeDDataSet := Value;
+        end;
+      end;
+    {$ENDIF}
+    else
+       Assert(False);
+  end;
+end;
+
 procedure TPhastModel.SetTimes(const Value: TTimeCollection);
 begin
   FTimes.Assign(Value);
@@ -8931,6 +9031,32 @@ begin
     msModflowLGR: result := 'Parent model';
     {$IFDEF SUTRA} msSutra: result := 'SUTRA'; {$ENDIF}
     else Assert(False);
+  end;
+end;
+
+function TCustomModel.GetThreeDDataSet: TDataArray;
+begin
+  result := nil;
+  case ModelSelection of
+    msUndefined:
+      begin
+        Assert(False);
+      end;
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        result := Grid.ThreeDDataSet;
+      end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        if (Mesh <> nil) then
+        begin
+          result := Mesh.ThreeDDataSet;
+        end;
+      end;
+    {$ENDIF}
+    else
+       Assert(False);
   end;
 end;
 
@@ -9906,11 +10032,11 @@ begin
     TimeIndex := FThreeDTimeList.FirstTimeGreaterThan(FThreeDDisplayTime) - 1;
     if TimeIndex < 0 then
     begin
-      Grid.ThreeDDataSet := nil;
+      ThreeDDataSet := nil;
     end
     else
     begin
-      Grid.ThreeDDataSet := FThreeDTimeList.Items[TimeIndex];
+      ThreeDDataSet := FThreeDTimeList.Items[TimeIndex];
     end;
   end;
 end;
@@ -10526,7 +10652,7 @@ begin
   result := LayerStructure.Layvka;
 end;
 
-function TCustomModel.LayerFractions(LayerGroup: TLayerGroup): TDoubleDynArray;
+function TCustomModel.LayerFractions(LayerGroup: TCustomLayerGroup): TDoubleDynArray;
 var
   FractionIndex: Integer;
 //  Fraction: Real;
@@ -12984,7 +13110,7 @@ begin
   if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
   begin
     FThreeDTimeList := nil;
-    Grid.ThreeDDataSet := nil;
+    ThreeDDataSet := nil;
     Exit;
   end;
   LocalSelectedLayer := Grid.SelectedLayer;
@@ -12999,12 +13125,12 @@ begin
     TimeIndex := TimeList.FirstTimeGreaterThan(Time) - 1;
     if TimeIndex < 0 then
     begin
-      Grid.ThreeDDataSet := nil;
+      ThreeDDataSet := nil;
     end
     else
     begin
-      Grid.ThreeDDataSet := TimeList.Items[TimeIndex];
-      Grid.ThreeDDataSet.UpdateMinMaxValues
+      ThreeDDataSet := TimeList.Items[TimeIndex];
+      ThreeDDataSet.UpdateMinMaxValues
     end;
     FThreeDTimeList := TimeList;
   finally
@@ -13542,6 +13668,31 @@ begin
         DischargeRoutingArray.StopsTalkingTo(LakeIdArray);
       end;
     end;
+  end;
+end;
+
+procedure TCustomModel.DiscretizationChanged;
+begin
+  case ModelSelection of
+    msUndefined:
+      begin
+        Assert(False);
+      end;
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        Grid.GridChanged;
+      end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        if (Mesh <> nil) then
+        begin
+          Mesh.MeshChanged;
+        end;
+      end;
+    {$ENDIF}
+    else
+       Assert(False);
   end;
 end;
 
@@ -16639,6 +16790,8 @@ begin
 
   FUnitNumbers := TUnitNumbers.Create(self);
 
+  FSutraOptions := TSutraOptions.Create(self);
+
   FDataArrayManager.DefinePackageDataArrays;
   CreateModflowDisplayTimeLists;
 end;
@@ -16655,7 +16808,9 @@ begin
 //  FBoundaryDataSets.Free;
 //  FDataSets.Free;
 //  FDataSetsToCache.Free;
+
   FSutraMesh.Free;
+  FSutraOptions.Free;
   FModflowWettingOptions.Free;
   FFilesToArchive.Free;
   FModelInputFiles.Free;
@@ -16868,12 +17023,50 @@ end;
 
 procedure TCustomModel.SetSelectedLayer(const Value: integer);
 begin
-  Grid.SelectedLayer:= Value;
+  case ModelSelection of
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        Grid.SelectedLayer:= Value;
+      end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        if Mesh <> nil then
+        begin
+          Mesh.SelectedLayer := Value;
+        end;
+      end
+    {$ENDIF}
+  else
+    Assert(False);
+  end;
 end;
 
 procedure TCustomModel.SetSelectedRow(const Value: integer);
 begin
   Grid.SelectedRow := Value;
+end;
+
+procedure TCustomModel.SetSideDataSet(const Value: TDataArray);
+begin
+  case ModelSelection of
+    msUndefined:
+      begin
+        Assert(False);
+      end;
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        Grid.SideDataSet := Value;
+      end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        // do nothing
+      end;
+    {$ENDIF}
+    else
+       Assert(False);
+  end;
 end;
 
 procedure TCustomModel.SetSideTimeList(const Value: TCustomTimeList);
@@ -16888,6 +17081,36 @@ begin
     FSutraMesh := TSutraMesh3D.Create(self);
   end;
   FSutraMesh.Assign(Value);
+end;
+
+procedure TCustomModel.SetSutraOptions(const Value: TSutraOptions);
+begin
+  FSutraOptions.Assign(Value);
+end;
+
+procedure TCustomModel.SetTopDataSet(const Value: TDataArray);
+begin
+  case ModelSelection of
+    msUndefined:
+      begin
+        Assert(False);
+      end;
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        Grid.TopDataSet := Value;
+      end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        if (Mesh <> nil) then
+        begin
+          Mesh.TopDataSet := Value;
+        end;
+      end;
+    {$ENDIF}
+    else
+       Assert(False);
+  end;
 end;
 
 procedure TCustomModel.SetTopTimeList(const Value: TCustomTimeList);
@@ -16914,6 +17137,28 @@ procedure TCustomModel.SetFilesToArchive(const Value: TStrings);
 begin
   FFilesToArchive.Assign(Value);
   Invalidate;
+end;
+
+procedure TCustomModel.SetFrontDataSet(const Value: TDataArray);
+begin
+  case ModelSelection of
+    msUndefined:
+      begin
+        Assert(False);
+      end;
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        Grid.FrontDataSet := Value;
+      end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        // do nothing
+      end;
+    {$ENDIF}
+    else
+       Assert(False);
+  end;
 end;
 
 procedure TCustomModel.SetFrontTimeList(const Value: TCustomTimeList);
@@ -17200,6 +17445,10 @@ begin
       if FSutraMesh = nil then
       begin
         FSutraMesh := TSutraMesh3D.Create(self);
+        if Self is TPhastModel then
+        begin
+          TPhastModel(Self).SutraLayerStructure.Loaded;
+        end;
       end;
       FSutraMesh.BeginUpdate;
       try
@@ -17221,6 +17470,7 @@ begin
       finally
         FSutraMesh.EndUpdate;
       end;
+      FSutraMesh.UpdateElevations;
       frmGoPhast.InvalidateGrid;
 
     finally
@@ -17239,13 +17489,19 @@ begin
     DataArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount, Grid.ColumnCount);
   end
   {$IFDEF Sutra}
-  else if (FModelSelection = msSutra) and (SutraMesh <> nil) then
+  else if (FModelSelection = msSutra) and (Mesh <> nil) then
   begin
     case DataArray.EvaluatedAt of
       eaBlocks:
-        DataArray.UpdateDimensions(1, 1, SutraMesh.Elements.Count);
+        begin
+          DataArray.UpdateDimensions((Self as TPhastModel).
+            SutraLayerStructure.LayerCount, 1, Mesh.Mesh2D.Elements.Count);
+        end;
       eaNodes:
-        DataArray.UpdateDimensions(1, 1, SutraMesh.Nodes.Count);
+        begin
+          DataArray.UpdateDimensions((Self as TPhastModel).
+            SutraLayerStructure.NodeLayerCount, 1, Mesh.Mesh2D.Nodes.Count);
+        end;
     else
       Assert(False);
     end;
@@ -17357,6 +17613,14 @@ begin
   ModflowGrid.FrontContourDataSet := nil;
   ModflowGrid.SideContourDataSet := nil;
   ModflowGrid.ThreeDContourDataSet := nil;
+
+  if Mesh <> nil then
+  begin
+    Mesh.TopDataSet := nil;
+//    Mesh.FrontDataSet := nil;
+//    Mesh.SideDataSet := nil;
+    Mesh.ThreeDDataSet := nil;
+  end;
 end;
 
 function TCustomModel.GetParsers(Index: integer): TRbwParser;
@@ -17378,13 +17642,23 @@ end;
 
 function TCustomModel.GetSelectedLayer: integer;
 begin
-  if Grid <> nil then
-  begin
-    result := Grid.SelectedLayer;
-  end
+  result := 0;
+  case ModelSelection of
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        result := Grid.SelectedLayer;
+      end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        if Mesh <> nil then
+        begin
+          result := Mesh.SelectedLayer;
+        end;
+      end
+    {$ENDIF}
   else
-  begin
-    result := 0;
+    Assert(False);
   end;
 end;
 
@@ -17397,6 +17671,32 @@ begin
   else
   begin
     result := 0;
+  end;
+end;
+
+function TCustomModel.GetSideDataSet: TDataArray;
+begin
+  result := nil;
+  case ModelSelection of
+    msUndefined:
+      begin
+        Assert(False);
+      end;
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        result := Grid.SideDataSet;
+      end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        if (Mesh <> nil) then
+        begin
+          // do nothing
+        end;
+      end;
+    {$ENDIF}
+    else
+       Assert(False);
   end;
 end;
 
@@ -17498,7 +17798,7 @@ var
     end;
     Variable.UpToDate := False;
   end;
-  procedure UpdateVariable(Variable: TGlobalVariable);
+  procedure UpdateGlobalVariable(Variable: TGlobalVariable);
   var
     CompilerIndex: Integer;
     Compiler: TRbwParser;
@@ -17637,7 +17937,7 @@ begin
     for Index := 0 to NewVariables.Count - 1 do
     begin
       Variable := NewVariables.Objects[Index] as TGlobalVariable;
-      UpdateVariable(Variable);
+      UpdateGlobalVariable(Variable);
     end;
 
   finally
@@ -17877,7 +18177,7 @@ begin
   Assert(ActiveDataArray.Name = rsActive);
   if Grid <> nil then
   begin
-    DataArray := Grid.ThreeDDataSet;
+    DataArray := ThreeDDataSet;
     if (DataArray <> nil) and DataArray.Limits.ActiveOnly then
     begin
       if not ActiveDataArray.UpToDate then
@@ -18065,10 +18365,10 @@ begin
   begin
     DataArray := FDataSetsToCache[Index];
     if (FCustomModel.Grid = nil)
-      or ((DataArray <> FCustomModel.Grid.TopDataSet)
-      and (DataArray <> FCustomModel.Grid.FrontDataSet)
-      and (DataArray <> FCustomModel.Grid.SideDataSet)
-      and (DataArray <> FCustomModel.Grid.ThreeDDataSet)
+      or ((DataArray <> FCustomModel.TopDataSet)
+      and (DataArray <> FCustomModel.FrontDataSet)
+      and (DataArray <> FCustomModel.SideDataSet)
+      and (DataArray <> FCustomModel.ThreeDDataSet)
       and (DataArray <> FCustomModel.Grid.TopContourDataSet)
       and (DataArray <> FCustomModel.Grid.FrontContourDataSet)
       and (DataArray <> FCustomModel.Grid.SideContourDataSet)
@@ -19905,11 +20205,6 @@ begin
   end;
 end;
 
-//function TCustomModel.AlwaysUsed(Sender: TObject): boolean;
-//begin
-//  result := True;
-//end;
-
 function TCustomModel.AquiferPropertiesUsed(Sender: TObject): boolean;
 begin
   result := ModflowOrPhastUsed(Sender) and ((ModelSelection = msPhast)
@@ -20520,6 +20815,85 @@ begin
   result := LayerStructure.Trpy;
 end;
 
+function TCustomModel.TwoDElementCenter(const Column, Row: integer): TPoint2D;
+var
+  LocalGrid: TCustomModelGrid;
+  LocalMesh: TSutraMesh3D;
+begin
+  LocalGrid := Grid;
+  if LocalGrid <> nil then
+  begin
+    result := LocalGrid.TwoDElementCenter(Column, Row);
+  end
+  else
+  begin
+    LocalMesh := Mesh;
+    Assert(LocalMesh <> nil);
+    Assert(Row = 0);
+    result := LocalMesh.Mesh2D.Elements[Column].Center;
+  end;
+end;
+
+function TCustomModel.TwoDElementCorner(const Column, Row: integer): TPoint2D;
+var
+  LocalGrid: TCustomModelGrid;
+  LocalMesh: TSutraMesh3D;
+begin
+  LocalGrid := Grid;
+  if LocalGrid <> nil then
+  begin
+    result := LocalGrid.TwoDElementCorner(Column, Row);
+  end
+  else
+  begin
+    LocalMesh := Mesh;
+    Assert(LocalMesh <> nil);
+    Assert(Row = 0);
+    result := LocalMesh.Mesh2D.Nodes[Column].Location;
+  end;
+end;
+
+function TCustomModel.CheckMt3dTimes(ShowWarning: Boolean): boolean;
+var
+  ModflowEndTime: Double;
+  MbResult: Integer;
+  TimeIndex: Integer;
+  Mt3dmsEndTime: Double;
+begin
+  result := True;
+  ModflowEndTime := ModflowFullStressPeriods[
+    ModflowFullStressPeriods.Count - 1].EndTime;
+  Mt3dmsEndTime := Mt3dmsTimes[Mt3dmsTimes.Count - 1].EndTime;
+  if Mt3dmsEndTime < ModflowEndTime then
+  begin
+    if ShowWarning then
+    begin
+      MbResult := Application.MessageBox(PChar(Format(StrTheFinalTimeSpeci,
+        [Mt3dmsEndTime, ModflowEndTime])), PChar(StrTimesDoNotMatch),
+        MB_ICONASTERISK or MB_YESNOCANCEL);
+    end
+    else
+    begin
+      MbResult := idYes
+    end;
+    if MbResult = idYes then
+    begin
+      for TimeIndex := ModflowFullStressPeriods.Count - 1 downto 0 do
+      begin
+        if ModflowFullStressPeriods[TimeIndex].EndTime > Mt3dmsEndTime then
+        begin
+          ModflowFullStressPeriods.Delete(TimeIndex);
+        end
+        else
+        begin
+          break;
+        end;
+      end;
+    end;
+    result := not (MbResult in [0,IDCANCEL]);
+  end;
+end;
+
 function TCustomModel.IndenticalTransientArray(DataArray: TDataArray; DataArrays: TList;
       var CachedIndex: integer): TDataArray;
 var
@@ -20983,6 +21357,22 @@ begin
   result := ModflowPackages.HobPackage.IsSelected;
 end;
 
+function TCustomModel.GetMesh: TSutraMesh3D;
+begin
+  {$IFDEF SUTRA}
+  if ModelSelection = msSutra then
+  begin
+    result := SutraMesh;
+  end
+  else
+  begin
+    result := nil;
+  end;
+  {$ELSE}
+  result := nil;
+  {$ENDIF}
+end;
+
 procedure TCustomModel.GetMfHobHeadsUseList(Sender: TObject; NewUseList: TStringList);
 begin
   NewUseList.Add(rsActive);
@@ -21381,6 +21771,8 @@ begin
     frmProgressMM := TfrmProgressMM.Create(nil);
   end;
   try
+    // Note: MODFLOW can not read Unicode text files.
+
     frmFormulaErrors.DelayShowing := True;
     try
       frmProgressMM.Prefix := 'File ';
@@ -21565,7 +21957,7 @@ var
   Mnw2Writer: TModflowMNW2_Writer;
   ZoneWriter: TModflowZoneWriter;
   MultiplierWriter: TModflowMultiplierWriter;
-  BatchFileLocation: string;
+//  BatchFileLocation: string;
   GmgWriter: TGmgWriter;
   SipWriter: TSipWriter;
   De4Writer: TDe4Writer;
@@ -21573,11 +21965,11 @@ var
   GagWriter: TModflowGAG_Writer;
   HobWriter: TModflowHobWriter;
   HfbWriter: TModflowHfb_Writer;
-  NumberOfSteps: Integer;
+//  NumberOfSteps: Integer;
   SubWriter: TModflowSUB_Writer;
   SwtWriter: TModflowSWT_Writer;
   HydModWriter: TModflowHydmodWriter;
-  ShouldExit: Boolean;
+//  ShouldExit: Boolean;
   MultipUsed: Boolean;
   ZUsed: Boolean;
   NwtWriter: TNwtWriter;
@@ -21591,6 +21983,8 @@ var
   LinkWriter: TModflowMt3dmsLinkWriter;
   PcgnWriter: TPcgnWriter;
 begin
+  // Note: MODFLOW can not read Unicode text files.
+
   Assert(Assigned(NameFileWriter));
   LocalNameWriter := NameFileWriter as TNameFileWriter;
   UpdateCurrentModel(self);
@@ -22357,6 +22751,8 @@ var
   BatchFileLocation: string;
   LargeBudgetFileResponse: string;
 begin
+  // Note: MODPATH can not read Unicode text files.
+
   if not TestModpathOK then
   begin
     Exit;
@@ -22448,6 +22844,8 @@ var
   ListFileName: string;
   BatchFileLocation: string;
 begin
+  // Note: MT3DMS can not read Unicode text files.
+
   if frmProgressMM = nil then
   begin
     frmProgressMM := TfrmProgressMM.Create(nil);
@@ -22467,6 +22865,10 @@ begin
       frmProgressMM.pbProgress.Position := 0;
 
       if not PrepareModflowFullStressPeriods(ShowWarning) then
+      begin
+        Exit;
+      end;
+      if not CheckMt3dTimes(ShowWarning) then
       begin
         Exit;
       end;
@@ -22720,6 +23122,8 @@ var
   ResponseFileWriter: TZoneBudgetResponseFileWriter;
   BatchFileLocation: string;
 begin
+  // Note: ZONEBUDGET can not read Unicode text files.
+
   SetCurrentDir(ExtractFileDir(FileName));
   FileName := FixFileName(FileName);
   if frmProgressMM = nil then
@@ -24975,7 +25379,7 @@ begin
   end;
 end;
 
-function TChildModel.LayerFractions(LayerGroup: TLayerGroup): TDoubleDynArray;
+function TChildModel.LayerFractions(LayerGroup: TCustomLayerGroup): TDoubleDynArray;
 var
   ParentLayerIndex: Integer;
   ArrayLength: Integer;
@@ -25003,7 +25407,7 @@ begin
     begin
       for ParentLayerIndex := 0 to LayerGroup.LayerCount - 1 do
       begin
-        Item := Discretization.GetAnItemByGroupAndLayer(LayerGroup, ParentLayerIndex);
+        Item := Discretization.GetAnItemByGroupAndLayer(LayerGroup as TLayerGroup, ParentLayerIndex);
         Inc(ArrayLength, Item.Discretization);
       end;
     end
@@ -25037,7 +25441,7 @@ begin
       end;
 
       Delta := HigherFraction - Fraction;
-      Item := Discretization.GetAnItemByGroupAndLayer(LayerGroup, ParentLayerIndex);
+      Item := Discretization.GetAnItemByGroupAndLayer(LayerGroup as TLayerGroup, ParentLayerIndex);
       for ChildLayerIndex := Item.Discretization - 1 downto 1 do
       begin
         result[LayerIndex] := Fraction
@@ -25066,7 +25470,7 @@ begin
       ArrayLength := 0;
       for ParentLayerIndex := 0 to LayerGroup.LayerCount - 1 do
       begin
-        Item := Discretization.GetAnItemByGroupAndLayer(LayerGroup, ParentLayerIndex);
+        Item := Discretization.GetAnItemByGroupAndLayer(LayerGroup as TLayerGroup, ParentLayerIndex);
         if Discretization.BottomLayerInUnit = ParentLayerIndex then
         begin
           Inc(ArrayLength, Item.Discretization div 2);
@@ -25821,6 +26225,32 @@ begin
   result := FTimeSeries;
 end;
 
+function TCustomModel.GetTopDataSet: TDataArray;
+begin
+  result := nil;
+  case ModelSelection of
+    msUndefined:
+      begin
+        Assert(False);
+      end;
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        result := Grid.TopDataSet;
+      end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        if (Mesh <> nil) then
+        begin
+          result := Mesh.TopDataSet;
+        end;
+      end;
+    {$ENDIF}
+    else
+       Assert(False);
+  end;
+end;
+
 function TCustomModel.StoreEndPoints: boolean;
 begin
   result := (FEndPoints <> nil) and (FEndPoints.FileName <> '');
@@ -25833,6 +26263,29 @@ begin
     FEndPoints := TEndPointReader.Create(self);
   end;
   result := FEndPoints;
+end;
+
+function TCustomModel.GetFrontDataSet: TDataArray;
+begin
+  result := nil;
+  case ModelSelection of
+    msUndefined:
+      begin
+        Assert(False);
+      end;
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        result := Grid.FrontDataSet;
+      end;
+    {$IFDEF SUTRA}
+    msSutra:
+      begin
+        // do nothing
+      end;
+    {$ENDIF}
+    else
+       Assert(False);
+  end;
 end;
 
 procedure TCustomModel.SetEndPoints(const Value: TEndPointReader);
