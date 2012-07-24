@@ -2054,6 +2054,7 @@ var
   end;
 begin
   result := True;
+  NTRANS := 0;
   try
     try
       if not FileExists(AFileName) then

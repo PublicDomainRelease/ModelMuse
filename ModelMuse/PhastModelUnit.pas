@@ -5334,9 +5334,11 @@ const
   //         dialog box has been changed to a red font.
   //       Change: The light blue background for a parenthesis and it's
   //         match in the formula editor has been changed to a light blue font.
+  //     '2.16.1.0' Bug fix: Fixed bug that caused importing model results to
+  //        fail.
 
 const
-  ModelVersion = '2.16.0.0';
+  ModelVersion = '2.16.1.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];

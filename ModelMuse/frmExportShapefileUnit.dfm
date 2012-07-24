@@ -4,9 +4,9 @@ inherited frmExportShapefile: TfrmExportShapefile
   Caption = 'Export Grid Data to Shapefile'
   ClientHeight = 539
   ClientWidth = 456
-  ExplicitWidth = 464
-  ExplicitHeight = 573
-  PixelsPerInch = 96
+  ExplicitWidth = 474
+  ExplicitHeight = 584
+  PixelsPerInch = 120
   TextHeight = 18
   object lblExportItems: TLabel
     Left = 8
@@ -19,7 +19,7 @@ inherited frmExportShapefile: TfrmExportShapefile
   object lblTime: TLabel
     Left = 269
     Top = 8
-    Width = 107
+    Width = 106
     Height = 18
     Anchors = [akTop, akRight]
     Caption = '&Times to export'
@@ -223,23 +223,19 @@ inherited frmExportShapefile: TfrmExportShapefile
     Width = 82
     Height = 34
     Anchors = [akTop, akRight]
-    DoubleBuffered = True
     Kind = bkCancel
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 9
+    TabOrder = 10
   end
   object btnOK: TBitBtn
     Left = 278
-    Top = 501
+    Top = 499
     Width = 82
     Height = 34
     Anchors = [akTop, akRight]
-    DoubleBuffered = True
     Kind = bkOK
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 11
+    TabOrder = 9
     OnClick = btnOKClick
   end
   object btnHelp: TBitBtn
@@ -248,10 +244,8 @@ inherited frmExportShapefile: TfrmExportShapefile
     Width = 82
     Height = 34
     Anchors = [akTop, akRight]
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 8
     OnClick = btnHelpClick
   end
@@ -286,18 +280,18 @@ inherited frmExportShapefile: TfrmExportShapefile
   end
   object comboModel: TComboBox
     Left = 8
-    Top = 501
+    Top = 503
     Width = 170
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akTop, akRight]
-    TabOrder = 10
+    TabOrder = 11
   end
   object ilCheckImages: TImageList
     Left = 136
     Top = 96
     Bitmap = {
-      494C010104000500040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000500080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
