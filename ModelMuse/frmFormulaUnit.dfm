@@ -13,13 +13,13 @@ inherited frmFormula: TfrmFormula
   Position = poOwnerFormCenter
   ExplicitWidth = 787
   ExplicitHeight = 508
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 16
   object Splitter: TSplitter
     Left = 539
     Top = 0
     Width = 5
-    Height = 422
+    Height = 433
     OnCanResize = SplitterCanResize
     ExplicitLeft = 476
     ExplicitHeight = 361
@@ -28,7 +28,7 @@ inherited frmFormula: TfrmFormula
     Left = 0
     Top = 0
     Width = 539
-    Height = 422
+    Height = 433
     Align = alLeft
     ParentColor = True
     TabOrder = 0
@@ -49,7 +49,7 @@ inherited frmFormula: TfrmFormula
     end
     object pnlButtons: TPanel
       Left = 1
-      Top = 188
+      Top = 199
       Width = 537
       Height = 233
       HelpType = htKeyword
@@ -71,7 +71,7 @@ inherited frmFormula: TfrmFormula
           Height = 37
           Hint = 'or operator'
           Margins.Top = 20
-          Caption = 'OR'
+          Caption = 'or'
           ParentShowHint = False
           ShowHint = True
           TabOrder = 3
@@ -85,7 +85,7 @@ inherited frmFormula: TfrmFormula
           Hint = 'and operator'
           Margins.Left = 8
           Margins.Top = 20
-          Caption = 'AND'
+          Caption = 'and'
           ParentShowHint = False
           ShowHint = True
           TabOrder = 2
@@ -98,7 +98,7 @@ inherited frmFormula: TfrmFormula
           Height = 37
           Hint = 'not operator'
           Margins.Left = 8
-          Caption = 'NOT'
+          Caption = 'not'
           ParentShowHint = False
           ShowHint = True
           TabOrder = 6
@@ -206,7 +206,7 @@ inherited frmFormula: TfrmFormula
           Width = 63
           Height = 37
           Hint = 'xor operator (exclusive or)'
-          Caption = 'XOR'
+          Caption = 'xor'
           ParentShowHint = False
           ShowHint = True
           TabOrder = 7
@@ -228,7 +228,7 @@ inherited frmFormula: TfrmFormula
           Hint = 'mod operator (remainder)'
           Margins.Left = 8
           Margins.Top = 20
-          Caption = 'MOD'
+          Caption = 'mod'
           ParentShowHint = False
           ShowHint = True
           TabOrder = 0
@@ -241,7 +241,7 @@ inherited frmFormula: TfrmFormula
           Height = 37
           Hint = 'div operator (integer division)'
           Margins.Top = 20
-          Caption = 'DIV'
+          Caption = 'div'
           ParentShowHint = False
           ShowHint = True
           TabOrder = 1
@@ -491,11 +491,12 @@ inherited frmFormula: TfrmFormula
       Left = 1
       Top = 108
       Width = 537
-      Height = 80
+      Height = 91
       Hint = 'Type formula here'
       HelpType = htKeyword
       HelpKeyword = 'Formula_Text_Box'
       Align = alClient
+      HideSelection = False
       ScrollBars = ssVertical
       TabOrder = 1
       OnChange = jreFormulaChange
@@ -506,14 +507,14 @@ inherited frmFormula: TfrmFormula
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 422
-    Width = 769
+    Top = 433
+    Width = 779
     Height = 41
     Align = alBottom
     ParentColor = True
     TabOrder = 2
     DesignSize = (
-      769
+      779
       41)
     object btnCancel: TBitBtn
       Left = 665
@@ -600,8 +601,8 @@ inherited frmFormula: TfrmFormula
   object pnlRight: TPanel
     Left = 544
     Top = 0
-    Width = 225
-    Height = 422
+    Width = 235
+    Height = 433
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
@@ -609,7 +610,7 @@ inherited frmFormula: TfrmFormula
     object pnlLabelItemTree: TPanel
       Left = 0
       Top = 0
-      Width = 225
+      Width = 235
       Height = 41
       Align = alTop
       ParentColor = True
@@ -629,8 +630,8 @@ inherited frmFormula: TfrmFormula
     object tvItems: TTreeView
       Left = 0
       Top = 41
-      Width = 225
-      Height = 381
+      Width = 235
+      Height = 392
       Hint = 'Double-click to insert selected item into formula'
       HelpType = htKeyword
       HelpKeyword = 'List_of_Data_Sets_and_Function'

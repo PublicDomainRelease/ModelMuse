@@ -587,6 +587,9 @@ resourcestring
   StrXZ0s1s = '(X'',Z): (%0:s, %1:s)';
   StrYZ0s1s = '(Y'',Z): (%0:s, %1:s)';
   StrChooseAToolAndCl = 'Choose a tool and click to edit model';
+  StrCol0dRow1d = 'Col: %0:d; Row: %1:d';
+  StrCol0dLay1d = 'Col: %0:d; Lay: %1:d';
+  StrRow0dLay1d = 'Row: %0:d; Lay: %1:d';
 
 const
   SelectedCellsColor = clSilver;
@@ -730,8 +733,8 @@ begin
           begin
               // If the cursor is over the grid or mesh,
               // display the column and row number
-              frmGoPhast.sbMain.Panels[1].Text := 'Col: ' + IntToStr(Column + 1)
-                + '; Row: ' + IntToStr(Row + 1);
+              frmGoPhast.sbMain.Panels[1].Text :=
+                Format(StrCol0dRow1d, [Column + 1, Row + 1]);
               UpdateStatusBarForTopBlockDataSet(Column, Row, X, Y, APoint);
           end
           else
@@ -768,8 +771,8 @@ begin
           begin
             // If the cursor is over the grid,
             // display the column and row number
-            frmGoPhast.sbMain.Panels[1].Text := 'Col: ' + IntToStr(Column + 1)
-              + '; Row: ' + IntToStr(Row + 1);
+            frmGoPhast.sbMain.Panels[1].Text :=
+              Format(StrCol0dRow1d, [Column + 1, Row + 1]);
             UpdateStatusBarForTopNodeDataSet(Column, Row, APoint);
           end
           else
@@ -801,8 +804,8 @@ begin
           begin
             // If the cursor is over the grid,
             // display the column and layer number
-            frmGoPhast.sbMain.Panels[1].Text := 'Col: ' + IntToStr(Column + 1)
-              + '; Lay: ' + IntToStr(Layer + 1);
+            frmGoPhast.sbMain.Panels[1].Text :=
+              Format(StrCol0dLay1d, [Column + 1, Layer + 1]);
             UpdateStatusBarFrontBlockDataSet(Column, Layer, APoint);
           end
           else
@@ -823,8 +826,8 @@ begin
           begin
             // If the cursor is over the grid,
             // display the column and layer number
-            frmGoPhast.sbMain.Panels[1].Text := 'Col: ' + IntToStr(Column + 1)
-              + '; Lay: ' + IntToStr(Layer + 1);
+            frmGoPhast.sbMain.Panels[1].Text :=
+              Format(StrCol0dLay1d, [Column + 1, Layer + 1]);
             UpdateStatusBarFrontNodeDataSet(Column, Layer, APoint);
           end
           else
@@ -854,8 +857,8 @@ begin
             and (Row < Grid.RowCount)
             and (Layer < Grid.LayerCount) then
           begin
-            frmGoPhast.sbMain.Panels[1].Text := 'Row: ' + IntToStr(Row + 1)
-              + '; Lay: ' + IntToStr(Layer + 1);
+            frmGoPhast.sbMain.Panels[1].Text :=
+              Format(StrRow0dLay1d, [Row + 1, Layer + 1]);
             UpdateStatusBarSideBlockDataSet(Row, Layer, APoint);
           end
           else
@@ -874,8 +877,8 @@ begin
             and (Row <= Grid.RowCount)
             and (Layer <= Grid.LayerCount) then
           begin
-            frmGoPhast.sbMain.Panels[1].Text := 'Row: ' + IntToStr(Row + 1)
-              + '; Lay: ' + IntToStr(Layer + 1);
+            frmGoPhast.sbMain.Panels[1].Text :=
+              Format(StrRow0dLay1d, [Row + 1, Layer + 1]);
             UpdateStatusBarSideNodeDataSet(Row, Layer, APoint);
           end
           else
@@ -1290,8 +1293,12 @@ begin
       if (frmGoPhast.PhastModel.ScreenObjectCount = 0)
         and not frmGoPhast.PhastModel.LgrUsed
         and (frmGoPhast.PhastModel.PathLines.Lines.Count = 0)
+        and (frmGoPhast.PhastModel.PathLines.LinesV6.Count = 0)
         and (frmGoPhast.PhastModel.Endpoints.Points.Count = 0)
-        and (frmGoPhast.PhastModel.TimeSeries.Series.Count = 0) then
+        and (frmGoPhast.PhastModel.Endpoints.PointsV6.Count = 0)
+        and (frmGoPhast.PhastModel.TimeSeries.Series.Count = 0)
+        and (frmGoPhast.PhastModel.TimeSeries.SeriesV6.Count = 0)
+        then
       begin
         GridChanged := False;
         Exit;
@@ -1944,7 +1951,8 @@ begin
     vdSide: Orientation := dsoSide;
     else Assert(False);
   end;
-  if frmGoPhast.PhastModel.Pathlines.Lines.Count > 0 then
+  if (frmGoPhast.PhastModel.Pathlines.Lines.Count > 0)
+    or (frmGoPhast.PhastModel.Pathlines.LinesV6.Count > 0) then
   begin
     frmGoPhast.PhastModel.Pathlines.Draw(Orientation, FBitmap32);
   end;
@@ -1953,7 +1961,8 @@ begin
     for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
     begin
       ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
-      if ChildModel.Pathlines.Lines.Count > 0 then
+      if (ChildModel.Pathlines.Lines.Count > 0)
+        or (ChildModel.Pathlines.LinesV6.Count > 0)then
       begin
         ChildModel.Pathlines.Draw(Orientation, FBitmap32);
       end;
@@ -1974,7 +1983,8 @@ begin
     vdSide: Orientation := dsoSide;
     else Assert(False);
   end;
-  if frmGoPhast.PhastModel.EndPoints.Points.Count > 0 then
+  if (frmGoPhast.PhastModel.EndPoints.Points.Count > 0)
+    or (frmGoPhast.PhastModel.EndPoints.PointsV6.Count > 0) then
   begin
     frmGoPhast.PhastModel.EndPoints.Draw(Orientation, FBitmap32);
   end;
@@ -2004,7 +2014,8 @@ begin
     vdSide: Orientation := dsoSide;
     else Assert(False);
   end;
-  if frmGoPhast.PhastModel.TimeSeries.Series.Count > 0 then
+  if (frmGoPhast.PhastModel.TimeSeries.Series.Count > 0)
+    or (frmGoPhast.PhastModel.TimeSeries.SeriesV6.Count > 0) then
   begin
     frmGoPhast.PhastModel.TimeSeries.Draw(Orientation, FBitmap32);
   end;
@@ -2013,7 +2024,8 @@ begin
     for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
     begin
       ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
-      if ChildModel.TimeSeries.Series.Count > 0 then
+      if (ChildModel.TimeSeries.Series.Count > 0)
+        or (ChildModel.TimeSeries.SeriesV6.Count > 0) then
       begin
         ChildModel.TimeSeries.Draw(Orientation, FBitmap32);
       end;

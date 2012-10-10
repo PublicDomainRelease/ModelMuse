@@ -18,6 +18,33 @@ type
   // See @link(TRbwModelCube.ClickDirection).
   TRbwClickDirection = (cdNone, cdDown, cdUp, cdWest, cdEast, cdNorth, cdSouth);
 
+  TBreakPosition = class(TCollectionItem)
+  private
+    FLowerFraction: double;
+    FHigherFraction: double;
+    procedure SetLowerFraction(const Value: double);
+    procedure SetHigherFraction(const Value: double);
+  published
+    property LowerFraction: double read FLowerFraction write SetLowerFraction;
+    property HigherFraction: double read FHigherFraction write SetHigherFraction;
+  end;
+
+  TBreakCollection = class(TCollection)
+  private
+    FOnChange: TNotifyEvent;
+    function GetItem(Index: Integer): TBreakPosition;
+    procedure SetItem(Index: Integer; const Value: TBreakPosition);
+  protected
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    procedure Update(Item: TCollectionItem); override;
+  public
+    constructor Create;
+    function Add: TBreakPosition;
+    procedure Sort;
+    property Items[Index: Integer]: TBreakPosition read GetItem
+      write SetItem; default;
+  end;
+
 type
   { @abstract(@name) is a TPaintBox that draws
     a block on itself.) Typically, the block is drawn as
@@ -92,6 +119,7 @@ type
     // See @link(ZOrigin).
     FZOrigin: TRbwZOrigin;
     FSelectionColor: TColor;
+    FBreaks: TBreakCollection;
     // See @link(CanClickFace).
     procedure SetCanClickFace(const Value: boolean);
     // See @link(SelectedFace).
@@ -129,6 +157,9 @@ type
     // See @link(CubeWidth).
     procedure SetCubeWidth(const Value: integer);
     procedure SetSelectionColor(const Value: TColor);
+    procedure DrawSelection(BackTopY, BackBottomY, BackLeftX,
+      BackRightX: Integer);
+    procedure BreakChanged(Sender: TObject);
     { Private declarations }
   protected
     // If @link(CanClickFace) is true,
@@ -167,6 +198,7 @@ type
     procedure Paint; override;
     { Protected declarations }
   public
+    property Breaks: TBreakCollection read FBreaks;
     // The result of @name depend on @link(SelectedFace).
     //
     // If @link(SelectedFace) = faNone, @name returns cdNone.
@@ -185,6 +217,7 @@ type
     function ClickDirection(const X, Y: integer): TRbwClickDirection;
     // @name creates and instance of @link(TRbwModelCube).
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     { Public declarations }
   published
     // If @name is true, the user can change @link(SelectedFace)
@@ -271,6 +304,9 @@ procedure Register;
 
 implementation
 
+uses
+  Math;
+
 procedure Register;
 begin
   RegisterComponents('RBW', [TRbwModelCube]);
@@ -315,6 +351,11 @@ begin   // based on CACM 112
 end;
 
 { TRbwModelCube }
+
+procedure TRbwModelCube.BreakChanged(Sender: TObject);
+begin
+  Invalidate;
+end;
 
 function TRbwModelCube.ClickDirection(const X,
   Y: integer): TRbwClickDirection;
@@ -531,6 +572,8 @@ end;
 constructor TRbwModelCube.Create(AOwner: TComponent);
 begin
   inherited;
+  FBreaks := TBreakCollection.Create;
+  FBreaks.OnChange := BreakChanged;
   FSelectionColor := clRed;
   Width := 49;
   Height := 52;
@@ -558,6 +601,225 @@ begin
     if AFace <> faNone then
     begin
       SelectedFace := AFace;
+    end;
+  end;
+end;
+
+destructor TRbwModelCube.Destroy;
+begin
+  FBreaks.Free;
+  inherited;
+end;
+
+procedure TRbwModelCube.DrawSelection(BackTopY, BackBottomY, BackLeftX,
+  BackRightX: Integer);
+var
+  Point6: TPoint;
+  Point5: TPoint;
+  Point2: TPoint;
+  Point1: TPoint;
+  BrushColor: Integer;
+  Point3: TPoint;
+  Point7: TPoint;
+  Point4: TPoint;
+  Point8: TPoint;
+begin
+  if ShowSelection then
+  begin
+    BrushColor := Canvas.Brush.Color;
+    try
+      Canvas.Brush.Color := SelectionColor;
+      case SelectedFace of
+        faTop:
+          // Top
+          begin
+            Point1.X := FLeftX;
+            Point2.X := BackLeftX;
+            Point3.X := BackRightX;
+            Point4.X := FRightX;
+            if ZOrigin = zoBottom then
+            begin
+              Point1.Y := Interpolate(FBottomY, FTopY, Selection2);
+              Point2.Y := Interpolate(BackBottomY, BackTopY, Selection2);
+            end
+            else
+            begin
+              Point1.Y := Interpolate(FBottomY, FTopY, 1 - Selection2);
+              Point2.Y := Interpolate(BackBottomY, BackTopY, 1 - Selection2);
+            end;
+            Point3.Y := Point2.Y;
+            Point4.Y := Point1.Y;
+            Point5.X := FLeftX;
+            Point6.X := BackLeftX;
+            Point7.X := BackRightX;
+            Point8.X := FRightX;
+            if ZOrigin = zoBottom then
+            begin
+              Point5.Y := Interpolate(FBottomY, FTopY, Selection1);
+              Point6.Y := Interpolate(BackBottomY, BackTopY, Selection1);
+            end
+            else
+            begin
+              Point5.Y := Interpolate(FBottomY, FTopY, 1 - Selection1);
+              Point6.Y := Interpolate(BackBottomY, BackTopY, 1 - Selection1);
+            end;
+            Point7.Y := Point6.Y;
+            Point8.Y := Point5.Y;
+            if not Opaque or ((ZOrigin = zoBottom) and (Selection2 = 1)) or ((ZOrigin = zoTop) and (Selection1 = 0)) then
+            begin
+              if (ZOrigin = zoBottom) then
+              begin
+                Canvas.Polygon([Point1, Point2, Point3, Point4]);
+              end
+              else
+              begin
+                Canvas.Polygon([Point5, Point6, Point7, Point8]);
+              end;
+            end;
+            Canvas.Polygon([Point1, Point4, Point8, Point5]);
+            Canvas.Polygon([Point3, Point7, Point8, Point4]);
+          end;
+        faFront:
+          // Front
+          begin
+            if YOrigin = yoSouth then
+            begin
+              Point1.X := Interpolate(FLeftX, BackLeftX, Selection1);
+            end
+            else
+            begin
+              Point1.X := Interpolate(FLeftX, BackLeftX, 1 - Selection1);
+            end;
+            Point2.X := Point1.X;
+            if YOrigin = yoSouth then
+            begin
+              Point3.X := Interpolate(FRightX, BackRightX, Selection1);
+            end
+            else
+            begin
+              Point3.X := Interpolate(FRightX, BackRightX, 1 - Selection1);
+            end;
+            Point4.X := Point3.X;
+            if YOrigin = yoSouth then
+            begin
+              Point1.Y := Interpolate(FBottomY, BackBottomY, Selection1);
+              Point2.Y := Interpolate(FTopY, BackTopY, Selection1);
+            end
+            else
+            begin
+              Point1.Y := Interpolate(FBottomY, BackBottomY, 1 - Selection1);
+              Point2.Y := Interpolate(FTopY, BackTopY, 1 - Selection1);
+            end;
+            Point3.Y := Point2.Y;
+            Point4.Y := Point1.Y;
+            if YOrigin = yoSouth then
+            begin
+              Point5.X := Interpolate(FLeftX, BackLeftX, Selection2);
+            end
+            else
+            begin
+              Point5.X := Interpolate(FLeftX, BackLeftX, 1 - Selection2);
+            end;
+            Point6.X := Point5.X;
+            if YOrigin = yoSouth then
+            begin
+              Point7.X := Interpolate(FRightX, BackRightX, Selection2);
+            end
+            else
+            begin
+              Point7.X := Interpolate(FRightX, BackRightX, 1 - Selection2);
+            end;
+            Point8.X := Point7.X;
+            if YOrigin = yoSouth then
+            begin
+              Point5.Y := Interpolate(FBottomY, BackBottomY, Selection2);
+              Point6.Y := Interpolate(FTopY, BackTopY, Selection2);
+            end
+            else
+            begin
+              Point5.Y := Interpolate(FBottomY, BackBottomY, 1 - Selection2);
+              Point6.Y := Interpolate(FTopY, BackTopY, 1 - Selection2);
+            end;
+            Point7.Y := Point6.Y;
+            Point8.Y := Point5.Y;
+            if not Opaque or ((YOrigin = yoSouth) and (Selection1 = 0)) or ((YOrigin = yoNorth) and (Selection2 = 1)) then
+            begin
+              if YOrigin = yoSouth then
+              begin
+                Canvas.Polygon([Point1, Point2, Point3, Point4]);
+              end
+              else
+              begin
+                Canvas.Polygon([Point5, Point6, Point7, Point8]);
+              end;
+            end;
+            Canvas.Polygon([Point2, Point3, Point7, Point6]);
+            Canvas.Polygon([Point3, Point7, Point8, Point4]);
+          end;
+        faSide:
+          // side
+          begin
+            if XOrigin = xoWest then
+            begin
+              Point1.X := Interpolate(FLeftX, FRightX, Selection2);
+            end
+            else
+            begin
+              Point1.X := Interpolate(FLeftX, FRightX, 1 - Selection2);
+            end;
+            Point2.X := Point1.X;
+            if XOrigin = xoWest then
+            begin
+              Point3.X := Interpolate(BackLeftX, BackRightX, Selection2);
+            end
+            else
+            begin
+              Point3.X := Interpolate(BackLeftX, BackRightX, 1 - Selection2);
+            end;
+            Point4.X := Point3.X;
+            Point1.Y := FBottomY;
+            Point2.Y := FTopY;
+            Point3.Y := BackTopY;
+            Point4.Y := BackBottomY;
+            if XOrigin = xoWest then
+            begin
+              Point5.X := Interpolate(FLeftX, FRightX, Selection1);
+            end
+            else
+            begin
+              Point5.X := Interpolate(FLeftX, FRightX, 1 - Selection1);
+            end;
+            Point6.X := Point5.X;
+            if XOrigin = xoWest then
+            begin
+              Point7.X := Interpolate(BackLeftX, BackRightX, Selection1);
+            end
+            else
+            begin
+              Point7.X := Interpolate(BackLeftX, BackRightX, 1 - Selection1);
+            end;
+            Point8.X := Point7.X;
+            Point5.Y := FBottomY;
+            Point6.Y := FTopY;
+            Point7.Y := BackTopY;
+            Point8.Y := BackBottomY;
+            if not Opaque or ((XOrigin = xoWest) and (Selection2 = 1)) or ((XOrigin = xoEast) and (Selection1 = 0)) then
+            begin
+              if (XOrigin = xoWest) then
+              begin
+                Canvas.Polygon([Point1, Point2, Point3, Point4]);
+              end
+              else
+              begin
+                Canvas.Polygon([Point5, Point6, Point7, Point8]);
+              end;
+            end;
+            Canvas.Polygon([Point2, Point3, Point7, Point6]);
+            Canvas.Polygon([Point1, Point2, Point6, Point5]);
+          end;
+      end;
+    finally
+      Canvas.Brush.Color := BrushColor;
     end;
   end;
 end;
@@ -640,273 +902,169 @@ var
   // less than or equal to 1.
   BackLeftX, BackRightX, BackTopY, BackBottomY : integer;
   PenStyle : TPenStyle;
-  BrushColor : TColor;
-  Point1, Point2, Point3, Point4 : TPoint;
-  Point5, Point6, Point7, Point8 : TPoint;
+  FrontLeftCoordinates: array of TPoint;
+  FrontRightCoordinates: array of TPoint;
+  BackLeftCoordinates: array of TPoint;
+  BackRightCoordinates: array of TPoint;
+  PointIndex: Integer;
+  ABreak: TBreakPosition;
+  Frac1: double;
+  Frac2: double;
 begin
+  if SelectedFace = faNone then
+  begin
+    Exit;
+  end;
   BackLeftX := Interpolate(FLeftX, FVanishingPointX, FFraction);
   BackRightX := Interpolate(FRightX, FVanishingPointX, FFraction);
   BackTopY := Interpolate(FTopY, FVanishingPointY, FFraction);
   BackBottomY := Interpolate(FBottomY, FVanishingPointY, FFraction);
 
   // draw hidden part of cube
-  With Canvas do
+//  With Canvas do
   begin
-    PenStyle := Pen.Style;
+    PenStyle := Canvas.Pen.Style;
     try
       if not Opaque then
       begin
-        Pen.Style := psDot;
+        if SelectedFace <> faTop then
+        begin
+          Canvas.Pen.Style := psDot;
 
-        ThickLine(Canvas, Point(FLeftX,FBottomY),
-          Point(BackLeftX,BackBottomY));
-        ThickLine(Canvas, Point(BackLeftX,BackBottomY),
-          Point(BackRightX,BackBottomY));
-        ThickLine(Canvas, Point(BackLeftX,BackBottomY),
-          Point(BackLeftX,BackTopY));
-
-        // The following should work but it causes the lines to blink
-        // on and off.
-
-//        MoveTo(FLeftX,FBottomY);
-//        LineTo(BackLeftX,BackBottomY);
-//        LineTo(BackRightX,BackBottomY);
-
-//        MoveTo(BackLeftX,BackBottomY);
-//        LineTo(BackLeftX,BackTopY);
-      end;
-
-      Pen.Style := psSolid;
-
-      if ShowSelection then
-      begin
-        BrushColor := Brush.Color;
-        try
-          Brush.Color := SelectionColor;
-          case SelectedFace of
-            faTop: // Top
-              begin
-                Point1.X := FLeftX;
-                Point2.X  := BackLeftX;
-                Point3.X  := BackRightX;
-                Point4.X  := FRightX;
-
-                if ZOrigin = zoBottom then
-                begin
-                  Point1.Y := Interpolate(FBottomY,FTopY,  Selection2);
-                  Point2.Y := Interpolate(BackBottomY,BackTopY, Selection2);
-                end
-                else
-                begin
-                  Point1.Y := Interpolate(FBottomY,FTopY,  1-Selection2);
-                  Point2.Y := Interpolate(BackBottomY,BackTopY, 1-Selection2);
-                end;
-
-                Point3.Y := Point2.Y;
-                Point4.Y := Point1.Y;
-
-                Point5.X := FLeftX;
-                Point6.X  := BackLeftX;
-                Point7.X  := BackRightX;
-                Point8.X  := FRightX;
-
-                if ZOrigin = zoBottom then
-                begin
-                  Point5.Y := Interpolate(FBottomY,FTopY, Selection1);
-                  Point6.Y := Interpolate(BackBottomY,BackTopY, Selection1);
-                end
-                else
-                begin
-                  Point5.Y := Interpolate(FBottomY,FTopY, 1-Selection1);
-                  Point6.Y := Interpolate(BackBottomY,BackTopY, 1-Selection1);
-                end;
-                Point7.Y := Point6.Y;
-                Point8.Y := Point5.Y;
-
-                if not Opaque or ((ZOrigin = zoBottom) and (Selection2 = 1))
-                  or ((ZOrigin = zoTop) and (Selection1 = 0)) then
-                begin
-                  if (ZOrigin = zoBottom) then
-                  begin
-                    Polygon([Point1, Point2, Point3, Point4]);
-                  end
-                  else
-                  begin
-                    Polygon([Point5, Point6, Point7, Point8]);
-                  end;
-                end;
-                Polygon([Point1, Point4, Point8, Point5]);
-                Polygon([Point3, Point7, Point8, Point4]);
-              end;
-            faFront: // Front
-              begin
-                if YOrigin = yoSouth then
-                begin
-                  Point1.X := Interpolate(FLeftX, BackLeftX, Selection1);
-                end
-                else
-                begin
-                  Point1.X := Interpolate(FLeftX, BackLeftX, 1-Selection1);
-                end;
-                Point2.X := Point1.X;
-                if YOrigin = yoSouth then
-                begin
-                  Point3.X := Interpolate(FRightX, BackRightX, Selection1);
-                end
-                else
-                begin
-                  Point3.X := Interpolate(FRightX, BackRightX, 1-Selection1);
-                end;
-                Point4.X := Point3.X;
-
-                if YOrigin = yoSouth then
-                begin
-                  Point1.Y := Interpolate(FBottomY, BackBottomY, Selection1);
-                  Point2.Y := Interpolate(FTopY, BackTopY, Selection1);
-                end
-                else
-                begin
-                  Point1.Y := Interpolate(FBottomY, BackBottomY, 1-Selection1);
-                  Point2.Y := Interpolate(FTopY, BackTopY, 1-Selection1);
-                end;
-                Point3.Y := Point2.Y;
-                Point4.Y := Point1.Y;
-
-                if YOrigin = yoSouth then
-                begin
-                  Point5.X := Interpolate(FLeftX, BackLeftX, Selection2);
-                end
-                else
-                begin
-                  Point5.X := Interpolate(FLeftX, BackLeftX, 1-Selection2);
-                end;
-                Point6.X := Point5.X;
-                if YOrigin = yoSouth then
-                begin
-                  Point7.X := Interpolate(FRightX, BackRightX, Selection2);
-                end
-                else
-                begin
-                  Point7.X := Interpolate(FRightX, BackRightX, 1-Selection2);
-                end;
-                Point8.X := Point7.X;
-
-                if YOrigin = yoSouth then
-                begin
-                  Point5.Y := Interpolate(FBottomY, BackBottomY, Selection2);
-                  Point6.Y := Interpolate(FTopY, BackTopY, Selection2);
-                end
-                else
-                begin
-                  Point5.Y := Interpolate(FBottomY, BackBottomY, 1-Selection2);
-                  Point6.Y := Interpolate(FTopY, BackTopY, 1-Selection2);
-                end;
-                Point7.Y := Point6.Y;
-                Point8.Y := Point5.Y;
-
-                if not Opaque or ((YOrigin = yoSouth) and (Selection1 = 0))
-                  or ((YOrigin = yoNorth) and (Selection2 = 1)) then
-                begin
-                  if YOrigin = yoSouth then
-                  begin
-                    Polygon([Point1, Point2, Point3, Point4]);
-                  end
-                  else
-                  begin
-                    Polygon([Point5, Point6, Point7, Point8]);
-                  end;
-                end;
-                Polygon([Point2, Point3, Point7, Point6]);
-                Polygon([Point3, Point7, Point8, Point4]);
-              end;
-            faSide: // side
-              begin
-                if XOrigin = xoWest then
-                begin
-                  Point1.X := Interpolate(FLeftX, FRightX, Selection2);
-                end
-                else
-                begin
-                  Point1.X := Interpolate(FLeftX, FRightX, 1-Selection2);
-                end;
-                Point2.X := Point1.X;
-                if XOrigin = xoWest then
-                begin
-                  Point3.X := Interpolate(BackLeftX, BackRightX, Selection2);
-                end
-                else
-                begin
-                  Point3.X := Interpolate(BackLeftX, BackRightX, 1-Selection2);
-                end;
-                Point4.X := Point3.X;
-
-                Point1.Y := FBottomY;
-                Point2.Y := FTopY;
-                Point3.Y := BackTopY;
-                Point4.Y := BackBottomY;
-
-                if XOrigin = xoWest then
-                begin
-                  Point5.X := Interpolate(FLeftX, FRightX, Selection1);
-                end
-                else
-                begin
-                  Point5.X := Interpolate(FLeftX, FRightX, 1-Selection1);
-                end;
-                Point6.X := Point5.X;
-                if XOrigin = xoWest then
-                begin
-                  Point7.X := Interpolate(BackLeftX, BackRightX, Selection1);
-                end
-                else
-                begin
-                  Point7.X := Interpolate(BackLeftX, BackRightX, 1-Selection1);
-                end;
-                Point8.X := Point7.X;
-
-                Point5.Y := FBottomY;
-                Point6.Y := FTopY;
-                Point7.Y := BackTopY;
-                Point8.Y := BackBottomY;
-
-                if not Opaque or ((XOrigin = xoWest) and (Selection2 = 1))
-                  or ((XOrigin = xoEast) and (Selection1 = 0)) then
-                begin
-                  if (XOrigin = xoWest) then
-                  begin
-                    Polygon([Point1, Point2, Point3, Point4]);
-                  end
-                  else
-                  begin
-                    Polygon([Point5, Point6, Point7, Point8]);
-                  end;
-                end;
-                Polygon([Point2, Point3, Point7, Point6]);
-                Polygon([Point1, Point2, Point6, Point5]);
-              end;
-          end;
-        finally
-          Brush.Color := BrushColor
+          ThickLine(Canvas, Point(FLeftX,FBottomY),
+            Point(BackLeftX,BackBottomY));
+          ThickLine(Canvas, Point(BackLeftX,BackBottomY),
+            Point(BackRightX,BackBottomY));
+          ThickLine(Canvas, Point(BackLeftX,BackBottomY),
+            Point(BackLeftX,BackTopY));
         end;
       end;
 
+      Canvas.Pen.Style := psSolid;
+
+      DrawSelection(BackTopY, BackBottomY, BackLeftX, BackRightX);
+
     // draw front of cube
 
-      MoveTo(FLeftX,FTopY);
-      LineTo(FRightX,FTopY);
-      LineTo(FRightX,FBottomY);
-      LineTo(FLeftX,FBottomY);
-      LineTo(FLeftX,FTopY);
+      if SelectedFace = faTop then
+      begin
+        SetLength(FrontLeftCoordinates, 2+Breaks.Count*2);
+        SetLength(FrontRightCoordinates, 2+Breaks.Count*2);
+        SetLength(BackLeftCoordinates, 2+Breaks.Count*2);
+        SetLength(BackRightCoordinates, 2+Breaks.Count*2);
+        for PointIndex := 0 to Length(FrontLeftCoordinates) - 1 do
+        begin
+          FrontLeftCoordinates[PointIndex].X := FLeftX;
+          BackLeftCoordinates[PointIndex].X := BackLeftX;
+          FrontRightCoordinates[PointIndex].X := FRightX;
+          BackRightCoordinates[PointIndex].X := BackRightX;
+        end;
 
-      LineTo(BackLeftX,BackTopY);
-      LineTo(BackRightX,BackTopY);
-      LineTo(FRightX,FTopY);
+        FrontLeftCoordinates[0].Y := FBottomY;
+        FrontLeftCoordinates[1+Breaks.Count*2].Y := FTopY;
+        BackLeftCoordinates[0].Y := BackBottomY;
+        BackLeftCoordinates[1+Breaks.Count*2].Y := BackTopY;
+        FrontRightCoordinates[0].Y := FBottomY;
+        FrontRightCoordinates[1+Breaks.Count*2].Y := FTopY;
+        BackRightCoordinates[0].Y := BackBottomY;
+        BackRightCoordinates[1+Breaks.Count*2].Y := BackTopY;
 
-      MoveTo(FRightX,FBottomY);
-      LineTo(BackRightX,BackBottomY);
-      LineTo(BackRightX,BackTopY);
+        Breaks.Sort;
+        for PointIndex := 0 to Breaks.Count - 1 do
+        begin
+          ABreak := Breaks[PointIndex];
+          FrontLeftCoordinates[PointIndex*2+1].Y :=
+            Interpolate(FBottomY, FTopY, ABreak.LowerFraction);
+          FrontLeftCoordinates[PointIndex*2+2].Y :=
+            Interpolate(FBottomY, FTopY, ABreak.HigherFraction);
+          FrontRightCoordinates[PointIndex*2+1].Y :=
+            FrontLeftCoordinates[PointIndex*2+1].Y;
+          FrontRightCoordinates[PointIndex*2+2].Y :=
+            FrontLeftCoordinates[PointIndex*2+2].Y;
+          BackLeftCoordinates[PointIndex*2+1].Y :=
+            Interpolate(BackBottomY, BackTopY, ABreak.LowerFraction);
+          BackLeftCoordinates[PointIndex*2+2].Y :=
+            Interpolate(BackBottomY, BackTopY, ABreak.HigherFraction);
+          BackRightCoordinates[PointIndex*2+1].Y :=
+            BackLeftCoordinates[PointIndex*2+1].Y;
+          BackRightCoordinates[PointIndex*2+2].Y :=
+            BackLeftCoordinates[PointIndex*2+2].Y;
+        end;
+
+        for PointIndex := 0 to Length(FrontLeftCoordinates) div 2 - 1 do
+        begin
+          if not Opaque then
+          begin
+            Canvas.Pen.Style := psDot;
+
+            ThickLine(Canvas, FrontLeftCoordinates[PointIndex*2],
+              BackLeftCoordinates[PointIndex*2]);
+            ThickLine(Canvas, BackLeftCoordinates[PointIndex*2],
+              BackRightCoordinates[PointIndex*2]);
+            ThickLine(Canvas, BackLeftCoordinates[PointIndex*2],
+              BackLeftCoordinates[PointIndex*2+1]);
+          end;
+
+          Canvas.Pen.Style := psSolid;
+          // Front Face
+          Canvas.MoveTo(FrontLeftCoordinates[PointIndex*2+1].X,
+            FrontLeftCoordinates[PointIndex*2+1].Y);
+          Canvas.LineTo(FrontLeftCoordinates[PointIndex*2].X,
+            FrontLeftCoordinates[PointIndex*2].Y);
+          Canvas.LineTo(FrontRightCoordinates[PointIndex*2].X,
+            FrontRightCoordinates[PointIndex*2].Y);
+          Canvas.LineTo(FrontRightCoordinates[PointIndex*2+1].X,
+            FrontRightCoordinates[PointIndex*2+1].Y);
+          Canvas.LineTo(FrontLeftCoordinates[PointIndex*2+1].X,
+            FrontLeftCoordinates[PointIndex*2+1].Y);
+
+          // Top Face
+          Canvas.LineTo(BackLeftCoordinates[PointIndex*2+1].X,
+            BackLeftCoordinates[PointIndex*2+1].Y);
+          Canvas.LineTo(BackRightCoordinates[PointIndex*2+1].X,
+            BackRightCoordinates[PointIndex*2+1].Y);
+          Canvas.LineTo(FrontRightCoordinates[PointIndex*2+1].X,
+            FrontRightCoordinates[PointIndex*2+1].Y);
+
+          // Side Face
+          Canvas.MoveTo(FrontRightCoordinates[PointIndex*2].X,
+            FrontRightCoordinates[PointIndex*2].Y);
+          Canvas.LineTo(BackRightCoordinates[PointIndex*2].X,
+            BackRightCoordinates[PointIndex*2].Y);
+          Canvas.LineTo(BackRightCoordinates[PointIndex*2+1].X,
+            BackRightCoordinates[PointIndex*2+1].Y);
+
+          Frac1 := (PointIndex * 2)/Length(FrontLeftCoordinates);
+          Frac2 := ((PointIndex * 2)+1)/Length(FrontLeftCoordinates);
+
+          if (Frac2 > Selection1) and (Frac1 < Selection2) then
+          begin
+            DrawSelection(BackTopY, BackBottomY, BackLeftX, BackRightX);
+          end;
+        end;
+      end
+      else
+      begin
+        // front face
+        Canvas.MoveTo(FLeftX,FTopY);
+        Canvas.LineTo(FRightX,FTopY);
+        Canvas.LineTo(FRightX,FBottomY);
+        Canvas.LineTo(FLeftX,FBottomY);
+        Canvas.LineTo(FLeftX,FTopY);
+
+        // top face
+        Canvas.LineTo(BackLeftX,BackTopY);
+        Canvas.LineTo(BackRightX,BackTopY);
+        Canvas.LineTo(FRightX,FTopY);
+
+        // right face
+        Canvas.MoveTo(FRightX,FBottomY);
+        Canvas.LineTo(BackRightX,BackBottomY);
+        Canvas.LineTo(BackRightX,BackTopY);
+      end;
+
     finally
-      Pen.Style := PenStyle;
+      Canvas.Pen.Style := PenStyle;
     end;
 
   end;
@@ -1166,6 +1324,89 @@ begin
   begin
     FZOrigin := Value;
     Invalidate;
+  end;
+end;
+
+{ TBreakPosition }
+
+procedure TBreakPosition.SetLowerFraction(const Value: double);
+begin
+  FLowerFraction := Value;
+  (Collection as TBreakCollection).Changed;
+end;
+
+procedure TBreakPosition.SetHigherFraction(const Value: double);
+begin
+  FHigherFraction := Value;
+  (Collection as TBreakCollection).Changed;
+end;
+
+{ TBreakCollection }
+
+function TBreakCollection.Add: TBreakPosition;
+begin
+  Result := inherited Add as TBreakPosition;
+  Changed;
+end;
+
+constructor TBreakCollection.Create;
+begin
+  inherited Create(TBreakPosition);
+end;
+
+function TBreakCollection.GetItem(Index: Integer): TBreakPosition;
+begin
+  result := inherited Items[Index] as TBreakPosition;
+end;
+
+procedure TBreakCollection.SetItem(Index: Integer; const Value: TBreakPosition);
+begin
+  inherited Items[Index] := Value;
+end;
+
+function CompareBreaks(Item1, Item2: Pointer): integer;
+var
+  Break1, Break2: TBreakPosition;
+begin
+  Break1 := Item1;
+  Break2 := Item2;
+  result := Sign(Break1.LowerFraction - Break2.LowerFraction);
+  if result = 0 then
+  begin
+    result := Sign(Break1.HigherFraction - Break2.HigherFraction);
+  end;
+end;
+
+procedure TBreakCollection.Sort;
+var
+  List: TList;
+  index: Integer;
+  ABreak: TBreakPosition;
+begin
+  List := TList.Create;
+  try
+    List.Capacity := Count;
+    for index := 0 to Count - 1 do
+    begin
+      List.Add(Items[index])
+    end;
+    List.Sort(CompareBreaks);
+    for index := 0 to List.Count - 1 do
+    begin
+      ABreak := List[index];
+      ABreak.Index := index;
+    end;
+  finally
+    List.Free;
+  end;
+end;
+
+procedure TBreakCollection.Update(Item: TCollectionItem);
+begin
+  inherited;
+  if Assigned(OnChange) then
+  begin
+    OnChange(Self);
   end;
 end;
 

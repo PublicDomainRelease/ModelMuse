@@ -189,8 +189,8 @@ inherited frmSutraLayers: TfrmSutraLayers
           Width = 198
           ExplicitWidth = 198
           inherited lbl3: TLabel
-            Width = 198
-            Height = 41
+            Width = 179
+            Height = 36
             ExplicitWidth = 179
             ExplicitHeight = 36
           end
@@ -248,10 +248,8 @@ inherited frmSutraLayers: TfrmSutraLayers
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
     end
     object btnOK: TBitBtn
@@ -260,10 +258,8 @@ inherited frmSutraLayers: TfrmSutraLayers
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -273,10 +269,8 @@ inherited frmSutraLayers: TfrmSutraLayers
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
   end

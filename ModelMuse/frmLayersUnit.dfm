@@ -21,7 +21,7 @@ inherited frmLayers: TfrmLayers
     Top = 0
     Width = 441
     Height = 383
-    ActivePage = tabBasics
+    ActivePage = tabDiscretization
     Align = alClient
     TabOrder = 1
     OnChange = pcLayerGroupsChange
@@ -574,10 +574,8 @@ inherited frmLayers: TfrmLayers
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -587,10 +585,8 @@ inherited frmLayers: TfrmLayers
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -600,10 +596,8 @@ inherited frmLayers: TfrmLayers
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
   end

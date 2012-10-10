@@ -124,7 +124,7 @@ object frameModpathParticles: TframeModpathParticles
       Height = 138
       Camera = GLCamera
       FieldOfView = 104.002532958984400000
-      TabOrder = 2
+      TabOrder = 4
     end
     object plParticlePlacement: TJvPageList
       Left = 143
@@ -656,7 +656,7 @@ object frameModpathParticles: TframeModpathParticles
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
       Value = 1.000000000000000000
-      TabOrder = 4
+      TabOrder = 5
     end
     object rdgReleaseTimes: TRbwDataGrid4
       Left = 400
@@ -668,7 +668,7 @@ object frameModpathParticles: TframeModpathParticles
       FixedCols = 1
       RowCount = 2
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
-      TabOrder = 5
+      TabOrder = 3
       ExtendedAutoDistributeText = False
       AutoMultiEdit = True
       AutoDistributeText = True

@@ -383,6 +383,7 @@ resourcestring
   'required by MT3DMS, you will need to generate the MODFLOW input files and' +
   ' run MODFLOW again.';
   FormatStr = 'Number of %s parameters';
+  StrSWasNotFound = '%s was not found.';
 
 {$R *.dfm}
 
@@ -1564,7 +1565,7 @@ begin
     AddNode(StrObservations, StrObservations, PriorNode);
     AddNode(StrOutput, StrOutput, PriorNode);
     AddNode(StrPostProcessors, StrPostProcessors, PriorNode);
-    AddNode(StrMT3DMS, StrMT3DMS, PriorNode);
+    AddNode(StrMT3DMS_Classificaton, StrMT3DMS_Classificaton, PriorNode);
 
     for Index := 0 to FPackageList.Count - 1 do
     begin
@@ -1580,7 +1581,7 @@ begin
       Frame := APackage.Frame;
       Assert(Frame <> nil);
       NodeIndex := FTreeNodeList.IndexOf(APackage.Classification);
-      Assert(NodeIndex >= 0);
+      Assert(NodeIndex >= 0, Format(StrSWasNotFound, [APackage.Classification]));
       ParentNode := FTreeNodeList.Objects[NodeIndex] as TTreeNode;
       ChildNode := tvPackages.Items.AddChild(ParentNode, APackage.PackageIdentifier);
 

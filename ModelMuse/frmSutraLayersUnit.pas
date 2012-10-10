@@ -92,7 +92,7 @@ begin
   if FLayerStructure.Count = 0 then
   begin
     LayerGroup := FLayerStructure.Insert(0) as TSutraLayerGroup;
-    LayerGroup.AquiferName := StrSUTRAMeshTop;
+    LayerGroup.AquiferName := kSUTRAMeshTop;
   end;
   LayerGroup := FLayerStructure.Insert(Position+1) as TSutraLayerGroup;
   // LayerGroup.AquiferName can not be assigned in LayerGroup.Create
@@ -456,7 +456,7 @@ begin
     LocalModel.UpdateDataSetDimensions;
     if Assigned(LocalModel.Mesh) then
     begin
-      LocalModel.Mesh.UpdateElevations;
+      LocalModel.Mesh.ElevationsNeedUpdating := True;
     end;
 //    for Index := 0 to LocalModel.ChildModels.Count - 1 do
 //    begin
@@ -484,7 +484,7 @@ begin
     LocalModel.LayerStructure.NewDataSets := nil;
     UpdatedRequiredDataSets;
     LocalModel.UpdateDataSetDimensions;
-    LocalModel.Mesh.UpdateElevations;
+    LocalModel.Mesh.ElevationsNeedUpdating := True;
 //    for Index := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
 //    begin
 //      ChildModel := frmGoPhast.PhastModel.ChildModels[Index].ChildModel;

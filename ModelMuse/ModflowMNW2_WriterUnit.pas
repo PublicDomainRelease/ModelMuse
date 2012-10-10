@@ -316,7 +316,7 @@ begin
         if UsedIndicies <> [] then
         begin
           List := Well.FCells;
-          List.CheckRestore;
+//          List.CheckRestore;
 
           UpdateCellDisplay(List, DataSets, [], nil, UsedIndicies);
           List.Cache;

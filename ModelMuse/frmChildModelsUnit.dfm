@@ -107,10 +107,6 @@ inherited frmChildModels: TfrmChildModels
     TabOrder = 1
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         350
         423)
@@ -180,10 +176,10 @@ inherited frmChildModels: TfrmChildModels
         Height = 26
         Increment = 2.000000000000000000
         MaxValue = 2147483647.000000000000000000
-        MinValue = 3.000000000000000000
+        MinValue = 1.000000000000000000
         Value = 3.000000000000000000
         TabOrder = 3
-        OnChange = seCellCountChange
+        OnExit = seCellCountExit
       end
       object rgStartingHeads: TRadioGroup
         Left = 3
@@ -490,10 +486,8 @@ inherited frmChildModels: TfrmChildModels
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnHelpClick
     end
@@ -503,10 +497,8 @@ inherited frmChildModels: TfrmChildModels
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnOKClick
     end
@@ -516,10 +508,8 @@ inherited frmChildModels: TfrmChildModels
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 3
     end
     object cbSaveBFH: TCheckBox

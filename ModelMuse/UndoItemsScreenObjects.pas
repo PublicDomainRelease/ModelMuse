@@ -163,6 +163,9 @@ type
     // ListOfScreenObjects in @link(FNewScreenObjects).
     procedure StoreNewScreenObjects(const ListOfScreenObjects: TList); virtual;
     procedure UpdateScreenObject(const AScreenObject: TScreenObject);
+    procedure DoCommand; override;
+    procedure Redo; override;
+    procedure Undo; override;
   end;
 
   TUndoPasteScreenObjects = class(TCustomImportMultipleScreenObjects)
@@ -969,7 +972,7 @@ end;
 procedure TUndoChangeSelection.DoCommand;
 begin
   InvalidateImages;
-  FShouldUpdateShowHideObjects := True;
+  FShouldUpdateShowHideObjectsDisplay := True;
   UpdateDisplay;
 end;
 
@@ -992,6 +995,7 @@ begin
   SelectScreenObjectTool.ShouldDrawSelectionRectangle :=
     FNewSelectedScreenObjects.Count > 0;
   InvalidateImages;
+  FShouldUpdateShowHideObjectsDisplay := True;
   UpdateDisplay;
 end;
 
@@ -1195,6 +1199,7 @@ begin
   end;
 
   InvalidateImages;
+  FShouldUpdateShowHideObjectsDisplay := True;
   UpdateDisplay;
 end;
 
@@ -3249,6 +3254,8 @@ begin
       ScreenObject.Invalidate;
     end;
   end;
+  FShouldUpdateShowHideObjects := True;
+  UpdateDisplay;
 end;
 
 procedure TUndoMergeObjects.Redo;
@@ -3275,6 +3282,7 @@ begin
     ScreenObject.Deleted := False;
     ScreenObject.Invalidate;
   end;
+  FShouldUpdateShowHideObjects := True;
   inherited;
 end;
 
@@ -3339,6 +3347,18 @@ end;
 destructor TCustomImportMultipleScreenObjects.Destroy;
 begin
   FNewScreenObjects.Free;
+  inherited;
+end;
+
+procedure TCustomImportMultipleScreenObjects.DoCommand;
+begin
+  FShouldUpdateShowHideObjects := True;
+  inherited;
+end;
+
+procedure TCustomImportMultipleScreenObjects.Redo;
+begin
+  FShouldUpdateShowHideObjects := True;
   inherited;
 end;
 
@@ -3410,6 +3430,12 @@ begin
     AScreenObject.Invalidate;
     UpdateScreenObject(AScreenObject);
   end;
+end;
+
+procedure TCustomImportMultipleScreenObjects.Undo;
+begin
+  FShouldUpdateShowHideObjects := True;
+  inherited;
 end;
 
 procedure TCustomImportMultipleScreenObjects.DeleteNewScreenObjects;

@@ -1017,6 +1017,7 @@ begin
   begin
     Exit;
   end;
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrSfrInvalid);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrStreamFlowFileDoe);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheFollowingObject);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidStartingTimeStep1);
@@ -1522,7 +1523,6 @@ begin
     InternalUpdateDisplay(TimeLists);
   end;
 end;
-
 
 procedure TModflowSFR_Writer.InternalUpdateDisplay(
   TimeLists: TModflowBoundListOfTimeLists);

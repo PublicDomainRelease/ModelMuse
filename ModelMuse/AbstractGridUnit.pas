@@ -4335,7 +4335,8 @@ begin
     SetMinMax(DataSet, MinMaxInitialized, MinMax, StringValues,
       LayerCount, RowCount, ColCount);
   end;
-  if DataSet.Limits.LogTransform and (MinMax.RMinPositive > 0) then
+  if DataSet.Limits.LogTransform and (MinMax.RMinPositive > 0)
+    and (MinMax.RMax > 0) then
   begin
     MinMax.LogRMin := Log10(MinMax.RMinPositive);
     MinMax.LogRMax := Log10(MinMax.RMax);
@@ -6383,7 +6384,8 @@ begin
     SetMinMax(DataSet, MinMaxInitialized, MinMax, StringValues,
       LayerCount, RowCount, ColCount);
 
-    if DataSet.Limits.LogTransform and (MinMax.RMinPositive > 0) then
+    if DataSet.Limits.LogTransform and (MinMax.RMinPositive > 0)
+      and (MinMax.RMax > 0) then
     begin
       MinMax.LogRMin := Log10(MinMax.RMinPositive);
       MinMax.LogRMax := Log10(MinMax.RMax);
@@ -7522,6 +7524,10 @@ begin
       begin
         MinValue := MinPositive;
       end;
+      if MaxValue <= 0 then
+      begin
+        MaxValue := MinPositive;
+      end;
       if MinValue > 0 then
       begin
         LogMin := Log10(MinValue);
@@ -8484,6 +8490,8 @@ begin
       end;
     rdtInteger:
       begin
+        MinMax.IMin := DataSet.IntegerData[Layer, Row, Col];
+        MinMax.IMax := MinMax.IMin;
         if DataSet.DisplayRealValue then
         begin
           MinMax.RMin := DataSet.RealData[Layer, Row, Col];
@@ -8499,8 +8507,6 @@ begin
         end
         else
         begin
-          MinMax.IMin := DataSet.IntegerData[Layer, Row, Col];
-          MinMax.IMax := MinMax.IMin;
           if DataSet.Limits.LowerLimit.UseLimit then
           begin
             MinMax.IMin := DataSet.Limits.LowerLimit.IntegerLimitValue;
@@ -8626,20 +8632,18 @@ begin
             begin
               MinMax.RMin := RTemp;
             end;
-          end
-          else
+          end;
+
+          ITemp := DataSet.IntegerData[Layer, Row, Col];
+          if (ITemp > MinMax.IMax) and
+            not DataSet.Limits.UpperLimit.UseLimit then
           begin
-            ITemp := DataSet.IntegerData[Layer, Row, Col];
-            if (ITemp > MinMax.IMax) and
-              not DataSet.Limits.UpperLimit.UseLimit then
-            begin
-              MinMax.IMax := ITemp;
-            end
-            else if (ITemp < MinMax.IMin) and
-              not DataSet.Limits.LowerLimit.UseLimit then
-            begin
-              MinMax.IMin := ITemp;
-            end;
+            MinMax.IMax := ITemp;
+          end
+          else if (ITemp < MinMax.IMin) and
+            not DataSet.Limits.LowerLimit.UseLimit then
+          begin
+            MinMax.IMin := ITemp;
           end;
         end;
       rdtBoolean:

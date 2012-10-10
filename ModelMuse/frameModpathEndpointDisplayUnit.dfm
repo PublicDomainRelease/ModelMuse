@@ -9,30 +9,26 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
     Top = 0
     Width = 476
     Height = 359
-    ActivePage = tabBasic
+    ActivePage = tabOptions
     Align = alClient
     TabOrder = 0
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 8
-      ExplicitTop = 28
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         468
-        331)
+        328)
       object lblModpathFile: TLabel
         Left = 8
         Top = 8
-        Width = 111
-        Height = 13
+        Width = 132
+        Height = 16
         Caption = 'MODPATH endpoint file'
       end
       object lblColorScheme: TLabel
         Left = 8
         Top = 108
-        Width = 64
-        Height = 13
+        Width = 78
+        Height = 16
         Caption = 'Color scheme'
       end
       object pbColorScheme: TPaintBox
@@ -47,31 +43,30 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
       object lblColorAdjustment: TLabel
         Left = 8
         Top = 211
-        Width = 82
-        Height = 13
+        Width = 98
+        Height = 16
         Caption = 'Color adjustment'
       end
       object lblCycles: TLabel
         Left = 364
         Top = 211
-        Width = 31
-        Height = 13
+        Width = 36
+        Height = 16
         Anchors = [akTop, akRight]
         Caption = 'Cycles'
-        ExplicitLeft = 356
       end
       object lblModelSelection: TLabel
         Left = 8
         Top = 273
-        Width = 73
-        Height = 13
+        Width = 88
+        Height = 16
         Caption = 'Model selection'
       end
       object fedModpathFile: TJvFilenameEdit
         Left = 8
         Top = 29
         Width = 457
-        Height = 21
+        Height = 24
         OnBeforeDialog = fedModpathFileBeforeDialog
         DefaultExt = '.end'
         Filter = 
@@ -101,7 +96,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         Left = 8
         Top = 128
         Width = 457
-        Height = 21
+        Height = 24
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
         DropDownCount = 12
@@ -138,7 +133,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         Left = 164
         Top = 232
         Width = 65
-        Height = 21
+        Height = 24
         ButtonKind = bkClassic
         Increment = 0.010000000000000000
         MaxValue = 2.000000000000000000
@@ -151,7 +146,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         Left = 365
         Top = 232
         Width = 101
-        Height = 21
+        Height = 24
         ButtonKind = bkClassic
         MaxValue = 2147483647.000000000000000000
         MinValue = 1.000000000000000000
@@ -164,7 +159,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         Left = 8
         Top = 292
         Width = 241
-        Height = 21
+        Height = 24
         Style = csDropDownList
         TabOrder = 7
         Visible = False
@@ -174,13 +169,9 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         468
-        331)
+        328)
       object rgShow2D: TRadioGroup
         Left = 9
         Top = 0
@@ -190,7 +181,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         ItemIndex = 0
         Items.Strings = (
           'Show all'
-          'Limit by location, zone, or time')
+          'Limit by location, zone, time, or group')
         TabOrder = 0
         OnClick = rgShow2DClick
       end
@@ -224,7 +215,8 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
           'Ending X'#39
           'Ending Y'#39
           'Ending Z'
-          'Ending zone')
+          'Ending zone'
+          'Group')
         TabOrder = 2
         OnClick = rgColorByClick
       end
@@ -236,6 +228,7 @@ object frameModpathEndpointDisplay: TframeModpathEndpointDisplay
         Anchors = [akLeft, akTop, akBottom]
         ColCount = 3
         FixedCols = 0
+        RowCount = 6
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing]
         TabOrder = 3
         OnSelectCell = rdgLimitsSelectCell

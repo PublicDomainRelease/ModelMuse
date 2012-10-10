@@ -1065,7 +1065,8 @@ begin
     begin
         frmErrorsAndWarnings.AddWarning(GlobalCurrentModel,
           Format(StrThe0sFunctionIs, [StrInterpolatedVertexValues]),
-          Format(StrObject0sInvali, [GlobalCurrentScreenObject.Name, VertexValueName]));
+          Format(StrObject0sInvali, [GlobalCurrentScreenObject.Name,
+          VertexValueName]));
         frmErrorsAndWarnings.Show;
     end;
   end
@@ -2726,7 +2727,7 @@ begin
     end
     else
     begin
-      GroundSurface := GetDataSetValue(Column, Row, 0, StrModelTop);
+      GroundSurface := GetDataSetValue(Column, Row, 0, kModelTop);
     end;
 
     HufTop := GetDataSetValue(Column, Row, 0, HufUnit.TopDataArrayName);
@@ -2985,7 +2986,7 @@ begin
   // affected by zone arrays and multiplier arrays of ptHUF_HK
   // and ptHUF_KDEP parameters
   // may be affected by StrHufReferenceSurface either
-  // or StrModelTop depending on
+  // or kModelTop depending on
   // AModel.ModflowPackages.HufPackage.ReferenceChoice
   // and whether or not KDEP is used.
 
@@ -3072,7 +3073,7 @@ begin
   // affected by zone arrays and multiplier arrays of ptHUF_HK
   // and ptHUF_KDEP parameters
   // may be affected by StrHufReferenceSurface either
-  // or StrModelTop depending on
+  // or kModelTop depending on
   // PhastModel.ModflowPackages.HufPackage.ReferenceChoice
   // and whether or not KDEP is used.
 end;
@@ -3089,7 +3090,7 @@ begin
   // affected by zone arrays and multiplier arrays of ptHUF_HK
   // and ptHUF_KDEP parameters
   // may be affected by StrHufReferenceSurface either
-  // or StrModelTop depending on
+  // or kModelTop depending on
   // PhastModel.ModflowPackages.HufPackage.ReferenceChoice
   // and whether or not KDEP is used.
   // affected by zone arrays and multiplier arrays of ptHUF_HANI
@@ -3748,8 +3749,8 @@ begin
     case AModel.ModflowPackages.HufPackage.ReferenceChoice of
       hrcModelTop:
         begin
-//          StrModelTop added previously.
-//          result.Add(StrModelTop);
+//          kModelTop added previously.
+//          result.Add(kModelTop);
         end;
       hrcReferenceLayer:
         begin

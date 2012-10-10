@@ -311,7 +311,8 @@ begin
             AnOrientation := dso3D;
           end;
 
-          DataArray := Model.DataArrayManager.CreateNewDataArray(TDataArray, Value, NewFormula,
+          DataArray := Model.DataArrayManager.CreateNewDataArray(TDataArray,
+            Value, NewFormula, Value,
             [dcName, dcType, dcOrientation, dcEvaluatedAt], rdtDouble,
             eaBlocks, AnOrientation, Classification);
           Collection.AddOwnedDataArray(DataArray);
@@ -494,19 +495,19 @@ begin
       case Variable.ResultType of
         rdtDouble:
           begin
-            Parser.CreateVariable(NewName, Variable.Classification, 0.0);
+            Parser.CreateVariable(NewName, Variable.Classification, 0.0, NewName);
           end;
         rdtInteger:
           begin
-            Parser.CreateVariable(NewName, Variable.Classification, 0);
+            Parser.CreateVariable(NewName, Variable.Classification, 0, NewName);
           end;
         rdtBoolean:
           begin
-            Parser.CreateVariable(NewName, Variable.Classification, False);
+            Parser.CreateVariable(NewName, Variable.Classification, False, NewName);
           end;
         rdtString:
           begin
-            Parser.CreateVariable(NewName, Variable.Classification, '');
+            Parser.CreateVariable(NewName, Variable.Classification, '', NewName);
           end;
       end;
 //      Parser.RenameVariable(VariableIndex, NewName);
@@ -590,7 +591,8 @@ begin
             AnOrientation := dso3D;
           end;
 
-          DataArray := Model.DataArrayManager.CreateNewDataArray(TDataArray, Value, NewFormula,
+          DataArray := Model.DataArrayManager.CreateNewDataArray(TDataArray,
+            Value, NewFormula, Value,
             [dcName, dcType, dcOrientation, dcEvaluatedAt], rdtBoolean,
             eaBlocks, AnOrientation, Classification);
           Collection.AddOwnedDataArray(DataArray);

@@ -61,7 +61,7 @@ inherited frmDataSets: TfrmDataSets
         0000}
       ModalResult = 1
       NumGlyphs = 2
-      TabOrder = 3
+      TabOrder = 2
       OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
@@ -72,16 +72,16 @@ inherited frmDataSets: TfrmDataSets
       Anchors = [akTop, akRight]
       Kind = bkClose
       NumGlyphs = 2
-      TabOrder = 4
+      TabOrder = 3
       OnClick = btnCancelClick
     end
     object btnAdd: TButton
       Left = 8
-      Top = 4
+      Top = 6
       Width = 73
       Height = 33
       Caption = 'Add'
-      TabOrder = 0
+      TabOrder = 4
       OnClick = btnAddClick
     end
     object btnDelete: TButton
@@ -90,7 +90,7 @@ inherited frmDataSets: TfrmDataSets
       Width = 73
       Height = 33
       Caption = 'Delete'
-      TabOrder = 1
+      TabOrder = 0
       OnClick = btnDeleteClick
     end
     object btnHelp: TBitBtn
@@ -101,7 +101,7 @@ inherited frmDataSets: TfrmDataSets
       Anchors = [akTop, akRight]
       Kind = bkHelp
       NumGlyphs = 2
-      TabOrder = 2
+      TabOrder = 1
       OnClick = btnHelpClick
     end
   end
@@ -133,15 +133,11 @@ inherited frmDataSets: TfrmDataSets
     Top = 0
     Width = 320
     Height = 394
-    ActivePage = tabComment
+    ActivePage = tabBasic
     Align = alRight
     TabOrder = 1
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         312
         360)
@@ -522,10 +518,6 @@ inherited frmDataSets: TfrmDataSets
     object tabComment: TTabSheet
       Caption = 'Comment'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Splitter2: TSplitter
         Left = 0
         Top = 168
@@ -547,10 +539,11 @@ inherited frmDataSets: TfrmDataSets
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 69
+          Width = 306
           Height = 19
           Align = alTop
           Caption = 'Comment'
+          ExplicitWidth = 69
         end
         object reComment: TRichEdit
           AlignWithMargins = True
@@ -577,10 +570,11 @@ inherited frmDataSets: TfrmDataSets
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 164
+          Width = 306
           Height = 19
           Align = alTop
           Caption = 'Associated model data'
+          ExplicitWidth = 164
         end
         object memoAssociatedDataSets: TMemo
           AlignWithMargins = True

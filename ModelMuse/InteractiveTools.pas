@@ -419,9 +419,17 @@ Consider creating descendants that each only handle one view of the model. }
     FStartY: integer;
     FPoint1Selected: Boolean;
     FPoint2Selected: Boolean;
+    FCurrentX: Integer;
+    FCurrentY: Integer;
+  protected
+    procedure Activate; override;
+    procedure DrawOnBitMap32(Sender: TObject; Buffer: TBitmap32); override;
   public
     procedure MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer); override;
+    // @name causes ZoomBox.Image32 to be redrawn.
+    procedure MouseMove(Sender: TObject; Shift: TShiftState;
+      X, Y: Integer); override;
     procedure MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer); override;
   end;
@@ -6446,6 +6454,57 @@ end;
 {$IFDEF SUTRA}
 { TEditCrossSectionTool }
 
+procedure TEditCrossSectionTool.Activate;
+begin
+  inherited;
+  CreateLayers;
+end;
+
+procedure TEditCrossSectionTool.DrawOnBitMap32(Sender: TObject;
+  Buffer: TBitmap32);
+var
+  Points: GoPhastTypes.TPointArray;
+  ZoomBox: TQRbwZoomBox2;
+  CrossSection: TCrossSection;
+  NewSegment: TSegment2D;
+  DeltaX: Extended;
+  DeltaY: Extended;
+begin
+  if (FPoint1Selected or FPoint2Selected) and (ViewDirection = vdTop) then
+  begin
+    SetLength(Points, 2);
+    ZoomBox := frmGoPhast.frameTopView.ZoomBox;
+    CrossSection := frmGoPhast.PhastModel.SutraMesh.CrossSection;
+    NewSegment := CrossSection.Segment;
+
+    if FPoint1Selected and FPoint2Selected then
+    begin
+      DeltaX := ZoomBox.X(FCurrentX)-ZoomBox.X(FStartX);
+      DeltaY := ZoomBox.Y(FCurrentY)-ZoomBox.Y(FStartY);
+      NewSegment[1].x := NewSegment[1].x + DeltaX;
+      NewSegment[1].y := NewSegment[1].y + DeltaY;
+      NewSegment[2].x := NewSegment[2].x + DeltaX;
+      NewSegment[2].y := NewSegment[2].y + DeltaY;
+    end
+    else if FPoint1Selected then
+    begin
+      NewSegment[1].x := ZoomBox.X(FCurrentX);
+      NewSegment[1].y := ZoomBox.Y(FCurrentY);
+    end
+    else if FPoint2Selected then
+    begin
+      NewSegment[2].x := ZoomBox.X(FCurrentX);
+      NewSegment[2].y := ZoomBox.Y(FCurrentY);
+    end;
+
+
+    Points[0] := ConvertTop2D_Point(ZoomBox, NewSegment[1]);
+    Points[1] := ConvertTop2D_Point(ZoomBox, NewSegment[2]);
+    DrawBigPolyline32(Buffer, Color32(CrossSection.Color),
+      OrdinaryGridLineThickness, Points, True, True);
+  end;
+end;
+
 procedure TEditCrossSectionTool.MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var
@@ -6527,6 +6586,18 @@ begin
   end;
 end;
 
+procedure TEditCrossSectionTool.MouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  inherited;
+  FCurrentX := X;
+  FCurrentY := Y;
+  if (ViewDirection = vdTop) and (ssLeft in Shift) then
+  begin
+    ZoomBox.InvalidateImage32;
+  end;
+end;
+
 procedure TEditCrossSectionTool.MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var
@@ -6562,6 +6633,8 @@ begin
       NewSegment[2].y := LocalZoomBox.Y(Y);
     end;
     Undo := TUndoMoveCrossSection.Create(NewSegment);
+    FPoint1Selected := False;
+    FPoint2Selected := False;
     frmGoPhast.UndoStack.Submit(Undo);
   end;
 end;
@@ -6628,3 +6701,4 @@ finalization
   {$ENDIF}
 
 end.
+

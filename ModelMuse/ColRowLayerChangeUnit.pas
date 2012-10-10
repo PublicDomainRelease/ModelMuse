@@ -146,6 +146,11 @@ implementation
 
 uses frmGoPhastUnit, frameViewUnit, ScreenObjectUnit, PhastModelUnit;
 
+//resourcestring
+//  StrSelectedColD = 'Selected Col: %d';
+//  StrSelectedRowD = 'Selected Row: %d';
+//  StrSelectedLayerD = 'Selected Layer: %d';
+
 type
   {@abstract(@name handles changes in the selected column.)}
   TColumnSelector = class(TCustomLayerRowColumnSelector)
@@ -418,8 +423,8 @@ begin
   // Display the column that is selected.
   if frmGoPhast.Grid <> nil then
   begin
-    frmGoPhast.sbMain.Panels[1].Text := 'Selected Col: '
-      + IntToStr(frmGoPhast.Grid.SelectedColumn + 1);
+    frmGoPhast.sbMain.Panels[1].Text := Format(StrSelectedColD,
+      [frmGoPhast.Grid.SelectedColumn + 1]);
   end;
 end;
 
@@ -553,8 +558,8 @@ end;
 
 procedure TRowSelector.DisplayRow;
 begin
-  frmGoPhast.sbMain.Panels[1].Text := 'Selected Row: '
-    + IntToStr(frmGoPhast.PhastModel.SelectedRow + 1);
+  frmGoPhast.sbMain.Panels[1].Text := Format(StrSelectedRowD,
+    [frmGoPhast.PhastModel.SelectedRow + 1]);
 end;
 
 procedure TRowSelector.ItemChange(Sender: TObject);
@@ -688,8 +693,8 @@ end;
 
 procedure TLayerSelector.DisplayLayer;
 begin
-  frmGoPhast.sbMain.Panels[1].Text := 'Selected Layer: '
-    + IntToStr(frmGoPhast.PhastModel.SelectedLayer + 1);
+  frmGoPhast.sbMain.Panels[1].Text := Format(StrSelectedLayerD,
+    [frmGoPhast.PhastModel.SelectedLayer + 1]);
 end;
 
 procedure TLayerSelector.ItemChange(Sender: TObject);

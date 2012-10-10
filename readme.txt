@@ -1,4 +1,4 @@
-ModelMuse – Version 2.16.1.0
+ModelMuse – Version 2.17.0.0
 
 NOTE: Any use of trade, product or firm names is for descriptive purposes 
       only and does not imply endorsement by the U.S. Government.
@@ -27,11 +27,11 @@ Either version may be used for installing ModelMuse.  Both contain
 the same version of ModelMuse for use on personal computers:
 
 For 32 or 64-bit operating systems:
-         ModelMuseSetup32_2_16_1.exe
-         ModelMuse32_2_16_1.zip
+         ModelMuseSetup32_2_17.exe
+         ModelMuse32_2_17.zip
 For 64-bit operating systems:
-         ModelMuseSetup64_2_16_1.exe
-         ModelMuse64_2_16_1.zip
+         ModelMuseSetup64_2_17.exe
+         ModelMuse64_2_17.zip
 
 Both distribution files contain:
 
@@ -41,22 +41,22 @@ Both distribution files contain:
           Example models
           Supplementary materials
 
-The file ModelMuseSource2_16_1.zip contains the source code for ModelMuse, 
+The file ModelMuseSource2_17.zip contains the source code for ModelMuse, 
          ModelMonitor, and MF2005_Importer.exe.
 
 B. INSTALLING
 
 The distribution file is an installer.  Execution of the distribution 
 file will install ModelMuse in a directory chosen by the user. By default,
-ModelMuse will be installed in C:\Program Files\USGS\ModelMuse2_16_1 or
-C:\Program Files (x86)\USGS\ModelMuse2_16_1. If 
+ModelMuse will be installed in C:\Program Files\USGS\ModelMuse2_17 or
+C:\Program Files (x86)\USGS\ModelMuse2_17. If 
 the new version of ModelMuse is installed over an older version, the 
 program may be installed in the same directory as the older version of the 
 program. The installer will associate files with the extensions .gpt, 
 .gpb, and .mmZlib with ModelMuse.  The following directory structure will 
 be created in the installation directory:
 
-   |--ModelMuse2_16_1
+   |--ModelMuse2_17
    |  |--bin          ; ModelMuse, ModelMonitor, and MF2005_Importer 
    |  |                   executables.
    |  |--doc          ; Documentation file
@@ -64,7 +64,7 @@ be created in the installation directory:
    |  |                   documentation or the ModelMuse help.
    |  |--examples     ; Sample models.
 
-Included in directory ModelMuse2_16_1\doc is the report on ModelMuse as a 
+Included in directory ModelMuse2_17\doc is the report on ModelMuse as a 
 Portable Document Format (PDF) file. The PDF file is readable and 
 printable on various computer platforms using Acrobat Reader from Adobe.
 The Acrobat Reader is freely available from the following World Wide Web
@@ -100,7 +100,10 @@ documentation or help are in the data folder.
 
 E. COMPILING
 
-ModelMuse and ModelMonitor are compiled with Delphi XE2 from Embarcadero. 
+The 32-bit version of ModelMuse is compiled with Delphi XE from Embarcadero. 
+http://www.embarcadero.com/
+The 64-bit version of ModelMuse and both the 32-bit and 64-bit versions of 
+ModelMonitor are compiled with Delphi XE2 from Embarcadero. 
 http://www.embarcadero.com/
 
 The help system for ModelMuse is compiled with Help and Manual version 5
@@ -109,7 +112,7 @@ from EC Software. http://www.helpandmanual.com/
 MF2005_Importer is compiled with the Intel Fortran compiler.
 
 ModelMuse uses a number of custom comoponents which must be installed 
-in Delphi XE2 before compiling ModelMuse.  Some are included with the 
+in Delphi XE or Delphi XE2 before compiling ModelMuse.  Some are included with the 
 ModelMuse source code.  Addition required files or components are 
 listed below.  In some cases, the files must be altered before they 
 can be used with ModelMuse.  The required changes are listed below.
@@ -132,16 +135,14 @@ source\windows
 
 Installing Graphics32
 http://graphics32.org/wiki/
-Download the latest version of Graphics32. It should be a version more recent than graphics32-1-9-1.
+Download the latest version of Graphics32. It should be version graphics32-1-9-1 or more recent.
 Comment out MouseUp(mbLeft, [], 0, 0); in TCustomImage32.DblClick in GR32_Image.pas.
 Build the runtime package first. Then install the design time package.  
 
 Installing GLScene
 http://glscene.sourceforge.net
-Download a version of GlScene that is more recent than 
-GLScene_v1.1_March_2011_SVN_revision_5593.7z.
-See http://sourceforge.net/scm/?type=svn&group_id=29749 for instructions 
-on downloading the latest source code with Subversion.
+For compiling with Delphi XE, use GLScene_v1.1_March_2011_SVN_revision_5593.7z.
+For compiling with Delphi XE2, use GLScene_v1.1_November_2011_SVN_revision_5991.7z
 Open and read the readme.html file in the source directory of GLScene. 
 Graphics 32 support must be added by modifing GLScene.inc so make the 
 required change.
@@ -152,7 +153,7 @@ Get and install VirtualTreeView version 5.0.0 or later.
 http://www.soft-gems.net/
 
 MadExcept version 4 or later must be installed.  It can be obtained from 
-http://www.madshi.net/madExceptDescription.htm.
+http://www.madshi.net/
 
 TurboPower Abbrevia
 http://sourceforge.net/projects/tpabbrevia/

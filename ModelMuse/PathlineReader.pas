@@ -3,10 +3,11 @@ unit PathlineReader;
 interface
 
 uses Windows, Classes, SysUtils, GoPhastTypes, ColorSchemes, Graphics, GR32,
-  OpenGL12x, RealListUnit, QuadtreeClass, Generics.Collections;
+  OpenGL12x, RealListUnit, QuadtreeClass, Generics.Collections, XBase1;
 
 type
   TShowChoice = (scAll, scSpecified, scStart, scEnd);
+  TAnsiCharArray = array of AnsiChar;
 
   TShowIntegerLimit = class(TPersistent)
   private
@@ -48,12 +49,14 @@ type
     FColumnLimits: TShowIntegerLimit;
     FShowChoice: TShowChoice;
     FTimeLimits: TShowFloatLimit;
+    FParticleGroupLimits: TShowIntegerLimit;
     procedure SetLimitToCurrentIn2D(const Value: boolean);
     procedure SetColumnLimits(const Value: TShowIntegerLimit);
     procedure SetLayerLimits(const Value: TShowIntegerLimit);
     procedure SetRowLimits(const Value: TShowIntegerLimit);
     procedure SetShowChoice(const Value: TShowChoice);
     procedure SetTimeLimits(const Value: TShowFloatLimit);
+    procedure SetParticleGroupLimits(const Value: TShowIntegerLimit);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create;
@@ -62,13 +65,17 @@ type
     property ShowChoice: TShowChoice read FShowChoice write SetShowChoice;
     property LimitToCurrentIn2D: boolean read FLimitToCurrentIn2D
       write SetLimitToCurrentIn2D default True;
-    property ColumnLimits: TShowIntegerLimit read FColumnLimits write SetColumnLimits;
+    property ColumnLimits: TShowIntegerLimit read FColumnLimits
+      write SetColumnLimits;
     property RowLimits: TShowIntegerLimit read FRowLimits write SetRowLimits;
-    property LayerLimits: TShowIntegerLimit read FLayerLimits write SetLayerLimits;
+    property LayerLimits: TShowIntegerLimit read FLayerLimits
+      write SetLayerLimits;
     property TimeLimits: TShowFloatLimit read FTimeLimits write SetTimeLimits;
+    property ParticleGroupLimits: TShowIntegerLimit read FParticleGroupLimits
+      write SetParticleGroupLimits;
   end;
 
-  TColorLimitChoice = (clcNone, clcTime, clcXPrime, clcYPrime, clcZ);
+  TColorLimitChoice = (clcNone, clcTime, clcXPrime, clcYPrime, clcZ, clcGroup);
 
   TPathlineColorLimits = class(TPersistent)
   private
@@ -92,6 +99,8 @@ type
   end;
 
   TPathLine = class;
+  TPathLineV6 = class;
+  TCustomPathLine = class;
 
   TPathLinePoint = class(TCollectionItem)
   private
@@ -106,14 +115,15 @@ type
     FColumn: integer;
     FXPrime: double;
     FYPrime: double;
-    function CheckLimits(Limits: TPathLineDisplayLimits): boolean;
     function GetAbsoluteTime: double;
+  protected
+    function CheckLimits(Limits: TPathLineDisplayLimits): boolean; virtual;
   public
     procedure Assign(Source: TPersistent); override;
     function ShouldShow(Limits: TPathLineDisplayLimits;
       Orientation: TDataSetOrientation; CurrentColRowOrLayer: integer): boolean;
     function ShouldShowLine(Limits: TPathLineDisplayLimits): boolean;
-    function ParentLine: TPathLine;
+    function ParentLine: TCustomPathLine;
     property AbsoluteTime: double read GetAbsoluteTime;
   published
     // Real world X coordinate
@@ -133,36 +143,89 @@ type
     property TimeStep: integer read FTimeStep write FTimeStep;
   end;
 
-  TPathLinePoints = class(TCollection)
+  TPathLinePointV6 = class(TPathLinePoint)
   private
-    FPathLine: TPathLine;
-    function GetPoint(Index: integer): TPathLinePoint;
-  public
-    Constructor Create(PathLine: TPathLine);
-    property Points[Index: integer]: TPathLinePoint read GetPoint; default;
-    function TestGetMaxTime(var Maxtime: double): boolean;
-  end;
-
-  TPathLine = class(TCollectionItem)
-  private
-    FPoints: TPathLinePoints;
-    procedure SetPoints(const Value: TPathLinePoints);
+    FTimePointIndex: integer;
+    FLineSegmentIndex: Integer;
+    FParticleGroup: integer;
+  protected
+    function CheckLimits(Limits: TPathLineDisplayLimits): boolean; override;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Collection: TCollection); override;
-    Destructor Destroy; override;
   published
-    property Points: TPathLinePoints read FPoints write SetPoints;
+    property ParticleGroup: integer read FParticleGroup write FParticleGroup;
+    property TimePointIndex: integer read FTimePointIndex write FTimePointIndex;
+    property LineSegmentIndex: Integer read FLineSegmentIndex write FLineSegmentIndex;
   end;
 
-  TPathLines = class(TCollection)
+  TCustomPathLinePoints = class(TCollection)
   private
-    function GetLine(Index: integer): TPathLine;
+    function GetPoint(Index: integer): TPathLinePoint;
+  protected
+    FPathLine: TCustomPathLine;
+  public
+    property Points[Index: integer]: TPathLinePoint read GetPoint; default;
+    Constructor Create(ItemClass: TCollectionItemClass; PathLine: TCustomPathLine);
+    function TestGetMaxTime(var Maxtime: double): boolean;
+  end;
+
+  TPathLinePoints = class(TCustomPathLinePoints)
+  public
+    Constructor Create(PathLine: TPathLine);
+  end;
+
+  TPathLinePointsV6 = class(TCustomPathLinePoints)
+  public
+    Constructor Create(PathLine: TPathLineV6);
+  end;
+
+  TCustomPathLine = class(TCollectionItem)
+  private
+    FPoints: TCustomPathLinePoints;
+    procedure SetPoints(const Value: TCustomPathLinePoints);
+  public
+    procedure Assign(Source: TPersistent); override;
+    Destructor Destroy; override;
+  published
+    property Points: TCustomPathLinePoints read FPoints write SetPoints;
+  end;
+
+  TPathLine = class(TCustomPathLine)
+  public
+    Constructor Create(Collection: TCollection); override;
+  end;
+
+  TPathLineV6 = class(TCustomPathLine)
+  public
+    Constructor Create(Collection: TCollection); override;
+  end;
+
+  TCustomPathLines = class(TCollection)
+  private
+    function GetLine(Index: integer): TCustomPathLine;
+  protected
+    procedure DefineShapeFileFields(Fields: TStringList); virtual;
+    procedure UpdateShapeFileFields(ALine: TCustomPathLine;
+      ShapeDataBase: TXBase); virtual;
+    procedure ExportShapefile(FileName: string);
+    function XbaseFieldName(AName: string): Ansistring;
+  public
+    property Lines[Index: integer]: TCustomPathLine read GetLine; default;
+    function TestGetMaxTime(var Maxtime: double): boolean;
+  end;
+
+  TPathLines = class(TCustomPathLines)
   public
     Constructor Create;
-    property Lines[Index: integer]: TPathLine read GetLine; default;
-    procedure ExportShapefile(FileName: string);
-    function TestGetMaxTime(var Maxtime: double): boolean;
+  end;
+
+  TPathLinesV6 = class(TCustomPathLines)
+  protected
+    procedure DefineShapeFileFields(Fields: TStringList); override;
+    procedure UpdateShapeFileFields(ALine: TCustomPathLine;
+      ShapeDataBase: TXBase); override;
+  public
+    Constructor Create;
   end;
 
   TCustomModpathSettings = class(TPersistent)
@@ -201,9 +264,17 @@ type
       write FVisible Stored False;
    end;
 
+  TPathlineVersion = (pv5, pv6_0);
+  TTrackingDirection = (tdForward, tdBackward);
+
   TPathLineReader = class(TPathLineSettings)
   private
-    FLines: TPathLines;
+    class var
+      FPathlineGLIndex: TGLuint;
+      FListInitialized: boolean;
+  private
+    FLinesV5: TPathLines;
+    FLinesV6: TPathLinesV6;
     FFileName: string;
     FFile: TFileStream;
     FFileDate: TDateTime;
@@ -215,19 +286,29 @@ type
     FFrontQuadTree: TRbwQuadTree;
     FSideQuadTree: TRbwQuadTree;
     FModel: TBaseModel;
-    class var
-      FPathlineGLIndex: TGLuint;
-      FListInitialized: boolean;
-    procedure SetLines(const Value: TPathLines);
+    FModpathVersion: TPathlineVersion;
+    FReferenceTimeV6: double;
+    FTrackingDirectionV6: TTrackingDirection;
+    FMaxParticleGroup: integer;
+    FMinParticleGroup: integer;
+    procedure SetLinesV5(const Value: TPathLines);
     procedure SetFileDate(const Value: TDateTime);
     procedure SetMaxTime(const Value: double);
     procedure SetMinTime(const Value: double);
     function GetPointColor(MaxValue, MinValue: double;
       Point: TPathLinePoint): TColor;
     procedure GetMinMaxValues(var MaxValue: Double; var MinValue: Double);
-    function CheckShowLine(Line: TPathLine): Boolean;
+    function CheckShowLine(Line: TCustomPathLine): Boolean;
     class function GetPathlineGLIndex: TGLuint; static;
-    procedure Record3DPathLines;
+    procedure ReadFileV5;
+    procedure DrawLines3D(LocalLines: TCustomPathLines);
+    procedure DrawLines(Orientation: TDataSetOrientation; const BitMap: TBitmap32;
+      LocalLines: TCustomPathLines);
+    procedure Record3DPathLines(LocalLines: TCustomPathLines);
+    procedure SetLinesV6(const Value: TPathLinesV6);
+    procedure ReadFileV6;
+    procedure SetMaxParticleGroup(const Value: integer);
+    procedure SetMinParticleGroup(const Value: integer);
   protected
     class property PathlineGLIndex: TGLuint read GetPathlineGLIndex;
   public
@@ -241,12 +322,22 @@ type
     property TopQuadTree: TRbwQuadTree read FTopQuadTree;
     property FrontQuadTree: TRbwQuadTree read FFrontQuadTree;
     property SideQuadTree: TRbwQuadTree read FSideQuadTree;
+    procedure ExportShapefile(FileName: string);
   published
-    property Lines: TPathLines read FLines write SetLines;
+    property Lines: TPathLines read FLinesV5 write SetLinesV5;
+    property LinesV6: TPathLinesV6 read FLinesV6 write SetLinesV6;
     property FileName: string read FFileName write FFileName;
     property FileDate: TDateTime read FFileDate write SetFileDate;
     property MaxTime: double read FMaxTime write SetMaxTime;
     property MinTime: double read FMinTime write SetMinTime;
+    property MinParticleGroup: integer read FMinParticleGroup write SetMinParticleGroup;
+    property MaxParticleGroup: integer read FMaxParticleGroup write SetMaxParticleGroup;
+    property ModpathVersion: TPathlineVersion read FModpathVersion
+      write FModpathVersion;
+    property TrackingDirectionV6: TTrackingDirection read FTrackingDirectionV6
+      write FTrackingDirectionV6;
+    property ReferenceTimeV6: double read FReferenceTimeV6
+      write FReferenceTimeV6;
   end;
 
   TPathLinesObjectList = TObjectList<TPathLineReader>;
@@ -269,6 +360,7 @@ type
     FEndColumnLimits: TShowIntegerLimit;
     FStartZoneLimits: TShowIntegerLimit;
     FWhereToPlot: TWhereToPlot;
+    FParticleGroupLimits: TShowIntegerLimit;
     procedure SetLimitToCurrentIn2D(const Value: boolean);
     procedure SetStartColumnLimits(const Value: TShowIntegerLimit);
     procedure SetStartLayerLimits(const Value: TShowIntegerLimit);
@@ -282,37 +374,40 @@ type
     procedure SetStartZoneLimits(const Value: TShowIntegerLimit);
     procedure SetTrackingTimeLimits(const Value: TShowFloatLimit);
     procedure SetWhereToPlot(const Value: TWhereToPlot);
+    procedure SetParticleGroupLimits(const Value: TShowIntegerLimit);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create;
     Destructor Destroy; override;
   published
-    property ShowChoice: TEndpointShowChoice read FShowChoice 
+    property ShowChoice: TEndpointShowChoice read FShowChoice
       write SetShowChoice;
     property LimitToCurrentIn2D: boolean read FLimitToCurrentIn2D
       write SetLimitToCurrentIn2D default True;
-    property StartColumnLimits: TShowIntegerLimit read FStartColumnLimits 
+    property StartColumnLimits: TShowIntegerLimit read FStartColumnLimits
       write SetStartColumnLimits;
-    property StartRowLimits: TShowIntegerLimit read FStartRowLimits 
+    property StartRowLimits: TShowIntegerLimit read FStartRowLimits
       write SetStartRowLimits;
     property StartLayerLimits: TShowIntegerLimit read FStartLayerLimits
       write SetStartLayerLimits;
-    property StartZoneLimits: TShowIntegerLimit read FStartZoneLimits 
+    property StartZoneLimits: TShowIntegerLimit read FStartZoneLimits
       write SetStartZoneLimits;
-    property ReleaseTimeLimits: TShowFloatLimit read FReleaseTimeLimits 
+    property ReleaseTimeLimits: TShowFloatLimit read FReleaseTimeLimits
       write SetReleaseTimeLimits;
-    property EndColumnLimits: TShowIntegerLimit read FEndColumnLimits 
+    property EndColumnLimits: TShowIntegerLimit read FEndColumnLimits
       write SetEndColumnLimits;
-    property EndRowLimits: TShowIntegerLimit read FEndRowLimits 
+    property EndRowLimits: TShowIntegerLimit read FEndRowLimits
       write SetEndRowLimits;
-    property EndLayerLimits: TShowIntegerLimit read FEndLayerLimits 
+    property EndLayerLimits: TShowIntegerLimit read FEndLayerLimits
       write SetEndLayerLimits;
     property EndZoneLimits: TShowIntegerLimit read FEndZoneLimits
       write SetEndZoneLimits;
     property TrackingTimeLimits: TShowFloatLimit read FTrackingTimeLimits
       write SetTrackingTimeLimits;
-    property WhereToPlot: TWhereToPlot read FWhereToPlot write SetWhereToPlot 
+    property WhereToPlot: TWhereToPlot read FWhereToPlot write SetWhereToPlot
       default wtpEnd;
+    property ParticleGroupLimits: TShowIntegerLimit read FParticleGroupLimits
+      write SetParticleGroupLimits;
   end;
 
   TEndPoint = class(TCollectionItem)
@@ -342,7 +437,9 @@ type
     FStartLayer: integer;
     FReleaseTime: double;
     FStartZoneCode: integer;
-    function CheckLimits(Limits: TEndPointDisplayLimits): boolean;
+    FParticleNumber: Integer;
+  protected
+    function CheckLimits(Limits: TEndPointDisplayLimits): boolean; virtual;
   public
     procedure Assign(Source: TPersistent); override;
     function ShouldShow(Limits: TEndPointDisplayLimits;
@@ -378,24 +475,79 @@ type
     property StartYPrime: double read FStartYPrime write FStartYPrime;
     property StartLocalZ: double read FStartLocalZ write FStartLocalZ;
     property StartTimeStep: integer read FStartTimeStep write FStartTimeStep;
+    {
+     The meaning of the Termination code is different in MODPATH version 5
+     and MODPATH version 6.
+     Version 5:
+       IDCODE = -2; particle is unreleased.
+       IDCODE = -1; particle stranded in inactive (dry) cell.
+       IDCODE = 0; particle remains active.
+       IDCODE = 1; particle discharged normally.
+       IDCODE = 2; particle stopped in a specified zone.
+     Version 6:
+       Pending : Status = 0. Particles that are scheduled to be released but
+         have not yet been released. At the start of a simulation, all
+         particles have a status of pending.
+       Active : Status = 1. Particles that are actively moving in the flow
+         system and have not yet reached a termination location.
+       NormallyTerminated : Status = 2. Particles that have terminated at a
+         boundary or internally at a cell with an internal source/sink.
+       ZoneTerminated : Status = 3. Particles that terminated at a cell with
+         a specified zone number indicating automatic termination.
+       Unreleased : Status = 4. Particles that were not released and were
+         tagged as permanently unreleased. The most common situation that
+         results in unreleased particles is a dry or inactive cell condition
+         at the scheduled release time.
+       Stranded : Status = 5. Particles that remain in cells after the cell
+         goes dry. Stranded particles sometimes occur in transient simulations.
+         Once a particle is stranded, it cannot be reactivated and is
+         considered terminated.
+    }
     property TerminationCode: integer read FTerminationCode write FTerminationCode;
     property EndTimeStep: integer read FEndTimeStep write FEndTimeStep;
     property ReleaseTime: double read FReleaseTime write FReleaseTime;
+    property ParticleNumber: Integer read FParticleNumber write FParticleNumber;
   end;
 
-  TEndPoints = class(TCollection)
+  TEndPointV6 = class(TEndPoint)
+  private
+    FParticleGroup: integer;
+    FInitialCellFace: Integer;
+    FFinalCellFace: Integer;
+    FParticleLabel: string;
+  protected
+    function CheckLimits(Limits: TEndPointDisplayLimits): boolean; override;
+  public
+    procedure Assign(Source: TPersistent); override;
+  published
+    property ParticleGroup: integer read FParticleGroup write FParticleGroup;
+    property InitialCellFace: Integer read FInitialCellFace write FInitialCellFace;
+    property FinalCellFace: Integer read FFinalCellFace write FFinalCellFace;
+    property ParticleLabel: string read FParticleLabel write FParticleLabel;
+  end;
+
+  TCustomEndPoints = class(TCollection)
   private
     function GetPoint(Index: integer): TEndPoint;
   public
-    Constructor Create;
     property Points[Index: integer]: TEndPoint read GetPoint; default;
     procedure ExportShapefileAtStartingLocations(FileName: string);
     procedure ExportShapefileAtEndingLocations(FileName: string);
   end;
 
+  TEndPoints = class(TCustomEndPoints)
+  public
+    Constructor Create;
+  end;
+
+  TEndPointsV6 = class(TCustomEndPoints)
+  public
+    Constructor Create;
+  end;
+
   TEndpointColorLimitChoice = (elcNone, elcReleaseTime, elcTrackingTime,
     elcStartXPrime, elcStartYPrime, elcStartZ, elcStartZone,
-    elcEndXPrime, elcEndYPrime, elcEndZ, elcEndZone);
+    elcEndXPrime, elcEndYPrime, elcEndZ, elcEndZone, elcParticleGroup);
 
   TEndPointColorLimits = class(TPersistent)
   private
@@ -439,10 +591,13 @@ type
 
   TEndPointReader = class(TEndPointSettings)
   private
+    class var
+      FListInitialized: Boolean;
+      FPathlineGLIndex: Cardinal;
+  private
     FPoints: TEndPoints;
     FFileName: string;
     FFileDate: TDateTime;
-    StartZ: Single;
     FMaxTrackingTime: double;
     FMinTrackingTime: double;
     FMinReleaseTime: double;
@@ -457,9 +612,10 @@ type
     FFrontQuadTree: TRbwQuadTree;
     FSideQuadTree: TRbwQuadTree;
     FModel: TBaseModel;
-    class var
-      FListInitialized: Boolean;
-      FPathlineGLIndex: Cardinal;
+    FPointsV6: TEndPointsV6;
+    FModpathVersion: TPathlineVersion;
+    FMaxParticleGroup: integer;
+    FMinParticleGroup: integer;
     procedure SetPoints(const Value: TEndPoints);
     procedure SetFileDate(const Value: TDateTime);
     class function GetEndPointGLIndex: TGLuint; static;
@@ -475,16 +631,22 @@ type
     procedure SetMinEndZone(const Value: integer);
     procedure SetMinStartZone(const Value: integer);
     procedure Record3DEndPoints;
+    procedure SetPointsV6(const Value: TEndPointsV6);
+    procedure ReadFileV5;
+    procedure ReadFileV6;
+    procedure SetMinMaxValues(LocalPoints: TCustomEndPoints);
+    procedure SetMaxParticleGroup(const Value: integer);
+    procedure SetMinParticleGroup(const Value: integer);
   protected
     class property EndPointGLIndex: TGLuint read GetEndPointGLIndex;
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
-    procedure ReadFile;
     procedure Draw(Orientation: TDataSetOrientation; const BitMap: TBitmap32);
     procedure Draw3D;
     procedure Invalidate;
+    procedure ReadFile;
     property TopQuadTree: TRbwQuadTree read FTopQuadTree;
     property FrontQuadTree: TRbwQuadTree read FFrontQuadTree;
     property SideQuadTree: TRbwQuadTree read FSideQuadTree;
@@ -503,7 +665,12 @@ type
     property MaxStartZone: integer read FMaxStartZone write SetMaxStartZone;
     property MinEndZone: integer read FMinEndZone write SetMinEndZone;
     property MaxEndZone: integer read FMaxEndZone write SetMaxEndZone;
+    property MinParticleGroup: integer read FMinParticleGroup write SetMinParticleGroup;
+    property MaxParticleGroup: integer read FMaxParticleGroup write SetMaxParticleGroup;
     property Points: TEndPoints read FPoints write SetPoints;
+    property PointsV6: TEndPointsV6 read FPointsV6 write SetPointsV6;
+    property ModpathVersion: TPathlineVersion read FModpathVersion
+      write FModpathVersion;
   end;
 
   TEndPointObjectList = TObjectList<TEndPointReader>;
@@ -515,11 +682,13 @@ type
     FLimitToCurrentIn2D: boolean;
     FRowLimits: TShowIntegerLimit;
     FColumnLimits: TShowIntegerLimit;
+    FParticleGroupLimits: TShowIntegerLimit;
     procedure SetShowChoice(const Value: TShowChoice);
     procedure SetColumnLimits(const Value: TShowIntegerLimit);
     procedure SetLayerLimits(const Value: TShowIntegerLimit);
     procedure SetLimitToCurrentIn2D(const Value: boolean);
     procedure SetRowLimits(const Value: TShowIntegerLimit);
+    procedure SetParticleGroupLimits(const Value: TShowIntegerLimit);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create;
@@ -533,6 +702,7 @@ type
     property RowLimits: TShowIntegerLimit read FRowLimits write SetRowLimits;
     property LayerLimits: TShowIntegerLimit read FLayerLimits
       write SetLayerLimits;
+    property ParticleGroupLimits: TShowIntegerLimit read FParticleGroupLimits write SetParticleGroupLimits;
   end;
 
   TTimeSeriesPoint = class(TCollectionItem)
@@ -550,13 +720,15 @@ type
     FRow: integer;
     FYPrime: double;
     FColumn: integer;
-    function CheckLimits(Limits: TTimeSeriesDisplayLimits): boolean;
+  protected
+    function CheckLimits(Limits: TTimeSeriesDisplayLimits): boolean; virtual;
   public
     procedure Assign(Source: TPersistent); override;
     function ShouldShow(Limits: TTimeSeriesDisplayLimits;
       Orientation: TDataSetOrientation; CurrentColRowOrLayer: integer): boolean;
     function ShouldShowSeries(Limits: TTimeSeriesDisplayLimits): boolean;
   published
+    // Time point index
     property TimeStepIndex: integer read FTimeStepIndex write FTimeStepIndex;
     property ParticleIndex: integer read FParticleIndex write FParticleIndex;
     property Layer: integer read FLayer write FLayer;
@@ -569,35 +741,95 @@ type
     property Z: double read FZ write FZ;
     property LocalZ: double read FLocalZ write FLocalZ;
     property TrackingTime: double read FTrackingTime write FTrackingTime;
+    // cumulative time step
     property TimeStep: integer read FTimeStep write FTimeStep;
   end;
 
-  TTimeSeriesPoints = class(TCollection)
+  TTimeSeriesPointV6 = class(TTimeSeriesPoint)
+  private
+    FParticleGroup: integer;
+  protected
+    function CheckLimits(Limits: TTimeSeriesDisplayLimits): boolean; override;
+  public
+    procedure Assign(Source: TPersistent); override;
+  published
+    property ParticleGroup: integer read FParticleGroup write FParticleGroup;
+  end;
+
+  TCustomTimeSeriesPoints = class(TCollection)
   private
     function GetPoint(Index: integer): TTimeSeriesPoint;
   public
-    Constructor Create;
     property Points[Index: integer]: TTimeSeriesPoint read GetPoint; default;
   end;
 
-  // @name represents the position of a particle at different times.
-  TTimeSeries = class(TCollectionItem)
+  TTimeSeriesPoints = class(TCustomTimeSeriesPoints)
+  public
+    Constructor Create;
+  end;
+
+  TTimeSeriesPointsV6 = class(TCustomTimeSeriesPoints)
   private
-    FPoints: TTimeSeriesPoints;
+    function GetPoint(Index: integer): TTimeSeriesPointV6;
+  public
+    Constructor Create;
+    property Points[Index: integer]: TTimeSeriesPointV6 read GetPoint; default;
+  end;
+
+  TCustomTimeSeries = class(TCollectionItem)
+  private
     FTimes: TRealList;
-    procedure SetPoints(const Value: TTimeSeriesPoints);
-    function GetTimes: TRealList;
+    function GetTimes: TRealList; virtual; abstract;
     procedure SetTimes(const Value: TRealList);
+  protected
+    function GetPoints: TCustomTimeSeriesPoints; virtual; abstract;
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
     property Times: TRealList read GetTimes write SetTimes;
+    property Points: TCustomTimeSeriesPoints read GetPoints;
+  end;
+
+  // @name represents the position of a particle at different times.
+  TTimeSeries = class(TCustomTimeSeries)
+  private
+    FPoints: TTimeSeriesPoints;
+    function GetTimes: TRealList; override;
+    procedure SetPoints(const Value: TTimeSeriesPoints);
+  protected
+    function GetPoints: TCustomTimeSeriesPoints; override;
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Collection: TCollection); override;
+    destructor Destroy; override;
   published
     property Points: TTimeSeriesPoints read FPoints write SetPoints;
   end;
 
-  TTimeSeriesCollection = class(TCollection)
+  TTimeSeriesV6 = class(TCustomTimeSeries)
+  private
+    FPoints: TTimeSeriesPointsV6;
+    function GetTimes: TRealList; override;
+    procedure SetPoints(const Value: TTimeSeriesPointsV6);
+  protected
+    function GetPoints: TCustomTimeSeriesPoints; override;
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Collection: TCollection); override;
+    destructor Destroy; override;
+  published
+    property Points: TTimeSeriesPointsV6 read FPoints write SetPoints;
+  end;
+
+  TCustomTimeSeriesCollection = class(TCollection)
+  private
+    function GetSeries(Index: integer): TCustomTimeSeries;
+  public
+    property Series[Index: integer]: TCustomTimeSeries read GetSeries; default;
+  end;
+
+  TTimeSeriesCollection = class(TCustomTimeSeriesCollection)
   private
     function GetSeries(Index: integer): TTimeSeries;
   public
@@ -605,10 +837,18 @@ type
     property Series[Index: integer]: TTimeSeries read GetSeries; default;
   end;
 
+  TTimeSeriesCollectionV6 = class(TCustomTimeSeriesCollection)
+  private
+    function GetSeries(Index: integer): TTimeSeriesV6;
+  public
+    Constructor Create;
+    property Series[Index: integer]: TTimeSeriesV6 read GetSeries; default;
+  end;
+
   TTimeSeriesColorLimitChoice = (tscNone, tscParticleNumber,
     tscXPrime, tscYPrime, tscZ,
     tscStartXPrime, tscStartYPrime, tscStartZ,
-    tscEndXPrime, tscEndYPrime, tscEndZ);
+    tscEndXPrime, tscEndYPrime, tscEndZ, tscGroup);
 
   TTimeSeriesColorLimits = class(TPersistent)
   private
@@ -655,6 +895,7 @@ type
     FFileName: string;
     FFileDate: TDateTime;
     FSeries: TTimeSeriesCollection;
+    FSeriesV6: TTimeSeriesCollectionV6;
     FMaxTime: double;
     FMinTime: double;
     FTimeIndex: integer;
@@ -663,13 +904,15 @@ type
     FRecordedTimeSeries: array of Boolean;
     FRealList: TRealList;
     FModel: TBaseModel;
+    FMaxParticleGroup: Integer;
+    FMinParticleGroup: Integer;
     procedure SetFileDate(const Value: TDateTime);
     procedure SetLines(const Value: TTimeSeriesCollection);
     procedure SetMaxTime(const Value: double);
     procedure SetMinTime(const Value: double);
     procedure SetTimeIndex(const Value: integer);
     procedure GetMinMaxValues(var MaxValue: Double; var MinValue: Double);
-    function CheckShowSeries(Series: TTimeSeries): Boolean;
+    function CheckShowSeries(Series: TCustomTimeSeries): Boolean;
     function GetPointColor(MaxValue, MinValue: double;
       Point: TTimeSeriesPoint): TColor;
     function GetRecordedTimeSeries(ATimeIndex: integer): boolean;
@@ -679,6 +922,11 @@ type
     procedure EnsureGLArrays(ATimeIndex: Integer);
     function GetTimes: TRealList;
     procedure SetTimes(const Value: TRealList);
+    procedure SetLinesV6(const Value: TTimeSeriesCollectionV6);
+    procedure ReadFileV5;
+    procedure ReadFileV6;
+    procedure SetMaxParticleGroup(const Value: Integer);
+    procedure SetMinParticleGroup(const Value: Integer);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Model: TBaseModel);
@@ -697,18 +945,23 @@ type
     property FileName: string read FFileName write FFileName;
     property FileDate: TDateTime read FFileDate write SetFileDate;
     property Series: TTimeSeriesCollection read FSeries write SetLines;
+    property SeriesV6: TTimeSeriesCollectionV6 read FSeriesV6 write SetLinesV6;
     property MaxTime: double read FMaxTime write SetMaxTime;
     property MinTime: double read FMinTime write SetMinTime;
     property TimeIndex: integer read FTimeIndex write SetTimeIndex;
+    property MinParticleGroup: Integer read FMinParticleGroup write SetMinParticleGroup;
+    property MaxParticleGroup: Integer read FMaxParticleGroup write SetMaxParticleGroup;
   end;
 
   TimeSeriesObjectList = TObjectList<TTimeSeriesReader>;
+
+  function GetPathlineVersion(const FileName: string): TPathlineVersion;
 
 implementation
 
 uses
   Contnrs, frmGoPhastUnit, FastGEO, ZoomBox2, ModflowGridUnit, BigCanvasMethods,
-  ModelMuseUtilities, PhastModelUnit, XBase1, frmExportShapefileUnit, 
+  ModelMuseUtilities, PhastModelUnit, frmExportShapefileUnit,
   ShapefileUnit, AbstractGridUnit;
 
 const
@@ -738,6 +991,7 @@ const
   StrCOLUMN: AnsiString = 'COLUMN';
   StrTIMESTEP: AnsiString = 'TIME_STEP';
   StrPARTICLE: AnsiString = 'PARTICLE';
+  StrParticleGroup: AnsiString = 'PARTICLE_GROUP';
 
 procedure ConvertIndicies(NCol, NRow: Integer;
   var I, K, J: Integer);
@@ -759,7 +1013,18 @@ begin
 end;
 
 procedure ConvertCoordinates(Grid: TModflowGrid; var XPrime, YPrime: single;
-  var Point2D: TPoint2D);
+  var Point2D: TPoint2D); overload;
+begin
+  // need to convert X and Y to real world coordinates.
+  XPrime := XPrime + Grid.ColumnPosition[0];
+  YPrime := YPrime + Grid.RowPosition[Grid.RowCount];
+  Point2D.X := XPrime;
+  Point2D.Y := YPrime;
+  Point2D := Grid.RotateFromGridCoordinatesToRealWorldCoordinates(Point2D);
+end;
+
+procedure ConvertCoordinates(Grid: TModflowGrid; var XPrime, YPrime: double;
+  var Point2D: TPoint2D); overload;
 begin
   // need to convert X and Y to real world coordinates.
   XPrime := XPrime + Grid.ColumnPosition[0];
@@ -790,19 +1055,107 @@ begin
 //    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, @Colors);
 end;
 
-{ TPathLine }
-
-procedure TPathLine.Assign(Source: TPersistent);
+function AnsiCharArrayToStr(CharArray: TAnsiCharArray): string;
+var
+  StringBuilder: TStringBuilder;
+  Index: Integer;
 begin
-  if Source is TPathLine then
-  begin
-    FPoints.Assign(TPathLine(Source).FPoints);
-  end
-  else
-  begin
-    inherited;
+  StringBuilder := TStringBuilder.Create;
+  try
+    StringBuilder.Capacity := Length(CharArray);
+    for Index := 0 to Length(CharArray) - 1 do
+    begin
+      StringBuilder.Append(CharArray[Index]);
+    end;
+    result := StringBuilder.ToString;
+  finally
+    StringBuilder.Free;
   end;
 end;
+
+
+function GetPathlineVersion(const FileName: string): TPathlineVersion;
+const
+  MP6 = 'MODPATH_PATHLINE_FILE';
+var
+  AFile: TFileStream;
+  CharArray: TAnsiCharArray;
+  AString: AnsiString;
+begin
+  Assert(FileExists(FileName));
+  AFile := TFileStream.Create(FileName, fmOpenRead or fmShareDenyNone);
+  try
+    SetLength(CharArray, Length(MP6));
+    AFile.Read(CharArray[0], Length(MP6) * SizeOf(AnsiChar));
+    AString := AnsiCharArrayToStr(CharArray);
+    if AString = MP6 then
+    begin
+      result := pv6_0;
+    end
+    else
+    begin
+      result := pv5;
+    end;
+  finally
+    AFile.Free;
+  end;
+end;
+
+function GetEndpointVersion(const FileName: string): TPathlineVersion;
+const
+  MP6 = 'MODPATH_ENDPOINT_FILE 6 0';
+var
+  AFile: TFileStream;
+  CharArray: TAnsiCharArray;
+  AString: AnsiString;
+begin
+  Assert(FileExists(FileName));
+  AFile := TFileStream.Create(FileName, fmOpenRead or fmShareDenyNone);
+  try
+    SetLength(CharArray, Length(MP6));
+    AFile.Read(CharArray[0], Length(MP6) * SizeOf(AnsiChar));
+    AString := AnsiCharArrayToStr(CharArray);
+    if AString = MP6 then
+    begin
+      result := pv6_0;
+    end
+    else
+    begin
+      result := pv5;
+    end;
+  finally
+    AFile.Free;
+  end;
+end;
+
+function GetTimeSeriesVersion(const FileName: string): TPathlineVersion;
+const
+  MP6 = 'MODPATH_TIMESERIES_FILE 6 0';
+var
+  AFile: TFileStream;
+  CharArray: TAnsiCharArray;
+  AString: AnsiString;
+begin
+  Assert(FileExists(FileName));
+  AFile := TFileStream.Create(FileName, fmOpenRead or fmShareDenyNone);
+  try
+    SetLength(CharArray, Length(MP6));
+    AFile.Read(CharArray[0], Length(MP6) * SizeOf(AnsiChar));
+    AString := AnsiCharArrayToStr(CharArray);
+    if AString = MP6 then
+    begin
+      result := pv6_0;
+    end
+    else
+    begin
+      result := pv5;
+    end;
+  finally
+    AFile.Free;
+  end;
+end;
+
+{ TPathLine }
 
 constructor TPathLine.Create(Collection: TCollection);
 begin
@@ -810,13 +1163,25 @@ begin
   FPoints := TPathLinePoints.Create(self);
 end;
 
-destructor TPathLine.Destroy;
+procedure TCustomPathLine.Assign(Source: TPersistent);
+begin
+  if Source is TCustomPathLine then
+  begin
+    FPoints.Assign(TCustomPathLine(Source).FPoints);
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+destructor TCustomPathLine.Destroy;
 begin
   FPoints.Free;
   inherited;
 end;
 
-procedure TPathLine.SetPoints(const Value: TPathLinePoints);
+procedure TCustomPathLine.SetPoints(const Value: TCustomPathLinePoints);
 begin
   FPoints.Assign(Value);
 end;
@@ -831,10 +1196,16 @@ begin
   begin
     PathLineReader := TPathLineReader(Source);
     Lines := PathLineReader.Lines;
+    LinesV6 := PathLineReader.LinesV6;
     FileName := PathLineReader.FileName;
     MinTime := PathLineReader.MinTime;
     MaxTime := PathLineReader.MaxTime;
     FileDate := PathLineReader.FileDate;
+    ModpathVersion := PathLineReader.ModpathVersion;
+    TrackingDirectionV6 := PathLineReader.TrackingDirectionV6;
+    ReferenceTimeV6 := PathLineReader.ReferenceTimeV6;
+    MinParticleGroup := PathLineReader.MinParticleGroup;
+    MaxParticleGroup := PathLineReader.MaxParticleGroup;
     TopQuadTree.Clear;
     FrontQuadTree.Clear;
     SideQuadTree.Clear;
@@ -846,7 +1217,8 @@ constructor TPathLineReader.Create(Model: TBaseModel);
 begin
   inherited Create;
   FModel := Model;
-  FLines := TPathLines.Create;
+  FLinesV5 := TPathLines.Create;
+  FLinesV6 := TPathLinesV6.Create;
   FTopQuadTree := TRbwQuadTree.Create(nil);
   FFrontQuadTree := TRbwQuadTree.Create(nil);
   FSideQuadTree := TRbwQuadTree.Create(nil);
@@ -857,316 +1229,42 @@ begin
   FSideQuadTree.Free;
   FFrontQuadTree.Free;
   FTopQuadTree.Free;
-  FLines.Free;
+  FLinesV6.Free;
+  FLinesV5.Free;
   inherited;
 end;
 
-
 procedure TPathLineReader.Draw(Orientation: TDataSetOrientation;
   const BitMap: TBitmap32);
-var
-  LineIndex: Integer;
-  Line: TPathLine;
-  APoint: TPathLinePoint;
-  ColRowOrLayer: integer;
-  PointIndex: Integer;
-  ShowPriorPoint: Boolean;
-  ZoomBox: TQRbwZoomBox2;
-  Points: array [0..1] of TPoint;
-  ADisplayPoint: TPoint;
-  MaxValue, MinValue: double;
-  Grid: TModflowGrid;
-  AColor: TColor;
-  AColor32: TColor32;
-  QuadTree: TRbwQuadTree;
-  ShouldInitializeTree: Boolean;
-  Limits: TGridLimit;
 begin
-  if not Visible then
-  begin
-    Exit;
-  end;
-  Grid := (FModel as TCustomModel).ModflowGrid;
-  if Grid = nil then
-  begin
-    Exit;
-  end;
-  if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0)
-    or (Grid.ColumnCount <= 0) then
-  begin
-    Exit;
-  end;
-  ColRowOrLayer := -1;
-  ZoomBox := nil;
-  QuadTree := nil;
-  case Orientation of
-    dsoTop:
+  case ModpathVersion of
+    pv5:
       begin
-        QuadTree := TopQuadTree;
-        ZoomBox := frmGoPhast.frameTopView.ZoomBox;
-        ColRowOrLayer := Grid.SelectedLayer+1;
+        DrawLines(Orientation,BitMap,Lines);
       end;
-    dsoFront:
+    pv6_0:
       begin
-        QuadTree := FrontQuadTree;
-        ZoomBox := frmGoPhast.frameFrontView.ZoomBox;
-        ColRowOrLayer := Grid.SelectedRow+1;
+        DrawLines(Orientation,BitMap,LinesV6);
       end;
-    dsoSide:
-      begin
-        QuadTree := SideQuadTree;
-        ZoomBox := frmGoPhast.frameSideView.ZoomBox;
-        ColRowOrLayer := Grid.SelectedColumn+1;
-      end;
-    dso3D: Assert(False);
-    else Assert(False);
-  end;
-  GetMinMaxValues(MaxValue, MinValue);
-
-  ShouldInitializeTree := QuadTree.Count = 0;
-  if ShouldInitializeTree then
-  begin
-    Limits := Grid.GridLimits(OrientationToViewDirection(Orientation));
-    case Orientation of
-      dsoTop:
-        begin
-          QuadTree.XMax := Limits.MaxX;
-          QuadTree.XMin := Limits.MinX;
-          QuadTree.YMax := Limits.MaxY;
-          QuadTree.YMin := Limits.MinY;
-        end;
-      dsoFront:
-        begin
-          QuadTree.XMax := Limits.MaxX;
-          QuadTree.XMin := Limits.MinX;
-          QuadTree.YMax := Limits.MaxZ;
-          QuadTree.YMin := Limits.MinZ;
-        end;
-      dsoSide:
-        begin
-          QuadTree.XMax := Limits.MaxY;
-          QuadTree.XMin := Limits.MinY;
-          QuadTree.YMax := Limits.MaxZ;
-          QuadTree.YMin := Limits.MinZ;
-        end
-      else Assert(False);
-    end;
-  end;
-  for LineIndex := 0 to Lines.Count - 1 do
-  begin
-    Line := Lines[LineIndex];
-    if Line.Points.Count > 0 then
-    begin
-      if CheckShowLine(Line) then
-      begin
-        ShowPriorPoint := False;
-        Points[0].X := 0;
-        Points[0].Y := 0;
-        for PointIndex := 0 to Line.Points.Count - 1 do
-        begin
-          APoint := Line.Points[PointIndex];
-          if APoint.ShouldShow(DisplayLimits, Orientation, ColRowOrLayer) then
-          begin
-            case Orientation of
-              dsoTop:
-                begin
-                  ADisplayPoint.X := ZoomBox.XCoord(APoint.X);
-                  ADisplayPoint.Y := ZoomBox.YCoord(APoint.Y);
-                  if ShouldInitializeTree then
-                  begin
-                    QuadTree.AddPoint(APoint.X, APoint.Y, APoint);
-                  end;
-                end;
-              dsoFront:
-                begin
-                  ADisplayPoint.X := ZoomBox.XCoord(APoint.X);
-                  ADisplayPoint.Y := ZoomBox.YCoord(APoint.Z);
-                  if ShouldInitializeTree then
-                  begin
-                    QuadTree.AddPoint(APoint.X, APoint.Z, APoint);
-                  end;
-                end;
-              dsoSide:
-                begin
-                  ADisplayPoint.X := ZoomBox.XCoord(APoint.Z);
-                  ADisplayPoint.Y := ZoomBox.YCoord(APoint.Y);
-                  if ShouldInitializeTree then
-                  begin
-                    QuadTree.AddPoint(APoint.Z, APoint.X, APoint);
-                  end;
-                end;
-              else Assert(False);
-            end;
-            Points[1] := ADisplayPoint;
-            if ShowPriorPoint then
-            begin
-              AColor := GetPointColor(MaxValue, MinValue, APoint);
-              AColor32 := Color32(AColor);
-              DrawBigPolyline32(BitMap, AColor32, 1, Points, True);
-            end;
-            Points[0] := ADisplayPoint;
-            ShowPriorPoint := True;
-          end
-          else
-          begin
-            ShowPriorPoint := False;
-          end;
-        end;
-      end;
-    end;
+    else
   end;
 end;
 
 procedure TPathLineReader.Draw3D;
-var
-  Grid: TModflowGrid;
 begin
-  if FDrawingPathLines then
-  begin
-    Exit;
-  end;
-  try
-    FDrawingPathLines := True;
-
-
-    if (not FRecordedPathLines) then
-    begin
-      Record3DPathLines;
-      // FRecordedPathLines is private and won't be set
-      // by overridden versions of RecordFront.
-      FRecordedPathLines := True;
-    end;
-
-    if not Visible then
-    begin
-      Exit;
-    end;
-    Grid := (FModel as TCustomModel).ModflowGrid;
-    if Grid = nil then
-    begin
-      Exit;
-    end;
-    if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0)
-      or (Grid.ColumnCount <= 0) then
-    begin
-      Exit;
-    end;
-//    EnableLighting;
-    glCallList(PathlineGLIndex);
-  finally
-    FDrawingPathLines := False;
-  end;
-
-end;
-
-procedure TPathLineReader.Record3DPathLines;
-var
-  LineIndex: Integer;
-  Line: TPathLine;
-  APoint: TPathLinePoint;
-  ColRowOrLayer: integer;
-  PointIndex: Integer;
-  ShowPriorPoint: Boolean;
-  MaxValue, MinValue: double;
-  Grid: TModflowGrid;
-  AColor: TColor;
-  LineVisible: boolean;
-  PriorPoint: TPathLinePoint;
-  procedure StartLine;
-  begin
-    if not LineVisible then
-    begin
-      glBegin(GL_LINE_STRIP);
-      LineVisible := True;
-      AColor := GetPointColor(MaxValue, MinValue, PriorPoint);
-      AssignColor(AColor);
-
-      glVertex3f(PriorPoint.X, PriorPoint.Y, PriorPoint.Z);
-    end;
-  end;
-  procedure EndLine;
-  begin
-    if LineVisible then
-    begin
-      glEnd;
-      LineVisible := False;
-    end;
-  end;
-begin
-  if not Visible then
-  begin
-    Exit;
-  end;
-  Grid := (FModel as TCustomModel).ModflowGrid;
-  if Grid = nil then
-  begin
-    Exit;
-  end;
-  if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0)
-    or (Grid.ColumnCount <= 0) then
-  begin
-    Exit;
-  end;
-  ColRowOrLayer := -1;
-
-//    EnableLighting;
-  glMatrixMode(GL_MODELVIEW);
-
-  glNewList(PathlineGLIndex, GL_COMPILE);
-  try
-    glPushMatrix;
-    try
-      glEnable(GL_LINE_SMOOTH);
-      glShadeModel(GL_SMOOTH);
-
-      GetMinMaxValues(MaxValue, MinValue);
-      glLineWidth(1);
-
-      LineVisible := False;
-      for LineIndex := 0 to Lines.Count - 1 do
+  case ModpathVersion of
+    pv5:
       begin
-        Line := Lines[LineIndex];
-        if Line.Points.Count > 0 then
-        begin
-          if CheckShowLine(Line) then
-          begin
-            PriorPoint := nil;
-            ShowPriorPoint := False;
-            for PointIndex := 0 to Line.Points.Count - 1 do
-            begin
-              APoint := Line.Points[PointIndex];
-              if APoint.ShouldShow(DisplayLimits, dso3D, ColRowOrLayer) then
-              begin
-
-                if ShowPriorPoint then
-                begin
-                  StartLine;
-                  AColor := GetPointColor(MaxValue, MinValue, APoint);
-                  AssignColor(AColor);
-                  glVertex3f(APoint.X, APoint.Y, APoint.Z);
-                end;
-                ShowPriorPoint := True;
-                PriorPoint := APoint;
-              end
-              else
-              begin
-                ShowPriorPoint := False;
-                EndLine;
-              end;
-            end;
-          end;
-          EndLine;
-        end;
+        DrawLines3D(Lines);;
       end;
-    finally
-      glPopMatrix;
-    end;
-  finally
-    glEndList;
+    pv6_0:
+      begin
+        DrawLines3D(LinesV6);
+      end;
+    else
   end;
 end;
-
-function TPathLineReader.CheckShowLine(Line: TPathLine): Boolean;
+function TPathLineReader.CheckShowLine(Line: TCustomPathLine): Boolean;
 var
   APoint: TPathLinePoint;
 begin
@@ -1190,7 +1288,8 @@ begin
   end;
 end;
 
-procedure TPathLineReader.GetMinMaxValues(var MaxValue: Double; var MinValue: Double);
+procedure TPathLineReader.GetMinMaxValues(var MaxValue: Double;
+  var MinValue: Double);
 var
   Grid: TModflowGrid;
 begin
@@ -1230,6 +1329,11 @@ begin
           MinValue := Grid.LowestElevation;
           MaxValue := Grid.HighestElevation;
         end;
+      clcGroup:
+        begin
+          MinValue := MinParticleGroup;
+          MaxValue := MaxParticleGroup;
+        end
     else
       Assert(False);
     end;
@@ -1274,6 +1378,18 @@ begin
       begin
         AValue := Point.Z;
       end;
+    clcGroup:
+      begin
+        if Point is TPathLinePointV6 then
+        begin
+          AValue := TPathLinePointV6(Point).ParticleGroup;
+        end
+        else
+        begin
+          result := clBlack;
+          Exit;
+        end;
+      end
     else Assert(False);
   end;
   if AValue > MaxValue then
@@ -1303,6 +1419,23 @@ begin
 end;
 
 procedure TPathLineReader.ReadFile;
+begin
+  Assert(FileExists(FileName));
+  ModpathVersion := GetPathlineVersion(FileName);
+  case ModpathVersion of
+    pv5:
+      begin
+        ReadFileV5;
+      end;
+    pv6_0:
+      begin
+        ReadFileV6;
+      end;
+    else
+  end;
+end;
+
+procedure TPathLineReader.ReadFileV5;
 var
   AFile: TFileStream;
   AChar: AnsiChar;
@@ -1321,7 +1454,7 @@ var
   NCol: integer;
   K: integer;
   I: integer;
-  PathLine: TPathLine;
+  PathLine: TCustomPathLine;
   APoint: TPathLinePoint;
   Description: array[0..79] of AnsiChar;
   // 4 null bytes separate Description from the following data.
@@ -1330,7 +1463,7 @@ var
   Grid: TModflowGrid;
   ADate: TDateTime;
   LineIndex: Integer;
-  Line: TPathLine;
+  Line: TCustomPathLine;
   FirstPoint: TPathLinePoint;
   LastPoint: TPathLinePoint;
   FirstTimeFound: Boolean;
@@ -1339,12 +1472,12 @@ var
   var
     Point2D: TPoint2D;
   begin
-    While FLines.Count < ParticleIndex do
+    While FLinesV5.Count < ParticleIndex do
     begin
-      FLines.Add;
+      FLinesV5.Add;
     end;
 
-    PathLine := FLines[ParticleIndex-1];
+    PathLine := FLinesV5[ParticleIndex-1];
 
     APoint := PathLine.FPoints.Add as TPathLinePoint;
     ConvertCoordinates(Grid, XPrime, YPrime, Point2D);
@@ -1374,7 +1507,7 @@ begin
   begin
     FileDate := ADate;
   end;
-  FLines.Clear;
+  FLinesV5.Clear;
   AFile := TFileStream.Create(FFileName, fmOpenRead or fmShareDenyNone);
   try
     AFile.Read(AChar, SizeOf(AChar));
@@ -1497,14 +1630,24 @@ begin
   FFileDate := Value;
 end;
 
-procedure TPathLineReader.SetLines(const Value: TPathLines);
+procedure TPathLineReader.SetLinesV5(const Value: TPathLines);
 begin
-  FLines.Assign(Value);
+  FLinesV5.Assign(Value);
+end;
+
+procedure TPathLineReader.SetMaxParticleGroup(const Value: integer);
+begin
+  FMaxParticleGroup := Value;
 end;
 
 procedure TPathLineReader.SetMaxTime(const Value: double);
 begin
   FMaxTime := Value;
+end;
+
+procedure TPathLineReader.SetMinParticleGroup(const Value: integer);
+begin
+  FMinParticleGroup := Value;
 end;
 
 procedure TPathLineReader.SetMinTime(const Value: double);
@@ -1574,9 +1717,9 @@ begin
   result := Abs(Time);
 end;
 
-function TPathLinePoint.ParentLine: TPathLine;
+function TPathLinePoint.ParentLine: TCustomPathLine;
 begin
-  result := (Collection as TPathLinePoints).FPathLine;
+  result := (Collection as TCustomPathLinePoints).FPathLine;
 end;
 
 function TPathLinePoint.ShouldShow(Limits: TPathLineDisplayLimits;
@@ -1656,16 +1799,16 @@ end;
 
 constructor TPathLinePoints.Create(PathLine: TPathLine);
 begin
-  inherited Create(TPathLinePoint);
-  FPathLine := PathLine;
+  inherited Create(TPathLinePoint, PathLine);
+//  FPathLine := PathLine;
 end;
 
-function TPathLinePoints.GetPoint(Index: integer): TPathLinePoint;
+function TCustomPathLinePoints.GetPoint(Index: integer): TPathLinePoint;
 begin
   result := Items[Index] as TPathLinePoint;
 end;
 
-function TPathLinePoints.TestGetMaxTime(var Maxtime: double): boolean;
+function TCustomPathLinePoints.TestGetMaxTime(var Maxtime: double): boolean;
 begin
   result := Count > 0;
   if result then
@@ -1681,15 +1824,13 @@ begin
   inherited Create(TPathLine);
 end;
 
-procedure TPathLines.ExportShapefile(FileName: string);
+procedure TCustomPathLines.ExportShapefile(FileName: string);
 var
   ShapeDataBase: TXBase;
   Fields: TStringList;
   ShapeFileWriter: TShapefileGeometryWriter;
   LineIndex: Integer;
-  ALine: TPathLine;
-  FirstPoint: TPathLinePoint;
-  LastPoint: TPathLinePoint;
+  ALine: TCustomPathLine;
   PointIndex: Integer;
   APoint: TPathLinePoint;
   Shape: TShapeObject;
@@ -1698,14 +1839,7 @@ begin
   try
     Fields := TStringList.Create;
     try
-      Fields.Add(string(StrSTARTLAY) + '=N');
-      Fields.Add(string(StrSTARTROW) + '=N');
-      Fields.Add(string(StrSTARTCOL) + '=N');
-      Fields.Add(string(StrSTARTTIME) + '=N18,10');
-      Fields.Add(string(StrENDLAY) + '=N');
-      Fields.Add(string(StrENDROW) + '=N');
-      Fields.Add(string(StrENDCOL) + '=N');
-      Fields.Add(string(StrENDTIME) + '=N18,10');
+      DefineShapeFileFields(Fields);
       InitializeDataBase(FileName, ShapeDataBase, Fields);
     finally
       Fields.Free;
@@ -1719,18 +1853,7 @@ begin
         if ALine.Points.Count > 0 then
         begin
           ShapeDataBase.AppendBlank;
-
-          FirstPoint := ALine.Points[0];
-          ShapeDataBase.UpdFieldInt(StrSTARTLAY, FirstPoint.FLayer);
-          ShapeDataBase.UpdFieldInt(StrSTARTROW, FirstPoint.FRow);
-          ShapeDataBase.UpdFieldInt(StrSTARTCOL, FirstPoint.FColumn);
-          ShapeDataBase.UpdFieldNum(StrSTARTTIME, FirstPoint.FTime);
-
-          LastPoint := ALine.Points[ALine.Points.Count-1];
-          ShapeDataBase.UpdFieldInt(StrENDLAY, LastPoint.FLayer);
-          ShapeDataBase.UpdFieldInt(StrENDROW, LastPoint.FRow);
-          ShapeDataBase.UpdFieldInt(StrENDCOL, LastPoint.FColumn);
-          ShapeDataBase.UpdFieldNum(StrENDTIME, LastPoint.FTime);
+          UpdateShapeFileFields(ALine, ShapeDataBase);
 
           ShapeDataBase.PostChanges;
 
@@ -1770,12 +1893,47 @@ begin
   end;
 end;
 
-function TPathLines.GetLine(Index: integer): TPathLine;
+procedure TCustomPathLines.UpdateShapeFileFields(ALine: TCustomPathLine;
+  ShapeDataBase: TXBase);
+var
+  FirstPoint: TPathLinePoint;
+  LastPoint: TPathLinePoint;
 begin
-  result := Items[Index] as TPathLine;
+  FirstPoint := ALine.Points[0];
+  ShapeDataBase.UpdFieldInt(XbaseFieldName(StrSTARTLAY), FirstPoint.FLayer);
+  ShapeDataBase.UpdFieldInt(XbaseFieldName(StrSTARTROW), FirstPoint.FRow);
+  ShapeDataBase.UpdFieldInt(XbaseFieldName(StrSTARTCOL), FirstPoint.FColumn);
+  ShapeDataBase.UpdFieldNum(XbaseFieldName(StrSTARTTIME), FirstPoint.FTime);
+  LastPoint := ALine.Points[ALine.Points.Count - 1];
+  ShapeDataBase.UpdFieldInt(XbaseFieldName(StrENDLAY), LastPoint.FLayer);
+  ShapeDataBase.UpdFieldInt(XbaseFieldName(StrENDROW), LastPoint.FRow);
+  ShapeDataBase.UpdFieldInt(XbaseFieldName(StrENDCOL), LastPoint.FColumn);
+  ShapeDataBase.UpdFieldNum(XbaseFieldName(StrENDTIME), LastPoint.FTime);
 end;
 
-function TPathLines.TestGetMaxTime(var Maxtime: double): boolean;
+function TCustomPathLines.XbaseFieldName(AName: string): Ansistring;
+begin
+  result := AnsiString(Copy(AName, 1, 10));
+end;
+
+procedure TCustomPathLines.DefineShapeFileFields(Fields: TStringList);
+begin
+  Fields.Add(XbaseFieldName(StrSTARTLAY) + '=N');
+  Fields.Add(XbaseFieldName(StrSTARTROW) + '=N');
+  Fields.Add(XbaseFieldName(StrSTARTCOL) + '=N');
+  Fields.Add(XbaseFieldName(StrSTARTTIME) + '=N18,10');
+  Fields.Add(XbaseFieldName(StrENDLAY) + '=N');
+  Fields.Add(XbaseFieldName(StrENDROW) + '=N');
+  Fields.Add(XbaseFieldName(StrENDCOL) + '=N');
+  Fields.Add(XbaseFieldName(StrENDTIME) + '=N18,10');
+end;
+
+function TCustomPathLines.GetLine(Index: integer): TCustomPathLine;
+begin
+  result := Items[Index] as TCustomPathLine;
+end;
+
+function TCustomPathLines.TestGetMaxTime(var Maxtime: double): boolean;
 var
   LineIndex: Integer;
   AValue: double;
@@ -1816,6 +1974,7 @@ begin
     RowLimits := SourceLimits.RowLimits;
     LayerLimits := SourceLimits.LayerLimits;
     TimeLimits := SourceLimits.TimeLimits;
+    ParticleGroupLimits := SourceLimits.ParticleGroupLimits;
   end
   else
   begin
@@ -1830,11 +1989,13 @@ begin
   FRowLimits := TShowIntegerLimit.Create;
   FColumnLimits := TShowIntegerLimit.Create;
   FTimeLimits := TShowFloatLimit.Create;
+  FParticleGroupLimits := TShowIntegerLimit.Create;
   FLimitToCurrentIn2D := True;
 end;
 
 destructor TPathLineDisplayLimits.Destroy;
 begin
+  FParticleGroupLimits.Free;
   FTimeLimits.Free;
   FColumnLimits.Free;
   FRowLimits.Free;
@@ -1855,6 +2016,12 @@ end;
 procedure TPathLineDisplayLimits.SetLimitToCurrentIn2D(const Value: boolean);
 begin
   FLimitToCurrentIn2D := Value;
+end;
+
+procedure TPathLineDisplayLimits.SetParticleGroupLimits(
+  const Value: TShowIntegerLimit);
+begin
+  FParticleGroupLimits.Assign(Value);
 end;
 
 procedure TPathLineDisplayLimits.SetRowLimits(const Value: TShowIntegerLimit);
@@ -1994,7 +2161,7 @@ begin
   inherited Create(TEndPoint)
 end;
 
-procedure TEndPoints.ExportShapefileAtEndingLocations(FileName: string);
+procedure TCustomEndPoints.ExportShapefileAtEndingLocations(FileName: string);
 var
   ShapeDataBase: TXBase;
   Fields: TStringList;
@@ -2094,7 +2261,7 @@ begin
   end;
 end;
 
-procedure TEndPoints.ExportShapefileAtStartingLocations(FileName: string);
+procedure TCustomEndPoints.ExportShapefileAtStartingLocations(FileName: string);
 var
   ShapeDataBase: TXBase;
   Fields: TStringList;
@@ -2195,7 +2362,7 @@ begin
 
 end;
 
-function TEndPoints.GetPoint(Index: integer): TEndPoint;
+function TCustomEndPoints.GetPoint(Index: integer): TEndPoint;
 begin
   result := inherited Items[Index] as TEndPoint;
 end;
@@ -2234,6 +2401,7 @@ begin
     TerminationCode := SourcePoint.TerminationCode;
     EndTimeStep := SourcePoint.EndTimeStep;
     ReleaseTime := SourcePoint.ReleaseTime;
+    ParticleNumber := SourcePoint.ParticleNumber;
   end
   else
   begin
@@ -2395,7 +2563,11 @@ begin
     MaxStartZone := EndPointSource.MaxStartZone;
     MinEndZone := EndPointSource.MinEndZone;
     MaxEndZone := EndPointSource.MaxEndZone;
+    MaxParticleGroup := EndPointSource.MaxParticleGroup;
+    MinParticleGroup := EndPointSource.MinParticleGroup;
     Points := EndPointSource.Points;
+    PointsV6 := EndPointSource.PointsV6;
+    ModpathVersion := EndPointSource.ModpathVersion;
     TopQuadTree.Clear;
     FrontQuadTree.Clear;
     SideQuadTree.Clear;
@@ -2411,10 +2583,12 @@ begin
   FFrontQuadTree := TRbwQuadTree.Create(nil);
   FSideQuadTree := TRbwQuadTree.Create(nil);
   FPoints:= TEndPoints.Create;
+  FPointsV6 := TEndPointsV6.Create;
 end;
 
 destructor TEndPointReader.Destroy;
 begin
+  FPointsV6.Free;
   FPoints.Free;
   FSideQuadTree.Free;
   FFrontQuadTree.Free;
@@ -2438,6 +2612,7 @@ var
   QuadTree: TRbwQuadTree;
   ShouldInitializeTree: Boolean;
   Limits: TGridLimit;
+  LocalPoints: TCustomEndPoints;
 begin
   if not Visible then
   begin
@@ -2480,7 +2655,6 @@ begin
   end;
   GetMinMaxValues(MaxValue, MinValue);
 
-
   ShouldInitializeTree := QuadTree.Count = 0;
   if ShouldInitializeTree then
   begin
@@ -2511,9 +2685,18 @@ begin
     end;
   end;
 
-  for EndPointIndex := 0 to Points.Count - 1 do
+  if Points.Count > 0 then
   begin
-    EndPoint := Points[EndPointIndex];
+    LocalPoints := Points;
+  end
+  else
+  begin
+    LocalPoints := PointsV6;
+  end;
+
+  for EndPointIndex := 0 to LocalPoints.Count - 1 do
+  begin
+    EndPoint := LocalPoints[EndPointIndex];
     if EndPoint.ShouldShow(DisplayLimits, Orientation, ColRowOrLayer) then
     begin
       case DisplayLimits.WhereToPlot of
@@ -2531,20 +2714,20 @@ begin
                 end;
               dsoFront:
                 begin
-                  ADisplayPoint.X := ZoomBox.XCoord(EndPoint.StartX);
+                  ADisplayPoint.X := ZoomBox.XCoord(EndPoint.StartXPrime);
                   ADisplayPoint.Y := ZoomBox.YCoord(EndPoint.StartZ);
                   if ShouldInitializeTree then
                   begin
-                    QuadTree.AddPoint(EndPoint.StartX, EndPoint.StartZ, EndPoint);
+                    QuadTree.AddPoint(EndPoint.StartXPrime, EndPoint.StartZ, EndPoint);
                   end;
                 end;
               dsoSide:
                 begin
                   ADisplayPoint.X := ZoomBox.XCoord(EndPoint.StartZ);
-                  ADisplayPoint.Y := ZoomBox.YCoord(EndPoint.StartY);
+                  ADisplayPoint.Y := ZoomBox.YCoord(EndPoint.StartYPrime);
                   if ShouldInitializeTree then
                   begin
-                    QuadTree.AddPoint(EndPoint.StartZ, EndPoint.StartY, EndPoint);
+                    QuadTree.AddPoint(EndPoint.StartZ, EndPoint.StartYPrime, EndPoint);
                   end;
                 end;
               else Assert(False);
@@ -2564,20 +2747,20 @@ begin
                 end;
               dsoFront:
                 begin
-                  ADisplayPoint.X := ZoomBox.XCoord(EndPoint.EndX);
+                  ADisplayPoint.X := ZoomBox.XCoord(EndPoint.EndXPrime);
                   ADisplayPoint.Y := ZoomBox.YCoord(EndPoint.EndZ);
                   if ShouldInitializeTree then
                   begin
-                    QuadTree.AddPoint(EndPoint.EndX, EndPoint.EndZ, EndPoint);
+                    QuadTree.AddPoint(EndPoint.EndXPrime, EndPoint.EndZ, EndPoint);
                   end;
                 end;
               dsoSide:
                 begin
                   ADisplayPoint.X := ZoomBox.XCoord(EndPoint.EndZ);
-                  ADisplayPoint.Y := ZoomBox.YCoord(EndPoint.EndY);
+                  ADisplayPoint.Y := ZoomBox.YCoord(EndPoint.EndYPrime);
                   if ShouldInitializeTree then
                   begin
-                    QuadTree.AddPoint(EndPoint.EndZ, EndPoint.EndY, EndPoint);
+                    QuadTree.AddPoint(EndPoint.EndZ, EndPoint.EndYPrime, EndPoint);
                   end;
                 end;
               else Assert(False);
@@ -2586,10 +2769,10 @@ begin
       end;
       AColor := GetPointColor(MaxValue, MinValue, EndPoint);
       AColor32 := Color32(AColor);
-      ARect.Top := ADisplayPoint.Y -1;
-      ARect.Bottom := ADisplayPoint.Y +1;
-      ARect.Left := ADisplayPoint.X -1;
-      ARect.Right := ADisplayPoint.X +1;
+      ARect.Top := ADisplayPoint.Y -2;
+      ARect.Bottom := ADisplayPoint.Y +2;
+      ARect.Left := ADisplayPoint.X -2;
+      ARect.Right := ADisplayPoint.X +2;
       DrawBigRectangle32(BitMap, AColor32, AColor32, 1, ARect);
     end;
   end;
@@ -2702,6 +2885,11 @@ begin
           MinValue := MinEndZone;
           MaxValue := MaxEndZone;
         end;
+      elcParticleGroup:
+        begin
+          MinValue := MinParticleGroup;
+          MaxValue := MaxParticleGroup;
+        end
       else Assert(False);
     end;
   end;
@@ -2751,14 +2939,27 @@ begin
       begin
         AValue := Point.EndYPrime;
       end;
-    elcEndZ: 
+    elcEndZ:
       begin
         AValue := Point.EndZ;
       end;
-    elcEndZone: 
+    elcEndZone:
       begin
         AValue := Point.EndZoneCode
       end;
+    elcParticleGroup:
+      begin
+        if Point is TEndPointV6 then
+        begin
+          AValue := TEndPointV6(Point).ParticleGroup
+        end
+        else
+        begin
+          result := clBlack;
+          Exit;
+        end;
+      end;
+    else Assert(False);
   end;
   if AValue > MaxValue then
   begin
@@ -2823,6 +3024,80 @@ end;
 
 procedure TEndPointReader.ReadFile;
 var
+  version: TPathlineVersion;
+begin
+  version := GetEndPointVersion(FFileName);
+  case version of
+    pv5: ReadFileV5;
+    pv6_0: ReadFileV6;
+    else Assert(False);
+  end;
+end;
+
+procedure TEndPointReader.SetMinMaxValues(LocalPoints: TCustomEndPoints);
+var
+  PointIndex: Integer;
+  EndPoint: TEndPoint;
+begin
+  for PointIndex := 0 to LocalPoints.Count - 1 do
+  begin
+    EndPoint := LocalPoints[PointIndex];
+    if PointIndex = 0 then
+    begin
+      MinTrackingTime := EndPoint.TrackingTime;
+      MaxTrackingTime := EndPoint.TrackingTime;
+      MinReleaseTime := EndPoint.ReleaseTime;
+      MaxReleaseTime := EndPoint.ReleaseTime;
+      MinStartZone := EndPoint.StartZoneCode;
+      MaxStartZone := EndPoint.StartZoneCode;
+      MinEndZone := EndPoint.EndZoneCode;
+      MaxEndZone := EndPoint.EndZoneCode;
+    end
+    else
+    begin
+      if EndPoint.TrackingTime < MinTrackingTime then
+      begin
+        MinTrackingTime := EndPoint.TrackingTime;
+      end;
+      if EndPoint.TrackingTime > MaxTrackingTime then
+      begin
+        MaxTrackingTime := EndPoint.TrackingTime;
+      end;
+      if EndPoint.ReleaseTime < MinReleaseTime then
+      begin
+        MinReleaseTime := EndPoint.ReleaseTime;
+      end;
+      if EndPoint.ReleaseTime > MaxReleaseTime then
+      begin
+        MaxReleaseTime := EndPoint.ReleaseTime;
+      end;
+      if EndPoint.StartZoneCode < MinStartZone then
+      begin
+        MinStartZone := EndPoint.StartZoneCode;
+      end;
+      if EndPoint.StartZoneCode > MaxStartZone then
+      begin
+        MaxStartZone := EndPoint.StartZoneCode;
+      end;
+      if EndPoint.EndZoneCode < MinEndZone then
+      begin
+        MinEndZone := EndPoint.EndZoneCode;
+      end;
+      if EndPoint.EndZoneCode > MaxEndZone then
+      begin
+        MaxEndZone := EndPoint.EndZoneCode;
+      end;
+    end;
+  end;
+end;
+
+procedure TEndPointReader.SetMinParticleGroup(const Value: integer);
+begin
+  FMinParticleGroup := Value;
+end;
+
+procedure TEndPointReader.ReadFileV5;
+var
   Grid: TModflowGrid;
   ADate: TDateTime;
   AFile: TFileStream;
@@ -2855,8 +3130,10 @@ var
   StartLocalZ: single;
   ReleaseTime: single;
   StartTimeStep: integer;
-  PointIndex: Integer;
-  EndPoint: TEndPoint;
+//  PointIndex: Integer;
+  StartZ: single;
+//  EndPoint: TEndPoint;
+  ParticleID: Integer;
   procedure CreateEndPoint;
   var
     APoint: TEndPoint;
@@ -2901,6 +3178,7 @@ var
       APoint.EndTimeStep := IPCODE div 10;
     end;
     APoint.ReleaseTime := ReleaseTime;
+    APoint.ParticleNumber := ParticleID;
   end;
 begin
   Grid := (FModel as TCustomModel).ModflowGrid;
@@ -2913,6 +3191,7 @@ begin
     FileDate := ADate;
   end;
   Points.Clear;
+  PointsV6.Clear;
   AFile := TFileStream.Create(FFileName, fmOpenRead or fmShareDenyNone);
   try
     AFile.Read(AChar, SizeOf(AChar));
@@ -2929,6 +3208,7 @@ begin
       Reset(FTextFile);
       Readln(FTextFile, ALine);
       CompactFormat := Pos('COMPACT',ALine) >= 1;
+      ParticleID := 1;
       While Not Eof(FTextFile) do
       begin
         if CompactFormat then
@@ -2951,6 +3231,7 @@ begin
         end;
 
         CreateEndPoint;
+        Inc(ParticleID);
       end;
     finally
       CloseFile(FTextFile);
@@ -2989,6 +3270,244 @@ begin
     finally
       FFile.Free;
     end;
+  end;
+
+  SetMinMaxValues(Points)
+end;
+
+procedure TEndPointReader.ReadFileV6;
+var
+  Grid: TModflowGrid;
+  ADate: TDateTime;
+//  AFile: TFileStream;
+//  AChar: AnsiChar;
+//  IsTextFile: Boolean;
+  NRow: Integer;
+  NCol: Integer;
+  FTextFile: TextFile;
+  ALine: string;
+//  CompactFormat: boolean;
+//  FFile: TFileStream;
+//  Description: array[0..79] of AnsiChar;
+//  Terminator: array[0..3] of AnsiChar;
+  EndZoneCode: integer;
+  FinalColumn: integer;
+  FinalRow: integer;
+  FinalLayer: integer;
+  StartColumn: integer;
+  StartRow: integer;
+  StartLayer: integer;
+  StartZoneCode: integer;
+  IPCODE: integer;
+  EndXPrime: double;
+  EndYPrime: double;
+  EndZ: double;
+  EndLocalZ: double;
+  TrackingTime: double;
+  StartXPrime: double;
+  StartYPrime: double;
+  StartLocalZ: double;
+  ReleaseTime: double;
+  StartTimeStep: integer;
+  PointIndex: Integer;
+  StartZ: single;
+  EndPoint: TEndPoint;
+  Splitter: TStringList;
+  TrackingDirection: Integer;
+  TotalCount: Integer;
+  ReleaseCount: Integer;
+  MaximumID: Integer;
+  ReferenceTime: double;
+  Pending: Integer;
+  Active: Integer;
+  NormallyTerminated: Integer;
+  ZoneTerminated: Integer;
+  Unreleased: Integer;
+  Stranded: Integer;
+  GroupCount: integer;
+  GroupIndex: Integer;
+  GroupName: string;
+  ParticleID: Integer;
+  ParticleGroup: Integer;
+  Status: Integer;
+  InitialGrid: Integer;
+  StartCellFace: Integer;
+  StartLocalX: double;
+  StartLocalY: double;
+  FinallGrid: Integer;
+  FinalCellFace: Integer;
+  EndLocalX: double;
+  EndLocalY: double;
+  PointLabel: string;
+  FirstLine: boolean;
+  procedure CreateEndPoint;
+  var
+    APoint: TEndPointV6;
+    Point2D: TPoint2D;
+  begin
+    APoint := TEndPointV6.Create(FPointsV6);
+    APoint.EndZoneCode := EndZoneCode;
+    APoint.EndColumn := FinalColumn;
+    APoint.EndRow := FinalRow;
+    APoint.EndLayer := FinalLayer;
+
+    ConvertCoordinates(Grid, EndXPrime, EndYPrime, Point2D);
+
+    APoint.EndX := Point2D.x;
+    APoint.EndY := Point2D.Y;
+    APoint.EndZ := EndZ;
+    APoint.EndXPrime := EndXPrime;
+    APoint.EndYPrime := EndYPrime;
+    APoint.EndLocalZ := EndLocalZ;
+    APoint.TrackingTime := TrackingTime;
+    APoint.StartZoneCode := StartZoneCode;
+    APoint.StartColumn := StartColumn;
+    APoint.StartRow := StartRow;
+    APoint.StartLayer := StartLayer;
+
+    ConvertCoordinates(Grid, StartXPrime, StartYPrime, Point2D);
+
+    APoint.StartX := Point2D.x;
+    APoint.StartY := Point2D.y;
+    APoint.StartZ := StartZ;
+    APoint.StartXPrime := StartXPrime;
+    APoint.StartYPrime := StartYPrime;
+    APoint.StartTimeStep := StartTimeStep;
+    if IPCODE < 0 then
+    begin
+      APoint.TerminationCode := IPCODE;
+      APoint.EndTimeStep := 0;
+    end
+    else
+    begin
+      APoint.TerminationCode := IPCODE mod 10;
+      APoint.EndTimeStep := IPCODE div 10;
+    end;
+    APoint.ReleaseTime := ReleaseTime;
+    APoint.ParticleGroup := ParticleGroup;
+    APoint.InitialCellFace := StartCellFace;
+    APoint.FinalCellFace := FinalCellFace;
+    APoint.ParticleLabel := PointLabel;
+    APoint.ParticleNumber := ParticleID;
+  end;
+begin
+  Grid := (FModel as TCustomModel).ModflowGrid;
+  if Grid = nil then
+  begin
+    Exit;
+  end;
+  if FileAge(FileName, ADate) then
+  begin
+    FileDate := ADate;
+  end;
+  Points.Clear;
+  PointsV6.Clear;
+
+  NRow := Grid.RowCount;
+  NCol := Grid.ColumnCount;
+
+  AssignFile(FTextFile, FFileName);
+  Splitter:= TStringList.Create;
+  try
+    Splitter.Delimiter := ' ';
+
+    Reset(FTextFile);
+    Readln(FTextFile, ALine);
+    Assert(Trim(ALine) = 'MODPATH_ENDPOINT_FILE 6 0');
+
+    // line 2
+    Readln(FTextFile, ALine);
+    Splitter.DelimitedText := Trim(ALine);
+    Assert(Splitter.Count = 5);
+    TrackingDirection := StrToInt(Splitter[0]);
+    TotalCount := StrToInt(Splitter[1]);
+    ReleaseCount := StrToInt(Splitter[2]);
+    MaximumID := StrToInt(Splitter[3]);
+    ReferenceTime := FortranStrToFloat(Splitter[4]);
+
+    // line 3
+    Readln(FTextFile, ALine);
+    Splitter.DelimitedText := Trim(ALine);
+    Assert(Splitter.Count = 6);
+    Pending := StrToInt(Splitter[0]);
+    Active := StrToInt(Splitter[1]);
+    NormallyTerminated := StrToInt(Splitter[2]);
+    ZoneTerminated := StrToInt(Splitter[3]);
+    Unreleased := StrToInt(Splitter[4]);
+    Stranded := StrToInt(Splitter[5]);
+
+    // line 4
+    Readln(FTextFile, GroupCount);
+    Assert(GroupCount > 0);
+
+    for GroupIndex := 0 to GroupCount - 1 do
+    begin
+      Readln(FTextFile, GroupName);
+    end;
+
+    Readln(FTextFile, ALine);
+    Assert(Trim(ALine) = 'END HEADER');
+    FirstLine := True;
+    While Not Eof(FTextFile) do
+    begin
+      Readln(FTextFile, ALine);
+      Splitter.DelimitedText := Trim(ALine);
+      Assert(Splitter.Count = 30);
+
+      ParticleID := StrToInt(Splitter[0]);
+      ParticleGroup := StrToInt(Splitter[1]);
+      Status := StrToInt(Splitter[2]);
+      ReleaseTime := FortranStrtoFloat(Splitter[3]);
+      TrackingTime := FortranStrtoFloat(Splitter[4]);
+      InitialGrid := StrToInt(Splitter[5]);
+      StartLayer := StrToInt(Splitter[6]);
+      StartRow := StrToInt(Splitter[7]);
+      StartColumn := StrToInt(Splitter[8]);
+      StartCellFace := StrToInt(Splitter[9]);
+      StartZoneCode := StrToInt(Splitter[10]);
+      StartLocalX := FortranStrtoFloat(Splitter[11]);
+      StartLocalY := FortranStrtoFloat(Splitter[12]);
+      StartLocalZ := FortranStrtoFloat(Splitter[13]);
+      StartXPrime := FortranStrtoFloat(Splitter[14]);
+      StartYPrime := FortranStrtoFloat(Splitter[15]);
+      StartZ := FortranStrtoFloat(Splitter[16]);
+      FinallGrid := StrToInt(Splitter[17]);
+      FinalLayer := StrToInt(Splitter[18]);
+      FinalRow := StrToInt(Splitter[19]);
+      FinalColumn := StrToInt(Splitter[20]);
+      FinalCellFace := StrToInt(Splitter[21]);
+      EndZoneCode := StrToInt(Splitter[22]);
+      EndLocalX := FortranStrtoFloat(Splitter[23]);
+      EndLocalY := FortranStrtoFloat(Splitter[24]);
+      EndLocalZ := FortranStrtoFloat(Splitter[25]);
+      EndXPrime := FortranStrtoFloat(Splitter[26]);
+      EndYPrime := FortranStrtoFloat(Splitter[27]);
+      EndZ := FortranStrtoFloat(Splitter[28]);
+      PointLabel := Splitter[29];
+
+      CreateEndPoint;
+
+      if FirstLine then
+      begin
+        FirstLine := False;
+        MinParticleGroup := ParticleGroup;
+        MaxParticleGroup := ParticleGroup;
+      end
+      else
+      begin
+        if ParticleGroup < MinParticleGroup then
+        begin
+          MinParticleGroup := ParticleGroup;
+        end;
+        if ParticleGroup > MaxParticleGroup then
+        begin
+          MaxParticleGroup := ParticleGroup;
+        end;
+      end;
+    end;
+  finally
+    Splitter.Free;
+    CloseFile(FTextFile);
   end;
 
   for PointIndex := 0 to Points.Count - 1 do
@@ -3040,7 +3559,8 @@ begin
         MaxEndZone := EndPoint.EndZoneCode;
       end;
     end;
-  end
+  end;
+  SetMinMaxValues(PointsV6)
 end;
 
 procedure TEndPointReader.Record3DEndPoints;
@@ -3052,6 +3572,7 @@ var
   PointIndex: Integer;
   EndPoint: TEndPoint;
   AColor: TColor;
+  LocalPoints: TCustomEndPoints;
 begin
   if not Visible then
   begin
@@ -3083,9 +3604,17 @@ begin
       glLineWidth(1);
 
       glBegin(GL_POINTS);
-      for PointIndex := 0 to Points.Count - 1 do
+      if Points.Count > 0 then
       begin
-        EndPoint := Points[PointIndex];
+        LocalPoints := Points;
+      end
+      else
+      begin
+        LocalPoints := PointsV6;
+      end;
+      for PointIndex := 0 to LocalPoints.Count - 1 do
+      begin
+        EndPoint := LocalPoints[PointIndex];
         if EndPoint.ShouldShow(DisplayLimits, dso3D, ColRowOrLayer) then
         begin
           AColor := GetPointColor(MaxValue, MinValue, EndPoint);
@@ -3093,11 +3622,11 @@ begin
           case DisplayLimits.WhereToPlot of
             wtpStart:
               begin
-                glVertex3f(EndPoint.StartX, EndPoint.StartY, EndPoint.StartZ);
+                glVertex3f(EndPoint.StartXPrime, EndPoint.StartYPrime, EndPoint.StartZ);
               end;
             wtpEnd:
               begin
-                glVertex3f(EndPoint.EndX, EndPoint.EndY, EndPoint.EndZ);
+                glVertex3f(EndPoint.EndXPrime, EndPoint.EndYPrime, EndPoint.EndZ);
               end;
             else Assert(False);
           end;
@@ -3120,6 +3649,11 @@ end;
 procedure TEndPointReader.SetMaxEndZone(const Value: integer);
 begin
   FMaxEndZone := Value;
+end;
+
+procedure TEndPointReader.SetMaxParticleGroup(const Value: integer);
+begin
+  FMaxParticleGroup := Value;
 end;
 
 procedure TEndPointReader.SetMaxReleaseTime(const Value: double);
@@ -3162,6 +3696,11 @@ begin
   FPoints.Assign(Value);
 end;
 
+procedure TEndPointReader.SetPointsV6(const Value: TEndPointsV6);
+begin
+  FPointsV6.Assign(Value);
+end;
+
 { TEndPointDisplayLimits }
 
 procedure TEndPointDisplayLimits.Assign(Source: TPersistent);
@@ -3183,6 +3722,7 @@ begin
     EndLayerLimits := SourceLimits.EndLayerLimits;
     EndZoneLimits := SourceLimits.EndZoneLimits;
     TrackingTimeLimits := SourceLimits.TrackingTimeLimits;
+    ParticleGroupLimits := SourceLimits.ParticleGroupLimits;
     WhereToPlot := SourceLimits.WhereToPlot;
   end
   else
@@ -3204,11 +3744,13 @@ begin
   FEndZoneLimits := TShowIntegerLimit.Create;
   FReleaseTimeLimits := TShowFloatLimit.Create;
   FTrackingTimeLimits := TShowFloatLimit.Create;
+  FParticleGroupLimits := TShowIntegerLimit.Create;
   FWhereToPlot := wtpEnd;
 end;
 
 destructor TEndPointDisplayLimits.Destroy;
 begin
+  FParticleGroupLimits.Free;
   FTrackingTimeLimits.Free;
   FReleaseTimeLimits.Free;
   FEndZoneLimits.Free;
@@ -3249,6 +3791,12 @@ end;
 procedure TEndPointDisplayLimits.SetLimitToCurrentIn2D(const Value: boolean);
 begin
   FLimitToCurrentIn2D := Value;
+end;
+
+procedure TEndPointDisplayLimits.SetParticleGroupLimits(
+  const Value: TShowIntegerLimit);
+begin
+  FParticleGroupLimits.Assign(Value);
 end;
 
 procedure TEndPointDisplayLimits.SetReleaseTimeLimits(
@@ -3357,15 +3905,18 @@ begin
     FileName := SourceSeries.FileName;
     FileDate := SourceSeries.FileDate;
     Series := SourceSeries.Series;
+    SeriesV6 := SourceSeries.SeriesV6;
     MaxTime := SourceSeries.MaxTime;
     MinTime := SourceSeries.MinTime;
     TimeIndex := SourceSeries.TimeIndex;
     Times := SourceSeries.Times;
+    MinParticleGroup := SourceSeries.MinParticleGroup;
+    MaxParticleGroup := SourceSeries.MaxParticleGroup;
   end;
   inherited;
 end;
 
-function TTimeSeriesReader.CheckShowSeries(Series: TTimeSeries): Boolean;
+function TTimeSeriesReader.CheckShowSeries(Series: TCustomTimeSeries): Boolean;
 var
   APoint: TTimeSeriesPoint;
 begin
@@ -3395,10 +3946,12 @@ begin
   FModel := Model;
   FRealList := nil;
   FSeries:= TTimeSeriesCollection.Create;
+  FSeriesV6:= TTimeSeriesCollectionV6.Create;
 end;
 
 destructor TTimeSeriesReader.Destroy;
 begin
+  FSeriesV6.Free;
   FSeries.Free;
   FRealList.Free;
   inherited;
@@ -3408,7 +3961,7 @@ procedure TTimeSeriesReader.Draw(Orientation: TDataSetOrientation;
   const BitMap: TBitmap32);
 var
   TimeSeriesIndex: Integer;
-  TimeSeries: TTimeSeries;
+  TimeSeries: TCustomTimeSeries;
   APoint: TTimeSeriesPoint;
   ColRowOrLayer: integer;
   ZoomBox: TQRbwZoomBox2;
@@ -3420,6 +3973,7 @@ var
   ARect: TRect;
   TimeToPlot: Double;
   PlotIndex: Integer;
+  LocalSeries: TCustomTimeSeriesCollection;
 begin
   if not Visible then
   begin
@@ -3429,7 +3983,17 @@ begin
   begin
     Exit;
   end;
-  if Series.Count = 0 then
+
+  if Series.Count > 0 then
+  begin
+    LocalSeries := Series;
+  end
+  else
+  begin
+    LocalSeries := SeriesV6;
+  end;
+
+  if LocalSeries.Count = 0 then
   begin
     Exit;
   end;
@@ -3468,9 +4032,9 @@ begin
   GetMinMaxValues(MaxValue, MinValue);
 
   TimeToPlot := Times[TimeIndex];
-  for TimeSeriesIndex := 0 to Series.Count - 1 do
+  for TimeSeriesIndex := 0 to LocalSeries.Count - 1 do
   begin
-    TimeSeries := Series[TimeSeriesIndex];
+    TimeSeries := LocalSeries[TimeSeriesIndex];
     PlotIndex := TimeSeries.Times.IndexOf(TimeToPlot);
     if PlotIndex >= 0 then
     begin
@@ -3487,22 +4051,22 @@ begin
               end;
             dsoFront:
               begin
-                ADisplayPoint.X := ZoomBox.XCoord(APoint.X);
+                ADisplayPoint.X := ZoomBox.XCoord(APoint.XPrime);
                 ADisplayPoint.Y := ZoomBox.YCoord(APoint.Z);
               end;
             dsoSide:
               begin
                 ADisplayPoint.X := ZoomBox.XCoord(APoint.Z);
-                ADisplayPoint.Y := ZoomBox.YCoord(APoint.Y);
+                ADisplayPoint.Y := ZoomBox.YCoord(APoint.YPrime);
               end;
             else Assert(False);
           end;
           AColor := GetPointColor(MaxValue, MinValue, APoint);
           AColor32 := Color32(AColor);
-          ARect.Top := ADisplayPoint.Y -1;
-          ARect.Bottom := ADisplayPoint.Y +1;
-          ARect.Left := ADisplayPoint.X -1;
-          ARect.Right := ADisplayPoint.X +1;
+          ARect.Top := ADisplayPoint.Y -2;
+          ARect.Bottom := ADisplayPoint.Y +2;
+          ARect.Left := ADisplayPoint.X -2;
+          ARect.Right := ADisplayPoint.X +2;
           DrawBigRectangle32(BitMap, AColor32, AColor32, 1, ARect);
         end;
       end;
@@ -3513,6 +4077,7 @@ end;
 procedure TTimeSeriesReader.Draw3D;
 var
   Grid: TModflowGrid;
+  LocalSeries: TCustomTimeSeriesCollection;
 begin
   if TimeIndex < 0 then
   begin
@@ -3522,7 +4087,15 @@ begin
   begin
     Exit;
   end;
-  if Series.Count = 0 then
+  if Series.Count > 0 then
+  begin
+    LocalSeries := Series;
+  end
+  else
+  begin
+    LocalSeries := SeriesV6;
+  end;
+  if LocalSeries.Count = 0 then
   begin
     Exit;
   end;
@@ -3592,13 +4165,22 @@ var
   ShapeFileWriter: TShapefileGeometryWriter;
   ATime: Double;
   SeriesIndex: Integer;
-  ASeries: TTimeSeries;
+  ASeries: TCustomTimeSeries;
   PlotIndex: Integer;
   APoint: TTimeSeriesPoint;
   Shape: TShapeObject;
   PointCount: Integer;
   PlotTimeIndex: Integer;
+  LocalSeries: TCustomTimeSeriesCollection;
 begin
+  if Series.Count > 0 then
+  begin
+    LocalSeries := Series;
+  end
+  else
+  begin
+    LocalSeries := SeriesV6;
+  end;
   ShapeDataBase := TXBase.Create(nil);
   try
     Fields := TStringList.Create;
@@ -3617,16 +4199,16 @@ begin
         Shape := TShapeObject.Create;
         try
           Shape.FShapeType := stMultiPointZ;
-          SetLength(Shape.FMArray, Series.Count);
-          SetLength(Shape.FParts, Series.Count);
-          SetLength(Shape.FPoints, Series.Count);
-          SetLength(Shape.FZArray, Series.Count);
+          SetLength(Shape.FMArray, LocalSeries.Count);
+          SetLength(Shape.FParts, LocalSeries.Count);
+          SetLength(Shape.FPoints, LocalSeries.Count);
+          SetLength(Shape.FZArray, LocalSeries.Count);
 
           PointCount := 0;
           APoint := nil;
-          for SeriesIndex := 0 to Series.Count - 1 do
+          for SeriesIndex := 0 to LocalSeries.Count - 1 do
           begin
-            ASeries := Series[SeriesIndex];
+            ASeries := LocalSeries[SeriesIndex];
             PlotIndex := ASeries.Times.IndexOf(ATime);
             if PlotIndex >= 0 then
             begin
@@ -3698,7 +4280,14 @@ begin
       tscParticleNumber:
         begin
           MinValue := 1;
-          MaxValue := Series.Count;
+          if Series.Count > 0 then
+          begin
+            MaxValue := Series.Count;
+          end
+          else
+          begin
+            MaxValue := SeriesV6.Count;
+          end;
         end;
       tscXPrime, tscStartXPrime, tscEndXPrime:
         begin
@@ -3715,6 +4304,11 @@ begin
           MinValue := Grid.LowestElevation;
           MaxValue := Grid.HighestElevation;
         end;
+      tscGroup:
+        begin
+          MinValue := MinParticleGroup;
+          MaxValue := MaxParticleGroup;
+        end
       else Assert(False);
     end;
   end;
@@ -3783,6 +4377,19 @@ begin
           as TTimeSeriesPoint;
         AValue := EndPoint.Z;
       end;
+    tscGroup:
+      begin
+        StartPoint := Point.Collection.Items[0] as TTimeSeriesPoint;
+        if StartPoint is TTimeSeriesPointV6 then
+        begin
+          AValue := TTimeSeriesPointV6(StartPoint).ParticleGroup;
+        end
+        else
+        begin
+          result := clBlack;
+          Exit;
+        end;
+      end
     else Assert(False);
   end;
   if AValue > MaxValue then
@@ -3818,34 +4425,45 @@ var
   MaxCount: integer;
   MaxIndex: integer;
   Index: Integer;
-  ASeries: TTimeSeries;
+  ASeries: TCustomTimeSeries;
   APoint: TTimeSeriesPoint;
   SeriesIndex: Integer;
+  LocalSeries: TCustomTimeSeriesCollection;
 begin
   if FRealList = nil then
   begin
     FRealList := TRealList.Create;
+
     if Series.Count > 0 then
+    begin
+      LocalSeries := Series;
+    end
+    else
+    begin
+      LocalSeries := SeriesV6;
+    end;
+
+    if LocalSeries.Count > 0 then
     begin
       MaxCount := 0;
       MaxIndex := 0;
-      for Index := 0 to Series.Count - 1 do
+      for Index := 0 to LocalSeries.Count - 1 do
       begin
-        ASeries := Series[Index];
+        ASeries := LocalSeries[Index];
         if ASeries.Points.Count > MaxCount then
         begin
           MaxCount := ASeries.Points.Count;
           MaxIndex := Index;
         end;
       end;
-      ASeries := Series[MaxIndex];
+      ASeries := LocalSeries[MaxIndex];
       if ASeries.Points.Count > 0 then
       begin
         FRealList.Capacity := ASeries.Points.Count;
         FRealList.Sorted := True;
-        for SeriesIndex := 0 to Series.Count - 1 do
+        for SeriesIndex := 0 to LocalSeries.Count - 1 do
         begin
-          ASeries := Series[SeriesIndex];
+          ASeries := LocalSeries[SeriesIndex];
           for Index := 0 to ASeries.Points.Count - 1 do
           begin
             APoint := ASeries.Points[Index];
@@ -3875,6 +4493,18 @@ begin
 end;
 
 procedure TTimeSeriesReader.ReadFile;
+var
+  version: TPathlineVersion;
+begin
+  version := GetTimeSeriesVersion(FFileName);
+  case version of
+    pv5: ReadFileV5;
+    pv6_0: ReadFileV6;
+    else Assert(False);
+  end;
+end;
+
+procedure TTimeSeriesReader.ReadFileV5;
 var
   AFile: TFileStream;
   AChar: AnsiChar;
@@ -3953,6 +4583,7 @@ begin
     FileDate := ADate;
   end;
   FSeries.Clear;
+  FSeriesV6.Clear;
   AFile := TFileStream.Create(FFileName, fmOpenRead or fmShareDenyNone);
   try
     AFile.Read(AChar, SizeOf(AChar));
@@ -4082,6 +4713,229 @@ begin
   end;
 end;
 
+procedure TTimeSeriesReader.ReadFileV6;
+var
+//  AFile: TFileStream;
+//  AChar: AnsiChar;
+//  IsTextFile: Boolean;
+  ALine: string;
+//  CompactFormat: Boolean;
+  ParticleIndex: integer;
+  XPrime: single;
+  YPrime: single;
+  LocalZ: single;
+  LocalX: single;
+  LocalY: single;
+  Z: single;
+  TrackingTime: single;
+  Column: integer;
+  TS: integer;
+  NRow: integer;
+  NCol: integer;
+  Layer: integer;
+  Row: integer;
+  TimeSeries: TTimeSeriesV6;
+  APoint: TTimeSeriesPointV6;
+//  Description: array[0..79] of AnsiChar;
+  // 4 null bytes separate Description from the following data.
+  // Use Terminator to read and ignore those 4 null bytes.
+//  Terminator: array[0..3] of AnsiChar;
+  Grid: TModflowGrid;
+  ADate: TDateTime;
+  LineIndex: Integer;
+  Line: TTimeSeries;
+  FirstPoint: TTimeSeriesPoint;
+  LastPoint: TTimeSeriesPoint;
+  FirstTimeFound: Boolean;
+  FTextFile: TextFile;
+//  FFile: TFileStream;
+  TimeStepIndex: integer;
+  MaxPoints: Integer;
+  Splitter: TStringList;
+  TrackingDirection: Integer;
+  ReferenceTime: double;
+  ParticleGroup: integer;
+  GridNumber: Integer;
+  FirstRow: boolean;
+  procedure CreateParticle;
+  var
+    Point2D: TPoint2D;
+  begin
+    While FSeriesV6.Count < ParticleIndex do
+    begin
+      FSeriesV6.Add;
+    end;
+
+    TimeSeries := FSeriesV6[ParticleIndex-1];
+
+    APoint := TimeSeries.FPoints.Add as TTimeSeriesPointV6;
+    ConvertCoordinates(Grid, XPrime, YPrime, Point2D);
+
+    APoint.ParticleIndex := ParticleIndex;
+    APoint.FTimeStepIndex := TimeStepIndex;
+    APoint.FXPrime := XPrime;
+    APoint.FYPrime := YPrime;
+    APoint.FX := Point2D.X;
+    APoint.FY := Point2D.Y;
+    APoint.FLocalZ := LocalZ;
+    APoint.FZ := Z;
+    APoint.FTrackingTime := TrackingTime;
+    APoint.FLayer := Layer;
+    APoint.FRow := Row;
+    APoint.FColumn := Column;
+    APoint.FTimeStep := TS;
+    APoint.ParticleGroup := ParticleGroup;
+    Assert(APoint.FLayer >= 1);
+    Assert(APoint.FRow >= 1);
+    Assert(APoint.FColumn >= 1);
+  end;
+begin
+  Grid := (FModel as TCustomModel).ModflowGrid;
+  if Grid = nil then
+  begin
+    Exit;
+  end;
+  FreeAndNil(FRealList);
+  if FileAge(FileName, ADate) then
+  begin
+    FileDate := ADate;
+  end;
+  FSeries.Clear;
+  FSeriesV6.Clear;
+
+  NRow := Grid.RowCount;
+  NCol := Grid.ColumnCount;
+
+  Splitter:= TStringList.Create;
+  AssignFile(FTextFile, FFileName);
+  try
+    Splitter.Delimiter := ' ';
+    Reset(FTextFile);
+
+    Readln(FTextFile, ALine);
+    Assert(Trim(ALine) = 'MODPATH_TIMESERIES_FILE 6 0');
+
+    Readln(FTextFile, ALine);
+    Splitter.DelimitedText := ALine;
+    Assert(Splitter.Count = 2);
+    TrackingDirection := StrToInt(Splitter[0]);
+    ReferenceTime := FortranStrToFloat(Splitter[1]);
+
+    Readln(FTextFile, ALine);
+    Assert(Trim(ALine) = 'END HEADER');
+
+    FirstRow := true;
+    While Not Eof(FTextFile) do
+    begin
+      Readln(FTextFile, ALine);
+
+      Splitter.DelimitedText := ALine;
+      Assert(Splitter.Count = 15);
+
+      TimeStepIndex := StrToInt(Splitter[0]);
+      TS := StrToInt(Splitter[1]);
+      TrackingTime := FortranStrToFloat(Splitter[2]);
+      ParticleIndex := StrToInt(Splitter[3]);
+      ParticleGroup := StrToInt(Splitter[4]);
+      XPrime := FortranStrToFloat(Splitter[5]);
+      YPrime := FortranStrToFloat(Splitter[6]);
+      Z := FortranStrToFloat(Splitter[7]);
+      GridNumber := StrToInt(Splitter[8]);
+      Layer := StrToInt(Splitter[9]);
+      Row := StrToInt(Splitter[10]);
+      Column := StrToInt(Splitter[11]);
+      LocalX := FortranStrToFloat(Splitter[12]);
+      Localy := FortranStrToFloat(Splitter[13]);
+      LocalZ := FortranStrToFloat(Splitter[14]);
+
+      CreateParticle;
+
+      if FirstRow then
+      begin
+        FirstRow := False;
+        MinParticleGroup := ParticleGroup;
+        MaxParticleGroup := ParticleGroup;
+      end
+      else
+      begin
+        if ParticleGroup < MinParticleGroup then
+        begin
+          MinParticleGroup := ParticleGroup
+        end;
+        if ParticleGroup > MaxParticleGroup then
+        begin
+          MaxParticleGroup := ParticleGroup
+        end;
+      end;
+    end;
+  finally
+    Splitter.Free;
+    CloseFile(FTextFile);
+  end;
+
+  MaxPoints := 0;
+  FirstTimeFound := False;
+  if Series.Count > 0 then
+  begin
+    for LineIndex := 0 to Series.Count - 1 do
+    begin
+      Line := Series[LineIndex];
+      if Line.Points.Count > MaxPoints then
+      begin
+        MaxPoints := Line.Points.Count;
+      end;
+      if Line.Points.Count > 0 then
+      begin
+        FirstPoint := Line.Points[0];
+        LastPoint := Line.Points[Line.Points.Count-1];
+        if not FirstTimeFound then
+        begin
+          if FirstPoint.TrackingTime < LastPoint.TrackingTime then
+          begin
+            MinTime := FirstPoint.TrackingTime;
+            MaxTime := LastPoint.TrackingTime;
+          end
+          else
+          begin
+            MinTime := LastPoint.TrackingTime;
+            MaxTime := FirstPoint.TrackingTime;
+          end;
+          FirstTimeFound := True;
+        end
+        else
+        begin
+          if FirstPoint.TrackingTime < LastPoint.TrackingTime then
+          begin
+            if FirstPoint.TrackingTime < MinTime then
+            begin
+              MinTime := FirstPoint.TrackingTime
+            end;
+            if LastPoint.TrackingTime > MaxTime then
+            begin
+              MaxTime := LastPoint.TrackingTime;
+            end;
+          end
+          else
+          begin
+            if LastPoint.TrackingTime < MinTime then
+            begin
+              MinTime := LastPoint.TrackingTime
+            end;
+            if FirstPoint.TrackingTime > MaxTime then
+            begin
+              MaxTime := FirstPoint.TrackingTime;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+  if TimeIndex >= MaxPoints  then
+  begin
+    TimeIndex := MaxPoints-1;
+  end;
+end;
+
 procedure TTimeSeriesReader.Record3DTimeSeries(TimeIndex: integer);
 var
   Grid: TModflowGrid;
@@ -4091,9 +4945,10 @@ var
   PointIndex: Integer;
   TimeSeriesPoint: TTimeSeriesPoint;
   AColor: TColor;
-  ASeries: TTimeSeries;
+  ASeries: TCustomTimeSeries;
   TimeToPlot: Double;
   PlotIndex: Integer;
+  LocalSeries: TCustomTimeSeriesCollection;
 begin
   if not Visible then
   begin
@@ -4135,9 +4990,20 @@ begin
       TimeToPlot := Times[TimeIndex];
 
       glBegin(GL_POINTS);
-      for PointIndex := 0 to Series.Count - 1 do
+
+      if Series.Count > 0 then
       begin
-        ASeries := Series[PointIndex];
+        LocalSeries := Series;
+      end
+      else
+      begin
+        LocalSeries := SeriesV6;
+      end;
+
+
+      for PointIndex := 0 to LocalSeries.Count - 1 do
+      begin
+        ASeries := LocalSeries[PointIndex];
         PlotIndex := ASeries.Times.IndexOf(TimeToPlot);
 
         if PlotIndex >= 0 then
@@ -4149,7 +5015,7 @@ begin
             begin
               AColor := GetPointColor(MaxValue, MinValue, TimeSeriesPoint);
               AssignColor(AColor);
-              glVertex3f(TimeSeriesPoint.X, TimeSeriesPoint.Y, TimeSeriesPoint.Z);
+              glVertex3f(TimeSeriesPoint.XPrime, TimeSeriesPoint.YPrime, TimeSeriesPoint.Z);
             end;
           end;
         end;
@@ -4173,9 +5039,24 @@ begin
   FSeries.Assign(Value);
 end;
 
+procedure TTimeSeriesReader.SetLinesV6(const Value: TTimeSeriesCollectionV6);
+begin
+  FSeriesV6.Assign(Value);
+end;
+
+procedure TTimeSeriesReader.SetMaxParticleGroup(const Value: Integer);
+begin
+  FMaxParticleGroup := Value;
+end;
+
 procedure TTimeSeriesReader.SetMaxTime(const Value: double);
 begin
   FMaxTime := Value;
+end;
+
+procedure TTimeSeriesReader.SetMinParticleGroup(const Value: Integer);
+begin
+  FMinParticleGroup := Value;
 end;
 
 procedure TTimeSeriesReader.SetMinTime(const Value: double);
@@ -4221,25 +5102,19 @@ begin
   begin
     SourceSeries := TTimeSeries(Source);
     Points := SourceSeries.Points;
-    Times := SourceSeries.Times;
-  end
-  else
-  begin
-    inherited;
   end;
+  inherited;
 end;
 
 constructor TTimeSeries.Create(Collection: TCollection);
 begin
   inherited;
-  FTimes := nil;
   FPoints:= TTimeSeriesPoints.Create;
 end;
 
 destructor TTimeSeries.Destroy;
 begin
   FPoints.Free;
-  FTimes.Free;
   inherited;
 end;
 
@@ -4248,7 +5123,7 @@ begin
   FPoints.Assign(Value);
 end;
 
-procedure TTimeSeries.SetTimes(const Value: TRealList);
+procedure TCustomTimeSeries.SetTimes(const Value: TRealList);
 begin
   if (Value = nil) or (Value.Count = 0) then
   begin
@@ -4262,6 +5137,38 @@ begin
     end;
     FTimes.Assign(Value);
   end;
+end;
+
+procedure TCustomTimeSeries.Assign(Source: TPersistent);
+var
+  SourceSeries: TCustomTimeSeries;
+begin
+  if Source is TCustomTimeSeries then
+  begin
+    SourceSeries := TCustomTimeSeries(Source);
+    Times := SourceSeries.Times;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+constructor TCustomTimeSeries.Create(Collection: TCollection);
+begin
+  inherited;
+  FTimes := nil;
+end;
+
+destructor TCustomTimeSeries.Destroy;
+begin
+  FTimes.Free;
+  inherited;
+end;
+
+function TTimeSeries.GetPoints: TCustomTimeSeriesPoints;
+begin
+  result := FPoints;
 end;
 
 function TTimeSeries.GetTimes: TRealList;
@@ -4416,7 +5323,7 @@ begin
   inherited Create(TTimeSeriesPoint);
 end;
 
-function TTimeSeriesPoints.GetPoint(Index: integer): TTimeSeriesPoint;
+function TCustomTimeSeriesPoints.GetPoint(Index: integer): TTimeSeriesPoint;
 begin
   result := Items[Index] as TTimeSeriesPoint;
 end;
@@ -4447,6 +5354,7 @@ begin
     ColumnLimits := TimeSeriesSource.ColumnLimits;
     RowLimits := TimeSeriesSource.RowLimits;
     LayerLimits := TimeSeriesSource.LayerLimits;
+    ParticleGroupLimits := TimeSeriesSource.ParticleGroupLimits;
   end
   else
   begin
@@ -4461,10 +5369,12 @@ begin
   FLayerLimits:= TShowIntegerLimit.Create;
   FRowLimits:= TShowIntegerLimit.Create;
   FColumnLimits:= TShowIntegerLimit.Create;
+  FParticleGroupLimits := TShowIntegerLimit.Create;
 end;
 
 destructor TTimeSeriesDisplayLimits.Destroy;
 begin
+  FParticleGroupLimits.Free;
   FColumnLimits.Free;
   FRowLimits.Free;
   FLayerLimits.Free;
@@ -4488,9 +5398,15 @@ begin
   FLimitToCurrentIn2D := Value;
 end;
 
+procedure TTimeSeriesDisplayLimits.SetParticleGroupLimits(
+  const Value: TShowIntegerLimit);
+begin
+  FParticleGroupLimits.Assign(Value);
+end;
+
 procedure TTimeSeriesDisplayLimits.SetRowLimits(const Value: TShowIntegerLimit);
 begin
-  FRowLimits.Assign(Value)
+  FRowLimits.Assign(Value);
 end;
 
 procedure TTimeSeriesDisplayLimits.SetShowChoice(const Value: TShowChoice);
@@ -4688,6 +5604,774 @@ end;
 procedure TCustomModpathSettings.SetColorParameters(const Value: TColorParameters);
 begin
   FColorParameters.Assign(Value);
+end;
+
+{ TPathLinePointsV6 }
+
+constructor TPathLinePointsV6.Create(PathLine: TPathLineV6);
+begin
+  inherited Create(TPathLinePointV6, PathLine);
+end;
+
+{ TPathLineV6 }
+
+constructor TPathLineV6.Create(Collection: TCollection);
+begin
+  inherited;
+  FPoints := TPathLinePointsV6.Create(self);
+end;
+
+{ TPathLinesV6 }
+
+constructor TPathLinesV6.Create;
+begin
+  inherited Create(TPathLineV6);
+end;
+
+procedure TPathLinesV6.UpdateShapeFileFields(ALine: TCustomPathLine;
+  ShapeDataBase: TXBase);
+var
+  FirstPoint: TPathLinePoint;
+begin
+  inherited;
+  FirstPoint := ALine.Points[0];
+  ShapeDataBase.UpdFieldInt(XbaseFieldName(StrParticleGroup),
+    (FirstPoint as TPathLinePointV6).ParticleGroup);
+end;
+
+procedure TPathLinesV6.DefineShapeFileFields(Fields: TStringList);
+begin
+  inherited;
+  Fields.Add(XbaseFieldName(StrParticleGroup) + '=N');
+end;
+
+{ TPathLineReader }
+
+procedure TPathLineReader.DrawLines(Orientation: TDataSetOrientation;
+  const BitMap: TBitmap32; LocalLines: TCustomPathLines);
+var
+  LineIndex: Integer;
+  Line: TCustomPathLine;
+  APoint: TPathLinePoint;
+  ColRowOrLayer: integer;
+  PointIndex: Integer;
+  ShowPriorPoint: Boolean;
+  ZoomBox: TQRbwZoomBox2;
+  Points: array [0..1] of TPoint;
+  ADisplayPoint: TPoint;
+  MaxValue, MinValue: double;
+  Grid: TModflowGrid;
+  AColor: TColor;
+  AColor32: TColor32;
+  QuadTree: TRbwQuadTree;
+  ShouldInitializeTree: Boolean;
+  Limits: TGridLimit;
+begin
+  if not Visible then
+  begin
+    Exit;
+  end;
+  Grid := (FModel as TCustomModel).ModflowGrid;
+  if Grid = nil then
+  begin
+    Exit;
+  end;
+  if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0)
+    or (Grid.ColumnCount <= 0) then
+  begin
+    Exit;
+  end;
+  ColRowOrLayer := -1;
+  ZoomBox := nil;
+  QuadTree := nil;
+  case Orientation of
+    dsoTop:
+      begin
+        QuadTree := TopQuadTree;
+        ZoomBox := frmGoPhast.frameTopView.ZoomBox;
+        ColRowOrLayer := Grid.SelectedLayer+1;
+      end;
+    dsoFront:
+      begin
+        QuadTree := FrontQuadTree;
+        ZoomBox := frmGoPhast.frameFrontView.ZoomBox;
+        ColRowOrLayer := Grid.SelectedRow+1;
+      end;
+    dsoSide:
+      begin
+        QuadTree := SideQuadTree;
+        ZoomBox := frmGoPhast.frameSideView.ZoomBox;
+        ColRowOrLayer := Grid.SelectedColumn+1;
+      end;
+    dso3D: Assert(False);
+    else Assert(False);
+  end;
+  GetMinMaxValues(MaxValue, MinValue);
+
+  ShouldInitializeTree := QuadTree.Count = 0;
+  if ShouldInitializeTree then
+  begin
+    Limits := Grid.GridLimits(OrientationToViewDirection(Orientation));
+    case Orientation of
+      dsoTop:
+        begin
+          QuadTree.XMax := Limits.MaxX;
+          QuadTree.XMin := Limits.MinX;
+          QuadTree.YMax := Limits.MaxY;
+          QuadTree.YMin := Limits.MinY;
+        end;
+      dsoFront:
+        begin
+          QuadTree.XMax := Limits.MaxX;
+          QuadTree.XMin := Limits.MinX;
+          QuadTree.YMax := Limits.MaxZ;
+          QuadTree.YMin := Limits.MinZ;
+        end;
+      dsoSide:
+        begin
+          QuadTree.XMax := Limits.MaxY;
+          QuadTree.XMin := Limits.MinY;
+          QuadTree.YMax := Limits.MaxZ;
+          QuadTree.YMin := Limits.MinZ;
+        end
+      else Assert(False);
+    end;
+  end;
+  for LineIndex := 0 to LocalLines.Count - 1 do
+  begin
+    Line := LocalLines[LineIndex];
+    if Line.Points.Count > 0 then
+    begin
+      if CheckShowLine(Line) then
+      begin
+        ShowPriorPoint := False;
+        Points[0].X := 0;
+        Points[0].Y := 0;
+        for PointIndex := 0 to Line.Points.Count - 1 do
+        begin
+          APoint := Line.Points[PointIndex];
+          if APoint.ShouldShow(DisplayLimits, Orientation, ColRowOrLayer) then
+          begin
+            case Orientation of
+              dsoTop:
+                begin
+                  ADisplayPoint.X := ZoomBox.XCoord(APoint.X);
+                  ADisplayPoint.Y := ZoomBox.YCoord(APoint.Y);
+                  if ShouldInitializeTree then
+                  begin
+                    QuadTree.AddPoint(APoint.X, APoint.Y, APoint);
+                  end;
+                end;
+              dsoFront:
+                begin
+                  ADisplayPoint.X := ZoomBox.XCoord(APoint.XPrime);
+                  ADisplayPoint.Y := ZoomBox.YCoord(APoint.Z);
+                  if ShouldInitializeTree then
+                  begin
+                    QuadTree.AddPoint(APoint.XPrime, APoint.Z, APoint);
+                  end;
+                end;
+              dsoSide:
+                begin
+                  ADisplayPoint.X := ZoomBox.XCoord(APoint.Z);
+                  ADisplayPoint.Y := ZoomBox.YCoord(APoint.YPrime);
+                  if ShouldInitializeTree then
+                  begin
+                    QuadTree.AddPoint(APoint.Z, APoint.YPrime, APoint);
+                  end;
+                end;
+              else Assert(False);
+            end;
+            Points[1] := ADisplayPoint;
+            if ShowPriorPoint then
+            begin
+              AColor := GetPointColor(MaxValue, MinValue, APoint);
+              AColor32 := Color32(AColor);
+              DrawBigPolyline32(BitMap, AColor32, 1, Points, True);
+            end;
+            Points[0] := ADisplayPoint;
+            ShowPriorPoint := True;
+          end
+          else
+          begin
+            ShowPriorPoint := False;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TPathLineReader.DrawLines3D(LocalLines: TCustomPathLines);
+var
+  Grid: TModflowGrid;
+begin
+  if FDrawingPathLines then
+  begin
+    Exit;
+  end;
+  try
+    FDrawingPathLines := True;
+
+
+    if (not FRecordedPathLines) then
+    begin
+      Record3DPathLines(LocalLines);
+      // FRecordedPathLines is private and won't be set
+      // by overridden versions of RecordFront.
+      FRecordedPathLines := True;
+    end;
+
+    if not Visible then
+    begin
+      Exit;
+    end;
+    Grid := (FModel as TCustomModel).ModflowGrid;
+    if Grid = nil then
+    begin
+      Exit;
+    end;
+    if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0)
+      or (Grid.ColumnCount <= 0) then
+    begin
+      Exit;
+    end;
+//    EnableLighting;
+    glCallList(PathlineGLIndex);
+  finally
+    FDrawingPathLines := False;
+  end;
+
+end;
+
+procedure TPathLineReader.ExportShapefile(FileName: string);
+begin
+  case ModpathVersion of
+    pv5: Lines.ExportShapefile(FileName);
+    pv6_0: LinesV6.ExportShapefile(FileName);
+    else Assert(False);
+  end;
+end;
+
+procedure TPathLineReader.ReadFileV6;
+var
+  ALine: string;
+  ParticleIndex: integer;
+  XPrime: double;
+  YPrime: double;
+  LocalZ: double;
+  Z: double;
+  Time: double;
+  Column: integer;
+  TS: integer;
+  Layer: integer;
+  Row: integer;
+  PathLine: TCustomPathLine;
+  APoint: TPathLinePointV6;
+  Grid: TModflowGrid;
+  ADate: TDateTime;
+  LineIndex: Integer;
+  Line: TCustomPathLine;
+  FirstPoint: TPathLinePoint;
+  LastPoint: TPathLinePoint;
+  FirstTimeFound: Boolean;
+  FTextFile: TextFile;
+  TrackDirection: integer;
+  RefTime: double;
+  ParticleGroup: integer;
+  TimePointIndex: integer;
+  GridIndex: integer;
+  LineSegmentIndex: integer;
+  LocalX: double;
+  LocalY: double;
+  Splitter: TStringList;
+  FirstLine: boolean;
+  procedure CreateParticle;
+  var
+    Point2D: TPoint2D;
+  begin
+    While FLinesV6.Count < ParticleIndex do
+    begin
+      FLinesV6.Add;
+    end;
+
+    PathLine := FLinesV6[ParticleIndex-1];
+
+    APoint := PathLine.FPoints.Add as TPathLinePointV6;
+    ConvertCoordinates(Grid, XPrime, YPrime, Point2D);
+
+    APoint.FXPrime := XPrime;
+    APoint.FYPrime := YPrime;
+    APoint.FX := Point2D.X;
+    APoint.FY := Point2D.Y;
+    APoint.FLocalZ := LocalZ;
+    APoint.FZ := Z;
+    APoint.FTime := Time;
+    APoint.FLayer := Layer;
+    APoint.FRow := Row;
+    APoint.FColumn := Column;
+    APoint.FTimeStep := TS;
+
+    APoint.ParticleGroup := ParticleGroup;
+    APoint.TimePointIndex := TimePointIndex;
+    APoint.LineSegmentIndex := LineSegmentIndex;
+
+    Assert(APoint.FLayer >= 1);
+    Assert(APoint.FRow >= 1);
+    Assert(APoint.FColumn >= 1);
+  end;
+begin
+  Grid := (FModel as TCustomModel).ModflowGrid;
+  if Grid = nil then
+  begin
+    Exit;
+  end;
+  if FileAge(FileName, ADate) then
+  begin
+    FileDate := ADate;
+  end;
+  FLinesV6.Clear;
+//  NRow := Grid.RowCount;
+//  NCol := Grid.ColumnCount;
+
+  Splitter:= TStringList.Create;
+  AssignFile(FTextFile, FFileName);
+  try
+    Splitter.Delimiter := ' ';
+    Reset(FTextFile);
+    Readln(FTextFile, ALine);
+    Assert(Trim(ALine) = 'MODPATH_PATHLINE_FILE 6 0');
+    Readln(FTextFile, TrackDirection, RefTime);
+    case TrackDirection of
+      1:
+        begin
+          TrackingDirectionV6 := tdForward;
+        end;
+      2:
+        begin
+          TrackingDirectionV6 := tdBackward;
+        end;
+      else Assert(False);
+    end;
+    ReferenceTimeV6 := RefTime;
+
+    Readln(FTextFile, ALine);
+    Assert(Trim(ALine) = 'END HEADER');
+    FirstLine := True;
+    While Not Eof(FTextFile) do
+    begin
+      Readln(FTextFile, ALine);
+      if ALine <> '' then
+      begin
+        Splitter.DelimitedText := ALine;
+        Assert(Splitter.Count = 16);
+
+        ParticleIndex := StrToInt(Splitter[0]);
+        ParticleGroup := StrToInt(Splitter[1]);
+        TimePointIndex := StrToInt(Splitter[2]);
+        TS := StrToInt(Splitter[3]);
+        Time := FortranStrToFloat(Splitter[4]);
+        XPrime := FortranStrToFloat(Splitter[5]);
+        YPrime := FortranStrToFloat(Splitter[6]);
+        Z := FortranStrToFloat(Splitter[7]);
+        Layer := StrToInt(Splitter[8]);
+        Row := StrToInt(Splitter[9]);
+        Column := StrToInt(Splitter[10]);
+        GridIndex := StrToInt(Splitter[11]);
+        LocalX := FortranStrToFloat(Splitter[12]);
+        LocalY := FortranStrToFloat(Splitter[13]);
+        LocalZ := FortranStrToFloat(Splitter[14]);
+        LineSegmentIndex := StrToInt(Splitter[15]);
+
+        CreateParticle;
+
+        if FirstLine then
+        begin
+          MinParticleGroup := ParticleGroup;
+          MaxParticleGroup := ParticleGroup;
+          FirstLine := False;
+        end
+        else
+        begin
+          if ParticleGroup < MinParticleGroup then
+          begin
+            MinParticleGroup := ParticleGroup;
+          end;
+          if ParticleGroup > MaxParticleGroup then
+          begin
+            MaxParticleGroup := ParticleGroup;
+          end;
+        end;
+      end;
+    end;
+  finally
+    Splitter.Free;
+    CloseFile(FTextFile);
+  end;
+
+  FirstTimeFound := False;
+  if LinesV6.Count > 0 then
+  begin
+    for LineIndex := 0 to LinesV6.Count - 1 do
+    begin
+      Line := LinesV6[LineIndex];
+      if Line.Points.Count > 0 then
+      begin
+        FirstPoint := Line.Points[0];
+        LastPoint := Line.Points[Line.Points.Count-1];
+        if not FirstTimeFound then
+        begin
+          if FirstPoint.AbsoluteTime < LastPoint.AbsoluteTime then
+          begin
+            MinTime := FirstPoint.AbsoluteTime;
+            MaxTime := LastPoint.AbsoluteTime;
+          end
+          else
+          begin
+            MinTime := LastPoint.AbsoluteTime;
+            MaxTime := FirstPoint.AbsoluteTime;
+          end;
+          FirstTimeFound := True;
+        end
+        else
+        begin
+          if FirstPoint.AbsoluteTime < LastPoint.AbsoluteTime then
+          begin
+            if FirstPoint.AbsoluteTime < MinTime then
+            begin
+              MinTime := FirstPoint.AbsoluteTime
+            end;
+            if LastPoint.AbsoluteTime > MaxTime then
+            begin
+              MaxTime := LastPoint.AbsoluteTime;
+            end;
+          end
+          else
+          begin
+            if LastPoint.AbsoluteTime < MinTime then
+            begin
+              MinTime := LastPoint.AbsoluteTime
+            end;
+            if FirstPoint.AbsoluteTime > MaxTime then
+            begin
+              MaxTime := FirstPoint.AbsoluteTime;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TPathLineReader.Record3DPathLines(LocalLines: TCustomPathLines);
+var
+  LineIndex: Integer;
+  Line: TCustomPathLine;
+  APoint: TPathLinePoint;
+  ColRowOrLayer: integer;
+  PointIndex: Integer;
+  ShowPriorPoint: Boolean;
+  MaxValue, MinValue: double;
+  Grid: TModflowGrid;
+  AColor: TColor;
+  LineVisible: boolean;
+  PriorPoint: TPathLinePoint;
+//  NewLine: Boolean;
+
+  procedure StartLine;
+  begin
+    if not LineVisible then
+    begin
+      glBegin(GL_LINE_STRIP);
+      LineVisible := True;
+      AColor := GetPointColor(MaxValue, MinValue, PriorPoint);
+      AssignColor(AColor);
+
+      glVertex3f(PriorPoint.XPrime, PriorPoint.YPrime, PriorPoint.Z);
+    end;
+  end;
+  procedure EndLine;
+  begin
+    if LineVisible then
+    begin
+      glEnd;
+      LineVisible := False;
+    end;
+  end;
+begin
+
+  if not Visible then
+  begin
+    Exit;
+  end;
+  Grid := (FModel as TCustomModel).ModflowGrid;
+  if Grid = nil then
+  begin
+    Exit;
+  end;
+  if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0)
+    or (Grid.ColumnCount <= 0) then
+  begin
+    Exit;
+  end;
+
+
+
+  ColRowOrLayer := -1;
+
+//    EnableLighting;
+  glMatrixMode(GL_MODELVIEW);
+
+  glNewList(PathlineGLIndex, GL_COMPILE);
+  try
+    glPushMatrix;
+    try
+      glEnable(GL_LINE_SMOOTH);
+      glShadeModel(GL_SMOOTH);
+
+      GetMinMaxValues(MaxValue, MinValue);
+      glLineWidth(1);
+
+      LineVisible := False;
+      for LineIndex := 0 to LocalLines.Count - 1 do
+      begin
+        Line := LocalLines[LineIndex];
+        if Line.Points.Count > 0 then
+        begin
+          if CheckShowLine(Line) then
+          begin
+            PriorPoint := nil;
+            ShowPriorPoint := False;
+            for PointIndex := 0 to Line.Points.Count - 1 do
+            begin
+              APoint := Line.Points[PointIndex];
+              if APoint.ShouldShow(DisplayLimits, dso3D, ColRowOrLayer) then
+              begin
+
+                if ShowPriorPoint then
+                begin
+                  StartLine;
+
+                  AColor := GetPointColor(MaxValue, MinValue, APoint);
+                  AssignColor(AColor);
+                  glVertex3f(APoint.XPrime, APoint.YPrime, APoint.Z);
+                end;
+                ShowPriorPoint := True;
+                PriorPoint := APoint;
+              end
+              else
+              begin
+                ShowPriorPoint := False;
+                EndLine;
+              end;
+            end;
+          end;
+          EndLine;
+        end;
+      end;
+    finally
+      glPopMatrix;
+    end;
+  finally
+    glEndList;
+  end;
+end;
+
+procedure TPathLineReader.SetLinesV6(const Value: TPathLinesV6);
+begin
+  FLinesV6.Assign(Value);
+end;
+
+{ TCustomPathLinePoints }
+
+constructor TCustomPathLinePoints.Create(ItemClass: TCollectionItemClass; PathLine: TCustomPathLine);
+begin
+  inherited Create(ItemClass);
+  FPathLine := PathLine;
+end;
+
+{ TPathLinePointV6 }
+
+procedure TPathLinePointV6.Assign(Source: TPersistent);
+var
+  SourcePoint: TPathLinePointV6;
+begin
+  if Source is TPathLinePointV6 then
+  begin
+    SourcePoint := TPathLinePointV6(Source);
+    ParticleGroup := SourcePoint.ParticleGroup;
+    TimePointIndex := SourcePoint.TimePointIndex;
+    LineSegmentIndex := SourcePoint.LineSegmentIndex;
+  end;
+  inherited;
+
+end;
+
+function TPathLinePointV6.CheckLimits(Limits: TPathLineDisplayLimits): boolean;
+begin
+  result := inherited;
+  if result then
+  begin
+    if Limits.ParticleGroupLimits.UseLimit then
+    begin
+      result := (Limits.ParticleGroupLimits.StartLimit <= ParticleGroup)
+        and (ParticleGroup <= Limits.ParticleGroupLimits.EndLimit);
+      if not result then Exit;
+    end;
+  end;
+end;
+
+{ TEndPointsV6 }
+
+constructor TEndPointsV6.Create;
+begin
+  inherited Create(TEndPointV6)
+end;
+
+{ TEndPointV6 }
+
+procedure TEndPointV6.Assign(Source: TPersistent);
+var
+  SourcePoint: TEndPointV6;
+begin
+  if Source is TEndPointV6 then
+  begin
+    SourcePoint := TEndPointV6(Source);
+
+    ParticleGroup := SourcePoint.ParticleGroup;
+    InitialCellFace := SourcePoint.InitialCellFace;
+    FinalCellFace := SourcePoint.FinalCellFace;
+    ParticleLabel := SourcePoint.ParticleLabel;
+  end;
+  inherited;
+
+end;
+
+function TEndPointV6.CheckLimits(Limits: TEndPointDisplayLimits): boolean;
+begin
+  result := inherited;
+  if result then
+  begin
+    if Limits.ParticleGroupLimits.UseLimit then
+    begin
+      result := (Limits.ParticleGroupLimits.StartLimit <= ParticleGroup)
+        and (ParticleGroup <= Limits.ParticleGroupLimits.EndLimit);
+      if not result then Exit;
+    end;
+  end;
+end;
+
+{ TTimeSeriesPointV6 }
+
+procedure TTimeSeriesPointV6.Assign(Source: TPersistent);
+begin
+  if Source is TTimeSeriesPointV6 then
+  begin
+    ParticleGroup := TTimeSeriesPointV6(Source).ParticleGroup;
+  end;
+  inherited;
+
+end;
+
+function TTimeSeriesPointV6.CheckLimits(
+  Limits: TTimeSeriesDisplayLimits): boolean;
+begin
+  result := inherited;
+  if result then
+  begin
+    if Limits.ParticleGroupLimits.UseLimit then
+    begin
+      result := (Limits.ParticleGroupLimits.StartLimit <= ParticleGroup)
+        and (ParticleGroup <= Limits.ParticleGroupLimits.EndLimit);
+      if not result then Exit;
+    end;
+  end;
+end;
+
+{ TTimeSeriesPointsV6 }
+
+constructor TTimeSeriesPointsV6.Create;
+begin
+  inherited Create(TTimeSeriesPointV6);
+end;
+
+function TTimeSeriesPointsV6.GetPoint(Index: integer): TTimeSeriesPointV6;
+begin
+  result := inherited Items[Index] as TTimeSeriesPointV6
+end;
+
+{ TTimeSeriesV6 }
+
+procedure TTimeSeriesV6.Assign(Source: TPersistent);
+var
+  SourceSeries: TTimeSeriesV6;
+begin
+  if Source is TTimeSeriesV6 then
+  begin
+    SourceSeries := TTimeSeriesV6(Source);
+    Points := SourceSeries.Points;
+  end;
+  inherited;
+end;
+
+constructor TTimeSeriesV6.Create(Collection: TCollection);
+begin
+  inherited;
+  FPoints:= TTimeSeriesPointsV6.Create;
+end;
+
+destructor TTimeSeriesV6.Destroy;
+begin
+  FPoints.Free;
+  inherited;
+end;
+
+function TTimeSeriesV6.GetPoints: TCustomTimeSeriesPoints;
+begin
+  result := FPoints;
+end;
+
+function TTimeSeriesV6.GetTimes: TRealList;
+var
+  APoint: TTimeSeriesPoint;
+  PointIndex: Integer;
+begin
+  if FTimes = nil then
+  begin
+    FTimes := TRealList.Create;
+    for PointIndex := 0 to Points.Count - 1 do
+    begin
+      APoint := Points[PointIndex];
+      FTimes.Add(APoint.TrackingTime);
+    end;
+    FTimes.Sorted := True;
+  end;
+  result := FTimes;
+end;
+
+procedure TTimeSeriesV6.SetPoints(const Value: TTimeSeriesPointsV6);
+begin
+  FPoints.Assign(Value);
+end;
+
+{ TTimeSeriesCollectionV6 }
+
+constructor TTimeSeriesCollectionV6.Create;
+begin
+  inherited Create(TTimeSeriesV6);
+end;
+
+function TTimeSeriesCollectionV6.GetSeries(Index: integer): TTimeSeriesV6;
+begin
+  result := Items[Index] as TTimeSeriesV6;
+end;
+
+{ TCustomTimeSeriesCollection }
+
+function TCustomTimeSeriesCollection.GetSeries(
+  Index: integer): TCustomTimeSeries;
+begin
+  result := Items[Index] as TCustomTimeSeries;
 end;
 
 end.

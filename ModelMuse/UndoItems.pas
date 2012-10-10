@@ -2191,7 +2191,7 @@ begin
           VarIndex := Compiler.IndexOfVariable(OldVariableName);
           if VarIndex >= 0 then
           begin
-            Compiler.RenameVariable(VarIndex, NewVariableName);
+            Compiler.RenameVariable(VarIndex, NewVariableName, NewVariableName);
           end;
         end;
       end;
@@ -2225,7 +2225,7 @@ end;
 procedure TPhastDataSetStorage.Assign(const DataSet: TDataArray);
 begin
   FDataSet := DataSet;
-  Name := DataSet.Name;
+  Name := DataSet.DisplayName;
 //  Visible := DataSet.Visible;
   Orientation := DataSet.Orientation;
   EvaluatedAt := DataSet.EvaluatedAt;
@@ -2302,7 +2302,7 @@ begin
         ChildDataArray := ChildModel.DataArrayManager.
           GetDataSetByName(FDataSet.Name);
 //        Assert(ChildDataArray <> nil);
-        if ChildDataArray <> nil then
+        if (ChildDataArray <> nil) and not (dcName in ChildDataArray.Lock) then
         begin
           ChildDataArray.Name := Name;
           ChildDataArray.UpdateWithoutNotification(Orientation, EvaluatedAt,
@@ -2314,9 +2314,12 @@ begin
       end;
     end;
   end;
-  FDataSet.Name := Name;
-  FDataSet.UpdateWithoutNotification(Orientation, EvaluatedAt,
-    DataType, FNeedToInvalidate);
+  if not (dcName in FDataSet.Lock) then
+  begin
+    FDataSet.Name := Name;
+    FDataSet.UpdateWithoutNotification(Orientation, EvaluatedAt,
+      DataType, FNeedToInvalidate);
+  end;
 //  FDataSet.Orientation := Orientation;
 //  FDataSet.EvaluatedAt := EvaluatedAt;
 //  FDataSet.DataType := DataType;
@@ -2341,7 +2344,10 @@ begin
           GetDataSetByName(FDataSet.Name);
         if ChildDataArray <> nil then
         begin
-          ChildDataArray.Name := Name;
+          if not (dcName in ChildDataArray.Lock) then
+          begin
+            ChildDataArray.Name := Name;
+          end;
           ChildDataArray.Orientation := Orientation;
           ChildDataArray.EvaluatedAt := EvaluatedAt;
           ChildDataArray.DataType := DataType;
@@ -2372,7 +2378,10 @@ begin
     ShouldInvalidate := True;
   end;
 
-  FDataSet.Name := Name;
+  if not (dcName in FDataSet.Lock) then
+  begin
+    FDataSet.Name := Name;
+  end;
   FDataSet.Orientation := Orientation;
   FDataSet.EvaluatedAt := EvaluatedAt;
   FDataSet.DataType := DataType;
@@ -2395,7 +2404,7 @@ function TPhastDataSetStorage.DataSetChanged: boolean;
 var
   TempValues: TPhastInterpolationValues;
 begin
-  result := (Name <> FDataSet.Name)
+  result := (Name <> FDataSet.DisplayName)
     or (DataType <> FDataSet.DataType)
     or (EvaluatedAt <> FDataSet.EvaluatedAt)
     or (Formula <> FDataSet.Formula)
@@ -2724,12 +2733,22 @@ procedure TUndoMoveCrossSection.DoCommand;
 begin
   inherited;
   frmGoPhast.PhastModel.SutraMesh.CrossSection.Segment := FNewLocation;
+  frmGoPhast.TopDiscretizationChanged := True;
+  frmGoPhast.FrontDiscretizationChanged := True;
+  frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+  frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
+  frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
 end;
 
 procedure TUndoMoveCrossSection.Undo;
 begin
   inherited;
   frmGoPhast.PhastModel.SutraMesh.CrossSection.Segment := FOldLocation;
+  frmGoPhast.TopDiscretizationChanged := True;
+  frmGoPhast.FrontDiscretizationChanged := True;
+  frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+  frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
+  frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
 end;
 
 end.

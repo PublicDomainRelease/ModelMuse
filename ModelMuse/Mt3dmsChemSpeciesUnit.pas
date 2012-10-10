@@ -18,11 +18,19 @@ type
     FSecondSorbParamDataArrayName: string;
     FReactionRateDisolvedDataArrayName: string;
     FReactionRateSorbedDataArrayName: string;
+
+    FInitialConcDisplayName: string;
+    FSorbOrImmobInitialConcDisplayName: string;
+    FFirstSorbParamDisplayName: string;
+    FSecondSorbParamDisplayName: string;
+    FReactionRateDisolvedDisplayName: string;
+    FReactionRateSorbedDisplayName: string;
     procedure SetName(const Value: string); virtual;
     procedure SetInitialConcDataArrayName(const NewName: string);
     function Collection: TCustomChemSpeciesCollection;
     procedure UpdateDataArray(OnDataSetUsed: TObjectUsedEvent;
-      const OldDataArrayName, NewName, NewFormula, AssociatedDataSets: string; ShouldCreate: boolean);
+      const OldDataArrayName, NewName, NewDisplayName, NewFormula,
+      AssociatedDataSets: string; ShouldCreate: boolean);
     procedure SetSorbOrImmobInitialConcDataArrayName(const NewName: string);
     procedure SetFirstSorbParamDataArrayName(const NewName: string);
     procedure SetSecondSorbParamDataArrayName(const NewName: string);
@@ -82,6 +90,7 @@ type
 
   TMobileChemSpeciesItem = class(TChemSpeciesItem)
   private
+    FDiffusionCoefDisplayName: string;
     FDiffusionCoefDataArrayName: string;
     procedure SetDiffusionCoefDataArrayName(const NewName: string);
   protected
@@ -113,7 +122,27 @@ uses
   PhastModelUnit, RbwParser, SysUtils, ModflowPackageSelectionUnit,
   frmGoPhastUnit, ScreenObjectUnit, Mt3dmsChemUnit, Mt3dmsTobUnit;
 
-{ TChemSpeciesItem }
+const
+  kInitConcPrefix = 'Initial_Concentration_';
+  kSorbPrefix = 'Sorbed_Phase_Initial_Conc_';
+  kImmobPrefix = 'Immobile_Phase_Initial_Conc_';
+  kFirstSorbParamPrefix = 'Sorption_Parameter1_';
+  kSecondSorbParamPrefix = 'Sorption_Parameter2_';
+  kRC1Prefix = 'Reaction_Rate_Dissolved_Phase_';
+  kRC2Prefix = 'Reaction_Rate_Sorbed_Phase_';
+  kDiffCoefPrefix = 'Diffusion_Coefficient_';
+
+resourcestring
+  StrInitConcPrefix = kInitConcPrefix;
+  StrSorbPrefix = kSorbPrefix;
+  StrImmobPrefix = kImmobPrefix;
+  StrFirstSorbParamPrefix = kFirstSorbParamPrefix;
+  StrSecondSorbParamPrefix = kSecondSorbParamPrefix;
+  StrRC1Prefix = kRC1Prefix;
+  StrRC2Prefix = kRC2Prefix;
+  StrDiffCoefPrefix = kDiffCoefPrefix;
+
+  { TChemSpeciesItem }
 
 procedure TChemSpeciesItem.Assign(Source: TPersistent);
 var
@@ -167,7 +196,7 @@ begin
 end;
 
 procedure TChemSpeciesItem.UpdateDataArray(OnDataSetUsed: TObjectUsedEvent;
-  const OldDataArrayName, NewName, NewFormula, AssociatedDataSets: string; ShouldCreate: boolean);
+  const OldDataArrayName, NewName, NewDisplayName, NewFormula, AssociatedDataSets: string; ShouldCreate: boolean);
 var
   DataArray: TDataArray;
   LocalModel: TPhastModel;
@@ -183,7 +212,7 @@ begin
       begin
         if DataArray.Name <> NewName then
         begin
-          LocalModel.RenameDataArray(DataArray, NewName);
+          LocalModel.RenameDataArray(DataArray, NewName, NewDisplayName);
         end;
       end
       else
@@ -196,9 +225,9 @@ begin
         begin
           // create a new data array.
           DataArray := LocalModel.DataArrayManager.CreateNewDataArray(
-            TDataArray, NewName, NewFormula,
+            TDataArray, NewName, NewFormula, NewDisplayName,
             [dcName, dcType, dcOrientation, dcEvaluatedAt],
-            rdtDouble, eaBlocks, dso3D, StrMT3DMS);
+            rdtDouble, eaBlocks, dso3D, StrMT3DMS_Classificaton);
         end;
       end;
       if DataArray <> nil then
@@ -360,7 +389,8 @@ begin
   if LocalModel <> nil then
   begin
     UpdateDataArray(LocalModel.Mt3dMsFirstSorbParamUsed,
-      FFirstSorbParamDataArrayName, NewName, '1.', 'MT3DMS RCT package, SP1',
+      FFirstSorbParamDataArrayName, NewName,
+      FFirstSorbParamDisplayName, '1.', 'MT3DMS RCT package, SP1',
       LocalModel.AnyMt3dSorbParameter);
   end;
   SetCaseSensitiveStringProperty(FFirstSorbParamDataArrayName, NewName);
@@ -409,7 +439,8 @@ begin
   if LocalModel <> nil then
   begin
     UpdateDataArray(LocalModel.Mt3dMsInitialConcUsed,
-      FInitialConcDataArrayName, NewName, '0', 'MT3DMS BTN package, SCONC',
+      FInitialConcDataArrayName, NewName,
+      FInitialConcDisplayName, '0', 'MT3DMS BTN package, SCONC',
       True);
   end;
 
@@ -417,14 +448,6 @@ begin
 end;
 
 procedure TChemSpeciesItem.SetName(const Value: string);
-const
-  InitConcPrefix = 'Initial_Concentration_';
-  SorbPrefix = 'Sorbed_Phase_Initial_Conc_';
-  ImmobPrefix = 'Immobile_Phase_Initial_Conc_';
-  FirstSorbParamPrefix = 'Sorption_Parameter1_';
-  SecondSorbParamPrefix = 'Sorption_Parameter2_';
-  RC1Prefix = 'Reaction_Rate_Dissolved_Phase_';
-  RC2Prefix = 'Reaction_Rate_Sorbed_Phase_';
 var
   LocalModel: TPhastModel;
 begin
@@ -434,19 +457,41 @@ begin
   begin
     if UpperCase(FName) = UpperCase(Value) then
     begin
+      FInitialConcDisplayName := StringReplace(FInitialConcDisplayName,
+        GenerateNewRoot(FName),GenerateNewRoot(Value), []);
       InitialConcDataArrayName := StringReplace(InitialConcDataArrayName,
+        GenerateNewRoot(FName),GenerateNewRoot(Value), []);
+
+      FSorbOrImmobInitialConcDisplayName := StringReplace(
+        FSorbOrImmobInitialConcDisplayName,
         GenerateNewRoot(FName),GenerateNewRoot(Value), []);
       SorbOrImmobInitialConcDataArrayName := StringReplace(
         SorbOrImmobInitialConcDataArrayName,
         GenerateNewRoot(FName),GenerateNewRoot(Value), []);
+
+      FFirstSorbParamDisplayName := StringReplace(
+        FFirstSorbParamDisplayName,
+        GenerateNewRoot(FName),GenerateNewRoot(Value), []);
       FirstSorbParamDataArrayName := StringReplace(
         FirstSorbParamDataArrayName,
+        GenerateNewRoot(FName),GenerateNewRoot(Value), []);
+
+      FSecondSorbParamDisplayName := StringReplace(
+        FSecondSorbParamDisplayName,
         GenerateNewRoot(FName),GenerateNewRoot(Value), []);
       SecondSorbParamDataArrayName := StringReplace(
         SecondSorbParamDataArrayName,
         GenerateNewRoot(FName),GenerateNewRoot(Value), []);
+
+      FReactionRateDisolvedDisplayName := StringReplace(
+        FReactionRateDisolvedDisplayName,
+        GenerateNewRoot(FName),GenerateNewRoot(Value), []);
       ReactionRateDisolvedDataArrayName := StringReplace(
         ReactionRateDisolvedDataArrayName,
+        GenerateNewRoot(FName),GenerateNewRoot(Value), []);
+
+      FReactionRateSorbedDisplayName := StringReplace(
+        FReactionRateSorbedDisplayName,
         GenerateNewRoot(FName),GenerateNewRoot(Value), []);
       ReactionRateSorbedDataArrayName := StringReplace(
         ReactionRateSorbedDataArrayName,
@@ -454,7 +499,8 @@ begin
     end
     else
     begin
-      InitialConcDataArrayName := GenerateNewRoot(InitConcPrefix + Value);
+      FInitialConcDisplayName := GenerateNewRoot(StrInitConcPrefix + Value);
+      InitialConcDataArrayName := GenerateNewRoot(kInitConcPrefix + Value);
       LocalModel := Model as TPhastModel;
       if LocalModel = nil then
       begin
@@ -463,22 +509,37 @@ begin
       if LocalModel.ModflowPackages.Mt3dmsChemReact.SorptionChoice
         = scFirstOrderKinetic then
       begin
+        FSorbOrImmobInitialConcDisplayName :=
+          GenerateNewRoot(StrSorbPrefix + Value);
         SorbOrImmobInitialConcDataArrayName :=
-          GenerateNewRoot(SorbPrefix + Value);
+          GenerateNewRoot(kSorbPrefix + Value);
       end
       else
       begin
+        FSorbOrImmobInitialConcDisplayName :=
+          GenerateNewRoot(kImmobPrefix + Value);
         SorbOrImmobInitialConcDataArrayName :=
-          GenerateNewRoot(ImmobPrefix + Value);
+          GenerateNewRoot(kImmobPrefix + Value);
       end;
+      FFirstSorbParamDisplayName :=
+        GenerateNewRoot(StrFirstSorbParamPrefix + Value);
       FirstSorbParamDataArrayName :=
-        GenerateNewRoot(FirstSorbParamPrefix + Value);
+        GenerateNewRoot(kFirstSorbParamPrefix + Value);
+
+      FSecondSorbParamDisplayName :=
+        GenerateNewRoot(StrSecondSorbParamPrefix + Value);
       SecondSorbParamDataArrayName :=
-        GenerateNewRoot(SecondSorbParamPrefix + Value);
+        GenerateNewRoot(kSecondSorbParamPrefix + Value);
+
+      FReactionRateDisolvedDisplayName :=
+        GenerateNewRoot(StrRC1Prefix + Value);
       ReactionRateDisolvedDataArrayName :=
-        GenerateNewRoot(RC1Prefix + Value);
+        GenerateNewRoot(kRC1Prefix + Value);
+
+      FReactionRateSorbedDisplayName :=
+        GenerateNewRoot(StrRC2Prefix + Value);
       ReactionRateSorbedDataArrayName :=
-        GenerateNewRoot(RC2Prefix + Value);
+        GenerateNewRoot(kRC2Prefix + Value);
     end;
     RenameDependents(Value);
     SetCaseSensitiveStringProperty(FName, Value);
@@ -495,7 +556,8 @@ begin
   if LocalModel <> nil then
   begin
     UpdateDataArray(LocalModel.Mt3dmsReactionRateDisolvedUsed,
-      FReactionRateDisolvedDataArrayName, NewName, '1E-6', 'MT3DMS RCT package, RC1',
+      FReactionRateDisolvedDataArrayName, NewName,
+      FReactionRateDisolvedDisplayName, '1E-6', 'MT3DMS RCT package, RC1',
       LocalModel.AnyMt3dReactions);
   end;
 
@@ -512,7 +574,8 @@ begin
   if LocalModel <> nil then
   begin
     UpdateDataArray(LocalModel.Mt3dmsReactionRateSorbedUsed,
-      FReactionRateSorbedDataArrayName, NewName, '1E-6', 'MT3DMS RCT package, RC2',
+      FReactionRateSorbedDataArrayName, NewName,
+      FReactionRateSorbedDisplayName, '1E-6', 'MT3DMS RCT package, RC2',
       LocalModel.AnyMt3dReactions);
   end;
 
@@ -528,7 +591,8 @@ begin
   if LocalModel <> nil then
   begin
     UpdateDataArray(LocalModel.Mt3dMsSecondSorbParamUsed,
-      FSecondSorbParamDataArrayName, NewName, '1.', 'MT3DMS RCT package, SP2',
+      FSecondSorbParamDataArrayName, NewName,
+      FSecondSorbParamDisplayName, '1.', 'MT3DMS RCT package, SP2',
       LocalModel.AnyMt3dSorbParameter);
   end;
 
@@ -544,7 +608,8 @@ begin
   if LocalModel <> nil then
   begin
     UpdateDataArray(LocalModel.Mt3dMsSorbImmobInitialConcUsed,
-      FSorbOrImmobInitialConcDataArrayName, NewName, '0', 'MT3DMS RCT package, SRCONC',
+      FSorbOrImmobInitialConcDataArrayName, NewName,
+      FSorbOrImmobInitialConcDisplayName, '0', 'MT3DMS RCT package, SRCONC',
       LocalModel.AnyMt3dSorbImmobConc);
   end;
   SetCaseSensitiveStringProperty(FSorbOrImmobInitialConcDataArrayName, NewName);
@@ -649,7 +714,8 @@ begin
   if LocalModel <> nil then
   begin
     UpdateDataArray(LocalModel.ModDispDataArrayUsed,
-      FDiffusionCoefDataArrayName, NewName, '0', 'MT3DMS DSP Package, DMCOEF',
+      FDiffusionCoefDataArrayName, NewName,
+      FDiffusionCoefDisplayName, '0', 'MT3DMS DSP Package, DMCOEF',
       LocalModel.AnyDispersionMultiDiffusion);
   end;
 
@@ -657,8 +723,6 @@ begin
 end;
 
 procedure TMobileChemSpeciesItem.SetName(const Value: string);
-const
-  Prefix = 'Diffusion_Coefficient_';
 begin
   Assert(Value <> '');
   // data array names may need to change even if the species name does not.
@@ -666,12 +730,15 @@ begin
   begin
     if UpperCase(FName) = UpperCase(Value) then
     begin
+      FDiffusionCoefDisplayName := StringReplace(FDiffusionCoefDisplayName,
+        GenerateNewRoot(FName),GenerateNewRoot(Value), []);
       DiffusionCoefDataArrayName := StringReplace(DiffusionCoefDataArrayName,
         GenerateNewRoot(FName),GenerateNewRoot(Value), []);
     end
     else
     begin
-      DiffusionCoefDataArrayName := GenerateNewRoot(Prefix + Value);
+      FDiffusionCoefDisplayName := GenerateNewRoot(StrDiffCoefPrefix + Value);
+      DiffusionCoefDataArrayName := GenerateNewRoot(kDiffCoefPrefix + Value);
     end;
   end;
   inherited;

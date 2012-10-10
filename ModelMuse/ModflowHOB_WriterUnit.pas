@@ -41,7 +41,7 @@ type
 implementation
 
 uses ModflowUnitNumbers, ScreenObjectUnit, DataSetUnit,
-  frmErrorsAndWarningsUnit, frmProgressUnit, Forms;
+  frmErrorsAndWarningsUnit, frmProgressUnit, Forms, ModflowTimeUnit;
 
 resourcestring
   ObsNameWarning = 'The following Head observation names may be valid for MODFLOW but they are not valid for UCODE.';
@@ -473,6 +473,20 @@ begin
         TOFFSET := Item.Time - FStartingTimes[ReferenceStressPeriodIndex];
         HOBS := Item.Head;
         IREFSP := ReferenceStressPeriodIndex+1;
+
+        // If the observation time is at the end of a steady state stress period,
+        // make the reference stress period be the steady state stress period
+        // rather than the following stress period. This also requires
+        // an adjustment of TOFFSET.
+        if (ReferenceStressPeriodIndex > 0) and (TOFFSET = 0)
+          and (Model.ModflowFullStressPeriods[ReferenceStressPeriodIndex-1].
+          StressPeriodType = sptSteadyState) then
+        begin
+          TOFFSET := Model.ModflowFullStressPeriods[
+            ReferenceStressPeriodIndex-1].PeriodLength;
+          IREFSP := IREFSP-1;
+        end;
+
         WriteString(OBSNAM);
         WriteInteger(IREFSP);
         WriteFloat(TOFFSET);
@@ -699,7 +713,8 @@ begin
   end;
 end;
 
-procedure TModflowHobWriter.WriteDataSet3(Observations: THobBoundary; CellList: TObsCellList);
+procedure TModflowHobWriter.WriteDataSet3(Observations: THobBoundary;
+  CellList: TObsCellList);
 var
   ROFF: Double;
   COFF: Double;
@@ -753,6 +768,7 @@ begin
   COLUMN := Cell.Column+1;
   ObservationTimeCount := Observations.Values.
     CountObservationTimes(FStartTime, FEndTime);
+  TOFFSET := Cell.Time - FStartingTimes[ReferenceStressPeriodIndex];
   if ObservationTimeCount = 1 then
   begin
     IREFSP := ReferenceStressPeriodIndex+1;
@@ -761,7 +777,24 @@ begin
   begin
     IREFSP := -ObservationTimeCount;
   end;
-  TOFFSET := Cell.Time - FStartingTimes[ReferenceStressPeriodIndex];
+
+  // If the observation time is at the end of a steady state stress period,
+  // make the reference stress period be the steady state stress period
+  // rather than the following stress period. This also requires an adjustment of
+  // TOFFSET.
+  if (ReferenceStressPeriodIndex > 0) and (TOFFSET = 0)
+    and (Model.ModflowFullStressPeriods[ReferenceStressPeriodIndex-1].
+    StressPeriodType = sptSteadyState) then
+  begin
+    TOFFSET := Model.ModflowFullStressPeriods[
+      ReferenceStressPeriodIndex-1].PeriodLength;
+    if ObservationTimeCount = 1 then
+    begin
+      IREFSP := IREFSP-1;
+    end;
+  end;
+
+
   ROFF := Observations.Values.ObservationRowOffset;
   COFF := Observations.Values.ObservationColumnOffset;
   HOBS := Cell.Head;

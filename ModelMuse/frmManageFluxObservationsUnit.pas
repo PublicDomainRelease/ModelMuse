@@ -2052,13 +2052,13 @@ begin
     begin
       case DataArray.DataType of
         rdtDouble: rparserThreeDFormulaElements.CreateVariable(DataArray.Name,
-          DataArray.FullClassification, 0.0);
+          DataArray.FullClassification, 0.0, DataArray.DisplayName);
         rdtInteger: rparserThreeDFormulaElements.CreateVariable(DataArray.Name,
-          DataArray.FullClassification, 0);
+          DataArray.FullClassification, 0, DataArray.DisplayName);
         rdtBoolean: rparserThreeDFormulaElements.CreateVariable(DataArray.Name,
-          DataArray.FullClassification, False);
+          DataArray.FullClassification, False, DataArray.DisplayName);
         rdtString: rparserThreeDFormulaElements.CreateVariable(DataArray.Name,
-          DataArray.FullClassification, '');
+          DataArray.FullClassification, '', DataArray.DisplayName);
       end;
     end;
   end;

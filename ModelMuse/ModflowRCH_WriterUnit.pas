@@ -183,7 +183,7 @@ begin
           RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
             ParametersUsed, ParameterValues, True);
           List := Values[TimeIndex];
-          List.CheckRestore;
+//          List.CheckRestore;
 
           if NPRCH = 0 then
           begin

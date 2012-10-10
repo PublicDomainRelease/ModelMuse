@@ -9,37 +9,33 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
     Top = 0
     Width = 465
     Height = 398
-    ActivePage = tabBasic
+    ActivePage = tabOptions
     Align = alClient
     TabOrder = 0
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         457
-        370)
+        367)
       object lblModpathFile: TLabel
         Left = 3
         Top = 8
-        Width = 120
-        Height = 13
+        Width = 146
+        Height = 16
         Caption = 'MODPATH time series file'
       end
       object lblTimeToPlot: TLabel
         Left = 3
         Top = 64
-        Width = 56
-        Height = 13
+        Width = 69
+        Height = 16
         Caption = 'Time to plot'
       end
       object lblColorScheme: TLabel
         Left = 3
         Top = 166
-        Width = 64
-        Height = 13
+        Width = 78
+        Height = 16
         Caption = 'Color scheme'
       end
       object pbColorScheme: TPaintBox
@@ -54,31 +50,30 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
       object lblColorAdjustment: TLabel
         Left = 3
         Top = 264
-        Width = 82
-        Height = 13
+        Width = 98
+        Height = 16
         Caption = 'Color adjustment'
       end
       object lblCycles: TLabel
         Left = 351
         Top = 264
-        Width = 31
-        Height = 13
+        Width = 36
+        Height = 16
         Anchors = [akTop, akRight]
         Caption = 'Cycles'
-        ExplicitLeft = 352
       end
       object lblModelSelection: TLabel
         Left = 3
         Top = 327
-        Width = 73
-        Height = 13
+        Width = 88
+        Height = 16
         Caption = 'Model selection'
       end
       object fedModpathFile: TJvFilenameEdit
         Left = 2
         Top = 29
         Width = 448
-        Height = 21
+        Height = 24
         OnBeforeDialog = fedModpathFileBeforeDialog
         DefaultExt = '.ts'
         Filter = 
@@ -93,7 +88,7 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
         Left = 3
         Top = 85
         Width = 145
-        Height = 21
+        Height = 24
         Style = csDropDownList
         TabOrder = 1
         OnChange = comboTimeToPlotChange
@@ -101,7 +96,7 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
       object udTimeToPlot: TJvUpDown
         Left = 148
         Top = 85
-        Width = 17
+        Width = 21
         Height = 26
         TabOrder = 2
         OnChangingEx = udTimeToPlotChangingEx
@@ -126,7 +121,7 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
         Left = 3
         Top = 186
         Width = 448
-        Height = 21
+        Height = 24
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
         DropDownCount = 12
@@ -163,7 +158,7 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
         Left = 156
         Top = 285
         Width = 65
-        Height = 21
+        Height = 24
         ButtonKind = bkClassic
         Increment = 0.010000000000000000
         MaxValue = 2.000000000000000000
@@ -176,7 +171,7 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
         Left = 350
         Top = 285
         Width = 101
-        Height = 21
+        Height = 24
         ButtonKind = bkClassic
         MaxValue = 2147483647.000000000000000000
         MinValue = 1.000000000000000000
@@ -189,7 +184,7 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
         Left = 3
         Top = 346
         Width = 241
-        Height = 21
+        Height = 24
         Style = csDropDownList
         TabOrder = 9
         Visible = False
@@ -199,13 +194,9 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         457
-        370)
+        367)
       object rgShow2D: TRadioGroup
         Left = 2
         Top = 3
@@ -215,9 +206,9 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
         ItemIndex = 0
         Items.Strings = (
           'Show all'
-          'Specify columns, rows, and/or layers to show'
-          'Specify starting columns, rows, and/or layers to show'
-          'Specify ending columns, rows, and/or layers to show')
+          'Specify columns, rows, layers and/or groups to show'
+          'Specify starting columns, rows, layers and/or groups to show'
+          'Specify ending columns, rows, layers and/or groups to show')
         TabOrder = 0
         OnClick = rgShow2DClick
       end
@@ -239,7 +230,8 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
           'Starting Z'
           'Ending X'#39
           'Ending Y'#39
-          'Ending Z')
+          'Ending Z'
+          'Group')
         TabOrder = 1
         OnClick = rgColorByClick
       end
@@ -251,6 +243,7 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
         Anchors = [akLeft, akTop, akBottom]
         ColCount = 3
         FixedCols = 0
+        RowCount = 6
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing]
         TabOrder = 2
         OnSelectCell = rdgLimitsSelectCell

@@ -660,7 +660,7 @@ var
     LAKE := -ScreenObject.ModflowLakBoundary.TrueLakeID;
     UNIT_Number := StartUnitNumber;
     Line := IntToStr(LAKE) + ' '
-      + IntToStr(UNIT_Number) + ' '
+      + IntToStr(-UNIT_Number) + ' '
       + IntToStr(OUTTYPE);
     Lines.Add(Line);
     Inc(StartUnitNumber);

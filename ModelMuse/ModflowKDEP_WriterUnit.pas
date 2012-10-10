@@ -14,7 +14,7 @@ type
     procedure WriteDataSet1;
     procedure WriteDataSet2;
     procedure WriteDataSets3and4;
-    function PackageID_Comment: string;
+    function PackageID_Comment: string; reintroduce;
   protected
     function Package: TModflowPackageSelection; override;
     class function Extension: string; override;

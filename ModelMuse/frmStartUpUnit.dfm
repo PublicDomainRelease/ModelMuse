@@ -32,7 +32,6 @@ inherited frmStartUp: TfrmStartUp
       Height = 33
       Anchors = [akTop, akRight]
       Caption = 'Next'
-      DoubleBuffered = True
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000120B0000120B00001000000010000000000000000000
@@ -48,7 +47,6 @@ inherited frmStartUp: TfrmStartUp
         3333333333333333333333333333333333333333333333333333}
       Layout = blGlyphRight
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnNextClick
     end
@@ -59,10 +57,8 @@ inherited frmStartUp: TfrmStartUp
       Height = 33
       Anchors = [akTop, akRight]
       Caption = 'No grid'
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       Visible = False
       OnClick = btnDontCreateGridClick
@@ -74,10 +70,8 @@ inherited frmStartUp: TfrmStartUp
       Height = 33
       HelpType = htKeyword
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnHelpClick
     end

@@ -3481,7 +3481,7 @@ begin
     begin
       NewLayerStructure.Add;
     end;
-    NewLayerStructure.LayerGroups[0].AquiferName := StrModelTop;
+    NewLayerStructure.LayerGroups[0].AquiferName := kModelTop;
     GroupIndex := 1;
     for LayerIndex := 0 to Length(LAYCBD) - 1 do
     begin
@@ -4581,8 +4581,8 @@ begin
           DataArray := FModel.DataArrayManager.GetDataSetByName(DataArrayName);
           if DataArray = nil then
           begin
-            DataArray := FModel.DataArrayManager.CreateNewDataArray(TDataArray, DataArrayName,
-              'True', [], rdtBoolean, eaBlocks, dsoTop, '');
+            DataArray := FModel.DataArrayManager.CreateNewDataArray(TDataArray,
+              DataArrayName, 'True', DataArrayName, [], rdtBoolean, eaBlocks, dsoTop, '');
 
             DataArray.UpdateDimensions(FGrid.LayerCount,
               FGrid.RowCount,FGrid.ColumnCount);
@@ -5069,7 +5069,7 @@ begin
     if DataArray = nil then
     begin
       DataArray := FModel.DataArrayManager.CreateNewDataArray(TDataArray,
-        DataArrayName, '0', [], rdtInteger, eaBlocks, dsoTop, '');
+        DataArrayName, '0', DataArrayName, [], rdtInteger, eaBlocks, dsoTop, '');
 
       DataArray.UpdateDimensions(FGrid.LayerCount,
         FGrid.RowCount, FGrid.ColumnCount);
@@ -5113,7 +5113,8 @@ begin
     DataArray := FModel.DataArrayManager.GetDataSetByName(DataArrayName);
     if DataArray = nil then
     begin
-      DataArray := FModel.DataArrayManager.CreateNewDataArray(TDataArray, DataArrayName, '0',
+      DataArray := FModel.DataArrayManager.CreateNewDataArray(TDataArray,
+        DataArrayName, '0', DataArrayName,
         [], rdtDouble, eaBlocks, dsoTop, '');
 
       DataArray.UpdateDimensions(FGrid.LayerCount,
@@ -6742,7 +6743,8 @@ begin
   DataArray := FModel.DataArrayManager.GetDataSetByName(DataArrayName);
   if DataArray = nil then
   begin
-    DataArray := FModel.DataArrayManager.CreateNewDataArray(TDataArray, DataArrayName, '0',
+    DataArray := FModel.DataArrayManager.CreateNewDataArray(TDataArray,
+      DataArrayName, '0', DataArrayName,
       [], rdtDouble, eaBlocks, dsoTop, '');
 
     DataArray.UpdateDimensions(FGrid.LayerCount, FGrid.RowCount,
@@ -9958,7 +9960,8 @@ begin
     NewName := Root;
   end;
 
-  DataSet := FModel.DataArrayManager.CreateNewDataArray(TDataArray, NewName, '0',
+  DataSet := FModel.DataArrayManager.CreateNewDataArray(TDataArray,
+    NewName, '0', NewName,
     [], DataType, eaBlocks, dsoTop, '');
 
   DataSet.UpdateDimensions(FGrid.LayerCount, FGrid.RowCount, FGrid.ColumnCount);
@@ -10663,7 +10666,7 @@ begin
     begin
       ScreenObject := CreateScreenObjectAroundGrid(ScreenObjectRoot
         + IntToStr(ObjectIndex));
-      ScreenObject.ElevationFormula := StrModelTop;
+      ScreenObject.ElevationFormula := kModelTop;
     end
     else
     begin
@@ -10685,7 +10688,7 @@ begin
             begin
               ScreenObject := CreateScreenObjectAroundGrid(ScreenObjectRoot
                 + IntToStr(ObjectIndex));
-              ScreenObject.ElevationFormula := StrModelTop;
+              ScreenObject.ElevationFormula := kModelTop;
               break;
             end;
           end;
@@ -10696,7 +10699,7 @@ begin
         ZoneArray := FZoneImporter.ZoneArray(ZoneIndex);
         ScreenObject := CreateScreenObjectAroundZones(ZoneArray, Cluster,
           ScreenObjectRoot + IntToStr(ObjectIndex));
-        ScreenObject.ElevationFormula := StrModelTop;
+        ScreenObject.ElevationFormula := kModelTop;
       end;
     end;
     if ScreenObject <> nil then
@@ -11295,7 +11298,7 @@ begin
     end
     else
     begin
-      ScreenObject.ElevationFormula := StrModelTop;
+      ScreenObject.ElevationFormula := kModelTop;
 //      ScreenObject.ElevationCount := ecZero;
     end;
 
@@ -12217,7 +12220,7 @@ begin
     end
     else
     begin
-      ScreenObject.ElevationFormula := StrModelTop;
+      ScreenObject.ElevationFormula := kModelTop;
 //      ScreenObject.ElevationCount := ecZero;
     end;
 
@@ -15112,7 +15115,7 @@ begin
           FLakeOutline, Cluster, 'ImportedLake_'
           + IntToStr(LakeID));
         ScreenObject.ElevationCount := ecTwo;
-        ScreenObject.HigherElevationFormula := StrModelTop;
+        ScreenObject.HigherElevationFormula := kModelTop;
         ScreenObject.LowerElevationFormula := BottomFormula;
 
         CreateBoundary(ScreenObject);
@@ -16958,7 +16961,7 @@ begin
     end
     else
     begin
-      ScreenObject.ElevationFormula := StrModelTop;
+      ScreenObject.ElevationFormula := kModelTop;
 //      ScreenObject.ElevationCount := ecZero;
     end;
 
@@ -17376,7 +17379,7 @@ begin
           ScreenObjectName := 'Imported_RES_Layer_' + IntToStr(LayerIndex);
           ScreenObject := CreateScreenObjectAroundZones(
             ResLayer, Cluster, ScreenObjectName);
-          ScreenObject.ElevationFormula := StrModelTop;
+          ScreenObject.ElevationFormula := kModelTop;
           Position := ScreenObject.AddDataSet(DataArray);
           ScreenObject.DataSetFormulas[Position] := IntToStr(LayerIndex);
         end;
@@ -17443,7 +17446,7 @@ begin
       ScreenObjectName := 'Imported_Reservoir_' + IntToStr(ResIndex);
       ScreenObject := CreateScreenObjectAroundZones(
         ResLocation, Cluster, ScreenObjectName);
-      ScreenObject.ElevationFormula := StrModelTop;
+      ScreenObject.ElevationFormula := kModelTop;
       CreateBoundary(ScreenObject);
       ResBoundary := ScreenObject.ModflowResBoundary;
       ResBoundary.Values.Capacity := FModel.ModflowStressPeriods.Count;
@@ -17954,7 +17957,7 @@ begin
   end;
 
   AScreenObject := CreateScreenObjectAroundGrid('Imported_UZF_Rates');
-  AScreenObject.ElevationFormula := StrModelTop;
+  AScreenObject.ElevationFormula := kModelTop;
 
   CreateBoundary(AScreenObject);
   Boundary := AScreenObject.ModflowUzfBoundary;

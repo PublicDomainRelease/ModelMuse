@@ -187,10 +187,14 @@ type
     property StreamDepthAnnotation: string read GetStreamDepthAnnotation;
   end;
 
+resourcestring
+  StrSfrInvalid = 'The following objects do not define SFR streams c' +
+  'orrectly because they don''t set the values of intersected cells.';
+
 implementation
 
 uses Contnrs, DataSetUnit, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit,
-  ModflowSfrUnit, TempFiles, frmGoPhastUnit;
+  ModflowSfrUnit, TempFiles, frmGoPhastUnit, frmErrorsAndWarningsUnit;
 
 resourcestring
   StrStreambedThickness = 'Streambed thickness';
@@ -709,6 +713,12 @@ begin
 
   Boundary := BoundaryGroup as TSfrBoundary;
   ScreenObject := Boundary.ScreenObject as TScreenObject;
+  if (AssignmentLocation <> alAll)
+    and (not ScreenObject.SetValuesOfIntersectedCells) then
+  begin
+    frmErrorsAndWarnings.AddError(AModel, StrSfrInvalid, ScreenObject.Name);
+    Exit;
+  end;
   for Index := 0 to Count - 1 do
   begin
     Item := Items[Index] as TSfrSegmentItem;

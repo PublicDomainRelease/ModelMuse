@@ -11,7 +11,7 @@ uses
 type
   TEndLimits = (elNone, elColors, elStartLayer, elStartRow, elStartColumn, elStartZone,
     elEndLayer, elEndRow, elEndColumn, elEndZone,
-    elTrackingTime, elReleaseTime);
+    elTrackingTime, elReleaseTime, elGroup);
 
 resourcestring
   StartingLayer = 'Starting layer';
@@ -24,13 +24,14 @@ resourcestring
   EndingZone = 'Ending zone';
   TrackingTime = 'Tracking time';
   ReleaseTime = 'Release time';
+  Group = 'Group';
 
 const
   TableCaptions: array[Low(TEndLimits)..High(TEndLimits)] of string =
     ('', Colorlimits,
     StartingLayer, StartingRow, StartingColumn, StartingZone,
     EndingLayer, EndingRow, EndingColumn, EndingZone,
-    TrackingTime, ReleaseTime);
+    TrackingTime, ReleaseTime, Group);
 
 type
   TUndoImportEndpoints = class(TCustomUndo)
@@ -42,7 +43,8 @@ type
     procedure ForceRedraw;
     procedure EnableMenuItems;
   public
-    Constructor Create(Model: TCustomModel; var NewEndPoints: TEndPointReader; ImportedNewFile: boolean);
+    Constructor Create(Model: TCustomModel; var NewEndPoints: TEndPointReader;
+      ImportedNewFile: boolean);
     Destructor Destroy; override;
     function Description: string; override;
     procedure DoCommand; override;
@@ -190,7 +192,8 @@ var
   ChildModel: TChildModel;
 begin
   frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled :=
-    frmGoPhast.PhastModel.EndPoints.Points.Count > 0;
+    (frmGoPhast.PhastModel.EndPoints.Points.Count > 0)
+    or (frmGoPhast.PhastModel.EndPoints.Points.Count > 0);
   if not frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled
     and frmGoPhast.PhastModel.LgrUsed then
   begin
@@ -198,7 +201,8 @@ begin
     begin
       ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
       frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled :=
-        ChildModel.EndPoints.Points.Count > 0;
+        (ChildModel.EndPoints.Points.Count > 0)
+        or (ChildModel.EndPoints.Points.Count > 0);
       if frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled then
       begin
         break;
@@ -255,6 +259,7 @@ begin
   ReadIntLimit(Limits.EndRowLimits, elEndRow);
   ReadIntLimit(Limits.EndLayerLimits, elEndLayer);
   ReadIntLimit(Limits.EndZoneLimits, elEndZone);
+  ReadIntLimit(Limits.ParticleGroupLimits, elGroup);
 
   ReadFloatLimits(Limits.ReleaseTimeLimits, elReleaseTime);
   ReadFloatLimits(Limits.TrackingTimeLimits, elTrackingTime);
@@ -458,7 +463,7 @@ end;
 procedure TframeModpathEndpointDisplay.rdgLimitsSetEditText(Sender: TObject;
   ACol, ARow: Integer; const Value: string);
 begin
-  if (ARow in [Ord(elStartLayer)..Ord(elEndZone)]) and (ACol in [1,2]) then
+  if (ARow in [Ord(elStartLayer)..Ord(elEndZone), Ord(elGroup)]) and (ACol in [1,2]) then
   begin
     rdgLimits.Columns[ACol].CheckACell(ACol, ARow, False, True, 0, 1);
   end;
@@ -547,6 +552,7 @@ begin
     if EndPoints.FileName = '' then
     begin
       EndPoints.Points.Clear;
+      EndPoints.PointsV6.Clear;
     end
     else
     begin
@@ -590,6 +596,7 @@ begin
         SetIntLimit(elEndRow, Grid.RowCount, Limits.EndRowLimits);
         SetIntLimit(elEndLayer, Grid.LayerCount, Limits.EndLayerLimits);
         SetIntLimit(elEndZone, EndPoints.MaxEndZone, Limits.EndZoneLimits);
+        SetIntLimit(elGroup, EndPoints.MaxParticleGroup, Limits.ParticleGroupLimits);
 
         SetFloatLimit(elReleaseTime, EndPoints.MaxReleaseTime,
           Limits.ReleaseTimeLimits);
@@ -654,3 +661,4 @@ begin
 end;
 
 end.
+

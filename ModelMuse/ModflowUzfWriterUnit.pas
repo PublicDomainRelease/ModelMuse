@@ -203,7 +203,7 @@ begin
     InfiltrationArray := Infiltration[TimeIndex]
       as TModflowBoundaryDisplayDataArray;
     CellList := Values[TimeIndex];
-    CellList.CheckRestore;
+//    CellList.CheckRestore;
     AssignTransient2DArray(InfiltrationArray, 0, CellList, 0,
       rdtDouble, Model.ModflowPackages.UzfPackage.AssignmentMethod);
     Model.AdjustDataArray(InfiltrationArray);
@@ -216,7 +216,7 @@ begin
       if TimeIndex < FEtDemand.Count then
       begin
         CellList := FEtDemand[TimeIndex];
-        CellList.CheckRestore;
+//        CellList.CheckRestore;
         AssignTransient2DArray(EtDemandArray, 0, CellList, 0,
           rdtDouble, umAssign);
         Model.AdjustDataArray(EtDemandArray);
@@ -233,7 +233,7 @@ begin
       if TimeIndex < FEExtinctionDepths.Count then
       begin
         CellList := FEExtinctionDepths[TimeIndex];
-        CellList.CheckRestore;
+//        CellList.CheckRestore;
         AssignTransient2DArray(ExtinctionDepthArray, 0, CellList, 0,
           rdtDouble, umAssign);
         CellList.Cache;
@@ -250,7 +250,7 @@ begin
       if TimeIndex <  FExtinctionWaterContent.Count then
       begin
         CellList := FExtinctionWaterContent[TimeIndex];
-        CellList.CheckRestore;
+//        CellList.CheckRestore;
         AssignTransient2DArray(WaterContentArray, 0, CellList, 0,
           rdtDouble, umAssign);
         CellList.Cache;

@@ -10,7 +10,7 @@ Type
   TSelectionType = (stCheckBox, stRadioButton);
 
   // modpath ordinals
-  TReferenceTimeOption = (rtoPeriodAndStep, rtoTime);
+//  TReferenceTimeOption = (rtoPeriodAndStep, rtoTime);
   TCompositeBudgetFileOption = (cbfGenerateNew, cbfUseOldFile);
   TModpathOutputMode = (mopEndpoints, mopPathline, mopTimeSeries);
   TTimeMethod = (tmIntervals, tmIndividual);
@@ -18,6 +18,11 @@ Type
   TWeakSink = (wsPassThrough, wsStop, wsThreshold);
   TEndpointWrite = (ewAll, ewInStoppingZone);
   TTimeSeriesMethod = (tsmUniform, tsmIndividual);
+  TStopOption = (soModelEnd, soExtend, soTrackingTime);
+  TBudgetChecking = (bcNone, bcSummary, bcList, bcTrace);
+  TRetardationOption = (roNone, roUsed);
+  TAdvectiveObservations = (aoNone, aoAll, aoLast);
+  TMpathVersion = (mp5, mp6);
 
   TModflowPackageSelection = class(TPersistent)
   private
@@ -46,6 +51,7 @@ Type
     procedure OnValueChanged(Sender: TObject);
     procedure SetIntegerProperty(var Field: integer; const Value: integer);
     procedure SetBooleanProperty(var Field: boolean; const Value: boolean);
+    procedure SetRealProperty(var Field: real; const Value: real);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
@@ -1400,6 +1406,20 @@ Type
     FTimeSeriesInterval: double;
     FTimeSeriesMethod: TTimeSeriesMethod;
     FBackwardsTrackingReleaseTime: double;
+    FWeakSource: TWeakSink;
+    FStopOption: TStopOption;
+    FBudgetChecking: TBudgetChecking;
+    FRetardationOption: TRetardationOption;
+    FAdvectiveObservations: TAdvectiveObservations;
+    FMpathVersion: TMpathVersion;
+    FStopTime: real;
+    FTraceID: Integer;
+    FUzf_Source: TSurfaceApplicationPosition;
+    FSfr_Source: TSurfaceApplicationPosition;
+    FMnw2_Source: TSurfaceApplicationPosition;
+    FRes_Source: TSurfaceApplicationPosition;
+    FEts_Sink: TSurfaceApplicationPosition;
+    FLak_Source: TSurfaceApplicationPosition;
     procedure SetMaximumSize(const Value: integer);
     procedure SetEVT_Sink(const Value: TSurfaceApplicationPosition);
     procedure SetRCH_Source(const Value: TSurfaceApplicationPosition);
@@ -1426,6 +1446,20 @@ Type
     procedure SetTimeSeriesMaxCount(const Value: integer);
     procedure SetTimeSeriesMethod(const Value: TTimeSeriesMethod);
     procedure SetBackwardsTrackingReleaseTime(const Value: double);
+    procedure SetWeakSource(const Value: TWeakSink);
+    procedure SetStopOption(const Value: TStopOption);
+    procedure SetBudgetChecking(const Value: TBudgetChecking);
+    procedure SetRetardationOption(const Value: TRetardationOption);
+    procedure SetAdvectiveObservations(const Value: TAdvectiveObservations);
+    procedure SetMpathVersion(const Value: TMpathVersion);
+    procedure SetStopTime(const Value: real);
+    procedure SetTraceID(const Value: Integer);
+    procedure SetEts_Sink(const Value: TSurfaceApplicationPosition);
+    procedure SetMnw2_Source(const Value: TSurfaceApplicationPosition);
+    procedure SetRes_Source(const Value: TSurfaceApplicationPosition);
+    procedure SetSfr_Source(const Value: TSurfaceApplicationPosition);
+    procedure SetUzf_Source(const Value: TSurfaceApplicationPosition);
+    procedure SetLak_Source(const Value: TSurfaceApplicationPosition);
   protected
     procedure SetIsSelected(const Value: boolean); override;
   public
@@ -1435,46 +1469,117 @@ Type
     procedure InitializeVariables; override;
     function ShouldCreateTimeFile: boolean;
   published
+    // Version 5 only.
     property MaximumSize: integer read FMaximumSize write SetMaximumSize;
+    // versions 5 and 6.
+    // IEVTTP
     property EVT_Sink: TSurfaceApplicationPosition
       read FEVT_Sink write SetEVT_Sink default sapVertical;
+    // versions 5 and 6.
+    // IRCHTP
     property RCH_Source: TSurfaceApplicationPosition
       read FRCH_Source write SetRCH_Source default sapVertical;
+    // Version 5 only.
     property Compact: boolean read FCompact write SetCompact;
+    // Version 5 only.
     property Binary: boolean read FBinary write SetBinary;
+    // Version 5 only.
     property BeginningTime: Real read FBeginningTime write SetBeginningTime;
+    // Version 5 only.
     property EndingTime: Real read FEndingTime write SetEndingTime;
+    // versions 5 and 6.
+    // ReferenceTime
     property ReferenceTime: real read FReferenceTime write SetReferenceTime;
+    // versions 5 and 6.
+    // SimulationType
     property OutputMode: TModpathOutputMode read FOutputMode
       write SetOutputMode;
+    // versions 5 and 6.
+    // TimePointCount, TimePoints
     property OutputTimes: TModpathTimes read FOutputTimes write SetOutputTimes;
+    // Version 5 only.
     property StopAfterMaxTime: boolean read FStopAfterMaxTime
       write SetStopAfterMaxTime;
+    // Version 5 only.
     property MaxTime: real read FMaxTime write SetMaxTime;
+    // versions 5 and 6.
+    // TrackingDirection
     property TrackingDirection: TTrackingDirection read FTrackingDirection
       write SetTrackingDirection;
+    // versions 5 and 6.
+    // WeakSinkOption
     property WeakSink: TWeakSink read FWeakSink write SetWeakSink;
+    // version 5.
     property WeakSinkThreshold: real read FWeakSinkThreshold
       write SetWeakSinkThreshold;
+    // versions 5 and 6.
+    // ZoneArrayOption
     property StopInZone: boolean read FStopInZone write SetStopInZone;
+    // versions 5 and 6.
+    // StopZone
     property StopZoneNumber: integer read FStopZoneNumber
       write SetStopZoneNumber;
+    // version 5.
     property EndpointWrite: TEndpointWrite read FEndpointWrite
       write SetEndpointWrite;
+    // version 5.
     property ComputeBudgetInAllCells: boolean read FComputeBudgetInAllCells
       write SetComputeBudgetInAllCells;
+    // version 5.
     property ErrorTolerance: real read FErrorTolerance write SetErrorTolerance;
+    // version 5.
     property Summarize: boolean read FSummarize write SetSummarize;
+    // version 5.
     property MakeBigBudgetFile: boolean read FMakeBigBudgetFile
       write SetMakeBigBudgetFile default True;
     // new properties
+    // versions 5 and 6.
+    // TimePointOption
     property TimeSeriesMethod: TTimeSeriesMethod read FTimeSeriesMethod
       write SetTimeSeriesMethod;
+    // versions 5 and 6.
+    // ReleaseTimeIncrement
     property TimeSeriesInterval: double read FTimeSeriesInterval
       write SetTimeSeriesInterval stored True;
+    // versions 5 and 6.
+    // TimePointCount
     property TimeSeriesMaxCount: integer read FTimeSeriesMaxCount
       write SetTimeSeriesMaxCount;
-    property BackwardsTrackingReleaseTime: double read FBackwardsTrackingReleaseTime write SetBackwardsTrackingReleaseTime;
+    // version 5.
+    property BackwardsTrackingReleaseTime: double
+      read FBackwardsTrackingReleaseTime write SetBackwardsTrackingReleaseTime;
+    // MODPATH 6 options
+    property MpathVersion: TMpathVersion read FMpathVersion
+      write SetMpathVersion stored True;
+    // WeakSource.
+    property WeakSource: TWeakSink read FWeakSource write SetWeakSource;
+    // StopOption.
+    property StopOption: TStopOption read FStopOption write SetStopOption;
+    // StopTime
+    property StopTime: real read FStopTime write SetStopTime;
+    // BudgetOutputOption
+    property BudgetChecking: TBudgetChecking read FBudgetChecking
+      write SetBudgetChecking;
+    // TraceID
+    property TraceID: Integer read FTraceID write SetTraceID default 1;
+    // RetardationOption
+    property RetardationOption: TRetardationOption read FRetardationOption
+      write SetRetardationOption;
+    // AdvectiveObservationsOption
+    property AdvectiveObservations: TAdvectiveObservations
+      read FAdvectiveObservations write SetAdvectiveObservations;
+    property Ets_Sink: TSurfaceApplicationPosition
+      read FEts_Sink write SetEts_Sink default sapVertical;
+    property Uzf_Source: TSurfaceApplicationPosition
+      read FUzf_Source write SetUzf_Source default sapVertical;
+    property Mnw2_Source: TSurfaceApplicationPosition
+      read FMnw2_Source write SetMnw2_Source default sapInternal;
+    property Res_Source: TSurfaceApplicationPosition
+      read FRes_Source write SetRes_Source default sapVertical;
+    property Sfr_Source: TSurfaceApplicationPosition
+      read FSfr_Source write SetSfr_Source default sapVertical;
+    property Lak_Source: TSurfaceApplicationPosition
+      read FLak_Source write SetLak_Source default sapVertical;
   end;
 
   ZZoneItem = class(TOrderedItem)
@@ -2631,6 +2736,16 @@ begin
 //      UpdateFrmContourData;
       UpdateFrmGridValue;
     end;
+  end;
+end;
+
+procedure TModflowPackageSelection.SetRealProperty(var Field: real;
+  const Value: real);
+begin
+  if Field <> Value then
+  begin
+    Field := Value;
+    InvalidateModel;
   end;
 end;
 
@@ -6417,6 +6532,24 @@ begin
     TimeSeriesInterval := ModpathSource.TimeSeriesInterval;
     TimeSeriesMaxCount := ModpathSource.TimeSeriesMaxCount;
     BackwardsTrackingReleaseTime := ModpathSource.BackwardsTrackingReleaseTime;
+
+    // MPATH 6.
+    WeakSource := ModpathSource.WeakSource;
+    StopOption := ModpathSource.StopOption;
+    BudgetChecking := ModpathSource.BudgetChecking;
+    RetardationOption := ModpathSource.RetardationOption;
+    AdvectiveObservations := ModpathSource.AdvectiveObservations;
+    MpathVersion := ModpathSource.MpathVersion;
+    StopTime := ModpathSource.StopTime;
+    TraceID := ModpathSource.TraceID;
+
+    Ets_Sink := ModpathSource.Ets_Sink;
+    Uzf_Source := ModpathSource.Uzf_Source;
+    Mnw2_Source := ModpathSource.Mnw2_Source;
+    Res_Source := ModpathSource.Res_Source;
+    Sfr_Source := ModpathSource.Sfr_Source;
+    Lak_Source := ModpathSource.Lak_Source;
+
   end;
   inherited;
 end;
@@ -6425,10 +6558,7 @@ constructor TModpathSelection.Create(Model: TBaseModel);
 begin
   inherited;
   FOutputTimes := TModpathTimes.Create(Model);
-  FEVT_Sink := sapVertical;
-  FRCH_Source := sapVertical;
-  FMakeBigBudgetFile := True;
-  FTimeSeriesInterval := 1;
+  InitializeVariables;
 end;
 
 destructor TModpathSelection.Destroy;
@@ -6445,6 +6575,52 @@ begin
   FEVT_Sink := sapVertical;
   FCompact := False;
   FBinary := False;
+  FBeginningTime := 0;
+  FEndingTime := 0;
+  FReferenceTime := 0;
+  FOutputMode := mopEndpoints;
+  FOutputTimes.Clear;
+  FStopAfterMaxTime := False;
+  FMaxTime := 0;
+  FTrackingDirection := tdForward;
+  FWeakSink := wsPassThrough;
+  FWeakSource := wsPassThrough;
+  FWeakSinkThreshold := 0;
+  FStopInZone := False;
+  FStopZoneNumber := 0;
+  FEndpointWrite := ewAll;
+  FComputeBudgetInAllCells := False;
+  FErrorTolerance := 0;
+  FSummarize := False;
+  FMakeBigBudgetFile := True;
+  FTimeSeriesMethod := tsmUniform;
+  FTimeSeriesInterval := 1;
+  FTimeSeriesMaxCount := 0;
+  FBackwardsTrackingReleaseTime := 0;
+  FStopOption := soModelEnd;
+  FBudgetChecking := bcNone;
+  FRetardationOption := roNone;
+  FAdvectiveObservations := aoNone;
+  FMpathVersion := mp6;
+  FStopTime := 0;
+  FTraceID := 1;
+
+  FEts_Sink := sapVertical;
+  FUzf_Source := sapVertical;
+  FMnw2_Source := sapInternal;
+  FRes_Source := sapVertical;
+  FSfr_Source := sapVertical;
+  FLak_Source := sapVertical;
+end;
+
+procedure TModpathSelection.SetAdvectiveObservations(
+  const Value: TAdvectiveObservations);
+begin
+  if FAdvectiveObservations <> Value then
+  begin
+    InvalidateModel;
+    FAdvectiveObservations := Value;
+  end;
 end;
 
 procedure TModpathSelection.SetBackwardsTrackingReleaseTime(
@@ -6472,6 +6648,15 @@ begin
   begin
     InvalidateModel;
     FBinary := Value;
+  end;
+end;
+
+procedure TModpathSelection.SetBudgetChecking(const Value: TBudgetChecking);
+begin
+  if FBudgetChecking <> Value then
+  begin
+    InvalidateModel;
+    FBudgetChecking := Value;
   end;
 end;
 
@@ -6520,6 +6705,16 @@ begin
   end;
 end;
 
+procedure TModpathSelection.SetEts_Sink(
+  const Value: TSurfaceApplicationPosition);
+begin
+  if FEts_Sink <> Value then
+  begin
+    InvalidateModel;
+    FEts_Sink := Value;
+  end;
+end;
+
 procedure TModpathSelection.SetEVT_Sink(
   const Value: TSurfaceApplicationPosition);
 begin
@@ -6536,6 +6731,16 @@ begin
   if FModel <> nil then
   begin
     (FModel as TCustomModel).DataArrayManager.UpdateClassifications;
+  end;
+end;
+
+procedure TModpathSelection.SetLak_Source(
+  const Value: TSurfaceApplicationPosition);
+begin
+  if FLak_Source <> Value then
+  begin
+    InvalidateModel;
+    FLak_Source := Value;
   end;
 end;
 
@@ -6563,6 +6768,25 @@ begin
   begin
     InvalidateModel;
     FMaxTime := Value;
+  end;
+end;
+
+procedure TModpathSelection.SetMnw2_Source(
+  const Value: TSurfaceApplicationPosition);
+begin
+  if FMnw2_Source <> Value then
+  begin
+    InvalidateModel;
+    FMnw2_Source := Value;
+  end;
+end;
+
+procedure TModpathSelection.SetMpathVersion(const Value: TMpathVersion);
+begin
+  if FMpathVersion <> Value then
+  begin
+    InvalidateModel;
+    FMpathVersion := Value;
   end;
 end;
 
@@ -6599,6 +6823,36 @@ begin
   end;
 end;
 
+procedure TModpathSelection.SetRes_Source(
+  const Value: TSurfaceApplicationPosition);
+begin
+  if FRes_Source <> Value then
+  begin
+    InvalidateModel;
+    FRes_Source := Value;
+  end;
+end;
+
+procedure TModpathSelection.SetRetardationOption(
+  const Value: TRetardationOption);
+begin
+  if FRetardationOption <> Value then
+  begin
+    InvalidateModel;
+    FRetardationOption := Value;
+  end;
+end;
+
+procedure TModpathSelection.SetSfr_Source(
+  const Value: TSurfaceApplicationPosition);
+begin
+  if FSfr_Source <> Value then
+  begin
+    InvalidateModel;
+    FSfr_Source := Value;
+  end;
+end;
+
 procedure TModpathSelection.SetStopAfterMaxTime(const Value: boolean);
 begin
   if FStopAfterMaxTime <> Value then
@@ -6615,6 +6869,20 @@ begin
     InvalidateModel;
     FStopInZone := Value;
   end;
+end;
+
+procedure TModpathSelection.SetStopOption(const Value: TStopOption);
+begin
+  if FStopOption <> Value then
+  begin
+    InvalidateModel;
+    FStopOption := Value;
+  end;
+end;
+
+procedure TModpathSelection.SetStopTime(const Value: real);
+begin
+  SetRealProperty(FStopTime, Value);
 end;
 
 procedure TModpathSelection.SetStopZoneNumber(const Value: integer);
@@ -6662,6 +6930,11 @@ begin
   end;
 end;
 
+procedure TModpathSelection.SetTraceID(const Value: Integer);
+begin
+  SetIntegerProperty(FTraceID, Value);
+end;
+
 procedure TModpathSelection.SetTrackingDirection(
   const Value: TTrackingDirection);
 begin
@@ -6669,6 +6942,16 @@ begin
   begin
     InvalidateModel;
     FTrackingDirection := Value;
+  end;
+end;
+
+procedure TModpathSelection.SetUzf_Source(
+  const Value: TSurfaceApplicationPosition);
+begin
+  if FUzf_Source <> Value then
+  begin
+    InvalidateModel;
+    FUzf_Source := Value;
   end;
 end;
 
@@ -6687,6 +6970,15 @@ begin
   begin
     InvalidateModel;
     FWeakSinkThreshold := Value;
+  end;
+end;
+
+procedure TModpathSelection.SetWeakSource(const Value: TWeakSink);
+begin
+  if FWeakSource <> Value then
+  begin
+    InvalidateModel;
+    FWeakSource := Value;
   end;
 end;
 

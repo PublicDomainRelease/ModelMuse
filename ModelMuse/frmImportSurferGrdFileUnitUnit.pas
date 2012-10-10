@@ -175,6 +175,7 @@ var
   NewDataSets: TList;
   Position: integer;
   Count: Integer;
+  PointCount: Integer;
 begin
   frmGoPhast.PhastModel.BeginScreenObjectUpdate;
   frmGoPhast.CanDraw := False;
@@ -290,11 +291,13 @@ begin
                 Item.Values.DataType := DataSet.DataType;
                 Item.Values.Count := Count;
 
+                PointCount := 0;
                 for PointIndex := 0 to Length(FGrd7.Points) - 1 do
                 begin
                   if FGrd7.Points[PointIndex].Z < FGrd7.Header.BlankValue then
                   begin
-                    Item.Values.RealValues[PointIndex] := FGrd7.Points[PointIndex].Z;
+                    Item.Values.RealValues[PointCount] := FGrd7.Points[PointIndex].Z;
+                    Inc(PointCount);
                   end;
                 end;
                 Item.CacheData;

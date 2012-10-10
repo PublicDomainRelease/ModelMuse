@@ -7,24 +7,28 @@ uses SysUtils, Classes, PhastModelUnit;
 Type
   TModpathNameFileWriter = class(TObject)
   public
-    procedure WriteFile(const FileName: string; Model: TCustomModel; EmbeddedExport: boolean);
+    procedure WriteFile(const FileName: string; Model: TCustomModel;
+      EmbeddedExport: boolean);
+    procedure WriteFileVersion6(const FileName: string; Model: TCustomModel;
+      EmbeddedExport: boolean);
   end;
 
 
 implementation
 
-uses ModpathMainFileWriterUnit, ModflowDiscretizationWriterUnit, 
+uses ModpathMainFileWriterUnit, ModflowDiscretizationWriterUnit,
   ModpathStartingLocationsWriter, ModflowPackageSelectionUnit,
-  ModflowOutputControlUnit, frmErrorsAndWarningsUnit;
+  ModflowOutputControlUnit, frmErrorsAndWarningsUnit, frmGoPhastUnit;
+
+resourcestring
+  CbfFileExistsError = 'The following MODFLOW input or output files are '
+    + 'required by MODPATH to run but they are not in the directory in which '
+    + 'MODPATH is being run: "%s".';
 
 { TModpathNameFileWriter }
 
 procedure TModpathNameFileWriter.WriteFile(const FileName: string;
   Model: TCustomModel; EmbeddedExport: boolean);
-const
-  CbfFileExistsError = 'The following MODFLOW input or output files are '
-    + 'required by MODPATH to run but they are not in the directory in which '
-    + 'MODPATH is being run: "%s".';
 var
   NameFile: TStringList;
   AFileName: string;
@@ -166,6 +170,79 @@ begin
       end;
     end;
 
+    NameFile.SaveToFile(FileName);
+  finally
+    NameFile.Free;
+  end;
+end;
+
+procedure TModpathNameFileWriter.WriteFileVersion6(const FileName: string;
+  Model: TCustomModel; EmbeddedExport: boolean);
+var
+  NameFile: TStringList;
+  AFileName: string;
+//  Options: TModpathSelection;
+  procedure CheckFileExists(const AFileName: string);
+  var
+    FullFileName: string;
+  begin
+    if EmbeddedExport then
+    begin
+      Exit;
+    end;
+
+    FullFileName := ExpandFileName(AFileName);
+    if not FileExists(FullFileName) then
+    begin
+      frmErrorsAndWarnings.AddError(Model, Format(CbfFileExistsError,
+        [ExtractFilePath(FileName)]),
+        AFileName);
+    end;
+  end;
+begin
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, CbfFileExistsError);
+//  Options := Model.ModflowPackages.ModPath;
+
+  NameFile := TStringList.Create;
+  try
+    AFileName := ChangeFileExt(FileName,
+      TModpathBasicFileWriter.Extension);
+    frmGoPhast.PhastModel.AddModelInputFile(AFileName);
+    AFileName := ExtractFileName(AFileName);
+    NameFile.Add('MPBAS 12 ' + AFileName);
+
+    AFileName := ChangeFileExt(FileName,
+      TModflowDiscretizationWriter.Extension);
+    frmGoPhast.PhastModel.AddModelInputFile(AFileName);
+    AFileName := ExtractFileName(AFileName);
+    NameFile.Add('DIS 13 ' + AFileName);
+    CheckFileExists(AFileName);
+
+    AFileName := ChangeFileExt(FileName, StrCbcExt);
+    frmGoPhast.PhastModel.AddFileToArchive(AFileName);
+    AFileName := ExtractFileName(AFileName);
+    NameFile.Add('BUDGET 20 ' + AFileName);
+    CheckFileExists(AFileName);
+
+    if Model.ModflowOutputControl.HeadOC.SaveInExternalFile then
+    begin
+      case Model.ModflowOutputControl.HeadOC.OutputFileType of
+        oftText:
+          begin
+          end;
+        oftBinary:
+          begin
+            AFileName := ChangeFileExt(FileName, StrBhd);
+            frmGoPhast.PhastModel.AddFileToArchive(AFileName);
+            AFileName := ExtractFileName(AFileName);
+            NameFile.Add('HEAD 22 ' + AFileName);
+            CheckFileExists(AFileName);
+          end;
+        else Assert(False);
+      end;
+    end;
+
+    frmGoPhast.PhastModel.AddModelInputFile(FileName);
     NameFile.SaveToFile(FileName);
   finally
     NameFile.Free;

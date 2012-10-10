@@ -343,7 +343,7 @@ type
     miExportZoneBudgetPopup: TMenuItem;
     miRunMt3dmsPopup: TMenuItem;
     acSutraActive: TAction;
-    SUTRA1: TMenuItem;
+    miSUTRA: TMenuItem;
     acSutraLayers: TAction;
     N10: TMenuItem;
     SUTRALayerGroups1: TMenuItem;
@@ -1672,12 +1672,18 @@ type
     property ObservationFileName[SD: TSaveDialog]: string read GetObservationFileName;
     property PredictionFileName[SD: TSaveDialog]: string read GetPredictionFileName;
     procedure EnableVisualization;
+    procedure UpdateModelCubeBreaks;
   end;
 
 
 var
   // @name is the main form of ModelMuse.
   frmGoPhast: TfrmGoPhast;
+
+resourcestring
+  StrSelectedLayerD = 'Selected Layer: %d';
+  StrSelectedRowD = 'Selected Row: %d';
+  StrSelectedColD = 'Selected Col: %d';
 
 const
   VideoUrl = 'http://water.usgs.gov/nrp/gwsoftware/ModelMuse/ModelMuseVideos.html';
@@ -1723,7 +1729,8 @@ uses
   frmImportAsciiRasterUnit, CustomModflowWriterUnit, ModflowUnitNumbers,
   ZoneBudgetWriterUnit, ModflowHobUnit, frmDisplayDataUnit, IOUtils,
   ReadPvalUnit, ModflowParameterUnit, OrderedCollectionUnit, ReadGlobalsUnit,
-  GlobalVariablesUnit, SutraMeshUnit, frmSutraLayersUnit, frmSutraOptionsUnit;
+  GlobalVariablesUnit, SutraMeshUnit, frmSutraLayersUnit, frmSutraOptionsUnit,
+  ModflowPackageSelectionUnit;
 
 resourcestring
   StrModelMate = 'ModelMate';
@@ -1815,9 +1822,6 @@ resourcestring
   StrSubdivideGridCell = 'Subdivide Grid &Cells...';
   StrSubdivideGridCells = 'Subdivide grid cells|Click down and drag to selec' +
   't cells to be subdivided.';
-  StrSelectedLayerD = 'Selected Layer: %d';
-  StrSelectedRowD = 'Selected Row: %d';
-  StrSelectedColD = 'Selected Col: %d';
   StrCombinedModel = 'Combined model';
   StrMODFLOW = 'MODFLOW';
   StrThisModelDoesntH = 'This model doesn''t have any images.';
@@ -1838,6 +1842,7 @@ var
   Mf2005Date: TDateTime;
   ModelMateDate: TDateTime;
   MfNwtDate: TDateTime;
+  Modpath6Date: TDateTime;
 
 const
 //  MfNwtDate = 40933; //40907;//40819;
@@ -3295,6 +3300,7 @@ begin
   miPrintInitial.Enabled := PhastModel.ModelSelection = msPhast;
   miPrintFrequency.Enabled := PhastModel.ModelSelection = msPhast;
   miPHASTProgramLocation.Enabled := PhastModel.ModelSelection = msPhast;
+  UpdateModelCubeBreaks;
 end;
 
 procedure TfrmGoPhast.miMF_HydrogeologicUnitsClick(Sender: TObject);
@@ -3339,7 +3345,21 @@ function TfrmGoPhast.ModpathUpToDate: boolean;
 var
   WarningMessage: string;
 begin
-  result := ModelUpToDate(PhastModel.ProgramLocations.ModPathLocation, Modpath5Date);
+  result := False;
+  case PhastModel.ModflowPackages.ModPath.MpathVersion of
+    mp5:
+      begin
+        result := ModelUpToDate(PhastModel.
+          ProgramLocations.ModPathLocation, Modpath5Date);
+      end;
+    mp6:
+      begin
+        result := ModelUpToDate(PhastModel.
+          ProgramLocations.ModPathLocationVersion6, Modpath6Date);
+      end;
+    else
+      Assert(False);
+  end;
   if not result then
   begin
     Beep;
@@ -4854,13 +4874,14 @@ end;
 function TfrmGoPhast.TestModpathLocationOK: Boolean;
 begin
   result := True;
-  if not FileExists(PhastModel.ProgramLocations.ModPathLocation) then
+  if not FileExists(PhastModel.ModPathLocation) then
   begin
     GetProgramLocations;
-    if not FileExists(PhastModel.ProgramLocations.ModPathLocation) then
+    if not FileExists(PhastModel.ModPathLocation) then
     begin
       Beep;
-      if MessageDlg(StrMODPATHDoesNotExi, mtWarning, [mbYes, mbNo], 0) <> mrYes then
+      if MessageDlg(StrMODPATHDoesNotExi, mtWarning,
+        [mbYes, mbNo], 0) <> mrYes then
       begin
         result := False;
       end;
@@ -6417,6 +6438,31 @@ begin
   InvalidateImage32AllViews;
 end;
 
+procedure TfrmGoPhast.UpdateModelCubeBreaks;
+var
+  Breaks: TBreakCollection;
+  LayerCount: Integer;
+  LayerIndex: Integer;
+  ABreak: TBreakPosition;
+begin
+  Breaks := frameTopView.ModelCube.Breaks;
+  Breaks.Clear;
+  if (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    and (PhastModel.LayerStructure.Count > 0) then
+  begin
+    LayerCount := PhastModel.CombinedLayerCount;
+    for LayerIndex := 0 to LayerCount - 1 do
+    begin
+      if not PhastModel.CombinedLayerSimulated(LayerIndex) then
+      begin
+        ABreak := Breaks.Add;
+        ABreak.LowerFraction := (LayerCount - LayerIndex -1)/LayerCount;
+        ABreak.HigherFraction := (LayerCount - LayerIndex)/LayerCount;
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmGoPhast.UpdateModelSelection;
 begin
   acModflowActive.Checked := (PhastModel.Grid <> nil)
@@ -7487,6 +7533,7 @@ begin
         CreateArchiveSet := False;
         FCreateArchive := True;
       end;
+      UpdateModelCubeBreaks;
       frameTopView.AdjustScales;
       frameFrontView.AdjustScales;
       frameSideView.AdjustScales;
@@ -7505,14 +7552,18 @@ begin
         {$IFDEF SUTRA} msSutra: acSutraActive.Checked := True; {$ENDIF}
         else Assert(False);
       end;
-      miPathlinestoShapefile.Enabled := PhastModel.PathLines.Lines.Count > 0;
+      miPathlinestoShapefile.Enabled := (PhastModel.PathLines.Lines.Count > 0)
+        or (PhastModel.PathLines.LinesV6.Count > 0);
 
       miEndpointsatStartingLocationstoShapefile.Enabled :=
-        PhastModel.EndPoints.Points.Count > 0;
+        (PhastModel.EndPoints.Points.Count > 0)
+        or (PhastModel.EndPoints.PointsV6.Count > 0);
       miEndpointsatEndingLocationstoShapefile.Enabled :=
-        PhastModel.EndPoints.Points.Count > 0;
+        miEndpointsatStartingLocationstoShapefile.Enabled;
 
-      miTimeSeriestoShapefile.Enabled := PhastModel.TimeSeries.Series.Count > 0;
+      miTimeSeriestoShapefile.Enabled :=
+        (PhastModel.TimeSeries.Series.Count > 0)
+        or (PhastModel.TimeSeries.SeriesV6.Count > 0);
 
       Application.Title := ExtractFileName(FileName) + ' ' + StrModelName;
       InvalidateImage32AllViews;
@@ -8392,6 +8443,7 @@ var
   AGrid: TCustomModelGrid;
   NameWriter: TNameFileWriter;
   ModflowVersionName: string;
+  MPathLocation: string;
 begin
   inherited;
   AGrid := Grid;
@@ -8455,10 +8507,12 @@ begin
       begin
         Exit;
       end;
-      if FileExists(PhastModel.ProgramLocations.ModPathLocation) then
+      MPathLocation := PhastModel.ModPathLocation;
+      if FileExists(MPathLocation) then
       begin
-        PhastModel.AddModelInputFile(PhastModel.ProgramLocations.ModPathLocation);
+        PhastModel.AddModelInputFile(MPathLocation);
       end;
+
     end;
     if PhastModel.ModflowPackages.ZoneBudget.IsSelected and FRunZoneBudget then
     begin
@@ -8560,6 +8614,7 @@ var
   InputFiles: TModelIOPairs;
   NameFile: string;
   CommandLine: string;
+  ModflowLocation: string;
 begin
   inherited;
 
@@ -8683,8 +8738,17 @@ begin
         FoundPair.AppFile := AppFile;
       end;
 
-      CommandLine := ExtractRelativePath(NameFile,
-        PhastModel.ProgramLocations.ModflowLocation)
+      case ModelSelection of
+        msModflow: ModflowLocation :=
+          PhastModel.ProgramLocations.ModflowLocation;
+        msModflowLGR: ModflowLocation :=
+          PhastModel.ProgramLocations.ModflowLgrLocation;
+        msModflowNWT: ModflowLocation :=
+          PhastModel.ProgramLocations.ModflowNwtLocation;
+        else
+          Assert(False);
+      end;
+      CommandLine := ExtractRelativePath(NameFile, ModflowLocation)
         + ' ' + ExtractFileName(NameFile);
       case PhastModel.ObservationPurpose of
         ofObserved:
@@ -8779,7 +8843,7 @@ begin
     end;
     FCreateNewCompositeBudgetFile := False;
 
-    if frmErrorsAndWarnings.HasMessages then
+     if frmErrorsAndWarnings.HasMessages then
     begin
       frmErrorsAndWarnings.Show;
     end;
@@ -9329,7 +9393,6 @@ begin
           end;
       end;
 
-
     finally
       CanDraw := True;
       frmFormulaErrors.sgErrors.EndUpdate;
@@ -9670,7 +9733,7 @@ begin
     begin
       AModel := PhastModel;
     end;
-    AModel.PathLines.Lines.ExportShapefile(sdShapefile.FileName);
+    AModel.PathLines.ExportShapefile(sdShapefile.FileName);
   end;
 end;
 
@@ -9871,6 +9934,7 @@ initialization
   Mf2005Date := EncodeDate(2012,4,24);
   ModelMateDate := EncodeDate(2012,6,4);
   MfNwtDate := EncodeDate(2012,5,14);
+  Modpath6Date := EncodeDate(2012,8,28);
 
   {$IFDEF Win64}
   RegisterExpectedMemoryLeak(GR32_Blend.AlphaTable);

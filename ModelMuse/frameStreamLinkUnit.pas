@@ -3,7 +3,8 @@ unit frameStreamLinkUnit;
 interface
 
 uses
-  System.UITypes, Windows, Messages, SysUtils, Variants, Classes, Graphics,
+  {$IF CompilerVersion >= 23} System.UITypes, {$IFEND} Windows, Messages,
+  SysUtils, Variants, Classes, Graphics,
   Controls, Forms, Dialogs, StdCtrls, ExtCtrls, JvExStdCtrls, JvCombobox,
   JvListComb, PhastModelUnit, UndoItems, DisplaySettingsUnit;
 

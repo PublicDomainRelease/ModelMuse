@@ -85,6 +85,7 @@ type
     FParticleStorage: TParticleStorage;
     FCanCreateParticles: Boolean;
     FTrackingDirection: TTrackingDirection;
+    FMPathVersion: TMpathVersion;
     procedure CreateGridParticles;
     procedure CreateCylinderParticles;
     procedure CreateSphereParticles;
@@ -95,6 +96,8 @@ type
     procedure SetTrackingDirection(const Value: TTrackingDirection);
     procedure EnableTrackingTimeGrid;
     procedure EnableDeleteTimeButton;
+    procedure SetMPathVersion(const Value: TMpathVersion);
+    procedure EnableTimeControls;
     { Private declarations }
   public
     procedure UpdateRowCount;
@@ -105,6 +108,7 @@ type
     procedure InitializeFrame;
     property TrackingDirection: TTrackingDirection read FTrackingDirection
       write SetTrackingDirection;
+    property MPathVersion : TMpathVersion read FMPathVersion write SetMPathVersion;
     { Public declarations }
   end;
 
@@ -306,16 +310,29 @@ begin
   end;
 end;
 
+procedure TframeModpathParticles.EnableTimeControls;
+var
+  ShouldEnable: Boolean;
+begin
+  EnableTrackingTimeGrid;
+  ShouldEnable := ((TrackingDirection = tdForward) or (MPathVersion = mp6));
+  seTimeCount.Enabled := ShouldEnable;
+  sbAddTime.Enabled := ShouldEnable;
+  sbInsertTime.Enabled := ShouldEnable;
+  EnableDeleteTimeButton;
+end;
+
 procedure TframeModpathParticles.EnableDeleteTimeButton;
 begin
-  sbDeleteTime.Enabled := (TrackingDirection = tdForward)
+  sbDeleteTime.Enabled :=
+    ((TrackingDirection = tdForward) or (MPathVersion= mp6))
     and (seTimeCount.AsInteger > 1);
 end;
 
 procedure TframeModpathParticles.EnableTrackingTimeGrid;
 begin
   rdgReleaseTimes.Enabled := (seTimeCount.AsInteger > 0)
-    and (TrackingDirection = tdForward);
+    and ((TrackingDirection = tdForward) or (MPathVersion= mp6));
 end;
 
 procedure TframeModpathParticles.CreateSphereParticles;
@@ -468,18 +485,17 @@ begin
   end;
 end;
 
+procedure TframeModpathParticles.SetMPathVersion(const Value: TMpathVersion);
+begin
+  FMPathVersion := Value;
+  EnableTimeControls;
+end;
+
 procedure TframeModpathParticles.SetTrackingDirection(
   const Value: TTrackingDirection);
-var
-  ShouldEnable: boolean;
 begin
   FTrackingDirection := Value;
-  EnableTrackingTimeGrid;
-  ShouldEnable := (TrackingDirection = tdForward);
-  seTimeCount.Enabled := ShouldEnable;
-  sbAddTime.Enabled := ShouldEnable;
-  sbInsertTime.Enabled := ShouldEnable;
-  EnableDeleteTimeButton;
+  EnableTimeControls;
 end;
 
 procedure TframeModpathParticles.UpdateRowCount;

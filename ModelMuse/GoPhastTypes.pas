@@ -387,7 +387,8 @@ type
   function OrientationToViewDirection(Orientation: TDataSetOrientation): TViewDirection;
 
 const
-  StrModelTop = 'Model_Top';
+  kModelTop = 'Model_Top';
+
 
   {@name is used when writing the PHAST input file to insert a consistent
     number of blank spaces.
@@ -403,6 +404,30 @@ const
   MRU_Section = 'MostRecentlyUsed';
 
 resourcestring
+  StrModelTop = kModelTop;
+  StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrWritingDataSet2 = '  Writing Data Set 2.';
+  StrWritingDataSet3 = '  Writing Data Set 3.';
+  StrWritingDataSet4 = '  Writing Data Set 4.';
+  StrWritingDataSet5 = '  Writing Data Set 5.';
+  StrWritingDataSet6 = '  Writing Data Set 6.';
+  StrWritingDataSet7 = '  Writing Data Set 7.';
+  StrWritingDataSet8 = '  Writing Data Set 8.';
+  StrWritingDataSet10 = '  Writing Data Set 10.';
+  StrWritingDataSet14 = '  Writing Data Set 14.';
+  StrWritingDataSet15 = '  Writing Data Set 15.';
+  StrWritingDataSet16 = '  Writing Data Set 16.';
+  StrWritingDataSet17 = '  Writing Data Set 17.';
+  StrWritingDataSet22 = '  Writing Data Set 22.';
+  StrWritingDataSet23 = '  Writing Data Set 23.';
+  StrWritingDataSet24 = '  Writing Data Set 24.';
+  StrWritingDataSet25 = '  Writing Data Set 25.';
+  StrWritingDataSet26 = '  Writing Data Set 26.';
+  StrWritingDataSet27 = '  Writing Data Set 27.';
+  StrWritingDataSet28 = '  Writing Data Set 28.';
+  StrWritingDataSet29 = '  Writing Data Set 29.';
+  StrWritingDataSet30 = '  Writing Data Set 30.';
+  StrWritingDataSet31 = '  Writing Data Set 31.';
   {@name is used as the default name for a new data set.
 
   @longcode(#

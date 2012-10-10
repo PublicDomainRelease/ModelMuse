@@ -5,7 +5,7 @@ interface
 uses
   Windows, FastGEO, Classes, GoPhastTypes, GR32, ZoomBox2, MeshRenumbering,
   AbstractGridUnit, Generics.Collections, gpc, Generics.Defaults, Types,
-  DataSetUnit, Graphics;
+  DataSetUnit, Graphics, SubscriptionUnit;
 
 Type
   TDrawingChoice = (dcAll, dcEdge);
@@ -204,6 +204,7 @@ Type
     FTopDataSet: TDataArray;
     FThreeDDataSet: TDataArray;
     FSelectedLayer: integer;
+    FTopGridObserver: TObserver;
     procedure SetElements(const Value: TSutraElement2D_Collection);
     procedure SetNodes(const Value: TSutraNode2D_Collection);
     procedure DrawTop(const BitMap: TBitmap32;
@@ -219,6 +220,7 @@ Type
       NodesOnSegment: TSutraNode2D_List);
     procedure GetElementsOnSegment(Segment: TSegment2D;
       ElementsOnSegment: TSutraElement2D_List);
+    procedure SetTopGridObserver(const Value: TObserver);
   protected
     procedure CalculateMinMax(DataSet: TDataArray;
       var MinMaxInitialized: boolean; var MinMax: TMinMax;
@@ -238,6 +240,9 @@ Type
       write SetThreeDDataSet;
     property TopDataSet: TDataArray read FTopDataSet write SetTopDataSet;
     property SelectedLayer: integer read FSelectedLayer write SetSelectedLayer;
+    property TopGridObserver: TObserver read FTopGridObserver
+      write SetTopGridObserver;
+    procedure EndUpdate; override;
   published
     property Nodes: TSutraNode2D_Collection read FNodes write SetNodes;
     property Elements: TSutraElement2D_Collection read FElements
@@ -394,6 +399,9 @@ Type
     FMeshUpdate: integer;
     FCanDraw: boolean;
     FCrossSection: TCrossSection;
+    FThreeDGridObserver: TObserver;
+    FElevationsNeedUpdating: boolean;
+    FUpdatingElevations: boolean;
     procedure SetElements(const Value: TSutraElement3D_Collection);
     procedure SetNodes(const Value: TSutraNode3D_Collection);
     procedure SetMesh2D(const Value: TSutraMesh2D);
@@ -413,11 +421,18 @@ Type
     procedure SetCrossSection(const Value: TCrossSection);
     procedure DrawFront(const BitMap: TBitmap32);
     procedure DrawPointsOnCrossSection(BitMap: TBitmap32);
+    function GetTopGridObserver: TObserver;
+    procedure SetThreeDGridObserver(const Value: TObserver);
+    procedure SetTopGridObserver(const Value: TObserver);
+    procedure CheckUpdateElevations;
+    procedure UpdateElevations;
   protected
     procedure CalculateMinMax(DataSet: TDataArray;
       var MinMaxInitialized: Boolean; var MinMax: TMinMax;
       StringValues: TStringList); override;
   public
+    property ElevationsNeedUpdating: boolean read FElevationsNeedUpdating
+      write FElevationsNeedUpdating;
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure Clear;
@@ -427,7 +442,6 @@ Type
       const EvaluatedAt: TEvaluatedAt): T2DTopCell;
     function MeshLimits(ViewDirection: TViewDirection): TGridLimit;
     function MeshBox(ViewDirection: TViewDirection): TPolygon2D;
-    procedure UpdateElevations;
     property NodeArray[Layer: Integer; Col: Integer]: TSutraNode3D
       read GetNodeArrayMember;
     property ElementArray[Layer: Integer; Col: Integer]: TSutraElement3D
@@ -439,13 +453,16 @@ Type
     property CanDraw: boolean read GetCanDraw write SetCanDraw;
     // @name is the number of layers of elements.
     property LayerCount: Integer read GetLayerCount;
-    procedure BeginUpdate; override;
-    procedure EndUpdate; override;
     procedure UpdateElementsInNodes;
     function FrontPolygons(Angle: Double;
       EvaluatedAt: TEvaluatedAt; out Limits: TLimitsArray): TCellElementPolygons2D;
     procedure GetMinMax(var MinMax: TMinMax; DataSet: TDataArray;
       StringValues: TStringList); override;
+    property TopGridObserver: TObserver read GetTopGridObserver
+      write SetTopGridObserver;
+    property ThreeDGridObserver: TObserver read FThreeDGridObserver
+      write SetThreeDGridObserver;
+    procedure EndUpdate; override;
   published
     property Nodes: TSutraNode3D_Collection read FNodes write SetNodes;
     property Elements: TSutraElement3D_Collection read FElements
@@ -1472,10 +1489,15 @@ begin
 end;
 
 constructor TSutraMesh2D.Create(Model: TBaseModel);
+var
+  LocalModel: TCustomModel;
 begin
   inherited Create(Model);
   FNodes := TSutraNode2D_Collection.Create(Model);
   FElements := TSutraElement2D_Collection.Create(Model);
+  LocalModel := Model as TCustomModel;
+  FTopGridObserver := LocalModel.TopGridObserver;
+  FTopGridObserver.OnUpToDateSet := LocalModel.OnTopSutraMeshChanged;
 end;
 
 destructor TSutraMesh2D.Destroy;
@@ -1583,6 +1605,20 @@ begin
     end;
   finally
     StringValues.free;
+  end;
+end;
+
+procedure TSutraMesh2D.EndUpdate;
+begin
+  inherited;
+  if (FUpdateCount = 0) then
+  begin
+    frmGoPhast.PhastModel.DataArrayManager.InvalidateAllDataSets;
+    if Assigned(TopGridObserver) then
+    begin
+      TopGridObserver.UpToDate := False;
+      TopGridObserver.UpToDate := True;
+    end;
   end;
 end;
 
@@ -2470,19 +2506,14 @@ end;
 
 { TSutraMesh3D }
 
-procedure TSutraMesh3D.BeginUpdate;
-begin
-  inherited;
-  Mesh2D.BeginUpdate;
-end;
-
 procedure TSutraMesh3D.CalculateMinMax(DataSet: TDataArray;
   var MinMaxInitialized: Boolean; var MinMax: TMinMax;
   StringValues: TStringList);
 begin
   SetMinMax(DataSet, MinMaxInitialized, MinMax, StringValues,
     DataSet.LayerCount, DataSet.RowCount, DataSet.ColumnCount);
-  if DataSet.Limits.LogTransform and (MinMax.RMinPositive > 0) then
+  if DataSet.Limits.LogTransform and (MinMax.RMinPositive > 0)
+    and (MinMax.RMax > 0) then
   begin
     MinMax.LogRMin := Log10(MinMax.RMinPositive);
     MinMax.LogRMax := Log10(MinMax.RMax);
@@ -2503,6 +2534,16 @@ begin
 
 end;
 
+procedure TSutraMesh3D.CheckUpdateElevations;
+begin
+  if ElevationsNeedUpdating then
+  begin
+    ElevationsNeedUpdating := False;
+    ThreeDGridObserver.UpToDate := True;
+    UpdateElevations;
+  end;
+end;
+
 procedure TSutraMesh3D.Clear;
 begin
   BeginUpdate;
@@ -2516,13 +2557,19 @@ begin
 end;
 
 constructor TSutraMesh3D.Create(Model: TBaseModel);
+var
+  LocalModel: TCustomModel;
 begin
   inherited Create(Model);
+  FElevationsNeedUpdating := True;
   FCrossSection := TCrossSection.Create(Model);
   FElements := TSutraElement3D_Collection.Create(Model);
   FNodes := TSutraNode3D_Collection.Create(Model);
   FMesh2D := TSutraMesh2D.Create(Model);
   FMeshType := mt3D;
+  LocalModel := Model as TCustomModel;
+  FThreeDGridObserver := LocalModel.ThreeDGridObserver;
+  FThreeDGridObserver.OnUpToDateSet := LocalModel.OnTopSutraMeshChanged;
 end;
 
 destructor TSutraMesh3D.Destroy;
@@ -2923,13 +2970,6 @@ begin
   end;
 end;
 
-procedure TSutraMesh3D.EndUpdate;
-begin
-  Mesh2D.EndUpdate;
-
-  inherited;
-end;
-
 procedure TSutraMesh3D.DrawPointsOnCrossSection(BitMap: TBitmap32);
 var
   NodesOnSegment: TSutraNode2D_List;
@@ -2988,9 +3028,19 @@ begin
   end;
 end;
 
+procedure TSutraMesh3D.EndUpdate;
+begin
+  inherited;
+  if (FUpdateCount = 0) then
+  begin
+    frmGoPhast.PhastModel.DataArrayManager.InvalidateAll3DDataSets;
+  end;
+end;
+
 procedure TSutraMesh3D.Draw(const BitMap: TBitmap32;
   const ViewDirection: TViewDirection);
 begin
+  CheckUpdateElevations;
   case ViewDirection of
     vdTop:
       begin
@@ -3021,6 +3071,7 @@ end;
 function TSutraMesh3D.GetElementArrayMember(Layer,
   Col: Integer): TSutraElement3D;
 begin
+  CheckUpdateElevations;
   result := FElementArray[Layer, Col];
 end;
 
@@ -3117,6 +3168,7 @@ end;
 
 function TSutraMesh3D.GetNodeArrayMember(Layer, Col: Integer): TSutraNode3D;
 begin
+//  CheckUpdateElevations;
   result := FNodeArray[Layer, Col];
 end;
 
@@ -3135,11 +3187,17 @@ begin
   result := Mesh2D.TopDataSet;
 end;
 
+function TSutraMesh3D.GetTopGridObserver: TObserver;
+begin
+  result := Mesh2D.TopGridObserver;
+end;
+
 function TSutraMesh3D.MeshLimits(ViewDirection: TViewDirection): TGridLimit;
 var
   Node: TSutraNode3D;
   NodeIndex: Integer;
 begin
+  CheckUpdateElevations;
   case ViewDirection of
     vdTop: result := Mesh2D.MeshLimits;
     vdFront:
@@ -3337,9 +3395,24 @@ begin
   Mesh2D.ThreeDDataSet := Value;
 end;
 
+procedure TSutraMesh3D.SetThreeDGridObserver(const Value: TObserver);
+begin
+  FThreeDGridObserver := Value;
+  if Assigned(FThreeDGridObserver) then
+  begin
+    FThreeDGridObserver.UpToDate := False;
+    FThreeDGridObserver.UpToDate := True;
+  end;
+end;
+
 procedure TSutraMesh3D.SetTopDataSet(const Value: TDataArray);
 begin
   Mesh2D.TopDataSet := Value;
+end;
+
+procedure TSutraMesh3D.SetTopGridObserver(const Value: TObserver);
+begin
+  Mesh2D.TopGridObserver := Value;
 end;
 
 procedure TSutraMesh2D.SetThreeDDataSet(const Value: TDataArray);
@@ -3371,6 +3444,16 @@ begin
 //
 //    frmGoPhast.frameTopView.ItemChange(nil);
 //    frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
+  end;
+end;
+
+procedure TSutraMesh2D.SetTopGridObserver(const Value: TObserver);
+begin
+  FTopGridObserver := Value;
+  if Assigned(FTopGridObserver) then
+  begin
+    FTopGridObserver.UpToDate := False;
+    FTopGridObserver.UpToDate := True;
   end;
 end;
 
@@ -3424,6 +3507,11 @@ var
   Width: Double;
   MidY: Extended;
 begin
+  if FUpdatingElevations then
+  begin
+    Exit;
+  end;
+  FUpdatingElevations := True;
   frmGoPhast.PhastModel.UpdateDataSetDimensions;
 
   Elements.Clear;
@@ -3520,6 +3608,7 @@ begin
     EndUpdate;
   end;
   UpdateElementsInNodes;
+  FUpdatingElevations := False;
 end;
 { TSutraNodeNumber3D_Item }
 
@@ -3579,7 +3668,6 @@ begin
   Dec(FUpdateCount);
   if FUpdateCount = 0 then
   begin
-    frmGoPhast.PhastModel.DataArrayManager.InvalidateAllDataSets;
     frmGoPhast.PhastModel.InvalidateSegments;
     frmGoPhast.EnableVisualization;
   end;

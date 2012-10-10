@@ -46,10 +46,8 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       Width = 87
       Height = 27
       Anchors = [akRight, akBottom]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnHelpClick
     end
@@ -59,10 +57,8 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       Width = 87
       Height = 27
       Anchors = [akRight, akBottom]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 4
     end
     object OkBtn: TBitBtn
@@ -71,10 +67,8 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       Width = 87
       Height = 27
       Anchors = [akRight, akBottom]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 3
       OnClick = OkBtnClick
     end

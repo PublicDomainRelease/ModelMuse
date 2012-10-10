@@ -33,9 +33,13 @@ type
     // and calls @link(SetAppearance).
     procedure FormShow(Sender: TObject);
     procedure btnHelpClick(Sender: TObject);
-    function FormHelp(Command: Word; Data: NativeInt;
-//  Data: {$IF CompilerVersion >= 23} NativeInt {$ELSE} Integer {$IFEND};
-      var CallHelp: Boolean): Boolean;
+{$IF CompilerVersion >= 23}
+   function FormHelp(Command: Word; Data:  NativeInt;
+     var CallHelp: Boolean): Boolean;
+{$ELSE}
+   function FormHelp(Command: Word; Data:  Integer;
+     var CallHelp: Boolean): Boolean;
+{$IFEND}
     procedure FormDestroy(Sender: TObject); virtual;
   private
     FCallingHelp: Boolean;
@@ -221,10 +225,13 @@ begin
 //  result := HelpRouter.HelpJump('', KeyWord);
 end;
 
-function TfrmCustomGoPhast.FormHelp(Command: Word;
-  Data: NativeInt ;
-//  Data: {$IF CompilerVersion >= 23} NativeInt {$ELSE} Integer {$IFEND};
+{$IF CompilerVersion >= 23}
+function TfrmCustomGoPhast.FormHelp(Command: Word; Data:  NativeInt;
   var CallHelp: Boolean): Boolean;
+{$ELSE}
+function TfrmCustomGoPhast.FormHelp(Command: Word; Data:  Integer;
+  var CallHelp: Boolean): Boolean;
+{$IFEND}
 begin
   if (Command in [HELP_CONTEXT, HELP_INDEX, HELP_FORCEFILE,
     HH_DISPLAY_SEARCH {, 15}])
@@ -1107,7 +1114,7 @@ begin
   end
   else
   begin
-    SelectedName := SelectedDataArray.Name;
+    SelectedName := SelectedDataArray.DisplayName;
   end;
 
   // Create lists used for sorting the nodes.

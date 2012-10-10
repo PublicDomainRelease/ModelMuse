@@ -40,10 +40,11 @@ type
     procedure SetUseInAllLayers(const Value: boolean);
   protected
     FDataArrayTypes: TStringList;
-    procedure UpdateArrayNames(NewNames: TStringList); virtual; abstract;
+    FDataArrayDisplayTypes: TStringList;
+    procedure UpdateArrayNames(NewNames, NewDisplayNames: TStringList); virtual; abstract;
     procedure UpdateAssociatedDataSetNames(NewNames: TStringList);
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
-    procedure SetDataArrayName(var StoredName: string; NewName: string;
+    procedure SetDataArrayName(var StoredName: string; NewName, NewDisplayName: string;
       CreateDataArray: boolean);
     procedure SetArrayNames(NewName: string);
   public
@@ -64,6 +65,11 @@ type
     FInelasticSkeletalStorageCoefficientDataArrayName: string;
     FPreconsolidationHeadDataArrayName: string;
     FInitialCompactionDataArrayName: string;
+
+    FPreconsolidationHeadDisplayName: string;
+    FElasticSkeletalStorageCoefficientDisplayName: string;
+    FInelasticSkeletalStorageCoefficientDisplayName: string;
+    FInitialCompactionDisplayName: string;
     procedure SetElasticSkeletalStorageCoefficientDataArrayName(
       const Value: string);
     procedure SetInelasticSkeletalStorageCoefficientDataArrayName(
@@ -73,7 +79,7 @@ type
     procedure Loaded;
   protected
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
-    procedure UpdateArrayNames(NewNames: TStringList); override;
+    procedure UpdateArrayNames(NewNames, NewDisplayNames: TStringList); override;
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Collection: TCollection); override;
@@ -122,6 +128,15 @@ type
     FInterbedStartingHeadDataArrayName: string;
     FInelasticSpecificStorageDataArrayName: string;
     FEquivNumberDataArrayName: string;
+
+    FEquivNumberDisplayName: string;
+    FVerticalHydraulicConductivityDisplayName: string;
+    FElasticSpecificStorageDisplayName: string;
+    FInelasticSpecificStorageDisplayName: string;
+    FInterbedStartingHeadDisplayName: string;
+    FInterbedPreconsolidationHeadDisplayName: string;
+    FInterbedStartingCompactionDisplayName: string;
+    FInterbedEquivalentThicknessDisplayName: string;
     procedure SetElasticSpecificStorageDataArrayName(const Value: string);
     procedure SetEquivNumberDataArrayName(const Value: string);
     procedure SetInelasticSpecificStorageDataArrayName(const Value: string);
@@ -137,7 +152,7 @@ type
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Collection: TCollection); override;
-    procedure UpdateArrayNames(NewNames: TStringList); override;
+    procedure UpdateArrayNames(NewNames, NewDisplayNames: TStringList); override;
   published
     // data set 4. RNB
     property EquivNumberDataArrayName: string read FEquivNumberDataArrayName
@@ -193,6 +208,14 @@ type
     FWaterTableCompressionIndexDataArrayName: string;
     FWaterTableRecompressionIndexDataArrayName: string;
     FWaterTableInitialInelasticSkeletalSpecificStorageDataArrayName: string;
+
+    FWaterTableCompressibleThicknessDisplayName: string;
+    FWaterTableInitialElasticSkeletalSpecificStorageDisplayName: string;
+    FWaterTableInitialInelasticSkeletalSpecificStorageDisplayName: string;
+    FWaterTableRecompressionIndexDisplayName: string;
+    FWaterTableCompressionIndexDisplayName: string;
+    FWaterTableInitialVoidRatioDisplayName: string;
+    FWaterTableInitialCompactionDisplayName: string;
     procedure SetWaterTableCompressibleThicknessDataArrayName(
       const Value: string);
     procedure SetWaterTableCompressionIndexDataArrayName(const Value: string);
@@ -209,7 +232,7 @@ type
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Collection: TCollection); override;
-    procedure UpdateArrayNames(NewNames: TStringList); override;
+    procedure UpdateArrayNames(NewNames, NewDisplayNames: TStringList); override;
   published
     // data set 7 THICK.
     property WaterTableCompressibleThicknessDataArrayName: string
@@ -254,14 +277,56 @@ type
   end;
 
 
-const
-  StrSubSidence = 'Subsidence';
+//const
+//  StrSubSidence = 'Subsidence';
 
 implementation
 
 uses
   PhastModelUnit, DataSetUnit, RbwParser, IntListUnit,
-  ModflowPackageSelectionUnit;
+  ModflowPackageSelectionUnit, ModflowPackagesUnit;
+
+const
+  kNoDelayPreconsolid = 'No_Delay_Preconsolidation_Head';
+  kNoDelayElasticSke = 'No_Delay_Elastic_Skeletal_Storage_Coefficient';
+  kNoDelayInelasticS = 'No_Delay_Inelastic_Skeletal_Storage_Coefficient';
+  kNoDelayInitialCom = 'No_Delay_Initial_Compaction';
+  kDelayEquivalentNum = 'Delay_Equivalent_Number';
+  kDelayVerticalHydra = 'Delay_Vertical_Hydraulic_Conductivity';
+  kDelayElasticSpecif = 'Delay_Elastic_Specific_Storage';
+  kDelayInelasticSpec = 'Delay_Inelastic_Specific_Storage';
+  kDelayInterbedStartHead = 'Delay_Interbed_Starting_Head';
+  kDelayInterbedPreco = 'Delay_Interbed_Preconsolidation_Head';
+  kDelayInterbedStartCompact = 'Delay_Interbed_Starting_Compaction';
+  kDelayInterbedEquiv = 'Delay_Interbed_Equivalent_Thickness';
+  kCompressibleThickne = 'Compressible_Thickness';
+  kInitialElasticSkel = 'Initial_Elastic_Skeletal_Specific_Storage';
+  kInitialInelasticSk = 'Initial_Inelastic_Skeletal_Specific_Storage';
+  kRecompressionIndex = 'Recompression_Index';
+  kCompressionIndex = 'Compression_Index';
+  kInitialVoidRatio = 'Initial_Void_Ratio';
+  kInitialCompaction = 'Initial_Compaction';
+
+resourcestring
+  StrNoDelayPreconsolid = kNoDelayPreconsolid;
+  StrNoDelayElasticSke =  kNoDelayElasticSke;
+  StrNoDelayInelasticS =  kNoDelayInelasticS;
+  StrNoDelayInitialCom =  kNoDelayInitialCom;
+  StrDelayEquivalentNum = kDelayEquivalentNum;
+  StrDelayVerticalHydra = kDelayVerticalHydra;
+  StrDelayElasticSpecif = kDelayElasticSpecif;
+  StrDelayInelasticSpec = kDelayInelasticSpec;
+  StrDelayInterbedStartHead = kDelayInterbedStartHead;
+  StrDelayInterbedPreco = kDelayInterbedPreco;
+  StrDelayInterbedStartCompact = kDelayInterbedStartCompact;
+  StrDelayInterbedEquiv = kDelayInterbedEquiv;
+  StrCompressibleThickne  = kCompressibleThickne;
+  StrInitialElasticSkel   = kInitialElasticSkel;
+  StrInitialInelasticSk   = kInitialInelasticSk;
+  StrRecompressionIndex   = kRecompressionIndex;
+  StrCompressionIndex     = kCompressionIndex;
+  StrInitialVoidRatio     = kInitialVoidRatio;
+  StrInitialCompaction    = kInitialCompaction;
 
 { TSubNoDelayBedLayers }
 
@@ -287,10 +352,15 @@ end;
 constructor TSubNoDelayBedLayerItem.Create(Collection: TCollection);
 begin
   inherited;
-  FDataArrayTypes.Add('No_Delay_Preconsolidation_Head');
-  FDataArrayTypes.Add('No_Delay_Elastic_Skeletal_Storage_Coefficient');
-  FDataArrayTypes.Add('No_Delay_Inelastic_Skeletal_Storage_Coefficient');
-  FDataArrayTypes.Add('No_Delay_Initial_Compaction');
+  FDataArrayTypes.Add(kNoDelayPreconsolid);
+  FDataArrayTypes.Add(kNoDelayElasticSke);
+  FDataArrayTypes.Add(kNoDelayInelasticS);
+  FDataArrayTypes.Add(kNoDelayInitialCom);
+
+  FDataArrayDisplayTypes.Add(StrNoDelayPreconsolid);
+  FDataArrayDisplayTypes.Add(StrNoDelayElasticSke);
+  FDataArrayDisplayTypes.Add(StrNoDelayInelasticS);
+  FDataArrayDisplayTypes.Add(StrNoDelayInitialCom);
 
   FAssociatedModelDataSetNames.Add('MODFLOW SUB: HC (Data Set 5)');
   FAssociatedModelDataSetNames.Add('MODFLOW SUB: Sfe (Data Set 6)');
@@ -355,34 +425,45 @@ procedure TSubNoDelayBedLayerItem.
   SetElasticSkeletalStorageCoefficientDataArrayName(const Value: string);
 begin
   SetDataArrayName(FElasticSkeletalStorageCoefficientDataArrayName,
-    Value, True);
+    Value, FElasticSkeletalStorageCoefficientDisplayName, True);
 end;
 
 procedure TSubNoDelayBedLayerItem.
   SetInelasticSkeletalStorageCoefficientDataArrayName(const Value: string);
 begin
-  SetDataArrayName(FInelasticSkeletalStorageCoefficientDataArrayName, Value,
-    True);
+  SetDataArrayName(FInelasticSkeletalStorageCoefficientDataArrayName,
+    Value, FInelasticSkeletalStorageCoefficientDisplayName, True);
 end;
 
 procedure TSubNoDelayBedLayerItem.SetInitialCompactionDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FInitialCompactionDataArrayName, Value, True);
+  SetDataArrayName(FInitialCompactionDataArrayName,
+    Value, FInitialCompactionDisplayName, True);
 end;
 
 procedure TSubNoDelayBedLayerItem.SetPreconsolidationHeadDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FPreconsolidationHeadDataArrayName, Value, True);
+  SetDataArrayName(FPreconsolidationHeadDataArrayName,
+    Value, FPreconsolidationHeadDisplayName, True);
 end;
 
-procedure TSubNoDelayBedLayerItem.UpdateArrayNames(NewNames: TStringList);
+procedure TSubNoDelayBedLayerItem.UpdateArrayNames(NewNames, NewDisplayNames: TStringList);
 begin
   Assert(NewNames.Count= 4);
+  Assert(NewDisplayNames.Count= 4);
+
+  FPreconsolidationHeadDisplayName := NewDisplayNames[0];
   PreconsolidationHeadDataArrayName := NewNames[0];
+
+  FElasticSkeletalStorageCoefficientDisplayName := NewDisplayNames[1];
   ElasticSkeletalStorageCoefficientDataArrayName := NewNames[1];
+
+  FInelasticSkeletalStorageCoefficientDisplayName := NewDisplayNames[2];
   InelasticSkeletalStorageCoefficientDataArrayName := NewNames[2];
+
+  FInitialCompactionDisplayName := NewDisplayNames[3];
   InitialCompactionDataArrayName := NewNames[3];
 
   UpdateAssociatedDataSetNames(NewNames);
@@ -420,14 +501,23 @@ end;
 constructor TSubDelayBedLayerItem.Create(Collection: TCollection);
 begin
   inherited;
-  FDataArrayTypes.Add('Delay_Equivalent_Number');
-  FDataArrayTypes.Add('Delay_Vertical_Hydraulic_Conductivity');
-  FDataArrayTypes.Add('Delay_Elastic_Specific_Storage');
-  FDataArrayTypes.Add('Delay_Inelastic_Specific_Storage');
-  FDataArrayTypes.Add('Delay_Interbed_Starting_Head');
-  FDataArrayTypes.Add('Delay_Interbed_Preconsolidation_Head');
-  FDataArrayTypes.Add('Delay_Interbed_Starting_Compaction');
-  FDataArrayTypes.Add('Delay_Interbed_Equivalent_Thickness');
+  FDataArrayTypes.Add(kDelayEquivalentNum);
+  FDataArrayTypes.Add(kDelayVerticalHydra);
+  FDataArrayTypes.Add(kDelayElasticSpecif);
+  FDataArrayTypes.Add(kDelayInelasticSpec);
+  FDataArrayTypes.Add(kDelayInterbedStartHead);
+  FDataArrayTypes.Add(kDelayInterbedPreco);
+  FDataArrayTypes.Add(kDelayInterbedStartCompact);
+  FDataArrayTypes.Add(kDelayInterbedEquiv);
+
+  FDataArrayDisplayTypes.Add(StrDelayEquivalentNum);
+  FDataArrayDisplayTypes.Add(StrDelayVerticalHydra);
+  FDataArrayDisplayTypes.Add(StrDelayElasticSpecif);
+  FDataArrayDisplayTypes.Add(StrDelayInelasticSpec);
+  FDataArrayDisplayTypes.Add(StrDelayInterbedStartHead);
+  FDataArrayDisplayTypes.Add(StrDelayInterbedPreco);
+  FDataArrayDisplayTypes.Add(StrDelayInterbedStartCompact);
+  FDataArrayDisplayTypes.Add(StrDelayInterbedEquiv);
 
   FAssociatedModelDataSetNames.Add('MODFLOW SUB: RNB (Data Set 4)');
   FAssociatedModelDataSetNames.Add('MODFLOW SUB: DP (Data Set 9); NZ (Data Set 14)');
@@ -511,25 +601,29 @@ end;
 procedure TSubDelayBedLayerItem.SetElasticSpecificStorageDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FElasticSpecificStorageDataArrayName, Value, True);
+  SetDataArrayName(FElasticSpecificStorageDataArrayName,
+    Value, FElasticSpecificStorageDisplayName, True);
 end;
 
 procedure TSubDelayBedLayerItem.
   SetEquivNumberDataArrayName(const Value: string);
 begin
-  SetDataArrayName(FEquivNumberDataArrayName, Value, True);
+  SetDataArrayName(FEquivNumberDataArrayName,
+    Value, FEquivNumberDisplayName, True);
 end;
 
 procedure TSubDelayBedLayerItem.SetInelasticSpecificStorageDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FInelasticSpecificStorageDataArrayName, Value, True);
+  SetDataArrayName(FInelasticSpecificStorageDataArrayName,
+    Value, FInelasticSpecificStorageDisplayName, True);
 end;
 
 procedure TSubDelayBedLayerItem.SetInterbedEquivalentThicknessDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FInterbedEquivalentThicknessDataArrayName, Value, True);
+  SetDataArrayName(FInterbedEquivalentThicknessDataArrayName,
+    Value, FInterbedEquivalentThicknessDisplayName, True);
 end;
 
 procedure TSubDelayBedLayerItem.SetInterbedPreconsolidationHeadDataArrayName(
@@ -539,14 +633,16 @@ var
 begin
   CreateDataArray := (Model <> nil) and ((Model as TPhastModel).ModflowPackages.
     SubPackage.ReadDelayRestartFileName = '');
-  SetDataArrayName(FInterbedPreconsolidationHeadDataArrayName, Value,
+  SetDataArrayName(FInterbedPreconsolidationHeadDataArrayName,
+    Value, FInterbedPreconsolidationHeadDisplayName,
     CreateDataArray);
 end;
 
 procedure TSubDelayBedLayerItem.SetInterbedStartingCompactionDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FInterbedStartingCompactionDataArrayName, Value, True);
+  SetDataArrayName(FInterbedStartingCompactionDataArrayName,
+    Value, FInterbedStartingCompactionDisplayName, True);
 end;
 
 procedure TSubDelayBedLayerItem.SetInterbedStartingHeadDataArrayName(
@@ -556,25 +652,44 @@ var
 begin
   CreateDataArray := (Model <> nil) and ((Model as TPhastModel).ModflowPackages.
     SubPackage.ReadDelayRestartFileName = '');
-  SetDataArrayName(FInterbedStartingHeadDataArrayName, Value, CreateDataArray);
+  SetDataArrayName(FInterbedStartingHeadDataArrayName,
+    Value, FInterbedStartingHeadDisplayName, CreateDataArray);
 end;
 
 procedure TSubDelayBedLayerItem.SetVerticalHydraulicConductivityDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FVerticalHydraulicConductivityDataArrayName, Value, True);
+  SetDataArrayName(FVerticalHydraulicConductivityDataArrayName,
+    Value, FVerticalHydraulicConductivityDisplayName, True);
 end;
 
-procedure TSubDelayBedLayerItem.UpdateArrayNames(NewNames: TStringList);
+procedure TSubDelayBedLayerItem.UpdateArrayNames(NewNames, NewDisplayNames: TStringList);
 begin
   Assert(NewNames.Count= 8);
+  Assert(NewDisplayNames.Count= 8);
+
+  FEquivNumberDisplayName := NewDisplayNames[0];
   EquivNumberDataArrayName := NewNames[0];
+
+  FVerticalHydraulicConductivityDisplayName := NewDisplayNames[1];
   VerticalHydraulicConductivityDataArrayName := NewNames[1];
+
+  FElasticSpecificStorageDisplayName := NewDisplayNames[2];
   ElasticSpecificStorageDataArrayName := NewNames[2];
+
+  FInelasticSpecificStorageDisplayName := NewDisplayNames[3];
   InelasticSpecificStorageDataArrayName := NewNames[3];
+
+  FInterbedStartingHeadDisplayName := NewDisplayNames[4];
   InterbedStartingHeadDataArrayName := NewNames[4];
+
+  FInterbedPreconsolidationHeadDisplayName := NewDisplayNames[5];
   InterbedPreconsolidationHeadDataArrayName := NewNames[5];
+
+  FInterbedStartingCompactionDisplayName := NewDisplayNames[6];
   InterbedStartingCompactionDataArrayName := NewNames[6];
+
+  FInterbedEquivalentThicknessDisplayName := NewDisplayNames[7];
   InterbedEquivalentThicknessDataArrayName := NewNames[7];
 
   UpdateAssociatedDataSetNames(NewNames);
@@ -731,6 +846,7 @@ begin
   inherited Create(Collection);
   FAssociatedModelDataSetNames:= TStringList.Create;
   FDataArrayTypes := TStringList.Create;
+  FDataArrayDisplayTypes := TStringList.Create;
   FUsedLayers := TUseLayersCollection.Create(
     (Collection as TOrderedCollection).Model);
 end;
@@ -738,6 +854,7 @@ end;
 destructor TCustomSubLayerItem.Destroy;
 begin
   FUsedLayers.Free;
+  FDataArrayDisplayTypes.Free;
   FDataArrayTypes.Free;
   FAssociatedModelDataSetNames.Free;
   inherited;
@@ -759,33 +876,38 @@ end;
 
 procedure TCustomSubLayerItem.SetArrayNames(NewName: string);
 var
-  NewNames: TStringList;
+  NewNames, NewDisplayNames: TStringList;
   ANewName: string;
   Index: integer;
 begin
   NewNames := TStringList.Create;
+  NewDisplayNames := TStringList.Create;
   try
     NewName := ValidName(NewName);
     NewNames.Capacity := FDataArrayTypes.Count;
+    NewDisplayNames.Capacity := FDataArrayDisplayTypes.Count;
     for Index := 0 to FDataArrayTypes.Count - 1 do
     begin
       ANewName := NewName + '_' + FDataArrayTypes[Index];
       NewNames.Add(ANewName);
+      ANewName := NewName + '_' + FDataArrayDisplayTypes[Index];
+      NewDisplayNames.Add(ANewName);
     end;
-    UpdateArrayNames(NewNames);
+    UpdateArrayNames(NewNames, NewDisplayNames);
   finally
+    NewDisplayNames.Free;
     NewNames.Free;
   end;
 end;
 
 procedure TCustomSubLayerItem.SetDataArrayName(var StoredName: string;
-  NewName: string; CreateDataArray: boolean);
+  NewName, NewDisplayName: string; CreateDataArray: boolean);
 var
   LocalModel: TPhastModel;
   DataArray: TDataArray;
   NewFormula: string;
-  Compiler: TRbwParser;
-  Position: Integer;
+//  Compiler: TRbwParser;
+//  Position: Integer;
   LocalCollection: TCustomSubLayer;
 begin
   LocalCollection := Collection as TCustomSubLayer;
@@ -816,22 +938,12 @@ begin
         begin
           // rename data array.
           LocalModel.TopGridObserver.StopsTalkingTo(DataArray);
-//          DataArray.StopsTalkingTo(LocalModel.ThreeDGridObserver);
-          DataArray.Name := NewName;
+          DataArray.StopsTalkingTo(LocalModel.ThreeDGridObserver);
+
           DataArray.Classification := StrSubSidence + '|' + Name;
-          Compiler := LocalModel.GetCompiler(DataArray.Orientation,
-            DataArray.EvaluatedAt);
-          Position := Compiler.IndexOfVariable(StoredName);
-          if Position >= 0 then
+          if StoredName <> NewName then
           begin
-            Compiler.RenameVariable(Position, NewName);
-          end;
-          Compiler := LocalModel.GetCompiler(dso3D,
-            DataArray.EvaluatedAt);
-          Position := Compiler.IndexOfVariable(StoredName);
-          if Position >= 0 then
-          begin
-            Compiler.RenameVariable(Position, NewName);
+            LocalModel.RenameDataArray(DataArray, NewName, NewDisplayName);
           end;
         end
         else if CreateDataArray then
@@ -842,8 +954,9 @@ begin
           NewFormula := '0.';
 
           // create new data array.
-          DataArray := LocalModel.DataArrayManager.CreateNewDataArray(TDataArray, NewName,
-            NewFormula, [dcName, dcType, dcOrientation, dcEvaluatedAt],
+          DataArray := LocalModel.DataArrayManager.CreateNewDataArray(TDataArray,
+            NewName, NewFormula, NewDisplayName,
+            [dcName, dcType, dcOrientation, dcEvaluatedAt],
             rdtDouble, eaBlocks, dsoTop, StrSubSidence + '|' + Name);
           DataArray.OnDataSetUsed := LocalModel.SubsidenceDataArrayUsed;
 
@@ -946,13 +1059,21 @@ end;
 constructor TSwtWaterTableItem.Create(Collection: TCollection);
 begin
   inherited;
-  FDataArrayTypes.Add('Compressible_Thickness');
-  FDataArrayTypes.Add('Initial_Elastic_Skeletal_Specific_Storage');
-  FDataArrayTypes.Add('Initial_Inelastic_Skeletal_Specific_Storage');
-  FDataArrayTypes.Add('Recompression_Index');
-  FDataArrayTypes.Add('Compression_Index');
-  FDataArrayTypes.Add('Initial_Void_Ratio');
-  FDataArrayTypes.Add('Initial_Compaction');
+  FDataArrayTypes.Add(kCompressibleThickne);
+  FDataArrayTypes.Add(kInitialElasticSkel);
+  FDataArrayTypes.Add(kInitialInelasticSk);
+  FDataArrayTypes.Add(kRecompressionIndex);
+  FDataArrayTypes.Add(kCompressionIndex);
+  FDataArrayTypes.Add(kInitialVoidRatio);
+  FDataArrayTypes.Add(kInitialCompaction);
+
+  FDataArrayDisplayTypes.Add(StrCompressibleThickne);
+  FDataArrayDisplayTypes.Add(StrInitialElasticSkel);
+  FDataArrayDisplayTypes.Add(StrInitialInelasticSk);
+  FDataArrayDisplayTypes.Add(StrRecompressionIndex);
+  FDataArrayDisplayTypes.Add(StrCompressionIndex);
+  FDataArrayDisplayTypes.Add(StrInitialVoidRatio);
+  FDataArrayDisplayTypes.Add(StrInitialCompaction);
 
   FAssociatedModelDataSetNames.Add('MODFLOW SWT: THICK (Data Set 7)');
   FAssociatedModelDataSetNames.Add('MODFLOW SWT: Sse (Data Set 8)');
@@ -1034,7 +1155,8 @@ end;
 procedure TSwtWaterTableItem.SetWaterTableCompressibleThicknessDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FWaterTableCompressibleThicknessDataArrayName, Value, True);
+  SetDataArrayName(FWaterTableCompressibleThicknessDataArrayName,
+    Value, FWaterTableCompressibleThicknessDisplayName, True);
 end;
 
 procedure TSwtWaterTableItem.SetWaterTableCompressionIndexDataArrayName(
@@ -1044,14 +1166,16 @@ var
 begin
   CreateDataArray := (Model <> nil) and ((Model as TPhastModel).ModflowPackages.
     SwtPackage.CompressionSource = csCompressionReComp);
-  SetDataArrayName(FWaterTableCompressionIndexDataArrayName, Value,
+  SetDataArrayName(FWaterTableCompressionIndexDataArrayName,
+    Value, FWaterTableCompressionIndexDisplayName,
     CreateDataArray);
 end;
 
 procedure TSwtWaterTableItem.SetWaterTableInitialCompactionDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FWaterTableInitialCompactionDataArrayName, Value, True);
+  SetDataArrayName(FWaterTableInitialCompactionDataArrayName,
+    Value, FWaterTableInitialCompactionDisplayName, True);
 end;
 
 procedure TSwtWaterTableItem.
@@ -1063,8 +1187,9 @@ begin
   CreateDataArray := (Model <> nil) and ((Model as TPhastModel).ModflowPackages.
     SwtPackage.CompressionSource = csSpecificStorage);
   SetDataArrayName(
-    FWaterTableInitialElasticSkeletalSpecificStorageDataArrayName, Value,
-      CreateDataArray);
+    FWaterTableInitialElasticSkeletalSpecificStorageDataArrayName,
+    Value, FWaterTableInitialElasticSkeletalSpecificStorageDisplayName,
+    CreateDataArray);
 end;
 
 procedure TSwtWaterTableItem.
@@ -1076,14 +1201,16 @@ begin
   CreateDataArray := (Model <> nil) and ((Model as TPhastModel).ModflowPackages.
     SwtPackage.CompressionSource = csSpecificStorage);
   SetDataArrayName(
-    FWaterTableInitialInelasticSkeletalSpecificStorageDataArrayName, Value,
-      CreateDataArray);
+    FWaterTableInitialInelasticSkeletalSpecificStorageDataArrayName,
+    Value, FWaterTableInitialInelasticSkeletalSpecificStorageDisplayName,
+    CreateDataArray);
 end;
 
 procedure TSwtWaterTableItem.SetWaterTableInitialVoidRatioDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FWaterTableInitialVoidRatioDataArrayName, Value, True);
+  SetDataArrayName(FWaterTableInitialVoidRatioDataArrayName,
+    Value, FWaterTableInitialVoidRatioDisplayName, True);
 end;
 
 procedure TSwtWaterTableItem.SetWaterTableRecompressionIndexDataArrayName(
@@ -1093,19 +1220,34 @@ var
 begin
   CreateDataArray := (Model <> nil) and ((Model as TPhastModel).ModflowPackages.
     SwtPackage.CompressionSource = csCompressionReComp);
-  SetDataArrayName(FWaterTableRecompressionIndexDataArrayName, Value,
-    CreateDataArray);
+  SetDataArrayName(FWaterTableRecompressionIndexDataArrayName,
+    Value, FWaterTableRecompressionIndexDisplayName, CreateDataArray);
 end;
 
-procedure TSwtWaterTableItem.UpdateArrayNames(NewNames: TStringList);
+procedure TSwtWaterTableItem.UpdateArrayNames(NewNames, NewDisplayNames: TStringList);
 begin
   Assert(NewNames.Count= 7);
+  Assert(NewDisplayNames.Count= 7);
+
+  FWaterTableCompressibleThicknessDisplayName := NewDisplayNames[0];
   WaterTableCompressibleThicknessDataArrayName := NewNames[0];
+
+  FWaterTableInitialElasticSkeletalSpecificStorageDisplayName := NewDisplayNames[1];
   WaterTableInitialElasticSkeletalSpecificStorageDataArrayName := NewNames[1];
+
+  FWaterTableInitialInelasticSkeletalSpecificStorageDisplayName := NewDisplayNames[2];
   WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName := NewNames[2];
+
+  FWaterTableRecompressionIndexDisplayName := NewDisplayNames[3];
   WaterTableRecompressionIndexDataArrayName := NewNames[3];
+
+  FWaterTableCompressionIndexDisplayName := NewDisplayNames[4];
   WaterTableCompressionIndexDataArrayName := NewNames[4];
+
+  FWaterTableInitialVoidRatioDisplayName := NewDisplayNames[5];
   WaterTableInitialVoidRatioDataArrayName := NewNames[5];
+
+  FWaterTableInitialCompactionDisplayName := NewDisplayNames[6];
   WaterTableInitialCompactionDataArrayName := NewNames[6];
 
   UpdateAssociatedDataSetNames(NewNames);

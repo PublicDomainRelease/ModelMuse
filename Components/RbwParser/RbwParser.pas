@@ -956,6 +956,7 @@ type
       string that can be compiled into an equivalent @classname.
     }
     function Decompile: string; virtual;
+    function DecompileDisplay: string; virtual;
   end;
 
   {
@@ -990,6 +991,7 @@ type
       @Name returns the @Link(Name) of the @Link(TCustomValue).
     }
     function Decompile: string; override;
+    function DecompileDisplay: string; override;
   end;
 
   {
@@ -1000,6 +1002,10 @@ type
     in @Link(TCustomVariable.Create).
   }
   TCustomVariable = class(TCustomValue)
+  private
+    FDisplayName: string;
+    function GetDisplayName: string;
+    procedure SetDisplayName(const Value: string);
   public
     {
       @Name calls inherited create and then validates VariableName.
@@ -1007,7 +1013,10 @@ type
       The rest of the name must consist of letters underscores and digits.
     }
     constructor Create(const VariableName: string; const DataType:
-      TRbwDataType);
+      TRbwDataType; const NameToDisplay: string);
+    property DisplayName: string read GetDisplayName write SetDisplayName;
+    function Decompile: string; override;
+    function DecompileDisplay: string; override;
   end;
 
   {
@@ -1024,7 +1033,7 @@ type
     {
       @Name calls the inherited create.
     }
-    constructor Create(const VariableName: string);
+    constructor Create(const VariableName: string; const NameToDisplay: string);
     {
       @Name is the double stored by @Link(TRealVariable).
     }
@@ -1047,7 +1056,7 @@ type
     {
       @Name calls the inherited create.
     }
-    constructor Create(const VariableName: string);
+    constructor Create(const VariableName: string; const NameToDisplay: string);
     {
       @Name is the Integer stored by @Link(TIntegerVariable).
     }
@@ -1070,7 +1079,7 @@ type
     {
       @Name calls the inherited create.
     }
-    constructor Create(const VariableName: string);
+    constructor Create(const VariableName: string; const NameToDisplay: string);
     {
       @Name is the Boolean stored by @Link(TBooleanVariable).
     }
@@ -1093,7 +1102,7 @@ type
     {
       @Name calls the inherited create.
     }
-    constructor Create(const VariableName: string);
+    constructor Create(const VariableName: string; const NameToDisplay: string);
     {
       @Name is the String stored by @Link(TStringVariable).
     }
@@ -1113,6 +1122,8 @@ type
     property Expression: TExpression read FExpression;
     constructor Create(Owner: TExpression); reintroduce;
   end;
+
+  TDecompileType = (dtInternal, dtDisplay);
 
   {
     @abstract(@Name is the compiled version of an Expression
@@ -1189,6 +1200,7 @@ type
     procedure ResetDataLength(const Count: integer);
     // See @link(AllowConversionToConstant).
     procedure SetAllowConversionToConstant(const Value: boolean); inline;
+    function DecompileByType(DecompileType: TDecompileType): string;
     {
       @Name defines whether the result of a function may be
       considered a constant value if all of the values passed to the function
@@ -1254,6 +1266,7 @@ type
       together with its arguments.
     }
     function Decompile: string; override;
+    function DecompileDisplay: string; override;
     {
       @Name destroys the @Link(TExpression).  Do not call Destroy directly.
       Call Free instead.
@@ -1463,6 +1476,8 @@ type
   // @name is used to define operators that are between two arguments
   // or are before a single argument.
   TOperator = class(TExpression)
+  private
+    function DecompileByType(DecompileType: TDecompileType): string;
   public
     {
       Decompile converts the value stored in the TOperator to a
@@ -1470,6 +1485,7 @@ type
       together with its argument.
     }
     function Decompile: string; override;
+    function DecompileDisplay: string; override;
   end;
 
   // @name is used in @link(TOperatorArgumentDefinition) to indicate
@@ -1700,9 +1716,9 @@ type
       See also:  @link(RegisterVariable).
     }
     function CreateVariable(const Name, Classification: string;
-      const Value: boolean): TBooleanVariable; overload;
+      const Value: boolean; const NameToDisplay: string): TBooleanVariable; overload;
     function CreateVariable(const Name, Classification: string;
-      const Value: boolean; VariableClass: TBooleanVariableClass):
+      const Value: boolean; VariableClass: TBooleanVariableClass; const NameToDisplay: string):
       TBooleanVariable; overload;
     {
       @Name creates a @Link(TIntegerVariable)
@@ -1712,9 +1728,9 @@ type
       See also:  @link(RegisterVariable).
     }
     function CreateVariable(const Name, Classification: string;
-      const Value: integer): TIntegerVariable; overload;
+      const Value: integer; const NameToDisplay: string): TIntegerVariable; overload;
     function CreateVariable(const Name, Classification: string;
-      const Value: integer; VariableClass: TIntegerVariableClass)
+      const Value: integer; VariableClass: TIntegerVariableClass; const NameToDisplay: string)
       : TIntegerVariable; overload;
     {
       @Name creates a @Link(TRealVariable)
@@ -1755,9 +1771,9 @@ type
       #)
     }
     function CreateVariable(const Name, Classification: string;
-      const Value: double): TRealVariable; overload;
+      const Value: double; const NameToDisplay: string): TRealVariable; overload;
     function CreateVariable(const Name, Classification: string;
-      const Value: double; VariableClass: TRealVariableClass):
+      const Value: double; VariableClass: TRealVariableClass; const NameToDisplay: string):
       TRealVariable; overload;
     {
       @Name creates a @Link(TStringVariable)
@@ -1767,9 +1783,9 @@ type
       See also:  @link(RegisterVariable).
     }
     function CreateVariable(const Name, Classification: string;
-      const Value: string): TStringVariable; overload;
+      const Value: string; const NameToDisplay: string): TStringVariable; overload;
     function CreateVariable(const Name, Classification: string;
-      const Value: string; VariableClass: TStringVariableClass):
+      const Value: string; VariableClass: TStringVariableClass; const NameToDisplay: string):
       TStringVariable; overload;
     {
       @Name searches for AString in @Link(Expressions). If it finds it,
@@ -1846,7 +1862,7 @@ type
       Index to a NewName and changes Index to the new position of
       the variable.
     }
-    procedure RenameVariable(var Index: integer; NewName: string);
+    procedure RenameVariable(var Index: integer; NewName: string; NewDisplayName: string);
     {
       @Name is an array of variables (@Link(TCustomValue)s) used by
       the current @Link(TRbwParser).
@@ -2228,6 +2244,8 @@ type
   end;
 
   TSignOperator = class(TOperator)
+  private
+    function DecompileByType(DecompileType: TDecompileType): string;
   public
     {
       Decompile converts the value stored in the TSignOperator to a
@@ -2235,10 +2253,13 @@ type
       together with its argument.
     }
     function Decompile: string; override;
+    function DecompileDisplay: string; override;
   end;
 
 
   TIntToDoubleExpression = class(TExpression)
+  private
+    function DecompileByType(DecompileType: TDecompileType): string;
   protected
     // @name calls @name for the integer it is converting.
     procedure MakeDiagram(List: TStringList; Level: integer); override;
@@ -2248,6 +2269,7 @@ type
       of the TIntToDoubleExpression.
     }
     function Decompile: string; override;
+    function DecompileDisplay: string; override;
   end;
 
   TPartialEvaluationOperator = class(TOperator)
@@ -2276,12 +2298,15 @@ type
   end;
 
   TVariableExpression = class(TExpression)
+  private
+    function DecompileByType(DecompileType: TDecompileType): string;
   protected
     procedure MakeDiagram(List: TStringList; Level: integer); override;
   public
     constructor Create(const Variable: TCustomValue;
       SpecialImplementorList: TSpecialImplementorList);
     function Decompile: string; override;
+    function DecompileDisplay: string; override;
     procedure Evaluate; override;
   end;
 
@@ -2514,87 +2539,119 @@ end;
 { TRbwParser }
 
 function TRbwParser.CreateVariable(const Name, Classification: string;
-  const Value: integer; VariableClass: TIntegerVariableClass)
+  const Value: integer; VariableClass: TIntegerVariableClass; const NameToDisplay: string)
   : TIntegerVariable;
 begin
   if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
   begin
     raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [Name]), 1);
   end;
-  result := VariableClass.Create(Name);
+  if (NameToDisplay <> '') and (FVariables.IndexOf(Trim(UpperCase(NameToDisplay))) >= 0) then
+  begin
+    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [NameToDisplay]), 1);
+  end;
+  result := VariableClass.Create(Name, NameToDisplay);
   result.Classification := Classification;
   result.Value := Value;
   FVariables.AddObject(result.Name, result);
+  if result.Name <> result.DisplayName then
+  begin
+    FVariables.AddObject(result.DisplayName, result);
+  end;
   FOwnedVariables.Add(result);
 end;
 
 function TRbwParser.CreateVariable(const Name, Classification: string;
-  const Value: integer): TIntegerVariable;
+  const Value: integer; const NameToDisplay: string): TIntegerVariable;
 begin
-  result := CreateVariable(Name, Classification, Value, TIntegerVariable);
+  result := CreateVariable(Name, Classification, Value, TIntegerVariable, NameToDisplay);
 end;
 
 function TRbwParser.CreateVariable(const Name, Classification: string;
-  const Value: boolean; VariableClass: TBooleanVariableClass):
+  const Value: boolean; VariableClass: TBooleanVariableClass; const NameToDisplay: string):
   TBooleanVariable;
 begin
   if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
   begin
     raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [Name]), 1);
   end;
-  result := VariableClass.Create(Name);
+  if (NameToDisplay <> '') and (FVariables.IndexOf(Trim(UpperCase(NameToDisplay))) >= 0) then
+  begin
+    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [NameToDisplay]), 1);
+  end;
+  result := VariableClass.Create(Name, NameToDisplay);
   result.Classification := Classification;
   result.Value := Value;
   FVariables.AddObject(result.Name, result);
+  if result.Name <> result.DisplayName then
+  begin
+    FVariables.AddObject(result.DisplayName, result);
+  end;
   FOwnedVariables.Add(result);
 end;
 
 
 function TRbwParser.CreateVariable(const Name, Classification: string;
-  const Value: boolean): TBooleanVariable;
+  const Value: boolean; const NameToDisplay: string): TBooleanVariable;
 begin
-  result := CreateVariable(Name, Classification, Value, TBooleanVariable);
+  result := CreateVariable(Name, Classification, Value, TBooleanVariable, NameToDisplay);
 end;
 
 function TRbwParser.CreateVariable(const Name, Classification: string;
-  const Value: string; VariableClass: TStringVariableClass):
+  const Value: string; VariableClass: TStringVariableClass; const NameToDisplay: string):
   TStringVariable;
 begin
   if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
   begin
     raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [Name]), 1);
   end;
-  result := VariableClass.Create(Name);
+  if (NameToDisplay <> '') and (FVariables.IndexOf(Trim(UpperCase(NameToDisplay))) >= 0) then
+  begin
+    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [NameToDisplay]), 1);
+  end;
+  result := VariableClass.Create(Name, NameToDisplay);
   result.Classification := Classification;
   result.Value := Value;
   FVariables.AddObject(result.Name, result);
+  if result.Name <> result.DisplayName then
+  begin
+    FVariables.AddObject(result.DisplayName, result);
+  end;
   FOwnedVariables.Add(result);
 end;
 
 function TRbwParser.CreateVariable(const Name, Classification,
-  Value: string): TStringVariable;
+  Value: string; const NameToDisplay: string): TStringVariable;
 begin
-  result := CreateVariable(Name, Classification, Value, TStringVariable);
+  result := CreateVariable(Name, Classification, Value, TStringVariable, NameToDisplay);
 end;
 
 function TRbwParser.CreateVariable(const Name, Classification: string;
-  const Value: double): TRealVariable;
+  const Value: double; const NameToDisplay: string): TRealVariable;
 begin
-  result := CreateVariable(Name, Classification, Value, TRealVariable);
+  result := CreateVariable(Name, Classification, Value, TRealVariable, NameToDisplay);
 end;
 
 function TRbwParser.CreateVariable(const Name, Classification: string;
-  const Value: double; VariableClass: TRealVariableClass):
+  const Value: double; VariableClass: TRealVariableClass; const NameToDisplay: string):
   TRealVariable;
 begin
   if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
   begin
     raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [Name]), 1);
   end;
-  result := VariableClass.Create(Name);
+  if (NameToDisplay <> '') and (FVariables.IndexOf(Trim(UpperCase(NameToDisplay))) >= 0) then
+  begin
+    raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [NameToDisplay]), 1);
+  end;
+  result := VariableClass.Create(Name, NameToDisplay);
   result.Classification := Classification;
   result.Value := Value;
   FVariables.AddObject(result.Name, result);
+  if result.Name <> result.DisplayName then
+  begin
+    FVariables.AddObject(result.DisplayName, result);
+  end;
   FOwnedVariables.Add(result);
 end;
 
@@ -3005,6 +3062,8 @@ begin
   FFunctions := TFunctionStringList.Create;
   FVariables := TStringList.Create;
   FVariables.Sorted := True;
+  FVariables.CaseSensitive := False;
+  FVariables.Duplicates := dupIgnore;
   FSpecialImplementorList := TSpecialImplementorList.Create;
 
   FOpereratorDefinitions := TObjectList.Create;
@@ -3075,6 +3134,8 @@ begin
 end;
 
 procedure TRbwParser.RegisterVariable(const Value: TCustomValue);
+var
+  DisplayName: string;
 begin
   if (Value is TBooleanVariable) or (Value is TIntegerVariable)
     or (Value is TRealVariable) or (Value is TStringVariable) then
@@ -3084,9 +3145,23 @@ begin
       raise ErbwParserError.CreateMode('Error: A Variable named '
         + Value.Name + ' already exists', 1);
     end
+    else if (Value is TCustomVariable)
+      and (FVariables.IndexOf(TCustomVariable(Value).DisplayName) >= 0) then
+    begin
+      raise ErbwParserError.CreateMode('Error: A Variable named '
+        + TCustomVariable(Value).DisplayName + ' already exists', 1);
+    end
     else
     begin
-      FVariables.AddObject(Value.Name, Value)
+      FVariables.AddObject(Value.Name, Value);
+      if (Value is TCustomVariable) then
+      begin
+        DisplayName := TCustomVariable(Value).DisplayName;
+        if DisplayName <> Value.Name then
+        begin
+          FVariables.AddObject(DisplayName, Value);
+        end;
+      end;
     end;
   end
   else
@@ -3112,7 +3187,7 @@ begin
   FVariables.Clear;
 end;
 
-procedure TRbwParser.RenameVariable(var Index: integer; NewName: string);
+procedure TRbwParser.RenameVariable(var Index: integer; NewName: string; NewDisplayName: string);
 var
   AVariable: TCustomValue;
   NewExpressions: TStringList;
@@ -3120,12 +3195,24 @@ var
   AnExpression: TExpression;
   NewUserName: string;
   Position: integer;
+//  NewUserDislayName: string;
 begin
   NewUserName := Trim(NewName);
-  NewName := UpperCase(NewUserName);
-  ValidateVariableName(NewName);
-  if Variables[Index].Decompile <> NewUserName then
+  if NewDisplayName = '' then
   begin
+    NewDisplayName := NewUserName;
+  end;
+  NewName := NewUserName;
+  NewDisplayName := Trim(NewDisplayName);
+  ValidateVariableName(NewName);
+  ValidateVariableName(NewDisplayName);
+  if UpperCase(Variables[Index].Decompile) <> UpperCase(NewDisplayName) then
+  begin
+    Position := FVariables.IndexOf(NewDisplayName);
+    if (Position >= 0) and (Position <> Index) then
+    begin
+      raise ErbwParserError.CreateMode(Format(StrErrorAVariableNa, [NewDisplayName]), 1);
+    end;
     Position := FVariables.IndexOf(NewName);
     if (Position >= 0) and (Position <> Index) then
     begin
@@ -3133,9 +3220,19 @@ begin
     end;
     AVariable := FVariables.Objects[Index] as TCustomValue;
     FVariables.Delete(Index);
+    Index := FVariables.IndexOfObject(AVariable);
+    while Index >= 0 do
+    begin
+      FVariables.Delete(Index);
+      Index := FVariables.IndexOfObject(AVariable);
+    end;
     AVariable.FName := NewName;
     AVariable.FUserName := NewUserName;
+    Assert(AVariable is TCustomVariable);
+    TCustomVariable(AVariable).DisplayName := NewDisplayName;
+
     Index := FVariables.AddObject(NewName, AVariable);
+    FVariables.AddObject(NewDisplayName, AVariable);
     NewExpressions := TStringList.Create;
     try
       for ExpressionIndex := 0 to FExpressions.Count - 1 do
@@ -3187,9 +3284,10 @@ begin
     end;
   end;
   Position := FVariables.IndexOfObject(Variable);
-  if Position >= 0 then
+  While Position >= 0 do
   begin
     FVariables.Delete(Position);
+    Position := FVariables.IndexOfObject(Variable);
   end;
   FOwnedVariables.Remove(Variable)
 end;
@@ -3206,7 +3304,7 @@ constructor TCustomValue.Create(const VariableName: string;
 begin
   inherited Create(DataType);
   FUserName := Trim(VariableName);
-  FName := UpperCase(FUserName);
+  FName := FUserName;
 end;
 
 function TCustomValue.Decompile: string;
@@ -3214,11 +3312,16 @@ begin
   result := FUserName;
 end;
 
+function TCustomValue.DecompileDisplay: string;
+begin
+  result := FUserName;
+end;
+
 { TRealVariable }
 
-constructor TRealVariable.Create(const VariableName: string);
+constructor TRealVariable.Create(const VariableName: string; const NameToDisplay: string);
 begin
-  inherited Create(VariableName, rdtDouble);
+  inherited Create(VariableName, rdtDouble, NameToDisplay);
 end;
 
 {$WARNINGS OFF}
@@ -3237,9 +3340,9 @@ end;
 
 { TIntegerVariable }
 
-constructor TIntegerVariable.Create(const VariableName: string);
+constructor TIntegerVariable.Create(const VariableName: string; const NameToDisplay: string);
 begin
-  inherited Create(VariableName, rdtInteger);
+  inherited Create(VariableName, rdtInteger, NameToDisplay);
 end;
 
 {$WARNINGS OFF}
@@ -3258,9 +3361,9 @@ end;
 
 { TBooleanVariable }
 
-constructor TBooleanVariable.Create(const VariableName: string);
+constructor TBooleanVariable.Create(const VariableName: string; const NameToDisplay: string);
 begin
-  inherited Create(VariableName, rdtBoolean);
+  inherited Create(VariableName, rdtBoolean, NameToDisplay);
 end;
 
 {$WARNINGS OFF}
@@ -3279,9 +3382,9 @@ end;
 
 { TStringVariable }
 
-constructor TStringVariable.Create(const VariableName: string);
+constructor TStringVariable.Create(const VariableName: string; const NameToDisplay: string);
 begin
-  inherited Create(VariableName, rdtString);
+  inherited Create(VariableName, rdtString, NameToDisplay);
 end;
 
 function TStringVariable.GetValue: string;
@@ -3421,7 +3524,7 @@ begin
   begin
     Line := Line + #9;
   end;
-  Line := Line + Decompile + #9 + Decompile;
+  Line := Line + DecompileDisplay + #9 + DecompileDisplay;
   List.Add(Line);
 end;
 
@@ -3440,6 +3543,11 @@ begin
   result := ValueToString;
 end;
 
+function TConstant.DecompileDisplay: string;
+begin
+  result := ValueToString;
+end;
+
 function TConstant.ValueToString: string;
 //var
 //  OldDecimalSeparator: Char;
@@ -3448,19 +3556,12 @@ begin
   case ResultType of
     rdtDouble:
       begin
-//        OldDecimalSeparator := DecimalSeparator;
-//        try
-//          DecimalSeparator := '.';
-          result := InternalFloatToStr(DoubleResult);
-//        finally
-//          DecimalSeparator := OldDecimalSeparator;
-//        end;
+        result := InternalFloatToStr(DoubleResult);
         if (Pos('.', result) <= 0) and (Pos('e', result) <= 0) and (Pos('E',
           result) <= 0) then
         begin
           result := result + '.';
         end;
-
       end;
     rdtInteger:
       begin
@@ -6779,7 +6880,7 @@ begin
     Line := Line + #9;
   end;
 
-  Line := Line + FUserName  + Prototype + #9 + Decompile + Prototype;
+  Line := Line + FUserName  + Prototype + #9 + DecompileDisplay + Prototype;
   List.Add(Line);
 
   for Index := 0 to ArrayLength - 1 do
@@ -6905,6 +7006,11 @@ end;
 {$WARNINGS ON}
 
 function TExpression.Decompile: string;
+begin
+  result := DecompileByType(dtInternal);
+end;
+
+function TExpression.DecompileByType(DecompileType: TDecompileType): string;
 var
   Index: integer;
   ArrayLength: integer;
@@ -6946,7 +7052,6 @@ begin
       if NeedsParenthesis and ParametersPresent then
       begin
         DecompileList.Add('(');
-//        result := result + '(';
       end;
       for Index := 0 to ArrayLength - 1 do
       begin
@@ -6955,7 +7060,6 @@ begin
           if Index > 0 then
           begin
             DecompileList.Add(', ');
-//            result := result + ', ';
           end;
           AVariable := Data[Index].Datum;
           if AVariable is TExpression then
@@ -6963,20 +7067,28 @@ begin
             TExpression(AVariable).FTopLevel := False;
           end;
 
-          DecompileList.Add(AVariable.Decompile);
-//          result := result + AVariable.Decompile;
+          case DecompileType of
+            dtInternal: DecompileList.Add(AVariable.Decompile);
+            dtDisplay: DecompileList.Add(AVariable.DecompileDisplay);
+            else Assert(False);
+          end;
+
         end;
       end;
       if NeedsParenthesis and ParametersPresent then
       begin
         DecompileList.Add(')');
-//        result := result + ')';
       end;
       result := ConcatenateStrings(DecompileList);
     finally
       DecompileList.Free;
     end;
   end;
+end;
+
+function TExpression.DecompileDisplay: string;
+begin
+  result := DecompileByType(dtDisplay);
 end;
 
 function TExpression.UsesVariable(const Variable: TCustomVariable): boolean;
@@ -8234,15 +8346,49 @@ end;
 { TCustomVariable }
 
 constructor TCustomVariable.Create(const VariableName: string;
-  const DataType: TRbwDataType);
+  const DataType: TRbwDataType; const NameToDisplay: string);
 begin
   inherited Create(VariableName, DataType);
   ValidateVariableName(VariableName);
+  DisplayName := NameToDisplay;
+  ValidateVariableName(DisplayName);
+end;
+
+function TCustomVariable.Decompile: string;
+begin
+  result := Name;
+end;
+
+function TCustomVariable.DecompileDisplay: string;
+begin
+  result := DisplayName;
+end;
+
+function TCustomVariable.GetDisplayName: string;
+begin
+  if FDisplayName = '' then
+  begin
+    result := inherited Decompile;
+  end
+  else
+  begin
+    result := FDisplayName
+  end;
+end;
+
+procedure TCustomVariable.SetDisplayName(const Value: string);
+begin
+  FDisplayName := Value;
 end;
 
 { TOperator }
 
 function TOperator.Decompile: string;
+begin
+  result := DecompileByType(dtInternal);
+end;
+
+function TOperator.DecompileByType(DecompileType: TDecompileType): string;
 var
   ArrayLength: integer;
   AVariable: TConstant;
@@ -8257,7 +8403,11 @@ begin
     begin
       AVariable := Data[0].Datum;
       Assert(AVariable <> nil);
-      result := result + ' ' + AVariable.Decompile;
+      case DecompileType of
+        dtInternal: result := result + ' ' + AVariable.Decompile;
+        dtDisplay: result := result + ' ' + AVariable.DecompileDisplay;
+        else Assert(False);
+      end;
     end
     else
     begin
@@ -8276,14 +8426,24 @@ begin
         TExpression(AVariable).FTopLevel := False;
       end;
 
-      result := Paren + AVariable.Decompile + ' ' + result + ' ';
+      case DecompileType of
+        dtInternal: result := Paren + AVariable.Decompile + ' ' + result + ' ';
+        dtDisplay: result := Paren + AVariable.DecompileDisplay + ' ' + result + ' ';
+        else Assert(False);
+      end;
+
       AVariable := Data[1].Datum;
       Assert(AVariable <> nil);
       if AVariable is TExpression then
       begin
         TExpression(AVariable).FTopLevel := False;
       end;
-      result := result + AVariable.Decompile;
+      case DecompileType of
+        dtInternal: result := result + AVariable.Decompile;
+        dtDisplay: result := result + AVariable.DecompileDisplay;
+        else Assert(False);
+      end;
+
       if not FTopLevel then
       begin
         result := result + ')';
@@ -8296,9 +8456,19 @@ begin
   end;
 end;
 
+function TOperator.DecompileDisplay: string;
+begin
+  result := DecompileByType(dtDisplay);
+end;
+
 { TSignOperator }
 
 function TSignOperator.Decompile: string;
+begin
+  result := DecompileByType(dtInternal);
+end;
+
+function TSignOperator.DecompileByType(DecompileType: TDecompileType): string;
 var
   ArrayLength: integer;
   AVariable: TConstant;
@@ -8314,7 +8484,12 @@ begin
     begin
       TExpression(AVariable).FTopLevel := False;
     end;
-    result := result + AVariable.Decompile;
+    case DecompileType of
+      dtInternal: result := result + AVariable.Decompile;
+      dtDisplay: result := result + AVariable.DecompileDisplay;
+      else Assert(False);
+    end;
+
   end
   else
   begin
@@ -8322,9 +8497,19 @@ begin
   end;
 end;
 
+function TSignOperator.DecompileDisplay: string;
+begin
+  result := DecompileByType(dtDisplay);
+end;
+
 { TIntToDoubleExpression }
 
 function TIntToDoubleExpression.Decompile: string;
+begin
+  result := DecompileByType(dtInternal);
+end;
+
+function TIntToDoubleExpression.DecompileByType(DecompileType: TDecompileType): string;
 var
   ArrayLength: integer;
   AVariable: TConstant;
@@ -8337,7 +8522,18 @@ begin
   begin
     TExpression(AVariable).FTopLevel := FTopLevel;
   end;
-  result := AVariable.Decompile;
+  result := '';
+  case DecompileType of
+    dtInternal: result := AVariable.Decompile;
+    dtDisplay: result := AVariable.DecompileDisplay;
+    else Assert(False);
+  end;
+
+end;
+
+function TIntToDoubleExpression.DecompileDisplay: string;
+begin
+  result := DecompileByType(dtDisplay);
 end;
 
 procedure InitializeVariables;
@@ -8358,7 +8554,7 @@ begin
   OperatorList.Add(NotOperator);
   NotOperator.InputDataCount := 1;
   NotOperator.BFunctionAddr := _not;
-  NotOperator.Name := 'NOT';
+  NotOperator.Name := 'not';
   NotOperator.Prototype := 'Logical|not';
   NotOperator.InputDataTypes[0] := rdtBoolean;
   NotOperator.OptionalArguments := 0;
@@ -8367,7 +8563,7 @@ begin
   OperatorList.Add(XorOperator);
   XorOperator.InputDataCount := 2;
   XorOperator.BFunctionAddr := _Xor;
-  XorOperator.Name := 'XOR';
+  XorOperator.Name := 'xor';
   XorOperator.Prototype := 'Logical|xor';
   XorOperator.InputDataTypes[0] := rdtBoolean;
   XorOperator.InputDataTypes[1] := rdtBoolean;
@@ -9007,13 +9203,28 @@ begin
 end;
 
 function TVariableExpression.Decompile: string;
+begin
+  result := DecompileByType(dtInternal);
+end;
+
+function TVariableExpression.DecompileByType(DecompileType: TDecompileType): string;
 var
   AVariable: TConstant;
 begin
   Assert(Length(Data) = 1);
   AVariable := Data[0].Datum;
   Assert(AVariable <> nil);
-  result := AVariable.Decompile;
+  result := '';
+  case DecompileType of
+    dtInternal: result := AVariable.Decompile;
+    dtDisplay: result := AVariable.DecompileDisplay;
+    else Assert(False);
+  end;
+end;
+
+function TVariableExpression.DecompileDisplay: string;
+begin
+  result := DecompileByType(dtDisplay);
 end;
 
 procedure TVariableExpression.Evaluate;
@@ -9023,26 +9234,6 @@ begin
   resultVariable := Variables[0];
   assert(resultVariable.ResultType = ResultType);
   SetResultFromConstant(resultVariable, self);
-//  case ResultType of
-//    rdtDouble:
-//      begin
-//        PDouble(FResult)^ := PDouble(resultVariable.FResult)^;
-//      end;
-//    rdtInteger:
-//      begin
-//        PInteger(FResult)^ := PInteger(resultVariable.FResult)^;
-//      end;
-//    rdtBoolean:
-//      begin
-//        PBoolean(FResult)^ := PBoolean(resultVariable.FResult)^;
-//      end;
-//    rdtString:
-//      begin
-//        ResultString := resultVariable.ResultString;
-//      end;
-//  else
-//    Assert(False);
-//  end;
 
 end;
 
@@ -9056,7 +9247,7 @@ begin
   begin
     Line := Line + #9;
   end;
-  Line := Line + FUserName + #9 + Decompile;
+  Line := Line + FUserName + #9 + DecompileDisplay;
   List.Add(Line);
 end;
 

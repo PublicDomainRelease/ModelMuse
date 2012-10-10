@@ -1554,13 +1554,13 @@ begin
     begin
       case DataArray.DataType of
         rdtDouble:
-          Parser.CreateVariable(DataArray.Name, StrDataSets, 0, TRealVariable);
+          Parser.CreateVariable(DataArray.Name, StrDataSets, 0, TRealVariable, DataArray.Name);
         rdtInteger:
-          Parser.CreateVariable(DataArray.Name, StrDataSets, 0, TIntegerVariable);
+          Parser.CreateVariable(DataArray.Name, StrDataSets, 0, TIntegerVariable, DataArray.Name);
         rdtBoolean:
-          Parser.CreateVariable(DataArray.Name, StrDataSets, False, TBooleanVariable);
+          Parser.CreateVariable(DataArray.Name, StrDataSets, False, TBooleanVariable, DataArray.Name);
         rdtString:
-          Parser.CreateVariable(DataArray.Name, StrDataSets, '', TStringVariable);
+          Parser.CreateVariable(DataArray.Name, StrDataSets, '', TStringVariable, DataArray.Name);
       end;
     end;
   end;
@@ -6434,7 +6434,7 @@ begin
       end;
 
       DataSet := frmGoPhast.PhastModel.DataArrayManager.CreateNewDataArray(
-        TDataArray, NewDataSetName, NewFormula, [], NewDataType,
+        TDataArray, NewDataSetName, NewFormula, NewDataSetName, [], NewDataType,
         TEvaluatedAt(rgEvaluatedAt.ItemIndex), dsoTop,
         strDefaultClassification + '|' + StrCreatedFromShapefi);
 
@@ -8533,7 +8533,7 @@ begin
         dgFields.Cells[Ord(fgcAttributes),RowIndex]))) of
         xbfChar:
           begin
-            Parser.CreateVariable(VariableName, StrAttributes, '', TValueStr);
+            Parser.CreateVariable(VariableName, StrAttributes, '', TValueStr, VariableName);
           end;
         xbfNumber:
           begin
@@ -8541,16 +8541,16 @@ begin
               GetFieldNumberFromName(AnsiString(
               dgFields.Cells[Ord(fgcAttributes),RowIndex]))) = 0 then
             begin
-              Parser.CreateVariable(VariableName, StrAttributes, 0, TValueInt);
+              Parser.CreateVariable(VariableName, StrAttributes, 0, TValueInt, VariableName);
             end
             else
             begin
-              Parser.CreateVariable(VariableName, StrAttributes, 0.0, TValueReal);
+              Parser.CreateVariable(VariableName, StrAttributes, 0.0, TValueReal, VariableName);
             end;
           end;
         xbfLogic:
           begin
-            Parser.CreateVariable(VariableName, StrAttributes, False, TValueBool);
+            Parser.CreateVariable(VariableName, StrAttributes, False, TValueBool, VariableName);
           end;
       else
         Assert(False);

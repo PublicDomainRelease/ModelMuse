@@ -11,23 +11,7 @@ uses
 type
   TframeModpathSelection = class(TframePackage)
     pcModpath: TPageControl;
-    tabInput: TTabSheet;
-    rdeMaxSize: TRbwDataEntry;
-    comboEvtSink: TJvImageComboBox;
-    comboRchSource: TJvImageComboBox;
-    cbCompact: TCheckBox;
-    cbBinary: TCheckBox;
-    rdeBeginningTime: TRbwDataEntry;
-    rdeEndingTime: TRbwDataEntry;
-    lblEndingTime: TLabel;
-    lblBeginningTime: TLabel;
-    lblRchSource: TLabel;
-    lblEvtSink: TLabel;
-    lblMaxSize: TLabel;
     tabResponse: TTabSheet;
-    cbStopAfterMaxTime: TCheckBox;
-    rdeMaxTime: TRbwDataEntry;
-    lblMaxTime: TLabel;
     comboTrackingDirection: TJvImageComboBox;
     lblTrackingDirection: TLabel;
     lblWeakSinkTreatment: TLabel;
@@ -39,11 +23,6 @@ type
     lblStopZone: TLabel;
     comboWhichEndpoints: TJvImageComboBox;
     lblWhichEndpoints: TLabel;
-    cbComputeBudget: TCheckBox;
-    rdeErrorTolerance: TRbwDataEntry;
-    lblErrorTolerance: TLabel;
-    cbSummarize: TCheckBox;
-    cbBigBudget: TCheckBox;
     rgOutputMode: TRadioGroup;
     lblReferenceTime: TLabel;
     rdeReferenceTime: TRbwDataEntry;
@@ -61,8 +40,56 @@ type
     lblParticleInterval: TLabel;
     lblMaxTimes: TLabel;
     rdeMaxTimes: TRbwDataEntry;
+    tsVersion6Options: TTabSheet;
+    lblWeakSource: TLabel;
+    comboWeakSource: TJvImageComboBox;
+    lblStopOption: TLabel;
+    comboStopOption: TJvImageComboBox;
+    lblStopTime: TLabel;
+    rdeStopTime: TRbwDataEntry;
+    lblBudget: TLabel;
+    comboBudget: TJvImageComboBox;
+    lblTraceID: TLabel;
+    rdeTraceID: TRbwDataEntry;
+    chkRetardation: TCheckBox;
+    lblAdvObs: TLabel;
+    comboAdvObs: TJvImageComboBox;
+    tabVersion5Options: TTabSheet;
+    cbCompact: TCheckBox;
+    cbBinary: TCheckBox;
+    rdeBeginningTime: TRbwDataEntry;
+    rdeEndingTime: TRbwDataEntry;
+    rdeMaxSize: TRbwDataEntry;
+    lblBeginningTime: TLabel;
+    lblEndingTime: TLabel;
+    lblMaxSize: TLabel;
+    lblErrorTolerance: TLabel;
+    rdeErrorTolerance: TRbwDataEntry;
+    cbComputeBudget: TCheckBox;
+    cbSummarize: TCheckBox;
+    cbBigBudget: TCheckBox;
+    cbStopAfterMaxTime: TCheckBox;
+    lblMaxTime: TLabel;
+    rdeMaxTime: TRbwDataEntry;
     lblReleaseTime: TLabel;
     rdeReleaseTime: TRbwDataEntry;
+    rgModpathVersion: TRadioGroup;
+    comboEvtSink: TJvImageComboBox;
+    lblEvtSink: TLabel;
+    comboRchSource: TJvImageComboBox;
+    lblRchSource: TLabel;
+    comboUzfIface: TJvImageComboBox;
+    lblUzfIface: TLabel;
+    lblMnw2Iface: TLabel;
+    comboMnw2Iface: TJvImageComboBox;
+    lblResIface: TLabel;
+    comboResIface: TJvImageComboBox;
+    lblSfrIface: TLabel;
+    comboSfrIface: TJvImageComboBox;
+    lblEtsIface: TLabel;
+    comboEtsIface: TJvImageComboBox;
+    lblLakIface: TLabel;
+    comboLakIface: TJvImageComboBox;
     procedure seTimeCountChange(Sender: TObject);
     procedure rdgTimesEndUpdate(Sender: TObject);
     procedure sbAddRowClick(Sender: TObject);
@@ -77,6 +104,9 @@ type
     procedure rcSelectionControllerEnabledChange(Sender: TObject);
     procedure comboTimeMethodChange(Sender: TObject);
     procedure comboTrackingDirectionChange(Sender: TObject);
+    procedure rgModpathVersionClick(Sender: TObject);
+    procedure comboStopOptionChange(Sender: TObject);
+    procedure comboBudgetChange(Sender: TObject);
   private
     FGettingData: Boolean;
     procedure UpdateTimes;
@@ -114,6 +144,9 @@ resourcestring
   StrStopComputingPathsSpec = 'Stop computing paths after a specified tracki' +
   'ng time';
   StrMaximumTrackingTim = 'Maximum tracking time';
+  StrResponseFileOption = 'Response file options';
+  StrSimulationFileOpti = 'Simulation file options';
+  StrStopIfExitingFlow = 'Stop if exiting flow fraction is above threshold';
 
 {$R *.dfm}
 
@@ -136,6 +169,20 @@ begin
   inherited;
   EnableStopZone;
   EnableWhichEndPointsRecorded;
+end;
+
+procedure TframeModpathSelection.comboBudgetChange(Sender: TObject);
+begin
+  inherited;
+  rdeTraceID.Enabled := (comboBudget.ItemIndex = 3)
+    and rcSelectionController.Enabled;
+end;
+
+procedure TframeModpathSelection.comboStopOptionChange(Sender: TObject);
+begin
+  inherited;
+  rdeStopTime.Enabled := (comboStopOption.ItemIndex = 2)
+    and rcSelectionController.Enabled;
 end;
 
 procedure TframeModpathSelection.comboTimeMethodChange(Sender: TObject);
@@ -188,6 +235,9 @@ begin
         StrStopComputingPathsSpec;
       lblMaxTime.Caption := StrMaximumTrackingTim;
     end;
+    rgModpathVersion.ItemIndex := Ord(ModpathSource.MpathVersion);
+    rgModpathVersionClick(nil);
+
     comboTrackingDirection.ItemIndex := Ord(ModpathSource.TrackingDirection);
     EnableTimeControls;
     EnableBeginAndEndTime;
@@ -238,6 +288,23 @@ begin
 
     rdeReleaseTime.Text := FloatToStr(ModpathSource.BackwardsTrackingReleaseTime);
 
+    // version 6
+    comboWeakSource.ItemIndex := Ord(ModpathSource.WeakSource);
+    comboStopOption.ItemIndex := Ord(ModpathSource.StopOption);
+    rdeStopTime.Text := FloatToStr(ModpathSource.StopTime);
+    comboBudget.ItemIndex := Ord(ModpathSource.BudgetChecking);
+    rdeTraceID.Text := IntToStr(ModpathSource.TraceID);
+    chkRetardation.Checked := ModpathSource.RetardationOption = roUsed;
+    comboAdvObs.ItemIndex := Ord(ModpathSource.AdvectiveObservations);
+
+    comboEtsIface.ItemIndex := Ord(ModpathSource.Ets_Sink);
+    comboUzfIface.ItemIndex := Ord(ModpathSource.Uzf_Source);
+    comboMnw2Iface.ItemIndex := Ord(ModpathSource.Mnw2_Source);
+    comboResIface.ItemIndex := Ord(ModpathSource.Res_Source);
+    comboSfrIface.ItemIndex := Ord(ModpathSource.Sfr_Source);
+    comboLakIface.ItemIndex := Ord(ModpathSource.Lak_Source);
+
+
     EnableErrorTolerance;
     EnableMaxTime;
     EnableSinkThreshold;
@@ -258,12 +325,17 @@ begin
 //    and frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel;
 //  rdeEndingTime.Enabled := rdeBeginningTime.Enabled;
 
+  EnableTimeControls;
   SetTimeControlsEnabled;
   EnableStopZone;
   EnableMaxTime;
   EnableSinkThreshold;
   EnableErrorTolerance;
   EnableWhichEndPointsRecorded;
+  comboStopOptionChange(nil);
+  comboBudgetChange(nil);
+  rgOutputModeClick(nil);
+  rgModpathVersionClick(nil);
 end;
 
 procedure TframeModpathSelection.rdgTimesBeforeDrawCell(Sender: TObject; ACol,
@@ -283,11 +355,67 @@ begin
   UpdateTimes;
 end;
 
+procedure TframeModpathSelection.rgModpathVersionClick(Sender: TObject);
+begin
+  inherited;
+  case rgModpathVersion.ItemIndex of
+    0:
+      begin
+        tabResponse.Caption := StrResponseFileOption;
+        tsVersion6Options.TabVisible := False;
+        tabVersion5Options.TabVisible := True;
+        while comboWeakSinkTreatment.Items.Count < 3 do
+        begin
+          comboWeakSinkTreatment.Items.Add;
+        end;
+
+        comboWeakSinkTreatment.Items[2].Text := StrStopIfExitingFlow;
+        end;
+    1:
+      begin
+        tabResponse.Caption := StrSimulationFileOpti;
+        tsVersion6Options.TabVisible := True;
+        tabVersion5Options.TabVisible := False;
+        while comboWeakSinkTreatment.Items.Count > 2 do
+        begin
+          comboWeakSinkTreatment.Items.Delete(
+            comboWeakSinkTreatment.Items.Count-1);
+        end;
+        if comboWeakSinkTreatment.ItemIndex < 0 then
+        begin
+          comboWeakSinkTreatment.ItemIndex := 1;
+        end;
+      end;
+    else
+      Assert(False);
+  end;
+  cbCompact.Enabled := rcSelectionController.Enabled
+    and (rgModpathVersion.ItemIndex = 0);
+  cbBinary.Enabled := rcSelectionController.Enabled
+    and (rgModpathVersion.ItemIndex = 0);
+  rdeMaxSize.Enabled := rcSelectionController.Enabled
+    and (rgModpathVersion.ItemIndex = 0);
+  cbComputeBudget.Enabled := rcSelectionController.Enabled
+    and (rgModpathVersion.ItemIndex = 0);
+  cbSummarize.Enabled := rcSelectionController.Enabled
+    and (rgModpathVersion.ItemIndex = 0);
+  cbBigBudget.Enabled := rcSelectionController.Enabled
+    and (rgModpathVersion.ItemIndex = 0);
+  cbStopAfterMaxTime.Enabled := rcSelectionController.Enabled
+    and (rgModpathVersion.ItemIndex = 0);
+  EnableBeginAndEndTime;
+  EnableWhichEndPointsRecorded;
+
+
+end;
+
 procedure TframeModpathSelection.rgOutputModeClick(Sender: TObject);
 begin
   inherited;
   SetTimeControlsEnabled;
   EnableWhichEndPointsRecorded;
+  comboAdvObs.Enabled := (rgOutputMode.ItemIndex = 2)
+    and rcSelectionController.Enabled;
 //  EnableStopZone;
   UpdateMaxTimes;
 end;
@@ -338,6 +466,8 @@ var
 begin
   inherited;
   ModpathSource := Package as TModpathSelection;
+  ModpathSource.MpathVersion := TMpathVersion(rgModpathVersion.ItemIndex);
+
   ModpathSource.MaximumSize := StrToInt(rdeMaxSize.Text);
   ModpathSource.EVT_Sink :=
     TSurfaceApplicationPosition(comboEvtSink.ItemIndex);
@@ -385,30 +515,49 @@ begin
   ModpathSource.TimeSeriesInterval := StrToFloat(rdeParticleInterval.Text);
   ModpathSource.TimeSeriesMaxCount := StrToInt(rdeMaxTimes.Text);
   ModpathSource.BackwardsTrackingReleaseTime := StrToFloat(rdeReleaseTime.Text);
+  // version 6
+  ModpathSource.WeakSource := TWeakSink(comboWeakSource.ItemIndex);
+  ModpathSource.StopOption := TStopOption(comboStopOption.ItemIndex);
+  ModpathSource.StopTime := StrTofloat(rdeStopTime.Text);
+  ModpathSource.BudgetChecking := TBudgetChecking(comboBudget.ItemIndex);
+  ModpathSource.TraceID := StrToInt(rdeTraceID.Text);
+  ModpathSource.RetardationOption := TRetardationOption(chkRetardation.Checked);
+  ModpathSource.AdvectiveObservations := TAdvectiveObservations(comboAdvObs.ItemIndex);
+  ModpathSource.Ets_Sink := TSurfaceApplicationPosition(comboEtsIface.ItemIndex);
+  ModpathSource.Uzf_Source := TSurfaceApplicationPosition(comboUzfIface.ItemIndex);
+  ModpathSource.Mnw2_Source := TSurfaceApplicationPosition(comboMnw2Iface.ItemIndex);
+  ModpathSource.Res_Source := TSurfaceApplicationPosition(comboResIface.ItemIndex);
+  ModpathSource.Sfr_Source := TSurfaceApplicationPosition(comboSfrIface.ItemIndex);
+  ModpathSource.Lak_Source := TSurfaceApplicationPosition(comboLakIface.ItemIndex);
 end;
 
 procedure TframeModpathSelection.EnableBeginAndEndTime;
 begin
   rdeBeginningTime.Enabled := rcSelectionController.Enabled
+    and (rgModpathVersion.ItemIndex = 0)
     and frmGoPhast.PhastModel.ModflowStressPeriods.CompletelyTransient;
   rdeEndingTime.Enabled := rcSelectionController.Enabled
+    and (rgModpathVersion.ItemIndex = 0)
     and frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel;
 end;
 
 procedure TframeModpathSelection.EnableTimeControls;
 begin
-  rdeReferenceTime.Enabled :=
-    frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel
-    and (comboTrackingDirection.ItemIndex = 0);
-  rdeReleaseTime.Enabled :=
-    frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel
+
+  rdeReferenceTime.Enabled := rcSelectionController.Enabled
+    and ((rgModpathVersion.ItemIndex = 1)
+    or (frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel
+    and (comboTrackingDirection.ItemIndex = 0)));
+  rdeReleaseTime.Enabled := rcSelectionController.Enabled
+    and frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel
     and (comboTrackingDirection.ItemIndex = 1);
 end;
 
 procedure TframeModpathSelection.EnableWhichEndPointsRecorded;
 begin
   comboWhichEndpoints.Enabled := cbStopInZone.Checked
-    and (rgOutputMode.ItemIndex = 0) and rcSelectionController.Enabled;
+    and (rgOutputMode.ItemIndex = 0) and rcSelectionController.Enabled
+    and (rgModpathVersion.ItemIndex = 0);
 end;
 
 procedure TframeModpathSelection.UpdateMaxTimes;

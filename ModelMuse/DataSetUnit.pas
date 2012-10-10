@@ -407,6 +407,7 @@ type
     FUpdatingProgress: Boolean;
     FUseLgrEdgeCells: TLgrCellTreatment;
     FUnicodeSaved: Boolean;
+    FDisplayName: string;
     // See @link(TwoDInterpolatorClass).
     function GetTwoDInterpolatorClass: string;
     // @name is called if an invalid formula has been specified.
@@ -469,6 +470,9 @@ type
     procedure ReadCompressedData(Stream: TStream);
     procedure WriteCompressedData(Stream: TStream);
     procedure SetUnicodeSaved(const Value: Boolean);
+    procedure SetDisplayName(const Value: string);
+    function GetDisplayName: string;
+    function GetDisplayFormula: string;
   protected
     // See @link(DimensionsChanged).
     FDimensionsChanged: boolean;
@@ -645,6 +649,7 @@ type
     function DisplayRealValue: boolean; virtual;
     // @name is the formula used to assign values to the @classname.
     property Formula: string read GetFormula write SetFormula;
+    property DisplayFormula: string read GetDisplayFormula write SetFormula;
     // @name is the formula that is used to simulate how
     // MODFLOW parameters are used in MODFLOW.
     property ParameterFormula: string read FParameterFormula
@@ -780,6 +785,7 @@ type
     procedure AssignProperties(Source: TDataArray); virtual;
     property Model: TBaseModel read FModel;
     property UseLgrEdgeCells: TLgrCellTreatment read FUseLgrEdgeCells write FUseLgrEdgeCells;
+    property DisplayName: string read GetDisplayName write SetDisplayName;
   published
     // @name indicates the hierarchical position of this instance of
     // @classname when it is required by MODFLOW.
@@ -2949,6 +2955,15 @@ begin
   FDimensionsChanged := False;
 end;
 
+procedure TDataArray.SetDisplayName(const Value: string);
+begin
+  if FDisplayName <> Value then
+  begin
+    FDisplayName := Value;
+    frmGoPhast.InvalidateModel;
+  end;
+end;
+
 procedure TDataArray.SetFormula(const Value: string);
 var
   P: Pointer;
@@ -3266,7 +3281,8 @@ begin
     for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
     begin
       ChildItem := LocalModel.ChildModels[ChildIndex];
-      ChildDataArray := ChildItem.ChildModel.DataArrayManager.GetDataSetByName(Name);
+      ChildDataArray := ChildItem.ChildModel.DataArrayManager.
+        GetDataSetByName(Name);
       if ChildDataArray <> nil then
       begin
         ChildDataArray.UpdateWithName(AName);
@@ -3489,6 +3505,24 @@ begin
     end;
   end;
   result := LocalModel.GetCompiler(Orientation, EvaluatedAt);
+end;
+
+function TDataArray.GetDisplayFormula: string;
+begin
+  Assert(FFormulaObject <> nil);
+  result := FFormulaObject.DisplayFormula;
+end;
+
+function TDataArray.GetDisplayName: string;
+begin
+  if FDisplayName = '' then
+  begin
+    result := Name;
+  end
+  else
+  begin
+    result := FDisplayName;
+  end;
 end;
 
 function TDataArray.GetFormula: string;

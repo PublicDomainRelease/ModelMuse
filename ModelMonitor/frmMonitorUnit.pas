@@ -170,6 +170,7 @@ type
     FDone: Boolean;
     FPriorSolving: Boolean;
     FPriorLine: string;
+    FProblem: Boolean;
     procedure GetListFile(AFileName: string; ListFiles: TStringList);
     procedure FindStart(RichEdit: TRichEdit; PositionInLine: integer;
       out SelStart: integer);
@@ -202,6 +203,9 @@ resourcestring
   StrFIRSTENTRYINNAME = 'FIRST ENTRY IN NAME FILE MUST BE "LIST".';
   StrFAILEDTOMEETSOLVE = 'FAILED TO MEET SOLVER CONVERGENCE CRITERIA';
   StrNoListFileInName = 'No list file in name file.';
+
+const
+  WarningColor = clYellow;
 
 {$R *.dfm}
 
@@ -261,6 +265,10 @@ var
   FileReaderIndex: Integer;
   ListHandler: TListFileHandler;
 begin
+  if FProblem then
+  begin
+    Exit;
+  end;
   CreateFileReaders;
   FReading1 := True;
   try
@@ -341,6 +349,7 @@ var
 begin
   if timerReadOutput.Enabled then
   begin
+    FProblem := False;
     btnRun.Caption := StrStartModel;
     FShouldAbort := True;
     timerReadOutput.Enabled := False;
@@ -765,6 +774,10 @@ var
   ModelCaption: string;
   ANode: TTreeNode;
 begin
+  if FProblem then
+  begin
+    Exit;
+  end;
 //  if FOutFile = '' then
 //  begin
 //    FreeAndNil(FMonitorTextReader);
@@ -781,6 +794,10 @@ begin
     Exit;
   end;
 
+  if treeNavigation.Items.Count = 0 then
+  begin
+    Exit;
+  end;
   ANode := treeNavigation.Items[treeNavigation.Items.Count-1];
   treeNavigation.Items.Delete(ANode);
 
@@ -805,8 +822,19 @@ begin
           ModelCaption := 'Child ' + IntToStr(FileHandlerIndex) + ' ';
         end;
       end;
-      FileHandler := TListFileHandler.Create(AListingFile, jvplMain,
-        treeNavigation, ModelCaption, FListFilesNames.Count > 1);
+      FileHandler := nil;
+      try
+        FileHandler := TListFileHandler.Create(AListingFile, jvplMain,
+          treeNavigation, ModelCaption, FListFilesNames.Count > 1);
+      except on EAccessViolation do
+        begin
+          FProblem := True;
+          Beep;
+          MessageDlg('Unable to open ' + AListingFile, mtError, [mbOK], 0);
+//          FileHandler.Free;
+          Exit;
+        end;
+      end;
       FileHandler.OnStatusChanged := StatusChanged;
       FListFileHandlers.Add(FileHandler);
     end
@@ -836,11 +864,11 @@ var
     case AStatus of
       scWarning:
         begin
-          AColor := clRed;
+          AColor := WarningColor;
         end;
       scError:
         begin
-          AColor := clYellow;
+          AColor := clRed;
         end;
       else Assert(False);
     end;
@@ -1030,14 +1058,17 @@ procedure TfrmMonitor.SetPageStatus(APage: TJvStandardPage;
 var
   ANode: TTreeNode;
 begin
-  ANode := treeNavigation.Items[APage.PageIndex];
-  if Status = scNone then
+  if treeNavigation.Items.Count > APage.PageIndex then
   begin
-    ANode.StateIndex := -1;
-  end
-  else
-  begin
-    ANode.StateIndex := Ord(Status)+1;
+    ANode := treeNavigation.Items[APage.PageIndex];
+    if Status = scNone then
+    begin
+      ANode.StateIndex := -1;
+    end
+    else
+    begin
+      ANode.StateIndex := Ord(Status)+1;
+    end;
   end;
 end;
 
@@ -1059,7 +1090,7 @@ var
   FileReaderIndex: Integer;
   ListHandler : TListFileHandler;
 begin
-  if FReading2 then
+  if FReading2 or FProblem then
   begin
     Exit;
   end;
@@ -1240,6 +1271,8 @@ begin
   FErrorMessages.Parent := FListingTabSheet;
   FErrorMessages.Align := alClient;
   FErrorMessages.WordWrap := False;
+  FErrorMessages.ScrollBars := ssBoth;
+  FErrorMessages.Color := clSilver;
 
   CreateNewTabSheet(FResultsTabSheet, 'Results', FResultsNode);
 
@@ -1268,8 +1301,14 @@ begin
   FPercentCumulative.Free;
 
 
-  FTree.Items.Delete(FListingNode);
-  FTree.Items.Delete(FResultsNode);
+  if FListingNode <> nil then
+  begin
+    FTree.Items.Delete(FListingNode);
+  end;
+  if FResultsNode <> nil then
+  begin
+    FTree.Items.Delete(FResultsNode);
+  end;
   if FParentNode <> nil then
   begin
     FTree.Items.Delete(FParentNode);
@@ -1354,7 +1393,7 @@ begin
   if IsError or IsWarning then
   begin
     FErrorMessages.Lines.Add(ALine);
-    HandleProblem(IsWarning, clYellow, FWarningPositions, WarningValues);
+    HandleProblem(IsWarning, WarningColor, FWarningPositions, WarningValues);
     HandleProblem(IsError, clRed, FErrorPositions, ErrorValues);
   end;
 end;
@@ -1399,10 +1438,10 @@ begin
 //        FErrorMessages.SetSelection(SelStart, SelStart + Length(EV[Index]), True);
         FErrorMessages.SelAttributes.Color := AColor;
 //        FErrorMessages.SelAttributes.BackColor := AColor;
-        if AColor = clRed then
-        begin
-          FErrorMessages.SelAttributes.Color := clWhite;
-        end;
+//        if AColor = clRed then
+//        begin
+//          FErrorMessages.SelAttributes.Color := clWhite;
+//        end;
         FErrorMessages.SelLength := 0;
 //        FErrorMessages.SetSelection(SelStart, SelStart, True);
       end;

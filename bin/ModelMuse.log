@@ -1,0 +1,26 @@
+0	 (I)  	Thread ID 6196	Log subsystem started in elapsed time mode.
+31	 (I)  	Thread ID 5440	Service thread started
+405	 (i)  	Thread ID 5440	Temporary rendering context created
+405	 (I)  	Thread ID 5440	Getting OpenGL entry points and extension
+405	 (I)  	Thread ID 5440	
+405	 (i)  	Thread ID 5440	OpenGL rendering context information:
+405	 (i)  	Thread ID 5440	Renderer     : Quadro NVS 295/PCIe/SSE2
+405	 (i)  	Thread ID 5440	Vendor       : NVIDIA Corporation
+405	 (i)  	Thread ID 5440	Version      : 3.3.0
+405	 (i)  	Thread ID 5440	GLSL version : 3.30 NVIDIA via Cg compiler
+405	 (I)  	Thread ID 5440	
+421	 (I)  	Thread ID 5440	Getting OpenGL entry points and extension
+436	 (i)  	Thread ID 5440	Backward compatible core PBuffer context successfully created
+436	 (I)  	Thread ID 5440	Service context successfuly initialized
+11668	 (i)  	Thread ID 6196	Temporary rendering context created
+11668	 (I)  	Thread ID 6196	Getting OpenGL entry points and extension
+11668	 (i)  	Thread ID 6196	Temporary rendering context destroyed
+11684	 (I)  	Thread ID 6196	Getting OpenGL entry points and extension
+11700	 (i)  	Thread ID 6196	Temporary rendering context created
+11700	 (I)  	Thread ID 6196	Getting OpenGL entry points and extension
+11700	 (i)  	Thread ID 6196	Temporary rendering context destroyed
+11700	 (I)  	Thread ID 6196	Getting OpenGL entry points and extension
+11918	 (I)  	Thread ID 5440	Service thread finished
+11918	 (D)  	Thread ID 6196	Service thread destroyed
+11918	 (i)  	Thread ID 6196	Logged fatal errors: 0, errors: 0, warnings: 0, titles: 11, infos: 11, debug info: 1
+11918	 (i)  	Thread ID 6196	Log session shutdown

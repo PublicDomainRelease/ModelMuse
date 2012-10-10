@@ -8,7 +8,7 @@ uses
   ComCtrls, JvExComCtrls, JvPageListTreeView, JvExControls, StdCtrls, Buttons,
   frameHeadObservationResultsUnit, frameModpathDisplayUnit,
   frameModpathTimeSeriesDisplayUnit, frameModpathEndpointDisplayUnit,
-  frameCustomColorUnit, frameColorGridUnit, frameContourDataUnit, JvRichEdit;
+  frameCustomColorUnit, frameColorGridUnit, frameContourDataUnit{, JvRichEdit};
 
 type
   TPostPages = (ppColorGrid, ppContourData, ppPathline, ppEndPoints,
@@ -66,6 +66,15 @@ implementation
 uses
   frmGoPhastUnit, PhastModelUnit, GoPhastTypes, ModflowPackagesUnit;
 
+resourcestring
+  StrColorGrid = 'Color Grid';
+  StrContourData = 'Contour Data';
+  StrMODPATHPathlines = 'MODPATH Pathlines';
+  StrMODPATHEndPoints = 'MODPATH End Points';
+  StrMODPATHTimeSeries = 'MODPATH Time Series';
+  StrHeadObservationRes = 'Head Observation Results';
+  StrStreamLinks = 'Stream Links';
+
 {$R *.dfm}
 
 procedure UpdateFrmDisplayData(Force: boolean = false);
@@ -85,11 +94,29 @@ begin
 end;
 
 procedure TfrmDisplayData.FormCreate(Sender: TObject);
+var
+  Node: TJvPageIndexNode;
 begin
   inherited;
   AdjustFormPosition(dpRight);
   Handle;
   tvpglstMain.Handle;
+
+  tvpglstMain.Items.Clear;
+  Node := tvpglstMain.Items.Add(nil, StrColorGrid) as TJvPageIndexNode;
+  Node.PageIndex := 5;
+  Node := tvpglstMain.Items.Add(nil, StrContourData) as TJvPageIndexNode;
+  Node.PageIndex := 6;
+  Node := tvpglstMain.Items.Add(nil, StrMODPATHPathlines) as TJvPageIndexNode;
+  Node.PageIndex := 0;
+  Node := tvpglstMain.Items.Add(nil, StrMODPATHEndPoints) as TJvPageIndexNode;
+  Node.PageIndex := 4;
+  Node := tvpglstMain.Items.Add(nil, StrMODPATHTimeSeries) as TJvPageIndexNode;
+  Node.PageIndex := 3;
+  Node := tvpglstMain.Items.Add(nil, StrHeadObservationRes) as TJvPageIndexNode;
+  Node.PageIndex := 2;
+  Node := tvpglstMain.Items.Add(nil, StrStreamLinks) as TJvPageIndexNode;
+  Node.PageIndex := 1;
 end;
 
 procedure TfrmDisplayData.frameContourDatavirttreecomboDataSetsChange(
@@ -138,11 +165,17 @@ begin
   Assert(Ord(High(TPostPages)) = tvpglstMain.Items.Count-1);
 
   tvpglstMain.Items[Ord(ppPathline)].Enabled :=
-    ModpathSelected or (LocalModel.PathLines.Lines.Count > 0);
+    ModpathSelected
+    or (LocalModel.PathLines.Lines.Count > 0)
+    or (LocalModel.PathLines.LinesV6.Count > 0);
   tvpglstMain.Items[Ord(ppEndPoints)].Enabled :=
-    ModpathSelected or (LocalModel.EndPoints.Points.Count > 0);
+    ModpathSelected
+    or (LocalModel.EndPoints.Points.Count > 0)
+    or (LocalModel.EndPoints.PointsV6.Count > 0);
   tvpglstMain.Items[Ord(ppTimeSeries)].Enabled :=
-    ModpathSelected or (LocalModel.TimeSeries.Series.Count > 0);
+    ModpathSelected
+    or (LocalModel.TimeSeries.Series.Count > 0)
+    or (LocalModel.TimeSeries.SeriesV6.Count > 0);
   tvpglstMain.Items[Ord(ppHeadObs)].Enabled :=
     HeadObsSelected or (LocalModel.HeadObsResults.Count > 0);
   tvpglstMain.Items[Ord(ppStreamLink)].Enabled := SfrSelected;

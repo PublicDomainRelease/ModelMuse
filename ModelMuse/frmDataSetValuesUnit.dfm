@@ -10,52 +10,52 @@ inherited frmDataSetValues: TfrmDataSetValues
   TextHeight = 18
   object Panel1: TPanel
     Left = 0
-    Top = 199
+    Top = 160
     Width = 548
-    Height = 105
+    Height = 144
     Align = alBottom
-    TabOrder = 0
+    TabOrder = 2
     DesignSize = (
       548
-      105)
+      144)
     object lblDataSet: TLabel
-      Left = 12
-      Top = 46
+      Left = 4
+      Top = 78
       Width = 59
       Height = 18
       Caption = 'Data set'
     end
     object lblModel: TLabel
-      Left = 12
-      Top = 14
+      Left = 4
+      Top = 46
       Width = 43
       Height = 18
       Caption = 'Model'
     end
     object btnClose: TBitBtn
-      Left = 467
-      Top = 76
+      Left = 459
+      Top = 108
       Width = 75
       Height = 25
       Anchors = [akTop, akRight]
       Kind = bkClose
       NumGlyphs = 2
-      TabOrder = 0
+      TabOrder = 6
     end
     object btnHelp: TBitBtn
-      Left = 467
-      Top = 44
+      Left = 459
+      Top = 76
       Width = 75
       Height = 25
       Anchors = [akTop, akRight]
       Kind = bkHelp
       NumGlyphs = 2
-      TabOrder = 1
+      TabOrder = 4
       OnClick = btnHelpClick
     end
     object btnCopy: TButton
-      Left = 467
-      Top = 12
+      Left = 459
+      Top = 44
       Width = 75
       Height = 25
       Anchors = [akTop, akRight]
@@ -65,18 +65,18 @@ inherited frmDataSetValues: TfrmDataSetValues
       OnClick = btnCopyClick
     end
     object comboModel: TComboBox
-      Left = 89
-      Top = 11
+      Left = 81
+      Top = 43
       Width = 356
       Height = 26
       Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]
-      TabOrder = 3
+      TabOrder = 1
       OnChange = comboModelChange
     end
     object treecomboDataSets: TRbwStringTreeCombo
-      Left = 89
-      Top = 43
+      Left = 81
+      Top = 75
       Width = 356
       Height = 26
       Tree.Left = 0
@@ -121,12 +121,12 @@ inherited frmDataSetValues: TfrmDataSetValues
         EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
         EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00}
       NumGlyphs = 2
-      TabOrder = 4
+      TabOrder = 3
       OnChange = treecomboDataSetsChange
     end
     object comboOrientation: TComboBox
-      Left = 89
-      Top = 75
+      Left = 81
+      Top = 107
       Width = 356
       Height = 26
       Style = csDropDownList
@@ -140,12 +140,23 @@ inherited frmDataSetValues: TfrmDataSetValues
         'Row'
         'Column')
     end
+    object btnSave: TButton
+      Left = 459
+      Top = 13
+      Width = 75
+      Height = 25
+      Anchors = [akTop, akRight]
+      Caption = 'Save'
+      Enabled = False
+      TabOrder = 0
+      OnClick = btnSaveClick
+    end
   end
   object pcDataSet: TPageControl
     Left = 97
     Top = 0
     Width = 451
-    Height = 199
+    Height = 160
     Align = alClient
     TabOrder = 1
   end
@@ -153,10 +164,10 @@ inherited frmDataSetValues: TfrmDataSetValues
     Left = 0
     Top = 0
     Width = 97
-    Height = 199
+    Height = 160
     Align = alLeft
     Caption = 'Panel2'
-    TabOrder = 2
+    TabOrder = 0
     object lblLayer: TLabel
       AlignWithMargins = True
       Left = 4
@@ -172,7 +183,7 @@ inherited frmDataSetValues: TfrmDataSetValues
       Left = 1
       Top = 25
       Width = 95
-      Height = 173
+      Height = 134
       Align = alClient
       ItemHeight = 18
       Background.FillMode = bfmTile
@@ -180,5 +191,11 @@ inherited frmDataSetValues: TfrmDataSetValues
       TabOrder = 0
       OnMouseUp = lbLayersMouseUp
     end
+  end
+  object dlgSave: TSaveDialog
+    DefaultExt = '.txt'
+    Filter = 'Text files *.txt|*.txt|All Files (*.*)|*.*'
+    Left = 264
+    Top = 16
   end
 end

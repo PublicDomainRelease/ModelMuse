@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ExtCtrls, JvExStdCtrls,
-  UndoItems, StrUtils, JvExControls, JvLinkLabel, Vcl.ComCtrls;
+  UndoItems, StrUtils, JvExControls, JvLinkLabel, ComCtrls;
 
 type
   TfrmFilesToArchive = class(TfrmCustomGoPhast)
@@ -142,7 +142,7 @@ procedure TfrmFilesToArchive.JvLinkLabel1LinkClick(Sender: TObject;
   LinkNumber: Integer; LinkText, LinkParam: string);
 begin
   inherited;
-  TWebTools.OpenWebPage('http://water.usgs.gov/admin/memo/GW/gw00.02.html');
+  TWebTools.OpenWebPage('http://water.usgs.gov/admin/memo/GW/gw11.01.html');
 end;
 
 procedure TfrmFilesToArchive.ColorText;
@@ -168,7 +168,7 @@ begin
     while EndPosition >= 1 do
     begin
       reFilesToSave.SelStart := StartPosition;
-      reFilesToSave.SelLength := EndPosition-1;
+      reFilesToSave.SelLength := EndPosition-1-StartPosition;
       FileName := Trim(reFilesToSave.SelText);
       if not FileExists(FileName) then
       begin
@@ -181,7 +181,7 @@ begin
     reFilesToSave.SelStart := StartPosition;
     reFilesToSave.SelLength := MAXINT;
     FileName := Trim(reFilesToSave.SelText);
-    if not FileExists(FileName) then
+    if (FileName <> '') and not FileExists(FileName) then
     begin
       reFilesToSave.SelAttributes.Color := clRed;
     end;

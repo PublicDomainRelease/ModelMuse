@@ -4,9 +4,9 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
   Caption = 'MODFLOW Output Control'
   ClientHeight = 403
   ClientWidth = 549
-  ExplicitWidth = 557
-  ExplicitHeight = 437
-  PixelsPerInch = 96
+  ExplicitWidth = 567
+  ExplicitHeight = 448
+  PixelsPerInch = 120
   TextHeight = 18
   object JvNetscapeSplitter1: TJvNetscapeSplitter
     Left = 121
@@ -32,15 +32,13 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       41)
     object btnHelp: TBitBtn
       Left = 285
-      Top = 7
+      Top = 6
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 1
+      TabOrder = 0
       OnClick = btnHelpClick
     end
     object btnOK: TBitBtn
@@ -49,23 +47,19 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 0
+      TabOrder = 1
       OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
       Left = 461
-      Top = 7
+      Top = 6
       Width = 83
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
   end
@@ -124,8 +118,8 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       object cbPrintInputArrays: TJvCheckBox
         Left = 6
         Top = 3
-        Width = 137
-        Height = 18
+        Width = 140
+        Height = 20
         Caption = 'Print input arrays'
         Checked = True
         State = cbChecked
@@ -141,8 +135,8 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       object cbPrintInputCellLists: TJvCheckBox
         Left = 6
         Top = 26
-        Width = 148
-        Height = 18
+        Width = 151
+        Height = 20
         Caption = 'Print input cell lists'
         Checked = True
         State = cbChecked
@@ -346,8 +340,8 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       object cbCompact: TJvCheckBox
         Left = 16
         Top = 31
-        Width = 137
-        Height = 18
+        Width = 140
+        Height = 20
         Caption = 'Compact budget'
         Checked = True
         State = cbChecked
@@ -520,7 +514,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
         inherited Panel: TPanel
           Top = 121
           Width = 418
-          ExplicitTop = 149
+          ExplicitTop = 121
           ExplicitWidth = 418
           inherited lbNumber: TLabel
             Width = 218
@@ -573,7 +567,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
               AutoAdjustColWidths = True
             end>
           ExplicitWidth = 418
-          ExplicitHeight = 149
+          ExplicitHeight = 121
         end
       end
     end

@@ -32,13 +32,10 @@ type
     FLayerGroup: TCustomLayerGroup;
     procedure InvalidateModel;
     procedure Sort;
-//    function GetItem(Index: Integer): TLayerFraction;
-//    procedure SetItem(Index: Integer; const Value: TLayerFraction);
   public
     function IsSame(AnotherLayerCollection: TLayerCollection): boolean;
     procedure Assign(Source: TPersistent); override;
     constructor Create(LayerGroup: TCustomLayerGroup);
-//    property Items[Index: Integer]: TLayerFraction read GetItem write SetItem; default;
   end;
 
   TCustomLayerStructure = class;
@@ -48,6 +45,7 @@ type
   private
     FDataArrayName: string;
     FAquiferName: string;
+    FAquiferDisplayName: string;
     FGrowthMethod: TGrowthMethod;
     FGrowthRate: real;
     {@name defines the layer or layers in @classname.}
@@ -59,7 +57,8 @@ type
     function EvalAt: TEvaluatedAt; virtual;
     function GetSimulated: boolean; virtual;
     procedure SetSimulated(const Value: boolean); virtual;
-    procedure UpdateDataArray(const NewName: string);
+    procedure UpdateDataArray(const NewName, NewDisplayName: string);
+    procedure SetTopDisplayName(Model: TBaseModel);
   protected
     procedure SetLayerCollection(const Value: TLayerCollection); virtual;
     function Collection: TCustomLayerStructure;
@@ -265,6 +264,12 @@ implementation
 
 uses SysUtils, Math, RbwParser, PhastModelUnit, DataSetUnit,
   ModflowDiscretizationWriterUnit, SutraMeshUnit;
+
+const
+  KBottom = '_Bottom';
+
+resourcestring
+  StrBottom = KBottom;
 
 procedure TLayerGroup.Assign(Source: TPersistent);
 var
@@ -1409,7 +1414,7 @@ procedure TCustomLayerGroup.SetDataArrayName(const NewName: string);
 begin
   if FDataArrayName <> NewName then
   begin
-    UpdateDataArray(NewName);
+    UpdateDataArray(NewName, FAquiferDisplayName);
     FDataArrayName := NewName;
     InvalidateModel;
   end;
@@ -1445,7 +1450,20 @@ begin
   result := LayerCollection.Count + 1;
 end;
 
-procedure TCustomLayerGroup.UpdateDataArray(const NewName: string);
+procedure TCustomLayerGroup.SetTopDisplayName(Model: TBaseModel);
+begin
+  //      FAquiferDisplayName := FDataArrayName;
+  case Model.ModelSelection of
+    msUndefined, msPhast, msModflow, msModflowLGR,msModflowNWT:
+      FAquiferDisplayName := StrModelTop;
+    {$IFDEF SUTRA}
+    msSutra: FAquiferDisplayName := StrSUTRAMeshTop;
+    {$ENDIF}
+    else Assert(False);
+  end;
+end;
+
+procedure TCustomLayerGroup.UpdateDataArray(const NewName, NewDisplayName: string);
 var
   Model: TPhastModel;
   DataArray: TDataArray;
@@ -1461,7 +1479,7 @@ begin
       DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
       if DataArray <> nil then
       begin
-        Model.RenameDataArray(DataArray, NewName);
+        Model.RenameDataArray(DataArray, NewName, NewDisplayName);
       end
       else
       begin
@@ -1493,7 +1511,10 @@ begin
           NewFormula := '(' + UnitAbove.DataArrayName + ' + ' + UnitBelow.DataArrayName + ') / 2';
         end;
         // create new data array.
-        DataArray := Model.DataArrayManager.CreateNewDataArray(TDataArray, NewName, NewFormula, [dcName, dcType, dcOrientation, dcEvaluatedAt], rdtDouble, EvalAt, dsoTop, StrLayerDefinition);
+        DataArray := Model.DataArrayManager.CreateNewDataArray(TDataArray,
+           NewName, NewFormula, NewDisplayName,
+           [dcName, dcType, dcOrientation, dcEvaluatedAt], rdtDouble, EvalAt,
+           dsoTop, StrLayerDefinition);
         DataArray.OnDataSetUsed := Model.ModelLayerDataArrayUsed;
         Collection.AddOwnedDataArray(DataArray);
       end;
@@ -1516,10 +1537,18 @@ var
   DataArray: TDataArray;
 begin
   Model := Collection.Model as TPhastModel;
-  DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
-  if ShouldCreateDataArray and (DataArray = nil) then
+//  DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
+//  if ShouldCreateDataArray and (DataArray = nil) then
   begin
-    UpdateDataArray(DataArrayName);
+    if Index = 0 then
+    begin
+      SetTopDisplayName(Model);
+    end
+    else
+    begin
+      FAquiferDisplayName := GenerateNewRoot(FAquiferName + StrBottom);
+    end;
+    UpdateDataArray(DataArrayName, FAquiferDisplayName);
     DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
     Assert(DataArray <> nil);
   end;
@@ -1532,6 +1561,8 @@ begin
 end;
 
 procedure TCustomLayerGroup.SetAquiferName(const Value: string);
+var
+  LocalDataArrayName: string;
 begin
   Assert(Value <> '');
   if FAquiferName <> Value then
@@ -1541,18 +1572,26 @@ begin
       if UpperCase(FAquiferName) = UpperCase(Value) then
       begin
         // Change case of the data set
-        DataArrayName := StringReplace(DataArrayName,
+        LocalDataArrayName := StringReplace(DataArrayName,
           GenerateNewRoot(FAquiferName), GenerateNewRoot(Value), []);
+        FAquiferDisplayName := LocalDataArrayName;
+        DataArrayName := LocalDataArrayName;
       end
       else
       begin
         if Index = 0 then
         begin
-          DataArrayName := GenerateNewName(Value);
+          LocalDataArrayName := GenerateNewName(Value);
+//          FAquiferDisplayName := LocalDataArrayName;
+          SetTopDisplayName(Collection.Model);
+//          FAquiferDisplayName := ModelTopDisplayName;
+          DataArrayName := LocalDataArrayName;
         end
         else
         begin
-          DataArrayName := GenerateNewRoot(Value + '_Bottom');
+          LocalDataArrayName := GenerateNewRoot(Value + KBottom);
+          FAquiferDisplayName := GenerateNewRoot(Value + StrBottom);
+          DataArrayName := LocalDataArrayName;
         end;
       end;
     end;

@@ -10,12 +10,13 @@ uses
   PhastModelUnit;
 
 type
-  TTimeSeriesLimits = (tslNone, tslColors, tslLayer, tslRow, tslColumn);
+  TTimeSeriesLimits = (tslNone, tslColors, tslLayer, tslRow, tslColumn,
+    tslParticleGroup);
 
 const
   TableCaptions: array[Low(TTimeSeriesLimits)..
     High(TTimeSeriesLimits)] of string =
-    ('', Colorlimits, Layer, Row, Column);
+    ('', Colorlimits, Layer, Row, Column, Group);
 
 type
   TUndoImportTimeSeries = class(TCustomUndo)
@@ -175,7 +176,8 @@ var
   ChildModel: TChildModel;
 begin
   frmGoPhast.miTimeSeriestoShapefile.Enabled :=
-    frmGoPhast.PhastModel.TimeSeries.Series.Count > 0;
+    (frmGoPhast.PhastModel.TimeSeries.Series.Count > 0)
+    or (frmGoPhast.PhastModel.TimeSeries.SeriesV6.Count > 0);
   if not frmGoPhast.miTimeSeriestoShapefile.Enabled
     and frmGoPhast.PhastModel.LgrUsed then
   begin
@@ -183,7 +185,8 @@ begin
     begin
       ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
       frmGoPhast.miTimeSeriestoShapefile.Enabled :=
-        ChildModel.TimeSeries.Series.Count > 0;
+        (ChildModel.TimeSeries.Series.Count > 0)
+        or (ChildModel.TimeSeries.SeriesV6.Count > 0);
       if frmGoPhast.miTimeSeriestoShapefile.Enabled then
       begin
         break;
@@ -266,6 +269,7 @@ begin
   ReadIntLimit(DisplayLimits.ColumnLimits, tslColumn);
   ReadIntLimit(DisplayLimits.RowLimits, tslRow);
   ReadIntLimit(DisplayLimits.LayerLimits, tslLayer);
+  ReadIntLimit(DisplayLimits.ParticleGroupLimits, tslParticleGroup);
 
   ALimitRow := tslColors;
 
@@ -484,7 +488,7 @@ end;
 procedure TframeModpathTimeSeriesDisplay.rdgLimitsSetEditText(Sender: TObject;
   ACol, ARow: Integer; const Value: string);
 begin
-  if (ARow in [Ord(tslLayer)..Ord(tslColumn)]) and (ACol in [1,2]) then
+  if (ARow in [Ord(tslLayer)..Ord(tslParticleGroup)]) and (ACol in [1,2]) then
   begin
     rdgLimits.Columns[ACol].CheckACell(ACol, ARow, False, True, 0, 1);
   end;
@@ -558,6 +562,7 @@ begin
     if TimeSeries.FileName = '' then
     begin
       TimeSeries.Series.Clear;
+      TimeSeries.SeriesV6.Clear;
     end
     else
     begin
@@ -594,6 +599,8 @@ begin
         SetIntLimit(tslColumn, Grid.ColumnCount, Limits.ColumnLimits);
         SetIntLimit(tslRow, Grid.RowCount, Limits.RowLimits);
         SetIntLimit(tslLayer, Grid.LayerCount, Limits.LayerLimits);
+        SetIntLimit(tslParticleGroup, TimeSeries.MaxParticleGroup,
+          Limits.ParticleGroupLimits);
       end;
 
       ColorLimits := TimeSeries.ColorLimits;
@@ -666,3 +673,4 @@ begin
 end;
 
 end.
+

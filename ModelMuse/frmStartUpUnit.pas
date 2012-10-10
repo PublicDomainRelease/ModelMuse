@@ -431,7 +431,7 @@ begin
     end;
     Value := StrToFloat(rdgInitialLayers.Cells[1, 1]);
     LayerGroup := frmGoPhast.PhastModel.LayerStructure.Add as TLayerGroup;
-    LayerGroup.AquiferName := StrModelTop;
+    LayerGroup.AquiferName := kModelTop;
     NewDataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(LayerGroup.DataArrayName);
     Assert(NewDataArray <> nil);
 //    NewDataArray := frmGoPhast.PhastModel.DataSets[DataArrayIndex];

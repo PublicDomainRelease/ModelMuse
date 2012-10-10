@@ -6,9 +6,9 @@ inherited frmGridValue: TfrmGridValue
   ClientWidth = 406
   KeyPreview = True
   OnClose = FormClose
-  ExplicitWidth = 414
-  ExplicitHeight = 547
-  PixelsPerInch = 96
+  ExplicitWidth = 424
+  ExplicitHeight = 558
+  PixelsPerInch = 120
   TextHeight = 18
   object btnHelp: TBitBtn
     Left = 210
@@ -16,10 +16,8 @@ inherited frmGridValue: TfrmGridValue
     Width = 89
     Height = 33
     Anchors = [akRight, akBottom]
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 1
     OnClick = btnHelpClick
   end
@@ -29,10 +27,8 @@ inherited frmGridValue: TfrmGridValue
     Width = 89
     Height = 33
     Anchors = [akRight, akBottom]
-    DoubleBuffered = True
     Kind = bkClose
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 2
   end
   object pcDataDisplay: TPageControl
@@ -40,16 +36,12 @@ inherited frmGridValue: TfrmGridValue
     Top = 0
     Width = 406
     Height = 467
-    ActivePage = tabCurrentData
+    ActivePage = tabPathline
     Align = alTop
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
     object tabCurrentData: TTabSheet
       Caption = 'Current Data'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         398
         434)
@@ -89,7 +81,7 @@ inherited frmGridValue: TfrmGridValue
       object lblCellValue: TLabel
         Left = 8
         Top = 132
-        Width = 40
+        Width = 39
         Height = 18
         Caption = 'Value'
       end
@@ -210,17 +202,13 @@ inherited frmGridValue: TfrmGridValue
     object tabAllDataSets: TTabSheet
       Caption = 'All Data Sets'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         398
         434)
       object lblSelectValue: TLabel
         Left = 3
         Top = 35
-        Width = 40
+        Width = 39
         Height = 18
         Caption = 'Value'
       end
@@ -269,11 +257,10 @@ inherited frmGridValue: TfrmGridValue
         Height = 26
         Tree.Left = 0
         Tree.Top = 0
-        Tree.Width = 312
-        Tree.Height = 206
+        Tree.Width = 302
+        Tree.Height = 195
         Tree.Align = alClient
         Tree.Header.AutoSizeIndex = 0
-        Tree.Header.DefaultHeight = 17
         Tree.Header.Font.Charset = DEFAULT_CHARSET
         Tree.Header.Font.Color = clWindowText
         Tree.Header.Font.Height = -11
@@ -315,10 +302,6 @@ inherited frmGridValue: TfrmGridValue
     object tabPathline: TTabSheet
       Caption = 'Pathline'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgPathline: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -327,7 +310,7 @@ inherited frmGridValue: TfrmGridValue
         Align = alClient
         ColCount = 4
         FixedCols = 1
-        RowCount = 12
+        RowCount = 14
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
         TabOrder = 0
         ExtendedAutoDistributeText = False
@@ -433,10 +416,6 @@ inherited frmGridValue: TfrmGridValue
     object tabEndPoint: TTabSheet
       Caption = 'End Point'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgEndPoints: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -445,7 +424,7 @@ inherited frmGridValue: TfrmGridValue
         Align = alClient
         ColCount = 3
         FixedCols = 1
-        RowCount = 12
+        RowCount = 14
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
         TabOrder = 0
         ExtendedAutoDistributeText = False
@@ -549,7 +528,7 @@ inherited frmGridValue: TfrmGridValue
           Top = 38
           Width = 121
           Height = 26
-          EditLabel.Width = 121
+          EditLabel.Width = 119
           EditLabel.Height = 18
           EditLabel.Caption = 'Termination code'
           LabelPosition = lpLeft
@@ -561,7 +540,7 @@ inherited frmGridValue: TfrmGridValue
           Top = 70
           Width = 121
           Height = 26
-          EditLabel.Width = 94
+          EditLabel.Width = 93
           EditLabel.Height = 18
           EditLabel.Caption = 'Tracking time'
           LabelPosition = lpLeft

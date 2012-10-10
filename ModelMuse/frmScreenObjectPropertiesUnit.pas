@@ -2031,6 +2031,10 @@ resourcestring
   'ar reference in this formula.  Do you wish to restore the old formula';
   StrErrorThereAppears2 = 'Error: There appears to be a cirular reference to' +
   ' "%s" in this formula.  Do you wish to restore the old formula';
+  StrInvalidMethod = 'You are attempting to specify MODFLOW features but' +
+  ' they won''t be specified correctly because neither "Set properties of en' +
+  'closed cells" nor "Set properties of intersected cells" is checked.'#13#10 +
+  #13#10'Is this really what you want?';
 
 {$R *.dfm}
 
@@ -2190,7 +2194,7 @@ begin
 
   Assert(FCurrentEdit <> nil);
 
-  DSetName := FCurrentEdit.DataArray.Name;
+  DSetName := FCurrentEdit.DataArray.DisplayName;
 
   VariableList := TList.Create;
   // VariableList will hold a list of variables that can
@@ -2218,7 +2222,7 @@ begin
     NewValue := reDataSetFormula.Text;
     if (NewValue = '') and OldFormulaOK then
     begin
-      NewValue := FCurrentEdit.Expression.Decompile;
+      NewValue := FCurrentEdit.Expression.DecompileDisplay;
     end;
     with TfrmFormula.Create(self) do
     begin
@@ -2980,6 +2984,9 @@ var
   ShowError: boolean;
   Edit: TScreenObjectDataEdit;
   ListOfScreenObjects: TList;
+  BoundaryNodeList: TList;
+  BoundaryNodeIndex: integer;
+  ANode: TJvPageIndexNode;
 begin
   inherited;
   frmGoPhast.BeginSuppressDrawing;
@@ -3070,6 +3077,62 @@ begin
       end;
     end;
 
+    if not cbIntersectedCells.Checked
+      and not cbEnclosedCells.Checked then
+    begin
+      ShowError :=
+        ((FDRN_Node <> nil) and (FDRN_Node.StateIndex <> 1));
+      BoundaryNodeList := TList.Create;
+      try
+        BoundaryNodeList.Add(FCHD_Node);
+        BoundaryNodeList.Add(FGHB_Node);
+        BoundaryNodeList.Add(FWEL_Node);
+        BoundaryNodeList.Add(FRIV_Node);
+        BoundaryNodeList.Add(FDRN_Node);
+        BoundaryNodeList.Add(FDRT_Node);
+        BoundaryNodeList.Add(FRCH_Node);
+        BoundaryNodeList.Add(FEVT_Node);
+        BoundaryNodeList.Add(FETS_Node);
+        BoundaryNodeList.Add(FRES_Node);
+        BoundaryNodeList.Add(FLAK_Node);
+        BoundaryNodeList.Add(FMNW2_Node);
+        BoundaryNodeList.Add(FSFR_Node);
+        BoundaryNodeList.Add(FUZF_Node);
+        BoundaryNodeList.Add(FChob_Node);
+        BoundaryNodeList.Add(FDrob_Node);
+        BoundaryNodeList.Add(FGbob_Node);
+        BoundaryNodeList.Add(FRvob_Node);
+        BoundaryNodeList.Add(FGage_Node);
+        BoundaryNodeList.Add(FMt3dmsSsm_Node);
+        BoundaryNodeList.Add(FMt3dmsTobConc_Node);
+        BoundaryNodeList.Add(FMt3dmsTobFlux_Node);
+        BoundaryNodeList.Add(FHOB_Node);
+        BoundaryNodeList.Add(FHFB_Node);
+        BoundaryNodeList.Add(FHydmod_Node);
+
+        BoundaryNodeList.Pack;
+        ShowError := False;
+        for BoundaryNodeIndex := 0 to BoundaryNodeList.Count - 1 do
+        begin
+          ANode := BoundaryNodeList[BoundaryNodeIndex];
+          if ANode.StateIndex <> 1 then
+          begin
+            ShowError := True;
+            break;
+          end;
+        end;
+      finally
+        BoundaryNodeList.Free;
+      end;
+      if ShowError then
+      begin
+        if MessageDlg(StrInvalidMethod, mtWarning,
+          [mbYes, mbNo], 0, mbNo) = mrNo then
+        begin
+          Exit;
+        end;
+      end;
+    end;
 
     if rgEvaluatedAt.ItemIndex = 1 then
     begin
@@ -3189,6 +3252,9 @@ begin
     end;
   finally
     frmGoPhast.EndSupressDrawing;
+    frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+    frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
+    frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
   end;
 end;
 
@@ -5342,6 +5408,8 @@ begin
   Frame := frameModpathParticles;
   Frame.TrackingDirection := frmGoPhast.PhastModel.
     ModflowPackages.ModPath.TrackingDirection;
+  Frame.MPathVersion := frmGoPhast.PhastModel.
+    ModflowPackages.ModPath.MPathVersion;
   UsedDistribution := [];
   for ScreenObjectIndex := 0 to ListOfScreenObjects.Count - 1 do
   begin
@@ -5489,6 +5557,7 @@ begin
       end;
     end;
   end;
+  frameModpathParticlesgbParticlesCheckBoxClick(nil);
   frameModpathParticles.CreateParticles;
 end;
 
@@ -6495,22 +6564,22 @@ begin
 end;
 
 procedure TfrmScreenObjectProperties.CreateDataSetEdits(ListOfScreenObjects: TList);
-  function DataArrayNameToEdit(const Name: string): TScreenObjectDataEdit;
-  var
-    Index: integer;
-    Edit: TScreenObjectDataEdit;
-  begin
-    result := nil;
-    for Index := 0 to FDataEdits.Count - 1 do
-    begin
-      Edit := FDataEdits[Index];
-      if Edit.DataArray.Name = Name then
-      begin
-        result := Edit;
-        Exit;
-      end;
-    end;
-  end;
+//  function DataArrayNameToEdit(const Name: string): TScreenObjectDataEdit;
+//  var
+//    Index: integer;
+//    Edit: TScreenObjectDataEdit;
+//  begin
+//    result := nil;
+//    for Index := 0 to FDataEdits.Count - 1 do
+//    begin
+//      Edit := FDataEdits[Index];
+//      if Edit.DataArray.Name = Name then
+//      begin
+//        result := Edit;
+//        Exit;
+//      end;
+//    end;
+//  end;
 var
   Index: Integer;
   Edit: TScreenObjectDataEdit;
@@ -6805,7 +6874,7 @@ begin
   end;
   if result = '' then
   begin
-    result := DataArray.Formula;
+    result := DataArray.DisplayFormula;
   end;
 end;
 
@@ -10341,6 +10410,7 @@ var
   TempFormulaCompiler: TRbwParser;
   DataSet: TDataArray;
   Local3DCompiler: TRbwParser;
+  NewDisplayName: string;
 begin
   // Create a variable to represent the dataset specified by Index in
   // each TRbwParser that needs it.
@@ -10349,6 +10419,7 @@ begin
 
   Variable := nil;
   NewName := DataSet.Name;
+  NewDisplayName := DataSet.DisplayName;
 
   Local3DCompiler := nil;
   case DataSet.EvaluatedAt of
@@ -10369,37 +10440,37 @@ begin
     rdtDouble:
       begin
         Variable := TempFormulaCompiler.CreateVariable(NewName,
-          DataSet.FullClassification, 0.0);
+          DataSet.FullClassification, 0.0, NewDisplayName);
         if TempFormulaCompiler <> Local3DCompiler then
         begin
-          Local3DCompiler.CreateVariable(NewName, DataSet.FullClassification, 0.0);
+          Local3DCompiler.CreateVariable(NewName, DataSet.FullClassification, 0.0, NewDisplayName);
         end;
       end;
     rdtInteger:
       begin
         Variable := TempFormulaCompiler.CreateVariable(NewName,
-          DataSet.FullClassification, 0);
+          DataSet.FullClassification, 0, NewDisplayName);
         if TempFormulaCompiler <> Local3DCompiler then
         begin
-          Local3DCompiler.CreateVariable(NewName, DataSet.FullClassification, 0);
+          Local3DCompiler.CreateVariable(NewName, DataSet.FullClassification, 0, NewDisplayName);
         end;
       end;
     rdtBoolean:
       begin
         Variable := TempFormulaCompiler.CreateVariable(NewName,
-          DataSet.FullClassification, False);
+          DataSet.FullClassification, False, NewDisplayName);
         if TempFormulaCompiler <> Local3DCompiler then
         begin
-          Local3DCompiler.CreateVariable(NewName, DataSet.FullClassification, False);
+          Local3DCompiler.CreateVariable(NewName, DataSet.FullClassification, False, NewDisplayName);
         end;
       end;
     rdtString:
       begin
         Variable := TempFormulaCompiler.CreateVariable(NewName,
-          DataSet.FullClassification, '0');
+          DataSet.FullClassification, '0', NewDisplayName);
         if TempFormulaCompiler <> Local3DCompiler then
         begin
-          Local3DCompiler.CreateVariable(NewName, DataSet.FullClassification, '0');
+          Local3DCompiler.CreateVariable(NewName, DataSet.FullClassification, '0', NewDisplayName);
         end;
       end;
   else
@@ -11664,14 +11735,14 @@ begin
     ((ResultType = rdtDouble) and (CompiledFormula.ResultType = rdtInteger))
       then
   begin
-    DataGrid.Cells[ACol, ARow] := CompiledFormula.Decompile;
+    DataGrid.Cells[ACol, ARow] := CompiledFormula.DecompileDisplay;
   end
   else
   begin
     Formula := AdjustFormula(Formula, CompiledFormula.ResultType, ResultType);
     TempCompiler.Compile(Formula);
     CompiledFormula := TempCompiler.CurrentExpression;
-    DataGrid.Cells[ACol, ARow] := CompiledFormula.Decompile;
+    DataGrid.Cells[ACol, ARow] := CompiledFormula.DecompileDisplay;
   end;
   if Assigned(DataGrid.OnSetEditText) then
   begin
@@ -11700,13 +11771,13 @@ begin
         Beep;
         Edit := FDataEdits[DataSetIndex];
         MessageDlg(Format(StrErrorInMixtureFor,
-          [Edit.DataArray.Name, E.Message]), mtError, [mbOK], 0);
+          [Edit.DataArray.DisplayName, E.Message]), mtError, [mbOK], 0);
         Exit;
       end
     end;
 
     result := TempCompiler.CurrentExpression;
-    framePhastInterpolationData.edMixFormula.Text := result.Decompile;
+    framePhastInterpolationData.edMixFormula.Text := result.DecompileDisplay;
     ResultType := rdtDouble;
     // check that the formula is OK.
     if not (result.ResultType in [rdtDouble, rdtInteger]) then
@@ -11719,7 +11790,7 @@ begin
       TempCompiler.Compile(Formula);
       result := TempCompiler.CurrentExpression;
 
-      framePhastInterpolationData.edMixFormula.Text := result.DeCompile;
+      framePhastInterpolationData.edMixFormula.Text := result.DecompileDisplay;
     end;
   except
     raise;
@@ -11754,7 +11825,7 @@ begin
         Edit.Expression := nil;
         Beep;
         MessageDlg(Format(StrErrorInFormulaFor,
-          [Edit.DataArray.Name, E.Message]), mtError, [mbOK], 0);
+          [Edit.DataArray.DisplayName, E.Message]), mtError, [mbOK], 0);
         Exit;
       end
     end;
@@ -11771,13 +11842,13 @@ begin
           Edit.Expression := nil;
           Beep;
           MessageDlg(Format(StrErrorInFormulaFor,
-            [Edit.DataArray.Name, E.Message]), mtError, [mbOK], 0);
+            [Edit.DataArray.DisplayName, E.Message]), mtError, [mbOK], 0);
           Exit;
         end
       end;
     end;
 
-    Edit.Formula := CompiledFormula.Decompile;
+    Edit.Formula := CompiledFormula.DecompileDisplay;
     ResultType := Edit.FDataArray.DataType;
     // check that the formula is OK.
     if (ResultType = CompiledFormula.ResultType) or
@@ -11799,7 +11870,7 @@ begin
       TempCompiler.Compile(Formula);
       CompiledFormula := TempCompiler.CurrentExpression;
       Edit.Expression := CompiledFormula;
-      Edit.Formula := CompiledFormula.DeCompile;
+      Edit.Formula := CompiledFormula.DecompileDisplay;
     end;
   except
     Edit.Expression := nil;
@@ -12011,7 +12082,7 @@ begin
       OldFormulaOK := FCurrentEdit.Expression <> nil;
       if OldFormulaOK then
       begin
-        OldFormula := FCurrentEdit.Expression.Decompile;
+        OldFormula := FCurrentEdit.Expression.DecompileDisplay;
       end;
 
       Tester := TRbwParser.Create(self);
@@ -12081,7 +12152,7 @@ begin
             OldFormulaOK, OldFormula);
           if FCurrentEdit.Expression <> nil then
           begin
-            FCurrentEdit.Formula := FCurrentEdit.Expression.Decompile;
+            FCurrentEdit.Formula := FCurrentEdit.Expression.DecompileDisplay;
           end;
 
           // update the list of which variables depend on which
@@ -12225,7 +12296,7 @@ begin
         end
         else
         begin
-          FunctionString := CompiledFormula.Decompile;
+          FunctionString := CompiledFormula.DecompileDisplay;
           if FunctionString <> ed.Text then
           begin
             ed.Text := FunctionString;
@@ -12609,7 +12680,7 @@ begin
     end
     else
     begin
-      FunctionString := CompiledFormula.Decompile;
+      FunctionString := CompiledFormula.DecompileDisplay;
       if FunctionString <> ed.Text then
       begin
         ed.Text := FunctionString;
@@ -13956,7 +14027,7 @@ begin
     else
     begin
       ed.Color := clWindow;
-      FunctionString := CompiledFormula.Decompile;
+      FunctionString := CompiledFormula.DecompileDisplay;
       if FunctionString <> ed.Text then
       begin
         ed.Text := FunctionString;
@@ -16380,11 +16451,11 @@ procedure TfrmScreenObjectProperties.frameModpathParticlesseSpecificParticleCoun
   Sender: TObject);
 begin
   inherited;
+  frameModpathParticles.UpdateRowCount;
+  frameModpathParticles.seSpecificParticleCount.MinValue := 0;
+  frameModpathParticles.CreateParticles;
   if IsLoaded then
   begin
-    frameModpathParticles.UpdateRowCount;
-    frameModpathParticles.seSpecificParticleCount.MinValue := 0;
-    frameModpathParticles.CreateParticles;
     StoreModPath;
   end;
 end;
@@ -17739,7 +17810,7 @@ end;
 function TScreenObjectDataEdit.ClassificationName: string;
 begin
   Assert(DataArray <> nil);
-  result := DataArray.Name;
+  result := DataArray.DisplayName;
 end;
 
 constructor TScreenObjectDataEdit.Create(ListOfScreenObjects: TList;

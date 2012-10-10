@@ -869,6 +869,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="MODFLOW-LGR" value="3605"/>
       <helpcontext-number href="MODPATH" value="3461"/>
       <helpcontext-number href="MODPATH#ReferenceTime" value="3463"/>
+      <helpcontext-number href="MODPATH#SimulationType" value="3670"/>
       <helpcontext-number href="MODPATH#UnlimitedBudgetSize" value="3522"/>
       <helpcontext-number href="MODPATH_Display_Dialog_Box" value="3541"/>
       <helpcontext-number href="MODPATH_Endpoint_Display" value="3543"/>

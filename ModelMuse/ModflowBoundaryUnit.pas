@@ -1173,6 +1173,7 @@ var
   LastUsedTime: Double;
   MaxArrays: Integer;
   ErrorFormula: string;
+  StoredCount: Integer;
 begin
   if Count = 0 then
   begin
@@ -1363,6 +1364,7 @@ begin
 
       AddSpecificBoundary(AModel);
       SetBoundaryStartAndEndTime(CellList.Count, AnItem, ItemCount, AModel);
+      StoredCount := ItemCount;
       AssignCellLocation(Boundaries[ItemCount, AModel],  CellList);
       for BoundaryFunctionIndex := 0 to AnItem.BoundaryFormulaCount - 1 do
       begin
@@ -1499,8 +1501,8 @@ begin
           end;
         end;
         PriorTime := AnItem.EndTime;
-      end
-
+      end;
+      Boundaries[StoredCount, AModel].CacheData;
     end;
 
 

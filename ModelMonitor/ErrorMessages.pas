@@ -11,7 +11,11 @@ var
   ErrorValues: TAnsiStringList;
   WarningValues: TAnsiStringList;
 
+  // These are error messages that start with a number.
+  NumberErrorValues: TAnsiStringList;
+
 implementation
+
 
 Procedure AssignErrorStrings;
 begin
@@ -37,6 +41,7 @@ begin
     ErrorValues.Add('BUT THE MAXIMUM NUMBER OF PARAMETERS IS');
     ErrorValues.Add('ERROR FOUND IN PARAMETER INPUT FILE.  SEARCH ABOVE');
     ErrorValues.Add('ERROR ENCOUNTERED IN READING PARAMETER INPUT FILE');
+//    ErrorValues.Add('IS GREATER THAN');
     ErrorValues.Add('IS GREATER THAN MXACTC');
     ErrorValues.Add('NO-FLOW CELLS CANNOT BE CONVERTED TO SPECIFIED HEAD');
     ErrorValues.Add('IS GREATER THAN MXACTD');
@@ -55,7 +60,7 @@ begin
     ErrorValues.Add('Aborting. Weights for Auxiliary variables cannot');
     ErrorValues.Add('ABORTING');
     ErrorValues.Add('*** ERROR');
-    ErrorValues.Add('IS GREATER THAN MXACTB');
+//    ErrorValues.Add('IS GREATER THAN MXACTB');
     ErrorValues.Add('INSTANCES ARE NOT SUPPORTED FOR HFB');
     ErrorValues.Add('ERROR DETECTED IN LOCATION DATA OF BARRIER NO.');
     ErrorValues.Add('LAYWT is not 0 and LTHUF is 0 for layer:');
@@ -105,7 +110,6 @@ begin
     ErrorValues.Add('GREATER THAN MXACTW');
     ErrorValues.Add('Duplicate parameter name');
     ErrorValues.Add('The number of parameters has exceeded the maximum');
-    ErrorValues.Add('CLUSTERS WERE SPECIFIED, BUT THERE IS SPACE FOR ONLY');
     ErrorValues.Add('Multiplier array has not been defined');
     ErrorValues.Add('There were no zone values specified in the cluster');
     ErrorValues.Add('Zone array has not been defined');
@@ -174,6 +178,8 @@ begin
     ErrorValues.Add('Allocation error in subroutine PCG');
     ErrorValues.Add('Dimension mismatch in subroutine PCG');
 
+    NumberErrorValues.Add('CLUSTERS WERE SPECIFIED, BUT THERE IS SPACE FOR ONLY');
+
     // MODFLOW-NWT
     ErrorValues.Add('THIS WILL CAUSE PROBLEMS IN COMPUTING LAKE STAGE USING THE NEWTON METHOD.');
     ErrorValues.Add('***ERROR: MNW PACKAGE DOES NOT SUPPORT HEAD-DEPENDENT');
@@ -207,28 +213,29 @@ begin
     ErrorValues.Add('error in xmdprecd (xmdsfacd)');
     ErrorValues.Add('error in xmdcheck');
 
-    WarningValues.Add('**WARNING**');
-    WarningValues.Add('*** WARNING ***');
+//    WarningValues.Add('**WARNING**');
+//    WarningValues.Add('*** WARNING ***');
     WarningValues.Add('CELL CONVERSIONS FOR ITER');
     WarningValues.Add('****Units are undefined');
     WarningValues.Add('ELIMINATED BECAUSE ALL HYDRAULIC CONDUCTIVITIES TO NODE ARE 0');
-    WarningValues.Add('WARNING-- COMPUTED STAGE OF ');
+//    WarningValues.Add('WARNING-- COMPUTED STAGE OF ');
     WarningValues.Add('IF WETDRY FLAG NOT TURNED ON, VERTICAL LEAKANCES ARE NOT SAVED:');
     WarningValues.Add('THEREFORE, LAKE/AQUIFER CONDUCTANCES ARE BASED SOLELY ON LAKEBED SPECIFICATION');
     WarningValues.Add('NODE(S) ADJACENT TO LAKE IN CONFINED LAYER:');
     WarningValues.Add('LAKE/AQUIFER CONDUCTANCES BASED SOLELY ON LAKEBED SPECIFICATION');
     WarningValues.Add('NOTE: INFORMATION ABOUT CALCULATED LAKE/AQUIFER CONDUCTANCES WHEN USING BCF PACKAGE FOLLOWS:');
-    WarningValues.Add('*** WARNING: IBOUND = ');
-    WarningValues.Add('WARNING -- SUM OF INTERLAKE FLUXES ');
-    WarningValues.Add(' WARNING****  OUTFLOWING STREAM SEGMENT');
+//    WarningValues.Add('*** WARNING: IBOUND = ');
+//    WarningValues.Add('WARNING -- SUM OF INTERLAKE FLUXES ');
+//    WarningValues.Add(' WARNING****  OUTFLOWING STREAM SEGMENT');
     WarningValues.Add('Note: Solution may be sensitive to value of HWtol;');
     WarningValues.Add('adjust value if solution fails to converge');
-    WarningValues.Add('deactivated this time step because Hnew<bottom elev. of cell');
-    WarningValues.Add('deactivated this time step because IBOUND=0');
+    WarningValues.Add('deactivated this time step because');
+//    WarningValues.Add('deactivated this time step because Hnew<bottom elev. of cell');
+//    WarningValues.Add('deactivated this time step because IBOUND=0');
     WarningValues.Add('DEACTIVATED THIS STRESS PERIOD BECAUSE ALL NODES WERE DEACTIVATED');
-    WarningValues.Add('***WARNING*** Specified-head condition should not exist in same cell as a multi-node well');
-    WarningValues.Add('***WARNING*** CWC<0 in Well ');
-    WarningValues.Add('***WARNING*** CWC<0 reset to CWC=0');
+//    WarningValues.Add('***WARNING*** Specified-head condition should not exist in same cell as a multi-node well');
+//    WarningValues.Add('***WARNING*** CWC<0 in Well ');
+//    WarningValues.Add('***WARNING*** CWC<0 reset to CWC=0');
     WarningValues.Add('WARNING');
     WarningValues.Add('LARGE RESIDUAL L2 NORM FOR THIS SOLUTION');
     WarningValues.Add('CHECK THAT MASS BALANCE ERROR NOT EXCESSIVE');
@@ -249,15 +256,16 @@ begin
     WarningValues.Add('INCONSISTANT DATA HAS BEEN ENTERED');
     WarningValues.Add('PCGN ASSEMBLER HAS DISCOVERED AN ADDITIONAL INACTIVE CELL');
     WarningValues.Add('***PROVISIONAL CONVERGENCE***');
-    WarningValues.Add('WARNING: RATIO_E NEGATIVE IN SUBROUTINE NONLINEAR');
+//    WarningValues.Add('WARNING: RATIO_E NEGATIVE IN SUBROUTINE NONLINEAR');
     WarningValues.Add('A ZERO PIVOT WAS ENCOUNTERED AT LOCATION');
     WarningValues.Add('A NEGATIVE PIVOT WAS ENCOUNTERED AT LOCATION');
     WarningValues.Add('PRECONDITIONED CONJUGATE GRADIENT SOLVER CANNOT');
     WarningValues.Add('THE DOMAIN INTEGRITY ANALYSIS IS DEFECTIVE');
     WarningValues.Add('THE DOMAIN INTEGRITY APPEARS TO BE COMPROMIZED');
+    WarningValues.Add('SECTIONS OF THE LAKE BOTTOM HAVE BECOME DRY');
 
     // MODFLOW-NWT
-    WarningValues.Add('*** WARNING *** NEGATIVE LAKE OUTFLOW NOT ALLOWED;');
+//    WarningValues.Add('*** WARNING *** NEGATIVE LAKE OUTFLOW NOT ALLOWED;');
     WarningValues.Add('NEGATIVE PUMPING RATES WILL BE REDUCED IF HEAD ');
     WarningValues.Add('FALLS WITHIN THE INTERVAL PSIRAMP TIMES THE CELL');
     WarningValues.Add('THICKNESS. THE VALUE SPECIFIED FOR PHISRAMP IS');
@@ -269,9 +277,11 @@ end;
 initialization
   ErrorValues := TAnsiStringList.Create;
   WarningValues := TAnsiStringList.Create;
+  NumberErrorValues := TAnsiStringList.Create;
   AssignErrorStrings;
 
 finalization
+  NumberErrorValues.Free;
   ErrorValues.Free;
   WarningValues.Free;
 

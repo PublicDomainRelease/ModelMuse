@@ -38,6 +38,7 @@ type
     procedure FixSubscriptions;
     procedure DeleteSubscriptionEvents(OnRemoveSubscription,
     OnRestoreSubscription: TChangeSubscription; Subject: TObject);
+    function GetDisplayFormula: string;
   protected
     procedure Notification(AComponent: TComponent;
       Operation: TOperation); override;
@@ -45,7 +46,8 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     property Expression: TExpression read GetExpression;
-    property Formula: string read GetFormula{ write SetFormula};
+    property Formula: string read GetFormula;
+    property DisplayFormula: string read GetDisplayFormula;
     property Parser: TRbwParser read FParser write SetParser;
     // if @name is called with new events, be sure to update
     // @link(RemoveSubscriptions), @link(RestoreSubscriptions), and
@@ -246,6 +248,26 @@ begin
         end;
       end;
     end;
+  end;
+end;
+
+function TFormulaObject.GetDisplayFormula: string;
+begin
+  if (FExpression = nil) or not FNotifies then
+  begin
+    if (FParser <> nil) and (FFormula <> '') then
+    begin
+      CompileFormula(FFormula);
+    end;
+    result := FFormula;
+    if FExpression <> nil then
+    begin
+      result := FExpression.DecompileDisplay;
+    end;
+  end
+  else
+  begin
+    result := FExpression.DecompileDisplay;
   end;
 end;
 
@@ -922,9 +944,9 @@ begin
   end;
 
   FSortedList.Free;
-  FSortedList:= THashTableFacade.Create;
+  FSortedList:= THashTableFacade.Create(Max(211, FList.Count*2-1));
   FSortedList.IgnoreCase := True;
-  FSortedList.TableSize := Max(211, FList.Count*2-1);
+//  FSortedList.TableSize := Max(211, FList.Count*2-1);
   for Index := 0 to FList.Count - 1 do
   begin
     FormulaObject := FList[Index];

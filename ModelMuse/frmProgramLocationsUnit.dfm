@@ -15,7 +15,6 @@ inherited frmProgramLocations: TfrmProgramLocations
     Height = 41
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 485
     DesignSize = (
       623
       41)
@@ -59,7 +58,6 @@ inherited frmProgramLocations: TfrmProgramLocations
     Height = 500
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 485
     DesignSize = (
       623
       500)
@@ -88,7 +86,7 @@ inherited frmProgramLocations: TfrmProgramLocations
       Caption = 'Text editor'
     end
     object htlblModPath: TJvHTLabel
-      Left = 101
+      Left = 131
       Top = 176
       Width = 430
       Height = 19

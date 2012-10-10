@@ -167,7 +167,7 @@ begin
     NewDataSetName := GenerateNewName(NewDataSetName + Suffix);
 
     DataSet := frmGoPhast.PhastModel.DataArrayManager.CreateNewDataArray(TDataArray,
-      NewDataSetName, '0.', [], rdtDouble,
+      NewDataSetName, '0.', NewDataSetName, [], rdtDouble,
       TEvaluatedAt(rgEvaluatedAt.ItemIndex), dsoTop, Classification);
 
     DataSet.OnDataSetUsed := frmGoPhast.PhastModel.ModelResultsRequired;

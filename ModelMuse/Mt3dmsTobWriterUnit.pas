@@ -714,6 +714,12 @@ begin
   for TimeIndex := 0 to Observations.Values.Count - 1 do
   begin
     CellList := Observations.CellLists[TimeIndex];
+    if CellList.Count = 0 then
+    begin
+      // This is an error but it was reported earlier in
+      // TMt3dmsConcObsTimeList.Initialize
+      Continue;
+    end;
     Cell := CellList[0];
     COBS := Cell.Concentration;
     weight := Cell.Weight;

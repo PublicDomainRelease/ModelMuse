@@ -8,7 +8,7 @@ uses
   SsButtonEd, RbwStringTreeCombo, StdCtrls, ComCtrls, JvExComCtrls, JvUpDown,
   JvExControls, JvxSlider, Mask, JvExMask, JvSpin, JvExStdCtrls,
   VirtualTrees, DataSetUnit, LegendUnit, RbwParser, ClassificationUnit,
-  EdgeDisplayUnit, SubscriptionUnit, JvRichEdit;
+  EdgeDisplayUnit, SubscriptionUnit{, JvRichEdit};
 
 type
   TEdgeDisplayEdit = class(TObject)
@@ -192,7 +192,7 @@ function TBoundaryClassification.ClassificationName: string;
 begin
   if FDataArray <> nil then
   begin
-    result := FDataArray.Name;
+    result := FDataArray.DisplayName;
     Assert(FTimeList = nil);
     Assert(FEdgeDisplay = nil);
   end

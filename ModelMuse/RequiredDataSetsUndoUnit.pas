@@ -150,7 +150,8 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
   else if ArrayNeeded(self)
     or (Assigned(CreateDataSet) and CreateDataSet(self)) then
   begin
-    DataArray := DataArrayManager.CreateNewDataArray(TDataArray, DataSetName, NewFormula,
+    DataArray := DataArrayManager.CreateNewDataArray(TDataArray, DataSetName,
+      NewFormula, DataSetName,
       Lock, DataType, DataArrayManager.FDataArrayCreationRecords[Index].EvaluatedAt,
       Orientation, Classification);
     DataArray.OnDataSetUsed := ArrayNeeded;

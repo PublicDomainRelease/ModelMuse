@@ -67,7 +67,7 @@ type
 
 implementation
 
-uses frmGoPhastUnit, GoPhastTypes;
+uses frmGoPhastUnit, GoPhastTypes, ModflowPackageSelectionUnit;
 
 resourcestring
   StrThisFileDoesNotE = 'This file does not exist';
@@ -100,12 +100,28 @@ end;
 procedure TfrmProgramLocations.GetData;
 var
   Locations: TProgramLocations;
+  function LinkString(const Url: string): string;
+  begin
+    result := Format('<a href="%0:s">%0:s</a>', [Url]);
+  end;
 begin
   frmGoPhast.ReadIniFile;
   Locations := frmGoPhast.PhastModel.ProgramLocations;
   fedModflow.FileName := Locations.ModflowLocation;
   fedTextEditor.FileName := Locations.TextEditorLocation;
-  fedModpath.FileName := Locations.ModPathLocation;
+  if frmGoPhast.PhastModel.ModflowPackages.ModPath.MpathVersion = mp5 then
+  begin
+    fedModpath.FileName := Locations.ModPathLocation;
+    lblModpath.Caption := 'MODPATH v5';
+    htlblModPath.Caption := LinkString(
+      'http://water.usgs.gov/nrp/gwsoftware/modpath5/modpath5.html');
+  end
+  else
+  begin
+    fedModpath.FileName := Locations.ModPathLocationVersion6;
+    lblModpath.Caption := 'MODPATH v6';
+    htlblModPath.Caption := LinkString('http://water.usgs.gov/ogw/modpath/');
+  end;
   fedModelMonitor.FileName := Locations.ModelMonitorLocation;
   fedZonebudget.FileName := Locations.ZoneBudgetLocation;
   fedModelMate.FileName := Locations.ModelMateLocation;
@@ -123,7 +139,14 @@ begin
   try
     Locations.ModflowLocation := fedModflow.FileName;
     Locations.TextEditorLocation := fedTextEditor.FileName;
-    Locations.ModPathLocation := fedModpath.FileName;
+    if frmGoPhast.PhastModel.ModflowPackages.ModPath.MpathVersion = mp5 then
+    begin
+      Locations.ModPathLocation := fedModpath.FileName;
+    end
+    else
+    begin
+      Locations.ModPathLocationVersion6 := fedModpath.FileName;
+    end;
     Locations.ModelMonitorLocation := fedModelMonitor.FileName;
     Locations.ZoneBudgetLocation := fedZonebudget.FileName;
     Locations.ModelMateLocation := fedModelMate.FileName;

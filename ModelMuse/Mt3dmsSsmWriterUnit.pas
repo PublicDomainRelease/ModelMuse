@@ -5,7 +5,7 @@ interface
 uses
   CustomModflowWriterUnit, SysUtils, ScreenObjectUnit,
   ModflowPackageSelectionUnit, Forms, PhastModelUnit, Classes, IntListUnit,
-  ModflowBoundaryDisplayUnit;
+  ModflowBoundaryDisplayUnit, ModflowCellUnit;
 
 type
   TMt3dmsSsmWriter = class(TCustomTransientWriter)
@@ -14,12 +14,12 @@ type
     FBoundaryCellsPerStressPeriod: TIntegerList;
     procedure CountCells(var MaximumNumberOfCells: Integer);
     procedure WriteBoundaryArrays(const FormatString: string;
-      StressPeriod, BoundaryID: integer);
+      BoundaryID: integer; List: TValueCellList);
     procedure WriteDataSet1;
     procedure WriteDataSet2;
-    procedure WriteDataSets3and4(StressPeriod: integer);
-    procedure WriteDataSets5and6(StressPeriod: integer);
-    procedure WriteDataSets7and8(StressPeriod: integer);
+    procedure WriteDataSets3and4(StressPeriod: Integer; List: TValueCellList);
+    procedure WriteDataSets5and6(StressPeriod: Integer; List: TValueCellList);
+    procedure WriteDataSets7and8(StressPeriod: integer; List: TValueCellList);
     procedure WriteStressPeriods; reintroduce;
   protected
     procedure Evaluate; override;
@@ -36,7 +36,7 @@ implementation
 
 uses
   GoPhastTypes, Mt3dmsChemUnit, frmProgressUnit, frmErrorsAndWarningsUnit,
-  ModflowUnitNumbers, ModflowCellUnit, ModflowGridUnit, Mt3dmsChemSpeciesUnit,
+  ModflowUnitNumbers, ModflowGridUnit, Mt3dmsChemSpeciesUnit,
   DataSetUnit, RbwParser, ModflowPackagesUnit;
 
 resourcestring
@@ -59,6 +59,7 @@ resourcestring
   StrWritingDataSet1 = '  Writing Data Set 1.';
   StrWritingDataSet2 = '  Writing Data Set 2.';
   StrWritingStressP = '    Writing Stress Period %d';
+  StrTransferringDat = '    Transferring Data for %s';
 
 { TMt3dmsSsmWriter }
 
@@ -204,35 +205,59 @@ var
   ScreenObject: TScreenObject;
   Boundary: TMt3dmsConcBoundary;
   NoAssignmentErrorRoot: string;
+  BoundaryList: TList;
+  BoundaryIndex: Integer;
+  ValueIndex: Integer;
+  Cells: TValueCellList;
 begin
   NoAssignmentErrorRoot := Format(StrNoBoundaryConditio,
     [Package.PackageIdentifier]);
   frmProgressMM.AddMessage(StrEvaluatingSSMPacka);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, NoAssignmentErrorRoot);
 
-  for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
-  begin
-    ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
-    if ScreenObject.Deleted then
+  BoundaryList := TList.Create;
+  try
+    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
     begin
-      Continue;
-    end;
-    if not ScreenObject.UsedModels.UsesModel(Model) then
-    begin
-      Continue;
-    end;
-    Boundary := ScreenObject.Mt3dmsConcBoundary;
-    if Boundary <> nil then
-    begin
-      frmProgressMM.AddMessage(Format(StrEvaluatingS, [ScreenObject.Name]));
-      if not ScreenObject.SetValuesOfEnclosedCells
-        and not ScreenObject.SetValuesOfIntersectedCells then
+      ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
+      if ScreenObject.Deleted then
       begin
-        frmErrorsAndWarnings.AddError(Model,
-          NoAssignmentErrorRoot, ScreenObject.Name);
+        Continue;
       end;
-      Boundary.GetCellValues(Values, nil, Model);
+      if not ScreenObject.UsedModels.UsesModel(Model) then
+      begin
+        Continue;
+      end;
+      Boundary := ScreenObject.Mt3dmsConcBoundary;
+      if Boundary <> nil then
+      begin
+        frmProgressMM.AddMessage(Format(StrEvaluatingS, [ScreenObject.Name]));
+        Application.ProcessMessages;
+        if not ScreenObject.SetValuesOfEnclosedCells
+          and not ScreenObject.SetValuesOfIntersectedCells then
+        begin
+          frmErrorsAndWarnings.AddError(Model,
+            NoAssignmentErrorRoot, ScreenObject.Name);
+        end;
+        Boundary.GetCellValues(Values, nil, Model);
+        BoundaryList.Add(Boundary);
+      end;
     end;
+    Application.ProcessMessages;
+    for BoundaryIndex := 0 to BoundaryList.Count - 1 do
+    begin
+      Boundary := BoundaryList[BoundaryIndex];
+      ScreenObject := Boundary.ScreenObject as TScreenObject;
+      frmProgressMM.AddMessage(Format(StrTransferringDat, [ScreenObject.Name]));
+      Boundary.BoundaryAssignCells(Model,Values);
+    end;
+    for ValueIndex := 0 to Values.Count - 1 do
+    begin
+      Cells := Values[ValueIndex];
+      Cells.Cache;
+    end;
+  finally
+    BoundaryList.Free;
   end;
   CountCells(MXSS);
 end;
@@ -290,7 +315,7 @@ begin
       ConcentrationArray := ConcentrationsTimes[TimeIndex]
         as TModflowBoundaryDisplayDataArray;
       CellList := Values[TimeIndex];
-      CellList.CheckRestore;
+//      CellList.CheckRestore;
 
 
       if CellList.Count > 0 then
@@ -338,14 +363,14 @@ begin
 end;
 
 procedure TMt3dmsSsmWriter.WriteBoundaryArrays(const FormatString: string;
-  StressPeriod, BoundaryID: integer);
+  BoundaryID: integer; List: TValueCellList);
 var
   Grid: TModflowGrid;
   ComponentCount: Integer;
   ComponentList: TList;
   ComponentIndex: Integer;
   Concentration: array of array of array of double;
-  List: TValueCellList;
+
   CellIndex: Integer;
   ACell: TMt3dmsConc_Cell;
   ChemItem: TChemSpeciesItem;
@@ -372,7 +397,6 @@ begin
     end;
   end;
 
-  List := Values[StressPeriod];
   for CellIndex := 0 to List.Count - 1 do
   begin
     ACell := List[CellIndex] as TMt3dmsConc_Cell;
@@ -385,7 +409,7 @@ begin
       end;
     end;
   end;
-  List.Cache;
+//  List.Cache;
 
   ComponentList := TList.Create;
   try
@@ -430,43 +454,42 @@ begin
   end;
 end;
 
-procedure TMt3dmsSsmWriter.WriteDataSets3and4(StressPeriod: integer);
+procedure TMt3dmsSsmWriter.WriteDataSets3and4(StressPeriod: Integer; List: TValueCellList);
 begin
   if Model.ModflowPackages.RchPackage.IsSelected then
   begin
     frmProgressMM.AddMessage(StrWritingRechar);
     // Data set 3
     WriteI10Integer(1, 'SSM package, INCRCH');
-    WriteString(' # Data set 3: INCRCH');
+    WriteString(' # Data set 3: INCRCH; Stress Period ' + IntToStr(StressPeriod+1));
     NewLine;
 
     // data set 4.
-    WriteBoundaryArrays(StrDataSet4CRCHSp, StressPeriod, ISSTYPE_RCH);
+    WriteBoundaryArrays(StrDataSet4CRCHSp, ISSTYPE_RCH, List);
   end;
 end;
 
-procedure TMt3dmsSsmWriter.WriteDataSets5and6(StressPeriod: integer);
+procedure TMt3dmsSsmWriter.WriteDataSets5and6(StressPeriod: Integer; List: TValueCellList);
 begin
   if Model.ModflowPackages.EvtPackage.IsSelected then
   begin
     frmProgressMM.AddMessage(StrWritingEvapot);
     // Data set 5
     WriteI10Integer(1, 'SSM package, INCEVT');
-    WriteString(' # Data set 5: INCEVT');
+    WriteString(' # Data set 5: INCEVT; Stress Period ' + IntToStr(StressPeriod+1));
     NewLine;
 
     // data set 6.
-    WriteBoundaryArrays(StrDataSet6CEVTSp, StressPeriod, ISSTYPE_EVT);
+    WriteBoundaryArrays(StrDataSet6CEVTSp, ISSTYPE_EVT, List);
   end;
 end;
 
-procedure TMt3dmsSsmWriter.WriteDataSets7and8(StressPeriod: integer);
+procedure TMt3dmsSsmWriter.WriteDataSets7and8(StressPeriod: integer; List: TValueCellList);
 const
   DS8 = ' # Data Set 8: KSS, ISS, JSS, CSS, ISSTYPE, [CSSMS(n), n=1, NCOMP]';
 var
   NSS: Integer;
   ComponentCount: Integer;
-  List: TValueCellList;
   CellIndex: Integer;
   ACell: TMt3dmsConc_Cell;
   LayerCount: Integer;
@@ -480,10 +503,11 @@ var
   TestLayer: Integer;
 begin
   frmProgressMM.AddMessage(StrWritingPoint);
+  Application.ProcessMessages;
   // Data set 7
   NSS := FBoundaryCellsPerStressPeriod[StressPeriod];
   WriteI10Integer(NSS, 'SSM package, NSS');
-  WriteString(' # Data set 7: NSS');
+  WriteString(' # Data set 7: NSS; Stress Period ' + IntToStr(StressPeriod+1));
   NewLine;
   if NSS > 0 then
   begin
@@ -627,6 +651,7 @@ begin
         end;
       end;
     end;
+//    List.Cache;
   end;
 end;
 
@@ -713,6 +738,7 @@ var
   TimeIndex: Integer;
   NSS: Integer;
   Packages: TModflowPackages;
+  List: TValueCellList;
 begin
   if Values.Count = 0 then
   begin
@@ -736,25 +762,30 @@ begin
   begin
     frmProgressMM.AddMessage(Format(StrWritingStressP, [TimeIndex+1]));
 
-    WriteDataSets3and4(TimeIndex);
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+    List := Values[TimeIndex];
+    try
+      WriteDataSets3and4(TimeIndex, List);
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    WriteDataSets5and6(TimeIndex);
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      WriteDataSets5and6(TimeIndex, List);
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    WriteDataSets7and8(TimeIndex);
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
+      WriteDataSets7and8(TimeIndex, List);
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+    finally
+      List.Cache;
     end;
   end;
 end;

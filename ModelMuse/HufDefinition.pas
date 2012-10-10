@@ -128,8 +128,9 @@ type
     procedure SetPrintItems(const Value: TPrintCollection);
     procedure RenameLayer(const NewHufName: string);
     procedure FillDataArrayNames(DataArrayNames: TStrings);
-    procedure CreateOrRenameDataArray(var LayerName: string; Extension: string;
-      const NewHufName: string; AModel: TBaseModel);
+    procedure CreateOrRenameDataArray(var LayerName: string;
+      Extension, DisplayExtension: string; const NewHufName: string;
+      AModel: TBaseModel);
     function HufUnits: THydrogeologicUnits;
     procedure RemoveUsedParameter(const ParameterName: string);
     function UsesParameterType(ParamType: TParameterType): Boolean;
@@ -202,9 +203,13 @@ uses
   SysUtils, PhastModelUnit, DataSetUnit, frmGoPhastUnit, Math, 
   ModflowParameterUnit;
 
+const
+  kMultiplier = '_Multiplier';
+  kZone = '_Zone';
+
 resourcestring
-  StrMultiplier = '_Multiplier';
-  StrZone = '_Zone';
+  StrMultiplier = kMultiplier;
+  StrZone = kZone;
   StrHydrogeologicUnit = 'Hydrogeologic unit = %0:s; Parameter = %1:s';
 
 { THufUsedParameters }
@@ -235,6 +240,7 @@ end;
 procedure THufUsedParameter.RenameDataArrays(NewRoot: string; AModel: TBaseModel);
 var
   NewName: string;
+  NewDisplayName: string;
   DataArray: TDataArray;
   LocalModel: TCustomModel;
   DataArrayManager: TDataArrayManager;
@@ -251,8 +257,12 @@ begin
       DataArray := DataArrayManager.GetDataSetByName(FMultiplierName);
       if DataArray <> nil then
       begin
-        NewName := NewRoot + StrMultiplier;
-        DataArray.UpdateWithName(NewName);
+        NewName := NewRoot + kMultiplier;
+        NewDisplayName := NewRoot + StrMultiplier;
+        if FMultiplierName <> NewName then
+        begin
+          LocalModel.RenameDataArray(DataArray, NewName, NewDisplayName);
+        end;
         FMultiplierName := NewName;
       end;
     end;
@@ -261,8 +271,12 @@ begin
       DataArray := DataArrayManager.GetDataSetByName(FZoneName);
       if DataArray <> nil then
       begin
-        NewName := NewRoot + StrZone;
-        DataArray.UpdateWithName(NewName);
+        NewName := NewRoot + kZone;
+        NewDisplayName := NewRoot + StrZone;
+        if FZoneName <> NewName then
+        begin
+          LocalModel.RenameDataArray(DataArray, NewName, NewDisplayName);
+        end;
         FZoneName := NewName;
       end;
     end;
@@ -289,6 +303,8 @@ var
   PhastModel: TPhastModel;
   ChildIndex: Integer;
   ChildModel: TChildModel;
+  LayerDisplayName: string;
+  DisplayExtension: string;
 begin
   LocalModel := AModel as TCustomModel;
   if LocalModel <> nil then
@@ -298,21 +314,24 @@ begin
     begin
       if DataType = rdtBoolean then
       begin
-        Extension := StrZone;
+        Extension := kZone;
+        DisplayExtension := StrZone;
         Formula := 'False';
       end
       else
       begin
         Assert(DataType = rdtDouble);
-        Extension := StrMultiplier;
+        Extension := kMultiplier;
+        DisplayExtension := StrMultiplier;
         Formula := '1.';
       end;
       LayerName := HufUnit.FHufName + '_' + ParameterName + Extension;
+      LayerDisplayName := HufUnit.FHufName + '_' + ParameterName + DisplayExtension;
       DataArray := DataArrayManager.GetDataSetByName(LayerName);
       if DataArray = nil then
       begin
         DataArray := DataArrayManager.CreateNewDataArray(TDataArray, LayerName,
-          Formula, StandardLock, DataType, eaBlocks, dsoTop, StrHUF);
+          Formula, LayerDisplayName, StandardLock, DataType, eaBlocks, dsoTop, StrHUF);
         LocalModel.UpdateDataArrayDimensions(DataArray);
 //        if frmGoPhast.Grid = nil then
 //        begin
@@ -331,6 +350,7 @@ begin
       end
       else
       begin
+        DataArray.DisplayName := LayerDisplayName;
         DataArray.UpdateWithName(LayerName);
         DataArray.Lock := StandardLock;
 //        DataArray.OnNameChange := LocalModel.DataArrayNameChange;
@@ -740,7 +760,7 @@ begin
 end;
 
 procedure THydrogeologicUnit.CreateOrRenameDataArray(var LayerName: string;
-  Extension: string; const NewHufName: string; AModel: TBaseModel);
+  Extension, DisplayExtension: string; const NewHufName: string; AModel: TBaseModel);
 var
   LocalModel: TCustomModel;
   DataArray: TDataArray;
@@ -748,7 +768,7 @@ var
   PhastModel: TPhastModel;
   ChildIndex: Integer;
   ChildModel: TChildModel;
-
+  LayerDisplayName: string;
 begin
   LocalModel := AModel as TCustomModel;
   DataArrayManager := LocalModel.DataArrayManager;
@@ -762,6 +782,7 @@ begin
     DataArray := DataArrayManager.GetDataSetByName(LayerName);
   end;
   LayerName := NewHufName + Extension;
+  LayerDisplayName := NewHufName + DisplayExtension;
   if DataArray = nil then
   begin
     DataArray := DataArrayManager.GetDataSetByName(LayerName);
@@ -769,7 +790,7 @@ begin
   if DataArray = nil then
   begin
     DataArray := DataArrayManager.CreateNewDataArray(TDataArray, LayerName,
-      '0.', StandardLock, rdtDouble, eaBlocks, dsoTop, StrHUF);
+      '0.', LayerDisplayName, StandardLock, rdtDouble, eaBlocks, dsoTop, StrHUF);
     LocalModel.UpdateDataArrayDimensions(DataArray);
 //    if frmGoPhast.Grid = nil then
 //    begin
@@ -795,7 +816,9 @@ begin
   end
   else
   begin
-    DataArray.UpdateWithName(LayerName);
+    LocalModel.RenameDataArray(DataArray, LayerName, LayerDisplayName);
+//    DataArray.DisplayName := LayerDisplayName;
+//    DataArray.UpdateWithName(LayerName);
     DataArray.Lock := StandardLock;
 //    DataArray.OnNameChange := LocalModel.DataArrayNameChange;
     DataArray.OnDataSetUsed := LocalModel.HufDataArrayUsed;
@@ -806,7 +829,8 @@ begin
     for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
     begin
       ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
-      CreateOrRenameDataArray(LayerName, Extension, NewHufName, ChildModel);
+      CreateOrRenameDataArray(LayerName, Extension, DisplayExtension,
+        NewHufName, ChildModel);
     end;
   end;
 end;
@@ -900,8 +924,9 @@ var
 begin
   if Model <> nil then
   begin
-    CreateOrRenameDataArray(FTopArrayName, StrTop, NewHufName, Model);
-    CreateOrRenameDataArray(FThickessArrayName, StrHufThickness, NewHufName, Model);
+    CreateOrRenameDataArray(FTopArrayName, kTop, StrTop, NewHufName, Model);
+    CreateOrRenameDataArray(FThickessArrayName, kHufThickness,
+      StrHufThickness, NewHufName, Model);
     LocalModel := Model as TCustomModel;
     DataArray := LocalModel.DataArrayManager.GetDataSetByName(FThickessArrayName);
     Assert(DataArray <> nil);

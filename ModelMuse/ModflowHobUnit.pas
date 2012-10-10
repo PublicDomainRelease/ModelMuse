@@ -54,9 +54,13 @@ type
     procedure SetStatFlag(const Value: TStatFlag);
     procedure SetStatistic(const Value: double);
     function GetStatFlag: TStatFlag;
+    function GetHeadChange: Double;
+    procedure SetHeadChange(const Value: Double);
   protected
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
     procedure InvalidateModel; override;
+  public
+    property HeadChange: Double read GetHeadChange write SetHeadChange;
   published
     // @name copies Source to this @classname.
     procedure Assign(Source: TPersistent); override;
@@ -494,6 +498,23 @@ begin
   inherited;
 end;
 
+function THobItem.GetHeadChange: Double;
+var
+  LocalCollection: THobCollection;
+  FirstItem: THobItem;
+begin
+  if Index = 0 then
+  begin
+    result := 0;
+  end
+  else
+  begin
+    LocalCollection := Collection as THobCollection;
+    FirstItem := LocalCollection.Items[0] as THobItem;
+    Result := Head - FirstItem.Head;
+  end;
+end;
+
 function THobItem.GetStatFlag: TStatFlag;
 var
   LocalCollection: THobCollection;
@@ -523,6 +544,19 @@ begin
     result := (Item.Head = Head)
       and (Item.Statistic = Statistic)
       and (Item.StatFlag = StatFlag);
+  end;
+end;
+
+procedure THobItem.SetHeadChange(const Value: Double);
+var
+  LocalCollection: THobCollection;
+  FirstItem: THobItem;
+begin
+  if Index > 0 then
+  begin
+    LocalCollection := Collection as THobCollection;
+    FirstItem := LocalCollection.Items[0] as THobItem;
+    Head := FirstItem.Head + Value;
   end;
 end;
 

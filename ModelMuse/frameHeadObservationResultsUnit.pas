@@ -2,6 +2,8 @@ unit frameHeadObservationResultsUnit;
 
 interface
 
+{ TODO : give the option to plot residuals as a number and to filter out large residuals. }
+
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, Grids, RbwDataGrid4, JvSpin, JvExControls,

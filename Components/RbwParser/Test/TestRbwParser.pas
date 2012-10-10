@@ -1,4 +1,4 @@
-unit TestRbwParser;
+﻿unit TestRbwParser;
 {
 
   Delphi DUnit Test Case
@@ -9,6 +9,16 @@ unit TestRbwParser;
 
 }
 
+{$ifdef CONDITIONALEXPRESSIONS}
+  {$if CompilerVersion>=20}
+    {$DEFINE Delphi_2009_UP}
+  {$ifend}
+  {$if CompilerVersion>=21}
+    {$DEFINE Delphi_XE_UP}
+  {$ifend}
+{$endif}
+
+
 interface
 
 uses
@@ -18,6 +28,7 @@ type
   TestTRbwParser = class(TTestCase)
   strict private
     FRbwParser: TRbwParser;
+  private
   public
     procedure SetUp; override;
     procedure TearDown; override;
@@ -28,6 +39,10 @@ type
     procedure TestCreateVariable1;
     procedure TestCreateVariable2;
     procedure TestCreateVariable3;
+    {$IFDEF Delphi_XE_UP}
+    procedure TestCreateVariable4;
+    procedure Test_InternationalChar;
+    {$ENDIF}
     procedure TestCompile;
     procedure TestDeleteExpression;
     procedure TestExpressionCount;
@@ -142,6 +157,7 @@ type
     procedure TestDelete;
     procedure Test_UsesFunction;
     procedure Test_SpecialImplementor;
+    procedure TestDisplayNames;
   end;
 
 implementation
@@ -197,8 +213,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
 
   rR1.Value := 2;
   rR2.Value := 3;
@@ -244,8 +260,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
 
   rR1.Value := 2;
   rR2.Value := 3;
@@ -287,7 +303,7 @@ procedure TestTRbwParser.TestClearVariables;
 begin
   if FRbwParser.VariableCount = 0 then
   begin
-    FRbwParser.CreateVariable('X', '', True);
+    FRbwParser.CreateVariable('X', '', True, '');
   end;
   Check(FRbwParser.VariableCount > 0, 'Error counting variables');
 
@@ -306,7 +322,7 @@ begin
   end;
   Check(FRbwParser.VariableCount = 0, 'Error counting variables');
 
-  ReturnValue := FRbwParser.CreateVariable('X_bool', '', True);
+  ReturnValue := FRbwParser.CreateVariable('X_bool', '', True, '');
   Check(ReturnValue.ResultType = rdtBoolean, 'Error creating boolean variable');
   Check(ReturnValue.BooleanResult = True, 'Error setting boolean variable value');
   Check(ReturnValue.Decompile = 'X_bool', 'Error decompiling variable');
@@ -314,7 +330,7 @@ begin
 
   TestValue := False;
   try
-    FRbwParser.CreateVariable('X_bool', '', True);
+    FRbwParser.CreateVariable('X_bool', '', True, '');
   except on ERbwParserError do
     begin
       TestValue := True;
@@ -334,15 +350,15 @@ begin
   end;
   Check(FRbwParser.VariableCount = 0, 'Error counting variables');
 
-  ReturnValue := FRbwParser.CreateVariable('X_integer', '', 1);
-  Check(ReturnValue.ResultType = rdtInteger, 'Error creating real variable');
+  ReturnValue := FRbwParser.CreateVariable('X_integer', '', 1, '');
+  Check(ReturnValue.ResultType = rdtInteger, 'Error creating integer variable');
   Check(ReturnValue.IntegerResult = 1, 'Error setting integer variable value');
   Check(ReturnValue.Decompile = 'X_integer', 'Error decompiling variable');
   Check(FRbwParser.VariableCount = 1, 'Error counting variables');
 
   TestValue := False;
   try
-    FRbwParser.CreateVariable('X_integer', '', 1);
+    FRbwParser.CreateVariable('X_integer', '', 1, '');
 
   except on ERbwParserError do
     begin
@@ -366,7 +382,7 @@ begin
   Check(FRbwParser.VariableCount = 0, 'Error counting variables');
 
   Variable := 0.1;
-  ReturnValue := FRbwParser.CreateVariable('X_real', '', Variable);
+  ReturnValue := FRbwParser.CreateVariable('X_real', '', Variable, '');
   Check(ReturnValue.ResultType = rdtDouble, 'Error creating real variable');
   Variable := 0.1;
   Check(ReturnValue.DoubleResult = Variable, 'Error setting real variable value');
@@ -375,7 +391,7 @@ begin
 
   TestValue := False;
   try
-    FRbwParser.CreateVariable('X_real', '', 0.1);
+    FRbwParser.CreateVariable('X_real', '', 0.1, '');
 
   except on ERbwParserError do
     begin
@@ -396,15 +412,15 @@ begin
   end;
   Check(FRbwParser.VariableCount = 0, 'Error counting variables');
 
-  ReturnValue := FRbwParser.CreateVariable('X_string', '', '1');
-  Check(ReturnValue.ResultType = rdtString, 'Error creating real variable');
+  ReturnValue := FRbwParser.CreateVariable('X_string', '', '1', '');
+  Check(ReturnValue.ResultType = rdtString, 'Error creating string variable');
   Check(ReturnValue.StringResult = '1', 'Error setting string variable value');
   Check(ReturnValue.Decompile = 'X_string', 'Error decompiling variable');
   Check(FRbwParser.VariableCount = 1, 'Error counting variables');
 
   TestValue := False;
   try
-    FRbwParser.CreateVariable('X_string', '', '1');
+    FRbwParser.CreateVariable('X_string', '', '1', '');
 
   except on ERbwParserError do
     begin
@@ -413,6 +429,37 @@ begin
   end;
   Check(TestValue, 'Error attempting to create a duplicating variable');
 end;
+
+{$IFDEF Delphi_XE_UP}
+procedure TestTRbwParser.TestCreateVariable4;
+var
+  ReturnValue: TCustomVariable;
+  TestValue: boolean;
+begin
+  if FRbwParser.VariableCount > 0 then
+  begin
+    FRbwParser.ClearVariables;
+  end;
+  Check(FRbwParser.VariableCount = 0, 'Error counting variables');
+
+  ReturnValue := FRbwParser.CreateVariable('变量', '', '1', '');
+  Check(ReturnValue.ResultType = rdtString, 'Error creating string variable');
+  Check(ReturnValue.StringResult = '1', 'Error setting string variable value');
+  Check(ReturnValue.Decompile = '变量', 'Error decompiling variable');
+  Check(FRbwParser.VariableCount = 1, 'Error counting variables');
+
+  TestValue := False;
+  try
+    FRbwParser.CreateVariable('变量', '', '1', '');
+
+  except on ERbwParserError do
+    begin
+      TestValue := True;
+    end;
+  end;
+  Check(TestValue, 'Error attempting to create a duplicating variable');
+end;
+{$ENDIF}
 
 procedure TestTRbwParser.TestCompile;
 var
@@ -428,13 +475,13 @@ begin
   end;
   Check(FRbwParser.VariableCount = 0, 'Error counting variables');
 
-  RealVariable1 := FRbwParser.CreateVariable('RealVariable1', '', 1.0);
+  RealVariable1 := FRbwParser.CreateVariable('RealVariable1', '', 1.0, '');
   Check(RealVariable1.ResultType = rdtDouble, 'Error creating real variable');
   Check(RealVariable1.DoubleResult = 1.0, 'Error setting real variable value');
   Check(RealVariable1.Decompile = 'RealVariable1');
   Check(FRbwParser.VariableCount = 1, 'Error counting variables');
 
-  RealVariable2 := FRbwParser.CreateVariable('RealVariable2', '', 2.0);
+  RealVariable2 := FRbwParser.CreateVariable('RealVariable2', '', 2.0, '');
   Check(RealVariable2.ResultType = rdtDouble, 'Error creating real variable');
   Check(RealVariable2.DoubleResult = 2.0, 'Error setting real variable value');
   Check(RealVariable2.Decompile = 'RealVariable2');
@@ -514,13 +561,13 @@ begin
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
 
-  RealVariable1 := FRbwParser.CreateVariable('RealVariable1', '', 1.0);
+  RealVariable1 := FRbwParser.CreateVariable('RealVariable1', '', 1.0, '');
   Check(RealVariable1.ResultType = rdtDouble, 'Error creating real variable');
   Check(RealVariable1.DoubleResult = 1.0, 'Error setting real variable value');
   Check(RealVariable1.Decompile = 'RealVariable1');
   Check(FRbwParser.VariableCount = 1, 'Error counting variables');
 
-  RealVariable2 := FRbwParser.CreateVariable('RealVariable2', '', 2.0);
+  RealVariable2 := FRbwParser.CreateVariable('RealVariable2', '', 2.0, '');
   Check(RealVariable2.ResultType = rdtDouble, 'Error creating real variable');
   Check(RealVariable2.DoubleResult = 2.0, 'Error setting real variable value');
   Check(RealVariable2.Decompile = 'RealVariable2');
@@ -558,13 +605,13 @@ begin
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
 
-  RealVariable1 := FRbwParser.CreateVariable('RealVariable1', '', 1.0);
+  RealVariable1 := FRbwParser.CreateVariable('RealVariable1', '', 1.0, '');
   Check(RealVariable1.ResultType = rdtDouble, 'Error creating real variable');
   Check(RealVariable1.DoubleResult = 1.0, 'Error setting real variable value');
   Check(RealVariable1.Decompile = 'RealVariable1');
   Check(FRbwParser.VariableCount = 1, 'Error counting variables');
 
-  RealVariable2 := FRbwParser.CreateVariable('RealVariable2', '', 2.0);
+  RealVariable2 := FRbwParser.CreateVariable('RealVariable2', '', 2.0, '');
   Check(RealVariable2.ResultType = rdtDouble, 'Error creating real variable');
   Check(RealVariable2.DoubleResult = 2.0, 'Error setting real variable value');
   Check(RealVariable2.Decompile = 'RealVariable2');
@@ -580,6 +627,74 @@ begin
   Check(FRbwParser.Variables[0] = RealVariable2, 'error removing variables');
 end;
 
+procedure TestTRbwParser.TestDisplayNames;
+var
+  RealVariable1, RealVariable2: TRealVariable;
+  Position: integer;
+  Expression: string;
+  Index: Integer;
+  b1: double;
+  b2: double;
+  Value: Double;
+begin
+  FRbwParser.ClearVariables;
+  Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
+  Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
+
+  RealVariable1 := FRbwParser.CreateVariable('RealVariable1', '', 1.0, 'RealVariable5');
+  Check(RealVariable1.ResultType = rdtDouble, 'Error creating real variable');
+  Check(RealVariable1.DoubleResult = 1.0, 'Error setting real variable value');
+  Check(RealVariable1.Decompile = 'RealVariable1', 'Error creating variable');
+  Check(RealVariable1.DecompileDisplay = 'RealVariable5', 'Error Setting Display Name');
+  Check(FRbwParser.VariableCount = 2, 'Error counting variables');
+
+  RealVariable2 := FRbwParser.CreateVariable('RealVariable2', '', 2.0, '');
+  Check(RealVariable2.ResultType = rdtDouble, 'Error creating real variable');
+  Check(RealVariable2.DoubleResult = 2.0, 'Error setting real variable value');
+  Check(RealVariable2.Decompile = 'RealVariable2');
+  Check(FRbwParser.VariableCount = 3, 'Error counting variables');
+
+  Expression := 'RealVariable1 + RealVariable2';
+  FRbwParser.Compile(Expression);
+  Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
+
+  for Index := 0 to 100 do
+  begin
+    b1 := Random(1000);
+    b2 := Random(1000);
+    RealVariable1.Value := b1;
+    RealVariable2.Value := b2;
+    Value := b1 + b2;
+
+    FRbwParser.CurrentExpression.Evaluate;
+    Check(FRbwParser.CurrentExpression.DoubleResult = Value,
+      'Error calculating addition.');
+  end;
+
+  Position := FRbwParser.IndexOfVariable('RealVariable1');
+  FRbwParser.RenameVariable(Position, 'RealVariable6', 'RealVariable7');
+  Check(RealVariable1.Decompile = 'RealVariable6', 'Error renaming variable');
+  Check(RealVariable1.DecompileDisplay = 'RealVariable7', 'Error setting DisplayName');
+
+  Expression := 'RealVariable7 + RealVariable2';
+  FRbwParser.Compile(Expression);
+  Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
+
+  for Index := 0 to 100 do
+  begin
+    b1 := Random(1000);
+    b2 := Random(1000);
+    RealVariable1.Value := b1;
+    RealVariable2.Value := b2;
+    Value := b1 + b2;
+
+    FRbwParser.CurrentExpression.Evaluate;
+    Check(FRbwParser.CurrentExpression.DoubleResult = Value,
+      'Error calculating addition.');
+  end;
+
+end;
+
 procedure TestTRbwParser.TestRenameVariable;
 var
   RealVariable1, RealVariable2: TRealVariable;
@@ -589,20 +704,20 @@ begin
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
 
-  RealVariable1 := FRbwParser.CreateVariable('RealVariable1', '', 1.0);
+  RealVariable1 := FRbwParser.CreateVariable('RealVariable1', '', 1.0, '');
   Check(RealVariable1.ResultType = rdtDouble, 'Error creating real variable');
   Check(RealVariable1.DoubleResult = 1.0, 'Error setting real variable value');
   Check(RealVariable1.Decompile = 'RealVariable1');
   Check(FRbwParser.VariableCount = 1, 'Error counting variables');
 
-  RealVariable2 := FRbwParser.CreateVariable('RealVariable2', '', 2.0);
+  RealVariable2 := FRbwParser.CreateVariable('RealVariable2', '', 2.0, '');
   Check(RealVariable2.ResultType = rdtDouble, 'Error creating real variable');
   Check(RealVariable2.DoubleResult = 2.0, 'Error setting real variable value');
   Check(RealVariable2.Decompile = 'RealVariable2');
   Check(FRbwParser.VariableCount = 2, 'Error counting variables');
 
   Position := FRbwParser.IndexOfVariable('RealVariable1');
-  FRbwParser.RenameVariable(Position, 'RealVariable3');
+  FRbwParser.RenameVariable(Position, 'RealVariable3', '');
   Check(RealVariable1.Decompile = 'RealVariable3', 'Error renaming variable');
 end;
 
@@ -614,13 +729,13 @@ begin
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
 
-  RealVariable1 := FRbwParser.CreateVariable('RealVariable1', '', 1.0);
+  RealVariable1 := FRbwParser.CreateVariable('RealVariable1', '', 1.0, '');
   Check(RealVariable1.ResultType = rdtDouble, 'Error creating real variable');
   Check(RealVariable1.DoubleResult = 1.0, 'Error setting real variable value');
   Check(RealVariable1.Decompile = 'RealVariable1');
   Check(FRbwParser.VariableCount = 1, 'Error counting variables');
 
-  RealVariable2 := FRbwParser.CreateVariable('RealVariable2', '', 2.0);
+  RealVariable2 := FRbwParser.CreateVariable('RealVariable2', '', 2.0, '');
   Check(RealVariable2.ResultType = rdtDouble, 'Error creating real variable');
   Check(RealVariable2.DoubleResult = 2.0, 'Error setting real variable value');
   Check(RealVariable2.Decompile = 'RealVariable2');
@@ -643,7 +758,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  sS :=FRbwParser.CreateVariable('S', '', '');
+  sS :=FRbwParser.CreateVariable('S', '', '', '');
   Expression := 'UpperCase(S)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtString, 'Error compiling');
@@ -670,7 +785,7 @@ var
 begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
-  FRbwParser.CreateVariable('RVar', '', 1.0);
+  FRbwParser.CreateVariable('RVar', '', 1.0, '');
   Formula := 'Cos(Sin(RVar))';
   FRbwParser.Compile(Formula);
   Expression := FRbwParser.CurrentExpression;
@@ -691,9 +806,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
-  iI3 :=FRbwParser.CreateVariable('I3', '', 0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
+  iI3 :=FRbwParser.CreateVariable('I3', '', 0, '');
   Expression := 'MinI(I1, I2, I3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -735,7 +850,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'ArcCos(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -765,7 +880,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  sS1 :=FRbwParser.CreateVariable('S1', '', '');
+  sS1 :=FRbwParser.CreateVariable('S1', '', '', '');
   Expression := 'StrTofloatDef(S1, 0)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -836,9 +951,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  bB :=FRbwParser.CreateVariable('B', '', False);
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
+  bB :=FRbwParser.CreateVariable('B', '', False, '');
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
   Expression := 'IfI(B, I1, I2)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -875,7 +990,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'ArcCosh(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -908,7 +1023,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  sS1 :=FRbwParser.CreateVariable('S1', '', '');
+  sS1 :=FRbwParser.CreateVariable('S1', '', '', '');
   Expression := 'StrToInt(S1)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -956,7 +1071,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI :=FRbwParser.CreateVariable('I', '', 0);
+  iI :=FRbwParser.CreateVariable('I', '', 0, '');
   Expression := 'IntToStr(I)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtString, 'Error compiling');
@@ -1027,7 +1142,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'Frac(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -1052,7 +1167,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'Arctanh(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -1082,7 +1197,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  sS1 :=FRbwParser.CreateVariable('S1', '', '');
+  sS1 :=FRbwParser.CreateVariable('S1', '', '', '');
   Expression := 'StrToIntDef(S1, 0)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -1136,8 +1251,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  sS1 :=FRbwParser.CreateVariable('S1', '', '');
-  sS2 :=FRbwParser.CreateVariable('S2', '', '');
+  sS1 :=FRbwParser.CreateVariable('S1', '', '', '');
+  sS2 :=FRbwParser.CreateVariable('S2', '', '', '');
   Expression := 'Pos(S2, S1)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -1176,9 +1291,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  sS1 :=FRbwParser.CreateVariable('S1', '', '');
-  sS2 :=FRbwParser.CreateVariable('S2', '', '');
-  FRbwParser.CreateVariable('Offset', '', 31);
+  sS1 :=FRbwParser.CreateVariable('S1', '', '', '');
+  sS2 :=FRbwParser.CreateVariable('S2', '', '', '');
+  FRbwParser.CreateVariable('Offset', '', 31, '');
   Expression := 'PosEx(S2, S1, Offset)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -1218,10 +1333,10 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI :=FRbwParser.CreateVariable('I', '', 0);
-  sS1 :=FRbwParser.CreateVariable('S1', '', '');
-  sS2 :=FRbwParser.CreateVariable('S2', '', '');
-  sS3 :=FRbwParser.CreateVariable('S3', '', '');
+  iI :=FRbwParser.CreateVariable('I', '', 0, '');
+  sS1 :=FRbwParser.CreateVariable('S1', '', '', '');
+  sS2 :=FRbwParser.CreateVariable('S2', '', '', '');
+  sS3 :=FRbwParser.CreateVariable('S3', '', '', '');
   Expression := 'CaseS(I, S1, S2, S3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtString, 'Error compiling');
@@ -1276,7 +1391,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'RadToDeg(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -1304,9 +1419,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  bB :=FRbwParser.CreateVariable('B', '', False);
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  bB :=FRbwParser.CreateVariable('B', '', False, '');
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
   Expression := 'IfR(B, R1, R2)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -1343,7 +1458,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'DegToRad(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -1372,9 +1487,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  sX :=FRbwParser.CreateVariable('x', '', '');
-  iStartVar :=FRbwParser.CreateVariable('Start', '', 0);
-  iLengthVar :=FRbwParser.CreateVariable('StringLength', '', 0);
+  sX :=FRbwParser.CreateVariable('x', '', '', '');
+  iStartVar :=FRbwParser.CreateVariable('Start', '', 0, '');
+  iLengthVar :=FRbwParser.CreateVariable('StringLength', '', 0, '');
   Expression := 'Copy(x,Start,StringLength)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtString, 'Error compiling');
@@ -1412,9 +1527,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
-  rR3 :=FRbwParser.CreateVariable('R3', '', 0.0);
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
+  rR3 :=FRbwParser.CreateVariable('R3', '', 0.0, '');
   Expression := 'MaxR(R1, R2, R3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -1456,8 +1571,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
   Expression := 'LogN(R1, R2)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -1487,10 +1602,10 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI :=FRbwParser.CreateVariable('I', '', 0);
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
-  iI3 :=FRbwParser.CreateVariable('I3', '', 0);
+  iI :=FRbwParser.CreateVariable('I', '', 0, '');
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
+  iI3 :=FRbwParser.CreateVariable('I3', '', 0, '');
   Expression := 'CaseI(I, I1, I2, I3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -1558,7 +1673,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'Trunc(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -1583,7 +1698,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'Sin(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -1620,7 +1735,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iX :=FRbwParser.CreateVariable('x', '', 0);
+  iX :=FRbwParser.CreateVariable('x', '', 0, '');
   Expression := 'FactorialR(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -1644,11 +1759,11 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rPosition :=FRbwParser.CreateVariable('Position', '', 0.0);
-  rDistance1 :=FRbwParser.CreateVariable('Distance1', '', 0.0);
-  rDistance2 :=FRbwParser.CreateVariable('Distance2', '', 0.0);
-  rValue1 :=FRbwParser.CreateVariable('Value1', '', 0.0);
-  rValue2 :=FRbwParser.CreateVariable('Value2', '', 0.0);
+  rPosition :=FRbwParser.CreateVariable('Position', '', 0.0, '');
+  rDistance1 :=FRbwParser.CreateVariable('Distance1', '', 0.0, '');
+  rDistance2 :=FRbwParser.CreateVariable('Distance2', '', 0.0, '');
+  rValue1 :=FRbwParser.CreateVariable('Value1', '', 0.0, '');
+  rValue2 :=FRbwParser.CreateVariable('Value2', '', 0.0, '');
   Expression := 'Interpolate(Position, Value1, Distance1, Value2, Distance2)';
   Expression2 := Expression;
   FRbwParser.Compile(Expression);
@@ -1697,7 +1812,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'Sinh(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -1831,8 +1946,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
   Expression := 'Power(R1, R2)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -1860,7 +1975,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
   Expression := 'Odd(I1)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtboolean, 'Error compiling');
@@ -1890,7 +2005,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'SqrR(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -1917,7 +2032,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  sX :=FRbwParser.CreateVariable('x', '', '');
+  sX :=FRbwParser.CreateVariable('x', '', '', '');
   Expression := 'Length(x)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -1955,8 +2070,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI :=FRbwParser.CreateVariable('I', '', 0);
-  rR :=FRbwParser.CreateVariable('R', '', 0.0);
+  iI :=FRbwParser.CreateVariable('I', '', 0, '');
+  rR :=FRbwParser.CreateVariable('R', '', 0.0, '');
   Expression := 'IntPower(R, I)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -1988,10 +2103,10 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI :=FRbwParser.CreateVariable('I', '', 0);
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
-  rR3 :=FRbwParser.CreateVariable('R3', '', 0.0);
+  iI :=FRbwParser.CreateVariable('I', '', 0, '');
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
+  rR3 :=FRbwParser.CreateVariable('R3', '', 0.0, '');
   Expression := 'CaseR(I, R1, R2, R3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -2042,9 +2157,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
-  rR3 :=FRbwParser.CreateVariable('R3', '', 0.0);
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
+  rR3 :=FRbwParser.CreateVariable('R3', '', 0.0, '');
   Expression := 'MinR(R1, R2, R3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -2090,7 +2205,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  sS :=FRbwParser.CreateVariable('S', '', '');
+  sS :=FRbwParser.CreateVariable('S', '', '', '');
   Expression := 'LowerCase(S)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtString, 'Error compiling');
@@ -2121,9 +2236,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
-  iI3 :=FRbwParser.CreateVariable('I3', '', 0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
+  iI3 :=FRbwParser.CreateVariable('I3', '', 0, '');
   Expression := 'MaxI(I1, I2, I3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -2165,7 +2280,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'Cos(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -2190,7 +2305,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'Cosh(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -2215,7 +2330,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'Sqrt(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -2238,13 +2353,13 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rPosition :=FRbwParser.CreateVariable('Position', '', 0.0);
-  rDistance1 :=FRbwParser.CreateVariable('Distance1', '', 0.0);
-  rDistance2 :=FRbwParser.CreateVariable('Distance2', '', 0.0);
-  rDistance3 :=FRbwParser.CreateVariable('Distance3', '', 0.0);
-  rValue1 :=FRbwParser.CreateVariable('Value1', '', 0.0);
-  rValue2 :=FRbwParser.CreateVariable('Value2', '', 0.0);
-  rValue3 :=FRbwParser.CreateVariable('Value3', '', 0.0);
+  rPosition :=FRbwParser.CreateVariable('Position', '', 0.0, '');
+  rDistance1 :=FRbwParser.CreateVariable('Distance1', '', 0.0, '');
+  rDistance2 :=FRbwParser.CreateVariable('Distance2', '', 0.0, '');
+  rDistance3 :=FRbwParser.CreateVariable('Distance3', '', 0.0, '');
+  rValue1 :=FRbwParser.CreateVariable('Value1', '', 0.0, '');
+  rValue2 :=FRbwParser.CreateVariable('Value2', '', 0.0, '');
+  rValue3 :=FRbwParser.CreateVariable('Value3', '', 0.0, '');
   Expression := 'MultiInterpolate(Position, Value1, Distance1)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -2342,7 +2457,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iX :=FRbwParser.CreateVariable('x', '', 0);
+  iX :=FRbwParser.CreateVariable('x', '', 0, '');
   Expression := 'FactorialI(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -2367,7 +2482,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'ArcSin(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -2390,11 +2505,11 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  FRbwParser.CreateVariable('x1', '', 0.0);
-  FRbwParser.CreateVariable('x2', '', 0.0);
-  FRbwParser.CreateVariable('y1', '', 0.0);
-  FRbwParser.CreateVariable('y2', '', 0.0);
-  FRbwParser.CreateVariable('A', '', 0);
+  FRbwParser.CreateVariable('x1', '', 0.0, '');
+  FRbwParser.CreateVariable('x2', '', 0.0, '');
+  FRbwParser.CreateVariable('y1', '', 0.0, '');
+  FRbwParser.CreateVariable('y2', '', 0.0, '');
+  FRbwParser.CreateVariable('A', '', 0, '');
   Expression := 'Distance(+x1, y1, x2, y2) * (-A + 1)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtdouble, 'Error compiling');
@@ -2436,10 +2551,10 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX1 :=FRbwParser.CreateVariable('x1', '', 0.0);
-  rX2 :=FRbwParser.CreateVariable('x2', '', 0.0);
-  rY1 :=FRbwParser.CreateVariable('y1', '', 0.0);
-  RY2 :=FRbwParser.CreateVariable('y2', '', 0.0);
+  rX1 :=FRbwParser.CreateVariable('x1', '', 0.0, '');
+  rX2 :=FRbwParser.CreateVariable('x2', '', 0.0, '');
+  rY1 :=FRbwParser.CreateVariable('y1', '', 0.0, '');
+  RY2 :=FRbwParser.CreateVariable('y2', '', 0.0, '');
   Expression := 'Distance(x1,y1, x2, y2)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtdouble, 'Error compiling');
@@ -2473,10 +2588,10 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI :=FRbwParser.CreateVariable('I', '', 0);
-  bB1 :=FRbwParser.CreateVariable('B1', '', False);
-  bB2 :=FRbwParser.CreateVariable('B2', '', False);
-  bB3 :=FRbwParser.CreateVariable('B3', '', False);
+  iI :=FRbwParser.CreateVariable('I', '', 0, '');
+  bB1 :=FRbwParser.CreateVariable('B1', '', False, '');
+  bB2 :=FRbwParser.CreateVariable('B2', '', False, '');
+  bB3 :=FRbwParser.CreateVariable('B3', '', False, '');
   Expression := 'CaseB(I, B1, B2, B3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtBoolean, 'Error compiling');
@@ -2526,7 +2641,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'ArcSinh(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -2559,7 +2674,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  sS1 :=FRbwParser.CreateVariable('S1', '', '');
+  sS1 :=FRbwParser.CreateVariable('S1', '', '', '');
   Expression := 'StrTofloat(S1)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -2626,7 +2741,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'log10(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -2651,7 +2766,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'ln(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -2678,7 +2793,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'FloatToStr(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtString, 'Error compiling');
@@ -2728,7 +2843,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'Round(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -2757,7 +2872,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'Tan(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -2786,9 +2901,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  bB :=FRbwParser.CreateVariable('B', '', False);
-  sS1 :=FRbwParser.CreateVariable('S1', '', '');
-  sS2 :=FRbwParser.CreateVariable('S2', '', '');
+  bB :=FRbwParser.CreateVariable('B', '', False, '');
+  sS1 :=FRbwParser.CreateVariable('S1', '', '', '');
+  sS2 :=FRbwParser.CreateVariable('S2', '', '', '');
   Expression := 'IfS(B, S1, S2)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtString, 'Error compiling');
@@ -2832,8 +2947,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
-  rY :=FRbwParser.CreateVariable('Y', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
+  rY :=FRbwParser.CreateVariable('Y', '', 0.0, '');
   Expression := 'Arctan2(Y,X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -2863,7 +2978,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'Tanh(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -2889,7 +3004,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI :=FRbwParser.CreateVariable('x', '', 0);
+  iI :=FRbwParser.CreateVariable('x', '', 0, '');
   Expression := 'SqrI(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -2915,7 +3030,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iX :=FRbwParser.CreateVariable('x', '', 0);
+  iX :=FRbwParser.CreateVariable('x', '', 0, '');
   Expression := 'AbsI(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -2943,7 +3058,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.1);
+  rX :=FRbwParser.CreateVariable('x', '', 0.1, '');
   Expression := 'AbsR(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -2974,10 +3089,10 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI :=FRbwParser.CreateVariable('I', '', 0);
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
-  iI3 :=FRbwParser.CreateVariable('I3', '', 0);
+  iI :=FRbwParser.CreateVariable('I', '', 0, '');
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
+  iI3 :=FRbwParser.CreateVariable('I3', '', 0, '');
   Expression := 'Case(I, I1, I2, I3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -3030,10 +3145,10 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI :=FRbwParser.CreateVariable('I', '', 0);
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
-  rR3 :=FRbwParser.CreateVariable('R3', '', 0.0);
+  iI :=FRbwParser.CreateVariable('I', '', 0, '');
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
+  rR3 :=FRbwParser.CreateVariable('R3', '', 0.0, '');
   Expression := 'Case(I, R1, R2, R3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -3086,10 +3201,10 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI :=FRbwParser.CreateVariable('I', '', 0);
-  bB1 :=FRbwParser.CreateVariable('B1', '', False);
-  bB2 :=FRbwParser.CreateVariable('B2', '', False);
-  bB3 :=FRbwParser.CreateVariable('B3', '', False);
+  iI :=FRbwParser.CreateVariable('I', '', 0, '');
+  bB1 :=FRbwParser.CreateVariable('B1', '', False, '');
+  bB2 :=FRbwParser.CreateVariable('B2', '', False, '');
+  bB3 :=FRbwParser.CreateVariable('B3', '', False, '');
   Expression := 'Case(I, B1, B2, B3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtBoolean, 'Error compiling');
@@ -3143,10 +3258,10 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI :=FRbwParser.CreateVariable('I', '', 0);
-  sS1 :=FRbwParser.CreateVariable('S1', '', '');
-  sS2 :=FRbwParser.CreateVariable('S2', '', '');
-  sS3 :=FRbwParser.CreateVariable('S3', '', '');
+  iI :=FRbwParser.CreateVariable('I', '', 0, '');
+  sS1 :=FRbwParser.CreateVariable('S1', '', '', '');
+  sS2 :=FRbwParser.CreateVariable('S2', '', '', '');
+  sS3 :=FRbwParser.CreateVariable('S3', '', '', '');
   Expression := 'Case(I, S1, S2, S3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtString, 'Error compiling');
@@ -3204,9 +3319,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  bB :=FRbwParser.CreateVariable('B', '', False);
-  bB1 :=FRbwParser.CreateVariable('B1', '', False);
-  bB2 :=FRbwParser.CreateVariable('B2', '', False);
+  bB :=FRbwParser.CreateVariable('B', '', False, '');
+  bB1 :=FRbwParser.CreateVariable('B1', '', False, '');
+  bB2 :=FRbwParser.CreateVariable('B2', '', False, '');
   Expression := 'IfB(B, B1, B2)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtBoolean, 'Error compiling');
@@ -3246,9 +3361,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  bB :=FRbwParser.CreateVariable('B', '', False);
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
+  bB :=FRbwParser.CreateVariable('B', '', False, '');
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
   Expression := 'If(B, I1, I2)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -3288,9 +3403,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  bB :=FRbwParser.CreateVariable('B', '', False);
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  bB :=FRbwParser.CreateVariable('B', '', False, '');
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
   Expression := 'If(B, R1, R2)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -3330,9 +3445,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  bB :=FRbwParser.CreateVariable('B', '', False);
-  bB1 :=FRbwParser.CreateVariable('B1', '', False);
-  bB2 :=FRbwParser.CreateVariable('B2', '', False);
+  bB :=FRbwParser.CreateVariable('B', '', False, '');
+  bB1 :=FRbwParser.CreateVariable('B1', '', False, '');
+  bB2 :=FRbwParser.CreateVariable('B2', '', False, '');
   Expression := 'If(B, B1, B2)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtBoolean, 'Error compiling');
@@ -3373,9 +3488,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  bB :=FRbwParser.CreateVariable('B', '', False);
-  sS1 :=FRbwParser.CreateVariable('S1', '', '');
-  sS2 :=FRbwParser.CreateVariable('S2', '', '');
+  bB :=FRbwParser.CreateVariable('B', '', False, '');
+  sS1 :=FRbwParser.CreateVariable('S1', '', '', '');
+  sS2 :=FRbwParser.CreateVariable('S2', '', '', '');
   Expression := 'If(B, S1, S2)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtString, 'Error compiling');
@@ -3418,9 +3533,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
-  rR3 :=FRbwParser.CreateVariable('R3', '', 0.0);
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
+  rR3 :=FRbwParser.CreateVariable('R3', '', 0.0, '');
   Expression := 'Max(R1, R2, R3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -3463,9 +3578,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
-  iI3 :=FRbwParser.CreateVariable('I3', '', 0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
+  iI3 :=FRbwParser.CreateVariable('I3', '', 0, '');
   Expression := 'Max(I1, I2, I3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -3508,9 +3623,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
-  rR3 :=FRbwParser.CreateVariable('R3', '', 0.0);
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
+  rR3 :=FRbwParser.CreateVariable('R3', '', 0.0, '');
   Expression := 'Min(R1, R2, R3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -3553,9 +3668,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
-  iI3 :=FRbwParser.CreateVariable('I3', '', 0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
+  iI3 :=FRbwParser.CreateVariable('I3', '', 0, '');
   Expression := 'Min(I1, I2, I3)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -3598,7 +3713,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI :=FRbwParser.CreateVariable('x', '', 0);
+  iI :=FRbwParser.CreateVariable('x', '', 0, '');
   Expression := 'Sqr(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -3624,7 +3739,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'Sqr(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -3651,8 +3766,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  sS1 :=FRbwParser.CreateVariable('S1', '', '');
-  sS2 :=FRbwParser.CreateVariable('S2', '', '');
+  sS1 :=FRbwParser.CreateVariable('S1', '', '', '');
+  sS2 :=FRbwParser.CreateVariable('S2', '', '', '');
   Expression := 'S1 + S2';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtString, 'Error compiling');
@@ -3687,8 +3802,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  bB2 :=FRbwParser.CreateVariable('B2', '', False);
-  bB3 :=FRbwParser.CreateVariable('B3', '', False);
+  bB2 :=FRbwParser.CreateVariable('B2', '', False, '');
+  bB3 :=FRbwParser.CreateVariable('B3', '', False, '');
 
   Expression := 'B2 and B3';
   FRbwParser.Compile(Expression);
@@ -3718,8 +3833,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  bB2 :=FRbwParser.CreateVariable('B2', '', False);
-  bB3 :=FRbwParser.CreateVariable('B3', '', False);
+  bB2 :=FRbwParser.CreateVariable('B2', '', False, '');
+  bB3 :=FRbwParser.CreateVariable('B3', '', False, '');
 
   Expression := 'B2 or B3';
   FRbwParser.Compile(Expression);
@@ -3751,8 +3866,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  bB1 :=FRbwParser.CreateVariable('B1', '', False);
-  bB2 :=FRbwParser.CreateVariable('B2', '', False);
+  bB1 :=FRbwParser.CreateVariable('B1', '', False, '');
+  bB2 :=FRbwParser.CreateVariable('B2', '', False, '');
 
   Expression := 'not B1';
   FRbwParser.Compile(Expression);
@@ -3798,10 +3913,10 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
 
   Expression := 'I1 > I2';
   FRbwParser.Compile(Expression);
@@ -3905,10 +4020,10 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
 
   Expression := 'I1 < I2';
   FRbwParser.Compile(Expression);
@@ -4012,10 +4127,10 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
 
   Expression := 'I1 = I2';
   FRbwParser.Compile(Expression);
@@ -4149,10 +4264,10 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
 
   Expression := 'I1 >= I2';
   FRbwParser.Compile(Expression);
@@ -4256,10 +4371,10 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
 
   Expression := 'I1 <> I2';
   FRbwParser.Compile(Expression);
@@ -4393,10 +4508,10 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
 
   Expression := 'I1 <= I2';
   FRbwParser.Compile(Expression);
@@ -4498,8 +4613,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
   Expression := 'I1 div I2';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -4539,8 +4654,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
   Expression := 'I1+I2';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -4566,6 +4681,46 @@ begin
   end;
 end;
 
+{$IFDEF Delphi_XE_UP}
+procedure TestTRbwParser.Test_InternationalChar;
+var
+  iI1, iI2: TIntegerVariable;
+  Index: integer;
+  Expression: string;
+  Value: integer;
+  I1, I2: integer;
+begin
+  FRbwParser.ClearVariables;
+  Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
+  Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
+  iI1 :=FRbwParser.CreateVariable('变量', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('另一个变量', '', 0, '');
+  Expression := '变量+另一个变量';
+  FRbwParser.Compile(Expression);
+  Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
+  for Index := 0 to 100 do
+  begin
+    I1 := Random(MAXINT div 2);
+    I2 := Random(MAXINT div 2);
+    if Random > 0.5 then
+    begin
+      I1 := -I1;
+    end;
+    if Random > 0.5 then
+    begin
+      I2 := -I2;
+    end;
+    iI1.Value := I1;
+    iI2.Value := I2;
+    value := I1+i2;
+
+    FRbwParser.CurrentExpression.Evaluate;
+    Check(FRbwParser.CurrentExpression.IntegerResult = Value,
+      'Error calculating +.');
+  end;
+end;
+{$ENDIF}
+
 procedure TestTRbwParser.Test_ModIntegerOperator;
 var
   iI1, iI2: TIntegerVariable;
@@ -4577,8 +4732,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
   Expression := 'I1 MOD I2';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -4619,8 +4774,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
   Expression := 'I1*I2';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -4658,8 +4813,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  iI1 :=FRbwParser.CreateVariable('I1', '', 0);
-  iI2 :=FRbwParser.CreateVariable('I2', '', 0);
+  iI1 :=FRbwParser.CreateVariable('I1', '', 0, '');
+  iI2 :=FRbwParser.CreateVariable('I2', '', 0, '');
   Expression := 'I1-I2';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtInteger, 'Error compiling');
@@ -4696,8 +4851,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
   Expression := 'R1+R2';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtdouble, 'Error compiling');
@@ -4734,8 +4889,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
   Expression := 'R1*R2';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtdouble, 'Error compiling');
@@ -4772,8 +4927,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
   Expression := 'R1-R2';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -4810,8 +4965,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0);
-  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0);
+  rR1 :=FRbwParser.CreateVariable('R1', '', 0.0, '');
+  rR2 :=FRbwParser.CreateVariable('R2', '', 0.0, '');
   Expression := 'R1/R2';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtdouble, 'Error compiling');
@@ -4848,8 +5003,8 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  bB2 :=FRbwParser.CreateVariable('B2', '', False);
-  bB3 :=FRbwParser.CreateVariable('B3', '', False);
+  bB2 :=FRbwParser.CreateVariable('B2', '', False, '');
+  bB3 :=FRbwParser.CreateVariable('B3', '', False, '');
 
   Expression := 'B2 xor B3';
   FRbwParser.Compile(Expression);
@@ -4878,7 +5033,7 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rX :=FRbwParser.CreateVariable('x', '', 0.0);
+  rX :=FRbwParser.CreateVariable('x', '', 0.0, '');
   Expression := 'Exp(X)';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtDouble, 'Error compiling');
@@ -4905,11 +5060,11 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  rA :=FRbwParser.CreateVariable('A', '', 0.0);
-  rB :=FRbwParser.CreateVariable('B', '', 0.0);
-  rC :=FRbwParser.CreateVariable('C', '', 0.0);
-  rD :=FRbwParser.CreateVariable('D', '', 0.0);
-  rE :=FRbwParser.CreateVariable('E', '', 0.0);
+  rA :=FRbwParser.CreateVariable('A', '', 0.0, '');
+  rB :=FRbwParser.CreateVariable('B', '', 0.0, '');
+  rC :=FRbwParser.CreateVariable('C', '', 0.0, '');
+  rD :=FRbwParser.CreateVariable('D', '', 0.0, '');
+  rE :=FRbwParser.CreateVariable('E', '', 0.0, '');
   Expression := 'A*B+C/D-E';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtdouble, 'Error compiling');
@@ -4972,13 +5127,13 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  bA :=FRbwParser.CreateVariable('A', '', False);
-  bB :=FRbwParser.CreateVariable('B', '', False);
-  bC :=FRbwParser.CreateVariable('C', '', False);
-  bD :=FRbwParser.CreateVariable('D', '', False);
-  bE :=FRbwParser.CreateVariable('E', '', False);
-  bF :=FRbwParser.CreateVariable('F', '', False);
-  bG :=FRbwParser.CreateVariable('G', '', False);
+  bA :=FRbwParser.CreateVariable('A', '', False, '');
+  bB :=FRbwParser.CreateVariable('B', '', False, '');
+  bC :=FRbwParser.CreateVariable('C', '', False, '');
+  bD :=FRbwParser.CreateVariable('D', '', False, '');
+  bE :=FRbwParser.CreateVariable('E', '', False, '');
+  bF :=FRbwParser.CreateVariable('F', '', False, '');
+  bG :=FRbwParser.CreateVariable('G', '', False, '');
   Expression := 'not A or f = g and not c xor not d and not e or not b';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtBoolean, 'Error compiling');
@@ -5017,7 +5172,7 @@ begin
     DecimalSeparator := '.';
     FRbwParser.ClearVariables;
     FRbwParser.ClearExpressions;
-    FRbwParser.CreateVariable('R', '', 0.5);
+    FRbwParser.CreateVariable('R', '', 0.5, '');
     Expression := 'FloatToStr(R)';
     FRbwParser.Compile(Expression);
     FRbwParser.CurrentExpression.Evaluate;
@@ -5026,7 +5181,7 @@ begin
     DecimalSeparator := ',';
     FRbwParser.ClearVariables;
     FRbwParser.ClearExpressions;
-    FRbwParser.CreateVariable('R', '', 0.5);
+    FRbwParser.CreateVariable('R', '', 0.5, '');
     Expression := 'FloatToStr(R)';
     FRbwParser.Compile(Expression);
     FRbwParser.CurrentExpression.Evaluate;
@@ -5047,7 +5202,7 @@ begin
     DecimalSeparator := '.';
     FRbwParser.ClearVariables;
     FRbwParser.ClearExpressions;
-    FRbwParser.CreateVariable('S', '', '0.5');
+    FRbwParser.CreateVariable('S', '', '0.5', '');
     Expression := 'StrToFloat(S)';
     FRbwParser.Compile(Expression);
     FRbwParser.CurrentExpression.Evaluate;
@@ -5056,7 +5211,7 @@ begin
     DecimalSeparator := ',';
     FRbwParser.ClearVariables;
     FRbwParser.ClearExpressions;
-    FRbwParser.CreateVariable('S', '', '0.5');
+    FRbwParser.CreateVariable('S', '', '0.5', '');
     Expression := 'StrToFloat(S)';
     FRbwParser.Compile(Expression);
     FRbwParser.CurrentExpression.Evaluate;
@@ -5073,9 +5228,9 @@ begin
   FRbwParser.ClearVariables;
   Check(FRbwParser.ExpressionCount = 0, 'Error clearing variables');
   Check(FRbwParser.VariableCount = 0, 'Error clearing variables');
-  FRbwParser.CreateVariable('A', '', 0.0);
-  FRbwParser.CreateVariable('B', '', 0.0);
-  FRbwParser.CreateVariable('C', '', 0.0);
+  FRbwParser.CreateVariable('A', '', 0.0, '');
+  FRbwParser.CreateVariable('B', '', 0.0, '');
+  FRbwParser.CreateVariable('C', '', 0.0, '');
   Expression := 'A*B';
   FRbwParser.Compile(Expression);
   Check(FRbwParser.CurrentExpression.ResultType = rdtdouble, 'Error compiling');

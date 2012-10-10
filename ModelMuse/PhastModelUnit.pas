@@ -33,6 +33,11 @@ uses Windows, Types, GuiSettingsUnit, SysUtils, Classes, Contnrs, Controls,
   SutraOptionsUnit;
 
 const
+  kHufThickness = '_Thickness';
+resourcestring
+  StrHufThickness = kHufThickness;
+
+const
   // @name is the name of the @link(TDataArray) that specifies whether an
   // element in PHAST is active or not.
   rsActive = 'Active';
@@ -95,6 +100,75 @@ const
   // the "Print XYZ Chemistry" distribution.
   rsPrint_XYZ_Chemistry = 'Print_XYZ_Chemistry';
 
+  // @name indicates the layer number for a MODFLOW reservoir.
+  rsResLayer = 'Reservoir_Layer';
+  // @name is the elevation of a MODFLOW reservoir.
+  rsResBottom = 'Reservoir_Elevation';
+  // @name is the hydraulic conductivity of a MODFLOW reservoir.
+  rsResKv = 'Reservoir_Hydraulic_Conductivity';
+  // @name is the bed thickness of a MODFLOW reservoir.
+  rsResBedThickness = 'Reservoir_Bed_Thickness';
+
+  // @name is the lake number of a MODFLOW lake.
+  rsLakeID = 'Lake_ID';
+  // @name is the leakance of a MODFLOW lake.
+  rsLakeLeakance = 'Lakebed_Leakance';
+
+  rsModflowSpecifiedHead = 'Modflow_Specified_Head';
+
+  // @name is the land surface in UZF. It is used to set IUZFBND.
+  StrUzfLandSurface = 'Land_Surface';
+  // @name set IUZFBND.
+  StrUzfLayer = 'UZF_Layer';
+  StrUzfDischargeRouting = 'Discharge_Routing';
+  StrUzfVerticalK = 'Maximum_Unsaturated_Vertical_K';
+  StrUzfBrooksCoreyEpsilon = 'Brooks_Corey_Epsilon';
+  StrUzfSaturatedWaterContent = 'Saturated_Water_Content';
+  StrUzfInitialUnsaturatedWaterContent = 'Initial_Unsaturated_Water_Content';
+  StrUzfReisidualWaterContent = 'Residual_Water_Content';
+  StrUzfGage_1_and_2 = 'UZF_Gage_1_and_2';
+  StrUzfGage3 = 'UZF_Gage3';
+
+  rsModflow_Initial_Head = 'Modflow_Initial_Head';
+  rsModflow_CBKz = 'Confining_Bed_Kz';
+  rsVerticalAnisotropy = 'Vertical_Anisotropy';
+  rsHorizontalAnisotropy = 'Horizontal_Anisotropy';
+  rsSpecificYield = 'Specific_Yield';
+  rsWetDryThreshold = 'Wet_Dry_Threshold';
+  rsWetDryFlag = 'Wet_Dry_Flag';
+  rsWetDry = 'WetDry';
+
+  StrModpathZone = 'Modpath_Zone';
+  StrHufReferenceSurface = 'HUF_Reference_Surface';
+  StrTransmissivity = 'Transmissivity';
+  StrVerticalConductance = 'Vertical_Leakance';
+  StrConfinedStorageCoe = 'Confined_Storage_Coefficient';
+
+  StrHUFKxName = 'HUF_Kx';
+  StrHUFKyName = 'HUF_Ky';
+  StrHUFInterlayerKz = 'HUF_Interlayer_Kz';
+  StrHUFSSName = 'HUF_SS';
+  StrHUFAverageSYName = 'HUF_Average_SY';
+  StrHUFSYName = 'HUF_SY';
+  StrHUFSYTPName = 'HUF_SYTP';
+
+  StrZones = 'Zones';
+  StrGeostaticStress = 'Geostatic_Stress';
+  StrSpecificGravityUns = 'Specific_Gravity_Unsaturated';
+  StrSpecificGravitySat = 'Specific_Gravity_Saturated';
+  StrInitialPreOffsets = 'Initial_Preconsolidation_Stress_Offset';
+  StrInitialPreconsolida = 'Initial_Preconsolidation_Stress';
+
+  STR_MT3DMS_Observation_Locations = 'MT3DMS_Observation_Locations';
+  StrMT3DMSActive = 'MT3DMS_Active';
+  rsBulkDensity = 'Bulk_Density';
+  rsImmobPorosity = 'Immobile_Domain_Porosity';
+  rsMT3DMS_Layer_Thickness = 'MT3DMS_Layer_Thickness';
+
+  KModpathBudget = 'Modpath_Budget';
+  KModpathRetardation = 'Modpath_Retardation';
+
+
   // @name is the name of the @link(TDataArray) that specifies
   // the hydraulic conductivity for the leaky boundary condition on the top
   // view of the model.
@@ -155,30 +229,6 @@ const
   StrRiverAssocSoln = 'River_Associated_Solution';
   StrWellInjectionRate = 'Well_Injection_Rate';
   StrWellSolution = 'Well_Solution';
-
-
-  rsModflow_Initial_Head = 'Modflow_Initial_Head';
-  rsModflow_CBKz = 'Confining_Bed_Kz';
-  rsSpecificYield = 'Specific_Yield';
-  rsWetDryThreshold = 'Wet_Dry_Threshold';
-  rsWetDryFlag = 'Wet_Dry_Flag';
-  rsWetDry = 'WetDry';
-  rsHorizontalAnisotropy = 'Horizontal_Anisotropy';
-  rsVerticalAnisotropy = 'Vertical_Anisotropy';
-  rsModflowSpecifiedHead = 'Modflow_Specified_Head';
-
-  rsResLayer = 'Reservoir_Layer';
-  rsResBottom = 'Reservoir_Elevation';
-  rsResKv = 'Reservoir_Hydraulic_Conductivity';
-  rsResBedThickness = 'Reservoir_Bed_Thickness';
-  rsResClassificaton = 'Reservoir';
-  rsBulkDensity = 'Bulk_Density';
-  rsImmobPorosity = 'Immobile_Domain_Porosity';
-  rsMT3DMS_Layer_Thickness = 'MT3DMS_Layer_Thickness';
-
-  rsLakeID = 'Lake_ID';
-  rsLakeLeakance = 'Lakebed_Leakance';
-  rsLakeClassificaton = 'Lake';
 
   // names of @link(TModflowBoundaryDisplayTimeList)s
 
@@ -274,31 +324,154 @@ const
   StrPartialPenetration = 'Partial Penetration Fraction';
   StrMT3DMSSSMConcentra = 'MT3DMS SSM Concentration';
 
-  StrUzfLandSurface = 'Land_Surface';
-  StrUzfLayer = 'UZF_Layer';
-  StrUzfDischargeRouting = 'Discharge_Routing';
-  StrUzfVerticalK = 'Maximum_Unsaturated_Vertical_K';
-  strUzfClassification = 'UZF';
-  StrUzfBrooksCoreyEpsilon = 'Brooks_Corey_Epsilon';
-  StrUzfSaturatedWaterContent = 'Saturated_Water_Content';
-  StrUzfInitialUnsaturatedWaterContent = 'Initial_Unsaturated_Water_Content';
-  StrUzfReisidualWaterContent = 'Residual_Water_Content';
-  StrUzfGage_1_and_2 = 'UZF_Gage_1_and_2';
-  StrUzfGage3 = 'UZF_Gage3';
-  StrHydrology = 'Hydrology';
-  StrChemistry = 'Chemistry';
-  StrOutput = 'Output';
 
-  StrModpathZone = 'Modpath_Zone';
-  StrHufReferenceSurface = 'HUF_Reference_Surface';
   StrMT3DMS = 'MT3DMS';
 
 resourcestring
+  strUzfClassification = 'UZF';
+  StrHydrology = 'Hydrology';
+  StrChemistry = 'Chemistry';
+  StrOutput = 'Output';
   WetError = 'The wetting option is active but '
     + 'no layers of the proper type have been specified.';
   StrNewDataSet = 'NewDataSet';
+  rsResClassificaton = 'Reservoir';
+  rsLakeClassificaton = 'Lake';
+  StrMT3DMS_Classificaton = 'MT3DMS';
 const
   WettableLayers = [1,3];
+
+
+resourcestring
+  // @name is the name of the @link(TDataArray) that specifies whether an
+  // element in PHAST is active or not.
+  rsActiveDisplayName = rsActive;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the hydraulic conductivity in the X direction.
+  rsKxDisplayName = rsKx;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the hydraulic conductivity in the Y direction.
+  rsKyDisplayName = rsKy;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the hydraulic conductivity in the Z direction.
+  rsKzDisplayName = rsKz;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the porosity.
+  rsPorosityDisplayName = rsPorosity;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the specific storage.
+  rsSpecific_StorageDisplayName = rsSpecific_Storage;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the longitudinal dispersivity.
+  rsLong_DispersivityDisplayName = rsLong_Dispersivity;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the horizontal transverse dispersivity.
+  rsHorizontal_Transv_DispersivityDisplayName = rsHorizontal_Transv_Dispersivity;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the vertical transverse dispersivity.
+  rsVertical_Transv_DispersivityDisplayName = rsVertical_Transv_Dispersivity;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the initial head.
+  rsInitial_HeadDisplayName = rsInitial_Head;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the initial water table.
+  rsInitial_Water_TableDisplayName = rsInitial_Water_Table;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the initial solution.
+  rsChemistry_Initial_SolutionDisplayName = rsChemistry_Initial_Solution;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the initial equilibrium phases.
+  rsChemistry_Initial_Equilibrium_PhasesDisplayName =
+    rsChemistry_Initial_Equilibrium_Phases;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the initial surface properties.
+  rsChemistry_Initial_SurfaceDisplayName = rsChemistry_Initial_Surface;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the initial exchange properties.
+  rsChemistry_Initial_ExchangeDisplayName = rsChemistry_Initial_Exchange;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the initial gas phase properties.
+  rsChemistry_Initial_Gas_PhaseDisplayName = rsChemistry_Initial_Gas_Phase;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the initial solid-solution properties.
+  rsChemistry_Initial_Solid_SolutionsDisplayName = rsChemistry_Initial_Solid_Solutions;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the initial kinetic properties.
+  rsChemistry_Initial_KineticsDisplayName = rsChemistry_Initial_Kinetics;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the "Print Chemistry" distribution.
+  rsPrint_ChemistryDisplayName = rsPrint_Chemistry;
+  // @name is the name of the @link(TDataArray) that specifies
+  // the "Print XYZ Chemistry" distribution.
+  rsPrint_XYZ_ChemistryDisplayName = rsPrint_XYZ_Chemistry;
+
+  // @name indicates the layer number for a MODFLOW reservoir.
+  rsResLayerDisplayName = rsResLayer;
+  // @name is the elevation of a MODFLOW reservoir.
+  rsResBottomDisplayName = rsResBottom;
+  // @name is the hydraulic conductivity of a MODFLOW reservoir.
+  rsResKvDisplayName = rsResKv;
+  // @name is the bed thickness of a MODFLOW reservoir.
+  rsResBedThicknessDisplayName = rsResBedThickness;
+
+  // @name is the lake number of a MODFLOW lake.
+  rsLakeIDDisplayName = rsLakeID;
+  // @name is the leakance of a MODFLOW lake.
+  rsLakeLeakanceDisplayName = rsLakeLeakance;
+
+  rsModflowSpecifiedHeadDisplayName = rsModflowSpecifiedHead;
+
+  // @name is the land surface in UZF. It is used to set IUZFBND.
+  StrUzfLandSurfaceDisplayName = StrUzfLandSurface;
+  // @name set IUZFBND.
+  StrUzfLayerDisplayName = StrUzfLayer;
+  StrUzfDischargeRoutingDisplayName = StrUzfDischargeRouting;
+  StrUzfVerticalKDisplayName = StrUzfVerticalK;
+  StrUzfBrooksCoreyEpsilonDisplayName = StrUzfBrooksCoreyEpsilon;
+  StrUzfSaturatedWaterContentDisplayName = StrUzfSaturatedWaterContent;
+  StrUzfInitialUnsaturatedWaterContentDisplayName = StrUzfInitialUnsaturatedWaterContent;
+  StrUzfReisidualWaterContentDisplayName = StrUzfReisidualWaterContent;
+  StrUzfGage_1_and_2DisplayName = StrUzfGage_1_and_2;
+  StrUzfGage3DisplayName = StrUzfGage3;
+
+  rsModflow_Initial_HeadDisplayName = rsModflow_Initial_Head;
+  rsModflow_CBKzDisplayName = rsModflow_CBKz;
+  rsVerticalAnisotropyDisplayName = rsVerticalAnisotropy;
+  rsHorizontalAnisotropyDisplayName = rsHorizontalAnisotropy;
+  rsSpecificYieldDisplayName = rsSpecificYield;
+  rsWetDryThresholdDisplayName = rsWetDryThreshold;
+  rsWetDryFlagDisplayName = rsWetDryFlag;
+  rsWetDryDisplayName = rsWetDry;
+
+  StrModpathZoneDisplayName = StrModpathZone;
+  StrHufReferenceSurfaceDisplayName = StrHufReferenceSurface;
+  StrTransmissivityDisplayName = StrTransmissivity;
+  StrVerticalConductanceDisplayName = StrVerticalConductance;
+  StrConfinedStorageCoeDisplayName = StrConfinedStorageCoe;
+
+  StrHUFKxNameDisplayName = StrHUFKxName;
+  StrHUFKyNameDisplayName = StrHUFKyName;
+  StrHUFInterlayerKzDisplayName = StrHUFInterlayerKz;
+  StrHUFSSNameDisplayName = StrHUFSSName;
+  StrHUFAverageSYNameDisplayName = StrHUFAverageSYName;
+  StrHUFSYNameDisplayName = StrHUFSYName;
+  StrHUFSYTPNameDisplayName = StrHUFSYTPName;
+
+  StrZonesDisplayName = StrZones;
+  StrGeostaticStressDisplayName = StrGeostaticStress;
+  StrSpecificGravityUnsDisplayName = StrSpecificGravityUns;
+  StrSpecificGravitySatDisplayName = StrSpecificGravitySat;
+  StrInitialPreOffsetsDisplayName = StrInitialPreOffsets;
+  StrInitialPreconsolidaDisplayName = StrInitialPreconsolida;
+
+  STR_MT3DMS_Observation_LocationsDisplayName = STR_MT3DMS_Observation_Locations;
+  StrMT3DMSActiveDisplayName = StrMT3DMSActive;
+  rsBulkDensityDisplayName = rsBulkDensity;
+  rsImmobPorosityDisplayName = rsImmobPorosity;
+  rsMT3DMS_Layer_ThicknessDisplayName = rsMT3DMS_Layer_Thickness;
+
+  KModpathBudgetDisplayName = KModpathBudget;
+  KModpathRetardationDisplayName = KModpathRetardation;
 
 type
   TEvaluationType = (etExport, etDisplay);
@@ -323,6 +496,7 @@ type
     Orientation: TDataSetOrientation;
     DataType: TRbwDataType;
     Name: string;
+    DisplayName: string;
     Formula: string;
     Classification: String;
     DataSetNeeded: TObjectUsedEvent;
@@ -358,6 +532,7 @@ type
     FModflowLgrLocation: string;
     FModflowNwtLocation: string;
     FMt3dmsLocation: string;
+    FModPathLocationV6: string;
     function GetTextEditorLocation: string;
     procedure SetModflowLocation(const Value: string);
     function RemoveQuotes(const Value: string): string;
@@ -369,6 +544,7 @@ type
     procedure SetModflowLgrLocation(const Value: string);
     procedure SetModflowNwtLocation(const Value: string);
     procedure SetMt3dmsLocation(const Value: string);
+    procedure SetModPathLocationV6(const Value: string);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create;
@@ -381,6 +557,8 @@ type
       write FTextEditorLocation;
     property ModPathLocation: string read FModPathLocation
       write SetModPathLocation;
+    property ModPathLocationVersion6: string read FModPathLocationV6
+      write SetModPathLocationV6;
     property ModelMonitorLocation: string read FModelMonitorLocation
       write SetModelMonitorLocation;
     property PhastLocation: string read FPhastLocation write SetPhastLocation;
@@ -1337,7 +1515,7 @@ that affects the model output should also have a comment. }
     procedure CacheDataArrays;
     // @name creates a new @link(TDataArray) and adds it to @link(DataSets).
     function CreateNewDataArray(const ClassType: TDataArrayType;
-      const Name, Formula: string; Lock: TDataLock; DataType: TRbwDataType;
+      const Name, Formula, DisplayName: string; Lock: TDataLock; DataType: TRbwDataType;
       EvaluatedAt: TEvaluatedAt; Orientation: TDataSetOrientation;
       const Classification: string): TDataArray;
     // @name retrieves a @link(TDataArray) from
@@ -1361,6 +1539,7 @@ that affects the model output should also have a comment. }
     // name, @name returns -1.
     function IndexOfBoundaryDataSet(DataSetName: string): integer;
     procedure InvalidateAllDataSets;
+    procedure InvalidateAll3DDataSets;
     procedure ClearDeletedDataSets;
     procedure UnlinkDeletedDataSets;
     procedure HandleAddedDataArrays(AddedDataSetList: TList);
@@ -1651,6 +1830,10 @@ that affects the model output should also have a comment. }
     procedure SetTopDataSet(const Value: TDataArray);
     function GetMesh: TSutraMesh3D;
     procedure SetSutraOptions(const Value: TSutraOptions);
+    function ModpathBudgetNeeded(Sender: TObject): boolean;
+    function ModpathRetardationNeeded(Sender: TObject): boolean;
+    function GetModPathLocation: string;
+    function ModpathZonesNeeded(Sender: TObject): boolean;
   var
     LakWriter: TObject;
     SfrWriter: TObject;
@@ -1754,7 +1937,8 @@ that affects the model output should also have a comment. }
     procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection);
       virtual; abstract;
   public
-    procedure RenameDataArray(DataArray: TDataArray; const NewName: string);
+    procedure RenameDataArray(DataArray: TDataArray;
+      const NewName, NewDisplayName: string);
     // When a @link(TDataArray) or global variable is renamed, @name is
     // called to update all the formulas with the new names.
     procedure UpdateFormulas(OldNames, NewNames: TStringList);
@@ -1764,6 +1948,7 @@ that affects the model output should also have a comment. }
     function StoreHeadObsResults: boolean;
     function TestModpathOK: Boolean;
     property ModflowLocation: string read GetModflowLocation write SetModflowLocation;
+    property ModPathLocation: string read GetModPathLocation;
     procedure ExportSeparateLgrModel(const FileName: string;
       RunModel, ExportModpath, ExportZoneBudget, ShowWarning: boolean);
     // @name returns the name of the most likely output file from which
@@ -2208,6 +2393,7 @@ that affects the model output should also have a comment. }
       write SetShowContourLabels default True;
     procedure UpdateMt3dmsChemDataSets; virtual; abstract;
     procedure GenerateSutraMesh(var ErrorMessage: string);
+    procedure OnTopSutraMeshChanged(Sender: TObject);
     property ThreeDDataSet: TDataArray read GetThreeDDataSet
       write SetThreeDDataSet;
     property TopDataSet: TDataArray read GetTopDataSet
@@ -2665,7 +2851,7 @@ that affects the model output should also have a comment. }
     function DirectionCount(ViewDirection: TViewDirection): integer;
     function MaxChildDisPerParentDis(ViewDirection: TViewDirection;
       Position: integer): integer;
-    procedure UpdateAMapping(var FMapping: TMappingArray;
+    procedure UpdateAMapping(var AMapping: TMappingArray;
       ViewDirection: TViewDirection);
     procedure SetCombinedDisplayColumn(const Value: integer);
     procedure SetCombinedDisplayLayer(const Value: integer);
@@ -3237,6 +3423,7 @@ that affects the model output should also have a comment. }
     function Mt3dMsSecondSorbParamUsed(Sender: TObject): boolean;
     function Mt3dmsReactionRateDisolvedUsed(Sender: TObject): boolean;
     function Mt3dmsReactionRateSorbedUsed(Sender: TObject): boolean;
+    function CombinedLayerSimulated(ALayer: Integer): boolean;
   published
     // The following properties are obsolete.
 
@@ -3749,7 +3936,6 @@ that affects the model output should also have a comment. }
   Valid names must begin with a letter or underscore.  The remaining
   characters must be letters, digits or the underscore character.}
   function GenerateNewRoot(const Root: string): string;
-
 
 resourcestring
   StrGlobalVariables = 'Global Variables';
@@ -5335,27 +5521,78 @@ const
   //       Change: The light blue background for a parenthesis and it's
   //         match in the formula editor has been changed to a light blue font.
   //     '2.16.1.0' Bug fix: Fixed bug that caused importing model results to
-  //        fail.
+  //         fail.
+  //     '2.16.1.1' Bug fix: When exporting ModelMate files, ModelMuse now
+  //         specifies the correct version of MODFLOW to use.
+  //       Bug fix: The "Function Help" button on the Formula editor works again.
+  //     '2.16.1.2' no real change. Converted some text to make it easier to
+  //         translate.
+  //     '2.16.1.3' Bug fix: Fixed export and import of head change
+  //         observations to ModelMate.
+  //     '2.16.1.4' no change.
+  //     '2.16.1.5' Bug fix: Fixed bug in export of gages for the Lake package.
+  //       Bug fix: Fixed bug in export of Shapefiles in which the last
+  //         character of the last field was not written to the file.
+  //       Bug fix: Fixed export of unit numbers for lake gages.
+  //     '2.16.1.6' (Changed version of GLScene used to 5991.)
+  //     '2.16.1.7' no real change.
+  //     '2.16.1.8' Bug fix: Renaming parameters for the HUF package now
+  //         causes any formulas based on data arrays for those parameters
+  //         to be updated.
+  //       Enhancement: Added support for MODPATH version 6.
+  //       Change: Head observations that are at the end of a steady-state
+  //         stress period now have their reference stress period set to that
+  //         stress period rather than the beginning of the following
+  //         stress period.
+  //     '2.16.1.9' Change: Updated link for model archiving policy.
+  //       Bug fix: Fixed display of file names in the Files to Archive
+  //         dialog box.
+  //       Bug fix: The name file for MODFLOW models is now included in
+  //         archives.
+  //       Bug fix: Fixed import of binary Surfer grid files.
+  //     '2.16.1.10' Enhancement: Added support for exporting data set values
+  //         for display in Model Viewer.
+  //     '2.16.1.11' Bug fix: Fixed coloring the grid for certain PHAST data
+  //         sets.
+  //     '2.16.1.12' Bug fix: Fixed display of layer numbers on the status bar
+  //         for the front and side views. {Bug not in released version.}
+  //       Bug fix: fixed bug in export of MODPATH version 6 input
+  //         (Bug not in released version.)
+  //     '2.16.1.13' Bug fix: Fixed how the "Child Models" dialog box for
+  //         MODFLOW-LGR models responds to the user entering an invalid number
+  //         for NCPP.
+  //       Bug fix: Fixed bug that could cause some MODFLOW budget files to
+  //         be incorrectly identified as invalid.
+  //     '2.16.1.14' Bug fix: Fixed detecting the version number of MODPATH
+  //         used to create a pathline file. (Bug not in released version.)
+  //       Bug fix: Fixed display of endpoints, pathlines and time series data
+  //         from MODPATH on the front and side views when the grid is rotated.
+  //     '2.16.1.15' Bug fix: Fixed bug that caused too much memory to be used
+  //         when exporting the SSM package in MT3DMS.
+  //     '2.16.1.16' Bug fix: Fixed bug that caused exporting the SSM file in
+  //         MT3DMS to take more time than it should have.
+  //     '2.16.1.17' Enhancement: The Selection Cube for the top view of the
+  //         model draws the grid outline only for simulated layers.
+  //       Bug fix: Fixed bug that could cause an error in the export of the
+  //         MT3DMS TOB package if duplicate times were specified.
+  //     '2.17.0.0' No further changes.
+  //     '2.17.1.0'  Bug fix: Fixed bug in which objects were not drawn as
+  //         selected after clicking the OK button in the Object Properties
+  //         dialog box.
+  //       Bug fix: The tree control in the Show Or Hide Objects dialog box
+  //         no longer collapses all its nodes just because there has been a
+  //         change in which object is selected.
+  //       Bug fix: The display of the data for the RCH, EVT and ETS packages
+  //         has been fixed.
 
 const
-  ModelVersion = '2.16.1.0';
+  ModelVersion = '2.17.1.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
   StrHUF = 'HUF2';
-  StrTop = '_Top';
-  StrHufThickness = '_Thickness';
-  StrConfinedStorageCoe = 'Confined_Storage_Coefficient';
-//  StrVerticalConductance = 'Vertical_Conductance';
-  StrVerticalConductance = 'Vertical_Leakance';
-  StrTransmissivity = 'Transmissivity';
+  kTop = '_Top';
   StrZonebudget = 'ZoneBudget';
-  StrZones = 'Zones';
-  StrGeostaticStress = 'Geostatic_Stress';
-  StrSpecificGravitySat = 'Specific_Gravity_Saturated';
-  StrSpecificGravityUns = 'Specific_Gravity_Unsaturated';
-  StrInitialPreOffsets = 'Initial_Preconsolidation_Stress_Offset';
-  StrInitialPreconsolida = 'Initial_Preconsolidation_Stress';
   StrFhd = '.fhd';
   StrBhd = '.bhd';
   StrFdn = '.fdn';
@@ -5388,15 +5625,20 @@ const
   StrMt3dConcFile = '.ucn';
   StrMtName = '.mt_nam';
   strMtObs = '.mto';
-  StrSUTRAMeshTop = 'SUTRA_Mesh_Top';
+  kSUTRAMeshTop = 'SUTRA_Mesh_Top';
 
 
-  StrMT3DMSActive = 'MT3DMS_Active';
-  STR_MT3DMS_Observation_Locations = 'MT3DMS_Observation_Locations';
 
   MaxString12 = 12;
   MaxString20 = 20;
   MaxString255 = 255;
+
+resourcestring
+  StrTop = kTop;
+
+resourcestring
+  StrSUTRAMeshTop = kSUTRAMeshTop;
+
 
 implementation
 
@@ -5433,6 +5675,7 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
 
 resourcestring
   StrMpathDefaultPath = 'C:\WRDAPP\Mpath.5_0\setup\Mpathr5_0.exe';
+  StrMpathDefaultPathVersion6 = 'C:\WRDAPP\modpath.6_0\bin\mp6.exe';
   StrModflowDefaultPath = 'C:\WRDAPP\MF2005.1_9\Bin\mf2005.exe';
   StrPhastDefaultPath = 'C:\Program Files\USGS\phast-1.5.1\bin\phast.bat';
   StrPhastDefaultPath64 = 'C:\Program Files (x86)\USGS\phast-1.5.1\bin\phast.bat';
@@ -5445,6 +5688,7 @@ resourcestring
   StrMODFLOW2005 = 'MODFLOW-2005';
   StrTextEditor = 'Text Editor';
   StrMODPATH = 'MODPATH';
+  StrMODPATHVersion6 = 'MODPATH Version 6';
   StrModelMonitor = 'ModelMonitor';
   StrModelMonitorDefaultPath = 'ModelMonitor.exe';
   StrPHAST = 'PHAST';
@@ -7038,8 +7282,6 @@ begin
   FFreeSurface := False;
   FDiffusivitySet := False;
 
-  ModelSelection := msUndefined;
-
   // Clear screen objects before clearing child models because
   // the screen objects access the child models while being destroyed.
   FScreenObjectList.Clear;
@@ -7049,6 +7291,8 @@ begin
     ChildModels[ChildIndex].ChildModel.Clear;
   end;
   ChildModels.Clear;
+  ModelSelection := msUndefined;
+
 
   FDataArrayManager.ClearAllDataSets;
   ClearParsers;
@@ -7262,7 +7506,7 @@ begin
 end;
 
 procedure TCustomModel.RenameDataArray(DataArray: TDataArray;
-  const NewName: string);
+  const NewName, NewDisplayName: string);
 var
   OldNames: TStringList;
   Compiler: TRbwParser;
@@ -7285,17 +7529,18 @@ begin
     OldNames.Free;
   end;
   DataArray.Name := NewName;
+  DataArray.DisplayName := NewDisplayName;
   Compiler := GetCompiler(DataArray.Orientation, DataArray.EvaluatedAt);
   Position := Compiler.IndexOfVariable(OldName);
   if Position >= 0 then
   begin
-    Compiler.RenameVariable(Position, NewName);
+    Compiler.RenameVariable(Position, NewName, NewDisplayName);
   end;
   Compiler := GetCompiler(dso3D, DataArray.EvaluatedAt);
   Position := Compiler.IndexOfVariable(OldName);
   if Position >= 0 then
   begin
-    Compiler.RenameVariable(Position, NewName);
+    Compiler.RenameVariable(Position, NewName, NewDisplayName);
   end;
 end;
 
@@ -7341,18 +7586,6 @@ begin
   Invalidate;
 end;
 
-//function TPhastModel.GetHeight: integer;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.Height;
-//  end;
-//end;
-
 function TPhastModel.GetHufParameters: THufModflowParameters;
 begin
   result := FHufParameters;
@@ -7362,42 +7595,6 @@ function TPhastModel.GetImmobileComponents: TChemSpeciesCollection;
 begin
   Result := FImmobileComponents;
 end;
-
-//function TPhastModel.GetLeft: integer;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.Left;
-//  end;
-//end;
-
-//function TPhastModel.GetTop: integer;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.Top;
-//  end;
-//end;
-
-//function TPhastModel.GetWidth: integer;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.Width;
-//  end;
-//end;
 
 procedure TPhastModel.SetHeight(const Value: integer);
 begin
@@ -7702,7 +7899,7 @@ begin
         if FSutraLayerStructure.Count = 0 then
         begin
           LayerGroup := FSutraLayerStructure.Add as TSutraLayerGroup;
-          LayerGroup.AquiferName := StrSUTRAMeshTop;
+          LayerGroup.AquiferName := kSUTRAMeshTop;
         end
       end
     {$ENDIF}
@@ -7759,6 +7956,7 @@ begin
       msModflow, msModflowLGR, msModflowNWT:
         begin
           FGrid := ModflowGrid;
+          ThreeDGridObserver.OnUpToDateSet := ModflowGrid.NotifyGridChanged;
         end;
       {$IFDEF SUTRA}
       msSutra:
@@ -8075,6 +8273,10 @@ end;
 
 function TPhastModel.GetSutraLayerStructure: TSutraLayerStructure;
 begin
+  if FSutraLayerStructure = nil then
+  begin
+    FSutraLayerStructure := TSutraLayerStructure.Create(self);
+  end;
   result := FSutraLayerStructure
 end;
 
@@ -8851,19 +9053,19 @@ begin
     case Variable.Format of
       rdtDouble:
         begin
-          Parser.CreateVariable(Variable.Name, StrGlobalVariables, Variable.RealValue);
+          Parser.CreateVariable(Variable.Name, StrGlobalVariables, Variable.RealValue, Variable.Name);
         end;
       rdtInteger:
         begin
-          Parser.CreateVariable(Variable.Name, StrGlobalVariables, Variable.IntegerValue);
+          Parser.CreateVariable(Variable.Name, StrGlobalVariables, Variable.IntegerValue, Variable.Name);
         end;
       rdtBoolean:
         begin
-          Parser.CreateVariable(Variable.Name, StrGlobalVariables, Variable.BooleanValue);
+          Parser.CreateVariable(Variable.Name, StrGlobalVariables, Variable.BooleanValue, Variable.Name);
         end;
       rdtString:
         begin
-          Parser.CreateVariable(Variable.Name, StrGlobalVariables, Variable.StringValue);
+          Parser.CreateVariable(Variable.Name, StrGlobalVariables, Variable.StringValue, Variable.Name);
         end;
     else
       Assert(False);
@@ -9099,7 +9301,7 @@ begin
         VarIndex := Compiler.IndexOfVariable(OldNames[VariableIndex]);
         if VarIndex >= 0 then
         begin
-          Compiler.RenameVariable(VarIndex, NewNames[VariableIndex]);
+          Compiler.RenameVariable(VarIndex, NewNames[VariableIndex], NewNames[VariableIndex]);
         end;
       end;
     end;
@@ -9112,7 +9314,7 @@ begin
         VarIndex := Compiler.IndexOfVariable(NewNames[VariableIndex]);
         if VarIndex >= 0 then
         begin
-          Compiler.RenameVariable(VarIndex, OldNames[VariableIndex]);
+          Compiler.RenameVariable(VarIndex, OldNames[VariableIndex], OldNames[VariableIndex]);
         end;
       end;
     end;
@@ -10211,7 +10413,7 @@ begin
   end;
 end;
 
-procedure TPhastModel.UpdateAMapping(var FMapping: TMappingArray;
+procedure TPhastModel.UpdateAMapping(var AMapping: TMappingArray;
   ViewDirection: TViewDirection);
 var
   SubDisCount: Integer;
@@ -10228,10 +10430,10 @@ var
   MaximumPosition: Integer;
 begin
   ArrayLength := CombinedCount(ViewDirection);
-  SetLength(FMapping, ArrayLength);
-  for Index := 0 to Length(FMapping) - 1 do
+  SetLength(AMapping, ArrayLength);
+  for Index := 0 to Length(AMapping) - 1 do
   begin
-    SetLength(FMapping[Index].ChildPositions, ChildModels.Count);
+    SetLength(AMapping[Index].ChildPositions, ChildModels.Count);
   end;
   CombinedIndex := 0;
   for ParentDisIndex := 0 to DirectionCount(ViewDirection) - 1 do
@@ -10241,7 +10443,7 @@ begin
     for SubDisIndex := 0 to MaxSubDiscretization - 1 do
     begin
       ChildCombinedIndex := CombinedIndex + SubDisIndex;
-      FMapping[ChildCombinedIndex].ParentPostion := ParentDisIndex;
+      AMapping[ChildCombinedIndex].ParentPostion := ParentDisIndex;
     end;
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -10255,21 +10457,21 @@ begin
         ChildCombinedIndex := CombinedIndex + SubDisIndex;
         if (ARange.First < 0) then
         begin
-          FMapping[ChildCombinedIndex].ChildPositions[ChildIndex] := -1;
+          AMapping[ChildCombinedIndex].ChildPositions[ChildIndex] := -1;
         end
         else if ARange.First >= MaximumPosition then
         begin
-          FMapping[ChildCombinedIndex].ChildPositions[ChildIndex] :=
+          AMapping[ChildCombinedIndex].ChildPositions[ChildIndex] :=
             MaximumPosition;
         end
         else if (SubDisIndex >= SubDisCount) then
         begin
-          FMapping[ChildCombinedIndex].ChildPositions[ChildIndex]
-            := FMapping[ChildCombinedIndex-1].ChildPositions[ChildIndex]
+          AMapping[ChildCombinedIndex].ChildPositions[ChildIndex]
+            := AMapping[ChildCombinedIndex-1].ChildPositions[ChildIndex]
         end
         else
         begin
-          FMapping[ChildCombinedIndex].ChildPositions[ChildIndex] :=
+          AMapping[ChildCombinedIndex].ChildPositions[ChildIndex] :=
             ARange.First + SubDisIndex;
         end;
       end;
@@ -11326,7 +11528,8 @@ begin
       finally
         CompilerList.Free;
       end;
-      RenameDataArray(DataArray, StrVerticalConductance);
+      RenameDataArray(DataArray, StrVerticalConductance,
+        StrVerticalConductanceDisplayName);
       DataArray.OnDataSetUsed := DA.OnDataSetUsed;
       DA.Free;
     end;
@@ -11780,7 +11983,12 @@ begin
       end;
     end;
   end;
-
+  if FileVersionEqualOrEarlier('2.16.1.1')
+    and ModflowPackages.ModPath.IsSelected then
+  begin
+    ModflowPackages.ModPath.MpathVersion := mp5;
+    ModflowPackages.ModPath.StopOption := soExtend;
+  end;
 end;
 
 procedure TPhastModel.FreeSfrWriter;
@@ -12161,13 +12369,21 @@ begin
     case Operation of
       mmoImport:
         begin
-          ModelMuseHeadObs.Head := StrToFloatDef(ValAttribute.Text, 0);
+          case Method of
+            momAllHeads: ModelMuseHeadObs.Head := StrToFloatDef(ValAttribute.Text, 0);
+            momHeadAndDrawdown: ModelMuseHeadObs.HeadChange := StrToFloatDef(ValAttribute.Text, 0);
+            else Assert(False);
+          end;
           ModelMuseHeadObs.Statistic := StrToFloatDef(StatAttribute.Text, 0);
           ModelMuseHeadObs.StatFlag := StrToStatFlag(StatFlagAttribute.Text);
         end;
       mmoExport:
         begin
-          ValAttribute.Text := FortranFloatToStr(ModelMuseHeadObs.Head);
+          case Method of
+            momAllHeads: ValAttribute.Text := FortranFloatToStr(ModelMuseHeadObs.Head);
+            momHeadAndDrawdown: ValAttribute.Text := FortranFloatToStr(ModelMuseHeadObs.HeadChange);
+            else Assert(False);
+          end;
           StatAttribute.Text := FortranFloatToStr(ModelMuseHeadObs.Statistic);
           StatFlagAttribute.Text := StatFlagStrings[ModelMuseHeadObs.StatFlag];
         end;
@@ -14864,6 +15080,47 @@ begin
   end;
 end;
 
+function TPhastModel.CombinedLayerSimulated(ALayer: Integer): boolean;
+var
+  LocalCombinedCount: Integer;
+begin
+  if ALayer < 0 then
+  begin
+    ALayer := 0;
+  end;
+  if ModelSelection = msPhast then
+  begin
+    result := True;
+    Exit;
+  end;
+  if (Grid <> nil) and (Grid.ColumnCount > 0)
+    and (Grid.RowCount > 0)and (Grid.LayerCount > 0) then
+  begin
+    UpdateMapping;
+    LocalCombinedCount := Length(FLayerMapping);
+    if ALayer > LocalCombinedCount then
+    begin
+      ALayer := LocalCombinedCount;
+    end;
+    Assert(ALayer >= 0);
+    if ALayer < LocalCombinedCount then
+    begin
+      ALayer :=
+        FLayerMapping[ALayer].ParentPostion;
+    end
+    else
+    begin
+      ALayer :=
+        FLayerMapping[ALayer-1].ParentPostion+1;
+    end;
+    result := LayerStructure.IsLayerSimulated(ALayer)
+  end
+  else
+  begin
+    result := True
+  end;
+end;
+
 procedure TPhastModel.SetCombinedDisplayLayer(const Value: integer);
 var
   LocalCombinedCount: Integer;
@@ -16494,6 +16751,7 @@ begin
     ModflowLocation := SourceLocations.ModflowLocation;
     TextEditorLocation := SourceLocations.TextEditorLocation;
     ModPathLocation := SourceLocations.ModPathLocation;
+    ModPathLocationVersion6 := SourceLocations.ModPathLocationVersion6;
     ModelMonitorLocation := SourceLocations.ModelMonitorLocation;
     PhastLocation := SourceLocations.PhastLocation;
     ZoneBudgetLocation := SourceLocations.ZoneBudgetLocation;
@@ -16540,6 +16798,8 @@ begin
     StrTextEditor, '');
   ModPathLocation := IniFile.ReadString(StrProgramLocations, StrMODPATH,
     StrMpathDefaultPath);
+  ModPathLocationVersion6 := IniFile.ReadString(StrProgramLocations, StrMODPATHVersion6,
+    StrMpathDefaultPathVersion6);
   PhastLocation := IniFile.ReadString(StrProgramLocations, StrPHAST,
     DefaultPhastPath);
   ZoneBudgetLocation := IniFile.ReadString(StrProgramLocations, StrZonebudget,
@@ -16626,9 +16886,14 @@ begin
   FModPathLocation := RemoveQuotes(Value);
 end;
 
+procedure TProgramLocations.SetModPathLocationV6(const Value: string);
+begin
+  FModPathLocationV6 := RemoveQuotes(Value);
+end;
+
 procedure TProgramLocations.SetMt3dmsLocation(const Value: string);
 begin
-  FMt3dmsLocation := RemoveQuotes(Value);;
+  FMt3dmsLocation := RemoveQuotes(Value);
 end;
 
 procedure TProgramLocations.SetPhastLocation(const Value: string);
@@ -16646,6 +16911,7 @@ begin
   IniFile.WriteString(StrProgramLocations, StrMODFLOW2005, ModflowLocation);
   IniFile.WriteString(StrProgramLocations, StrTextEditor, TextEditorLocation);
   IniFile.WriteString(StrProgramLocations, StrMODPATH, ModPathLocation);
+  IniFile.WriteString(StrProgramLocations, StrMODPATHVersion6, ModPathLocationVersion6);
   IniFile.WriteString(StrProgramLocations, StrModelMonitor, ModelMonitorLocation);
   IniFile.WriteString(StrProgramLocations, StrPHAST, PhastLocation);
   IniFile.WriteString(StrProgramLocations, StrZonebudget, ZoneBudgetLocation);
@@ -16670,7 +16936,7 @@ end;
 
 function TDataSetClassification.ClassificationName: string;
 begin
-  result := FDataArray.Name;
+  result := FDataArray.DisplayName;
 end;
 
 { TLookUpList }
@@ -17454,25 +17720,30 @@ begin
       end;
       FSutraMesh.BeginUpdate;
       try
-        FSutraMesh.Clear;
-        FSutraMesh.Mesh2D.Nodes.Capacity := MeshCreator.NodeCount;
-        FSutraMesh.Mesh2D.Elements.Capacity := MeshCreator.ElementCount;
-        for NodeIndex := 0 to MeshCreator.NodeCount - 1 do
-        begin
-          SutraNode := FSutraMesh.Mesh2D.Nodes.Add;
-          MeshNode := MeshCreator.Nodes[NodeIndex];
-          SutraNode.AssignINode(MeshNode);
+        FSutraMesh.Mesh2D.BeginUpdate;
+        try
+          FSutraMesh.Clear;
+          FSutraMesh.Mesh2D.Nodes.Capacity := MeshCreator.NodeCount;
+          FSutraMesh.Mesh2D.Elements.Capacity := MeshCreator.ElementCount;
+          for NodeIndex := 0 to MeshCreator.NodeCount - 1 do
+          begin
+            SutraNode := FSutraMesh.Mesh2D.Nodes.Add;
+            MeshNode := MeshCreator.Nodes[NodeIndex];
+            SutraNode.AssignINode(MeshNode);
+          end;
+          for ElementIndex := 0 to MeshCreator.ElementCount - 1 do
+          begin
+            SutraElement := FSutraMesh.Mesh2D.Elements.Add;
+            MeshElement := MeshCreator.Elements[ElementIndex];
+            SutraElement.AssignIElement(MeshElement);
+          end;
+        finally
+          FSutraMesh.Mesh2D.EndUpdate;
         end;
-        for ElementIndex := 0 to MeshCreator.ElementCount - 1 do
-        begin
-          SutraElement := FSutraMesh.Mesh2D.Elements.Add;
-          MeshElement := MeshCreator.Elements[ElementIndex];
-          SutraElement.AssignIElement(MeshElement);
-        end;
+//        FSutraMesh.UpdateElevations;
       finally
         FSutraMesh.EndUpdate;
       end;
-      FSutraMesh.UpdateElevations;
       frmGoPhast.InvalidateGrid;
 
     finally
@@ -17823,22 +18094,22 @@ var
           rdtDouble:
             begin
               Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-                Variable.RealValue);
+                Variable.RealValue, Variable.Name);
             end;
           rdtInteger:
             begin
               Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-                Variable.IntegerValue);
+                Variable.IntegerValue, Variable.Name);
             end;
           rdtBoolean:
             begin
               Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-                Variable.BooleanValue);
+                Variable.BooleanValue, Variable.Name);
             end;
           rdtString:
             begin
               Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-                Variable.StringValue);
+                Variable.StringValue, Variable.Name);
             end;
           else Assert(False);
         end;
@@ -17968,22 +18239,22 @@ begin
         rdtDouble:
           begin
             Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-              Variable.RealValue);
+              Variable.RealValue, Variable.Name);
           end;
         rdtInteger:
           begin
             Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-              Variable.IntegerValue);
+              Variable.IntegerValue, Variable.Name);
           end;
         rdtBoolean:
           begin
             Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-              Variable.BooleanValue);
+              Variable.BooleanValue, Variable.Name);
           end;
         rdtString:
           begin
             Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-              Variable.StringValue);
+              Variable.StringValue, Variable.Name);
           end;
       else
         Assert(False);
@@ -18057,41 +18328,41 @@ begin
       rdtDouble:
         begin
           TempCompiler.CreateVariable(DataSet.Name,
-            DataSet.FullClassification, 0.0);
+            DataSet.FullClassification, 0.0, DataSet.DisplayName);
           if TempCompiler <> Local3DCompiler then
           begin
             Local3DCompiler.CreateVariable(DataSet.Name,
-              DataSet.FullClassification, 0.0);
+              DataSet.FullClassification, 0.0, DataSet.DisplayName);
           end;
         end;
       rdtInteger:
         begin
           TempCompiler.CreateVariable(DataSet.Name,
-            DataSet.FullClassification, 0);
+            DataSet.FullClassification, 0, DataSet.DisplayName);
           if TempCompiler <> Local3DCompiler then
           begin
             Local3DCompiler.CreateVariable(DataSet.Name,
-              DataSet.FullClassification, 0);
+              DataSet.FullClassification, 0, DataSet.DisplayName);
           end;
         end;
       rdtBoolean:
         begin
           TempCompiler.CreateVariable(DataSet.Name,
-            DataSet.FullClassification, False);
+            DataSet.FullClassification, False, DataSet.DisplayName);
           if TempCompiler <> Local3DCompiler then
           begin
             Local3DCompiler.CreateVariable(DataSet.Name,
-              DataSet.FullClassification, False);
+              DataSet.FullClassification, False, DataSet.DisplayName);
           end;
         end;
       rdtString:
         begin
           TempCompiler.CreateVariable(DataSet.Name,
-            DataSet.FullClassification, '');
+            DataSet.FullClassification, '', DataSet.DisplayName);
           if TempCompiler <> Local3DCompiler then
           begin
             Local3DCompiler.CreateVariable(DataSet.Name,
-              DataSet.FullClassification, '');
+              DataSet.FullClassification, '', DataSet.DisplayName);
           end;
         end;
     else
@@ -18101,14 +18372,14 @@ begin
   else
   begin
     Variable := TempCompiler.Variables[VarIndex];
-    Assert(Variable.Name = UpperCase(DataSet.Name));
+    Assert(Variable.Name = DataSet.Name);
     Assert(Variable.ResultType = DataSet.DataType);
     Variable.Classification := DataSet.FullClassification;
     if TempCompiler <> Local3DCompiler then
     begin
       VarIndex := Local3DCompiler.IndexOfVariable(DataSet.Name);
       Variable := Local3DCompiler.Variables[VarIndex];
-      Assert(Variable.Name = UpperCase(DataSet.Name));
+      Assert(Variable.Name = DataSet.Name);
       Assert(Variable.ResultType = DataSet.DataType);
       Variable.Classification := DataSet.FullClassification;
     end;
@@ -18200,6 +18471,16 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TCustomModel.OnTopSutraMeshChanged(Sender: TObject);
+begin
+  {$IFDEF SUTRA}
+  if (ModelSelection = msSutra) and (FSutraMesh <> nil) then
+  begin
+    FSutraMesh.ElevationsNeedUpdating := True;
+  end;
+  {$ENDIF}
 end;
 
 function TCustomModel.OptionalDataSet(Sender: TObject): boolean;
@@ -18573,6 +18854,7 @@ var
   ArrayArrayShouldBeCreated: TObjectUsedEvent;
   NewFormula, Classification: string;
   Lock: TDataLock;
+  DisplayName: string;
 begin
   { TODO : Find a way to extract common code from
 TPhastModel.CreateModflowDataSets and
@@ -18583,10 +18865,12 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
   for Index := 0 to Length(FDataArrayCreationRecords) - 1 do
   begin
     DataSetName := FDataArrayCreationRecords[Index].Name;
+    DisplayName := FDataArrayCreationRecords[Index].DisplayName;
     Orientation := FDataArrayCreationRecords[Index].Orientation;
     DataType := FDataArrayCreationRecords[Index].DataType;
     ArrayNeeded := FDataArrayCreationRecords[Index].DataSetNeeded;
-    ArrayArrayShouldBeCreated := FDataArrayCreationRecords[Index].DataSetShouldBeCreated;
+    ArrayArrayShouldBeCreated :=
+      FDataArrayCreationRecords[Index].DataSetShouldBeCreated;
     NewFormula := FDataArrayCreationRecords[Index].Formula;
     Classification := FDataArrayCreationRecords[Index].Classification;
     Lock := FDataArrayCreationRecords[Index].Lock;
@@ -18596,6 +18880,7 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
     if DataArray <> nil then
     begin
       DataArray.Name := DataSetName;
+      DataArray.DisplayName := DisplayName;
       DataArray.Lock := Lock;
       DataArray.OnDataSetUsed := ArrayNeeded;
       FCustomModel.CreateVariables(DataArray);
@@ -18606,6 +18891,7 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
     begin
       DataArray := CreateNewDataArray(
         FDataArrayCreationRecords[Index].DataSetType, DataSetName, NewFormula,
+        DisplayName,
         Lock, DataType, FDataArrayCreationRecords[Index].EvaluatedAt,
         Orientation, Classification);
       DataArray.OnDataSetUsed := ArrayNeeded;
@@ -18614,6 +18900,7 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
       DataArray.CheckMin := FDataArrayCreationRecords[Index].CheckMin;
       DataArray.Max := FDataArrayCreationRecords[Index].Max;
       DataArray.Min := FDataArrayCreationRecords[Index].Min;
+      DataArray.DisplayName := DisplayName;
     end;
     if DataArray <> nil then
     begin
@@ -18637,7 +18924,7 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
 end;
 
 function TDataArrayManager.CreateNewDataArray(const ClassType: TDataArrayType;
-  const Name, Formula: string; Lock: TDataLock; DataType: TRbwDataType;
+  const Name, Formula, DisplayName: string; Lock: TDataLock; DataType: TRbwDataType;
   EvaluatedAt: TEvaluatedAt; Orientation: TDataSetOrientation;
   const Classification: string): TDataArray;
 var
@@ -18647,6 +18934,7 @@ begin
   result := ClassType.Create(FCustomModel);
   result.Lock := Lock;
   result.UpdateWithName(Name);
+  result.DisplayName := DisplayName;
   result.DataType := DataType;
   result.EvaluatedAt := EvaluatedAt;
   result.Orientation := Orientation;
@@ -18659,7 +18947,7 @@ begin
     ChildMan := ChildDataArrayManagers[ChildManagerIndex];
     if ChildMan.GetDataSetByName(Name) = nil then
     begin
-      ChildMan.CreateNewDataArray(ClassType, Name, Formula, Lock, DataType,
+      ChildMan.CreateNewDataArray(ClassType, Name, Formula, DisplayName, Lock, DataType,
         EvaluatedAt, Orientation, Classification);
     end;
   end;
@@ -18681,16 +18969,18 @@ procedure TDataArrayManager.DefinePackageDataArrays;
 var
   Index: integer;
 begin
-  SetLength(FDataArrayCreationRecords, 68);
+  SetLength(FDataArrayCreationRecords, 70);
   Index := 0;
 
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtBoolean;
   FDataArrayCreationRecords[Index].Name := rsActive;
+  FDataArrayCreationRecords[Index].DisplayName := rsActiveDisplayName;
   FDataArrayCreationRecords[Index].Formula := 'True';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ModflowOrPhastUsed;
+  FDataArrayCreationRecords[Index].DataSetNeeded :=
+    FCustomModel.ModflowOrPhastUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
@@ -18702,6 +18992,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsKx;
+  FDataArrayCreationRecords[Index].DisplayName := rsKxDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.0001';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded :=
@@ -18709,7 +19000,8 @@ begin
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-Kx'+ sLineBreak + 'MODFLOW LPF: HK'+ sLineBreak + 'MODFLOW BCF: TRAN,HY';
+    'PHAST: MEDIA-Kx'+ sLineBreak + 'MODFLOW LPF: HK'
+    + sLineBreak + 'MODFLOW BCF: TRAN,HY';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
   FDataArrayCreationRecords[Index].Min := 0;
@@ -18719,13 +19011,15 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsKy;
+  FDataArrayCreationRecords[Index].DisplayName := rsKyDisplayName;
   FDataArrayCreationRecords[Index].Formula := rsKx;
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.KyUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-Ky'+ sLineBreak + 'MODFLOW LPF: HANI'+ sLineBreak + 'MODFLOW HUF and BCF: (not used)';
+    'PHAST: MEDIA-Ky'+ sLineBreak + 'MODFLOW LPF: HANI'
+    + sLineBreak + 'MODFLOW HUF and BCF: (not used)';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
   FDataArrayCreationRecords[Index].Min := 0;
@@ -18735,13 +19029,15 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsKz;
+  FDataArrayCreationRecords[Index].DisplayName := rsKzDisplayName;
   FDataArrayCreationRecords[Index].Formula := rsKx + ' / 10';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.KzUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-Kz'+ sLineBreak + 'MODFLOW LPF: VKA'+ sLineBreak + 'MODFLOW BCF: Vcont';
+    'PHAST: MEDIA-Kz'+ sLineBreak + 'MODFLOW LPF: VKA'
+    + sLineBreak + 'MODFLOW BCF: Vcont';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
   FDataArrayCreationRecords[Index].Min := 0;
@@ -18752,13 +19048,16 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsPorosity;
+  FDataArrayCreationRecords[Index].DisplayName := rsPorosityDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.25';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.PorosityUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-porosity'+ sLineBreak + 'MODPATH: POR';
+    'PHAST: MEDIA-porosity'
+    + sLineBreak + 'MODPATH: POR'
+    + sLineBreak + 'MT3DMS BTN Package: PRSITY';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
   FDataArrayCreationRecords[Index].Min := 0;
@@ -18768,6 +19067,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsSpecific_Storage;
+  FDataArrayCreationRecords[Index].DisplayName := rsSpecific_StorageDisplayName;
   FDataArrayCreationRecords[Index].Formula := '1e-5';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded :=
@@ -18775,7 +19075,8 @@ begin
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-specific_storage'+ sLineBreak + 'MODFLOW LPF: Ss'+ sLineBreak + 'MODFLOW BCF: Sf1';
+    'PHAST: MEDIA-specific_storage'+ sLineBreak + 'MODFLOW LPF: Ss'
+    + sLineBreak + 'MODFLOW BCF: Sf1';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
   FDataArrayCreationRecords[Index].Min := 0;
@@ -18785,6 +19086,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsLong_Dispersivity;
+  FDataArrayCreationRecords[Index].DisplayName := rsLong_DispersivityDisplayName;
   FDataArrayCreationRecords[Index].Formula := '10.';
   FDispersivityIndex := Index;
   if (FCustomModel = nil) or (FCustomModel.ModelSelection = msPhast) then
@@ -18793,7 +19095,7 @@ begin
   end
   else
   begin
-    FDataArrayCreationRecords[Index].Classification := StrMT3DMS;
+    FDataArrayCreationRecords[Index].Classification := StrMT3DMS_Classificaton;
   end;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.LongitudinalDispersionUsed;
 
@@ -18810,6 +19112,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsHorizontal_Transv_Dispersivity;
+  FDataArrayCreationRecords[Index].DisplayName := rsHorizontal_Transv_DispersivityDisplayName;
   FDataArrayCreationRecords[Index].Formula := '1.';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ChemistryUsed;
@@ -18826,6 +19129,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsVertical_Transv_Dispersivity;
+  FDataArrayCreationRecords[Index].DisplayName := rsVertical_Transv_DispersivityDisplayName;
   FDataArrayCreationRecords[Index].Formula := '1.';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ChemistryUsed;
@@ -18842,6 +19146,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsInitial_Head;
+  FDataArrayCreationRecords[Index].DisplayName := rsInitial_HeadDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.InitialHeadUsed;
@@ -18856,6 +19161,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsInitial_Water_Table;
+  FDataArrayCreationRecords[Index].DisplayName := rsInitial_Water_TableDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded :=
@@ -18871,6 +19177,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Solution;
+  FDataArrayCreationRecords[Index].DisplayName := rsChemistry_Initial_SolutionDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0';
   FDataArrayCreationRecords[Index].Classification := StrChemistry;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ChemistryUsed;
@@ -18885,6 +19192,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Equilibrium_Phases;
+  FDataArrayCreationRecords[Index].DisplayName := rsChemistry_Initial_Equilibrium_PhasesDisplayName;
   FDataArrayCreationRecords[Index].Formula := '-1';
   FDataArrayCreationRecords[Index].Classification := StrChemistry;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.EquilibriumPhasesUsed;
@@ -18899,6 +19207,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Surface;
+  FDataArrayCreationRecords[Index].DisplayName := rsChemistry_Initial_SurfaceDisplayName;
   FDataArrayCreationRecords[Index].Formula := '-1';
   FDataArrayCreationRecords[Index].Classification := StrChemistry;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SurfacesUsed;
@@ -18913,6 +19222,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Exchange;
+  FDataArrayCreationRecords[Index].DisplayName := rsChemistry_Initial_ExchangeDisplayName;
   FDataArrayCreationRecords[Index].Formula := '-1';
   FDataArrayCreationRecords[Index].Classification := StrChemistry;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ExchangeUsed;
@@ -18927,6 +19237,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Gas_Phase;
+  FDataArrayCreationRecords[Index].DisplayName := rsChemistry_Initial_Gas_PhaseDisplayName;
   FDataArrayCreationRecords[Index].Formula := '-1';
   FDataArrayCreationRecords[Index].Classification := StrChemistry;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.GasPhaseUsed;
@@ -18941,6 +19252,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Solid_Solutions;
+  FDataArrayCreationRecords[Index].DisplayName := rsChemistry_Initial_Solid_SolutionsDisplayName;
   FDataArrayCreationRecords[Index].Formula := '-1';
   FDataArrayCreationRecords[Index].Classification := StrChemistry;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SolidSolutionUsed;
@@ -18955,6 +19267,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Kinetics;
+  FDataArrayCreationRecords[Index].DisplayName := rsChemistry_Initial_KineticsDisplayName;
   FDataArrayCreationRecords[Index].Formula := '-1';
   FDataArrayCreationRecords[Index].Classification := StrChemistry;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.KineticsUsed;
@@ -18969,6 +19282,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := rsPrint_Chemistry;
+  FDataArrayCreationRecords[Index].DisplayName := rsPrint_ChemistryDisplayName;
   FDataArrayCreationRecords[Index].Formula := '1';
   FDataArrayCreationRecords[Index].Classification := StrOutput;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ChemistryUsed;
@@ -18985,6 +19299,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := rsPrint_XYZ_Chemistry;
+  FDataArrayCreationRecords[Index].DisplayName := rsPrint_XYZ_ChemistryDisplayName;
   FDataArrayCreationRecords[Index].Formula := '1';
   FDataArrayCreationRecords[Index].Classification := StrOutput;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ChemistryUsed;
@@ -19002,6 +19317,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := rsResLayer;
+  FDataArrayCreationRecords[Index].DisplayName := rsResLayerDisplayName;
   FDataArrayCreationRecords[Index].Formula := '1';
   FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ReservoirLayerUsed;
@@ -19015,6 +19331,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsResBottom;
+  FDataArrayCreationRecords[Index].DisplayName := rsResBottomDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.';
   FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ReservoirPackageUsed;
@@ -19028,6 +19345,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsResKv;
+  FDataArrayCreationRecords[Index].DisplayName := rsResKvDisplayName;
   FDataArrayCreationRecords[Index].Formula := '100.';
   FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ReservoirPackageUsed;
@@ -19041,6 +19359,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsResBedThickness;
+  FDataArrayCreationRecords[Index].DisplayName := rsResBedThicknessDisplayName;
   FDataArrayCreationRecords[Index].Formula := '1.';
   FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ReservoirPackageUsed;
@@ -19055,6 +19374,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := rsLakeID;
+  FDataArrayCreationRecords[Index].DisplayName := rsLakeIDDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0';
   FDataArrayCreationRecords[Index].Classification := rsLakeClassificaton;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.LakePackageUsed;
@@ -19068,6 +19388,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsLakeLeakance;
+  FDataArrayCreationRecords[Index].DisplayName := rsLakeLeakanceDisplayName;
   FDataArrayCreationRecords[Index].Formula := '100.';
   FDataArrayCreationRecords[Index].Classification := rsLakeClassificaton;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.LakePackageUsed;
@@ -19082,6 +19403,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := StrUzfLandSurface;
+  FDataArrayCreationRecords[Index].DisplayName := StrUzfLandSurfaceDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.';
   FDataArrayCreationRecords[Index].Classification := strUzfClassification;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfPackageUsed;
@@ -19096,6 +19418,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtBoolean;
   FDataArrayCreationRecords[Index].Name := rsModflowSpecifiedHead;
+  FDataArrayCreationRecords[Index].DisplayName := rsModflowSpecifiedHeadDisplayName;
   FDataArrayCreationRecords[Index].Formula := 'False';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ModflowUsed;
@@ -19109,6 +19432,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := StrUzfLayer;
+  FDataArrayCreationRecords[Index].DisplayName := StrUzfLayerDisplayName;
   FDataArrayCreationRecords[Index].Formula :=
     'If((ActiveOnLayer(ElevationToLayer('
       + StrUzfLandSurface + ')) AND NOT SpecifiedHeadOnLayer(ElevationToLayer('
@@ -19126,6 +19450,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := StrUzfDischargeRouting;
+  FDataArrayCreationRecords[Index].DisplayName := StrUzfDischargeRoutingDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0';
   FDataArrayCreationRecords[Index].Classification := strUzfClassification;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.RouteUzfDischarge;
@@ -19139,6 +19464,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := StrUzfVerticalK;
+  FDataArrayCreationRecords[Index].DisplayName := StrUzfVerticalKDisplayName;
   FDataArrayCreationRecords[Index].Formula := '1.';
   FDataArrayCreationRecords[Index].Classification := strUzfClassification;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfUnsatVertKUsed;
@@ -19152,6 +19478,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := StrUzfBrooksCoreyEpsilon;
+  FDataArrayCreationRecords[Index].DisplayName := StrUzfBrooksCoreyEpsilonDisplayName;
   FDataArrayCreationRecords[Index].Formula := '3.5';
   FDataArrayCreationRecords[Index].Classification := strUzfClassification;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfPackageUsed;
@@ -19165,6 +19492,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := StrUzfSaturatedWaterContent;
+  FDataArrayCreationRecords[Index].DisplayName := StrUzfSaturatedWaterContentDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.3';
   FDataArrayCreationRecords[Index].Classification := strUzfClassification;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfPackageUsed;
@@ -19178,6 +19506,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := StrUzfInitialUnsaturatedWaterContent;
+  FDataArrayCreationRecords[Index].DisplayName := StrUzfInitialUnsaturatedWaterContentDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.3';
   FDataArrayCreationRecords[Index].Classification := strUzfClassification;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfInitialInfiltrationUsed;
@@ -19191,6 +19520,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := StrUzfReisidualWaterContent;
+  FDataArrayCreationRecords[Index].DisplayName := StrUzfReisidualWaterContentDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.2';
   FDataArrayCreationRecords[Index].Classification := strUzfClassification;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfResidualWaterContentUsed;
@@ -19204,6 +19534,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := StrUzfGage_1_and_2;
+  FDataArrayCreationRecords[Index].DisplayName := StrUzfGage_1_and_2DisplayName;
   FDataArrayCreationRecords[Index].Formula := '0';
   FDataArrayCreationRecords[Index].Classification := strUzfClassification;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfPackageUsed;
@@ -19217,6 +19548,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := StrUzfGage3;
+  FDataArrayCreationRecords[Index].DisplayName := StrUzfGage3DisplayName;
   FDataArrayCreationRecords[Index].Formula := '0';
   FDataArrayCreationRecords[Index].Classification := strUzfClassification;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfPackageUsed;
@@ -19230,6 +19562,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsModflow_Initial_Head;
+  FDataArrayCreationRecords[Index].DisplayName := rsModflow_Initial_HeadDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ModflowInitialHeadUsed;
@@ -19244,6 +19577,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsModflow_CBKz;
+  FDataArrayCreationRecords[Index].DisplayName := rsModflow_CBKzDisplayName;
   FDataArrayCreationRecords[Index].Formula := rsKz;
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ConfiningBedKzUsed;
@@ -19257,6 +19591,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsVerticalAnisotropy;
+  FDataArrayCreationRecords[Index].DisplayName := rsVerticalAnisotropyDisplayName;
   FDataArrayCreationRecords[Index].Formula :=
     'If((' + rsKz + ' = 0.), 0, (' + rsKx + ' / ' + rsKz + '))';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
@@ -19272,6 +19607,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsHorizontalAnisotropy;
+  FDataArrayCreationRecords[Index].DisplayName := rsHorizontalAnisotropyDisplayName;
   FDataArrayCreationRecords[Index].Formula :=
     'If((' + rsKx + ' = 0.), 1., (' + rsKy + ' / ' + rsKx + '))';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
@@ -19286,6 +19622,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsSpecificYield;
+  FDataArrayCreationRecords[Index].DisplayName := rsSpecificYieldDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.2';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SpecificYieldUsed;
@@ -19299,6 +19636,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsWetDryThreshold;
+  FDataArrayCreationRecords[Index].DisplayName := rsWetDryThresholdDisplayName;
   FDataArrayCreationRecords[Index].Formula := StrLayerHeight + ' * 0.1';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.WetDryUsed;
@@ -19312,6 +19650,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := rsWetDryFlag;
+  FDataArrayCreationRecords[Index].DisplayName := rsWetDryFlagDisplayName;
   FDataArrayCreationRecords[Index].Formula := 'IfI(' + rsActive + ', -1, 0)';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.WetDryUsed;
@@ -19335,6 +19674,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsWetDry;
+  FDataArrayCreationRecords[Index].DisplayName := rsWetDryDisplayName;
   FDataArrayCreationRecords[Index].Formula := rsWetDryThreshold
     + ' * ' + rsWetDryFlag;
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
@@ -19349,9 +19689,10 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := StrModpathZone;
+  FDataArrayCreationRecords[Index].DisplayName := StrModpathZoneDisplayName;
   FDataArrayCreationRecords[Index].Formula := '1';
-  FDataArrayCreationRecords[Index].Classification := 'MODPATH';
-  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ModpathUsed;
+  FDataArrayCreationRecords[Index].Classification := StrMODPATH;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ModpathZonesNeeded;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].CheckMax := False;
@@ -19365,6 +19706,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := StrHufReferenceSurface;
+  FDataArrayCreationRecords[Index].DisplayName := StrHufReferenceSurfaceDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.';
   FDataArrayCreationRecords[Index].Classification := StrHUF;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.HufReferenceSurfaceNeeded;
@@ -19382,6 +19724,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := StrTransmissivity;
+  FDataArrayCreationRecords[Index].DisplayName := StrTransmissivityDisplayName;
   FDataArrayCreationRecords[Index].Formula := rsKx + ' * ' + StrLayerHeight;
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.BcfUsed;
@@ -19398,6 +19741,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := StrVerticalConductance;
+  FDataArrayCreationRecords[Index].DisplayName := StrVerticalConductanceDisplayName;
   FDataArrayCreationRecords[Index].Formula := StrBcfVCONT;
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.BcfUsed;
@@ -19414,6 +19758,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := StrConfinedStorageCoe;
+  FDataArrayCreationRecords[Index].DisplayName := StrConfinedStorageCoeDisplayName;
   FDataArrayCreationRecords[Index].Formula := rsSpecific_Storage + ' * ' + StrLayerHeight;
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ConfinedStorageCoefUsed;
@@ -19429,7 +19774,8 @@ begin
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := 'HUF_Kx';
+  FDataArrayCreationRecords[Index].Name := StrHUFKxName;
+  FDataArrayCreationRecords[Index].DisplayName := StrHUFKxNameDisplayName;
   FDataArrayCreationRecords[Index].Formula := StrHufKx + '(' + rsModflow_Initial_Head + ')';
   FDataArrayCreationRecords[Index].Classification := StrHUF;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.OptionalDataSet;
@@ -19442,7 +19788,8 @@ begin
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := 'HUF_Ky';
+  FDataArrayCreationRecords[Index].Name := StrHUFKyName;
+  FDataArrayCreationRecords[Index].DisplayName := StrHUFKyNameDisplayName;
   FDataArrayCreationRecords[Index].Formula := StrHufKy + '(' + rsModflow_Initial_Head + ')';
   FDataArrayCreationRecords[Index].Classification := StrHUF;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.OptionalDataSet;
@@ -19455,7 +19802,8 @@ begin
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := 'HUF_Interlayer_Kz';
+  FDataArrayCreationRecords[Index].Name := StrHUFInterlayerKz;
+  FDataArrayCreationRecords[Index].DisplayName := StrHUFInterlayerKzDisplayName;
   FDataArrayCreationRecords[Index].Formula := StrHufKz + '(' + rsModflow_Initial_Head + ')';
   FDataArrayCreationRecords[Index].Classification := StrHUF;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.OptionalDataSet;
@@ -19469,7 +19817,8 @@ begin
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := 'HUF_SS';
+  FDataArrayCreationRecords[Index].Name := StrHUFSSName;
+  FDataArrayCreationRecords[Index].DisplayName := StrHUFSSNameDisplayName;
   FDataArrayCreationRecords[Index].Formula := StrHufSs + '(' + rsModflow_Initial_Head + ')';
   FDataArrayCreationRecords[Index].Classification := StrHUF;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.OptionalDataSet;
@@ -19483,7 +19832,8 @@ begin
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := 'HUF_Average_SY';
+  FDataArrayCreationRecords[Index].Name := StrHUFAverageSYName;
+  FDataArrayCreationRecords[Index].DisplayName := StrHUFAverageSYNameDisplayName;
   FDataArrayCreationRecords[Index].Formula := StrHufAverageSy + '(' + rsModflow_Initial_Head + ')';
   FDataArrayCreationRecords[Index].Classification := StrHUF;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.OptionalDataSet;
@@ -19497,7 +19847,8 @@ begin
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := 'HUF_SY';
+  FDataArrayCreationRecords[Index].Name := StrHUFSYName;
+  FDataArrayCreationRecords[Index].DisplayName := StrHUFSYNameDisplayName;
   FDataArrayCreationRecords[Index].Formula := StrHufSy + '(' + rsModflow_Initial_Head + ')';
   FDataArrayCreationRecords[Index].Classification := StrHUF;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.OptionalDataSet;
@@ -19511,7 +19862,8 @@ begin
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := 'HUF_SYTP';
+  FDataArrayCreationRecords[Index].Name := StrHUFSYTPName;
+  FDataArrayCreationRecords[Index].DisplayName := StrHUFSYTPNameDisplayName;
   FDataArrayCreationRecords[Index].Formula := StrHufSytp;
   FDataArrayCreationRecords[Index].Classification := StrHUF;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.OptionalDataSet;
@@ -19526,6 +19878,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtInteger;
   FDataArrayCreationRecords[Index].Name := StrZones;
+  FDataArrayCreationRecords[Index].DisplayName := StrZonesDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0';
   FDataArrayCreationRecords[Index].Classification := StrZonebudget;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ZoneBudgetSelected;
@@ -19540,6 +19893,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := StrGeostaticStress;
+  FDataArrayCreationRecords[Index].DisplayName := StrGeostaticStressDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0';
   FDataArrayCreationRecords[Index].Classification := StrSubsidence;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwtSelected;
@@ -19554,6 +19908,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := StrSpecificGravityUns;
+  FDataArrayCreationRecords[Index].DisplayName := StrSpecificGravityUnsDisplayName;
   FDataArrayCreationRecords[Index].Formula := '1.7';
   FDataArrayCreationRecords[Index].Classification := StrSubsidence;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwtSelected;
@@ -19568,6 +19923,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dsoTop;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := StrSpecificGravitySat;
+  FDataArrayCreationRecords[Index].DisplayName := StrSpecificGravitySatDisplayName;
   FDataArrayCreationRecords[Index].Formula := '2.';
   FDataArrayCreationRecords[Index].Classification := StrSubsidence;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwtSelected;
@@ -19585,6 +19941,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := StrInitialPreOffsets;
+  FDataArrayCreationRecords[Index].DisplayName := StrInitialPreOffsetsDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.';
   FDataArrayCreationRecords[Index].Classification := StrSubsidence;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwtOffsetsUsed;
@@ -19599,6 +19956,7 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := StrInitialPreconsolida;
+  FDataArrayCreationRecords[Index].DisplayName := StrInitialPreconsolidaDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.';
   FDataArrayCreationRecords[Index].Classification := StrSubsidence;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwtSpecifiedUsed;
@@ -19613,8 +19971,9 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtBoolean;
   FDataArrayCreationRecords[Index].Name := STR_MT3DMS_Observation_Locations;
+  FDataArrayCreationRecords[Index].DisplayName := STR_MT3DMS_Observation_LocationsDisplayName;
   FDataArrayCreationRecords[Index].Formula := 'False';
-  FDataArrayCreationRecords[Index].Classification := StrMT3DMS;
+  FDataArrayCreationRecords[Index].Classification := StrMT3DMS_Classificaton;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Mt3dMSUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
@@ -19626,8 +19985,9 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtBoolean;
   FDataArrayCreationRecords[Index].Name := StrMT3DMSActive;
+  FDataArrayCreationRecords[Index].DisplayName := StrMT3DMSActiveDisplayName;
   FDataArrayCreationRecords[Index].Formula := rsActive;
-  FDataArrayCreationRecords[Index].Classification := StrMT3DMS;
+  FDataArrayCreationRecords[Index].Classification := StrMT3DMS_Classificaton;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Mt3dMSUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
@@ -19639,8 +19999,9 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsBulkDensity;
+  FDataArrayCreationRecords[Index].DisplayName := rsBulkDensityDisplayName;
   FDataArrayCreationRecords[Index].Formula := '2000000';
-  FDataArrayCreationRecords[Index].Classification := StrMT3DMS;
+  FDataArrayCreationRecords[Index].Classification := StrMT3DMS_Classificaton;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Mt3dMSBulkDensityUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
@@ -19652,8 +20013,9 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsImmobPorosity;
+  FDataArrayCreationRecords[Index].DisplayName := rsImmobPorosityDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.2';
-  FDataArrayCreationRecords[Index].Classification := StrMT3DMS;
+  FDataArrayCreationRecords[Index].Classification := StrMT3DMS_Classificaton;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Mt3dMSImmobPorosityUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
@@ -19665,13 +20027,42 @@ begin
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := rsMT3DMS_Layer_Thickness;
+  FDataArrayCreationRecords[Index].DisplayName := rsMT3DMS_Layer_ThicknessDisplayName;
   FDataArrayCreationRecords[Index].Formula :=StrLayerHeight;
-  FDataArrayCreationRecords[Index].Classification := StrMT3DMS;
+  FDataArrayCreationRecords[Index].Classification := StrMT3DMS_Classificaton;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Mt3dMSUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'MT3DMS Basic package DZ data set 10';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtBoolean;
+  FDataArrayCreationRecords[Index].Name := KModpathBudget;
+  FDataArrayCreationRecords[Index].DisplayName := KModpathBudgetDisplayName;
+  FDataArrayCreationRecords[Index].Formula := 'False';
+  FDataArrayCreationRecords[Index].Classification := StrMODPATH;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ModpathBudgetNeeded;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'MODPATH Simulation file, Item 27';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KModpathRetardation;
+  FDataArrayCreationRecords[Index].DisplayName := KModpathRetardationDisplayName;
+  FDataArrayCreationRecords[Index].Formula := '2.';
+  FDataArrayCreationRecords[Index].Classification := StrMODPATH;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ModpathRetardationNeeded;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'MODPATH Simulation file, Items 32 and 33: RetardationFactor and RetardationFactorCB';
   Inc(Index);
 
   Assert(Length(FDataArrayCreationRecords) = Index);
@@ -19792,9 +20183,9 @@ begin
   end;
   if FDataSetLookUpList = nil then
   begin
-    FDataSetLookUpList := THashTableFacade.Create;
+    FDataSetLookUpList := THashTableFacade.Create( Max(211, DataSetCount*2-1));
     FDataSetLookUpList.IgnoreCase := True;
-    FDataSetLookUpList.TableSize := Max(211, DataSetCount*2-1);
+//    FDataSetLookUpList.TableSize := Max(211, DataSetCount*2-1);
     for Index := 0 to LocalCount - 1 do
     begin
       DataArray := DataSets[Index];
@@ -19908,7 +20299,7 @@ begin
         begin
           ChildDataArray := ChildManager.CreateNewDataArray(
             TDataArrayType(DataArray.ClassType),
-            DataArray.Name, DataArray.Formula, DataArray.Lock,
+            DataArray.Name, DataArray.Formula, DataArray.DisplayName,  DataArray.Lock,
             DataArray.DataType, DataArray.EvaluatedAt, DataArray.Orientation,
             DataArray.Classification);
           ChildDataArray.AssignProperties(DataArray);
@@ -19998,6 +20389,33 @@ end;
 procedure TDataArrayManager.Invalidate;
 begin
   FCustomModel.Invalidate;
+end;
+
+procedure TDataArrayManager.InvalidateAll3DDataSets;
+var
+  Index: Integer;
+  DS: TDataArray;
+begin
+  for Index := 0 to DataSetCount - 1 do
+  begin
+    DS := DataSets[Index];
+    if DS.Orientation = dso3D then
+    begin
+      DS.Invalidate;
+    end;
+  end;
+  for Index := 0 to BoundaryDataSetCount - 1 do
+  begin
+    DS := BoundaryDataSets[Index];
+    if DS.Orientation = dso3D then
+    begin
+      DS.Invalidate;
+    end;
+  end;
+  for Index := 0 to ChildDataArrayManagerCount - 1 do
+  begin
+    ChildDataArrayManagers[Index].InvalidateAll3DDataSets;
+  end;
 end;
 
 procedure TDataArrayManager.InvalidateAllDataSets;
@@ -20097,7 +20515,7 @@ begin
     end
     else
     begin
-      FDataArrayCreationRecords[FDispersivityIndex].Classification := StrMT3DMS;
+      FDataArrayCreationRecords[FDispersivityIndex].Classification := StrMT3DMS_Classificaton;
     end;
     DataArray := GetDataSetByName(FDataArrayCreationRecords[FDispersivityIndex].Name);
     if DataArray <> nil then
@@ -20118,11 +20536,11 @@ begin
       Packages := FCustomModel.ModflowPackages;
       if Packages.Mt3dBasic.IsSelected and Packages.ModPath.IsSelected then
       begin
-        FDataArrayCreationRecords[FPorosityIndex].Classification := StrModpath + ' \ ' + StrMt3dms;
+        FDataArrayCreationRecords[FPorosityIndex].Classification := StrModpath + ' \ ' + StrMT3DMS_Classificaton;
       end
       else if Packages.Mt3dBasic.IsSelected then
       begin
-        FDataArrayCreationRecords[FPorosityIndex].Classification := StrMt3dms;
+        FDataArrayCreationRecords[FPorosityIndex].Classification := StrMT3DMS_Classificaton;
       end
       else if Packages.ModPath.IsSelected then
       begin
@@ -20698,6 +21116,27 @@ function TCustomModel.WetDryUsed(Sender: TObject): boolean;
 begin
   result := ModflowWettingOptions.WettingActive
     and not ModflowPackages.UpwPackage.IsSelected;
+end;
+
+function TCustomModel.ModpathBudgetNeeded(Sender: TObject): boolean;
+begin
+  result := ModpathUsed(Sender)
+    and (ModflowPackages.ModPath.BudgetChecking = bcList);
+end;
+
+function TCustomModel.ModpathRetardationNeeded(Sender: TObject): boolean;
+begin
+  result := ModpathUsed(Sender)
+    and (ModflowPackages.ModPath.RetardationOption = roUsed);
+end;
+
+function TCustomModel.ModpathZonesNeeded(Sender: TObject): boolean;
+begin
+  result := ModpathUsed(Sender);
+  if result and (ModflowPackages.ModPath.MpathVersion = mp6) then
+  begin
+    result := ModflowPackages.ModPath.StopInZone;
+  end;
 end;
 
 function TCustomModel.ModpathUsed(Sender: TObject): boolean;
@@ -21388,6 +21827,16 @@ begin
     msModflowLGR: result := ProgramLocations.ModflowLgrLocation;
     msModflowNWT: result := ProgramLocations.ModflowNwtLocation;
     else result := ProgramLocations.ModflowLocation;
+  end;
+end;
+
+function TCustomModel.GetModPathLocation: string;
+begin
+  Result := '';
+  case ModflowPackages.ModPath.MpathVersion of
+    mp5: result := ProgramLocations.ModPathLocation;
+    mp6: result := ProgramLocations.ModPathLocationVersion6;
+    else Assert(False);
   end;
 end;
 
@@ -22752,6 +23201,9 @@ var
   NameFileWriter: TModpathNameFileWriter;
   BatchFileLocation: string;
   LargeBudgetFileResponse: string;
+  BasicFileWriter : TModpathBasicFileWriter;
+  SimFileWriter : TModpathSimFileWriter;
+  LogFileName: string;
 begin
   // Note: MODPATH can not read Unicode text files.
 
@@ -22770,49 +23222,88 @@ begin
       SetCurrentDir(ExtractFileDir(FileName));
       FileName := FixFileName(FileName);
 
-      NameFileWriter := TModpathNameFileWriter.Create;
-      try
-        NameFileWriter.WriteFile(FileName, self, EmbeddedExport);
-      finally
-        NameFileWriter.Free;
-      end;
+      case ModflowPackages.ModPath.MpathVersion of
+        mp5:
+          begin
+            NameFileWriter := TModpathNameFileWriter.Create;
+            try
+              NameFileWriter.WriteFile(FileName, self, EmbeddedExport);
+            finally
+              NameFileWriter.Free;
+            end;
 
-      MainFileWriter := TModpathMainFileWriter.Create(Self, etExport);
-      try
-        MainFileWriter.WriteFile(FileName);
-      finally
-        MainFileWriter.Free;
-      end;
-      StartLocations := TModpathStartingLocationsWriter.Create(Self, etExport);
-      try
-        StartLocations.WriteFile(FileName);
-      finally
-        StartLocations.Free;
-      end;
-      if ModflowPackages.ModPath.ShouldCreateTimeFile then
-      begin
-        TimeFileWriter := TModpathTimeFileWriter.Create(Self, etExport);
-        try
-          TimeFileWriter.WriteFile(FileName);
-        finally
-          TimeFileWriter.Free;
-        end;
-      end;
-      Responses := TModpathResponseFileWriter.Create(Self, etExport);
-      try
-        Responses.WriteFile(FileName, NewBudgetFile);
-        LargeBudgetFileResponse := Responses.FLargeBudgetFileResponse;
-      finally
-        Responses.Free;
-      end;
+            MainFileWriter := TModpathMainFileWriter.Create(Self, etExport);
+            try
+              MainFileWriter.WriteFile(FileName);
+            finally
+              MainFileWriter.Free;
+            end;
+            StartLocations := TModpathStartingLocationsWriter.Create(Self, etExport);
+            try
+              StartLocations.WriteFile(FileName);
+            finally
+              StartLocations.Free;
+            end;
+            if ModflowPackages.ModPath.ShouldCreateTimeFile then
+            begin
+              TimeFileWriter := TModpathTimeFileWriter.Create(Self, etExport);
+              try
+                TimeFileWriter.WriteFile(FileName);
+              finally
+                TimeFileWriter.Free;
+              end;
+            end;
+            Responses := TModpathResponseFileWriter.Create(Self, etExport);
+            try
+              Responses.WriteFile(FileName, NewBudgetFile);
+              LargeBudgetFileResponse := Responses.FLargeBudgetFileResponse;
+            finally
+              Responses.Free;
+            end;
 
-      BatchFileLocation := WriteModpathBatchFile(ProgramLocations, FileName,
-        ChangeFileExt(FileName,'.mplst'), RunModel, LargeBudgetFileResponse,
-        EmbeddedExport);
+            BatchFileLocation := WriteModpathBatchFile(ProgramLocations, FileName,
+              ChangeFileExt(FileName,'.mplst'), RunModel, LargeBudgetFileResponse,
+              EmbeddedExport);
 
+          end;
+        mp6:
+          begin
+            NameFileWriter := TModpathNameFileWriter.Create;
+            try
+              NameFileWriter.WriteFileVersion6(FileName, self, EmbeddedExport);
+            finally
+              NameFileWriter.Free;
+            end;
+
+            BasicFileWriter := TModpathBasicFileWriter.Create(Self, etExport);
+            try
+              BasicFileWriter.WriteFile(FileName);
+            finally
+              BasicFileWriter.Free;
+            end;
+            StartLocations := TModpathStartingLocationsWriter.Create(Self, etExport);
+            try
+              StartLocations.WriteFileVersion6(FileName);
+            finally
+              StartLocations.Free;
+            end;
+
+            SimFileWriter := TModpathSimFileWriter.Create(Self, etExport);
+            try
+              SimFileWriter.WriteFile(FileName);
+            finally
+              SimFileWriter.Free;
+            end;
+
+            BatchFileLocation := WriteModPathBatchFileVersion6(ProgramLocations,
+              FileName, ChangeFileExt(FileName,'.mplst'), RunModel,
+              EmbeddedExport);
+          end;
+        else
+          Assert(False);
+      end;
       if RunModel then
       begin
-//        WinExec(PAnsiChar(AnsiString('"' + BatchFileLocation + '"')), SW_SHOW);
         RunAProgram('"' + BatchFileLocation + '"');
       end;
     except on E: EFCreateError do
@@ -22821,11 +23312,18 @@ begin
         MessageDlg(E.Message, mtError, [mbOK], 0);
       end;
     end;
+    if (ModflowPackages.ModPath.MpathVersion = mp6) then
+    begin
+      LogFileName := IncludeTrailingPathDelimiter(ExtractFileDir(FileName))
+        + 'MPATH6.LOG';
+      AddFileToArchive(LogFileName);
+    end;
   finally
     if frmProgressMM.Owner = nil then
     begin
       FreeAndNil(frmProgressMM);
     end;
+
 //    ReclaimMemory;
   end;
 end;
@@ -26305,4 +26803,6 @@ initialization
   RegisterClass(TChildModel);
 
 end.
+
+
 

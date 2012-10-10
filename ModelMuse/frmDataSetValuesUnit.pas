@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ExtCtrls, VirtualTrees,
   ComCtrls, Grids, RbwDataGrid4, JvExStdCtrls, JvListBox, SsButtonEd,
-  RbwStringTreeCombo;
+  RbwStringTreeCombo, DataSetUnit;
 
 type
   TfrmDataSetValues = class(TfrmCustomGoPhast)
@@ -23,6 +23,8 @@ type
     lblModel: TLabel;
     treecomboDataSets: TRbwStringTreeCombo;
     comboOrientation: TComboBox;
+    btnSave: TButton;
+    dlgSave: TSaveDialog;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure treecomboDataSetsDropDownTreeChange(Sender: TBaseVirtualTree;
@@ -41,6 +43,7 @@ type
       ParentNode, Node: PVirtualNode;
       var InitialStates: TVirtualNodeInitStates);
     procedure comboOrientationChange(Sender: TObject);
+    procedure btnSaveClick(Sender: TObject);
   private
     FSelectedVirtNode: PVirtualNode;
     // @name is implemented as a TObjectList.
@@ -48,6 +51,7 @@ type
     FTempControls: TList;
     procedure GetData;
     procedure SetSelectedNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure GetDataArray(var DataArray: TDataArray);
     { Private declarations }
   public
     property SelectedVirtNode: PVirtualNode read FSelectedVirtNode;
@@ -58,7 +62,7 @@ implementation
 
 {$R *.dfm}
 
-uses Contnrs, ClassificationUnit, frmGoPhastUnit, DataSetUnit, RbwParser,
+uses Contnrs, ClassificationUnit, frmGoPhastUnit, RbwParser,
   GoPhastTypes, PhastModelUnit;
 
 resourcestring
@@ -66,6 +70,10 @@ resourcestring
   StrLayer = 'Layer';
   StrRow = 'Row';
   StrColumn = 'Column';
+  StrToSaveDataSetVal = 'To save data set values, you must first select a da' +
+  'ta set.';
+  StrOnlyDataSetsThat = 'Only data sets that have numeric values can be save' +
+  'd.';
 
 procedure TfrmDataSetValues.btnCopyClick(Sender: TObject);
 var
@@ -79,6 +87,80 @@ begin
     Grid.SelectAll;
     Grid.CopySelectedCellsToClipboard;
     Grid.ClearSelection;
+  end;
+end;
+
+procedure TfrmDataSetValues.btnSaveClick(Sender: TObject);
+var
+  DataArray: TDataArray;
+  AFileName: string;
+  Lines: TStringList;
+  StringBuilder: TStringBuilder;
+  LayerIndex: Integer;
+  RowIndex: Integer;
+  ColIndex: Integer;
+begin
+  inherited;
+  GetDataArray(DataArray);
+  if DataArray = nil then
+  begin
+    Beep;
+    MessageDlg(StrToSaveDataSetVal, mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  if not (DataArray.DataType in [rdtDouble, rdtInteger]) then
+  begin
+    Beep;
+    MessageDlg(StrOnlyDataSetsThat, mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  AFileName := ExtractFileDir(frmGoPhast.PhastModel.ModelFileName);
+  AFileName := IncludeTrailingPathDelimiter(AFileName)
+    + DataArray.Name + dlgSave.DefaultExt;
+  dlgSave.FileName := AFileName;
+  if dlgSave.Execute then
+  begin
+    Lines := TStringList.Create;
+    StringBuilder := TStringBuilder.Create;
+    try
+      // Format code
+      Lines.Add('1');
+
+      // number of data sets
+      Lines.Add('1');
+
+      // data array names
+      Lines.Add(DataArray.Name);
+
+      // Number of layers, row, and columns
+      Lines.Add(Format('%0:d %1:d %2:d',
+        [DataArray.LayerCount, DataArray.RowCount, DataArray.ColumnCount]));
+
+      // data set values.
+      for LayerIndex := 0 to DataArray.LayerCount - 1 do
+      begin
+        for RowIndex := 0 to DataArray.RowCount - 1 do
+        begin
+          StringBuilder.Clear;
+          for ColIndex := 0 to DataArray.ColumnCount - 1 do
+          begin
+            case DataArray.DataType of
+              rdtDouble: StringBuilder.Append(
+                DataArray.RealData[LayerIndex, RowIndex, ColIndex]);
+              rdtInteger: StringBuilder.Append(
+                DataArray.IntegerData[LayerIndex, RowIndex, ColIndex]);
+              else Assert(False);
+            end;
+            StringBuilder.Append(' ');
+          end;
+          Lines.Add(StringBuilder.ToString);
+        end;
+      end;
+      Lines.SaveToFile(dlgSave.FileName);
+    finally
+      StringBuilder.Free;
+      Lines.Free;
+    end;
   end;
 end;
 
@@ -174,23 +256,16 @@ var
   ColIndex: Integer;
   ColumnFormat: TRbwColumnFormat4;
   RowIndex: Integer;
-  LocalModel: TCustomModel;
   RowIndex2: Integer;
   ColIndex2: Integer;
 begin
   inherited;
   UpdateTreeComboText(SelectedVirtNode, treecomboDataSets);
-  DataArray := frmGoPhast.PhastModel.DataArrayManager.
-    GetDataSetByName(treecomboDataSets.Text);
+  GetDataArray(DataArray);
+
   if DataArray = nil then
   begin
     Exit;
-  end;
-
-  LocalModel := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
-  if LocalModel <> frmGoPhast.PhastModel then
-  begin
-    DataArray := LocalModel.DataArrayManager.GetDataSetByName(DataArray.Name);
   end;
 
   FTempControls.Clear;
@@ -586,10 +661,11 @@ begin
       end;
     else Assert(False);
   end;
-;
+
   pcDataSet.ActivePageIndex := 0;
   lbLayers.ItemIndex := 0;
   btnCopy.Enabled := True;
+  btnSave.Enabled := DataArray.DataType in [rdtDouble, rdtInteger];
 end;
 
 procedure TfrmDataSetValues.treecomboDataSetsDropDownTreeChange(
@@ -618,6 +694,23 @@ procedure TfrmDataSetValues.SetSelectedNode(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
 begin
   SelectOnlyLeaves(Node, treecomboDataSets, Sender, FSelectedVirtNode);
+end;
+
+procedure TfrmDataSetValues.GetDataArray(var DataArray: TDataArray);
+var
+  LocalModel: TCustomModel;
+begin
+  DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(
+    treecomboDataSets.Text);
+  if DataArray = nil then
+  begin
+    Exit;
+  end;
+  LocalModel := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
+  if LocalModel <> frmGoPhast.PhastModel then
+  begin
+    DataArray := LocalModel.DataArrayManager.GetDataSetByName(DataArray.Name);
+  end;
 end;
 
 end.

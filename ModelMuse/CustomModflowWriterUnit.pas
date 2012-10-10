@@ -78,7 +78,7 @@ type
     function File_Comment(const FileID: string): string;
     // @name generates a comment line for a MODFLOW input file indentifying
     // the package.
-    function PackageID_Comment(APackage: TModflowPackageSelection): string;
+    function PackageID_Comment(APackage: TModflowPackageSelection): string; virtual;
     // @name closes the MODFLOW input file that is being exported.
     // @seealso(OpenFile)
     procedure CloseFile;
@@ -720,6 +720,10 @@ function WriteModPathBatchFile(ProgramLocations: TProgramLocations;
   FileName: string; ListFile: string; OpenListFile: boolean;
   const LargeBudgetFileResponse: string; EmbeddedExport: boolean): string;
 
+function WriteModPathBatchFileVersion6(ProgramLocations: TProgramLocations;
+  FileName: string; ListFile: string; OpenListFile: boolean;
+  EmbeddedExport: boolean): string;
+
 function WriteZoneBudgetBatchFile(Model: TCustomModel;
   FileName: string; OpenListFile, EmbeddedExport: boolean): string;
 
@@ -745,7 +749,8 @@ implementation
 uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmGoPhastUnit,
   frmProgressUnit, GlobalVariablesUnit, frmFormulaErrorsUnit, GIS_Functions,
   ZoneBudgetWriterUnit, ModelMuseUtilities, SparseDataSets, SparseArrayUnit,
-  RealListUnit, ModflowMultiplierZoneWriterUnit, IOUtils;
+  RealListUnit, ModflowMultiplierZoneWriterUnit, IOUtils,
+  ModpathResponseFileWriterUnit;
 
 resourcestring
   StrTheFollowingParame = 'The following %s parameters are being skipped ' +
@@ -969,6 +974,48 @@ begin
   end;
 end;
 
+function WriteModPathBatchFileVersion6(ProgramLocations: TProgramLocations;
+  FileName: string; ListFile: string; OpenListFile: boolean;
+  EmbeddedExport: boolean): string;
+var
+  BatchFile: TStringList;
+  ModPathLocation: string;
+  AFileName: string;
+  MpBatName: string;
+begin
+  result := ExtractFileDir(FileName);
+  MpBatName := IncludeTrailingPathDelimiter(result)
+    + 'Mp.bat';
+
+  BatchFile := TStringList.Create;
+  try
+    ModPathLocation :=  QuoteFileName(ProgramLocations.ModPathLocationVersion6);
+    AFileName := ExtractFileName(ChangeFileExt(FileName, TModpathSimFileWriter.Extension));
+    BatchFile.Add(ModPathLocation + ' ' + AFileName);
+    BatchFile.SaveToFile(MpBatName);
+  finally
+    BatchFile.Free;
+  end;
+
+  result := IncludeTrailingPathDelimiter(result)
+    + 'RunModpath.Bat';
+
+  FileName := ExtractFileName(FileName);
+  BatchFile := TStringList.Create;
+  try
+    BatchFile.Add('call mp.bat /wait');
+    AddOpenListFileLine(ListFile, OpenListFile, BatchFile, ProgramLocations);
+    if not EmbeddedExport then
+    begin
+      BatchFile.Add('pause');
+    end;
+    BatchFile.SaveToFile(result);
+  finally
+    BatchFile.Free;
+  end;
+
+end;
+
 function WriteModPathBatchFile(ProgramLocations: TProgramLocations;
   FileName: string; ListFile: string; OpenListFile: boolean;
   const LargeBudgetFileResponse: string; EmbeddedExport: boolean): string;
@@ -978,14 +1025,6 @@ var
   ResponseFile: string;
   MpBatName: string;
 begin
-  if (Length(ProgramLocations.ModPathLocation) > 0)
-    and (ProgramLocations.ModPathLocation[1] <> '"')
-    and (Pos(' ', ProgramLocations.ModPathLocation) > 0) then
-  begin
-    ProgramLocations.ModPathLocation := '"'
-      + ProgramLocations.ModPathLocation + '"';
-  end;
-
   result := ExtractFileDir(FileName);
   MpBatName := IncludeTrailingPathDelimiter(result)
     + 'MpIn.txt';
@@ -3296,7 +3335,7 @@ begin
       if TimeIndex < FLayers.Count then
       begin
         CellList := FLayers[TimeIndex];
-        CellList.CheckRestore;
+//        CellList.CheckRestore;
         UpdateLayerDataSet(CellList, DataArray);
       end
       else
@@ -3757,42 +3796,42 @@ var
     end;
   end;
 begin
-  if List is TValueCellList then
-  begin
-    TValueCellList(List).CheckRestore;
-  end;
+//  if List is TValueCellList then
+//  begin
+//    TValueCellList(List).CheckRestore;
+//  end;
   if List.Count > 0 then
   begin
     AnObject := List[0];
     if AnObject is TList then
     begin
-      if AnObject is TValueCellList then
-      begin
-        TValueCellList(AnObject).CheckRestore;
-      end;
+//      if AnObject is TValueCellList then
+//      begin
+//        TValueCellList(AnObject).CheckRestore;
+//      end;
       for ListIndex := 0 to List.Count - 1 do
       begin
         DataArrayList := List[ListIndex];
-        if DataArrayList is TValueCellList then
-        begin
-          TValueCellList(DataArrayList).CheckRestore;
-        end;
+//        if DataArrayList is TValueCellList then
+//        begin
+//          TValueCellList(DataArrayList).CheckRestore;
+//        end;
         if DataArrayList.Count > 0 then
         begin
           AnObject := DataArrayList[0];
           if AnObject is TList then
           begin
-            if AnObject is TValueCellList then
-            begin
-              TValueCellList(AnObject).CheckRestore;
-            end;
+//            if AnObject is TValueCellList then
+//            begin
+//              TValueCellList(AnObject).CheckRestore;
+//            end;
             for DataArrayIndex := 0 to DataArrayList.Count - 1 do
             begin
               InnerDataArrayList := DataArrayList[DataArrayIndex];
-              if InnerDataArrayList is TValueCellList then
-              begin
-                TValueCellList(InnerDataArrayList).CheckRestore;
-              end;
+//              if InnerDataArrayList is TValueCellList then
+//              begin
+//                TValueCellList(InnerDataArrayList).CheckRestore;
+//              end;
               AssignCellValues(InnerDataArrayList);
             end;
           end
@@ -3891,9 +3930,17 @@ var
   end;
 begin
   InitializeDisplayArray(DisplayArray, DefaultValue);
-  if List.Count > 0 then
+  if (List.Count > 0)
+    or ((List is TValueCellList) and (TValueCellList(List).Count > 0)) then
   begin
-    AnObject := List[0];
+    if (List is TValueCellList) then
+    begin
+      AnObject := TValueCellList(List).Items[0];
+    end
+    else
+    begin
+      AnObject := List[0];
+    end;
     if AnObject is TList then
     begin
       for ListIndex := 0 to List.Count - 1 do
@@ -4757,8 +4804,9 @@ end;
 
 procedure TCustomNameFileWriter.SaveNameFile(AFileName: string);
 begin
-  // AFileName := ChangeFileExt(AFileName, '.nam');
-  NameFile.SaveToFile(FileName(AFileName));
+  AFileName := FileName(AFileName);
+  NameFile.SaveToFile(AFileName);
+  frmGoPhast.PhastModel.AddModelInputFile(AFileName);
 end;
 
 end.

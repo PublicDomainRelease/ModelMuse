@@ -90,10 +90,8 @@ inherited frmCustomImportSimpleFile: TfrmCustomImportSimpleFile
     Top = 228
     Width = 91
     Height = 33
-    DoubleBuffered = True
     Kind = bkOK
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 4
   end
   object btnCancel: TBitBtn
@@ -101,10 +99,8 @@ inherited frmCustomImportSimpleFile: TfrmCustomImportSimpleFile
     Top = 228
     Width = 91
     Height = 33
-    DoubleBuffered = True
     Kind = bkCancel
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 6
   end
   object btnHelp: TBitBtn
@@ -112,10 +108,8 @@ inherited frmCustomImportSimpleFile: TfrmCustomImportSimpleFile
     Top = 228
     Width = 91
     Height = 33
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 8
     OnClick = btnHelpClick
   end

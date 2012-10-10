@@ -217,13 +217,13 @@ begin
           RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
             ParametersUsed, ParameterValues, True);
           List := Values[TimeIndex];
-          List.CheckRestore;
+//          List.CheckRestore;
 
           // data set 6
           if FDepthSurface.Count > 0 then
           begin
             DepthSurfaceCellList := FDepthSurface[TimeIndex];
-            DepthSurfaceCellList.CheckRestore;
+//            DepthSurfaceCellList.CheckRestore;
             AssignTransient2DArray(EvapSurfArray, 0, DepthSurfaceCellList, 0,
               rdtDouble, umAssign);
           end
@@ -274,7 +274,7 @@ begin
               RetrieveParametersForStressPeriod(D7PNameIname, D7PName, 0,
                 ParametersUsed, ParameterValues, True);
               List := Values[0];
-              List.CheckRestore;
+//              List.CheckRestore;
             end;
             UpdateLayerDisplay(List, ParameterValues, TimeIndex,
               EvapLayerArray);

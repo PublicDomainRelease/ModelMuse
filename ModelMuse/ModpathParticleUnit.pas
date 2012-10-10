@@ -148,9 +148,13 @@ type
   // @name is used in both @link(TParticleStorage) and
   // @link(TModpathSelection).
   TModpathTimes = class(TPhastCollection)
+  private
+    function GetItem(Index: Integer): TModpathTimeItem;
+    procedure SetItem(Index: Integer; const Value: TModpathTimeItem);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
+    property Items[Index: Integer]: TModpathTimeItem read GetItem write SetItem; default;
   end;
 
   TParticleStorage = class(TGoPhastPersistent)
@@ -246,13 +250,16 @@ procedure TParticleLocation.Assign(Source: TPersistent);
 var
   SourceItem: TParticleLocation;
 begin
-  inherited;
   if Source is TParticleLocation then
   begin
     SourceItem := TParticleLocation(Source);
     X := SourceItem.X;
     Y := SourceItem.Y;
     Z := SourceItem.Z;
+  end
+  else
+  begin
+    inherited;
   end;
 end;
 
@@ -1279,6 +1286,16 @@ end;
 constructor TModpathTimes.Create(Model: TBaseModel);
 begin
   inherited Create(TModpathTimeItem, Model);
+end;
+
+function TModpathTimes.GetItem(Index: Integer): TModpathTimeItem;
+begin
+  result := inherited Items[Index] as TModpathTimeItem;
+end;
+
+procedure TModpathTimes.SetItem(Index: Integer; const Value: TModpathTimeItem);
+begin
+  inherited Items[Index] := Value;
 end;
 
 end.

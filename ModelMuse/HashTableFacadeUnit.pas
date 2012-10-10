@@ -2,36 +2,41 @@ unit HashTableFacadeUnit;
 
 interface
 
-uses {EZDSLHsh,} JclHashMaps;
+uses {EZDSLHsh,} {JclHashMaps,} Generics.Collections;
 
 type
 
   THashTableFacade = class(TObject)
   private
-    FJclUnicodeStrHashMap: TJclUnicodeStrHashMap;
-    FTableSize: integer;
+//    FJclUnicodeStrHashMap: TJclUnicodeStrHashMap;
+    FDictionary: TDictionary<string, Pointer>;
+//    FTableSize: integer;
+    FCaseSensitive: Boolean;
     function GetIgnoreCase: boolean;
-    function GetTableSize: integer;
+//    function GetTableSize: integer;
     procedure SetIgnoreCase(const Value: boolean);
-    procedure SetTableSize(Value: integer);
+//    procedure SetTableSize(Value: integer);
   public
-    constructor Create;
+    constructor Create(TableSize: Integer = 0);
     destructor Destroy; override;
     procedure Delete(const aKey : string);
     procedure Insert(const aKey : string; aData : pointer);
     function Search(const aKey : string; var aData : pointer) : boolean;
-    property TableSize : integer read GetTableSize write SetTableSize;
+//    property TableSize : integer read GetTableSize write SetTableSize;
     property IgnoreCase : boolean read GetIgnoreCase write SetIgnoreCase;
   end;
 
 implementation
 
 uses
-  JclContainerIntf;
+  SysUtils;
 
-const
-  MinTableSize = 11;   {arbitrary smallest table size}
-  StartTableSize = 53; {arbitrary beginning table size}
+//uses
+//  JclContainerIntf;
+
+//const
+//  MinTableSize = 11;   {arbitrary smallest table size}
+//  StartTableSize = 53; {arbitrary beginning table size}
 
 type
   TPointerStorage = class(TObject)
@@ -100,48 +105,68 @@ end;
 
 { THashTableFacade }
 
-constructor THashTableFacade.Create;
+constructor THashTableFacade.Create(TableSize: Integer = 0);
 begin
-  FJclUnicodeStrHashMap := TJclUnicodeStrHashMap.Create(StartTableSize, True);
-  FTableSize := StartTableSize;
+//  FJclUnicodeStrHashMap := TJclUnicodeStrHashMap.Create(StartTableSize, True);
+  FDictionary:= TDictionary<string, Pointer>.Create(TableSize);
+//  FTableSize := StartTableSize;
   IgnoreCase := False;
 end;
 
 procedure THashTableFacade.Delete(const aKey: string);
 begin
+  if IgnoreCase then
+  begin
+    FDictionary.Remove(UpperCase(aKey));
+  end
+  else
+  begin
+    FDictionary.Remove(aKey);
+  end;
 //  FHashTable.Delete(aKey);
-  FJclUnicodeStrHashMap.Extract(aKey).Free;
+//  FJclUnicodeStrHashMap.Extract(aKey).Free;
 end;
 
 destructor THashTableFacade.Destroy;
 begin
-  FJclUnicodeStrHashMap.Free;
+  FDictionary.Free;
+//  FJclUnicodeStrHashMap.Free;
 //  FHashTable.Free;
   inherited;
 end;
 
 function THashTableFacade.GetIgnoreCase: boolean;
 begin
+  result := FCaseSensitive;
 //  result := FHashTable.IgnoreCase;
-  Result := not FJclUnicodeStrHashMap.CaseSensitive;
+//  Result := not FJclUnicodeStrHashMap.CaseSensitive;
 end;
 
-function THashTableFacade.GetTableSize: integer;
-begin
-//  result := FHashTable.TableSize;
-  result := FTableSize;
-end;
+//function THashTableFacade.GetTableSize: integer;
+//begin
+////  result := FHashTable.TableSize;
+//  result := FTableSize;
+//end;
 
 procedure THashTableFacade.Insert(const aKey: string; aData: pointer);
-var
-  ValueObject: TPointerStorage;
-  OldHashMap: TJclUnicodeStrHashMap;
-  It: IJclUnicodeStrIterator;
-  Key: UnicodeString;
-  OldSize: Integer;
+//var
+//  ValueObject: TPointerStorage;
+//  OldHashMap: TJclUnicodeStrHashMap;
+//  It: IJclUnicodeStrIterator;
+//  Key: UnicodeString;
+//  OldSize: Integer;
 begin
 //  FHashTable.Insert(aKey, aData);
-  ValueObject := TPointerStorage.Create;
+  if IgnoreCase then
+  begin
+    FDictionary.Add(UpperCase(aKey), aData);
+  end
+  else
+  begin
+    FDictionary.Add(aKey, aData);
+  end;
+
+{  ValueObject := TPointerStorage.Create;
   ValueObject.Data := aData;
   FJclUnicodeStrHashMap.PutValue(aKey, ValueObject);
   if FJclUnicodeStrHashMap.Size > TableSize * 2 div 3 then
@@ -158,22 +183,49 @@ begin
     end;
     Assert(FJclUnicodeStrHashMap.Size = OldSize);
     OldHashMap.Destroy;
-  end;
+  end;   }
 end;
 
 procedure THashTableFacade.SetIgnoreCase(const Value: boolean);
 begin
+  Assert(FDictionary.Count = 0);
+  FCaseSensitive := Value;
 //  FHashTable.IgnoreCase := Value;
-  FJclUnicodeStrHashMap.CaseSensitive := not Value;
+//  FJclUnicodeStrHashMap.CaseSensitive := not Value;
 end;
 
 function THashTableFacade.Search(const aKey: string;
   var aData: pointer): boolean;
-var
-  ValueObject: TPointerStorage;
+//var
+//  ValueObject: TPointerStorage;
 begin
+  if IgnoreCase then
+  begin
+    Result := FDictionary.ContainsKey(UpperCase(aKey));
+    if Result then
+    begin
+      aData := FDictionary[UpperCase(aKey)];
+    end
+    else
+    begin
+      aData := nil;
+    end;
+  end
+  else
+  begin
+    Result := FDictionary.ContainsKey(aKey);
+    if Result then
+    begin
+      aData := FDictionary[aKey];
+    end
+    else
+    begin
+      aData := nil;
+    end;
+  end;
+
 //  result := FHashTable.Search(aKey, aData);
-  ValueObject := FJclUnicodeStrHashMap.GetValue(aKey) as TPointerStorage;
+{  ValueObject := FJclUnicodeStrHashMap.GetValue(aKey) as TPointerStorage;
   result := ValueObject <> nil;
   if result then
   begin
@@ -182,24 +234,24 @@ begin
   else
   begin
     aData := nil;
-  end;
+  end;  }
 end;
 
-procedure THashTableFacade.SetTableSize(Value: integer);
-begin
-//  FHashTable.TableSize := Value;
-
- {force the hash table to be a prime at least MinTableSize, and if
-   there's nothing to do, do it}
-  Value := GetClosestPrime(Value);
-  if (Value < MinTableSize) then
-    Value := MinTableSize;
-  if FTableSize <> Value then
-  begin
-    FJclUnicodeStrHashMap.SetCapacity(Value);
-    FTableSize := Value;
-  end;
-
-end;
+//procedure THashTableFacade.SetTableSize(Value: integer);
+//begin
+////  FHashTable.TableSize := Value;
+//
+// {force the hash table to be a prime at least MinTableSize, and if
+//   there's nothing to do, do it}
+//  Value := GetClosestPrime(Value);
+//  if (Value < MinTableSize) then
+//    Value := MinTableSize;
+//  if FTableSize <> Value then
+//  begin
+//    FJclUnicodeStrHashMap.SetCapacity(Value);
+//    FTableSize := Value;
+//  end;
+//
+//end;
 
 end.

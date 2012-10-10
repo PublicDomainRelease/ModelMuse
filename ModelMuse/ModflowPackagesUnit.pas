@@ -191,6 +191,7 @@ resourcestring
   StrSolver = 'Solvers';
   StrObservations = 'Observations';
   StrPostProcessors = 'Post processors';
+  StrSubsidence = 'Subsidence';
 
   function BC_SpecHead: string;
   function BC_SpecifiedFlux: string;
@@ -203,7 +204,6 @@ uses
 
 resourcestring
   StrHUF_Identifier = 'HUF2: Hydrogeologic Unit Flow package';
-  StrSubsidence = 'Subsidence';
   StrOutput = 'Output';
   StrCHDTimeVariantSp = 'CHD: Time-Variant Specified-Head package';
   StrPCGPreconditioned = 'PCG: Preconditioned Conjugate Gradient package';
@@ -474,37 +474,37 @@ begin
 
   FMt3dBasic := TMt3dBasic.Create(Model);
   FMt3dBasic.PackageIdentifier := StrBTNMT3DMSBasicTr;
-  FMt3dBasic.Classification := StrMT3DMS;
+  FMt3dBasic.Classification := StrMT3DMS_Classificaton;
   FMt3dBasic.SelectionType := stCheckBox;
 
   FMt3dmsGCGSolver := TMt3dmsGCGSolverPackage.Create(Model);
   FMt3dmsGCGSolver.PackageIdentifier := StrGCGGeneralizedCon;
-  FMt3dmsGCGSolver.Classification := StrMT3DMS;
+  FMt3dmsGCGSolver.Classification := StrMT3DMS_Classificaton;
   FMt3dmsGCGSolver.SelectionType := stCheckBox;
 
   FMt3dmsAdvection := TMt3dmsAdvection.Create(Model);
   FMt3dmsAdvection.PackageIdentifier := StrADVAdvectionPacka;
-  FMt3dmsAdvection.Classification := StrMT3DMS;
+  FMt3dmsAdvection.Classification := StrMT3DMS_Classificaton;
   FMt3dmsAdvection.SelectionType := stCheckBox;
 
   FMt3dmsDispersion := TMt3dmsDispersion.Create(Model);
   FMt3dmsDispersion.PackageIdentifier := StrDSPDispersionPack;
-  FMt3dmsDispersion.Classification := StrMT3DMS;
+  FMt3dmsDispersion.Classification := StrMT3DMS_Classificaton;
   FMt3dmsDispersion.SelectionType := stCheckBox;
 
   FMt3dmsSourceSink := TMt3dmsSourceSinkMixing.Create(Model);
   FMt3dmsSourceSink.PackageIdentifier := StrSSMSinkSourceM;
-  FMt3dmsSourceSink.Classification := StrMT3DMS;
+  FMt3dmsSourceSink.Classification := StrMT3DMS_Classificaton;
   FMt3dmsSourceSink.SelectionType := stCheckBox;
 
   FMt3dmsChemReaction := TMt3dmsChemReaction.Create(Model);
   FMt3dmsChemReaction.PackageIdentifier := StrRCTChemicalReacti;
-  FMt3dmsChemReaction.Classification := StrMT3DMS;
+  FMt3dmsChemReaction.Classification := StrMT3DMS_Classificaton;
   FMt3dmsChemReaction.SelectionType := stCheckBox;
 
   FMt3dmsTransObs := TMt3dmsTransportObservations.Create(Model);
   FMt3dmsTransObs.PackageIdentifier := StrTOBTransportObser;
-  FMt3dmsTransObs.Classification := StrMT3DMS;
+  FMt3dmsTransObs.Classification := StrMT3DMS_Classificaton;
   FMt3dmsTransObs.SelectionType := stCheckBox;
 end;
 

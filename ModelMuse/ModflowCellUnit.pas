@@ -36,10 +36,14 @@ type
     procedure SetColumn(const Value: integer); virtual; abstract;
     procedure SetLayer(const Value: integer); virtual; abstract;
     procedure SetRow(const Value: integer); virtual; abstract;
-    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; virtual; abstract;
-    function GetRealValue(Index: integer; AModel: TBaseModel): double; virtual; abstract;
-    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; virtual; abstract;
-    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; virtual; abstract;
+    function GetIntegerValue(Index: integer;
+      AModel: TBaseModel): integer; virtual; abstract;
+    function GetRealValue(Index: integer;
+      AModel: TBaseModel): double; virtual; abstract;
+    function GetRealAnnotation(Index: integer;
+      AModel: TBaseModel): string; virtual; abstract;
+    function GetIntegerAnnotation(Index: integer;
+      AModel: TBaseModel): string; virtual; abstract;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); virtual;
     procedure Restore(Decomp: TDecompressionStream;
       Annotations: TStringList); virtual;
@@ -56,10 +60,14 @@ type
     // @name is the column number for this cell. Valid values range from 0 to
     // the number of columns in the grid minus 1.
     property Column: integer read GetColumn write SetColumn;
-    property IntegerValue[Index: integer; AModel: TBaseModel]: integer read GetIntegerValue;
-    property RealValue[Index: integer; AModel: TBaseModel]: double read GetRealValue;
-    property RealAnnotation[Index: integer; AModel: TBaseModel]: string read GetRealAnnotation;
-    property IntegerAnnotation[Index: integer; AModel: TBaseModel]: string read GetIntegerAnnotation;
+    property IntegerValue[Index: integer; AModel: TBaseModel]: integer
+      read GetIntegerValue;
+    property RealValue[Index: integer; AModel: TBaseModel]: double
+      read GetRealValue;
+    property RealAnnotation[Index: integer; AModel: TBaseModel]: string
+      read GetRealAnnotation;
+    property IntegerAnnotation[Index: integer; AModel: TBaseModel]: string
+      read GetIntegerAnnotation;
     property IFace: TIface read FIFace write FIFace;
     // @name is the @link(TScreenObject) used to assign this
     // @classname.  @name is assigned in @link(TModflowBoundary.AssignCells).
@@ -69,8 +77,10 @@ type
     property ScreenObject: TObject read FScreenObject write SetScreenObject;
     property Section: integer read GetSection;
     function IsIdentical(AnotherCell: TValueCell): boolean; virtual;
-    function AreRealValuesIdentical(AnotherCell: TValueCell; DataIndex: integer): boolean;
-    function AreIntegerValuesIdentical(AnotherCell: TValueCell; DataIndex: integer): boolean;
+    function AreRealValuesIdentical(AnotherCell: TValueCell;
+      DataIndex: integer): boolean;
+    function AreIntegerValuesIdentical(AnotherCell: TValueCell;
+      DataIndex: integer): boolean;
   end;
 
   TValueCellType = class of TValueCell;
@@ -78,25 +88,31 @@ type
   TValueCellList = class(TObjectList)
   private
     FCachedCount: integer;
-    FCached: Boolean;
     FCleared: Boolean;
+    FCached: Boolean;
     FValueCellType: TValueCellType;
-    FTempFileName: string;
+    FTempFileNames: TStringList;
+    FOldCachedCount: Integer;
     function GetCount: integer;
     procedure SetCount(const Value: integer);
     function GetItem(Index: integer): TValueCell;
     procedure SetItem(Index: integer; const Value: TValueCell);
-    procedure Restore(Start: integer = 0);
+    procedure Restore;
+    procedure ClearFileNames;
+    procedure CheckRestore;
   public
     function Add(Item: TValueCell): integer;
     procedure Cache;
-    procedure CheckRestore;
     Constructor Create(ValueCellType: TValueCellType);
     property Count: integer read GetCount write SetCount;
-    property Items[Index: integer]: TValueCell read GetItem write SetItem; default;
+    property Items[Index: integer]: TValueCell read GetItem
+      write SetItem; default;
     Destructor Destroy; override;
-    function AreRealValuesIdentical(AnotherList: TValueCellList; DataIndex: integer): boolean;
-    function AreIntegerValuesIdentical(AnotherList: TValueCellList; DataIndex: integer): boolean;
+    function AreRealValuesIdentical(AnotherList: TValueCellList;
+      DataIndex: integer): boolean;
+    function AreIntegerValuesIdentical(AnotherList: TValueCellList;
+      DataIndex: integer): boolean;
+    procedure Clear; override;
   end;
 
 procedure WriteCompInt(Stream: TStream; Value: integer);
@@ -198,12 +214,9 @@ end;
 
 function TValueCellList.Add(Item: TValueCell): integer;
 begin
-  if FCached and fCleared then
-  begin
-    Restore;
-  end;
-  FCached := False;
   result := inherited Add(Item);
+  FCached := False;
+  FCleared := False;
 end;
 
 function TValueCellList.AreIntegerValuesIdentical(AnotherList: TValueCellList;
@@ -224,6 +237,26 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TValueCellList.Clear;
+begin
+  ClearFileNames;
+  FCached := False;
+  FCleared := False;
+  FCachedCount := 0;
+  inherited;
+end;
+
+procedure TValueCellList.ClearFileNames;
+var
+  NameIndex: Integer;
+begin
+  for NameIndex := 0 to FTempFileNames.Count - 1 do
+  begin
+    FreeMemory(FTempFileNames[NameIndex]);
+  end;
+  FTempFileNames.Clear;
 end;
 
 function TValueCellList.AreRealValuesIdentical(AnotherList: TValueCellList;
@@ -248,74 +281,72 @@ end;
 
 procedure TValueCellList.Cache;
 var
-//  TempFile: TTempFileStream;
   Compressor: TCompressionStream;
   Index: Integer;
   Cell: TValueCell;
   LocalCount: integer;
-//  NewTempFileName: string;
   Strings: TStringList;
   StringIndex: Integer;
   TempFile: TMemoryStream;
+  ATempFileName: string;
 begin
-  { TODO : Investigate why this this if statement doesn't work. }
-  if not FCached then
+  LocalCount := inherited Count;
+  if (LocalCount > 0) and not FCached then
   begin
-    LocalCount := inherited Count;
-    if LocalCount > 0 then
-    begin
-      if FTempFileName = '' then
-      begin
-        FTempFileName := TempFileName;
-      end;
-      TempFile := TMemoryStream.Create;
+    ATempFileName := TempFileName;
+    FTempFileNames.Add(ATempFileName);
+    TempFile := TMemoryStream.Create;
+    try
+      Compressor := TCompressionStream.Create(clDefault, TempFile);
       try
-        Compressor := TCompressionStream.Create(clDefault, TempFile);
+        FCachedCount := FCachedCount + LocalCount;
+
+        Strings := TStringList.Create;
         try
-          FCachedCount := {FCachedCount +} LocalCount;
+          Strings.Sorted := True;
+          Strings.Duplicates := dupIgnore;
+          for Index := 0 to LocalCount - 1 do
+          begin
+            Cell := inherited Items[Index] as TValueCell;
+            Cell.RecordStrings(Strings);
+          end;
 
-          Strings := TStringList.Create;
-          try
-            Strings.Sorted := True;
-            Strings.Duplicates := dupIgnore;
-            for Index := 0 to LocalCount - 1 do
-            begin
-              Cell := inherited Items[Index] as TValueCell;
-              Cell.RecordStrings(Strings);
-            end;
+          WriteCompInt(Compressor, Strings.Count);
+          for StringIndex := 0 to Strings.Count - 1 do
+          begin
+            WriteCompString(Compressor, Strings[StringIndex])
+          end;
 
-            WriteCompInt(Compressor, Strings.Count);
-            for StringIndex := 0 to Strings.Count - 1 do
-            begin
-              WriteCompString(Compressor, Strings[StringIndex])
-            end;
-
-            WriteCompInt(Compressor, LocalCount);
-            for Index := 0 to LocalCount - 1 do
-            begin
-              Cell := inherited Items[Index] as TValueCell;
-              Cell.Cache(Compressor, Strings);
-            end;
-          finally
-            Strings.Free;
+          WriteCompInt(Compressor, LocalCount);
+          for Index := 0 to LocalCount - 1 do
+          begin
+            Cell := inherited Items[Index] as TValueCell;
+            Cell.Cache(Compressor, Strings);
           end;
         finally
-          Compressor.Free;
+          Strings.Free;
         end;
-        ZipAFile(FTempFileName, TempFile);
       finally
-        TempFile.Free;
+        Compressor.Free;
       end;
-      FCached := True;
+      ZipAFile(ATempFileName, TempFile);
+    finally
+      TempFile.Free;
     end;
+    FCached := True;
+    FOldCachedCount := FCachedCount;
+  end
+  else if FCached then
+  begin
+    FCachedCount := FOldCachedCount;
   end;
-  Clear;
+  inherited Clear;
   FCleared := True;
 end;
 
 procedure TValueCellList.CheckRestore;
 begin
-  if FCached and FCleared then
+  if FCached and FCleared and (FTempFileNames.Count > 0) then
   begin
     Restore;
   end;
@@ -324,30 +355,21 @@ end;
 constructor TValueCellList.Create(ValueCellType: TValueCellType);
 begin
   inherited Create;
-  FCached := False;
-  FTempFileName := '';
   FValueCellType := ValueCellType;
+  FTempFileNames := TStringList.Create;
+  FCached := False;
 end;
 
 destructor TValueCellList.Destroy;
 begin
-  if FTempFileName <> '' then
-  begin
-    FreeMemory(FTempFileName);
-  end;
+  ClearFileNames;
+  FTempFileNames.Free;
   inherited;
 end;
 
 function TValueCellList.GetCount: integer;
 begin
-  if FCached and FCleared then
-  begin
-    result := FCachedCount;
-  end
-  else
-  begin
-    result := inherited Count;
-  end;
+  result := FCachedCount + inherited Count;
 end;
 
 function TValueCellList.GetItem(Index: integer): TValueCell;
@@ -356,7 +378,7 @@ begin
   result := inherited Items[Index] as TValueCell;
 end;
 
-procedure TValueCellList.Restore(Start: integer = 0);
+procedure TValueCellList.Restore;
 var
   DecompressionStream: TDecompressionStream;
   ValueCell: TValueCell;
@@ -366,10 +388,13 @@ var
   StringIndex: Integer;
   StringCount: Integer;
   TempFile: TMemoryStream;
+  NameIndex: Integer;
+  ATempFileName: string;
 begin
-  Assert(FCached);
-  Assert(FCleared);
-
+  if not FCleared then
+  begin
+    Cache;
+  end;
   Annotations := TStringList.Create;
   try
     if Capacity < FCachedCount then
@@ -377,32 +402,39 @@ begin
       Capacity := FCachedCount;
     end;
 
-    TempFile := TMemoryStream.Create;
-    ExtractAFile(FTempFileName, TempFile);
-    DecompressionStream := TDecompressionStream.Create(TempFile);
-    try
-      StringCount := ReadCompInt(DecompressionStream);
-      Annotations.Clear;
-      Annotations.Capacity := StringCount;
-      for StringIndex := 0 to StringCount - 1 do
-      begin
-        Annotations.Add(ReadCompStringSimple(DecompressionStream));
-      end;
+    for NameIndex := 0 to FTempFileNames.Count - 1 do
+    begin
+      ATempFileName := FTempFileNames[NameIndex];
+      TempFile := TMemoryStream.Create;
+      ExtractAFile(ATempFileName, TempFile);
+      DecompressionStream := TDecompressionStream.Create(TempFile);
+      try
+        StringCount := ReadCompInt(DecompressionStream);
+        Annotations.Clear;
+        Annotations.Capacity := StringCount;
+        for StringIndex := 0 to StringCount - 1 do
+        begin
+          Annotations.Add(ReadCompStringSimple(DecompressionStream));
+        end;
 
-      LocalCount := ReadCompInt(DecompressionStream);
-      Assert(LocalCount = FCachedCount);
-      for CellIndex := 0 to LocalCount - 1 do
-      begin
-        ValueCell := FValueCellType.Create;
-        inherited Add(ValueCell);
-        ValueCell.Restore(DecompressionStream, Annotations);
+        LocalCount := ReadCompInt(DecompressionStream);
+        for CellIndex := 0 to LocalCount - 1 do
+        begin
+          ValueCell := FValueCellType.Create;
+          inherited Add(ValueCell);
+          ValueCell.Restore(DecompressionStream, Annotations);
+        end;
+      finally
+        DecompressionStream.Free;
+        TempFile.Free;
       end;
-    finally
-      DecompressionStream.Free;
-      TempFile.Free;
     end;
 
+//    ClearFileNames;
     FCleared := False;
+    FOldCachedCount := FCachedCount;
+    FCachedCount := 0;
+
   finally
     Annotations.Free;
   end;
@@ -410,7 +442,7 @@ end;
 
 procedure TValueCellList.SetCount(const Value: integer);
 begin
-  if FCached and FCleared then
+  if FCleared then
   begin
     Restore;
   end;
@@ -427,7 +459,8 @@ end;
 function TValueCell.AreIntegerValuesIdentical(AnotherCell: TValueCell;
   DataIndex: integer): boolean;
 begin
-  result := IntegerValue[DataIndex, nil] = AnotherCell.IntegerValue[DataIndex, nil];
+  result := IntegerValue[DataIndex, nil] =
+    AnotherCell.IntegerValue[DataIndex, nil];
 end;
 
 function TValueCell.AreRealValuesIdentical(AnotherCell: TValueCell;

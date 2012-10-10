@@ -63,6 +63,7 @@ Type
     FNode: TTreeNode;
     FComment: string;
     FNotifier: TEditorNotifierComponent;
+    FDisplayName: string;
     procedure SetTwoDInterpolator(const Value: TCustom2DInterpolater);
     procedure SetInterpValues(const Value: TPhastInterpolationValues);
     procedure SetNewUses(const Value: TStringList);
@@ -73,6 +74,7 @@ Type
     Constructor Create(ADataArray: TDataArray);
     destructor Destroy; override;
     property Name: string read FName write FName;
+    property DisplayName: string read FDisplayName write FDisplayName;
     property DataType: TRbwDataType read FDataType write FDataType;
     property Orientation: TDataSetOrientation read FOrientation
       write FOrientation;
@@ -562,6 +564,7 @@ begin
   FLoading := True;
   try
     DataEdit.Name := GenerateNewName('', nil);
+    DataEdit.DisplayName := DataEdit.Name;
     DataEdit.DataType := rdtDouble;
     DataEdit.Orientation := dsoTop;
     DataEdit.EvaluatedAt := eaBlocks;
@@ -1700,11 +1703,17 @@ begin
   begin
     Exit;
   end;
-  
+
+  if (DataEdit.DataArray <> nil) and (dcName in DataEdit.DataArray.Lock) then
+  begin
+    Exit;
+  end;
+
   Variable := DataEdit.Variable;
   if DataEdit.Name <> NewName then
   begin
-    DataEdit.Name := NewName
+    DataEdit.Name := NewName;
+    DataEdit.DisplayName := NewName;
   end;
   Assert(Variable <> nil);
 
@@ -1713,7 +1722,8 @@ begin
     NewName := GenerateNewName(NewName, DataEdit);
     if DataEdit.Name <> NewName then
     begin
-      DataEdit.Name := NewName
+      DataEdit.Name := NewName;
+      DataEdit.DisplayName := NewName;
     end;
     TempFormulaCompiler := GetCompiler(DataEdit.Orientation, DataEdit.EvaluatedAt);
     Temp3DCompiler := Get3DCompiler(DataEdit.EvaluatedAt);
@@ -1723,7 +1733,7 @@ begin
     if Position >= 0 then
     begin
       try
-        TempFormulaCompiler.RenameVariable(Position, NewName);
+        TempFormulaCompiler.RenameVariable(Position, NewName, NewName);
       except on E: ERbwParserError do
         begin
           if E.ErrorType = 1 then
@@ -1747,7 +1757,7 @@ begin
       Position := Temp3DCompiler.IndexOfVariable(OldName);
       if Position >= 0 then
       begin
-        Temp3DCompiler.RenameVariable(Position, NewName);
+        Temp3DCompiler.RenameVariable(Position, NewName, NewName);
       end;
     end;
     // update the displayed formulas to use the new name.
@@ -1757,7 +1767,7 @@ begin
       Expression := OtherDataEdit.Expression;
       if Expression <> nil then
       begin
-        OtherDataEdit.Formula := Expression.Decompile;
+        OtherDataEdit.Formula := Expression.DecompileDisplay;
       end;
     end;
   end;
@@ -1886,7 +1896,7 @@ begin
   try
     TempCompiler.Compile(Formula);
     result := TempCompiler.CurrentExpression;
-    framePhastInterpolation.edMixFormula.Text := result.Decompile;
+    framePhastInterpolation.edMixFormula.Text := result.DecompileDisplay;
     ResultType := rdtDouble;
     if not (result.ResultType in [rdtDouble, rdtInteger]) then
     begin
@@ -1928,7 +1938,7 @@ begin
               //Formulas[Row].Free;
               //Formulas[Row] := CompiledFormula;
               framePhastInterpolation.edMixFormula.Text
-                := result.DeCompile;
+                := result.DecompileDisplay;
             end;
           end;
         finally
@@ -1965,6 +1975,7 @@ var
   Classification: string;
   DataArray: TDataArray;
   OldVarPosition: Integer;
+  NewDisplayName: string;
 begin
   Assert(DataArrayEdit <> nil);
   // This procedure creates a TCustomVariable that represents a data set in
@@ -1976,6 +1987,7 @@ begin
   Temp3DCompiler := Get3DCompiler(DataArrayEdit.EvaluatedAt);
 
   NewName := DataArrayEdit.Name;
+  NewDisplayName := DataArrayEdit.DisplayName;
 
   DataArray := DataArrayEdit.DataArray;
   if DataArray = nil then
@@ -2008,37 +2020,37 @@ begin
     rdtDouble:
       begin
         Variable := TempFormulaCompiler.CreateVariable(NewName,
-          Classification, 0.0);
+          Classification, 0.0, NewDisplayName);
         if TempFormulaCompiler <> Temp3DCompiler then
         begin
-          Temp3DCompiler.CreateVariable(NewName, Classification, 0.0);
+          Temp3DCompiler.CreateVariable(NewName, Classification, 0.0, NewDisplayName);
         end;
       end;
     rdtInteger:
       begin
         Variable := TempFormulaCompiler.CreateVariable(NewName,
-          Classification, 0);
+          Classification, 0, NewDisplayName);
         if TempFormulaCompiler <> Temp3DCompiler then
         begin
-          Temp3DCompiler.CreateVariable(NewName, Classification, 0);
+          Temp3DCompiler.CreateVariable(NewName, Classification, 0, NewDisplayName);
         end;
       end;
     rdtBoolean:
       begin
         Variable := TempFormulaCompiler.CreateVariable(NewName,
-          Classification, False);
+          Classification, False, NewDisplayName);
         if TempFormulaCompiler <> Temp3DCompiler then
         begin
-          Temp3DCompiler.CreateVariable(NewName, Classification, False);
+          Temp3DCompiler.CreateVariable(NewName, Classification, False, NewDisplayName);
         end;
       end;
     rdtString:
       begin
         Variable := TempFormulaCompiler.CreateVariable(NewName,
-          Classification, '0');
+          Classification, '0', NewDisplayName);
         if TempFormulaCompiler <> Temp3DCompiler then
         begin
-          Temp3DCompiler.CreateVariable(NewName, Classification, '0');
+          Temp3DCompiler.CreateVariable(NewName, Classification, '0', NewDisplayName);
         end;
       end;
   else
@@ -2113,21 +2125,21 @@ begin
   OK_Var.HufKxOK := (EvaluatedAt = eaBlocks)
     and (FSelectedEdit.Name <> rsModflow_Initial_Head)
     and (FSelectedEdit.Name <> StrHufReferenceSurface)
-    and (FSelectedEdit.Name <> StrModelTop);
+    and (FSelectedEdit.Name <> kModelTop);
   OK_Var.HufKyOK := (EvaluatedAt = eaBlocks)
     and (FSelectedEdit.Name <> rsModflow_Initial_Head)
     and (FSelectedEdit.Name <> StrHufReferenceSurface)
-    and (FSelectedEdit.Name <> StrModelTop);
+    and (FSelectedEdit.Name <> kModelTop);
   OK_Var.HufKzOK := (EvaluatedAt = eaBlocks)
     and (FSelectedEdit.Name <> rsModflow_Initial_Head)
     and (FSelectedEdit.Name <> StrHufReferenceSurface)
-    and (FSelectedEdit.Name <> StrModelTop);
+    and (FSelectedEdit.Name <> kModelTop);
   OK_Var.HufSsOk := (EvaluatedAt = eaBlocks)
     and (FSelectedEdit.Name <> rsModflow_Initial_Head)
-    and (FSelectedEdit.Name <> StrModelTop);
+    and (FSelectedEdit.Name <> kModelTop);
   OK_Var.HufSyOk := (EvaluatedAt = eaBlocks)
     and (FSelectedEdit.Name <> rsModflow_Initial_Head)
-    and (FSelectedEdit.Name <> StrModelTop);
+    and (FSelectedEdit.Name <> kModelTop);
   for GeoIndex := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
   begin
     GeoUnit := frmGoPhast.PhastModel.LayerStructure[GeoIndex];
@@ -2345,7 +2357,7 @@ begin
     OK_Var.HufKyOK := OK_Var.HufKyOK and (VariablePosition < 0);
     OK_Var.HufKzOK := OK_Var.HufKzOK and (VariablePosition < 0);
   end;
-  if VariableName = StrModelTop then
+  if VariableName = kModelTop then
   begin
     OK_Var.HufKxOK := OK_Var.HufKxOK and (VariablePosition < 0);
     OK_Var.HufKyOK := OK_Var.HufKyOK and (VariablePosition < 0);
@@ -2488,7 +2500,7 @@ begin
   try
     TempCompiler.Compile(Formula);
     CompiledFormula := TempCompiler.CurrentExpression;
-    DataArrayEdit.Formula := CompiledFormula.Decompile;
+    DataArrayEdit.Formula := CompiledFormula.DecompileDisplay;
     ResultType := DataArrayEdit.DataType;
     if (ResultType = CompiledFormula.ResultType) or
       ((ResultType = rdtDouble) and (CompiledFormula.ResultType = rdtInteger))
@@ -2546,7 +2558,7 @@ begin
               //Formulas[Row].Free;
               DataArrayEdit.Expression := CompiledFormula;
               DataArrayEdit.Formula
-                := CompiledFormula.DeCompile;
+                := CompiledFormula.DecompileDisplay;
             end;
           end;
         finally
@@ -2672,7 +2684,7 @@ begin
       btnDelete.Enabled := (FSelectedEdit.DataArray = nil)
         or not (dcName in FSelectedEdit.DataArray.Lock);
 
-      edName.Text := FSelectedEdit.Name;
+      edName.Text := FSelectedEdit.DisplayName;
       edName.Enabled := (FSelectedEdit.DataArray = nil)
         or not (dcName in FSelectedEdit.DataArray.Lock);
 
@@ -3247,7 +3259,7 @@ end;
 function TDataArrayEdit.ClassificationName: string;
 begin
   Assert(DataArray <> nil);
-  result := DataArray.Name;
+  result := DataArray.DisplayName;
   if DataArray.ParameterUsed then
   begin
     result := Format(StrDefinedByParamet, [result]);
@@ -3267,11 +3279,12 @@ begin
   if FDataArray <> nil then
   begin
     Name := FDataArray.Name;
+    DisplayName := FDataArray.DisplayName;
     DataType := FDataArray.DataType;
     Orientation := FDataArray.Orientation;
     EvaluatedAt := FDataArray.EvaluatedAt;
     Units := FDataArray.Units;
-    Formula := FDataArray.Formula;
+    Formula := FDataArray.DisplayFormula;
     TwoDInterpolator := FDataArray.TwoDInterpolator;
     Comment := FDataArray.Comment;
     if ADataArray is TCustomPhastDataSet then

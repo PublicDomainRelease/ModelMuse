@@ -12,14 +12,19 @@ type
     FNonSimulatedLocations: TStringList;
     FReleaseTimes: TStringList;
     FTrackingDirection: TTrackingDirection;
+    function GetNonSimulatedLocation(Index: integer): string;
+    function GetSimulatedLocation(Index: integer): string;
   public
     Constructor Create(ScreenObject: TScreenObject;
       TrackingDirection: TTrackingDirection; StartTime, EndTime: Real);
     Destructor Destroy; override;
     procedure UpdateLocationLines(Lines: TStringList;
       Layer, Row, Column: integer; SimulatedLayer: boolean);
+    property SimulatedLocations[Index: integer]: string read GetSimulatedLocation;
+    property NonSimulatedLocations[Index: integer]: string read GetNonSimulatedLocation;
   end;
 
+  // MODPATH versions 5 and 6
   TModpathStartingLocationsWriter = class(TCustomModflowWriter)
   private
     FParticleLines: TList;
@@ -32,17 +37,19 @@ type
     procedure UpdateParticleLines;
     procedure WriteLines;
   public
+    function PackageID_Comment(APackage: TModflowPackageSelection): string; override;
     class function Extension: string; override;
     Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     Destructor Destroy; override;
     procedure WriteFile(const AFileName: string);
+    procedure WriteFileVersion6(const AFileName: string);
   end;
 
 implementation
 
 uses
   ModpathParticleUnit, ModflowTimeUnit, frmErrorsAndWarningsUnit,
-  ModelMuseUtilities, frmGoPhastUnit;
+  ModelMuseUtilities, frmGoPhastUnit, Math;
 
 resourcestring
   StrAStartingTimeFor = 'A starting time for the MODPATH particles defined '
@@ -70,6 +77,12 @@ end;
 class function TModpathStartingLocationsWriter.Extension: string;
 begin
   result := '.strt';
+end;
+
+function TModpathStartingLocationsWriter.PackageID_Comment(
+  APackage: TModflowPackageSelection): string;
+begin
+  result := File_Comment(APackage.PackageIdentifier + ' Starting Locations file');
 end;
 
 procedure TModpathStartingLocationsWriter.WriteFile(const AFileName: string);
@@ -105,6 +118,206 @@ begin
   finally
     CloseFile;
   end;
+end;
+
+procedure TModpathStartingLocationsWriter.WriteFileVersion6(
+  const AFileName: string);
+const
+  InputStyle = 2;
+  Grid = 1;
+var
+  ReferenceTime: Real;
+  LocalModel: TCustomModel;
+  Index: Integer;
+  ScreenObject: TScreenObject;
+  UsedObjects: TList;
+  NameOfFile: string;
+  FOptions: TModpathSelection;
+  GroupCount: Integer;
+  GroupName: string;
+  Particles: TParticles;
+  ObjectIndex: Integer;
+  Cell: TCellAssignment;
+  LocationCount: Integer;
+//  ParticleCount: Integer;
+  ReleaseStartTime: Double;
+  ReleaseOption: Integer;
+  ReleaseEventCount: Integer;
+  TimeIndex: Integer;
+  ReleaseTimes: TModpathTimes;
+  ATime: Double;
+  Layer: Integer;
+  ParticleIndex: Integer;
+  ParticleLines: TParticleLines;
+  LocalXYZ: string;
+  ParticleLabelBase: string;
+  MaxLabelBaseLength: Integer;
+  ParticleLabel: string;
+  Digits: Int64;
+  FormatString: string;
+  ParticleCount: Integer;
+  StressPeriods: TModflowStressPeriods;
+begin
+  StressPeriods := Model.ModflowStressPeriods;
+  FStartTime := StressPeriods[0].StartTime;
+  FEndTime := StressPeriods[StressPeriods.Count-1].EndTime;
+  NameOfFile := FileName(AFileName);
+  OpenFile(NameOfFile);
+  try
+    LocalModel := Model;
+    FOptions := LocalModel.ModflowPackages.ModPath;
+    // Data set 0
+    WriteCommentLine(PackageID_Comment(FOptions));
+    WriteCommentLines(FOptions.Comments);
+    // Data set 1
+    WriteInteger(InputStyle);
+    WriteString(' # Data Set 1: InputStyle');
+    NewLine;
+
+    ReferenceTime := FOptions.ReferenceTime
+      - Model.ModflowStressPeriods[0].StartTime;
+    UsedObjects := TList.Create;
+    try
+      for Index := 0 to LocalModel.ScreenObjectCount - 1 do
+      begin
+        ScreenObject := LocalModel.ScreenObjects[Index];
+        if (not ScreenObject.Deleted) and ScreenObject.ModpathParticles.Used then
+        begin
+          UsedObjects.Add(ScreenObject);
+        end;
+      end;
+
+      // Data set 6
+      GroupCount := UsedObjects.Count;
+      WriteInteger(GroupCount);
+      WriteString(' # Data Set 6: GroupCount');
+      NewLine;
+
+      for Index := 0 to UsedObjects.Count - 1 do
+      begin
+        ScreenObject := UsedObjects[Index];
+        // data set 7
+        GroupName := ScreenObject.Name;
+        if Length(GroupName) > 16 then
+        begin
+          SetLength(GroupName, 16);
+        end;
+        WriteString(GroupName);
+        WriteString(' # Data Set 7: GroupName');
+        NewLine;
+
+        Particles := ScreenObject.ModpathParticles.Particles;
+
+        FCellList.Clear;
+        ScreenObject.GetModpathCellList(FCellList, LocalModel);
+        LocationCount := FCellList.Count * Particles.Count;
+
+        // data set 8
+        WriteInteger(LocationCount);
+        ReleaseTimes := ScreenObject.ModpathParticles.ReleaseTimes;
+        ReleaseStartTime := ReleaseTimes[0].Time;
+        WriteFloat(ReleaseStartTime);
+        if ReleaseTimes.Count = 1 then
+        begin
+          ReleaseOption := 1;
+        end
+        else
+        begin
+          ReleaseOption := 3;
+        end;
+        WriteInteger(ReleaseOption);
+        WriteString(' # Data Set 8: LocationCount ReleaseStartTime ReleaseOption');
+        NewLine;
+
+        // Data Set 10
+        if ReleaseOption = 3 then
+        begin
+          ReleaseEventCount := ReleaseTimes.Count-1;
+          WriteInteger(ReleaseEventCount);
+          WriteString(' # Data Set 10: ReleaseEventCount');
+          NewLine;
+
+          // Data Set 11
+          for TimeIndex := 1 to ReleaseTimes.Count - 1 do
+          begin
+            ATime := ReleaseTimes[TimeIndex].Time;// - FOptions.ReferenceTime;
+//            if FOptions.TrackingDirection = tdBackward then
+//            begin
+//              ATime := -ATime;
+//            end;
+            WriteFloat(ATime);
+            if ((TimeIndex mod 10) = 0) and (TimeIndex <> ReleaseTimes.Count - 1) then
+            begin
+              NewLine;
+            end;
+          end;
+          if ReleaseTimes.Count > 0 then
+          begin
+            WriteString('Data Set 11: MultipleReleaseTimes');
+            NewLine;
+          end;
+        end;
+
+        // Data Set 12
+        ParticleLabelBase := ScreenObject.Name;
+        Digits := Trunc(Log10(LocationCount))+1;
+        MaxLabelBaseLength := 39 - Digits;
+        FormatString := '%.' + IntToStr(Digits) + 'd';
+        if Length(ParticleLabelBase) > MaxLabelBaseLength then
+        begin
+          SetLength(ParticleLabelBase, MaxLabelBaseLength);
+        end;
+        ParticleLabelBase := ParticleLabelBase + '-';
+        ParticleCount := 0;
+        ParticleLines := TParticleLines.Create(ScreenObject,
+          FOptions.TrackingDirection,
+          FStartTime, FEndTime);
+        try
+          for ObjectIndex := 0 to FCellList.Count - 1 do
+          begin
+            Cell := FCellList[ObjectIndex];
+            Layer := Model.DataSetLayerToModflowLayer(Cell.Layer);
+            if not Model.IsLayerSimulated(Cell.Layer) then
+            begin
+              Dec(Layer);
+            end;
+
+            for ParticleIndex := 0 to Particles.Count - 1 do
+            begin
+              WriteInteger(Grid);
+              WriteInteger(Layer);
+              WriteInteger(Cell.Row+1);
+              WriteInteger(Cell.Column+1);
+              if Model.IsLayerSimulated(Cell.Layer) then
+              begin
+                LocalXYZ := ParticleLines.SimulatedLocations[ParticleIndex]
+              end
+              else
+              begin
+                LocalXYZ := ParticleLines.NonSimulatedLocations[ParticleIndex]
+              end;
+              WriteString(' ' + LocalXYZ);
+              Inc(ParticleCount);
+              ParticleLabel := ParticleLabelBase + Format(FormatString, [ParticleCount]);
+              WriteString(ParticleLabel);
+              WriteString(' # Data Set 12: Grid Layer Row Column LocalX LocalY LocalZ Label');
+              NewLine;
+            end;
+
+          end;
+        finally
+          ParticleLines.Free;
+        end;
+
+
+      end;
+    finally
+      UsedObjects.Free;
+    end;
+  finally
+    CloseFile;
+  end;
+
 end;
 
 procedure TModpathStartingLocationsWriter.WriteLines;
@@ -232,6 +445,16 @@ begin
   FNonSimulatedLocations.Free;
   FReleaseTimes.Free;
   inherited;
+end;
+
+function TParticleLines.GetNonSimulatedLocation(Index: integer): string;
+begin
+  result := FNonSimulatedLocations[Index];
+end;
+
+function TParticleLines.GetSimulatedLocation(Index: integer): string;
+begin
+  result := FSimulatedLocations[Index];
 end;
 
 procedure TParticleLines.UpdateLocationLines(Lines: TStringList; Layer, Row,

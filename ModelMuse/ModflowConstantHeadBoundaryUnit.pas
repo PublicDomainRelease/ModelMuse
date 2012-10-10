@@ -527,7 +527,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       // The starting head for each cell will be
       // StartHeadFactor * StartingHead + (1-StartHeadFactor)*EndingHead
       // The ending head for each cell will be

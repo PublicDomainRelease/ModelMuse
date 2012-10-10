@@ -273,7 +273,11 @@ begin
       begin
         MinValue := MinPositive;
       end;
-      if MinValue > 0 then
+      if (MaxValue <= 0) then
+      begin
+        MaxValue := MinPositive;
+      end;
+      if (MinValue > 0) then
       begin
         LogMin := Log10(MinValue);
         LogMax := Log10(MaxValue);

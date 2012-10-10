@@ -10,11 +10,11 @@ uses
 
 type
   TPathLineColumn = (plcLabel, plcFirst, plcLast, plcClosest);
-  TPathlineRow = (plrLabel, plrX, plrY, plrZ, plrXPrime, plrYPrime, plrLocalZ,
-    plrTime, plrColumn, plrRow, plrLayer, plrTimeStep);
+  TPathlineRow = (plrLabel, plrNumber, plrX, plrY, plrZ, plrXPrime, plrYPrime, plrLocalZ,
+    plrTime, plrColumn, plrRow, plrLayer, plrTimeStep, plrGroup);
   TEndPointColumn = (epcLabel, epcStart, epcEnd);
-  TEndPointRow = (eprLabel, eprZone, eprColumn, eprRow, eprLayer, eprX, eprY,
-    eprZ, eprXPrime, eprYPrime, eprLocalZ, eprTimeStep);
+  TEndPointRow = (eprLabel, eprNumber, eprZone, eprColumn, eprRow, eprLayer, eprX, eprY,
+    eprZ, eprXPrime, eprYPrime, eprLocalZ, eprTimeStep, eprParticleGroup);
 
 
   TfrmGridValue = class(TfrmCustomGoPhast)
@@ -173,6 +173,8 @@ resourcestring
   StrStart = 'Start';
   StrEnd = 'End';
   StrZone = 'Zone';
+  StrGroup = 'Group';
+  StrNumber = 'Number';
 
 {$R *.dfm}
 
@@ -1081,6 +1083,8 @@ begin
       rdgEndPoints.BeginUpdate;
       try
         begin
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprNumber)] :=
+            IntToStr(AnEndPoint.ParticleNumber);
           rdgEndPoints.Cells[Ord(epcStart), Ord(eprZone)] :=
             IntToStr(AnEndPoint.StartZoneCode);
           rdgEndPoints.Cells[Ord(epcStart), Ord(eprColumn)] :=
@@ -1103,7 +1107,18 @@ begin
             FloatToStr(AnEndPoint.StartLocalZ);
           rdgEndPoints.Cells[Ord(epcStart), Ord(eprTimeStep)] :=
             IntToStr(AnEndPoint.StartTimeStep);
+          if AnEndPoint is TEndPointV6 then
+          begin
+            rdgEndPoints.Cells[Ord(epcStart), Ord(eprParticleGroup)] :=
+              IntToStr(TEndPointV6(AnEndPoint).ParticleGroup);
+          end
+          else
+          begin
+            rdgEndPoints.Cells[Ord(epcStart), Ord(eprParticleGroup)] := '';
+          end;
 
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprNumber)] :=
+            IntToStr(AnEndPoint.ParticleNumber);
           rdgEndPoints.Cells[Ord(epcEnd), Ord(eprZone)] :=
             IntToStr(AnEndPoint.EndZoneCode);
           rdgEndPoints.Cells[Ord(epcEnd), Ord(eprColumn)] :=
@@ -1126,6 +1141,16 @@ begin
             FloatToStr(AnEndPoint.EndLocalZ);
           rdgEndPoints.Cells[Ord(epcEnd), Ord(eprTimeStep)] :=
             IntToStr(AnEndPoint.EndTimeStep);
+
+          if AnEndPoint is TEndPointV6 then
+          begin
+            rdgEndPoints.Cells[Ord(epcEnd), Ord(eprParticleGroup)] :=
+              IntToStr(TEndPointV6(AnEndPoint).ParticleGroup);
+          end
+          else
+          begin
+            rdgEndPoints.Cells[Ord(epcEnd), Ord(eprParticleGroup)] := '';
+          end;
         end;
       finally
         rdgEndPoints.EndUpdate;
@@ -1161,7 +1186,7 @@ var
   ZoomBox: TQRbwZoomBox2;
   ColIndex: Integer;
   RowIndex: Integer;
-  PathLine: TPathLine;
+  PathLine: TCustomPathLine;
   FirstPoint: TPathLinePoint;
   LastPoint: TPathLinePoint;
   List: TList;
@@ -1202,32 +1227,66 @@ begin
     X := Location.X;
     Y := Location.Y;
     PathQuadTree.FirstNearestPoint(X, Y, APointer);
-    PathLinePoint := APointer;
-    Assert(PathLinePoint <> nil);
-
     DisplayPoint := False;
-    case FViewDirection of
-      vdTop:
-        begin
-          DisplayPoint := (Abs(FColumn+1 - PathLinePoint.Column) <= 1)
-            and (Abs(FRow+1 - PathLinePoint.Row) <= 1);
-        end;
-      vdFront:
-        begin
-          ALayer := frmGoPhast.PhastModel.
-            ModflowLayerToDataSetLayer(PathLinePoint.Layer);
-          DisplayPoint := (Abs(FColumn+1 - PathLinePoint.Column) <= 1)
-            and (Abs(FLayer - ALayer) <= 1);
-        end;
-      vdSide:
-        begin
-          ALayer := frmGoPhast.PhastModel.
-            ModflowLayerToDataSetLayer(PathLinePoint.Layer);
-          DisplayPoint := (Abs(FLayer - ALayer) <= 1)
-            and (Abs(FRow+1 - PathLinePoint.Row) <= 1);
-        end;
-      else Assert(False);
-    end;
+//    case PathLines.ModpathVersion of
+//      pv5:
+//        begin
+          PathLinePoint := APointer;
+          Assert(PathLinePoint <> nil);
+          case FViewDirection of
+            vdTop:
+              begin
+                DisplayPoint := (Abs(FColumn+1 - PathLinePoint.Column) <= 1)
+                  and (Abs(FRow+1 - PathLinePoint.Row) <= 1);
+              end;
+            vdFront:
+              begin
+                ALayer := frmGoPhast.PhastModel.
+                  ModflowLayerToDataSetLayer(PathLinePoint.Layer);
+                DisplayPoint := (Abs(FColumn+1 - PathLinePoint.Column) <= 1)
+                  and (Abs(FLayer - ALayer) <= 1);
+              end;
+            vdSide:
+              begin
+                ALayer := frmGoPhast.PhastModel.
+                  ModflowLayerToDataSetLayer(PathLinePoint.Layer);
+                DisplayPoint := (Abs(FLayer - ALayer) <= 1)
+                  and (Abs(FRow+1 - PathLinePoint.Row) <= 1);
+              end;
+            else Assert(False);
+          end;
+//        end;
+//      pv6_0:
+//        begin
+//          PathLinePointV6 := APointer;
+//          Assert(PathLinePointV6 <> nil);
+//          case FViewDirection of
+//            vdTop:
+//              begin
+//                DisplayPoint := (Abs(FColumn+1 - PathLinePointV6.Column) <= 1)
+//                  and (Abs(FRow+1 - PathLinePointV6.Row) <= 1);
+//              end;
+//            vdFront:
+//              begin
+//                ALayer := frmGoPhast.PhastModel.
+//                  ModflowLayerToDataSetLayer(PathLinePointV6.Layer);
+//                DisplayPoint := (Abs(FColumn+1 - PathLinePointV6.Column) <= 1)
+//                  and (Abs(FLayer - ALayer) <= 1);
+//              end;
+//            vdSide:
+//              begin
+//                ALayer := frmGoPhast.PhastModel.
+//                  ModflowLayerToDataSetLayer(PathLinePointV6.Layer);
+//                DisplayPoint := (Abs(FLayer - ALayer) <= 1)
+//                  and (Abs(FRow+1 - PathLinePointV6.Row) <= 1);
+//              end;
+//            else Assert(False);
+//          end;
+//        end;
+//      else
+//        Assert(False);
+//    end;
+
 
     if not DisplayPoint then
     begin
@@ -1259,6 +1318,9 @@ begin
           for ColIndex := Ord(plcFirst) to Ord(plcClosest) do
           begin
             APathLinePoint := List[ColIndex];
+            rdgPathline.Cells[ColIndex, Ord(plrNumber)] :=
+              IntToStr(PathLine.Index+1);
+
             rdgPathline.Cells[ColIndex, Ord(plrX)] :=
               FloatToStr(APathLinePoint.X);
             rdgPathline.Cells[ColIndex, Ord(plrY)] :=
@@ -1281,6 +1343,15 @@ begin
               IntToStr(APathLinePoint.Layer);
             rdgPathline.Cells[ColIndex, Ord(plrTimeStep)] :=
               IntToStr(APathLinePoint.TimeStep);
+            if APathLinePoint is TPathLinePointV6 then
+            begin
+              rdgPathline.Cells[ColIndex, Ord(plrGroup)] :=
+                IntToStr(TPathLinePointV6(APathLinePoint).ParticleGroup);
+            end
+            else
+            begin
+              rdgPathline.Cells[ColIndex, Ord(plrGroup)] := '';
+            end;
           end;
         finally
           rdgPathline.EndUpdate;
@@ -1312,6 +1383,7 @@ begin
   rdgPathline.Cells[Ord(plcFirst), 0] := StrFirst;
   rdgPathline.Cells[Ord(plcLast), 0] := StrLast;
   rdgPathline.Cells[Ord(plcClosest), 0] := StrClosest;
+  rdgPathline.Cells[0, Ord(plrNumber)] := StrNumber;
   rdgPathline.Cells[0, Ord(plrX)] := StrX;
   rdgPathline.Cells[0, Ord(plrY)] := StrY;
   rdgPathline.Cells[0, Ord(plrZ)] := StrZ;
@@ -1323,12 +1395,14 @@ begin
   rdgPathline.Cells[0, Ord(plrRow)] := StrRow;
   rdgPathline.Cells[0, Ord(plrLayer)] := StrLayer;
   rdgPathline.Cells[0, Ord(plrTimeStep)] := StrTimeStep;
+  rdgPathline.Cells[0, Ord(plrGroup)] := StrGroup;
 end;
 
 procedure TfrmGridValue.InitializeEndpointGrid;
 begin
   rdgEndPoints.Cells[Ord(epcStart), 0] := StrStart;
   rdgEndPoints.Cells[Ord(epcEnd), 0] := StrEnd;
+  rdgEndPoints.Cells[0, Ord(eprNumber)] := StrNumber;
   rdgEndPoints.Cells[0, Ord(eprZone)] := StrZone;
   rdgEndPoints.Cells[0, Ord(eprX)] := StrX;
   rdgEndPoints.Cells[0, Ord(eprY)] := StrY;
@@ -1340,6 +1414,7 @@ begin
   rdgEndPoints.Cells[0, Ord(eprRow)] := StrRow;
   rdgEndPoints.Cells[0, Ord(eprLayer)] := StrLayer;
   rdgEndPoints.Cells[0, Ord(eprTimeStep)] := StrTimeStep;
+  rdgEndPoints.Cells[0, Ord(eprParticleGroup)] := StrGroup;
 end;
 
 procedure TfrmGridValue.UpdatedSelectedObject;

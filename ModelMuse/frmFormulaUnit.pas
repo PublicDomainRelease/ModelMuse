@@ -343,12 +343,12 @@ procedure TfrmFormula.InsertText(const NewText: string);
 ////  BreakChar = [#10,#13];
 //  LineBreak = #13#10;
 //{$ENDIF}
-//var
-//  Start, sLength: integer;
-//  Index: integer;
-//  Position: integer;
+var
+  Start, sLength: integer;
+  Index: integer;
+  Position: integer;
 //  NewExpression: string;
-//  TextToSelect: string;
+  TextToSelect: string;
 //  NewStart: integer;
 //  FormulaText: string;
 //  SelLength: integer;
@@ -358,6 +358,8 @@ procedure TfrmFormula.InsertText(const NewText: string);
 //  PriorStart: Integer;
 begin
   try
+    Start := jreFormula.SelStart;
+//    SelLength := jreFormula.SelLength;
     jreFormula.SelText := NewText;
 //    SelLength := jreFormula.SelLength;
 //    if SelLength > 0 then
@@ -386,28 +388,28 @@ begin
 //
 //      Start := PriorStart;
 //
-//      Position := Pos('(', NewText);
-//      if (Position >= 1) and (NewText <> '(') then
-//      begin
-//        TextToSelect := '';
-//        sLength := 0;
-//        for Index := Position + 1 to Length(NewText) do
-//        begin
-//          if CharInSet(NewText[Index], [' ', ',', ')']) then
-//          begin
-//            sLength := Index - Position - 1;
-//            TextToSelect := Copy(NewText, Position + 1, sLength);
-//            break;
-//          end;
-//        end;
-//        If TextToSelect <> '' then
-//        begin
+      Position := Pos('(', NewText);
+      if (Position >= 1) and (NewText <> '(') then
+      begin
+        TextToSelect := '';
+        sLength := 0;
+        for Index := Position + 1 to Length(NewText) do
+        begin
+          if CharInSet(NewText[Index], [' ', ',', ')']) then
+          begin
+            sLength := Index - Position - 1;
+            TextToSelect := Copy(NewText, Position + 1, sLength);
+            break;
+          end;
+        end;
+        If TextToSelect <> '' then
+        begin
 //          NewExpression := jreFormula.Lines.Text;
-//          Start := Position + Start;
+          Start := Position + Start;
 //          Start := PosEx(TextToSelect, NewExpression, Start) -1;
 //
-//          jreFormula.SelStart := Start;
-//          jreFormula.SelLength := sLength;
+          jreFormula.SelStart := Start;
+          jreFormula.SelLength := sLength;
 //
 //          While(jreFormula.SelText <> TextToSelect)
 //            and (jreFormula.SelStart + sLength + 1 < Length(NewExpression)) do
@@ -426,13 +428,13 @@ begin
 //              end;
 //            end;
 //          end
-//        end;
+        end;
 //      end
 //      else
 //      begin
 //        jreFormula.SelStart := Start - 1 + Length(NewText);
 //        jreFormula.SelLength := 0;
-//      end;
+      end;
 //    end
 //    else
 //    begin
@@ -1084,6 +1086,7 @@ var
   Node: TTreeNode;
   HydrogeologicUnitNames: TStringList;
   HufDataArrays: TClassificationList;
+  DuplicateVarCheck: TList;
 begin
   { TODO : Nearly the same code is use in TfrmFormulaUnit, TFrmGridColor,
   TfrmScreenObjectProperties, and TfrmDataSets. Find a way to combine them. }
@@ -1116,21 +1119,31 @@ begin
         LayerStringList.Add(DataArray.Name);
       end;
 
-      for Index := 0 to rbFormulaParser.VariableCount - 1 do
-      begin
-        AVariable := rbFormulaParser.Variables[Index];
-        VarEdit := TVariableEdit.Create(AVariable);
-        VariableList.Add(VarEdit);
-        Position := LayerStringList.IndexOf(VarEdit.ClassificationName);
-        if Position >= 0 then
+      DuplicateVarCheck := TList.Create;
+      try
+        for Index := 0 to rbFormulaParser.VariableCount - 1 do
         begin
-          ClassifiedLayerList[Position] := VarEdit;
+          AVariable := rbFormulaParser.Variables[Index];
+          if DuplicateVarCheck.IndexOf(AVariable) >= 0 then
+          begin
+            Continue;
+          end;
+          DuplicateVarCheck.Add(AVariable);
+          VarEdit := TVariableEdit.Create(AVariable);
+          VariableList.Add(VarEdit);
+          Position := LayerStringList.IndexOf(VarEdit.ClassificationName);
+          if Position >= 0 then
+          begin
+            ClassifiedLayerList[Position] := VarEdit;
+          end;
+          Position := HydrogeologicUnitNames.IndexOf(VarEdit.ClassificationName);
+          if Position >= 0 then
+          begin
+            HufDataArrays[Position] := VarEdit;
+          end;
         end;
-        Position := HydrogeologicUnitNames.IndexOf(VarEdit.ClassificationName);
-        if Position >= 0 then
-        begin
-          HufDataArrays[Position] := VarEdit;
-        end;
+      finally
+        DuplicateVarCheck.Free;
       end;
       ClassifiedLayerList.Pack;
       HufDataArrays.Pack;
@@ -1278,6 +1291,7 @@ begin
       break;
     end;
   end;
+  btnFunctionHelp.HelpKeyWord := FFunctionHelpString;
   btnFunctionHelp.Enabled := IsFunction;
 end;
 
@@ -1309,7 +1323,7 @@ begin
     else if AnObject is TCustomValue then
     begin
       Value := FSelectedNode.Data;
-      InsertText(Value.Decompile);
+      InsertText(Value.DecompileDisplay);
     end;
   end;
 end;
@@ -1466,7 +1480,7 @@ end;
 
 function TVariableEdit.ClassificationName: string;
 begin
-  result := FVariable.Decompile;
+  result := FVariable.DecompileDisplay;
 end;
 
 constructor TVariableEdit.Create(AVariable: TCustomValue);

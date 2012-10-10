@@ -616,8 +616,8 @@ begin
   DrawBigRectangle32(BitMap, OutlineColor, FillColor, LineThickness, Rect(X1, Y1, X2, Y2), UseStipple);
 end;
 
-procedure DrawBigRectangle32(const BitMap: TBitmap32; const OutlineColor, FillColor: TColor32;
-  const LineThickness: single;
+procedure DrawBigRectangle32(const BitMap: TBitmap32;
+  const OutlineColor, FillColor: TColor32; const LineThickness: single;
   const ARect: TRect; UseStipple: boolean = False); overload;
 var
   Intersection: TRect;

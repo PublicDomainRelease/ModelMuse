@@ -145,7 +145,7 @@ begin
             end;
             if ColoringLimits.LogTransform then
             begin
-              if (LegendType = ltContour) or (MinReal > 0) then
+              if (LegendType = ltContour) or (MinReal > 0) and (MaxReal > 0) then
               begin
                 if LegendType = ltColor then
                 begin
@@ -388,7 +388,7 @@ begin
 
                     if ColoringLimits.LogTransform then
                     begin
-                      if MinReal > 0 then
+                      if (MinReal > 0) and (MaxReal > 0) then
                       begin
                         MinReal := Log10(MinReal);
                         MaxReal := Log10(MaxReal);

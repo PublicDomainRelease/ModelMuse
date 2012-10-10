@@ -69,7 +69,6 @@ type
     procedure rdeRelaxHeadsChange(Sender: TObject);
     procedure rdeRelaxFluxChange(Sender: TObject);
     procedure seMaxIterationsChange(Sender: TObject);
-    procedure seCellCountChange(Sender: TObject);
     procedure rdeHeadClosureChange(Sender: TObject);
     procedure rdeFluxClosureChange(Sender: TObject);
     procedure cbOneWayCouplingClick(Sender: TObject);
@@ -80,6 +79,7 @@ type
     procedure rdgDiscretizationMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure rgCouplingMethodClick(Sender: TObject);
+    procedure seCellCountExit(Sender: TObject);
   private
     FChildModels: TChildModelEditCollection;
     FAlreadyHandled: Boolean;
@@ -447,7 +447,7 @@ begin
   ReadSublayerDiscretization;
 end;
 
-procedure TfrmChildModels.seCellCountChange(Sender: TObject);
+procedure TfrmChildModels.seCellCountExit(Sender: TObject);
 var
   Edit: TChildModelEdit;
 begin
@@ -455,6 +455,10 @@ begin
   if (tvChildModels.Selected <> nil) then
   begin
     Edit := tvChildModels.Selected.Data;
+    if seCellCount.AsInteger <= 2 then
+    begin
+      seCellCount.AsInteger := 3;
+    end;
     if not Odd(seCellCount.AsInteger) then
     begin
       seCellCount.AsInteger := seCellCount.AsInteger + 1;
@@ -738,6 +742,7 @@ begin
   inherited;
   frmGoPhast.PhastModel.SaveBfhBoundaryConditions := FNewSaveBfhBoundaries;
   ChangeChildModel(FNewChildModels);
+  frmGoPhast.UpdateModelCubeBreaks;
 end;
 
 procedure TUndoChildModelChange.Undo;
@@ -755,6 +760,7 @@ begin
     frmGoPhast.PhastModel.ChildModels[ChildIndex].
       ChildModel.HorizontalPositionScreenObject := ScreenObject;
   end;
+  frmGoPhast.UpdateModelCubeBreaks;
 end;
 
 end.

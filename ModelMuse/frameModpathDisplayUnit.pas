@@ -9,7 +9,8 @@ uses
   PhastModelUnit;
 
 type
-  TPathlineLimits = (plNone, plColors, plLayer, plRow, plColumn, plTime);
+  TPathlineLimits = (plNone, plColors, plLayer, plRow, plColumn, plTime,
+    pcParticleGroup);
 
 resourcestring
   Colorlimits = 'Color limits';
@@ -17,10 +18,11 @@ resourcestring
   Row = 'Row';
   Column = 'Column';
   Times = 'Times';
+  Group = 'Group';
 
 const
   TableCaptions: array[Low(TPathlineLimits)..High(TPathlineLimits)] of string =
-    ('', Colorlimits, Layer, Row, Column, Times);
+    ('', Colorlimits, Layer, Row, Column, Times, Group);
 
 type
   TUndoImportPathline = class(TCustomUndo)
@@ -171,7 +173,8 @@ var
   ChildModel: TChildModel;
 begin
   frmGoPhast.miPathlinestoShapefile.Enabled :=
-    frmGoPhast.PhastModel.PathLines.Lines.Count > 0;
+    (frmGoPhast.PhastModel.PathLines.Lines.Count > 0)
+    or (frmGoPhast.PhastModel.PathLines.LinesV6.Count > 0);
   if not frmGoPhast.miPathlinestoShapefile.Enabled
     and frmGoPhast.PhastModel.LgrUsed then
   begin
@@ -179,7 +182,8 @@ begin
     begin
       ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
       frmGoPhast.miPathlinestoShapefile.Enabled :=
-        ChildModel.PathLines.Lines.Count > 0;
+        (ChildModel.PathLines.Lines.Count > 0)
+        or (ChildModel.PathLines.LinesV6.Count > 0);
       if frmGoPhast.miPathlinestoShapefile.Enabled then
       begin
         break;
@@ -220,6 +224,7 @@ var
   ARow: Integer;
   MaxTime: Double;
   LocalModel: TCustomModel;
+  LocalLines: TCustomPathLines;
 begin
   LocalModel := comboModelSelection.Items.Objects[
     comboModelSelection.ItemIndex] as TCustomModel;
@@ -234,7 +239,16 @@ begin
   PathLines := FPathLines[comboModelSelection.ItemIndex];
 
   fedModpathFile.FileName := PathLines.FileName;
-  if PathLines.Lines.TestGetMaxTime(MaxTime) then
+
+  if PathLines.Lines.Count > 0 then
+  begin
+    LocalLines := PathLines.Lines;
+  end
+  else
+  begin
+    LocalLines := PathLines.LinesV6;
+  end;
+  if LocalLines.TestGetMaxTime(MaxTime) then
   begin
     lblMaxTime.Caption := StrMaximumTime
       + FloatToStrF(MaxTime, ffGeneral, 7, 0);
@@ -253,6 +267,7 @@ begin
   ReadIntLimit(Limits.ColumnLimits, plColumn);
   ReadIntLimit(Limits.RowLimits, plRow);
   ReadIntLimit(Limits.LayerLimits, plLayer);
+  ReadIntLimit(Limits.ParticleGroupLimits, pcParticleGroup);
 
   ReadFloatLimits(Limits.TimeLimits, plTime);
 
@@ -457,7 +472,7 @@ end;
 procedure TframeModpathDisplay.rdgLimitsSetEditText(Sender: TObject; ACol,
   ARow: Integer; const Value: string);
 begin
-  if (ARow in [Ord(plLayer)..Ord(plColumn)]) and (ACol in [1,2]) then
+  if (ARow in [Ord(plLayer)..Ord(plColumn), Ord(pcParticleGroup)]) and (ACol in [1,2]) then
   begin
     rdgLimits.Columns[ACol].CheckACell(ACol, ARow, False, True, 0, 1);
   end;
@@ -553,11 +568,14 @@ begin
     if PathLine.FileName = '' then
     begin
       PathLine.Lines.Clear;
+      PathLine.LinesV6.Clear;
     end
     else
     begin
       if FileExists(PathLine.FileName) then
       begin
+
+
         if(PathLine.FileName <> ExistingPathLines.FileName) then
         begin
           PathLine.ReadFile;
@@ -589,6 +607,7 @@ begin
         SetIntLimit(plColumn, Grid.ColumnCount, Limits.ColumnLimits);
         SetIntLimit(plRow, Grid.RowCount, Limits.RowLimits);
         SetIntLimit(plLayer, Grid.LayerCount, Limits.LayerLimits);
+        SetIntLimit(pcParticleGroup, Grid.ColumnCount, Limits.ParticleGroupLimits);
 
         SetFloatLimit(plTime, PathLine.MinTime, PathLine.MaxTime,
           Limits.TimeLimits);

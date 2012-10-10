@@ -808,7 +808,7 @@ begin
   if FLayerStructure.Count = 0 then
   begin
     LayerGroup := FLayerStructure.Insert(0) as TLayerGroup;
-    LayerGroup.AquiferName := StrModelTop;
+    LayerGroup.AquiferName := kModelTop;
   end;
   LayerGroup := FLayerStructure.Insert(Position+1) as TLayerGroup;
   // LayerGroup.AquiferName can not be assigned in LayerGroup.Create
@@ -1590,6 +1590,7 @@ begin
     end;
     frmGoPhast.PhastModel.ModflowGrid.NotifyGridChanged(nil);
     frmGoPhast.PhastModel.UpdateMapping;
+    frmGoPhast.UpdateModelCubeBreaks;
   finally
     frmGoPhast.CanDraw := True;
   end;
@@ -1618,6 +1619,7 @@ begin
     end;
     frmGoPhast.PhastModel.ModflowGrid.NotifyGridChanged(nil);
     frmGoPhast.PhastModel.UpdateMapping;
+    frmGoPhast.UpdateModelCubeBreaks;
   finally
     frmGoPhast.CanDraw := True;
   end;
