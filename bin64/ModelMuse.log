@@ -1,0 +1,26 @@
+0	 (I)  	Thread ID 3816	Log subsystem started in elapsed time mode.
+31	 (I)  	Thread ID 740	Service thread started
+827	 (i)  	Thread ID 740	Temporary rendering context created
+827	 (I)  	Thread ID 740	Getting OpenGL entry points and extension
+827	 (I)  	Thread ID 740	
+827	 (i)  	Thread ID 740	OpenGL rendering context information:
+827	 (i)  	Thread ID 740	Renderer     : Quadro NVS 295/PCIe/SSE2
+827	 (i)  	Thread ID 740	Vendor       : NVIDIA Corporation
+827	 (i)  	Thread ID 740	Version      : 3.3.0
+827	 (i)  	Thread ID 740	GLSL version : 3.30 NVIDIA via Cg compiler
+827	 (I)  	Thread ID 740	
+842	 (I)  	Thread ID 740	Getting OpenGL entry points and extension
+842	 (i)  	Thread ID 740	Backward compatible core PBuffer context successfully created
+842	 (I)  	Thread ID 740	Service context successfuly initialized
+5257	 (i)  	Thread ID 3816	Temporary rendering context created
+5257	 (I)  	Thread ID 3816	Getting OpenGL entry points and extension
+5257	 (i)  	Thread ID 3816	Temporary rendering context destroyed
+5273	 (I)  	Thread ID 3816	Getting OpenGL entry points and extension
+5288	 (i)  	Thread ID 3816	Temporary rendering context created
+5288	 (I)  	Thread ID 3816	Getting OpenGL entry points and extension
+5288	 (i)  	Thread ID 3816	Temporary rendering context destroyed
+5304	 (I)  	Thread ID 3816	Getting OpenGL entry points and extension
+12371	 (I)  	Thread ID 740	Service thread finished
+12386	 (D)  	Thread ID 3816	Service thread destroyed
+12386	 (i)  	Thread ID 3816	Logged fatal errors: 0, errors: 0, warnings: 0, titles: 11, infos: 11, debug info: 1
+12386	 (i)  	Thread ID 3816	Log session shutdown
