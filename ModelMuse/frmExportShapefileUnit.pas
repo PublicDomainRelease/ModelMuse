@@ -29,6 +29,8 @@ type
     rgExportObjectType: TRadioGroup;
     rgHfbDimensions: TRadioGroup;
     comboModel: TComboBox;
+    pnlBottom: TPanel;
+    pnlTop: TPanel;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure tvExportItemsMouseDown(Sender: TObject; Button: TMouseButton;
@@ -272,7 +274,7 @@ procedure TfrmExportShapefile.InitializeFileNames;
 var
   NewFileName: string;
 begin
-  NewFileName := ChangeFileExt(frmGoPhast.sdSaveDialog.FileName, '');;
+  NewFileName := ChangeFileExt(frmGoPhast.sdSaveDialog.FileName, '');
   jfeElements.FileName := NewFileName + '_E.shp';
   jfeNodes.FileName := NewFileName + '_N.shp';
   jfeHorizontalFlowBarrier.FileName := NewFileName + '_HFB.shp';
@@ -780,7 +782,7 @@ begin
         
         Shape.FPoints[0] := ConvertPoint(APoint);
         Shape.FZArray[0] := APoint.Z;
-        Shape.FMArray[0] := 0;;
+        Shape.FMArray[0] := 0;
       end;
     stMultiPatch:
       begin

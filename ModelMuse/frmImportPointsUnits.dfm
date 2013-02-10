@@ -12,20 +12,18 @@ inherited frmImportPoints: TfrmImportPoints
   OnKeyUp = FormKeyUp
   ExplicitWidth = 578
   ExplicitHeight = 527
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 433
-    Width = 560
+    Top = 440
+    Width = 562
     Height = 49
     Align = alBottom
     ParentColor = True
     TabOrder = 1
-    ExplicitTop = 444
-    ExplicitWidth = 570
     DesignSize = (
-      560
+      562
       49)
     object btnCancel: TBitBtn
       Left = 461
@@ -63,29 +61,21 @@ inherited frmImportPoints: TfrmImportPoints
   object pcImportPoints: TPageControl
     Left = 0
     Top = 0
-    Width = 560
-    Height = 433
-    ActivePage = tabData
+    Width = 562
+    Height = 440
+    ActivePage = tabControls
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 570
-    ExplicitHeight = 444
     object tabControls: TTabSheet
       Caption = 'Controls'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlRadioGroups: TPanel
-        Left = 182
+        Left = 184
         Top = 0
         Width = 370
-        Height = 400
+        Height = 407
         Align = alRight
         ParentColor = True
         TabOrder = 1
-        ExplicitLeft = 192
-        ExplicitHeight = 411
         object lblRoot: TLabel
           Left = 208
           Top = 231
@@ -245,57 +235,46 @@ inherited frmImportPoints: TfrmImportPoints
       object pnlData: TPanel
         Left = 0
         Top = 0
-        Width = 182
-        Height = 400
+        Width = 184
+        Height = 407
         Align = alClient
         Caption = 'pnlData'
         TabOrder = 0
-        ExplicitWidth = 192
-        ExplicitHeight = 411
         object jvclbDataSets: TJvxCheckListBox
           Left = 1
           Top = 26
-          Width = 180
-          Height = 373
+          Width = 182
+          Height = 380
           Align = alClient
           Color = clRed
           ItemHeight = 18
           TabOrder = 1
           OnClickCheck = jvclbDataSetsClickCheck
-          ExplicitWidth = 190
-          ExplicitHeight = 384
           InternalVersion = 202
         end
         object pnlLabelDataSets: TPanel
           Left = 1
           Top = 1
-          Width = 180
+          Width = 182
           Height = 25
           Align = alTop
           Caption = 'Data sets'
           ParentColor = True
           TabOrder = 0
-          ExplicitWidth = 190
         end
       end
     end
     object tabData: TTabSheet
       Caption = 'Data'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlDataTabControls: TPanel
         Left = 0
-        Top = 354
-        Width = 552
+        Top = 361
+        Width = 554
         Height = 46
         Align = alBottom
         ParentColor = True
         TabOrder = 1
-        ExplicitTop = 365
-        ExplicitWidth = 562
         object lblRows: TLabel
           Left = 115
           Top = 13
@@ -342,8 +321,8 @@ inherited frmImportPoints: TfrmImportPoints
       object dgData: TRbwDataGrid4
         Left = 0
         Top = 0
-        Width = 552
-        Height = 354
+        Width = 554
+        Height = 361
         Align = alClient
         ColCount = 2
         FixedColor = 14803425
@@ -407,8 +386,6 @@ inherited frmImportPoints: TfrmImportPoints
             AutoAdjustColWidths = True
           end>
         OnEndUpdate = dgDataEndUpdate
-        ExplicitWidth = 562
-        ExplicitHeight = 365
       end
     end
   end

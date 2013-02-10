@@ -20,10 +20,12 @@ implementation
 Procedure AssignErrorStrings;
 begin
     ErrorValues.Add('INVALID VALUE FOR IFREQ PARAMETER:');
+    ErrorValues.Add('INSUFFICIENT MEMORY FOR DE4 SOLVER:');
     ErrorValues.Add('ERROR IN GMG INPUT');
     ErrorValues.Add('ALLOCATION ERROR IN SUBROUTINE GMG1ALG');
     ErrorValues.Add('GMG ASSEMBLY ERROR IN SUBROUTINE GMG1AP');
     ErrorValues.Add('DIS file must be specified for MODFLOW to run');
+    ErrorValues.Add('SSFLAG MUST BE EITHER "SS" OR "TR"');
     ErrorValues.Add('STOP EXECUTION');
     ErrorValues.Add('THERE MUST BE AT LEAST ONE TIME STEP IN EVERY STRESS PERIOD');
     ErrorValues.Add('PERLEN MUST NOT BE 0.0 FOR TRANSIENT STRESS PERIODS');
@@ -51,6 +53,7 @@ begin
     ErrorValues.Add('Parameter type conflict:');
     ErrorValues.Add('Blank instance name');
     ErrorValues.Add('file specifies undefined instance');
+    ErrorValues.Add('*** ERROR: PARAMETER');
     ErrorValues.Add('IS GREATER THAN THE MAXIMUM ALLOWED');
     ErrorValues.Add('file specifies an undefined parameter');
     ErrorValues.Add('Parameter type must be');
@@ -60,7 +63,7 @@ begin
     ErrorValues.Add('Aborting. Weights for Auxiliary variables cannot');
     ErrorValues.Add('ABORTING');
     ErrorValues.Add('*** ERROR');
-//    ErrorValues.Add('IS GREATER THAN MXACTB');
+    ErrorValues.Add('IS GREATER THAN MXACTB');
     ErrorValues.Add('INSTANCES ARE NOT SUPPORTED FOR HFB');
     ErrorValues.Add('ERROR DETECTED IN LOCATION DATA OF BARRIER NO.');
     ErrorValues.Add('LAYWT is not 0 and LTHUF is 0 for layer:');
@@ -68,7 +71,7 @@ begin
     ErrorValues.Add('Simulation is transient and no storage parameters are');
     ErrorValues.Add('Simulation is steady state and storage parameters are');
     ErrorValues.Add('Simulation is transient and has convertible');
-    ErrorValues.Add('Simulation is steady state and SYTP parameter(s) are');
+    ErrorValues.Add('Simulation has SYTP parameter(s) defined but has a');
     ErrorValues.Add('STOP SGWF2HUF7VKA');
     ErrorValues.Add('CONSTANT-HEAD CELL WENT DRY');
     ErrorValues.Add('Sy not defined for cell at');
@@ -82,6 +85,7 @@ begin
     ErrorValues.Add('ERROR - NO AQUIFER UNDER LAKE CELL');
     ErrorValues.Add('***NLAKES too large for BUFF in Subroutine GWF2');
     ErrorValues.Add('LAYWET is not 0 and LAYTYP is 0 for layer');
+    ErrorValues.Add('LAYWET must be 0 if LAYTYP is 0');
     ErrorValues.Add('IS AN INVALID LAYAVG VALUE -- MUST BE 0, 1, or 2');
     ErrorValues.Add('Negative cell thickness at (layer,row,col)');
     ErrorValues.Add('SIMULATION ABORTED');
@@ -138,7 +142,7 @@ begin
     ErrorValues.Add('MAXIMUM NUMBER OF GRID CELLS ADJACENT TO LAKES HAS BEEN EXCEEDED WITH CELL');
     ErrorValues.Add('LAK Package requires BCF, LPF, or HUF');
     ErrorValues.Add('THIS WILL CAUSE PROBLEMS IN COMPUTING LAKE STAGE USING THE NEWTON METHOD.');
-    ErrorValues.Add('***NLAKES too large for BUFF in Subroutine GWF2LAK7SFR7RPS***  STOP EXECUTION');
+    //    ErrorValues.Add('***NLAKES too large for BUFF in Subroutine GWF2LAK7SFR7RPS***  STOP EXECUTION');
     ErrorValues.Add('FAILED TO CONVERGE');
     ErrorValues.Add('Can''t find name file');
     ErrorValues.Add('INVALID INPUT FOR GRIDSTATUS IN LGR INPUT FILE:');
@@ -162,7 +166,6 @@ begin
     ErrorValues.Add('If the BCF Package is used and unsaturated flow is active then ISFROPT must equal 3 or 5.');
     ErrorValues.Add('Streambed has lower altitude than GW cell bottom. Model stopping');
     ErrorValues.Add('STOPPING SIMULATION');
-    ErrorValues.Add(' NaN');
     ErrorValues.Add('***ERROR: MNW2 PACKAGE DOES NOT SUPPORT');
     ErrorValues.Add('*** BAD RECORD ENCOUNTERED, PCGN DATA INPUT ***');
     ErrorValues.Add('***BAD DATA READ, SUBROUTINE PCGNRP***');
@@ -177,8 +180,44 @@ begin
     ErrorValues.Add('ARRAY DIAG CONTAINS A NEGATIVE ELEMENT AT NODE');
     ErrorValues.Add('Allocation error in subroutine PCG');
     ErrorValues.Add('Dimension mismatch in subroutine PCG');
+    ErrorValues.Add('NOT DEFINED FOR PARAMETER TYPE');
+    ErrorValues.Add('HUF and LAK cannot be used together in a simulation');
+    ErrorValues.Add('IS LISTED MORE THAN ONCE IN PARAMETER FILE');
+    ErrorValues.Add('IN PARAMETER INPUT FILE HAS NOT BEEN DEFINED');
+    ErrorValues.Add('ERROR: Proportion must be between 0.0 and 1.0');
+    ErrorValues.Add('ERROR DETECTED IN LOCATION DATA OF BARRIER');
+    ErrorValues.Add('LAYWT must be 0 if LTHUF is 0');
+    ErrorValues.Add('Vertical K is zero in row');
+    ErrorValues.Add('Horizontal K is zero in row');
+    ErrorValues.Add('MULTKDEP is zero in row');
+    ErrorValues.Add('LVDA cannot calculate sensitivities');
+    ErrorValues.Add('LAYVKA entered for layer');
+    ErrorValues.Add('parameters of type VK can apply only to layers for which');
+    ErrorValues.Add('parameters of type VANI can apply only to layers for which');
+    ErrorValues.Add('MNWOBS MUST BE > 0');
+    ErrorValues.Add('ALLOCATION OF MNW ROUTING ARRAY FAILED');
+    ErrorValues.Add('MNW2 NODE ARRAY ALLOCATION INSUFFICIENT');
+    ErrorValues.Add('MNW2 Node not in grid; Layer, Row, Col=');
+    ErrorValues.Add('ILLEGAL OPTION CODE. SIMULATION ABORTING');
+    ErrorValues.Add('Model stopping');
+    ErrorValues.Add('CANNOT BE READ FROM RESTART RECORDS');
+    ErrorValues.Add('IMPROPER LAYER ASSIGNMENT FOR SUB-WT SYSTEM OF');
+    ErrorValues.Add('SUB-WT CANNOT BE USED IN CONJUNCTION WITH QUASI-3D');
+    ErrorValues.Add('NEGATIVE EFFECTIVE STRESS VALUE AT (ROW,COL,LAY):');
+    ErrorValues.Add('ERROR READING LMT PACKAGE INPUT DATA');
+    ErrorValues.Add('ERROR IN LMT PACKAGE INPT DATA:');
+    ErrorValues.Add('ERROR IN LMT PACKAGE INPUT DATA:');
+    ErrorValues.Add('BETWEEN 1 AND NPER (OF THE DISCRETIZATION INPUT FILE');
+    ErrorValues.Add('STREAMFLOW PACKAGE OF GWF IS NOT OPEN');
+    ErrorValues.Add('Package has not been defined');
+    ErrorValues.Add('MATRIX IS SEVERELY NON-DIAGONALLY DOMINANT');
+    ErrorValues.Add('CONJUGATE-GRADIENT METHOD FAILED');
+    ErrorValues.Add('DIVIDE BY 0 IN SIP AT LAYER');
+
+//    ErrorValues.Add('NOT FOUND (STOP EXECUTION(GWF2HUF7RPGD))');
 
     NumberErrorValues.Add('CLUSTERS WERE SPECIFIED, BUT THERE IS SPACE FOR ONLY');
+    NumberErrorValues.Add(' NaN');
 
     // MODFLOW-NWT
     ErrorValues.Add('THIS WILL CAUSE PROBLEMS IN COMPUTING LAKE STAGE USING THE NEWTON METHOD.');
@@ -212,12 +251,60 @@ begin
     ErrorValues.Add('error in xmdprecl (xmdsfacl)');
     ErrorValues.Add('error in xmdprecd (xmdsfacd)');
     ErrorValues.Add('error in xmdcheck');
+    ErrorValues.Add('SWR PROCESS REQUIRES LAYCON OF 1 OR 3 FOR');
+    ErrorValues.Add('SWR PROCESS REQUIRES USE OF THE BCF, LPF,');
+    ErrorValues.Add('COULD NOT PARSE NTABRCH FOR TABULAR DATA ITEM');
+    ErrorValues.Add('CONFINED AQUIFERS CANNOT BE SIMULATED WITH SWR');
+    ErrorValues.Add('FLOW PACKAGE SPECIFIED INCONSISTENT WITH SWR');
+    ErrorValues.Add('SWR 4D: COULD NOT PARSE NTABRCH');
+    ErrorValues.Add('ERROR CANNOT REUSE');
+    ErrorValues.Add('ERROR REACH ITEM');
+    ErrorValues.Add('MUST BE GREATER THAN');
+    ErrorValues.Add('MUST BE LESS THAN');
+    ErrorValues.Add('MUST NOT EQUAL');
+    ErrorValues.Add('RTMAX EXCEEDS MODFLOW DELT');
+    ErrorValues.Add('REACHNO EXCEEDS NREACHES');
+    ErrorValues.Add('REACHNO LESS THAN ONE');
+    ErrorValues.Add('NCONN LESS THAN ZERO');
+    ErrorValues.Add('ICONN EXCEEDS NREACHES');
+    ErrorValues.Add('ICONN LESS THAN ONE');
+    ErrorValues.Add('REACH LAYER EXCEEDS NLAY');
+    ErrorValues.Add('REACH ROW EXCEEDS NROW');
+    ErrorValues.Add('REACH COL EXCEEDS NCOL');
+    ErrorValues.Add('MUST BE EQUAL TO NREACHES');
+    ErrorValues.Add('MUST NOT EXCEED NREACHES');
+    ErrorValues.Add('ERROR SPECIFYING ISWRBND');
+    ErrorValues.Add('POSITIVE REACH RAIN VALUE REQUIRED');
+    ErrorValues.Add('POSITIVE REACH EVAP VALUE REQUIRED');
+    ErrorValues.Add('ISTRRCH.LT.1 OR .GT.NREACHES');
+    ErrorValues.Add('ISTRNUM.LT.1 OR .GT.REACH(ISTRRCH)%NSTRUCT');
+    ErrorValues.Add('SIMULATED SWR1 STAGE STRCRIT ONLY FOR');
+    ErrorValues.Add('PROGRAMMING ERROR: UNDEFINED ISTRTYPE');
+    ErrorValues.Add('SWR SOLUTION DID NOT CONVERGE');
+    ErrorValues.Add('COULD NOT READ FROM UNIT Iu');
+    ErrorValues.Add('jstack.GT.nstack GWFSWR');
+    ErrorValues.Add('SPECIFIED STRUCTURE CONNECTION ERRORS:');
+    ErrorValues.Add('INVALID STRUCTURE CONNECTION FOR REACH');
+    ErrorValues.Add('ERRORS IN SPECIFIED REACH');
+    ErrorValues.Add('4B: ASSYMETRY IN REACH CONNECTIONS');
+    ErrorValues.Add('COULD NOT ALLOCATE RCHGRP(n)%REACH');
+    ErrorValues.Add('MULTIPLE DW CONNECTIONS TO THE SAME DW RCHGRP');
+    ErrorValues.Add('MULT. ROUTING APPROACHES FOR AT LEAST');
+    ErrorValues.Add('KRCH MUST BE SET TO 1 FOR REACH');
+    ErrorValues.Add('PROGRAMMING ERROR:');
+    ErrorValues.Add('SWR STAGE FILE NOT');
+    ErrorValues.Add('NO DATA READ FROM SPECIFIED SWR1 STAGE FILE');
+
 
 //    WarningValues.Add('**WARNING**');
 //    WarningValues.Add('*** WARNING ***');
+//    WarningValues.Add('***WARNING***  FOR CHD CELL');
+    WarningValues.Add('OUTPUT CONTROL WAS SPECIFIED FOR A NONEXISTENT');
+    WarningValues.Add('NO FLOW EQUATION TO SOLVE IN TIME STEP');
     WarningValues.Add('CELL CONVERSIONS FOR ITER');
     WarningValues.Add('****Units are undefined');
-    WarningValues.Add('ELIMINATED BECAUSE ALL HYDRAULIC CONDUCTIVITIES TO NODE ARE 0');
+    WarningValues.Add('ELIMINATED BECAUSE ALL HYDRAULIC');
+    WarningValues.Add('Nodes are often elminated for the following reasons');
 //    WarningValues.Add('WARNING-- COMPUTED STAGE OF ');
     WarningValues.Add('IF WETDRY FLAG NOT TURNED ON, VERTICAL LEAKANCES ARE NOT SAVED:');
     WarningValues.Add('THEREFORE, LAKE/AQUIFER CONDUCTANCES ARE BASED SOLELY ON LAKEBED SPECIFICATION');
@@ -249,7 +336,7 @@ begin
     WarningValues.Add('PET DIFF ERROR');
     WarningValues.Add('FAILURE TO MEET SOLVER CONVERGENCE CRITERIA');
     WarningValues.Add('CONTINUING EXECUTION');
-    WarningValues.Add('OMITTED BECAUSE IBOUND=0 FOR CELL(S) IN MODEL LAYER');
+    WarningValues.Add('OMITTED BECAUSE IBOUND=0 FOR CELL(S)');
     WarningValues.Add('REQUIRED FOR MULTILAYER INTERPOLATION');
     WarningValues.Add('For the cells listed below, one of two conditions exist');
     WarningValues.Add('ISOLATED CELL IS BEING ELIMINATED');
@@ -263,6 +350,66 @@ begin
     WarningValues.Add('THE DOMAIN INTEGRITY ANALYSIS IS DEFECTIVE');
     WarningValues.Add('THE DOMAIN INTEGRITY APPEARS TO BE COMPROMIZED');
     WarningValues.Add('SECTIONS OF THE LAKE BOTTOM HAVE BECOME DRY');
+    WarningValues.Add('OMITTED BECAUSE IBOUND=0');
+    WarningValues.Add('IS DRY -- OMIT');
+    WarningValues.Add('ARE BELOW THE BOTTOM');
+    WarningValues.Add('When solver convergence criteria are not met');
+    WarningValues.Add('NPVAL in parameter file is 0');
+    WarningValues.Add('FHB STEADY-STATE OPTION FLAG WILL BE IGNORED');
+    WarningValues.Add('SPECIFIED-HEAD VALUE IGNORED AT ROW');
+    WarningValues.Add('GAGE PACKAGE ACTIVE EVEN THOUGH SFR AND LAK');
+    WarningValues.Add('NUMGAGE=0, SO GAGE IS BEING TURNED OFF');
+    WarningValues.Add('Warning');
+    WarningValues.Add('IOHUFFLWS NOT FOUND AND WILL BE SET TO BE ZERO');
+    WarningValues.Add('Simulation is steady state and SYTP parameter(s) are');
+    WarningValues.Add('Invalid array type was found on the following');
+    WarningValues.Add('Hydrograph Record will be ignored.');
+    WarningValues.Add('Coordinates of the following record are');
+    WarningValues.Add('Invalid interpolation type was found on the');
+    WarningValues.Add('Invalid streamflow array was found on the following');
+    WarningValues.Add('Hydrograph specified for non-existent stream reach');
+    WarningValues.Add('Invalid SFR array was found on the following');
+    WarningValues.Add('Hydrograph specified for non-existent stream reach');
+    WarningValues.Add('BEEN SUPERSEDED BY THE SUBSIDENCE AND AQUIFER-SYSTEM');
+    WarningValues.Add('JUST GONE DRY');
+    WarningValues.Add('IS DRY');
+    WarningValues.Add('SECTIONS OF THE LAKE BOTTOM HAVE BECOME DRY.');
+    WarningValues.Add('MNW2 node in dry cell, Q set to 0.0');
+    WarningValues.Add('Note-- the following MNW2 well went dry:');
+    WarningValues.Add('Partial penetration solution did not');
+    WarningValues.Add('Note: z2>z1 & distal part of well is shallower.');
+    WarningValues.Add('PROGRAM CONTINUES TO NEXT TIME STEP BECAUSE NNN');
+    WarningValues.Add('SFR PACKAGE BEING TURNED OFF');
+    WarningValues.Add('NUMBER OF TRAILING WAVES IS LESS THAN ZERO');
+    WarningValues.Add('RESETTING UNSATURATED FLOW TO BE INACTIVE');
+    WarningValues.Add('IS LESS THAN 1.0E-07: SETTING SLOPE TO');
+    WarningValues.Add('SECANT METHOD FAILED TO FIND SOLUTION FOR');
+    WarningValues.Add('HIGHEST DEPTH LISTED IN RATING TABLE OF ');
+    WarningValues.Add('two cross-section points are identical');
+    WarningValues.Add('Non-convergence in ROUTE_CHAN');
+    WarningValues.Add('VERTICAL FLOW IN VADOSE ZONE IS');
+    WarningValues.Add('SETTING UZF PACKAGE TO INACTIVE');
+    WarningValues.Add('NUMBER OF TRAILING WAVES IS LESS THAN ZERO');
+    WarningValues.Add('RESETTING THE NUMBER OF WAVE SETS TO BE 20');
+    WarningValues.Add('SETTING UNSATURATED FLOW IN CELL TO INACTIVE');
+    WarningValues.Add('Removing gage');
+    WarningValues.Add('SETTING RATE TO ZERO');
+    WarningValues.Add('SETTING DEPTH TO ONE');
+    WarningValues.Add('SETTING EXTINCTION WATER CONTENT EQUAL TO RESIDUAL WATER CONTENT');
+    WarningValues.Add('UNSATURATED FLOW WILL NOT BE ADDED TO ANY LAYER--');
+    WarningValues.Add('Deactivating the Well Package because MXACTW=0');
+    WarningValues.Add('WARNING READING LMT PACKAGE INPUT DATA:');
+    WarningValues.Add('INTERPOLATION FOR HEAD OBS#');
+    WarningValues.Add('Observation within a steady-state time step has');
+    WarningValues.Add('the observation type does not allow this');
+    WarningValues.Add('The observation is being moved to the end of the time step.');
+    WarningValues.Add('An observation cannot be placed at the very');
+    WarningValues.Add('HEADS AT DRAIN CELLS ARE BELOW THE');
+    WarningValues.Add('ALL CELLS INCLUDED IN THIS OBSERVATION ARE DRY');
+    WarningValues.Add('THESE CONDITIONS DIMINISH THE IMPACT');
+    WarningValues.Add('these conditions can diminish the impact');
+    WarningValues.Add('COMBINED LAKE/AQUIFER CONDUCTANCES BASED SOLELY ON LAKEBED');
+    WarningValues.Add('Well is inactive');
 
     // MODFLOW-NWT
 //    WarningValues.Add('*** WARNING *** NEGATIVE LAKE OUTFLOW NOT ALLOWED;');
@@ -272,6 +419,10 @@ begin
     WarningValues.Add('TO AVOID PUMPING WATER FROM A DRY CELL');
     WarningValues.Add('THE PUMPING RATE WAS REDUCED FOR CELL');
     WarningValues.Add('warning in xmdcheck');
+    WarningValues.Add('UNRECOGNIZED SWR1 OPTION:');
+    WarningValues.Add('*** MODFLOW CONVERGENCE FAILURE ***');
+
+
 end;
 
 initialization

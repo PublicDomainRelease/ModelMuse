@@ -297,6 +297,9 @@
         <topicref type="topic" id="393234682819013" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2007-08-29T14:42:22.650Z" icon="0" href="AbsR">
           <caption translate="true">AbsR</caption>
         </topicref>
+        <topicref type="topic" id="413052180685968" build="ALL" modified="2013-01-31T05:33:08.004Z" icon="0" href="Closest">
+          <caption translate="true">Closest</caption>
+        </topicref>
         <topicref type="topic" id="393236571284748" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2007-08-29T14:42:30.603Z" icon="0" href="Distance">
           <caption translate="true">Distance</caption>
         </topicref>
@@ -639,6 +642,9 @@
       </topicref>
       <topicref type="topic" id="405750911084731" build="ALL" modified="2011-01-31T23:30:38.578Z" icon="0" href="Import_ASCII_Raster_File">
         <caption translate="true">Import ASCII Raster File Dialog Box</caption>
+      </topicref>
+      <topicref type="topic" id="413050866537091" build="ALL" modified="2013-01-31T05:43:48.758Z" icon="0" href="Import_T_PROGS_File_Dialog_Box">
+        <caption translate="true">Import T-PROGS File Dialog Box</caption>
       </topicref>
       <topicref type="topic" id="393786359145194" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2008-04-23T09:06:10.619Z" icon="0" href="ImportEdit_Bitmap_Dialog_Box">
         <caption translate="true">Import/Edit Image Dialog Box</caption>

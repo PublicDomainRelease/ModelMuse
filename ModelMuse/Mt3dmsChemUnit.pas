@@ -138,9 +138,9 @@ type
     procedure CreateFormulaObjects; override;
     procedure GetPropertyObserver(Sender: TObject; List: TList); override;
     procedure RemoveFormulaObjects; override;
-    // See @link(TCustomModflowBoundaryItem.BoundaryFormula).
+    // See @link(BoundaryFormula).
     function GetBoundaryFormula(Index: integer): string; override;
-    // See @link(TCustomModflowBoundaryItem.BoundaryFormula).
+    // See @link(BoundaryFormula).
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     // @name checks whether AnotherItem is the same as the current @classname.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
@@ -190,7 +190,7 @@ type
 
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
-    class function ItemClass: TMF_BoundItemClass; override;
+    class function ItemClass: TBoundaryItemClass; override;
     // @name calls inherited @name and then sets the length of
     // the @link(TMt3dmsConcStorage.FMt3dmsConclArray) at ItemIndex in
     // @link(TCustomMF_BoundColl.Boundaries) to BoundaryCount.
@@ -771,7 +771,7 @@ begin
   end;
 end;
 
-class function TMt3dmsConcCollection.ItemClass: TMF_BoundItemClass;
+class function TMt3dmsConcCollection.ItemClass: TBoundaryItemClass;
 begin
   result := TMt3dmsConcItem;
 end;

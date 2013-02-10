@@ -54,14 +54,14 @@ type
     htlblMt3dms: TJvHTLabel;
     fedMt3dms: TJvFilenameEdit;
     procedure fedModflowChange(Sender: TObject);
-    procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
   private
-    Procedure GetData;
+    FModel: TCustomModel;
     procedure SetData;
     procedure HighlightControls;
     { Private declarations }
   public
+    Procedure GetData(Model: TCustomModel);
     { Public declarations }
   end;
 
@@ -90,14 +90,7 @@ begin
   HighlightControls;
 end;
 
-procedure TfrmProgramLocations.FormCreate(Sender: TObject);
-begin
-  inherited;
-  GetData;
-  HighlightControls;
-end;
-
-procedure TfrmProgramLocations.GetData;
+procedure TfrmProgramLocations.GetData(Model: TCustomModel);
 var
   Locations: TProgramLocations;
   function LinkString(const Url: string): string;
@@ -105,11 +98,12 @@ var
     result := Format('<a href="%0:s">%0:s</a>', [Url]);
   end;
 begin
+  FModel := Model;
   frmGoPhast.ReadIniFile;
   Locations := frmGoPhast.PhastModel.ProgramLocations;
   fedModflow.FileName := Locations.ModflowLocation;
   fedTextEditor.FileName := Locations.TextEditorLocation;
-  if frmGoPhast.PhastModel.ModflowPackages.ModPath.MpathVersion = mp5 then
+  if Model.ModflowPackages.ModPath.MpathVersion = mp5 then
   begin
     fedModpath.FileName := Locations.ModPathLocation;
     lblModpath.Caption := 'MODPATH v5';
@@ -128,6 +122,8 @@ begin
   fedModflowLgr.FileName := Locations.ModflowLgrLocation;
   fedModflowNwt.FileName := Locations.ModflowNwtLocation;
   fedMt3dms.FileName := Locations.Mt3dmsLocation;
+
+  HighlightControls;
 end;
 
 procedure TfrmProgramLocations.SetData;
@@ -139,7 +135,7 @@ begin
   try
     Locations.ModflowLocation := fedModflow.FileName;
     Locations.TextEditorLocation := fedTextEditor.FileName;
-    if frmGoPhast.PhastModel.ModflowPackages.ModPath.MpathVersion = mp5 then
+    if FModel.ModflowPackages.ModPath.MpathVersion = mp5 then
     begin
       Locations.ModPathLocation := fedModpath.FileName;
     end

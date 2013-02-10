@@ -133,7 +133,7 @@ begin
       nimKOrder: LEVFILL := NWT.FillLevel;
       else Assert(False);
     end;
-    STOPTOL := NWT.StopTolerance.Value;;
+    STOPTOL := NWT.StopTolerance.Value;
     MSDR := NWT.MaxGmresRestarts;
 
     WriteInteger(MAXITINNER);

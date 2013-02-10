@@ -59,15 +59,14 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<VerInfo_Release>1</VerInfo_Release>
 			<DCC_ExeOutput>.\$(Config)\$(Platform)</DCC_ExeOutput>
 			<VerInfo_Locale>1033</VerInfo_Locale>
-			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=2.17.1.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=2.17.1.0;Comments=</VerInfo_Keys>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=2.18.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=2.18.0.0;Comments=</VerInfo_Keys>
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 			<Manifest_File>None</Manifest_File>
 			<DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
 			<Icon_MainIcon>ModelMuse_Icon2.ico</Icon_MainIcon>
-			<VerInfo_MinorVer>17</VerInfo_MinorVer>
+			<VerInfo_MinorVer>18</VerInfo_MinorVer>
 			<VerInfo_MajorVer>2</VerInfo_MajorVer>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_MapFile>3</DCC_MapFile>
@@ -937,6 +936,49 @@
 			<DCCReference Include="SutraOptionsUnit.pas"/>
 			<DCCReference Include="frmSutraOptionsUnit.pas">
 				<Form>frmSutraOptions</Form>
+			</DCCReference>
+			<DCCReference Include="framePackageWellUnit.pas">
+				<Form>framePackageWell</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="SutraTimeScheduleUnit.pas"/>
+			<DCCReference Include="frmSutraTimesUnit.pas">
+				<Form>frmSutraTimes</Form>
+				<FormType>dfm</FormType>
+			</DCCReference>
+			<DCCReference Include="SutraBoundariesUnit.pas"/>
+			<DCCReference Include="frameCustomSutraFeatureUnit.pas">
+				<Form>frameCustomSutraFeature</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameSutraBoundaryUnit.pas">
+				<Form>frameSutraBoundary</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameSutraObservationsUnit.pas">
+				<Form>frameSutraObservations</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frmSutraTimeAdjustChoiceUnit.pas">
+				<Form>frmSutraTimeAdjustChoice</Form>
+				<FormType>dfm</FormType>
+			</DCCReference>
+			<DCCReference Include="SutraBoundaryWriterUnit.pas"/>
+			<DCCReference Include="SutraObservationWriterUnit.pas"/>
+			<DCCReference Include="SutraOutputControlUnit.pas"/>
+			<DCCReference Include="frmSutraOutputControlUnit.pas">
+				<Form>frmSutraOutputControl</Form>
+				<FormType>dfm</FormType>
+			</DCCReference>
+			<DCCReference Include="SutraInputWriterUnit.pas"/>
+			<DCCReference Include="SutraTimeScheduleWriterUnit.pas"/>
+			<DCCReference Include="SutraInitialConditionsWriterUnit.pas"/>
+			<DCCReference Include="SutraFileWriterUnit.pas"/>
+			<DCCReference Include="frmSutraProgramLocationsUnit.pas">
+				<Form>frmSutraProgramLocations</Form>
+			</DCCReference>
+			<DCCReference Include="frmImportTprogsUnit.pas">
+				<Form>frmImportTprogs</Form>
 			</DCCReference>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>

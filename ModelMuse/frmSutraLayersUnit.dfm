@@ -2,10 +2,19 @@ inherited frmSutraLayers: TfrmSutraLayers
   Caption = 'frmSutraLayers'
   ClientHeight = 436
   ClientWidth = 585
-  ExplicitWidth = 593
-  ExplicitHeight = 470
+  ExplicitWidth = 601
+  ExplicitHeight = 474
   PixelsPerInch = 96
   TextHeight = 18
+  object spl1: TSplitter
+    Left = 137
+    Top = 0
+    Width = 5
+    Height = 395
+    ExplicitLeft = 145
+    ExplicitTop = 8
+    ExplicitHeight = 383
+  end
   object pnl1: TPanel
     Left = 0
     Top = 0
@@ -109,24 +118,25 @@ inherited frmSutraLayers: TfrmSutraLayers
       ReadOnly = True
       TabOrder = 0
       OnChange = tvLayerGroupsChange
+      ExplicitLeft = 2
     end
   end
   object pnlMain: TPanel
-    Left = 137
+    Left = 142
     Top = 0
-    Width = 448
+    Width = 443
     Height = 395
     Align = alClient
     TabOrder = 1
     object pnlTop: TPanel
       Left = 1
       Top = 1
-      Width = 446
+      Width = 441
       Height = 56
       Align = alTop
       TabOrder = 0
       DesignSize = (
-        446
+        441
         56)
       object lbl1: TLabel
         Left = 5
@@ -138,7 +148,7 @@ inherited frmSutraLayers: TfrmSutraLayers
       object edName: TRbwEdit
         Left = 5
         Top = 27
-        Width = 437
+        Width = 432
         Height = 26
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
@@ -148,18 +158,18 @@ inherited frmSutraLayers: TfrmSutraLayers
     inline frameDiscretization: TframeDiscretization
       Left = 1
       Top = 57
-      Width = 446
+      Width = 441
       Height = 337
       Align = alClient
       TabOrder = 1
       ExplicitLeft = 1
       ExplicitTop = 57
-      ExplicitWidth = 446
+      ExplicitWidth = 441
       ExplicitHeight = 337
       inherited lbl1: TLabel
-        Width = 149
+        Width = 148
         Height = 18
-        ExplicitWidth = 149
+        ExplicitWidth = 148
         ExplicitHeight = 18
       end
       inherited lbl2: TLabel
@@ -169,60 +179,55 @@ inherited frmSutraLayers: TfrmSutraLayers
         ExplicitHeight = 18
       end
       inherited pnlDiscritization: TPanel
-        Width = 198
+        Width = 193
         Height = 335
-        ExplicitWidth = 198
+        ExplicitWidth = 193
         ExplicitHeight = 335
         inherited spl1: TSplitter
-          Left = 110
+          Left = 105
           Height = 294
           ExplicitLeft = 110
           ExplicitHeight = 335
         end
         inherited rdgSubLayerBoundaries: TRbwDataGrid4
-          Width = 110
+          Width = 105
           Height = 294
-          ExplicitWidth = 110
+          ExplicitWidth = 105
           ExplicitHeight = 294
         end
         inherited pnl1: TPanel
-          Width = 198
-          ExplicitWidth = 198
+          Width = 193
+          ExplicitWidth = 193
           inherited lbl3: TLabel
-            Width = 179
-            Height = 36
+            Width = 193
+            Height = 41
             ExplicitWidth = 179
             ExplicitHeight = 36
           end
         end
         inherited pnlPaintboxParent: TPanel
-          Left = 113
+          Left = 108
           Height = 294
-          ExplicitLeft = 113
+          ExplicitLeft = 108
           ExplicitHeight = 294
+          DesignSize = (
+            85
+            294)
           inherited pbSubLayers: TPaintBox
             Height = 262
             ExplicitHeight = 303
           end
-          inherited grdpnl1: TGridPanel
-            Top = 262
-            ControlCollection = <
-              item
-                Column = 0
-                Control = frameDiscretization.sbInsertLine
-                Row = 0
-              end
-              item
-                Column = 1
-                Control = frameDiscretization.sbMoveLine
-                Row = 0
-              end
-              item
-                Column = 2
-                Control = frameDiscretization.sbDeleteLine
-                Row = 0
-              end>
-            ExplicitTop = 262
+          inherited sbInsertLine: TSpeedButton
+            Top = 269
+            ExplicitTop = 269
+          end
+          inherited sbMoveLine: TSpeedButton
+            Top = 269
+            ExplicitTop = 269
+          end
+          inherited sbDeleteLine: TSpeedButton
+            Top = 269
+            ExplicitTop = 269
           end
         end
       end

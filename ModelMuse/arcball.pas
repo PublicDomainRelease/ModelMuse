@@ -54,6 +54,9 @@ The net effects of these changes are:
      aren't square.
 }
 
+{$IF CompilerVersion>=23}
+{$EXCESSPRECISION OFF}
+{$IFEND}
 unit arcball;
 
 interface

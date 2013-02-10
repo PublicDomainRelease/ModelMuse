@@ -9,18 +9,20 @@ inherited frmPrintFrequency: TfrmPrintFrequency
   Caption = 'PHAST Print Frequency'
   ExplicitWidth = 626
   ExplicitHeight = 560
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 448
-    Width = 618
+    Top = 437
+    Width = 608
     Height = 78
     Align = alBottom
     ParentColor = True
     TabOrder = 2
+    ExplicitTop = 448
+    ExplicitWidth = 618
     DesignSize = (
-      618
+      608
       78)
     object btnInsert: TButton
       Left = 103
@@ -55,10 +57,8 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 4
       OnClick = btnOKClick
     end
@@ -68,10 +68,8 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 5
     end
     object cbSaveFinalHeads: TCheckBox
@@ -88,10 +86,8 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 3
       OnClick = btnHelpClick
     end
@@ -99,8 +95,8 @@ inherited frmPrintFrequency: TfrmPrintFrequency
   object rdgPrintFrequency: TRbwDataGrid4
     Left = 0
     Top = 41
-    Width = 618
-    Height = 407
+    Width = 608
+    Height = 396
     Align = alClient
     ColCount = 4
     FixedCols = 2
@@ -225,6 +221,8 @@ inherited frmPrintFrequency: TfrmPrintFrequency
         CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
+    ExplicitWidth = 618
+    ExplicitHeight = 407
     ColWidths = (
       64
       64
@@ -257,10 +255,11 @@ inherited frmPrintFrequency: TfrmPrintFrequency
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 618
+    Width = 608
     Height = 41
     Align = alTop
     TabOrder = 0
+    ExplicitWidth = 618
     object rdeTime: TRbwDataEntry
       Left = 136
       Top = 10

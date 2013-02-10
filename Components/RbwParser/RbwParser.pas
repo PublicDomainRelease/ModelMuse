@@ -2398,6 +2398,7 @@ var
   CaseIntegerFunction: TFunctionRecord;
   CaseDoubleFunction: TFunctionRecord;
   CaseStringFunction: TFunctionRecord;
+  ClosestFunction: TFunctionRecord;
 
   CopyFunction: TFunctionRecord;
   CosFunction: TFunctionRecord;
@@ -6409,6 +6410,32 @@ end;
 {$WARNINGS ON}
 
 {$WARNINGS OFF}
+function _Closest(Values: array of pointer): integer;
+var
+  TestValue: double;
+  AValue: double;
+  Delta: double;
+  TestDelta: double;
+  index: integer;
+begin
+  TestValue := PDouble(Values[0])^;
+  AValue := PDouble(Values[1])^;
+  Delta := Abs(AValue-TestValue);
+  result := 1;
+  for index := 2 to Length(Values) - 1 do
+  begin
+    AValue := PDouble(Values[index])^;
+    TestDelta := Abs(AValue-TestValue);
+    if TestDelta < Delta then
+    begin
+      result := index;
+      Delta := TestDelta;
+    end;
+  end;
+end;
+{$WARNINGS ON}
+
+{$WARNINGS OFF}
 function _CaseString(Values: array of pointer): string;
 begin
   result := PString(Values[PInteger(Values[0])^])^;
@@ -7628,6 +7655,19 @@ begin
   SetLength(CaseStringFunction.Synonyms, 1);
   CaseStringFunction.Synonyms[0] := 'CaseS';
   Add(CaseStringFunction);
+
+  ClosestFunction.ResultType := rdtInteger;
+  ClosestFunction.Name := 'Closest';
+  ClosestFunction.Prototype :=
+    'Math|Closest(TestValue, Value1, Value2, ...)';
+  SetLength(ClosestFunction.InputDataTypes, 2);
+  ClosestFunction.InputDataTypes[0] := rdtDouble;
+  ClosestFunction.InputDataTypes[1] := rdtDouble;
+  ClosestFunction.OptionalArguments := -1;
+  ClosestFunction.CanConvertToConstant := True;
+  ClosestFunction.IFunctionAddr := _Closest;
+  Add(ClosestFunction);
+
 
   DegToRadFunction.ResultType := rdtDouble;
   DegToRadFunction.Name := 'DegToRad';

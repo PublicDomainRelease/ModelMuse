@@ -15,6 +15,32 @@ uses
   RbwStringTreeCombo, Mask, JvExMask;
 
 type
+  TEdgeDisplayEdit = class(TObject)
+    Edge: TCustomModflowGridEdgeDisplay;
+    DataIndex: integer;
+  end;
+
+  TBoundaryClassification = class(TClassificationObject)
+  private
+    FDataArray: TDataArray;
+    FTimeList: TCustomTimeList;
+    FEdgeDisplay: TEdgeDisplayEdit;
+    FName: string;
+    function GetClassifiedObject: TObject;
+    function GetBoundaryType: TBoundaryType;
+  public
+    function ClassificationName: string; Override;
+    function FullClassification: string; Override;
+    Constructor Create(AnObject: TDataArray); overload;
+    Constructor Create(AnObject: TCustomTimeList); overload;
+    Constructor Create(const Name: string; AnObject: TEdgeDisplayEdit); overload;
+    Constructor Create(const Name: string; AnObject: TObject); overload;
+    property ClassifiedObject: TObject read GetClassifiedObject;
+    property BoundaryType: TBoundaryType read GetBoundaryType;
+  end;
+
+  TCanSelectBoundary = function (BoundaryClassification: TBoundaryClassification): Boolean of object;
+
   // @name is used in @link(TfrmCustomGoPhast.AdjustFormPosition)
   // to tell whether the form
   // should be to the right or to the left of the main form.
@@ -33,11 +59,11 @@ type
     // and calls @link(SetAppearance).
     procedure FormShow(Sender: TObject);
     procedure btnHelpClick(Sender: TObject);
-{$IF CompilerVersion >= 23}
-   function FormHelp(Command: Word; Data:  NativeInt;
+{$IF CompilerVersion < 23}
+   function FormHelp(Command: Word; Data:  Integer;
      var CallHelp: Boolean): Boolean;
 {$ELSE}
-   function FormHelp(Command: Word; Data:  Integer;
+   function FormHelp(Command: Word; Data:  NativeInt;
      var CallHelp: Boolean): Boolean;
 {$IFEND}
     procedure FormDestroy(Sender: TObject); virtual;
@@ -71,14 +97,6 @@ type
   public
     procedure MouseClick;
     procedure UpdateSubComponents(AComponent: TComponent);
-    // @name changes all the cells in Grid that are in Column and that
-    // are selected to NewText.
-    procedure ChangeSelectedCellsInColumn(Grid: TRbwDataGrid4;
-      const Column: integer; const NewText: string);
-    // @name changes all the checked stated of all cells in Grid that
-    // are in Column and that are selected to NewState.
-    procedure ChangeSelectedCellsStateInColumn(Grid: TRbwDataGrid4;
-      const Column: integer; const NewState: TCheckBoxState);
     // If the Application.MainForm has been assigned,
     // @name sets the color, font, and icon used in the form
     // to be the same as in Application.MainForm via a call to
@@ -90,6 +108,14 @@ type
   { Public declarations }
   end;
 
+  // @name changes all the cells in Grid that are in Column and that
+  // are selected to NewText.
+  procedure ChangeSelectedCellsInColumn(Grid: TRbwDataGrid4;
+    const Column: integer; const NewText: string);
+  // @name changes all the checked stated of all cells in Grid that
+  // are in Column and that are selected to NewState.
+  procedure ChangeSelectedCellsStateInColumn(Grid: TRbwDataGrid4;
+    const Column: integer; const NewState: TCheckBoxState);
   // @name checks all the cells in Grid that are in Col.  If at least one
   // such cell is selected, AControl will be enabled. Otherwise, it will be
   // disabled.
@@ -134,17 +160,21 @@ procedure FillVirtStrTreeWithBoundaryConditions(
   SelectedTimeList: TCustomTimeList;
   SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
   LocalBoundaryClassifications: TList; EdgeEdits: TList;
-  ATree: TVirtualStringTree);
+  ATree: TVirtualStringTree;
+  CanSelectBoundary: TCanSelectBoundary = nil);
 
 var
   GlobalFont: TFont = nil;
   GlobalColor: TColor = clBtnFace;
 
+resourcestring
+  StrNone = 'none';
+
 implementation
 
 uses SubscriptionUnit, GoPhastTypes, ModflowPackagesUnit,
   frmGoPhastUnit, PhastModelUnit, ModflowPackageSelectionUnit,
-  frameCustomColorUnit;
+  frameCustomColorUnit, JvRollOut;
 
 {$R *.dfm}
 
@@ -225,11 +255,11 @@ begin
 //  result := HelpRouter.HelpJump('', KeyWord);
 end;
 
-{$IF CompilerVersion >= 23}
-function TfrmCustomGoPhast.FormHelp(Command: Word; Data:  NativeInt;
+{$IF CompilerVersion < 23}
+function TfrmCustomGoPhast.FormHelp(Command: Word; Data:  Integer;
   var CallHelp: Boolean): Boolean;
 {$ELSE}
-function TfrmCustomGoPhast.FormHelp(Command: Word; Data:  Integer;
+function TfrmCustomGoPhast.FormHelp(Command: Word; Data:  NativeInt;
   var CallHelp: Boolean): Boolean;
 {$IFEND}
 begin
@@ -312,7 +342,8 @@ procedure FillVirtStrTreeWithBoundaryConditions(
   SelectedTimeList: TCustomTimeList;
   SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
   LocalBoundaryClassifications: TList; EdgeEdits: TList;
-  ATree: TVirtualStringTree);
+  ATree: TVirtualStringTree;
+  CanSelectBoundary: TCanSelectBoundary = nil);
 var
   List: TStringList;
   ClassificationPosition: Integer;
@@ -322,6 +353,8 @@ var
   Classifications: TStringList;
   NodeData: PClassificationNodeData;
   RootNode: PVirtualNode;
+  ANode: PVirtualNode;
+  NextNode: PVirtualNode;
   DummyRootClassification: TDummyClassification;
   ParentNode: PVirtualNode;
   AnObject: TObject;
@@ -336,6 +369,7 @@ var
   ChildIndex: Integer;
   ChildModel: TChildModel;
   ChildTimeList: TCustomTimeList;
+  NodeDeleted: Boolean;
 begin
   LocalBoundaryClassifications.Clear;
   DummyRootClassification := TDummyClassification.Create(StrBoundaryConditions);
@@ -433,6 +467,14 @@ begin
       begin
         BounddaryClassification := TBoundaryClassification.Create(
           List[BoundaryIndex], List.Objects[BoundaryIndex]);
+        if Assigned(CanSelectBoundary) then
+        begin
+          if not CanSelectBoundary(BounddaryClassification) then
+          begin
+            BounddaryClassification.Free;
+            Continue;
+          end;
+        end;
         LocalBoundaryClassifications.Add(BounddaryClassification);
         VirtualNode := ATree.AddChild(VirtualClassificationNode);
         NodeData := ATree.GetNodeData(VirtualNode);
@@ -464,6 +506,31 @@ begin
         end;
       end;
     end;
+
+    repeat
+      ANode := RootNode;
+      NodeDeleted := False;
+      while ANode <> nil do
+      begin
+        NextNode := ATree.GetNext(ANode);
+        NodeData := ATree.GetNodeData(ANode);
+        if NodeData.ClassificationObject is TDummyClassification then
+        begin
+          if not ATree.HasChildren[ANode] then
+          begin
+            if ANode = RootNode then
+            begin
+              RootNode := nil;
+            end;
+            ATree.DeleteNode(ANode);
+            NodeDeleted := True;
+          end;
+        end;
+        ANode:= NextNode;
+      end;
+    until not NodeDeleted;
+
+
   finally
     for Index := 0 to Classifications.Count - 1 do
     begin
@@ -613,6 +680,10 @@ begin
         begin
           RowGrid.Rows[Index].ButtonFont := Font;
         end;
+      end;
+      if Component is TJvRollOut then
+      begin
+        TJvRollOut(Component).ButtonFont := Font;
       end;
     end;
     UpdateSubComponents(Component);
@@ -978,7 +1049,7 @@ begin
 end;
 
 
-procedure TfrmCustomGoPhast.ChangeSelectedCellsInColumn(Grid: TRbwDataGrid4;
+procedure ChangeSelectedCellsInColumn(Grid: TRbwDataGrid4;
   const Column: integer; const NewText: string);
 var
   Index: Integer;
@@ -1008,7 +1079,7 @@ begin
   end;
 end;
 
-procedure TfrmCustomGoPhast.ChangeSelectedCellsStateInColumn(
+procedure ChangeSelectedCellsStateInColumn(
   Grid: TRbwDataGrid4; const Column: integer; const NewState: TCheckBoxState);
 var
   Index: Integer;
@@ -1155,7 +1226,7 @@ begin
   if not Assigned(ClassificationNodeData)
     or not Assigned(ClassificationNodeData.ClassificationObject) then
   begin
-    CellText := 'none';
+    CellText := StrNone;
   end
   else
   begin
@@ -1212,6 +1283,106 @@ end;
 //  HelpRouter.ValidateID := False;
 
 //finalization
+
+{ TBoundaryClassification }
+
+function TBoundaryClassification.ClassificationName: string;
+begin
+  if FDataArray <> nil then
+  begin
+    result := FDataArray.DisplayName;
+    Assert(FTimeList = nil);
+    Assert(FEdgeDisplay = nil);
+  end
+  else if FTimeList <> nil then
+  begin
+    result := FTimeList.Name;
+    Assert(FEdgeDisplay = nil);
+  end
+  else
+  begin
+    result := FName;
+  end;
+end;
+
+constructor TBoundaryClassification.Create(AnObject: TCustomTimeList);
+begin
+  FTimeList := AnObject;
+  FDataArray := nil;
+  FEdgeDisplay := nil;
+end;
+
+constructor TBoundaryClassification.Create(AnObject: TDataArray);
+begin
+  FDataArray := AnObject;
+  FTimeList := nil;
+  FEdgeDisplay := nil;
+end;
+
+constructor TBoundaryClassification.Create(const Name: string;
+  AnObject: TObject);
+begin
+  FName := Name;
+  if AnObject is TDataArray then
+  begin
+    Create(TDataArray(AnObject));
+  end
+  else if AnObject is TCustomTimeList then
+  begin
+    Create(TCustomTimeList(AnObject));
+  end
+  else if AnObject is TEdgeDisplayEdit then
+  begin
+    Create(Name, TEdgeDisplayEdit(AnObject));
+  end
+  else
+  begin
+    Assert(False);
+  end;
+end;
+
+constructor TBoundaryClassification.Create(const Name: string;
+  AnObject: TEdgeDisplayEdit);
+begin
+  FName := Name;
+  FEdgeDisplay := AnObject;
+  FDataArray := nil;
+  FTimeList := nil;
+end;
+
+function TBoundaryClassification.FullClassification: string;
+begin
+  result := ''
+end;
+
+function TBoundaryClassification.GetBoundaryType: TBoundaryType;
+begin
+  if FEdgeDisplay <> nil then
+  begin
+    result := btMfHfb;
+  end
+  else
+  begin
+    result := FTimeList.BoundaryType;
+  end;
+end;
+
+function TBoundaryClassification.GetClassifiedObject: TObject;
+begin
+  if FDataArray <> nil then
+  begin
+    result := FDataArray;
+  end
+  else if FTimeList <> nil then
+  begin
+    result := FTimeList;
+  end
+  else
+  begin
+    result := FEdgeDisplay;
+    Assert(result <> nil);
+  end;
+end;
 
 end.
 

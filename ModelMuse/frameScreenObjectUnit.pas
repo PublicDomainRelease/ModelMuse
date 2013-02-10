@@ -15,6 +15,10 @@ type
     // See @link(FrameLoaded).
     procedure SetFrameLoaded(const Value: boolean);
   protected
+    // When the user sets the starting time for a boundary that matches the
+    // starting time of a stress period, automatically
+    // set the ending time to be the ending time to be the ending time of the
+    // same stress period.
     procedure UpdateNextTimeCell(DataGrid: TRbwDataGrid4; ACol, ARow: Integer);
   public
     // @name is used in @link(TframeScreenObjectParam.clbParametersStateChange

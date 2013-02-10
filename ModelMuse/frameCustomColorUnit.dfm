@@ -171,8 +171,8 @@ object frameCustomColor: TframeCustomColor
         Height = 24
         Tree.Left = 0
         Tree.Top = 0
-        Tree.Width = 312
-        Tree.Height = 206
+        Tree.Width = 304
+        Tree.Height = 202
         Tree.Align = alClient
         Tree.Header.AutoSizeIndex = 0
         Tree.Header.Font.Charset = DEFAULT_CHARSET

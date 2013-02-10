@@ -30,10 +30,6 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
       HelpType = htKeyword
       HelpKeyword = 'MNW2_Basic_Tab'
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         601
         393)
@@ -556,10 +552,6 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
       HelpKeyword = 'MNW2_Discharge_Adjustment_Tab'
       Caption = 'Discharge Adjustment'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         601
         393)
@@ -756,10 +748,6 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
       HelpKeyword = 'MNW2_Pumping_Rate_Tab'
       Caption = 'Pumping Rate'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgTimeTable: TRbwDataGrid4
         Left = 0
         Top = 65
@@ -1083,10 +1071,6 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
       HelpKeyword = 'Well_Screens'
       Caption = 'Well Screens'
       ImageIndex = 4
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Panel3: TPanel
         Left = 0
         Top = 352
@@ -1376,6 +1360,7 @@ inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
             ' and bottom of the object as defined by the higher and lower Z c' +
             'oordinates will define a well screen.'
           WordWrap = True
+          ExplicitWidth = 594
         end
         object lblWellScreenFormula: TLabel
           Left = 136

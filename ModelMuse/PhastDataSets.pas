@@ -927,7 +927,7 @@ to elements or cells.}
   TPhastTimeList = class(TCustomTimeList)
   private
     // See @link(BoundaryType).
-    FBoundaryType: TBoundaryTypes;
+    FBoundaryType: TPhastBoundaryTypes;
     // See @link(BoundaryTypeDataSets).
     FBoundaryTypeDataSets: TBoundaryTypeList;
 
@@ -948,7 +948,7 @@ to elements or cells.}
       const Data: TSparseArrayPhastInterpolationDataSet): integer;
     // @name specifies the type of boundary condition being specified
     // by this @classname.
-    property BoundaryType: TBoundaryTypes read FBoundaryType write
+    property BoundaryType: TPhastBoundaryTypes read FBoundaryType write
       FBoundaryType;
     // @name holds a series of @link(TIntegerSparseDataSet)s that indicate
     // the type of boundary condition that applies at each location.

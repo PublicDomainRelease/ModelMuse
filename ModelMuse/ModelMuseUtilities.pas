@@ -108,10 +108,18 @@ procedure RunAProgram(const CommandLine: string);
 var
   Runner: TJvCreateProcess;
 begin
+
   Runner := TJvCreateProcess.Create(nil);
   try
     Runner.CommandLine := CommandLine;
-    Runner.Run;
+    try
+      Runner.Run;
+    except on E: EOSError do
+      begin
+        Beep;
+        MessageDlg(E.message, mtError, [mbOK], 0);
+      end;
+    end;
   finally
     Runner.Free;
   end;

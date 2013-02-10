@@ -1453,14 +1453,30 @@ end;
 procedure TCustomLayerGroup.SetTopDisplayName(Model: TBaseModel);
 begin
   //      FAquiferDisplayName := FDataArrayName;
-  case Model.ModelSelection of
-    msUndefined, msPhast, msModflow, msModflowLGR,msModflowNWT:
-      FAquiferDisplayName := StrModelTop;
-    {$IFDEF SUTRA}
-    msSutra: FAquiferDisplayName := StrSUTRAMeshTop;
-    {$ENDIF}
-    else Assert(False);
+  if FDAtaArrayName = kModelTop then
+  begin
+    FAquiferDisplayName := StrModelTop
+  end
+  else if FDAtaArrayName = kSUTRAMeshTop then
+  begin
+    FAquiferDisplayName := StrSUTRAMeshTop
+  end
+  else if FDAtaArrayName = '' then
+  begin
+    FAquiferDisplayName := '';
+  end
+  else
+  begin
+    Assert(False);
   end;
+//  case Model.ModelSelection of
+//    msUndefined, msPhast, msModflow, msModflowLGR,msModflowNWT:
+//      FAquiferDisplayName := StrModelTop;
+//    {$IFDEF SUTRA}
+//    msSutra: FAquiferDisplayName := StrSUTRAMeshTop;
+//    {$ENDIF}
+//    else Assert(False);
+//  end;
 end;
 
 procedure TCustomLayerGroup.UpdateDataArray(const NewName, NewDisplayName: string);
@@ -1689,19 +1705,34 @@ end;
 
 function TSutraLayerStructure.LayerCount: integer;
 begin
-  if (Model as TPhastModel).Mesh.MeshType = mt2D then
+  if (Model is TPhastModel) then
   begin
-    result := 1;
+    if TPhastModel(Model).Mesh = nil then
+    begin
+      result := 0
+    end
+    else if TPhastModel(Model).Mesh.MeshType = mt2D then
+    begin
+      result := 1;
+    end
+    else
+    begin
+      result := inherited;
+    end;
   end
   else
   begin
-    result := inherited;
+    result := 0;
   end;
 end;
 
 function TSutraLayerStructure.NodeLayerCount: Integer;
 begin
-  if (Model as TPhastModel).Mesh.MeshType = mt2D then
+  if (Model as TPhastModel).Mesh = nil then
+  begin
+    result := 0;
+  end
+  else if (Model as TPhastModel).Mesh.MeshType = mt2D then
   begin
     result := 1;
   end
@@ -1725,7 +1756,7 @@ var
 {$ENDIF}
 begin
   {$IFDEF SUTRA}
-  Result := (Model.ModelSelection = msSutra);
+  Result := (Model.ModelSelection = msSutra22);
   if result then
   begin
     LocalModel := Model as TCustomModel;

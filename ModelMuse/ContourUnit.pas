@@ -1433,7 +1433,7 @@ begin
     FLabels.Clear;
     FLabelLocations.XMin := 0;
     FLabelLocations.YMin := 0;
-    FLabelLocations.XMax := ZoomBox.Width;;
+    FLabelLocations.XMax := ZoomBox.Width;
     FLabelLocations.YMax := ZoomBox.Height;
     for ContourIndex := 0 to Length(ContourValues) - 1 do
     begin

@@ -5,8 +5,8 @@ inherited frmLayers: TfrmLayers
   ClientHeight = 424
   ClientWidth = 583
   OnResize = FormResize
-  ExplicitWidth = 591
-  ExplicitHeight = 458
+  ExplicitWidth = 599
+  ExplicitHeight = 462
   PixelsPerInch = 96
   TextHeight = 18
   object Splitter1: TSplitter
@@ -29,6 +29,10 @@ inherited frmLayers: TfrmLayers
       HelpType = htKeyword
       HelpKeyword = 'Basics_Tab'
       Caption = 'Basics'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         433
         350)
@@ -42,14 +46,14 @@ inherited frmLayers: TfrmLayers
       object Label5: TLabel
         Left = 3
         Top = 58
-        Width = 202
+        Width = 198
         Height = 18
         Caption = 'Layer type (LAYTYP, LTHUF)'
       end
       object lblInterblockMethod: TLabel
         Left = 3
         Top = 157
-        Width = 391
+        Width = 388
         Height = 18
         Caption = 'Method of calculating interblock transmissivity (LAYAVG)'
       end
@@ -219,9 +223,9 @@ inherited frmLayers: TfrmLayers
         TabOrder = 0
         ExplicitHeight = 350
         inherited lbl1: TLabel
-          Width = 149
+          Width = 148
           Height = 18
-          ExplicitWidth = 149
+          ExplicitWidth = 148
           ExplicitHeight = 18
         end
         inherited lbl2: TLabel
@@ -243,9 +247,9 @@ inherited frmLayers: TfrmLayers
           end
           inherited pnl1: TPanel
             inherited lbl3: TLabel
-              Width = 185
-              Height = 41
-              ExplicitWidth = 179
+              Width = 142
+              Height = 36
+              ExplicitWidth = 142
               ExplicitHeight = 36
             end
           end
@@ -255,26 +259,6 @@ inherited frmLayers: TfrmLayers
             inherited pbSubLayers: TPaintBox
               Height = 275
               ExplicitHeight = 275
-            end
-            inherited grdpnl1: TGridPanel
-              Top = 275
-              ControlCollection = <
-                item
-                  Column = 0
-                  Control = frameDiscretization.sbInsertLine
-                  Row = 0
-                end
-                item
-                  Column = 1
-                  Control = frameDiscretization.sbMoveLine
-                  Row = 0
-                end
-                item
-                  Column = 2
-                  Control = frameDiscretization.sbDeleteLine
-                  Row = 0
-                end>
-              ExplicitTop = 275
             end
           end
         end
@@ -289,6 +273,10 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'No_Delay_Beds_Tab'
       Caption = 'No-Delay Beds'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frameSubNoDelayBeds: TframeSubBeds
         Left = 0
         Top = 0
@@ -332,6 +320,10 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'Delay_Beds_Tab'
       Caption = 'Delay Beds'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frameSubDelayBeds: TframeSubBeds
         Left = 0
         Top = 0
@@ -375,6 +367,10 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'SWT_Tab'
       Caption = 'SWT'
       ImageIndex = 4
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frameSwt: TframeSubBeds
         Left = 0
         Top = 0
@@ -418,6 +414,10 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'Dispersion_Tab'
       Caption = 'Dispersion'
       ImageIndex = 5
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgDispersion: TRbwDataGrid4
         Left = 0
         Top = 41
@@ -616,13 +616,13 @@ inherited frmLayers: TfrmLayers
       Align = alBottom
       ColumnCollection = <
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end>
       ControlCollection = <
         item
@@ -753,7 +753,7 @@ inherited frmLayers: TfrmLayers
     Left = 16
     Top = 16
     Bitmap = {
-      494C010105000900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010105000900100010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1045,7 +1045,7 @@ inherited frmLayers: TfrmLayers
     Left = 16
     Top = 56
     Bitmap = {
-      494C010106000900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010106000900100010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

@@ -218,6 +218,7 @@ begin
   rgINTYP.WordWrap := not rgINTYP.WordWrap;
   rgINTYP.WordWrap := not rgINTYP.WordWrap;
 
+  rgINTYP.Handle;
   rgINTYP.Buttons[Ord(amInterpolate)].Enabled := InterpolationAllowed(List);
 //  rgINTYP.Controls[Ord(amInterpolate)].Enabled := InterpolationAllowed(List);
 
@@ -770,6 +771,7 @@ begin
         end;
         if rgINTYP.ItemIndex >= 0 then
         begin
+          rgINTYP.Handle;
           if rgINTYP.Enabled and rgINTYP.Buttons[Ord(amInterpolate)].Enabled then
 //          if rgINTYP.Enabled and rgINTYP.Controls[Ord(amInterpolate)].Enabled then
           begin

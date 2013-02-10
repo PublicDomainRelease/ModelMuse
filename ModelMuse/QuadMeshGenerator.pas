@@ -65,8 +65,8 @@ Type
     function DiagonalSwapping: boolean;
     procedure ReplaceNodeInElement(ReplacementNode: TNode;
       AnElement: TBoundary);
-    function GetElementCount: integer;
-    function GetElement(Index: Integer): IElement;
+    function GetActiveElementCount: integer;
+    function GetActiveElement(Index: Integer): IElement;
     function GetNodeNumber: Integer;
     procedure SetNodeNumber(Value: Integer);
     function GetLocation: TPoint2D;
@@ -80,9 +80,9 @@ Type
     property X: double read FLocation.X write FLocation.X;
     property Y: double read FLocation.Y write FLocation.Y;
     property NodeType: TNodeType read GetNodeType;
-    property ElementCount: integer read GetElementCount;
+    property ElementCount: integer read GetActiveElementCount;
     property DesiredElementCount: integer read FDesiredElementCount;
-    property Elements[Index: Integer]: IElement read GetElement;
+    property Elements[Index: Integer]: IElement read GetActiveElement;
     property NodeNumber: Integer read GetNodeNumber write SetNodeNumber;
   end;
   TNodeList = class(TList<TNode>);
@@ -244,29 +244,27 @@ Type
     Procedure Split(List: TBoundaryList);
     constructor Create(QuadMeshCreator: TQuadMeshCreator;
       SegmentType: TSegmentType; Parent: TBoundary; DesiredSpacing: double);
-    function GetNodeCount: Integer;
+    function GetActiveNodeCount: Integer;
     property SegmentType: TSegmentType read FSegmentType;
     // The spacing between neighboring nodes in the final mesh
     // should be no greater than @name.
     property DesiredSpacing: double read FDesiredSpacing;
     property SubPartCount: integer read GetSubPartCount;
     property SubParts[Index: integer]: TBoundary read GetSubPart;
-  {$IFDEF DEBUG}
     procedure CheckInvalidElement;
-  {$ENDIF}
   protected
     function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
     function _AddRef: Integer; stdcall;
     function _Release: Integer; stdcall;
-    function GetNode(Index: Integer): INode;
+    function GetActiveNode(Index: Integer): INode;
     function GetElementNumber: Integer;
     procedure SetElementNumber(Value: Integer);
   public
     destructor Destroy; override;
     procedure AddNode(Node: TNode);
-    property Nodes[Index: Integer]: INode read GetNode;
+    property Nodes[Index: Integer]: INode read GetActiveNode;
     property ElementNumber: Integer read GetElementNumber write SetElementNumber;
-    property NodeCount: Integer read GetNodeCount;
+    property NodeCount: Integer read GetActiveNodeCount;
   end;
 
   TQuadMeshCreator = class(TInterfacedObject, IMesh)
@@ -321,12 +319,12 @@ Type
     procedure AdjustPositionLagrange;
     procedure AdjustPositionGiuliani;
     procedure AssignDesiredSpacings;
-    function GetNodeCount: Integer;
+    function GetActiveNodeCount: Integer;
     function GetNodeObject(Index: Integer): TNode;
     procedure RenumberNodes;
-    function GetElementCount: integer;
-    function GetElement(Index: Integer): IElement;
-    function GetNode(Index: Integer): INode;
+    function GetActiveElementCount: integer;
+    function GetActiveElement(Index: Integer): IElement;
+    function GetActiveNode(Index: Integer): INode;
     property Cost[Node1, Node2: TNodeInBoundary]: TCost read GetCost;
     property BoundaryCount: Integer read GetBoundaryCount;
 //    property Boundaries[index: integer]: TBoundary read GetBoundary;
@@ -334,9 +332,7 @@ Type
     function ImproveTopology: boolean;
     function _AddRef: Integer; stdcall;
     function _Release: Integer; stdcall;
-  {$IFDEF DEBUG}
     procedure CheckInvalidElements;
-    {$ENDIF}
   public
     Constructor Create;
     destructor Destroy; override;
@@ -346,10 +342,10 @@ Type
     property SixNodeClosureMethod: TSixNodeClosureMethod read FSixNodeClosureMethod write SetSixNodeClosureMethod;
     property GrowthRate: double read FGrowthRate write FGrowthRate;
     property NodeAdjustmentMethod: TNodeAdjustmentMethod read FNodeAdjustmentMethod write SetNodeAdjustmentMethod;
-    property NodeCount: Integer read GetNodeCount;
-    property ElementCount: Integer read GetElementCount;
-    property Elements[Index: Integer]: IElement read GetElement;
-    property Nodes[Index: Integer]: INode read GetNode;
+    property NodeCount: Integer read GetActiveNodeCount;
+    property ElementCount: Integer read GetActiveElementCount;
+    property Elements[Index: Integer]: IElement read GetActiveElement;
+    property Nodes[Index: Integer]: INode read GetActiveNode;
   end;
 
 function VertexAngleRadians(x1,y1,x2,y2,x3,y3:TFloat):TFloat; overload;
@@ -1128,7 +1124,6 @@ begin
   end;
 end;
 
-  {$IFDEF DEBUG}
 procedure TBoundary.CheckInvalidElement;
 var
   ANode: TNode;
@@ -1174,7 +1169,6 @@ begin
     Beep
   end;
 end;
-  {$ENDIF}
 
 procedure TBoundary.ConvertToClosedBoundary;
 var
@@ -1310,12 +1304,12 @@ begin
   result := FElementNumber;
 end;
 
-function TBoundary.GetNode(Index: Integer): INode;
+function TBoundary.GetActiveNode(Index: Integer): INode;
 begin
   result := Items[Index].FNode;
 end;
 
-function TBoundary.GetNodeCount: Integer;
+function TBoundary.GetActiveNodeCount: Integer;
 begin
   Result := Count-1;
 end;
@@ -2399,7 +2393,7 @@ begin
   if Count = 5 then
   begin
   {$IFDEF DEBUG}
-    CheckInvalidElement;
+//    CheckInvalidElement;
   {$ENDIF}
     Exit;
   end;
@@ -2409,10 +2403,10 @@ begin
     if SpecialCase then
     begin
       {$IFDEF DEBUG}
-      for SubBoundaryIndex := 0 to FSubParts.Count - 1 do
-      begin
-        FSubParts[SubBoundaryIndex].CheckInvalidElement;
-      end;
+//      for SubBoundaryIndex := 0 to FSubParts.Count - 1 do
+//      begin
+//        FSubParts[SubBoundaryIndex].CheckInvalidElement;
+//      end;
       {$ENDIF}
       Exit;
     end;
@@ -2803,7 +2797,6 @@ begin
   end;
 end;
 
-  {$IFDEF DEBUG}
 procedure TQuadMeshCreator.CheckInvalidElements;
   procedure CheckElement(Element: TBoundary);
   var
@@ -2825,7 +2818,6 @@ begin
   Assert(FBoundaries.Count = 1);
   CheckElement(FBoundaries[0]);
 end;
-  {$ENDIF}
 
 procedure TQuadMeshCreator.ComputeCharacteristicLength;
 var
@@ -3049,9 +3041,7 @@ begin
 
   FBoundaries[0].SetCounterClockwiseOrientation;
   AdjustNodes;
-  {$IFDEF DEBUG}
   CheckInvalidElements;
-  {$ENDIF}
 
   repeat
   until (not ImproveTopology);
@@ -3133,12 +3123,12 @@ begin
   end;
 end;
 
-function TQuadMeshCreator.GetElement(Index: Integer): IElement;
+function TQuadMeshCreator.GetActiveElement(Index: Integer): IElement;
 begin
   result := FElementList[Index];
 end;
 
-function TQuadMeshCreator.GetElementCount: integer;
+function TQuadMeshCreator.GetActiveElementCount: integer;
 begin
   result := FElementList.Count
 end;
@@ -3148,12 +3138,12 @@ begin
   result := FNodes[Index];
 end;
 
-function TQuadMeshCreator.GetNode(Index: Integer): INode;
+function TQuadMeshCreator.GetActiveNode(Index: Integer): INode;
 begin
   result := FNodeList[Index];
 end;
 
-function TQuadMeshCreator.GetNodeCount: Integer;
+function TQuadMeshCreator.GetActiveNodeCount: Integer;
 begin
   Result := FNodes.Count;
 end;
@@ -4338,12 +4328,12 @@ begin
   end;
 end;
 
-function TNode.GetElement(Index: Integer): IElement;
+function TNode.GetActiveElement(Index: Integer): IElement;
 begin
   Result := FElements[Index];
 end;
 
-function TNode.GetElementCount: integer;
+function TNode.GetActiveElementCount: integer;
 begin
   result := FElements.Count;
 end;
@@ -4479,7 +4469,7 @@ var
     Assert((FirstElementToDelete = AnElement)
       or (SecondElementToDelete = AnElement));
 
-    ElementToKeep1 := FElements[NextElementIndex];;
+    ElementToKeep1 := FElements[NextElementIndex];
 
     ElementToKeep2 := nil;
     for KeepEleIndex := 0 to NodeB.FElements.Count - 1 do

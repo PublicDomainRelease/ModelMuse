@@ -1263,7 +1263,7 @@ begin
 
 
       {$IFDEF Sutra}
-      if  (frmGoPhast.PhastModel.ModelSelection = msSutra) and
+      if  (frmGoPhast.PhastModel.ModelSelection = msSutra22) and
         (frmGoPhast.PhastModel.Mesh <> nil) then
       begin
         frmGoPhast.PhastModel.Mesh.Draw(FBitMap32, ViewDirection);
@@ -1573,7 +1573,7 @@ end;
 procedure TframeView.PaintLayer(Sender: TObject; Buffer: TBitmap32);
 begin
   {$IFDEF Sutra}
-  if frmGoPhast.PhastModel.ModelSelection = msSutra then
+  if frmGoPhast.PhastModel.ModelSelection = msSutra22 then
   begin
 
   end
@@ -2818,7 +2818,7 @@ begin
         end;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         Mesh := frmGoPhast.PhastModel.Mesh;
         if Mesh <> nil then
@@ -3324,7 +3324,7 @@ begin
           ShowValue := (Layer <= frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount);
         end;
         {$IFDEF SUTRA}
-        msSutra:
+        msSutra22:
         begin
           Mesh := frmGoPhast.PhastModel.Mesh;
           ShowValue := (Mesh <> nil) and (Layer <= Mesh.LayerCount);
@@ -3422,7 +3422,7 @@ begin
           Layer := frmGoPhast.PhastModel.SelectedModel.SelectedLayer;
         end;
         {$IFDEF SUTRA}
-        msSutra:
+        msSutra22:
         begin
           Layer := frmGoPhast.PhastModel.Mesh.SelectedLayer;
         end;
@@ -3452,7 +3452,7 @@ begin
           ShowValue := (Layer < frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount);
         end;
         {$IFDEF SUTRA}
-        msSutra:
+        msSutra22:
         begin
           Mesh := frmGoPhast.PhastModel.Mesh;
           ShowValue := (Mesh <> nil) and (Layer < Mesh.LayerCount);
@@ -3468,7 +3468,7 @@ begin
       end;
     end;
   end
-  else if {$IFDEF SUTRA} (frmGoPhast.PhastModel.ModelSelection <> msSutra) and {$ENDIF}
+  else if {$IFDEF SUTRA} (frmGoPhast.PhastModel.ModelSelection <> msSutra22) and {$ENDIF}
     (frmGoPhast.PhastModel.SelectedModel.EdgeDisplay <> nil) then
   begin
     EdgeDisplay := frmGoPhast.PhastModel.SelectedModel.EdgeDisplay;

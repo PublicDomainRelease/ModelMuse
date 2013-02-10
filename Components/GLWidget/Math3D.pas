@@ -1,5 +1,9 @@
 unit Math3D;
 
+{$IF CompilerVersion>=23}
+{$EXCESSPRECISION OFF}
+{$IFEND}
+
 // Vector and matrix math library for OpenGL
 // by LI Qingrui
 // Feel free to use and modify.

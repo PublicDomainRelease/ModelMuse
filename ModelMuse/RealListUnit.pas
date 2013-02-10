@@ -96,6 +96,7 @@ type
 
 implementation
 
+
 type
   TRealClass = class(TObject)
   private

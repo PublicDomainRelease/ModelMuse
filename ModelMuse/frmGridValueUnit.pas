@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ScreenObjectUnit,
   ComCtrls, DataSetUnit, VirtualTrees, FastGEO, GoPhastTypes, SsButtonEd,
-  RbwStringTreeCombo, Grids, RbwDataGrid4, ExtCtrls;
+  RbwStringTreeCombo, Grids, RbwDataGrid4, ExtCtrls, JvExExtCtrls,
+  JvExtComponent, JvRollOut;
 
 type
   TPathLineColumn = (plcLabel, plcFirst, plcLast, plcClosest);
@@ -20,42 +21,43 @@ type
   TfrmGridValue = class(TfrmCustomGoPhast)
     btnHelp: TBitBtn;
     btnClose: TBitBtn;
-    pcDataDisplay: TPageControl;
-    tabCurrentData: TTabSheet;
-    lblLower3rdDimensionCoordinate: TLabel;
-    lblHigher3rdDimensionCoordinate: TLabel;
-    cbShowThirdDValues: TCheckBox;
-    lblSelectedObject: TLabel;
-    memoExplanation: TMemo;
-    lblExplanation: TLabel;
-    edCellValue: TEdit;
-    lblCellValue: TLabel;
-    lblDataSet: TLabel;
-    lblColumn: TLabel;
-    lblRow: TLabel;
+    pnlTabs: TPanel;
+    jvrltCurrentData: TJvRollOut;
+    lblModel: TLabel;
+    comboModel: TComboBox;
     lblLayer: TLabel;
     lblLayerHeight: TLabel;
+    lblRow: TLabel;
     lblRowWidth: TLabel;
+    lblColumn: TLabel;
     lblColumnWidth: TLabel;
-    tabAllDataSets: TTabSheet;
+    lblDataSet: TLabel;
+    lblCellValue: TLabel;
+    edCellValue: TEdit;
+    lblExplanation: TLabel;
+    memoExplanation: TMemo;
+    lblSelectedObject: TLabel;
+    lblVertex: TLabel;
+    lblSection: TLabel;
+    cbShowThirdDValues: TCheckBox;
+    lblHigher3rdDimensionCoordinate: TLabel;
+    lblLower3rdDimensionCoordinate: TLabel;
+    jvrltAllDataSets: TJvRollOut;
+    jvrltPathline: TJvRollOut;
+    jvrltEndPoint: TJvRollOut;
+    virttreecomboDataSets: TRbwStringTreeCombo;
     lblSelectValue: TLabel;
     edSelectValue: TEdit;
     lblSelectExplanation: TLabel;
     memoSelectExplanation: TMemo;
     btnUpdate: TButton;
-    lblSection: TLabel;
-    lblVertex: TLabel;
-    lblModel: TLabel;
-    comboModel: TComboBox;
-    virttreecomboDataSets: TRbwStringTreeCombo;
-    tabPathline: TTabSheet;
     rdgPathline: TRbwDataGrid4;
-    tabEndPoint: TTabSheet;
-    rdgEndPoints: TRbwDataGrid4;
     pnlEndPoints: TPanel;
     lbledtReleaseTime: TLabeledEdit;
     lbledtTerminationCode: TLabeledEdit;
     lbledtTrackingTime: TLabeledEdit;
+    rdgEndPoints: TRbwDataGrid4;
+    spl1: TSplitter;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject); override;
     procedure edCellValueKeyUp(Sender: TObject; var Key: Word;
@@ -65,23 +67,22 @@ type
     procedure btnUpdateClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject); override;
     procedure FormShow(Sender: TObject);
-    procedure virttreecomboDataSetsDropDownTreeGetNodeDataSize(
-      Sender: TBaseVirtualTree; var NodeDataSize: Integer);
-    procedure virttreecomboDataSetsDropDownTreeGetText(Sender: TBaseVirtualTree;
-      Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-      var CellText: string);
     procedure comboModelChange(Sender: TObject);
     procedure virttreecomboDataSetsChange(Sender: TObject);
-    procedure virttreecomboDataSets1TreeGetNodeDataSize(
-      Sender: TBaseVirtualTree; var NodeDataSize: Integer);
-    procedure virttreecomboDataSets1TreeGetText(Sender: TBaseVirtualTree;
-      Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-      var CellText: string);
-    procedure virttreecomboDataSets1TreeInitNode(Sender: TBaseVirtualTree;
-      ParentNode, Node: PVirtualNode;
-      var InitialStates: TVirtualNodeInitStates);
     procedure virttreecomboDataSetsTreeChange(Sender: TBaseVirtualTree;
       Node: PVirtualNode);
+    procedure virttreecomboDataSetsTreeGetNodeDataSize(Sender: TBaseVirtualTree;
+      var NodeDataSize: Integer);
+    procedure virttreecomboDataSetsTreeInitNode(Sender: TBaseVirtualTree;
+      ParentNode, Node: PVirtualNode;
+      var InitialStates: TVirtualNodeInitStates);
+    procedure virttreecomboDataSetsTreeGetText(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+      var CellText: string);
+    procedure jvrltEndPointCollapse(Sender: TObject);
+    procedure jvrltEndPointExpand(Sender: TObject);
+    procedure jvrltPathlineCollapse(Sender: TObject);
+    procedure jvrltPathlineExpand(Sender: TObject);
   private
     FSelectedScreenObject: TScreenObject;
     FColumn: Integer;
@@ -104,6 +105,7 @@ type
     procedure InitializePathlineGrid;
     procedure DisplayPathlineData(const Location: TPoint2D);
     function DiscretizationDefined: Boolean;
+    procedure GetWidthForModpathPanels(var AvailableWidth: Integer);
     { Private declarations }
   public
     procedure UpdateValue(const Layer, Row, Column: integer;
@@ -243,7 +245,7 @@ begin
   FDataSetDummyObjects := TObjectList.Create;
 
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowNWT {$IFDEF SUTRA}, msSutra {$ENDIF}:
+    msPhast, msModflow, msModflowNWT {$IFDEF SUTRA}, msSutra22 {$ENDIF}:
       begin
         comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel)
       end;
@@ -279,7 +281,12 @@ begin
   // virttreecomboDataSets thows an exception if it is not on the
   // active page when TfrmGridValue is created.
 //  Assert(pcDataDisplay.ActivePageIndex = 1);
-  pcDataDisplay.ActivePageIndex := 0;
+  jvrltCurrentData.Collapsed := False;
+  jvrltAllDataSets.Collapsed := True;
+  jvrltPathline.Collapsed := True;
+  jvrltEndPoint.Collapsed := True;
+
+//  pcDataDisplay.ActivePageIndex := 0;
 end;
 
 procedure TfrmGridValue.memoExplanationKeyUp(Sender: TObject; var Key: Word;
@@ -448,14 +455,21 @@ begin
   UpdateSelectedData(FLayer, FRow, FColumn);
 end;
 
-procedure TfrmGridValue.virttreecomboDataSets1TreeGetNodeDataSize(
+procedure TfrmGridValue.virttreecomboDataSetsTreeChange(
+  Sender: TBaseVirtualTree; Node: PVirtualNode);
+begin
+  inherited;
+  SelectOnlyLeaves(Node, virttreecomboDataSets, Sender, FSelectedVirtNode);
+end;
+
+procedure TfrmGridValue.virttreecomboDataSetsTreeGetNodeDataSize(
   Sender: TBaseVirtualTree; var NodeDataSize: Integer);
 begin
   inherited;
   NodeDataSize := SizeOf(TClassificationNodeData);
 end;
 
-procedure TfrmGridValue.virttreecomboDataSets1TreeGetText(
+procedure TfrmGridValue.virttreecomboDataSetsTreeGetText(
   Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
   TextType: TVSTTextType; var CellText: string);
 begin
@@ -463,7 +477,7 @@ begin
   GetNodeCaption(Node, CellText, Sender);
 end;
 
-procedure TfrmGridValue.virttreecomboDataSets1TreeInitNode(
+procedure TfrmGridValue.virttreecomboDataSetsTreeInitNode(
   Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
   var InitialStates: TVirtualNodeInitStates);
 var
@@ -471,28 +485,6 @@ var
 begin
   inherited;
   GetNodeCaption(Node, CellText, Sender);
-end;
-
-procedure TfrmGridValue.virttreecomboDataSetsDropDownTreeGetNodeDataSize(
-  Sender: TBaseVirtualTree; var NodeDataSize: Integer);
-begin
-  inherited;
-  NodeDataSize := SizeOf(TClassificationNodeData);
-end;
-
-procedure TfrmGridValue.virttreecomboDataSetsDropDownTreeGetText(
-  Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
-  TextType: TVSTTextType; var CellText: string);
-begin
-  inherited;
-  GetNodeCaption(Node, CellText, Sender);
-end;
-
-procedure TfrmGridValue.virttreecomboDataSetsTreeChange(
-  Sender: TBaseVirtualTree; Node: PVirtualNode);
-begin
-  inherited;
-  SelectOnlyLeaves(Node, virttreecomboDataSets, Sender, FSelectedVirtNode);
 end;
 
 procedure TfrmGridValue.GetSelectedDataArray(var OtherDataSet: TDataArray);
@@ -557,7 +549,7 @@ var
           end;
         end;
       {$IFDEF SUTRA}
-      msSutra:
+      msSutra22:
         begin
           Mesh := frmGoPhast.PhastModel.Mesh;
           case FSelectedScreenObject.ViewDirection of
@@ -921,6 +913,27 @@ begin
     FDataSetDummyObjects, nil, nil);
 end;
 
+procedure TfrmGridValue.GetWidthForModpathPanels(var AvailableWidth: Integer);
+begin
+  AvailableWidth := ClientWidth - spl1.Width;
+  if not jvrltCurrentData.Collapsed then
+  begin
+    AvailableWidth := AvailableWidth - jvrltCurrentData.Width;
+  end
+  else
+  begin
+    AvailableWidth := AvailableWidth - 22;
+  end;
+  if not jvrltAllDataSets.Collapsed then
+  begin
+    AvailableWidth := AvailableWidth - jvrltAllDataSets.Width;
+  end
+  else
+  begin
+    AvailableWidth := AvailableWidth - 22;
+  end;
+end;
+
 function TfrmGridValue.DiscretizationDefined: Boolean;
 var
   Grid: TCustomModelGrid;
@@ -937,7 +950,7 @@ begin
           and (Grid.RowCount >= 1) and (Grid.ColumnCount >= 1);
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         Mesh := frmGoPhast.PhastModel.Mesh;
         result := (Mesh <> nil) and (Mesh.Mesh2D.Nodes.Count > 0);
@@ -962,6 +975,7 @@ var
   RowIndex: Integer;
   ALayer: Integer;
   ColIndex: Integer;
+  LocalModel: TCustomModel;
 begin
   if (FPriorEndPointLocation.x = Location.x)
     and (FPriorEndPointLocation.y = Location.Y)then
@@ -969,14 +983,15 @@ begin
     Exit;
   end;
   {$IFDEF SUTRA}
-  if frmGoPhast.ModelSelection = msSutra then
+  if frmGoPhast.ModelSelection = msSutra22 then
   begin
-    tabEndPoint.TabVisible := False;
+    jvrltEndPoint.Visible := False;
     Exit;
   end;
   {$ENDIF}
   FPriorEndPointLocation := Location;
-  EndPoints := frmGoPhast.PhastModel.EndPoints;
+  LocalModel := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
+  EndPoints := LocalModel.EndPoints;
   EndPointQuadTree := nil;
   if EndPoints.Visible then
   begin
@@ -991,8 +1006,8 @@ begin
       Assert(False);
     end;
   end;
-  tabEndPoint.TabVisible := EndPoints.Visible and (EndPointQuadTree.Count > 0);
-  if tabEndPoint.TabVisible then
+  jvrltEndPoint.Visible := EndPoints.Visible and (EndPointQuadTree.Count > 0);
+  if jvrltEndPoint.Visible then
   begin
     X := Location.X;
     Y := Location.Y;
@@ -1015,14 +1030,14 @@ begin
               end;
             vdFront:
               begin
-                ALayer := frmGoPhast.PhastModel.
+                ALayer := LocalModel.
                   ModflowLayerToDataSetLayer(AnEndPoint.StartLayer);
                 DisplayPoint := (Abs(FColumn+1 - AnEndPoint.StartColumn) <= 1)
                   and (Abs(FLayer - ALayer) <= 1);
               end;
             vdSide:
               begin
-                ALayer := frmGoPhast.PhastModel.
+                ALayer := LocalModel.
                   ModflowLayerToDataSetLayer(AnEndPoint.StartLayer);
                 DisplayPoint := (Abs(FLayer - ALayer) <= 1)
                   and (Abs(FRow+1 - AnEndPoint.StartRow) <= 1);
@@ -1040,14 +1055,14 @@ begin
               end;
             vdFront:
               begin
-                ALayer := frmGoPhast.PhastModel.
+                ALayer := LocalModel.
                   ModflowLayerToDataSetLayer(AnEndPoint.EndLayer);
                 DisplayPoint := (Abs(FColumn+1 - AnEndPoint.EndColumn) <= 1)
                   and (Abs(FLayer - ALayer) <= 1);
               end;
             vdSide:
               begin
-                ALayer := frmGoPhast.PhastModel.
+                ALayer := LocalModel.
                   ModflowLayerToDataSetLayer(AnEndPoint.EndLayer);
                 DisplayPoint := (Abs(FLayer - ALayer) <= 1)
                   and (Abs(FRow+1 - AnEndPoint.endRow) <= 1);
@@ -1192,6 +1207,7 @@ var
   List: TList;
   APathLinePoint: TPathLinePoint;
   ALayer: Integer;
+  LocalModel: TCustomModel;
 begin
   if (FPriorLocation.x = Location.x)
     and (FPriorLocation.y = Location.Y)then
@@ -1199,14 +1215,15 @@ begin
     Exit;
   end;
   {$IFDEF SUTRA}
-  if frmGoPhast.ModelSelection = msSutra then
+  if frmGoPhast.ModelSelection = msSutra22 then
   begin
-    tabPathline.TabVisible := False;
+    jvrltPathline.Visible := False;
     Exit;
   end;
   {$ENDIF}
   FPriorLocation := Location;
-  PathLines := frmGoPhast.PhastModel.PathLines;
+  LocalModel := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
+  PathLines := LocalModel.PathLines;
   PathQuadTree := nil;
   if PathLines.Visible then
   begin
@@ -1221,8 +1238,8 @@ begin
       Assert(False);
     end;
   end;
-  tabPathline.TabVisible := PathLines.Visible and (PathQuadTree.Count > 0);
-  if tabPathline.TabVisible then
+  jvrltPathline.Visible := PathLines.Visible and (PathQuadTree.Count > 0);
+  if jvrltPathline.Visible then
   begin
     X := Location.X;
     Y := Location.Y;
@@ -1241,14 +1258,14 @@ begin
               end;
             vdFront:
               begin
-                ALayer := frmGoPhast.PhastModel.
+                ALayer := LocalModel.
                   ModflowLayerToDataSetLayer(PathLinePoint.Layer);
                 DisplayPoint := (Abs(FColumn+1 - PathLinePoint.Column) <= 1)
                   and (Abs(FLayer - ALayer) <= 1);
               end;
             vdSide:
               begin
-                ALayer := frmGoPhast.PhastModel.
+                ALayer := LocalModel.
                   ModflowLayerToDataSetLayer(PathLinePoint.Layer);
                 DisplayPoint := (Abs(FLayer - ALayer) <= 1)
                   and (Abs(FRow+1 - PathLinePoint.Row) <= 1);
@@ -1396,6 +1413,105 @@ begin
   rdgPathline.Cells[0, Ord(plrLayer)] := StrLayer;
   rdgPathline.Cells[0, Ord(plrTimeStep)] := StrTimeStep;
   rdgPathline.Cells[0, Ord(plrGroup)] := StrGroup;
+end;
+
+procedure TfrmGridValue.jvrltEndPointCollapse(Sender: TObject);
+var
+  AvailableWidth: Integer;
+begin
+  inherited;
+   GetWidthForModpathPanels(AvailableWidth);
+  if AvailableWidth > 0  then
+  begin
+    if not jvrltPathline.Collapsed then
+    begin
+      jvrltPathline.Width := AvailableWidth-22;
+    end;
+  end;
+//  if jvrltPathline.Collapsed then
+//  begin
+//    jvrltEndPoint.Align := alLeft;
+//  end
+//  else
+//  begin
+//    jvrltEndPoint.Align := alRight;
+//    Application.ProcessMessages;
+//    jvrltPathline.Align := alClient;
+//  end;
+end;
+
+procedure TfrmGridValue.jvrltEndPointExpand(Sender: TObject);
+var
+  AvailableWidth: Integer;
+begin
+  inherited;
+//  jvrltPathline.Align := alLeft;
+//    Application.ProcessMessages;
+  GetWidthForModpathPanels(AvailableWidth);
+
+  if AvailableWidth > 0 then
+  begin
+    if jvrltPathline.Collapsed then
+    begin
+      jvrltEndPoint.Width := AvailableWidth-22
+    end
+    else
+    begin
+      jvrltEndPoint.Width := AvailableWidth div 2;
+      jvrltPathline.Width := AvailableWidth div 2;
+    end;
+
+  end;
+//  jvrltEndPoint.Align := alClient;
+end;
+
+procedure TfrmGridValue.jvrltPathlineCollapse(Sender: TObject);
+var
+  AvailableWidth: Integer;
+begin
+  inherited;
+  GetWidthForModpathPanels(AvailableWidth);
+  if AvailableWidth > 0  then
+  begin
+    if not jvrltEndPoint.Collapsed then
+    begin
+      jvrltEndPoint.Width := AvailableWidth-22;
+    end;
+  end;
+//  jvrltPathline.Align := alLeft;
+//  if jvrltEndPoint.Collapsed then
+//  begin
+//    jvrltEndPoint.Align := alLeft;
+//  end
+//  else
+//  begin
+//    jvrltEndPoint.Align := alClient;
+//  end;
+//  Application.ProcessMessages;
+//  jvrltEndPoint.Left := jvrltPathline.Left + 22;
+end;
+
+procedure TfrmGridValue.jvrltPathlineExpand(Sender: TObject);
+var
+  AvailableWidth: Integer;
+begin
+  inherited;
+//  jvrltPathline.Align := alClient;
+//  jvrltEndPoint.Align := alRight;
+  GetWidthForModpathPanels(AvailableWidth);
+  if AvailableWidth > 0  then
+  begin
+    if jvrltEndPoint.Collapsed then
+    begin
+      jvrltPathline.Width := AvailableWidth -22;
+    end
+    else
+    begin
+      jvrltPathline.Width := AvailableWidth div 2;
+      jvrltEndPoint.Width := AvailableWidth div 2;
+    end;
+
+  end;
 end;
 
 procedure TfrmGridValue.InitializeEndpointGrid;

@@ -55,6 +55,8 @@ resourcestring
   StrAStartingTimeFor = 'A starting time for the MODPATH particles defined '
     + 'with the following objects are not valid. Adjust the beginning and '
     + 'ending time for MODPATH or adjust the relese time.';
+//  StrNoMODPATHStarting = 'No MODPATH starting locations defined';
+//  StrNoObjectsDefineSt = 'No objects define starting locations for MODPATH';
 
 { TModpathStartingLocationsWriter }
 
@@ -158,6 +160,7 @@ var
   ParticleCount: Integer;
   StressPeriods: TModflowStressPeriods;
 begin
+//  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoMODPATHStarting);
   StressPeriods := Model.ModflowStressPeriods;
   FStartTime := StressPeriods[0].StartTime;
   FEndTime := StressPeriods[StressPeriods.Count-1].EndTime;
@@ -260,7 +263,16 @@ begin
 
         // Data Set 12
         ParticleLabelBase := ScreenObject.Name;
-        Digits := Trunc(Log10(LocationCount))+1;
+        if LocationCount <= 0 then
+        begin
+          Digits := 0;
+//          frmErrorsAndWarnings.AddError(Model, StrNoMODPATHStarting,
+//            StrNoObjectsDefineSt);
+        end
+        else
+        begin
+          Digits := Trunc(Log10(LocationCount))+1;
+        end;
         MaxLabelBaseLength := 39 - Digits;
         FormatString := '%.' + IntToStr(Digits) + 'd';
         if Length(ParticleLabelBase) > MaxLabelBaseLength then

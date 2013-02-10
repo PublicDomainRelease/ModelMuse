@@ -36,7 +36,7 @@ uses
   ModflowUzfUnit, ModflowHobUnit, ValueArrayStorageUnit, QuadTreeClass,
   ModflowHfbUnit, ModpathParticleUnit, GPC_Classes, ModflowGageUnit,
   FormulaManagerUnit, ModflowMnw2Unit, ModflowHydmodUnit, Mt3dmsChemUnit,
-  Mt3dmsTobUnit;
+  Mt3dmsTobUnit, SutraBoundariesUnit, SutraMeshUnit;
 
 type
   //
@@ -450,6 +450,9 @@ type
     FLgrEdge: Boolean;
   private
     FScreenObject: TScreenObject;
+    FSutraX: double;
+    FSutraY: double;
+    FSutraZ: Double;
     procedure Assign(Cell: TCellAssignment);
     function GetSection: integer;
     procedure Store(Stream: TStream);
@@ -474,6 +477,19 @@ type
       const AnAnnotation: string; AnAssignmentMethod: TAssignmentMethod);
     Destructor Destroy; override;
     property LgrEdge: Boolean read FLgrEdge;
+    // @name is used for the location of SUTRA observations when those
+    // locations are defined by the location of the object rather than
+    // the location of the node or element intersected by the object.
+    Property SutraX: double read FSutraX;
+    // @name is used for the location of SUTRA observations when those
+    // locations are defined by the location of the object rather than
+    // the location of the node or element intersected by the object.
+    property SutraY: double read FSutraY;
+    // @name is used for the location of SUTRA observations when those
+    // locations are defined by the location of the object rather than
+    // the location of the node or element intersected by the object.
+    property SutraZ: Double read FSutraZ;
+    // If any new properties are added, be sure to update Assign too.
   end;
 
   // @name is used to provide limited access to @link(TCellAssignment);
@@ -1288,24 +1304,24 @@ type
       FBoundaryValue write SetBoundaryValue;
   end;
 
-  TIntegerItem = class(TCollectionItem)
-  private
-    FValue: integer;
-  public
-    procedure Assign(Source: TPersistent); override;
-  published
-    property Value: integer read FValue write FValue;
-  end;
-
-  TIntegerCollection = class(TPhastCollection)
-  private
-    function GetValue(Index: integer): integer;
-    procedure SetValue(Index: integer; const Value: integer);
-  published
-  public
-    constructor Create(Model: TBaseModel);
-    property Values[Index: integer]: integer read GetValue write SetValue;
-  end;
+//  TIntegerItem = class(TCollectionItem)
+//  private
+//    FValue: integer;
+//  public
+//    procedure Assign(Source: TPersistent); override;
+//  published
+//    property Value: integer read FValue write FValue;
+//  end;
+//
+//  TIntegerCollection = class(TPhastCollection)
+//  private
+//    function GetValue(Index: integer): integer;
+//    procedure SetValue(Index: integer; const Value: integer);
+//  published
+//  public
+//    constructor Create(Model: TBaseModel);
+//    property Values[Index: integer]: integer read GetValue write SetValue;
+//  end;
 
   { TODO : Allow the user to control visibility of TScreenObject via selected
   col, row, layer. }
@@ -1723,6 +1739,7 @@ view. }
     FPriorFullObjectIntersectLength: Boolean;
     FPositionLocked: boolean;
     FStoredSutraAngle: TRealStorage;
+    FSutraBoundaries: TSutraBoundaries;
     procedure CreateLastSubPolygon;
     procedure DestroyLastSubPolygon;
     function GetSubPolygonCount: integer;
@@ -1735,12 +1752,6 @@ view. }
     procedure SetLeakyBoundary(const Value: TLeakyBoundary);
     // See @link(RiverBoundary).
     procedure SetRiverBoundary(const Value: TRiverBoundary);
-    // @name determines whether @link(FluxBoundary) is stored.
-    function StoreFlux: boolean;
-    // @name determines whether @link(LeakyBoundary) is stored.
-    function StoreLeaky: boolean;
-    // @name determines whether @link(RiverBoundary) is stored.
-    function StoreRiver: boolean;
     // See @link(SpecifiedHeadBoundary).
     procedure SetSpecifiedHeadBoundary(
       const Value: TSpecifiedHeadBoundary);
@@ -1750,10 +1761,6 @@ view. }
       const Value: TSpecifiedSolutionBoundary);
     // See @link(WellBoundary).
     procedure SetWellBoundary(const Value: TWellBoundary);
-    // @name determines whether @link(SpecifiedHeadBoundary) is stored.
-    function StoreSpecifiedHead: boolean;
-    // @name determines whether @link(WellBoundary) is stored.
-    function StoreWell: boolean;
     // AddPointFromColumn creates a @link(TEdgePoint)
     // at the column boundary on Grid
     // indicated by ColIndex on the line defined by PreviousPoint and APoint.
@@ -2274,22 +2281,11 @@ view. }
     procedure SetModflowRivBoundary(const Value: TRivBoundary);
     procedure SetModflowDrnBoundary(const Value: TDrnBoundary);
     procedure SetModflowDrtBoundary(const Value: TDrtBoundary);
-    function StoreModflowChdBoundary: Boolean;
-    function StoreModflowDrnBoundary: Boolean;
-    function StoreModflowDrtBoundary: Boolean;
-    function StoreModflowGhbBoundary: Boolean;
-    function StoreModflowRivBoundary: Boolean;
-    function StoreModflowWellBoundary: Boolean;
     procedure SetModflowRchBoundary(const Value: TRchBoundary);
-    function StoreModflowRchBoundary: Boolean;
     procedure SetModflowEvtBoundary(const Value: TEvtBoundary);
-    function StoreModflowEvtBoundary: Boolean;
     procedure SetModflowEtsBoundary(const Value: TEtsBoundary);
-    function StoreModflowEtsBoundary: Boolean;
     procedure SetModflowResBoundary(const Value: TResBoundary);
-    function StoreModflowResBoundary: Boolean;
     procedure SetModflowLakBoundary(const Value: TLakBoundary);
-    function StoreModflowLakBoundary: Boolean;
     procedure GetInterpDistance(const InterpValue: TInterpValuesItem;
       var Distance: Double; const DataSet: TDataArray;
       const LayerIndex, RowIndex, ColIndex: Integer);
@@ -2305,7 +2301,6 @@ view. }
     function GetSectionClosed(const Index: integer): boolean;
     function GetSectionLength(const Index: integer): integer;
     procedure SetModflowSfrBoundary(const Value: TSfrBoundary);
-    function StoreModflowSfrBoundary: Boolean;
     function GetModflowSfrBoundary: TSfrBoundary;
     function GetModflowLakBoundary: TLakBoundary;
     function GetModflowResBoundary: TResBoundary;
@@ -2331,12 +2326,10 @@ view. }
       UpperBoundary: double);
     function GetModflowUzfBoundary: TUzfBoundary;
     procedure SetModflowUzfBoundary(const Value: TUzfBoundary);
-    function StoreModflowUzfBoundary: Boolean;
     procedure Draw1ElevModflow(const Direction: TViewDirection;
       const Bitmap32: TBitmap32; const DrawAsSelected: Boolean; AModel: TBaseModel);
     function GetModflowHeadObservations: THobBoundary;
     procedure SetModflowHeadObservations(const Value: THobBoundary);
-    function StoreModflowHeadObservations: Boolean;
     procedure SetSectionStarts(const Value: TValueArrayStorage);
     function GetSectionStarts: TValueArrayStorage;
     procedure CreateSectionStarts;
@@ -2433,6 +2426,8 @@ view. }
     procedure InvalidateModelEvent(Sender: TObject);
     function GetSutraAngle: Double;
     procedure SetSutraAngle(const Value: Double);
+    procedure SetSutraBoundaries(const Value: TSutraBoundaries);
+    function SaveSutraBoundaries: Boolean;
     property SubPolygonCount: integer read GetSubPolygonCount;
     property SubPolygons[Index: integer]: TSubPolygon read GetSubPolygon;
     procedure DeleteExtraSections;
@@ -2648,7 +2643,7 @@ view. }
     procedure InvalidateModel;
     // @name indicates what sort of PHAST boundary (if any) is specified
     // by this @classname.
-    function PhastBoundaryType: TBoundaryTypes;
+    function PhastBoundaryType: TPhastBoundaryTypes;
     {
     @name assigns a value to a particular cell in DataSet.
 
@@ -2858,6 +2853,34 @@ view. }
     procedure UpdateMixtureExpression;
     procedure UpdateFormulaExpression;
   public
+    function StoreModflowHfbBoundary: Boolean;
+    function StoreModflowMnw2Boundary: Boolean;
+    function StoreMt3dmsConcBoundary: Boolean;
+    function StoreMt3dmsTransObservations: Boolean;
+    function StoreModflowUzfBoundary: Boolean;
+    function StoreModflowHeadObservations: Boolean;
+    function StoreModflowSfrBoundary: Boolean;
+    function StoreModflowRchBoundary: Boolean;
+    function StoreModflowEvtBoundary: Boolean;
+    function StoreModflowEtsBoundary: Boolean;
+    function StoreModflowResBoundary: Boolean;
+    function StoreModflowLakBoundary: Boolean;
+    function StoreModflowChdBoundary: Boolean;
+    function StoreModflowDrnBoundary: Boolean;
+    function StoreModflowDrtBoundary: Boolean;
+    function StoreModflowGhbBoundary: Boolean;
+    function StoreModflowRivBoundary: Boolean;
+    function StoreModflowWellBoundary: Boolean;
+    // @name determines whether @link(WellBoundary) is stored.
+    function StoreWell: boolean;
+    // @name determines whether @link(FluxBoundary) is stored.
+    function StoreFlux: boolean;
+    // @name determines whether @link(RiverBoundary) is stored.
+    function StoreRiver: boolean;
+    // @name determines whether @link(SpecifiedHeadBoundary) is stored.
+    function StoreSpecifiedHead: boolean;
+    // @name determines whether @link(LeakyBoundary) is stored.
+    function StoreLeaky: boolean;
     property ModflowBoundaries: TModflowBoundaries read GetModflowBoundaries;
     // @name contains a set of higher elevations for points that
     // could be in the @classname.  It is indexed by [Layer, Row, Column].
@@ -2866,11 +2889,16 @@ view. }
     // @name contains a set of lower elevations for points that
     // could be in the @classname.  It is indexed by [Layer, Row, Column].
     property Lower3DElevations[AModel: TBaseModel]: T3DSparseRealArray read GetLower3DElevations;
-    function IsLower3DElevationAssigned(Col, Row, Layer: integer; Model: TBaseModel): boolean;
+    function IsLower3DElevationAssigned(Col, Row, Layer: integer;
+      Model: TBaseModel): boolean;
     procedure GetCellsToAssign(const Grid: TCustomModelGrid;
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
-      AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
+      AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); overload;
+    procedure GetCellsToAssign(const Mesh: TSutraMesh3D;
+      const DataSetFunction: string; OtherData: TObject;
+      const DataSet: TDataArray; CellList: TCellAssignmentList;
+      AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); overload;
   public
     property FullObjectIntersectLength: Boolean read FFullObjectIntersectLength
       write FFullObjectIntersectLength;
@@ -2969,6 +2997,9 @@ view. }
     procedure AssignValuesToModflowDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; const Formula: string; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
+    procedure AssignValuesToSutraDataSet(const Mesh: TSutraMesh3D;
+      const DataSet: TDataArray; const Formula: string; AModel: TBaseModel);
+
     // @name is a key method of @classname.  It is used
     // to assign values to a data set based on the function for that data
     // set. @name first checks whether it should set the values
@@ -2996,7 +3027,7 @@ view. }
       read GetBoundaryDataSetFormulas write SetBoundaryDataSetFormulas;
     // @name returns @True if this @classname
     // affects a boundary condition.
-    function BoundaryTypeUsed: TBoundaryTypes;
+    function BoundaryTypeUsed: TPhastBoundaryTypes;
     property CanInvalidateModel: boolean read FCanInvalidateModel
       write FCanInvalidateModel;
     // @name is an array of TPoints that represent the object.
@@ -3480,13 +3511,13 @@ having them take care of the subscriptions. }
     // @name is used only for backwards compatibility with versions of
     // ModelMuse predating the initial release of ModelMuse.
     property ModflowHfbBoundary: THfbBoundary read GetModflowHfbBoundary
-      write SetModflowHfbBoundary;
+      write SetModflowHfbBoundary stored StoreModflowHfbBoundary;
     property ModflowMnw2Boundary: TMnw2Boundary read GetModflowMnw2Boundary
-      write SetModflowMnw2Boundary;
+      write SetModflowMnw2Boundary stored StoreModflowMnw2Boundary;
     property Mt3dmsConcBoundary: TMt3dmsConcBoundary read GetMt3dmsConcBoundary
-      write SetMt3dmsConcBoundary;
+      write SetMt3dmsConcBoundary stored StoreMt3dmsConcBoundary;
     property Mt3dmsTransObservations: TMt3dmsTransObservations read GetMt3dmsTransObservations
-      write SetMt3dmsTransObservations;
+      write SetMt3dmsTransObservations stored StoreMt3dmsTransObservations;
     { TODO :
 Consider making SectionStarts private and only exposing SectionStart,
 SectionEnd etc. DefineProperties could be used to store and retrieve
@@ -3532,6 +3563,8 @@ SectionStarts.}
       write SetPositionLocked;
     property StoredSutraAngle: TRealStorage read FStoredSutraAngle write
       SetStoredSutraAngle stored SaveSutraAngle;
+    property SutraBoundaries: TSutraBoundaries read FSutraBoundaries
+    write SetSutraBoundaries stored SaveSutraBoundaries;
   end;
 
   TScreenObjectList = class(TObject)
@@ -3903,7 +3936,7 @@ SectionStarts.}
     FMixtureVariables: TStringList;
     FMixtureCompiler: TRbwParser;
     FMixtureExpression: TExpression;
-    function PhastBoundaryType: TBoundaryTypes;
+    function PhastBoundaryType: TPhastBoundaryTypes;
     function ThreeDBoundaryFormula: string;
     function TwoDBoundaryFormula: string;
     procedure AssignIntegerDataWithPhastInterpolation(const DataSet: TDataArray;
@@ -4168,6 +4201,13 @@ SectionStarts.}
     procedure AssignSelectedCells(AModel: TBaseModel); override;
     procedure OtherIndex(const LayerOrRow, RowOrColumn: integer;
       out First, Last: integer; const DataSet: TDataArray); override;
+//    function DataSetUsed(const DataSet: TDataArray;
+//      var OtherData: TObject; AModel: TBaseModel): boolean; override;
+  public
+    procedure InitializeExpression(out Compiler: TRbwParser;
+      out DataSetFunction: string; out Expression: TExpression;
+      const DataSet: TDataArray; const OtherData: TObject); override;
+
   end;
 
 
@@ -4523,7 +4563,7 @@ uses Math, UndoItemsScreenObjects, BigCanvasMethods,
   GIS_Functions, frmFormulaErrorsUnit, SparseArrayUnit, ModelMuseUtilities,
   InteractiveTools, PhastModelUnit, CountObjectsUnit, GlobalVariablesUnit,
   IntListUnit, frmGoPhastUnit, IsosurfaceUnit, TempFiles, LayerStructureUnit,
-  gpc, frmGridValueUnit, frmErrorsAndWarningsUnit, SutraMeshUnit;
+  gpc, frmGridValueUnit, frmErrorsAndWarningsUnit;
 
 resourcestring
   StrInvalidVertex0 = 'Invalid vertex (#%0:d) in "%1:s". %2:s';
@@ -5914,6 +5954,8 @@ begin
   Mt3dmsTransObservations := AScreenObject.Mt3dmsTransObservations;
   ModflowHydmodData := AScreenObject.ModflowHydmodData;
 
+  SutraBoundaries := AScreenObject.SutraBoundaries;
+
   // avoid creating AScreenObject.FPointPositionValues if it
   // hasn't been created yet.
   PointPositionValues := AScreenObject.FPointPositionValues;
@@ -6034,7 +6076,7 @@ var
   PointDistance: Extended;
   PointAngle: Extended;
   RotatedX: Extended;
-  RotatedY: Extended;
+//  RotatedY: Extended;
 begin
   VariableList := TList.Create;
   DataSetList := TList.Create;
@@ -6193,7 +6235,7 @@ begin
             PointDistance := sqrt(Sqr(CenterPoint3D.x) + Sqr(CenterPoint3D.y));
             PointAngle := ArcTan2(CenterPoint3D.y,CenterPoint3D.x);
             RotatedX := Cos(PointAngle-SutraAngle)*PointDistance;
-            RotatedY := Sin(PointAngle-SutraAngle)*PointDistance;
+//            RotatedY := Sin(PointAngle-SutraAngle)*PointDistance;
             if IsPointInside(RotatedX, CenterPoint3D.Z,
               SectionIndex) then
             begin
@@ -7007,7 +7049,13 @@ begin
     end;
     FListUpToDate := True;
   end;
-  glCallList(FGlScreenObjectList);
+  try
+    glCallList(FGlScreenObjectList);
+  except on EMathError do
+    begin
+      // do nothing
+    end;
+  end;
 end;
 
 procedure TScreenObject.Draw(Const Bitmap32: TBitmap32;
@@ -7081,7 +7129,7 @@ begin
             (Model as TPhastModel).SelectedModel);
         end;
       {$IFDEF Sutra}
-      msSutra:
+      msSutra22:
         begin
           Draw1ElevSutra(Direction, Bitmap32, DrawAsSelected);
         end
@@ -7288,6 +7336,23 @@ begin
   // screen object should be drawn on the screeen.
   CalculateCanvasCoordinates;
   result := FCanvasCoordinates;
+end;
+
+procedure TScreenObject.GetCellsToAssign(const Mesh: TSutraMesh3D;
+  const DataSetFunction: string; OtherData: TObject; const DataSet: TDataArray;
+  CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
+  AModel: TBaseModel);
+begin
+  Assert(CellList.Count = 0);
+  case ViewDirection of
+    vdTop: Delegate.GetTopCellsToAssign(DataSetFunction, OtherData,
+      DataSet, CellList, AssignmentLocation, AModel);
+    vdFront: Delegate.GetFrontCellsToAssign(DataSetFunction, OtherData,
+      DataSet, CellList, AssignmentLocation, AModel);
+    vdSide: Delegate.GetSideCellsToAssign(DataSetFunction, OtherData,
+      DataSet, CellList, AssignmentLocation, AModel);
+    else Assert(False);
+  end;
 end;
 
 function TScreenObject.GetPointPositionValues: TPointPositionValues;
@@ -8308,6 +8373,15 @@ begin
   {$ENDIF}
 end;
 
+function TScreenObject.SaveSutraBoundaries: Boolean;
+begin
+  {$IFDEF SUTRA}
+  Result := True;
+  {$ELSE}
+  result := False;
+  {$ENDIF}
+end;
+
 function TScreenObject.ScreenObjectArea: real;
 var
   EmptyPolygon: TGpcPolygonClass;
@@ -9055,7 +9129,7 @@ begin
 
   Assert(AModel <> nil);
   {$IFDEF SUTRA}
-  if AModel.ModelSelection = msSutra then
+  if AModel.ModelSelection = msSutra22 then
   begin
     LocalMesh := (AModel as TCustomModel).Mesh;
     Assert(LocalMesh <> nil);
@@ -9396,6 +9470,8 @@ begin
   FUsedModels := TUsedWithModelCollection.Create(Model);
   FStoredSutraAngle := TRealStorage.Create;
   FStoredSutraAngle.OnChange := InvalidateModelEvent;
+
+  FSutraBoundaries := TSutraBoundaries.Create(Model, self);
 end;
 
 procedure TScreenObject.CreateLastSubPolygon;
@@ -11705,7 +11781,7 @@ begin
           Draw2ElevModflow(Direction, Bitmap32, (Model as TPhastModel).SelectedModel);
         end;
       {$IFDEF Sutra}
-      msSutra:
+      msSutra22:
         begin
           Draw2ElevSutra(Direction, Bitmap32);
         end
@@ -14604,6 +14680,68 @@ begin
     UseLgrEdgeCells);
 end;
 
+procedure TScreenObject.AssignValuesToSutraDataSet(const Mesh: TSutraMesh3D;
+  const DataSet: TDataArray; const Formula: string; AModel: TBaseModel);
+var
+  Compiler: TRbwParser;
+  DataSetFunction: string;
+  OtherData: TModflowDataObject;
+begin
+  if not UsedModels.UsesModel(AModel) then
+  begin
+    Exit;
+  end;
+  try
+    Compiler := GetCompiler(DataSet.Orientation);
+    DataSetFunction := Formula;
+    case ViewDirection of
+      vdTop:
+        begin
+          OtherData := TModflowDataObject.Create;
+          try
+            OtherData.Compiler := Compiler;
+            OtherData.DataSetFunction := DataSetFunction;
+            OtherData.AlternateName := DataSet.Name;
+            Delegate.AssignValuesToTopDataSet(DataSet, OtherData,
+              AModel, lctUse, alAll);
+          finally
+            OtherData.Free;
+          end;
+        end;
+      vdFront:
+        begin
+          OtherData := TModflowDataObject.Create;
+          try
+            OtherData.Compiler := Compiler;
+            OtherData.DataSetFunction := DataSetFunction;
+            Delegate.AssignValuesToFrontDataSet(DataSet, OtherData,
+              AModel, lctUse, alAll);
+          finally
+            OtherData.Free;
+          end;
+        end;
+      vdSide:
+        begin
+          OtherData := TModflowDataObject.Create;
+          try
+            OtherData.Compiler := Compiler;
+            OtherData.DataSetFunction := DataSetFunction;
+            Delegate.AssignValuesToSideDataSet(DataSet, OtherData,
+              AModel, lctUse, alAll);
+          finally
+            OtherData.Free;
+          end;
+        end;
+      else Assert(False);
+    end;
+  finally
+    if (FSegments <> nil) and FSegments.UpToDate and not FSegments.FCleared then
+    begin
+      FSegments.CacheData;
+    end;
+  end
+end;
+
 procedure TScreenObject.UpdateBox;
 var
   Index: integer;
@@ -15159,6 +15297,7 @@ var
   FormulaIndex: Integer;
   FormulaObject: TFormulaObject;
 begin
+  FSutraBoundaries.Free;
   FStoredSutraAngle.Free;
   FUsedModels.Free;
   ChildModel := nil;
@@ -19495,7 +19634,7 @@ end;
 
 function TCellElementSegment.FirstPointRealCoord(ViewDirection: TViewDirection): TPoint2D;
 begin
-  result := FSegment[1];;
+  result := FSegment[1];
   if (ViewDirection = vdTop) and (frmGoPhast.Grid <> nil) then
   begin
     result := frmGoPhast.Grid.
@@ -19886,7 +20025,7 @@ begin
             Item.DelegateClass := TModflowNWTDelegate.ClassName;
           end;
         {$IFDEF SUTRA}
-        msSutra:
+        msSutra22:
           begin
             Item.DelegateClass := TSutraDelegate.ClassName;
           end
@@ -22217,7 +22356,7 @@ being displayed on the status bar.  Find a way around this problem. }
 //  end;
 end;
 
-function TPhastDelegate.PhastBoundaryType: TBoundaryTypes;
+function TPhastDelegate.PhastBoundaryType: TPhastBoundaryTypes;
 begin
   result := btNone;
   if (FScreenObject.SpecifiedHeadBoundary.BoundaryValue.Count > 0)
@@ -27035,6 +27174,11 @@ begin
   FStoredSutraAngle.Value := Value;
 end;
 
+procedure TScreenObject.SetSutraBoundaries(const Value: TSutraBoundaries);
+begin
+  FSutraBoundaries.Assign(Value);
+end;
+
 procedure TScreenObject.SetWellBoundary(const Value: TWellBoundary);
 begin
   if Value = nil then
@@ -27236,8 +27380,9 @@ end;
 
 function TScreenObject.StoreFlux: boolean;
 begin
-  result := (FluxBoundary.BoundaryValue.Count > 0)
-    or (FluxBoundary.Solution.Count > 0);
+  result := (FFluxBoundary <> nil) and
+    ((FluxBoundary.BoundaryValue.Count > 0)
+    or (FluxBoundary.Solution.Count > 0));
 end;
 
 function TScreenObject.StoreImportedHigherSectionElevations: Boolean;
@@ -27262,8 +27407,9 @@ end;
 
 function TScreenObject.StoreLeaky: boolean;
 begin
-  result := (LeakyBoundary.BoundaryValue.Count > 0)
-    or (LeakyBoundary.Solution.Count > 0);
+  result := (FLeakyBoundary <> nil) and
+    ((LeakyBoundary.BoundaryValue.Count > 0)
+    or (LeakyBoundary.Solution.Count > 0));
 end;
 
 function TScreenObject.StoreModflowChdBoundary: Boolean;
@@ -27307,6 +27453,12 @@ function TScreenObject.StoreModflowHeadObservations: Boolean;
 begin
   result := (FModflowBoundaries <> nil)
     and (ModflowHeadObservations <> nil) and ModflowHeadObservations.Used;
+end;
+
+function TScreenObject.StoreModflowHfbBoundary: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowHfbBoundary <> nil) and ModflowHfbBoundary.Used;
 end;
 
 function TScreenObject.StoreModflowHydmodData: Boolean;
@@ -27365,20 +27517,41 @@ end;
 
 function TScreenObject.StoreRiver: boolean;
 begin
-  result := (RiverBoundary.BoundaryValue.Count > 0)
-    or (RiverBoundary.Solution.Count > 0);
+  result := (FRiverBoundary <> nil) and
+    ((RiverBoundary.BoundaryValue.Count > 0)
+    or (RiverBoundary.Solution.Count > 0));
+end;
+
+function TScreenObject.StoreModflowMnw2Boundary: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowMnw2Boundary <> nil) and ModflowMnw2Boundary.Used;
+end;
+
+function TScreenObject.StoreMt3dmsConcBoundary: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (Mt3dmsConcBoundary <> nil) and Mt3dmsConcBoundary.Used;
+end;
+
+function TScreenObject.StoreMt3dmsTransObservations: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (Mt3dmsTransObservations <> nil) and Mt3dmsTransObservations.Used;
 end;
 
 function TScreenObject.StoreSpecifiedHead: boolean;
 begin
-  result := (SpecifiedHeadBoundary.BoundaryValue.Count > 0)
-    or (SpecifiedHeadBoundary.Solution.Count > 0);
+  result := (FSpecifiedHeadBoundary <> nil)
+    and ((SpecifiedHeadBoundary.BoundaryValue.Count > 0)
+    or (SpecifiedHeadBoundary.Solution.Count > 0));
 end;
 
 function TScreenObject.StoreWell: boolean;
 begin
-  result := (WellBoundary.BoundaryValue.Count > 0)
-    or (WellBoundary.Solution.Count > 0);
+  result := (FWellBoundary <> nil) and
+    ((WellBoundary.BoundaryValue.Count > 0)
+    or (WellBoundary.Solution.Count > 0));
 end;
 
 function TScreenObject.ThreeDBoundaryFormula: string;
@@ -31856,7 +32029,7 @@ begin
   end;
 end;
 
-function TScreenObject.PhastBoundaryType: TBoundaryTypes;
+function TScreenObject.PhastBoundaryType: TPhastBoundaryTypes;
 begin
   result := btNone;
   if (SpecifiedHeadBoundary.BoundaryValue.Count > 0)
@@ -31899,7 +32072,7 @@ begin
   result := Ord(PhastBoundaryType);
 end;
 
-function TScreenObject.BoundaryTypeUsed: TBoundaryTypes;
+function TScreenObject.BoundaryTypeUsed: TPhastBoundaryTypes;
 begin
   result := btNone;
   if (FFluxBoundary <> nil)
@@ -33800,34 +33973,34 @@ end;
 
 { TIntegerCollection }
 
-constructor TIntegerCollection.Create(Model: TBaseModel);
-begin
-  inherited Create(TIntegerItem, Model);
-end;
-
-function TIntegerCollection.GetValue(Index: integer): integer;
-begin
-  result := (Items[Index] as TIntegerItem).Value;
-end;
-
-procedure TIntegerCollection.SetValue(Index: integer; const Value: integer);
-begin
-  (Items[Index] as TIntegerItem).Value := Value;
-end;
-
-{ TIntegerItem }
-
-procedure TIntegerItem.Assign(Source: TPersistent);
-begin
-  if Source is TIntegerItem then
-  begin
-    Value := TIntegerItem(Source).Value;
-  end
-  else
-  begin
-    inherited;
-  end;
-end;
+//constructor TIntegerCollection.Create(Model: TBaseModel);
+//begin
+//  inherited Create(TIntegerItem, Model);
+//end;
+//
+//function TIntegerCollection.GetValue(Index: integer): integer;
+//begin
+//  result := (Items[Index] as TIntegerItem).Value;
+//end;
+//
+//procedure TIntegerCollection.SetValue(Index: integer; const Value: integer);
+//begin
+//  (Items[Index] as TIntegerItem).Value := Value;
+//end;
+//
+//{ TIntegerItem }
+//
+//procedure TIntegerItem.Assign(Source: TPersistent);
+//begin
+//  if Source is TIntegerItem then
+//  begin
+//    Value := TIntegerItem(Source).Value;
+//  end
+//  else
+//  begin
+//    inherited;
+//  end;
+//end;
 
 { TModflowBoundaries }
 
@@ -34380,6 +34553,9 @@ begin
   FAnnotation := Cell.FAnnotation;
   FAssignmentMethod := Cell.FAssignmentMethod;
   FLgrEdge := Cell.FLgrEdge;
+  FSutraX := Cell.FSutraX;
+  FSutraY := Cell.FSutraY;
+  FSutraZ := Cell.FSutraZ;
 end;
 
 constructor TCellAssignment.Create(ALayer, ARow, ACol: integer;
@@ -34462,6 +34638,9 @@ begin
   FRow := ReadCompInt(Stream);
   FColumn := ReadCompInt(Stream);
   FLgrEdge := ReadCompBoolean(Stream);
+  FSutraX := ReadCompReal(Stream);
+  FSutraY := ReadCompReal(Stream);
+  FSutraZ := ReadCompReal(Stream);
 end;
 
 procedure TCellAssignment.Store(Stream: TStream);
@@ -34480,6 +34659,9 @@ begin
   WriteCompInt(Stream, FRow);
   WriteCompInt(Stream, FColumn);
   WriteCompBoolean(Stream, FLgrEdge);
+  WriteCompReal(Stream, FSutraX);
+  WriteCompReal(Stream, FSutraY);
+  WriteCompReal(Stream, FSutraZ);
 end;
 
 { TCellList }
@@ -35523,7 +35705,7 @@ var
   Index: Integer;
   AnItem: TUsedWithModelItem;
 begin
-  result := UsedWithAllModels;
+  result := UsedWithAllModels or not frmGoPhast.PhastModel.LgrUsed;
   if not result then
   begin
     for Index := 0 to Count - 1 do
@@ -35657,7 +35839,8 @@ begin
       FScreenObject.RemoveDataSet(DataSet);
       Exit;
     end;
-    if DataSetUsed(DataSet, OtherData, AModel) then
+    // DataSetUsed doesn't test for transient data sets.
+//    if DataSetUsed(DataSet, OtherData, AModel) then
     begin
       UsedVariables := TStringList.Create;
       try
@@ -35716,7 +35899,8 @@ begin
       FScreenObject.RemoveDataSet(DataSet);
       Exit;
     end;
-    if DataSetUsed(DataSet, OtherData, AModel) then
+    // DataSetUsed doesn't test for transient data sets.
+//    if DataSetUsed(DataSet, OtherData, AModel) then
     begin
       UsedVariables := TStringList.Create;
       try
@@ -35803,6 +35987,7 @@ var
   SelectY: Double;
   SegmentIndex: Integer;
   PointAngle: Extended;
+  ACellAssignment: TCellAssignment;
   procedure GetCellBounds(LayerIndex,ColIndex: integer);
   begin
     UpperLimit := Limits[LayerIndex,ColIndex].UpperLimit;
@@ -36055,7 +36240,7 @@ begin
           // need to rotate point here.
           PointDistance := sqrt(Sqr(CenterPoint.x) + Sqr(CenterPoint.y));
           PointAngle := ArcTan2(CenterPoint.y,CenterPoint.x);
-          RotatedX := Cos(PointAngle-FScreenObject.SutraAngle)*PointDistance;
+//          RotatedX := Cos(PointAngle-FScreenObject.SutraAngle)*PointDistance;
           RotatedY := Sin(PointAngle-FScreenObject.SutraAngle)*PointDistance;
 
 
@@ -36073,13 +36258,34 @@ begin
           Annotation := IAnnotation;
           if Orientation = dso3D then
           begin
-            CellList.Add(TCellAssignment.Create(ASegment.Layer, ASegment.Row,
-              ASegment.Col, ASegment, ASegment.SectionIndex, Annotation, amIntersect));
+            ACellAssignment := TCellAssignment.Create(ASegment.Layer, ASegment.Row,
+              ASegment.Col, ASegment, ASegment.SectionIndex, Annotation,
+              amIntersect);
+            CellList.Add(ACellAssignment);
           end
           else
           begin
-            CellList.Add(TCellAssignment.Create(0, ASegment.Row,
-              ASegment.Col, ASegment, ASegment.SectionIndex, Annotation, amIntersect));
+            ACellAssignment := TCellAssignment.Create(0, ASegment.Row,
+              ASegment.Col, ASegment, ASegment.SectionIndex, Annotation,
+              amIntersect);
+            CellList.Add(ACellAssignment);
+          end;
+          ACellAssignment.FSutraX := (ASegment.X1 + ASegment.X2)/2;
+          ACellAssignment.FSutraZ := (ASegment.Y1 + ASegment.Y2)/2;
+          case FScreenObject.ElevationCount of
+            ecZero:
+              begin
+                ACellAssignment.FSutraY := 0;
+              end;
+            ecOne:
+              begin
+                ACellAssignment.FSutraY := FScreenObject.FTopElevation;
+              end;
+            ecTwo:
+              begin
+                ACellAssignment.FSutraY := (FScreenObject.FTopElevation
+                  + FScreenObject.FBottomElevation)/2;
+              end;
           end;
         end
       end;
@@ -36127,6 +36333,9 @@ var
   Element3D: TSutraElement3D;
   Node3D: TSutraNode3D;
   Node2: TSutraNode3D;
+  ACellAssignment: TCellAssignment;
+  LayerIndex: Integer;
+  Intersected: Boolean;
 begin
   if DataSet = nil then
   begin
@@ -36173,25 +36382,6 @@ begin
       and FScreenObject.Closed then
     begin
 
-      // Get the coordinates of the points.
-//      FScreenObject.GetColumns(Mesh, TempMinX, TempMaxX, FirstCol, LastCol);
-//      if FirstCol > Mesh.ColumnCount then
-//      begin
-//        FirstCol := Mesh.ColumnCount;
-//      end;
-//      if LastCol > Mesh.ColumnCount then
-//      begin
-//        LastCol := Mesh.ColumnCount;
-//      end;
-//      FScreenObject.GetRows(Mesh, TempMinY, TempMaxY, FirstRow, LastRow);
-//      if FirstRow > Mesh.RowCount then
-//      begin
-//        FirstRow := Mesh.RowCount;
-//      end;
-//      if LastRow > Mesh.RowCount then
-//      begin
-//        LastRow := Mesh.RowCount;
-//      end;
       Limit := 0;
       case EvalAt of
         eaBlocks: Limit := Mesh.Mesh2D.Elements.Count;
@@ -36201,179 +36391,188 @@ begin
       // Find the cells inside the screen object and assign values to them.
       for ColIndex := 0 to Limit-1 do
       begin
-//        for RowIndex := FirstRow to LastRow do
-//        begin
-          case EvalAt of
-            eaBlocks: APoint := Mesh.Mesh2D.Elements[ColIndex].Center;
-            eaNodes: APoint := Mesh.Mesh2D.Nodes[ColIndex].Location;
-            else Assert(False);
-          end;
-          if FScreenObject.IsPointInside(APoint.X,
-            APoint.Y, SectionIndex) then
+        case EvalAt of
+          eaBlocks: APoint := Mesh.Mesh2D.Elements[ColIndex].Center;
+          eaNodes: APoint := Mesh.Mesh2D.Nodes[ColIndex].Location;
+          else Assert(False);
+        end;
+        if FScreenObject.IsPointInside(APoint.X,
+          APoint.Y, SectionIndex) then
+        begin
+          OtherIndex(0, ColIndex, FirstElevationIndex,
+            LastElevationIndex, DataSet);
+          if (FirstElevationIndex >= 0)
+            and (LastElevationIndex <= LayerLimit) then
           begin
-            OtherIndex(0, ColIndex, FirstElevationIndex,
-              LastElevationIndex, DataSet);
-            if (FirstElevationIndex >= 0)
-              and (LastElevationIndex <= LayerLimit) then
+            for ElevationIndex := FirstElevationIndex to LastElevationIndex do
             begin
-              for ElevationIndex := FirstElevationIndex to LastElevationIndex do
+              case FScreenObject.ElevationCount of
+                ecZero: ; // do nothing
+                ecOne:
+                  begin
+                    FScreenObject.FTopElevation :=
+                      FScreenObject.Higher3DElevations[AModel][
+                        ElevationIndex, 0, ColIndex];
+                    FScreenObject.FBottomElevation :=
+                      FScreenObject.TopElevation
+                  end;
+                ecTwo:
+                  begin
+                    FScreenObject.FTopElevation :=
+                      FScreenObject.Higher3DElevations[AModel][
+                        ElevationIndex, 0, ColIndex];
+                    FScreenObject.FBottomElevation :=
+                      FScreenObject.Lower3DElevations[AModel][
+                        ElevationIndex, 0, ColIndex];
+                  end;
+                else Assert(False);
+              end;
+
+              if not FScreenObject.SetValuesOfEnclosedCells then
               begin
-                case FScreenObject.ElevationCount of
-                  ecZero: ; // do nothing
-                  ecOne:
-                    begin
-                      FScreenObject.FTopElevation :=
-                        FScreenObject.Higher3DElevations[AModel][
-                          ElevationIndex, 0, ColIndex];
-                      FScreenObject.FBottomElevation :=
-                        FScreenObject.TopElevation
-                    end;
-                  ecTwo:
-                    begin
-                      FScreenObject.FTopElevation :=
-                        FScreenObject.Higher3DElevations[AModel][
-                          ElevationIndex, 0, ColIndex];
-                      FScreenObject.FBottomElevation :=
-                        FScreenObject.Lower3DElevations[AModel][
-                          ElevationIndex, 0, ColIndex];
-                    end;
-                  else Assert(False);
-                end;
-
-                if not FScreenObject.SetValuesOfEnclosedCells then
+                AssignmentMethod := amIntersect;
+                if IAnnotation = '' then
                 begin
-                  AssignmentMethod := amIntersect;
-                  if IAnnotation = '' then
-                  begin
-                    IAnnotation := IntersectAnnotation(
-                      DataSetFunction, OtherData);
-                  end;
-                  Annotation := IAnnotation;
-                end
+                  IAnnotation := IntersectAnnotation(
+                    DataSetFunction, OtherData);
+                end;
+                Annotation := IAnnotation;
+              end
+              else
+              begin
+                AssignmentMethod := amEnclose;
+                if EAnnotation = '' then
+                begin
+                  EAnnotation := EncloseAnnotation(DataSetFunction, OtherData);
+                end;
+                Annotation := EAnnotation;
+              end;
+              UpdateCurrentSection(SectionIndex);
+
+              UpperBound := 0;
+              LowerBound := 0;
+              if (FScreenObject.ElevationCount in [ecOne, ecTwo])
+                and (Mesh.MeshType = mt3D) then
+              begin
+                case EvalAt of
+                  eaBlocks:
+                    begin
+                      Element3D := Mesh.ElementArray[ElevationIndex, ColIndex];
+                      UpperBound := Element3D.UpperElevation;
+                      LowerBound := Element3D.LowerElevation;
+                    end;
+                  eaNodes:
+                    begin
+                      Node3D := Mesh.NodeArray[ElevationIndex, ColIndex];
+                      if ElevationIndex > 0 then
+                      begin
+                        Node2 := Mesh.NodeArray[ElevationIndex-1, ColIndex];
+                        UpperBound := (Node3D.Z+Node2.Z)/2;
+                      end
+                      else
+                      begin
+                        UpperBound := Node3D.Z;
+                      end;
+                      if ElevationIndex < LastElevationIndex then
+                      begin
+                        Node2 := Mesh.NodeArray[ElevationIndex+1, ColIndex];
+                        LowerBound := (Node3D.Z+Node2.Z)/2;
+                      end
+                      else
+                      begin
+                        LowerBound := Node3D.Z;
+                      end;
+                    end;
                 else
-                begin
-                  AssignmentMethod := amEnclose;
-                  if EAnnotation = '' then
-                  begin
-                    EAnnotation := EncloseAnnotation(DataSetFunction, OtherData);
-                  end;
-                  Annotation := EAnnotation;
+                  Assert(False);
                 end;
-                UpdateCurrentSection(SectionIndex);
+              end;
 
-                UpperBound := 0;
-                LowerBound := 0;
-                if FScreenObject.ElevationCount in [ecOne, ecTwo] then
-                begin
-                  case EvalAt of
-                    eaBlocks:
-                      begin
-                        Element3D := Mesh.ElementArray[ElevationIndex, ColIndex];
-                        UpperBound := Element3D.UpperElevation;
-                        LowerBound := Element3D.LowerElevation;
-                      end;
-                    eaNodes:
-                      begin
-                        Node3D := Mesh.NodeArray[ElevationIndex, ColIndex];
-                        if ElevationIndex > 0 then
-                        begin
-                          Node2 := Mesh.NodeArray[ElevationIndex-1, ColIndex];
-                          UpperBound := (Node3D.Z+Node2.Z)/2;
-                        end
-                        else
-                        begin
-                          UpperBound := Node3D.Z;
-                        end;
-                        if ElevationIndex < LastElevationIndex then
-                        begin
-                          Node2 := Mesh.NodeArray[ElevationIndex+1, ColIndex];
-                          LowerBound := (Node3D.Z+Node2.Z)/2;
-                        end
-                        else
-                        begin
-                          LowerBound := Node3D.Z;
-                        end;
-                      end;
-                  else
-                    Assert(False);
+              case Mesh.MeshType of
+                mt2D:
+                  begin
+                    CellList.Add(TCellAssignment.Create(ElevationIndex,
+                      0, ColIndex, nil, SectionIndex, Annotation,
+                      AssignmentMethod));
                   end;
-                end;
-//                Mesh.BlockExtents(vdTop, FScreenObject.EvaluatedAt,
-//                  ElevationIndex, LowerBound, UpperBound);
-                case FScreenObject.ElevationCount of
-                  ecZero:
-                    begin
-                      CellList.Add(TCellAssignment.Create(ElevationIndex,
-                        0, ColIndex, nil, SectionIndex, Annotation,
-                        AssignmentMethod));
-                    end;
-                  ecOne:
-                    begin
-                      if (Orientation = dsoTop) or
-                        ((FScreenObject.TopElevation >= LowerBound)
-                        and ((FScreenObject.BottomElevation < UpperBound)
-                        or ((FScreenObject.BottomElevation = UpperBound)
-                        and (ElevationIndex = LayerLimit)))) then
-                      begin
-                        CellList.Add(TCellAssignment.Create(ElevationIndex,
-                          0, ColIndex, nil, SectionIndex, Annotation,
-                          AssignmentMethod));
-                      end;
-                    end;
-                  ecTwo:
-                    begin
-                      if not FScreenObject.SetValuesOfEnclosedCells then
-                      begin
-                        if (Orientation = dsoTop)
-                          or ((UpperBound >= FScreenObject.TopElevation)
-                          and (LowerBound <= FScreenObject.TopElevation))
-                          or ((UpperBound >= FScreenObject.BottomElevation)
-                          and (LowerBound <= FScreenObject.BottomElevation)) then
+                mt3D:
+                  begin
+                    case FScreenObject.ElevationCount of
+                      ecZero:
                         begin
                           CellList.Add(TCellAssignment.Create(ElevationIndex,
                             0, ColIndex, nil, SectionIndex, Annotation,
                             AssignmentMethod));
                         end;
-                      end
-                      else
-                      begin
-                        case FScreenObject.EvaluatedAt of
-                          eaBlocks:
-                            begin
-                              Middle := (LowerBound + UpperBound)/2;
-                              if (Orientation = dsoTop) or
-                                ((FScreenObject.TopElevation >= Middle)
-                                and (FScreenObject.BottomElevation <= Middle)) then
-                              begin
-                                CellList.Add(TCellAssignment.Create(
-                                  ElevationIndex, 0,
-                                  ColIndex, nil, SectionIndex, Annotation,
-                                  AssignmentMethod));
-                              end;
-                            end;
-                          eaNodes:
-                            begin
-                              if (Orientation = dsoTop) or
-                                ((FScreenObject.TopElevation >= LowerBound)
-                                and (FScreenObject.BottomElevation <= UpperBound))
-                                then
-                              begin
-                                CellList.Add(TCellAssignment.Create(
-                                  ElevationIndex, 0,
-                                  ColIndex, nil, SectionIndex, Annotation,
-                                  AssignmentMethod));
-                              end;
-                            end;
-                          else Assert(False);
+                      ecOne:
+                        begin
+                          if (Orientation = dsoTop) or
+                            ((FScreenObject.TopElevation >= LowerBound)
+                            and ((FScreenObject.BottomElevation < UpperBound)
+                            or ((FScreenObject.BottomElevation = UpperBound)
+                            and (ElevationIndex = LayerLimit)))) then
+                          begin
+                            CellList.Add(TCellAssignment.Create(ElevationIndex,
+                              0, ColIndex, nil, SectionIndex, Annotation,
+                              AssignmentMethod));
+                          end;
                         end;
-                      end;
+                      ecTwo:
+                        begin
+                          if not FScreenObject.SetValuesOfEnclosedCells then
+                          begin
+                            if (Orientation = dsoTop)
+                              or ((UpperBound >= FScreenObject.TopElevation)
+                              and (LowerBound <= FScreenObject.TopElevation))
+                              or ((UpperBound >= FScreenObject.BottomElevation)
+                              and (LowerBound <= FScreenObject.BottomElevation)) then
+                            begin
+                              CellList.Add(TCellAssignment.Create(ElevationIndex,
+                                0, ColIndex, nil, SectionIndex, Annotation,
+                                AssignmentMethod));
+                            end;
+                          end
+                          else
+                          begin
+                            case FScreenObject.EvaluatedAt of
+                              eaBlocks:
+                                begin
+                                  Middle := (LowerBound + UpperBound)/2;
+                                  if (Orientation = dsoTop) or
+                                    ((FScreenObject.TopElevation >= Middle)
+                                    and (FScreenObject.BottomElevation <= Middle)) then
+                                  begin
+                                    CellList.Add(TCellAssignment.Create(
+                                      ElevationIndex, 0,
+                                      ColIndex, nil, SectionIndex, Annotation,
+                                      AssignmentMethod));
+                                  end;
+                                end;
+                              eaNodes:
+                                begin
+                                  if (Orientation = dsoTop) or
+                                    ((FScreenObject.TopElevation >= LowerBound)
+                                    and (FScreenObject.BottomElevation <= UpperBound))
+                                    then
+                                  begin
+                                    CellList.Add(TCellAssignment.Create(
+                                      ElevationIndex, 0,
+                                      ColIndex, nil, SectionIndex, Annotation,
+                                      AssignmentMethod));
+                                  end;
+                                end;
+                              else Assert(False);
+                            end;
+                          end;
+                        end;
+                      else Assert(False);
                     end;
-                  else Assert(False);
-                end;
+                  end
+                else Assert(False);
               end;
             end;
           end;
-//        end;
+        end;
       end;
     end;
     if FScreenObject.SetValuesOfIntersectedCells then
@@ -36397,148 +36596,305 @@ begin
           and (ASegment.Layer >= FirstElevationIndex)
           and (ASegment.Layer <= LastElevationIndex) then
         begin
-          UpdateCurrentSegment(ASegment);
-          if IAnnotation = '' then
+          for LayerIndex := FirstElevationIndex to LastElevationIndex do
+
           begin
-            IAnnotation := IntersectAnnotation(DataSetFunction, OtherData);
-          end;
-          Annotation := IAnnotation;
-//          Mesh.BlockExtents(vdTop, FScreenObject.EvaluatedAt,
-//            ASegment.Layer, LowerBound, UpperBound);
-          case FScreenObject.ElevationCount of
-            ecZero: ; // do nothing
-            ecOne:
-              begin
-                FScreenObject.FTopElevation :=
-                  FScreenObject.Higher3DElevations[AModel][
-                    ASegment.Layer, ASegment.Row, ASegment.Col];
-                FScreenObject.FBottomElevation :=
-                  FScreenObject.TopElevation
-              end;
-            ecTwo:
-              begin
-                FScreenObject.FTopElevation :=
-                  FScreenObject.Higher3DElevations[AModel][
-                    ASegment.Layer, ASegment.Row, ASegment.Col];
-                FScreenObject.FBottomElevation :=
-                  FScreenObject.Lower3DElevations[AModel][
-                    ASegment.Layer, ASegment.Row, ASegment.Col];
-              end;
-            else Assert(False);
-          end;
-          UpperBound := 0;
-          LowerBound := 0;
-          if FScreenObject.ElevationCount in [ecOne, ecTwo] then
-          begin
-            case EvalAt of
-              eaBlocks:
-                begin
-                  Element3D := Mesh.ElementArray[ASegment.Layer, ASegment.Col];
-                  UpperBound := Element3D.UpperElevation;
-                  LowerBound := Element3D.LowerElevation;
-                end;
-              eaNodes:
-                begin
-                  Node3D := Mesh.NodeArray[ASegment.Layer, ASegment.Col];
-                  if ASegment.Layer > 0 then
-                  begin
-                    Node2 := Mesh.NodeArray[ASegment.Layer-1, ASegment.Col];
-                    UpperBound := (Node3D.Z+Node2.Z)/2;
-                  end
-                  else
-                  begin
-                    UpperBound := Node3D.Z;
-                  end;
-                  if ASegment.Layer < LastElevationIndex then
-                  begin
-                    Node2 := Mesh.NodeArray[ASegment.Layer+1, ASegment.Col];
-                    LowerBound := (Node3D.Z+Node2.Z)/2;
-                  end
-                  else
-                  begin
-                    LowerBound := Node3D.Z;
-                  end;
-                end;
-            else
-              Assert(False);
+            UpdateCurrentSegment(ASegment);
+            if IAnnotation = '' then
+            begin
+              IAnnotation := IntersectAnnotation(DataSetFunction, OtherData);
             end;
-          end;
-          case FScreenObject.ElevationCount of
-            ecZero:
-              begin
-                CellList.Add(TCellAssignment.Create(ASegment.Layer,
-                  ASegment.Row, ASegment.Col, ASegment,
-                  ASegment.SectionIndex, Annotation, amIntersect));
+            Annotation := IAnnotation;
+
+            if Mesh.MeshType = mt3D then
+            begin
+
+              case FScreenObject.ElevationCount of
+                ecZero: ; // do nothing
+                ecOne:
+                  begin
+                    FScreenObject.FTopElevation :=
+                      FScreenObject.Higher3DElevations[AModel][
+                        ASegment.Layer, ASegment.Row, ASegment.Col];
+                    FScreenObject.FBottomElevation :=
+                      FScreenObject.TopElevation
+                  end;
+                ecTwo:
+                  begin
+                    FScreenObject.FTopElevation :=
+                      FScreenObject.Higher3DElevations[AModel][
+                        ASegment.Layer, ASegment.Row, ASegment.Col];
+                    FScreenObject.FBottomElevation :=
+                      FScreenObject.Lower3DElevations[AModel][
+                        ASegment.Layer, ASegment.Row, ASegment.Col];
+                  end;
+                else Assert(False);
               end;
-            ecOne:
+              UpperBound := 0;
+              LowerBound := 0;
+              if FScreenObject.ElevationCount in [ecOne, ecTwo] then
               begin
-                case FScreenObject.EvaluatedAt of
+                case EvalAt of
                   eaBlocks:
                     begin
-                      if (Orientation = dsoTop) or
-                        ((FScreenObject.TopElevation >= LowerBound)
-                        and ((FScreenObject.BottomElevation < UpperBound)
-                        or  ((FScreenObject.BottomElevation = UpperBound)
-                        and (ASegment.Layer = Mesh.LayerCount-1)))) then
+                      Element3D := Mesh.ElementArray[LayerIndex, ASegment.Col];
+                      if not Element3D.Active then
                       begin
-                        CellList.Add(TCellAssignment.Create(ASegment.Layer,
-                          ASegment.Row, ASegment.Col, ASegment,
-                          ASegment.SectionIndex, Annotation, amIntersect));
+                        Continue;
                       end;
+                      UpperBound := Element3D.UpperElevation;
+                      LowerBound := Element3D.LowerElevation;
                     end;
                   eaNodes:
                     begin
-                      if (Orientation = dsoTop) or
-                        ((FScreenObject.TopElevation >= LowerBound)
-                        and ((FScreenObject.BottomElevation < UpperBound)
-                        or  ((FScreenObject.BottomElevation = UpperBound)
-                        and (ASegment.Layer = Mesh.LayerCount)))) then
+                      Node3D := Mesh.NodeArray[LayerIndex, ASegment.Col];
+                      if not Node3D.Active then
                       begin
-                        CellList.Add(TCellAssignment.Create(ASegment.Layer,
-                          ASegment.Row, ASegment.Col, ASegment,
-                          ASegment.SectionIndex, Annotation, amIntersect));
+                        Continue;
+                      end;
+                      if LayerIndex > 0 then
+                      begin
+                        Node2 := Mesh.NodeArray[LayerIndex-1, ASegment.Col];
+                        if Node2.Active then
+                        begin
+                          UpperBound := (Node3D.Z+Node2.Z)/2;
+                        end
+                        else
+                        begin
+                          UpperBound := Node3D.Z;
+                        end;
+                      end
+                      else
+                      begin
+                        UpperBound := Node3D.Z;
+                      end;
+                      if LayerIndex < LastElevationIndex then
+                      begin
+                        Node2 := Mesh.NodeArray[LayerIndex+1, ASegment.Col];
+                        if Node2.Active then
+                        begin
+                          LowerBound := (Node3D.Z+Node2.Z)/2;
+                        end
+                        else
+                        begin
+                          LowerBound := Node3D.Z;
+                        end;
+                      end
+                      else
+                      begin
+                        LowerBound := Node3D.Z;
                       end;
                     end;
-                  else Assert(False);
+                else
+                  Assert(False);
                 end;
               end;
-            ecTwo:
-              begin
-                case FScreenObject.EvaluatedAt of
-                  eaBlocks:
-                    begin
-                      Middle := (LowerBound + UpperBound)/2;
-                      if (Orientation = dsoTop) or
-                        ((FScreenObject.TopElevation >= Middle)
-                        and (FScreenObject.BottomElevation <= Middle)) then
-                      begin
-                        CellList.Add(TCellAssignment.Create(ASegment.Layer,
-                          ASegment.Row, ASegment.Col, ASegment,
-                          ASegment.SectionIndex, Annotation, amIntersect));
-                      end;
-                    end;
-                  eaNodes:
-                    begin
-                      if (Orientation = dsoTop) or
-                        ((FScreenObject.TopElevation >= LowerBound)
-                        and (FScreenObject.BottomElevation <= UpperBound)) then
-                      begin
-                        CellList.Add(TCellAssignment.Create(ASegment.Layer,
-                          ASegment.Row, ASegment.Col, ASegment,
-                          ASegment.SectionIndex, Annotation, amIntersect));
-                      end;
-                    end;
-                  else Assert(False);
+            end;
+
+            case Mesh.MeshType of
+              mt2D:
+                begin
+                  ACellAssignment := TCellAssignment.Create(ASegment.Layer,
+                    ASegment.Row, ASegment.Col, ASegment,
+                    ASegment.SectionIndex, Annotation, amIntersect);
+                  CellList.Add(ACellAssignment);
+                  ACellAssignment.FSutraX := (ASegment.X1 + ASegment.X2)/2;
+                  ACellAssignment.FSutraY := (ASegment.Y1 + ASegment.Y2)/2;
+                  ACellAssignment.FSutraZ :=0;
                 end;
-              end;
-            else Assert(False);
-          end;
+              mt3D:
+                begin
+                  case FScreenObject.ElevationCount of
+                    ecZero:
+                      begin
+                        ACellAssignment := TCellAssignment.Create(LayerIndex,
+                          ASegment.Row, ASegment.Col, ASegment,
+                          ASegment.SectionIndex, Annotation, amIntersect);
+                        CellList.Add(ACellAssignment);
+                        ACellAssignment.FSutraX := (ASegment.X1 + ASegment.X2)/2;
+                        ACellAssignment.FSutraY := (ASegment.Y1 + ASegment.Y2)/2;
+                        ACellAssignment.FSutraZ :=0;
+                      end;
+                    ecOne:
+                      begin
+                        case FScreenObject.EvaluatedAt of
+                          eaBlocks:
+                            begin
+                              if (Orientation = dsoTop) or
+                                (((FScreenObject.TopElevation >= LowerBound)
+                                and (FScreenObject.BottomElevation < UpperBound))
+                                or  ((FScreenObject.BottomElevation = UpperBound)
+                                and (LayerIndex = 0))) then
+                              begin
+                                ACellAssignment := TCellAssignment.Create(LayerIndex,
+                                  ASegment.Row, ASegment.Col, ASegment,
+                                  ASegment.SectionIndex, Annotation, amIntersect);
+                                CellList.Add(ACellAssignment);
+                                ACellAssignment.FSutraX := (ASegment.X1 + ASegment.X2)/
+                                  2;
+                                ACellAssignment.FSutraY := (ASegment.Y1 + ASegment.Y2)/
+                                  2;
+                                ACellAssignment.FSutraZ :=FScreenObject.FTopElevation;
+                              end;
+                            end;
+                          eaNodes:
+                            begin
+                              Intersected := False;
+                              if Orientation = dsoTop then
+                              begin
+                                Intersected := True;
+                              end
+                              else if (FScreenObject.TopElevation >= LowerBound) then
+                              begin
+                                if (FScreenObject.BottomElevation < UpperBound) then
+                                begin
+                                  Intersected := True;
+                                end
+                                else if (FScreenObject.BottomElevation = UpperBound) then
+                                begin
+                                  if (LayerIndex = 0) then
+                                  begin
+                                    Intersected := True;
+                                  end
+                                  else
+                                  begin
+                                    Node2 := Mesh.NodeArray[LayerIndex-1, ASegment.Col];
+                                    if not Node2.Active then
+                                    begin
+                                      Intersected := True;
+                                    end;
+                                  end;
+                                end;
+                              end;
+                              if Intersected then
+                              begin
+                                ACellAssignment := TCellAssignment.Create(LayerIndex,
+                                  ASegment.Row, ASegment.Col, ASegment,
+                                  ASegment.SectionIndex, Annotation, amIntersect);
+                                CellList.Add(ACellAssignment);
+                                ACellAssignment.FSutraX := (ASegment.X1 + ASegment.X2)/
+                                  2;
+                                ACellAssignment.FSutraY := (ASegment.Y1 + ASegment.Y2)/
+                                  2;
+                                ACellAssignment.FSutraZ :=FScreenObject.FTopElevation;
+                              end;
+                            end;
+                          else Assert(False);
+                        end;
+                      end;
+                    ecTwo:
+                      begin
+                        case FScreenObject.EvaluatedAt of
+                          eaBlocks:
+                            begin
+                              Middle := (LowerBound + UpperBound)/2;
+                              if (Orientation = dsoTop) or
+                                ((FScreenObject.TopElevation >= Middle)
+                                and (FScreenObject.BottomElevation <= Middle)) then
+                              begin
+                                ACellAssignment := TCellAssignment.Create(LayerIndex,
+                                  ASegment.Row, ASegment.Col, ASegment,
+                                  ASegment.SectionIndex, Annotation, amIntersect);
+                                CellList.Add(ACellAssignment);
+                                ACellAssignment.FSutraX := (ASegment.X1 + ASegment.X2)/
+                                  2;
+                                ACellAssignment.FSutraY := (ASegment.Y1 + ASegment.Y2)/
+                                  2;
+                                ACellAssignment.FSutraZ := (FScreenObject.FTopElevation
+                                  + FScreenObject.FBottomElevation)/2;
+                              end;
+                            end;
+                          eaNodes:
+                            begin
+                              if (Orientation = dsoTop) or
+                                ((FScreenObject.TopElevation >= LowerBound)
+                                and (FScreenObject.BottomElevation <= UpperBound)) then
+                              begin
+                                ACellAssignment := TCellAssignment.Create(LayerIndex,
+                                  ASegment.Row, ASegment.Col, ASegment,
+                                  ASegment.SectionIndex, Annotation, amIntersect);
+                                CellList.Add(ACellAssignment);
+                                ACellAssignment.FSutraX := (ASegment.X1 + ASegment.X2)/
+                                  2;
+                                ACellAssignment.FSutraY := (ASegment.Y1 + ASegment.Y2)/
+                                  2;
+                                ACellAssignment.FSutraZ := (FScreenObject.FTopElevation
+                                  + FScreenObject.FBottomElevation)/2;
+                              end;
+                            end;
+                          else Assert(False);
+                        end;
+                      end;
+                    else Assert(False);
+                  end;
+                end;
+              else Assert(False);
+            end;
+          end
         end;
       end;
     end;
   finally
     FScreenObject.UpdateCellCache(CellList, EvalAt,
       Orientation, AssignmentLocation, AModel);
+  end;
+end;
+
+procedure TSutraDelegate.InitializeExpression(out Compiler: TRbwParser;
+  out DataSetFunction: string; out Expression: TExpression;
+  const DataSet: TDataArray; const OtherData: TObject);
+var
+  DataObject: TModflowDataObject;
+  ResultTypeOK: Boolean;
+  NameToDisplay: string;
+  TypeToCheck: TRbwDataType;
+begin
+  if OtherData = nil then
+  begin
+    inherited;
+  end
+  else
+  begin
+    DataObject := OtherData as TModflowDataObject;
+    Compiler := DataObject.Compiler;
+    DataSetFunction := DataObject.DataSetFunction;
+
+    try
+      Compiler.Compile(DataSetFunction);
+    except on E: ERbwParserError do
+      begin
+        if DataSet <> nil then
+        begin
+          NameToDisplay := DataSet.Name;
+          frmFormulaErrors.AddFormulaError(FScreenObject.Name,
+            NameToDisplay, DataSetFunction, StrInvalidFormula);
+        end
+        else
+        begin
+          NameToDisplay := DataObject.AlternateName;
+          frmFormulaErrors.AddFormulaError(FScreenObject.Name,
+            NameToDisplay, DataSetFunction, StrInvalidFormula);
+        end;
+        DataSetFunction := '0';
+        Compiler.Compile(DataSetFunction);
+      end;
+    end;
+    Expression := Compiler.CurrentExpression;
+    if DataSet <> nil then
+    begin
+      TypeToCheck := DataSet.Datatype;
+    end
+    else
+    begin
+      TypeToCheck := DataObject.AlternateDataType;
+    end;
+    ResultTypeOK := (Expression.ResultType = TypeToCheck)
+      or ((Expression.ResultType = rdtInteger)
+      and (TypeToCheck = rdtDouble));
+    if not ResultTypeOK then
+    begin
+      raise EInvalidDataType.Create(StrInvalidDataType);
+    end;
   end;
 end;
 
@@ -36564,34 +36920,31 @@ begin
         begin
           First := 0;
           Mesh := (FModel as TPhastModel).Mesh;
-          case FScreenObject.ViewDirection of
-            vdTop:
-              begin
-                case FScreenObject.EvaluatedAt of
-                  eaBlocks: Last := Mesh.LayerCount-1;
-                  eaNodes: Last := Mesh.LayerCount;
-                  else Assert(False);
+          if Mesh.Meshtype = mt2D then
+          begin
+            Last := 0;
+          end
+          else
+          begin
+            case FScreenObject.ViewDirection of
+              vdTop:
+                begin
+                  case FScreenObject.EvaluatedAt of
+                    eaBlocks: Last := Mesh.LayerCount-1;
+                    eaNodes: Last := Mesh.LayerCount;
+                    else Assert(False);
+                  end;
                 end;
-              end;
-            vdFront:
-              begin
-                Assert(False);
-//                case FScreenObject.EvaluatedAt of
-//                  eaBlocks: Last := Mesh.RowCount-1;
-//                  eaNodes: Last := Mesh.RowCount;
-//                  else Assert(False);
-//                end;
-              end;
-            vdSide:
-              begin
-                Assert(False);
-//                case FScreenObject.EvaluatedAt of
-//                  eaBlocks: Last := Mesh.ColumnCount-1;
-//                  eaNodes: Last := Mesh.ColumnCount;
-//                  else Assert(False);
-//                end;
-              end;
-            else Assert(False);
+              vdFront:
+                begin
+                  Assert(False);
+                end;
+              vdSide:
+                begin
+                  Assert(False);
+                end;
+              else Assert(False);
+            end;
           end;
         end;
     else

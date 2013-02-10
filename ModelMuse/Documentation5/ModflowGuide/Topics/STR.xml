@@ -71,7 +71,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="30" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/usgspubs/ofr/ofr88729" target="_blank" styleclass="Citation" translate="true">Prudic, D.E., 1989, Documentation of a computer program to simulate stream-aquifer relations using a modular, finite-difference, ground-water flow model: U.S. Geological Survey Open-File Report 88-729, 113 p.</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="str6.pdf" styleclass="Normal" translate="true">str6.pdf</link></li>
           </list>
@@ -82,9 +82,10 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Related Packages</text></para>
         </td>
         <td>
-          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
-            <li styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR"/><link displaytype="text" defaultstyle="true" type="topiclink" href="STOB" styleclass="Normal" translate="true">Stream Observation</link><conditional-text type="ELSE"/><text styleclass="Normal" translate="true">Stream Observation</text><conditional-text type="END"/><text styleclass="Normal" translate="true"> package</text></li>
-            <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" styleclass="Normal" translate="true">Streamflow-Routing (SFR)</link><text styleclass="Normal" translate="true"> package</text></li>
+          <list id="31" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="STOB" styleclass="Normal" translate="true">Stream Observation</link><text styleclass="Normal" translate="true"> package</text></li>
+            <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" styleclass="Normal" translate="true">Streamflow-Routing (SFR)</link><text styleclass="Normal" translate="true"> package</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/></li>
+            <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" styleclass="Normal" translate="true">Surface-Water Routing (SWR)</link><text styleclass="Normal" translate="true"> process</text><conditional-text type="END"/></li>
           </list>
         </td>
       </tr>
@@ -93,11 +94,11 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="32" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="33" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
@@ -108,7 +109,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Other Notes</text></para>
         </td>
         <td>
-          <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="34" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Compared with the Stream (STR) package, the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" styleclass="Normal" translate="true">Streamflow-Routing (SFR)</link><text styleclass="Normal" translate="true"> provides greater flexibility in how streams are specified but the parameters in it can not be used with the Sensitivity or Parameter-Estimation processes.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The Stream package does not support the &quot;FREE&quot; option of the Basic Package, so input must be entered in fixed-field format where indicated.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The Stream (STR) package was originally called the &quot;Streamflow-Routing&quot; package. &#160;This name is identical with the name of the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" styleclass="Normal" translate="true">SFR</link><text styleclass="Normal" translate="true"> package. &#160;The name &#160;&quot;Stream&quot; rather than &quot;Streamflow-Routing&quot; is adopted here for the STR package to minimize confusion.</text></li>
@@ -179,7 +180,7 @@
           <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 2</text></para>
         </td>
         <td>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">MXACTS NSS NTRIB NDIV &#160;ICALC CONST ISTCB1 ISTCB2</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">MXACTS NSS NTRIB NDIV &#160;ICALC CONST ISTCB1 ISTCB2 Option</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">I10 I10 I10 I10 I10 F10.0 I10 I10</text></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
@@ -238,7 +239,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="ISTCB1" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">ISTCB1 - is a flag and a unit number for the option to write seepage between the stream reaches and model cells into the list file or an unformatted (binary) file.</text></para>
-                      <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="35" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISTCB1&gt;0, it is the unit number to which seepage between each stream reach and the corresponding model cell will be saved whenever the variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" anchor="ICBCFL" styleclass="Normal" translate="true">ICBCFL</link><text styleclass="Normal" translate="true"> is set </text><text styleclass="New Materials" translate="true">or &quot;Save Budget&quot; is specified</text><text styleclass="Normal" translate="true"> in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" styleclass="Normal" translate="true">Output Control</link><text styleclass="Normal" translate="true"> Option.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISTCB1=0, seepage between each stream reach and the corresponding model cell will not be written into any file.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISTCB1&lt;0, streamflow for each reach and seepage between each stream reach and the corresponding models cell will be written into the LIST file whenever the variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" anchor="ICBCFL" styleclass="Normal" translate="true">ICBCFL</link><text styleclass="Normal" translate="true"> is set </text><text styleclass="New Materials" translate="true">or &quot;Save Budget&quot; is specified</text><text styleclass="Normal" translate="true"> in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" styleclass="Normal" translate="true">Output Control</link><text styleclass="Normal" translate="true"> Option.</text></li>
@@ -251,11 +252,22 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">ISTCB2 - is a flag and a unit number for the option to store streamflow out of each reach in an unformatted (binary) file.</text></para>
-                      <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="36" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISTCB2 &gt; 0, it is the unit number to which streamflow in each stream reach will be saved whenever the variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" anchor="ICBCFL" styleclass="Normal" translate="true">ICBCFL</link><text styleclass="Normal" translate="true"> is set </text><text styleclass="New Materials" translate="true">or &quot;Save Budget&quot; is specified</text><text styleclass="Normal" translate="true"> in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" styleclass="Normal" translate="true">Output Control</link><text styleclass="Normal" translate="true"> Option.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ISTCB2 ≤0, streamflow in each stream reach will not be stored in a disk file.</text></li>
                       </list>
-                      <para styleclass="Normal"></para>
+                    </td>
+                  </tr>
+                </table></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Option]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+                  <tr style="vertical-align:top">
+                    <td>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Option—is an optional list of character values. (MODFLOW-2005 and MODFLOW-NWT only)</text></para>
+                      <list id="37" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">“</text><text styleclass="Keywords" translate="true">AUXILIARY</text><text styleclass="Normal" translate="true"> abc” or “</text><text styleclass="Keywords" translate="true">AUX</text><text styleclass="Normal" translate="true"> abc”—defines an auxiliary variable, named &quot;abc&quot;, which will be read for each stream reach as part of Items 4 and 6. Up to 20 variables can be specified, each of which must be preceded by &quot;</text><text styleclass="Keywords" translate="true">AUXILIARY</text><text styleclass="Normal" translate="true">&quot; or &quot;</text><text styleclass="Keywords" translate="true">AUX</text><text styleclass="Normal" translate="true">.&quot; These variables will not be used by the Ground-Water Flow Process, but they will be available for use by other processes. The auxiliary variable values will be read after the Cond variable.</text></li>
+                      </list>
+                      <para styleclass="Normal"><snippet src="Uses_of_Auxiliary_Parameters"/></para>
                     </td>
                   </tr>
                 </table></para>
@@ -400,7 +412,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="ITMP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">ITMP - is a flag and a counter. Its meaning depends on whether or not stream parameters are being used.</text></para>
-                      <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="38" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If </text><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" anchor="PARNAM" styleclass="Normal" translate="true">STR parameters</link><text styleclass="Normal" translate="true"> are being used (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" anchor="NPSTR" styleclass="Normal" translate="true">NPSTR</link><text styleclass="Normal" translate="true">&gt;0), ITMP is the number of stream parameters being used in the current stress period.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If </text><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" anchor="PARNAM" styleclass="Normal" translate="true">STR parameters</link><text styleclass="Normal" translate="true"> are not being used (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" anchor="NPSTR" styleclass="Normal" translate="true">NPSTR</link><text styleclass="Normal" translate="true">=0), ITMP is the number of stream reaches for which data will be read in the current stress period. If ITMP &lt; 0, STR data from the preceding stress period will be reused.</text></li>
                       </list>

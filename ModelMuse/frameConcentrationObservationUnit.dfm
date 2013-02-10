@@ -7,14 +7,15 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
     ExplicitHeight = 251
     inherited tabTimes: TTabSheet
       ExplicitLeft = 4
-      ExplicitTop = 24
+      ExplicitTop = 27
       ExplicitWidth = 560
-      ExplicitHeight = 223
+      ExplicitHeight = 220
       inherited Panel5: TPanel
         inherited rdeMultiValueEdit: TRbwDataEntry
           Left = 120
           Top = 6
           Height = 23
+          TabOrder = 1
           OnChange = rdeMultiValueEditChange
           ExplicitLeft = 120
           ExplicitTop = 6
@@ -24,18 +25,28 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
           Left = 8
           Top = 6
           Width = 89
-          Height = 21
+          Height = 24
           Style = csDropDownList
-          TabOrder = 1
+          TabOrder = 0
           OnChange = comboSpeciesNamesChange
         end
       end
       inherited Panel2: TPanel
-        Top = 147
-        ExplicitTop = 147
+        Top = 144
+        ExplicitTop = 144
+        inherited lblNumberOfTimes: TLabel
+          Left = 95
+          ExplicitLeft = 95
+        end
+        inherited seTimes: TJvSpinEdit
+          Width = 81
+          Height = 24
+          ExplicitWidth = 81
+          ExplicitHeight = 24
+        end
       end
       inherited rdgObservations: TRbwDataGrid4
-        Height = 112
+        Height = 109
         ColCount = 6
         DefaultColWidth = 40
         Columns = <
@@ -180,7 +191,7 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
             CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end>
-        ExplicitHeight = 112
+        ExplicitHeight = 109
         ColWidths = (
           40
           40
@@ -192,16 +203,20 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
     end
     inherited tabLayers: TTabSheet
       ExplicitLeft = 4
-      ExplicitTop = 24
+      ExplicitTop = 27
       ExplicitWidth = 560
-      ExplicitHeight = 223
+      ExplicitHeight = 220
       inherited Panel4: TPanel
-        Top = 147
-        ExplicitTop = 147
+        Top = 144
+        ExplicitTop = 144
+        inherited seLayers: TJvSpinEdit
+          Height = 24
+          ExplicitHeight = 24
+        end
       end
       inherited rdgLayers: TRbwDataGrid4
-        Height = 112
-        ExplicitHeight = 112
+        Height = 109
+        ExplicitHeight = 109
       end
     end
   end
@@ -217,17 +232,20 @@ inherited frameConcentrationObservation: TframeConcentrationObservation
     inherited edObsName: TLabeledEdit
       Left = 11
       Top = 27
+      Height = 24
       EditLabel.ExplicitLeft = 11
       EditLabel.ExplicitTop = 11
       EditLabel.ExplicitWidth = 88
       ExplicitLeft = 11
       ExplicitTop = 27
+      ExplicitHeight = 24
     end
     inherited comboTreatment: TComboBox
       Left = 150
       Top = 27
       ExplicitLeft = 150
       ExplicitTop = 27
+      ExplicitHeight = 24
     end
   end
 end

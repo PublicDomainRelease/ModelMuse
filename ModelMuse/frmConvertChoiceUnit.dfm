@@ -11,13 +11,13 @@ inherited frmConvertChoice: TfrmConvertChoice
   Position = poDesigned
   ExplicitWidth = 367
   ExplicitHeight = 257
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object rgChoice: TRadioGroup
     Left = 0
     Top = 113
-    Width = 359
-    Height = 69
+    Width = 349
+    Height = 58
     Align = alClient
     Caption = 'What do you want to do?'
     ItemIndex = 0
@@ -25,24 +25,26 @@ inherited frmConvertChoice: TfrmConvertChoice
       'Change the data type of the data set.'
       'Automatically adjust the formula')
     TabOrder = 0
+    ExplicitWidth = 359
+    ExplicitHeight = 69
   end
   object pnlButton: TPanel
     Left = 0
-    Top = 182
-    Width = 359
+    Top = 171
+    Width = 349
     Height = 41
     Align = alBottom
     ParentColor = True
     TabOrder = 1
+    ExplicitTop = 182
+    ExplicitWidth = 359
     object btnCancel: TBitBtn
       Left = 264
       Top = 4
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
     object btnOK: TBitBtn
@@ -50,10 +52,8 @@ inherited frmConvertChoice: TfrmConvertChoice
       Top = 4
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
     end
     object btnHelp: TBitBtn
@@ -62,10 +62,8 @@ inherited frmConvertChoice: TfrmConvertChoice
       Width = 91
       Height = 33
       HelpType = htKeyword
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -73,11 +71,12 @@ inherited frmConvertChoice: TfrmConvertChoice
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 359
+    Width = 349
     Height = 113
     Align = alTop
     ParentColor = True
     TabOrder = 2
+    ExplicitWidth = 359
     object Label1: TLabel
       Left = 16
       Top = 8
@@ -123,7 +122,7 @@ inherited frmConvertChoice: TfrmConvertChoice
     object lblVariableName: TLabel
       Left = 144
       Top = 32
-      Width = 111
+      Width = 110
       Height = 18
       Caption = '(VariableName)'
     end

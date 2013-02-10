@@ -13,7 +13,7 @@ inherited frmCustomSelectObjects: TfrmCustomSelectObjects
     Height = 41
     Align = alBottom
     ParentColor = True
-    TabOrder = 1
+    TabOrder = 0
     DesignSize = (
       422
       41)
@@ -23,10 +23,8 @@ inherited frmCustomSelectObjects: TfrmCustomSelectObjects
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkClose
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
     end
     object btnHelp: TBitBtn
@@ -35,10 +33,8 @@ inherited frmCustomSelectObjects: TfrmCustomSelectObjects
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
     end
   end
@@ -49,7 +45,6 @@ inherited frmCustomSelectObjects: TfrmCustomSelectObjects
     Height = 373
     Align = alClient
     Header.AutoSizeIndex = 0
-    Header.DefaultHeight = 17
     Header.Font.Charset = DEFAULT_CHARSET
     Header.Font.Color = clWindowText
     Header.Font.Height = -11
@@ -57,7 +52,7 @@ inherited frmCustomSelectObjects: TfrmCustomSelectObjects
     Header.Font.Style = []
     Header.MainColumn = -1
     Header.Options = [hoColumnResize, hoDrag]
-    TabOrder = 0
+    TabOrder = 1
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toWheelPanning]
     OnChecking = vstObjectsChecking
     OnFreeNode = vstObjectsFreeNode

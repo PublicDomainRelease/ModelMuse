@@ -193,8 +193,8 @@ type
     property Values: TMt3dmsTobCollection read FValues write SetValues;
   end;
 
-  // @name is used to store a series of @link(TDataArray)s for head
-  // observations in MODFLOW.
+  // @name is used to store a series of @link(TDataArray)s for concentration
+  // observations in MT3DMS.
   TMt3dmsConcObsTimeList = class(TCustomTimeList)
   private
     // See @link(OnInvalidate).

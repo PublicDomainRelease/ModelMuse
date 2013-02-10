@@ -16,8 +16,8 @@ uses Windows, Math, ZLib, GR32, TempFiles, IntListUnit, RealListUnit, SysUtils,
   SparseDataSets, ObserverIntfU, FormulaManagerUnit, Dialogs;
 
 { TODO :
-Consider making dual data sets that can be evaluated at both elements 
-and nodes. }  
+Consider making dual data sets that can be evaluated at both elements
+and nodes. }
 
 type
   // @name is a 3D array of real numbers.
@@ -31,6 +31,13 @@ type
 
   // @name is a 3D array of strings.
   T3DStringDataSet = array of array of array of string;
+
+  TBoundaryType = (btUndefined, btPhastSpecifiedHead, btPhastFlux, btPhastLeaky,
+    btPhastRiver, btPhastWell, btMfWell, btMfGhb, btMfDrn, btMfDrt, btMfRiv,
+    btMfChd, btMfEts, btMfEt, btMfRch, btMfSfr, btMfUzf, btMfObs, btMfMnw,
+    btMt3dSsm, btMfHfb);
+
+  TBoundaryTypes = set of TBoundaryType;
 
   // @abstract(@name is raised if a formula is assigned that, when compiled
   // gives a type of data that is incompatible with the type of data
@@ -1068,6 +1075,12 @@ type
   private
     // @name is used to store the real numbers in @classname.
     FRealValues: T3DSparseRealArray;
+    function GetMaxColumn: Integer;
+    function GetMaxLayer: Integer;
+    function GetMaxRow: Integer;
+    function GetMinColumn: Integer;
+    function GetMinLayer: Integer;
+    function GetMinRow: Integer;
   protected
     procedure Clear; override;
     // @name checks whether @link(FRealValues) has been
@@ -1094,6 +1107,12 @@ type
     // @name destroys the the current instance of @classname.
     // Do not call @name directly. Call Free instead.
     destructor Destroy; override;
+    property MinLayer: Integer read GetMinLayer;
+    property MaxLayer: Integer read GetMaxLayer;
+    property MinRow: Integer read GetMinRow;
+    property MaxRow: Integer read GetMaxRow;
+    property MinColumn: Integer read GetMinColumn;
+    property MaxColumn: Integer read GetMaxColumn;
   end;
 
   TTransientRealSparseDataSet = class(TRealSparseDataSet)
@@ -1210,13 +1229,16 @@ type
     procedure SetMax(const Value: double);
     // See @link(Min).
     procedure SetMin(const Value: double);
-
+    function GetBoundaryType: TBoundaryType;
   protected
     property Model: TBaseModel read FModel;
     // See @link(UpToDate).
     function GetUpToDate: boolean; virtual;
     // See @link(UpToDate).
     procedure SetUpToDate(const Value: boolean); virtual;
+    // @name checks that there is not a conflict between the
+    // @link(TDataArray.Model) and @link(Model).
+    procedure CheckSameModel(const Data: TDataArray); virtual;
   public
     // @name is used to indicate whether or not a particular @classname
     // is used by the model.
@@ -1307,6 +1329,7 @@ type
     from a hierarchical list of @classname's}
     property Classification: string read GetClassification
       write SetClassification;
+    property BoundaryType: TBoundaryType read GetBoundaryType;
     // @name is used to set the @link(TDataArray.Max) property of any
     // @link(TDataArray)s stored in @classname
     property Max: double read FMax write SetMax;
@@ -1400,6 +1423,26 @@ resourcestring
   StrErrorThisInterpolString = 'Error: This interpolator can not return a st' +
   'ring result.';
   StrEvaluatingDat = '      Evaluating data set: "%s."';
+  StrPHASTSpecifiedHead = 'PHAST Specified Head';
+  StrPHASTFlux = 'PHAST Flux';
+  StrPHASTLeaky = 'PHAST Leaky';
+  StrPHASTRiver = 'PHAST River';
+  StrPHASTWell = 'PHAST Well';
+  StrMODFLOWWell = 'MODFLOW Well';
+  StrMODFLOWGeneralHead = 'MODFLOW General Head Boundary';
+  StrMODFLOWDrain = 'MODFLOW Drain';
+  StrMODFLOWDrainReturn = 'MODFLOW Drain Return';
+  StrMODFLOWRiver = 'MODFLOW River';
+  StrMODFLOWCHD = 'MODFLOW CHD';
+  StrMODFLOWEvapoSegments = 'MODFLOW Evapotranspiration Segments';
+  StrMODFLOWEvapotranspi = 'MODFLOW Evapotranspiration';
+  StrMODFLOWRecharge = 'MODFLOW Recharge';
+  StrMODFLOWStreamflowR = 'MODFLOW Streamflow Routing';
+  StrMODFLOWUnsaturated = 'MODFLOW Unsaturated Zone Flow';
+  StrMODFLOWObservations = 'MODFLOW Observations';
+  StrMODFLOWMultinodeWe = 'MODFLOW Multinode Well';
+  StrMT3DMSSinkAndSour = 'MT3DMS Sink and Source Mixing';
+  StrUndefined = 'Undefined';
 
 { TDataArray }
 
@@ -1854,7 +1897,7 @@ var
   procedure GetLimits;
   begin
     {$IFDEF SUTRA}
-    if LocalModel.ModelSelection = msSutra then
+    if LocalModel.ModelSelection = msSutra22 then
     begin
       LayerLimit := LayerCount - 1;
       RowLimit := RowCount - 1;
@@ -2768,6 +2811,11 @@ begin
     if (frmDisplayData <> nil) and frmDisplayData.ShouldUpdate then
     begin
       frmDisplayData.UpdateLabelsAndLegend;
+    end;
+
+    if frmErrorsAndWarnings.HasMessages then
+    begin
+      frmErrorsAndWarnings.Show;
     end;
   end;
   CheckIfUniform;
@@ -4686,7 +4734,7 @@ end;
 procedure TDataArray.GetLimits(out ColLimit, RowLimit, LayerLimit: Integer);
 begin
     {$IFDEF SUTRA}
-  if (Model as TCustomModel).ModelSelection = msSutra then
+  if (Model as TCustomModel).ModelSelection = msSutra22 then
   begin
     LayerLimit := LayerCount - 1;
     RowLimit := RowCount - 1;
@@ -5258,7 +5306,7 @@ begin
     if LocalModel <> nil then
     begin
       {$IFDEF Sutra}
-      if LocalModel.ModelSelection = msSutra then
+      if LocalModel.ModelSelection = msSutra22 then
       begin
         Mesh := LocalModel.Mesh.Mesh2D;
         if Mesh <> nil then
@@ -5356,6 +5404,36 @@ begin
   end;
 end;
 
+function TRealSparseDataSet.GetMaxColumn: Integer;
+begin
+  CheckRestoreData;
+  result := FRealValues.MaxCol;
+end;
+
+function TRealSparseDataSet.GetMaxLayer: Integer;
+begin
+  CheckRestoreData;
+  result := FRealValues.MaxLayer;
+end;
+
+function TRealSparseDataSet.GetMaxRow: Integer;
+begin
+  CheckRestoreData;
+  result := FRealValues.MaxRow;
+end;
+
+function TRealSparseDataSet.GetMinColumn: Integer;
+begin
+  CheckRestoreData;
+  result := FRealValues.MinCol;
+end;
+
+function TRealSparseDataSet.GetMinLayer: Integer;
+begin
+  CheckRestoreData;
+  result := FRealValues.MinLayer
+end;
+
 procedure TRealSparseDataSet.GetMinMaxStoredLimits(out LayerMin, RowMin, ColMin,
   LayerMax, RowMax, ColMax: integer);
 begin
@@ -5366,6 +5444,12 @@ begin
   LayerMax := FRealValues.MaxLayer;
   RowMax := FRealValues.MaxRow;
   ColMax := FRealValues.MaxCol;
+end;
+
+function TRealSparseDataSet.GetMinRow: Integer;
+begin
+  CheckRestoreData;
+  result := FRealValues.MinRow
 end;
 
 function TRealSparseDataSet.GetRealData(const Layer, Row,
@@ -5893,10 +5977,13 @@ begin
   begin
     for Index := 0 to Count - 1 do
     begin
-      result := Items[Index].UpToDate;
-      if not result then
+      if Items[Index] <> nil then
       begin
-        Exit;
+        result := Items[Index].UpToDate;
+        if not result then
+        begin
+          Exit;
+        end;
       end;
     end;
   end;
@@ -5982,7 +6069,10 @@ begin
     if TimeIndex >= 0 then
     begin
       DataSet := Items[TimeIndex];
-      result := DataSet.MaxValue;
+      if DataSet <> nil then
+      begin
+        result := DataSet.MaxValue;
+      end;
     end;
   end;
 end;
@@ -5999,16 +6089,24 @@ begin
     if TimeIndex >= 0 then
     begin
       DataSet := Items[TimeIndex];
-      result := DataSet.MinValue;
+      if DataSet <> nil then
+      begin
+        result := DataSet.MinValue;
+      end;
     end;
   end;
+end;
+
+procedure TCustomTimeList.CheckSameModel(const Data: TDataArray);
+begin
+  Assert(Data <> nil);
+  Assert(Model = Data.Model);
 end;
 
 function TCustomTimeList.Add(const ATime: double;
   const Data: TDataArray): integer;
 begin
-  Assert(Data <> nil);
-  Assert(Model = Data.Model);
+  CheckSameModel(Data);
   result := IndexOf(ATime);
   if result >= 0 then
   begin
@@ -6026,11 +6124,14 @@ begin
     FData.Insert(result, Data);
   end;
 
-  Data.Limits := Limits;
-  Data.Max := Max;
-  Data.Min := Min;
-  Data.CheckMax := CheckMax;
-  Data.CheckMin := CheckMin;
+  if Data <> nil then
+  begin
+    Data.Limits := Limits;
+    Data.Max := Max;
+    Data.Min := Min;
+    Data.CheckMax := CheckMax;
+    Data.CheckMin := CheckMin;
+  end;
 
   Invalidate;
 end;
@@ -6051,191 +6152,280 @@ begin
   Invalidate;
 end;
 
+function TCustomTimeList.GetBoundaryType: TBoundaryType;
+begin
+  if (Name = StrSpecifiedHead)
+    or (Name = StrSpecifiedHeadSolution)
+    then
+  begin
+    result := btPhastSpecifiedHead;
+  end
+  else if (Name = StrTopFluxBoundaryFlux)
+    or (Name = StrFrontFluxBoundaryFlux)
+    or (Name = StrSideFluxBoundaryFlux)
+    or (Name = StrTopFluxBoundaryAssocSoln)
+    or (Name = StrFrontFluxBoundaryAssocSoln)
+    or (Name = StrSideFluxBoundaryAssocSoln)
+    then
+  begin
+    Result := btPhastFlux;
+  end
+  else if (Name = StrTopLeakyBoundaryHead)
+    or (Name = StrTopLeakyBoundaryAssocSoln)
+    or (Name = StrFrontLeakyBoundaryHead)
+    or (Name = StrFrontLeakyBoundaryAssocSoln)
+    or (Name = StrSideLeakyBoundaryHead)
+    or (Name = StrSideLeakyBoundaryAssocSoln)
+    then
+  begin
+    Result := btPhastLeaky;
+  end
+  else if (Name = StrRiverHead)
+    or (Name = StrRiverAssocSoln)
+    then
+  begin
+    Result := btPhastRiver;
+  end
+  else if (Name = StrWellInjectionRate)
+    or (Name = StrWellSolution)
+    then
+  begin
+    Result := btPhastWell;
+  end
+  else if (Name = StrMODFLOWWellPumping)
+    then
+  begin
+    Result := btMfWell;
+  end
+  else if (Name = StrMODFLOWGhbConductance)
+    or (Name = StrMODFLOWGhbHead)
+    then
+  begin
+    Result := btMfGhb;
+  end
+  else if (Name = StrMODFLOWDrainElevation)
+    or (Name = StrMODFLOWDrainConductance)
+    then
+  begin
+    Result := btMfDrn;
+  end
+  else if (Name = StrMODFLOWDrainReturnConductance)
+    or (Name = StrMODFLOWDrainReturnElevation)
+    or (Name = StrMODFLOWDrainReturnFraction)
+    then
+  begin
+    Result := btMfDrt;
+  end
+  else if (Name = StrMODFLOWRiverConductance)
+    or (Name = StrMODFLOWRiverStage)
+    or (Name = StrMODFLOWRiverBottom)
+    then
+  begin
+    Result := btMfRiv;
+  end
+  else if (Name = StrMODFLOWCHDStartingHead)
+    or (Name = StrMODFLOWCHDEndingHead)
+    then
+  begin
+    Result := btMfChd;
+  end
+  else if (Pos(StrMODFLOWEtsRateFraction, Name) = 1)
+    or (Pos(StrMODFLOWEtsDepthFraction, Name) = 1)
+    or (Name = StrMODFLOWEtsRate)
+    or (Name = StrMODFLOWEtsDepth)
+    or (Name = StrMODFLOWEtsSurface)
+    or (Name = StrMODFLOWEtsLayer)
+    then
+  begin
+    Result := btMfEts;
+  end
+  else if (Name = StrMODFLOWEvtRate)
+    or (Name = StrMODFLOWEvtDepth)
+    or (Name = StrMODFLOWEvtSurface)
+    or (Name = StrMODFLOWEvtLayer)
+    then
+  begin
+    Result := btMfEt;
+  end
+  else if (Name = StrMODFLOWRchRate)
+    or (Name = StrMODFLOWRchLayer)
+    then
+  begin
+    Result := btMfRch;
+  end
+  else if (Name = StrModflowSfrSegment)
+    or (Name = StrModflowSfrReach)
+    or (Name = StrModflowSfrIcalc)
+    or (Name = StrModflowSfrReachLength)
+    or (Name = StrModflowSfrStreamTop)
+    or (Name = StrModflowSfrStreamSlope)
+    or (Name = StrModflowSfrStreamThickness)
+    or (Name = StrModflowSfrStreamK)
+    or (Name = StrModflowSfrSatWatCont)
+    or (Name = StrModflowSfrInitWatCont)
+    or (Name = StrModflowSfrBrooksCorey)
+    or (Name = StrModflowSfrVertK)
+    or (Name = StrModflowSfrDownstreamSegment)
+    or (Name = StrModflowSfrDiversionSegment)
+    or (Name = StrModflowSfrIprior)
+    or (Name = StrModflowSfrFlow)
+    or (Name = StrModflowSfrRunoff)
+    or (Name = StrModflowSfrPrecipitation)
+    or (Name = StrModflowSfrEvapotranspiration)
+    or (Name = StrModflowSfrChannelRoughness)
+    or (Name = StrModflowSfrBankRoughness)
+    or (Name = StrModflowSfrDepthCoefficient)
+    or (Name = StrModflowSfrDepthExponent)
+    or (Name = StrModflowSfrWidthCoefficient)
+    or (Name = StrModflowSfrWidthExponent)
+    or (Name = StrModflowSfrUpstreamHydraulicConductivity)
+    or (Name = StrModflowSfrDownstreamHydraulicConductivity)
+    or (Name = StrModflowSfrUpstreamWidth)
+    or (Name = StrModflowSfrDownstreamWidth)
+    or (Name = StrModflowSfrUpstreamThickness)
+    or (Name = StrModflowSfrDownstreamThickness)
+    or (Name = StrModflowSfrUpstreamElevation)
+    or (Name = StrModflowSfrDownstreamElevation)
+    or (Name = StrModflowSfrUpstreamDepth)
+    or (Name = StrModflowSfrDownstreamDepth)
+    or (Name = StrModflowSfrUpstreamSaturatedWaterContent)
+    or (Name = StrModflowSfrDownstreamSaturatedWaterContent)
+    or (Name = StrModflowSfrUpstreamInitialUnsaturatedWaterContent)
+    or (Name = StrModflowSfrDownstreamInitialUnsaturatedWaterContent)
+    or (Name = StrModflowSfrUpstreamBrooksCoreyExponent)
+    or (Name = StrModflowSfrDownstreamBrooksCoreyExponent)
+    or (Name = StrModflowSfrUpstreamMaxUnsaturatedKz)
+    or (Name = StrModflowSfrDownstreamMaxUnsaturatedKz)
+    then
+  begin
+    Result := btMfSfr;
+  end
+  else if (Name = StrUzfInfiltrationRate)
+    or (Name = StrUzfExtinctionDepth)
+    or (Name = StrUzfWaterContent)
+    or (Name = StrUzfEtDemand)
+    then
+  begin
+    Result := btMfUzf;
+  end
+  else if (Name = StrMODFLOWHeadObservations)
+    then
+  begin
+    Result := btMfObs;
+  end
+  else if (Name = StrWellRadius)
+    or (Name = StrSkinRadius)
+    or (Name = StrSkinK)
+    or (Name = StrB)
+    or (Name = StrC)
+    or (Name = StrP)
+    or (Name = StrCellToWellConductance)
+    or (Name = StrPartialPenetration)
+    then
+  begin
+    Result := btMfMnw;
+  end
+  else if Name = StrMT3DMSSSMConcentra then
+  begin
+    Result := btMt3dSsm;
+  end
+  else
+  begin
+    result := btUndefined;
+  end;
+
+end;
+
+
+
 function TCustomTimeList.GetClassification: string;
 begin
   result := FClassification;
   if result = '' then
   begin
-    if (Name = StrSpecifiedHead)
-      or (Name = StrSpecifiedHeadSolution)
-      then
-    begin
-      result := 'PHAST Specified Head';
-    end
-    else if (Name = StrTopFluxBoundaryFlux)
-      or (Name = StrFrontFluxBoundaryFlux)
-      or (Name = StrSideFluxBoundaryFlux)
-      or (Name = StrTopFluxBoundaryAssocSoln)
-      or (Name = StrFrontFluxBoundaryAssocSoln)
-      or (Name = StrSideFluxBoundaryAssocSoln)
-      then
-    begin
-      Result := 'PHAST Flux';
-    end
-    else if (Name = StrTopLeakyBoundaryHead)
-      or (Name = StrTopLeakyBoundaryAssocSoln)
-      or (Name = StrFrontLeakyBoundaryHead)
-      or (Name = StrFrontLeakyBoundaryAssocSoln)
-      or (Name = StrSideLeakyBoundaryHead)
-      or (Name = StrSideLeakyBoundaryAssocSoln)
-      then
-    begin
-      Result := 'PHAST Leaky';
-    end
-    else if (Name = StrRiverHead)
-      or (Name = StrRiverAssocSoln)
-      then
-    begin
-      Result := 'PHAST River';
-    end
-    else if (Name = StrWellInjectionRate)
-      or (Name = StrWellSolution)
-      then
-    begin
-      Result := 'PHAST Well';
-    end
-    else if (Name = StrMODFLOWWellPumping)
-      then
-    begin
-      Result := 'MODFLOW Well';
-    end
-    else if (Name = StrMODFLOWGhbConductance)
-      or (Name = StrMODFLOWGhbHead)
-      then
-    begin
-      Result := 'MODFLOW General Head Boundary';
-    end
-    else if (Name = StrMODFLOWDrainElevation)
-      or (Name = StrMODFLOWDrainConductance)
-      then
-    begin
-      Result := 'MODFLOW Drain';
-    end
-    else if (Name = StrMODFLOWDrainReturnConductance)
-      or (Name = StrMODFLOWDrainReturnElevation)
-      or (Name = StrMODFLOWDrainReturnFraction)
-      then
-    begin
-      Result := 'MODFLOW Drain Return';
-    end
-    else if (Name = StrMODFLOWRiverConductance)
-      or (Name = StrMODFLOWRiverStage)
-      or (Name = StrMODFLOWRiverBottom)
-      then
-    begin
-      Result := 'MODFLOW River';
-    end
-    else if (Name = StrMODFLOWCHDStartingHead)
-      or (Name = StrMODFLOWCHDEndingHead)
-      then
-    begin
-      Result := 'MODFLOW CHD';
-    end
-    else if (Pos(StrMODFLOWEtsRateFraction, Name) = 1)
-      or (Pos(StrMODFLOWEtsDepthFraction, Name) = 1)
-      or (Name = StrMODFLOWEtsRate)
-      or (Name = StrMODFLOWEtsDepth)
-      or (Name = StrMODFLOWEtsSurface)
-      or (Name = StrMODFLOWEtsLayer)
-      then
-    begin
-      Result := 'MODFLOW Evapotranspiration Segments';
-    end
-    else if (Name = StrMODFLOWEvtRate)
-      or (Name = StrMODFLOWEvtDepth)
-      or (Name = StrMODFLOWEvtSurface)
-      or (Name = StrMODFLOWEvtLayer)
-      then
-    begin
-      Result := 'MODFLOW Evapotranspiration';
-    end
-    else if (Name = StrMODFLOWRchRate)
-      or (Name = StrMODFLOWRchLayer)
-      then
-    begin
-      Result := 'MODFLOW Recharge';
-    end
-    else if (Name = StrModflowSfrSegment)
-      or (Name = StrModflowSfrReach)
-      or (Name = StrModflowSfrIcalc)
-      or (Name = StrModflowSfrReachLength)
-      or (Name = StrModflowSfrStreamTop)
-      or (Name = StrModflowSfrStreamSlope)
-      or (Name = StrModflowSfrStreamThickness)
-      or (Name = StrModflowSfrStreamK)
-      or (Name = StrModflowSfrSatWatCont)
-      or (Name = StrModflowSfrInitWatCont)
-      or (Name = StrModflowSfrBrooksCorey)
-      or (Name = StrModflowSfrVertK)
-      or (Name = StrModflowSfrDownstreamSegment)
-      or (Name = StrModflowSfrDiversionSegment)
-      or (Name = StrModflowSfrIprior)
-      or (Name = StrModflowSfrFlow)
-      or (Name = StrModflowSfrRunoff)
-      or (Name = StrModflowSfrPrecipitation)
-      or (Name = StrModflowSfrEvapotranspiration)
-      or (Name = StrModflowSfrChannelRoughness)
-      or (Name = StrModflowSfrBankRoughness)
-      or (Name = StrModflowSfrDepthCoefficient)
-      or (Name = StrModflowSfrDepthExponent)
-      or (Name = StrModflowSfrWidthCoefficient)
-      or (Name = StrModflowSfrWidthExponent)
-      or (Name = StrModflowSfrUpstreamHydraulicConductivity)
-      or (Name = StrModflowSfrDownstreamHydraulicConductivity)
-      or (Name = StrModflowSfrUpstreamWidth)
-      or (Name = StrModflowSfrDownstreamWidth)
-      or (Name = StrModflowSfrUpstreamThickness)
-      or (Name = StrModflowSfrDownstreamThickness)
-      or (Name = StrModflowSfrUpstreamElevation)
-      or (Name = StrModflowSfrDownstreamElevation)
-      or (Name = StrModflowSfrUpstreamDepth)
-      or (Name = StrModflowSfrDownstreamDepth)
-      or (Name = StrModflowSfrUpstreamSaturatedWaterContent)
-      or (Name = StrModflowSfrDownstreamSaturatedWaterContent)
-      or (Name = StrModflowSfrUpstreamInitialUnsaturatedWaterContent)
-      or (Name = StrModflowSfrDownstreamInitialUnsaturatedWaterContent)
-      or (Name = StrModflowSfrUpstreamBrooksCoreyExponent)
-      or (Name = StrModflowSfrDownstreamBrooksCoreyExponent)
-      or (Name = StrModflowSfrUpstreamMaxUnsaturatedKz)
-      or (Name = StrModflowSfrDownstreamMaxUnsaturatedKz)
-      then
-    begin
-      Result := 'MODFLOW Streamflow Routing';
-    end
-    else if (Name = StrUzfInfiltrationRate)
-      or (Name = StrUzfExtinctionDepth)
-      or (Name = StrUzfWaterContent)
-      or (Name = StrUzfEtDemand)
-      then
-    begin
-      Result := 'MODFLOW Unsaturated Zone Flow';
-    end
-    else if (Name = StrMODFLOWHeadObservations)
-      then
-    begin
-      Result := 'MODFLOW Observations';
-    end
-    else if (Name = StrWellRadius)
-      or (Name = StrSkinRadius)
-      or (Name = StrSkinK)
-      or (Name = StrB)
-      or (Name = StrC)
-      or (Name = StrP)
-      or (Name = StrCellToWellConductance)
-      or (Name = StrPartialPenetration)
-      then
-    begin
-      Result := 'MODFLOW Multinode Well';
-    end
-    else if Name = StrMT3DMSSSMConcentra then
-    begin
-      Result := 'MT3DMS Sink and Source Mixing';
-    end
-    else
-    begin
-      result := 'Undefined';
+    case BoundaryType of
+      btUndefined:
+        begin
+          result := StrUndefined;
+        end;
+      btPhastSpecifiedHead:
+        begin
+          result := StrPHASTSpecifiedHead;
+        end;
+      btPhastFlux:
+        begin
+          Result := StrPHASTFlux;
+        end;
+      btPhastLeaky:
+        begin
+          Result := StrPHASTLeaky;
+        end;
+      btPhastRiver:
+        begin
+          Result := StrPHASTRiver;
+        end;
+      btPhastWell:
+        begin
+          Result := StrPHASTWell;
+        end;
+      btMfWell:
+        begin
+          Result := StrMODFLOWWell;
+        end;
+      btMfGhb:
+        begin
+          Result := StrMODFLOWGeneralHead;
+        end;
+      btMfDrn:
+        begin
+          Result := StrMODFLOWDrain;
+        end;
+      btMfDrt:
+        begin
+          Result := StrMODFLOWDrainReturn;
+        end;
+      btMfRiv:
+        begin
+          Result := StrMODFLOWRiver;
+        end;
+      btMfChd:
+        begin
+          Result := StrMODFLOWCHD;
+        end;
+      btMfEts:
+        begin
+          Result := StrMODFLOWEvapoSegments;
+        end;
+      btMfEt:
+        begin
+          Result := StrMODFLOWEvapotranspi;
+        end;
+      btMfRch:
+        begin
+          Result := StrMODFLOWRecharge;
+        end;
+      btMfSfr:
+        begin
+          Result := StrMODFLOWStreamflowR;
+        end;
+      btMfUzf:
+        begin
+          Result := StrMODFLOWUnsaturated;
+        end;
+      btMfObs:
+        begin
+          Result := StrMODFLOWObservations;
+        end;
+      btMfMnw:
+        begin
+          Result := StrMODFLOWMultinodeWe;
+        end;
+      btMt3dSsm:
+        begin
+          Result := StrMT3DMSSinkAndSour;
+        end;
     end;
-    if result <> 'Undefined' then
+    if result <> StrUndefined then
     begin
       FClassification := result;
     end;
@@ -6363,7 +6553,10 @@ end;
 function TCustomTimeList.GetItems(const Index: integer): TDataArray;
 begin
   result := FData[Index];
-  result.ATimeList := self;
+  if result <> nil then
+  begin
+    result.ATimeList := self;
+  end;
 end;
 
 procedure TCustomTimeList.SetCheckMax(const Value: boolean);
@@ -6415,8 +6608,11 @@ begin
   Limits.Update;
   for Index := 0 to Count - 1 do
   begin
-    DataSet := self.Items[Index];
-    DataSet.Limits := Limits;
+    DataSet := Items[Index];
+    if DataSet <> nil then
+    begin
+      DataSet.Limits := Limits;
+    end;
   end;
 end;
 

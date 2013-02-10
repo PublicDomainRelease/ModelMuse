@@ -113,8 +113,8 @@ inherited frameArrayParameterDefinition: TframeArrayParameterDefinition
     object lblParamValue: TLabel
       Left = 24
       Top = 8
-      Width = 66
-      Height = 13
+      Width = 82
+      Height = 16
       Caption = 'lblParamValue'
       Enabled = False
     end

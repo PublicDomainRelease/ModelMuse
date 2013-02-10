@@ -762,7 +762,7 @@ type
   { Public declarations }
   published
     Property ColorSelectedRow : boolean read FColorSelectedColumnOrRow
-      write SetColorSelectedColumnOrRow;
+      write SetColorSelectedColumnOrRow default True;
     property Columns : TRbwDataGridColumns4 read FColumns write SetColumns;
     property OnEndUpdate: TNotifyEvent read FOnEndUpdate write FOnEndUpdate;
     // @name is only for backwards compatibility.
@@ -2166,6 +2166,11 @@ var
   Item: TCustomRowOrColumn;
 begin
   Item := CollectionItem(ACol, ARow);
+  if Item = nil then
+  begin
+    Result := esSimple;
+    Exit;
+  end;
   if Item.ButtonUsed then
   begin
     result := esEllipsis;
@@ -2477,7 +2482,7 @@ begin
         break;
       end;
     end;
-    if ACol > AGrid.FixedCols then
+    if ACol >= AGrid.FixedCols then
     begin
       for ARow := AGrid.FixedRows to AGrid.RowCount -1 do
       begin
@@ -2514,7 +2519,7 @@ begin
         break;
       end;
     end;
-    if ARow > AGrid.FixedRows then
+    if ARow >= AGrid.FixedRows then
     begin
       for ACol := AGrid.FixedCols to AGrid.ColCount - 1 do
       begin
@@ -3137,14 +3142,34 @@ end;
 
 procedure TCustomRBWDataGrid.GetButtonCaption(Sender: TObject;
   var ButtonCaption: string);
+var
+  Item: TCustomRowOrColumn;
 begin
-  ButtonCaption := CollectionItem(Col, Row).ButtonCaption;
+  Item := CollectionItem(Col, Row);
+  if Item = nil then
+  begin
+    ButtonCaption := '';
+  end
+  else
+  begin
+    ButtonCaption := Item.ButtonCaption;
+  end;
 end;
 
 procedure TCustomRBWDataGrid.GetButtonWidth(Sender: TObject;
   var ButtonWidth: Integer);
+var
+  Item: TCustomRowOrColumn;
 begin
-  ButtonWidth := CollectionItem(Col, Row).ButtonWidth;
+  Item := CollectionItem(Col, Row);
+  if Item = nil then
+  begin
+    ButtonWidth := 0;
+  end
+  else
+  begin
+    ButtonWidth := Item.ButtonWidth;
+  end;
 end;
 
 function TCustomRBWDataGrid.GetCaptionFlags(const ACol, ARow: integer): UINT;

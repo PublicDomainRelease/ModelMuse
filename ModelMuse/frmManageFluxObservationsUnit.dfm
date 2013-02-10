@@ -12,8 +12,8 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
   Position = poScreenCenter
   OnActivate = ListClick
   OnResize = FormResize
-  ExplicitWidth = 800
-  ExplicitHeight = 425
+  ExplicitWidth = 808
+  ExplicitHeight = 429
   PixelsPerInch = 96
   TextHeight = 18
   object JvNetscapeSplitter1: TJvNetscapeSplitter
@@ -879,7 +879,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object lblTreatment: TLabel
         Left = 200
         Top = 6
-        Width = 70
+        Width = 69
         Height = 18
         Caption = 'Treatment'
       end

@@ -103,6 +103,7 @@ const
   StrLMT6                   = 'LMT6';
   StrFTL                    = 'FTL';
   StrCNF                    = 'CNF';
+  StrPHIRAMPOut = 'PHIRAMP_Out';
 
   Solvers: array[0..5] of string = (StrPCG, StrPCGN, StrGMG, StrSIP, StrDE4, StrNWT);
   FlowPackages: array[0..3] of string = (StrLPF, StrHUF2, StrBCF, StrUPW);
@@ -338,11 +339,14 @@ const
   PCGN_UNIT_TS = 139;
   PCGN_IPUNIT  = 140;
 
+  NwtPhrampOut = 141;
+
 
 
   GageOutputStartUnit = 205;
 
 implementation
+
 
 { TUnitNumbers }
 
@@ -482,6 +486,8 @@ begin
   AddItem(StrUPW ,UPW_Unit);
   AddItem(StrLMT6, LMT6_Unit);
   AddItem(StrFTL, FTL_Unit);
+
+  AddItem(StrPHIRAMPOut, NwtPhrampOut);
 
 
 

@@ -39,7 +39,7 @@ uses
   frameMt3dBasicPkgUnit, frameMt3dmsGcgPackageUnit, frameMt3dmsAdvPkgUnit,
   frameMt3dmsDispersionPkgUnit, Mt3dmsChemSpeciesUnit,
   frameMt3dmsChemReactionPkgUnit, frameMt3dmsTransObsPkgUnit, Mt3dmsTimesUnit,
-  framePackagePcgnUnit;
+  framePackagePcgnUnit, framePackageWellUnit;
 
 type
 
@@ -85,7 +85,7 @@ type
     jvspGHB: TJvStandardPage;
     framePkgGHB: TframePackage;
     jvspWEL: TJvStandardPage;
-    framePkgWEL: TframePackage;
+    framePkgWEL: TframePackageWell;
     jvspRIV: TJvStandardPage;
     framePkgRIV: TframePackage;
     jvspDRN: TJvStandardPage;
@@ -448,6 +448,7 @@ begin
     begin
       Page := jplSfrParameters.Pages[PageIndex];
       Assert(Page.ControlCount= 1);
+      Page.Handle;
       Frame := Page.Controls[0] as TframeSfrParamInstances;
       ParameterName := frameSFRParameterDefinition.dgParameters.Cells[Ord(pcName), PageIndex+1];
       if ParameterName <> '' then
@@ -725,6 +726,8 @@ begin
   begin
     SwtPackage.PrintChoices.ReportErrors;
   end;
+
+  frmGoPhast.PhastModel.ModpathHeadWarning;
 
   if NeedToDefineFluxObservations then
   begin
@@ -1078,6 +1081,7 @@ begin
   begin
     Page := jplSfrParameters.Pages[PageIndex];
     Assert(Page.ControlCount= 1);
+    Page.Handle;
     Frame := Page.Controls[0] as TframeSfrParamInstances;
     Frame.Free;
     Page.Free;
@@ -1112,6 +1116,7 @@ begin
   begin
     Page := jplSfrParameters.Pages[PageIndex];
     Assert(Page.ControlCount= 1);
+    Page.Handle;
     Frame := Page.Controls[0] as TframeSfrParamInstances;
     Frame.pnlLabel.Caption := frameSFRParameterDefinition.
       dgParameters.Cells[Ord(pcName),PageIndex+1];
@@ -1155,6 +1160,7 @@ begin
   begin
     Page := jplSfrParameters.Pages[jplSfrParameters.PageCount-1];
     Assert(Page.ControlCount= 1);
+    Page.Handle;
     Frame := Page.Controls[0] as TframeSfrParamInstances;
     Frame.Free;
     Page.Free;
@@ -1364,6 +1370,7 @@ begin
     begin
       Page := jplSfrParameters.Pages[PageIndex];
       Assert(Page.ControlCount= 1);
+      Page.Handle;
       Frame := Page.Controls[0] as TframeSfrParamInstances;
       ParameterName := frameSFRParameterDefinition.dgParameters.
         Cells[Ord(pcName), PageIndex+1];
@@ -1403,6 +1410,7 @@ begin
     begin
       Page := jplSfrParameters.Pages[PageIndex];
       Assert(Page.ControlCount= 1);
+      Page.Handle;
       Frame := Page.Controls[0] as TframeSfrParamInstances;
       ParameterName := frameSFRParameterDefinition.dgParameters.
         Cells[Ord(pcName), PageIndex+1];
@@ -1498,6 +1506,7 @@ begin
       Assert(PageIndex >= 0);
       Page := jplSfrParameters.Pages[PageIndex];
       Assert(Page.ControlCount= 1);
+      Page.Handle;
       Frame := Page.Controls[0] as TframeSfrParamInstances;
       Frame.seInstanceCount.AsInteger := Frame.seInstanceCount.AsInteger +1;
       Row := Frame.seInstanceCount.AsInteger;
@@ -2020,7 +2029,7 @@ end;
 
 procedure TfrmModflowPackages.Mt3dmsBasicSelectedChange(Sender: TObject);
 begin
-  frameMt3dmsGcgPackage.CanSelect := framePkgMt3dBasic.Selected;;
+  frameMt3dmsGcgPackage.CanSelect := framePkgMt3dBasic.Selected;
   frameMt3dmsGcgPackage.Selected := framePkgMt3dBasic.Selected;
 
   frameMt3dmsAdvPkg.CanSelect := framePkgMt3dBasic.Selected;

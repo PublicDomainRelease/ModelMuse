@@ -6,9 +6,11 @@ uses
   frmMonitorUnit in 'frmMonitorUnit.pas' {frmMonitor},
   ErrorMessages in 'ErrorMessages.pas',
   RealListUnit in '..\ModelMuse\RealListUnit.pas',
-  forceforeground in 'forceforeground.pas';
+  forceforeground in 'forceforeground.pas',
+  SearchTrie in 'SearchTrie.pas';
 
 {$R *.res}
+{#BACKUP ModelMonitor.cfg}
 
 begin
   Application.Initialize;

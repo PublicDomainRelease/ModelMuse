@@ -75,7 +75,12 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.usgs.gov/tm/tm6a30/" target="_blank" styleclass="Normal" translate="true">Konikow, L.F., Hornberger, G.Z., Halford, K.J., and Hanson, R.T., 2009, Revised multi-node well (MNW2) package for MODFLOW ground-water flow model: U.S. Geological Survey Techniques and Methods 6–A30, 67 p.</link></para>
+          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.usgs.gov/tm/tm6a30/" target="_blank" styleclass="Normal" translate="true">Konikow, L.F., Hornberger, G.Z., Halford, K.J., and Hanson, R.T., 2009, Revised multi-node well (MNW2) package for MODFLOW ground-water flow model: U.S. Geological Survey Techniques and Methods 6–A30, 67 p.</link></li>
+          </list>
+          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="NWT_release.txt" styleclass="Citation" style="font-style:normal;" translate="true">Release.txt</link><text styleclass="Citation" style="font-style:normal;" translate="true"> for MODFLOW-NWT</text></li>
+          </list>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -94,17 +99,17 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
           </list>
-          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="18" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
           </list>
         </td>
@@ -151,7 +156,24 @@
           <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 1</text></para>
         </td>
         <td>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">MNWMAX IWL2CB MNWPRNT [OPTION]</text></para>
+          <para styleclass="Normal"><table styleclass="Default" rowcount="2" colcount="2" style="cell-padding:2px; cell-spacing:2px;">
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2000, MODFLOW-2005, MODFLOW-LGR, MODFLOW-CFP</text><conditional-text type="END"/></para>
+              </td>
+              <td>
+                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR"/><text styleclass="Normal" translate="true">MNWMAX IWL2CB MNWPRNT [OPTION]</text><conditional-text type="END"/></para>
+              </td>
+            </tr>
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Normal" style="text-align:center;"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-NWT</text><conditional-text type="END"/></para>
+              </td>
+              <td>
+                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><text styleclass="Normal" translate="true">MNWMAX [NODTOT] IWL2CB MNWPRNT [OPTION]</text><conditional-text type="END"/></para>
+              </td>
+            </tr>
+          </table></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
             <tr style="vertical-align:top">
@@ -160,16 +182,25 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><anchor id="MNWMAX" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">is the maximum number of multi-node wells (MNW) to be simulated.</text></para>
+                      <para styleclass="Normal"><anchor id="MNWMAX" styleclass="Normal"></anchor><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><text styleclass="Normal" translate="true">The absolute value of </text><conditional-text type="END"/><text styleclass="Normal" translate="true">MNWMAX is the maximum number of multi-node wells (MNW) to be simulated.</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><text styleclass="Normal" translate="true"> If MNWMAX is a negative number, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW2" anchor="NODTOT" styleclass="Normal" translate="true">NODTOT</link><text styleclass="Normal" translate="true"> is read.</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Normal" translate="true"> Negative values of MNWMAX are only currently supported in MOFLOW-NWT.</text><conditional-text type="END"/></para>
                     </td>
                   </tr>
                 </table></para>
-                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[IWL2CB]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[NODTOT]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+                  <tr style="vertical-align:top">
+                    <td>
+                      <para styleclass="Normal"><anchor id="NODTOT" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Maximum number of nodes.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">The code automatically estimates the maximum number of nodes (NODTOT) as required for allocation of arrays. However, if a large number of horizontal wells are being simulated, or possibly for other reasons, this default estimate proves to be inadequate, a new input option has been added to allow the user to directly specify a value for NODTOT. If this is a desired option, then it can be implemented by specifying a negative value for &quot;MNWMAX&quot;--the first value listed in Record 1 (Line 1) of the MNW2 input data file. If this is done, then the code will assume that the very next value on that line will be the desired value of &quot;NODTOT&quot;. The model will then reset &quot;MNWMAX&quot; to its absolute value. The value of &quot;IWL2CB&quot; will become the third value on that line, etc.</text></para>
+                    </td>
+                  </tr>
+                </table></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><conditional-text type="END"/><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[IWL2CB]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">is a flag and a unit number:</text></para>
-                      <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">if IWL2CB &gt; 0, then it is the unit number to which MNW cell-by-cell flow terms will be recorded whenever cell-by-cell budget data are written to a file (as determined by the outputcontrol options of MODFLOW).</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">if IWL2CB = 0, then MNW cell-by-cell flow terms will not be printed or recorded.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">if IWL2CB &lt; 0, then well injection or withdrawal rates and water levels in the well and its multiple cells will be printed in the main MODFLOW listing (output) file whenever cell-by-cell budget data are written to a file (as determined by the output control options of MODFLOW).</text></li>
@@ -189,7 +220,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">is an optional list of character values in the style of “AUXILIARY abc” or “AUX abc” where “abc” is the name of an auxiliary parameter to be read for each multi-node well as part of dataset 4a. Up to five parameters can be specified, each of which must be preceded by “AUXILIARY” or “AUX.” These parameters will not be used by the MNW2 Package, but they will be available for use by other packages.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">is an optional list of character values in the style of “AUXILIARY abc” or “AUX abc” where “abc” is the name of an auxiliary parameter to be read for each multi-node well as part of dataset 4a. Up to 20 parameters can be specified, each of which must be preceded by “AUXILIARY” or “AUX.” These parameters will not be used by the MNW2 Package, but they will be available for use by other packages.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -250,7 +281,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="LOSSTYPE" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">is a character flag to determine the user-specified model for well loss (equation 2). Available options (that is, place one of the following approved words in this field) are:</text></para>
-                      <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="17" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">NONE there are no well corrections and the head in the well is assumed to equal the head in the cell. This option (h</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:sub; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">WELL</text><text styleclass="Normal" translate="true"> = h</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:sub; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">n</text><text styleclass="Normal" translate="true">) is only valid for a single-node well (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW2" anchor="NNodes" styleclass="Normal" translate="true">NNODES</link><text styleclass="Normal" translate="true"> = 1). (This is equivalent to using the original WEL Package of MODFLOW, but specifying the single-node well within the MNW2 Package enables the use of constraints.)</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">THIEM this option allows for only the cell-to-well correction at the well based on the Thiem (1906) equation; head in the well is determined from equation 2 as (h</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:sub; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">WELL</text><text styleclass="Normal" translate="true"> = h</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:sub; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">n</text><text styleclass="Normal" translate="true"> + AQ</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:sub; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">n</text><text styleclass="Normal" translate="true">), and the model computes A on the basis of the user-specified well radius (Rw) and previously defined values of cell transmissivity and grid spacing. Coefficients B and C in equation 2 are automatically set = 0.0. User must define Rw in dataset 2c or 2d.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">SKIN this option allows for formation damage or skin corrections at the well: h</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:sub; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">WELL</text><text styleclass="Normal" translate="true"> = h</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:sub; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">n</text><text styleclass="Normal" translate="true"> + AQ</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:sub; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">n</text><text styleclass="Normal" translate="true"> + BQ</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:sub; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">n</text><text styleclass="Normal" translate="true"> (from equation 2), where A is determined by the model from the value of Rw, and B is determined by the model from Rskin and Kskin. User must define Rw, Rskin, and Kskin in dataset 2c or 2d.</text></li>
@@ -314,7 +345,7 @@
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Include the appropriate coefficients in 2c, as consistent with the specified LOSSTYPE defined in 2b, as summarized also in table A1–1.</text></para>
-                <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                <list id="18" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">if LOSSTYPE = THIEM, then specify </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Rw</text><text styleclass="Normal" translate="true"> (the radius of the well).</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">if LOSSTYPE = SKIN, then specify </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Rw</text><text styleclass="Normal" translate="true">, </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Rskin</text><text styleclass="Normal" translate="true"> (the radius to the outer limit of the skin), and </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Kskin</text><text styleclass="Normal" translate="true"> (the hydraulic conductivity of the skin).</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">if LOSSTYPE = GENERAL, then specify </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Rw</text><text styleclass="Normal" translate="true">, </text><text styleclass="Normal" style="font-weight:bold;" translate="true">B</text><text styleclass="Normal" translate="true">, </text><text styleclass="Normal" style="font-weight:bold;" translate="true">C</text><text styleclass="Normal" translate="true">, and </text><text styleclass="Normal" style="font-weight:bold;" translate="true">P</text><text styleclass="Normal" translate="true">, where the last three parameters are coefficients in the well-loss equation (equation 2). (See notes and suggestions for GENERAL option under 2b above.)</text></li>
@@ -785,7 +816,7 @@
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><anchor id="ITMP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">is an integer value for reusing or reading multi-node well data; it can change each stress period. ITMP must be </text><text styleclass="Normal" style="font-family:Symbol;" translate="true">³</text><text styleclass="Normal" translate="true"> 0 for the first stress period of a simulation.</text></para>
-                <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                <list id="19" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">if ITMP &gt; 0, then ITMP is the total number of active multi-node wells simulated during the stress period, and only wells listed in dataset 4a will be active during the stress period. Characteristics of each well are defined in datasets 2 and 4.</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">if ITMP = 0, then no multi-node wells are active for the stress period and the following dataset is skipped.</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">if ITMP &lt; 0, then the same number of wells and well information will be reused from the previous stress period and dataset 4 is skipped.</text></li>
@@ -847,7 +878,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">represents a list of up to five auxiliary variables for a multi-node well that have been defined in dataset 1. The auxiliary variables must be present in each repetition of dataset 4a if they are defined in dataset 1.</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">represents a list of up to 20 auxiliary variables for a multi-node well that have been defined in dataset 1. The auxiliary variables must be present in each repetition of dataset 4a if they are defined in dataset 1.</text></para>
                     </td>
                   </tr>
                 </table></para>

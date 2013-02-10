@@ -10,50 +10,50 @@ object framePhastInterpolation: TframePhastInterpolation
   object lblDistance1: TLabel
     Left = 8
     Top = 60
-    Width = 50
-    Height = 13
+    Width = 59
+    Height = 16
     Caption = 'Distance 1'
     Enabled = False
   end
   object lblDistance2: TLabel
     Left = 8
     Top = 92
-    Width = 50
-    Height = 13
+    Width = 59
+    Height = 16
     Caption = 'Distance 2'
     Enabled = False
   end
   object lblValue1: TLabel
     Left = 216
     Top = 60
-    Width = 35
-    Height = 13
+    Width = 43
+    Height = 16
     Caption = 'Value 1'
     Enabled = False
   end
   object lblValue2: TLabel
     Left = 216
     Top = 92
-    Width = 35
-    Height = 13
+    Width = 43
+    Height = 16
     Caption = 'Value 2'
     Enabled = False
   end
   object lblMixtureFormula: TLabel
     Left = 392
     Top = 64
-    Width = 75
-    Height = 13
+    Width = 90
+    Height = 16
     Caption = 'Mixture formula'
   end
   object cbPhastInterpolation: TJvCheckBox
     Left = 8
     Top = 16
-    Width = 164
-    Height = 17
+    Width = 194
+    Height = 20
     Caption = 'Use PHAST-style interpolation'
     Enabled = False
-    TabOrder = 0
+    TabOrder = 1
     OnClick = cbPhastInterpolationClick
     LinkedControls = <>
     HotTrackFont.Charset = DEFAULT_CHARSET
@@ -84,7 +84,7 @@ object framePhastInterpolation: TframePhastInterpolation
     Cursor = crIBeam
     Color = clBtnFace
     Enabled = False
-    TabOrder = 3
+    TabOrder = 4
     Text = '1'
     DataType = dtReal
     Max = 1.000000000000000000
@@ -98,7 +98,7 @@ object framePhastInterpolation: TframePhastInterpolation
     Cursor = crIBeam
     Color = clBtnFace
     Enabled = False
-    TabOrder = 4
+    TabOrder = 3
     Text = '0'
     DataType = dtReal
     Max = 1.000000000000000000
@@ -132,7 +132,7 @@ object framePhastInterpolation: TframePhastInterpolation
       'Y'
       'Z'
       'Mix')
-    TabOrder = 1
+    TabOrder = 0
     OnClick = rgInterpolationDirectionClick
   end
   object edMixFormula: TRbwEdit

@@ -138,6 +138,10 @@ const
   StrVariable2DIntegerArray = 'VARIABLE 2D INTEGER ARRAY:';
   StrInitialHead = 'INITIAL HEAD';
   BoundaryArray = 'BOUNDARY ARRAY';
+  StrHEADNG1 = 'HEADNG(1):';
+  StrHEADNG2 = 'HEADNG(2):';
+  StrIXSECICHFLGIFREF = 'IXSEC, ICHFLG, IFREFM, IPRTIM, STOPER:';
+  StrHNOFLO = 'HNOFLO:';
 
 Type
   TDoubleArray = array of double;
@@ -4178,7 +4182,7 @@ var
   Index: Integer;
 begin
   ImportedValues.Values.DataType := rdtDouble;
-  ImportedValues.Values.Count := Length(ImportedData);;
+  ImportedValues.Values.Count := Length(ImportedData);
   for Index := 0 to Length(ImportedData) - 1 do
   begin
     ImportedValues.Values.RealValues[Index] :=
@@ -4886,15 +4890,15 @@ begin
     end;
   end;
 
-  if ALabel = 'HEADNG(1):' then
+  if ALabel = StrHEADNG1 then
   begin
     ReadHeading(FHeading1);
   end
-  else if ALabel = 'HEADNG(2):' then
+  else if ALabel = StrHEADNG2 then
   begin
     ReadHeading(FHeading2);
   end
-  else if ALabel = 'IXSEC, ICHFLG, IFREFM, IPRTIM, STOPER:' then
+  else if ALabel = StrIXSECICHFLGIFREF then
   begin
     ReadDataSet1;
   end
@@ -4914,7 +4918,7 @@ begin
   begin
     ReadVariableIboundForCrossSection;
   end
-  else if ALabel = 'HNOFLO:' then
+  else if ALabel = StrHNOFLO then
   begin
     ReadLn(FImporter.FFile, FHNoFlo);
     FProgressHandler(FilePos(FImporter.FFile));
@@ -4943,7 +4947,24 @@ begin
   end
   else
   begin
-    Assert(False);
+    Assert(False,
+      'The following text was found when importing the Basic package: "'
+      + ALabel + '".'
+      + sLineBreak
+      + 'One of the following was expected: '
+      + '"' + StrHEADNG1 + '", '
+      + '"' + StrHEADNG2 + '", '
+      + '"' + StrIXSECICHFLGIFREF + '", '
+      + '"' + StrConstant2DIntegerArrayForLayer + '", '
+      + '"' + StrConstant2DIntegerArray + '", '
+      + '"' + StrVariable2DIntegerArrayForLayer + '", '
+      + '"' + StrVariable2DIntegerArrayForCrossSection + '", '
+      + '"' + StrHNOFLO + '", '
+      + '"' + StrConstant2DRealArray + '", '
+      + '"' + StrConstant2DRealArrayForLayer + '", '
+      + '"' + StrVariable2DRealArray + '", '
+      + '"' + StrVariable2DRealArrayForLayer + '", '
+      + '"' + StrVariable2DRealArrayForCrossSection + '".');
   end;
 end;
 
@@ -7639,7 +7660,7 @@ var
   PumpName: string;
 begin
   ValueItem := ScreenObject.ImportedValues.Add as TValueArrayItem;
-  PumpName := 'WelPump' + ParamName;;
+  PumpName := 'WelPump' + ParamName;
   ValueItem.Name := PumpName;
   PumpingValues := ValueItem.Values;
   PumpingValues.DataType := rdtDouble;
@@ -11033,7 +11054,7 @@ begin
 
   if not ZoneExists then
   begin
-    result.Deleted := True;;
+    result.Deleted := True;
     Exit;
   end;
 
@@ -20778,6 +20799,8 @@ begin
       AScreen := AWell.FScreens[ScreenIndex];
       VerticalScreen := AScreenObject.ModflowMnw2Boundary.VerticalScreens.Add
         as TVerticalScreen;
+      VerticalScreen.StartTime := ScreenIndex;
+      VerticalScreen.EndTime := ScreenIndex+1;
       VerticalScreen.ZTop := AScreen.Ztop;
       VerticalScreen.ZBottom := AScreen.Zbotm;
       VerticalScreen.WellRadius := FortranFloatToStr(AScreen.Rw);
@@ -20806,6 +20829,7 @@ var
   ImportedKSkinData: TDoubleArray;
   ImportedRSkinData: TDoubleArray;
   ImportedRwData: TDoubleArray;
+  ImportedPPData: TDoubleArray;
   ImportedElevations: TValueArrayStorage;
   APoint3D: T3DRealPoint;
   APoint: TPoint2D;
@@ -20827,6 +20851,10 @@ begin
   SetLength(ImportedCData, AWell.FCells.ArrayLength);
   SetLength(ImportedPData, AWell.FCells.ArrayLength);
   SetLength(ImportedCWCData, AWell.FCells.ArrayLength);
+  if AWell.PPFLAG > 0 then
+  begin
+    SetLength(ImportedPPData, AWell.FCells.ArrayLength);
+  end;
   for CellIndex := 0 to AWell.FCells.ArrayLength - 1 do
   begin
     ACell := AWell.FCells[CellIndex];
@@ -20849,16 +20877,35 @@ begin
     ImportedCData[CellIndex] := ACell.C;
     ImportedPData[CellIndex] := ACell.P;
     ImportedCWCData[CellIndex] := ACell.CWC;
+    if AWell.PPFLAG > 0 then
+    begin
+      ImportedPPData[CellIndex] := ACell.PP;
+    end;
   end;
   AScreenObject.SectionStarts.CacheData;
-  SpatialItem := nil;
+
+  SpatialItem := AScreenObject.ModflowMnw2Boundary.Values.Add
+    as TMnw2SpatialItem;
+  if AWell.PPFLAG > 0 then
+  begin
+    if UniformArray(ImportedPPData) then
+    begin
+      AValue := ImportedPPData[0];
+      SpatialItem.PartialPenetration := FortranFloatToStr(AValue);
+    end
+    else
+    begin
+      ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
+      ImportedValues.Name := 'Imported_MNW2_PP';
+      AssignImportedValues(ImportedValues, ImportedPPData);
+      SpatialItem.PartialPenetration := rsObjectImportedValuesR
+        + '("' + ImportedValues.Name + '")';
+    end;
+  end;
+
+
   if AWell.LossType in [mltThiem, mltSkin, mltEquation] then
   begin
-    if SpatialItem = nil then
-    begin
-      SpatialItem := AScreenObject.ModflowMnw2Boundary.Values.Add
-        as TMnw2SpatialItem;
-    end;
     if UniformArray(ImportedRwData) then
     begin
       AValue := ImportedRwData[0];
@@ -20875,11 +20922,6 @@ begin
   end;
   if AWell.LossType = mltSkin then
   begin
-    if SpatialItem = nil then
-    begin
-      SpatialItem := AScreenObject.ModflowMnw2Boundary.Values.Add
-        as TMnw2SpatialItem;
-    end;
     if UniformArray(ImportedRSkinData) then
     begin
       AValue := ImportedRSkinData[0];
@@ -20909,11 +20951,6 @@ begin
   end;
   if AWell.LossType = mltEquation then
   begin
-    if SpatialItem = nil then
-    begin
-      SpatialItem := AScreenObject.ModflowMnw2Boundary.Values.Add
-        as TMnw2SpatialItem;
-    end;
     if UniformArray(ImportedBData) then
     begin
       AValue := ImportedBData[0];
@@ -20956,11 +20993,6 @@ begin
   end;
   if AWell.LossType = mtlSpecify then
   begin
-    if SpatialItem = nil then
-    begin
-      SpatialItem := AScreenObject.ModflowMnw2Boundary.Values.Add
-        as TMnw2SpatialItem;
-    end;
     if UniformArray(ImportedCWCData) then
     begin
       AValue := ImportedCWCData[0];

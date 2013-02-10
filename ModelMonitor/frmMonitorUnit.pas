@@ -15,6 +15,8 @@ interface
   1.3.0.0 NaN is now flagged as an error.
   1.4.0.0 If the name file or the program does not exist, attempting to
     start the program will be flagged as an error.
+  1.5.0.0 Minor changes.
+  1.6.0.0 Minor changes.
 }
 
 uses
@@ -23,7 +25,8 @@ uses
   JvImageList, TeEngine, Series, TeeProcs, Chart, ComCtrls, Buttons,
   JvToolEdit, AppEvnts, RealListUnit, JvHtControls, JvPageList,
   JvExControls, JvExStdCtrls, JvExMask, Mask, JvExComCtrls,
-  JvComCtrls, JvComponentBase, JvCreateProcess, ErrorMessages;
+  JvComCtrls, JvComponentBase, JvCreateProcess, ErrorMessages, SearchTrie,
+  JvRichEdit;
 
 type
   TStatusChange = (scOK, scWarning, scError, scNone);
@@ -41,10 +44,12 @@ type
 
   TOnStatusChanged = procedure(Sender: TObject; NewStatus: TStatusChange) of object;
 
+  TProblemType = (ptWarning, ptError);
+
   TListFileHandler = class(TObject)
   private
     FFileStream: TStringFileStream;
-    FErrorMessages: TRichEdit;
+    FErrorMessages: TJvRichEdit;
     FBudgetChart: TChart;
     FserCumulative: TLineSeries;
     FserTimeStep: TLineSeries;
@@ -67,6 +72,7 @@ type
     FListingNode: TTreeNode;
     FResultsNode: TTreeNode;
     FVolBudget: Boolean;
+    FSearcher: TSearchTrie<TProblemType>;
     procedure CreateNewTabSheet(out ATabSheet: TjvStandardPage;
       NewCaption: string; out NewNode: TTreeNode);
     procedure CreateLineSeries(AColor: TColor; ATitle: string;
@@ -78,10 +84,14 @@ type
     function PlotPercentDiscrepancy : boolean;
     procedure IndentifyProblem(ALine: string; var IsProblem: Boolean;
       StatusChangeIndicator: TStatusChange; var Positions: TIntegerDynArray;
-      KeyTerms: TAnsiStringList);
+      KeyTerms: TAnsiStringList); overload;
+    procedure IndentifyProblem(ALine: string;
+      var IsError, IsWarning: Boolean; var PositionInLine, KeyLength: Integer); overload;
     procedure HandleListFileLine(ALine: string);
     procedure HandleProblem(IsError: Boolean; AColor: TColor;
-      Positions: TIntegerDynArray; EV: TAnsiStringList);
+      Positions: TIntegerDynArray; EV: TAnsiStringList); overload;
+    procedure HandleProblem(IsProblem: Boolean; AColor: TColor;
+      PositionInLine: integer; KeyLength: integer); overload;
     function GetPageStatus(APage: TjvStandardPage): TStatusChange;
     procedure SetPageStatus(APage: TjvStandardPage;
       const Value: TStatusChange);
@@ -131,7 +141,7 @@ type
     treeNavigation: TJvTreeView;
     jvcpRunModel: TJvCreateProcess;
     btnStopModel: TBitBtn;
-    reMonitor: TRichEdit;
+    reMonitor: TJvRichEdit;
     procedure btnRunClick(Sender: TObject);
     procedure timerReadOutputTimer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -172,7 +182,7 @@ type
     FPriorLine: string;
     FProblem: Boolean;
     procedure GetListFile(AFileName: string; ListFiles: TStringList);
-    procedure FindStart(RichEdit: TRichEdit; PositionInLine: integer;
+    procedure FindStart(RichEdit: TJvRichEdit; PositionInLine: integer;
       out SelStart: integer);
     procedure CreateFileReaders;
 //    function WinExecAndWait32(FileName: string; Visibility: Integer): Longword;
@@ -199,10 +209,14 @@ resourcestring
   StrNormalTermination = 'Normal termination of simulation';
   StrFailureToConverge = 'Failure to converge';
   StrStopMonitoringMode = 'Stop monitoring model';
-  StrStartModel = 'Re-Start model';
+  StrStartModel = 'Restart model';
   StrFIRSTENTRYINNAME = 'FIRST ENTRY IN NAME FILE MUST BE "LIST".';
   StrFAILEDTOMEETSOLVE = 'FAILED TO MEET SOLVER CONVERGENCE CRITERIA';
   StrNoListFileInName = 'No list file in name file.';
+  StrScreenOutput = 'Screen output';
+  StrVersionS = 'Version: %s';
+  StrProgramFailedToTe = 'Screen output' + sLineBreak
+    + 'Program failed to terminate normally';
 
 const
   WarningColor = clYellow;
@@ -459,7 +473,7 @@ begin
 
     reMonitor.Lines.Clear;
 
-    lblMonitor.Caption := 'Screen output';
+    lblMonitor.Caption := StrScreenOutput;
     lblMonitor.Font.Color := clBlack;
     lblMonitor.Font.Style := [];
 
@@ -557,7 +571,7 @@ begin
   FListFileHandlers := TObjectList.Create;
   VerInfo := TJvVersionInfo.Create(Application.ExeName);
   try
-    lblVersion.Caption := 'Version: ' + VerInfo.FileVersion;
+    lblVersion.Caption := Format(StrVersionS, [VerInfo.FileVersion]);
   finally
     VerInfo.Free;
   end;
@@ -638,8 +652,7 @@ begin
 
   if not FShouldAbort and not NormalTermination then
   begin
-    lblMonitor.Caption := 'Screen output' + sLineBreak
-      + 'Program failed to terminate normally';
+    lblMonitor.Caption := StrProgramFailedToTe;
     lblMonitor.Font.Color := clRed;
     lblMonitor.Font.Style := [fsBold];
     SetPageStatus(tabMonitor, scError);
@@ -669,7 +682,7 @@ begin
   end;
 end;
 
-procedure TfrmMonitor.FindStart(RichEdit: TRichEdit; PositionInLine: integer;
+procedure TfrmMonitor.FindStart(RichEdit: TJvRichEdit; PositionInLine: integer;
   out SelStart: integer);
 var
   LineIndex: Integer;
@@ -872,23 +885,23 @@ var
         end;
       else Assert(False);
     end;
-    FindStart(reMonitor, Position, SelStart);
-    reMonitor.SelStart := SelStart;
-    reMonitor.SelLength := Length(AText);
-    reMonitor.SelAttributes.Color := AColor;
-    reMonitor.SelLength := 0;
-    StatusChanged(nil, scError);
-    SetPageStatus(tabMonitor, scError);
-
-    // For TJvRichEdit;
 //    FindStart(reMonitor, Position, SelStart);
-//    reMonitor.SetSelection(SelStart,
-//      SelStart + Length(AText), True);
-//    reMonitor.SelAttributes.BackColor := AColor;
-//    reMonitor.SelAttributes.Color := clWhite;
-//    reMonitor.SetSelection(SelStart, SelStart, True);
+//    reMonitor.SelStart := SelStart;
+//    reMonitor.SelLength := Length(AText);
+//    reMonitor.SelAttributes.Color := AColor;
+//    reMonitor.SelLength := 0;
 //    StatusChanged(nil, scError);
 //    SetPageStatus(tabMonitor, scError);
+
+    // For TJvRichEdit;
+    FindStart(reMonitor, Position, SelStart);
+    reMonitor.SetSelection(SelStart,
+      SelStart + Length(AText), True);
+    reMonitor.SelAttributes.BackColor := AColor;
+    reMonitor.SelAttributes.Color := clWhite;
+    reMonitor.SetSelection(SelStart, SelStart, True);
+    StatusChanged(nil, scError);
+    SetPageStatus(tabMonitor, scError);
   end;
 begin
 //  if (FOutFile = '') then
@@ -1233,7 +1246,25 @@ end;
 constructor TListFileHandler.Create(AFileName: string;
   APageControl: TJvPageList; ATree: TTreeView; ModelCaption: string;
   CreateSubTree: boolean);
+var
+  index: Integer;
 begin
+  FSearcher := TSearchTrie<TProblemType>.Create;
+
+  for index := 0 to ErrorValues.Count - 1 do
+  begin
+    FSearcher.AddKey(PAnsiChar(ErrorValues[index]), ptError);
+  end;
+  for index := 0 to NumberErrorValues.Count - 1 do
+  begin
+    FSearcher.AddKey(PAnsiChar(NumberErrorValues[index]), ptError);
+  end;
+  for index := 0 to WarningValues.Count - 1 do
+  begin
+    FSearcher.AddKey(PAnsiChar(WarningValues[index]), ptWarning);
+  end;
+
+
   SetLength(FErrorPositions, ErrorValues.Count);
   SetLength(FWarningPositions, WarningValues.Count);
 
@@ -1267,12 +1298,12 @@ begin
   FLabel.Caption := 'Errors and warnings in Listing file';
   FLabel.Height := 19;
 
-  FErrorMessages := TRichEdit.Create(FPageControl.Owner);
+  FErrorMessages := TJvRichEdit.Create(FPageControl.Owner);
   FErrorMessages.Parent := FListingTabSheet;
   FErrorMessages.Align := alClient;
   FErrorMessages.WordWrap := False;
   FErrorMessages.ScrollBars := ssBoth;
-  FErrorMessages.Color := clSilver;
+//  FErrorMessages.Color := clSilver;
 
   CreateNewTabSheet(FResultsTabSheet, 'Results', FResultsNode);
 
@@ -1321,7 +1352,7 @@ begin
   FErrorMessages.Free;
   FResultsTabSheet.Free;
   FListingTabSheet.Free;
-
+  FSearcher.Free;
   inherited;
 end;
 
@@ -1383,18 +1414,27 @@ procedure TListFileHandler.HandleListFileLine(ALine: string);
 var
   IsError: boolean;
   IsWarning: Boolean;
+  KeyLength: Integer;
+  PositionInLine: Integer;
+  Prefix: string;
 begin
   Inc(FLineCount);
   StorePercentDiscrepancy(ALine);
 
-  ALine := IntToStr(FLineCount) + ': ' + ALine;
-  IndentifyProblem(ALine, IsError, scError, FErrorPositions, ErrorValues);
-  IndentifyProblem(ALine, IsWarning, scWarning, FWarningPositions, WarningValues);
+//  ALine := IntToStr(FLineCount) + ': ' + ALine;
+  IndentifyProblem(ALine, IsError, IsWarning, PositionInLine, KeyLength);
+//  IndentifyProblem(ALine, IsError, scError, FErrorPositions, ErrorValues);
+//  IndentifyProblem(ALine, IsWarning, scWarning, FWarningPositions, WarningValues);
   if IsError or IsWarning then
   begin
+    Prefix := IntToStr(FLineCount) + ': ';
+    ALine := Prefix + ALine;
+    PositionInLine := PositionInLine + Length(Prefix);
     FErrorMessages.Lines.Add(ALine);
-    HandleProblem(IsWarning, WarningColor, FWarningPositions, WarningValues);
-    HandleProblem(IsError, clRed, FErrorPositions, ErrorValues);
+    HandleProblem(IsWarning, WarningColor, PositionInLine, KeyLength);
+    HandleProblem(IsError, clRed, PositionInLine, KeyLength);
+//    HandleProblem(IsWarning, WarningColor, FWarningPositions, WarningValues);
+//    HandleProblem(IsError, clRed, FErrorPositions, ErrorValues);
   end;
 end;
 
@@ -1420,6 +1460,26 @@ begin
   PlotPercentDiscrepancy;
 end;
 
+procedure TListFileHandler.HandleProblem(IsProblem: Boolean; AColor: TColor;
+  PositionInLine: integer; KeyLength: integer);
+var
+  SelStart: Integer;
+begin
+  if IsProblem then
+  begin
+    FindStart(PositionInLine, SelStart);
+    FErrorMessages.SelStart := SelStart;
+    FErrorMessages.SelLength := KeyLength;
+//    FErrorMessages.SelAttributes.Color := AColor;
+    FErrorMessages.SelAttributes.BackColor := AColor;
+    if AColor = clRed then
+    begin
+      FErrorMessages.SelAttributes.Color := clWhite;
+    end;
+    FErrorMessages.SelLength := 0;
+  end;
+end;
+
 procedure TListFileHandler.HandleProblem(IsError: Boolean; AColor: TColor;
   Positions: TIntegerDynArray; EV: TAnsiStringList);
 var
@@ -1436,16 +1496,66 @@ begin
         FErrorMessages.SelStart := SelStart;
         FErrorMessages.SelLength := Length(EV[Index]);
 //        FErrorMessages.SetSelection(SelStart, SelStart + Length(EV[Index]), True);
-        FErrorMessages.SelAttributes.Color := AColor;
-//        FErrorMessages.SelAttributes.BackColor := AColor;
-//        if AColor = clRed then
-//        begin
-//          FErrorMessages.SelAttributes.Color := clWhite;
-//        end;
+
+//        FErrorMessages.SelAttributes.Color := AColor;
+        FErrorMessages.SelAttributes.BackColor := AColor;
+        if AColor = clRed then
+        begin
+          FErrorMessages.SelAttributes.Color := clWhite;
+        end;
         FErrorMessages.SelLength := 0;
 //        FErrorMessages.SetSelection(SelStart, SelStart, True);
       end;
     end;
+  end;
+end;
+
+procedure TListFileHandler.IndentifyProblem(ALine: string;
+  var IsError, IsWarning: Boolean; var PositionInLine, KeyLength: Integer);
+var
+  AnisLine: AnsiString;
+  Key: PAnsiChar;
+  ProblemType: TProblemType;
+  StatusChangeIndicator: TStatusChange;
+begin
+  IsError := False;
+  IsWarning := False;
+  AnisLine := AnsiString(ALine);
+  Key := PAnsiChar(AnisLine);
+  while Key^ <> AnsiChar(0) do
+  begin
+    if FSearcher.Find(Key, ProblemType, KeyLength) then
+    begin
+      PositionInLine := Key - PAnsiChar(AnisLine);
+      case ProblemType of
+        ptWarning:
+          begin
+            IsWarning := True;
+            StatusChangeIndicator := scWarning;
+          end;
+        ptError:
+          begin
+            IsError := True;
+            StatusChangeIndicator := scError;
+          end;
+        else
+          begin
+            Assert(False);
+            StatusChangeIndicator := scError;
+          end;
+      end;
+      if Assigned(OnStatusChanged) then
+      begin
+        OnStatusChanged(self, StatusChangeIndicator);
+      end;
+      if (PageStatus[FListingTabSheet] = scNone)
+        or (PageStatus[FListingTabSheet] < StatusChangeIndicator) then
+      begin
+        PageStatus[FListingTabSheet] := StatusChangeIndicator;
+      end;
+      break;
+    end;
+    Inc(Key);
   end;
 end;
 

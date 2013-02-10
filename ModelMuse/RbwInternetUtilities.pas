@@ -375,7 +375,7 @@ begin
     INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
   if Connection = nil then
   begin
-    raise EInternetConnectionError.Create(StrUnableToOpenInter);;
+    raise EInternetConnectionError.Create(StrUnableToOpenInter);
   end;
 
   try

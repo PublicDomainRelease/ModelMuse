@@ -262,6 +262,7 @@ begin
     // This will cause TCustomRadioGroup.UpdateButtons to be called.
     rgChoice.WordWrap := not rgChoice.WordWrap;
     rgChoice.WordWrap := not rgChoice.WordWrap;
+    rgChoice.Handle;
     rgChoice.Buttons[0].Enabled := False;
 //    rgChoice.Controls[0].Enabled := False;
   end;

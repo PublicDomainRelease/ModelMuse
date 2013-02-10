@@ -1376,7 +1376,7 @@ begin
   if FCount >= FGrowSize then Resize(FGrowSize shl 2);
   // Name hash table
   Item.FNameHash := HashName(Item.Name);
-  PName := Item.FNameHash and FAndMask;;
+  PName := Item.FNameHash and FAndMask;
   ItemName := FNameArray[PName];
   while Assigned(ItemName) do begin
     if ItemName.Name = Item.Name then begin

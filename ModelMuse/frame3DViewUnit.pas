@@ -6,6 +6,9 @@
 }
 unit frame3DViewUnit;
 
+{$IF CompilerVersion>=23}
+{$EXCESSPRECISION OFF}
+{$IFEND}
 interface
 
 uses
@@ -185,11 +188,16 @@ begin
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix;
   try
-    glTranslatef(-0.8, -0.8, -0.8);
-    glscalef(glWidModelView.ClientHeight/Max(1,glWidModelView.ClientWidth), 1, 1);
+    glTranslated(-0.8, -0.8, -0.8);
+    glscaled(glWidModelView.ClientHeight/Max(1,glWidModelView.ClientWidth), 1, 1);
     glMultMatrixf(@FTheBall.Matrix);
-
-    glCallList(FAxesGLIndex);
+    try
+      glCallList(FAxesGLIndex);
+    except on EMathError do
+      begin
+        // do nothing
+      end;
+    end;
 
   finally
     glPopMatrix;
@@ -335,151 +343,167 @@ var
   //  light_position : array[0..3] of GLfloat = ( XY, XY, 40.0, 0.0 );
   //  light_position2 : array[0..3] of GLfloat = ( -XY, -XY, 40.0, 0.0 );
 begin
-  if not glWidModelView.Started then
-    Exit;
+  try
+//    {$IFDEF Win64}
+//    glWidModelView.Visible := False;
+//    {$ENDIF}
+    if not glWidModelView.Started then
+      Exit;
 
-  light_position[0] := ColorValues.X;
-  light_position[1] := ColorValues.Y;
-  light_position[2] := ColorValues.Z;
-  light_position[3] := 0;
+    light_position[0] := ColorValues.X;
+    light_position[1] := ColorValues.Y;
+    light_position[2] := ColorValues.Z;
+    light_position[3] := 0;
 
-  // White background
-  glClearColor(1.0, 1.0, 1.0, 0.0);
+    // White background
+    glClearColor(1.0, 1.0, 1.0, 0.0);
 
-//  Exit;
+  //  Exit;
 
-  //  glShadeModel(GL_FLAT);
-  glShadeModel(GL_SMOOTH);
-  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
-  glLightfv(GL_LIGHT0, GL_POSITION, @light_position);
+    //  glShadeModel(GL_FLAT);
+    glShadeModel(GL_SMOOTH);
+    glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+    glLightfv(GL_LIGHT0, GL_POSITION, @light_position);
 
-//  Beep;
+  //  Beep;
 
-//  Exit;
+  //  Exit;
 
-  if not frmGoPhast.CanDraw then
-  begin
-    Exit;
-  end;
-
-  if (frmGoPhast.PhastModel = nil)
-    or (csReading in frmGoPhast.PhastModel.ComponentState) then
-  begin
-    Exit;
-  end;
-
-  if (frmGoPhast.PhastModel.Grid = nil)
-    or not frmGoPhast.PhastModel.Grid.CanDraw3D then
-  begin
-    Exit;
-  end;
-
-//   Exit;
-
-  //  glEnable(GL_CULL_FACE);
-
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity;
-
-  glPushMatrix;
-
-  XMove := 0;
-  YMove := 0;
-  ZMove := 0;
-  if frmGoPhast.PhastModel.Grid.CanDraw3D then
-  begin
-    with frmGoPhast.PhastModel.Grid do
+    if not frmGoPhast.CanDraw then
     begin
-      XMove := -(ColumnPosition[0] + ColumnPosition[ColumnCount]) / 2;
-      YMove := -(RowPosition[0] + RowPosition[RowCount]) / 2;
-      ZMove := -(CellElevation[ColumnCount div 2,RowCount div 2, 0]
-        + CellElevation[ColumnCount div 2,RowCount div 2, LayerCount]) / 2;
+      Exit;
     end;
-  end;
 
-//  Exit;
-
-  // The descriptions below are written as if they apply to the model
-  // when they actually affect the coordinate system.  Because they
-  // actually affect the coordinate system, the order in which they affect
-  // the model is the reverse of the order they appear.  For example
-  // XPan and YPan are applied last and moving the center of the model
-  // to the origin is applied first.
-
-  // XPan and YPan moves the model around on the screen.
-  glTranslatef(FXPan, FYPan, 0);
-  // ZOffset moves the model back behind the near cut-off position.
-  glTranslatef(0, 0, ZOffset);
-  // Rotate the model based on the grid angle after converting
-  // from radians to degrees.
-  glRotatef(frmGoPhast.PhastModel.Grid.GridAngle / Pi * 180, 0.0, 0.0, 1.0);
-  // Respond to "rolling" of the model.
-  glMultMatrixf(@FTheBall.Matrix);
-  // Use ZScale to scale the model to a size that can be
-  // confortably seen.
-  // Apply the vertical exaggeration to the model.
-  glScalef(FZScale * FZoomFactor, FZScale * FZoomFactor,
-    FZScale * FZoomFactor * frmGoPhast.PhastModel.Exaggeration);
-  // Move the center of the model to the origin so that all
-  // "rolling" is relative to the center of the model.
-  glTranslatef(XMove, YMove, ZMove);
-  glPushMatrix;
-
-  glEnable(GL_DEPTH_TEST);
-
-//  Exit;
-
-  frmGoPhast.PhastModel.Grid.Draw3D;
-
-  frmGoPhast.PhastModel.PathLines.Draw3D;
-  frmGoPhast.PhastModel.TimeSeries.Draw3D;
-  frmGoPhast.PhastModel.EndPoints.Draw3D;
-  if frmGoPhast.PhastModel.LgrUsed then
-  begin
-    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    if (frmGoPhast.PhastModel = nil)
+      or (csReading in frmGoPhast.PhastModel.ComponentState) then
     begin
-      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
-      ChildModel.PathLines.Draw3D;
-      ChildModel.TimeSeries.Draw3D;
-      ChildModel.EndPoints.Draw3D;
+      Exit;
     end;
-  end;
 
-  if frmGoPhast.tb3DObjects.Down then
-  begin
+    if (frmGoPhast.PhastModel.Grid = nil)
+      or not frmGoPhast.PhastModel.Grid.CanDraw3D then
+    begin
+      Exit;
+    end;
+
+  //   Exit;
+
+    //  glEnable(GL_CULL_FACE);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity;
+
     glPushMatrix;
-    glRotatef(-frmGoPhast.PhastModel.Grid.GridAngle / Pi * 180, 0.0, 0.0, 1.0);
-    frmGoPhast.PhastModel.DrawScreenObjects3D;
+
+    XMove := 0;
+    YMove := 0;
+    ZMove := 0;
+    if frmGoPhast.PhastModel.Grid.CanDraw3D then
+    begin
+      with frmGoPhast.PhastModel.Grid do
+      begin
+        XMove := -(ColumnPosition[0] + ColumnPosition[ColumnCount]) / 2;
+        YMove := -(RowPosition[0] + RowPosition[RowCount]) / 2;
+        ZMove := -(CellElevation[ColumnCount div 2,RowCount div 2, 0]
+          + CellElevation[ColumnCount div 2,RowCount div 2, LayerCount]) / 2;
+      end;
+    end;
+
+  //  Exit;
+
+    // The descriptions below are written as if they apply to the model
+    // when they actually affect the coordinate system.  Because they
+    // actually affect the coordinate system, the order in which they affect
+    // the model is the reverse of the order they appear.  For example
+    // XPan and YPan are applied last and moving the center of the model
+    // to the origin is applied first.
+
+    // XPan and YPan moves the model around on the screen.
+    glTranslatef(FXPan, FYPan, 0);
+    // ZOffset moves the model back behind the near cut-off position.
+    glTranslatef(0, 0, ZOffset);
+    // Rotate the model based on the grid angle after converting
+    // from radians to degrees.
+    glRotatef(frmGoPhast.PhastModel.Grid.GridAngle / Pi * 180, 0.0, 0.0, 1.0);
+    // Respond to "rolling" of the model.
+    glMultMatrixf(@FTheBall.Matrix);
+    // Use ZScale to scale the model to a size that can be
+    // confortably seen.
+    // Apply the vertical exaggeration to the model.
+    glScalef(FZScale * FZoomFactor, FZScale * FZoomFactor,
+      FZScale * FZoomFactor * frmGoPhast.PhastModel.Exaggeration);
+    // Move the center of the model to the origin so that all
+    // "rolling" is relative to the center of the model.
+    glTranslatef(XMove, YMove, ZMove);
+    glPushMatrix;
+
+    glEnable(GL_DEPTH_TEST);
+
+  //  Exit;
+
+    frmGoPhast.PhastModel.Grid.Draw3D;
+
+    frmGoPhast.PhastModel.PathLines.Draw3D;
+    frmGoPhast.PhastModel.TimeSeries.Draw3D;
+    frmGoPhast.PhastModel.EndPoints.Draw3D;
+    if frmGoPhast.PhastModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+        ChildModel.PathLines.Draw3D;
+        ChildModel.TimeSeries.Draw3D;
+        ChildModel.EndPoints.Draw3D;
+      end;
+    end;
+
+    if frmGoPhast.tb3DObjects.Down then
+    begin
+      glPushMatrix;
+      glRotatef(-frmGoPhast.PhastModel.Grid.GridAngle / Pi * 180, 0.0, 0.0, 1.0);
+      frmGoPhast.PhastModel.DrawScreenObjects3D;
+      glPopMatrix;
+    end;
+
     glPopMatrix;
+
+    glLineWidth(2);
+    glPointSize(5);
+
+    glColor3ub(0, 0, 0);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+
+    //  glDisable(GL_LIGHTING);
+    FTheBall.Render;
+//    try
+    DrawAxes;
+//    except on E: EInvalidOp do
+//      begin
+//        Beep;
+//        ShowMessage('DrawAxes');
+//        raise;
+//      end;
+//
+//    end;
+
+
+
+    //  glEnable(GL_LIGHTING);
+    glEnable(GL_DEPTH_TEST);
+    errorCode := glGetError;
+
+    if errorCode <> GL_NO_ERROR then
+      Beep;
+    glPopMatrix;
+
+    errorCode := glGetError;
+
+    if errorCode <> GL_NO_ERROR then
+      Beep;
+  except
+    glWidModelView.Visible := False;
   end;
-
-  glPopMatrix;
-
-  glLineWidth(2);
-  glPointSize(5);
-
-  glColor3ub(0, 0, 0);
-  glDisable(GL_DEPTH_TEST);
-  glDisable(GL_LIGHTING);
-
-  //  glDisable(GL_LIGHTING);
-  FTheBall.Render;
-
-  DrawAxes;
-
-
-  //  glEnable(GL_LIGHTING);
-  glEnable(GL_DEPTH_TEST);
-  errorCode := glGetError;
-
-  if errorCode <> GL_NO_ERROR then
-    Beep;
-  glPopMatrix;
-
-  errorCode := glGetError;
-
-  if errorCode <> GL_NO_ERROR then
-    Beep;
 end;
 
 procedure Tframe3DView.glWidModelViewResize(Sender: TObject);
@@ -515,8 +539,8 @@ end;
 
 procedure Tframe3DView.RecordAxes;
 var
-  X, Y, Z: single;
-  X2, Y2, Z2: single;
+  X, Y, Z: double;
+  X2, Y2, Z2: double;
 begin
   if not FListsCreated then
   begin
@@ -537,17 +561,17 @@ begin
       Y2 := 0.2;
       Z2 := 0.2;
 
-      glColor3f(0.0, 0.0, 1.0);
-      glVertex3f(X, Y, Z);
-      glVertex3f(X2, Y, Z);
+      glColor3d(0.0, 0.0, 1.0);
+      glVertex3d(X, Y, Z);
+      glVertex3d(X2, Y, Z);
 
-      glColor3f(0.0, 1.0, 0.0);
-      glVertex3f(X, Y, Z);
-      glVertex3f(X, Y2, Z);
+      glColor3d(0.0, 1.0, 0.0);
+      glVertex3d(X, Y, Z);
+      glVertex3d(X, Y2, Z);
 
-      glColor3f(1.0, 0.0, 0.0);
-      glVertex3f(X, Y, Z);
-      glVertex3f(X, Y, Z2);
+      glColor3d(1.0, 0.0, 0.0);
+      glVertex3d(X, Y, Z);
+      glVertex3d(X, Y, Z2);
     finally
       glEnd;
     end;

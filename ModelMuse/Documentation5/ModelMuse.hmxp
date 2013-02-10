@@ -95,7 +95,7 @@
       <config-value name="deffont">font-family:'MS Sans Serif'; font-size:8pt; color:#000000;</config-value>
       <config-value name="contents"></config-value>
       <config-value name="topicprefix"></config-value>
-      <config-value name="autohelpstart">3665</config-value>
+      <config-value name="autohelpstart">3674</config-value>
       <config-value name="autohelpincrement">1</config-value>
       <config-value name="autohelpanchor">1</config-value>
       <config-value name="searchpath">.\;.\Used Images\;.\ScreenShots\;.\ModflowGuide\</config-value>
@@ -596,6 +596,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Child_Model_Dialog_Box#MXLGRITER" value="3669"/>
       <helpcontext-number href="CHOB_Specified_Head_Flow_Observations" value="3464"/>
       <helpcontext-number href="CHOB_Specified_Head_Flow_ObsObjects" value="3469"/>
+      <helpcontext-number href="Closest" value="3671"/>
       <helpcontext-number href="Color_Grid_Dialog_Box" value="1870"/>
       <helpcontext-number href="Color_Schemes" value="3542"/>
       <helpcontext-number href="Column" value="410"/>
@@ -774,6 +775,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Import_Points_Dialog_Box" value="1580"/>
       <helpcontext-number href="Import_Shapefile_Dialog_Box" value="1560"/>
       <helpcontext-number href="Import_Surfer_Grid_File" value="3563"/>
+      <helpcontext-number href="Import_T_PROGS_File_Dialog_Box" value="3672"/>
       <helpcontext-number href="Imported_Data_Tab" value="3443"/>
       <helpcontext-number href="ImportEdit_Bitmap_Dialog_Box" value="1600"/>
       <helpcontext-number href="Importing_Data" value="3180"/>
@@ -973,6 +975,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Rectangles" value="1510"/>
       <helpcontext-number href="References_Cited" value="3270"/>
       <helpcontext-number href="References_Cited#MehlHill2010" value="3596"/>
+      <helpcontext-number href="References_Cited#TPROGS" value="3673"/>
       <helpcontext-number href="RES_Object_Pane" value="2030"/>
       <helpcontext-number href="RES_Reservoir_Package_Pane" value="2730"/>
       <helpcontext-number href="RIV_Object_Pane" value="2040"/>

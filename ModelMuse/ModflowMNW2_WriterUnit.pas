@@ -63,6 +63,7 @@ type
     procedure EvaluateVerticalScreenFormula(var Expression: TExpression;
       const ADataName: string; var Formula: string; Compiler: TRbwParser; WellBoundary: TMnw2Boundary);
     procedure CheckWells;
+    function CountNodes: integer;
   protected
     function Package: TModflowPackageSelection; override;
     class function Extension: string; override;
@@ -204,8 +205,12 @@ begin
       begin
         Continue;
       end;
+      if Boundary.Values.Count = 0 then
+      begin
+        Boundary.Values.Add;
+      end;
 
-      Item := Boundary.Values[0];
+      Item := Boundary.Values[0] as TCustomModflowBoundaryItem;
       StressPeriod := Model.ModflowFullStressPeriods[0];
       Item.StartTime := StressPeriod.StartTime;
       StressPeriod := Model.ModflowFullStressPeriods[
@@ -474,16 +479,69 @@ var
   MNWMAX: integer;
   IWL2CB: integer;
   MNWPRNT: integer;
+  NODTOT: Integer;
+  UseNODTOT: boolean;
 begin
   MNWMAX := FWells.Count;
+  UseNODTOT := Model.ModelSelection = msModflowNWT;
+  if UseNODTOT then
+  begin
+    NODTOT := CountNodes;
+    MNWMAX := -MNWMAX;
+  end
+  else
+  begin
+    NODTOT := 0;
+  end;
   GetFlowUnitNumber(IWL2CB);
   MNWPRNT := Ord(Model.ModflowPackages.Mnw2Package.PrintOption);
   WriteInteger(MNWMAX);
+  if UseNODTOT then
+  begin
+    WriteInteger(NODTOT);
+  end;
   WriteInteger(IWL2CB);
   WriteInteger(MNWPRNT);
   WriteString(OPTION);
-  WriteString(' # DataSet 1: MNWMAX, IWL2CB, MNWPRNT, OPTION');
+  if UseNODTOT then
+  begin
+    WriteString(' # DataSet 1: MNWMAX, NODTOT, IWL2CB, MNWPRNT, OPTION');
+  end
+  else
+  begin
+    WriteString(' # DataSet 1: MNWMAX, IWL2CB, MNWPRNT, OPTION');
+  end;
   NewLine;
+end;
+
+function TModflowMNW2_Writer.CountNodes: integer;
+var
+  WellIndex: Integer;
+  Well: TMultinodeWell;
+  WellBoundary: TMnw2Boundary;
+  Local_NNODES: Integer;
+  LayerCount: Integer;
+begin
+  result := 0;
+  LayerCount := Model.ModflowGrid.LayerCount;
+  for WellIndex := 0 to FWells.Count - 1 do
+  begin
+    Well := FWells[WellIndex];
+    WellBoundary := Well.WellBoundary;
+    Local_NNODES := Well.FCells.Count;
+    if Well.VerticalWell then
+    begin
+      if WellBoundary.VerticalScreens.Count > 0 then
+      begin
+        Local_NNODES := Max(WellBoundary.VerticalScreens.Count, LayerCount);
+      end
+      else if WellBoundary.LossType <> mltNone then
+      begin
+        Local_NNODES := LayerCount;
+      end;
+    end;
+    Inc(result, Local_NNODES);
+  end;
 end;
 
 procedure TModflowMNW2_Writer.WriteDataSet2;
@@ -585,7 +643,7 @@ begin
   if (FMnwiWells.Count > 0) or FMnwPackage.CreateWellFile
     or FMnwPackage.SummarizeByWell or FMnwPackage.SummarizeByNode then
   begin
-    NameOfMnwiFile := ChangeFileExt(AFileName, '.mnwi');;
+    NameOfMnwiFile := ChangeFileExt(AFileName, '.mnwi');
     WriteToNameFile(StrMNWI, Model.UnitNumbers.UnitNumber(StrMNWI),
       NameOfMnwiFile, foInput);
 

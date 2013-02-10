@@ -141,6 +141,7 @@ begin
     DestinationTab := ParentPageControl.Pages[0];
     ControlsToMoveDown := TList.Create;
     try
+      DestinationTab.Handle;
       for Index := 0 to DestinationTab.ControlCount - 1 do
       begin
         ControlsToMoveDown.Add(DestinationTab.Controls[Index]);

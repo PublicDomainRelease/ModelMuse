@@ -82,6 +82,7 @@ begin
   inherited;
   if pcDataSet.ActivePage <> nil then
   begin
+    pcDataSet.ActivePage.Handle;
     Grid := pcDataSet.ActivePage.Controls[0] as TRbwDataGrid4;
     Grid.Options := Grid.Options - [goEditing];
     Grid.SelectAll;

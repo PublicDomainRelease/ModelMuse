@@ -40,9 +40,9 @@ type
     procedure CreateFormulaObjects; override;
     procedure GetPropertyObserver(Sender: TObject; List: TList); override;
     procedure RemoveFormulaObjects; override;
-    // See @link(TCustomModflowBoundaryItem.BoundaryFormula).
+    // See @link(BoundaryFormula).
     function GetBoundaryFormula(Index: integer): string; override;
-    // See @link(TCustomModflowBoundaryItem.BoundaryFormula).
+    // See @link(BoundaryFormula).
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     // @name checks whether AnotherItem is the same as the current @classname.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
@@ -71,7 +71,7 @@ type
   protected
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
-    class function ItemClass: TMF_BoundItemClass; override;
+    class function ItemClass: TBoundaryItemClass; override;
   public
     procedure EvaluateBoundaries;
     property FlowTimeValues[Index: integer]: TSfrSegmentFlowRecord
@@ -529,7 +529,7 @@ begin
   end;
 end;
 
-class function TSfrSegmentFlowCollection.ItemClass: TMF_BoundItemClass;
+class function TSfrSegmentFlowCollection.ItemClass: TBoundaryItemClass;
 begin
   result := TSfrSegmentFlowItem;
 end;

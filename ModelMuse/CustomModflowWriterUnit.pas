@@ -52,15 +52,63 @@ type
   TErrorType = (etError, etWarning);
   TArrayWritingFormat = (awfModflow, awfMt3dms);
 
-  { @name is an abstract base class used as an ancestor for classes that
-    write MODFLOW input files.
-  }
-  TCustomModflowWriter = class(TObject)
+  TCustomFileWriter = class(TObject)
   private
     // name is the file that is created by @classname.
     FFileStream: TFileStream;
     // See @link(Model).
     FModel: TCustomModel;
+  protected
+    FEvaluationType: TEvaluationType;
+    // @name closes the file that is being exported.
+    // @seealso(OpenFile)
+    procedure CloseFile;
+    // @name opens the input file to be exported.
+    // @seealso(CloseFile)
+    procedure OpenFile(const FileName: string);
+    // @name generates a comment line for a MODFLOW input file indentifying
+    // the file type
+    function File_Comment(const FileID: string): string;
+    // @name writes a comment line to the output file.
+    procedure WriteCommentLine(const Comment: string);
+  public
+    {@name is the model to be exported.}
+    property Model: TCustomModel read FModel;
+    // the period as the decimal separator.
+    class Function FortranDecimal(NumberString : string) : string;
+    // @name converts "Value" to an string padded at the beginning with blank
+    // characters so that the resulting string as a length of "Width".
+    class function FixedFormattedInteger(const Value, Width: integer): string;
+    // @name converts "Value" to an string padded at the beginning with blank
+    // characters so that the resulting string as a length of "Width".
+    class function FixedFormattedReal(const Value : double;
+      const Width : integer) : string;
+    // @name converts "Value" to a string.  The decimal separator will
+    // always be a period.
+    class function FreeFormattedReal(const Value : double) : string;
+    // @name creates and instance of @classname.
+    // @param(Model is the @link(TCustomModel) to be exported.)
+    Constructor Create(AModel: TCustomModel; EvaluationType: TEvaluationType); virtual;
+    // @name writes an end of line to the output file.
+    procedure NewLine;
+    // @name writes Value to the output with a leading blank space.
+    procedure WriteFloat(const Value: double);
+    procedure WriteF10Float(const Value: double);
+    // @name writes Value to the output with a leading blank space.
+    procedure WriteInteger(Const Value: integer);
+    // @name writes Value to the output in I10 format.
+    procedure WriteI10Integer(Const Value: integer; const ErrorID: string);
+    // @name writes Value to the output in I2 format.
+    procedure WriteI2Integer(Const Value: integer; const ErrorID: string);
+    // @name writes Value to the output with NO leading blank space.
+    procedure WriteString(const Value: String);
+  end;
+
+  { @name is an abstract base class used as an ancestor for classes that
+    write MODFLOW input files.
+  }
+  TCustomModflowWriter = class(TCustomFileWriter)
+  private
 
     // @name writes a header for DataArray using either
     // @link(WriteConstantU2DINT) or @link(WriteU2DRELHeader).
@@ -71,20 +119,10 @@ type
     procedure WriteArrayValues(const LayerIndex: Integer;
       const DataArray: TDataArray);
   protected
-    FEvaluationType: TEvaluationType;
     FArrayWritingFormat: TArrayWritingFormat;
-    // @name generates a comment line for a MODFLOW input file indentifying
-    // the file type
-    function File_Comment(const FileID: string): string;
     // @name generates a comment line for a MODFLOW input file indentifying
     // the package.
     function PackageID_Comment(APackage: TModflowPackageSelection): string; virtual;
-    // @name closes the MODFLOW input file that is being exported.
-    // @seealso(OpenFile)
-    procedure CloseFile;
-    // @name opens the input file to be exported.
-    // @seealso(CloseFile)
-    procedure OpenFile(const FileName: string);
     // @name converts AFileName to use the correct extension for the file.
     class function FileName(const AFileName: string): string;
     // @name returns the extension (including the initial period) for the
@@ -120,22 +158,8 @@ type
       List: TList; AssignmentMethod: TUpdateMethod; AdjustForLGR: boolean; var TransientArray: TDataArray;
       FreeArray: boolean = True);
   public
-    {@name is the model to be exported.}
-    property Model: TCustomModel read FModel;
     // @name converts a real number represented as a string to always use
     property ArrayWritingFormat: TArrayWritingFormat read FArrayWritingFormat;
-    // the period as the decimal separator.
-    class Function FortranDecimal(NumberString : string) : string;
-    // @name converts "Value" to an string padded at the beginning with blank
-    // characters so that the resulting string as a length of "Width".
-    class function FixedFormattedInteger(const Value, Width: integer): string;
-    // @name converts "Value" to an string padded at the beginning with blank
-    // characters so that the resulting string as a length of "Width".
-    class function FixedFormattedReal(const Value : double;
-      const Width : integer) : string;
-    // @name converts "Value" to a string.  The decimal separator will
-    // always be a period.
-    class function FreeFormattedReal(const Value : double) : string;
     {@name checks that the values stored in DataArray are valid.)
     @param(DataArray is the @link(TDataArray) to be checked.)
     @param(LayerIndex is the layer (first index) in DataArray to be checked.)
@@ -152,9 +176,7 @@ type
       CheckValue: double; ErrorType: TErrorType);
     // @name creates and instance of @classname.
     // @param(Model is the @link(TCustomModel) to be exported.)
-    Constructor Create(AModel: TCustomModel; EvaluationType: TEvaluationType); virtual;
-    // @name writes an end of line to the output file.
-    procedure NewLine;
+    Constructor Create(AModel: TCustomModel; EvaluationType: TEvaluationType); override;
     { @name writes one layer of DataArray to the output file.
       @param(DataArray is the TDataArray to be written.)
       @param(LayerIndex is the layer in DataArray to be written.)
@@ -163,8 +185,6 @@ type
     }
     procedure WriteArray(const DataArray: TDataArray; const LayerIndex: integer;
       const ArrayName: string; CacheArray: Boolean = True);
-    // @name writes a comment line to the output file.
-    procedure WriteCommentLine(const Comment: string);
     // @name writes value to the output file using the U2DINT format in MODFLOW
     // or the IARRAY array reader in MT3DMS depending on the value of
     // @link(FArrayWritingFormat)
@@ -180,17 +200,6 @@ type
     // @name writes DataArray in cross section format.
     procedure WriteCrossSectionArray(const DataArray: TDataArray;
       const ArrayName: string);
-    // @name writes Value to the output with a leading blank space.
-    procedure WriteFloat(const Value: double);
-    procedure WriteF10Float(const Value: double);
-    // @name writes Value to the output with a leading blank space.
-    procedure WriteInteger(Const Value: integer);
-    // @name writes Value to the output in I10 format.
-    procedure WriteI10Integer(Const Value: integer; const ErrorID: string);
-    // @name writes Value to the output in I2 format.
-    procedure WriteI2Integer(Const Value: integer; const ErrorID: string);
-    // @name writes Value to the output with NO leading blank space.
-    procedure WriteString(const Value: String);
     // @name writes the IFACE parameter in MODFLOW.
     procedure WriteIface(const Value: TIface);
     // @name writes the header for the U2DINT array reader in MODFLOW
@@ -797,6 +806,10 @@ resourcestring
   StrLayer0dRow1 = 'Layer: %0:d; Row: %1:d; Column: %2:d';
   StrInputFileDoesNot = 'Input file does not exist.';
   StrTheRequiredInputF = 'The required input file "%s" does not exist.';
+  StrInSNoFlowObser = 'In %s, no flow observations of the correct type have ' +
+  'been defined.';
+  StrSelectModelObserv = 'Select "Model|Observation Type" and make sure you ' +
+  'have the correct observation type selected.';
 
 var
 //  NameFile: TStringList;
@@ -1314,7 +1327,7 @@ begin
   Model.DataArrayManager.AddDataSetToCache(DataArray);
 end;
 
-procedure TCustomModflowWriter.CloseFile;
+procedure TCustomFileWriter.CloseFile;
 begin
   FreeAndNil(FFileStream);
 end;
@@ -1332,10 +1345,10 @@ end;
 
 constructor TCustomModflowWriter.Create(AModel: TCustomModel; EvaluationType: TEvaluationType);
 begin
-  inherited Create;
-  FEvaluationType := EvaluationType;
+  inherited Create(AModel, EvaluationType);
+//  FEvaluationType := EvaluationType;
   FArrayWritingFormat := awfModflow;
-  FModel := AModel;
+//  FModel := AModel;
 //  FExportTime := Now;
 end;
 
@@ -1344,7 +1357,15 @@ begin
   result := ChangeFileExt(AFileName, Extension);
 end;
 
-class function TCustomModflowWriter.FixedFormattedInteger(const Value,
+constructor TCustomFileWriter.Create(AModel: TCustomModel;
+  EvaluationType: TEvaluationType);
+begin
+  inherited Create;
+  FEvaluationType := EvaluationType;
+  FModel := AModel;
+end;
+
+class function TCustomFileWriter.FixedFormattedInteger(const Value,
   Width: integer): string;
 var
   Index : integer;
@@ -1379,7 +1400,7 @@ begin
   end;
 end;
 
-class function TCustomModflowWriter.FixedFormattedReal(const Value: double;
+class function TCustomFileWriter.FixedFormattedReal(const Value: double;
   const Width: integer): string;
 var
   Index : integer;
@@ -1400,7 +1421,7 @@ begin
   result := FortranDecimal(result);
 end;
 
-class function TCustomModflowWriter.FortranDecimal(
+class function TCustomFileWriter.FortranDecimal(
   NumberString: string): string;
 begin
   if FormatSettings.DecimalSeparator = '.' then
@@ -1414,18 +1435,18 @@ begin
   end;
 end;
 
-class function TCustomModflowWriter.FreeFormattedReal(
+class function TCustomFileWriter.FreeFormattedReal(
   const Value: double): string;
 begin
   result := FortranDecimal(Format('%.13e ', [Value]));
 end;
 
-procedure TCustomModflowWriter.NewLine;
+procedure TCustomFileWriter.NewLine;
 begin
   WriteString(sLineBreak);
 end;
 
-procedure TCustomModflowWriter.OpenFile(const FileName: string);
+procedure TCustomFileWriter.OpenFile(const FileName: string);
 begin
   FFileStream:= TFileStream.Create(FileName, fmCreate or fmShareDenyWrite);
 end;
@@ -1487,7 +1508,7 @@ begin
   end;
 end;
 
-procedure TCustomModflowWriter.WriteCommentLine(const Comment: string);
+procedure TCustomFileWriter.WriteCommentLine(const Comment: string);
 begin
   WriteString('# ' + Comment);
   NewLine;
@@ -1569,17 +1590,17 @@ begin
   end;
 end;
 
-procedure TCustomModflowWriter.WriteF10Float(const Value: double);
+procedure TCustomFileWriter.WriteF10Float(const Value: double);
 begin
   WriteString(FixedFormattedReal(Value, 10));
 end;
 
-procedure TCustomModflowWriter.WriteFloat(const Value: double);
+procedure TCustomFileWriter.WriteFloat(const Value: double);
 begin
   WriteString(' ' + FreeFormattedReal(Value));
 end;
 
-procedure TCustomModflowWriter.WriteI10Integer(const Value: integer;
+procedure TCustomFileWriter.WriteI10Integer(const Value: integer;
   const ErrorID: string);
 const
   MaxCharacters = 10;
@@ -1602,7 +1623,7 @@ begin
   WriteString(ValueAsString);
 end;
 
-procedure TCustomModflowWriter.WriteI2Integer(const Value: integer;
+procedure TCustomFileWriter.WriteI2Integer(const Value: integer;
   const ErrorID: string);
 const
   MaxCharacters = 2;
@@ -1633,7 +1654,7 @@ begin
   WriteInteger(IFACE);
 end;
 
-procedure TCustomModflowWriter.WriteInteger(const Value: integer);
+procedure TCustomFileWriter.WriteInteger(const Value: integer);
 var
   ValueAsString: string;
 begin
@@ -1641,7 +1662,7 @@ begin
   WriteString(ValueAsString);
 end;
 
-procedure TCustomModflowWriter.WriteString(const Value: String);
+procedure TCustomFileWriter.WriteString(const Value: String);
 var
   StringToWrite: AnsiString;
 begin
@@ -3763,11 +3784,11 @@ begin
   end;
 end;
 
-function TCustomModflowWriter.File_Comment(const FileID: string): string;
+function TCustomFileWriter.File_Comment(const FileID: string): string;
 begin
   result := FileID + ' file created on '
     + DateToStr(Now) + ' by ' + Model.ProgramName + ' version '
-    + ModelVersion + '.';
+    + IModelVersion + '.';
 end;
 
 function TCustomModflowWriter.PackageID_Comment(
@@ -4166,6 +4187,7 @@ var
   NQ_Pkg: Integer;
   ErrorRoot: string;
   DetailedMessage: string;
+  FluxObsCountWarning: string;
 begin
   // if the package is not selected, quit.
   if not ObservationPackage.IsSelected then
@@ -4180,6 +4202,10 @@ begin
 
   frmErrorsAndWarnings.RemoveWarningGroup(Model, ObsNameWarningString);
 
+  FluxObsCountWarning := Format(StrInSNoFlowObser,
+    [ObservationPackage.PackageIdentifier]);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, FluxObsCountWarning);
+
   // count the number of cell groups for which flux observations are listed
   NQ_Pkg := 0;
   for ObsIndex := 0 to Observations.Count - 1 do
@@ -4189,6 +4215,11 @@ begin
     begin
       Inc(NQ_Pkg);
     end;
+  end;
+
+  if (Observations.Count > 0) and (NQ_Pkg = 0) then
+  begin
+    frmErrorsAndWarnings.AddWarning(Model, FluxObsCountWarning, StrSelectModelObserv);
   end;
 
   NQC_Pkg := 0;

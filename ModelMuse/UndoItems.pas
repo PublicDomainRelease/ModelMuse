@@ -582,6 +582,7 @@ type
     procedure SetFormula(const Value: string);
     procedure SetDataSet(const Value: TDataArray);
   public
+    procedure InvalidateDataSet;
     procedure AssignBasicProperties;
     // @name is the @link(TDataArray) whose values are being stored.
     property DataSet: TDataArray read FDataSet write SetDataSet;
@@ -1802,6 +1803,10 @@ end;
 procedure TCustomUndoChangeGridDimensions.UpdateDataSets;
 begin
   frmGoPhast.PhastModel.UpdateDataSetDimensions;
+  if frmGoPhast.PhastModel.ModflowGrid <> nil then
+  begin
+    frmGoPhast.PhastModel.ModflowGrid.NotifyGridChanged(nil);
+  end;
 end;
 { TUndoCreateGrid }
 
@@ -2078,6 +2083,7 @@ begin
   UpdateFrmDisplayData;
 //  UpdateFrmContourData;
   UpdateFrmGridValue;
+  frmGoPhast.InvalidateImage32AllViews;
 //  frmGoPhast.PhastModel.DataArrayNameChangeWarning;
 end;
 
@@ -2136,6 +2142,7 @@ begin
   UpdateFrmDisplayData;
 //  UpdateFrmContourData;
   UpdateFrmGridValue;
+  frmGoPhast.InvalidateImage32AllViews;
 //  frmGoPhast.PhastModel.DataArrayNameChangeWarning;
 end;
 
@@ -2449,6 +2456,24 @@ end;
 function TPhastDataSetStorage.GetFormula: string;
 begin
   result := FFormula.Formula;
+end;
+
+procedure TPhastDataSetStorage.InvalidateDataSet;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildDataSet: TDataArray;
+begin
+  DataSet.Invalidate;
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    ChildDataSet :=  ChildModel.DataArrayManager.GetDataSetByName(DataSet.Name);
+    if ChildDataSet <> nil then
+    begin
+      ChildDataSet.Invalidate;
+    end;
+  end;
 end;
 
 procedure TPhastDataSetStorage.SetDataSet(const Value: TDataArray);

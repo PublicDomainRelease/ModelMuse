@@ -4,9 +4,9 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
   Caption = 'MODFLOW Output Control'
   ClientHeight = 403
   ClientWidth = 549
-  ExplicitWidth = 567
-  ExplicitHeight = 448
-  PixelsPerInch = 120
+  ExplicitWidth = 565
+  ExplicitHeight = 441
+  PixelsPerInch = 96
   TextHeight = 18
   object JvNetscapeSplitter1: TJvNetscapeSplitter
     Left = 121
@@ -118,8 +118,8 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       object cbPrintInputArrays: TJvCheckBox
         Left = 6
         Top = 3
-        Width = 140
-        Height = 20
+        Width = 137
+        Height = 18
         Caption = 'Print input arrays'
         Checked = True
         State = cbChecked
@@ -135,8 +135,8 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       object cbPrintInputCellLists: TJvCheckBox
         Left = 6
         Top = 26
-        Width = 151
-        Height = 20
+        Width = 148
+        Height = 18
         Caption = 'Print input cell lists'
         Checked = True
         State = cbChecked
@@ -340,8 +340,8 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       object cbCompact: TJvCheckBox
         Left = 16
         Top = 31
-        Width = 140
-        Height = 20
+        Width = 137
+        Height = 18
         Caption = 'Compact budget'
         Checked = True
         State = cbChecked

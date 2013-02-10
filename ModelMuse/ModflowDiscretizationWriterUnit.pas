@@ -164,7 +164,7 @@ var
 begin
   WriteCommentLine('Discretization File created on ' + DateToStr(Now) + ' by '
     + Model.ProgramName
-    + ' version ' + ModelVersion + '.');
+    + ' version ' + IModelVersion + '.');
   WriteCommentLines(Model.ModflowOptions.Description);
 
   WriteCorner('Upper left corner:', Model.Grid.TwoDElementCorner(0,0));

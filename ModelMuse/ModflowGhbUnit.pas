@@ -53,9 +53,9 @@ type
     procedure CreateFormulaObjects; override;
     procedure GetPropertyObserver(Sender: TObject; List: TList); override;
     procedure RemoveFormulaObjects; override;
-    // See @link(TCustomModflowBoundaryItem.BoundaryFormula).
+    // See @link(BoundaryFormula).
     function GetBoundaryFormula(Index: integer): string; override;
-    // See @link(TCustomModflowBoundaryItem.BoundaryFormula).
+    // See @link(BoundaryFormula).
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     // @name checks whether AnotherItem is the same as the current @classname.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
@@ -116,7 +116,7 @@ type
 
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
-    class function ItemClass: TMF_BoundItemClass; override;
+    class function ItemClass: TBoundaryItemClass; override;
     // @name calls inherited @name and then sets the length of
     // the @link(TGhbStorage.GhbArray) at ItemIndex in
     // @link(TCustomMF_BoundColl.Boundaries) to BoundaryCount.
@@ -579,7 +579,7 @@ begin
   end;
 end;
 
-class function TGhbCollection.ItemClass: TMF_BoundItemClass;
+class function TGhbCollection.ItemClass: TBoundaryItemClass;
 begin
   result := TGhbItem;
 end;
@@ -812,7 +812,7 @@ begin
   ValueCount := 0;
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    Item := Values[ValueIndex];
+    Item := Values[ValueIndex] as TCustomModflowBoundaryItem;
     if ObservationsPresent then
     begin
       if PriorTime < Item.StartTime then
@@ -863,7 +863,7 @@ begin
     ValueCount := 0;
     for ValueIndex := 0 to Param.Param.Count - 1 do
     begin
-      Item := Param.Param[ValueIndex];
+      Item := Param.Param[ValueIndex] as TCustomModflowBoundaryItem;
       if ObservationsPresent then
       begin
         if PriorTime < Item.StartTime then

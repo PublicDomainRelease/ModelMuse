@@ -55,12 +55,12 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/usgspubs/ofr/ofr200092" target="_blank" styleclass="Citation" translate="true">Harbaugh, A.W., Banta, E.R., Hill, M.C., and McDonald, M.G., 2000, MODFLOW-2000, the U.S. Geological Survey modular ground-water model -- User guide to modularization concepts and the Ground-Water Flow Process: U.S. Geological Survey Open-File Report 00-92, 121 p.</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="Time-varying-parameters.pdf" styleclass="Normal" translate="true">Time-varying-parameters.pdf</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="release.txt" styleclass="Normal" translate="true">release.txt</link></li>
           </list>
-          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="modpath.txt" styleclass="Normal" translate="true">modpath.txt</link></li>
           </list>
         </td>
@@ -70,7 +70,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Related Packages</text></para>
         </td>
         <td>
-          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">See: &#160;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="BAS6" anchor="IBOUND" styleclass="Normal" translate="true">IBOUND</link><text styleclass="Normal" translate="true"> in the Basic package</text></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="FHB" styleclass="Normal" translate="true">Flow and Head Boundary (FHB)</link><text styleclass="Normal" translate="true"> package</text></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="CHOB" styleclass="Normal" translate="true">Constant-Head Flow Observation</link><text styleclass="Normal" translate="true"> package</text></li>
@@ -82,15 +82,15 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="20" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
           </list>
         </td>
@@ -100,7 +100,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Other Notes</text></para>
         </td>
         <td>
-          <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="New Materials" translate="true">If two or more CHD Boundary cells are at the same location, the specified head at that location will be the sum of the specified heads as specified by the Time-Variant Specified-Head package.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Once a cell has been designated as a constant-head cell, it remains one for the rest of the simulation even if it is not respecified as a constant-head cell in a later stress period. &#160;It&apos;s head will be the last head that was specified.</text></li>
             <li styleclass="Normal"><text styleclass="New Materials" translate="true">Specified heads specified by the Time-Variant Specified-Head package are overridden by those specified in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="FHB" styleclass="New Materials" translate="true">Flow and Head Boundary</link><text styleclass="New Materials" translate="true"> package.</text></li>
@@ -192,11 +192,11 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">Option—is an optional list of character values.</text></para>
-                      <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
-                        <li styleclass="Normal"><text styleclass="Normal" translate="true">“</text><text styleclass="Keywords" translate="true">AUXILIARY</text><text styleclass="Normal" translate="true"> abc” or “</text><text styleclass="Keywords" translate="true">AUX</text><text styleclass="Normal" translate="true"> abc”—defines an auxiliary variable, named &quot;abc&quot;, which will be read for each constant-head boundary as part of Items 4 and 6. Up to five variables can be specified, each of which must be preceded by &quot;</text><text styleclass="Keywords" translate="true">AUXILIARY</text><text styleclass="Normal" translate="true">&quot; or &quot;</text><text styleclass="Keywords" translate="true">AUX</text><text styleclass="Normal" translate="true">.&quot; These variables will not be used by the Ground-Water Flow Process, but they will be available for use by other processes. The auxiliary variable values will be read after the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CHD" anchor="Ehead" styleclass="Normal" translate="true">Ehead</link><text styleclass="Normal" translate="true"> variable.</text></li>
+                      <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">“</text><text styleclass="Keywords" translate="true">AUXILIARY</text><text styleclass="Normal" translate="true"> abc” or “</text><text styleclass="Keywords" translate="true">AUX</text><text styleclass="Normal" translate="true"> abc”—defines an auxiliary variable, named &quot;abc&quot;, which will be read for each constant-head boundary as part of Items 4 and 6. Up to 20 variables can be specified, each of which must be preceded by &quot;</text><text styleclass="Keywords" translate="true">AUXILIARY</text><text styleclass="Normal" translate="true">&quot; or &quot;</text><text styleclass="Keywords" translate="true">AUX</text><text styleclass="Normal" translate="true">.&quot; These variables will not be used by the Ground-Water Flow Process, but they will be available for use by other processes. The auxiliary variable values will be read after the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CHD" anchor="Ehead" styleclass="Normal" translate="true">Ehead</link><text styleclass="Normal" translate="true"> variable.</text></li>
                       </list>
                       <para styleclass="Normal"><snippet src="Uses_of_Auxiliary_Parameters"/></para>
-                      <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Keywords" translate="true">NOPRINT</text><text styleclass="Normal" translate="true">—suppresses the printing of cell lists.</text></li>
                       </list>
                     </td>
@@ -379,7 +379,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="ITMP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">ITMP—is a flag and a counter.</text></para>
-                      <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="17" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ITMP &lt; 0, non-parameter CHD data from the preceding stress period will be reused.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If ITMP </text><text styleclass="Normal" style="font-family:Symbol;" translate="true">³</text><text styleclass="Normal" translate="true"> 0, ITMP is the number of non-parameter constant-head boundaries read for the current stress period.</text></li>
                       </list>

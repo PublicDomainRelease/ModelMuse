@@ -8,7 +8,7 @@ uses
   Windows, SysUtils, Types, Classes, StrUtils, Graphics, Controls, Forms,
   Dialogs, StdCtrls, frmCustomGoPhastUnit, Buttons, ExtCtrls, ComCtrls,
   RbwParser, JvExExtCtrls, JvNetscapeSplitter, JvExStdCtrls, RichEdit,
-  ClassificationUnit, GoPhastTypes;
+  ClassificationUnit, GoPhastTypes, JvRichEdit;
 
 type
   TVariableEdit = class(TClassificationObject)
@@ -149,7 +149,7 @@ many will be displayed at one time. }
     gbNumbers: TGroupBox;
     gbOperators: TGroupBox;
     lbltems: TLabel;
-    jreFormula: TRichEdit;
+    jreFormula: TJvRichEdit;
     // @name shows help on the function that is selected in @link(tvItems).
     // See @link(tvItemsChange).
     procedure btnFunctionHelpClick(Sender: TObject);
@@ -228,8 +228,6 @@ many will be displayed at one time. }
     procedure DiagramFormula;
     procedure MatchEndingParen(PriorSelection: TCharRange); overload;
     procedure MatchStartingParen(PriorSelection: TCharRange); overload;
-    procedure MatchEndingParen(PriorSelStart, PriorSelLength: integer); overload;
-    procedure MatchStartingParen(PriorSelStart, PriorSelLength: integer); overload;
     procedure GetGlobalVariables;
     procedure RemoveSpecialImplementor(AClass: TClass);
     procedure CreateNodesForVariables;
@@ -456,90 +454,90 @@ procedure TfrmFormula.jreFormulaSelectionChange(Sender: TObject);
 var
   SelText: string;
   // Use the following variables for TRichEdit
-  PriorSelStart: integer;
-  PriorSelLength: integer;
-  NewSelStart: integer;
-  NewSelLength: integer;
+//  PriorSelStart: integer;
+//  PriorSelLength: integer;
+//  NewSelStart: integer;
+//  NewSelLength: integer;
   // Use the following variables for TJvRichEdit
-//  PriorSelection: TCharRange;
-//  NewSelection: TCharRange;
+  PriorSelection: TCharRange;
+  NewSelection: TCharRange;
 begin
   // Use the following for TRichEdit
-  if FUpdating then Exit;
-  FUpdating := True;
-  try
-    PriorSelStart := jreFormula.SelStart;
-    PriorSelLength := jreFormula.SelLength;
-    try
-      if FSetColor then
-      begin
-        jreFormula.SelStart := 0;
-        jreFormula.SelLength := MAXINT;
-        jreFormula.SelAttributes.Color := clBlack;
-        jreFormula.SelStart := PriorSelStart;
-        jreFormula.SelLength := PriorSelLength;
-        FSetColor := False;
-      end;
-
-      NewSelStart := PriorSelStart;
-      NewSelLength := PriorSelLength;
-      if NewSelLength = 0 then
-      begin
-        Inc(NewSelLength);
-      end;
-      jreFormula.SelStart := NewSelStart;
-      jreFormula.SelLength := NewSelLength;
-      SelText := jreFormula.SelText;
-      if SelText = '(' then
-      begin
-        MatchStartingParen(PriorSelStart, PriorSelLength);
-      end
-      else if SelText = ')' then
-      begin
-        MatchEndingParen(PriorSelStart, PriorSelLength);
-      end;
-    finally
-      jreFormula.SelStart := PriorSelStart;
-      jreFormula.SelLength := PriorSelLength;
-    end;
-  finally
-    FUpdating := False;
-  end;
-
-  // Use the following for TJvRichEdit
 //  if FUpdating then Exit;
 //  FUpdating := True;
 //  try
-//    PriorSelection := jreFormula.GetSelection;
+//    PriorSelStart := jreFormula.SelStart;
+//    PriorSelLength := jreFormula.SelLength;
 //    try
 //      if FSetColor then
 //      begin
-//        jreFormula.SetSelection(0, MAXINT, False);
-//        jreFormula.SelAttributes.BackColor := clWindow;
-//        jreFormula.SetSelection(PriorSelection.cpMin, PriorSelection.cpMax, False);
+//        jreFormula.SelStart := 0;
+//        jreFormula.SelLength := MAXINT;
+//        jreFormula.SelAttributes.Color := clBlack;
+//        jreFormula.SelStart := PriorSelStart;
+//        jreFormula.SelLength := PriorSelLength;
 //        FSetColor := False;
 //      end;
 //
-//      NewSelection := PriorSelection;
-//      if NewSelection.cpMin = NewSelection.cpMax then
+//      NewSelStart := PriorSelStart;
+//      NewSelLength := PriorSelLength;
+//      if NewSelLength = 0 then
 //      begin
-//        Inc(NewSelection.cpMax);
+//        Inc(NewSelLength);
 //      end;
-//      SelText := jreFormula.GetTextRange(NewSelection.cpMin, NewSelection.cpMax);
+//      jreFormula.SelStart := NewSelStart;
+//      jreFormula.SelLength := NewSelLength;
+//      SelText := jreFormula.SelText;
 //      if SelText = '(' then
 //      begin
-//        MatchStartingParen(PriorSelection);
+//        MatchStartingParen(PriorSelStart, PriorSelLength);
 //      end
 //      else if SelText = ')' then
 //      begin
-//        MatchEndingParen(PriorSelection);
+//        MatchEndingParen(PriorSelStart, PriorSelLength);
 //      end;
 //    finally
-//      jreFormula.SetSelection(PriorSelection.cpMin, PriorSelection.cpMax, False);
+//      jreFormula.SelStart := PriorSelStart;
+//      jreFormula.SelLength := PriorSelLength;
 //    end;
 //  finally
 //    FUpdating := False;
 //  end;
+
+  // Use the following for TJvRichEdit
+  if FUpdating then Exit;
+  FUpdating := True;
+  try
+    PriorSelection := jreFormula.GetSelection;
+    try
+      if FSetColor then
+      begin
+        jreFormula.SetSelection(0, MAXINT, False);
+        jreFormula.SelAttributes.BackColor := clWindow;
+        jreFormula.SetSelection(PriorSelection.cpMin, PriorSelection.cpMax, False);
+        FSetColor := False;
+      end;
+
+      NewSelection := PriorSelection;
+      if NewSelection.cpMin = NewSelection.cpMax then
+      begin
+        Inc(NewSelection.cpMax);
+      end;
+      SelText := jreFormula.GetTextRange(NewSelection.cpMin, NewSelection.cpMax);
+      if SelText = '(' then
+      begin
+        MatchStartingParen(PriorSelection);
+      end
+      else if SelText = ')' then
+      begin
+        MatchEndingParen(PriorSelection);
+      end;
+    finally
+      jreFormula.SetSelection(PriorSelection.cpMin, PriorSelection.cpMax, False);
+    end;
+  finally
+    FUpdating := False;
+  end;
 end;
 
 procedure TfrmFormula.buttonClick(Sender: TObject);
@@ -1329,151 +1327,151 @@ begin
 end;
 
 procedure TfrmFormula.MatchStartingParen(PriorSelection: TCharRange);
-//var
-//  Index: Integer;
-//  Level: Integer;
-//  StoredLevel: Integer;
-//  SelText: string;
-//  NewSelection: TCharRange;
-//  InString: boolean;
+var
+  Index: Integer;
+  Level: Integer;
+  StoredLevel: Integer;
+  SelText: string;
+  NewSelection: TCharRange;
+  InString: boolean;
 begin
   // Use for TJvRichEdit
 
-//  NewSelection.cpMin := 0;
-//  NewSelection.cpMax := 1;
-//  StoredLevel := -1;
-//  Level := 0;
-//  InString := False;
-//  for Index := 0 to MAXINT do
-//  begin
-//    SelText := jreFormula.GetTextRange(NewSelection.cpMin, NewSelection.cpMax);
-//    jreFormula.SetSelection(NewSelection.cpMin, NewSelection.cpMax, False);
-//    if SelText = '' then
-//    begin
-//      break;
-//    end
-//    else if (SelText = '"') and not InString then
-//    begin
-//      InString := True;
-//    end
-//    else if SelText = '"' then
-//    begin
-//      InString := False;
-//    end
-//    else if InString then
-//    begin
-//      if NewSelection.cpMin = PriorSelection.cpMin then
-//      begin
-//        break;
-//      end;
-//    end
-//    else if SelText = '(' then
-//    begin
-//      Inc(Level);
-//      if NewSelection.cpMin = PriorSelection.cpMin then
-//      begin
-//        jreFormula.SetSelection(NewSelection.cpMin, NewSelection.cpMax, False);
-//        jreFormula.SelAttributes.Color := clAqua;
-//        FSetColor := True;
-//        StoredLevel := Level;
-//      end;
-//    end
-//    else if SelText = ')' then
-//    begin
-//      if Level = StoredLevel then
-//      begin
-//        jreFormula.SetSelection(NewSelection.cpMin, NewSelection.cpMax, False);
-//        jreFormula.SelAttributes.Color := clAqua;
-//        break;
-//      end;
-//      Dec(Level);
-//    end;
-//    Inc(NewSelection.cpMin);
-//    Inc(NewSelection.cpMax);
-//  end;
+  NewSelection.cpMin := 0;
+  NewSelection.cpMax := 1;
+  StoredLevel := -1;
+  Level := 0;
+  InString := False;
+  for Index := 0 to MAXINT do
+  begin
+    SelText := jreFormula.GetTextRange(NewSelection.cpMin, NewSelection.cpMax);
+    jreFormula.SetSelection(NewSelection.cpMin, NewSelection.cpMax, False);
+    if SelText = '' then
+    begin
+      break;
+    end
+    else if (SelText = '"') and not InString then
+    begin
+      InString := True;
+    end
+    else if SelText = '"' then
+    begin
+      InString := False;
+    end
+    else if InString then
+    begin
+      if NewSelection.cpMin = PriorSelection.cpMin then
+      begin
+        break;
+      end;
+    end
+    else if SelText = '(' then
+    begin
+      Inc(Level);
+      if NewSelection.cpMin = PriorSelection.cpMin then
+      begin
+        jreFormula.SetSelection(NewSelection.cpMin, NewSelection.cpMax, False);
+        jreFormula.SelAttributes.BackColor := clAqua;
+        FSetColor := True;
+        StoredLevel := Level;
+      end;
+    end
+    else if SelText = ')' then
+    begin
+      if Level = StoredLevel then
+      begin
+        jreFormula.SetSelection(NewSelection.cpMin, NewSelection.cpMax, False);
+        jreFormula.SelAttributes.BackColor := clAqua;
+        break;
+      end;
+      Dec(Level);
+    end;
+    Inc(NewSelection.cpMin);
+    Inc(NewSelection.cpMax);
+  end;
 end;
 
 procedure TfrmFormula.MatchEndingParen(PriorSelection: TCharRange);
-//var
-//  Levels: TIntegerList;
-//  Starts: TIntegerList;
-//  StoredLevel: Integer;
-//  Level: Integer;
-//  Index: Integer;
-//  NewSelection: TCharRange;
-//  SelText: string;
-//  InString: boolean;
+var
+  Levels: TIntegerList;
+  Starts: TIntegerList;
+  StoredLevel: Integer;
+  Level: Integer;
+  Index: Integer;
+  NewSelection: TCharRange;
+  SelText: string;
+  InString: boolean;
 begin
   // Use for TJvRichEdit
 
-//  Levels := TIntegerList.Create;
-//  Starts := TIntegerList.Create;
-//  try
-//    NewSelection.cpMin := 0;
-//    NewSelection.cpMax := 1;
-//    StoredLevel := -1;
-//    Level := 0;
-//    InString := False;
-//    for Index := 0 to MAXINT do
-//    begin
-//      SelText := jreFormula.GetTextRange(NewSelection.cpMin, NewSelection.cpMax);
-////      SelText := jreFormula.SelText;
-//      if SelText = '' then
-//      begin
-//        break;
-//      end
-//      else if (SelText = '"') and not InString then
-//      begin
-//        InString := True;
-//      end
-//      else if SelText = '"' then
-//      begin
-//        InString := False;
-//      end
-//      else if InString then
-//      begin
-//        if NewSelection.cpMin = PriorSelection.cpMin then
-//        begin
-//          break;
-//        end;
-//      end
-//      else if SelText = '(' then
-//      begin
-//        Inc(Level);
-//        Levels.Add(Level);
-//        Starts.Add(NewSelection.cpMin);
-//      end
-//      else if SelText = ')' then
-//      begin
-//        if NewSelection.cpMin = PriorSelection.cpMin then
-//        begin
-//          jreFormula.SetSelection(NewSelection.cpMin, NewSelection.cpMax, False);
-//          jreFormula.SelAttributes.BackColor := clAqua;
-//          StoredLevel := Level;
-//          FSetColor := True;
-//          break;
-//        end;
-//        Dec(Level);
-//      end;
-//      Inc(NewSelection.cpMin);
-//      Inc(NewSelection.cpMax);
-//    end;
-//    if StoredLevel >= 0 then
-//    begin
-//      for Index := Levels.Count - 1 downto 0 do
-//      begin
-//        if Levels[Index] = StoredLevel then
-//        begin
-//          jreFormula.SetSelection(Starts[Index], Starts[Index] + 1, False);
-//          jreFormula.SelAttributes.Color := clAqua;
-//          break;
-//        end;
-//      end;
-//    end;
-//  finally
-//    Levels.Free;
-//    Starts.Free;
-//  end;
+  Levels := TIntegerList.Create;
+  Starts := TIntegerList.Create;
+  try
+    NewSelection.cpMin := 0;
+    NewSelection.cpMax := 1;
+    StoredLevel := -1;
+    Level := 0;
+    InString := False;
+    for Index := 0 to MAXINT do
+    begin
+      SelText := jreFormula.GetTextRange(NewSelection.cpMin, NewSelection.cpMax);
+//      SelText := jreFormula.SelText;
+      if SelText = '' then
+      begin
+        break;
+      end
+      else if (SelText = '"') and not InString then
+      begin
+        InString := True;
+      end
+      else if SelText = '"' then
+      begin
+        InString := False;
+      end
+      else if InString then
+      begin
+        if NewSelection.cpMin = PriorSelection.cpMin then
+        begin
+          break;
+        end;
+      end
+      else if SelText = '(' then
+      begin
+        Inc(Level);
+        Levels.Add(Level);
+        Starts.Add(NewSelection.cpMin);
+      end
+      else if SelText = ')' then
+      begin
+        if NewSelection.cpMin = PriorSelection.cpMin then
+        begin
+          jreFormula.SetSelection(NewSelection.cpMin, NewSelection.cpMax, False);
+          jreFormula.SelAttributes.BackColor := clAqua;
+          StoredLevel := Level;
+          FSetColor := True;
+          break;
+        end;
+        Dec(Level);
+      end;
+      Inc(NewSelection.cpMin);
+      Inc(NewSelection.cpMax);
+    end;
+    if StoredLevel >= 0 then
+    begin
+      for Index := Levels.Count - 1 downto 0 do
+      begin
+        if Levels[Index] = StoredLevel then
+        begin
+          jreFormula.SetSelection(Starts[Index], Starts[Index] + 1, False);
+          jreFormula.SelAttributes.BackColor := clAqua;
+          break;
+        end;
+      end;
+    end;
+  finally
+    Levels.Free;
+    Starts.Free;
+  end;
 end;
 
 { TVariableEdit }
@@ -1494,161 +1492,161 @@ begin
   result := FVariable.Classification;
 end;
 
-procedure TfrmFormula.MatchEndingParen(PriorSelStart, PriorSelLength: integer);
-var
-  Levels: TIntegerList;
-  Starts: TIntegerList;
-  StoredLevel: Integer;
-  Level: Integer;
-  Index: Integer;
-  SelText: string;
-  InString: boolean;
-  NewSelStart: Integer;
-  NewSelLength: Integer;
-begin
+//procedure TfrmFormula.MatchEndingParen(PriorSelStart, PriorSelLength: integer);
+//var
+//  Levels: TIntegerList;
+//  Starts: TIntegerList;
+//  StoredLevel: Integer;
+//  Level: Integer;
+//  Index: Integer;
+//  SelText: string;
+//  InString: boolean;
+//  NewSelStart: Integer;
+//  NewSelLength: Integer;
+//begin
   // Use for TRichEdit
 
-  Levels := TIntegerList.Create;
-  Starts := TIntegerList.Create;
-  try
-    NewSelStart := 0;
-    NewSelLength := 1;
-    StoredLevel := -1;
-    Level := 0;
-    InString := False;
-    for Index := 0 to MAXINT do
-    begin
-      jreFormula.SelStart := NewSelStart;
-      jreFormula.SelLength := NewSelLength;
-      SelText := jreFormula.SelText;
-      if SelText = '' then
-      begin
-        break;
-      end
-      else if (SelText = '"') and not InString then
-      begin
-        InString := True;
-      end
-      else if SelText = '"' then
-      begin
-        InString := False;
-      end
-      else if InString then
-      begin
-        if NewSelStart = PriorSelStart then
-        begin
-          break;
-        end;
-      end
-      else if SelText = '(' then
-      begin
-        Inc(Level);
-        Levels.Add(Level);
-        Starts.Add(NewSelStart);
-      end
-      else if SelText = ')' then
-      begin
-        if NewSelStart = PriorSelStart then
-        begin
-          jreFormula.SelAttributes.Color := clAqua;
-          StoredLevel := Level;
-          FSetColor := True;
-          break;
-        end;
-        if Starts.Count > 0 then
-        begin
-          Starts.Delete(Starts.Count-1);
-          Levels.Delete(Levels.Count-1);
-        end;
-        Dec(Level);
-      end;
-      Inc(NewSelStart);
-    end;
-    if StoredLevel >= 0 then
-    begin
-      for Index := Levels.Count - 1 downto 0 do
-      begin
-        if Levels[Index] = StoredLevel then
-        begin
-          jreFormula.SelStart := Starts[Index];
-          jreFormula.SelLength := 1;
-          jreFormula.SelAttributes.Color := clAqua;
-          break;
-        end;
-      end;
-    end;
-  finally
-    Levels.Free;
-    Starts.Free;
-  end;
-end;
+//  Levels := TIntegerList.Create;
+//  Starts := TIntegerList.Create;
+//  try
+//    NewSelStart := 0;
+//    NewSelLength := 1;
+//    StoredLevel := -1;
+//    Level := 0;
+//    InString := False;
+//    for Index := 0 to MAXINT do
+//    begin
+//      jreFormula.SelStart := NewSelStart;
+//      jreFormula.SelLength := NewSelLength;
+//      SelText := jreFormula.SelText;
+//      if SelText = '' then
+//      begin
+//        break;
+//      end
+//      else if (SelText = '"') and not InString then
+//      begin
+//        InString := True;
+//      end
+//      else if SelText = '"' then
+//      begin
+//        InString := False;
+//      end
+//      else if InString then
+//      begin
+//        if NewSelStart = PriorSelStart then
+//        begin
+//          break;
+//        end;
+//      end
+//      else if SelText = '(' then
+//      begin
+//        Inc(Level);
+//        Levels.Add(Level);
+//        Starts.Add(NewSelStart);
+//      end
+//      else if SelText = ')' then
+//      begin
+//        if NewSelStart = PriorSelStart then
+//        begin
+//          jreFormula.SelAttributes.Color := clAqua;
+//          StoredLevel := Level;
+//          FSetColor := True;
+//          break;
+//        end;
+//        if Starts.Count > 0 then
+//        begin
+//          Starts.Delete(Starts.Count-1);
+//          Levels.Delete(Levels.Count-1);
+//        end;
+//        Dec(Level);
+//      end;
+//      Inc(NewSelStart);
+//    end;
+//    if StoredLevel >= 0 then
+//    begin
+//      for Index := Levels.Count - 1 downto 0 do
+//      begin
+//        if Levels[Index] = StoredLevel then
+//        begin
+//          jreFormula.SelStart := Starts[Index];
+//          jreFormula.SelLength := 1;
+//          jreFormula.SelAttributes.Color := clAqua;
+//          break;
+//        end;
+//      end;
+//    end;
+//  finally
+//    Levels.Free;
+//    Starts.Free;
+//  end;
+//end;
 
-procedure TfrmFormula.MatchStartingParen(PriorSelStart,
-  PriorSelLength: integer);
-var
-  Index: Integer;
-  Level: Integer;
-  StoredLevel: Integer;
-  SelText: string;
-  NewSelStart: Integer;
-  NewSelLength: Integer;
-  InString: boolean;
-begin
+//procedure TfrmFormula.MatchStartingParen(PriorSelStart,
+//  PriorSelLength: integer);
+//var
+//  Index: Integer;
+//  Level: Integer;
+//  StoredLevel: Integer;
+//  SelText: string;
+//  NewSelStart: Integer;
+//  NewSelLength: Integer;
+//  InString: boolean;
+//begin
   // Use for TRichEdit
 
-  NewSelStart := 0;
-  NewSelLength := 1;
-  StoredLevel := -1;
-  Level := 0;
-  InString := False;
-  for Index := 0 to MAXINT do
-  begin
-    jreFormula.SelStart := NewSelStart;
-    jreFormula.SelLength := NewSelLength;
-    SelText := jreFormula.SelText;
-    if SelText = '' then
-    begin
-      break;
-    end
-    else if (SelText = '"') and not InString then
-    begin
-      InString := True;
-    end
-    else if SelText = '"' then
-    begin
-      InString := False;
-    end
-    else if InString then
-    begin
-      if NewSelStart = PriorSelStart then
-      begin
-        break;
-      end;
-    end
-    else if SelText = '(' then
-    begin
-      Inc(Level);
-      if NewSelStart = PriorSelStart then
-      begin
-//        jreFormula.SetSelection(NewSelection.cpMin, NewSelection.cpMax, False);
-        jreFormula.SelAttributes.Color := clAqua;
-        FSetColor := True;
-        StoredLevel := Level;
-      end;
-    end
-    else if SelText = ')' then
-    begin
-      if Level = StoredLevel then
-      begin
-//        jreFormula.SetSelection(NewSelection.cpMin, NewSelection.cpMax, False);
-        jreFormula.SelAttributes.Color := clAqua;
-        break;
-      end;
-      Dec(Level);
-    end;
-    Inc(NewSelStart);
-  end;
-end;
+//  NewSelStart := 0;
+//  NewSelLength := 1;
+//  StoredLevel := -1;
+//  Level := 0;
+//  InString := False;
+//  for Index := 0 to MAXINT do
+//  begin
+//    jreFormula.SelStart := NewSelStart;
+//    jreFormula.SelLength := NewSelLength;
+//    SelText := jreFormula.SelText;
+//    if SelText = '' then
+//    begin
+//      break;
+//    end
+//    else if (SelText = '"') and not InString then
+//    begin
+//      InString := True;
+//    end
+//    else if SelText = '"' then
+//    begin
+//      InString := False;
+//    end
+//    else if InString then
+//    begin
+//      if NewSelStart = PriorSelStart then
+//      begin
+//        break;
+//      end;
+//    end
+//    else if SelText = '(' then
+//    begin
+//      Inc(Level);
+//      if NewSelStart = PriorSelStart then
+//      begin
+////        jreFormula.SetSelection(NewSelection.cpMin, NewSelection.cpMax, False);
+//        jreFormula.SelAttributes.Color := clAqua;
+//        FSetColor := True;
+//        StoredLevel := Level;
+//      end;
+//    end
+//    else if SelText = ')' then
+//    begin
+//      if Level = StoredLevel then
+//      begin
+////        jreFormula.SetSelection(NewSelection.cpMin, NewSelection.cpMax, False);
+//        jreFormula.SelAttributes.Color := clAqua;
+//        break;
+//      end;
+//      Dec(Level);
+//    end;
+//    Inc(NewSelStart);
+//  end;
+//end;
 
 end.
 

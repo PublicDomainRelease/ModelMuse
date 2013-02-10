@@ -1068,7 +1068,7 @@ begin
       end;
       frmProgressMM.AddMessage(Format(StrEvaluatingS, [ScreenObject.Name]));
       Assert(Boundary.Values.Count = 1);
-      Item := Boundary.Values[0];
+      Item := Boundary.Values[0] as TCustomModflowBoundaryItem;
       Item.StartTime := StartTime;
       Item.EndTime := EndTime;
 

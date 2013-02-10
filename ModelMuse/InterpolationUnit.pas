@@ -437,7 +437,7 @@ begin
               Cell.Lay := 0;
             end;
           {$IFDEF Sutra}
-          msSutra:
+          msSutra22:
             begin
               TopCell := frmGoPhast.PhastModel.Mesh.TopContainingCellOrElement(
                 ClosestLocation, DataSet.EvaluatedAt);
@@ -1056,7 +1056,7 @@ begin
         Cell.Lay := 0;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         // With MODFLOW, the only 2D data sets are in the top view.
         Assert(DataSet.Orientation = dsoTop);
@@ -1117,7 +1117,7 @@ begin
         end;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
 //        Assert(False);
         { TODO -cSUTRA : Adjust cell if needed }

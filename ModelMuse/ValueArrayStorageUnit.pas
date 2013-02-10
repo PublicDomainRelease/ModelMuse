@@ -108,7 +108,7 @@ begin
       rdtInteger: IntValues[Index] := Reader.ReadInteger;
       rdtBoolean: BooleanValues[Index] := Reader.ReadBoolean;
       rdtString: StringValues[Index] := Reader.ReadString;
-      else Assert(False);;
+      else Assert(False);
     end;
   end;
   Reader.ReadListEnd;
@@ -223,7 +223,7 @@ begin
       rdtInteger: Writer.WriteInteger(IntValues[Index]);
       rdtBoolean: Writer.WriteBoolean(BooleanValues[Index]);
       rdtString: Writer.WriteString(StringValues[Index]);
-      else Assert(False);;
+      else Assert(False);
     end;
   end;
   Writer.WriteListEnd;

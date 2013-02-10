@@ -230,7 +230,7 @@ uses Math, frmGoPhastUnit, RbwParser,
   frmUpdateDataSetsUnit, UndoItemsScreenObjects,
   InterpolationUnit, HufDefinition, ModflowTimeUnit,
   frmGridValueUnit, shlobj, activex, AnsiStrings, frmDisplayDataUnit,
-  Mt3dmsChemSpeciesUnit;
+  Mt3dmsChemSpeciesUnit, frmExportImageUnit;
 
 resourcestring
   StrHead = 'Head';
@@ -358,7 +358,7 @@ begin
     '_S' + PaddedIntToStr(KSTP, FMaxStep);
   if FResultFormat = mfMt3dConc then
   begin
-    NewName := NewName + '_TS' + PaddedIntToStr(NTRANS, FMaxTrans);;
+    NewName := NewName + '_TS' + PaddedIntToStr(NTRANS, FMaxTrans);
   end;
   NewName := ValidName(NewName);
   case DataArrayForm of
@@ -1173,7 +1173,7 @@ begin
     begin
       ParentArray.Limits.LowerLimit.UseLimit := True;
       ParentArray.Limits.LowerLimit.RealLimitValue :=
-        Min(MinValues[0], ParentArray.Limits.LowerLimit.RealLimitValue);;
+        Min(MinValues[0], ParentArray.Limits.LowerLimit.RealLimitValue);
       ParentArray.Limits.UpperLimit.UseLimit := True;
       ParentArray.Limits.UpperLimit.RealLimitValue :=
         Max(MaxValues[MaxValues.Count -1], ParentArray.Limits.UpperLimit.RealLimitValue);
@@ -1874,18 +1874,18 @@ begin
     SubsidenceDescriptions.Add(StrSWTLayercenterEle);
     SubsidenceExtensions.Add(StrSwtLayerCentElevOut);
 
-    odSelectFiles.Filter := StrCommonSupportedFil + FileExtensions[0];
+    odSelectFiles.Filter := StrCommonSupportedFil + Trim(FileExtensions[0]);
     for index := 1 to FileExtensions.Count - 1 do
     begin
       odSelectFiles.Filter := odSelectFiles.Filter
-        + ';*' + FileExtensions[index];
+        + ';*' + Trim(FileExtensions[index]);
     end;
 
     odSelectFiles.Filter := odSelectFiles.Filter + StrSubsidenceFiles + SubsidenceExtensions[0];
     for index := 1 to SubsidenceExtensions.Count - 1 do
     begin
       odSelectFiles.Filter := odSelectFiles.Filter
-        + ';*' + SubsidenceExtensions[index];
+        + ';*' + Trim(SubsidenceExtensions[index]);
     end;
 
     Assert(FileExtensions.Count = FilterDescriptions.Count);
@@ -1893,7 +1893,7 @@ begin
     begin
       odSelectFiles.Filter := odSelectFiles.Filter
         + '|' + FilterDescriptions[index]
-        + '(*' + FileExtensions[index] + ')|*' + FileExtensions[index];
+        + '(*' + Trim(FileExtensions[index]) + ')|*' + Trim(FileExtensions[index]);
     end;
 
     Assert(SubsidenceExtensions.Count = SubsidenceDescriptions.Count);
@@ -1901,7 +1901,7 @@ begin
     begin
       odSelectFiles.Filter := odSelectFiles.Filter
         + '|' + SubsidenceDescriptions[index]
-        + '(*' + SubsidenceExtensions[index] + ')|*' + SubsidenceExtensions[index];
+        + '(*' + Trim(SubsidenceExtensions[index]) + ')|*' + Trim(SubsidenceExtensions[index]);
     end;
   finally
     FilterDescriptions.Free;

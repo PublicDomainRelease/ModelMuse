@@ -349,7 +349,7 @@ begin
             Data.Caption := StrSetGridCellSize;
           end;
         {$IFDEF Sutra}
-        msSutra:
+        msSutra22:
           begin
             Data.Caption := StrSetMeshElementSize
           end
@@ -1688,7 +1688,7 @@ begin
         ScreenObject := ChildData.ScreenObjects[ScreenObjectIndex];
         if ScreenObjectIndex = 0 then
         begin
-          SetFirstNodeCheckState(ChildData, ScreenObject);;
+          SetFirstNodeCheckState(ChildData, ScreenObject);
         end
         else
         begin
@@ -2161,3 +2161,4 @@ initialization
   Assert(SizeOf(PVirtualNode) = SizeOf(TObject));
 
 end.
+

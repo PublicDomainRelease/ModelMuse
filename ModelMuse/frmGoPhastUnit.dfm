@@ -1,7 +1,7 @@
 inherited frmGoPhast: TfrmGoPhast
   Left = 91
   Top = 50
-  Width = 776
+  Width = 778
   Height = 566
   HelpType = htKeyword
   HelpKeyword = 'Main_Window'
@@ -18,14 +18,14 @@ inherited frmGoPhast: TfrmGoPhast
   OnMouseMove = pnlLowerRightMouseMove
   OnMouseWheel = FormMouseWheel
   OnResize = FormResize
-  ExplicitWidth = 776
+  ExplicitWidth = 778
   ExplicitHeight = 566
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object splitHoriz: TJvNetscapeSplitter
     Left = 0
-    Top = 361
-    Width = 768
+    Top = 325
+    Width = 760
     Height = 10
     Cursor = crVSplit
     Hint = 'Click and drag to resize the windows.'
@@ -41,16 +41,16 @@ inherited frmGoPhast: TfrmGoPhast
   object pnlTop: TPanel
     Left = 0
     Top = 68
-    Width = 768
-    Height = 293
+    Width = 760
+    Height = 257
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 1
     object splitVertTop: TJvNetscapeSplitter
-      Left = 529
+      Left = 521
       Top = 0
-      Height = 293
+      Height = 257
       Hint = 'Click and drag to resize the windows.'
       Align = alRight
       MinSize = 1
@@ -65,42 +65,42 @@ inherited frmGoPhast: TfrmGoPhast
     inline frameTopView: TframeView
       Left = 0
       Top = 0
-      Width = 529
-      Height = 293
+      Width = 521
+      Height = 257
       HorzScrollBar.Range = 36
       VertScrollBar.Range = 40
       Align = alClient
       TabOrder = 0
       TabStop = True
-      ExplicitWidth = 529
-      ExplicitHeight = 293
+      ExplicitWidth = 521
+      ExplicitHeight = 257
       inherited rulVertical: TRbwRuler
-        Height = 239
+        Height = 203
         ExplicitTop = 39
         ExplicitHeight = 173
       end
       inherited Panel1: TPanel
-        Width = 529
-        ExplicitWidth = 529
+        Width = 521
+        ExplicitWidth = 521
         inherited rulHorizontal: TRbwRuler
-          Width = 480
+          Width = 472
           ExplicitWidth = 351
         end
       end
       inherited ZoomBox: TQRbwZoomBox2
-        Width = 480
-        Height = 239
+        Width = 472
+        Height = 203
         Image32.Left = 1
         Image32.Top = 1
-        Image32.Width = 478
-        Image32.Height = 217
+        Image32.Width = 470
+        Image32.Height = 201
         Image32.Align = alClient
         Image32.ExplicitLeft = 1
         Image32.ExplicitTop = 1
-        Image32.ExplicitWidth = 478
-        Image32.ExplicitHeight = 217
-        ExplicitWidth = 480
-        ExplicitHeight = 219
+        Image32.ExplicitWidth = 470
+        Image32.ExplicitHeight = 201
+        ExplicitWidth = 472
+        ExplicitHeight = 203
       end
       inherited OrderMenu: TPopupMenu
         Left = 80
@@ -108,21 +108,21 @@ inherited frmGoPhast: TfrmGoPhast
       end
     end
     inline frameSideView: TframeView
-      Left = 539
+      Left = 531
       Top = 0
       Width = 229
-      Height = 293
+      Height = 257
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alRight
       TabOrder = 1
       TabStop = True
-      ExplicitLeft = 539
+      ExplicitLeft = 531
       ExplicitWidth = 229
-      ExplicitHeight = 293
+      ExplicitHeight = 257
       inherited rulVertical: TRbwRuler
         Left = 180
-        Height = 239
+        Height = 203
         Align = alRight
         RulerPosition = rpRight
         ExplicitLeft = 194
@@ -156,21 +156,21 @@ inherited frmGoPhast: TfrmGoPhast
       inherited ZoomBox: TQRbwZoomBox2
         Left = 0
         Width = 180
-        Height = 239
+        Height = 203
         ExaggerationDirection = edHorizontal
         HorizontalDirection = hdLeft
         Image32.Left = 1
         Image32.Top = 1
         Image32.Width = 178
-        Image32.Height = 217
+        Image32.Height = 201
         Image32.Align = alClient
         Image32.ExplicitLeft = 1
         Image32.ExplicitTop = 1
         Image32.ExplicitWidth = 178
-        Image32.ExplicitHeight = 217
+        Image32.ExplicitHeight = 201
         ExplicitLeft = 0
         ExplicitWidth = 180
-        ExplicitHeight = 219
+        ExplicitHeight = 203
       end
       inherited OrderMenu: TPopupMenu
         Left = 48
@@ -180,8 +180,8 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 371
-    Width = 768
+    Top = 335
+    Width = 760
     Height = 133
     Align = alBottom
     BevelOuter = bvNone
@@ -192,7 +192,7 @@ inherited frmGoPhast: TfrmGoPhast
     TabOrder = 2
     OnMouseMove = pnlLowerRightMouseMove
     object splitVertBottom: TJvNetscapeSplitter
-      Left = 529
+      Left = 521
       Top = 0
       Height = 133
       Hint = 'Click and drag to resize the windows.'
@@ -208,14 +208,14 @@ inherited frmGoPhast: TfrmGoPhast
     inline frameFrontView: TframeView
       Left = 0
       Top = 0
-      Width = 529
+      Width = 521
       Height = 133
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alClient
       TabOrder = 0
       TabStop = True
-      ExplicitWidth = 529
+      ExplicitWidth = 521
       ExplicitHeight = 133
       inherited rulVertical: TRbwRuler
         Top = 0
@@ -225,11 +225,11 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited Panel1: TPanel
         Top = 79
-        Width = 529
+        Width = 521
         Align = alBottom
         TabOrder = 1
         ExplicitTop = 79
-        ExplicitWidth = 529
+        ExplicitWidth = 521
         inherited ModelCube: TRbwModelCube
           Hint = 
             'Click to change row|Click to change the selected row forward or ' +
@@ -239,7 +239,7 @@ inherited frmGoPhast: TfrmGoPhast
           Selection2 = 0.010000000000000000
         end
         inherited rulHorizontal: TRbwRuler
-          Width = 480
+          Width = 472
           RulerMajorTickLength = -10
           RulerMinorTickLength = -5
           RulerTextPosition = tpInside
@@ -250,25 +250,25 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited ZoomBox: TQRbwZoomBox2
         Top = 0
-        Width = 480
+        Width = 472
         Height = 79
         TabOrder = 0
         Image32.Left = 1
         Image32.Top = 1
-        Image32.Width = 478
+        Image32.Width = 470
         Image32.Height = 77
         Image32.Align = alClient
         Image32.ExplicitLeft = 1
         Image32.ExplicitTop = 1
-        Image32.ExplicitWidth = 478
+        Image32.ExplicitWidth = 470
         Image32.ExplicitHeight = 77
         ExplicitTop = 0
-        ExplicitWidth = 480
+        ExplicitWidth = 472
         ExplicitHeight = 79
       end
     end
     inline frame3DView: Tframe3DView
-      Left = 539
+      Left = 531
       Top = 0
       Width = 229
       Height = 133
@@ -278,7 +278,7 @@ inherited frmGoPhast: TfrmGoPhast
       ParentDoubleBuffered = False
       TabOrder = 1
       TabStop = True
-      ExplicitLeft = 539
+      ExplicitLeft = 531
       ExplicitWidth = 229
       ExplicitHeight = 133
       inherited glWidModelView: TGLWidget
@@ -291,8 +291,8 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object sbMain: TStatusBar
     Left = 0
-    Top = 504
-    Width = 768
+    Top = 468
+    Width = 760
     Height = 28
     Hint = 'Drag with the mouse to resize status bar panels'
     Panels = <
@@ -315,12 +315,11 @@ inherited frmGoPhast: TfrmGoPhast
     OnMouseMove = sbMainMouseMove
     OnMouseUp = sbMainMouseUp
     OnDrawPanel = sbMainDrawPanel
-    ExplicitTop = 484
   end
   object cbControlBar: TControlBar
     Left = 0
     Top = 0
-    Width = 768
+    Width = 760
     Height = 68
     Align = alTop
     AutoSize = True
@@ -1061,6 +1060,9 @@ inherited frmGoPhast: TfrmGoPhast
           HelpContext = 3594
           OnClick = miASCII_RasterFileClick
         end
+        object ImportTPROGSBinaryGridFile1: TMenuItem
+          Action = acImportTprogs
+        end
         object miImportBitmap: TMenuItem
           Caption = 'Image...'
           HelpContext = 1600
@@ -1100,6 +1102,9 @@ inherited frmGoPhast: TfrmGoPhast
         end
         object miRunMt3dms: TMenuItem
           Action = acRunMt3dms
+        end
+        object acRunSutra1: TMenuItem
+          Action = acRunSutra
         end
         object miShapefile: TMenuItem
           Caption = '&Shapefile'
@@ -1656,6 +1661,7 @@ inherited frmGoPhast: TfrmGoPhast
       object miSUTRA: TMenuItem
         Action = acSutraActive
         GroupIndex = 1
+        RadioItem = True
       end
       object N7: TMenuItem
         Caption = '-'
@@ -1845,12 +1851,24 @@ inherited frmGoPhast: TfrmGoPhast
         Caption = '-'
         GroupIndex = 1
       end
-      object SUTRALayerGroups1: TMenuItem
+      object miSUTRALayerGroups: TMenuItem
         Action = acSutraLayers
         GroupIndex = 1
       end
-      object SutraOptions1: TMenuItem
+      object miSutraOptions: TMenuItem
         Action = acSutraOptions
+        GroupIndex = 1
+      end
+      object miSutraTimes: TMenuItem
+        Action = acSutraTimes
+        GroupIndex = 1
+      end
+      object mniSutraOutputControl: TMenuItem
+        Action = acSutraOutputControl
+        GroupIndex = 1
+      end
+      object mniSutraProgramLocations: TMenuItem
+        Action = acSutraProgramLocations
         GroupIndex = 1
       end
     end
@@ -2706,12 +2724,38 @@ inherited frmGoPhast: TfrmGoPhast
       Caption = 'Sutra Options...'
       OnExecute = acSutraOptionsExecute
     end
+    object acSutraTimes: TAction
+      Category = 'Model'
+      Caption = 'SUTRA Time Controls...'
+      OnExecute = acSutraTimesExecute
+    end
+    object acRunSutra: TAction
+      Category = 'File'
+      Caption = 'SUTRA Input Files'
+      ImageIndex = 72
+      OnExecute = acRunSutraExecute
+    end
+    object acSutraOutputControl: TAction
+      Category = 'Model'
+      Caption = 'SUTRA Output Control...'
+      OnExecute = acSutraOutputControlExecute
+    end
+    object acSutraProgramLocations: TAction
+      Category = 'Model'
+      Caption = 'SUTRA Program Location...'
+      OnExecute = acSutraProgramLocationsExecute
+    end
+    object acImportTprogs: TAction
+      Category = 'File'
+      Caption = 'T-PROGS Binary Grid File...'
+      OnExecute = acImportTprogsExecute
+    end
   end
   object ilDisabledImageList: TImageList
     Left = 104
     Top = 128
     Bitmap = {
-      494C010148004A00280010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010148004A00C40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003001000001002000000000000030
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -5354,7 +5398,7 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 176
     Top = 80
     Bitmap = {
-      494C010158005900280010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010158005900C40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000007001000001002000000000000070
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -8507,5 +8551,15 @@ inherited frmGoPhast: TfrmGoPhast
       Action = acRunMt3dms
       Caption = 'Export MT3DMS Input Files'
     end
+  end
+  object sdSutraInput: TSaveDialog
+    OnClose = sdSutraInputClose
+    OnShow = sdSutraInputShow
+    DefaultExt = '.inp'
+    Filter = 'SUTRA input files|*.inp|All Files|*.*'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
+    Title = 'Save SUTRA input files'
+    Left = 176
+    Top = 264
   end
 end

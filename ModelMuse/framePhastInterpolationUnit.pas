@@ -174,6 +174,7 @@ begin
   lblDistance2.Enabled := ShouldEnable;
   lblValue1.Enabled := ShouldEnable;
   lblValue2.Enabled := ShouldEnable;
+  rgInterpolationDirection.Handle;
   rgInterpolationDirection.Buttons[3].Enabled := FMixtureAllowed
     and Enabled and cbPhastInterpolation.Checked;
 //  rgInterpolationDirection.Controls[3].Enabled := FMixtureAllowed
@@ -346,6 +347,7 @@ begin
   rgInterpolationDirection.WordWrap := not rgInterpolationDirection.WordWrap;
   rgInterpolationDirection.WordWrap := not rgInterpolationDirection.WordWrap;
 
+  rgInterpolationDirection.Handle;
   rgInterpolationDirection.Buttons[3].Enabled := FMixtureAllowed
     and Enabled and cbPhastInterpolation.Checked;
 //  rgInterpolationDirection.Controls[3].Enabled := FMixtureAllowed
@@ -356,6 +358,7 @@ procedure TframePhastInterpolation.SetMixtureAllowed(
   const AValue: boolean);
 begin
   FMixtureAllowed := AValue;
+  rgInterpolationDirection.Handle;
 //  rgInterpolationDirection.Controls[3].Enabled := FMixtureAllowed
 //    and Enabled and cbPhastInterpolation.Checked;
   rgInterpolationDirection.Buttons[3].Enabled := FMixtureAllowed

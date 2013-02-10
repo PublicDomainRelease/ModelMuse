@@ -12,8 +12,10 @@ type
   private
     NPWEL: integer;
     MXL: integer;
+    FNameOfFile: string;
     procedure WriteDataSet1;
     procedure WriteDataSet2;
+    procedure WriteDataSet2b;
     procedure WriteDataSets3And4;
     procedure WriteDataSets5To7;
 //    procedure ListEvaluate;
@@ -131,6 +133,27 @@ begin
   NewLine
 end;
 
+procedure TModflowWEL_Writer.WriteDataSet2b;
+var
+  PhiRamp: Double;
+  IUNITRAMP: integer;
+  NameOfOutputFile: string;
+begin
+  Assert(Model.ModelSelection = msModflowNWT);
+  PhiRamp := (Package as TWellPackage).PhiRamp;
+  if PhiRamp <> 0 then
+  begin
+    IUNITRAMP := Model.UnitNumbers.UnitNumber(StrPHIRAMPOut);
+    WriteString('SPECIFY');
+    WriteFloat(PhiRamp);
+    WriteInteger(IUNITRAMP);
+    WriteString(' # Data Set 2b: SPECIFY PHIRAMP IUNITRAMP');
+    NewLine;
+    NameOfOutputFile := ChangeFileExt(FNameOfFile, '') + '.wel_dewater.txt';
+    WriteToNameFile(StrData, IUNITRAMP, NameOfOutputFile, foOutput);
+  end;
+end;
+
 procedure TModflowWEL_Writer.WriteDataSets3And4;
 const
   ErrorRoot = 'One or more %s parameters have been eliminated '
@@ -158,8 +181,6 @@ begin
 end;
 
 procedure TModflowWEL_Writer.WriteFile(const AFileName: string);
-var
-  NameOfFile: string;
 begin
   if not Package.IsSelected then
   begin
@@ -169,8 +190,8 @@ begin
   begin
     Exit;
   end;
-  NameOfFile := FileName(AFileName);
-  WriteToNameFile(StrWEL, Model.UnitNumbers.UnitNumber(StrWEL), NameOfFile, foInput);
+  FNameOfFile := FileName(AFileName);
+  WriteToNameFile(StrWEL, Model.UnitNumbers.UnitNumber(StrWEL), FNameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
@@ -178,7 +199,7 @@ begin
     Exit;
   end;
   ClearTimeLists(Model);
-  OpenFile(FileName(AFileName));
+  OpenFile(FNameOfFile);
   try
     frmProgressMM.AddMessage(StrWritingWELPackage);
     frmProgressMM.AddMessage(StrWritingDataSet0);
@@ -203,6 +224,17 @@ begin
     if not frmProgressMM.ShouldContinue then
     begin
       Exit;
+    end;
+
+    if Model.ModelSelection = msModflowNWT then
+    begin
+      frmProgressMM.AddMessage('  Writing Data Set 2b.');
+      WriteDataSet2b;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
     end;
 
     frmProgressMM.AddMessage(StrWritingDataSets3and4);

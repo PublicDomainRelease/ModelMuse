@@ -914,7 +914,7 @@ begin
         comboOrientation.Items[1].Brush.Color := clWhite;
         comboOrientation.Items[2].Brush.Color := clWhite;
       end;
-    msModflow, msModflowLGR, msModflowNWT {$IFDEF SUTRA}, msSutra {$ENDIF}:
+    msModflow, msModflowLGR, msModflowNWT {$IFDEF SUTRA}, msSutra22 {$ENDIF}:
       begin
         comboOrientation.Items[1].Brush.Color := clBtnFace;
         comboOrientation.Items[2].Brush.Color := clBtnFace;
@@ -1243,7 +1243,7 @@ begin
         SelectedEdit.Orientation :=
           TDataSetOrientation(comboOrientation.ItemIndex);
       end;
-    msModflow, msModflowLGR, msModflowNWT {$IFDEF SUTRA}, msSutra {$ENDIF}:
+    msModflow, msModflowLGR, msModflowNWT {$IFDEF SUTRA}, msSutra22 {$ENDIF}:
       begin
         case comboOrientation.ItemIndex of
           0,3:
@@ -1331,6 +1331,7 @@ var
   CompilerList: TList;
   OtherDataEdit: TDataArrayEdit;
   ErrorMessage: string;
+  EvalAt: TEvaluatedAt;
 begin
   if csDestroying in ComponentState then
   begin
@@ -1354,6 +1355,7 @@ begin
     try
       Orientation := DataEdit.Orientation;
       // Add the variable whose value is being set to "Used".
+      EvalAt := DataEdit.EvaluatedAt;
 
       Used.Assign(DataEdit.NewUses);
 
@@ -1367,7 +1369,8 @@ begin
           VariableName := OtherDataEdit.Name;
           VariablePosition := Used.IndexOf(VariableName);
           if (VariablePosition < 0) and ((Orientation = dso3D)
-            or (Orientation = OtherDataEdit.Orientation)) then
+            or (Orientation = OtherDataEdit.Orientation))
+            and (EvalAt = OtherDataEdit.EvaluatedAt) then
           begin
             // if the variable does not depend on the
             // data set whose formula is being edited
@@ -2698,7 +2701,7 @@ begin
 
       comboEvaluatedAt.ItemIndex := Ord(FSelectedEdit.EvaluatedAt);
       comboEvaluatedAt.Enabled := (frmGoPhast.ModelSelection
-        in [msPhast {$IFDEF Sutra}, msSutra {$ENDIF}])
+        in [msPhast {$IFDEF Sutra}, msSutra22 {$ENDIF}])
         and ((FSelectedEdit.DataArray = nil)
         or not (dcEvaluatedAt in FSelectedEdit.DataArray.Lock));
 

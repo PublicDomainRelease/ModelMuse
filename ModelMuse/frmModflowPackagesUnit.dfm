@@ -5,8 +5,8 @@ inherited frmModflowPackages: TfrmModflowPackages
   ClientHeight = 555
   ClientWidth = 782
   OnResize = FormResize
-  ExplicitWidth = 790
-  ExplicitHeight = 589
+  ExplicitWidth = 798
+  ExplicitHeight = 593
   PixelsPerInch = 96
   TextHeight = 18
   object JvNetscapeSplitter1: TJvNetscapeSplitter
@@ -27,7 +27,7 @@ inherited frmModflowPackages: TfrmModflowPackages
     Top = 0
     Width = 595
     Height = 514
-    ActivePage = jvspModpath
+    ActivePage = jvspWEL
     PropagateEnable = False
     Align = alClient
     OnChange = jvplPackagesChange
@@ -208,9 +208,9 @@ inherited frmModflowPackages: TfrmModflowPackages
           Width = 464
           ExplicitWidth = 464
           inherited lblParamValue: TLabel
-            Width = 102
+            Width = 101
             Height = 18
-            ExplicitWidth = 102
+            ExplicitWidth = 101
             ExplicitHeight = 18
           end
         end
@@ -729,10 +729,10 @@ inherited frmModflowPackages: TfrmModflowPackages
         end
         inherited lblPCGDampPcgT: TLabel
           Top = 489
-          Width = 281
+          Width = 280
           Height = 18
           ExplicitTop = 489
-          ExplicitWidth = 281
+          ExplicitWidth = 280
           ExplicitHeight = 18
         end
         inherited memoComments: TMemo
@@ -871,7 +871,7 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'WEL_Well_Package_Pane'
       Caption = 'jvspWEL'
-      inline framePkgWEL: TframePackage
+      inline framePkgWEL: TframePackageWell
         Left = 0
         Top = 0
         Width = 595
@@ -892,6 +892,12 @@ inherited frmModflowPackages: TfrmModflowPackages
           ExplicitWidth = 78
           ExplicitHeight = 18
         end
+        inherited lblPhiRamp: TLabel
+          Width = 382
+          Height = 18
+          ExplicitWidth = 382
+          ExplicitHeight = 18
+        end
         inherited memoComments: TMemo
           Width = 564
           ExplicitWidth = 564
@@ -903,6 +909,9 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
             item
               Control = framePkgWEL.memoComments
+            end
+            item
+              Control = framePkgWEL.rdePhiRamp
             end
             item
               Control = frameWelParameterDefinition
@@ -1901,12 +1910,12 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited lblStreamTolerance: TLabel
               Left = 112
               Top = 269
-              Width = 189
+              Width = 187
               Height = 18
               Anchors = [akLeft, akBottom]
               ExplicitLeft = 112
               ExplicitTop = 269
-              ExplicitWidth = 189
+              ExplicitWidth = 187
               ExplicitHeight = 18
             end
             inherited lblSfrTrailingWaveIncrements: TLabel
@@ -1956,23 +1965,23 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited lblWeight: TLabel
               Left = 112
               Top = 407
-              Width = 442
+              Width = 441
               Height = 18
               Anchors = [akLeft, akBottom]
               ExplicitLeft = 112
               ExplicitTop = 407
-              ExplicitWidth = 442
+              ExplicitWidth = 441
               ExplicitHeight = 18
             end
             inherited lblFLWTOL: TLabel
               Left = 112
               Top = 429
-              Width = 411
+              Width = 410
               Height = 18
               Anchors = [akLeft, akBottom]
               ExplicitLeft = 112
               ExplicitTop = 429
-              ExplicitWidth = 411
+              ExplicitWidth = 410
               ExplicitHeight = 18
             end
             inherited memoComments: TMemo
@@ -2271,11 +2280,11 @@ inherited frmModflowPackages: TfrmModflowPackages
           end
           inherited lblVerticalKSource: TLabel
             Top = 56
-            Width = 336
+            Width = 335
             Height = 18
             Caption = 'Vertical hydraulic conductivity source (IUZFOPT) '
             ExplicitTop = 56
-            ExplicitWidth = 336
+            ExplicitWidth = 335
             ExplicitHeight = 18
           end
           inherited lblNumberOfTrailingWaves: TLabel
@@ -2738,10 +2747,10 @@ inherited frmModflowPackages: TfrmModflowPackages
         end
         inherited lblSipNparm: TLabel
           Top = 213
-          Width = 270
+          Width = 269
           Height = 18
           ExplicitTop = 213
-          ExplicitWidth = 270
+          ExplicitWidth = 269
           ExplicitHeight = 18
         end
         inherited lblSipAccl: TLabel
@@ -3285,24 +3294,25 @@ inherited frmModflowPackages: TfrmModflowPackages
           ExplicitWidth = 590
           ExplicitHeight = 375
           inherited tabResponse: TTabSheet
+            ExplicitLeft = 4
             ExplicitTop = 29
             ExplicitWidth = 582
             ExplicitHeight = 342
             inherited lblTrackingDirection: TLabel
               Left = 359
               Top = 257
-              Width = 133
+              Width = 132
               Height = 36
               WordWrap = True
               ExplicitLeft = 359
               ExplicitTop = 257
-              ExplicitWidth = 133
+              ExplicitWidth = 132
               ExplicitHeight = 36
             end
             inherited lblWeakSinkTreatment: TLabel
-              Width = 300
+              Width = 299
               Height = 18
-              ExplicitWidth = 300
+              ExplicitWidth = 299
               ExplicitHeight = 18
             end
             inherited lblWeakSinkThreshold: TLabel
@@ -3340,15 +3350,15 @@ inherited frmModflowPackages: TfrmModflowPackages
               ExplicitHeight = 36
             end
             inherited lblEvtSink: TLabel
-              Width = 288
+              Width = 287
               Height = 18
-              ExplicitWidth = 288
+              ExplicitWidth = 287
               ExplicitHeight = 18
             end
             inherited lblRchSource: TLabel
-              Width = 224
+              Width = 223
               Height = 18
-              ExplicitWidth = 224
+              ExplicitWidth = 223
               ExplicitHeight = 18
             end
             inherited comboTrackingDirection: TJvImageComboBox
@@ -3356,7 +3366,6 @@ inherited frmModflowPackages: TfrmModflowPackages
               Top = 296
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitLeft = 359
               ExplicitTop = 296
               ExplicitHeight = 28
@@ -3379,7 +3388,6 @@ inherited frmModflowPackages: TfrmModflowPackages
               Top = 190
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitTop = 190
               ExplicitHeight = 28
             end
@@ -3393,13 +3401,11 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboEvtSink: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboRchSource: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
           end
@@ -3419,9 +3425,9 @@ inherited frmModflowPackages: TfrmModflowPackages
               ExplicitHeight = 18
             end
             inherited lblMaxSize: TLabel
-              Width = 388
+              Width = 386
               Height = 36
-              ExplicitWidth = 388
+              ExplicitWidth = 386
               ExplicitHeight = 36
             end
             inherited lblErrorTolerance: TLabel
@@ -3444,12 +3450,14 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
           end
           inherited tsVersion6Options: TTabSheet
+            ExplicitLeft = 4
             ExplicitTop = 29
+            ExplicitWidth = 592
             ExplicitHeight = 331
             inherited lblWeakSource: TLabel
-              Width = 338
+              Width = 337
               Height = 18
-              ExplicitWidth = 338
+              ExplicitWidth = 337
               ExplicitHeight = 18
             end
             inherited lblStopOption: TLabel
@@ -3461,10 +3469,10 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
             inherited lblStopTime: TLabel
               Top = 123
-              Width = 242
+              Width = 241
               Height = 18
               ExplicitTop = 123
-              ExplicitWidth = 242
+              ExplicitWidth = 241
               ExplicitHeight = 18
             end
             inherited lblBudget: TLabel
@@ -3474,9 +3482,9 @@ inherited frmModflowPackages: TfrmModflowPackages
               ExplicitHeight = 18
             end
             inherited lblTraceID: TLabel
-              Width = 177
+              Width = 176
               Height = 18
-              ExplicitWidth = 177
+              ExplicitWidth = 176
               ExplicitHeight = 18
             end
             inherited lblAdvObs: TLabel
@@ -3488,51 +3496,49 @@ inherited frmModflowPackages: TfrmModflowPackages
               ExplicitHeight = 36
             end
             inherited lblUzfIface: TLabel
-              Width = 160
+              Width = 159
               Height = 18
-              ExplicitWidth = 160
+              ExplicitWidth = 159
               ExplicitHeight = 18
             end
             inherited lblMnw2Iface: TLabel
-              Width = 178
+              Width = 177
               Height = 18
-              ExplicitWidth = 178
+              ExplicitWidth = 177
               ExplicitHeight = 18
             end
             inherited lblResIface: TLabel
-              Width = 197
+              Width = 196
               Height = 18
-              ExplicitWidth = 197
+              ExplicitWidth = 196
               ExplicitHeight = 18
             end
             inherited lblSfrIface: TLabel
-              Width = 162
-              Height = 18
-              ExplicitWidth = 162
-              ExplicitHeight = 18
-            end
-            inherited lblEtsIface: TLabel
               Width = 161
               Height = 18
               ExplicitWidth = 161
               ExplicitHeight = 18
             end
-            inherited lblLakIface: TLabel
-              Width = 165
+            inherited lblEtsIface: TLabel
+              Width = 160
               Height = 18
-              ExplicitWidth = 165
+              ExplicitWidth = 160
+              ExplicitHeight = 18
+            end
+            inherited lblLakIface: TLabel
+              Width = 164
+              Height = 18
+              ExplicitWidth = 164
               ExplicitHeight = 18
             end
             inherited comboWeakSource: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboStopOption: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboBudget: TJvImageComboBox
@@ -3557,54 +3563,50 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboUzfIface: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboMnw2Iface: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboResIface: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboSfrIface: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboEtsIface: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboLakIface: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               TabOrder = 12
               ExplicitHeight = 28
             end
           end
           inherited tabOutputTimes: TTabSheet
+            ExplicitLeft = 4
             ExplicitTop = 29
+            ExplicitWidth = 592
             ExplicitHeight = 331
             inherited lblTimeMethod: TLabel
-              Width = 316
+              Width = 315
               Height = 18
-              ExplicitWidth = 316
+              ExplicitWidth = 315
               ExplicitHeight = 18
             end
             inherited lblParticleInterval: TLabel
-              Width = 330
+              Width = 328
               Height = 18
-              ExplicitWidth = 330
+              ExplicitWidth = 328
               ExplicitHeight = 18
             end
             inherited lblMaxTimes: TLabel
@@ -3615,9 +3617,9 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
             inherited gbTime: TJvGroupBox
               inherited lblTimeCount: TLabel
-                Width = 122
+                Width = 121
                 Height = 36
-                ExplicitWidth = 122
+                ExplicitWidth = 121
                 ExplicitHeight = 36
               end
               inherited rdgTimes: TRbwDataGrid4
@@ -3631,7 +3633,6 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboTimeMethod: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited rdeParticleInterval: TRbwDataEntry
@@ -4282,9 +4283,9 @@ inherited frmModflowPackages: TfrmModflowPackages
         ExplicitWidth = 595
         ExplicitHeight = 514
         inherited lblComments: TLabel
-          Width = 206
+          Width = 205
           Height = 18
-          ExplicitWidth = 206
+          ExplicitWidth = 205
           ExplicitHeight = 18
         end
         inherited lblPackage: TLabel
@@ -4421,10 +4422,10 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 345
             inherited lblIvoid: TLabel
               Top = 92
-              Width = 210
+              Width = 209
               Height = 18
               ExplicitTop = 92
-              ExplicitWidth = 210
+              ExplicitWidth = 209
               ExplicitHeight = 18
             end
             inherited lblIstpcs: TLabel
@@ -5272,10 +5273,10 @@ inherited frmModflowPackages: TfrmModflowPackages
         end
         inherited lblHYDNOH: TLabel
           Top = 462
-          Width = 397
+          Width = 396
           Height = 18
           ExplicitTop = 462
-          ExplicitWidth = 397
+          ExplicitWidth = 396
           ExplicitHeight = 18
         end
         inherited memoComments: TMemo
@@ -5549,13 +5550,13 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited lblMomentumCoefficient: TLabel
               Left = 86
               Top = 127
-              Width = 246
+              Width = 245
               Height = 18
               Caption = 'Momentum coefficient (MOMFACT)'
               WordWrap = False
               ExplicitLeft = 86
               ExplicitTop = 127
-              ExplicitWidth = 246
+              ExplicitWidth = 245
               ExplicitHeight = 18
             end
             inherited Label4: TLabel
@@ -5685,12 +5686,12 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited lblTolerance: TLabel
               Left = 89
               Top = 164
-              Width = 400
+              Width = 398
               Height = 18
               WordWrap = False
               ExplicitLeft = 89
               ExplicitTop = 164
-              ExplicitWidth = 400
+              ExplicitWidth = 398
               ExplicitHeight = 18
             end
             inherited lblRestarts: TLabel
@@ -6267,9 +6268,9 @@ inherited frmModflowPackages: TfrmModflowPackages
           ExplicitHeight = 18
         end
         inherited lblPreconditioner: TLabel
-          Width = 173
+          Width = 172
           Height = 18
-          ExplicitWidth = 173
+          ExplicitWidth = 172
           ExplicitHeight = 18
         end
         inherited lblDispersion: TLabel
@@ -6433,11 +6434,11 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited lblMaxParticlesCount: TLabel
               Left = 2
               Top = 157
-              Width = 370
+              Width = 369
               Height = 18
               ExplicitLeft = 2
               ExplicitTop = 157
-              ExplicitWidth = 370
+              ExplicitWidth = 369
               ExplicitHeight = 18
             end
             inherited lblConcWeight: TLabel
@@ -7176,9 +7177,9 @@ inherited frmModflowPackages: TfrmModflowPackages
               ExplicitHeight = 18
             end
             inherited lblDamp_D: TLabel
-              Width = 325
+              Width = 324
               Height = 18
-              ExplicitWidth = 325
+              ExplicitWidth = 324
               ExplicitHeight = 18
             end
             inherited lblChglimit: TLabel
@@ -7208,10 +7209,10 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
             inherited lblRate_C: TLabel
               Top = 255
-              Width = 317
+              Width = 316
               Height = 18
               ExplicitTop = 255
-              ExplicitWidth = 317
+              ExplicitWidth = 316
               ExplicitHeight = 18
             end
             inherited lblIpunit: TLabel
@@ -7418,7 +7419,7 @@ inherited frmModflowPackages: TfrmModflowPackages
     Left = 136
     Top = 96
     Bitmap = {
-      494C010108000900240010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010108000900340010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

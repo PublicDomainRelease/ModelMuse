@@ -8,8 +8,8 @@ object frameScreenObjectHydmod: TframeScreenObjectHydmod
   object lblHYDLBL: TLabel
     Left = 8
     Top = 40
-    Width = 129
-    Height = 13
+    Width = 153
+    Height = 16
     Caption = 'Hydrograph label (HYDLBL)'
   end
   object pnlCaption: TPanel
@@ -51,15 +51,16 @@ object frameScreenObjectHydmod: TframeScreenObjectHydmod
     TabOrder = 3
     object clbBasic: TCheckListBox
       Left = 2
-      Top = 15
+      Top = 18
       Width = 249
-      Height = 93
+      Height = 90
       Align = alClient
-      ItemHeight = 13
       Items.Strings = (
         'Head (HD)'
         'Drawdown (DD)')
       TabOrder = 0
+      ExplicitTop = 15
+      ExplicitHeight = 93
     end
   end
   object gbSubsidence: TGroupBox
@@ -72,48 +73,48 @@ object frameScreenObjectHydmod: TframeScreenObjectHydmod
     object lblLayerGroup: TLabel
       Left = 2
       Top = 96
-      Width = 58
-      Height = 13
+      Width = 68
+      Height = 16
       Caption = 'Layer group'
     end
     object lblNoDelayBed: TLabel
       Left = 2
       Top = 157
-      Width = 64
-      Height = 13
+      Width = 75
+      Height = 16
       Caption = 'No-delay bed'
     end
     object lblLayer: TLabel
       Left = 153
       Top = 96
-      Width = 32
-      Height = 13
+      Width = 37
+      Height = 16
       Caption = 'Layers'
     end
     object clbSub: TCheckListBox
       Left = 2
-      Top = 15
+      Top = 18
       Width = 293
       Height = 66
       Align = alTop
-      ItemHeight = 13
       Items.Strings = (
         'PreconsolidationHead (HC)'
         'Instantaneous compaction (CP)'
         'Instantaneous subsidence (SB)')
       TabOrder = 0
+      ExplicitTop = 15
     end
     object comboLayerGroup: TJvImageComboBox
       Left = 2
       Top = 120
       Width = 145
-      Height = 23
+      Height = 26
       Style = csOwnerDrawVariable
       ButtonStyle = fsLighter
       DroppedWidth = 145
       ImageHeight = 0
       ImageWidth = 0
-      ItemHeight = 17
+      ItemHeight = 20
       ItemIndex = -1
       TabOrder = 1
       OnChange = comboLayerGroupChange
@@ -123,13 +124,13 @@ object frameScreenObjectHydmod: TframeScreenObjectHydmod
       Left = 2
       Top = 181
       Width = 145
-      Height = 23
+      Height = 26
       Style = csOwnerDrawVariable
       ButtonStyle = fsLighter
       DroppedWidth = 145
       ImageHeight = 0
       ImageWidth = 0
-      ItemHeight = 17
+      ItemHeight = 20
       ItemIndex = -1
       TabOrder = 3
       OnChange = comboNoDelayBedChange
@@ -153,18 +154,19 @@ object frameScreenObjectHydmod: TframeScreenObjectHydmod
     TabOrder = 4
     object clbSFR: TCheckListBox
       Left = 2
-      Top = 15
+      Top = 18
       Width = 297
-      Height = 93
+      Height = 90
       OnClickCheck = clbSFRClickCheck
       Align = alClient
-      ItemHeight = 13
       Items.Strings = (
         'Stream stage (ST)'
         'Streamflow into reach (SI)'
         'Streamflow out of reach (SO)'
         'Streamflow into or out of aquifer (SA)')
       TabOrder = 0
+      ExplicitTop = 15
+      ExplicitHeight = 93
     end
   end
 end

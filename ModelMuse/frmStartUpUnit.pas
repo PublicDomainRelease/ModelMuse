@@ -179,7 +179,7 @@ begin
               begin
                 // new PHAST model
                 frameInitialGridPosition.Parent := gbInitialGrid;
-                frmGoPhast.ModelSelection := msPhast;;
+                frmGoPhast.ModelSelection := msPhast;
                 pcStartup.ActivePageIndex := 1;
               end;
               frmGoPhast.UpdateModelSelection;
@@ -260,6 +260,7 @@ begin
     rgChoice.WordWrap := not rgChoice.WordWrap;
     rgChoice.WordWrap := not rgChoice.WordWrap;
 
+    rgChoice.Handle;
 //    rgChoice.Items.Add(ExtractFileName(FileName));
 //    Control := rgChoice.Controls[rgChoice.ControlCount-1];
     Control := rgChoice.Buttons[rgChoice.ControlCount-1];

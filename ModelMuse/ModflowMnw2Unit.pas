@@ -84,7 +84,9 @@ type
     procedure CreateFormulaObjects; override;
     procedure GetPropertyObserver(Sender: TObject; List: TList); override;
     procedure RemoveFormulaObjects; override;
+    // See @link(BoundaryFormula).
     function GetBoundaryFormula(Index: integer): string; override;
+    // See @link(BoundaryFormula).
     procedure SetBoundaryFormula(Index: integer; const Value: string);
       override;
     function BoundaryFormulaCount: integer; override;
@@ -126,7 +128,7 @@ type
 
   TMnw2TimeCollection = class(TCustomNonSpatialBoundColl)
   protected
-    class function ItemClass: TMF_BoundItemClass; override;
+    class function ItemClass: TBoundaryItemClass; override;
   public
     procedure Evaluate;
     function IndexOfContainedStartTime(AStartTime: double): integer;
@@ -163,7 +165,9 @@ type
     procedure CreateFormulaObjects; override;
     procedure GetPropertyObserver(Sender: TObject; List: TList); override;
     procedure RemoveFormulaObjects; override;
+    // See @link(BoundaryFormula).
     function GetBoundaryFormula(Index: integer): string; override;
+    // See @link(BoundaryFormula).
     procedure SetBoundaryFormula(Index: integer; const Value: string);
       override;
     function BoundaryFormulaCount: integer; override;
@@ -237,7 +241,7 @@ type
 
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
-    class function ItemClass: TMF_BoundItemClass; override;
+    class function ItemClass: TBoundaryItemClass; override;
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
     property PhastModel: TBaseModel read GetPhastModel;
@@ -428,7 +432,9 @@ type
     function GetWellRadius: string;
   protected
     function BoundaryFormulaCount: integer; override;
+    // See @link(BoundaryFormula).
     function GetBoundaryFormula(Index: integer): string; override;
+    // See @link(BoundaryFormula).
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
     function ScreenObject: TObject;
@@ -453,7 +459,7 @@ type
 
   TVerticalScreenCollection = class(TCustomNonSpatialBoundColl)
   protected
-    class function ItemClass: TMF_BoundItemClass; override;
+    class function ItemClass: TBoundaryItemClass; override;
   public
     procedure Sort;
   end;
@@ -973,6 +979,7 @@ var
   LossType: TMnwLossType;
   IsValue: Boolean;
   UsedCells: T3DSparseIntegerArray;
+  VerticalScreenCount: Integer;
 begin
   LocalModel := AModel as TCustomModel;
   PriorCol := -1;
@@ -1038,6 +1045,8 @@ begin
   UsedCells := T3DSparseIntegerArray.Create(SPASmall);
   try
     LocalScreenObject := ScreenObject as TScreenObject;
+    VerticalScreenCount := LocalScreenObject.ModflowBoundaries.
+      ModflowMnw2Boundary.VerticalScreens.Count;
     for SegmentIndex := 0 to LocalScreenObject.Segments[LocalModel].Count - 1 do
     begin
       Segment := LocalScreenObject.Segments[LocalModel][SegmentIndex];
@@ -1105,7 +1114,7 @@ begin
             RealData[LayerIndex, RowIndex, ColIndex];
           WellRadiusAnnotation := WellRadiusArray.
             Annotation[LayerIndex, RowIndex, ColIndex];
-          if WellRadius <= 0 then
+          if (WellRadius <= 0) and (VerticalScreenCount = 0) then
           begin
             frmErrorsAndWarnings.AddError(LocalModel, StrOneOrMoreMNW2Wel,
               LocalScreenObject.Name);
@@ -1118,13 +1127,13 @@ begin
             RealData[LayerIndex, RowIndex, ColIndex];
           SkinRadiusAnnotation := SkinRadiusArray.
             Annotation[LayerIndex, RowIndex, ColIndex];
-          if SkinRadius <= 0 then
+          if (SkinRadius <= 0) and (VerticalScreenCount = 0) then
           begin
             frmErrorsAndWarnings.AddError(LocalModel, MnwSkinError,
               LocalScreenObject.Name);
           end;
           Assert(WellRadiusArray <> nil);
-          if SkinRadius < WellRadius then
+          if (SkinRadius < WellRadius) and (VerticalScreenCount = 0) then
           begin
             frmErrorsAndWarnings.AddError(LocalModel, MnwSkinToThinError,
               LocalScreenObject.Name);
@@ -1136,7 +1145,7 @@ begin
             RealData[LayerIndex, RowIndex, ColIndex];
           SkinKAnnotation := SkinKArray.
             Annotation[LayerIndex, RowIndex, ColIndex];
-          if SkinK <= 0 then
+          if (SkinK <= 0) and (VerticalScreenCount = 0) then
           begin
             frmErrorsAndWarnings.AddError(LocalModel, MnwSkinKError,
               LocalScreenObject.Name);
@@ -1756,7 +1765,7 @@ begin
   end;
 end;
 
-class function TMnw2SpatialCollection.ItemClass: TMF_BoundItemClass;
+class function TMnw2SpatialCollection.ItemClass: TBoundaryItemClass;
 begin
   result := TMnw2SpatialItem;
 end;
@@ -2230,7 +2239,7 @@ end;
 
 function TMnw2Boundary.Used: boolean;
 begin
-  result := TimeValues.Count > 0;
+  result := (TimeValues.Count > 0);
 end;
 
 { TMnw2SpatialItem }
@@ -2699,7 +2708,7 @@ begin
   end;
 end;
 
-class function TMnw2TimeCollection.ItemClass: TMF_BoundItemClass;
+class function TMnw2TimeCollection.ItemClass: TBoundaryItemClass;
 begin
   result := TMnw2TimeItem;
 end;
@@ -3518,7 +3527,7 @@ begin
   end;
 end;
 
-class function TVerticalScreenCollection.ItemClass: TMF_BoundItemClass;
+class function TVerticalScreenCollection.ItemClass: TBoundaryItemClass;
 begin
   result := TVerticalScreen;
 end;

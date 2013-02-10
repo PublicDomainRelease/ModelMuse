@@ -176,6 +176,11 @@ resourcestring
   'signed to individual nodes.';
   StrInvalidKeyIn0s = 'Invalid key in %0:s function.';
   StrObject0sInvali = 'Object: %0:s; invalid key: %1:s';
+  StrNoImportedDataExi = 'No imported data exists in the object "%s" '
+  + 'for the following name(s).';
+  StrBecauseHorizontalH = 'Because horizontal hyraulic conductivity is zero ' +
+  'in the following cells (Layer, Row, Column), vertical conductivity can no' +
+  't be calculated. (This message can be ignored for inactive cells.)';
 
 var  
   SpecialImplementors: TList;
@@ -312,6 +317,8 @@ var
 
   HufSYTP: TFunctionClass;
   HufSYTPSpecialImplementor: TSpecialImplementor;
+
+  InvalidNames: TStringList;
 
 procedure PushGlobalStack;
 var
@@ -565,7 +572,7 @@ begin
   LocalModel := Model as TCustomModel;
 
   {$IFDEF SUTRA}
-  if LocalModel.ModelSelection = msSutra then
+  if LocalModel.ModelSelection = msSutra22 then
   begin
     case EvaluatedAt of
       eaBlocks:
@@ -1463,7 +1470,7 @@ var
   LocalGrid : TCustomModelGrid;
 begin
   {$IFDEF SUTRA}
-  if frmGoPhast.ModelSelection = msSutra then
+  if frmGoPhast.ModelSelection = msSutra22 then
   begin
     result := 0;
     Exit;
@@ -1533,7 +1540,7 @@ var
   LocalGrid : TCustomModelGrid;
 begin
   {$IFDEF SUTRA}
-  if frmGoPhast.ModelSelection = msSutra then
+  if frmGoPhast.ModelSelection = msSutra22 then
   begin
     result := 0;
     Exit;
@@ -1704,7 +1711,7 @@ begin
         end;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         { TODO -cSUTRA : Need to implement this. }
         result := 0;
@@ -1879,7 +1886,7 @@ var
   LocalGrid : TCustomModelGrid;
 begin
   {$IFDEF SUTRA}
-  if frmGoPhast.ModelSelection = msSutra then
+  if frmGoPhast.ModelSelection = msSutra22 then
   begin
     result := 0;
     Exit;
@@ -1910,7 +1917,7 @@ var
   LocalGrid : TCustomModelGrid;
 begin
   {$IFDEF SUTRA}
-  if frmGoPhast.ModelSelection = msSutra then
+  if frmGoPhast.ModelSelection = msSutra22 then
   begin
     result := 0;
     Exit;
@@ -1970,7 +1977,7 @@ begin
         end;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         result := 0;
       end;
@@ -2362,7 +2369,17 @@ begin
   if GlobalCurrentScreenObject <> nil then
   begin
     GetImportedValues(ImportedValues, Values, ImportedName);
-    if ImportedValues <> nil then
+    if ImportedValues = nil then
+    begin
+      if InvalidNames.IndexOf(ImportedName) < 0 then
+      begin
+        InvalidNames.Add(ImportedName);
+        frmErrorsAndWarnings.AddError(GlobalCurrentModel,
+          Format(StrNoImportedDataExi, [GlobalCurrentScreenObject.Name]),
+          ImportedName);
+      end;
+    end
+    else
     begin
       Index := GlobalSection;
       if Index < 0 then
@@ -2395,7 +2412,17 @@ begin
   if GlobalCurrentScreenObject <> nil then
   begin
     GetImportedValues(ImportedValues, Values, ImportedName);
-    if ImportedValues <> nil then
+    if ImportedValues = nil then
+    begin
+      if InvalidNames.IndexOf(ImportedName) < 0 then
+      begin
+        InvalidNames.Add(ImportedName);
+        frmErrorsAndWarnings.AddError(GlobalCurrentModel,
+          Format(StrNoImportedDataExi, [GlobalCurrentScreenObject.Name]),
+          ImportedName);
+      end;
+    end
+    else
     begin
       Index := GlobalSection;
       if Index < 0 then
@@ -2429,7 +2456,17 @@ begin
   if GlobalCurrentScreenObject <> nil then
   begin
     GetImportedValues(ImportedValues, Values, ImportedName);
-    if ImportedValues <> nil then
+    if ImportedValues = nil then
+    begin
+      if InvalidNames.IndexOf(ImportedName) < 0 then
+      begin
+        InvalidNames.Add(ImportedName);
+        frmErrorsAndWarnings.AddError(GlobalCurrentModel,
+          Format(StrNoImportedDataExi, [GlobalCurrentScreenObject.Name]),
+          ImportedName);
+      end;
+    end
+    else
     begin
       Index := GlobalSection;
       if Index < 0 then
@@ -2463,7 +2500,17 @@ begin
   if GlobalCurrentScreenObject <> nil then
   begin
     GetImportedValues(ImportedValues, Values, ImportedName);
-    if ImportedValues <> nil then
+    if ImportedValues = nil then
+    begin
+      if InvalidNames.IndexOf(ImportedName) < 0 then
+      begin
+        InvalidNames.Add(ImportedName);
+        frmErrorsAndWarnings.AddError(GlobalCurrentModel,
+          Format(StrNoImportedDataExi, [GlobalCurrentScreenObject.Name]),
+          ImportedName);
+      end;
+    end
+    else
     begin
       Index := GlobalSection;
       if Index < 0 then
@@ -3125,12 +3172,14 @@ var
   VK_Used: Boolean;
   UpperHead: double;
   HufIntervalThickness: Double;
+  ZeroResultErrorDisplayed: Boolean;
 begin
   // affected by everything in _HufKx plus the
   // by zone arrays and multiplier arrays of ptHUF_VK and ptHUF_VANI
   // parameters
   // affected by HufUnit.VK_Method.
 
+  ZeroResultErrorDisplayed := False;
   Assert(Length(Values) >= 1);
   UpperHead := PDouble(Values[0])^;
 //  LowerHead := PDouble(Values[2])^;
@@ -3246,14 +3295,21 @@ begin
                 end;
               else Assert(False);
             end;
-//            if VK = 0 then
-//            begin
-//              // This is an error.
-//            end
-//            else
-//            begin
+            if VK = 0 then
+            begin
+//              result := 0;
+              if HufIntervalThickness > 0 then
+              begin
+                frmErrorsAndWarnings.AddWarning(GlobalCurrentModel,
+                  StrBecauseHorizontalH,
+                  Format(StrLayerDRowDCo, [Layer + 1, Row+1, Column+1]));
+                ZeroResultErrorDisplayed := True;
+              end;
+            end
+            else
+            begin
               result := result + HufIntervalThickness/VK;
-//            end;
+            end;
           end;
         end;
       end;
@@ -3261,7 +3317,19 @@ begin
   end;
   if CumulativeHufThickness > 0 then
   begin
-    result := CumulativeHufThickness/result;
+    if result = 0 then
+    begin
+      if not ZeroResultErrorDisplayed then
+      begin
+        frmErrorsAndWarnings.AddWarning(GlobalCurrentModel,
+          StrBecauseHorizontalH,
+          Format(StrLayerDRowDCo, [Layer + 1, Row+1, Column+1]));
+      end;
+    end
+    else
+    begin
+      result := CumulativeHufThickness/result;
+    end;
   end;
 end;
 
@@ -4778,7 +4846,13 @@ initialization
   HufSYTPSpecialImplementor.Implementor := THufSYTP;
   SpecialImplementors.Add(HufSYTPSpecialImplementor);
 
+  InvalidNames := TStringList.Create;
+  InvalidNames.Sorted := True;
+  InvalidNames.CaseSensitive := False;
+
 finalization
+  InvalidNames.Free;
+
   NodeInterpolate.Free;
   NodeInterpolateSpecialImplementor.Free;
 

@@ -13,13 +13,13 @@ inherited frmFormula: TfrmFormula
   Position = poOwnerFormCenter
   ExplicitWidth = 787
   ExplicitHeight = 508
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 16
   object Splitter: TSplitter
     Left = 539
     Top = 0
     Width = 5
-    Height = 433
+    Height = 422
     OnCanResize = SplitterCanResize
     ExplicitLeft = 476
     ExplicitHeight = 361
@@ -28,7 +28,7 @@ inherited frmFormula: TfrmFormula
     Left = 0
     Top = 0
     Width = 539
-    Height = 433
+    Height = 422
     Align = alLeft
     ParentColor = True
     TabOrder = 0
@@ -49,7 +49,7 @@ inherited frmFormula: TfrmFormula
     end
     object pnlButtons: TPanel
       Left = 1
-      Top = 199
+      Top = 188
       Width = 537
       Height = 233
       HelpType = htKeyword
@@ -487,11 +487,11 @@ inherited frmFormula: TfrmFormula
       OnCollapsed = tvFormulaDiagramCollapsed
       OnExpanded = tvFormulaDiagramExpanded
     end
-    object jreFormula: TRichEdit
+    object jreFormula: TJvRichEdit
       Left = 1
       Top = 108
       Width = 537
-      Height = 91
+      Height = 80
       Hint = 'Type formula here'
       HelpType = htKeyword
       HelpKeyword = 'Formula_Text_Box'
@@ -507,14 +507,14 @@ inherited frmFormula: TfrmFormula
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 433
-    Width = 779
+    Top = 422
+    Width = 769
     Height = 41
     Align = alBottom
     ParentColor = True
     TabOrder = 2
     DesignSize = (
-      779
+      769
       41)
     object btnCancel: TBitBtn
       Left = 665
@@ -601,8 +601,8 @@ inherited frmFormula: TfrmFormula
   object pnlRight: TPanel
     Left = 544
     Top = 0
-    Width = 235
-    Height = 433
+    Width = 225
+    Height = 422
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
@@ -610,7 +610,7 @@ inherited frmFormula: TfrmFormula
     object pnlLabelItemTree: TPanel
       Left = 0
       Top = 0
-      Width = 235
+      Width = 225
       Height = 41
       Align = alTop
       ParentColor = True
@@ -619,19 +619,21 @@ inherited frmFormula: TfrmFormula
         AlignWithMargins = True
         Left = 4
         Top = 4
-        Width = 193
-        Height = 16
+        Width = 217
+        Height = 33
         Align = alClient
         Alignment = taCenter
         Caption = 'Double-click to insert into formula'
         WordWrap = True
+        ExplicitWidth = 193
+        ExplicitHeight = 16
       end
     end
     object tvItems: TTreeView
       Left = 0
       Top = 41
-      Width = 235
-      Height = 392
+      Width = 225
+      Height = 381
       Hint = 'Double-click to insert selected item into formula'
       HelpType = htKeyword
       HelpKeyword = 'List_of_Data_Sets_and_Function'

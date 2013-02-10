@@ -368,13 +368,13 @@ begin
       LocalModel.ModflowFullStressPeriods.Count - 1].EndTime;
     if UpstreamUnsatSegmentValues.Count > 0 then
     begin
-      Item := UpstreamUnsatSegmentValues[0];
+      Item := UpstreamUnsatSegmentValues[0] as TCustomModflowBoundaryItem;
       Item.StartTime := FirstUsedTime;
       Item.EndTime := LastUsedTime;
     end;
     if DownstreamUnsatSegmentValues.Count > 0 then
     begin
-      Item := DownstreamUnsatSegmentValues[0];
+      Item := DownstreamUnsatSegmentValues[0] as TCustomModflowBoundaryItem;
       Item.StartTime := FirstUsedTime;
       Item.EndTime := LastUsedTime;
     end;

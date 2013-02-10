@@ -25,7 +25,7 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
       Left = 8
       Top = 6
       Width = 49
-      Height = 33
+      Height = 21
       ButtonKind = bkClassic
       MaxValue = 2147483647.000000000000000000
       TabOrder = 0
@@ -39,7 +39,6 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
       Anchors = [akTop, akRight]
       Cancel = True
       Caption = '&Delete'
-      DoubleBuffered = True
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
         18000000000000030000120B0000120B00000000000000000000FFFFFFFFFFFF
@@ -67,7 +66,6 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
         000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnDeleteClick
     end
@@ -79,7 +77,6 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
       Anchors = [akTop, akRight]
       Cancel = True
       Caption = '&Insert'
-      DoubleBuffered = True
       Glyph.Data = {
         F6000000424DF600000000000000760000002800000010000000100000000100
         0400000000008000000000000000000000001000000000000000000000000000
@@ -89,7 +86,6 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
         FF0FFFFF0FFFFFFFFF0FFFFF00000000000FF0FF0CCCCCCCCC0F000F0CCCCCCC
         CC0FF0FF0CCCCCCCCC0FFFFF00000000000FFFFF0FFFFFFFFF0FFFFF0FFFFFFF
         FF0FFFFF0FFFFFFFFF0FFFFF00000000000FFFFFFFFFFFFFFFFF}
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnInsertClick
     end
@@ -100,7 +96,6 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
     Width = 320
     Height = 25
     Align = alTop
-    Caption = 'pnlTop'
     TabOrder = 0
     object pnlCaption: TPanel
       Left = 1
@@ -109,7 +104,6 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
       Height = 23
       Align = alClient
       BevelOuter = bvNone
-      Caption = 'pnlCaption'
       TabOrder = 0
     end
   end

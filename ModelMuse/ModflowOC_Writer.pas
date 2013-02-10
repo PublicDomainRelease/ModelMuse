@@ -53,7 +53,7 @@ var
 begin
   WriteCommentLine('Output Control file created on '
     + DateToStr(Now) + ' by ' + Model.ProgramName
-    + ' version ' + ModelVersion + '.');
+    + ' version ' + IModelVersion + '.');
   for Index := 0 to FOutputControl.Comments.Count - 1 do
   begin
     WriteCommentLine(FOutputControl.Comments[Index]);

@@ -102,9 +102,9 @@ type
     procedure CreateFormulaObjects; override;
     procedure GetPropertyObserver(Sender: TObject; List: TList); override;
     procedure RemoveFormulaObjects; override;
-    // See @link(TCustomModflowBoundaryItem.BoundaryFormula).
+    // See @link(BoundaryFormula).
     function GetBoundaryFormula(Index: integer): string; override;
-    // See @link(TCustomModflowBoundaryItem.BoundaryFormula).
+    // See @link(BoundaryFormula).
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     // @name checks whether AnotherItem is the same as the current @classname.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
@@ -133,9 +133,9 @@ type
     procedure CreateFormulaObjects; override;
     procedure GetPropertyObserver(Sender: TObject; List: TList); override;
     procedure RemoveFormulaObjects; override;
-    // See @link(TCustomModflowBoundaryItem.BoundaryFormula).
+    // See @link(BoundaryFormula).
     function GetBoundaryFormula(Index: integer): string; override;
-    // See @link(TCustomModflowBoundaryItem.BoundaryFormula).
+    // See @link(BoundaryFormula).
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     // @name checks whether AnotherItem is the same as the current @classname.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
@@ -178,7 +178,7 @@ type
     procedure InitializeTimeLists(ListOfTimeLists: TList; AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
-    class function ItemClass: TMF_BoundItemClass; override;
+    class function ItemClass: TBoundaryItemClass; override;
     // @name calls inherited @name and then sets the length of
     // the @link(TEvtStorage.EvtArray) at ItemIndex in
     // @link(TCustomMF_BoundColl.Boundaries) to BoundaryCount.
@@ -216,7 +216,7 @@ type
     procedure InitializeTimeLists(ListOfTimeLists: TList; AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
-    class function ItemClass: TMF_BoundItemClass; override;
+    class function ItemClass: TBoundaryItemClass; override;
     // @name calls inherited @name and then sets the length of
     // the @link(TEvtStorage.EvtArray) at ItemIndex in
     // @link(TCustomMF_BoundColl.Boundaries) to BoundaryCount.
@@ -1084,7 +1084,7 @@ begin
   end;
 end;
 
-class function TUzfExtinctionDepthCollection.ItemClass: TMF_BoundItemClass;
+class function TUzfExtinctionDepthCollection.ItemClass: TBoundaryItemClass;
 begin
   result := TUzfExtinctDepthItem
 end;
@@ -1220,7 +1220,7 @@ begin
   end;
 end;
 
-class function TUzfWaterContentCollection.ItemClass: TMF_BoundItemClass;
+class function TUzfWaterContentCollection.ItemClass: TBoundaryItemClass;
 begin
   result := TUzfWaterContentItem;
 end;

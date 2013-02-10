@@ -8,31 +8,9 @@ uses
   SsButtonEd, RbwStringTreeCombo, StdCtrls, ComCtrls, JvExComCtrls, JvUpDown,
   JvExControls, JvxSlider, Mask, JvExMask, JvSpin, JvExStdCtrls,
   VirtualTrees, DataSetUnit, LegendUnit, RbwParser, ClassificationUnit,
-  EdgeDisplayUnit, SubscriptionUnit{, JvRichEdit};
+  EdgeDisplayUnit, SubscriptionUnit;
 
 type
-  TEdgeDisplayEdit = class(TObject)
-    Edge: TCustomModflowGridEdgeDisplay;
-    DataIndex: integer;
-  end;
-
-  TBoundaryClassification = class(TClassificationObject)
-  private
-    FDataArray: TDataArray;
-    FTimeList: TCustomTimeList;
-    FEdgeDisplay: TEdgeDisplayEdit;
-    FName: string;
-    function GetClassifiedObject: TObject;
-  public
-    function ClassificationName: string; Override;
-    function FullClassification: string; Override;
-    Constructor Create(AnObject: TDataArray); overload;
-    Constructor Create(AnObject: TCustomTimeList); overload;
-    Constructor Create(const Name: string; AnObject: TEdgeDisplayEdit); overload;
-    Constructor Create(const Name: string; AnObject: TObject); overload;
-    property ClassifiedObject: TObject read GetClassifiedObject;
-  end;
-
   TframeCustomColor = class(TFrame)
     pcChoices: TPageControl;
     tabSelection: TTabSheet;
@@ -188,93 +166,106 @@ const
 
 { TBoundaryClassification }
 
-function TBoundaryClassification.ClassificationName: string;
-begin
-  if FDataArray <> nil then
-  begin
-    result := FDataArray.DisplayName;
-    Assert(FTimeList = nil);
-    Assert(FEdgeDisplay = nil);
-  end
-  else if FTimeList <> nil then
-  begin
-    result := FTimeList.Name;
-    Assert(FEdgeDisplay = nil);
-  end
-  else
-  begin
-    result := FName;
-  end;
-end;
-
-
-constructor TBoundaryClassification.Create(AnObject: TDataArray);
-begin
-  FDataArray := AnObject;
-  FTimeList := nil;
-  FEdgeDisplay := nil;
-end;
-
-constructor TBoundaryClassification.Create(AnObject: TCustomTimeList);
-begin
-  FTimeList := AnObject;
-  FDataArray := nil;
-  FEdgeDisplay := nil;
-end;
-
-function TBoundaryClassification.FullClassification: string;
-begin
-  result := ''
-end;
-
-function TBoundaryClassification.GetClassifiedObject: TObject;
-begin
-  if FDataArray <> nil then
-  begin
-    result := FDataArray;
-  end
-  else if FTimeList <> nil then
-  begin
-    result := FTimeList;
-  end
-  else
-  begin
-    result := FEdgeDisplay;
-    Assert(result <> nil);
-  end;
-end;
-
-
-constructor TBoundaryClassification.Create(const Name: string;
-  AnObject: TEdgeDisplayEdit);
-begin
-  FName := Name;
-  FEdgeDisplay := AnObject;
-  FDataArray := nil;
-  FTimeList := nil;
-end;
-
-constructor TBoundaryClassification.Create(const Name: string;
-  AnObject: TObject);
-begin
-  FName := Name;
-  if AnObject is TDataArray then
-  begin
-    Create(TDataArray(AnObject));
-  end
-  else if AnObject is TCustomTimeList then
-  begin
-    Create(TCustomTimeList(AnObject));
-  end
-  else if AnObject is TEdgeDisplayEdit then
-  begin
-    Create(Name, TEdgeDisplayEdit(AnObject));
-  end
-  else
-  begin
-    Assert(False);
-  end;
-end;
+//function TBoundaryClassification.ClassificationName: string;
+//begin
+//  if FDataArray <> nil then
+//  begin
+//    result := FDataArray.DisplayName;
+//    Assert(FTimeList = nil);
+//    Assert(FEdgeDisplay = nil);
+//  end
+//  else if FTimeList <> nil then
+//  begin
+//    result := FTimeList.Name;
+//    Assert(FEdgeDisplay = nil);
+//  end
+//  else
+//  begin
+//    result := FName;
+//  end;
+//end;
+//
+//
+//constructor TBoundaryClassification.Create(AnObject: TDataArray);
+//begin
+//  FDataArray := AnObject;
+//  FTimeList := nil;
+//  FEdgeDisplay := nil;
+//end;
+//
+//constructor TBoundaryClassification.Create(AnObject: TCustomTimeList);
+//begin
+//  FTimeList := AnObject;
+//  FDataArray := nil;
+//  FEdgeDisplay := nil;
+//end;
+//
+//function TBoundaryClassification.FullClassification: string;
+//begin
+//  result := ''
+//end;
+//
+//function TBoundaryClassification.GetBoundaryType: TBoundaryType;
+//begin
+//  if FEdgeDisplay <> nil then
+//  begin
+//    result := btMfHfb;
+//  end
+//  else
+//  begin
+//    result := FTimeList.BoundaryType;
+//  end;
+//
+//end;
+//
+//function TBoundaryClassification.GetClassifiedObject: TObject;
+//begin
+//  if FDataArray <> nil then
+//  begin
+//    result := FDataArray;
+//  end
+//  else if FTimeList <> nil then
+//  begin
+//    result := FTimeList;
+//  end
+//  else
+//  begin
+//    result := FEdgeDisplay;
+//    Assert(result <> nil);
+//  end;
+//end;
+//
+//
+//constructor TBoundaryClassification.Create(const Name: string;
+//  AnObject: TEdgeDisplayEdit);
+//begin
+//  FName := Name;
+//  FEdgeDisplay := AnObject;
+//  FDataArray := nil;
+//  FTimeList := nil;
+//end;
+//
+//constructor TBoundaryClassification.Create(const Name: string;
+//  AnObject: TObject);
+//begin
+//  FName := Name;
+//  if AnObject is TDataArray then
+//  begin
+//    Create(TDataArray(AnObject));
+//  end
+//  else if AnObject is TCustomTimeList then
+//  begin
+//    Create(TCustomTimeList(AnObject));
+//  end
+//  else if AnObject is TEdgeDisplayEdit then
+//  begin
+//    Create(Name, TEdgeDisplayEdit(AnObject));
+//  end
+//  else
+//  begin
+//    Assert(False);
+//  end;
+//end;
 
 { TframeCustomColor }
 
@@ -347,7 +338,8 @@ begin
   result := False;
   case DataArray.EvaluatedAt of
     eaBlocks: result := True;
-    eaNodes: result := frmGoPhast.PhastModel.ModelSelection in [msPhast {$IFDEF SUTRA}, msSutra {$ENDIF}];
+    eaNodes: result := frmGoPhast.PhastModel.ModelSelection
+      in [msPhast {$IFDEF SUTRA}, msSutra22 {$ENDIF}];
     else Assert(False);
   end;
 end;

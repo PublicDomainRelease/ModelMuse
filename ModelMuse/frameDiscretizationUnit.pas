@@ -18,13 +18,12 @@ type
     lbl3: TLabel;
     pnlPaintboxParent: TPanel;
     pbSubLayers: TPaintBox;
-    grdpnl1: TGridPanel;
-    sbInsertLine: TSpeedButton;
-    sbMoveLine: TSpeedButton;
-    sbDeleteLine: TSpeedButton;
     rdeGrowthRate: TRbwDataEntry;
     rdeVDiscretization: TRbwDataEntry;
     rgMethod: TRadioGroup;
+    sbInsertLine: TSpeedButton;
+    sbMoveLine: TSpeedButton;
+    sbDeleteLine: TSpeedButton;
     procedure rdeVDiscretizationChange(Sender: TObject);
     procedure rdeGrowthRateChange(Sender: TObject);
     procedure rdeGrowthRateExit(Sender: TObject);
@@ -164,7 +163,7 @@ end;
 procedure TframeDiscretization.InsertLine(Y: integer);
 var
   NumLayers: integer;
-  LayerGroup: TLayerGroup;
+  LayerGroup: TCustomLayerGroup;
   LayerIndex: integer;
 begin
   rgMethod.ItemIndex := Integer(gmCustom);
@@ -312,7 +311,7 @@ end;
 procedure TframeDiscretization.rdeGrowthRateExit(Sender: TObject);
 var
   Index: integer;
-  SelectedUnit: TLayerGroup;
+  SelectedUnit: TCustomLayerGroup;
 begin
   inherited;
   if not FSettingUnit then
@@ -431,7 +430,7 @@ var
   Index: Integer;
   Fractions: TRealArray;
   LayerIndex: Integer;
-  LayerGroup: TLayerGroup;
+  LayerGroup: TCustomLayerGroup;
 begin
   for LayerIndex := 0 to FSelectedUnits.Count - 1 do
   begin
@@ -457,7 +456,7 @@ end;
 procedure TframeDiscretization.rgMethodClick(Sender: TObject);
 var
   Index: integer;
-  SelectedUnit: TLayerGroup;
+  SelectedUnit: TCustomLayerGroup;
 begin
   inherited;
   EnableGrowthRateControl;
@@ -477,8 +476,8 @@ end;
 
 procedure TframeDiscretization.SetControlValues;
 var
-  SelectedUnit: TLayerGroup;
-  FirstUnit: TLayerGroup;
+  SelectedUnit: TCustomLayerGroup;
+  FirstUnit: TCustomLayerGroup;
   Same: boolean;
   procedure AssignGrowthRate;
   var
@@ -517,6 +516,7 @@ var
         break;
       end;
     end;
+
     if Same then
     begin
       rgMethod.ItemIndex := Ord(FirstUnit.GrowthMethod);
@@ -567,7 +567,7 @@ var
       begin
         SelectedUnit := FSelectedUnits[Index];
         Same := (SelectedUnit.GrowthMethod = gmCustom) and
-          SelectedUnit.LayerCollection.IsSame(FirstUnit.LayerCollection);;
+          SelectedUnit.LayerCollection.IsSame(FirstUnit.LayerCollection);
         if not Same then
         begin
           break;
@@ -599,21 +599,22 @@ begin
   if csDestroying in ComponentState then Exit;
 
   FSettingUnit := True;
-  rdeGrowthRate.Enabled := FSelectedUnits.Count >= 1;
-  rdeVDiscretization.Enabled := FSelectedUnits.Count >= 1;
-  rgMethod.Enabled := FSelectedUnits.Count >= 1;
-
-  if FSelectedUnits.Count = 0 then
-  begin
-    Exit;
-  end;
-  FirstUnit := FSelectedUnits[0];
-
   try
+    rdeGrowthRate.Enabled := FSelectedUnits.Count >= 1;
+    rdeVDiscretization.Enabled := FSelectedUnits.Count >= 1;
+    rgMethod.Enabled := FSelectedUnits.Count >= 1;
+
+    if FSelectedUnits.Count = 0 then
+    begin
+      Exit;
+    end;
+    FirstUnit := FSelectedUnits[0];
+
     FirstUnit := FSelectedUnits[0];
     AssignGrowthRate;
     AssignDiscretization;
     AssignGrowthMethod;
+    AssignCustomPostions;
   finally
     FSettingUnit := False;
   end;
@@ -690,6 +691,7 @@ begin
           end;
           if RealList.Count = 0 then
           begin
+            SetLength(Fractions, 0);
             GrowthMethod := gmUniform;
           end;
         end;
@@ -697,9 +699,12 @@ begin
         case GrowthMethod of
           gmUniform:
             begin
-              for Index := 0 to SubLayers - 2 do
+              if Length(Fractions) > 0 then
               begin
-                Fractions[SubLayers - 2 - Index] := (Index+1)/SubLayers;
+                for Index := 0 to SubLayers - 2 do
+                begin
+                  Fractions[SubLayers - 2 - Index] := (Index+1)/SubLayers;
+                end;
               end;
             end;
           gmUp:
@@ -865,7 +870,7 @@ var
   Fractions: TRealArray;
   Index: integer;
   LayerFraction: TLayerFraction;
-  SelectedUnit: TLayerGroup;
+  SelectedUnit: TCustomLayerGroup;
   GroupIndex: integer;
   LayerCount: integer;
 begin

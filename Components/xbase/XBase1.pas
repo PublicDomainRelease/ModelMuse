@@ -2331,8 +2331,11 @@ var  J1 , X1 , XFLD1 {, XLEN1 , XDEC1} : smallint ;
   ALength: integer;
 begin
    Result := true ;
-   W9_RECLEN := 0 ;
-   W9_ADR    := 0 ;
+   // The first character of each record is used to mark whether the
+   // record is deleted or not so 1 extra character needs to be included
+   // in each record to account for that.
+   W9_RECLEN := 1 ;
+   W9_ADR    := 1 ;
    XFLD1 := DBFFields.Count ;  // nombre de Chaines, donc de champs
    if XFLD1 > KMAXFLD then
             XFLD1 := KMAXFLD ;

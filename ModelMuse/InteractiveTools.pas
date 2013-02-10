@@ -422,9 +422,9 @@ Consider creating descendants that each only handle one view of the model. }
     FCurrentX: Integer;
     FCurrentY: Integer;
   protected
-    procedure Activate; override;
     procedure DrawOnBitMap32(Sender: TObject; Buffer: TBitmap32); override;
   public
+    procedure Activate; override;
     procedure MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer); override;
     // @name causes ZoomBox.Image32 to be redrawn.
@@ -6523,7 +6523,7 @@ begin
   FPoint1Selected := False;
   FPoint2Selected := False;
   if (ViewDirection = vdTop)
-    and (frmGoPhast.PhastModel.ModelSelection = msSutra)
+    and (frmGoPhast.PhastModel.ModelSelection = msSutra22)
     and (frmGoPhast.PhastModel.SutraMesh <> nil) then
   begin
     FStartX := X;

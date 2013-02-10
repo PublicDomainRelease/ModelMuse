@@ -54,7 +54,7 @@ function TModflowKDEP_Writer.PackageID_Comment: string;
 begin
   result := 'KDEP file created on '
     + DateToStr(Now) + ' by ' + Model.ProgramName + ' version '
-    + ModelVersion + '.';
+    + IModelVersion + '.';
 end;
 
 procedure TModflowKDEP_Writer.WriteDataSet0;

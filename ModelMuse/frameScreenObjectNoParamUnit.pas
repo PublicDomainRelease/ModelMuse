@@ -82,13 +82,16 @@ type
     FDeleting: Boolean;
     FDeletedCells: array of array of boolean;
     procedure LayoutMultiRowEditControls;
+    // See @link(DeletedCells)
     function GetDeletedCells(ACol, ARow: integer): boolean;
+    // See @link(DeletedCells)
     procedure SetDeletedCells(ACol, ARow: integer; const Value: boolean);
     { Private declarations }
   public
     ConductanceColumn: Integer;
     procedure ClearDeletedCells;
-    property DeletedCells[ACol, ARow: integer]: boolean read GetDeletedCells write SetDeletedCells;
+    property DeletedCells[ACol, ARow: integer]: boolean read GetDeletedCells
+      write SetDeletedCells;
     function ConductanceCaption(DirectCaption: string): string; virtual;
     procedure InitializeNoParamFrame(
       Boundary: TModflowBoundary);
@@ -113,9 +116,6 @@ implementation
 uses OrderedCollectionUnit, frmGoPhastUnit, ModflowTimeUnit,
   frmCustomGoPhastUnit, GoPhastTypes;
 
-resourcestring
-  StrYouNeedToSelectA = 'You need to select a row in the grid before clickin' +
-  'g the Insert button.';
 
 {$R *.dfm}
 
@@ -159,7 +159,7 @@ begin
     dgModflowBoundary.Columns[Index].ButtonUsed := true;
   end;
   dgModflowBoundary.Cells[0, 0] := StrStartingTime;
-  dgModflowBoundary.Cells[1, 0] := StrEndingTime;;
+  dgModflowBoundary.Cells[1, 0] := StrEndingTime;
   if Boundary <> nil then
   begin
     for Index := 0 to Boundary.Values.TimeListCount(frmGoPhast.PhastModel) - 1 do

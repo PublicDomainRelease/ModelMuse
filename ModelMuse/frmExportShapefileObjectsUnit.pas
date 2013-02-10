@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomSelectObjectsUnit, VirtualTrees, StdCtrls, Buttons,
   ExtCtrls, Contnrs, ScreenObjectUnit, DataSetUnit, ArgusDataEntry,
-  ShapefileUnit, XBase1, ValueArrayStorageUnit;
+  ShapefileUnit, XBase1, ValueArrayStorageUnit, CheckLst,
+  frmCustomGoPhastUnit;
 
 type
   TFieldDefinition = record
@@ -19,12 +20,17 @@ type
     BreakObject: boolean;
   end;
 
+  TBoundaryName = class(TObject)
+    Name: string;
+    BoundaryType: TBoundaryType;
+  end;
+
   TfrmExportShapefileObjects = class(TfrmCustomSelectObjects)
-    Panel1: TPanel;
+    pnlTop: TPanel;
     lblObjects: TLabel;
     vstDataSets: TVirtualStringTree;
     lblDataArrays: TLabel;
-    Splitter1: TSplitter;
+    splLeft: TSplitter;
     BitBtn1: TBitBtn;
     rdeMissingData: TRbwDataEntry;
     lblMissingData: TLabel;
@@ -35,17 +41,23 @@ type
     rbPolygons: TRadioButton;
     sdShapefile: TSaveDialog;
     XBaseShapeFile: TXBase;
+    cbExportName: TCheckBox;
+    cbExportElevationFormulas: TCheckBox;
+    chklstTimes: TCheckListBox;
+    splRight: TSplitter;
+    lblTimes: TLabel;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure vstDataSetsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
     procedure FormResize(Sender: TObject);
-    procedure Splitter1Moved(Sender: TObject);
+    procedure splLeftMoved(Sender: TObject);
     procedure vstDataSetsChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstDataSetsChecking(Sender: TBaseVirtualTree; Node: PVirtualNode;
       var NewState: TCheckState; var Allowed: Boolean);
     procedure vstObjectsChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure btnCloseClick(Sender: TObject);
+    procedure splRightMoved(Sender: TObject);
   protected
     function ShouldCheckBoxBeChecked(ScreenObject: TScreenObject): boolean;
       override;
@@ -53,18 +65,26 @@ type
     procedure HandleUnchecked(AScreenObject: TScreenObject); override;
     function CanSelect(ScreenObject: TScreenObject): boolean; override;
   private
-    CurrentNodeName: string;
+    FCurrentNodeName: string;
     FObjectOwner: TList;
     FSelectedDataSets: TList;
+    FSelectedBoundaries: TBoundaryTypes;
     FSelectedScreenObjects: TList;
     FSettingChecked: Boolean;
     FFieldDefinitions: array of TFieldDefinition;
     FBreakScreenObjects: array of TBreakScreenObject;
     FShapeType: Integer;
-    FMissingValueString: string;
+    FMissingValueString: AnsiString;
     FMissingValue: Integer;
     FShowWarning: boolean;
     FShapeFileWriter: TShapefileGeometryWriter;
+    FClassifiationList: TList;
+    FEdgeList: TList;
+    FBoundaryNames: TStringList;
+    FBoundDataSetCount: Integer;
+    FTimeCount: Integer;
+    FTimeBoundaryFound: Boolean;
+    FMaxHeadObsTimes: Integer;
     procedure GetData;
     procedure CenterLabels;
     procedure SetCheckedNodes(Sender: TBaseVirtualTree);
@@ -93,6 +113,11 @@ type
     function GetImportedValuesFromFormula(DataArray: TDataArray;
       ScreenObject: TScreenObject; Formula: string): TValueArrayStorage;
     procedure CreateShape(var Shape: TShapeObject);
+    function GetExtraDataSetCount: Integer;
+    function CanSelectBoundary(
+      BoundaryClassification: TBoundaryClassification): Boolean;
+    function CanSelectBoundaryType(Element: TBoundaryType): boolean;
+    procedure EnableTimesCheckList;
     { Private declarations }
   public
     { Public declarations }
@@ -102,14 +127,23 @@ implementation
 
 {$R *.dfm}
 
-uses frmCustomGoPhastUnit, ClassificationUnit, PhastModelUnit, FastGEO,
+uses ClassificationUnit, PhastModelUnit, FastGEO,
   ConvexHullUnit, GPC_Classes, gpc, RbwParser, StrUtils,
-  frmErrorsAndWarningsUnit, GIS_Functions, ModelMuseUtilities, frmGoPhastUnit;
+  frmErrorsAndWarningsUnit, GIS_Functions, ModelMuseUtilities, frmGoPhastUnit,
+  GoPhastTypes, frameCustomColorUnit, ModflowTimeUnit,
+  Generics.Collections, ModflowWellUnit, ModflowBoundaryUnit,
+  ModflowGhbUnit, ModflowDrnUnit, ModflowDrtUnit, ModflowRivUnit,
+  ModflowConstantHeadBoundaryUnit, ModflowEvtUnit, ModflowEtsUnit,
+  ModflowRchUnit, ModflowUzfUnit, ModflowHfbUnit, ModflowHfbDisplayUnit,
+  ModflowHobUnit;
 
 resourcestring
   StrDataSet0sOb = ' Data set = %0:s; Object = %1:s';
   StrAreYouSureYouWan = 'Are you sure you want to overwrite the existing Sha' +
   'pefile?';
+  StrYouMustSelectOne = 'You must select one or more times at which you wish' +
+  ' the MODFLOW Features to be exported.';
+  StrYouMustSelectObject = 'You must select at least one object to export.';
 
 const
   StrFormulaTruncatedTo = 'Formula truncated to 254 characters';
@@ -120,8 +154,49 @@ type
   { TfrmExportShapefileObjects }
 
 procedure TfrmExportShapefileObjects.btnCloseClick(Sender: TObject);
+var
+  TimeIndex: Integer;
+  TimesSelected: Boolean;
+  BoundIndex: Integer;
+  BoundaryName: TBoundaryName;
 begin
   inherited;
+  if FSelectedScreenObjects.Count = 0 then
+  begin
+    Beep;
+    MessageDlg(StrYouMustSelectObject, mtError, [mbOK], 0);
+    ModalResult := mrNone;
+    Exit;
+  end;
+
+  if FBoundaryNames.Count > 0 then
+  begin
+    for BoundIndex := 0 to FBoundaryNames.Count - 1 do
+    begin
+      BoundaryName := FBoundaryNames.Objects[BoundIndex] as TBoundaryName;
+      if not (BoundaryName.BoundaryType in [btMfHfb, btMfObs]) then
+      begin
+        TimesSelected := False;
+        for TimeIndex := 0 to chklstTimes.Count - 1 do
+        begin
+          if chklstTimes.Checked[TimeIndex] then
+          begin
+            TimesSelected := True;
+            Break;
+          end;
+        end;
+        if not TimesSelected then
+        begin
+          Beep;
+          MessageDlg(StrYouMustSelectOne, mtError, [mbOK], 0);
+          ModalResult := mrNone;
+          Exit;
+        end;
+        Break;
+      end;
+    end;
+  end;
+
   if sdShapefile.Execute then
   begin
     if FileExists(sdShapefile.FileName)
@@ -131,6 +206,7 @@ begin
       if MessageDlg(StrAreYouSureYouWan,
         mtWarning, [mbYes, mbNo], 0) <> mrYes then
       begin
+        ModalResult := mrNone;
         Exit;
       end;
     end;
@@ -138,11 +214,195 @@ begin
   end;
 end;
 
+function TfrmExportShapefileObjects.CanSelectBoundary(BoundaryClassification: TBoundaryClassification): Boolean;
+begin
+  result := CanSelectBoundaryType(BoundaryClassification.BoundaryType);
+end;
+
+
+function TfrmExportShapefileObjects.CanSelectBoundaryType(Element: TBoundaryType): boolean;
+begin
+  Result := False;
+  case Element of
+    btUndefined: ;
+    btPhastSpecifiedHead:
+      begin
+//          if ScreenObject.StoreSpecifiedHead then
+        begin
+          result := False;
+//          Exit;
+        end;
+      end;
+    btPhastFlux:
+      begin
+//          if ScreenObject.StoreFlux then
+        begin
+          result := False;
+//          Exit;
+        end;
+      end;
+    btPhastLeaky:
+      begin
+//          if ScreenObject.StoreLeaky then
+        begin
+          result := False;
+//          Exit;
+        end;
+      end;
+    btPhastRiver:
+      begin
+//          if ScreenObject.StoreRiver then
+        begin
+          result := False;
+//          Exit;
+        end;
+      end;
+    btPhastWell:
+      begin
+//          if ScreenObject.StoreWell then
+        begin
+          result := False;
+//          Exit;
+        end;
+      end;
+    btMfWell:
+      begin
+//        if ScreenObject.StoreModflowWellBoundary then
+        begin
+          result := True;
+//          Exit;
+        end;
+      end;
+    btMfGhb:
+      begin
+//        if ScreenObject.StoreModflowGhbBoundary then
+        begin
+          result := True;
+//          Exit;
+        end;
+      end;
+    btMfDrn:
+      begin
+//        if ScreenObject.StoreModflowDrnBoundary then
+        begin
+          result := True;
+//          Exit;
+        end;
+      end;
+    btMfDrt:
+      begin
+//        if ScreenObject.StoreModflowDrtBoundary then
+        begin
+          result := True;
+//          Exit;
+        end;
+      end;
+    btMfRiv:
+      begin
+//        if ScreenObject.StoreModflowRivBoundary then
+        begin
+          result := True;
+//          Exit;
+        end;
+      end;
+    btMfChd:
+      begin
+//        if ScreenObject.StoreModflowChdBoundary then
+        begin
+          result := True;
+//          Exit;
+        end;
+      end;
+    btMfEts:
+      begin
+//        if ScreenObject.StoreModflowEtsBoundary then
+        begin
+          result := True;
+//          Exit;
+        end;
+      end;
+    btMfEt:
+      begin
+//        if ScreenObject.StoreModflowEvtBoundary then
+        begin
+          result := True;
+//          Exit;
+        end;
+      end;
+    btMfRch:
+      begin
+//        if ScreenObject.StoreModflowRchBoundary then
+        begin
+          result := True;
+//          Exit;
+        end;
+      end;
+    btMfSfr:
+      begin
+//          if ScreenObject.StoreModflowSfrBoundary then
+        begin
+          result := False;
+//          Exit;
+        end;
+      end;
+    btMfUzf:
+      begin
+//        if ScreenObject.StoreModflowUzfBoundary then
+        begin
+          result := True;
+//          Exit;
+        end;
+      end;
+    btMfObs:
+      begin
+//          if ScreenObject.StoreModflowHeadObservations then
+        begin
+          result := True;
+//          Exit;
+        end;
+      end;
+    btMfMnw:
+      begin
+//          if ScreenObject.StoreModflowMnw2Boundary then
+        begin
+          result := False;
+//          Exit;
+        end;
+      end;
+    btMt3dSsm:
+      begin
+//          if ScreenObject.StoreMt3dmsConcBoundary then
+        begin
+          result := False;
+//          Exit;
+        end;
+      end;
+    btMfHfb:
+      begin
+//        if ScreenObject.StoreModflowHfbBoundary then
+        begin
+          result := True;
+//          Exit;
+        end;
+      end;
+  end;
+end;
+
+procedure TfrmExportShapefileObjects.EnableTimesCheckList;
+var
+  TempBoundaries: TBoundaryTypes;
+begin
+  TempBoundaries := FSelectedBoundaries;
+  Exclude(TempBoundaries, btMfObs);
+  chklstTimes.Enabled := TempBoundaries <> [];
+end;
+
 function TfrmExportShapefileObjects.CanSelect(
   ScreenObject: TScreenObject): boolean;
 var
   Index: Integer;
   DataArray: TDataArray;
+  Element: TBoundaryType;
 begin
   result := False;
   for Index := 0 to FSelectedDataSets.Count - 1 do
@@ -154,6 +414,176 @@ begin
       Exit;
     end;
   end;
+  for Element in FSelectedBoundaries do
+  begin
+    case Element of
+      btUndefined: ;
+      btPhastSpecifiedHead:
+        begin
+  //          if ScreenObject.StoreSpecifiedHead then
+          begin
+            result := False;
+  //          Exit;
+          end;
+        end;
+      btPhastFlux:
+        begin
+  //          if ScreenObject.StoreFlux then
+          begin
+            result := False;
+  //          Exit;
+          end;
+        end;
+      btPhastLeaky:
+        begin
+  //          if ScreenObject.StoreLeaky then
+          begin
+            result := False;
+  //          Exit;
+          end;
+        end;
+      btPhastRiver:
+        begin
+  //          if ScreenObject.StoreRiver then
+          begin
+            result := False;
+  //          Exit;
+          end;
+        end;
+      btPhastWell:
+        begin
+  //          if ScreenObject.StoreWell then
+          begin
+            result := False;
+  //          Exit;
+          end;
+        end;
+      btMfWell:
+        begin
+          if ScreenObject.StoreModflowWellBoundary then
+          begin
+            result := True;
+  //          Exit;
+          end;
+        end;
+      btMfGhb:
+        begin
+          if ScreenObject.StoreModflowGhbBoundary then
+          begin
+            result := True;
+  //          Exit;
+          end;
+        end;
+      btMfDrn:
+        begin
+          if ScreenObject.StoreModflowDrnBoundary then
+          begin
+            result := True;
+  //          Exit;
+          end;
+        end;
+      btMfDrt:
+        begin
+          if ScreenObject.StoreModflowDrtBoundary then
+          begin
+            result := True;
+  //          Exit;
+          end;
+        end;
+      btMfRiv:
+        begin
+          if ScreenObject.StoreModflowRivBoundary then
+          begin
+            result := True;
+  //          Exit;
+          end;
+        end;
+      btMfChd:
+        begin
+          if ScreenObject.StoreModflowChdBoundary then
+          begin
+            result := True;
+  //          Exit;
+          end;
+        end;
+      btMfEts:
+        begin
+          if ScreenObject.StoreModflowEtsBoundary then
+          begin
+            result := True;
+  //          Exit;
+          end;
+        end;
+      btMfEt:
+        begin
+          if ScreenObject.StoreModflowEvtBoundary then
+          begin
+            result := True;
+  //          Exit;
+          end;
+        end;
+      btMfRch:
+        begin
+          if ScreenObject.StoreModflowRchBoundary then
+          begin
+            result := True;
+  //          Exit;
+          end;
+        end;
+      btMfSfr:
+        begin
+  //          if ScreenObject.StoreModflowSfrBoundary then
+          begin
+            result := False;
+  //          Exit;
+          end;
+        end;
+      btMfUzf:
+        begin
+          if ScreenObject.StoreModflowUzfBoundary then
+          begin
+            result := True;
+  //          Exit;
+          end;
+        end;
+      btMfObs:
+        begin
+  //          if ScreenObject.StoreModflowHeadObservations then
+          begin
+            result := True;
+  //          Exit;
+          end;
+        end;
+      btMfMnw:
+        begin
+  //          if ScreenObject.StoreModflowMnw2Boundary then
+          begin
+            result := False;
+  //          Exit;
+          end;
+        end;
+      btMt3dSsm:
+        begin
+  //          if ScreenObject.StoreMt3dmsConcBoundary then
+          begin
+            result := False;
+  //          Exit;
+          end;
+        end;
+      btMfHfb:
+        begin
+          if ScreenObject.StoreModflowHfbBoundary then
+          begin
+            result := True;
+  //          Exit;
+          end;
+        end;
+    end;
+    if result then
+    begin
+      Exit;
+    end;
+  end;
 end;
 
 procedure TfrmExportShapefileObjects.CenterLabels;
@@ -162,6 +592,8 @@ begin
     + (vstObjects.Width - lblObjects.Width) div 2;
   lblDataArrays.Left := vstDataSets.Left
     + (vstDataSets.Width - lblDataArrays.Width) div 2;
+  lblTimes.Left := chklstTimes.Left
+    + (chklstTimes.Width - lblTimes.Width) div 2;
 end;
 
 procedure TfrmExportShapefileObjects.SetCheckedNodes(Sender: TBaseVirtualTree);
@@ -212,8 +644,8 @@ begin
   try
     InitializeDataBase;
     GetShapeType(FShapeType);
-    FMissingValueString := rdeMissingData.Text;
-    FMissingValue := StrToInt(FMissingValueString);
+    FMissingValueString := AnsiString(rdeMissingData.Text);
+    FMissingValue := StrToInt(string(FMissingValueString));
 
     FShapeFileWriter := TShapefileGeometryWriter.Create(FShapeType, True);
     try
@@ -746,7 +1178,7 @@ var
   FieldDefinition: AnsiString;
   FieldIndex: Integer;
 begin
-  for FieldIndex := 0 to FSelectedDataSets.Count - 1 do
+  for FieldIndex := 0 to Length(FFieldDefinitions) - 1 do
   begin
     FieldDefinition := FFieldDefinitions[FieldIndex].FieldName + '=';
     case FFieldDefinitions[FieldIndex].FieldType of
@@ -944,25 +1376,251 @@ begin
   FShapeFileWriter.AddShape(Shape);
 end;
 
+function TfrmExportShapefileObjects.GetExtraDataSetCount: Integer;
+begin
+  result := 0;
+  if cbExportName.Checked then
+  begin
+    result := 1;
+  end;
+  if cbExportElevationFormulas.Checked then
+  begin
+    Inc(result, 3);
+  end;
+end;
+
 procedure TfrmExportShapefileObjects.InitializeDataBase;
+const
+  MaximumFieldNameLength = 10;
 var
   FieldNames: TStringList;
   DataArrayIndex: Integer;
   DataArray: TDataArray;
   FieldDefinitions: TStringList;
+  ExtraDataSetCount: integer;
+  StartIndex: Integer;
+  BoundIndex: Integer;
+  BoundaryName: TBoundaryName;
+  TimeIndex: Integer;
+//  TimeBoundaryFound: Boolean;
+  MaxLength: Integer;
+  FieldName: string;
+  HeadObsFound: Boolean;
+  ObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  HeadObservations: THobBoundary;
+  HeadObsDataSetsCount: Integer;
 begin
+  FBoundDataSetCount := 0;
+  FTimeBoundaryFound := False;
+  HeadObsFound := False;
+  if FBoundaryNames.Count > 0 then
+  begin
+    FTimeCount := 0;
+    if chklstTimes.Enabled then
+    begin
+      for TimeIndex := 0 to chklstTimes.Items.Count - 1 do
+      begin
+        if chklstTimes.Checked[TimeIndex] then
+        begin
+          Inc(FTimeCount);
+        end;
+      end;
+    end;
+
+    for BoundIndex := 0 to FBoundaryNames.Count - 1 do
+    begin
+      BoundaryName := FBoundaryNames.Objects[BoundIndex] as TBoundaryName;
+      if BoundaryName.BoundaryType = btMfObs then
+      begin
+        HeadObsFound := True;
+      end
+      else if BoundaryName.BoundaryType = btMfHfb then
+      begin
+        Inc(FBoundDataSetCount);
+      end
+      else
+      begin
+        if not FTimeBoundaryFound then
+        begin
+          Inc(FBoundDataSetCount,FTimeCount);
+          FTimeBoundaryFound := True;
+        end;
+        Inc(FBoundDataSetCount,FTimeCount);
+      end;
+    end;
+  end;
+
+  FMaxHeadObsTimes := 0;
+  HeadObsDataSetsCount := 0;
+  if HeadObsFound then
+  begin
+    for ObjectIndex := 0 to FSelectedScreenObjects.Count - 1 do
+    begin
+      AScreenObject := FSelectedScreenObjects[ObjectIndex];
+      HeadObservations :=
+        AScreenObject.ModflowHeadObservations;
+      if (HeadObservations <> nil)
+        and (HeadObservations.Values.Count > FMaxHeadObsTimes) then
+      begin
+        FMaxHeadObsTimes := HeadObservations.Values.Count;
+      end;
+    end;
+    if FMaxHeadObsTimes = 1 then
+    begin
+      HeadObsDataSetsCount := 6;
+    end
+    else
+    begin
+      HeadObsDataSetsCount := 3 + FMaxHeadObsTimes*4;
+    end;
+  end;
+  Inc(FBoundDataSetCount, HeadObsDataSetsCount);
+
   FieldNames := TStringList.Create;
   try
     FieldNames.Sorted := True;
     FieldNames.CaseSensitive := False;
     InitializeBreakScreenObjects;
-    SetLength(FFieldDefinitions, FSelectedDataSets.Count);
+    ExtraDataSetCount := GetExtraDataSetCount;
+    SetLength(FFieldDefinitions, FSelectedDataSets.Count
+      + FBoundDataSetCount + ExtraDataSetCount);
     for DataArrayIndex := 0 to FSelectedDataSets.Count - 1 do
     begin
       DataArray := FSelectedDataSets[DataArrayIndex];
       FFieldDefinitions[DataArrayIndex].DataArray := DataArray;
       SetFieldType(DataArrayIndex);
       AssignFieldName(FieldNames, DataArrayIndex);
+    end;
+    StartIndex := FSelectedDataSets.Count;
+
+    if FBoundaryNames.Count > 0 then
+    begin
+      if FTimeBoundaryFound then
+      begin
+        for TimeIndex := 1 to FTimeCount do
+        begin
+          FFieldDefinitions[StartIndex].DataArray := nil;
+          FFieldDefinitions[StartIndex].FieldType := 'F';
+          FFieldDefinitions[StartIndex].FieldName := 'TIME' + AnsiString(IntToStr(TimeIndex));
+          FieldNames.Add(string(FFieldDefinitions[StartIndex].FieldName));
+          Inc(StartIndex);
+        end;
+      end;
+      MaxLength := MaximumFieldNameLength - Length(IntToStr(FTimeCount));
+
+      for BoundIndex := 0 to FBoundaryNames.Count - 1 do
+      begin
+        BoundaryName := FBoundaryNames.Objects[BoundIndex] as TBoundaryName;
+        FieldName := StringReplace(BoundaryName.Name,
+          ' ', '', [rfReplaceAll, rfIgnoreCase]);
+        FieldName := UpperCase(FieldName);
+        if BoundaryName.BoundaryType = btMfObs then
+        begin
+          Continue;
+        end
+        else if BoundaryName.BoundaryType = btMfHfb then
+        begin
+          FieldName := Copy(FieldName, 1, MaximumFieldNameLength);
+          FFieldDefinitions[StartIndex].DataArray := nil;
+          FFieldDefinitions[StartIndex].FieldType := 'C';
+          FFieldDefinitions[StartIndex].FieldName := AnsiString(FieldName);
+          FieldNames.Add(string(FFieldDefinitions[StartIndex].FieldName));
+          Inc(StartIndex);
+        end
+        else
+        begin
+          FieldName := Copy(FieldName, 1, MaxLength);
+          for TimeIndex := 1 to FTimeCount do
+          begin
+            FFieldDefinitions[StartIndex].DataArray := nil;
+            FFieldDefinitions[StartIndex].FieldType := 'C';
+            FFieldDefinitions[StartIndex].FieldName := AnsiString(FieldName + IntToStr(TimeIndex));
+            FieldNames.Add(string(FFieldDefinitions[StartIndex].FieldName));
+            Inc(StartIndex);
+          end;
+        end;
+      end;
+    end;
+
+    if HeadObsFound then
+    begin
+      FFieldDefinitions[StartIndex].DataArray := nil;
+      FFieldDefinitions[StartIndex].FieldType := 'C';
+      FFieldDefinitions[StartIndex].FieldName := 'OBSNAME';
+      FieldNames.Add(string(FFieldDefinitions[StartIndex].FieldName));
+      Inc(StartIndex);
+
+      FFieldDefinitions[StartIndex].DataArray := nil;
+      FFieldDefinitions[StartIndex].FieldType := 'N';
+      FFieldDefinitions[StartIndex].FieldName := 'OBSTYPE';
+      FieldNames.Add(string(FFieldDefinitions[StartIndex].FieldName));
+      Inc(StartIndex);
+
+      if FMaxHeadObsTimes > 1 then
+      begin
+        FFieldDefinitions[StartIndex].DataArray := nil;
+        FFieldDefinitions[StartIndex].FieldType := 'N';
+        FFieldDefinitions[StartIndex].FieldName := 'ITT';
+        FieldNames.Add(string(FFieldDefinitions[StartIndex].FieldName));
+        Inc(StartIndex);
+      end;
+
+      for TimeIndex := 1 to FMaxHeadObsTimes do
+      begin
+        FFieldDefinitions[StartIndex].DataArray := nil;
+        FFieldDefinitions[StartIndex].FieldType := 'F';
+        FFieldDefinitions[StartIndex].FieldName := 'O_TIME' + AnsiString(IntToStr(TimeIndex));
+        FieldNames.Add(string(FFieldDefinitions[StartIndex].FieldName));
+        Inc(StartIndex);
+
+        FFieldDefinitions[StartIndex].DataArray := nil;
+        FFieldDefinitions[StartIndex].FieldType := 'F';
+        FFieldDefinitions[StartIndex].FieldName := 'O_HEAD' + AnsiString(IntToStr(TimeIndex));
+        FieldNames.Add(string(FFieldDefinitions[StartIndex].FieldName));
+        Inc(StartIndex);
+
+        FFieldDefinitions[StartIndex].DataArray := nil;
+        FFieldDefinitions[StartIndex].FieldType := 'F';
+        FFieldDefinitions[StartIndex].FieldName := 'O_STAT' + AnsiString(IntToStr(TimeIndex));
+        FieldNames.Add(string(FFieldDefinitions[StartIndex].FieldName));
+        Inc(StartIndex);
+
+        FFieldDefinitions[StartIndex].DataArray := nil;
+        FFieldDefinitions[StartIndex].FieldType := 'N';
+        FFieldDefinitions[StartIndex].FieldName := 'O_SF' + AnsiString(IntToStr(TimeIndex));
+        FieldNames.Add(string(FFieldDefinitions[StartIndex].FieldName));
+        Inc(StartIndex);
+      end;
+    end;
+
+    if cbExportName.Checked then
+    begin
+      FFieldDefinitions[StartIndex].DataArray := nil;
+      FFieldDefinitions[StartIndex].FieldType := 'C';
+      FFieldDefinitions[StartIndex].FieldName := 'OBJECTNAME';
+      FieldNames.Add('OBJECTNAME');
+      Inc(StartIndex);
+    end;
+    if cbExportElevationFormulas.Checked then
+    begin
+      FFieldDefinitions[StartIndex].DataArray := nil;
+      FFieldDefinitions[StartIndex].FieldType := 'C';
+      FFieldDefinitions[StartIndex].FieldName := 'Z_FORMULA';
+      FieldNames.Add('Z_FORMULA');
+      Inc(StartIndex);
+
+      FFieldDefinitions[StartIndex].DataArray := nil;
+      FFieldDefinitions[StartIndex].FieldType := 'C';
+      FFieldDefinitions[StartIndex].FieldName := 'HIGH_Z';
+      FieldNames.Add('HIGH_Z');
+      Inc(StartIndex);
+
+      FFieldDefinitions[StartIndex].DataArray := nil;
+      FFieldDefinitions[StartIndex].FieldType := 'C';
+      FFieldDefinitions[StartIndex].FieldName := 'LOW_Z';
+      FieldNames.Add('LOW_Z');
+      Inc(StartIndex);
     end;
     FieldDefinitions := TStringList.Create;
     try
@@ -1012,19 +1670,1311 @@ var
   FieldIndex: Integer;
   SectionIndex: Integer;
   ImportedValues: TValueArrayStorage;
-begin
-  if BreakObject then
+  ExtraDataSetCount: Integer;
+  ExtraDataSetStart: Integer;
+  StartIndex: Integer;
+  SectionString: string;
+  BoundaryDataSetStart: Integer;
+  TimeList: TList<Double>;
+  TimeIndex: Integer;
+  procedure AssignBoundaryData;
+  var
+    TimeIndex: Integer;
+    BoundIndex: Integer;
+    BoundaryName: TBoundaryName;
+    MfWellBoundary: TMfWellBoundary;
+    PValues: TModflowParamItem;
+    Values: TCustomMF_BoundColl;
+    WellTimeItem: TWellItem;
+    GhbBoundary: TGhbBoundary;
+    GhbTimeItem: TGhbItem;
+    DrnBoundary: TDrnBoundary;
+    DrnTimeItem: TDrnItem;
+    DrtBoundary: TDrtBoundary;
+    DrtTimeItem: TDrtItem;
+    RivTimeItem: TRivItem;
+    RivBoundary: TRivBoundary;
+    ChdBoundary: TChdBoundary;
+    ChdTimeItem: TChdItem;
+    EtsBoundary: TEtsBoundary;
+    EtTimeItem: TEvtItem;
+    EtsSurfTimeItem: TEtsSurfDepthItem;
+    FractionIndex: Integer;
+    FormulaItem: TStringValueItem;
+    EtLayerItem: TEvtLayerItem;
+    EvtBoundary: TEvtBoundary;
+    RchBoundary: TRchBoundary;
+    RchTimeItem: TRchItem;
+    RchLayerItem: TRchLayerItem;
+    UzfBoundary: TUzfBoundary;
+    UzfExtinctDepthItem: TUzfExtinctDepthItem;
+    UzfWaterContentItem: TUzfWaterContentItem;
+    HfbBoundary: THfbBoundary;
+    HeadObservations: THobBoundary;
+    HobItem: THobItem;
   begin
-    for SectionIndex := 0 to AScreenObject.SectionCount - 1 do
+    StartIndex := BoundaryDataSetStart;
+    if FTimeBoundaryFound then
+    begin
+      for TimeIndex := 0 to TimeList.Count - 1 do
+      begin
+        FloatValue := TimeList[TimeIndex];
+        XBaseShapeFile.UpdFieldNum(
+          FFieldDefinitions[StartIndex].FieldName, FloatValue);
+        Inc(StartIndex);
+      end;
+    end;
+    for BoundIndex := 0 to FBoundaryNames.Count - 1 do
+    begin
+      BoundaryName := FBoundaryNames.Objects[BoundIndex] as TBoundaryName;
+      case BoundaryName.BoundaryType of
+        btUndefined: Assert(False);
+        btPhastSpecifiedHead: ;
+        btPhastFlux: ;
+        btPhastLeaky: ;
+        btPhastRiver: ;
+        btPhastWell: ;
+        btMfWell:
+          begin
+            MfWellBoundary := AScreenObject.ModflowWellBoundary;
+            if MfWellBoundary = nil then
+            begin
+              Formula := FMissingValueString;
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end
+            else
+            begin
+              Values := nil;
+              if MfWellBoundary.Values.Count > 0 then
+              begin
+                Values := MfWellBoundary.Values;
+              end
+              else if MfWellBoundary.Parameters.Count > 0 then
+              begin
+                PValues := MfWellBoundary.Parameters[0];
+                Values := PValues.Param;
+              end;
+              Assert(Values.Count > 0);
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                WellTimeItem := Values.GetItemByStartTime(
+                  TimeList[TimeIndex]) as TWellItem;
+                if WellTimeItem = nil then
+                begin
+                  Formula := FMissingValueString;
+                end
+                else
+                begin
+                  Formula := AnsiString(WellTimeItem.PumpingRate);
+                end;
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end;
+          end;
+        btMfGhb:
+          begin
+            GhbBoundary := AScreenObject.ModflowGhbBoundary;
+            if GhbBoundary = nil then
+            begin
+              Formula := FMissingValueString;
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end
+            else
+            begin
+              Values := nil;
+              if GhbBoundary.Values.Count > 0 then
+              begin
+                Values := GhbBoundary.Values;
+              end
+              else if GhbBoundary.Parameters.Count > 0 then
+              begin
+                PValues := GhbBoundary.Parameters[0];
+                Values := PValues.Param;
+              end;
+              Assert(Values.Count > 0);
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                GhbTimeItem := Values.GetItemByStartTime(
+                  TimeList[TimeIndex]) as TGhbItem;
+                if GhbTimeItem = nil then
+                begin
+                  Formula := FMissingValueString;
+                end
+                else
+                begin
+                  if BoundaryName.Name = StrMODFLOWGhbConductance then
+                  begin
+                    Formula := AnsiString(GhbTimeItem.Conductance);
+                  end
+                  else if BoundaryName.Name = StrMODFLOWGhbHead then
+                  begin
+                    Formula := AnsiString(GhbTimeItem.BoundaryHead);
+                  end
+                  else
+                  begin
+                    Assert(False);
+                  end;
+                end;
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end;
+          end;
+        btMfDrn:
+          begin
+            DrnBoundary := AScreenObject.ModflowDrnBoundary;
+            if DrnBoundary = nil then
+            begin
+              Formula := FMissingValueString;
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end
+            else
+            begin
+              Values := nil;
+              if DrnBoundary.Values.Count > 0 then
+              begin
+                Values := DrnBoundary.Values;
+              end
+              else if DrnBoundary.Parameters.Count > 0 then
+              begin
+                PValues := DrnBoundary.Parameters[0];
+                Values := PValues.Param;
+              end;
+              Assert(Values.Count > 0);
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                DrnTimeItem := Values.GetItemByStartTime(
+                  TimeList[TimeIndex]) as TDrnItem;
+                if DrnTimeItem = nil then
+                begin
+                  Formula := FMissingValueString;
+                end
+                else
+                begin
+                  if BoundaryName.Name = StrMODFLOWDrainConductance then
+                  begin
+                    Formula := AnsiString(DrnTimeItem.Conductance);
+                  end
+                  else if BoundaryName.Name = StrMODFLOWDrainElevation then
+                  begin
+                    Formula := AnsiString(DrnTimeItem.Elevation);
+                  end
+                  else
+                  begin
+                    Assert(False);
+                  end;
+                end;
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end;
+          end;
+        btMfDrt:
+          begin
+            DrtBoundary := AScreenObject.ModflowDrtBoundary;
+            if DrtBoundary = nil then
+            begin
+              Formula := FMissingValueString;
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end
+            else
+            begin
+              Values := nil;
+              if DrtBoundary.Values.Count > 0 then
+              begin
+                Values := DrtBoundary.Values;
+              end
+              else if DrtBoundary.Parameters.Count > 0 then
+              begin
+                PValues := DrtBoundary.Parameters[0];
+                Values := PValues.Param;
+              end;
+              Assert(Values.Count > 0);
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                DrtTimeItem := Values.GetItemByStartTime(
+                  TimeList[TimeIndex]) as TDrtItem;
+                if DrtTimeItem = nil then
+                begin
+                  Formula := FMissingValueString;
+                end
+                else
+                begin
+                  if BoundaryName.Name = StrMODFLOWDrainReturnConductance then
+                  begin
+                    Formula := AnsiString(DrtTimeItem.Conductance);
+                  end
+                  else if BoundaryName.Name = StrMODFLOWDrainReturnElevation then
+                  begin
+                    Formula := AnsiString(DrtTimeItem.Elevation);
+                  end
+                  else if BoundaryName.Name = StrMODFLOWDrainReturnFraction then
+                  begin
+                    Formula := AnsiString(DrtTimeItem.ReturnFraction);
+                  end
+                  else
+                  begin
+                    Assert(False);
+                  end;
+                end;
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end;
+          end;
+        btMfRiv:
+          begin
+            RivBoundary := AScreenObject.ModflowRivBoundary;
+            if RivBoundary = nil then
+            begin
+              Formula := FMissingValueString;
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end
+            else
+            begin
+              Values := nil;
+              if RivBoundary.Values.Count > 0 then
+              begin
+                Values := RivBoundary.Values;
+              end
+              else if RivBoundary.Parameters.Count > 0 then
+              begin
+                PValues := RivBoundary.Parameters[0];
+                Values := PValues.Param;
+              end;
+              Assert(Values.Count > 0);
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                RivTimeItem := Values.GetItemByStartTime(
+                  TimeList[TimeIndex]) as TRivItem;
+                if RivTimeItem = nil then
+                begin
+                  Formula := FMissingValueString;
+                end
+                else
+                begin
+                  if BoundaryName.Name = StrMODFLOWRiverConductance then
+                  begin
+                    Formula := AnsiString(RivTimeItem.Conductance);
+                  end
+                  else if BoundaryName.Name = StrMODFLOWRiverStage then
+                  begin
+                    Formula := AnsiString(RivTimeItem.RiverStage);
+                  end
+                  else if BoundaryName.Name = StrMODFLOWRiverBottom then
+                  begin
+                    Formula := AnsiString(RivTimeItem.RiverBottom);
+                  end
+                  else
+                  begin
+                    Assert(False);
+                  end;
+                end;
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end;
+          end;
+        btMfChd:
+          begin
+            ChdBoundary := AScreenObject.ModflowChdBoundary;
+            if ChdBoundary = nil then
+            begin
+              Formula := FMissingValueString;
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end
+            else
+            begin
+              Values := nil;
+              if ChdBoundary.Values.Count > 0 then
+              begin
+                Values := ChdBoundary.Values;
+              end
+              else if ChdBoundary.Parameters.Count > 0 then
+              begin
+                PValues := ChdBoundary.Parameters[0];
+                Values := PValues.Param;
+              end;
+              Assert(Values.Count > 0);
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                ChdTimeItem := Values.GetItemByStartTime(
+                  TimeList[TimeIndex]) as TChdItem;
+                if ChdTimeItem = nil then
+                begin
+                  Formula := FMissingValueString;
+                end
+                else
+                begin
+                  if BoundaryName.Name = StrMODFLOWCHDStartingHead then
+                  begin
+                    Formula := AnsiString(ChdTimeItem.StartHead);
+                  end
+                  else if BoundaryName.Name = StrMODFLOWCHDEndingHead then
+                  begin
+                    Formula := AnsiString(ChdTimeItem.EndHead);
+                  end
+                  else
+                  begin
+                    Assert(False);
+                  end;
+                end;
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end;
+          end;
+        btMfEts:
+          begin
+            EtsBoundary := AScreenObject.ModflowEtsBoundary;
+            if EtsBoundary = nil then
+            begin
+              Formula := FMissingValueString;
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end
+            else
+            begin
+              if BoundaryName.Name = StrMODFLOWEtsRate then
+              begin
+                Values := nil;
+                if EtsBoundary.Values.Count > 0 then
+                begin
+                  Values := EtsBoundary.Values;
+                end
+                else if EtsBoundary.Parameters.Count > 0 then
+                begin
+                  PValues := EtsBoundary.Parameters[0];
+                  Values := PValues.Param;
+                end;
+                Assert(Values.Count > 0);
+                for TimeIndex := 0 to TimeList.Count - 1 do
+                begin
+                  EtTimeItem := Values.GetItemByStartTime(
+                    TimeList[TimeIndex]) as TEvtItem;
+                  if EtTimeItem = nil then
+                  begin
+                    Formula := FMissingValueString;
+                  end
+                  else
+                  begin
+                    Formula := AnsiString(EtTimeItem.EvapotranspirationRate);
+                  end;
+                  XBaseShapeFile.UpdFieldStr(
+                    FFieldDefinitions[StartIndex].FieldName, Formula);
+                  Inc(StartIndex);
+                end;
+              end
+              else if (BoundaryName.Name = StrMODFLOWEtsDepth)
+                or (BoundaryName.Name = StrMODFLOWEtsSurface)
+                or (Pos(StrMODFLOWEtsRateFraction, BoundaryName.Name) = 1)
+                or (Pos(StrMODFLOWEtsDepthFraction, BoundaryName.Name) = 1) then
+              begin
+                Values := EtsBoundary.EtsSurfDepthCollection;
+                Assert(Values.Count > 0);
+                for TimeIndex := 0 to TimeList.Count - 1 do
+                begin
+                  EtsSurfTimeItem := Values.GetItemByStartTime(
+                    TimeList[TimeIndex]) as TEtsSurfDepthItem;
+                  if EtsSurfTimeItem = nil then
+                  begin
+                    Formula := FMissingValueString;
+                  end
+                  else
+                  begin
+                    if BoundaryName.Name = StrMODFLOWEtsDepth then
+                    begin
+                      Formula := AnsiString(EtsSurfTimeItem.EvapotranspirationDepth);
+                    end
+                    else if BoundaryName.Name = StrMODFLOWEtsSurface then
+                    begin
+                      Formula := AnsiString(EtsSurfTimeItem.EvapotranspirationSurface);
+                    end
+                    else if (Pos(StrMODFLOWEtsRateFraction, BoundaryName.Name) = 1) then
+                    begin
+                      FractionIndex := StrToInt(Copy(BoundaryName.Name,
+                        Length(StrMODFLOWEtsRateFraction), MaxInt))-1;
+                      FormulaItem := EtsSurfTimeItem.EtFractions.Items
+                        [FractionIndex] as TStringValueItem;
+                      Formula := AnsiString(FormulaItem.Value);
+                    end
+                    else if (Pos(StrMODFLOWEtsDepthFraction, BoundaryName.Name) = 1) then
+                    begin
+                      FractionIndex := StrToInt(Copy(BoundaryName.Name,
+                        Length(StrMODFLOWEtsDepthFraction), MaxInt))-1;
+                      FormulaItem := EtsSurfTimeItem.DepthFractions.Items
+                        [FractionIndex] as TStringValueItem;
+                      Formula := AnsiString(FormulaItem.Value);
+                    end
+                    else
+                    begin
+                      Assert(False);
+                    end;
+                  end;
+                  XBaseShapeFile.UpdFieldStr(
+                    FFieldDefinitions[StartIndex].FieldName, Formula);
+                  Inc(StartIndex);
+                end
+              end
+              else if (BoundaryName.Name = StrMODFLOWEtsLayer) then
+              begin
+                Values := EtsBoundary.EvapotranspirationLayers;
+                if (Values.Count = 0) then
+                begin
+                  Formula := FMissingValueString;
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end;
+                end
+                else
+                begin
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    EtLayerItem := Values.GetItemByStartTime(
+                      TimeList[TimeIndex]) as TEvtLayerItem;
+                    if EtLayerItem = nil then
+                    begin
+                      Formula := FMissingValueString;
+                    end
+                    else
+                    begin
+                      Formula := AnsiString(EtLayerItem.EvapotranspirationLayer);
+                    end;
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end
+                end;
+              end
+              else
+              begin
+                Assert(False);
+              end;
+            end;
+          end;
+        btMfEt:
+          begin
+            EvtBoundary := AScreenObject.ModflowEvtBoundary;
+            if EvtBoundary = nil then
+            begin
+              Formula := FMissingValueString;
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end
+            else
+            begin
+              if BoundaryName.Name = StrMODFLOWEvtRate then
+              begin
+                Values := nil;
+                if EvtBoundary.Values.Count > 0 then
+                begin
+                  Values := EvtBoundary.Values;
+                end
+                else if EvtBoundary.Parameters.Count > 0 then
+                begin
+                  PValues := EvtBoundary.Parameters[0];
+                  Values := PValues.Param;
+                end;
+                Assert(Values.Count > 0);
+                for TimeIndex := 0 to TimeList.Count - 1 do
+                begin
+                  EtTimeItem := Values.GetItemByStartTime(
+                    TimeList[TimeIndex]) as TEvtItem;
+                  if EtTimeItem = nil then
+                  begin
+                    Formula := FMissingValueString;
+                  end
+                  else
+                  begin
+                    Formula := AnsiString(EtTimeItem.EvapotranspirationRate);
+                  end;
+                  XBaseShapeFile.UpdFieldStr(
+                    FFieldDefinitions[StartIndex].FieldName, Formula);
+                  Inc(StartIndex);
+                end;
+              end
+              else if (BoundaryName.Name = StrMODFLOWEvtDepth)
+                or (BoundaryName.Name = StrMODFLOWEvtSurface) then
+              begin
+                Values := EvtBoundary.EvtSurfDepthCollection;
+                Assert(Values.Count > 0);
+                for TimeIndex := 0 to TimeList.Count - 1 do
+                begin
+                  EtsSurfTimeItem := Values.GetItemByStartTime(
+                    TimeList[TimeIndex]) as TEtsSurfDepthItem;
+                  if EtsSurfTimeItem = nil then
+                  begin
+                    Formula := FMissingValueString;
+                  end
+                  else
+                  begin
+                    if BoundaryName.Name = StrMODFLOWEvtDepth then
+                    begin
+                      Formula := AnsiString(EtsSurfTimeItem.EvapotranspirationDepth);
+                    end
+                    else if BoundaryName.Name = StrMODFLOWEvtSurface then
+                    begin
+                      Formula := AnsiString(EtsSurfTimeItem.EvapotranspirationSurface);
+                    end
+                    else
+                    begin
+                      Assert(False);
+                    end;
+                  end;
+                  XBaseShapeFile.UpdFieldStr(
+                    FFieldDefinitions[StartIndex].FieldName, Formula);
+                  Inc(StartIndex);
+                end
+              end
+              else if (BoundaryName.Name = StrMODFLOWEvtLayer) then
+              begin
+                Values := EvtBoundary.EvapotranspirationLayers;
+                if (Values.Count = 0) then
+                begin
+                  Formula := FMissingValueString;
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end;
+                end
+                else
+                begin
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    EtLayerItem := Values.GetItemByStartTime(
+                      TimeList[TimeIndex]) as TEvtLayerItem;
+                    if EtLayerItem = nil then
+                    begin
+                      Formula := FMissingValueString;
+                    end
+                    else
+                    begin
+                      Formula := AnsiString(EtLayerItem.EvapotranspirationLayer);
+                    end;
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end
+                end;
+              end
+              else
+              begin
+                Assert(False);
+              end;
+            end;
+          end;
+        btMfRch:
+          begin
+            RchBoundary := AScreenObject.ModflowRchBoundary;
+            if RchBoundary = nil then
+            begin
+              Formula := FMissingValueString;
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end
+            else
+            begin
+              if BoundaryName.Name = StrMODFLOWRchRate then
+              begin
+                Values := nil;
+                if RchBoundary.Values.Count > 0 then
+                begin
+                  Values := RchBoundary.Values;
+                end
+                else if RchBoundary.Parameters.Count > 0 then
+                begin
+                  PValues := RchBoundary.Parameters[0];
+                  Values := PValues.Param;
+                end;
+                Assert(Values.Count > 0);
+                for TimeIndex := 0 to TimeList.Count - 1 do
+                begin
+                  RchTimeItem := Values.GetItemByStartTime(
+                    TimeList[TimeIndex]) as TRchItem;
+                  if RchTimeItem = nil then
+                  begin
+                    Formula := FMissingValueString;
+                  end
+                  else
+                  begin
+                    Formula := AnsiString(RchTimeItem.RechargeRate);
+                  end;
+                  XBaseShapeFile.UpdFieldStr(
+                    FFieldDefinitions[StartIndex].FieldName, Formula);
+                  Inc(StartIndex);
+                end;
+              end
+              else if (BoundaryName.Name = StrMODFLOWRchLayer) then
+              begin
+                Values := RchBoundary.RechargeLayers;
+                if (Values.Count = 0) then
+                begin
+                  Formula := FMissingValueString;
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end;
+                end
+                else
+                begin
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    RchLayerItem := Values.GetItemByStartTime(
+                      TimeList[TimeIndex]) as TRchLayerItem;
+                    if RchLayerItem = nil then
+                    begin
+                      Formula := FMissingValueString;
+                    end
+                    else
+                    begin
+                      Formula := AnsiString(RchLayerItem.RechargeLayer);
+                    end;
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end
+                end;
+              end
+              else
+              begin
+                Assert(False);
+              end;
+            end;
+          end;
+        btMfSfr:
+          Assert(False);
+        btMfUzf:
+          begin
+            UzfBoundary := AScreenObject.ModflowUzfBoundary;
+            if UzfBoundary = nil then
+            begin
+              Formula := FMissingValueString;
+              for TimeIndex := 0 to TimeList.Count - 1 do
+              begin
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[StartIndex].FieldName, Formula);
+                Inc(StartIndex);
+              end;
+            end
+            else
+            begin
+              if BoundaryName.Name = StrUzfInfiltrationRate then
+              begin
+                Values := UzfBoundary.Values;
+                if (Values.Count = 0) then
+                begin
+                  Formula := FMissingValueString;
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end;
+                end
+                else
+                begin
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    RchTimeItem := Values.GetItemByStartTime(
+                      TimeList[TimeIndex]) as TRchItem;
+                    if RchTimeItem = nil then
+                    begin
+                      Formula := FMissingValueString;
+                    end
+                    else
+                    begin
+                      Formula := AnsiString(RchTimeItem.RechargeRate);
+                    end;
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end;
+                end;
+              end
+              else if BoundaryName.Name = StrUzfEtDemand then
+              begin
+                Values := UzfBoundary.EvapotranspirationDemand;
+                if (Values.Count = 0) then
+                begin
+                  Formula := FMissingValueString;
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end;
+                end
+                else
+                begin
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    EtTimeItem := Values.GetItemByStartTime(
+                      TimeList[TimeIndex]) as TEvtItem;
+                    if EtTimeItem = nil then
+                    begin
+                      Formula := FMissingValueString;
+                    end
+                    else
+                    begin
+                      Formula := AnsiString(EtTimeItem.EvapotranspirationRate);
+                    end;
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end;
+                end;
+              end
+              else if (BoundaryName.Name = StrUzfExtinctionDepth) then
+              begin
+                Values := UzfBoundary.ExtinctionDepth;
+                if (Values.Count = 0) then
+                begin
+                  Formula := FMissingValueString;
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end;
+                end
+                else
+                begin
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    UzfExtinctDepthItem := Values.GetItemByStartTime(
+                      TimeList[TimeIndex]) as TUzfExtinctDepthItem;
+                    if UzfExtinctDepthItem = nil then
+                    begin
+                      Formula := FMissingValueString;
+                    end
+                    else
+                    begin
+                      Formula := AnsiString(UzfExtinctDepthItem.UzfExtinctDepth);
+                    end;
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end
+                end;
+              end
+              else if (BoundaryName.Name = StrUzfWaterContent) then
+              begin
+                Values := UzfBoundary.WaterContent;
+                if (Values.Count = 0) then
+                begin
+                  Formula := FMissingValueString;
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end;
+                end
+                else
+                begin
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    UzfWaterContentItem := Values.GetItemByStartTime(
+                      TimeList[TimeIndex]) as TUzfWaterContentItem;
+                    if UzfWaterContentItem = nil then
+                    begin
+                      Formula := FMissingValueString;
+                    end
+                    else
+                    begin
+                      Formula := AnsiString(UzfWaterContentItem.UzfWaterContent);
+                    end;
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end
+                end;
+              end
+              else
+              begin
+                Assert(False);
+              end;
+            end;
+          end;
+        btMfObs:
+          begin
+            HeadObservations :=
+              AScreenObject.ModflowHeadObservations;
+            if (HeadObservations = nil) then
+            begin
+              Formula := FMissingValueString;
+            end
+            else
+            begin
+              Formula := AnsiString(HeadObservations.ObservationName);
+            end;
+            XBaseShapeFile.UpdFieldStr('OBSNAME', Formula);
+
+            if (HeadObservations = nil) then
+            begin
+              IntValue := FMissingValue;
+            end
+            else
+            begin
+              IntValue := Ord(HeadObservations.Purpose);
+            end;
+            XBaseShapeFile.UpdFieldInt('OBSTYPE', IntValue);
+
+            if FMaxHeadObsTimes > 1 then
+            begin
+              if (HeadObservations = nil) then
+              begin
+                IntValue := FMissingValue;
+              end
+              else
+              begin
+                IntValue := Ord(HeadObservations.MultiObsMethod);
+              end;
+              XBaseShapeFile.UpdFieldInt('ITT', IntValue);
+            end;
+
+            for TimeIndex := 1 to FMaxHeadObsTimes do
+            begin
+              if (HeadObservations = nil) or (TimeIndex > HeadObservations.Values.Count) then
+              begin
+                HobItem := nil;
+              end
+              else
+              begin
+                HobItem := HeadObservations.Values.HobItems[TimeIndex-1];
+              end;
+
+              if HobItem = nil then
+              begin
+                FloatValue := FMissingValue;
+              end
+              else
+              begin
+                FloatValue := HobItem.Time;
+              end;
+              XBaseShapeFile.UpdFieldNum('O_TIME' + IntToStr(TimeIndex),
+                FloatValue);
+
+              if HobItem = nil then
+              begin
+                FloatValue := FMissingValue;
+              end
+              else
+              begin
+                FloatValue := HobItem.Head;
+              end;
+              XBaseShapeFile.UpdFieldNum('O_HEAD' + IntToStr(TimeIndex),
+                FloatValue);
+
+              if HobItem = nil then
+              begin
+                FloatValue := FMissingValue;
+              end
+              else
+              begin
+                FloatValue := HobItem.Statistic;
+              end;
+              XBaseShapeFile.UpdFieldNum('O_STAT' + IntToStr(TimeIndex),
+                FloatValue);
+
+              if HobItem = nil then
+              begin
+                IntValue := FMissingValue;
+              end
+              else
+              begin
+                IntValue := Ord(HobItem.StatFlag);
+              end;
+              XBaseShapeFile.UpdFieldInt('O_SF' + AnsiString(IntToStr(TimeIndex)),
+                IntValue);
+            end;
+
+          end;
+        btMfMnw:
+          Assert(False);
+        btMt3dSsm:
+          Assert(False);
+        btMfHfb:
+          begin
+            HfbBoundary := AScreenObject.ModflowHfbBoundary;
+            if (BoundaryName.Name = StrHydrConductivity) then
+            begin
+              Formula := AnsiString(HfbBoundary.HydraulicConductivityFormula);
+            end
+            else if (BoundaryName.Name = StrThickness) then
+            begin
+              Formula := AnsiString(HfbBoundary.ThicknessFormula);
+            end
+            else if (BoundaryName.Name = StrHydrCharacteristic) then
+            begin
+              Formula := AnsiString('('
+                + HfbBoundary.HydraulicConductivityFormula
+                + ') * ('
+                + HfbBoundary.ThicknessFormula
+                + ')');
+            end
+            else
+            begin
+              Assert(False);
+            end;
+            XBaseShapeFile.UpdFieldStr(
+              FFieldDefinitions[StartIndex].FieldName, Formula);
+            Inc(StartIndex);
+          end;
+        else
+          Assert(False);
+      end;
+    end;
+  end;
+  procedure AssignExtraData;
+  begin
+    StartIndex := ExtraDataSetStart;
+    if cbExportName.Checked then
+    begin
+      Formula := AnsiString(AScreenObject.Name + SectionString);
+      XBaseShapeFile.UpdFieldStr(
+        FFieldDefinitions[StartIndex].FieldName, Formula);
+      if Length(Formula) > 254 then
+      begin
+        frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
+          StrFormulaTruncatedTo, Format(' Object Name; Object = %s',
+          [AScreenObject.Name]));
+        FShowWarning := True;
+      end;
+      Inc(StartIndex);
+    end;
+    if cbExportElevationFormulas.Checked then
+    begin
+      case AScreenObject.ElevationCount of
+        ecZero:
+          begin
+            Formula := AnsiString(FMissingValueString);
+            XBaseShapeFile.UpdFieldStr(
+              FFieldDefinitions[StartIndex].FieldName, Formula);
+            Inc(StartIndex);
+
+            XBaseShapeFile.UpdFieldStr(
+              FFieldDefinitions[StartIndex].FieldName, Formula);
+            Inc(StartIndex);
+
+            XBaseShapeFile.UpdFieldStr(
+              FFieldDefinitions[StartIndex].FieldName, Formula);
+            Inc(StartIndex);
+          end;
+        ecOne:
+          begin
+            Formula := AnsiString(AScreenObject.ElevationFormula);
+            XBaseShapeFile.UpdFieldStr(
+              FFieldDefinitions[StartIndex].FieldName, Formula);
+            if Length(Formula) > 254 then
+            begin
+              frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
+                StrFormulaTruncatedTo, Format(' Z Formula; Object = %s',
+                [AScreenObject.Name]));
+              FShowWarning := True;
+            end;
+            Inc(StartIndex);
+
+            Formula := AnsiString(FMissingValueString);
+            XBaseShapeFile.UpdFieldStr(
+              FFieldDefinitions[StartIndex].FieldName, Formula);
+            Inc(StartIndex);
+
+            XBaseShapeFile.UpdFieldStr(
+              FFieldDefinitions[StartIndex].FieldName, Formula);
+            Inc(StartIndex);
+          end;
+        ecTwo:
+          begin
+            Formula := AnsiString(FMissingValueString);
+            XBaseShapeFile.UpdFieldStr(
+              FFieldDefinitions[StartIndex].FieldName, Formula);
+            Inc(StartIndex);
+
+            Formula := AnsiString(AScreenObject.HigherElevationFormula);
+            XBaseShapeFile.UpdFieldStr(
+              FFieldDefinitions[StartIndex].FieldName, Formula);
+            if Length(Formula) > 254 then
+            begin
+              frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
+                StrFormulaTruncatedTo, Format(' Higher Z Formula; Object = %s',
+                [AScreenObject.Name]));
+              FShowWarning := True;
+            end;
+            Inc(StartIndex);
+
+            Formula := AnsiString(AScreenObject.LowerElevationFormula);
+            XBaseShapeFile.UpdFieldStr(
+              FFieldDefinitions[StartIndex].FieldName, Formula);
+            if Length(Formula) > 254 then
+            begin
+              frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
+                StrFormulaTruncatedTo, Format(' Lower Z Formula; Object = %s',
+                [AScreenObject.Name]));
+              FShowWarning := True;
+            end;
+            Inc(StartIndex);
+          end;
+        else
+          Assert(False);
+      end;
+    end;
+
+  end;
+begin
+  TimeList:= TList<Double>.Create;
+  try
+    TimeList.Capacity := FTimeCount;
+    if FTimeCount > 0 then
+    begin
+      for TimeIndex := 0 to chklstTimes.Items.Count - 1 do
+      begin
+        if chklstTimes.Checked[TimeIndex] then
+        begin
+          FloatValue := StrToFloat(chklstTimes.Items[TimeIndex]);
+          TimeList.Add(FloatValue);
+        end;
+      end;
+    end;
+    ExtraDataSetCount := GetExtraDataSetCount;
+    ExtraDataSetStart := Length(FFieldDefinitions) - ExtraDataSetCount;
+    BoundaryDataSetStart := ExtraDataSetStart - FBoundDataSetCount;
+
+    if BreakObject then
+    begin
+      for SectionIndex := 0 to AScreenObject.SectionCount - 1 do
+      begin
+        XBaseShapeFile.AppendBlank;
+        for FieldIndex := 0 to BoundaryDataSetStart - 1 do
+        begin
+          DataArray := FFieldDefinitions[FieldIndex].DataArray;
+          APosition := AScreenObject.IndexOfDataSet(DataArray);
+          FloatValue := FMissingValue;
+          IntValue := FMissingValue;
+          Formula := AnsiString(FMissingValueString);
+          if APosition < 0 then
+          begin
+            case DataArray.DataType of
+              rdtString:
+                begin
+                  Formula := AnsiString(FMissingValueString);
+                end;
+              rdtDouble:
+                begin
+                  FloatValue := FMissingValue;
+                end;
+              rdtBoolean:
+                begin
+                  IntValue := FMissingValue;
+                end;
+              rdtInteger:
+                begin
+                  IntValue := FMissingValue;
+                end;
+            else
+              Assert(False);
+            end;
+          end
+          else
+          begin
+            Formula := AnsiString(AScreenObject.DataSetFormulas[APosition]);
+            ImportedValues := GetImportedValuesFromFormula(DataArray,
+              AScreenObject, string(Formula));
+            if (ImportedValues <> nil)
+              and (ImportedValues.Count = AScreenObject.SectionCount) then
+            begin
+              case DataArray.DataType of
+                rdtDouble:
+                  begin
+                    FloatValue := ImportedValues.RealValues[SectionIndex];
+                    Formula := AnsiString(FortranFloatToStr(FloatValue));
+                  end;
+                rdtInteger:
+                  begin
+                    IntValue := ImportedValues.IntValues[SectionIndex];
+                    Formula := AnsiString(IntToStr(IntValue));
+                  end;
+                rdtBoolean:
+                  begin
+                    if ImportedValues.BooleanValues[SectionIndex] then
+                    begin
+                      IntValue := 1;
+                      Formula := '1';
+                    end
+                    else
+                    begin
+                      IntValue := 0;
+                      Formula := '0';
+                    end;
+                  end;
+                rdtString:
+                  begin
+                    Formula := AnsiString(ImportedValues.StringValues[SectionIndex]);
+                    if Length(Formula) >= 2 then
+                    begin
+                      if (Formula[1] = '"')
+                        and (Formula[Length(Formula)] = '"')
+                        and (PosEx('"', String(Formula), 2) = Length(Formula)) then
+                      begin
+                        Formula := Copy(Formula, 2, Length(Formula) - 2);
+                      end;
+                    end;
+                  end;
+              end;
+            end
+            else
+            begin
+              case DataArray.DataType of
+                rdtDouble:
+                  begin
+                    if FFieldDefinitions[FieldIndex].FieldType = 'F' then
+                    begin
+                      FloatValue := StrToFloat(String(Formula));
+                    end;
+                  end;
+                rdtInteger:
+                  begin
+                    if FFieldDefinitions[FieldIndex].FieldType = 'N' then
+                    begin
+                      IntValue := StrToInt(String(Formula));
+                    end;
+                  end;
+                rdtBoolean:
+                  begin
+                    if FFieldDefinitions[FieldIndex].FieldType = 'N' then
+                    begin
+                      if SameText(String(Formula), 'True') then
+                      begin
+                        IntValue := 1;
+                      end
+                      else
+                      begin
+                        IntValue := 0;
+                      end;
+                    end;
+                  end;
+                rdtString:
+                  begin
+                    if Length(Formula) >= 2 then
+                    begin
+                      if (Formula[1] = '"')
+                        and (Formula[Length(Formula)] = '"')
+                        and (PosEx('"', String(Formula), 2) = Length(Formula)) then
+                      begin
+                        Formula := Copy(Formula, 2, Length(Formula) - 2);
+                      end;
+                    end;
+                  end;
+              else
+                Assert(False);
+              end;
+            end;
+          end;
+          case FFieldDefinitions[FieldIndex].FieldType of
+            'C':
+              begin
+                XBaseShapeFile.UpdFieldStr(
+                  FFieldDefinitions[FieldIndex].FieldName, Formula);
+                if Length(Formula) > 254 then
+                begin
+                  frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
+                    StrFormulaTruncatedTo, Format(StrDataSet0sOb,
+                    [DataArray.Name, AScreenObject.Name]));
+                  FShowWarning := True;
+                end;
+              end;
+            'F':
+              begin
+                XBaseShapeFile.UpdFieldNum(
+                  FFieldDefinitions[FieldIndex].FieldName, FloatValue);
+              end;
+      //      'L':
+      //        begin
+      //          XBaseShapeFile.UpdFieldInt(
+      //            FFieldDefinitions[FieldIndex].FieldName, IntValue);
+      //        end;
+            'N':
+              begin
+                XBaseShapeFile.UpdFieldInt(
+                  FFieldDefinitions[FieldIndex].FieldName, IntValue);
+              end;
+          else
+            Assert(False);
+          end;
+        end;
+        SectionString := '_' + IntToStr(SectionIndex+1);
+        AssignBoundaryData;
+        AssignExtraData;
+
+        XBaseShapeFile.PostChanges;
+        XBaseShapeFile.GotoNext;
+      end;
+    end
+    else
     begin
       XBaseShapeFile.AppendBlank;
-      for FieldIndex := 0 to Length(FFieldDefinitions) - 1 do
+      for FieldIndex := 0 to BoundaryDataSetStart - 1 do
       begin
         DataArray := FFieldDefinitions[FieldIndex].DataArray;
         APosition := AScreenObject.IndexOfDataSet(DataArray);
         FloatValue := FMissingValue;
         IntValue := FMissingValue;
-        Formula := AnsiString(FMissingValueString);
         if APosition < 0 then
         begin
           case DataArray.DataType of
@@ -1051,96 +3001,49 @@ begin
         else
         begin
           Formula := AnsiString(AScreenObject.DataSetFormulas[APosition]);
-          ImportedValues := GetImportedValuesFromFormula(DataArray,
-            AScreenObject, string(Formula));
-          if (ImportedValues <> nil)
-            and (ImportedValues.Count = AScreenObject.SectionCount) then
-          begin
-            case DataArray.DataType of
-              rdtDouble:
+          case DataArray.DataType of
+            rdtString:
+              begin
+                if Length(Formula) >= 2 then
                 begin
-                  FloatValue := ImportedValues.RealValues[SectionIndex];
-                  Formula := AnsiString(FortranFloatToStr(FloatValue));
+                  if (Formula[1] = '"')
+                    and (Formula[Length(Formula)] = '"')
+                    and (PosEx('"', string(Formula), 2) = Length(Formula)) then
+                  begin
+                    Formula := Copy(Formula, 2, Length(Formula) - 2);
+                  end;
                 end;
-              rdtInteger:
+              end;
+            rdtDouble:
+              begin
+                if FFieldDefinitions[FieldIndex].FieldType = 'F' then
                 begin
-                  IntValue := ImportedValues.IntValues[SectionIndex];
-                  Formula := AnsiString(IntToStr(IntValue));
+                  FloatValue := StrToFloat(string(Formula));
                 end;
-              rdtBoolean:
+              end;
+            rdtBoolean:
+              begin
+                if FFieldDefinitions[FieldIndex].FieldType = 'N' then
                 begin
-                  if ImportedValues.BooleanValues[SectionIndex] then
+                  if SameText(string(Formula), 'True') then
                   begin
                     IntValue := 1;
-                    Formula := '1';
                   end
                   else
                   begin
                     IntValue := 0;
-                    Formula := '0';
                   end;
                 end;
-              rdtString:
+              end;
+            rdtInteger:
+              begin
+                if FFieldDefinitions[FieldIndex].FieldType = 'N' then
                 begin
-                  Formula := AnsiString(ImportedValues.StringValues[SectionIndex]);
-                  if Length(Formula) >= 2 then
-                  begin
-                    if (Formula[1] = '"')
-                      and (Formula[Length(Formula)] = '"')
-                      and (PosEx('"', String(Formula), 2) = Length(Formula)) then
-                    begin
-                      Formula := Copy(Formula, 2, Length(Formula) - 2);
-                    end;
-                  end;
+                  IntValue := StrToInt(string(Formula));
                 end;
-            end;
-          end
+              end;
           else
-          begin
-            case DataArray.DataType of
-              rdtDouble:
-                begin
-                  if FFieldDefinitions[FieldIndex].FieldType = 'F' then
-                  begin
-                    FloatValue := StrToFloat(String(Formula));
-                  end;
-                end;
-              rdtInteger:
-                begin
-                  if FFieldDefinitions[FieldIndex].FieldType = 'N' then
-                  begin
-                    IntValue := StrToInt(String(Formula));
-                  end;
-                end;
-              rdtBoolean:
-                begin
-                  if FFieldDefinitions[FieldIndex].FieldType = 'N' then
-                  begin
-                    if SameText(String(Formula), 'True') then
-                    begin
-                      IntValue := 1;
-                    end
-                    else
-                    begin
-                      IntValue := 0;
-                    end;
-                  end;
-                end;
-              rdtString:
-                begin
-                  if Length(Formula) >= 2 then
-                  begin
-                    if (Formula[1] = '"')
-                      and (Formula[Length(Formula)] = '"')
-                      and (PosEx('"', String(Formula), 2) = Length(Formula)) then
-                    begin
-                      Formula := Copy(Formula, 2, Length(Formula) - 2);
-                    end;
-                  end;
-                end;
-            else
-              Assert(False);
-            end;
+            Assert(False);
           end;
         end;
         case FFieldDefinitions[FieldIndex].FieldType of
@@ -1175,124 +3078,14 @@ begin
           Assert(False);
         end;
       end;
+      SectionString := '';
+      AssignBoundaryData;
+      AssignExtraData;
       XBaseShapeFile.PostChanges;
       XBaseShapeFile.GotoNext;
     end;
-  end
-  else
-  begin
-    XBaseShapeFile.AppendBlank;
-    for FieldIndex := 0 to Length(FFieldDefinitions) - 1 do
-    begin
-      DataArray := FFieldDefinitions[FieldIndex].DataArray;
-      APosition := AScreenObject.IndexOfDataSet(DataArray);
-      FloatValue := FMissingValue;
-      IntValue := FMissingValue;
-      if APosition < 0 then
-      begin
-        case DataArray.DataType of
-          rdtString:
-            begin
-              Formula := AnsiString(FMissingValueString);
-            end;
-          rdtDouble:
-            begin
-              FloatValue := FMissingValue;
-            end;
-          rdtBoolean:
-            begin
-              IntValue := FMissingValue;
-            end;
-          rdtInteger:
-            begin
-              IntValue := FMissingValue;
-            end;
-        else
-          Assert(False);
-        end;
-      end
-      else
-      begin
-        Formula := AnsiString(AScreenObject.DataSetFormulas[APosition]);
-        case DataArray.DataType of
-          rdtString:
-            begin
-              if Length(Formula) >= 2 then
-              begin
-                if (Formula[1] = '"')
-                  and (Formula[Length(Formula)] = '"')
-                  and (PosEx('"', string(Formula), 2) = Length(Formula)) then
-                begin
-                  Formula := Copy(Formula, 2, Length(Formula) - 2);
-                end;
-              end;
-            end;
-          rdtDouble:
-            begin
-              if FFieldDefinitions[FieldIndex].FieldType = 'F' then
-              begin
-                FloatValue := StrToFloat(string(Formula));
-              end;
-            end;
-          rdtBoolean:
-            begin
-              if FFieldDefinitions[FieldIndex].FieldType = 'N' then
-              begin
-                if SameText(string(Formula), 'True') then
-                begin
-                  IntValue := 1;
-                end
-                else
-                begin
-                  IntValue := 0;
-                end;
-              end;
-            end;
-          rdtInteger:
-            begin
-              if FFieldDefinitions[FieldIndex].FieldType = 'N' then
-              begin
-                IntValue := StrToInt(string(Formula));
-              end;
-            end;
-        else
-          Assert(False);
-        end;
-      end;
-      case FFieldDefinitions[FieldIndex].FieldType of
-        'C':
-          begin
-            XBaseShapeFile.UpdFieldStr(
-              FFieldDefinitions[FieldIndex].FieldName, Formula);
-            if Length(Formula) > 254 then
-            begin
-              frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
-                StrFormulaTruncatedTo, Format(StrDataSet0sOb,
-                [DataArray.Name, AScreenObject.Name]));
-              FShowWarning := True;
-            end;
-          end;
-        'F':
-          begin
-            XBaseShapeFile.UpdFieldNum(
-              FFieldDefinitions[FieldIndex].FieldName, FloatValue);
-          end;
-  //      'L':
-  //        begin
-  //          XBaseShapeFile.UpdFieldInt(
-  //            FFieldDefinitions[FieldIndex].FieldName, IntValue);
-  //        end;
-        'N':
-          begin
-            XBaseShapeFile.UpdFieldInt(
-              FFieldDefinitions[FieldIndex].FieldName, IntValue);
-          end;
-      else
-        Assert(False);
-      end;
-    end;
-    XBaseShapeFile.PostChanges;
-    XBaseShapeFile.GotoNext;
+  finally
+    TimeList.Free;
   end;
 end;
 
@@ -1347,6 +3140,9 @@ end;
 procedure TfrmExportShapefileObjects.FormCreate(Sender: TObject);
 begin
   inherited;
+  FBoundaryNames:= TStringList.Create;
+  FBoundaryNames.OwnsObjects := True;
+  FBoundaryNames.Sorted := true;
   vstDataSets.Width := (vstDataSets.Width + vstObjects.Width) div 2;
   CenterLabels;
 
@@ -1355,15 +3151,22 @@ begin
   FSelectedDataSets := TList.Create;
   FSelectedScreenObjects := TList.Create;
 
+  FClassifiationList := TObjectList.Create;
+  FEdgeList := TObjectList.Create;
+
   GetData;
 end;
 
 procedure TfrmExportShapefileObjects.FormDestroy(Sender: TObject);
 begin
   inherited;
+  FEdgeList.Free;
+  FClassifiationList.Free;
   FObjectOwner.Free;
   FSelectedDataSets.Free;
   FSelectedScreenObjects.Free;
+
+  FBoundaryNames.Free;
 end;
 
 procedure TfrmExportShapefileObjects.FormResize(Sender: TObject);
@@ -1375,9 +3178,28 @@ end;
 procedure TfrmExportShapefileObjects.GetData;
 var
   Node: PVirtualNode;
+  StressPeriods: TModflowStressPeriods;
+  StressPeriod: TModflowStressPeriod;
+  TimeIndex: Integer;
 begin
   inherited;
+
+  if frmGoPhast.PhastModel.ModelSelection in
+    [msModflow, msModflowLGR, msModflowNWT] then
+  begin
+    StressPeriods := frmGoPhast.PhastModel.ModflowStressPeriods;
+    chklstTimes.Items.Capacity := StressPeriods.Count;
+    for TimeIndex := 0 to StressPeriods.Count - 1 do
+    begin
+      StressPeriod := StressPeriods[TimeIndex];
+      chklstTimes.Items.Add(FloatToStr(StressPeriod.StartTime));
+    end;
+  end;
+
+  FSelectedBoundaries := [];
   FillVirtualStringTreeWithDataSets(vstDataSets, FObjectOwner, nil);
+  FillVirtStrTreeWithBoundaryConditions(nil, nil, nil, FClassifiationList,
+    FEdgeList, vstDataSets, CanSelectBoundary);
   Node := vstDataSets.GetFirst;
   While Node <> nil do
   begin
@@ -1412,6 +3234,7 @@ begin
   begin
     FSelectedScreenObjects.Delete(Position);
   end;
+  EnableTimesCheckList;
 end;
 
 function TfrmExportShapefileObjects.ShouldCheckBoxBeChecked(
@@ -1420,7 +3243,13 @@ begin
   result := ScreenObject.Visible;
 end;
 
-procedure TfrmExportShapefileObjects.Splitter1Moved(Sender: TObject);
+procedure TfrmExportShapefileObjects.splLeftMoved(Sender: TObject);
+begin
+  inherited;
+  CenterLabels;
+end;
+
+procedure TfrmExportShapefileObjects.splRightMoved(Sender: TObject);
 begin
   inherited;
   CenterLabels;
@@ -1430,10 +3259,16 @@ procedure TfrmExportShapefileObjects.vstDataSetsChecked(
   Sender: TBaseVirtualTree; Node: PVirtualNode);
 var
   Data: PClassificationNodeData;
-  ClassificationObject: TDataSetClassification;
+  DataSetClassificationObject: TDataSetClassification;
   DataArray: TDataArray;
   AllObjectData: PMyRec;
   Index: Integer;
+  BoundaryClassificationObject: TBoundaryClassification;
+  BoundName: TBoundaryName;
+  BoundIndex: Integer;
+  ParentNode: PVirtualNode;
+  ChildNode: PVirtualNode;
+  ChildChecked: Boolean;
 begin
   inherited;
   FSettingChecked := True;
@@ -1442,8 +3277,8 @@ begin
   begin
     if Data.ClassificationObject is TDataSetClassification then
     begin
-      ClassificationObject := TDataSetClassification(Data.ClassificationObject);
-      DataArray := ClassificationObject.DataArray;
+      DataSetClassificationObject := TDataSetClassification(Data.ClassificationObject);
+      DataArray := DataSetClassificationObject.DataArray;
       Assert(DataArray <> nil);
       if Sender.CheckState[Node] in [csCheckedNormal, csCheckedPressed] then
       begin
@@ -1453,9 +3288,49 @@ begin
       begin
         FSelectedDataSets.Remove(DataArray);
       end;
+    end
+    else if Data.ClassificationObject is TBoundaryClassification then
+    begin
+      BoundaryClassificationObject := TBoundaryClassification(Data.ClassificationObject);
+      if Sender.CheckState[Node] in [csCheckedNormal, csCheckedPressed] then
+      begin
+        Include(FSelectedBoundaries, BoundaryClassificationObject.BoundaryType);
+        BoundName := TBoundaryName.Create;
+        BoundName.Name := BoundaryClassificationObject.ClassificationName;
+        BoundName.BoundaryType := BoundaryClassificationObject.BoundaryType;
+        FBoundaryNames.AddObject(BoundName.Name, BoundName);
+      end
+      else if not (Sender.CheckState[Node] in [csCheckedNormal, csCheckedPressed]) then
+      begin
+        BoundIndex := FBoundaryNames.IndexOf(BoundaryClassificationObject.ClassificationName);
+        if BoundIndex >= 0 then
+        begin
+          FBoundaryNames.Delete(BoundIndex);
+        end;
+
+        ChildChecked := False;
+        ParentNode := Node.Parent;
+        ChildNode := Sender.GetFirstChild(ParentNode);
+        while ChildNode <> nil do
+        begin
+          ChildChecked := Sender.CheckState[ChildNode]
+            in [csCheckedNormal, csCheckedPressed];
+          if ChildChecked then
+          begin
+            Break;
+          end;
+          ChildNode := Sender.GetNextSibling(ChildNode);
+        end;
+
+        if not ChildChecked then
+        begin
+          Exclude(FSelectedBoundaries, BoundaryClassificationObject.BoundaryType);
+        end;
+
+      end;
     end;
   end;
-  if CurrentNodeName = Data.ClassificationObject.ClassificationName then
+  if FCurrentNodeName = Data.ClassificationObject.ClassificationName then
   begin
     inherited GetData;
     AllObjectData := vstObjects.GetNodeData(FvstAllObjectsNode);
@@ -1470,6 +3345,7 @@ begin
     SetCheckedNodes(vstObjects);
     FSettingChecked := False;
   end;
+  EnableTimesCheckList;
 end;
 
 procedure TfrmExportShapefileObjects.vstDataSetsChecking(
@@ -1486,8 +3362,8 @@ begin
   Data := Sender.GetNodeData(Node);
   if Data.ClassificationObject <> nil then
   begin
-    CurrentNodeName := Data.ClassificationObject.ClassificationName;
-    if CurrentNodeName <> '' then
+    FCurrentNodeName := Data.ClassificationObject.ClassificationName;
+    if FCurrentNodeName <> '' then
     begin
       FSettingChecked := True;
     end;

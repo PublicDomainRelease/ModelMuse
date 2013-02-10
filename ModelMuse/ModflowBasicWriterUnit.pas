@@ -41,7 +41,7 @@ resourcestring
   StrWritingDataSet3 = '  Writing Data Set 3.';
   StrWritingDataSet4 = '  Writing Data Set 4.';
   StrCheckingStarting = '  Checking starting heads.';
-  StrInitialHeadIsBelo = 'Initial Head is below the bottom of the layer.';
+  StrInitialHeadIsBelo = 'Initial Head is below or equal to the bottom of the layer.';
 
 { TModflowBasicWriter }
 
@@ -73,7 +73,7 @@ begin
           begin
             Head := DataArray.RealData[LayerIndex, RowIndex, ColIndex];
             Bottom := Model.ModflowGrid.CellElevation[ColIndex, RowIndex, LayerIndex+1];
-            if Bottom > Head then
+            if Bottom >= Head then
             begin
               frmErrorsAndWarnings.AddWarning(Model, ErrorString,
                 Format(StrLayer0dRow1,
@@ -105,7 +105,7 @@ begin
   WriteCommentLines(Model.ModflowOptions.Description);
   WriteCommentLine('Basic Package file created on ' + DateToStr(Now) + ' by '
     + Model.ProgramName
-    + ' version ' + ModelVersion + '.');
+    + ' version ' + IModelVersion + '.');
 end;
 
 procedure TModflowBasicWriter.WriteDataSet1;

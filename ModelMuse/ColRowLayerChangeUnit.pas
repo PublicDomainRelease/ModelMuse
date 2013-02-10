@@ -586,7 +586,7 @@ var
   LayerCount: Integer;
   LocalModel: TPhastModel;
 begin
-  if frmGoPhast.Grid <> nil then
+  if (frmGoPhast.Grid <> nil) or (frmGoPhast.SutraMesh <> nil) then
   begin
     LocalModel := frmGoPhast.PhastModel;
     LayerCount := LocalModel.CombinedLayerCount;
@@ -614,6 +614,7 @@ begin
 
     end;
   end;
+
   frmGoPhast.TopDiscretizationChanged := True;
   frmGoPhast.FrontDiscretizationChanged := True;
   frmGoPhast.SideDiscretizationChanged := True;
@@ -706,7 +707,14 @@ function TLayerSelector.GetViewDataSet: TDataArray;
 begin
   if frmGoPhast.Grid = nil then
   begin
-    result := nil;
+    if frmGoPhast.SutraMesh = nil then
+    begin
+      result := nil;
+    end
+    else
+    begin
+      result := frmGoPhast.SutraMesh.TopDataSet
+    end;
   end
   else
   begin

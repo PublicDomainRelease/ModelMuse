@@ -10,18 +10,18 @@ inherited frmImportShapeFile: TfrmImportShapeFile
   Caption = 'Import Shapefile'
   ExplicitWidth = 797
   ExplicitHeight = 580
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlButton: TPanel
     Left = 0
-    Top = 505
-    Width = 789
+    Top = 494
+    Width = 779
     Height = 41
     Align = alBottom
     ParentColor = True
     TabOrder = 1
     DesignSize = (
-      789
+      779
       41)
     object lblNumShapes: TLabel
       Left = 10
@@ -84,21 +84,17 @@ inherited frmImportShapeFile: TfrmImportShapeFile
   object pcImportShape: TPageControl
     Left = 0
     Top = 0
-    Width = 789
-    Height = 505
-    ActivePage = tabData
+    Width = 779
+    Height = 494
+    ActivePage = tabOptions
     Align = alClient
     TabOrder = 0
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
-        781
-        472)
+        771
+        461)
       object lblImportCriterion: TLabel
         Left = 8
         Top = 154
@@ -116,9 +112,9 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       object lblVisibility: TLabel
         Left = 8
         Top = 219
-        Width = 199
+        Width = 187
         Height = 18
-        Caption = 'Imported shapes should be...'
+        Caption = 'Imported shapes should be'
       end
       object lblZ: TLabel
         Left = 3
@@ -194,7 +190,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       object edImportCriterion: TEdit
         Left = 152
         Top = 151
-        Width = 530
+        Width = 505
         Height = 26
         Cursor = crIBeam
         Anchors = [akLeft, akTop, akRight]
@@ -203,18 +199,18 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         OnExit = edImportCriterionExit
       end
       object comboJoinObjects: TJvImageComboBox
-        Left = 152
-        Top = 181
-        Width = 249
+        Left = 145
+        Top = 184
+        Width = 281
         Height = 28
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
-        DroppedWidth = 249
+        DroppedWidth = 281
         ImageHeight = 0
         ImageWidth = 0
         ItemHeight = 22
         ItemIndex = 0
-        TabOrder = 8
+        TabOrder = 9
         OnChange = comboJoinObjectsChange
         Items = <
           item
@@ -229,13 +225,13 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           end>
       end
       object comboVisibility: TJvImageComboBox
-        Left = 216
-        Top = 215
-        Width = 185
+        Left = 213
+        Top = 216
+        Width = 213
         Height = 28
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
-        DroppedWidth = 185
+        DroppedWidth = 213
         ImageHeight = 0
         ImageWidth = 0
         ItemHeight = 22
@@ -272,8 +268,8 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         OnClick = rgEvaluatedAtClick
       end
       object btnImportCriterion: TButton
-        Left = 688
-        Top = 147
+        Left = 663
+        Top = 148
         Width = 90
         Height = 33
         Anchors = [akTop, akRight]
@@ -299,19 +295,19 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       object edZ: TRbwEdit
         Left = 201
         Top = 303
-        Width = 481
+        Width = 456
         Height = 26
         Anchors = [akLeft, akTop, akRight]
         Color = clBtnFace
         Enabled = False
-        TabOrder = 12
+        TabOrder = 13
         Text = '0'
         OnExit = edZExit
       end
       object edHighZ: TRbwEdit
         Left = 201
         Top = 336
-        Width = 481
+        Width = 456
         Height = 26
         Cursor = crIBeam
         Anchors = [akLeft, akTop, akRight]
@@ -324,7 +320,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       object edLowZ: TRbwEdit
         Left = 201
         Top = 369
-        Width = 481
+        Width = 456
         Height = 26
         Cursor = crIBeam
         Anchors = [akLeft, akTop, akRight]
@@ -335,19 +331,19 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         OnExit = edLowZExit
       end
       object btnZ: TButton
-        Left = 688
-        Top = 303
+        Left = 663
+        Top = 301
         Width = 90
         Height = 30
         Anchors = [akTop, akRight]
         Caption = 'Edit F()...'
         Enabled = False
-        TabOrder = 13
+        TabOrder = 12
         OnClick = btnElevFormulaEdit
       end
       object btnHighZ: TButton
-        Left = 688
-        Top = 335
+        Left = 663
+        Top = 334
         Width = 90
         Height = 30
         Anchors = [akTop, akRight]
@@ -357,8 +353,8 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         OnClick = btnElevFormulaEdit
       end
       object btnLowZ: TButton
-        Left = 688
-        Top = 368
+        Left = 663
+        Top = 367
         Width = 90
         Height = 30
         Anchors = [akTop, akRight]
@@ -368,25 +364,21 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         OnClick = btnElevFormulaEdit
       end
       object memoMultipleParts: TMemo
-        Left = 407
+        Left = 432
         Top = 181
-        Width = 371
+        Width = 321
         Height = 114
         Anchors = [akLeft, akTop, akRight]
         ScrollBars = ssVertical
-        TabOrder = 9
+        TabOrder = 8
       end
     end
     object tabData: TTabSheet
       Caption = 'Data'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlData: TPanel
         Left = 0
-        Top = 427
-        Width = 781
+        Top = 416
+        Width = 771
         Height = 45
         Align = alBottom
         ParentColor = True
@@ -422,15 +414,15 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       object pnlDataGrids: TPanel
         Left = 0
         Top = 0
-        Width = 781
-        Height = 427
+        Width = 771
+        Height = 416
         Align = alClient
         TabOrder = 0
         object dgFields: TRbwDataGrid4
           Left = 1
           Top = 42
-          Width = 779
-          Height = 384
+          Width = 769
+          Height = 373
           Align = alClient
           ColCount = 4
           FixedCols = 1
@@ -543,7 +535,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         object pnlDataTop: TPanel
           Left = 1
           Top = 1
-          Width = 779
+          Width = 769
           Height = 41
           Align = alTop
           TabOrder = 0
@@ -574,21 +566,17 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       Caption = 'Features'
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlBoundaryCondition: TPanel
         Left = 0
         Top = 0
-        Width = 781
-        Height = 472
+        Width = 771
+        Height = 461
         Align = alClient
         TabOrder = 0
         object splitterBoundary: TSplitter
           Left = 1
-          Top = 212
-          Width = 779
+          Top = 201
+          Width = 769
           Height = 5
           Cursor = crVSplit
           Align = alBottom
@@ -598,7 +586,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         object pnlBoundaryControls: TPanel
           Left = 1
           Top = 1
-          Width = 779
+          Width = 769
           Height = 41
           Align = alTop
           TabOrder = 0
@@ -646,8 +634,8 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         object rdgBoundaryConditions: TRbwDataGrid4
           Left = 1
           Top = 42
-          Width = 779
-          Height = 170
+          Width = 769
+          Height = 159
           Align = alClient
           ColCount = 4
           Enabled = False
@@ -758,8 +746,8 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         end
         object plBoundary: TJvPageList
           Left = 1
-          Top = 217
-          Width = 779
+          Top = 206
+          Width = 769
           Height = 254
           ActivePage = jvspModflowDRT
           PropagateEnable = False
@@ -767,20 +755,20 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspNone: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 779
+            Width = 769
             Height = 254
             Caption = 'jvspNone'
           end
           object jvspPhastSpecifiedHead: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 779
+            Width = 769
             Height = 254
             Caption = 'jvspPhastSpecifiedHead'
             object lblSolutionType: TLabel
               Left = 16
               Top = 6
-              Width = 108
+              Width = 107
               Height = 18
               Caption = 'Type of solution'
             end
@@ -802,7 +790,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspPhastLeaky: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 779
+            Width = 769
             Height = 254
             Caption = 'jvspPhastLeaky'
             object lblLeakyHydraulicConductivity: TLabel
@@ -839,7 +827,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspPhastRiver: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 779
+            Width = 769
             Height = 254
             Caption = 'jvspPhastRiver'
             object lblRiverDescripton: TLabel
@@ -922,7 +910,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspPhastWell: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 779
+            Width = 769
             Height = 254
             Caption = 'jvspPhastWell'
             object pnlPhastWell: TPanel
@@ -1034,7 +1022,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
             object dgWellElevations: TRbwDataGrid4
               Left = 369
               Top = 0
-              Width = 410
+              Width = 400
               Height = 254
               Align = alClient
               ColCount = 3
@@ -1139,7 +1127,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspConductanceInterp: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 779
+            Width = 769
             Height = 254
             Caption = 'jvspConductanceInterp'
             object lblConductanceInterpretation: TLabel
@@ -1167,23 +1155,19 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspModflowSFR: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 779
+            Width = 769
             Height = 254
             Caption = 'jvspModflowSFR'
             object pcSFR: TPageControl
               Left = 0
               Top = 0
-              Width = 779
+              Width = 769
               Height = 254
               ActivePage = tabSfrBasic
               Align = alClient
               TabOrder = 0
               object tabSfrBasic: TTabSheet
                 Caption = 'Basic'
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblSfrSegmentNumber: TLabel
                   Left = 13
                   Top = 9
@@ -1273,10 +1257,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               object tabSfrUnsaturated: TTabSheet
                 Caption = 'Unsaturated'
                 ImageIndex = 1
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblSaturatedVolumetricWater: TLabel
                   Left = 3
                   Top = 6
@@ -1339,7 +1319,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspModflowLAK: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 779
+            Width = 769
             Height = 254
             Caption = 'jvspModflowLAK'
             object LblLakeID: TLabel
@@ -1402,7 +1382,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspModflowDRT: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 779
+            Width = 769
             Height = 254
             Caption = 'jvspModflowDRT'
             object lblConductanceInterpretationDRT: TLabel
@@ -1459,17 +1439,11 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               object tabDrtNone: TTabSheet
                 Caption = 'tabDrtNone'
                 TabVisible = False
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
               end
               object tabDrtLocation: TTabSheet
                 Caption = 'tabDrtLocation'
                 ImageIndex = 2
                 TabVisible = False
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblDrtX: TLabel
                   Left = 3
                   Top = 7
@@ -1541,9 +1515,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 Caption = 'tabDrtCell'
                 ImageIndex = 3
                 TabVisible = False
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblDrtCol: TLabel
                   Left = 3
                   Top = 7
@@ -1622,7 +1593,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspModflowHFB: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 779
+            Width = 769
             Height = 254
             Caption = 'jvspModflowHFB'
             object lblHydraulicConductivity: TLabel
@@ -1676,7 +1647,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspModflowHOB: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 779
+            Width = 769
             Height = 254
             Caption = 'jvspModflowHOB'
             object lblHeadObservationNames: TLabel
@@ -1689,14 +1660,14 @@ inherited frmImportShapeFile: TfrmImportShapeFile
             object lblHeadObsType: TLabel
               Left = 13
               Top = 73
-              Width = 70
+              Width = 69
               Height = 18
               Caption = 'Treatment'
             end
             object lblIgnoreValues: TLabel
               Left = 13
               Top = 105
-              Width = 113
+              Width = 112
               Height = 18
               Caption = 'Values to ignore'
             end
@@ -1755,13 +1726,13 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspModflowMNW2: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 779
+            Width = 769
             Height = 254
             Caption = 'jvspModflowMNW2'
             object pcMnw2: TPageControl
               Left = 0
               Top = 0
-              Width = 779
+              Width = 769
               Height = 254
               ActivePage = tabBasic
               Align = alClient
@@ -1770,10 +1741,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 HelpType = htKeyword
                 HelpKeyword = 'MNW2_Basic_Tab'
                 Caption = 'Basic'
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblWellId: TLabel
                   Left = 3
                   Top = 6
@@ -1942,10 +1909,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 HelpKeyword = 'MNW2_Loss_Controls_Tab'
                 Caption = 'Loss Controls'
                 ImageIndex = 1
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblWellRadius: TLabel
                   Left = 3
                   Top = 6
@@ -2050,10 +2013,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 HelpKeyword = 'MNW2_Discharge_Adjustment_Tab'
                 Caption = 'Discharge Adjustment'
                 ImageIndex = 2
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblReferenceHead: TLabel
                   Left = 8
                   Top = 6
@@ -2119,10 +2078,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     object tabCoordinateConversion: TTabSheet
       Caption = 'Coordinate Conversion'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object imageUtmZones: TImage
         Left = 8
         Top = 96

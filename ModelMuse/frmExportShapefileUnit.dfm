@@ -2,296 +2,321 @@ inherited frmExportShapefile: TfrmExportShapefile
   HelpType = htKeyword
   HelpKeyword = 'Export_Shapefile_Dialog_Box'
   Caption = 'Export Grid Data to Shapefile'
-  ClientHeight = 539
-  ClientWidth = 456
-  ExplicitWidth = 474
-  ExplicitHeight = 584
-  PixelsPerInch = 120
+  ClientHeight = 555
+  ClientWidth = 449
+  ExplicitWidth = 467
+  ExplicitHeight = 600
+  PixelsPerInch = 96
   TextHeight = 18
-  object lblExportItems: TLabel
-    Left = 8
-    Top = 8
-    Width = 101
-    Height = 18
-    Caption = '&Items to export'
-    FocusControl = tvExportItems
-  end
-  object lblTime: TLabel
-    Left = 269
-    Top = 8
-    Width = 106
-    Height = 18
-    Anchors = [akTop, akRight]
-    Caption = '&Times to export'
-    FocusControl = rdgTime
-  end
-  object lblTimeCount: TLabel
-    Left = 269
-    Top = 158
-    Width = 178
-    Height = 18
-    Anchors = [akTop, akRight]
-    Caption = '&Number of times to export'
-    FocusControl = seTimeCount
-  end
-  object lblElements: TLabel
-    Left = 8
-    Top = 279
-    Width = 170
-    Height = 18
-    Caption = '&Element Shapefile name'
-    FocusControl = jfeElements
-  end
-  object lblNodes: TLabel
-    Left = 8
-    Top = 335
-    Width = 151
-    Height = 18
-    Caption = '&Node Shapefile name'
-    FocusControl = jfeNodes
-  end
-  object lblHorizontalFlowBarrier: TLabel
-    Left = 8
-    Top = 445
-    Width = 263
-    Height = 18
-    Caption = '&Horizontal flow barrier Shapefile name'
-    FocusControl = jfeHorizontalFlowBarrier
-  end
-  object tvExportItems: TTreeView
-    Left = 8
-    Top = 31
-    Width = 255
-    Height = 174
-    Anchors = [akLeft, akTop, akRight]
-    Indent = 20
-    ReadOnly = True
-    StateImages = ilCheckImages
-    TabOrder = 0
-    OnMouseDown = tvExportItemsMouseDown
-  end
-  object rdgTime: TRbwDataGrid4
-    Left = 269
-    Top = 32
-    Width = 179
-    Height = 120
-    Anchors = [akTop, akRight]
-    Color = clBtnFace
-    ColCount = 1
-    FixedCols = 0
-    RowCount = 2
-    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
+  object pnlBottom: TPanel
+    Left = 0
+    Top = 223
+    Width = 449
+    Height = 332
+    Align = alBottom
+    BevelOuter = bvNone
     TabOrder = 1
-    OnSetEditText = rdgTimeSetEditText
-    ExtendedAutoDistributeText = False
-    AutoMultiEdit = True
-    AutoDistributeText = True
-    AutoIncreaseColCount = False
-    AutoIncreaseRowCount = True
-    SelectedRowOrColumnColor = clAqua
-    UnselectableColor = clBtnFace
-    ColorRangeSelection = False
-    ColorSelectedRow = True
-    Columns = <
-      item
-        AutoAdjustRowHeights = False
-        ButtonCaption = '...'
-        ButtonFont.Charset = DEFAULT_CHARSET
-        ButtonFont.Color = clWindowText
-        ButtonFont.Height = -11
-        ButtonFont.Name = 'Tahoma'
-        ButtonFont.Style = []
-        ButtonUsed = False
-        ButtonWidth = 20
-        CheckMax = False
-        CheckMin = False
-        ComboUsed = True
-        Format = rcf4Real
-        LimitToList = False
-        MaxLength = 0
-        ParentButtonFont = False
-        WordWrapCaptions = False
-        WordWrapCells = False
-        CaseSensitivePicklist = False
-        AutoAdjustColWidths = True
-      end>
+    DesignSize = (
+      449
+      332)
+    object lblElements: TLabel
+      Left = 8
+      Top = 68
+      Width = 170
+      Height = 18
+      Caption = '&Element Shapefile name'
+      FocusControl = jfeElements
+    end
+    object lblHorizontalFlowBarrier: TLabel
+      Left = 8
+      Top = 235
+      Width = 263
+      Height = 18
+      Caption = '&Horizontal flow barrier Shapefile name'
+      FocusControl = jfeHorizontalFlowBarrier
+    end
+    object lblNodes: TLabel
+      Left = 8
+      Top = 124
+      Width = 151
+      Height = 18
+      Caption = '&Node Shapefile name'
+      FocusControl = jfeNodes
+    end
+    object jfeElements: TJvFilenameEdit
+      Left = 8
+      Top = 92
+      Width = 433
+      Height = 26
+      DialogKind = dkSave
+      DefaultExt = '.shp'
+      Filter = 'Shapefiles (*.shp)|*.shp'
+      DialogOptions = [ofOverwritePrompt, ofHideReadOnly]
+      Enabled = False
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        04000000000000010000130B0000130B00001000000000000000000000000000
+        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333330070
+        7700333333337777777733333333008088003333333377F73377333333330088
+        88003333333377FFFF7733333333000000003FFFFFFF77777777000000000000
+        000077777777777777770FFFFFFF0FFFFFF07F3333337F3333370FFFFFFF0FFF
+        FFF07F3FF3FF7FFFFFF70F00F0080CCC9CC07F773773777777770FFFFFFFF039
+        99337F3FFFF3F7F777F30F0000F0F09999937F7777373777777F0FFFFFFFF999
+        99997F3FF3FFF77777770F00F000003999337F773777773777F30FFFF0FF0339
+        99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
+        93337FFFF7737777733300000033333333337777773333333333}
+      ImageKind = ikCustom
+      NumGlyphs = 2
+      Anchors = [akLeft, akTop, akRight]
+      TabOrder = 1
+      Text = 'jfeElements'
+    end
+    object jfeHorizontalFlowBarrier: TJvFilenameEdit
+      Left = 8
+      Top = 259
+      Width = 433
+      Height = 26
+      DialogKind = dkSave
+      DefaultExt = '.shp'
+      Filter = 'Shapefiles (*.shp)|*.shp'
+      DialogOptions = [ofOverwritePrompt, ofHideReadOnly]
+      Enabled = False
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        04000000000000010000130B0000130B00001000000000000000000000000000
+        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333330070
+        7700333333337777777733333333008088003333333377F73377333333330088
+        88003333333377FFFF7733333333000000003FFFFFFF77777777000000000000
+        000077777777777777770FFFFFFF0FFFFFF07F3333337F3333370FFFFFFF0FFF
+        FFF07F3FF3FF7FFFFFF70F00F0080CCC9CC07F773773777777770FFFFFFFF039
+        99337F3FFFF3F7F777F30F0000F0F09999937F7777373777777F0FFFFFFFF999
+        99997F3FF3FFF77777770F00F000003999337F773777773777F30FFFF0FF0339
+        99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
+        93337FFFF7737777733300000033333333337777773333333333}
+      ImageKind = ikCustom
+      NumGlyphs = 2
+      Anchors = [akLeft, akTop, akRight]
+      TabOrder = 4
+      Text = 'JvFilenameEdit1'
+    end
+    object jfeNodes: TJvFilenameEdit
+      Left = 8
+      Top = 148
+      Width = 433
+      Height = 26
+      DialogKind = dkSave
+      DefaultExt = '.shp'
+      Filter = 'Shapefiles (*.shp)|*.shp'
+      DialogOptions = [ofOverwritePrompt, ofHideReadOnly]
+      Enabled = False
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        04000000000000010000130B0000130B00001000000000000000000000000000
+        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333330070
+        7700333333337777777733333333008088003333333377F73377333333330088
+        88003333333377FFFF7733333333000000003FFFFFFF77777777000000000000
+        000077777777777777770FFFFFFF0FFFFFF07F3333337F3333370FFFFFFF0FFF
+        FFF07F3FF3FF7FFFFFF70F00F0080CCC9CC07F773773777777770FFFFFFFF039
+        99337F3FFFF3F7F777F30F0000F0F09999937F7777373777777F0FFFFFFFF999
+        99997F3FF3FFF77777770F00F000003999337F773777773777F30FFFF0FF0339
+        99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
+        93337FFFF7737777733300000033333333337777773333333333}
+      ImageKind = ikCustom
+      NumGlyphs = 2
+      Anchors = [akLeft, akTop, akRight]
+      TabOrder = 2
+      Text = 'JvFilenameEdit1'
+    end
+    object rgExportObjectType: TRadioGroup
+      Left = 8
+      Top = 0
+      Width = 433
+      Height = 62
+      Anchors = [akLeft, akTop, akRight]
+      Caption = 'E&xport data sets as...'
+      Columns = 2
+      ItemIndex = 0
+      Items.Strings = (
+        '2D polygons'
+        '2D points'
+        '3D polyhedrons'
+        '3D points')
+      TabOrder = 0
+    end
+    object rgHfbDimensions: TRadioGroup
+      Left = 8
+      Top = 180
+      Width = 433
+      Height = 49
+      Caption = 'Export horizontal flow barriers as...'
+      Columns = 2
+      ItemIndex = 0
+      Items.Strings = (
+        '2D polylines'
+        '3D triangle strips')
+      TabOrder = 3
+    end
+    object btnCancel: TBitBtn
+      Left = 359
+      Top = 291
+      Width = 82
+      Height = 34
+      Anchors = [akTop, akRight]
+      Kind = bkCancel
+      NumGlyphs = 2
+      TabOrder = 7
+    end
+    object btnHelp: TBitBtn
+      Left = 183
+      Top = 291
+      Width = 82
+      Height = 34
+      Anchors = [akTop, akRight]
+      Kind = bkHelp
+      NumGlyphs = 2
+      TabOrder = 5
+      OnClick = btnHelpClick
+    end
+    object btnOK: TBitBtn
+      Left = 271
+      Top = 291
+      Width = 82
+      Height = 34
+      Anchors = [akTop, akRight]
+      Kind = bkOK
+      NumGlyphs = 2
+      TabOrder = 6
+      OnClick = btnOKClick
+    end
+    object comboModel: TComboBox
+      Left = 8
+      Top = 293
+      Width = 169
+      Height = 26
+      Style = csDropDownList
+      Anchors = [akLeft, akTop, akRight]
+      TabOrder = 8
+    end
   end
-  object seTimeCount: TJvSpinEdit
-    Left = 269
-    Top = 181
-    Width = 179
-    Height = 26
-    CheckMaxValue = False
-    ButtonKind = bkClassic
-    MinValue = 1.000000000000000000
-    Value = 1.000000000000000000
-    Enabled = False
-    Anchors = [akTop, akRight]
-    TabOrder = 2
-    OnChange = seTimeCountChange
-  end
-  object jfeElements: TJvFilenameEdit
-    Left = 8
-    Top = 303
-    Width = 440
-    Height = 26
-    DialogKind = dkSave
-    DefaultExt = '.shp'
-    Filter = 'Shapefiles (*.shp)|*.shp'
-    DialogOptions = [ofOverwritePrompt, ofHideReadOnly]
-    Enabled = False
-    Glyph.Data = {
-      76010000424D7601000000000000760000002800000020000000100000000100
-      04000000000000010000130B0000130B00001000000000000000000000000000
-      800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
-      FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333330070
-      7700333333337777777733333333008088003333333377F73377333333330088
-      88003333333377FFFF7733333333000000003FFFFFFF77777777000000000000
-      000077777777777777770FFFFFFF0FFFFFF07F3333337F3333370FFFFFFF0FFF
-      FFF07F3FF3FF7FFFFFF70F00F0080CCC9CC07F773773777777770FFFFFFFF039
-      99337F3FFFF3F7F777F30F0000F0F09999937F7777373777777F0FFFFFFFF999
-      99997F3FF3FFF77777770F00F000003999337F773777773777F30FFFF0FF0339
-      99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
-      93337FFFF7737777733300000033333333337777773333333333}
-    ImageKind = ikCustom
-    NumGlyphs = 2
-    Anchors = [akLeft, akTop, akRight]
-    TabOrder = 4
-    Text = 'jfeElements'
-  end
-  object jfeNodes: TJvFilenameEdit
-    Left = 8
-    Top = 358
-    Width = 440
-    Height = 26
-    DialogKind = dkSave
-    DefaultExt = '.shp'
-    Filter = 'Shapefiles (*.shp)|*.shp'
-    DialogOptions = [ofOverwritePrompt, ofHideReadOnly]
-    Enabled = False
-    Glyph.Data = {
-      76010000424D7601000000000000760000002800000020000000100000000100
-      04000000000000010000130B0000130B00001000000000000000000000000000
-      800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
-      FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333330070
-      7700333333337777777733333333008088003333333377F73377333333330088
-      88003333333377FFFF7733333333000000003FFFFFFF77777777000000000000
-      000077777777777777770FFFFFFF0FFFFFF07F3333337F3333370FFFFFFF0FFF
-      FFF07F3FF3FF7FFFFFF70F00F0080CCC9CC07F773773777777770FFFFFFFF039
-      99337F3FFFF3F7F777F30F0000F0F09999937F7777373777777F0FFFFFFFF999
-      99997F3FF3FFF77777770F00F000003999337F773777773777F30FFFF0FF0339
-      99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
-      93337FFFF7737777733300000033333333337777773333333333}
-    ImageKind = ikCustom
-    NumGlyphs = 2
-    Anchors = [akLeft, akTop, akRight]
-    TabOrder = 5
-    Text = 'JvFilenameEdit1'
-  end
-  object jfeHorizontalFlowBarrier: TJvFilenameEdit
-    Left = 8
-    Top = 469
-    Width = 440
-    Height = 26
-    DialogKind = dkSave
-    DefaultExt = '.shp'
-    Filter = 'Shapefiles (*.shp)|*.shp'
-    DialogOptions = [ofOverwritePrompt, ofHideReadOnly]
-    Enabled = False
-    Glyph.Data = {
-      76010000424D7601000000000000760000002800000020000000100000000100
-      04000000000000010000130B0000130B00001000000000000000000000000000
-      800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
-      FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333330070
-      7700333333337777777733333333008088003333333377F73377333333330088
-      88003333333377FFFF7733333333000000003FFFFFFF77777777000000000000
-      000077777777777777770FFFFFFF0FFFFFF07F3333337F3333370FFFFFFF0FFF
-      FFF07F3FF3FF7FFFFFF70F00F0080CCC9CC07F773773777777770FFFFFFFF039
-      99337F3FFFF3F7F777F30F0000F0F09999937F7777373777777F0FFFFFFFF999
-      99997F3FF3FFF77777770F00F000003999337F773777773777F30FFFF0FF0339
-      99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
-      93337FFFF7737777733300000033333333337777773333333333}
-    ImageKind = ikCustom
-    NumGlyphs = 2
-    Anchors = [akLeft, akTop, akRight]
-    TabOrder = 7
-    Text = 'JvFilenameEdit1'
-  end
-  object btnCancel: TBitBtn
-    Left = 366
-    Top = 499
-    Width = 82
-    Height = 34
-    Anchors = [akTop, akRight]
-    Kind = bkCancel
-    NumGlyphs = 2
-    TabOrder = 10
-  end
-  object btnOK: TBitBtn
-    Left = 278
-    Top = 499
-    Width = 82
-    Height = 34
-    Anchors = [akTop, akRight]
-    Kind = bkOK
-    NumGlyphs = 2
-    TabOrder = 9
-    OnClick = btnOKClick
-  end
-  object btnHelp: TBitBtn
-    Left = 190
-    Top = 499
-    Width = 82
-    Height = 34
-    Anchors = [akTop, akRight]
-    Kind = bkHelp
-    NumGlyphs = 2
-    TabOrder = 8
-    OnClick = btnHelpClick
-  end
-  object rgExportObjectType: TRadioGroup
-    Left = 8
-    Top = 211
-    Width = 440
-    Height = 62
-    Anchors = [akLeft, akTop, akRight]
-    Caption = 'E&xport data sets as...'
-    Columns = 2
-    ItemIndex = 0
-    Items.Strings = (
-      '2D polygons'
-      '2D points'
-      '3D polyhedrons'
-      '3D points')
-    TabOrder = 3
-  end
-  object rgHfbDimensions: TRadioGroup
-    Left = 8
-    Top = 390
-    Width = 433
-    Height = 49
-    Caption = 'Export horizontal flow barriers as...'
-    Columns = 2
-    ItemIndex = 0
-    Items.Strings = (
-      '2D polylines'
-      '3D triangle strips')
-    TabOrder = 6
-  end
-  object comboModel: TComboBox
-    Left = 8
-    Top = 503
-    Width = 170
-    Height = 26
-    Style = csDropDownList
-    Anchors = [akLeft, akTop, akRight]
-    TabOrder = 11
+  object pnlTop: TPanel
+    Left = 0
+    Top = 0
+    Width = 449
+    Height = 223
+    Align = alClient
+    BevelOuter = bvNone
+    TabOrder = 0
+    DesignSize = (
+      449
+      223)
+    object lblExportItems: TLabel
+      Left = 8
+      Top = 8
+      Width = 101
+      Height = 18
+      Caption = '&Items to export'
+      FocusControl = tvExportItems
+    end
+    object lblTime: TLabel
+      Left = 244
+      Top = 8
+      Width = 106
+      Height = 18
+      Anchors = [akTop, akRight]
+      Caption = '&Times to export'
+      FocusControl = rdgTime
+      ExplicitLeft = 254
+    end
+    object lblTimeCount: TLabel
+      Left = 244
+      Top = 157
+      Width = 178
+      Height = 18
+      Anchors = [akRight, akBottom]
+      Caption = '&Number of times to export'
+      FocusControl = seTimeCount
+    end
+    object rdgTime: TRbwDataGrid4
+      Left = 244
+      Top = 32
+      Width = 197
+      Height = 120
+      Anchors = [akTop, akRight, akBottom]
+      Color = clBtnFace
+      ColCount = 1
+      FixedCols = 0
+      RowCount = 2
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
+      TabOrder = 1
+      OnSetEditText = rdgTimeSetEditText
+      ExtendedAutoDistributeText = False
+      AutoMultiEdit = True
+      AutoDistributeText = True
+      AutoIncreaseColCount = False
+      AutoIncreaseRowCount = True
+      SelectedRowOrColumnColor = clAqua
+      UnselectableColor = clBtnFace
+      ColorRangeSelection = False
+      ColorSelectedRow = True
+      Columns = <
+        item
+          AutoAdjustRowHeights = False
+          ButtonCaption = '...'
+          ButtonFont.Charset = DEFAULT_CHARSET
+          ButtonFont.Color = clWindowText
+          ButtonFont.Height = -11
+          ButtonFont.Name = 'Tahoma'
+          ButtonFont.Style = []
+          ButtonUsed = False
+          ButtonWidth = 20
+          CheckMax = False
+          CheckMin = False
+          ComboUsed = True
+          Format = rcf4Real
+          LimitToList = False
+          MaxLength = 0
+          ParentButtonFont = False
+          WordWrapCaptions = False
+          WordWrapCells = False
+          CaseSensitivePicklist = False
+          AutoAdjustColWidths = True
+        end>
+    end
+    object seTimeCount: TJvSpinEdit
+      Left = 244
+      Top = 181
+      Width = 197
+      Height = 26
+      CheckMaxValue = False
+      ButtonKind = bkClassic
+      MinValue = 1.000000000000000000
+      Value = 1.000000000000000000
+      Enabled = False
+      Anchors = [akRight, akBottom]
+      TabOrder = 2
+      OnChange = seTimeCountChange
+    end
+    object tvExportItems: TTreeView
+      Left = 8
+      Top = 31
+      Width = 230
+      Height = 180
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      Indent = 20
+      ReadOnly = True
+      StateImages = ilCheckImages
+      TabOrder = 0
+      OnMouseDown = tvExportItemsMouseDown
+    end
   end
   object ilCheckImages: TImageList
     Left = 136
     Top = 96
     Bitmap = {
-      494C010104000500080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000500140010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

@@ -105,6 +105,10 @@ type
     procedure SetChangeDisabledColor(const Value: boolean);
     procedure SetDisabledColor(const Value: TColor);
     procedure SetEnabledColor(Value: TColor);
+    function GetRealValue: Double;
+    procedure SetRealValue(const Value: Double);
+    function GetIntegerValue: Integer;
+    procedure SetIntegerValue(const Value: Integer);
   protected
     { Protected declarations }
  {   function GetText: TCaption;
@@ -207,7 +211,8 @@ type
       representation of Text is still outside the appropriate range, Text will
       be changed to Max or Min, whichever is closer and raises an
       OnExceededBounds event.}
-
+    property RealValue: Double read GetRealValue write SetRealValue;
+    property IntegerValue: Integer read GetIntegerValue write SetIntegerValue;
   published
     { Published declarations }
     property DataType: TDataType read FDataType write SetDataType default dtString;
@@ -300,6 +305,7 @@ type
     {EnabledColor is the color that the control will be changed to if
      ChangeDisabledColor is true and the control becomes enabled.  By default,
      EnabledColor is clWindow.}
+
   end;
 
   TRbwDataEntry = class(TArgusDataEntry);
@@ -494,6 +500,12 @@ begin
            + 'TArgusDataEntry.Min');}
     end;
   end;
+end;
+
+procedure TArgusDataEntry.SetRealValue(const Value: Double);
+begin
+  Assert(DataType = dtReal);
+  Text := FloatToStr(Value);
 end;
 
 procedure TArgusDataEntry.SetCheckMax(Value : boolean);
@@ -1003,6 +1015,18 @@ begin
   end;
 end;
 
+function TArgusDataEntry.GetIntegerValue: Integer;
+begin
+  Assert(DataType = dtInteger);
+  result := StrToInt(Text)
+end;
+
+function TArgusDataEntry.GetRealValue: Double;
+begin
+  Assert(DataType = dtReal);
+  result := StrToFloat(Text)
+end;
+
 function TArgusDataEntry.GetText: TCaption;
 var
   Len: Integer;
@@ -1057,6 +1081,12 @@ begin
     FEnabledColor := Value;
     ChangeColor
   end;
+end;
+
+procedure TArgusDataEntry.SetIntegerValue(const Value: Integer);
+begin
+  Assert(DataType = dtInteger);
+  Text := IntToStr(Value);
 end;
 
 procedure TArgusDataEntry.ChangeColor;

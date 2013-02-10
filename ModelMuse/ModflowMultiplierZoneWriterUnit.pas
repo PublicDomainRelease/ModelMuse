@@ -491,7 +491,7 @@ procedure TModflowZoneWriter.WriteDataSet0;
 begin
   WriteCommentLine('Zone (ZONE) File created on '
     + DateToStr(Now) + ' by ' + Model.ProgramName
-    + ' version ' + ModelVersion + '.');
+    + ' version ' + IModelVersion + '.');
 end;
 
 procedure TModflowZoneWriter.WriteDataSet1;
@@ -636,7 +636,7 @@ procedure TModflowMultiplierWriter.WriteDataSet0;
 begin
   WriteCommentLine('Multiplier (MULT) File created on '
     + DateToStr(Now) + ' by ' + Model.ProgramName
-    + ' version ' + ModelVersion + '.');
+    + ' version ' + IModelVersion + '.');
 end;
 
 procedure TModflowMultiplierWriter.WriteDataSet1;

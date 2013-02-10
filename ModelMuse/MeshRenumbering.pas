@@ -17,15 +17,15 @@ type
 
   IElement = interface;
   INode = interface(IInterface)
-    function GetElementCount: integer;
-    function GetElement(Index: Integer): IElement;
+    function GetActiveElementCount: integer;
+    function GetActiveElement(Index: Integer): IElement;
     function GetNodeNumber: Integer;
     procedure SetNodeNumber(Value: Integer);
     function GetLocation: TPoint2D;
     procedure SetLocation(const Value: TPoint2D);
     function GetNodeType: TNodeType;
-    property ElementCount: Integer read GetElementCount;
-    property Elements[Index: Integer]: IElement read GetElement;
+    property ActiveElementCount: Integer read GetActiveElementCount;
+    property ActiveElements[Index: Integer]: IElement read GetActiveElement;
     property NodeNumber: Integer read GetNodeNumber write SetNodeNumber;
     property Location: TPoint2D read GetLocation write SetLocation;
     property NodeType: TNodeType read GetNodeType;
@@ -33,25 +33,25 @@ type
   TINodeList = TList<INode>;
 
   IElement = interface(IInterface)
-    function GetNode(Index: Integer): INode;
-    function GetNodeCount: integer;
+    function GetActiveNode(Index: Integer): INode;
+    function GetActiveNodeCount: integer;
     function GetElementNumber: Integer;
     procedure SetElementNumber(Value: Integer);
-    property NodeCount: Integer read GetNodeCount;
-    property Nodes[Index: Integer]: INode read GetNode;
+    property NodeCount: Integer read GetActiveNodeCount;
+    property Nodes[Index: Integer]: INode read GetActiveNode;
     property ElementNumber: Integer read GetElementNumber write SetElementNumber;
   end;
   TIElementList = TList<IElement>;
 
   IMesh = interface(IInterface)
-    function GetNode(Index: Integer): INode;
-    function GetNodeCount: integer;
-    function GetElementCount: integer;
-    function GetElement(Index: Integer): IElement;
-    property NodeCount: Integer read GetNodeCount;
-    property Nodes[Index: Integer]: INode read GetNode;
-    property ElementCount: Integer read GetElementCount;
-    property Elements[Index: Integer]: IElement read GetElement;
+    function GetActiveNode(Index: Integer): INode;
+    function GetActiveNodeCount: integer;
+    function GetActiveElementCount: integer;
+    function GetActiveElement(Index: Integer): IElement;
+    property NodeCount: Integer read GetActiveNodeCount;
+    property Nodes[Index: Integer]: INode read GetActiveNode;
+    property ElementCount: Integer read GetActiveElementCount;
+    property Elements[Index: Integer]: IElement read GetActiveElement;
   end;
 
 procedure RenumberMesh(Mesh: IMesh);
@@ -340,10 +340,14 @@ var
   ElementHandler: TElementHandler;
   DeleteIndex: Integer;
 begin
+  if Mesh.NodeCount = 0 then
+  begin
+    Exit;
+  end;
   NodeHandlers := TNodeHandlerObjectList.Create;
   try
     // Create node TNodeHandler's
-    Assert(Mesh.NodeCount > 0);
+//    Assert(Mesh.NodeCount > 0);
     for NodeIndex := 0 to Mesh.NodeCount - 1 do
     begin
       Node := Mesh.Nodes[NodeIndex];
@@ -536,9 +540,9 @@ var
   NodeIndex: Integer;
   Handler: TNodeHandler;
 begin
-  for ElementIndex := 0 to FNode.ElementCount - 1 do
+  for ElementIndex := 0 to FNode.ActiveElementCount - 1 do
   begin
-    Element := FNode.Elements[ElementIndex];
+    Element := FNode.ActiveElements[ElementIndex];
     for NodeIndex := 0 to Element.NodeCount - 1 do
     begin
       ANode := Element.Nodes[NodeIndex];

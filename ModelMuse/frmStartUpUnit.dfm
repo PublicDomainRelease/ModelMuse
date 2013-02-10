@@ -15,15 +15,17 @@ inherited frmStartUp: TfrmStartUp
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 332
-    Width = 761
+    Top = 328
+    Width = 753
     Height = 47
     Align = alBottom
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 1
+    ExplicitTop = 332
+    ExplicitWidth = 761
     DesignSize = (
-      761
+      753
       47)
     object btnNext: TBitBtn
       Left = 655
@@ -79,12 +81,14 @@ inherited frmStartUp: TfrmStartUp
   object pcStartup: TPageControl
     Left = 0
     Top = 0
-    Width = 761
-    Height = 332
+    Width = 753
+    Height = 328
     ActivePage = tabInitialModflowGrid
     Align = alClient
     TabOrder = 0
     OnChange = pcStartupChange
+    ExplicitWidth = 761
+    ExplicitHeight = 332
     object tabModelChoice: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'Start_Up_Dialog_Box'
@@ -119,8 +123,8 @@ inherited frmStartUp: TfrmStartUp
       object gbInitialGrid: TGroupBox
         Left = 0
         Top = 0
-        Width = 753
-        Height = 299
+        Width = 745
+        Height = 295
         Align = alClient
         Caption = 'Specify initial grid (optional)'
         TabOrder = 0
@@ -264,9 +268,9 @@ inherited frmStartUp: TfrmStartUp
             ExplicitHeight = 18
           end
           inherited lblVerticalExaggeration: TLabel
-            Width = 148
+            Width = 147
             Height = 18
-            ExplicitWidth = 148
+            ExplicitWidth = 147
             ExplicitHeight = 18
           end
           inherited lblGridOrigin: TLabel
@@ -311,11 +315,13 @@ inherited frmStartUp: TfrmStartUp
       object gbInitialGridModflow: TGroupBox
         Left = 0
         Top = 0
-        Width = 753
-        Height = 299
+        Width = 745
+        Height = 295
         Align = alClient
         Caption = 'Specify initial grid (optional)'
         TabOrder = 0
+        ExplicitWidth = 753
+        ExplicitHeight = 299
         object Label8: TLabel
           Left = 344
           Top = 68
@@ -421,10 +427,10 @@ inherited frmStartUp: TfrmStartUp
           ChangeDisabledColor = True
         end
         object rdgInitialLayers: TRbwDataGrid4
-          Left = 465
+          Left = 457
           Top = 20
           Width = 286
-          Height = 277
+          Height = 273
           Align = alRight
           Anchors = [akLeft, akTop, akRight, akBottom]
           ColCount = 2
@@ -488,6 +494,7 @@ inherited frmStartUp: TfrmStartUp
             end>
           OnEndUpdate = rdgInitialLayersEndUpdate
           ExplicitLeft = 464
+          ExplicitHeight = 277
         end
       end
     end

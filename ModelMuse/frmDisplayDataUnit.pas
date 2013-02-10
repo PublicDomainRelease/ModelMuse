@@ -8,7 +8,7 @@ uses
   ComCtrls, JvExComCtrls, JvPageListTreeView, JvExControls, StdCtrls, Buttons,
   frameHeadObservationResultsUnit, frameModpathDisplayUnit,
   frameModpathTimeSeriesDisplayUnit, frameModpathEndpointDisplayUnit,
-  frameCustomColorUnit, frameColorGridUnit, frameContourDataUnit{, JvRichEdit};
+  frameCustomColorUnit, frameColorGridUnit, frameContourDataUnit;
 
 type
   TPostPages = (ppColorGrid, ppContourData, ppPathline, ppEndPoints,
@@ -131,7 +131,7 @@ var
   LocalModel: TPhastModel;
   ModflowSelected: Boolean;
   ModpathSelected: Boolean;
-  LocalPackages: TModflowPackages;
+//  LocalPackages: TModflowPackages;
   SfrSelected: Boolean;
   HeadObsSelected: Boolean;
 //  Node: TTreeNode;
@@ -140,10 +140,10 @@ begin
   tvpglstMain.Handle;
   LocalModel := frmGoPhast.PhastModel;
   ModflowSelected := LocalModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
-  LocalPackages := LocalModel.ModflowPackages;
-  ModpathSelected := ModflowSelected and LocalPackages.ModPath.IsSelected;
-  SfrSelected := ModflowSelected and LocalPackages.SfrPackage.IsSelected;
-  HeadObsSelected := ModflowSelected and LocalPackages.HobPackage.IsSelected;
+//  LocalPackages := LocalModel.ModflowPackages;
+  ModpathSelected := ModflowSelected and LocalModel.MODPATHIsSelected;
+  SfrSelected := ModflowSelected and LocalModel.SfrIsSelected;
+  HeadObsSelected := ModflowSelected and LocalModel.HobIsSelected;
 
 //  if tvpglstMain.Items.Count = 0 then
 //  begin

@@ -116,7 +116,7 @@ implementation
 
 {$R *.dfm}
 
-uses Contnrs;
+uses Contnrs, Math;
 
 resourcestring
   StrN = 'N';
@@ -199,33 +199,38 @@ end;
 
 procedure TframeModpathParticles.CreateParticles;
 begin
-  FParticleStorage.ClearSpheres;
-  FCanCreateParticles := False;
-  if rgChoice.ItemIndex >= 0 then
-  begin
-    FParticleStorage.ParticleDistribution
-      := TParticleDistribution(rgChoice.ItemIndex);
-    case FParticleStorage.ParticleDistribution of
-      pdGrid:
-        begin
-          CreateGridParticles;
-        end;
-      pdCylinder:
-        begin
-          CreateCylinderParticles;
-        end;
-      pdSphere:
-        begin
-          CreateSphereParticles;
-        end;
-      pdIndividual:
-        begin
-          CreateSpecificParticles;
-        end;
-      else
-        Assert(False);
+  GLScene1.BeginUpdate;
+  try
+    FParticleStorage.ClearSpheres;
+    FCanCreateParticles := False;
+    if rgChoice.ItemIndex >= 0 then
+    begin
+      FParticleStorage.ParticleDistribution
+        := TParticleDistribution(rgChoice.ItemIndex);
+      case FParticleStorage.ParticleDistribution of
+        pdGrid:
+          begin
+            CreateGridParticles;
+          end;
+        pdCylinder:
+          begin
+            CreateCylinderParticles;
+          end;
+        pdSphere:
+          begin
+            CreateSphereParticles;
+          end;
+        pdIndividual:
+          begin
+            CreateSpecificParticles;
+          end;
+        else
+          Assert(False);
+      end;
+      ScaleParticles;
     end;
-    ScaleParticles;
+  finally
+    GLScene1.EndUpdate;
   end;
 end;
 
@@ -474,7 +479,7 @@ var
   MaxParticleSize: double;
 begin
   Particles := FParticleStorage.Particles;
-  MaxParticleSize := FParticleStorage.MaxSphereSize;;
+  MaxParticleSize := FParticleStorage.MaxSphereSize;
   for Index := 0 to Particles.Count - 1 do
   begin
     Item := Particles.Items[Index] as TParticleLocation;

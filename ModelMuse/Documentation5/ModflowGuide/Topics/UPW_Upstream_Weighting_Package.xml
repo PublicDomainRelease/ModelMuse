@@ -53,7 +53,10 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <para styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/publication/tm6A37" target="_blank" styleclass="Citation" translate="true">Niswonger, R.G., Panday, Sorab, and Ibaraki, Motomu, 2011, MODFLOW-NWT, A Newton formulation for MODFLOW-2005: U.S. Geological Survey Techniques and Methods 6-A37, 44 p.</link></para>
+          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/publication/tm6A37" target="_blank" styleclass="Citation" translate="true">Niswonger, R.G., Panday, Sorab, and Ibaraki, Motomu, 2011, MODFLOW-NWT, A Newton formulation for MODFLOW-2005: U.S. Geological Survey Techniques and Methods 6-A37, 44 p.</link></li>
+            <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="NWT_release.txt" styleclass="Normal" translate="true">Release.txt for MODFLOW-NWT</link></li>
+          </list>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -78,7 +81,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Other Notes</text></para>
         </td>
         <td>
-          <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Input data types and formats described below are nearly identical to those for the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" styleclass="Normal" translate="true">LPF</link><text styleclass="Normal" translate="true"> Package and described on pages 8-28 through 8-31 of the MODFLOW-2005 manual (Harbaugh, 2005). However, the input variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="LAYWET" styleclass="Normal" translate="true">LAYWET</link><text styleclass="Normal" translate="true"> should be set to zero for all layers because all layers that are specified as convertible (that is, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="LAYTYP" styleclass="Normal" translate="true">LAYTYP</link><text styleclass="Normal" translate="true">&gt;0) are assumed to be wettable in the UPW Package. The model will stop and print an error statement to the main Listing file if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="LAYWET" styleclass="Normal" translate="true">LAYWET</link><text styleclass="Normal" translate="true"> is non-zero for any layers. Options are not allowed in the UPW Package, as they are in the LPF Package, and the variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="IPHDRY" styleclass="Normal" translate="true">IPHDRY</link><text styleclass="Normal" translate="true"> is new to the UPW Package. </text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The optional variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="WEL" anchor="PHIRAMP" styleclass="Normal" translate="true">PHIRAMP</link><text styleclass="Normal" translate="true"> in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="WEL" styleclass="Normal" translate="true">Well</link><text styleclass="Normal" translate="true"> package can be specified in MODFLOW-NWT.</text></li>
           </list>
@@ -114,7 +117,7 @@
           <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 1.</text></para>
         </td>
         <td>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">IUPWCB HDRY NPUPW IPHDRY</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">IUPWCB HDRY NPUPW IPHDRY Options</text></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
@@ -124,7 +127,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">IUPWCB is a flag and a unit number.</text></para>
-                      <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IUPWCB &gt; 0, cell-by-cell flow terms will be written to this unit number when “SAVE BUDGET” or a non-zero value for </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" anchor="ICBCFL" styleclass="Normal" translate="true">ICBCFL</link><text styleclass="Normal" translate="true"> is specified in Output Control. The terms that are saved are storage, constant-head flow, and flow between adjacent cells.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IUPWCB = 0, cell-by-cell flow terms will not be written.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IUPWCB &lt; 0, cell-by-cell flow for constant-head cells will be written in the listing file when “SAVE BUDGET” or a non-zero value for </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" anchor="ICBCFL" styleclass="Normal" translate="true">ICBCFL</link><text styleclass="Normal" translate="true"> is specified in Output Control. Cell-by-cell flow to storage and between adjacent cells will not be written to any file.</text></li>
@@ -153,11 +156,22 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="IPHDRY" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">IPHDRY is a flag that indicates whether groundwater head will be set to </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="HDRY" styleclass="Normal" translate="true">HDRY</link><text styleclass="Normal" translate="true"> when the groundwater head is less than 1×10</text><text style="font-family:&apos;Times New Roman&apos;; font-size:8pt; vertical-align:super; color:#000000;" translate="true">-4</text><text styleclass="Normal" translate="true"> above the cell bottom (units defined by </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DIS" anchor="LENUNI" styleclass="Normal" translate="true">LENUNI</link><text styleclass="Normal" translate="true">). </text></para>
-                      <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IPHDRY=0, then head will not be set to </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="HDRY" styleclass="Normal" translate="true">HDRY</link><text styleclass="Normal" translate="true">.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IPHDRY&gt;0, then head will be set to </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="HDRY" styleclass="Normal" translate="true">HDRY</link><text styleclass="Normal" translate="true">.</text></li>
                       </list>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">If the head solution from one simulation will be used as </text><link displaytype="text" defaultstyle="true" type="topiclink" href="BAS6" anchor="STRT" styleclass="Normal" translate="true">starting heads</link><text styleclass="Normal" translate="true"> for a subsequent simulation, or if the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Observation_Process_Input_File" styleclass="Normal" translate="true">Observation</link><text styleclass="Normal" translate="true"> Process is used (Harbaugh and others, 2000), then </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="HDRY" styleclass="Normal" translate="true">HDRY</link><text styleclass="Normal" translate="true"> should not be printed to the output file for dry cells (that is, the UPW Package input variable should be set as IPHDRY=0).</text></para>
+                    </td>
+                  </tr>
+                </table></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Options]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+                  <tr style="vertical-align:top">
+                    <td>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Options—are optional key words that activate options:</text></para>
+                      <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                        <li styleclass="Normal"><text styleclass="Keywords" translate="true">NOPARCHECK</text><text styleclass="Normal" translate="true"> turns off the checking that a value is defined for all cells when parameters are used to define layer data.</text></li>
+                      </list>
                     </td>
                   </tr>
                 </table></para>
@@ -176,7 +190,7 @@
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><anchor id="LAYTYP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">LAYTYP contains a flag for each layer that specifies the layer type.</text></para>
-                <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                <list id="18" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">0 – confined</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">&gt;0 – convertible</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">&lt;0 – confined</text></li>
@@ -196,7 +210,7 @@
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">LAYAVG contains a flag for each layer that defines the method of calculating interblock transmissivity.</text></para>
-                <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">0—harmonic mean</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">1—logarithmic mean</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">2—arithmetic mean of saturated thickness and logarithmic-mean hydraulic conductivity.</text></li>
@@ -231,7 +245,7 @@
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Normal"><anchor id="LAYVKA" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">LAYVKA contains a flag for each layer that indicates whether variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="VKA" styleclass="Normal" translate="true">VKA</link><text styleclass="Normal" translate="true"> is vertical hydraulic conductivity or the ratio of horizontal to vertical hydraulic conductivity.</text></para>
-                <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">0—indicates </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="VKA" styleclass="Normal" translate="true">VKA</link><text styleclass="Normal" translate="true"> is vertical hydraulic conductivity</text></li>
                   <li styleclass="Normal"><text styleclass="Normal" translate="true">not 0—indicates </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="VKA" styleclass="Normal" translate="true">VKA</link><text styleclass="Normal" translate="true"> is the ratio of horizontal to vertical hydraulic conductivity, where the horizontal hydraulic conductivity is specified as </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="HK" styleclass="Normal" translate="true">HK</link><text styleclass="Normal" translate="true"> in item 9.</text></li>
                 </list>
@@ -285,7 +299,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">PARTYP is the type of parameter to be defined. For the UPW Package, the allowed parameter types are: </text></para>
-                      <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="17" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><anchor id="HK_Param" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">HK—defines variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="HK" styleclass="Normal" translate="true">HK</link><text styleclass="Normal" translate="true">, horizontal hydraulic conductivity </text></li>
                         <li styleclass="Normal"><anchor id="HANI_Param" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">HANI—defines variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="HANI" styleclass="Normal" translate="true">HANI</link><text styleclass="Normal" translate="true">, horizontal anisotropy </text></li>
                         <li styleclass="Normal"><anchor id="VK_Param" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">VK—defines variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="VKA" styleclass="Normal" translate="true">VKA</link><text styleclass="Normal" translate="true"> for layers for which &#160;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="VKA" styleclass="Normal" translate="true">VKA</link><text styleclass="Normal" translate="true">represents vertical hydraulic conductivity (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="LAYVKA" styleclass="Normal" translate="true">LAYVKA</link><text styleclass="Normal" translate="true">=0) </text></li>

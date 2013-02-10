@@ -53,25 +53,19 @@ type
   // @link(TModflowTimeList.Initialize).
   TBoundaryValueArray = array of TBoundaryValue;
 
-  // @name represents a boundary for one time interval.
-  // @name is stored by @link(TCustomMF_BoundColl).
-  TCustomModflowBoundaryItem = class(TOrderedItem)
+  TCustomBoundaryItem = class(TOrderedItem)
   private
-    // See @link(EndTime).
-    FEndTime: double;
     // See @link(StartTime).
     FStartTime: double;
-    // See @link(EndTime).
-    procedure SetEndTime(const Value: double);
     // See @link(StartTime).
     procedure SetStartTime(const Value: double);
-    function GetScreenObject: TObject;
   protected
     FObserverList: TList;
     procedure AssignObserverEvents(Collection: TCollection); virtual; abstract;
     procedure CreateFormulaObjects; virtual; abstract;
     procedure GetPropertyObserver(Sender: TObject; List: TList); virtual; abstract;
     procedure RemoveFormulaObjects; virtual; abstract;
+    function GetScreenObject: TObject;
     procedure ResetItemObserver(Index: integer);
     procedure UpdateFormulaDependencies(OldFormula: string; var
       NewFormula: string; Observer: TObserver; Compiler: TRbwParser);
@@ -81,22 +75,22 @@ type
     procedure SetBoundaryFormula(Index: integer; const Value: string);
       virtual; abstract;
     // @name returns @true if AnotherItem is a @classname and
-    // @link(StartTime) and (EndTime) are the same in the current
+    // @link(StartTime) is the same in the current
     // @classname and in AnotherItem.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
-    function NonBlankFormulas: boolean;
     function BoundaryFormulaCount: integer; virtual; abstract;
+    function NonBlankFormulas: boolean;
     procedure UpdateFormula(Value: string; Position: Integer;
       var FormulaObject: TFormulaObject);
     procedure RemoveSubscription(Sender: TObject; const AName: string);
     procedure RestoreSubscription(Sender: TObject; const AName: string);
     function CreateFormulaObject(Orientation:
-      TDataSetOrientation): TFormulaObject;
+      TDataSetOrientation): TFormulaObject; virtual;
   public
-    constructor Create(Collection: TCollection); override;
-    destructor Destroy; override;
     property ScreenObject: TObject read GetScreenObject;
     procedure Assign(Source: TPersistent); override;
+    constructor Create(Collection: TCollection); override;
+    destructor Destroy; override;
     // Descendants of @classname define string properties that are the
     // formulas for the unique features of each boundary condition.
     // @name provides access to those properties without knowing what
@@ -113,6 +107,27 @@ type
   published
     // @name indicates the starting time of this boundary.
     property StartTime: double read FStartTime write SetStartTime;
+  end;
+
+  TBoundaryItemClass = class of TCustomBoundaryItem;
+
+  // @name represents a boundary for one time interval.
+  // @name is stored by @link(TCustomMF_BoundColl).
+  TCustomModflowBoundaryItem = class(TCustomBoundaryItem)
+  private
+    // See @link(EndTime).
+    FEndTime: double;
+    // See @link(EndTime).
+    procedure SetEndTime(const Value: double);
+  protected
+    // @name returns @true if AnotherItem is a @classname and
+    // @link(StartTime) and (EndTime) are the same in the current
+    // @classname and in AnotherItem.
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+  public
+    procedure Assign(Source: TPersistent); override;
+  published
+
     // @name indicates the ending time of this boundary.
     property EndTime: double read FEndTime write SetEndTime;
   end;
@@ -125,6 +140,7 @@ type
     procedure CreateFormulaObjects; override;
     procedure AssignObserverEvents(Collection: TCollection); override;
     procedure GetPropertyObserver(Sender: TObject; List: TList); override;
+    // See @link(BoundaryFormula).
     function GetBoundaryFormula(Index: integer): string; override;
     // See @link(BoundaryFormula).
     procedure SetBoundaryFormula(Index: integer; const Value: string);
@@ -149,16 +165,15 @@ type
     // @name is the @link(TModflowBoundary) that owns the current @classname.
     FBoundary: TModflowBoundary;
     // See @link(Items).
-    procedure SetItem(Index: Integer; const Value: TCustomModflowBoundaryItem);
+    procedure SetItem(Index: Integer; const Value: TCustomBoundaryItem);
     // See @link(Items).
-    function GetItem(Index: Integer): TCustomModflowBoundaryItem;
+    function GetItem(Index: Integer): TCustomBoundaryItem;
   protected
     // @name is the @link(TModflowBoundary) that owns @classname.
     property BoundaryGroup: TModflowBoundary read FBoundary;
     // @name is the descendant of @link(TCustomModflowBoundaryItem)
     // stored by classname.
-    class function ItemClass: TMF_BoundItemClass; virtual; abstract;
-
+    class function ItemClass: TBoundaryItemClass; virtual; abstract;
   public
     // @name is the @link(TScreenObject) for this boundary.
     // @name provides access to @link(TCustomModflowBoundaryItem) representing
@@ -167,7 +182,7 @@ type
     // @name is the @link(TScreenObject) for this boundary.
     // @name provides access to @link(TCustomModflowBoundaryItem) representing
     // the boundary conditions for different time periods.
-    property Items[Index: Integer]: TCustomModflowBoundaryItem read GetItem
+    property Items[Index: Integer]: TCustomBoundaryItem read GetItem
       write SetItem; default;
     procedure Assign(Source: TPersistent); override;
     // @name is the @link(TScreenObject) for this boundary.
@@ -183,8 +198,8 @@ type
     FModel: TBaseModel;
     // @name stores a series of @link(TModflowTimeList)s.  They
     // must be in the same order as the order used to access
-    // the corresponding @link(TCustomModflowBoundaryItem.BoundaryFormula
-    // TCustomModflowBoundaryItem.BoundaryFormula)s.
+    // the corresponding @link(TCustomBoundaryItem.BoundaryFormula
+    // TCustomBoundaryItem.BoundaryFormula)s.
     // @seealso(TCustomMF_BoundColl.AddTimeList)
     // @seealso(TCustomMF_BoundColl.GetTimeList)
     // @seealso(TCustomMF_BoundColl.TimeLists)
@@ -242,8 +257,8 @@ type
   // @name represents MODFLOW boundaries for a series of time intervals.
   // Descendants define one or more @link(TModflowTimeList)s  which must be
   // stored in @link(FTimeListLink) in the same order as the order used to access
-  // the corresponding @link(TCustomModflowBoundaryItem.BoundaryFormula
-  // TCustomModflowBoundaryItem.BoundaryFormula)s.
+  // the corresponding @link(TCustomBoundaryItem.BoundaryFormula
+  // TCustomBoundaryItem.BoundaryFormula)s.
   TCustomMF_BoundColl = class(TCustomNonSpatialBoundColl)
   private
     // See @link(ParamName).
@@ -259,8 +274,8 @@ type
     // Each of them stores a series of @link(TModflowTimeList)s
     // associated with a particular model.  They
     // must be in the same order as the order used to access
-    // the corresponding @link(TCustomModflowBoundaryItem.BoundaryFormula
-    // TCustomModflowBoundaryItem.BoundaryFormula)s.
+    // the corresponding @link(TCustomBoundaryItem.BoundaryFormula
+    // TCustomBoundaryItem.BoundaryFormula)s.
     // @seealso(AddTimeList)
     // @seealso(GetTimeList)
     // @seealso(TimeLists)
@@ -295,8 +310,8 @@ type
     // can be accessed through @link(TimeLists).  The order in which
     // @link(TModflowTimeList)s are added must correspond to the
     // order in which the corresponding
-    // @link(TCustomModflowBoundaryItem.BoundaryFormula
-    // TCustomModflowBoundaryItem.BoundaryFormula)s are accessed.
+    // @link(TCustomBoundaryItem.BoundaryFormula
+    // TCustomBoundaryItem.BoundaryFormula)s are accessed.
     procedure AddTimeList(List: TModflowTimeList; AModel: TBaseModel);
     // @name is the @link(TModflowBoundary) that owns @classname.
     // @name is used to set the capacity of @link(FBoundaries)
@@ -307,10 +322,8 @@ type
     // @link(TCustomBoundaryStorage.StartingTime
     // TCustomBoundaryStorage.EndingTime) of the
     // @link(TCustomBoundaryStorage) at ItemIndex in @link(Boundaries)
-    // to the values of @link(TCustomModflowBoundaryItem.StartTime
-    // TCustomModflowBoundaryItem.StartTime) and
-    // @link(TCustomModflowBoundaryItem.EndTime
-    // TCustomModflowBoundaryItem.EndTime)
+    // to the values of @link(TCustomBoundaryItem.StartTime) and
+    // @link(TCustomModflowBoundaryItem.EndTime)
     // Descendants used BoundaryCount to set the length of array of records
     // that define where and with what values the boundary condition apply.
     // for the item in @link(Boundaries) at ItemIndex.
@@ -355,6 +368,7 @@ type
     // @name returns @true if Count > 0.
     function DataSetUsed(DataArray: TDataArray; AModel: TBaseModel): boolean; virtual;
     function GetBoundaryByStartTime(StartTime: double; AModel: TBaseModel): TCustomBoundaryStorage;
+    function GetItemByStartTime(StartTime: Double): TCustomModflowBoundaryItem;
   published
     // @name is the name of the @link(TModflowTransientListParameter)
     // (if any) associated with this @classname.
@@ -441,7 +455,6 @@ type
     FDataType: TRbwDataType;
     // See @link(OnInvalidate).
     FOnInvalidate: TNotifyEvent;
-    FVariableInterpretation: boolean;
     FScreenObject: TObject;
   protected
     // @name calls the inherited @link(TCustomTimeList.SetUpToDate)
@@ -472,8 +485,6 @@ type
     // TfrmScreenObjectProperties.InitializeModflowBoundaryFrames).
     property ParamDescription: string read FParamDescription
       write FParamDescription;
-    property VariableInterpretation: boolean read FVariableInterpretation
-      write FVariableInterpretation;
     // @name is the @link(TRbwDataType) of the @link(TDataArray)s contained
     // by @classname
     property DataType: TRbwDataType read FDataType write FDataType;
@@ -771,18 +782,7 @@ begin
   end;
 end;
 
-
-
-procedure TCustomModflowBoundaryItem.SetStartTime(const Value: double);
-begin
-  if FStartTime <> Value then
-  begin
-    FStartTime := Value;
-    InvalidateModel;
-  end;
-end;
-
-procedure TCustomModflowBoundaryItem.UpdateFormulaDependencies(
+procedure TCustomBoundaryItem.UpdateFormulaDependencies(
   OldFormula: string; var NewFormula: string; Observer: TObserver;
   Compiler: TRbwParser);
 var
@@ -866,7 +866,6 @@ begin
   if Source is TCustomModflowBoundaryItem then
   begin
     Item := TCustomModflowBoundaryItem(Source);
-    StartTime := Item.StartTime;
     EndTime := Item.EndTime;
   end;
   inherited;
@@ -876,16 +875,19 @@ function TCustomModflowBoundaryItem.IsSame(AnotherItem: TOrderedItem): boolean;
 var
   Item: TCustomModflowBoundaryItem;
 begin
-  result := (AnotherItem is TCustomModflowBoundaryItem);
+  result := inherited;
   if result then
   begin
-    Item := TCustomModflowBoundaryItem(AnotherItem);
-    result := (Item.EndTime = EndTime)
-      and (Item.StartTime = StartTime);
+    result := (AnotherItem is TCustomModflowBoundaryItem);
+    if result then
+    begin
+      Item := TCustomModflowBoundaryItem(AnotherItem);
+      result := (Item.EndTime = EndTime)
+    end;
   end;
 end;
 
-function TCustomModflowBoundaryItem.NonBlankFormulas: boolean;
+function TCustomBoundaryItem.NonBlankFormulas: boolean;
 var
   Index: integer;
 begin
@@ -900,7 +902,19 @@ begin
   end;
 end;
 
-procedure TCustomModflowBoundaryItem.ResetItemObserver(Index: integer);
+function TCustomBoundaryItem.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  Item: TCustomBoundaryItem;
+begin
+  result := (AnotherItem is TCustomBoundaryItem);
+  if result then
+  begin
+    Item := TCustomBoundaryItem(AnotherItem);
+    result := (Item.StartTime = StartTime);
+  end;
+end;
+
+procedure TCustomBoundaryItem.ResetItemObserver(Index: integer);
 var
   Observer: TObserver;
 begin
@@ -1040,13 +1054,13 @@ begin
   LastUsedTime := LocalModel.ModflowFullStressPeriods[
     LocalModel.ModflowFullStressPeriods.Count - 1].EndTime;
 
-  Item := Items[0];
+  Item := Items[0] as TCustomModflowBoundaryItem;
   if Item.StartTime >= LastUsedTime  then
   begin
     Exit;
   end;
 
-  Item := Items[Count-1];
+  Item := Items[Count-1] as TCustomModflowBoundaryItem;
   if Item.EndTime <= FirstUsedTime  then
   begin
     Exit;
@@ -1067,7 +1081,7 @@ begin
     ItemCount := 0;
     for ItemIndex := 0 to Count - 1 do
     begin
-      Item := Items[ItemIndex];
+      Item := Items[ItemIndex] as TCustomModflowBoundaryItem;
       if (Item.StartTime > LastUsedTime)
         or (Item.EndTime < FirstUsedTime) then
       begin
@@ -1191,13 +1205,13 @@ begin
   LastUsedTime := LocalModel.ModflowFullStressPeriods[
     LocalModel.ModflowFullStressPeriods.Count - 1].EndTime;
 
-  AnItem := Items[0];
+  AnItem := Items[0] as TCustomModflowBoundaryItem;
   if AnItem.StartTime >= LastUsedTime  then
   begin
     Exit;
   end;
 
-  AnItem := Items[Count-1];
+  AnItem := Items[Count-1] as TCustomModflowBoundaryItem;
   if AnItem.EndTime <= FirstUsedTime  then
   begin
     Exit;
@@ -1284,7 +1298,7 @@ begin
 
     for ItemIndex := 0 to Count - 1 do
     begin
-      AnItem := Items[ItemIndex];
+      AnItem := Items[ItemIndex] as TCustomModflowBoundaryItem;
 
       // Skip times earlier than the first time or after
       // the last time.
@@ -1452,7 +1466,7 @@ begin
         begin
           if (ItemIndex+1 < Count) then
           begin
-            NextItem := Items[ItemIndex+1];
+            NextItem := Items[ItemIndex+1] as TCustomModflowBoundaryItem;
           end
           else
           begin
@@ -1716,6 +1730,27 @@ begin
   result := Link.Boundaries.Count;
 end;
 
+function TCustomMF_BoundColl.GetItemByStartTime(
+  StartTime: Double): TCustomModflowBoundaryItem;
+var
+  ItemIndex: Integer;
+  AnItem: TCustomModflowBoundaryItem;
+begin
+  result := nil;
+  for ItemIndex := 0 to Count - 1 do
+  begin
+    AnItem := Items[ItemIndex] as TCustomModflowBoundaryItem;
+    if AnItem.StartTime >= StartTime then
+    begin
+      result := AnItem;
+      if AnItem.EndTime > StartTime then
+      begin
+        Break;
+      end;
+    end;
+  end;
+end;
+
 function TCustomMF_BoundColl.GetParam: TModflowTransientListParameter;
 var
   Model: TPhastModel;
@@ -1772,7 +1807,8 @@ begin
 end;
 
 procedure TCustomMF_BoundColl.SetBoundaryStartAndEndTime(
-  BoundaryCount: Integer; Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
+  BoundaryCount: Integer; Item: TCustomModflowBoundaryItem; ItemIndex: Integer;
+  AModel: TBaseModel);
 begin
   Boundaries[ItemIndex, AModel].StartingTime := Item.StartTime;
   Boundaries[ItemIndex, AModel].EndingTime := Item.EndTime;
@@ -2335,7 +2371,7 @@ end;
 function TModflowParamBoundary.Used: boolean;
 begin
   result := inherited Used or Parameters.Used
-end;           
+end;
 
 procedure TSpecificModflowBoundary.Assign(Source: TPersistent);
 begin
@@ -2442,7 +2478,7 @@ var
 begin
   for BoundaryIndex := 0 to BoundCol.Count - 1 do
   begin
-    Boundary := BoundCol[BoundaryIndex];
+    Boundary := BoundCol[BoundaryIndex] as TCustomModflowBoundaryItem;
     Times.AddUnique(Boundary.StartTime);
     Times.AddUnique(Boundary.EndTime);
     if (Boundary.StartTime < StartTestTime) then
@@ -2483,7 +2519,7 @@ procedure TCustomNonSpatialBoundColl.Assign(Source: TPersistent);
 var
   List: TList;
   Index: Integer;
-  Item1, Item2: TCustomModflowBoundaryItem;
+  Item1, Item2: TCustomBoundaryItem;
 begin
   inherited;
   List := TList.Create;
@@ -2500,13 +2536,21 @@ begin
     end;
     for Index := Count - 1 downto 1 do
     begin
-      Item1 := Items[Index-1];
-      Item2 := Items[Index];
-      if Item2.StartTime < Item1.EndTime then
+      Item1 := Items[Index-1] as TCustomBoundaryItem;
+      if not (Item1 is TCustomModflowBoundaryItem) then
       begin
-        Item2.StartTime := Item1.EndTime;
+        break;
       end;
-      if Item2.StartTime >= Item2.EndTime then
+      Item2 := Items[Index] as TCustomModflowBoundaryItem;
+
+      if (TCustomModflowBoundaryItem(Item2).StartTime
+        < TCustomModflowBoundaryItem(Item1).EndTime) then
+      begin
+        TCustomModflowBoundaryItem(Item2).StartTime
+          := TCustomModflowBoundaryItem(Item1).EndTime;
+      end;
+      if (TCustomModflowBoundaryItem(Item2).StartTime
+        >= TCustomModflowBoundaryItem(Item2).EndTime) then
       begin
         Delete(Index);
       end;
@@ -2531,18 +2575,18 @@ begin
 end;
 
 procedure TCustomNonSpatialBoundColl.SetItem(Index: Integer;
-  const Value: TCustomModflowBoundaryItem);
+  const Value: TCustomBoundaryItem);
 begin
   inherited Items[Index] := Value;
 end;
 
 function TCustomNonSpatialBoundColl.GetItem(
-  Index: Integer): TCustomModflowBoundaryItem;
+  Index: Integer): TCustomBoundaryItem;
 begin
-  result := inherited Items[Index] as TCustomModflowBoundaryItem
+  result := inherited Items[Index] as TCustomBoundaryItem
 end;
 
-constructor TCustomModflowBoundaryItem.Create(Collection: TCollection);
+constructor TCustomBoundaryItem.Create(Collection: TCollection);
 var
   Index: integer;
   Observer: TObserver;
@@ -2565,7 +2609,7 @@ begin
   AssignObserverEvents(Collection);
 end;
 
-destructor TCustomModflowBoundaryItem.Destroy;
+destructor TCustomBoundaryItem.Destroy;
 var
   LocalScreenObject: TScreenObject;
   Observer: TObserver;
@@ -2594,7 +2638,7 @@ begin
   inherited;
 end;
 
-function TCustomModflowBoundaryItem.GetScreenObject: TObject;
+function TCustomBoundaryItem.GetScreenObject: TObject;
 begin
   result := nil;
   if Collection = nil then
@@ -2725,7 +2769,7 @@ begin
   Assert(False);
 end;
 
-procedure TCustomModflowBoundaryItem.UpdateFormula(Value: string;
+procedure TCustomBoundaryItem.UpdateFormula(Value: string;
   Position: Integer; var FormulaObject: TFormulaObject);
 var
   ParentModel: TPhastModel;
@@ -2765,7 +2809,7 @@ begin
   (Subject as TCustomModflowBoundaryItem).RestoreSubscription(Sender, AName);
 end;
 
-procedure TCustomModflowBoundaryItem.RemoveSubscription(Sender: TObject; const AName: string);
+procedure TCustomBoundaryItem.RemoveSubscription(Sender: TObject; const AName: string);
 var
   Observer: TObserver;
   DS: TObserver;
@@ -2786,7 +2830,7 @@ begin
   end;
 end;
 
-procedure TCustomModflowBoundaryItem.RestoreSubscription(Sender: TObject; const AName: string);
+procedure TCustomBoundaryItem.RestoreSubscription(Sender: TObject; const AName: string);
 var
   Observer: TObserver;
   DS: TObserver;
@@ -2808,7 +2852,20 @@ begin
   end;
 end;
 
-function TCustomModflowBoundaryItem.CreateFormulaObject(
+procedure TCustomBoundaryItem.Assign(Source: TPersistent);
+var
+  Item: TCustomBoundaryItem;
+begin
+  // if Assign is updated, update IsSame too.
+  if Source is TCustomBoundaryItem then
+  begin
+    Item := TCustomBoundaryItem(Source);
+    StartTime := Item.StartTime;
+  end;
+  inherited;
+end;
+
+function TCustomBoundaryItem.CreateFormulaObject(
   Orientation: TDataSetOrientation): TFormulaObject;
 begin
   result := frmGoPhast.PhastModel.FormulaManager.Add;
@@ -2986,6 +3043,15 @@ begin
   result := TBoundaryModelLink.Create(AModel);
   FList.Add(result);
   FCachedResult := result;
+end;
+
+procedure TCustomBoundaryItem.SetStartTime(const Value: double);
+begin
+  if FStartTime <> Value then
+  begin
+    FStartTime := Value;
+    InvalidateModel;
+  end;
 end;
 
 end.

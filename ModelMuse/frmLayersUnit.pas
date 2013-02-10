@@ -1199,7 +1199,7 @@ var
       Exit;
     end;
     tabNoDelay.TabVisible := frmGoPhast.PhastModel.
-      ModflowPackages.SubPackage.IsSelected;;
+      ModflowPackages.SubPackage.IsSelected;
     InitializeSubsidenceGrid(frameSubNoDelayBeds);
     AssignSubFrame(FirstUnit.SubNoDelayBedLayers, frameSubNoDelayBeds);
   end;
@@ -1211,7 +1211,7 @@ var
       Exit;
     end;
     tabDelay.TabVisible := frmGoPhast.PhastModel.
-      ModflowPackages.SubPackage.IsSelected;;
+      ModflowPackages.SubPackage.IsSelected;
     InitializeSubsidenceGrid(frameSubDelayBeds);
     AssignSubFrame(FirstUnit.SubDelayBedLayers, frameSubDelayBeds);
   end;
@@ -1223,7 +1223,7 @@ var
       Exit;
     end;
     tabSWT.TabVisible := frmGoPhast.PhastModel.
-      ModflowPackages.SwtPackage.IsSelected;;
+      ModflowPackages.SwtPackage.IsSelected;
     InitializeSubsidenceGrid(frameSwt);
     AssignSubFrame(FirstUnit.WaterTableLayers, frameSwt);
   end;

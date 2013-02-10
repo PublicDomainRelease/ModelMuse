@@ -1516,26 +1516,15 @@ procedure TfrmImportShapefile.AddModflowPackageToImportChoices(
 begin
   if frmGoPhast.PhastModel.PackageIsSelected(APackage) then
   begin
-    if comboJoinObjects.ItemIndex = 0 then
+    if (APackage is TSfrPackageSelection)
+      or (APackage is TMultinodeWellSelection)
+      or (APackage is TLakePackageSelection)
+      or (APackage is THobPackageSelection)
+      then
     begin
-      comboBoundaryChoice.Items.AddObject(APackage.PackageIdentifier, APackage);
-    end
-    else
-    begin
-      if (APackage is TSfrPackageSelection)
-        or (APackage is TMultinodeWellSelection)
-        or (APackage is TLakePackageSelection)
-        or (APackage is THobPackageSelection)
-        then
-      begin
-
-      end
-      else
-      begin
-        comboBoundaryChoice.Items.AddObject(
-          APackage.PackageIdentifier, APackage);
-      end;
+      comboJoinObjects.ItemIndex := 0;
     end;
+    comboBoundaryChoice.Items.AddObject(APackage.PackageIdentifier, APackage);
   end;
 end;
 
@@ -5191,7 +5180,7 @@ begin
   rdgBoundaryConditions.Columns[Ord(ccStartingTime)].ComboUsed :=
     not CombinedObjects;
   rdgBoundaryConditions.Columns[Ord(ccEndingTime)].ComboUsed :=
-    not CombinedObjects;;
+    not CombinedObjects;
   rdgBoundaryConditions.Columns[Ord(ccParameterName)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(ccStartingHead)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(ccEndingHead)].ComboUsed := True;
@@ -6007,6 +5996,11 @@ begin
         AddModflowPackageToImportChoices(Packages.UzfPackage);
         AddModflowPackageToImportChoices(Packages.WelPackage);
       end;
+    {$IFDEF SUTRA}
+    msSutra22:
+      begin
+      end;
+    {$ENDIF}
   else
     begin
       Assert(False);
@@ -6614,9 +6608,9 @@ begin
                   GlobalDecompileType := dcValue;
                 end;
                 ZExpression := rpShapeCompiler.CurrentExpression;
-                Assert(ZExpression.ResultType in [rdtDouble, rdtInteger]);
+                Assert(ZExpression.ResultType in [rdtDouble, rdtInteger, rdtString]);
                 ElevFormula := AFormula;
-                if RealFieldNames.IndexOf(AFormula) < 0 then
+                if (RealFieldNames.IndexOf(AFormula) < 0) or (ZExpression.ResultType = rdtString) then
                 begin
                   if frmGoPhast.PhastModel.GetObserverByName(ElevFormula)
                     <> nil then
@@ -6652,9 +6646,10 @@ begin
                   GlobalDecompileType := dcValue;
                 end;
                 HighZExpression := rpShapeCompiler.CurrentExpression;
-                Assert(HighZExpression.ResultType in [rdtDouble, rdtInteger]);
+
+                Assert(HighZExpression.ResultType in [rdtDouble, rdtInteger, rdtString]);
                 HighElevFormula := AFormula;
-                if RealFieldNames.IndexOf(HighElevFormula) < 0 then
+                if (RealFieldNames.IndexOf(HighElevFormula) < 0) or (HighZExpression.ResultType = rdtString) then
                 begin
                   if frmGoPhast.PhastModel.GetObserverByName(HighElevFormula)
                     <> nil then
@@ -6674,8 +6669,7 @@ begin
                   end;
                 end;
 
-
-                AFormula := edLowZ.Text;
+               AFormula := edLowZ.Text;
                 GlobalDecompileType := dcNormal;
                 try
                   rpShapeCompiler.Compile(AFormula);
@@ -6683,9 +6677,9 @@ begin
                   GlobalDecompileType := dcValue;
                 end;
                 LowZExpression := rpShapeCompiler.CurrentExpression;
-                Assert(LowZExpression.ResultType in [rdtDouble, rdtInteger]);
+                Assert(LowZExpression.ResultType in [rdtDouble, rdtInteger, rdtString]);
                 LowElevFormula := AFormula;
-                if RealFieldNames.IndexOf(LowElevFormula) < 0 then
+                if (RealFieldNames.IndexOf(LowElevFormula) < 0) or (LowZExpression.ResultType = rdtString) then
                 begin
                   if frmGoPhast.PhastModel.GetObserverByName(LowElevFormula)
                     <> nil then
@@ -7062,8 +7056,13 @@ begin
                             end
                             else
                             begin
+                              AFormula := ZExpression.Decompile;
+                              if ZExpression.ResultType = rdtString then
+                              begin
+                                AFormula := Copy(AFormula, 2, Length(AFormula)-2);
+                              end;
                               AScreenObject.ElevationFormula
-                                := ZExpression.Decompile;
+                                := AFormula;
                             end;
                           end;
                         end;
@@ -7084,8 +7083,13 @@ begin
                             end
                             else
                             begin
+                              AFormula := HighZExpression.Decompile;
+                              if HighZExpression.ResultType = rdtString then
+                              begin
+                                AFormula := Copy(AFormula, 2, Length(AFormula)-2);
+                              end;
                               AScreenObject.HigherElevationFormula
-                                := HighZExpression.Decompile;
+                                := AFormula;
                             end;
                           end;
                           if LowZExpression = nil then
@@ -7103,8 +7107,13 @@ begin
                             end
                             else
                             begin
+                              AFormula := LowZExpression.Decompile;
+                              if LowZExpression.ResultType = rdtString then
+                              begin
+                                AFormula := Copy(AFormula, 2, Length(AFormula)-2);
+                              end;
                               AScreenObject.LowerElevationFormula
-                                := LowZExpression.Decompile;
+                                := AFormula;
                             end;
                           end;
                         end;
@@ -7824,7 +7833,7 @@ begin
       Prop.AssignToDataSet(ShouldInvalidate[Index]);
       if ShouldInvalidate[Index] then
       begin
-        Prop.DataSet.Invalidate;
+        Prop.InvalidateDataSet;
       end;
     end;
   finally
@@ -7885,7 +7894,7 @@ begin
       Prop.AssignToDataSet(ShouldInvalidate[Index]);
       if ShouldInvalidate[Index] then
       begin
-        Prop.DataSet.Invalidate;
+        Prop.InvalidateDataSet;
       end;
     end;
 
@@ -8644,7 +8653,7 @@ begin
         end;
       rdtString:
         begin
-          AFormula := 'TextToFloatDef(' +  AFormula + ', 0)';
+//          AFormula := 'TextToFloatDef(' +  AFormula + ', 0)';
         end;
     else
       Assert(False);

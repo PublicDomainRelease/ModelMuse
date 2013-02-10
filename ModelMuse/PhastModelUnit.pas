@@ -30,7 +30,8 @@ uses Windows, Types, GuiSettingsUnit, SysUtils, Classes, Contnrs, Controls,
   ModflowGageUnit, ModflowHeadObsResults, GR32, AxCtrls, Generics.Collections,
   Generics.Defaults, Mt3dmsTimesUnit, Mt3dmsChemSpeciesUnit,
   Mt3dmsFluxObservationsUnit, SutraMeshUnit, HashTableFacadeUnit,
-  SutraOptionsUnit;
+  SutraOptionsUnit, SutraTimeScheduleUnit, frmSutraOutputControlUnit,
+  SutraOutputControlUnit;
 
 const
   kHufThickness = '_Thickness';
@@ -167,6 +168,26 @@ const
 
   KModpathBudget = 'Modpath_Budget';
   KModpathRetardation = 'Modpath_Retardation';
+
+  KNodalPorosity = 'Nodal_Porosity';
+  KNodalThickness = 'Nodal_Thickness';
+  KUnsatRegionNodes = 'Unsat_Region_Nodes';
+  KUnsatRegionElements = 'Unsat_Region_Elements';
+  KMaximumPermeability = 'Maximum_Permeability';
+  KMiddlePermeability = 'Middle_Permeability';
+  KMinimumPermeability = 'Minimum_Permeability';
+  KHorizontalAngle = 'Horizontal_Angle';
+  KVerticalAngle = 'Vertical_Angle';
+  KRotationalAngle = 'Rotational_Angle';
+  KMaxLongitudinalDisp = 'Longitudinal_Dispersivity_Max_Dir';
+  KMidLongitudinalDisp = 'Longitudinal_Dispersivity_Mid_Dir';
+  KMinLongitudinalDisp = 'Longitudinal_Dispersivity_Min_Dir';
+  KMaxTransverseDisp = 'Transverse_Dispersivity_Max_Dir';
+  KMidTransverseDisp = 'Transverse_Dispersivity_Mid_Dir';
+  KMinTransverseDisp = 'Transverse_Dispersivity_Min_Dir';
+  KInitialPressure = 'InitialPressure';
+  KInitialConcentration = 'InitialConcentration';
+  KInitialTemperature = 'InitialTemperature';
 
 
   // @name is the name of the @link(TDataArray) that specifies
@@ -324,8 +345,10 @@ const
   StrPartialPenetration = 'Partial Penetration Fraction';
   StrMT3DMSSSMConcentra = 'MT3DMS SSM Concentration';
 
-
+const
   StrMT3DMS = 'MT3DMS';
+  KSutra22  = 'SUTRA2.2';
+  KSutraDefaultPath = 'C:\SutraSuite\SUTRA_2_2\bin\sutra_2_2.exe';
 
 resourcestring
   strUzfClassification = 'UZF';
@@ -473,6 +496,33 @@ resourcestring
   KModpathBudgetDisplayName = KModpathBudget;
   KModpathRetardationDisplayName = KModpathRetardation;
 
+  StrNodalPorosityDisplayName = KNodalPorosity;
+  StrNodalThicknessDisplayName = KNodalThickness;
+  StrUnsatRegionNodesDisplayName = KUnsatRegionNodes;
+  StrUnsatRegionElementsDisplayName = KUnsatRegionElements;
+
+  StrMaximumPermeability = KMaximumPermeability;
+  StrMiddlePermeability = KMiddlePermeability;
+  StrMinimumPermeability = KMinimumPermeability;
+  StrHorizontalAngle = KHorizontalAngle;
+  StrVerticalAngle = KVerticalAngle;
+  StrRotationalAngle = KRotationalAngle;
+  StrMaxLongitudinalDisp = KMaxLongitudinalDisp;
+  StrMidLongitudinalDisp = KMidLongitudinalDisp;
+  StrMinLongitudinalDisp = KMinLongitudinalDisp;
+  StrMaxTransverseDisp = KMaxTransverseDisp;
+  StrMidTransverseDisp = KMidTransverseDisp;
+  StrMinTransverseDisp = KMinTransverseDisp;
+  StrInitialPressure = KInitialPressure;
+  StrInitialConcentration = KInitialConcentration;
+  StrInitialTemperature = KInitialTemperature;
+
+
+  StrWrongHeadModpath = 'Wrong head output file type for MODPATH';
+  StrWrongHeadModpathDetailed = 'MODPATH version 6 requires that heads be '
+  + 'saved in a binary format instead of a text format. You can change the '
+  + 'format in the Output Control dialog box.';
+
 type
   TEvaluationType = (etExport, etDisplay);
 
@@ -533,6 +583,7 @@ type
     FModflowNwtLocation: string;
     FMt3dmsLocation: string;
     FModPathLocationV6: string;
+    FSutra22Location: string;
     function GetTextEditorLocation: string;
     procedure SetModflowLocation(const Value: string);
     function RemoveQuotes(const Value: string): string;
@@ -545,6 +596,7 @@ type
     procedure SetModflowNwtLocation(const Value: string);
     procedure SetMt3dmsLocation(const Value: string);
     procedure SetModPathLocationV6(const Value: string);
+    procedure SetSutra22Location(const Value: string);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create;
@@ -572,6 +624,8 @@ type
       write SetModflowNwtLocation;
     property Mt3dmsLocation: string read FMt3dmsLocation
       write SetMt3dmsLocation;
+    property Sutra22Location: string read FSutra22Location
+      write SetSutra22Location;
   end;
 
   {
@@ -1658,7 +1712,10 @@ that affects the model output should also have a comment. }
     function SwtSelected(Sender: TObject): boolean; virtual;
     function SwtOffsetsUsed(Sender: TObject): boolean; virtual;
     function SwtSpecifiedUsed(Sender: TObject): boolean; virtual;
-    function SutraUsed(Sender: TObject): boolean; virtual;
+    function SutraUsed(Sender: TObject): boolean;
+    function Sutra3DModel(Sender: TObject): boolean;
+    function SutraConcentrationUsed(Sender: TObject): boolean;
+    function SutraTemperatureUsed(Sender: TObject): boolean;
     function ModflowOrPhastUsed(Sender: TObject): boolean; virtual;
     function IndenticalTransientArray(DataArray: TDataArray; DataArrays: TList;
       var CachedIndex: integer): TDataArray;
@@ -1706,6 +1763,7 @@ that affects the model output should also have a comment. }
     FMt3dmsLakMassFluxObservations: TMt3dmsFluxObservationGroups;
     FSutraMesh: TSutraMesh3D;
     FSutraOptions: TSutraOptions;
+    FSutraOutputControl: TSutraOutputControl;
     procedure SetAlternateFlowPackage(const Value: boolean);
     procedure SetAlternateSolver(const Value: boolean);
     procedure SetBatchFileAdditionsAfterModel(const Value: TStrings);
@@ -1834,6 +1892,10 @@ that affects the model output should also have a comment. }
     function ModpathRetardationNeeded(Sender: TObject): boolean;
     function GetModPathLocation: string;
     function ModpathZonesNeeded(Sender: TObject): boolean;
+    procedure SetSutraOutputControl(const Value: TSutraOutputControl);
+    function SutraThicknessUsed(Sender: TObject): boolean;
+    function SutraUnsatRegionUsed(Sender: TObject): boolean;
+    function GetSutraMesh: TSutraMesh3D;
   var
     LakWriter: TObject;
     SfrWriter: TObject;
@@ -1878,6 +1940,8 @@ that affects the model output should also have a comment. }
     FTimeLists: TList;
 
   protected
+    function GetSfrStreamLinkPlot: TSfrStreamLinkPlot; virtual; abstract;
+    procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot); virtual; abstract;
     procedure SetFileName(const Value: string); virtual;
     procedure SetFrontTimeList(const Value: TCustomTimeList); virtual;
     procedure SetSideTimeList(const Value: TCustomTimeList); virtual;
@@ -1937,6 +2001,8 @@ that affects the model output should also have a comment. }
     procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection);
       virtual; abstract;
   public
+    procedure DrawSfrStreamLinkages(const BitMap: TBitmap32;
+      const ZoomBox: TQRbwZoomBox2);
     procedure RenameDataArray(DataArray: TDataArray;
       const NewName, NewDisplayName: string);
     // When a @link(TDataArray) or global variable is renamed, @name is
@@ -1946,7 +2012,7 @@ that affects the model output should also have a comment. }
     function IndexOfMt3dmsSpeciesName(const AChemSpecies: string): integer;
     property Gages: TStringList read FGages;
     function StoreHeadObsResults: boolean;
-    function TestModpathOK: Boolean;
+    function TestModpathOK(Model: TCustomModel): Boolean;
     property ModflowLocation: string read GetModflowLocation write SetModflowLocation;
     property ModPathLocation: string read GetModPathLocation;
     procedure ExportSeparateLgrModel(const FileName: string;
@@ -2406,6 +2472,8 @@ that affects the model output should also have a comment. }
     property Mesh: TSutraMesh3D read GetMesh;
     function TwoDElementCenter(const Column, Row: integer): TPoint2D;
     function TwoDElementCorner(const Column, Row: integer): TPoint2D;
+    property SfrStreamLinkPlot: TSfrStreamLinkPlot read GetSfrStreamLinkPlot
+      write SetSfrStreamLinkPlot;
   published
     // @name defines the grid used with PHAST.
     property PhastGrid: TPhastGrid read FPhastGrid write SetPhastGrid;
@@ -2517,10 +2585,12 @@ that affects the model output should also have a comment. }
     // @name is used only in MODFLOW models.
     property EndPoints: TEndPointReader read GetEndPoints Write SetEndPoints
       stored StoreEndPoints;
-    property SutraMesh: TSutraMesh3D read FSutraMesh write SetSutraMesh
-      stored False;
+    property SutraMesh: TSutraMesh3D read GetSutraMesh write SetSutraMesh
+      {$IFNDEF SUTRA} stored False {$ENDIF};
     property SutraOptions: TSutraOptions read FSutraOptions
       write SetSutraOptions {$IFNDEF SUTRA} stored False {$ENDIF};
+    property SutraOutputControl: TSutraOutputControl read FSutraOutputControl
+      write SetSutraOutputControl {$IFNDEF SUTRA} stored False {$ENDIF};
   end;
 
   TMapping = record
@@ -2737,6 +2807,8 @@ that affects the model output should also have a comment. }
     FImmobileComponents: TChemSpeciesCollection;
     FMobileComponents: TMobileChemSpeciesCollection;
     FSutraLayerStructure: TSutraLayerStructure;
+    FSutraTimeOptions: TSutraTimeOptions;
+//    FSutraOutputControl: TSutraOutputControl;
     // See @link(Exaggeration).
     function GetExaggeration: double;
     // See @link(OwnsScreenObjects).
@@ -2815,7 +2887,6 @@ that affects the model output should also have a comment. }
     procedure CreatePhastTimeListGroups;
     procedure UpdateUseList(DataIndex: integer; NewUseList: TStringList;
       Item: TCustomModflowBoundaryItem);
-    //    procedure DefinePackageDataArrays;
     function DefaultArchiveName: string;
     function GetArchiveName: string;
     procedure SetArchiveName(const Value: string);
@@ -2899,12 +2970,15 @@ that affects the model output should also have a comment. }
     function GetCombinedDisplayLayer: integer;
     function GetCombinedDisplayRow: integer;
     function UpwIsSelected: Boolean;
-    procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot);
     function SsmIsSelected: Boolean;
     function GetSutraLayerStructure: TSutraLayerStructure;
     procedure SetSutraLayerStructure(const Value: TSutraLayerStructure);
     procedure RenameOldVerticalLeakance; override;
+    procedure SetSutraTimeOptions(const Value: TSutraTimeOptions);
+//    procedure SetSutraOutputControl(const Value: TSutraOutputControl);
   protected
+    function GetSfrStreamLinkPlot: TSfrStreamLinkPlot; override;
+    procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot); override;
     procedure SetFileName(const Value: string); override;
     function GetFormulaManager: TFormulaManager; override;
     function GetLayerStructure: TLayerStructure;override;
@@ -2983,8 +3057,8 @@ that affects the model output should also have a comment. }
 //    procedure RenameDataArray(DataArray: TDataArray; const NewName: string);
     procedure DrawHeadObservations(const BitMap: TBitmap32;
       const ZoomBox: TQRbwZoomBox2); override;
-    procedure DrawSfrStreamLinkages(const BitMap: TBitmap32;
-      const ZoomBox: TQRbwZoomBox2);
+//    procedure DrawSfrStreamLinkages(const BitMap: TBitmap32;
+//      const ZoomBox: TQRbwZoomBox2);
     // Update relationships of parent grid with child grids.
     procedure UpdateMapping;
     function InitialWaterTableUsed(Sender: TObject): boolean; override;
@@ -3382,6 +3456,7 @@ that affects the model output should also have a comment. }
     function LpfIsSelected: Boolean;
     function Mnw2IsSelected: Boolean;
     function MODPATHIsSelected: Boolean;
+    procedure ModpathHeadWarning;
     function Mt3dmsIsSelected: Boolean;
     function Mt3dmsSsmIsSelected: Boolean;
     function Mt3dmsTobIsSelected: Boolean;
@@ -3559,11 +3634,13 @@ that affects the model output should also have a comment. }
     property SaveBfhBoundaryConditions;
     property ContourFont;
     property ShowContourLabels;
-    property SfrStreamLinkPlot: TSfrStreamLinkPlot read FSfrStreamLinkPlot
-      write SetSfrStreamLinkPlot;
+    property SfrStreamLinkPlot;
     property SutraLayerStructure: TSutraLayerStructure read GetSutraLayerStructure
       write SetSutraLayerStructure {$IFNDEF Sutra} stored False {$ENDIF};
-
+    property SutraTimeOptions: TSutraTimeOptions read FSutraTimeOptions
+      write SetSutraTimeOptions {$IFNDEF Sutra} stored False {$ENDIF};
+//    property SutraOutputControl: TSutraOutputControl read FSutraOutputControl
+//      write SetSutraOutputControl {$IFNDEF Sutra} stored False {$ENDIF};
   end;
 
   TChildDiscretization = class(TOrderedItem)
@@ -3758,6 +3835,8 @@ that affects the model output should also have a comment. }
     function GetMobileComponents: TMobileChemSpeciesCollection; override;
     procedure SetImmobileComponents(const Value: TChemSpeciesCollection); override;
     procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection); override;
+    function GetSfrStreamLinkPlot: TSfrStreamLinkPlot; override;
+    procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot); override;
   public
     property CanUpdateGrid: Boolean read FCanUpdateGrid write SetCanUpdateGrid;
     function LayerGroupUsed(LayerGroup: TLayerGroup): boolean; override;
@@ -5584,9 +5663,75 @@ const
   //         change in which object is selected.
   //       Bug fix: The display of the data for the RCH, EVT and ETS packages
   //         has been fixed.
+  //     '2.17.1.1' Enhancement: Added support for PHIRAMP in the
+  //         Well package of MODFLOW-NWT.
+  //       Bug fix: Fixed export of starting locations file for MODPATH version
+  //         6 when no starting locations have been defined for some objects.
+  //       Bug fix: Fixed export of MODPATH with MODFLOW-LGR child models
+  //         when the MODPATH options differ between the parent and child
+  //         models.
+  //     '2.17.1.2' Bug fix: Fixed problem with editing objects in
+  //        translated version of ModelMuse.
+  //     '2.17.1.3' No real change.
+  //     '2.17.1.4' Bug fix: Attempting to read a head observation file in
+  //         which some of the numbers are invalid now results in an error
+  //         message to the user instead of a bug report.
+  //       Enhancement: When exporting objects as Shapefiles, you can now export
+  //         the formulas for many but not all MODFLOW Features.
+  //     '2.17.1.5' Bug fix: In the MODFLOW Layers dialog box, deleting
+  //         sublayers graphically now works correctly.
+  //       Bug fix: Fixed bug in importing the MNW2 package from existing
+  //         models.
+  //     '2.17.1.6' Bug fix: If a pathline just has a single point, it is now
+  //         drawn as a single point instead of being skipped.
+  //       Bug fix: In the grid value dialog box, data for MODPATH pathlines
+  //         and endpoints are now displayed for child models in MODFLOW-LGR
+  //         models.
+  //       Bug fix: When exporting images with MODFLOW-LGR models, MODPATH
+  //         pathlines and other data can now be displayed for child models.
+  //       Bug fix: Streamlinks of MODFLOW-LGR child models are now displayed.
+  //       Bug fix: Fixed export of locations of pval and jtf file names to
+  //         ModelMate when the model files are in a different directory from
+  //         the ModelMuse file. (More changes in version 2.17.1.7.)
+  //       Enhancement: Added support for exporting head observations to
+  //         Shapefiles. (This is an extension of the enhancement in version
+  //         2.17.1.4.)
+  //     '2.17.1.7' Bug fix: Fixed export of ModelMate files when the model
+  //         files are in a different directory from the ModelMuse file.
+  //     '2.17.1.8' Enhancement: The Grid Value dialog box was modified to
+  //         allow multiple tabs to be displayed simultaneously.
+  //     '2.17.1.9' Bug fix: In the MODFLOW Layers dialog box, setting custom
+  //         sub discretizations for layer groups now works properly.
+  //     '2.17.1.10' Bug fix: Added support for IUNITRAMP in data set 2B of the
+  //         well package of MODFLOW-NWT. (Bug not in released version.)
+  //     '2.17.1.11' Bug fix: Fixed bug in exporting Shapefiles. Each record
+  //         for the shapefile in the .dbf file now includes a space for
+  //         indicating whether a record is deleted or not.
+  //     '2.17.1.12' Bug fix: Fixed bug in exporting the TOB file for MT3DMS
+  //         when no concentration observations are defined.
+  //     '2.17.1.13' Bug fix: Fixed updating of the initial NWT values.
+  //         (Bug not in released version.)
+  //       Bug fix: Fixed bug that caused ModelMuse to crash when it
+  //         first starts on some systems. (Bug in GLScene fixed by updating
+  //         GLScene to the latest version from SVN.)
+  //       Bug fix: Fixed bug displaying 3D view on Windows 8.
+  //     '2.17.1.14' Enhancement: Added new function for use in Formulas:
+  //         Closest. See the ModelMuse help for details.
+  //       Enhancement: Added the ability to import binary grid files created
+  //         by T-PROGS.
+  //     '2.17.1.15' Bug fix: Fixed bug that caused ModelMuse to crash when
+  //         changing the number of rows, oolumns or layers in the grid.
+  //     '2.17.1.16' Bug fix: Fixed bug in adding new data sets when child
+  //         models from a MODFLOW-LGR model have been created but the
+  //         model is no longer a MODFLOW-LGR model.
+  //       Enhancement: Changes to the file format of the MNW2 package in
+  //         MODFLOW-NWT are now supported.
+  //     '2.18.0.0' Bug fix: Fixed bug that would cause divide-by-zero errors
+  //         when calculating Interlayer Kz in the HUF package if some of the
+  //         data was not properly defined.
 
 const
-  ModelVersion = '2.17.1.0';
+  IModelVersion = '2.18.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -5682,7 +5827,7 @@ resourcestring
   StrZoneBudgetDefaultPath = 'C:\WRDAPP\Zonbud.3_01\Bin\zonbud.exe';
   StrModelMateDefaultPath = 'C:\WRDAPP\ModelMate_1_0_1\Bin\ModelMate.exe';
   strModflowLgrDefaultPath = 'C:\WRDAPP\mflgr.1_2\bin\mflgr.exe';
-  strModflowNwtDefaultPath = 'C:\WRDAPP\MODFLOW-NWT_1.0.5\bin\MODFLOW-NWT.exe';
+  strModflowNwtDefaultPath = 'C:\WRDAPP\MODFLOW-NWT_1.0.7\bin\MODFLOW-NWT.exe';
 
   StrProgramLocations = 'Program Locations';
   StrMODFLOW2005 = 'MODFLOW-2005';
@@ -5763,6 +5908,9 @@ resourcestring
   ' (%1:g). Do you want to stop the MT3DMS simulation when it reaches the ti' +
   'me you specified for the end of the MT3DMS simulation? ("Cancel" aborts ' +
   'the export of the MT3DMS files.)';
+  StrMODPATHVersion6Re = 'MODPATH version 6 requires that if heads are saved, ' +
+  'they must be saved in a binary format. That isn''t the case for this ' +
+  'model. Do you want to export the MODPATH input anyway?';
 
 const
   StatFlagStrings : array[Low(TStatFlag)..High(TStatFlag)] of string
@@ -5975,7 +6123,7 @@ begin
               end
               else
               begin
-                AnnotationList.Add(NewAnnotation);;
+                AnnotationList.Add(NewAnnotation);
               end;
               ADataArray.Annotation[LayerIndex,
                 ChildModel.FirstRow, ChildModel.FirstCol] := NewAnnotation;
@@ -5997,7 +6145,7 @@ begin
               end
               else
               begin
-                AnnotationList.Add(NewAnnotation);;
+                AnnotationList.Add(NewAnnotation);
               end;
               ADataArray.Annotation[LayerIndex,
                 ChildModel.FirstRow, ChildModel.LastCol] := NewAnnotation;
@@ -6019,7 +6167,7 @@ begin
               end
               else
               begin
-                AnnotationList.Add(NewAnnotation);;
+                AnnotationList.Add(NewAnnotation);
               end;
               ADataArray.Annotation[LayerIndex,
                 ChildModel.LastRow, ChildModel.FirstCol] := NewAnnotation;
@@ -6041,7 +6189,7 @@ begin
               end
               else
               begin
-                AnnotationList.Add(NewAnnotation);;
+                AnnotationList.Add(NewAnnotation);
               end;
               ADataArray.Annotation[LayerIndex,
                 ChildModel.LastRow, ChildModel.LastCol] := NewAnnotation;
@@ -6064,7 +6212,7 @@ begin
                 end
                 else
                 begin
-                  AnnotationList.Add(NewAnnotation);;
+                  AnnotationList.Add(NewAnnotation);
                 end;
                 ADataArray.Annotation[LayerIndex,
                   ChildModel.FirstRow, ColIndex] := NewAnnotation;
@@ -6082,7 +6230,7 @@ begin
                 end
                 else
                 begin
-                  AnnotationList.Add(NewAnnotation);;
+                  AnnotationList.Add(NewAnnotation);
                 end;
                 ADataArray.Annotation[LayerIndex,
                   ChildModel.LastRow, ColIndex] := NewAnnotation;
@@ -6103,7 +6251,7 @@ begin
                 end
                 else
                 begin
-                  AnnotationList.Add(NewAnnotation);;
+                  AnnotationList.Add(NewAnnotation);
                 end;
                 ADataArray.Annotation[LayerIndex, RowIndex,
                   ChildModel.FirstCol] := NewAnnotation;
@@ -6121,7 +6269,7 @@ begin
                 end
                 else
                 begin
-                  AnnotationList.Add(NewAnnotation);;
+                  AnnotationList.Add(NewAnnotation);
                 end;
                 ADataArray.Annotation[LayerIndex, RowIndex,
                   ChildModel.LastCol] := NewAnnotation;
@@ -6338,7 +6486,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.BcfPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -6434,7 +6582,7 @@ begin
 
   FDiffusivity := 1E-9;
   FModelTimes := TRealList.Create;
-  FFileVersion := ModelVersion;
+  FFileVersion := IModelVersion;
 
   FTopBoundaryType := TIntegerSparseDataSet.Create(self);
   FTopBoundaryType.Name := 'FTopBoundaryType';
@@ -6524,6 +6672,7 @@ begin
 
   {$IFDEF Sutra}
   FSutraLayerStructure:= TSutraLayerStructure.Create(Self);
+  FSutraTimeOptions := TSutraTimeOptions.Create(Self);
 //  LayerGroup := FSutraLayerStructure.Add as TSutraLayerGroup;
 //  LayerGroup.AquiferName := 'SUTRA_Mesh_Top';
   {$ENDIF}
@@ -6861,6 +7010,7 @@ begin
     FContourFont.Free;
 
     FSutraLayerStructure.Free;
+    FSutraTimeOptions.Free;
   finally
     FreeAndNil(frmFileProgress);
   end;
@@ -6928,6 +7078,11 @@ begin
   result := FSelectedModel
 end;
 
+function TPhastModel.GetSfrStreamLinkPlot: TSfrStreamLinkPlot;
+begin
+  Result := FSfrStreamLinkPlot;
+end;
+
 function TPhastModel.GetShowContourLabels: boolean;
 begin
   result := FShowContourLabels
@@ -6960,7 +7115,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.HufPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -6994,7 +7149,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.HydmodPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -7030,7 +7185,7 @@ begin
         end;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         result := (SutraMesh <> nil) and (SutraMesh.MeshType = mt3D);
         if result then
@@ -7157,7 +7312,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.LpfPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -7406,7 +7561,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.ChdBoundary.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -7440,7 +7595,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.ChobPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -7804,7 +7959,7 @@ begin
     begin
       for ValueIndex := 0 to Boundary.Values.Count -1 do
       begin
-        Item := Boundary.Values[ValueIndex];
+        Item := Boundary.Values[ValueIndex] as TCustomModflowBoundaryItem;
         UpdateUseList(DataIndex, NewUseList, Item);
       end;
       for ParamIndex := 0 to Boundary. Parameters.Count - 1 do
@@ -7894,7 +8049,7 @@ begin
     msModflowLGR: ;
     msModflowNWT: ;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         if FSutraLayerStructure.Count = 0 then
         begin
@@ -7932,7 +8087,7 @@ begin
           ModflowGrid.ThreeDGridObserver := nil;
         end;
       {$IFDEF SUTRA}
-      msSutra:
+      msSutra22:
         begin
 
         end
@@ -7959,9 +8114,11 @@ begin
           ThreeDGridObserver.OnUpToDateSet := ModflowGrid.NotifyGridChanged;
         end;
       {$IFDEF SUTRA}
-      msSutra:
+      msSutra22:
         begin
           FGrid := nil;
+          TopGridObserver.OnUpToDateSet := OnTopSutraMeshChanged;
+          ThreeDGridObserver.OnUpToDateSet := OnTopSutraMeshChanged;
         end
       {$ENDIF}
       else Assert(False);
@@ -8424,7 +8581,7 @@ end;
 
 function TPhastModel.GetVersion: string;
 begin
-  result := ModelVersion;
+  result := IModelVersion;
 end;
 
 procedure TPhastModel.SetVersion(const Value: string);
@@ -9000,7 +9157,7 @@ begin
         Grid.ThreeDDataSet := Value;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         if (Mesh <> nil) then
         begin
@@ -9154,7 +9311,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.GbobPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -9233,7 +9390,7 @@ begin
     msPhast: result := 'PHAST';
     msModflow, msModflowNWT: result := 'MODFLOW';
     msModflowLGR: result := 'Parent model';
-    {$IFDEF SUTRA} msSutra: result := 'SUTRA'; {$ENDIF}
+    {$IFDEF SUTRA} msSutra22: result := 'SUTRA'; {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -9251,7 +9408,7 @@ begin
         result := Grid.ThreeDDataSet;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         if (Mesh <> nil) then
         begin
@@ -9953,7 +10110,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.UzfPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -10032,7 +10189,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.WelPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -10081,7 +10238,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.ZoneBudget.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -10175,7 +10332,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.ResPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -10251,7 +10408,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.RivPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -10285,7 +10442,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.RvobPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -10506,6 +10663,7 @@ var
 begin
   result := 0;
   case ModelSelection of
+    msUndefined: result := 0;
     msPhast: result := PhastGrid.LayerCount;
     msModflow, msModflowNWT: result := ModflowGrid.LayerCount;
     msModflowLGR:
@@ -10515,7 +10673,20 @@ begin
         begin
           Inc(result, MaxChildLayersPerLayer(LayerIndex));
         end;
-      end
+      end;
+    {$IFDEF SUTRA}
+    msSutra22:
+      begin
+        if SutraMesh = nil then
+        begin
+          result := 0;
+        end
+        else
+        begin
+          result := SutraMesh.LayerCount;
+        end;
+      end;
+    {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -10583,7 +10754,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.Mnw2Package.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -10728,7 +10899,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.RchPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -10897,7 +11068,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.LakPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -11250,6 +11421,46 @@ begin
     begin
       result := result or
         ChildModels[ChildIndex].ChildModel.ModflowUsed(Sender);
+    end;
+  end;
+end;
+
+procedure TPhastModel.ModpathHeadWarning;
+var
+  HeadOC: THeadDrawdownOutputControl;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  frmErrorsAndWarnings.RemoveWarningGroup(self,StrWrongHeadModpath);
+  if ModflowPackages.Modpath.IsSelected
+    and (ModflowPackages.Modpath.MpathVersion = mp6) then
+  begin
+    HeadOC := ModflowOutputControl.HeadOC;
+    if HeadOC.OutputFileType = oftText then
+    begin
+      frmErrorsAndWarnings.AddWarning(self,
+        StrWrongHeadModpath, StrWrongHeadModpathDetailed);
+    end;
+  end;
+  if LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if (ChildModel <> nil) then
+      begin
+        frmErrorsAndWarnings.RemoveWarningGroup(ChildModel,StrWrongHeadModpath);
+        if ChildModel.ModflowPackages.Modpath.IsSelected
+          and (ChildModel.ModflowPackages.Modpath.MpathVersion = mp6) then
+        begin
+          HeadOC := ChildModel.ModflowOutputControl.HeadOC;
+          if HeadOC.OutputFileType = oftText then
+          begin
+            frmErrorsAndWarnings.AddWarning(ChildModel,
+              StrWrongHeadModpath, StrWrongHeadModpathDetailed);
+          end;
+        end;
+      end;
     end;
   end;
 end;
@@ -11649,7 +11860,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.SubPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -11778,7 +11989,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.SwtPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -11846,10 +12057,8 @@ var
   SfrBoundary: TSfrBoundary;
   ParamItem: TSfrParamIcalcItem;
   SegItem: TCustomModflowBoundaryItem;
-//  ChildIndex: Integer;
-//  ChildModel: TChildModel;
-//  Index: integer;
-//  ADataSet, ChildDataArray: TDataArray;
+  TempBool: boolean;
+  TempSelected: Boolean;
 begin
    RenameOldVerticalLeakance;
 
@@ -11976,7 +12185,7 @@ begin
           begin
             ParamItem.Assign(SfrBoundary.ParamIcalc.Items[ParamItem.Index-1]);
           end;
-          SegItem := SfrBoundary.SegmentFlows.Items[ParamItem.Index];
+          SegItem := SfrBoundary.SegmentFlows.Items[ParamItem.Index] as TCustomModflowBoundaryItem;
           ParamItem.StartTime := SegItem.StartTime;
           ParamItem.EndTime := SegItem.EndTime;
         end;
@@ -11988,6 +12197,20 @@ begin
   begin
     ModflowPackages.ModPath.MpathVersion := mp5;
     ModflowPackages.ModPath.StopOption := soExtend;
+  end;
+
+  if FileVersionEqualOrEarlier('2.17.1.9')
+    and not ModflowPackages.NwtPackage.IsSelected then
+//    or (ModflowPackages.NwtPackage.Option <> noSpecified))  then
+  begin
+    TempBool := ModflowPackages.NwtPackage.ContinueNWT;
+    TempSelected := ModflowPackages.NwtPackage.IsSelected;
+    ModflowPackages.NwtPackage.InitializeVariables;
+    ModflowPackages.NwtPackage.IsSelected := TempSelected;
+    if ModflowPackages.NwtPackage.IsSelected then
+    begin
+      ModflowPackages.NwtPackage.ContinueNWT := TempBool;
+    end;
   end;
 end;
 
@@ -12760,7 +12983,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.EtsPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -12795,7 +13018,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.EvtPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -13031,7 +13254,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.HfbPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -13050,7 +13273,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.HobPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -13102,7 +13325,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.GhbBoundary.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -13121,7 +13344,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.GmgPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -13149,7 +13372,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.SfrPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -13168,7 +13391,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.SipPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -13243,6 +13466,11 @@ end;
 procedure TPhastModel.SetSutraLayerStructure(const Value: TSutraLayerStructure);
 begin
   FSutraLayerStructure.Assign(Value);
+end;
+
+procedure TPhastModel.SetSutraTimeOptions(const Value: TSutraTimeOptions);
+begin
+  FSutraTimeOptions.Assign(Value);
 end;
 
 procedure TPhastModel.SetSaveBfhBoundaryConditions(const Value: boolean);
@@ -13423,7 +13651,7 @@ begin
   end;
 end;
 
-procedure TPhastModel.DrawSfrStreamLinkages(const BitMap: TBitmap32;
+procedure TCustomModel.DrawSfrStreamLinkages(const BitMap: TBitmap32;
   const ZoomBox: TQRbwZoomBox2);
 const
   SquareSize = 6;
@@ -13600,7 +13828,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.DrnPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -13619,7 +13847,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.DrobPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -13638,7 +13866,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.DrtPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -13901,7 +14129,7 @@ begin
         Grid.GridChanged;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         if (Mesh <> nil) then
         begin
@@ -13934,7 +14162,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.De4Package.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -15177,6 +15405,11 @@ begin
       end;
     end;
   end;
+  if SutraMesh <> nil then
+  begin
+    SutraMesh.SelectedLayer := FCombinedDisplayLayer;
+    FCombinedDisplayLayer := SutraMesh.SelectedLayer;
+  end;
 end;
 
 procedure TPhastModel.SetCombinedDisplayRow(const Value: integer);
@@ -15589,7 +15822,7 @@ var
   ChildModel: TChildModel;
 begin
   result := ModflowPackages.PcgPackage.IsSelected;
-  if frmGoPhast.PhastModel.LgrUsed then
+  if not result and frmGoPhast.PhastModel.LgrUsed then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -16759,6 +16992,7 @@ begin
     ModflowLgrLocation := SourceLocations.ModflowLgrLocation;
     ModflowNwtLocation := SourceLocations.ModflowNwtLocation;
     Mt3dmsLocation := SourceLocations.Mt3dmsLocation;
+    Sutra22Location := SourceLocations.Sutra22Location;
   end
   else
   begin
@@ -16777,6 +17011,7 @@ begin
   ModflowLgrLocation := strModflowLgrDefaultPath;
   ModflowNwtLocation := strModflowNwtDefaultPath;
   Mt3dmsLocation := strMt3dmsDefaultPath;
+  Sutra22Location := KSutraDefaultPath;
   ADirectory := GetCurrentDir;
   try
     SetCurrentDir(ExtractFileDir(ParamStr(0)));
@@ -16812,6 +17047,8 @@ begin
     strModflowNwtDefaultPath);
   Mt3dmsLocation := IniFile.ReadString(StrProgramLocations, StrMT3DMS,
     strMt3dmsDefaultPath);
+  Sutra22Location := IniFile.ReadString(StrProgramLocations, KSutra22,
+    KSutraDefaultPath);
 
   ADirectory := GetCurrentDir;
   try
@@ -16901,9 +17138,14 @@ begin
   FPhastLocation := RemoveQuotes(Value);
 end;
 
+procedure TProgramLocations.SetSutra22Location(const Value: string);
+begin
+  FSutra22Location := RemoveQuotes(Value);
+end;
+
 procedure TProgramLocations.SetZoneBudgetLocation(const Value: string);
 begin
-  FZoneBudgetLocation := RemoveQuotes(Value);;
+  FZoneBudgetLocation := RemoveQuotes(Value);
 end;
 
 procedure TProgramLocations.WriteToIniFile(IniFile: TMemInifile);
@@ -16919,6 +17161,7 @@ begin
   IniFile.WriteString(StrProgramLocations, strModflowLgr, ModflowLgrLocation);
   IniFile.WriteString(StrProgramLocations, strModflowNWT, ModflowNwtLocation);
   IniFile.WriteString(StrProgramLocations, StrMT3DMS, Mt3dmsLocation);
+  IniFile.WriteString(StrProgramLocations, KSutra22, Sutra22Location);
 end;
 
 { TDataSetClassification }
@@ -17057,8 +17300,10 @@ begin
   FHufSyNotifier.Name := 'HufSyNotifier';
 
   FUnitNumbers := TUnitNumbers.Create(self);
+//  FSfrStreamLinkPlot := TSfrStreamLinkPlot.Create(self);
 
   FSutraOptions := TSutraOptions.Create(self);
+  FSutraOutputControl := TSutraOutputControl.Create(self);
 
   FDataArrayManager.DefinePackageDataArrays;
   CreateModflowDisplayTimeLists;
@@ -17078,7 +17323,9 @@ begin
 //  FDataSetsToCache.Free;
 
   FSutraMesh.Free;
+  FSutraOutputControl.Free;
   FSutraOptions.Free;
+//  FSfrStreamLinkPlot.Free;
   FModflowWettingOptions.Free;
   FFilesToArchive.Free;
   FModelInputFiles.Free;
@@ -17136,7 +17383,7 @@ begin
   end;
 end;
 
-function TCustomModel.TestModpathOK: Boolean;
+function TCustomModel.TestModpathOK(Model: TCustomModel): Boolean;
 begin
   result := True;
   if (ModflowOutputControl.SaveCellFlows = csfNone)
@@ -17152,6 +17399,20 @@ begin
     begin
       frmGoPhast.miOutputControlClick(nil);
       result := false;
+    end;
+  end;
+  if result and (Model.ModflowPackages.ModPath.MpathVersion = mp6) then
+  begin
+    if ModflowOutputControl.HeadOC.SaveInExternalFile
+      and (ModflowOutputControl.HeadOC.OutputFileType <> oftBinary) then
+    begin
+      Beep;
+    if (MessageDlg(StrMODPATHVersion6Re,
+      mtWarning, [mbYes, mbNo], 0, mbNo) <> mrYes) then
+    begin
+      frmGoPhast.miOutputControlClick(nil);
+      result := false;
+    end;
     end;
   end;
 end;
@@ -17297,7 +17558,7 @@ begin
         Grid.SelectedLayer:= Value;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         if Mesh <> nil then
         begin
@@ -17327,7 +17588,7 @@ begin
         Grid.SideDataSet := Value;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         // do nothing
       end;
@@ -17356,6 +17617,11 @@ begin
   FSutraOptions.Assign(Value);
 end;
 
+procedure TCustomModel.SetSutraOutputControl(const Value: TSutraOutputControl);
+begin
+  FSutraOutputControl.Assign(Value);
+end;
+
 procedure TCustomModel.SetTopDataSet(const Value: TDataArray);
 begin
   case ModelSelection of
@@ -17368,7 +17634,7 @@ begin
         Grid.TopDataSet := Value;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         if (Mesh <> nil) then
         begin
@@ -17419,7 +17685,7 @@ begin
         Grid.FrontDataSet := Value;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         // do nothing
       end;
@@ -17740,8 +18006,16 @@ begin
         finally
           FSutraMesh.Mesh2D.EndUpdate;
         end;
+
 //        FSutraMesh.UpdateElevations;
       finally
+        DataArrayManager.InvalidateAllDataSets;
+        DataArrayManager.CreateInitialDataSets;
+
+        FSutraMesh.NodeDrawingChoice := dcEdge;
+        FSutraMesh.ElementDrawingChoice := dcAll;
+        FSutraMesh.ElevationsNeedUpdating := true;
+
         FSutraMesh.EndUpdate;
       end;
       frmGoPhast.InvalidateGrid;
@@ -17762,7 +18036,7 @@ begin
     DataArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount, Grid.ColumnCount);
   end
   {$IFDEF Sutra}
-  else if (FModelSelection = msSutra) and (Mesh <> nil) then
+  else if (FModelSelection = msSutra22) and (Mesh <> nil) then
   begin
     case DataArray.EvaluatedAt of
       eaBlocks:
@@ -17922,7 +18196,7 @@ begin
         result := Grid.SelectedLayer;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         if Mesh <> nil then
         begin
@@ -17960,7 +18234,7 @@ begin
         result := Grid.SideDataSet;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         if (Mesh <> nil) then
         begin
@@ -17971,6 +18245,22 @@ begin
     else
        Assert(False);
   end;
+end;
+
+function TCustomModel.GetSutraMesh: TSutraMesh3D;
+begin
+  if FSutraMesh = nil then
+  begin
+    FSutraMesh := TSutraMesh3D.Create(self);
+    if not (csLoading in ComponentState) then
+    begin
+      if Self is TPhastModel then
+      begin
+        TPhastModel(Self).SutraLayerStructure.Loaded;
+      end;
+    end;
+  end;
+  result := FSutraMesh;
 end;
 
 procedure TCustomModel.Clear;
@@ -18027,7 +18317,7 @@ begin
     FTemplate.Insert(0, IntToStr(FTemplate.Count));
 
     Comment := '# PVAL file created on ' + DateToStr(Now) + ' by '
-      + ProgramName + ' version ' + ModelVersion + '.';
+      + ProgramName + ' version ' + IModelVersion + '.';
     FPValFile.Insert(0, Comment);
     FTemplate.Insert(0, Comment);
 
@@ -18476,9 +18766,13 @@ end;
 procedure TCustomModel.OnTopSutraMeshChanged(Sender: TObject);
 begin
   {$IFDEF SUTRA}
-  if (ModelSelection = msSutra) and (FSutraMesh <> nil) then
+  if (ModelSelection = msSutra22) and (FSutraMesh <> nil) then
   begin
-    FSutraMesh.ElevationsNeedUpdating := True;
+    if not ThreeDGridObserver.UpToDate then
+    begin
+      frmGoPhast.FrontDiscretizationChanged := True;
+      FSutraMesh.ElevationsNeedUpdating := True;
+    end;
   end;
   {$ENDIF}
 end;
@@ -18966,10 +19260,17 @@ procedure TDataArrayManager.DefinePackageDataArrays;
     ARecord.Max := 1;
     ARecord.Min := 0;
   end;
+{$IFDEF SUTRA}
+const
+  ArrayCount = 89;
+{$ELSE}
+const
+  ArrayCount = 70;
+{$ENDIF}
 var
   Index: integer;
 begin
-  SetLength(FDataArrayCreationRecords, 70);
+  SetLength(FDataArrayCreationRecords, ArrayCount);
   Index := 0;
 
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
@@ -20065,6 +20366,274 @@ begin
     'MODPATH Simulation file, Items 32 and 33: RetardationFactor and RetardationFactorCB';
   Inc(Index);
 
+{$IFDEF SUTRA}
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KNodalPorosity;
+  FDataArrayCreationRecords[Index].DisplayName := StrNodalPorosityDisplayName;
+  FDataArrayCreationRecords[Index].Formula := '0.1';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 14B: POR';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KNodalThickness;
+  FDataArrayCreationRecords[Index].DisplayName := StrNodalThicknessDisplayName;
+  FDataArrayCreationRecords[Index].Formula := '1';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraThicknessUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 14B: Z';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := KUnsatRegionNodes;
+  FDataArrayCreationRecords[Index].DisplayName := StrUnsatRegionNodesDisplayName;
+  FDataArrayCreationRecords[Index].Formula := '1';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUnsatRegionUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 14B: NREG';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := KUnsatRegionElements;
+  FDataArrayCreationRecords[Index].DisplayName := StrUnsatRegionElementsDisplayName;
+  FDataArrayCreationRecords[Index].Formula := '1';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUnsatRegionUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: LREG';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KMaximumPermeability;
+  FDataArrayCreationRecords[Index].DisplayName := StrMaximumPermeability;
+  FDataArrayCreationRecords[Index].Formula := '1E-10';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: PMAX';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KMiddlePermeability;
+  FDataArrayCreationRecords[Index].DisplayName := StrMiddlePermeability;
+  FDataArrayCreationRecords[Index].Formula := KMaximumPermeability;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Sutra3DModel;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: PMID';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KMinimumPermeability;
+  FDataArrayCreationRecords[Index].DisplayName := StrMinimumPermeability;
+  FDataArrayCreationRecords[Index].Formula := KMaximumPermeability;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: PMIN';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KHorizontalAngle;
+  FDataArrayCreationRecords[Index].DisplayName := StrHorizontalAngle; 
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: ANGLE1';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KVerticalAngle;
+  FDataArrayCreationRecords[Index].DisplayName := StrVerticalAngle;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Sutra3DModel;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: ANGLE2';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KRotationalAngle;
+  FDataArrayCreationRecords[Index].DisplayName := StrRotationalAngle;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Sutra3DModel;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: ANGLE3';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KMaxLongitudinalDisp;
+  FDataArrayCreationRecords[Index].DisplayName := StrMaxLongitudinalDisp;
+  FDataArrayCreationRecords[Index].Formula := '0.5';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: ALMAX';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KMidLongitudinalDisp;
+  FDataArrayCreationRecords[Index].DisplayName := StrMidLongitudinalDisp;
+  FDataArrayCreationRecords[Index].Formula := KMaxLongitudinalDisp;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Sutra3DModel;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: ALMID';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KMinLongitudinalDisp;
+  FDataArrayCreationRecords[Index].DisplayName := StrMinLongitudinalDisp;
+  FDataArrayCreationRecords[Index].Formula := KMaxLongitudinalDisp;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: ALMIN';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KMaxTransverseDisp;
+  FDataArrayCreationRecords[Index].DisplayName := StrMaxTransverseDisp;
+  FDataArrayCreationRecords[Index].Formula := '0.5';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: ATMAX';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KMidTransverseDisp;
+  FDataArrayCreationRecords[Index].DisplayName := StrMidTransverseDisp;
+  FDataArrayCreationRecords[Index].Formula := KMaxTransverseDisp;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Sutra3DModel;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: ATMID';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KMinTransverseDisp;
+  FDataArrayCreationRecords[Index].DisplayName := StrMinTransverseDisp;
+  FDataArrayCreationRecords[Index].Formula := KMaxTransverseDisp;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: ATMIN';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KInitialPressure;
+  FDataArrayCreationRecords[Index].DisplayName := StrInitialPressure;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA ICS Data Set 2: PVEC';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KInitialConcentration;
+  FDataArrayCreationRecords[Index].DisplayName := StrInitialConcentration;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraConcentrationUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA ICS Data Set 3: UVEC';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KInitialTemperature;
+  FDataArrayCreationRecords[Index].DisplayName := StrInitialTemperature;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraTemperatureUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA ICS Data Set 3: UVEC';
+  Inc(Index);
+{$ENDIF}
+
   Assert(Length(FDataArrayCreationRecords) = Index);
 end;
 
@@ -20154,14 +20723,14 @@ begin
   if FCustomModel is TPhastModel then
   begin
     PhastModel := TPhastModel(FCustomModel);
-    if PhastModel.LgrUsed then
-    begin
+//    if PhastModel.LgrUsed then
+//    begin
       result := PhastModel.ChildModels.Count;
-    end
-    else
-    begin
-      result := 0;
-    end;
+//    end
+//    else
+//    begin
+//      result := 0;
+//    end;
   end
   else
   begin
@@ -20668,6 +21237,7 @@ begin
     Mt3dmsLakMassFluxObservations := SourceModel.Mt3dmsLakMassFluxObservations;
     Mt3dmsDrtMassFluxObservations := SourceModel.Mt3dmsDrtMassFluxObservations;
     Mt3dmsEtsMassFluxObservations := SourceModel.Mt3dmsEtsMassFluxObservations;
+//    SfrStreamLinkPlot := SourceModel.SfrStreamLinkPlot;
   end
   else
   begin
@@ -20759,7 +21329,7 @@ begin
           end;
         end;
       end;
-    {$IFDEF SUTRA} msSutra: result := False; {$ENDIF}
+    {$IFDEF SUTRA} msSutra22: result := False; {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -20791,7 +21361,7 @@ begin
           result := False;
         end;
       end;
-    {$IFDEF SUTRA} msSutra: result := False; {$ENDIF}
+    {$IFDEF SUTRA} msSutra22: result := False; {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -20816,10 +21386,52 @@ begin
   result := ChemistryUsed(Sender) and ChemistryOptions.UseSurfaceAssemblages;
 end;
 
+function TCustomModel.Sutra3DModel(Sender: TObject): boolean;
+begin
+  result := False;
+  {$IFDEF Sutra}
+  if (frmGoPhast.PhastModel <> nil) then
+  begin
+    result := SutraUsed(Sender)
+      and (frmGoPhast.PhastModel.SutraLayerStructure.LayerCount > 1);
+  end;
+  {$ENDIF}
+end;
+
+function TCustomModel.SutraConcentrationUsed(Sender: TObject): boolean;
+begin
+  result := SutraUsed(Sender) and (SutraOptions.TransportChoice = tcSolute);
+end;
+
+function TCustomModel.SutraTemperatureUsed(Sender: TObject): boolean;
+begin
+  result := SutraUsed(Sender) and (SutraOptions.TransportChoice = tcEnergy);
+end;
+
 function TCustomModel.SutraUsed(Sender: TObject): boolean;
 begin
   {$IFDEF Sutra}
-  result := (ModelSelection = msSutra)
+  result := (ModelSelection = msSutra22)
+  {$ELSE}
+  result := False;
+  {$ENDIF}
+end;
+
+function TCustomModel.SutraThicknessUsed(Sender: TObject): boolean;
+begin
+  {$IFDEF Sutra}
+  result := SutraUsed(Sender) and (FSutraMesh <> nil)
+    and (FSutraMesh.MeshType = mt2D);
+  {$ELSE}
+  result := False;
+  {$ENDIF}
+end;
+
+function TCustomModel.SutraUnsatRegionUsed(Sender: TObject): boolean;
+begin
+  {$IFDEF Sutra}
+  result := SutraUsed(Sender)
+    and (SutraOptions.SaturationChoice = scUnsaturated);
   {$ELSE}
   result := False;
   {$ENDIF}
@@ -21173,7 +21785,7 @@ begin
   result := False;
   case ModelSelection of
     msUndefined: result := False;
-    msPhast {$IFDEF SUTRA}, msSutra {$ENDIF}: result := False;
+    msPhast {$IFDEF SUTRA}, msSutra22 {$ENDIF}: result := False;
     msModflow, msModflowLGR, msModflowNWT:
       begin
         if ModflowPackages.BcfPackage.IsSelected then
@@ -21801,7 +22413,7 @@ end;
 function TCustomModel.GetMesh: TSutraMesh3D;
 begin
   {$IFDEF SUTRA}
-  if ModelSelection = msSutra then
+  if ModelSelection = msSutra22 then
   begin
     result := SutraMesh;
   end
@@ -23207,7 +23819,7 @@ var
 begin
   // Note: MODPATH can not read Unicode text files.
 
-  if not TestModpathOK then
+  if not TestModpathOK(self) then
   begin
     Exit;
   end;
@@ -25194,6 +25806,11 @@ begin
   result := ParentModel.SelectedModel;
 end;
 
+function TChildModel.GetSfrStreamLinkPlot: TSfrStreamLinkPlot;
+begin
+  result := ParentModel.GetSfrStreamLinkPlot
+end;
+
 function TChildModel.GetShowContourLabels: boolean;
 begin
   result := ParentModel.GetShowContourLabels;
@@ -25492,6 +26109,11 @@ end;
 procedure TChildModel.SetSelectedModel(const Value: TCustomModel);
 begin
   ParentModel.SelectedModel := Value;
+end;
+
+procedure TChildModel.SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot);
+begin
+  ParentModel.SetSfrStreamLinkPlot(Value);
 end;
 
 procedure TChildModel.SetShowContourLabels(const Value: boolean);
@@ -26738,7 +27360,7 @@ begin
         result := Grid.TopDataSet;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         if (Mesh <> nil) then
         begin
@@ -26778,7 +27400,7 @@ begin
         result := Grid.FrontDataSet;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         // do nothing
       end;

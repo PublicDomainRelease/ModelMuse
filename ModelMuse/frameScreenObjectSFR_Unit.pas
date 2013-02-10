@@ -384,6 +384,7 @@ begin
   begin
     Page := PageList.Pages[Row-1];
     Assert(Page.ControlCount = 1);
+    Page.Handle;
     Page.Controls[0].Free;
     Page.Free;
     FDeletingRow := True;
@@ -1531,6 +1532,7 @@ var
     begin
       Page := jvplTable.Pages[PageIndex];
       Assert(Page.ControlCount = 1);
+      Page.Handle;
       FrameFlowTable := Page.Controls[0] as TframeFlowTable;
       ClearTable(FrameFlowTable.dgSfrTable);
     end;
@@ -1557,6 +1559,7 @@ begin
 
           Page := jvplTable.Pages[Row-1];
           Assert(Page.ControlCount = 1);
+          Page.Handle;
           FrameFlowTable := Page.Controls[0] as TframeFlowTable;
 
           if FrameFlowTable.seTableCount.AsInteger = TablelItem.SfrTable.Count then
@@ -1627,6 +1630,7 @@ begin
 
         Page := jvplTable.Pages[Row-1];
         Assert(Page.ControlCount = 1);
+        Page.Handle;
         FrameFlowTable := Page.Controls[0] as TframeFlowTable;
 
         FrameFlowTable.seTableCount.AsInteger := TablelItem.SfrTable.Count;
@@ -1647,6 +1651,7 @@ begin
   begin
     Page := jvplTable.Pages[PageIndex];
     Assert(Page.ControlCount = 1);
+    Page.Handle;
     FrameFlowTable := Page.Controls[0] as TframeFlowTable;
     FrameFlowTable.TableCountChanged := False;
   end;
@@ -2114,6 +2119,7 @@ begin
       begin
         Page := jvplCrossSection.Pages[PageIndex];
         Assert(Page.ControlCount = 1);
+        Page.Handle;
         FrameCrossSection := Page.Controls[0] as TframeCrossSection;
         ClearTable(FrameCrossSection.dg8Point);
       end;
@@ -2145,6 +2151,7 @@ begin
 
           Page := jvplCrossSection.Pages[TableIndex];
           Assert(Page.ControlCount = 1);
+          Page.Handle;
           FrameCrossSection := Page.Controls[0] as TframeCrossSection;
 
           for XS_Index := 0 to 7 do
@@ -2167,6 +2174,7 @@ begin
           begin
             Page := jvplCrossSection.Pages[PageIndex];
             Assert(Page.ControlCount = 1);
+            Page.Handle;
             FrameCrossSection := Page.Controls[0] as TframeCrossSection;
             ClearTable(FrameCrossSection.dg8Point);
           end;
@@ -2194,6 +2202,7 @@ begin
 
         Page := jvplCrossSection.Pages[TableIndex];
         Assert(Page.ControlCount = 1);
+        Page.Handle;
         FrameCrossSection := Page.Controls[0] as TframeCrossSection;
 
         for XS_Index := 0 to 7 do
@@ -2317,6 +2326,7 @@ var
 begin
   if (jvplTable.ActivePage <> nil) and Assigned(GetParser) then
   begin
+    jvplTable.ActivePage.Handle;
     Frame := jvplTable.ActivePage.Controls[0] as TframeFlowTable;
     Grid := Frame.dgSfrTable;
     Parser := GetParser(self);
@@ -2566,6 +2576,7 @@ begin
 
     Page := jvplCrossSection.ActivePage;
     Assert(Page.ControlCount = 1);
+    Page.Handle;
     FrameCrossSection := Page.Controls[0] as TframeCrossSection;
     FrameCrossSection.dg8Point.Invalidate;
 
@@ -2641,6 +2652,7 @@ begin
 
       Page := jvplTable.ActivePage;
       Assert(Page.ControlCount = 1);
+      Page.Handle;
       FrameFlowTable := Page.Controls[0] as TframeFlowTable;
 //      FrameFlowTable.dgSfrTable.Align := alNone;
 //      FrameFlowTable.dgSfrTable.Align := alTop;
@@ -2890,6 +2902,7 @@ var
   IntValue: integer;
   NewItem: Boolean;
   SfrItem: TSfrItem;
+  LastItem: TSfrItem;
 begin
   ParamIcalcValues := TSfrParamIcalcCollection.Create(nil, nil, nil);
   try
@@ -2987,7 +3000,8 @@ begin
       Boundary.ParamIcalc := ParamIcalcValues;
       SfrItem := Boundary.Values.Items[0] as TSfrItem;
       SfrItem.StartTime := ParamIcalcValues[0].StartTime;
-      SfrItem.EndTime := ParamIcalcValues[ParamIcalcValues.Count-1].EndTime;
+      LastItem := ParamIcalcValues[ParamIcalcValues.Count-1] as TSfrItem;
+      SfrItem.EndTime := LastItem.EndTime;
     end
     else if FTimesChanged then
     begin
@@ -3051,6 +3065,7 @@ begin
 
         Page := jvplCrossSection.Pages[RowIndex-1];
         Assert(Page.ControlCount = 1);
+        Page.Handle;
         FrameCrossSection := Page.Controls[0] as TframeCrossSection;
         for XS_Index := 0 to 7 do
         begin
@@ -3261,6 +3276,7 @@ begin
       begin
         Page := jvplTable.Pages[RowIndex-1];
         Assert(Page.ControlCount = 1);
+        Page.Handle;
         FrameFlowTable := Page.Controls[0] as TframeFlowTable;
 
         if RowIndex - 1 < TableCollection.Count then
@@ -3681,6 +3697,7 @@ begin
   begin
     Page := jvplTable.Pages[Index];
     Assert(Page.ControlCount = 1);
+    Page.Handle;
     FrameFlowTable := Page.Controls[0] as TframeFlowTable;
     FrameFlowTable.dgSfrTable.OnButtonClick := Value;
   end;
@@ -3688,6 +3705,7 @@ begin
   begin
     Page := jvplCrossSection.Pages[Index];
     Assert(Page.ControlCount = 1);
+    Page.Handle;
     FrameCrossSection := Page.Controls[0] as TframeCrossSection;
     FrameCrossSection.dg8Point.OnButtonClick := Value;
   end;
@@ -3864,6 +3882,7 @@ var
 begin
   if (jvplCrossSection.ActivePage <> nil) and Assigned(GetParser) then
   begin
+    jvplCrossSection.ActivePage.Handle;
     Frame := jvplCrossSection.ActivePage.Controls[0] as TframeCrossSection;
     Parser := GetParser(self);
     Grid := Frame.dg8Point;
@@ -4097,6 +4116,7 @@ begin
     begin
       Page := jvplCrossSection.Pages[PageIndex];
       Assert(Page.ControlCount = 1);
+      Page.Handle;
       FrameCrossSection := Page.Controls[0] as TframeCrossSection;
       ClearTable(FrameCrossSection.dg8Point);
     end;
@@ -4105,6 +4125,7 @@ begin
     begin
       Page := jvplTable.Pages[PageIndex];
       Assert(Page.ControlCount = 1);
+      Page.Handle;
       FrameFlowTable := Page.Controls[0] as TframeFlowTable;
       ClearTable(FrameFlowTable.dgSfrTable);
     end;

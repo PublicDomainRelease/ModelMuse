@@ -81,7 +81,7 @@ type
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
     // @name returns @link(TChdItem).
-    class function ItemClass: TMF_BoundItemClass; override;
+    class function ItemClass: TBoundaryItemClass; override;
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
     procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
@@ -121,7 +121,9 @@ type
     procedure CreateFormulaObjects; override;
     procedure AssignObserverEvents(Collection: TCollection); override;
     procedure GetPropertyObserver(Sender: TObject; List: TList); override;
+    // See @link(BoundaryFormula).
     function GetBoundaryFormula(Index: integer): string; override;
+    // See @link(BoundaryFormula).
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     // @name checks whether AnotherItem is the same as the current @classname.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
@@ -310,7 +312,7 @@ function TChdItem.IsSame(AnotherItem: TOrderedItem): boolean;
 var
   Item: TChdItem;
 begin
-  result := (AnotherItem is TChdItem) and inherited IsSame(AnotherItem);;
+  result := (AnotherItem is TChdItem) and inherited IsSame(AnotherItem);
   if result then
   begin
     Item := TChdItem(AnotherItem);
@@ -485,7 +487,7 @@ begin
   end;
 end;
 
-class function TChdCollection.ItemClass: TMF_BoundItemClass;
+class function TChdCollection.ItemClass: TBoundaryItemClass;
 begin
   result := TChdItem;
 end;

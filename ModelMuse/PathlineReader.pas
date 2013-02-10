@@ -1087,7 +1087,7 @@ begin
   try
     SetLength(CharArray, Length(MP6));
     AFile.Read(CharArray[0], Length(MP6) * SizeOf(AnsiChar));
-    AString := AnsiCharArrayToStr(CharArray);
+    AString := AnsiString(AnsiCharArrayToStr(CharArray));
     if AString = MP6 then
     begin
       result := pv6_0;
@@ -1114,7 +1114,7 @@ begin
   try
     SetLength(CharArray, Length(MP6));
     AFile.Read(CharArray[0], Length(MP6) * SizeOf(AnsiChar));
-    AString := AnsiCharArrayToStr(CharArray);
+    AString := AnsiString(AnsiCharArrayToStr(CharArray));
     if AString = MP6 then
     begin
       result := pv6_0;
@@ -1141,7 +1141,7 @@ begin
   try
     SetLength(CharArray, Length(MP6));
     AFile.Read(CharArray[0], Length(MP6) * SizeOf(AnsiChar));
-    AString := AnsiCharArrayToStr(CharArray);
+    AString := AnsiString(AnsiCharArrayToStr(CharArray));
     if AString = MP6 then
     begin
       result := pv6_0;
@@ -1255,7 +1255,7 @@ begin
   case ModpathVersion of
     pv5:
       begin
-        DrawLines3D(Lines);;
+        DrawLines3D(Lines);
       end;
     pv6_0:
       begin
@@ -2787,6 +2787,10 @@ begin
     Exit;
   end;
   try
+    if FPoints.Count = 0 then
+    begin
+      Exit;
+    end;
     FDrawingEndPoints := True;
 
 
@@ -2813,7 +2817,13 @@ begin
       Exit;
     end;
 //    EnableLighting;
-    glCallList(EndPointGLIndex);
+    try
+      glCallList(EndPointGLIndex);
+    except on EMathError do
+      begin
+        // do nothing
+      end;
+    end;
   finally
     FDrawingEndPoints := False;
   end;
@@ -4126,7 +4136,13 @@ begin
       Exit;
     end;
 //    EnableLighting;
-    glCallList(TimeSeriesGLIndex[TimeIndex]);
+    try
+      glCallList(TimeSeriesGLIndex[TimeIndex]);
+    except on EMathError do
+      begin
+        // do nothing
+      end;
+    end;
   finally
     FDrawingTimeSeries := False;
   end;
@@ -5666,6 +5682,7 @@ var
   QuadTree: TRbwQuadTree;
   ShouldInitializeTree: Boolean;
   Limits: TGridLimit;
+  ARect: TRect;
 begin
   if not Visible then
   begin
@@ -5782,15 +5799,28 @@ begin
                 end;
               else Assert(False);
             end;
-            Points[1] := ADisplayPoint;
-            if ShowPriorPoint then
+            if Line.Points.Count = 1 then
             begin
               AColor := GetPointColor(MaxValue, MinValue, APoint);
               AColor32 := Color32(AColor);
-              DrawBigPolyline32(BitMap, AColor32, 1, Points, True);
+              ARect.Top := ADisplayPoint.Y -2;
+              ARect.Bottom := ADisplayPoint.Y +2;
+              ARect.Left := ADisplayPoint.X -2;
+              ARect.Right := ADisplayPoint.X +2;
+              DrawBigRectangle32(BitMap, AColor32, AColor32, 1, ARect);
+            end
+            else
+            begin
+              Points[1] := ADisplayPoint;
+              if ShowPriorPoint then
+              begin
+                AColor := GetPointColor(MaxValue, MinValue, APoint);
+                AColor32 := Color32(AColor);
+                DrawBigPolyline32(BitMap, AColor32, 1, Points, True);
+              end;
+              Points[0] := ADisplayPoint;
+              ShowPriorPoint := True;
             end;
-            Points[0] := ADisplayPoint;
-            ShowPriorPoint := True;
           end
           else
           begin
@@ -5807,6 +5837,10 @@ var
   Grid: TModflowGrid;
 begin
   if FDrawingPathLines then
+  begin
+    Exit;
+  end;
+  if LocalLines.Count = 0 then
   begin
     Exit;
   end;
@@ -5837,7 +5871,13 @@ begin
       Exit;
     end;
 //    EnableLighting;
-    glCallList(PathlineGLIndex);
+    try
+      glCallList(PathlineGLIndex);
+    except on EMathError do
+      begin
+        // do nothing
+      end;
+    end;
   finally
     FDrawingPathLines := False;
   end;

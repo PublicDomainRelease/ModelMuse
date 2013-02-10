@@ -936,12 +936,31 @@ begin
     begin
       LocalModel.DrawHeadObservations(FModelImage, frmGoPhast.frameTopView.ZoomBox);
       LocalModel.DrawSfrStreamLinkages(FModelImage, frmGoPhast.frameTopView.ZoomBox);
+      if LocalModel.LgrUsed then
+      begin
+        for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+        begin
+          ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+          ChildModel.DrawHeadObservations(FModelImage, frmGoPhast.frameTopView.ZoomBox);
+          ChildModel.DrawSfrStreamLinkages(FModelImage, frmGoPhast.frameTopView.ZoomBox);
+        end;
+      end;
 
     end;
 
     LocalModel.Pathlines.Draw(Orientation, FModelImage);
     LocalModel.EndPoints.Draw(Orientation, FModelImage);
     LocalModel.TimeSeries.Draw(Orientation, FModelImage);
+    if LocalModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+        ChildModel.Pathlines.Draw(Orientation, FModelImage);
+        ChildModel.EndPoints.Draw(Orientation, FModelImage);
+        ChildModel.TimeSeries.Draw(Orientation, FModelImage);
+      end;
+    end;
 
     if ViewDirection = vdSide then
     begin
@@ -2757,21 +2776,33 @@ procedure TfrmExportImage.ApplyMacro(CommentLines: TStringList;
 var
   SearchPosition: Integer;
   ReplacementText: string;
-  Index: Integer;
+   Index: Integer;
 begin
+  // See if one of the search terms such as  '%SP' is in the text that
+  // will be displayed.
   SearchPosition := Pos(TextSearchKey, TextToDraw);
   if SearchPosition > 0 then
   begin
+    // The search term has been found.
+    // Set the default value for the text that will replace TextSearchKey.
     ReplacementText := '?';
+
+    // Search each line of the comment for a line that begins with
+    // CommentSearchKey.
+    // One example of CommentSearchKey is 'Stress Period: ';
     for Index := 0 to CommentLines.Count - 1 do
     begin
       if Pos(CommentSearchKey, CommentLines[Index]) = 1 then
       begin
+        // The CommentSearchKey has been found.
+        // Set ReplacementText to the remainder of the line containing
+        // CommentSearchKey
         ReplacementText := Trim(Copy(CommentLines[Index],
           Length(CommentSearchKey), MAXINT));
         break;
       end;
     end;
+    // Replace TextSearchKey with ReplacementText.
     TextToDraw := StringReplace(TextToDraw, TextSearchKey,
       ReplacementText, [rfReplaceAll, rfIgnoreCase]);
   end;

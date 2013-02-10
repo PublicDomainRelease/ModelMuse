@@ -13,9 +13,16 @@ type
     procedure SetUpToDate(const Value: boolean); override;
   end;
 
+resourcestring
+  StrHydrConductivity = 'Hydr Conductivity';
+  StrThickness = 'HFB Thickness';
+  StrHydrCharacteristic = 'Hydr Characteristic';
+
+
 implementation
 
 uses frmGoPhastUnit;
+
 
 { THfbDisplayer }
 
@@ -24,15 +31,15 @@ begin
   case DataIndex of
     0:
       begin
-        result := 'Hydr Conductivity';
+        result := StrHydrConductivity;
       end;
     1:
       begin
-        result := 'Thickness';;
+        result := StrThickness;
       end;
     2:
       begin
-        result := 'Hydr Characteristic';
+        result := StrHydrCharacteristic;
       end;
     else
       Assert(False);

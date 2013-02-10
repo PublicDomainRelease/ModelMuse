@@ -85,7 +85,7 @@ var
 
 implementation
 
-uses frmGoPhastUnit, Mt3dmsTimesUnit;
+uses frmGoPhastUnit, Mt3dmsTimesUnit, frmErrorsAndWarningsUnit;
 
 resourcestring
   StrChangeOutputContro = 'change output control';
@@ -99,6 +99,12 @@ procedure TfrmModflowOutputControl.btnOKClick(Sender: TObject);
 begin
   inherited;
   SetData;
+
+  frmGoPhast.PhastModel.ModpathHeadWarning;
+  if frmErrorsAndWarnings.HasMessages then
+  begin
+    frmErrorsAndWarnings.Show;
+  end;
 end;
 
 procedure TfrmModflowOutputControl.comboSaveMt3msResultsChange(Sender: TObject);

@@ -1136,8 +1136,8 @@ begin
 
             if Grid.Cells[Ord(fmcWeight),Index] = '' then
             begin
-              ObsTime.Weight := 0;
-              Grid.Cells[Ord(fmcWeight),Index] := '0';
+              ObsTime.Weight := 1;
+              Grid.Cells[Ord(fmcWeight),Index] := '1';
             end
             else
             begin
@@ -1470,7 +1470,7 @@ begin
     NodeList.Pack;
     if (tvFluxObservations.Selected = nil) and (NodeList.Count > 0) then
     begin
-      tvFluxObservations.Selected := NodeList[0];;
+      tvFluxObservations.Selected := NodeList[0];
     end;
     if tvFluxObservations.Selected = nil then
     begin

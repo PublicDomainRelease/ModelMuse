@@ -23,6 +23,7 @@ type
     sbAddUnit: TSpeedButton;
     sbInsertUnit: TSpeedButton;
     sbDeleteUnit: TSpeedButton;
+    spl1: TSplitter;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
@@ -417,6 +418,7 @@ end;
 constructor TUndoDefineSutraLayers.Create(
   var NewLayerStructure: TSutraLayerStructure);
 begin
+  inherited Create;
   FNewDataSets := TList.Create;
 
   FNewLayerStructure:= NewLayerStructure;
@@ -429,7 +431,7 @@ end;
 
 function TUndoDefineSutraLayers.Description: string;
 begin
-  result := 'change SUTRA layer structure';;
+  result := 'change SUTRA layer structure';
 end;
 
 destructor TUndoDefineSutraLayers.Destroy;
@@ -454,10 +456,12 @@ begin
     LocalModel.SutraLayerStructure.NewDataSets := nil;
     UpdatedRequiredDataSets;
     LocalModel.UpdateDataSetDimensions;
+    frmGoPhast.FrontDiscretizationChanged := True;
     if Assigned(LocalModel.Mesh) then
     begin
       LocalModel.Mesh.ElevationsNeedUpdating := True;
     end;
+    frmGoPhast.InvalidateImage32AllViews;
 //    for Index := 0 to LocalModel.ChildModels.Count - 1 do
 //    begin
 //      ChildModel := LocalModel.ChildModels[Index].ChildModel;
@@ -478,13 +482,15 @@ begin
   try
     inherited;
     LocalModel := frmGoPhast.PhastModel;
-    LocalModel.LayerStructure.NewDataSets := FNewDataSets;
-    LocalModel.LayerStructure.Assign(FOldLayerStructure);
-    LocalModel.LayerStructure.RemoveNewDataSets;
-    LocalModel.LayerStructure.NewDataSets := nil;
+    LocalModel.SutraLayerStructure.NewDataSets := FNewDataSets;
+    LocalModel.SutraLayerStructure.Assign(FOldLayerStructure);
+    LocalModel.SutraLayerStructure.RemoveNewDataSets;
+    LocalModel.SutraLayerStructure.NewDataSets := nil;
     UpdatedRequiredDataSets;
     LocalModel.UpdateDataSetDimensions;
+    frmGoPhast.FrontDiscretizationChanged := True;
     LocalModel.Mesh.ElevationsNeedUpdating := True;
+    frmGoPhast.InvalidateImage32AllViews;
 //    for Index := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
 //    begin
 //      ChildModel := frmGoPhast.PhastModel.ChildModels[Index].ChildModel;

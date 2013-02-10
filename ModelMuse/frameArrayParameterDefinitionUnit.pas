@@ -66,22 +66,6 @@ type
     // @name places the controls used to edit multiple parameters at once
     // at the correct locations.
     procedure ArrangeMultiEditControls;
-    // @name returns the form that is the ultimate parent of @classname.
-    function ParentCustomGoPhastForm: TfrmCustomGoPhast;
-    // @name sets the values of the selected cells
-    // in the selected column of Grid
-    // to NewText.
-    procedure ChangeSelectedCellsInColumn(Grid: TRbwDataGrid4;
-      const Column: integer; const NewText: string);
-    // @name sets the checkbox state of the selected cells
-    // in the selected column of Grid
-    // to NewState.
-    procedure ChangeSelectedCellsStateInColumn(Grid: TRbwDataGrid4;
-      const Column: integer; const NewState: TCheckBoxState);
-    // @name enables or disables a control used to edit more than
-    // a single parameter at once.
-    procedure EnableMultiEditControl(Grid: TRbwDataGrid4; AControl: TControl;
-      Col: integer);
   protected
     // @name disables the controls used to edit more than
     // a single parameter at once if Value is @false.
@@ -127,30 +111,6 @@ begin
 
 end;
 
-procedure TframeArrayParameterDefinition.ChangeSelectedCellsInColumn(
-  Grid: TRbwDataGrid4; const Column: integer; const NewText: string);
-var
-  ParentForm: TfrmCustomGoPhast;
-begin
-  ParentForm := ParentCustomGoPhastForm;
-  if ParentForm <> nil then
-  begin
-    ParentForm.ChangeSelectedCellsInColumn(Grid, Column, NewText);
-  end;
-end;
-
-procedure TframeArrayParameterDefinition.ChangeSelectedCellsStateInColumn(
-  Grid: TRbwDataGrid4; const Column: integer; const NewState: TCheckBoxState);
-var
-  ParentForm: TfrmCustomGoPhast;
-begin
-  ParentForm := ParentCustomGoPhastForm;
-  if ParentForm <> nil then
-  begin
-    ParentForm.ChangeSelectedCellsStateInColumn(Grid, Column, NewState);
-  end;
-end;
-
 procedure TframeArrayParameterDefinition.dgParametersColSize(Sender: TObject;
   ACol, PriorWidth: Integer);
 begin
@@ -175,41 +135,12 @@ begin
   lblParamValue.Enabled := rdeParamValue.Enabled;
 end;
 
-procedure TframeArrayParameterDefinition.EnableMultiEditControl(
-  Grid: TRbwDataGrid4; AControl: TControl; Col: integer);
-var
-  ParentForm: TfrmCustomGoPhast;
-begin
-  ParentForm := ParentCustomGoPhastForm;
-  if ParentForm <> nil then
-  begin
-    frmCustomGoPhastUnit.EnableMultiEditControl(Grid, AControl, Col);
-  end;
-end;
-
 procedure TframeArrayParameterDefinition.Loaded;
 begin
   inherited;
   lblParamValue.Caption := dgParameters.Cells[Ord(pcValue),0];
   cbUseZone.Caption := dgParameters.Cells[Ord(pcUseZone),0];
   cbUseMultiplier.Caption := dgParameters.Cells[Ord(pcUseMultiplier),0];
-end;
-
-function TframeArrayParameterDefinition.ParentCustomGoPhastForm: TfrmCustomGoPhast;
-var
-  Control: TWinControl;
-begin
-  result := nil;
-  Control := Parent;
-  while Control <> nil do
-  begin
-    if Control is TfrmCustomGoPhast then
-    begin
-      result := TfrmCustomGoPhast(Control);
-      Exit;
-    end;
-    Control := Control.Parent;
-  end;
 end;
 
 procedure TframeArrayParameterDefinition.rdeParamValueChange(Sender: TObject);

@@ -10,7 +10,6 @@ Type
   TSelectionType = (stCheckBox, stRadioButton);
 
   // modpath ordinals
-//  TReferenceTimeOption = (rtoPeriodAndStep, rtoTime);
   TCompositeBudgetFileOption = (cbfGenerateNew, cbfUseOldFile);
   TModpathOutputMode = (mopEndpoints, mopPathline, mopTimeSeries);
   TTimeMethod = (tmIntervals, tmIndividual);
@@ -85,15 +84,25 @@ Type
   TWellPackage = class(TModflowPackageSelection)
   private
     FMfWellPumpage: TModflowBoundaryDisplayTimeList;
+    FPublishedPhiRamp: TRealStorage;
     procedure InvalidateMfWellPumpage(Sender: TObject);
     procedure InitializeMfWellPumpage(Sender: TObject);
     procedure GetMfWellUseList(Sender: TObject; NewUseList: TStringList);
+    function GetPhiRamp: Double;
+    procedure SetPhiRamp(const Value: Double);
+    procedure SetPublishedPhiRamp(const Value: TRealStorage);
   public
+    procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfWellPumpage: TModflowBoundaryDisplayTimeList
       read FMfWellPumpage;
     procedure InvalidateAllTimeLists; override;
+    procedure InitializeVariables; override;
+    property PhiRamp: Double read GetPhiRamp write SetPhiRamp;
+  published
+    property PublishedPhiRamp: TRealStorage read FPublishedPhiRamp
+      write SetPublishedPhiRamp;
   end;
 
   TGhbPackage = class(TModflowPackageSelection)
@@ -3516,7 +3525,7 @@ begin
       TimeList.OnInitialize := InitializeEtsDisplay;
       TimeList.OnGetUseList := GetMfEtsDepthFractionUseList;
       TimeList.Name := StrMODFLOWEtsDepthFraction
-        + IntToStr(FEtsDepthFractionLists.Count);;
+        + IntToStr(FEtsDepthFractionLists.Count);
     end;
   end
   else
@@ -3559,7 +3568,7 @@ begin
     begin
       for ValueIndex := 0 to Boundary.EtsSurfDepthCollection.Count -1 do
       begin
-        Item := Boundary.EtsSurfDepthCollection[ValueIndex];
+        Item := Boundary.EtsSurfDepthCollection[ValueIndex] as TCustomModflowBoundaryItem;
         UpdateUseList(DataIndex, NewUseList, Item);
       end;
     end;
@@ -3913,7 +3922,7 @@ begin
     begin
       for ValueIndex := 0 to Boundary.EvtSurfDepthCollection.Count -1 do
       begin
-        Item := Boundary.EvtSurfDepthCollection[ValueIndex];
+        Item := Boundary.EvtSurfDepthCollection[ValueIndex] as TCustomModflowBoundaryItem;
         UpdateUseList(DataIndex, NewUseList, Item);
       end;
     end;
@@ -5649,7 +5658,7 @@ begin
     begin
       for ValueIndex := 0 to Boundary.ExtinctionDepth.Count -1 do
       begin
-        Item := Boundary.ExtinctionDepth[ValueIndex];
+        Item := Boundary.ExtinctionDepth[ValueIndex] as TCustomModflowBoundaryItem;
         UpdateUseList(0, NewUseList, Item);
       end;
     end;
@@ -5679,7 +5688,7 @@ begin
     begin
       for ValueIndex := 0 to Boundary.Values.Count -1 do
       begin
-        Item := Boundary.Values[ValueIndex];
+        Item := Boundary.Values[ValueIndex] as TCustomModflowBoundaryItem;
         UpdateUseList(0, NewUseList, Item);
       end;
     end;
@@ -5709,7 +5718,7 @@ begin
     begin
       for ValueIndex := 0 to Boundary.WaterContent.Count -1 do
       begin
-        Item := Boundary.WaterContent[ValueIndex];
+        Item := Boundary.WaterContent[ValueIndex] as TCustomModflowBoundaryItem;
         UpdateUseList(0, NewUseList, Item);
       end;
     end;
@@ -5739,7 +5748,7 @@ begin
     begin
       for ValueIndex := 0 to Boundary.EvapotranspirationDemand.Count -1 do
       begin
-        Item := Boundary.EvapotranspirationDemand[ValueIndex];
+        Item := Boundary.EvapotranspirationDemand[ValueIndex] as TCustomModflowBoundaryItem;
         UpdateUseList(0, NewUseList, Item);
       end;
     end;
@@ -6991,9 +7000,20 @@ end;
 
 { TWellPackage }
 
+procedure TWellPackage.Assign(Source: TPersistent);
+begin
+  if Source is TWellPackage then
+  begin
+    PublishedPhiRamp := TWellPackage(Source).PublishedPhiRamp
+  end;
+  inherited;
+
+end;
+
 constructor TWellPackage.Create(Model: TBaseModel);
 begin
   inherited;
+  FPublishedPhiRamp := TRealStorage.Create;
   if Model <> nil then
   begin
     FMfWellPumpage := TModflowBoundaryDisplayTimeList.Create(Model);
@@ -7003,11 +7023,13 @@ begin
     MfWellPumpage.Name := StrMODFLOWWellPumping;
     AddTimeList(MfWellPumpage);
   end;
+  InitializeVariables;
 end;
 
 destructor TWellPackage.Destroy;
 begin
   FMfWellPumpage.Free;
+  FPublishedPhiRamp.Free;
   inherited;
 end;
 
@@ -7015,6 +7037,11 @@ procedure TWellPackage.GetMfWellUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
   UpdateDisplayUseList(NewUseList, ptQ, 0, 'Well Pumping Rate');
+end;
+
+function TWellPackage.GetPhiRamp: Double;
+begin
+  result := FPublishedPhiRamp.Value;
 end;
 
 procedure TWellPackage.InitializeMfWellPumpage(Sender: TObject);
@@ -7035,6 +7062,12 @@ begin
   MfWellPumpage.LabelAsSum;
 end;
 
+procedure TWellPackage.InitializeVariables;
+begin
+  PhiRamp := 1e-6;
+  inherited;
+end;
+
 procedure TWellPackage.InvalidateAllTimeLists;
 begin
   inherited;
@@ -7047,6 +7080,16 @@ end;
 procedure TWellPackage.InvalidateMfWellPumpage(Sender: TObject);
 begin
   MfWellPumpage.Invalidate;
+end;
+
+procedure TWellPackage.SetPhiRamp(const Value: Double);
+begin
+  FPublishedPhiRamp.Value := Value;
+end;
+
+procedure TWellPackage.SetPublishedPhiRamp(const Value: TRealStorage);
+begin
+  FPublishedPhiRamp.Assign(Value);
 end;
 
 { TGhbPackage }
@@ -7633,7 +7676,7 @@ begin
       begin
         for ValueIndex := 0 to Boundary.Values.Count -1 do
         begin
-          Item := Boundary.Values[ValueIndex];
+          Item := Boundary.Values[ValueIndex] as TCustomModflowBoundaryItem;
           UpdateUseList(DataIndex, NewUseList, Item);
         end;
       end;
@@ -9204,30 +9247,31 @@ begin
   PrintFlag := 1;
   CorrectForCellBottom := 0;
   Option := noSimple;
-  DBDTheta.Value := 0.7;
+  DBDTheta.Value := 0.9;
   DBDKappa.Value := 0.0001;
   DBDGamma.Value := 0;
   MomementumCoefficient.Value := 0.1;
-  BackFlag := 0;
+  BackFlag := 1;
   MaxBackIterations := 50;
-  BackTol.Value := 1.5;
-  BackReduce.Value := 0.9;
+  BackTol.Value := 1.1;
+  BackReduce.Value := 0.7;
   MaxIterInner := 50;
   IluMethod := nimKOrder;
   FillLimit := 7;
   FillLevel := 1;
   StopTolerance.Value := 1e-10;
   MaxGmresRestarts := 10;
-  AccelMethod := namBiCgstab;
-  OrderingMethod := nomMinimumOrdering;
-  Level := 1;
-  NumberOfOrthogonalizations := 2;
-  ApplyReducedPrecondition := narpDontApply;
+  AccelMethod := namOthoMin;
+  OrderingMethod := nomRCM;
+  Level := 3;
+  NumberOfOrthogonalizations := 5;
+  ApplyReducedPrecondition := narpApply;
   ResidReducConv.Value := 0;
   UseDropTolerance := nudtUse;
-  DropTolerancePreconditioning.Value := 1e-3;
+  DropTolerancePreconditioning.Value := 1e-4;
   InnerHeadClosureCriterion.Value := 1e-4;
   MaxInnerIterations := 50;
+  ContinueNWT := False;
 end;
 
 procedure TNwtPackageSelection.SetAccelMethod(const Value: TNewtonAccelMethod);
@@ -10378,7 +10422,7 @@ begin
     begin
       for ValueIndex := 0 to Boundary.Values.Count -1 do
       begin
-        Item := Boundary.Values[ValueIndex];
+        Item := Boundary.Values[ValueIndex] as TCustomModflowBoundaryItem;
         UpdateUseList(0, NewUseList, Item);
       end;
     end;

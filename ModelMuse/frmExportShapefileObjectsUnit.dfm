@@ -4,63 +4,75 @@ inherited frmExportShapefileObjects: TfrmExportShapefileObjects
   Caption = 'Export Objects as Shapefile'
   ClientWidth = 617
   OnResize = FormResize
-  ExplicitWidth = 625
-  PixelsPerInch = 96
+  ExplicitWidth = 635
+  ExplicitHeight = 459
+  PixelsPerInch = 120
   TextHeight = 18
-  object Splitter1: TSplitter [0]
-    Left = 300
+  object splLeft: TSplitter [0]
+    Left = 257
     Top = 41
-    Height = 287
-    OnMoved = Splitter1Moved
+    Height = 247
+    OnMoved = splLeftMoved
     ExplicitLeft = 304
     ExplicitTop = 128
     ExplicitHeight = 100
   end
+  object splRight: TSplitter [1]
+    Left = 493
+    Top = 41
+    Height = 247
+    Align = alRight
+    OnMoved = splRightMoved
+    ExplicitLeft = 496
+    ExplicitTop = 208
+    ExplicitHeight = 100
+  end
   inherited pnlBottom: TPanel
-    Top = 328
+    Top = 288
     Width = 617
-    Height = 86
-    ExplicitTop = 328
+    Height = 126
+    TabOrder = 4
+    ExplicitTop = 288
     ExplicitWidth = 617
-    ExplicitHeight = 86
+    ExplicitHeight = 126
     object lblMissingData: TLabel [0]
       Left = 437
-      Top = 16
+      Top = 48
       Width = 129
       Height = 18
       Caption = 'Missing data value'
     end
     inherited btnClose: TBitBtn
       Left = 421
-      Top = 46
+      Top = 78
       Caption = '&OK'
       Kind = bkOK
+      TabOrder = 5
       OnClick = btnCloseClick
       ExplicitLeft = 421
-      ExplicitTop = 46
+      ExplicitTop = 78
     end
     inherited btnHelp: TBitBtn
       Left = 326
-      Top = 46
+      Top = 78
+      TabOrder = 4
       OnClick = btnHelpClick
       ExplicitLeft = 326
-      ExplicitTop = 46
+      ExplicitTop = 78
     end
     object BitBtn1: TBitBtn
       Left = 516
-      Top = 46
+      Top = 78
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 2
+      TabOrder = 6
     end
     object rdeMissingData: TRbwDataEntry
       Left = 326
-      Top = 13
+      Top = 45
       Width = 105
       Height = 27
       TabOrder = 3
@@ -71,11 +83,11 @@ inherited frmExportShapefileObjects: TfrmExportShapefileObjects
     end
     object gbExportAs: TGroupBox
       Left = 8
-      Top = 8
+      Top = 40
       Width = 249
       Height = 73
       Caption = 'Export as'
-      TabOrder = 4
+      TabOrder = 2
       object rbPoints: TRadioButton
         Left = 8
         Top = 24
@@ -93,7 +105,7 @@ inherited frmExportShapefileObjects: TfrmExportShapefileObjects
         Margins.Left = 8
         Caption = 'Multipoints'
         Checked = True
-        TabOrder = 1
+        TabOrder = 2
         TabStop = True
       end
       object rbPolyline: TRadioButton
@@ -103,7 +115,7 @@ inherited frmExportShapefileObjects: TfrmExportShapefileObjects
         Height = 17
         Margins.Left = 8
         Caption = 'Polylines'
-        TabOrder = 2
+        TabOrder = 1
       end
       object rbPolygons: TRadioButton
         Left = 132
@@ -115,28 +127,49 @@ inherited frmExportShapefileObjects: TfrmExportShapefileObjects
         TabOrder = 3
       end
     end
+    object cbExportName: TCheckBox
+      Left = 8
+      Top = 16
+      Width = 177
+      Height = 18
+      Caption = 'Export object name'
+      Checked = True
+      State = cbChecked
+      TabOrder = 0
+    end
+    object cbExportElevationFormulas: TCheckBox
+      Left = 325
+      Top = 16
+      Width = 241
+      Height = 18
+      Caption = 'Export elevation formulas'
+      Checked = True
+      State = cbChecked
+      TabOrder = 1
+    end
   end
   inherited vstObjects: TVirtualStringTree
-    Left = 303
+    Left = 260
     Top = 41
-    Width = 314
-    Height = 287
+    Width = 233
+    Height = 247
+    TabOrder = 2
     OnChecked = vstObjectsChecked
-    ExplicitLeft = 303
+    ExplicitLeft = 260
     ExplicitTop = 41
-    ExplicitWidth = 314
-    ExplicitHeight = 287
+    ExplicitWidth = 233
+    ExplicitHeight = 247
   end
-  object Panel1: TPanel
+  object pnlTop: TPanel
     Left = 0
     Top = 0
     Width = 617
     Height = 41
     Align = alTop
-    TabOrder = 2
+    TabOrder = 0
     object lblObjects: TLabel
-      Left = 404
-      Top = 12
+      Left = 314
+      Top = 11
       Width = 117
       Height = 18
       Caption = 'Objects to export'
@@ -148,15 +181,21 @@ inherited frmExportShapefileObjects: TfrmExportShapefileObjects
       Height = 18
       Caption = 'Data sets to export'
     end
+    object lblTimes: TLabel
+      Left = 536
+      Top = 11
+      Width = 42
+      Height = 18
+      Caption = 'Times'
+    end
   end
   object vstDataSets: TVirtualStringTree
     Left = 0
     Top = 41
-    Width = 300
-    Height = 287
+    Width = 257
+    Height = 247
     Align = alLeft
     Header.AutoSizeIndex = 0
-    Header.DefaultHeight = 17
     Header.Font.Charset = DEFAULT_CHARSET
     Header.Font.Color = clWindowText
     Header.Font.Height = -11
@@ -164,12 +203,22 @@ inherited frmExportShapefileObjects: TfrmExportShapefileObjects
     Header.Font.Style = []
     Header.MainColumn = -1
     Header.Options = [hoColumnResize, hoDrag]
-    TabOrder = 3
+    TabOrder = 1
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toWheelPanning]
     OnChecked = vstDataSetsChecked
     OnChecking = vstDataSetsChecking
     OnGetText = vstDataSetsGetText
     Columns = <>
+  end
+  object chklstTimes: TCheckListBox
+    Left = 496
+    Top = 41
+    Width = 121
+    Height = 247
+    Align = alRight
+    Enabled = False
+    ItemHeight = 18
+    TabOrder = 3
   end
   object sdShapefile: TSaveDialog
     DefaultExt = '.shp'

@@ -83,6 +83,10 @@
 
 unit OpenGL12x;
 
+{$IF CompilerVersion>=23}
+{$EXCESSPRECISION OFF}
+{$IFEND}
+
 //----------------------------------------------------------------------------------------------------------------------
 //
 //  This is an interface unit for the use of OpenGL from within Delphi and contains

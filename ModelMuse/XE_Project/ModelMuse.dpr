@@ -22,6 +22,11 @@ program ModelMuse;
 //  {$ENDIF}
 uses
   FastMM4 in '..\FastMM4.pas',
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
   FastMM4Messages in '..\FastMM4Messages.pas',
   TempFiles in '..\TempFiles.pas',
   Forms,
@@ -370,9 +375,7 @@ uses
   framePackageNwtUnit in '..\framePackageNwtUnit.pas' {framePackageNwt: TFrame},
   ModflowNWT_WriterUnit in '..\ModflowNWT_WriterUnit.pas',
   ModflowUPW_WriterUnit in '..\ModflowUPW_WriterUnit.pas',
-  {$IFDEF Win32}
   Pcx in '..\Pcx.pas',
-  {$ENDIF}
   frameScreenObjectUnit in '..\frameScreenObjectUnit.pas' {frameScreenObject: TFrame},
   ModflowHeadObsResults in '..\ModflowHeadObsResults.pas',
   frameStreamLinkUnit in '..\frameStreamLinkUnit.pas' {frameStreamLink: TFrame},
@@ -424,7 +427,25 @@ uses
   frmSutraLayersUnit in '..\frmSutraLayersUnit.pas' {frmSutraLayers},
   HashTableFacadeUnit in '..\HashTableFacadeUnit.pas',
   SutraOptionsUnit in '..\SutraOptionsUnit.pas',
-  frmSutraOptionsUnit in '..\frmSutraOptionsUnit.pas' {frmSutraOptions};
+  frmSutraOptionsUnit in '..\frmSutraOptionsUnit.pas' {frmSutraOptions},
+  framePackageWellUnit in '..\framePackageWellUnit.pas' {framePackageWell: TFrame},
+  SutraTimeScheduleUnit in '..\SutraTimeScheduleUnit.pas',
+  frmSutraTimesUnit in '..\frmSutraTimesUnit.pas' {frmSutraTimes},
+  SutraBoundariesUnit in '..\SutraBoundariesUnit.pas',
+  frameCustomSutraFeatureUnit in '..\frameCustomSutraFeatureUnit.pas' {frameCustomSutraFeature: TFrame},
+  frameSutraBoundaryUnit in '..\frameSutraBoundaryUnit.pas' {frameSutraBoundary: TFrame},
+  frameSutraObservationsUnit in '..\frameSutraObservationsUnit.pas' {frameSutraObservations: TFrame},
+  frmSutraTimeAdjustChoiceUnit in '..\frmSutraTimeAdjustChoiceUnit.pas' {frmSutraTimeAdjustChoice},
+  SutraBoundaryWriterUnit in '..\SutraBoundaryWriterUnit.pas',
+  SutraObservationWriterUnit in '..\SutraObservationWriterUnit.pas',
+  SutraOutputControlUnit in '..\SutraOutputControlUnit.pas',
+  frmSutraOutputControlUnit in '..\frmSutraOutputControlUnit.pas' {frmSutraOutputControl},
+  SutraInputWriterUnit in '..\SutraInputWriterUnit.pas' {$R *.res},
+  SutraTimeScheduleWriterUnit in '..\SutraTimeScheduleWriterUnit.pas',
+  frmImportTprogsUnit in '..\frmImportTprogsUnit.pas' {frmImportTprogs},
+  frmSutraProgramLocationsUnit in '..\frmSutraProgramLocationsUnit.pas' {frmSutraProgramLocations},
+  SutraFileWriterUnit in '..\SutraFileWriterUnit.pas',
+  SutraInitialConditionsWriterUnit in '..\SutraInitialConditionsWriterUnit.pas';
 
 {$R *.res}
 
@@ -438,6 +459,12 @@ begin
   Application.CreateForm(TfrmGoPhast, frmGoPhast);
   Application.CreateForm(TfrmScreenObjectProperties, frmScreenObjectProperties);
   Application.CreateForm(TfrmProgressMM, frmProgressMM);
+  Application.CreateForm(TfrmSutraTimeAdjustChoice, frmSutraTimeAdjustChoice);
+  Application.CreateForm(TfrmSutraOutputControl, frmSutraOutputControl);
+  Application.CreateForm(TfrmImportTprogs, frmImportTprogs);
+  Application.CreateForm(TfrmSutraProgramLocations, frmSutraProgramLocations);
+  Application.CreateForm(TfrmImportTprogs, frmImportTprogs);
+  Application.CreateForm(TfrmSutraProgramLocations, frmSutraProgramLocations);
   //  Application.CreateForm(TfrmSelectedObjects, frmSelectedObjects);
   Application.CreateForm(TfrmColors, frmColors);
   Application.Run;

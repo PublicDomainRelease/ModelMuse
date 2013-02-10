@@ -338,7 +338,7 @@ var
     result := False;
     for ItemIndex := 0 to Boundary.Values.Count - 1 do
     begin
-      Item := Boundary.Values[ItemIndex];
+      Item := Boundary.Values[ItemIndex] as TCustomModflowBoundaryItem;
       result := (Item.StartTime <= Time) and (Time <= Item.EndTime);
       if result then Exit;
     end;
@@ -347,7 +347,7 @@ var
       Param := Boundary.Parameters[ParamIndex];
       for ItemIndex := 0 to Param.Param.Count - 1 do
       begin
-        Item := Param.Param.Items[ItemIndex];
+        Item := Param.Param.Items[ItemIndex] as TCustomModflowBoundaryItem;
         result := (Item.StartTime <= Time) and (Time <= Item.EndTime);
         if result then Exit;
       end;

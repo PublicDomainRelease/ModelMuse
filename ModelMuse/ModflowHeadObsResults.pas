@@ -102,7 +102,7 @@ implementation
 uses
   StrUtils, ModelMuseUtilities, frmGoPhastUnit, ScreenObjectUnit,
   ModflowHobUnit, FastGEO, BigCanvasMethods, GR32_Polygons, Math,
-  PhastModelUnit;
+  PhastModelUnit, frmErrorsAndWarningsUnit;
 
 resourcestring
   StrTheFileFromWhich = 'The file from which you are attempting to read ' +
@@ -113,6 +113,8 @@ resourcestring
   'ad data, %s, does not appear to contain observed head data.';
   StrTheObservationSI = 'The observation %s in the head observation results ' +
   'file is not among the observations defined in this model.';
+  StrTheFollowingLines = 'The following lines of the Head Observation file c' +
+  'ontain invalid values. Those lines have been skipped.';
 
 const
   StrSIMULATEDEQUIVALEN = '"SIMULATED EQUIVALENT"   "OBSERVED VALUE"    "OBS' +
@@ -318,111 +320,137 @@ var
   StringSplitter: TStringList;
   Sorter: TList;
   Index: Integer;
+  Val1: Extended;
+  Val2: Extended;
+  ShowErrors: Boolean;
 begin
   result := False;
-  if not FileExists(FileName) then
-  begin
-    Beep;
-    MessageDlg(Format(StrTheFileFromWhich, [FileName]), mtError, [mbOK], 0);
-    Exit;
-  end;
-  HeadFile := TStringList.Create;
+  ShowErrors := False;
   try
+    if not FileExists(FileName) then
+    begin
+      Beep;
+      MessageDlg(Format(StrTheFileFromWhich, [FileName]), mtError, [mbOK], 0);
+      Exit;
+    end;
+    HeadFile := TStringList.Create;
     try
-      HeadFile.LoadFromFile(FileName);
-    except on EFOpenError do
+      try
+        HeadFile.LoadFromFile(FileName);
+      except on EFOpenError do
+        begin
+          CantOpenFileMessage(FileName);
+          Exit;
+        end;
+      end;
+      if HeadFile.Count = 0 then
       begin
-        CantOpenFileMessage(FileName);
+        Beep;
+        MessageDlg(Format(StrTheFileEmpty, [FileName]), mtError, [mbOK], 0);
         Exit;
       end;
-    end;
-    if HeadFile.Count = 0 then
-    begin
-      Beep;
-      MessageDlg(Format(StrTheFileEmpty, [FileName]), mtError, [mbOK], 0);
-      Exit;
-    end;
-    if HeadFile[0] <> StrSIMULATEDEQUIVALEN then
-    begin
-      Beep;
-      MessageDlg(Format(StrWrongData, [FileName]), mtError, [mbOK], 0);
-      Exit;
-    end;
-    Clear;
-    HeadObsObjects := TStringList.Create;
-    try
-      for ObjectIndex := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+      if HeadFile[0] <> StrSIMULATEDEQUIVALEN then
       begin
-        ScreenObject := frmGoPhast.PhastModel.ScreenObjects[ObjectIndex];
-        HeadObservations := ScreenObject.ModflowBoundaries.
-          ModflowHeadObservations;
-        if HeadObservations <> nil then
+        Beep;
+        MessageDlg(Format(StrWrongData, [FileName]), mtError, [mbOK], 0);
+        Exit;
+      end;
+      Clear;
+      HeadObsObjects := TStringList.Create;
+      try
+        for ObjectIndex := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
         begin
-          for ObsIndex := 0 to HeadObservations.Values.Count - 1 do
+          ScreenObject := frmGoPhast.PhastModel.ScreenObjects[ObjectIndex];
+          HeadObservations := ScreenObject.ModflowBoundaries.
+            ModflowHeadObservations;
+          if HeadObservations <> nil then
           begin
-            ObsItem := HeadObservations.Values.HobItems[ObsIndex];
-            HeadObsObjects.AddObject(HeadObservations.GetItemObsName(ObsItem),
-              ObsItem)
+            for ObsIndex := 0 to HeadObservations.Values.Count - 1 do
+            begin
+              ObsItem := HeadObservations.Values.HobItems[ObsIndex];
+              HeadObsObjects.AddObject(HeadObservations.GetItemObsName(ObsItem),
+                ObsItem)
+            end;
           end;
         end;
-      end;
-      HeadObsObjects.Sorted := True;
+        HeadObsObjects.Sorted := True;
 
-      StringSplitter := TStringList.Create();
-      try
-        StringSplitter.Delimiter := ' ';
-        for LineIndex := 1 to HeadFile.Count - 1 do
-        begin
-          StringSplitter.DelimitedText := HeadFile[LineIndex];
-          Assert(StringSplitter.Count = 3);
-          ObsIndex := HeadObsObjects.IndexOf(StringSplitter[2]);
-          if ObsIndex < 0 then
+        frmErrorsAndWarnings.RemoveErrorGroup(frmGoPhast.PhastModel,
+          StrTheFollowingLines);
+        StringSplitter := TStringList.Create();
+        try
+          StringSplitter.Delimiter := ' ';
+          for LineIndex := 1 to HeadFile.Count - 1 do
           begin
-            Beep;
-            MessageDlg(Format(StrTheObservationSI, [StringSplitter[2]]),
-              mtError, [mbOK], 0);
-            Clear;
-            Exit;
+            StringSplitter.DelimitedText := HeadFile[LineIndex];
+            Assert(StringSplitter.Count = 3);
+            ObsIndex := HeadObsObjects.IndexOf(StringSplitter[2]);
+            if ObsIndex < 0 then
+            begin
+              Beep;
+              MessageDlg(Format(StrTheObservationSI, [StringSplitter[2]]),
+                mtError, [mbOK], 0);
+              Clear;
+              Exit;
+            end;
+            Assert(ObsIndex >= 0);
+            Val1 := 0;
+            Val2 := 0;
+            try
+              Val1 := FortranStrToFloat(StringSplitter[0]);
+              Val2 := FortranStrToFloat(StringSplitter[1]);
+            except on EConvertError do
+              begin
+                frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
+                  StrTheFollowingLines, IntToStr(LineIndex+1));
+                ShowErrors := True;
+                Continue;
+              end;
+            end;
+            Item := Add as THeadObsItem;
+            Item.SimulatedValue := Val1;
+            Item.ObservedValue := Val2;
+            Item.Name := StringSplitter[2];
+            ObsItem := HeadObsObjects.Objects[ObsIndex] as THobItem;
+            ObsCollection := ObsItem.Collection as THobCollection;
+            ScreenObject := ObsCollection.ScreenObject as TScreenObject;
+            Item.Time := ObsItem.Time;
+            APoint := ScreenObject.Points[0];
+            Item.X := APoint.x;
+            Item.Y := APoint.y;
+            Item.ScreenObjectName := ScreenObject.Name;
           end;
-          Assert(ObsIndex >= 0);
-          Item := Add as THeadObsItem;
-          Item.SimulatedValue := FortranStrToFloat(StringSplitter[0]);
-          Item.ObservedValue := FortranStrToFloat(StringSplitter[1]);
-          Item.Name := StringSplitter[2];
-          ObsItem := HeadObsObjects.Objects[ObsIndex] as THobItem;
-          ObsCollection := ObsItem.Collection as THobCollection;
-          ScreenObject := ObsCollection.ScreenObject as TScreenObject;
-          Item.Time := ObsItem.Time;
-          APoint := ScreenObject.Points[0];
-          Item.X := APoint.x;
-          Item.Y := APoint.y;
-          Item.ScreenObjectName := ScreenObject.Name;
+        finally
+          StringSplitter.Free;
         end;
       finally
-        StringSplitter.Free;
+        HeadObsObjects.Free;
       end;
     finally
-      HeadObsObjects.Free;
+      HeadFile.Free;
+    end;
+    UpdateVisibleItems(nil);
+    FileAge(FileName, FFileDate);
+    Sorter := TList.Create;
+    try
+      for Index := 0 to Count - 1 do
+      begin
+        Sorter.Add(Items[Index])
+      end;
+      Sorter.Sort(SortItems);
+      for Index := 0 to Sorter.Count - 1 do
+      begin
+        Item := Sorter[Index];
+        Item.Index := Index;
+      end;
+    finally
+      Sorter.Free;
     end;
   finally
-    HeadFile.Free;
-  end;
-  UpdateVisibleItems(nil);
-  FileAge(FileName, FFileDate);
-  Sorter := TList.Create;
-  try
-    for Index := 0 to Count - 1 do
+    if ShowErrors then
     begin
-      Sorter.Add(Items[Index])
+      frmErrorsAndWarnings.ShowAfterDelay;
     end;
-    Sorter.Sort(SortItems);
-    for Index := 0 to Sorter.Count - 1 do
-    begin
-      Item := Sorter[Index];
-      Item.Index := Index;
-    end;
-  finally
-    Sorter.Free;
   end;
   result := True;
 end;

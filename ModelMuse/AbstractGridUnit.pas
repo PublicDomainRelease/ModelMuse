@@ -7334,30 +7334,36 @@ begin
   end;
 
   // Show the display lists.
-  if frmGoPhast.tbShell.Down then
-  begin
-    glCallList(FGridShellGLIndex);
-  end;
-  if frmGoPhast.tbTopGrid.Down then
-  begin
-    glCallList(FTopGridGLIndex);
-  end;
-  if frmGoPhast.tbFrontGrid.Down then
-  begin
-    glCallList(FFrontGridGLIndex);
-  end;
-  if frmGoPhast.tbSideGrid.Down then
-  begin
-    glCallList(FSideGridGLIndex);
-  end;
-  if frmGoPhast.tb3DColors.Down and (ThreeDDataSet <> nil) then
-  begin
-    glCallList(FCellsGLIndex);
-  end;
-  if frmGoPhast.tb3DColors.Down
-    and (frmGoPhast.PhastModel.EdgeDisplay <> nil) then
-  begin
-    glCallList(FEdgesGLIndex);
+  try
+    if frmGoPhast.tbShell.Down and FRecordedShell then
+    begin
+      glCallList(FGridShellGLIndex);
+    end;
+    if frmGoPhast.tbTopGrid.Down and FRecordedTopGrid then
+    begin
+      glCallList(FTopGridGLIndex);
+    end;
+    if frmGoPhast.tbFrontGrid.Down and FRecordedFrontGrid then
+    begin
+      glCallList(FFrontGridGLIndex);
+    end;
+    if frmGoPhast.tbSideGrid.Down and FRecordedSideGrid then
+    begin
+      glCallList(FSideGridGLIndex);
+    end;
+    if frmGoPhast.tb3DColors.Down and (ThreeDDataSet <> nil) then
+    begin
+      glCallList(FCellsGLIndex);
+    end;
+    if frmGoPhast.tb3DColors.Down
+      and (frmGoPhast.PhastModel.EdgeDisplay <> nil) then
+    begin
+      glCallList(FEdgesGLIndex);
+    end;
+  except on EMathError do
+    begin
+      // do nothing
+    end;
   end;
 
   glPopMatrix;

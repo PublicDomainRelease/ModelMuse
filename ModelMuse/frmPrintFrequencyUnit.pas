@@ -386,23 +386,21 @@ end;
 
 procedure TfrmPrintFrequency.LayoutMultiEditControls;
 var
-  Row: Integer;
   Col: Integer;
   Index: Integer;
 begin
   if [csLoading, csReading] * ComponentState <> [] then
   begin
     Exit
-  end;  
+  end;
   Col := 2;
-  Row := rdgPrintFrequency.Row;
   for Index := 2 to rdgPrintFrequency.ColCount - 1 do
   begin
     if Odd(Index) then
     begin
       Continue;
     end;
-    if rdgPrintFrequency.CellVisible[Index, Row] then
+    if rdgPrintFrequency.ColVisible[Index] then
     begin
       Col := Index;
       break;

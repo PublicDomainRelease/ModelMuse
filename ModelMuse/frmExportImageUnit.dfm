@@ -6,9 +6,9 @@ inherited frmExportImage: TfrmExportImage
   ClientWidth = 721
   ShowHint = True
   OnClose = FormClose
-  ExplicitWidth = 729
-  ExplicitHeight = 553
-  PixelsPerInch = 96
+  ExplicitWidth = 739
+  ExplicitHeight = 564
+  PixelsPerInch = 120
   TextHeight = 18
   object JvNetscapeSplitter2: TJvNetscapeSplitter
     Left = 249
@@ -117,7 +117,6 @@ inherited frmExportImage: TfrmExportImage
               Width = 75
               Height = 25
               Caption = 'Save'
-              DoubleBuffered = True
               Glyph.Data = {
                 76010000424D7601000000000000760000002800000020000000100000000100
                 04000000000000010000120B0000120B00001000000000000000000000000000
@@ -132,7 +131,6 @@ inherited frmExportImage: TfrmExportImage
                 33303FFFFFF7FFFFFFF700000000000000007777777777777777030303030303
                 03037F7F7F7F7F7F7F7F00000000000000007777777777777777}
               NumGlyphs = 2
-              ParentDoubleBuffered = False
               TabOrder = 2
               OnClick = btnSaveMultipleImagesClick
             end
@@ -213,7 +211,6 @@ inherited frmExportImage: TfrmExportImage
             Height = 135
             Align = alClient
             Header.AutoSizeIndex = 0
-            Header.DefaultHeight = 17
             Header.Font.Charset = DEFAULT_CHARSET
             Header.Font.Color = clWindowText
             Header.Font.Height = -11
@@ -250,7 +247,7 @@ inherited frmExportImage: TfrmExportImage
           object lblTitle: TLabel
             Left = 11
             Top = 2
-            Width = 29
+            Width = 28
             Height = 18
             Caption = 'Title'
           end
@@ -479,10 +476,8 @@ inherited frmExportImage: TfrmExportImage
       Width = 87
       Height = 26
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 4
       OnClick = btnHelpClick
     end
@@ -492,10 +487,8 @@ inherited frmExportImage: TfrmExportImage
       Width = 87
       Height = 26
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkClose
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 7
       OnClick = btnCloseClick
     end
@@ -528,7 +521,6 @@ inherited frmExportImage: TfrmExportImage
       Height = 58
       Anchors = [akTop, akRight]
       Caption = 'Refresh'
-      DoubleBuffered = True
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000130B0000130B00001000000000000000000000000000
@@ -543,7 +535,6 @@ inherited frmExportImage: TfrmExportImage
         99933773FF777F3F777F339993707399999333773F373F77777F333999999999
         3393333777333777337333333999993333333333377777333333}
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnRefreshClick
     end
@@ -564,7 +555,6 @@ inherited frmExportImage: TfrmExportImage
       Height = 26
       Anchors = [akTop, akRight]
       Caption = 'Save image'
-      DoubleBuffered = True
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000130B0000130B00001000000000000000000000000000
@@ -579,7 +569,6 @@ inherited frmExportImage: TfrmExportImage
         99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
         93337FFFF7737777733300000033333333337777773333333333}
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 6
       OnClick = btnSaveImageClick
       HotTrackFont.Charset = ANSI_CHARSET
@@ -596,7 +585,6 @@ inherited frmExportImage: TfrmExportImage
       Height = 26
       Anchors = [akTop, akRight]
       Caption = 'Copy image'
-      DoubleBuffered = True
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000130B0000130B00001000000000000000000000000000
@@ -611,7 +599,6 @@ inherited frmExportImage: TfrmExportImage
         99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
         93337FFFF7737777733300000033333333337777773333333333}
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 3
       OnClick = JvBitBtn1Click
       HotTrackFont.Charset = ANSI_CHARSET

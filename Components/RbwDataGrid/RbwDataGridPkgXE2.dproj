@@ -56,7 +56,7 @@
 			<Icon_MainIcon>RbwDataGridPkgXE_Icon.ico</Icon_MainIcon>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base_Win32)'!=''">
-			<DCC_UsePackage>vcl;$(DCC_UsePackage)</DCC_UsePackage>
+			<DCC_UsePackage>vcl;RbwDataGridPkgXE2;$(DCC_UsePackage)</DCC_UsePackage>
 			<Icon_MainIcon>RbwDataGridPkgXE_Icon.ico</Icon_MainIcon>
 			<DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>

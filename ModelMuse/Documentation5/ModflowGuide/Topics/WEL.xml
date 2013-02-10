@@ -192,7 +192,7 @@
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">Option—is an optional list of character values.</text></para>
                       <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
-                        <li styleclass="Normal"><text styleclass="Normal" translate="true">“</text><text styleclass="Keywords" translate="true">AUXILIARY</text><text styleclass="Normal" translate="true"> abc” or “</text><text styleclass="Keywords" translate="true">AUX</text><text styleclass="Normal" translate="true"> abc”—defines an auxiliary variable, named &quot;abc&quot;, which will be read for each well as part of Items 4 and 6. Up to five variables can be specified, each of which must be preceded by &quot;AUXILIARY&quot; or &quot;AUX.&quot; These variables will not be used by the Ground-Water Flow Process, but they will be available for use by other processes. The auxiliary variable values will be read after the Q variable.</text></li>
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">“</text><text styleclass="Keywords" translate="true">AUXILIARY</text><text styleclass="Normal" translate="true"> abc” or “</text><text styleclass="Keywords" translate="true">AUX</text><text styleclass="Normal" translate="true"> abc”—defines an auxiliary variable, named &quot;abc&quot;, which will be read for each well as part of Items 4 and 6. Up to 20 variables can be specified, each of which must be preceded by &quot;AUXILIARY&quot; or &quot;AUX.&quot; These variables will not be used by the Ground-Water Flow Process, but they will be available for use by other processes. The auxiliary variable values will be read after the Q variable.</text></li>
                       </list>
                       <para styleclass="Normal"><snippet src="Uses_of_Auxiliary_Parameters"/></para>
                       <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
@@ -213,7 +213,7 @@
         </td>
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Data set 2b can only be used in MODFLOW-NWT.</text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">[</text><text styleclass="Keywords" translate="true">SPECIFY</text><text styleclass="Normal" translate="true"> PHIRAMP]</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">[</text><text styleclass="Keywords" translate="true">SPECIFY</text><text styleclass="Normal" translate="true"> PHIRAMP IUNITRAMP]</text></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
             <tr style="vertical-align:top">
@@ -231,6 +231,35 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="PHIRAMP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">PHIRAMP is the fraction of the cell thickness used as an interval for smoothly adjusting negative pumping rates to 0 for dry cells. Negative pumping rates are adjusted to 0 or a smaller negative value when the head in the cell is equal to or less than the calculated interval above the cell bottom (see equations 24 and 25 on page 14 of Niswonger and others, 2011).</text></para>
+                    </td>
+                  </tr>
+                </table></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[IUNITRAMP]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+                  <tr style="vertical-align:top">
+                    <td>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Changes were made to report wells with reduced pumping due to dewatered conditions to a separate output file or to the main listing file. If the wells with reduced pumping rates are written to a separate output file then a file of type &quot;DATA&quot; must be included in the Name file with a unit number that matches the unit number specified in the Well file (following the variable PHIRAMP in Item 2b). For example, a value of PHIRAMP (see MODFLOW-NWT documentation report) of 0.3 and a unit number of 50 can be specified in the second line of the Well file using the key word &quot;SPECIFY&quot; as:</text></para>
+                      <para styleclass="Normal"></para>
+                      <para styleclass="Code Example"><text styleclass="Code Example" translate="true">SPECIFY &#160;0.3 &#160;50</text></para>
+                      <para styleclass="Normal"></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">The following line must be added to the Name file:</text></para>
+                      <para styleclass="Normal"></para>
+                      <para styleclass="Code Example"><text styleclass="Code Example" translate="true">DATA &#160; &#160; 50 &#160; &#160;Reduced_wells.out</text></para>
+                      <para styleclass="Normal"></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Thus, wells with reduced pumping will be written for each time step to the output file &quot;Reduced_wells.out&quot; with unit number 50. For example, wells with reduced pumping will be reported to file &quot;reduced_wells.out&quot; as:</text></para>
+                      <para styleclass="Normal"></para>
+                      <para styleclass="Code Example"><text styleclass="Normal" translate="true">&#32;</text><text styleclass="Code Example" translate="true">WELLS WITH REDUCED PUMPING FOR STRESS PERIOD &#160; &#160; 6 TIME STEP &#160; &#160; 2</text></para>
+                      <para styleclass="Code Example"><text styleclass="Code Example" translate="true"> &#160; LAY &#160; ROW &#160; COL &#160; &#160; &#160; &#160; APPL.Q &#160; &#160; &#160; &#160; &#160;ACT.Q &#160; &#160; &#160; &#160;GW-HEAD &#160; &#160; &#160; CELL-BOT</text></para>
+                      <para styleclass="Code Example"><text styleclass="Code Example" translate="true"> &#160; &#160; 4 &#160; &#160;91 &#160; &#160;69 &#160;-0.104400E+04 &#160;-0.104399E+04 &#160; 0.208142E+04 &#160; 0.205380E+04</text></para>
+                      <para styleclass="Code Example"><text styleclass="Code Example" translate="true"> &#160; &#160; 4 &#160; &#160;91 &#160; &#160;69 &#160;-0.208800E+04 &#160;-0.208798E+04 &#160; 0.208142E+04 &#160; 0.205380E+04</text></para>
+                      <para styleclass="Code Example"><text styleclass="Code Example" translate="true"> &#160; &#160; 4 &#160; &#160;91 &#160; &#160;69 &#160;-0.208800E+04 &#160;-0.208798E+04 &#160; 0.208142E+04 &#160; 0.205380E+04</text></para>
+                      <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&#32;</text></para>
+                      <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&#32;</text></para>
+                      <para styleclass="Code Example"><text styleclass="Code Example" translate="true"> WELLS WITH REDUCED PUMPING FOR STRESS PERIOD &#160; &#160; 6 TIME STEP &#160; &#160; 3</text></para>
+                      <para styleclass="Code Example"><text styleclass="Code Example" translate="true"> &#160; LAY &#160; ROW &#160; COL &#160; &#160; &#160; &#160; APPL.Q &#160; &#160; &#160; &#160; &#160;ACT.Q &#160; &#160; &#160; &#160;GW-HEAD &#160; &#160; &#160; CELL-BOT</text></para>
+                      <para styleclass="Code Example"><text styleclass="Code Example" translate="true"> &#160; &#160; 4 &#160; &#160;91 &#160; &#160;69 &#160;-0.104400E+04 &#160;-0.967118E+03 &#160; 0.207686E+04 &#160; 0.205380E+04</text></para>
+                      <para styleclass="Code Example"><text styleclass="Code Example" translate="true"> &#160; &#160; 4 &#160; &#160;91 &#160; &#160;69 &#160;-0.208800E+04 &#160;-0.193424E+04 &#160; 0.207686E+04 &#160; 0.205380E+04</text></para>
+                      <para styleclass="Code Example"><text styleclass="Code Example" translate="true"> &#160; &#160; 4 &#160; &#160;91 &#160; &#160;69 &#160;-0.208800E+04 &#160;-0.193424E+04 &#160; 0.207686E+04 &#160; 0.205380E+04</text></para>
                     </td>
                   </tr>
                 </table></para>

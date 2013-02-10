@@ -26,7 +26,8 @@ uses Windows,
   frameScreenObjectHydmodUnit, CheckLst, frameScreenObjectUnit,
   frameScreenObjectSsmUnit, frameCustomCellObservationUnit,
   frameConcentrationObservationUnit, CustomFrameFluxObsUnit,
-  frameMt3dmsFluxObsUnit;
+  frameMt3dmsFluxObsUnit, frameCustomSutraFeatureUnit,
+  frameSutraObservationsUnit, frameSutraBoundaryUnit;
 
   { TODO : Consider making this a property sheet like the Object Inspector that
   could stay open at all times.  Boundary conditions and vertices might be
@@ -271,6 +272,21 @@ type
     jvspMT3DMS_TOB_Flux: TJvStandardPage;
     frameMt3dmsFluxObs: TframeMt3dmsFluxObs;
     reDataSetFormula: TRichEdit;
+    tabSutraFeatures: TTabSheet;
+    jvplSutraFeatures: TJvPageList;
+    jvpltvSutraFeatures: TJvPageListTreeView;
+    splttrSutraFeatures: TJvNetscapeSplitter;
+    jvspSutraObservations: TJvStandardPage;
+    frameSutraObservations: TframeSutraObservations;
+    jvspSutraSpecifiedPressure: TJvStandardPage;
+    jvspSutraSpecTempConc: TJvStandardPage;
+    jvspSutraFluidFlux: TJvStandardPage;
+    jvspSutraMassEnergyFlux: TJvStandardPage;
+    frameSutraSpecifiedPressure: TframeSutraBoundary;
+    frameSutraSpecTempConc: TframeSutraBoundary;
+    frameSutraFluidFlux: TframeSutraBoundary;
+    frameSutraMassEnergyFlux: TframeSutraBoundary;
+    jvspSutraBlank: TJvStandardPage;
     // @name changes which check image is displayed for the selected item
     // in @link(jvtlModflowBoundaryNavigator).
     procedure jvtlModflowBoundaryNavigatorMouseDown(Sender: TObject;
@@ -467,6 +483,13 @@ type
       ACol, ARow: Integer; const Value: TCheckBoxState);
     procedure frameHydmodcomboLayerGroupChange(Sender: TObject);
     procedure frameHydmodcomboNoDelayBedChange(Sender: TObject);
+    procedure jvpltvSutraFeaturesMouseDown(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure frameSutraObservationsbtnDeleteClick(Sender: TObject);
+    procedure frameSutraObservationsbtnInsertClick(Sender: TObject);
+    procedure frameSutraObservationsedNameExit(Sender: TObject);
+    procedure SutraBoundaryButtonClick(
+      Sender: TObject; ACol, ARow: Integer);
   published
     // Clicking @name closes the @classname without changing anything.
     // See @link(btnCancelClick),
@@ -1389,6 +1412,11 @@ type
     FFilledDataSetTreeView: Boolean;
     FChildModels: TList;
     FChildModelsScreenObjects: TList;
+    FSutraObs_Node: TJvPageIndexNode;
+    FSutraSpecPressure_Node: TJvPageIndexNode;
+    FSutraSpecTempConc_Node: TJvPageIndexNode;
+    FSutraFluidFlux_Node: TJvPageIndexNode;
+    FSutraMassEnergyFlux_Node: TJvPageIndexNode;
     Function GenerateNewDataSetFormula(DataArray: TDataArray): string;
     // @name assigns new formulas for @link(TDataArray)s for each
     // @link(TScreenObject) in @link(FNewProperties).
@@ -1728,6 +1756,13 @@ type
     procedure GetMt3dmsFluxObservations(const AScreenObjectList: TList);
     procedure CreateMt3dmsTobFluxNode;
     procedure SetMt3dFluxObs(List: TList);
+    procedure CreateSutraObsNode;
+    procedure ActivateSutraFeature(Sender: TObject; CheckState: TCheckBoxState);
+    procedure CreateSutraSpecPressNode;
+    procedure CreateSutraSpecTempConcNode;
+    procedure CreateSutraFluidFluxNode;
+    procedure CreateSutraMassEnergyFluxNode;
+    procedure SetSelectedSutraBoundaryNode;
 
     // @name is set to @true when the @classname has stored values of the
     // @link(TScreenObject)s being edited.
@@ -1817,22 +1852,22 @@ type
     procedure GetScreenObjectVerticies;
     procedure SetZLabelCaptions;
     procedure GetPhastBoundaryConditionsForAdditionalObjects(
-      AScreenObject: TScreenObject; var TempType: TBoundaryTypes);
+      AScreenObject: TScreenObject; var TempType: TPhastBoundaryTypes);
     procedure GetPhastSpecifiedHeadBoundaryForAdditionalObject(
       AScreenObject: TScreenObject; UsedTimes: TRealList;
-      var TempType: TBoundaryTypes);
+      var TempType: TPhastBoundaryTypes);
     procedure GetPhastSpecifiedFluxBoundaryForAdditionalObject(
       AScreenObject: TScreenObject; UsedTimes: TRealList;
-      var TempType: TBoundaryTypes);
+      var TempType: TPhastBoundaryTypes);
     procedure GetPhastLeakyBoundaryForAdditionalObject(
       AScreenObject: TScreenObject; UsedTimes: TRealList;
-      var TempType: TBoundaryTypes);
+      var TempType: TPhastBoundaryTypes);
     procedure GetPhastRiverBoundaryForAdditionalObject(
       AScreenObject: TScreenObject; UsedTimes: TRealList;
-      var TempType: TBoundaryTypes);
+      var TempType: TPhastBoundaryTypes);
     procedure GetPhastWellBoundaryForAdditionalObject(
       AScreenObject: TScreenObject; UsedTimes: TRealList;
-      var TempType: TBoundaryTypes);
+      var TempType: TPhastBoundaryTypes);
     procedure GetElevationFormulasForAdditionalObject(
       AScreenObject: TScreenObject);
     procedure GetDataSetsForAdditionalObject(AScreenObject: TScreenObject);
@@ -1901,6 +1936,8 @@ type
     procedure FillChildModelList;
     procedure GetPositionLockedForAdditionalObject(AScreenObject: TScreenObject);
     procedure GetCanSelectNode(Node: TTreeNode; var AllowChange: Boolean);
+    function ShouldCreateSutraBoundary: Boolean;
+    procedure CreateSutraFeatureNodes;
 //    function CanSelectMt3dms: Boolean;
     { Private declarations }
   public
@@ -1934,7 +1971,8 @@ uses Math, StrUtils, JvToolEdit, frmGoPhastUnit, AbstractGridUnit,
   LayerStructureUnit, ModpathParticleUnit, IntListUnit,
   frmManageFluxObservationsUnit, ModflowGageUnit, ModflowMnw2Unit, JvGroupBox,
   ModflowHydmodUnit, ModelMuseUtilities, Mt3dmsChemUnit, Mt3dmsChemSpeciesUnit,
-  Mt3dmsTobUnit, Mt3dmsFluxObservationsUnit, frmDataSetsUnits;
+  Mt3dmsTobUnit, Mt3dmsFluxObservationsUnit, frmDataSetsUnits,
+  SutraBoundariesUnit, SutraMeshUnit, SutraOptionsUnit;
 
 resourcestring
   StrConcentrationObserv = 'Concentration Observations: ';
@@ -2035,6 +2073,15 @@ resourcestring
   ' they won''t be specified correctly because neither "Set properties of en' +
   'closed cells" nor "Set properties of intersected cells" is checked.'#13#10 +
   #13#10'Is this really what you want?';
+  StrSutraObservations = 'Sutra Observations';
+  StrSpecifiedPressure = 'Specified Pressure';
+  StrSpecifiedTemp = 'Specified Temperature';
+  StrSpecifiedConc = 'Specified Concentration';
+//  StrSpecifiedTemperatur = 'Specified Temperature or Concentration';
+  StrFluidFlux = 'Fluid Flux';
+  StrMassFlux = 'Mass Flux';
+  StrEnergyFlux = 'Energy Flux';
+//  StrMassOrEnergyFlux = 'Mass or Energy Flux';
 
 {$R *.dfm}
 
@@ -2390,6 +2437,38 @@ begin
   btnHelp.HelpKeyword := HelpKeyWord;
 end;
 
+procedure TfrmScreenObjectProperties.jvpltvSutraFeaturesMouseDown(
+  Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  CanSelectNode: Boolean;
+begin
+  inherited;
+  CanSelectNode := True;
+//  jvtlModflowBoundaryNavigatorChanging(Sender,
+//    jvpltvSutraFeatures.GetNodeAt(X,Y), CanSelectNode);
+  if not CanSelectNode then
+  begin
+    Exit;
+  end;
+  if htOnStateIcon in jvpltvSutraFeatures.GetHitTestInfoAt(X, Y) then
+  begin
+    case jvpltvSutraFeatures.Selected.StateIndex of
+      1:
+        begin
+          jvpltvSutraFeatures.Selected.StateIndex := 2;
+        end;
+      2:
+        begin
+          jvpltvSutraFeatures.Selected.StateIndex := 1;
+        end;
+      3:
+        begin
+          jvpltvSutraFeatures.Selected.StateIndex := 2;
+        end;
+    end;
+  end;
+end;
+
 procedure TfrmScreenObjectProperties.jvtlModflowBoundaryNavigatorChanging(
   Sender: TObject; Node: TTreeNode; var AllowChange: Boolean);
 begin
@@ -2635,6 +2714,7 @@ begin
 
   rdeGridCellSize.Text := '1';
 
+  rgBoundaryType.Handle;
   rgBoundaryType.Buttons[Ord(btRiver)].Enabled := True;
   rgBoundaryType.Buttons[Ord(btWell)].Enabled := True;
 //  rgBoundaryType.Controls[Ord(btRiver)].Enabled := True;
@@ -2690,9 +2770,12 @@ begin
   CreateMt3dmsTobConcNode(AScreenObject);
   CreateMt3dmsTobFluxNode;
 
+  CreateSutraFeatureNodes;
+
   tabLGR.TabVisible := frmGoPhast.PhastModel.LgrUsed;
   SetupChildModelControls(AScreenObject);
   jvplModflowBoundaries.ActivePage := jvspBlank;
+  jvplSutraFeatures.ActivePage := jvspSutraBlank;
 end;
 
 procedure TfrmScreenObjectProperties.GetGlobalVariables;
@@ -2708,6 +2791,46 @@ begin
   end;
 end;
 
+procedure TfrmScreenObjectProperties.ActivateSutraFeature(Sender: TObject;
+  CheckState: TCheckBoxState);
+begin
+  if Sender = frameSutraObservations then
+  begin
+    if FSutraObs_Node <> nil then
+    begin
+      FSutraObs_Node.StateIndex := Ord(CheckState)+1;
+    end;
+  end
+  else if Sender = frameSutraSpecifiedPressure then
+  begin
+    if FSutraSpecPressure_Node <> nil then
+    begin
+      FSutraSpecPressure_Node.StateIndex := Ord(CheckState)+1;
+    end;
+  end
+  else if Sender = frameSutraSpecTempConc then
+  begin
+    if FSutraSpecTempConc_Node <> nil then
+    begin
+      FSutraSpecTempConc_Node.StateIndex := Ord(CheckState)+1;
+    end;
+  end
+  else if Sender = frameSutraFluidFlux then
+  begin
+    if FSutraSpecTempConc_Node <> nil then
+    begin
+      FSutraFluidFlux_Node.StateIndex := Ord(CheckState)+1;
+    end;
+  end
+  else if Sender = frameSutraMassEnergyFlux then
+  begin
+    if FSutraMassEnergyFlux_Node <> nil then
+    begin
+      FSutraMassEnergyFlux_Node.StateIndex := Ord(CheckState)+1;
+    end;
+  end
+end;
+
 procedure TfrmScreenObjectProperties.GetData(const AScreenObject:
   TScreenObject);
 var
@@ -2720,6 +2843,11 @@ var
   ValueItem: TValueArrayItem;
   TreeViewFilled: boolean;
 begin
+  frameSutraSpecifiedPressure.BoundaryType := sbtSpecPress;
+  frameSutraSpecTempConc.BoundaryType := sbtSpecConcTemp;
+  frameSutraFluidFlux.BoundaryType := sbtFluidSource;
+  frameSutraMassEnergyFlux.BoundaryType := sbtMassEnergySource;
+
   // This will cause TCustomRadioGroup.UpdateButtons to be called.
   rgBoundaryType.WordWrap := not rgBoundaryType.WordWrap;
   rgBoundaryType.WordWrap := not rgBoundaryType.WordWrap;
@@ -2746,7 +2874,7 @@ begin
   InitializeGridObjects;
   seBoundaryTimes.Value := 1;
   rgEvaluatedAt.Enabled := frmGoPhast.PhastModel.ModelSelection in
-    [msPhast {$IFDEF Sutra}, msSutra {$ENDIF}];
+    [msPhast {$IFDEF Sutra}, msSutra22 {$ENDIF}];
 
   rgEvaluatedAt.Items[Ord(eaBlocks)] := EvalAtToString(eaBlocks,
     frmGoPhast.PhastModel.ModelSelection, True, True);
@@ -2769,6 +2897,7 @@ begin
   FViewDirection := FScreenObject.ViewDirection;
   if FViewDirection <> vdTop then
   begin
+    rgBoundaryType.Handle;
     rgBoundaryType.Buttons[Ord(btRiver)].Enabled := False;
     rgBoundaryType.Buttons[Ord(btWell)].Enabled := False;
 //    rgBoundaryType.Controls[Ord(btRiver)].Enabled := False;
@@ -2777,11 +2906,13 @@ begin
 
   if AScreenObject.Count > 1 then
   begin
+    rgBoundaryType.Handle;
     rgBoundaryType.Buttons[Ord(btWell)].Enabled := False;
 //    rgBoundaryType.Controls[Ord(btWell)].Enabled := False;
   end;
   if AScreenObject.Closed or (AScreenObject.Count <= 1) then
   begin
+    rgBoundaryType.Handle;
     rgBoundaryType.Buttons[Ord(btRiver)].Enabled := False;
 //    rgBoundaryType.Controls[Ord(btRiver)].Enabled := False;
   end;
@@ -2856,6 +2987,29 @@ begin
   finally
     List.Free;
   end;
+
+  {$IFDEF SUTRA}
+  if frmGoPhast.PhastModel.ModelSelection = msSutra22 then
+  begin
+    frameSutraObservations.OnActivate := ActivateSutraFeature;
+    frameSutraObservations.GetData(FNewProperties);
+
+    frameSutraSpecifiedPressure.OnActivate := ActivateSutraFeature;
+    frameSutraSpecifiedPressure.GetData(FNewProperties);
+
+    frameSutraSpecTempConc.OnActivate := ActivateSutraFeature;
+    frameSutraSpecTempConc.GetData(FNewProperties);
+
+    frameSutraFluidFlux.OnActivate := ActivateSutraFeature;
+    frameSutraFluidFlux.GetData(FNewProperties);
+
+    frameSutraMassEnergyFlux.OnActivate := ActivateSutraFeature;
+    frameSutraMassEnergyFlux.GetData(FNewProperties);
+
+    SetSelectedSutraBoundaryNode;
+  end;
+  {$ENDIF}
+
   SetDisabledElevationFormulas(AScreenObject);
 
   // The first condition is because TStringGrid can't handle too many rows.
@@ -3080,8 +3234,8 @@ begin
     if not cbIntersectedCells.Checked
       and not cbEnclosedCells.Checked then
     begin
-      ShowError :=
-        ((FDRN_Node <> nil) and (FDRN_Node.StateIndex <> 1));
+//      ShowError :=
+//        ((FDRN_Node <> nil) and (FDRN_Node.StateIndex <> 1));
       BoundaryNodeList := TList.Create;
       try
         BoundaryNodeList.Add(FCHD_Node);
@@ -3758,6 +3912,11 @@ end;
 procedure TfrmScreenObjectProperties.FormCreate(Sender: TObject);
 begin
   inherited;
+
+  {$IFDEF Win64}
+//  frameModpathParticles.GLSceneViewer1.Visible := False;
+  {$ENDIF}
+
   reDataSetFormula.DoubleBuffered := False;
   frameMnw2.OnChange := Mnw2Changed;
 
@@ -3804,6 +3963,7 @@ begin
 
   frameHeadObservations.InitializeControls;
   frameMt3dmsTobConc.InitializeControls;
+
 end;
 
 procedure TfrmScreenObjectProperties.ResetSpecifiedHeadGrid;
@@ -4083,7 +4243,7 @@ var
   ScreenObjectIndex: integer;
   AScreenObject: TScreenObject;
   TempList: TStringList;
-  TempType: TBoundaryTypes;
+  TempType: TPhastBoundaryTypes;
   CompilerList: TList;
   Index: Integer;
   Compiler: TRbwParser;
@@ -4183,7 +4343,7 @@ begin
       tabNodes.TabVisible := False;
       GetModflowBoundaries(AScreenObjectList);
       GetAdditionalUsedModels(AScreenObjectList);
-
+      SetSelectedSutraBoundaryNode;
     end;
     FCanFillTreeView := True;
     if AScreenObjectList.Count > 1 then
@@ -4220,6 +4380,34 @@ begin
   UpdateSubComponents(self);
   UpdateCurrentEdit;
 //  OutputDebugString('SAMPLING OFF');
+end;
+
+procedure TfrmScreenObjectProperties.CreateSutraFeatureNodes;
+begin
+  jvpltvSutraFeatures.Items.Clear;
+  CreateSutraObsNode;
+  CreateSutraSpecPressNode;
+  CreateSutraSpecTempConcNode;
+  CreateSutraFluidFluxNode;
+  CreateSutraMassEnergyFluxNode;
+end;
+
+function TfrmScreenObjectProperties.ShouldCreateSutraBoundary: Boolean;
+  {$IFDEF SUTRA}
+var
+  LocalModel: TPhastModel;
+  {$ENDIF}
+begin
+  {$IFDEF SUTRA}
+  LocalModel := frmGoPhast.PhastModel;
+  result := (LocalModel.ModelSelection = msSutra22)
+    and (LocalModel.SutraMesh <> nil)
+    and (rgEvaluatedAt.ItemIndex = Ord(eaNodes))
+    and ((LocalModel.SutraMesh.MeshType = mt2D)
+    or (rgElevationCount.ItemIndex in [1, 2]));
+  {$ELSE}
+    result := False;
+  {$ENDIF}
 end;
 
 //function TfrmScreenObjectProperties.CanSelectMt3dms: Boolean;
@@ -4701,6 +4889,35 @@ begin
     ((FMt3dmsTobConc_Node <> nil) and (FMt3dmsTobConc_Node.StateIndex = 2)),
     ((FMt3dmsTobConc_Node = nil) or (FMt3dmsTobConc_Node.StateIndex = 1))
     and frmGoPhast.PhastModel.Mt3dmsTobIsSelected);
+
+  {$IFDEF SUTRA}
+
+  frameSutraObservations.SetData(FNewProperties,
+    ((FSutraObs_Node <> nil) and (FSutraObs_Node.StateIndex = 2)),
+    ((FSutraObs_Node = nil) or (FSutraObs_Node.StateIndex = 1))
+    and (frmGoPhast.PhastModel.ModelSelection = msSutra22));
+
+  frameSutraSpecifiedPressure.SetData(FNewProperties,
+    ((FSutraSpecPressure_Node <> nil) and (FSutraSpecPressure_Node.StateIndex = 2)),
+    ((FSutraSpecPressure_Node = nil) or (FSutraSpecPressure_Node.StateIndex = 1))
+    and (frmGoPhast.PhastModel.ModelSelection = msSutra22));
+
+  frameSutraSpecTempConc.SetData(FNewProperties,
+    ((FSutraSpecTempConc_Node <> nil) and (FSutraSpecTempConc_Node.StateIndex = 2)),
+    ((FSutraSpecTempConc_Node = nil) or (FSutraSpecTempConc_Node.StateIndex = 1))
+    and (frmGoPhast.PhastModel.ModelSelection = msSutra22));
+
+  frameSutraFluidFlux.SetData(FNewProperties,
+    ((FSutraFluidFlux_Node <> nil) and (FSutraFluidFlux_Node.StateIndex = 2)),
+    ((FSutraFluidFlux_Node = nil) or (FSutraFluidFlux_Node.StateIndex = 1))
+    and (frmGoPhast.PhastModel.ModelSelection = msSutra22));
+
+  frameSutraMassEnergyFlux.SetData(FNewProperties,
+    ((FSutraMassEnergyFlux_Node <> nil) and (FSutraMassEnergyFlux_Node.StateIndex = 2)),
+    ((FSutraMassEnergyFlux_Node = nil) or (FSutraMassEnergyFlux_Node.StateIndex = 1))
+    and (frmGoPhast.PhastModel.ModelSelection = msSutra22));
+
+  {$ENDIF}
 
 end;
 
@@ -7077,7 +7294,7 @@ end;
 
 procedure TfrmScreenObjectProperties.GetPhastWellBoundaryForAdditionalObject(
   AScreenObject: TScreenObject; UsedTimes: TRealList;
-  var TempType: TBoundaryTypes);
+  var TempType: TPhastBoundaryTypes);
 var
   BoundaryIndentical: Boolean;
   Index: Integer;
@@ -7156,7 +7373,7 @@ end;
 
 procedure TfrmScreenObjectProperties.GetPhastRiverBoundaryForAdditionalObject(
   AScreenObject: TScreenObject; UsedTimes: TRealList;
-  var TempType: TBoundaryTypes);
+  var TempType: TPhastBoundaryTypes);
 var
   BoundaryIndentical: Boolean;
 begin
@@ -7203,7 +7420,7 @@ end;
 
 procedure TfrmScreenObjectProperties.GetPhastLeakyBoundaryForAdditionalObject(
   AScreenObject: TScreenObject; UsedTimes: TRealList;
-  var TempType: TBoundaryTypes);
+  var TempType: TPhastBoundaryTypes);
 var
   BoundaryIndentical: Boolean;
 begin
@@ -7240,7 +7457,7 @@ end;
 
 procedure TfrmScreenObjectProperties.
   GetPhastSpecifiedFluxBoundaryForAdditionalObject(AScreenObject: TScreenObject;
-  UsedTimes: TRealList; var TempType: TBoundaryTypes);
+  UsedTimes: TRealList; var TempType: TPhastBoundaryTypes);
 var
   BoundaryIndentical: Boolean;
 begin
@@ -7269,7 +7486,7 @@ end;
 
 procedure TfrmScreenObjectProperties.
   GetPhastSpecifiedHeadBoundaryForAdditionalObject(AScreenObject: TScreenObject;
-  UsedTimes: TRealList; var TempType: TBoundaryTypes);
+  UsedTimes: TRealList; var TempType: TPhastBoundaryTypes);
 var
   BoundaryIndentical: Boolean;
 begin
@@ -7303,7 +7520,7 @@ end;
 
 procedure TfrmScreenObjectProperties.
   GetPhastBoundaryConditionsForAdditionalObjects(AScreenObject: TScreenObject;
-  var TempType: TBoundaryTypes);
+  var TempType: TPhastBoundaryTypes);
 var
   UsedTimes: TRealList;
 begin
@@ -8029,6 +8246,33 @@ begin
   jvtlModflowBoundaryNavigator.Selected := SelectedMfBoundaryNode;
 end;
 
+procedure TfrmScreenObjectProperties.SetSelectedSutraBoundaryNode;
+var
+  SelectedSutraBoundaryNode: TTreeNode;
+begin
+  SelectedSutraBoundaryNode := jvpltvSutraFeatures.Items.GetFirstNode;
+  while SelectedSutraBoundaryNode <> nil do
+  begin
+    if SelectedSutraBoundaryNode.StateIndex <> 1 then
+    begin
+      break;
+    end;
+    SelectedSutraBoundaryNode := SelectedSutraBoundaryNode.GetNext;
+  end;
+  if SelectedSutraBoundaryNode = nil then
+  begin
+    SelectedSutraBoundaryNode := jvpltvSutraFeatures.Items.GetFirstNode;
+  end;
+  if SelectedSutraBoundaryNode = nil then
+  begin
+    jvplSutraFeatures.ActivePage := jvspSutraBlank;
+  end
+  else
+  begin
+    jvpltvSutraFeatures.Selected := SelectedSutraBoundaryNode;
+  end;
+end;
+
 procedure TfrmScreenObjectProperties.CreateUzfNode;
 var
   Node: TJvPageIndexNode;
@@ -8427,6 +8671,142 @@ begin
     Node.ImageIndex := 1;
     FGHB_Node := Node;
   end;
+end;
+
+procedure TfrmScreenObjectProperties.CreateSutraObsNode;
+  {$IFDEF SUTRA}
+var
+  Node: TJvPageIndexNode;
+  LocalModel: TPhastModel;
+  {$ENDIF}
+begin
+  FSutraObs_Node := nil;
+  {$IFDEF SUTRA}
+  LocalModel := frmGoPhast.PhastModel;
+  if (LocalModel.ModelSelection = msSutra22)
+    and (LocalModel.SutraMesh <> nil)
+    and ((LocalModel.SutraMesh.MeshType = mt2D)
+    or (rgElevationCount.ItemIndex in [1,2])) then
+  begin
+    Node := jvpltvSutraFeatures.Items.AddChild(nil,
+      StrSutraObservations) as TJvPageIndexNode;
+    Node.PageIndex := jvspSutraObservations.PageIndex;
+    frameSutraObservations.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FSutraObs_Node := Node;
+    frameSutraObservations.RefreshNodeState;
+  end;
+  {$ENDIF}
+end;
+
+procedure TfrmScreenObjectProperties.CreateSutraSpecPressNode;
+  {$IFDEF SUTRA}
+var
+  Node: TJvPageIndexNode;
+  {$ENDIF}
+begin
+  FSutraSpecPressure_Node := nil;
+  {$IFDEF SUTRA}
+  if ShouldCreateSutraBoundary then
+  begin
+    Node := jvpltvSutraFeatures.Items.AddChild(nil,
+      StrSpecifiedPressure) as TJvPageIndexNode;
+    Node.PageIndex := jvspSutraSpecifiedPressure.PageIndex;
+    frameSutraSpecifiedPressure.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FSutraSpecPressure_Node := Node;
+    frameSutraSpecifiedPressure.RefreshNodeState;
+  end;
+  {$ENDIF}
+end;
+
+procedure TfrmScreenObjectProperties.CreateSutraSpecTempConcNode;
+  {$IFDEF SUTRA}
+var
+  Node: TJvPageIndexNode;
+  TransportChoice: TTransportChoice;
+  {$ENDIF}
+begin
+  FSutraSpecTempConc_Node := nil;
+  {$IFDEF SUTRA}
+  if ShouldCreateSutraBoundary then
+  begin
+    TransportChoice := frmGoPhast.PhastModel.SutraOptions.TransportChoice;
+    case TransportChoice of
+      tcSolute:
+        begin
+          Node := jvpltvSutraFeatures.Items.AddChild(nil,
+            StrSpecifiedConc) as TJvPageIndexNode;
+        end;
+      tcEnergy:
+        begin
+          Node := jvpltvSutraFeatures.Items.AddChild(nil,
+            StrSpecifiedTemp) as TJvPageIndexNode;
+        end;
+      else Assert(False);
+    end;
+    Node.PageIndex := jvspSutraSpecTempConc.PageIndex;
+    frameSutraSpecTempConc.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FSutraSpecTempConc_Node := Node;
+    frameSutraSpecTempConc.RefreshNodeState;
+  end;
+  {$ENDIF}
+end;
+
+procedure TfrmScreenObjectProperties.CreateSutraFluidFluxNode;
+  {$IFDEF SUTRA}
+var
+  Node: TJvPageIndexNode;
+  {$ENDIF}
+begin
+  FSutraFluidFlux_Node := nil;
+  {$IFDEF SUTRA}
+  if ShouldCreateSutraBoundary then
+  begin
+    Node := jvpltvSutraFeatures.Items.AddChild(nil,
+      StrFluidFlux) as TJvPageIndexNode;
+    Node.PageIndex := jvspSutraFluidFlux.PageIndex;
+    frameSutraFluidFlux.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FSutraFluidFlux_Node := Node;
+    frameSutraFluidFlux.RefreshNodeState;
+  end;
+  {$ENDIF}
+end;
+
+procedure TfrmScreenObjectProperties.CreateSutraMassEnergyFluxNode;
+  {$IFDEF SUTRA}
+var
+  Node: TJvPageIndexNode;
+  TransportChoice: TTransportChoice;
+  {$ENDIF}
+begin
+  FSutraMassEnergyFlux_Node := nil;
+  {$IFDEF SUTRA}
+  if ShouldCreateSutraBoundary then
+  begin
+    TransportChoice := frmGoPhast.PhastModel.SutraOptions.TransportChoice;
+    case TransportChoice of
+      tcSolute:
+        begin
+          Node := jvpltvSutraFeatures.Items.AddChild(nil,
+            StrMassFlux) as TJvPageIndexNode;
+        end;
+      tcEnergy:
+        begin
+          Node := jvpltvSutraFeatures.Items.AddChild(nil,
+            StrEnergyFlux) as TJvPageIndexNode;
+        end;
+      else Assert(False);
+    end;
+    Node.PageIndex := jvspSutraMassEnergyFlux.PageIndex;
+    frameSutraMassEnergyFlux.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FSutraMassEnergyFlux_Node := Node;
+    frameSutraMassEnergyFlux.RefreshNodeState;
+  end;
+  {$ENDIF}
 end;
 
 procedure TfrmScreenObjectProperties.CreateChdNode;
@@ -9445,7 +9825,7 @@ begin
         begin
           if RowIndex - 1 < BoundaryValues.Count then
           begin
-            BoundItem := BoundaryValues.Items[RowIndex - 1];
+            BoundItem := BoundaryValues.Items[RowIndex - 1] as TCustomModflowBoundaryItem;
           end
           else
           begin
@@ -9462,7 +9842,7 @@ begin
   begin
     for BoundIndex := 0 to BoundaryValues.TimeListCount(frmGoPhast.PhastModel) - 1 do
     begin
-      BoundItem := BoundaryValues.Items[RowIndex - 1];
+      BoundItem := BoundaryValues.Items[RowIndex - 1] as TCustomModflowBoundaryItem;
       BoundItem.BoundaryFormula[BoundIndex] := '';
     end;
   end;
@@ -10239,6 +10619,12 @@ begin
     (frmGoPhast.PhastModel.DataArrayManager.DataSetCount > 0);
   tabModflowBoundaryConditions.TabVisible := CanSetData and
     (frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT]);
+  {$IFDEF SUTRA}
+  tabSutraFeatures.TabVisible := CanSetData and
+    (frmGoPhast.ModelSelection = msSutra22);
+  {$ELSE}
+  tabSutraFeatures.TabVisible := False;
+  {$ENDIF}
 end;
 
 procedure TfrmScreenObjectProperties.AssignNewDataSetFormula(
@@ -11726,6 +12112,10 @@ begin
   begin
     ResultType := rdtDouble;
   end
+  else if (DataGrid.Owner is TframeSutraBoundary) then
+  begin
+    ResultType := rdtDouble;
+  end
   else
   begin
     Assert(False);
@@ -12024,6 +12414,7 @@ var
   EditIndex: integer;
   OtherEdit: TScreenObjectDataEdit;
   NewEditIndex: integer;
+  EvalAt: TEvaluatedAt;
 begin
   if FCurrentEdit = nil then Exit;
   // ValidateDataSetFormula ensures that when a formula
@@ -12050,6 +12441,7 @@ begin
     // the data set whose formula will be edited.
     try
       Orientation := FCurrentEdit.DataArray.Orientation;
+      EvalAt := FCurrentEdit.DataArray.EvaluatedAt;
       // Add the variable whose value is being set to "Used".
 
       Used.Assign(FCurrentEdit.UsesList);
@@ -12063,7 +12455,9 @@ begin
           VariableName := OtherEdit.DataArray.Name;
           TempUsesList := OtherEdit.UsesList;
           VariablePosition := TempUsesList.IndexOf(DSName);
-          if (VariablePosition < 0) and ((Orientation = dso3D)
+          if (VariablePosition < 0)
+            and (EvalAt = OtherEdit.DataArray.EvaluatedAt)
+            and ((Orientation = dso3D)
             or (Orientation = OtherEdit.DataArray.Orientation)) then
           begin
             // if the variable does not depend on the
@@ -12182,6 +12576,7 @@ var
   Compiler: TRbwParser;
   CompiledFormula: TExpression;
   Tester: TRbwParser;
+  AVar: TCustomValue;
 begin
   // ValidateEdFormula ensures that when a formula has been entered at
   // one of the elevation edit boxes, that the formula is valid.
@@ -12245,7 +12640,11 @@ begin
       try
         for VarIndex := 0 to Compiler.VariableCount - 1 do
         begin
-          VariableList.Add(Compiler.Variables[VarIndex]);
+          AVar := Compiler.Variables[VarIndex];
+          if VariableList.IndexOf(AVar) < 0 then
+          begin
+            VariableList.Add(AVar);
+          end;
         end;
 
         Tester := TRbwParser.Create(self);
@@ -13259,6 +13658,8 @@ begin
   end;
 
   FPriorElevationCount := rgElevationCount.ItemIndex;
+  CreateSutraFeatureNodes;
+  SetSelectedSutraBoundaryNode;
 end;
 
 procedure TfrmScreenObjectProperties.cbSetGridCellSizeClick(Sender: TObject);
@@ -13327,7 +13728,7 @@ begin
         lblGridCellSize.Caption := StrGridCellSize;
       end;
     {$IFDEF SUTRA}
-    msSutra:
+    msSutra22:
       begin
         cbSetGridCellSize.Caption := StrUseToSetMeshElem;
         lblGridCellSize.Caption := StrMeshElementSize;
@@ -13421,6 +13822,8 @@ begin
     end;
   end;
   ShowOrHideTabs;
+  CreateSutraFeatureNodes;
+  SetSelectedSutraBoundaryNode;
 end;
 
 procedure TfrmScreenObjectProperties.AssignPhastInterpolation(DataArray: TDataArray);
@@ -14113,6 +14516,117 @@ begin
   StoreUzfBoundary;
 end;
 
+procedure TfrmScreenObjectProperties.SutraBoundaryButtonClick(
+  Sender: TObject; ACol, ARow: Integer);
+var
+  VariableList: TList;
+  Orientation: TDataSetOrientation;
+  DataGrid: TRbwDataGrid4;
+  EvaluatedAt: TEvaluatedAt;
+  Index: integer;
+  DataSet: TDataArray;
+  NewValue: string;
+  Variable: TCustomValue;
+  Edit: TScreenObjectDataEdit;
+  DataArrayManager: TDataArrayManager;
+begin
+  inherited;
+  DataGrid := Sender as TRbwDataGrid4;
+  VariableList := TList.Create;
+  // VariableList will hold a list of variables that can
+  // be used in the function
+  try
+      Orientation := dso3D;
+    // All the MODFLOW boundary conditions are evaluated at blocks.
+    EvaluatedAt := eaNodes;
+
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    for Index := 0 to DataArrayManager.DataSetCount - 1 do
+    begin
+      DataSet := DataArrayManager.DataSets[Index];
+      if (EvaluatedAt = DataSet.EvaluatedAt) then
+      begin
+        if ((Orientation = dso3D)
+          or (Orientation = DataSet.Orientation)) then
+        begin
+          Edit := FDataEdits[Index];
+          // if the variable does not depend on the
+          // data set whose formula is being edited
+          // and it's orientation is OK, the variable
+          // can be used in the formula.
+          VariableList.Add(Edit.Variable);
+        end;
+      end;
+    end;
+
+    NewValue := DataGrid.Cells[ACol, ARow];
+    if (NewValue = '') then
+    begin
+      NewValue := '0';
+    end;
+
+    with TfrmFormula.Create(self) do
+    begin
+      try
+        IncludeGIS_Functions(eaBlocks);
+        RemoveGetVCont;
+        RemoveHufFunctions;
+        PopupParent := self;
+
+        // register the appropriate variables with the
+        // parser.
+        for Index := 0 to VariableList.Count - 1 do
+        begin
+          Variable := VariableList[Index];
+          rbFormulaParser.RegisterVariable(Variable);
+        end;
+
+        // show the variables and functions
+        UpdateTreeList;
+
+        // put the formula in the TfrmFormula.
+        Formula := NewValue;
+        // The user edits the formula.
+        ShowModal;
+        if ResultSet then
+        begin
+          CreateBoundaryFormula(DataGrid, ACol, ARow, Formula, Orientation,
+            EvaluatedAt);
+        end;
+      finally
+        Free;
+      end;
+    end;
+
+  finally
+    VariableList.Free;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.frameSutraObservationsbtnDeleteClick(
+  Sender: TObject);
+begin
+  inherited;
+  frameSutraObservations.btnDeleteClick(Sender);
+//
+end;
+
+procedure TfrmScreenObjectProperties.frameSutraObservationsbtnInsertClick(
+  Sender: TObject);
+begin
+  inherited;
+  frameSutraObservations.btnInsertClick(Sender);
+//
+end;
+
+procedure TfrmScreenObjectProperties.frameSutraObservationsedNameExit(
+  Sender: TObject);
+begin
+  inherited;
+  frameSutraObservations.edNameExit(Sender);
+//
+end;
+
 procedure TfrmScreenObjectProperties.frameWellParamclbParametersStateChange(
   Sender: TObject; Index: Integer);
 begin
@@ -14179,7 +14693,7 @@ var
   ColIndex, RowIndex: integer;
 begin
   DataGrid := nil;
-  case TBoundaryTypes(rgBoundaryType.ItemIndex) of
+  case TPhastBoundaryTypes(rgBoundaryType.ItemIndex) of
     btSpecifiedHead:
       begin
         DataGrid := dgSpecifiedHead;
@@ -14228,7 +14742,7 @@ procedure TfrmScreenObjectProperties.rgBoundaryTypeClick(Sender: TObject);
 var
   ItemIndex: Integer;
   Item: TScreenObjectEditItem;
-  NewBoundaryType: TBoundaryTypes;
+  NewBoundaryType: TPhastBoundaryTypes;
 begin
   inherited;
 
@@ -14246,7 +14760,7 @@ begin
   SelectBoundaryCell;
   if IsLoaded and (rgBoundaryType.ItemIndex >= 0) then
   begin
-    NewBoundaryType := TBoundaryTypes(rgBoundaryType.ItemIndex);
+    NewBoundaryType := TPhastBoundaryTypes(rgBoundaryType.ItemIndex);
     for ItemIndex := 0 to FNewProperties.Count - 1 do
     begin
       Item := FNewProperties[ItemIndex];
@@ -14279,7 +14793,7 @@ begin
   inherited;
   FDeletingPhastTime := True;
   try
-    case TBoundaryTypes(pcPhastBoundaries.ActivePageIndex) of
+    case TPhastBoundaryTypes(pcPhastBoundaries.ActivePageIndex) of
       btNone:
         begin
           FBoundaryGrid := nil;
@@ -14671,7 +15185,7 @@ end;
 procedure TfrmScreenObjectProperties.pcPhastBoundariesChange(Sender: TObject);
 begin
   inherited;
-  case TBoundaryTypes(pcPhastBoundaries.ActivePageIndex) of
+  case TPhastBoundaryTypes(pcPhastBoundaries.ActivePageIndex) of
     btNone:
       begin
         Exit;
@@ -16155,6 +16669,7 @@ var
 begin
   inherited;
   GB := frameModpathParticles.gbParticles;
+  GB.Handle;
   Check := GB.Components[0] as TCheckBox;
   for Index := 0 to GB.ControlCount - 1 do
   begin
@@ -17458,11 +17973,11 @@ end;
 
 procedure TfrmScreenObjectProperties.StorePhastBoundary;
 var
-  NewBoundaryType: TBoundaryTypes;
+  NewBoundaryType: TPhastBoundaryTypes;
 begin
   if IsLoaded then
   begin
-    NewBoundaryType := TBoundaryTypes(rgBoundaryType.ItemIndex);
+    NewBoundaryType := TPhastBoundaryTypes(rgBoundaryType.ItemIndex);
     case NewBoundaryType of
       btNone: ;  // do nothing
       btSpecifiedHead: StorePhastSpecifiedHeads;

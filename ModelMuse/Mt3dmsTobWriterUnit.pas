@@ -23,6 +23,8 @@ type
     FFluxObsList: TObsList;
     FMaxConcObs: Integer;
     FMaxFluxObs: Integer;
+    inConcObs: Integer;
+    inFluxObs: Integer;
     procedure EvaluateConcentrationObs(Purpose: TObservationPurpose);
     procedure WriteDataSet1;
     procedure WriteDataSet2;
@@ -64,7 +66,7 @@ uses
 resourcestring
   ConcOffGrid = 'One or more concentration observation are not located on ' +
     'the grid and will be ignored';
-  StrNoValidConcObserv = 'No valid conentration observations were defined. ' +
+  StrNoValidConcObserv = 'No valid concentration observations were defined. ' +
   'Check that "Model|Observation Type" is set to the correct value and that ' +
   'the observation type for each observation is set correctly.';
   StrNoConcentrationObs = 'No concentration observations';
@@ -610,8 +612,6 @@ end;
 procedure TMt3dmsTobWriter.WriteDataSet2;
 var
   inSaveObs: integer;
-  inConcObs: Integer;
-  inFluxObs: Integer;
 begin
   if FTobPackage.SaveBinary = sbSave then
   begin
@@ -1049,6 +1049,10 @@ var
   FScale: Double;
   iOutFlux: Integer;
 begin
+  if inFluxObs <= 0 then
+  begin
+    Exit;
+  end;
   frmProgressMM.AddMessage(StrWritingDataSet6);
   // write data set 6
   nFluxGroup := FFluxObsList.Count;
@@ -1084,6 +1088,10 @@ var
   iConcLOG: Integer;
   iConcINTP: Integer;
 begin
+  if inConcObs <= 0 then
+  begin
+    Exit;
+  end;
   frmProgressMM.AddMessage(StrWritingDataSet3);
   CScale := FTobPackage.ConcScaleFactor;
   iOutCobs := Ord(FTobPackage.ConcObsResult);

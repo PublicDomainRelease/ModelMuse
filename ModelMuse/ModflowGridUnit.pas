@@ -2688,7 +2688,7 @@ begin
     // Draw back side;
     glBegin(GL_LINE_LOOP);
     LayerIndex := 0;
-    RowIndex := Length(CellPoints[0])-1;;
+    RowIndex := Length(CellPoints[0])-1;
     for ColumnIndex := 0 to Length(CellPoints) -1 do
     begin
       APoint := CellPoints[ColumnIndex,RowIndex,LayerIndex];

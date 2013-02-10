@@ -1,5 +1,7 @@
 program ModelMuse;
 
+{$EXCESSPRECISION OFF}
+
 // The following option allows up to 3Gb of memory to be used.
 {$SetPEFlags $20}
 
@@ -428,9 +430,28 @@ uses
   frmSutraLayersUnit in 'frmSutraLayersUnit.pas' {frmSutraLayers},
   HashTableFacadeUnit in 'HashTableFacadeUnit.pas',
   SutraOptionsUnit in 'SutraOptionsUnit.pas',
-  frmSutraOptionsUnit in 'frmSutraOptionsUnit.pas' {frmSutraOptions};
+  frmSutraOptionsUnit in 'frmSutraOptionsUnit.pas' {frmSutraOptions},
+  framePackageWellUnit in 'framePackageWellUnit.pas' {framePackageWell: TFrame},
+  SutraTimeScheduleUnit in 'SutraTimeScheduleUnit.pas',
+  frmSutraTimesUnit in 'frmSutraTimesUnit.pas' {frmSutraTimes},
+  SutraBoundariesUnit in 'SutraBoundariesUnit.pas',
+  frameCustomSutraFeatureUnit in 'frameCustomSutraFeatureUnit.pas' {frameCustomSutraFeature: TFrame},
+  frameSutraBoundaryUnit in 'frameSutraBoundaryUnit.pas' {frameSutraBoundary: TFrame},
+  frameSutraObservationsUnit in 'frameSutraObservationsUnit.pas' {frameSutraObservations: TFrame},
+  frmSutraTimeAdjustChoiceUnit in 'frmSutraTimeAdjustChoiceUnit.pas' {frmSutraTimeAdjustChoice},
+  SutraBoundaryWriterUnit in 'SutraBoundaryWriterUnit.pas',
+  SutraObservationWriterUnit in 'SutraObservationWriterUnit.pas',
+  SutraOutputControlUnit in 'SutraOutputControlUnit.pas',
+  frmSutraOutputControlUnit in 'frmSutraOutputControlUnit.pas' {frmSutraOutputControl},
+  SutraInputWriterUnit in 'SutraInputWriterUnit.pas',
+  SutraTimeScheduleWriterUnit in 'SutraTimeScheduleWriterUnit.pas',
+  SutraInitialConditionsWriterUnit in 'SutraInitialConditionsWriterUnit.pas',
+  SutraFileWriterUnit in 'SutraFileWriterUnit.pas',
+  frmSutraProgramLocationsUnit in 'frmSutraProgramLocationsUnit.pas' {frmSutraProgramLocations},
+  frmImportTprogsUnit in 'frmImportTprogsUnit.pas' {frmImportTprogs};
 
 {$R *.res}
+{#BACKUP ModelMuse.cfg}
 
 begin
   // This line is to help ensure consistent results on different machines.

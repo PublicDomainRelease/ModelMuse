@@ -1,5 +1,9 @@
 unit GLWidget;
 
+{$IF CompilerVersion>=23}
+{$EXCESSPRECISION OFF}
+{$IFEND}
+
 // Cross-platform OpenGL Control and Utils
 // by Qingrui Li
 
@@ -133,6 +137,7 @@ var
   HighQuality: boolean = true;
 
 {$IFDEF MSWINDOWS}
+FActivated: boolean;
 function CreateRC(dc: Windows.HDC; opt: TRCOptions): THandle;
 procedure MakeCurrent(dc, rc: THandle);
 procedure DestroyRC(rc: THandle);
@@ -194,7 +199,15 @@ end;
 
 procedure MakeCurrent(dc, rc: THandle);
 begin
-  if not wglMakeCurrent(dc, rc) then Beep;
+  if not wglMakeCurrent(dc, rc) then
+  begin
+    Beep;
+    FActivated := False;
+  end
+  else
+  begin
+    FActivated := True;
+  end;
 end;
 
 procedure DestroyRC(rc: THandle);
@@ -458,7 +471,13 @@ end;
 procedure TGLWidget.DoRender;
 begin
   Activate;
+{$IFDEF MSWindows}
+  if FActivated then
+{$ENDIF}
   FOnRender(self);
+{$IFDEF MSWindows}
+  if FActivated then
+{$ENDIF}
   SwapBuffers(FDC);
 end;
 
@@ -552,6 +571,9 @@ begin
   if NotDesigning then
   begin
     Activate;
+  {$IFDEF MSWindows}
+    if FActivated then
+  {$ENDIF}
     if Started then
       glViewport(0, 0, ClientWidth, ClientHeight);
   end;

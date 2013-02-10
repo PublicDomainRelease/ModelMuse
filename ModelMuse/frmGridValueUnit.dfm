@@ -3,262 +3,268 @@ inherited frmGridValue: TfrmGridValue
   HelpKeyword = 'Grid_Value_Dialog_Box'
   Caption = 'Grid Value'
   ClientHeight = 513
-  ClientWidth = 406
+  ClientWidth = 507
   KeyPreview = True
   OnClose = FormClose
-  ExplicitWidth = 424
-  ExplicitHeight = 558
-  PixelsPerInch = 120
+  ExplicitWidth = 523
+  ExplicitHeight = 551
+  PixelsPerInch = 96
   TextHeight = 18
   object btnHelp: TBitBtn
-    Left = 210
+    Left = 311
     Top = 473
     Width = 89
     Height = 33
     Anchors = [akRight, akBottom]
     Kind = bkHelp
     NumGlyphs = 2
-    TabOrder = 1
+    TabOrder = 0
     OnClick = btnHelpClick
   end
   object btnClose: TBitBtn
-    Left = 307
+    Left = 408
     Top = 473
     Width = 89
     Height = 33
     Anchors = [akRight, akBottom]
     Kind = bkClose
     NumGlyphs = 2
-    TabOrder = 2
+    TabOrder = 1
   end
-  object pcDataDisplay: TPageControl
+  object pnlTabs: TPanel
     Left = 0
     Top = 0
-    Width = 406
+    Width = 507
     Height = 467
-    ActivePage = tabPathline
     Align = alTop
     Anchors = [akLeft, akTop, akRight, akBottom]
-    TabOrder = 0
-    object tabCurrentData: TTabSheet
+    TabOrder = 2
+    object spl1: TSplitter
+      Left = 471
+      Top = 1
+      Height = 465
+      ExplicitLeft = 50
+    end
+    object jvrltCurrentData: TJvRollOut
+      Left = 1
+      Top = 1
+      Width = 22
+      Height = 465
+      Align = alLeft
+      ButtonFont.Charset = ANSI_CHARSET
+      ButtonFont.Color = clWindowText
+      ButtonFont.Height = -16
+      ButtonFont.Name = 'Arial'
+      ButtonFont.Style = []
       Caption = 'Current Data'
+      Placement = plLeft
+      Collapsed = True
+      SmartExpand = False
+      SmartShow = False
+      TabOrder = 0
       DesignSize = (
-        398
-        434)
-      object lblLower3rdDimensionCoordinate: TLabel
-        Left = 8
-        Top = 407
-        Width = 224
+        22
+        465)
+      FAWidth = 426
+      FAHeight = 511
+      FCWidth = 22
+      FCHeight = 22
+      object lblModel: TLabel
+        Left = 24
+        Top = 19
+        Width = 43
         Height = 18
-        Anchors = [akLeft, akBottom]
-        Caption = 'Lower 3rd dimension coordinate'
-        ExplicitTop = 310
-      end
-      object lblHigher3rdDimensionCoordinate: TLabel
-        Left = 8
-        Top = 386
-        Width = 227
-        Height = 18
-        Anchors = [akLeft, akBottom]
-        Caption = 'Higher 3rd dimension coordinate'
-      end
-      object lblSelectedObject: TLabel
-        Left = 8
-        Top = 294
-        Width = 108
-        Height = 18
-        Anchors = [akLeft, akBottom]
-        Caption = 'Selected object'
-        ExplicitTop = 205
-      end
-      object lblExplanation: TLabel
-        Left = 8
-        Top = 163
-        Width = 81
-        Height = 18
-        Caption = 'Explanation'
-      end
-      object lblCellValue: TLabel
-        Left = 8
-        Top = 132
-        Width = 39
-        Height = 18
-        Caption = 'Value'
-      end
-      object lblDataSet: TLabel
-        Left = 8
-        Top = 109
-        Width = 62
-        Height = 18
-        Caption = 'Data Set'
-      end
-      object lblColumn: TLabel
-        Left = 8
-        Top = 86
-        Width = 53
-        Height = 18
-        Caption = 'Column'
-      end
-      object lblRow: TLabel
-        Left = 8
-        Top = 63
-        Width = 31
-        Height = 18
-        Caption = 'Row'
+        Caption = 'Model'
       end
       object lblLayer: TLabel
-        Left = 8
-        Top = 40
+        Left = 24
+        Top = 48
         Width = 39
         Height = 18
         Caption = 'Layer'
       end
       object lblLayerHeight: TLabel
-        Left = 137
-        Top = 40
+        Left = 153
+        Top = 48
         Width = 85
         Height = 18
         Caption = 'Layer height'
       end
+      object lblRow: TLabel
+        Left = 24
+        Top = 71
+        Width = 31
+        Height = 18
+        Caption = 'Row'
+      end
       object lblRowWidth: TLabel
-        Left = 137
-        Top = 63
+        Left = 153
+        Top = 71
         Width = 71
         Height = 18
         Caption = 'Row width'
       end
+      object lblColumn: TLabel
+        Left = 24
+        Top = 94
+        Width = 53
+        Height = 18
+        Caption = 'Column'
+      end
       object lblColumnWidth: TLabel
-        Left = 137
-        Top = 86
+        Left = 153
+        Top = 94
         Width = 93
         Height = 18
         Caption = 'Column width'
       end
-      object lblSection: TLabel
-        Left = 8
-        Top = 339
-        Width = 53
+      object lblDataSet: TLabel
+        Left = 24
+        Top = 117
+        Width = 62
+        Height = 18
+        Caption = 'Data Set'
+      end
+      object lblCellValue: TLabel
+        Left = 24
+        Top = 140
+        Width = 39
+        Height = 18
+        Caption = 'Value'
+      end
+      object lblExplanation: TLabel
+        Left = 24
+        Top = 171
+        Width = 81
+        Height = 18
+        Caption = 'Explanation'
+      end
+      object lblSelectedObject: TLabel
+        Left = 24
+        Top = 320
+        Width = 108
         Height = 18
         Anchors = [akLeft, akBottom]
-        Caption = 'Section'
-        ExplicitTop = 250
+        Caption = 'Selected object'
       end
       object lblVertex: TLabel
-        Left = 8
-        Top = 318
+        Left = 24
+        Top = 344
         Width = 100
         Height = 18
         Anchors = [akLeft, akBottom]
         Caption = 'Nearest vertex'
-        ExplicitTop = 229
       end
-      object lblModel: TLabel
-        Left = 8
-        Top = 11
-        Width = 43
+      object lblSection: TLabel
+        Left = 24
+        Top = 365
+        Width = 53
         Height = 18
-        Caption = 'Model'
+        Anchors = [akLeft, akBottom]
+        Caption = 'Section'
+      end
+      object lblHigher3rdDimensionCoordinate: TLabel
+        Left = 24
+        Top = 412
+        Width = 227
+        Height = 18
+        Anchors = [akLeft, akBottom]
+        Caption = 'Higher 3rd dimension coordinate'
+      end
+      object lblLower3rdDimensionCoordinate: TLabel
+        Left = 24
+        Top = 433
+        Width = 224
+        Height = 18
+        Anchors = [akLeft, akBottom]
+        Caption = 'Lower 3rd dimension coordinate'
+      end
+      object comboModel: TComboBox
+        Left = 153
+        Top = 16
+        Width = 246
+        Height = 26
+        Style = csDropDownList
+        TabOrder = 0
+        OnChange = comboModelChange
+      end
+      object edCellValue: TEdit
+        Left = 88
+        Top = 137
+        Width = 326
+        Height = 26
+        ReadOnly = True
+        TabOrder = 1
+        OnKeyUp = edCellValueKeyUp
+      end
+      object memoExplanation: TMemo
+        Left = 24
+        Top = 192
+        Width = 390
+        Height = 122
+        Anchors = [akLeft, akTop, akBottom]
+        ReadOnly = True
+        ScrollBars = ssVertical
+        TabOrder = 2
+        OnKeyUp = memoExplanationKeyUp
       end
       object cbShowThirdDValues: TCheckBox
-        Left = 8
-        Top = 363
+        Left = 24
+        Top = 389
         Width = 390
         Height = 17
         Anchors = [akLeft, akBottom]
         Caption = 'Show selected object 3rd dimension coordinates'
         TabOrder = 3
       end
-      object memoExplanation: TMemo
-        Left = 8
-        Top = 184
-        Width = 388
-        Height = 104
-        Anchors = [akLeft, akTop, akRight, akBottom]
-        ReadOnly = True
-        ScrollBars = ssVertical
-        TabOrder = 2
-        OnKeyUp = memoExplanationKeyUp
-      end
-      object edCellValue: TEdit
-        Left = 72
-        Top = 129
-        Width = 324
-        Height = 26
-        Anchors = [akLeft, akTop, akRight]
-        ReadOnly = True
-        TabOrder = 1
-        OnKeyUp = edCellValueKeyUp
-      end
-      object comboModel: TComboBox
-        Left = 137
-        Top = 8
-        Width = 145
-        Height = 26
-        Style = csDropDownList
-        TabOrder = 0
-        OnChange = comboModelChange
-      end
     end
-    object tabAllDataSets: TTabSheet
+    object jvrltAllDataSets: TJvRollOut
+      Left = 23
+      Top = 1
+      Width = 426
+      Height = 465
+      Align = alLeft
+      ButtonFont.Charset = ANSI_CHARSET
+      ButtonFont.Color = clWindowText
+      ButtonFont.Height = -16
+      ButtonFont.Name = 'Arial'
+      ButtonFont.Style = []
       Caption = 'All Data Sets'
-      ImageIndex = 1
+      Placement = plLeft
+      SmartExpand = False
+      SmartShow = False
+      TabOrder = 1
+      ExplicitWidth = 145
       DesignSize = (
-        398
-        434)
+        426
+        465)
+      FAWidth = 426
+      FAHeight = 511
+      FCWidth = 22
+      FCHeight = 22
       object lblSelectValue: TLabel
-        Left = 3
-        Top = 35
+        Left = 32
+        Top = 39
         Width = 39
         Height = 18
         Caption = 'Value'
       end
       object lblSelectExplanation: TLabel
-        Left = 3
-        Top = 58
+        Left = 31
+        Top = 63
         Width = 81
         Height = 18
         Caption = 'Explanation'
       end
-      object edSelectValue: TEdit
-        Left = 67
-        Top = 32
-        Width = 324
-        Height = 26
-        Anchors = [akLeft, akTop, akRight]
-        ReadOnly = True
-        TabOrder = 1
-        OnKeyUp = edCellValueKeyUp
-      end
-      object memoSelectExplanation: TMemo
-        Left = 3
-        Top = 81
-        Width = 388
-        Height = 319
-        Anchors = [akLeft, akTop, akRight, akBottom]
-        ReadOnly = True
-        ScrollBars = ssVertical
-        TabOrder = 2
-        OnKeyUp = memoExplanationKeyUp
-      end
-      object btnUpdate: TButton
-        Left = 3
-        Top = 406
-        Width = 75
-        Height = 25
-        Anchors = [akLeft, akBottom]
-        Caption = 'Update'
-        TabOrder = 3
-        OnClick = btnUpdateClick
-      end
       object virttreecomboDataSets: TRbwStringTreeCombo
-        Left = 3
-        Top = 0
+        Left = 32
+        Top = 7
         Width = 388
         Height = 26
         Tree.Left = 0
         Tree.Top = 0
-        Tree.Width = 302
-        Tree.Height = 195
+        Tree.Width = 304
+        Tree.Height = 202
         Tree.Align = alClient
         Tree.Header.AutoSizeIndex = 0
         Tree.Header.Font.Charset = DEFAULT_CHARSET
@@ -269,11 +275,9 @@ inherited frmGridValue: TfrmGridValue
         Tree.Header.MainColumn = -1
         Tree.TabOrder = 0
         Tree.OnChange = virttreecomboDataSetsTreeChange
-        Tree.OnGetText = virttreecomboDataSets1TreeGetText
-        Tree.OnGetNodeDataSize = virttreecomboDataSets1TreeGetNodeDataSize
-        Tree.OnInitNode = virttreecomboDataSets1TreeInitNode
+        Tree.OnGetText = virttreecomboDataSetsTreeGetText
+        Tree.OnGetNodeDataSize = virttreecomboDataSetsTreeGetNodeDataSize
         Tree.Columns = <>
-        Anchors = [akLeft, akTop, akRight]
         Enabled = True
         Glyph.Data = {
           36020000424D3602000000000000360000002800000010000000080000000100
@@ -298,15 +302,65 @@ inherited frmGridValue: TfrmGridValue
         TabOrder = 0
         OnChange = virttreecomboDataSetsChange
       end
+      object edSelectValue: TEdit
+        Left = 77
+        Top = 39
+        Width = 343
+        Height = 26
+        ReadOnly = True
+        TabOrder = 1
+        OnKeyUp = edCellValueKeyUp
+      end
+      object memoSelectExplanation: TMemo
+        Left = 31
+        Top = 87
+        Width = 389
+        Height = 335
+        Anchors = [akLeft, akTop, akBottom]
+        ReadOnly = True
+        ScrollBars = ssVertical
+        TabOrder = 2
+        OnKeyUp = memoExplanationKeyUp
+      end
+      object btnUpdate: TButton
+        Left = 31
+        Top = 429
+        Width = 75
+        Height = 25
+        Anchors = [akLeft, akBottom]
+        Caption = 'Update'
+        TabOrder = 3
+        OnClick = btnUpdateClick
+      end
     end
-    object tabPathline: TTabSheet
+    object jvrltPathline: TJvRollOut
+      Left = 449
+      Top = 1
+      Width = 22
+      Height = 465
+      Align = alLeft
+      ButtonFont.Charset = ANSI_CHARSET
+      ButtonFont.Color = clWindowText
+      ButtonFont.Height = -16
+      ButtonFont.Name = 'Arial'
+      ButtonFont.Style = []
       Caption = 'Pathline'
-      ImageIndex = 2
+      Placement = plLeft
+      Collapsed = True
+      SmartExpand = False
+      SmartShow = False
+      TabOrder = 2
+      OnExpand = jvrltPathlineExpand
+      OnCollapse = jvrltPathlineCollapse
+      FAWidth = 426
+      FAHeight = 511
+      FCWidth = 22
+      FCHeight = 22
       object rdgPathline: TRbwDataGrid4
-        Left = 0
-        Top = 0
-        Width = 398
-        Height = 434
+        Left = 21
+        Top = 1
+        Width = 0
+        Height = 463
         Align = alClient
         ColCount = 4
         FixedCols = 1
@@ -413,20 +467,86 @@ inherited frmGridValue: TfrmGridValue
           end>
       end
     end
-    object tabEndPoint: TTabSheet
+    object jvrltEndPoint: TJvRollOut
+      Left = 474
+      Top = 1
+      Width = 22
+      Height = 465
+      Align = alLeft
+      ButtonFont.Charset = ANSI_CHARSET
+      ButtonFont.Color = clWindowText
+      ButtonFont.Height = -16
+      ButtonFont.Name = 'Arial'
+      ButtonFont.Style = []
       Caption = 'End Point'
-      ImageIndex = 3
+      Placement = plLeft
+      Collapsed = True
+      SmartExpand = False
+      SmartShow = False
+      TabOrder = 3
+      OnExpand = jvrltEndPointExpand
+      OnCollapse = jvrltEndPointCollapse
+      ExplicitLeft = 70
+      FAWidth = 426
+      FAHeight = 170
+      FCWidth = 22
+      FCHeight = 22
+      object pnlEndPoints: TPanel
+        Left = 21
+        Top = 358
+        Width = 0
+        Height = 106
+        Align = alBottom
+        TabOrder = 0
+        ExplicitWidth = 404
+        object lbledtReleaseTime: TLabeledEdit
+          Left = 136
+          Top = 6
+          Width = 121
+          Height = 26
+          EditLabel.Width = 92
+          EditLabel.Height = 18
+          EditLabel.Caption = 'Release time'
+          LabelPosition = lpLeft
+          ReadOnly = True
+          TabOrder = 0
+        end
+        object lbledtTerminationCode: TLabeledEdit
+          Left = 136
+          Top = 38
+          Width = 121
+          Height = 26
+          EditLabel.Width = 119
+          EditLabel.Height = 18
+          EditLabel.Caption = 'Termination code'
+          LabelPosition = lpLeft
+          ReadOnly = True
+          TabOrder = 1
+        end
+        object lbledtTrackingTime: TLabeledEdit
+          Left = 136
+          Top = 70
+          Width = 121
+          Height = 26
+          EditLabel.Width = 93
+          EditLabel.Height = 18
+          EditLabel.Caption = 'Tracking time'
+          LabelPosition = lpLeft
+          ReadOnly = True
+          TabOrder = 2
+        end
+      end
       object rdgEndPoints: TRbwDataGrid4
-        Left = 0
-        Top = 0
-        Width = 398
-        Height = 328
+        Left = 21
+        Top = 1
+        Width = 0
+        Height = 357
         Align = alClient
         ColCount = 3
         FixedCols = 1
         RowCount = 14
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
-        TabOrder = 0
+        TabOrder = 1
         ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = False
@@ -503,50 +623,7 @@ inherited frmGridValue: TfrmGridValue
             CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
-      end
-      object pnlEndPoints: TPanel
-        Left = 0
-        Top = 328
-        Width = 398
-        Height = 106
-        Align = alBottom
-        TabOrder = 1
-        object lbledtReleaseTime: TLabeledEdit
-          Left = 136
-          Top = 6
-          Width = 121
-          Height = 26
-          EditLabel.Width = 92
-          EditLabel.Height = 18
-          EditLabel.Caption = 'Release time'
-          LabelPosition = lpLeft
-          ReadOnly = True
-          TabOrder = 0
-        end
-        object lbledtTerminationCode: TLabeledEdit
-          Left = 136
-          Top = 38
-          Width = 121
-          Height = 26
-          EditLabel.Width = 119
-          EditLabel.Height = 18
-          EditLabel.Caption = 'Termination code'
-          LabelPosition = lpLeft
-          ReadOnly = True
-          TabOrder = 1
-        end
-        object lbledtTrackingTime: TLabeledEdit
-          Left = 136
-          Top = 70
-          Width = 121
-          Height = 26
-          EditLabel.Width = 93
-          EditLabel.Height = 18
-          EditLabel.Caption = 'Tracking time'
-          LabelPosition = lpLeft
-          ReadOnly = True
-          TabOrder = 2
-        end
+        ExplicitWidth = 404
       end
     end
   end

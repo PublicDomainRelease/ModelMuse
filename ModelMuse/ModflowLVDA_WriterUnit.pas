@@ -54,7 +54,7 @@ function TModflowLVDA_Writer.PackageID_Comment: string;
 begin
   result := 'LVDA file created on '
     + DateToStr(Now) + ' by ' + Model.ProgramName + ' version '
-    + ModelVersion + '.';
+    + IModelVersion + '.';
 end;
 
 procedure TModflowLVDA_Writer.WriteDataSet0;

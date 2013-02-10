@@ -183,7 +183,7 @@ type
   // @value(btLeaky = Leaky boundary condition)
   // @value(btRiver = River boundary condition)
   // @value(btWell = Well boundary condition)
-  TBoundaryTypes = (btNone, btSpecifiedHead, btFlux, btLeaky, btRiver, btWell);
+  TPhastBoundaryTypes = (btNone, btSpecifiedHead, btFlux, btLeaky, btRiver, btWell);
   TModflowBoundaryType = (mbtNone, mbtCHD);
 
   // @name specifies how elevations are specified in the well boundary
@@ -193,7 +193,7 @@ type
   // @name is used to indicate what type of model is active.
   // The type of model should never be set to msUndefined.
   TModelSelection = (msUndefined, msPhast, msModflow, msModflowLGR,
-    msModflowNWT {$IFDEF SUTRA}, msSutra {$ENDIF});
+    msModflowNWT {$IFDEF SUTRA}, msSutra22 {$ENDIF});
 
   //  @name is used to indicate how the spacing of layers within a unit
   // is specified.
@@ -264,6 +264,35 @@ type
     function Model: TBaseModel;
   end;
 
+  TIntegerItem = class(TPhastCollectionItem)
+  private
+    FValue: integer;
+    FOnChange: TNotifyEvent;
+    procedure SetValue(const Value: integer);
+  public
+    procedure Assign(Source: TPersistent); override;
+    function IsSame(Item: TIntegerItem): Boolean;
+  published
+    property Value: integer read FValue write SetValue;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+  end;
+
+  TIntegerCollection = class(TPhastCollection)
+  private
+    FInitialValue: integer;
+    function GetItems(Index: Integer): TIntegerItem;
+    procedure SetItems(Index: Integer; const Value: TIntegerItem);
+    procedure SetInitialValue(const Value: integer);
+  public
+    constructor Create(Model: TBaseModel);
+    function IsSame(IntegerCollection: TIntegerCollection): Boolean;
+    property  Items[Index: Integer]: TIntegerItem read GetItems
+      write SetItems; default;
+    function Add: TIntegerItem;
+    property InitialValue: integer read FInitialValue write SetInitialValue;
+    procedure Sort;
+  end;
+
   TRealItem = class(TPhastCollectionItem)
   private
     FValue: double;
@@ -275,7 +304,7 @@ type
     procedure DefineProperties(Filer: TFiler); override;
   public
     procedure Assign(Source: TPersistent); override;
-    function IsSame(Item: TRealItem): Boolean;
+    function IsSame(Item: TRealItem): Boolean; virtual;
   published
     property Value: double read FValue write SetValue;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
@@ -288,12 +317,14 @@ type
     procedure SetItems(Index: Integer; const Value: TRealItem);
     procedure SetInitialValue(const Value: Real);
   public
-    constructor Create(Model: TBaseModel);
+    constructor Create(Model: TBaseModel); overload;
+    constructor Create(Model: TBaseModel; Values: TOneDRealArray); overload;
     function IsSame(RealCollection: TRealCollection): Boolean;
     property  Items[Index: Integer]: TRealItem read GetItems
       write SetItems; default;
     function Add: TRealItem;
     property InitialValue: Real read FInitialValue write SetInitialValue;
+    procedure Sort;
   end;
 
   TPointArray = array of TPoint;
@@ -337,6 +368,7 @@ type
     procedure SetBooleanProperty(var AField: boolean; const NewValue: boolean);
     procedure SetIntegerProperty(var AField: integer; const NewValue: integer);
     procedure SetRealProperty(var AField: double; const NewValue: double);
+    procedure SetAnsiStringProperty(var AField: AnsiString; const NewValue: AnsiString);
     procedure SetStringProperty(var AField: string; const NewValue: string);
     procedure SetPointProperty(var AField: TPoint; const NewValue: TPoint);
     procedure SetColorProperty(var AField: TColor; const NewValue: TColor);
@@ -523,6 +555,8 @@ resourcestring
   StrElapsedTimeLabel = 'Elapsed Time: ';
   StrTransportStep = 'Transport Step: ';
   StrParentModel = 'Parent model';
+  StrYouNeedToSelectA = 'You need to select a row in the grid before clickin' +
+  'g the Insert button.';
 
 const
   // On Linux, @name is used to control the access permissions of files.
@@ -559,7 +593,7 @@ implementation
 
 
 {$IFNDEF Testing}
-uses PhastModelUnit, Character;
+uses PhastModelUnit, Character, Math;
 {$ENDIF}
 
 function SortLayerSorts(Item1, Item2: Pointer): Integer;
@@ -619,8 +653,6 @@ end;
 
 { TRealStorage }
 
-{ TRealStorage }
-
 procedure TRealStorage.Assign(Source: TPersistent);
 begin
   if Source is TRealStorage then
@@ -675,6 +707,16 @@ begin
   if FModel <> nil then
   begin
     FModel.Invalidate;
+  end;
+end;
+
+procedure TGoPhastPersistent.SetAnsiStringProperty(var AField: AnsiString;
+  const NewValue: AnsiString);
+begin
+  if AField <> NewValue then
+  begin
+    AField := NewValue;
+    InvalidateModel;
   end;
 end;
 
@@ -750,7 +792,7 @@ function EvalAtToString(const Eval: TEvaluatedAt; const Model: TModelSelection;
 begin
   result := '';
   case Model of
-    msUndefined, msPhast {$IFDEF SUTRA}, msSutra {$ENDIF}:
+    msUndefined, msPhast {$IFDEF SUTRA}, msSutra22 {$ENDIF}:
       begin
         case Eval of
           eaBlocks:
@@ -1109,6 +1151,18 @@ begin
   inherited Create(TRealItem, Model);
 end;
 
+constructor TRealCollection.Create(Model: TBaseModel; Values: TOneDRealArray);
+var
+  index: Integer;
+begin
+  Create(Model);
+  Capacity := Length(Values);
+  for index := 0 to Length(Values) - 1 do
+  begin
+    Add.Value := Values[index];
+  end;
+end;
+
 function TRealCollection.GetItems(Index: Integer): TRealItem;
 begin
   result := inherited Items[index] as TRealItem
@@ -1119,7 +1173,8 @@ var
   index: Integer;
 begin
   // if Assign is updated, update IsSame too.
-  result := Count = RealCollection.Count;
+  result := (Count = RealCollection.Count)
+    and (InitialValue = RealCollection.InitialValue);
   if result then
   begin
     for index := 0 to Count - 1 do
@@ -1138,9 +1193,158 @@ begin
   FInitialValue := Value;
 end;
 
-procedure TRealCollection.SetItems(Index: Integer; const Value: TRealItem);
+procedure TRealCollection.SetItems(Index: Integer; const Value:TRealItem );
 begin
   inherited Items[index] := Value;
+end;
+
+Function CompareRealItems(Item1, Item2: Pointer): integer;
+var
+  RealItem1: TRealItem;
+  RealItem2: TRealItem;
+begin
+  RealItem1 := Item1;
+  RealItem2 := Item2;
+  result := Sign(RealItem1.Value - RealItem2.Value);
+end;
+
+procedure TRealCollection.Sort;
+var
+  AList: TList;
+  Index: Integer;
+  AnItem: TRealItem;
+begin
+  AList := TList.Create;
+  try
+    for Index := 0 to Count - 1 do
+    begin
+      AList.Add(Items[Index]);
+    end;
+    AList.Sort(CompareRealItems);
+    for Index := 0 to AList.Count - 1 do
+    begin
+      AnItem := AList[Index];
+      AnItem.Index := Index
+    end;
+  finally
+    AList.Free;
+  end;
+end;
+
+{ TIntegerItem }
+
+procedure TIntegerItem.Assign(Source: TPersistent);
+begin
+  if Source is TIntegerItem then
+  begin
+    Value := TIntegerItem(Source).Value;
+  end
+  else
+  begin
+    inherited;
+  end;
+  // if Assign is updated, update IsSame too.
+end;
+
+function TIntegerItem.IsSame(Item: TIntegerItem): Boolean;
+begin
+  Result := Value = Item.Value;
+end;
+
+procedure TIntegerItem.SetValue(const Value: integer);
+begin
+  if FValue <> Value then
+  begin
+    FValue := Value;
+    InvalidateModel;
+    if Assigned(OnChange) then
+    begin
+      OnChange(self);
+    end;
+  end;
+end;
+
+{ TIntegerCollection }
+
+function TIntegerCollection.Add: TIntegerItem;
+begin
+  result := inherited Add as TIntegerItem;
+  result.FValue := InitialValue;
+end;
+
+constructor TIntegerCollection.Create(Model: TBaseModel);
+begin
+  inherited Create(TIntegerItem, Model);
+end;
+
+function TIntegerCollection.GetItems(Index: Integer): TIntegerItem;
+begin
+  result := inherited Items[index] as TIntegerItem
+end;
+
+function TIntegerCollection.IsSame(IntegerCollection: TIntegerCollection): Boolean;
+var
+  index: Integer;
+begin
+  // if Assign is updated, update IsSame too.
+  result := (Count = IntegerCollection.Count)
+    and (InitialValue = IntegerCollection.InitialValue);
+  if result then
+  begin
+    for index := 0 to Count - 1 do
+    begin
+      result := Items[index].IsSame(IntegerCollection[index]);
+      if not result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+procedure TIntegerCollection.SetInitialValue(const Value: integer);
+begin
+  FInitialValue := Value;
+end;
+
+procedure TIntegerCollection.SetItems(Index: Integer;
+  const Value: TIntegerItem);
+begin
+  inherited Items[index] := Value;
+end;
+
+Function CompareIntegerItems(Item1, Item2: Pointer): integer;
+var
+  IntItem1: TIntegerItem;
+  IntItem2: TIntegerItem;
+begin
+  IntItem1 := Item1;
+  IntItem2 := Item2;
+  result := Sign(IntItem1.Value - IntItem2.Value);
+end;
+
+
+procedure TIntegerCollection.Sort;
+var
+  AList: TList;
+  Index: Integer;
+  AnItem: TIntegerItem;
+begin
+  AList := TList.Create;
+  try
+    for Index := 0 to Count - 1 do
+    begin
+      AList.Add(Items[Index]);
+    end;
+    AList.Sort(CompareIntegerItems);
+    for Index := 0 to AList.Count - 1 do
+    begin
+      AnItem := AList[Index];
+      AnItem.Index := Index
+    end;
+  finally
+    AList.Free;
+  end;
 end;
 
 initialization
