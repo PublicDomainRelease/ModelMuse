@@ -167,10 +167,14 @@ procedure Register;
 
 implementation
 
-{$IFDEF WIN32}
-   {$R *.r32}
+{$IFDEF WIN64}
+     {$R *.r32}
 {$ELSE}
-   {$R *.r16}
+  {$IFDEF WIN32}
+     {$R *.r32}
+  {$ELSE}
+     {$R *.r16}
+  {$ENDIF}
 {$ENDIF}
 
 procedure Register;

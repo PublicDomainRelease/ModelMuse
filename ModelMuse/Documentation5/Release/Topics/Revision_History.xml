@@ -6,8 +6,35 @@
     <header>
       <para styleclass="Heading1"><text styleclass="Heading1" translate="true">Revision History</text></para>
     </header>
-    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"></para>
-    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.18, Feb. 11, 2012]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.18.1, Feb. 22, 2013]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">The user can now cut and paste data from the Imported Data tab of the Object Properties dialog box.</text></para>
+              </td>
+            </tr>
+          </table></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug in export of RCH package when parameters are used but the layer is not time-varying.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused ModelMuse to hang on some computers when using the search function in the ModelMuse help.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that allowed an attempt to be made to export the PHAST input file even if the grid was not yet defined.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that sometimes incorrectly prevented the user from importing the shapes in a Shapefile as a single multipart object.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed a bug that would cause an error opening a ModelMuse file if an object used in the definition of a flux observation had been deleted.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that allowed MT3DMS to have zero stress periods defined.</text></para>
+              </td>
+            </tr>
+          </table></para>
+        </td>
+      </tr>
+    </table></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.18, Feb. 11, 2013]]></caption></toggle></para>
     <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
@@ -47,6 +74,7 @@
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug displaying 3D view on Windows 8.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused ModelMuse to crash when changing the number of rows, columns or layers in the grid.</text></para>
                 <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug in adding new data sets when child models from a MODFLOW-LGR model have been created but the model is no longer a MODFLOW-LGR model.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Bug fix: Fixed bug that would cause divide-by-zero errors when calculating Interlayer Kz in the HUF package if some of the data was not properly defined.</text></para>
               </td>
             </tr>
           </table></para>

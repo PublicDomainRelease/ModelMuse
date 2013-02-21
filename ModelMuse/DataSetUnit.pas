@@ -35,7 +35,8 @@ type
   TBoundaryType = (btUndefined, btPhastSpecifiedHead, btPhastFlux, btPhastLeaky,
     btPhastRiver, btPhastWell, btMfWell, btMfGhb, btMfDrn, btMfDrt, btMfRiv,
     btMfChd, btMfEts, btMfEt, btMfRch, btMfSfr, btMfUzf, btMfObs, btMfMnw,
-    btMt3dSsm, btMfHfb);
+    btMt3dSsm, btMfHfb, btSutraSpecifiedPressure, btSutraSpecConcTemp,
+    btSutraFluidFlux, btMassEnergyFlux);
 
   TBoundaryTypes = set of TBoundaryType;
 
@@ -1167,6 +1168,9 @@ type
   protected
     procedure UpdateNotifiers; override;
   end;
+
+  TOnGetUseList = procedure (Sender: TObject;
+    NewUseList: TStringList) of object;
 
   // @name is used to store a series of @link(TDataArray)s. Each is associated
   // with a specific time.
@@ -3171,7 +3175,7 @@ begin
 
   Updated := Value and not UpToDate;
   inherited;
-  // doing this causes to much thrashing when evaluating
+  // doing this causes too much thrashing when evaluating
   // transient data.
   // ScreenObjectsChanged is called every time a TDataArray
   // is created.
@@ -3978,6 +3982,7 @@ var
   ARealValue: double;
   AnIntValue: Integer;
   MinimumRealPositive: double;
+  Mesh: TSutraMesh3D;
 begin
   if not UpToDate then
   begin
@@ -4222,6 +4227,7 @@ begin
   begin
     PhastModel := FModel as TCustomModel;
     Grid := PhastModel.Grid;
+    Mesh := PhastModel.Mesh;
     if Grid <> nil then
     begin
       if (frmDisplayData <> nil) then
@@ -4244,6 +4250,30 @@ begin
           frmDisplayData.ShouldUpdate := True;
 //          frmDisplayData.UpdateLabelsAndLegend;
         end;
+      end;
+    end
+    else if Mesh <> nil then
+    begin
+      if (frmDisplayData <> nil) then
+      begin
+        if (PhastModel.TopDataSet = self)
+//          or (Mesh.FrontDataSet = self)
+//          or (Mesh.SideDataSet = self)
+          or (PhastModel.ThreeDDataSet = self) then
+        begin
+          frmDisplayData.frameColorGrid.LegendDataSource := self;
+          frmDisplayData.ShouldUpdate := True;
+//          frmDisplayData.UpdateLabelsAndLegend;
+        end;
+//        if (Mesh.TopContourDataSet = self)
+//          or (Mesh.FrontContourDataSet = self)
+//          or (Mesh.SideContourDataSet = self)
+//          or (Mesh.ThreeDContourDataSet = self) then
+//        begin
+//          frmDisplayData.frameContourData.LegendDataSource := self;
+//          frmDisplayData.ShouldUpdate := True;
+////          frmDisplayData.UpdateLabelsAndLegend;
+//        end;
       end;
     end;
   end;
@@ -6329,6 +6359,29 @@ begin
   begin
     Result := btMt3dSsm;
   end
+  else if (Name = StrSpecifiedPressure)
+    or (Name = StrAssocPresConc)
+    or (Name = StrAssocPresTemp)
+    then
+  begin
+    Result := btSutraSpecifiedPressure;
+  end
+  else if (Name = StrSpecifiedTemp)
+    or (Name = StrSpecifiedConc) then
+  begin
+    Result := btSutraSpecConcTemp;
+  end
+  else if (Name = StrFluidFlux)
+   or (Name = StrFluxAssocPresConc)
+   or (Name = StrAssocPresTemp) then
+  begin
+    Result := btSutraFluidFlux;
+  end
+  else if (Name = StrMassFlux)
+    or (Name = StrEnergyFlux) then
+  begin
+    Result := btMassEnergyFlux;
+  end
   else
   begin
     result := btUndefined;
@@ -6424,6 +6477,24 @@ begin
         begin
           Result := StrMT3DMSSinkAndSour;
         end;
+      btSutraSpecifiedPressure:
+        begin
+          result := StrSUTRASpecifiedPres;
+        end;
+      btSutraSpecConcTemp:
+        begin
+          result := StrSUTRASpecifiedConcTemp;
+        end;
+      btSutraFluidFlux:
+        begin
+          result := StrSutraFluidFlux;
+        end;
+      btMassEnergyFlux:
+        begin
+          result := StrMassEnergyFlux;
+        end;
+      else
+        Assert(False);
     end;
     if result <> StrUndefined then
     begin

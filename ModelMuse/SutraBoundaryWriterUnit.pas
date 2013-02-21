@@ -257,6 +257,7 @@ var
   ANode2D: TSutraNode2D;
 begin
   Evaluate;
+  Mesh := frmGoPhast.PhastModel.Mesh;
   FNodeNumbers.Clear;
   Times := TRealList.Create;
   try
@@ -269,10 +270,14 @@ begin
         Times.AddUnique(AList.Times[TimeIndex]);
       end;
     end;
+    PQTimeList.Clear;
     for TimeIndex := 0 to Times.Count - 1 do
     begin
       DataArray := TTransientRealSparseDataSet.Create(Model);
       DataArray.DataType := rdtDouble;
+      DataArray.Orientation := dso3D;
+      DataArray.UpdateDimensions(Mesh.LayerCount+1, 1, Mesh.Mesh2D.Nodes.Count);
+//      DataArray.SetDimensions(False);
       PQTimeList.Add(Times[TimeIndex], DataArray)
     end;
 
@@ -286,10 +291,14 @@ begin
         Times.AddUnique(AList.Times[TimeIndex]);
       end;
     end;
+    UTimeList.Clear;
     for TimeIndex := 0 to Times.Count - 1 do
     begin
       DataArray := TTransientRealSparseDataSet.Create(Model);
       DataArray.DataType := rdtDouble;
+      DataArray.Orientation := dso3D;
+      DataArray.UpdateDimensions(Mesh.LayerCount+1, 1, Mesh.Mesh2D.Nodes.Count);
+//      DataArray.SetDimensions(False);
       UTimeList.Add(Times[TimeIndex], DataArray)
     end;
 
@@ -702,11 +711,10 @@ begin
     else
       Assert(False);
     end;
-
   finally
     Times.Free;
   end;
-  Mesh := frmGoPhast.PhastModel.Mesh;
+
   FCount := 0;
   if (FNodeNumbers.MinLayer >= 0) {and (Mesh.MeshType = mt3D)} then
   begin

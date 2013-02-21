@@ -2629,12 +2629,17 @@ view. }
     procedure RestoreSubscriptionToList(List: TList; const AName: string;
       Sender: TObject; Subscriptions: TObjectList);
     function GetTestDataArray(const DataSet: TDataArray): TDataArray;
-    procedure AddTopGridSegments(AModel: TBaseModel; const EvaluatedAt: TEvaluatedAt;
-      DataSetList2: TList; Expression1: TExpression; LayerLimit: Integer;
-      DataSetList1: TList; VariableList2: TList; const PointsRotated: Boolean;
-      VariableList1: TList;
-      var RotatedPoints: TEdgePointArray; Expression2: TExpression);
-    procedure AddTopMeshSegments(AModel: TBaseModel; const EvaluatedAt: TEvaluatedAt);
+    procedure AddTopGridSegments(AModel: TBaseModel;
+      const EvaluatedAt: TEvaluatedAt; LowerElevDataSets: TList;
+      HigherElevExpression: TExpression; LayerLimit: Integer;
+      HigherElevDataSets: TList; LowerElevVariables: TList;
+      const PointsRotated: Boolean; HigherElevVariables: TList;
+      var RotatedPoints: TEdgePointArray; LowerElevExpression: TExpression);
+    procedure AddTopMeshSegments(AModel: TBaseModel;
+      const EvaluatedAt: TEvaluatedAt; LowerElevDataSets: TList;
+      HigherElevExpression: TExpression; LayerLimit: Integer;
+      HigherElevDataSets: TList; LowerElevVariables: TList;
+      HigherElevVariables: TList; LowerElevExpression: TExpression);
   protected
     {
      @name is true during @link(TScreenObjectItem.UpdateScreenObject).}
@@ -4551,6 +4556,7 @@ procedure GlobalRemovePhastBoundarySubscription(Sender: TObject; Subject: TObjec
 procedure GlobalRestorePhastBoundarySubscription(Sender: TObject; Subject: TObject;
   const AName: string);
 function IsValueInside(const First, Middle, Last: real): boolean;
+function PointInConcavePolygon(const Point:TPoint2D; const Polygon:TPolygon2D):Boolean;
 
 const
   ObjectPrefix = 'Object';
@@ -7060,6 +7066,10 @@ end;
 
 procedure TScreenObject.Draw(Const Bitmap32: TBitmap32;
   const Direction: TViewDirection; const DrawAsSelected: Boolean = False);
+  {$IFDEF SUTRA}
+var
+  Mesh3D: TSutraMesh3D;
+  {$ENDIF}
 begin
   if Deleted or not Visible then
     Exit;
@@ -7068,6 +7078,16 @@ begin
   begin
       Exit;
   end;
+  {$IFDEF SUTRA}
+  if (ViewDirection = vdFront) and (Model.ModelSelection = msSutra22) then
+  begin
+    Mesh3D := (Model as TCustomModel).Mesh;
+    if Mesh3D.CrossSection.Angle <> self.SutraAngle then
+    begin
+      Exit;
+    end;
+  end;
+  {$ENDIF}
   case ElevationCount of
     ecZero:
       begin
@@ -7160,6 +7180,7 @@ begin
   P := nil;
   if Deleted or (ViewDirection <> Direction) then
     Exit;
+
 
   // initialize the variables.
   FillColor32 := Color32(FillColor);
@@ -9854,7 +9875,11 @@ begin
   end;
 end;
 
-procedure TScreenObject.AddTopMeshSegments(AModel: TBaseModel; const EvaluatedAt: TEvaluatedAt);
+procedure TScreenObject.AddTopMeshSegments(AModel: TBaseModel;
+  const EvaluatedAt: TEvaluatedAt; LowerElevDataSets: TList;
+  HigherElevExpression: TExpression; LayerLimit: Integer;
+  HigherElevDataSets: TList; LowerElevVariables: TList;
+  HigherElevVariables: TList; LowerElevExpression: TExpression);
 var
   Node: TSutraNode2D;
   IntIndex: Integer;
@@ -9869,6 +9894,195 @@ var
   NodeIndex: Integer;
   IntsectSeg: TSegment2D;
   Mesh: TSutraMesh3D;
+  LayerIndex: Integer;
+  procedure AddElementSegment(Layer: integer; ASeg: TSegment2D);
+  begin
+    Segment := TCellElementSegment.Create(self);
+    Segment.FSegment := ASeg;
+    Segment.Col := Element.ElementNumber;
+    Segment.Row := 0;
+    Segment.Layer := Layer;
+    Segment.StartPosition := epFirst;
+    Segment.EndPosition := epLast;
+    Segment.VertexIndex := SectionStart[SectionIndex];
+    Segment.SectionIndex := SectionIndex;
+  end;
+  procedure AddNodeSegment(Layer: integer; ASeg: TSegment2D);
+  begin
+    Segment := TCellElementSegment.Create(self);
+    Segment.FSegment := ASeg;
+    Segment.Col := Node.Number;
+    Segment.Row := 0;
+    Segment.Layer := Layer;
+    Segment.StartPosition := epFirst;
+    Segment.EndPosition := epLast;
+    Segment.VertexIndex := SectionStart[SectionIndex];
+    Segment.SectionIndex := SectionIndex;
+//    FSegments.Add(Segment);
+  end;
+  procedure SetStartEndPostions;
+  begin
+    if IsEqual(IntsectSeg[1], Segment2D[1], Epsilon) then
+    begin
+      Segment.StartPosition := epFirst;
+    end
+    else if IsEqual(IntsectSeg[1], Segment2D[2], Epsilon) then
+    begin
+      Segment.StartPosition := epLast;
+    end
+    else
+    begin
+      Segment.StartPosition := epMiddle;
+    end;
+    if IsEqual(IntsectSeg[2], Segment2D[1], Epsilon) then
+    begin
+      Segment.EndPosition := epFirst;
+    end
+    else if IsEqual(IntsectSeg[2], Segment2D[2], Epsilon) then
+    begin
+      Segment.EndPosition := epLast;
+    end
+    else
+    begin
+      Segment.EndPosition := epMiddle;
+    end;
+  end;
+  procedure AddSomeSegments;
+  var
+    AnElement3D: TSutraElement3D;
+    ANode3D: TSutraNode3D;
+    UpperElevation: double;
+    LowerElevation: double;
+    ANode3D_2: TSutraNode3D;
+    Elevation1: double;
+    Elevation2: double;
+    Eps: double;
+  begin
+    // only add segments for the correct node or elements.
+    if (ElevationCount in [ecOne, ecTwo]) and (Mesh.MeshType = mt3D) then
+    begin
+      case EvaluatedAt of
+        eaBlocks:
+          begin
+            AnElement3D := Mesh.ElementArray[Segment.Layer, Segment.Col];
+            if not AnElement3D.Active then
+            begin
+              FreeAndNil(Segment);
+              Exit;
+            end;
+            UpperElevation := AnElement3D.UpperElevation;
+            LowerElevation := AnElement3D.LowerElevation;
+          end;
+        eaNodes:
+          begin
+            ANode3D := Mesh.NodeArray[Segment.Layer, Segment.Col];
+            if not ANode3D.Active then
+            begin
+              FreeAndNil(Segment);
+              Exit;
+            end;
+            if Segment.Layer > 0 then
+            begin
+              ANode3D_2 := Mesh.NodeArray[Segment.Layer-1, Segment.Col];
+              if ANode3D_2.Active then
+              begin
+                UpperElevation := (ANode3D.Z + ANode3D_2.Z)/2;
+              end
+              else
+              begin
+                UpperElevation := ANode3D.Z;
+              end;
+            end
+            else
+            begin
+              UpperElevation := ANode3D.Z;
+            end;
+            if Segment.Layer < Mesh.LayerCount then
+            begin
+              ANode3D_2 := Mesh.NodeArray[Segment.Layer+1, Segment.Col];
+              if ANode3D_2.Active then
+              begin
+                LowerElevation := (ANode3D.Z + ANode3D_2.Z)/2;
+              end
+              else
+              begin
+                LowerElevation := ANode3D.Z;
+              end;
+            end
+            else
+            begin
+              LowerElevation := ANode3D.Z;
+            end;
+          end;
+      end;
+      UpdateUsedVariables(HigherElevVariables, HigherElevDataSets,
+        Segment.Layer, Segment.Row, Segment.Col);
+      UpdateCurrentScreenObject(self);
+      UpdateGlobalLocations(Segment.Col, Segment.Row, Segment.Layer,
+        EvaluatedAt, Model);
+      UpdateCurrentSegment(Segment);
+      UpdateCurrentSection(Segment.SectionIndex);
+      if ElevationCount = ecOne then
+      begin
+        FCurrentValues := ImportedSectionElevations;
+      end
+      else
+      begin
+        FCurrentValues := ImportedHigherSectionElevations;
+      end;
+      HigherElevExpression.Evaluate;
+      Elevation1 := HigherElevExpression.DoubleResult;
+
+    if ElevationCount = ecTwo then
+    begin
+      UpdateUsedVariables(LowerElevVariables, LowerElevDataSets,
+        Segment.Layer, Segment.Row, Segment.Col);
+
+      UpdateCurrentScreenObject(self);
+      UpdateGlobalLocations(Segment.Col, Segment.Row, Segment.Layer,
+        EvaluatedAt, Model);
+      UpdateCurrentSegment(Segment);
+      UpdateCurrentSection(Segment.SectionIndex);
+      FCurrentValues := ImportedLowerSectionElevations;
+      LowerElevExpression.Evaluate;
+      Elevation2 := LowerElevExpression.DoubleResult;
+    end
+    else
+    begin
+      Elevation2 := 0;
+    end;
+
+    case ElevationCount of
+      ecOne:
+        begin
+          if (UpperElevation < Elevation1) or (LowerElevation > Elevation1) then
+          begin
+            FreeAndNil(Segment);
+          end;
+        end;
+      ecTwo:
+        begin
+          Eps := Max(Abs(UpperElevation), Abs(LowerElevation))/10E12;
+          if ((UpperElevation > Elevation2+Eps)
+            or ((UpperElevation = Elevation2) and (Segment.Layer = 0)))
+            and (LowerElevation < Elevation1-Eps) then
+          begin
+//            FSegments.Add(Segment);
+          end
+          else
+          begin
+            FreeAndNil(Segment);
+          end;
+        end;
+      else Assert(false);
+    end;
+
+    end;
+    if Segment <> nil then
+    begin
+      FSegments.Add(Segment);
+    end;
+  end;
 begin
   { TODO -cSUTRA : Still need to deal with 1D and 2D objects }
   Mesh := (Model as TCustomModel).Mesh;
@@ -9887,16 +10101,32 @@ begin
               Element := Mesh2D.Elements[ElementIndex];
               if Element.IsInside(Segment2D[1]) then
               begin
-                Segment := TCellElementSegment.Create(self);
-                Segment.FSegment := Segment2D;
-                Segment.Col := Element.ElementNumber;
-                Segment.Row := 0;
-                Segment.Layer := 0;
-                Segment.StartPosition := epFirst;
-                Segment.EndPosition := epLast;
-                Segment.VertexIndex := SectionStart[SectionIndex];
-                Segment.SectionIndex := SectionIndex;
-                FSegments.Add(Segment);
+//                AddElementSegment(0, Segment2D);
+                case Mesh.MeshType of
+                  mt2D:
+                    begin
+                      AddElementSegment(0, Segment2D);
+                      AddSomeSegments;
+                    end;
+                  mt3D:
+                    begin
+                      for LayerIndex := 0 to Mesh.LayerCount - 1 do
+                      begin
+                        AddElementSegment(LayerIndex, Segment2D);
+                        AddSomeSegments;
+                      end;
+                    end;
+                end;
+//                Segment := TCellElementSegment.Create(self);
+//                Segment.FSegment := Segment2D;
+//                Segment.Col := Element.ElementNumber;
+//                Segment.Row := 0;
+//                Segment.Layer := 0;
+//                Segment.StartPosition := epFirst;
+//                Segment.EndPosition := epLast;
+//                Segment.VertexIndex := SectionStart[SectionIndex];
+//                Segment.SectionIndex := SectionIndex;
+//                FSegments.Add(Segment);
               end;
             end;
           end;
@@ -9907,16 +10137,32 @@ begin
               Node := Mesh2D.Nodes[NodeIndex];
               if Node.IsInsideCell(Segment2D[1]) then
               begin
-                Segment := TCellElementSegment.Create(self);
-                Segment.FSegment := Segment2D;
-                Segment.Col := Node.Number;
-                Segment.Row := 0;
-                Segment.Layer := 0;
-                Segment.StartPosition := epFirst;
-                Segment.EndPosition := epLast;
-                Segment.VertexIndex := SectionStart[SectionIndex];
-                Segment.SectionIndex := SectionIndex;
-                FSegments.Add(Segment);
+//                AddNodeSegment(0, Segment2D);
+                case Mesh.MeshType of
+                  mt2D:
+                    begin
+                      AddNodeSegment(0, Segment2D);
+                      AddSomeSegments;
+                    end;
+                  mt3D:
+                    begin
+                      for LayerIndex := 0 to Mesh.LayerCount do
+                      begin
+                        AddNodeSegment(LayerIndex, Segment2D);
+                        AddSomeSegments;
+                      end;
+                    end;
+                end;
+//                Segment := TCellElementSegment.Create(self);
+//                Segment.FSegment := Segment2D;
+//                Segment.Col := Node.Number;
+//                Segment.Row := 0;
+//                Segment.Layer := 0;
+//                Segment.StartPosition := epFirst;
+//                Segment.EndPosition := epLast;
+//                Segment.VertexIndex := SectionStart[SectionIndex];
+//                Segment.SectionIndex := SectionIndex;
+//                FSegments.Add(Segment);
               end;
             end;
           end;
@@ -9939,38 +10185,59 @@ begin
                 Element := Mesh2D.Elements[ElementIndex];
                 if Element.Intersection(Segment2D, IntsectSeg) then
                 begin
-                  Segment := TCellElementSegment.Create(self);
-                  Segment.FSegment := IntsectSeg;
-                  Segment.Col := Element.ElementNumber;
-                  Segment.Row := 0;
-                  Segment.Layer := 0;
-                  if IsEqual(IntsectSeg[1], Segment2D[1], Epsilon) then
-                  begin
-                    Segment.StartPosition := epFirst;
-                  end
-                  else if IsEqual(IntsectSeg[1], Segment2D[2], Epsilon) then
-                  begin
-                    Segment.StartPosition := epLast;
-                  end
-                  else
-                  begin
-                    Segment.StartPosition := epMiddle;
+//                  AddElementSegment(0, IntsectSeg);
+//                  SetStartEndPostions;
+                  case Mesh.MeshType of
+                    mt2D:
+                      begin
+                        AddElementSegment(0, IntsectSeg);
+                        SetStartEndPostions;
+                        AddSomeSegments;
+                      end;
+                    mt3D:
+                      begin
+                        for LayerIndex := 0 to Mesh.LayerCount - 1 do
+                        begin
+                          AddElementSegment(LayerIndex, IntsectSeg);
+                          SetStartEndPostions;
+                          AddSomeSegments;
+                        end;
+                      end;
                   end;
-                  if IsEqual(IntsectSeg[2], Segment2D[1], Epsilon) then
-                  begin
-                    Segment.EndPosition := epFirst;
-                  end
-                  else if IsEqual(IntsectSeg[2], Segment2D[2], Epsilon) then
-                  begin
-                    Segment.EndPosition := epLast;
-                  end
-                  else
-                  begin
-                    Segment.EndPosition := epMiddle;
-                  end;
-                  Segment.VertexIndex := PointIndex;
-                  Segment.SectionIndex := SectionIndex;
-                  FSegments.Add(Segment);
+
+
+//                  Segment := TCellElementSegment.Create(self);
+//                  Segment.FSegment := IntsectSeg;
+//                  Segment.Col := Element.ElementNumber;
+//                  Segment.Row := 0;
+//                  Segment.Layer := 0;
+//                  if IsEqual(IntsectSeg[1], Segment2D[1], Epsilon) then
+//                  begin
+//                    Segment.StartPosition := epFirst;
+//                  end
+//                  else if IsEqual(IntsectSeg[1], Segment2D[2], Epsilon) then
+//                  begin
+//                    Segment.StartPosition := epLast;
+//                  end
+//                  else
+//                  begin
+//                    Segment.StartPosition := epMiddle;
+//                  end;
+//                  if IsEqual(IntsectSeg[2], Segment2D[1], Epsilon) then
+//                  begin
+//                    Segment.EndPosition := epFirst;
+//                  end
+//                  else if IsEqual(IntsectSeg[2], Segment2D[2], Epsilon) then
+//                  begin
+//                    Segment.EndPosition := epLast;
+//                  end
+//                  else
+//                  begin
+//                    Segment.EndPosition := epMiddle;
+//                  end;
+//                  Segment.VertexIndex := PointIndex;
+//                  Segment.SectionIndex := SectionIndex;
+//                  FSegments.Add(Segment);
                 end;
               end;
             end;
@@ -9984,38 +10251,60 @@ begin
                   for IntIndex := 0 to Length(IntsectSegs) - 1 do
                   begin
                     IntsectSeg := IntsectSegs[IntIndex];
-                    Segment := TCellElementSegment.Create(self);
-                    Segment.FSegment := IntsectSeg;
-                    Segment.Col := Node.Number;
-                    Segment.Row := 0;
-                    Segment.Layer := 0;
-                    if IsEqual(IntsectSeg[1], Segment2D[1], Epsilon) then
-                    begin
-                      Segment.StartPosition := epFirst;
-                    end
-                    else if IsEqual(IntsectSeg[1], Segment2D[2], Epsilon) then
-                    begin
-                      Segment.StartPosition := epLast;
-                    end
-                    else
-                    begin
-                      Segment.StartPosition := epMiddle;
+
+//                    AddNodeSegment(0, IntsectSeg);
+//                    SetStartEndPostions;
+                    case Mesh.MeshType of
+                      mt2D:
+                        begin
+                          AddNodeSegment(0, IntsectSeg);
+                          SetStartEndPostions;
+                          AddSomeSegments;
+                        end;
+                      mt3D:
+                        begin
+                          for LayerIndex := 0 to Mesh.LayerCount do
+                          begin
+                            AddNodeSegment(LayerIndex, IntsectSeg);
+                            SetStartEndPostions;
+                            AddSomeSegments;
+                          end;
+                        end;
                     end;
-                    if IsEqual(IntsectSeg[2], Segment2D[1], Epsilon) then
-                    begin
-                      Segment.EndPosition := epFirst;
-                    end
-                    else if IsEqual(IntsectSeg[2], Segment2D[2], Epsilon) then
-                    begin
-                      Segment.EndPosition := epLast;
-                    end
-                    else
-                    begin
-                      Segment.EndPosition := epMiddle;
-                    end;
-                    Segment.VertexIndex := PointIndex;
-                    Segment.SectionIndex := SectionIndex;
-                    FSegments.Add(Segment);
+
+//                    Segment := TCellElementSegment.Create(self);
+//                    Segment.FSegment := IntsectSeg;
+//                    Segment.Col := Node.Number;
+//                    Segment.Row := 0;
+//                    Segment.Layer := 0;
+//
+//                    if IsEqual(IntsectSeg[1], Segment2D[1], Epsilon) then
+//                    begin
+//                      Segment.StartPosition := epFirst;
+//                    end
+//                    else if IsEqual(IntsectSeg[1], Segment2D[2], Epsilon) then
+//                    begin
+//                      Segment.StartPosition := epLast;
+//                    end
+//                    else
+//                    begin
+//                      Segment.StartPosition := epMiddle;
+//                    end;
+//                    if IsEqual(IntsectSeg[2], Segment2D[1], Epsilon) then
+//                    begin
+//                      Segment.EndPosition := epFirst;
+//                    end
+//                    else if IsEqual(IntsectSeg[2], Segment2D[2], Epsilon) then
+//                    begin
+//                      Segment.EndPosition := epLast;
+//                    end
+//                    else
+//                    begin
+//                      Segment.EndPosition := epMiddle;
+//                    end;
+//                    Segment.VertexIndex := PointIndex;
+//                    Segment.SectionIndex := SectionIndex;
+//                    FSegments.Add(Segment);
                   end;
                 end;
               end;
@@ -10028,11 +10317,12 @@ begin
   end;
 end;
 
-procedure TScreenObject.AddTopGridSegments(AModel: TBaseModel; const EvaluatedAt: TEvaluatedAt;
-  DataSetList2: TList; Expression1: TExpression; LayerLimit: Integer;
-  DataSetList1: TList; VariableList2: TList; const PointsRotated: Boolean;
-  VariableList1: TList;
-  var RotatedPoints: TEdgePointArray; Expression2: TExpression);
+procedure TScreenObject.AddTopGridSegments(AModel: TBaseModel;
+  const EvaluatedAt: TEvaluatedAt; LowerElevDataSets: TList;
+  HigherElevExpression: TExpression; LayerLimit: Integer;
+  HigherElevDataSets: TList; LowerElevVariables: TList;
+  const PointsRotated: Boolean; HigherElevVariables: TList;
+  var RotatedPoints: TEdgePointArray; LowerElevExpression: TExpression);
 var
   LocalModel: TCustomModel;
   Grid: TCustomModelGrid;
@@ -10139,7 +10429,7 @@ var
 
     if ElevationCount in [ecOne, ecTwo] then
     begin
-      UpdateUsedVariables(VariableList1, DataSetList1,
+      UpdateUsedVariables(HigherElevVariables, HigherElevDataSets,
         ElevationIndex, ASegment.Row, ASegment.Col);
       UpdateCurrentScreenObject(self);
       UpdateGlobalLocations(ASegment.Col, ASegment.Row, ElevationIndex,
@@ -10154,8 +10444,8 @@ var
       begin
         FCurrentValues := ImportedHigherSectionElevations;
       end;
-      Expression1.Evaluate;
-      Elevation1 := Expression1.DoubleResult;
+      HigherElevExpression.Evaluate;
+      Elevation1 := HigherElevExpression.DoubleResult;
     end
     else
     begin
@@ -10164,7 +10454,7 @@ var
 
     if ElevationCount = ecTwo then
     begin
-      UpdateUsedVariables(VariableList2, DataSetList2,
+      UpdateUsedVariables(LowerElevVariables, LowerElevDataSets,
         ElevationIndex, ASegment.Row, ASegment.Col);
 
       UpdateCurrentScreenObject(self);
@@ -10173,8 +10463,8 @@ var
       UpdateCurrentSegment(ASegment);
       UpdateCurrentSection(ASegment.SectionIndex);
       FCurrentValues := ImportedLowerSectionElevations;
-      Expression2.Evaluate;
-      Elevation2 := Expression2.DoubleResult;
+      LowerElevExpression.Evaluate;
+      Elevation2 := LowerElevExpression.DoubleResult;
     end
     else
     begin
@@ -13919,24 +14209,24 @@ procedure TScreenObject.UpdateTopSegments(
   var RotatedPoints: TEdgePointArray; AModel: TBaseModel);
 var
   LayerLimit: integer;
-  Expression1: TExpression;
-  Expression2: TExpression;
+  HigherElevExpression: TExpression;
+  LowerElevExpression: TExpression;
   TempFormula: string;
   Compiler: TRbwParser;
   LocalModel: TCustomModel;
-  VariableList1, DataSetList1: TList;
-  VariableList2, DataSetList2: TList;
+  HigherElevVariables, HigherElevDataSets: TList;
+  LowerElevVariables, LowerElevDataSets: TList;
   Grid: TCustomModelGrid;
   Mesh: TSutraMesh3D;
 begin
-  VariableList1 := TList.Create;
-  DataSetList1 := TList.Create;
-  VariableList2 := TList.Create;
-  DataSetList2 := TList.Create;
+  HigherElevVariables := TList.Create;
+  HigherElevDataSets := TList.Create;
+  LowerElevVariables := TList.Create;
+  LowerElevDataSets := TList.Create;
   try
     LocalModel:= AModel as TCustomModel;
-    Expression1 := nil;
-    Expression2 := nil;
+    HigherElevExpression := nil;
+    LowerElevExpression := nil;
     case ElevationCount of
       ecZero:
         begin
@@ -13946,25 +14236,25 @@ begin
           TempFormula := ElevationFormula;
           Compiler := GetCompiler(dso3D);
           Compiler.Compile(TempFormula);
-          Expression1 := Compiler.CurrentExpression;
-          InitializeUsedDataSets(LocalModel, Compiler, Expression1,
-            VariableList1, DataSetList1);
+          HigherElevExpression := Compiler.CurrentExpression;
+          InitializeUsedDataSets(LocalModel, Compiler, HigherElevExpression,
+            HigherElevVariables, HigherElevDataSets);
         end;
       ecTwo:
         begin
           TempFormula := HigherElevationFormula;
           Compiler := GetCompiler(dso3D);
           Compiler.Compile(TempFormula);
-          Expression1 := Compiler.CurrentExpression;
-          InitializeUsedDataSets(LocalModel, Compiler, Expression1,
-            VariableList1, DataSetList1);
+          HigherElevExpression := Compiler.CurrentExpression;
+          InitializeUsedDataSets(LocalModel, Compiler, HigherElevExpression,
+            HigherElevVariables, HigherElevDataSets);
 
           TempFormula := LowerElevationFormula;
           Compiler := GetCompiler(dso3D);
           Compiler.Compile(TempFormula);
-          Expression2 := Compiler.CurrentExpression;
-          InitializeUsedDataSets(LocalModel, Compiler, Expression2,
-            VariableList2, DataSetList2);
+          LowerElevExpression := Compiler.CurrentExpression;
+          InitializeUsedDataSets(LocalModel, Compiler, LowerElevExpression,
+            LowerElevVariables, LowerElevDataSets);
         end;
       else Assert(False);
     end;
@@ -13979,21 +14269,23 @@ begin
       Mesh := LocalModel.Mesh;
       if Mesh <> nil then
       begin
-        AddTopMeshSegments(AModel, EvaluatedAt);
+        AddTopMeshSegments(AModel, EvaluatedAt, LowerElevDataSets,
+          HigherElevExpression, LayerLimit, HigherElevDataSets,
+          LowerElevVariables, HigherElevVariables, LowerElevExpression);
       end;
     end
     else
     begin
-      AddTopGridSegments(AModel, EvaluatedAt, DataSetList2, Expression1,
-        LayerLimit, DataSetList1, VariableList2, PointsRotated,
-        VariableList1, RotatedPoints, Expression2);
+      AddTopGridSegments(AModel, EvaluatedAt, LowerElevDataSets, HigherElevExpression,
+        LayerLimit, HigherElevDataSets, LowerElevVariables, PointsRotated,
+        HigherElevVariables, RotatedPoints, LowerElevExpression);
     end;
     FSegments.UpToDate := True;
   finally
-    VariableList1.Free;
-    DataSetList1.Free;
-    VariableList2.Free;
-    DataSetList2.Free;
+    HigherElevVariables.Free;
+    HigherElevDataSets.Free;
+    LowerElevVariables.Free;
+    LowerElevDataSets.Free;
   end;
 end;
 
@@ -36336,6 +36628,7 @@ var
   ACellAssignment: TCellAssignment;
   LayerIndex: Integer;
   Intersected: Boolean;
+  PriorLayer: Integer;
 begin
   if DataSet = nil then
   begin
@@ -36579,18 +36872,21 @@ begin
     begin
       PriorCol := -1;
       PriorRow := -1;
+      PriorLayer := -1;
       FirstElevationIndex := 0;
       LastElevationIndex := -1;
       for SegmentIndex := 0 to FScreenObject.Segments[AModel].Count - 1 do
       begin
         ASegment := FScreenObject.Segments[AModel][SegmentIndex];
-        if (ASegment.Col <> PriorCol) or (ASegment.Row <> PriorRow) then
+        if (ASegment.Col <> PriorCol) or (ASegment.Row <> PriorRow)
+          or (ASegment.Layer <> PriorLayer) then
         begin
           UpdateCurrentSegment(ASegment);
           OtherIndex(ASegment.Row, ASegment.Col, FirstElevationIndex,
             LastElevationIndex, DataSet);
           PriorCol := ASegment.Col;
           PriorRow := ASegment.Row;
+          PriorLayer := ASegment.Layer;
         end;
         if (FirstElevationIndex >= 0) and (LastElevationIndex <= LayerLimit)
           and (ASegment.Layer >= FirstElevationIndex)

@@ -206,7 +206,7 @@ type
       dtInteger or dtReal. It also catches the invalid value of '-' for real
       and integer data typed in the text field. If the value in the data field
       should be checked as specified by CheckMin and CheckMax and is
-      outside the limits set by Min and Max an OnExcceedingBounds event occurs.
+      outside the limits set by Min and Max an OnExceedingBounds event occurs.
       If after the eventhandler for OnExceedingBounds, the numeric
       representation of Text is still outside the appropriate range, Text will
       be changed to Max or Min, whichever is closer and raises an

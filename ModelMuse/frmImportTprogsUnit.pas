@@ -174,7 +174,7 @@ function TfrmImportTprogs.ReadTProgFile: boolean;
 var
   BgrFile: TFileStream;
   DimensionCount: integer;
-  index: integer;
+//  index: integer;
   LayerIndex: integer;
   RowIndex: integer;
   ColIndex: integer;

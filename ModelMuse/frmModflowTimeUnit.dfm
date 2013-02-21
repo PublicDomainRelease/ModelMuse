@@ -5,9 +5,9 @@ inherited frmModflowTime: TfrmModflowTime
   ClientHeight = 327
   ClientWidth = 754
   OnResize = FormResize
-  ExplicitWidth = 762
-  ExplicitHeight = 361
-  PixelsPerInch = 96
+  ExplicitWidth = 772
+  ExplicitHeight = 372
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -25,10 +25,8 @@ inherited frmModflowTime: TfrmModflowTime
       Width = 83
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
     object btnOK: TBitBtn
@@ -37,10 +35,8 @@ inherited frmModflowTime: TfrmModflowTime
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -50,10 +46,8 @@ inherited frmModflowTime: TfrmModflowTime
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -69,10 +63,6 @@ inherited frmModflowTime: TfrmModflowTime
     OnChange = pgcMainChange
     object tabModflow: TTabSheet
       Caption = 'MODFLOW'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlTop: TPanel
         Left = 0
         Top = 0
@@ -108,7 +98,7 @@ inherited frmModflowTime: TfrmModflowTime
         object lblSteadyTransient: TLabel
           Left = 412
           Top = 8
-          Width = 128
+          Width = 127
           Height = 18
           Alignment = taCenter
           Caption = 'lblSteadyTransient'
@@ -459,7 +449,7 @@ inherited frmModflowTime: TfrmModflowTime
         object lblTimeUnit: TLabel
           Left = 403
           Top = 9
-          Width = 127
+          Width = 126
           Height = 18
           Caption = 'Time unit (ITMUNI)'
         end
@@ -481,6 +471,7 @@ inherited frmModflowTime: TfrmModflowTime
           Width = 145
           Height = 26
           Style = csDropDownList
+          ItemHeight = 18
           TabOrder = 1
           Text = 'seconds (1)'
           Items.Strings = (
@@ -552,6 +543,7 @@ inherited frmModflowTime: TfrmModflowTime
           end
           inherited seNumber: TJvSpinEdit
             Height = 26
+            Value = 1.000000000000000000
             ExplicitHeight = 26
           end
         end

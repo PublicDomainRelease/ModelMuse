@@ -60,9 +60,11 @@ type
     procedure FormShow(Sender: TObject);
     procedure btnHelpClick(Sender: TObject);
 {$IF CompilerVersion < 23}
+// Use this version for Delphi XE
    function FormHelp(Command: Word; Data:  Integer;
      var CallHelp: Boolean): Boolean;
 {$ELSE}
+// Use this version for Delphi XE2
    function FormHelp(Command: Word; Data:  NativeInt;
      var CallHelp: Boolean): Boolean;
 {$IFEND}
@@ -163,6 +165,8 @@ procedure FillVirtStrTreeWithBoundaryConditions(
   ATree: TVirtualStringTree;
   CanSelectBoundary: TCanSelectBoundary = nil);
 
+function ShowHelp(const Keyword: string): boolean;
+
 var
   GlobalFont: TFont = nil;
   GlobalColor: TColor = clBtnFace;
@@ -174,12 +178,85 @@ implementation
 
 uses SubscriptionUnit, GoPhastTypes, ModflowPackagesUnit,
   frmGoPhastUnit, PhastModelUnit, ModflowPackageSelectionUnit,
-  frameCustomColorUnit, JvRollOut;
+  frameCustomColorUnit, JvRollOut, Messages, ShellAPI;
 
 {$R *.dfm}
 
 type
   TStringGridCrack = class(TStringGrid);
+
+// from http://delphi.about.com/cs/adptips2000/a/bltip0100_2.htm
+function KillApp(const sCapt: PChar) : boolean;
+var
+  AppHandle:THandle;
+begin
+  AppHandle:=FindWindow(Nil, sCapt) ;
+  if AppHandle <> 0 then
+  begin
+    Result:=PostMessage(AppHandle, WM_QUIT, 0, 0) ;
+  end
+  else
+  begin
+    Result := False;
+  end;
+end;
+
+
+function ShowHelp(const Keyword: string): boolean;
+//var
+//  AppHandle:THandle;
+begin
+{
+  AppHandle:=FindWindow(Nil, 'ModelMuse Help');
+  if AppHandle = 0 then
+  begin
+    if Keyword = '' then
+    begin
+  //    Result := ShellExecute(AppHandle, 'open', 'HH', PChar(Application.HelpFile),
+      Result := ShellExecute(0, 'open', 'HH', PChar(Application.HelpFile),
+        nil, SW_SHOWNORMAL) > 32;
+    end
+    else
+    begin
+  //    Result := ShellExecute(AppHandle, 'open', 'HH',
+      Result := ShellExecute(0, 'open', 'HH',
+        PChar(Application.HelpFile + '::/' + Keyword + '.htm'),
+        nil, SW_SHOWNORMAL) > 32;
+    end;
+  end
+  else
+  begin
+    if Keyword = '' then
+    begin
+      Result := ShellExecute(AppHandle, 'explore', 'HH', PChar(Application.HelpFile),
+//      Result := ShellExecute(0, 'open', 'HH', PChar(Application.HelpFile),
+        nil, SW_SHOWNORMAL) > 32;
+    end
+    else
+    begin
+      Result := ShellExecute(AppHandle, 'explore', 'HH',
+//      Result := ShellExecute(0, 'open', 'HH',
+        PChar(Application.HelpFile + '::/' + Keyword + '.htm'),
+        nil, SW_SHOWNORMAL) > 32;
+    end;
+  end;
+}
+
+  KillApp('ModelMuse Help');
+  if Keyword = '' then
+  begin
+    Result := ShellExecute(0, 'open', 'HH', PChar(Application.HelpFile),
+      nil, SW_SHOWNORMAL) > 32;
+  end
+  else
+  begin
+    Result := ShellExecute(0, 'open', 'HH',
+      PChar(Application.HelpFile + '::/' + Keyword + '.htm'),
+      nil, SW_SHOWNORMAL) > 32;
+  end;
+
+
+end;
 
 Procedure UpdateDialogBoxFileName(Dialog: TOpenDialog; NewFileName: string);
 const
@@ -251,14 +328,17 @@ begin
       HelpControl := HelpControl.Parent;
     end;
   end;
-  result := Application.HelpJump(KeyWord);
+  result := not ShowHelp(KeyWord);
+//  result := Application.HelpJump(KeyWord);
 //  result := HelpRouter.HelpJump('', KeyWord);
 end;
 
 {$IF CompilerVersion < 23}
+// Delphi XE
 function TfrmCustomGoPhast.FormHelp(Command: Word; Data:  Integer;
   var CallHelp: Boolean): Boolean;
 {$ELSE}
+// Delphi XE2
 function TfrmCustomGoPhast.FormHelp(Command: Word; Data:  NativeInt;
   var CallHelp: Boolean): Boolean;
 {$IFEND}
@@ -1383,6 +1463,11 @@ begin
     Assert(result <> nil);
   end;
 end;
+
+initialization
+
+finalization
+  KillApp('ModelMuse Help');
 
 end.
 

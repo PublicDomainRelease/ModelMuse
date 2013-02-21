@@ -196,7 +196,7 @@ implementation
 
 uses
   GoPhastTypes, ScreenObjectUnit, frmGoPhastUnit, ModflowTimeUnit,
-  frmCustomGoPhastUnit, ModflowMNW2_WriterUnit;
+  frmCustomGoPhastUnit, ModflowMNW2_WriterUnit, frmErrorsAndWarningsUnit;
 
 resourcestring
   StrWellScreenTopZTo = 'Well screen top (ZTop)';
@@ -1439,7 +1439,11 @@ var
   ScreenIndex: Integer;
   VerticalScreen: TVerticalScreen;
   AValue: string;
+  LiftError1: Boolean;
+  LiftError2: Boolean;
+  ShowError: boolean;
 begin
+  ShowError := False;
   for Index := 0 to List.Count - 1 do
   begin
     Item := List.Items[Index];
@@ -1592,6 +1596,8 @@ begin
             Inc(LiftCount);
           end;
         end;
+        LiftError1 := False;
+        LiftError2 := False;
         if LiftCount > 0 then
         begin
           While Boundary.LiftValues.Count < LiftCount do
@@ -1612,8 +1618,28 @@ begin
               LiftItem := Boundary.LiftValues.Items[LiftIndex] as TLiftItem;
               LiftItem.Lift := StrToFloat(rdgLiftTable.Cells[Ord(mltcLift), RowIndex]);
               LiftItem.Q := StrToFloat(rdgLiftTable.Cells[Ord(mltcQ), RowIndex]);
+              if Boundary.MaximumLift < LiftItem.Lift then
+              begin
+                LiftError1 := True;
+              end;
+              if Boundary.LiftAtMaxRate > LiftItem.Lift then
+              begin
+                LiftError2 := True;
+              end;
             end;
           end;
+        end;
+        if LiftError1 then
+        begin
+          ShowError := True;
+          frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrInvalidMnwTable,
+            ScreenObject.Name);
+        end;
+        if LiftError2 then
+        begin
+          ShowError := True;
+          frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrInvalidMnwTable2,
+            ScreenObject.Name);
         end;
       end;
 
@@ -1766,6 +1792,10 @@ begin
     end;
   end;
   framePumpLocationMethod.SetData(List, SetAll, ClearAll);
+  if ShowError then
+  begin
+    frmErrorsAndWarnings.Show;
+  end;
 end;
 
 procedure TframeScreenObjectMNW2.LayoutMultiCellEditControlsForStressPeriods;

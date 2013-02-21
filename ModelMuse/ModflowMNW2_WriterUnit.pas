@@ -67,7 +67,7 @@ type
   protected
     function Package: TModflowPackageSelection; override;
     class function Extension: string; override;
-    procedure Evaluate; 
+    procedure Evaluate;
   public
     Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     destructor Destroy; override;
@@ -76,6 +76,16 @@ type
       var StartUnitNumber: integer);
     procedure UpdateDisplay(TimeLists: TModflowBoundListOfTimeLists);
   end;
+
+resourcestring
+  StrInvalidMnwTable = 'The following objects define multinode wells in w' +
+  'hich LIFTqmax is less than one or more values in the head capacity table.';
+  StrInvalidMnwTable2 = 'The following objects define multinode wells in w' +
+  'hich LIFTq0 is greater than one or more values in the head capacity table.';
+  StrWhenPumpingCapacit = 'When pumping capacity affects the flow rate in MN' +
+  'W2 wells, the first withdrawal rate is treated as the maximum possible pu' +
+  'mping rate and should be greater than the largest pumping rate in the pum' +
+  'p capacity table. The following objects specify wells that do';
 
 implementation
 
@@ -115,6 +125,8 @@ resourcestring
   StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
   StrWritingMNWIPackage = 'Writing MNWI Package input.';
   StrWritingDataSet3 = '  Writing Data Set 3.';
+
+//  StrTheFollowingObject
 
 { TModflowMNW2_Writer }
 
@@ -183,6 +195,18 @@ var
 begin
   frmProgressMM.AddMessage(StrEvaluatingMNW2Pack);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoMultinodeWellsD);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, SignError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, RelativeSizeError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, SizeError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, InvalidFractionError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidMnwTable);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidMnwTable2);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, LossTypeError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheFollowingObject);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrVerticalScreensAre);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrWhenPumpingCapacit);
+
+
   Dummy := TStringList.Create;
   try
     for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
@@ -913,7 +937,12 @@ var
   LIFTn: Double;
   Item: TLiftItem;
   LiftIndex: Integer;
+  LiftError1: boolean;
+  LiftError2: Boolean;
+  ScreenObject: TScreenObject;
 begin
+  LiftError1 := False;
+  LiftError2 := False;
   if WellBoundary.AdjustPumping then
   begin
     WellBoundary.LiftValues.Sort;
@@ -926,6 +955,30 @@ begin
       WriteFloat(Qn);
       WriteString(' Data Set 2H: LIFTn, Qn');
       NewLine;
+      if LIFTn > WellBoundary.MaximumLift then
+      begin
+        LiftError1 := True;
+      end;
+      if LIFTn < WellBoundary.LiftAtMaxRate then
+      begin
+        LiftError2 := True;
+      end;
+    end;
+  end;
+  if LiftError1 or LiftError2 then
+  begin
+    ScreenObject := WellBoundary.ScreenObject as TScreenObject;
+    if LiftError1 then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrInvalidMnwTable,
+        ScreenObject.Name);
+
+    end;
+    if LiftError2 then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrInvalidMnwTable2,
+        ScreenObject.Name);
+
     end;
   end;
 end;
@@ -1383,6 +1436,10 @@ var
   LOSSTYPE: string;
   PUMPCAP: Integer;
   PPFLAG: Integer;
+  ItemIndex: Integer;
+  TimeItem: TMnw2TimeItem;
+  LiftItem: TLiftItem;
+  ScreenObject: TScreenObject;
 const
   LossTypes: array[Low(TMnwLossType)..High(TMnwLossType)] of string =
     ('NONE ', 'THIEM ', 'SKIN ', 'GENERAL ', 'SPECIFYcwc ');
@@ -1449,6 +1506,27 @@ begin
   WriteInteger(PUMPCAP);
   WriteString(' # Data Set 2B: LOSSTYPE, PUMPLOC, Qlimit, PPFLAG, PUMPCAP');
   NewLine;
+
+  if PUMPCAP > 0 then
+  begin
+    for ItemIndex := 0 to WellBoundary.TimeValues.Count - 1 do
+    begin
+      TimeItem := WellBoundary.TimeValues.Items[ItemIndex] as TMnw2TimeItem;
+      if TimeItem.PumpingRateValue < 0 then
+      begin
+        LiftItem := WellBoundary.LiftValues.Items[
+          WellBoundary.LiftValues.Count-1] as TLiftItem;
+        if Abs(TimeItem.PumpingRateValue)
+          < LiftItem.Q*TimeItem.HeadCapacityMultiplierValue then
+        begin
+          ScreenObject := WellBoundary.ScreenObject as TScreenObject;
+          frmErrorsAndWarnings.AddError(Model, StrWhenPumpingCapacit,
+            ScreenObject.Name);
+        end;
+        break;
+      end;
+    end;
+  end;
 end;
 
 procedure TModflowMNW2_Writer.WriteDataSet2A(WellBoundary: TMnw2Boundary;

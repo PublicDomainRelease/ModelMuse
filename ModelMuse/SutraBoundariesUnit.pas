@@ -39,25 +39,42 @@ type
 
   {
   Merge @link(TSutraTimeList)s as follows.
+
   1. Get a list of @link(TSutraTimeList)s in the same order as the
   @link(TScreenObject)s that define them.
+
   2. Get a combined list of all the times in the @link(TSutraTimeList)s
+
   3. Merge each @link(TSutraTimeList) in turn, into the combined list.
   For each data set in each @link(TSutraTimeList), apply from its
   start time up until but not including
   the next start time included in the @link(TSutraTimeList).
+
   3a. With specified pressures and specified temperature/concentration,
   use the value in the last @link(TSutraTimeList).
+
   3b. With specified flux, add the flux to the existing flux and compute
   a weighted average of the injection concentrations or temperatures.
+
   3c. With solute/energy sources, add the solute/energy source to
   the existing solute/energy sources.
+
+  Merging @link(TSutraTimeList)s is done in
+  @link(TSutraBoundaryWriter.UpdateMergeLists).
 
   @name can be used for both export and display.
   }
   TSutraMergedTimeList = class(TCustomTimeList)
+  private
+//    FOnGetUseList: TOnGetUseList;
+    FOnInitialize: TNotifyEvent;
+    procedure SetOnInitialize(const Value: TNotifyEvent);
   public
     procedure Initialize; override;
+//    property OnGetUseList: TOnGetUseList read FOnGetUseList
+//      write FOnGetUseList;
+    property OnInitialize: TNotifyEvent read FOnInitialize
+      write SetOnInitialize;
   end;
 
   TSutraBoundary = class(TModflowBoundary)
@@ -354,6 +371,7 @@ end;
 
 function TCustomSutraBoundaryCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
+  result := nil;
   // this needs to be changed.
   Assert(False);
 end;
@@ -1144,8 +1162,30 @@ end;
 { TSutraMergedTimeList }
 
 procedure TSutraMergedTimeList.Initialize;
+var
+  index: Integer;
+  DataArray: TDataArray;
 begin
+  if Assigned(OnInitialize) then
+  begin
+    OnInitialize(Self);
+    for index := 0 to Count - 1 do
+    begin
+      DataArray := Items[index];
+      DataArray.UpToDate := True;
+      DataArray.CacheData;
+    end;
+    SetUpToDate(True);
+  end;
+end;
 
+procedure TSutraMergedTimeList.SetOnInitialize(const Value: TNotifyEvent);
+begin
+  if Addr(FOnInitialize) <> Addr(Value) then
+  begin
+    FOnInitialize := Value;
+    Invalidate;
+  end;
 end;
 
 end.

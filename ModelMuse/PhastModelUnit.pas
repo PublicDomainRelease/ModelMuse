@@ -31,7 +31,7 @@ uses Windows, Types, GuiSettingsUnit, SysUtils, Classes, Contnrs, Controls,
   Generics.Defaults, Mt3dmsTimesUnit, Mt3dmsChemSpeciesUnit,
   Mt3dmsFluxObservationsUnit, SutraMeshUnit, HashTableFacadeUnit,
   SutraOptionsUnit, SutraTimeScheduleUnit, frmSutraOutputControlUnit,
-  SutraOutputControlUnit;
+  SutraOutputControlUnit, SutraBoundariesUnit;
 
 const
   kHufThickness = '_Thickness';
@@ -361,6 +361,17 @@ resourcestring
   rsResClassificaton = 'Reservoir';
   rsLakeClassificaton = 'Lake';
   StrMT3DMS_Classificaton = 'MT3DMS';
+  StrSpecifiedPressure = 'Specified Pressure';
+  StrAssocPresConc = 'SP Associated Conc.';
+  StrAssocPresTemp = 'SP Associated Temp.';
+  StrSpecifiedTemp = 'Specified Temperature';
+  StrSpecifiedConc = 'Specified Concentration';
+  StrFluidFlux = 'Fluid Flux';
+  StrFluxAssocPresConc = 'Flux Associated Conc.';
+  StrFluxAssocPresTemp = 'Flux Associated Temp.';
+  StrMassFlux = 'Mass Flux';
+  StrEnergyFlux = 'Energy Flux';
+  StrNoStressPeriods = 'No stress periods have been defined for MT3DMS.';
 const
   WettableLayers = [1,3];
 
@@ -1764,6 +1775,14 @@ that affects the model output should also have a comment. }
     FSutraMesh: TSutraMesh3D;
     FSutraOptions: TSutraOptions;
     FSutraOutputControl: TSutraOutputControl;
+    {$IFDEF SUTRA}
+    FSutraSpecPressureTimeList: TSutraMergedTimeList;
+    FSutraSpecPresUTimeList: TSutraMergedTimeList;
+    FSutraConcTempTimeList: TSutraMergedTimeList;
+    FSutraFluidFluxTimeList: TSutraMergedTimeList;
+    FSutraFluidFluxUTimeList: TSutraMergedTimeList;
+    FSutraMassEnergyFluxTimeList: TSutraMergedTimeList;
+    {$ENDIF}
     procedure SetAlternateFlowPackage(const Value: boolean);
     procedure SetAlternateSolver(const Value: boolean);
     procedure SetBatchFileAdditionsAfterModel(const Value: TStrings);
@@ -1896,6 +1915,10 @@ that affects the model output should also have a comment. }
     function SutraThicknessUsed(Sender: TObject): boolean;
     function SutraUnsatRegionUsed(Sender: TObject): boolean;
     function GetSutraMesh: TSutraMesh3D;
+    procedure InitializeSutraSpecPres(Sender: TObject);
+    procedure InitializeSutraSpecifiedConcTemp(Sender: TObject);
+    procedure InitializeSutraFluidFlux(Sender: TObject);
+    procedure InitializeSutraMassEnergyFlux(Sender: TObject);
   var
     LakWriter: TObject;
     SfrWriter: TObject;
@@ -2474,6 +2497,8 @@ that affects the model output should also have a comment. }
     function TwoDElementCorner(const Column, Row: integer): TPoint2D;
     property SfrStreamLinkPlot: TSfrStreamLinkPlot read GetSfrStreamLinkPlot
       write SetSfrStreamLinkPlot;
+    procedure InvalidateSutraSpecPressure(Sender: TObject);
+    procedure UpdateSutraTimeListNames;
   published
     // @name defines the grid used with PHAST.
     property PhastGrid: TPhastGrid read FPhastGrid write SetPhastGrid;
@@ -2557,6 +2582,7 @@ that affects the model output should also have a comment. }
       write SetFilesToArchive;
     property ModelInputFiles: TStrings read FModelInputFiles
       write SetModelInputFiles;
+    // @name is the name of the ModelMuse file that has been opened or saved.
     property ModelFileName: string read FFileName write SetFileName;
     property ModflowOptions: TModflowOptions read FModflowOptions
       write SetModflowOptions;
@@ -5720,7 +5746,7 @@ const
   //       Enhancement: Added the ability to import binary grid files created
   //         by T-PROGS.
   //     '2.17.1.15' Bug fix: Fixed bug that caused ModelMuse to crash when
-  //         changing the number of rows, oolumns or layers in the grid.
+  //         changing the number of rows, columns or layers in the grid.
   //     '2.17.1.16' Bug fix: Fixed bug in adding new data sets when child
   //         models from a MODFLOW-LGR model have been created but the
   //         model is no longer a MODFLOW-LGR model.
@@ -5729,9 +5755,26 @@ const
   //     '2.18.0.0' Bug fix: Fixed bug that would cause divide-by-zero errors
   //         when calculating Interlayer Kz in the HUF package if some of the
   //         data was not properly defined.
+  //     '2.18.0.1' Bug fix: Fixed bug that caused ModelMuse to hang on
+  //         some computers when using the search function in the ModelMuse
+  //         help.
+  //       Bug fix: Fixed bug that allowed an attempt to be made to export the
+  //         PHAST input file even if the grid was not yet defined.
+  //       Bug fix: Fixed bug that sometimes incorrectly prevented the user
+  //         from importing the shapes in a Shapefile as a single multipart
+  //         object.
+  //     '2.18.0.2' Bug fix: Fixed bug in export of RCH package when parameters
+  //         are used but the layer is not time-varying.
+  //     '2.18.0.3' Change: the user can now cut and paste data from the
+  //         Imported Data tab of the Object Properties dialog box.
+  //     '2.18.0.4' Bug fix: Fixed a bug that would cause an error opening a
+  //         ModelMuse file if an object used in the definition of a flux
+  //         observation had been deleted.
+  //     '2.18.1.0' Fixed bug that allowed MT3DMS to have zero stress periods
+  //         defined.
 
 const
-  IModelVersion = '2.18.0.0';
+  IModelVersion = '2.18.1.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -5783,6 +5826,10 @@ resourcestring
 
 resourcestring
   StrSUTRAMeshTop = kSUTRAMeshTop;
+  StrSUTRASpecifiedPres = 'SUTRA Specified Pressure';
+  StrSUTRASpecifiedConcTemp = 'SUTRA Specified Concentration or Temperature';
+  StrSutraFluidFlux = 'SUTRA Fluid Flux';
+  StrMassEnergyFlux = 'SUTRA Mass or Energy Flux';
 
 
 implementation
@@ -5816,7 +5863,8 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   BigCanvasMethods, Mt3dmsBtnWriterUnit, Mt3dmsAdvWriterUnit,
   Mt3dmsDspWriterUnit, Mt3dmsSsmWriterUnit, Mt3dmsRctWriterUnit,
   Mt3dmsGcgWriterUnit, Mt3dmsTobWriterUnit, ModflowMt3dmsLinkWriterUnit,
-  QuadMeshGenerator, MeshRenumbering, ModflowPCGN_WriterUnit, Character;
+  QuadMeshGenerator, MeshRenumbering, ModflowPCGN_WriterUnit, Character,
+  SutraBoundaryWriterUnit;
 
 resourcestring
   StrMpathDefaultPath = 'C:\WRDAPP\Mpath.5_0\setup\Mpathr5_0.exe';
@@ -7456,6 +7504,11 @@ begin
   PhastGrid.GridAngle := 0;
   ModflowGrid.GridAngle := 0;
   FLayerStructure.Clear;
+  if FSutraLayerStructure <> nil then
+  begin
+    FSutraLayerStructure.Clear;
+  end;
+
   Times.Initialize;
 
   ModflowPackages.Reset;
@@ -8358,66 +8411,6 @@ begin
   result := FFreeSurface;
 end;
 
-//function TPhastModel.GetFrontHeight: integer;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.FrontHeight;
-//  end;
-//end;
-
-//function TPhastModel.GetFrontX: double;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.FrontX;
-//  end;
-//end;
-
-//function TPhastModel.GetFrontY: double;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.FrontY;
-//  end;
-//end;
-
-//function TPhastModel.GetSideX: double;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.SideX;
-//  end;
-//end;
-
-//function TPhastModel.GetSideY: double;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.SideY;
-//  end;
-//end;
-
 function TPhastModel.GetSoluteTransport: boolean;
 begin
   result := FSoluteTransport;
@@ -8436,30 +8429,6 @@ begin
   end;
   result := FSutraLayerStructure
 end;
-
-//function TPhastModel.GetTopX: double;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.TopX;
-//  end;
-//end;
-
-//function TPhastModel.GetTopY: double;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.TopY;
-//  end;
-//end;
 
 procedure TPhastModel.SetFrontHeight(Value: integer);
 begin
@@ -8538,30 +8507,6 @@ begin
     GuiSettings.TopY := Value
   end;
 end;
-
-//function TPhastModel.GetTopViewHeight: integer;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.TopViewHeight;
-//  end;
-//end;
-
-//function TPhastModel.GetTopViewWidth: integer;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.TopViewWidth;
-//  end;
-//end;
 
 procedure TPhastModel.SetTopViewHeight(const Value: integer);
 begin
@@ -9248,18 +9193,6 @@ begin
   end;
 end;
 
-//function TPhastModel.GetSideWidth: integer;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := 0;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.SideWidth;
-//  end;
-//end;
-
 procedure TPhastModel.SetSideTimeList(const Value: TCustomTimeList);
 var
   ChildIndex: Integer;
@@ -9923,36 +9856,78 @@ var
   TimeIndex: integer;
   LocalSelectedLayer, LocalSelectedRow, LocalSelectedColumn: integer;
 begin
-  if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
+
+  if Grid <> nil then
+  begin
+    if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
+    begin
+      FTopTimeList := nil;
+      Grid.TopDataSet := nil;
+      Exit;
+    end;
+    LocalSelectedLayer := Grid.SelectedLayer;
+    LocalSelectedRow := Grid.SelectedRow;
+    LocalSelectedColumn := Grid.SelectedColumn;
+    try
+      if not TimeList.UpToDate then
+      begin
+        TimeList.Initialize;
+      end;
+      TimeIndex := TimeList.FirstTimeGreaterThan(Time) - 1;
+      if TimeIndex < 0 then
+      begin
+        Grid.TopDataSet := nil;
+      end
+      else
+      begin
+        Grid.TopDataSet := TimeList.Items[TimeIndex];
+        Grid.TopDataSet.UpdateMinMaxValues;
+      end;
+      FTopTimeList := TimeList;
+      FTopDisplayTime := Time;
+    finally
+      Grid.SelectedLayer := LocalSelectedLayer;
+      Grid.SelectedRow := LocalSelectedRow;
+      Grid.SelectedColumn := LocalSelectedColumn;
+    end;
+  end
+  else if Mesh <> nil then
+  begin
+    if (Mesh.LayerCount <= 0) {or (Mesh.RowCount <= 0) or (Mesh.ColumnCount <= 0)} then
+    begin
+      FTopTimeList := nil;
+      Mesh.TopDataSet := nil;
+      Exit;
+    end;
+    LocalSelectedLayer := Mesh.SelectedLayer;
+//    LocalSelectedRow := Mesh.SelectedRow;
+//    LocalSelectedColumn := Mesh.SelectedColumn;
+    try
+      if not TimeList.UpToDate then
+      begin
+        TimeList.Initialize;
+      end;
+      TimeIndex := TimeList.FirstTimeGreaterThan(Time) - 1;
+      if TimeIndex < 0 then
+      begin
+        Mesh.TopDataSet := nil;
+      end
+      else
+      begin
+        Mesh.TopDataSet := TimeList.Items[TimeIndex];
+        Mesh.TopDataSet.UpdateMinMaxValues;
+      end;
+      FTopTimeList := TimeList;
+      FTopDisplayTime := Time;
+    finally
+      Mesh.SelectedLayer := LocalSelectedLayer;
+//      Mesh.SelectedRow := LocalSelectedRow;
+//      Mesh.SelectedColumn := LocalSelectedColumn;
+    end;
+  end
+  else
   begin
     FTopTimeList := nil;
-    Grid.TopDataSet := nil;
-    Exit;
-  end;
-  LocalSelectedLayer := Grid.SelectedLayer;
-  LocalSelectedRow := Grid.SelectedRow;
-  LocalSelectedColumn := Grid.SelectedColumn;
-  try
-    if not TimeList.UpToDate then
-    begin
-      TimeList.Initialize;
-    end;
-    TimeIndex := TimeList.FirstTimeGreaterThan(Time) - 1;
-    if TimeIndex < 0 then
-    begin
-      Grid.TopDataSet := nil;
-    end
-    else
-    begin
-      Grid.TopDataSet := TimeList.Items[TimeIndex];
-      Grid.TopDataSet.UpdateMinMaxValues;
-    end;
-    FTopTimeList := TimeList;
-    FTopDisplayTime := Time;
-  finally
-    Grid.SelectedLayer := LocalSelectedLayer;
-    Grid.SelectedRow := LocalSelectedRow;
-    Grid.SelectedColumn := LocalSelectedColumn;
   end;
 end;
 
@@ -13307,18 +13282,6 @@ begin
   FScreenObjectList.Capacity := FScreenObjectList.Capacity + Delta;
 end;
 
-//function TPhastModel.GetWindowState: TWindowState;
-//begin
-//  if GuiSettings = nil then
-//  begin
-//    result := wsNormal;
-//  end
-//  else
-//  begin
-//    result := GuiSettings.WindowState;
-//  end;
-//end;
-
 function TPhastModel.GhbIsSelected: Boolean;
 var
   ChildIndex: Integer;
@@ -13553,36 +13516,79 @@ var
   TimeIndex: integer;
   LocalSelectedLayer, LocalSelectedRow, LocalSelectedColumn: integer;
 begin
-  if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
+  if Grid <> nil then
   begin
-    FThreeDTimeList := nil;
-    ThreeDDataSet := nil;
-    Exit;
-  end;
-  LocalSelectedLayer := Grid.SelectedLayer;
-  LocalSelectedRow := Grid.SelectedRow;
-  LocalSelectedColumn := Grid.SelectedColumn;
-  try
-    FThreeDDisplayTime := Time;
-    if not TimeList.UpToDate then
+    if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
     begin
-      TimeList.Initialize;
-    end;
-    TimeIndex := TimeList.FirstTimeGreaterThan(Time) - 1;
-    if TimeIndex < 0 then
-    begin
+      FThreeDTimeList := nil;
       ThreeDDataSet := nil;
-    end
-    else
-    begin
-      ThreeDDataSet := TimeList.Items[TimeIndex];
-      ThreeDDataSet.UpdateMinMaxValues
+      Exit;
     end;
-    FThreeDTimeList := TimeList;
-  finally
-    Grid.SelectedLayer := LocalSelectedLayer;
-    Grid.SelectedRow := LocalSelectedRow;
-    Grid.SelectedColumn := LocalSelectedColumn;
+    LocalSelectedLayer := Grid.SelectedLayer;
+    LocalSelectedRow := Grid.SelectedRow;
+    LocalSelectedColumn := Grid.SelectedColumn;
+    try
+      FThreeDDisplayTime := Time;
+      if not TimeList.UpToDate then
+      begin
+        TimeList.Initialize;
+      end;
+      TimeIndex := TimeList.FirstTimeGreaterThan(Time) - 1;
+      if TimeIndex < 0 then
+      begin
+        ThreeDDataSet := nil;
+      end
+      else
+      begin
+        ThreeDDataSet := TimeList.Items[TimeIndex];
+        ThreeDDataSet.UpdateMinMaxValues
+      end;
+      FThreeDTimeList := TimeList;
+    finally
+      Grid.SelectedLayer := LocalSelectedLayer;
+      Grid.SelectedRow := LocalSelectedRow;
+      Grid.SelectedColumn := LocalSelectedColumn;
+    end;
+  end
+  else if Mesh <> nil then
+  begin
+    if Mesh.Mesh2D.Nodes.Count <= 0 then
+    begin
+      FThreeDTimeList := nil;
+      ThreeDDataSet := nil;
+      Exit;
+    end;
+    if (Mesh.MeshType = mt3D) and (Mesh.Nodes.Count <= 0) then
+    begin
+      FThreeDTimeList := nil;
+      ThreeDDataSet := nil;
+      Exit;
+    end;
+    LocalSelectedLayer := Mesh.SelectedLayer;
+//    LocalSelectedRow := Mesh.SelectedRow;
+//    LocalSelectedColumn := Mesh.SelectedColumn;
+    try
+      FThreeDDisplayTime := Time;
+      if not TimeList.UpToDate then
+      begin
+        TimeList.Initialize;
+      end;
+      TimeIndex := TimeList.FirstTimeGreaterThan(Time) - 1;
+      if TimeIndex < 0 then
+      begin
+        ThreeDDataSet := nil;
+      end
+      else
+      begin
+        ThreeDDataSet := TimeList.Items[TimeIndex];
+        ThreeDDataSet.UpdateMinMaxValues
+      end;
+      FThreeDTimeList := TimeList;
+    finally
+      Mesh.SelectedLayer := LocalSelectedLayer;
+//      Mesh.SelectedRow := LocalSelectedRow;
+//      Mesh.SelectedColumn := LocalSelectedColumn;
+    end;
   end;
 end;
 
@@ -15222,6 +15228,14 @@ begin
   finally
     EndGridChange;
   end;
+end;
+
+procedure TCustomModel.InvalidateSutraSpecPressure(Sender: TObject);
+begin
+{$IFDEF SUTRA}
+  FSutraSpecPressureTimeList.Invalidate;
+{$ENDIF}
+//  ModflowPackages.EvtPackage.InvalidateMfEvtEvapLayer(Sender);
 end;
 
 function TCustomModel.IsLayerSimulated(const LayerID: integer): boolean;
@@ -17300,14 +17314,214 @@ begin
   FHufSyNotifier.Name := 'HufSyNotifier';
 
   FUnitNumbers := TUnitNumbers.Create(self);
-//  FSfrStreamLinkPlot := TSfrStreamLinkPlot.Create(self);
 
   FSutraOptions := TSutraOptions.Create(self);
   FSutraOutputControl := TSutraOutputControl.Create(self);
 
   FDataArrayManager.DefinePackageDataArrays;
   CreateModflowDisplayTimeLists;
+
+
+{$IFDEF SUTRA}
+  FSutraSpecPressureTimeList := TSutraMergedTimeList.Create(self);
+  FSutraSpecPressureTimeList.Name := StrSpecifiedPressure;
+  FSutraSpecPressureTimeList.OnTimeListUsed := SutraUsed;
+  FSutraSpecPressureTimeList.OnInitialize := InitializeSutraSpecPres;
+  AddTimeList(FSutraSpecPressureTimeList);
+
+  FSutraSpecPresUTimeList := TSutraMergedTimeList.Create(self);
+  case SutraOptions.TransportChoice of
+    tcSolute: FSutraSpecPresUTimeList.Name := StrAssocPresConc;
+    tcEnergy: FSutraSpecPresUTimeList.Name := StrAssocPresTemp;
+    else Assert(False);
+  end;
+  FSutraSpecPresUTimeList.OnTimeListUsed := SutraUsed;
+  FSutraSpecPresUTimeList.OnInitialize := InitializeSutraSpecPres;
+  AddTimeList(FSutraSpecPresUTimeList);
+
+  FSutraConcTempTimeList := TSutraMergedTimeList.Create(self);
+  case SutraOptions.TransportChoice of
+    tcSolute: FSutraConcTempTimeList.Name := StrSpecifiedConc;
+    tcEnergy: FSutraConcTempTimeList.Name := StrSpecifiedTemp;
+    else Assert(False);
+  end;
+  FSutraConcTempTimeList.OnTimeListUsed := SutraUsed;
+  FSutraConcTempTimeList.OnInitialize := InitializeSutraSpecifiedConcTemp;
+  AddTimeList(FSutraConcTempTimeList);
+
+
+  FSutraFluidFluxTimeList := TSutraMergedTimeList.Create(self);
+  FSutraFluidFluxTimeList.Name := StrFluidFlux;
+  FSutraFluidFluxTimeList.OnTimeListUsed := SutraUsed;
+  FSutraFluidFluxTimeList.OnInitialize := InitializeSutraFluidFlux;
+  AddTimeList(FSutraFluidFluxTimeList);
+
+  FSutraFluidFluxUTimeList := TSutraMergedTimeList.Create(self);
+  case SutraOptions.TransportChoice of
+    tcSolute: FSutraFluidFluxUTimeList.Name := StrFluxAssocPresConc;
+    tcEnergy: FSutraFluidFluxUTimeList.Name := StrFluxAssocPresTemp;
+    else Assert(False);
+  end;
+  FSutraFluidFluxUTimeList.OnTimeListUsed := SutraUsed;
+  FSutraFluidFluxUTimeList.OnInitialize := InitializeSutraFluidFlux;
+  AddTimeList(FSutraFluidFluxUTimeList);
+
+  FSutraMassEnergyFluxTimeList := TSutraMergedTimeList.Create(self);
+  case SutraOptions.TransportChoice of
+    tcSolute: FSutraMassEnergyFluxTimeList.Name := StrMassFlux;
+    tcEnergy: FSutraMassEnergyFluxTimeList.Name := StrEnergyFlux;
+    else Assert(False);
+  end;
+  FSutraMassEnergyFluxTimeList.OnTimeListUsed := SutraUsed;
+  FSutraMassEnergyFluxTimeList.OnInitialize := InitializeSutraMassEnergyFlux;
+  AddTimeList(FSutraMassEnergyFluxTimeList);
+
+
+{$ENDIF}
 end;
+
+procedure TCustomModel.UpdateSutraTimeListNames;
+begin
+{$IFDEF SUTRA}
+  case SutraOptions.TransportChoice of
+    tcSolute:
+      begin
+        FSutraConcTempTimeList.Name := StrSpecifiedConc;
+        FSutraSpecPresUTimeList.Name := StrAssocPresConc;
+        FSutraFluidFluxUTimeList.Name := StrFluxAssocPresConc;
+        FSutraMassEnergyFluxTimeList.Name := StrMassFlux;
+      end;
+    tcEnergy:
+      begin
+        FSutraConcTempTimeList.Name := StrSpecifiedTemp;
+        FSutraSpecPresUTimeList.Name := StrAssocPresTemp;
+        FSutraFluidFluxUTimeList.Name := StrFluxAssocPresTemp;
+        FSutraMassEnergyFluxTimeList.Name := StrEnergyFlux;
+      end
+    else Assert(False);
+  end;
+{$ENDIF}
+end;
+
+procedure TCustomModel.InitializeSutraMassEnergyFlux(Sender: TObject);
+{$IFDEF SUTRA}
+var
+  BoundaryWriter: TSutraBoundaryWriter;
+  Dummy: TSutraMergedTimeList;
+{$ENDIF}
+begin
+{$IFDEF SUTRA}
+  Dummy := TSutraMergedTimeList.Create(self);
+  BoundaryWriter := TSutraBoundaryWriter.Create(Self, etDisplay, sbtMassEnergySource);
+  try
+    BoundaryWriter.UpdateMergeLists(Dummy,
+      FSutraMassEnergyFluxTimeList);
+  finally
+    BoundaryWriter.Free;
+    Dummy.Free;
+  end;
+{$ENDIF}
+end;
+
+
+procedure TCustomModel.InitializeSutraSpecifiedConcTemp(Sender: TObject);
+{$IFDEF SUTRA}
+var
+  BoundaryWriter: TSutraBoundaryWriter;
+  Dummy: TSutraMergedTimeList;
+{$ENDIF}
+begin
+{$IFDEF SUTRA}
+  Dummy := TSutraMergedTimeList.Create(self);
+  BoundaryWriter := TSutraBoundaryWriter.Create(Self, etDisplay, sbtSpecConcTemp);
+  try
+    BoundaryWriter.UpdateMergeLists(Dummy,
+      FSutraConcTempTimeList);
+  finally
+    BoundaryWriter.Free;
+    Dummy.Free;
+  end;
+{$ENDIF}
+end;
+
+procedure TCustomModel.InitializeSutraFluidFlux(Sender: TObject);
+{$IFDEF SUTRA}
+var
+  BoundaryWriter: TSutraBoundaryWriter;
+{$ENDIF}
+begin
+{$IFDEF SUTRA}
+  BoundaryWriter := TSutraBoundaryWriter.Create(Self, etDisplay, sbtFluidSource);
+  try
+    BoundaryWriter.UpdateMergeLists(FSutraFluidFluxTimeList,
+      FSutraFluidFluxUTimeList);
+  finally
+    BoundaryWriter.Free;
+  end;
+{$ENDIF}
+end;
+
+procedure TCustomModel.InitializeSutraSpecPres(Sender: TObject);
+{$IFDEF SUTRA}
+var
+  BoundaryWriter: TSutraBoundaryWriter;
+{$ENDIF}
+begin
+{$IFDEF SUTRA}
+  BoundaryWriter := TSutraBoundaryWriter.Create(Self, etDisplay, sbtSpecPress);
+  try
+    BoundaryWriter.UpdateMergeLists(FSutraSpecPressureTimeList,
+      FSutraSpecPresUTimeList);
+  finally
+    BoundaryWriter.Free;
+  end;
+{$ENDIF}
+end;
+
+//procedure TCustomModel.UpdateSutraSpecPresUseList(Sender: TObject;
+//  NewUseList: TStringList);
+//var
+//  ScreenObjectIndex: Integer;
+//  ScreenObject: TScreenObject;
+//  Item: TCustomModflowBoundaryItem;
+//  ValueIndex: Integer;
+//  ParamIndex: Integer;
+//  ParamItem: TModflowParamItem;
+//  Boundary: TSutraSpecifiedPressureBoundary;
+//  DataIndex: integer;
+//  LocalModel: TPhastModel;
+//begin
+//  // Use DataIndex = 0 for concentration/temperature.
+//  // Use DataIndex = 1 for specified pressure or specified fluid flux.
+//  DataIndex := 1;
+//
+//  if Self is TPhastModel then
+//  begin
+//    LocalModel := TPhastModel(Self);
+//  end
+//  else
+//  begin
+//    LocalModel := (Self as TChildModel).ParentModel as TPhastModel;
+//  end;
+//
+//  for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
+//  begin
+//    ScreenObject := ScreenObjects[ScreenObjectIndex];
+//    if ScreenObject.Deleted then
+//    begin
+//      Continue;
+//    end;
+//    Boundary := ScreenObject.SutraBoundaries.SpecifiedPressure;
+//    if (Boundary <> nil) and Boundary.Used then
+//    begin
+//      for ValueIndex := 0 to Boundary.Values.Count -1 do
+//      begin
+//        Item := Boundary.Values[ValueIndex] as TCustomModflowBoundaryItem;
+//        LocalModel.UpdateUseList(DataIndex, NewUseList, Item);
+//      end;
+//    end;
+//  end;
+//end;
 
 function TCustomModel.DataSetLayerToModflowLayer(
   DataSetLayer: integer): integer;
@@ -17317,6 +17531,14 @@ end;
 
 destructor TCustomModel.Destroy;
 begin
+{$IFDEF SUTRA}
+  FSutraSpecPressureTimeList.Free;
+  FSutraSpecPresUTimeList.Free;
+  FSutraConcTempTimeList.Free;
+  FSutraFluidFluxTimeList.Free;
+  FSutraFluidFluxUTimeList.Free;
+  FSutraMassEnergyFluxTimeList.Free;
+{$ENDIF}
 //  FChangedDataArrayNames.Free;
 //  FBoundaryDataSets.Free;
 //  FDataSets.Free;
@@ -21913,37 +22135,47 @@ var
   TimeIndex: Integer;
   Mt3dmsEndTime: Double;
 begin
-  result := True;
-  ModflowEndTime := ModflowFullStressPeriods[
-    ModflowFullStressPeriods.Count - 1].EndTime;
-  Mt3dmsEndTime := Mt3dmsTimes[Mt3dmsTimes.Count - 1].EndTime;
-  if Mt3dmsEndTime < ModflowEndTime then
+  result := Mt3dmsTimes.Count >= 1;
+  if result then
+  begin
+    ModflowEndTime := ModflowFullStressPeriods[
+      ModflowFullStressPeriods.Count - 1].EndTime;
+    Mt3dmsEndTime := Mt3dmsTimes[Mt3dmsTimes.Count - 1].EndTime;
+    if Mt3dmsEndTime < ModflowEndTime then
+    begin
+      if ShowWarning then
+      begin
+        MbResult := Application.MessageBox(PChar(Format(StrTheFinalTimeSpeci,
+          [Mt3dmsEndTime, ModflowEndTime])), PChar(StrTimesDoNotMatch),
+          MB_ICONASTERISK or MB_YESNOCANCEL);
+      end
+      else
+      begin
+        MbResult := idYes
+      end;
+      if MbResult = idYes then
+      begin
+        for TimeIndex := ModflowFullStressPeriods.Count - 1 downto 0 do
+        begin
+          if ModflowFullStressPeriods[TimeIndex].EndTime > Mt3dmsEndTime then
+          begin
+            ModflowFullStressPeriods.Delete(TimeIndex);
+          end
+          else
+          begin
+            break;
+          end;
+        end;
+      end;
+      result := not (MbResult in [0,IDCANCEL]);
+    end;
+  end
+  else
   begin
     if ShowWarning then
     begin
-      MbResult := Application.MessageBox(PChar(Format(StrTheFinalTimeSpeci,
-        [Mt3dmsEndTime, ModflowEndTime])), PChar(StrTimesDoNotMatch),
-        MB_ICONASTERISK or MB_YESNOCANCEL);
-    end
-    else
-    begin
-      MbResult := idYes
+      MessageDlg(StrNoStressPeriods, mtError, [mbOK], 0);
     end;
-    if MbResult = idYes then
-    begin
-      for TimeIndex := ModflowFullStressPeriods.Count - 1 downto 0 do
-      begin
-        if ModflowFullStressPeriods[TimeIndex].EndTime > Mt3dmsEndTime then
-        begin
-          ModflowFullStressPeriods.Delete(TimeIndex);
-        end
-        else
-        begin
-          break;
-        end;
-      end;
-    end;
-    result := not (MbResult in [0,IDCANCEL]);
   end;
 end;
 

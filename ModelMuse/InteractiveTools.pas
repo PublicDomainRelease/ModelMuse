@@ -425,9 +425,31 @@ Consider creating descendants that each only handle one view of the model. }
     procedure DrawOnBitMap32(Sender: TObject; Buffer: TBitmap32); override;
   public
     procedure Activate; override;
+    procedure Deactivate; override;
     procedure MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer); override;
     // @name causes ZoomBox.Image32 to be redrawn.
+    procedure MouseMove(Sender: TObject; Shift: TShiftState;
+      X, Y: Integer); override;
+    procedure MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer); override;
+  end;
+
+  TRotateCrossSectionTool = class(TCustomInteractiveTool)
+  private
+    FCenterPoint: TPoint2D;
+    FStart: TPoint2D;
+    FStarted: Boolean;
+    FCurrentX: Integer;
+    FCurrentY: Integer;
+    procedure GetNewLocation(X, Y: Integer; out NewLocation: TSegment2D);
+  protected
+    procedure DrawOnBitMap32(Sender: TObject; Buffer: TBitmap32); override;
+  public
+    procedure Activate; override;
+    procedure Deactivate; override;
+    procedure MouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer); override;
     procedure MouseMove(Sender: TObject; Shift: TShiftState;
       X, Y: Integer); override;
     procedure MouseUp(Sender: TObject; Button: TMouseButton;
@@ -1029,6 +1051,7 @@ Consider creating descendants that each only handle one view of the model. }
     RulerTool: TRulerTool;
   {$IFDEF SUTRA}
     EditCrossSectionTool: TEditCrossSectionTool;
+    RotateCrossSectionTool: TRotateCrossSectionTool;
   {$ENDIF}
 
 {$ENDREGION}
@@ -1046,7 +1069,7 @@ implementation
 uses Math, CursorsFoiledAgain, GR32_Polygons, frmGoPhastUnit, frmSubdivideUnit,
   frmSetSpacingUnit, frmScreenObjectPropertiesUnit, BigCanvasMethods,
   LayerStructureUnit, DataSetUnit, ZoomBox2, Contnrs, frmPointValuesUnit, 
-  Dialogs, SutraMeshUnit;
+  Dialogs, Generics.Collections, SutraMeshUnit;
 
 resourcestring
   StrClickAndDragToZo = 'Click and drag to zoom in';
@@ -1077,6 +1100,56 @@ begin
   result.x := APoint.y;
   result.y := APoint.x;
 end;
+
+// Adapted from FastGeo.
+function VertexAngleRadians(x1,y1,x2,y2,x3,y3:TFloat):TFloat; overload;
+var
+  Dist      : TFloat;
+  InputTerm : TFloat;
+begin
+ (*
+    Using the cosine identity:
+    cosA = (b^2 + c^2 - a^2) / (2*b*c)
+    A    = Cos'((b^2 + c^2 - a^2) / (2*b*c))
+
+    Where:
+
+    a,b and c : are edges in the triangle
+    A         : is the angle at the vertex opposite edge 'a'
+                aka the edge defined by the vertex <x1y1-x2y2-x3y3>
+
+ *)
+  (* Quantify coordinates *)
+  x1   := x1 - x2;
+  x3   := x3 - x2;
+  y1   := y1 - y2;
+  y3   := y3 - y2;
+
+  (* Calculate Ley Distance *)
+  Dist := (x1 * x1 + y1 * y1) * (x3 * x3 + y3 * y3);
+
+  if IsEqual(Dist,Zero) then
+    Result := Zero
+  else
+  begin
+    InputTerm := (x1 * x3 + y1 * y3) / sqrt(Dist);
+    if IsEqual(InputTerm,1.0) then
+      Result := Zero
+    else if IsEqual(InputTerm,-1.0) then
+      Result := Pi
+    else
+      Result := ArcCos(InputTerm);
+  end;
+end;
+(* End of Vertex Angle *)
+
+
+function VertexAngleRadians(const Point1,Point2,Point3:TPoint2D):TFloat;
+  overload;
+begin
+  Result := VertexAngleRadians(Point1.x,Point1.y,Point2.x,Point2.y,Point3.x,Point3.y);
+end;
+
 
 type
   TScreenPointStorage = class(TObject)
@@ -6455,9 +6528,26 @@ end;
 { TEditCrossSectionTool }
 
 procedure TEditCrossSectionTool.Activate;
+var
+  CrossSection: TCrossSection;
 begin
   inherited;
   CreateLayers;
+  CrossSection := frmGoPhast.PhastModel.SutraMesh.CrossSection;
+  CrossSection.Editing := True;
+  View.ModelChanged := True;
+  UpdateAllViews;
+end;
+
+procedure TEditCrossSectionTool.Deactivate;
+var
+  CrossSection: TCrossSection;
+begin
+  inherited;
+  CrossSection := frmGoPhast.PhastModel.SutraMesh.CrossSection;
+  CrossSection.Editing := False;
+  View.ModelChanged := True;
+  UpdateAllViews;
 end;
 
 procedure TEditCrossSectionTool.DrawOnBitMap32(Sender: TObject;
@@ -6638,6 +6728,219 @@ begin
     frmGoPhast.UndoStack.Submit(Undo);
   end;
 end;
+
+{ TRotateCrossSectionTool }
+
+procedure TRotateCrossSectionTool.Activate;
+var
+  PointList: TList<TPoint2D>;
+  Top, Left, Bottom, Right: double;
+  ZoomBox: TQRbwZoomBox2;
+  APoint: TPoint2D;
+  CrossSegSegment: TSegment2D;
+  EdgeSegment: TSegment2D;
+  InterSectPoint: TPoint2D;
+  CrossSection: TCrossSection;
+begin
+  inherited;
+  CreateLayers;
+  FStarted := False;
+  PointList := TList<TPoint2D>.Create;
+  try
+    ZoomBox := frmGoPhast.frameTopView.ZoomBox;
+    Left := ZoomBox.X(0);
+    Right := ZoomBox.X(ZoomBox.Width);
+    Top := ZoomBox.Y(0);
+    Bottom := ZoomBox.Y(ZoomBox.Height);
+    CrossSection := frmGoPhast.PhastModel.Mesh.CrossSection;
+    CrossSection.Editing := True;
+    APoint := CrossSection.StartPoint;
+    if (APoint.x >= Left) and (APoint.x <= Right)
+      and (APoint.y >= Bottom) and (APoint.y <= Top) then
+    begin
+      PointList.Add(APoint);
+    end;
+    APoint := CrossSection.EndPoint;
+    if (APoint.x >= Left) and (APoint.x <= Right)
+      and (APoint.y >= Bottom) and (APoint.y <= Top) then
+    begin
+      PointList.Add(APoint);
+    end;
+    CrossSegSegment := CrossSection.Segment;
+    if PointList.Count < 2 then
+    begin
+      EdgeSegment[1].x := Left;
+      EdgeSegment[2].x := Left;
+      EdgeSegment[2].y := Top;
+      EdgeSegment[2].y := Bottom;
+
+      if Intersect(CrossSegSegment, EdgeSegment) then
+      begin
+        InterSectPoint := IntersectionPoint(CrossSegSegment, EdgeSegment);
+        PointList.Add(InterSectPoint);
+      end;
+    end;
+    if PointList.Count < 2 then
+    begin
+      EdgeSegment[1].x := Left;
+      EdgeSegment[2].x := Right;
+      EdgeSegment[2].y := Top;
+      EdgeSegment[2].y := Top;
+
+      if Intersect(CrossSegSegment, EdgeSegment) then
+      begin
+        InterSectPoint := IntersectionPoint(CrossSegSegment, EdgeSegment);
+        PointList.Add(InterSectPoint);
+      end;
+    end;
+    if PointList.Count < 2 then
+    begin
+      EdgeSegment[1].x := Right;
+      EdgeSegment[2].x := Right;
+      EdgeSegment[2].y := Top;
+      EdgeSegment[2].y := Bottom;
+
+      if Intersect(CrossSegSegment, EdgeSegment) then
+      begin
+        InterSectPoint := IntersectionPoint(CrossSegSegment, EdgeSegment);
+        PointList.Add(InterSectPoint);
+      end;
+    end;
+    if PointList.Count < 2 then
+    begin
+      EdgeSegment[1].x := Left;
+      EdgeSegment[2].x := Right;
+      EdgeSegment[2].y := Bottom;
+      EdgeSegment[2].y := Bottom;
+
+      if Intersect(CrossSegSegment, EdgeSegment) then
+      begin
+        InterSectPoint := IntersectionPoint(CrossSegSegment, EdgeSegment);
+        PointList.Add(InterSectPoint);
+      end;
+    end;
+    if PointList.Count = 0 then
+    begin
+      PointList.Add(CrossSection.StartPoint);
+      PointList.Add(CrossSection.EndPoint);
+    end;
+    Assert(PointList.Count = 2);
+    FCenterPoint.x := (PointList[0].x + PointList[1].x)/2;
+    FCenterPoint.y := (PointList[0].y + PointList[1].y)/2;
+  finally
+    PointList.Free;
+  end;
+end;
+
+procedure TRotateCrossSectionTool.MouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if (ViewDirection = vdTop)
+    and (frmGoPhast.PhastModel.ModelSelection = msSutra22)
+    and (frmGoPhast.PhastModel.SutraMesh <> nil) then
+  begin
+    FStart.x := ZoomBox.X(X);
+    FStart.y := ZoomBox.Y(Y);
+    FStarted := True;
+  end;
+end;
+
+procedure TRotateCrossSectionTool.MouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  inherited;
+  FCurrentX := X;
+  FCurrentY := Y;
+  if (ViewDirection = vdTop)
+    and (frmGoPhast.PhastModel.ModelSelection = msSutra22)
+    and (frmGoPhast.PhastModel.SutraMesh <> nil)
+    and FStarted then
+  begin
+    ZoomBox.InvalidateImage32;
+  end;
+end;
+
+procedure TRotateCrossSectionTool.MouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var
+  NewLocation: TSegment2D;
+  Undo: TUndoRotateCrossSection;
+begin
+  inherited;
+  if (ViewDirection = vdTop)
+    and (frmGoPhast.PhastModel.ModelSelection = msSutra22)
+    and (frmGoPhast.PhastModel.SutraMesh <> nil)
+    and FStarted then
+  begin
+    GetNewLocation(X, Y, NewLocation);
+    Undo := TUndoRotateCrossSection.Create(NewLocation);
+    frmGoPhast.UndoStack.Submit(Undo);
+    FStarted := False;
+  end;
+end;
+
+procedure TRotateCrossSectionTool.Deactivate;
+var
+  CrossSection: TCrossSection;
+begin
+  inherited;
+  CrossSection := frmGoPhast.PhastModel.Mesh.CrossSection;
+  CrossSection.Editing := False;
+  View.ModelChanged := True;
+  UpdateAllViews;
+end;
+
+procedure TRotateCrossSectionTool.DrawOnBitMap32(Sender: TObject;
+  Buffer: TBitmap32);
+var
+  Points: GoPhastTypes.TPointArray;
+  NewLocation: TSegment2D;
+  CrossSection: TCrossSection;
+begin
+  inherited;
+  if (ViewDirection = vdTop)
+    and (frmGoPhast.PhastModel.ModelSelection = msSutra22)
+    and (frmGoPhast.PhastModel.SutraMesh <> nil)
+    and FStarted then
+  begin
+    SetLength(Points, 2);
+    GetNewLocation(FCurrentX, FCurrentY, NewLocation);
+    Points[0] := ConvertTop2D_Point(ZoomBox, NewLocation[1]);
+    Points[1] := ConvertTop2D_Point(ZoomBox, NewLocation[2]);
+    CrossSection := frmGoPhast.PhastModel.Mesh.CrossSection;
+    DrawBigPolyline32(Buffer, Color32(CrossSection.Color),
+      OrdinaryGridLineThickness, Points, True, True);
+  end;
+end;
+
+procedure TRotateCrossSectionTool.GetNewLocation(X, Y: Integer;
+  out NewLocation: TSegment2D);
+var
+  DeltaX: Double;
+  DeltaY: Double;
+  SectionHalfLength: Double;
+  DeltaAngle: Double;
+  NewAngle: Double;
+  EndPoint: TPoint2D;
+  CrossSection: TCrossSection;
+begin
+  EndPoint.x := ZoomBox.X(X);
+  EndPoint.y := ZoomBox.Y(Y);
+  DeltaAngle := VertexAngleRadians(FStart, FCenterPoint, EndPoint);
+  if Orientation(FStart, FCenterPoint, EndPoint) <> Clockwise then
+  begin
+    DeltaAngle := 2 * pi - DeltaAngle;
+  end;
+  CrossSection := frmGoPhast.PhastModel.Mesh.CrossSection;
+  NewAngle := frmGoPhast.PhastModel.Mesh.CrossSection.Angle + DeltaAngle;
+  SectionHalfLength := Distance(CrossSection.StartPoint, CrossSection.EndPoint) / 2;
+  DeltaX := SectionHalfLength * Cos(NewAngle);
+  DeltaY := SectionHalfLength * Sin(NewAngle);
+  NewLocation[1].x := FCenterPoint.x - DeltaX;
+  NewLocation[1].y := FCenterPoint.y - DeltaY;
+  NewLocation[2].x := FCenterPoint.x + DeltaX;
+  NewLocation[2].y := FCenterPoint.y + DeltaY;
+end;
   {$ENDIF}
 
 
@@ -6669,6 +6972,7 @@ initialization
   RulerTool := TRulerTool.Create(nil);
   {$IFDEF SUTRA}
   EditCrossSectionTool:= TEditCrossSectionTool.Create(nil);
+  RotateCrossSectionTool:= TRotateCrossSectionTool.Create(nil);
   {$ENDIF}
 
 finalization
@@ -6698,6 +7002,7 @@ finalization
   RulerTool.Free;
   {$IFDEF SUTRA}
   EditCrossSectionTool.Free;
+  RotateCrossSectionTool.Free;
   {$ENDIF}
 
 end.

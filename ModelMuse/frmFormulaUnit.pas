@@ -1245,7 +1245,8 @@ end;
 
 procedure TfrmFormula.btnFunctionHelpClick(Sender: TObject);
 begin
-  Application.HelpJump(FFunctionHelpString);
+  ShowHelp(FFunctionHelpString);
+//  Application.HelpJump(FFunctionHelpString);
 //  HelpRouter.HelpJump('', FFunctionHelpString);
 //  Application.HelpJump('files\Functions.htm#'+ FFunctionHelpString);
   inherited;

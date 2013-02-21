@@ -193,6 +193,29 @@ type
     property TimeToPlot: TDateTime read FTimeToPlot write SetTimeToPlot;
   end;
 
+  {$IFDEF SUTRA}
+  TSutraSettings = class(TGoPhastPersistent)
+  private
+    FElementFont: TFont;
+    FNodeFont: TFont;
+    FShowNodeNumbers: Boolean;
+    FShowElementNumbers: Boolean;
+    procedure SetElementFont(const Value: TFont);
+    procedure SetNodeFont(const Value: TFont);
+    procedure SetShowElementNumbers(const Value: Boolean);
+    procedure SetShowNodeNumbers(const Value: Boolean);
+  public
+    procedure Assign(Source: TPersistent); override;
+    procedure AssignTo(Dest: TPersistent); override;
+    constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
+  published
+    property NodeFont: TFont read FNodeFont write SetNodeFont;
+    property ElementFont: TFont read FElementFont write SetElementFont;
+    property ShowNodeNumbers: Boolean read FShowNodeNumbers write SetShowNodeNumbers;
+    property ShowElementNumbers: Boolean read FShowElementNumbers write SetShowElementNumbers;
+  end;
+  {$ENDIF}
 
 
   {A @name stores all the information
@@ -226,6 +249,10 @@ type
     FContourFont: TFont;
     FLabelContours: boolean;
     FSfrStreamLinkPlot: TSfrStreamLinkPlot;
+  {$IFDEF SUTRA}
+    FSutraSettings: TSutraSettings;
+  {$ENDIF}
+    procedure OnChangeEventHandler(Sender: TObject);
     procedure SetAdditionalText(const Value: TTextCollection);
     procedure SetGridDisplayChoice(const Value: TGridLineDrawingChoice);
     procedure SetHorizontalRuler(const Value: TRulerSettings);
@@ -248,6 +275,9 @@ type
     procedure SetVisibleObjects(const Value: TStringList);
     procedure SetContourFont(const Value: TFont);
     procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot);
+  {$IFDEF SUTRA}
+    procedure SetSutraSettings(const Value: TSutraSettings);
+  {$ENDIF}
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Collection: TCollection); override;
@@ -294,6 +324,9 @@ type
     property LabelContours: boolean read FLabelContours write FLabelContours;
     property SfrStreamLinkPlot: TSfrStreamLinkPlot read FSfrStreamLinkPlot
       write SetSfrStreamLinkPlot;
+  {$IFDEF SUTRA}
+    property SutraSettings: TSutraSettings read FSutraSettings write SetSutraSettings;
+  {$ENDIF}
   end;
 
   { @name is a collection of @link(TDisplaySettingsItem)s.
@@ -313,7 +346,7 @@ implementation
 
 uses
   DrawTextUnit, RbwRuler, ScreenObjectUnit, PhastModelUnit, ModflowSfrUnit,
-  ModflowSfrParamIcalcUnit, ModflowLakUnit;
+  ModflowSfrParamIcalcUnit, ModflowLakUnit, SutraMeshUnit;
 
 { TTextDisplay }
 
@@ -526,6 +559,9 @@ begin
     ContourFont := SourceDisplay.ContourFont;
     LabelContours := SourceDisplay.LabelContours;
     SfrStreamLinkPlot := SourceDisplay.SfrStreamLinkPlot;
+  {$IFDEF SUTRA}
+    SutraSettings := SourceDisplay.SutraSettings;
+  {$ENDIF}
   end
   else
   begin
@@ -548,11 +584,18 @@ begin
   FVerticaRuler := TRulerSettings.Create(Model);
   FVisibleObjects := TStringList.Create;
   FContourFont := TFont.Create;
+  FContourFont.OnChange := OnChangeEventHandler;
   FSfrStreamLinkPlot := TSfrStreamLinkPlot.Create(Model);
+  {$IFDEF SUTRA}
+  FSutraSettings := TSutraSettings.Create(Model);
+  {$ENDIF}
 end;
 
 destructor TDisplaySettingsItem.Destroy;
 begin
+  {$IFDEF SUTRA}
+  FSutraSettings.Free;
+  {$ENDIF}
   FSfrStreamLinkPlot.Free;
   FContourFont.Free;
   FVisibleObjects.Free;
@@ -567,6 +610,11 @@ begin
   FAdditionalText.Free;
   FTitle.Free;
   inherited;
+end;
+
+procedure TDisplaySettingsItem.OnChangeEventHandler(Sender: TObject);
+begin
+  InvalidateModel;
 end;
 
 procedure TDisplaySettingsItem.SetAdditionalText(const Value: TTextCollection);
@@ -620,6 +668,88 @@ procedure TDisplaySettingsItem.SetEdgeDisplaySettings(
 begin
   FEdgeDisplaySettings.Assign(Value);
 end;
+
+  {$IFDEF SUTRA}
+procedure TSutraSettings.Assign(Source: TPersistent);
+var
+  SourceSettings: TSutraSettings;
+  SourceMesh: TSutraMesh3D;
+begin
+  if Source is TSutraSettings then
+  begin
+    SourceSettings := TSutraSettings(Source);
+    NodeFont := SourceSettings.NodeFont;
+    ElementFont := SourceSettings.ElementFont;
+    ShowNodeNumbers := SourceSettings.ShowNodeNumbers;
+    ShowElementNumbers := SourceSettings.ShowElementNumbers;
+  end
+  else if Source is TSutraMesh3D then
+  begin
+    SourceMesh := TSutraMesh3D(Source);
+    NodeFont := SourceMesh.NodeFont;
+    ElementFont := SourceMesh.ElementFont;
+    ShowNodeNumbers := SourceMesh.DrawNodeNumbers;
+    ShowElementNumbers := SourceMesh.DrawElementNumbers;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+procedure TSutraSettings.AssignTo(Dest: TPersistent);
+var
+  DestMesh: TSutraMesh3D;
+begin
+  if Dest is TSutraMesh3D then
+  begin
+    DestMesh := TSutraMesh3D(Dest);
+    DestMesh.NodeFont := NodeFont;
+    DestMesh.ElementFont := ElementFont;
+    DestMesh.DrawNodeNumbers := ShowNodeNumbers;
+    DestMesh.DrawElementNumbers := ShowElementNumbers;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+constructor TSutraSettings.Create(Model: TBaseModel);
+begin
+  FNodeFont := TFont.Create;
+  FNodeFont.OnChange := OnChangeEventHander;
+  FElementFont := TFont.Create;
+  FElementFont.OnChange := OnChangeEventHander;
+end;
+
+destructor TSutraSettings.Destroy;
+begin
+  FNodeFont.Free;
+  FElementFont.Free;
+  inherited;
+end;
+
+procedure TSutraSettings.SetElementFont(const Value: TFont);
+begin
+  FElementFont.Assign(Value);
+end;
+
+procedure TSutraSettings.SetShowElementNumbers(const Value: Boolean);
+begin
+  SetBooleanProperty(FShowElementNumbers, Value);
+end;
+
+procedure TSutraSettings.SetShowNodeNumbers(const Value: Boolean);
+begin
+  SetBooleanProperty(FShowNodeNumbers, Value);
+end;
+
+procedure TSutraSettings.SetNodeFont(const Value: TFont);
+begin
+  FNodeFont.Assign(Value);
+end;
+{$ENDIF}
 
 procedure TDisplaySettingsItem.SetGridDisplayChoice(
   const Value: TGridLineDrawingChoice);
@@ -687,6 +817,13 @@ procedure TDisplaySettingsItem.SetShowModpathPathLineSettings(
 begin
   FModpathPathLineSettings.Assign(Value);
 end;
+
+{$IFDEF SUTRA}
+procedure TDisplaySettingsItem.SetSutraSettings(const Value: TSutraSettings);
+begin
+  FSutraSettings.Assign(Value);
+end;
+{$ENDIF}
 
 procedure TDisplaySettingsItem.SetModpathTimeSeriesSettings(
   const Value: TTimeSeriesSettings);

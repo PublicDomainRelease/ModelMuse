@@ -574,7 +574,7 @@ procedure TObservationFactor.Loaded;
 begin
   ScreenObject := ((Collection as TPhastCollection).Model as TCustomModel).
     GetScreenObjectByName(ObjectName);
-  Assert(ScreenObject <> nil);
+//  Assert(ScreenObject <> nil);
 end;
 
 procedure TObservationFactor.SetFactor(const Value: string);
@@ -691,6 +691,13 @@ begin
   for Index := 0 to Count - 1 do
   begin
     Items[Index].Loaded;
+  end;
+  for Index := Count-1 downto 0 do
+  begin
+    if Items[Index].ScreenObject = nil then
+    begin
+      Delete(Index);
+    end;
   end;
 end;
 

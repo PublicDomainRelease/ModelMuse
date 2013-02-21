@@ -448,7 +448,10 @@ uses
   SutraInitialConditionsWriterUnit in 'SutraInitialConditionsWriterUnit.pas',
   SutraFileWriterUnit in 'SutraFileWriterUnit.pas',
   frmSutraProgramLocationsUnit in 'frmSutraProgramLocationsUnit.pas' {frmSutraProgramLocations},
-  frmImportTprogsUnit in 'frmImportTprogsUnit.pas' {frmImportTprogs};
+  frmImportTprogsUnit in 'frmImportTprogsUnit.pas' {frmImportTprogs},
+  frmCustomizeMeshUnit in 'frmCustomizeMeshUnit.pas' {frmCustomizeMesh},
+  ReadSutraNodEleUnit in 'ReadSutraNodEleUnit.pas',
+  frmImportSutraModelResultsUnit in 'frmImportSutraModelResultsUnit.pas' {frmImportSutraModelResults};
 
 {$R *.res}
 {#BACKUP ModelMuse.cfg}

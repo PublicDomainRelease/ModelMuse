@@ -222,6 +222,7 @@ var
   DisplayChoices : array[TDisplayChoice] of integer = (0, 0, 0);
 const
   MaxDisplayChoiceCount = 10;
+  StrModelResults = 'Model Results';
 
 implementation
 
@@ -307,7 +308,6 @@ resourcestring
   'f type" combo box in the "Open File" dialog box.';
 
 const
-  StrModelResults = 'Model Results';
   StrLayerData = StrModelResults + '|Layer Data';
   StrThreeDData = StrModelResults + '|3D Data';
   KSystem = StrModelResults + '|System';

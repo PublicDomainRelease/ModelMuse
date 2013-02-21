@@ -272,7 +272,7 @@ var
   SCHNAM: AnsiString;
   SCHTYP: AnsiString;
   CREFT: AnsiString;
-  NameLength: Integer;
+//  NameLength: Integer;
   SCALT: double;
   NTLIST: Integer;
   TimeIndex: Integer;
@@ -333,6 +333,8 @@ begin
       stTimeCycle:
         begin
           SCHTYP := ' ''TIME CYCLE''';
+          TIMEI := -MAXINT;
+          CREFT := '';
           case ASchedule.Schedule.SutraTimeChoice of
             stcAbsolute:
               begin

@@ -618,6 +618,7 @@ begin
   frmGoPhast.PhastModel.SutraOptions := FNewSutraOptions;
   frmGoPhast.PhastModel.SutraLayerStructure.Loaded;
   frmGoPhast.PhastModel.DataArrayManager.CreateInitialDataSets;
+  frmGoPhast.PhastModel.UpdateSutraTimeListNames
 end;
 
 procedure TUndoChangeSutraOptions.Undo;
@@ -630,6 +631,7 @@ begin
   frmGoPhast.PhastModel.SutraOptions := FOldSutraOptions;
   frmGoPhast.PhastModel.SutraLayerStructure.Loaded;
   frmGoPhast.PhastModel.DataArrayManager.CreateInitialDataSets;
+  frmGoPhast.PhastModel.UpdateSutraTimeListNames
 end;
 
 end.

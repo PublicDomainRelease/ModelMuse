@@ -1516,14 +1516,14 @@ procedure TfrmImportShapefile.AddModflowPackageToImportChoices(
 begin
   if frmGoPhast.PhastModel.PackageIsSelected(APackage) then
   begin
-    if (APackage is TSfrPackageSelection)
-      or (APackage is TMultinodeWellSelection)
-      or (APackage is TLakePackageSelection)
-      or (APackage is THobPackageSelection)
-      then
-    begin
-      comboJoinObjects.ItemIndex := 0;
-    end;
+//    if (APackage is TSfrPackageSelection)
+//      or (APackage is TMultinodeWellSelection)
+//      or (APackage is TLakePackageSelection)
+//      or (APackage is THobPackageSelection)
+//      then
+//    begin
+//      comboJoinObjects.ItemIndex := 0;
+//    end;
     comboBoundaryChoice.Items.AddObject(APackage.PackageIdentifier, APackage);
   end;
 end;
@@ -8308,6 +8308,19 @@ begin
         Packages := Model.ModflowPackages;
         APackage := comboBoundaryChoice.Items.Objects[
           comboBoundaryChoice.ItemIndex] as TModflowPackageSelection;
+        if (APackage is TSfrPackageSelection)
+          or (APackage is TMultinodeWellSelection)
+          or (APackage is TLakePackageSelection)
+          or (APackage is THobPackageSelection)
+          then
+        begin
+          comboJoinObjects.ItemIndex := 0;
+          comboJoinObjects.Enabled := False;
+        end
+        else
+        begin
+          comboJoinObjects.Enabled := Self.FAllowShapesToCombine;
+        end;
         if APackage = Packages.ChdBoundary then
         begin
           InitializeBoundaryControlsForCHD;

@@ -3383,6 +3383,9 @@ var
   LayerList: TValueCellList;
   LocalPackage: TCustomTransientLayerPackageSelection;
 begin
+
+
+
   LocalPackage := Package as TCustomTransientLayerPackageSelection;
   if LocalPackage.LayerOption = loSpecified then
   begin
@@ -3588,7 +3591,18 @@ begin
       end;
     end;
 
-    if List is TValueCellList then
+    // List may have been cast to a TValueCellList even when it wasn't one.
+    if List.Count > 0 then
+    begin
+      AnObject := List[0];
+    end
+    else
+    begin
+      AnObject := nil;
+    end;
+
+
+    if (AnObject = nil) or (AnObject is TValueCell) then
     begin
       AssignCellValues(List as TValueCellList);
     end

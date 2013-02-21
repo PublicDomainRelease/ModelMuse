@@ -6,9 +6,6 @@ uses Windows, SysUtils, Classes, DataSetUnit, SparseDataSets, ZLib,
   GoPhastTypes;
 
 type
-  TOnGetUseList = procedure (Sender: TObject;
-    NewUseList: TStringList) of object;
-
   TModflowBoundaryDisplayDataArray = class(TRealSparseDataSet)
   private
     FCount: T3DSparseIntegerArray;

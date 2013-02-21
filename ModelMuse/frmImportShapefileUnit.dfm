@@ -86,7 +86,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     Top = 0
     Width = 779
     Height = 494
-    ActivePage = tabOptions
+    ActivePage = tabFeatures
     Align = alClient
     TabOrder = 0
     object tabOptions: TTabSheet

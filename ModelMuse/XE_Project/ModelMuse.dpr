@@ -445,7 +445,10 @@ uses
   frmImportTprogsUnit in '..\frmImportTprogsUnit.pas' {frmImportTprogs},
   frmSutraProgramLocationsUnit in '..\frmSutraProgramLocationsUnit.pas' {frmSutraProgramLocations},
   SutraFileWriterUnit in '..\SutraFileWriterUnit.pas',
-  SutraInitialConditionsWriterUnit in '..\SutraInitialConditionsWriterUnit.pas';
+  SutraInitialConditionsWriterUnit in '..\SutraInitialConditionsWriterUnit.pas',
+  frmCustomizeMeshUnit in '..\frmCustomizeMeshUnit.pas' {frmCustomizeMesh},
+  ReadSutraNodEleUnit in '..\ReadSutraNodEleUnit.pas',
+  frmImportSutraModelResultsUnit in '..\frmImportSutraModelResultsUnit.pas' {frmImportSutraModelResults};
 
 {$R *.res}
 
@@ -465,6 +468,7 @@ begin
   Application.CreateForm(TfrmSutraProgramLocations, frmSutraProgramLocations);
   Application.CreateForm(TfrmImportTprogs, frmImportTprogs);
   Application.CreateForm(TfrmSutraProgramLocations, frmSutraProgramLocations);
+  Application.CreateForm(TfrmCustomizeMesh, frmCustomizeMesh);
   //  Application.CreateForm(TfrmSelectedObjects, frmSelectedObjects);
   Application.CreateForm(TfrmColors, frmColors);
   Application.Run;

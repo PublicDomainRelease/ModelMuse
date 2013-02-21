@@ -1551,6 +1551,9 @@ begin
   end;
   comboView.ItemIndex := Ord(ASetting.ViewToDisplay);
   PhastModel.Exaggeration := ASetting.VerticalExaggeration;
+  {$IFDEF SUTRA}
+  PhastModel.SutraMesh.Assign(ASetting.SutraSettings);
+  {$ENDIF}
   frmGoPhast.frameTopView.ZoomBox.Magnification := ASetting.Magnification;
   frmGoPhast.frameFrontView.ZoomBox.Magnification := ASetting.Magnification;
   frmGoPhast.frameSideView.ZoomBox.Magnification := ASetting.Magnification;
@@ -1795,6 +1798,10 @@ begin
     ASetting.ContourFont := PhastModel.ContourFont;
     ASetting.LabelContours := PhastModel.ShowContourLabels;
     ASetting.SfrStreamLinkPlot := PhastModel.SfrStreamLinkPlot;
+
+    {$IFDEF SUTRA}
+    ASetting.SutraSettings.Assign(PhastModel.SutraMesh);
+    {$ENDIF}
 
     Undo := TUndoEditDisplaySettings.Create(ModifiedDisplaySettings);
     frmGoPhast.UndoStack.Submit(Undo);

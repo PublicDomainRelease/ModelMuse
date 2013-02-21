@@ -364,6 +364,7 @@ type
   TGoPhastPersistent = class(TPersistent)
   protected
     FModel: TBaseModel;
+    procedure OnChangeEventHander(Sender: TObject);
     procedure InvalidateModel; virtual;
     procedure SetBooleanProperty(var AField: boolean; const NewValue: boolean);
     procedure SetIntegerProperty(var AField: integer; const NewValue: integer);
@@ -708,6 +709,11 @@ begin
   begin
     FModel.Invalidate;
   end;
+end;
+
+procedure TGoPhastPersistent.OnChangeEventHander(Sender: TObject);
+begin
+  InvalidateModel;
 end;
 
 procedure TGoPhastPersistent.SetAnsiStringProperty(var AField: AnsiString;

@@ -367,11 +367,11 @@ end;
 
 procedure TframeColorGrid.GetBoundaryConditions;
 begin
-  if frmGoPhast.Grid = nil then
-  begin
-
-  end
-  else
+//  if frmGoPhast.Grid = nil then
+//  begin
+//
+//  end
+//  else
   begin
     FillVirtStrTreeWithBoundaryConditions(frmGoPhast.PhastModel.ThreeDDataSet,
       frmGoPhast.PhastModel.ThreeDTimeList, frmGoPhast.PhastModel.EdgeDisplay,

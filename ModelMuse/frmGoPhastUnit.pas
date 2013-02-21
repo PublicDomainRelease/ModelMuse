@@ -357,11 +357,15 @@ type
     sdSutraInput: TSaveDialog;
     acRunSutra1: TMenuItem;
     acSutraOutputControl: TAction;
-    mniSutraOutputControl: TMenuItem;
-    mniSutraProgramLocations: TMenuItem;
+    miSutraOutputControl: TMenuItem;
+    miSutraProgramLocations: TMenuItem;
     acSutraProgramLocations: TAction;
     acImportTprogs: TAction;
     ImportTPROGSBinaryGridFile1: TMenuItem;
+    miCustomizeSutraMesh: TMenuItem;
+    tbRotateCrossSection: TToolButton;
+    acImportSutraModelResults: TAction;
+    mniImportSutraModelResults: TMenuItem;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -484,6 +488,9 @@ type
     procedure acImportTprogsExecute(Sender: TObject);
     procedure sdSutraInputShow(Sender: TObject);
     procedure sdSutraInputClose(Sender: TObject);
+    procedure miCustomizeSutraMeshClick(Sender: TObject);
+    procedure tbRotateCrossSectionClick(Sender: TObject);
+    procedure acImportSutraModelResultsExecute(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -1564,10 +1571,14 @@ type
       write SetChangingSelection;
     procedure EnableManageFlowObservations;
     procedure EnableManageHeadObservations;
-    // @name reads an ini file containing the most recently used files.
+    // @name reads an ini file containing the most recently used files
+    // and also other settings that will be set by the user for all models
+    // rather than being saved in the model.
     // @seealso(WriteIniFile)
     procedure ReadIniFile;
-    // @name writes an ini file containing the most recently used files.
+    // @name writes an ini file containing the most recently used files
+    // and also other settings that will be set by the user for all models
+    // rather than being saved in the model.
     // @seealso(ReadIniFile)
     procedure WriteIniFile;
     procedure SynchronizeViews(SourceView: TViewDirection);
@@ -1758,7 +1769,15 @@ uses
   SutraFileWriterUnit, SutraInitialConditionsWriterUnit,
   SutraObservationWriterUnit, SutraInputWriterUnit, SutraTimeScheduleWriterUnit,
   SutraOptionsUnit, frmSutraProgramLocationsUnit, frmImportTprogsUnit,
-  Generics.Collections;
+  Generics.Collections, frmCustomizeMeshUnit, frmImportSutraModelResultsUnit;
+
+const
+  StrDisplayOption = 'DisplayOption';
+  StrColor = 'Color';
+  StrContour = 'Contour';
+  StrDisplayNone = 'None';
+  StrNodeFont = 'Node Font';
+  StrElementFont = 'Element Font';
 
 resourcestring
   StrModelMate = 'ModelMate';
@@ -1767,10 +1786,6 @@ resourcestring
   StrEndpointsAtStartshp = 'EndpointsAtStart.shp';
   StrEndpointsAtEndshp = 'EndpointsAtEnd.shp';
   StrTimeSeriesshp = 'TimeSeries.shp';
-  StrDisplayOption = 'DisplayOption';
-  StrColor = 'Color';
-  StrContour = 'Contour';
-  StrDisplayNone = 'None';
   StrYouMustCreateThe = 'You must create the grid before attempting to impor' +
   't gridded data.';
   StrZONEBUDGETDoesNot = 'ZONEBUDGET does not exist at the location you spec' +
@@ -1889,11 +1904,11 @@ const
 var
   SbMainHeight: integer;
 
-const
-  HELP_TAB = 15;
-  TAB_CONTENTS = 0;
-  TAB_INDEX = -2;
-  TAB_FIND = 1;
+//const
+//  HELP_TAB = 15;
+//  TAB_CONTENTS = 0;
+//  TAB_INDEX = -2;
+//  TAB_FIND = 1;
 
 
 procedure TfrmGoPhast.splitVertTopMoved(Sender: TObject);
@@ -2295,6 +2310,26 @@ begin
   UndoStack.Submit(TUndoSplitScreenObject.Create);
 end;
 
+// modified from http://www.scalabium.com/faq/dct0039.htm
+procedure SaveFont(FStream: TCustomIniFile; Section, Ident: string; smFont: TFont);
+begin
+  FStream.WriteString(Section, Ident + ' Name', smFont.Name);
+  FStream.WriteInteger(Section, Ident + ' CharSet', smFont.CharSet);
+  FStream.WriteInteger(Section, Ident + ' Color', smFont.Color);
+  FStream.WriteInteger(Section, Ident + ' Size', smFont.Size);
+  FStream.WriteInteger(Section, Ident + ' Style', Byte(smFont.Style));
+end;
+
+// modified from http://www.scalabium.com/faq/dct0039.htm
+procedure LoadFont(FStream: TCustomIniFile; Section, Ident: string; smFont: TFont);
+begin
+  smFont.Name := FStream.ReadString(Section, Ident + ' Name', smFont.Name);
+  smFont.CharSet := TFontCharSet(FStream.ReadInteger(Section, Ident +  ' CharSet', smFont.CharSet));
+  smFont.Color := TColor(FStream.ReadInteger(Section, Ident + ' Color', smFont.Color));
+  smFont.Size := FStream.ReadInteger(Section, Ident + ' Size', smFont.Size);
+  smFont.Style := TFontStyles(Byte(FStream.ReadInteger(Section, Ident + ' Style', Byte(smFont.Style))));
+end;
+
 procedure TfrmGoPhast.ReadIniFile;
 const
   MaxAttempts = 10;
@@ -2330,6 +2365,11 @@ begin
   end;
 
   miShowVideoTips.Checked := FIniFile.ReadBool(StrCustomization, StrShowTips, True);
+  {$IFDEF SUTRA}
+  LoadFont(FIniFile, StrCustomization, StrNodeFont, SutraMesh.NodeFont);
+  LoadFont(FIniFile, StrCustomization, StrElementFont, SutraMesh.ElementFont);
+  {$ENDIF}
+
 
   DisplayChoices[dcColor] := FIniFile.ReadInteger(StrDisplayOption, StrColor, 0);
   DisplayChoices[dcContour] := FIniFile.ReadInteger(StrDisplayOption, StrContour, 0);
@@ -2363,9 +2403,10 @@ begin
         end;
         LastTipDate := FIniFile.ReadDateTime(StrCustomization, StrTipDate, 0);
         WebIniFile.WriteDateTime(StrCustomization, StrTipDate, LastTipDate);
-        LastCheckInternetDate := FIniFile.ReadDateTime(StrCustomization, StrInternetCheckDate, LastTipDate);
-        WebIniFile.WriteDateTime(StrCustomization, StrInternetCheckDate, LastCheckInternetDate);
-
+        LastCheckInternetDate := FIniFile.ReadDateTime(StrCustomization,
+          StrInternetCheckDate, LastTipDate);
+        WebIniFile.WriteDateTime(StrCustomization, StrInternetCheckDate,
+          LastCheckInternetDate);
 
         WebIniFile.UpdateFile;
       finally
@@ -2444,6 +2485,12 @@ begin
     DisplayChoices[dcContour] := DisplayChoices[dcContour] div 2;
     DisplayChoices[dcNone] := DisplayChoices[dcNone] div 2;
   end;
+
+  FIniFile.WriteBool(StrCustomization, StrShowTips, miShowVideoTips.Checked);
+  {$IFDEF SUTRA}
+  SaveFont(FIniFile, StrCustomization, StrNodeFont, SutraMesh.NodeFont);
+  SaveFont(FIniFile, StrCustomization, StrElementFont, SutraMesh.ElementFont);
+  {$ENDIF}
 
   FIniFile.WriteInteger(StrDisplayOption, StrColor, DisplayChoices[dcColor]);
   FIniFile.WriteInteger(StrDisplayOption, StrContour, DisplayChoices[dcContour]);
@@ -2594,6 +2641,8 @@ begin
   acRunSutra.Visible := False;
   acSutraOutputControl.Visible := False;
   acSutraProgramLocations.Visible := False;
+  miCustomizeSutraMesh.Visible := False;
+  acImportSutraModelResults.Visible := False;
   {$ENDIF}
   FRunSutra := True;
 
@@ -3300,6 +3349,11 @@ begin
 
   acImportModelResults.Enabled :=
     PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
+  {$IFDEF SUTRA}
+  acImportSutraModelResults.Enabled :=
+    PhastModel.ModelSelection = msSutra22;
+  {$ENDIF}
+
   acExportModpath.Enabled :=
     PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
   miImportDistributedDatabyZone.Enabled := PhastModel.ModelSelection = msPhast;
@@ -3434,12 +3488,13 @@ begin
 
     // SUTRA
     ControlList.Clear;
-    ControlList.Add(miSUTRALayerGroups);
-    ControlList.Add(miSutraOptions);
-    ControlList.Add(miSutraTimes);
-    ControlList.Add(mniSutraOutputControl);
-    ControlList.Add(mniSutraProgramLocations);
+    ControlList.Add(acSutraLayers);
+    ControlList.Add(acSutraOptions);
+    ControlList.Add(acSutraTimes);
+    ControlList.Add(acSutraOutputControl);
+    ControlList.Add(acSutraProgramLocations);
     ControlList.Add(acRunSutra1);
+    ControlList.Add(miCustomizeSutraMesh);
 
     {$IFDEF SUTRA}
     ShowControls := PhastModel.ModelSelection = msSutra22;
@@ -3493,7 +3548,8 @@ end;
 procedure TfrmGoPhast.ModflowReference1Click(Sender: TObject);
 begin
   inherited;
-  Application.HelpJump('Introduction');
+  ShowHelp('Introduction');
+//  Application.HelpJump('Introduction');
 //  HelpRouter.HelpJump('', 'Introduction');
 end;
 
@@ -3935,6 +3991,7 @@ begin
   AList.Add(tbVertexValue);
   AList.Add(tbMeasure);
   AList.Add(tbCrossSection);
+  AList.Add(tbRotateCrossSection);
 end;
 
 procedure TfrmGoPhast.SetButtonsUp(const CurrentButton: TObject);
@@ -5766,6 +5823,12 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TfrmGoPhast.miCustomizeSutraMeshClick(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmCustomizeMesh);
 end;
 
 procedure TfrmGoPhast.ConvertPoint(Sender: TObject; VD: TViewDirection;
@@ -7838,6 +7901,10 @@ begin
           PhastModel.ChildModels.Loaded;
           PhastModel.UpdateScreenObjects;
           PhastModel.LayerStructure.Loaded;
+          {$IFDEF SUTRA}
+          PhastModel.SutraLayerStructure.Loaded;
+          PhastModel.UpdateSutraTimeListNames;
+          {$ENDIF}
           PhastModel.HeadFluxObservations.Loaded;
           PhastModel.DrainObservations.Loaded;
           PhastModel.GhbObservations.Loaded;
@@ -9265,6 +9332,7 @@ begin
   begin
     Beep;
     MessageDlg(StrYouMustDefineThe3, mtError, [mbOK], 0);
+    Exit;
   end;
   if (sdPhastInput.FileName = '') and (sdSaveDialog.FileName <> '') then
   begin
@@ -9308,9 +9376,24 @@ begin
   ShowAForm(TfrmDataSetValues)
 end;
 
+//var
+//  HelpHandle: HINST = 0;
+
+
 procedure TfrmGoPhast.acHelpContentsExecute(Sender: TObject);
 begin
-  Application.HelpShowTableOfContents;
+//  if HelpHandle <> 0 then
+//  begin
+//    KillApp('ModelMuse Help');
+////    if not KillApp('ModelMuse Help') then ShowMessage('App not closed') ;
+////    CloseWindow(HelpHandle);
+//  end;
+
+  ShowHelp('');
+//  HelpHandle := ShellExecute(HelpHandle, 'open', 'HH', PChar(Application.HelpFile),
+//    {nil,} nil, SW_SHOWNORMAL);
+
+//  Application.HelpShowTableOfContents;
 //  HelpRouter.HelpContent;
 end;
 
@@ -9340,6 +9423,12 @@ begin
     PhastModel.ModelMateProjectFileName :=
       ExtractRelativePath(sdSaveDialog.FileName, odModelMate.FileName);
   end;
+end;
+
+procedure TfrmGoPhast.acImportSutraModelResultsExecute(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmImportSutraModelResults);
 end;
 
 procedure TfrmGoPhast.acImportTprogsExecute(Sender: TObject);
@@ -9583,7 +9672,6 @@ procedure TfrmGoPhast.miShowVideoTipsClick(Sender: TObject);
 begin
   inherited;
   miShowVideoTips.Checked := not miShowVideoTips.Checked;
-  FIniFile.WriteBool(StrCustomization, StrShowTips, miShowVideoTips.Checked);
   WriteIniFile;
 end;
 
@@ -9996,6 +10084,43 @@ begin
 
 end;
 
+procedure TfrmGoPhast.tbRotateCrossSectionClick(Sender: TObject);
+begin
+  {$IFDEF SUTRA}
+  // Toggle the Checked state of the Sender or it's associated action.
+  SetActionChecked(Sender);
+
+  if not (Sender is TToolButton) then
+  begin
+    tbRotateCrossSection.OnMouseDown(tbRotateCrossSection, mbLeft, [ssLeft], 0, 0);
+  end;
+
+  if tbRotateCrossSection.Down then
+  begin
+    // Make sure all buttons except the current one are up.
+    SetButtonsUp(tbRotateCrossSection);
+    // Set the cursors.
+    SetZB_Cursors(crArrow);
+    if frameTopView <> nil then
+    begin
+      frameTopView.ZoomBox.Cursor := crRotate;
+      frameTopView.ZoomBox.Image32.Cursor := crRotate;
+    end;
+
+    // Show a rectangle around the selected nodes.
+//    frameTopView.UpdateSelectRectangle;
+//    frameFrontView.UpdateSelectRectangle;
+//    frameSideView.UpdateSelectRectangle;
+    CurrentTool := RotateCrossSectionTool;
+  end
+  else
+  begin
+    CurrentTool := nil;
+  end;
+  SelectDefaultButton;
+  {$ENDIF}
+end;
+
 procedure TfrmGoPhast.tbCrossSectionClick(Sender: TObject);
 begin
   {$IFDEF SUTRA}
@@ -10198,13 +10323,20 @@ end;
 
 procedure TfrmGoPhast.miExamplesClick(Sender: TObject);
 begin
-  Application.HelpJump('Examples');
+  ShowHelp('Examples');
+//  Application.HelpJump('Examples');
 //  HelpRouter.HelpJump('', 'Examples');
 end;
 
 procedure TfrmGoPhast.miHelpOnMainWindowClick(Sender: TObject);
 begin
-  Application.HelpJump(HelpKeyword);
+  ShowHelp(HelpKeyword);
+//  HelpHandle := ShellExecute(HelpHandle, 'open', 'HH',
+//    PChar(Application.HelpFile + '::/' + HelpKeyword + '.htm'),
+//    {nil,} nil, SW_SHOWNORMAL);
+
+
+//  Application.HelpJump(HelpKeyword);
 //  HelpRouter.HelpJump('', HelpKeyword);
 end;
 

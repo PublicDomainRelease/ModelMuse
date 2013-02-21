@@ -83,7 +83,7 @@
       </tablestyleclass>
     </styleclasses>
     <config-group name="project">
-      <config-value name="title" translate="true">ModelMuse—A Graphical User Interface for MODFLOW-2005, MODFLOW-LGR, MODFLOW-NWT, MT3DMS and PHAST version 1.</config-value>
+      <config-value name="title" translate="true">ModelMuse Help</config-value>
       <config-value name="author" translate="true">Richard B. Winston</config-value>
       <config-value name="copyright" translate="true">© &lt;%YEAR%&gt; &lt;%AUTHOR%&gt;</config-value>
       <config-value name="versionmajor">1</config-value>

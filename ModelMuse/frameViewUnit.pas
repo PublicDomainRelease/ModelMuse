@@ -356,6 +356,9 @@ type
     procedure DrawPathLines;
     procedure DrawEndPoints;
     procedure DrawTimeSeries;
+    procedure UpdateStatusBarTopElementNode(const APoint: TPoint2D);
+    procedure GetMeshColLayer(APoint: TPoint2D; out NodeCol, NodeLayer,
+      ElCol, ElLayer: integer);
     { Private declarations }
   protected
     // @name is used to indicate that a change has been made to the grid
@@ -590,6 +593,7 @@ resourcestring
   StrCol0dRow1d = 'Col: %0:d; Row: %1:d';
   StrCol0dLay1d = 'Col: %0:d; Lay: %1:d';
   StrRow0dLay1d = 'Row: %0:d; Lay: %1:d';
+  StrElement0dNode = 'Element: %0:d; Node: %1:d';
 
 const
   SelectedCellsColor = clSilver;
@@ -663,6 +667,54 @@ begin
   rulVertical.Invalidate;
 end;
 
+procedure TframeView.UpdateStatusBarTopElementNode(const APoint: TPoint2D);
+var
+  Row: Integer;
+  Column: Integer;
+  ElementNumber: Integer;
+  Mesh: TSutraMesh3D;
+  ElementLayer: Integer;
+  NodeNumber: Integer;
+  NodeLayer: Integer;
+begin
+  Mesh := frmGoPhast.PhastModel.Mesh;
+  GetRowCol(APoint, Row, Column);
+  ElementNumber := 0;
+  case Mesh.MeshType of
+    mt2D:
+      begin
+        ElementNumber := Mesh.Mesh2D.Elements[Column].DisplayNumber;
+      end;
+    mt3D:
+      begin
+        ElementLayer := Mesh.SelectedLayer;
+        if ElementLayer >= Mesh.LayerCount then
+        begin
+          ElementLayer := Mesh.LayerCount-1;
+        end;
+        ElementNumber := Mesh.ElementArray[ElementLayer,Column].DisplayNumber;
+      end;
+    else Assert(False);
+  end;
+  GetNodeRowCol(APoint, Row, Column);
+  NodeNumber := 0;
+  case Mesh.MeshType of
+    mt2D:
+      begin
+        NodeNumber := Mesh.Mesh2D.Nodes[Column].Number+1;
+      end;
+    mt3D:
+      begin
+        NodeLayer := Mesh.SelectedLayer;
+        NodeNumber := Mesh.NodeArray[NodeLayer,Column].Number+1;
+      end;
+    else Assert(False);
+  end;
+  frmGoPhast.sbMain.Panels[1].Text :=
+    Format(StrElement0dNode, [ElementNumber, NodeNumber]);
+end;
+
+
 procedure TframeView.UpdateStatusBar(const X, Y: integer);
 var
   APoint: TPoint2D;
@@ -671,6 +723,12 @@ var
   Grid: TCustomModelGrid;
   Mesh: TSutraMesh3D;
   FillPanels1And2: Boolean;
+  NodeLayer: Integer;
+  NodeCol: Integer;
+  ElCol: Integer;
+  ElLayer: Integer;
+  Node3D: TSutraNode3D;
+  Element3D: TSutraElement3D;
 begin
   if (frmGoPhast.PhastModel.ComponentState * [csLoading, csReading]) <> [] then
   begin
@@ -731,11 +789,19 @@ begin
           end;
           if FillPanels1And2 then
           begin
+            if Mesh = nil then
+            begin
               // If the cursor is over the grid or mesh,
               // display the column and row number
+
               frmGoPhast.sbMain.Panels[1].Text :=
                 Format(StrCol0dRow1d, [Column + 1, Row + 1]);
-              UpdateStatusBarForTopBlockDataSet(Column, Row, X, Y, APoint);
+            end
+            else
+            begin
+              UpdateStatusBarTopElementNode(APoint);
+            end;
+            UpdateStatusBarForTopBlockDataSet(Column, Row, X, Y, APoint);
           end
           else
           begin
@@ -769,10 +835,17 @@ begin
           end;
           if FillPanels1And2 then
           begin
-            // If the cursor is over the grid,
-            // display the column and row number
-            frmGoPhast.sbMain.Panels[1].Text :=
-              Format(StrCol0dRow1d, [Column + 1, Row + 1]);
+            if Mesh = nil then
+            begin
+              // If the cursor is over the grid,
+              // display the column and row number
+              frmGoPhast.sbMain.Panels[1].Text :=
+                Format(StrCol0dRow1d, [Column + 1, Row + 1]);
+            end
+            else
+            begin
+              UpdateStatusBarTopElementNode(APoint);
+            end;
             UpdateStatusBarForTopNodeDataSet(Column, Row, APoint);
           end
           else
@@ -786,56 +859,85 @@ begin
       end;
     vdFront:
       begin
-        if Grid = nil then
+        if Mesh <> nil then
         begin
-          DataSet := nil;
-        end
-        else
-        begin
-          DataSet := Grid.FrontDataSet;
-        end;
-        if (DataSet = nil) or (DataSet.EvaluatedAt = eaBlocks) then
-        begin
-          // Get the column and layer containing the current cursor position.
-          GetColLayer(APoint, Column, Layer);
-          if (Column >= 0) and (Layer >= 0)
-            and (Column < Grid.ColumnCount)
-            and (Layer < Grid.LayerCount) then
+          DataSet := Mesh.ThreeDDataSet;
+          GetMeshColLayer(APoint, NodeCol, NodeLayer, ElCol, ElLayer);
+          if (NodeCol >= 0) and  (NodeLayer >= 0)
+            and  (ElCol >= 0) and  (ElLayer >= 0) then
           begin
-            // If the cursor is over the grid,
-            // display the column and layer number
+            Node3D := Mesh.NodeArray[NodeLayer, NodeCol];
+            Element3D := Mesh.ElementArray[ElLayer, ElCol];
             frmGoPhast.sbMain.Panels[1].Text :=
-              Format(StrCol0dLay1d, [Column + 1, Layer + 1]);
-            UpdateStatusBarFrontBlockDataSet(Column, Layer, APoint);
+              Format(StrElement0dNode, [Element3D.ElementNumber+1, Node3D.Number+1]);
+            if (DataSet = nil) or (DataSet.EvaluatedAt = eaBlocks) then
+            begin
+              UpdateStatusBarFrontBlockDataSet(ElCol, ElLayer, APoint);
+            end
+            else
+            begin
+              UpdateStatusBarFrontNodeDataSet(NodeCol, NodeLayer, APoint);
+            end;
           end
           else
           begin
-            // If the cursor is not over the grid, don't display
-            // the column and layer number or the data set value.
             frmGoPhast.sbMain.Panels[1].Text := '';
             frmGoPhast.sbMain.Panels[2].Text := '';
           end;
         end
         else
         begin
-          // Get the column and layer containing the current cursor position.
-          GetNodeColLayer(APoint, Column, Layer);
-          if (Column >= 0) and (Layer >= 0)
-            and (Column <= Grid.ColumnCount)
-            and (Layer <= Grid.LayerCount) then
+          if Grid = nil then
           begin
-            // If the cursor is over the grid,
-            // display the column and layer number
-            frmGoPhast.sbMain.Panels[1].Text :=
-              Format(StrCol0dLay1d, [Column + 1, Layer + 1]);
-            UpdateStatusBarFrontNodeDataSet(Column, Layer, APoint);
+            DataSet := nil;
           end
           else
           begin
-            // If the cursor is not over the grid, don't display
-            // the column and layer number or the data set value.
-            frmGoPhast.sbMain.Panels[1].Text := '';
-            frmGoPhast.sbMain.Panels[2].Text := '';
+            DataSet := Grid.FrontDataSet;
+          end;
+          if (DataSet = nil) or (DataSet.EvaluatedAt = eaBlocks) then
+          begin
+            // Get the column and layer containing the current cursor position.
+            GetColLayer(APoint, Column, Layer);
+            if (Column >= 0) and (Layer >= 0)
+              and (Column < Grid.ColumnCount)
+              and (Layer < Grid.LayerCount) then
+            begin
+              // If the cursor is over the grid,
+              // display the column and layer number
+              frmGoPhast.sbMain.Panels[1].Text :=
+                Format(StrCol0dLay1d, [Column + 1, Layer + 1]);
+              UpdateStatusBarFrontBlockDataSet(Column, Layer, APoint);
+            end
+            else
+            begin
+              // If the cursor is not over the grid, don't display
+              // the column and layer number or the data set value.
+              frmGoPhast.sbMain.Panels[1].Text := '';
+              frmGoPhast.sbMain.Panels[2].Text := '';
+            end;
+          end
+          else
+          begin
+            // Get the column and layer containing the current cursor position.
+            GetNodeColLayer(APoint, Column, Layer);
+            if (Column >= 0) and (Layer >= 0)
+              and (Column <= Grid.ColumnCount)
+              and (Layer <= Grid.LayerCount) then
+            begin
+              // If the cursor is over the grid,
+              // display the column and layer number
+              frmGoPhast.sbMain.Panels[1].Text :=
+                Format(StrCol0dLay1d, [Column + 1, Layer + 1]);
+              UpdateStatusBarFrontNodeDataSet(Column, Layer, APoint);
+            end
+            else
+            begin
+              // If the cursor is not over the grid, don't display
+              // the column and layer number or the data set value.
+              frmGoPhast.sbMain.Panels[1].Text := '';
+              frmGoPhast.sbMain.Panels[2].Text := '';
+            end;
           end;
         end;
       end;
@@ -2344,6 +2446,185 @@ begin
   end;
 end;
 
+procedure TframeView.GetMeshColLayer(APoint: TPoint2D; out NodeCol, NodeLayer,
+  ElCol, ElLayer: integer);
+var
+  Mesh: TSutraMesh3D;
+  NodeList: TSutraNode2D_List;
+  SegmentAngle: Double;
+  StartPoint: TPoint2D;
+  Node2D_Index: Integer;
+  Node2D: TSutraNode2D;
+  Angle: Extended;
+  X_Float: TFloat;
+  TestValue: TFloat;
+  LayerIndex: Integer;
+  ClosestNodeIndex: Integer;
+  ClosestLayerIndex: Integer;
+  FirstFound: Boolean;
+  Limits: TLimitsArray;
+  NodePolygons: TCellElementPolygons2D;
+  ElementList: TSutraElement2D_List;
+  ElementIndex: Integer;
+  AnElement2D: TSutraElement2D;
+  ElementPolygons: TCellElementPolygons2D;
+  Closest2DElement: TSutraElement2D;
+  Element3D: TSutraElement3D;
+  ElCenter: TPoint2D;
+  CenterDistance: TFloat;
+  Node3D: TSutraNode3D;
+//  ElementList3D: TSutraElement3DList;
+begin
+  NodeCol := -1;
+  NodeLayer := -1;
+  ElCol := -1;
+  ElLayer := -1;
+  Mesh := frmGoPhast.PhastModel.Mesh;
+  if Mesh = nil then
+  begin
+    Exit;
+  end;
+  if( Mesh.MeshType = mt2D) then
+  begin
+    Exit;
+  end;
+  NodeList := TSutraNode2D_List.Create;
+  ElementList := TSutraElement2D_List.Create;
+  try
+    Mesh.GetNodesOnCrossSection(NodeList);
+    if NodeList.Count = 0 then
+    begin
+      Exit;
+    end;
+    Mesh.GetElementsOnCrossSection(ElementList);
+    if ElementList.Count = 0 then
+    begin
+      Exit;
+    end;
+
+    SegmentAngle := Mesh.CrossSection.Angle;
+    StartPoint := Mesh.GetCrossSectionStart;
+    ClosestNodeIndex := -1;
+    TestValue := 0;
+    for Node2D_Index := 0 to NodeList.Count - 1 do
+    begin
+      Node2D := NodeList[Node2D_Index];
+      Angle := ArcTan2(Node2D.y - StartPoint.y,
+        Node2D.x - StartPoint.x) - SegmentAngle;
+      X_Float := Distance(StartPoint, Node2D.Location)*Cos(Angle)
+        + StartPoint.x;
+      X_Float := Abs(APoint.x - X_Float);
+      if Node2D_Index = 0 then
+      begin
+        ClosestNodeIndex := Node2D_Index;
+        TestValue := X_Float;
+      end
+      else if X_Float < TestValue then
+      begin
+        ClosestNodeIndex := Node2D_Index;
+        TestValue := X_Float;
+      end;
+    end;
+    Node2D := NodeList[ClosestNodeIndex];
+    Angle := ArcTan2(Node2D.y - StartPoint.y,
+      Node2D.x - StartPoint.x) - SegmentAngle;
+    X_Float := Distance(StartPoint, Node2D.Location)*Cos(Angle)
+      + StartPoint.x;
+    if (ClosestNodeIndex = 0) and (X_Float < APoint.x) then
+    begin
+      Exit;
+    end;
+    if (ClosestNodeIndex = NodeList.Count -1) and (X_Float > APoint.x) then
+    begin
+      Exit;
+    end;
+
+    Assert( Mesh.MeshType = mt3D);
+    ClosestLayerIndex := -1;
+    FirstFound := False;
+    NodePolygons := Mesh.FrontPolygons(SegmentAngle, eaNodes, Limits);
+    for LayerIndex := 0 to Mesh.LayerCount do
+    begin
+      Node3D := Mesh.NodeArray[LayerIndex, Node2D.Number];
+      if Node3D.Active then
+      begin
+        if ScreenObjectUnit.PointInConcavePolygon(APoint,
+          NodePolygons[LayerIndex, Node2D.Number]) then
+        begin
+          ClosestLayerIndex := LayerIndex;
+          Break;
+        end;
+      end;
+    end;
+    if ClosestLayerIndex < 0 then
+    begin
+      Exit;
+    end;
+    NodeLayer := ClosestLayerIndex;
+    NodeCol := Node2D.Number;
+
+    for ElementIndex := ElementList.Count - 1 downto 0 do
+    begin
+      AnElement2D := ElementList[ElementIndex];
+      if AnElement2D.Nodes.IndexOfNode(Node2D) < 0 then
+      begin
+        ElementList.Delete(ElementIndex);
+      end;
+    end;
+
+    ElementPolygons := Mesh.FrontPolygons(SegmentAngle, eaBlocks, Limits);
+
+    FirstFound := False;
+    Closest2DElement := nil;
+    TestValue := 0;
+    for ElementIndex := 0 to ElementList.Count - 1 do
+    begin
+      AnElement2D := ElementList[ElementIndex];
+      ElCenter.X := Distance(StartPoint, AnElement2D.Center)*Cos(Angle)
+            + StartPoint.x;
+      for LayerIndex := 0 to Mesh.LayerCount - 1 do
+      begin
+        if ScreenObjectUnit.PointInConcavePolygon(APoint,
+          ElementPolygons[LayerIndex, AnElement2D.ElementNumber]) then
+        begin
+          Element3D := Mesh.ElementArray[LayerIndex,AnElement2D.ElementNumber];
+          if Element3D.Active then
+          begin
+            ElCenter.y := Element3D.CenterElevation;
+            CenterDistance := Distance(APoint, ElCenter);
+            if not FirstFound then
+            begin
+              ClosestLayerIndex := LayerIndex;
+              Closest2DElement := AnElement2D;
+              TestValue := CenterDistance;
+              FirstFound := True;
+            end
+            else if CenterDistance < TestValue then
+            begin
+              ClosestLayerIndex := LayerIndex;
+              Closest2DElement := AnElement2D;
+              TestValue := CenterDistance;
+            end;
+          end;
+        end;
+      end;
+    end;
+    if Closest2DElement = nil then
+    begin
+      NodeCol := -1;
+      NodeLayer := -1;
+    end
+    else
+    begin
+      ElCol := Closest2DElement.ElementNumber;
+      ElLayer := ClosestLayerIndex;
+    end;
+  finally
+    NodeList.Free;
+    ElementList.Free;
+  end;
+end;
+
 procedure TframeView.GetColLayer(APoint: TPoint2D; out Col, Layer:
   integer);
 var
@@ -3163,56 +3444,99 @@ var
   Row: Integer;
   DataSet: TDataArray;
   TrueRow: Integer;
+  Mesh: TSutraMesh3D;
 begin
   // Display the value of the current data set (if any).
-  Row := frmGoPhast.PhastModel.SelectedRow;
-  TrueRow := Row;
-  DataSet := frmGoPhast.Grid.FrontDataSet;
-  if DataSet = nil then
+  Mesh := frmGoPhast.PhastModel.Mesh;
+  if Mesh <> nil then
   begin
-    DataSet := frmGoPhast.Grid.FrontContourDataSet;
-  end;
-  if (DataSet <> nil) then
-  begin
-    if DataSet.Orientation = dso3D then
+    DataSet := Mesh.ThreeDDataSet;
+    if (DataSet <> nil) then
     begin
-      Row := frmGoPhast.PhastModel.SelectedRow;
-    end
-    else
-    begin
-      Row := 0;
-    end;
-    if frmGoPhast.PhastModel.FrontTimeList = nil then
-    begin
-      NameToDisplay := DataSet.Name;
-    end
-    else
-    begin
-      NameToDisplay := frmGoPhast.PhastModel.FrontTimeList.Name;
-    end;
-    if DataSet.IsValue[Layer, Row, Column] and (Row >= 0) and (Row <=
-      frmGoPhast.Grid.RowCount) then
-    begin
-      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer,
-        Column, TrueRow, Layer, Location);
+      if frmGoPhast.PhastModel.TopTimeList = nil then
+      begin
+        NameToDisplay := DataSet.Name;
+      end
+      else
+      begin
+        NameToDisplay := frmGoPhast.PhastModel.TopTimeList.Name;
+      end;
+      if DataSet.IsValue[Layer, 0, Column]  then
+      begin
+        ShowCurrentValue(DataSet, NameToDisplay, Column, 0, Layer,
+          Column, TrueRow, Layer, Location);
+      end
+      else
+      begin
+        frmGoPhast.sbMain.Panels[2].Text := '';
+        if frmGridValue <> nil then
+        begin
+          frmGridValue.UpdateValue(Layer, 0, Column, NameToDisplay, '', '',
+            Location, ViewDirection);
+        end;
+      end;
     end
     else
     begin
       frmGoPhast.sbMain.Panels[2].Text := '';
       if frmGridValue <> nil then
       begin
-        frmGridValue.UpdateValue(Layer, TrueRow, Column, NameToDisplay, '', '',
+        frmGridValue.UpdateValue(Layer, 0, Column, '', '', '',
           Location, ViewDirection);
       end;
     end;
   end
   else
   begin
-    frmGoPhast.sbMain.Panels[2].Text := '';
-    if frmGridValue <> nil then
+    Row := frmGoPhast.PhastModel.SelectedRow;
+    TrueRow := Row;
+    DataSet := frmGoPhast.Grid.FrontDataSet;
+    if DataSet = nil then
     begin
-      frmGridValue.UpdateValue(Layer, TrueRow, Column, '', '', '',
-        Location, ViewDirection);
+      DataSet := frmGoPhast.Grid.FrontContourDataSet;
+    end;
+    if (DataSet <> nil) then
+    begin
+      if DataSet.Orientation = dso3D then
+      begin
+        Row := frmGoPhast.PhastModel.SelectedRow;
+      end
+      else
+      begin
+        Row := 0;
+      end;
+      if frmGoPhast.PhastModel.FrontTimeList = nil then
+      begin
+        NameToDisplay := DataSet.Name;
+      end
+      else
+      begin
+        NameToDisplay := frmGoPhast.PhastModel.FrontTimeList.Name;
+      end;
+      if DataSet.IsValue[Layer, Row, Column] and (Row >= 0) and (Row <=
+        frmGoPhast.Grid.RowCount) then
+      begin
+        ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer,
+          Column, TrueRow, Layer, Location);
+      end
+      else
+      begin
+        frmGoPhast.sbMain.Panels[2].Text := '';
+        if frmGridValue <> nil then
+        begin
+          frmGridValue.UpdateValue(Layer, TrueRow, Column, NameToDisplay, '', '',
+            Location, ViewDirection);
+        end;
+      end;
+    end
+    else
+    begin
+      frmGoPhast.sbMain.Panels[2].Text := '';
+      if frmGridValue <> nil then
+      begin
+        frmGridValue.UpdateValue(Layer, TrueRow, Column, '', '', '',
+          Location, ViewDirection);
+      end;
     end;
   end;
 end;
@@ -3224,56 +3548,99 @@ var
   Row: Integer;
   DataSet: TDataArray;
   TrueRow: Integer;
+  Mesh: TSutraMesh3D;
 begin
   // Display the value of the current data set (if any).
-  Row := frmGoPhast.PhastModel.SelectedModel.SelectedRow;
-  TrueRow := Row;
-  DataSet := frmGoPhast.PhastModel.SelectedModel.Grid.FrontDataSet;
-  if DataSet = nil then
+  Mesh := frmGoPhast.PhastModel.Mesh;
+  if Mesh <> nil then
   begin
-    DataSet := frmGoPhast.PhastModel.SelectedModel.Grid.FrontContourDataSet;
-  end;
-  if (DataSet <> nil) then
-  begin
-    if DataSet.Orientation = dso3D then
+    DataSet := Mesh.ThreeDDataSet;
+    if (DataSet <> nil) then
     begin
-      Row := frmGoPhast.PhastModel.SelectedModel.SelectedRow;
-    end
-    else
-    begin
-      Row := 0;
-    end;
-    if frmGoPhast.PhastModel.FrontTimeList = nil then
-    begin
-      NameToDisplay := DataSet.Name;
-    end
-    else
-    begin
-      NameToDisplay := frmGoPhast.PhastModel.FrontTimeList.Name;
-    end;
-    if DataSet.IsValue[Layer, Row, Column] and (Row >= 0) and (Row <
-      frmGoPhast.PhastModel.SelectedModel.Grid.RowCount) then
-    begin
-      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer,
-        Column, TrueRow, Layer, Location);
+      if frmGoPhast.PhastModel.FrontTimeList = nil then
+      begin
+        NameToDisplay := DataSet.Name;
+      end
+      else
+      begin
+        NameToDisplay := frmGoPhast.PhastModel.FrontTimeList.Name;
+      end;
+      if DataSet.IsValue[Layer, 0, Column]  then
+      begin
+        ShowCurrentValue(DataSet, NameToDisplay, Column, 0, Layer,
+          Column, TrueRow, Layer, Location);
+      end
+      else
+      begin
+        frmGoPhast.sbMain.Panels[2].Text := '';
+        if frmGridValue <> nil then
+        begin
+          frmGridValue.UpdateValue(Layer, 0, Column, NameToDisplay, '', '',
+            Location, ViewDirection);
+        end;
+      end;
     end
     else
     begin
       frmGoPhast.sbMain.Panels[2].Text := '';
       if frmGridValue <> nil then
       begin
-        frmGridValue.UpdateValue(Layer, TrueRow, Column, NameToDisplay, '', '',
+        frmGridValue.UpdateValue(Layer, 0, Column, '', '', '',
           Location, ViewDirection);
       end;
     end;
   end
   else
   begin
-    frmGoPhast.sbMain.Panels[2].Text := '';
-    if frmGridValue <> nil then
+    Row := frmGoPhast.PhastModel.SelectedModel.SelectedRow;
+    TrueRow := Row;
+    DataSet := frmGoPhast.PhastModel.SelectedModel.Grid.FrontDataSet;
+    if DataSet = nil then
     begin
-      frmGridValue.UpdateValue(Layer, TrueRow, Column, '', '', '',
-        Location, ViewDirection);
+      DataSet := frmGoPhast.PhastModel.SelectedModel.Grid.FrontContourDataSet;
+    end;
+    if (DataSet <> nil) then
+    begin
+      if DataSet.Orientation = dso3D then
+      begin
+        Row := frmGoPhast.PhastModel.SelectedModel.SelectedRow;
+      end
+      else
+      begin
+        Row := 0;
+      end;
+      if frmGoPhast.PhastModel.FrontTimeList = nil then
+      begin
+        NameToDisplay := DataSet.Name;
+      end
+      else
+      begin
+        NameToDisplay := frmGoPhast.PhastModel.FrontTimeList.Name;
+      end;
+      if DataSet.IsValue[Layer, Row, Column] and (Row >= 0) and (Row <
+        frmGoPhast.PhastModel.SelectedModel.Grid.RowCount) then
+      begin
+        ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer,
+          Column, TrueRow, Layer, Location);
+      end
+      else
+      begin
+        frmGoPhast.sbMain.Panels[2].Text := '';
+        if frmGridValue <> nil then
+        begin
+          frmGridValue.UpdateValue(Layer, TrueRow, Column, NameToDisplay, '', '',
+            Location, ViewDirection);
+        end;
+      end;
+    end
+    else
+    begin
+      frmGoPhast.sbMain.Panels[2].Text := '';
+      if frmGridValue <> nil then
+      begin
+        frmGridValue.UpdateValue(Layer, TrueRow, Column, '', '', '',
+          Location, ViewDirection);
+      end;
     end;
   end;
 end;

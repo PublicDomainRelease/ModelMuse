@@ -756,6 +756,11 @@ type
     procedure Undo; override;
   end;
 
+  TUndoRotateCrossSection = class(TUndoMoveCrossSection)
+  protected
+    function Description: string; override;
+  end;
+
 implementation
 
 uses SysUtils, Math, frmGoPhastUnit, InteractiveTools, frmSubdivideUnit,
@@ -791,6 +796,7 @@ resourcestring
   Str0sColumn1d = '%0:s column %1:d, ';
   Str0sColumns1d2 = '%0:s columns %1:d-%2:d, ';
   StrMoveCrossSection = 'move cross section';
+  StrRotateCrossSection = 'rotate cross section';
 
 { TUndoDeleteRow }
 
@@ -2774,6 +2780,13 @@ begin
   frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
   frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
   frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
+end;
+
+{ TUndoRotateCrossSection }
+
+function TUndoRotateCrossSection.Description: string;
+begin
+  result := StrRotateCrossSection;
 end;
 
 end.

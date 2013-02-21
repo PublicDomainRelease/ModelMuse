@@ -2074,13 +2074,6 @@ resourcestring
   'closed cells" nor "Set properties of intersected cells" is checked.'#13#10 +
   #13#10'Is this really what you want?';
   StrSutraObservations = 'Sutra Observations';
-  StrSpecifiedPressure = 'Specified Pressure';
-  StrSpecifiedTemp = 'Specified Temperature';
-  StrSpecifiedConc = 'Specified Concentration';
-//  StrSpecifiedTemperatur = 'Specified Temperature or Concentration';
-  StrFluidFlux = 'Fluid Flux';
-  StrMassFlux = 'Mass Flux';
-  StrEnergyFlux = 'Energy Flux';
 //  StrMassOrEnergyFlux = 'Mass or Energy Flux';
 
 {$R *.dfm}
@@ -8731,6 +8724,7 @@ begin
   {$IFDEF SUTRA}
   if ShouldCreateSutraBoundary then
   begin
+    Node := nil;
     TransportChoice := frmGoPhast.PhastModel.SutraOptions.TransportChoice;
     case TransportChoice of
       tcSolute:
@@ -8786,6 +8780,7 @@ begin
   {$IFDEF SUTRA}
   if ShouldCreateSutraBoundary then
   begin
+    Node := nil;
     TransportChoice := frmGoPhast.PhastModel.SutraOptions.TransportChoice;
     case TransportChoice of
       tcSolute:

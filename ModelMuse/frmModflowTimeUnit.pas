@@ -598,6 +598,7 @@ begin
     finally
       frameGrid.Grid.EndUpdate;
     end;
+    frameGrid.seNumber.MinValue := 1;
   end
   else
   begin
