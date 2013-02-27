@@ -97,6 +97,7 @@ type
     procedure Assign(Source: TPersistent);override;
     constructor Create(Collection: TCollection); override;
     Destructor Destroy; override;
+    procedure AssignTable(Source: TPersistent);
   published
     property SfrTable: TSfrTable read FSfrTable write SetSfrTable;
   end;
@@ -109,6 +110,8 @@ type
     function GetTableTimeValues(Index: integer): TSfrFlowTableRecord;
     procedure SetTableTimeValues(Index: integer;
       const Value: TSfrFlowTableRecord);
+    function GetItem(Index: Integer): TSfrTablelItem;
+    procedure SetItem(Index: Integer; const Value: TSfrTablelItem);
   protected
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
@@ -118,6 +121,7 @@ type
     property TableTimeValues[Index: integer]: TSfrFlowTableRecord
       read GetTableTimeValues write SetTableTimeValues;
     function GetRecordForTime(StartTime: double): TSfrFlowTableRecord;
+    property Items[Index: Integer]: TSfrTablelItem read GetItem write SetItem; default;
   end;
 
 procedure TableRowRemoveSubscription(Sender: TObject; Subject: TObject;
@@ -146,15 +150,8 @@ const
 { TSfrTablelItem }
 
 procedure TSfrTablelItem.Assign(Source: TPersistent);
-var
-  Sfr: TSfrTablelItem;
 begin
-  // if Assign is updated, update IsSame too.
-  if Source is TSfrTablelItem then
-  begin
-    Sfr := TSfrTablelItem(Source);
-    SfrTable := Sfr.SfrTable;
-  end;
+  AssignTable(Source);
   inherited;
 end;
 
@@ -191,6 +188,18 @@ destructor TSfrTablelItem.Destroy;
 begin
   FSfrTable.Free;
   inherited;
+end;
+
+procedure TSfrTablelItem.AssignTable(Source: TPersistent);
+var
+  Sfr: TSfrTablelItem;
+begin
+  // if Assign is updated, update IsSame too.
+  if Source is TSfrTablelItem then
+  begin
+    Sfr := TSfrTablelItem(Source);
+    SfrTable := Sfr.SfrTable;
+  end;
 end;
 
 function TSfrTablelItem.GetBoundaryFormula(Index: integer): string;
@@ -382,6 +391,11 @@ begin
   end;
 end;
 
+function TSfrTableCollection.GetItem(Index: Integer): TSfrTablelItem;
+begin
+  result := inherited Items[index] as TSfrTablelItem;
+end;
+
 function TSfrTableCollection.GetRecordForTime(
   StartTime: double): TSfrFlowTableRecord;
 var
@@ -420,6 +434,12 @@ end;
 class function TSfrTableCollection.ItemClass: TBoundaryItemClass;
 begin
   result := TSfrTablelItem;
+end;
+
+procedure TSfrTableCollection.SetItem(Index: Integer;
+  const Value: TSfrTablelItem);
+begin
+  inherited Items[index] := Value;
 end;
 
 procedure TSfrTableCollection.SetTableTimeValues(Index: integer;

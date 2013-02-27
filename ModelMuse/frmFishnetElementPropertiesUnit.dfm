@@ -1,10 +1,12 @@
 inherited frmFishnetElementProperties: TfrmFishnetElementProperties
+  HelpType = htKeyword
+  HelpKeyword = 'Fishnet_Quadrilateral_Properti'
   Caption = 'Fishnet Quadrilateral Properties'
   ClientHeight = 442
   ClientWidth = 480
   ExplicitWidth = 496
   ExplicitHeight = 480
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object btnHelp: TBitBtn
     Left = 84
@@ -13,12 +15,10 @@ inherited frmFishnetElementProperties: TfrmFishnetElementProperties
     Height = 33
     HelpType = htKeyword
     Anchors = [akLeft, akBottom]
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 0
-    ExplicitTop = 272
+    TabOrder = 1
+    OnClick = btnHelpClick
   end
   object btnOK: TBitBtn
     Left = 179
@@ -26,13 +26,10 @@ inherited frmFishnetElementProperties: TfrmFishnetElementProperties
     Width = 89
     Height = 33
     Anchors = [akLeft, akBottom]
-    DoubleBuffered = True
     Kind = bkOK
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 1
+    TabOrder = 2
     OnClick = btnOKClick
-    ExplicitTop = 272
   end
   object btnCancel: TBitBtn
     Left = 274
@@ -40,29 +37,22 @@ inherited frmFishnetElementProperties: TfrmFishnetElementProperties
     Width = 91
     Height = 33
     Anchors = [akLeft, akBottom]
-    DoubleBuffered = True
     Kind = bkCancel
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 2
-    ExplicitTop = 272
+    TabOrder = 3
   end
   object pc1: TPageControl
     Left = 0
     Top = 0
     Width = 480
     Height = 398
-    ActivePage = tabFirst
+    ActivePage = tabSecond
     Align = alTop
     Anchors = [akLeft, akTop, akRight, akBottom]
-    TabOrder = 3
+    TabOrder = 0
     object tabCornerCoordinates: TTabSheet
       Caption = 'Corner Coordinates'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 365
-      ExplicitHeight = 233
       object rdgCornerCoordinates: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -127,10 +117,6 @@ inherited frmFishnetElementProperties: TfrmFishnetElementProperties
             CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
-        ExplicitLeft = 12
-        ExplicitTop = 90
-        ExplicitWidth = 353
-        ExplicitHeight = 143
       end
     end
     object tabFirst: TTabSheet
@@ -179,11 +165,11 @@ inherited frmFishnetElementProperties: TfrmFishnetElementProperties
             Width = 224
             ExplicitWidth = 224
             inherited lbl3: TLabel
-              Width = 197
-              Height = 18
-              Caption = 'Discretization within element'
-              ExplicitWidth = 197
-              ExplicitHeight = 18
+              Width = 224
+              Height = 41
+              Caption = 'Discretization within quadrilateral'
+              ExplicitWidth = 142
+              ExplicitHeight = 36
             end
           end
           inherited pnlPaintboxParent: TPanel
@@ -211,6 +197,13 @@ inherited frmFishnetElementProperties: TfrmFishnetElementProperties
         end
         inherited rgMethod: TRadioGroup
           Height = 247
+          Items.Strings = (
+            'Uniform spacing'
+            'Increase forward'
+            'Increase backward'
+            'Increase toward middle'
+            'Increase toward edges'
+            'Custom')
           ExplicitHeight = 247
         end
       end
@@ -262,11 +255,11 @@ inherited frmFishnetElementProperties: TfrmFishnetElementProperties
             Width = 224
             ExplicitWidth = 224
             inherited lbl3: TLabel
-              Width = 197
-              Height = 18
-              Caption = 'Discretization within element'
-              ExplicitWidth = 197
-              ExplicitHeight = 18
+              Width = 224
+              Height = 41
+              Caption = 'Discretization within quadrilateral'
+              ExplicitWidth = 142
+              ExplicitHeight = 36
             end
           end
           inherited pnlPaintboxParent: TPanel
@@ -294,6 +287,13 @@ inherited frmFishnetElementProperties: TfrmFishnetElementProperties
         end
         inherited rgMethod: TRadioGroup
           Height = 247
+          Items.Strings = (
+            'Uniform spacing'
+            'Increase forward'
+            'Increase backward'
+            'Increase toward middle'
+            'Increase toward edges'
+            'Custom')
           ExplicitHeight = 247
         end
       end

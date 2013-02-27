@@ -948,12 +948,15 @@ var
   Index: Integer;
 begin
   FResultList.Clear;
+  result := FResultList;
   for Index := 0 to Length(Intervals) - 1 do
   begin
-    Assert(Intervals[Index].LowerBoundary <= Intervals[Index].UpperBoundary);
+    if Intervals[Index].LowerBoundary > Intervals[Index].UpperBoundary then
+    begin
+      Exit;
+    end;
   end;
   FInternalTree.Search(Intervals);
-  result := FResultList;
 end;
 
 { TInternalRangeTreeLeafList }

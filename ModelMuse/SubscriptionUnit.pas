@@ -4,7 +4,8 @@ unit SubscriptionUnit;
 
 interface
 
-uses Classes, SysUtils, ObserverIntfU, ObserverListU, ObserverU;
+uses Classes, SysUtils, ObserverIntfU, ObserverListU, ObserverU,
+  Generics.Collections;
 
 const
   // @name is used in TObserver.@link(TObserver.IsRecursive) to
@@ -130,6 +131,8 @@ type
     property OnUpToDateSet: TNotifyEvent read FOnUpToDateSet write
       FOnUpToDateSet;
   end;
+
+  TObserverList = TList<TObserver>;
 
 implementation
 

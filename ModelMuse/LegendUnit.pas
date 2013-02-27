@@ -3,7 +3,8 @@ unit LegendUnit;
 interface
 
 uses Classes, GoPhastTypes, ColorSchemes, DataSetUnit, ValueArrayStorageUnit,
-  Math, Graphics, SysUtils, EdgeDisplayUnit, Types, SubscriptionUnit;
+  Math, Graphics, SysUtils, EdgeDisplayUnit, Types, SubscriptionUnit,
+  ContourUnit;
 
 type
   TLegendType = (ltColor, ltContour);
@@ -21,6 +22,7 @@ type
     FEdgeDataToPlot: integer;
     FFractions: TValueArrayStorage;
     StringValues: TStringList;
+    FContours: TContours;
     procedure SetColoringLimits(const Value: TColoringLimits);
     procedure SetColorParameters(const Value: TColorParameters);
     procedure SetLegendType(const Value: TLegendType);
@@ -37,6 +39,7 @@ type
       DataArray: TDataArray);
     procedure GetRealLimitsForEdgeDisplay(var MinReal, MaxReal: real;
       EdgeDisplay: TCustomModflowGridEdgeDisplay);
+    function GetFractions: TValueArrayStorage;
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
@@ -46,7 +49,8 @@ type
     procedure AssignFractions;
     procedure Draw(Canvas: TCanvas; StartX, StartY: integer;
       out LegendRect: TRect);
-    property Fractions: TValueArrayStorage read FFractions write SetFractions;
+    property Fractions: TValueArrayStorage read GetFractions write SetFractions;
+    property Contours: TContours read FContours write FContours;
   published
     property ColorParameters: TColorParameters read FColorParameters
       write SetColorParameters;
@@ -63,7 +67,7 @@ type
 implementation
 
 uses
-  PhastModelUnit, RbwParser, frmGoPhastUnit, SutraMeshUnit;
+  PhastModelUnit, RbwParser, frmGoPhastUnit, SutraMeshUnit, GR32;
 
 { TLegend }
 
@@ -552,7 +556,14 @@ begin
                   begin
                     if ColoringLimits.LogTransform then
                     begin
-                      MinReal := Contours.ContourValues[0];
+                      if Length(Contours.ContourValues) > 0 then
+                      begin
+                        MinReal := Contours.ContourValues[0];
+                      end
+                      else
+                      begin
+                        MinReal := 0;
+                      end;
 //                      if MinReal > 0 then
                       begin
                         for Index := 0 to Contours.Count - 1 do
@@ -756,6 +767,15 @@ var
   TextSeparation: integer;
   ARect: TRect;
   Extent: TSize;
+  CustomColorSchemes: TUserDefinedColorSchemeCollection;
+  ACustomColorScheme: TUserDefinedColorSchemeItem;
+  ContourValues: TOneDRealArray;
+  ContourColors: TArrayOfColor32;
+  ColorIndex: Integer;
+  ColorItem: TColorItem;
+  AMinValue: Double;
+  AMaxValue: Double;
+  DeltaValue: Double;
 begin
   LegendRect.Top := StartY;
   LegendRect.Left := StartX;
@@ -780,78 +800,157 @@ begin
   ARect.Top := StartY;
   ARect.Right := TextX + Extent.cx;
   ARect.Bottom := StartY + Extent.cy;
-  UnionRect(LegendRect, LegendRect, ARect);
+
+  {$IF CompilerVersion >= 23.0}
+  // Delphi XE2 and up
+  System.Types.UnionRect(LegendRect, LegendRect, ARect);
+  {$ELSE}
+  // Delphi XE and earlier
+  Types.UnionRect(LegendRect, LegendRect, ARect);
+  {$IFEND}
 
   Canvas.TextOut(X, StartY, LegendText);
   StartY := StartY + DeltaY;
 
-  Assert(Fractions.Count <= Values.Count);
-  for Index := 0 to Values.Count - 1 do
-  begin
-    AColor := ColorParameters.FracToColor(Fractions.RealValues[Index]);
-    Y := StartY + DeltaY*Index;
-    Canvas.Brush.Color := AColor;
-    case LegendType of
-      ltColor:
-        begin
-          ARect := Rect(X,Y,X+BoxWidth,Y+DeltaY);
-        end;
-      ltContour:
-        begin
-          Canvas.Pen.Color := AColor;
-          YLine := Y + DeltaY div 2;
-          ARect := Rect(X,YLine-1,X+BoxWidth,YLine+1);
-        end;
-      else Assert(False);
-    end;
-    Canvas.Rectangle(ARect);
-    UnionRect(LegendRect, LegendRect, ARect);
+  CustomColorSchemes := nil;
+  ACustomColorScheme := nil;
+  try
 
-    Canvas.Brush.Color := clWhite;
-    Y := Y + ((DeltaY - TextHeight) div 2);
-
-    case Values.DataType of
-      rdtDouble:
+    if (LegendType = ltContour) and (Contours <> nil)
+      and Contours.SpecifyContours and not Contours.AutomaticColors then
+    begin
+      CustomColorSchemes := TUserDefinedColorSchemeCollection.Create(nil);
+      ACustomColorScheme := CustomColorSchemes.Add;
+      ContourValues := Contours.ContourValues;
+      ContourColors := Contours.ContourColors;
+      Assert(Length(ContourValues) = Length(ContourColors));
+      if Length(ContourValues) > 0  then
+      begin
+        AMinValue := ContourValues[0];
+        AMaxValue := ContourValues[Length(ContourValues)-1];
+        DeltaValue := AMaxValue-AMinValue;
+        for ColorIndex := 0 to Length(ContourValues) - 1 do
         begin
-//          if ColoringLimits.LogTransform then
-//          begin
-            LegendText := FloatToStrF(Values.RealValues[Index], ffGeneral, 7, 0);
-//          end
-//          else
-//          begin
-//            LegendText := FloatToStrF(Values.RealValues[Index], ffGeneral, 7, 0);
-//          end;
-        end;
-      rdtInteger:
-        begin
-          LegendText := IntToStr(Values.IntValues[Index])
-        end;
-      rdtBoolean: 
-        begin
-          if Values.BooleanValues[Index] then
+          ColorItem := ACustomColorScheme.Colors.Add;
+          ColorItem.Color := WinColor(ContourColors[ColorIndex]);
+          if ColorIndex = 0 then
           begin
-            LegendText := 'True';
+            ColorItem.Fraction := 0;
+          end
+          else if ColorIndex = Length(ContourValues)-1 then
+          begin
+            ColorItem.Fraction := 1;
+          end
+          else if (AMinValue = AMaxValue) then
+          begin
+            ColorItem.Fraction := 0.5;
           end
           else
           begin
-            LegendText := 'False';
+            ColorItem.Fraction := (ContourValues[ColorIndex]-AMinValue)/DeltaValue;
           end;
         end;
-      rdtString:
-        begin
-          LegendText := Values.StringValues[Index];
-        end;
-      else Assert(False);
+      end
+      else
+      begin
+        ACustomColorScheme := nil;
+      end;
     end;
+//      CustomColorSchemes := TUserDefinedColorSchemeItem.Create;
+//      CustomColorSchemes.
+//    end;
 
-    Extent := Canvas.TextExtent(LegendText);
-    ARect.Left := TextX;
-    ARect.Top := Y;
-    ARect.Right := TextX + Extent.cx;
-    ARect.Bottom := Y + Extent.cy;
-    UnionRect(LegendRect, LegendRect, ARect);
+  //  Assert(Fractions.Count <= Values.Count);
+    for Index := 0 to Min(Fractions.Count, Values.Count) - 1 do
+    begin
+      if ACustomColorScheme = nil then
+      begin
+        AColor := ColorParameters.FracToColor(Fractions.RealValues[Index]);
+      end
+      else
+      begin
+        AColor := ColorParameters.FracToColor(Fractions.RealValues[Index],
+          ACustomColorScheme);
+      end;
+      Y := StartY + DeltaY*Index;
+      Canvas.Brush.Color := AColor;
+      case LegendType of
+        ltColor:
+          begin
+            ARect := Rect(X,Y,X+BoxWidth,Y+DeltaY);
+          end;
+        ltContour:
+          begin
+            Canvas.Pen.Color := AColor;
+            YLine := Y + DeltaY div 2;
+            ARect := Rect(X,YLine-1,X+BoxWidth,YLine+1);
+          end;
+        else Assert(False);
+      end;
+      Canvas.Rectangle(ARect);
 
-    Canvas.TextOut(TextX, Y, LegendText);
+      {$IF CompilerVersion >= 23.0}
+      // Delphi XE2 and up
+      System.Types.UnionRect(LegendRect, LegendRect, ARect);
+      {$ELSE}
+      // Delphi XE and earlier
+      Types.UnionRect(LegendRect, LegendRect, ARect);
+      {$IFEND}
+
+      Canvas.Brush.Color := clWhite;
+      Y := Y + ((DeltaY - TextHeight) div 2);
+
+      case Values.DataType of
+        rdtDouble:
+          begin
+  //          if ColoringLimits.LogTransform then
+  //          begin
+              LegendText := FloatToStrF(Values.RealValues[Index], ffGeneral, 7, 0);
+  //          end
+  //          else
+  //          begin
+  //            LegendText := FloatToStrF(Values.RealValues[Index], ffGeneral, 7, 0);
+  //          end;
+          end;
+        rdtInteger:
+          begin
+            LegendText := IntToStr(Values.IntValues[Index])
+          end;
+        rdtBoolean:
+          begin
+            if Values.BooleanValues[Index] then
+            begin
+              LegendText := 'True';
+            end
+            else
+            begin
+              LegendText := 'False';
+            end;
+          end;
+        rdtString:
+          begin
+            LegendText := Values.StringValues[Index];
+          end;
+        else Assert(False);
+      end;
+
+      Extent := Canvas.TextExtent(LegendText);
+      ARect.Left := TextX;
+      ARect.Top := Y;
+      ARect.Right := TextX + Extent.cx;
+      ARect.Bottom := Y + Extent.cy;
+      {$IF CompilerVersion >= 23.0}
+      // Delphi XE2 and up
+      System.Types.UnionRect(LegendRect, LegendRect, ARect);
+      {$ELSE}
+      // Delphi XE and earlier
+      Types.UnionRect(LegendRect, LegendRect, ARect);
+      {$IFEND}
+
+      Canvas.TextOut(TextX, Y, LegendText);
+    end;
+  finally
+    CustomColorSchemes.Free;
   end;
 end;
 
@@ -932,6 +1031,11 @@ begin
   begin
     MinReal := MinMax.RMin;
   end;
+end;
+
+function TLegend.GetFractions: TValueArrayStorage;
+begin
+  result := FFractions;
 end;
 
 procedure TLegend.GetIntegerLimits(var MinInteger, MaxInteger: Integer;

@@ -4,11 +4,11 @@
   <title translate="true">File</title>
   <body>
     <header>
-      <para styleclass="Heading2"><text styleclass="Heading1" translate="true">File</text></para>
+      <para styleclass="Heading2_atoc_"><text styleclass="Heading1" translate="true">File</text></para>
     </header>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The menu items under File are listed in table 3. &#160;The commands under this menu have to do with opening, saving, importing or exporting files. &#160;Many of the choices under File|Import refer to features of data sets and objects that are described under &#160;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="Data_Sets_Dialog_Box" styleclass="Normal" translate="true">Data Sets Dialog Box</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Object_Properties_Dialog_Box" styleclass="Normal" translate="true">Object Properties Dialog Box</link><text styleclass="Normal" translate="true">.</text></para>
     <para styleclass="Table Caption"><text styleclass="Table Caption" translate="true">Table 3. File Menu</text></para>
-    <para styleclass="Normal" style="text-align:center;"><table rowcount="42" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal" style="text-align:center;"><table rowcount="44" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td colspan="2" style="width:626px;">
           <para styleclass="Normal"><line style="height:1px; color:#000000;" /></para>
@@ -45,6 +45,14 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="width:221px;">
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">New|New SUTRA Model</text></para>
+        </td>
+        <td style="width:405px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Creates a new SUTRA model.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:221px;">
           <para styleclass="Table Header" style="text-align:left;"><image src="Open.png" scale="100.00%" styleclass="Table Header"><title translate="true">Open button</title></image><text styleclass="Table Header" translate="true"> Open </text></para>
         </td>
         <td style="width:405px;">
@@ -72,7 +80,7 @@
           <para styleclass="Normal"><image src="ImportModelResults.bmp" scale="100.00%" styleclass="Image Caption"><title translate="true">Import and display model results button</title></image><text styleclass="Image Caption" translate="true">&#32;</text><text styleclass="Table Header" translate="true">Import|Model Results...</text></para>
         </td>
         <td style="width:405px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Import, head, drawdown, or flows from a MODFLOW model into ModelMuse and optionally color the grid using one of the imported data sets. See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Select_Results_to_Import_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Select Model Results to Import</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Import, head, drawdown, or flows from a MODFLOW or SUTRA model into ModelMuse and optionally color the grid using one of the imported data sets. For MODFLOW models, see </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Select_Results_to_Import_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Select Model Results to Import</link><text styleclass="Table Cell" translate="true"> dialog box. For SUTRA models see </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Import_SUTRA_Model_Results_Dia" styleclass="Normal" style="font-weight:bold;" translate="true">Import SUTRA Model Results</link><text styleclass="Normal" translate="true"> dialog box.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -157,10 +165,10 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="width:221px;">
-          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Import|MODFLOW-2005 Model...</text></para>
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Import|MODFLOW-2005 or -NWT Model...</text></para>
         </td>
         <td style="width:405px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Import an existing MODFLOW-2005 model into ModelMuse. See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Import_MODFLOW_Model_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Import MODFLOW-2005 Model</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Import an existing MODFLOW-2005 or MODFLOW-NWT model into ModelMuse. See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Import_MODFLOW_Model_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Import MODFLOW-2005 or  -NWT Model</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -192,7 +200,7 @@
           <para styleclass="Table Header" style="text-align:left;"><image src="RunButton.bmp" scale="100.00%" styleclass="Image Caption"></image><text styleclass="Image Caption" translate="true">&#32;</text><text styleclass="Table Header" translate="true">Export|MODFLOW-LGR Input Files</text></para>
         </td>
         <td style="width:405px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Creates the input files for MODFLOW-LGR and optionally executes MODFLOW-LGR. &#160;See also: </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Batch_File_Additions_Dialog" styleclass="Strong" translate="true">Batch File Additions</link><text styleclass="Table Cell" translate="true"> dialog box. A combobox at the bottom of the Save dialog box allows the user to select between exporting the input files for a combined model or for just the parent or just one of the child models.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Creates the input files for MODFLOW-LGR version 1 or version 2 and optionally executes MODFLOW-LGR. &#160;See also: </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Batch_File_Additions_Dialog" styleclass="Strong" translate="true">Batch File Additions</link><text styleclass="Table Cell" translate="true"> dialog box. A combobox at the bottom of the Save dialog box allows the user to select between exporting the input files for a combined model or for just the parent or just one of the child models.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -201,6 +209,14 @@
         </td>
         <td style="width:405px;">
           <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Creates the input files for MODFLOW-NWT and optionally executes MODFLOW-NWT. &#160;See also: </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Batch_File_Additions_Dialog" styleclass="Strong" translate="true">Batch File Additions</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:221px;">
+          <para styleclass="Table Header" style="text-align:left;"><image src="RunButton.bmp" scale="100.00%" styleclass="Image Caption"></image><text styleclass="Image Caption" translate="true">&#32;</text><text styleclass="Table Header" translate="true">Export|SUTRA Input Files</text></para>
+        </td>
+        <td style="width:405px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Creates the input files for SUTRA and optionally executes SUTRA.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -229,10 +245,10 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="width:221px;">
-          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Shapefile|Grid Data to Shapefile...</text></para>
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Shapefile|Grid/Mesh Data to Shapefile...</text></para>
         </td>
         <td style="width:405px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Export a Shapefile of gridded data. &#160;See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Export_Shapefile_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Export Grid Data to Shapefile</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Export a Shapefile of gridded or meshed data. &#160;See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Export_Shapefile_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Export Grid/Mesh Data to Shapefile</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -293,7 +309,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="width:221px;">
-          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Image...</text></para>
+          <para styleclass="Table Header" style="text-align:left;"><image src="ExportImageButton.bmp" scale="100.00%" styleclass="Image Caption"></image><text styleclass="Table Header" translate="true"> Export|Image...</text></para>
         </td>
         <td style="width:405px;">
           <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Export an image of the top, front, or side view of the model as an Enhanced Windows Metafile. See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Export_Image_Dialog_Box" styleclass="Strong" translate="true">Export Image</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>

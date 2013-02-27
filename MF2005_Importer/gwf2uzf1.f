@@ -95,7 +95,8 @@
 
 C
 C-------SUBROUTINE GWF2UZF1AR
-      SUBROUTINE GWF2UZF1AR(In, Iunitbcf, Iunitlpf, Iunithuf, Igrid)
+      SUBROUTINE GWF2UZF1AR(In, Iunitbcf, Iunitlpf, Iunithuf, 
+     +                      Iunitupw, Igrid)
 C     ******************************************************************
 C     ALLOCATE ARRAY STORAGE FOR UNSATURATED FLOW, RECHARGE, AND ET
 C     READ AND CHECK VARIABLES THAT REMAIN CONSTANT
@@ -104,18 +105,18 @@ C     ******************************************************************
       USE GWFUZFMODULE
       USE GLOBAL,       ONLY: NCOL, NROW, NLAY, IOUT, ITRSS, ISSFLG, 
      +                        DELR, DELC, IBOUND, LBOTM, BOTM
-      USE GLOBAL,       ONLY: ITMUNI, LENUNI
+      USE GLOBAL,       ONLY: ITMUNI, LENUNI, LAYHDT
       USE GWFLPFMODULE, ONLY: SCLPF=>SC2, LAYTYP
       USE GWFBCFMODULE, ONLY: SC1, SC2, LAYCON
       USE GWFHUFMODULE, ONLY: SC2HUF
-
+      USE GWFUPWMODULE, ONLY: SC2UPW
       IMPLICIT NONE
 C     ------------------------------------------------------------------
 C     SPECIFICATIONS:
 C     ------------------------------------------------------------------
 C     ARGUMENTS
 C     ------------------------------------------------------------------
-      INTEGER In, Iunitbcf, Iunitlpf, Iunithuf, Igrid
+      INTEGER In, Iunitbcf, Iunitlpf, Iunithuf, Iunitupw, Igrid
 C     ------------------------------------------------------------------
 C     LOCAL VARIABLES
 C     ------------------------------------------------------------------
@@ -592,6 +593,16 @@ C use LPF SC2, Iunitlpf>0
      +                       , 'COMPUTING RESIDUAL WATER CONTENT-- '
      +                       , 'CELL LAYER,ROW,COLUMN: ',3I5) 
                      CALL USTOP(' ')
+                    END IF
+                  ELSE IF ( Iunitupw.GT.0 ) THEN
+                    IF ( LAYHDT(nlth).EQ.0 ) THEN
+                      THICK = BOTM(ncth, nrth, LBOTM(nlth)-1)-
+     +                      BOTM(ncth, nrth, LBOTM(nlth))
+                      sy = SC2UPW(ncth, nrth, nlth)/
+     +                     (THICK*DELR(ncth)*DELC(nrth)) 
+                    ELSE
+                      sy = SC2UPW(ncth, nrth, nlth)/
+     +                     (DELR(ncth)*DELC(nrth)) 
                     END IF 
                   ELSE IF ( Iunitbcf.GT.0 ) THEN                
                     IF ( LAYCON(nlth).LT.2 ) THEN

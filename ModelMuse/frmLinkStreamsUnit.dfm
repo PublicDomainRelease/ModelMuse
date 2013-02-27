@@ -2,22 +2,22 @@ inherited frmLinkStreams: TfrmLinkStreams
   HelpType = htKeyword
   HelpKeyword = 'Link_Streams_Dialog_Box'
   Caption = 'Link Streams'
-  ClientHeight = 189
+  ClientHeight = 262
   ClientWidth = 246
-  ExplicitWidth = 254
-  ExplicitHeight = 223
+  ExplicitWidth = 262
+  ExplicitHeight = 300
   PixelsPerInch = 96
   TextHeight = 18
   object lblTolerance: TLabel
-    Left = 8
-    Top = 79
+    Left = 7
+    Top = 152
     Width = 97
     Height = 18
     Caption = 'Link tolerance'
   end
   object rgWhatToLink: TRadioGroup
-    Left = 8
-    Top = 8
+    Left = 7
+    Top = 81
     Width = 231
     Height = 65
     Caption = 'What to link'
@@ -28,8 +28,8 @@ inherited frmLinkStreams: TfrmLinkStreams
     TabOrder = 0
   end
   object rdeTolerance: TRbwDataEntry
-    Left = 8
-    Top = 99
+    Left = 7
+    Top = 172
     Width = 231
     Height = 22
     TabOrder = 1
@@ -40,8 +40,8 @@ inherited frmLinkStreams: TfrmLinkStreams
     ChangeDisabledColor = True
   end
   object cbKeepExistingLinkages: TCheckBox
-    Left = 8
-    Top = 127
+    Left = 7
+    Top = 200
     Width = 177
     Height = 17
     Caption = 'Keep existing linkages'
@@ -50,13 +50,12 @@ inherited frmLinkStreams: TfrmLinkStreams
     TabOrder = 2
   end
   object btnApply: TBitBtn
-    Left = 87
-    Top = 150
+    Left = 86
+    Top = 223
     Width = 73
     Height = 31
     Caption = '&Apply'
     Default = True
-    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -75,31 +74,38 @@ inherited frmLinkStreams: TfrmLinkStreams
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 3
     OnClick = btnApplyClick
   end
   object btnClose: TBitBtn
-    Left = 166
-    Top = 150
+    Left = 165
+    Top = 223
     Width = 73
     Height = 31
-    DoubleBuffered = True
     Kind = bkClose
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 4
   end
   object btnHelp: TBitBtn
-    Left = 8
-    Top = 150
+    Left = 7
+    Top = 223
     Width = 73
     Height = 31
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 5
     OnClick = btnHelpClick
+  end
+  object rgStreamtype: TRadioGroup
+    Left = 8
+    Top = 8
+    Width = 233
+    Height = 67
+    Caption = 'Stream type'
+    ItemIndex = 0
+    Items.Strings = (
+      'SFR'
+      'STR')
+    TabOrder = 6
   end
 end

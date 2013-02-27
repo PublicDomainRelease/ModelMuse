@@ -4,9 +4,9 @@ inherited frmGlobalVariables: TfrmGlobalVariables
   Caption = 'Global Variables'
   ClientHeight = 284
   ClientWidth = 494
-  ExplicitWidth = 502
-  ExplicitHeight = 318
-  PixelsPerInch = 96
+  ExplicitWidth = 512
+  ExplicitHeight = 329
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -28,10 +28,8 @@ inherited frmGlobalVariables: TfrmGlobalVariables
       Top = 72
       Width = 82
       Height = 27
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 4
       OnClick = btnHelpClick
     end
@@ -40,10 +38,8 @@ inherited frmGlobalVariables: TfrmGlobalVariables
       Top = 72
       Width = 82
       Height = 27
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 5
       OnClick = btnOKClick
     end
@@ -52,10 +48,8 @@ inherited frmGlobalVariables: TfrmGlobalVariables
       Top = 72
       Width = 83
       Height = 27
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 6
     end
     object seGlobalVariableCount: TJvSpinEdit
@@ -105,8 +99,9 @@ inherited frmGlobalVariables: TfrmGlobalVariables
     ColCount = 4
     FixedCols = 0
     RowCount = 2
-    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs]
     TabOrder = 0
+    OnMouseDown = rdgGlobalVariablesMouseDown
     OnSelectCell = rdgGlobalVariablesSelectCell
     OnSetEditText = rdgGlobalVariablesSetEditText
     ExtendedAutoDistributeText = False
@@ -118,7 +113,6 @@ inherited frmGlobalVariables: TfrmGlobalVariables
     UnselectableColor = clBtnFace
     OnBeforeDrawCell = rdgGlobalVariablesBeforeDrawCell
     ColorRangeSelection = False
-    ColorSelectedRow = True
     Columns = <
       item
         AutoAdjustRowHeights = False
@@ -218,7 +212,7 @@ inherited frmGlobalVariables: TfrmGlobalVariables
       64
       80
       64
-      187)
+      225)
   end
   object dlgOpenGlobVar: TOpenDialog
     DefaultExt = '.txt'

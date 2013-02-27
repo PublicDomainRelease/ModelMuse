@@ -66,7 +66,6 @@ begin
     rdgSutraFeature.DeleteRow(rdgSutraFeature.Row);
   end;
   seNumberOfTimes.AsInteger := seNumberOfTimes.AsInteger -1;
-  comboSchedule.ItemIndex := 0;
 end;
 
 procedure TframeCustomSutraFeature.btnInsertClick(Sender: TObject);
@@ -83,7 +82,6 @@ begin
     rdgSutraFeature.InsertRow(rdgSutraFeature.SelectedRow);
   end;
   seNumberOfTimes.AsInteger := seNumberOfTimes.AsInteger +1;
-  comboSchedule.ItemIndex := 0;
 end;
 
 procedure TframeCustomSutraFeature.comboScheduleChange(Sender: TObject);

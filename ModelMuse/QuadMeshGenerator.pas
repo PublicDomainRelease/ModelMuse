@@ -1,5 +1,5 @@
-{ @name is used to generate a quadrilateral mesh using the algorithm described
-  in
+{ @name is used to generate a quadrilateral mesh using the algorithm
+  derived from the one described in
   Sarrate, Josep, and Huerta, Antonio, 2000. Efficient unstructured
   quadrilateral mesh generation. International Journal of Numerical Methods
   in Engineering. 49:1327-1350.
@@ -17,6 +17,10 @@
   Giuliani, S. 1982. An algorithm for continuous rezoning of the hydrodynamic
   grid in arbitrary Lagrangian-Eulerian computer codes. Nuclear Engineering
   and Design. 72: 205-212
+
+  Sarrate, Josep, and Huerta, Antonio, 2001. An improved algorithm to smooth
+  graded quadrilateral meshes preserving the prescribed element size.
+  Communications in Numerical Methods in Engineering. 17:89-99.
 }
 
 unit QuadMeshGenerator;
@@ -25,14 +29,39 @@ interface
 
 uses
   Windows, Generics.Collections, Generics.Defaults, FastGEO, SysUtils,
-  IntListUnit, MeshRenumbering;
+  IntListUnit, MeshRenumbering, QuadTreeClass, MeshRenumberingTypes;
 
 Type
-  TSegmentType = (stInner, stEdge, stSubDomain);
+  TPolygon2DArray = array of TPolygon2D;
+  // @name indicates whether a @link(TSegment) is an interior segment created
+  // during mesh generation or along either the exterior or an interior
+  // @link(TBoundary).
+  // @value(stInner The @link(TSegment) is an interior segment created
+  // during mesh generation)
+  // @value(stSubDomain The @link(TSegment) was created along one of the
+  // interior @link(TBoundary) instances of the mesh.)
+  // @value(stEdge The @link(TSegment) was created along the
+  // exterior @link(TBoundary) instances of the mesh.)
+  TSegmentType = (stInner, stSubDomain, stEdge);
+  // @name indicates the method used to split @link(TBoundary) instances
+  // with 6 edges into two @link(TBoundary) instances with four edges each.
+  // @value(cmModifiedCost this is the method described by
+  // Sarrate and Huerta, 2000.)
+  // @value(cmTemplate This is the method described by Bastian, 2003.)
+  // The default for @link(TQuadMeshCreator.SetSixNodeClosureMethod) is
+  // cmTemplate.
   TSixNodeClosureMethod = (cmModifiedCost, cmTemplate);
+  // @name indicates the method that is used to adjust the position of
+  // nodes.
+  // @value(namLagrange Move the @link(TNode) to the centroid of the elements
+  // of which the @link(TNode) is a part.)
+  // @value(namGiuliani Move the @link(TNode) using the algorithm described
+  // by Giuliani, 1982.)
+  // @value(namSarrateHuerta  Move the @link(TNode) using the algorithm described
+  // by Sarrate and Huerta, 2001.)
+  // @seealso(TNode.AdjustPositionLagrange)
+  // @seealso(TNode.AdjustPositionGiuliani)
   TNodeAdjustmentMethod = (namLagrange, namGiuliani, namSarrateHuerta);
-
-  EInvalidElement = class(Exception);
 
   TQuadMeshCreator = class;
 
@@ -41,58 +70,167 @@ Type
 
   TBoundary = class;
   TBoundaryList = class(TList<TBoundary>);
+  TBoundaryListSqr = TObjectList<TBoundaryList>;
 
   TSegment = class;
   TSegmentList = class(TList<TSegment>);
+  TSegmentLists = TList<TSegmentList>;
+  TSegmentObjectListsSqr = TObjectList<TSegmentLists>;
 
+  TNode = class;
+  TNodeList = class(TList<TNode>);
+
+  // @name defines a node in the finite element mesh.
   TNode = class(TInterfacedObject, INode)
   private
+    // See @link(Location).
     FLocation: TPoint2D;
+    // See @link(NodeType).
     FNodeType: TNodeType;
+    // @name is a list of @link(TBoundary) instances that have this @classname
+    // as one of their nodes.
     FElements: TBoundaryList;
+    // @name is a list of @link(TSegment) instances that contain this
+    // @classname as one of their nodes.
     FSegments: TSegmentList;
+    // @name is the owner of this @classname
     FQuadMeshCreator: TQuadMeshCreator;
+    // See @link(NodeNumber).
     FNodeNumber: Integer;
+    // See @link(DesiredSpacing).
     FDesiredSpacing: double;
+    // See @link(DesiredElementCount).
     FDesiredElementCount: Integer;
+    // @name is used internally to mark nodes that are at the location
+    // where two or more of the original @link(TBoundary) instances cross
+    // each other.
+    FIntersection: Boolean;
+    // @name is the sum of all the angles made at this @classname by
+    // the edges of all the
+    // elements that contain this @classname at this @classname.
+    // It is used to assign @link(DesiredSpacing).
+    FTotalAngle: double;
     // Move the node to the centroid of the elements
     // of which the node is a part.
+    FConstraintNeighbors: TNodeList;
     procedure AdjustPositionLagrange;
+    // Move the node using the algorithm described in Giuliani, 1982
+    // or by Sarrate and Huerta, 2001.)
     procedure AdjustPositionGiuliani;
+    // @name improves the topology of the mesh by
+    // @link(NodeElimination),
+    // @link(ElementElimination),
+    // @link(SideElimination),
+    // @link(InteriorElementElimination), and
+    // @link(FanElimination).
     function ImproveTopology1: boolean;
+    // @name improves the topology of the mesh by @link(DiagonalSwapping)
     function ImproveTopology2: boolean;
+    // Eliminate interior nodes that are part of only two elements and
+    // merge the two elements into a single element.
+    // @name may result in triangular elements on the edge of the mesh which
+    // must be cleaned up later.
+    // (Zhu and others, 1991, figure 10).
     procedure NodeElimination;
+    // When two interior nodes on opposite sides of an element both only
+    // have three elements, move the two opposite nodes to a position
+    // halfway between them and eliminate the element and one of the nodes.
+    // (Zhu and others, 1991, figure 11).
     function ElementElimination: boolean;
+    // @name merges elements that fan out from a single node.
+    function FanElimination: boolean;
+    // @name improves topology by combining elements when three of the nodes
+    // of an element have only three elements each.
+    function InteriorElementElimination: Boolean;
+    // If two adjacent interior nodes both only
+    // have three elements, eliminate both elements that are shared by
+    // both nodes and from the merger of the two remaining elements, create
+    // two new elements by inserting a new diagonal.
+    // (Zhu and others, 1991, figure 13).
     function SideElimination: boolean;
+    // Improve the topology by eliminating the shared side of two elements
+    // and from the merger of the two remaining elements, create
+    // two new elements by inserting a new diagonal.
+    // (Zhu and others, 1991, figure 12).
     function DiagonalSwapping: boolean;
+    // @name replaces all references to the current @classname in AnElement
+    // with ReplacementNode.
     procedure ReplaceNodeInElement(ReplacementNode: TNode;
       AnElement: TBoundary);
+    // @name returns the number of @link(IElement)s that have this @classname
+    // as one of their boundary nodes.
     function GetActiveElementCount: Integer;
+    // @name returns the @link(IElement) at position Index.
     function GetActiveElement(Index: Integer): IElement;
+    // @name returns the node number of this @classname.
     function GetNodeNumber: Integer;
+    // @name sets the node number of this @classname.
     procedure SetNodeNumber(Value: Integer);
+    // @name returns the location of this @classname.
     function GetLocation: TPoint2D;
+    // @name sets the location of this @classname.
     procedure SetLocation(const Value: TPoint2D);
+
+    // @name returns the @link(TNodeType) of this node.
     function GetNodeType: TNodeType;
+    // @name checks that a location is inside the meshing domain.
+    function ValidPosition(ALocation: TPoint2D): boolean;
+    // @name returns the highest and lowest angle of any element that
+    // includes this @classname.
+    procedure WorstAngles(var HighestAngle, LowestAngle: double);
+//    procedure SetX(const Value: double);
+//    procedure SetY(const Value: double);
+
+    // @name fills NeighborNodes with a list of @link(TNode)s connected to the
+    // central node in clockwise order around the central node.
+    // @name also fills ElementList with a list of @link(TBoundary)s
+    // connected to the central node in clockwise order around the central node.
+    procedure GetNeighborNodesAndElements(NeighborNodes: TNodeList; ElementList: TBoundaryList);
+    // @name fills NeighborNodes with a list of @link(TNode)s connected to the
+    // central node.
+    procedure GetNeighborNodes(FoundNodes: TNodeList);
   public
+    { @name creates a @classname.
+      @definitionlist(
+        @itemLabel(QuadMeshCreator)
+        @item(This is the @link(TQuadMeshCreator) that owns this @classname.)
+
+        @itemLabel(DesiredSpacing)
+        @item(This is the spacing that is desired between nodes for
+         this @classname.)
+      )
+    }
     constructor Create(QuadMeshCreator: TQuadMeshCreator;
       DesiredSpacing: double);
+    {@name frees @link(FSegments) and @link(FElements) and this @classname.}
     destructor Destroy; override;
-    property DesiredSpacing: double read FDesiredSpacing;
-    property Location: TPoint2D read GetLocation write SetLocation;
+    // @name is the desired spacing between nodes for this @classname.
+    property DesiredSpacing: double read FDesiredSpacing write FDesiredSpacing;
+    // @name is where this node is located.
+    property Location: TPoint2D read FLocation write SetLocation;
+    // @name is the X-coordinate of the @link(Location) of this @classname.
     property X: double read FLocation.X write FLocation.X;
+    // @name is the Y-coordinate of the @link(Location) of this @classname.
     property Y: double read FLocation.Y write FLocation.Y;
+    // @name indicates whether this @classname is an internal node,
+    // and edge node or a node on an internal boundary of the mesh.
     property NodeType: TNodeType read GetNodeType;
+    // @name indicates the number of elements that have this @classname
+    // as one of their boundary nodes.
     property ElementCount: Integer read GetActiveElementCount;
+    // @name is the optimal number of elements at this @classname.
     property DesiredElementCount: Integer read FDesiredElementCount;
+    // @name is used to access @link(IElement) instances that contain this
+    // @classname as one of their corners.
     property Elements[Index: Integer]: IElement read GetActiveElement;
+    // @name is the number of this @classname.
     property NodeNumber: Integer read GetNodeNumber write SetNodeNumber;
   end;
 
-  TNodeList = class(TList<TNode>);
-
   INodeComparer = IComparer<TNode>;
 
+  // @name is used to sort @link(TNode)s based on the angle they make with
+  // CenterNode in @link(Create).
   TNodeAngleComparer = class(TComparer<TNode>)
   private
     FCenterNode: TNode;
@@ -101,6 +239,7 @@ Type
     constructor Create(CenterNode: TNode);
   end;
 
+  // @name is used to sort @link(TNode)s based on @link(TNode.DesiredSpacing).
   TNodeSpacingComparer = class(TComparer<TNode>)
   public
     function Compare(const Left, Right: TNode): Integer; override;
@@ -113,14 +252,26 @@ Type
   }
   TSegment = class(TObject)
   private
+    // @name is the position of @link(FNode1) within @link(FBoundary).
+    // It is set in @link(TBoundary.SetSegmentPositions).
+    FPosition1: integer;
+    // @name is the position of @link(FNode2) within @link(FBoundary).
+    // It is set in @link(TBoundary.SetSegmentPositions).
+    FPosition2: integer;
     // First endpoint @link(TNode) of the segment
     FNode1: TNode;
     // Second endpoint @link(TNode) of the segment
     FNode2: TNode;
-    // @link(TNode)s inserted along length of @classname
+    // @link(TNode)s inserted along length of @classname between @link(FNode1)
+    // and @link(FNode2).
     FInnerNodes: TNodeList;
+    // @name is the @link(TSegmentType) of this @classname. It is used to
+    // set @link(TNode.NodeType) of @link(TNode) inserted into
+    // @link(FInnerNodes)
     FSegmentType: TSegmentType;
+    // @name is the @link(TBoundary) of which owns this @classname.
     FBoundary: TBoundary;
+    // This is the @link(TQuadMeshCreator) that is creating the mesh.
     FQuadMeshCreator: TQuadMeshCreator;
     // @name returns the number of @link(TNode)s that ideally would be inserted
     // along this @classname. The actual number inserted might be larger
@@ -133,77 +284,214 @@ Type
     // @link(TNode.FSegments) of @link(Node1) and @link(Node2).
     constructor Create(Node1, Node2: TNode; SegmentType: TSegmentType;
       Boundary: TBoundary; QuadMeshCreator: TQuadMeshCreator);
-    property Node1: TNode read FNode1;
-    property Node2: TNode read FNode2;
+    // @name is the @link(TSegmentType) of this @classname. It is used to
+    // set @link(TNode.NodeType) of @link(TNode) inserted into
+    // @link(FInnerNodes)
     property SegmentType: TSegmentType read FSegmentType;
     // @name splits this @classname into two parts at ANode. ANode must be in
     // @link(FInnerNodes).
     function Split(ANode: TNode): TSegmentList;
     // @name creates a new @classname whose orientation is opposite this one.
     function CreateReversedSegment: TSegment;
+    // @name is the distance between the end nodes of this @classname.
+    // @seealso(FNode1)
+    // @seealso(FNode2)
     function Length: double;
     // @name creates evenly spaced new nodes and inserts them in
     // @link(FInnerNodes).
     procedure InsertNodes(NumberToInsert: Integer);
+    // @name returns @true if ANode is in this @classname.
+    function ContainsNode(ANode: TNode): Boolean;
+  {$IFDEF TEST}
   public
+  {$ENDIF}
+    // This is the first end node of this @classname.
+    // Name is used only for testing.
+    property Node1: TNode read FNode1;
+    // This is the second end node of this @classname.
+    // Name is used only for testing.
+    property Node2: TNode read FNode2;
+  public
+  {$IFDEF TEST}
+    // See @link(FInnerNodes).
+    // Name is used only for testing.
+    property InnerNodes: TNodeList read FInnerNodes;
+  {$ENDIF}
+    // @name destroys @link(FInnerNodes).
     destructor Destroy; override;
   end;
 
+  // Each @classname represents a single vertex along the edge of a single
+  // @link(TBoundary). While a @link(TNode) can be on many @link(TBoundary)
+  // instances, each @classname is only on one @link(TBoundary).
+  // Each @classname has a @link(TNode) as one of its members
+  // (see @link(FNode)). Multiple instances of @classname on the same
+  // @link(TBoundary) may have the same @link(TNode). However, they will
+  // differ in @link(FPosition).
+  // Each @name is owned by @link(TQuadMeshCreator.FBoundaryNodes).
   TNodeInBoundary = class(TObject)
-  private
-    FNode: TNode;
-    FPosition: Integer;
-    FBoundary: TBoundary;
+  strict private
+    // @name is a list of FSegments along a @link(TNodeInBoundary) that
+    // will contain the @classname at @link(FPosition).
     FSegments: TSegmentList;
+  private
+    // @name is the @link(TNode) that defines the position in space of this
+    // @Classname
+    FNode: TNode;
+    // @name is the position of this vertex of the @link(TBoundary) in the
+    // list of vertices around the edge of the @link(TBoundary).
+    FPosition: Integer;
+    // @name is the @link(TBoundary) that contains this @classname.
+    FBoundary: TBoundary;
+    // @name returns true if this @classname and ANode are both along the same
+    // @link(TSegment)
     function OnSameSegment(ANode: TNodeInBoundary): boolean;
+    // See @link(DesiredSpacing).
     function GetDesiredSpacing: double;
+    // See @link(X).
     function GetX: double;
+    // See @link(Y).
     function GetY: double;
+    // See @link(NodeType).
     function GetNodeType: TNodeType;
+    // See @link(ElementCount).
     function GetElementCount: Integer;
+    // See @link(Location).
     function GetLocation: TPoint2D;
+    // See @link(SegmentCount)
+    function GetSegmentCount: Integer;
+    // See @link(Segments)
+    function GetSegment(Index: Integer): TSegment;
+    // See @link(Segments)
+    procedure SetSegment(Index: Integer; const Value: TSegment);
+    // @link(FPosition)
     property Position: Integer read FPosition;
+    // See @link(TNode.DesiredSpacing).
     property DesiredSpacing: double read GetDesiredSpacing;
+    { @name creates a new @classname.
+      @definitionlist(
+        @itemlabel(Node)
+        @item(@name defines the spatial position of this @classname and
+          a variety of other properties.)
+
+        @itemlabel(Boundary)
+        @item(@name is the @link(TBoundary) that includes this @classname.)
+
+        @itemlabel(Segment)
+        @item(@name is the @link(TSegment) along which this @classname lies.)
+      )
+    }
     Constructor Create(Node: TNode; Boundary: TBoundary; Segment: TSegment);
+    // @name adds @link(TSegment)s to @link(FSegments).
+    procedure AddSegment(ASegment: TSegment);
+    // @name is the number of @link(TSegment)s in @link(FSegments).
+    property SegmentCount: Integer read GetSegmentCount;
+    // @name returns the @link(TSegment)s in @link(FSegments) at Index.
+    property Segments[Index: Integer]: TSegment read GetSegment write SetSegment;
+    // @name deletes the @link(TSegment) in @link(FSegments) at Index.
+    procedure DeleteSegment(Index: Integer);
+    // @name returns the position of @link(TSegment)s in @link(FSegments).
+    function IndexOfSegment(ASegment: TSegment): integer;
+    // @name reverses the order of @link(TSegment)s in @link(FSegments).
+    procedure ReverseSegments;
+    // @name inserts a @link(TSegment) into @link(FSegments) at Index.
+    procedure InsertSegment(Index: Integer; ASegment: TSegment);
+    // @name removes a @link(TSegment) from @link(FSegments).
+    procedure RemoveSegment(ASegment: TSegment);
   public
+  {$IFDEF TEST}
+    // @name defines the position of this @classname.
+    // @name is used only for testing.
+    property Node: TNode read FNode;
+  {$ENDIF}
+    // @name destroys FSegments.
     destructor Destroy; override;
+    // See @link(TNode.X).
     property X: double read GetX;
+    // See @link(TNode.Y).
     property Y: double read GetY;
+    // See @link(TNode.NodeType).
     property NodeType: TNodeType read GetNodeType;
+    // See @link(TNode.ElementCount).
     property ElementCount: Integer read GetElementCount;
+    // See @link(TNode.Location).
     property Location: TPoint2D read GetLocation;
   end;
 
   TNodeInBoundaryObjectList = TObjectList<TNodeInBoundary>;
 
+  // @name is used to decide how to split a @link(TBoundary) into two
+  // instances of @link(TBoundary). The @classname that is @link(Visible)
+  // and has the lowest @link(Cost) is picked at the place to split the
+  //  @link(TBoundary). The method used to compute the cost
+  // (see @link(ComputeCost) has been modified from Sarrate and Huerta, 2000.
   TCost = class(TObject)
   private
-    FTheta1: TFloat;
-    FTheta2: TFloat;
-    FPhi: double;
-    FNodeDistance: TFloat;
-    FNStar: double;
-    F_l: double;
-    FGamma: double;
+    // @name is the first endpoint of the proposed location to split
+    // a @link(TBoundary).
     FNode1: TNodeInBoundary;
+    // @name is the second endpoint of the proposed location to split
+    // a @link(TBoundary).
     FNode2: TNodeInBoundary;
+    // @name is the @link(TQuadMeshCreator) that is creating the mesh.
     FQuadMeshCreator: TQuadMeshCreator;
+    // See @link(Visible).
     FVisible: boolean;
+    // See link(Cost).
     FCost: double;
+    // @name is set to -1 in @link(Create) and then is set to the distance
+    // between @link(FNode1) and @link(FNode2) in @link(ComputeCost).
+    FNodeDistance: TFloat;
+    // @name is used internally in @link(ComputeCost). It only needs to
+    // be computed when the @classname is first created.
+    FTheta1: TFloat;
+    // @name is used internally in @link(ComputeCost). It only needs to
+    // be computed when the @classname is first created.
+    FTheta2: TFloat;
+    // @name is used internally in @link(ComputeCost). It only needs to
+    // be computed when the @classname is first created.
+    FPhi: double;
+    // @name is used internally in @link(ComputeCost). It only needs to
+    // be computed when the @classname is first created.
+    FNStar: double;
+    // @name is used internally in @link(ComputeCost). It only needs to
+    // be computed when the @classname is first created.
+    F_l: double;
+    // @name is used internally in @link(ComputeCost). It only needs to
+    // be computed when the @classname is first created.
+    FGamma: double;
+    // @name is the area of the first polygon to be created by splitting a
+    // @link(TBoundary).
+    FArea1: double;
+    // @name is the area of the second polygon to be created by splitting a
+    // @link(TBoundary).
+    FArea2: double;
+    // @name is used to determine whether it would be OK to split the
+    // @link(TBoundary) at @link(FNode1) and @link(FNode2). If it would be
+    // OK, @link(Visible) is set to @true.
+    // If the proposed splitting segment would cross another segment of the
+    // boundary, the proposed split is not OK.
     procedure ComputeVisibility;
+    // @name gets the instances of @link(TNodeInBoundary) that come just
+    // before and just after @link(FNode1) and @link(FNode2).
     procedure GetNeighborNodes(var PriorNode1, SubsequentNode1, PriorNode2,
       SubsequentNode2: TNodeInBoundary);
-    procedure ComputeCost;
+    // Compute @link(Cost) using a method modified from
+    // Sarrate and Huerta, 2000.
+    procedure ComputeCost(LowestCost: TCost);
+    // @name creates a @classname and calls @link(ComputeVisibility).
     Constructor Create(Node1, Node2: TNodeInBoundary;
       QuadMeshCreator: TQuadMeshCreator);
+    // @name indicates whether or not the two @link(TNode)s that define this
+    // @classname can be used to split the @link(TBoundary).
     property Visible: boolean read FVisible;
+    // @name is a measure of the estimated quality of the position specified
+    // for splitting a @link(TBoundary). Higher costs represent poorer
+    // positions.
     property Cost: double read FCost;
   end;
 
   TNodeObjectList = class(TObjectList<TNode>);
-  TCostObjectList = class(TObjectList<TCost>);
-  TCost2ObjectList = class(TObjectList<TCostObjectList>);
-  TCost3ObjectList = class(TObjectList<TCost2ObjectList>);
 
   TBoundaryObjectList = class(TObjectList<TBoundary>);
 
@@ -213,50 +501,131 @@ Type
   // beginning and end of @link(FNodes).
   TBoundary = class(TNodeInBoundaryList, IElement)
   private
+    // @name is the @link(TQuadMeshCreator) with which this @classname is
+    // associated.
     FQuadMeshCreator: TQuadMeshCreator;
+    // When a @classname is originally used to define a region where meshing
+    // is to be performed, @name holds the @link(TNode)s that define the region.
+    // Later on @name is no longer used.
     FNodes: TNodeList;
+    // @name holds @link(TSegment)s around the edge of the @classname.
     FSegments: TSegmentObjectList;
-    FSegmentType: TSegmentType;
+{$IFDEF TEST}
+  public
+{$ENDIF}
+    // When a @classname is @link(Split), @name is the @classname from which
+    // it has been split.
     FParent: TBoundary;
+    // When a @classname is @link(Split), @name holds the parts into which
+    // it has been split.
     FSubParts: TBoundaryObjectList;
+    // @name is the spacing between @link(TNode)s that would ideally be used
+    // for this @classname.
     FDesiredSpacing: double;
+    // @name is set to @true in @Link(ConvertToClosedBoundary) and tested in
+    // @link(AssignOriginalEdgeAngles).
     FConverted: boolean;
+    // @name is the number of this element.
     FElementNumber: Integer;
+    // @name keeps track of how many references there are to this @classname.
+    // This @classname will free itself if @name reaches zero.
     FRefCount: Integer;
+    // @name makes sure that the @link(TSegment)s in @link(FSegments)
+    // are correct.
+    procedure FixSegments;
+    // See @link(SubParts).
     function GetSubPart(Index: Integer): TBoundary;
     // @name inserts an even number of @link(TNode)s around the @classname
     procedure InsertNodesAlongBoundary;
+    // @name converts and open to a closed boundary by adding @link(TSegment)s
+    // that reverse the path from the beginning to the end.
     procedure ConvertToClosedBoundary;
+    // @name assigns new boundary node numbers.
     procedure RenumberNodes;
-    procedure SetNodeTypes(NodeType: TNodeType);
+    // @name sets the @link(TNodeType) of all @link(TNode)s in @link(FNodes).
+    procedure SetNodeType(NodeType: TNodeType);
     // @name creates @link(TNodeInBoundary TNodeInBoundaries) along it's edge.
     procedure CreateBoundaryNodes;
+    // @name finds the @link(TSegment) that contains ANode and splits the
+    // segment if required.
     procedure SplitSegmentAtNode(ANode: TNodeInBoundary);
-    function SpecialCase: boolean;
-    procedure Split222(FirstIndex: Integer);
+    // @name is used to split a @classname once the number of sides has
+    // reached 6.
+    function SpecialCase({$ifdef TEST}List: TBoundaryList {$ENDIF}) : boolean;
+    // @name splits a @classname into three elements by adding a new point.
+    procedure Split222(FirstIndex: Integer); overload;
+    // @name splits a @classname with three sides each composed of 3 nodes
+    //  into three elements with a new point at NewLocation.
+    procedure Split222(FirstIndex: Integer; NewLocation: TPoint2D); overload;
+    // @name splits a @classname that has three sides one of which has 4 points
+    // in a line and another of which has 3 points in a line.
     procedure Split312(FirstIndex: Integer);
-    procedure Split411(FirstIndex: Integer);
+    // @name splits a @classname that has three sides one of which has 5 points
+    // in a line.
+    procedure Split411(FirstIndex: Integer
+      {$IFDEF TEST}; List: TBoundaryList{$ENDIF});
+    // @name splits a @classname that has four sides two of which have 3 points
+    // in a line and which don't intersect.
     procedure Split2121(FirstIndex: Integer);
+    // @name removes itself from all @link(TNodeInBoundary)s that contain it.
     procedure RemoveSelfFromAllNodes;
+    // @name reverses itself or @link(FSubParts).
     procedure ReverseSubBoundaries;
+    // @name indicates whether a @link(TBoundary) is in clockwise or
+    // counter clockwise orientation.
     function Orientation: Integer;
+    // @name returns the position of the @link(TNodeInBoundary) that contains
+    // ANode.
     function IndexOfNode(ANode: TNode): Integer;
+    procedure AssignConstraintNodes;
+{$IFDEF TEST}
+  public
+    function Center: TPoint2D;
+{$ENDIF}
+    // @name removes itself from all of the @link(TNode)s that have it.
     procedure RemoveSelfFromOwnNodes;
+    // See @link(SubPartCount).
     function GetSubPartCount: Integer;
+    // @name sets the orientation of this @classname to be counterclockwise.
     procedure SetCounterClockwiseOrientation;
+    // @name computes the angle for each node on the boundary and uses that
+    // to assign @link(TNode.FDesiredElementCount).
     procedure AssignOriginalEdgeAngles;
+    // @name creates @link(TNodeInBoundary)s based on the contents of
+    // @link(FNodes).
     procedure GenerateSegments(DesiredOrientation: Integer);
+    // @name splits a @classname into two or more parts and adds the new parts
+    // to list if they might be split further.
     Procedure Split(List: TBoundaryList);
+    // @name creates an instance of @classname.
     constructor Create(QuadMeshCreator: TQuadMeshCreator;
-      SegmentType: TSegmentType; Parent: TBoundary; DesiredSpacing: double);
+      Parent: TBoundary; DesiredSpacing: double);
+    // @name returns Count -1. See @link(NodeCount).
     function GetActiveNodeCount: Integer;
-    property SegmentType: TSegmentType read FSegmentType;
+    // @name returns @link(Clockwise), @link(CounterClockwise),
+    // or @link(CollinearOrientation) depending on the
+    // content of @link(FNodes).
+    function NodeOrientation: Integer;
     // The spacing between neighboring nodes in the final mesh
     // should be no greater than @name.
     property DesiredSpacing: double read FDesiredSpacing;
-    property SubPartCount: Integer read GetSubPartCount;
-    property SubParts[Index: Integer]: TBoundary read GetSubPart;
+    // If a @classname intersects itself multiple times, @name splits it into
+    // separate @classname s at the intersection points.
+    procedure SplitMultiplyConnectedBoundary;
+//    procedure SplitMultiplyConnectedBoundary2;
+{$IFDEF TEST}
+    // @name is only used in testing
     procedure CheckInvalidElement;
+  public
+    // @name is only used in testing
+    ListCount: Integer;
+{$ENDIF}
+    // @name is the number of parts into which @name has been split.
+    property SubPartCount: Integer read GetSubPartCount;
+    // @name gives access to the parts into which a @classname has been split.
+    property SubParts[Index: Integer]: TBoundary read GetSubPart;
+    // @name sets @link(TSegment.FPosition1) and @link(TSegment.FPosition2).
+    procedure SetSegmentPositions;
   protected
     function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
     function _AddRef: Integer; stdcall;
@@ -264,99 +633,388 @@ Type
     function GetActiveNode(Index: Integer): INode;
     function GetElementNumber: Integer;
     procedure SetElementNumber(Value: Integer);
+{$IFDEF TEST}
   public
+{$ENDIF}
+    // @name is the area of a @classname.
+    function Area: double;
+  public
+    // @name destroys an instance of @classname. Don't call @name.
+    // Call Free instead.
     destructor Destroy; override;
+    // @name adds a @link(TNode) to @link(FNodes).
     procedure AddNode(Node: TNode);
+    // @name returns the @link(TNode) of the @link(TNodeInBoundary) at Index.
     property Nodes[Index: Integer]: INode read GetActiveNode;
+    // @name is the number of the element.
     property ElementNumber: Integer read GetElementNumber
       write SetElementNumber;
+    // @name is the number of active nodes in an IElement.
     property NodeCount: Integer read GetActiveNodeCount;
+  {$IFDEF TEST}
+    // name is only used in tests.
+    property NodeList: TNodeList read FNodes;
+    // name is only used in tests.
+    property Segments: TSegmentObjectList read FSegments;
+  {$ENDIF}
   end;
+
+  TBoundaryComparer = TComparer<TBoundary>;
+
+  // @name is used in sorting @link(TBoundary)s based on the number of
+  // @link(TNodeInBoundary) that they contain.
+  TBoundaryCountComparer = class(TBoundaryComparer)
+  public
+    function Compare(const Left, Right: TBoundary): Integer; override;
+  end;
+
+  TNodeConnection = class;
+  TNodeConnectionsObjectList = TObjectList<TNodeConnection>;
 
   TQuadMeshCreator = class(TInterfacedObject, IMesh)
   private
+    // @name is the minimum X coordinate of all of the points
+    // on all of the @link(TBoundary boundaries).
     FMinX: double;
+    // @name is the minimum Y coordinate of all of the points
+    // on all of the @link(TBoundary boundaries).
     FMinY: double;
+    // @name is the maximum X coordinate of all of the points
+    // on all of the @link(TBoundary boundaries).
     FMaxX: double;
+    // @name is the maximum Y coordinate of all of the points
+    // on all of the @link(TBoundary boundaries).
     FMaxY: double;
-    // @name is the length of the diagonal of a rectangular box around the
-    // the nodes making up the boundary.
+    {$IFDEF TEST}
+  public
+    {$ENDIF}
+    // @name is the length of the diagonal of a rectangle that encloses
+    // all of the points on all of the @link(TBoundary boundaries).
     FCharacteristicLength: double;
+    FDuplicateBoundaries: TBoundaryObjectList;
+    {$IFDEF TEST}
+  private
+    {$ENDIF}
+    // @name contains the original @link(TBoundary boundaries) that define
+    // the meshing region or the @link(TBoundary boundaries) created by
+    // intersecting them.
     FBoundaries: TBoundaryObjectList;
-    FCostsArray: TCost3ObjectList;
+    // See @link(SixNodeClosureMethod).
     FSixNodeClosureMethod: TSixNodeClosureMethod;
+    // See @link(NodeAdjustmentMethod).
     FNodeAdjustmentMethod: TNodeAdjustmentMethod;
+    // See @link(GrowthRate)
     FGrowthRate: double;
+    // @name holds all the @link(TNode)s in the mesh.
     FNodes: TNodeObjectList;
+    // @name holds the @link(IElement)s in the mesh. It is filled in
+    // @link(RenumberNodes)
     FElementList: TIElementList;
+    // @name holds the @link(INode)s in the mesh. It is filled in
+    // @link(RenumberNodes)
     FNodeList: TINodeList;
+    // @name owns all the @link(TNodeInBoundary)s.
     FBoundaryNodes: TNodeInBoundaryObjectList;
-    procedure InvalidateCosts(List: TBoundary; LowestCost: TCost);
+    // @name is used to search for @link(TNode)s.
+    FNodeQuadTree: TRbwQuadTree;
+    // @name stores the original polygons that were specified at the beginning
+    // of the mesh generation process.
+    FPolygonArray: TPolygon2DArray;
+    // @name stores a list of the @link(TNode)s that form the outermost
+    // boundary of the mesh that will be generated. They may not be in order.
+    FBNodes: TNodeList;
+    // @name is used to create lists of @link(TBoundary)s that are inside
+    // another @link(TBoundary).
+    FIncludedBoundaries: TObjectList<TBoundaryList>;
+    FRenumberingAlgorithm: TRenumberingAlgorithm;
+    procedure GetConnectedOpenBoundaries(OpenBoundaryList: TBoundaryList; BlindEndsBoundaryList: TBoundaryList);
+    // @name fills ClosedBoundaries with all the closed @link(TBoundary)s.
+    // LinkedClosedBoundaries and LinkedOpenBoundaries are filled with lists
+    // of open of closed @link(TBoundary)s that correspond to the nodes in
+    // IntersectionNodes.
+    procedure InitializeIntersectLists(IntersectionNodes: TNodeList;
+      LinkedClosedBoundaries, LinkedOpenBoundaries: TBoundaryListSqr;
+      ClosedBoundaries: TBoundaryList);
+    // @name stores a copy of the @link(TNode)s on the very first
+    // @link(TBoundary) in @link(FBNodes).
+    procedure StoreBoundaryNodes;
+    procedure GetBestLinkWhenSameNode(var ClosestCost: TCost; FirstBoundary,
+      ABoundary: TBoundary);
+    procedure GetConnectionsBetweenBoundaries(OpenBoundaryList,
+      BlindEndsBoundaryList: TBoundaryList; NodeList: TNodeList;
+      ConnectionsList: TNodeConnectionsObjectList);
+
+    {$IFDEF TEST}
+  public
+    {$ENDIF}
+    // @name stores polygons representing the original closed boundaries
+    // of the meshing area.
+    procedure StoreClosedBoundaryPolygons;
+    // @name checks the interior nodes and if any of them have concave
+    // angles in an element, it fixes them.
+    function FixEdgeTriangles: boolean;
+    // The first @link(TBoundary) is the edge of the meshing area. If any
+    // other closed boundaries intersect it, they are broken into
+    // an open @link(TBoundary).
+    procedure BreakClosedBoundariesThatIntersectOuterBoundary;
+    // @name calls @link(TBoundary.FixSegments) for all the @link(TBoundary)s.
+    procedure FixSegments;
+    { @name computes @link(FCharacteristicLength), @link(FMinX),
+    @link(FMinY), @link(FMaxX), and @link(FMaxY).}
+    procedure ComputeCharacteristicLength;
+    {$IFDEF TEST}
+    // @name is only used in testing.
+    function GetBoundaryCount: Integer;
+    {$ENDIF}
+    // See @link(SixNodeClosureMethod).
+    procedure SetSixNodeClosureMethod(const Value: TSixNodeClosureMethod);
+    // See @link(NodeAdjustmentMethod).
+    procedure SetNodeAdjustmentMethod(const Value: TNodeAdjustmentMethod);
+    // @name moves the node to the centroid of a polygon made up of the
+    // @classname s neighboring this @classname.
+    // See @link(TNode.AdjustPositionLagrange).
+    procedure AdjustPositionLagrange;
+    // @name calls @link(TNode.AdjustPositionGiuliani) for all the
+    // @link(TNode)s.
+    procedure AdjustPositionGiuliani;
+    // @name returns the number of @link(TNode)s.
+    function GetActiveNodeCount: Integer;
+    // See @link(NodeObjects).
+    function GetNodeObject(Index: Integer): TNode;
+    // See link(ElementCount).
+    function GetActiveElementCount: Integer;
+    // See link(Elements).
+    function GetActiveElement(Index: Integer): IElement;
+    // See link(Nodes).
+    function GetActiveNode(Index: Integer): INode;
+    procedure SetRenumberingAlgorithm(const Value: TRenumberingAlgorithm);
+    procedure AssignConstraintNodes;
+    {$IFDEF TEST}
+    // @name is only used in testing.
+    property BoundaryCount: Integer read GetBoundaryCount;
+    {$ENDIF}
+    // @name access @link(FNodes).
+    property NodeObjects[Index: Integer]: TNode read GetNodeObject;
+    function _AddRef: Integer; stdcall;
+    function _Release: Integer; stdcall;
+    // @name is used to create lists of @link(TBoundary)s that are inside
+    // another @link(TBoundary).
+    property IncludedBoundaries: TObjectList<TBoundaryList>
+      read FIncludedBoundaries;
+    // @name calls @link(ComputeCharacteristicLength) and
+    // @link(StoreBoundaryNodes). This results in the computation of
+    // a bounding rectangle encompassing all the points on all the
+    // @link(TBoundary boundaries) and of @link(FCharacteristicLength).
+    // It also stores the @link(TNode)s in the first @link(TBoundary) in
+    // @link(FBNodes). Initially, the first boundary defines the outer edge
+    // of the mesh that will be created. However, during the process of
+    // creating the mesh, both the boundaries themselves and the order of the
+    // boundaries will be modified. See @link(FBoundaries).
+    procedure Initialize;
+    {@name finds all points of intersection between the boundaries used to
+    control the mesh generation. It then adds the intersection points to the
+    boundaries. }
+    procedure IntersectBoundaries;
+    // @name looks for intersections between closed boundaries (except the
+    // outermost closed boundary) and if it finds intersections, merges the
+    // intersecting closed boundaries into a single boundary. If in the
+    // process of merging the boundaries, some @link(TNode)s are inside the
+    // resulting closed boundary, they are removed.
+    procedure MergeClosedBoundaries;
+    // @name breaks open @link(TBoundary boundaries) into separate
+    // @link(TBoundary boundaries) at points of intersection.
+    procedure BreakOpenBoundaries;
+    // @name deletes boundaries outside the first boundary
+    // or inside internal closed boundaries.
+    procedure DeleteExternalBoundaries;
+    // @name deletes @link(TBoundary) that are outside the meshing area.
+    procedure DeleteDisconnectedBoundaries;
+    // @name traces open @link(TBoundary boundaries) linked to the
+    // closed @link(TBoundary boundaries) and
+    // extracts new closed @link(TBoundary boundaries) where possible.
+    procedure ExtractClosedBoundaries;
+    // Where open @link(TBoundary boundaries) intersect closed
+    // @link(TBoundary boundaries), they are merged with the closed
+    // @link(TBoundary boundaries). At each intersection point, the
+    // boundaries are sorted in the order of the direction of the
+    // boundary away from the intersection point. The closed boundaries
+    // will be in the list twice and the open boundaries will only be in
+    // the list once. The order of the @link(TBoundary boundaries).
+    // determines the order in which the boundaries will be merged.
+    procedure MergeOpenWithClosedBoundaries;
+    // @name merges open @link(TBoundary boundaries) that intersect with other
+    // open @link(TBoundary boundaries)
+    // into a single closed @link(TBoundary). At each intersection point, the
+    // boundaries are sorted in the order of the direction of the
+    // boundary away from the intersection point.
+    // The order of the @link(TBoundary boundaries).
+    // determines the order in which the boundaries will be merged.
+//    procedure MergeOpenNodeBoundaries;
+//    procedure MergeOpenNodeBoundaries2;
+    procedure MergeOpenNodeBoundaries3;
+    // @name fills @link(FIncludedBoundaries). Each @link(TBoundaryList) in
+    // @link(FIncludedBoundaries) has a closed @link(TBoundary) as its
+    // first member. All the other @link(TBoundary boundaries) are ones that
+    // are inside the first one.
+    procedure ArrangeBoundaries;
+    // @name sets the @link(TNode.FNodeType) of the @link(TNode)s in the
+    // outermost boundary to ntEdge and for the others to ntSubDomain.
+    procedure SetNodeTypes;
+    // @name creates @link(TSegment)s in a counterclockwise orientation
+    // around the outer @link(TBoundary) and in a clockwise orientation
+    // around the other boundaries.
+    procedure GenerateSegments;
+    {@name assigns the @link(TNode.DesiredSpacing) to each @link(TNode) based
+    on the the distance of the @link(TNode) to other @link(TNode)s with
+    smaller @link(TNode.DesiredSpacing)s.}
+    procedure AssignDesiredSpacings;
+    // @name adds every @link(TNode) to @link(FNodeQuadTree).
+    procedure FillNodeTree;
     // @name inserts nodes along boundaries to ensure that the spacing between
     // nodes is never larger than the desired spacing and that the number of
     // nodes inserted is even.
     procedure InsertNodesAlongBoundaries;
     // @name converts an open boundary to a closed one by adding the existing
-    // nodes in reverse order to the boundary.
+    // @link(TSegment)s in reverse order to the boundary.
     procedure ConvertToClosedBoundaries;
-    // If there is more than one boundary, @name joins them together to convert
-    // them to a single boundary.
-    procedure MakeSingleBoundary;
-    // @name sets the @link(TNode.FNodeType) of the @link(TNode)s in the
-    // outermost boundary to ntEdge and for the others to ntSubDomain.
-    procedure SetNodeTypes;
-    procedure AssignOriginalEdgeAngles;
-    // @name computes @link(FCharacteristicLength).
-    procedure ComputeCharacteristicLength;
-    // @name creates @link(TSegment)s in a counterclockwise orientation
-    // around the outer @link(TBoundary) and in a clockwise orientation
-    // around the other boundaries.
-    procedure GenerateSegments;
-    // @name sets the @link(TBoundary.FSegmentType) of the outermost boundary to
-    // ntEdge and for the others to ntSubDomain.
-    procedure SetSegmentTypes;
     // @name creates @link(TNodeInBoundary TNodeInBoundaries)
     // along each @link(TBoundary).
     procedure CreateBoundaryNodes;
-    function GetBoundaryCount: Integer;
-    function GetCost(Node1, Node2: TNodeInBoundary): TCost;
-    procedure SetSixNodeClosureMethod(const Value: TSixNodeClosureMethod);
-    procedure SetNodeAdjustmentMethod(const Value: TNodeAdjustmentMethod);
-    procedure AdjustPositionLagrange;
-    procedure AdjustPositionGiuliani;
-    procedure AssignDesiredSpacings;
-    function GetActiveNodeCount: Integer;
-    function GetNodeObject(Index: Integer): TNode;
-    procedure RenumberNodes;
-    function GetActiveElementCount: Integer;
-    function GetActiveElement(Index: Integer): IElement;
-    function GetActiveNode(Index: Integer): INode;
-    property Cost[Node1, Node2: TNodeInBoundary]: TCost read GetCost;
-    property BoundaryCount: Integer read GetBoundaryCount;
-    // property Boundaries[index: integer]: TBoundary read GetBoundary;
-    property NodeObjects[Index: Integer]: TNode read GetNodeObject;
+    {@name calls @link(TBoundary.AssignOriginalEdgeAngles) for each
+    @link(TBoundary) to assign @link(TNode.FTotalAngle) for each @link(TNode)
+    // and uses the angles to assign
+    @link(TNode.FDesiredElementCount) for each @link(TNode).}
+    procedure AssignOriginalEdgeAngles;
+    // If there is more than one @link(TBoundary) in each @link(TBoundaryList)
+    // in @link(FIncludedBoundaries), @name joins them together to convert
+    // them to a single boundary.
+    procedure MakeSingleBoundary;
+    // @name calls @link(TBoundary.SplitMultiplyConnectedBoundary) for each
+    // @link(TBoundary).
+    procedure SplitMultiplyConnectedBoundaries;
+    // @name improves the topology of the mesh by
+    // @link(TNode.NodeElimination),
+    // @link(TNode.ElementElimination),
+    // @link(TNode.SideElimination), and
+    // @link(TNode.DiagonalSwapping)
     function ImproveTopology: boolean;
-    function _AddRef: Integer; stdcall;
-    function _Release: Integer; stdcall;
-    procedure CheckInvalidElements;
+    // @name adds the @link(TBoundary boundaries) to @link(FElementList)
+    // and the @link(TNode)s to @link(FNodeList). Then it calls
+    // @link(RenumberMesh) and sorts @link(FElementList) and @link(FNodeList)
+    // according to their node or element number.
+    procedure RenumberNodesAndElements;
+    // @name fixes triangular boundaries on the edge of the mesh.
+    procedure FixFinalTriangularElements;
   public
+    // @name creates an instance of @classname.
     Constructor Create;
+    // @name destroys an instance of @classname. Don't call @name.
+    // Call Free instead.
     destructor Destroy; override;
+    // After the mesh generation area has been defined by calls to
+    // @link(AddBoundary), @link(TBoundary.AddNode) and
+    // @link(SixNodeClosureMethod), @link(GrowthRate),
+    // and @link(NodeAdjustmentMethod) have been set, call @name to
+    // generate a finite element mesh composed or quadrilaterals.
+    // Use @link(NodeCount), @link(Nodes), @link(ElementCount) and
+    // @link(Elements) to read the generated mesh. You may call
+    // @link(AdjustNodes) to adjust the positions of the nodes according
+    // to the method specified in @link(NodeAdjustmentMethod).
     procedure GenerateMesh;
+    // @name adjusts the positions of the nodes according
+    // to the method specified in @link(NodeAdjustmentMethod).
     procedure AdjustNodes;
+    // @name is used to add a new boundary to the meshing area. The first
+    // boundary added will define the extent of the final mesh.
     function AddBoundary(DesiredSpacing: double): TBoundary;
+    // @name is the method used to fill in the boundaries with six sides.
     property SixNodeClosureMethod: TSixNodeClosureMethod
       read FSixNodeClosureMethod write SetSixNodeClosureMethod;
+    // When the desired spacing between nodes is different for different
+    // boundaries, @name controls how quickly the elements change in size
+    // between small and large elements.
+    // @name should be greater than 1.
     property GrowthRate: double read FGrowthRate write FGrowthRate;
+    // @name determines what method is used to adjust the position of
+    // @link(TNode)s.
     property NodeAdjustmentMethod: TNodeAdjustmentMethod
       read FNodeAdjustmentMethod write SetNodeAdjustmentMethod;
+    // @name is the number of nodes in the mesh.
     property NodeCount: Integer read GetActiveNodeCount;
-    property ElementCount: Integer read GetActiveElementCount;
-    property Elements[Index: Integer]: IElement read GetActiveElement;
+    // Use @name to access the @link(INode)s of the generated mesh.
     property Nodes[Index: Integer]: INode read GetActiveNode;
+    // @name is the number of elements in the mesh.
+    property ElementCount: Integer read GetActiveElementCount;
+    // Use @name to access the @link(IElement)s of the generated mesh.
+    property Elements[Index: Integer]: IElement read GetActiveElement;
+    property RenumberingAlgorithm: TRenumberingAlgorithm read FRenumberingAlgorithm write SetRenumberingAlgorithm;
+    {$IFDEF TEST}
+    // @name is used only for testing.
+    property Boundaries: TBoundaryObjectList read FBoundaries;
+    // @name is used only for testing.
+    property NodeList: TNodeObjectList read FNodes;
+    {$ENDIF}
   end;
 
+  TBoundaryLink = class;
+  TBoundaryLinkList = TList<TBoundaryLink>;
+  TBoundaryLinkObjectList = TObjectList<TBoundaryLink>;
+
+  // @name is used in @link(TQuadMeshCreator.ExtractClosedBoundaries)
+  // to trace open @link(TBoundary)s that are connected to closed
+  // @link(TBoundary)s
+  TBoundaryLink = class(TObject)
+  private
+    Parent: TBoundaryLink;
+    Children: TBoundaryLinkObjectList;
+    Boundary: TBoundary;
+    PositionInBoundary: integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+  TDirection = (dForward, dBackward);
+
+  // @name is used in @link(TQuadMeshCreator.MergeOpenNodeBoundaries)
+  // and @link(TQuadMeshCreator.MergeOpenWithClosedBoundaries) together
+  // with @link(TAngleComparer) to ensure that open @Link(TBoundary)s are
+  // merged in the correct order around an intersection point.
+  TAngleCompareItem = class(TObject)
+    Direction: TDirection;
+    Boundary: TBoundary;
+    NodePosition: Integer;
+    Angle: double;
+  end;
+
+    // sort in order of descending angles (= clockwise).
+
+  TAngleComparer = class(TComparer<TAngleCompareItem>)
+    function Compare(const Left, Right: TAngleCompareItem): Integer; override;
+  end;
+
+  TAngleList = TObjectList<TAngleCompareItem>;
+
+  // @name is used in @link(TQuadMeshCreator.MergeOpenNodeBoundaries)
+  // and @link(TQuadMeshCreator.MergeOpenWithClosedBoundaries) together
+  // with @link(TAngleCompareItem) to ensure that open @Link(TBoundary)s are
+  // merged in the correct order around an intersection point.
+  TNodeConnection = class(TObject)
+  private
+    FNode: TNode;
+    FConnections: TAngleList;
+    procedure AddLink(ABoundary: TBoundary);
+    procedure RemoveLink(ABoundary: TBoundary);
+    procedure Sort;
+  public
+    Constructor Create(ANode: TNode);
+    destructor Destroy; override;
+  end;
+
+
+// name returns a vertex angle in radians instead of degrees.
 function VertexAngleRadians(x1, y1, x2, y2, x3, y3: TFloat): TFloat; overload;
+// name returns a vertex angle in radians instead of degrees.
 function VertexAngleRadians(const Point1, Point2, Point3: TPoint2D)
   : TFloat; overload;
 
@@ -375,16 +1033,14 @@ var
   AltC6: double;
   ElementGrowthRate: double;
 
+// Set default values for C1..C6, AltC1..AltC6, and ElementGrowthRate.
 procedure SetDefaults;
 
 implementation
 
 uses
-  Math, QuadTreeClass, ConvexHullUnit, Dialogs, RealListUnit;
-
-resourcestring
-  StrOneOrMoreInvalid = 'One or more invalid elements was created. ' +
-    'Adjusting the mesh generation parameters may help.';
+  Math, ConvexHullUnit, Dialogs, RealListUnit, GPC_Classes, gpc,
+  CuthillMcKeeRenumbering;
 
 type
   TColliniears = array [0 .. 5] of boolean;
@@ -398,9 +1054,6 @@ const
 var
   InvalidElement: boolean = False;
 
-type
-  TIElementComparer = TComparer<IElement>;
-  TINodeComparer = TComparer<INode>;
 
 procedure SetDefaults;
 begin
@@ -409,28 +1062,30 @@ begin
   C3 := 0;
   C4 := 0.17;
   C5 := 0.14;
-  C6 := 0.3;
+  C6 := 0.36;
   AltC1 := 0.56;
   AltC2 := 0.33;
   AltC3 := 0.11;
   AltC4 := 0.0;
   AltC5 := 0.0;
   AltC6 := 1.2;
-  ElementGrowthRate := 1.2;
+  ElementGrowthRate := 1.05;
 end;
 
-function BadAngle(P1, P2, P3: TPoint2D): boolean;
+function NearlyStraightAngle(P1, P2, P3: TPoint2D): boolean;
+const
+  Epsilon: double = 0.1;
 var
   AnAngle: TFloat;
 begin
   AnAngle := VertexAngle(P1, P2, P3);
-  result := (AnAngle < 0.1) and (AnAngle > -0.1);
+  result := (AnAngle < Epsilon) and (AnAngle > -Epsilon);
   if not result then
   begin
-    result := (AnAngle < 180.1) and (AnAngle > 179.9);
+    result := (AnAngle < 180 + Epsilon) and (AnAngle > 180 - Epsilon);
     if not result then
     begin
-      result := (AnAngle > -180.1) and (AnAngle < -179.9);
+      result := (AnAngle > -180 - Epsilon) and (AnAngle < -180 + Epsilon);
     end;
   end;
 end;
@@ -494,6 +1149,63 @@ begin
   end;
 end;
 
+var
+  XEpsilon: double;
+  YEpsilon: double;
+
+function NearlyTheSame(const A, B: double; Epsilon: double): boolean; overload;
+var
+  Delta: double;
+  AbsA: double;
+  AbsB: double;
+begin
+  result := (A = B);
+
+  if not result then
+  begin
+    Delta := A-B;
+    Delta := Abs(Delta);
+    result := Delta < Epsilon;
+
+    if not result then
+    begin
+      AbsA := Abs(A);
+      AbsB := Abs(B);
+      result := Delta/(AbsA+AbsB) < Epsilon;
+    end;
+  end;
+end;
+
+function NearlyTheSame(const A, B: TPoint2D): boolean; overload;
+begin
+  result := NearlyTheSame(A.x, B.x, XEpsilon)
+    and NearlyTheSame(A.y, B.y, YEpsilon);
+end;
+
+function PointInConcavePolygon(const Point:TPoint2D; const Polygon:TPolygon2D):Boolean;
+var
+  PriorIndex: Integer;
+  VertexIndex: Integer;
+  APoint: TPoint2D;
+  AnotherPoint: TPoint2D;
+begin
+  Result := False;
+  PriorIndex := Length(Polygon) - 1;
+  for VertexIndex := 0 to Length(Polygon) - 1 do
+  begin
+    APoint := Polygon[VertexIndex];
+    AnotherPoint := Polygon[PriorIndex];
+    if ((Point.Y <= APoint.Y) = (Point.Y > AnotherPoint.Y)) and
+      (Point.X - APoint.X - (Point.Y - APoint.Y) *
+      (AnotherPoint.X - APoint.X) /
+      (AnotherPoint.Y - APoint.Y) < 0) then
+    begin
+      result := not result;
+    end;
+    PriorIndex := VertexIndex;
+  end;
+end;
+
 procedure TCost.ComputeVisibility;
 var
   BoundaryIndex: Integer;
@@ -509,6 +1221,24 @@ var
   Angle2: TFloat;
   Segment: TSegment2D;
   APoint: TPoint2D;
+  Poly: TPolygon2D;
+  Index: Integer;
+  ANode: TNodeInBoundary;
+  Epsilon: double;
+  SegmentIndex: Integer;
+  ASegment: TSegment;
+  Boundary: TBoundary;
+  HigherNode: TNodeInBoundary;
+  LowerNode: TNodeInBoundary;
+  LowerSegmentIndex: Integer;
+  HigherSegmentIndex: Integer;
+  Polygon1: TPolygon2D;
+  NNode: TNodeInBoundary;
+  Polygon2: TPolygon2D;
+  NodeList: TNodeList;
+  ANode1: TNode;
+  ANode2: TNode;
+  ANode3: TNode;
   procedure Compute(ABoundary: TBoundary);
   var
     NodeIndex: Integer;
@@ -527,9 +1257,14 @@ var
         if Intersect(FNode1.FNode.Location, FNode2.FNode.Location,
           NodeA.Location, NodeB.Location) then
         begin
+          // Don't allow the split if the new segment will cross one of the
+          // other edges of and existing polygon.
           FVisible := False;
           Exit;
         end;
+        // Don't allow the split if the new segment will
+        // nearly intersect one of the
+        // other nodes of the existing polygon.
         APoint := ClosestPointOnSegmentFromPoint(Segment, NodeA.Location);
         if IsEqual(NodeA.Location, APoint) then
         begin
@@ -558,6 +1293,9 @@ var
 begin
   GetNeighborNodes(PriorNode1, SubsequentNode1, PriorNode2, SubsequentNode2);
 
+  // First do a quick check to make sure that the proposed split will be
+  // inside the TBoundary at the FNode1 by comparing the angles that would
+  // be formed at FNode1.
   if PriorNode1.FNode <> SubsequentNode1.FNode then
   begin
     Angle1 := VertexAngleRadians(PriorNode1.FNode.Location,
@@ -571,6 +1309,7 @@ begin
     end;
   end;
 
+  // Do the same check at FNode2.
   if PriorNode2.FNode <> SubsequentNode2.FNode then
   begin
     Angle1 := VertexAngleRadians(PriorNode2.FNode.Location,
@@ -589,38 +1328,228 @@ begin
   FVisible := True;
   if (FNode1.FBoundary = FNode2.FBoundary) then
   begin
+    // We are splitting a TBoundary into two.
     ABoundary := FNode1.FBoundary;
-    for NodeIndex := 0 to ABoundary.Count - 2 do
+
+    Epsilon := FQuadMeshCreator.FCharacteristicLength/1e7;
+    if FNode1.FNode = FNode2.FNode then
     begin
-      Node1 := ABoundary[NodeIndex];
-      Node2 := ABoundary[NodeIndex + 1];
-      if (FNode1.FNode = Node1.FNode) or (FNode1.FNode = Node2.FNode) or
-        (FNode2.FNode = Node1.FNode) or (FNode2.FNode = Node2.FNode) then
+      // If both FNode1 and FNode2 are at the same position
+      // don't split if one of the resulting polygons will have
+      // an area of zero (within rounding error). If both polygons
+      // will have areas greater than zero, allow the polygon to be split.
+      if FNode2.Position > FNode1.Position then
+      begin
+        Node1 := FNode1;
+        Node2 := FNode2;
+      end
+      else
+      begin
+        Node2 := FNode1;
+        Node1 := FNode2;
+      end;
+      SetLength(Poly, Node2.Position-Node1.Position);
+      Index := 0;
+      for NodeIndex := Node1.Position to Node2.Position - 1 do
+      begin
+        ANode := ABoundary[NodeIndex];
+        Poly[Index] := ANode.FNode.Location;
+        Inc(Index);
+      end;
+      Assert(index = Length(Poly));
+      if Abs(Area(Poly)) < Epsilon then
+      begin
+        FVisible := False;
+        Exit;
+      end;
+      SetLength(Poly, ABoundary.Count - Node2.Position + Node1.Position);
+      Index := 0;
+      for NodeIndex := Node2.Position to ABoundary.Count - 1 do
+      begin
+        ANode := ABoundary[NodeIndex];
+        Poly[Index] := ANode.FNode.Location;
+        Inc(Index);
+      end;
+      for NodeIndex := 0 to Node1.Position - 1 do
+      begin
+        ANode := ABoundary[NodeIndex];
+        Poly[Index] := ANode.FNode.Location;
+        Inc(Index);
+      end;
+      Assert(index = Length(Poly));
+      if Abs(Area(Poly)) < Epsilon then
+      begin
+        FVisible := False;
+        Exit;
+      end;
+      Exit;
+    end;
+
+
+    for SegmentIndex := 0 to ABoundary.FSegments.Count - 1 do
+    begin
+      ASegment := ABoundary.FSegments[SegmentIndex];
+      if ASegment.ContainsNode(FNode1.FNode) then
+      begin
+        if ASegment.ContainsNode(FNode2.FNode) then
+        begin
+          FVisible := False;
+          Exit;
+        end
+        else
+        begin
+          Continue;
+        end;
+      end
+      else if ASegment.ContainsNode(FNode2.FNode) then
       begin
         Continue;
       end;
-      if Intersect(FNode1.FNode.Location, FNode2.FNode.Location,
-        Node1.FNode.Location, Node2.FNode.Location) then
+
+      if Intersect(Segment, EquateSegment(ASegment.FNode1.Location,
+        ASegment.FNode2.Location)) then
+      begin
+        // Don't allow the split if the new segment will cross one of the
+        // other edges of the existing polygon.
+        FVisible := False;
+        Exit;
+      end;
+      // Don't allow the split if the new segment will
+      // nearly intersect one of the
+      // other nodes of the existing polygon.
+      APoint := ClosestPointOnSegmentFromPoint(Segment,
+        ASegment.FNode1.Location);
+      if IsEqual(ASegment.FNode1.Location, APoint) then
       begin
         FVisible := False;
         Exit;
       end;
-      APoint := ClosestPointOnSegmentFromPoint(Segment, Node1.FNode.Location);
-      if IsEqual(Node1.FNode.Location, APoint) then
-      begin
-        FVisible := False;
-        Exit;
-      end;
-      APoint := ClosestPointOnSegmentFromPoint(Segment, Node2.FNode.Location);
-      if IsEqual(Node2.FNode.Location, APoint) then
+      if Distance(APoint, ASegment.FNode1.Location) < Epsilon then
       begin
         FVisible := False;
         Exit;
       end;
     end;
+
+
+    Boundary := FNode1.FBoundary;
+    if FNode1.Position > FNode2.Position then
+    begin
+      HigherNode := FNode1;
+      LowerNode := FNode2;
+    end
+    else
+    begin
+      HigherNode := FNode2;
+      LowerNode := FNode1;
+    end;
+
+    LowerSegmentIndex := -1;
+    HigherSegmentIndex := -1;
+    for SegmentIndex := 0 to Boundary.FSegments.Count - 1 do
+    begin
+      ASegment := Boundary.FSegments[SegmentIndex];
+      if (LowerSegmentIndex < 0) and (ASegment.FPosition2 >= LowerNode.Position) then
+      begin
+        LowerSegmentIndex := SegmentIndex;
+      end;
+      if ASegment.FPosition2 >= HigherNode.Position then
+      begin
+        HigherSegmentIndex := SegmentIndex;
+        Break;
+      end;
+    end;
+    Assert(LowerSegmentIndex >= 0);
+  //  Assert(HigherSegmentIndex >= 0);
+    Assert(HigherSegmentIndex > LowerSegmentIndex);
+
+
+    NNode := nil;
+    NodeIndex := 0;
+    SetLength(Polygon1, HigherNode.Position - LowerNode.Position + 1);
+    for SegmentIndex := LowerSegmentIndex to HigherSegmentIndex do
+    begin
+      ASegment := Boundary.FSegments[SegmentIndex];
+      if SegmentIndex = LowerSegmentIndex then
+      begin
+        NNode := Boundary[LowerNode.Position];
+        if LowerNode.Position <> ASegment.FPosition2 then
+        begin
+          Polygon1[NodeIndex] := NNode.FNode.Location;
+          Inc(NodeIndex);
+          NNode := Boundary[ASegment.FPosition2];
+        end;
+      end
+      else if SegmentIndex = HigherSegmentIndex then
+      begin
+        NNode := Boundary[HigherNode.Position];
+      end
+      else
+      begin
+        NNode := Boundary[ASegment.FPosition2];
+      end;
+      Polygon1[NodeIndex] := NNode.FNode.Location;
+      Inc(NodeIndex);
+    end;
+    SetLength(Polygon1, NodeIndex);
+
+    SetLength(Polygon2, Boundary.Count - HigherNode.Position +
+      LowerNode.Position);
+    NodeIndex := 0;
+    for SegmentIndex := HigherSegmentIndex to Boundary.FSegments.Count-1 do
+    begin
+      ASegment := Boundary.FSegments[SegmentIndex];
+      if SegmentIndex = HigherSegmentIndex then
+      begin
+        NNode := Boundary[HigherNode.Position];
+        if HigherNode.Position <> ASegment.FPosition2 then
+        begin
+          Polygon2[NodeIndex] := NNode.FNode.Location;
+          Inc(NodeIndex);
+          NNode := Boundary[ASegment.FPosition2];
+        end;
+      end
+      else
+      begin
+        NNode := Boundary[ASegment.FPosition2];
+      end;
+      Polygon2[NodeIndex] := NNode.FNode.Location;
+      Inc(NodeIndex);
+    end;
+
+    for SegmentIndex := 0 to LowerSegmentIndex do
+    begin
+      ASegment := Boundary.FSegments[SegmentIndex];
+      if SegmentIndex = LowerSegmentIndex then
+      begin
+        if ASegment.FPosition1 = LowerNode.Position then
+        begin
+          break;
+        end;
+        NNode := Boundary[LowerNode.Position];
+      end
+      else
+      begin
+        NNode := Boundary[ASegment.FPosition2];
+      end;
+      Polygon2[NodeIndex] := NNode.FNode.Location;
+      Inc(NodeIndex);
+    end;
+
+    SetLength(Polygon2, NodeIndex);
+
+    FArea1 := Abs(Area(Polygon1));
+    FArea2 := Abs(Area(Polygon2));
+    if (FArea1 < Epsilon) or (FArea2 < Epsilon) then
+    begin
+      FVisible := False;
+      Exit;
+    end;
+
   end
   else
   begin
+    // We are joining two separate boundaries.
     for BoundaryIndex := 0 to FQuadMeshCreator.FBoundaries.Count - 1 do
     begin
       ABoundary := FQuadMeshCreator.FBoundaries[BoundaryIndex];
@@ -632,6 +1561,79 @@ begin
     end;
   end;
 
+  if FVisible and (FNode1.FBoundary = FNode2.FBoundary) then
+  begin
+    NodeList := TNodeList.Create;
+    try
+      if FNode1.FPosition + 3 = FNode2.Position then
+      begin
+        for NodeIndex := FNode1.FPosition to FNode2.Position do
+        begin
+          NodeList.Add(FNode1.FBoundary[NodeIndex].FNode);
+        end;
+      end
+      else if FNode2.Position + 3 - FNode1.FBoundary.Count =  FNode1.FPosition then
+      begin
+        for NodeIndex := FNode2.FPosition to FNode1.FBoundary.Count-1 do
+        begin
+          NodeList.Add(FNode1.FBoundary[NodeIndex].FNode);
+        end;
+        for NodeIndex := 1 to FNode1.Position do
+        begin
+          NodeList.Add(FNode1.FBoundary[NodeIndex].FNode);
+        end;
+      end
+      else if FNode2.FPosition + 3 = FNode1.Position then
+      begin
+        for NodeIndex := FNode2.FPosition to FNode1.Position do
+        begin
+          NodeList.Add(FNode2.FBoundary[NodeIndex].FNode);
+        end;
+      end
+      else if FNode1.Position + 3 - FNode2.FBoundary.Count =  FNode2.FPosition then
+      begin
+        for NodeIndex := FNode1.FPosition to FNode2.FBoundary.Count-1 do
+        begin
+          NodeList.Add(FNode2.FBoundary[NodeIndex].FNode);
+        end;
+        for NodeIndex := 1 to FNode2.Position do
+        begin
+          NodeList.Add(FNode2.FBoundary[NodeIndex].FNode);
+        end;
+      end;
+
+      if NodeList.Count = 4 then
+      begin
+        ANode1 := NodeList[2];
+        ANode2 := NodeList[3];
+        for NodeIndex := 0 to NodeList.Count - 1 do
+        begin
+          ANode3 := NodeList[NodeIndex];
+          if Orientation(ANode1.Location, ANode2.Location,
+            ANode3.Location) = ClockWise then
+          begin
+            ASegment := TSegment.Create(FNode1.FNode, FNode2.FNode, stInner,
+              FNode1.FBoundary, FQuadMeshCreator);
+            try
+              if ASegment.NodesToInsert = 0 then
+              begin
+                FVisible := False;
+                Exit;
+              end;
+            finally
+              FNode1.RemoveSegment(ASegment);
+              FNode2.RemoveSegment(ASegment);
+              ASegment.Free;
+            end;
+          end;
+          ANode1 := ANode2;
+          ANode2 := ANode3;
+        end;
+      end;
+    finally
+      NodeList.Free;
+    end;
+  end
 end;
 
 procedure TCost.GetNeighborNodes(var PriorNode1, SubsequentNode1, PriorNode2,
@@ -691,20 +1693,13 @@ begin
   end;
 end;
 
-function ComputeGamma(NodeType: TNodeType; Theta: TFloat): double;
+function ComputeGamma(Theta: TFloat): double;
 const
-  StraightAngle = Pi * (1 - Epsilon);
+  StraightAngle = Pi * (1 + Epsilon);
 begin
   if Theta > StraightAngle then
   begin
-    if NodeType = ntInner then
-    begin
-      result := 0.5;
-    end
-    else
-    begin
-      result := 0;
-    end;
+    result := (2*Pi - Theta)/Pi;
   end
   else
   begin
@@ -714,10 +1709,9 @@ end;
 
 { TCost }
 
-procedure TCost.ComputeCost;
+procedure TCost.ComputeCost(LowestCost: TCost);
 // Constants from page 1334.
 var
-  NodeIndex: Integer;
   PriorNode1: TNodeInBoundary;
   SubsequentNode1: TNodeInBoundary;
   Angle1: TFloat;
@@ -735,151 +1729,71 @@ var
   Sigma: Extended;
   N: Integer;
   Eta: double;
-  Polygon1: TPolygon2D;
-  Polygon2: TPolygon2D;
-  NNode: TNodeInBoundary;
-  Boundary: TBoundary;
-  NIndex: Integer;
-  HigherNode: TNodeInBoundary;
-  LowerNode: TNodeInBoundary;
-  Area1: TFloat;
-  Area2: TFloat;
   Alpha: double;
   ComputeAll: boolean;
   SixNodeCost: boolean;
+  LocalC1: Double;
+  LocalC2: Double;
+  LocalC3: Double;
+  LocalC4: Double;
+  LocalC5: Double;
+  LocalC6: Double;
   function GetSigma(ANode: TNodeInBoundary; Theta: TFloat): double;
-{$IFNDEF New}
   var
     DeltaElement: Integer;
-{$ENDIF}
   begin
-    case ANode.FNode.FNodeType of
-      ntInner:
-        begin
-          case FNode1.FNode.FElements.Count + 1 of
-            3:
-              begin
-                result := 5.6;
-                Exit;
-              end;
-            4:
-              begin
-                result := 4;
-                Exit;
-              end;
-            5:
-              begin
-                result := 36;
-                Exit;
-              end;
-            6:
-              begin
-                result := 60;
-                Exit;
-              end;
-          else
-            begin
-              // result := 80;
-              result := FNode1.FNode.FElements.Count * 12;
-              Exit;
-            end;
-          end;
-        end;
-      ntEdge:
-        begin
-{$IFNDEF New}
-          DeltaElement := FNode1.FNode.FDesiredElementCount -
-            FNode1.FNode.FElements.Count + 1;
-          if DeltaElement < 0 then
-          begin
-            DeltaElement := 0;
-          end;
-          case DeltaElement of
-            0:
-              begin
-                result := 4;
-              end;
-            1:
-              begin
-                result := 36;
-              end;
-          else
-            begin
-              result := 100;
-            end;
-          end;
-          Exit;
-{$ELSE}
-          if Theta < TwoPiDiv3 then
-          begin
-            result := 100;
-            Assert(0 <= Theta);
-            Exit;
-          end
-          else if (Theta <= TwoPi) then
-          begin
-            result := 0;
-            Exit;
-          end
-          else
-          begin
-            result := 100;
-            Exit;
-          end;
-{$ENDIF}
-        end;
-      ntSubDomain:
-        begin
-{$IFNDEF New}
-          DeltaElement := FNode1.FNode.FDesiredElementCount -
-            FNode1.FNode.FElements.Count + 1;
-          if DeltaElement < 0 then
-          begin
-            DeltaElement := 0;
-          end;
-          case DeltaElement of
-            0:
-              begin
-                result := 4;
-              end;
-            1:
-              begin
-                result := 36
-              end;
-          else
-            begin
-              result := 80;
-            end;
-          end;
-          Exit;
-{$ELSE}
-          if Theta < TwoPiDiv3 then
-          begin
-            result := 80;
-            Assert(0 <= Theta);
-            Exit;
-          end
-          else if (Theta <= TwoPi) then
-          begin
-            result := 0;
-            Exit;
-          end
-          else
-          begin
-            result := 80;
-            Exit;
-          end;
-{$ENDIF}
-        end;
+    DeltaElement :=
+      ANode.FNode.FElements.Count + 1
+        - ANode.FNode.FDesiredElementCount;
+    if DeltaElement < 0 then
+    begin
+      DeltaElement := 0;
     end;
-    result := 100;
-    Assert(False);
+    case DeltaElement of
+      0:
+        begin
+          result := 4;
+        end;
+      1:
+        begin
+          result := 36;
+        end;
+    else
+      begin
+        result := 36*Sqr(DeltaElement);
+      end;
+    end;
   end;
 
 begin
   ComputeAll := FNodeDistance < 0;
   SixNodeCost := (FNode1.FBoundary = FNode2.FBoundary) and
     (FNode1.FBoundary.Count = 7);
+
+  if SixNodeCost then
+  begin
+    LocalC1 := AltC1;
+    LocalC2 := AltC2;
+    LocalC3 := AltC3;
+    LocalC4 := AltC4;
+    LocalC5 := AltC5;
+    LocalC6 := AltC6;
+  end
+  else
+  begin
+    LocalC1 := C1;
+    LocalC2 := C2;
+    LocalC3 := C3;
+    LocalC4 := C4;
+    LocalC5 := C5;
+    LocalC6 := C6;
+  end;
+
+  if FNode1.FNode.FNodeNumber = FNode2.FNode.FNodeNumber then
+  begin
+    FCost := 0;
+    Exit;
+  end;
   if ComputeAll or SixNodeCost then
   begin
     GetNeighborNodes(PriorNode1, SubsequentNode1, PriorNode2, SubsequentNode2);
@@ -946,10 +1860,38 @@ begin
     end;
   end;
 
+  FCost := LocalC1 * FPhi {+ LocalC2 * Sigma + LocalC3 * Eta + LocalC4 * F_l
+    + LocalC5 * Alpha + LocalC6 * FGamma};
+  if (LowestCost <> nil) and (FCost > LowestCost.Cost) then
+  begin
+    Exit;
+  end;
+
   // Compute second factor: Structuring index
   Sigma1 := GetSigma(FNode1, FTheta1);
   Sigma2 := GetSigma(FNode2, FTheta2);
   Sigma := (Sigma1 + Sigma2) / 200;
+
+  FCost := FCost + LocalC2 * Sigma {+ LocalC3 * Eta + LocalC4 * F_l
+    + LocalC5 * Alpha + LocalC6 * FGamma};
+  if (LowestCost <> nil) and (FCost > LowestCost.Cost) then
+  begin
+    Exit;
+  end;
+
+  // RBW modification: Favor splitting at  concave and straight locations.
+  if ComputeAll then
+  begin
+    FGamma := (ComputeGamma(FTheta1) +
+      ComputeGamma(FTheta2)) / 2;
+  end;
+
+  FCost := FCost + LocalC6 * FGamma {+ LocalC3 * Eta + LocalC4 * F_l
+    + LocalC5 * Alpha };
+  if (LowestCost <> nil) and (FCost > LowestCost.Cost) then
+  begin
+    Exit;
+  end;
 
   // Compute third factor: Node placement error.
   if ComputeAll then
@@ -969,6 +1911,13 @@ begin
   // equation 6
   Eta := Abs(FNStar - N);
 
+  FCost := FCost + LocalC3 * Eta {+ LocalC4 * F_l
+    + LocalC5 * Alpha };
+  if (LowestCost <> nil) and (FCost > LowestCost.Cost) then
+  begin
+    Exit;
+  end;
+
   // Compute fourth factor: splitting line length
   // equation 8
   if ComputeAll then
@@ -976,71 +1925,40 @@ begin
     F_l := FNodeDistance / FQuadMeshCreator.FCharacteristicLength;
   end;
 
+  FCost := FCost + LocalC4 * F_l
+    {+ LocalC5 * Alpha };
+  if (LowestCost <> nil) and (FCost > LowestCost.Cost) then
+  begin
+    Exit;
+  end;
+
   // Compute fifth factor: Symmetry.
-  Boundary := FNode1.FBoundary;
-  if FNode1.Position > FNode2.Position then
+  if (FArea1 = 0) and (FArea2 = 0) then
   begin
-    HigherNode := FNode1;
-    LowerNode := FNode2;
+    Alpha := MAXINT;
   end
   else
   begin
-    HigherNode := FNode2;
-    LowerNode := FNode1;
+    Alpha := Abs(FArea2 - FArea1) / (FArea2 + FArea1);
   end;
 
-  SetLength(Polygon1, HigherNode.Position - LowerNode.Position + 1);
-  for NodeIndex := 0 to Length(Polygon1) - 1 do
-  begin
-    NNode := Boundary[NodeIndex + LowerNode.Position];
-    Polygon1[NodeIndex] := NNode.FNode.Location;
-  end;
-  SetLength(Polygon2, Boundary.Count - HigherNode.Position +
-    LowerNode.Position);
-  for NodeIndex := 0 to Length(Polygon2) - 1 do
-  begin
-    NIndex := NodeIndex + HigherNode.Position;
-    if NIndex >= Boundary.Count - 1 then
-    begin
-      NIndex := NIndex - (Boundary.Count - 1);
-    end;
-    NNode := Boundary[NIndex];
-    Polygon2[NodeIndex] := NNode.FNode.Location;
-  end;
-  Area1 := Abs(Area(Polygon1));
-  Area2 := Abs(Area(Polygon2));
-
-  Alpha := Abs(Area2 - Area1) / (Area2 + Area1);
-
-  // RBW modification: Favor splitting at  concave and straight locations.
-  if ComputeAll then
-  begin
-    FGamma := (ComputeGamma(FNode1.FNode.FNodeType, FTheta1) +
-      ComputeGamma(FNode2.FNode.FNodeType, FTheta2)) / 2;
-  end;
-
-  if SixNodeCost then
-  begin
-    FCost := AltC1 * FPhi + AltC2 * Sigma + AltC3 * Eta + AltC4 * F_l + AltC5 *
-      Alpha + AltC6 * FGamma;
-    FNodeDistance := -1;
-  end
-  else
-  begin
-    FCost := C1 * FPhi + C2 * Sigma + C3 * Eta + C4 * F_l + C5 * Alpha +
-      C6 * FGamma;
-  end;
+  FCost := FCost + LocalC5 * Alpha;
+//
+//
+//  FCost := LocalC1 * FPhi + LocalC2 * Sigma + LocalC3 * Eta + LocalC4 * F_l
+//    + LocalC5 * Alpha + LocalC6 * FGamma;
 end;
 
+
 constructor TCost.Create(Node1, Node2: TNodeInBoundary;
-  QuadMeshCreator: TQuadMeshCreator);
+  QuadMeshCreator: TQuadMeshCreator{; InitialVisibility: TInitialVisibility});
 begin
   inherited Create;
   FNode1 := Node1;
   FNode2 := Node2;
   FQuadMeshCreator := QuadMeshCreator;
   FNodeDistance := -1;
-  ComputeVisibility;
+  ComputeVisibility
 end;
 
 { TOutline }
@@ -1048,6 +1966,115 @@ end;
 procedure TBoundary.AddNode(Node: TNode);
 begin
   FNodes.Add(Node);
+end;
+
+procedure TBoundary.SetSegmentPositions;
+var
+  NodePosition: Integer;
+  SegIndex: Integer;
+  ANode: TNodeInBoundary;
+  ASegment: TSegment;
+begin
+  NodePosition := 0;
+  ANode := Items[NodePosition];
+  for SegIndex := 0 to FSegments.Count - 1 do
+  begin
+    ASegment := FSegments[SegIndex];
+    Assert(ASegment.FNode1 = ANode.FNode);
+    ASegment.FPosition1 := NodePosition;
+    NodePosition := NodePosition + ASegment.FInnerNodes.Count + 1;
+    ANode := Items[NodePosition];
+    Assert(ASegment.FNode2 = ANode.FNode);
+    ASegment.FPosition2 := NodePosition;
+  end;
+  Assert(NodePosition = Count-1);
+end;
+
+procedure TBoundary.FixSegments;
+var
+  NodeIndex: Integer;
+  SegIndex: Integer;
+  ASegment: TSegment;
+  SubsequentSegIndex: Integer;
+  PriorSegIndex: Integer;
+  ANode: TNodeInBoundary;
+  UnusedSegs: array of Boolean;
+  SegPosition: Integer;
+begin
+  SetLength(UnusedSegs, FSegments.Count);
+  for SegIndex := 0 to Length(UnusedSegs) - 1 do
+  begin
+    UnusedSegs[SegIndex] := True;
+  end;
+  for NodeIndex := 0 to Count - 1 do
+  begin
+    ANode := Items[NodeIndex];
+    for SegIndex := ANode.SegmentCount - 1 downto 0 do
+    begin
+      ASegment := ANode.Segments[SegIndex];
+      SegPosition := FSegments.IndexOf(ASegment);
+      if SegPosition < 0 then
+      begin
+        ANode.DeleteSegment(SegIndex);
+      end
+      else
+      begin
+        UnusedSegs[SegPosition]:= False;
+      end;
+    end;
+  end;
+  for SegIndex := FSegments.Count - 1 downto 0 do
+  begin
+    if UnusedSegs[SegIndex] then
+    begin
+      FSegments.Extract(FSegments[SegIndex]);
+    end;
+  end;
+
+  for NodeIndex := 0 to Count - 2 do
+  begin
+    ANode := Items[NodeIndex];
+    for SegIndex := 0 to ANode.SegmentCount - 1 do
+    begin
+      ASegment := ANode.Segments[SegIndex];
+      if ANode.SegmentCount = 1 then
+      begin
+        if (ASegment.FInnerNodes.IndexOf(ANode.FNode) < 0) then
+        begin
+          if ASegment.FNode1 = ANode.FNode then
+          begin
+            PriorSegIndex := FSegments.IndexOf(ASegment);
+            Assert(PriorSegIndex >= 0);
+            Dec(PriorSegIndex);
+            if PriorSegIndex < 0 then
+            begin
+              PriorSegIndex := FSegments.Count - 1;
+            end;
+            ANode.InsertSegment(0, FSegments[PriorSegIndex]);
+          end
+          else if ASegment.FNode2 = ANode.FNode then
+          begin
+            SubsequentSegIndex := FSegments.IndexOf(ASegment);
+            Assert(SubsequentSegIndex >= 0);
+            Inc(SubsequentSegIndex);
+            if SubsequentSegIndex >= FSegments.Count then
+            begin
+              SubsequentSegIndex := 0;
+            end;
+            ANode.AddSegment(FSegments[SubsequentSegIndex]);
+          end
+          else
+          begin
+            Assert(False);
+          end;
+        end;
+      end
+      else
+      begin
+        Assert((ASegment.FNode1 = ANode.FNode) or (ASegment.FNode2 = ANode.FNode));
+      end;
+    end;
+  end;
 end;
 
 procedure TBoundary.SetCounterClockwiseOrientation;
@@ -1070,12 +2097,9 @@ begin
       FSegments.Reverse;
       if FSegments.Count >= 2 then
       begin
-        if FSegments[0].Node2 <> FSegments[1].Node1 then
+        for SegIndex := 0 to FSegments.Count - 1 do
         begin
-          for SegIndex := 0 to FSegments.Count - 1 do
-          begin
-            FSegments[SegIndex].Reverse;
-          end;
+          FSegments[SegIndex].Reverse;
         end;
       end;
       RenumberNodes;
@@ -1110,6 +2134,38 @@ begin
   end;
 end;
 
+function TBoundary.Area: double;
+var
+  Poly: TPolygon2D;
+  index: Integer;
+begin
+  SetLength(Poly, FSegments.Count);
+  for index := 0 to FSegments.Count - 1 do
+  begin
+    Poly[index] := FSegments[index].FNode1.Location;
+  end;
+  Result := Abs(FastGEO.Area(Poly));
+end;
+
+procedure TBoundary.AssignConstraintNodes;
+var
+  Index: Integer;
+  PriorNode: TNode;
+  ANode: TNode;
+begin
+  Assert(Count > 0);
+  PriorNode := Items[0].FNode;
+  Assert(PriorNode.FNodeType <> ntInner);
+  for Index := 1 to Count - 1 do
+  begin
+    ANode := Items[Index].FNode;
+    Assert(ANode.FNodeType <> ntInner);
+    ANode.FConstraintNeighbors.Add(PriorNode);
+    PriorNode.FConstraintNeighbors.Add(ANode);
+    PriorNode := ANode;
+  end;
+end;
+
 procedure TBoundary.AssignOriginalEdgeAngles;
 var
   PriorNode: TNode;
@@ -1125,6 +2181,7 @@ begin
   begin
     Exit
   end;
+
   PriorNode := FSegments[FSegments.Count - 1].FNode1;
   for SegmentIndex := 0 to FSegments.Count - 1 do
   begin
@@ -1133,30 +2190,38 @@ begin
     NextNode := ASegment.Node2;
     NodeAngle := VertexAngleRadians(PriorNode.Location, CurrentNode.Location,
       NextNode.Location);
-    if NodeAngle = 0 then
+    if (NodeAngle = 0) and not CurrentNode.FIntersection then
     begin
       NodeAngle := 2 * Pi;
     end;
-    if NodeAngle < Pi / 4 then
-    begin
-      CurrentNode.FDesiredElementCount := 1;
-    end
-    else if NodeAngle < Pi + Pi / 4 then
-    begin
-      CurrentNode.FDesiredElementCount := 2;
-    end
-    else if NodeAngle < Pi * 7 / 4 then
-    begin
-      CurrentNode.FDesiredElementCount := 3;
-    end;
+    CurrentNode.FTotalAngle := CurrentNode.FTotalAngle + NodeAngle;
     PriorNode := CurrentNode;
     for NodeIndex := 0 to ASegment.FInnerNodes.Count - 1 do
     begin
       InnerNode := ASegment.FInnerNodes[NodeIndex];
-      InnerNode.FDesiredElementCount := 2;
+      InnerNode.FTotalAngle := InnerNode.FTotalAngle + Pi;
     end;
   end;
 end;
+
+{$IFDEF TEST}
+{$IFDEF TEST}
+function TBoundary.Center: TPoint2D;
+var
+  index: Integer;
+begin
+  Assert(Count = 5);
+  Result.x := 0;
+  Result.y := 0;
+  for index := 0 to 3 do
+  begin
+    Result.x := Result.x + Items[index].FNode.FLocation.x;
+    Result.y := Result.y + Items[index].FNode.FLocation.y;
+  end;
+  Result.x := Result.x/4;
+  Result.y := Result.y/4;
+end;
+{$ENDIF}
 
 procedure TBoundary.CheckInvalidElement;
 var
@@ -1203,6 +2268,7 @@ begin
     InvalidElement := True;
   end;
 end;
+{$ENDIF}
 
 procedure TBoundary.ConvertToClosedBoundary;
 var
@@ -1227,11 +2293,10 @@ begin
 end;
 
 constructor TBoundary.Create(QuadMeshCreator: TQuadMeshCreator;
-  SegmentType: TSegmentType; Parent: TBoundary; DesiredSpacing: double);
+  Parent: TBoundary; DesiredSpacing: double);
 begin
   inherited Create;
   FParent := Parent;
-  FSegmentType := SegmentType;
   FQuadMeshCreator := QuadMeshCreator;
   FNodes := TNodeList.Create;
   FSubParts := TBoundaryObjectList.Create;
@@ -1266,7 +2331,7 @@ begin
     if PriorSegment <> nil then
     begin
       Assert(PriorSegment.Node2 = ASegment.Node1);
-      ANode.FSegments.Add(PriorSegment);
+      ANode.AddSegment(PriorSegment);
     end;
     for NodeIndex := 0 to ASegment.FInnerNodes.Count - 1 do
     begin
@@ -1299,10 +2364,20 @@ var
   OutputPoints: TPolygon2D;
   Node1: TNode;
   Node2: TNode;
+  SegmentType: TSegmentType;
+  SegmentType1: TSegmentType;
+  SegmentType2: TSegmentType;
 begin
   Assert(FSegments.Count = 0);
   if FNodes.Count = 1 then
   begin
+    SegmentType := stInner;
+    case FNodes[0].NodeType of
+      ntInner: SegmentType := stInner;
+      ntEdge: SegmentType := stEdge;
+      ntSubDomain: SegmentType := stSubDomain;
+      else Assert(False);
+    end;
     Segment := TSegment.Create(FNodes[0], FNodes[0], SegmentType, self,
       FQuadMeshCreator);
     FSegments.Add(Segment);
@@ -1327,6 +2402,28 @@ begin
     begin
       Node1 := FNodes[NodeIndex];
       Node2 := FNodes[NodeIndex + 1];
+      SegmentType1 := stInner;
+      case Node1.NodeType of
+        ntInner: SegmentType1 := stInner;
+        ntEdge: SegmentType1 := stEdge;
+        ntSubDomain: SegmentType1 := stSubDomain;
+        else Assert(False);
+      end;
+      SegmentType2 := stInner;
+      case Node2.NodeType of
+        ntInner: SegmentType2 := stInner;
+        ntEdge: SegmentType2 := stEdge;
+        ntSubDomain: SegmentType2 := stSubDomain;
+        else Assert(False);
+      end;
+      if SegmentType1 < SegmentType2 then
+      begin
+        SegmentType := SegmentType1;
+      end
+      else
+      begin
+        SegmentType := SegmentType2;
+      end;
       Segment := TSegment.Create(Node1, Node2, SegmentType, self,
         FQuadMeshCreator);
       FSegments.Add(Segment);
@@ -1378,65 +2475,36 @@ procedure TBoundary.InsertNodesAlongBoundary;
 var
   NodeDistance: TFloat;
   NumberOfNodesToInsert: Integer;
-  LargestIndex: Integer;
-  LargestSpacing: double;
-  TotalEdgeCount: Integer;
   SegmentIndex: Integer;
   ASegment: TSegment;
 begin
 
   Assert(FSegments.Count > 0);
 
-  LargestSpacing := 0;
-  LargestIndex := -1;
-  TotalEdgeCount := 0;
-
   for SegmentIndex := 0 to FSegments.Count - 1 do
   begin
-    NodeDistance := FSegments[SegmentIndex].Length;
-    if LargestSpacing < NodeDistance then
-    begin
-      LargestSpacing := NodeDistance;
-      LargestIndex := SegmentIndex;
-    end;
     ASegment := FSegments[SegmentIndex];
-    if NodeDistance > Min(ASegment.Node1.DesiredSpacing,
-      ASegment.Node2.DesiredSpacing) then
+    if ASegment.Node1 = ASegment.Node2 then
+    begin
+      Continue;
+    end;
+    NodeDistance := ASegment.Length;
+    if (NodeDistance > Min(ASegment.Node1.DesiredSpacing,
+      ASegment.Node2.DesiredSpacing)) then
     begin
       NumberOfNodesToInsert := ASegment.NodesToInsert;
-      Inc(TotalEdgeCount, NumberOfNodesToInsert + 1)
     end
     else
     begin
-      if NodeDistance > 0 then
-      begin
-        Inc(TotalEdgeCount);
-      end;
+      NumberOfNodesToInsert := 1;
     end;
-  end;
-
-  if not Odd(TotalEdgeCount) then
-  begin
-    LargestIndex := -1;
-  end;
-
-  for SegmentIndex := 0 to FSegments.Count - 1 do
-  begin
-    NodeDistance := FSegments[SegmentIndex].Length;
-    ASegment := FSegments[SegmentIndex];
-    if (NodeDistance > Min(ASegment.Node1.DesiredSpacing,
-      ASegment.Node2.DesiredSpacing)) or (SegmentIndex = LargestIndex) then
+    if not Odd(NumberOfNodesToInsert) then
     begin
-      NumberOfNodesToInsert := ASegment.NodesToInsert;
-      if SegmentIndex = LargestIndex then
-      begin
-        Inc(NumberOfNodesToInsert);
-      end;
-      Assert(NumberOfNodesToInsert >= 1);
-      FSegments[SegmentIndex].InsertNodes(NumberOfNodesToInsert);
+      Inc(NumberOfNodesToInsert);
     end;
+    Assert(NumberOfNodesToInsert >= 1);
+    FSegments[SegmentIndex].InsertNodes(NumberOfNodesToInsert);
   end;
-
 end;
 
 procedure TBoundary.RenumberNodes;
@@ -1445,26 +2513,25 @@ var
   SegIndex: Integer;
   PriorSegment: TSegment;
   ASegment: TSegment;
+  ANode: TNodeInBoundary;
 begin
   for Index := Count - 1 downto 0 do
   begin
-    Items[Index].FPosition := Index;
+    ANode := Items[Index];
+    ANode.FPosition := Index;
+    Assert(ANode.SegmentCount in [1,2]);
   end;
   PriorSegment := FSegments[FSegments.Count - 1];
-  for SegIndex := 0 to FSegments.Count - 2 do
+  for SegIndex := 0 to FSegments.Count - 1 do
   begin
     ASegment := FSegments[SegIndex];
-    try
-      Assert(ASegment.Node1 = PriorSegment.Node2);
-    except
-      ShowMessage(IntToStr(SegIndex));
-      raise;
-    end;
+    Assert(ASegment.Node1 = PriorSegment.Node2);
+    Assert(ASegment.FBoundary = self);
     PriorSegment := ASegment;
   end;
 end;
 
-procedure TBoundary.SetNodeTypes(NodeType: TNodeType);
+procedure TBoundary.SetNodeType(NodeType: TNodeType);
 var
   Index: Integer;
 begin
@@ -1474,13 +2541,9 @@ begin
   end;
 end;
 
-procedure TBoundary.Split222(FirstIndex: Integer);
+procedure TBoundary.Split222(FirstIndex: Integer; NewLocation: TPoint2D);
 var
   NewNode: TNode;
-  NodeIndex: Integer;
-  BoundNode1: TNodeInBoundary;
-  BoundNode2: TNodeInBoundary;
-  BoundNode3: TNodeInBoundary;
   procedure CreateSubBoundary(OffsetIndex: Integer);
   var
     NodeIndex: Integer;
@@ -1491,7 +2554,7 @@ var
     ASegment: TSegment;
     NewBoundNode: TNodeInBoundary;
   begin
-    SubBoundary := TBoundary.Create(FQuadMeshCreator, stInner, self,
+    SubBoundary := TBoundary.Create(FQuadMeshCreator, self,
       DesiredSpacing);
     FSubParts.Add(SubBoundary);
     NodeIndex := FirstIndex + OffsetIndex;
@@ -1549,9 +2612,43 @@ begin
   // 2-2-2
   // 2-1-1-2
   // 2-2-1-1
+  if Count = 7 then
+  begin
+    Delete(Count - 1);
+  end;
+  Assert(Count = 6);
+//  Delete(Count - 1);
+  NewNode := TNode.Create(FQuadMeshCreator, DesiredSpacing);
+  NewNode.Location := NewLocation;
+
+  // First element
+  CreateSubBoundary(1);
+
+  // second element
+  CreateSubBoundary(3);
+
+  // Third element
+  CreateSubBoundary(5);
+
+  RemoveSelfFromOwnNodes;
+  Clear;
+  FSegments.Clear;
+end;
+
+
+procedure TBoundary.Split222(FirstIndex: Integer);
+var
+  NodeIndex: Integer;
+  BoundNode1: TNodeInBoundary;
+  BoundNode2: TNodeInBoundary;
+  BoundNode3: TNodeInBoundary;
+  NewLocation: TPoint2D;
+begin
+  // 2-2-2
+  // 2-1-1-2
+  // 2-2-1-1
   Assert(Count = 7);
   Delete(Count - 1);
-  NewNode := TNode.Create(FQuadMeshCreator, DesiredSpacing);
   NodeIndex := FirstIndex + 1;
   if NodeIndex >= Count then
   begin
@@ -1571,23 +2668,12 @@ begin
   end;
   BoundNode3 := Items[NodeIndex];
 
-  NewNode.FLocation.X := (BoundNode1.FNode.X + BoundNode2.FNode.X +
+  NewLocation.X := (BoundNode1.FNode.X + BoundNode2.FNode.X +
     BoundNode3.FNode.X) / 3;
-  NewNode.FLocation.Y := (BoundNode1.FNode.Y + BoundNode2.FNode.Y +
+  NewLocation.Y := (BoundNode1.FNode.Y + BoundNode2.FNode.Y +
     BoundNode3.FNode.Y) / 3;
 
-  // First element
-  CreateSubBoundary(1);
-
-  // second element
-  CreateSubBoundary(3);
-
-  // Third element
-  CreateSubBoundary(5);
-
-  RemoveSelfFromOwnNodes;
-  Clear;
-  FSegments.Clear;
+  Split222(FirstIndex, NewLocation);
 end;
 
 procedure TBoundary.Split312(FirstIndex: Integer);
@@ -1695,7 +2781,7 @@ begin
   end;
 
   // element 1
-  SubBoundary := TBoundary.Create(FQuadMeshCreator, stInner, self,
+  SubBoundary := TBoundary.Create(FQuadMeshCreator, self,
     DesiredSpacing);
   FSubParts.Add(SubBoundary);
 
@@ -1728,7 +2814,7 @@ begin
   SubBoundary.Add(SubBoundary.Items[0]);
 
   // element 2
-  SubBoundary := TBoundary.Create(FQuadMeshCreator, stInner, self,
+  SubBoundary := TBoundary.Create(FQuadMeshCreator, self,
     DesiredSpacing);
   FSubParts.Add(SubBoundary);
 
@@ -1760,7 +2846,7 @@ begin
   SubBoundary.Add(SubBoundary.Items[0]);
 
   // element 3
-  SubBoundary := TBoundary.Create(FQuadMeshCreator, stInner, self,
+  SubBoundary := TBoundary.Create(FQuadMeshCreator, self,
     DesiredSpacing);
   FSubParts.Add(SubBoundary);
 
@@ -1793,7 +2879,7 @@ begin
   SubBoundary.Add(SubBoundary.Items[0]);
 
   // element 4
-  SubBoundary := TBoundary.Create(FQuadMeshCreator, stInner, self,
+  SubBoundary := TBoundary.Create(FQuadMeshCreator, self,
     DesiredSpacing);
   FSubParts.Add(SubBoundary);
 
@@ -1829,7 +2915,8 @@ begin
   FSegments.Clear;
 end;
 
-procedure TBoundary.Split411(FirstIndex: Integer);
+procedure TBoundary.Split411(FirstIndex: Integer
+  {$IFDEF TEST}; List: TBoundaryList{$ENDIF});
 var
   NodeIndex: Integer;
   BaseNode1: TNodeInBoundary;
@@ -1897,7 +2984,7 @@ begin
   ReverseSegment := EdgeSegment.CreateReversedSegment;
 
   // element 1
-  SubBoundary := TBoundary.Create(FQuadMeshCreator, stInner, self,
+  SubBoundary := TBoundary.Create(FQuadMeshCreator, self,
     DesiredSpacing);
   FSubParts.Add(SubBoundary);
 
@@ -1936,7 +3023,7 @@ begin
   SubBoundary.Add(SubBoundary.Items[0]);
 
   // element 2
-  SubBoundary := TBoundary.Create(FQuadMeshCreator, stInner, self,
+  SubBoundary := TBoundary.Create(FQuadMeshCreator, self,
     DesiredSpacing);
   FSubParts.Add(SubBoundary);
 
@@ -1982,9 +3069,632 @@ begin
 
   for SubIndex := 0 to FSubParts.Count - 1 do
   begin
-    FSubParts[SubIndex].SpecialCase;
+    FSubParts[SubIndex].SpecialCase{$IFDEF TEST}(List){$ENDIF};
   end;
 end;
+
+procedure TBoundary.SplitMultiplyConnectedBoundary;
+var
+  NodeIndex: Integer;
+  ANode: TNode;
+  PriorIndex: Integer;
+  APolygon1: TPolygon2D;
+  InnerIndex: Integer;
+  Epsilon: double;
+  NIndex: Integer;
+  Changed: Boolean;
+  NewBoundary: TBoundary;
+  ASegment: TSegment;
+  StartNode: TNode;
+  NewNode: TNodeInBoundary;
+  ExistingNode: TNodeInBoundary;
+  SegIndex: integer;
+  NewSegment: TSegment;
+  LastNode: TNodeInBoundary;
+  OtherNode: TNodeInBoundary;
+  SegmentIndex: integer;
+  InnerSegIndex: integer;
+  TestNode: TNodeInBoundary;
+  InnerSeg: TSegment;
+  InnerSegPos: integer;
+  ABoundNode1: TNodeInBoundary;
+  PriorSegment: TSegment;
+  APolygon2: TPolygon2D;
+  Nodes1: TNodeList;
+  Nodes2: TNodeList;
+  InternalPoly: boolean;
+  InnerNode: TNode;
+  InnerNodeIndex: Integer;
+  EndPriorIndex: integer;
+  StartIndex: integer;
+  procedure ReplaceSegInBoundary(ABoundary: TBoundary; OldSeg, NewSeg: TSegment);
+  var
+    NIndex: integer;
+    ANode: TNodeInBoundary;
+    SegIndex: Integer;
+  begin
+    for NIndex := 0 to ABoundary.Count - 1 do
+    begin
+      ANode := Items[NIndex];
+      SegIndex := ANode.IndexOfSegment(OldSeg);
+      if SegIndex >= 0 then
+      begin
+        ANode.DeleteSegment(SegIndex);
+        ANode.InsertSegment(SegIndex, NewSeg);
+      end;
+    end;
+  end;
+  procedure RemoveSegFromNodes(ABoundary: TBoundary; ASeg: TSegment);
+  var
+    NIndex: integer;
+    ANode: TNodeInBoundary;
+  begin
+    for NIndex := 0 to ABoundary.Count - 1 do
+    begin
+      ANode := Items[NIndex];
+      ANode.RemoveSegment(ASeg);
+    end;
+  end;
+begin
+  RenumberNodes;
+  Epsilon := FQuadMeshCreator.FCharacteristicLength/1e7;
+  repeat
+    Changed := False;
+    for NodeIndex := 0 to Count - 2 do
+    begin
+      if Changed then
+      begin
+        break;
+      end;
+      ANode := Items[NodeIndex].FNode;
+      if ANode.FIntersection then
+      begin
+        EndPriorIndex := IndexOfNode(ANode);
+        PriorIndex := EndPriorIndex;
+        if (PriorIndex < NodeIndex) then
+        begin
+          StartIndex := NodeIndex-1;
+          while not Changed do
+          begin
+            if StartIndex < EndPriorIndex then
+            begin
+              break;
+            end;
+            for InnerNodeIndex := StartIndex downto EndPriorIndex do
+            begin
+              if Items[InnerNodeIndex].FNode = ANode then
+              begin
+                PriorIndex := InnerNodeIndex;
+                break;
+              end;
+            end;
+            StartIndex := PriorIndex -1;
+
+            Nodes1 := TNodeList.Create;
+            Nodes2 := TNodeList.Create;
+            try
+              SetLength(APolygon1, NodeIndex-PriorIndex);
+              Nodes1.Capacity := Length(APolygon1);
+              NIndex := 0;
+              for InnerIndex := PriorIndex to NodeIndex - 1 do
+              begin
+                Nodes1.Add(Items[InnerIndex].FNode);
+                APolygon1[NIndex] := Items[InnerIndex].FNode.Location;
+                Inc(NIndex);
+              end;
+              if Abs(FastGeo.Area(APolygon1)) < Epsilon then
+              begin
+                Continue;
+              end;
+
+              SetLength(APolygon2, Count);
+              Nodes2.Capacity := Count;
+
+              NIndex := 0;
+              for InnerIndex := 0 to PriorIndex do
+              begin
+                Nodes2.Add(Items[NIndex].FNode);
+                APolygon2[NIndex] := Items[NIndex].FNode.Location;
+                Inc(NIndex);
+              end;
+              for InnerIndex := NodeIndex to Count - 2 do
+              begin
+                Nodes2.Add(Items[InnerIndex].FNode);
+                APolygon2[NIndex] := Items[InnerIndex].FNode.Location;
+                Inc(NIndex);
+              end;
+              SetLength(APolygon2, NIndex);
+              if Abs(FastGeo.Area(APolygon1)) < Epsilon then
+              begin
+                Continue;
+              end;
+
+              InternalPoly := False;
+              for InnerIndex := 0 to Nodes1.Count -1 do
+              begin
+                InnerNode := Nodes1[InnerIndex];
+                if Nodes2.IndexOf(InnerNode) < 0 then
+                begin
+                  InternalPoly := PointInConcavePolygon(
+                    InnerNode.Location, APolygon2);
+                  Break;
+                end;
+              end;
+              if InternalPoly then
+              begin
+                Continue;
+              end;
+
+              for InnerIndex := 0 to Nodes2.Count -1 do
+              begin
+                InnerNode := Nodes2[InnerIndex];
+                if Nodes1.IndexOf(InnerNode) < 0 then
+                begin
+                  InternalPoly := PointInConcavePolygon(
+                    InnerNode.Location, APolygon1);
+                  Break;
+                end;
+              end;
+              if InternalPoly then
+              begin
+                Continue;
+              end;
+
+            finally
+              Nodes1.Free;
+              Nodes2.Free;
+            end;
+
+            SetSegmentPositions;
+
+            LastNode := Items[NodeIndex];
+            for SegmentIndex := 0 to LastNode.SegmentCount - 1 do
+            begin
+              Assert(LastNode.Segments[SegmentIndex].FBoundary = self);
+            end;
+
+            NewBoundary := TBoundary.Create(FQuadMeshCreator, nil, FDesiredSpacing);
+            FQuadMeshCreator.FBoundaries.Add(NewBoundary);
+
+            StartNode := Items[PriorIndex].FNode;
+
+            SegIndex := -1;
+            ASegment := nil;
+            begin
+              for InnerIndex := 0 to FSegments.Count - 1 do
+              begin
+                if FSegments[InnerIndex].FNode1 = StartNode then
+                begin
+                  if FSegments[InnerIndex].FPosition1 = PriorIndex then
+                  begin
+                    ASegment := FSegments[InnerIndex];
+                    SegIndex := InnerIndex;
+                    Break;
+                  end;
+                end;
+              end;
+            end;
+            Assert(ASegment <> nil);
+
+            ASegment.FBoundary := NewBoundary;
+
+            NewNode := TNodeInBoundary.Create(StartNode, NewBoundary, ASegment);
+            NewNode.FPosition := NewBoundary.Add(NewNode);
+
+            for InnerIndex := PriorIndex +1 to NodeIndex - 1 do
+            begin
+              ExistingNode := Items[InnerIndex];
+              ExistingNode.FBoundary := NewBoundary;
+              Assert(ExistingNode.SegmentCount in [1,2]);
+              for InnerSegIndex := 0 to ExistingNode.SegmentCount - 1 do
+              begin
+                ExistingNode.Segments[InnerSegIndex].FBoundary := NewBoundary;
+              end;
+              ExistingNode.FPosition := NewBoundary.Add(ExistingNode);
+            end;
+
+            ExistingNode := NewBoundary[NewBoundary.Count-1];
+
+            for InnerIndex := SegIndex to FSegments.Count - 1 do
+            begin
+              ASegment := FSegments[InnerIndex];
+              Assert(ASegment.FBoundary = NewBoundary);
+              NewBoundary.FSegments.Add(ASegment);
+              if (ASegment.FNode2 = StartNode)
+                and (ExistingNode.IndexOfSegment(ASegment) >= 0)
+                then
+              begin
+                if (ASegment.FPosition2 = NodeIndex) then
+                begin
+                  NewNode.AddSegment(ASegment);
+                  break;
+                end;
+              end;
+            end;
+
+            NewBoundary.Add(NewNode);
+
+
+
+            for InnerIndex := 1 to NewBoundary.Count - 2 do
+            begin
+              Extract(NewBoundary.Items[InnerIndex]);
+            end;
+
+            for InnerIndex := 0 to NewBoundary.FSegments.Count - 1 do
+            begin
+              ASegment := NewBoundary.FSegments[InnerIndex];
+              FSegments.Extract(ASegment);
+            end;
+
+            OtherNode := Items[PriorIndex];
+            for SegIndex := OtherNode.SegmentCount - 1 downto 0 do
+            begin
+              ASegment := OtherNode.Segments[SegIndex];
+              begin
+                if (ASegment.FBoundary = self)
+                  and (LastNode.IndexOfSegment(ASegment) < 0)
+                  and ((ASegment.FPosition1 = PriorIndex)
+                  or (ASegment.FPosition2 = PriorIndex))
+                  then
+                begin
+                  LastNode.AddSegment(ASegment)
+                end;
+              end;
+            end;
+            Delete(PriorIndex);
+
+            for SegIndex := LastNode.SegmentCount - 1 downto 0 do
+            begin
+              ASegment := LastNode.Segments[SegIndex];
+              if (ASegment.FBoundary <> self) then
+              begin
+                LastNode.DeleteSegment(SegIndex);
+              end;
+            end;
+
+            Assert(LastNode.SegmentCount = 2);
+
+            NewBoundary.RenumberNodes;
+
+            for InnerIndex := Count - 1 downto 0 do
+            begin
+              TestNode := Items[InnerIndex];
+              begin
+                for InnerSegIndex := TestNode.SegmentCount - 1 downto 0 do
+                begin
+                  InnerSeg := TestNode.Segments[InnerSegIndex];
+                  if (InnerSeg.FBoundary <> self) then
+                  begin
+                    if InnerSeg.FBoundary <> NewBoundary then
+                    begin
+                      Assert(False);
+                    end
+                    else
+                    begin
+                      if NewBoundary.FSegments.IndexOf(InnerSeg) < 0 then
+                      begin
+                        NewSegment := InnerSeg.CreateReversedSegment;
+                        NewSegment.FBoundary := self;
+                        NewSegment.Reverse;
+                        ReplaceSegInBoundary(self, InnerSeg, NewSegment);
+                        RemoveSegFromNodes(NewBoundary, InnerSeg);
+                        InnerSegPos := FSegments.IndexOf(InnerSeg);
+                        Assert(InnerSegPos >= 0);
+                        FSegments[InnerSegPos] := NewSegment;
+                      end
+                      else
+                      begin
+                        Assert(FSegments.IndexOf(InnerSeg) < 0);
+                        TestNode.DeleteSegment(InnerSegIndex);
+                      end;
+                    end;
+                  end;
+                end;
+              end;
+            end;
+
+            ABoundNode1 := Items[0];
+            if ABoundNode1.SegmentCount = 2 then
+            begin
+              if ABoundNode1.Segments[0].FNode2
+                <> ABoundNode1.Segments[1].FNode1 then
+              begin
+                ABoundNode1.ReverseSegments;
+              end;
+            end;
+
+            PriorSegment := ABoundNode1.Segments[0];
+            for InnerIndex := 0 to Count - 2 do
+            begin
+              ABoundNode1 := Items[InnerIndex];
+              if ABoundNode1.SegmentCount = 2 then
+              begin
+                if ABoundNode1.Segments[0].FNode2
+                  <> ABoundNode1.Segments[1].FNode1 then
+                begin
+                  ABoundNode1.ReverseSegments;
+                end;
+              end;
+              Assert(ABoundNode1.SegmentCount in [1,2]);
+            end;
+
+            FixSegments;
+
+
+            RenumberNodes;
+            NewBoundary.FixSegments;
+
+            Changed := True;
+            break;
+          end;
+        end;
+      end;
+    end;
+  until not Changed;
+
+end;
+
+//procedure TBoundary.SplitMultiplyConnectedBoundary2;
+//var
+//  Epsilon: double;
+//  SegmentLists: TObjectList<TSegmentList>;
+//  index: Integer;
+//  ASegment: TSegment;
+//  ASegmentList: TSegmentList;
+//  FirstList: TSegmentList;
+//  SegmentIndex: Integer;
+//  IntersectionNodeList: TNodeList;
+//  StartLists: TSegmentObjectListsSqr;
+//  EndLists: TSegmentObjectListsSqr;
+//  Angles: TAngleList;
+//  SegmentListIndex: Integer;
+//  ANode: TNode;
+//  NodePostion: Integer;
+//  NodeSegmentList: TSegmentLists;
+//  NodeIndex: Integer;
+//  CompareItem: TAngleCompareItem;
+//  Changed: Boolean;
+//  procedure FindPolygon(PolyList: TNodeList; NodePosition: integer;
+//    SegmentLists: TSegmentObjectListsSqr);
+//  var
+//    NewPolyList: TNodeList;
+//    ANode: TNode;
+//    PositionInList: Integer;
+//    Poly1: TPolygon2D;
+//    NodeIndex: Integer;
+//    PolySegments1: TSegmentList;
+//    SegIndex: Integer;
+//    SegListIndex: Integer;
+//    ASegLists: TSegmentLists;
+//    ASegList: TSegmentList;
+//    StartIndex: Integer;
+//    ASeg: TSegment;
+//    PolySegments2: TSegmentList;
+//    Poly2: TPolygon2D;
+//    PriorSeg: TSegment;
+//  begin
+//    NewPolyList := TNodeList.Create;
+//    try
+//      NewPolyList.AddRange(PolyList);
+//      ANode := IntersectionNodeList[NodePosition];
+//      PositionInList := NewPolyList.IndexOf(ANode);
+//      if PositionInList >= 0 then
+//      begin
+//        SetLength(Poly1, PolyList.Count - PositionInList);
+//        for NodeIndex := PositionInList to NewPolyList.Count - 1 do
+//        begin
+//          Poly1[NodeIndex-PositionInList] := NewPolyList[NodeIndex].Location;
+//        end;
+//        if Abs(FastGeo.Area(Poly1)) > 0 then
+//        begin
+//          PolySegments1 := TSegmentList.Create;
+//          try
+//            for SegListIndex := 0 to SegmentLists.Count - 1 do
+//            begin
+//              ASegLists := SegmentLists[SegListIndex];
+//              for SegIndex := 0 to ASegLists.Count - 1 do
+//              begin
+//                ASegList := ASegLists[SegIndex];
+//                PolySegments1.AddRange(ASegList);
+//              end;
+//            end;
+//            StartIndex := Segments.IndexOf(PolySegments1[0]);
+//            PolySegments2 := TSegmentList.Create;
+//            try
+//              for SegIndex := StartIndex+1 to FSegments.Count - 1 do
+//              begin
+//                ASeg := FSegments[SegIndex];
+//                if PolySegments1.IndexOf(ASeg) < 0 then
+//                begin
+//                  PolySegments2.Add(ASeg);
+//                end;
+//              end;
+//              for SegIndex := 0 to StartIndex - 1 do
+//              begin
+//                ASeg := FSegments[SegIndex];
+//                if PolySegments1.IndexOf(ASeg) < 0 then
+//                begin
+//                  PolySegments2.Add(ASeg);
+//                end;
+//              end;
+//              if PolySegments2.Count > 0 then
+//              begin
+//                PriorSeg := PolySegments2[PolySegments2.Count-1];
+//                SetLength(Poly2, PolySegments2.Count);
+//                for SegIndex := 0 to PolySegments2.Count - 1 do
+//                begin
+//                  ASeg := PolySegments2[SegIndex];
+//                  Assert(ASeg.FNode1 = PriorSeg.FNode2);
+//                  Poly2[SegIndex] := ASeg.FNode1.Location;
+//                  PriorSeg := ASeg;
+//                end;
+//                if Abs(FastGeo.Area(Poly2)) > 0 then
+//                begin
+//                  // break out boundary here and Set Changed := True;
+//                  Exit;
+//                end;
+//              end;
+//            finally
+//              PolySegments2.Free;
+//            end;
+//          finally
+//            PolySegments1.Free;
+//          end;
+//        end;
+//      end;
+//      // if you reach here find the next nodes and call this recursively.
+//    finally
+//      NewPolyList.Free;
+//    end;
+//  end;
+//begin
+//  RenumberNodes;
+//  Epsilon := FQuadMeshCreator.FCharacteristicLength/1e7;
+//  SetSegmentPositions;
+//  Changed := False;
+//  SegmentLists := TObjectList<TSegmentList>.Create;
+//  try
+//    repeat
+//      ASegment := nil;
+//      ASegmentList := nil;
+//      for index := 0 to Segments.Count - 1 do
+//      begin
+//        ASegment := Segments[index];
+//        if (index = 0) or ASegment.FNode1.FIntersection then
+//        begin
+//          ASegmentList := TSegmentList.Create;
+//          SegmentLists.Add(ASegmentList);
+//        end;
+//        ASegmentList.Add(ASegment);
+//      end;
+//      if (SegmentLists.Count > 1) and not ASegment.FNode2.FIntersection then
+//      begin
+//        FirstList := SegmentLists[0];
+//        for SegmentIndex := 0 to FirstList.Count - 1 do
+//        begin
+//          ASegmentList.Add(FirstList[SegmentIndex]);
+//        end;
+//        SegmentLists.Delete(0);
+//      end;
+//      if SegmentLists.Count > 1 then
+//      begin
+//        IntersectionNodeList := TNodeList.Create;
+//        StartLists := TSegmentObjectListsSqr.Create;
+//        EndLists := TSegmentObjectListsSqr.Create;
+//        try
+//          for SegmentListIndex := 0 to SegmentLists.Count - 1 do
+//          begin
+//            ASegmentList := SegmentLists[SegmentListIndex];
+//            ASegment := ASegmentList[0];
+//            ANode := ASegment.FNode1;
+//            NodePostion := IntersectionNodeList.IndexOf(ANode);
+//            if NodePostion < 0 then
+//            begin
+//              NodePostion := IntersectionNodeList.Add(ANode);
+//              NodeSegmentList := TSegmentLists.Create;
+//              StartLists.Add(NodeSegmentList)
+//            end
+//            else
+//            begin
+//              NodeSegmentList := StartLists[NodePostion];
+//            end;
+//            NodeSegmentList.Add(ASegmentList);
+//
+//            ASegment := ASegmentList[ASegmentList.Count-1];
+//            ANode := ASegment.FNode2;
+//            NodePostion := IntersectionNodeList.IndexOf(ANode);
+//            if NodePostion < 0 then
+//            begin
+//              NodePostion := IntersectionNodeList.Add(ANode);
+//              NodeSegmentList := TSegmentLists.Create;
+//              EndLists.Add(NodeSegmentList)
+//            end
+//            else
+//            begin
+//              NodeSegmentList := EndLists[NodePostion];
+//            end;
+//            NodeSegmentList.Add(ASegmentList);
+//          end;
+//
+//          Assert(IntersectionNodeList.Count = StartLists.Count);
+//          Assert(IntersectionNodeList.Count = EndLists.Count);
+//
+//          Angles := TAngleList.Create;
+//          try
+//            for NodeIndex := 0 to IntersectionNodeList.Count - 1 do
+//            begin
+//              Angles.Clear;
+//              ANode := IntersectionNodeList[NodeIndex];
+//              NodeSegmentList := StartLists[NodeIndex];
+//              for SegmentIndex := 0 to NodeSegmentList.Count - 1 do
+//              begin
+//                ASegmentList := NodeSegmentList[SegmentIndex];
+//                ASegment := ASegmentList[0];
+//                Assert(ASegment.FNode1 = ANode);
+//                CompareItem := TAngleCompareItem.Create;
+//                Angles.Add(CompareItem);
+//
+//                CompareItem.Angle := ArcTan2(ASegment.FNode2.Y-ASegment.FNode2.Y, ASegment.FNode2.X-ASegment.FNode2.X);
+//                CompareItem.NodePosition := ASegment.FPosition1;
+//                CompareItem.Boundary := self;
+//                CompareItem.Direction := dForward;
+//              end;
+//
+//              NodeSegmentList := EndLists[NodeIndex];
+//              for SegmentIndex := 0 to NodeSegmentList.Count - 1 do
+//              begin
+//                ASegmentList := NodeSegmentList[SegmentIndex];
+//                ASegment := ASegmentList[ASegmentList.Count-1];
+//                Assert(ASegment.FNode2 = ANode);
+//                CompareItem := TAngleCompareItem.Create;
+//                Angles.Add(CompareItem);
+//
+//                CompareItem.Angle := ArcTan2(ASegment.FNode2.Y-ASegment.FNode2.Y, ASegment.FNode2.X-ASegment.FNode2.X);
+//                CompareItem.NodePosition := ASegment.FPosition2;
+//                CompareItem.Boundary := self;
+//                CompareItem.Direction := dBackward;
+//              end;
+//
+//
+//              // sort in order of descending angles.
+//              Angles.Sort(TAngleComparer.Construct(
+//                function (const L, R: TAngleCompareItem): integer
+//                begin
+//                  result := 0;
+//                  if R = L then
+//                  begin
+//                    Exit;
+//                  end;
+//                  result := Sign(R.Angle - L.Angle);
+//                  if result = 0 then
+//                  begin
+//                    Result := Ord(R.Direction) - Ord(L.Direction);
+//                  end;
+//                end
+//                )) ;
+//            end;
+//          finally
+//            Angles.Free;
+//          end;
+//
+//          for NodeIndex := 0 to IntersectionNodeList.Count - 1 do
+//          begin
+//            ANode := IntersectionNodeList[NodeIndex];
+//            // call FindPolygon here
+//          end;
+//
+//        finally
+//          EndLists.Free;
+//          StartLists.Free;
+//          IntersectionNodeList.Free;
+//        end;
+//      end;
+//    until not Changed;
+//  finally
+//    SegmentLists.Free;
+//  end;
+//end;
 
 procedure TBoundary.Split2121(FirstIndex: Integer);
 var
@@ -2045,7 +3755,7 @@ begin
   TopNode1 := Items[NodeIndex];
 
   // element 1
-  SubBoundary := TBoundary.Create(FQuadMeshCreator, stInner, self,
+  SubBoundary := TBoundary.Create(FQuadMeshCreator, self,
     DesiredSpacing);
   FSubParts.Add(SubBoundary);
 
@@ -2079,7 +3789,7 @@ begin
   SubBoundary.Add(SubBoundary.Items[0]);
 
   // element 2
-  SubBoundary := TBoundary.Create(FQuadMeshCreator, stInner, self,
+  SubBoundary := TBoundary.Create(FQuadMeshCreator, self,
     DesiredSpacing);
   FSubParts.Add(SubBoundary);
 
@@ -2134,7 +3844,7 @@ begin
   end;
 end;
 
-function TBoundary.SpecialCase: boolean;
+function TBoundary.SpecialCase({$ifdef TEST}List: TBoundaryList {$ENDIF}): boolean;
 var
   Colinears: TColliniears;
   NodeIndex: Integer;
@@ -2151,6 +3861,10 @@ var
   BoundNode2: TNodeInBoundary;
   BoundNode3: TNodeInBoundary;
   AnOrientation: Integer;
+  Delta: Integer;
+    {$IFDEF TEST}
+  SubIndex: Integer;
+  {$ENDIF}
 begin
   Assert(Count = 7);
   result := False;
@@ -2159,7 +3873,7 @@ begin
     Node1 := Items[NodeIndex];
     Node2 := Items[NodeIndex + 1];
     Node3 := Items[NodeIndex + 2];
-    Colinears[NodeIndex] := BadAngle(Node1.FNode.Location, Node2.FNode.Location,
+    Colinears[NodeIndex] := NearlyStraightAngle(Node1.FNode.Location, Node2.FNode.Location,
       Node3.FNode.Location);
     result := result or Colinears[NodeIndex]
   end;
@@ -2167,13 +3881,15 @@ begin
   Node1 := Items[NodeIndex];
   Node2 := Items[NodeIndex + 1];
   Node3 := Items[1];
-  Colinears[NodeIndex] := BadAngle(Node1.FNode.Location, Node2.FNode.Location,
-    Node3.FNode.Location);
+  Colinears[NodeIndex] := NearlyStraightAngle(Node1.FNode.Location,
+    Node2.FNode.Location, Node3.FNode.Location);
   result := result or Colinears[NodeIndex];
   if not result then
   begin
     Exit;
   end;
+  // Find the position of the first node that is colinear with the two nodes
+  // after it.
   FirstIndex := -1;
   for ColinIndex := 0 to Length(Colinears) - 1 do
   begin
@@ -2198,6 +3914,7 @@ begin
       end;
     end;
   end;
+
   ColinCount := 1;
   AddedLast := False;
   IntList := TIntegerList.Create;
@@ -2235,12 +3952,77 @@ begin
       IntList.Add(ColinCount);
     end;
     case IntList.Count of
+      1:
+        begin
+          // all points colinear.
+          Split2121(FirstIndex);
+        end;
+     { 2:
+        begin
+          // bad geometry
+          BoundNode3 := Items[Count - 3];
+          BoundNode2 := Items[Count - 2];
+          for NodeIndex := 0 to Count - 2 do
+          begin
+            BoundNode1 := Items[NodeIndex];
+
+            AnOrientation := FastGEO.Orientation(BoundNode3.FNode.Location,
+              BoundNode2.FNode.Location, BoundNode1.FNode.Location);
+            if AnOrientation = Clockwise then
+            begin
+              // The polygon is concave so break at the concave point.
+
+              Delta := NodeIndex - FirstIndex;
+              if Delta < 0 then
+              begin
+                Delta := Delta + 6;
+              end;
+
+              ColinIndex := NodeIndex-2;
+              if ColinIndex < 0 then
+              begin
+                ColinIndex := ColinIndex + Length(Colinears);
+              end;
+
+              if not Colinears[ColinIndex] then
+              begin
+                FirstIndex := NodeIndex - 2;
+                if FirstIndex < 0 then
+                begin
+                  FirstIndex := FirstIndex + 6;
+                end;
+                Split2121(FirstIndex);
+                Exit
+              end;
+            end;
+            BoundNode3 := BoundNode2;
+            BoundNode2 := BoundNode1;
+          end;
+
+          Split2121(FirstIndex);
+        end;   }
       3:
         begin
           case IntList[0] of
             2:
               begin
                 // 2-2-2, 2-1-3, or 2-3-1
+
+                {These and similar comments identify the pattern of colinear
+                 sides in the boundary. 2-2-2, for example, means that
+                 sides 1 and 2 are colinear, sides 3 and 4 are colinear
+                 and sides 5 and 6 are colinear so the boundary has a
+                 triangular shape with each of the triangles sides comprising
+                 two edges of the boundary as shown below.
+
+                            *
+                          /  \
+                         /    \
+                        *      *
+                       /        \
+                      /          \
+                     *------*-----*
+                }
                 case IntList[1] of
                   1:
                     begin
@@ -2248,7 +4030,7 @@ begin
                       Assert(IntList[2] = 3);
                       // Convert to 3-1-2 and process again
                       Reverse;
-                      SpecialCase;
+                      SpecialCase{$IFDEF TEST}(List){$ENDIF};
                       ReverseSubBoundaries;
                     end;
                   2:
@@ -2273,7 +4055,7 @@ begin
                       Add(Items[0]);
                       Delete(0);
                       Add(Items[0]);
-                      SpecialCase;
+                      SpecialCase{$IFDEF TEST}(List){$ENDIF};
                     end;
                 else
                   Assert(False);
@@ -2287,7 +4069,17 @@ begin
                     begin
                       // 3-1-2
                       Assert(IntList[2] = 2);
-                      Split312(FirstIndex);
+
+                      if Items[0].FNode = Items[2].FNode then
+                      begin
+                        Split2121(FirstIndex);
+                      end
+                      else
+                      begin
+                        Split312(FirstIndex);
+                      end;
+
+
                     end;
                   2:
                     begin
@@ -2295,7 +4087,7 @@ begin
                       Assert(IntList[2] = 1);
                       // convert to 2-3-1 and process again
                       Reverse;
-                      SpecialCase;
+                      SpecialCase{$IFDEF TEST}(List){$ENDIF};
                       ReverseSubBoundaries;
                     end;
                 else
@@ -2307,7 +4099,7 @@ begin
                 // 4-1-1
                 Assert(IntList[1] = 1);
                 Assert(IntList[2] = 1);
-                Split411(FirstIndex);
+                Split411(FirstIndex{$IFDEF TEST}, List{$ENDIF});
               end;
           else
             Assert(False);
@@ -2328,12 +4120,82 @@ begin
                           begin
                             // 2-1-1-2
                             Assert(IntList[3] = 2);
+
+                            BoundNode3 := Items[Count - 3];
+                            BoundNode2 := Items[Count - 2];
+                            for NodeIndex := 0 to Count - 2 do
+                            begin
+                              BoundNode1 := Items[NodeIndex];
+
+                              AnOrientation := FastGEO.Orientation(BoundNode3.FNode.Location,
+                                BoundNode2.FNode.Location, BoundNode1.FNode.Location);
+                              if AnOrientation = Clockwise then
+                              begin
+                                // The polygon is concave so break at the concave point.
+
+                                Delta := NodeIndex - FirstIndex;
+                                if Delta < 0 then
+                                begin
+                                  Delta := Delta + 6;
+                                end;
+
+                                if Delta in [3,4,5] then
+                                begin
+                                  FirstIndex := NodeIndex - 2;
+                                  if FirstIndex < 0 then
+                                  begin
+                                    FirstIndex := FirstIndex + 6;
+                                  end;
+                                  Split2121(FirstIndex);
+                                  Exit
+                                end;
+                              end;
+                              BoundNode3 := BoundNode2;
+                              BoundNode2 := BoundNode1;
+                            end;
+
                             Split222(FirstIndex);
                           end;
                         2:
                           begin
                             // 2-2-1-1
                             Assert(IntList[3] = 1);
+
+                            BoundNode3 := Items[Count - 3];
+                            BoundNode2 := Items[Count - 2];
+                            for NodeIndex := 0 to Count - 2 do
+                            begin
+                              BoundNode1 := Items[NodeIndex];
+
+                              AnOrientation := FastGEO.Orientation(BoundNode3.FNode.Location,
+                                BoundNode2.FNode.Location, BoundNode1.FNode.Location);
+                              if (AnOrientation = Clockwise) and not NearlyStraightAngle(
+                                BoundNode3.FNode.Location, BoundNode2.FNode.Location,
+                                BoundNode1.FNode.Location) then
+                              begin
+                                // The polygon is concave so break at the concave point.
+
+                                Delta := NodeIndex - FirstIndex;
+                                if Delta < 0 then
+                                begin
+                                  Delta := Delta + 6;
+                                end;
+
+                                if Delta in [0,4,5] then
+                                begin
+                                  FirstIndex := NodeIndex - 2;
+                                  if FirstIndex < 0 then
+                                  begin
+                                    FirstIndex := FirstIndex + 6;
+                                  end;
+                                  Split2121(FirstIndex);
+                                  Exit
+                                end;
+                              end;
+                              BoundNode3 := BoundNode2;
+                              BoundNode2 := BoundNode1;
+                            end;
+
                             Split222(FirstIndex);
                           end;
                       else
@@ -2346,6 +4208,42 @@ begin
                       Assert(IntList[1] = 1);
                       Assert(IntList[2] = 2);
                       Assert(IntList[3] = 1);
+
+                      BoundNode3 := Items[Count - 3];
+                      BoundNode2 := Items[Count - 2];
+                      for NodeIndex := 0 to Count - 2 do
+                      begin
+                        BoundNode1 := Items[NodeIndex];
+
+                        AnOrientation := FastGEO.Orientation(BoundNode3.FNode.Location,
+                          BoundNode2.FNode.Location, BoundNode1.FNode.Location);
+                        if (AnOrientation = Clockwise) and not NearlyStraightAngle(
+                          BoundNode3.FNode.Location, BoundNode2.FNode.Location,
+                          BoundNode1.FNode.Location) then
+                        begin
+                          // The polygon is concave so break at the concave point.
+
+                          ColinIndex := NodeIndex-2;
+                          if ColinIndex < 0 then
+                          begin
+                            ColinIndex := ColinIndex + Length(Colinears);
+                          end;
+
+                          if not Colinears[ColinIndex] then
+                          begin
+                            FirstIndex := NodeIndex - 2;
+                            if FirstIndex < 0 then
+                            begin
+                              FirstIndex := FirstIndex + 6;
+                            end;
+                            Split2121(FirstIndex);
+                            Exit
+                          end;
+                        end;
+                        BoundNode3 := BoundNode2;
+                        BoundNode2 := BoundNode1;
+                      end;
+
                       Split2121(FirstIndex);
                     end;
                 else
@@ -2358,6 +4256,42 @@ begin
                 Assert(IntList[1] = 1);
                 Assert(IntList[2] = 1);
                 Assert(IntList[3] = 1);
+
+                BoundNode3 := Items[Count - 3];
+                BoundNode2 := Items[Count - 2];
+                for NodeIndex := 0 to Count - 2 do
+                begin
+                  BoundNode1 := Items[NodeIndex];
+
+                  AnOrientation := FastGEO.Orientation(BoundNode3.FNode.Location,
+                    BoundNode2.FNode.Location, BoundNode1.FNode.Location);
+                  if (AnOrientation = Clockwise)  and not NearlyStraightAngle(
+                    BoundNode3.FNode.Location, BoundNode2.FNode.Location,
+                    BoundNode1.FNode.Location) then
+                  begin
+                    // The polygon is concave so break at the concave point.
+
+                    Delta := NodeIndex - FirstIndex;
+                    if Delta < 0 then
+                    begin
+                      Delta := Delta + 6;
+                    end;
+
+                    if Delta in [0,3,4,5] then
+                    begin
+                      FirstIndex := NodeIndex - 2;
+                      if FirstIndex < 0 then
+                      begin
+                        FirstIndex := FirstIndex + 6;
+                      end;
+                      Split2121(FirstIndex);
+                      Exit
+                    end;
+                  end;
+                  BoundNode3 := BoundNode2;
+                  BoundNode2 := BoundNode1;
+                end;
+
                 Split312(FirstIndex);
               end;
           else
@@ -2381,14 +4315,27 @@ begin
 
             AnOrientation := FastGEO.Orientation(BoundNode3.FNode.Location,
               BoundNode2.FNode.Location, BoundNode1.FNode.Location);
-            if AnOrientation = Clockwise then
+            if (AnOrientation = Clockwise) and not NearlyStraightAngle(
+              BoundNode3.FNode.Location, BoundNode2.FNode.Location,
+              BoundNode1.FNode.Location) then
             begin
-              FirstIndex := NodeIndex - 2;
-              if FirstIndex < 0 then
+              // The polygon is concave so break at the concave point.
+
+              Delta := NodeIndex - FirstIndex;
+              if Delta < 0 then
               begin
-                FirstIndex := FirstIndex + Count - 1;
+                Delta := Delta + 6;
               end;
-              break;
+
+              if Delta in [0,1,3,4,5] then
+              begin
+                FirstIndex := NodeIndex - 2;
+                if FirstIndex < 0 then
+                begin
+                  FirstIndex := FirstIndex + 6;
+                end;
+                break;
+              end;
             end;
             BoundNode3 := BoundNode2;
             BoundNode2 := BoundNode1;
@@ -2401,6 +4348,12 @@ begin
     end;
   finally
     IntList.Free;
+    {$IFDEF TEST}
+      for SubIndex := 0 to FSubParts.Count - 1 do
+      begin
+        FSubParts[SubIndex].ListCount := List.Count;
+      end;
+    {$ENDIF}
   end;
 
   Clear;
@@ -2424,6 +4377,23 @@ begin
   ConvexHull2(InputPoints, result, OutputPoints);
 end;
 
+function TBoundary.NodeOrientation: Integer;
+var
+  InputPoints: TPolygon2D;
+  OutputPoints: TPolygon2D;
+  NodeIndex: Integer;
+  ANode: TNode;
+begin
+  Assert(FNodes.Count > 0);
+  SetLength(InputPoints, FNodes.Count - 1);
+  for NodeIndex := 0 to FNodes.Count - 2 do
+  begin
+    ANode := FNodes[NodeIndex];
+    InputPoints[NodeIndex] := ANode.Location;
+  end;
+  ConvexHull2(InputPoints, result, OutputPoints);
+end;
+
 function TBoundary.QueryInterface(const IID: TGUID; out Obj): HResult;
 begin
   if GetInterface(IID, Obj) then
@@ -2433,6 +4403,8 @@ begin
 end;
 
 procedure TBoundary.Split(List: TBoundaryList);
+const
+  TooManyPoints = 100;
 var
   OuterNodeIndex: Integer;
   Node1: TNodeInBoundary;
@@ -2458,150 +4430,313 @@ var
   SubBoundaryIndex: Integer;
   FirstNode: TNodeInBoundary;
   ShouldSkip: boolean;
+  ASubPart: TBoundary;
+  HiddenSegments: TSegmentList;
+  OuterSegIndex: Integer;
+  OuterSegment: TSegment;
+  InnerSegIndex: Integer;
+  Seg1: TSegment2D;
+  InnerSegment: TSegment;
+//  StartingIndex: Integer;
+//  EndingIndex: Integer;
+  TempCost: TCost;
+//  SplitSegment1: TSegment;
+//  SplitSegment2: TSegment;
+//  SplitIndex: Integer;
+//  SplitNode1: TNodeInBoundary;
+//  SplitNode2: TNodeInBoundary;
 begin
   SetCounterClockwiseOrientation;
 
   if Count = 5 then
   begin
-{$IFDEF DEBUG}
-    // CheckInvalidElement;
-{$ENDIF}
     Exit;
   end;
+  Assert(Odd(Count));
   Assert(Count >= 7);
   if (Count = 7) and (FQuadMeshCreator.SixNodeClosureMethod = cmTemplate) then
   begin
-    if SpecialCase then
+    if SpecialCase{$IFDEF TEST}(List){$ENDIF} then
     begin
-{$IFDEF DEBUG}
-      // for SubBoundaryIndex := 0 to FSubParts.Count - 1 do
-      // begin
-      // FSubParts[SubBoundaryIndex].CheckInvalidElement;
-      // end;
-{$ENDIF}
       Exit;
     end;
-
   end;
+  SetSegmentPositions;
+
+  HiddenSegments:= TSegmentList.Create;
   LowestCost := nil;
-  // The last point is a duplicate of the first point
-  for OuterNodeIndex := 0 to Count - 2 do
-  begin
-    Node1 := Items[OuterNodeIndex];
-    for InnerNodeIndex := OuterNodeIndex + 1 to Count - 1 do
+  try
+    // This doesn't appear to improve overall mesh quality.
+    {
+    if (FSegments.Count = 4)
+      and (FSegments[0].FInnerNodes.Count = FSegments[2].FInnerNodes.Count)
+      and (FSegments[1].FInnerNodes.Count = FSegments[3].FInnerNodes.Count)
+      then
     begin
-      // skip neighboring points
-      if Abs(OuterNodeIndex - InnerNodeIndex) <= 1 then
+      if (OrientedVertexAngle(FSegments[0].FNode1.Location,
+        FSegments[0].FNode2.Location, FSegments[1].FNode2.Location,
+        CounterClockwise) < 120)
+        and
+        (OrientedVertexAngle(FSegments[1].FNode1.Location,
+        FSegments[1].FNode2.Location, FSegments[2].FNode2.Location,
+        CounterClockwise) < 120)
+        and
+        (OrientedVertexAngle(FSegments[2].FNode1.Location,
+        FSegments[2].FNode2.Location, FSegments[3].FNode2.Location,
+        CounterClockwise) < 120)
+        and
+        (OrientedVertexAngle(FSegments[3].FNode1.Location,
+        FSegments[3].FNode2.Location, FSegments[0].FNode2.Location,
+        CounterClockwise) < 120)
+        then
       begin
-        Continue;
-      end;
-      if (OuterNodeIndex = 0) and (InnerNodeIndex >= Count - 2) then
-      begin
-        Continue;
-      end;
-      if (OuterNodeIndex = 1) and (InnerNodeIndex = Count - 1) then
-      begin
-        Continue;
-      end;
-      Node2 := Items[InnerNodeIndex];
-      if Node1.OnSameSegment(Node2) then
-      begin
-        Continue;
-      end;
-      if Node1.FNode = Node2.FNode then
-      begin
-        Continue;
-      end;
-
-      ACost := FQuadMeshCreator.Cost[Node1, Node2];
-
-      if ACost.Visible then
-      begin
-        ACost.ComputeCost;
-        if (LowestCost = nil) or (ACost.Cost < LowestCost.Cost) then
+        if FSegments[0].FInnerNodes.Count > FSegments[1].FInnerNodes.Count then
         begin
-          LowestCost := ACost;
+          SplitSegment1 := FSegments[0];
+          SplitSegment2 := FSegments[2];
+        end
+        else
+        begin
+          SplitSegment1 := FSegments[1];
+          SplitSegment2 := FSegments[3];
+        end;
+        SplitIndex := SplitSegment1.FInnerNodes.Count div 2;
+        SplitNode1 := Items[SplitSegment1.FPosition1 + SplitIndex+1];
+        SplitNode2 := Items[SplitSegment2.FPosition2 - SplitIndex-1];
+        LowestCost := TCost.Create(SplitNode1, SplitNode2, FQuadMeshCreator);
+        Assert(LowestCost.Visible);
+      end;
+    end;
+    if LowestCost = nil then
+    }
+    begin
+      // The last point is a duplicate of the first point
+      for OuterNodeIndex := 0 to Count-2 do
+      begin
+        Node1 := Items[OuterNodeIndex];
+        HiddenSegments.Clear;
+        if (Count > FSegments.Count*2)
+          and (FSegments.Count > 3) then
+        begin
+          for OuterSegIndex := 0 to FSegments.Count - 1 do
+          begin
+            OuterSegment := FSegments[OuterSegIndex];
+            if (OuterSegment.FNode1 = Node1.FNode)
+              or (OuterSegment.FNode2 = Node1.FNode)
+              or (Node1.IndexOfSegment(OuterSegment) >= 0) then
+            begin
+              Continue;
+            end;
+            if HiddenSegments.IndexOf(OuterSegment) >= 0 then
+            begin
+              Continue;
+            end;
+            Seg1 := EquateSegment(OuterSegment.FNode1.Location,
+              OuterSegment.FNode2.Location);
+            for InnerSegIndex := 0 to FSegments.Count - 1 do
+            begin
+              if Abs(OuterSegIndex-InnerSegIndex) <= 1 then
+              begin
+                Continue;
+              end;
+              InnerSegment := FSegments[InnerSegIndex];
+              if (OuterSegment.FNode1 = InnerSegment.FNode1)
+                or (OuterSegment.FNode1 = InnerSegment.FNode2)
+                or (OuterSegment.FNode2 = InnerSegment.FNode1)
+                or (OuterSegment.FNode2 = InnerSegment.FNode2)
+                then
+              begin
+                Continue;
+              end;
+              if (InnerSegment.FNode1 = Node1.FNode)
+                or (InnerSegment.FNode2 = Node1.FNode)
+                or (Node1.IndexOfSegment(InnerSegment) >= 0) then
+              begin
+                Continue;
+              end;
+              if HiddenSegments.IndexOf(InnerSegment) >= 0 then
+              begin
+                Continue;
+              end;
+              if Intersect(Seg1, EquateSegment(Node1.Location,
+                InnerSegment.FNode1.Location))
+                and Intersect(Seg1, EquateSegment(Node1.Location,
+                InnerSegment.FNode2.Location)) then
+              begin
+                HiddenSegments.Add(InnerSegment);
+              end;
+            end;
+          end;
+        end;
+
+        for InnerNodeIndex := OuterNodeIndex + 1 to Count-1 do
+        begin
+
+          // skip neighboring points
+          if Abs(OuterNodeIndex - InnerNodeIndex) <= 1 then
+          begin
+            Continue;
+          end;
+          if (OuterNodeIndex = 0) and (InnerNodeIndex >= Count - 2) then
+          begin
+            Continue;
+          end;
+          if (OuterNodeIndex = 1) and (InnerNodeIndex = Count - 1) then
+          begin
+            Continue;
+          end;
+          Node2 := Items[InnerNodeIndex];
+          if Node1.OnSameSegment(Node2) then
+          begin
+            Continue;
+          end;
+          if Node1.FNode = Node2.FNode then
+          begin
+            Continue;
+          end;
+          if HiddenSegments.IndexOf(Node2.Segments[0]) >= 0 then
+          begin
+            Continue;
+          end;
+          if (Node2.SegmentCount > 1)
+            and (HiddenSegments.IndexOf(Node2.Segments[1]) >= 0) then
+          begin
+            Continue;
+          end;
+
+
+          ACost := TCost.Create(Node1, Node2, FQuadMeshCreator{, ivUnknown});
+          try
+          if ACost.Visible then
+          begin
+            ACost.ComputeCost(LowestCost);
+            if (LowestCost = nil) or (ACost.Cost < LowestCost.Cost) then
+            begin
+              TempCost := LowestCost;
+              LowestCost := ACost;
+              ACost := TempCost;
+
+              if LowestCost.Cost = 0  then
+              begin
+                break;
+              end;
+            end;
+          end;
+          finally
+            ACost.Free;
+          end;
         end;
       end;
     end;
-  end;
-  Assert(LowestCost <> nil);
+    Assert(LowestCost <> nil);
 
-  if LowestCost.FNode1.Position < LowestCost.FNode2.Position then
-  begin
-    Node1 := LowestCost.FNode1;
-    Node2 := LowestCost.FNode2;
-  end
-  else
-  begin
-    Node1 := LowestCost.FNode2;
-    Node2 := LowestCost.FNode1;
-  end;
-
-  SplitSegmentAtNode(Node1);
-  SplitSegmentAtNode(Node2);
-
-  PriorSegment := nil;
-  for SegIndex := 0 to Node1.FSegments.Count - 1 do
-  begin
-    ASeg := Node1.FSegments[SegIndex];
-    if ASeg.Node2 = Node1.FNode then
+    if LowestCost.FNode1.Position < LowestCost.FNode2.Position then
     begin
-      PriorSegment := ASeg;
-      break;
+      Node1 := LowestCost.FNode1;
+      Node2 := LowestCost.FNode2;
+    end
+    else
+    begin
+      Node1 := LowestCost.FNode2;
+      Node2 := LowestCost.FNode1;
     end;
-  end;
-  Assert(PriorSegment <> nil);
-  ShouldSkip := False;
-  SegmentInsertPosition1 := FSegments.IndexOf(PriorSegment) + 1;
-  if SegmentInsertPosition1 = FSegments.Count then
-  begin
-    SegmentInsertPosition1 := 0;
-    ShouldSkip := True;
-  end;
 
-  PriorSegment := nil;
-  for SegIndex := 0 to Node2.FSegments.Count - 1 do
-  begin
-    ASeg := Node2.FSegments[SegIndex];
-    if ASeg.Node1 = Node2.FNode then
+    SplitSegmentAtNode(Node1);
+    SplitSegmentAtNode(Node2);
+
+    PriorSegment := nil;
+    for SegIndex := 0 to Node1.SegmentCount - 1 do
     begin
-      PriorSegment := ASeg;
-      break;
+      ASeg := Node1.Segments[SegIndex];
+      if ASeg.Node2 = Node1.FNode then
+      begin
+        PriorSegment := ASeg;
+        Assert(PriorSegment.FBoundary = self);
+        break;
+      end;
     end;
-  end;
-  Assert(PriorSegment <> nil);
-  SegmentInsertPosition2 := FSegments.IndexOf(PriorSegment);
-
-  NewSegment := TSegment.Create(Node1.FNode, Node2.FNode, stInner, self,
-    FQuadMeshCreator);
-
-  SegmentBetweenCount := Node2.Position - Node1.Position;
-  NodesToInsert := NewSegment.NodesToInsert;
-  if not Odd(SegmentBetweenCount + NodesToInsert) then
-  begin
-    Inc(NodesToInsert);
-  end;
-  if NodesToInsert > 0 then
-  begin
-    NewSegment.InsertNodes(NodesToInsert);
-  end;
-
-  ReversedSegment := NewSegment.CreateReversedSegment;
-
-  SubBoundary := TBoundary.Create(FQuadMeshCreator, stInner, self,
-    (Node1.DesiredSpacing + Node2.DesiredSpacing) / 2);
-  FSubParts.Add(SubBoundary);
-
-  PriorSegment := nil;
-  FirstNode := nil;
-
-  if not ShouldSkip then
-  begin
-    for SegmentIndex := 0 to FSegments.Count - 1 do
+    Assert(PriorSegment <> nil);
+    ShouldSkip := False;
+    SegmentInsertPosition1 := FSegments.IndexOf(PriorSegment) + 1;
+    if SegmentInsertPosition1 = FSegments.Count then
     begin
-      ASegment := FSegments[SegmentIndex];
-      NewNode := TNodeInBoundary.Create(ASegment.Node1, SubBoundary, ASegment);
+      SegmentInsertPosition1 := 0;
+      ShouldSkip := True;
+    end;
+
+    PriorSegment := nil;
+    for SegIndex := 0 to Node2.SegmentCount - 1 do
+    begin
+      ASeg := Node2.Segments[SegIndex];
+      if ASeg.Node1 = Node2.FNode then
+      begin
+        PriorSegment := ASeg;
+        Assert(PriorSegment.FBoundary = self);
+        break;
+      end;
+    end;
+    Assert(PriorSegment <> nil);
+    SegmentInsertPosition2 := FSegments.IndexOf(PriorSegment);
+    Assert(SegmentInsertPosition2 >= 0);
+
+    NewSegment := nil;
+    ReversedSegment := nil;
+    if Node1.FNode <> Node2.FNode then
+    begin
+      NewSegment := TSegment.Create(Node1.FNode, Node2.FNode, stInner, self,
+        FQuadMeshCreator);
+
+      SegmentBetweenCount := Node2.Position - Node1.Position;
+      NodesToInsert := NewSegment.NodesToInsert;
+      if not Odd(SegmentBetweenCount + NodesToInsert) then
+      begin
+        Inc(NodesToInsert);
+      end;
+      if NodesToInsert > 0 then
+      begin
+        NewSegment.InsertNodes(NodesToInsert);
+      end;
+
+      ReversedSegment := NewSegment.CreateReversedSegment;
+    end;
+
+    SubBoundary := TBoundary.Create(FQuadMeshCreator, self,
+      (Node1.DesiredSpacing + Node2.DesiredSpacing) / 2);
+    FSubParts.Add(SubBoundary);
+
+    PriorSegment := nil;
+    FirstNode := nil;
+
+    if not ShouldSkip then
+    begin
+      for SegmentIndex := 0 to SegmentInsertPosition1 - 1 do
+      begin
+        ASegment := FSegments[SegmentIndex];
+        NewNode := TNodeInBoundary.Create(ASegment.Node1, SubBoundary, ASegment);
+        if FirstNode = nil then
+        begin
+          FirstNode := NewNode;
+        end;
+        SubBoundary.Add(NewNode);
+        if PriorSegment <> nil then
+        begin
+          NewNode.AddSegment(PriorSegment);
+        end;
+        SubBoundary.FSegments.Add(ASegment);
+        ASegment.FBoundary := SubBoundary;
+        for NodeIndex := 0 to ASegment.FInnerNodes.Count - 1 do
+        begin
+          AnInnerNode := ASegment.FInnerNodes[NodeIndex];
+          NewNode := TNodeInBoundary.Create(AnInnerNode, SubBoundary, ASegment);
+          SubBoundary.Add(NewNode);
+        end;
+        PriorSegment := ASegment;
+      end;
+    end;
+
+    if NewSegment <> nil then
+    begin
+      NewNode := TNodeInBoundary.Create(NewSegment.Node1, SubBoundary, NewSegment);
       if FirstNode = nil then
       begin
         FirstNode := NewNode;
@@ -2609,7 +4744,27 @@ begin
       SubBoundary.Add(NewNode);
       if PriorSegment <> nil then
       begin
-        NewNode.FSegments.Add(PriorSegment);
+        NewNode.AddSegment(PriorSegment);
+      end;
+      SubBoundary.FSegments.Add(NewSegment);
+      NewSegment.FBoundary := SubBoundary;
+      for NodeIndex := 0 to NewSegment.FInnerNodes.Count - 1 do
+      begin
+        AnInnerNode := NewSegment.FInnerNodes[NodeIndex];
+        NewNode := TNodeInBoundary.Create(AnInnerNode, SubBoundary, NewSegment);
+        SubBoundary.Add(NewNode);
+      end;
+      PriorSegment := NewSegment;
+    end;
+
+    for SegmentIndex := SegmentInsertPosition2 to FSegments.Count - 1 do
+    begin
+      ASegment := FSegments[SegmentIndex];
+      NewNode := TNodeInBoundary.Create(ASegment.Node1, SubBoundary, ASegment);
+      SubBoundary.Add(NewNode);
+      if PriorSegment <> nil then
+      begin
+        NewNode.AddSegment(PriorSegment);
       end;
       SubBoundary.FSegments.Add(ASegment);
       ASegment.FBoundary := SubBoundary;
@@ -2620,108 +4775,122 @@ begin
         SubBoundary.Add(NewNode);
       end;
       PriorSegment := ASegment;
-      if ASegment.Node2 = Node1.FNode then
+    end;
+    SubBoundary.Add(SubBoundary.Items[0]);
+
+    if FirstNode <> nil then
+    begin
+      FirstNode.AddSegment(PriorSegment);
+    end;
+
+    SubBoundary.RenumberNodes;
+
+    SubBoundary := TBoundary.Create(FQuadMeshCreator, self,
+      (Node1.DesiredSpacing + Node2.DesiredSpacing) / 2);
+    FSubParts.Add(SubBoundary);
+
+    FirstNode := nil;
+    PriorSegment := nil;
+    if ReversedSegment <> nil then
+    begin
+      NewNode := TNodeInBoundary.Create(ReversedSegment.Node1, SubBoundary,
+        ReversedSegment);
+      FirstNode := NewNode;
+      SubBoundary.Add(NewNode);
+      SubBoundary.FSegments.Add(ReversedSegment);
+      ReversedSegment.FBoundary := SubBoundary;
+      PriorSegment := ReversedSegment;
+      for NodeIndex := 0 to ReversedSegment.FInnerNodes.Count - 1 do
       begin
-        break;
+        AnInnerNode := ReversedSegment.FInnerNodes[NodeIndex];
+        NewNode := TNodeInBoundary.Create(AnInnerNode, SubBoundary,
+          ReversedSegment);
+        SubBoundary.Add(NewNode);
       end;
     end;
-  end;
 
-  NewNode := TNodeInBoundary.Create(NewSegment.Node1, SubBoundary, NewSegment);
-  if FirstNode = nil then
-  begin
-    FirstNode := NewNode;
-  end;
-  SubBoundary.Add(NewNode);
-  if PriorSegment <> nil then
-  begin
-    NewNode.FSegments.Add(PriorSegment);
-  end;
-  SubBoundary.FSegments.Add(NewSegment);
-  NewSegment.FBoundary := SubBoundary;
-  for NodeIndex := 0 to NewSegment.FInnerNodes.Count - 1 do
-  begin
-    AnInnerNode := NewSegment.FInnerNodes[NodeIndex];
-    NewNode := TNodeInBoundary.Create(AnInnerNode, SubBoundary, NewSegment);
-    SubBoundary.Add(NewNode);
-  end;
-  PriorSegment := NewSegment;
-
-  for SegmentIndex := SegmentInsertPosition2 to FSegments.Count - 1 do
-  begin
-    ASegment := FSegments[SegmentIndex];
-    NewNode := TNodeInBoundary.Create(ASegment.Node1, SubBoundary, ASegment);
-    SubBoundary.Add(NewNode);
-    if PriorSegment <> nil then
+    for SegmentIndex := SegmentInsertPosition1 to SegmentInsertPosition2 - 1 do
     begin
-      NewNode.FSegments.Add(PriorSegment);
-    end;
-    SubBoundary.FSegments.Add(ASegment);
-    ASegment.FBoundary := SubBoundary;
-    for NodeIndex := 0 to ASegment.FInnerNodes.Count - 1 do
-    begin
-      AnInnerNode := ASegment.FInnerNodes[NodeIndex];
-      NewNode := TNodeInBoundary.Create(AnInnerNode, SubBoundary, ASegment);
+      ASegment := FSegments[SegmentIndex];
+      NewNode := TNodeInBoundary.Create(ASegment.Node1, SubBoundary, ASegment);
+      if PriorSegment <> nil then
+      begin
+        NewNode.AddSegment(PriorSegment);
+      end;
       SubBoundary.Add(NewNode);
+      SubBoundary.FSegments.Add(ASegment);
+      ASegment.FBoundary := SubBoundary;
+      for NodeIndex := 0 to ASegment.FInnerNodes.Count - 1 do
+      begin
+        AnInnerNode := ASegment.FInnerNodes[NodeIndex];
+        NewNode := TNodeInBoundary.Create(AnInnerNode, SubBoundary, ASegment);
+        SubBoundary.Add(NewNode);
+      end;
+      PriorSegment := ASegment;
     end;
-    PriorSegment := ASegment;
-  end;
-  SubBoundary.Add(SubBoundary.Items[0]);
-  FirstNode.FSegments.Add(PriorSegment);
-
-  SubBoundary.RenumberNodes;
-
-  SubBoundary := TBoundary.Create(FQuadMeshCreator, stInner, self,
-    (Node1.DesiredSpacing + Node2.DesiredSpacing) / 2);
-  FSubParts.Add(SubBoundary);
-
-  NewNode := TNodeInBoundary.Create(ReversedSegment.Node1, SubBoundary,
-    ReversedSegment);
-  FirstNode := NewNode;
-  SubBoundary.Add(NewNode);
-  SubBoundary.FSegments.Add(ReversedSegment);
-  ReversedSegment.FBoundary := SubBoundary;
-  PriorSegment := ReversedSegment;
-  for NodeIndex := 0 to ReversedSegment.FInnerNodes.Count - 1 do
-  begin
-    AnInnerNode := ReversedSegment.FInnerNodes[NodeIndex];
-    NewNode := TNodeInBoundary.Create(AnInnerNode, SubBoundary,
-      ReversedSegment);
-    SubBoundary.Add(NewNode);
-  end;
-
-  for SegmentIndex := SegmentInsertPosition1 to SegmentInsertPosition2 - 1 do
-  begin
-    ASegment := FSegments[SegmentIndex];
-    NewNode := TNodeInBoundary.Create(ASegment.Node1, SubBoundary, ASegment);
-    if PriorSegment <> nil then
+    SubBoundary.Add(SubBoundary.Items[0]);
+    if FirstNode <> nil then
     begin
-      NewNode.FSegments.Add(PriorSegment);
+      FirstNode.AddSegment(PriorSegment);
     end;
-    SubBoundary.Add(NewNode);
-    SubBoundary.FSegments.Add(ASegment);
-    ASegment.FBoundary := SubBoundary;
-    for NodeIndex := 0 to ASegment.FInnerNodes.Count - 1 do
+    SubBoundary.RenumberNodes;
+    FSegments.OwnsObjects := False;
+    RemoveSelfFromOwnNodes;
+
+    Clear;
+    FSegments.Clear;
+
+    for SubBoundaryIndex := 0 to FSubParts.Count - 1 do
     begin
-      AnInnerNode := ASegment.FInnerNodes[NodeIndex];
-      NewNode := TNodeInBoundary.Create(AnInnerNode, SubBoundary, ASegment);
-      SubBoundary.Add(NewNode);
+      ASubPart := FSubParts[SubBoundaryIndex];
+      Assert(Odd(ASubPart.Count));
+
+      List.Add(ASubPart);
+      // Sorting the elements doesn't appear to help much if at all.
+//      FirstPosition := ListPosition + 1;
+//      LastPosition := List.Count-1;
+//      if FirstPosition > LastPosition then
+//      begin
+//        List.Add(ASubPart);
+//      end
+//      else if List[FirstPosition].Count < ASubPart.Count then
+//      begin
+//        List.Insert(FirstPosition, ASubPart);
+//      end
+//      else if List[LastPosition].Count > ASubPart.Count then
+//      begin
+//        List.Add(ASubPart);
+//      end
+//      else
+//      begin
+//        while LastPosition - FirstPosition > 1 do
+//        begin
+//          MidPosition := (LastPosition + FirstPosition) div 2;
+//          if List[MidPosition].Count < ASubPart.Count then
+//          begin
+//            LastPosition := MidPosition;
+//          end
+//          else
+//          begin
+//            FirstPosition := MidPosition;
+//          end;
+//        end;
+//        if List[FirstPosition].Count < ASubPart.Count then
+//        begin
+//          List.Insert(FirstPosition, ASubPart);
+//        end
+//        else
+//        begin
+//          List.Insert(LastPosition, ASubPart);
+//        end;
+//      end;
+      {$IFDEF TEST}
+      ASubPart.ListCount := List.Count;
+      {$ENDIF}
     end;
-    PriorSegment := ASegment;
-  end;
-  SubBoundary.Add(SubBoundary.Items[0]);
-  FirstNode.FSegments.Add(PriorSegment);
-  SubBoundary.RenumberNodes;
-  FSegments.OwnsObjects := False;
-  RemoveSelfFromOwnNodes;
-  FQuadMeshCreator.InvalidateCosts(self, LowestCost);
-
-  Clear;
-  FSegments.Clear;
-
-  for SubBoundaryIndex := 0 to FSubParts.Count - 1 do
-  begin
-    List.Add(FSubParts[SubBoundaryIndex]);
+  finally
+    HiddenSegments.Free;
+    LowestCost.Free;
   end;
 end;
 
@@ -2739,20 +4908,21 @@ var
   Seg1: TSegment;
   Seg2: TSegment;
 begin
-  if ANode.FSegments.Count = 1 then
+  if ANode.SegmentCount = 1 then
   begin
-    ASegment := ANode.FSegments[0];
-    ANode.FSegments.Delete(0);
+    ASegment := ANode.Segments[0];
+    ANode.DeleteSegment(0);
     ASegmentList := ASegment.Split(ANode.FNode);
     try
       Assert(ASegmentList.Count = 2);
       SegmentPosition := FSegments.IndexOf(ASegment);
       FSegments.Delete(SegmentPosition);
+
       for SegmentIndex := 0 to ASegmentList.Count - 1 do
       begin
         SubSegment := ASegmentList[SegmentIndex];
         FSegments.Insert(SegmentPosition + SegmentIndex, SubSegment);
-        ANode.FSegments.Add(SubSegment);
+        ANode.AddSegment(SubSegment);
       end;
 
       SubSeg1 := ASegmentList[0];
@@ -2765,11 +4935,11 @@ begin
     for NodeIndex := ANode.Position - 1 downto 0 do
     begin
       AnotherNode := Items[NodeIndex];
-      SegmentPosition := AnotherNode.FSegments.IndexOf(ASegment);
+      SegmentPosition := AnotherNode.IndexOfSegment(ASegment);
       if SegmentPosition >= 0 then
       begin
-        AnotherNode.FSegments.Delete(SegmentPosition);
-        AnotherNode.FSegments.Add(SubSeg1);
+        AnotherNode.DeleteSegment(SegmentPosition);
+        AnotherNode.AddSegment(SubSeg1);
       end
       else
       begin
@@ -2780,11 +4950,11 @@ begin
     for NodeIndex := ANode.Position + 1 to Count - 1 do
     begin
       AnotherNode := Items[NodeIndex];
-      SegmentPosition := AnotherNode.FSegments.IndexOf(ASegment);
+      SegmentPosition := AnotherNode.IndexOfSegment(ASegment);
       if SegmentPosition >= 0 then
       begin
-        AnotherNode.FSegments.Delete(SegmentPosition);
-        AnotherNode.FSegments.Add(SubSeg2);
+        AnotherNode.DeleteSegment(SegmentPosition);
+        AnotherNode.AddSegment(SubSeg2);
       end
       else
       begin
@@ -2792,13 +4962,13 @@ begin
       end;
     end;
   end;
-  Assert(ANode.FSegments.Count = 2);
-  Seg1 := ANode.FSegments[0];
-  Seg2 := ANode.FSegments[1];
+  Assert(ANode.SegmentCount = 2);
+  Seg1 := ANode.Segments[0];
+  Seg2 := ANode.Segments[1];
   if Seg1.Node1 = ANode.FNode then
   begin
     Assert(Seg2.Node2 = ANode.FNode);
-    ANode.FSegments.Reverse
+    ANode.ReverseSegments;
   end
   else
   begin
@@ -2825,8 +4995,496 @@ end;
 
 function TQuadMeshCreator.AddBoundary(DesiredSpacing: double): TBoundary;
 begin
-  result := TBoundary.Create(self, stEdge, nil, DesiredSpacing);
+  result := TBoundary.Create(self, nil, DesiredSpacing);
   FBoundaries.Add(result);
+end;
+
+procedure TQuadMeshCreator.GetConnectedOpenBoundaries(
+  OpenBoundaryList: TBoundaryList; BlindEndsBoundaryList: TBoundaryList);
+var
+  ABoundary: TBoundary;
+  BoundaryIndex: Integer;
+begin
+  OpenBoundaryList.Clear;
+  BlindEndsBoundaryList.Clear;
+  for BoundaryIndex := 0 to FBoundaries.Count - 1 do
+  begin
+    ABoundary := FBoundaries[BoundaryIndex];
+    if (ABoundary.FNodes.Count > 1)
+      and (ABoundary.FNodes[0] <> ABoundary.FNodes[ABoundary.FNodes.Count - 1])
+      then
+    begin
+      if ABoundary.FNodes[0].FIntersection
+        and ABoundary.FNodes[ABoundary.FNodes.Count - 1].FIntersection then
+      begin
+        OpenBoundaryList.Add(ABoundary);
+      end
+      else if ABoundary.FNodes[0].FIntersection
+        or ABoundary.FNodes[ABoundary.FNodes.Count - 1].FIntersection then
+      begin
+        BlindEndsBoundaryList.Add(ABoundary);
+      end;
+    end;
+  end;
+end;
+
+function TQuadMeshCreator.FixEdgeTriangles: boolean;
+var
+  NodeIndex: Integer;
+  ANode: TNode;
+  BoundaryIndex: Integer;
+  ABoundary: TBoundary;
+  NodePosition: integer;
+  NextNode: TNode;
+  PriorNode: TNode;
+  OppositeNode: TNode;
+  OppositePosition: Integer;
+  PriorSharedBoundary: TBoundary;
+  NextSharedBoundary: TBoundary;
+  NewLocation: TPoint2D;
+  NewDesiredSpacing: Double;
+  NewNode: TNode;
+//  OppositeElement: TBoundary;
+  procedure FixConstrainedTriangle;
+  var
+    UnconstrainedNeighbor: TNode;
+    BoundaryIndex: integer;
+    TestBoundary: TBoundary;
+    InsertPosition: integer;
+    CopyPosition: integer;
+    NodePosition: Integer;
+    CopyNodeIB: TNodeInBoundary;
+    SegmentIndex: Integer;
+    ASegment: TSegment;
+    OppositeElement: TBoundary;
+    UnConIndex: Integer;
+    TempBoundary: TBoundary;
+    OppositeIndex: Integer;
+  begin
+//    Beep;
+//    Exit;
+    // All the nodes are constrained nodes. Find a pair of nodes that are
+    // not constrained to be neighbors and find the element on the opposite
+    // side of the edge defined by those two nodes. Merge the elements
+    // and then split into 3 elements.
+    UnconstrainedNeighbor := nil;
+    if OppositeNode.FConstraintNeighbors.IndexOf(PriorNode) < 0 then
+    begin
+      UnconstrainedNeighbor := PriorNode;
+      Assert(OppositeNode.FConstraintNeighbors.IndexOf(NextNode) >= 0);
+    end
+    else if OppositeNode.FConstraintNeighbors.IndexOf(NextNode) < 0 then
+    begin
+      UnconstrainedNeighbor := NextNode;
+    end;
+    if UnconstrainedNeighbor <> nil then
+    begin
+      OppositeElement := nil;
+      for BoundaryIndex := 0 to UnconstrainedNeighbor.FElements.Count - 1 do
+      begin
+        TestBoundary := UnconstrainedNeighbor.FElements[BoundaryIndex];
+        if (TestBoundary = ABoundary) then
+        begin
+          Continue;
+        end;
+        if OppositeNode.FElements.IndexOf(TestBoundary) >= 0 then
+        begin
+          OppositeElement := TestBoundary;
+          break;
+        end;
+      end;
+      if OppositeElement <> nil then
+      begin
+        ABoundary.SetCounterClockwiseOrientation;
+        OppositeElement.SetCounterClockwiseOrientation;
+
+        ABoundary.FixSegments;
+        OppositeElement.FixSegments;
+
+        // make sure neither OppositeNode nor UnconstrainedNeighbor
+        // are in the middle of segment
+        NodePosition := ABoundary.IndexOfNode(OppositeNode);
+        Assert(NodePosition >= 0);
+        ABoundary.SplitSegmentAtNode(ABoundary[NodePosition]);
+
+        NodePosition := ABoundary.IndexOfNode(UnconstrainedNeighbor);
+        Assert(NodePosition >= 0);
+        ABoundary.SplitSegmentAtNode(ABoundary[NodePosition]);
+
+        NodePosition := OppositeElement.IndexOfNode(OppositeNode);
+        Assert(NodePosition >= 0);
+        OppositeElement.SplitSegmentAtNode(OppositeElement[NodePosition]);
+
+        NodePosition := OppositeElement.IndexOfNode(UnconstrainedNeighbor);
+        Assert(NodePosition >= 0);
+        OppositeElement.SplitSegmentAtNode(OppositeElement[NodePosition]);
+
+        ABoundary.Delete(ABoundary.Count-1);
+        OppositeElement.Delete(OppositeElement.Count-1);
+
+        OppositeIndex := OppositeElement.IndexOfNode(OppositeNode);
+        UnConIndex := OppositeElement.IndexOfNode(UnconstrainedNeighbor);
+        Inc(UnConIndex);
+        if OppositeIndex >= OppositeElement.Count then
+        begin
+          OppositeIndex := 0;
+        end;
+
+        if OppositeIndex = UnConIndex then
+        begin
+          TempBoundary := OppositeElement;
+          OppositeElement := ABoundary;
+          ABoundary := TempBoundary;
+        end;
+
+        InsertPosition := ABoundary.IndexOfNode(UnconstrainedNeighbor);
+        Assert(InsertPosition >= 0);
+
+        CopyPosition := OppositeElement.IndexOfNode(UnconstrainedNeighbor);
+        Assert(CopyPosition >= 0);
+
+        Inc(InsertPosition);
+        Inc(CopyPosition);
+        if CopyPosition >= OppositeElement.Count then
+        begin
+          CopyPosition := 0;
+        end;
+        CopyNodeIB := OppositeElement[CopyPosition];
+        Assert(CopyNodeIB.FNode <> OppositeNode);
+        Assert(CopyNodeIB.FNode <> UnconstrainedNeighbor);
+        ABoundary.Insert(InsertPosition, CopyNodeIB);
+        CopyNodeIB.FNode.FElements.Remove(OppositeElement);
+        CopyNodeIB.FNode.FElements.Add(ABoundary);
+        CopyNodeIB.FBoundary := ABoundary;
+        CopyNodeIB.FPosition := InsertPosition;
+
+        Inc(InsertPosition);
+        Inc(CopyPosition);
+        if CopyPosition >= OppositeElement.Count then
+        begin
+          CopyPosition := 0;
+        end;
+        CopyNodeIB := OppositeElement[CopyPosition];
+        Assert(CopyNodeIB.FNode <> OppositeNode);
+        Assert(CopyNodeIB.FNode <> UnconstrainedNeighbor);
+        ABoundary.Insert(InsertPosition, CopyNodeIB);
+        CopyNodeIB.FNode.FElements.Remove(OppositeElement);
+        CopyNodeIB.FNode.FElements.Add(ABoundary);
+        CopyNodeIB.FBoundary := ABoundary;
+        CopyNodeIB.FPosition := InsertPosition;
+
+        InsertPosition := -1;
+        for SegmentIndex := 0 to ABoundary.FSegments.Count - 1 do
+        begin
+          ASegment := ABoundary.FSegments[SegmentIndex];
+          // shouldn't need to test for the segment being oriented the opposite way.
+          if (ASegment.FNode1 = UnconstrainedNeighbor)
+            and (ASegment.FNode2 = OppositeNode) then
+          begin
+            InsertPosition := SegmentIndex;
+            ABoundary.FSegments.Delete(SegmentIndex);
+            Break;
+          end;
+        end;
+        Assert(InsertPosition >= 0);
+
+
+        for SegmentIndex := 0 to OppositeElement.FSegments.Count - 1 do
+        begin
+          ASegment := OppositeElement.FSegments[SegmentIndex];
+          // shouldn't need to test for the segment being oriented the opposite way.
+          if (ASegment.FNode1 = OppositeNode)
+            and (ASegment.FNode2 = UnconstrainedNeighbor) then
+          begin
+//          delete this segment and insert the others.
+            OppositeElement.FSegments.Delete(SegmentIndex);
+            CopyPosition := SegmentIndex;
+            break;
+          end;
+        end;
+        Assert(CopyPosition >= 0);
+
+        for SegmentIndex := CopyPosition to OppositeElement.FSegments.Count - 1 do
+        begin
+          ASegment := OppositeElement.FSegments[SegmentIndex];
+          ASegment.FBoundary := ABoundary;
+          ABoundary.FSegments.Insert(InsertPosition, ASegment);
+          Inc(InsertPosition);
+        end;
+
+        for SegmentIndex := 0 to CopyPosition - 1 do
+        begin
+          ASegment := OppositeElement.FSegments[SegmentIndex];
+          ASegment.FBoundary := ABoundary;
+          ABoundary.FSegments.Insert(InsertPosition, ASegment);
+          Inc(InsertPosition);
+        end;
+        OppositeElement.FSegments.OwnsObjects := False;
+
+        OppositeElement.RemoveSelfFromOwnNodes;
+        OppositeElement.Clear;
+
+
+        ABoundary.Add(ABoundary[0]);
+        Assert(ABoundary.SpecialCase);
+
+      end;
+    end;
+  end;
+  function SharedBoundary(EdgeNode: TNode): TBoundary;
+  var
+    InnerBoundaryIndex: Integer;
+    AnotherBoundary: TBoundary;
+  begin
+    result := nil;
+    for InnerBoundaryIndex := 0 to EdgeNode.FElements.Count - 1 do
+    begin
+      begin
+        AnotherBoundary := EdgeNode.FElements[InnerBoundaryIndex];
+        if AnotherBoundary = ABoundary then
+        begin
+          Continue;
+        end;
+        if (AnotherBoundary.IndexOfNode(EdgeNode) >= 0)
+          and (AnotherBoundary.IndexOfNode(OppositeNode) >= 0)then
+        begin
+          result := AnotherBoundary;
+          Exit;
+        end;
+      end;
+    end;
+  end;
+  procedure ReconfigureBoundary(ABoundary: TBoundary;
+    PreviousNode, NewNode, SubsequentNode: TNode; First: boolean);
+  var
+    SubsequentNodeIndex: integer;
+    NewNodeIndex: integer;
+    ReplaceIndex: integer;
+    SegmentIndex: Integer;
+    ASegment: TSegment;
+    NewSegment: TSegment;
+    NewBoundaryNode: TNodeInBoundary;
+    FirstIndex: Integer;
+    PriorNodeIndex: integer;
+    NodeIndex: integer;
+    SegIndex: Integer;
+    OldSegment: TSegment;
+  begin
+    ABoundary.SetCounterClockwiseOrientation;
+    ABoundary.FixSegments;
+
+    ABoundary.Delete(ABoundary.Count-1);
+
+    SubsequentNodeIndex := ABoundary.IndexOfNode(SubsequentNode);
+    Assert(SubsequentNodeIndex >= 0);
+    ABoundary.SplitSegmentAtNode(ABoundary[SubsequentNodeIndex]);
+
+    ABoundary.Delete(SubsequentNodeIndex);
+
+    PriorNodeIndex := ABoundary.IndexOfNode(PreviousNode);
+    Assert(PriorNodeIndex >= 0);
+    ABoundary.SplitSegmentAtNode(ABoundary[PriorNodeIndex]);
+
+    NewNodeIndex := PriorNodeIndex + 1;
+
+    ReplaceIndex := -1;
+    for SegmentIndex := 0 to ABoundary.FSegments.Count - 1 do
+    begin
+      ASegment := ABoundary.FSegments[SegmentIndex];
+      if (ASegment.FNode2 = SubsequentNode)
+        and (ASegment.FNode1 = PreviousNode) then
+      begin
+        ReplaceIndex := SegmentIndex;
+        break;
+      end;
+      if (ASegment.FNode1 = SubsequentNode)
+        and (ASegment.FNode2 = PreviousNode) then
+      begin
+        ABoundary.FSegments.Reverse;
+        if ABoundary.FSegments.Count >= 2 then
+        begin
+          for SegIndex := 0 to ABoundary.FSegments.Count - 1 do
+          begin
+            ABoundary.FSegments[SegIndex].Reverse;
+          end;
+        end;
+        ReplaceIndex := ABoundary.FSegments.Count - 1 - SegmentIndex;
+        break;
+      end;
+    end;
+    Assert(ReplaceIndex >= 0);
+
+    OldSegment := ABoundary.FSegments[ReplaceIndex];
+    for NodeIndex := 0 to ABoundary.Count - 1 do
+    begin
+      ABoundary[NodeIndex].RemoveSegment(OldSegment);
+    end;
+
+    ABoundary.FSegments.Delete(ReplaceIndex);
+
+    if First then
+    begin
+      NewSegment := TSegment.Create(PreviousNode, ANode, stInner,
+        ABoundary, self);
+      NewBoundaryNode := TNodeInBoundary.Create(ANode,
+        ABoundary, NewSegment);
+      ABoundary.FSegments.Insert(ReplaceIndex, NewSegment);
+      Inc(ReplaceIndex);
+      ABoundary.Insert(NewNodeIndex, NewBoundaryNode);
+      Inc(NewNodeIndex);
+
+      NewSegment := TSegment.Create(ANode, NewNode, stInner,
+        ABoundary, self);
+      NewBoundaryNode := TNodeInBoundary.Create(NewNode,
+        ABoundary, NewSegment);
+      ABoundary.FSegments.Insert(ReplaceIndex, NewSegment);
+      Inc(ReplaceIndex);
+      ABoundary.Insert(NewNodeIndex, NewBoundaryNode);
+      Inc(NewNodeIndex);
+
+      NewSegment := TSegment.Create(NewNode, SubsequentNode, stInner,
+        ABoundary, self);
+      NewBoundaryNode := TNodeInBoundary.Create(SubsequentNode,
+        ABoundary, NewSegment);
+      ABoundary.FSegments.Insert(ReplaceIndex, NewSegment);
+      ABoundary.Insert(NewNodeIndex, NewBoundaryNode);
+    end
+    else
+    begin
+      NewSegment := TSegment.Create(PreviousNode, NewNode, stInner,
+        ABoundary, self);
+      NewBoundaryNode := TNodeInBoundary.Create(NewNode,
+        ABoundary, NewSegment);
+      ABoundary.FSegments.Insert(ReplaceIndex, NewSegment);
+      Inc(ReplaceIndex);
+      ABoundary.Insert(NewNodeIndex, NewBoundaryNode);
+      Inc(NewNodeIndex);
+
+      NewSegment := TSegment.Create(NewNode, ANode, stInner,
+        ABoundary, self);
+      NewBoundaryNode := TNodeInBoundary.Create(ANode,
+        ABoundary, NewSegment);
+      ABoundary.FSegments.Insert(ReplaceIndex, NewSegment);
+      Inc(ReplaceIndex);
+      ABoundary.Insert(NewNodeIndex, NewBoundaryNode);
+      Inc(NewNodeIndex);
+
+      NewSegment := TSegment.Create(ANode, SubsequentNode, stInner,
+        ABoundary, self);
+      NewBoundaryNode := TNodeInBoundary.Create(SubsequentNode,
+        ABoundary, NewSegment);
+      ABoundary.FSegments.Insert(ReplaceIndex, NewSegment);
+      ABoundary.Insert(NewNodeIndex, NewBoundaryNode);
+    end;
+
+
+    ABoundary.Add(ABoundary[0]);
+
+    ABoundary.FixSegments;
+    ABoundary.RenumberNodes;
+
+    if First then
+    begin
+      FirstIndex := ABoundary.IndexOfNode(PreviousNode);
+      Assert(FirstIndex>= 0);
+      Dec(FirstIndex);
+      if FirstIndex < 0 then
+      begin
+        FirstIndex := 5;
+      end;
+    end
+    else
+    begin
+      FirstIndex := ABoundary.IndexOfNode(PreviousNode);
+    end;
+    Assert(FirstIndex>= 0);
+
+    ABoundary.Split222(FirstIndex,
+      SegmentMidPoint(PreviousNode.Location, SubsequentNode.Location));
+  end;
+begin
+  result := False;
+  for NodeIndex := 0 to FNodes.Count - 1 do
+  begin
+    ANode := FNodes[NodeIndex];
+    if ANode.NodeType <> ntInner then
+    begin
+      for BoundaryIndex := 0 to ANode.FElements.Count - 1 do
+      begin
+        ABoundary := ANode.FElements[BoundaryIndex];
+        ABoundary.SetCounterClockwiseOrientation;
+        Assert(ABoundary.Count = 5);
+        NodePosition := ABoundary.IndexOfNode(ANode);
+        Assert(NodePosition >= 0);
+        NextNode := ABoundary[NodePosition+1].FNode;
+        if NextNode.NodeType = ntInner then
+        begin
+          Continue;
+        end;
+        if NodePosition = 0 then
+        begin
+          NodePosition := ABoundary.Count-1;
+        end;
+        PriorNode := ABoundary[NodePosition-1].FNode;
+        if PriorNode.NodeType = ntInner then
+        begin
+          Continue;
+        end;
+        if OrientedVertexAngle(PriorNode.Location, ANode.Location,
+          NextNode.Location, CounterClockwise) > 179 then
+        begin
+          OppositePosition := NodePosition-2;
+          if OppositePosition < 0 then
+          begin
+            OppositePosition := OppositePosition + 4;
+          end;
+          OppositeNode := ABoundary[OppositePosition].FNode;
+
+          if VertexAngle(PriorNode.Location, ANode.Location, OppositeNode.Location) > 179 then
+          begin
+            Continue;
+          end;
+          if VertexAngle(NextNode.Location, ANode.Location, OppositeNode.Location) > 179 then
+          begin
+            Continue;
+          end;
+
+          if OppositeNode.NodeType <> ntInner then
+          begin
+            FixConstrainedTriangle;
+            Continue;
+          end;
+
+          PriorSharedBoundary := SharedBoundary(PriorNode);
+          NextSharedBoundary := SharedBoundary(NextNode);
+          if (PriorSharedBoundary <> nil) and (NextSharedBoundary <> nil) then
+          begin
+            Assert(PriorSharedBoundary <> NextSharedBoundary);
+            result := True;
+            Assert(PriorSharedBoundary.Count = 5);
+            Assert(NextSharedBoundary.Count = 5);
+            NewLocation.X:= (ANode.X + OppositeNode.X)/2;
+            NewLocation.Y:= (ANode.Y + OppositeNode.Y)/2;
+            NewDesiredSpacing := Min(ANode.FDesiredSpacing,
+              OppositeNode.FDesiredSpacing);
+
+            NewNode := TNode.Create(self, NewDesiredSpacing);
+            NewNode.Location := NewLocation;
+
+            ReconfigureBoundary(PriorSharedBoundary, PriorNode,
+              NewNode, OppositeNode, True);
+            ReconfigureBoundary(NextSharedBoundary, OppositeNode,
+              NewNode, NextNode, False);
+
+            ABoundary.RemoveSelfFromAllNodes;
+
+            ABoundary.FParent.FSubParts.Remove(ABoundary);
+
+          end;
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TQuadMeshCreator.AdjustNodes;
@@ -2861,42 +5519,362 @@ begin
   end;
 end;
 
+procedure TQuadMeshCreator.FixFinalTriangularElements;
+var
+  NodeIndex: Integer;
+  ANode: TNode;
+  ElementIndex: Integer;
+  AnElement: TBoundary;
+  NodePosition: Integer;
+  NextNode: TNode;
+  PriorNode: TNode;
+  NNodes: TNodeList;
+  ClosestNode: TNode;
+  NeighborIndex: Integer;
+  TestNode: TNode;
+  ClosestDistance: double;
+  NewLocation: TPoint2D;
+  TestDistance: double;
+//  OppositeNode: TNode;
+//  IntsectPt: TPoint2D;
+//  NewLocDist: TFloat;
+begin
+  for NodeIndex := 0 to FNodes.Count - 1 do
+  begin
+    ANode := FNodes[NodeIndex];
+    if ANode.NodeType <> ntInner then
+    begin
+      Continue;
+    end;
+    for ElementIndex := 0 to ANode.FElements.Count - 1 do
+    begin
+      AnElement := ANode.FElements[ElementIndex];
+      AnElement.SetCounterClockwiseOrientation;
+      Assert(AnElement.Count = 5);
+      NodePosition := AnElement.IndexOfNode(ANode);
+      Assert(NodePosition >= 0);
+      NextNode := AnElement[NodePosition+1].FNode;
+      Dec(NodePosition);
+      if NodePosition < 0 then
+      begin
+        NodePosition := 3;
+      end;
+      PriorNode := AnElement[NodePosition].FNode;
+      if OrientedVertexAngle(PriorNode.Location, ANode.Location,
+        NextNode.Location, CounterClockwise) >= 180 then
+      begin
+//        Dec(NodePosition);
+//        if NodePosition < 0 then
+//        begin
+//          NodePosition := 3;
+//        end;
+//        OppositeNode := AnElement[NodePosition].FNode;
+        NNodes := TNodeList.Create;
+        try
+          ANode.GetNeighborNodes(NNodes);
+          NNodes.Remove(NextNode);
+          NNodes.Remove(PriorNode);
+          ClosestNode := nil;
+          ClosestDistance := -1;
+          for NeighborIndex := 0 to NNodes.Count - 1 do
+          begin
+            TestNode := NNodes[NeighborIndex];
+            TestDistance := Distance(ANode.Location, TestNode.Location);
+            if (ClosestNode = nil) or (TestDistance < ClosestDistance) then
+            begin
+              ClosestNode := TestNode;
+              ClosestDistance := TestDistance;
+            end;
+          end;
+          if ClosestNode <> nil then
+          begin
+            NewLocation.X := (ANode.Location.X + ClosestNode.Location.X)/2;
+            NewLocation.Y := (ANode.Location.Y + ClosestNode.Location.Y)/2;
+
+            // The following is not needed so long as the tested angle is
+            // greater than or equal to 180 degrees.
+            {
+            NewLocDist := Distance(ANode.Location, NewLocation);
+
+            IntsectPt :=
+              IntersectionPoint(
+              EquateLine(OppositeNode.Location, PriorNode.Location),
+              EquateLine(ANode.Location, NewLocation));
+            if (Distance(ANode.Location, IntsectPt) < NewLocDist)
+              and (Distance(NewLocation, IntsectPt) < NewLocDist) then
+            begin
+              NewLocation.X := (ANode.Location.X + IntsectPt.X)/2;
+              NewLocation.Y := (ANode.Location.Y + IntsectPt.Y)/2;
+              NewLocDist := Distance(ANode.Location, NewLocation);
+            end;
+
+            IntsectPt :=
+              IntersectionPoint(
+              EquateLine(OppositeNode.Location, NextNode.Location),
+              EquateLine(ANode.Location, NewLocation));
+            if (Distance(ANode.Location, IntsectPt) < NewLocDist)
+              and (Distance(NewLocation, IntsectPt) < NewLocDist) then
+            begin
+              NewLocation.X := (ANode.Location.X + IntsectPt.X)/2;
+              NewLocation.Y := (ANode.Location.Y + IntsectPt.Y)/2;
+              NewLocDist := Distance(ANode.Location, NewLocation);
+            end;
+            }
+
+            ANode.Location := NewLocation;
+          end;
+        finally
+          NNodes.Free;
+        end;
+
+        break;
+      end;
+    end;
+  end;
+end;
+
+procedure TQuadMeshCreator.ArrangeBoundaries;
+var
+  ClosedBoundaries: TBoundaryList;
+  OpenBoundaries: TBoundaryList;
+  BoundaryIndex: integer;
+  ABoundary: TBoundary;
+  InnerBoundaryIndex: Integer;
+  OuterBoundary: TBoundary;
+  InnerBoundary: TBoundary;
+  NodeIndex: Integer;
+  ANode: TNode;
+  PolyList: TList<TPolygon2D>;
+  APoly: TPolygon2D;
+  OuterBoundaryIndex: Integer;
+  TestNode: TNode;
+  PolyNodeIndex: Integer;
+  AList: TBoundaryList;
+  index: Integer;
+begin
+  for index := 0 to FDuplicateBoundaries.Count - 1 do
+  begin
+    FBoundaries.Add(FDuplicateBoundaries[index]);
+  end;
+  FDuplicateBoundaries.OwnsObjects := False;
+//  FDuplicateBoundaries.Clear;
+
+  FIncludedBoundaries.Clear;
+  ClosedBoundaries := TBoundaryList.Create;
+  OpenBoundaries := TBoundaryList.Create;
+  PolyList := TList<TPolygon2D>.Create;
+  try
+    for BoundaryIndex := 0 to FBoundaries.Count - 1 do
+    begin
+      ABoundary := FBoundaries[BoundaryIndex];
+      if (ABoundary.FNodes.Count < 2)
+        or (ABoundary.FNodes[0] <> ABoundary.FNodes[ABoundary.FNodes.Count-1]) then
+      begin
+        OpenBoundaries.Add(ABoundary);
+      end
+      else
+      begin
+        ClosedBoundaries.Add(ABoundary);
+        AList := TBoundaryList.Create;
+        AList.Add(ABoundary);
+        FIncludedBoundaries.Add(AList);
+        PolyList.Add(APoly);
+      end;
+    end;
+    for OuterBoundaryIndex := ClosedBoundaries.Count - 1 downto 0 do
+    begin
+      OuterBoundary := ClosedBoundaries[OuterBoundaryIndex];
+      for InnerBoundaryIndex := ClosedBoundaries.Count - 1
+        downto OuterBoundaryIndex+1 do
+      begin
+        InnerBoundary := ClosedBoundaries[InnerBoundaryIndex];
+        if FDuplicateBoundaries.IndexOf(InnerBoundary) < 0 then
+        begin
+          TestNode := nil;
+          for NodeIndex  := 0 to InnerBoundary.FNodes.Count - 1 do
+          begin
+            ANode := InnerBoundary.FNodes[NodeIndex];
+            if OuterBoundary.FNodes.IndexOf(ANode) < 0 then
+            begin
+              TestNode := ANode;
+              Break;
+            end;
+          end;
+          if TestNode <> nil then
+          begin
+            APoly := PolyList[OuterBoundaryIndex];
+            if Length(APoly) = 0 then
+            begin
+              SetLength(APoly, OuterBoundary.FNodes.Count-1);
+              for PolyNodeIndex := 0 to OuterBoundary.FNodes.Count - 2 do
+              begin
+                APoly[PolyNodeIndex] := OuterBoundary.FNodes[PolyNodeIndex].Location;
+              end;
+              PolyList[OuterBoundaryIndex] := APoly;
+            end;
+            if PointInConcavePolygon(TestNode.Location, APoly) then
+            begin
+              FIncludedBoundaries[OuterBoundaryIndex].AddRange(
+                FIncludedBoundaries[InnerBoundaryIndex]);
+              ClosedBoundaries.Delete(InnerBoundaryIndex);
+              FIncludedBoundaries.Delete(InnerBoundaryIndex);
+              PolyList.Delete(InnerBoundaryIndex);
+              Continue;
+            end;
+          end;
+        end;
+
+        TestNode := nil;
+        for NodeIndex  := 0 to OuterBoundary.FNodes.Count - 1 do
+        begin
+          ANode := OuterBoundary.FNodes[NodeIndex];
+          if InnerBoundary.FNodes.IndexOf(ANode) < 0 then
+          begin
+            TestNode := ANode;
+            Break;
+          end;
+        end;
+        if TestNode <> nil then
+        begin
+          APoly := PolyList[InnerBoundaryIndex];
+          if Length(APoly) = 0 then
+          begin
+            SetLength(APoly, InnerBoundary.FNodes.Count-1);
+            for PolyNodeIndex := 0 to InnerBoundary.FNodes.Count - 2 do
+            begin
+              APoly[PolyNodeIndex] := InnerBoundary.FNodes[PolyNodeIndex].Location;
+            end;
+            PolyList[InnerBoundaryIndex] := APoly;
+          end;
+          if PointInConcavePolygon(TestNode.Location, APoly) then
+          begin
+            FIncludedBoundaries[InnerBoundaryIndex].AddRange(
+              FIncludedBoundaries[OuterBoundaryIndex]);
+            ClosedBoundaries.Delete(OuterBoundaryIndex);
+            FIncludedBoundaries.Delete(OuterBoundaryIndex);
+            PolyList.Delete(OuterBoundaryIndex);
+            OuterBoundary := nil;
+            Break;
+          end;
+        end;
+      end;
+      if OuterBoundary = nil then
+      begin
+        Continue;
+      end;
+      for InnerBoundaryIndex := OpenBoundaries.Count - 1 downto 0 do
+      begin
+        InnerBoundary := OpenBoundaries[InnerBoundaryIndex];
+        TestNode := nil;
+        for NodeIndex  := 0 to InnerBoundary.FNodes.Count - 1 do
+        begin
+          ANode := InnerBoundary.FNodes[NodeIndex];
+          if OuterBoundary.FNodes.IndexOf(ANode) < 0 then
+          begin
+            TestNode := ANode;
+            Break;
+          end;
+        end;
+        if TestNode <> nil then
+        begin
+          APoly := PolyList[OuterBoundaryIndex];
+          if Length(APoly) = 0 then
+          begin
+            SetLength(APoly, OuterBoundary.FNodes.Count-1);
+            for PolyNodeIndex := 0 to OuterBoundary.FNodes.Count - 2 do
+            begin
+              APoly[PolyNodeIndex] := OuterBoundary.FNodes[PolyNodeIndex].Location;
+            end;
+            PolyList[OuterBoundaryIndex] := APoly;
+          end;
+          if PointInConcavePolygon(TestNode.Location, APoly) then
+          begin
+            FIncludedBoundaries[OuterBoundaryIndex].Add(InnerBoundary);
+            OpenBoundaries.Delete(InnerBoundaryIndex);
+          end;
+        end;
+      end;
+    end;
+  finally
+    PolyList.Free;
+    OpenBoundaries.Free;
+    ClosedBoundaries.Free;
+  end;
+end;
+
 procedure TQuadMeshCreator.AssignOriginalEdgeAngles;
 var
   Index: Integer;
+  NodeIndex: Integer;
+  NodeAngle: double;
+  CurrentNode: TNode;
 begin
   Assert(FBoundaries.Count > 0);
+  for NodeIndex := 0 to FNodes.Count - 1 do
+  begin
+    FNodes[NodeIndex].FTotalAngle := 0
+  end;
+
   for Index := 0 to FBoundaries.Count - 1 do
   begin
     FBoundaries[Index].AssignOriginalEdgeAngles;
   end;
-end;
 
-procedure TQuadMeshCreator.CheckInvalidElements;
-  procedure CheckElement(Element: TBoundary);
-  var
-    Index: Integer;
+  for NodeIndex := 0 to FNodes.Count - 1 do
   begin
-    if Element.SubPartCount > 0 then
+    CurrentNode := FNodes[NodeIndex];
+    NodeAngle := CurrentNode.FTotalAngle;
+    if NodeAngle < Pi*3 / 4 then
     begin
-      for index := 0 to Element.SubPartCount - 1 do
-      begin
-        CheckElement(Element.SubParts[index]);
-      end;
+      CurrentNode.FDesiredElementCount := 1;
     end
-    else
+    else if NodeAngle < Pi + Pi / 4 then
     begin
-      Element.CheckInvalidElement;
+      CurrentNode.FDesiredElementCount := 2;
+    end
+    else if NodeAngle < Pi * 7 / 4 then
+    begin
+      CurrentNode.FDesiredElementCount := 3;
     end;
   end;
+end;
 
+procedure TQuadMeshCreator.BreakOpenBoundaries;
+var
+  BoundaryIndex: Integer;
+  ABoundary: TBoundary;
+  NodeIndex: Integer;
+  ANode: TNode;
+  NewBoundary: TBoundary;
+  InnerNodeIndex: Integer;
 begin
-  Assert(FBoundaries.Count = 1);
-  InvalidElement := False;
-  CheckElement(FBoundaries[0]);
-  if InvalidElement then
+  for BoundaryIndex := 0 to FBoundaries.Count - 1 do
   begin
-    raise EInvalidElement.Create(StrOneOrMoreInvalid);
+    ABoundary := FBoundaries[BoundaryIndex];
+    // skip closed boundaries and point boundaries.
+    if (ABoundary.FNodes.Count < 2)
+      or (ABoundary.FNodes[0] = ABoundary.FNodes[ABoundary.FNodes.Count-1]) then
+    begin
+      Continue;
+    end;
+    // There isn't a need to break a TBoundary at the first or last node
+    // so don't process them.
+    for NodeIndex := ABoundary.FNodes.Count - 2 downto 1 do
+    begin
+      ANode := ABoundary.FNodes[NodeIndex];
+      if ANode.FIntersection then
+      begin
+        NewBoundary := AddBoundary(ABoundary.DesiredSpacing);
+        for InnerNodeIndex := NodeIndex to ABoundary.FNodes.Count - 1 do
+        begin
+          NewBoundary.FNodes.Add(ABoundary.FNodes[InnerNodeIndex]);
+        end;
+        for InnerNodeIndex := ABoundary.FNodes.Count - 1 downto NodeIndex+1 do
+        begin
+          ABoundary.FNodes.Delete(InnerNodeIndex);
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -2955,14 +5933,18 @@ end;
 
 constructor TQuadMeshCreator.Create;
 begin
+  FNodeAdjustmentMethod := namSarrateHuerta;
+  FBNodes:= TNodeList.Create;
   FNodes := TNodeObjectList.Create;
-  FCostsArray := TCost3ObjectList.Create;
   FBoundaries := TBoundaryObjectList.Create;
+  FDuplicateBoundaries := TBoundaryObjectList.Create;
   SixNodeClosureMethod := cmTemplate;
   FGrowthRate := ElementGrowthRate;
   FElementList := TIElementList.Create;
   FNodeList := TINodeList.Create;
   FBoundaryNodes := TNodeInBoundaryObjectList.Create;
+  FNodeQuadTree := TRbwQuadTree.Create(nil);
+  FIncludedBoundaries :=  TObjectList<TBoundaryList>.Create;
 end;
 
 procedure TQuadMeshCreator.CreateBoundaryNodes;
@@ -2975,15 +5957,595 @@ begin
   end;
 end;
 
+procedure TQuadMeshCreator.DeleteDisconnectedBoundaries;
+var
+  BoundaryIndex: Integer;
+  ABoundary: TBoundary;
+  ANode: TNode;
+  ExternalBoundary: TPolygon2D;
+  NodeIndex: Integer;
+  TestNode: TNode;
+  PriorNode: TNode;
+  HasInsidePoint: Boolean;
+  TestPoint: TPoint2D;
+  OuterBoundary: TBoundary;
+begin
+  if FBoundaries.Count = 1 then
+  begin
+    Exit;
+  end;
+  for BoundaryIndex := FBoundaries.Count - 1 downto 0 do
+  begin
+    ABoundary := FBoundaries[BoundaryIndex];
+
+    TestNode := ABoundary.FNodes[0];
+
+    if FBNodes.IndexOf(TestNode) >= 0 then
+    begin
+      Continue;
+    end;
+
+    if Length(ExternalBoundary) = 0 then
+    begin
+      OuterBoundary := FBoundaries[0];
+      Assert(OuterBoundary.FNodes.First = OuterBoundary.FNodes.Last);
+      SetLength(ExternalBoundary, OuterBoundary.FNodes.Count-1);
+      for NodeIndex := 0 to Length(ExternalBoundary) - 1 do
+      begin
+        ExternalBoundary[NodeIndex] := OuterBoundary.FNodes[NodeIndex].Location;
+      end;
+    end;
+
+    HasInsidePoint := False;
+    PriorNode := nil;
+    for NodeIndex := 0 to ABoundary.FNodes.Count - 1 do
+    begin
+      ANode := ABoundary.FNodes[NodeIndex];
+      if ANode.FIntersection then
+      begin
+        if (PriorNode <> nil) and PriorNode.FIntersection then
+        begin
+          TestPoint.X := (PriorNode.X + ANode.X)/2;
+          TestPoint.Y := (PriorNode.Y + ANode.Y)/2;
+          HasInsidePoint := PointInConcavePolygon(TestPoint, ExternalBoundary);
+        end;
+      end
+      else
+      begin
+        HasInsidePoint := PointInConcavePolygon(ANode.Location, ExternalBoundary);
+      end;
+      if HasInsidePoint then
+      begin
+        Break;
+      end;
+      PriorNode := ANode;
+    end;
+
+    if not HasInsidePoint then
+    begin
+      FBoundaries.Delete(BoundaryIndex);
+    end;
+  end;
+end;
+
+procedure TQuadMeshCreator.DeleteExternalBoundaries;
+var
+  ClosedBoundaries: TBoundaryList;
+  BoundaryIndex: Integer;
+  OpenBoundaries: TBoundaryList;
+  ABoundary: TBoundary;
+  Poly: TPolygon2D;
+  NodeIndex: Integer;
+  AClosedBoundary: TBoundary;
+  TestBoundary: TBoundary;
+  TestPoint: TPoint2D;
+  ClosedBoundaryIndex: Integer;
+  ShouldDelete: Boolean;
+  ANode: TNode;
+  procedure GetTestPoint(var DeleteImmediately: Boolean;
+    var TestPoint: TPoint2D);
+  begin
+    DeleteImmediately := False;
+    if TestBoundary.Count = 1 then
+    begin
+      if AClosedBoundary.FNodes.IndexOf(TestBoundary.FNodes[0]) >= 0 then
+      begin
+        DeleteImmediately := True;
+      end;
+      TestPoint := TestBoundary.FNodes[0].Location;
+    end
+    else
+    begin
+      if not TestBoundary.FNodes[0].FIntersection then
+      begin
+        TestPoint := TestBoundary.FNodes[0].Location;
+      end
+      else if not TestBoundary.FNodes[TestBoundary.FNodes.Count-1].FIntersection then
+      begin
+        TestPoint := TestBoundary.FNodes[TestBoundary.FNodes.Count-1].Location;
+      end
+      else if (TestBoundary.FNodes.Count > 2) and
+        (not TestBoundary.FNodes[1].FIntersection) then
+      begin
+        TestPoint := TestBoundary.FNodes[1].Location;
+      end
+      else
+      begin
+        TestPoint.X := (TestBoundary.FNodes[0].X + TestBoundary.FNodes[1].X)/2;
+        TestPoint.Y := (TestBoundary.FNodes[0].Y + TestBoundary.FNodes[1].Y)/2;
+      end;
+    end;
+  end;
+begin
+  ClosedBoundaries := TBoundaryList.Create;
+  OpenBoundaries := TBoundaryList.Create;
+  try
+    for BoundaryIndex := 0 to FBoundaries.Count - 1 do
+    begin
+      ABoundary := FBoundaries[BoundaryIndex];
+      if (ABoundary.FNodes.Count < 2)
+        or (ABoundary.FNodes[0] <> ABoundary.FNodes[ABoundary.FNodes.Count-1]) then
+      begin
+        OpenBoundaries.Add(ABoundary);
+      end
+      else
+      begin
+        ClosedBoundaries.Add(ABoundary);
+      end;
+    end;
+    AClosedBoundary := ClosedBoundaries[0];
+    Assert(AClosedBoundary = FBoundaries[0]);
+    if OpenBoundaries.Count > 0 then
+    begin
+      SetLength(Poly, AClosedBoundary.FNodes.Count-1);
+      for NodeIndex := 0 to AClosedBoundary.FNodes.Count - 2 do
+      begin
+        Poly[NodeIndex] := AClosedBoundary.FNodes[NodeIndex].Location;
+      end;
+      for BoundaryIndex := OpenBoundaries.Count - 1 downto 0 do
+      begin
+        TestBoundary := OpenBoundaries[BoundaryIndex];
+        GetTestPoint(ShouldDelete, TestPoint);
+        if not ShouldDelete then
+        begin
+          ShouldDelete := not PointInConcavePolygon(TestPoint, Poly);
+        end;
+        if ShouldDelete then
+        begin
+          OpenBoundaries.Delete(BoundaryIndex);
+          FBoundaries.Remove(TestBoundary);
+        end;
+      end;
+
+      for ClosedBoundaryIndex := 1 to ClosedBoundaries.Count - 1 do
+      begin
+        AClosedBoundary := ClosedBoundaries[ClosedBoundaryIndex];
+        if OpenBoundaries.Count > 0 then
+        begin
+          SetLength(Poly, AClosedBoundary.FNodes.Count-1);
+          for NodeIndex := 0 to AClosedBoundary.FNodes.Count - 2 do
+          begin
+            Poly[NodeIndex] := AClosedBoundary.FNodes[NodeIndex].Location;
+          end;
+          for BoundaryIndex := OpenBoundaries.Count - 1 downto 0 do
+          begin
+            TestBoundary := OpenBoundaries[BoundaryIndex];
+            GetTestPoint(ShouldDelete, TestPoint);
+            if not ShouldDelete then
+            begin
+              ShouldDelete := PointInConcavePolygon(TestPoint, Poly);
+            end;
+            if ShouldDelete then
+            begin
+              OpenBoundaries.Delete(BoundaryIndex);
+              FBoundaries.Remove(TestBoundary);
+            end;
+          end;
+        end
+      end;
+    end;
+  finally
+    ClosedBoundaries.Free;
+    OpenBoundaries.Free;
+  end;
+  for NodeIndex := FNodes.Count - 1 downto 0 do
+  begin
+    ANode := FNodes[NodeIndex];
+    for BoundaryIndex := 0 to FBoundaries.Count - 1 do
+    begin
+      ABoundary := FBoundaries[BoundaryIndex];
+      if ABoundary.FNodes.IndexOf(ANode) >= 0 then
+      begin
+        ANode := nil;
+        break;
+      end;
+    end;
+    if ANode <> nil then
+    begin
+      FNodes.Delete(NodeIndex);
+    end;
+  end;
+end;
+
 destructor TQuadMeshCreator.Destroy;
 begin
+  FIncludedBoundaries.Free;
+  FNodeQuadTree.Free;
   FBoundaryNodes.Free;
   FElementList.Free;
   FNodeList.Free;
+  FDuplicateBoundaries.Free;
   FBoundaries.Free;
-  FCostsArray.Free;
   FNodes.Free;
+  FBNodes.Free;
   inherited;
+end;
+
+procedure TQuadMeshCreator.ExtractClosedBoundaries;
+var
+  Changed: Boolean;
+  IntersectionNodes: TNodeList;
+  LinkedOpenBoundaries: TBoundaryListSqr;
+  LinkedClosedBoundaries: TBoundaryListSqr;
+  NodeIndex: Integer;
+  ANode: TNode;
+  BoundaryIndex: Integer;
+  ABoundary: TBoundary;
+  ClosedBoundaries: TBoundaryList;
+  StartLink: TBoundaryLink;
+  LoopLink: TBoundaryLink;
+  NewBoundary1: TBoundary;
+  BoundaryNodeIndex: integer;
+  LastNodeIndex: integer;
+  LastNode: TNode;
+  LinkList: TBoundaryLinkList;
+  LinkIndex: integer;
+  NewBoundary2: TBoundary;
+  LoopNode: TNode;
+  LinkNodes: TNodeList;
+
+  function GetLoopLink(Link: TBoundaryLink; ANode: TNode; LinkNodes: TNodeList): TBoundaryLink;
+  var
+    BList: TBoundaryList;
+    ParentLink: TBoundaryLink;
+    SearchBoundary: TBoundary;
+    ABoundary: TBoundary;
+    BoundaryIndex: Integer;
+    OppositeNode: TNode;
+    NodePosition: Integer;
+    ClosedBoundaryList: TBoundaryList;
+    ChildLink: TBoundaryLink;
+    OpenBoundaries: TBoundaryList;
+    BoundarySearchList:  TBoundaryList;
+    SearchNodePosition: Integer;
+    PriorNode: TNode;
+    ParentAngle: double;
+    SearchPoly: TPolygon2D;
+    BNodeIndex: Integer;
+    SearchLocation: TPoint2D;
+  begin
+    result := nil;
+    OpenBoundaries := LinkedOpenBoundaries[IntersectionNodes.IndexOf(ANode)];
+    if OpenBoundaries.Count > 0 then
+    begin
+      BList := TBoundaryList.Create;
+      BoundarySearchList := TBoundaryList.Create;
+      try
+        ParentLink := Link;
+        while ParentLink <> nil do
+        begin
+          BList.Add(ParentLink.Boundary);
+          ParentLink := ParentLink.Parent;
+        end;
+        SearchBoundary := BList.Last;
+        Assert(SearchBoundary <> nil);
+        for BoundaryIndex := OpenBoundaries.Count - 1 downto 0 do
+        begin
+          if BoundaryIndex >= OpenBoundaries.Count then
+          begin
+            Continue;
+          end;
+          ABoundary := OpenBoundaries[BoundaryIndex];
+          if (ABoundary.FNodes.Count > 1)
+            and (ABoundary.FNodes[0] = ABoundary.FNodes[ABoundary.FNodes.Count-1]) then
+          begin
+            Continue;
+          end;
+          if BList.IndexOf(ABoundary) >= 0 then
+          begin
+            Continue;
+          end;
+          NodePosition := ABoundary.FNodes.IndexOf(ANode);
+          Assert(NodePosition >= 0);
+          OppositeNode := ABoundary.FNodes[ABoundary.FNodes.Count-1-NodePosition];
+          if OppositeNode.FIntersection
+            and (LinkNodes.IndexOf(OppositeNode) < 0) then
+          begin
+            if Length(SearchPoly) = 0 then
+            begin
+              SetLength(SearchPoly, SearchBoundary.FNodes.Count-1);
+              for BNodeIndex := 0 to SearchBoundary.FNodes.Count - 2 do
+              begin
+                SearchPoly[BNodeIndex] :=
+                  SearchBoundary.FNodes[BNodeIndex].Location;
+              end;
+            end;
+            if NodePosition = 0 then
+            begin
+              SearchLocation.X := (ANode.X + ABoundary.FNodes[1].X)/2;
+              SearchLocation.Y := (ANode.Y + ABoundary.FNodes[1].Y)/2;
+            end
+            else
+            begin
+              SearchLocation.X := (ANode.X + ABoundary.FNodes[ABoundary.FNodes.Count - 2].X)/2;
+              SearchLocation.Y := (ANode.Y + ABoundary.FNodes[ABoundary.FNodes.Count - 2].Y)/2;
+            end;
+
+            if PointInConcavePolygon(SearchLocation, SearchPoly) then
+            begin
+              BoundarySearchList.Add(ABoundary);
+            end;
+          end;
+        end;
+
+
+        if BoundarySearchList.Count > 1 then
+        begin
+          SearchNodePosition := Link.Boundary.FNodes.IndexOf(ANode);
+          if SearchNodePosition = 0 then
+          begin
+            SearchNodePosition := Link.Boundary.FNodes.Count-1;
+          end;
+          PriorNode := Link.Boundary.FNodes[SearchNodePosition-1];
+          ParentAngle := ArcTan2(ANode.Y - PriorNode.Y, ANode.X - PriorNode.X);
+
+          // Sort the boundaries in counterclockwise order around ANode;
+          BoundarySearchList.Sort(TBoundaryComparer.Construct
+            (function (const L, R: TBoundary): integer
+              var
+                NodePositionL: Integer;
+                NodePositionR: Integer;
+                LAngle: double;
+                RAngle: double;
+                OtherNode: TNode;
+              begin
+                result := 0;
+                if R = L then
+                begin
+                  Exit;
+                end;
+                if L.FNodes.Count = 1 then
+                begin
+                  if R.FNodes.Count = 1 then
+                  begin
+                    Result := NativeUInt(Pointer(L)) - NativeUInt(Pointer(R));
+                  end
+                  else
+                  begin
+                    Result := -1;
+                  end;
+                end
+                else
+                begin
+                  if R.FNodes.Count = 1 then
+                  begin
+                    Result := 1;
+                  end
+                  else
+                  begin
+                    NodePositionL := L.FNodes.IndexOf(ANode);
+                    if NodePositionL = 0 then
+                    begin
+                      OtherNode := L.FNodes[1];
+                    end
+                    else
+                    begin
+                      Assert(NodePositionL = L.FNodes.Count-1);
+                      OtherNode := L.FNodes[L.FNodes.Count-2];
+                    end;
+                    LAngle := ArcTan2(ANode.Y - OtherNode.Y, ANode.X - OtherNode.X);
+                    if LAngle < ParentAngle then
+                    begin
+                      LAngle := LAngle + 2*Pi;
+                    end;
+
+                    NodePositionR := R.FNodes.IndexOf(ANode);
+                    if NodePositionR = 0 then
+                    begin
+                      OtherNode := R.FNodes[1];
+                    end
+                    else
+                    begin
+                      Assert(NodePositionR = R.FNodes.Count-1);
+                      OtherNode := R.FNodes[R.FNodes.Count-2];
+                    end;
+                    RAngle := ArcTan2(ANode.Y - OtherNode.Y, ANode.X - OtherNode.X);
+                    if RAngle < ParentAngle then
+                    begin
+                      RAngle := RAngle + 2*Pi;
+                    end;
+                    result := Sign(LAngle-RAngle);
+
+                  end;
+                end;
+
+              end
+              ));
+        end;
+
+        for BoundaryIndex := 0 to BoundarySearchList.Count - 1 do
+        begin
+          ABoundary := BoundarySearchList[BoundaryIndex];
+          NodePosition := ABoundary.FNodes.IndexOf(ANode);
+          Assert(NodePosition >= 0);
+          OppositeNode := ABoundary.FNodes[ABoundary.FNodes.Count-1-NodePosition];
+          ClosedBoundaryList := LinkedClosedBoundaries[IntersectionNodes.IndexOf(OppositeNode)];
+          if ClosedBoundaryList.IndexOf(SearchBoundary) >= 0 then
+          begin
+            ChildLink := TBoundaryLink.Create;
+            ChildLink.Parent := Link;
+            ChildLink.Boundary := ABoundary;
+            ChildLink.PositionInBoundary := NodePosition;
+            Link.Children.Add(ChildLink) ;
+            Result := ChildLink;
+            Exit;
+          end;
+
+          begin
+            ChildLink := TBoundaryLink.Create;
+            ChildLink.Parent := Link;
+            ChildLink.Boundary := ABoundary;
+            ChildLink.PositionInBoundary := NodePosition;
+            Link.Children.Add(ChildLink) ;
+            LinkNodes.Add(OppositeNode);
+            Result := GetLoopLink(ChildLink, OppositeNode, LinkNodes);
+            if Result <> nil then
+            begin
+              Exit;
+            end
+            else
+            begin
+              LinkNodes.Remove(OppositeNode);
+            end;
+          end;
+        end;
+      finally
+        BList.Free;
+        BoundarySearchList.Free;
+      end;
+    end;
+  end;
+begin
+  IntersectionNodes := TNodeList.Create;
+  LinkedOpenBoundaries:= TBoundaryListSqr.Create;
+  LinkedClosedBoundaries:= TBoundaryListSqr.Create;
+  ClosedBoundaries:= TBoundaryList.Create;
+  try
+    for NodeIndex := 0 to FNodes.Count - 1 do
+    begin
+      ANode := FNodes[NodeIndex];
+      if ANode.FIntersection then
+      begin
+        IntersectionNodes.Add(ANode);
+      end;
+    end;
+    repeat
+      Changed:= false;
+
+      InitializeIntersectLists(IntersectionNodes, LinkedClosedBoundaries,
+        LinkedOpenBoundaries, ClosedBoundaries);
+
+      for BoundaryIndex := 0 to ClosedBoundaries.Count - 1 do
+      begin
+        ABoundary := ClosedBoundaries[BoundaryIndex];
+        for NodeIndex := 0 to ABoundary.FNodes.Count - 1 do
+        begin
+          ANode := ABoundary.FNodes[NodeIndex];
+          if ANode.FIntersection then
+          begin
+            StartLink := TBoundaryLink.Create;
+            LinkNodes := TNodeList.Create;
+            try
+              StartLink.Boundary := ABoundary;
+              StartLink.PositionInBoundary := NodeIndex;
+              StartLink.Parent := nil;
+              LinkNodes.Add(ANode);
+              LoopLink := GetLoopLink(StartLink, ANode, LinkNodes);
+              if LoopLink <> nil then
+              begin
+                Changed := True;
+                LastNodeIndex :=
+                  LoopLink.Boundary.FNodes.Count-1-LoopLink.PositionInBoundary;
+                LastNode :=  LoopLink.Boundary.FNodes[LastNodeIndex];
+                LastNodeIndex := ABoundary.FNodes.IndexOf(LastNode);
+                Assert(LastNodeIndex > StartLink.PositionInBoundary);
+                LinkList := TBoundaryLinkList.Create;
+                try
+                  while LoopLink <> nil do
+                  begin
+                    LinkList.Add(LoopLink);
+                    LoopLink := LoopLink.Parent;
+                  end;
+                  LinkList.Delete(LinkList.Count-1);
+                  LinkList.Reverse;
+                  NewBoundary1 := AddBoundary(ABoundary.DesiredSpacing);
+                  for BoundaryNodeIndex := 0 to StartLink.PositionInBoundary-1 do
+                  begin
+                    NewBoundary1.FNodes.Add(ABoundary.FNodes[BoundaryNodeIndex]);
+                  end;
+                  NewBoundary2 := AddBoundary(ABoundary.DesiredSpacing);
+                  for LinkIndex := 0 to LinkList.Count - 1 do
+                  begin
+                    LoopLink := LinkList[LinkIndex];
+                    if LoopLink.PositionInBoundary = 0 then
+                    begin
+                      for BoundaryNodeIndex := 0 to LoopLink.Boundary.FNodes.Count - 2 do
+                      begin
+                        LoopNode := LoopLink.Boundary.FNodes[BoundaryNodeIndex];
+                        NewBoundary1.FNodes.Add(LoopNode);
+                        NewBoundary2.FNodes.Add(LoopNode);
+                      end;
+                    end
+                    else
+                    begin
+                      Assert(LoopLink.PositionInBoundary =
+                        LoopLink.Boundary.FNodes.Count-1);
+                      for BoundaryNodeIndex := LoopLink.Boundary.FNodes.Count - 1 downto 1 do
+                      begin
+                        LoopNode := LoopLink.Boundary.FNodes[BoundaryNodeIndex];
+                        NewBoundary1.FNodes.Add(LoopNode);
+                        NewBoundary2.FNodes.Add(LoopNode);
+                      end;
+                    end;
+                    FBoundaries.Remove(LoopLink.Boundary);
+                  end;
+                  for BoundaryNodeIndex := LastNodeIndex downto StartLink.PositionInBoundary do
+                  begin
+                    NewBoundary2.FNodes.Add(ABoundary.FNodes[BoundaryNodeIndex]);
+                  end;
+                  for BoundaryNodeIndex := LastNodeIndex to ABoundary.FNodes.Count - 1 do
+                  begin
+                    NewBoundary1.FNodes.Add(ABoundary.FNodes[BoundaryNodeIndex]);
+                  end;
+
+                  if NewBoundary1.NodeOrientation <> Clockwise then
+                  begin
+                    NewBoundary1.FNodes.Reverse;
+                  end;
+                  if NewBoundary2.NodeOrientation <> Clockwise then
+                  begin
+                    NewBoundary2.FNodes.Reverse;
+                  end;
+
+                  FBoundaries.Remove(ABoundary);
+
+                finally
+                  LinkList.Free;
+                end;
+              end;
+            finally
+              StartLink.Free;
+              LinkNodes.Free;
+            end;
+          end;
+          if Changed then
+          begin
+            break;
+          end;
+        end;
+        if Changed then
+        begin
+          break;
+        end;
+      end;
+
+    until (not Changed);
+  finally
+    ClosedBoundaries.Free;
+    LinkedOpenBoundaries.Free;
+    LinkedClosedBoundaries.Free;
+    IntersectionNodes.Free;
+  end;
 end;
 
 procedure TQuadMeshCreator.AssignDesiredSpacings;
@@ -3004,7 +6566,9 @@ var
   OuterSpacing: double;
   ModifiedNode: boolean;
   RadiusToNode: double;
+  Epsilon: double;
 begin
+  Epsilon := FCharacteristicLength/1e7;
   NodeList := TNodeList.Create;
   try
     for BoundaryIndex := 0 to FBoundaries.Count - 1 do
@@ -3065,6 +6629,16 @@ begin
               RadiusToNode := RadiusToNode + CurrentSpacing;
               if RadiusToNode >= Separation then
               begin
+                if RadiusToNode > Separation then
+                begin
+                  CurrentSpacing := ln(AnotherNode.DesiredSpacing/
+                    CompareNode.DesiredSpacing)/ln(GrowthRate);
+                  CurrentSpacing := CurrentSpacing *Separation/RadiusToNode;
+                  CurrentSpacing := CompareNode.DesiredSpacing*
+                    Power(GrowthRate,CurrentSpacing);
+                end;
+                Assert(CurrentSpacing <= AnotherNode.DesiredSpacing+Epsilon);
+                Assert(CurrentSpacing >= CompareNode.DesiredSpacing-Epsilon);
                 AnotherNode.FDesiredSpacing := CurrentSpacing;
                 break;
               end;
@@ -3087,32 +6661,522 @@ begin
   end;
 end;
 
+procedure TQuadMeshCreator.BreakClosedBoundariesThatIntersectOuterBoundary;
+var
+  NodesTree: TRbwQuadTree;
+  NodeIndex: Integer;
+  ANode: TNode;
+  OuterBoundary: TBoundary;
+  BoundaryIndex: Integer;
+  OuterNodeIndex: Integer;
+  Node1: TNode;
+  Node2: TNode;
+  OuterSegment: TSegment2D;
+  InnerNodeIndex: Integer;
+  Node3: TNode;
+  Node4: TNode;
+  InnerSegment: TSegment2D;
+  APoint: TPoint2D;
+  X: TFloat;
+  Y: TFloat;
+  DataArray: TPointerArray;
+  InsertOuter: Boolean;
+  InsertInner: Boolean;
+  IntesectNode: TNode;
+  ABoundary: TBoundary;
+  DesiredSpacing: Extended;
+  OuterPolygon: TPolygon2D;
+  MidPoint: TPoint2D;
+  IntersectsBoundary: boolean;
+  MoveNodeIndex: Integer;
+begin
+  NodesTree := TRbwQuadTree.Create(nil);
+  try
+    NodesTree.XMax := FMaxX;
+    NodesTree.XMin := FMinX;
+    NodesTree.YMax := FMaxY;
+    NodesTree.YMin := FMinY;
+    YEpsilon := (NodesTree.YMax - NodesTree.YMin)/1e7;
+    XEpsilon := (NodesTree.XMax - NodesTree.XMin)/1e7;
+    for NodeIndex := 1 to FNodes.Count - 1 do
+    begin
+      ANode := FNodes[NodeIndex];
+      NodesTree.AddPoint(ANode.X, ANode.Y, ANode);
+    end;
+    OuterBoundary:= FBoundaries[0];
+
+    SetLength(OuterPolygon, OuterBoundary.FNodes.Count-1);
+    for OuterNodeIndex := 0 to OuterBoundary.FNodes.Count - 2 do
+    begin
+      OuterPolygon[OuterNodeIndex] :=
+        OuterBoundary.FNodes[OuterNodeIndex].Location;
+    end;
+
+    for BoundaryIndex := 1 to FBoundaries.Count - 1 do
+    begin
+      ABoundary := FBoundaries[BoundaryIndex];
+      if (ABoundary.FNodes.Count > 1)
+        and (ABoundary.FNodes[0] = ABoundary.FNodes[ABoundary.FNodes.Count-1]) then
+      begin
+        IntersectsBoundary := False;
+        for OuterNodeIndex := OuterBoundary.FNodes.Count - 2 downto 0 do
+        begin
+          Node1 := OuterBoundary.FNodes[OuterNodeIndex];
+          Node2 := OuterBoundary.FNodes[OuterNodeIndex+1];
+          OuterSegment[1] := Node1.Location;
+          OuterSegment[2] := Node2.Location;
+          for InnerNodeIndex := ABoundary.FNodes.Count - 2 downto 0 do
+          begin
+            Node3 := ABoundary.FNodes[InnerNodeIndex];
+            Node4 := ABoundary.FNodes[InnerNodeIndex+1];
+            InnerSegment[1] := Node3.Location;
+            InnerSegment[2] := Node4.Location;
+            if Intersect(OuterSegment, InnerSegment) then
+            begin
+              IntersectsBoundary := True;
+              APoint := IntersectionPoint(OuterSegment, InnerSegment);
+              X := APoint.X;
+              Y := APoint.Y;
+              NodesTree.FindClosestPointsData(X,Y, DataArray);
+              InsertOuter := True;
+              InsertInner := True;
+              IntesectNode := nil;
+              if NearlyTheSame(X, APoint.X, XEpsilon)
+                and NearlyTheSame(Y, APoint.Y, YEpsilon) then
+              begin
+                if NearlyTheSame(APoint, Node1.Location) then
+                begin
+                  Node1.FIntersection := True;
+                  IntesectNode := Node1;
+                  InsertOuter := False;
+                end;
+                if NearlyTheSame(APoint, Node2.Location) then
+                begin
+                  Node2.FIntersection := True;
+                  IntesectNode := Node2;
+                  InsertOuter := False;
+                end;
+                if NearlyTheSame(APoint, Node3.Location) then
+                begin
+                  Node3.FIntersection := True;
+                  IntesectNode := Node3;
+                  InsertInner := False;
+                end;
+                if NearlyTheSame(APoint, Node4.Location) then
+                begin
+                  Node4.FIntersection := True;
+                  IntesectNode := Node4;
+                  InsertInner := False;
+                end;
+              end;
+
+              ANode := nil;
+              if InsertOuter or InsertInner then
+              begin
+                if InsertOuter and InsertInner then
+                begin
+                  DesiredSpacing := Min(OuterBoundary.DesiredSpacing,
+                    ABoundary.DesiredSpacing);
+                end
+                else if InsertOuter then
+                begin
+                  DesiredSpacing := OuterBoundary.DesiredSpacing;
+                end
+                else
+                begin
+                  DesiredSpacing := ABoundary.DesiredSpacing;
+                end;
+                if IntesectNode = nil then
+                begin
+                  ANode := TNode.Create(self, DesiredSpacing);
+                  ANode.Location := APoint;
+                  if BoundaryIndex = 0 then
+                  begin
+                    FBNodes.Add(ANode);
+                    // FBNodes are now no longer in order.
+                  end;
+                end
+                else
+                begin
+                  ANode := IntesectNode;
+                end;
+                ANode.FIntersection := True;
+                ANode.FDesiredSpacing := DesiredSpacing;
+                if InsertOuter then
+                begin
+                  if OuterBoundary.FNodes[OuterNodeIndex+1] <> ANode then
+                  begin
+                    OuterBoundary.FNodes.Insert(OuterNodeIndex+1,ANode);
+                  end;
+                  OuterSegment[2] := ANode.Location;
+                end;
+                if InsertInner then
+                begin
+                  if ABoundary.FNodes[InnerNodeIndex+1] <> ANode then
+                  begin
+                    ABoundary.FNodes.Insert(InnerNodeIndex+1,ANode);
+                  end;
+                  InnerSegment[2] := ANode.Location;
+                end;
+                NodesTree.AddPoint(ANode.X, ANode.Y, ANode);
+              end;
+
+              if Node3 <> ANode then
+              begin
+                MidPoint := SegmentMidPoint(Node3.Location, ANode.Location);
+                if PointInConcavePolygon(MidPoint, OuterPolygon) then
+                begin
+                  // Node3 is inside the outer boundary
+                  ABoundary.FNodes.Delete(InnerNodeIndex+2);
+                  ABoundary.FNodes.Delete(ABoundary.FNodes.Count-1);
+                  for MoveNodeIndex := ABoundary.FNodes.Count-1 downto InnerNodeIndex + 2 do
+                  begin
+                    ABoundary.FNodes.Insert(0, ABoundary.FNodes[ABoundary.FNodes.Count-1]);
+                    ABoundary.FNodes.Delete(ABoundary.FNodes.Count-1);
+                  end;
+                end
+                else
+                begin
+                  // Node3 is not inside the outer boundary
+                  ABoundary.FNodes.Delete(InnerNodeIndex);
+                  ABoundary.FNodes.Delete(ABoundary.FNodes.Count-1);
+                  for MoveNodeIndex := 0 to InnerNodeIndex - 1 do
+                  begin
+                    ABoundary.FNodes.Add(ABoundary.FNodes[0]);
+                    ABoundary.FNodes.Delete(0);
+                  end;
+                end;
+              end
+              else
+              begin
+                MidPoint := SegmentMidPoint(Node4.Location, ANode.Location);
+                if PointInConcavePolygon(MidPoint, OuterPolygon) then
+                begin
+                  // Node3 is not inside the outer boundary
+                  ABoundary.FNodes.Delete(InnerNodeIndex);
+                  ABoundary.FNodes.Delete(ABoundary.FNodes.Count-1);
+                  for MoveNodeIndex := 0 to InnerNodeIndex - 1 do
+                  begin
+                    ABoundary.FNodes.Add(ABoundary.FNodes[0]);
+                    ABoundary.FNodes.Delete(0);
+                  end;
+                end
+                else
+                begin
+                  // Node3 is inside the outer boundary
+                  ABoundary.FNodes.Delete(InnerNodeIndex+1);
+                  ABoundary.FNodes.Delete(ABoundary.FNodes.Count-1);
+                  for MoveNodeIndex := ABoundary.FNodes.Count-1 downto InnerNodeIndex + 1 do
+                  begin
+                    ABoundary.FNodes.Insert(0, ABoundary.FNodes[ABoundary.FNodes.Count-1]);
+                    ABoundary.FNodes.Delete(ABoundary.FNodes.Count-1);
+                  end;
+                end;
+              end;
+
+              Break;
+            end;
+          end;
+          if IntersectsBoundary then
+          begin
+            Break;
+          end;
+
+        end;
+        if IntersectsBoundary then
+        begin
+          Break;
+        end;
+
+      end;
+    end;
+  finally
+    NodesTree.Free;
+  end;
+end;
+
+procedure TQuadMeshCreator.IntersectBoundaries;
+var
+  ABoundary: TBoundary;
+  NodesTree: TRbwQuadTree;
+  BoundaryIndex: Integer;
+  NodeIndex: Integer;
+  ANode: TNode;
+  NextBIndex: Integer;
+  NextBoundary: TBoundary;
+  OuterNodeIndex: Integer;
+  OuterSegment: TSegment2D;
+  Node1: TNode;
+  Node2: TNode;
+  InnerNodeIndex: Integer;
+  Node3: TNode;
+  Node4: TNode;
+  InnerSegment: TSegment2D;
+  APoint: TPoint2D;
+  X: double;
+  Y: double;
+  DataArray: TPointerArray;
+  InsertOuter: Boolean;
+  InsertInner: Boolean;
+  DesiredSpacing: Extended;
+  Changed: Boolean;
+  IntesectNode: TNode;
+begin
+  NodesTree := TRbwQuadTree.Create(nil);
+  try
+    NodesTree.XMax := FMaxX;
+    NodesTree.XMin := FMinX;
+    NodesTree.YMax := FMaxY;
+    NodesTree.YMin := FMinY;
+    YEpsilon := (NodesTree.YMax - NodesTree.YMin)/1e7;
+    XEpsilon := (NodesTree.XMax - NodesTree.XMin)/1e7;
+    for NodeIndex := 1 to FNodes.Count - 1 do
+    begin
+      ANode := FNodes[NodeIndex];
+      NodesTree.AddPoint(ANode.X, ANode.Y, ANode);
+    end;
+
+    repeat
+      Changed := False;
+      for BoundaryIndex := 0 to FBoundaries.Count - 2 do
+      begin
+        ABoundary:= FBoundaries[BoundaryIndex];
+        for NextBIndex := BoundaryIndex+1 to FBoundaries.Count - 1 do
+        begin
+          NextBoundary :=  FBoundaries[NextBIndex];
+          for OuterNodeIndex := ABoundary.FNodes.Count - 2 downto 0 do
+          begin
+            Node1 := ABoundary.FNodes[OuterNodeIndex];
+            Node2 := ABoundary.FNodes[OuterNodeIndex+1];
+            OuterSegment[1] := Node1.Location;
+            OuterSegment[2] := Node2.Location;
+            for InnerNodeIndex := NextBoundary.FNodes.Count - 2 downto 0 do
+            begin
+              Node3 := NextBoundary.FNodes[InnerNodeIndex];
+              Node4 := NextBoundary.FNodes[InnerNodeIndex+1];
+              InnerSegment[1] := Node3.Location;
+              InnerSegment[2] := Node4.Location;
+              if Intersect(OuterSegment, InnerSegment) then
+              begin
+                APoint := IntersectionPoint(OuterSegment, InnerSegment);
+                X := APoint.X;
+                Y := APoint.Y;
+                NodesTree.FindClosestPointsData(X,Y, DataArray);
+                InsertOuter := True;
+                InsertInner := True;
+                IntesectNode := nil;
+                if NearlyTheSame(X, APoint.X, XEpsilon)
+                  and NearlyTheSame(Y, APoint.Y, YEpsilon) then
+                begin
+                  if NearlyTheSame(APoint, Node1.Location) then
+                  begin
+                    Node1.FIntersection := True;
+                    IntesectNode := Node1;
+                    InsertOuter := False;
+                  end;
+                  if NearlyTheSame(APoint, Node2.Location) then
+                  begin
+                    Node2.FIntersection := True;
+                    IntesectNode := Node2;
+                    InsertOuter := False;
+                  end;
+                  if NearlyTheSame(APoint, Node3.Location) then
+                  begin
+                    Node3.FIntersection := True;
+                    IntesectNode := Node3;
+                    InsertInner := False;
+                  end;
+                  if NearlyTheSame(APoint, Node4.Location) then
+                  begin
+                    Node4.FIntersection := True;
+                    IntesectNode := Node4;
+                    InsertInner := False;
+                  end;
+                end;
+                if InsertOuter or InsertInner then
+                begin
+                  if InsertOuter and InsertInner then
+                  begin
+                    DesiredSpacing := Min(ABoundary.DesiredSpacing,
+                      NextBoundary.DesiredSpacing);
+                  end
+                  else if InsertOuter then
+                  begin
+                    DesiredSpacing := ABoundary.DesiredSpacing;
+                  end
+                  else
+                  begin
+                    DesiredSpacing := NextBoundary.DesiredSpacing;
+                  end;
+                  if IntesectNode = nil then
+                  begin
+                    ANode := TNode.Create(self, DesiredSpacing);
+                    ANode.Location := APoint;
+                    if BoundaryIndex = 0 then
+                    begin
+                      FBNodes.Add(ANode);
+                      // FBNodes are now no longer in order.
+                    end;
+                  end
+                  else
+                  begin
+                    ANode := IntesectNode;
+                  end;
+                  ANode.FIntersection := True;
+                  ANode.FDesiredSpacing := DesiredSpacing;
+                  if InsertOuter then
+                  begin
+                    if ABoundary.FNodes[OuterNodeIndex+1] <> ANode then
+                    begin
+                      ABoundary.FNodes.Insert(OuterNodeIndex+1,ANode);
+                    end;
+                    OuterSegment[2] := ANode.Location;
+                  end;
+                  if InsertInner then
+                  begin
+                    if NextBoundary.FNodes[InnerNodeIndex+1] <> ANode then
+                    begin
+                      NextBoundary.FNodes.Insert(InnerNodeIndex+1,ANode);
+                    end;
+                    InnerSegment[2] := ANode.Location;
+                  end;
+                  NodesTree.AddPoint(ANode.X, ANode.Y, ANode);
+                  Changed := True;
+                end;
+              end;
+            end;
+          end;
+        end;
+      end;
+    until not Changed;
+  finally
+    NodesTree.Free;
+  end;
+end;
+
+procedure TQuadMeshCreator.FillNodeTree;
+var
+  index: Integer;
+  ANode: TNode;
+begin
+  FNodeQuadTree.XMax := FMaxX;
+  FNodeQuadTree.XMin := FMinX;
+  FNodeQuadTree.YMax := FMaxY;
+  FNodeQuadTree.YMin := FMinY;
+  for index := 0 to FNodes.Count - 1 do
+  begin
+    ANode := FNodes[index];
+    FNodeQuadTree.AddPoint(ANode.X, ANode.Y, ANode);
+  end;
+end;
+
+procedure TQuadMeshCreator.StoreClosedBoundaryPolygons;
+var
+  BoundaryIndex: Integer;
+  List: TBoundaryList;
+  ABoundary: TBoundary;
+  PointIndex: Integer;
+begin
+  List := TBoundaryList.Create;
+  try
+    for BoundaryIndex := 0 to FBoundaries.Count - 1 do
+    begin
+      ABoundary := FBoundaries[BoundaryIndex];
+      if (ABoundary.FNodes.Count > 2) and (ABoundary.FNodes[0]
+        = ABoundary.FNodes[ABoundary.FNodes.Count-1]) then
+      begin
+        List.Add(ABoundary);
+      end;
+    end;
+    SetLength(FPolygonArray, List.Count);
+    for BoundaryIndex := 0 to List.Count - 1 do
+    begin
+      ABoundary := List[BoundaryIndex];
+      SetLength(FPolygonArray[BoundaryIndex], ABoundary.FNodes.Count-1);
+      for PointIndex := 0 to ABoundary.FNodes.Count - 2 do
+      begin
+        FPolygonArray[BoundaryIndex][PointIndex]
+          := ABoundary.FNodes[PointIndex].Location;
+      end;
+    end;
+  finally
+    List.Free;
+  end;
+end;
+
+procedure TQuadMeshCreator.AssignConstraintNodes;
+var
+  Index: Integer;
+begin
+  for Index := 0 to FBoundaries.Count - 1 do
+  begin
+    FBoundaries[Index].AssignConstraintNodes
+  end;
+end;
+
 procedure TQuadMeshCreator.GenerateMesh;
+const
+  MaxIterations = 10;
 var
   List: TBoundaryList;
   Index: Integer;
   ABoundary: TBoundary;
+  Iterations: integer;
 begin
-  ComputeCharacteristicLength;
+  Initialize;
+  BreakClosedBoundariesThatIntersectOuterBoundary;
+  IntersectBoundaries;
+  BreakOpenBoundaries;
+  DeleteDisconnectedBoundaries;
+  MergeClosedBoundaries;
+  StoreClosedBoundaryPolygons;
+  BreakOpenBoundaries;
+  DeleteExternalBoundaries;
+  ExtractClosedBoundaries;
+//  MergeOpenNodeBoundaries2;
+  MergeOpenWithClosedBoundaries;
+//  MergeOpenNodeBoundaries;
+  MergeOpenNodeBoundaries3;
+  ArrangeBoundaries;
   SetNodeTypes;
-  SetSegmentTypes;
   GenerateSegments;
   AssignDesiredSpacings;
+  FillNodeTree;
   InsertNodesAlongBoundaries;
   ConvertToClosedBoundaries;
   CreateBoundaryNodes;
+  AssignConstraintNodes;
   AssignDesiredSpacings;
   AssignOriginalEdgeAngles;
+  FixSegments;
   MakeSingleBoundary;
-  Assert(FBoundaries.Count = 1);
+  FixSegments;
+  SplitMultiplyConnectedBoundaries;
+  FixSegments;
+
+  Assert(FBoundaries.Count >= 1);
   List := TBoundaryList.Create;
   try
-    List.Add(FBoundaries[0]);
+    for index := 0 to FBoundaries.Count - 1 do
+    begin
+      List.Add(FBoundaries[index]);
+    end;
+
     Index := 0;
     while Index < List.Count do
     begin
       ABoundary := List[Index];
+      {$IFDEF DEBUG}
+      try
+      {$ENDIF}
       ABoundary.Split(List);
+      {$IFDEF DEBUG}
+      except
+//        ShowMessage('Error at ' + IntToStr(Index));
+        raise;
+      end;
+      {$ENDIF}
+
       Inc(Index);
     end;
 
@@ -3120,102 +7184,51 @@ begin
     List.Free;
   end;
 
-  FBoundaries[0].SetCounterClockwiseOrientation;
-  AdjustNodes;
-  try
-    CheckInvalidElements;
-  except
-    on EInvalidElement do
-    begin
-      // ignore
-    end;
-  end;
+  FixEdgeTriangles;
 
-  repeat
-  until (not ImproveTopology);
-
-  RenumberNodes;
-
-  if InvalidElement then
+  for index := 0 to FBoundaries.Count - 1 do
   begin
-    raise EInvalidElement.Create(StrOneOrMoreInvalid);
+    FBoundaries[index].SetCounterClockwiseOrientation;
   end;
 
+  Iterations := 0;
+  repeat
+    repeat
+      AdjustNodes;
+    until (not ImproveTopology);
+    Inc(Iterations)
+  until  (not FixEdgeTriangles) or (Iterations >= MaxIterations);
+
+  FixFinalTriangularElements;
+
+  RenumberNodesAndElements;
 end;
 
 procedure TQuadMeshCreator.GenerateSegments;
 var
   Index: Integer;
+  ListIndex: Integer;
+  AList: TBoundaryList;
 begin
-  Assert(FBoundaries.Count > 0);
-  FBoundaries[0].GenerateSegments(CounterClockwise);
-  for Index := 1 to FBoundaries.Count - 1 do
+  Assert(IncludedBoundaries.Count > 0);
+  for ListIndex := 0 to IncludedBoundaries.Count - 1 do
   begin
-    FBoundaries[Index].GenerateSegments(Clockwise);
+    AList := IncludedBoundaries[ListIndex];
+    Assert(AList.Count > 0);
+    AList[0].GenerateSegments(CounterClockwise);
+    for Index := 1 to AList.Count - 1 do
+    begin
+      AList[Index].GenerateSegments(Clockwise);
+    end;
   end;
 end;
 
+{$IFDEF TEST}
 function TQuadMeshCreator.GetBoundaryCount: Integer;
 begin
   result := FBoundaries.Count;
 end;
-
-function TQuadMeshCreator.GetCost(Node1, Node2: TNodeInBoundary): TCost;
-var
-  Index1: Integer;
-  Index2: Integer;
-  Temp: TNodeInBoundary;
-  CostRow: TCost2ObjectList;
-  CostList: TCostObjectList;
-  CostIndex: Integer;
-  ACost: TCost;
-begin
-  if Node1.FNode.FNodeNumber > Node2.FNode.FNodeNumber then
-  begin
-    Temp := Node1;
-    Node1 := Node2;
-    Node2 := Temp;
-  end;
-  Index1 := Node1.FNode.FNodeNumber;
-  Index2 := Node2.FNode.FNodeNumber;
-  Assert(Index1 <> Index2);
-  while Index1 >= FCostsArray.Count do
-  begin
-    FCostsArray.Add(nil);
-  end;
-  CostRow := FCostsArray[Index1];
-  if CostRow = nil then
-  begin
-    CostRow := TCost2ObjectList.Create;
-    FCostsArray[Index1] := CostRow;
-  end;
-  while Index2 >= CostRow.Count do
-  begin
-    CostRow.Add(nil);
-  end;
-
-  CostList := CostRow[Index2];
-  if CostList = nil then
-  begin
-    CostList := TCostObjectList.Create;
-    CostRow[Index2] := CostList;
-  end;
-  result := nil;
-  for CostIndex := 0 to CostList.Count - 1 do
-  begin
-    ACost := CostList[CostIndex];
-    if (ACost.FNode1 = Node1) and (ACost.FNode2 = Node2) then
-    begin
-      result := ACost;
-      Exit;
-    end;
-  end;
-  if result = nil then
-  begin
-    result := TCost.Create(Node1, Node2, self);
-    CostList.Add(result);
-  end;
-end;
+{$ENDIF}
 
 function TQuadMeshCreator.GetActiveElement(Index: Integer): IElement;
 begin
@@ -3247,20 +7260,35 @@ var
   NodeIndex: Integer;
   ANode: TNode;
   ShouldRemove: boolean;
+  ElementIndex: Integer;
+  AnElement: TBoundary;
 begin
   result := False;
-  Assert(BoundaryCount = 1);
+  for NodeIndex := FNodes.Count - 1 downto 0 do
+  begin
+    ANode := FNodes[NodeIndex];
+    for ElementIndex := ANode.FElements.Count - 1 downto 0 do
+    begin
+      AnElement := ANode.FElements[ElementIndex];
+      if AnElement.Count = 0 then
+      begin
+        ANode.FElements.Delete(ElementIndex);
+        result := True;
+      end;
+    end;
+    if ANode.FElements.Count = 0 then
+    begin
+      FNodes.Delete(NodeIndex);
+      result := True;
+    end;
+  end;
   for NodeIndex := FNodes.Count - 1 downto 0 do
   begin
     if NodeIndex < FNodes.Count then
     begin
       ANode := FNodes[NodeIndex];
-      try
-        ShouldRemove := ANode.ImproveTopology1;
-      except
-        ShowMessage(IntToStr(NodeIndex));
-        raise;
-      end;
+      ShouldRemove := ANode.ImproveTopology1;
+
       result := result or ShouldRemove;
       if ShouldRemove then
       begin
@@ -3269,6 +7297,83 @@ begin
       else
       begin
         result := ANode.ImproveTopology2 or result;
+      end;
+    end;
+  end;
+end;
+
+
+procedure TQuadMeshCreator.Initialize;
+begin
+  ComputeCharacteristicLength;
+  StoreBoundaryNodes;
+end;
+
+procedure TQuadMeshCreator.StoreBoundaryNodes;
+var
+  ABoundary: TBoundary;
+begin
+  ABoundary := FBoundaries[0];
+  FBNodes.AddRange(ABoundary.FNodes);
+end;
+
+procedure TQuadMeshCreator.InitializeIntersectLists(
+  IntersectionNodes: TNodeList;
+  LinkedClosedBoundaries, LinkedOpenBoundaries: TBoundaryListSqr;
+  ClosedBoundaries: TBoundaryList);
+var
+  ABoundary: TBoundary;
+  BoundaryIndex: Integer;
+  Index: Integer;
+  NodeIndex: Integer;
+  ANode: TNode;
+begin
+  ClosedBoundaries.Clear;
+  if LinkedOpenBoundaries.Count = 0 then
+  begin
+    Assert(LinkedClosedBoundaries.Count = 0);
+    for Index := 0 to IntersectionNodes.Count - 1 do
+    begin
+      LinkedOpenBoundaries.Add(TBoundaryList.Create);
+      LinkedClosedBoundaries.Add(TBoundaryList.Create);
+    end;
+  end
+  else
+  begin
+    Assert(LinkedOpenBoundaries.Count = IntersectionNodes.Count);
+    Assert(LinkedClosedBoundaries.Count = IntersectionNodes.Count);
+    for Index := 0 to IntersectionNodes.Count - 1 do
+    begin
+      LinkedOpenBoundaries[Index].Clear;
+      LinkedClosedBoundaries[Index].Clear;
+    end;
+  end;
+  for BoundaryIndex := 0 to FBoundaries.Count - 1 do
+  begin
+    ABoundary := FBoundaries[BoundaryIndex];
+    if (ABoundary.FNodes.Count < 2)
+      or (ABoundary.FNodes[0] <> ABoundary.FNodes[ABoundary.FNodes.Count - 1])
+      then
+    begin
+      for NodeIndex := 0 to IntersectionNodes.Count - 1 do
+      begin
+        ANode := IntersectionNodes[NodeIndex];
+        if ABoundary.FNodes.IndexOf(ANode) >= 0 then
+        begin
+          LinkedOpenBoundaries[NodeIndex].Add(ABoundary);
+        end;
+      end;
+    end
+    else
+    begin
+      ClosedBoundaries.Add(ABoundary);
+      for NodeIndex := 0 to IntersectionNodes.Count - 1 do
+      begin
+        ANode := IntersectionNodes[NodeIndex];
+        if ABoundary.FNodes.IndexOf(ANode) >= 0 then
+        begin
+          LinkedClosedBoundaries[NodeIndex].Add(ABoundary);
+        end;
       end;
     end;
   end;
@@ -3284,63 +7389,164 @@ begin
   end;
 end;
 
-procedure TQuadMeshCreator.InvalidateCosts(List: TBoundary; LowestCost: TCost);
+procedure TQuadMeshCreator.GetBestLinkWhenSameNode(var ClosestCost: TCost;
+  FirstBoundary, ABoundary: TBoundary);
 var
-  Index1: Integer;
-  Index2: Integer;
-  CostRow: TCost2ObjectList;
-  procedure InvalidateCostsInBoundary;
-  var
-    NodeIndex: Integer;
-    ANode: TNodeInBoundary;
-    NodePosition: Integer;
-    ACost: TCost;
-    ACostList: TCostObjectList;
-    CostIndex: Integer;
-  begin
-    for NodeIndex := 0 to List.Count - 1 do
+  NodeIndex: Integer;
+  ANode: TNodeInBoundary;
+//  FirstBoundaryMatchedNodes: TNodeInBoundaryList;
+//  FirstBoundaryMatchedNodesIndices : TList<Integer>;
+//  ABoundaryMatchedNodes: TNodeInBoundaryList;
+//  ABoundaryMatchedNodesIndices: TList<Integer>;
+  AngleList: TAngleList;
+  CompareItem: TAngleCompareItem;
+  PriorNode: TNodeInBoundary;
+  NextNode: TNodeInBoundary;
+  ItemIndex: Integer;
+  AnItem: TAngleCompareItem;
+  FirstItem: TAngleCompareItem;
+  SecondItem: TAngleCompareItem;
+//  SegmentIndex: Integer;
+//  ASegment: TSegment;
+  Comparer: TAngleComparer;
+begin
+  Assert(ClosestCost <> nil);
+  Assert(FirstBoundary <> nil);
+  Assert(ABoundary <> nil);
+  Assert(ClosestCost.FNode1.FNode = ClosestCost.FNode2.FNode);
+  Assert(FirstBoundary.Count > 1);
+  Assert(ABoundary.Count > 1);
+//  FirstBoundaryMatchedNodes := TNodeInBoundaryList.Create;
+//  FirstBoundaryMatchedNodesIndices :=  TList<Integer>.Create;
+//  ABoundaryMatchedNodes := TNodeInBoundaryList.Create;
+//  ABoundaryMatchedNodesIndices :=  TList<Integer>.Create;
+  AngleList := TAngleList.Create;
+
+  try
+    for NodeIndex := 0 to FirstBoundary.Count - 2 do
     begin
-      ANode := List[NodeIndex];
-      NodePosition := ANode.FNode.FNodeNumber;
-      if (NodePosition < CostRow.Count) then
+      ANode := FirstBoundary[NodeIndex];
+      if ANode.FNode = ClosestCost.FNode1.FNode then
       begin
-        ACostList := CostRow[NodePosition];
-        if ACostList <> nil then
+        if NodeIndex > 0 then
         begin
-          for CostIndex := 0 to ACostList.Count - 1 do
-          begin
-            ACost := ACostList[CostIndex];
-            if (ACost.FNode1 = LowestCost.FNode1) or
-              (ACost.FNode1 = LowestCost.FNode2) or
-              (ACost.FNode2 = LowestCost.FNode1) or
-              (ACost.FNode2 = LowestCost.FNode2) then
-            begin
-              ACost.FNodeDistance := -1;
-            end;
-          end;
+          PriorNode := FirstBoundary[NodeIndex-1];
+        end
+        else
+        begin
+          PriorNode := FirstBoundary[FirstBoundary.Count-2];
+        end;
+        CompareItem := TAngleCompareItem.Create;
+        AngleList.Add(CompareItem);
+        CompareItem.Angle := ArcTan2(PriorNode.Y-ANode.Y, PriorNode.X-ANode.X);
+        CompareItem.NodePosition := NodeIndex;
+        CompareItem.Boundary := FirstBoundary;
+        CompareItem.Direction := dBackward;
+
+        NextNode := FirstBoundary[NodeIndex+1];
+        CompareItem := TAngleCompareItem.Create;
+        AngleList.Add(CompareItem);
+        CompareItem.Angle := ArcTan2(NextNode.Y-ANode.Y, NextNode.X-ANode.X);
+        CompareItem.NodePosition := NodeIndex;
+        CompareItem.Boundary := FirstBoundary;
+        CompareItem.Direction := dForward;
+      end;
+    end;
+    for NodeIndex := 0 to ABoundary.Count - 2 do
+    begin
+      ANode := ABoundary[NodeIndex];
+      if ANode.FNode = ClosestCost.FNode1.FNode then
+      begin
+        if NodeIndex > 0 then
+        begin
+          PriorNode := ABoundary[NodeIndex-1];
+        end
+        else
+        begin
+          PriorNode := ABoundary[ABoundary.Count-2];
+        end;
+        CompareItem := TAngleCompareItem.Create;
+        AngleList.Add(CompareItem);
+        CompareItem.Angle := ArcTan2(PriorNode.Y-ANode.Y, PriorNode.X-ANode.X);
+        CompareItem.NodePosition := NodeIndex;
+        CompareItem.Boundary := ABoundary;
+        CompareItem.Direction := dBackward;
+
+        NextNode := ABoundary[NodeIndex+1];
+        CompareItem := TAngleCompareItem.Create;
+        AngleList.Add(CompareItem);
+        CompareItem.Angle := ArcTan2(NextNode.Y-ANode.Y, NextNode.X-ANode.X);
+        CompareItem.NodePosition := NodeIndex;
+        CompareItem.Boundary := ABoundary;
+        CompareItem.Direction := dForward;
+      end;
+    end;
+
+    // sort in order of descending angles.
+    Comparer := TAngleComparer.Create;
+    try
+      AngleList.Sort(Comparer) ;
+    finally
+      Comparer.Free;
+    end;
+
+//    AngleList.Reverse;
+
+    FirstItem := nil;
+    SecondItem := nil;
+    for ItemIndex := 0 to AngleList.Count - 1 do
+    begin
+      AnItem := AngleList[ItemIndex];
+      if AnItem.Boundary = FirstBoundary then
+      begin
+        FirstItem := AnItem;
+      end;
+      if (FirstItem <> nil) and (AnItem.Boundary = ABoundary) then
+      begin
+        SecondItem := AnItem;
+        Break;
+      end;
+    end;
+
+    if (FirstItem <> nil) and (SecondItem = nil) then
+    begin
+      for ItemIndex := 0 to AngleList.Count - 1 do
+      begin
+        AnItem := AngleList[ItemIndex];
+        if (AnItem.Boundary = ABoundary) then
+        begin
+          SecondItem := AnItem;
+          Break;
         end;
       end;
     end;
-  end;
+    Assert(FirstItem <> nil);
+    Assert(SecondItem <> nil);
 
-begin
-  Index1 := LowestCost.FNode1.FNode.FNodeNumber;
-  if (Index1 < FCostsArray.Count) then
-  begin
-    CostRow := FCostsArray[Index1];
-    if CostRow <> nil then
-    begin
-      InvalidateCostsInBoundary;
-    end;
-  end;
-  Index2 := LowestCost.FNode2.FNode.FNodeNumber;
-  if (Index2 < FCostsArray.Count) then
-  begin
-    CostRow := FCostsArray[Index2];
-    if CostRow <> nil then
-    begin
-      InvalidateCostsInBoundary;
-    end;
+    ClosestCost.Free;
+
+    ClosestCost := TCost.Create(FirstBoundary[FirstItem.NodePosition],
+      ABoundary[SecondItem.NodePosition], self);
+
+//    ABoundary.Reverse;
+//    ABoundary.FSegments.Reverse;
+//    for SegmentIndex := 0 to ABoundary.FSegments.Count - 1 do
+//    begin
+//      ASegment := ABoundary.FSegments[SegmentIndex];
+//      ASegment.Reverse;
+//    end;
+//    for NodeIndex := 0 to ABoundary.Count - 2 do
+//    begin
+//      ABoundary[NodeIndex].FPosition := NodeIndex;
+//    end;
+
+
+  finally
+    AngleList.Free;
+//    FirstBoundaryMatchedNodes.Free;
+//    FirstBoundaryMatchedNodesIndices.Free;
+//    ABoundaryMatchedNodes.Free;
+//    ABoundaryMatchedNodesIndices.Free;
   end;
 end;
 
@@ -3373,222 +7579,1999 @@ var
   AnInnerNode: TNode;
   SegInsertPosition: Integer;
   SegmentIndex: Integer;
-begin
-  Assert(FBoundaries.Count > 0);
-  if FBoundaries.Count = 1 then
+  ListIndex: Integer;
+  AList: TBoundaryList;
+  BoundaryComparer: TBoundaryCountComparer;
+  MovedSegment: TSegment;
+  Temp: TCost;
+  OuterNodeIndex: Integer;
+  InnerNodeIndex: Integer;
+  OuterNode: TNodeInBoundary;
+  InnerNode: TNodeInBoundary;
+  InterSectionNodes: TNodeList;
+  procedure SwitchIntersectingBoundary;
+  var
+    NIndex: Integer;
+    EdgeNode: TNode;
+    FoundIntersectingBoundary: Boolean;
+    BoundaryIndex: integer;
+    ABoundary: TBoundary;
   begin
-    Exit;
+    InterSectionNodes.Clear;
+    for NIndex := 0 to FirstBoundary.Count - 1 do
+    begin
+      EdgeNode := FirstBoundary[NIndex].FNode;
+      if EdgeNode.FIntersection
+        and (InterSectionNodes.IndexOf(EdgeNode) < 0) then
+      begin
+        InterSectionNodes.Add(EdgeNode);
+      end;
+    end;
+    if InterSectionNodes.Count = 0 then
+    begin
+      Exit;
+    end;
+
+    FoundIntersectingBoundary := False;
+    for BoundaryIndex := AList.Count - 1 downto 0 do
+    begin
+      ABoundary := AList[BoundaryIndex];
+      for NIndex := 0 to InterSectionNodes.Count - 1 do
+      begin
+        EdgeNode := InterSectionNodes[NIndex];
+        if ABoundary.IndexOfNode(EdgeNode) >= 0 then
+        begin
+          FoundIntersectingBoundary := True;
+          AList.Delete(BoundaryIndex);
+          AList.Add(ABoundary);
+          Break;
+        end;
+      end;
+      if FoundIntersectingBoundary then
+      begin
+        break;
+      end;
+    end;
   end;
+begin
+  Assert(FIncludedBoundaries.Count > 0);
+
+  Assert(FBoundaries.Count > 0);
   BoundaryQuadTree := TRbwQuadTree.Create(nil);
+  InterSectionNodes := TNodeList.Create;
   try
     BoundaryQuadTree.XMax := FMaxX;
     BoundaryQuadTree.XMin := FMinX;
     BoundaryQuadTree.YMax := FMaxY;
     BoundaryQuadTree.YMin := FMinY;
-
-    FirstBoundary := FBoundaries[0];
-
-    // Last point should be a duplicate of the first point.
-    for NodeIndex := 0 to FirstBoundary.Count - 2 do
+    for ListIndex := 0 to FIncludedBoundaries.Count - 1 do
     begin
-      ANode := FirstBoundary[NodeIndex];
-      BoundaryQuadTree.AddPoint(ANode.FNode.X, ANode.FNode.Y, ANode);
-    end;
-
-    BoundariesChanged := True;
-    while (FBoundaries.Count > 1) and BoundariesChanged do
-    begin
-      BoundariesChanged := False;
-      for BoundaryIndex := FBoundaries.Count - 1 downto 1 do
+      AList := FIncludedBoundaries[ListIndex];
+      if AList.Count = 1 then
       begin
-        ABoundary := FBoundaries[BoundaryIndex];
-        ClosestCost := nil;
-        ClosestDistance := 0;
-        for NodeIndex := 0 to ABoundary.Count - 1 do
+        Continue;
+      end;
+      BoundaryQuadTree.Clear;
+      FirstBoundary := AList[0];
+
+      // Last point should be a duplicate of the first point.
+      for NodeIndex := 0 to FirstBoundary.Count - 2 do
+      begin
+        ANode := FirstBoundary[NodeIndex];
+        BoundaryQuadTree.AddPoint(ANode.FNode.X, ANode.FNode.Y, ANode);
+      end;
+
+      AList.Delete(0);
+      BoundaryComparer := TBoundaryCountComparer.Create;
+      try
+        AList.Sort(BoundaryComparer);
+      finally
+        BoundaryComparer.Free;
+      end;
+
+      BoundariesChanged := True;
+      while (AList.Count > 0) and BoundariesChanged do
+      begin
+        BoundariesChanged := False;
+
+
+
+        for BoundaryIndex := AList.Count - 1 downto 0 do
         begin
-          ANode := ABoundary[NodeIndex];
-          ClosestNode := BoundaryQuadTree.NearestPointsFirstData(ANode.FNode.X,
-            ANode.FNode.Y);
-          ACost := Cost[ANode, ClosestNode];
-          if ACost.Visible then
-          begin
-            ADistance := Distance(ANode.FNode.Location,
-              ClosestNode.FNode.Location);
-            if (ClosestCost = nil) or (ADistance < ClosestDistance) then
+          SwitchIntersectingBoundary;
+          ABoundary := AList[BoundaryIndex];
+          ClosestCost := nil;
+          try
+            ClosestDistance := 0;
+            SubDomainNode := nil;
+            OuterBoundaryNode := nil;
+            for NodeIndex := 0 to ABoundary.Count - 1 do
             begin
-              ClosestCost := ACost;
-              ClosestDistance := ADistance;
+              ANode := ABoundary[NodeIndex];
+              ClosestNode := BoundaryQuadTree.NearestPointsFirstData(ANode.FNode.X,
+                ANode.FNode.Y);
+              ACost := TCost.Create(ANode, ClosestNode, self {, ivUnknown});
+              try
+                if ACost.Visible then
+                begin
+                  ADistance := Distance(ANode.FNode.Location,
+                    ClosestNode.FNode.Location);
+                  if (ClosestCost = nil) or (ADistance < ClosestDistance) then
+                  begin
+                    Temp := ClosestCost;
+                    ClosestCost := ACost;
+                    ACost := Temp;
+                    ClosestDistance := ADistance;
+                    if ClosestDistance = 0 then
+                    begin
+                      break;
+                    end;
+                  end;
+                end;
+              finally
+                ACost.Free;
+              end;
             end;
-          end;
-        end;
-        if ClosestCost <> nil then
-        begin
-          if ClosestCost.FNode1.FBoundary = ABoundary then
-          begin
-            SubDomainNode := ClosestCost.FNode1;
-            OuterBoundaryNode := ClosestCost.FNode2;
-            Assert(OuterBoundaryNode.FBoundary = FirstBoundary);
-          end
-          else
-          begin
-            SubDomainNode := ClosestCost.FNode2;
-            OuterBoundaryNode := ClosestCost.FNode1;
-            Assert(SubDomainNode.FBoundary = ABoundary);
-            Assert(OuterBoundaryNode.FBoundary = FirstBoundary);
-          end;
-          if ABoundary.Count = 1 then
-          begin
-            Assert(SubDomainNode.FSegments.Count = 1);
-            Seg2 := SubDomainNode.FSegments[0];
-          end
-          else
-          begin
-            ABoundary.SplitSegmentAtNode(SubDomainNode);
-
-            Assert(SubDomainNode.FSegments.Count = 2);
-            Seg1 := SubDomainNode.FSegments[0];
-            Seg2 := SubDomainNode.FSegments[1];
-            if Seg1.FNode2 <> Seg2.FNode1 then
+            if ClosestCost = nil then
             begin
-              SubDomainNode.FSegments.Reverse;
-              Seg1 := SubDomainNode.FSegments[0];
-              Seg2 := SubDomainNode.FSegments[1];
-              Assert(Seg1.FNode2 = Seg2.FNode1);
+              for OuterNodeIndex := 0 to FirstBoundary.Count - 1 do
+              begin
+                OuterNode := FirstBoundary[OuterNodeIndex];
+                for InnerNodeIndex := 0 to ABoundary.Count - 1 do
+                begin
+                  InnerNode := ABoundary[InnerNodeIndex];
+                  ACost := TCost.Create(OuterNode, InnerNode, self {, ivUnknown});
+                  try
+                    if ACost.Visible then
+                    begin
+                      ADistance := Distance(OuterNode.FNode.Location,
+                        InnerNode.FNode.Location);
+                      if (ClosestCost = nil) or (ADistance < ClosestDistance) then
+                      begin
+                        Temp := ClosestCost;
+                        ClosestCost := ACost;
+                        ACost := Temp;
+                        ClosestDistance := ADistance;
+                      end;
+                    end;
+                  finally
+                    ACost.Free;
+                  end;
+                end;
+              end;
             end;
-          end;
-          Assert(Seg2.Node1 = SubDomainNode.FNode);
-          SubDomainSegPosition := ABoundary.FSegments.IndexOf(Seg2);
-          Assert(SubDomainSegPosition >= 0);
-
-          FirstBoundary.SplitSegmentAtNode(OuterBoundaryNode);
-          InsertPosition := OuterBoundaryNode.Position + 1;
-
-          Assert(OuterBoundaryNode.FSegments.Count = 2);
-          Seg1 := OuterBoundaryNode.FSegments[0];
-          Seg2 := OuterBoundaryNode.FSegments[1];
-          if Seg1.FNode2 <> Seg2.FNode1 then
-          begin
-            OuterBoundaryNode.FSegments.Reverse;
-            Seg1 := OuterBoundaryNode.FSegments[0];
-            Seg2 := OuterBoundaryNode.FSegments[1];
-            Assert(Seg1.FNode2 = Seg2.FNode1);
-          end;
-          Assert(Seg2.Node1 = OuterBoundaryNode.FNode);
-          SegPosition := FirstBoundary.FSegments.IndexOf(Seg1);
-          Assert(SegPosition >= 0);
-
-          NewSegment := TSegment.Create(OuterBoundaryNode.FNode,
-            SubDomainNode.FNode, stInner, FirstBoundary, self);
-          NodeDistance := NewSegment.Length;
-          if (NodeDistance > ABoundary.DesiredSpacing) or
-            (NodeDistance > FirstBoundary.DesiredSpacing) then
-          begin
-            NumberOfNodesToInsert := NewSegment.NodesToInsert;
-            if NumberOfNodesToInsert > 0 then
+            if (ClosestCost <> nil) and (ClosestDistance = 0) then
             begin
-              NewSegment.InsertNodes(NumberOfNodesToInsert);
+              GetBestLinkWhenSameNode(ClosestCost, FirstBoundary, ABoundary);
             end;
-          end;
-
-          ReversedSegment := NewSegment.CreateReversedSegment;
-
-          for NodeIndex := 0 to NewSegment.FInnerNodes.Count - 1 do
-          begin
-            AnInnerNode := NewSegment.FInnerNodes[NodeIndex];
-            NewNode := TNodeInBoundary.Create(AnInnerNode, FirstBoundary,
-              NewSegment);
-            FirstBoundary.Insert(InsertPosition, NewNode);
-            Inc(InsertPosition);
-            BoundaryQuadTree.AddPoint(NewNode.FNode.X, NewNode.FNode.Y,
-              NewNode);
-          end;
-
-          for NodeIndex := SubDomainNode.Position to ABoundary.Count - 2 do
-          begin
-            ANode := ABoundary[NodeIndex];
-            FirstBoundary.Insert(InsertPosition, ANode);
-            ANode.FBoundary := FirstBoundary;
-            Inc(InsertPosition);
-            BoundaryQuadTree.AddPoint(ANode.FNode.X, ANode.FNode.Y, ANode);
-          end;
-          for NodeIndex := 0 to SubDomainNode.Position - 1 do
-          begin
-            ANode := ABoundary[NodeIndex];
-            FirstBoundary.Insert(InsertPosition, ANode);
-            ANode.FBoundary := FirstBoundary;
-            Inc(InsertPosition);
-            BoundaryQuadTree.AddPoint(ANode.FNode.X, ANode.FNode.Y, ANode);
-          end;
-
-          NewNode := TNodeInBoundary.Create(ReversedSegment.Node1,
-            FirstBoundary, ReversedSegment);
-          FirstBoundary.Insert(InsertPosition, NewNode);
-          Inc(InsertPosition);
-          BoundaryQuadTree.AddPoint(NewNode.FNode.X, NewNode.FNode.Y, NewNode);
-          if ABoundary.Count = 1 then
-          begin
-            NewNode.FSegments.Insert(0, NewSegment);
-            if NewNode.FNode.FSegments.IndexOf(NewSegment) < 0 then
+            if ClosestCost <> nil then
             begin
-              NewNode.FNode.FSegments.Add(NewSegment);
+              if ClosestCost.FNode1.FBoundary = ABoundary then
+              begin
+                SubDomainNode := ClosestCost.FNode1;
+                OuterBoundaryNode := ClosestCost.FNode2;
+                Assert(OuterBoundaryNode.FBoundary = FirstBoundary);
+              end
+              else
+              begin
+                SubDomainNode := ClosestCost.FNode2;
+                OuterBoundaryNode := ClosestCost.FNode1;
+                Assert(SubDomainNode.FBoundary = ABoundary);
+                Assert(OuterBoundaryNode.FBoundary = FirstBoundary);
+              end;
             end;
-          end;
-
-          for NodeIndex := 0 to ReversedSegment.FInnerNodes.Count - 1 do
-          begin
-            AnInnerNode := ReversedSegment.FInnerNodes[NodeIndex];
-            NewNode := TNodeInBoundary.Create(AnInnerNode, FirstBoundary,
-              ReversedSegment);
-            FirstBoundary.Insert(InsertPosition, NewNode);
-            Inc(InsertPosition);
-            BoundaryQuadTree.AddPoint(NewNode.FNode.X, NewNode.FNode.Y,
-              NewNode);
-          end;
-
-          NewNode := TNodeInBoundary.Create(ReversedSegment.Node2,
-            FirstBoundary, ReversedSegment);
-          FirstBoundary.Insert(InsertPosition, NewNode);
-          BoundaryQuadTree.AddPoint(NewNode.FNode.X, NewNode.FNode.Y, NewNode);
-
-          SegInsertPosition := SegPosition + 1;
-          FirstBoundary.FSegments.Insert(SegInsertPosition, NewSegment);
-          Inc(SegInsertPosition);
-          if ABoundary.Count > 1 then
-          begin
-            for SegmentIndex := SubDomainSegPosition to ABoundary.FSegments.
-              Count - 1 do
+            if (SubDomainNode <> nil) and (OuterBoundaryNode <> nil) then
             begin
-              FirstBoundary.FSegments.Insert(SegInsertPosition,
-                ABoundary.FSegments[SegmentIndex]);
-              Inc(SegInsertPosition);
+              if ABoundary.Count = 1 then
+              begin
+                Assert(SubDomainNode.SegmentCount = 1);
+                Seg1 := nil;
+                Seg2 := SubDomainNode.Segments[0];
+              end
+              else
+              begin
+                ABoundary.SplitSegmentAtNode(SubDomainNode);
+
+                Assert(SubDomainNode.SegmentCount = 2);
+                Seg1 := SubDomainNode.Segments[0];
+                Seg2 := SubDomainNode.Segments[1];
+                if Seg1.FNode2 <> Seg2.FNode1 then
+                begin
+                  SubDomainNode.ReverseSegments;
+                  Seg1 := SubDomainNode.Segments[0];
+                  Seg2 := SubDomainNode.Segments[1];
+                  Assert(Seg1.FNode2 = Seg2.FNode1);
+                end;
+              end;
+              Assert(Seg2.Node1 = SubDomainNode.FNode);
+              SubDomainSegPosition := ABoundary.FSegments.IndexOf(Seg2);
+              Assert(SubDomainSegPosition >= 0);
+
+              FirstBoundary.SplitSegmentAtNode(OuterBoundaryNode);
+              InsertPosition := OuterBoundaryNode.Position + 1;
+
+              Assert(OuterBoundaryNode.SegmentCount = 2);
+              Seg1 := OuterBoundaryNode.Segments[0];
+              Seg2 := OuterBoundaryNode.Segments[1];
+              if Seg1.FNode2 <> Seg2.FNode1 then
+              begin
+                OuterBoundaryNode.ReverseSegments;
+                Seg1 := OuterBoundaryNode.Segments[0];
+                Seg2 := OuterBoundaryNode.Segments[1];
+                Assert(Seg1.FNode2 = Seg2.FNode1);
+              end;
+              Assert(Seg2.Node1 = OuterBoundaryNode.FNode);
+              SegPosition := FirstBoundary.FSegments.IndexOf(Seg1);
+              Assert(SegPosition >= 0);
+
+              NewSegment := nil;
+              ReversedSegment := nil;
+              NewNode := nil;
+
+              if Distance(OuterBoundaryNode.FNode.Location,
+                SubDomainNode.FNode.Location) > 0 then
+              begin
+                NewSegment := TSegment.Create(OuterBoundaryNode.FNode,
+                  SubDomainNode.FNode, stInner, FirstBoundary, self);
+                OuterBoundaryNode.Segments[1] := NewSegment;
+                SubDomainNode.Segments[0] := NewSegment;
+                NodeDistance := NewSegment.Length;
+                if (NodeDistance > ABoundary.DesiredSpacing) or
+                  (NodeDistance > FirstBoundary.DesiredSpacing) then
+                begin
+                  NumberOfNodesToInsert := NewSegment.NodesToInsert;
+                  if NumberOfNodesToInsert > 0 then
+                  begin
+                    NewSegment.InsertNodes(NumberOfNodesToInsert);
+                  end;
+                end;
+
+                ReversedSegment := NewSegment.CreateReversedSegment;
+                if SubDomainNode.SegmentCount = 1 then
+                begin
+                  SubDomainNode.Segments[0] := ReversedSegment;
+//                end
+//                else
+//                begin
+//                  SubDomainNode.Segments[1] := ReversedSegment;
+                end;
+
+                for NodeIndex := 0 to NewSegment.FInnerNodes.Count - 1 do
+                begin
+                  AnInnerNode := NewSegment.FInnerNodes[NodeIndex];
+                  NewNode := TNodeInBoundary.Create(AnInnerNode, FirstBoundary,
+                    NewSegment);
+                  FirstBoundary.Insert(InsertPosition, NewNode);
+                  Inc(InsertPosition);
+                  BoundaryQuadTree.AddPoint(NewNode.FNode.X, NewNode.FNode.Y,
+                    NewNode);
+                end;
+              end;
+
+              for NodeIndex := SubDomainNode.Position to ABoundary.Count - 2 do
+              begin
+                ANode := ABoundary[NodeIndex];
+                if (NewSegment = nil) and (OuterBoundaryNode.FNode = ANode.FNode)
+                  and (SubDomainNode.Position = NodeIndex) then
+                begin
+                  Continue;
+                end;
+                FirstBoundary.Insert(InsertPosition, ANode);
+                ANode.FBoundary := FirstBoundary;
+                Inc(InsertPosition);
+                BoundaryQuadTree.AddPoint(ANode.FNode.X, ANode.FNode.Y, ANode);
+              end;
+              if (NewSegment = nil) then
+              begin
+                if (SubDomainNode.Position = 0) then
+                begin
+                  ANode := ABoundary[ABoundary.Count-1];
+                  FirstBoundary.Insert(InsertPosition, ANode);
+                  ANode.FBoundary := FirstBoundary;
+                  Inc(InsertPosition);
+                  BoundaryQuadTree.AddPoint(ANode.FNode.X, ANode.FNode.Y, ANode);
+                end;
+              end;
+              for NodeIndex := 0 to SubDomainNode.Position - 1 do
+              begin
+                ANode := ABoundary[NodeIndex];
+//                if (NewSegment = nil) and (OuterBoundaryNode.FNode = ANode.FNode) then
+//                begin
+//                  Continue;
+//                end;
+                FirstBoundary.Insert(InsertPosition, ANode);
+                ANode.FBoundary := FirstBoundary;
+                Inc(InsertPosition);
+                BoundaryQuadTree.AddPoint(ANode.FNode.X, ANode.FNode.Y, ANode);
+              end;
+
+              if (NewSegment = nil) then
+              begin
+                if (SubDomainNode.Position <> 0) then
+                begin
+                  ANode := SubDomainNode;
+                  FirstBoundary.Insert(InsertPosition, ANode);
+                  ANode.FBoundary := FirstBoundary;
+                  Inc(InsertPosition);
+                  BoundaryQuadTree.AddPoint(ANode.FNode.X, ANode.FNode.Y, ANode);
+                end;
+              end;
+
+              if ReversedSegment <> nil then
+              begin
+                NewNode := TNodeInBoundary.Create(ReversedSegment.Node1,
+                  FirstBoundary, ReversedSegment);
+                FirstBoundary.Insert(InsertPosition, NewNode);
+                Inc(InsertPosition);
+                BoundaryQuadTree.AddPoint(NewNode.FNode.X, NewNode.FNode.Y, NewNode);
+                if ABoundary.Count = 1 then
+                begin
+                  NewNode.InsertSegment(0, NewSegment);
+                  if NewNode.FNode.FSegments.IndexOf(NewSegment) < 0 then
+                  begin
+                    NewNode.FNode.FSegments.Add(NewSegment);
+                  end;
+                end;
+
+                for NodeIndex := 0 to ReversedSegment.FInnerNodes.Count - 1 do
+                begin
+                  AnInnerNode := ReversedSegment.FInnerNodes[NodeIndex];
+                  NewNode := TNodeInBoundary.Create(AnInnerNode, FirstBoundary,
+                    ReversedSegment);
+                  FirstBoundary.Insert(InsertPosition, NewNode);
+                  Inc(InsertPosition);
+                  BoundaryQuadTree.AddPoint(NewNode.FNode.X, NewNode.FNode.Y,
+                    NewNode);
+                end;
+
+                NewNode := TNodeInBoundary.Create(ReversedSegment.Node2,
+                  FirstBoundary, ReversedSegment);
+                FirstBoundary.Insert(InsertPosition, NewNode);
+                BoundaryQuadTree.AddPoint(NewNode.FNode.X, NewNode.FNode.Y, NewNode);
+              end;
+
+              if (NewNode <> nil) and (NewSegment <> nil) then
+              begin
+                if NewNode.IndexOfSegment(NewSegment) < 0 then
+                begin
+                  Assert((NewSegment.FNode1 = NewNode.FNode)
+                    or (NewSegment.FNode2 = NewNode.FNode));
+                  NewNode.AddSegment(NewSegment);
+                end;
+              end;
+
+
+
+              SegInsertPosition := SegPosition + 1;
+              if SegInsertPosition = FirstBoundary.FSegments.Count then
+              begin
+                SegInsertPosition := 0;
+              end;
+              if NewSegment <> nil then
+              begin
+                Assert(NewSegment.FBoundary = FirstBoundary);
+                FirstBoundary.FSegments.Insert(SegInsertPosition, NewSegment);
+                Inc(SegInsertPosition);
+              end;
+
+              if ABoundary.Count > 1 then
+              begin
+                for SegmentIndex := SubDomainSegPosition to ABoundary.FSegments.
+                  Count - 1 do
+                begin
+                  MovedSegment := ABoundary.FSegments[SegmentIndex];
+                  MovedSegment.FBoundary := FirstBoundary;
+                  FirstBoundary.FSegments.Insert(SegInsertPosition,
+                    MovedSegment);
+                  Inc(SegInsertPosition);
+                end;
+                for SegmentIndex := 0 to SubDomainSegPosition - 1 do
+                begin
+                  MovedSegment := ABoundary.FSegments[SegmentIndex];
+                  MovedSegment.FBoundary := FirstBoundary;
+                  FirstBoundary.FSegments.Insert(SegInsertPosition,
+                    MovedSegment);
+                  Inc(SegInsertPosition);
+                end;
+              end;
+              if ReversedSegment <> nil then
+              begin
+                Assert(ReversedSegment.FBoundary = FirstBoundary);
+                FirstBoundary.FSegments.Insert(SegInsertPosition, ReversedSegment);
+              end;
+
+              FirstBoundary.FixSegments;
+
+              FirstBoundary.RenumberNodes;
+
+              if ABoundary.FNodes.Count > 1 then
+              begin
+                ABoundary.FSegments.OwnsObjects := False;
+              end;
+              ABoundary.RemoveSelfFromAllNodes;
+
+              AList.Delete(BoundaryIndex);
+              FBoundaries.Remove(ABoundary);
+              BoundariesChanged := True;
             end;
-            for SegmentIndex := 0 to SubDomainSegPosition - 1 do
-            begin
-              FirstBoundary.FSegments.Insert(SegInsertPosition,
-                ABoundary.FSegments[SegmentIndex]);
-              Inc(SegInsertPosition);
-            end;
+          finally
+            ClosestCost.Free;
           end;
-          FirstBoundary.FSegments.Insert(SegInsertPosition, ReversedSegment);
-
-          FirstBoundary.RenumberNodes;
-
-          ABoundary.FSegments.OwnsObjects := False;
-          ABoundary.RemoveSelfFromAllNodes;
-
-          FBoundaries.Delete(BoundaryIndex);
-          BoundariesChanged := True;
         end;
       end;
-    end;
-    Assert(FBoundaries.Count = 1);
+      Assert(AList.Count = 0);
 
+    end;
   finally
+    InterSectionNodes.Free;
     BoundaryQuadTree.Free;
   end;
 end;
 
-procedure TQuadMeshCreator.RenumberNodes;
+procedure TQuadMeshCreator.MergeClosedBoundaries;
+var
+  BoundaryIndex: Integer;
+  ABoundary: TBoundary;
+  ClosedBoundaries: TBoundaryList;
+  GpcPoly: TGpcPolygonClass;
+  VertexIndex: Integer;
+  MergedPolys: Boolean;
+  PolyIndex: Integer;
+  NodeTree: TRbwQuadTree;
+  NodeIndex: Integer;
+  ANode: TNode;
+  Epsilon: double;
+  ContourIndex: Integer;
+  UnionGpcPoly: TGpcPolygonClass;
+  NewBoundaries: TBoundaryObjectList;
+  NewBoundary: TBoundary;
+  APoint: TPoint2D;
+  NodeList: TNodeList;
+  ASegment: TSegment2D;
+  Temp: TGpcPolygonClass;
+  index: Integer;
+  HasEdgeNode: Boolean;
+begin
+  ClosedBoundaries := TBoundaryList.Create;
+  try
+    // skip the first boundary.
+    for BoundaryIndex := 1 to FBoundaries.Count - 1 do
+    begin
+      ABoundary:= FBoundaries[BoundaryIndex];
+      if (ABoundary.FNodes.Count > 1) and (ABoundary.FNodes[0]
+        = ABoundary.FNodes[ABoundary.FNodes.Count-1]) then
+      begin
+        HasEdgeNode := False;
+        for index := 0 to ABoundary.FNodes.Count - 1 do
+        begin
+          ANode := ABoundary.FNodes[index];
+          HasEdgeNode := FBNodes.IndexOf(ANode) >= 0;
+          if HasEdgeNode then
+          begin
+            break;
+          end;
+        end;
+        if not HasEdgeNode then
+        begin
+          ClosedBoundaries.Add(ABoundary);
+        end;
+      end;
+    end;
+    if ClosedBoundaries.Count > 1 then
+    begin
+      UnionGpcPoly := nil;
+      try
+        UnionGpcPoly := TGpcPolygonClass.Create;
+        UnionGpcPoly.NumberOfContours := 0;
+        for BoundaryIndex := 0 to ClosedBoundaries.Count - 1 do
+        begin
+          GpcPoly := TGpcPolygonClass.Create;
+          GpcPoly.NumberOfContours := 1;
+          ABoundary:= ClosedBoundaries[BoundaryIndex];
+          GpcPoly.VertexCount[0] := ABoundary.FNodes.Count -1;
+          for VertexIndex := 0 to ABoundary.FNodes.Count - 2 do
+          begin
+            GpcPoly.Vertices[0,VertexIndex] :=
+              ABoundary.FNodes[VertexIndex].Location;
+          end;
+          Temp := UnionGpcPoly;
+
+          try
+            UnionGpcPoly := TGpcPolygonClass.CreateFromOperation(GPC_UNION,
+              GpcPoly, UnionGpcPoly);
+          finally
+            Temp.Free;
+            GpcPoly.Free;
+          end;
+        end;
+
+
+        MergedPolys := UnionGpcPoly.NumberOfContours <> ClosedBoundaries.Count;
+        if not MergedPolys then
+        begin
+          for PolyIndex := 0 to UnionGpcPoly.NumberOfContours - 1 do
+          begin
+            if UnionGpcPoly.Holes[PolyIndex] then
+            begin
+              MergedPolys := True;
+              Break;
+            end;
+          end;
+        end;
+        if MergedPolys then
+        begin
+          NodeTree := TRbwQuadTree.Create(nil);
+          NewBoundaries := TBoundaryObjectList.Create;
+          NodeList:= TNodeList.Create;
+          try
+            NodeTree.XMax := FMaxX;
+            NodeTree.XMin := FMinX;
+            NodeTree.YMax := FMaxY;
+            NodeTree.YMin := FMinY;
+
+            for BoundaryIndex := 0 to ClosedBoundaries.Count - 1 do
+            begin
+              ABoundary := ClosedBoundaries[BoundaryIndex];
+              for NodeIndex := 0 to ABoundary.FNodes.Count - 1 do
+              begin
+                ANode := ABoundary.FNodes[NodeIndex];
+                NodeTree.AddPoint(ANode.X, ANode.Y, ANode);
+                if NodeList.IndexOf(ANode) < 0 then
+                begin
+                  NodeList.Add(ANode);
+                end;
+              end;
+            end;
+
+            for ContourIndex := 0 to UnionGpcPoly.NumberOfContours - 1 do
+            begin
+              if UnionGpcPoly.Holes[ContourIndex] then
+              begin
+                Continue;
+              end;
+              NewBoundary := TBoundary.Create(Self, nil, 100);
+              NewBoundary.FDesiredSpacing := 0;
+              NewBoundaries.Add(NewBoundary);
+              NewBoundary.FNodes.Capacity :=
+                UnionGpcPoly.VertexCount[ContourIndex]+1;
+              for VertexIndex := 0 to UnionGpcPoly.VertexCount[ContourIndex] - 1 do
+              begin
+                APoint := UnionGpcPoly.Vertices[ContourIndex, VertexIndex];
+                ANode := NodeTree.NearestPointsFirstData(APoint.x, APoint.y);
+                NodeList.Remove(ANode);
+                Assert(NearlyTheSame(ANode.Location, APoint));
+                NewBoundary.FNodes.Add(ANode);
+              end;
+              NewBoundary.FNodes.Add(NewBoundary.FNodes[0]);
+              if NewBoundary.NodeOrientation <> Clockwise then
+              begin
+                NewBoundary.FNodes.Reverse;
+              end;
+            end;
+
+            if NodeList.Count > 0 then
+            begin
+              Epsilon := FCharacteristicLength/1e7;
+              for NodeIndex := NodeList.Count - 1 downto 0 do
+              begin
+                ANode := NodeList[NodeIndex];
+                for ContourIndex := 0 to NewBoundaries.Count - 1 do
+                begin
+                  NewBoundary := NewBoundaries[ContourIndex];
+                  for VertexIndex := NewBoundary.FNodes.Count - 2 downto 0 do
+                  begin
+                    ASegment[1] := NewBoundary.FNodes[VertexIndex].Location;
+                    ASegment[2] := NewBoundary.FNodes[VertexIndex+1].Location;
+                    if Distance(ANode.Location, ASegment) < Epsilon then
+                    begin
+                      NewBoundary.FNodes.Insert(VertexIndex+1,ANode);
+                      NodeList.Remove(ANode);
+                    end;
+                  end;
+                end;
+              end;
+            end;
+
+            for NodeIndex := NodeList.Count - 1 downto 0 do
+            begin
+              ANode := NodeList[NodeIndex];
+              FNodes.Remove(ANode);
+            end;
+
+            for ContourIndex := 0 to NewBoundaries.Count - 1 do
+            begin
+              NewBoundary := NewBoundaries[ContourIndex];
+              for VertexIndex := 0 to NewBoundary.FNodes.Count - 2 do
+              begin
+                ANode := NewBoundary.FNodes[VertexIndex];
+                if ANode.DesiredSpacing > NewBoundary.DesiredSpacing then
+                begin
+                  NewBoundary.FDesiredSpacing := ANode.DesiredSpacing;
+                end;
+              end;
+            end;
+
+            // need to delete open boundaries inside closed boundaries here.
+
+            for ContourIndex := 0 to ClosedBoundaries.Count - 1 do
+            begin
+              FBoundaries.Remove(ClosedBoundaries[ContourIndex]);
+            end;
+            for ContourIndex := 0 to NewBoundaries.Count - 1 do
+            begin
+              FBoundaries.Add(NewBoundaries[ContourIndex]);
+            end;
+            NewBoundaries.OwnsObjects := False;
+
+          finally
+            NewBoundaries.Free;
+            NodeTree.Free;
+            NodeList.Free;
+          end;
+        end;
+      finally
+        UnionGpcPoly.Free;
+      end;
+    end;
+  finally
+    ClosedBoundaries.Free;
+  end;
+
+end;
+
+//procedure TQuadMeshCreator.MergeOpenNodeBoundaries;
+//var
+//  IntersectionNodes: TNodeList;
+//  LinkedOpenBoundaries: TBoundaryListSqr;
+//  LinkedClosedBoundaries: TBoundaryListSqr;
+//  ClosedBoundaries: TBoundaryList;
+//  NodeIndex: Integer;
+//  ANode: TNode;
+//  OpenBoundaryList: TBoundaryList;
+//  BoundaryIndex: Integer;
+//  ABoundary: TBoundary;
+//  OtherNode: TNode;
+//  CompareItem: TAngleCompareItem;
+//  AngleList: TAngleList;
+//  BoundaryNodeIndex: Integer;
+//  index: Integer;
+//  FirstItem: TAngleCompareItem;
+//  FirstBoundary: TBoundary;
+//  InsertPosition: Integer;
+//  InsertNode: TNode;
+//  InsertBoundary: TBoundary;
+//  Changed: Boolean;
+//  Comparer: TAngleComparer;
+//begin
+//  IntersectionNodes := TNodeList.Create;
+//  LinkedOpenBoundaries:= TBoundaryListSqr.Create;
+//  LinkedClosedBoundaries:= TBoundaryListSqr.Create;
+//  ClosedBoundaries:= TBoundaryList.Create;
+//  try
+//    for NodeIndex := 0 to FNodes.Count - 1 do
+//    begin
+//      ANode := FNodes[NodeIndex];
+//      if ANode.FIntersection then
+//      begin
+//        IntersectionNodes.Add(ANode);
+//      end;
+//    end;
+//    repeat
+//      Changed := False;
+//      for NodeIndex := 0 to IntersectionNodes.Count - 1 do
+//      begin
+//        InitializeIntersectLists(IntersectionNodes, LinkedClosedBoundaries,
+//          LinkedOpenBoundaries, ClosedBoundaries);
+//
+//        ANode := IntersectionNodes[NodeIndex];
+//        OpenBoundaryList := LinkedOpenBoundaries[NodeIndex];
+//        if (OpenBoundaryList.Count > 1) then
+//        begin
+//          begin
+//            Changed := True;
+//            AngleList := TAngleList.Create;
+//            try
+//              for BoundaryIndex := 0 to OpenBoundaryList.Count - 1 do
+//              begin
+//                ABoundary := OpenBoundaryList[BoundaryIndex];
+//                Assert(ABoundary.FNodes.Count > 1);
+//                CompareItem := TAngleCompareItem.Create;
+//                AngleList.Add(CompareItem);
+//                CompareItem.Boundary := ABoundary;
+//                CompareItem.NodePosition := ABoundary.FNodes.IndexOf(ANode);
+//                if CompareItem.NodePosition = 0 then
+//                begin
+//                  OtherNode := ABoundary.FNodes[1];
+//                  CompareItem.Direction := dForward;
+//                end
+//                else
+//                begin
+//                  Assert(CompareItem.NodePosition = ABoundary.FNodes.Count-1);
+//                  OtherNode := ABoundary.FNodes[CompareItem.NodePosition-1];
+//                  CompareItem.Direction := dBackward;
+//                end;
+//                CompareItem.Angle := ArcTan2(OtherNode.Y-ANode.Y, OtherNode.X-ANode.X);
+//              end;
+//
+//              // sort in order of descending angles.
+//              Comparer := TAngleComparer.Create;
+//              try
+//                AngleList.Sort(Comparer) ;
+//              finally
+//                Comparer.Free;
+//              end;
+//
+////              AngleList.Sort(TAngleComparer.Construct(
+////                function (const L, R: TAngleCompareItem): integer
+////                begin
+////                  result := 0;
+////                  if R = L then
+////                  begin
+////                    Exit;
+////                  end;
+////                  result := Sign(R.Angle - L.Angle);
+////                  if result = 0 then
+////                  begin
+////                    Result := Ord(R.Direction) - Ord(L.Direction);
+////                  end;
+////                end
+////                )) ;
+//
+//              FirstItem := AngleList[0];
+//              InsertBoundary := FirstItem.Boundary;
+//              if FirstItem.NodePosition <> 0 then
+//              begin
+//                InsertBoundary.FNodes.Reverse;
+//                FirstItem.NodePosition := 0;
+//              end;
+//              InsertPosition := FirstItem.Boundary.FNodes.Count;
+//              for BoundaryNodeIndex :=
+//                FirstItem.Boundary.FNodes.Count - 2 downto 0 do
+//              begin
+//                InsertNode := FirstItem.Boundary.FNodes[BoundaryNodeIndex];
+//                InsertBoundary.FNodes.Insert(InsertPosition, InsertNode);
+//                Inc(InsertPosition);
+//              end;
+//              for index := 1 to AngleList.Count - 1 do
+//              begin
+//                CompareItem := AngleList[index];
+//                if CompareItem.NodePosition = 0 then
+//                begin
+//                  for BoundaryNodeIndex := 1
+//                    to CompareItem.Boundary.FNodes.Count - 1 do
+//                  begin
+//                    InsertNode := CompareItem.Boundary.FNodes[BoundaryNodeIndex];
+//                    InsertBoundary.FNodes.Insert(InsertPosition, InsertNode);
+//                    Inc(InsertPosition);
+//                  end;
+//                  for BoundaryNodeIndex :=
+//                    CompareItem.Boundary.FNodes.Count - 2 downto 0 do
+//                  begin
+//                    InsertNode := CompareItem.Boundary.FNodes[BoundaryNodeIndex];
+//                    InsertBoundary.FNodes.Insert(InsertPosition, InsertNode);
+//                    Inc(InsertPosition);
+//                  end;
+//                end
+//                else
+//                begin
+//                  for BoundaryNodeIndex :=
+//                    CompareItem.Boundary.FNodes.Count - 2 downto 0 do
+//                  begin
+//                    InsertNode := CompareItem.Boundary.FNodes[BoundaryNodeIndex];
+//                    InsertBoundary.FNodes.Insert(InsertPosition, InsertNode);
+//                    Inc(InsertPosition);
+//                  end;
+//                  for BoundaryNodeIndex := 1
+//                    to CompareItem.Boundary.FNodes.Count - 1 do
+//                  begin
+//                    InsertNode := CompareItem.Boundary.FNodes[BoundaryNodeIndex];
+//                    InsertBoundary.FNodes.Insert(InsertPosition, InsertNode);
+//                    Inc(InsertPosition);
+//                  end;
+//                end;
+//              end;
+//              FirstItem := AngleList[0];
+//              FirstBoundary := FirstItem.Boundary;
+//              for index := 1 to AngleList.Count - 1 do
+//              begin
+//                CompareItem := AngleList[index];
+//                if (CompareItem.Boundary <> FirstBoundary) then
+//                begin
+//                  FBoundaries.Remove(CompareItem.Boundary);
+//                end;
+//              end;
+//            finally
+//               AngleList.Free;
+//            end;
+//          end;
+//        end;
+//      end;
+//    until not Changed;
+//  finally
+//    ClosedBoundaries.Free;
+//    LinkedOpenBoundaries.Free;
+//    LinkedClosedBoundaries.Free;
+//    IntersectionNodes.Free;
+//  end;
+//end;
+
+//procedure TQuadMeshCreator.MergeOpenNodeBoundaries2;
+//var
+//  OpenBoundaryList: TBoundaryList;
+//  BoundaryIndex: Integer;
+//  ABoundary: TBoundary;
+//  BoundaryLinkList: TBoundaryList;
+//  AngleList: TAngleList;
+//  BlindEndsBoundaryList: TBoundaryList;
+//  StartNode: TNode;
+//  EndNode: TNode;
+//  AngleItem: TAngleCompareItem;
+//  OtherNode: TNode;
+//  StartBoundary: TBoundary;
+//  index: Integer;
+//  StartNodes: TNodeList;
+//  EndNodePos: integer;
+//  BIndex: Integer;
+//  PriorBoundary: TBoundary;
+//  FirstBoundary: TBoundary;
+//  NodeIndex: Integer;
+//  Changed: boolean;
+//  LinkFound: boolean;
+//  NewBoundary: TBoundary;
+//  Comparer: TAngleComparer;
+//begin
+//  OpenBoundaryList := TBoundaryList.Create;
+//  BlindEndsBoundaryList := TBoundaryList.Create;
+//  try
+//    for BoundaryIndex := 0 to FBoundaries.Count - 1 do
+//    begin
+//      ABoundary := FBoundaries[BoundaryIndex];
+//      if (ABoundary.FNodes.Count > 1) and (ABoundary.FNodes[0]
+//        <> ABoundary.FNodes[ABoundary.FNodes.Count-1]) then
+//      begin
+//        if ABoundary.FNodes[0].FIntersection
+//          and ABoundary.FNodes[ABoundary.FNodes.Count-1].FIntersection  then
+//        begin
+//          OpenBoundaryList.Add(ABoundary);
+//        end
+//        else if ABoundary.FNodes[0].FIntersection
+//          or ABoundary.FNodes[ABoundary.FNodes.Count-1].FIntersection  then
+//        begin
+//          BlindEndsBoundaryList.Add(ABoundary);
+//        end;
+//      end;
+//    end;
+//    if OpenBoundaryList.Count > 0 then
+//    begin
+//      BoundaryLinkList := TBoundaryList.Create;
+//      AngleList := TAngleList.Create;
+//      StartNodes := TNodeList.Create;
+//      try
+//        Changed:= False;
+//        repeat
+//          if OpenBoundaryList.Count = 0 then
+//          begin
+//            Break;
+//          end;
+//          Changed:= False;
+//          StartNodes.Clear;
+//          ABoundary := OpenBoundaryList[0];
+//          OpenBoundaryList.Delete(0);
+//          BoundaryLinkList.Add(ABoundary);
+//          StartNode := ABoundary.FNodes[0];
+//          StartNodes.Add(StartNode);
+//          EndNode := ABoundary.FNodes[ABoundary.FNodes.Count-1];
+//          OtherNode := ABoundary.FNodes[ABoundary.FNodes.Count-2];
+//          AngleList.Clear;
+////          AngleItem := TAngleCompareItem.Create;
+////          AngleItem.Direction := dForward;
+////          AngleItem.Boundary := ABoundary;
+////          AngleItem.NodePosition := ABoundary.FNodes.Count-1;
+////          AngleItem.Angle := ArcTan2(OtherNode.Y-EndNode.Y, OtherNode.X-EndNode.X);
+////          AngleList.Add(AngleItem);
+//          repeat
+//            LinkFound := False;
+//            AngleList.Clear;
+//            StartBoundary := BoundaryLinkList[BoundaryLinkList.Count-1];
+//
+//            AngleItem := TAngleCompareItem.Create;
+//            if StartNode = StartBoundary.FNodes[0] then
+//            begin
+//              AngleItem.Direction := dForward;
+//              AngleItem.NodePosition := 0;
+//            end
+//            else
+//            begin
+//              Assert(StartBoundary.FNodes[StartBoundary.FNodes.Count-1] = StartNode);
+//              AngleItem.Direction := dBackward;
+//              AngleItem.NodePosition := StartBoundary.FNodes.Count-1;
+//            end;
+//            AngleItem.Boundary := StartBoundary;
+//            AngleItem.Angle := ArcTan2(OtherNode.Y-EndNode.Y, OtherNode.X-EndNode.X);
+//            AngleList.Add(AngleItem);
+//
+//            for BoundaryIndex := 0 to OpenBoundaryList.Count - 1 do
+//            begin
+//              ABoundary := OpenBoundaryList[BoundaryIndex];
+//              if BoundaryLinkList.IndexOf(ABoundary) >= 0 then
+//              begin
+//                Continue;
+//              end;
+//              AngleItem := nil;
+//              if ABoundary.FNodes[0] = EndNode then
+//              begin
+//                AngleItem := TAngleCompareItem.Create;
+//                AngleItem.Direction := dBackward;
+//                AngleItem.NodePosition := 0;
+//                OtherNode := ABoundary.FNodes[1];
+//              end
+//              else if ABoundary.FNodes[ABoundary.FNodes.Count-1] = EndNode then
+//              begin
+//                AngleItem := TAngleCompareItem.Create;
+//                AngleItem.Direction := dForward;
+//                AngleItem.NodePosition := ABoundary.FNodes.Count-1;
+//                OtherNode := ABoundary.FNodes[ABoundary.FNodes.Count-2];
+//              end;
+//              if AngleItem <> nil then
+//              begin
+//                AngleList.Add(AngleItem);
+//                AngleItem.Boundary := ABoundary;
+//                AngleItem.Angle := ArcTan2(OtherNode.Y-EndNode.Y, OtherNode.X-EndNode.X);
+//              end;
+//            end;
+//
+//            if AngleList.Count > 1 then
+//            begin
+//              LinkFound := True;
+//              Comparer := TAngleComparer.Create;
+//              try
+//                AngleList.Sort(Comparer) ;
+//              finally
+//                Comparer.Free;
+//              end;
+//
+////              AngleList.Sort(TAngleComparer.Construct(
+////                function (const L, R: TAngleCompareItem): integer
+////                begin
+////                  result := 0;
+////                  if R = L then
+////                  begin
+////                    Exit;
+////                  end;
+////                  result := Sign(R.Angle - L.Angle);
+////                  if result = 0 then
+////                  begin
+////                    Result := Ord(R.Direction) - Ord(L.Direction);
+////                  end;
+////                end
+////                )) ;
+//              for index := 0 to AngleList.Count - 1 do
+//              begin
+//                AngleItem := AngleList[0];
+//                if AngleItem.Boundary = StartBoundary then
+//                begin
+//                  break;
+//                end
+//                else
+//                begin
+//                  AngleList.Extract(AngleItem);
+//                  AngleList.Add(AngleItem);
+//                end;
+//              end;
+//              AngleItem := AngleList[1];
+//              ABoundary := AngleItem.Boundary;
+//              BoundaryLinkList.Add(ABoundary);
+//              if AngleItem.Direction = dForward then
+//              begin
+//                StartNode := ABoundary.FNodes[ABoundary.FNodes.Count-1];
+//                EndNode := ABoundary.FNodes[0];
+//                OtherNode := ABoundary.FNodes[1];
+//              end
+//              else
+//              begin
+//                Assert(AngleItem.Direction = dBackward);
+//                EndNode := ABoundary.FNodes[ABoundary.FNodes.Count-1];
+//                StartNode := ABoundary.FNodes[0];
+//                OtherNode := ABoundary.FNodes[ABoundary.FNodes.Count-2];
+//              end;
+//              StartNodes.Add(StartNode);
+//              EndNodePos := StartNodes.IndexOf(EndNode);
+//              if EndNodePos >= 0 then
+//              begin
+//                for BIndex := EndNodePos to BoundaryLinkList.Count - 1 do
+//                begin
+//                  StartNode := StartNodes[BIndex];
+//                  ABoundary := BoundaryLinkList[BIndex];
+//                  if ABoundary.FNodes[0] <> StartNode then
+//                  begin
+//                    ABoundary.FNodes.Reverse;
+//                  end;
+//                end;
+//                PriorBoundary := BoundaryLinkList[BoundaryLinkList.Count - 1];
+//                for BIndex := EndNodePos to BoundaryLinkList.Count - 1 do
+//                begin
+//                  ABoundary := BoundaryLinkList[BIndex];
+//                  Assert(PriorBoundary.FNodes[PriorBoundary.FNodes.Count-1]
+//                    = ABoundary.FNodes[0]);
+//                  PriorBoundary := ABoundary;
+//                end;
+//                FirstBoundary := BoundaryLinkList[EndNodePos];
+//                for BIndex := EndNodePos+1 to BoundaryLinkList.Count - 1 do
+//                begin
+//                  ABoundary := BoundaryLinkList[BIndex];
+//                  for NodeIndex := 1 to ABoundary.FNodes.Count - 1 do
+//                  begin
+//                    FirstBoundary.FNodes.Add(ABoundary.FNodes[NodeIndex]);
+//                  end;
+//                end;
+//                for BIndex := BoundaryLinkList.Count - 1 downto EndNodePos+1 do
+//                begin
+//                  ABoundary := BoundaryLinkList[BIndex];
+//                  BoundaryLinkList.Delete(BIndex);
+//                  OpenBoundaryList.Remove(ABoundary);
+//                  FBoundaries.Remove(ABoundary);
+//                end;
+//                if BoundaryLinkList.Count > 1 then
+//                begin
+//                  OpenBoundaryList.Add(BoundaryLinkList[0]);
+//                end;
+//                BoundaryLinkList.Clear;
+//
+//                NewBoundary := TBoundary.Create(self, FirstBoundary.FParent,
+//                  FirstBoundary.FDesiredSpacing);
+//                FDuplicateBoundaries.Add(NewBoundary);
+//                NewBoundary.FNodes.Capacity := FirstBoundary.FNodes.Count;
+//                for NodeIndex := FirstBoundary.FNodes.Count - 1 downto 0 do
+//                begin
+//                  NewBoundary.FNodes.Add(FirstBoundary.FNodes[NodeIndex]);
+//                end;
+//
+//                Changed := True;
+//                break;
+//              end;
+//            end;
+//          until not LinkFound;
+//        until (not Changed) and (OpenBoundaryList.Count = 0);
+//      finally
+//        StartNodes.Free;
+//        AngleList.Free;
+//        BoundaryLinkList.Free;
+//      end;
+//    end;
+//  finally
+//    OpenBoundaryList.Free;
+//    BlindEndsBoundaryList.Free;
+//  end;
+//end;
+
+procedure TQuadMeshCreator.GetConnectionsBetweenBoundaries(
+  OpenBoundaryList, BlindEndsBoundaryList: TBoundaryList; NodeList: TNodeList;
+  ConnectionsList: TNodeConnectionsObjectList);
+var
+  ABoundary: TBoundary;
+  ANode: TNode;
+  Changed: Boolean;
+  ConnectionIndex: integer;
+  NodeLinks: TNodeConnection;
+  ALink: TAngleCompareItem;
+  OppositeNode: TNode;
+  OtherLinks: TNodeConnection;
+  NodeIndex: integer;
+  BoundaryIndex: Integer;
+  procedure AddConnection;
+  var
+    NodePosition: Integer;
+    NodeLinks: TNodeConnection;
+  begin
+    NodePosition := NodeList.IndexOf(ANode);
+    if NodePosition < 0 then
+    begin
+      NodePosition := NodeList.Add(ANode);
+      Assert(NodePosition = ConnectionsList.
+        Add(TNodeConnection.Create(ANode)));
+    end;
+    NodeLinks := ConnectionsList[NodePosition];
+    NodeLinks.AddLink(ABoundary);
+  end;
+begin
+  NodeList.Clear;
+  ConnectionsList.Clear;
+  for BoundaryIndex := 0 to OpenBoundaryList.Count - 1 do
+  begin
+    ABoundary := OpenBoundaryList[BoundaryIndex];
+    ANode := ABoundary.FNodes.First;
+    AddConnection;
+    ANode := ABoundary.FNodes.Last;
+    AddConnection;
+  end;
+  repeat
+    Changed := False;
+    for ConnectionIndex := ConnectionsList.Count - 1 downto 0 do
+    begin
+      NodeLinks := ConnectionsList[ConnectionIndex];
+      if NodeLinks.FConnections.Count = 1 then
+      begin
+        ALink := NodeLinks.FConnections[0];
+        if ALink.Direction = dForward then
+        begin
+          OppositeNode := ALink.Boundary.FNodes.Last;
+        end
+        else
+        begin
+          Assert(ALink.Direction = dBackward);
+          OppositeNode := ALink.Boundary.FNodes.First;
+        end;
+        NodeIndex := NodeList.IndexOf(OppositeNode);
+        OtherLinks := ConnectionsList[NodeIndex];
+        OtherLinks.RemoveLink(ALink.Boundary);
+        if BlindEndsBoundaryList.IndexOf(ALink.Boundary) < 0 then
+        begin
+          BlindEndsBoundaryList.Add(ALink.Boundary);
+        end;
+      end;
+      if NodeLinks.FConnections.Count <= 1 then
+      begin
+        ConnectionsList.Delete(ConnectionIndex);
+        NodeList.Delete(ConnectionIndex);
+        Changed := True;
+      end;
+    end;
+  until (not Changed);
+  for ConnectionIndex := 0 to ConnectionsList.Count - 1 do
+  begin
+    ConnectionsList[ConnectionIndex].Sort;
+  end;
+end;
+
+procedure TQuadMeshCreator.MergeOpenNodeBoundaries3;
+var
+  OpenBoundaryList: TBoundaryList;
+  BlindEndsBoundaryList: TBoundaryList;
+  ConnectionsList: TNodeConnectionsObjectList;
+  NodeList: TNodeList;
+  Changed: Boolean;
+  NodeIndex: integer;
+  TracedNodes: TNodeList;
+  TracedBoundaries: TBoundaryList;
+  ANode: TNode;
+  NodeConnections: TNodeConnection;
+  BoundaryIndex: integer;
+  ConnectItem: TAngleCompareItem;
+  StartPosition: integer;
+  BIndex: integer;
+  StartNode: TNode;
+  ABoundary: TBoundary;
+  PriorBoundary: TBoundary;
+  FirstBoundary: TBoundary;
+  InnerNodeIndex: integer;
+  NewBoundary: TBoundary;
+  IntersectionNodes: TNodeList;
+  BlindBoundaryIndex: integer;
+  AngleList: TAngleList;
+  OtherNode: TNode;
+  CompareItem: TAngleCompareItem;
+  Comparer: TAngleComparer;
+  CompareIndex: integer;
+  index: integer;
+  InsertBoundary: TBoundary;
+  InsertPosition: integer;
+  SameBoundary: boolean;
+  InsertIndex: integer;
+  NodePosition: integer;
+  function TraceBoundary(TracedNodeList: TNodeList;
+    BoundaryList: TBoundaryList): boolean;
+  var
+    LastNode: TNode;
+    NodePosition: Integer;
+    NodeConnections: TNodeConnection;
+    LastBoundary: TBoundary;
+    BoundaryPosition: Integer;
+    BoundaryIndex: integer;
+    function EvaluateConnection: Boolean;
+    var
+      AConnection: TAngleCompareItem;
+      NextNode: TNode;
+    begin
+//      result := False;
+      AConnection := NodeConnections.FConnections[BoundaryIndex];
+      if AConnection.Boundary.FNodes.First = LastNode then
+      begin
+        NextNode := AConnection.Boundary.FNodes.Last;
+      end
+      else
+      begin
+        NextNode := AConnection.Boundary.FNodes.First;
+        Assert(LastNode = AConnection.Boundary.FNodes.Last);
+      end;
+      if TracedNodeList.IndexOf(NextNode) >= 0 then
+      begin
+        result := True;
+        TracedNodeList.Add(LastNode);
+        TracedNodeList.Add(NextNode);
+        BoundaryList.Add(AConnection.Boundary);
+        Exit;
+      end;
+      TracedNodeList.Add(LastNode);
+      BoundaryList.Add(AConnection.Boundary);
+      Result := TraceBoundary(TracedNodeList, BoundaryList);
+      if result then
+      begin
+        Exit;
+      end;
+      TracedNodeList.Delete(TracedNodeList.Count-1);
+      BoundaryList.Delete(BoundaryList.Count-1);
+    end;
+  begin
+    result := False;
+    Assert(TracedNodeList.Count > 0);
+    Assert(TracedNodeList.Count = BoundaryList.Count);
+    LastNode := TracedNodeList.Last;
+    LastBoundary := BoundaryList.Last;
+    if LastBoundary.FNodes.Last = LastNode then
+    begin
+      LastBoundary.FNodes.Reverse;
+    end;
+    Assert(LastBoundary.FNodes.First = LastNode);
+    LastNode := LastBoundary.FNodes.Last;
+    NodePosition := NodeList.IndexOf(LastNode);
+    Assert(NodePosition >= 0);
+    NodeConnections := ConnectionsList[NodePosition];
+
+    BoundaryPosition := -1;
+    for BoundaryIndex := 0 to NodeConnections.FConnections.Count - 1 do
+    begin
+      if NodeConnections.FConnections[BoundaryIndex].Boundary = LastBoundary then
+      begin
+        BoundaryPosition := BoundaryIndex;
+        break;
+      end;
+    end;
+    Assert(BoundaryPosition >= 0);
+    for BoundaryIndex := BoundaryPosition+1 to
+      NodeConnections.FConnections.Count - 1 do
+    begin
+      Result := EvaluateConnection;
+      if result then
+      begin
+        Exit;
+      end;
+    end;
+    for BoundaryIndex := 0 to BoundaryPosition - 1 do
+    begin
+      Result := EvaluateConnection;
+      if result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+  procedure InsertMoreBlindBoundaries(NodePosition: Integer);
+  var
+    ANode: TNode;
+    AngleList: TAngleList;
+    ABoundary: TBoundary;
+    SameBoundary: Boolean;
+    CompareIndex: integer;
+    Comparer: TAngleComparer;
+    index: integer;
+    BlindBoundaryIndex: integer;
+    InsertIndex: Integer;
+  begin
+    ANode := InsertBoundary.FNodes[NodePosition];
+    if not ANode.FIntersection then
+    begin
+      exit;
+    end;
+    AngleList := nil;
+    try
+      AngleList := TAngleList.Create;
+
+      for BlindBoundaryIndex := BlindEndsBoundaryList.Count - 1 downto 0 do
+      begin
+        if BlindBoundaryIndex >= BlindEndsBoundaryList.Count then
+        begin
+          Continue;
+        end;
+        ABoundary := BlindEndsBoundaryList[BlindBoundaryIndex];
+        CompareItem := nil;
+        if ABoundary.FNodes.Last = ANode then
+        begin
+          ABoundary.FNodes.Reverse;
+        end;
+        if ABoundary.FNodes.First = ANode then
+        begin
+          SameBoundary := False;
+          for CompareIndex := 0 to AngleList.Count - 1 do
+          begin
+            if AngleList[CompareIndex].Boundary = ABoundary then
+            begin
+              SameBoundary := True;
+              break;
+            end;
+          end;
+          if SameBoundary then
+          begin
+            Continue;
+          end;
+
+          BlindEndsBoundaryList.Delete(BlindBoundaryIndex);
+
+          CompareItem := TAngleCompareItem.Create;
+          CompareItem.Direction := dForward;
+          CompareItem.Boundary := ABoundary;
+          CompareItem.NodePosition := 0;
+          OtherNode := ABoundary.FNodes[1];
+          CompareItem.Angle := ArcTan2(OtherNode.Y-ANode.Y, OtherNode.X-ANode.X);
+          AngleList.Add(CompareItem);
+        end
+      end;
+
+      if AngleList.Count > 0 then
+      begin
+        CompareItem := TAngleCompareItem.Create;
+        CompareItem.Direction := dBackward;
+        CompareItem.Boundary := InsertBoundary;
+        CompareItem.NodePosition := NodePosition;
+        if NodePosition = 0 then
+        begin
+          OtherNode := InsertBoundary.FNodes[InsertBoundary.FNodes.Count-2];
+        end
+        else
+        begin
+          OtherNode := InsertBoundary.FNodes[NodePosition-1];
+        end;
+
+        CompareItem.Angle := ArcTan2(OtherNode.Y-ANode.Y, OtherNode.X-ANode.X);
+        AngleList.Add(CompareItem);
+
+        Comparer := TAngleComparer.Create;
+        try
+          AngleList.Sort(Comparer);
+        finally
+          Comparer.Free;
+        end;
+
+//        AngleList.Reverse;
+        for index := 0 to AngleList.Count - 1 do
+        begin
+          CompareItem := AngleList[0];
+          if (CompareItem.Boundary = InsertBoundary) then
+          begin
+            break;
+          end;
+          AngleList.Extract(CompareItem);
+          AngleList.Add(CompareItem)
+        end;
+
+        for index := 1 to AngleList.Count - 1 do
+        begin
+          CompareItem := AngleList[index];
+
+          ABoundary := CompareItem.Boundary;
+
+//          Inc(InsertPosition);
+          for InsertIndex := 1 to ABoundary.FNodes.Count - 1 do
+          begin
+            InsertBoundary.FNodes.Insert(InsertPosition, ABoundary.FNodes[InsertIndex]);
+            Inc(InsertPosition);
+          end;
+          InsertMoreBlindBoundaries(InsertPosition-1);
+          for InsertIndex := ABoundary.FNodes.Count - 2 downto 0 do
+          begin
+            InsertBoundary.FNodes.Insert(InsertPosition, ABoundary.FNodes[InsertIndex]);
+            Inc(InsertPosition);
+          end;
+
+          FBoundaries.Remove(ABoundary);
+        end
+      end;
+
+    finally
+      AngleList.Free;
+    end;
+  end;
+begin
+  OpenBoundaryList := TBoundaryList.Create;
+  BlindEndsBoundaryList := TBoundaryList.Create;
+  ConnectionsList := TNodeConnectionsObjectList.Create;
+  NodeList := TNodeList.Create;
+  TracedNodes := TNodeList.Create;
+  TracedBoundaries := TBoundaryList.Create;
+  try
+    repeat
+      Changed := False;
+      GetConnectedOpenBoundaries(OpenBoundaryList, BlindEndsBoundaryList);
+      if OpenBoundaryList.Count > 0 then
+      begin
+        GetConnectionsBetweenBoundaries(OpenBoundaryList, BlindEndsBoundaryList,
+          NodeList, ConnectionsList);
+
+        TracedNodes.Clear;
+        TracedBoundaries.Clear;
+        for NodeIndex := 0 to NodeList.Count - 1 do
+        begin
+          ANode := NodeList[NodeIndex];
+          NodeConnections := ConnectionsList[NodeIndex];
+          for BoundaryIndex := 0 to NodeConnections.FConnections.Count - 1 do
+          begin
+            ConnectItem := NodeConnections.FConnections[BoundaryIndex];
+            Assert(TracedNodes.Count = 0);
+            Assert(TracedBoundaries.Count = 0);
+            TracedNodes.Add(ANode);
+            TracedBoundaries.Add(ConnectItem.Boundary);
+            if TraceBoundary(TracedNodes, TracedBoundaries) then
+            begin
+              StartPosition := TracedNodes.IndexOf(TracedNodes.Last);
+              Assert(StartPosition < TracedNodes.Count -1);
+
+              for BIndex := StartPosition to TracedBoundaries.Count - 1 do
+              begin
+                StartNode := TracedNodes[BIndex];
+                ABoundary := TracedBoundaries[BIndex];
+                if ABoundary.FNodes.First <> StartNode then
+                begin
+                  ABoundary.FNodes.Reverse;
+                end;
+              end;
+              PriorBoundary := TracedBoundaries[TracedBoundaries.Count - 1];
+              for BIndex := StartPosition to TracedBoundaries.Count - 1 do
+              begin
+                ABoundary := TracedBoundaries[BIndex];
+                Assert(PriorBoundary.FNodes.Last = ABoundary.FNodes.First);
+                PriorBoundary := ABoundary;
+              end;
+              FirstBoundary := TracedBoundaries[StartPosition];
+              for BIndex := StartPosition+1 to TracedBoundaries.Count - 1 do
+              begin
+                ABoundary := TracedBoundaries[BIndex];
+                for InnerNodeIndex := 1 to ABoundary.FNodes.Count - 1 do
+                begin
+                  FirstBoundary.FNodes.Add(ABoundary.FNodes[InnerNodeIndex]);
+                end;
+              end;
+              for BIndex := TracedBoundaries.Count - 1 downto StartPosition+1 do
+              begin
+                ABoundary := TracedBoundaries[BIndex];
+                TracedBoundaries.Delete(BIndex);
+                OpenBoundaryList.Remove(ABoundary);
+                FBoundaries.Remove(ABoundary);
+              end;
+
+              if FirstBoundary.NodeOrientation = CounterClockwise then
+              begin
+                FirstBoundary.FNodes.Reverse;
+              end;
+
+              NewBoundary := TBoundary.Create(self, FirstBoundary.FParent,
+                FirstBoundary.FDesiredSpacing);
+              FDuplicateBoundaries.Add(NewBoundary);
+              NewBoundary.FNodes.Capacity := FirstBoundary.FNodes.Count;
+              for InnerNodeIndex := FirstBoundary.FNodes.Count - 1 downto 0 do
+              begin
+                NewBoundary.FNodes.Add(FirstBoundary.FNodes[InnerNodeIndex]);
+              end;
+
+              IntersectionNodes := TNodeList.Create;
+              AngleList := TAngleList.Create;
+              try
+                for InnerNodeIndex := 0 to FirstBoundary.FNodes.Count - 2 do
+                begin
+                  ANode := FirstBoundary.FNodes[InnerNodeIndex];
+                  if ANode.FIntersection then
+                  begin
+                    Assert(IntersectionNodes.IndexOf(ANode) < 0);
+                    IntersectionNodes.Add(ANode);
+                  end;
+                end;
+
+                for InnerNodeIndex := 0 to IntersectionNodes.Count - 1 do
+                begin
+                  ANode := IntersectionNodes[InnerNodeIndex];
+                  AngleList.Clear;
+                  for BlindBoundaryIndex := BlindEndsBoundaryList.Count - 1 downto 0 do
+                  begin
+                    if BlindBoundaryIndex >= BlindEndsBoundaryList.Count then
+                    begin
+                      Continue;
+                    end;
+                    ABoundary := BlindEndsBoundaryList[BlindBoundaryIndex];
+                    CompareItem := nil;
+                    if ABoundary.FNodes.Last = ANode then
+                    begin
+                      ABoundary.FNodes.Reverse;
+                    end;
+                    if ABoundary.FNodes.First = ANode then
+                    begin
+                      SameBoundary := False;
+                      for CompareIndex := 0 to AngleList.Count - 1 do
+                      begin
+                        if AngleList[CompareIndex].Boundary = ABoundary then
+                        begin
+                          SameBoundary := True;
+                          break;
+                        end;
+                      end;
+                      if SameBoundary then
+                      begin
+                        Continue;
+                      end;
+
+                      BlindEndsBoundaryList.Delete(BlindBoundaryIndex);
+
+                      CompareItem := TAngleCompareItem.Create;
+                      CompareItem.Direction := dForward;
+                      CompareItem.Boundary := ABoundary;
+                      CompareItem.NodePosition := 0;
+                      OtherNode := ABoundary.FNodes[1];
+                      CompareItem.Angle := ArcTan2(OtherNode.Y-ANode.Y, OtherNode.X-ANode.X);
+                      AngleList.Add(CompareItem);
+                    end
+                  end;
+
+                  if AngleList.Count > 0 then
+                  begin
+                    NodePosition := FirstBoundary.FNodes.IndexOf(ANode);
+
+                    CompareItem := TAngleCompareItem.Create;
+                    CompareItem.Direction := dBackward;
+                    CompareItem.Boundary := FirstBoundary;
+                    CompareItem.NodePosition := NodePosition;
+                    if NodePosition = 0 then
+                    begin
+                      OtherNode := FirstBoundary.FNodes[FirstBoundary.FNodes.Count-2];
+                    end
+                    else
+                    begin
+                      OtherNode := FirstBoundary.FNodes[NodePosition-1];
+                    end;
+                    CompareItem.Angle := ArcTan2(OtherNode.Y-ANode.Y, OtherNode.X-ANode.X);
+                    AngleList.Add(CompareItem);
+
+                    CompareItem := TAngleCompareItem.Create;
+                    CompareItem.Direction := dForward;
+                    CompareItem.Boundary := FirstBoundary;
+                    CompareItem.NodePosition := NodePosition;
+                    OtherNode := FirstBoundary.FNodes[NodePosition+1];
+                    CompareItem.Angle := ArcTan2(OtherNode.Y- ANode.Y, OtherNode.X- ANode.X);
+                    AngleList.Add(CompareItem);
+
+                    Comparer := TAngleComparer.Create;
+                    try
+                      AngleList.Sort(Comparer);
+                    finally
+                      Comparer.Free;
+                    end;
+//                    AngleList.Reverse;
+
+                    for index := 0 to AngleList.Count - 1 do
+                    begin
+                      CompareItem := AngleList[0];
+                      if (CompareItem.Direction = dBackward) then
+                      begin
+                        Assert(CompareItem.Boundary = FirstBoundary);
+                        break;
+                      end;
+                      AngleList.Extract(CompareItem);
+                      AngleList.Add(CompareItem)
+                    end;
+
+                    InsertBoundary := FirstBoundary;
+                    InsertPosition := -1;
+                    for index := 1 to AngleList.Count - 1 do
+                    begin
+                      CompareItem := AngleList[index];
+                      if CompareItem.Boundary = FirstBoundary then
+                      begin
+                        InsertBoundary := NewBoundary;
+                        InsertPosition := -1;
+                        continue;
+                      end;
+
+                      ABoundary := CompareItem.Boundary;
+                      if InsertPosition < 0 then
+                      begin
+                        InsertPosition := InsertBoundary.FNodes.
+                          IndexOf(ABoundary.FNodes.First);
+                        Assert(InsertPosition >= 0);
+                        Inc(InsertPosition);
+                      end;
+                      for InsertIndex := 1 to ABoundary.FNodes.Count - 1 do
+                      begin
+                        InsertBoundary.FNodes.Insert(InsertPosition, ABoundary.FNodes[InsertIndex]);
+                        Inc(InsertPosition);
+                      end;
+                      InsertMoreBlindBoundaries(InsertPosition-1);
+                      for InsertIndex := ABoundary.FNodes.Count - 2 downto 0 do
+                      begin
+                        InsertBoundary.FNodes.Insert(InsertPosition, ABoundary.FNodes[InsertIndex]);
+                        Inc(InsertPosition);
+                      end;
+                      FBoundaries.Remove(ABoundary);
+                    end;
+                  end;
+
+                end;
+
+              finally
+                IntersectionNodes.Free;
+                AngleList.Free;
+              end;
+
+              Changed := True;
+              break;
+            end;
+          end;
+          if Changed then
+          begin
+            break;
+          end;
+        end;
+
+      end;
+
+
+    until not Changed;
+  finally
+    TracedNodes.Free;
+    TracedBoundaries.Free;
+    NodeList.Free;
+    ConnectionsList.Free;
+    BlindEndsBoundaryList.Free;
+    OpenBoundaryList.Free;
+  end;
+end;
+
+procedure TQuadMeshCreator.MergeOpenWithClosedBoundaries;
+var
+  IntersectionNodes: TNodeList;
+  LinkedOpenBoundaries: TBoundaryListSqr;
+  LinkedClosedBoundaries: TBoundaryListSqr;
+  ClosedBoundaries: TBoundaryList;
+  NodeIndex: Integer;
+  ANode: TNode;
+  OpenBoundaryList: TBoundaryList;
+  ClosedBoundaryList: TBoundaryList;
+  BoundaryIndex: Integer;
+  ABoundary: TBoundary;
+  OtherNode: TNode;
+  CompareItem: TAngleCompareItem;
+  AngleList: TAngleList;
+  PolyList: TList<TPolygon2D>;
+  APoly: TPolygon2D;
+  BoundaryNodeIndex: Integer;
+  ForwardCompareItem: TAngleCompareItem;
+  BackwardCompareItem: TAngleCompareItem;
+  index: Integer;
+  AClosedBoundary: TBoundary;
+  InnerItemIndex: Integer;
+  FirstItem: TAngleCompareItem;
+  FirstBoundary: TBoundary;
+  InsertPosition: Integer;
+  InsertNode: TNode;
+  InsertIndexList: TIntegerList;
+  InsertBoundary: TBoundary;
+  InnerPolyList: TList<TPolygon2D>;
+  BIndex: Integer;
+  StoredIndex: Integer;
+  StartIndex: Integer;
+  Changed: Boolean;
+begin
+  IntersectionNodes := TNodeList.Create;
+  LinkedOpenBoundaries:= TBoundaryListSqr.Create;
+  LinkedClosedBoundaries:= TBoundaryListSqr.Create;
+  ClosedBoundaries:= TBoundaryList.Create;
+  PolyList := TList<TPolygon2D>.Create;
+  InnerPolyList := TList<TPolygon2D>.Create;
+  try
+    for NodeIndex := 0 to FNodes.Count - 1 do
+    begin
+      ANode := FNodes[NodeIndex];
+      if ANode.FIntersection then
+      begin
+        IntersectionNodes.Add(ANode);
+      end;
+    end;
+    repeat
+      Changed := False;
+      for NodeIndex := 0 to IntersectionNodes.Count - 1 do
+      begin
+        InitializeIntersectLists(IntersectionNodes, LinkedClosedBoundaries,
+          LinkedOpenBoundaries, ClosedBoundaries);
+
+        if (NodeIndex = 0) then
+        begin
+          PolyList.Capacity := ClosedBoundaries.Count;
+          for BoundaryIndex := 0 to ClosedBoundaries.Count - 1 do
+          begin
+            ABoundary := ClosedBoundaries[BoundaryIndex];
+            SetLength(APoly, ABoundary.FNodes.Count-1);
+            for BoundaryNodeIndex := 0 to ABoundary.FNodes.Count - 2 do
+            begin
+              APoly[BoundaryNodeIndex] := ABoundary.FNodes[BoundaryNodeIndex].Location;
+            end;
+            PolyList.Add(APoly);
+          end;
+        end;
+
+        ANode := IntersectionNodes[NodeIndex];
+        OpenBoundaryList := LinkedOpenBoundaries[NodeIndex];
+        if (OpenBoundaryList.Count > 0) then
+        begin
+          ClosedBoundaryList := LinkedClosedBoundaries[NodeIndex];
+          if (ClosedBoundaryList.Count > 0) then
+          begin
+            Changed := True;
+            AngleList := TAngleList.Create;
+            try
+              for BoundaryIndex := 0 to OpenBoundaryList.Count - 1 do
+              begin
+                ABoundary := OpenBoundaryList[BoundaryIndex];
+                Assert(ABoundary.FNodes.Count > 1);
+                CompareItem := TAngleCompareItem.Create;
+                AngleList.Add(CompareItem);
+                CompareItem.Boundary := ABoundary;
+                CompareItem.NodePosition := ABoundary.FNodes.IndexOf(ANode);
+                if CompareItem.NodePosition = 0 then
+                begin
+                  OtherNode := ABoundary.FNodes[1];
+                  CompareItem.Direction := dForward;
+                end
+                else
+                begin
+                  Assert(CompareItem.NodePosition = ABoundary.FNodes.Count-1);
+                  OtherNode := ABoundary.FNodes[CompareItem.NodePosition-1];
+                  CompareItem.Direction := dBackward;
+                end;
+                CompareItem.Angle := ArcTan2(OtherNode.Y-ANode.Y, OtherNode.X-ANode.X);
+              end;
+
+              for BoundaryIndex := 0 to ClosedBoundaryList.Count - 1 do
+              begin
+                ABoundary := ClosedBoundaryList[BoundaryIndex];
+                if ABoundary.NodeOrientation <> Clockwise then
+                begin
+                  ABoundary.FNodes.Reverse;
+                end;
+                Assert(ABoundary.FNodes.Count > 1);
+                ForwardCompareItem := TAngleCompareItem.Create;
+                AngleList.Add(ForwardCompareItem);
+                ForwardCompareItem.Boundary := ABoundary;
+                ForwardCompareItem.NodePosition := ABoundary.FNodes.IndexOf(ANode);
+                ForwardCompareItem.Direction := dForward;
+                OtherNode := ABoundary.FNodes[ForwardCompareItem.NodePosition+1];
+                ForwardCompareItem.Angle := ArcTan2(OtherNode.Y-ANode.Y, OtherNode.X-ANode.X);
+                if ANode.Y=OtherNode.Y then
+                begin
+                  ForwardCompareItem.Angle := -ForwardCompareItem.Angle;
+                end;
+
+
+                BackwardCompareItem := TAngleCompareItem.Create;
+                AngleList.Add(BackwardCompareItem);
+                BackwardCompareItem.Boundary := ABoundary;
+                BackwardCompareItem.NodePosition := ForwardCompareItem.NodePosition;
+                BackwardCompareItem.Direction := dBackward;
+                if BackwardCompareItem.NodePosition = 0 then
+                begin
+                  OtherNode := ABoundary.FNodes[ABoundary.FNodes.Count-2];
+                end
+                else
+                begin
+                  OtherNode := ABoundary.FNodes[BackwardCompareItem.NodePosition-1];
+                end;
+                BackwardCompareItem.Angle := ArcTan2(OtherNode.Y-ANode.Y, OtherNode.X-ANode.X);
+                if ANode.Y=OtherNode.Y then
+                begin
+                  BackwardCompareItem.Angle := -BackwardCompareItem.Angle;
+                end;
+              end;
+
+              // sort in order of descending angles.
+              AngleList.Sort(TComparer<TAngleCompareItem>.Construct(
+                function (const L, R: TAngleCompareItem): integer
+                var
+                  LIndex: Integer;
+                  RIndex: Integer;
+                begin
+                  result := 0;
+                  if R = L then
+                  begin
+                    Exit;
+                  end;
+                  result := Sign(R.Angle - L.Angle);
+                  if result = 0 then
+                  begin
+                    LIndex := ClosedBoundaryList.IndexOf(L.Boundary);
+                    RIndex := ClosedBoundaryList.IndexOf(R.Boundary);
+                    if (LIndex >= 0) and (RIndex >= 0) then
+                    begin
+                      result := LIndex - RIndex;
+                    end;
+                  end;
+                  if result = 0 then
+                  begin
+                    Result := -(Ord(R.Direction) - Ord(L.Direction));
+                  end;
+                end
+                )) ;
+
+              // Reverse AngleList if adding points to the inside of the
+              // closed boundaries.
+              if ClosedBoundaryList.Count > 1 then
+              begin
+                AngleList.Reverse;
+              end;
+
+              AClosedBoundary := nil;
+              if ClosedBoundaryList.Count > 0 then
+              begin
+                AClosedBoundary := ClosedBoundaryList[0];
+                for index := 0 to AngleList.Count - 1 do
+                begin
+                  CompareItem := AngleList[index];
+                  if (CompareItem.Boundary = AClosedBoundary)
+                    and (CompareItem.Direction = dBackward) then
+                  begin
+                    for InnerItemIndex := 0 to index - 1 do
+                    begin
+                      CompareItem := AngleList[0];
+                      AngleList.Extract(CompareItem);
+                      AngleList.Add(CompareItem);
+                    end;
+                    break;
+                  end;
+                end;
+              end;
+              InsertIndexList := TIntegerList.Create;
+              try
+                InnerPolyList.Clear;
+                for BoundaryIndex := 0 to ClosedBoundaryList.Count - 1 do
+                begin
+                  ABoundary := ClosedBoundaryList[BoundaryIndex];
+                  InsertIndexList.Add(ABoundary.FNodes.IndexOf(ANode)+1);
+                  InnerPolyList.Add(PolyList[ClosedBoundaries.IndexOf(ABoundary)]);
+                end;
+                StoredIndex := -1;
+                if ClosedBoundaryList.Count > 0 then
+                begin
+                  StartIndex := 0;
+                  InsertPosition := -1;
+                  InsertBoundary := nil;
+                end
+                else
+                begin
+                  StartIndex := 1;
+                  FirstItem := AngleList[0];
+                  InsertBoundary := FirstItem.Boundary;
+                  InsertPosition := FirstItem.NodePosition+1;
+                end;
+                for index := StartIndex to AngleList.Count - 1 do
+                begin
+                  CompareItem := AngleList[index];
+                  if ClosedBoundaryList.IndexOf(CompareItem.Boundary) >= 0 then
+                  begin
+                    Continue;
+                  end;
+                  if ClosedBoundaryList.Count > 0 then
+                  begin
+                    if ClosedBoundaryList.Count > 1 then
+                    begin
+                      if CompareItem.NodePosition = 0 then
+                      begin
+                        OtherNode := CompareItem.Boundary.FNodes[1];
+                      end
+                      else
+                      begin
+                        Assert(CompareItem.NodePosition = CompareItem.Boundary.FNodes.Count-1);
+                        OtherNode := CompareItem.Boundary.FNodes[CompareItem.NodePosition-1];
+                      end;
+                      StoredIndex := -1;
+                      for BIndex := 0 to ClosedBoundaryList.Count - 1 do
+                      begin
+                        InsertBoundary := nil;
+                        APoly := InnerPolyList[BIndex];
+                        if PointInConcavePolygon(OtherNode.Location, APoly) then
+                        begin
+                          InsertBoundary := ClosedBoundaryList[BIndex];
+                          InsertPosition := InsertIndexList[BIndex];
+                          StoredIndex := BIndex;
+                          break;
+                        end;
+                      end;
+                    end
+                    else
+                    begin
+                      InsertBoundary := ClosedBoundaryList[0];
+                      InsertPosition := InsertIndexList[0];
+                      StoredIndex := 0;
+                    end;
+                    Assert(StoredIndex >= 0);
+                  end;
+                  if CompareItem.NodePosition = 0 then
+                  begin
+                    for BoundaryNodeIndex := 1
+                      to CompareItem.Boundary.FNodes.Count - 1 do
+                    begin
+                      InsertNode := CompareItem.Boundary.FNodes[BoundaryNodeIndex];
+                      InsertBoundary.FNodes.Insert(InsertPosition, InsertNode);
+                      Inc(InsertPosition);
+                    end;
+                    for BoundaryNodeIndex :=
+                      CompareItem.Boundary.FNodes.Count - 2 downto 0 do
+                    begin
+                      InsertNode := CompareItem.Boundary.FNodes[BoundaryNodeIndex];
+                      InsertBoundary.FNodes.Insert(InsertPosition, InsertNode);
+                      Inc(InsertPosition);
+                    end;
+                  end
+                  else
+                  begin
+                    for BoundaryNodeIndex :=
+                      CompareItem.Boundary.FNodes.Count - 2 downto 0 do
+                    begin
+                      InsertNode := CompareItem.Boundary.FNodes[BoundaryNodeIndex];
+                      InsertBoundary.FNodes.Insert(InsertPosition, InsertNode);
+                      Inc(InsertPosition);
+                    end;
+                    for BoundaryNodeIndex := 1
+                      to CompareItem.Boundary.FNodes.Count - 1 do
+                    begin
+                      InsertNode := CompareItem.Boundary.FNodes[BoundaryNodeIndex];
+                      InsertBoundary.FNodes.Insert(InsertPosition, InsertNode);
+                      Inc(InsertPosition);
+                    end;
+                  end;
+                  if ClosedBoundaryList.Count > 0 then
+                  begin
+                    InsertIndexList[StoredIndex] := InsertPosition;
+                  end;
+                end;
+              finally
+                InsertIndexList.Free;
+              end;
+              if ClosedBoundaryList.Count > 0 then
+              begin
+                for index := 0 to AngleList.Count - 1 do
+                begin
+                  CompareItem := AngleList[index];
+                  if (ClosedBoundaryList.IndexOf(CompareItem.Boundary) < 0) then
+                  begin
+                    FBoundaries.Remove(CompareItem.Boundary);
+                  end;
+                end;
+              end
+              else
+              begin
+                FirstItem := AngleList[0];
+                FirstBoundary := FirstItem.Boundary;
+                for index := 1 to AngleList.Count - 1 do
+                begin
+                  CompareItem := AngleList[index];
+                  if (CompareItem.Boundary <> FirstBoundary) then
+                  begin
+                    FBoundaries.Remove(CompareItem.Boundary);
+                  end;
+                end;
+              end;
+            finally
+               AngleList.Free;
+            end;
+          end;
+        end;
+      end;
+    until not Changed;
+
+  finally
+    InnerPolyList.Free;
+    PolyList.Free;
+    ClosedBoundaries.Free;
+    LinkedOpenBoundaries.Free;
+    LinkedClosedBoundaries.Free;
+    IntersectionNodes.Free;
+  end;
+end;
+
+procedure TQuadMeshCreator.RenumberNodesAndElements;
   procedure AddElements(ABoundary: TBoundary);
   var
     Index: Integer;
@@ -3606,6 +9589,7 @@ procedure TQuadMeshCreator.RenumberNodes;
     begin
       if ABoundary.NodeCount > 0 then
       begin
+        ABoundary.SetCounterClockwiseOrientation;
         FElementList.Add(ABoundary);
       end
       else
@@ -3617,9 +9601,13 @@ procedure TQuadMeshCreator.RenumberNodes;
 
 var
   NodeIndex: Integer;
+  BoundaryIndex: Integer;
 begin
-  Assert(FBoundaries.Count = 1);
-  AddElements(FBoundaries[0]);
+  for BoundaryIndex := 0 to FBoundaries.Count - 1 do
+  begin
+    AddElements(FBoundaries[BoundaryIndex]);
+  end;
+
   FBoundaries.OwnsObjects := False;
 
   for NodeIndex := 0 to NodeCount - 1 do
@@ -3628,7 +9616,12 @@ begin
   end;
   FNodes.OwnsObjects := False;
 
-  RenumberMesh(self);
+  case RenumberingAlgorithm of
+    CuthillMcKee: CuthillMcKeeRenumbering.RenumberMesh(self);
+    raSloanRandolph: MeshRenumbering.RenumberMesh(self);
+    else Assert(False);
+  end;
+
 
   FElementList.Sort(TIElementComparer.Construct(
     function(const L, R: IElement): Integer
@@ -3655,29 +9648,51 @@ var
   Index: Integer;
 begin
   Assert(FBoundaries.Count > 0);
-  FBoundaries[0].SetNodeTypes(ntEdge);
-  for Index := 1 to FBoundaries.Count - 1 do
+  for Index := 0 to FBoundaries.Count - 1 do
   begin
-    FBoundaries[Index].SetNodeTypes(ntSubDomain)
+    FBoundaries[Index].SetNodeType(ntSubDomain)
+  end;
+  for index := 0 to FBNodes.Count - 1 do
+  begin
+    FBNodes[index].FNodeType := ntEdge;
   end;
 end;
 
-procedure TQuadMeshCreator.SetSegmentTypes;
-var
-  Index: Integer;
+procedure TQuadMeshCreator.SetRenumberingAlgorithm(
+  const Value: TRenumberingAlgorithm);
 begin
-  Assert(FBoundaries.Count > 0);
-  FBoundaries[0].FSegmentType := stEdge;
-  for Index := 1 to FBoundaries.Count - 1 do
-  begin
-    FBoundaries[Index].FSegmentType := stSubDomain;
-  end;
+  FRenumberingAlgorithm := Value;
 end;
 
 procedure TQuadMeshCreator.SetSixNodeClosureMethod
   (const Value: TSixNodeClosureMethod);
 begin
   FSixNodeClosureMethod := Value;
+end;
+
+procedure TQuadMeshCreator.FixSegments;
+var
+  BoundaryIndex: Integer;
+  ABoundary: TBoundary;
+begin
+  for BoundaryIndex := 0 to FBoundaries.Count - 1 do
+  begin
+    ABoundary := FBoundaries[BoundaryIndex];
+    ABoundary.FixSegments;
+  end;
+end;
+
+procedure TQuadMeshCreator.SplitMultiplyConnectedBoundaries;
+var
+  BoundaryIndex: Integer;
+  ABoundary: TBoundary;
+begin
+  for BoundaryIndex := 0 to FBoundaries.Count - 1 do
+  begin
+    ABoundary := FBoundaries[BoundaryIndex];
+    ABoundary.SplitMultiplyConnectedBoundary;
+//    ABoundary.SplitMultiplyConnectedBoundary2;
+  end;
 end;
 
 function TQuadMeshCreator._AddRef: Integer;
@@ -3703,6 +9718,77 @@ Type
     APrime: double;
   end;
 
+function TNode.ValidPosition(ALocation: TPoint2D): boolean;
+var
+  PolyIndex: Integer;
+begin
+  Assert(Length(FQuadMeshCreator.FPolygonArray) > 0);
+  result := PointInConcavePolygon(ALocation, FQuadMeshCreator.FPolygonArray[0]);
+  if result then
+  begin
+    for PolyIndex := 1 to Length(FQuadMeshCreator.FPolygonArray) - 1 do
+    begin
+      result := not PointInConcavePolygon(ALocation,
+        FQuadMeshCreator.FPolygonArray[PolyIndex]);
+      if not result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+procedure TNode.WorstAngles(var HighestAngle, LowestAngle: double);
+var
+  ElementIndex: Integer;
+  AnElement: TBoundary;
+  FirstAngle: Boolean;
+  PriorNode: TNode;
+  CurrentNode: TNode;
+  NodeIndex: Integer;
+  NextNode: TNode;
+  AnAngle: TFloat;
+begin
+  FirstAngle := True;
+  for ElementIndex := 0 to FElements.Count - 1 do
+  begin
+    AnElement := FElements[ElementIndex];
+    AnElement.SetCounterClockwiseOrientation;
+    Assert(AnElement.Count = 5);
+    PriorNode := AnElement[3].FNode;
+    CurrentNode := AnElement[0].FNode;
+    for NodeIndex := 0 to AnElement.Count - 2 do
+    begin
+      NextNode := AnElement[NodeIndex+1].FNode;
+      AnAngle := OrientedVertexAngle(PriorNode.Location, CurrentNode.Location,
+        NextNode.Location, CounterClockwise);
+      if AnAngle < 0 then
+      begin
+        AnAngle := AnAngle + 360;
+      end;
+      if FirstAngle then
+      begin
+        HighestAngle := AnAngle;
+        LowestAngle := AnAngle;
+        FirstAngle:= False;
+      end
+      else
+      begin
+        if HighestAngle < AnAngle then
+        begin
+          HighestAngle := AnAngle;
+        end;
+        if LowestAngle > AnAngle then
+        begin
+          LowestAngle := AnAngle;
+        end;
+      end;
+      PriorNode := CurrentNode;
+      CurrentNode := NextNode;
+    end;
+  end;
+end;
+
 procedure TNode.AdjustPositionGiuliani;
 var
   ElementIndex: Integer;
@@ -3727,6 +9813,12 @@ var
   S5: double;
   Index: Integer;
   L: TPoint2D;
+  OldLocation: TPoint2D;
+  NewLocation: TPoint2D;
+  OldHighestAngle: Double;
+  OldLowestAngle: Double;
+  NewHighestAngle: Double;
+  NewLowestAngle: Double;
 begin
   if FNodeType <> ntInner then
   begin
@@ -3772,6 +9864,10 @@ begin
     TotalBase := TotalBase + TriVals[ElementIndex].b;
 
   end;
+  if TotalBase = 0 then
+  begin
+    Exit;
+  end;
   // Eq. 2.8
   MeanHeight := 2 * TotalArea / TotalBase;
   // Eq. 2.9
@@ -3798,6 +9894,11 @@ begin
       MeanHeight := TriVals[Index].b / 2;
     end;
 
+    if TriVals[Index].b = 0 then
+    begin
+      Exit;
+    end;
+
     S1 := S1 + 1 / Sqr(TriVals[Index].b) *
       (W1 * Sqr(TriVals[Index].P) + W2 * Sqr(TriVals[Index].Q));
     S2 := S2 + TriVals[Index].P * TriVals[Index].Q / Sqr(TriVals[Index].b) *
@@ -3816,26 +9917,49 @@ begin
       TriVals[Index].Q));
   end;
 
+  try
   L.X := (S3 * S4 - S2 * S5) / (S1 * S4 - Sqr(S2));
   L.Y := (S1 * S5 - S2 * S3) / (S1 * S4 - Sqr(S2));
 
-  X := X + L.X;
-  Y := Y + L.Y;
+  NewLocation.X := X + L.X;
+  NewLocation.Y := Y + L.Y;
+  except on EInvalidOp do
+    Exit;
+  end;
 
+  if ValidPosition(NewLocation) then
+  begin
+    OldLocation := FLocation;
+    WorstAngles(OldHighestAngle, OldLowestAngle);
+    Location := NewLocation;
+    WorstAngles(NewHighestAngle, NewLowestAngle);
+    if (OldHighestAngle >= 180) then
+    begin
+      if (NewHighestAngle > OldHighestAngle) then
+      begin
+        FLocation := OldLocation;
+      end;
+    end
+    else  if ((NewHighestAngle > 180) and (NewHighestAngle > OldHighestAngle))
+      or ((NewLowestAngle < 20) and (NewLowestAngle < OldLowestAngle))
+      then
+    begin
+      FLocation := OldLocation;
+    end;
+  end;
 end;
 
 procedure TNode.AdjustPositionLagrange;
 var
-  ElementIndex: Integer;
-  AnElement: TBoundary;
   NodeIndex: Integer;
-  PriorNodeIndex: Integer;
-  SubsequentNodeIndex: Integer;
-  PriorNode: TNodeInBoundary;
-  SubsequentNode: TNodeInBoundary;
   APoly: TPolygon2D;
   FoundNodes: TNodeList;
-  NodeComparer: INodeComparer;
+  OldLocation: TPoint2D;
+  NewLocation: TPoint2D;
+  OldHighestAngle: Double;
+  OldLowestAngle: Double;
+  NewHighestAngle: Double;
+  NewLowestAngle: Double;
 begin
   if FNodeType <> ntInner then
   begin
@@ -3844,41 +9968,7 @@ begin
 
   FoundNodes := TNodeList.Create;
   try
-    for ElementIndex := 0 to FElements.Count - 1 do
-    begin
-      AnElement := FElements[ElementIndex];
-      // The last point in AnElement is a duplicate of the first point
-      // so there are really 4 nodes in the element.
-      Assert(AnElement.Count = 5);
-      NodeIndex := AnElement.IndexOfNode(self);
-      Assert(NodeIndex >= 0);
-      SubsequentNodeIndex := NodeIndex + 1;
-      // because the last node is a duplicate of the first, there is no need
-      // to adjust SubsequentNodeIndex for the possibility of being past the
-      // end of  AnElement's nodes.
-      SubsequentNode := AnElement[SubsequentNodeIndex];
-      PriorNodeIndex := NodeIndex - 1;
-      if PriorNodeIndex < 0 then
-      begin
-        PriorNodeIndex := AnElement.Count - 2;
-      end;
-      PriorNode := AnElement[PriorNodeIndex];
-      if FoundNodes.IndexOf(PriorNode.FNode) < 0 then
-      begin
-        FoundNodes.Add(PriorNode.FNode);
-      end;
-      if FoundNodes.IndexOf(SubsequentNode.FNode) < 0 then
-      begin
-        FoundNodes.Add(SubsequentNode.FNode);
-      end;
-    end;
-
-    NodeComparer := TNodeAngleComparer.Create(self);
-    try
-      FoundNodes.Sort(NodeComparer);
-    finally
-      NodeComparer := nil;
-    end;
+    GetNeighborNodes(FoundNodes);
 
     SetLength(APoly, FoundNodes.Count);
     for NodeIndex := 0 to FoundNodes.Count - 1 do
@@ -3891,7 +9981,28 @@ begin
 
   if Area(APoly) <> 0 then
   begin
-    FLocation := Centroid(APoly);
+    NewLocation := Centroid(APoly);
+
+    if ValidPosition(NewLocation) then
+    begin
+      OldLocation := FLocation;
+      WorstAngles(OldHighestAngle, OldLowestAngle);
+      Location := NewLocation;
+      WorstAngles(NewHighestAngle, NewLowestAngle);
+      if (OldHighestAngle >= 180) then
+      begin
+        if (NewHighestAngle > OldHighestAngle) then
+        begin
+          FLocation := OldLocation;
+        end;
+      end
+      else  if ((NewHighestAngle > 180) and (NewHighestAngle > OldHighestAngle))
+        or ((NewLowestAngle < 20) and (NewLowestAngle < OldLowestAngle))
+        then
+      begin
+        FLocation := OldLocation;
+      end;
+    end;
   end;
 end;
 
@@ -3905,13 +10016,122 @@ begin
   Assert(DesiredSpacing > 0);
   FDesiredSpacing := DesiredSpacing;
   FDesiredElementCount := 4;
+  FConstraintNeighbors:= TNodeList.Create;
 end;
 
 destructor TNode.Destroy;
 begin
+  FConstraintNeighbors.Free;
   FSegments.Free;
   FElements.Free;
   inherited;
+end;
+
+procedure TNode.GetNeighborNodes(FoundNodes: TNodeList);
+var
+  AnElement: TBoundary;
+  SubsequentNodeIndex: Integer;
+  SubsequentNode: TNodeInBoundary;
+  ElementIndex: Integer;
+  PriorNodeIndex: Integer;
+  NodeComparer: INodeComparer;
+  PriorNode: TNodeInBoundary;
+  NodeIndex: Integer;
+begin
+  for ElementIndex := 0 to FElements.Count - 1 do
+  begin
+    AnElement := FElements[ElementIndex];
+    // The last point in AnElement is a duplicate of the first point
+    // so there are really 4 nodes in the element.
+    Assert(AnElement.Count = 5);
+    NodeIndex := AnElement.IndexOfNode(self);
+    Assert(NodeIndex >= 0);
+    SubsequentNodeIndex := NodeIndex + 1;
+    // because the last node is a duplicate of the first, there is no need
+    // to adjust SubsequentNodeIndex for the possibility of being past the
+    // end of  AnElement's nodes.
+    SubsequentNode := AnElement[SubsequentNodeIndex];
+    PriorNodeIndex := NodeIndex - 1;
+    if PriorNodeIndex < 0 then
+    begin
+      PriorNodeIndex := AnElement.Count - 2;
+    end;
+    PriorNode := AnElement[PriorNodeIndex];
+    if FoundNodes.IndexOf(PriorNode.FNode) < 0 then
+    begin
+      FoundNodes.Add(PriorNode.FNode);
+    end;
+    if FoundNodes.IndexOf(SubsequentNode.FNode) < 0 then
+    begin
+      FoundNodes.Add(SubsequentNode.FNode);
+    end;
+  end;
+  NodeComparer := TNodeAngleComparer.Create(self);
+  try
+    FoundNodes.Sort(NodeComparer);
+  finally
+    NodeComparer := nil;
+  end;
+end;
+
+procedure TNode.GetNeighborNodesAndElements(NeighborNodes: TNodeList;
+  ElementList: TBoundaryList);
+var
+  FoundElement: Boolean;
+  NeighborNode: TNode;
+  NeighborIndex: Integer;
+  AnElement: TBoundary;
+  NodeIndex: Integer;
+  ElementIndex: Integer;
+  UnusedElements: TBoundaryList;
+begin
+  UnusedElements := TBoundaryList.Create;
+  try
+    for ElementIndex := 0 to FElements.Count - 1 do
+    begin
+      Assert(FElements[ElementIndex].Count = 5);
+      FElements[ElementIndex].SetCounterClockwiseOrientation;
+    end;
+    for ElementIndex := 1 to FElements.Count - 1 do
+    begin
+      UnusedElements.Add(FElements[ElementIndex]);
+    end;
+    AnElement := FElements[0];
+    ElementList.Add(AnElement);
+    NodeIndex := AnElement.IndexOfNode(self);
+    Assert(NodeIndex >= 0);
+    Inc(NodeIndex);
+    NeighborNode := AnElement.Items[NodeIndex].FNode;
+    NeighborNodes.Add(NeighborNode);
+    while ElementList.Count < 4 do
+    begin
+      FoundElement := False;
+      for ElementIndex := 0 to UnusedElements.Count - 1 do
+      begin
+        AnElement := UnusedElements[ElementIndex];
+        NodeIndex := AnElement.IndexOfNode(self);
+        Assert(NodeIndex >= 0);
+        NeighborIndex := AnElement.IndexOfNode(NeighborNode);
+        if NeighborIndex >= 0 then
+        begin
+          ElementList.Add(AnElement);
+          Inc(NeighborIndex, 2);
+          if NeighborIndex >= AnElement.Count then
+          begin
+            Dec(NeighborIndex, 4);
+          end;
+          NeighborNode := AnElement.Items[NeighborIndex].FNode;
+          UnusedElements.Delete(ElementIndex);
+          FoundElement := True;
+          NeighborNodes.Add(NeighborNode);
+          break;
+        end;
+      end;
+      Assert(FoundElement);
+    end;
+  finally
+    UnusedElements.Free;
+  end;
 end;
 
 function TNode.DiagonalSwapping: boolean;
@@ -4048,14 +10268,40 @@ begin
                   if not Intersect(EquateSegment(Location, NodeD.Location),
                     EquateSegment(NodeC.Location, NodeF.Location)) then
                   begin
-                    Exit;
+                    Continue;
                   end;
                   if not Intersect(EquateSegment(NodeC.Location,
                     NodeB.Location), EquateSegment(NodeE.Location,
                     NodeD.Location)) then
                   begin
-                    Exit;
+                    Continue;
                   end;
+
+                  if OrientedVertexAngle(NodeC.Location, NodeD.Location,
+                    NodeB.Location, CounterClockwise) > 180  then
+                  begin
+                    Continue;
+                  end;
+
+                  if OrientedVertexAngle(NodeE.Location, NodeC.Location,
+                    NodeD.Location, CounterClockwise) > 180  then
+                  begin
+                    Continue;
+                  end;
+
+                  if OrientedVertexAngle(NodeD.Location, NodeC.Location,
+                    self.Location, CounterClockwise) > 180  then
+                  begin
+                    Continue;
+                  end;
+
+                  if OrientedVertexAngle(NodeF.Location, NodeD.Location,
+                    NodeC.Location, CounterClockwise) > 180  then
+                  begin
+                    Continue;
+                  end;
+
+
 
                   // Exit if the new element would result in an element
                   // with 3 edge nodes in a straight line.
@@ -4079,11 +10325,11 @@ begin
                     end;
                     if BoundaryNodes.Count = 3 then
                     begin
-                      if BadAngle(BoundaryNodes[0].Location,
+                      if NearlyStraightAngle(BoundaryNodes[0].Location,
                         BoundaryNodes[1].Location, BoundaryNodes[2].Location)
                       then
                       begin
-                        Exit;
+                        Continue;
                       end;
                     end;
                     BoundaryNodes.Clear;
@@ -4105,11 +10351,11 @@ begin
                     end;
                     if BoundaryNodes.Count = 3 then
                     begin
-                      if BadAngle(BoundaryNodes[0].Location,
+                      if NearlyStraightAngle(BoundaryNodes[0].Location,
                         BoundaryNodes[1].Location, BoundaryNodes[2].Location)
                       then
                       begin
-                        Exit;
+                        Continue;
                       end;
                     end;
                   finally
@@ -4123,7 +10369,7 @@ begin
                   NodeC.FElements.Add(Element1);
                   NodeD.FElements.Add(Element2);
                   result := True;
-{$IFDEF DEBUG}
+{$IFDEF TEST}
                   Element1.CheckInvalidElement;
                   Element2.CheckInvalidElement;
 {$ENDIF}
@@ -4150,13 +10396,37 @@ begin
                   if not Intersect(EquateSegment(Location, NodeE.Location),
                     EquateSegment(NodeC.Location, NodeF.Location)) then
                   begin
-                    Exit;
+                    Continue;
                   end;
                   if not Intersect(EquateSegment(NodeB.Location,
                     NodeF.Location), EquateSegment(NodeE.Location,
                     NodeD.Location)) then
                   begin
-                    Exit;
+                    Continue;
+                  end;
+
+                  if OrientedVertexAngle(NodeE.Location, NodeF.Location,
+                    NodeD.Location, CounterClockwise) > 180  then
+                  begin
+                    Continue;
+                  end;
+
+                  if OrientedVertexAngle(NodeB.Location, NodeE.Location,
+                    NodeF.Location, CounterClockwise) > 180  then
+                  begin
+                    Continue;
+                  end;
+
+                  if OrientedVertexAngle(NodeF.Location, NodeE.Location,
+                    NodeC.Location, CounterClockwise) > 180  then
+                  begin
+                    Continue;
+                  end;
+
+                  if OrientedVertexAngle(self.Location, NodeF.Location,
+                    NodeE.Location, CounterClockwise) > 180  then
+                  begin
+                    Continue;
                   end;
 
                   // Exit if the new element would result in an element
@@ -4181,11 +10451,11 @@ begin
                     end;
                     if BoundaryNodes.Count = 3 then
                     begin
-                      if BadAngle(BoundaryNodes[0].Location,
+                      if NearlyStraightAngle(BoundaryNodes[0].Location,
                         BoundaryNodes[1].Location, BoundaryNodes[2].Location)
                       then
                       begin
-                        Exit;
+                        Continue;
                       end;
                     end;
                     BoundaryNodes.Clear;
@@ -4207,11 +10477,11 @@ begin
                     end;
                     if BoundaryNodes.Count = 3 then
                     begin
-                      if BadAngle(BoundaryNodes[0].Location,
+                      if NearlyStraightAngle(BoundaryNodes[0].Location,
                         BoundaryNodes[1].Location, BoundaryNodes[2].Location)
                       then
                       begin
-                        Exit;
+                        Continue;
                       end;
                     end;
                   finally
@@ -4225,7 +10495,7 @@ begin
                   NodeE.FElements.Add(Element1);
                   NodeF.FElements.Add(Element2);
                   result := True;
-{$IFDEF DEBUG}
+{$IFDEF TEST}
                   Element1.CheckInvalidElement;
                   Element2.CheckInvalidElement;
 {$ENDIF}
@@ -4250,6 +10520,9 @@ var
   SegmentIndex: Integer;
   BoundaryNode: TNodeInBoundary;
 begin
+  Assert(AnElement.IndexOfNode(ReplacementNode) < 0);
+  // After calling this procedure, be sure to remove the element from this
+  // node and add it to the replacement node as needed.
   for SegmentIndex := 0 to AnElement.FSegments.Count - 1 do
   begin
     ASegment := AnElement.FSegments[SegmentIndex];
@@ -4260,6 +10533,11 @@ begin
     if ASegment.FNode2 = self then
     begin
       ASegment.FNode2 := ReplacementNode;
+    end;
+    NodeIndex := ASegment.FInnerNodes.IndexOf(self);
+    if NodeIndex >= 0  then
+    begin
+      ASegment.FInnerNodes[NodeIndex] := ReplacementNode;
     end;
   end;
   NodeIndex := AnElement.FNodes.IndexOf(self);
@@ -4288,18 +10566,14 @@ end;
 procedure TNode.NodeElimination;
 var
   Element1: TBoundary;
-  NodePosition1: Integer;
   Element2: TBoundary;
   NodePosition2: Integer;
   OppositeNodePosition2: Integer;
   OppositeBoundaryNode2: TNodeInBoundary;
-  BoundaryNode1: TNodeInBoundary;
   ReplacementNode: TNode;
 begin
+  Assert(FElements.Count = 2);
   Element1 := FElements[0];
-  NodePosition1 := Element1.IndexOfNode(self);
-  Assert(NodePosition1 >= 0);
-  BoundaryNode1 := Element1[NodePosition1];
 
   Element2 := FElements[1];
   NodePosition2 := Element2.IndexOfNode(self);
@@ -4313,14 +10587,17 @@ begin
   OppositeBoundaryNode2 := Element2[OppositeNodePosition2];
 
   ReplacementNode := OppositeBoundaryNode2.FNode;
-  BoundaryNode1.FNode := ReplacementNode;
-  BoundaryNode1.FNode.FElements.Add(Element1);
-  Element2.RemoveSelfFromOwnNodes;
   ReplaceNodeInElement(ReplacementNode, Element1);
+
+  ReplacementNode.FElements.Add(Element1);
+  ReplacementNode.FElements.Remove(Element2);
+
+  Element2.RemoveSelfFromOwnNodes;
+
 
   Element2.FParent.FSubParts.Remove(Element2);
 
-{$IFDEF DEBUG}
+{$IFDEF TEST}
   Element1.CheckInvalidElement;
 {$ENDIF}
 end;
@@ -4423,7 +10700,7 @@ begin
       end;
 
       result := True;
-      OppositeNode.FNode.FLocation := NewLocation;
+      OppositeNode.FNode.Location := NewLocation;
 
       for InnerElementIndex := 0 to FElements.Count - 1 do
       begin
@@ -4434,7 +10711,7 @@ begin
         AnotherElement := FElements[InnerElementIndex];
         ReplaceNodeInElement(OppositeNode.FNode, AnotherElement);
         OppositeNode.FNode.FElements.Add(AnotherElement);
-{$IFDEF DEBUG}
+{$IFDEF TEST}
         AnotherElement.CheckInvalidElement;
 {$ENDIF}
       end;
@@ -4445,6 +10722,316 @@ begin
       break;
     end;
   end;
+end;
+
+{
+  N = NeighborNodes
+  E = ElementList
+  EE1 = ExternalElement1
+  EE2 = ExternalElement2
+  EN1 = ExternalNode1
+  EN2 = ExternalNode2
+
+  EN3       EN4                 EN5         EN6
+   *---------*---------*N[2]-----*-----------*
+    \        |         |         |          /
+     \       |         |         |         /
+      \ EE1  |   E[2]  |  E[3]   |  EE2   /
+       \     |         |         |       /
+     EN1*----*N[1]-----*---------*N[3]--*EN2
+           \      E[1] |  E[0]       /
+              \        |          /
+                 \     |       /
+                    \  |    /
+                       *N[0]
+                     Fan Node
+
+
+
+
+   *---------*---------*---------*---------*
+    \                /   \                /
+     \           /           \           /
+      \       /                 \       /
+       \   /                      \    /
+        *                           *
+           \                       /
+              \                 /
+                 \           /
+                    \     /
+                       *
+
+
+
+
+}
+
+function TNode.FanElimination: boolean;
+var
+  NeighborNodes: TNodeList;
+  ElementIndex: Integer;
+  AnElement: TBoundary;
+  ElementList: TBoundaryList;
+  NodeIndex: Integer;
+  FanIndex: integer;
+  CentralNodeIndex: Integer;
+  ExternalElement1: TBoundary;
+  ExternalElement2: TBoundary;
+  ExternalNode1: TNode;
+  ExternalNode2: TNode;
+  ExternalNode3: TNode;
+  ExternalNode4: TNode;
+  ExternalNode5: TNode;
+  ExternalNode6: TNode;
+begin
+  result := False;
+  Assert(ElementCount = 4);
+
+  NeighborNodes := TNodeList.Create;
+  ElementList := TBoundaryList.Create;
+    try
+      GetNeighborNodesAndElements(NeighborNodes, ElementList);
+
+      // NeighborNodes contains a list of nodes connected to the central
+      // node in clockwise order around the central node.
+      // ElementList contains a list of TBoundaries connected to the central
+      // node in clockwise order around the central node.
+      Assert(NeighborNodes.Count = 4);
+      if (NeighborNodes[0].ElementCount = 3)
+        and (NeighborNodes[0].NodeType = ntInner)
+        and (NeighborNodes[2].ElementCount = 3)
+        and (NeighborNodes[2].NodeType = ntInner) then
+      begin
+        if (NeighborNodes[1].FElements.Count
+          - NeighborNodes[1].FDesiredElementCount) >
+          (NeighborNodes[3].FElements.Count
+          - NeighborNodes[3].FDesiredElementCount) then
+        begin
+          FanIndex := 1;
+        end
+        else
+        begin
+          FanIndex := 3;
+        end;
+      end
+      else if (NeighborNodes[1].ElementCount = 3)
+        and (NeighborNodes[1].NodeType = ntInner)
+        and (NeighborNodes[3].ElementCount = 3)
+        and (NeighborNodes[3].NodeType = ntInner) then
+      begin
+        if (NeighborNodes[0].FElements.Count
+          - NeighborNodes[0].FDesiredElementCount) >
+          (NeighborNodes[2].FElements.Count
+          - NeighborNodes[2].FDesiredElementCount) then
+        begin
+          FanIndex := 0;
+        end
+        else
+        begin
+          FanIndex := 2;
+        end;
+      end
+      else
+      begin
+        Exit;
+      end;
+      if (NeighborNodes[FanIndex].FElements.Count
+        > NeighborNodes[FanIndex].FDesiredElementCount) then
+      begin
+        while FanIndex > 0 do
+        begin
+          NeighborNodes.Add(NeighborNodes[0]);
+          NeighborNodes.Delete(0);
+          ElementList.Add(ElementList[0]);
+          ElementList.Delete(0);
+          Dec(FanIndex);
+        end;
+  //      FanNode := NeighborNodes[0];
+
+        ExternalElement1 := nil;
+        for ElementIndex := 0 to NeighborNodes[1].FElements.Count - 1 do
+        begin
+          AnElement := NeighborNodes[1].FElements[ElementIndex];
+          if AnElement.IndexOfNode(Self) < 0 then
+          begin
+            ExternalElement1 := AnElement;
+            break;
+          end;
+        end;
+        Assert(ExternalElement1 <> nil);
+        ExternalElement1.SetCounterClockwiseOrientation;
+
+        ExternalElement2 := nil;
+        for ElementIndex := 0 to NeighborNodes[3].FElements.Count - 1 do
+        begin
+          AnElement := NeighborNodes[3].FElements[ElementIndex];
+          if AnElement.IndexOfNode(Self) < 0 then
+          begin
+            ExternalElement2 := AnElement;
+            break;
+          end;
+        end;
+        Assert(ExternalElement2 <> nil);
+        ExternalElement2.SetCounterClockwiseOrientation;
+
+        AnElement := ElementList[1];
+        NodeIndex := AnElement.IndexOfNode(NeighborNodes[0]);
+        CentralNodeIndex := AnElement.IndexOfNode(self);
+        Dec(CentralNodeIndex);
+        if CentralNodeIndex < 0 then
+        begin
+          CentralNodeIndex := 3;
+        end;
+        if (CentralNodeIndex <> NodeIndex) then
+        begin
+          // straight line element
+          Exit;
+        end;
+        Dec(NodeIndex);
+        if NodeIndex < 0 then
+        begin
+          NodeIndex := 3;
+        end;
+        ExternalNode1 := AnElement[NodeIndex].FNode;
+
+        NodeIndex := ExternalElement1.IndexOfNode(ExternalNode1);
+        Assert(NodeIndex >= 0);
+        Dec(NodeIndex);
+        if NodeIndex < 0 then
+        begin
+          NodeIndex := 3;
+        end;
+        ExternalNode3 := ExternalElement1[NodeIndex].FNode;
+
+        Dec(NodeIndex);
+        if NodeIndex < 0 then
+        begin
+          NodeIndex := 3;
+        end;
+        ExternalNode4 := ExternalElement1[NodeIndex].FNode;
+
+
+        AnElement := ElementList[0];
+        NodeIndex := AnElement.IndexOfNode(NeighborNodes[0]);
+        CentralNodeIndex := AnElement.IndexOfNode(self);
+        ExternalNode2 := AnElement[NodeIndex+1].FNode;
+        Dec(NodeIndex);
+        if NodeIndex < 0 then
+        begin
+          NodeIndex := 3;
+        end;
+        if (CentralNodeIndex <> NodeIndex) then
+        begin
+          // straight line element.
+          Exit;
+        end;
+
+        NodeIndex := ExternalElement2.IndexOfNode(NeighborNodes[3]);
+        Assert(NodeIndex >= 0);
+        Dec(NodeIndex);
+        if NodeIndex < 0 then
+        begin
+          NodeIndex := 3;
+        end;
+        ExternalNode5 := ExternalElement2[NodeIndex].FNode;
+
+        Dec(NodeIndex);
+        if NodeIndex < 0 then
+        begin
+          NodeIndex := 3;
+        end;
+        ExternalNode6 := ExternalElement2[NodeIndex].FNode;
+
+        if not Intersect(
+          EquateSegment(ExternalNode1.Location, ExternalNode2.Location),
+          EquateSegment(NeighborNodes[0].Location, NeighborNodes[2].Location)) then
+        begin
+          Exit;
+        end;
+
+        if not Intersect(
+          EquateSegment(ExternalNode1.Location, ExternalNode4.Location),
+          EquateSegment(ExternalNode3.Location, NeighborNodes[2].Location)) then
+        begin
+          Exit;
+        end;
+
+        if not Intersect(
+          EquateSegment(ExternalNode2.Location, ExternalNode5.Location),
+          EquateSegment(ExternalNode6.Location, NeighborNodes[2].Location)) then
+        begin
+          Exit;
+        end;
+
+        if (ExternalNode3.NodeType <> ntInner)
+          and (ExternalNode4.NodeType <> ntInner)
+          and (NeighborNodes[2].NodeType <> ntInner)
+          and (OrientedVertexAngle(ExternalNode3.Location, ExternalNode4.Location,
+            NeighborNodes[2].Location, Clockwise) > 179) then
+        begin
+          Exit;
+        end;
+
+        if (ExternalNode5.NodeType <> ntInner)
+          and (ExternalNode6.NodeType <> ntInner)
+          and (NeighborNodes[2].NodeType <> ntInner)
+          and (OrientedVertexAngle(NeighborNodes[2].Location,
+            ExternalNode5.Location, ExternalNode6.Location, Clockwise) > 179) then
+        begin
+          Exit;
+        end;
+
+        if (ExternalNode1.NodeType <> ntInner)
+          and (ExternalNode2.NodeType <> ntInner)
+          and (NeighborNodes[0].NodeType <> ntInner)
+          and (OrientedVertexAngle(ExternalNode2.Location, NeighborNodes[0].Location,
+            ExternalNode1.Location, Clockwise) > 179) then
+        begin
+          Exit;
+        end;
+
+        AnElement := ElementList[0];
+
+        NeighborNodes[1].ReplaceNodeInElement(NeighborNodes[2], ExternalElement1);
+        NeighborNodes[3].ReplaceNodeInElement(NeighborNodes[2], ExternalElement2);
+
+        NeighborNodes[3].ReplaceNodeInElement(NeighborNodes[2], AnElement);
+        self.ReplaceNodeInElement(ExternalNode1, AnElement);
+
+        NeighborNodes[2].FElements.Add(ExternalElement1);
+        NeighborNodes[2].FElements.Add(ExternalElement2);
+        NeighborNodes[2].FElements.Add(AnElement);
+        ExternalNode1.FElements.Add(AnElement);
+
+        NeighborNodes[1].FElements.Remove(ExternalElement1);
+        NeighborNodes[3].FElements.Remove(ExternalElement2);
+        NeighborNodes[3].FElements.Remove(AnElement);
+        Self.FElements.Remove(AnElement);
+
+        for ElementIndex := 1 to ElementList.Count-1 do
+        begin
+          AnElement := ElementList[ElementIndex];
+          AnElement.RemoveSelfFromAllNodes;
+          AnElement.FParent.FSubParts.Remove(AnElement);
+        end;
+
+        Assert(NeighborNodes[1].FElements.Count = 0);
+        Assert(NeighborNodes[3].FElements.Count = 0);
+        Assert(self.FElements.Count = 0);
+
+        ExternalElement1.FixSegments;
+        ExternalElement2.FixSegments;
+        ElementList[0].FixSegments;
+
+        FQuadMeshCreator.FNodes.Remove(NeighborNodes[1]);
+        FQuadMeshCreator.FNodes.Remove(NeighborNodes[3]);
+        result := True;
+      end;
+
+    finally
+      NeighborNodes.Free;
+      ElementList.Free;
+    end;
 end;
 
 function TNode.GetActiveElement(Index: Integer): IElement;
@@ -4490,6 +11077,14 @@ begin
           begin
             result := SideElimination;
           end;
+          if not result then
+          begin
+            result := InteriorElementElimination;
+          end;
+        end;
+      4:
+        begin
+          result := FanElimination;
         end;
     end;
   end;
@@ -4498,6 +11093,428 @@ end;
 function TNode.ImproveTopology2: boolean;
 begin
   result := DiagonalSwapping;
+end;
+
+{
+   CE = CentralElement
+
+              *                                     *
+             / \                                   / \
+            /   \                                 /   \
+           /     \                               /     \
+         A*       *B                             *       *
+         / \     / \                           / \     / \
+        /   \   /   \                         /   \   /   \
+       /     \ /     \                       /     \ /     \
+      /       *I      \                     /       *       \
+     /  E1   / \   E3  \                   /        |        \
+    /       /   \       \                 /         |         \
+   /       /     \       \               /          |          \
+ C*-------*F  CE G*-------*D  ------>   *           |           *
+   \       \     /       /               \          |          /
+    \       \   /       /                 \         |         /
+     \   E2  \ /   E4  /                   \        |        /
+      \       *H      /                     \       |       /
+       \      |      /                       \      |      /
+        \     |     /                         \     |     /
+         \    |    /                           \    |    /
+          \   |   /                             \   |   /
+           \  |  /                               \  |  /
+            \ | /                                 \ | /
+             \|/                                   \|/
+              *                                     *
+              E
+
+              If B-D-E colinear and on edge   (RightSideColinear)
+
+              *                                        *
+             / \                                      / \
+            /   \                                    /   \
+           /     \                                  /     \
+         A*       *B                              A*       *B
+         / \     / \                              /|\     / \
+        /   \   /   \                            / | \   /   \
+       /     \ /     \                          /  \  \ /     \
+      /       *I      \                        /    |  *I      \
+     /  E1   / \   E3  \                      /  E1 \   \   E3  \
+    /       /   \       \                    /       |   \       \
+   /       /     \       \                  /        \ CE \       \
+ C*-------*F  CE G*-------*D  ------>     C*          |   G*-------*D
+   \       \     /       /                  \         \   /       /
+    \       \   /       /                    \         | /       /
+     \   E2  \ /   E4  /                      \        \/   E4  /
+      \       *H      /                        \       *H      /
+       \      |      /                          \      |      /
+        \     |     /                            \     |     /
+         \    |    /                              \    |    /
+          \   |   /                                \   |   /
+           \  |  /                                  \  |  /
+            \ | /                                    \ | /
+             \|/                                      \|/
+              *                                        *
+              E                                        E
+
+
+              If A-C-E colinear and on edge (LeftSideColinear)
+
+              *                                        *
+             / \                                      / \
+            /   \                                    /   \
+           /     \                                  /     \
+         A*       *B                              A*       *B
+         / \     / \                              / \     /|\
+        /   \   /   \                            /   \   / | \
+       /     \ /     \                          /     \ /  |  \
+      /       *I      \                        /       *I  |   \
+     /  E1   / \   E3  \                      /  E1   /    /    \
+    /       /   \       \                    /       /    |  E3  \
+   /       /     \       \                  /       /     /       \
+ C*-------*F  CE G*-------*D  ------>     C*-------*F CE |        *D
+   \       \     /       /                  \       \    /        /
+    \       \   /       /                    \       \  |        /
+     \   E2  \ /   E4  /                      \    2  \ /       /
+      \       *H      /                        \       *H      /
+       \      |      /                          \      |      /
+        \     |     /                            \     |     /
+         \    |    /                              \    |    /
+          \   |   /                                \   |   /
+           \  |  /                                  \  |  /
+            \ | /                                    \ | /
+             \|/                                      \|/
+              *                                        *
+              E                                        E
+
+
+}
+
+function TNode.InteriorElementElimination: Boolean;
+var
+  ElementIndex: Integer;
+  NodeIndex: Integer;
+  AnElement: TBoundary;
+  ANode: TNode;
+  OutsideElementIndex: Integer;
+  NodeF: TNode;
+  NodeGIndex: Integer;
+  NodeG: TNode;
+  NodeHIndex: Integer;
+  NodeH: TNode;
+  CentralElement: TBoundary;
+  NodeFIndex: Integer;
+  ThreeElementCount: Integer;
+  NodeI: TNode;
+  Element1: TBoundary;
+  Element2: TBoundary;
+  InnerElementIndex: Integer;
+  Element3: TBoundary;
+  Element4: TBoundary;
+  NodeA: TNode;
+  NodeB: TNode;
+  NodeC: TNode;
+  NodeD: TNode;
+  NodeE: TNode;
+  NodeAIndex: Integer;
+  NodeCIndex: Integer;
+  NodeEIndex: Integer;
+  NodeDIndex: Integer;
+  NodeBIndex: integer;
+  LeftSideColinear: Boolean;
+  RightSideColinear: Boolean;
+  Epsilon: double;
+begin
+  result := False;
+  Assert(ElementCount = 3);
+  Epsilon := FQuadMeshCreator.FCharacteristicLength/1e7;
+  for ElementIndex := 0 to FElements.Count - 1 do
+  begin
+    AnElement := FElements[ElementIndex];
+    ThreeElementCount := 0;
+    OutsideElementIndex := -1;
+    AnElement.SetCounterClockwiseOrientation;
+    for NodeIndex := 0 to AnElement.Count - 2 do
+    begin
+      ANode := AnElement.Items[NodeIndex].FNode;
+      if (ANode.NodeType = ntInner)  then
+      begin
+        if (ANode.FElements.Count = 3) then
+        begin
+          Inc(ThreeElementCount);
+        end
+        else if (ANode.FElements.Count > 3) then
+        begin
+          OutsideElementIndex := NodeIndex;
+        end;
+      end
+      else
+      begin
+        break;
+      end;
+    end;
+    if (ThreeElementCount <> 3) or (OutsideElementIndex < 0) then
+    begin
+      Continue;
+    end;
+    CentralElement := AnElement;
+    NodeHIndex := OutsideElementIndex-2;
+    if NodeHIndex < 0 then
+    begin
+      NodeHIndex := NodeHIndex + 4;
+    end;
+    NodeH := CentralElement[NodeHIndex].FNode;
+
+    NodeFIndex := OutsideElementIndex+1;
+    NodeF := CentralElement[NodeFIndex].FNode;
+
+    NodeGIndex := OutsideElementIndex-1;
+    if NodeGIndex < 0 then
+    begin
+      NodeGIndex := 3;
+    end;
+    NodeG := CentralElement[NodeGIndex].FNode;
+    NodeI := CentralElement[OutsideElementIndex].FNode;
+
+    Element1 := nil;
+    Element2 := nil;
+    for InnerElementIndex := 0 to NodeF.FElements.Count - 1 do
+    begin
+      AnElement := NodeF.FElements[InnerElementIndex];
+      if AnElement = CentralElement then
+      begin
+        Continue;
+      end
+      else if AnElement.IndexOfNode(NodeI) >= 0 then
+      begin
+        Element1 := AnElement
+      end
+      else if AnElement.IndexOfNode(NodeH) >= 0 then
+      begin
+        Element2 := AnElement
+      end
+      else
+      begin
+        Assert(False);
+      end;
+    end;
+    Assert(Element1 <> nil);
+    Assert(Element2 <> nil);
+    Element1.SetCounterClockwiseOrientation;
+    Element2.SetCounterClockwiseOrientation;
+
+    Element3 := nil;
+    Element4 := nil;
+    for InnerElementIndex := 0 to NodeG.FElements.Count - 1 do
+    begin
+      AnElement := NodeG.FElements[InnerElementIndex];
+      if AnElement = CentralElement then
+      begin
+        Continue;
+      end
+      else if AnElement.IndexOfNode(NodeI) >= 0 then
+      begin
+        Element3 := AnElement
+      end
+      else if AnElement.IndexOfNode(NodeH) >= 0 then
+      begin
+        Element4 := AnElement
+      end
+      else
+      begin
+        Assert(False);
+      end;
+    end;
+    Assert(Element3 <> nil);
+    Assert(Element4 <> nil);
+    Element3.SetCounterClockwiseOrientation;
+    Element4.SetCounterClockwiseOrientation;
+
+    NodeAIndex := Element1.IndexOfNode(NodeI);
+    if NodeAIndex < 0 then
+    begin
+      // concave element
+      Continue;
+    end;
+    Inc(NodeAIndex);
+    NodeA := Element1.Items[NodeAIndex].FNode;
+
+    NodeCIndex := NodeAIndex + 1;
+    if NodeCIndex >= Element1.Count then
+    begin
+      NodeCIndex := NodeCIndex-4;
+    end;
+    NodeC := Element1.Items[NodeCIndex].FNode;
+
+    NodeEIndex := Element2.IndexOfNode(NodeC);
+    if NodeEIndex < 0 then
+    begin
+      // concave element
+      Continue;
+    end;
+    Inc(NodeEIndex);
+    NodeE := Element2.Items[NodeEIndex].FNode;
+
+    NodeDIndex := Element4.IndexOfNode(NodeE);
+    if NodeDIndex < 0 then
+    begin
+      // concave element
+      Continue;
+    end;
+    Inc(NodeDIndex);
+    NodeD := Element4.Items[NodeDIndex].FNode;
+
+    NodeBIndex := Element3.IndexOfNode(NodeD);
+    if NodeBIndex < 0 then
+    begin
+      // concave element
+      Continue;
+    end;
+    Inc(NodeBIndex);
+    NodeB := Element3.Items[NodeBIndex].FNode;
+
+    LeftSideColinear := False;
+    RightSideColinear := False;
+    if NodeE.NodeType <> ntInner then
+    begin
+      if (NodeA.NodeType <> ntInner)
+        and (NodeC.NodeType <> ntInner)
+        and RobustCollinear(NodeA.Location, NodeC.Location, NodeE.Location, Epsilon)
+        then
+      begin
+        LeftSideColinear := True;
+      end;
+
+      if (NodeB.NodeType <> ntInner)
+        and (NodeD.NodeType <> ntInner)
+        and RobustCollinear(NodeB.Location, NodeD.Location, NodeE.Location, Epsilon)
+        then
+      begin
+        RightSideColinear := True;
+      end;
+    end;
+
+
+    if LeftSideColinear then
+    begin
+      if NodeG <> self then
+      begin
+        Continue;
+      end;
+
+      if not Intersect(EquateSegment(NodeF.Location, NodeB.Location),
+        EquateSegment(NodeH.Location, NodeI.Location)) then
+      begin
+        Continue;
+      end;
+      if not Intersect(EquateSegment(NodeE.Location, NodeB.Location),
+        EquateSegment(NodeH.Location, NodeD.Location)) then
+      begin
+        Continue;
+      end;
+      NodeG.ReplaceNodeInElement(NodeB, CentralElement);
+      NodeB.FElements.Add(CentralElement);
+      NodeG.FElements.Remove(CentralElement);
+
+      NodeG.ReplaceNodeInElement(NodeE, Element3);
+      NodeE.FElements.Add(Element3);
+      NodeG.FElements.Remove(Element3);
+
+      NodeI.ReplaceNodeInElement(NodeH, Element3);
+      NodeH.FElements.Add(Element3);
+      NodeI.FElements.Remove(Element3);
+
+      Element4.RemoveSelfFromAllNodes;
+
+      Element4.FParent.FSubParts.Remove(Element4);
+
+      Assert(NodeG.FElements.Count = 0);
+
+      result := True;
+      Exit;
+    end
+    else if RightSideColinear then
+    begin
+      if NodeF <> self then
+      begin
+        Continue;
+      end;
+
+      if not Intersect(EquateSegment(NodeG.Location, NodeA.Location),
+        EquateSegment(NodeH.Location, NodeI.Location)) then
+      begin
+        Continue;
+      end;
+      if not Intersect(EquateSegment(NodeA.Location, NodeE.Location),
+        EquateSegment(NodeH.Location, NodeC.Location)) then
+      begin
+        Continue;
+      end;
+      NodeF.ReplaceNodeInElement(NodeA, CentralElement);
+      NodeA.FElements.Add(CentralElement);
+      NodeF.FElements.Remove(CentralElement);
+
+      NodeI.ReplaceNodeInElement(NodeH, Element1);
+      NodeH.FElements.Add(Element1);
+      NodeI.FElements.Remove(Element1);
+
+      NodeF.ReplaceNodeInElement(NodeE, Element1);
+      NodeE.FElements.Add(Element1);
+      NodeF.FElements.Remove(Element1);
+
+
+
+      Element2.RemoveSelfFromAllNodes;
+
+      Element2.FParent.FSubParts.Remove(Element2);
+
+      Assert(NodeF.FElements.Count = 0);
+
+      result := True;
+      Exit;
+
+    end
+    else
+    begin
+      if NodeH <> self then
+      begin
+        Continue;
+      end;
+
+      if not Intersect(EquateSegment(NodeA.Location, NodeE.Location),
+        EquateSegment(NodeC.Location, NodeI.Location)) then
+      begin
+        Continue;
+      end;
+      if not Intersect(EquateSegment(NodeB.Location, NodeE.Location),
+        EquateSegment(NodeD.Location, NodeI.Location)) then
+      begin
+        Continue;
+      end;
+
+      NodeF.ReplaceNodeInElement(NodeE, Element1);
+      NodeE.FElements.Add(Element1);
+      NodeF.FElements.Remove(Element1);
+
+      NodeG.ReplaceNodeInElement(NodeE, Element3);
+      NodeE.FElements.Add(Element3);
+      NodeG.FElements.Remove(Element3);
+
+      Element2.RemoveSelfFromAllNodes;
+      Element4.RemoveSelfFromAllNodes;
+      CentralElement.RemoveSelfFromAllNodes;
+
+      Element2.FParent.FSubParts.Remove(Element2);
+      Element4.FParent.FSubParts.Remove(Element4);
+      CentralElement.FParent.FSubParts.Remove(CentralElement);
+
+      Assert(NodeF.FElements.Count = 0);
+      Assert(NodeG.FElements.Count = 0);
+      Assert(NodeH.FElements.Count = 0);
+
+      FQuadMeshCreator.FNodes.Remove(NodeG);
+      FQuadMeshCreator.FNodes.Remove(NodeH);
+      result := True;
+      Exit;
+    end;
+  end;
 end;
 
 procedure TNode.SetLocation(const Value: TPoint2D);
@@ -4569,6 +11586,7 @@ var
   CFCount: Integer;
   DECount: Integer;
   NodeBIndexToDelete: Integer;
+  Epsilon: double;
   procedure HandleSideToBeDeleted;
   var
     KeepEleIndex: Integer;
@@ -4671,6 +11689,45 @@ var
         EquateSegment(NodeE.Location, NodeF.Location));
       if CanHandleCF then
       begin
+        if (NodeG.NodeType <> ntInner)
+          and (NodeD.NodeType <> ntInner)
+          and (NodeF.NodeType <> ntInner)
+          and RobustCollinear(NodeG.Location, NodeD.Location, NodeF.Location,
+            Epsilon)
+          then
+        begin
+          CanHandleCF := False;
+        end;
+        if (NodeG.NodeType <> ntInner)
+          and (NodeD.NodeType <> ntInner)
+          and (NodeC.NodeType <> ntInner)
+          and RobustCollinear(NodeG.Location, NodeD.Location, NodeC.Location,
+            Epsilon)
+          then
+        begin
+          CanHandleCF := False;
+        end;
+        if (NodeG.NodeType <> ntInner)
+          and (NodeE.NodeType <> ntInner)
+          and (NodeH.NodeType <> ntInner)
+          and RobustCollinear(NodeG.Location, NodeE.Location, NodeH.Location,
+            Epsilon)
+          then
+        begin
+          CanHandleCF := False;
+        end;
+        if (NodeG.NodeType <> ntInner)
+          and (NodeE.NodeType <> ntInner)
+          and (NodeC.NodeType <> ntInner)
+          and RobustCollinear(NodeG.Location, NodeE.Location, NodeC.Location,
+            Epsilon)
+          then
+        begin
+          CanHandleCF := False;
+        end;
+      end;
+      if CanHandleCF then
+      begin
         for NodeIndex := 0 to ElementToKeep1.Count - 2 do
         begin
           ANode := ElementToKeep1[NodeIndex].FNode;
@@ -4685,7 +11742,7 @@ var
         end;
         if BoundaryNodes.Count = 3 then
         begin
-          CanHandleCF := not BadAngle(BoundaryNodes[0].Location,
+          CanHandleCF := not NearlyStraightAngle(BoundaryNodes[0].Location,
             BoundaryNodes[1].Location, BoundaryNodes[2].Location)
         end
         else
@@ -4710,7 +11767,7 @@ var
           end;
           if BoundaryNodes.Count = 3 then
           begin
-            CanHandleCF := not BadAngle(BoundaryNodes[0].Location,
+            CanHandleCF := not NearlyStraightAngle(BoundaryNodes[0].Location,
               BoundaryNodes[1].Location, BoundaryNodes[2].Location)
           end
           else
@@ -4725,6 +11782,45 @@ var
       CanHandleDE := CanHandleDE and
         Intersect(EquateSegment(NodeD.Location, NodeH.Location),
         EquateSegment(NodeE.Location, NodeF.Location));
+      if CanHandleDE then
+      begin
+        if (NodeE.NodeType <> ntInner)
+          and (NodeC.NodeType <> ntInner)
+          and (NodeG.NodeType <> ntInner)
+          and RobustCollinear(NodeE.Location, NodeC.Location, NodeG.Location,
+            Epsilon)
+          then
+        begin
+          CanHandleDE := False;
+        end;
+        if (NodeG.NodeType <> ntInner)
+          and (NodeD.NodeType <> ntInner)
+          and (NodeC.NodeType <> ntInner)
+          and RobustCollinear(NodeG.Location, NodeD.Location, NodeC.Location,
+            Epsilon)
+          then
+        begin
+          CanHandleDE := False;
+        end;
+        if (NodeD.NodeType <> ntInner)
+          and (NodeF.NodeType <> ntInner)
+          and (NodeH.NodeType <> ntInner)
+          and RobustCollinear(NodeD.Location, NodeF.Location, NodeH.Location,
+            Epsilon)
+          then
+        begin
+          CanHandleDE := False;
+        end;
+        if (NodeF.NodeType <> ntInner)
+          and (NodeH.NodeType <> ntInner)
+          and (NodeE.NodeType <> ntInner)
+          and RobustCollinear(NodeF.Location, NodeH.Location, NodeE.Location,
+            Epsilon)
+          then
+        begin
+          CanHandleDE := False;
+        end;
+      end;
       if CanHandleDE then
       begin
 
@@ -4743,7 +11839,7 @@ var
         end;
         if BoundaryNodes.Count = 3 then
         begin
-          CanHandleDE := not BadAngle(BoundaryNodes[0].Location,
+          CanHandleDE := not NearlyStraightAngle(BoundaryNodes[0].Location,
             BoundaryNodes[1].Location, BoundaryNodes[2].Location)
         end
         else
@@ -4768,7 +11864,7 @@ var
           end;
           if BoundaryNodes.Count = 3 then
           begin
-            CanHandleDE := not BadAngle(BoundaryNodes[0].Location,
+            CanHandleDE := not NearlyStraightAngle(BoundaryNodes[0].Location,
               BoundaryNodes[1].Location, BoundaryNodes[2].Location)
           end
           else
@@ -4837,7 +11933,7 @@ var
     FQuadMeshCreator.FNodes.Delete(NodeBIndexToDelete);
 
     result := True;
-{$IFDEF DEBUG}
+{$IFDEF TEST}
     ElementToKeep1.CheckInvalidElement;
     ElementToKeep2.CheckInvalidElement;
 {$ENDIF}
@@ -4850,6 +11946,7 @@ begin
   begin
     Exit;
   end;
+  Epsilon := FQuadMeshCreator.FCharacteristicLength/1e7;
   for ElementIndex := 0 to FElements.Count - 1 do
   begin
     AnElement := FElements[ElementIndex];
@@ -4914,6 +12011,11 @@ end;
 
 { TNodeInBoundary }
 
+procedure TNodeInBoundary.AddSegment(ASegment: TSegment);
+begin
+  FSegments.Add(ASegment);
+end;
+
 constructor TNodeInBoundary.Create(Node: TNode; Boundary: TBoundary;
 Segment: TSegment);
 begin
@@ -4927,8 +12029,13 @@ begin
     FNode.FSegments.Add(Segment);
   end;
   FBoundary := Boundary;
-  FSegments.Add(Segment);
+  AddSegment(Segment);
   FBoundary.FQuadMeshCreator.FBoundaryNodes.Add(self);
+end;
+
+procedure TNodeInBoundary.DeleteSegment(Index: Integer);
+begin
+  FSegments.Delete(index);
 end;
 
 destructor TNodeInBoundary.Destroy;
@@ -4957,6 +12064,16 @@ begin
   result := FNode.NodeType;
 end;
 
+function TNodeInBoundary.GetSegment(Index: Integer): TSegment;
+begin
+  result := FSegments[Index];
+end;
+
+function TNodeInBoundary.GetSegmentCount: Integer;
+begin
+  result := FSegments.Count;
+end;
+
 function TNodeInBoundary.GetX: double;
 begin
   result := FNode.X;
@@ -4967,10 +12084,22 @@ begin
   result := FNode.Y;
 end;
 
+function TNodeInBoundary.IndexOfSegment(ASegment: TSegment): integer;
+begin
+  result := FSegments.IndexOf(ASegment);
+end;
+
+procedure TNodeInBoundary.InsertSegment(Index: Integer; ASegment: TSegment);
+begin
+  FSegments.Insert(Index, ASegment);
+end;
+
 function TNodeInBoundary.OnSameSegment(ANode: TNodeInBoundary): boolean;
 var
   SegmentIndex: Integer;
   ASegment: TSegment;
+  InnerSegmentIndex: Integer;
+  AnotherSegment: TSegment;
 begin
   result := False;
   for SegmentIndex := 0 to FSegments.Count - 1 do
@@ -4981,7 +12110,32 @@ begin
       result := True;
       Exit;
     end;
+    for InnerSegmentIndex := 0 to ANode.FSegments.Count - 1 do
+    begin
+      AnotherSegment := ANode.FSegments[InnerSegmentIndex];
+      if (ASegment.FNode1 = AnotherSegment.FNode2)
+        and (ASegment.FNode2 = AnotherSegment.FNode1) then
+      begin
+        result := True;
+        Exit;
+      end;
+    end;
   end;
+end;
+
+procedure TNodeInBoundary.RemoveSegment(ASegment: TSegment);
+begin
+  FSegments.Remove(ASegment);
+end;
+
+procedure TNodeInBoundary.ReverseSegments;
+begin
+  FSegments.Reverse;
+end;
+
+procedure TNodeInBoundary.SetSegment(Index: Integer; const Value: TSegment);
+begin
+  FSegments[Index] := Value;
 end;
 
 { TSegment }
@@ -5034,6 +12188,8 @@ begin
   end;
 
   result := CalcNodesToInsert(NStar);
+
+
 end;
 
 procedure TSegment.Reverse;
@@ -5044,6 +12200,12 @@ begin
   FNode1 := FNode2;
   FNode2 := Temp;
   FInnerNodes.Reverse;
+end;
+
+function TSegment.ContainsNode(ANode: TNode): Boolean;
+begin
+  result := (ANode = FNode1) or (ANode = FNode2)
+    or (FInnerNodes.IndexOf(ANode) >= 0);
 end;
 
 constructor TSegment.Create(Node1, Node2: TNode; SegmentType: TSegmentType;
@@ -5094,6 +12256,10 @@ var
   ElapsedDistance: double;
   Factor: double;
   NodeIndex: Integer;
+  NewNodeX: Double;
+  NewNodeY: Double;
+  NodeTree: TRbwQuadTree;
+  Epsilon: double;
   procedure InsertNode;
   begin
     case SegmentType of
@@ -5114,13 +12280,30 @@ begin
   Assert(FInnerNodes.Count = 0);
   DeltaX := Node2.X - Node1.X;
   DeltaY := Node2.Y - Node1.Y;
+  NodeTree := FQuadMeshCreator.FNodeQuadTree;
+  Epsilon := Min((NodeTree.XMax-NodeTree.XMin),(NodeTree.YMax-NodeTree.YMin));
+  Epsilon := Epsilon/1e7;
   if Node1.DesiredSpacing = Node2.DesiredSpacing then
   begin
     for NewNodeIndex := 1 to NumberToInsert do
     begin
-      NewNode := TNode.Create(FQuadMeshCreator, Node1.DesiredSpacing);
-      NewNode.X := Node1.X + DeltaX / (NumberToInsert + 1) * NewNodeIndex;
-      NewNode.Y := Node1.Y + DeltaY / (NumberToInsert + 1) * NewNodeIndex;
+      Factor := NewNodeIndex / (NumberToInsert + 1);
+      NewNodeX := Node1.X + DeltaX * Factor;
+      NewNodeY := Node1.Y + DeltaY * Factor;
+
+      NewNode := NodeTree.NearestPointsFirstData(NewNodeX, NewNodeY);
+      if (Abs(NewNode.X - NewNodeX)>Epsilon) or (Abs(NewNode.Y - NewNodeY)>Epsilon) then
+      begin
+        NewNode := TNode.Create(FQuadMeshCreator, Node1.DesiredSpacing);
+        case SegmentType of
+          stInner: NewNode.FNodeType := ntInner;
+          stSubDomain:  NewNode.FNodeType := ntSubDomain;
+          stEdge:  NewNode.FNodeType := ntEdge;
+        end;
+        NewNode.X := NewNodeX;
+        NewNode.Y := NewNodeY;
+        NodeTree.AddPoint(NewNode.X, NewNode.Y, NewNode);
+      end;
       InsertNode;
     end;
   end
@@ -5193,20 +12376,30 @@ begin
       for NewNodeIndex := 0 to Distances.Count - 1 do
       begin
         Factor := Distances[NewNodeIndex] / ElapsedDistance;
-        Assert(Factor > Epsilon);
-        Assert(Factor < 1 - Epsilon);
-        NewNode := TNode.Create(FQuadMeshCreator, Spacings[NewNodeIndex]);
-        NewNode.X := Node1.X + DeltaX * Factor;
-        NewNode.Y := Node1.Y + DeltaY * Factor;
+        Assert(Factor > 0);
+        Assert(Factor < 1);
+        NewNodeX := Node1.X + DeltaX * Factor;
+        NewNodeY := Node1.Y + DeltaY * Factor;
+        NewNode := NodeTree.NearestPointsFirstData(NewNodeX, NewNodeY);
+        if (Abs(NewNode.X - NewNodeX)>Epsilon) or (Abs(NewNode.Y - NewNodeY)>Epsilon) then
+        begin
+          NewNode := TNode.Create(FQuadMeshCreator, LastSpacing);
+          case SegmentType of
+            stInner: NewNode.FNodeType := ntInner;
+            stSubDomain:  NewNode.FNodeType := ntSubDomain;
+            stEdge:  NewNode.FNodeType := ntEdge;
+          end;
+          NewNode.X := NewNodeX;
+          NewNode.Y := NewNodeY;
+          NodeTree.AddPoint(NewNode.X, NewNode.Y, NewNode);
+        end;
         InsertNode;
       end;
-
     finally
       Distances.Free;
       Spacings.Free;
     end;
   end;
-
 end;
 
 function TSegment.Length: double;
@@ -5286,6 +12479,105 @@ end;
 function TNodeSpacingComparer.Compare(const Left, Right: TNode): Integer;
 begin
   result := Sign(Right.DesiredSpacing - Left.DesiredSpacing);
+end;
+
+{ TBoundaryLink }
+
+constructor TBoundaryLink.Create;
+begin
+  Children := TBoundaryLinkObjectList.Create;
+end;
+
+destructor TBoundaryLink.Destroy;
+begin
+  Children.Free;
+  inherited;
+end;
+
+
+{ TBoundaryCountComparer }
+
+function TBoundaryCountComparer.Compare(const Left, Right: TBoundary): Integer;
+begin
+  Result := Left.Count - Right.Count;
+end;
+
+{ TNodeConnection }
+
+procedure TNodeConnection.AddLink(ABoundary: TBoundary);
+var
+  CompareItem: TAngleCompareItem;
+  OtherNode: TNode;
+begin
+  CompareItem := TAngleCompareItem.Create;
+  CompareItem.Boundary := ABoundary;
+  if ABoundary.FNodes.First = FNode then
+  begin
+    CompareItem.Direction := dForward;
+    OtherNode := ABoundary.FNodes[1];
+  end
+  else
+  begin
+    Assert(ABoundary.FNodes.Last = FNode);
+    CompareItem.Direction := dBackward;
+    OtherNode := ABoundary.FNodes[ABoundary.FNodes.Count -2];
+  end;
+  CompareItem.Angle := ArcTan2(OtherNode.Y-FNode.Y, OtherNode.X-FNode.X);
+  FConnections.Add(CompareItem);
+end;
+
+constructor TNodeConnection.Create(ANode: TNode);
+begin
+  FNode := ANode;
+  FConnections := TAngleList.Create;
+end;
+
+destructor TNodeConnection.Destroy;
+begin
+  FConnections.Free;
+  inherited;
+end;
+
+procedure TNodeConnection.RemoveLink(ABoundary: TBoundary);
+var
+  Index: Integer;
+begin
+  for Index := FConnections.Count - 1 downto 0 do
+  begin
+    if FConnections[Index].Boundary = ABoundary then
+    begin
+      FConnections.Delete(Index);
+    end;
+  end;
+end;
+
+procedure TNodeConnection.Sort;
+var
+  Comparer: TAngleComparer;
+begin
+  Comparer := TAngleComparer.Create;
+  try
+    FConnections.Sort(Comparer);
+  finally
+    Comparer.Free;
+  end;
+//  FConnections.Reverse;
+end;
+
+{ TAngleComparer }
+
+function TAngleComparer.Compare(const Left, Right: TAngleCompareItem): Integer;
+begin
+  result := 0;
+  if Right = Left then
+  begin
+    Exit;
+  end;
+  result := Sign(Right.Angle - Left.Angle);
+  if result = 0 then
+  begin
+    Result := -(Ord(Right.Direction) - Ord(Left.Direction));
+  end;
 end;
 
 initialization

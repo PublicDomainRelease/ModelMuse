@@ -91,8 +91,8 @@ var
   RowIndex: Integer;
   Row: Integer;
   LayerIndex: Integer;
+  LIndex: Integer;
 begin
-  {$IFDEF SUTRA}
   Assert(frmGoPhast.ModelSelection = msSutra22);
   lbLayers.Items.Add('1');
   APage := TTabSheet.Create(self);
@@ -132,11 +132,25 @@ begin
         case DataArray.EvaluatedAt of
           eaBlocks:
             begin
-              AGrid.RowCount := Mesh.ActiveElementCount + 1
+              if DataArray.Orientation = dso3D then
+              begin
+                AGrid.RowCount := Mesh.ActiveElementCount + 1
+              end
+              else
+              begin
+                AGrid.RowCount := Mesh.Mesh2D.Elements.Count + 1
+              end;
             end;
           eaNodes:
             begin
-              AGrid.RowCount := Mesh.ActiveNodeCount + 1;
+              if DataArray.Orientation = dso3D then
+              begin
+                AGrid.RowCount := Mesh.ActiveNodeCount + 1
+              end
+              else
+              begin
+                AGrid.RowCount := Mesh.Mesh2D.Nodes.Count + 1
+              end;
             end;
           else Assert(False);
         end;
@@ -193,26 +207,60 @@ begin
               case DataArray.EvaluatedAt of
                 eaBlocks:
                   begin
-                    Element3D := Mesh.ElementArray[LayerIndex, ColIndex];
-                    if Element3D.Active then
+                    if DataArray.Orientation = dso3D then
                     begin
-                      Row := Element3D.ElementNumber + 1;
+                      Element3D := Mesh.ElementArray[LayerIndex, ColIndex];
+                      if Element3D.Active then
+                      begin
+                        Row := Element3D.ElementNumber + 1;
+                      end
+                      else
+                      begin
+                        Row := -1;
+                      end;
                     end
                     else
                     begin
-                      Row := -1;
+                      Row:= -1;
+                      for LIndex := 0 to Mesh.LayerCount - 1 do
+                      begin
+                        Element3D := Mesh.ElementArray[LIndex, ColIndex];
+                        if Element3D.Active then
+                        begin
+                          Row := ColIndex + 1;
+                          AGrid.Cells[0, Row] := IntToStr(Element3D.ElementNumber + 1);
+                          break;
+                        end;
+                      end;
                     end;
                   end;
                 eaNodes:
                   begin
-                    Node3D := Mesh.NodeArray[LayerIndex, ColIndex];
-                    if Node3D.Active then
+                    if DataArray.Orientation = dso3D then
                     begin
-                      Row := Node3D.Number + 1;
+                      Node3D := Mesh.NodeArray[LayerIndex, ColIndex];
+                      if Node3D.Active then
+                      begin
+                        Row := Node3D.Number + 1;
+                      end
+                      else
+                      begin
+                        Row := -1;
+                      end;
                     end
                     else
                     begin
                       Row := -1;
+                      for LIndex := 0 to Mesh.LayerCount - 1 do
+                      begin
+                        Node3D := Mesh.NodeArray[LIndex, ColIndex];
+                        if Node3D.Active then
+                        begin
+                          Row := ColIndex + 1;
+                          AGrid.Cells[0, Row] := IntToStr(Node3D.Number + 1);
+                          break;
+                        end;
+                      end;
                     end;
                   end;
                 else Assert(False);
@@ -248,7 +296,6 @@ begin
     AGrid.EndUpdate;
   end;
   APage.TabVisible := False;
-  {$ENDIF}
 end;
 
 procedure TfrmDataSetValues.btnCopyClick(Sender: TObject);
@@ -260,10 +307,7 @@ begin
   begin
     pcDataSet.ActivePage.Handle;
     Grid := pcDataSet.ActivePage.Controls[0] as TRbwDataGrid4;
-    Grid.Options := Grid.Options - [goEditing];
-    Grid.SelectAll;
-    Grid.CopySelectedCellsToClipboard;
-    Grid.ClearSelection;
+    Grid.CopyAllCellsToClipboard;
   end;
 end;
 
@@ -376,11 +420,11 @@ var
   ChildModel: TChildModel;
 begin
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowNWT {$IFDEF SUTRA}, msSutra22{$ENDIF}:
+    msPhast, msModflow, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}, msSutra22:
       begin
         comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel)
       end;
-    msModflowLGR:
+    msModflowLGR, msModflowLGR2:
       begin
         comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel);
         for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
@@ -441,7 +485,6 @@ begin
   lbLayers.Items.Clear;
   DataArray.Initialize;
 
-  {$IFDEF SUTRA}
   if frmGoPhast.ModelSelection = msSutra22 then
   begin
     AssignMeshValues(DataArray);
@@ -450,9 +493,6 @@ begin
   begin
     AssignGridValues(DataArray);
   end;
-  {$ELSE}
-    AssignGridValues(DataArray);
-  {$ENDIF}
   pcDataSet.ActivePageIndex := 0;
   lbLayers.ItemIndex := 0;
   btnCopy.Enabled := True;

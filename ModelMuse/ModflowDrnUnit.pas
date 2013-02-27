@@ -118,7 +118,8 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer;
+      AModel: TBaseModel); override;
   end;
 
   // Each @name stores a @link(TDrnCollection).
@@ -131,7 +132,7 @@ type
   TDrn_Cell = class(TValueCell)
   private
     Values: TDrnRecord;
-    StressPeriod: integer;
+//    StressPeriod: integer;
     function GetElevation: double;
     function GetConductance: double;
     function GetConductanceAnnotation: string;
@@ -232,11 +233,11 @@ end;
 procedure TDrnItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FConductance,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FElevation,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TDrnItem.CreateFormulaObjects;
@@ -594,7 +595,7 @@ procedure TDrn_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
   Values.Cache(Comp, Strings);
-  WriteCompInt(Comp, StressPeriod);
+//  WriteCompInt(Comp, StressPeriod);
 end;
 
 function TDrn_Cell.GetColumn: integer;
@@ -672,7 +673,7 @@ procedure TDrn_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringLi
 begin
   inherited;
   Values.Restore(Decomp, Annotations);
-  StressPeriod := ReadCompInt(Decomp);
+//  StressPeriod := ReadCompInt(Decomp);
 end;
 
 procedure TDrn_Cell.SetColumn(const Value: integer);
@@ -735,7 +736,7 @@ begin
         Assert(ScreenObject <> nil);
         Cell.IFace := (ScreenObject as TScreenObject).IFace;
         Cells.Add(Cell);
-        Cell.StressPeriod := TimeIndex;
+//        Cell.StressPeriod := TimeIndex;
         Cell.Values := BoundaryValues;
         Cell.ScreenObject := ScreenObject;
         LocalModel.AdjustCellPosition(Cell);
@@ -778,7 +779,7 @@ begin
     Item := Values[ValueIndex] as TCustomModflowBoundaryItem;
     if ObservationsPresent then
     begin
-      if PriorTime < Item.StartTime then
+      if PriorTime <= Item.StartTime then
       begin
         if ValueCount < Values.BoundaryCount[AModel] then
         begin
@@ -795,7 +796,7 @@ begin
       AssignCells(BoundaryStorage, ValueTimeList, AModel);
       Inc(ValueCount);
     end;
-    if (ValueIndex = Values.Count - 1) and ObservationsPresent then
+    if {(ValueIndex = Values.Count - 1) and} ObservationsPresent then
     begin
       if Item.EndTime < EndOfLastStressPeriod then
       begin

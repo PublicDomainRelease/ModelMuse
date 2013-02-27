@@ -4,7 +4,7 @@
   <title translate="true">Operators</title>
   <body>
     <header>
-      <para styleclass="Heading2"><text styleclass="Heading1" translate="true">Operators</text></para>
+      <para styleclass="Heading2_atoc_"><text styleclass="Heading1" translate="true">Operators</text></para>
     </header>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The operators in table 1 can be used in formulas.</text></para>
     <para styleclass="Table Caption"><text styleclass="Table Caption" translate="true">Table 1. Operators in ModelMuse Formulas</text></para>
@@ -25,7 +25,7 @@
       </thead>
       <tr style="vertical-align:middle">
         <td colspan="4" style="height:1px;">
-          <para styleclass="Normal" style="text-align:left; text-indent:0px; margin-top:0px; margin-right:0px; margin-bottom:0px; margin-left:0px; line-height:1.0; white-space:normal; page-break-inside:auto; page-break-after:auto; tabstops:none;">          <line style="height:1px; color:#000000;" />
+          <para styleclass="Normal" style="text-align:left; text-indent:0px; margin-top:0px; margin-right:0px; margin-bottom:0px; margin-left:0px; line-height:1.0; white-space:normal; page-break-inside:auto; page-break-after:auto; tabstops:none;">          <line style="height:1px; color:#000000;"/>
 </para>
         </td>
       </tr>
@@ -255,7 +255,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td colspan="4">
-          <para styleclass="Normal" style="text-align:left; text-indent:0px; margin-top:0px; margin-right:0px; margin-bottom:0px; margin-left:0px; line-height:1.0; white-space:normal; page-break-inside:auto; page-break-after:auto; tabstops:none;">          <line style="height:1px; color:#000000;" />
+          <para styleclass="Normal" style="text-align:left; text-indent:0px; margin-top:0px; margin-right:0px; margin-bottom:0px; margin-left:0px; line-height:1.0; white-space:normal; page-break-inside:auto; page-break-after:auto; tabstops:none;">          <line style="height:1px; color:#000000;"/>
 </para>
         </td>
       </tr>

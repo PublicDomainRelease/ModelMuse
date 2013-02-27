@@ -7,7 +7,7 @@ uses
   Controls, Forms, Dialogs, frameCustomSutraFeatureUnit,
   ArgusDataEntry, StdCtrls, Grids, RbwDataGrid4, Buttons, Mask,
   JvExMask, JvSpin, ExtCtrls, UndoItemsScreenObjects, SutraBoundariesUnit,
-  GoPhastTypes;
+  GoPhastTypes, SutraTimeScheduleUnit;
 
 type
   TSutraBoundaryGridColumns = (sbgtTime, sbgtUsed, sbgtVariable1, sbgtVariable2);
@@ -16,6 +16,7 @@ type
     pnlEditGrid: TPanel;
     lblFormula: TLabel;
     rdeFormula: TRbwDataEntry;
+    cbUsed: TCheckBox;
     procedure edNameChange(Sender: TObject);
     procedure seNumberOfTimesChange(Sender: TObject);
     procedure comboScheduleChange(Sender: TObject);
@@ -33,6 +34,9 @@ type
     procedure rdgSutraFeatureEndUpdate(Sender: TObject);
     procedure btnDeleteClick(Sender: TObject);
     procedure btnInsertClick(Sender: TObject);
+    procedure rdgSutraFeatureSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure cbUsedClick(Sender: TObject);
   private
     FInitialTime: Double;
     FBoundaryType: TSutraBoundaryType;
@@ -44,10 +48,10 @@ type
     procedure InitializeColumnHeadings;
     procedure GetBoundaryValues(BoundaryList: TSutraBoundaryList);
     procedure SetBoundaryValues(BoundValues: TCustomSutraBoundaryCollection);
-    procedure AdjustBoundaryValues(SutraValues: TCustomSutraBoundaryCollection);
     procedure LayoutMultiEditControls;
     function GetValidTime(ACol, ARow: integer): Boolean;
     procedure UpdateColWidths;
+    procedure ClearData;
     { Private declarations }
   public
     property BoundaryType: TSutraBoundaryType read FBoundaryType write SetBoundaryType;
@@ -56,6 +60,9 @@ type
       ClearAll: boolean); override;
     { Public declarations }
   end;
+
+//procedure AdjustBoundaryValues(ASchedule: TSutraTimeSchedule;
+//  SutraValues: TCustomSutraBoundaryCollection);
 
 var
   frameSutraBoundary: TframeSutraBoundary;
@@ -67,9 +74,9 @@ implementation
 
 uses
   ModflowBoundaryUnit, Generics.Collections, ScreenObjectUnit,
-  frmGoPhastUnit, SutraTimeScheduleUnit,
-  frmSutraTimeAdjustChoiceUnit, RealListUnit, frmCustomGoPhastUnit,
-  SutraOptionsUnit, frmErrorsAndWarningsUnit;
+  frmGoPhastUnit,
+  RealListUnit, frmCustomGoPhastUnit,
+  SutraOptionsUnit, frmErrorsAndWarningsUnit, AdjustSutraBoundaryValuesUnit;
 
 resourcestring
   StrFluidSource = 'Fluid source';
@@ -78,7 +85,7 @@ resourcestring
   StrSoluteSource = 'Solute source';
   StrEnergySouce = 'Energy source';
   StrSpecifiedPressure = 'Specified pressure';
-  StrSutraSpecifiedHead = 'SUTRA specified head';
+  StrSutraSpecifiedHead = 'Specified head';
   StrSpecifiedTemperatur = 'Specified temperature';
   StrSpecifiedConcentration = 'Specified concentration';
   StrTime = 'Time';
@@ -107,6 +114,8 @@ var
   ABoundary: TSutraBoundary;
 begin
   inherited;
+  ClearData;
+
   FInitialTime := frmGoPhast.PhastModel.SutraTimeOptions.InitialTime;
   FGettingData := True;
   BoundaryList := TSutraBoundaryList.Create;
@@ -164,7 +173,7 @@ begin
     end;
     GetScheduleName(BoundaryList);
     GetBoundaryValues(BoundaryList);
-    comboScheduleChange(nil);
+//    comboScheduleChange(nil);
 //    CheckSchedule(BoundaryList);
 
 
@@ -172,6 +181,7 @@ begin
     BoundaryList.Free;
     FGettingData := False;
   end;
+  comboScheduleChange(nil);
 end;
 
 procedure TframeSutraBoundary.SetBoundaryType(
@@ -274,6 +284,29 @@ begin
   end;
 end;
 
+procedure TframeSutraBoundary.ClearData;
+var
+  RowIndex: Integer;
+  ColIndex: Integer;
+begin
+  rdgSutraFeature.BeginUpdate;
+  try
+    for RowIndex := rdgSutraFeature.FixedRows to rdgSutraFeature.RowCount - 1 do
+    begin
+      rdgSutraFeature.Checked[Ord(sbgtUsed), RowIndex] := False;
+      for ColIndex := rdgSutraFeature.FixedCols to rdgSutraFeature.ColCount - 1 do
+      begin
+        rdgSutraFeature.Cells[ColIndex, RowIndex] := '';
+      end;
+    end;
+    rdgSutraFeature.RowCount := 2;
+    seNumberOfTimes.AsInteger := 0;
+    comboSchedule.ItemIndex := 0;
+  finally
+    rdgSutraFeature.EndUpdate;
+  end;
+end;
+
 procedure TframeSutraBoundary.UpdateColWidths;
 var
   NewColWidth: Integer;
@@ -325,101 +358,6 @@ begin
       end;
     end;
   end;
-end;
-
-procedure TframeSutraBoundary.AdjustBoundaryValues(
-  SutraValues: TCustomSutraBoundaryCollection);
-var
-//  SutraValues: TCustomSutraBoundaryCollection;
-  ASchedule: TSutraTimeSchedule;
-//  SameValues: Boolean;
-  TimeIndex: Integer;
-//  Form: TfrmSutraTimeAdjustChoice;
-//  AdjustChoice: TAdjustChoice;
-  SutraTimeOptions: TSutraTimeOptions;
-  TimeValues: TOneDRealArray;
-  TimeList: TRealList;
-  Item: TCustomBoundaryItem;
-  TimePos: Integer;
-begin
-  SutraTimeOptions := frmGoPhast.PhastModel.SutraTimeOptions;
-  ASchedule := comboSchedule.Items.Objects[comboSchedule.ItemIndex]
-    as TSutraTimeSchedule;
-  TimeValues := ASchedule.TimeValues(SutraTimeOptions.InitialTime,
-     SutraTimeOptions.Schedules);
-
-  TimeList := TRealList.Create;
-  try
-    for TimeIndex := 0 to Length(TimeValues) - 1 do
-    begin
-      TimeList.Add(TimeValues[TimeIndex]);
-    end;
-    TimeList.Sort;
-
-    for TimeIndex := SutraValues.Count - 1 downto 0 do
-    begin
-      Item := SutraValues[TimeIndex];
-      TimePos := TimeList.IndexOfClosest(Item.StartTime);
-      Item.StartTime := TimeList[TimePos];
-    end;
-
-    for TimeIndex := SutraValues.Count - 1 downto 1 do
-    begin
-      if SutraValues[TimeIndex].StartTime = SutraValues[TimeIndex-1].StartTime then
-      begin
-        SutraValues.Delete(TimeIndex-1);
-      end;
-    end;
-  finally
-    TimeList.Free;
-  end;
-
-//  SameValues := Length(TimeValues) = SutraValues.Count;
-//  if SameValues then
-//  begin
-//    for TimeIndex := 0 to SutraValues.Count - 1 do
-//    begin
-//      SameValues := TimeValues[TimeIndex] = SutraValues[TimeIndex].StartTime;
-//      if not SameValues then
-//      begin
-//        break;
-//      end;
-//    end;
-//  end;
-//  if not SameValues then
-//  begin
-//    Beep;
-//    Form := TfrmSutraTimeAdjustChoice.Create(nil);
-//    try
-//      Form.ShowModal;
-//      AdjustChoice := Form.AdjustChoice;
-//    finally
-//      Form.Free;
-//    end;
-//    case AdjustChoice of
-//      acUseSchedule:
-//        begin
-//          if Length(TimeValues) = SutraValues.Count then
-//          begin
-//            for TimeIndex := 0 to SutraValues.Count - 1 do
-//            begin
-//              SutraValues[TimeIndex].StartTime := TimeValues[TimeIndex];
-//            end;
-//          end
-//          else
-//          begin
-//            AdjustBoundaryTimes(TimeValues, SutraValues);
-//          end;
-//          DisplayBoundaries(SutraValues);
-//        end;
-//      acConvert:
-//        begin
-//          comboSchedule.ItemIndex := 0;
-//        end;
-//    else
-//      Assert(False);
-//    end;
-//  end;
 end;
 
 procedure TframeSutraBoundary.SetBoundaryValues(
@@ -524,6 +462,7 @@ var
   BoundColl: TCustomSutraBoundaryCollection;
   Index: Integer;
   ABoundary: TSutraBoundary;
+  ASchedule: TSutraTimeSchedule;
 begin
   FirstBoundary := BoundaryList[0];
   BoundColl := FirstBoundary.Values as TCustomSutraBoundaryCollection;
@@ -542,7 +481,10 @@ begin
   begin
     if comboSchedule.ItemIndex >= 1 then
     begin
-      AdjustBoundaryValues(BoundColl);
+      ASchedule := comboSchedule.Items.Objects[comboSchedule.ItemIndex]
+        as TSutraTimeSchedule;
+
+      AdjustBoundaryValues(ASchedule, BoundColl);
     end;
 //    CheckSchedule(BoundaryList);
     DisplayBoundaries(BoundColl);
@@ -563,6 +505,12 @@ procedure TframeSutraBoundary.btnInsertClick(Sender: TObject);
 begin
   inherited;
 //
+end;
+
+procedure TframeSutraBoundary.cbUsedClick(Sender: TObject);
+begin
+  inherited;
+  ChangeSelectedCellsStateInColumn(rdgSutraFeature, 1, cbUsed.State);
 end;
 
 procedure TframeSutraBoundary.ClearBoundaries;
@@ -648,6 +596,47 @@ begin
         if rdgSutraFeature.Cells[0,RowIndex+1] = rdgSutraFeature.Cells[0,RowIndex] then
         begin
           rdgSutraFeature.DeleteRow(RowIndex+1);
+        end;
+      end;
+      if comboSchedule.ItemIndex <> 1 then
+      begin
+        RowIndex := 1;
+        While RowIndex < rdgSutraFeature.RowCount do
+        begin
+          if TryStrToFloat(rdgSutraFeature.Cells[0,RowIndex], AValue) then
+          begin
+            TimePos := TimeList.IndexOfClosest(AValue)+1;
+            if TimePos > RowIndex then
+            begin
+              if RowIndex-1 >= TimeList.Count then
+              begin
+                Break;
+              end;
+              rdgSutraFeature.InsertRow(RowIndex);
+//              Continue;
+              rdgSutraFeature.Cells[0,RowIndex] := FloatToStr(TimeList[RowIndex-1]);
+              rdgSutraFeature.Checked[1,RowIndex] := False;
+            end;
+          end
+          else
+          begin
+            if RowIndex-1 >= TimeList.Count then
+            begin
+              Break;
+            end;
+//            rdgSutraFeature.InsertRow(RowIndex);
+            rdgSutraFeature.Cells[0,RowIndex] := FloatToStr(TimeList[RowIndex-1]);
+            rdgSutraFeature.Checked[1,RowIndex] := False;
+          end;
+          Inc(RowIndex);
+        end;
+        while RowIndex-1 < TimeList.Count do
+        begin
+          rdgSutraFeature.RowCount := rdgSutraFeature.RowCount+1;
+          seNumberOfTimes.AsInteger := seNumberOfTimes.AsInteger + 1;
+          rdgSutraFeature.Cells[0,RowIndex] := FloatToStr(TimeList[RowIndex-1]);
+          rdgSutraFeature.Checked[1,RowIndex] := False;
+          Inc(RowIndex);
         end;
       end;
     finally
@@ -910,6 +899,15 @@ begin
       break;
     end;
   end;
+  if rdgSutraFeature.ColVisible[1] then
+  begin
+    cbUsed.Visible := True;
+    LayoutControls(rdgSutraFeature, cbUsed, nil, 1);
+  end
+  else
+  begin
+    cbUsed.Visible := False;
+  end;
   LayoutControls(rdgSutraFeature, rdeFormula, lblFormula, Col);
 
 end;
@@ -988,7 +986,19 @@ begin
   begin
     EnableMultiEditControl(rdgSutraFeature, rdeFormula, [2,3]);
   end;
+    EnableMultiEditControl(rdgSutraFeature, cbUsed, 1);
 
+end;
+
+procedure TframeSutraBoundary.rdgSutraFeatureSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+begin
+  inherited;
+  if (ARow >= rdgSutraFeature.FixedRows) and (ACol >= Ord(sbgtVariable1))
+    and (rdgSutraFeature.CheckState[Ord(sbgtUsed), ARow] = cbUnchecked) then
+  begin
+    CanSelect := False;
+  end;
 end;
 
 procedure TframeSutraBoundary.rdgSutraFeatureSetEditText(Sender: TObject; ACol,

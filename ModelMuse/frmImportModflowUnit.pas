@@ -23,6 +23,7 @@ type
     lblWarning: TLabel;
     sbStatusBar: TStatusBar;
     pbProgress: TProgressBar;
+    cbOldStream: TCheckBox;
     procedure btnOKClick(Sender: TObject);
     procedure edNameFileChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -41,7 +42,7 @@ implementation
 {$R *.dfm}
 
 uses JclSysUtils, Modflow2005ImporterUnit, frmShowHideObjectsUnit,
-  frmDisplayDataUnit, ModelMuseUtilities;
+  frmDisplayDataUnit, ModelMuseUtilities, StrUtils;
 
 resourcestring
   StrTheMODFLOWNameFil = 'The MODFLOW Name file appears to be invalid';
@@ -66,6 +67,8 @@ var
   XOrigin: double;
   YOrigin: double;
   GridAngle: double;
+  OldFile: string;
+//  DelimPos: Integer;
 begin
   inherited;
   Enabled := False;
@@ -90,6 +93,20 @@ begin
     XOrigin := StrToFloat(rdeX.Text);
     YOrigin := StrToFloat(rdeY.Text);
     GridAngle := StrToFloat(rdeGridAngle.Text) * Pi/180;
+
+    OldFile := ExtractFileDir(edNameFile.FileName) + '\old.txt';
+    if cbOldStream.Checked then
+    begin
+      With TStringList.Create do
+      begin
+        SaveToFile(OldFile);
+        Free;
+      end;
+    end
+    else
+    begin
+      DeleteFile(OldFile);
+    end;
 
     ListFileName := '';
     NameFile := TStringList.Create;
@@ -141,6 +158,15 @@ begin
       Exit;
     end;
     SetCurrentDir(ExtractFileDir(edNameFile.FileName));
+//    if Copy(ListFileName,1,2) = '.\' then
+//    begin
+//      DelimPos := PosEx(PathDelim,ListFileName,3);
+//      if DelimPos > 0 then
+//      begin
+//        ListFileName := Copy(ListFileName,DelimPos+1,MaxInt);
+//      end;
+//
+//    end;
     ListFileName := ExpandFileName(ListFileName);
 
     FReadModflowInputProperly := False;

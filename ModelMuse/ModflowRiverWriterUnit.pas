@@ -32,6 +32,8 @@ type
     class function ObservationExtension: string; override;
     class function ObservationOutputExtension: string; override;
     function ObsNameWarningString: string; override;
+    procedure CheckCell(ValueCell: TValueCell; const PackageName: string); override;
+    procedure Evaluate; override;
   public
     procedure WriteFile(const AFileName: string);
     procedure WriteFluxObservationFile(const AFileName: string;
@@ -41,7 +43,8 @@ type
 implementation
 
 uses ModflowTimeUnit, frmErrorsAndWarningsUnit,
-  ModflowTransientListParameterUnit, ModflowUnitNumbers, frmProgressUnit, Forms;
+  ModflowTransientListParameterUnit, ModflowUnitNumbers, frmProgressUnit, Forms,
+  DataSetUnit;
 
 resourcestring
   StrInTheFollowingRiv = 'In the following river cells, the stage is below t' +
@@ -55,12 +58,57 @@ resourcestring
   StrWritingDataSet2 = '  Writing Data Set 2.';
   StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
   StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
+  StrRiverStageIsBelow = 'River stage is below the bottom of the cell at the' +
+  ' following locations.';
 
 { TModflowRIV_Writer }
 
 function TModflowRIV_Writer.CellType: TValueCellType;
 begin
   result := TRiv_Cell;
+end;
+
+procedure TModflowRIV_Writer.CheckCell(ValueCell: TValueCell;
+  const PackageName: string);
+var
+  Riv_Cell: TRiv_Cell;
+  ActiveDataArray: TDataArray;
+  ScreenObject: TScreenObject;
+begin
+  inherited;
+  Riv_Cell := ValueCell as TRiv_Cell;
+  ActiveDataArray := Model.DataArrayManager.GetDataSetByName(rsActive);
+  Assert(ActiveDataArray <> nil);
+  if ActiveDataArray.BooleanData[Riv_Cell.Layer, Riv_Cell.Row, Riv_Cell.Column]
+    and (Riv_Cell.RiverStage < Model.Grid.CellElevation[
+    Riv_Cell.Column, Riv_Cell.Row, Riv_Cell.Layer+1]) then
+  begin
+    ScreenObject := Riv_Cell.ScreenObject as TScreenObject;
+    if Model.ModelSelection = msModflowNWT then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrRiverStageIsBelow,
+        Format(StrLayerRowColObject, [
+        Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]));
+    end
+    else
+    begin
+      frmErrorsAndWarnings.AddWarning(Model, StrRiverStageIsBelow,
+        Format(StrLayerRowColObject, [
+        Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1, ScreenObject.Name]));
+    end;
+  end;
+end;
+
+procedure TModflowRIV_Writer.Evaluate;
+begin
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrRiverStageIsBelow);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrRiverStageIsBelow);
+    inherited;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
+  end;
 end;
 
 class function TModflowRIV_Writer.Extension: string;
@@ -121,8 +169,16 @@ begin
   NewLine;
   if Riv_Cell.RiverStage <= Riv_Cell.RiverBottom then
   begin
-    frmErrorsAndWarnings.AddError(Model, StrInTheFollowingRiv,
-      Format(StrLayerDRowDC, [Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1]));
+    if Model.ModelSelection = msModflowNWT then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrInTheFollowingRiv,
+        Format(StrLayerDRowDC, [Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1]));
+    end
+    else
+    begin
+      frmErrorsAndWarnings.AddWarning(Model, StrInTheFollowingRiv,
+        Format(StrLayerDRowDC, [Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1]));
+    end;
   end;
 end;
 
@@ -198,6 +254,7 @@ var
   ShouldWriteObservationFile: Boolean;
 begin
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInTheFollowingRiv);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInTheFollowingRiv);
   if not Package.IsSelected then
   begin
     Exit

@@ -254,68 +254,72 @@ var
   CellIndex: Integer;
 begin
   // Quit if the package isn't used.
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrHeadObservationsError);
-  if not Package.IsSelected then
-  begin
-    UpdateNotUsedDisplay(TimeLists);
-    Exit;
-  end;
-  DataArrayList := TList.Create;
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    // evaluate all the data used in the package.
-    Evaluate(Purpose);
-
-    Assert(TimeLists.Count= 1);
-    DisplayTimeList := TimeLists[0] as THobDisplayTimeList;
-    for ObsIndex := 0 to FObservations.Count - 1 do
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrHeadObservationsError);
+    if not Package.IsSelected then
     begin
-      Obs := FObservations[ObsIndex];
-      for ItemIndex := 0 to Obs.Values.ObservationHeads[Model].Count - 1 do
+      UpdateNotUsedDisplay(TimeLists);
+      Exit;
+    end;
+    DataArrayList := TList.Create;
+    try
+      // evaluate all the data used in the package.
+      Evaluate(Purpose);
+
+      Assert(TimeLists.Count= 1);
+      DisplayTimeList := TimeLists[0] as THobDisplayTimeList;
+      for ObsIndex := 0 to FObservations.Count - 1 do
       begin
-        CellList := Obs.Values.ObservationHeads[Model][ItemIndex];
-        if CellList.Count > 0 then
+        Obs := FObservations[ObsIndex];
+        for ItemIndex := 0 to Obs.Values.ObservationHeads[Model].Count - 1 do
         begin
-          Cell := CellList[0];
-          TimePosition := DisplayTimeList.FirstTimeGreaterThan(Cell.Time);
-          if TimePosition >= DisplayTimeList.Count then
+          CellList := Obs.Values.ObservationHeads[Model][ItemIndex];
+          if CellList.Count > 0 then
           begin
-            TimePosition := DisplayTimeList.Count-1;
-          end;
-          for TimeIndex := TimePosition downto Max(0, TimePosition-1) do
-          begin
-            if DisplayTimeList.Times[TimeIndex] = Cell.Time then
+            Cell := CellList[0];
+            TimePosition := DisplayTimeList.FirstTimeGreaterThan(Cell.Time);
+            if TimePosition >= DisplayTimeList.Count then
             begin
-              TimePosition := TimeIndex;
-              break;
+              TimePosition := DisplayTimeList.Count-1;
             end;
-          end;
-          DataArray := DisplayTimeList[TimePosition]
-            as TModflowBoundaryDisplayDataArray;
-          for CellIndex := 0 to CellList.Count - 1 do
-          begin
-            Cell := CellList[CellIndex];
-            DataArray.AddDataValue(Cell.HeadAnnotation, Cell.Head,
-              Cell.Column, Cell.Row, Cell.Layer);
+            for TimeIndex := TimePosition downto Max(0, TimePosition-1) do
+            begin
+              if DisplayTimeList.Times[TimeIndex] = Cell.Time then
+              begin
+                TimePosition := TimeIndex;
+                break;
+              end;
+            end;
+            DataArray := DisplayTimeList[TimePosition]
+              as TModflowBoundaryDisplayDataArray;
+            for CellIndex := 0 to CellList.Count - 1 do
+            begin
+              Cell := CellList[CellIndex];
+              DataArray.AddDataValue(Cell.HeadAnnotation, Cell.Head,
+                Cell.Column, Cell.Row, Cell.Layer);
+            end;
           end;
         end;
       end;
-    end;
-    // Mark all the data arrays and time lists as up to date.
-    for TimeListIndex := 0 to TimeLists.Count - 1 do
-    begin
-      DisplayTimeList := TimeLists[TimeListIndex] as THobDisplayTimeList;
-      for TimeIndex := 0 to DisplayTimeList.Count - 1 do
+      // Mark all the data arrays and time lists as up to date.
+      for TimeListIndex := 0 to TimeLists.Count - 1 do
       begin
-        DataArray := DisplayTimeList[TimeIndex]
-          as TModflowBoundaryDisplayDataArray;
-        DataArray.UpToDate := True;
+        DisplayTimeList := TimeLists[TimeListIndex] as THobDisplayTimeList;
+        for TimeIndex := 0 to DisplayTimeList.Count - 1 do
+        begin
+          DataArray := DisplayTimeList[TimeIndex]
+            as TModflowBoundaryDisplayDataArray;
+          DataArray.UpToDate := True;
+        end;
+        DisplayTimeList.SetUpToDate(True);
       end;
-      DisplayTimeList.SetUpToDate(True);
+    finally
+      DataArrayList.Free;
     end;
   finally
-    DataArrayList.Free;
+    frmErrorsAndWarnings.EndUpdate;
   end;
-
 end;
 
 procedure TModflowHobWriter.WriteDataSet1;
@@ -385,60 +389,65 @@ begin
   begin
     Exit;
   end;
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrHeadObservationsError);
-  frmProgressMM.AddMessage(StrWritingHOBPackage);
-  frmProgressMM.AddMessage(StrEvaluatingData);
-  Evaluate(Purpose);
-  NameOfFile := FileName(AFileName);
-  WriteToNameFile(StrHOB, Model.UnitNumbers.UnitNumber(StrHOB), NameOfFile, foInput);
-  if IUHOBSV <> 0 then
-  begin
-    OutFileName := ChangeFileExt(NameOfFile, StrHobout);
-    WriteToNameFile(StrDATA, IUHOBSV, OutFileName, foOutput);
-  end;
-  OpenFile(NameOfFile);
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    frmProgressMM.AddMessage(StrWritingDataSet0);
-    WriteDataSet0;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrHeadObservationsError);
+    frmProgressMM.AddMessage(StrWritingHOBPackage);
+    frmProgressMM.AddMessage(StrEvaluatingData);
+    Evaluate(Purpose);
+    NameOfFile := FileName(AFileName);
+    WriteToNameFile(StrHOB, Model.UnitNumbers.UnitNumber(StrHOB), NameOfFile, foInput);
+    if IUHOBSV <> 0 then
     begin
-      Exit;
+      OutFileName := ChangeFileExt(NameOfFile, StrHobout);
+      WriteToNameFile(StrDATA, IUHOBSV, OutFileName, foOutput);
     end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet1);
-    WriteDataSet1;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSets3to6);
-    WriteDataSet2;
-
-    FStartingTimes := TRealList.Create;
+    OpenFile(NameOfFile);
     try
-      for TimeIndex := 0 to Model.ModflowFullStressPeriods.Count - 1 do
+      frmProgressMM.AddMessage(StrWritingDataSet0);
+      WriteDataSet0;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
       begin
-        FStartingTimes.Add(Model.ModflowFullStressPeriods[TimeIndex].StartTime);
+        Exit;
       end;
-      FStartingTimes.Sort;
 
-      for Index := 0 to FObservations.Count - 1 do
+      frmProgressMM.AddMessage(StrWritingDataSet1);
+      WriteDataSet1;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
       begin
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSets3to6);
+      WriteDataSet2;
+
+      FStartingTimes := TRealList.Create;
+      try
+        for TimeIndex := 0 to Model.ModflowFullStressPeriods.Count - 1 do
         begin
-          Exit;
+          FStartingTimes.Add(Model.ModflowFullStressPeriods[TimeIndex].StartTime);
         end;
-        WriteDataSet3to6(Index);
+        FStartingTimes.Sort;
+
+        for Index := 0 to FObservations.Count - 1 do
+        begin
+          Application.ProcessMessages;
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+          WriteDataSet3to6(Index);
+        end;
+      finally
+        FStartingTimes.Free;
       end;
     finally
-      FStartingTimes.Free;
+      CloseFile;
     end;
   finally
-    CloseFile;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -540,11 +549,12 @@ var
   DeltaCol: Integer;
   DeltaRow: Integer;
   WarningMessage: string;
+  Layer: integer;
 begin
   if CellList.Count > 1 then
   begin
     // When the absolute value of ROFF or COFF is less than 0.001,
-    // MODFLOW-2000 and MODFLOW-2005 convert them to 0. 
+    // MODFLOW-2000 and MODFLOW-2005 convert them to 0.
     if Observations.Values.ObservationRowOffset < -0.001 then
     begin
       DeltaRow := -1;
@@ -597,6 +607,10 @@ begin
       for CellIndex := 0 to CellList.Count - 1 do
       begin
         Cell := CellList[CellIndex];
+        if not Model.IsLayerSimulated(Cell.Layer) then
+        begin
+          Continue;
+        end;
         LayerSort := TLayerSort.Create;
         LayerSorter.Add(LayerSort);
         LayerSort.Layer := Cell.Layer;
@@ -692,7 +706,9 @@ begin
             WarningMessage);
         end;
 
-        WriteInteger(LayerSort.Layer+1);
+        LAYER := Model.
+          DataSetLayerToModflowLayer(LayerSort.Layer);
+        WriteInteger(LAYER);
         WriteFloat(LayerSort.Proportion);
         if (((SortIndex + 1) mod 10) = 0)
           or (SortIndex = LayerSorter.Count - 1) then
@@ -730,6 +746,7 @@ var
   COFF: Double;
   HOBS: Double;
   Cell: THob_Cell;
+  ACell: THob_Cell;
   OBSNAM: string;
   LAYER: Integer;
   ROW: Integer;
@@ -739,6 +756,7 @@ var
   ObservationTimeCount: Integer;
   ScreenObject: TScreenObject;
   ReferenceStressPeriodIndex: Integer;
+  CellIndex: Integer;
 begin
   if CellList.Count = 0 then
   begin
@@ -767,7 +785,15 @@ begin
   end;
   if CellList.Count > 1 then
   begin
-    LAYER := -CellList.Count;
+    LAYER := 0;
+    for CellIndex := 0 to CellList.Count - 1 do
+    begin
+      ACell := CellList[CellIndex];
+      if Model.IsLayerSimulated(ACell.Layer) then
+      begin
+        Dec(LAYER);
+      end;
+    end;
   end
   else
   begin

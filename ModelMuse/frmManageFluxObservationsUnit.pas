@@ -155,9 +155,12 @@ type
     FGhbScreenObjects: TList;
     FRvobObservations: TFluxObservationGroups;
     FRivScreenObjects: TList;
+    FStobObservations: TFluxObservationGroups;
+    FStrScreenObjects: TList;
     FGbobNode: TTreeNode;
     FDrobNode: TTreeNode;
     FRvobNode: TTreeNode;
+    FStobNode: TTreeNode;
     FSettingTimeCount: Boolean;
     FHeadMassFluxObservations: TList;
     FWellMassFluxObservations: TList;
@@ -171,6 +174,9 @@ type
     FLakMassFluxObservations: TList;
     FDrtMassFluxObservations: TList;
     FEtsMassFluxObservations: TList;
+    FStrMassFluxObservations: TList;
+    FFhbHeadsMassFluxObservations: TList;
+    FFhbFlowsMassFluxObservations: TList;
     FMassFluxObs: TMassFluxObs;
     FHeadMassFluxNode: TTreeNode;
     FWellMassFluxNode: TTreeNode;
@@ -184,6 +190,9 @@ type
     FLakMassFluxNode: TTreeNode;
     FEtsMassFluxNode: TTreeNode;
     FDrtMassFluxNode: TTreeNode;
+    FStrMassFluxNode: TTreeNode;
+    FFhbHeadsMassFluxNode: TTreeNode;
+    FFhbFlowsMassFluxNode: TTreeNode;
     procedure SetSelectedObservation(const Value: TCustomFluxObservationGroup);
     procedure AssignObsNames;
     procedure DisplayFactor;
@@ -256,6 +265,9 @@ resourcestring
   StrResevoirMassFlux = 'Resevoir Mass Flux';
   StrLakeMassFlux = 'Lake Mass Flux';
   StrDRTMassFlux = 'DRT Mass Flux';
+  StrSTRMassFlux = 'STR Mass Flux';
+  StrFHBHeadMassFlux = 'FHB Head Mass Flux';
+  StrFHBFlowMassFlux = 'FHB Flow Mass Flux';
   StrETSMassFlux = 'ETS Mass Flux';
   StrErrorInFormulaS = 'Error in formula: %s';
   StrYouMustDefineAtL = 'You must define at least one chemical species in th' +
@@ -452,6 +464,18 @@ begin
     begin
       AvailableList := FDrtMassFluxObservations;
     end
+    else if tvFluxObservations.Selected.Parent = FStrMassFluxNode then
+    begin
+      AvailableList := FStrMassFluxObservations;
+    end
+    else if tvFluxObservations.Selected.Parent = FFhbHeadsMassFluxNode then
+    begin
+      AvailableList := FFhbHeadsMassFluxObservations;
+    end
+    else if tvFluxObservations.Selected.Parent = FFhbFlowsMassFluxNode then
+    begin
+      AvailableList := FFhbFlowsMassFluxObservations;
+    end
     else
     begin
       Assert(False);
@@ -587,6 +611,10 @@ begin
     begin
       AvailableList := FRivScreenObjects;
     end
+    else if tvFluxObservations.Selected.Parent = FStobNode then
+    begin
+      AvailableList := FStrScreenObjects;
+    end
     else
     begin
       Assert(False);
@@ -684,6 +712,7 @@ begin
     and (TreeView.Selected.Data <> FDrobObservations)
     and (TreeView.Selected.Data <> FGbobObservations)
     and (TreeView.Selected.Data <> FRvobObservations)
+    and (TreeView.Selected.Data <> FStobObservations)
 
     and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsHeadMassFluxObservations)
     and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsWellMassFluxObservations)
@@ -696,7 +725,10 @@ begin
     and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsResMassFluxObservations)
     and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsLakMassFluxObservations)
     and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsDrtMassFluxObservations)
-    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsEtsMassFluxObservations);
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsEtsMassFluxObservations)
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsStrMassFluxObservations)
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsFhbHeadMassFluxObservations)
+    and (TreeView.Selected.Data <> FMassFluxObs.Mt3dmsFhbFlowMassFluxObservations);
   if tabObservationsTimes.TabVisible then
   begin
     rdgFluxObsTimesExit(nil);
@@ -848,6 +880,7 @@ begin
     FDrobObservations.CheckObservationTimes(ErrorRoots, ErrorMessages);
     FGbobObservations.CheckObservationTimes(ErrorRoots, ErrorMessages);
     FRvobObservations.CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FStobObservations.CheckObservationTimes(ErrorRoots, ErrorMessages);
 
     FMassFluxObs.Mt3dmsHeadMassFluxObservations.
       CheckObservationTimes(ErrorRoots, ErrorMessages);
@@ -872,6 +905,12 @@ begin
     FMassFluxObs.Mt3dmsDrtMassFluxObservations.
       CheckObservationTimes(ErrorRoots, ErrorMessages);
     FMassFluxObs.Mt3dmsEtsMassFluxObservations.
+      CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FMassFluxObs.Mt3dmsStrMassFluxObservations.
+      CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FMassFluxObs.Mt3dmsFhbHeadMassFluxObservations.
+      CheckObservationTimes(ErrorRoots, ErrorMessages);
+    FMassFluxObs.Mt3dmsFhbFlowMassFluxObservations.
       CheckObservationTimes(ErrorRoots, ErrorMessages);
 
     Assert(ErrorRoots.Count = ErrorMessages.Count);
@@ -1257,7 +1296,7 @@ begin
   Undo := TUndoEditFluxObservations.Create;
   try
     Undo.AssignNewObservations(FChobObservations, FDrobObservations,
-      FGbobObservations, FRvobObservations, FMassFluxObs);
+      FGbobObservations, FRvobObservations, FStobObservations, FMassFluxObs);
   except
     Undo.Free;
     raise;
@@ -1455,6 +1494,7 @@ begin
     NodeList.Add(FGbobNode);
     NodeList.Add(FDrobNode);
     NodeList.Add(FRvobNode);
+    NodeList.Add(FStobNode);
     NodeList.Add(FHeadMassFluxNode);
     NodeList.Add(FWellMassFluxNode);
     NodeList.Add(FDrnMassFluxNode);
@@ -1467,6 +1507,9 @@ begin
     NodeList.Add(FLakMassFluxNode);
     NodeList.Add(FEtsMassFluxNode);
     NodeList.Add(FDrtMassFluxNode);
+    NodeList.Add(FStrMassFluxNode);
+    NodeList.Add(FFhbHeadsMassFluxNode);
+    NodeList.Add(FFhbFlowsMassFluxNode);
     NodeList.Pack;
     if (tvFluxObservations.Selected = nil) and (NodeList.Count > 0) then
     begin
@@ -1503,6 +1546,10 @@ begin
   else if ParentNode = FRvobNode then
   begin
     ObsName := 'Rvob';
+  end
+  else if ParentNode = FStobNode then
+  begin
+    ObsName := 'Stob';
   end
   else if ParentNode = FHeadMassFluxNode then
   begin
@@ -1551,6 +1598,18 @@ begin
   else if ParentNode = FDrtMassFluxNode then
   begin
     ObsName := 'DrMfob';
+  end
+  else if ParentNode = FStrMassFluxNode then
+  begin
+    ObsName := 'StMfob';
+  end
+  else if ParentNode = FFhbHeadsMassFluxNode then
+  begin
+    ObsName := 'FhbHob';
+  end
+  else if ParentNode = FFhbFlowsMassFluxNode then
+  begin
+    ObsName := 'FhbFob';
   end
   else
   begin
@@ -2097,6 +2156,10 @@ begin
   FRvobObservations.FluxObservationType := fotRiver;
   FRivScreenObjects := TList.Create;
 
+  FStobObservations := TFluxObservationGroups.Create(nil);
+  FStobObservations.FluxObservationType := fotSTR;
+  FStrScreenObjects := TList.Create;
+
   FMassFluxObs.CreateAll;
 //  FMassFluxObs.Mt3dmsHeadMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
   FHeadMassFluxObservations := TList.Create;
@@ -2133,6 +2196,11 @@ begin
 
 //  FMassFluxObs.Mt3dmsEtsMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
   FEtsMassFluxObservations := TList.Create;
+
+  FStrMassFluxObservations := TList.Create;
+
+  FFhbHeadsMassFluxObservations := TList.Create;
+  FFhbFlowsMassFluxObservations := TList.Create;
 
   rdgFluxObsTimes.Cells[Ord(fcName),0] := StrName;
   rdgFluxObsTimes.Cells[Ord(fcTime),0] := StrTime;
@@ -2172,6 +2240,8 @@ begin
   FGbobObservations.Free;
   FRivScreenObjects.Free;
   FRvobObservations.Free;
+  FStrScreenObjects.Free;
+  FStobObservations.Free;
   FHeadMassFluxObservations.Free;
   FWellMassFluxObservations.Free;
   FDrnMassFluxObservations.Free;
@@ -2184,18 +2254,23 @@ begin
   FLakMassFluxObservations.Free;
   FDrtMassFluxObservations.Free;
   FEtsMassFluxObservations.Free;
-  FMassFluxObs.Mt3dmsHeadMassFluxObservations.Free;
-  FMassFluxObs.Mt3dmsWellMassFluxObservations.Free;
-  FMassFluxObs.Mt3dmsMassLoadingMassFluxObservations.Free;
-  FMassFluxObs.Mt3dmsGhbMassFluxObservations.Free;
-  FMassFluxObs.Mt3dmsRivMassFluxObservations.Free;
-  FMassFluxObs.Mt3dmsResMassFluxObservations.Free;
-  FMassFluxObs.Mt3dmsRchMassFluxObservations.Free;
-  FMassFluxObs.Mt3dmsDrtMassFluxObservations.Free;
-  FMassFluxObs.Mt3dmsEtsMassFluxObservations.Free;
-  FMassFluxObs.Mt3dmsEvtMassFluxObservations.Free;
-  FMassFluxObs.Mt3dmsDrnMassFluxObservations.Free;
-  FMassFluxObs.Mt3dmsLakMassFluxObservations.Free;
+  FStrMassFluxObservations.Free;
+  FFhbHeadsMassFluxObservations.Free;
+  FFhbFlowsMassFluxObservations.Free;
+  FMassFluxObs.FreeAll;
+//  FMassFluxObs.Mt3dmsHeadMassFluxObservations.Free;
+//  FMassFluxObs.Mt3dmsWellMassFluxObservations.Free;
+//  FMassFluxObs.Mt3dmsMassLoadingMassFluxObservations.Free;
+//  FMassFluxObs.Mt3dmsGhbMassFluxObservations.Free;
+//  FMassFluxObs.Mt3dmsRivMassFluxObservations.Free;
+//  FMassFluxObs.Mt3dmsResMassFluxObservations.Free;
+//  FMassFluxObs.Mt3dmsRchMassFluxObservations.Free;
+//  FMassFluxObs.Mt3dmsDrtMassFluxObservations.Free;
+//  FMassFluxObs.Mt3dmsEtsMassFluxObservations.Free;
+//  FMassFluxObs.Mt3dmsEvtMassFluxObservations.Free;
+//  FMassFluxObs.Mt3dmsDrnMassFluxObservations.Free;
+//  FMassFluxObs.Mt3dmsLakMassFluxObservations.Free;
+//  FMassFluxObs.Mt3dmsStrMassFluxObservations.Free;
 
 end;
 
@@ -2219,6 +2294,7 @@ begin
   ListClick(nil);
   rdgFluxObsTimes.Options := rdgFluxObsTimes.Options - [goEditing];
   rdgFluxObsTimes.Options := rdgFluxObsTimes.Options + [goEditing];
+  pcMain.ActivePageIndex := 0;
 
 //  rdgFluxObsTimes.hi
 end;
@@ -2284,6 +2360,13 @@ begin
       FRivScreenObjects.Add(ScreenObject);
       FRivMassFluxObservations.Add(ScreenObject);
     end;
+    if (ScreenObject.ModflowStrBoundary <> nil)
+      and ScreenObject.ModflowStrBoundary.Used then
+    begin
+      FStrScreenObjects.Add(ScreenObject);
+      FStrMassFluxObservations.Add(ScreenObject);
+    end;
+
     if (ScreenObject.ModflowWellBoundary <> nil)
       and ScreenObject.ModflowWellBoundary.Used then
     begin
@@ -2319,6 +2402,21 @@ begin
     begin
       FLakMassFluxObservations.Add(ScreenObject);
     end;
+//    if (ScreenObject.ModflowStrBoundary <> nil)
+//      and ScreenObject.ModflowStrBoundary.Used then
+//    begin
+//      FStrMassFluxObservations.Add(ScreenObject);
+//    end;
+    if ((ScreenObject.ModflowFhbHeadBoundary <> nil)
+      and ScreenObject.ModflowFhbHeadBoundary.Used) then
+    begin
+      FFhbHeadsMassFluxObservations.Add(ScreenObject);
+    end;
+    if ((ScreenObject.ModflowFhbFlowBoundary <> nil)
+      and ScreenObject.ModflowFhbFlowBoundary.Used) then
+    begin
+      FFhbFlowsMassFluxObservations.Add(ScreenObject);
+    end;
     if (ScreenObject.Mt3dmsConcBoundary <> nil)
       and ScreenObject.Mt3dmsConcBoundary.Used
       and ScreenObject.Mt3dmsConcBoundary.MassLoadingBoundary then
@@ -2342,6 +2440,10 @@ begin
   FRvobObservations.Assign(frmGoPhast.PhastModel.RiverObservations);
   ReadFluxObservations(frmGoPhast.PhastModel.ModflowPackages.RvobPackage,
     FRvobObservations, FRvobNode);
+
+  FStobObservations.Assign(frmGoPhast.PhastModel.StreamObservations);
+  ReadFluxObservations(frmGoPhast.PhastModel.ModflowPackages.StobPackage,
+    FStobObservations, FStobNode);
 
   FMassFluxObs.Mt3dmsHeadMassFluxObservations.Assign(
     frmGoPhast.PhastModel.Mt3dmsHeadMassFluxObservations);
@@ -2397,6 +2499,21 @@ begin
     frmGoPhast.PhastModel.Mt3dmsDrtMassFluxObservations);
   ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.DrtPackage,
     StrDRTMassFlux, FMassFluxObs.Mt3dmsDrtMassFluxObservations, FDrtMassFluxNode);
+
+  FMassFluxObs.Mt3dmsStrMassFluxObservations.Assign(
+    frmGoPhast.PhastModel.Mt3dmsStrMassFluxObservations);
+  ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.StrPackage,
+    StrSTRMassFlux, FMassFluxObs.Mt3dmsStrMassFluxObservations, FStrMassFluxNode);
+
+  FMassFluxObs.Mt3dmsFhbHeadMassFluxObservations.Assign(
+    frmGoPhast.PhastModel.Mt3dmsFhbHeadMassFluxObservations);
+  ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.FhbPackage,
+    StrFHBHeadMassFlux, FMassFluxObs.Mt3dmsFhbHeadMassFluxObservations, FFhbHeadsMassFluxNode);
+
+  FMassFluxObs.Mt3dmsFhbFlowMassFluxObservations.Assign(
+    frmGoPhast.PhastModel.Mt3dmsFhbFlowMassFluxObservations);
+  ReadMassFluxObservations(frmGoPhast.PhastModel.ModflowPackages.FhbPackage,
+    StrFHBFlowMassFlux, FMassFluxObs.Mt3dmsFhbFlowMassFluxObservations, FFhbFlowsMassFluxNode);
 
   FMassFluxObs.Mt3dmsEtsMassFluxObservations.Assign(
     frmGoPhast.PhastModel.Mt3dmsEtsMassFluxObservations);

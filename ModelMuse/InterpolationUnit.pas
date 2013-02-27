@@ -436,7 +436,7 @@ begin
               Cell := frmGoPhast.PhastGrid.GetCell(ClosestLocation,
                 AScreenObject.ViewDirection, DataSet.EvaluatedAt);
             end;
-          msModflow, msModflowLGR, msModflowNWT:
+          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
             begin
               TopCell := frmGoPhast.Grid.TopContainingCell(ClosestLocation,
                 DataSet.EvaluatedAt);
@@ -444,7 +444,6 @@ begin
               Cell.Row := TopCell.Row;
               Cell.Lay := 0;
             end;
-          {$IFDEF Sutra}
           msSutra22:
             begin
               TopCell := frmGoPhast.PhastModel.Mesh.TopContainingCellOrElement(
@@ -453,7 +452,6 @@ begin
               Cell.Row := TopCell.Row;
               Cell.Lay := 0;
             end;
-          {$ENDIF}
           else Assert(False);
         end;
         for InnerIndex := 0 to VariablesUsed.Count - 1 do
@@ -506,7 +504,7 @@ begin
       NearestSegment := AScreenObject.Segments[FModel].ClosestSegment(
         ClosestLocation, LocalAnisotropy);
       UpdateCurrentSegment(NearestSegment);
-      if NearestSegment = nil then
+//      if NearestSegment = nil then
       begin
         UpdateCurrentSection(SectionIndex);
       end;
@@ -515,7 +513,7 @@ begin
 
       UpdateCurrentScreenObject(AScreenObject);
       UpdateCurrentSegment(NearestSegment);
-      if NearestSegment = nil then
+//      if NearestSegment = nil then
       begin
         UpdateCurrentSection(SectionIndex);
       end;
@@ -1102,7 +1100,7 @@ begin
         Cell := Model.PhastGrid.GetCell(Location,
           AScreenObject.ViewDirection, DataSet.EvaluatedAt);
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         // With MODFLOW, the only 2D data sets are in the top view.
         Assert(DataSet.Orientation = dsoTop);
@@ -1113,7 +1111,6 @@ begin
         Cell.Row := TopCell.Row;
         Cell.Lay := 0;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         // With MODFLOW, the only 2D data sets are in the top view.
@@ -1125,7 +1122,6 @@ begin
         Cell.Row := TopCell.Row;
         Cell.Lay := 0;
       end;
-    {$ENDIF}
     else
       Assert(False);
   end;
@@ -1138,7 +1134,7 @@ begin
     Cell.Row := 0;
   end;
   case Model.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         case DataSet.EvaluatedAt of
           eaBlocks:
@@ -1174,13 +1170,11 @@ begin
           else Assert(False);
         end;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
 //        Assert(False);
         { TODO -cSUTRA : Adjust cell if needed }
       end;
-    {$ENDIF}
     else
       Assert(False);
   end;
@@ -1190,7 +1184,7 @@ begin
     DataSet.Model);
   UpdateCurrentScreenObject(AScreenObject);
   UpdateCurrentSegment(NearestSegment);
-  if NearestSegment = nil then
+//  if NearestSegment = nil then
   begin
     UpdateCurrentSection(SectionIndex);
   end;
@@ -1245,7 +1239,7 @@ begin
     DataSet.Model);
   UpdateCurrentScreenObject(AScreenObject);
   UpdateCurrentSegment(NearestSegment);
-  if NearestSegment = nil then
+//  if NearestSegment = nil then
   begin
     UpdateCurrentSection(SectionIndex);
   end;
@@ -1268,7 +1262,7 @@ var
 begin
   result := nil;
 
-  if FListOfTScreenObjects.Count = 0 then
+  if (FListOfTScreenObjects.Count = 0) or (FQuadTree.Count = 0) then
   begin
     Exit;
   end;
@@ -1441,12 +1435,25 @@ var
   Y: Double;
   Data: TPointerArray;
 begin
+  if FQuadTree.Count = 0 then
+  begin
+    result := nil;
+    Exit;
+  end;
   X := Location.X;
   Y := Location.Y * Anisotropy;
-  FQuadTree.FindClosestPointsData(X, Y, Data);
-  if Length(Data) > 0 then
+
+  if FQuadTree.Count > 0 then
   begin
-    result := Data[0];
+    FQuadTree.FindClosestPointsData(X, Y, Data);
+    if Length(Data) > 0 then
+    begin
+      result := Data[0];
+    end
+    else
+    begin
+      result := nil;
+    end;
   end
   else
   begin

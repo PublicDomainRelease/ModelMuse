@@ -9,6 +9,6 @@
     <header>
       <para style="margin-bottom:10px; line-height:2.0;"><text styleclass="Heading1" translate="true">LayerCount</text></para>
     </header>
-    <para styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">LayerCount</text><text styleclass="Normal" translate="true"> returns the number of layer boundaries in the grid, which equals the number of nodes in the Z direction.</text></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">For MODFLOW and PHAST models, </text><text styleclass="Normal" style="font-weight:bold;" translate="true">LayerCount</text><text styleclass="Normal" translate="true"> returns the number of layer boundaries in the grid, which equals the number of nodes in the Z direction. For SUTRA models, </text><text styleclass="Normal" style="font-weight:bold;" translate="true">LayerCount</text><text styleclass="Normal" translate="true"> returns the number of layers of nodes.</text></para>
   </body>
 </topic>

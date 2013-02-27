@@ -1,8 +1,10 @@
 inherited frmSutraTimeAdjustChoice: TfrmSutraTimeAdjustChoice
+  HelpType = htKeyword
+  HelpKeyword = 'Adjust_Times_Dialog_Box'
   Caption = 'Adjust Times'
   ClientHeight = 189
-  ExplicitWidth = 442
-  ExplicitHeight = 234
+  ExplicitWidth = 440
+  ExplicitHeight = 227
   PixelsPerInch = 96
   TextHeight = 18
   object lblMessage: TLabel
@@ -33,10 +35,18 @@ inherited frmSutraTimeAdjustChoice: TfrmSutraTimeAdjustChoice
     Top = 159
     Width = 75
     Height = 25
-    DoubleBuffered = True
     Kind = bkOK
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 1
+  end
+  object btnHelp: TBitBtn
+    Left = 260
+    Top = 159
+    Width = 75
+    Height = 25
+    Kind = bkHelp
+    NumGlyphs = 2
+    TabOrder = 2
+    OnClick = btnHelpClick
   end
 end

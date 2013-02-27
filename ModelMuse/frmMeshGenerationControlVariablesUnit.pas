@@ -9,9 +9,9 @@ uses
   SutraMeshUnit, ArgusDataEntry;
 
 type
-  TMeshControlType = (mtcNone, mctSplittingAngle, mctStructure,
-    mtcNodePlacementError, mtcLineLength, mtcSymmetry, mtcConcave);
-  TMeshControlLocation = (mtlNone, mtlGeneral, mtlSixNode);
+  TMeshControlType = (mtcNone, mtcGrowthRate, mctSplittingAngle,
+    mtcLineLength, mtcSymmetry, mtcConcave, mctStructure, mtcNodePlacementError);
+  TMeshControlLocation = (mtlNone, mtlVariable);
 
   TUndoChangeMeshGenControls = class(TCustomUndo)
   private
@@ -33,9 +33,9 @@ type
     btnOK: TBitBtn;
     btnCancel: TBitBtn;
     btnResetDefaults: TButton;
-    rdeGrowthRate: TRbwDataEntry;
-    lblElementGrowthRate: TLabel;
     rgMethod: TRadioGroup;
+    pnlTop: TPanel;
+    rgRenumberingMethod: TRadioGroup;
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
     procedure btnResetDefaultsClick(Sender: TObject);
@@ -55,7 +55,7 @@ type
 implementation
 
 uses
-  frmGoPhastUnit;
+  frmGoPhastUnit, MeshRenumberingTypes;
 
 resourcestring
   StrSplittingAngle = 'Splitting angle';
@@ -64,8 +64,11 @@ resourcestring
   StrLineLength = 'Line length';
   StrSymmetry = 'Symmetry';
   StrConcave = 'Concave';
-  StrGeneral = 'General';
-  StrSixNodes = 'Six-Nodes';
+  StrControlVariable = 'Control variable';
+//  StrSixNodes = 'Six-Nodes';
+  StrElementGrowthRate = 'Element growth rate';
+  StrValue = 'Value';
+  StrTheElementGrowthR = 'The element growth rate must be greater than 1.';
 
 {$R *.dfm}
 
@@ -100,9 +103,11 @@ begin
   rdgControlVariables.Cells[Ord(mtlNone), Ord(mtcLineLength)] := StrLineLength;
   rdgControlVariables.Cells[Ord(mtlNone), Ord(mtcSymmetry)] := StrSymmetry;
   rdgControlVariables.Cells[Ord(mtlNone), Ord(mtcConcave)] := StrConcave;
+  rdgControlVariables.Cells[Ord(mtlNone), Ord(mtcGrowthRate)] := StrElementGrowthRate;
 
-  rdgControlVariables.Cells[Ord(mtlGeneral), Ord(mtcNone)] := StrGeneral;
-  rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mtcNone)] := StrSixNodes;
+  rdgControlVariables.Cells[Ord(mtlNone), Ord(mtcNone)] := StrControlVariable;
+  rdgControlVariables.Cells[Ord(mtlVariable), Ord(mtcNone)] := StrValue;
+//  rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mtcNone)] := StrSixNodes;
   GetData;
 end;
 
@@ -118,7 +123,7 @@ procedure TfrmMeshGenerationControlVariables.rgMethodClick(Sender: TObject);
 begin
   inherited;
   rdgControlVariables.Enabled := rgMethod.ItemIndex = 1;
-  rdeGrowthRate.Enabled := rdgControlVariables.Enabled;
+//  rdeGrowthRate.Enabled := rdgControlVariables.Enabled;
   if rdgControlVariables.Enabled then
   begin
     rdgControlVariables.Color := clWindow;
@@ -138,39 +143,50 @@ begin
   try
     MeshGenControls.MeshGenerationMethod :=
       TMeshGenerationMethod(rgMethod.ItemIndex);
+    MeshGenControls.RenumberingAlgorithm :=
+      TRenumberingAlgorithm(rgRenumberingMethod.ItemIndex);
     MeshGenControls.SplittingAngle.Value :=
-      StrToFloat(rdgControlVariables.Cells[Ord(mtlGeneral),
+      StrToFloat(rdgControlVariables.Cells[Ord(mtlVariable),
       Ord(mctSplittingAngle)]);
     MeshGenControls.Structure.Value :=
-      StrToFloat(rdgControlVariables.Cells[Ord(mtlGeneral), Ord(mctStructure)]);
+      StrToFloat(rdgControlVariables.Cells[Ord(mtlVariable), Ord(mctStructure)]);
     MeshGenControls.NodePlacementError.Value :=
-      StrToFloat(rdgControlVariables.Cells[Ord(mtlGeneral),
+      StrToFloat(rdgControlVariables.Cells[Ord(mtlVariable),
       Ord(mtcNodePlacementError)]);
     MeshGenControls.LineLength.Value :=
-      StrToFloat(rdgControlVariables.Cells[Ord(mtlGeneral),
+      StrToFloat(rdgControlVariables.Cells[Ord(mtlVariable),
       Ord(mtcLineLength)]);
     MeshGenControls.Symmetry.Value :=
-      StrToFloat(rdgControlVariables.Cells[Ord(mtlGeneral), Ord(mtcSymmetry)]);
+      StrToFloat(rdgControlVariables.Cells[Ord(mtlVariable), Ord(mtcSymmetry)]);
     MeshGenControls.Concave.Value :=
-      StrToFloat(rdgControlVariables.Cells[Ord(mtlGeneral), Ord(mtcConcave)]);
+      StrToFloat(rdgControlVariables.Cells[Ord(mtlVariable), Ord(mtcConcave)]);
 
-    MeshGenControls.AltSplittingAngle.Value :=
-      StrToFloat(rdgControlVariables.Cells[Ord(mtlSixNode),
-      Ord(mctSplittingAngle)]);
-    MeshGenControls.AltStructure.Value :=
-      StrToFloat(rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mctStructure)]);
-    MeshGenControls.AltNodePlacementError.Value :=
-      StrToFloat(rdgControlVariables.Cells[Ord(mtlSixNode),
-      Ord(mtcNodePlacementError)]);
-    MeshGenControls.AltLineLength.Value :=
-      StrToFloat(rdgControlVariables.Cells[Ord(mtlSixNode),
-      Ord(mtcLineLength)]);
-    MeshGenControls.AltSymmetry.Value :=
-      StrToFloat(rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mtcSymmetry)]);
-    MeshGenControls.AltConcave.Value :=
-      StrToFloat(rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mtcConcave)]);
+//    MeshGenControls.AltSplittingAngle.Value :=
+//      StrToFloat(rdgControlVariables.Cells[Ord(mtlSixNode),
+//      Ord(mctSplittingAngle)]);
+//    MeshGenControls.AltStructure.Value :=
+//      StrToFloat(rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mctStructure)]);
+//    MeshGenControls.AltNodePlacementError.Value :=
+//      StrToFloat(rdgControlVariables.Cells[Ord(mtlSixNode),
+//      Ord(mtcNodePlacementError)]);
+//    MeshGenControls.AltLineLength.Value :=
+//      StrToFloat(rdgControlVariables.Cells[Ord(mtlSixNode),
+//      Ord(mtcLineLength)]);
+//    MeshGenControls.AltSymmetry.Value :=
+//      StrToFloat(rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mtcSymmetry)]);
+//    MeshGenControls.AltConcave.Value :=
+//      StrToFloat(rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mtcConcave)]);
 
-    MeshGenControls.ElementGrowthRate.Value := rdeGrowthRate.RealValue;
+    MeshGenControls.ElementGrowthRate.Value :=
+      StrToFloat(rdgControlVariables.Cells[Ord(mtlVariable), Ord(mtcGrowthRate)]);
+
+    if MeshGenControls.ElementGrowthRate.Value <= 1 then
+    begin
+      Beep;
+      MessageDlg(StrTheElementGrowthR, mtError, [mbOK], 0);
+      ModalResult := mrNone;
+      Exit;
+    end;
 
     Undo := TUndoChangeMeshGenControls.Create(MeshGenControls);
     frmGoPhast.UndoStack.Submit(Undo);
@@ -182,32 +198,53 @@ end;
 procedure TfrmMeshGenerationControlVariables.AssignValues(MeshGenControls
   : TMeshGenerationControls);
 begin
-  rgMethod.ItemIndex := Ord(MeshGenControls.MeshGenerationMethod);
-  rdgControlVariables.Cells[Ord(mtlGeneral), Ord(mctSplittingAngle)] :=
+  case MeshGenControls.MeshGenerationMethod of
+    mgmFishnet, mgmIrregular:
+      begin
+        rgMethod.ItemIndex := Ord(MeshGenControls.MeshGenerationMethod);
+      end;
+    mgmUnknown:
+      begin
+        if frmGoPhast.PhastModel.FishnetMeshGenerator.Elements.Count > 0 then
+        begin
+          rgMethod.ItemIndex := Ord(mgmFishnet);
+        end
+        else
+        begin
+          rgMethod.ItemIndex := Ord(mgmIrregular);
+        end;
+      end;
+    else Assert(False);
+  end;
+
+  rgRenumberingMethod.ItemIndex := Ord(MeshGenControls.RenumberingAlgorithm);
+
+  rdgControlVariables.Cells[Ord(mtlVariable), Ord(mctSplittingAngle)] :=
     FloatToStr(MeshGenControls.SplittingAngle.Value);
-  rdgControlVariables.Cells[Ord(mtlGeneral), Ord(mctStructure)] :=
+  rdgControlVariables.Cells[Ord(mtlVariable), Ord(mctStructure)] :=
     FloatToStr(MeshGenControls.Structure.Value);
-  rdgControlVariables.Cells[Ord(mtlGeneral), Ord(mtcNodePlacementError)] :=
+  rdgControlVariables.Cells[Ord(mtlVariable), Ord(mtcNodePlacementError)] :=
     FloatToStr(MeshGenControls.NodePlacementError.Value);
-  rdgControlVariables.Cells[Ord(mtlGeneral), Ord(mtcLineLength)] :=
+  rdgControlVariables.Cells[Ord(mtlVariable), Ord(mtcLineLength)] :=
     FloatToStr(MeshGenControls.LineLength.Value);
-  rdgControlVariables.Cells[Ord(mtlGeneral), Ord(mtcSymmetry)] :=
+  rdgControlVariables.Cells[Ord(mtlVariable), Ord(mtcSymmetry)] :=
     FloatToStr(MeshGenControls.Symmetry.Value);
-  rdgControlVariables.Cells[Ord(mtlGeneral), Ord(mtcConcave)] :=
+  rdgControlVariables.Cells[Ord(mtlVariable), Ord(mtcConcave)] :=
     FloatToStr(MeshGenControls.Concave.Value);
-  rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mctSplittingAngle)] :=
-    FloatToStr(MeshGenControls.AltSplittingAngle.Value);
-  rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mctStructure)] :=
-    FloatToStr(MeshGenControls.AltStructure.Value);
-  rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mtcNodePlacementError)] :=
-    FloatToStr(MeshGenControls.AltNodePlacementError.Value);
-  rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mtcLineLength)] :=
-    FloatToStr(MeshGenControls.AltLineLength.Value);
-  rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mtcSymmetry)] :=
-    FloatToStr(MeshGenControls.AltSymmetry.Value);
-  rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mtcConcave)] :=
-    FloatToStr(MeshGenControls.AltConcave.Value);
-  rdeGrowthRate.RealValue := MeshGenControls.ElementGrowthRate.Value;
+//  rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mctSplittingAngle)] :=
+//    FloatToStr(MeshGenControls.AltSplittingAngle.Value);
+//  rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mctStructure)] :=
+//    FloatToStr(MeshGenControls.AltStructure.Value);
+//  rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mtcNodePlacementError)] :=
+//    FloatToStr(MeshGenControls.AltNodePlacementError.Value);
+//  rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mtcLineLength)] :=
+//    FloatToStr(MeshGenControls.AltLineLength.Value);
+//  rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mtcSymmetry)] :=
+//    FloatToStr(MeshGenControls.AltSymmetry.Value);
+//  rdgControlVariables.Cells[Ord(mtlSixNode), Ord(mtcConcave)] :=
+//    FloatToStr(MeshGenControls.AltConcave.Value);
+  rdgControlVariables.Cells[Ord(mtlVariable), Ord(mtcGrowthRate)] :=
+    FloatToStr(MeshGenControls.ElementGrowthRate.Value);
 end;
 
 { TUndoChangeMeshGenControls }

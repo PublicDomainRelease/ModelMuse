@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, Types, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ArgusDataEntry, ExtCtrls,
-  UndoItems, ScreenObjectUnit;
+  UndoItems, ScreenObjectUnit, OrderedCollectionUnit;
 
 type
   TStreamLinkageChangeItem = class(TCollectionItem)
@@ -27,10 +27,11 @@ type
 
   TStreamLinkageChangeCollection = class(TCollection)
   private
+    FParameterType: TParameterType;
     function GetItems(Index: integer): TStreamLinkageChangeItem;
     procedure SetItems(Index: integer; const Value: TStreamLinkageChangeItem);
   public
-    Constructor Create;
+    Constructor Create(ParameterType: TParameterType);
     property Items[Index: integer]: TStreamLinkageChangeItem read GetItems
       write SetItems;
     function Add: TStreamLinkageChangeItem;
@@ -55,10 +56,12 @@ type
     btnApply: TBitBtn;
     btnClose: TBitBtn;
     btnHelp: TBitBtn;
+    rgStreamtype: TRadioGroup;
     procedure GetLinkTolerance;
     procedure btnApplyClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject); override;
+    procedure FormShow(Sender: TObject);
   private
+    procedure GetData;
     { Private declarations }
   public
     { Public declarations }
@@ -69,7 +72,8 @@ var
 
 implementation
 
-uses frmGoPhastUnit, ModflowSfrParamIcalcUnit;
+uses frmGoPhastUnit, ModflowSfrParamIcalcUnit, ModflowStrUnit,
+  ModflowBoundaryUnit;
 
 resourcestring
   StrAssignStreamLinkag = 'assign stream linkages';
@@ -102,15 +106,43 @@ procedure TStreamLinkageChangeItem.SetScreenObject(const Value: TScreenObject);
 var
   ParamIcalc: TSfrParamIcalcCollection;
   Index: integer;
+  ParamItem: TModflowParamItem;
+  Values: TStrCollection;
 begin
   FScreenObject := Value;
-  Assert((FScreenObject.ModflowSfrBoundary <> nil)
-    and FScreenObject.ModflowSfrBoundary.Used);
-  ParamIcalc := FScreenObject.ModflowSfrBoundary.ParamIcalc;
-  SetLength(FOldOutFlowSegments, ParamIcalc.Count);
-  for Index := 0 to ParamIcalc.Count - 1 do
-  begin
-    FOldOutFlowSegments[Index] := ParamIcalc.Items[Index].OutflowSegment;
+  case (Collection as TStreamLinkageChangeCollection).FParameterType of
+    ptSFR:
+      begin
+        Assert((FScreenObject.ModflowSfrBoundary <> nil)
+          and FScreenObject.ModflowSfrBoundary.Used);
+        ParamIcalc := FScreenObject.ModflowSfrBoundary.ParamIcalc;
+        SetLength(FOldOutFlowSegments, ParamIcalc.Count);
+        for Index := 0 to ParamIcalc.Count - 1 do
+        begin
+          FOldOutFlowSegments[Index] := ParamIcalc.Items[Index].OutflowSegment;
+        end;
+      end;
+    ptSTR:
+      begin
+        Assert((FScreenObject.ModflowStrBoundary <> nil)
+          and FScreenObject.ModflowStrBoundary.Used);
+
+        if FScreenObject.ModflowStrBoundary.Parameters.Count > 0 then
+        begin
+          ParamItem := FScreenObject.ModflowStrBoundary.Parameters[0];
+          Values := ParamItem.Param as TStrCollection;
+        end
+        else
+        begin
+          Values := FScreenObject.ModflowStrBoundary.Values as TStrCollection;
+        end;
+
+        SetLength(FOldOutFlowSegments, Values.Count);
+        for Index := 0 to Values.Count - 1 do
+        begin
+          FOldOutFlowSegments[Index] := (Values[Index] as TStrItem).OutflowSegment;
+        end;
+      end;
   end;
 end;
 
@@ -121,9 +153,11 @@ begin
   result := inherited Add as TStreamLinkageChangeItem;
 end;
 
-constructor TStreamLinkageChangeCollection.Create;
+constructor TStreamLinkageChangeCollection.Create(ParameterType: TParameterType);
 begin
   inherited Create(TStreamLinkageChangeItem);
+  Assert(ParameterType in [ptSFR, ptSTR]);
+  FParameterType := ParameterType;
 end;
 
 function TStreamLinkageChangeCollection.GetItems(
@@ -144,7 +178,7 @@ constructor TUndoChangeStreamLinkages.Create(
   Linkages: TStreamLinkageChangeCollection);
 begin
   inherited Create;
-  FLinkages:= TStreamLinkageChangeCollection.Create;
+  FLinkages:= TStreamLinkageChangeCollection.Create(Linkages.FParameterType);
   FLinkages.Assign(Linkages);
 end;
 
@@ -165,16 +199,41 @@ var
   Item: TStreamLinkageChangeItem;
   ParamIcalc: TSfrParamIcalcCollection;
   PI_Index: Integer;
+  ParamItem: TModflowParamItem;
+  Values: TStrCollection;
+  ItemIndex: Integer;
 begin
   for Index := 0 to FLinkages.Count - 1 do
   begin
     Item := FLinkages.Items[Index];
-//    Item.ScreenObject.ModflowSfrBoundary.OutflowSegment
-//      := Item.NewOutFlowSegment;
-    ParamIcalc := Item.ScreenObject.ModflowSfrBoundary.ParamIcalc;
-    for PI_Index := 0 to ParamIcalc.Count - 1 do
-    begin
-      ParamIcalc.Items[PI_Index].OutflowSegment := Item.NewOutFlowSegment;
+    case FLinkages.FParameterType of
+      ptSFR:
+        begin
+          ParamIcalc := Item.ScreenObject.ModflowSfrBoundary.ParamIcalc;
+          for PI_Index := 0 to ParamIcalc.Count - 1 do
+          begin
+            ParamIcalc.Items[PI_Index].OutflowSegment := Item.NewOutFlowSegment;
+          end;
+        end;
+      ptSTR:
+        begin
+          if Item.ScreenObject.ModflowStrBoundary.Parameters.Count > 0 then
+          begin
+            ParamItem := Item.ScreenObject.ModflowStrBoundary.Parameters[0];
+            Values := ParamItem.Param as TStrCollection;
+          end
+          else
+          begin
+            Values := Item.ScreenObject.ModflowStrBoundary.Values as TStrCollection;
+          end;
+
+          for ItemIndex := 0 to Values.Count - 1 do
+          begin
+            (Values[ItemIndex] as TStrItem).OutflowSegment := Item.NewOutFlowSegment;
+          end;
+        end;
+      else
+        Assert(False);
     end;
   end;
 end;
@@ -185,15 +244,40 @@ var
   Item: TStreamLinkageChangeItem;
   ParamIcalc: TSfrParamIcalcCollection;
   PI_Index: Integer;
+  ParamItem: TModflowParamItem;
+  Values: TStrCollection;
+  ItemIndex: Integer;
 begin
   for Index := 0 to FLinkages.Count - 1 do
   begin
     Item := FLinkages.Items[Index];
-    ParamIcalc := Item.ScreenObject.ModflowSfrBoundary.ParamIcalc;
-    for PI_Index := 0 to ParamIcalc.Count - 1 do
-    begin
-      ParamIcalc.Items[PI_Index].OutflowSegment :=
-        Item.OldOutFlowSegments[PI_Index];
+    case FLinkages.FParameterType of
+      ptSFR:
+        begin
+          ParamIcalc := Item.ScreenObject.ModflowSfrBoundary.ParamIcalc;
+          for PI_Index := 0 to ParamIcalc.Count - 1 do
+          begin
+            ParamIcalc.Items[PI_Index].OutflowSegment :=
+              Item.OldOutFlowSegments[PI_Index];
+          end;
+        end;
+      ptSTR:
+        begin
+          if Item.ScreenObject.ModflowStrBoundary.Parameters.Count > 0 then
+          begin
+            ParamItem := Item.ScreenObject.ModflowStrBoundary.Parameters[0];
+            Values := ParamItem.Param as TStrCollection;
+          end
+          else
+          begin
+            Values := Item.ScreenObject.ModflowStrBoundary.Values as TStrCollection;
+          end;
+
+          for ItemIndex := 0 to Values.Count - 1 do
+          begin
+            (Values[ItemIndex] as TStrItem).OutflowSegment := Item.OldOutFlowSegments[ItemIndex];
+          end;
+        end;
     end;
   end;
 end;
@@ -210,10 +294,21 @@ var
   ParamIcalc: TSfrParamIcalcCollection;
   PI_Index: Integer;
   OutFlowSegmentNeedsToChange: Boolean;
+  ParameterType: TParameterType;
+  Values: TStrCollection;
+  ParamItem: TModflowParamItem;
+  ItemIndex: Integer;
+  StrItem: TStrItem;
 begin
   inherited;
   Tolerance := StrToFloat(rdeTolerance.Text);
-  Linkages := TStreamLinkageChangeCollection.Create;
+  ParameterType := ptUndefined;
+  case rgStreamtype.ItemIndex of
+    0: ParameterType := ptSFR;
+    1: ParameterType := ptSTR;
+    else Assert(False);
+  end;
+  Linkages := TStreamLinkageChangeCollection.Create(ParameterType);
   try
     for ScreenObjectIndex := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
     begin
@@ -222,10 +317,23 @@ begin
       begin
         Continue;
       end;
-      if (ScreenObject.ModflowSfrBoundary = nil)
-        or not ScreenObject.ModflowSfrBoundary.Used then
-      begin
-        Continue;
+      case ParameterType of
+        ptSFR:
+          begin
+            if (ScreenObject.ModflowSfrBoundary = nil)
+              or not ScreenObject.ModflowSfrBoundary.Used then
+            begin
+              Continue;
+            end;
+          end;
+        ptSTR:
+          begin
+            if (ScreenObject.ModflowStrBoundary = nil)
+              or not ScreenObject.ModflowStrBoundary.Used then
+            begin
+              Continue;
+            end;
+          end;
       end;
       if (rgWhatToLink.ItemIndex = 1) and not ScreenObject.Selected then
       begin
@@ -234,22 +342,62 @@ begin
       if cbKeepExistingLinkages.Checked then
       begin
         OutflowSegmentAssigned := False;
-        ParamIcalc := ScreenObject.ModflowSfrBoundary.ParamIcalc;
-        for PI_Index := 0 to ParamIcalc.Count - 1 do
-        begin
-          if ParamIcalc.Items[PI_Index].OutflowSegment <> 0 then
-          begin
-            OutflowSegmentAssigned := True;
-            break;
-          end;
+        case ParameterType of
+          ptSFR:
+            begin
+              ParamIcalc := ScreenObject.ModflowSfrBoundary.ParamIcalc;
+              for PI_Index := 0 to ParamIcalc.Count - 1 do
+              begin
+                if ParamIcalc.Items[PI_Index].OutflowSegment <> 0 then
+                begin
+                  OutflowSegmentAssigned := True;
+                  break;
+                end;
+              end;
+            end;
+          ptSTR:
+            begin
+              if ScreenObject.ModflowStrBoundary.Parameters.Count > 0 then
+              begin
+                ParamItem := ScreenObject.ModflowStrBoundary.Parameters[0];
+                Values := ParamItem.Param as TStrCollection;
+              end
+              else
+              begin
+                Values := ScreenObject.ModflowStrBoundary.Values as TStrCollection;
+              end;
+              for ItemIndex := 0 to Values.Count - 1 do
+              begin
+                StrItem := Values[ItemIndex] as TStrItem;
+                if StrItem.OutflowSegment > 0 then
+                begin
+                  OutflowSegmentAssigned := True;
+                  break;
+                end;
+              end;
+            end;
+          else Assert(False);
         end;
         if OutflowSegmentAssigned then
         begin
           Continue;
         end;
       end;
-      frmGoPhast.PhastModel.LocateNearestLakeOrStream(ScreenObject,
-          NearestLake, NearestStream, Tolerance);
+      NearestStream := nil;
+      NearestLake := nil;
+      case ParameterType of
+        ptSFR:
+          begin
+            frmGoPhast.PhastModel.LocateNearestLakeOrStream(ScreenObject,
+                NearestLake, NearestStream, Tolerance);
+          end;
+        ptSTR:
+          begin
+            frmGoPhast.PhastModel.LocateNearestStrStream(ScreenObject,
+                NearestStream, Tolerance);
+          end;
+        else Assert(False);
+      end;
       if (NearestStream = nil) and (NearestLake = nil) then
       begin
         Continue;
@@ -258,24 +406,63 @@ begin
       begin
         if NearestLake = nil then
         begin
-          Assert(NearestStream.ModflowSfrBoundary <> nil);
-          OutFlowSegmentNeedsToChange := False;
-          ParamIcalc := ScreenObject.ModflowSfrBoundary.ParamIcalc;
-          for PI_index := 0 to ParamIcalc.Count - 1 do
-          begin
-            if ParamIcalc.Items[PI_index].OutflowSegment <>
-              NearestStream.ModflowSfrBoundary.SegementNumber then
-            begin
-              OutFlowSegmentNeedsToChange := True;
-              break;
-            end;
-          end;
-          if OutFlowSegmentNeedsToChange then
-          begin
-            Linkage := Linkages.Add;
-            Linkage.ScreenObject := ScreenObject;
-            Linkage.NewOutFlowSegment :=
-              NearestStream.ModflowSfrBoundary.SegementNumber;
+          case ParameterType of
+            ptSFR:
+              begin
+                Assert(NearestStream.ModflowSfrBoundary <> nil);
+                OutFlowSegmentNeedsToChange := False;
+                ParamIcalc := ScreenObject.ModflowSfrBoundary.ParamIcalc;
+                for PI_index := 0 to ParamIcalc.Count - 1 do
+                begin
+                  if ParamIcalc.Items[PI_index].OutflowSegment <>
+                    NearestStream.ModflowSfrBoundary.SegementNumber then
+                  begin
+                    OutFlowSegmentNeedsToChange := True;
+                    break;
+                  end;
+                end;
+                if OutFlowSegmentNeedsToChange then
+                begin
+                  Linkage := Linkages.Add;
+                  Linkage.ScreenObject := ScreenObject;
+                  Linkage.NewOutFlowSegment :=
+                    NearestStream.ModflowSfrBoundary.SegementNumber;
+                end;
+              end;
+            ptSTR:
+              begin
+                Assert(NearestStream.ModflowStrBoundary <> nil);
+                OutFlowSegmentNeedsToChange := False;
+
+                if ScreenObject.ModflowStrBoundary.Parameters.Count > 0 then
+                begin
+                  ParamItem := ScreenObject.ModflowStrBoundary.Parameters[0];
+                  Values := ParamItem.Param as TStrCollection;
+                end
+                else
+                begin
+                  Values := ScreenObject.ModflowStrBoundary.Values as TStrCollection;
+                end;
+
+                for ItemIndex := 0 to Values.Count - 1 do
+                begin
+                  if (Values[ItemIndex] as TStrItem).OutflowSegment <>
+                    NearestStream.ModflowStrBoundary.SegmentNumber then
+                  begin
+                    OutFlowSegmentNeedsToChange := True;
+                    break;
+                  end;
+                end;
+                if OutFlowSegmentNeedsToChange then
+                begin
+                  Linkage := Linkages.Add;
+                  Linkage.ScreenObject := ScreenObject;
+                  Linkage.NewOutFlowSegment :=
+                    NearestStream.ModflowStrBoundary.SegmentNumber;
+                end;
+
+              end;
+            else Assert(False);
           end;
         end
         else
@@ -317,10 +504,22 @@ begin
   end;
 end;
 
-procedure TfrmLinkStreams.FormCreate(Sender: TObject);
+procedure TfrmLinkStreams.FormShow(Sender: TObject);
 begin
   inherited;
+  GetData;
+  OnShow := nil;
+end;
+
+procedure TfrmLinkStreams.GetData;
+begin
   GetLinkTolerance;
+  rgStreamtype.Buttons[0].Enabled := frmGoPhast.PhastModel.SfrIsSelected;
+  rgStreamtype.Buttons[1].Enabled := frmGoPhast.PhastModel.StrIsSelected;
+  if not rgStreamtype.Buttons[0].Enabled then
+  begin
+    rgStreamtype.ItemIndex := 1;
+  end;
 end;
 
 procedure TfrmLinkStreams.GetLinkTolerance;

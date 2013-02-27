@@ -42,13 +42,13 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/usgspubs/ofr/ofr200092" target="_blank" styleclass="Citation" translate="true">Harbaugh, A.W., Banta, E.R., Hill, M.C., and McDonald, M.G., 2000, MODFLOW-2000, the U.S. Geological Survey modular ground-water model -- User guide to modularization concepts and the Ground-Water Flow Process: U.S. Geological Survey Open-File Report 00-92, 121 p.</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="release.txt" styleclass="Normal" translate="true">release.txt</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="ofr-00-92-errata.pdf" styleclass="Normal" translate="true">ofr-00-92-errata.pdf</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="readme_PCG.txt" styleclass="Normal" translate="true">readme_PCG.txt</link></li>
           </list>
-          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="RevisedMF2005Input.pdf" styleclass="Normal" translate="true">RevisedMF2005Input.pdf</link></li>
           </list>
         </td>
@@ -66,22 +66,25 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
+          </list>
+          <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MF2005-FMP2</text></li>
           </list>
         </td>
       </tr>
     </table></para>
     <para styleclass="Heading1"><text styleclass="Heading1" translate="true">Input Instructions</text></para>
-    <para styleclass="Normal"><text styleclass="Normal" translate="true">Input to the Preconditioned Conjugate-Gradient (PCG) Package is read from the file that is type &quot;PCG&quot; in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">name</link><text styleclass="Normal" translate="true"> file. In MODFLOW-2000, all numeric variables are free format if the option “FREE” is specified in the Basic Package input file; otherwise, all the variables have 10-character fields. In MODFLOW-2005, all numeric variables are always free format.</text></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">Input to the Preconditioned Conjugate-Gradient (PCG) Package is read from the file that is type &quot;PCG&quot; in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Name_File" styleclass="Normal" translate="true">name</link><text styleclass="Normal" translate="true"> file. In MODFLOW-2000, all numeric variables are free format if the option “FREE” is specified in the Basic Package input file; otherwise, all the variables have 10-character fields. </text><text styleclass="New Materials" translate="true">In MODFLOW-2005, all numeric variables are always free format.</text></para>
     <para styleclass="Normal"><table rowcount="4" colcount="2" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td colspan="2">
@@ -110,13 +113,13 @@
           <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 1</text></para>
         </td>
         <td>
-          <para styleclass="Normal"><table styleclass="Default" rowcount="2" colcount="2">
+          <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="2" colcount="2">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2000, MODFLOW-LGR, and MODFLOW-CFP:</text><conditional-text type="END"/></para>
+                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2000, MODFLOW-LGR, and MODFLOW-CFP, MF2005-FMP2:</text><conditional-text type="END"/></para>
               </td>
               <td>
-                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000,MODFLOW-CFP,MODFLOW-NWT"/><text styleclass="Normal" translate="true">MXITER ITER1 NPCOND</text><conditional-text type="END"/></para>
+                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-NWT"/><text styleclass="Normal" translate="true">MXITER ITER1 NPCOND</text><conditional-text type="END"/></para>
               </td>
             </tr>
             <tr style="vertical-align:top">
@@ -153,7 +156,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">NPCOND—is the flag used to select the matrix conditioning method:</text></para>
-                      <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">1—is for Modified Incomplete Cholesky (for use on scalar computers)</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">2—is for Polynomial (for use on vector computers or to conserve computer memory)</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/></li>
                       </list>
@@ -164,7 +167,12 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">When an active cell is surrounded by dry cells, the cell normally converts to dry. &#160;The new option causes the cell to convert to dry only if storage and head-dependent boundary flow are also 0. &#160;IHCOFADD is a 4th integer input item read on the first input line. &#160;A non-zero value activates the option. &#160;An unspecified or 0 value turns the option off. (MODFLOW-2005 only)</text><conditional-text type="END"/></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">IHCOFADD—is a flag that determines what happens to an active cell that is surrounded by dry cells: </text></para>
+                      <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">0—cell converts to dry regardless of HCOF value. This is the default, which is the way PCG2 worked prior to the addition of this option. </text></li>
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">Not 0—cell converts to dry only if HCOF is 0 (no head-dependent stresses or storage terms) )</text></li>
+                      </list>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">(MODFLOW-2005 and MODFLOW-NWT only.</text><conditional-text type="END"/></para>
                     </td>
                   </tr>
                 </table></para>
@@ -189,10 +197,10 @@
             </tr>
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2005, MODFLOW-CFP, MODFLOW-NWT, and MODFLOW-LGR: </text><conditional-text type="END"/></para>
+                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2005, MODFLOW-CFP, MODFLOW-NWT, and MODFLOW-LGR, MF2005-FMP2: </text><conditional-text type="END"/></para>
               </td>
               <td>
-                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Normal" translate="true">HCLOSE RCLOSE RELAX NBPOL &#160;IPRPCG MUTPCG DAMPPCG [DAMPPCGT]</text><conditional-text type="END"/></para>
+                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Normal" translate="true">HCLOSE RCLOSE RELAX NBPOL &#160;IPRPCG MUTPCG DAMPPCG [DAMPPCGT]</text><conditional-text type="END"/></para>
               </td>
             </tr>
           </table></para>
@@ -246,7 +254,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">MUTPCG—is a flag that controls printing of convergence information from the solver:</text></para>
-                      <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="17" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">0—is for printing tables of maximum head change and residual each iteration</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">1—is for printing only the total number of iterations</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">2—is for no printing</text></li>
@@ -263,7 +271,7 @@
                     </td>
                   </tr>
                 </table></para>
-                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><conditional-text type="END"/><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[DAMPPCG]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><conditional-text type="END"/><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-LGR,MODFLOW-NWT"/><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[DAMPPCG]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>

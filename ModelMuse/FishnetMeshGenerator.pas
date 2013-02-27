@@ -82,6 +82,7 @@ type
     procedure SetFirstControl(const Value: TMeshControl);
     procedure SetSecondControl(const Value: TMeshControl);
     function GetGenerator: TFishnetMeshGenerator;
+    function GetFractions(MeshControls: TMeshControl): TRealArray;
   public
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
@@ -146,7 +147,6 @@ type
       write SetElements;
   end;
 
-{$IFDEF SUTRA}
   TUndoFishnetMeshValues = class(TCustomUndo)
   private
     FOldFishNetMesh: TFishnetMeshGenerator;
@@ -169,8 +169,6 @@ type
     procedure DoCommand; override;
     procedure Undo; override;
   end;
-
-{$ENDIF}
 
 implementation
 
@@ -408,31 +406,135 @@ begin
 end;
 
 function TFishnetMeshElement.Fractions1: TRealArray;
-var
-  InteriorIndex: Integer;
 begin
-  SetLength(Result, FirstControl.LayerCollection.Count + 2);
-  Result[0] := 0;
-  for InteriorIndex := 0 to FirstControl.LayerCollection.Count - 1 do
-  begin
-    Result[InteriorIndex+1] := FirstControl.LayerCollection[
-      FirstControl.LayerCollection.Count - 1 - InteriorIndex].Fraction;
-  end;
-  Result[Length(Result)-1] := 1;
+  Result := GetFractions(FirstControl);
 end;
 
 function TFishnetMeshElement.Fractions2: TRealArray;
+begin
+  Result := GetFractions(SecondControl);
+end;
+
+function TFishnetMeshElement.GetFractions(MeshControls: TMeshControl): TRealArray;
 var
   InteriorIndex: Integer;
+  Sum: double;
+  CurrentLength: double;
+  StopIndex: Integer;
+  StartIndex: Integer;
 begin
-  SetLength(Result, SecondControl.LayerCollection.Count + 2);
+  Assert(MeshControls.Count >= 1);
+  SetLength(Result, MeshControls.Count + 1);
   Result[0] := 0;
-  for InteriorIndex := 0 to SecondControl.LayerCollection.Count - 1 do
+  if MeshControls.Count > 1 then
   begin
-    Result[InteriorIndex+1] := SecondControl.LayerCollection[
-      SecondControl.LayerCollection.Count - 1- InteriorIndex].Fraction;
+    case MeshControls.GrowthMethod of
+      gmUniform:
+        begin
+          for InteriorIndex := 1 to MeshControls.Count - 1 do
+          begin
+            result[InteriorIndex] := (InteriorIndex)/MeshControls.Count;
+          end;
+        end;
+      gmUp:
+        begin
+          Sum := 1;
+          CurrentLength := 1;
+          for InteriorIndex := 1 to MeshControls.Count-1 do
+          begin
+            result[MeshControls.Count - InteriorIndex] := Sum;
+            CurrentLength := CurrentLength * MeshControls.GrowthRate;
+            Sum := Sum + CurrentLength;
+          end;
+          for InteriorIndex := 1 to MeshControls.Count-1 do
+          begin
+            result[InteriorIndex] := result[InteriorIndex]/ Sum;
+          end;
+        end;
+      gmDown:
+        begin
+          Sum := 1;
+          CurrentLength := 1;
+          for InteriorIndex := 1 to MeshControls.Count-1 do
+          begin
+            result[MeshControls.Count - InteriorIndex] := Sum;
+            CurrentLength := CurrentLength / MeshControls.GrowthRate;
+            Sum := Sum + CurrentLength;
+          end;
+          for InteriorIndex := 1 to MeshControls.Count-1 do
+          begin
+            result[InteriorIndex] := result[InteriorIndex]/ Sum;
+          end;
+        end;
+      gmMiddle, gmEdge:
+        begin
+          if Odd(MeshControls.Count) then
+          begin
+            StopIndex := (MeshControls.Count div 2)+1;
+          end
+          else
+          begin
+            StopIndex := (MeshControls.Count div 2);
+          end;
+
+          Sum := 1;
+          CurrentLength := 1;
+          for InteriorIndex := 1 to StopIndex-1 do
+          begin
+            result[InteriorIndex] := Sum;
+            case MeshControls.GrowthMethod of
+              gmMiddle:
+                begin
+                  CurrentLength := CurrentLength * MeshControls.GrowthRate;
+                end;
+              gmEdge:
+                begin
+                  CurrentLength := CurrentLength / MeshControls.GrowthRate;
+                end;
+              else Assert(False);
+            end;
+            Sum := Sum + CurrentLength;
+          end;
+          StartIndex := StopIndex;
+          if not Odd(MeshControls.Count) then
+          begin
+            result[StartIndex] := Sum;
+            Sum := Sum + CurrentLength;
+            Inc(StartIndex);
+          end;
+          for InteriorIndex := StartIndex to MeshControls.Count-1 do
+          begin
+            result[InteriorIndex] := Sum;
+            case MeshControls.GrowthMethod of
+              gmMiddle:
+                begin
+                  CurrentLength := CurrentLength / MeshControls.GrowthRate;
+                end;
+              gmEdge:
+                begin
+                  CurrentLength := CurrentLength * MeshControls.GrowthRate;
+                end;
+              else Assert(False);
+            end;
+            Sum := Sum + CurrentLength;
+          end;
+          for InteriorIndex := 0 to MeshControls.Count - 1 do
+          begin
+            result[InteriorIndex] := result[InteriorIndex]/ Sum;
+          end;
+        end;
+      gmCustom:
+        begin
+          for InteriorIndex := 0 to MeshControls.LayerCollection.Count - 1 do
+          begin
+            Result[MeshControls.LayerCollection.Count -InteriorIndex] :=
+              MeshControls.LayerCollection[InteriorIndex].Fraction;
+          end;
+        end;
+      else Assert(False);
+    end;
   end;
-  Result[Length(Result)-1] := 1;
+  Result[Length(Result) - 1] := 1;
 end;
 
 function TFishnetMeshElement.GetGenerator: TFishnetMeshGenerator;
@@ -946,7 +1048,7 @@ begin
         for ElementIndex := 0 to Node1.Elements.Count - 1 do
         begin
           AnotherElement := Node1.Elements[ElementIndex];
-          if (AnotherElement = Element) {or AnotherElement.FMarked} then
+          if (AnotherElement = Element) or AnotherElement.FMarked then
           begin
             Continue;
           end;
@@ -1056,7 +1158,7 @@ begin
         for ElementIndex := 0 to Node1.Elements.Count - 1 do
         begin
           AnotherElement := Node1.Elements[ElementIndex];
-          if (AnotherElement = Element) {or AnotherElement.FMarked} then
+          if (AnotherElement = Element) or AnotherElement.FMarked then
           begin
             Continue;
           end;
@@ -1143,7 +1245,6 @@ begin
 end;
 
 { TUndoFishnetMeshValues }
-{$IFDEF SUTRA}
 
 constructor TUndoFishnetMeshValues.Create;
 begin
@@ -1213,7 +1314,6 @@ begin
   inherited;
 
 end;
-{$ENDIF}
 
 { TMeshControl }
 
@@ -1228,13 +1328,13 @@ begin
     gmDown: GrowthMethod := gmUp;
     else Assert(False);
   end;
-  if GrowthMethod = gmCustom then
+  LayerCollection.Assign(Source.LayerCollection);
+  if GrowthMethod in [gmCustom, gmUp, gmDown] then
   begin
-    LayerCollection.Assign(Source.LayerCollection);
     for index := 0 to LayerCollection.Count - 1 do
     begin
       LayerCollection[index].Fraction :=
-        Source.LayerCollection[LayerCollection.Count - 1 - index].Fraction;
+        1 - Source.LayerCollection[LayerCollection.Count - 1 - index].Fraction;
     end;
   end
   else
@@ -1292,7 +1392,7 @@ begin
           for index := 0 to LayerCollection.Count - 1 do
           begin
             result := LayerCollection[index].Fraction =
-              OtherMeshControl.LayerCollection[
+              1 - OtherMeshControl.LayerCollection[
               LayerCollection.Count - 1- index].Fraction;
             if not Result then
             begin

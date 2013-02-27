@@ -5,6 +5,7 @@ c                  GZH  20050405      -- Converted calculations to use double pr
 c                  KJH  20050419      -- Array WELL2 dimensioned to 18 to store well id
 C                  AWH  20080411      -- Retrieve HDRY from GWFBASMODULE rather than from
 C                                        LPF, BCF, or HUF
+C                  RGN  20111001      -- Modified to support UPW; removed BC switching is UPW is used.
 c
       MODULE GWFMNW1MODULE
         DOUBLE PRECISION, PARAMETER :: TWOPI=2.0D0*3.1415926535897932D0
@@ -35,8 +36,10 @@ c
 C
 c-------------------------------------------------------------------------
 c
-      SUBROUTINE GWF2MNW17AR(In, Iusip, Iude4, Iusor, Iupcg, Iulmg,
-     +                      Iugmg, Fname, Igrid)
+      SUBROUTINE GWF2MNW17AR(In, Iusip, Iude4, Iunwt, Iusor, Iupcg, 
+     +                      Iulmg, Iugmg, Fname, Igrid)
+!rgn------REVISION NUMBER CHANGED TO BE CONSISTENT WITH NWT RELEASE
+!rgn------NEW VERSION NUMBER 1.0.5:  April 5, 2012
 C     VERSION 20020819 KJH
 c
 c----- MNW by K.J. Halford        1/31/98
@@ -52,6 +55,7 @@ c     ------------------------------------------------------------------
       USE DE4MODULE,ONLY:HCLOSEDE4
       USE PCGMODULE,ONLY:HCLOSEPCG
       USE GMGMODULE,ONLY:HCLOSEGMG
+      USE GWFNWTMODULE,ONLY:Tol
       IMPLICIT NONE
 c     ------------------------------------------------------------------
       INTRINSIC ABS
@@ -60,7 +64,8 @@ c     ------------------------------------------------------------------
 c     ------------------------------------------------------------------
 c     Arguments
 c     ------------------------------------------------------------------
-      INTEGER :: In, Iusip, Iude4, Iusor, Iupcg, Iulmg, Iugmg, Igrid
+      INTEGER :: In, Iusip, Iude4, Iusor, Iupcg, Iulmg, Iugmg, 
+     +           Iunwt, Igrid
       CHARACTER(LEN=200) :: Fname                 !!08/19/02KJH-MODIFIED
 c     ------------------------------------------------------------------
 c     Local Variables
@@ -268,12 +273,14 @@ C                    dimension from 17 to 18
       ALLOCATE (WELL2(18, MXWEL2+1), MNWSITE(MXWEL2))
 c
 C-------SET SMALL DEPENDING ON CLOSURE CRITERIA OF THE SOLVER
+      SMALL = 0.0D0
       IF ( Iusip.NE.0 ) SMALL = HCLOSE
       IF ( Iude4.NE.0 ) SMALL = HCLOSEDE4
 !     IF ( Iusor.NE.0 ) SMALL = HCLOSESOR
       IF ( Iupcg.NE.0 ) SMALL = HCLOSEPCG
       IF ( Iulmg.NE.0 ) SMALL = 0.0D0  !LMG SETS HCLOSE TO ZERO
       IF ( Iugmg.NE.0 ) SMALL = HCLOSEGMG
+      IF ( Iunwt.NE.0 ) SMALL = TOL
 c
 c-----SAVE POINTERS FOR GRID AND RETURN
       CALL SGWF2MNW1PSV(Igrid)
@@ -283,7 +290,8 @@ c7------return
 c
 c_________________________________________________________________________________
 c
-      SUBROUTINE GWF2MNW17RP(In, Iubcf, Iulpf, Iuhuf, Kper, Igrid)
+      SUBROUTINE GWF2MNW17RP(In, Iubcf, Iulpf, Iuhuf, Iuupw, Kper, 
+     +                       Igrid)
 c     VERSION 20020819 KJH
 C
 c----- MNW by K.J. Halford        1/31/98
@@ -301,12 +309,13 @@ c     ------------------------------------------------------------------
       IMPLICIT NONE
       INTRINSIC ABS, MAX, MOD, INT
       INTEGER, EXTERNAL :: IFRL, IDIRECT
-!      DOUBLE PRECISION, EXTERNAL :: CEL2WELBCF, CEL2WELLPF, CEL2WELHUF
+      DOUBLE PRECISION, EXTERNAL :: CEL2WELBCF, CEL2WELLPF, CEL2WELHUF, 
+     +                              CEL2WELUPW
       EXTERNAL NCREAD, UPCASE, QREAD, USTOP
 c     ------------------------------------------------------------------
 c     Arguments
 c     ------------------------------------------------------------------
-      INTEGER, INTENT(IN) :: Iubcf, Iulpf, Iuhuf, Kper, Igrid
+      INTEGER, INTENT(IN) :: Iubcf, Iulpf, Iuhuf, Kper, Igrid, Iuupw
       INTEGER, INTENT(INOUT) :: In
 c     ------------------------------------------------------------------
 c     Local Variables
@@ -329,6 +338,7 @@ cswm: SET POINTERS FOR FLOW PACKAGE TO GET K's FOR CEL2WEL
       IF ( Iubcf.NE.0 ) CALL SGWF2BCF7PNT(Igrid)
       IF ( Iulpf.NE.0 ) CALL SGWF2LPF7PNT(Igrid)
       IF ( Iuhuf.NE.0 ) CALL SGWF2HUF7PNT(Igrid)
+      IF ( Iuupw.NE.0 ) CALL SGWF2UPW1PNT(Igrid)
 C
       icmn = 1
       kfini = 1
@@ -715,6 +725,7 @@ c
 !            IF ( Iubcf.NE.0 ) cond = CEL2WELBCF(i,j,k,rw,sk,qact,cf)
 !            IF ( Iulpf.NE.0 ) cond = CEL2WELLPF(i,j,k,rw,sk,qact,cf)
 !            IF ( Iuhuf.NE.0 ) cond = CEL2WELHUF(i,j,k,rw,sk,qact,cf)
+!            IF ( Iuupw.NE.0 ) cond = CEL2WELUPW(i,j,k,rw,sk,qact,cf)
             IF ( rw.LT.ZERO25 ) cond = cond*1.0D3
           ENDIF
           WELL2(11, m) = cond

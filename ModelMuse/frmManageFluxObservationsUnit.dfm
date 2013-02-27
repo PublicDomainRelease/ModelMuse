@@ -12,9 +12,9 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
   Position = poScreenCenter
   OnActivate = ListClick
   OnResize = FormResize
-  ExplicitWidth = 808
-  ExplicitHeight = 429
-  PixelsPerInch = 96
+  ExplicitWidth = 810
+  ExplicitHeight = 436
+  PixelsPerInch = 120
   TextHeight = 18
   object JvNetscapeSplitter1: TJvNetscapeSplitter
     Left = 121
@@ -113,10 +113,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object tabObservationsTimes: TTabSheet
         Caption = 'Observation times and values'
         OnResize = tabObservationsTimesResize
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         DesignSize = (
           653
           252)
@@ -155,7 +151,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
           OnColSize = rdgFluxObsTimesColSize
           ColorRangeSelection = False
           OnHorizontalScroll = rdgFluxObsTimesHorizontalScroll
-          ColorSelectedRow = True
           Columns = <
             item
               AutoAdjustRowHeights = False
@@ -392,10 +387,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
         Caption = 'Mass flux observation times and values'
         ImageIndex = 2
         TabVisible = False
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         DesignSize = (
           653
           252)
@@ -489,7 +480,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
           OnColSize = rdgConcFluxObsTimesColSize
           ColorRangeSelection = False
           OnHorizontalScroll = rdgConcFluxObsTimesHorizontalScroll
-          ColorSelectedRow = True
           Columns = <
             item
               AutoAdjustRowHeights = False
@@ -692,10 +682,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object tabObjects: TTabSheet
         Caption = 'Objects'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         DesignSize = (
           653
           252)

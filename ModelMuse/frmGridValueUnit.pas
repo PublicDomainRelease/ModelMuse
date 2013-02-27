@@ -83,6 +83,7 @@ type
     procedure jvrltEndPointExpand(Sender: TObject);
     procedure jvrltPathlineCollapse(Sender: TObject);
     procedure jvrltPathlineExpand(Sender: TObject);
+    procedure FormResize(Sender: TObject);
   private
     FSelectedScreenObject: TScreenObject;
     FColumn: Integer;
@@ -110,7 +111,8 @@ type
   public
     procedure UpdateValue(const Layer, Row, Column: integer;
       const DataSetName, CellValue: string; Explanation: string;
-      const Location: TPoint2D; ViewDirection: TViewDirection);
+      const Location: TPoint2D; ViewDirection: TViewDirection;
+      EvaluatedAt: TEvaluatedAt);
     procedure UpdateDataSets;
     { Public declarations }
   end;
@@ -125,7 +127,7 @@ implementation
 uses Clipbrd, CustomModflowWriterUnit, AbstractGridUnit, frmGoPhastUnit, 
   GIS_Functions, RbwParser, Contnrs, ClassificationUnit,
   PhastModelUnit, PathlineReader, QuadtreeClass, ZoomBox2, InteractiveTools,
-  frmSutraLayersUnit, SutraMeshUnit;
+  frmSutraLayersUnit, SutraMeshUnit, UndoItems;
 
 resourcestring
   StrSelectedObject = 'Selected object';
@@ -177,6 +179,12 @@ resourcestring
   StrZone = 'Zone';
   StrGroup = 'Group';
   StrNumber = 'Number';
+  StrElementD = 'Element: %d';
+  StrNodeD = 'Node: %d';
+  StrYouMustColorTheG = 'You must color the grid with a data set evaluated a' +
+  't %s to see this data set''s values.';
+  StrElements = 'elements';
+  StrNodes = 'nodes';
 
 {$R *.dfm}
 
@@ -245,11 +253,11 @@ begin
   FDataSetDummyObjects := TObjectList.Create;
 
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowNWT {$IFDEF SUTRA}, msSutra22 {$ENDIF}:
+    msPhast, msModflow, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}, msSutra22:
       begin
         comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel)
       end;
-    msModflowLGR:
+    msModflowLGR, msModflowLGR2:
       begin
         comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel);
         for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
@@ -272,6 +280,12 @@ procedure TfrmGridValue.FormDestroy(Sender: TObject);
 begin
   inherited;
   FDataSetDummyObjects.Free;
+end;
+
+procedure TfrmGridValue.FormResize(Sender: TObject);
+begin
+  inherited;
+    rdgPathline.Width := jvrltPathline.ClientWidth;
 end;
 
 procedure TfrmGridValue.FormShow(Sender: TObject);
@@ -336,6 +350,24 @@ begin
     else Assert(False);
   end;
 
+  if GlobalEvaluatedAt <> OtherDataSet.EvaluatedAt then
+  begin
+    edSelectValue.Text := '';
+    case GlobalEvaluatedAt of
+      eaBlocks:
+        begin
+          memoSelectExplanation.Text := Format(StrYouMustColorTheG, [StrElements]);
+        end;
+      eaNodes:
+        begin
+          memoSelectExplanation.Text := Format(StrYouMustColorTheG, [StrNodes]);
+        end;
+      else Assert(False);
+    end;
+
+    Exit;
+  end;
+
   if Layer > OtherDataSet.LayerCount then
   begin
     Layer := OtherDataSet.LayerCount -1;
@@ -381,14 +413,20 @@ end;
 
 procedure TfrmGridValue.UpdateValue(const Layer, Row, Column: integer;
   const DataSetName, CellValue: string; Explanation: string;
-  const Location: TPoint2D; ViewDirection: TViewDirection);
+  const Location: TPoint2D; ViewDirection: TViewDirection;
+  EvaluatedAt: TEvaluatedAt);
 var
   DataArray: TDataArray;
-  EvaluatedAt: TEvaluatedAt;
+
   ColumnWidth: Double;
   RowWidth: Double;
   LayerHeight: Double;
   Model: TBaseModel;
+  Mesh: TSutraMesh3D;
+  AnElement3D: TSutraElement3D;
+  ANode3D: TSutraNode3D;
+  AnElement2D: TSutraElement2D;
+  ANode2D: TSutraNode2D;
 //  DiscretizationDefined: Boolean;
 begin
   Model := frmGoPhast.PhastModel.SelectedModel;
@@ -396,9 +434,6 @@ begin
   FColumn := Column;
   FRow := Row;
   FLayer := Layer;
-  lblLayer.Caption := Format(StrLayerD, [(Layer+1)]);
-  lblRow.Caption := Format(StrRowD, [(Row+1)]);
-  lblColumn.Caption := Format(StrColumn, [(Column+1)]);
   lblDataSet.Caption := DataSetName;
   edCellValue.Text := CellValue;
   if (Explanation <> StrNoValueAssigned)
@@ -418,13 +453,58 @@ begin
     begin
       DataArray := nil;
     end;
-    if DataArray = nil then
+    if DataArray <> nil then
+//    begin
+//      EvaluatedAt := eaBlocks;
+//    end
+//    else
     begin
-      EvaluatedAt := eaBlocks;
+      EvaluatedAt := DataArray.EvaluatedAt;
+    end;
+
+    if Model.ModelSelection <> msSutra22 then
+    begin
+      lblLayer.Caption := Format(StrLayerD, [(Layer+1)]);
+      lblRow.Caption := Format(StrRowD, [(Row+1)]);
+      lblColumn.Caption := Format(StrColumn, [(Column+1)]);
     end
     else
     begin
-      EvaluatedAt := DataArray.EvaluatedAt;
+      lblLayer.Caption := Format(StrLayerD, [(Layer+1)]);
+      lblColumn.Caption := '';
+      Mesh := (Model as TPhastModel).SutraMesh;
+      if Mesh.MeshType = mt3D then
+      begin
+        case EvaluatedAt of
+          eaBlocks:
+            begin
+              AnElement3D := Mesh.ElementArray[Layer,Column];
+              lblRow.Caption := Format(StrElementD, [AnElement3D.ElementNumber+1]);
+            end;
+          eaNodes:
+            begin
+              ANode3D := Mesh.NodeArray[Layer,Column];
+              lblRow.Caption := Format(StrNodeD, [ANode3D.Number+1]);
+            end;
+          else Assert(False);
+        end;
+      end
+      else
+      begin
+        case EvaluatedAt of
+          eaBlocks:
+            begin
+              AnElement2D := Mesh.Mesh2D.Elements[Column];
+              lblRow.Caption := Format(StrElementD, [AnElement2D.ElementNumber+1]);
+            end;
+          eaNodes:
+            begin
+              ANode2D := Mesh.Mesh2D.Nodes[Column];
+              lblRow.Caption := Format(StrNodeD, [ANode2D.Number+1]);
+            end;
+          else Assert(False);
+        end;
+      end;
     end;
     GlobalEvaluatedAt := EvaluatedAt;
     ColumnWidth := GetColumnWidth(Column);
@@ -432,16 +512,35 @@ begin
     LayerHeight := GetLayerHeight(Column, Row, Layer);
 
     lblLayerHeight.Caption := Format(StrLayerHeightG, [LayerHeight]);
-    lblRowWidth.Caption := Format(StrRowWidthG, [RowWidth]);
-    lblColumnWidth.Caption := Format(StrColumnWidthG, [ColumnWidth]);
+    if Model.ModelSelection <> msSutra22 then
+    begin
+      lblRowWidth.Caption := Format(StrRowWidthG, [RowWidth]);
+      lblColumnWidth.Caption := Format(StrColumnWidthG, [ColumnWidth]);
+    end
+    else
+    begin
+      lblRowWidth.Caption := '';
+      lblColumnWidth.Caption := '';
+    end;
   end
   else
   begin
+    lblLayer.Caption := Format(StrLayerD, [(Layer+1)]);
+    lblRow.Caption := Format(StrRowD, [(Row+1)]);
+    lblColumn.Caption := Format(StrColumn, [(Column+1)]);
     lblLayerHeight.Caption := StrLayerHeight;
-    lblRowWidth.Caption := StrRowWidth;
-    lblColumnWidth.Caption := StrColumnWidth;
+    if Model.ModelSelection <> msSutra22 then
+    begin
+      lblRowWidth.Caption := StrRowWidth;
+      lblColumnWidth.Caption := StrColumnWidth;
+    end
+    else
+    begin
+      lblRowWidth.Caption := '';
+      lblColumnWidth.Caption := '';
+    end;
   end;
-  
+
   UpdateScreenObjectInfo(Column, Row, Layer, Location, Model);
   UpdateSelectedData(Layer, Row, Column);
   DisplayPathlineData(Location);
@@ -507,21 +606,23 @@ var
   Value: Double;
   DirectionText: string;
   Segment: TCellElementSegment;
+  ASegment: TCellElementSegment;
   LocalModel: TCustomModel;
   temp: TFloat;
+//  LocalAnisotropy: double;
+  Segments: TCellElementSegmentList;
+  SegmentIndex: Integer;
   procedure GetDirectionVariables(var VarIndex, MaxCount: Integer;
     var VarLabel: string);
   var
     Grid: TCustomModelGrid;
-  {$IFDEF SUTRA}
     Mesh: TSutraMesh3D;
-  {$ENDIF}
   begin
     VarIndex := -1;
     MaxCount := 0;
     VarLabel := '';
     case frmGoPhast.ModelSelection of
-      msPhast, msModflow, msModflowLGR, msModflowNWT:
+      msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
         begin
           Grid := frmGoPhast.Grid;
 
@@ -548,7 +649,6 @@ var
               Assert(False);
           end;
         end;
-      {$IFDEF SUTRA}
       msSutra22:
         begin
           Mesh := frmGoPhast.PhastModel.Mesh;
@@ -575,7 +675,6 @@ var
             Assert(False);
           end;
         end;
-      {$ENDIF}
     else
       Assert(False);
     end;
@@ -799,7 +898,50 @@ begin
         Location.x := Location.y;
         Location.y := temp;
       end;
-      Segment := FSelectedScreenObject.Segments[Model].ClosestSegment(Location, 1);
+//      case FViewDirection of
+//        vdTop: LocalAnisotropy := 1;
+//        vdFront: LocalAnisotropy := TUndoVerticalExaggeration.GetOldVE;
+//        vdSide: LocalAnisotropy := 1/TUndoVerticalExaggeration.GetOldVE;
+//        else Assert(False);
+//      end;
+
+      Segment := nil;
+      Segments := FSelectedScreenObject.Segments[Model];
+      for SegmentIndex := 0 to Segments.Count - 1 do
+      begin
+        ASegment := Segments[SegmentIndex];
+        case FSelectedScreenObject.ViewDirection of
+          vdTop:
+            begin
+              if (ASegment.Col = Column)
+                and (ASegment.Row = Row) then
+              begin
+                Segment := ASegment;
+                break;
+              end;
+            end;
+          vdFront:
+            begin
+              if (ASegment.Col = Column)
+                and (ASegment.Layer = Layer) then
+              begin
+                Segment := ASegment;
+                break;
+              end;
+            end;
+          vdSide:
+            begin
+              if (ASegment.Row = Row) and (ASegment.Layer = Layer) then
+              begin
+                Segment := ASegment;
+                break;
+              end
+            end;
+          else Assert(False);
+        end;
+      end;
+
+//      Segment := FSelectedScreenObject.Segments[Model].ClosestSegment(Location, LocalAnisotropy);
       case FSelectedScreenObject.ViewDirection of
         vdTop:
           begin
@@ -937,25 +1079,21 @@ end;
 function TfrmGridValue.DiscretizationDefined: Boolean;
 var
   Grid: TCustomModelGrid;
-  {$IFDEF SUTRA}
   Mesh: TSutraMesh3D;
-  {$ENDIF}
 begin
   result := False;
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         Grid := frmGoPhast.Grid;
         result := (Grid <> nil) and (Grid.LayerCount >= 1)
           and (Grid.RowCount >= 1) and (Grid.ColumnCount >= 1);
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         Mesh := frmGoPhast.PhastModel.Mesh;
         result := (Mesh <> nil) and (Mesh.Mesh2D.Nodes.Count > 0);
       end;
-    {$ENDIF}
   else
     Assert(False);
   end;
@@ -982,13 +1120,11 @@ begin
   begin
     Exit;
   end;
-  {$IFDEF SUTRA}
   if frmGoPhast.ModelSelection = msSutra22 then
   begin
     jvrltEndPoint.Visible := False;
     Exit;
   end;
-  {$ENDIF}
   FPriorEndPointLocation := Location;
   LocalModel := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
   EndPoints := LocalModel.EndPoints;
@@ -1214,13 +1350,11 @@ begin
   begin
     Exit;
   end;
-  {$IFDEF SUTRA}
   if frmGoPhast.ModelSelection = msSutra22 then
   begin
     jvrltPathline.Visible := False;
     Exit;
   end;
-  {$ENDIF}
   FPriorLocation := Location;
   LocalModel := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
   PathLines := LocalModel.PathLines;
@@ -1510,7 +1644,7 @@ begin
       jvrltPathline.Width := AvailableWidth div 2;
       jvrltEndPoint.Width := AvailableWidth div 2;
     end;
-
+    rdgPathline.Width := jvrltPathline.ClientWidth;
   end;
 end;
 

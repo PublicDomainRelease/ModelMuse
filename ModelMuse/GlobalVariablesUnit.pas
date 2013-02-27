@@ -21,6 +21,7 @@ type
     FValues: TVariableRecord;
     FCollection: TGlobalVariables;
     FComment: string;
+    FLocked: Boolean;
     function GetBooleanValue: boolean;
     function GetIntegerValue: integer;
     function GetRealValue: double;
@@ -38,6 +39,7 @@ type
     procedure InvalidateModel;
     procedure SetComment(const Value: string);
     procedure NotifyObservers;
+    procedure SetLocked(const Value: Boolean);
   protected
     procedure SetName(const NewName: TComponentName); override;
   public
@@ -45,11 +47,16 @@ type
   published
     procedure Assign(Source: TPersistent); override;
     property Format: TRbwDataType read GetFormat write SetFormat stored True;
-    property RealValue: double read GetRealValue write SetRealValue stored StoreRealValue;
-    property IntegerValue: integer read GetIntegerValue write SetIntegerValue stored StoreIntegerValue;
-    property BooleanValue: boolean read GetBooleanValue write SetBooleanValue stored StoreBooleanValue;
-    property StringValue: string read GetStringValue write SetStringValue stored StoreStringValue;
+    property RealValue: double read GetRealValue write SetRealValue
+      stored StoreRealValue;
+    property IntegerValue: integer read GetIntegerValue write SetIntegerValue
+      stored StoreIntegerValue;
+    property BooleanValue: boolean read GetBooleanValue write SetBooleanValue
+      stored StoreBooleanValue;
+    property StringValue: string read GetStringValue write SetStringValue
+      stored StoreStringValue;
     property Comment: string read FComment write SetComment;
+    property Locked: Boolean read FLocked write SetLocked;
   end;
 
   TGlobalVariableItem = class(TOrderedItem)
@@ -79,7 +86,8 @@ type
     Destructor Destroy; override;
     function IndexOfVariable(Name: string): integer;
     function GetVariableByName(Const Name: string): TGlobalVariable;
-    property Variables[Index: integer]: TGlobalVariable read GetVariable write SetVariable; default;
+    property Variables[Index: integer]: TGlobalVariable read GetVariable
+      write SetVariable; default;
   end;
 
 implementation
@@ -105,6 +113,7 @@ begin
       rdtBoolean: BooleanValue := SourceVariable.BooleanValue;
       rdtString: StringValue := SourceVariable.StringValue;
     end;
+    Locked := SourceVariable.Locked;
   end
   else
   begin
@@ -315,6 +324,11 @@ begin
     FValues.IntegerValue := Value;
     NotifyObservers;
   end;
+end;
+
+procedure TGlobalVariable.SetLocked(const Value: Boolean);
+begin
+  FLocked := Value;
 end;
 
 procedure TGlobalVariable.SetName(const NewName: TComponentName);

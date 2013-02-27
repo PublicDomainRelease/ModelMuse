@@ -260,9 +260,9 @@ end;
 procedure TResItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FEndHead,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FStartHead,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TResItem.SetBoundaryFormula(Index: integer; const Value: string);

@@ -6,7 +6,7 @@ inherited frmExportShapefile: TfrmExportShapefile
   ClientWidth = 449
   ExplicitWidth = 465
   ExplicitHeight = 593
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -260,7 +260,6 @@ inherited frmExportShapefile: TfrmExportShapefile
       SelectedRowOrColumnColor = clAqua
       UnselectableColor = clBtnFace
       ColorRangeSelection = False
-      ColorSelectedRow = True
       Columns = <
         item
           AutoAdjustRowHeights = False
@@ -316,7 +315,7 @@ inherited frmExportShapefile: TfrmExportShapefile
     Left = 136
     Top = 96
     Bitmap = {
-      494C0101040005002C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000500380010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

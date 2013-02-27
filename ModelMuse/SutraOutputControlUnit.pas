@@ -120,7 +120,9 @@ begin
   FListingOptions := [sloNPrint, sloCPandS,
     sloCVel, sloCCorT, sloCBudg, sloCScrn];
   FNE_PrintFrequency := 9999;
-  FNodeElementOptions := [neoPrintFirst, neoNumber, neoCoordinates,
+  // By default, don't print node number. It interferes with Model Viewer
+  // being able to read the files.
+  FNodeElementOptions := [neoPrintFirst, {neoNumber,} neoCoordinates,
     neoPressure, neoU, neoSaturation, neoVelocities];
   FMaxObsPerLine := 10000;
   FFluidSourcePrintFrequency := 9999;

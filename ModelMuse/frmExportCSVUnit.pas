@@ -95,7 +95,7 @@ begin
   inherited;
   FDataSets := TObjectList.Create;
   rgEvaluatedAt.Enabled := frmGoPhast.PhastModel.ModelSelection
-    in [msPhast {$IFDEF SUTRA}, msSutra22 {$ENDIF}];
+    in [msPhast, msSutra22];
 
   comboModel.AddItem(StrParentModel, frmGoPhast.PhastModel);
   if frmGoPhast.PhastModel.LgrUsed then
@@ -314,7 +314,7 @@ begin
   Grid := nil;
   Mesh := nil;
   case LocalModel.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         Grid := LocalModel.Grid;
         if (Grid.ColumnCount = 0)
@@ -325,7 +325,6 @@ begin
           Exit;
         end;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         Mesh := LocalModel.Mesh;
@@ -349,7 +348,6 @@ begin
           else Assert(False);
         end;
       end;
-    {$ENDIF}
     else Assert(False);
   end;
   Screen.Cursor := crHourGlass;

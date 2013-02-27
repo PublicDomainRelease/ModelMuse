@@ -206,6 +206,7 @@ type
     function GetReachLength: double;
     function GetReachLengthAnnotation: string;
     function GetLgrReachLength: double;
+    procedure SetValues(const Value: TSfrRecord);
   protected
     function GetColumn: integer; override;
     function GetLayer: integer; override;
@@ -222,7 +223,7 @@ type
     function GetSection: integer; override;
     procedure RecordStrings(Strings: TStringList); override;
   public
-    property Values: TSfrRecord read FValues write FValues;
+    property Values: TSfrRecord read FValues write SetValues;
     property StressPeriod: integer read FStressPeriod write FStressPeriod;
     property HydraulicConductivity: double read GetHydraulicConductivity;
     property StreambedElevation: double read GetStreambedElevation;
@@ -539,23 +540,23 @@ end;
 procedure TSfrItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FVerticalK,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FBrooksCoreyExponent,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FInitialWaterContent,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FSaturatedWaterContent,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FStreamSlope,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FStreambedElevation,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FStreamBedThickness,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FHydraulicConductivity,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FReachLength,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 function TSfrItem.ScreenObject: TObject;
@@ -1639,6 +1640,11 @@ end;
 procedure TSfr_Cell.SetRow(const Value: integer);
 begin
   FValues.Cell.Row := Value;
+end;
+
+procedure TSfr_Cell.SetValues(const Value: TSfrRecord);
+begin
+  FValues := Value;
 end;
 
 { TSfrRecord }

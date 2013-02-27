@@ -11,9 +11,8 @@ uses
   ComCtrls, Buttons, ArgusDataEntry, RbwEdit, Grids, RbwDataGrid4,
   frameInitialGridPositionUnit, frameGridUnit;
 type
-  TStandardChoices = (scNewModflow, scNewPhast,
-  {$IFDEF SUTRA}scNewSutra, {$ENDIF}
-  scExisting, scImportModflow);
+  TStandardChoices = (scNewModflow, scNewPhast, scNewSutra,
+    scExisting, scImportModflow);
 
   {@abstract(@name is used to specify the grid for a new model or open an
     existing model.)}
@@ -105,6 +104,9 @@ type
     rgTransport: TRadioGroup;
     rdgLocation: TRbwDataGrid4;
     lblModelPosition: TLabel;
+    rdeMinimumThickness: TRbwDataEntry;
+    lblMinimumThickness: TLabel;
+    rgSaturation: TRadioGroup;
     // @name sets the vertical exaggeration of the model
     // but does not set up the grid.
     procedure btnDontCreateGridClick(Sender: TObject);
@@ -137,6 +139,8 @@ type
     procedure rgMeshTypeClick(Sender: TObject);
     procedure frameModelLayersGridSelectCell(Sender: TObject; ACol,
       ARow: Integer; var CanSelect: Boolean);
+    procedure rdgLocationBeforeDrawCell(Sender: TObject; ACol, ARow: Integer);
+    procedure rgTransportClick(Sender: TObject);
   private
     // @name sets up the
     // @link(TPhastGrid) using the values displayed on @link(tabInitialGrid).
@@ -217,15 +221,13 @@ begin
                 end;
                 frmGoPhast.UpdateModelSelection;
               end;
-          {$IFDEF SUTRA}
             scNewSutra:
               begin
                 Caption := StrInitialModelArea;
                 btnNext.Caption := StrFinish;
-                frmGoPhast.ModelSelection := msSutra22;
                 pcStartup.ActivePageIndex := 3;
+                rgMeshTypeClick(nil);
               end;
-          {$ENDIF}
             scExisting: // The user has chosen to open an existing model.
               begin
                 if frmGoPhast.odOpenDialog.Execute then
@@ -304,15 +306,26 @@ var
   TopZoomBox: TQRbwZoomBox2;
   FrontZoomBox: TQRbwZoomBox2;
   FrameHeight: double;
+  MinThickness: double;
 begin
+
   PhastModel := frmGoPhast.PhastModel;
   PhastModel.SutraMesh.MeshType := TMeshType(rgMeshType.ItemIndex);
+  if PhastModel.SutraMesh.MeshType = mtProfile then
+  begin
+    PhastModel.SutraOptions.GravityY := -9.81;
+  end;
+  frmGoPhast.splitHoriz.Minimized := PhastModel.SutraMesh.MeshType <> mt3D;
   PhastModel.SutraOptions.TransportChoice :=
     TTransportChoice(rgTransport.ItemIndex);
+  PhastModel.SutraOptions.SaturationChoice :=
+    TSaturationChoice(rgSaturation.ItemIndex);
+  PhastModel.ModelSelection := msSutra22;
   Values:= TRealList.Create;
   try
     if PhastModel.SutraMesh.MeshType = mt3D then
     begin
+      MinThickness := StrToFloat(rdeMinimumThickness.Output);
       LayerStructure := TSutraLayerStructure.Create(nil);
       try
         LayerStructure.Assign(frmGoPhast.PhastModel.SutraLayerStructure);
@@ -354,6 +367,7 @@ begin
         for LayerIndex := 0 to PhastModel.SutraLayerStructure.Count - 1 do
         begin
           LayerGroup := PhastModel.SutraLayerStructure.LayerGroups[LayerIndex];
+          LayerGroup.MinThickness := MinThickness;
           NewDataArray := PhastModel.DataArrayManager.
             GetDataSetByName(LayerGroup.DataArrayName);
           Assert(NewDataArray <> nil);
@@ -369,6 +383,7 @@ begin
     YBottom := StrToFloatDef(rdgLocation.Cells[1,2], 0);
     YTop := StrToFloatDef(rdgLocation.Cells[2,2], 0);
 
+//    PhastModel.ModelSelection := msSutra22;
     if (XLeft < XRight) and (YBottom < YTop) then
     begin
       ModelXWidth := XRight-XLeft;
@@ -415,6 +430,39 @@ begin
             SetTopPosition((XLeft + XRight)/2, (YBottom + YTop)/2);
           end;
           SetFrontPosition((XLeft + XRight)/2, (ZTop + ZBottom)/2);
+        end;
+      end
+      else if PhastModel.SutraMesh.MeshType = mtProfile then
+      begin
+        if YTop > YBottom then
+        begin
+          ModelXWidth := TopZoomBox.X(TopZoomBox.ClientWidth-1)
+            - TopZoomBox.X(0);
+          ZHeight := YTop-YBottom;
+          Exaggeration := ModelXWidth / ZHeight;
+          if ((TopZoomBox.Height > 10)
+            and (TopZoomBox.Width > 10)) then
+          begin
+            FrameRatio := TopZoomBox.Width
+              / TopZoomBox.Height;
+            Exaggeration := Exaggeration/FrameRatio;
+          end
+          else
+          begin
+            Exaggeration := Exaggeration/3;
+          end;
+          E := Floor(Log10(Exaggeration));
+          D := ceil(Exaggeration*Power(10, -E));
+          Exaggeration := D*Power(10, E);
+          frmGoPhast.UpdateVerticalExaggeration(Exaggeration);
+
+          TopZoomBox.Magnification := 0.9 *
+            Min(TopZoomBox.Width / ModelXWidth,
+            TopZoomBox.Height / (ModelYWidth*Exaggeration));
+          FrontZoomBox.Magnification := TopZoomBox.Magnification;
+
+
+          SetTopPosition((XLeft + XRight)/2, (YBottom + YTop)/2);
         end;
       end;
     end;
@@ -613,9 +661,9 @@ end;
 procedure TfrmStartUp.Loaded;
 begin
   inherited;
-{$IFNDEF SUTRA}
-  rgChoice.Items.Delete(2);
-{$ENDIF}
+//{$IFNDEF SUTRA}
+//  rgChoice.Items.Delete(2);
+//{$ENDIF}
 end;
 
 procedure TfrmStartUp.SetUpModflowLayers(ColCount, RowCount: Integer;
@@ -825,10 +873,43 @@ begin
   CanSelect := (ARow <> 1) or (ACol <> 0);
 end;
 
+procedure TfrmStartUp.rdgLocationBeforeDrawCell(Sender: TObject; ACol,
+  ARow: Integer);
+var
+  LowerValue: Extended;
+  HigherValue: Extended;
+begin
+  inherited;
+  if (ACol >= rdgLocation.FixedCols) and (ARow >= rdgLocation.FixedRows) then
+  begin
+    LowerValue := StrToFloatDef(rdgLocation.Cells[1,ARow], 0);
+    HigherValue := StrToFloatDef(rdgLocation.Cells[2,ARow], 0);
+    if LowerValue > HigherValue then
+    begin
+      rdgLocation.Canvas.Brush.Color := clRed;
+    end;
+  end;
+end;
+
 procedure TfrmStartUp.rgMeshTypeClick(Sender: TObject);
 begin
   inherited;
   frameModelLayers.Enabled := TMeshType(rgMeshType.ItemIndex) = mt3D;
+  rdeMinimumThickness.Enabled := TMeshType(rgMeshType.ItemIndex) = mt3D;
+end;
+
+procedure TfrmStartUp.rgTransportClick(Sender: TObject);
+var
+  TransportChoice: TTransportChoice;
+begin
+  inherited;
+  TransportChoice := TTransportChoice(rgTransport.ItemIndex);
+  rgSaturation.Enabled := TransportChoice in [tcSolute, tcEnergy];
+  if not rgSaturation.Enabled then
+  begin
+    rgSaturation.ItemIndex := 0;
+  end;
+
 end;
 
 procedure TfrmStartUp.FormShow(Sender: TObject);

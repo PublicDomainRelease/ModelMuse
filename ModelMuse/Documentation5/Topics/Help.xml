@@ -4,7 +4,7 @@
   <title translate="true">Help</title>
   <body>
     <header>
-      <para styleclass="Heading2"><text styleclass="Heading1" translate="true">Help</text></para>
+      <para styleclass="Heading2_atoc_"><text styleclass="Heading1" translate="true">Help</text></para>
     </header>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The menu items under Help are listed in table 14.</text></para>
     <para styleclass="Table Caption"><text styleclass="Table Caption" translate="true">Table 14. Help Menu</text></para>
@@ -74,6 +74,6 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Normal"><text styleclass="Normal" translate="true">There are a number of ways to display help on a topic. &#160;Most dialog boxes have a help button. Clicking it will display the help for that dialog box. &#160;The Help menu in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Main_Window" styleclass="Normal" translate="true">Main Window</link><text styleclass="Normal" translate="true"> can also be used to access the help. &#160;Pressing the F1 key will also display help.</text></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">There are a number of ways to display help on a topic.  Most dialog boxes have a help button. Clicking it will display the help for that dialog box.  The Help menu in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Main_Window" styleclass="Normal" translate="true">Main Window</link><text styleclass="Normal" translate="true"> can also be used to access the help.  Pressing the F1 key will also display help.</text></para>
   </body>
 </topic>

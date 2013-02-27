@@ -144,6 +144,7 @@ inherited framePackageUZF: TframePackageUZF
       Width = 293
       Height = 80
       Caption = 'Infiltration assignment method'
+      Enabled = False
       ItemIndex = 1
       Items.Strings = (
         'Objects overwrite values of previous objects'
@@ -173,6 +174,7 @@ inherited framePackageUZF: TframePackageUZF
         Control = rdeSURFDEP
       end
       item
+        Control = lblSURFDEP
       end
       item
         Control = rdeNumberOfTrailingWaves
@@ -193,6 +195,7 @@ inherited framePackageUZF: TframePackageUZF
         Control = lblVerticalKSource
       end
       item
+        Control = rgAssignmentMethod
       end>
   end
 end

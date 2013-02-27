@@ -20,6 +20,7 @@ type
     FY: double;
     FHeadObsCollection: THeadObsCollection;
     FScreenObjectName: string;
+    FOriginalOrder: Integer;
     procedure SetName(const Value: string);
     procedure SetObservedValue(const Value: double);
     procedure SetSimulatedValue(const Value: double);
@@ -28,6 +29,7 @@ type
     procedure SetX(const Value: double);
     procedure SetY(const Value: double);
     procedure SetScreenObjectName(const Value: string);
+    procedure SetOriginalOrder(const Value: Integer);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Collection: TCollection); override;
@@ -42,6 +44,7 @@ type
     property Visible: boolean read FVisible write SetVisible;
     property X: double read FX write SetX;
     property Y: double read FY write SetY;
+    property OriginalOrder: Integer read FOriginalOrder write SetOriginalOrder;
   end;
 
   THeadObsCollection = class(TPhastCollection)
@@ -137,6 +140,7 @@ begin
     Visible := SourceItem.Visible;
     X := SourceItem.X;
     Y := SourceItem.Y;
+    OriginalOrder := SourceItem.OriginalOrder;
   end
   else
   begin
@@ -206,6 +210,11 @@ end;
 procedure THeadObsItem.SetObservedValue(const Value: double);
 begin
   SetRealProperty(FObservedValue, Value);
+end;
+
+procedure THeadObsItem.SetOriginalOrder(const Value: Integer);
+begin
+  SetIntegerProperty(FOriginalOrder, Value);
 end;
 
 procedure THeadObsItem.SetScreenObjectName(const Value: string);
@@ -408,6 +417,7 @@ begin
               end;
             end;
             Item := Add as THeadObsItem;
+            Item.OriginalOrder := Count-1;
             Item.SimulatedValue := Val1;
             Item.ObservedValue := Val2;
             Item.Name := StringSplitter[2];

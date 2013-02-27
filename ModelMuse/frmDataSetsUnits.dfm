@@ -138,6 +138,10 @@ inherited frmDataSets: TfrmDataSets
     TabOrder = 1
     object tabBasic: TTabSheet
       Caption = 'Basic'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         312
         360)
@@ -523,6 +527,10 @@ inherited frmDataSets: TfrmDataSets
     object tabComment: TTabSheet
       Caption = 'Comment'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Splitter2: TSplitter
         Left = 0
         Top = 168
@@ -544,11 +552,10 @@ inherited frmDataSets: TfrmDataSets
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 306
+          Width = 69
           Height = 19
           Align = alTop
           Caption = 'Comment'
-          ExplicitWidth = 69
         end
         object reComment: TRichEdit
           AlignWithMargins = True
@@ -576,11 +583,10 @@ inherited frmDataSets: TfrmDataSets
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 306
+          Width = 164
           Height = 19
           Align = alTop
           Caption = 'Associated model data'
-          ExplicitWidth = 164
         end
         object memoAssociatedDataSets: TMemo
           AlignWithMargins = True

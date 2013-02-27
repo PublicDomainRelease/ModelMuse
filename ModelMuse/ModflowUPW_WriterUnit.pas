@@ -58,7 +58,10 @@ var
   HDRY: Real;
   NPUPW: Integer;
   IPHDRY: integer;
+  Options: string;
+  LocalPackage: TUpwPackageSelection;
 begin
+  LocalPackage := Model.ModflowPackages.UpwPackage;
   IUPWCB := 0;
   GetFlowUnitNumber(IUPWCB);
   HDRY := Model.ModflowOptions.HDry;
@@ -71,13 +74,27 @@ begin
     NPUPW := Model.ModflowSteadyParameters.CountParameters(SteadyLpfParameters);
   end;
   NPLPF := NPUPW;
-  IPHDRY := Ord(Model.ModflowPackages.UpwPackage.HDryPrintOption);
+  IPHDRY := Ord(LocalPackage.HDryPrintOption);
+
+  Options := '';
+  if LocalPackage.NoParCheck then
+  begin
+    Options := Options + ' NOPARCHECK';
+  end;
 
   WriteInteger(IUPWCB);
   WriteFloat(HDRY);
   WriteInteger(NPUPW);
   WriteInteger(IPHDRY);
+  if Options <> '' then
+  begin
+    WriteString(Options)
+  end;
   WriteString(' # Data Set 1, IUPWCB HDRY NPUPW IPHDRY');
+  if Options <> '' then
+  begin
+    WriteString(' Options');
+  end;
   NewLine;
 end;
 
@@ -97,88 +114,93 @@ procedure TModflowUPW_Writer.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
 begin
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrParameterZonesNot);
-
-  if not Model.ModflowPackages.UpwPackage.IsSelected then
-  begin
-    Exit
-  end;
-  if FlowPackageFileGeneratedExternally then
-  begin
-    Exit;
-  end;
-  NameOfFile := FileName(AFileName);
-  WriteToNameFile(StrUPW, Model.UnitNumbers.UnitNumber(StrUPW),
-    NameOfFile, foInput);
-  OpenFile(NameOfFile);
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    frmProgressMM.AddMessage(StrWritingUPWPackage);
-    frmProgressMM.AddMessage(StrWritingDataSet0);
-    WriteDataSet0;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrParameterZonesNot);
+
+    if not Model.ModflowPackages.UpwPackage.IsSelected then
+    begin
+      Exit
+    end;
+    if FlowPackageFileGeneratedExternally then
     begin
       Exit;
     end;
+    NameOfFile := FileName(AFileName);
+    WriteToNameFile(StrUPW, Model.UnitNumbers.UnitNumber(StrUPW),
+      NameOfFile, foInput);
+    OpenFile(NameOfFile);
+    try
+      frmProgressMM.AddMessage(StrWritingUPWPackage);
+      frmProgressMM.AddMessage(StrWritingDataSet0);
+      WriteDataSet0;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet1);
-    WriteDataSet1;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
+      frmProgressMM.AddMessage(StrWritingDataSet1);
+      WriteDataSet1;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet2);
+      WriteDataSet2;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet3);
+      WriteDataSet3;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet4);
+      WriteDataSet4;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet5);
+      WriteDataSet5;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet6);
+      WriteDataSet6;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      WriteParameters;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      WriteLayerData;
+    finally
+      CloseFile;
     end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet2);
-    WriteDataSet2;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet3);
-    WriteDataSet3;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet4);
-    WriteDataSet4;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet5);
-    WriteDataSet5;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet6);
-    WriteDataSet6;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    WriteParameters;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    WriteLayerData;
   finally
-    CloseFile;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 

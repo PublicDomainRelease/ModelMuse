@@ -59,6 +59,9 @@
           <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
           </list>
+          <list id="21" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MF2005-FMP2</text></li>
+          </list>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -163,7 +166,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><anchor id="op1" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">MLTNAM1, MLTNAM2, MLTNAM3, ...—are the names of multiplier arrays that have already been defined. op1, op2, op3, ...—are arithmetic operators used to define a multiplier array based on other multiplier arrays. Each operator can be either “+”, “-”, “*”, or “/”. Operations are applied from left to right to each array element. The operators must be separated from the multiplier array names by at least one space.</text></para>
+                      <para styleclass="Normal"><anchor id="op1" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">MLTNAM1, MLTNAM2, MLTNAM3, ...—are the names of multiplier arrays that have already been defined. op1, op2, op3, ...—are arithmetic operators used to define a multiplier array based on other multiplier arrays. Each operator can be either “+”, “-”, “*”, or “/”. Operations are applied from left to right to each array element. The operators must be separated from the multiplier array names by at least one space. </text><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><text styleclass="Normal" translate="true">In the Farm Process &quot;^&quot; can be used as the exponentiation operator.</text><conditional-text type="END"/></para>
                     </td>
                   </tr>
                 </table></para>

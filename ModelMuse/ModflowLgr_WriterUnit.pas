@@ -27,7 +27,8 @@ type
 implementation
 
 uses
-  Forms, frmProgressUnit, SysUtils, ModflowUnitNumbers, LayerStructureUnit;
+  Forms, frmProgressUnit, SysUtils, ModflowUnitNumbers, LayerStructureUnit,
+  GoPhastTypes;
 
 resourcestring
   StrWritingLGRControl = 'Writing LGR control file.';
@@ -131,7 +132,14 @@ begin
   ISHFLG := Ord(ChildModel.StartingHeadSource);
   WriteInteger(ISHFLG);
 
-  IBFLG := -(ChildIndex+2);
+  if Model.ModelSelection = msModflowLGR then
+  begin
+    IBFLG := -(ChildIndex+2);
+  end
+  else
+  begin
+    IBFLG := (ChildIndex+2);
+  end;
   WriteInteger(IBFLG);
 
   // need to decide how IUCBHSV and IUCBFSV

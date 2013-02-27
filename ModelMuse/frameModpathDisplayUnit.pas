@@ -10,7 +10,7 @@ uses
 
 type
   TPathlineLimits = (plNone, plColors, plLayer, plRow, plColumn, plTime,
-    pcParticleGroup);
+    pcParticleGroup, pcLineNumber);
 
 resourcestring
   Colorlimits = 'Color limits';
@@ -19,10 +19,11 @@ resourcestring
   Column = 'Column';
   Times = 'Times';
   Group = 'Group';
+  LineNumber = 'Line Number';
 
 const
   TableCaptions: array[Low(TPathlineLimits)..High(TPathlineLimits)] of string =
-    ('', Colorlimits, Layer, Row, Column, Times, Group);
+    ('', Colorlimits, Layer, Row, Column, Times, Group, LineNumber);
 
 type
   TUndoImportPathline = class(TCustomUndo)
@@ -268,6 +269,7 @@ begin
   ReadIntLimit(Limits.RowLimits, plRow);
   ReadIntLimit(Limits.LayerLimits, plLayer);
   ReadIntLimit(Limits.ParticleGroupLimits, pcParticleGroup);
+  ReadIntLimit(Limits.LineNumberLimits, pcLineNumber);
 
   ReadFloatLimits(Limits.TimeLimits, plTime);
 
@@ -472,7 +474,8 @@ end;
 procedure TframeModpathDisplay.rdgLimitsSetEditText(Sender: TObject; ACol,
   ARow: Integer; const Value: string);
 begin
-  if (ARow in [Ord(plLayer)..Ord(plColumn), Ord(pcParticleGroup)]) and (ACol in [1,2]) then
+  if (ARow in [Ord(plLayer)..Ord(plColumn),
+    Ord(pcParticleGroup)..Ord(pcLineNumber)]) and (ACol in [1,2]) then
   begin
     rdgLimits.Columns[ACol].CheckACell(ACol, ARow, False, True, 0, 1);
   end;
@@ -608,6 +611,7 @@ begin
         SetIntLimit(plRow, Grid.RowCount, Limits.RowLimits);
         SetIntLimit(plLayer, Grid.LayerCount, Limits.LayerLimits);
         SetIntLimit(pcParticleGroup, Grid.ColumnCount, Limits.ParticleGroupLimits);
+        SetIntLimit(pcLineNumber, PathLine.MaxLineNumber, Limits.LineNumberLimits);
 
         SetFloatLimit(plTime, PathLine.MinTime, PathLine.MaxTime,
           Limits.TimeLimits);

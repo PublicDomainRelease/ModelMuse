@@ -8,12 +8,14 @@ object frameHeadObservationResults: TframeHeadObservationResults
     Left = 0
     Top = 0
     Width = 528
-    Height = 342
-    ActivePage = tabControls
+    Height = 318
+    ActivePage = tabValues
     Align = alClient
     TabOrder = 0
+    ExplicitHeight = 342
     object tabControls: TTabSheet
       Caption = 'Controls'
+      ExplicitHeight = 311
       object lblNegativeColor: TLabel
         Left = 3
         Top = 234
@@ -203,15 +205,12 @@ object frameHeadObservationResults: TframeHeadObservationResults
     object tabValues: TTabSheet
       Caption = 'Values (read only)'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitHeight = 311
       object rdgHeadObs: TRbwDataGrid4
         Left = 0
         Top = 0
         Width = 520
-        Height = 311
+        Height = 287
         Align = alClient
         ColCount = 8
         FixedCols = 0
@@ -404,34 +403,54 @@ object frameHeadObservationResults: TframeHeadObservationResults
             CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
-        ExplicitHeight = 314
+        ExplicitHeight = 311
       end
     end
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 342
+    Top = 318
     Width = 528
-    Height = 41
+    Height = 65
     Align = alBottom
     TabOrder = 1
+    ExplicitTop = 304
     object comboModels: TComboBox
       Left = 231
       Top = 6
       Width = 180
       Height = 24
       Style = csDropDownList
-      TabOrder = 1
+      TabOrder = 2
       OnChange = comboModelsChange
     end
     object btnHightlightObjects: TButton
       Left = 4
       Top = 6
-      Width = 221
-      Height = 25
+      Width = 101
+      Height = 51
       Caption = 'Highlight selected objects'
       TabOrder = 0
+      WordWrap = True
       OnClick = btnHightlightObjectsClick
+    end
+    object btnRestore: TButton
+      Left = 111
+      Top = 6
+      Width = 107
+      Height = 25
+      Caption = 'Original order'
+      TabOrder = 1
+      OnClick = btnRestoreClick
+    end
+    object btnCopy: TButton
+      Left = 111
+      Top = 32
+      Width = 107
+      Height = 25
+      Caption = 'Copy to clipboard'
+      TabOrder = 3
+      OnClick = btnCopyClick
     end
   end
 end

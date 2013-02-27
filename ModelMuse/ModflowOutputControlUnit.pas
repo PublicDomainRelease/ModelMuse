@@ -199,6 +199,7 @@ begin
     Comments := SourceOutputControl.Comments;
     BudgetFrequency := SourceOutputControl.BudgetFrequency;
     BudgetFrequencyChoice := SourceOutputControl.BudgetFrequencyChoice;
+    PrintInputCellLists := SourceOutputControl.PrintInputCellLists;
   end
   else
   begin

@@ -322,6 +322,23 @@ type
     procedure Undo; override;
   end;
 
+  TUndoDeleteModelResults = class(TUndoChangeDataSets)
+  private
+    FDeleteScreenObjects: TUndoDeleteScreenObjects;
+  protected
+    // @name describes what @classname does.
+    function Description: string; override;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure DoCommand; override;
+    // @name calls @link(DoCommand).
+    procedure Redo; override;
+    // @name sets Deleted to @False and makes other required changes.
+    procedure Undo; override;
+  end;
+
+
   TUndoCutScreenObjects = class(TUndoDeleteScreenObjects)
   protected
     // @name describes what this @classname does.  It is used in menu captions
@@ -549,12 +566,14 @@ type
     // @link(TScreenObject.Visible) property will be changed.
     FScreenObjectsToChange: TList;
 
+    FUndoCrossSection: TUndoMoveCrossSection;
+
     // @name tells what @classname does.
     function Description: string; override;
     // @name changes the @link(TScreenObject.Visible) property
     // of each @link(TScreenObject) in @link(FScreenObjectsToChange).
     procedure ToggleVisibility;
-
+    procedure SetNewCrossSectionAngle;
   public
     // @name stores ScreenObject and will toggle its
     // @link(TScreenObject.Visible) property when required.
@@ -796,7 +815,8 @@ implementation
 
 uses Math, frmGoPhastUnit, frmSelectedObjectsUnit, frmShowHideObjectsUnit,
   InteractiveTools, PhastDataSets, DataSetUnit, CountObjectsUnit, 
-  ModflowSfrReachUnit, frmErrorsAndWarningsUnit, IntListUnit;
+  ModflowSfrReachUnit, frmErrorsAndWarningsUnit, IntListUnit,
+  frmSelectResultToImportUnit, SutraMeshUnit;
 
 resourcestring
   StrChangeSelection = 'change selection';
@@ -1122,12 +1142,10 @@ procedure TUndoChangeSelection.SetPriorSelection;
 begin
   SetSelection(FOldSelectedScreenObjects, FOldSelectedVertices);
   StoreVisible(FOldVisibleScreenObjects);
-  {$IFDEF SUTRA}
   if frmGoPhast.PhastModel.Mesh <> nil then
   begin
     FOldSegment := frmGoPhast.PhastModel.Mesh.CrossSection.Segment;
   end;
-  {$ENDIF}
 end;
 
 procedure TUndoChangeSelection.StoreVisible(const ScreenObjects: TList);
@@ -1207,12 +1225,10 @@ begin
 
   InvalidateImages;
   FShouldUpdateShowHideObjectsDisplay := True;
-  {$IFDEF SUTRA}
   if frmGoPhast.PhastModel.Mesh <> nil then
   begin
     frmGoPhast.PhastModel.Mesh.CrossSection.Segment := FOldSegment;
   end;
-  {$ENDIF}
 
   UpdateDisplay;
 end;
@@ -1362,7 +1378,7 @@ begin
   DummyNewMtsdObs.NilAll;
   FUndoEditFluxObservations.AssignNewObservations(Model.HeadFluxObservations,
     Model.DrainObservations, Model.GhbObservations, Model.RiverObservations,
-    DummyNewMtsdObs);
+    Model.StreamObservations, DummyNewMtsdObs);
 end;
 
 procedure TUndoCreateScreenObject.WarnSfrLengthProblem;
@@ -2059,6 +2075,7 @@ constructor TUndoShowHideScreenObject.Create;
 begin
   inherited;
   FScreenObjectsToChange := TList.Create;
+  FUndoCrossSection := nil;
 end;
 
 function TUndoShowHideScreenObject.Description: string;
@@ -2068,6 +2085,7 @@ end;
 
 destructor TUndoShowHideScreenObject.Destroy;
 begin
+  FUndoCrossSection.Free;
   FScreenObjectsToChange.Free;
   inherited;
 end;
@@ -2075,6 +2093,11 @@ end;
 procedure TUndoShowHideScreenObject.DoCommand;
 begin
   ToggleVisibility;
+  SetNewCrossSectionAngle;
+  if FUndoCrossSection <> nil then
+  begin
+    FUndoCrossSection.DoCommand;
+  end;
   inherited;
 end;
 
@@ -2083,7 +2106,41 @@ begin
   inherited;
   ToggleVisibility;
   FShouldUpdateShowHideObjects := True;
+  if FUndoCrossSection <> nil then
+  begin
+    FUndoCrossSection.Redo;
+  end;
   UpdateDisplay;
+end;
+
+procedure TUndoShowHideScreenObject.SetNewCrossSectionAngle;
+var
+  index: Integer;
+  AScreenObject: TScreenObject;
+  NewLocation: TSegment2D;
+begin
+
+  if (frmGoPhast.ModelSelection = msSutra22)
+    and (frmGoPhast.PhastModel.SutraMesh.MeshType = mt3D) then
+  begin
+    for index := 0 to FScreenObjectsToChange.Count - 1 do
+    begin
+      AScreenObject := FScreenObjectsToChange[index];
+      if (AScreenObject.ViewDirection = vdFront)
+        and (AScreenObject.Visible)
+        then
+      begin
+        if AScreenObject.SutraAngle <>
+          frmGoPhast.PhastModel.SutraMesh.CrossSection.Angle then
+        begin
+          InteractiveTools.SetNewCrossSectionAngle(AScreenObject.SutraAngle,
+            NewLocation);
+          FUndoCrossSection:= TUndoMoveCrossSection.Create(NewLocation);
+        end;
+        break;
+      end;
+    end;
+  end;
 end;
 
 procedure TUndoShowHideScreenObject.ToggleVisibility;
@@ -2116,6 +2173,10 @@ end;
 procedure TUndoShowHideScreenObject.Undo;
 begin
   ToggleVisibility;
+  if FUndoCrossSection <> nil then
+  begin
+    FUndoCrossSection.Undo;
+  end;
   inherited;
 end;
 
@@ -2321,7 +2382,7 @@ begin
   DummyNewMtsdObs.NilAll;
   FUndoEditFluxObservations.AssignNewObservations(Model.HeadFluxObservations,
     Model.DrainObservations, Model.GhbObservations, Model.RiverObservations,
-    DummyNewMtsdObs);
+    Model.StreamObservations, DummyNewMtsdObs);
 end;
 
 { TCustomUpdateScreenObjectUndo }
@@ -4028,4 +4089,138 @@ begin
   end;
 end;
 
+{ TUndoDeleteModelResults }
+
+constructor TUndoDeleteModelResults.Create;
+var
+  DataArrayManager: TDataArrayManager;
+  DataSetIndex: Integer;
+  ADataArray: TDataArray;
+  DataSetsToDelete: TList;
+  NewDataSets: TList;
+  NewDataSetProperties: TObjectList;
+  PhastModel: TPhastModel;
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  DeletedScreenObjects: TScreenObjectList;
+  DataStorage: TPhastDataSetStorage;
+begin
+  FDeleteScreenObjects := nil;
+  PhastModel := frmGoPhast.PhastModel;
+  DataArrayManager := PhastModel.DataArrayManager;
+  DataSetsToDelete := TList.Create;
+  // There are no new data sets but the following two variables
+  // are needed for the inherited constructor.
+  NewDataSets := TList.Create;
+  NewDataSetProperties := TObjectList.Create;
+//  NewDataSets: TList;
+  try
+    for DataSetIndex := 0 to DataArrayManager.DataSetCount - 1 do
+    begin
+      ADataArray := DataArrayManager.DataSets[DataSetIndex];
+      if Pos(StrModelResults, ADataArray.Classification) > 0 then
+      begin
+        DataSetsToDelete.Add(ADataArray);
+      end
+      else
+      begin
+        DataStorage := TPhastDataSetStorage.Create;
+        NewDataSetProperties.Add(DataStorage);
+        DataStorage.DataSet := ADataArray;
+
+        DataStorage.Name := ADataArray.Name;
+        DataStorage.Orientation := ADataArray.Orientation;
+
+        DataStorage.EvaluatedAt := ADataArray.EvaluatedAt;
+
+        DataStorage.Datatype := ADataArray.Datatype;
+        DataStorage.Units := ADataArray.Units;
+        DataStorage.AngleType := ADataArray.AngleType;
+
+        DataStorage.TwoDInterpolator := ADataArray.TwoDInterpolator;
+        DataStorage.Formula := ADataArray.Formula;
+
+        DataStorage.Comment := ADataArray.Comment;
+        DataStorage.Classification := ADataArray.Classification;
+
+        if ADataArray is TCustomPhastDataSet then
+        begin
+          DataStorage.PhastInterpolationValues.Assign(ADataArray);
+        end;
+      end;
+    end;
+    DeletedScreenObjects:= TScreenObjectList.Create;
+    try
+      for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+      begin
+        AScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+        if AScreenObject.Deleted then
+        begin
+          Continue;
+        end;
+        for DataSetIndex := 0 to DataSetsToDelete.Count - 1 do
+        begin
+          ADataArray := DataSetsToDelete[DataSetIndex];
+          if AScreenObject.IndexOfDataSet(ADataArray) >= 0 then
+          begin
+            DeletedScreenObjects.Add(AScreenObject);
+            Break;
+          end;
+        end;
+      end;
+      if DeletedScreenObjects.Count > 0 then
+      begin
+        FDeleteScreenObjects := TUndoDeleteScreenObjects.
+          Create(DeletedScreenObjects);
+      end;
+    finally
+      DeletedScreenObjects.Free;
+    end;
+    inherited Create(DataSetsToDelete, NewDataSets, NewDataSetProperties);
+  finally
+    DataSetsToDelete.Free;
+    NewDataSets.Free;
+    NewDataSetProperties.Free;
+  end;
+end;
+
+function TUndoDeleteModelResults.Description: string;
+begin
+  result := 'delete "Model Results" data sets and objects';
+end;
+
+destructor TUndoDeleteModelResults.Destroy;
+begin
+  FDeleteScreenObjects.Free;
+  inherited;
+end;
+
+procedure TUndoDeleteModelResults.DoCommand;
+begin
+  if FDeleteScreenObjects <> nil then
+  begin
+    FDeleteScreenObjects.DoCommand;
+  end;
+  inherited;
+end;
+
+procedure TUndoDeleteModelResults.Redo;
+begin
+  if FDeleteScreenObjects <> nil then
+  begin
+    FDeleteScreenObjects.Redo;
+  end;
+  inherited;
+end;
+
+procedure TUndoDeleteModelResults.Undo;
+begin
+  inherited;
+  if FDeleteScreenObjects <> nil then
+  begin
+    FDeleteScreenObjects.Undo;
+  end;
+end;
+
 end.
+

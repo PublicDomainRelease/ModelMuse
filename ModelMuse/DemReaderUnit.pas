@@ -1,3 +1,6 @@
+{
+See http://nationalmap.gov/standards/demstds.html for the supported format.
+}
 unit DemReaderUnit;
 
 interface
@@ -55,8 +58,10 @@ type
     function GetPoint(Index: integer): TElevationPoint;
     function GetPointCount: integer;
     function GetCorner(Index: integer): TCornerPoint;
+    function GetCornerCount: Integer;
   public
     property Corners[Index: integer]: TCornerPoint read GetCorner;
+    property CornerCount: Integer read GetCornerCount;
     property CoordInSec: Boolean read FCoordInSec;
     property CentralMeridianRadians: Double read FCentralMeridianRadians
       write FCentralMeridianRadians;
@@ -145,6 +150,11 @@ end;
 function TDemReader.GetCorner(Index: integer): TCornerPoint;
 begin
   result := FCorners[Index];
+end;
+
+function TDemReader.GetCornerCount: Integer;
+begin
+  result := FCorners.Count;
 end;
 
 function TDemReader.GetPoint(Index: integer): TElevationPoint;

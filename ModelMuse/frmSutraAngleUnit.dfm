@@ -1,4 +1,6 @@
 inherited frmSutraAngle: TfrmSutraAngle
+  HelpType = htKeyword
+  HelpKeyword = 'SUTRA_Cross_Section_Dialog_Box'
   Caption = 'SUTRA Cross Section'
   ClientHeight = 272
   ClientWidth = 368
@@ -46,10 +48,8 @@ inherited frmSutraAngle: TfrmSutraAngle
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -59,10 +59,8 @@ inherited frmSutraAngle: TfrmSutraAngle
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -72,10 +70,8 @@ inherited frmSutraAngle: TfrmSutraAngle
       Width = 83
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
   end
@@ -87,7 +83,7 @@ inherited frmSutraAngle: TfrmSutraAngle
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Specify'
     Columns = 2
-    ItemIndex = 0
+    ItemIndex = 1
     Items.Strings = (
       'Angle'
       'End points')

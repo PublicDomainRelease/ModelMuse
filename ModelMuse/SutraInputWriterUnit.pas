@@ -5,7 +5,7 @@ interface
 uses
   CustomModflowWriterUnit, PhastModelUnit, JclAnsiStrings, SutraOptionsUnit,
   SutraMeshUnit, SutraOutputControlUnit, Generics.Collections,
-  Generics.Defaults, IntListUnit, SysUtils;
+  Generics.Defaults, IntListUnit, SysUtils, Classes;
 
 type
   TNodeData = class(TObject)
@@ -57,6 +57,8 @@ type
     FSpecifiedPressureNodes: TIntegerList;
     FSpecifiedTempConcNodes: TIntegerList;
     FFileName: string;
+    FSchedules: TStringList;
+    FObservations: TStringList;
     procedure WriteDataSet0;
     procedure WriteDataSet1;
     procedure WriteDataSet2A;
@@ -91,7 +93,8 @@ type
     Constructor Create(AModel: TCustomModel); reintroduce;
     procedure WriteFile(FileName: string; FluidSourceNodes,
       MassEnergySourceNodes, SpecifiedPressureNodes,
-      SpecifiedTempConcNodes: TIntegerList; NOBS: integer);
+      SpecifiedTempConcNodes: TIntegerList; NOBS: integer;
+      Schedules, Observations: TStringList);
   end;
 
 
@@ -300,7 +303,7 @@ begin
       begin
         GRAVX := FOptions.GravityX;
         GRAVY := FOptions.GravityY;
-        if FMesh.MeshType = mt2D then
+        if FMesh.MeshType in [mt2D, mtProfile] then
         begin
           GRAVZ := 0;
         end
@@ -1175,18 +1178,18 @@ begin
   case FOptions.SimulationType of
     stSteadyFlowSteadyTransport:
       begin
-        CSSFLO := '''STEADY'' ';
-        CSSTRA := '''STEADY'' ';
+        CSSFLO := '''STEADY FLOW'' ';
+        CSSTRA := '''STEADY TRANSPORT'' ';
       end;
     stSteadyFlowTransientTransport:
       begin
-        CSSFLO := '''STEADY'' ';
-        CSSTRA := '''TRANSIENT'' ';
+        CSSFLO := '''STEADY FLOW'' ';
+        CSSTRA := '''TRANSIENT TRANSPORT'' ';
       end;
     stTransientFlowTransientTransport:
       begin
-        CSSFLO := '''TRANSIENT'' ';
-        CSSTRA := '''TRANSIENT'' ';
+        CSSFLO := '''TRANSIENT FLOW'' ';
+        CSSTRA := '''TRANSIENT TRANSPORT'' ';
       end;
     else
       Assert(False);
@@ -1225,14 +1228,28 @@ end;
 
 procedure TSutraInputWriter.WriteDataSet6;
 var
-  DS6_FileName: string;
+//  DS6_FileName: string;
+//  StringList: TStringList;
+  Index: Integer;
 begin
   WriteCommentLine('Data set 6');
-  DS6_FileName := ChangeFileExt(ExtractFileName(FFileName), '.6');
-  DS6_FileName := ''''+ DS6_FileName + '''';
-  WriteString('@INSERT 52 ');
-  WriteString(DS6_FileName);
-  NewLine;
+//  DS6_FileName := ChangeFileExt(FFileName, '.6');
+//  Assert(FileExists(DS6_FileName));
+//  StringList := TStringList.Create;
+//  try
+//    StringList.LoadFromFile(DS6_FileName);
+    for Index := 0 to FSchedules.Count - 1 do
+    begin
+      WriteString(FSchedules[Index]);
+      NewLine;
+    end;
+//  finally
+//    StringList.Free;
+//  end;
+//  DS6_FileName := ''''+ DS6_FileName + '''';
+//  WriteString('@INSERT 52 ');
+//  WriteString(DS6_FileName);
+//  NewLine;
 end;
 
 procedure TSutraInputWriter.WriteDataSet7A;
@@ -1463,10 +1480,10 @@ var
 begin
   WriteCommentLine('Data set 8C');
   LCOLPR := FOutputControl.NE_PrintFrequency;
-  if not (neoPrintFirst in FOutputControl.NodeElementOptions) then
-  begin
-    LCOLPR := -LCOLPR;
-  end;
+//  if not (neoPrintFirst in FOutputControl.NodeElementOptions) then
+//  begin
+//    LCOLPR := -LCOLPR;
+//  end;
   WriteInteger(LCOLPR);
   if (neoNumber in FOutputControl.NodeElementOptions) then
   begin
@@ -1494,16 +1511,31 @@ end;
 
 procedure TSutraInputWriter.WriteDataSet8D;
 var
-  DS8D_FileName: string;
+//  DS8D_FileName: string;
+//  StringList: TStringList;
+  Index: Integer;
 begin
   if FNOBS > 0 then
   begin
     WriteCommentLine('Data set 8D');
-    DS8D_FileName := ChangeFileExt(ExtractFileName(FFileName), '.8d');
-    DS8D_FileName := ''''+ DS8D_FileName + '''';
-    WriteString('@INSERT 53 ');
-    WriteString(DS8D_FileName);
-    NewLine;
+//    DS8D_FileName := ChangeFileExt(FFileName, '.8d');
+//    Assert(FileExists(DS8D_FileName));
+//    StringList := TStringList.Create;
+//    try
+//      StringList.LoadFromFile(DS8D_FileName);
+      for Index := 0 to FObservations.Count - 1 do
+      begin
+        WriteString(FObservations[Index]);
+        NewLine;
+      end;
+//    finally
+//      StringList.Free;
+//    end;
+
+//    DS8D_FileName := ''''+ DS8D_FileName + '''';
+//    WriteString('@INSERT 53 ');
+//    WriteString(DS8D_FileName);
+//    NewLine;
   end;
 end;
 
@@ -1538,51 +1570,68 @@ end;
 
 procedure TSutraInputWriter.WriteFile(FileName: string; FluidSourceNodes,
   MassEnergySourceNodes, SpecifiedPressureNodes,
-  SpecifiedTempConcNodes: TIntegerList; NOBS: integer);
+  SpecifiedTempConcNodes: TIntegerList; NOBS: integer;
+  Schedules, Observations: TStringList);
 begin
-  FFileName := ChangeFileExt(FileName, '.inp');
 
-  FFluidSourceNodes := FluidSourceNodes;
-  FMassEnergySourceNodes := MassEnergySourceNodes;
-  FSpecifiedPressureNodes := SpecifiedPressureNodes;
-  FSpecifiedTempConcNodes := SpecifiedTempConcNodes;
-  FNOBS := NOBS;
-
-  OpenFile(FFileName);
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    WriteDataSet0;
-    WriteDataSet1;
-    WriteDataSet2A;
-    WriteDataSet2B;
-    WriteDataSet3;
-    WriteDataSet4;
-    WriteDataSet5;
-    WriteDataSet6;
-    WriteDataSet7A;
-    WriteDataSet7B;
-    WriteDataSet7C;
-    WriteDataSet8A;
-    WriteDataSet8B;
-    WriteDataSet8C;
-    WriteDataSet8D;
-    WriteDataSet8E;
-    WriteDataSet9;
-    WriteDataSet10;
-    WriteDataSet11;
-    WriteDataSet12;
-    WriteDataSet13;
-    WriteDataSet14A;
-    WriteDataSet14B;
-    WriteDataSet15A;
-    WriteDataSet15B;
-    WriteDataSet17;
-    WriteDataSet18;
-    WriteDataSet19;
-    WriteDataSet20;
-    WriteDataSet22;
-    SutraFileWriter.AddFile(sftInp, FFileName);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrMaxPermMinPerm);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrMaxKMinK);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrMaxPermMidPerm);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrMaxKMidK);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrMidPermMinPerm);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrMidKMinK);
+
+
+    FFileName := ChangeFileExt(FileName, '.inp');
+    FSchedules := Schedules;
+    FObservations := Observations;
+
+    FFluidSourceNodes := FluidSourceNodes;
+    FMassEnergySourceNodes := MassEnergySourceNodes;
+    FSpecifiedPressureNodes := SpecifiedPressureNodes;
+    FSpecifiedTempConcNodes := SpecifiedTempConcNodes;
+    FNOBS := NOBS;
+
+    OpenFile(FFileName);
+    try
+      WriteDataSet0;
+      WriteDataSet1;
+      WriteDataSet2A;
+      WriteDataSet2B;
+      WriteDataSet3;
+      WriteDataSet4;
+      WriteDataSet5;
+      WriteDataSet6;
+      WriteDataSet7A;
+      WriteDataSet7B;
+      WriteDataSet7C;
+      WriteDataSet8A;
+      WriteDataSet8B;
+      WriteDataSet8C;
+      WriteDataSet8D;
+      WriteDataSet8E;
+      WriteDataSet9;
+      WriteDataSet10;
+      WriteDataSet11;
+      WriteDataSet12;
+      WriteDataSet13;
+      WriteDataSet14A;
+      WriteDataSet14B;
+      WriteDataSet15A;
+      WriteDataSet15B;
+      WriteDataSet17;
+      WriteDataSet18;
+      WriteDataSet19;
+      WriteDataSet20;
+      WriteDataSet22;
+      SutraFileWriter.AddFile(sftInp, FFileName);
+    finally
+      CloseFile;
+    end;
   finally
-    CloseFile;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 

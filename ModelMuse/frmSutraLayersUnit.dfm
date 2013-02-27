@@ -1,10 +1,12 @@
 inherited frmSutraLayers: TfrmSutraLayers
+  HelpType = htKeyword
+  HelpKeyword = 'SUTRA_Layer_Groups_Dialog_Box'
   Caption = 'Sutra Layer Groups'
   ClientHeight = 436
   ClientWidth = 585
   ExplicitWidth = 603
   ExplicitHeight = 481
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object spl1: TSplitter
     Left = 137
@@ -131,18 +133,25 @@ inherited frmSutraLayers: TfrmSutraLayers
       Left = 1
       Top = 1
       Width = 441
-      Height = 56
+      Height = 91
       Align = alTop
       TabOrder = 0
       DesignSize = (
         441
-        56)
+        91)
       object lbl1: TLabel
         Left = 5
         Top = 3
         Width = 196
         Height = 18
         Caption = 'Layer Group (Aquifer) Name'
+      end
+      object lblMinimumThickness: TLabel
+        Left = 111
+        Top = 62
+        Width = 132
+        Height = 18
+        Caption = 'Minimum thickness'
       end
       object edName: TRbwEdit
         Left = 5
@@ -153,18 +162,31 @@ inherited frmSutraLayers: TfrmSutraLayers
         TabOrder = 0
         OnChange = edNameChange
       end
+      object rdeMinimumThickness: TRbwDataEntry
+        Left = 5
+        Top = 59
+        Width = 100
+        Height = 22
+        TabOrder = 1
+        Text = '0'
+        OnChange = rdeMinimumThicknessChange
+        DataType = dtReal
+        Max = 1.000000000000000000
+        CheckMin = True
+        ChangeDisabledColor = True
+      end
     end
     inline frameDiscretization: TframeDiscretization
       Left = 1
-      Top = 57
+      Top = 92
       Width = 441
-      Height = 337
+      Height = 302
       Align = alClient
       TabOrder = 1
       ExplicitLeft = 1
-      ExplicitTop = 57
+      ExplicitTop = 92
       ExplicitWidth = 441
-      ExplicitHeight = 337
+      ExplicitHeight = 302
       inherited lbl1: TLabel
         Width = 148
         Height = 18
@@ -179,60 +201,60 @@ inherited frmSutraLayers: TfrmSutraLayers
       end
       inherited pnlDiscritization: TPanel
         Width = 193
-        Height = 335
+        Height = 300
         ExplicitWidth = 193
-        ExplicitHeight = 335
+        ExplicitHeight = 300
         inherited spl1: TSplitter
           Left = 105
-          Height = 294
+          Height = 259
           ExplicitLeft = 110
           ExplicitHeight = 335
         end
         inherited rdgSubLayerBoundaries: TRbwDataGrid4
           Width = 105
-          Height = 294
+          Height = 259
           ExplicitWidth = 105
-          ExplicitHeight = 294
+          ExplicitHeight = 259
         end
         inherited pnl1: TPanel
           Width = 193
           ExplicitWidth = 193
           inherited lbl3: TLabel
-            Width = 179
-            Height = 36
+            Width = 193
+            Height = 41
             ExplicitWidth = 179
             ExplicitHeight = 36
           end
         end
         inherited pnlPaintboxParent: TPanel
           Left = 108
-          Height = 294
+          Height = 259
           ExplicitLeft = 108
-          ExplicitHeight = 294
+          ExplicitHeight = 259
           DesignSize = (
             85
-            294)
+            259)
           inherited pbSubLayers: TPaintBox
-            Height = 262
+            Height = 227
             ExplicitHeight = 303
           end
           inherited sbInsertLine: TSpeedButton
-            Top = 269
+            Top = 234
             ExplicitTop = 269
           end
           inherited sbMoveLine: TSpeedButton
-            Top = 269
+            Top = 234
             ExplicitTop = 269
           end
           inherited sbDeleteLine: TSpeedButton
-            Top = 269
+            Top = 234
             ExplicitTop = 269
           end
         end
       end
       inherited rgMethod: TRadioGroup
-        Height = 219
-        ExplicitHeight = 219
+        Height = 184
+        ExplicitHeight = 184
       end
     end
   end
@@ -255,6 +277,7 @@ inherited frmSutraLayers: TfrmSutraLayers
       Kind = bkHelp
       NumGlyphs = 2
       TabOrder = 0
+      OnClick = btnHelpClick
     end
     object btnOK: TBitBtn
       Left = 358

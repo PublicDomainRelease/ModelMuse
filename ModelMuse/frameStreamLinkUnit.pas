@@ -9,6 +9,8 @@ uses
   JvListComb, PhastModelUnit, UndoItems, DisplaySettingsUnit;
 
 type
+  TStreamType = (stSFR, stSTR);
+
   TframeStreamLink = class(TFrame)
     shpStreamColor: TShape;
     dlgLinkColor: TColorDialog;
@@ -31,11 +33,12 @@ type
     procedure cbPlotUnconnectedClick(Sender: TObject);
   private
     FSfrStreamLinkPlot: TSfrStreamLinkPlot;
+    FStreamType: TStreamType;
     procedure SetShapeColor(AShape: TShape);
     { Private declarations }
   public
     destructor Destroy; override;
-    procedure GetData;
+    procedure GetData(StreamType: TStreamType);
     procedure SetData;
     { Public declarations }
   end;
@@ -44,13 +47,15 @@ type
   private
     FOldSfrStreamLinkPlot: TSfrStreamLinkPlot;
     FNewSfrStreamLinkPlot: TSfrStreamLinkPlot;
+    FStreamType: TStreamType;
   protected
     function Description: string; override;
   public
     procedure DoCommand; override;
     procedure Undo; override;
   public
-    constructor Create(var SfrStreamLinkPlot: TSfrStreamLinkPlot);
+    constructor Create(var SfrStreamLinkPlot: TSfrStreamLinkPlot;
+      StreamType: TStreamType);
     destructor Destroy; override;
   end;
 
@@ -60,7 +65,8 @@ uses
   frmGoPhastUnit;
 
 resourcestring
-  StrDisplayStreamLinks = 'display stream links';
+  StrDisplayStreamLinks = 'display SFR stream links';
+  StrDisplaySTRStreamLinks = 'display STR stream links';
 
 {$R *.dfm}
 
@@ -103,11 +109,12 @@ begin
   inherited;
 end;
 
-procedure TframeStreamLink.GetData;
+procedure TframeStreamLink.GetData(StreamType: TStreamType);
 var
   EndTime: double;
 begin
   Handle;
+  FStreamType := StreamType;
   FSfrStreamLinkPlot.Free;
   FSfrStreamLinkPlot:= TSfrStreamLinkPlot.Create(nil);
   frmGoPhast.PhastModel.ModflowStressPeriods.
@@ -116,7 +123,11 @@ begin
     frmGoPhast.PhastModel.ModflowStressPeriods.Count-1].EndTime;
   comboTimeToPlot.Items.Add(FloatToStr(EndTime));
 
-  FSfrStreamLinkPlot.Assign(frmGoPhast.PhastModel.SfrStreamLinkPlot);
+  case FStreamType of
+    stSFR: FSfrStreamLinkPlot.Assign(frmGoPhast.PhastModel.SfrStreamLinkPlot);
+    stSTR: FSfrStreamLinkPlot.Assign(frmGoPhast.PhastModel.StrStreamLinkPlot);
+  end;
+
   cbStreams.Checked := FSfrStreamLinkPlot.PlotStreamConnections;
   cbPlotDiversions.Checked := FSfrStreamLinkPlot.PlotDiversions;
   cbPlotUnconnected.Checked := FSfrStreamLinkPlot.PlotUnconnected;
@@ -134,7 +145,10 @@ begin
   if FSfrStreamLinkPlot = nil then
   begin
     FSfrStreamLinkPlot:= TSfrStreamLinkPlot.Create(nil);
-    FSfrStreamLinkPlot.Assign(frmGoPhast.PhastModel.SfrStreamLinkPlot);
+    case FStreamType of
+      stSFR: FSfrStreamLinkPlot.Assign(frmGoPhast.PhastModel.SfrStreamLinkPlot);
+      stSTR: FSfrStreamLinkPlot.Assign(frmGoPhast.PhastModel.StrStreamLinkPlot);
+    end;
   end;
   FSfrStreamLinkPlot.PlotStreamConnections := cbStreams.Checked;
   FSfrStreamLinkPlot.PlotDiversions := cbPlotDiversions.Checked;
@@ -144,7 +158,7 @@ begin
   FSfrStreamLinkPlot.UnconnectedColor := shpUnconnectedColor.Brush.Color;
   FSfrStreamLinkPlot.StreamsToPlot := TStreamsToPlot(rgItemsToPlot.ItemIndex);
   FSfrStreamLinkPlot.TimeToPlot := StrToFloat(comboTimeToPlot.Text);
-  Undo := TUndoStreamLinks.Create(FSfrStreamLinkPlot);
+  Undo := TUndoStreamLinks.Create(FSfrStreamLinkPlot, FStreamType);
   frmGoPhast.UndoStack.Submit(Undo);
 end;
 
@@ -159,18 +173,28 @@ end;
 
 { TUndoStreamLinks }
 
-constructor TUndoStreamLinks.Create(var SfrStreamLinkPlot: TSfrStreamLinkPlot);
+constructor TUndoStreamLinks.Create(var SfrStreamLinkPlot: TSfrStreamLinkPlot;
+  StreamType: TStreamType);
 begin
   inherited Create;
+  FStreamType := StreamType;
   FNewSfrStreamLinkPlot := SfrStreamLinkPlot;
   SfrStreamLinkPlot := nil;
   FOldSfrStreamLinkPlot := TSfrStreamLinkPlot.Create(nil);
-  FOldSfrStreamLinkPlot.Assign(frmGoPhast.PhastModel.SfrStreamLinkPlot);
+  case FStreamType of
+    stSFR: FOldSfrStreamLinkPlot.Assign(frmGoPhast.PhastModel.SfrStreamLinkPlot);
+    stSTR: FOldSfrStreamLinkPlot.Assign(frmGoPhast.PhastModel.StrStreamLinkPlot);
+  end;
+
 end;
 
 function TUndoStreamLinks.Description: string;
 begin
-  result := StrDisplayStreamLinks;
+  case FStreamType of
+    stSFR: result := StrDisplayStreamLinks;
+    stSTR: result := StrDisplaySTRStreamLinks;
+  end;
+
 end;
 
 destructor TUndoStreamLinks.Destroy;
@@ -183,7 +207,10 @@ end;
 procedure TUndoStreamLinks.DoCommand;
 begin
   inherited;
-  frmGoPhast.PhastModel.SfrStreamLinkPlot := FNewSfrStreamLinkPlot;
+  case FStreamType of
+    stSFR: frmGoPhast.PhastModel.SfrStreamLinkPlot := FNewSfrStreamLinkPlot;
+    stSTR: frmGoPhast.PhastModel.StrStreamLinkPlot := FNewSfrStreamLinkPlot;
+  end;
   frmGoPhast.frameTopView.ModelChanged := True;
   frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
 end;
@@ -191,7 +218,10 @@ end;
 procedure TUndoStreamLinks.Undo;
 begin
   inherited;
-  frmGoPhast.PhastModel.SfrStreamLinkPlot := FOldSfrStreamLinkPlot;
+  case FStreamType of
+    stSFR: frmGoPhast.PhastModel.SfrStreamLinkPlot := FOldSfrStreamLinkPlot;
+    stSTR: frmGoPhast.PhastModel.StrStreamLinkPlot := FOldSfrStreamLinkPlot;
+  end;
   frmGoPhast.frameTopView.ModelChanged := True;
   frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
 end;

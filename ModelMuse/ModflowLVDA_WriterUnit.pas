@@ -210,51 +210,58 @@ end;
 
 procedure TModflowLVDA_Writer.WriteFile(const AFileName: string);
 begin
-  if not Package.IsSelected then
-  begin
-    Exit
-  end;
-  if Model.PackageGeneratedExternally(StrLVDA) then
-  begin
-    Exit;
-  end;
-  if Model.ModflowSteadyParameters.CountParameters([ptHUF_LVDA]) = 0 then
-  begin
-    Exit;
-  end;
-
-  FNameOfFile := FileName(AFileName);
-  WriteToNameFile(StrLVDA, Model.UnitNumbers.UnitNumber(StrLVDA),
-    FNameOfFile, foInput);
-  OpenFile(FNameOfFile);
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    frmProgressMM.AddMessage(StrWritingLVDAPackage);
-    frmProgressMM.AddMessage(StrWritingDataSet0);
-    WriteDataSet0;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrParameterZonesNot);
+
+    if not Package.IsSelected then
+    begin
+      Exit
+    end;
+    if Model.PackageGeneratedExternally(StrLVDA) then
+    begin
+      Exit;
+    end;
+    if Model.ModflowSteadyParameters.CountParameters([ptHUF_LVDA]) = 0 then
     begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet1);
-    WriteDataSet1;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+    FNameOfFile := FileName(AFileName);
+    WriteToNameFile(StrLVDA, Model.UnitNumbers.UnitNumber(StrLVDA),
+      FNameOfFile, foInput);
+    OpenFile(FNameOfFile);
+    try
+      frmProgressMM.AddMessage(StrWritingLVDAPackage);
+      frmProgressMM.AddMessage(StrWritingDataSet0);
+      WriteDataSet0;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSets2and3);
-    WriteDataSets2and3;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      frmProgressMM.AddMessage(StrWritingDataSet1);
+      WriteDataSet1;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
+      frmProgressMM.AddMessage(StrWritingDataSets2and3);
+      WriteDataSets2and3;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+    finally
+      CloseFile;
+    end;
   finally
-    CloseFile;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 

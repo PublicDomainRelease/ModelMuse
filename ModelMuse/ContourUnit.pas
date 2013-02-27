@@ -107,6 +107,7 @@ type
     FGrid: T2DGrid;
     FMesh: TObject;
     FTriangulationData: TTriangulationData;
+    FMeshOutline: TObject;
     procedure EvaluateMinMaxLgr(out MaxValue, MinValue: Double;
       DSValues: TStringList;
       ViewDirection: TViewDirection);
@@ -204,7 +205,8 @@ implementation
 
 uses Math, RbwParser, BigCanvasMethods, PhastModelUnit,
   SysUtils, frmGoPhastUnit, frmDisplayDataUnit,
-  SutraMeshUnit, SparseArrayUnit, LineStorage, TriCP_Routines, RealListUnit;
+  SutraMeshUnit, SparseArrayUnit, LineStorage, TriCP_Routines, RealListUnit,
+  CalCompRoutines, SubPolygonUnit;
 
 function Interpolate(const C1, C2 : TPoint2D; Val1, Val2 : TFloat;
   ContourValue: TFloat) : TPoint2D;
@@ -921,6 +923,7 @@ var
   LabelStart: Integer;
   LabelEnd: Integer;
   MidLabelPostion: Integer;
+  LocalMesh: TSutraMesh3D;
 begin
   Assert(Assigned(DataSet));
   FAlgorithm := DataSet.ContourAlg;
@@ -942,10 +945,18 @@ begin
         if Assigned(Grid) then
         begin
           Assert(Assigned(ActiveDataSet));
+          FMeshOutline := nil;
+          CalCompRoutines.MeshOutline := nil;
         end
         else
         begin
           Assert(Assigned(Mesh));
+          LocalMesh := Mesh as TSutraMesh3D;
+          case ViewDirection of
+            vdTop: FMeshOutline := LocalMesh.TopMeshOutline(SelectedColRowLayer);
+            vdFront: FMeshOutline := LocalMesh.FrontMeshOutline;
+            else Assert(False);
+          end;
         end;
 //      end
 //    else Assert(False);
@@ -1149,6 +1160,10 @@ var
 begin
   SetLength(ContourColors, RequiredSize);
   SetLength(LineThicknesses, RequiredSize);
+  if RequiredSize = 0 then
+  begin
+    Exit;
+  end;
   for Index := 0 to Length(ContourValues) - 2 do
   begin
     ContourIndicator := ContourValues[Index] / DesiredSpacing / 5;
@@ -1187,7 +1202,10 @@ begin
       + Index * (LargestContour - SmallestContour)
       / (Length(ContourValues) - 1);
   end;
-  ContourValues[Length(ContourValues) - 1] := LargestContour;
+  if RequiredSize > 0 then
+  begin
+    ContourValues[Length(ContourValues) - 1] := LargestContour;
+  end;
 end;
 
 procedure TMultipleContourCreator.GetContouringParameters(
@@ -1208,8 +1226,15 @@ begin
     UsedMin := MinValue;
     UsedMax := MaxValue;
   end;
-  DesiredSpacing := (UsedMax - UsedMin) / 20;
-  DesiredSpacing := Power(10, Trunc(Log10(DesiredSpacing)));
+  if DataSet.ContourInterval.Value = 0 then
+  begin
+    DesiredSpacing := (UsedMax - UsedMin) / 20;
+    DesiredSpacing := Power(10, Trunc(Log10(DesiredSpacing)));
+  end
+  else
+  begin
+    DesiredSpacing := Abs(DataSet.ContourInterval.Value);
+  end;
   SmallestContour := Round(UsedMin / DesiredSpacing) * DesiredSpacing;
   while (SmallestContour > UsedMin) do
   begin
@@ -1456,6 +1481,14 @@ begin
   NewLength := ND*6-15;
   Assert(NewLength >= Length(FTriangulationData.Triangulation));
   SetLength(FTriangulationData.Triangulation, NewLength);
+  if Assigned(Mesh) then
+  begin
+    CalCompRoutines.MeshOutline := FMeshOutline as TOutline;
+  end
+  else
+  begin
+    CalCompRoutines.MeshOutline := nil;
+  end;
   if (FMesh <> nil)
     and ((FMesh as TSutraMesh3D).Mesh2D.MeshGenControls.
     MeshGenerationMethod = mgmFishnet) then
@@ -1845,7 +1878,12 @@ begin
             if Active[ColIndex,RowIndex,SelectedColRowLayer]
               and Active[ColIndex+1,RowIndex,SelectedColRowLayer]
               and Active[ColIndex,RowIndex+1,SelectedColRowLayer]
-              and Active[ColIndex+1,RowIndex+1,SelectedColRowLayer] then
+              and Active[ColIndex+1,RowIndex+1,SelectedColRowLayer]
+              and DataSet.ContourGridValueOK(SelectedColRowLayer, RowIndex, ColIndex)
+              and DataSet.ContourGridValueOK(SelectedColRowLayer, RowIndex, ColIndex+1)
+              and DataSet.ContourGridValueOK(SelectedColRowLayer, RowIndex+1, ColIndex)
+              and DataSet.ContourGridValueOK(SelectedColRowLayer, RowIndex+1, ColIndex+1)
+              then
             begin
               NodeUL := FTriangulationData.VertexNumbers[DSLayer,RowIndex,ColIndex];
               NodeLL := FTriangulationData.VertexNumbers[DSLayer,RowIndex+1,ColIndex];
@@ -1907,7 +1945,12 @@ begin
             if Active[ColIndex,SelectedColRowLayer,LayerIndex]
               and Active[ColIndex+1,SelectedColRowLayer,LayerIndex]
               and Active[ColIndex,SelectedColRowLayer,LayerIndex+1]
-              and Active[ColIndex+1,SelectedColRowLayer,LayerIndex+1] then
+              and Active[ColIndex+1,SelectedColRowLayer,LayerIndex+1]
+              and DataSet.ContourGridValueOK(LayerIndex, SelectedColRowLayer, ColIndex)
+              and DataSet.ContourGridValueOK(LayerIndex, SelectedColRowLayer, ColIndex+1)
+              and DataSet.ContourGridValueOK(LayerIndex+1, SelectedColRowLayer, ColIndex)
+              and DataSet.ContourGridValueOK(LayerIndex+1, SelectedColRowLayer, ColIndex+1)
+              then
             begin
               NodeUL := FTriangulationData.VertexNumbers[LayerIndex,DSRow,ColIndex];
               NodeLL := FTriangulationData.VertexNumbers[LayerIndex+1,DSRow,ColIndex];
@@ -1969,7 +2012,12 @@ begin
             if Active[SelectedColRowLayer,RowIndex,LayerIndex]
               and Active[SelectedColRowLayer,RowIndex+1,LayerIndex]
               and Active[SelectedColRowLayer,RowIndex,LayerIndex+1]
-              and Active[SelectedColRowLayer,RowIndex+1,LayerIndex+1] then
+              and Active[SelectedColRowLayer,RowIndex+1,LayerIndex+1]
+              and DataSet.ContourGridValueOK(LayerIndex, RowIndex, SelectedColRowLayer)
+              and DataSet.ContourGridValueOK(LayerIndex, RowIndex+1, SelectedColRowLayer)
+              and DataSet.ContourGridValueOK(LayerIndex+1, RowIndex, SelectedColRowLayer)
+              and DataSet.ContourGridValueOK(LayerIndex+1, RowIndex+1, SelectedColRowLayer)
+              then
             begin
               NodeUR := FTriangulationData.VertexNumbers[LayerIndex,RowIndex,DSCol];
               NodeUL := FTriangulationData.VertexNumbers[LayerIndex+1,RowIndex,DSCol];
@@ -2580,13 +2628,17 @@ var
   CrossX2: Real;
   CrossY2: Real;
   ALine: TLine;
+  MeshOutline: TMeshOutline;
 begin
   Assert(Assigned(Mesh));
+  Assert(Assigned(FMeshOutline));
   Assert(Assigned(FTriangulationData));
   NeighborStart := 0;
   PlotList.Clear;
   CurrentLineList := nil;
   CurrentLine := nil;
+
+  MeshOutline := FMeshOutline as TMeshOutline;
 
   ALineList := TLineList.Create;
   PlotList.Add(ALineList);
@@ -2655,11 +2707,15 @@ begin
                 CrossY2 := PointY + Frac2*(Neighbor2Y-PointY);
               end;
 
-              ALine := TLine.Create;
-              ALineList.Add(ALine);
-              ALine.ContourLevel := AValue;
-              ALine.Add(CrossX1, CrossY1);
-              ALine.Add(CrossX2, CrossY2);
+              if MeshOutline.PointInside(
+                (CrossX1+CrossX2)/2, (CrossY1+CrossY2)/2) then
+              begin
+                ALine := TLine.Create;
+                ALineList.Add(ALine);
+                ALine.ContourLevel := AValue;
+                ALine.Add(CrossX1, CrossY1);
+                ALine.Add(CrossX2, CrossY2);
+              end;
             end;
           end;
         end;

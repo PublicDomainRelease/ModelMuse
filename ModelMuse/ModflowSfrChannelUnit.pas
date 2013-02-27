@@ -59,6 +59,7 @@ type
     property Z[Index: integer]: string read GetZ write SetZ;
     constructor Create(Collection: TCollection); override;
     Destructor Destroy; override;
+    procedure AssignGeometry(Sfr: TSfrChannelItem);
   published
     // @name copies Source to this @classname.
     procedure Assign(Source: TPersistent);override;
@@ -76,6 +77,8 @@ type
     function GetChannelTimeValues(Index: integer): TSfrChannelRecord;
     procedure SetChannelTimeValues(Index: integer;
       const Value: TSfrChannelRecord);
+    function GetItem(Index: Integer): TSfrChannelItem;
+    procedure SetItem(Index: Integer; const Value: TSfrChannelItem);
   protected
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
@@ -86,6 +89,7 @@ type
       read GetChannelTimeValues write SetChannelTimeValues;
     function GetChannelTimeValuesFromTime(AModel: TBaseModel;
       StartTime: double): TSfrChannelRecord;
+    property Items[Index: Integer]: TSfrChannelItem read GetItem write SetItem; default;
   end;
 
 resourcestring
@@ -115,7 +119,6 @@ const
 procedure TSfrChannelItem.Assign(Source: TPersistent);
 var
   Sfr: TSfrChannelItem;
-  Index: integer;
 begin
   // if Assign is updated, update IsSame too.
   if Source is TSfrChannelItem then
@@ -123,13 +126,20 @@ begin
     Sfr := TSfrChannelItem(Source);
     ChannelRoughness := Sfr.ChannelRoughness;
     BankRoughness := Sfr.BankRoughness;
-    for Index := 0 to 7 do
-    begin
-      X[Index] := Sfr.X[Index];
-      Z[Index] := Sfr.Z[Index];
-    end;
+    AssignGeometry(Sfr);
   end;
   inherited;
+end;
+
+procedure TSfrChannelItem.AssignGeometry(Sfr: TSfrChannelItem);
+var
+  Index: Integer;
+begin
+  for Index := 0 to 7 do
+  begin
+    X[Index] := Sfr.X[Index];
+    Z[Index] := Sfr.Z[Index];
+  end;
 end;
 
 procedure TSfrChannelItem.InvalidateChannelRoughnessData(Sender: TObject);
@@ -215,17 +225,17 @@ begin
   for Index := Length(FZ)-1 downto 0 do
   begin
     frmGoPhast.PhastModel.FormulaManager.Remove(FZ[Index],
-      GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+      GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   end;
   for Index := Length(FX)-1 downto 0 do
   begin
     frmGoPhast.PhastModel.FormulaManager.Remove(FX[Index],
-      GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+      GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   end;
   frmGoPhast.PhastModel.FormulaManager.Remove(FBankRoughness,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FChannelRoughness,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TSfrChannelItem.WriteX(Writer: TWriter);
@@ -280,60 +290,60 @@ begin
   inherited;
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FX[0], '0.', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FX[1], '2.', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FX[2], '4.', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FX[3], '6.', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FX[4], '8.', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FX[5], '10.', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FX[6], '12.', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FX[7], '14.', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FZ[0], '6.', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FZ[1], '4.5', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FZ[2], '3.5', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FZ[3], '0.', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FZ[4], '0.3', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FZ[5], '3.5', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FZ[6], '4.5', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FZ[7], '6.', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FChannelRoughness, '3.5E-7',
     frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FBankRoughness, '3.5E-7',
     frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TSfrChannelItem.CreateFormulaObjects;
@@ -503,7 +513,7 @@ begin
     InvalidateModel;
     frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
       FX[Index], Value, frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-      GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+      GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   end;
 end;
 
@@ -515,7 +525,7 @@ begin
     InvalidateModel;
     frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
       FZ[Index], Value, frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-      GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+      GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   end;
 end;
 
@@ -546,7 +556,7 @@ begin
   Compiler := PhastModel.rpThreeDFormulaCompiler;
   for Index := 0 to Count - 1 do
   begin
-    CurrentItem := Items[Index] as TSfrChannelItem;
+    CurrentItem := Items[Index];
     CurrentRecord.StartingTime := CurrentItem.StartTime;
     CurrentRecord.EndingTime := CurrentItem.EndTime;
     Assert(ScrObj.ModflowSfrBoundary <> nil);
@@ -712,6 +722,11 @@ begin
 
 end;
 
+function TSfrChannelCollection.GetItem(Index: Integer): TSfrChannelItem;
+begin
+  result := inherited Items[Index] as TSfrChannelItem;
+end;
+
 class function TSfrChannelCollection.ItemClass: TBoundaryItemClass;
 begin
   result := TSfrChannelItem;
@@ -722,6 +737,12 @@ procedure TSfrChannelCollection.SetChannelTimeValues(Index: integer;
 begin
   Assert((Index >= 0) and (Index < Length(FTimeValues)));
   FTimeValues[Index] := Value;
+end;
+
+procedure TSfrChannelCollection.SetItem(Index: Integer;
+  const Value: TSfrChannelItem);
+begin
+  inherited Items[Index] := Value;
 end;
 
 end.

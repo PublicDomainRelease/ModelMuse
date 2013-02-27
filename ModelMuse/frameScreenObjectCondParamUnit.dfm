@@ -10,21 +10,21 @@ inherited frameScreenObjectCondParam: TframeScreenObjectCondParam
     object lblConductanceInterpretation: TLabel [1]
       Left = 8
       Top = 51
-      Width = 132
-      Height = 13
+      Width = 154
+      Height = 16
       Caption = 'Conductance interpretation'
     end
     object comboFormulaInterp: TComboBox
       Left = 174
       Top = 48
       Width = 145
-      Height = 21
+      Height = 24
       Style = csDropDownList
       TabOrder = 3
       Items.Strings = (
         'Calculated'
         'Direct'
-        'Total')
+        'Total per layer')
     end
   end
   inherited pnlGrid: TPanel

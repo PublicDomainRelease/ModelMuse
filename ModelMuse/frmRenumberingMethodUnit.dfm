@@ -1,9 +1,10 @@
 inherited frmRenumberingMethod: TfrmRenumberingMethod
+  HelpType = htKeyword
+  HelpKeyword = 'Mesh_Renumbering_Method_Dialog'
   Caption = 'Mesh Renumbering Method'
-  ClientHeight = 159
+  ClientHeight = 253
   ClientWidth = 302
-  ExplicitWidth = 318
-  ExplicitHeight = 197
+  ExplicitHeight = 298
   PixelsPerInch = 120
   TextHeight = 18
   object rgMethod: TRadioGroup
@@ -18,36 +19,43 @@ inherited frmRenumberingMethod: TfrmRenumberingMethod
     TabOrder = 0
   end
   object btnHelp: TBitBtn
-    Left = 8
-    Top = 118
+    Left = 9
+    Top = 214
     Width = 91
     Height = 33
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 1
+    TabOrder = 2
+    OnClick = btnHelpClick
   end
   object btnOK: TBitBtn
-    Left = 105
-    Top = 118
+    Left = 106
+    Top = 214
     Width = 91
     Height = 33
-    DoubleBuffered = True
     Kind = bkOK
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 2
+    TabOrder = 3
   end
   object btnCancel: TBitBtn
-    Left = 202
-    Top = 119
+    Left = 203
+    Top = 215
     Width = 91
     Height = 33
-    DoubleBuffered = True
     Kind = bkCancel
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 3
+    TabOrder = 4
+  end
+  object rgRenumberingMethod: TRadioGroup
+    Left = 8
+    Top = 119
+    Width = 286
+    Height = 90
+    Caption = 'Renumbering method'
+    ItemIndex = 0
+    Items.Strings = (
+      'Cuthill and McKee (1969)'
+      'Sloan and Randolph (1983)')
+    TabOrder = 1
   end
 end

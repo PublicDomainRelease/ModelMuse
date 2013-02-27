@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, frameDiscretizationUnit, StdCtrls, RbwEdit,
-  ComCtrls, Buttons, ExtCtrls, LayerStructureUnit, RequiredDataSetsUndoUnit;
+  ComCtrls, Buttons, ExtCtrls, LayerStructureUnit, RequiredDataSetsUndoUnit,
+  ArgusDataEntry;
 
 type
   TfrmSutraLayers = class(TfrmCustomGoPhast)
@@ -24,6 +25,8 @@ type
     sbInsertUnit: TSpeedButton;
     sbDeleteUnit: TSpeedButton;
     spl1: TSplitter;
+    rdeMinimumThickness: TRbwDataEntry;
+    lblMinimumThickness: TLabel;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
@@ -32,6 +35,7 @@ type
     procedure sbInsertUnitClick(Sender: TObject);
     procedure sbDeleteUnitClick(Sender: TObject);
     procedure edNameChange(Sender: TObject);
+    procedure rdeMinimumThicknessChange(Sender: TObject);
   private
     FLayerStructure: TSutraLayerStructure;
     FSelectedUnits: TList;
@@ -71,6 +75,9 @@ implementation
 
 uses
   frmGoPhastUnit, PhastModelUnit, frmLayersUnit, Character;
+
+resourcestring
+  StrChangeSUTRALayerS = 'change SUTRA layer structure';
 
 {$R *.dfm}
 
@@ -154,7 +161,7 @@ procedure TfrmSutraLayers.edNameChange(Sender: TObject);
     Result := TCharacter.IsLetter(C) or (C = '_');
   end;
 var
-  SelectedUnit: TLayerGroup;
+  SelectedUnit: TSutraLayerGroup;
   TreeNode: TTreeNode;
   Index: Integer;
   UsedNames: TStringList;
@@ -306,6 +313,31 @@ begin
   SetControlValues;
 end;
 
+procedure TfrmSutraLayers.rdeMinimumThicknessChange(Sender: TObject);
+var
+  MinThickness: Double;
+  index: Integer;
+  AGroup: TSutraLayerGroup;
+begin
+  inherited;
+  if (ComponentState * [csLoading, csReading]) <> [] then
+  begin
+    Exit;
+  end;
+  if (not FSettingUnit) and (FSelectedUnits.Count > 0) then
+  begin
+    if TryStrToFloat(rdeMinimumThickness.Text, MinThickness) then
+    begin
+      for index := 0 to FSelectedUnits.Count - 1 do
+      begin
+        AGroup := FSelectedUnits[index];
+        AGroup.MinThickness := MinThickness;
+      end;
+    end;
+
+  end;
+end;
+
 procedure TfrmSutraLayers.sbAddUnitClick(Sender: TObject);
 begin
   inherited;
@@ -358,11 +390,10 @@ end;
 
 procedure TfrmSutraLayers.SetControlValues;
 var
-//  SelectedUnit: TLayerGroup;
-  FirstUnit: TLayerGroup;
-//  Same: boolean;
-
-
+  FirstUnit: TSutraLayerGroup;
+  UnitIndex: Integer;
+  AGroup: TSutraLayerGroup;
+  IsSame: Boolean;
 begin
   if csDestroying in ComponentState then Exit;
 
@@ -379,10 +410,29 @@ begin
     if FSelectedUnits.Count = 1 then
     begin
       edName.Text := FirstUnit.AquiferName;
+      rdeMinimumThickness.Text := FloatToStr(FirstUnit.MinThickness);
     end
     else
     begin
       edName.Text := '';
+      IsSame := True;
+      for UnitIndex := 1 to FSelectedUnits.Count - 1 do
+      begin
+        AGroup := FSelectedUnits[UnitIndex];
+        IsSame := FirstUnit.MinThickness = AGroup.MinThickness;
+        if not IsSame then
+        begin
+          break;
+        end;
+      end;
+      if IsSame then
+      begin
+        rdeMinimumThickness.Text := FloatToStr(FirstUnit.MinThickness);
+      end
+      else
+      begin
+        rdeMinimumThickness.Text := '';
+      end;
     end;
 //    FirstUnit := FSelectedUnits[0];
     UpdateDiscretization;
@@ -452,7 +502,7 @@ end;
 
 function TUndoDefineSutraLayers.Description: string;
 begin
-  result := 'change SUTRA layer structure';
+  result := StrChangeSUTRALayerS;
 end;
 
 destructor TUndoDefineSutraLayers.Destroy;
@@ -484,13 +534,6 @@ begin
     end;
     frmGoPhast.InvalidateImage32AllViews;
     frmGoPhast.EnableMeshRenumbering;
-//    for Index := 0 to LocalModel.ChildModels.Count - 1 do
-//    begin
-//      ChildModel := LocalModel.ChildModels[Index].ChildModel;
-//      ChildModel.UpdateGrid;
-//    end;
-//    frmGoPhast.PhastModel.ModflowGrid.NotifyGridChanged(nil);
-//    frmGoPhast.PhastModel.UpdateMapping;
   finally
     frmGoPhast.CanDraw := True;
   end;
@@ -517,15 +560,6 @@ begin
     end;
     frmGoPhast.InvalidateImage32AllViews;
     frmGoPhast.EnableMeshRenumbering;
-//    for Index := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
-//    begin
-//      ChildModel := frmGoPhast.PhastModel.ChildModels[Index].ChildModel;
-//      NewDis := FChildDiscretizations[Index];
-//      ChildModel.Discretization.Assign(NewDis);
-//      ChildModel.UpdateGrid;
-//    end;
-//    frmGoPhast.PhastModel.ModflowGrid.NotifyGridChanged(nil);
-//    frmGoPhast.PhastModel.UpdateMapping;
   finally
     frmGoPhast.CanDraw := True;
   end;

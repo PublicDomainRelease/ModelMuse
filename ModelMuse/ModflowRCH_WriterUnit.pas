@@ -53,6 +53,8 @@ resourcestring
   StrWritingStressP = '    Writing Stress Period %d';
   ErrorRoot = 'One or more %s parameters have been eliminated '
     + 'because there are no cells associated with them.';
+  StrNoParametersHaveB = 'No parameters have been defined for the Recharge p' +
+  'ackage for the following Stress periods.';
 
 { TModflowRCH_Writer }
 
@@ -388,109 +390,121 @@ var
   Comment: string;
 begin
   inherited;
-  ParameterValues := TValueCellList.Create(CellType);
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    ParameterValues.OwnsObjects := False;
-    Comment := '# Data Set 8: IRCH';
-    if Values.Count = 0 then
-    begin
-      frmErrorsAndWarnings.AddError(Model, StrNoRechargeDefined,
-        StrTheRechargePackage);
-    end;
-    for TimeIndex := 0 to Values.Count - 1 do
-    begin
-      Application.ProcessMessages;
-      if not frmProgressMM.ShouldContinue then
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoParametersHaveB);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoRechargeDefined);
+    ParameterValues := TValueCellList.Create(CellType);
+    try
+      ParameterValues.OwnsObjects := False;
+      Comment := '# Data Set 8: IRCH';
+      if Values.Count = 0 then
       begin
-        Exit;
+        frmErrorsAndWarnings.AddError(Model, StrNoRechargeDefined,
+          StrTheRechargePackage);
       end;
-      frmProgressMM.AddMessage(Format(StrWritingStressP, [TimeIndex+1]));
-      ParametersUsed := TStringList.Create;
-      try
-        RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
-          ParametersUsed, ParameterValues, True);
-        NP := ParametersUsed.Count;
-        RechRateList := Values[TimeIndex];
-        // data set 5;
-        if NPRCH > 0 then
-        begin
-          INRECH := NP;
-        end
-        else
-        begin
-         if (TimeIndex > 0) then
-          begin
-            PriorRechRateList := Values[TimeIndex-1];
-            if PriorRechRateList.AreRealValuesIdentical(RechRateList, 0) then
-            begin
-              INRECH := -1;
-//              RechRateList.Cache;
-            end
-            else
-            begin
-              INRECH := 1;
-            end;
-            PriorRechRateList.Cache;
-          end
-          else
-          begin
-            INRECH := 1;
-          end;
-        end;
-        INIRCH := 1;
-
-        WriteInteger(INRECH);
-        WriteInteger(INIRCH);
-        WriteString(DS5 + ' Stress period ' + IntToStr(TimeIndex+1));
-        NewLine;
+      for TimeIndex := 0 to Values.Count - 1 do
+      begin
         Application.ProcessMessages;
         if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
-
-        if INRECH > 0 then
-        begin
-          if NPRCH = 0 then
+        frmProgressMM.AddMessage(Format(StrWritingStressP, [TimeIndex+1]));
+        ParametersUsed := TStringList.Create;
+        try
+          RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
+            ParametersUsed, ParameterValues, True);
+          NP := ParametersUsed.Count;
+          RechRateList := Values[TimeIndex];
+          // data set 5;
+          if NPRCH > 0 then
           begin
-            // data set 6
-            WriteCells(RechRateList, DataSetIdentifier, VariableIdentifiers);
+            INRECH := NP;
           end
           else
           begin
-            // data set 7
-            for ParamIndex := 0 to ParametersUsed.Count - 1 do
+           if (TimeIndex > 0) then
             begin
-              WriteString(ParametersUsed[ParamIndex]);
-              NewLine;
+              PriorRechRateList := Values[TimeIndex-1];
+              if PriorRechRateList.AreRealValuesIdentical(RechRateList, 0) then
+              begin
+                INRECH := -1;
+  //              RechRateList.Cache;
+              end
+              else
+              begin
+                INRECH := 1;
+              end;
+              PriorRechRateList.Cache;
+            end
+            else
+            begin
+              INRECH := 1;
             end;
           end;
+          INIRCH := 1;
+
+          WriteInteger(INRECH);
+          WriteInteger(INIRCH);
+          WriteString(DS5 + ' Stress period ' + IntToStr(TimeIndex+1));
+          NewLine;
+          Application.ProcessMessages;
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+
+          if INRECH > 0 then
+          begin
+            if NPRCH = 0 then
+            begin
+              // data set 6
+              WriteCells(RechRateList, DataSetIdentifier, VariableIdentifiers);
+            end
+            else
+            begin
+              // data set 7
+              if ParametersUsed.Count = 0 then
+              begin
+                frmErrorsAndWarnings.AddError(Model, StrNoParametersHaveB,
+                  IntToStr(TimeIndex+1));
+              end;
+              for ParamIndex := 0 to ParametersUsed.Count - 1 do
+              begin
+                WriteString(ParametersUsed[ParamIndex]);
+                NewLine;
+              end;
+            end;
+            Application.ProcessMessages;
+            if not frmProgressMM.ShouldContinue then
+            begin
+              RechRateList.Cache;
+              Exit;
+            end;
+          end;
+
+          // Data set 8
+          WriteLayerSelection(RechRateList, ParameterValues, TimeIndex, Comment);
           Application.ProcessMessages;
           if not frmProgressMM.ShouldContinue then
           begin
             RechRateList.Cache;
             Exit;
           end;
+          if TimeIndex = Values.Count - 1 then
+          begin
+            RechRateList.Cache;
+          end;
+        finally
+          ParametersUsed.Free;
         end;
-
-        // Data set 8
-        WriteLayerSelection(RechRateList, ParameterValues, TimeIndex, Comment);
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          RechRateList.Cache;
-          Exit;
-        end;
-        if TimeIndex = Values.Count - 1 then
-        begin
-          RechRateList.Cache;
-        end;
-      finally
-        ParametersUsed.Free;
       end;
+    finally
+      ParameterValues.Free;
     end;
   finally
-    ParameterValues.Free;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 

@@ -5,9 +5,9 @@ inherited frmModflowTime: TfrmModflowTime
   ClientHeight = 327
   ClientWidth = 754
   OnResize = FormResize
-  ExplicitWidth = 772
-  ExplicitHeight = 372
-  PixelsPerInch = 120
+  ExplicitWidth = 770
+  ExplicitHeight = 365
+  PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0

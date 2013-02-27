@@ -1,44 +1,48 @@
 inherited frmGridValue: TfrmGridValue
   HelpType = htKeyword
   HelpKeyword = 'Grid_Value_Dialog_Box'
-  Caption = 'Grid Value'
+  Caption = 'Grid or Mesh Value'
   ClientHeight = 513
-  ClientWidth = 507
+  ClientWidth = 502
   KeyPreview = True
   OnClose = FormClose
-  ExplicitWidth = 523
-  ExplicitHeight = 551
-  PixelsPerInch = 96
+  OnResize = FormResize
+  ExplicitWidth = 520
+  ExplicitHeight = 558
+  PixelsPerInch = 120
   TextHeight = 18
   object btnHelp: TBitBtn
-    Left = 311
+    Left = 306
     Top = 473
     Width = 89
     Height = 33
     Anchors = [akRight, akBottom]
     Kind = bkHelp
     NumGlyphs = 2
-    TabOrder = 0
+    TabOrder = 1
     OnClick = btnHelpClick
+    ExplicitLeft = 311
   end
   object btnClose: TBitBtn
-    Left = 408
+    Left = 403
     Top = 473
     Width = 89
     Height = 33
     Anchors = [akRight, akBottom]
     Kind = bkClose
     NumGlyphs = 2
-    TabOrder = 1
+    TabOrder = 2
+    ExplicitLeft = 408
   end
   object pnlTabs: TPanel
     Left = 0
     Top = 0
-    Width = 507
+    Width = 502
     Height = 467
     Align = alTop
     Anchors = [akLeft, akTop, akRight, akBottom]
-    TabOrder = 2
+    TabOrder = 0
+    ExplicitWidth = 507
     object spl1: TSplitter
       Left = 471
       Top = 1
@@ -263,8 +267,8 @@ inherited frmGridValue: TfrmGridValue
         Height = 26
         Tree.Left = 0
         Tree.Top = 0
-        Tree.Width = 304
-        Tree.Height = 202
+        Tree.Width = 302
+        Tree.Height = 195
         Tree.Align = alClient
         Tree.Header.AutoSizeIndex = 0
         Tree.Header.Font.Charset = DEFAULT_CHARSET
@@ -316,7 +320,7 @@ inherited frmGridValue: TfrmGridValue
         Top = 87
         Width = 389
         Height = 335
-        Anchors = [akLeft, akTop, akBottom]
+        Anchors = [akLeft, akTop, akRight, akBottom]
         ReadOnly = True
         ScrollBars = ssVertical
         TabOrder = 2
@@ -375,7 +379,6 @@ inherited frmGridValue: TfrmGridValue
         SelectedRowOrColumnColor = clAqua
         UnselectableColor = clBtnFace
         ColorRangeSelection = False
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = False
@@ -486,7 +489,6 @@ inherited frmGridValue: TfrmGridValue
       TabOrder = 3
       OnExpand = jvrltEndPointExpand
       OnCollapse = jvrltEndPointCollapse
-      ExplicitLeft = 70
       FAWidth = 426
       FAHeight = 170
       FCWidth = 22
@@ -497,8 +499,7 @@ inherited frmGridValue: TfrmGridValue
         Width = 0
         Height = 106
         Align = alBottom
-        TabOrder = 0
-        ExplicitWidth = 404
+        TabOrder = 1
         object lbledtReleaseTime: TLabeledEdit
           Left = 136
           Top = 6
@@ -546,7 +547,7 @@ inherited frmGridValue: TfrmGridValue
         FixedCols = 1
         RowCount = 14
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
-        TabOrder = 1
+        TabOrder = 0
         ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = False
@@ -555,7 +556,6 @@ inherited frmGridValue: TfrmGridValue
         SelectedRowOrColumnColor = clAqua
         UnselectableColor = clBtnFace
         ColorRangeSelection = False
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = False
@@ -623,7 +623,6 @@ inherited frmGridValue: TfrmGridValue
             CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
-        ExplicitWidth = 404
       end
     end
   end

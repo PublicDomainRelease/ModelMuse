@@ -63,6 +63,10 @@ var
   ColIndex: Integer;
   Item: TCustomSubLayerItem;
 begin
+  if SubLayers.Count = 0 then
+  begin
+    Exit;
+  end;
   Item := SubLayers.Items[ARow - 1] as TCustomSubLayerItem;
   if ACol = Ord(scUseAll) then
   begin

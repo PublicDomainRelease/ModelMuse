@@ -3,8 +3,8 @@ unit SutraInitialConditionsWriterUnit;
 interface
 
 uses
-  CustomModflowWriterUnit, SysUtils, DataSetUnit, PhastModelUnit,
-  Generics.Collections;
+  Windows, CustomModflowWriterUnit, SysUtils, DataSetUnit, PhastModelUnit,
+  Generics.Collections, Classes, SutraOptionsUnit;
 
 type
   TDataValue = class(TObject)
@@ -16,6 +16,9 @@ type
 
   TSutraInitialConditionsWriter = class(TCustomFileWriter)
   private
+    FRestartFile: TStreamReader;
+    FOptions: TSutraOptions;
+    FLimit: Integer;
     procedure WriteDataArray(DataArray: TDataArray);
     procedure WriteDataSet0;
     procedure WriteDataSet1;
@@ -29,8 +32,14 @@ type
 implementation
 
 uses
-  GoPhastTypes, SutraOptionsUnit, SutraMeshUnit, Generics.Defaults,
-  SutraFileWriterUnit;
+  GoPhastTypes, SutraMeshUnit, Generics.Defaults,
+  SutraFileWriterUnit, IOUtils, Dialogs;
+
+resourcestring
+  StrTheRestartFileS = 'The restart file "%s" does not exist.';
+  StrTheEndOfTheResta = 'The end of the restart file, %0:s, was reached before' +
+  ' reading all the data required for data set %1:d of the initial conditions f' +
+  'ile.';
 
 
 
@@ -148,61 +157,157 @@ end;
 procedure TSutraInitialConditionsWriter.WriteDataSet2;
 var
   InitialPressure: TDataArray;
+  index: Integer;
+  ALine: string;
 begin
   WriteCommentLine('Data set 2');
 
-  InitialPressure := nil;
-  case (Model as TPhastModel).SutraOptions.TransportChoice of
-    tcSolute, tcEnergy:
-      InitialPressure := Model.DataArrayManager.GetDataSetByName(KInitialPressure);
-    tcSoluteHead:
-      InitialPressure := Model.DataArrayManager.GetDataSetByName(rsInitial_Head);
-    else
-      Assert(False);
-  end;
+  if FOptions.ReadStart in [rsPressure, rsBoth] then
+  begin
+    Assert(Assigned(FRestartFile));
+    ALine := FRestartFile.ReadLine;
+    WriteString(ALine);
+    NewLine;
+    for index := 0 to FLimit - 1 do
+    begin
+      ALine := FRestartFile.ReadLine;
+      WriteString(ALine);
+      NewLine;
+      if FRestartFile.EndOfStream then
+      begin
+        Beep;
+        MessageDlg(Format(StrTheEndOfTheResta,
+          [FOptions.FullReadStartRestartFileName, 2]),
+          mtError, [mbOK], 0);
+        break;
+      end;
+    end;
+  end
+  else
+  begin
+    InitialPressure := nil;
+    case (Model as TPhastModel).SutraOptions.TransportChoice of
+      tcSolute, tcEnergy:
+        InitialPressure := Model.DataArrayManager.GetDataSetByName(KInitialPressure);
+      tcSoluteHead:
+        InitialPressure := Model.DataArrayManager.GetDataSetByName(rsInitial_Head);
+      else
+        Assert(False);
+    end;
 
-  WriteDataArray(InitialPressure);
+    WriteDataArray(InitialPressure);
+
+  end;
 end;
 
 procedure TSutraInitialConditionsWriter.WriteDataSet3;
 var
   InitialU: TDataArray;
+  index: Integer;
+  ALine: string;
 begin
   WriteCommentLine('Data set 3');
 
-  InitialU := nil;
-  case Model.SutraOptions.TransportChoice of
-    tcSolute, tcSoluteHead: InitialU := Model.DataArrayManager.GetDataSetByName(
-      KInitialConcentration);
-    tcEnergy: InitialU := Model.DataArrayManager.GetDataSetByName(
-      KInitialTemperature);
-    else
-      Assert(False);
+  if FOptions.ReadStart in [rsU, rsBoth] then
+  begin
+    Assert(Assigned(FRestartFile));
+    if FOptions.ReadStart = rsU then
+    begin
+      FRestartFile.ReadLine;
+      for index := 0 to FLimit - 1 do
+      begin
+        FRestartFile.ReadLine;
+      end;
+    end;
+    ALine := FRestartFile.ReadLine;
+    WriteString(ALine);
+    NewLine;
+    for index := 0 to FLimit - 1 do
+    begin
+      ALine := FRestartFile.ReadLine;
+      WriteString(ALine);
+      NewLine;
+      if FRestartFile.EndOfStream then
+      begin
+        Beep;
+        MessageDlg(Format(StrTheEndOfTheResta,
+          [FOptions.FullReadStartRestartFileName, 3]),
+          mtError, [mbOK], 0);
+        break;
+      end;
+    end;
+  end
+  else
+  begin
+    InitialU := nil;
+    case Model.SutraOptions.TransportChoice of
+      tcSolute, tcSoluteHead: InitialU := Model.DataArrayManager.GetDataSetByName(
+        KInitialConcentration);
+      tcEnergy: InitialU := Model.DataArrayManager.GetDataSetByName(
+        KInitialTemperature);
+      else
+        Assert(False);
+    end;
+    WriteDataArray(InitialU);
   end;
-  WriteDataArray(InitialU);
 end;
 
 procedure TSutraInitialConditionsWriter.WriteFile(FileName: string);
 var
-  Options: TSutraOptions;
+  ErrorMessage: string;
+  Mesh: TSutraMesh3D;
+  NodeCount: Integer;
 begin
-  Options := Model.SutraOptions;
-  if (Options.StartType = stWarm) and (Options.RestartFileName <> '') then
+  FOptions := Model.SutraOptions;
+  if (FOptions.StartType = stWarm) and (FOptions.FullRestartFileName <> '') then
   begin
-    SutraFileWriter.AddFile(sftIcs, Options.RestartFileName);
+    SutraFileWriter.AddFile(sftIcs, FOptions.FullRestartFileName);
   end
   else
   begin
-    FileName := ChangeFileExt(FileName, '.ics');
-    OpenFile(FileName);
+    FRestartFile := nil;
     try
-      WriteDataSet0;
-      WriteDataSet1;
-      WriteDataSet2;
-      WriteDataSet3;
-      SutraFileWriter.AddFile(sftIcs, FileName);
+      if FOptions.ReadStart in [rsPressure, rsU, rsBoth] then
+      begin
+         if not TFile.Exists(FOptions.FullReadStartRestartFileName) then
+         begin
+           Beep;
+           ErrorMessage := Format(StrTheRestartFileS,
+             [FOptions.FullReadStartRestartFileName]);
+           MessageDlg(ErrorMessage, mtError, [mbOK], 0);
+           Exit;
+         end
+         else
+         begin
+           FRestartFile := TFile.OpenText(FOptions.FullReadStartRestartFileName);
+           FRestartFile.ReadLine;
+           Mesh := Model.Mesh;
+           if Mesh.MeshType = mt3D then
+           begin
+             NodeCount := Mesh.ActiveNodeCount;
+           end
+           else
+           begin
+             NodeCount := Mesh.Mesh2D.Nodes.Count;
+           end;
+           FLimit := (NodeCount - 1) div 4 + 1;
+         end;
+      end;
+
+
+      FileName := ChangeFileExt(FileName, '.ics');
+      OpenFile(FileName);
+      try
+        WriteDataSet0;
+        WriteDataSet1;
+        WriteDataSet2;
+        WriteDataSet3;
+        SutraFileWriter.AddFile(sftIcs, FileName);
+      finally
+        CloseFile;
+      end;
     finally
-      CloseFile;
+      FRestartFile.Free;
     end;
   end;
 

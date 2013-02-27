@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ExtCtrls, Mask, JvExMask,
   JvToolEdit, JvExControls, JvLinkLabel, JvExStdCtrls, JvHtControls, UndoItems,
-  PhastModelUnit;
+  PhastModelUnit, JvExExtCtrls, JvExtComponent, JvRollOut, ImgList;
 
 type
   TUndoChangeProgramLocations = class(TCustomUndo)
@@ -23,42 +23,52 @@ type
   end;
 
   TfrmProgramLocations = class(TfrmCustomGoPhast)
-    fedModflow: TJvFilenameEdit;
     pnlBottom: TPanel;
     btnHelp: TBitBtn;
     btnOK: TBitBtn;
     btnCancel: TBitBtn;
     Panel1: TPanel;
-    lblModflow: TLabel;
+    ilShowHide: TImageList;
+    jvrltModflow2005: TJvRollOut;
     htlblModflow: TJvHTLabel;
-    fedTextEditor: TJvFilenameEdit;
-    lblTextEditor: TLabel;
-    htlblModPath: TJvHTLabel;
-    lblModpath: TLabel;
-    fedModpath: TJvFilenameEdit;
-    lblModelMonitor: TLabel;
-    fedModelMonitor: TJvFilenameEdit;
-    htlblZoneBudger: TJvHTLabel;
-    fedZonebudget: TJvFilenameEdit;
-    lblZoneBudget: TLabel;
-    lblModelMate: TLabel;
-    fedModelMate: TJvFilenameEdit;
-    Label1: TLabel;
+    fedModflow: TJvFilenameEdit;
+    jvrltModflowLGR: TJvRollOut;
     JvHTLabel1: TJvHTLabel;
     fedModflowLgr: TJvFilenameEdit;
-    htlblModelMate: TJvHTLabel;
-    lblModflowNWT: TLabel;
+    jvrltModflowLgr2: TJvRollOut;
+    jvhtlblMfLgr2: TJvHTLabel;
+    fedModflowLgr2: TJvFilenameEdit;
+    jvrltModflowNWT: TJvRollOut;
     htlblModflowNWT: TJvHTLabel;
     fedModflowNWT: TJvFilenameEdit;
-    lblMt3dms: TLabel;
+    jvrltModpath: TJvRollOut;
+    htlblModPath: TJvHTLabel;
+    fedModpath: TJvFilenameEdit;
+    jvrltZoneBudget: TJvRollOut;
+    htlblZoneBudger: TJvHTLabel;
+    fedZonebudget: TJvFilenameEdit;
+    jvrltMt3dms: TJvRollOut;
     htlblMt3dms: TJvHTLabel;
     fedMt3dms: TJvFilenameEdit;
+    jvrltModelMate: TJvRollOut;
+    htlblModelMate: TJvHTLabel;
+    fedModelMate: TJvFilenameEdit;
+    jvrltTextEditor: TJvRollOut;
+    fedTextEditor: TJvFilenameEdit;
+    jvrltModelMonitor: TJvRollOut;
+    fedModelMonitor: TJvFilenameEdit;
+    jvrltModflowFmp: TJvRollOut;
+    fedModflowFmp: TJvFilenameEdit;
+    htlbl1: TJvHTLabel;
     procedure fedModflowChange(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
+    procedure jvrltExpand(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     FModel: TCustomModel;
     procedure SetData;
     procedure HighlightControls;
+    procedure AdjustHeight;
     { Private declarations }
   public
     Procedure GetData(Model: TCustomModel);
@@ -78,6 +88,12 @@ resourcestring
 
 { TfrmProgramLocations }
 
+procedure TfrmProgramLocations.AdjustHeight;
+begin
+  ClientHeight := jvrltModelMonitor.Top + jvrltModelMonitor.Height
+    + pnlBottom.Height;
+end;
+
 procedure TfrmProgramLocations.btnOKClick(Sender: TObject);
 begin
   inherited;
@@ -88,6 +104,12 @@ procedure TfrmProgramLocations.fedModflowChange(Sender: TObject);
 begin
   inherited;
   HighlightControls;
+end;
+
+procedure TfrmProgramLocations.FormShow(Sender: TObject);
+begin
+  inherited;
+  AdjustHeight;
 end;
 
 procedure TfrmProgramLocations.GetData(Model: TCustomModel);
@@ -106,20 +128,21 @@ begin
   if Model.ModflowPackages.ModPath.MpathVersion = mp5 then
   begin
     fedModpath.FileName := Locations.ModPathLocation;
-    lblModpath.Caption := 'MODPATH v5';
+    jvrltModpath.Caption := 'MODPATH v5';
     htlblModPath.Caption := LinkString(
       'http://water.usgs.gov/nrp/gwsoftware/modpath5/modpath5.html');
   end
   else
   begin
     fedModpath.FileName := Locations.ModPathLocationVersion6;
-    lblModpath.Caption := 'MODPATH v6';
+    jvrltModpath.Caption := 'MODPATH v6';
     htlblModPath.Caption := LinkString('http://water.usgs.gov/ogw/modpath/');
   end;
   fedModelMonitor.FileName := Locations.ModelMonitorLocation;
   fedZonebudget.FileName := Locations.ZoneBudgetLocation;
   fedModelMate.FileName := Locations.ModelMateLocation;
   fedModflowLgr.FileName := Locations.ModflowLgrLocation;
+  fedModflowLgr2.FileName := Locations.ModflowLgr2Location;
   fedModflowNwt.FileName := Locations.ModflowNwtLocation;
   fedMt3dms.FileName := Locations.Mt3dmsLocation;
 
@@ -147,6 +170,7 @@ begin
     Locations.ZoneBudgetLocation := fedZonebudget.FileName;
     Locations.ModelMateLocation := fedModelMate.FileName;
     Locations.ModflowLgrLocation := fedModflowLgr.FileName;
+    Locations.ModflowLgr2Location := fedModflowLgr2.FileName;
     Locations.ModflowNwtLocation := fedModflowNwt.FileName;
     Locations.Mt3dmsLocation := fedMt3dms.FileName;
     Undo := TUndoChangeProgramLocations.Create(Locations);
@@ -160,10 +184,14 @@ procedure TfrmProgramLocations.HighlightControls;
 var
   ModflowOK: Boolean;
   ModflowLgrOK: Boolean;
+  ModflowLgr2OK: Boolean;
   ModpathOK: Boolean;
   ZoneBudgetOK: Boolean;
   FileEditorOK: Boolean;
   ModflowNwtOK: Boolean;
+{$IFDEF FMP}
+  ModflowFmpOK: Boolean;
+{$ENDIF}
   function CheckControl(Edit: TJvFilenameEdit): boolean;
   begin
     result := ExtractFileName(Edit.FileName) <> 'ModelMuse.exe';
@@ -202,20 +230,71 @@ var
 begin
   CheckControl(fedModelMonitor);
   CheckControl(fedModelMate);
+
+  jvrltModflow2005.Collapsed :=
+    (frmGoPhast.PhastModel.ModelSelection  <> msModflow);
   ModflowOK := CheckControl(fedModflow)
     or (frmGoPhast.PhastModel.ModelSelection  <> msModflow);
+
+  jvrltModflowLGR.Collapsed :=
+    (frmGoPhast.PhastModel.ModelSelection  <> msModflowLGR);
   ModflowLgrOK := CheckControl(fedModflowLgr)
     or (frmGoPhast.PhastModel.ModelSelection  <> msModflowLGR);
+
+  jvrltModflowLgr2.Collapsed :=
+    (frmGoPhast.PhastModel.ModelSelection  <> msModflowLGR2);
+  ModflowLgr2OK := CheckControl(fedModflowLgr2)
+    or (frmGoPhast.PhastModel.ModelSelection  <> msModflowLGR2);
+//  {$ELSE}
+//  ModflowLgr2OK := True;
+//  jvrltModflowLgr2.Visible := False;
+//  {$ENDIF}
+
+  jvrltModflowNWT.Collapsed :=
+    (frmGoPhast.PhastModel.ModelSelection  <> msModflowNWT);
   ModflowNwtOK := CheckControl(fedModflowNWT)
     or (frmGoPhast.PhastModel.ModelSelection  <> msModflowNWT);
+
+{$IFDEF FMP}
+  jvrltModflowFmp.Collapsed :=
+    (frmGoPhast.PhastModel.ModelSelection  <> msModflowFMP);
+  ModflowFmpOK := CheckControl(fedModflowFmp)
+    or (frmGoPhast.PhastModel.ModelSelection  <> msModflowFmp);
+{$ELSE}
+  jvrltModflowFmp.Visible := False;
+{$ENDIF}
+
+  jvrltModpath.Collapsed := not frmGoPhast.PhastModel.ModPathIsSelected;
   ModpathOK := CheckControl(fedModpath)
     or not frmGoPhast.PhastModel.ModPathIsSelected;
+
+  jvrltZoneBudget.Collapsed :=
+    not frmGoPhast.PhastModel.ZoneBudgetIsSelected;
   ZoneBudgetOK := CheckControl(fedZonebudget)
     or not frmGoPhast.PhastModel.ZoneBudgetIsSelected;
+
+  jvrltMt3dms.Collapsed :=
+    not frmGoPhast.PhastModel.Mt3dmsIsSelected;
   CheckControl(fedMt3dms);
+
+  jvrltModelMate.Collapsed :=
+    frmGoPhast.PhastModel.ModelMateProjectFileName  = '';
+
   FileEditorOK := CheckControl(fedTextEditor);
-  btnOK.Enabled := ModflowOK and ModflowLgrOK and ModflowNwtOK and ModpathOK
-    and ZoneBudgetOK and FileEditorOK;
+
+  btnOK.Enabled := ModflowOK and ModflowLgrOK and ModflowLgr2OK
+    and ModflowNwtOK
+{$IFDEF FMP}
+    and ModflowFmpOK
+{$ENDIF}
+    and ModpathOK and ZoneBudgetOK and FileEditorOK;
+
+end;
+
+procedure TfrmProgramLocations.jvrltExpand(Sender: TObject);
+begin
+  inherited;
+  AdjustHeight;
 end;
 
 { TUndoChangeProgramLocations }

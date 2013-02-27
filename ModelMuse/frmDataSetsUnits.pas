@@ -65,6 +65,7 @@ Type
     FNotifier: TEditorNotifierComponent;
     FDisplayName: string;
     FAngleType: TAngleType;
+    FClassification: string;
     procedure SetTwoDInterpolator(const Value: TCustom2DInterpolater);
     procedure SetInterpValues(const Value: TPhastInterpolationValues);
     procedure SetNewUses(const Value: TStringList);
@@ -93,6 +94,7 @@ Type
     property Variable: TCustomVariable read FVariable write FVariable;
     property Expression: TExpression read FExpression write SetExpression;
     property Comment: string read FComment write FComment;
+    property Classification: string read FClassification write FClassification;
     function ClassificationName: string; override;
     function FullClassification: string; override;
     property AssociatedDataSets: string read GetAssociatedDataSets;
@@ -415,7 +417,7 @@ implementation
 uses frmGoPhastUnit, frmFormulaUnit, frmConvertChoiceUnit, InterpolationUnit,
   GIS_Functions, PhastModelUnit, frmShowHideObjectsUnit, GlobalVariablesUnit,
   StrUtils, OrderedCollectionUnit, HufDefinition, LayerStructureUnit,
-  SubscriptionUnit, Menus;
+  SubscriptionUnit, Menus, frmSelectResultToImportUnit;
 
 resourcestring
   StrNone = 'none';
@@ -500,9 +502,9 @@ begin
   reDefaultFormula.DoubleBuffered := False;
   reComment.DoubleBuffered := False;
 
-{$IFNDEF SUTRA}
-  comboUnits.Items.Clear;
-{$ENDIF}
+//{$IFNDEF SUTRA}
+//  comboUnits.Items.Clear;
+//{$ENDIF}
 end;
 
 
@@ -921,7 +923,8 @@ begin
         comboOrientation.Items[1].Brush.Color := clWhite;
         comboOrientation.Items[2].Brush.Color := clWhite;
       end;
-    msModflow, msModflowLGR, msModflowNWT {$IFDEF SUTRA}, msSutra22 {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF} , msSutra22:
       begin
         comboOrientation.Items[1].Brush.Color := clBtnFace;
         comboOrientation.Items[2].Brush.Color := clBtnFace;
@@ -971,6 +974,7 @@ begin
   begin
     FArrayEdits := TObjectList.Create;
   end;
+  SelectedEdit := nil;
   FArrayEdits.Clear;
   if frmGoPhast.Grid <> nil then
   begin
@@ -1124,6 +1128,12 @@ begin
           DataStorage.Formula := ArrayEdit.Formula;
 
           DataStorage.Comment := ArrayEdit.Comment;
+          DataStorage.Classification := ArrayEdit.Classification;
+          if (DataStorage.Name <> DataSet.Name)
+            and (Pos(StrModelResults, DataSet.Classification) > 0) then
+          begin
+            DataStorage.Classification := '';
+          end;
 
           if DataSet is TCustomPhastDataSet then
           begin
@@ -1164,6 +1174,7 @@ begin
   inherited;
   SetData;
   SelectedEdit := nil;
+  GetData;
 end;
 
 procedure TfrmDataSets.comboEvaluatedAtChange(Sender: TObject);
@@ -1251,7 +1262,8 @@ begin
         SelectedEdit.Orientation :=
           TDataSetOrientation(comboOrientation.ItemIndex);
       end;
-    msModflow, msModflowLGR, msModflowNWT {$IFDEF SUTRA}, msSutra22 {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF} , msSutra22:
       begin
         case comboOrientation.ItemIndex of
           0,3:
@@ -1300,6 +1312,7 @@ end;
 
 procedure TfrmDataSets.FormDestroy(Sender: TObject);
 begin
+  SelectedEdit := nil;
 
   // free up data.
   FDeletedDataSets.Free;
@@ -2713,7 +2726,7 @@ begin
 
       comboEvaluatedAt.ItemIndex := Ord(FSelectedEdit.EvaluatedAt);
       comboEvaluatedAt.Enabled := (frmGoPhast.ModelSelection
-        in [msPhast {$IFDEF Sutra}, msSutra22 {$ENDIF}])
+        in [msPhast, msSutra22])
         and ((FSelectedEdit.DataArray = nil)
         or not (dcEvaluatedAt in FSelectedEdit.DataArray.Lock));
 
@@ -2725,12 +2738,10 @@ begin
       comboUnits.Enabled := (FSelectedEdit.DataArray = nil)
         or not (dcUnits in FSelectedEdit.DataArray.Lock);
 
-    {$IFDEF SUTRA}
       if FSelectedEdit.AngleType <> atNone then
       begin
         comboUnits.Text := comboUnits.Items[Ord(FSelectedEdit.AngleType)-1];
       end;
-    {$ENDIF}
 
       UpdateInterpolationChoice(FSelectedEdit);
       comboInterpolation.Enabled := (comboInterpolation.Items.Count > 1)
@@ -3314,6 +3325,7 @@ begin
     Formula := FDataArray.DisplayFormula;
     TwoDInterpolator := FDataArray.TwoDInterpolator;
     Comment := FDataArray.Comment;
+    Classification := FDataArray.Classification;
     if ADataArray is TCustomPhastDataSet then
     begin
       FInterpValues := TPhastInterpolationValues.Create;

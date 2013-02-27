@@ -33,6 +33,8 @@ resourcestring
   StrWritingOutputContr = 'Writing Output Control input.';
   StrWritingDataSet0 = '  Writing Data Set 0.';
   StrWritingDataSet1 = '  Writing Data Set 1.';
+  StrStressPeriodWarning = 'One or more transient stress periods are reference '
+    + 'periods for calculating drawdown';
 
 { TOutputControlWriter }
 
@@ -134,9 +136,6 @@ begin
 end;
 
 procedure TOutputControlWriter.WriteDataSets2and3;
-const
-  StressPeriodWarning = 'One or more transient stress periods are reference '
-    + 'periods for calculating drawdown';
 var
   StressPeriods: TModflowStressPeriods;
   HeadFrequency: integer;
@@ -242,7 +241,7 @@ begin
       begin
         WarningMessage := Format(StrStressPeriod0d,
           [StressPeriodIndex+1, StressPeriod.StartTime]);
-        frmErrorsAndWarnings.AddWarning(Model, StressPeriodWarning, WarningMessage);
+        frmErrorsAndWarnings.AddWarning(Model, StrStressPeriodWarning, WarningMessage);
       end;
 
       if ShouldExportHead or ShouldExportDrawdown or SetDDREFERENCE
@@ -308,18 +307,24 @@ begin
   begin
     Exit;
   end;
-  FNameOfFile := FileName(AFileName);
-  WriteToNameFile(StrOC, Model.UnitNumbers.UnitNumber(StrOC), FNameOfFile, foInput);
-  OpenFile(FNameOfFile);
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    frmProgressMM.AddMessage(StrWritingOutputContr);
-    frmProgressMM.AddMessage(StrWritingDataSet0);
-    WriteDataSet0;
-    frmProgressMM.AddMessage(StrWritingDataSet1);
-    WriteDataSet1;
-    WriteDataSets2and3;
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrStressPeriodWarning);
+    FNameOfFile := FileName(AFileName);
+    WriteToNameFile(StrOC, Model.UnitNumbers.UnitNumber(StrOC), FNameOfFile, foInput);
+    OpenFile(FNameOfFile);
+    try
+      frmProgressMM.AddMessage(StrWritingOutputContr);
+      frmProgressMM.AddMessage(StrWritingDataSet0);
+      WriteDataSet0;
+      frmProgressMM.AddMessage(StrWritingDataSet1);
+      WriteDataSet1;
+      WriteDataSets2and3;
+    finally
+      CloseFile;
+    end;
   finally
-    CloseFile;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 

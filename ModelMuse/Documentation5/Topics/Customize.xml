@@ -4,9 +4,9 @@
   <title translate="true">Customize</title>
   <body>
     <header>
-      <para styleclass="Heading2"><text styleclass="Heading1" translate="true">Customize</text></para>
+      <para styleclass="Heading2_atoc_"><text styleclass="Heading1" translate="true">Customize</text></para>
     </header>
-    <para styleclass="Normal"><text styleclass="Normal" translate="true">The menu items under Customize are listed in table 12. &#160;The commands under this menu are used to change how ModelMuse behaves.</text></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">The menu items under Customize are listed in table 12.  The commands under this menu are used to change how ModelMuse behaves.</text></para>
     <para styleclass="Table Caption"><text styleclass="Table Caption" translate="true">Table 12. Customize Menu</text></para>
     <para styleclass="Normal" style="text-align:center;"><table rowcount="7" colcount="2" style="cell-padding:4px; cell-spacing:0px; border-width:0px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#000000; border-style:solid;">
       <tr style="vertical-align:top">
@@ -35,18 +35,18 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="vertical-align:top; width:137px;">
-          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Hint Display Time... &#160;</text></para>
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Hint Display Time...  </text></para>
         </td>
         <td style="vertical-align:top; width:489px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Change how long “hints” are displayed. &#160;See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Hint_Display_Time_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Hint Display Time</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Change how long “hints” are displayed.  See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Hint_Display_Time_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Hint Display Time</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
         <td style="vertical-align:top; width:137px;">
-          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Ruler Format... &#160;</text></para>
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Ruler Format...  </text></para>
         </td>
         <td style="vertical-align:top; width:489px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Change the numeric format of the Rulers. &#160;See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Ruler_Format_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Ruler Format</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Change the numeric format of the Rulers.  See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Ruler_Format_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Ruler Format</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">

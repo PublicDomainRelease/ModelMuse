@@ -579,7 +579,7 @@ var
         for Index := 0 to FirstUnit.LayerCollection.Count - 1 do
         begin
           rdgSubLayerBoundaries.Cells[0,
-            rdgSubLayerBoundaries.RowCount - Index-1]
+            {rdgSubLayerBoundaries.RowCount -} Index+1]
             := FloatToStr((FirstUnit.LayerCollection.Items[Index]
             as TLayerFraction).Fraction);
         end;

@@ -736,8 +736,7 @@ begin
   rgEvaluatedAt.Items[Ord(eaNodes)] :=
     EvalAtToString(eaNodes, frmGoPhast.PhastModel.ModelSelection, True, True);
   rgEvaluatedAt.Enabled :=
-    frmGoPhast.PhastModel.ModelSelection in [msPhast
-    {$IFDEF SUTRA}, msSutra22 {$ENDIF}];
+    frmGoPhast.PhastModel.ModelSelection in [msPhast, msSutra22];
 end;
 
 procedure TfrmCustomImportSimpleFile.rgEvaluatedAtClick(Sender: TObject);
@@ -843,7 +842,7 @@ begin
   else
   begin
     Assert(Mesh <> nil);
-    MeshLimits := Mesh.MeshLimits(vdTop);
+    MeshLimits := Mesh.MeshLimits(vdTop, 0);
     MinX := MeshLimits.MinX;
     MaxX := MeshLimits.MaxX;
     MinY := MeshLimits.MinY;

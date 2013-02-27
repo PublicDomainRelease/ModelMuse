@@ -134,7 +134,10 @@ const
      (Package: 'HUF'; PType: 'SY'; PClass: pctHUF),
      (Package: 'HUF'; PType: 'SYTP'; PClass: pctSteady),
      (Package: 'HUF'; PType: 'KDEP'; PClass: pctHUF),
-     (Package: 'HUF'; PType: 'LVDA'; PClass: pctSteady));
+     (Package: 'HUF'; PType: 'LVDA'; PClass: pctSteady),
+     (Package: 'STR'; PType: 'STR'; PClass: pctTransient),
+     (Package: 'FMP'; PType: 'QMAX'; PClass: pctTransient)
+     );
 
 Type
   TCompareMethod = class(TObject)
@@ -508,6 +511,8 @@ begin
     ptHUF_SYTP: result := frmGoPhast.PhastModel.HufIsSelected and TransientModel;
     ptHUF_KDEP: result := frmGoPhast.PhastModel.HufIsSelected;
     ptHUF_LVDA: result := frmGoPhast.PhastModel.HufIsSelected;
+    ptSTR: result := frmGoPhast.PhastModel.StrIsSelected;
+    ptQMAX: result := frmGoPhast.PhastModel.FarmProcessIsSelected;
     else Assert(False);
   end;
 end;

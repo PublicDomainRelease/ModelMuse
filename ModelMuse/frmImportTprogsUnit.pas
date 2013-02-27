@@ -71,7 +71,7 @@ implementation
 uses frmGoPhastUnit, Contnrs, ClassificationUnit, RbwParser,
   AbstractGridUnit, IOUtils, PhastModelUnit, InterpolationUnit,
   ScreenObjectUnit, ValueArrayStorageUnit, UndoItems, ModelMuseUtilities,
-  GIS_Functions;
+  GIS_Functions, SutraMeshUnit;
 
 resourcestring
   StrSDoesNotExist = '%s does not exist.';
@@ -113,12 +113,11 @@ procedure TfrmImportTprogs.GetData;
 var
   GridAngle: Double;
   Origin: TPoint2D;
-{$IFDEF SUTRA}
   MeshLimits: TGridLimit;
-{$ENDIF}
   MinX: Double;
   MinY: Double;
   MinZ: Double;
+  Mesh: TSutraMesh3D;
   procedure ShowGridError;
   begin
     Beep;
@@ -161,7 +160,7 @@ begin
           Exit;
         end;
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         rgEvaluatedAt.Enabled := False;
         if frmGoPhast.Grid <> nil then
@@ -186,23 +185,23 @@ begin
           Exit;
         end
       end;
-{$IFDEF SUTRA}
     msSutra22:
       begin
         rgEvaluatedAt.ItemIndex := 1;
         GridAngle := 0;
         if frmGoPhast.PhastModel.Mesh <> nil then
         begin
-          if frmGoPhast.PhastModel.Mesh.Mesh2D.Nodes.Count = 0 then
+          Mesh := frmGoPhast.PhastModel.Mesh;
+          if Mesh.Mesh2D.Nodes.Count = 0 then
           begin
             ShowMeshError;
             Exit;
           end;
-          MeshLimits := frmGoPhast.PhastModel.Mesh.MeshLimits(vdFront);
+          MeshLimits := Mesh.MeshLimits(vdFront, 0);
           MinX := MeshLimits.MinX;
           MinZ := MeshLimits.MinZ;
 
-          MeshLimits := frmGoPhast.PhastModel.Mesh.MeshLimits(vdTop);
+          MeshLimits := Mesh.MeshLimits(vdTop, 0);
           MinY := MeshLimits.MinY;
         end
         else
@@ -211,7 +210,6 @@ begin
           Exit;
         end;
       end;
-{$ENDIF}
   else
     Assert(False);
   end;

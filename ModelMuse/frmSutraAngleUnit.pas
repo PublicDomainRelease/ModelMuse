@@ -146,7 +146,6 @@ var
 begin
   if FChanged then
   begin
-    {$IFDEF SUTRA}
     case rgSpecify.ItemIndex of
       0:
         begin
@@ -169,7 +168,6 @@ begin
     end;
     Undo := TUndoSpecifyCrossSection.Create(NewLocation);
     frmGoPhast.UndoStack.Submit(Undo);
-    {$ENDIF}
   end;
 end;
 

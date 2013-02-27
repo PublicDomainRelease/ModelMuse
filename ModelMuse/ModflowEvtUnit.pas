@@ -600,7 +600,7 @@ end;
 procedure TEvtItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FEvapotranspirationRate,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TEvtItem.SetBoundaryFormula(Index: integer; const Value: string);
@@ -1317,7 +1317,7 @@ end;
 procedure TEvtLayerItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FEvapotranspirationLayer,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TEvtLayerItem.SetBoundaryFormula(Index: integer; const Value: string);
@@ -1655,9 +1655,9 @@ end;
 procedure TEvtSurfDepthItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FEvapotranspirationDepth,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FEvapotranspirationSurface,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TEvtSurfDepthItem.SetBoundaryFormula(Index: integer;

@@ -73,7 +73,10 @@ inherited frmImportPoints: TfrmImportPoints
     ExplicitWidth = 560
     object tabControls: TTabSheet
       Caption = 'Controls'
+      ExplicitLeft = 0
+      ExplicitTop = 0
       ExplicitWidth = 552
+      ExplicitHeight = 0
       object pnlRadioGroups: TPanel
         Left = 184
         Top = 0
@@ -85,14 +88,14 @@ inherited frmImportPoints: TfrmImportPoints
         object lblRoot: TLabel
           Left = 208
           Top = 231
-          Width = 129
+          Width = 76
           Height = 18
           Caption = 'Root name'
         end
         object lblBoundaryChoice: TLabel
           Left = 9
           Top = 306
-          Width = 216
+          Width = 62
           Height = 18
           Margins.Left = 6
           Caption = 'Features'
@@ -100,7 +103,7 @@ inherited frmImportPoints: TfrmImportPoints
         object lblParameter: TLabel
           Left = 208
           Top = 365
-          Width = 121
+          Width = 74
           Height = 18
           Caption = 'Parameter'
         end
@@ -276,7 +279,10 @@ inherited frmImportPoints: TfrmImportPoints
     object tabData: TTabSheet
       Caption = 'Data'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
       ExplicitWidth = 552
+      ExplicitHeight = 0
       object pnlDataTabControls: TPanel
         Left = 0
         Top = 354
@@ -289,7 +295,7 @@ inherited frmImportPoints: TfrmImportPoints
         object lblRows: TLabel
           Left = 115
           Top = 13
-          Width = 53
+          Width = 39
           Height = 18
           Caption = 'Rows'
         end
@@ -350,7 +356,6 @@ inherited frmImportPoints: TfrmImportPoints
         UnselectableColor = clBtnFace
         ColorRangeSelection = False
         OnDistributeTextProgress = dgDataDistributeTextProgress
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = False

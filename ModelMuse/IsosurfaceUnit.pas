@@ -17,7 +17,6 @@ type
 
   TGridPoint = record
     P : TGLCoord;
-    // Result of the metaball equations at this point
     Value : glFLoat;
   end;
   PGridPoint = ^TGridPoint;

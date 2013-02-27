@@ -1663,7 +1663,7 @@ procedure TfrmImportShapefile.EnableEvalAt;
 begin
   rgEvaluatedAt.Enabled := cbImportObjects.Checked
     and (frmGoPhast.PhastModel.ModelSelection in
-    [msPhast {$IFDEF SUTRA}, msSutra22{$ENDIF}]);
+    [msPhast, msSutra22]);
 end;
 
 procedure TfrmImportShapefile.AssignColFeatureProperties;
@@ -5354,7 +5354,7 @@ begin
         begin
           ShouldEnable := (rgEvaluatedAt.ItemIndex = 1);
         end;
-      msModflow, msModflowLGR, msModflowNWT:
+      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
         begin
           ShouldEnable := (rgEvaluatedAt.ItemIndex = 0);
         end;
@@ -5983,7 +5983,7 @@ begin
             FloatToStr(Item.EndingTime));
         end;
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         Packages := Model.ModflowPackages;
         AddModflowPackageToImportChoices(Packages.ChdBoundary);
@@ -6003,11 +6003,9 @@ begin
         AddModflowPackageToImportChoices(Packages.UzfPackage);
         AddModflowPackageToImportChoices(Packages.WelPackage);
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
       end;
-    {$ENDIF}
   else
     begin
       Assert(False);
@@ -7524,7 +7522,7 @@ begin
   end;
 
   if (rgElevationCount.ItemIndex <> 0)
-    and (frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT]) then
+    and (frmGoPhast.PhastModel.ModelSelection in ModflowSelection) then
   begin
     LayerBoundaries := TStringList.Create;
     try
@@ -8329,7 +8327,7 @@ begin
             end;
         end;
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         Packages := Model.ModflowPackages;
         APackage := comboBoundaryChoice.Items.Objects[
@@ -8759,7 +8757,7 @@ begin
             end;
           end;
         end;
-      msModflow, msModflowLGR, msModflowNWT:
+      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
         begin
           Model := frmGoPhast.PhastModel;
           Packages := Model.ModflowPackages;

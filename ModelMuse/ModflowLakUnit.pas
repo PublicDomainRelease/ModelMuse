@@ -558,17 +558,17 @@ procedure TLakItem.RemoveFormulaObjects;
 begin
   inherited;
   frmGoPhast.PhastModel.FormulaManager.Remove(FWithdrawal,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FOverlandRunoff,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FEvaporation,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FPrecipitation,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FMaximumStage,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FMinimumStage,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 function TLakItem.RNF: double;

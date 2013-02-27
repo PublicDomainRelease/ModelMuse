@@ -15,7 +15,7 @@ interface
 uses Classes, Contnrs, Controls, Forms, RbwParser, Undo, GoPhastTypes, AbstractGridUnit,
   DataSetUnit, PhastDataSets, FluxObservationUnit, FormulaManagerUnit,
   DisplaySettingsUnit, Mt3dmsFluxObservationsUnit, FastGEO, SutraMeshUnit,
-  IntListUnit;
+  IntListUnit, Graphics, MeshRenumberingTypes;
 
 type
   {@abstract(@name is an abstract base class used as an ancestor
@@ -572,6 +572,7 @@ type
     FDataType: TRbwDataType;
     FComment: string;
     FAngleType: TAngleType;
+    FClassification: string;
     // See @link(PhastInterpolationValues).
     procedure SetPhastInterpolationValues(
       const Value: TPhastInterpolationValues);
@@ -623,6 +624,7 @@ type
     property PhastInterpolationValues: TPhastInterpolationValues
       read FPhastInterpolationValues write SetPhastInterpolationValues;
     property Comment: string read FComment write FComment;
+    property Classification: string read FClassification write FClassification;
   end;
 
   // @name is used to add, delete, and change the properties of
@@ -703,6 +705,9 @@ type
     Mt3dmsLakMassFluxObservations: TMt3dmsFluxObservationGroups;
     Mt3dmsDrtMassFluxObservations: TMt3dmsFluxObservationGroups;
     Mt3dmsEtsMassFluxObservations: TMt3dmsFluxObservationGroups;
+    Mt3dmsStrMassFluxObservations: TMt3dmsFluxObservationGroups;
+    Mt3dmsFhbHeadMassFluxObservations: TMt3dmsFluxObservationGroups;
+    Mt3dmsFhbFlowMassFluxObservations: TMt3dmsFluxObservationGroups;
     procedure NilAll;
     procedure CreateAll;
     procedure FreeAll;
@@ -718,6 +723,8 @@ type
     FNewGbobObservations: TFluxObservationGroups;
     FOldRvobObservations: TFluxObservationGroups;
     FNewRvobObservations: TFluxObservationGroups;
+    FOldStobObservations: TFluxObservationGroups;
+    FNewStobObservations: TFluxObservationGroups;
     FOldMt3dObs: TMassFluxObs;
     FNewMt3dObs: TMassFluxObs;
     procedure AssignMt3dObsToModel(MtsdObs: TMassFluxObs);
@@ -727,7 +734,8 @@ type
   public
     Constructor Create;
     procedure AssignNewObservations(NewChobObservations, NewDrobObservations,
-      NewGbobObservations, NewRvobObservations: TFluxObservationGroups;
+      NewGbobObservations, NewRvobObservations,
+      NewStobObservations: TFluxObservationGroups;
       var NewMtsdObs: TMassFluxObs);
     Destructor Destroy; override;
     procedure DoCommand; override;
@@ -800,8 +808,8 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    procedure UpdataNewMesh(NewMesh: TSutraMesh3D);
-    procedure UpdataOldMesh(OldMesh: TSutraMesh3D);
+    procedure UpdateNewMesh(NewMesh: TSutraMesh3D);
+    procedure UpdateOldMesh(OldMesh: TSutraMesh3D);
     procedure DoCommand; override;
     procedure Undo; override;
   end;
@@ -818,6 +826,8 @@ type
 
   TUndoRenumberMesh = class(TCustomUndo)
   private
+    FNewAlgorithm: TRenumberingAlgorithm;
+    FOldAlgorithm: TRenumberingAlgorithm;
     FOldElementNumbers: TIntegerCollection;
     FOldNodeNumbers: TIntegerCollection;
     FNewElementNumbers: TIntegerCollection;
@@ -826,7 +836,7 @@ type
   protected
     function Description: string; override;
   public
-    constructor Create;
+    constructor Create(Algorithm: TRenumberingAlgorithm);
     destructor Destroy; override;
     procedure UpdateNumbers;
     procedure DoCommand; override;
@@ -834,11 +844,26 @@ type
     procedure Redo; override;
   end;
 
+  TUndoChangeFont = class(TCustomUndo)
+  private
+    FOldFont: TFont;
+    FNewFont: TFont;
+    procedure AssignFont(AFont: TFont);
+  protected
+    function Description: string; override;
+  public
+    constructor Create(NewFont: TFont);
+    destructor Destroy; override;
+    procedure DoCommand; override;
+    procedure Undo; override;
+  end;
+
 implementation
 
 uses SysUtils, Math, frmGoPhastUnit, InteractiveTools, frmSubdivideUnit,
   frmGoToUnit, frmShowHideObjectsUnit,
-  frmGridValueUnit, PhastModelUnit, frmDisplayDataUnit;
+  frmGridValueUnit, PhastModelUnit, frmDisplayDataUnit, frmCustomGoPhastUnit,
+  frmMeshInformationUnit, frmSelectResultToImportUnit;
 
 resourcestring
   StrDeleteRow0dAt = 'delete row %0:d at %1:g.';
@@ -1573,13 +1598,16 @@ end;
 procedure TUndoEditGridLines.ChangeView;
 var
   Temp1, Temp2: double;
+  H: real;
+  L: real;
 begin
   // Set the magnifications so that the grid will fill most of the screen.
   with frmGoPhast.Grid do
   begin
     with frmGoPhast.frameTopView.ZoomBox do
     begin
-      if ColumnCount >= 0 then
+      if (ColumnCount >= 0)
+        and (ColumnPosition[ColumnCount] - ColumnPosition[0] <> 0) then
       begin
         Temp1 := Width / Abs(ColumnPosition[ColumnCount] - ColumnPosition[0])
       end
@@ -1587,7 +1615,7 @@ begin
       begin
         Temp1 := 0
       end;
-      if RowCount >= 0 then
+      if (RowCount >= 0) and (RowPosition[RowCount] - RowPosition[0] <> 0) then
       begin
         Temp2 := Height / Abs(RowPosition[RowCount] - RowPosition[0])
       end
@@ -1604,7 +1632,8 @@ begin
     end;
     with frmGoPhast.frameFrontView.ZoomBox do
     begin
-      if ColumnCount >= 0 then
+      if (ColumnCount >= 0)
+        and (ColumnPosition[ColumnCount] - ColumnPosition[0] <> 0) then
       begin
         Temp1 := Width / Abs(ColumnPosition[ColumnCount] - ColumnPosition[0])
       end
@@ -1612,10 +1641,11 @@ begin
       begin
         Temp1 := 0
       end;
-      if LayerCount >= 0 then
+      H := HighestElevation;
+      L := LowestElevation;
+      if (LayerCount >= 0) and (H-L <> 0) then
       begin
-        Temp2 := Height / (Abs(HighestElevation - LowestElevation) *
-          Exaggeration)
+        Temp2 := Height / (Abs(H - L) * Exaggeration)
       end
       else
       begin
@@ -1630,7 +1660,7 @@ begin
 
     with frmGoPhast.frameSideView.ZoomBox do
     begin
-      if RowCount >= 0 then
+      if (RowCount >= 0) and (RowPosition[RowCount] - RowPosition[0] <> 0) then
       begin
         Temp1 := Height / Abs(RowPosition[RowCount] - RowPosition[0])
       end
@@ -1638,10 +1668,11 @@ begin
       begin
         Temp1 := 0
       end;
-      if LayerCount >= 0 then
+      H := HighestElevation;
+      L := LowestElevation;
+      if (LayerCount >= 0) and (H - L <> 0) then
       begin
-        Temp2 := Width / (Abs(HighestElevation - LowestElevation) *
-          Exaggeration)
+        Temp2 := Width / (Abs(H - L) * Exaggeration)
       end
       else
       begin
@@ -1847,7 +1878,7 @@ end;
 constructor TCustomUndoChangeGridDimensions.Create;
 begin
   inherited;
-  if frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+  if frmGoPhast.PhastModel.ModelSelection in ModflowSelection then
   begin
     FLayerCount := frmGoPhast.PhastModel.ModflowGrid.LayerCount;
   end;
@@ -1856,7 +1887,7 @@ end;
 procedure TCustomUndoChangeGridDimensions.DoCommand;
 begin
   UpdateDataSets;
-  if frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+  if frmGoPhast.PhastModel.ModelSelection in ModflowSelection then
   begin
     if frmGoPhast.PhastModel.ModflowGrid.LayerCount < 0 then
     begin
@@ -1868,7 +1899,7 @@ end;
 procedure TCustomUndoChangeGridDimensions.Undo;
 begin
   UpdateDataSets;
-  if frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+  if frmGoPhast.PhastModel.ModelSelection in ModflowSelection then
   begin
       frmGoPhast.PhastModel.ModflowGrid.LayerCount := FLayerCount;
   end;
@@ -2316,6 +2347,7 @@ begin
   TwoDInterpolator := DataSet.TwoDInterpolator;
   Formula := DataSet.Formula;
   Comment := DataSet.Comment;
+  Classification := DataSet.Classification;
   if DataSet is TCustomPhastDataSet then
   begin
     PhastInterpolationValues.Assign(DataSet);
@@ -2437,6 +2469,7 @@ begin
           ChildDataArray.AngleType := AngleType;
           ChildDataArray.TwoDInterpolator := TwoDInterpolator;
           ChildDataArray.Comment := Comment;
+          ChildDataArray.Classification := Classification;
         end;
       end;
     end;
@@ -2448,6 +2481,7 @@ begin
     or (FDataSet.DataType <> DataType)
     or (FDataSet.Units <> Units)
     or (FDataSet.AngleType <> AngleType)
+    or (FDataSet.Classification <> Classification)
     then
   begin
     ShouldInvalidate := True;
@@ -2474,6 +2508,7 @@ begin
   FDataSet.AngleType := AngleType;
   FDataSet.TwoDInterpolator := TwoDInterpolator;
   FDataSet.Comment := Comment;
+  FDataSet.Classification := Classification;
   FNeedToInvalidate := False;
 end;
 
@@ -2609,6 +2644,9 @@ begin
   FOldRvobObservations := TFluxObservationGroups.Create(nil);
   FOldRvobObservations.Assign(frmGoPhast.PhastModel.RiverObservations);
 
+  FOldStobObservations := TFluxObservationGroups.Create(nil);
+  FOldStobObservations.Assign(frmGoPhast.PhastModel.StreamObservations);
+
   FillMt3dLists(FOldMt3dObs);
 end;
 
@@ -2627,6 +2665,8 @@ begin
   FNewGbobObservations.Free;
   FOldRvobObservations.Free;
   FNewRvobObservations.Free;
+  FOldStobObservations.Free;
+  FNewStobObservations.Free;
   FOldMt3dObs.FreeAll;
   FNewMt3dObs.FreeAll;
   inherited;
@@ -2638,6 +2678,7 @@ begin
   frmGoPhast.PhastModel.DrainObservations := FNewDrobObservations;
   frmGoPhast.PhastModel.GhbObservations := FNewGbobObservations;
   frmGoPhast.PhastModel.RiverObservations := FNewRvobObservations;
+  frmGoPhast.PhastModel.StreamObservations := FNewStobObservations;
   AssignMt3dObsToModel(FNewMt3dObs)
 end;
 
@@ -2647,6 +2688,7 @@ begin
   frmGoPhast.PhastModel.DrainObservations := FOldDrobObservations;
   frmGoPhast.PhastModel.GhbObservations := FOldGbobObservations;
   frmGoPhast.PhastModel.RiverObservations := FOldRvobObservations;
+  frmGoPhast.PhastModel.StreamObservations := FOldStobObservations;
   AssignMt3dObsToModel(FOldMt3dObs)
 end;
 
@@ -2665,6 +2707,10 @@ begin
   Mt3dObs.Mt3dmsLakMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsLakMassFluxObservations);
   Mt3dObs.Mt3dmsDrtMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsDrtMassFluxObservations);
   Mt3dObs.Mt3dmsEtsMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsEtsMassFluxObservations);
+  Mt3dObs.Mt3dmsStrMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsStrMassFluxObservations);
+  Mt3dObs.Mt3dmsFhbHeadMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsFhbHeadMassFluxObservations);
+  Mt3dObs.Mt3dmsFhbFlowMassFluxObservations.Assign(frmGoPhast.PhastModel.Mt3dmsFhbFlowMassFluxObservations);
+
 end;
 
 procedure TUndoEditFluxObservations.AssignMt3dObsToModel(MtsdObs: TMassFluxObs);
@@ -2693,10 +2739,18 @@ begin
     MtsdObs.Mt3dmsDrtMassFluxObservations;
   frmGoPhast.PhastModel.Mt3dmsEtsMassFluxObservations :=
     MtsdObs.Mt3dmsEtsMassFluxObservations;
+  frmGoPhast.PhastModel.Mt3dmsStrMassFluxObservations :=
+    MtsdObs.Mt3dmsStrMassFluxObservations;
+  frmGoPhast.PhastModel.Mt3dmsFhbHeadMassFluxObservations :=
+    MtsdObs.Mt3dmsFhbHeadMassFluxObservations;
+  frmGoPhast.PhastModel.Mt3dmsFhbFlowMassFluxObservations :=
+    MtsdObs.Mt3dmsFhbFlowMassFluxObservations;
+
 end;
 
-procedure TUndoEditFluxObservations.AssignNewObservations(NewChobObservations, NewDrobObservations,
-  NewGbobObservations, NewRvobObservations: TFluxObservationGroups;
+procedure TUndoEditFluxObservations.AssignNewObservations(NewChobObservations,
+  NewDrobObservations, NewGbobObservations, NewRvobObservations,
+  NewStobObservations: TFluxObservationGroups;
   var NewMtsdObs: TMassFluxObs);
 begin
   FNewChobObservations.Free;
@@ -2714,6 +2768,10 @@ begin
   FNewRvobObservations.Free;
   FNewRvobObservations := TFluxObservationGroups.Create(nil);
   FNewRvobObservations.Assign(NewRvobObservations);
+
+  FNewStobObservations.Free;
+  FNewStobObservations := TFluxObservationGroups.Create(nil);
+  FNewStobObservations.Assign(NewStobObservations);
 
   FNewMt3dObs := NewMtsdObs;
   if FNewMt3dObs.Mt3dmsHeadMassFluxObservations = nil then
@@ -2774,6 +2832,9 @@ begin
   Mt3dmsLakMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
   Mt3dmsDrtMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
   Mt3dmsEtsMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  Mt3dmsStrMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  Mt3dmsFhbHeadMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
+  Mt3dmsFhbFlowMassFluxObservations := TMt3dmsFluxObservationGroups.Create(nil);
 
   Mt3dmsHeadMassFluxObservations.FluxObservationType := mfotHead;
   Mt3dmsWellMassFluxObservations.FluxObservationType := mfotWell;
@@ -2787,6 +2848,9 @@ begin
   Mt3dmsLakMassFluxObservations.FluxObservationType := mfotLake;
   Mt3dmsDrtMassFluxObservations.FluxObservationType := mfotDRT;
   Mt3dmsEtsMassFluxObservations.FluxObservationType := mfotETS;
+  Mt3dmsStrMassFluxObservations.FluxObservationType := mfotSTR;
+  Mt3dmsFhbHeadMassFluxObservations.FluxObservationType := mfotFHB_Head;
+  Mt3dmsFhbFlowMassFluxObservations.FluxObservationType := mfotFHB_Flow;
 end;
 
 procedure TMassFluxObs.FreeAll;
@@ -2803,6 +2867,9 @@ begin
   Mt3dmsLakMassFluxObservations.Free;
   Mt3dmsDrtMassFluxObservations.Free;
   Mt3dmsEtsMassFluxObservations.Free;
+  Mt3dmsStrMassFluxObservations.Free;
+  Mt3dmsFhbHeadMassFluxObservations.Free;
+  Mt3dmsFhbFlowMassFluxObservations.Free;
 end;
 
 procedure TMassFluxObs.NilAll;
@@ -2819,6 +2886,9 @@ begin
   Mt3dmsLakMassFluxObservations := nil;
   Mt3dmsDrtMassFluxObservations := nil;
   Mt3dmsEtsMassFluxObservations := nil;
+  Mt3dmsStrMassFluxObservations := nil;
+  Mt3dmsFhbHeadMassFluxObservations := nil;
+  Mt3dmsFhbFlowMassFluxObservations := nil;
 end;
 
 { TUndoMoveCrossSection }
@@ -2847,6 +2917,10 @@ begin
   end;
   frmGoPhast.InvalidateImage32AllViews;
   frmGoPhast.frame3DView.glWidModelView.Invalidate;
+  if (frmShowHideObjects <> nil) and frmShowHideObjects.Visible then
+  begin
+    frmShowHideObjects.vstObjects.Invalidate;
+  end;
 end;
 
 function TUndoMoveCrossSection.Rotated: boolean;
@@ -3029,17 +3103,22 @@ procedure TUndoChangeMesh.AssignMesh(Mesh: TSutraMesh3D);
 begin
   frmGoPhast.PhastModel.SutraMesh := Mesh;
   frmGoPhast.PhastModel.Mesh.ElevationsNeedUpdating := True;
+  frmGoPhast.PhastModel.Mesh.CheckUpdateElevations;
   frmGoPhast.InvalidateAllViews;
   frmGoPhast.frameTopView.MagnificationChanged := True;
   frmGoPhast.frameFrontView.MagnificationChanged := True;
+  if (frmMeshInformation <> nil) and frmMeshInformation.Visible then
+  begin
+    frmMeshInformation.GetData
+  end;
 end;
 
 constructor TUndoChangeMesh.Create;
 begin
   FOldMesh := TSutraMesh3D.Create(nil);
-  UpdataOldMesh(frmGoPhast.PhastModel.SutraMesh);
+  UpdateOldMesh(frmGoPhast.PhastModel.SutraMesh);
   FNewMesh := TSutraMesh3D.Create(nil);
-  UpdataNewMesh(frmGoPhast.PhastModel.SutraMesh);
+  UpdateNewMesh(frmGoPhast.PhastModel.SutraMesh);
 end;
 
 function TUndoChangeMesh.Description: string;
@@ -3080,23 +3159,30 @@ begin
   frmGoPhast.frameTopView.MagnificationChanged := True;
   frmGoPhast.frameFrontView.MagnificationChanged := True;
   frmGoPhast.InvalidateAllViews;
+  if (frmMeshInformation <> nil) and frmMeshInformation.Visible then
+  begin
+    frmMeshInformation.GetData;
+  end;
 end;
 
-constructor TUndoRenumberMesh.Create;
+constructor TUndoRenumberMesh.Create(Algorithm: TRenumberingAlgorithm);
 var
   Mesh: TSutraMesh3D;
 begin
-  inherited;
+  inherited Create;
   FOldElementNumbers := TIntegerCollection.Create(nil);
   FOldNodeNumbers := TIntegerCollection.Create(nil);
   FNewElementNumbers := TIntegerCollection.Create(nil);
   FNewNodeNumbers := TIntegerCollection.Create(nil);
 
   Mesh := frmGoPhast.PhastModel.SutraMesh;
+  FOldAlgorithm := Mesh.Mesh2D.MeshGenControls.RenumberingAlgorithm;
   Mesh.UpdateNodeNumbers;
   Mesh.UpdateElementNumbers;
   FOldElementNumbers.Assign(Mesh.ElementNumbers);
   FOldNodeNumbers.Assign(Mesh.NodeNumbers);
+
+  FNewAlgorithm:= Algorithm;
 end;
 
 function TUndoRenumberMesh.Description: string;
@@ -3115,19 +3201,27 @@ end;
 
 procedure TUndoRenumberMesh.DoCommand;
 begin
-//  inherited;
   // do nothing
+  if (frmMeshInformation <> nil) and frmMeshInformation.Visible then
+  begin
+    frmMeshInformation.GetData;
+  end;
+
 end;
 
 procedure TUndoRenumberMesh.Redo;
 begin
 //  inherited;
+  frmGoPhast.PhastModel.SutraMesh.Mesh2D.MeshGenControls.RenumberingAlgorithm
+    := FNewAlgorithm;
   AssignNumbers(FNewNodeNumbers, FNewElementNumbers);
 end;
 
 procedure TUndoRenumberMesh.Undo;
 begin
 //  inherited;
+  frmGoPhast.PhastModel.SutraMesh.Mesh2D.MeshGenControls.RenumberingAlgorithm
+    := FOldAlgorithm;
   AssignNumbers(FOldNodeNumbers, FOldElementNumbers);
 end;
 
@@ -3149,12 +3243,12 @@ begin
   result := StrMoveNodes
 end;
 
-procedure TUndoChangeMesh.UpdataOldMesh(OldMesh: TSutraMesh3D);
+procedure TUndoChangeMesh.UpdateOldMesh(OldMesh: TSutraMesh3D);
 begin
   FOldMesh.Assign(OldMesh);
 end;
 
-procedure TUndoChangeMesh.UpdataNewMesh(NewMesh: TSutraMesh3D);
+procedure TUndoChangeMesh.UpdateNewMesh(NewMesh: TSutraMesh3D);
 begin
   FNewMesh.Assign(NewMesh);
 end;
@@ -3166,4 +3260,46 @@ begin
   result := StrDrawNewElements;
 end;
 
+{ TUndoChangeFont }
+
+procedure TUndoChangeFont.AssignFont(AFont: TFont);
+begin
+  frmGoPhast.Font := AFont;
+  GlobalFont := frmGoPhast.Font;
+  frmGoPhast.UpdatePermanantDialogBoxAppearances;
+end;
+
+constructor TUndoChangeFont.Create(NewFont: TFont);
+begin
+  FOldFont := TFont.Create;
+  FOldFont.Assign(GlobalFont);
+  FNewFont := TFont.Create;
+  FNewFont.Assign(NewFont);
+end;
+
+function TUndoChangeFont.Description: string;
+begin
+  result := 'change font';
+end;
+
+destructor TUndoChangeFont.Destroy;
+begin
+  FOldFont.Free;
+  FNewFont.Free;
+  inherited;
+end;
+
+procedure TUndoChangeFont.DoCommand;
+begin
+  inherited;
+  AssignFont(FNewFont);
+end;
+
+procedure TUndoChangeFont.Undo;
+begin
+  inherited;
+  AssignFont(FOldFont);
+end;
+
 end.
+

@@ -917,102 +917,108 @@ begin
   begin
     Exit;
   end;
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrSubsidenceNotSuppo);
-  if Model is TChildModel then
-  begin
-    frmErrorsAndWarnings.AddError(Model, StrSubsidenceNotSuppo,
-      StrModelMuseDoesNotC);
-  end;
-
-  FNameOfFile := FileName(AFileName);
-  WriteToNameFile(StrSUB, Model.UnitNumbers.UnitNumber(StrSUB),
-    FNameOfFile, foInput);
-  Evaluate;
-  Application.ProcessMessages;
-  if not frmProgressMM.ShouldContinue then
-  begin
-    Exit;
-  end;
-  OpenFile(FNameOfFile);
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    frmProgressMM.AddMessage(StrWritingSUBPackage);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrSubsidenceNotSuppo);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrRestartFileNamesI);
+    if Model is TChildModel then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrSubsidenceNotSuppo,
+        StrModelMuseDoesNotC);
+    end;
 
-    WriteDataSet0;
-
-    frmProgressMM.AddMessage(StrWritingDataSet1);
-    WriteDataSet1;
+    FNameOfFile := FileName(AFileName);
+    WriteToNameFile(StrSUB, Model.UnitNumbers.UnitNumber(StrSUB),
+      FNameOfFile, foInput);
+    Evaluate;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
+    OpenFile(FNameOfFile);
+    try
+      frmProgressMM.AddMessage(StrWritingSUBPackage);
 
-    frmProgressMM.AddMessage(StrWritingDataSet2);
-    WriteDataSet2;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
+      WriteDataSet0;
+
+      frmProgressMM.AddMessage(StrWritingDataSet1);
+      WriteDataSet1;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet2);
+      WriteDataSet2;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet3);
+      WriteDataSet3;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet4);
+      WriteDataSet4;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSets5to8);
+      WriteDataSets5to8;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet9);
+      WriteDataSet9;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSets10to14);
+      WriteDataSets10to14;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet15);
+      WriteDataSet15;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet16);
+      WriteDataSet16;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+    finally
+      CloseFile;
     end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet3);
-    WriteDataSet3;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet4);
-    WriteDataSet4;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSets5to8);
-    WriteDataSets5to8;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet9);
-    WriteDataSet9;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSets10to14);
-    WriteDataSets10to14;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet15);
-    WriteDataSet15;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet16);
-    WriteDataSet16;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
   finally
-    CloseFile;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 

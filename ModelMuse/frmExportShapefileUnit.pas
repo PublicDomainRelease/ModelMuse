@@ -118,8 +118,8 @@ resourcestring
   StrCellShapefileName = '&Cell Shapefile name';
   StrCellCornerShapefi = '&Cell-Corner Shapefile name';
   StrMODFLOWHorizontalF = 'MODFLOW Horizontal Flow Barrier';
-  StrExportGridDataTo = 'Export Grid Data to Shapefile;'#13;
-  StrExportMeshDataTo = 'Export Mesh Data to Shapefile;'#13;
+  StrExportGridDataTo = 'Export Grid Data to Shapefile';
+  StrExportMeshDataTo = 'Export Mesh Data to Shapefile';
 
 {$R *.dfm}
 
@@ -308,7 +308,7 @@ begin
             RealList.AddUnique(TimeItem.EndingTime);
           end;
         end;
-      msModflow, msModflowLGR, msModflowNWT:
+      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
         begin
           for Index := 0 to
             frmGoPhast.PhastModel.ModflowStressPeriods.Count - 1 do
@@ -318,7 +318,6 @@ begin
             RealList.AddUnique(StressPeriod.EndTime);
           end;
         end;
-    {$IFDEF SUTRA}
       msSutra22:
         begin
           SutraTimeOptions := frmGoPhast.PhastModel.SutraTimeOptions;
@@ -326,7 +325,6 @@ begin
           RealList.Assign(SutraTimeOptions.AllTimes);
           RealList.Sorted := True;
         end
-    {$ENDIF}
     else
       Assert(False);
     end;
@@ -1648,12 +1646,12 @@ var
   ChildIndex: Integer;
 begin
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowNWT {$IFDEF SUTRA}, msSutra22 {$ENDIF}:
+    msPhast, msModflow, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}, msSutra22:
       begin
         comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel);
         comboModel.Visible := False;
       end;
-    msModflowLGR:
+    msModflowLGR, msModflowLGR2:
       begin
         comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel);
         for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
@@ -2052,20 +2050,18 @@ begin
         lblNodes.Caption := StrNodeShapefileName;
         Caption := StrExportGridDataTo;
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         lblElements.Caption := StrCellShapefileName;
         lblNodes.Caption := StrCellCornerShapefi;
         Caption := StrExportGridDataTo;
       end;
-{$IFDEF SUTRA}
     msSutra22:
       begin
         lblElements.Caption := StrElementShapefileN;
         lblNodes.Caption := StrNodeShapefileName;
         Caption := StrExportMeshDataTo;
       end;
-{$ENDIF}
   else
     Assert(False);
   end;
@@ -2430,7 +2426,6 @@ begin
   rgExportObjectType.Enabled := (ShouldEnableElement or ShouldEnableNode);
   btnOK.Enabled := (ShouldEnableElement or ShouldEnableNode or ShouldEnableHfb);
 
-{$IFDEF SUTRA}
   if (not FGettingData)
     and (frmGoPhast.PhastModel.ModelSelection = msSutra22) then
   begin
@@ -2440,7 +2435,6 @@ begin
       rgExportObjectType.Buttons[Ord(escThreeDPoint)].Enabled := False;
     end;
   end;
-{$ENDIF}
 end;
 
 procedure TfrmExportShapefile.UpdateParentNodeStates;

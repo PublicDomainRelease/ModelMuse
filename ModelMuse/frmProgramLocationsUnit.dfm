@@ -2,19 +2,21 @@ inherited frmProgramLocations: TfrmProgramLocations
   HelpType = htKeyword
   HelpKeyword = 'MODFLOW_Program_Locations_Dialog_Box'
   Caption = 'MODFLOW Program Locations'
-  ClientHeight = 541
+  ClientHeight = 512
   ClientWidth = 623
-  ExplicitWidth = 641
-  ExplicitHeight = 586
+  ExplicitTop = -29
+  ExplicitWidth = 639
+  ExplicitHeight = 550
   PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 500
+    Top = 471
     Width = 623
     Height = 41
     Align = alBottom
     TabOrder = 1
+    ExplicitTop = 395
     DesignSize = (
       623
       41)
@@ -24,8 +26,10 @@ inherited frmProgramLocations: TfrmProgramLocations
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -35,8 +39,10 @@ inherited frmProgramLocations: TfrmProgramLocations
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -46,8 +52,10 @@ inherited frmProgramLocations: TfrmProgramLocations
       Width = 83
       Height = 27
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 2
     end
   end
@@ -55,246 +63,517 @@ inherited frmProgramLocations: TfrmProgramLocations
     Left = 0
     Top = 0
     Width = 623
-    Height = 500
+    Height = 471
     Align = alClient
     TabOrder = 0
-    DesignSize = (
-      623
-      500)
-    object lblModflow: TLabel
-      Left = 16
-      Top = 17
-      Width = 83
-      Height = 18
-      Caption = 'MODFLOW'
-    end
-    object htlblModflow: TJvHTLabel
-      Left = 105
-      Top = 17
-      Width = 478
-      Height = 19
-      Caption = 
-        '<a href="http://water.usgs.gov/nrp/gwsoftware/modflow2005/modflo' +
-        'w2005.html">http://water.usgs.gov/nrp/gwsoftware/modflow2005/mod' +
-        'flow2005.html</a>'
-    end
-    object lblTextEditor: TLabel
-      Left = 16
-      Top = 388
-      Width = 71
-      Height = 18
-      Caption = 'Text editor'
-    end
-    object htlblModPath: TJvHTLabel
-      Left = 131
-      Top = 176
-      Width = 430
-      Height = 19
-      Caption = 
-        '<a href="http://water.usgs.gov/nrp/gwsoftware/modpath5/modpath5.' +
-        'html">http://water.usgs.gov/nrp/gwsoftware/modpath5/modpath5.htm' +
-        'l</a>'
-    end
-    object lblModpath: TLabel
-      Left = 16
-      Top = 176
-      Width = 77
-      Height = 18
-      Caption = 'MODPATH'
-    end
-    object lblModelMonitor: TLabel
-      Left = 16
-      Top = 441
-      Width = 95
-      Height = 18
-      Caption = 'ModelMonitor'
-    end
-    object htlblZoneBudger: TJvHTLabel
-      Left = 131
-      Top = 229
-      Width = 448
-      Height = 19
-      Caption = 
-        '<a href="http://water.usgs.gov/nrp/gwsoftware/zonebud3/zonebudge' +
-        't3.html">http://water.usgs.gov/nrp/gwsoftware/zonebud3/zonebudge' +
-        't3.html</a>'
-    end
-    object lblZoneBudget: TLabel
-      Left = 16
-      Top = 229
-      Width = 109
-      Height = 18
-      Caption = 'ZONEBUDGET'
-    end
-    object lblModelMate: TLabel
-      Left = 16
-      Top = 335
-      Width = 78
-      Height = 18
-      Caption = 'ModelMate'
-    end
-    object Label1: TLabel
-      Left = 16
-      Top = 70
-      Width = 120
-      Height = 18
-      Caption = 'MODFLOW-LGR'
-    end
-    object JvHTLabel1: TJvHTLabel
-      Left = 142
-      Top = 70
-      Width = 444
-      Height = 19
-      Caption = 
-        '<a href="http://water.usgs.gov/nrp/gwsoftware/modflow2005_lgr/mf' +
-        'lgr.html">http://water.usgs.gov/nrp/gwsoftware/modflow2005_lgr/m' +
-        'flgr.html</a>'
-    end
-    object htlblModelMate: TJvHTLabel
-      Left = 100
-      Top = 335
-      Width = 290
-      Height = 19
-      Caption = 
-        '<a href="http://water.usgs.gov/software/ModelMate/">http://water' +
-        '.usgs.gov/software/ModelMate/</a>'
-    end
-    object lblModflowNWT: TLabel
-      Left = 16
-      Top = 123
-      Width = 123
-      Height = 18
-      Caption = 'MODFLOW-NWT'
-    end
-    object htlblModflowNWT: TJvHTLabel
-      Left = 145
-      Top = 123
-      Width = 464
-      Height = 19
-      Caption = 
-        '<a href="http://water.usgs.gov/nrp/gwsoftware/modflow_nwt/Modflo' +
-        'wNwt.html">http://water.usgs.gov/nrp/gwsoftware/modflow_nwt/Modf' +
-        'lowNwt.html</a>'
-    end
-    object lblMt3dms: TLabel
-      Left = 16
-      Top = 282
-      Width = 67
-      Height = 18
-      Caption = 'MT3DMS'
-    end
-    object htlblMt3dms: TJvHTLabel
-      Left = 89
-      Top = 282
-      Width = 200
-      Height = 19
-      Caption = 
-        '<a href="http://hydro.geo.ua.edu/mt3d/">http://hydro.geo.ua.edu/' +
-        'mt3d/</a>'
-    end
-    object fedModflow: TJvFilenameEdit
-      Left = 16
-      Top = 38
-      Width = 588
-      Height = 26
-      Filter = 
-        'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
-        '.*)|*.*'
-      Anchors = [akLeft, akTop, akRight]
+    ExplicitHeight = 395
+    object jvrltModflow2005: TJvRollOut
+      Left = 1
+      Top = 1
+      Width = 621
+      Height = 84
+      Align = alTop
+      Caption = 'Modflow 2005'
+      ImageOptions.Images = ilShowHide
       TabOrder = 0
-      OnChange = fedModflowChange
+      OnExpand = jvrltExpand
+      DesignSize = (
+        621
+        84)
+      FAWidth = 145
+      FAHeight = 84
+      FCWidth = 22
+      FCHeight = 22
+      object htlblModflow: TJvHTLabel
+        Left = 15
+        Top = 25
+        Width = 478
+        Height = 19
+        Caption = 
+          '<a href="http://water.usgs.gov/nrp/gwsoftware/modflow2005/modflo' +
+          'w2005.html">http://water.usgs.gov/nrp/gwsoftware/modflow2005/mod' +
+          'flow2005.html</a>'
+      end
+      object fedModflow: TJvFilenameEdit
+        Left = 15
+        Top = 50
+        Width = 588
+        Height = 26
+        Filter = 
+          'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
+          '.*)|*.*'
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        OnChange = fedModflowChange
+      end
     end
-    object fedTextEditor: TJvFilenameEdit
-      Left = 16
-      Top = 409
-      Width = 588
-      Height = 26
-      Filter = 
-        'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
-        '.*)|*.*'
-      Anchors = [akLeft, akTop, akRight]
-      TabOrder = 7
-      OnChange = fedModflowChange
-    end
-    object fedModpath: TJvFilenameEdit
-      Left = 16
-      Top = 197
-      Width = 588
-      Height = 26
-      Filter = 
-        'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
-        '.*)|*.*'
-      Anchors = [akLeft, akTop, akRight]
-      TabOrder = 3
-      OnChange = fedModflowChange
-    end
-    object fedModelMonitor: TJvFilenameEdit
-      Left = 16
-      Top = 462
-      Width = 588
-      Height = 26
-      Filter = 
-        'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
-        '.*)|*.*'
-      Anchors = [akLeft, akTop, akRight]
-      TabOrder = 8
-      OnChange = fedModflowChange
-    end
-    object fedZonebudget: TJvFilenameEdit
-      Left = 16
-      Top = 250
-      Width = 588
-      Height = 26
-      Filter = 
-        'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
-        '.*)|*.*'
-      Anchors = [akLeft, akTop, akRight]
-      TabOrder = 4
-      OnChange = fedModflowChange
-    end
-    object fedModelMate: TJvFilenameEdit
-      Left = 16
-      Top = 356
-      Width = 588
-      Height = 26
-      Filter = 'Executables (*.exe)|*.exe|All files (*.*)|*.*'
-      Anchors = [akLeft, akTop, akRight]
-      TabOrder = 6
-      OnChange = fedModflowChange
-    end
-    object fedModflowLgr: TJvFilenameEdit
-      Left = 16
-      Top = 91
-      Width = 588
-      Height = 26
-      Filter = 
-        'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
-        '.*)|*.*'
-      Anchors = [akLeft, akTop, akRight]
+    object jvrltModflowLGR: TJvRollOut
+      Left = 1
+      Top = 85
+      Width = 621
+      Height = 22
+      Align = alTop
+      Caption = 'MODFLOW-LGR'
+      Collapsed = True
+      ImageOptions.Images = ilShowHide
       TabOrder = 1
-      OnChange = fedModflowChange
+      OnExpand = jvrltExpand
+      DesignSize = (
+        621
+        22)
+      FAWidth = 145
+      FAHeight = 82
+      FCWidth = 22
+      FCHeight = 22
+      object JvHTLabel1: TJvHTLabel
+        Left = 15
+        Top = 25
+        Width = 444
+        Height = 19
+        Caption = 
+          '<a href="http://water.usgs.gov/nrp/gwsoftware/modflow2005_lgr/mf' +
+          'lgr.html">http://water.usgs.gov/nrp/gwsoftware/modflow2005_lgr/m' +
+          'flgr.html</a>'
+      end
+      object fedModflowLgr: TJvFilenameEdit
+        Left = 15
+        Top = 50
+        Width = 588
+        Height = 26
+        Filter = 
+          'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
+          '.*)|*.*'
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        OnChange = fedModflowChange
+      end
     end
-    object fedModflowNWT: TJvFilenameEdit
-      Left = 16
-      Top = 144
-      Width = 588
-      Height = 26
-      Filter = 
-        'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
-        '.*)|*.*'
-      Anchors = [akLeft, akTop, akRight]
+    object jvrltModflowLgr2: TJvRollOut
+      Left = 1
+      Top = 107
+      Width = 621
+      Height = 22
+      Align = alTop
+      Caption = 'MODFLOW-LGR V2'
+      Collapsed = True
+      ImageOptions.Images = ilShowHide
       TabOrder = 2
-      OnChange = fedModflowChange
+      OnExpand = jvrltExpand
+      DesignSize = (
+        621
+        22)
+      FAWidth = 145
+      FAHeight = 84
+      FCWidth = 22
+      FCHeight = 22
+      object jvhtlblMfLgr2: TJvHTLabel
+        Left = 15
+        Top = 25
+        Width = 444
+        Height = 19
+        Caption = 
+          '<a href="http://water.usgs.gov/nrp/gwsoftware/modflow2005_lgr/mf' +
+          'lgr.html">http://water.usgs.gov/nrp/gwsoftware/modflow2005_lgr/m' +
+          'flgr.html</a>'
+      end
+      object fedModflowLgr2: TJvFilenameEdit
+        Left = 15
+        Top = 50
+        Width = 588
+        Height = 26
+        Filter = 
+          'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
+          '.*)|*.*'
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        OnChange = fedModflowChange
+      end
     end
-    object fedMt3dms: TJvFilenameEdit
-      Left = 16
-      Top = 303
-      Width = 588
-      Height = 26
-      Filter = 'Executables (*.exe)|*.exe|All files (*.*)|*.*'
-      Anchors = [akLeft, akTop, akRight]
+    object jvrltModflowNWT: TJvRollOut
+      Left = 1
+      Top = 129
+      Width = 621
+      Height = 22
+      Align = alTop
+      Caption = 'MODFLOW-NWT'
+      Collapsed = True
+      ImageOptions.Images = ilShowHide
+      TabOrder = 3
+      OnExpand = jvrltExpand
+      DesignSize = (
+        621
+        22)
+      FAWidth = 145
+      FAHeight = 80
+      FCWidth = 22
+      FCHeight = 22
+      object htlblModflowNWT: TJvHTLabel
+        Left = 15
+        Top = 25
+        Width = 464
+        Height = 19
+        Caption = 
+          '<a href="http://water.usgs.gov/nrp/gwsoftware/modflow_nwt/Modflo' +
+          'wNwt.html">http://water.usgs.gov/nrp/gwsoftware/modflow_nwt/Modf' +
+          'lowNwt.html</a>'
+      end
+      object fedModflowNWT: TJvFilenameEdit
+        Left = 15
+        Top = 50
+        Width = 588
+        Height = 26
+        Filter = 
+          'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
+          '.*)|*.*'
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        OnChange = fedModflowChange
+      end
+    end
+    object jvrltModpath: TJvRollOut
+      Left = 1
+      Top = 151
+      Width = 621
+      Height = 22
+      Align = alTop
+      Caption = 'MODPATH'
+      Collapsed = True
+      ImageOptions.Images = ilShowHide
+      TabOrder = 4
+      OnExpand = jvrltExpand
+      DesignSize = (
+        621
+        22)
+      FAWidth = 145
+      FAHeight = 80
+      FCWidth = 22
+      FCHeight = 22
+      object htlblModPath: TJvHTLabel
+        Left = 15
+        Top = 25
+        Width = 430
+        Height = 19
+        Caption = 
+          '<a href="http://water.usgs.gov/nrp/gwsoftware/modpath5/modpath5.' +
+          'html">http://water.usgs.gov/nrp/gwsoftware/modpath5/modpath5.htm' +
+          'l</a>'
+      end
+      object fedModpath: TJvFilenameEdit
+        Left = 15
+        Top = 50
+        Width = 588
+        Height = 26
+        Filter = 
+          'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
+          '.*)|*.*'
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        OnChange = fedModflowChange
+      end
+    end
+    object jvrltZoneBudget: TJvRollOut
+      Left = 1
+      Top = 173
+      Width = 621
+      Height = 22
+      Align = alTop
+      Caption = 'ZONEBUDGET'
+      Collapsed = True
+      ImageOptions.Images = ilShowHide
       TabOrder = 5
-      OnChange = fedModflowChange
+      OnExpand = jvrltExpand
+      DesignSize = (
+        621
+        22)
+      FAWidth = 145
+      FAHeight = 84
+      FCWidth = 22
+      FCHeight = 22
+      object htlblZoneBudger: TJvHTLabel
+        Left = 15
+        Top = 25
+        Width = 448
+        Height = 19
+        Caption = 
+          '<a href="http://water.usgs.gov/nrp/gwsoftware/zonebud3/zonebudge' +
+          't3.html">http://water.usgs.gov/nrp/gwsoftware/zonebud3/zonebudge' +
+          't3.html</a>'
+      end
+      object fedZonebudget: TJvFilenameEdit
+        Left = 15
+        Top = 50
+        Width = 588
+        Height = 26
+        Filter = 
+          'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
+          '.*)|*.*'
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        OnChange = fedModflowChange
+      end
     end
+    object jvrltMt3dms: TJvRollOut
+      Left = 1
+      Top = 195
+      Width = 621
+      Height = 22
+      Align = alTop
+      Caption = 'MT3DMS'
+      Collapsed = True
+      ImageOptions.Images = ilShowHide
+      TabOrder = 6
+      OnExpand = jvrltExpand
+      DesignSize = (
+        621
+        22)
+      FAWidth = 145
+      FAHeight = 84
+      FCWidth = 22
+      FCHeight = 22
+      object htlblMt3dms: TJvHTLabel
+        Left = 15
+        Top = 25
+        Width = 200
+        Height = 19
+        Caption = 
+          '<a href="http://hydro.geo.ua.edu/mt3d/">http://hydro.geo.ua.edu/' +
+          'mt3d/</a>'
+      end
+      object fedMt3dms: TJvFilenameEdit
+        Left = 15
+        Top = 50
+        Width = 588
+        Height = 26
+        Filter = 'Executables (*.exe)|*.exe|All files (*.*)|*.*'
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        OnChange = fedModflowChange
+      end
+    end
+    object jvrltModelMate: TJvRollOut
+      Left = 1
+      Top = 217
+      Width = 621
+      Height = 22
+      Align = alTop
+      Caption = 'ModelMate'
+      Collapsed = True
+      ImageOptions.Images = ilShowHide
+      TabOrder = 7
+      OnExpand = jvrltExpand
+      DesignSize = (
+        621
+        22)
+      FAWidth = 145
+      FAHeight = 84
+      FCWidth = 22
+      FCHeight = 22
+      object htlblModelMate: TJvHTLabel
+        Left = 15
+        Top = 25
+        Width = 290
+        Height = 19
+        Caption = 
+          '<a href="http://water.usgs.gov/software/ModelMate/">http://water' +
+          '.usgs.gov/software/ModelMate/</a>'
+      end
+      object fedModelMate: TJvFilenameEdit
+        Left = 15
+        Top = 50
+        Width = 588
+        Height = 26
+        Filter = 'Executables (*.exe)|*.exe|All files (*.*)|*.*'
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        OnChange = fedModflowChange
+      end
+    end
+    object jvrltTextEditor: TJvRollOut
+      Left = 1
+      Top = 239
+      Width = 621
+      Height = 56
+      Align = alTop
+      Caption = 'Text editor'
+      ImageOptions.Images = ilShowHide
+      TabOrder = 8
+      OnExpand = jvrltExpand
+      DesignSize = (
+        621
+        56)
+      FAWidth = 145
+      FAHeight = 56
+      FCWidth = 22
+      FCHeight = 22
+      object fedTextEditor: TJvFilenameEdit
+        Left = 15
+        Top = 24
+        Width = 588
+        Height = 26
+        Filter = 
+          'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
+          '.*)|*.*'
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        OnChange = fedModflowChange
+      end
+    end
+    object jvrltModelMonitor: TJvRollOut
+      Left = 1
+      Top = 295
+      Width = 621
+      Height = 56
+      Align = alTop
+      Caption = 'ModelMonitor'
+      ImageOptions.Images = ilShowHide
+      TabOrder = 9
+      OnExpand = jvrltExpand
+      DesignSize = (
+        621
+        56)
+      FAWidth = 145
+      FAHeight = 56
+      FCWidth = 22
+      FCHeight = 22
+      object fedModelMonitor: TJvFilenameEdit
+        Left = 15
+        Top = 24
+        Width = 588
+        Height = 26
+        Filter = 
+          'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
+          '.*)|*.*'
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        OnChange = fedModflowChange
+      end
+    end
+    object jvrltModflowFmp: TJvRollOut
+      Left = 1
+      Top = 351
+      Width = 621
+      Height = 170
+      Align = alTop
+      Caption = 'MF2005-FMP2'
+      TabOrder = 10
+      ExplicitLeft = 2
+      DesignSize = (
+        621
+        170)
+      FAWidth = 145
+      FAHeight = 170
+      FCWidth = 22
+      FCHeight = 22
+      object htlbl1: TJvHTLabel
+        Left = 15
+        Top = 25
+        Width = 466
+        Height = 19
+        Caption = 
+          '<a href="http://water.usgs.gov/nrp/gwsoftware/mf2005_fmp/mf2005_' +
+          'fmp.html">http://water.usgs.gov/nrp/gwsoftware/mf2005_fmp/mf2005' +
+          '_fmp.html</a>'
+      end
+      object fedModflowFmp: TJvFilenameEdit
+        Left = 15
+        Top = 48
+        Width = 588
+        Height = 26
+        Filter = 
+          'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
+          '.*)|*.*'
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        OnChange = fedModflowChange
+      end
+    end
+  end
+  object ilShowHide: TImageList
+    Height = 12
+    Width = 12
+    Left = 448
+    Top = 48
+    Bitmap = {
+      494C0101020028005C000C000C00FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      0000000000003600000028000000300000000C00000001002000000000000009
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000C0C0C000808080008080
+      80008080800080808000808080008080800080808000C0C0C000000000000000
+      000000000000C0C0C00080808000808080008080800080808000808080008080
+      800080808000C0C0C00000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000080808000000000000000
+      0000000000000000000000000000000000000000000080808000000000000000
+      0000000000008080800000000000000000000000000000000000000000000000
+      0000000000008080800000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000080808000000000000000
+      0000000000000000000000000000000000000000000080808000000000000000
+      0000000000008080800000000000000000000000000000000000000000000000
+      0000000000008080800000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000080808000000000000000
+      0000000000000000000000000000000000000000000080808000000000000000
+      0000000000008080800000000000000000000000000000000000000000000000
+      0000000000008080800000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000080808000000000000000
+      0000000000000000000000000000000000000000000080808000000000000000
+      0000000000008080800000000000000000000000000000000000000000000000
+      0000000000008080800000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000080808000000000000000
+      0000000000000000000000000000000000000000000080808000000000000000
+      0000000000008080800000000000000000000000000000000000000000000000
+      0000000000008080800000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000080808000000000000000
+      0000000000000000000000000000000000000000000080808000000000000000
+      0000000000008080800000000000000000000000000000000000000000000000
+      0000000000008080800000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000080808000000000000000
+      0000000000000000000000000000000000000000000080808000000000000000
+      0000000000008080800000000000000000000000000000000000000000000000
+      0000000000008080800000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000C0C0C000808080008080
+      80008080800080808000808080008080800080808000C0C0C000000000000000
+      000000000000C0C0C00080808000808080008080800080808000808080008080
+      800080808000C0C0C00000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000424D3E000000000000003E000000
+      28000000300000000C0000000100010000000000600000000000000000000000
+      000000000000000000000000FFFFFF00FFFFFF0000000000FFFFFF0000000000
+      8038030000000000BFBBFB0000000000BFBBBB0000000000BFBBBB0000000000
+      A0BA0B0000000000BFBBBB0000000000BFBBBB0000000000BFBBFB0000000000
+      8038030000000000FFFFFF000000000000000000000000000000000000000000
+      000000000000}
   end
 end

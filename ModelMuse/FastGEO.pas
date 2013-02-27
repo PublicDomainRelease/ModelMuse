@@ -285,8 +285,8 @@ type TBooleanArray = array of Boolean;
 
 
 type TNumericPrecisionResult = record
-       EEResult      : Boolean;  // Epsilon equivelence result
-       ZEResult      : Boolean;  // Zero equivelence result;
+       EEResult      : Boolean;  // Epsilon equivalence result
+       ZEResult      : Boolean;  // Zero equivalence result;
        EFPResult     : Boolean;  // Extended floating point test result
        SystemEpsilon : TFloat;
 end;

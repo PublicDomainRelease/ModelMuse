@@ -416,7 +416,7 @@ end;
 procedure TRchItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FRechargeRate,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TRchItem.SetBoundaryFormula(Index: integer; const Value: string);
@@ -1101,7 +1101,7 @@ end;
 procedure TRchLayerItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FRechargeLayer,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TRchLayerItem.SetBoundaryFormula(Index: integer; const Value: string);

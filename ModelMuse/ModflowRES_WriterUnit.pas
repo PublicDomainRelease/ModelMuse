@@ -71,33 +71,38 @@ var
   Index: Integer;
   AScreenObject: TScreenObject;
 begin
-  frmProgressMM.AddMessage(StrEvaluatingRESPacka);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoReservoirsDefine);
-  NRES := 0;
-  for Index := 0 to Model.ScreenObjectCount - 1 do
-  begin
-    AScreenObject := Model.ScreenObjects[Index];
-    if AScreenObject.Deleted then
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    frmProgressMM.AddMessage(StrEvaluatingRESPacka);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoReservoirsDefine);
+    NRES := 0;
+    for Index := 0 to Model.ScreenObjectCount - 1 do
     begin
-      Continue;
+      AScreenObject := Model.ScreenObjects[Index];
+      if AScreenObject.Deleted then
+      begin
+        Continue;
+      end;
+      if not AScreenObject.UsedModels.UsesModel(Model) then
+      begin
+        Continue;
+      end;
+      if (AScreenObject.ModflowResBoundary <> nil)
+        and AScreenObject.ModflowResBoundary.Used then
+      begin
+        Assert(AScreenObject.ViewDirection = vdTop);
+        Inc(NRES);
+        AScreenObject.ModflowResBoundary.ResId := NRES;
+      end;
     end;
-    if not AScreenObject.UsedModels.UsesModel(Model) then
+    if NRES = 0 then
     begin
-      Continue;
+      frmErrorsAndWarnings.AddError(Model, StrNoReservoirsDefine, StrTheReservoirPackag);
     end;
-    if (AScreenObject.ModflowResBoundary <> nil)
-      and AScreenObject.ModflowResBoundary.Used then
-    begin
-      Assert(AScreenObject.ViewDirection = vdTop);
-      Inc(NRES);
-      AScreenObject.ModflowResBoundary.ResId := NRES;
-    end;
+    inherited;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
   end;
-  if NRES = 0 then
-  begin
-    frmErrorsAndWarnings.AddError(Model, StrNoReservoirsDefine, StrTheReservoirPackag);
-  end;
-  inherited;
 end;
 
 class function TModflowRES_Writer.Extension: string;
@@ -438,7 +443,7 @@ begin
     Exit;
   end;
   ClearTimeLists(Model);
-  OpenFile(FileName(AFileName));
+  OpenFile(NameOfFile);
   try
 //    WriteDataSet0;
     frmProgressMM.AddMessage(StrWritingRESPackage);

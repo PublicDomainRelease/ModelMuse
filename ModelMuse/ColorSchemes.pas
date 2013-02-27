@@ -729,6 +729,7 @@ var
 begin
   Result := clBlack;
   Fraction := 1-Fraction;
+  Assert(ColorScheme <> nil);
   if ColorScheme.Colors.Count = 0 then
   begin
     Exit;

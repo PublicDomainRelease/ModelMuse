@@ -218,9 +218,9 @@ begin
                 begin
                   GlobalRestorePhastBoundarySubscription(self, Subject, UsedVariables[VariableIndex]);
                 end
-                else if RestoreEvent = Addr(GlobalRestoreModflowBoundarySubscription) then
+                else if RestoreEvent = Addr(GlobalRestoreModflowBoundaryItemSubscription) then
                 begin
-                  GlobalRestoreModflowBoundarySubscription(self, Subject, UsedVariables[VariableIndex]);
+                  GlobalRestoreModflowBoundaryItemSubscription(self, Subject, UsedVariables[VariableIndex]);
                 end
                 else if RestoreEvent = Addr(StringValueRestoreSubscription) then
                 begin
@@ -381,9 +381,9 @@ begin
                     begin
                       GlobalRemovePhastBoundarySubscription(self, Subject, OldSubscriptions[VariableIndex]);
                     end
-                    else if PRemoveEvent = Addr(GlobalRemoveModflowBoundarySubscription) then
+                    else if PRemoveEvent = Addr(GlobalRemoveModflowBoundaryItemSubscription) then
                     begin
-                      GlobalRemoveModflowBoundarySubscription(self, Subject, OldSubscriptions[VariableIndex]);
+                      GlobalRemoveModflowBoundaryItemSubscription(self, Subject, OldSubscriptions[VariableIndex]);
                     end
                     else if PRemoveEvent = Addr(StringValueRemoveSubscription) then
                     begin
@@ -486,9 +486,9 @@ begin
               begin
                 GlobalRestorePhastBoundarySubscription(self, Subject, FNewSubscriptions[VariableIndex]);
               end
-              else if RestoreEvent = Addr(GlobalRestoreModflowBoundarySubscription) then
+              else if RestoreEvent = Addr(GlobalRestoreModflowBoundaryItemSubscription) then
               begin
-                GlobalRestoreModflowBoundarySubscription(self, Subject, FNewSubscriptions[VariableIndex]);
+                GlobalRestoreModflowBoundaryItemSubscription(self, Subject, FNewSubscriptions[VariableIndex]);
               end
               else if RestoreEvent = Addr(StringValueRestoreSubscription) then
               begin

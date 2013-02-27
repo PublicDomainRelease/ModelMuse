@@ -3,9 +3,9 @@ inherited frmExportCSV: TfrmExportCSV
   HelpKeyword = 'Export_Data_as_CSV_Dialog_Box'
   Caption = 'Export Data as CSV'
   ClientHeight = 407
-  ExplicitWidth = 440
-  ExplicitHeight = 445
-  PixelsPerInch = 96
+  ExplicitWidth = 442
+  ExplicitHeight = 452
+  PixelsPerInch = 120
   TextHeight = 18
   object Panel1: TPanel
     Left = 0
@@ -13,7 +13,7 @@ inherited frmExportCSV: TfrmExportCSV
     Width = 424
     Height = 343
     Align = alClient
-    TabOrder = 0
+    TabOrder = 1
     DesignSize = (
       424
       343)
@@ -23,6 +23,7 @@ inherited frmExportCSV: TfrmExportCSV
       Width = 416
       Height = 256
       Anchors = [akLeft, akTop, akRight, akBottom]
+      CheckImageKind = ckLightCheck
       Header.AutoSizeIndex = 0
       Header.Font.Charset = DEFAULT_CHARSET
       Header.Font.Color = clWindowText
@@ -107,7 +108,7 @@ inherited frmExportCSV: TfrmExportCSV
     Width = 424
     Height = 64
     Align = alTop
-    TabOrder = 1
+    TabOrder = 0
     DesignSize = (
       424
       64)

@@ -65,10 +65,14 @@ type
     FLpfSelected: boolean;
     FNwtSelected: boolean;
     FPcgSelected: boolean;
+    FPcgnSelected: boolean;
+    FOldChildModels: TChildModelEditCollection;
+    FNewChildModels: TChildModelEditCollection;
   protected
     function Description: string; override;
   public
     Constructor Create(NewModelSelection: TModelSelection);
+    destructor Destroy; override;
     procedure DoCommand; override;
     procedure Undo; override;
   end;
@@ -224,6 +228,10 @@ end;
 constructor TUndoModelSelectionChange.Create(NewModelSelection: TModelSelection);
 var
   Packages: TModflowPackages;
+  ChildIndex: Integer;
+  Item: TChildModelEdit;
+  DisIndex: Integer;
+  DisItem: TChildDiscretization;
 begin
   inherited Create;
   FOldModelSelection := frmGoPhast.ModelSelection;
@@ -233,6 +241,36 @@ begin
   FLpfSelected := Packages.LpfPackage.IsSelected;
   FNwtSelected := Packages.NwtPackage.IsSelected;
   FPcgSelected := Packages.PcgPackage.IsSelected;
+  FPcgnSelected := Packages.PcgnPackage.IsSelected;
+
+  FOldChildModels := TChildModelEditCollection.Create;
+  FOldChildModels.Capacity := frmGoPhast.PhastModel.ChildModels.Count;
+  FOldChildModels.Assign(frmGoPhast.PhastModel.ChildModels);
+
+  FNewChildModels := TChildModelEditCollection.Create;
+  FNewChildModels.Capacity := frmGoPhast.PhastModel.ChildModels.Count;
+  FNewChildModels.Assign(frmGoPhast.PhastModel.ChildModels);
+
+  if NewModelSelection = msModflowLGR then
+  begin
+    for ChildIndex := 0 to FNewChildModels.Count - 1 do
+    begin
+      Item := (FNewChildModels.Items[ChildIndex] as TChildModelEdit);
+      if not Odd(Item.ChildCellsPerParentCell) then
+      begin
+        Item.ChildCellsPerParentCell := Item.ChildCellsPerParentCell + 1;
+      end;
+      for DisIndex := 0 to Item.Discretization.Count - 1 do
+      begin
+        DisItem := Item.Discretization.Items[DisIndex];
+        if not Odd(DisItem.Discretization) then
+        begin
+          DisItem.Discretization := DisItem.Discretization + 1;
+        end;
+      end;
+    end;
+  end;
+
 end;
 
 function TUndoModelSelectionChange.Description: string;
@@ -240,10 +278,18 @@ begin
   result := StrChangeModelSelecti;
 end;
 
+destructor TUndoModelSelectionChange.Destroy;
+begin
+  FOldChildModels.Free;
+  FNewChildModels.Free;
+  inherited;
+end;
+
 procedure TUndoModelSelectionChange.DoCommand;
 begin
   inherited;
   frmGoPhast.ModelSelection := FNewModelSelection;
+  frmGoPhast.PhastModel.ChildModels.Assign(FNewChildModels);
   UpdatedRequiredDataSets;
 end;
 
@@ -253,11 +299,13 @@ var
 begin
   inherited;
   frmGoPhast.ModelSelection := FOldModelSelection;
+  frmGoPhast.PhastModel.ChildModels.Assign(FOldChildModels);
   Packages := frmGoPhast.PhastModel.ModflowPackages;
   Packages.UpwPackage.IsSelected := FUpwSelected;
   Packages.LpfPackage.IsSelected := FLpfSelected;
   Packages.NwtPackage.IsSelected := FNwtSelected;
   Packages.PcgPackage.IsSelected := FPcgSelected;
+  Packages.PcgnPackage.IsSelected := FPcgnSelected;
   UpdatedRequiredDataSets;
 end;
 

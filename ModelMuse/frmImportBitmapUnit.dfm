@@ -11,24 +11,26 @@ inherited frmImportBitmap: TfrmImportBitmap
   Caption = 'Import Image'
   ExplicitWidth = 800
   ExplicitHeight = 594
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object Splitter1: TSplitter
     Left = 369
     Top = 0
-    Height = 428
+    Height = 421
     ExplicitHeight = 465
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 428
-    Width = 784
+    Top = 421
+    Width = 782
     Height = 128
     Align = alBottom
     ParentColor = True
-    TabOrder = 1
+    TabOrder = 2
+    ExplicitTop = 428
+    ExplicitWidth = 784
     DesignSize = (
-      784
+      782
       128)
     object lblName: TLabel
       Left = 279
@@ -50,7 +52,7 @@ inherited frmImportBitmap: TfrmImportBitmap
       Width = 153
       Height = 33
       Caption = 'Select image'
-      TabOrder = 2
+      TabOrder = 3
       OnClick = btnSelectImageClick
     end
     object rgViewDirection: TRadioGroup
@@ -64,7 +66,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         'Top'
         'Front'
         'Side')
-      TabOrder = 3
+      TabOrder = 2
       OnClick = rgViewDirectionClick
     end
     object btnOK: TBitBtn
@@ -95,7 +97,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         0000}
       ModalResult = 1
       NumGlyphs = 2
-      TabOrder = 8
+      TabOrder = 7
       OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
@@ -106,7 +108,7 @@ inherited frmImportBitmap: TfrmImportBitmap
       Anchors = [akTop, akRight]
       Kind = bkCancel
       NumGlyphs = 2
-      TabOrder = 9
+      TabOrder = 8
     end
     object edName: TEdit
       Left = 322
@@ -124,7 +126,7 @@ inherited frmImportBitmap: TfrmImportBitmap
       Anchors = [akTop, akRight]
       Kind = bkHelp
       NumGlyphs = 2
-      TabOrder = 7
+      TabOrder = 6
       OnClick = btnHelpClick
     end
     object cbVisible: TCheckBox
@@ -135,7 +137,7 @@ inherited frmImportBitmap: TfrmImportBitmap
       Caption = 'Visible'
       Checked = True
       State = cbChecked
-      TabOrder = 6
+      TabOrder = 9
     end
     object btnImportWorldFile: TButton
       Left = 17
@@ -286,7 +288,7 @@ inherited frmImportBitmap: TfrmImportBitmap
     Left = 0
     Top = 0
     Width = 369
-    Height = 428
+    Height = 421
     Align = alLeft
     FixedColor = 14803425
     FixedCols = 1
@@ -303,7 +305,6 @@ inherited frmImportBitmap: TfrmImportBitmap
     SelectedRowOrColumnColor = clAqua
     UnselectableColor = clBtnFace
     ColorRangeSelection = False
-    ColorSelectedRow = True
     Columns = <
       item
         AutoAdjustRowHeights = False
@@ -416,14 +417,17 @@ inherited frmImportBitmap: TfrmImportBitmap
         AutoAdjustColWidths = True
       end>
     OnEndUpdate = dgPointsEndUpdate
+    ExplicitHeight = 428
   end
   object ScrollBox1: TScrollBox
     Left = 372
     Top = 0
-    Width = 412
-    Height = 428
+    Width = 410
+    Height = 421
     Align = alClient
-    TabOrder = 2
+    TabOrder = 1
+    ExplicitWidth = 412
+    ExplicitHeight = 428
     object ZoomBox: TQRbwZoomBox2
       Left = 0
       Top = 0
@@ -449,6 +453,10 @@ inherited frmImportBitmap: TfrmImportBitmap
       Image32.ScaleMode = smNormal
       Image32.TabOrder = 0
       Image32.OnMouseUp = ZoomBoxImage32MouseUp
+      Image32.ExplicitLeft = 0
+      Image32.ExplicitTop = 0
+      Image32.ExplicitWidth = 575
+      Image32.ExplicitHeight = 427
       ImmediateResize = True
       Magnification = 1.000000000000000000
       VerticalDirection = vdUp

@@ -105,78 +105,86 @@ var
 const
   Epsilon = 1e-4;
 begin
-  DataArrayManager := Model.DataArrayManager;
-  ActiveDataArray := DataArrayManager.GetDataSetByName(rsActive);
-  ActiveDataArray.Initialize;
-
-  HguList := TObjectList.Create;
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
-    begin
-      for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, GapWarning);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, OverlapWarning);
+
+    DataArrayManager := Model.DataArrayManager;
+    ActiveDataArray := DataArrayManager.GetDataSetByName(rsActive);
+    ActiveDataArray.Initialize;
+
+    HguList := TObjectList.Create;
+    try
+      for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
       begin
-        CellUsed := False;
-        for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
+        for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
         begin
-          if Model.IsLayerSimulated(LayerIndex) then
+          CellUsed := False;
+          for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
           begin
-            if ActiveDataArray.BooleanData[0, RowIndex, ColIndex] then
+            if Model.IsLayerSimulated(LayerIndex) then
             begin
-              CellUsed := True;
-              Break;
+              if ActiveDataArray.BooleanData[0, RowIndex, ColIndex] then
+              begin
+                CellUsed := True;
+                Break;
+              end;
             end;
           end;
-        end;
-        if CellUsed then
-        begin
-          for HguIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
+          if CellUsed then
           begin
-            HGU := Model.HydrogeologicUnits[HguIndex];
-            ThickArray := DataArrayManager.GetDataSetByName(HGU.ThickessDataArrayName);
-            ThickArray.Initialize;
-            DataArrayManager.AddDataSetToCache(ThickArray);
-            Thickness := ThickArray.RealData[0, RowIndex, ColIndex];
-            if Thickness > 0 then
+            for HguIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
             begin
-              SortItem := THguSort.Create;
-              HguList.Add(SortItem);
-              SortItem.HGU := HGU;
-              TopArray := DataArrayManager.GetDataSetByName(HGU.TopDataArrayName);
-              TopArray.Initialize;
-              DataArrayManager.AddDataSetToCache(TopArray);
-              SortItem.Top := TopArray.RealData[0, RowIndex, ColIndex];
-              SortItem.Bottom := SortItem.Top - Thickness;
+              HGU := Model.HydrogeologicUnits[HguIndex];
+              ThickArray := DataArrayManager.GetDataSetByName(HGU.ThickessDataArrayName);
+              ThickArray.Initialize;
+              DataArrayManager.AddDataSetToCache(ThickArray);
+              Thickness := ThickArray.RealData[0, RowIndex, ColIndex];
+              if Thickness > 0 then
+              begin
+                SortItem := THguSort.Create;
+                HguList.Add(SortItem);
+                SortItem.HGU := HGU;
+                TopArray := DataArrayManager.GetDataSetByName(HGU.TopDataArrayName);
+                TopArray.Initialize;
+                DataArrayManager.AddDataSetToCache(TopArray);
+                SortItem.Top := TopArray.RealData[0, RowIndex, ColIndex];
+                SortItem.Bottom := SortItem.Top - Thickness;
+              end;
             end;
-          end;
-          HguList.Sort(HguSorter);
-          for HguIndex := 1 to HguList.Count - 1 do
-          begin
-            SortItem1 := HguList[HguIndex-1];
-            SortItem2 := HguList[HguIndex];
-            Delta := SortItem1.Bottom - SortItem2.Top;
-            if Delta > Epsilon then
+            HguList.Sort(HguSorter);
+            for HguIndex := 1 to HguList.Count - 1 do
             begin
-              frmErrorsAndWarnings.AddWarning(Model, GapWarning,
-                Format(WarningFormat, [ColIndex+1, RowIndex+1,
-                  SortItem1.HGU.HufName, SortItem2.HGU.HufName]));
-            end
-            else if Delta < -Epsilon then
-            begin
-              frmErrorsAndWarnings.AddWarning(Model, OverlapWarning,
-                Format(WarningFormat, [ColIndex+1, RowIndex+1,
-                  SortItem1.HGU.HufName, SortItem2.HGU.HufName]));
+              SortItem1 := HguList[HguIndex-1];
+              SortItem2 := HguList[HguIndex];
+              Delta := SortItem1.Bottom - SortItem2.Top;
+              if Delta > Epsilon then
+              begin
+                frmErrorsAndWarnings.AddWarning(Model, GapWarning,
+                  Format(WarningFormat, [ColIndex+1, RowIndex+1,
+                    SortItem1.HGU.HufName, SortItem2.HGU.HufName]));
+              end
+              else if Delta < -Epsilon then
+              begin
+                frmErrorsAndWarnings.AddWarning(Model, OverlapWarning,
+                  Format(WarningFormat, [ColIndex+1, RowIndex+1,
+                    SortItem1.HGU.HufName, SortItem2.HGU.HufName]));
+              end;
             end;
+            HguList.Clear;
           end;
-          HguList.Clear;
         end;
       end;
+    finally
+      HguList.Free;
     end;
-  finally
-    HguList.Free;
-  end;
 
-  DataArrayManager.AddDataSetToCache(ActiveDataArray);
-  DataArrayManager.CacheDataArrays;
+    DataArrayManager.AddDataSetToCache(ActiveDataArray);
+    DataArrayManager.CacheDataArrays;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
+  end;
 end;
 
 constructor TModflowHUF_Writer.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
@@ -429,39 +437,45 @@ var
   HGUVANI: double;
   HGUNAM: string;
 begin
-  for UnitIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
-  begin
-    HGU := Model.HydrogeologicUnits[UnitIndex];
-    HGUNAM := HGU.HufName;
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoVKparameter);
+    for UnitIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
+    begin
+      HGU := Model.HydrogeologicUnits[UnitIndex];
+      HGUNAM := HGU.HufName;
     
-    if HGU.UsesHaniParam then
-    begin
-      HGUHANI := 0;
-    end
-    else
-    begin
-      HGUHANI := HGU.HorizontalAnisotropy;
-    end;
-
-    HGUVANI := 0;
-    case HGU.VK_Method of
-      vkVK: HGUVANI := 0;
-      vkVANI: HGUVANI := HGU.VerticalAnisotropy;
-      else Assert(False);
-    end;
-    if HGUVANI = 0 then
-    begin
-      if (not HGU.UsesVkParam)
-        and (Model.ModflowLayerCount > 1) then
+      if HGU.UsesHaniParam then
       begin
-        frmErrorsAndWarnings.AddError(Model, StrNoVKparameter, HGU.HufName);
+        HGUHANI := 0;
+      end
+      else
+      begin
+        HGUHANI := HGU.HorizontalAnisotropy;
       end;
+
+      HGUVANI := 0;
+      case HGU.VK_Method of
+        vkVK: HGUVANI := 0;
+        vkVANI: HGUVANI := HGU.VerticalAnisotropy;
+        else Assert(False);
+      end;
+      if HGUVANI = 0 then
+      begin
+        if (not HGU.UsesVkParam)
+          and (Model.ModflowLayerCount > 1) then
+        begin
+          frmErrorsAndWarnings.AddError(Model, StrNoVKparameter, HGU.HufName);
+        end;
+      end;
+      WriteString(HGUNAM);
+      WriteFloat(HGUHANI);
+      WriteFloat(HGUVANI);
+      WriteString(' # Data set 9: HGUNAM HGUHANI HGUVANI');
+      NewLine;
     end;
-    WriteString(HGUNAM);
-    WriteFloat(HGUHANI);
-    WriteFloat(HGUVANI);
-    WriteString(' # Data set 9: HGUNAM HGUHANI HGUVANI');
-    NewLine;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -488,125 +502,62 @@ var
   Zonarr: string;
   IZ: string;
 begin
-  UsedParameters := TList.Create;
-  UsedHufUnits := TList.Create;
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    for ParamIndex := 0 to Model.HufParameters.Count - 1 do
-    begin
-      Parameter := Model.HufParameters[ParamIndex];
-      if FTransient then
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, NoClusters);
+    UsedParameters := TList.Create;
+    UsedHufUnits := TList.Create;
+    try
+      for ParamIndex := 0 to Model.HufParameters.Count - 1 do
       begin
-        if not (Parameter.ParameterType in HufSteadyAndTransientParameters) then
+        Parameter := Model.HufParameters[ParamIndex];
+        if FTransient then
         begin
-          Continue;
-        end;
-      end
-      else
-      begin
-        if not (Parameter.ParameterType in HufSteadyParameters) then
+          if not (Parameter.ParameterType in HufSteadyAndTransientParameters) then
+          begin
+            Continue;
+          end;
+        end
+        else
         begin
-          Continue;
+          if not (Parameter.ParameterType in HufSteadyParameters) then
+          begin
+            Continue;
+          end;
         end;
-      end;
-      UsedParameters.Clear;
-      UsedHufUnits.Clear;
-      for HufUnitIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
-      begin
-        HGU := Model.HydrogeologicUnits[HufUnitIndex];
-        UsedParam := HGU.UsesParameter(Parameter);
-        if UsedParam <> nil then
+        UsedParameters.Clear;
+        UsedHufUnits.Clear;
+        for HufUnitIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
         begin
-          UsedParameters.Add(UsedParam);
-          UsedHufUnits.Add(HGU);
+          HGU := Model.HydrogeologicUnits[HufUnitIndex];
+          UsedParam := HGU.UsesParameter(Parameter);
+          if UsedParam <> nil then
+          begin
+            UsedParameters.Add(UsedParam);
+            UsedHufUnits.Add(HGU);
+          end;
         end;
-      end;
 
-      if UsedParameters.Count = 0 then
-      begin
-        frmErrorsAndWarnings.AddWarning(Model,
-          NoClusters, Parameter.ParameterName);
-      end;
+        if UsedParameters.Count = 0 then
+        begin
+          frmErrorsAndWarnings.AddWarning(Model,
+            NoClusters, Parameter.ParameterName);
+        end;
 
-      PARNAM := ExpandString(Parameter.ParameterName, 10);
-      case Parameter.ParameterType of
-        ptHUF_HK: PARTYP := 'HK';
-        ptHUF_HANI: PARTYP := 'HANI';
-        ptHUF_VK: PARTYP := 'VK';
-        ptHUF_VANI: PARTYP := 'VANI';
-        ptHUF_SS: PARTYP := 'SS';
-        ptHUF_SY: PARTYP := 'SY';
-        else Assert(False);
-      end;
-      PARTYP := ExpandString(' ' + PARTYP, 10);
-      PARVAL := Parameter.Value;
-      NCLU := UsedParameters.Count;
+        PARNAM := ExpandString(Parameter.ParameterName, 10);
+        case Parameter.ParameterType of
+          ptHUF_HK: PARTYP := 'HK';
+          ptHUF_HANI: PARTYP := 'HANI';
+          ptHUF_VK: PARTYP := 'VK';
+          ptHUF_VANI: PARTYP := 'VANI';
+          ptHUF_SS: PARTYP := 'SS';
+          ptHUF_SY: PARTYP := 'SY';
+          else Assert(False);
+        end;
+        PARTYP := ExpandString(' ' + PARTYP, 10);
+        PARVAL := Parameter.Value;
+        NCLU := UsedParameters.Count;
       
-      WriteString(PARNAM);
-      WriteString(PARTYP);
-      WriteFloat(PARVAL);
-      WriteInteger(NCLU);
-      WriteString(' # Data set 10: PARNAM PARTYP Parval NCLU');
-      NewLine;
-      Model.WritePValAndTemplate(PARNAM,PARVAL);
-
-      for ClusterIndex := 0 to UsedParameters.Count - 1 do
-      begin
-        UsedParam := UsedParameters[ClusterIndex];
-        HGU := UsedHufUnits[ClusterIndex];
-        HGUNAM := ExpandString(HGU.HufName, 10);
-
-        if UsedParam.UseMultiplier then
-        begin
-          UsedParam.GenerateMultiplierArrayName;
-          Mltarr := UsedParam.MultiplierArrayName;
-          UsedMultiplierArrayNames.Add(Mltarr);
-        end
-        else
-        begin
-          Mltarr := ' NONE      ';
-        end;
-        Mltarr := ExpandString(Mltarr, 10);
-
-        if UsedParam.UseZone then
-        begin
-          UsedParam.GenerateZoneArrayName;
-          Zonarr := UsedParam.ZoneArrayName;
-          UsedZoneArrayNames.Add(Zonarr);
-          IZ := ' 1';
-        end
-        else
-        begin
-          Zonarr := ' ALL       ';
-          IZ := '';
-        end;
-        Zonarr := ExpandString(Zonarr, 10);
-
-        WriteString(HGUNAM + ' ');
-        WriteString(Mltarr + ' ');
-        WriteString(Zonarr + ' ');
-        WriteString(IZ);
-        WriteString(' # Data Set 11: HGUNAM Mltarr Zonarr IZ');
-        NewLine;
-      end;
-    end;
-  finally
-    UsedParameters.Free;
-    UsedHufUnits.Free;
-  end;
-
-  if FTransient then
-  begin
-    for ParamIndex := 0 to Model.ModflowSteadyParameters.Count - 1 do
-    begin
-      Param := Model.ModflowSteadyParameters.Items[ParamIndex];
-      if Param.ParameterType = ptHUF_SYTP then
-      begin
-        Param.ClearArrayNames;
-        PARNAM := Param.ParameterName;
-        PARTYP := ' SYTP';
-        PARVAL := Param.Value;
-        NCLU := 1;
-    
         WriteString(PARNAM);
         WriteString(PARTYP);
         WriteFloat(PARVAL);
@@ -615,38 +566,107 @@ begin
         NewLine;
         Model.WritePValAndTemplate(PARNAM,PARVAL);
 
-        HGUNAM := 'SYTP';
+        for ClusterIndex := 0 to UsedParameters.Count - 1 do
+        begin
+          UsedParam := UsedParameters[ClusterIndex];
+          HGU := UsedHufUnits[ClusterIndex];
+          HGUNAM := ExpandString(HGU.HufName, 10);
 
-        if Param.UseMultiplier then
-        begin
-          Mltarr := Param.MultiplierArrayName(1, Model);
-          UsedMultiplierArrayNames.Add(Mltarr);
-        end
-        else
-        begin
-          Mltarr := ' NONE ';
+          if UsedParam.UseMultiplier then
+          begin
+            UsedParam.GenerateMultiplierArrayName;
+            Mltarr := UsedParam.MultiplierArrayName;
+            UsedMultiplierArrayNames.Add(Mltarr);
+          end
+          else
+          begin
+            Mltarr := ' NONE      ';
+          end;
+          Mltarr := ExpandString(Mltarr, 10);
+
+          if UsedParam.UseZone then
+          begin
+            UsedParam.GenerateZoneArrayName;
+            Zonarr := UsedParam.ZoneArrayName;
+            UsedZoneArrayNames.Add(Zonarr);
+            IZ := ' 1';
+          end
+          else
+          begin
+            Zonarr := ' ALL       ';
+            IZ := '';
+          end;
+          Zonarr := ExpandString(Zonarr, 10);
+
+          WriteString(HGUNAM + ' ');
+          WriteString(Mltarr + ' ');
+          WriteString(Zonarr + ' ');
+          WriteString(IZ);
+          WriteString(' # Data Set 11: HGUNAM Mltarr Zonarr IZ');
+          NewLine;
         end;
+      end;
+    finally
+      UsedParameters.Free;
+      UsedHufUnits.Free;
+    end;
 
-        if Param.UseZone then
+    if FTransient then
+    begin
+      for ParamIndex := 0 to Model.ModflowSteadyParameters.Count - 1 do
+      begin
+        Param := Model.ModflowSteadyParameters.Items[ParamIndex];
+        if Param.ParameterType = ptHUF_SYTP then
         begin
-          Zonarr := Param.ZoneArrayName(1, Model);
-          IZ := ' 1';
-          UsedZoneArrayNames.Add(Zonarr);
-        end
-        else
-        begin
-          Zonarr := ' ALL ';
-          IZ := '';
+          Param.ClearArrayNames;
+          PARNAM := Param.ParameterName;
+          PARTYP := ' SYTP';
+          PARVAL := Param.Value;
+          NCLU := 1;
+    
+          WriteString(PARNAM);
+          WriteString(PARTYP);
+          WriteFloat(PARVAL);
+          WriteInteger(NCLU);
+          WriteString(' # Data set 10: PARNAM PARTYP Parval NCLU');
+          NewLine;
+          Model.WritePValAndTemplate(PARNAM,PARVAL);
+
+          HGUNAM := 'SYTP';
+
+          if Param.UseMultiplier then
+          begin
+            Mltarr := Param.MultiplierArrayName(1, Model);
+            UsedMultiplierArrayNames.Add(Mltarr);
+          end
+          else
+          begin
+            Mltarr := ' NONE ';
+          end;
+
+          if Param.UseZone then
+          begin
+            Zonarr := Param.ZoneArrayName(1, Model);
+            IZ := ' 1';
+            UsedZoneArrayNames.Add(Zonarr);
+          end
+          else
+          begin
+            Zonarr := ' ALL ';
+            IZ := '';
+          end;
+
+          WriteString(HGUNAM + ' ');
+          WriteString(Mltarr + ' ');
+          WriteString(Zonarr + ' ');
+          WriteString(IZ);
+          WriteString(' # Data Set 11: HGUNAM Mltarr Zonarr IZ');
+          NewLine;
         end;
-
-        WriteString(HGUNAM + ' ');
-        WriteString(Mltarr + ' ');
-        WriteString(Zonarr + ' ');
-        WriteString(IZ);
-        WriteString(' # Data Set 11: HGUNAM Mltarr Zonarr IZ');
-        NewLine;
       end;
     end;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 

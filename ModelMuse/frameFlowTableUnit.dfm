@@ -11,8 +11,8 @@ object frameFlowTable: TframeFlowTable
   object lblNumberOfPoints: TLabel
     Left = 66
     Top = 180
-    Width = 82
-    Height = 13
+    Width = 98
+    Height = 16
     Anchors = [akLeft, akBottom]
     Caption = 'Number of points'
   end
@@ -20,13 +20,13 @@ object frameFlowTable: TframeFlowTable
     Left = 3
     Top = 177
     Width = 57
-    Height = 21
+    Height = 24
     ButtonKind = bkClassic
     MaxValue = 2147483647.000000000000000000
     MinValue = 2.000000000000000000
     Value = 2.000000000000000000
     Anchors = [akLeft, akBottom]
-    TabOrder = 0
+    TabOrder = 1
     OnChange = seTableCountChange
   end
   object dgSfrTable: TRbwDataGrid4
@@ -40,7 +40,7 @@ object frameFlowTable: TframeFlowTable
     FixedCols = 0
     RowCount = 3
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
-    TabOrder = 1
+    TabOrder = 0
     OnSetEditText = dgSfrTableSetEditText
     ExtendedAutoDistributeText = False
     AutoMultiEdit = True

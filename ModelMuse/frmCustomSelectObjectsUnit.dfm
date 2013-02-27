@@ -44,6 +44,7 @@ inherited frmCustomSelectObjects: TfrmCustomSelectObjects
     Width = 422
     Height = 373
     Align = alClient
+    CheckImageKind = ckLightCheck
     Header.AutoSizeIndex = 0
     Header.Font.Charset = DEFAULT_CHARSET
     Header.Font.Color = clWindowText

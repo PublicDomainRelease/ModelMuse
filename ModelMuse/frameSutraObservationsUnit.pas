@@ -54,7 +54,7 @@ implementation
 
 uses
   ScreenObjectUnit, SutraTimeScheduleUnit, frmGoPhastUnit,
-  frmSutraTimeAdjustChoiceUnit;
+  frmSutraTimeAdjustChoiceUnit, Math;
 
 {$R *.dfm}
 
@@ -316,13 +316,13 @@ end;
 procedure TframeSutraObservations.btnDeleteClick(Sender: TObject);
 begin
   inherited;
-//
+  comboSchedule.ItemIndex := 0;
 end;
 
 procedure TframeSutraObservations.btnInsertClick(Sender: TObject);
 begin
   inherited;
-//
+  comboSchedule.ItemIndex := 0;
 end;
 
 procedure TframeSutraObservations.CheckStoredTimes(ObsList: TSutraObsList);
@@ -336,6 +336,16 @@ var
   ASchedule: TSutraTimeSchedule;
   AdjustChoice: TAdjustChoice;
   Form: TfrmSutraTimeAdjustChoice;
+  LocalEpsilon: double;
+  function NearlyTheSame(const A, B: double): boolean;
+  begin
+    result := A = B;
+    if not result then
+    begin
+      result := Abs(A - B) < LocalEpsilon;
+    end;
+  end;
+
 //  ScheduleValues: TRealCollection;
 begin
   if FTimesIdentical and (comboSchedule.ItemIndex >= 1) then
@@ -352,9 +362,10 @@ begin
     SameValues := Length(TimeValues) = Times.Count;
     if SameValues then
     begin
+      LocalEpsilon := Max(Abs(TimeValues[Times.Count - 1]), Abs(Times[Times.Count - 1].Value))/1e9;
       for TimeIndex := 0 to Times.Count - 1 do
       begin
-        SameValues := TimeValues[TimeIndex] = Times[TimeIndex].Value;
+        SameValues := NearlyTheSame(TimeValues[TimeIndex], Times[TimeIndex].Value);
         if not SameValues then
         begin
           break;

@@ -169,6 +169,27 @@ begin
         ScreenObject.GetCellsToAssign(Model.Grid, '0', nil, nil, CellList, alAll, Model);
         Inc(MaximumNumberOfCells, CellList.Count);
       end;
+      if (ScreenObject.ModflowStrBoundary <> nil)
+        and ScreenObject.ModflowStrBoundary.Used then
+      begin
+        CellList.Clear;
+        ScreenObject.GetCellsToAssign(Model.Grid, '0', nil, nil, CellList, alAll, Model);
+        Inc(MaximumNumberOfCells, CellList.Count);
+      end;
+      if (ScreenObject.ModflowFhbHeadBoundary <> nil)
+        and ScreenObject.ModflowFhbHeadBoundary.Used then
+      begin
+        CellList.Clear;
+        ScreenObject.GetCellsToAssign(Model.Grid, '0', nil, nil, CellList, alAll, Model);
+        Inc(MaximumNumberOfCells, CellList.Count);
+      end;
+      if (ScreenObject.ModflowFhbFlowBoundary <> nil)
+        and ScreenObject.ModflowFhbFlowBoundary.Used then
+      begin
+        CellList.Clear;
+        ScreenObject.GetCellsToAssign(Model.Grid, '0', nil, nil, CellList, alAll, Model);
+        Inc(MaximumNumberOfCells, CellList.Count);
+      end;
       if (ScreenObject.ModflowLakBoundary <> nil)
         and ScreenObject.ModflowLakBoundary.Used then
       begin
@@ -213,53 +234,58 @@ begin
   NoAssignmentErrorRoot := Format(StrNoBoundaryConditio,
     [Package.PackageIdentifier]);
   frmProgressMM.AddMessage(StrEvaluatingSSMPacka);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, NoAssignmentErrorRoot);
-
-  BoundaryList := TList.Create;
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
-    begin
-      ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
-      if ScreenObject.Deleted then
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, NoAssignmentErrorRoot);
+
+    BoundaryList := TList.Create;
+    try
+      for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
       begin
-        Continue;
-      end;
-      if not ScreenObject.UsedModels.UsesModel(Model) then
-      begin
-        Continue;
-      end;
-      Boundary := ScreenObject.Mt3dmsConcBoundary;
-      if Boundary <> nil then
-      begin
-        frmProgressMM.AddMessage(Format(StrEvaluatingS, [ScreenObject.Name]));
-        Application.ProcessMessages;
-        if not ScreenObject.SetValuesOfEnclosedCells
-          and not ScreenObject.SetValuesOfIntersectedCells then
+        ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
+        if ScreenObject.Deleted then
         begin
-          frmErrorsAndWarnings.AddError(Model,
-            NoAssignmentErrorRoot, ScreenObject.Name);
+          Continue;
         end;
-        Boundary.GetCellValues(Values, nil, Model);
-        BoundaryList.Add(Boundary);
+        if not ScreenObject.UsedModels.UsesModel(Model) then
+        begin
+          Continue;
+        end;
+        Boundary := ScreenObject.Mt3dmsConcBoundary;
+        if Boundary <> nil then
+        begin
+          frmProgressMM.AddMessage(Format(StrEvaluatingS, [ScreenObject.Name]));
+          Application.ProcessMessages;
+          if not ScreenObject.SetValuesOfEnclosedCells
+            and not ScreenObject.SetValuesOfIntersectedCells then
+          begin
+            frmErrorsAndWarnings.AddError(Model,
+              NoAssignmentErrorRoot, ScreenObject.Name);
+          end;
+          Boundary.GetCellValues(Values, nil, Model);
+          BoundaryList.Add(Boundary);
+        end;
       end;
+      Application.ProcessMessages;
+      for BoundaryIndex := 0 to BoundaryList.Count - 1 do
+      begin
+        Boundary := BoundaryList[BoundaryIndex];
+        ScreenObject := Boundary.ScreenObject as TScreenObject;
+        frmProgressMM.AddMessage(Format(StrTransferringDat, [ScreenObject.Name]));
+        Boundary.BoundaryAssignCells(Model,Values);
+      end;
+      for ValueIndex := 0 to Values.Count - 1 do
+      begin
+        Cells := Values[ValueIndex];
+        Cells.Cache;
+      end;
+    finally
+      BoundaryList.Free;
     end;
-    Application.ProcessMessages;
-    for BoundaryIndex := 0 to BoundaryList.Count - 1 do
-    begin
-      Boundary := BoundaryList[BoundaryIndex];
-      ScreenObject := Boundary.ScreenObject as TScreenObject;
-      frmProgressMM.AddMessage(Format(StrTransferringDat, [ScreenObject.Name]));
-      Boundary.BoundaryAssignCells(Model,Values);
-    end;
-    for ValueIndex := 0 to Values.Count - 1 do
-    begin
-      Cells := Values[ValueIndex];
-      Cells.Cache;
-    end;
+    CountCells(MXSS);
   finally
-    BoundaryList.Free;
+    frmErrorsAndWarnings.EndUpdate;
   end;
-  CountCells(MXSS);
 end;
 
 class function TMt3dmsSsmWriter.Extension: string;

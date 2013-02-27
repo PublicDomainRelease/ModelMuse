@@ -15,6 +15,7 @@ type
     FCached: boolean;
     FCleared: boolean;
     FTempFileName: string;
+    FErrorRestoringData: Boolean;
     function GetBooleanValues(Index: integer): boolean;
     function GetCount: integer;
     function GetIntValues(Index: integer): integer;
@@ -53,9 +54,11 @@ type
     procedure CacheData;
     procedure RestoreData;
     procedure Reverse;
+    function UniformValues: boolean;
   published
     property DataType: TRbwDataType read FDataType write SetDataType;
     property Count: integer read GetCount write SetCount;
+    property ErrorRestoringData: Boolean read FErrorRestoringData;
   end;
 
   TValueArrayItem = class(TCollectionItem)
@@ -78,6 +81,7 @@ type
   private
     FCachedName: string;
     FCachedIndex: integer;
+    FErrorRestoringData: Boolean;
     function GetItem(Index: Integer): TValueArrayItem;
     procedure SetItem(Index: Integer; const Value: TValueArrayItem);
   public
@@ -87,6 +91,7 @@ type
     property Items[Index: Integer]: TValueArrayItem read GetItem write SetItem; default;
     function ValuesByName(AName: string): TValueArrayStorage;
     function ValueItemByName(AName: string): TValueArrayItem;
+    property ErrorRestoringData: Boolean read FErrorRestoringData;
   end;
 
 implementation
@@ -124,6 +129,7 @@ var
   StringValue: string;
   CachedData: TMemoryStream;
 begin
+  FErrorRestoringData := False;
   if not FCached or not FCleared then
   begin
     Exit;
@@ -135,30 +141,38 @@ begin
     DecompressionStream := TDecompressionStream.Create(CachedData);
     try
       DecompressionStream.Read(LocalCount, SizeOf(LocalCount));
+      if LocalCount <= 0 then
+      begin
+        FErrorRestoringData := True;
+        Exit;
+      end;
       Count := LocalCount;
-      case DataType of
-        rdtDouble:
-          begin
-            DecompressionStream.Read(FRealValues[0], LocalCount*SizeOf(double));
-          end;
-        rdtInteger:
-          begin
-            DecompressionStream.Read(FIntValues[0], LocalCount*SizeOf(integer));
-          end;
-        rdtBoolean:
-          begin
-            DecompressionStream.Read(FBooleanValues[0], LocalCount*SizeOf(boolean));
-          end;
-        rdtString:
-          begin
-            for Index := 0 to LocalCount - 1 do
+      if LocalCount > 0 then
+      begin
+        case DataType of
+          rdtDouble:
             begin
-              DecompressionStream.Read(ValueLength, SizeOf(ValueLength));
-              SetString(StringValue, nil, ValueLength);
-              DecompressionStream.Read(Pointer(StringValue)^, ValueLength * SizeOf(Char));
-              FStringValues[Index] := StringValue;
+              DecompressionStream.Read(FRealValues[0], LocalCount*SizeOf(double));
             end;
-          end;
+          rdtInteger:
+            begin
+              DecompressionStream.Read(FIntValues[0], LocalCount*SizeOf(integer));
+            end;
+          rdtBoolean:
+            begin
+              DecompressionStream.Read(FBooleanValues[0], LocalCount*SizeOf(boolean));
+            end;
+          rdtString:
+            begin
+              for Index := 0 to LocalCount - 1 do
+              begin
+                DecompressionStream.Read(ValueLength, SizeOf(ValueLength));
+                SetString(StringValue, nil, ValueLength);
+                DecompressionStream.Read(Pointer(StringValue)^, ValueLength * SizeOf(Char));
+                FStringValues[Index] := StringValue;
+              end;
+            end;
+        end;
       end;
     finally
       DecompressionStream.Free;
@@ -585,6 +599,75 @@ begin
   FCached := False;
 end;
 
+function TValueArrayStorage.UniformValues: boolean;
+var
+  FirstReal: Double;
+  FirstInteger: Integer;
+  FirstBool: Boolean;
+  FirstString: string;
+  index: Integer;
+begin
+  if Count = 0 then
+  begin
+    result := False;
+  end
+  else
+  begin
+    result := True;
+
+    case DataType of
+      rdtDouble:
+        begin
+          FirstReal := RealValues[0];
+          for index := 0 to Count - 1 do
+          begin
+            if FirstReal <> RealValues[index] then
+            begin
+              result := False;
+              Exit;
+            end;
+          end;
+        end;
+      rdtInteger:
+        begin
+          FirstInteger := IntValues[0];
+          for index := 0 to Count - 1 do
+          begin
+            if FirstInteger <> IntValues[index] then
+            begin
+              result := False;
+              Exit;
+            end;
+          end;
+        end;
+      rdtBoolean:
+        begin
+          FirstBool := BooleanValues[0];
+          for index := 0 to Count - 1 do
+          begin
+            if FirstBool <> BooleanValues[index] then
+            begin
+              result := False;
+              Exit;
+            end;
+          end;
+        end;
+      rdtString:
+        begin
+          FirstString := StringValues[0];
+          for index := 0 to Count - 1 do
+          begin
+            if FirstString <> StringValues[index] then
+            begin
+              result := False;
+              Exit;
+            end;
+          end;
+        end;
+    end;
+  end;
+end;
+
 { TValueArrayItem }
 
 procedure TValueArrayItem.Assign(Source: TPersistent);
@@ -657,9 +740,12 @@ procedure TValueCollection.RestoreData;
 var
   Index: Integer;
 begin
+  FErrorRestoringData := False;
   for Index := 0 to Count - 1 do
   begin
     Items[Index].FValues.RestoreData;
+    FErrorRestoringData :=
+      FErrorRestoringData or Items[Index].FValues.ErrorRestoringData;
   end;
 end;
 

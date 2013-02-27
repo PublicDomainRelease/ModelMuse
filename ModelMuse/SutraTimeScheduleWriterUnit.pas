@@ -29,21 +29,23 @@ type
 
   TSutraTimeScheduleWriter = class(TCustomFileWriter)
   private
-    CustomScheduleIndex: Integer;
+    FCustomScheduleIndex: Integer;
     FTimeOptions: TSutraTimeOptions;
     FSchedules: TSutraTimeSchedules;
-    ItemDictionary: TTimeValuesDictionary;
-    CustomScheduleNames: TStringList;
-    FluidSourceTimes: TRealList;
-    USourceTimes: TRealList;
-    SpecifiedPressureTimes: TRealList;
-    SpecifiedUTimes: TRealList;
-    AllTimes: TRealList;
-    CustomSchedules: TScreenObjectScheduleList;
-    FirstTimeValues: TTimeValues;
-    ExtraTimesDefined: Boolean;
-    ScheduleList: TTimeValuesList;
+    FItemDictionary: TTimeValuesDictionary;
+    FCustomScheduleNames: TStringList;
+    FFluidSourceTimes: TRealList;
+    FUSourceTimes: TRealList;
+    FSpecifiedPressureTimes: TRealList;
+    FSpecifiedUTimes: TRealList;
+    FAllTimes: TRealList;
+    FCustomSchedules: TScreenObjectScheduleList;
+    FFirstTimeValues: TTimeValues;
+    FExtraTimesDefined: Boolean;
+    FScheduleList: TTimeValuesList;
     FMaxTimes: Integer;
+    FSchedulesList: TStringList;
+    FBuffer: TStringBuilder;
     function CustomScheduleName(AScreenObject: TScreenObject): AnsiString;
     procedure Evaluate;
     procedure EvaluateDefinedSchedules;
@@ -54,10 +56,14 @@ type
     procedure WriteASchedule(ASchedule: TTimeValues); overload;
     procedure WriteASchedule(SCHNAM: AnsiString; Times: TRealList); overload;
     procedure WriteASchedule(SCHNAM: AnsiString; Times: TRealCollection); overload;
-  function ReformatScheduleName(SCHNAM: AnsiString): AnsiString;
+    procedure WriteABoundarySchedule(SCHNAM: AnsiString; Times: TRealList);
+    function ReformatScheduleName(SCHNAM: AnsiString): AnsiString;
   public
+    procedure NewLine; override;
+    procedure WriteString(const Value: AnsiString); overload; override;
     Constructor Create(AModel: TCustomModel); reintroduce;
-    procedure WriteFile(FileName: string);
+    destructor Destroy; override;
+    procedure WriteFile(Schedules: TStringList);
   end;
 
 function SameValues(List1, List2: TRealList): Boolean; overload;
@@ -68,11 +74,13 @@ implementation
 
 uses
   frmErrorsAndWarningsUnit, SutraBoundariesUnit, SutraBoundaryWriterUnit,
-  Math;
+  Math, frmGoPhastUnit;
 
 resourcestring
   StrTheFollowingTimeS = 'The following time schedule names are defined more' +
     ' than once. ';
+  StrTheFollowingObject = 'The following objects define observation times th' +
+  'at are different from those in the selected time schedule.';
 
 function SameValues(List1, List2: TRealList): Boolean;
 var
@@ -121,6 +129,7 @@ begin
   inherited Create(AModel, etExport);
   FTimeOptions := (AModel as TPhastModel).SutraTimeOptions;
   FSchedules := FTimeOptions.Schedules;
+  FBuffer := TStringBuilder.Create;
 end;
 
 function TSutraTimeScheduleWriter.CustomScheduleName(AScreenObject: TScreenObject): AnsiString;
@@ -129,14 +138,20 @@ var
 begin
   // maximum length of a schedule name is 10 characters.
   StrResult := Copy(string(AnsiString(AScreenObject.Name)), 1, 10);
-  while ItemDictionary.ContainsKey(StrResult) or
-    (CustomScheduleNames.IndexOf(StrResult) >= 0) do
+  while FItemDictionary.ContainsKey(StrResult) or
+    (FCustomScheduleNames.IndexOf(StrResult) >= 0) do
   begin
-    Inc(CustomScheduleIndex);
-    StrResult := 'SCHED_' + IntToStr(CustomScheduleIndex);
+    Inc(FCustomScheduleIndex);
+    StrResult := 'SCHED_' + IntToStr(FCustomScheduleIndex);
   end;
-  CustomScheduleNames.Add(StrResult);
+  FCustomScheduleNames.Add(StrResult);
   result := AnsiString(StrResult);
+end;
+
+destructor TSutraTimeScheduleWriter.Destroy;
+begin
+  FBuffer.Free;
+  inherited;
 end;
 
 procedure TSutraTimeScheduleWriter.WriteASchedule(SCHNAM: AnsiString;
@@ -176,48 +191,49 @@ begin
 
 end;
 
-procedure TSutraTimeScheduleWriter.WriteFile(FileName: string);
+procedure TSutraTimeScheduleWriter.WriteFile(Schedules: TStringList);
 begin
-  FluidSourceTimes := TRealList.Create;
-  USourceTimes := TRealList.Create;
-  SpecifiedPressureTimes := TRealList.Create;
-  SpecifiedUTimes := TRealList.Create;
+  FSchedulesList := Schedules;
+  FFluidSourceTimes := TRealList.Create;
+  FUSourceTimes := TRealList.Create;
+  FSpecifiedPressureTimes := TRealList.Create;
+  FSpecifiedUTimes := TRealList.Create;
 
-  FluidSourceTimes.Sorted := True;
-  USourceTimes.Sorted := True;
-  SpecifiedPressureTimes.Sorted := True;
-  SpecifiedUTimes.Sorted := True;
+  FFluidSourceTimes.Sorted := True;
+  FUSourceTimes.Sorted := True;
+  FSpecifiedPressureTimes.Sorted := True;
+  FSpecifiedUTimes.Sorted := True;
 
-  CustomScheduleNames := TStringList.Create;
-  AllTimes := TRealList.Create;
-  CustomSchedules := TScreenObjectScheduleList.Create;
-  ItemDictionary := TTimeValuesDictionary.Create([doOwnsValues]);
-    ScheduleList := TTimeValuesList.Create;
+  FCustomScheduleNames := TStringList.Create;
+  FAllTimes := TRealList.Create;
+  FCustomSchedules := TScreenObjectScheduleList.Create;
+  FItemDictionary := TTimeValuesDictionary.Create([doOwnsValues]);
+    FScheduleList := TTimeValuesList.Create;
   try
     Evaluate;
 
-    FileName := ChangeFileExt(FileName, '.6');
-    OpenFile(FileName);
     try
       WriteLine1;
       WriteSchedules;
-      Model.AddModelInputFile(FileName);
     finally
-      CloseFile;
+      if FBuffer.Length > 0 then
+      begin
+        NewLine;
+      end;
     end;
 
 
   finally
-    ScheduleList.Free;
-    AllTimes.Free;
-    ItemDictionary.Free;
-    CustomSchedules.Free;
-    CustomScheduleNames.Free;
+    FScheduleList.Free;
+    FAllTimes.Free;
+    FItemDictionary.Free;
+    FCustomSchedules.Free;
+    FCustomScheduleNames.Free;
 
-    FluidSourceTimes.Free;
-    USourceTimes.Free;
-    SpecifiedPressureTimes.Free;
-    SpecifiedUTimes.Free;
+    FFluidSourceTimes.Free;
+    FUSourceTimes.Free;
+    FSpecifiedPressureTimes.Free;
+    FSpecifiedUTimes.Free;
 
   end;
 end;
@@ -243,20 +259,20 @@ var
   NPCYC: Integer;
   NUCYC: Integer;
 begin
-  NSCH := ScheduleList.Count + CustomSchedules.Count;
-  if FluidSourceTimes.Count > 0 then
+  NSCH := FScheduleList.Count + FCustomSchedules.Count;
+  if FFluidSourceTimes.Count > 0 then
   begin
     Inc(NSCH);
   end;
-  if USourceTimes.Count > 0 then
+  if FUSourceTimes.Count > 0 then
   begin
     Inc(NSCH);
   end;
-  if SpecifiedPressureTimes.Count > 0 then
+  if FSpecifiedPressureTimes.Count > 0 then
   begin
     Inc(NSCH);
   end;
-  if SpecifiedUTimes.Count > 0 then
+  if FSpecifiedUTimes.Count > 0 then
   begin
     Inc(NSCH);
   end;
@@ -297,7 +313,7 @@ var
 begin
   SCHNAM := ReformatScheduleName(ASchedule.Schedule.Name);
 
-  if ExtraTimesDefined then
+  if FExtraTimesDefined then
   begin
     WriteASchedule(SCHNAM, ASchedule.Times);
   end
@@ -433,7 +449,7 @@ var
   TimeValues: TOneDRealArray;
 begin
   ScheduleCount := 0;
-  if (ScheduleList.Count > 0) and (not ExtraTimesDefined) then
+  if (FScheduleList.Count > 0) and (not FExtraTimesDefined) then
   begin
     FirstSchedule := FSchedules[0].Schedule;
 
@@ -442,15 +458,15 @@ begin
 
     FMaxTimes := Length(TimeValues);
   end;
-  for ScheduleIndex := 0 to ScheduleList.Count - 1 do
+  for ScheduleIndex := 0 to FScheduleList.Count - 1 do
   begin
-    ASchedule := ScheduleList[ScheduleIndex];
+    ASchedule := FScheduleList[ScheduleIndex];
     Inc(ScheduleCount);
     WriteCommentLine('Schedule ' + IntToStr(ScheduleCount));
 
-    if ExtraTimesDefined and (ScheduleIndex = 0) then
+    if FExtraTimesDefined and (ScheduleIndex = 0) then
     begin
-      WriteASchedule(ReformatScheduleName(ASchedule.Schedule.Name), AllTimes);
+      WriteASchedule(ReformatScheduleName(ASchedule.Schedule.Name), FAllTimes);
     end
     else
     begin
@@ -459,37 +475,37 @@ begin
 
   end;
 
-  if FluidSourceTimes.Count > 0 then
+  if FFluidSourceTimes.Count > 0 then
   begin
     Inc(ScheduleCount);
     WriteCommentLine('Schedule ' + IntToStr(ScheduleCount));
-    WriteASchedule(ReformatScheduleName(KFluidFlux), FluidSourceTimes);
+    WriteABoundarySchedule(ReformatScheduleName(KFluidFlux), FFluidSourceTimes);
   end;
 
-  if USourceTimes.Count > 0 then
+  if FUSourceTimes.Count > 0 then
   begin
     Inc(ScheduleCount);
     WriteCommentLine('Schedule ' + IntToStr(ScheduleCount));
-    WriteASchedule(ReformatScheduleName(KUFlux), USourceTimes);
+    WriteABoundarySchedule(ReformatScheduleName(KUFlux), FUSourceTimes);
   end;
 
-  if SpecifiedPressureTimes.Count > 0 then
+  if FSpecifiedPressureTimes.Count > 0 then
   begin
     Inc(ScheduleCount);
     WriteCommentLine('Schedule ' + IntToStr(ScheduleCount));
-    WriteASchedule(ReformatScheduleName(KSpecifiedP), SpecifiedPressureTimes);
+    WriteABoundarySchedule(ReformatScheduleName(KSpecifiedP), FSpecifiedPressureTimes);
   end;
 
-  if SpecifiedUTimes.Count > 0 then
+  if FSpecifiedUTimes.Count > 0 then
   begin
     Inc(ScheduleCount);
     WriteCommentLine('Schedule ' + IntToStr(ScheduleCount));
-    WriteASchedule(ReformatScheduleName(KSpecifiedU), SpecifiedUTimes);
+    WriteABoundarySchedule(ReformatScheduleName(KSpecifiedU), FSpecifiedUTimes);
   end;
 
-  for ScheduleIndex := 0 to CustomSchedules.Count - 1 do
+  for ScheduleIndex := 0 to FCustomSchedules.Count - 1 do
   begin
-    ACustomSchedule := CustomSchedules[ScheduleIndex];
+    ACustomSchedule := FCustomSchedules[ScheduleIndex];
     Inc(ScheduleCount);
     WriteCommentLine('Schedule ' + IntToStr(ScheduleCount));
     WriteASchedule(ReformatScheduleName(ACustomSchedule.Name),
@@ -500,22 +516,35 @@ begin
   NewLine;
 end;
 
+procedure TSutraTimeScheduleWriter.WriteString(const Value: AnsiString);
+begin
+//  inherited;
+  FBuffer.Append(Value);
+end;
+
 procedure TSutraTimeScheduleWriter.MakeListOfUsedSchedules;
 var
   ScheduleArray: TArray<TPair<string, TTimeValues>>;
   index: Integer;
   AValue: TTimeValues;
 begin
-  ScheduleArray := ItemDictionary.ToArray;
-  ScheduleList.Add(FirstTimeValues);
+  ScheduleArray := FItemDictionary.ToArray;
+  FScheduleList.Add(FFirstTimeValues);
   for index := 0 to Length(ScheduleArray) - 1 do
   begin
     AValue := ScheduleArray[index].Value;
-    if AValue.Used and (AValue <> FirstTimeValues) then
+    if AValue.Used and (AValue <> FFirstTimeValues) then
     begin
-      ScheduleList.Add(AValue);
+      FScheduleList.Add(AValue);
     end;
   end;
+end;
+
+procedure TSutraTimeScheduleWriter.NewLine;
+begin
+//  inherited;
+  FSchedulesList.Add(FBuffer.ToString);
+  FBuffer.Clear;
 end;
 
 procedure TSutraTimeScheduleWriter.EvaluateObjectSchedules;
@@ -528,8 +557,14 @@ var
   AScreenObject: TScreenObject;
   AName: string;
   CustomSchedule: TScreenObjectSchedule;
+  SutraTimeOptions: TSutraTimeOptions;
+  AllTimes: TRealList;
 begin
-  CustomScheduleIndex := 0;
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrTheFollowingObject);
+  SutraTimeOptions := frmGoPhast.PhastModel.SutraTimeOptions;
+  SutraTimeOptions.CalculateAllTimes;
+  AllTimes := SutraTimeOptions.AllTimes;
+  FCustomScheduleIndex := 0;
   for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin
     AScreenObject := Model.ScreenObjects[ScreenObjectIndex];
@@ -541,13 +576,20 @@ begin
     if Boundaries.Observations.Used then
     begin
       AName := UpperCase(string(Boundaries.Observations.ScheduleName));
-      if (AName <> '') and ItemDictionary.ContainsKey(AName) then
+      if (AName <> '') and FItemDictionary.ContainsKey(AName) then
       begin
-        TimeValues := ItemDictionary.Items[AName];
-        UseScheduleTimes := SameValues(TimeValues.Times, Boundaries.Observations.Times);
+        TimeValues := FItemDictionary.Items[AName];
+        UseScheduleTimes := SameValues(TimeValues.Times,
+          Boundaries.Observations.Times);
         TimeValues.Used := TimeValues.Used or UseScheduleTimes;
         // set default for the ExportScheduleName
-        Boundaries.Observations.ExportScheduleName := Boundaries.Observations.ScheduleName;
+        Boundaries.Observations.ExportScheduleName :=
+          Boundaries.Observations.ScheduleName;
+        if not UseScheduleTimes then
+        begin
+          frmErrorsAndWarnings.AddWarning(Model, StrTheFollowingObject,
+            AScreenObject.Name);
+        end;
       end
       else
       begin
@@ -558,7 +600,7 @@ begin
       begin
         Boundaries.Observations.ExportScheduleName := CustomScheduleName(AScreenObject);
         CustomSchedule := TScreenObjectSchedule.Create;
-        CustomSchedules.Add(CustomSchedule);
+        FCustomSchedules.Add(CustomSchedule);
         CustomSchedule.Name := Boundaries.Observations.ExportScheduleName;
         CustomSchedule.Times := Boundaries.Observations.Times;
       end;
@@ -569,28 +611,32 @@ begin
     begin
       for TimeIndex := 0 to Boundaries.FluidSource.Values.Count - 1 do
       begin
-        FluidSourceTimes.AddUnique(Boundaries.FluidSource.Values[TimeIndex].StartTime);
+        FFluidSourceTimes.AddUnique(FixTime(
+          Boundaries.FluidSource.Values[TimeIndex] as TCustomSutraBoundaryItem, AllTimes));
       end;
     end;
     if Boundaries.MassEnergySource.Used then
     begin
       for TimeIndex := 0 to Boundaries.MassEnergySource.Values.Count - 1 do
       begin
-        USourceTimes.AddUnique(Boundaries.MassEnergySource.Values[TimeIndex].StartTime);
+        FUSourceTimes.AddUnique(FixTime(
+          Boundaries.MassEnergySource.Values[TimeIndex] as TCustomSutraBoundaryItem, AllTimes));
       end;
     end;
     if Boundaries.SpecifiedPressure.Used then
     begin
       for TimeIndex := 0 to Boundaries.SpecifiedPressure.Values.Count - 1 do
       begin
-        SpecifiedPressureTimes.AddUnique(Boundaries.SpecifiedPressure.Values[TimeIndex].StartTime);
+        FSpecifiedPressureTimes.AddUnique(FixTime(
+          Boundaries.SpecifiedPressure.Values[TimeIndex] as TCustomSutraBoundaryItem, AllTimes));
       end;
     end;
     if Boundaries.SpecifiedConcTemp.Used then
     begin
       for TimeIndex := 0 to Boundaries.SpecifiedConcTemp.Values.Count - 1 do
       begin
-        SpecifiedUTimes.AddUnique(Boundaries.SpecifiedConcTemp.Values[TimeIndex].StartTime);
+        FSpecifiedUTimes.AddUnique(FixTime(
+          Boundaries.SpecifiedConcTemp.Values[TimeIndex] as TCustomSutraBoundaryItem, AllTimes));
       end;
     end;
   end;
@@ -605,7 +651,8 @@ var
   AName: string;
   ASchedule: TSutraTimeSchedule;
 begin
-  FirstTimeValues := nil;
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheFollowingTimeS);
+  FFirstTimeValues := nil;
   // Compute all the times for each time schedule and store them
   // in a TimeValues.Times for each schedule.
   for ScheduleIndex := 0 to FSchedules.Count - 1 do
@@ -615,10 +662,10 @@ begin
     TimeValues := TTimeValues.Create;
     if ScheduleIndex = 0 then
     begin
-      FirstTimeValues := TimeValues;
+      FFirstTimeValues := TimeValues;
     end;
     AName := UpperCase(string(ASchedule.Name));
-    if ItemDictionary.ContainsKey(AName) then
+    if FItemDictionary.ContainsKey(AName) then
     begin
       Beep;
       frmErrorsAndWarnings.AddError(Model, StrTheFollowingTimeS,
@@ -627,7 +674,7 @@ begin
     end
     else
     begin
-      ItemDictionary.Add(AName, TimeValues);
+      FItemDictionary.Add(AName, TimeValues);
     end;
     TimeValues.Schedule := ASchedule;
     for TimeIndex := 0 to Length(Times) - 1 do
@@ -639,20 +686,57 @@ end;
 
 procedure TSutraTimeScheduleWriter.Evaluate;
 begin
-  CustomScheduleNames.CaseSensitive := False;
-  CustomScheduleNames.Sorted := True;
-  FTimeOptions.CalculateAllTimes;
-  AllTimes.Assign(FTimeOptions.AllTimes);
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    FCustomScheduleNames.CaseSensitive := False;
+    FCustomScheduleNames.Sorted := True;
+    FTimeOptions.CalculateAllTimes;
+    FAllTimes.Assign(FTimeOptions.AllTimes);
 
-  EvaluateDefinedSchedules;
+    EvaluateDefinedSchedules;
 
-  // Determine if the screen objects defined any other times not
-  // listed in the main schedule.
-  ExtraTimesDefined := not SameValues(AllTimes, FirstTimeValues.Times);
-  FirstTimeValues.Used := ExtraTimesDefined;
+    // Determine if the screen objects defined any other times not
+    // listed in the main schedule.
+    FExtraTimesDefined := not SameValues(FAllTimes, FFirstTimeValues.Times);
+    FFirstTimeValues.Used := FExtraTimesDefined;
 
-  EvaluateObjectSchedules;
-  MakeListOfUsedSchedules;
+    EvaluateObjectSchedules;
+    MakeListOfUsedSchedules;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
+  end;
+end;
+
+procedure TSutraTimeScheduleWriter.WriteABoundarySchedule(SCHNAM: AnsiString;
+  Times: TRealList);
+var
+  SCHTYP: AnsiString;
+  NSLIST: Integer;
+  TimeIndex: Integer;
+  ISLIST: Integer;
+begin
+  WriteString(SCHNAM);
+
+  SCHTYP := ' ''STEP LIST''';
+  NSLIST := Times.Count;
+
+  WriteString(SCHTYP);
+  WriteInteger(NSLIST);
+  for TimeIndex := 0 to Times.Count - 1 do
+  begin
+    ISLIST := FAllTimes.IndexOf(Times[TimeIndex]);
+    Assert(ISLIST >= 0);
+    WriteInteger(ISLIST);
+    if (TimeIndex+1) mod 10 = 0 then
+    begin
+      NewLine;
+    end;
+  end;
+  if Times.Count mod 10 <> 0 then
+  begin
+    NewLine;
+  end;
+
 end;
 
 procedure TSutraTimeScheduleWriter.WriteASchedule(SCHNAM: AnsiString;

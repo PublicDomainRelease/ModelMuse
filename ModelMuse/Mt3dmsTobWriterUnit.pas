@@ -245,59 +245,66 @@ begin
     Exit;
   end;
 
-  FNameOfFile := FileName(AFileName);
-  WriteToMt3dMsNameFile(StrTOB, Mt3dTob,
-    FNameOfFile);
-
-  FTobPackage := Package as TMt3dmsTransportObservations;
-
-  OUTNAM := ChangeFileExt(ExtractFileName(FNameOfFile), '');
-
-  FillFluxObsList;
-  EvaluateConcentrationObs(Purpose);
-
-  OpenFile(FNameOfFile);
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    frmProgressMM.AddMessage(StrWritingTOBPackage);
-    frmProgressMM.AddMessage(StrWritingDataSet0);
-    WriteDataSet0;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrTheFollowingMASSF);
 
-    frmProgressMM.AddMessage(StrWritingDataSet1);
-    WriteDataSet1;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+    FNameOfFile := FileName(AFileName);
+    WriteToMt3dMsNameFile(StrTOB, Mt3dTob,
+      FNameOfFile);
 
-    frmProgressMM.AddMessage(StrWritingDataSet2);
-    WriteDataSet2;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+    FTobPackage := Package as TMt3dmsTransportObservations;
 
-    WriteDataSets3to5;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+    OUTNAM := ChangeFileExt(ExtractFileName(FNameOfFile), '');
 
-    WriteFluxObservations;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
+    FillFluxObsList;
+    EvaluateConcentrationObs(Purpose);
+
+    OpenFile(FNameOfFile);
+    try
+      frmProgressMM.AddMessage(StrWritingTOBPackage);
+      frmProgressMM.AddMessage(StrWritingDataSet0);
+      WriteDataSet0;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet1);
+      WriteDataSet1;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet2);
+      WriteDataSet2;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      WriteDataSets3to5;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      WriteFluxObservations;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+    finally
+      CloseFile;
     end;
   finally
-    CloseFile;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -352,6 +359,18 @@ begin
   for Index := 0 to Model.Mt3dmsEtsMassFluxObservations.Count - 1 do
   begin
     FFluxObsList.Add(Model.Mt3dmsEtsMassFluxObservations.Items[Index]);
+  end;
+  for Index := 0 to Model.Mt3dmsStrMassFluxObservations.Count - 1 do
+  begin
+    FFluxObsList.Add(Model.Mt3dmsStrMassFluxObservations.Items[Index]);
+  end;
+  for Index := 0 to Model.Mt3dmsFhbHeadMassFluxObservations.Count - 1 do
+  begin
+    FFluxObsList.Add(Model.Mt3dmsFhbHeadMassFluxObservations.Items[Index]);
+  end;
+  for Index := 0 to Model.Mt3dmsFhbFlowMassFluxObservations.Count - 1 do
+  begin
+    FFluxObsList.Add(Model.Mt3dmsFhbFlowMassFluxObservations.Items[Index]);
   end;
 end;
 
@@ -488,6 +507,8 @@ begin
   frmErrorsAndWarnings.RemoveErrorGroup(Model, MissingConcObsNameError);
   frmErrorsAndWarnings.RemoveWarningGroup(Model, ConcObsNameWarning);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInTheFollowingObj);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, InvalidConcEndObsTime);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, InvalidConcStartObsTime);
 
   for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin
@@ -642,7 +663,7 @@ begin
   WriteInteger(inConcObs);
   WriteInteger(inFluxObs);
   WriteInteger(inSaveObs);
-  WriteString(' Data Set 2: OUTNAM, inConcObs, inFluxObs, inSaveObs');
+  WriteString(' # Data Set 2: OUTNAM, inConcObs, inFluxObs, inSaveObs');
   NewLine;
 
   if inConcObs > 0 then

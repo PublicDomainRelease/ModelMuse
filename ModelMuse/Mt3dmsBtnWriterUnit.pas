@@ -4,7 +4,7 @@ interface
 
 uses
   CustomModflowWriterUnit, ModflowPackageSelectionUnit, Forms, PhastModelUnit,
-  ModflowTimeUnit;
+  ModflowTimeUnit, Classes;
 
 type
   TMt3dmsBtnWriter = class(TCustomModflowWriter)
@@ -20,6 +20,7 @@ type
     procedure WriteDataSet10;
     procedure WriteDataSet11;
     procedure WriteDataSet12;
+    // write initial concentrations
     procedure WriteDataSet13;
     procedure WriteDataSet14;
     procedure WriteDataSet15;
@@ -48,7 +49,7 @@ implementation
 uses
   ModflowUnitNumbers, frmProgressUnit, SysUtils, GoPhastTypes,
   DataSetUnit, Mt3dmsChemSpeciesUnit, ModflowOutputControlUnit, Mt3dmsTimesUnit,
-  frmErrorsAndWarningsUnit;
+  frmErrorsAndWarningsUnit, ReadModflowArrayUnit;
 
 resourcestring
   StrSInTheMT3DMSBTN = '%s in the MT3DMS BTN package';
@@ -83,6 +84,22 @@ resourcestring
   StrWritingDataSet19 = '  Writing Data Set 19.';
   StrWritingDataSet20 = '  Writing Data Set 20.';
   StrWritingDataSet21 = '  Writing Data Set 21.';
+  StrTheFile0sWas = 'The file "%0:s" was designated as the file containing i' +
+  'nitial concentrations for the species "%1:s". However, the file does not ' +
+  'exist.';
+  StrInitialConcentratio = 'Initial concentration file does not exist.';
+  StrTheSpecifiedStress = 'The specified stress period, time step, and trans' +
+  'port step were not found in the file "%s".';
+  StrMissingTransportSt = 'Missing transport step in initial concentration f' +
+  'ile.';
+  StrDataForLayer0d = 'Data for layer %0:d in the specified stress period, t' +
+  'ime step, and transport step were not found in the file "%1:s".';
+  StrMissingDataInInit = 'Missing data in initial concentration file';
+  StrTheNumberOfRowsO = 'The number of rows or columns in the file "%s" do n' +
+  'ot match the number in the model.';
+  StrIncorrectNumberOf = 'Incorrect number of rows or columns in initial con' +
+  'centration file.';
+  StrDataSet13SCONC = 'Data Set 13: SCONC: %0:s, Layer: %1:d';
 
 { TMt3dmsBtnWriter }
 
@@ -154,24 +171,169 @@ procedure TMt3dmsBtnWriter.WriteDataSet13;
 var
   SpeciesIndex: Integer;
   Item: TChemSpeciesItem;
+  StressPeriod: integer;
+  TimeStep: integer;
+  TransportStep: integer;
   procedure WriteInitialConc;
   var
     LayerIndex: Integer;
     DataArray: TDataArray;
+    FileName: string;
+    ErrorMessage: string;
+    AFileStream: TFileStream;
+    APrecision: TModflowPrecision;
+    KPER: Integer;
+    KSTP: Integer;
+    NTRANS: Integer;
+    TOTIM: TModflowDouble;
+    DESC: TModflowDesc;
+    NCOL, NROW, ILAY: Integer;
+    AnArray: TModflowDoubleArray;
+    DataWritten: Boolean;
+    LIndex: Integer;
+    ColIndex: Integer;
+    RowIndex: Integer;
+    NeedNewLine: Boolean;
   begin
-    DataArray := Model.DataArrayManager.GetDataSetByName(
-      Item.InitialConcDataArrayName);
-    DataArray.Initialize;
-    for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
+    DataWritten := False;
+    if Item.UseInitialConcentrationFile then
     begin
-      if Model.IsLayerSimulated(LayerIndex) then
+      FileName := Item.InitialConcentrationFileName;
+      if FileExists(FileName) then
       begin
-        WriteArray(DataArray, LayerIndex, Format('Data Set 13: SCONC: %0:s, Layer: %1:d',
-          [Item.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]));
+        KPER := -1;
+        KSTP := -1;
+        NTRANS := -1;
+        AFileStream := TFileStream.Create(FileName, fmOpenRead or fmShareCompat);
+        try
+          APrecision := CheckArrayPrecision(AFileStream);
+
+          While AFileStream.Position < AFileStream.Size do
+          begin
+            case APrecision of
+              mpSingle:
+                begin
+                  ReadSinglePrecisionMt3dmsBinaryRealArray(AFileStream, NTRANS,
+                    KSTP, KPER, TOTIM, DESC, NCOL, NROW, ILAY, AnArray);
+                end;
+              mpDouble:
+                begin
+                  ReadDoublePrecisionMt3dmsBinaryRealArray(AFileStream, NTRANS,
+                    KSTP, KPER, TOTIM, DESC, NCOL, NROW, ILAY, AnArray);
+                end;
+              else Assert(False);
+            end;
+            if (StressPeriod >= KPER) and (KSTP >= TimeStep)
+              and (TransportStep >= NTRANS) then
+            begin
+              break;
+            end;
+          end;
+
+          if (StressPeriod <> KPER) or (KSTP <> TimeStep)
+            or (TransportStep <> NTRANS) then
+          begin
+            ErrorMessage := Format(StrTheSpecifiedStress, [FileName]);
+            frmErrorsAndWarnings.AddError(Model, StrMissingTransportSt,
+              ErrorMessage);
+          end
+          else
+          begin
+            LIndex := 0;
+            for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
+            begin
+              if Model.IsLayerSimulated(LayerIndex) then
+              begin
+                Inc(LIndex);
+                if LIndex <> ILAY then
+                begin
+                  ErrorMessage := Format(StrDataForLayer0d, [LIndex, FileName]);
+                  frmErrorsAndWarnings.AddError(Model, StrMissingDataInInit,
+                    ErrorMessage);
+                  Exit;
+                end;
+
+                if (Model.Grid.RowCount <> NROW) or (Model.Grid.ColumnCount <> NCOL) then
+                begin
+                  ErrorMessage := Format(StrTheNumberOfRowsO, [FileName]);
+                  frmErrorsAndWarnings.AddError(Model, StrIncorrectNumberOf,
+                    ErrorMessage);
+                  Exit;
+                end;
+                WriteU2DRELHeader(Format(StrDataSet13SCONC,
+                  [Item.Name, LIndex]));
+                for RowIndex := 0 to Model.Grid.RowCount - 1 do
+                begin
+                  NeedNewLine := False;
+                  for ColIndex := 0 to Model.Grid.ColumnCount - 1 do
+                  begin
+                    WriteFloat(AnArray[RowIndex, ColIndex]);
+                    NeedNewLine := ((ColIndex + 1) mod 10) <> 0;
+                    if not NeedNewLine then
+                    begin
+                      NewLine;
+                    end;
+                  end;
+                  if NeedNewLine then
+                  begin
+                    NewLine;
+                  end;
+                end;
+
+                if AFileStream.Position < AFileStream.Size then
+                begin
+                  case APrecision of
+                    mpSingle:
+                      begin
+                        ReadSinglePrecisionMt3dmsBinaryRealArray(AFileStream, NTRANS,
+                          KSTP, KPER, TOTIM, DESC, NCOL, NROW, ILAY, AnArray);
+                      end;
+                    mpDouble:
+                      begin
+                        ReadDoublePrecisionMt3dmsBinaryRealArray(AFileStream, NTRANS,
+                          KSTP, KPER, TOTIM, DESC, NCOL, NROW, ILAY, AnArray);
+                      end;
+                    else Assert(False);
+                  end;
+                end
+
+
+              end;
+            end;
+            DataWritten := True;
+          end;
+        finally
+          AFileStream.Free;
+        end;
+      end
+      else
+      begin
+        ErrorMessage := Format(StrTheFile0sWas, [FileName, Item.Name]);
+        frmErrorsAndWarnings.AddError(Model, StrInitialConcentratio,
+          ErrorMessage);
+      end;
+    end;
+
+    if not DataWritten then
+    begin
+      DataArray := Model.DataArrayManager.GetDataSetByName(
+        Item.InitialConcDataArrayName);
+      DataArray.Initialize;
+      for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
+      begin
+        if Model.IsLayerSimulated(LayerIndex) then
+        begin
+          WriteArray(DataArray, LayerIndex,
+            Format(StrDataSet13SCONC,
+            [Item.Name, Model.DataSetLayerToModflowLayer(LayerIndex)]));
+        end;
       end;
     end;
   end;
 begin
+  StressPeriod := FMt3dBasic.InitialConcentrationStressPeriod;
+  TimeStep := FMt3dBasic.InitialConcentrationTimeStep;
+  TransportStep := FMt3dBasic.InitialConcentrationTransportStep;
   for SpeciesIndex := 0 to Model.MobileComponents.Count - 1 do
   begin
     Item := Model.MobileComponents[SpeciesIndex];
@@ -369,20 +531,21 @@ begin
         end;
       end;
     end;
-    BaseName := ChangeFileExt(FNameOfFile, '');
+    BaseName := ExtractFileName(FNameOfFile);
+    BaseName := ChangeFileExt(BaseName, '');
     // Generate Name file lines for chemical species
     for SpeciesIndex := 0 to Model.MobileComponents.Count-1 do
     begin
       UnitNumber := Mt3dObsStart + SpeciesIndex;
       Chem := Model.MobileComponents[SpeciesIndex];
-      OutputFileName := BaseName + '_' + Chem.Name + strMtObs;
+      OutputFileName := GenerateNewRoot(BaseName + '_' + Chem.Name) + strMtObs;
       WriteToMt3dMsNameFile(strDATA, UnitNumber, OutputFileName);
     end;
     for SpeciesIndex := 0 to Model.ImmobileComponents.Count-1 do
     begin
       UnitNumber := Mt3dUcnImmobileStart + Model.MobileComponents.Count + SpeciesIndex;
       Chem := Model.ImmobileComponents[SpeciesIndex];
-      OutputFileName := BaseName + '_' + Chem.Name + strMtObs;
+      OutputFileName := GenerateNewRoot(BaseName + '_' + Chem.Name) + strMtObs;
       WriteToMt3dMsNameFile(strDATA, UnitNumber, OutputFileName);
     end;
   end;
@@ -482,18 +645,19 @@ begin
   SecondUcnFileCreated := Mt3dmsChemReact.IsSelected
     and (Mt3dmsChemReact.SorptionChoice > scLinear);
 
-  BaseName := ChangeFileExt(FNameOfFile, '');
+  BaseName := ExtractFileName(FNameOfFile);
+  BaseName := ChangeFileExt(BaseName, '');
   // Generate Name file lines for chemical species
   for SpeciesIndex := 0 to Model.MobileComponents.Count-1 do
   begin
     UnitNumber := Mt3dUcnMobileStart + SpeciesIndex;
     Chem := Model.MobileComponents[SpeciesIndex];
-    OutputFileName := BaseName + '_' + Chem.Name + StrMt3dConcFile;
+    OutputFileName := GenerateNewRoot(BaseName + '_' + Chem.Name) + StrMt3dConcFile;
     WriteToMt3dMsNameFile(strDATABINARY, UnitNumber, OutputFileName);
     if SecondUcnFileCreated then
     begin
       UnitNumber := UnitNumber + 100;
-      OutputFileName := BaseName + '_' + Chem.Name + '_S'+ StrMt3dConcFile;
+      OutputFileName := GenerateNewRoot(BaseName + '_' + Chem.Name) + '_S'+ StrMt3dConcFile;
       WriteToMt3dMsNameFile(strDATABINARY, UnitNumber, OutputFileName);
     end;
   end;
@@ -501,12 +665,12 @@ begin
   begin
     UnitNumber := Mt3dUcnImmobileStart + SpeciesIndex;
     Chem := Model.ImmobileComponents[SpeciesIndex];
-    OutputFileName := BaseName + '_' + Chem.Name + StrMt3dConcFile;
+    OutputFileName := GenerateNewRoot(BaseName + '_' + Chem.Name) + StrMt3dConcFile;
     WriteToMt3dMsNameFile(strDATABINARY, UnitNumber, OutputFileName);
     if SecondUcnFileCreated then
     begin
       UnitNumber := UnitNumber + 100;
-      OutputFileName := BaseName + '_' + Chem.Name + '_S'+ StrMt3dConcFile;
+      OutputFileName := GenerateNewRoot(BaseName + '_' + Chem.Name) + '_S'+ StrMt3dConcFile;
       WriteToMt3dMsNameFile(strDATABINARY, UnitNumber, OutputFileName);
     end;
   end;
@@ -514,14 +678,14 @@ begin
   begin
     UnitNumber := Mt3dMassStart + SpeciesIndex;
     Chem := Model.MobileComponents[SpeciesIndex];
-    OutputFileName := BaseName + '_' + Chem.Name + '._mas';
+    OutputFileName := GenerateNewRoot(BaseName + '_' + Chem.Name) + '._mas';
     WriteToMt3dMsNameFile(strDATA, UnitNumber, OutputFileName);
   end;
   for SpeciesIndex := 0 to Model.ImmobileComponents.Count-1 do
   begin
     UnitNumber := Mt3dMassStart + Model.MobileComponents.Count + SpeciesIndex;
     Chem := Model.ImmobileComponents[SpeciesIndex];
-    OutputFileName := BaseName + '_' + Chem.Name + '._mas';
+    OutputFileName := GenerateNewRoot(BaseName + '_' + Chem.Name) + '._mas';
     WriteToMt3dMsNameFile(strDATA, UnitNumber, OutputFileName);
   end;
 end;
@@ -621,190 +785,201 @@ procedure TMt3dmsBtnWriter.WriteFile(const AFileName: string);
 begin
   // remove errors and warnings
 //  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrFileForTheInitial);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTimeDataForMT3DMS);
-
-  FNameOfFile := FileName(AFileName);
-  // PackageGeneratedExternally needs to be updated for MT3DMS
-  if Model.PackageGeneratedExternally(StrBTN) then
-  begin
-    Exit;
-  end;
-
-  // write to MT3DMS name file.
-  WriteToMt3dMsNameFile(StrBTN, Mt3dBtn,
-    FNameOfFile);
-
-  OpenFile(FNameOfFile);
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    frmProgressMM.AddMessage(StrWritingMT3DMSBTNP);
-    frmProgressMM.AddMessage(StrWritingDataSets1and2);
-    WriteDataSets1And2;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTimeDataForMT3DMS);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInitialConcentratio);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrMissingTransportSt);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrMissingDataInInit);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrIncorrectNumberOf);
+
+
+
+
+    FNameOfFile := FileName(AFileName);
+    // PackageGeneratedExternally needs to be updated for MT3DMS
+    if Model.PackageGeneratedExternally(StrBTN) then
     begin
       Exit;
     end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet3);
-    WriteDataSet3;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+    // write to MT3DMS name file.
+    WriteToMt3dMsNameFile(StrBTN, Mt3dBtn,
+      FNameOfFile);
 
-    frmProgressMM.AddMessage(StrWritingDataSet4);
-    WriteDataSet4;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+    OpenFile(FNameOfFile);
+    try
+      frmProgressMM.AddMessage(StrWritingMT3DMSBTNP);
+      frmProgressMM.AddMessage(StrWritingDataSets1and2);
+      WriteDataSets1And2;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet5);
-    WriteDataSet5;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      frmProgressMM.AddMessage(StrWritingDataSet3);
+      WriteDataSet3;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet4);
+      WriteDataSet4;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet5);
+      WriteDataSet5;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
 
-    frmProgressMM.AddMessage(StrWritingDataSet6);
-    WriteDataSet6;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      frmProgressMM.AddMessage(StrWritingDataSet6);
+      WriteDataSet6;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    // data set 7
-    frmProgressMM.AddMessage(StrWritingDataSet7);
-    Model.ModflowGrid.WriteDELR(self);
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      // data set 7
+      frmProgressMM.AddMessage(StrWritingDataSet7);
+      Model.ModflowGrid.WriteDELR(self);
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    // data set 8
-    frmProgressMM.AddMessage(StrWritingDataSet8);
-    Model.ModflowGrid.WriteDELC(self);
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      // data set 8
+      frmProgressMM.AddMessage(StrWritingDataSet8);
+      Model.ModflowGrid.WriteDELC(self);
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    // data set 9
-    frmProgressMM.AddMessage(StrWritingDataSet9);
-    Model.ModflowGrid.WriteTOP(self);
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-    Model.DataArrayManager.CacheDataArrays;
+      // data set 9
+      frmProgressMM.AddMessage(StrWritingDataSet9);
+      Model.ModflowGrid.WriteTOP(self);
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      Model.DataArrayManager.CacheDataArrays;
 
-    frmProgressMM.AddMessage(StrWritingDataSet10);
-    WriteDataSet10;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      frmProgressMM.AddMessage(StrWritingDataSet10);
+      WriteDataSet10;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet11);
-    WriteDataSet11;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      frmProgressMM.AddMessage(StrWritingDataSet11);
+      WriteDataSet11;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet12);
-    WriteDataSet12;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      frmProgressMM.AddMessage(StrWritingDataSet12);
+      WriteDataSet12;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet13);
-    WriteDataSet13;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      frmProgressMM.AddMessage(StrWritingDataSet13);
+      WriteDataSet13;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet14);
-    WriteDataSet14;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      frmProgressMM.AddMessage(StrWritingDataSet14);
+      WriteDataSet14;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet15);
-    WriteDataSet15;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      frmProgressMM.AddMessage(StrWritingDataSet15);
+      WriteDataSet15;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet16);
-    WriteDataSet16;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      frmProgressMM.AddMessage(StrWritingDataSet16);
+      WriteDataSet16;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet17);
-    WriteDataSet17;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      frmProgressMM.AddMessage(StrWritingDataSet17);
+      WriteDataSet17;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet18);
-    WriteDataSet18;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      frmProgressMM.AddMessage(StrWritingDataSet18);
+      WriteDataSet18;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet19);
-    WriteDataSet19;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      frmProgressMM.AddMessage(StrWritingDataSet19);
+      WriteDataSet19;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet20);
-    WriteDataSet20;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
+      frmProgressMM.AddMessage(StrWritingDataSet20);
+      WriteDataSet20;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet21);
-    WriteDataSet21to23;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
+      frmProgressMM.AddMessage(StrWritingDataSet21);
+      WriteDataSet21to23;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+    finally
+      CloseFile;
     end;
   finally
-    CloseFile;
+    frmErrorsAndWarnings.EndUpdate;
   end;
-
 end;
 
 end.

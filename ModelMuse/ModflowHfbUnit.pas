@@ -45,8 +45,8 @@ type
     procedure ResetItemObserver(Index: integer);
     procedure RemoveSubscription(Sender: TObject; const AName: string);
     procedure RestoreSubscription(Sender: TObject; const AName: string);
-    procedure GetPropertyObserver(Sender: TObject; List: TList);
   protected
+    procedure GetPropertyObserver(Sender: TObject; List: TList); override;
     procedure CreateFormulaObjects;
     property HydraulicConductivityObserver: TObserver
       read GetHydraulicConductivityObserver;
@@ -83,8 +83,8 @@ implementation
 uses PhastModelUnit, ScreenObjectUnit, frmGoPhastUnit;
 
 const
-  ThicknessPositon = 0;
-  HydraulicConductivityPositon = 1;
+  ThicknessPosition = 0;
+  HydraulicConductivityPosition = 1;
 
 procedure RemoveHfbModflowBoundarySubscription(Sender: TObject; Subject: TObject;
   const AName: string);
@@ -198,7 +198,10 @@ end;
 function THfbBoundary.GetHydraulicConductivity: string;
 begin
   Result := FHydraulicConductivityFormula.Formula;
-  ResetItemObserver(HydraulicConductivityPositon);
+  if ScreenObject <> nil then
+  begin
+    ResetItemObserver(HydraulicConductivityPosition);
+  end;
 end;
 
 function THfbBoundary.GetHydraulicConductivityObserver: TObserver;
@@ -224,18 +227,21 @@ procedure THfbBoundary.GetPropertyObserver(Sender: TObject; List: TList);
 begin
   if Sender = FThicknessFormula then
   begin
-    List.Add(FObserverList[ThicknessPositon]);
+    List.Add(FObserverList[ThicknessPosition]);
   end;
   if Sender = FHydraulicConductivityFormula then
   begin
-    List.Add(FObserverList[HydraulicConductivityPositon]);
+    List.Add(FObserverList[HydraulicConductivityPosition]);
   end;
 end;
 
 function THfbBoundary.GetThickness: string;
 begin
   Result := FThicknessFormula.Formula;
-  ResetItemObserver(ThicknessPositon);
+  if ScreenObject <> nil then
+  begin
+    ResetItemObserver(ThicknessPosition);
+  end;
 end;
 
 function THfbBoundary.GetThicknessObserver: TObserver;
@@ -277,7 +283,7 @@ end;
 
 procedure THfbBoundary.SetHydraulicConductivity(Value: string);
 begin
-  UpdateFormula(Value, HydraulicConductivityPositon, FHydraulicConductivityFormula);
+  UpdateFormula(Value, HydraulicConductivityPosition, FHydraulicConductivityFormula);
 end;
 
 procedure THfbBoundary.SetParameterName(const Value: string);
@@ -302,7 +308,7 @@ end;
 
 procedure THfbBoundary.SetThickness(const Value: string);
 begin
-  UpdateFormula(Value, ThicknessPositon, FThicknessFormula);
+  UpdateFormula(Value, ThicknessPosition, FThicknessFormula);
 end;
 
 procedure THfbBoundary.SetUsed(const Value: boolean);

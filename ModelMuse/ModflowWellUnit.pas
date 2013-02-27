@@ -15,6 +15,9 @@ type
     StartingTime: double;
     EndingTime: double;
     PumpingAnnotation: string;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+    procedure RecordStrings(Strings: TStringList);
   end;
     )
     @name stores, the location, time and pumping rate for a well boundary.
@@ -51,6 +54,9 @@ type
   // @name is stored by @link(TWellCollection).
   TWellItem = class(TCustomModflowBoundaryItem)
   private
+    const
+      PumpingRatePosition = 0;
+    var
     // See @link(PumpingRate).
     FPumpingRate: TFormulaObject;
     // See @link(PumpingRate).
@@ -82,7 +88,7 @@ type
   TMfWelTimeListLink = class(TTimeListsModelLink)
   private
     // @name is used to compute the pumping rates for a series of
-    // Well over a series of time intervals.
+    // Wells over a series of time intervals.
     FPumpingRateData: TModflowTimeList;
   protected
     procedure CreateTimeLists; override;
@@ -197,8 +203,6 @@ type
     procedure InvalidateDisplay; override;
   end;
 
-
-
 implementation
 
 uses ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit, TempFiles, 
@@ -207,8 +211,8 @@ uses ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit, TempFiles,
 resourcestring
   StrPumpingRateMultip = ' pumping rate multiplier';
 
-const
-  PumpingRatePosition = 0;  
+//const
+//  PumpingRatePosition = 0;
 
 { TWellItem }
 
@@ -296,7 +300,8 @@ end;
 procedure TWellItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FPumpingRate,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TWellItem.SetBoundaryFormula(Index: integer; const Value: string);

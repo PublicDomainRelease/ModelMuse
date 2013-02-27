@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../../helpproject.xsl" ?>
+<topic template="Default" lasteditedby="rbwinst-pr" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../helpproject.xsd">
+  <title translate="true">Farm Surface-Water Flags</title>
+  <body>
+    <header>
+      <para styleclass="Heading1"><text styleclass="Heading1" translate="true">Farm Surface-Water Flags</text></para>
+    </header>
+    <para styleclass="ItemGroup"><text styleclass="ItemGroup" translate="true">Surface-Water Flags</text></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[INRDFL]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><anchor id="INRDFL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Non-Routed Surface-Water Delivery Flag:</text></para>
+          <list id="5" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">0 = no Non-Routed Surface-Water Delivery exists.</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">1 = Non-Routed Surface-Water Deliveries exist. A farm related list of Volumes, Ranks, and Use-Flags of Non-Routed Surface-Water Delivery will be read. (Data Set </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="DataSet33" styleclass="Normal" translate="true">33</link><text styleclass="Normal" translate="true">)</text></li>
+          </list>
+        </td>
+      </tr>
+    </table></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[MXNRDT]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><anchor id="MXNRDT" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Maximum number of non-routed delivery types (read if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="INRDFL" styleclass="Normal" translate="true">INRDFL</link><text styleclass="Normal" translate="true"> = 1). (See Data Set </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="DataSet33" styleclass="Normal" translate="true">33</link><text styleclass="Normal" translate="true">)</text></para>
+        </td>
+      </tr>
+    </table></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[ISRDFL]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><anchor id="ISRDFL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Semi-Routed Surface-Water Delivery Flag:</text></para>
+          <list id="6" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">0 = no Semi-Routed Surface-Water Delivery exists</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">1 or 2 = Semi-Routed Surface-Water Deliveries exist. (Routing surface-water along a river or major canal, and allocating non-routed deliveries from a point of diversion). A farm related list of Row- and Column coordinates for a point of diversion will be read (only if SFR1 is specified in Name File).</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">1 = List of Row- and Column-coordinates is read for the entire simulation. (See Data Set </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="DataSet20a" styleclass="Normal" translate="true">20a</link><text styleclass="Normal" translate="true">.)</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">2 = List of Row- and Column-coordinates is read for each stress period. (See Data Set </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="DataSet34a" styleclass="Normal" translate="true">34a</link><text styleclass="Normal" translate="true">.)</text></li>
+          </list>
+        </td>
+      </tr>
+    </table></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[IRDFL]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><anchor id="IRDFL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Routed Surface-Water Delivery Flag:</text></para>
+          <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">0 = no surface-water delivery exists.</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">1 = fully-routed surface-water delivery may occur from the uppermost reach of a series of diversion-segment reaches located within a farm. Caution: Streamflow fully-routed through a conveyance network directly to a farm can only occur (1) if SFR is specified in Name File, (2) if at least one reach of a diversion segment is located within the farms, and (3) if streamflow is available.</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">–1 = fully-routed surface-water delivery may occur from the uppermost reach of a series of reaches of any type of stream segment located within a farm. Caution: Streamflow fully-routed through a conveyance network directly to a farm can only occur (1) if SFR is specified in Name File, (2) if at least one reach of a any type of segment is located within the farms, and (3) if streamflow is available.</text></li>
+          </list>
+        </td>
+      </tr>
+    </table></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[ISRRFL]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><anchor id="ISRRFL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Semi-Routed Surface-Water Runoff Returnflow Flag:</text></para>
+          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">0 = No locations along the stream network are specified for any farm, where semi-routed runoff returnflow is recharged into the stream network. Runoff is either automatically prorated over non-diversion-segment reaches located within a farm, or automatically recharged into one non-diversion-segment reach nearest to the lowest elevation of the farm.</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">1 or 2 = For each farm, a location is specified anywhere along the stream network, where semi-routed runoff returnflow is recharged anywhere in the active model domain. A farm-related list of row and column coordinates or segment and reach numbers for a point of runoff returnflow recharge will be read (only if SFR is specified in Name File).</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">1 = List of row and column coordinates or segment and reach numbers is read for the entire simulation. (See Data Set </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="DataSet20b" styleclass="Normal" translate="true">20b</link><text styleclass="Normal" translate="true">.)</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">2 = List of row and column coordinates or segment and reach numbers is read for each stress period. (See Data Set </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="DataSet34b" styleclass="Normal" translate="true">34b</link><text styleclass="Normal" translate="true">.)</text></li>
+          </list>
+        </td>
+      </tr>
+    </table></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[IRRFL]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><anchor id="IRRFL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Routed Surface-Water Runoff Returnflow Flag:</text></para>
+          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">0 = no surface-water runoff returnflow possible (no SFR specified in Name File).</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">1 = surface-water runoff may be returned as fully-routed returnflow to a series of non-diversion-segment reaches located within a farm (prorated over each reach weighted by the reach length). Caution: Fully-routed returnflow directly from a farm to a series of non-diversion-segment reaches can only occur (1) if SFR is specified in Name File and (2) if at least one reach of a non-diversion segment is located within the farm.</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">–1 = fully surface-water runoff may be returned as fully-routed returnflow to a series of reaches of any segment of stream type located within a farm (prorated over each reach weighted by the reach length). Caution: Fully-routed returnflow directly from a farm to a series of reaches of any type of stream segment can only occur (1) if SFR is specified in Name File and (2) if at least one reach of a non-diversion segment is located within the farm.</text></li>
+          </list>
+        </td>
+      </tr>
+    </table></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[IALLOT]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><anchor id="IALLOT" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Surface-water allotment flag</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">0–No surface-water allotment specified,</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">1–Equally appropriated surface-water allotment height [L] specified per stress period (specification of diversions from a river into diversion segments in SFR input file required if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="ISRDFL" styleclass="Normal" translate="true">ISRDFL</link><text styleclass="Normal" translate="true"> = 1 or 2, or </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="IRDFL" styleclass="Normal" translate="true">IRDFL</link><text styleclass="Normal" translate="true"> = 1). (See Data Set </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="DataSet35" styleclass="Normal" translate="true">35</link><text styleclass="Normal" translate="true">.)</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">2–Prior appropriation system with Water Rights Calls [L</text><text styleclass="Normal" style="font-size:8pt; vertical-align:super;" translate="true">3</text><text styleclass="Normal" translate="true">/T] (diversion rates from a river into diversion segments are simulated if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="ISRDFL" styleclass="Normal" translate="true">ISRDFL</link><text styleclass="Normal" translate="true"> = 1 or 2, or </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="IRDFL" styleclass="Normal" translate="true">IRDFL</link><text styleclass="Normal" translate="true"> = 1; specification of a farm-specific water rights calls list required for each stress period). (See Data Set </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="DataSet36" styleclass="Normal" translate="true">36</link><text styleclass="Normal" translate="true">.)</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">3–Prior appropriation system without Water Rights Calls [L</text><text styleclass="Normal" style="font-size:8pt; vertical-align:super;" translate="true">3</text><text styleclass="Normal" translate="true">/T] (diversion rates from a river into diversion segments are simulated if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="ISRDFL" styleclass="Normal" translate="true">ISRDFL</link><text styleclass="Normal" translate="true"> = 1 or 2, or </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="IRDFL" styleclass="Normal" translate="true">IRDFL</link><text styleclass="Normal" translate="true"> = 1).</text></para>
+        </td>
+      </tr>
+    </table></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[PCLOSE]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><anchor id="PCLOSE" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">User specified closure criterion for simulated diversions into diversion segments if prior appropriation is chosen [L</text><text styleclass="Normal" style="font-size:8pt; vertical-align:super;" translate="true">3</text><text styleclass="Normal" translate="true">/T] (only to specify if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="IALLOT" styleclass="Normal" translate="true">IALLOT</link><text styleclass="Normal" translate="true"> &gt; 1)</text></para>
+        </td>
+      </tr>
+    </table></para>
+  </body>
+</topic>

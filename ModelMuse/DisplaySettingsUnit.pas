@@ -5,7 +5,7 @@ interface
 uses
   Types, Classes, Graphics, GoPhastTypes, LegendUnit, AbstractGridUnit,
   PathlineReader, SysUtils, EdgeDisplayUnit, DataSetUnit,
-  Generics.Collections, Generics.Defaults, SutraMeshUnit;
+  Generics.Collections, Generics.Defaults, SutraMeshUnit, VectorDisplayUnit;
 
 type
   TTextDisplay = class(TGoPhastPersistent)
@@ -57,7 +57,7 @@ type
     constructor Create(Model: TBaseModel);
   end;
 
-  TContourDisplaySettings= class(TGoPhastPersistent)
+  TCustomDisplaySettings= class(TGoPhastPersistent)
   private
     FDataSetName: string;
     FLegend: TLegend;
@@ -81,7 +81,19 @@ type
     property ContourAlgorithm: TContourAlg read FContourAlgorithm write SetContourAlgorithm;
   end;
 
-  TColorDisplaySettings = class(TContourDisplaySettings)
+  TContourDisplaySettings = class(TCustomDisplaySettings)
+  private
+    FContours: TContours;
+    procedure SetContours(const Value: TContours);
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
+  published
+    property Contours: TContours read FContours write SetContours;
+  end;
+
+  TColorDisplaySettings = class(TCustomDisplaySettings)
   private
     FTimeListName: string;
     FTime: double;
@@ -174,8 +186,9 @@ type
     procedure SetPlotUnconnected(const Value: Boolean);
     procedure SetUnconnectedColor(const Value: TColor);
   public
-    procedure GetObjectsToPlot(StreamList: TSfrStreamPlotList;
-      LakeList: TLakePlotList);
+    procedure GetObjectsToPlot(SfrStreamList: TSfrStreamPlotList;
+      LakeList: TLakePlotList); overload;
+    procedure GetObjectsToPlot(StrStreamList: TSfrStreamPlotList); overload;
     Constructor Create(Model: TBaseModel);
     procedure Assign(Source: TPersistent); override;
   published
@@ -196,7 +209,6 @@ type
     property TimeToPlot: TDateTime read FTimeToPlot write SetTimeToPlot;
   end;
 
-  {$IFDEF SUTRA}
   TSutraSettings = class(TGoPhastPersistent)
   private
     FElementFont: TFont;
@@ -205,12 +217,14 @@ type
     FShowElementNumbers: Boolean;
     FNodeDrawingChoice: TDrawingChoice;
     FElementDrawingChoice: TDrawingChoice;
+    FDrawElementCenters: boolean;
     procedure SetElementFont(const Value: TFont);
     procedure SetNodeFont(const Value: TFont);
     procedure SetShowElementNumbers(const Value: Boolean);
     procedure SetShowNodeNumbers(const Value: Boolean);
     procedure SetElementDrawingChoice(const Value: TDrawingChoice);
     procedure SetNodeDrawingChoice(const Value: TDrawingChoice);
+    procedure SetDrawElementCenters(const Value: boolean);
   public
     procedure Assign(Source: TPersistent); override;
     procedure AssignTo(Dest: TPersistent); override;
@@ -220,16 +234,16 @@ type
     property NodeFont: TFont read FNodeFont write SetNodeFont;
     property ElementFont: TFont read FElementFont write SetElementFont;
     property ShowNodeNumbers: Boolean read FShowNodeNumbers
-      write SetShowNodeNumbers;
+      write SetShowNodeNumbers stored True;
     property ShowElementNumbers: Boolean read FShowElementNumbers
-      write SetShowElementNumbers;
+      write SetShowElementNumbers stored True;
     property ElementDrawingChoice: TDrawingChoice read FElementDrawingChoice
-      write SetElementDrawingChoice;
+      write SetElementDrawingChoice stored True;
     property NodeDrawingChoice: TDrawingChoice read FNodeDrawingChoice
-      write SetNodeDrawingChoice;
+      write SetNodeDrawingChoice stored True;
+    property DrawElementCenters: boolean read FDrawElementCenters
+      write SetDrawElementCenters;
   end;
-  {$ENDIF}
-
 
   {A @name stores all the information
    needed to restore the appearance of ModelMuse to a previous
@@ -262,9 +276,11 @@ type
     FContourFont: TFont;
     FLabelContours: boolean;
     FSfrStreamLinkPlot: TSfrStreamLinkPlot;
-  {$IFDEF SUTRA}
     FSutraSettings: TSutraSettings;
-  {$ENDIF}
+    FMaxVectors: TPredefinedVectors;
+    FVelocityVectors: TVectorCollection;
+    FMinVectors: TPredefinedVectors;
+    FMidVectors: TPredefinedVectors;
     procedure OnChangeEventHandler(Sender: TObject);
     procedure SetAdditionalText(const Value: TTextCollection);
     procedure SetGridDisplayChoice(const Value: TGridLineDrawingChoice);
@@ -288,9 +304,11 @@ type
     procedure SetVisibleObjects(const Value: TStringList);
     procedure SetContourFont(const Value: TFont);
     procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot);
-  {$IFDEF SUTRA}
     procedure SetSutraSettings(const Value: TSutraSettings);
-  {$ENDIF}
+    procedure SetMaxVectors(const Value: TPredefinedVectors);
+    procedure SetMidVectors(const Value: TPredefinedVectors);
+    procedure SetMinVectors(const Value: TPredefinedVectors);
+    procedure SetVelocityVectors(const Value: TVectorCollection);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Collection: TCollection); override;
@@ -337,9 +355,16 @@ type
     property LabelContours: boolean read FLabelContours write FLabelContours;
     property SfrStreamLinkPlot: TSfrStreamLinkPlot read FSfrStreamLinkPlot
       write SetSfrStreamLinkPlot;
-  {$IFDEF SUTRA}
-    property SutraSettings: TSutraSettings read FSutraSettings write SetSutraSettings;
-  {$ENDIF}
+    property SutraSettings: TSutraSettings read FSutraSettings
+      write SetSutraSettings;
+    property MaxVectors: TPredefinedVectors read FMaxVectors
+      write SetMaxVectors;
+    property MidVectors: TPredefinedVectors read FMidVectors
+      write SetMidVectors;
+    property MinVectors: TPredefinedVectors read FMinVectors
+      write SetMinVectors;
+    property VelocityVectors: TVectorCollection read FVelocityVectors
+      write SetVelocityVectors;
   end;
 
   { @name is a collection of @link(TDisplaySettingsItem)s.
@@ -359,7 +384,7 @@ implementation
 
 uses
   DrawTextUnit, RbwRuler, ScreenObjectUnit, PhastModelUnit, ModflowSfrUnit,
-  ModflowSfrParamIcalcUnit, ModflowLakUnit;
+  ModflowSfrParamIcalcUnit, ModflowLakUnit, ModflowStrUnit;
 
 { TTextDisplay }
 
@@ -572,9 +597,11 @@ begin
     ContourFont := SourceDisplay.ContourFont;
     LabelContours := SourceDisplay.LabelContours;
     SfrStreamLinkPlot := SourceDisplay.SfrStreamLinkPlot;
-  {$IFDEF SUTRA}
     SutraSettings := SourceDisplay.SutraSettings;
-  {$ENDIF}
+    MaxVectors := SourceDisplay.MaxVectors;
+    MidVectors := SourceDisplay.MidVectors;
+    MinVectors := SourceDisplay.MinVectors;
+    VelocityVectors := SourceDisplay.VelocityVectors;
   end
   else
   begin
@@ -599,16 +626,20 @@ begin
   FContourFont := TFont.Create;
   FContourFont.OnChange := OnChangeEventHandler;
   FSfrStreamLinkPlot := TSfrStreamLinkPlot.Create(Model);
-  {$IFDEF SUTRA}
   FSutraSettings := TSutraSettings.Create(Model);
-  {$ENDIF}
+  FMaxVectors := TPredefinedVectors.Create(nil);
+  FMidVectors := TPredefinedVectors.Create(nil);
+  FMinVectors := TPredefinedVectors.Create(nil);
+  FVelocityVectors := TVectorCollection.Create(nil);
 end;
 
 destructor TDisplaySettingsItem.Destroy;
 begin
-  {$IFDEF SUTRA}
+  FVelocityVectors.Free;
+  FMinVectors.Free;
+  FMidVectors.Free;
+  FMaxVectors.Free;
   FSutraSettings.Free;
-  {$ENDIF}
   FSfrStreamLinkPlot.Free;
   FContourFont.Free;
   FVisibleObjects.Free;
@@ -682,7 +713,6 @@ begin
   FEdgeDisplaySettings.Assign(Value);
 end;
 
-  {$IFDEF SUTRA}
 procedure TSutraSettings.Assign(Source: TPersistent);
 var
   SourceSettings: TSutraSettings;
@@ -697,6 +727,7 @@ begin
     ShowElementNumbers := SourceSettings.ShowElementNumbers;
     ElementDrawingChoice := SourceSettings.ElementDrawingChoice;
     NodeDrawingChoice := SourceSettings.NodeDrawingChoice;
+    DrawElementCenters := SourceSettings.DrawElementCenters;
   end
   else if Source is TSutraMesh3D then
   begin
@@ -707,6 +738,7 @@ begin
     ShowElementNumbers := SourceMesh.DrawElementNumbers;
     ElementDrawingChoice := SourceMesh.ElementDrawingChoice;
     NodeDrawingChoice := SourceMesh.NodeDrawingChoice;
+    DrawElementCenters := SourceMesh.DrawElementCenters;
   end
   else
   begin
@@ -727,6 +759,7 @@ begin
     DestMesh.DrawElementNumbers := ShowElementNumbers;
     DestMesh.ElementDrawingChoice := ElementDrawingChoice;
     DestMesh.NodeDrawingChoice := NodeDrawingChoice;
+    DestMesh.DrawElementCenters := DrawElementCenters;
   end
   else
   begin
@@ -740,6 +773,8 @@ begin
   FNodeFont.OnChange := OnChangeEventHander;
   FElementFont := TFont.Create;
   FElementFont.OnChange := OnChangeEventHander;
+  FNodeDrawingChoice := dcEdge;
+  FDrawElementCenters := True;
 end;
 
 destructor TSutraSettings.Destroy;
@@ -747,6 +782,11 @@ begin
   FNodeFont.Free;
   FElementFont.Free;
   inherited;
+end;
+
+procedure TSutraSettings.SetDrawElementCenters(const Value: boolean);
+begin
+  SetBooleanProperty(FDrawElementCenters, Value);
 end;
 
 procedure TSutraSettings.SetElementDrawingChoice(const Value: TDrawingChoice);
@@ -786,7 +826,6 @@ procedure TSutraSettings.SetNodeFont(const Value: TFont);
 begin
   FNodeFont.Assign(Value);
 end;
-{$ENDIF}
 
 procedure TDisplaySettingsItem.SetGridDisplayChoice(
   const Value: TGridLineDrawingChoice);
@@ -816,6 +855,21 @@ end;
 procedure TDisplaySettingsItem.SetMagnification(const Value: double);
 begin
   SetRealProperty(FMagnification, Value);
+end;
+
+procedure TDisplaySettingsItem.SetMaxVectors(const Value: TPredefinedVectors);
+begin
+  FMaxVectors.Assign(Value);
+end;
+
+procedure TDisplaySettingsItem.SetMidVectors(const Value: TPredefinedVectors);
+begin
+  FMidVectors.Assign(Value);
+end;
+
+procedure TDisplaySettingsItem.SetMinVectors(const Value: TPredefinedVectors);
+begin
+  FMinVectors.Assign(Value);
 end;
 
 procedure TDisplaySettingsItem.SetReferencePointX(const Value: double);
@@ -855,12 +909,10 @@ begin
   FModpathPathLineSettings.Assign(Value);
 end;
 
-{$IFDEF SUTRA}
 procedure TDisplaySettingsItem.SetSutraSettings(const Value: TSutraSettings);
 begin
   FSutraSettings.Assign(Value);
 end;
-{$ENDIF}
 
 procedure TDisplaySettingsItem.SetModpathTimeSeriesSettings(
   const Value: TTimeSeriesSettings);
@@ -871,6 +923,12 @@ end;
 procedure TDisplaySettingsItem.SetTitle(const Value: TTextDisplay);
 begin
   FTitle.Assign(Value);
+end;
+
+procedure TDisplaySettingsItem.SetVelocityVectors(
+  const Value: TVectorCollection);
+begin
+  FVelocityVectors.Assign(Value);
 end;
 
 procedure TDisplaySettingsItem.SetVerticalExaggeration(const Value: double);
@@ -925,13 +983,13 @@ end;
 
 { TContourDisplaySettings }
 
-procedure TContourDisplaySettings.Assign(Source: TPersistent);
+procedure TCustomDisplaySettings.Assign(Source: TPersistent);
 var
-  SourceDisplay: TContourDisplaySettings;
+  SourceDisplay: TCustomDisplaySettings;
 begin
-  if Source is TContourDisplaySettings then
+  if Source is TCustomDisplaySettings then
   begin
-    SourceDisplay := TContourDisplaySettings(Source);
+    SourceDisplay := TCustomDisplaySettings(Source);
     DataSetName := SourceDisplay.DataSetName;
     Legend := SourceDisplay.Legend;
     LegendVisible := SourceDisplay.LegendVisible;
@@ -944,21 +1002,21 @@ begin
   end;
 end;
 
-constructor TContourDisplaySettings.Create(Model: TBaseModel);
+constructor TCustomDisplaySettings.Create(Model: TBaseModel);
 begin
   inherited;
   FLegend := TLegend.Create(FModel);
   FLimits:= TColoringLimits.Create;
 end;
 
-destructor TContourDisplaySettings.Destroy;
+destructor TCustomDisplaySettings.Destroy;
 begin
   FLegend.Free;
   FLimits.Free;
   inherited;
 end;
 
-procedure TContourDisplaySettings.SetContourAlgorithm(const Value: TContourAlg);
+procedure TCustomDisplaySettings.SetContourAlgorithm(const Value: TContourAlg);
 begin
   if FContourAlgorithm <> Value then
   begin
@@ -967,12 +1025,12 @@ begin
   end;
 end;
 
-procedure TContourDisplaySettings.SetDataSetName(const Value: string);
+procedure TCustomDisplaySettings.SetDataSetName(const Value: string);
 begin
   SetStringProperty(FDataSetName, Value);
 end;
 
-procedure TContourDisplaySettings.SetLegend(const Value: TLegend);
+procedure TCustomDisplaySettings.SetLegend(const Value: TLegend);
 begin
   if Value = nil then
   begin
@@ -988,14 +1046,42 @@ begin
   end;
 end;
 
-procedure TContourDisplaySettings.SetLegendVisible(const Value: boolean);
+procedure TCustomDisplaySettings.SetLegendVisible(const Value: boolean);
 begin
   SetBooleanProperty(FLegendVisible, Value);
 end;
 
-procedure TContourDisplaySettings.SetLimits(const Value: TColoringLimits);
+procedure TCustomDisplaySettings.SetLimits(const Value: TColoringLimits);
 begin
   FLimits.Assign(Value);
+end;
+
+{ TContourDisplaySettings }
+
+procedure TContourDisplaySettings.Assign(Source: TPersistent);
+begin
+  if Source is TContourDisplaySettings then
+  begin
+    Contours := TContourDisplaySettings(Source).Contours
+  end;
+  inherited;
+end;
+
+constructor TContourDisplaySettings.Create(Model: TBaseModel);
+begin
+  inherited;
+  FContours := TContours.Create;
+end;
+
+destructor TContourDisplaySettings.Destroy;
+begin
+  FContours.Free;
+  inherited;
+end;
+
+procedure TContourDisplaySettings.SetContours(const Value: TContours);
+begin
+  FContours.Assign(Value);
 end;
 
 { TRulerSettings }
@@ -1125,7 +1211,73 @@ begin
   FPlotUnconnected := True;
 end;
 
-procedure TSfrStreamLinkPlot.GetObjectsToPlot(StreamList: TSfrStreamPlotList;
+procedure TSfrStreamLinkPlot.GetObjectsToPlot(
+  StrStreamList: TSfrStreamPlotList);
+var
+  LocalModel: TPhastModel;
+  Index : integer;
+  ScreenObject: TScreenObject;
+  StrBoundary: TStrBoundary;
+  Item: TStrItem;
+  StreamPlot: TSfrStreamPlot;
+begin
+  StrStreamList.Clear;
+  if StreamsToPlot <> stpNone then
+  begin
+    LocalModel := FModel as TPhastModel;
+    if not LocalModel.StrIsSelected then
+    begin
+      Exit;
+    end;
+    for Index := 0 to LocalModel.ScreenObjectCount - 1 do
+    begin
+      ScreenObject := LocalModel.ScreenObjects[Index];
+      if ScreenObject.Deleted then
+      begin
+        Continue;
+      end;
+      case StreamsToPlot of
+        stpVisible:
+          begin
+            if not ScreenObject.Visible then
+            begin
+              Continue;
+            end;
+          end;
+        stpSelected:
+          begin
+            if not ScreenObject.Selected then
+            begin
+              Continue;
+            end;
+          end;
+      end;
+      StrBoundary := ScreenObject.ModflowBoundaries.ModflowStrBoundary;
+      if StrBoundary <> nil then
+      begin
+        Item := StrBoundary.Values.GetItemContainingTime(TimeToPlot) as TStrItem;
+        if (Item = nil) and (StrBoundary.Parameters.Count > 0) then
+        begin
+          Item := StrBoundary.Parameters[0].Param.GetItemContainingTime(TimeToPlot) as TStrItem;
+        end;
+//        Item := StrBoundary.ParamIcalc.GetItemByStartTime(TimeToPlot);
+        if Item <> nil then
+        begin
+          StreamPlot := TSfrStreamPlot.Create;
+          StreamPlot.StreamObject := ScreenObject;
+          StreamPlot.Segment := StrBoundary.SegmentNumber;
+          StreamPlot.OutflowSegment := Item.OutflowSegment;
+          StreamPlot.DiversionSegment := Item.DiversionSegment;
+          StrStreamList.Add(StreamPlot);
+        end;
+      end;
+
+    end;
+    StrStreamList.Sort;
+  end;
+end;
+
+procedure TSfrStreamLinkPlot.GetObjectsToPlot(SfrStreamList: TSfrStreamPlotList;
   LakeList: TLakePlotList);
 var
   LocalModel: TPhastModel;
@@ -1137,7 +1289,7 @@ var
   LakBoundary: TLakBoundary;
   Lake: TLakePlot;
 begin
-  StreamList.Clear;
+  SfrStreamList.Clear;
   LakeList.Clear;
   if StreamsToPlot <> stpNone then
   begin
@@ -1180,7 +1332,7 @@ begin
           StreamPlot.Segment := SfrBoundary.SegementNumber;
           StreamPlot.OutflowSegment := Item.OutflowSegment;
           StreamPlot.DiversionSegment := Item.DiversionSegment;
-          StreamList.Add(StreamPlot);
+          SfrStreamList.Add(StreamPlot);
         end;
       end;
       if LocalModel.LakIsSelected then
@@ -1195,7 +1347,7 @@ begin
         end;
       end;
     end;
-    StreamList.Sort;
+    SfrStreamList.Sort;
     LakeList.Sort;
   end;
 end;

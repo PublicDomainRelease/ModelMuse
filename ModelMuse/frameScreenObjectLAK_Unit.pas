@@ -38,11 +38,16 @@ type
     procedure cbGagDeltaClick(Sender: TObject);
     procedure cbGage4Click(Sender: TObject);
     procedure rgBathChoiceClick(Sender: TObject);
+    procedure feLakeBathymetryAfterDialog(Sender: TObject; var AName: string;
+      var AAction: Boolean);
+    procedure feLakeBathymetryKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   protected
     procedure Loaded; override;
   private
     { Private declarations }
   public
+    procedure SetFeLakeBathymetryColor(const FileName: string);
     { Public declarations }
   end;
 
@@ -81,6 +86,20 @@ begin
   cbGagDelta.Enabled := cbGagStandard.State <> cbUnchecked;
 end;
 
+procedure TframeScreenObjectLAK.feLakeBathymetryAfterDialog(Sender: TObject;
+  var AName: string; var AAction: Boolean);
+begin
+  inherited;
+  SetFeLakeBathymetryColor(AName);
+end;
+
+procedure TframeScreenObjectLAK.feLakeBathymetryKeyUp(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  inherited;
+  SetFeLakeBathymetryColor(feLakeBathymetry.FileName);
+end;
+
 procedure TframeScreenObjectLAK.Loaded;
 begin
   inherited;
@@ -95,6 +114,18 @@ begin
     rdgLakeTable.Cells[Ord(bcSurfaceArea), 0] := StrSurfaceArea;
   end;
 
+end;
+
+procedure TframeScreenObjectLAK.SetFeLakeBathymetryColor(const FileName: string);
+begin
+  if feLakeBathymetry.Enabled and not FileExists(FileName) then
+  begin
+    feLakeBathymetry.Color := clRed;
+  end
+  else
+  begin
+    feLakeBathymetry.Color := clWindow;
+  end;
 end;
 
 procedure TframeScreenObjectLAK.rdeCenterLakeChange(Sender: TObject);
@@ -129,6 +160,14 @@ begin
   begin
     rdgLakeTable.Color := clBtnFace;
   end;
+  if feLakeBathymetry.Enabled and (feLakeBathymetry.FileName = '') and FrameLoaded then
+  begin
+    if feLakeBathymetry.Dialog.Execute then
+    begin
+      feLakeBathymetry.FileName := feLakeBathymetry.Dialog.FileName
+    end;
+  end;
+  SetFeLakeBathymetryColor(feLakeBathymetry.FileName);
 end;
 
 end.

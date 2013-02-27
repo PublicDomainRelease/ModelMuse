@@ -15,11 +15,11 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
   end
   inherited comboDataSets: TComboBox
     Top = 37
-    Width = 626
+    Width = 558
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 1
     ExplicitTop = 37
-    ExplicitWidth = 584
+    ExplicitWidth = 558
   end
   inherited comboInterpolators: TComboBox
     Top = 91
@@ -76,7 +76,7 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
   object rgFilterMethod: TRadioGroup [11]
     Left = 360
     Top = 84
-    Width = 274
+    Width = 206
     Height = 140
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Filter method'
@@ -88,6 +88,7 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
       'Point closest to cell center'
       'None')
     TabOrder = 3
+    ExplicitWidth = 224
   end
   object rdgFilesAndDataSets: TRbwDataGrid4 [12]
     Left = 530
@@ -110,7 +111,6 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
     UnselectableColor = clBtnFace
     OnButtonClick = rdgFilesAndDataSetsButtonClick
     ColorRangeSelection = False
-    ColorSelectedRow = True
     Columns = <
       item
         AutoAdjustRowHeights = False
@@ -190,7 +190,7 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
     TabOrder = 7
   end
   inherited OpenDialogFile: TOpenDialog
-    Filter = 'Text files (*.txt)|*.txt|All files (*.*)|*.*'
+    Filter = 'Text files (*.txt; *.asc)|*.txt;*.asc|All files (*.*)|*.*'
     FilterIndex = 1
     Options = [ofHideReadOnly, ofAllowMultiSelect, ofEnableSizing]
     Title = 'Open a ASCII raster file(s)'

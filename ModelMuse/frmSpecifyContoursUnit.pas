@@ -417,6 +417,7 @@ begin
       end;
     end;
     Contours.Count := Count;
+    Contours.Sort;
   end;
 end;
 

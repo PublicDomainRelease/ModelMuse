@@ -248,14 +248,13 @@ begin
   rgEvaluatedAt.Items[Ord(eaNodes)] := EvalAtToString(eaNodes,
     frmGoPhast.PhastModel.ModelSelection, True, True);
   rgEvaluatedAt.Enabled := frmGoPhast.PhastModel.ModelSelection
-    in [msPhast {$IFDEF SUTRA} , msSutra22 {$ENDIF}];
+    in [msPhast, msSutra22];
   if not rgEvaluatedAt.Enabled then
   begin
     rgEvaluatedAt.ItemIndex := 0;
   end;
 
-  if (frmGoPhast.PhastModel.ModelSelection
-    in [msModflow, msModflowLGR, msModflowNWT]) then
+  if (frmGoPhast.PhastModel.ModelSelection in ModflowSelection) then
   begin
     Packages := frmGoPhast.PhastModel.ModflowPackages;
     if Packages.ChdBoundary.IsSelected then
@@ -616,13 +615,10 @@ end;
 procedure TfrmImportPoints.FormShow(Sender: TObject);
 begin
   inherited;
-  {$IFDEF SUTRA}
   if frmGoPhast.PhastModel.ModelSelection = msSutra22 then
   begin
     rgViewDirection.Buttons[Ord(vdSide)].Enabled := False;
   end;
-  {$ENDIF}
-
 end;
 
 procedure TfrmImportPoints.UpdateDimensionColumns;
@@ -1225,7 +1221,7 @@ begin
     comboBoundaryChoiceChange(nil);
   end;
   comboBoundaryChoice.Enabled := (frmGoPhast.PhastModel.ModelSelection
-    in [msModflow, msModflowLGR, msModflowNWT])
+    in ModflowSelection)
     and (rgElevationCount.ItemIndex > 0)
     and (comboBoundaryChoice.Items.Count > 1);
 

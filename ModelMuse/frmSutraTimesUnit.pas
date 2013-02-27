@@ -7,7 +7,7 @@ uses
   Controls, Forms, Dialogs, frmCustomGoPhastUnit, ExtCtrls, Grids,
   RbwDataGrid4, ArgusDataEntry, JvPageList, JvExControls, StdCtrls,
   VirtualTrees, frameGridUnit, Buttons, SutraTimeScheduleUnit, Mask,
-  JvExMask, JvSpin, UndoItems, ComCtrls;
+  JvExMask, JvSpin, UndoItems, ComCtrls, JvGroupHeader;
 
 type
   PSutraTimeScheduleNodeData = ^TSutraTimeScheduleNodeData;
@@ -92,6 +92,8 @@ type
     lblPressureCycles: TLabel;
     seTransportCycles: TJvSpinEdit;
     lblTransportCycles: TLabel;
+    jvgrphdrICS: TJvGroupHeader;
+    jvgrphdrInput6: TJvGroupHeader;
     procedure comboScheduleTypeChange(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
@@ -148,6 +150,8 @@ resourcestring
   StrStepCycle = 'Step Cycle';
   StrTimes = 'Times';
   StrSteps = 'Steps';
+  StrNone = 'none';
+  StrChangeSUTRATimeOp = 'Change SUTRA time options';
 
 {$R *.dfm}
 
@@ -214,6 +218,7 @@ procedure TfrmSutraTimes.sbDeleteUnitClick(Sender: TObject);
 var
   NewIndex: Integer;
   OldSchedule: TSutraTimeScheduleItem;
+  Selected: PVirtualNode;
 begin
   inherited;
   if (SelectedSchedule <> nil) and (SelectedSchedule.Index > 0) then
@@ -232,6 +237,9 @@ begin
     begin
       SelectedSchedule := nil;
     end;
+    Selected := vstScedules.GetFirstSelected;
+    vstScedules.DeleteNode(Selected);
+
     OldSchedule.Free;
   end;
 end;
@@ -756,7 +764,7 @@ begin
   if not Assigned(SutraTimeScheduleNodeData) or
     not Assigned(SutraTimeScheduleNodeData.SutraTimeScheduleItem) then
   begin
-    CellText := 'none';
+    CellText := StrNone;
   end
   else
   begin
@@ -791,7 +799,7 @@ end;
 
 function TUndoChangeSutraTimes.Description: string;
 begin
-  result := 'Chane SUTRA time options';
+  result := StrChangeSUTRATimeOp;
 end;
 
 destructor TUndoChangeSutraTimes.Destroy;

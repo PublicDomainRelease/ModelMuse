@@ -1033,6 +1033,9 @@ side views of the model.}
       ModelSelection: TModelSelection): TGrid;
     {@name returns the elevation of the center of an element.}
     function LayerCenter(Column, Row, Layer: integer): real;
+    // @name returns and elevation 5% of the layer thickness below the layer
+    // top.
+    function NearLayerTop(Column, Row, Layer: integer): real;
     // @name returns the extent of the grid in grid coordinates;
     function GridLimits(ViewDirection: TViewDirection): TGridLimit;
     function GridOutline(ViewDirection: TViewDirection): TPolygon2D;
@@ -1406,7 +1409,7 @@ end;
 procedure TCustomModelGrid.Draw(const BitMap: TBitmap32;
   const ViewDirection: TViewDirection);
 begin
-  if not CanDraw then
+  if (not CanDraw) or ((Model as TCustomModel).LayerCount = 0) then
   begin
     Exit;
   end;
@@ -8132,6 +8135,12 @@ begin
     + CellElevation[Column, Row, Layer+1])/2;
 end;
 
+function TCustomModelGrid.NearLayerTop(Column, Row, Layer: integer): real;
+begin
+  result := ((CellElevation[Column, Row, Layer] * 19)
+    + CellElevation[Column, Row, Layer+1])/20;
+end;
+
 procedure TCustomModelGrid.DrawTopContours(const ZoomBox: TQRbwZoomBox2;
   const BitMap: TBitmap32);
 var
@@ -8589,7 +8598,9 @@ begin
   end;
 end;
 
-procedure TCustomDiscretization.UpdateMinMax(const Layer, Row, Col: integer; DataSet: TDataArray; var MinMaxInitialized: boolean; var MinMax: TMinMax; StringValues: TStringList);
+procedure TCustomDiscretization.UpdateMinMax(const Layer, Row, Col: integer;
+  DataSet: TDataArray; var MinMaxInitialized: boolean;
+  var MinMax: TMinMax; StringValues: TStringList);
 var
   RTemp: double;
   ITemp: integer;

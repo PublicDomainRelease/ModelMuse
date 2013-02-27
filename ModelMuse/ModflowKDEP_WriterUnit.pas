@@ -107,7 +107,9 @@ var
 begin
   UsedParameters := TList.Create;
   UsedHufUnits := TList.Create;
+  frmErrorsAndWarnings.BeginUpdate;
   try
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, NoClusters);
     for ParamIndex := 0 to Model.HufParameters.Count - 1 do
     begin
       Parameter := Model.HufParameters[ParamIndex];
@@ -193,6 +195,7 @@ begin
   finally
     UsedParameters.Free;
     UsedHufUnits.Free;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 
 end;

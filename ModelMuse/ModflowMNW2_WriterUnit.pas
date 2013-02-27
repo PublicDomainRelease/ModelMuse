@@ -194,79 +194,84 @@ var
   Item: TCustomModflowBoundaryItem;
   StressPeriod: TModflowStressPeriod;
 begin
-  frmProgressMM.AddMessage(StrEvaluatingMNW2Pack);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoMultinodeWellsD);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, SignError);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, RelativeSizeError);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, SizeError);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, InvalidFractionError);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidMnwTable);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidMnwTable2);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, LossTypeError);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheFollowingObject);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrVerticalScreensAre);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrWhenPumpingCapacit);
-
-
-  Dummy := TStringList.Create;
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
-    begin
-      if not frmProgressMM.ShouldContinue then
-      begin
-        Exit;
-      end;
-      ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
-      if ScreenObject.Deleted then
-      begin
-        Continue;
-      end;
-      if not ScreenObject.UsedModels.UsesModel(Model) then
-      begin
-        Continue;
-      end;
-      Boundary := ScreenObject.ModflowMnw2Boundary;
-      if (Boundary = nil) or not Boundary.Used then
-      begin
-        Continue;
-      end;
-      if Boundary.Values.Count = 0 then
-      begin
-        Boundary.Values.Add;
-      end;
+    frmProgressMM.AddMessage(StrEvaluatingMNW2Pack);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoMultinodeWellsD);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, SignError);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, RelativeSizeError);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, SizeError);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, InvalidFractionError);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidMnwTable);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidMnwTable2);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, LossTypeError);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheFollowingObject);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrVerticalScreensAre);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrWhenPumpingCapacit);
 
-      Item := Boundary.Values[0] as TCustomModflowBoundaryItem;
-      StressPeriod := Model.ModflowFullStressPeriods[0];
-      Item.StartTime := StressPeriod.StartTime;
-      StressPeriod := Model.ModflowFullStressPeriods[
-        Model.ModflowFullStressPeriods.Count-1];
-      Item.EndTime := StressPeriod.EndTime;
 
-      frmProgressMM.AddMessage(Format(StrEvaluatingS, [ScreenObject.Name]));
-      Boundary.GetCellValues(FValues, Dummy, Model);
-      if (FValues.Count >= 1) then
+    Dummy := TStringList.Create;
+    try
+      for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
       begin
-        Assert(FValues.Count = 1);
-        Well := TMultinodeWell.Create;
-        Well.FCells := FValues.Extract(FValues[0]);
-        if Well.FCells.Count > 0 then
+        if not frmProgressMM.ShouldContinue then
         begin
-          FWells.Add(Well);
-          Well.FScreenObject := ScreenObject;
-        end
-        else
+          Exit;
+        end;
+        ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
+        if ScreenObject.Deleted then
         begin
-          Well.Free;
+          Continue;
+        end;
+        if not ScreenObject.UsedModels.UsesModel(Model) then
+        begin
+          Continue;
+        end;
+        Boundary := ScreenObject.ModflowMnw2Boundary;
+        if (Boundary = nil) or not Boundary.Used then
+        begin
+          Continue;
+        end;
+        if Boundary.Values.Count = 0 then
+        begin
+          Boundary.Values.Add;
+        end;
+
+        Item := Boundary.Values[0] as TCustomModflowBoundaryItem;
+        StressPeriod := Model.ModflowFullStressPeriods[0];
+        Item.StartTime := StressPeriod.StartTime;
+        StressPeriod := Model.ModflowFullStressPeriods[
+          Model.ModflowFullStressPeriods.Count-1];
+        Item.EndTime := StressPeriod.EndTime;
+
+        frmProgressMM.AddMessage(Format(StrEvaluatingS, [ScreenObject.Name]));
+        Boundary.GetCellValues(FValues, Dummy, Model);
+        if (FValues.Count >= 1) then
+        begin
+          Assert(FValues.Count = 1);
+          Well := TMultinodeWell.Create;
+          Well.FCells := FValues.Extract(FValues[0]);
+          if Well.FCells.Count > 0 then
+          begin
+            FWells.Add(Well);
+            Well.FScreenObject := ScreenObject;
+          end
+          else
+          begin
+            Well.Free;
+          end;
         end;
       end;
+      CheckWells;
+    finally
+      Dummy.Free;
     end;
-    CheckWells;
+    if FWells.Count = 0 then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrNoMultinodeWellsD, StrTheMNW2PackageIs);
+    end;
   finally
-    Dummy.Free;
-  end;
-  if FWells.Count = 0 then
-  begin
-    frmErrorsAndWarnings.AddError(Model, StrNoMultinodeWellsD, StrTheMNW2PackageIs);
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -508,7 +513,7 @@ var
   UseNODTOT: boolean;
 begin
   MNWMAX := FWells.Count;
-  UseNODTOT := Model.ModelSelection in [msModflow, msModflowNWT];
+  UseNODTOT := Model.ModelSelection in [msModflow, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}];
   if UseNODTOT then
   begin
     NODTOT := CountNodes;
@@ -1308,7 +1313,8 @@ begin
     for CellIndex := 0 to Well.CellCount - 1 do
     begin
       Cell := Well.Cells[CellIndex] as TMnw2_Cell;
-      LAY := Cell.Layer+1;
+      LAY := Model.DataSetLayerToModflowLayer(Cell.Layer);
+//      LAY := Cell.Layer+1;
       ROW := Cell.Row+1;
       COL := Cell.Column+1;
       WriteInteger(LAY);

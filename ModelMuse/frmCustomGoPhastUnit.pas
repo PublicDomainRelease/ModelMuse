@@ -15,7 +15,7 @@ uses
   EdgeDisplayUnit, CommDlg, RbwDataGrid4, Spin, Windows, Forms, SysUtils, Types,
   Classes, Graphics, Controls, Dialogs, StdCtrls, Grids, HtmlHelpViewer,
   JvSpin, VirtualTrees, DataSetUnit, ClassificationUnit, GLWin32Viewer,
-  RbwStringTreeCombo, Mask, JvExMask;
+  RbwStringTreeCombo, Mask, JvExMask, Generics.Collections;
 
 type
   TEdgeDisplayEdit = class(TObject)
@@ -23,11 +23,18 @@ type
     DataIndex: integer;
   end;
 
+  TMnw2ItemID = class(TObject)
+    ID: string;
+  end;
+
+  TMnw2ItemIDObjectList = TObjectList<TMnw2ItemID>;
+
   TBoundaryClassification = class(TClassificationObject)
   private
     FDataArray: TDataArray;
     FTimeList: TCustomTimeList;
     FEdgeDisplay: TEdgeDisplayEdit;
+    FMnw2ItemID: TMnw2ItemID;
     FName: string;
     function GetClassifiedObject: TObject;
     function GetBoundaryType: TBoundaryType;
@@ -37,6 +44,7 @@ type
     Constructor Create(AnObject: TDataArray); overload;
     Constructor Create(AnObject: TCustomTimeList); overload;
     Constructor Create(const Name: string; AnObject: TEdgeDisplayEdit); overload;
+    Constructor Create(const Name: string; AnObject: TMnw2ItemID); overload;
     Constructor Create(const Name: string; AnObject: TObject); overload;
     property ClassifiedObject: TObject read GetClassifiedObject;
     property BoundaryType: TBoundaryType read GetBoundaryType;
@@ -165,7 +173,8 @@ procedure FillVirtStrTreeWithBoundaryConditions(
   SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
   LocalBoundaryClassifications: TList; EdgeEdits: TList;
   ATree: TVirtualStringTree;
-  CanSelectBoundary: TCanSelectBoundary = nil);
+  CanSelectBoundary: TCanSelectBoundary = nil;
+  IncludeMnw2TimeData: Boolean = false);
 
 function ShowHelp(const Keyword: string): boolean;
 
@@ -175,6 +184,14 @@ var
 
 resourcestring
   StrNone = 'none';
+
+resourcestring
+  StrMnw2PumpingRate = 'Pumping Rate';
+  StrMnw2HeadCapacityMultip = 'Head Capacity Multiplier';
+  StrMnw2LimitingWaterLevel = 'Limiting Water Level';
+  StrMnw2InactivationPumping = 'Inactivation Pumping Rate';
+  StrMnw2ReactivationPumping = 'Reactivation Pumping Rate';
+
 
 implementation
 
@@ -186,6 +203,9 @@ uses SubscriptionUnit, GoPhastTypes, ModflowPackagesUnit,
 
 type
   TStringGridCrack = class(TStringGrid);
+
+var
+  Mnw2Objects: TMnw2ItemIDObjectList = nil;
 
 // from http://delphi.about.com/cs/adptips2000/a/bltip0100_2.htm
 function KillApp(const sCapt: PChar) : boolean;
@@ -428,7 +448,8 @@ procedure FillVirtStrTreeWithBoundaryConditions(
   SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
   LocalBoundaryClassifications: TList; EdgeEdits: TList;
   ATree: TVirtualStringTree;
-  CanSelectBoundary: TCanSelectBoundary = nil);
+  CanSelectBoundary: TCanSelectBoundary = nil;
+  IncludeMnw2TimeData: Boolean = false);
 var
   List: TStringList;
   ClassificationPosition: Integer;
@@ -455,6 +476,8 @@ var
   ChildModel: TChildModel;
   ChildTimeList: TCustomTimeList;
   NodeDeleted: Boolean;
+  Mnw2Item: TMnw2ItemID;
+  Mnw2Index: integer;
 begin
   LocalBoundaryClassifications.Clear;
   DummyRootClassification := TDummyClassification.Create(StrBoundaryConditions);
@@ -486,7 +509,7 @@ begin
       end;
     end;
     EdgeEdits.Clear;
-    if (frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    if (frmGoPhast.PhastModel.ModelSelection in ModflowSelection)
       and frmGoPhast.PhastModel.HfbIsSelected then
     begin
       List := TStringList.Create;
@@ -536,6 +559,26 @@ begin
             as TStringList;
         end;
         List.AddObject(TimeList.Name, TimeList);
+      end;
+    end;
+    if IncludeMnw2TimeData and frmGoPhast.PhastModel.Mnw2IsSelected then
+    begin
+      ClassificationPosition := Classifications.IndexOf(StrMODFLOWMultinodeWe);
+      if ClassificationPosition < 0 then
+      begin
+        List := TStringList.Create;
+        Classifications.AddObject(StrMODFLOWMultinodeWe, List);
+      end
+      else
+      begin
+        List := Classifications.Objects[ClassificationPosition]
+          as TStringList;
+      end;
+
+      for Mnw2Index := 0 to Mnw2Objects.Count - 1 do
+      begin
+        Mnw2Item := Mnw2Objects[Mnw2Index];
+        List.AddObject(Mnw2Item.ID, Mnw2Item);
       end;
     end;
     Classifications.Sort;
@@ -1395,6 +1438,7 @@ begin
   FTimeList := AnObject;
   FDataArray := nil;
   FEdgeDisplay := nil;
+  FMnw2ItemID := nil;
 end;
 
 constructor TBoundaryClassification.Create(AnObject: TDataArray);
@@ -1402,6 +1446,7 @@ begin
   FDataArray := AnObject;
   FTimeList := nil;
   FEdgeDisplay := nil;
+  FMnw2ItemID := nil;
 end;
 
 constructor TBoundaryClassification.Create(const Name: string;
@@ -1420,10 +1465,24 @@ begin
   begin
     Create(Name, TEdgeDisplayEdit(AnObject));
   end
+  else if AnObject is TMnw2ItemID then
+  begin
+    Create(Name, TMnw2ItemID(AnObject));
+  end
   else
   begin
     Assert(False);
   end;
+end;
+
+constructor TBoundaryClassification.Create(const Name: string;
+  AnObject: TMnw2ItemID);
+begin
+  FName := Name;
+  FEdgeDisplay := nil;
+  FDataArray := nil;
+  FTimeList := nil;
+  FMnw2ItemID := AnObject;
 end;
 
 constructor TBoundaryClassification.Create(const Name: string;
@@ -1433,6 +1492,7 @@ begin
   FEdgeDisplay := AnObject;
   FDataArray := nil;
   FTimeList := nil;
+  FMnw2ItemID := nil;
 end;
 
 function TBoundaryClassification.FullClassification: string;
@@ -1442,7 +1502,11 @@ end;
 
 function TBoundaryClassification.GetBoundaryType: TBoundaryType;
 begin
-  if FEdgeDisplay <> nil then
+  if FMnw2ItemID <> nil then
+  begin
+    result := btMfMnw;
+  end
+  else if FEdgeDisplay <> nil then
   begin
     result := btMfHfb;
   end
@@ -1454,6 +1518,7 @@ end;
 
 function TBoundaryClassification.GetClassifiedObject: TObject;
 begin
+  result := nil;
   if FDataArray <> nil then
   begin
     result := FDataArray;
@@ -1462,17 +1527,51 @@ begin
   begin
     result := FTimeList;
   end
-  else
+  else if FEdgeDisplay <> nil then
   begin
     result := FEdgeDisplay;
+  end
+  else if FMnw2ItemID <> nil then
+  begin
+    result := FMnw2ItemID;
     Assert(result <> nil);
   end;
 end;
 
+procedure FileMnw2Objects;
+var
+  Mnw2Item: TMnw2ItemID;
+begin
+  Mnw2Item := TMnw2ItemID.Create;
+  Mnw2Item.ID := StrMnw2PumpingRate;
+  Mnw2Objects.Add(Mnw2Item);
+
+  Mnw2Item := TMnw2ItemID.Create;
+  Mnw2Item.ID := StrMnw2HeadCapacityMultip;
+  Mnw2Objects.Add(Mnw2Item);
+
+  Mnw2Item := TMnw2ItemID.Create;
+  Mnw2Item.ID := StrMnw2LimitingWaterLevel;
+  Mnw2Objects.Add(Mnw2Item);
+
+  Mnw2Item := TMnw2ItemID.Create;
+  Mnw2Item.ID := StrMnw2InactivationPumping;
+  Mnw2Objects.Add(Mnw2Item);
+
+  Mnw2Item := TMnw2ItemID.Create;
+  Mnw2Item.ID := StrMnw2ReactivationPumping;
+  Mnw2Objects.Add(Mnw2Item);
+
+end;
+
 initialization
+  Mnw2Objects := TMnw2ItemIDObjectList.Create;
+  FileMnw2Objects;
 
 finalization
+  Mnw2Objects.Free;
   KillApp('ModelMuse Help');
+//  GlobalFont.Free;
 
 end.
 

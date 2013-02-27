@@ -96,10 +96,10 @@ begin
     frmProgressMM.Caption := StrProgress;
     frmProgressMM.Show;
     try
-      FDxfObject := DXF_Object.Create(name);
-      FDxfObject.Progress := frmProgressMM.pbProgress;
-      FDxfObject.OnThinking := Think;
       try
+        FDxfObject := DXF_Object.Create(name);
+        FDxfObject.Progress := frmProgressMM.pbProgress;
+        FDxfObject.OnThinking := Think;
         FDxfObject.ReadFile(FDxfName, frmProgressMM.memoMessages.Lines);
       except on EInOutError do
         begin

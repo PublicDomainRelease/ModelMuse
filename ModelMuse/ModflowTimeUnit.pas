@@ -93,6 +93,8 @@ type
     // See @link(Items).
     procedure SetItems(Index: Integer; const Value: TModflowStressPeriod);
     function GetNumberOfSteps: integer;
+    function GetFirst: TModflowStressPeriod;
+    function GetLast: TModflowStressPeriod;
   public
     // @name copies Source to the current @classname.
     procedure Assign(Source: TPersistent); override;
@@ -119,7 +121,10 @@ type
     procedure FillStringsWithStartTimes(Strings: TStrings);
     procedure FillStringsWithEndTimes(Strings: TStrings);
     function MaxStepsInAnyStressPeriod: integer;
+    // @name returns the number of the first stress period that contains ATime.
     function FindStressPeriod(ATime: double): integer;
+    property First: TModflowStressPeriod read GetFirst;
+    property Last: TModflowStressPeriod read GetLast;
   end;
 
 function GetNumberOfTimeSteps(const PerLength, MaxFirstTimeStepLength,
@@ -376,9 +381,19 @@ begin
   FillStringsWithStartTimes(Strings);
 end;
 
+function TModflowStressPeriods.GetFirst: TModflowStressPeriod;
+begin
+  result := Items[0];
+end;
+
 function TModflowStressPeriods.GetItems(Index: Integer): TModflowStressPeriod;
 begin
   result := inherited Items[Index] as TModflowStressPeriod;
+end;
+
+function TModflowStressPeriods.GetLast: TModflowStressPeriod;
+begin
+  result := Items[Count-1];
 end;
 
 function TModflowStressPeriods.GetNumberOfSteps: integer;

@@ -74,7 +74,8 @@ type
     function GetParamByName(
       const ParamName: string): TModflowTransientListParameter;
     function CountParam(ParameterType: TParameterType): integer;
-    procedure Loaded; 
+    procedure Loaded;
+    function ParamNameIndex(const ParamName: string): integer;
   end;
 
 implementation
@@ -321,17 +322,13 @@ function TModflowTransientListParameters.GetParamByName(
   const ParamName: string): TModflowTransientListParameter;
 var
   Index: Integer;
-  Item: TModflowTransientListParameter;
+//  Item: TModflowTransientListParameter;
 begin
   result := nil;
-  for Index := 0 to Count - 1 do
+  Index := ParamNameIndex(ParamName);
+  if Index >= 0 then
   begin
-    Item := Items[Index];
-    if SameText(Item.ParameterName, ParamName) then
-    begin
-      result := Item;
-      Exit;
-    end;
+    result := Items[Index];
   end;
 end;
 
@@ -342,6 +339,24 @@ begin
   for ItemIndex := 0 to Count - 1 do
   begin
     Items[ItemIndex].Loaded;
+  end;
+end;
+
+function TModflowTransientListParameters.ParamNameIndex(
+  const ParamName: string): integer;
+var
+  Index: Integer;
+  Item: TModflowTransientListParameter;
+begin
+  result := -1;
+  for Index := 0 to Count - 1 do
+  begin
+    Item := Items[Index];
+    if SameText(Item.ParameterName, ParamName) then
+    begin
+      result := Index;
+      Exit;
+    end;
   end;
 end;
 
@@ -425,6 +440,17 @@ begin
           (Model as TPhastModel).InvalidateMfSfrData(self);
         end;
       end;
+    ptStr:
+      begin
+        if Model <> nil then
+        begin
+          (Model as TPhastModel).InvalidateMfStrConductance(self);
+        end;
+      end;
+    ptQMAX:
+      begin
+        { TODO -cFMP : This needs to be finished }
+      end
     else Assert(False);
   end;
 end;

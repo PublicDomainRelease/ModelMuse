@@ -582,7 +582,6 @@ end;
 procedure TCustomSutraAssociatedBoundaryItem.GetPropertyObserver(
   Sender: TObject; List: TList);
 begin
-  inherited;
   if Sender = FPQFormulaObject then
   begin
     List.Add(FObserverList[PQFormulaPosition]);
@@ -622,8 +621,8 @@ end;
 procedure TCustomSutraAssociatedBoundaryItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FPQFormulaObject,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
   inherited;
 end;
 
@@ -804,8 +803,8 @@ begin
     else Assert(False);
   end;
   result.AddSubscriptionEvents(
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TCustomSutraBoundaryItem.CreateFormulaObjects;
@@ -870,8 +869,8 @@ end;
 procedure TCustomSutraBoundaryItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(UFormulaObject,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TCustomSutraBoundaryItem.SetBoundaryFormula(Index: integer;

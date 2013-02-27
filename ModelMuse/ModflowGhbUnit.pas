@@ -334,9 +334,9 @@ end;
 procedure TGhbItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FConductance,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FBoundaryHead,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TGhbItem.SetBoundaryFormula(Index: integer; const Value: string);
@@ -815,7 +815,7 @@ begin
     Item := Values[ValueIndex] as TCustomModflowBoundaryItem;
     if ObservationsPresent then
     begin
-      if PriorTime < Item.StartTime then
+      if PriorTime <= Item.StartTime then
       begin
         if ValueCount < Values.BoundaryCount[AModel] then
         begin
@@ -832,7 +832,7 @@ begin
       AssignCells(BoundaryStorage, ValueTimeList, AModel);
       Inc(ValueCount);
     end;
-    if (ValueIndex = Values.Count - 1) and ObservationsPresent then
+    if {(ValueIndex = Values.Count - 1) and} ObservationsPresent then
     begin
       if Item.EndTime < EndOfLastStressPeriod then
       begin

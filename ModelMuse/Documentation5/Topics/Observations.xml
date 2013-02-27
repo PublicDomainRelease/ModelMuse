@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
-<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+<topic template="Default" lasteditedby="rbwinst-pr" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
   <title translate="true">Observations</title>
   <body>
     <header>
@@ -12,5 +12,6 @@
     <para styleclass="Normal"><text styleclass="Normal" translate="true">Drain observations are compared with simulated flows at a group of drain cells.</text></para>
     <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="GBOB_General_Head_Boundary_Observations" styleclass="Normal" translate="true">General-head boundary observations</link><text styleclass="Normal" translate="true"> are compared with simulated flows at a group of general-head boundary cells.</text></para>
     <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="RVOB_River_Observation_Package" styleclass="Normal" translate="true">River observations</link><text styleclass="Normal" translate="true"> are compared with simulated flows at a group of river cells.</text></para>
+    <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="STOB_Stream_Observation_Packag" styleclass="Normal" translate="true">Stream observations</link><text styleclass="Normal" translate="true"> are compared with simulated flows at a group of stream cells in the Stream (STR) package.</text></para>
   </body>
 </topic>

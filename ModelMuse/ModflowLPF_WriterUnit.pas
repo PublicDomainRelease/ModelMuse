@@ -391,96 +391,102 @@ procedure TModflowLPF_Writer.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
 begin
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrParameterZonesNot);
-
-  if not Model.ModflowPackages.LpfPackage.IsSelected then
-  begin
-    Exit
-  end;
-  if FlowPackageFileGeneratedExternally then
-  begin
-    Exit;
-  end;
-  NameOfFile := FileName(AFileName);
-  WriteToNameFile(StrLPF, Model.UnitNumbers.UnitNumber(StrLPF),
-    NameOfFile, foInput);
-  OpenFile(NameOfFile);
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    frmProgressMM.AddMessage(StrWritingLPFPackage);
-    frmProgressMM.AddMessage(StrWritingDataSet0);
-    WriteDataSet0;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrParameterZonesNot);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrVKCBParameterImpro);
+
+    if not Model.ModflowPackages.LpfPackage.IsSelected then
+    begin
+      Exit
+    end;
+    if FlowPackageFileGeneratedExternally then
     begin
       Exit;
     end;
+    NameOfFile := FileName(AFileName);
+    WriteToNameFile(StrLPF, Model.UnitNumbers.UnitNumber(StrLPF),
+      NameOfFile, foInput);
+    OpenFile(NameOfFile);
+    try
+      frmProgressMM.AddMessage(StrWritingLPFPackage);
+      frmProgressMM.AddMessage(StrWritingDataSet0);
+      WriteDataSet0;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet1);
-    WriteDataSet1;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
+      frmProgressMM.AddMessage(StrWritingDataSet1);
+      WriteDataSet1;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet2);
+      WriteDataSet2;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet3);
+      WriteDataSet3;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet4);
+      WriteDataSet4;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet5);
+      WriteDataSet5;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet6);
+      WriteDataSet6;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet7);
+      WriteDataSet7;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      WriteParameters;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      WriteLayerData;
+    finally
+      CloseFile;
     end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet2);
-    WriteDataSet2;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet3);
-    WriteDataSet3;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet4);
-    WriteDataSet4;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet5);
-    WriteDataSet5;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet6);
-    WriteDataSet6;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet7);
-    WriteDataSet7;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    WriteParameters;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    WriteLayerData;
   finally
-    CloseFile;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -681,8 +687,8 @@ begin
     Assert(DataArray <> nil);
     WriteArray(DataArray, ArrayIndex, 'HK ' + Group.AquiferName + ' Layer '
       + IntToStr(MFLayerIndex));
-      CheckArray(DataArray, ArrayIndex, Format(StrNegativeSValue,
-        [rsKx]), cvmGreaterEqual, 0, etError);
+    CheckArray(DataArray, ArrayIndex, Format(StrNegativeSValue,
+      [rsKx]), cvmGreaterEqual, 0, etError);
   end;
 end;
 
@@ -805,7 +811,7 @@ begin
             Error := Format(StrParameter0sInNonSim,
               [Param.ParameterName, Param.ZoneName]);
           end;
-          frmErrorsAndWarnings.AddWarning(Model, StrParameterZonesNot,
+          frmErrorsAndWarnings.AddError(Model, StrParameterZonesNot,
             Error);
           Continue;
         end;

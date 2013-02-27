@@ -154,7 +154,6 @@ inherited frmExportImage: TfrmExportImage
             SelectedRowOrColumnColor = clAqua
             UnselectableColor = clBtnFace
             ColorRangeSelection = False
-            ColorSelectedRow = True
             Columns = <
               item
                 AutoAdjustRowHeights = False
@@ -210,6 +209,7 @@ inherited frmExportImage: TfrmExportImage
             Width = 240
             Height = 135
             Align = alClient
+            CheckImageKind = ckLightCheck
             Header.AutoSizeIndex = 0
             Header.Font.Charset = DEFAULT_CHARSET
             Header.Font.Color = clWindowText
@@ -330,7 +330,6 @@ inherited frmExportImage: TfrmExportImage
         Caption = 'View'
         TabOrder = 0
         OnExpand = cpViewExpand
-        ExplicitWidth = 185
         object Panel3: TPanel
           Left = 0
           Top = 0

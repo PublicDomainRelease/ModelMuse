@@ -32,7 +32,7 @@ type
     procedure SetData;
     procedure DemProgress(Sender: TObject; FractionDone: double);
     procedure ImportProgress(Sender: TObject; FractionDone: double);
-    procedure DisplayCornerCoordinates;
+    function DisplayCornerCoordinates: boolean;
     procedure InvalidDem;
     { Private declarations }
   public
@@ -72,6 +72,8 @@ resourcestring
   StrSampledFromDEMFil = 'Sampled from DEM files using ';
   StrNoneOfThePointsI = 'None of the points in the DEM are inside the grid.';
   StrMeshNoneOfThePoints = 'None of the points in the DEM are inside the mesh.';
+  Str«ornerCoordinatesN = '«orner coordinates not listed in DEM file. Check ' +
+  'that the file is of the correct type.';
 
 {$R *.dfm}
 
@@ -105,7 +107,7 @@ begin
   Application.ProcessMessages;
 end;
 
-procedure TfrmImportDEM.DisplayCornerCoordinates;
+function TfrmImportDEM.DisplayCornerCoordinates: boolean;
 const
   FormatString = '(%0:g, %1:g)';
 var
@@ -119,6 +121,7 @@ var
   Y: Double;
 //  OldDecSep: Char;
 begin
+  result := OpenDialogFile.Files.Count > 0;
   CentralMeridian := 0.0;
   for DemIndex := 0 to OpenDialogFile.Files.Count - 1 do
   begin
@@ -135,21 +138,29 @@ begin
 //        end;
       end;
       memoCorners.Lines.Add(OpenDialogFile.Files[DemIndex]);
-      for CornerIndex := 0 to 3 do
+      if DemReader.CornerCount = 4 then
       begin
-        Corner := DemReader.Corners[CornerIndex];
-        if DemReader.CoordInSec then
+        for CornerIndex := 0 to 3 do
         begin
-          ConvertToUTM(Corner.Y/60/60/180*PI, Corner.X/60/60/180*PI, CentralMeridian,
-            X, Y);
-          Line := Format(FormatString, [Corner.X/3600, Corner.Y/3600])
-            + '; ' + Format(FormatString,[X,Y]);
-        end
-        else
-        begin
-          Line := Format(FormatString, [Corner.X, Corner.Y]);
+          Corner := DemReader.Corners[CornerIndex];
+          if DemReader.CoordInSec then
+          begin
+            ConvertToUTM(Corner.Y/60/60/180*PI, Corner.X/60/60/180*PI, CentralMeridian,
+              X, Y);
+            Line := Format(FormatString, [Corner.X/3600, Corner.Y/3600])
+              + '; ' + Format(FormatString,[X,Y]);
+          end
+          else
+          begin
+            Line := Format(FormatString, [Corner.X, Corner.Y]);
+          end;
+          memoCorners.Lines.Add(Line);
         end;
-        memoCorners.Lines.Add(Line);
+      end
+      else
+      begin
+        memoCorners.Lines.Add(Str«ornerCoordinatesN);
+        result := False;
       end;
     finally
       DemReader.Free;
@@ -180,7 +191,6 @@ var
 begin
   result := False;
   case frmGoPhast.ModelSelection of
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         Mesh := frmGoPhast.PhastModel.Mesh;
@@ -194,8 +204,7 @@ begin
           MessageDlg(StrYouMustCreateTheMesh, mtInformation, [mbOK], 0);
         end;
       end;
-    {$ENDIF}
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         Grid := frmGoPhast.PhastModel.Grid;
         result := (Grid <> nil) and (Grid.ColumnCount > 0)
@@ -218,18 +227,24 @@ begin
     UpdateEvalAt;
     SetCheckBoxCaptions;
     try
-      DisplayCornerCoordinates;
-    except
-      on EConvertError do
-      begin
-        result := False;
-        InvalidDem
+      try
+        Result := DisplayCornerCoordinates;
+      except
+        on E: EInOutError do
+        begin
+          result := False;
+          Beep;
+          MessageDlg(E.Message, mtError, [mbOK], 0);
+        end;
+      else
+        begin
+          result := False;
+        end;
       end;
-      on E: EInOutError do
+    finally
+      if not result then
       begin
-        result := False;
-        Beep;
-        MessageDlg(E.Message, mtError, [mbOK], 0);
+        InvalidDem;
       end;
     end;
   end;
@@ -248,7 +263,7 @@ begin
       begin
         Assert(False);
       end;
-    msPhast {$IFDEF SUTRA}, msSutra22 {$ENDIF}:
+    msPhast, msSutra22:
       begin
         case EvalAt of
           eaBlocks:
@@ -263,7 +278,7 @@ begin
             end;
         end;
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         NodeElemString := StrCell;
         CenterString := StrCellCenter

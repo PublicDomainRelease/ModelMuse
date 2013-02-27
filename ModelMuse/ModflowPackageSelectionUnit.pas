@@ -32,6 +32,8 @@ Type
     FFrame: pointer;
     FNode: pointer;
     FSelectionType: TSelectionType;
+    FAlternateNode: pointer;
+    FAlternativeClassification: string;
     procedure InvalidateModel;
     procedure SetComments(const Value: TStrings);
   protected
@@ -51,6 +53,7 @@ Type
     procedure SetIntegerProperty(var Field: integer; const Value: integer);
     procedure SetBooleanProperty(var Field: boolean; const Value: boolean);
     procedure SetRealProperty(var Field: real; const Value: real);
+    procedure SetStringProperty(var Field: string; const Value: string);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
@@ -64,12 +67,14 @@ Type
     // @name is used to set up a hierarchical arrangement of
     // @link(PackageIdentifier)s.
     property Classification: string read FClassification write FClassification;
+    property AlternativeClassification: string read FAlternativeClassification write FAlternativeClassification;
     // @name is used in @link(TfrmModflowPackages) to associate a particular
     // package with a particular TFrame.
     property Frame: pointer read FFrame write FFrame;
     // @name is used in @link(TfrmModflowPackages) to display or change
     // @link(IsSelected).
     property Node: pointer read FNode write FNode;
+    property AlternateNode: pointer read FAlternateNode write FAlternateNode;
     property SelectionType: TSelectionType read FSelectionType
       write FSelectionType;
     procedure InvalidateAllTimeLists; virtual;
@@ -299,7 +304,9 @@ Type
   TUpwPackageSelection = class(TModflowPackageSelection)
   private
     FHDryPrintOption: THDryPrintOption;
+    FNoParCheck: Boolean;
     procedure SetHDryPrintOption(const Value: THDryPrintOption);
+    procedure SetNoParCheck(const Value: Boolean);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
@@ -308,6 +315,7 @@ Type
   published
     property HDryPrintOption: THDryPrintOption read FHDryPrintOption
       write SetHDryPrintOption stored True;
+    property NoParCheck: Boolean read FNoParCheck write SetNoParCheck;
   end;
 
   THufReferenceChoice = (hrcModelTop, hrcReferenceLayer);
@@ -999,6 +1007,77 @@ Type
   end;
 
   TPrintFlows = (pfNoPrint, pfListing, pfText);
+
+  TStrPackageSelection = class(TModflowPackageSelection)
+  private
+    FCalculateStage: Boolean;
+    FMfStrBedTopElevation: TModflowBoundaryDisplayTimeList;
+    FMfStrBedBottomElevation: TModflowBoundaryDisplayTimeList;
+    FMfStrStage: TModflowBoundaryDisplayTimeList;
+    FMfStrConductance: TModflowBoundaryDisplayTimeList;
+    FMfStrFlow: TModflowBoundaryDisplayTimeList;
+    FMfStrRoughness: TModflowBoundaryDisplayTimeList;
+    FMfStrSlope: TModflowBoundaryDisplayTimeList;
+    FMfStrWidth: TModflowBoundaryDisplayTimeList;
+    FMfStrSegmentNumber: TModflowBoundaryDisplayTimeList;
+    FMfStrReachNumber: TModflowBoundaryDisplayTimeList;
+    FMfStrOutflowSegmentNumber: TModflowBoundaryDisplayTimeList;
+    FMfStrDiversionSegmentNumber: TModflowBoundaryDisplayTimeList;
+    procedure SetCalculateStage(const Value: Boolean);
+    procedure InitializeStrDisplay(Sender: TObject);
+    procedure GetMfStrConductanceUseList(Sender: TObject;
+      NewUseList: TStringList);
+    procedure GetMfStrBedTopElevationUseList(Sender: TObject;
+      NewUseList: TStringList);
+    procedure GetMfStrBedBottomElevationUseList(Sender: TObject;
+      NewUseList: TStringList);
+    procedure GetMfStrStageUseList(Sender: TObject;
+      NewUseList: TStringList);
+    procedure GetMfStrFlowUseList(Sender: TObject;
+      NewUseList: TStringList);
+    procedure GetMfStrWidthUseList(Sender: TObject;
+      NewUseList: TStringList);
+    procedure GetMfStrSlopeUseList(Sender: TObject;
+      NewUseList: TStringList);
+    procedure GetMfStrRoughnessUseList(Sender: TObject;
+      NewUseList: TStringList);
+    function StageUsed(Sender: TObject): boolean;
+    procedure GetMfStrUseList(Sender: TObject; NewUseList: TStringList);
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
+    Destructor Destroy; override;
+    property MfStrConductance: TModflowBoundaryDisplayTimeList
+      read FMfStrConductance;
+    property MfStrBedTopElevation: TModflowBoundaryDisplayTimeList
+      read FMfStrBedTopElevation;
+    property MfStrBedBottomElevation: TModflowBoundaryDisplayTimeList
+      read FMfStrBedBottomElevation;
+    property MfStrStage: TModflowBoundaryDisplayTimeList
+      read FMfStrStage;
+    property MfStrFlow: TModflowBoundaryDisplayTimeList
+      read FMfStrFlow;
+    property MfStrWidth: TModflowBoundaryDisplayTimeList
+      read FMfStrWidth;
+    property MfStrSlope: TModflowBoundaryDisplayTimeList
+      read FMfStrSlope;
+    property MfStrRoughness: TModflowBoundaryDisplayTimeList
+      read FMfStrRoughness;
+    property MfStrSegmentNumber: TModflowBoundaryDisplayTimeList
+      read FMfStrSegmentNumber;
+    property MfStrReachNumber: TModflowBoundaryDisplayTimeList
+      read FMfStrReachNumber;
+    property MfStrOutflowSegmentNumber: TModflowBoundaryDisplayTimeList
+      read FMfStrOutflowSegmentNumber;
+    property MfStrDiversionSegmentNumber: TModflowBoundaryDisplayTimeList
+      read FMfStrDiversionSegmentNumber;
+
+    procedure InvalidateAllTimeLists; override;
+    procedure InitializeVariables; override;
+  published
+    // ICALC
+    property CalculateStage: Boolean read FCalculateStage write SetCalculateStage;
+  end;
 
   TSfrPackageSelection = class(TModflowPackageSelection)
   private
@@ -2272,11 +2351,43 @@ Type
     property StoredHYDNOH: TRealStorage read FStoredHYDNOH write SetStoredHYDNOH;
   end;
 
+  TFhbSteadyStateInterpolation = (fssiNoInterpolation, fssiInterpolationUsed);
+
+  TFhbPackageSelection = class(TModflowPackageSelection)
+  private
+    // not used
+    FSteadyStateInterpolation: TFhbSteadyStateInterpolation;
+
+    FMfFhbHeads: TModflowBoundaryDisplayTimeList;
+    FMfFhbFlows: TModflowBoundaryDisplayTimeList;
+    procedure SetSteadyStateInterpolation(
+      const Value: TFhbSteadyStateInterpolation);
+    procedure InitializeFhbDisplay(Sender: TObject);
+    procedure GetMfFhbHeadUseList(Sender: TObject;
+      NewUseList: TStringList);
+    procedure GetMfFhbFlowUseList(Sender: TObject;
+      NewUseList: TStringList);
+  public
+    procedure Assign(Source: TPersistent); override;
+    procedure InitializeVariables; override;
+    Constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
+    property MfFhbHeads: TModflowBoundaryDisplayTimeList read FMfFhbHeads;
+    property MfFhbFlows: TModflowBoundaryDisplayTimeList read FMfFhbFlows;
+  published
+    // not used
+    property SteadyStateInterpolation: TFhbSteadyStateInterpolation
+      read FSteadyStateInterpolation write SetSteadyStateInterpolation stored False;
+  end;
+
   TMt3dBasic = class(TModflowPackageSelection)
   private
     FMinimumSaturatedFraction: TRealStorage;
     FInactiveConcentration: TRealStorage;
     FMassUnit: TStringStorage;
+    FInitialConcentrationTransportStep: Integer;
+    FInitialConcentrationTimeStep: Integer;
+    FInitialConcentrationStressPeriod: Integer;
     procedure SetStoredInactiveConcentration(const Value: TRealStorage);
     procedure SetStoredMassUnit(const Value: TStringStorage);
     procedure SetStoredMinimumSaturatedFraction(const Value: TRealStorage);
@@ -2288,6 +2399,9 @@ Type
     procedure SetMinimumSaturatedFraction(const Value: double);
     procedure Changed(Sender: TObject);
     procedure UpdateDataSets;
+    procedure SetInitialConcentrationStressPeriod(const Value: Integer);
+    procedure SetInitialConcentrationTimeStep(const Value: Integer);
+    procedure SetInitialConcentrationTransportStep(const Value: Integer);
   protected
     procedure SetIsSelected(const Value: boolean); override;
   public
@@ -2307,6 +2421,15 @@ Type
       read FInactiveConcentration write SetStoredInactiveConcentration;
     property StoredMinimumSaturatedFraction: TRealStorage
       read FMinimumSaturatedFraction write SetStoredMinimumSaturatedFraction;
+    property InitialConcentrationStressPeriod: Integer
+      read FInitialConcentrationStressPeriod
+      write SetInitialConcentrationStressPeriod default 1;
+    property InitialConcentrationTimeStep: Integer
+      read FInitialConcentrationTimeStep
+      write SetInitialConcentrationTimeStep default 1;
+    property InitialConcentrationTransportStep: Integer
+      read FInitialConcentrationTransportStep
+      write SetInitialConcentrationTransportStep default 1;
   end;
 
   TGcgPreconditioner = (gpJacobi, gpSSOR, gpCholesky);
@@ -2609,6 +2732,200 @@ Type
       write SetMassFluxObsResult stored True;
   end;
 
+  // IRTFL (1 & 2, 3)
+  TRootingDepth = (rdSpecified, rdCalculated);
+  // ICUFL (3, 2, 1, -1)
+  TConsumptiveUse = (cuCalculated, cuPotentialET, cuPotentialAndReferenceET,
+    cuCropCoefficient);
+  // IPFL (2, 3)
+  TPrecipitation = (pTimeSeries, pSpatiallyDistributed);
+  // IIESWFL (0, 1 and 2)
+  TFractionOfInefficiencyLoses = (filCalculated, filSpecified);
+  // IEBFL (0 and 1, 2 and 3)
+  // @name is used in conjunction with @link(TEfficiencyReset)
+  // to specify IEBFL.
+  TEfficiencyGroundwaterFunction = (egfConstant, egfVaries);
+  // IEBFL (0 and 2, 1 and 3)
+  // @name is used in conjunction with @link(TEfficiencyGroundwaterFunction)
+  // to specify IEBFL.
+  TEfficiencyReset = (erStressPeriod, erTimeStep);
+  // IDEFFL (-2, -1, 0, 1, 2)
+  TDeficiencyPolicy = (dpWaterStacking, dpDeficitIrrigation, dpNoPolicy,
+    dpAcreageOptimization, dpAcreageOptimizationWithConservationPool);
+  // ICOST (0, 1 and 2)
+  TWaterCostCoefficients = (wccLumped, wccByFarm);
+  // ICCFL (1 and 3, 2 and 4)
+  // @name is used in conjunction with @link(TCropConsumptiveLinkage)
+  // to specify ICCFL
+  TCropConsumptiveConcept = (cccConcept1, cccConcept2);
+  // ICCFL (1 and 2, 3 and 4)
+  // @name is used in conjunction with @link(TCropConsumptiveConcept)
+  // to specify ICCFL
+  TCropConsumptiveLinkage = (cclNotLinked, cclLinked);
+  // IALLOT
+  TSurfaceWaterAllotment = (swaNone, swaEqual, swaPriorWithCalls,
+    swaPriorWithoutCalls);
+  // IFWLCB
+  // swfrBudget is for backwards compatibility but is not used.
+  TSaveWellFlowRates = (swfrListing, swfrNone, swfrAscii, swfrBinary, swfrBudget);
+
+  // IFNRCB
+  TSaveNetRecharge = (snrListing, snrNone, snrAsciiByCell, snrAsciiByFarm,
+    snrBinary);
+  // ISDPFL
+  TSupplyAndDemand = (sadListingEveryIteration, sadListingEachTimeStep,
+     sadListingEachTimeStepWhenBudgetSaved, sadNone, sadAscii, sadBinary);
+  // IFBPFL
+  TFarmBudgetPrintFlags = (fbpNone, fbpAsciiCompact, fbpAscii, fbpBinary);
+  // IRTPFL (-2 and -1, 0, 1 and 2)
+  TPrintRouting = (prListingFile, prNoRoutingPrinted, prAscii);
+  // IOPFL (0, 1 and -1, 2 and -2, 3 and -3, 4 and -4)
+  // @name is used in conjunction with @link(TAcerageOptimizationPrintLocation)
+  // to specify IOPFL
+  TAcerageOptimizationPrintChoice = (aopcNone, aopcCellFractions,
+    aopcResourceConstraints, aopcCellFractionsAndResourceConstraints,
+    aopcMatrix);
+  // IOPFL (-1 to -4, 1 to 4)
+  // @name is used in conjunction with @link(TAcerageOptimizationPrintChoice)
+  // to specify IOPFL
+  TAcerageOptimizationPrintLocation = (aoplListing, aoplExternal);
+  // IPAPFL
+  TDiversionBudgetLocation = (dblListing, dblExternal);
+  // inverse of AUX NOCIRNOQ
+  TCropIrrigationRequirement = (cirContinuously, cirOnlyWhenNeeded);
+
+  TFarmProcess = class(TModflowPackageSelection)
+  private
+    FCropIrrigationRequirement: TCropIrrigationRequirement;
+    FSaveNetRecharge: TSaveNetRecharge;
+    FCropConsumptiveConcept: TCropConsumptiveConcept;
+    FEfficiencyReset: TEfficiencyReset;
+    FSurfaceWaterAllotment: TSurfaceWaterAllotment;
+    FFarmBudgetPrintFlags: TFarmBudgetPrintFlags;
+    FWaterCostCoefficients: TWaterCostCoefficients;
+    FPrecipitation: TPrecipitation;
+    FConsumptiveUse: TConsumptiveUse;
+    FAcerageOptimizationPrintLocation: TAcerageOptimizationPrintLocation;
+    FEfficiencyGroundwaterFunction: TEfficiencyGroundwaterFunction;
+    FSaveWellFlowRates: TSaveWellFlowRates;
+    FFractionOfInefficiencyLoses: TFractionOfInefficiencyLoses;
+    FSupplyAndDemand: TSupplyAndDemand;
+    FAcerageOptimizationPrintChoice: TAcerageOptimizationPrintChoice;
+    FCropConsumptiveLinkage: TCropConsumptiveLinkage;
+    FPrintRouting: TPrintRouting;
+    FDiversionBudgetLocation: TDiversionBudgetLocation;
+    FDeficiencyPolicy: TDeficiencyPolicy;
+    FRootingDepth: TRootingDepth;
+    FAssignmentMethod: TUpdateMethod;
+    procedure SetAcerageOptimizationPrintChoice(
+      const Value: TAcerageOptimizationPrintChoice);
+    procedure SetAcerageOptimizationPrintLocation(
+      const Value: TAcerageOptimizationPrintLocation);
+    procedure SetConsumptiveUse(const Value: TConsumptiveUse);
+    procedure SetCropConsumptiveConcept(const Value: TCropConsumptiveConcept);
+    procedure SetCropConsumptiveLinkage(const Value: TCropConsumptiveLinkage);
+    procedure SetCropIrrigationRequirement(
+      const Value: TCropIrrigationRequirement);
+    procedure SetDeficiencyPolicy(const Value: TDeficiencyPolicy);
+    procedure SetDiversionBudgetLocation(const Value: TDiversionBudgetLocation);
+    procedure SetEfficiencyGroundwaterFunction(
+      const Value: TEfficiencyGroundwaterFunction);
+    procedure SetEfficiencyReset(const Value: TEfficiencyReset);
+    procedure SetFarmBudgetPrintFlags(const Value: TFarmBudgetPrintFlags);
+    procedure SetFractionOfInefficiencyLoses(
+      const Value: TFractionOfInefficiencyLoses);
+    procedure SetPrecipitation(const Value: TPrecipitation);
+    procedure SetPrintRouting(const Value: TPrintRouting);
+    procedure SetRootingDepth(const Value: TRootingDepth);
+    procedure SetSaveNetRecharge(const Value: TSaveNetRecharge);
+    procedure SetSaveWellFlowRates(Value: TSaveWellFlowRates);
+    procedure SetSupplyAndDemand(const Value: TSupplyAndDemand);
+    procedure SetSurfaceWaterAllotment(const Value: TSurfaceWaterAllotment);
+    procedure SetWaterCostCoefficients(const Value: TWaterCostCoefficients);
+    procedure SetAssignmentMethod(const Value: TUpdateMethod);
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
+    procedure InitializeVariables; override;
+  published
+  // IRTFL (1 & 2, 3)
+    property RootingDepth: TRootingDepth read FRootingDepth
+      write SetRootingDepth;
+    // ICUFL (3, 2, 1, -1)
+    property ConsumptiveUse: TConsumptiveUse read FConsumptiveUse
+      write SetConsumptiveUse;
+    // IPFL (2, 3)
+    property Precipitation: TPrecipitation read FPrecipitation
+      write SetPrecipitation;
+    // IIESWFL (0, 1 and 2)
+    property FractionOfInefficiencyLoses: TFractionOfInefficiencyLoses
+      read FFractionOfInefficiencyLoses write SetFractionOfInefficiencyLoses;
+    // IEBFL (0 and 1, 2 and 3)
+    // @name is used in conjunction with @link(EfficiencyReset)
+    // to specify IEBFL.
+    property EfficiencyGroundwaterFunction: TEfficiencyGroundwaterFunction
+      read FEfficiencyGroundwaterFunction
+      write SetEfficiencyGroundwaterFunction;
+    // IEBFL (0 and 2, 1 and 3)
+    // @name is used in conjunction with @link(EfficiencyGroundwaterFunction)
+    // to specify IEBFL.
+    property EfficiencyReset: TEfficiencyReset read FEfficiencyReset
+      write SetEfficiencyReset;
+    // IDEFFL (-2, -1, 0, 1, 2)
+    property DeficiencyPolicy: TDeficiencyPolicy read FDeficiencyPolicy
+      write SetDeficiencyPolicy;
+    // ICOST (0, 1 and 2)
+    property WaterCostCoefficients: TWaterCostCoefficients
+      read FWaterCostCoefficients write SetWaterCostCoefficients;
+    // ICCFL (1 and 3, 2 and 4)
+    // @name is used in conjunction with @link(CropConsumptiveLinkage)
+    // to specify ICCFL
+    property CropConsumptiveConcept: TCropConsumptiveConcept
+      read FCropConsumptiveConcept write SetCropConsumptiveConcept;
+    // ICCFL (1 and 2, 3 and 4)
+    // @name is used in conjunction with @link(CropConsumptiveConcept)
+    // to specify ICCFL
+    property CropConsumptiveLinkage: TCropConsumptiveLinkage
+      read FCropConsumptiveLinkage write SetCropConsumptiveLinkage;
+    // IALLOT
+    property SurfaceWaterAllotment: TSurfaceWaterAllotment
+      read FSurfaceWaterAllotment write SetSurfaceWaterAllotment;
+    // IFWLCB
+    property SaveWellFlowRates: TSaveWellFlowRates read FSaveWellFlowRates
+      write SetSaveWellFlowRates;
+    // IFNRCB
+    property SaveNetRecharge: TSaveNetRecharge read FSaveNetRecharge
+      write SetSaveNetRecharge;
+    // ISDPFL
+    property SupplyAndDemand: TSupplyAndDemand read FSupplyAndDemand
+      write SetSupplyAndDemand;
+    // IFBPFL
+    property FarmBudgetPrintFlags: TFarmBudgetPrintFlags
+      read FFarmBudgetPrintFlags write SetFarmBudgetPrintFlags;
+    // IRTPFL (-2 and -1, 0, 1 and 2)
+    property PrintRouting: TPrintRouting read FPrintRouting
+      write SetPrintRouting;
+    // IOPFL (0, 1 and -1, 2 and -2, 3 and -3, 4 and -4)
+    // @name is used in conjunction with @link(AcerageOptimizationPrintLocation)
+    // to specify IOPFL
+    property AcerageOptimizationPrintChoice: TAcerageOptimizationPrintChoice
+      read FAcerageOptimizationPrintChoice
+      write SetAcerageOptimizationPrintChoice;
+    // IOPFL (-1 to -4, 1 to 4)
+    // @name is used in conjunction with @link(AcerageOptimizationPrintChoice)
+    // to specify IOPFL
+    property AcerageOptimizationPrintLocation: TAcerageOptimizationPrintLocation
+      read FAcerageOptimizationPrintLocation
+      write SetAcerageOptimizationPrintLocation;
+    // IPAPFL
+    property DiversionBudgetLocation: TDiversionBudgetLocation
+      read FDiversionBudgetLocation write SetDiversionBudgetLocation;
+    // inverse of AUX NOCIRNOQ
+    property CropIrrigationRequirement: TCropIrrigationRequirement
+      read FCropIrrigationRequirement write SetCropIrrigationRequirement;
+    property AssignmentMethod: TUpdateMethod read FAssignmentMethod
+      write SetAssignmentMethod Stored True;
+  end;
 
 implementation
 
@@ -2624,7 +2941,8 @@ uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
   ModflowSfrUnsatSegment, ModflowMNW2_WriterUnit, ModflowMnw2Unit,
   LayerStructureUnit, ModflowSubsidenceDefUnit, frmGridValueUnit,
   frmGoPhastUnit, CustomModflowWriterUnit, frmDisplayDataUnit,
-  Mt3dmsSsmWriterUnit, Mt3dmsChemUnit;
+  Mt3dmsSsmWriterUnit, Mt3dmsChemUnit, ModflowStrUnit, ModflowStrWriterUnit,
+  ModflowFhbWriterUnit;
 
 resourcestring
   StrLengthUnitsForMod = 'Length units for model are undefined';
@@ -2637,6 +2955,17 @@ resourcestring
   'ding time';
   StrStartingTime0g = 'StartingTime: %:0g; EndingTime: %1:g';
   StrXYOrZCoordinat = 'X, Y, or Z coordinate formula';
+  StrWellPumpingRate = 'Well Pumping Rate';
+  StrGHBBoundaryHead = 'GHB Boundary Head';
+  StrGHBConductance = 'GHB Conductance';
+  StrDrainConductance = 'Drain Conductance';
+  StrDrainReturnConduct = 'Drain Return Conductance';
+  StrDrainReturnElevati = 'Drain Return Elevation';
+  StrDrainReturnFractio = 'Drain Return Fraction';
+  StrRiverBottomElevati = 'River Bottom Elevation';
+  StrRiverConductance = 'River Conductance';
+  StrCHDEndingHead = 'CHD Ending Head';
+  StrCHDStartingHead = 'CHD Starting Head';
 
 
 { TModflowPackageSelection }
@@ -2750,6 +3079,16 @@ end;
 
 procedure TModflowPackageSelection.SetRealProperty(var Field: real;
   const Value: real);
+begin
+  if Field <> Value then
+  begin
+    Field := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TModflowPackageSelection.SetStringProperty(var Field: string;
+  const Value: string);
 begin
   if Field <> Value then
   begin
@@ -7036,7 +7375,7 @@ end;
 procedure TWellPackage.GetMfWellUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
-  UpdateDisplayUseList(NewUseList, ptQ, 0, 'Well Pumping Rate');
+  UpdateDisplayUseList(NewUseList, ptQ, 0, StrWellPumpingRate);
 end;
 
 function TWellPackage.GetPhiRamp: Double;
@@ -7125,13 +7464,13 @@ end;
 procedure TGhbPackage.GetMfGhbBoundaryHeadUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
-  UpdateDisplayUseList(NewUseList, ptGHB, 0, 'GHB Boundary Head');
+  UpdateDisplayUseList(NewUseList, ptGHB, 0, StrGHBBoundaryHead);
 end;
 
 procedure TGhbPackage.GetMfGhbConductanceUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
-  UpdateDisplayUseList(NewUseList, ptGHB, 1, 'GHB Conductance');
+  UpdateDisplayUseList(NewUseList, ptGHB, 1, StrGHBConductance);
 end;
 
 procedure TGhbPackage.InitializeGhbDisplay(Sender: TObject);
@@ -7198,7 +7537,7 @@ end;
 procedure TDrnPackage.GetMfDrnConductanceUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
-  UpdateDisplayUseList(NewUseList, ptDRN, 1, 'Drain Conductance');
+  UpdateDisplayUseList(NewUseList, ptDRN, 1, StrDrainConductance);
 end;
 
 procedure TDrnPackage.GetMfDrnElevationUseList(Sender: TObject;
@@ -7279,19 +7618,19 @@ end;
 procedure TDrtPackage.GetMfDrtConductanceUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
-  UpdateDisplayUseList(NewUseList, ptDRT, 1, 'Drain Return Conductance');
+  UpdateDisplayUseList(NewUseList, ptDRT, 1, StrDrainReturnConduct);
 end;
 
 procedure TDrtPackage.GetMfDrtElevationUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
-  UpdateDisplayUseList(NewUseList, ptDRT, 0, 'Drain Return Elevation');
+  UpdateDisplayUseList(NewUseList, ptDRT, 0, StrDrainReturnElevati);
 end;
 
 procedure TDrtPackage.GetMfDrtReturnFractionUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
-  UpdateDisplayUseList(NewUseList, ptDRT, 2, 'Drain Return Fraction');
+  UpdateDisplayUseList(NewUseList, ptDRT, 2, StrDrainReturnFractio);
 end;
 
 procedure TDrtPackage.InitializeDrtDisplay(Sender: TObject);
@@ -7371,13 +7710,13 @@ end;
 procedure TRivPackage.GetMfRivBottomUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
-  UpdateDisplayUseList(NewUseList, ptRIV, 2, 'River Bottom Elevation');
+  UpdateDisplayUseList(NewUseList, ptRIV, 2, StrRiverBottomElevati);
 end;
 
 procedure TRivPackage.GetMfRivConductanceUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
-  UpdateDisplayUseList(NewUseList, ptRIV, 1, 'River Conductance');
+  UpdateDisplayUseList(NewUseList, ptRIV, 1, StrRiverConductance);
 end;
 
 procedure TRivPackage.GetMfRivStageUseList(Sender: TObject;
@@ -7455,13 +7794,13 @@ end;
 procedure TChdPackage.GetMfChdEndingHeadUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
-  UpdateDisplayUseList(NewUseList, ptCHD, 1, 'CHD Ending Head');
+  UpdateDisplayUseList(NewUseList, ptCHD, 1, StrCHDEndingHead);
 end;
 
 procedure TChdPackage.GetMfChdStartingHeadUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
-  UpdateDisplayUseList(NewUseList, ptCHD, 0, 'CHD Starting Head');
+  UpdateDisplayUseList(NewUseList, ptCHD, 0, StrCHDStartingHead);
 end;
 
 procedure TChdPackage.InitializeChdDisplay(Sender: TObject);
@@ -9118,6 +9457,7 @@ begin
   if Source is TUpwPackageSelection then
   begin
     HDryPrintOption := TUpwPackageSelection(Source).HDryPrintOption;
+    NoParCheck := TUpwPackageSelection(Source).NoParCheck;
   end;
   inherited;
 
@@ -9138,6 +9478,7 @@ procedure TUpwPackageSelection.InitializeVariables;
 begin
   inherited;
   FHDryPrintOption := hpoPrintHdry;
+  FNoParCheck := False;
 end;
 
 procedure TUpwPackageSelection.SetHDryPrintOption(
@@ -9147,6 +9488,15 @@ begin
   begin
     InvalidateModel;
     FHDryPrintOption := Value;
+  end;
+end;
+
+procedure TUpwPackageSelection.SetNoParCheck(const Value: Boolean);
+begin
+  if FNoParCheck <> Value then
+  begin
+    InvalidateModel;
+    FNoParCheck := Value;
   end;
 end;
 
@@ -9602,6 +9952,13 @@ begin
       BasicSource.StoredMinimumSaturatedFraction;
     StoredInactiveConcentration := BasicSource.StoredInactiveConcentration;
     StoredMassUnit := BasicSource.StoredMassUnit;
+
+    InitialConcentrationStressPeriod :=
+      BasicSource.InitialConcentrationStressPeriod;
+    InitialConcentrationTimeStep := BasicSource.InitialConcentrationTimeStep;
+    InitialConcentrationTransportStep :=
+      BasicSource.InitialConcentrationTransportStep;
+
   end;
   inherited;
 end;
@@ -9656,11 +10013,29 @@ begin
   MassUnit := 'g';
   InactiveConcentration := -1e30;
   MinimumSaturatedFraction := 0.01;
+  FInitialConcentrationStressPeriod := 1;
+  FInitialConcentrationTimeStep := 1;
+  FInitialConcentrationTransportStep := 1;
 end;
 
 procedure TMt3dBasic.SetInactiveConcentration(const Value: double);
 begin
   StoredInactiveConcentration.Value := Value;
+end;
+
+procedure TMt3dBasic.SetInitialConcentrationStressPeriod(const Value: Integer);
+begin
+  SetIntegerProperty(FInitialConcentrationStressPeriod, Value);
+end;
+
+procedure TMt3dBasic.SetInitialConcentrationTimeStep(const Value: Integer);
+begin
+  SetIntegerProperty(FInitialConcentrationTimeStep, Value);
+end;
+
+procedure TMt3dBasic.SetInitialConcentrationTransportStep(const Value: Integer);
+begin
+  SetIntegerProperty(FInitialConcentrationTransportStep, Value);
 end;
 
 procedure TMt3dBasic.SetIsSelected(const Value: boolean);
@@ -10657,6 +11032,647 @@ end;
 procedure TModflowPackageSelection.OnValueChanged(Sender: TObject);
 begin
   InvalidateModel;
+end;
+
+{ TStrPackageSelection }
+
+procedure TStrPackageSelection.Assign(Source: TPersistent);
+var
+  Str: TStrPackageSelection;
+begin
+  if Source is TStrPackageSelection then
+  begin
+    Str := TStrPackageSelection(Source);
+    CalculateStage := Str.CalculateStage;
+  end;
+  inherited;
+
+end;
+
+constructor TStrPackageSelection.Create(Model: TBaseModel);
+begin
+  inherited;
+  if Model <> nil then
+  begin
+    FMfStrSegmentNumber := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfStrSegmentNumber.OnTimeListUsed := PackageUsed;
+    FMfStrSegmentNumber.OnInitialize := InitializeStrDisplay;
+    FMfStrSegmentNumber.OnGetUseList := GetMfStrUseList;
+    FMfStrSegmentNumber.Name := StrModflowStrSegment;
+    AddTimeList(FMfStrSegmentNumber);
+
+    FMfStrReachNumber := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfStrReachNumber.OnTimeListUsed := PackageUsed;
+    FMfStrReachNumber.OnInitialize := InitializeStrDisplay;
+    FMfStrReachNumber.OnGetUseList := GetMfStrUseList;
+    FMfStrReachNumber.Name := StrModflowStrReach;
+    AddTimeList(FMfStrReachNumber);
+
+    FMfStrOutflowSegmentNumber := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfStrOutflowSegmentNumber.OnTimeListUsed := PackageUsed;
+    FMfStrOutflowSegmentNumber.OnInitialize := InitializeStrDisplay;
+    FMfStrOutflowSegmentNumber.OnGetUseList := GetMfStrUseList;
+    FMfStrOutflowSegmentNumber.Name := StrModflowStrDownstreamSegment;
+    AddTimeList(FMfStrOutflowSegmentNumber);
+
+    FMfStrDiversionSegmentNumber := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfStrDiversionSegmentNumber.OnTimeListUsed := PackageUsed;
+    FMfStrDiversionSegmentNumber.OnInitialize := InitializeStrDisplay;
+    FMfStrDiversionSegmentNumber.OnGetUseList := GetMfStrUseList;
+    FMfStrDiversionSegmentNumber.Name := StrModflowStrDiversionSegment;
+    AddTimeList(FMfStrDiversionSegmentNumber);
+
+
+
+    FMfStrBedTopElevation := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfStrBedTopElevation.OnInitialize := InitializeStrDisplay;
+    FMfStrBedTopElevation.OnGetUseList := GetMfStrBedTopElevationUseList;
+    FMfStrBedTopElevation.OnTimeListUsed := PackageUsed;
+    FMfStrBedTopElevation.Name := StrSTRStreamTopElev;
+    AddTimeList(FMfStrBedTopElevation);
+
+    FMfStrBedBottomElevation := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfStrBedBottomElevation.OnInitialize := InitializeStrDisplay;
+    FMfStrBedBottomElevation.OnGetUseList := GetMfStrBedBottomElevationUseList;
+    FMfStrBedBottomElevation.OnTimeListUsed := PackageUsed;
+    FMfStrBedBottomElevation.Name := StrSTRStreamBottomElev;
+    AddTimeList(FMfStrBedBottomElevation);
+
+    FMfStrStage := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfStrStage.OnInitialize := InitializeStrDisplay;
+    FMfStrStage.OnGetUseList := GetMfStrStageUseList;
+    FMfStrStage.OnTimeListUsed := StageUsed;
+    FMfStrStage.Name := StrSTRStreamStage;
+    AddTimeList(FMfStrStage);
+
+    FMfStrConductance := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfStrConductance.OnInitialize := InitializeStrDisplay;
+    FMfStrConductance.OnGetUseList := GetMfStrConductanceUseList;
+    FMfStrConductance.OnTimeListUsed := PackageUsed;
+    FMfStrConductance.Name := StrSTRStreamConductance;
+    AddTimeList(FMfStrConductance);
+
+    FMfStrFlow := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfStrFlow.OnInitialize := InitializeStrDisplay;
+    FMfStrFlow.OnGetUseList := GetMfStrFlowUseList;
+    FMfStrFlow.OnTimeListUsed := PackageUsed;
+    FMfStrFlow.Name := StrSTRStreamFlow;
+    AddTimeList(FMfStrFlow);
+
+    FMfStrWidth := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfStrWidth.OnInitialize := InitializeStrDisplay;
+    FMfStrWidth.OnGetUseList := GetMfStrWidthUseList;
+    FMfStrWidth.OnTimeListUsed := PackageUsed;
+    FMfStrWidth.Name := StrSTRStreamWidth;
+    AddTimeList(FMfStrWidth);
+
+    FMfStrSlope := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfStrSlope.OnInitialize := InitializeStrDisplay;
+    FMfStrSlope.OnGetUseList := GetMfStrSlopeUseList;
+    FMfStrSlope.OnTimeListUsed := PackageUsed;
+    FMfStrSlope.Name := StrSTRStreamSlope;
+    AddTimeList(FMfStrSlope);
+
+    FMfStrRoughness := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfStrRoughness.OnInitialize := InitializeStrDisplay;
+    FMfStrRoughness.OnGetUseList := GetMfStrRoughnessUseList;
+    FMfStrRoughness.OnTimeListUsed := PackageUsed;
+    FMfStrRoughness.Name := StrSTRStreamRoughness;
+    AddTimeList(FMfStrRoughness);
+  end;
+  InitializeVariables;
+
+end;
+
+destructor TStrPackageSelection.Destroy;
+begin
+  FMfStrWidth.Free;
+  FMfStrSlope.Free;
+  FMfStrRoughness.Free;
+  FMfStrBedTopElevation.Free;
+  FMfStrBedBottomElevation.Free;
+  FMfStrStage.Free;
+  FMfStrConductance.Free;
+  FMfStrFlow.Free;
+  FMfStrSegmentNumber.Free;
+  FMfStrReachNumber.Free;
+  FMfStrOutflowSegmentNumber.Free;
+  FMfStrDiversionSegmentNumber.Free;
+  inherited;
+end;
+
+procedure TStrPackageSelection.GetMfStrBedBottomElevationUseList(
+  Sender: TObject; NewUseList: TStringList);
+begin
+  UpdateDisplayUseList(NewUseList, ptStr, StreamBedBottomPosition, StrSTRStreamBottomElev);
+end;
+
+procedure TStrPackageSelection.GetMfStrUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  // do nothing
+end;
+
+procedure TStrPackageSelection.GetMfStrBedTopElevationUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  UpdateDisplayUseList(NewUseList, ptStr, StreamBedTopPosition, StrSTRStreamTopElev);
+end;
+
+procedure TStrPackageSelection.GetMfStrConductanceUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  UpdateDisplayUseList(NewUseList, ptStr, StreamConductancePosition, StrSTRStreamConductance);
+end;
+
+procedure TStrPackageSelection.GetMfStrFlowUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  UpdateDisplayUseList(NewUseList, ptStr, StreamFlowPosition, StrSTRStreamFlow);
+end;
+
+procedure TStrPackageSelection.GetMfStrRoughnessUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  UpdateDisplayUseList(NewUseList, ptStr, StreamRoughnessPosition, StrSTRStreamRoughness);
+end;
+
+procedure TStrPackageSelection.GetMfStrSlopeUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  UpdateDisplayUseList(NewUseList, ptStr, StreamSlopePosition, StrSTRStreamSlope);
+end;
+
+procedure TStrPackageSelection.GetMfStrStageUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  UpdateDisplayUseList(NewUseList, ptStr, StreamStagePosition, StrSTRStreamStage);
+end;
+
+procedure TStrPackageSelection.GetMfStrWidthUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+  UpdateDisplayUseList(NewUseList, ptStr, StreamWidthPosition, StrSTRStreamWidth);
+end;
+
+procedure TStrPackageSelection.InitializeStrDisplay(Sender: TObject);
+var
+  StrWriter: TStrWriter;
+  List: TModflowBoundListOfTimeLists;
+begin
+  MfStrSegmentNumber.CreateDataSets;
+  MfStrReachNumber.CreateDataSets;
+  MfStrOutflowSegmentNumber.CreateDataSets;
+  MfStrDiversionSegmentNumber.CreateDataSets;
+  MfStrFlow.CreateDataSets;
+  MfStrStage.CreateDataSets;
+  MfStrConductance.CreateDataSets;
+  MfStrBedBottomElevation.CreateDataSets;
+  MfStrBedTopElevation.CreateDataSets;
+  MfStrWidth.CreateDataSets;
+  MfStrSlope.CreateDataSets;
+  MfStrRoughness.CreateDataSets;
+
+  List := TModflowBoundListOfTimeLists.Create;
+  StrWriter := TStrWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfStrSegmentNumber);
+    List.Add(MfStrReachNumber);
+    List.Add(MfStrOutflowSegmentNumber);
+    List.Add(MfStrDiversionSegmentNumber);
+    List.Add(MfStrFlow);
+    List.Add(MfStrStage);
+    List.Add(MfStrConductance);
+    List.Add(MfStrBedBottomElevation);
+    List.Add(MfStrBedTopElevation);
+    List.Add(MfStrWidth);
+    List.Add(MfStrSlope);
+    List.Add(MfStrRoughness);
+    StrWriter.UpdateDisplay(List);
+  finally
+    StrWriter.Free;
+    List.Free;
+  end;
+
+  MfStrSegmentNumber.ComputeAverage;
+  MfStrReachNumber.ComputeAverage;
+  MfStrOutflowSegmentNumber.ComputeAverage;
+  MfStrDiversionSegmentNumber.ComputeAverage;
+  MfStrFlow.ComputeAverage;
+  MfStrStage.ComputeAverage;
+  MfStrConductance.ComputeAverage;
+  MfStrBedBottomElevation.ComputeAverage;
+  MfStrBedTopElevation.ComputeAverage;
+  MfStrWidth.ComputeAverage;
+  MfStrSlope.ComputeAverage;
+  MfStrRoughness.ComputeAverage;
+end;
+
+procedure TStrPackageSelection.InitializeVariables;
+begin
+  inherited;
+  FCalculateStage := False;
+end;
+
+procedure TStrPackageSelection.InvalidateAllTimeLists;
+begin
+  inherited;
+  MfStrSegmentNumber.Invalidate;
+  MfStrOutflowSegmentNumber.Invalidate;
+  MfStrDiversionSegmentNumber.Invalidate;
+  MfStrReachNumber.Invalidate;
+  MfStrBedTopElevation.Invalidate;
+  MfStrBedBottomElevation.Invalidate;
+  MfStrStage.Invalidate;
+  MfStrConductance.Invalidate;
+  MfStrFlow.Invalidate;
+
+  MfStrRoughness.Invalidate;
+  MfStrSlope.Invalidate;
+  MfStrWidth.Invalidate;
+
+end;
+
+procedure TStrPackageSelection.SetCalculateStage(const Value: Boolean);
+begin
+  FCalculateStage := Value;
+end;
+
+function TStrPackageSelection.StageUsed(Sender: TObject): boolean;
+begin
+  result := PackageUsed(Sender) and not CalculateStage;
+end;
+
+{ TFhbPackageSelection }
+
+procedure TFhbPackageSelection.Assign(Source: TPersistent);
+begin
+  if Source is TFhbPackageSelection then
+  begin
+    SteadyStateInterpolation :=
+      TFhbPackageSelection(Source).SteadyStateInterpolation;
+  end;
+  inherited;
+end;
+
+constructor TFhbPackageSelection.Create(Model: TBaseModel);
+begin
+  inherited;
+  InitializeVariables;
+
+  if Model <> nil then
+  begin
+    FMfFhbHeads := TModflowBoundaryDisplayTimeList.Create(Model);
+    MfFhbHeads.OnInitialize := InitializeFhbDisplay;
+    MfFhbHeads.OnGetUseList := GetMfFhbHeadUseList;
+    MfFhbHeads.OnTimeListUsed := PackageUsed;
+    MfFhbHeads.Name := StrMODFLOWFHBHeads;
+    AddTimeList(MfFhbHeads);
+
+    FMfFhbFlows := TModflowBoundaryDisplayTimeList.Create(Model);
+    MfFhbFlows.OnInitialize := InitializeFhbDisplay;
+    MfFhbFlows.OnGetUseList := GetMfFhbFlowUseList;
+    MfFhbFlows.OnTimeListUsed := PackageUsed;
+    MfFhbFlows.Name := StrMODFLOWFHBFlows;
+    AddTimeList(MfFhbFlows);
+  end;
+
+end;
+
+destructor TFhbPackageSelection.Destroy;
+begin
+  FMfFhbHeads.Free;
+  FMfFhbFlows.Free;
+  inherited;
+end;
+
+procedure TFhbPackageSelection.GetMfFhbFlowUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+
+end;
+
+procedure TFhbPackageSelection.GetMfFhbHeadUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+
+end;
+
+procedure TFhbPackageSelection.InitializeFhbDisplay(Sender: TObject);
+var
+  FhbWriter: TModflowFhbWriter;
+  List: TModflowBoundListOfTimeLists;
+begin
+  MfFhbHeads.CreateDataSets;
+  FMfFhbFlows.CreateDataSets;
+
+  List := TModflowBoundListOfTimeLists.Create;
+  FhbWriter := TModflowFhbWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfFhbHeads);
+    List.Add(FMfFhbFlows);
+    FhbWriter.UpdateDisplay(List);
+  finally
+    FhbWriter.Free;
+    List.Free;
+  end;
+  MfFhbHeads.ComputeAverage;
+  FMfFhbFlows.ComputeAverage;
+
+
+end;
+
+procedure TFhbPackageSelection.InitializeVariables;
+begin
+  inherited;
+  SteadyStateInterpolation := fssiNoInterpolation;
+end;
+
+procedure TFhbPackageSelection.SetSteadyStateInterpolation(
+  const Value: TFhbSteadyStateInterpolation);
+begin
+  if FSteadyStateInterpolation <> Value then
+  begin
+    FSteadyStateInterpolation := Value;
+    InvalidateModel;
+  end;
+end;
+
+{ TFarmProcess }
+
+procedure TFarmProcess.Assign(Source: TPersistent);
+var
+  SourceFarm: TFarmProcess;
+begin
+  if Source is TFarmProcess then
+  begin
+    SourceFarm := TFarmProcess(Source);
+    RootingDepth := SourceFarm.RootingDepth;
+    ConsumptiveUse := SourceFarm.ConsumptiveUse;
+    Precipitation := SourceFarm.Precipitation;
+    FractionOfInefficiencyLoses := SourceFarm.FractionOfInefficiencyLoses;
+    EfficiencyGroundwaterFunction := SourceFarm.EfficiencyGroundwaterFunction;
+    EfficiencyReset := SourceFarm.EfficiencyReset;
+    DeficiencyPolicy := SourceFarm.DeficiencyPolicy;
+    WaterCostCoefficients := SourceFarm.WaterCostCoefficients;
+    CropConsumptiveConcept := SourceFarm.CropConsumptiveConcept;
+    CropConsumptiveLinkage := SourceFarm.CropConsumptiveLinkage;
+    SurfaceWaterAllotment := SourceFarm.SurfaceWaterAllotment;
+    SaveWellFlowRates := SourceFarm.SaveWellFlowRates;
+    SaveNetRecharge := SourceFarm.SaveNetRecharge;
+    SupplyAndDemand := SourceFarm.SupplyAndDemand;
+    FarmBudgetPrintFlags := SourceFarm.FarmBudgetPrintFlags;
+    PrintRouting := SourceFarm.PrintRouting;
+    AcerageOptimizationPrintChoice := SourceFarm.AcerageOptimizationPrintChoice;
+    AcerageOptimizationPrintLocation := SourceFarm.AcerageOptimizationPrintLocation;
+    DiversionBudgetLocation := SourceFarm.DiversionBudgetLocation;
+    CropIrrigationRequirement := SourceFarm.CropIrrigationRequirement;
+    AssignmentMethod := SourceFarm.AssignmentMethod;
+  end;
+  inherited;
+
+end;
+
+constructor TFarmProcess.Create(Model: TBaseModel);
+begin
+  inherited;
+  InitializeVariables;
+end;
+
+procedure TFarmProcess.InitializeVariables;
+begin
+  inherited;
+  RootingDepth := rdSpecified;
+  ConsumptiveUse := cuPotentialAndReferenceET;
+  Precipitation := pTimeSeries;
+  FractionOfInefficiencyLoses := filCalculated;
+  EfficiencyGroundwaterFunction := egfConstant;
+  EfficiencyReset := erStressPeriod;
+  DeficiencyPolicy := dpNoPolicy;
+  WaterCostCoefficients := wccLumped;
+  CropConsumptiveConcept := cccConcept1;
+  CropConsumptiveLinkage := cclNotLinked;
+  SurfaceWaterAllotment := swaNone;
+  SaveWellFlowRates := swfrBinary;
+  SaveNetRecharge := snrBinary;
+  SupplyAndDemand := sadBinary;
+  FarmBudgetPrintFlags := fbpNone;
+  PrintRouting := prListingFile;
+  AcerageOptimizationPrintChoice := aopcCellFractionsAndResourceConstraints;
+  AcerageOptimizationPrintLocation := aoplListing;
+  DiversionBudgetLocation := dblListing;
+  CropIrrigationRequirement := cirContinuously;
+  AssignmentMethod := umAssign;
+end;
+
+procedure TFarmProcess.SetAcerageOptimizationPrintChoice(
+  const Value: TAcerageOptimizationPrintChoice);
+begin
+  if FAcerageOptimizationPrintChoice <> Value then
+  begin
+    FAcerageOptimizationPrintChoice := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetAcerageOptimizationPrintLocation(
+  const Value: TAcerageOptimizationPrintLocation);
+begin
+  if FAcerageOptimizationPrintLocation <> Value then
+  begin
+    FAcerageOptimizationPrintLocation := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetAssignmentMethod(const Value: TUpdateMethod);
+begin
+  if FAssignmentMethod <> Value then
+  begin
+    FAssignmentMethod := Value;
+    InvalidateModel;
+    if FModel <> nil then
+    begin
+      Assert(False);
+      { TODO -cFMP : Need to finish this }
+//      MfUzfInfiltration.Invalidate;
+    end;
+  end;
+end;
+
+procedure TFarmProcess.SetConsumptiveUse(const Value: TConsumptiveUse);
+begin
+  if FConsumptiveUse <> Value then
+  begin
+    FConsumptiveUse := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetCropConsumptiveConcept(
+  const Value: TCropConsumptiveConcept);
+begin
+  if FCropConsumptiveConcept <> Value then
+  begin
+    FCropConsumptiveConcept := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetCropConsumptiveLinkage(
+  const Value: TCropConsumptiveLinkage);
+begin
+  if FCropConsumptiveLinkage <> Value then
+  begin
+    FCropConsumptiveLinkage := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetCropIrrigationRequirement(
+  const Value: TCropIrrigationRequirement);
+begin
+  if FCropIrrigationRequirement <> Value then
+  begin
+    FCropIrrigationRequirement := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetDeficiencyPolicy(const Value: TDeficiencyPolicy);
+begin
+  if FDeficiencyPolicy <> Value then
+  begin
+    FDeficiencyPolicy := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetDiversionBudgetLocation(
+  const Value: TDiversionBudgetLocation);
+begin
+  if FDiversionBudgetLocation <> Value then
+  begin
+    FDiversionBudgetLocation := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetEfficiencyGroundwaterFunction(
+  const Value: TEfficiencyGroundwaterFunction);
+begin
+  if FEfficiencyGroundwaterFunction <> Value then
+  begin
+    FEfficiencyGroundwaterFunction := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetEfficiencyReset(const Value: TEfficiencyReset);
+begin
+  if FEfficiencyReset <> Value then
+  begin
+    FEfficiencyReset := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetFarmBudgetPrintFlags(
+  const Value: TFarmBudgetPrintFlags);
+begin
+  if FFarmBudgetPrintFlags <> Value then
+  begin
+    FFarmBudgetPrintFlags := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetFractionOfInefficiencyLoses(
+  const Value: TFractionOfInefficiencyLoses);
+begin
+  if FFractionOfInefficiencyLoses <> Value then
+  begin
+    FFractionOfInefficiencyLoses := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetPrecipitation(const Value: TPrecipitation);
+begin
+  if FPrecipitation <> Value then
+  begin
+    FPrecipitation := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetPrintRouting(const Value: TPrintRouting);
+begin
+  if FPrintRouting <> Value then
+  begin
+    FPrintRouting := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetRootingDepth(const Value: TRootingDepth);
+begin
+  if FRootingDepth <> Value then
+  begin
+    FRootingDepth := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetSaveNetRecharge(const Value: TSaveNetRecharge);
+begin
+  if FSaveNetRecharge <> Value then
+  begin
+    FSaveNetRecharge := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetSaveWellFlowRates(Value: TSaveWellFlowRates);
+begin
+  if Value = swfrBudget then
+  begin
+    Value := swfrBinary;
+  end;
+  if FSaveWellFlowRates <> Value then
+  begin
+    FSaveWellFlowRates := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetSupplyAndDemand(const Value: TSupplyAndDemand);
+begin
+  if FSupplyAndDemand <> Value then
+  begin
+    FSupplyAndDemand := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetSurfaceWaterAllotment(
+  const Value: TSurfaceWaterAllotment);
+begin
+  if FSurfaceWaterAllotment <> Value then
+  begin
+    FSurfaceWaterAllotment := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetWaterCostCoefficients(
+  const Value: TWaterCostCoefficients);
+begin
+  if FWaterCostCoefficients <> Value then
+  begin
+    FWaterCostCoefficients := Value;
+    InvalidateModel;
+  end;
 end;
 
 end.

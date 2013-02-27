@@ -18,6 +18,8 @@ type
     btnContourFont: TButton;
     comboAlgorithm: TComboBox;
     lblAlgorithm: TLabel;
+    lblContourInterval: TLabel;
+    rdeContourInterval: TRbwDataEntry;
     procedure cbSpecifyContoursClick(Sender: TObject);
     procedure btnEditContoursClick(Sender: TObject);
     procedure virttreecomboDataSetsChange(Sender: TObject);
@@ -221,6 +223,7 @@ begin
   begin
     DataSet := TDataArray(AnObject);
     DataSet.ContourAlg := TContourAlg(comboAlgorithm.ItemIndex);
+    DataSet.ContourInterval.Value := StrToFloat(rdeContourInterval.Text);
     AssignLimits(DataSet.DataType, DataSet.ContourLimits);
     if FContours <> nil then
     begin
@@ -310,18 +313,38 @@ end;
 
 function TframeContourData.GetContourDataSet: TDataArray;
 begin
-  result := frmGoPhast.Grid.TopContourDataSet;
-  if result = nil then
+  result := nil;
+  if frmGoPhast.Grid <> nil then
   begin
-    result := frmGoPhast.Grid.FrontContourDataSet;
-  end;
-  if result = nil then
+    result := frmGoPhast.Grid.TopContourDataSet;
+    if result = nil then
+    begin
+      result := frmGoPhast.Grid.FrontContourDataSet;
+    end;
+    if result = nil then
+    begin
+      result := frmGoPhast.Grid.SideContourDataSet;
+    end;
+    if result = nil then
+    begin
+      result := frmGoPhast.Grid.ThreeDContourDataSet;
+    end;
+  end
+  else if  frmGoPhast.PhastModel.Mesh <> nil then
   begin
-    result := frmGoPhast.Grid.SideContourDataSet;
-  end;
-  if result = nil then
-  begin
-    result := frmGoPhast.Grid.ThreeDContourDataSet;
+    result := frmGoPhast.PhastModel.Mesh.TopContourDataSet;
+//    if result = nil then
+//    begin
+//      result := frmGoPhast.PhastModel.Mesh.FrontContourDataSet;
+//    end;
+//    if result = nil then
+//    begin
+//      result := frmGoPhast.PhastModel.Mesh.SideContourDataSet;
+//    end;
+    if result = nil then
+    begin
+      result := frmGoPhast.PhastModel.Mesh.ThreeDContourDataSet;
+    end;
   end;
 end;
 
@@ -431,6 +454,7 @@ begin
     seNumberOfValuesToIgnoreChange(nil);
     cbLogTransform.Enabled := False;
     rdgValuesToIgnore.Cells[0,1] := '';
+    rdeContourInterval.Enabled := False;
   end
   else if (AnObject is TDataArray) then
   begin
@@ -452,6 +476,15 @@ begin
     cbLogTransform.Enabled := DataSet.DataType = rdtDouble;
     HandleLimitChoice(DataSet);
     cbSpecifyContours.Enabled := True;
+    rdeContourInterval.Enabled := True;
+    if DataSet.DataType = rdtDouble then
+    begin
+      rdeContourInterval.DataType := dtReal;
+    end
+    else
+    begin
+      rdeContourInterval.DataType := dtInteger;
+    end;
 
     case rgUpdateLimitChoice.ItemIndex of
       0:
@@ -466,6 +499,7 @@ begin
           begin
             Contours := ContourDataSet.Contours;
             DataSet.Contours := Contours;
+            DataSet.ContourInterval.Value := ContourDataSet.ContourInterval.Value;
             cbSpecifyContours.Checked := (Contours <> nil) and Contours.SpecifyContours;
           end
           else
@@ -477,6 +511,7 @@ begin
       else
         Assert(False);
     end;
+    rdeContourInterval.Text := FloatToStr(DataSet.ContourInterval.Value);
   end;
   UpdateLabelsAndLegend;
 end;
@@ -574,6 +609,7 @@ begin
   end;
   SetMinMaxLabels;
   UpdateLegend;
+  FLegend.Contours := FContours;
 end;
 
 procedure TframeContourData.UpdateTopFrontAndSideItems;

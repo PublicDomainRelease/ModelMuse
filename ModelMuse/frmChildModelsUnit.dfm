@@ -4,9 +4,9 @@ inherited frmChildModels: TfrmChildModels
   Caption = 'Child Models'
   ClientHeight = 547
   ClientWidth = 471
-  ExplicitWidth = 479
-  ExplicitHeight = 581
-  PixelsPerInch = 96
+  ExplicitWidth = 489
+  ExplicitHeight = 592
+  PixelsPerInch = 120
   TextHeight = 18
   object Panel1: TPanel
     Left = 0
@@ -102,7 +102,7 @@ inherited frmChildModels: TfrmChildModels
     Top = 0
     Width = 358
     Height = 456
-    ActivePage = tabBasic
+    ActivePage = tabDiscretization
     Align = alClient
     TabOrder = 1
     object tabBasic: TTabSheet
@@ -200,10 +200,6 @@ inherited frmChildModels: TfrmChildModels
     object tabDiscretization: TTabSheet
       Caption = 'Discretization'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgDiscretization: TRbwDataGrid4
         Left = 0
         Top = 27
@@ -228,7 +224,6 @@ inherited frmChildModels: TfrmChildModels
         OnColSize = rdgDiscretizationColSize
         ColorRangeSelection = False
         OnHorizontalScroll = rdgDiscretizationHorizontalScroll
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = False
@@ -332,10 +327,6 @@ inherited frmChildModels: TfrmChildModels
     object tabSolution: TTabSheet
       Caption = 'Solution'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         350
         423)

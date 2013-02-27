@@ -2056,21 +2056,26 @@ begin
                 PrintChemistryXYZ_Zones);
             end;
 
-            frmErrorsAndWarnings.RemoveErrorGroup(frmGoPhast.PhastModel,
-              StrNoBoundaryConditio);
-            if (TopLeakyZones.ZoneCount = 0)
-              and (FrontLeakyZones.ZoneCount = 0)
-              and (SideLeakyZones.ZoneCount = 0)
-              and (TopFluxZones.ZoneCount = 0)
-              and (FrontFluxZones.ZoneCount = 0)
-              and (SideFluxZones.ZoneCount = 0)
-              and (SpecifiedHeadZones.ZoneCount = 0)
-              and (RiverWriter.ScreenObjectList.Count = 0)
-              and (WellWriter.ScreenObjectList.Count = 0)
-              then
-            begin
-              frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
-                StrNoBoundaryConditio, StrYouMustSpecifyAt);
+            frmErrorsAndWarnings.BeginUpdate;
+            try
+              frmErrorsAndWarnings.RemoveErrorGroup(frmGoPhast.PhastModel,
+                StrNoBoundaryConditio);
+              if (TopLeakyZones.ZoneCount = 0)
+                and (FrontLeakyZones.ZoneCount = 0)
+                and (SideLeakyZones.ZoneCount = 0)
+                and (TopFluxZones.ZoneCount = 0)
+                and (FrontFluxZones.ZoneCount = 0)
+                and (SideFluxZones.ZoneCount = 0)
+                and (SpecifiedHeadZones.ZoneCount = 0)
+                and (RiverWriter.ScreenObjectList.Count = 0)
+                and (WellWriter.ScreenObjectList.Count = 0)
+                then
+              begin
+                frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
+                  StrNoBoundaryConditio, StrYouMustSpecifyAt);
+              end;
+            finally
+              frmErrorsAndWarnings.EndUpdate;
             end;
 
             WriteLeakyBoundary(Input, TopLeakyZones, FrontLeakyZones,

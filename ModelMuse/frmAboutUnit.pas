@@ -496,6 +496,12 @@ begin
       'www.netlib.org/toms/, http://www.acm.org/publications/policies/' +
       'softwarecrnotice';
 
+    Inc(Row);
+    Assert(Row < dgCredit.RowCount);
+    dgCredit.Cells[0, Row] := 'CuthillMcKeeRenumbering.pas';
+    dgCredit.Cells[1, Row] := 'Ciprian Zavoianu ';
+    dgCredit.Cells[2, Row] := 'http://ciprian-zavoianu.blogspot.com/2009/01/project-bandwidth-reduction_18.html';
+
     Assert(Row = dgCredit.RowCount-1);
   finally
     dgCredit.EndUpdate

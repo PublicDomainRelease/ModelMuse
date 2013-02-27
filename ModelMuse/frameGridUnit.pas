@@ -74,6 +74,9 @@ begin
   end;
 end;
 
+type
+  TRbwDataGrid4Crack = class(TRbwDataGrid4);
+
 procedure TframeGrid.SetEnabled(Value: boolean);
 begin
   inherited;
@@ -82,6 +85,18 @@ begin
   Grid.Enabled := Value;
   seNumber.Enabled := Value;
   sbDelete.Enabled := Value and (seNumber.AsInteger >= 1);
+  if Grid.Enabled then
+  begin
+    Grid.Color := clWindow;
+    Grid.ColorSelectedRow := True;
+  end
+  else
+  begin
+    Grid.Color := clBtnFace;
+    TRbwDataGrid4Crack(Grid).HideEditor;
+    Grid.ColorSelectedRow := False;
+//    Grid.Invalidate;
+  end;
 end;
 
 procedure TframeGrid.ClearSelectedRow;

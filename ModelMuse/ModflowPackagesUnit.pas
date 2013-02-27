@@ -50,6 +50,10 @@ type
     FMt3dmsChemReaction: TMt3dmsChemReaction;
     FMt3dmsTransObs: TMt3dmsTransportObservations;
     FPcgnPackage: TPcgnSelection;
+    FStrPackage: TStrPackageSelection;
+    FStobPackage: TModflowPackageSelection;
+    FFhbPackage: TFhbPackageSelection;
+    FFarmProcess: TFarmProcess;
     procedure SetChdBoundary(const Value: TChdPackage);
     procedure SetLpfPackage(const Value: TLpfSelection);
     procedure SetPcgPackage(const Value: TPcgSelection);
@@ -92,6 +96,10 @@ type
     procedure SetMt3dmsChemReaction(const Value: TMt3dmsChemReaction);
     procedure SetMt3dmsTransObs(const Value: TMt3dmsTransportObservations);
     procedure SetPcgnPackage(const Value: TPcgnSelection);
+    procedure SetStrPackage(const Value: TStrPackageSelection);
+    procedure SetStobPackage(const Value: TModflowPackageSelection);
+    procedure SetFhbPackage(const Value: TFhbPackageSelection);
+    procedure SetFarmProcess(const Value: TFarmProcess);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Model: TBaseModel);
@@ -144,6 +152,8 @@ type
       read FGbobPackage write SetGbobPackage;
     property RvobPackage: TModflowPackageSelection
       read FRvobPackage write SetRvobPackage;
+    property StobPackage: TModflowPackageSelection
+      read FStobPackage write SetStobPackage;
     property HufPackage: THufPackageSelection
       read FHufPackage write SetHufPackage;
     property Mnw2Package: TMultinodeWellSelection
@@ -175,6 +185,15 @@ type
       write SetMt3dmsChemReaction;
     property Mt3dmsTransObs: TMt3dmsTransportObservations read FMt3dmsTransObs
       write SetMt3dmsTransObs;
+    property StrPackage: TStrPackageSelection read FStrPackage
+      write SetStrPackage;
+    property FhbPackage: TFhbPackageSelection read FFhbPackage
+      write SetFhbPackage;
+    property FarmProcess: TFarmProcess read FFarmProcess write SetFarmProcess
+    {$IFNDEF FMP}
+      stored False
+    {$ENDIF}
+      ;
     // Assign, Create, Destroy, SelectedModflowPackageCount
     // and Reset must be updated each time a new package is added.
   end;
@@ -206,6 +225,7 @@ resourcestring
   StrHUF_Identifier = 'HUF2: Hydrogeologic Unit Flow package';
   StrOutput = 'Output';
   StrCHDTimeVariantSp = 'CHD: Time-Variant Specified-Head package';
+  StrFHBPackage = 'FHB: Flow and Head Boundary package';
   StrPCGPreconditioned = 'PCG: Preconditioned Conjugate Gradient package';
   StrGHBGeneralHeadBo = 'GHB: General-Head Boundary package';
   StrWELWellPackage = 'WEL: Well package';
@@ -244,6 +264,11 @@ resourcestring
   StrSSMSinkSourceM = 'SSM: Sink and Source Mixing package';
   StrRCTChemicalReacti = 'RCT: Chemical Reactions package';
   StrTOBTransportObser = 'TOB: Transport Observation package';
+  StrPCGNPreconditioned = 'PCGN: Preconditioned Conjugate Gradient Solver wi' +
+  'th Improved Nonlinear Control';
+  StrSTRStreamPackage = 'STR: Stream package';
+  StrSTOBStreamObserva = 'STOB: Stream Observation package';
+  StrFarmProcess = 'Farm Process';
 
 { TModflowPackages }
 
@@ -269,6 +294,7 @@ begin
     ResPackage := SourcePackages.ResPackage;
     LakPackage := SourcePackages.LakPackage;
     SfrPackage := SourcePackages.SfrPackage;
+    StrPackage := SourcePackages.StrPackage;
     UzfPackage := SourcePackages.UzfPackage;
     GmgPackage := SourcePackages.GmgPackage;
     SipPackage := SourcePackages.SipPackage;
@@ -280,6 +306,7 @@ begin
     DrobPackage := SourcePackages.DrobPackage;
     GbobPackage := SourcePackages.GbobPackage;
     RvobPackage := SourcePackages.RvobPackage;
+    StobPackage := SourcePackages.StobPackage;
     HufPackage := SourcePackages.HufPackage;
     Mnw2Package := SourcePackages.Mnw2Package;
     BcfPackage := SourcePackages.BcfPackage;
@@ -296,6 +323,8 @@ begin
     Mt3dmsSourceSink := SourcePackages.Mt3dmsSourceSink;
     Mt3dmsChemReact := SourcePackages.Mt3dmsChemReact;
     Mt3dmsTransObs := SourcePackages.Mt3dmsTransObs;
+    FhbPackage := SourcePackages.FhbPackage;
+    FarmProcess := SourcePackages.FarmProcess;
   end
   else
   begin
@@ -330,7 +359,7 @@ begin
 
   FPcgnPackage := TPcgnSelection.Create(Model);
   FPcgnPackage.PackageIdentifier :=
-    'PCGN: Preconditioned Conjugate Gradient Solver with Improved Nonlinear Control';
+    StrPCGNPreconditioned;
   FPcgnPackage.Classification := StrSolver;
   FPcgnPackage.SelectionType := stRadioButton;
 
@@ -358,6 +387,12 @@ begin
   FRchPackage.PackageIdentifier := StrRCHRechargePackag;
   FRchPackage.Classification := BC_SpecifiedFlux;
 
+  FFhbPackage := TFhbPackageSelection.Create(Model);
+  FFhbPackage.PackageIdentifier := StrFHBPackage;
+  FFhbPackage.Classification := BC_SpecifiedFlux;
+  FFhbPackage.AlternativeClassification := BC_SpecHead;
+  FFhbPackage.SelectionType := stCheckBox;
+
   FEvtPackage := TEvtPackageSelection.Create(Model);
   FEvtPackage.PackageIdentifier := StrEVTEvapotranspirat;
   FEvtPackage.Classification := BC_HeadDependentFlux;
@@ -377,6 +412,10 @@ begin
   FSfrPackage := TSfrPackageSelection.Create(Model);
   SfrPackage.PackageIdentifier := StrSFR_Identifier;
   SfrPackage.Classification := BC_HeadDependentFlux;
+
+  FStrPackage := TStrPackageSelection.Create(Model);
+  FStrPackage.PackageIdentifier := StrSTRStreamPackage;;
+  FStrPackage.Classification := BC_HeadDependentFlux;
 
   FUzfPackage := TUzfPackageSelection.Create(Model);
   UzfPackage.PackageIdentifier := StrUZFUnsaturatedZon;
@@ -431,6 +470,11 @@ begin
   FRvobPackage.PackageIdentifier := StrRVOBRiverObservat;
   FRvobPackage.Classification := StrObservations;
   FRvobPackage.SelectionType := stCheckBox;
+
+  FStobPackage := TModflowPackageSelection.Create(Model);
+  FStobPackage.PackageIdentifier := StrSTOBStreamObserva;
+  FStobPackage.Classification := StrObservations;
+  FStobPackage.SelectionType := stCheckBox;
 
   FMnw2Package := TMultinodeWellSelection.Create(Model);
   FMnw2Package.PackageIdentifier := StrMNW2MultiNodeWel;
@@ -506,10 +550,16 @@ begin
   FMt3dmsTransObs.PackageIdentifier := StrTOBTransportObser;
   FMt3dmsTransObs.Classification := StrMT3DMS_Classificaton;
   FMt3dmsTransObs.SelectionType := stCheckBox;
+
+  FFarmProcess := TFarmProcess.Create(Model);
+  FFarmProcess.PackageIdentifier := StrFarmProcess;
+  FFarmProcess.Classification := StrFarmProcess;
+  FFarmProcess.SelectionType := stCheckBox;
 end;
 
 destructor TModflowPackages.Destroy;
 begin
+  FFarmProcess.Free;
   FMt3dmsTransObs.Free;
   FMt3dmsChemReaction.Free;
   FMt3dmsSourceSink.Free;
@@ -524,6 +574,7 @@ begin
   FZoneBudget.Free;
   FSubPackage.Free;
   FBcfPackage.Free;
+  FStobPackage.Free;
   FRvobPackage.Free;
   FGbobPackage.Free;
   FDrobPackage.Free;
@@ -534,6 +585,7 @@ begin
   FSipPackage.Free;
   FGmgPackage.Free;
   FUzfPackage.Free;
+  FStrPackage.Free;
   FSfrPackage.Free;
   FLakPackage.Free;
   FResPackage.Free;
@@ -545,6 +597,7 @@ begin
   FRivPackage.Free;
   FWelPackage.Free;
   FGhbBoundary.Free;
+  FFhbPackage.Free;
   FChdBoundary.Free;
   FHufPackage.Free;
   FLpfPackage.Free;
@@ -583,6 +636,7 @@ begin
   DrobPackage.InitializeVariables;
   GbobPackage.InitializeVariables;
   RvobPackage.InitializeVariables;
+  StobPackage.InitializeVariables;
   HufPackage.InitializeVariables;
   BcfPackage.InitializeVariables;
   SubPackage.InitializeVariables;
@@ -598,12 +652,19 @@ begin
   Mt3dmsSourceSink.InitializeVariables;
   Mt3dmsChemReact.InitializeVariables;
   Mt3dmsTransObs.InitializeVariables;
+  StrPackage.InitializeVariables;
+  FhbPackage.InitializeVariables;
+  FFarmProcess.InitializeVariables;
 end;
 
 function TModflowPackages.SelectedModflowPackageCount: integer;
 begin
   result := 0;
   if ChdBoundary.IsSelected then
+  begin
+    Inc(Result);
+  end;
+  if FhbPackage.IsSelected then
   begin
     Inc(Result);
   end;
@@ -707,6 +768,10 @@ begin
   begin
     Inc(Result);
   end;
+  if StobPackage.IsSelected then
+  begin
+    Inc(Result);
+  end;
   if HufPackage.IsSelected then
   begin
     Inc(Result);
@@ -749,6 +814,21 @@ begin
   begin
     Inc(Result);
   end;
+  if StrPackage.IsSelected then
+  begin
+    Inc(Result);
+  end;
+  if FHfbPackage.IsSelected then
+  begin
+    Inc(Result);
+  end;
+
+{$IFDEF FMP}
+  if FFarmProcess.IsSelected and (Model.ModelSelection = msModflowFmp) then
+  begin
+    Inc(Result);
+  end;
+{$ENDIF}
 
   // Don't count Modpath or ZoneBudget
   // because they are exported seperately from MODFLOW.
@@ -804,6 +884,16 @@ end;
 procedure TModflowPackages.SetEvtPackage(const Value: TEvtPackageSelection);
 begin
   FEvtPackage.Assign(Value);
+end;
+
+procedure TModflowPackages.SetFarmProcess(const Value: TFarmProcess);
+begin
+  FFarmProcess.Assign(Value);
+end;
+
+procedure TModflowPackages.SetFhbPackage(const Value: TFhbPackageSelection);
+begin
+  FFhbPackage.Assign(Value);
 end;
 
 procedure TModflowPackages.SetGbobPackage(
@@ -955,6 +1045,17 @@ end;
 procedure TModflowPackages.SetSipPackage(const Value: TSIPPackageSelection);
 begin
   FSipPackage.Assign(Value);
+end;
+
+procedure TModflowPackages.SetStobPackage(
+  const Value: TModflowPackageSelection);
+begin
+  FStobPackage.Assign(Value);
+end;
+
+procedure TModflowPackages.SetStrPackage(const Value: TStrPackageSelection);
+begin
+  FStrPackage.Assign(Value);
 end;
 
 procedure TModflowPackages.SetSubPackage(const Value: TSubPackageSelection);

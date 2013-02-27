@@ -10,7 +10,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
     Top = 0
     Width = 561
     Height = 506
-    ActivePage = tabGage
+    ActivePage = tabTime
     Align = alClient
     TabOrder = 0
     object tabBasic: TTabSheet
@@ -508,7 +508,6 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         OnColSize = rdgParametersColSize
         ColorRangeSelection = False
         OnHorizontalScroll = rdgParametersHorizontalScroll
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = True
@@ -626,7 +625,6 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             CaseSensitivePicklist = False
             AutoAdjustColWidths = True
           end>
-        ExplicitHeight = 380
         ColWidths = (
           50
           50
@@ -641,7 +639,6 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Height = 41
         Align = alBottom
         TabOrder = 2
-        ExplicitTop = 437
         DesignSize = (
           553
           41)
@@ -656,12 +653,13 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Left = 11
           Top = 6
           Width = 57
-          Height = 21
+          Height = 24
           ButtonKind = bkClassic
           MaxValue = 2147483647.000000000000000000
           Value = 1.000000000000000000
           TabOrder = 0
           OnChange = seParametersCountChange
+          OnEnter = seParametersCountEnter
         end
         object btnInserParameters: TBitBtn
           Left = 371
@@ -822,7 +820,6 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         OnColSize = rdgNetworkColSize
         ColorRangeSelection = False
         OnHorizontalScroll = rdgNetworkHorizontalScroll
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = True
@@ -984,7 +981,6 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         OnColSize = dgFlowTimesColSize
         ColorRangeSelection = False
         OnHorizontalScroll = dgFlowTimesHorizontalScroll
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = True
@@ -1199,7 +1195,6 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           OnColSize = dgUpColSize
           ColorRangeSelection = False
           OnHorizontalScroll = dgUpHorizontalScroll
-          ColorSelectedRow = True
           Columns = <
             item
               AutoAdjustRowHeights = True
@@ -1395,7 +1390,6 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Height = 258
         Align = alClient
         TabOrder = 1
-        ExplicitHeight = 261
         object dgDown: TRbwDataGrid4
           Left = 1
           Top = 53
@@ -1421,7 +1415,6 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           OnColSize = dgDownColSize
           ColorRangeSelection = False
           OnHorizontalScroll = dgDownHorizontalScroll
-          ColorSelectedRow = True
           Columns = <
             item
               AutoAdjustRowHeights = True
@@ -1621,33 +1614,24 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       ExplicitTop = 0
       ExplicitWidth = 0
       ExplicitHeight = 0
-      object Splitter3: TSplitter
-        Left = 379
-        Top = 0
-        Width = 8
-        Height = 366
-        Align = alRight
-        ExplicitLeft = 384
-        ExplicitHeight = 345
-      end
-      object jvplCrossSection: TJvPageList
-        Left = 387
-        Top = 0
-        Width = 166
-        Height = 366
-        PropagateEnable = False
-        Align = alRight
-        ExplicitHeight = 369
-      end
       object Panel5: TPanel
         Left = 0
         Top = 0
-        Width = 379
+        Width = 553
         Height = 366
         Align = alClient
         Caption = 'shouldn'#39't see this'
         TabOrder = 0
-        ExplicitHeight = 369
+        object Splitter3: TSplitter
+          Left = 378
+          Top = 58
+          Width = 8
+          Height = 307
+          Align = alRight
+          ExplicitLeft = 1
+          ExplicitTop = 360
+          ExplicitHeight = 551
+        end
         object dgSfrRough: TRbwDataGrid4
           Left = 1
           Top = 58
@@ -1672,7 +1656,6 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           OnColSize = dgSfrRoughColSize
           ColorRangeSelection = False
           OnHorizontalScroll = dgSfrRoughHorizontalScroll
-          ColorSelectedRow = True
           Columns = <
             item
               AutoAdjustRowHeights = True
@@ -1762,12 +1745,11 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
-          ExplicitHeight = 310
         end
         object pnlChannelTop: TPanel
           Left = 1
           Top = 1
-          Width = 377
+          Width = 551
           Height = 57
           Align = alTop
           BevelOuter = bvNone
@@ -1793,6 +1775,28 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             ChangeDisabledColor = True
           end
         end
+        inline frameCrossSection1: TframeCrossSection
+          Left = 386
+          Top = 58
+          Width = 166
+          Height = 307
+          Align = alRight
+          TabOrder = 2
+          TabStop = True
+          ExplicitLeft = 386
+          ExplicitTop = 58
+          ExplicitWidth = 166
+          ExplicitHeight = 307
+          inherited dg8Point: TRbwDataGrid4
+            Width = 166
+            Height = 307
+            OnSelectCell = frameCrossSection1dg8PointSelectCell
+            OnSetEditText = frameCrossSection1dg8PointSetEditText
+            OnButtonClick = frameCrossSection1dg8PointButtonClick
+            ExplicitWidth = 166
+            ExplicitHeight = 307
+          end
+        end
       end
       object zbChannel: TQRbwZoomBox2
         Left = 0
@@ -1801,7 +1805,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Height = 109
         Align = alBottom
         Caption = 'zbChannel'
-        TabOrder = 2
+        TabOrder = 1
         Exaggeration = 1.000000000000000000
         HorizontalDirection = hdRight
         Image32.Left = 0
@@ -1820,7 +1824,6 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         ImmediateResize = True
         Magnification = 1.000000000000000000
         VerticalDirection = vdUp
-        ExplicitTop = 369
         DesignSize = (
           553
           109)
@@ -1859,7 +1862,6 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         OnColSize = dgSfrEquationColSize
         ColorRangeSelection = False
         OnHorizontalScroll = dgSfrEquationHorizontalScroll
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = True
@@ -2035,7 +2037,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
       ExplicitWidth = 0
       ExplicitHeight = 0
       object Splitter2: TSplitter
-        Left = 208
+        Left = 218
         Top = 0
         Width = 8
         Height = 318
@@ -2043,27 +2045,19 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         ExplicitLeft = 386
         ExplicitHeight = 345
       end
-      object jvplTable: TJvPageList
-        Left = 216
-        Top = 0
-        Width = 337
-        Height = 318
-        PropagateEnable = False
-        Align = alRight
-        ExplicitHeight = 321
-      end
       object Panel4: TPanel
         Left = 0
         Top = 0
-        Width = 208
+        Width = 218
         Height = 318
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 216
         ExplicitHeight = 321
         object dgTableTime: TRbwDataGrid4
           Left = 1
           Top = 1
-          Width = 206
+          Width = 216
           Height = 319
           Align = alClient
           ColCount = 2
@@ -2081,7 +2075,6 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           SelectedRowOrColumnColor = clAqua
           UnselectableColor = clBtnFace
           ColorRangeSelection = False
-          ColorSelectedRow = True
           Columns = <
             item
               AutoAdjustRowHeights = False
@@ -2127,6 +2120,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
               CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
+          ExplicitWidth = 214
         end
       end
       object gpFlowTable: TGridPanel
@@ -2220,6 +2214,44 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           DesignSize = (
             270
             149)
+        end
+      end
+      inline frameFlowTable1: TframeFlowTable
+        Left = 226
+        Top = 0
+        Width = 327
+        Height = 318
+        Align = alRight
+        TabOrder = 1
+        TabStop = True
+        ExplicitLeft = 1
+        ExplicitTop = 1
+        ExplicitWidth = 327
+        ExplicitHeight = 319
+        inherited lblNumberOfPoints: TLabel
+          Top = 261
+          ExplicitTop = 155
+        end
+        inherited seTableCount: TJvSpinEdit
+          Top = 258
+          ExplicitTop = 256
+        end
+        inherited dgSfrTable: TRbwDataGrid4
+          Width = 327
+          Height = 252
+          OnSelectCell = dgSfrTableSelectCell
+          OnSetEditText = frameFlowTable1dgSfrTableSetEditText
+          OnButtonClick = frameFlowTable1dgSfrTableButtonClick
+          ExplicitWidth = 327
+          ExplicitHeight = 250
+        end
+        inherited btnInsertFlowTableRow: TBitBtn
+          Top = 285
+          ExplicitTop = 285
+        end
+        inherited btnDeleteFlowTableRow: TBitBtn
+          Top = 285
+          ExplicitTop = 285
         end
       end
     end
@@ -2683,6 +2715,10 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
     object tabGage: TTabSheet
       Caption = 'Gage'
       ImageIndex = 8
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         553
         475)

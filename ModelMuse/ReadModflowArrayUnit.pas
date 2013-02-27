@@ -4,7 +4,7 @@ unit ReadModflowArrayUnit;
 
 interface
 
-uses SysUtils, Classes;
+uses SysUtils, Classes, Generics.Collections;
 
 type
   TModflowFloat = single;
@@ -14,6 +14,15 @@ type
   TModflowSingleArray = array of array of TModflowFloat;
   TModflowDoubleArray = array of array of TModflowDouble;
   T3DTModflowArray = array of TModflowDoubleArray;
+
+  TStructCell = class(TObject)
+    Layer: Integer;
+    Row: integer;
+    Column: Integer;
+    Value: TModflowDouble;
+  end;
+
+  TStructuredCellList = TObjectList<TStructCell>;
 
   TModflowPrecision = (mpSingle, mpDouble);
 
@@ -108,6 +117,30 @@ procedure ReadModflowDoublePrecFluxArray(AFile: TFileStream;
   var NCOL, NROW, NLAY: Integer; var AnArray: T3DTModflowArray;
   HufFormat: boolean;
   ReadArray: Boolean = True
+  );
+
+// AFile needs to be open before being passed to this procedure.
+// The other variables will be returned from the procedure.
+// Use CheckBudgetPrecision to determine the precision before calling
+// this procedure.
+procedure ReadModflowSinglePrecFluxList(AFile: TFileStream;
+  var KSTP, KPER: Integer; var PERTIM, TOTIM: TModflowDouble;
+  var DESC: TModflowDesc; var NCOL, NROW, NLAY: Integer;
+  CellList: TStructuredCellList;
+  HufFormat: boolean;
+  ReadList: Boolean = True
+  );
+
+// AFile needs to be open before being passed to this procedure.
+// The other variables will be returned from the procedure.
+// Use CheckBudgetPrecision to determine the precision before calling
+// this procedure.
+procedure ReadModflowDoublePrecFluxList(AFile: TFileStream;
+  var KSTP, KPER: Integer; var PERTIM, TOTIM: TModflowDouble;
+  var DESC: TModflowDesc; var NCOL, NROW, NLAY: Integer;
+  CellList: TStructuredCellList;
+  HufFormat: boolean;
+  ReadList: Boolean = True
   );
 
 function CheckMt3dmsArrayPrecision(AFile: TFileStream): TModflowPrecision;
@@ -978,6 +1011,211 @@ begin
   end;
 end;
 
+procedure ReadModflowSinglePrecFluxList(AFile: TFileStream;
+  var KSTP, KPER: Integer; var PERTIM, TOTIM: TModflowDouble;
+  var DESC: TModflowDesc; var NCOL, NROW, NLAY: Integer;
+  CellList: TStructuredCellList;
+  HufFormat: boolean;
+  ReadList: Boolean = True
+  );
+var
+  ITYPE: integer;
+  DELT: TModflowFloat;
+  NVAL: Integer;
+  Index: Integer;
+  CTMP: TModflowDesc;
+  NLIST: Integer;
+  RowIndex: Integer;
+  LayerIndex: Integer;
+  ColIndex: Integer;
+  FluxArray: TModflowSingleArray;
+  LayerIndicatorArray: array of array of integer;
+  Values: array of TModflowFloat;
+  ICELL: Integer;
+  ValIndex: Integer;
+  NRC: Integer;
+  AValue: TModflowFloat;
+  ACell: TStructCell;
+begin
+  AFile.Read(KSTP, SizeOf(KSTP));
+  AFile.Read(KPER, SizeOf(KPER));
+  AFile.Read(DESC, SizeOf(DESC));
+  AFile.Read(NCOL, SizeOf(NCOL));
+  AFile.Read(NROW, SizeOf(NROW));
+  AFile.Read(NLAY, SizeOf(NLAY));
+  if ReadList then
+  begin
+    CellList.Clear;
+  end;
+  PERTIM := -1;
+  TOTIM := -1;
+
+  ITYPE := 0;
+  if (NLAY < 0) or HufFormat then
+  begin
+    AFile.Read(ITYPE, SizeOf(ITYPE));
+    AFile.Read(DELT, SizeOf(DELT));
+    AFile.Read(AValue, SizeOf(AValue));
+    PERTIM := AValue;
+    AFile.Read(AValue, SizeOf(AValue));
+    TOTIM := AValue;
+    NVAL := 1;
+    if ITYPE = 5 then
+    begin
+      AFile.Read(NVAL, SizeOf(NVAL));
+      if NVAL > 1 then
+      begin
+        for Index := 2 to NVAL do
+        begin
+          AFile.Read(CTMP, SizeOf(CTMP));
+        end;
+      end;
+    end;
+    if (ITYPE = 2) or (ITYPE = 5) then
+    begin
+      AFile.Read(NLIST, SizeOf(NLIST));
+    end;
+  end;
+  case ITYPE of
+    0,1: // full 3D array
+      begin
+        if ReadList then
+        begin
+          CellList.Capacity := Abs(NLAY)*NROW*NCOL;
+          for LayerIndex := 0 to Abs(NLAY) - 1 do
+          begin
+            for RowIndex := 0 to NROW - 1 do
+            begin
+              for ColIndex := 0 to NCOL - 1 do
+              begin
+                AFile.Read(AValue, SizeOf(TModflowFloat));
+                ACell := TStructCell.Create;
+                CellList.Add(ACell);
+                ACell.Layer := LayerIndex+1;
+                ACell.Row := RowIndex+1;
+                ACell.Column := ColIndex+1;
+                ACell.Value := AValue;
+              end;
+            end;
+          end;
+        end
+        else
+        begin
+          AFile.Position := AFile.Position + SizeOf(TModflowFloat)
+            * Abs(NLAY) * NROW * NCOL;
+        end;
+      end;
+    2,5:
+      begin
+        if NLIST > 0 then
+        begin
+          NRC := NROW*NCOL;
+          if ReadList then
+          begin
+            CellList.Capacity := NLIST;
+            SetLength(Values, NVAL);
+            for Index := 0 to NLIST - 1 do
+            begin
+              AFile.Read(ICELL, SizeOf(ICELL));
+              for ValIndex := 0 to NVAL - 1 do
+              begin
+                AFile.Read(Values[ValIndex], SizeOf(TModflowFloat));
+              end;
+              LayerIndex :=  (ICELL-1) div NRC;
+              RowIndex := ( (ICELL - LayerIndex*NRC)-1 ) div NCOL;
+              ColIndex := ICELL - (LayerIndex)*NRC - (RowIndex)*NCOL-1;
+              if ((ColIndex >= 0) AND (RowIndex >= 0) AND (LayerIndex >= 0)
+                AND (ColIndex < ncol) AND (RowIndex < NROW)
+                AND (LayerIndex < Abs(NLAY))) then
+              begin
+                ACell := TStructCell.Create;
+                CellList.Add(ACell);
+                ACell.Layer := LayerIndex+1;
+                ACell.Row := RowIndex+1;
+                ACell.Column := ColIndex+1;
+                ACell.Value := Values[0];
+              end;
+            end;
+          end
+          else
+          begin
+            AFile.Position := AFile.Position +
+              NLIST * (SizeOf(ICELL) + NVAL*SizeOf(TModflowFloat))
+          end;
+        end;
+      end;
+    3: // 1 layer array with layer indicator array
+      begin
+        if ReadList then
+        begin
+          CellList.Capacity := NROW * NCOL;
+          SetLength(FluxArray, NROW, NCOL);
+          SetLength(LayerIndicatorArray, NROW, NCOL);
+          for RowIndex := 0 to NROW - 1 do
+          begin
+            for ColIndex := 0 to NCOL - 1 do
+            begin
+              AFile.Read(LayerIndicatorArray[RowIndex, ColIndex],
+                SizeOf(integer));
+            end;
+          end;
+          for RowIndex := 0 to NROW - 1 do
+          begin
+            for ColIndex := 0 to NCOL - 1 do
+            begin
+              AFile.Read(FluxArray[RowIndex, ColIndex],
+                SizeOf(TModflowFloat));
+            end;
+          end;
+          for RowIndex := 0 to NROW - 1 do
+          begin
+            for ColIndex := 0 to NCOL - 1 do
+            begin
+              ACell := TStructCell.Create;
+              CellList.Add(ACell);
+              ACell.Layer := LayerIndicatorArray[RowIndex, ColIndex];
+              ACell.Row := RowIndex+1;
+              ACell.Column := ColIndex+1;
+              ACell.Value := FluxArray[RowIndex, ColIndex];
+            end;
+          end;
+        end
+        else
+        begin
+          AFile.Position := AFile.Position +
+            NROW * NCOL * (SizeOf(integer) + SizeOf(TModflowFloat))
+        end;
+      end;
+    4: // 1-layer array that defines layer 1.
+      begin
+        if ReadList then
+        begin
+          CellList.Capacity := NROW*NCOL;
+          for RowIndex := 0 to NROW - 1 do
+          begin
+            for ColIndex := 0 to NCOL - 1 do
+            begin
+              AFile.Read(AValue, SizeOf(TModflowFloat));
+
+              ACell := TStructCell.Create;
+              CellList.Add(ACell);
+              ACell.Layer := 1;
+              ACell.Row := RowIndex+1;
+              ACell.Column := ColIndex+1;
+              ACell.Value := AValue;
+            end;
+          end;
+        end
+        else
+        begin
+          AFile.Position := AFile.Position + NROW * NCOL * SizeOf(TModflowFloat);
+        end;
+      end;
+    else Assert(False);
+  end;
+end;
+
+
 procedure ReadModflowSinglePrecFluxArray(AFile: TFileStream;
   var KSTP, KPER: Integer;
   var PERTIM, TOTIM: TModflowDouble; var DESC: TModflowDesc;
@@ -1171,6 +1409,211 @@ begin
         else
         begin
           AFile.Position := AFile.Position + NROW * NCOL * SizeOf(TModflowFloat);
+        end;
+      end;
+    else Assert(False);
+  end;
+end;
+
+procedure ReadModflowDoublePrecFluxList(AFile: TFileStream;
+  var KSTP, KPER: Integer; var PERTIM, TOTIM: TModflowDouble;
+  var DESC: TModflowDesc; var NCOL, NROW, NLAY: Integer;
+  CellList: TStructuredCellList;
+  HufFormat: boolean;
+  ReadList: Boolean = True
+  );
+var
+  ITYPE: integer;
+  DELT: TModflowDouble;
+  NVAL: Integer;
+  Index: Integer;
+  CTMP: TModflowDesc;
+  NLIST: Integer;
+  RowIndex: Integer;
+  LayerIndex: Integer;
+  ColIndex: Integer;
+  FluxArray: TModflowDoubleArray;
+  LayerIndicatorArray: array of array of integer;
+  Values: array of TModflowDouble;
+  ICELL: Integer;
+  ValIndex: Integer;
+  NRC: Integer;
+  AValue: TModflowDouble;
+  ACell: TStructCell;
+begin
+  AFile.Read(KSTP, SizeOf(KSTP));
+  AFile.Read(KPER, SizeOf(KPER));
+  AFile.Read(DESC, SizeOf(DESC));
+  AFile.Read(NCOL, SizeOf(NCOL));
+  AFile.Read(NROW, SizeOf(NROW));
+  AFile.Read(NLAY, SizeOf(NLAY));
+  if ReadList then
+  begin
+    CellList.Clear;
+  end;
+  PERTIM := -1;
+  TOTIM := -1;
+
+  ITYPE := 0;
+  if (NLAY < 0) or HufFormat then
+  begin
+    AFile.Read(ITYPE, SizeOf(ITYPE));
+    AFile.Read(DELT, SizeOf(DELT));
+    AFile.Read(AValue, SizeOf(AValue));
+    PERTIM := AValue;
+    AFile.Read(AValue, SizeOf(AValue));
+    TOTIM := AValue;
+    NVAL := 1;
+    if ITYPE = 5 then
+    begin
+      AFile.Read(NVAL, SizeOf(NVAL));
+      if NVAL > 1 then
+      begin
+        for Index := 2 to NVAL do
+        begin
+          AFile.Read(CTMP, SizeOf(CTMP));
+        end;
+      end;
+    end;
+    if (ITYPE = 2) or (ITYPE = 5) then
+    begin
+      AFile.Read(NLIST, SizeOf(NLIST));
+    end;
+  end;
+  case ITYPE of
+    0,1: // full 3D array
+      begin
+        if ReadList then
+        begin
+          CellList.Capacity := Abs(NLAY) * NROW * NCOL;
+          for LayerIndex := 0 to Abs(NLAY) - 1 do
+          begin
+            for RowIndex := 0 to NROW - 1 do
+            begin
+              for ColIndex := 0 to NCOL - 1 do
+              begin
+                AFile.Read(AValue, SizeOf(TModflowDouble));
+                ACell := TStructCell.Create;
+                CellList.Add(ACell);
+                ACell.Layer := LayerIndex+1;
+                ACell.Row := RowIndex+1;
+                ACell.Column := ColIndex+1;
+                ACell.Value := AValue;
+              end;
+            end;
+          end;
+        end
+        else
+        begin
+          AFile.Position := AFile.Position +
+            Abs(NLAY) * NROW * NCOL * SizeOf(TModflowDouble);
+        end;
+      end;
+    2,5:
+      begin
+        if NLIST > 0 then
+        begin
+          NRC := NROW*NCOL;
+          if ReadList then
+          begin
+            CellList.Capacity := NLIST;
+            SetLength(Values, NVAL);
+            for Index := 0 to NLIST - 1 do
+            begin
+              AFile.Read(ICELL, SizeOf(ICELL));
+              for ValIndex := 0 to NVAL - 1 do
+              begin
+                AFile.Read(Values[ValIndex], SizeOf(TModflowDouble));
+              end;
+              LayerIndex :=  (ICELL-1) div NRC;
+              RowIndex := ( (ICELL - LayerIndex*NRC)-1 ) div NCOL;
+              ColIndex := ICELL - (LayerIndex)*NRC - (RowIndex)*NCOL-1;
+              if ((ColIndex >= 0) AND (RowIndex >= 0) AND (LayerIndex >= 0)
+                AND (ColIndex < ncol) AND (RowIndex < NROW)
+                AND (LayerIndex < Abs(NLAY))) then
+              begin
+                ACell := TStructCell.Create;
+                CellList.Add(ACell);
+                ACell.Layer := LayerIndex+1;
+                ACell.Row := RowIndex+1;
+                ACell.Column := ColIndex+1;
+                ACell.Value := Values[0];
+              end;
+            end;
+          end
+          else
+          begin
+            AFile.Position := AFile.Position +
+              NLIST * (SizeOf(ICELL) + NVAL * SizeOf(TModflowDouble));
+          end;
+        end;
+      end;
+    3: // 1 layer array with layer indicator array
+      begin
+        if ReadList then
+        begin
+          CellList.Capacity := NROW * NCOL;
+          SetLength(FluxArray, NROW, NCOL);
+          SetLength(LayerIndicatorArray, NROW, NCOL);
+          for RowIndex := 0 to NROW - 1 do
+          begin
+            for ColIndex := 0 to NCOL - 1 do
+            begin
+              AFile.Read(LayerIndicatorArray[RowIndex, ColIndex],
+                SizeOf(integer));
+            end;
+          end;
+          for RowIndex := 0 to NROW - 1 do
+          begin
+            for ColIndex := 0 to NCOL - 1 do
+            begin
+              AFile.Read(FluxArray[RowIndex, ColIndex],
+                SizeOf(TModflowDouble));
+            end;
+          end;
+          for RowIndex := 0 to NROW - 1 do
+          begin
+            for ColIndex := 0 to NCOL - 1 do
+            begin
+              ACell := TStructCell.Create;
+              CellList.Add(ACell);
+              ACell.Layer := LayerIndicatorArray[RowIndex, ColIndex];
+              ACell.Row := RowIndex+1;
+              ACell.Column := ColIndex+1;
+              ACell.Value := FluxArray[RowIndex, ColIndex];
+            end;
+          end;
+        end
+        else
+        begin
+          AFile.Position := AFile.Position +
+            NROW * NCOL * (SizeOf(integer) + SizeOf(TModflowDouble));
+        end;
+      end;
+    4: // 1-layer array that defines layer 1.
+      begin
+        if ReadList then
+        begin
+          CellList.Capacity := NROW * NCOL;
+          for RowIndex := 0 to NROW - 1 do
+          begin
+            for ColIndex := 0 to NCOL - 1 do
+            begin
+              AFile.Read(AValue, SizeOf(TModflowDouble));
+
+              ACell := TStructCell.Create;
+              CellList.Add(ACell);
+              ACell.Layer := 1;
+              ACell.Row := RowIndex+1;
+              ACell.Column := ColIndex+1;
+              ACell.Value := AValue;
+            end;
+          end;
+        end
+        else
+        begin
+          AFile.Position := AFile.Position +
+            NROW * NCOL * SizeOf(TModflowDouble);
         end;
       end;
     else Assert(False);
@@ -1428,6 +1871,7 @@ end;
 destructor THydModData.Destroy;
 begin
   FLabels.Free;
+  inherited;
 end;
 
 function THydModData.GetLabel(Index: integer): string;

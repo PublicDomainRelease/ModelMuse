@@ -51,7 +51,8 @@ type
   {@name indicates the type of flux observation}
   TMt3dmsFluxObsType = (mfotHead, mfotWell, mfotDrain, mfotRiver, mfotGHB,
     mfotRecharge, mfotEVT, mfotMassLoading, mfotSTR, mfotReservoir,
-    mfotFHB, mfotIBS, mfotTransLeakage, mfotLake, mfotMNW1, mfotDRT, mfotETS);
+    mfotFHB_Head, mfotFHB_Flow, mfotIBS, mfotTransLeakage, mfotLake, mfotMNW1,
+    mfotDRT, mfotETS);
 
   // @name defines one group of MT3DMS flux observation.  Each group
   // includes the same flux cells and the same observation times.
@@ -164,7 +165,11 @@ begin
       begin
         result := ISSTYPE_RES;
       end;
-    mfotFHB:
+    mfotFHB_Head:
+      begin
+        result := ISSTYPE_CHD;
+      end;
+    mfotFHB_Flow:
       begin
         result := ISSTYPE_FHB;
       end;
@@ -378,16 +383,23 @@ begin
         end;
       mfotSTR:
         begin
-          Assert(False);
+          Boundary := ScreenObject.ModflowStrBoundary;
+          BoundaryPackageID := 'STR';
         end;
       mfotReservoir:
         begin
           Boundary := ScreenObject.ModflowResBoundary;
           BoundaryPackageID := 'RES';
         end;
-      mfotFHB:
+      mfotFHB_Head:
         begin
-          Assert(False);
+          Boundary := ScreenObject.ModflowFhbHeadBoundary;
+          BoundaryPackageID := 'FHB';
+        end;
+      mfotFHB_Flow:
+        begin
+          Boundary := ScreenObject.ModflowFhbFlowBoundary;
+          BoundaryPackageID := 'FHB';
         end;
       mfotIBS:
         begin
@@ -478,6 +490,7 @@ begin
   begin
     ObsFactor := ObservationFactors[ObjectIndex];
     ScreenObject := ObsFactor.ScreenObject as TScreenObject;
+    Assert(ScreenObject <> nil);
     CellList := TCellAssignmentList.Create;
     try
       ScreenObject.GetCellsToAssign(LocalModel.Grid, '0', nil, nil, CellList, alAll, LocalModel);

@@ -14,7 +14,7 @@ uses
 type
   TUndoType = (utChange, utImport);
   TObsCol = (ocName, ocResidual, ocObserved, ocSimulated,
-    ocX, ocY, ocTime, ocObjectName);
+    ocX, ocY, ocTime, ocObjectName, ocOriginalOrder);
 
   TObsHeadLink = class(TObject)
   private
@@ -81,11 +81,15 @@ type
     pnlBottom: TPanel;
     comboModels: TComboBox;
     btnHightlightObjects: TButton;
+    btnRestore: TButton;
+    btnCopy: TButton;
     procedure flnmedHeadObsResultsChange(Sender: TObject);
     procedure comboModelsChange(Sender: TObject);
     procedure btnHightlightObjectsClick(Sender: TObject);
     procedure rdgHeadObsMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure btnRestoreClick(Sender: TObject);
+    procedure btnCopyClick(Sender: TObject);
   private
     FUndoType: TUndoType;
     FCurrentModelLink: TObsHeadLink;
@@ -163,10 +167,46 @@ end;
 function CompareName(Item1, Item2: Pointer): Integer;
 var
   P1, P2: THeadObsItem;
+  Splitter1: TStringList;
+  Splitter2: TStringList;
+  index: Integer;
+  Part1: string;
+  Part2: string;
+  Value1: Integer;
+  Value2: Integer;
 begin
   P1 := Item1;
   P2 := Item2;
-  result := AnsiCompareText(P1.Name, P2.Name);
+  Splitter1 := TStringList.Create;
+  Splitter2 := TStringList.Create;
+  try
+    Splitter1.Delimiter := '_';
+    Splitter2.Delimiter := '_';
+    Splitter1.DelimitedText := P1.Name;
+    Splitter2.DelimitedText := P2.Name;
+    for index := 0 to Min(Splitter1.Count, Splitter2.Count)  - 1 do
+    begin
+      Part1 := Splitter1[index];
+      Part2 := Splitter2[index];
+      if TryStrToInt(Part1, Value1) and TryStrToInt(Part2, Value2) then
+      begin
+        result := Value1-Value2
+      end
+      else
+      begin
+        result := AnsiCompareText(Part1, Part2);
+      end;
+      if result <> 0 then
+      begin
+        Exit;
+      end;
+    end;
+    result := AnsiCompareText(P1.Name, P2.Name);
+  finally
+    Splitter1.Free;
+    Splitter2.Free;
+  end;
+
 end;
 
 function CompareObservedValue(Item1, Item2: Pointer): Integer;
@@ -194,6 +234,15 @@ begin
   P1 := Item1;
   P2 := Item2;
   result := Sign(P1.Residual - P2.Residual);
+end;
+
+function CompareOriginalOrder(Item1, Item2: Pointer): Integer;
+var
+  P1, P2: THeadObsItem;
+begin
+  P1 := Item1;
+  P2 := Item2;
+  result := P1.OriginalOrder - P2.OriginalOrder;
 end;
 
 function CompareTime(Item1, Item2: Pointer): Integer;
@@ -250,6 +299,7 @@ begin
       ocY: result := CompareY(Item1, Item2);
       ocTime: result := CompareTime(Item1, Item2);
       ocObjectName: result := CompareScreenObjectName(Item1, Item2);
+      ocOriginalOrder: result := CompareOriginalOrder(Item1, Item2);
     end;
     if result <> 0 then
     begin
@@ -376,6 +426,11 @@ end;
 
 { TframeHeadObservationResults }
 
+procedure TframeHeadObservationResults.btnCopyClick(Sender: TObject);
+begin
+  rdgHeadObs.CopyAllCellsToClipboard;
+end;
+
 procedure TframeHeadObservationResults.btnHightlightObjectsClick(
   Sender: TObject);
 var
@@ -466,6 +521,27 @@ begin
   finally
     ScreenObjects.Free;
   end;
+end;
+
+procedure TframeHeadObservationResults.btnRestoreClick(Sender: TObject);
+var
+  ObsCol: TObsCol;
+  Index: Integer;
+  CM: TCompareMethod;
+begin
+  ObsCol := ocOriginalOrder;
+  for Index := 0 to SortOrder.Count-1 do
+  begin
+    CM := SortOrder[Index];
+    if CM.Method = ObsCol then
+    begin
+      SortOrder.Extract(CM);
+      SortOrder.Insert(0, CM);
+      GetDataForAModel(FCurrentModelLink.FNewHeadObsCollection);
+      break;
+    end;
+  end;
+
 end;
 
 procedure TframeHeadObservationResults.comboModelsChange(Sender: TObject);
@@ -911,7 +987,14 @@ begin
   begin
     CM := TCompareMethod.Create;
     CM.Method := Index;
-    SortOrder.Add(CM)
+    if CM.Method = ocOriginalOrder then
+    begin
+      SortOrder.Insert(0, CM)
+    end
+    else
+    begin
+      SortOrder.Add(CM)
+    end;
   end;
 end;
 

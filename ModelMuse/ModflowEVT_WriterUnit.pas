@@ -72,26 +72,31 @@ var
   ScreenObject: TScreenObject;
   Boundary: TEvtBoundary;
 begin
-  inherited;
-  for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
-  begin
-    ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
-    if ScreenObject.Deleted then
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    inherited;
+    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
     begin
-      Continue;
+      ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
+      if ScreenObject.Deleted then
+      begin
+        Continue;
+      end;
+      if not ScreenObject.UsedModels.UsesModel(Model) then
+      begin
+        Continue;
+      end;
+      Boundary := ScreenObject.ModflowEvtBoundary;
+      if Boundary <> nil then
+      begin
+        Boundary.GetEvapotranspirationLayerCells(FLayers, Model);
+        Boundary.GetEvapotranspirationSurfaceDepthCells(FDepthSurface, Model);
+        Boundary.EvtSurfDepthCollection.ClearBoundaries(Model);
+        Boundary.EvapotranspirationLayers.ClearBoundaries(Model);
+      end;
     end;
-    if not ScreenObject.UsedModels.UsesModel(Model) then
-    begin
-      Continue;
-    end;
-    Boundary := ScreenObject.ModflowEvtBoundary;
-    if Boundary <> nil then
-    begin
-      Boundary.GetEvapotranspirationLayerCells(FLayers, Model);
-      Boundary.GetEvapotranspirationSurfaceDepthCells(FDepthSurface, Model);
-      Boundary.EvtSurfDepthCollection.ClearBoundaries(Model);
-      Boundary.EvapotranspirationLayers.ClearBoundaries(Model);
-    end;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -138,6 +143,8 @@ resourcestring
   StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
   StrWritingDataSets5to10 = '  Writing Data Sets 5 to 10.';
   StrWritingStressP = '    Writing Stress Period %d';
+  StrNoParametersHaveB = 'No parameters have been defined for the Evapotrans' +
+  'piration package for the following Stress periods.';
 
 procedure TModflowEVT_Writer.UpdateDisplay(
   TimeLists: TModflowBoundListOfTimeLists);
@@ -164,144 +171,149 @@ const
   D7PNameIname = '';
   D7PName = '';
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, EtSurfaceError);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, EtDepthError);
-  if not Package.IsSelected then
-  begin
-    UpdateNotUsedDisplay(TimeLists);
-    Exit;
-  end;
-  ParameterValues := TList.Create;
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    Evaluate;
-    if not frmProgressMM.ShouldContinue then
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, EtSurfaceError);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, EtDepthError);
+    if not Package.IsSelected then
     begin
+      UpdateNotUsedDisplay(TimeLists);
       Exit;
     end;
-    ClearTimeLists(Model);
-    ParamDefArrays := TObjectList.Create;
+    ParameterValues := TList.Create;
     try
-      EvaluateParameterDefinitions(ParamDefArrays, ErrorRoot, umAssign);
-      NPEVT := ParameterCount;
-      NEVTOP := Ord(Model.ModflowPackages.EvtPackage.LayerOption) + 1;
-      EvapRateTimes := TimeLists[0];
-      EvapotranspirationSurfaceTimes := TimeLists[1];
-      EvapotranspirationDepthTimes := TimeLists[2];
-      EvapotranspirationLayerTimes := TimeLists[3];
-
-      if Values.Count = 0 then
+      Evaluate;
+      if not frmProgressMM.ShouldContinue then
       begin
-        SetTimeListsUpToDate(TimeLists);
         Exit;
       end;
-      for TimeIndex := 0 to Values.Count - 1 do
-      begin
-        EvapRateArray := EvapRateTimes[TimeIndex]
-          as TModflowBoundaryDisplayDataArray;
-        EvapSurfArray := EvapotranspirationSurfaceTimes[TimeIndex]
-          as TModflowBoundaryDisplayDataArray;
-        EvapDepthArray := EvapotranspirationDepthTimes[TimeIndex]
-          as TModflowBoundaryDisplayDataArray;
-        if EvapotranspirationLayerTimes = nil then
+      ClearTimeLists(Model);
+      ParamDefArrays := TObjectList.Create;
+      try
+        EvaluateParameterDefinitions(ParamDefArrays, ErrorRoot, umAssign);
+        NPEVT := ParameterCount;
+        NEVTOP := Ord(Model.ModflowPackages.EvtPackage.LayerOption) + 1;
+        EvapRateTimes := TimeLists[0];
+        EvapotranspirationSurfaceTimes := TimeLists[1];
+        EvapotranspirationDepthTimes := TimeLists[2];
+        EvapotranspirationLayerTimes := TimeLists[3];
+
+        if Values.Count = 0 then
         begin
-          EvapLayerArray := nil;
-        end
-        else
+          SetTimeListsUpToDate(TimeLists);
+          Exit;
+        end;
+        for TimeIndex := 0 to Values.Count - 1 do
         begin
-          EvapLayerArray := EvapotranspirationLayerTimes[TimeIndex]
+          EvapRateArray := EvapRateTimes[TimeIndex]
             as TModflowBoundaryDisplayDataArray;
-        end;
-
-        ParametersUsed := TStringList.Create;
-        try
-          RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
-            ParametersUsed, ParameterValues, True);
-          List := Values[TimeIndex];
-//          List.CheckRestore;
-
-          // data set 6
-          if FDepthSurface.Count > 0 then
+          EvapSurfArray := EvapotranspirationSurfaceTimes[TimeIndex]
+            as TModflowBoundaryDisplayDataArray;
+          EvapDepthArray := EvapotranspirationDepthTimes[TimeIndex]
+            as TModflowBoundaryDisplayDataArray;
+          if EvapotranspirationLayerTimes = nil then
           begin
-            DepthSurfaceCellList := FDepthSurface[TimeIndex];
-//            DepthSurfaceCellList.CheckRestore;
-            AssignTransient2DArray(EvapSurfArray, 0, DepthSurfaceCellList, 0,
-              rdtDouble, umAssign);
+            EvapLayerArray := nil;
           end
           else
           begin
-            DepthSurfaceCellList := nil;
-            EvapSurfArray.UpToDate := True;
-            frmErrorsAndWarnings.AddError(Model, EtSurfaceError, EtSurfaceErrorMessage);
+            EvapLayerArray := EvapotranspirationLayerTimes[TimeIndex]
+              as TModflowBoundaryDisplayDataArray;
           end;
-          EvapSurfArray.CacheData;
 
-          if NPEVT = 0 then
-          begin
-            // data set 7
-            AssignTransient2DArray(EvapRateArray, 0, List, 0, rdtDouble, umAssign);
-          end
-          else
-          begin
-            // data set 8
-            DefArrayList := ParamDefArrays[TimeIndex];
-            UpdateTransient2DArray(EvapRateArray, DefArrayList);
-          end;
-          Model.AdjustDataArray(EvapRateArray);
-          EvapRateArray.CacheData;
+          ParametersUsed := TStringList.Create;
+          try
+            RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
+              ParametersUsed, ParameterValues, True);
+            List := Values[TimeIndex];
+  //          List.CheckRestore;
 
-          // data set 9
-          if DepthSurfaceCellList <> nil then
-          begin
-            AssignTransient2DArray(EvapDepthArray, 1, DepthSurfaceCellList, 0,
-              rdtDouble, umAssign);
-          end
-          else
-          begin
-            EvapDepthArray.UpToDate := True;
-            frmErrorsAndWarnings.AddError(Model, EtDepthError, EtDepthErrorMessage);
-          end;
-          EvapDepthArray.CacheData;
-
-          // data set 10
-          if EvapLayerArray <> nil then
-          begin
-            if (Model.ModflowPackages.EvtPackage.
-              LayerOption = loSpecified)
-              and not Model.ModflowPackages.EvtPackage.
-              TimeVaryingLayers and (ParameterCount > 0)  then
+            // data set 6
+            if FDepthSurface.Count > 0 then
             begin
-              List.Cache;
-              RetrieveParametersForStressPeriod(D7PNameIname, D7PName, 0,
-                ParametersUsed, ParameterValues, True);
-              List := Values[0];
-//              List.CheckRestore;
+              DepthSurfaceCellList := FDepthSurface[TimeIndex];
+  //            DepthSurfaceCellList.CheckRestore;
+              AssignTransient2DArray(EvapSurfArray, 0, DepthSurfaceCellList, 0,
+                rdtDouble, umAssign);
+            end
+            else
+            begin
+              DepthSurfaceCellList := nil;
+              EvapSurfArray.UpToDate := True;
+              frmErrorsAndWarnings.AddError(Model, EtSurfaceError, EtSurfaceErrorMessage);
             end;
-            UpdateLayerDisplay(List, ParameterValues, TimeIndex,
-              EvapLayerArray);
-            EvapLayerArray.CacheData;
+            EvapSurfArray.CacheData;
+
+            if NPEVT = 0 then
+            begin
+              // data set 7
+              AssignTransient2DArray(EvapRateArray, 0, List, 0, rdtDouble, umAssign);
+            end
+            else
+            begin
+              // data set 8
+              DefArrayList := ParamDefArrays[TimeIndex];
+              UpdateTransient2DArray(EvapRateArray, DefArrayList);
+            end;
+            Model.AdjustDataArray(EvapRateArray);
+            EvapRateArray.CacheData;
+
+            // data set 9
+            if DepthSurfaceCellList <> nil then
+            begin
+              AssignTransient2DArray(EvapDepthArray, 1, DepthSurfaceCellList, 0,
+                rdtDouble, umAssign);
+            end
+            else
+            begin
+              EvapDepthArray.UpToDate := True;
+              frmErrorsAndWarnings.AddError(Model, EtDepthError, EtDepthErrorMessage);
+            end;
+            EvapDepthArray.CacheData;
+
+            // data set 10
+            if EvapLayerArray <> nil then
+            begin
+              if (Model.ModflowPackages.EvtPackage.
+                LayerOption = loSpecified)
+                and not Model.ModflowPackages.EvtPackage.
+                TimeVaryingLayers and (ParameterCount > 0)  then
+              begin
+                List.Cache;
+                RetrieveParametersForStressPeriod(D7PNameIname, D7PName, 0,
+                  ParametersUsed, ParameterValues, True);
+                List := Values[0];
+  //              List.CheckRestore;
+              end;
+              UpdateLayerDisplay(List, ParameterValues, TimeIndex,
+                EvapLayerArray);
+              EvapLayerArray.CacheData;
+            end;
+            List.Cache;
+            if DepthSurfaceCellList <> nil then
+            begin
+              DepthSurfaceCellList.Cache;
+            end;
+          finally
+            ParametersUsed.Free;
           end;
-          List.Cache;
-          if DepthSurfaceCellList <> nil then
-          begin
-            DepthSurfaceCellList.Cache;
-          end;
-        finally
-          ParametersUsed.Free;
         end;
-      end;
-      for Index := 0 to TimeLists.Count - 1 do
-      begin
-        ATimeList := TimeLists[Index];
-        if ATimeList <> nil then
+        for Index := 0 to TimeLists.Count - 1 do
         begin
-          ATimeList.SetUpToDate(True);
+          ATimeList := TimeLists[Index];
+          if ATimeList <> nil then
+          begin
+            ATimeList.SetUpToDate(True);
+          end;
         end;
+      finally
+        ParamDefArrays.Free;
       end;
     finally
-      ParamDefArrays.Free;
+      ParameterValues.Free;
     end;
   finally
-    ParameterValues.Free;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -488,6 +500,7 @@ var
   Comment: string;
 begin
   inherited;
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoParametersHaveB);
   ParameterValues := TValueCellList.Create(CellType);
   try
     ParameterValues.OwnsObjects := False;
@@ -636,6 +649,11 @@ begin
         else
         begin
           // data set 8
+          if ParametersUsed.Count = 0 then
+          begin
+            frmErrorsAndWarnings.AddError(Model, StrNoParametersHaveB,
+              IntToStr(TimeIndex+1));
+          end;
           for ParamIndex := 0 to ParametersUsed.Count - 1 do
           begin
             WriteString(ParametersUsed[ParamIndex]);

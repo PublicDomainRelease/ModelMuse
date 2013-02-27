@@ -60,12 +60,14 @@ type
     FExternalFlow: TExternalFlowProperties;
     function GetReach(Index: integer): TValueCell;
     function GetReachCount: integer;
+    procedure SetNewSegmentNumber(const Value: integer);
   public
     constructor Create;
     // @name is the segment number assigned by the user.
     function OriginalSegmentNumber: integer;
     // @name is the segment number exported to MODFLOW.
-    property NewSegmentNumber: integer read FNewSegmentNumber;
+    property NewSegmentNumber: integer read FNewSegmentNumber
+      write SetNewSegmentNumber;
     Destructor Destroy; override;
     function OriginalDownStreamSegmentNumbers: TIntegerDynArray;
     function OriginalDiversionSegmentNumbers: TIntegerDynArray;
@@ -537,20 +539,23 @@ begin
       end;
     end;
   end;
-  for SegmentIndex := 0 to SegmentCount - 1 do
+  if (Model as TPhastModel).LgrV1Used then
   begin
-    Segment := Segments[SegmentIndex];
-    for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
+    for SegmentIndex := 0 to SegmentCount - 1 do
     begin
-      SubSeg :=  Segment.FSubSegmentList[SubSegIndex];
-      if SubSeg.FModel <> Model then
+      Segment := Segments[SegmentIndex];
+      for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
       begin
-        for ParentReachIndex := SubSeg.ReachCount - 1 downto 0 do
+        SubSeg :=  Segment.FSubSegmentList[SubSegIndex];
+        if SubSeg.FModel <> Model then
         begin
-          ParentReach := SubSeg.Reaches[ParentReachIndex];
-          if ParentReach.Values.ReachLength = 0 then
+          for ParentReachIndex := SubSeg.ReachCount - 1 downto 0 do
           begin
-            SubSeg.DeleteReach(ParentReachIndex);
+            ParentReach := SubSeg.Reaches[ParentReachIndex];
+            if ParentReach.Values.ReachLength = 0 then
+            begin
+              SubSeg.DeleteReach(ParentReachIndex);
+            end;
           end;
         end;
       end;
@@ -560,7 +565,7 @@ begin
   for SegmentIndex := 0 to SegmentCount - 1 do
   begin
     Segment := Segments[SegmentIndex];
-    Segment.FNewSegmentNumber := Number;
+    Segment.NewSegmentNumber := Number;
     if Segment.FSubSegmentList.Count = 0 then
     begin
       Inc(Number);
@@ -921,11 +926,20 @@ var
   end;
   function ReachInOverlap(AReach: TSfr_Cell): Boolean;
   begin
-    result := (AReach.Column < OverlapWidth)
-      or (AReach.Row < OverlapWidth)
-      or (AReach.Column >= MaxOverlappedColumn)
-      or (AReach.Row >= MaxOverlappedRow)
-      or (AReach.Layer >= MaxOverlappedLayer)
+
+    if Model.ModelSelection = msModflowLGR then
+    begin
+      result := (AReach.Column < OverlapWidth)
+        or (AReach.Row < OverlapWidth)
+        or (AReach.Column >= MaxOverlappedColumn)
+        or (AReach.Row >= MaxOverlappedRow)
+        or (AReach.Layer >= MaxOverlappedLayer)
+    end
+    else
+    begin
+      Assert(Model.ModelSelection = msModflowLGR2);
+      result := False;
+    end;
   end;
 begin
   if Model is TPhastModel then
@@ -949,7 +963,8 @@ begin
 
           if (SubSeg = nil) or (SubSeg.FModel <> CurrentModel) then
           begin
-            SubSeg := ASegment.AddSubSegment(CurrentModel, LocalModel.ModflowFullStressPeriods.Count);
+            SubSeg := ASegment.AddSubSegment(CurrentModel,
+              LocalModel.ModflowFullStressPeriods.Count);
           end;
           SubSeg.AddReach(AReach);
 //          AReach.Active := True;
@@ -960,7 +975,14 @@ begin
   else
   begin
     LocalChildModel := Model as TChildModel;
-    OverlapWidth := LocalChildModel.ChildCellsPerParentCell div 2 + 1;
+    if Model.ModelSelection = msModflowLGR then
+    begin
+      OverlapWidth := LocalChildModel.ChildCellsPerParentCell div 2 + 1;
+    end
+    else
+    begin
+      OverlapWidth := 0;
+    end;
     MaxOverlappedColumn := LocalChildModel.Grid.ColumnCount - OverlapWidth;
     MaxOverlappedRow := LocalChildModel.Grid.RowCount - OverlapWidth;
     MaxOverlappedLayer := LocalChildModel.FirstOverlappedLayer;
@@ -1020,133 +1042,138 @@ begin
   begin
     Exit;
   end;
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrSfrInvalid);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrStreamFlowFileDoe);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheFollowingObject);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidStartingTimeStep1);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrIncompleteSFRData);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, DupErrorCategory);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, CircularCategory);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, ChannelRoughnessError);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, BankRoughnessError);
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, NoSegmentsWarning);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, UnsatError);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrOneOrMoreSFRStre);
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrDownstreamOutOfOrder);
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrDiversionOutOfOrder);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrLakeDownstreamError);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrLakeDiversionError);
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNoStreamsDefined);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrDupParamInstances);
-
-  StartTime := Model.ModflowStressPeriods[0].StartTime;
-  EndTime := Model.ModflowStressPeriods[
-    Model.ModflowStressPeriods.Count-1].EndTime;
-
-  NUMTAB := 0;
-  MAXVAL := 0;
-  frmProgressMM.AddMessage(StrEvaluatingSFRPacka);
-  ISFROPT := (Package as TSfrPackageSelection).Isfropt;
-  Dummy := TStringList.Create;
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
-    begin
-      if not frmProgressMM.ShouldContinue then
-      begin
-        Exit;
-      end;
-      ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
-      if ScreenObject.Deleted then
-      begin
-        Continue;
-      end;
-      if not ScreenObject.UsedModels.UsesModel(Model) then
-      begin
-        Continue;
-      end;
-      Boundary := ScreenObject.ModflowSfrBoundary;
-      if (Boundary = nil) or not Boundary.Used then
-      begin
-        Continue;
-      end;
-      frmProgressMM.AddMessage(Format(StrEvaluatingS, [ScreenObject.Name]));
-      Assert(Boundary.Values.Count = 1);
-      Item := Boundary.Values[0] as TCustomModflowBoundaryItem;
-      Item.StartTime := StartTime;
-      Item.EndTime := EndTime;
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrSfrInvalid);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrStreamFlowFileDoe);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheFollowingObject);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidStartingTimeStep1);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrIncompleteSFRData);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, DupErrorCategory);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, CircularCategory);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, ChannelRoughnessError);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, BankRoughnessError);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, NoSegmentsWarning);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, UnsatError);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrOneOrMoreSFRStre);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrDownstreamOutOfOrder);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrDiversionOutOfOrder);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrLakeDownstreamError);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrLakeDiversionError);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNoStreamsDefined);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrDupParamInstances);
 
-      Boundary.GetCellValues(FValues, Dummy, Model);
-      if (FValues.Count >= 1) then
+    StartTime := Model.ModflowStressPeriods[0].StartTime;
+    EndTime := Model.ModflowStressPeriods[
+      Model.ModflowStressPeriods.Count-1].EndTime;
+
+    NUMTAB := 0;
+    MAXVAL := 0;
+    frmProgressMM.AddMessage(StrEvaluatingSFRPacka);
+    ISFROPT := (Package as TSfrPackageSelection).Isfropt;
+    Dummy := TStringList.Create;
+    try
+      for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
       begin
-        Assert(FValues.Count = 1);
-        Segment := TSegment.Create;
-        Segment.FReaches := FValues.Extract(FValues[0]);
-        if Segment.FReaches.Count > 0 then
+        if not frmProgressMM.ShouldContinue then
         begin
-          FSegments.Add(Segment);
-          Segment.FScreenObject := ScreenObject;
-          Segment.FExternalFlow := Boundary.ExternalFlow;
-          NUMVAL := 0;
-          case Boundary.ExternalFlow.FlowFileChoice of
-            ffcNone:
-              begin
-                NUMVAL := 0;
-              end;
-            ffcFileName:
-              begin
-                if FileExists(Boundary.ExternalFlow.FullFlowFileName) then
-                begin
-                  Dummy.LoadFromFile(Boundary.ExternalFlow.FullFlowFileName);
-                  NUMVAL := Dummy.Count;
-                end
-                else
+          Exit;
+        end;
+        ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
+        if ScreenObject.Deleted then
+        begin
+          Continue;
+        end;
+        if not ScreenObject.UsedModels.UsesModel(Model) then
+        begin
+          Continue;
+        end;
+        Boundary := ScreenObject.ModflowSfrBoundary;
+        if (Boundary = nil) or not Boundary.Used then
+        begin
+          Continue;
+        end;
+        frmProgressMM.AddMessage(Format(StrEvaluatingS, [ScreenObject.Name]));
+        Assert(Boundary.Values.Count = 1);
+        Item := Boundary.Values[0] as TCustomModflowBoundaryItem;
+        Item.StartTime := StartTime;
+        Item.EndTime := EndTime;
+
+        Boundary.GetCellValues(FValues, Dummy, Model);
+        if (FValues.Count >= 1) then
+        begin
+          Assert(FValues.Count = 1);
+          Segment := TSegment.Create;
+          Segment.FReaches := FValues.Extract(FValues[0]);
+          if Segment.FReaches.Count > 0 then
+          begin
+            FSegments.Add(Segment);
+            Segment.FScreenObject := ScreenObject;
+            Segment.FExternalFlow := Boundary.ExternalFlow;
+            NUMVAL := 0;
+            case Boundary.ExternalFlow.FlowFileChoice of
+              ffcNone:
                 begin
                   NUMVAL := 0;
-                  frmErrorsAndWarnings.AddError(Model, StrTheFollowingObject,
-                    ScreenObject.Name);
                 end;
-              end;
-            ffcSpecify:
-              begin
-                NUMVAL := Boundary.ExternalFlow.FlowFileData.Count;
-              end;
-          end;
-          if NUMVAL > 0 then
-          begin
-            Inc(NUMTAB);
-            if NUMVAL > MAXVAL then
-            begin
-              MAXVAL := NUMVAL;
+              ffcFileName:
+                begin
+                  if FileExists(Boundary.ExternalFlow.FullFlowFileName) then
+                  begin
+                    Dummy.LoadFromFile(Boundary.ExternalFlow.FullFlowFileName);
+                    NUMVAL := Dummy.Count;
+                  end
+                  else
+                  begin
+                    NUMVAL := 0;
+                    frmErrorsAndWarnings.AddError(Model, StrTheFollowingObject,
+                      ScreenObject.Name);
+                  end;
+                end;
+              ffcSpecify:
+                begin
+                  NUMVAL := Boundary.ExternalFlow.FlowFileData.Count;
+                end;
             end;
+            if NUMVAL > 0 then
+            begin
+              Inc(NUMTAB);
+              if NUMVAL > MAXVAL then
+              begin
+                MAXVAL := NUMVAL;
+              end;
+            end;
+          end
+          else
+          begin
+            frmErrorsAndWarnings.AddWarning(Model,
+              NoSegmentsWarning, ScreenObject.Name);
+            Segment.Free;
           end;
-        end
-        else
-        begin
-          frmErrorsAndWarnings.AddWarning(Model,
-            NoSegmentsWarning, ScreenObject.Name);
-          Segment.Free;
         end;
       end;
+    finally
+      Dummy.Free;
+    end;
+    SortSegments;
+    for Index := 0 to FSegments.Count - 1 do
+    begin
+      Segment := FSegments[Index];
+      Segment.NewSegmentNumber := Index + 1;
+    end;
+    TestBedElevations;
+    CheckParamInstances;
+
+    // LGR
+    CreateLgrSubSegments;
+    RenumberLgrSubSegments;
+
+    if FSegments.Count = 0 then
+    begin
+      frmErrorsAndWarnings.AddWarning(Model, StrNoStreamsDefined, StrTheSFRPackageHas);
     end;
   finally
-    Dummy.Free;
-  end;
-  SortSegments;
-  for Index := 0 to FSegments.Count - 1 do
-  begin
-    Segment := FSegments[Index];
-    Segment.FNewSegmentNumber := Index + 1;
-  end;
-  TestBedElevations;
-  CheckParamInstances;
-
-  // LGR
-  CreateLgrSubSegments;
-  RenumberLgrSubSegments;
-
-  if FSegments.Count = 0 then
-  begin
-    frmErrorsAndWarnings.AddWarning(Model, StrNoStreamsDefined, StrTheSFRPackageHas);
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -1174,7 +1201,7 @@ begin
     for Index := 0 to SegmentCount - 1 do
     begin
       Segment := Segments[Index];
-      Segment.FNewSegmentNumber := Number;
+      Segment.NewSegmentNumber := Number;
       if Segment.FSubSegmentList.Count = 0 then
       begin
         Inc(Number);
@@ -3649,7 +3676,7 @@ var
   SfrPackage: TSfrPackageSelection;
 begin
   SfrPackage := Package as TSfrPackageSelection;
-  Result := (Model.ModelSelection in [msModflow, msModflowNWT])
+  Result := (Model.ModelSelection in [msModflow, msModflowNWT, msModflowLGR2 {$IFDEF FMP}, msModflowFmp {$ENDIF}])
     or SfrPackage.UseGsflowFormat;
 end;
 
@@ -5166,6 +5193,12 @@ function TSegment.OriginalSegmentNumber: integer;
 begin
   Assert(FScreenObject.ModflowSfrBoundary <> nil);
   result := FScreenObject.ModflowSfrBoundary.SegementNumber;
+end;
+
+procedure TSegment.SetNewSegmentNumber(const Value: integer);
+begin
+  FNewSegmentNumber := Value;
+  FScreenObject.SfrSegmentNumber := value;
 end;
 
 { TSubSegment }

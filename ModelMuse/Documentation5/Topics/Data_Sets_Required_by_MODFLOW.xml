@@ -7,22 +7,39 @@
       <para style="margin-bottom:10px; line-height:2.0;"><text styleclass="Heading1" translate="true">Data Sets Required by MODFLOW</text></para>
     </header>
     <para styleclass="Table Caption"><text styleclass="Table Caption" translate="true">Table 8. Data Sets required by MODFLOW</text></para>
-    <para styleclass="Normal" style="text-align:center;"><table rowcount="31" colcount="5" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal" style="text-align:center;"><table id="ModflowDataSets_srt_" rowcount="46" colcount="5" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+      <thead style="vertical-align:top">
+        <td>
+          <para styleclass="Table Header"><anchor id="_sortable_MODFLOW_DataSets_cicons-graphic_" styleclass="Table Header"></anchor><text styleclass="Table Header" translate="true">Data Set</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Header"><anchor id="_sortable_MODFLOW_Description_cicons-graphic_" styleclass="Table Header"></anchor><text styleclass="Table Header" translate="true">Description</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Header"><anchor id="_sortable_MODFLOW_Packages_cicons-graphic_" styleclass="Table Header"></anchor><text styleclass="Table Header" translate="true">Package</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Header"><anchor id="_sortable_MODFLOW_Variable_cicons-graphic_" styleclass="Table Header"></anchor><text styleclass="Table Header" translate="true">Variable</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Header"><anchor id="_sortable_MODFLOW_WhenUsed_cicons-graphic_" styleclass="Table Header"></anchor><text styleclass="Table Header" translate="true">When used</text></para>
+        </td>
+      </thead>
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Data Set</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Active</text></para>
         </td>
         <td>
-          <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Description</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Specifies whether a cell is active or not.</text></para>
         </td>
         <td>
-          <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Package</text></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="BAS6" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">BAS</link></para>
         </td>
         <td>
-          <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Variable</text></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="BAS6" anchor="IBOUND" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">IBOUND</link></para>
         </td>
         <td>
-          <para styleclass="Table Header"><text styleclass="Table Header" translate="true">When used</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Always</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -52,13 +69,15 @@
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">LPF</link></para>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="BCF" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">BCF6</link></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">UPW</link></para>
         </td>
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" anchor="HK" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">HK</link></para>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="BCF" anchor="HY" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">HY</link></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="HK" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">HK</link></para>
         </td>
         <td>
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the LPF or BCF6 package is active and no HK parameters are defined</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the LPF, BCF6, or UPW package is active and no HK parameters are defined</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -70,12 +89,14 @@
         </td>
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">LPF</link></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">UPW</link></para>
         </td>
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" anchor="HANI" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">HANI</link></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="HANI" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">HANI</link></para>
         </td>
         <td>
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the LPF package is active, no HANI parameters are defined.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the LPF or UPW package is active, no HANI parameters are defined.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -88,13 +109,15 @@
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">LPF</link></para>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="BCF" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">BCF6</link></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">UPW</link></para>
         </td>
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" anchor="VKA" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">VKA</link></para>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="BCF" anchor="Vcont" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">Vcont</link></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="VKA" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">VKA</link></para>
         </td>
         <td>
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the LPF or BCF6 package is active and no VK or VANI parameters are defined and the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Basics_Tab" anchor="VKA" styleclass="Table Cell" style="font-weight:bold;" translate="true">Method of specifying vertical hydraulic conductivity</link><text styleclass="Table Cell" translate="true"> is vertical hydraulic conductivity.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the LPF, BCF6, or UPW package is active and no VK or VANI parameters are defined and the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Basics_Tab" anchor="VKA" styleclass="Table Cell" style="font-weight:bold;" translate="true">Method of specifying vertical hydraulic conductivity</link><text styleclass="Table Cell" translate="true"> is vertical hydraulic conductivity.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -107,13 +130,15 @@
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">LPF</link></para>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="BCF" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">BCF6</link></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">UPW</link></para>
         </td>
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" anchor="VKCB" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">VKCB</link></para>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="BCF" anchor="Vcont" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">Vcont</link></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="VKCB" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">VKCB</link></para>
         </td>
         <td>
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the LPF or BCF6 package is active and no VKCB parameters are defined and there is at least one </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Basics_Tab" styleclass="Table Cell" translate="true">nonsimulated layer</link><text styleclass="Table Cell" translate="true">.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the LPF, BCF6, or UPW package is active and no VKCB parameters are defined and there is at least one </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Basics_Tab" styleclass="Table Cell" translate="true">nonsimulated layer</link><text styleclass="Table Cell" translate="true">.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -125,12 +150,14 @@
         </td>
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">LPF</link></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">UPW</link></para>
         </td>
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" anchor="VKA" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">VKA</link></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="VKA" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">VKA</link></para>
         </td>
         <td>
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the LPF package is active and no VK or VANI parameters are defined and the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Basics_Tab" anchor="VKA" styleclass="Table Cell" style="font-weight:bold;" translate="true">Method of specifying vertical hydraulic conductivity</link><text styleclass="Table Cell" translate="true"> is the ratio of horizontal to vertical hydraulic conductivity.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the LPF or UPW package is active and no VK or VANI parameters are defined and the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Basics_Tab" anchor="VKA" styleclass="Table Cell" style="font-weight:bold;" translate="true">Method of specifying vertical hydraulic conductivity</link><text styleclass="Table Cell" translate="true"> is the ratio of horizontal to vertical hydraulic conductivity.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -143,13 +170,15 @@
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">LPF</link></para>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="BCF" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">BCF6</link></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">UPW</link></para>
         </td>
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" anchor="Ss" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">Ss</link></para>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="BCF" anchor="Sf1" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">Sf1</link></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="Ss" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">Ss</link></para>
         </td>
         <td>
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the LPF or BCF6 package is active and the model contains at least one transient stress period.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the LPF, BCF6, or UPW package is active and the model contains at least one transient stress period.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -162,13 +191,15 @@
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">LPF</link></para>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="BCF" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">BCF6</link></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">UPW</link></para>
         </td>
         <td>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF" anchor="Sy" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">Sy</link></para>
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="BCF" anchor="Sf1" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">Sf1</link><text styleclass="Table Cell" translate="true">, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="BCF" anchor="Sf2" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">Sf2</link></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package" anchor="Sy" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">Sy</link></para>
         </td>
         <td>
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the LPF or BCF6 package is active, the model contains at least one transient stress period and there is at least one convertible layer.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the LPF, BCF6, or UPW package is active, the model contains at least one transient stress period and there is at least one convertible layer and no specific yield parameters are defined.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -449,7 +480,7 @@
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="VKS" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Normal" translate="true">VKS</link></para>
         </td>
         <td>
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the Unsaturated-Zone Flow package is used and </text><text styleclass="Normal" translate="true">the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated_Zone_Flow_Package" anchor="IUZFOPT" styleclass="Normal" translate="true">the user chooses to specify vertical hydraulic conductivity in the  unsaturated zone from that in the saturated zone</link></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the Unsaturated-Zone Flow package is used and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated_Zone_Flow_Package" anchor="IUZFOPT" styleclass="Normal" translate="true">the user chooses to specify vertical hydraulic conductivity in the  unsaturated zone separately from that in the saturated zone</link><text styleclass="Normal" translate="true"> or else neither the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="LPF_Layer_Property_Flow_Package" styleclass="Normal" translate="true">LPF</link><text styleclass="Normal" translate="true"> nor </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UPW_Upstream_Weighting_Package_Pane" styleclass="Normal" translate="true">UPW</link><text styleclass="Normal" translate="true"> package is used.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -500,12 +531,29 @@
           <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="THTI" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">THTI</link></para>
         </td>
         <td>
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the Unsaturated-Zone Flow package is used and all the stress periods are transient.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the Unsaturated-Zone Flow package is used and all the stress periods are transient and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated_Zone_Flow_Package" anchor="SPECIFYTHTI" styleclass="Normal" translate="true">the user chooses to specify the initial water content in the  unsaturated zone</link><text styleclass="Normal" translate="true">. </text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">StrUzfGage_1_and_2</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Residual_Water_Content</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">The residual water content for each vertical column of cells in units of volume of water to total volume (L</text><text styleclass="Table Cell" style="font-size:8pt; vertical-align:super;" translate="true">3</text><text styleclass="Table Cell" translate="true">L</text><text styleclass="Table Cell" style="font-size:8pt; vertical-align:super;" translate="true">-3</text><text styleclass="Table Cell" translate="true">)</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">UZF</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="THTR" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">THTR</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the Unsaturated-Zone Flow package is used &#160;and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated_Zone_Flow_Package" anchor="SPECIFYTHTI" styleclass="Normal" translate="true">the user chooses to specify the residaul water content in the  unsaturated zone</link><text styleclass="Normal" translate="true">. </text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">UzfGage_1_and_2</text></para>
         </td>
         <td>
           <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">A flag for the type of expanded listing desired in the output file. See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Object_Pane" anchor="IUZOPT" styleclass="Table Cell" translate="true">UZF: Unsaturated-Zone Flow Package Pane</link></para>
@@ -539,16 +587,237 @@
       </tr>
       <tr style="vertical-align:top">
         <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">HUF_Reference_Surface</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">the elevation of the reference surface to be used to calculate the depth</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="KDEP" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">HUF2 (KDEP)</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="KDEP" anchor="RS" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">RS</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the HUF package is selected and one or more KDEP parameters is defined and the user </text><link displaytype="text" defaultstyle="true" type="topiclink" href="HUF2_Hydrogeologic_Unit_Flow" styleclass="Table Cell" translate="true">chooses to use a reference surface different from the top of the model</link><text styleclass="Table Cell" translate="true">.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">HUF_Kx</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">This data set is used to display the value of the hydraulic conductivity in the X direction that would be calculated by the HUF package.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="HUF2" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">HUF2</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">never used directly.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">HUF_Ky</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">This data set is used to display the value of the hydraulic conductivity in the Y direction that would be calculated by the HUF package.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="HUF2" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">HUF2</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">never used directly.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">HUF_Interlayer_Kz</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">This data set is used to display the value of the hydraulic conductivity in the Z direction between cell centers that would be calculated by the HUF package. </text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="HUF2" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">HUF2</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">never used directly.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">HUF_SS</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">This data set is used to display the value of the specific storage that would be calculated by the HUF package.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="HUF2" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">HUF2</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">never used directly.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">HUF_Average_SY</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">This data set is used to display the value of the average specific yield for a cell that would be calculated by the HUF package.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="HUF2" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">HUF2</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">never used directly.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">HUF_SY</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">This data set is used to display the value of the specific storage that would be calculated by the HUF package.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="HUF2" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">HUF2</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">never used directly.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">HUF_SYTP</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">This data set is used to display the value of </text><link displaytype="text" defaultstyle="true" type="topiclink" href="HUF2" anchor="PARTYP" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">SYTP</link><text styleclass="Table Cell" translate="true"> (</text><text styleclass="Normal" translate="true">storage coefficient for the top active cell at each row, column location) </text><text styleclass="Table Cell" translate="true">that would be calculated by the HUF package.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="HUF2" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">HUF2</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">never used directly.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Geostatic_Stress</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">geostatic stress above model layer 1</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWT" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">SWT</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWT" anchor="GL0" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">GL0</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the SWT package is selected.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Specific_Gravity_Unsaturated</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">specific gravity of moist or unsaturated sediments</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWT" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">SWT</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWT" anchor="SGM" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">SGM</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the SWT package is selected.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Specific_Gravity_Saturated</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">specific gravity of saturated sediments</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWT" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">SWT</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWT" anchor="SGS" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">SGS</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the SWT package is selected.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Initial_Preconsolidation_Stress_Offset</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">The offset from initial effective stress to initial preconsolidation stress at the bottom of the model layer in units of height of a column of water</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWT" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">SWT</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWT" anchor="PCSOFF" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">PCSOFF</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the SWT package is selected and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWT_Package" anchor="ISTPCS" styleclass="Table Cell" translate="true">the user chooses to specify the initial preconsolidation stress as an offset from the initial stress</link><text styleclass="Table Cell" translate="true">.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Initial_Preconsolidation_Stress</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">The initial preconsolidation stress, in units of height of a column of water, at the bottom of the model layer</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWT" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">SWT</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="SWT" anchor="PCS" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">PCS</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the SWT package is selected and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWT_Package" anchor="ISTPCS" styleclass="Table Cell" translate="true">the user chooses to specify the initial preconsolidation stress directly</link><text styleclass="Table Cell" translate="true">.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
           <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">MODFLOW_Specified_Head</text></para>
         </td>
         <td>
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Values in this data set are set to true automatically in any specified head cell. It can not be manually set by the user. &#160;It is used in the formula for UZF_Layer</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Values in this data set are set to true automatically in any specified head cell. It can not be manually set by the user. &#160;It is used in the formula for UZF_Layer</text></para>
         </td>
         <td>
-          <para styleclass="Table Cell"></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="BAS6" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">BAS</link></para>
         </td>
         <td>
-          <para styleclass="Table Cell"></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="BAS6" anchor="IBOUND" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">IBOUND</link></para>
         </td>
         <td>
           <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">never used directly.</text></para>

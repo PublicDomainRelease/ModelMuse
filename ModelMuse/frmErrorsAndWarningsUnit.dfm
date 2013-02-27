@@ -4,17 +4,17 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
   Caption = 'Errors and Warnings'
   ClientWidth = 472
   OnResize = FormResize
-  ExplicitWidth = 480
-  ExplicitHeight = 268
-  PixelsPerInch = 96
+  ExplicitWidth = 490
+  ExplicitHeight = 271
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 193
+    Top = 185
     Width = 472
     Height = 41
     Align = alBottom
-    TabOrder = 0
+    TabOrder = 1
     DesignSize = (
       472
       41)
@@ -24,11 +24,9 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkClose
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 0
+      TabOrder = 4
     end
     object btnHelp: TBitBtn
       Left = 279
@@ -36,11 +34,9 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 1
+      TabOrder = 3
       OnClick = btnHelpClick
     end
     object btnSave: TButton
@@ -49,7 +45,7 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
       Width = 75
       Height = 33
       Caption = 'Save'
-      TabOrder = 2
+      TabOrder = 1
       OnClick = btnSaveClick
     end
     object btnClear: TButton
@@ -58,7 +54,7 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
       Width = 75
       Height = 33
       Caption = 'Clear'
-      TabOrder = 3
+      TabOrder = 2
       OnClick = btnClearClick
     end
     object btnCopy: TButton
@@ -67,7 +63,7 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
       Width = 75
       Height = 33
       Caption = 'Copy'
-      TabOrder = 4
+      TabOrder = 0
       OnClick = btnCopyClick
     end
   end
@@ -75,18 +71,17 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
     Left = 0
     Top = 0
     Width = 472
-    Height = 193
+    Height = 185
     Align = alClient
     CheckImageKind = ckLightTick
     Header.AutoSizeIndex = -1
-    Header.DefaultHeight = 17
     Header.Font.Charset = DEFAULT_CHARSET
     Header.Font.Color = clWindowText
     Header.Font.Height = -11
     Header.Font.Name = 'Tahoma'
     Header.Font.Style = []
     Header.Options = [hoColumnResize, hoDrag]
-    TabOrder = 1
+    TabOrder = 0
     OnGetText = vstWarningsAndErrorsGetText
     OnInitNode = vstWarningsAndErrorsInitNode
     OnMeasureItem = vstWarningsAndErrorsMeasureItem

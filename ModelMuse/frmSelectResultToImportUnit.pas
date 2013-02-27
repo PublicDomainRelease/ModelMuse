@@ -151,7 +151,7 @@ type
     procedure CreateOrRetrieveLayerDataSet(const Description: string;
       NTRANS, KSTP, KPER, ILAY: integer; TOTIM: TModflowDouble;
       out LayerData: TDataArray; out OldComment: string; NewDataSets: TList;
-      ScreenObjectsToDelete: TScreenObjectList; FileNames: string;
+      ScreenObjectsToDelete: TScreenObjectList; FileName: string;
       AModel: TCustomModel; DataArrayForm: TDataArrayForm = dafLayer);
     procedure CreateScreenObject(LayerIndex: integer; AModel: TCustomModel;
       out ScreenObject: TScreenObject);
@@ -163,7 +163,7 @@ type
       NTRANS, KPER, KSTP: integer; TOTIM: TModflowDouble;
       LayerNumbers: TIntegerList; LayerDataSets: TList;
       out New3DArray: TDataArray; out OldComment: string; FluxData: boolean;
-      NewDataSets: TList; FileNames: string; AModel: TCustomModel);
+      NewDataSets: TList; FileName: string; AModel: TCustomModel);
     procedure CloseFiles;
     procedure Read3DArray(var NLAY: Integer; var EndReached: Boolean;
       var KPER, KSTP: Integer; var TOTIM: TModflowDouble;
@@ -219,7 +219,13 @@ var
   DisplayChoices : array[TDisplayChoice] of integer = (0, 0, 0);
 const
   MaxDisplayChoiceCount = 10;
+
+resourcestring
   StrModelResults = 'Model Results';
+  StrLayerData = 'Model Results|Layer Data';
+  StrThreeDData = 'Model Results|3D Data';
+  KSystem = 'Model Results|System';
+  KWaterTable = 'Model Results|Water Table';
 
 implementation
 
@@ -228,7 +234,7 @@ uses Math, frmGoPhastUnit, RbwParser,
   frmUpdateDataSetsUnit, UndoItemsScreenObjects,
   InterpolationUnit, HufDefinition, ModflowTimeUnit,
   frmGridValueUnit, shlobj, activex, AnsiStrings, frmDisplayDataUnit,
-  Mt3dmsChemSpeciesUnit, frmExportImageUnit;
+  Mt3dmsChemSpeciesUnit, frmExportImageUnit, IOUtils;
 
 resourcestring
   StrHead = 'Head';
@@ -244,10 +250,11 @@ resourcestring
   StrTheNumberOfHydrogeologic = 'The number of rows, columns, or hydrogeolog' +
   'ic units in the data set doesn''t match the number of rows, columns, or h' +
   'ydrogeologic units in the grid.';
-  StrReadFrom0sOn = 'read from: "%0:s" on %1:s'
+  StrReadFrom0sOnStress = 'read from: "%0:s" on %1:s'
     + sLineBreak + 'Stress Period: %2:d'
     + sLineBreak + 'Time Step: %3:d'
-    + sLineBreak + 'Elapsed Time: %4:g';
+    + sLineBreak + 'Elapsed Time: %4:g'
+    + sLineBreak + 'File last modified on: %5:s';
   StrLayer = 'Layer: ';
   StrSystem = 'System: ';
   StrChildLayer = 'Child Layer: ';
@@ -304,11 +311,11 @@ resourcestring
   'zed by ModelMuse. The recognized file types are displayed in the "files o' +
   'f type" combo box in the "Open File" dialog box.';
 
-const
-  StrLayerData = StrModelResults + '|Layer Data';
-  StrThreeDData = StrModelResults + '|3D Data';
-  KSystem = StrModelResults + '|System';
-  KWaterTable = StrModelResults + '|Water Table';
+//resourcestring
+//  StrLayerData = StrModelResults + '|Layer Data';
+//  StrThreeDData = StrModelResults + '|3D Data';
+//  KSystem = StrModelResults + '|System';
+//  KWaterTable = StrModelResults + '|Water Table';
 
 {$R *.dfm}
 
@@ -338,7 +345,7 @@ procedure TfrmSelectResultToImport.CreateOrRetrieveLayerDataSet(
   const Description: string; NTRANS, KSTP, KPER, ILAY: integer;
   TOTIM: TModflowDouble;
   out LayerData: TDataArray; out OldComment: string; NewDataSets: TList;
-  ScreenObjectsToDelete: TScreenObjectList; FileNames: string;
+  ScreenObjectsToDelete: TScreenObjectList; FileName: string;
   AModel: TCustomModel; DataArrayForm: TDataArrayForm = dafLayer);
 var
   NewName: string;
@@ -459,8 +466,9 @@ begin
   OldComment := ParentLayerData.Comment;
   if LayerData = ParentLayerData then
   begin
-    ParentLayerData.Comment := Format(StrReadFrom0sOn,
-      [FileNames, DateTimeToStr(Now), KPER, KSTP, TOTIM]);
+    ParentLayerData.Comment := Format(StrReadFrom0sOnStress,
+      [FileName, DateTimeToStr(Now), KPER, KSTP, TOTIM,
+      DateTimeToStr(TFile.GetLastWriteTime(FileName))]);
     if FResultFormat = mfMt3dConc then
     begin
       ParentLayerData.Comment := ParentLayerData.Comment
@@ -489,8 +497,9 @@ begin
   begin
     if ParentLayerData.Comment = '' then
     begin
-      ParentLayerData.Comment := Format(StrReadFrom0sOn,
-        [FileNames, DateTimeToStr(Now), KPER, KSTP, TOTIM]);
+      ParentLayerData.Comment := Format(StrReadFrom0sOnStress,
+        [FileName, DateTimeToStr(Now), KPER, KSTP, TOTIM,
+        DateTimeToStr(TFile.GetLastWriteTime(FileName))]);
       if FResultFormat = mfMt3dConc then
       begin
         ParentLayerData.Comment := ParentLayerData.Comment
@@ -587,7 +596,7 @@ end;
 
 function TfrmSelectResultToImport.DefaultFileName(AModel: TCustomModel): string;
 begin
-  Assert(frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT]);
+  Assert(frmGoPhast.PhastModel.ModelSelection in ModflowSelection);
   result := AModel.DefaultModflowOutputFileName;
   if not FileExists(result) then
   begin
@@ -939,7 +948,7 @@ end;
 procedure TfrmSelectResultToImport.CreateOrRetrieve3DDataSet(Description: string;
   NTRANS, KPER, KSTP: integer; TOTIM: TModflowDouble; LayerNumbers: TIntegerList;
   LayerDataSets: TList; out New3DArray: TDataArray; out OldComment: string; FluxData: boolean;
-  NewDataSets: TList; FileNames: string; AModel: TCustomModel);
+  NewDataSets: TList; FileName: string; AModel: TCustomModel);
 var
   NewName: string;
   NewFormula: string;
@@ -1030,8 +1039,9 @@ begin
   OldComment := Parent3DArray.Comment;
   if (Parent3DArray = New3DArray) or (Parent3DArray.Comment = '') then
   begin
-    Parent3DArray.Comment := Format(StrReadFrom0sOn,
-      [FileNames, DateTimeToStr(Now), KPER, KSTP, TOTIM]);
+    Parent3DArray.Comment := Format(StrReadFrom0sOnStress,
+      [FileName, DateTimeToStr(Now), KPER, KSTP, TOTIM,
+      DateTimeToStr(TFile.GetLastWriteTime(FileName))]);
     if FResultFormat = mfMt3dConc then
     begin
       Parent3DArray.Comment := Parent3DArray.Comment
@@ -2134,7 +2144,8 @@ begin
               RecordItem(string(DESC));
               if (AModel.ModflowGrid.RowCount = 1) then
               begin
-                if (AModel.ModflowLayerCount <> NROW)
+                if ((AModel.ModflowLayerCount <> NROW)
+                  and (AModel.ModflowGrid.RowCount <> NROW))
                   or (AModel.ModflowGrid.ColumnCount <> NCOL) then
                 begin
                   Beep;
@@ -2167,7 +2178,8 @@ begin
               RecordItem(string(DESC2));
               if AModel.ModflowGrid.RowCount = 1 then
               begin
-                if (AModel.ModflowLayerCount <> NROW)
+                if ((AModel.ModflowLayerCount <> NROW)
+                  and (AModel.ModflowGrid.RowCount <> NROW))
                   or (AModel.ModflowGrid.ColumnCount <> NCOL) then
                 begin
                   Beep;
@@ -2426,7 +2438,7 @@ begin
           begin
             AValue := ValuesToIgnore[ValueIndex];
             WaterTableValue := WaterTableArray[RowIndex, ColIndex];
-            if WaterTableValue = AValue then
+            if IsNan(WaterTableValue) or  (WaterTableValue = AValue) then
             begin
               ValueOK := False;
               break;
@@ -2472,7 +2484,9 @@ begin
   end;
 end;
 
-procedure TfrmSelectResultToImport.GetShouldIgnore(ValuesToIgnore: TOneDRealArray; Temp: TModflowFloat; var ShouldIgnore: Boolean);
+procedure TfrmSelectResultToImport.GetShouldIgnore(
+  ValuesToIgnore: TOneDRealArray; Temp: TModflowFloat;
+  var ShouldIgnore: Boolean);
 var
   Delta: Double;
   IgnoreIndex: Integer;
@@ -2480,6 +2494,12 @@ var
 const
   Epsilon = 1E-07;
 begin
+  if IsNan(Temp) then
+  begin
+    ShouldIgnore := True;
+    Exit;
+  end;
+
   ShouldIgnore := False;
   for IgnoreIndex := 0 to Length(ValuesToIgnore) - 1 do
   begin
@@ -2808,6 +2828,8 @@ begin
     Exit;
   end;
 
+
+
   HufFormat:= false;
   case FResultFormat of
     mrBinary, mrHufBinary, mfSubBinary:
@@ -2859,6 +2881,7 @@ var
   Extension: string;
 begin
   inherited;
+  FFileVariable := nil;
   Assert(ACol = Ord(mcFileName));
   AModel := rdgModels.Objects[Ord(mcModelName), ARow] as TCustomModel;
   Assert(AModel <> nil);

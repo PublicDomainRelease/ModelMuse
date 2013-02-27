@@ -1,18 +1,17 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
-<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+<topic template="Default" lasteditedby="rbwinst-pr" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
   <title translate="true">Edit</title>
   <body>
     <header>
-      <para styleclass="Heading2"><text styleclass="Heading1" translate="true">Edit</text></para>
+      <para styleclass="Heading2_atoc_"><text styleclass="Heading1" translate="true">Edit</text></para>
     </header>
-    <para styleclass="Normal"><text styleclass="Normal" translate="true">The menu items under Edit are listed in table 4. &#160;The commands under this menu are used for editing the model.</text></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">The menu items under Edit are listed in table 4.  The commands under this menu are used for editing the model.</text></para>
     <para styleclass="Table Caption"><text styleclass="Table Caption" translate="true">Table 4. Edit Menu</text></para>
-    <para styleclass="Table Header"><table rowcount="14" colcount="2" style="cell-padding:4px; cell-spacing:0px; border-width:0px; cell-border-width:0px;">
+    <para styleclass="Table Header"><table rowcount="15" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:middle">
         <td colspan="2" style="width:626px; height:5px;">
-          <para styleclass="Table Cell">          <line style="height:1px; color:#000000;" />
-</para>
+          <para styleclass="Normal"><line style="height:1px; color:#000000;"/></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -25,8 +24,23 @@
       </tr>
       <tr style="vertical-align:top">
         <td colspan="2" style="vertical-align:top; width:626px; height:2px;">
-          <para styleclass="Table Cell">          <line style="height:1px; color:#000000;" />
-</para>
+          <para styleclass="Normal"><line style="height:1px; color:#000000;"/></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top; width:149px;">
+          <para styleclass="Table Header" style="text-align:left;"><image src="Undo.png" scale="100.00%" styleclass="Image Caption"><title translate="true">Undo button</title></image><text styleclass="Table Header" translate="true"> Undo</text></para>
+        </td>
+        <td style="vertical-align:top; width:477px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Reverses the last action.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top; width:149px;">
+          <para styleclass="Table Header" style="text-align:left;"><image src="Redo.png" scale="100.00%" styleclass="Image Caption"><title translate="true">Redo button</title></image><text styleclass="Table Header" translate="true"> Redo</text></para>
+        </td>
+        <td style="vertical-align:top; width:477px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Cancels undo.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -55,22 +69,6 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="vertical-align:top; width:149px;">
-          <para styleclass="Table Header" style="text-align:left;"><image src="Undo.png" scale="100.00%" styleclass="Image Caption"><title translate="true">Undo button</title></image><text styleclass="Table Header" translate="true"> Undo </text></para>
-        </td>
-        <td style="vertical-align:top; width:477px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Reverses the last action.</text></para>
-        </td>
-      </tr>
-      <tr style="vertical-align:top">
-        <td style="vertical-align:top; width:149px;">
-          <para styleclass="Table Header" style="text-align:left;"><image src="Redo.png" scale="100.00%" styleclass="Image Caption"><title translate="true">Redo button</title></image><text styleclass="Table Header" translate="true"> Redo </text></para>
-        </td>
-        <td style="vertical-align:top; width:477px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Cancels undo.</text></para>
-        </td>
-      </tr>
-      <tr style="vertical-align:top">
-        <td style="vertical-align:top; width:149px;">
           <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Select All</text></para>
         </td>
         <td style="vertical-align:top; width:477px;">
@@ -82,23 +80,23 @@
           <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Invert Selection</text></para>
         </td>
         <td style="vertical-align:top; width:477px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">If any object is selected, choosing </text><text styleclass="Table Cell" style="font-weight:bold;" translate="true">Invert Selection</text><text styleclass="Table Cell" style="font-weight:normal;" translate="true"> will cause all of the &#160;visible objects on the same view of the model that are not selected to become selected while also cause the selected objects to be de-selected.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">If any object is selected, choosing </text><text styleclass="Table Cell" style="font-weight:bold;" translate="true">Invert Selection</text><text styleclass="Table Cell" style="font-weight:normal;" translate="true"> will cause all of the  visible objects on the same view of the model that are not selected to become selected while also cause the selected objects to be de-selected.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
         <td style="vertical-align:top; width:149px;">
-          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Edit Images... &#160;</text></para>
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Edit Images...  </text></para>
         </td>
         <td style="vertical-align:top; width:477px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Allows the user to edit data related to images that have been imported into ModelMuse. &#160;See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ImportEdit_Bitmap_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Import/Edit Image</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Allows the user to edit data related to images that have been imported into ModelMuse.  See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ImportEdit_Bitmap_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Import/Edit Image</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
         <td style="vertical-align:top; width:149px;">
-          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Show or Hide Image[s]... &#160;</text></para>
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Show or Hide Image[s]...  </text></para>
         </td>
         <td style="vertical-align:top; width:477px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Allows the user to show or hide background images. &#160;See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Show_or_Hide_Bitmaps_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Show or Hide  Images</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Allows the user to show or hide background images.  See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Show_or_Hide_Bitmaps_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Show or Hide  Images</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -106,13 +104,20 @@
           <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Delete Image</text></para>
         </td>
         <td style="vertical-align:top; width:477px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">If one image has been imported, this command deletes it from the ModelMuse file. &#160;If more than one image has been selected, this command allows the user to delete on or more of the images from the ModelMuse file. &#160;See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Delete_Image_Dialog_Box" styleclass="Strong" translate="true">Delete Image</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">If one image has been imported, this command deletes it from the ModelMuse file.  If more than one image has been selected, this command allows the user to delete on or more of the images from the ModelMuse file.  See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Delete_Image_Dialog_Box" styleclass="Strong" translate="true">Delete Image</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top; width:149px;">
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Clear Undo/Redo Stack</text></para>
+        </td>
+        <td style="vertical-align:top; width:477px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Immediately after selecting this option it will not be possible to undo or redo previous actions. However, it will be possible to undo and redo future actions.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
         <td colspan="2" style="vertical-align:top; width:626px;">
-          <para styleclass="Normal" style="text-align:left; text-indent:0px; margin-top:0px; margin-right:0px; margin-bottom:0px; margin-left:0px; line-height:1.0; white-space:normal; page-break-inside:auto; page-break-after:auto; tabstops:none;">          <line style="height:1px; color:#000000;" />
-</para>
+          <para styleclass="Normal"><line style="height:1px; color:#000000;"/></para>
         </td>
       </tr>
     </table></para>

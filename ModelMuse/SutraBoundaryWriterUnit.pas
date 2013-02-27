@@ -5,7 +5,7 @@ interface
 uses
   CustomModflowWriterUnit, GoPhastTypes, SutraBoundariesUnit,
   Generics.Collections, PhastModelUnit, DataSetUnit, SparseDataSets,
-  SysUtils, IntListUnit;
+  SysUtils, IntListUnit, RealListUnit;
 
 type
   TSutraFluxCheckList = class(TCustomTimeList)
@@ -43,6 +43,8 @@ type
     procedure WriteFile(FileName: string; BoundaryNodes: TIntegerList);
   end;
 
+function FixTime(AnItem:TCustomSutraBoundaryItem; AllTimes: TRealList): double;
+
 const
   KFluidFlux = 'FluidFlux';
   KUFlux = 'UFlux';
@@ -53,7 +55,7 @@ implementation
 
 uses
   ScreenObjectUnit,
-  ModflowBoundaryUnit, frmGoPhastUnit, SutraTimeScheduleUnit, RealListUnit,
+  ModflowBoundaryUnit, frmGoPhastUnit, SutraTimeScheduleUnit,
   RbwParser, SutraMeshUnit, SparseArrayUnit, Math, SutraFileWriterUnit,
   SutraOptionsUnit;
 
@@ -78,6 +80,35 @@ begin
   inherited;
 end;
 
+function FixTime(AnItem:TCustomSutraBoundaryItem; AllTimes: TRealList): double;
+var
+  ParentCollection: TCustomSutraBoundaryCollection;
+  NextItem: TCustomSutraBoundaryItem;
+  SimulationType: TSimulationType;
+begin
+  SimulationType := frmGoPhast.PhastModel.SutraOptions.SimulationType;
+  result := AnItem.StartTime;
+  if (SimulationType in [stSteadyFlowTransientTransport,
+    stTransientFlowTransientTransport]) and (AnItem.Index = 0)
+    and (AnItem.StartTime = AllTimes[0]) then
+  begin
+    ParentCollection := AnItem.Collection as TCustomSutraBoundaryCollection;
+    if ParentCollection.Count = 1 then
+    begin
+      result := AllTimes[1];
+    end
+    else
+    begin
+      NextItem := ParentCollection.Items[1] as TCustomSutraBoundaryItem;
+      if NextItem.StartTime <> AllTimes[1] then
+      begin
+        result := AllTimes[1];
+      end;
+    end;
+  end;
+end;
+
+
 procedure TSutraBoundaryWriter.Evaluate;
 var
   ScreenObjectIndex: Integer;
@@ -88,23 +119,22 @@ var
   DisplayTimeIndex: Integer;
   Item: TCustomSutraBoundaryItem;
   AssocItem: TCustomSutraAssociatedBoundaryItem;
-  SutraOptions: TSutraTimeOptions;
-//  AllTimes: TRealList;
+  SutraTimeOptions: TSutraTimeOptions;
   DisplayTime: Double;
   TIndex: Integer;
   TimeIndex: Integer;
+  AllTimes: TRealList;
 begin
+  SutraTimeOptions := frmGoPhast.PhastModel.SutraTimeOptions;
+  SutraTimeOptions.CalculateAllTimes;
+  AllTimes := SutraTimeOptions.AllTimes;
   if FEvaluationType = etDisplay then
   begin
-    SutraOptions := frmGoPhast.PhastModel.SutraTimeOptions;
-    SutraOptions.CalculateAllTimes;
-//    AllTimes := SutraOptions.AllTimes;
     DisplayTime := Model.ThreeDDisplayTime;
     SetLength(BoundaryValues, 1);
   end
   else
   begin
-//    AllTimes := nil;
     DisplayTime := 0;
   end;
   for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
@@ -174,7 +204,7 @@ begin
           begin
             AssocItem := ABoundary.Values[TimeIndex]
               as TCustomSutraAssociatedBoundaryItem;
-            BoundaryValues[TimeIndex].Time := AssocItem.StartTime;
+            BoundaryValues[TimeIndex].Time := FixTime(AssocItem, AllTimes);
             BoundaryValues[TimeIndex].Used := AssocItem.Used;
             if AssocItem.Used then
             begin
@@ -210,7 +240,7 @@ begin
         for TimeIndex := 0 to ABoundary.Values.Count - 1 do
         begin
           Item := ABoundary.Values[TimeIndex] as TCustomSutraBoundaryItem;
-          BoundaryValues[TimeIndex].Time := Item.StartTime;
+          BoundaryValues[TimeIndex].Time := FixTime(Item, AllTimes);
           BoundaryValues[TimeIndex].Used := Item.Used;
           if Item.Used then
           begin
@@ -766,7 +796,7 @@ begin
     sbtSpecPress: Comment := '# Specified Pressure Boundary Condition File';
     sbtSpecConcTemp: Comment := '# Specified Temperature/Concentration Boundary Condition File';
   end;
-  WriteString(Comment);
+  WriteString(File_Comment(Comment));
   NewLine;
 end;
 
@@ -783,11 +813,10 @@ begin
     sbtFluidSource:
       begin
         case SimulationType of
-          stSteadyFlowSteadyTransport:
+          stSteadyFlowSteadyTransport, stSteadyFlowTransientTransport:
             begin
               BCSSCH := 'STEP_0';
             end;
-          stSteadyFlowTransientTransport,
             stTransientFlowTransientTransport:
             begin
               BCSSCH := KFluidFlux;
@@ -815,11 +844,10 @@ begin
     sbtSpecPress:
       begin
         case SimulationType of
-          stSteadyFlowSteadyTransport:
+          stSteadyFlowSteadyTransport, stSteadyFlowTransientTransport:
             begin
               BCSSCH := 'STEP_0';
             end;
-          stSteadyFlowTransientTransport,
             stTransientFlowTransientTransport:
             begin
               BCSSCH := KSpecifiedP;
@@ -873,7 +901,14 @@ var
 //  AStringBuilder: TStringBuilder;
 //  CharIndex: integer;
 begin
-  WriteCommentLine('Data set 2');
+  if TimeIndex < PQTimeList.Count then
+  begin
+    WriteCommentLine('Data set 2; Time = ' + FloatToStr(PQTimeList.Times[TimeIndex]));
+  end
+  else
+  begin
+    WriteCommentLine('Data set 2');
+  end;
 
   NSOP1 := 0;
   NSOU1 := 0;
@@ -1022,10 +1057,21 @@ begin
   begin
     Exit;
   end;
-  WriteCommentLine('Data set 3');
+  if TimeIndex < PQTimeList.Count then
+  begin
+    WriteCommentLine('Data set 3; Time = ' + FloatToStr(PQTimeList.Times[TimeIndex]));
+  end
+  else
+  begin
+    WriteCommentLine('Data set 3');
+  end;
 
   UDataArray := UTimeList[TimeIndex];
   PQDataArray := PQTimeList[TimeIndex];
+  if FNodeNumbers.MaxLayer < 0 then
+  begin
+    Exit;
+  end;
   if TimeIndex = 0 then
   begin
     for LayerIndex := FNodeNumbers.MinLayer to FNodeNumbers.MaxLayer do
@@ -1145,7 +1191,19 @@ begin
   begin
     Exit;
   end;
-  WriteCommentLine('Data set 4');
+  if TimeIndex < UTimeList.Count then
+  begin
+    WriteCommentLine('Data set 4; Time = ' + FloatToStr(UTimeList.Times[TimeIndex]));
+  end
+  else
+  begin
+    WriteCommentLine('Data set 4');
+  end;
+//  WriteCommentLine('Data set 4');
+  if FNodeNumbers.MaxLayer < 0 then
+  begin
+    Exit;
+  end;
   UDataArray := UTimeList[TimeIndex];
   if TimeIndex = 0 then
   begin
@@ -1257,7 +1315,19 @@ begin
   begin
     Exit;
   end;
-  WriteCommentLine('Data set 5');
+  if TimeIndex < PQTimeList.Count then
+  begin
+    WriteCommentLine('Data set 5; Time = ' + FloatToStr(PQTimeList.Times[TimeIndex]));
+  end
+  else
+  begin
+    WriteCommentLine('Data set 5');
+  end;
+//  WriteCommentLine('Data set 5');
+  if FNodeNumbers.MaxLayer < 0 then
+  begin
+    Exit;
+  end;
   UDataArray := UTimeList[TimeIndex];
   PQDataArray := PQTimeList[TimeIndex];
   if (FNodeNumbers.MaxLayer >= 0) then
@@ -1382,7 +1452,18 @@ begin
   begin
     Exit;
   end;
-  WriteCommentLine('Data set 6');
+  if TimeIndex < UTimeList.Count then
+  begin
+    WriteCommentLine('Data set 6; Time = ' + FloatToStr(UTimeList.Times[TimeIndex]));
+  end
+  else
+  begin
+    WriteCommentLine('Data set 6');
+  end;
+  if FNodeNumbers.MaxLayer < 0 then
+  begin
+    Exit;
+  end;
   UDataArray := UTimeList[TimeIndex];
   if TimeIndex = 0 then
   begin

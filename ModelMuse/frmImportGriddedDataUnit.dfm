@@ -339,7 +339,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
     Width = 436
     Height = 147
     Align = alTop
-    TabOrder = 1
+    TabOrder = 0
     DesignSize = (
       436
       147)
@@ -371,7 +371,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Height = 26
       Style = csDropDownList
       ItemIndex = 1
-      TabOrder = 0
+      TabOrder = 1
       Text = 'Array'
       OnChange = comboMethodChange
       Items.Strings = (
@@ -389,7 +389,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       FixedCols = 0
       RowCount = 2
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
-      TabOrder = 1
+      TabOrder = 0
       ExtendedAutoDistributeText = False
       AutoMultiEdit = True
       AutoDistributeText = True
@@ -441,8 +441,8 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Height = 26
       Tree.Left = 0
       Tree.Top = 0
-      Tree.Width = 312
-      Tree.Height = 206
+      Tree.Width = 304
+      Tree.Height = 202
       Tree.Align = alClient
       Tree.Header.AutoSizeIndex = 0
       Tree.Header.DefaultHeight = 17
@@ -451,6 +451,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Tree.Header.Font.Height = -11
       Tree.Header.Font.Name = 'Tahoma'
       Tree.Header.Font.Style = []
+      Tree.Header.Height = 17
       Tree.Header.MainColumn = -1
       Tree.TabOrder = 0
       Tree.OnChange = combotreeDataSetsDropDownTreeChange
@@ -510,10 +511,8 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -525,7 +524,6 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Anchors = [akTop, akRight]
       Caption = 'OK'
       Default = True
-      DoubleBuffered = True
       Enabled = False
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
@@ -546,7 +544,6 @@ inherited frmImportGriddedData: TfrmImportGriddedData
         0000}
       ModalResult = 1
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -556,10 +553,8 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
   end

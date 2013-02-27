@@ -82,6 +82,8 @@ type
     FColorContourList: TColorContourList;
     FColorContourDataArray: TDataArray;
     F_CCItem: TColorContourItem;
+    FNodeFileName: string;
+    FElementFileName: string;
     procedure GetData;
     procedure SetData;
     procedure CreateNodeScreenObject(out ScreenObject: TScreenObject);
@@ -103,8 +105,14 @@ var
   frmImportSutraModelResults: TfrmImportSutraModelResults;
 
 var
-  SutraNodeResults: string;
-  SutraElementResults: string;
+//  SutraNodeResults: string;
+//  SutraElementResults: string;
+  SutraPressureResults: string;
+  SutraUResults: string;
+  SutraSaturationResults: string;
+  SutraXVelocityResults: string;
+  SutraYVelocityResults: string;
+  SutraZVelocityResults: string;
 
 implementation
 
@@ -112,7 +120,8 @@ uses
   frmGoPhastUnit, SutraOptionsUnit, SutraMeshUnit, IntListUnit,
   SutraInputWriterUnit, UndoItems, FastGEO, GIS_Functions,
   RbwParser, PhastModelUnit, frmSelectResultToImportUnit,
-  ValueArrayStorageUnit, Math, frmDisplayDataUnit, frmGridValueUnit;
+  ValueArrayStorageUnit, Math, frmDisplayDataUnit, frmGridValueUnit,
+  VectorDisplayUnit, IOUtils;
 
 {$R *.dfm}
 
@@ -133,6 +142,11 @@ resourcestring
   StrUnableToImportEle = 'Unable to import element data because the element locati' +
   'ons were not saved in the .nod file.';
   StrNone = 'none';
+  StrReadFrom0sOn = 'read from: "%0:s" on %1:s'
+    + sLineBreak + 'Time Step: %2:d.'
+    + sLineBreak + 'Elapsed Time: %3:g.'
+    + sLineBreak + 'File last modified on: %4:s';
+  StrVelocityAtTimeSte = 'Velocity at time step %0:d imported on %1:s';
 
 
 { TfrmImportSutraModelResults }
@@ -257,8 +271,8 @@ end;
 procedure TfrmImportSutraModelResults.GetData;
 var
   FileName: TFileName;
-  NodeFileName: TFileName;
-  ElementFileName: string;
+//  NodeFileName: TFileName;
+//  ElementFileName: string;
   Extension: string;
   ItemIndex: Integer;
   Mesh: TSutraMesh3D;
@@ -275,40 +289,40 @@ begin
     Extension := LowerCase(ExtractFileExt(FileName));
     if Extension = '.nod' then
     begin
-      NodeFileName := FileName;
-      ElementFileName := ChangeFileExt(FileName, '.ele');
+      FNodeFileName := FileName;
+      FElementFileName := ChangeFileExt(FileName, '.ele');
     end
     else if Extension = '.ele' then
     begin
-      NodeFileName := ChangeFileExt(FileName, '.nod');
-      ElementFileName := FileName;
+      FNodeFileName := ChangeFileExt(FileName, '.nod');
+      FElementFileName := FileName;
     end
     else
     begin
-      NodeFileName := '';
-      ElementFileName := '';
+      FNodeFileName := '';
+      FElementFileName := '';
       Beep;
       MessageDlg(StrOnlyNodAndEleF, mtError, [mbOK], 0);
       ModalResult := mrOk;
       Exit;
     end;
     try
-      FNodeReader := TNodReader.Create(NodeFileName);
+      FNodeReader := TNodReader.Create(FNodeFileName);
     except on E: EInOutError do
       begin
         Beep;
-        MessageDlg(Format(StrUnableToOpen0s, [NodeFileName, E.message]),
+        MessageDlg(Format(StrUnableToOpen0s, [FNodeFileName, E.message]),
           mtWarning, [mbOK], 0);
         ModalResult := mrOk;
         Exit;
       end;
     end;
     try
-      FEleReader := TEleReader.Create(ElementFileName);
+      FEleReader := TEleReader.Create(FElementFileName);
     except on E: EInOutError do
       begin
         Beep;
-        MessageDlg(Format(StrUnableToOpen0s, [ElementFileName, E.message]),
+        MessageDlg(Format(StrUnableToOpen0s, [FElementFileName, E.message]),
           mtWarning, [mbOK], 0);
         ModalResult := mrOk;
         Exit;
@@ -589,7 +603,33 @@ var
   DataSet: TDataArray;
   NewFormula: string;
   NewDataType: TRbwDataType;
+  MeshType: TMeshType;
+  VItem: TVectorItem;
+  Vectors: TVectorCollection;
+  Classification: string;
+  procedure AssignCommonProperties;
+  var
+    PriorItem: TVectorItem;
+  begin
+    VItem := Vectors.Add as TVectorItem;
+    DataSet := NewDataSets[0];
+    VItem.Vectors.XVelocityName := DataSet.Name;
+    DataSet := NewDataSets[1];
+    VItem.Vectors.YVelocityName := DataSet.Name;
+    VItem.Description := Format(StrVelocityAtTimeSte,
+      [FResultList[StepIndex].TimeStep, DateTimeToStr(Now)]);
+    if Vectors.Count = 1 then
+    begin
+      VItem.Vectors.Color := clFuchsia;
+    end
+    else
+    begin
+      PriorItem := Vectors.Items[Vectors.Count-2] as TVectorItem;
+      VItem.Vectors.Color := PriorItem.Vectors.Color;
+    end;
+  end;
 begin
+  Assert(NewDataSets.Count = 0);
   for index := FirstElementItem to LastElementItem do
   begin
     if chklstDataToImport.Checked[Ord(index)] then
@@ -601,6 +641,7 @@ begin
             begin
               Continue;
             end;
+            Classification := SutraXVelocityResults;
           end;
         iiYVel:
           begin
@@ -608,6 +649,7 @@ begin
             begin
               Continue;
             end;
+            Classification := SutraYVelocityResults;
           end;
         iiZVel:
           begin
@@ -615,19 +657,25 @@ begin
             begin
               Continue;
             end;
+            Classification := SutraZVelocityResults;
           end;
         else
           Assert(False);
       end;
       NewName := GenerateNewName(chklstDataToImport.Items[Ord(index)] + '_'
-        + IntToStr(FResultList[StepIndex].TimeStep));
+        + IntToStr(FResultList[StepIndex].TimeStep), nil, '_');
 
       NewDataType := rdtDouble;
       NewFormula := '0.';
 
       DataSet := frmGoPhast.PhastModel.DataArrayManager.CreateNewDataArray(
         TDataArray, NewName, NewFormula, NewName, [], NewDataType,
-        eaBlocks, dso3D, SutraElementResults);
+        eaBlocks, dso3D, Classification);
+
+      DataSet.Comment := Format(StrReadFrom0sOn,
+        [FElementFileName, DateTimeToStr(Now), FResultList[StepIndex].TimeStep,
+        FResultList[StepIndex].Time,
+        DateTimeToStr(TFile.GetLastWriteTime(FElementFileName))]);
 
       if (F_CCItem <> nil) and (F_CCItem.ImportChoice = index)
         and (F_CCItem.TimeStep = FResultList[StepIndex].TimeStep) then
@@ -641,6 +689,44 @@ begin
       DataSet.Units := '';
 
     end;
+  end;
+  MeshType := frmGoPhast.PhastModel.SutraMesh.MeshType;
+  Vectors := frmGoPhast.PhastModel.VelocityVectors;
+  case MeshType of
+    mt2D, mtProfile:
+      begin
+        if NewDataSets.Count = 2 then
+        begin
+          AssignCommonProperties;
+        end;
+      end;
+    mt3D:
+      begin
+        if NewDataSets.Count = 3 then
+        begin
+          AssignCommonProperties;
+//          VItem := frmGoPhast.PhastModel.VelocityVectors.Add as TVectorItem;
+//          DataSet := NewDataSets[0];
+//          VItem.Vectors.XVelocityName := DataSet.Name;
+//          DataSet := NewDataSets[1];
+//          VItem.Vectors.YVelocityName := DataSet.Name;
+          DataSet := NewDataSets[2];
+          VItem.Vectors.ZVelocityName := DataSet.Name;
+//          VItem.Description := Format(StrVelocityAtTimeSte,
+//            [FResultList[StepIndex].TimeStep, DateTimeToStr(Now)]);
+//          if Vectors.Count = 1 then
+//          begin
+//            VItem.Vectors.Color := clFuchsia;
+//          end
+//          else
+//          begin
+//            PriorItem := Vectors[Vectors.Count-2];
+//            VItem.Vectors.Color := PriorItem.Vectors.Color;
+//          end;
+        end;
+      end;
+    else
+      Assert(False);
   end;
 end;
 
@@ -814,6 +900,7 @@ var
   DataSet: TDataArray;
   NewFormula: string;
   NewDataType: TRbwDataType;
+  Classification: string;
 begin
   for index := FirstNodeItem to LastNodeItem do
   begin
@@ -826,6 +913,7 @@ begin
             begin
               Continue;
             end;
+            Classification := SutraPressureResults;
           end;
         iiU:
           begin
@@ -833,6 +921,7 @@ begin
             begin
               Continue;
             end;
+            Classification := SutraUResults;
           end;
         iiSaturation:
           begin
@@ -840,6 +929,7 @@ begin
             begin
               Continue;
             end;
+            Classification := SutraSaturationResults;
           end;
         else
           Assert(False);
@@ -852,7 +942,12 @@ begin
 
       DataSet := frmGoPhast.PhastModel.DataArrayManager.CreateNewDataArray(
         TDataArray, NewName, NewFormula, NewName, [], NewDataType,
-        eaNodes, dso3D, SutraNodeResults);
+        eaNodes, dso3D, Classification);
+      DataSet.Comment := Format(StrReadFrom0sOn,
+        [FNodeFileName, DateTimeToStr(Now), FResultList[StepIndex].TimeStep,
+        FResultList[StepIndex].Time,
+        DateTimeToStr(TFile.GetLastWriteTime(FNodeFileName))]);
+
       if (F_CCItem <> nil) and (F_CCItem.ImportChoice = index)
         and (F_CCItem.TimeStep = FResultList[StepIndex].TimeStep) then
       begin
@@ -1395,7 +1490,15 @@ begin
 end;
 
 initialization
-  SutraNodeResults := StrModelResults + '|' + 'SUTRA Nodal Results';
-  SutraElementResults := StrModelResults + '|' + 'SUTRA Element Results';
+//  SutraNodeResults := StrModelResults + '|' + 'SUTRA Nodal Results';
+//  SutraElementResults := StrModelResults + '|' + 'SUTRA Element Results';
+
+  SutraPressureResults := StrModelResults + '|' + 'Pressure';
+  SutraUResults := StrModelResults + '|' + 'U Values';
+  SutraSaturationResults := StrModelResults + '|' + 'Saturation';
+
+  SutraXVelocityResults := StrModelResults + '|' + 'X Velocity';
+  SutraYVelocityResults := StrModelResults + '|' + 'Y Velocity';
+  SutraZVelocityResults := StrModelResults + '|' + 'Z Velocity';
 
 end.

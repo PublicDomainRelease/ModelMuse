@@ -39,7 +39,7 @@ type
 
 implementation
 
-uses ModflowUnitNumbers, frmErrorsAndWarningsUnit, frmProgressUnit, Forms;
+uses ModflowUnitNumbers, frmProgressUnit, Forms;
 
 resourcestring
   StrWritingWELPackage = 'Writing WEL Package input.';

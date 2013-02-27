@@ -359,6 +359,7 @@ type
     procedure UpdateStatusBarTopElementNode(const APoint: TPoint2D);
     procedure GetMeshColLayer(APoint: TPoint2D; out NodeCol, NodeLayer,
       ElCol, ElLayer: integer);
+    procedure DrawVectors;
     { Private declarations }
   protected
     // @name is used to indicate that a change has been made to the grid
@@ -575,7 +576,7 @@ uses GR32_Polygons, frmGoPhastUnit, CursorsFoiledAgain, Math, RbwParser,
   InteractiveTools, frmSetSpacingUnit, frmSubdivideUnit, BigCanvasMethods,
   frmRulerOptionsUnit, PhastModelUnit, frmGridValueUnit, EdgeDisplayUnit,
   CustomModflowWriterUnit, frmProgressUnit, SutraMeshUnit, frmDisplayDataUnit,
-  frmCustomGoPhastUnit;
+  frmCustomGoPhastUnit, VectorDisplayUnit;
 
 resourcestring
   StrTheSImageCanNo = 'The %s  image can not be shown at this magnification.' +
@@ -1447,13 +1448,11 @@ begin
       end;
 
 
-      {$IFDEF Sutra}
       if  (frmGoPhast.PhastModel.ModelSelection = msSutra22) and
         (frmGoPhast.PhastModel.Mesh <> nil) then
       begin
         frmGoPhast.PhastModel.Mesh.Draw(FBitMap32, ViewDirection);
       end;
-      {$ENDIF}
 
       // Do not call Application.ProcessMessages.
       // Calling Application.ProcessMessages causes all the views to
@@ -1497,15 +1496,20 @@ begin
       begin
         frmGoPhast.PhastModel.DrawHeadObservations(FBitMap32, ZoomBox);
         frmGoPhast.PhastModel.DrawSfrStreamLinkages(FBitMap32, ZoomBox);
+        frmGoPhast.PhastModel.DrawStrStreamLinkages(FBitMap32, ZoomBox);
       end;
 
-      if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+      if frmGoPhast.ModelSelection in ModflowSelection then
       begin
         DrawPathLines;
         DrawTimeSeries;
         DrawEndPoints;
       end;
 
+      if frmGoPhast.ModelSelection = msSutra22 then
+      begin
+        DrawVectors;
+      end;
 
     except on EInvalidGraphicOperation do
       begin
@@ -1760,13 +1764,11 @@ end;
 
 procedure TframeView.PaintLayer(Sender: TObject; Buffer: TBitmap32);
 begin
-  {$IFDEF Sutra}
   if frmGoPhast.PhastModel.ModelSelection = msSutra22 then
   begin
 
   end
   else
-  {$ENDIF}
   begin
     if frmGoPhast.Grid = nil then
     begin
@@ -2124,6 +2126,24 @@ end;
 procedure TframeView.miLockSelectedObjectsClick(Sender: TObject);
 begin
   frmGoPhast.miLockSelectedObjectsClick(Sender);
+end;
+
+procedure TframeView.DrawVectors;
+var
+  LocalModel: TPhastModel;
+  VelocityVectors: TVectorCollection;
+  VItem: TVectorItem;
+begin
+  LocalModel := frmGoPhast.PhastModel;
+  LocalModel.MaxVectors.PlotVectors2D(ViewDirection, FBitmap32);
+  LocalModel.MidVectors.PlotVectors2D(ViewDirection, FBitmap32);
+  LocalModel.MinVectors.PlotVectors2D(ViewDirection, FBitmap32);
+  VelocityVectors := LocalModel.VelocityVectors;
+  if VelocityVectors.SelectedItem >= 0 then
+  begin
+    VItem := VelocityVectors.Items[VelocityVectors.SelectedItem] as TVectorItem;
+    VItem.Vectors.PlotVectors2D(ViewDirection, FBitmap32);
+  end;
 end;
 
 procedure TframeView.DrawPathLines;
@@ -3174,13 +3194,11 @@ end;
 function TframeView.GetTopDisplayDataSet: TDataArray;
 var
   Grid: TCustomModelGrid;
-  {$IFDEF SUTRA}
   Mesh: TSutraMesh3D;
-  {$ENDIF}
 begin
   result := nil;
   case frmGoPhast.PhastModel.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         Grid := frmGoPhast.PhastModel.SelectedModel.Grid;
         result := Grid.TopDataSet;
@@ -3189,7 +3207,6 @@ begin
           result := Grid.TopContourDataSet;
         end;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         Mesh := frmGoPhast.PhastModel.Mesh;
@@ -3202,7 +3219,6 @@ begin
           end;
         end;
       end;
-    {$ENDIF}
   else
     Assert(False);
   end;
@@ -3374,7 +3390,8 @@ begin
   if frmGridValue <> nil then
   begin
     frmGridValue.UpdateValue(GlobalLayer, GlobalRow, GlobalColumn,
-      NameToDisplay, ValueToDisplay, Explanation, Location, ViewDirection);
+      NameToDisplay, ValueToDisplay, Explanation, Location, ViewDirection,
+      DataSet.EvaluatedAt);
   end;
 end;
 
@@ -3456,7 +3473,7 @@ begin
       if frmGridValue <> nil then
       begin
         frmGridValue.UpdateValue(Layer, Row, TrueColumn, NameToDisplay, '', '',
-          Location, ViewDirection);
+          Location, ViewDirection, DataSet.EvaluatedAt);
       end;
     end;
   end
@@ -3466,7 +3483,7 @@ begin
     if frmGridValue <> nil then
     begin
       frmGridValue.UpdateValue(Layer, Row, TrueColumn, '', '', '', Location,
-        ViewDirection);
+        ViewDirection, eaBlocks);
     end;
   end;
 end;
@@ -3517,7 +3534,7 @@ begin
       if frmGridValue <> nil then
       begin
         frmGridValue.UpdateValue(Layer, Row, TrueColumn, NameToDisplay, '', '',
-          Location, ViewDirection);
+          Location, ViewDirection, DataSet.EvaluatedAt);
       end;
     end;
   end
@@ -3527,7 +3544,7 @@ begin
       if frmGridValue <> nil then
       begin
         frmGridValue.UpdateValue(Layer, Row, TrueColumn, '', '', '',
-          Location, ViewDirection);
+          Location, ViewDirection, eaBlocks);
       end;
   end;
 end;
@@ -3575,7 +3592,7 @@ begin
         if frmGridValue <> nil then
         begin
           frmGridValue.UpdateValue(Layer, 0, Column, NameToDisplay, '', '',
-            Location, ViewDirection);
+            Location, ViewDirection, DataSet.EvaluatedAt);
         end;
       end;
     end
@@ -3585,7 +3602,7 @@ begin
       if frmGridValue <> nil then
       begin
         frmGridValue.UpdateValue(Layer, 0, Column, '', '', '',
-          Location, ViewDirection);
+          Location, ViewDirection, eaBlocks);
       end;
     end;
   end
@@ -3628,7 +3645,7 @@ begin
         if frmGridValue <> nil then
         begin
           frmGridValue.UpdateValue(Layer, TrueRow, Column, NameToDisplay, '', '',
-            Location, ViewDirection);
+            Location, ViewDirection, DataSet.EvaluatedAt);
         end;
       end;
     end
@@ -3638,7 +3655,7 @@ begin
       if frmGridValue <> nil then
       begin
         frmGridValue.UpdateValue(Layer, TrueRow, Column, '', '', '',
-          Location, ViewDirection);
+          Location, ViewDirection, eaBlocks);
       end;
     end;
   end;
@@ -3687,7 +3704,7 @@ begin
         if frmGridValue <> nil then
         begin
           frmGridValue.UpdateValue(Layer, 0, Column, NameToDisplay, '', '',
-            Location, ViewDirection);
+            Location, ViewDirection, DataSet.EvaluatedAt);
         end;
       end;
     end
@@ -3697,7 +3714,7 @@ begin
       if frmGridValue <> nil then
       begin
         frmGridValue.UpdateValue(Layer, 0, Column, '', '', '',
-          Location, ViewDirection);
+          Location, ViewDirection, eaBlocks);
       end;
     end;
   end
@@ -3740,7 +3757,7 @@ begin
         if frmGridValue <> nil then
         begin
           frmGridValue.UpdateValue(Layer, TrueRow, Column, NameToDisplay, '', '',
-            Location, ViewDirection);
+            Location, ViewDirection, DataSet.EvaluatedAt);
         end;
       end;
     end
@@ -3750,7 +3767,7 @@ begin
       if frmGridValue <> nil then
       begin
         frmGridValue.UpdateValue(Layer, TrueRow, Column, '', '', '',
-          Location, ViewDirection);
+          Location, ViewDirection, eaBlocks);
       end;
     end;
   end;
@@ -3764,9 +3781,7 @@ var
   DataSet: TDataArray;
   TrueLayer: Integer;
   ShowValue: Boolean;
-  {$IFDEF SUTRA}
   Mesh: TSutraMesh3D;
-  {$ENDIF}
 begin
   // Display the value of the current data set (if any).
   Layer := frmGoPhast.PhastModel.SelectedLayer;
@@ -3797,17 +3812,15 @@ begin
     if DataSet.IsValue[Layer, Row, Column] and (Layer >= 0) then
     begin
       case frmGoPhast.PhastModel.ModelSelection of
-        msPhast, msModflow, msModflowLGR, msModflowNWT:
+        msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
         begin
           ShowValue := (Layer <= frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount);
         end;
-        {$IFDEF SUTRA}
         msSutra22:
         begin
           Mesh := frmGoPhast.PhastModel.Mesh;
           ShowValue := (Mesh <> nil) and (Layer <= Mesh.LayerCount);
         end;
-        {$ENDIF}
       else
         Assert(False);
       end;
@@ -3824,7 +3837,7 @@ begin
       if frmGridValue <> nil then
       begin
         frmGridValue.UpdateValue(TrueLayer, Row, Column, NameToDisplay, '', '',
-          Location, ViewDirection);
+          Location, ViewDirection, DataSet.EvaluatedAt);
       end;
     end;
   end
@@ -3833,7 +3846,8 @@ begin
     frmGoPhast.sbMain.Panels[2].Text := '';
     if frmGridValue <> nil then
     begin
-      frmGridValue.UpdateValue(TrueLayer, Row, Column, '', '', '', Location, ViewDirection);
+      frmGridValue.UpdateValue(TrueLayer, Row, Column, '', '', '',
+        Location, ViewDirection, eaBlocks);
     end;
   end;
 end;
@@ -3849,9 +3863,7 @@ var
   Value: double;
   Explanation: string;
   TrueLayer: Integer;
-  {$IFDEF SUTRA}
   Mesh: TSutraMesh3D;
-  {$ENDIF}
   ShowValue: boolean;
 begin
   HasUpdated := False;
@@ -3862,49 +3874,20 @@ begin
   TrueLayer := Layer;
 
   DataSet := GetTopDisplayDataSet;
-//  DataSet := nil;
-//  case frmGoPhast.PhastModel.ModelSelection of
-//    msPhast, msModflow, msModflowLGR, msModflowNWT:
-//    begin
-//      Grid := frmGoPhast.PhastModel.SelectedModel.Grid;
-//      DataSet := Grid.TopDataSet;
-//      if DataSet = nil then
-//      begin
-//        DataSet := Grid.TopContourDataSet;
-//      end;
-//    end;
-//    {$IFDEF SUTRA}
-//    msSutra:
-//    begin
-//      Mesh := frmGoPhast.PhastModel.Mesh;
-//      if Mesh = nil then
-//      begin
-//        DataSet := nil;
-//      end
-//      else
-//      begin
-//        DataSet := Mesh.TopDataSet;
-//      end;
-//    end;
-//    {$ENDIF}
-//  else
-//    Assert(False);
-//  end;
+
   if (DataSet <> nil) then
   begin
     if DataSet.Orientation = dso3D then
     begin
       case frmGoPhast.PhastModel.ModelSelection of
-        msPhast, msModflow, msModflowLGR, msModflowNWT:
+        msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
         begin
           Layer := frmGoPhast.PhastModel.SelectedModel.SelectedLayer;
         end;
-        {$IFDEF SUTRA}
         msSutra22:
         begin
           Layer := frmGoPhast.PhastModel.Mesh.SelectedLayer;
         end;
-        {$ENDIF}
       else
         Assert(False);
       end;
@@ -3925,17 +3908,15 @@ begin
     begin
       ShowValue := False;
       case frmGoPhast.PhastModel.ModelSelection of
-        msPhast, msModflow, msModflowLGR, msModflowNWT:
+        msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
         begin
           ShowValue := (Layer < frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount);
         end;
-        {$IFDEF SUTRA}
         msSutra22:
         begin
           Mesh := frmGoPhast.PhastModel.Mesh;
           ShowValue := (Mesh <> nil) and (Layer < Mesh.LayerCount);
         end;
-        {$ENDIF}
       else
         Assert(False);
       end;
@@ -3946,7 +3927,7 @@ begin
       end;
     end;
   end
-  else if {$IFDEF SUTRA} (frmGoPhast.PhastModel.ModelSelection <> msSutra22) and {$ENDIF}
+  else if (frmGoPhast.PhastModel.ModelSelection <> msSutra22) and
     (frmGoPhast.PhastModel.SelectedModel.EdgeDisplay <> nil) then
   begin
     EdgeDisplay := frmGoPhast.PhastModel.SelectedModel.EdgeDisplay;
@@ -3963,7 +3944,7 @@ begin
       if frmGridValue <> nil then
       begin
         frmGridValue.UpdateValue(TrueLayer, Row, Column, NameToDisplay,
-          FloatToStr(Value), Explanation, Location, ViewDirection);
+          FloatToStr(Value), Explanation, Location, ViewDirection, eaBlocks);
       end;
       HasUpdated := True;
     end;
@@ -3975,7 +3956,7 @@ begin
     if frmGridValue <> nil then
     begin
       frmGridValue.UpdateValue(TrueLayer, Row, Column, NameToDisplay, '', '',
-        Location, ViewDirection);
+        Location, ViewDirection, eaBlocks);
     end;
   end;
 end;
@@ -3996,7 +3977,7 @@ begin
       begin
         if frmGoPhast.Grid = nil then
         begin
-          Assert(frmGoPhast.PhastModel.Mesh <> nil);
+          if (frmGoPhast.PhastModel.Mesh = nil) then Exit;
           RotationAngle := frmGoPhast.PhastModel.Mesh.CrossSection.Angle;
           if RotationAngle = 0 then
           begin

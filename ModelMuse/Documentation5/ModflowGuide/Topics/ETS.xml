@@ -60,7 +60,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="17" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="18" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/usgspubs/ofr/ofr00466" target="_blank" styleclass="Citation" translate="true">Banta, E.R., 2000, MODFLOW-2000, the U.S. Geological Survey Modular Ground-Water Model - Documentation of Packages for Simulating Evapotranspiration with a Segmented Function (ETS1) and Drains with Return Flow (DRT1): U.S. Geological Survey Open-File Report 00-466, 127 p.</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="Time-varying-parameters.pdf" styleclass="Normal" translate="true">Time-varying-parameters.pdf</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="MF2005_release.txt" styleclass="Normal" translate="true">release.txt for MODFLOW-2005</link></li>
@@ -72,7 +72,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Related Packages</text></para>
         </td>
         <td>
-          <list id="18" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="19" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" styleclass="Normal" translate="true">Evapotranspiration</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="Head-Dependent_Flux_Boundary_P" styleclass="Normal" translate="true">Head-Dependent Flux Boundary packages</link></li>
           </list>
@@ -83,16 +83,19 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="19" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="20" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="20" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="21" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="21" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="22" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
+          </list>
+          <list id="23" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MF2005-FMP2</text></li>
           </list>
         </td>
       </tr>
@@ -109,8 +112,8 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Other Notes</text></para>
         </td>
         <td>
-          <list id="22" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
-            <li styleclass="Normal"><text styleclass="New Materials" translate="true">The </text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" styleclass="New Materials" translate="true">UZF</link><conditional-text type="ELSE"/><text styleclass="New Materials" translate="true">UZF (not included in MODFLOW-2000)</text><conditional-text type="END"/><text styleclass="New Materials" translate="true"> package simulates evapotranspiration so the ETS package should not be included in a model that includes the </text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" styleclass="New Materials" translate="true">UZF</link><conditional-text type="ELSE"/><text styleclass="New Materials" translate="true">UZF</text><conditional-text type="END"/><text styleclass="New Materials" translate="true"> package.</text></li>
+          <list id="24" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="New Materials" translate="true">The </text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-LGR,MODFLOW-NWT"/><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" styleclass="New Materials" translate="true">UZF</link><conditional-text type="ELSE"/><text styleclass="New Materials" translate="true">UZF (not included in MODFLOW-2000)</text><conditional-text type="END"/><text styleclass="New Materials" translate="true"> package simulates evapotranspiration so the ETS package should not be included in a model that includes the </text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-LGR,MODFLOW-NWT"/><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" styleclass="New Materials" translate="true">UZF</link><conditional-text type="ELSE"/><text styleclass="New Materials" translate="true">UZF</text><conditional-text type="END"/><text styleclass="New Materials" translate="true"> package.</text></li>
           </list>
         </td>
       </tr>
@@ -156,7 +159,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="NETSOP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">NETSOP—is the evapotranspiration (ET) option code. ET variables (ET surface, maximum ET rate, and extinction depth) are specified in layer variables, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="ETSS" styleclass="Normal" translate="true">ETSS</link><text styleclass="Normal" translate="true">, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="ETSR" styleclass="Normal" translate="true">ETSR</link><text styleclass="Normal" translate="true">, and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="ETSX" styleclass="Normal" translate="true">ETSX</link><text styleclass="Normal" translate="true">, with one value for each vertical column of cells in the model grid. Accordingly, ET is calculated for one cell in each vertical column. The option codes determine the cell within a column for which ET will be calculated.</text></para>
-                      <list id="23" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="25" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If NETSOP = 1, ET is calculated only for cells in the top grid layer.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If NETSOP = 2, the cell for each vertical column is specified by the user in variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="IETS" styleclass="Normal" translate="true">IETS</link><text styleclass="Normal" translate="true">.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If NETSOP = 3, ET to be applied to the uppermost active cell in each horizontal location.</text></li>
@@ -169,7 +172,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">IETSCB—is a flag and a unit number.</text></para>
-                      <list id="24" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="26" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IETSCB &gt; 0, it is the unit number to which ETS1-Package cell-by-cell flow terms will be written when “SAVE BUDGET” or a non-zero value for </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" anchor="ICBCFL" styleclass="Normal" translate="true">ICBCFL</link><text styleclass="Normal" translate="true"> is specified in </text><link displaytype="text" defaultstyle="true" type="topiclink" href="OC" styleclass="Normal" translate="true">Output Control</link><text styleclass="Normal" translate="true"> (Harbaugh and others, 2000). IETSCB must be a unit number associated with a file listed with type “DATA(BINARY)” or “DATAGLO(BINARY)” in the name file.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IETSCB ≤0, ETS1-Package cell-by-cell flow terms will not be written.</text></li>
                       </list>
@@ -346,7 +349,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="INETSS" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">INETSS—is the ET surface (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="ETSS" styleclass="Normal" translate="true">ETSS</link><text styleclass="Normal" translate="true">) read flag.</text></para>
-                      <list id="25" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="27" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INETSS ≥0, a layer variable containing the ET surface (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="ETSS" styleclass="Normal" translate="true">ETSS</link><text styleclass="Normal" translate="true">) will be read from item 5 in the ETS1 input file.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INETSS &lt; 0, the ET surface from the preceding stress period will be reused.</text></li>
                       </list>
@@ -358,20 +361,20 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="INETSR" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">INETSR—is the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="ETSR" styleclass="Normal" translate="true">ETSR</link><text styleclass="Normal" translate="true"> read flag. Its function depends on whether or not parameters are being used.</text></para>
-                      <list id="26" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="28" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If no parameters are being used (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="NPETS" styleclass="Normal" translate="true">NPETS</link><text styleclass="Normal" translate="true"> = 0):</text></li>
                       </list>
-                      <list id="27" type="ul" listtype="bullet" formatstring="&#111;" levelreset="true" legalstyle="false" startfrom="1" styleclass="Indented bullet" style="font-family:&apos;Courier New&apos;; font-size:12pt; color:#000000;">
+                      <list id="29" type="ul" listtype="bullet" formatstring="&#111;" levelreset="true" legalstyle="false" startfrom="1" styleclass="Indented bullet" style="font-family:&apos;Courier New&apos;; font-size:12pt; color:#000000;">
                         <li styleclass="Indented bullet"><text styleclass="Indented bullet" translate="true">If INETSR ≥0, a layer variable containing the maximum ET rate (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="ETSR" styleclass="Indented bullet" translate="true">ETSR</link><text styleclass="Indented bullet" translate="true">) will be read from item 6 in the ETS1 input file.</text></li>
                         <li styleclass="Indented bullet"><text styleclass="Indented bullet" translate="true">If INETSR &lt; 0, the maximum ET rate from the preceding stress period will be reused.</text></li>
                       </list>
-                      <list id="28" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="30" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If parameters are being used (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="NPETS" styleclass="Normal" translate="true">NPETS</link><text styleclass="Normal" translate="true"> &gt; 0):</text></li>
                       </list>
-                      <list id="29" type="ul" listtype="bullet" formatstring="&#111;" levelreset="true" legalstyle="false" startfrom="1" styleclass="Indented bullet" style="font-family:&apos;Courier New&apos;; font-size:12pt; color:#000000;">
+                      <list id="31" type="ul" listtype="bullet" formatstring="&#111;" levelreset="true" legalstyle="false" startfrom="1" styleclass="Indented bullet" style="font-family:&apos;Courier New&apos;; font-size:12pt; color:#000000;">
                         <li styleclass="Indented bullet"><text styleclass="Indented bullet" translate="true">If INETSR &gt; 0, INETSR is the number of parameters used to define </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="ETSR" styleclass="Indented bullet" translate="true">ETSR</link><text styleclass="Indented bullet" translate="true"> in the current stress period. Item 7 defines the names of the parameters.</text></li>
                       </list>
-                      <list id="30" type="ul" listtype="bullet" formatstring="&#111;" levelreset="true" legalstyle="false" startfrom="1" styleclass="Indented bullet" style="font-family:&apos;Courier New&apos;; font-size:12pt; color:#000000;">
+                      <list id="32" type="ul" listtype="bullet" formatstring="&#111;" levelreset="true" legalstyle="false" startfrom="1" styleclass="Indented bullet" style="font-family:&apos;Courier New&apos;; font-size:12pt; color:#000000;">
                         <li styleclass="Indented bullet"><text styleclass="Indented bullet" translate="true">If INETSR &lt; 0, ETS parameters from the preceding stress period are used.</text></li>
                         <li styleclass="Indented bullet"><text styleclass="Indented bullet" translate="true">INETSR = 0 is not allowed. That is, when parameters are used, at least one parameter must be specified for each stress period.</text></li>
                       </list>
@@ -383,7 +386,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="INETSX" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">INETSX—is the extinction depth (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="ETSX" styleclass="Normal" translate="true">ETSX</link><text styleclass="Normal" translate="true">) read flag.</text></para>
-                      <list id="31" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="33" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INETSX ≥0, a layer variable containing the extinction depth (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="ETSX" styleclass="Normal" translate="true">ETSX</link><text styleclass="Normal" translate="true">) will be read from item 8 in the ETS1 input file.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INETSX &lt; 0, the extinction depth from the preceding stress period will be reused.</text></li>
                       </list>
@@ -395,7 +398,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="INIETS" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">INIETS—is the layer indicator (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="IETS" styleclass="Normal" translate="true">IETS</link><text styleclass="Normal" translate="true">) read flag. It is read if the ET option (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="NETSOP" styleclass="Normal" translate="true">NETSOP</link><text styleclass="Normal" translate="true">) is equal to two or if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="NETSEG" styleclass="Normal" translate="true">NETSEG</link><text styleclass="Normal" translate="true"> &gt; 1. If </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="NETSEG" styleclass="Normal" translate="true">NETSEG</link><text styleclass="Normal" translate="true"> &gt; 1 and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="NETSOP" styleclass="Normal" translate="true">NETSOP</link><text styleclass="Normal" translate="true"> is not equal to two, INIETS is ignored and IETS is not read.</text></para>
-                      <list id="32" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="34" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INIETS ≥0, a layer variable containing the layer indicators (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="IETS" styleclass="Normal" translate="true">IETS</link><text styleclass="Normal" translate="true">) will be read from item 9 in the ETS1 input file.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INIETS &lt; 0, layer indicators used during the preceding stress period will be reused.</text></li>
                       </list>
@@ -407,7 +410,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="INSGDF" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">INSGDF—is the segment definition read flag. It is read only if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="NETSEG" styleclass="Normal" translate="true">NETSEG</link><text styleclass="Normal" translate="true"> &gt; 1.</text></para>
-                      <list id="33" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="35" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INSGDF ≥0, two layer variables to define </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="PXDP" styleclass="Normal" translate="true">PXDP</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" styleclass="Normal" translate="true">PETM</link><text styleclass="Normal" translate="true"> for each of (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="NETSEG" styleclass="Normal" translate="true">NETSEG</link><text styleclass="Normal" translate="true"> – 1) segment intersections are read from items 10 and 11, respectively, of the ETS1 input file.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INSGDF &lt; 0, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" anchor="PXDP" styleclass="Normal" translate="true">PXDP</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" styleclass="Normal" translate="true">PETM</link><text styleclass="Normal" translate="true"> from the preceding stress period will be reused.</text></li>
                       </list>

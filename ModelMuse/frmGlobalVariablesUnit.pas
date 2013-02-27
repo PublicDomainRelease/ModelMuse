@@ -37,6 +37,8 @@ type
       ARow: Integer);
     procedure btnImportGlobalVariablesClick(Sender: TObject);
     procedure btnSaveGlobalVariablesClick(Sender: TObject);
+    procedure rdgGlobalVariablesMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     FInitializingRow: Boolean;
     FNewGlobals: TGlobalVariables;
@@ -142,10 +144,24 @@ begin
   rdgGlobalVariables.Invalidate;
 end;
 
-procedure TfrmGlobalVariables.rdgGlobalVariablesSelectCell(Sender: TObject;
-  ACol, ARow: Integer; var CanSelect: Boolean);
+procedure TfrmGlobalVariables.rdgGlobalVariablesMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
+  rdgGlobalVariables.Options := rdgGlobalVariables.Options + [goAlwaysShowEditor];
+end;
+
+procedure TfrmGlobalVariables.rdgGlobalVariablesSelectCell(Sender: TObject;
+  ACol, ARow: Integer; var CanSelect: Boolean);
+var
+  GlobalVariable: TGlobalVariable;
+begin
+  inherited;
+  GlobalVariable := rdgGlobalVariables.Objects[Ord(gvName), ARow] as TGlobalVariable;
+  if (GlobalVariable <> nil) and (GlobalVariable.Locked) then
+  begin
+    CanSelect := False;
+  end;
 //  CanSelect := seGlobalVariableCount.AsInteger >= 1;
 end;
 
@@ -334,10 +350,18 @@ begin
 end;
 
 procedure TfrmGlobalVariables.btnDeleteClick(Sender: TObject);
+var
+  GlobalVariable: TGlobalVariable;
 begin
   inherited;
   if (rdgGlobalVariables.Row > 0) then
   begin
+    GlobalVariable := rdgGlobalVariables.
+      Objects[Ord(gvName), rdgGlobalVariables.Row] as TGlobalVariable;
+    if (GlobalVariable <> nil) and (GlobalVariable.Locked) then
+    begin
+      Exit;
+    end;
     FNewGlobals.Delete(rdgGlobalVariables.Row-1);
     if seGlobalVariableCount.AsInteger > 1 then
     begin
@@ -559,6 +583,9 @@ begin
   VariableNames.Free;
 end;
 
+type
+  TStringGridCrack = class(TStringGrid);
+
 function TfrmGlobalVariables.GenerateNewName(Root: string = 'NewGlobalVariable';
   const CurrentRow: integer = -1): string;
 var
@@ -692,6 +719,7 @@ begin
       end;
       rdgGlobalVariables.Cells[Ord(gvComment), RowIndex] :=
         GlobalVariable.Comment;
+      rdgGlobalVariables.Objects[Ord(gvName), RowIndex] := GlobalVariable;
     end;
   finally
     rdgGlobalVariables.EndUpdate;

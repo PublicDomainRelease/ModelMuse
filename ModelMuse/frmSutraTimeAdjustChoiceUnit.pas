@@ -14,6 +14,7 @@ type
     lblMessage: TLabel;
     rgTimeTreatment: TRadioGroup;
     btnOK: TBitBtn;
+    btnHelp: TBitBtn;
   private
     { Private declarations }
   public

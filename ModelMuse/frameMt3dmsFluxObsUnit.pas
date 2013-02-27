@@ -194,10 +194,14 @@ begin
             and ScreenObject.ModflowEvtBoundary.Used;
           mfotMassLoading: ObsAllowed := (ScreenObject.Mt3dmsConcBoundary <> nil)
             and ScreenObject.Mt3dmsConcBoundary.Used;
-          mfotSTR: ;
+          mfotSTR: ObsAllowed := (ScreenObject.ModflowStrBoundary <> nil)
+            and ScreenObject.ModflowStrBoundary.Used;
           mfotReservoir: ObsAllowed := (ScreenObject.ModflowResBoundary <> nil)
             and ScreenObject.ModflowResBoundary.Used;
-          mfotFHB: ;
+          mfotFHB_Head:  ObsAllowed := (ScreenObject.ModflowFhbHeadBoundary <> nil)
+            and ScreenObject.ModflowFhbHeadBoundary.Used;
+          mfotFHB_Flow:  ObsAllowed := (ScreenObject.ModflowFhbFlowBoundary <> nil)
+            and ScreenObject.ModflowFhbFlowBoundary.Used;
           mfotIBS: ;
           mfotTransLeakage: ; // The Transient Leakage (TLK) package is not in MODFLOW-2000 or MODFLOW-2005.
           mfotLake: ObsAllowed := (ScreenObject.ModflowLakBoundary <> nil)

@@ -105,6 +105,7 @@ resourcestring
   StrWritingDataSet4 = '  Writing Data Set 4.';
   StrWritingDataSet5 = '  Writing Data Set 5.';
   StrWritingDataSet6 = '  Writing Data Set 6.';
+  Str0sIn1s = '%0:s in %1:s.';
 
 { TModflowHfb_Writer }
 
@@ -139,6 +140,8 @@ var
   ThicknessExpression: TExpression;
   PriorSegments: TList;
   SubsequentSegments: TList;
+  HydCondComment: string;
+  ThicknessComment: string;
   procedure HandleSection;
   var
     Segment: TCellElementSegment;
@@ -179,8 +182,7 @@ var
         end;
       end;
       Barrier.HydraulicConductivity := HydraulicConductivityExpression.DoubleResult;
-      Barrier.HydraulicConductivityAnnotation :=
-        ScreenObject.ModflowHfbBoundary.HydraulicConductivityFormula;
+      Barrier.HydraulicConductivityAnnotation := HydCondComment;
 
       try
         ThicknessExpression.Evaluate;
@@ -199,8 +201,7 @@ var
         end;
       end;
       Barrier.Thickness := ThicknessExpression.DoubleResult;
-      Barrier.ThicknessAnnotation :=
-        ScreenObject.ModflowHfbBoundary.ThicknessFormula;
+      Barrier.ThicknessAnnotation := ThicknessComment;
     end;
     function PreviousBarrierExists: boolean;
     var
@@ -357,72 +358,86 @@ var
     end;
   end;
 begin
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInTheHFBPackage);
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInTheHFBPackage1);
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNoDefinedBoundarie);
-
-  frmProgressMM.AddMessage(StrEvaluatingHFBPacka);
-  FillParameterScreenObjectList;
-  PriorSegments := TList.Create;
-  SubsequentSegments := TList.Create;
-  SegmentList := TList.Create;
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    for ParmIndex := 0 to FParameterScreenObjectList.Count - 1 do
-    begin
-      ScreenObjectList := FParameterScreenObjectList.Objects[ParmIndex] as TParamList;
-      for ScreenObjectIndex := 0 to ScreenObjectList.ScreenObjectCount - 1 do
-      begin
-        PriorCount := ScreenObjectList.BarrierCount;
-        ScreenObject := ScreenObjectList[ScreenObjectIndex];
-        if ScreenObject.Deleted then
-        begin
-          Continue;
-        end;
-        if not ScreenObject.UsedModels.UsesModel(Model) then
-        begin
-          Continue;
-        end;
-        DataToCompile := TModflowDataObject.Create;
-        try
-          DataToCompile.Compiler := Model.GetCompiler(dsoTop, eaBlocks);
-          DataToCompile.DataSetFunction := ScreenObject.ModflowHfbBoundary.HydraulicConductivityFormula;
-          DataToCompile.AlternateName := 'HFB Hydraulic Conductivity';
-          DataToCompile.AlternateDataType := rdtDouble;
-          (ScreenObject.Delegate as TModflowDelegate).InitializeExpression(
-            Compiler, DataSetFunction, HydraulicConductivityExpression, nil, DataToCompile);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInTheHFBPackage);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInTheHFBPackage1);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNoDefinedBoundarie);
 
-          DataToCompile.DataSetFunction := ScreenObject.ModflowHfbBoundary.ThicknessFormula;
-          DataToCompile.AlternateName := 'HFB Thickness';
-          (ScreenObject.Delegate as TModflowDelegate).InitializeExpression(
-            Compiler, DataSetFunction, ThicknessExpression, nil, DataToCompile);
-        finally
-          DataToCompile.Free;
-        end;
-        PriorSection := -1;
-        SegmentList.Clear;
-        for SegmentIndex := 0 to ScreenObject.Segments[Model].Count - 1 do
+    frmProgressMM.AddMessage(StrEvaluatingHFBPacka);
+    FillParameterScreenObjectList;
+    PriorSegments := TList.Create;
+    SubsequentSegments := TList.Create;
+    SegmentList := TList.Create;
+    try
+      for ParmIndex := 0 to FParameterScreenObjectList.Count - 1 do
+      begin
+        ScreenObjectList := FParameterScreenObjectList.Objects[ParmIndex] as TParamList;
+        for ScreenObjectIndex := 0 to ScreenObjectList.ScreenObjectCount - 1 do
         begin
-          ASegment := ScreenObject.Segments[Model][SegmentIndex];
-          if ASegment.SectionIndex <> PriorSection then
+          PriorCount := ScreenObjectList.BarrierCount;
+          ScreenObject := ScreenObjectList[ScreenObjectIndex];
+          if ScreenObject.Deleted then
           begin
-            HandleSection;
-            PriorSection := ASegment.SectionIndex;
-            SegmentList.Clear;
+            Continue;
           end;
-          SegmentList.Add(ASegment);
-        end;
-        HandleSection;
-        if PriorCount = ScreenObjectList.BarrierCount then
-        begin
-          frmErrorsAndWarnings.AddWarning(Model, StrInTheHFBPackage,
-            Format(StrSIsSupposedToDe, [ScreenObject.Name]));
+          if not ScreenObject.UsedModels.UsesModel(Model) then
+          begin
+            Continue;
+          end;
+          DataToCompile := TModflowDataObject.Create;
+          try
+            DataToCompile.Compiler := Model.GetCompiler(dsoTop, eaBlocks);
+            DataToCompile.DataSetFunction :=
+              ScreenObject.ModflowHfbBoundary.HydraulicConductivityFormula;
+            DataToCompile.AlternateName := 'HFB Hydraulic Conductivity';
+            DataToCompile.AlternateDataType := rdtDouble;
+            (ScreenObject.Delegate as TModflowDelegate).InitializeExpression(
+              Compiler, DataSetFunction, HydraulicConductivityExpression, nil,
+               DataToCompile);
+            HydCondComment := Format(Str0sIn1s,
+              [ScreenObject.ModflowHfbBoundary.HydraulicConductivityFormula,
+              ScreenObject.Name]);
+
+            DataToCompile.DataSetFunction :=
+              ScreenObject.ModflowHfbBoundary.ThicknessFormula;
+            DataToCompile.AlternateName := 'HFB Thickness';
+            (ScreenObject.Delegate as TModflowDelegate).InitializeExpression(
+              Compiler, DataSetFunction, ThicknessExpression, nil, DataToCompile);
+            ThicknessComment := Format(Str0sIn1s,
+              [ScreenObject.ModflowHfbBoundary.ThicknessFormula,
+              ScreenObject.Name]);
+          finally
+            DataToCompile.Free;
+          end;
+          PriorSection := -1;
+          SegmentList.Clear;
+          for SegmentIndex := 0 to ScreenObject.Segments[Model].Count - 1 do
+          begin
+            ASegment := ScreenObject.Segments[Model][SegmentIndex];
+            if ASegment.SectionIndex <> PriorSection then
+            begin
+              HandleSection;
+              PriorSection := ASegment.SectionIndex;
+              SegmentList.Clear;
+            end;
+            SegmentList.Add(ASegment);
+          end;
+          HandleSection;
+          if PriorCount = ScreenObjectList.BarrierCount then
+          begin
+            frmErrorsAndWarnings.AddWarning(Model, StrInTheHFBPackage,
+              Format(StrSIsSupposedToDe, [ScreenObject.Name]));
+          end;
         end;
       end;
+    finally
+      SegmentList.Free;
+      PriorSegments.Free;
+      SubsequentSegments.Free;
     end;
   finally
-    SegmentList.Free;
-    PriorSegments.Free;
-    SubsequentSegments.Free;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 

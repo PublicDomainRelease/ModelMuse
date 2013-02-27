@@ -7,7 +7,8 @@ uses
   Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ExtCtrls, UndoItems,
   SutraOptionsUnit, SutraMeshUnit, ComCtrls, JvExComCtrls,
   JvPageListTreeView, JvPageList, JvExControls, Mask, JvExMask, JvToolEdit,
-  JvSpin, JvEditorCommon, JvEditor, ArgusDataEntry;
+  JvSpin, JvEditorCommon, JvEditor, ArgusDataEntry, RequiredDataSetsUndoUnit,
+  JvExExtCtrls, JvNetscapeSplitter;
 
 type
   TfrmSutraOptions = class(TfrmCustomGoPhast)
@@ -72,19 +73,6 @@ type
     rdeViscosity: TRbwDataEntry;
     lblViscosityScaleFactor: TLabel;
     jvspSolidAdsorption: TJvStandardPage;
-    lblMatrixCompressibility: TLabel;
-    rdeMatrixCompressibility: TRbwDataEntry;
-    lblSolidGrainSpecificHeat: TLabel;
-    rdeSolidGrainSpecificHeat: TRbwDataEntry;
-    rdeSolidGrainDiffusivity: TRbwDataEntry;
-    lblSolidGrainDiffusivity: TLabel;
-    rdeSolidGrainDensity: TRbwDataEntry;
-    lblSolidGrainDensity: TLabel;
-    rgSorptionModel: TRadioGroup;
-    rdeFirstDistributionCoefficient: TRbwDataEntry;
-    lblFirstDistributionCoefficient: TLabel;
-    rdeSecondDistributionCoefficient: TRbwDataEntry;
-    lblSecondDistributionCoefficient: TLabel;
     jvspProdGrav: TJvStandardPage;
     rdeZeroFluidProd: TRbwDataEntry;
     lblZeroFluidProd: TLabel;
@@ -108,6 +96,25 @@ type
     lblFluidDensityCoefficientTemperature: TLabel;
     rdeBaseTemperature: TRbwDataEntry;
     lblBaseTemperature: TLabel;
+    splttrVertical: TJvNetscapeSplitter;
+    grpSolidMatrix: TGroupBox;
+    rdeSolidGrainDensity: TRbwDataEntry;
+    rdeSolidGrainDiffusivity: TRbwDataEntry;
+    rdeSolidGrainSpecificHeat: TRbwDataEntry;
+    rdeMatrixCompressibility: TRbwDataEntry;
+    lblMatrixCompressibility: TLabel;
+    lblSolidGrainSpecificHeat: TLabel;
+    lblSolidGrainDiffusivity: TLabel;
+    lblSolidGrainDensity: TLabel;
+    grpAdsorption: TGroupBox;
+    rgSorptionModel: TRadioGroup;
+    rdeFirstDistributionCoefficient: TRbwDataEntry;
+    lblFirstDistributionCoefficient: TLabel;
+    rdeSecondDistributionCoefficient: TRbwDataEntry;
+    lblSecondDistributionCoefficient: TLabel;
+    rgInitialValues: TRadioGroup;
+    lblRestartInitialConditions: TLabel;
+    fedRestartInitialConditions: TJvFilenameEdit;
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
     procedure seMaxIterationsChange(Sender: TObject);
@@ -118,6 +125,10 @@ type
     procedure rgSorptionModelClick(Sender: TObject);
     procedure rgMeshTypeClick(Sender: TObject);
     procedure rgStartTypeClick(Sender: TObject);
+    procedure jplMainChange(Sender: TObject);
+    procedure rgInitialValuesClick(Sender: TObject);
+    procedure fedRestartFileChange(Sender: TObject);
+    procedure fedRestartInitialConditionsChange(Sender: TObject);
   private
     FGettingData: Boolean;
     procedure GetData;
@@ -129,7 +140,7 @@ type
     { Public declarations }
   end;
 
-  TUndoChangeSutraOptions = class(TCustomUndo)
+  TUndoChangeSutraOptions = class(TCustomCreateRequiredDataSetsUndo)
   private
     FNewSutraOptions: TSutraOptions;
     FOldSutraOptions: TSutraOptions;
@@ -159,6 +170,15 @@ resourcestring
   StrYouHaveSetMoreTh = 'You have set more than one of the gravity vector co' +
   'mponents to a non-zero value so you model is tilted. Do you want to conti' +
   'nue anyway?';
+  StrConfiguration = 'Configuration';
+  StrTitle = 'Title';
+  StrInitialConditions = 'Initial Conditions';
+  StrNumericalControls = 'Numerical Controls';
+  StrSolverControls = 'Solver Controls';
+  StrFluidProperties = 'Fluid Properties';
+  StrSolidMatrixAdsorp = 'Solid Matrix, Adsorption';
+  StrProduction = 'Production';
+  StrChangeSUTRAOptions = 'change SUTRA options';
 
 {$R *.dfm}
 
@@ -221,7 +241,13 @@ begin
     end;
   end;
 
-  SetData
+  SetData;
+
+  if (frmGoPhast.PhastModel.SutraMesh.MeshType = mt3D)
+    and (frmGoPhast.PhastModel.SutraLayerStructure.Count <= 1) then
+  begin
+    frmGoPhast.acSutraLayersExecute(nil);
+  end;
 end;
 
 procedure TfrmSutraOptions.EnableControls;
@@ -242,32 +268,63 @@ begin
     or (TSorptionModel(rgSorptionModel.ItemIndex) <> smNone);
 end;
 
+procedure TfrmSutraOptions.fedRestartFileChange(Sender: TObject);
+begin
+  inherited;
+  if fedRestartFile.Enabled and not FileExists(fedRestartFile.FileName) then
+  begin
+    fedRestartFile.Color := clRed;
+  end
+  else
+  begin
+    fedRestartFile.Color := clWindow;
+  end;
+end;
+
+procedure TfrmSutraOptions.fedRestartInitialConditionsChange(Sender: TObject);
+begin
+  inherited;
+  if fedRestartInitialConditions.Enabled and
+    not FileExists(fedRestartInitialConditions.FileName) then
+  begin
+    fedRestartInitialConditions.Color := clRed;
+  end
+  else
+  begin
+    fedRestartInitialConditions.Color := clWindow;
+  end;
+end;
+
 procedure TfrmSutraOptions.FormCreate(Sender: TObject);
 var
   Node: TJvPageIndexNode;
+  StoredHelpKeyword: string;
 begin
   inherited;
+  StoredHelpKeyword := HelpKeyword;
   Handle;
   jvpltvNavigation.Handle;
   jvpltvNavigation.Items.Clear;
-  Node := jvpltvNavigation.Items.Add(nil, 'Configuration') as TJvPageIndexNode;
+  Node := jvpltvNavigation.Items.Add(nil, StrConfiguration) as TJvPageIndexNode;
   Node.PageIndex := jvspConfiguration.PageIndex;
-  Node := jvpltvNavigation.Items.Add(nil, 'Title') as TJvPageIndexNode;
+  Node := jvpltvNavigation.Items.Add(nil, StrTitle) as TJvPageIndexNode;
   Node.PageIndex := jvspTitle.PageIndex;
-  Node := jvpltvNavigation.Items.Add(nil, 'Initial Conditions') as TJvPageIndexNode;
+  Node := jvpltvNavigation.Items.Add(nil, StrInitialConditions) as TJvPageIndexNode;
   Node.PageIndex := jvspInitialCondition.PageIndex;
-  Node := jvpltvNavigation.Items.Add(nil, 'Numerical Controls') as TJvPageIndexNode;
+  Node := jvpltvNavigation.Items.Add(nil, StrNumericalControls) as TJvPageIndexNode;
   Node.PageIndex := jvspNumericalControls.PageIndex;
-  Node := jvpltvNavigation.Items.Add(nil, 'Solver Controls') as TJvPageIndexNode;
+  Node := jvpltvNavigation.Items.Add(nil, StrSolverControls) as TJvPageIndexNode;
   Node.PageIndex := jvspSolverControls.PageIndex;
-  Node := jvpltvNavigation.Items.Add(nil, 'Fluid Properties') as TJvPageIndexNode;
+  Node := jvpltvNavigation.Items.Add(nil, StrFluidProperties) as TJvPageIndexNode;
   Node.PageIndex := jvspFluidProperties.PageIndex;
-  Node := jvpltvNavigation.Items.Add(nil, 'Solid Matrix, Adsorption') as TJvPageIndexNode;
+  Node := jvpltvNavigation.Items.Add(nil, StrSolidMatrixAdsorp) as TJvPageIndexNode;
   Node.PageIndex := jvspSolidAdsorption.PageIndex;
-  Node := jvpltvNavigation.Items.Add(nil, 'Production') as TJvPageIndexNode;
+  Node := jvpltvNavigation.Items.Add(nil, StrProduction) as TJvPageIndexNode;
   Node.PageIndex := jvspProdGrav.PageIndex;
 
   jplMain.ActivePageIndex := 0;
+
+  HelpKeyword := StoredHelpKeyword;
 
 
   GetData;
@@ -292,8 +349,15 @@ begin
     rgSaturation.ItemIndex := Ord(SutraOptions.SaturationChoice);
     jvedTitle.Lines.Text := string(SutraOptions.TitleLines);
     rgSimulationType.ItemIndex := Ord(SutraOptions.SimulationType);
+
     rgStartType.ItemIndex := Ord(SutraOptions.StartType);
-    fedRestartFile.FileName := SutraOptions.RestartFileName;
+    fedRestartFile.FileName := SutraOptions.FullRestartFileName;
+    fedRestartFileChange(nil);
+
+    rgInitialValues.ItemIndex := Ord(SutraOptions.ReadStart);
+    fedRestartInitialConditions.FileName := SutraOptions.FullReadStartRestartFileName;
+    fedRestartInitialConditionsChange(nil);
+
     seRestartFrequency.AsInteger := SutraOptions.RestartFrequency;
     rdeFractionalUpstreamWeight.RealValue :=
       SutraOptions.FractionalUpstreamWeight;
@@ -352,6 +416,13 @@ begin
 //  RestartFrequency
 end;
 
+procedure TfrmSutraOptions.jplMainChange(Sender: TObject);
+begin
+  inherited;
+  HelpKeyWord := jplMain.ActivePage.HelpKeyword;
+
+end;
+
 procedure TfrmSutraOptions.rdeFractionalUpstreamWeightChange(Sender: TObject);
 begin
   if  csLoading in ComponentState then
@@ -365,6 +436,27 @@ begin
 
   rgPressureSolution.Buttons[Ord(pcmCG)].Enabled :=
     rdeFractionalUpstreamWeight.RealValue = 0;
+end;
+
+procedure TfrmSutraOptions.rgInitialValuesClick(Sender: TObject);
+begin
+  inherited;
+  fedRestartInitialConditions.Enabled := rgInitialValues.Enabled
+    and (rgInitialValues.ItemIndex > 0);
+  if  csLoading in ComponentState then
+  begin
+    Exit;
+  end;
+  if not FGettingData and fedRestartInitialConditions.Enabled
+    and (fedRestartInitialConditions.FileName = '') then
+  begin
+    if fedRestartInitialConditions.Dialog.Execute then
+    begin
+      fedRestartInitialConditions.FileName :=
+        fedRestartInitialConditions.Dialog.FileName
+    end;
+  end;
+
 end;
 
 procedure TfrmSutraOptions.rgMeshTypeClick(Sender: TObject);
@@ -381,6 +473,27 @@ begin
   TransportChoice := TTransportChoice(rgTransport.ItemIndex);
   rdeGravZ.Enabled := (TMeshType(rgMeshType.ItemIndex) = mt3D)
     and (TransportChoice in [tcSolute, tcEnergy]);
+
+  if not FGettingData and (Sender <> nil) then
+  begin
+    case TMeshType(rgMeshType.ItemIndex) of
+      mt2D, mt3D:
+        begin
+          rdeGravY.Text := '0'
+        end;
+      mtProfile:
+        begin
+          if StrToFloat(rdeGravY.Output) = 0 then
+          begin
+            rdeGravY.Text := '-9.81';
+          end;
+        end;
+      else Assert(False);
+    end;
+  begin
+
+  end;
+  end;
 end;
 
 procedure TfrmSutraOptions.rgPressureSolutionClick(Sender: TObject);
@@ -434,7 +547,9 @@ end;
 procedure TfrmSutraOptions.rgStartTypeClick(Sender: TObject);
 begin
   inherited;
-  fedRestartFile.Enabled := rgStartType.ItemIndex = 1;
+  fedRestartFile.Enabled := (rgStartType.ItemIndex = 1);
+  rgInitialValues.Enabled := (rgStartType.ItemIndex = 0);
+  rgInitialValuesClick(nil);
   if  csLoading in ComponentState then
   begin
     Exit;
@@ -442,7 +557,11 @@ begin
   if not FGettingData and fedRestartFile.Enabled
     and (fedRestartFile.FileName = '') then
   begin
-    fedRestartFile.Dialog.Execute;
+    if fedRestartFile.Dialog.Execute then
+    begin
+      fedRestartFile.FileName :=
+        fedRestartFile.Dialog.FileName
+    end;
   end;
 end;
 
@@ -546,7 +665,11 @@ begin
     SutraOptions.SimulationType := TSimulationType(rgSimulationType.ItemIndex);
     SutraOptions.TitleLines := AnsiString(jvedTitle.Lines.Text);
     SutraOptions.StartType := TStartType(rgStartType.ItemIndex);
-    SutraOptions.RestartFileName := fedRestartFile.FileName;
+    SutraOptions.FullRestartFileName := fedRestartFile.FileName;
+
+    SutraOptions.ReadStart := TReadStart(rgInitialValues.ItemIndex);
+    SutraOptions.FullReadStartRestartFileName := fedRestartInitialConditions.FileName;
+
     SutraOptions.RestartFrequency := seRestartFrequency.AsInteger;
     SutraOptions.FractionalUpstreamWeight :=
       rdeFractionalUpstreamWeight.RealValue;
@@ -624,7 +747,7 @@ end;
 
 function TUndoChangeSutraOptions.Description: string;
 begin
-  result := 'change SUTRA options';
+  result := StrChangeSUTRAOptions;
 end;
 
 destructor TUndoChangeSutraOptions.Destroy;
@@ -652,11 +775,14 @@ begin
   if frmGoPhast.PhastModel.SutraMesh <> nil then
   begin
     frmGoPhast.PhastModel.SutraMesh.MeshType := FNewMeshType;
+    frmGoPhast.splitHoriz.Minimized :=
+      frmGoPhast.PhastModel.SutraMesh.MeshType <> mt3D;
   end;
   frmGoPhast.PhastModel.SutraOptions := FNewSutraOptions;
   frmGoPhast.PhastModel.SutraLayerStructure.Loaded;
   frmGoPhast.PhastModel.DataArrayManager.CreateInitialDataSets;
   frmGoPhast.PhastModel.UpdateSutraTimeListNames;
+  UpdatedRequiredDataSets;
   if AdjustVerticalExag then
   begin
     frmGoPhast.UpdateVerticalExaggeration(VerticalExag);
@@ -692,11 +818,14 @@ begin
   if frmGoPhast.PhastModel.SutraMesh <> nil then
   begin
     frmGoPhast.PhastModel.SutraMesh.MeshType := FOldMeshType;
+    frmGoPhast.splitHoriz.Minimized :=
+      frmGoPhast.PhastModel.SutraMesh.MeshType <> mt3D;
   end;
   frmGoPhast.PhastModel.SutraOptions := FOldSutraOptions;
   frmGoPhast.PhastModel.SutraLayerStructure.Loaded;
   frmGoPhast.PhastModel.DataArrayManager.CreateInitialDataSets;
   frmGoPhast.PhastModel.UpdateSutraTimeListNames;
+  UpdatedRequiredDataSets;
   if AdjustVerticalExag then
   begin
     frmGoPhast.UpdateVerticalExaggeration(VerticalExag);

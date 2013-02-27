@@ -1,7 +1,7 @@
 inherited frmGoPhast: TfrmGoPhast
   Left = 91
   Top = 50
-  Width = 783
+  Width = 776
   Height = 566
   HelpType = htKeyword
   HelpKeyword = 'Main_Window'
@@ -18,14 +18,14 @@ inherited frmGoPhast: TfrmGoPhast
   OnMouseMove = pnlLowerRightMouseMove
   OnMouseWheel = FormMouseWheel
   OnResize = FormResize
-  ExplicitWidth = 783
+  ExplicitWidth = 776
   ExplicitHeight = 566
   PixelsPerInch = 120
   TextHeight = 18
   object splitHoriz: TJvNetscapeSplitter
     Left = 0
     Top = 325
-    Width = 765
+    Width = 758
     Height = 10
     Cursor = crVSplit
     Hint = 'Click and drag to resize the windows.'
@@ -41,14 +41,14 @@ inherited frmGoPhast: TfrmGoPhast
   object pnlTop: TPanel
     Left = 0
     Top = 100
-    Width = 765
+    Width = 758
     Height = 225
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 1
     object splitVertTop: TJvNetscapeSplitter
-      Left = 526
+      Left = 519
       Top = 0
       Height = 225
       Hint = 'Click and drag to resize the windows.'
@@ -65,14 +65,14 @@ inherited frmGoPhast: TfrmGoPhast
     inline frameTopView: TframeView
       Left = 0
       Top = 0
-      Width = 526
+      Width = 519
       Height = 225
       HorzScrollBar.Range = 36
       VertScrollBar.Range = 40
       Align = alClient
       TabOrder = 0
       TabStop = True
-      ExplicitWidth = 526
+      ExplicitWidth = 519
       ExplicitHeight = 225
       inherited rulVertical: TRbwRuler
         Height = 171
@@ -80,26 +80,26 @@ inherited frmGoPhast: TfrmGoPhast
         ExplicitHeight = 173
       end
       inherited Panel1: TPanel
-        Width = 526
-        ExplicitWidth = 526
+        Width = 519
+        ExplicitWidth = 519
         inherited rulHorizontal: TRbwRuler
-          Width = 477
+          Width = 470
           ExplicitWidth = 351
         end
       end
       inherited ZoomBox: TQRbwZoomBox2
-        Width = 477
+        Width = 470
         Height = 171
         Image32.Left = 1
         Image32.Top = 1
-        Image32.Width = 475
+        Image32.Width = 468
         Image32.Height = 169
         Image32.Align = alClient
         Image32.ExplicitLeft = 1
         Image32.ExplicitTop = 1
-        Image32.ExplicitWidth = 475
+        Image32.ExplicitWidth = 468
         Image32.ExplicitHeight = 169
-        ExplicitWidth = 477
+        ExplicitWidth = 470
         ExplicitHeight = 171
       end
       inherited OrderMenu: TPopupMenu
@@ -108,7 +108,7 @@ inherited frmGoPhast: TfrmGoPhast
       end
     end
     inline frameSideView: TframeView
-      Left = 536
+      Left = 529
       Top = 0
       Width = 229
       Height = 225
@@ -117,7 +117,7 @@ inherited frmGoPhast: TfrmGoPhast
       Align = alRight
       TabOrder = 1
       TabStop = True
-      ExplicitLeft = 536
+      ExplicitLeft = 529
       ExplicitWidth = 229
       ExplicitHeight = 225
       inherited rulVertical: TRbwRuler
@@ -181,7 +181,7 @@ inherited frmGoPhast: TfrmGoPhast
   object pnlBottom: TPanel
     Left = 0
     Top = 335
-    Width = 765
+    Width = 758
     Height = 133
     Align = alBottom
     BevelOuter = bvNone
@@ -192,7 +192,7 @@ inherited frmGoPhast: TfrmGoPhast
     TabOrder = 2
     OnMouseMove = pnlLowerRightMouseMove
     object splitVertBottom: TJvNetscapeSplitter
-      Left = 526
+      Left = 519
       Top = 0
       Height = 133
       Hint = 'Click and drag to resize the windows.'
@@ -208,14 +208,14 @@ inherited frmGoPhast: TfrmGoPhast
     inline frameFrontView: TframeView
       Left = 0
       Top = 0
-      Width = 526
+      Width = 519
       Height = 133
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alClient
       TabOrder = 0
       TabStop = True
-      ExplicitWidth = 526
+      ExplicitWidth = 519
       ExplicitHeight = 133
       inherited rulVertical: TRbwRuler
         Top = 0
@@ -225,11 +225,11 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited Panel1: TPanel
         Top = 79
-        Width = 526
+        Width = 519
         Align = alBottom
         TabOrder = 1
         ExplicitTop = 79
-        ExplicitWidth = 526
+        ExplicitWidth = 519
         inherited ModelCube: TRbwModelCube
           Hint = 
             'Click to change row|Click to change the selected row forward or ' +
@@ -239,7 +239,7 @@ inherited frmGoPhast: TfrmGoPhast
           Selection2 = 0.010000000000000000
         end
         inherited rulHorizontal: TRbwRuler
-          Width = 477
+          Width = 470
           RulerMajorTickLength = -10
           RulerMinorTickLength = -5
           RulerTextPosition = tpInside
@@ -250,25 +250,25 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited ZoomBox: TQRbwZoomBox2
         Top = 0
-        Width = 477
+        Width = 470
         Height = 79
         TabOrder = 0
         Image32.Left = 1
         Image32.Top = 1
-        Image32.Width = 475
+        Image32.Width = 468
         Image32.Height = 77
         Image32.Align = alClient
         Image32.ExplicitLeft = 1
         Image32.ExplicitTop = 1
-        Image32.ExplicitWidth = 475
+        Image32.ExplicitWidth = 468
         Image32.ExplicitHeight = 77
         ExplicitTop = 0
-        ExplicitWidth = 477
+        ExplicitWidth = 470
         ExplicitHeight = 79
       end
     end
     inline frame3DView: Tframe3DView
-      Left = 536
+      Left = 529
       Top = 0
       Width = 229
       Height = 133
@@ -278,7 +278,7 @@ inherited frmGoPhast: TfrmGoPhast
       ParentDoubleBuffered = False
       TabOrder = 1
       TabStop = True
-      ExplicitLeft = 536
+      ExplicitLeft = 529
       ExplicitWidth = 229
       ExplicitHeight = 133
       inherited glWidModelView: TGLWidget
@@ -292,7 +292,7 @@ inherited frmGoPhast: TfrmGoPhast
   object sbMain: TStatusBar
     Left = 0
     Top = 468
-    Width = 765
+    Width = 758
     Height = 28
     Hint = 'Drag with the mouse to resize status bar panels'
     Panels = <
@@ -318,7 +318,7 @@ inherited frmGoPhast: TfrmGoPhast
   object cbControlBar: TControlBar
     Left = 0
     Top = 0
-    Width = 765
+    Width = 758
     Height = 100
     Align = alTop
     AutoSize = True
@@ -961,7 +961,7 @@ inherited frmGoPhast: TfrmGoPhast
     object tlbMesh: TToolBar
       Left = 11
       Top = 66
-      Width = 165
+      Width = 152
       Height = 28
       Caption = 'tlbMesh'
       DisabledImages = ilDisabledImageList
@@ -970,56 +970,65 @@ inherited frmGoPhast: TfrmGoPhast
       object tbCrossSection: TToolButton
         Left = 0
         Top = 0
+        Action = acMoveCrossSection
         AllowAllUp = True
-        Caption = 'Move cross section'
         Grouped = True
-        ImageIndex = 88
         Style = tbsCheck
-        OnClick = tbCrossSectionClick
         OnMouseDown = tbPointMouseDown
         OnMouseUp = ToolButtonMouseUp
       end
       object tbRotateCrossSection: TToolButton
         Left = 23
         Top = 0
+        Action = acRotateCrossSection
         AllowAllUp = True
-        Caption = 'Rotate cross section'
         Grouped = True
-        ImageIndex = 89
         Style = tbsCheck
-        OnClick = tbRotateCrossSectionClick
         OnMouseDown = tbPointMouseDown
         OnMouseUp = ToolButtonMouseUp
       end
       object tbMoveNodes: TToolButton
         Left = 46
         Top = 0
-        AllowAllUp = True
-        Caption = 'Select nodes or elements'
-        Grouped = True
-        ImageIndex = 90
-        Style = tbsCheck
-        OnClick = tbMoveNodesClick
-        OnMouseDown = tbPointMouseDown
-      end
-      object btnFishnet: TToolButton
-        Left = 69
-        Top = 0
-        Action = acFishnet
+        Action = acMoveNodesOrElements
         AllowAllUp = True
         Grouped = True
         Style = tbsCheck
         OnMouseDown = tbPointMouseDown
         OnMouseUp = ToolButtonMouseUp
       end
-      object btnGenerateMesh: TToolButton
+      object tbDrawElement: TToolButton
+        Left = 69
+        Top = 0
+        Action = acDrawElement
+        AllowAllUp = True
+        Grouped = True
+        Style = tbsCheck
+        OnMouseDown = tbPointMouseDown
+        OnMouseUp = ToolButtonMouseUp
+      end
+      object btnFishnet: TToolButton
         Left = 92
+        Top = 0
+        Hint = 
+          'Draw fishnet-mesh quadilaterals|Draw fishnet-mesh quadrilaterals' +
+          ' to be used in generating a mesh.'
+        Action = acFishnet
+        AllowAllUp = True
+        Caption = 'Draw Fishnet-Mesh Quadrilaterals'
+        Grouped = True
+        Style = tbsCheck
+        OnMouseDown = tbPointMouseDown
+        OnMouseUp = ToolButtonMouseUp
+      end
+      object btnGenerateMesh: TToolButton
+        Left = 115
         Top = 0
         Action = acGenerateGrid
       end
     end
     object tlb3dViewMesh: TToolBar
-      Left = 189
+      Left = 176
       Top = 66
       Width = 60
       Height = 28
@@ -1137,7 +1146,7 @@ inherited frmGoPhast: TfrmGoPhast
           OnClick = miImportBitmapClick
         end
         object miModflow2005Model: TMenuItem
-          Caption = 'MODFLOW-2005 Model...'
+          Caption = 'MODFLOW-2005 or -NWT Model...'
           HelpContext = 3385
           Hint = 'Create a new model by importing and existing MODFLOW-2005 model'
           OnClick = acFileNewModflowModelExecute
@@ -1160,6 +1169,9 @@ inherited frmGoPhast: TfrmGoPhast
         end
         object miExportModflowNwt: TMenuItem
           Action = acRunModflowNwt
+        end
+        object miMODFLOWFMP2InputFiles1: TMenuItem
+          Action = acRunModflowFmp
         end
         object miExportModpath: TMenuItem
           Action = acExportModpath
@@ -1305,27 +1317,58 @@ inherited frmGoPhast: TfrmGoPhast
         OnClick = miDeleteImageClick
       end
       object miClearUndoRedostack: TMenuItem
-        Caption = 'Clear Undo/Redo stack'
+        Caption = 'Clear Undo/Redo Stack'
         OnClick = miClearUndoRedostackClick
       end
     end
     object miMesh: TMenuItem
       Caption = 'Mesh'
-      object miSpecifyCrossSection: TMenuItem
-        Caption = 'Specify Cross Section...'
-        OnClick = miSpecifyCrossSectionClick
-      end
       object miMeshGenerationControls: TMenuItem
-        Caption = 'Mesh Generation Controls...'
-        OnClick = miMeshGenerationControlsClick
+        Action = acGenerateGrid
       end
-      object miRenumberMesh: TMenuItem
-        Caption = 'Renumber Mesh'
-        OnClick = miRenumberMeshClick
+      object miFishnet: TMenuItem
+        Action = acFishnet
       end
       object miViewMeshInformation1: TMenuItem
-        Caption = 'View Mesh Information'
+        Caption = '&View Mesh Information'
         OnClick = miViewMeshInformation1Click
+      end
+      object miRenumberMesh: TMenuItem
+        Caption = '&Renumber Mesh...'
+        OnClick = miRenumberMeshClick
+      end
+      object miSpecifyMesh: TMenuItem
+        Caption = 'Specify Mesh...'
+        OnClick = miSpecifyMeshClick
+      end
+      object miSpecifyFishnetQuadrilateral: TMenuItem
+        Caption = 'Specify Fishnet-Mesh Quadrilaterals...'
+        OnClick = miSpecifyFishnetQuadrilateralClick
+      end
+      object N11: TMenuItem
+        Caption = '-'
+      end
+      object SetDefaultCrossSection1: TMenuItem
+        Action = acDefaultCrossSection
+      end
+      object miMoveCrossSection: TMenuItem
+        Action = acMoveCrossSection
+      end
+      object miRotateCrossSection: TMenuItem
+        Action = acRotateCrossSection
+      end
+      object miSpecifyCrossSection: TMenuItem
+        Caption = 'Specify &Cross Section...'
+        OnClick = miSpecifyCrossSectionClick
+      end
+      object N12: TMenuItem
+        Caption = '-'
+      end
+      object miMoveNodesOrElements: TMenuItem
+        Action = acMoveNodesOrElements
+      end
+      object miDrawElement: TMenuItem
+        Action = acDrawElement
       end
     end
     object miGrid: TMenuItem
@@ -1398,9 +1441,13 @@ inherited frmGoPhast: TfrmGoPhast
         Action = acShowGridValues
       end
       object miDisplayDataSetValues: TMenuItem
-        Caption = 'Display Data Set Values'
+        Caption = 'Display Data &Set Values'
         HelpContext = 3519
         OnClick = miDisplayDataSetValuesClick
+      end
+      object DeleteModelResults1: TMenuItem
+        Caption = 'Delete Model &Results'
+        OnClick = DeleteModelResults1Click
       end
     end
     object miObject: TMenuItem
@@ -1744,8 +1791,17 @@ inherited frmGoPhast: TfrmGoPhast
         GroupIndex = 1
         RadioItem = True
       end
+      object MODFLOWLGRV21: TMenuItem
+        Action = acModflowLgr2Active
+        GroupIndex = 1
+      end
       object miModflowNwt: TMenuItem
         Action = acModflowNwtActive
+        GroupIndex = 1
+        RadioItem = True
+      end
+      object miModflowFmpActive: TMenuItem
+        Action = acModflowFmpActive
         GroupIndex = 1
         RadioItem = True
       end
@@ -1809,7 +1865,7 @@ inherited frmGoPhast: TfrmGoPhast
         OnClick = miProgramLocationsClick
       end
       object miLinkSFRStreams: TMenuItem
-        Caption = 'Link SFR Streams...'
+        Caption = 'Link Streams...'
         GroupIndex = 1
         HelpContext = 3372
         Hint = 'Link streams in the SFR package based on proximity'
@@ -1869,6 +1925,18 @@ inherited frmGoPhast: TfrmGoPhast
         GroupIndex = 1
         HelpContext = 3598
         OnClick = miChildModelsClick
+      end
+      object miFarmCrops: TMenuItem
+        Action = acFarmCrops
+        GroupIndex = 1
+      end
+      object FarmSoils1: TMenuItem
+        Action = acFarmSoils
+        GroupIndex = 1
+      end
+      object FarmClimate1: TMenuItem
+        Action = acFarmClimate
+        GroupIndex = 1
       end
       object N8: TMenuItem
         Caption = '-'
@@ -1947,12 +2015,12 @@ inherited frmGoPhast: TfrmGoPhast
         Caption = '-'
         GroupIndex = 1
       end
-      object miSUTRALayerGroups: TMenuItem
-        Action = acSutraLayers
-        GroupIndex = 1
-      end
       object miSutraOptions: TMenuItem
         Action = acSutraOptions
+        GroupIndex = 1
+      end
+      object miSUTRALayerGroups: TMenuItem
+        Action = acSutraLayers
         GroupIndex = 1
       end
       object miSutraTimes: TMenuItem
@@ -2061,7 +2129,7 @@ inherited frmGoPhast: TfrmGoPhast
       Caption = 'New &MODFLOW Model'
       HelpContext = 1550
       HelpKeyword = 'File'
-      Hint = 'New|Create a new MODFLOW model'
+      Hint = 'New MODFLOW model|Create a new MODFLOW model'
       ImageIndex = 54
       OnExecute = acFileNewModflowModelExecute
     end
@@ -2496,7 +2564,7 @@ inherited frmGoPhast: TfrmGoPhast
     end
     object acModflowActive: TAction
       Category = 'Model'
-      Caption = 'MODFLOW'
+      Caption = 'MODFLOW-2005'
       GroupIndex = 1
       HelpContext = 2390
       HelpKeyword = 'Model'
@@ -2707,20 +2775,20 @@ inherited frmGoPhast: TfrmGoPhast
     end
     object acShowGridValues: TAction
       Category = 'Data'
-      Caption = 'Show Grid &Values'
+      Caption = 'Show Grid or Mesh &Values'
       HelpContext = 1880
-      Hint = 'Show grid values'
+      Hint = 'Show grid or mesh values'
       ImageIndex = 84
       ShortCut = 49235
       OnExecute = acShowGridValuesClick
     end
     object acModflowLgrActive: TAction
       Category = 'Model'
-      Caption = 'MODFLOW-LGR'
+      Caption = 'MODFLOW-LGR V1'
       GroupIndex = 1
       HelpContext = 2390
       HelpKeyword = 'Model'
-      Hint = 'Make MODFLOW-LGR the selected model type'
+      Hint = 'Make MODFLOW-LGR V1 the selected model type'
       OnExecute = acModflowLgrActiveExecute
     end
     object acImportModelResults: TAction
@@ -2828,6 +2896,7 @@ inherited frmGoPhast: TfrmGoPhast
     object acRunSutra: TAction
       Category = 'File'
       Caption = 'SUTRA Input Files'
+      Hint = 'Run SUTRA'
       ImageIndex = 72
       OnExecute = acRunSutraExecute
     end
@@ -2861,33 +2930,112 @@ inherited frmGoPhast: TfrmGoPhast
     end
     object acShowFrontMesh: TAction
       Category = 'View'
-      Caption = 'Show &Front Mesh'
+      Caption = 'Show &Front Cross Section'
       Checked = True
       HelpKeyword = 'View'
-      Hint = 'Show front mesh|Show the elements along the cross section in 3D'
+      Hint = 
+        'Show front cross section|Show the elements along the cross secti' +
+        'on in 3D'
       ImageIndex = 92
       OnExecute = acShowFrontMeshExecute
     end
     object acNewSutraModel: TAction
       Category = 'File'
-      Caption = 'New &Sutra Model'
+      Caption = 'New &SUTRA Model'
       OnExecute = acFileNewModflowModelExecute
     end
     object acFishnet: TAction
       Category = 'Mesh'
       Caption = 'Draw Fishnet Mesh Quadrilaterals'
       Hint = 
-        'Draw quads to define mesh|Draw quadrilaterals to be used in gene' +
-        'rating a mesh.'
+        'Draw fishnet mesh quadilaterals|Draw fishnet mesh quadrilaterals' +
+        ' to be used in generating a mesh.'
       ImageIndex = 93
       OnExecute = acFishnetExecute
+    end
+    object acMoveCrossSection: TAction
+      Category = 'Mesh'
+      Caption = '&Move Cross Section'
+      Hint = 
+        'Move cross section|Drag the cross section or one of its endpoint' +
+        's to a new position'
+      ImageIndex = 88
+      OnExecute = tbCrossSectionClick
+    end
+    object acRotateCrossSection: TAction
+      Category = 'Mesh'
+      Caption = '&Rotate Cross Section'
+      Hint = 'Rotate cross section|Rotate the cross section by dragging it.'
+      ImageIndex = 89
+      OnExecute = tbRotateCrossSectionClick
+    end
+    object acMoveNodesOrElements: TAction
+      Category = 'Mesh'
+      Caption = '&Move or Delete Nodes or Elements'
+      Hint = 
+        'Move or delete nodes or elements|Click on nodes or elements to s' +
+        'elect and then delete or move them. Double-click to edit node po' +
+        'sitions numerically.'
+      ImageIndex = 90
+      OnExecute = tbMoveNodesClick
+    end
+    object acDrawElement: TAction
+      Category = 'Mesh'
+      Caption = 'Draw Elements'
+      Hint = 'Draw elements|Click at four locations to draw a new element'
+      ImageIndex = 94
+      OnExecute = tbDrawElementClick
+    end
+    object acDefaultCrossSection: TAction
+      Category = 'Mesh'
+      Caption = 'Set Default Cross Section'
+      OnExecute = acDefaultCrossSectionExecute
+    end
+    object acModflowLgr2Active: TAction
+      Category = 'Model'
+      Caption = 'MODFLOW-LGR V2'
+      GroupIndex = 1
+      HelpContext = 2390
+      HelpKeyword = 'Model'
+      Hint = 'Make MODFLOW-LGR V2 the selected model type'
+      OnExecute = acModflowLgr2ActiveExecute
+    end
+    object acModflowFmpActive: TAction
+      Category = 'Model'
+      Caption = 'MODFLOW-FMP2'
+      GroupIndex = 1
+      HelpContext = 2390
+      HelpKeyword = 'Model'
+      Hint = 'Make MODFLOW-FMP2 the selected model type'
+      OnExecute = acModflowFmpActiveExecute
+    end
+    object acRunModflowFmp: TAction
+      Category = 'File'
+      Caption = 'MODFLOW-FMP2 Input Files'
+      ImageIndex = 72
+      OnExecute = acRunModflowFmpExecute
+    end
+    object acFarmCrops: TAction
+      Category = 'Model'
+      Caption = 'Farm Crops'
+      OnExecute = acFarmCropsExecute
+    end
+    object acFarmSoils: TAction
+      Category = 'Model'
+      Caption = 'Farm Soils'
+      OnExecute = acFarmSoilsExecute
+    end
+    object acFarmClimate: TAction
+      Category = 'Model'
+      Caption = 'Farm Climate'
+      OnExecute = acFarmClimateExecute
     end
   end
   object ilDisabledImageList: TImageList
     Left = 104
     Top = 128
     Bitmap = {
-      494C010148004A00C80110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010148004A00FC0210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003001000001002000000000000030
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -5491,6 +5639,7 @@ inherited frmGoPhast: TfrmGoPhast
       'ZLib)|*.mmZLib|ModelMuse files (*.gpt, *.gpb, *.xml, *.mmZLib)|*' +
       '.gpt; *.gpb; *.xml; *.mmZLib'
     FilterIndex = 5
+    Options = [ofHideReadOnly, ofFileMustExist, ofEnableSizing]
     Title = 'Open ModelMuse file'
     OnTypeChange = sdSaveDialogTypeChange
     Left = 296
@@ -5530,9 +5679,137 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 176
     Top = 80
     Bitmap = {
-      494C01015F00D001280210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
-      0000000000003600000028000000400000008001000001002000000000000080
+      494C01016000D0016C0310001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      0000000000003600000028000000400000009001000001002000000000000090
       0100000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -8605,12 +8882,16 @@ inherited frmGoPhast: TfrmGoPhast
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000424D3E000000000000003E000000
-      2800000040000000800100000100010000000000000C00000000000000000000
-      000000000000000000000000FFFFFF00FFFFFFF7FFC70000FFFFFFE7FF870000
-      FFFFFF4FF7070000FFFFFF1FF20F00008003FF07F01F0000BBBBFF1FE03F0000
-      BBBBCF7FE07F0000BBBBB3FFC03F00008003BCFFC01F0000BBBB9B3F80FF0000
-      BBBB63BF83FF0000BBBB79BF0E3F00008003367F3DDF0000FFFFC77FFBDF0000
-      FFFFF37FFB3F0000FFFFFCFFFCFF0000FFF1FFFFFFC7FFFFFFE1FF0FFF87FFFF
+      2800000040000000900100000100010000000000800C00000000000000000000
+      000000000000000000000000FFFFFF0000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000FFFFFFF7FFC7FFFFFFFFFFE7FF87CFFF
+      FFFFFF4FF707B7FFFFFFFF1FF20FB7FF8003FF07F01FCFFFBBBBFF1FE03FFEFF
+      BBBBCF7FE07FFF7FBBBBB3FFC03FFA418003BCFFC01FFBEFBBBB9B3F80EFFBF7
+      BBBB63BF8397FBFBBBBB79BF0F77FBFD8003367F3CFBF3DDFFFFC77FFBF1FBE3
+      FFFFF37FFB0FFFFFFFFFFCFFFCFFFFFFFFF1FFFFFFC7FFFFFFE1FF0FFF87FFFF
       FDC1FF3FF707FFFFFC83FF5FF20FFFFFFC07FF6FF01FFFFFF80FFFEFE03FFFFF
       F81FFFEFE07FFFFFF00F3FFCC03FFFFFF0070000C01FFFFFE03F3FFC80FFFFFF
       E0FFFFEF83FF0007C3FFFFEF0FFF7777CFFFFF6F3CFFBBBB3FF9FF5FFB7FDDDD
@@ -8718,6 +8999,7 @@ inherited frmGoPhast: TfrmGoPhast
   object odModelMate: TOpenDialog
     DefaultExt = '.mtc'
     Filter = 'ModelMate Files (*.mtc)|*.mtc'
+    Options = [ofHideReadOnly, ofFileMustExist, ofEnableSizing]
     Left = 328
     Top = 80
   end

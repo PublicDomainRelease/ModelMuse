@@ -4,13 +4,17 @@ interface
 
 uses
   CustomModflowWriterUnit, Generics.Collections, PhastModelUnit, FastGEO,
-  GoPhastTypes, SysUtils, SutraBoundariesUnit;
+  GoPhastTypes, SysUtils, SutraBoundariesUnit, Classes;
 
 type
+  TObsType = (otExact, otNode, otElement);
+
   TObsLocation = class(TObject)
   strict private
     FLocation: TPoint3d;
   private
+    FNodeOrElementNumber: integer;
+    FObsType: TObsType;
     function GetCenter2D: TPoint2D;
     procedure SetCenter2D(const Value: TPoint2D);
   public
@@ -19,6 +23,8 @@ type
     property Z: double read FLocation.Z write FLocation.Z;
     property Location: TPoint3d read FLocation write FLocation;
     property Center2D: TPoint2D read GetCenter2D write SetCenter2D;
+    property ObsType: TObsType read FObsType write FObsType;
+    property NodeOrElementNumber: integer read FNodeOrElementNumber write FNodeOrElementNumber;
   end;
 
   TObsLocationList = TObjectList<TObsLocation>;
@@ -51,14 +57,18 @@ type
     FNOBS: Integer;
     FUsedFormats: TObservationFormats;
     FFileName: string;
+    FBuffer: TStringBuilder;
+    FObservationList: TStringList;
     procedure Evaluate;
     procedure WriteDataSet1;
     procedure WriteObservationGroups;
   public
+    procedure NewLine; override;
+    procedure WriteString(const Value: AnsiString); overload; override;
     Constructor Create(AModel: TCustomModel;
       EvaluationType: TEvaluationType); override;
     destructor Destroy; override;
-    procedure WriteFile(FileName: string; out NOBS: integer);
+    procedure WriteFile(const FileName: string; ObservationList: TStringList; out NOBS: integer);
   end;
 
 implementation
@@ -73,6 +83,7 @@ constructor TSutraObservationWriter.Create(AModel: TCustomModel;
   EvaluationType: TEvaluationType);
 begin
   inherited;
+  FBuffer := TStringBuilder.Create;
   FObsGroups := TObsGroupList.Create;
   FUsedFormats := [];
 end;
@@ -80,6 +91,7 @@ end;
 destructor TSutraObservationWriter.Destroy;
 begin
   FObsGroups.Free;
+  FBuffer.Free;
   inherited;
 end;
 
@@ -101,6 +113,10 @@ var
   APointer: Pointer;
   AnElement2D: TSutraElement2D;
   ANode2D: TSutraNode2D;
+  CenterPoint2D: TPoint2D;
+  CenterPoint3D: TPoint3D;
+  NodeOrElementNumber: Integer;
+  ObsType: TObsType;
 //  OriginalY: Double;
 //  OriginalZ: Double;
 begin
@@ -129,6 +145,7 @@ begin
         try
           ScreenObject.GetCellsToAssign(Mesh, '0', nil, nil, CellList,
             alAll, Model);
+          OctTree.Clear;
           if (ScreenObject.SectionCount = ScreenObject.Count)
             and (ScreenObject.ViewDirection = vdTop)
             and ((ScreenObject.ElevationCount = ecOne)
@@ -137,7 +154,6 @@ begin
           begin
             // make observations at the exact locations of the points
             // in the objects.
-            OctTree.Clear;
 
             for CellIndex := 0 to CellList.Count - 1 do
             begin
@@ -188,6 +204,8 @@ begin
                 Obs.X := ACell.SutraX;
                 Obs.Y := ACell.SutraY;
                 Obs.Z := ACell.SutraZ;
+                Obs.NodeOrElementNumber := 0;
+                Obs.ObsType := otExact;
                 OctTree.AddPoint(Obs.X, Obs.Y, Obs.Z, Obs);
                 AnObsGroup.FLocations.Add(Obs);
               end;
@@ -199,55 +217,109 @@ begin
             for CellIndex := 0 to CellList.Count - 1 do
             begin
               ACell := CellList[CellIndex];
+              ObsType := otExact;
+              NodeOrElementNumber := -1;
               case ScreenObject.EvaluatedAt of
                 eaBlocks:
                   begin
+                    ObsType := otElement;
                     case Mesh.MeshType of
                       mt2D, mtProfile:
                         begin
                           AnElement2D := Mesh.Mesh2D.Elements[ACell.Column];
-                          Obs := TObsLocation.Create;
-                          AnObsGroup.FLocations.Add(Obs);
-                          Obs.Center2D := AnElement2D.Center;
+//                          Obs := TObsLocation.Create;
+//                          AnObsGroup.FLocations.Add(Obs);
+                          CenterPoint2D := AnElement2D.Center;
+                          CenterPoint3D.x := CenterPoint2D.x;
+                          CenterPoint3D.y := CenterPoint2D.y;
+                          CenterPoint3D.z := 0;
+                          NodeOrElementNumber := AnElement2D.DisplayNumber;
+//                          Obs.Center2D := CenterPoint2D;
                         end;
                       mt3D:
                         begin
                           AnElement := Mesh.ElementArray[ACell.Layer, ACell.Column];
                           if AnElement.Active then
                           begin
-                            Obs := TObsLocation.Create;
-                            AnObsGroup.FLocations.Add(Obs);
-                            Obs.Location := AnElement.CenterLocation;
+//                            Obs := TObsLocation.Create;
+//                            AnObsGroup.FLocations.Add(Obs);
+                            CenterPoint3D := AnElement.CenterLocation;
+//                            Obs.Location := CenterPoint3D;
+                          end
+                          else
+                          begin
+                            Continue;
                           end;
+                          NodeOrElementNumber := AnElement.DisplayNumber;
                         end;
                       else Assert(False);
                     end;
                   end;
                 eaNodes:
                   begin
+                    ObsType := otNode;
                     case Mesh.MeshType of
                       mt2D, mtProfile:
                         begin
                           ANode2D := Mesh.Mesh2D.Nodes[ACell.Column];
-                          Obs := TObsLocation.Create;
-                          AnObsGroup.FLocations.Add(Obs);
-                          Obs.Center2D := ANode2D.Location;
+//                          Obs := TObsLocation.Create;
+//                          AnObsGroup.FLocations.Add(Obs);
+                          CenterPoint2D := ANode2D.Location;
+                          CenterPoint3D.x := CenterPoint2D.x;
+                          CenterPoint3D.y := CenterPoint2D.y;
+                          CenterPoint3D.z := 0;
+                          NodeOrElementNumber := ANode2D.DisplayNumber;
+//                          Obs.Center2D := CenterPoint2D;
                         end;
                       mt3D:
                         begin
                           ANode := Mesh.NodeArray[ACell.Layer, ACell.Column];
                           if ANode.Active then
                           begin
-                            Obs := TObsLocation.Create;
-                            AnObsGroup.FLocations.Add(Obs);
-                            Obs.Location := ANode.NodeLocation
+//                            Obs := TObsLocation.Create;
+//                            AnObsGroup.FLocations.Add(Obs);
+                            CenterPoint3D := ANode.NodeLocation;
+//                            Obs.Location := CenterPoint3D;
+                          end
+                          else
+                          begin
+                            Continue;
                           end;
+                          NodeOrElementNumber := ANode.DisplayNumber;
                         end;
                       else Assert(False);
                     end;
                   end;
               else
                 Assert(False);
+              end;
+              X := CenterPoint3D.X;
+              Y := CenterPoint3D.Y;
+              Z := CenterPoint3D.Z;
+              Assert(ObsType <> otExact);
+              Assert(NodeOrElementNumber >= 0);
+              Obs := nil;
+              if OctTree.Count > 0 then
+              begin
+                OctTree.FirstNearestPoint(X, Y, Z, APointer);
+                if (X <> CenterPoint3D.X) or (Y <> CenterPoint3D.Y) or
+                  (Z <> CenterPoint3D.Z) then
+                begin
+                  Obs := nil;
+                end
+                else
+                begin
+                  Obs := APointer;
+                end;
+              end;
+              if Obs = nil then
+              begin
+                Obs := TObsLocation.Create;
+                Obs.Location := CenterPoint3D;
+                Obs.NodeOrElementNumber := NodeOrElementNumber;
+                Obs.ObsType := ObsType;
+                OctTree.AddPoint(Obs.X, Obs.Y, Obs.Z, Obs);
+                AnObsGroup.FLocations.Add(Obs);
               end;
             end;
           end;
@@ -261,6 +333,13 @@ begin
   end;
 end;
 
+procedure TSutraObservationWriter.NewLine;
+begin
+//  inherited;
+  FObservationList.Add(FBuffer.ToString);
+  FBuffer.Clear;
+end;
+
 procedure TSutraObservationWriter.WriteDataSet1;
 var
   OutputControl: TSutraOutputControl;
@@ -272,29 +351,36 @@ begin
   NewLine;
 end;
 
-procedure TSutraObservationWriter.WriteFile(FileName: string; out NOBS: integer);
+procedure TSutraObservationWriter.WriteFile(const FileName: string; ObservationList: TStringList;
+  out NOBS: integer);
 var
   ObsRoot: string;
 begin
+  FObservationList := ObservationList;
   Evaluate;
 
+//  FFileName := FileName;
   FFileName := ChangeFileExt(FileName, '.8d');
-  OpenFile(FFileName);
+//  OpenFile(FFileName);
   try
     WriteDataSet1;
     WriteObservationGroups;
     ObsRoot := ChangeFileExt(FFileName, '');
     if ofOBS in FUsedFormats then
     begin
-      SutraFileWriter.AddFile(sftObs, ObsRoot);
+      SutraFileWriter.AddFile(sftObs, ChangeFileExt(ObsRoot, '.obs'));
     end;
     if ofOBC in FUsedFormats then
     begin
-      SutraFileWriter.AddFile(sftObc, ObsRoot);
+      SutraFileWriter.AddFile(sftObc, ChangeFileExt(ObsRoot, '.obc'));
     end;
-    Model.AddModelInputFile(FFileName);
+//    Model.AddModelInputFile(FFileName);
   finally
-    CloseFile;
+    if FBuffer.Length > 0 then
+    begin
+      NewLine;
+    end;
+//    CloseFile;
   end;
   NOBS := FNOBS;
 end;
@@ -312,6 +398,7 @@ var
   OBSFMT: AnsiString;
   MeshType: TMeshType;
   OutputFileName: string;
+  GroupName: AnsiString;
 begin
   FNOBS := 0;
   MeshType := Model.SutraMesh.MeshType;
@@ -319,8 +406,8 @@ begin
   begin
     Group := FObsGroups[GroupIndex];
 
-    OBSNAM := Group.ObsName;
-    OBSNAM := '''' + OBSNAM + ''' ';
+    GroupName := Group.ObsName;
+//    OBSNAM := '''' + OBSNAM + ''' ';
 
     OutputFileName := ChangeFileExt(FFileName, '') + '_';
 
@@ -349,6 +436,27 @@ begin
     begin
       ObsLocation := Group.FLocations[LocationIndex];
 
+      OBSNAM := GroupName;
+      if Group.FLocations.Count > 1 then
+      begin
+        case ObsLocation.ObsType of
+          otExact:
+            begin
+              Assert(False);
+            end;
+          otNode:
+            begin
+              OBSNAM := AnsiString(string(OBSNAM) + 'N' + IntToStr(ObsLocation.NodeOrElementNumber));
+            end;
+          otElement:
+            begin
+              OBSNAM := AnsiString(string(OBSNAM) + 'E' + IntToStr(ObsLocation.NodeOrElementNumber));
+            end;
+          else
+            Assert(False);
+        end;
+      end;
+    OBSNAM := '''' + OBSNAM + ''' ';
       WriteString(OBSNAM);
 
       WriteFloat(ObsLocation.X);
@@ -367,6 +475,12 @@ begin
   end;
   WriteString('-');
   NewLine;
+end;
+
+procedure TSutraObservationWriter.WriteString(const Value: AnsiString);
+begin
+//  inherited;
+  FBuffer.Append(Value);
 end;
 
 { TObsGroup }

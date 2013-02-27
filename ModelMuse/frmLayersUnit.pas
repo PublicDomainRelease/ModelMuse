@@ -1592,7 +1592,7 @@ end;
 procedure TUndoDefineLayers.DoCommand;
 var
   LocalModel: TPhastModel;
-  Index: Integer;
+  ChildIndex: Integer;
   ChildModel: TChildModel;
 begin
   frmGoPhast.CanDraw := False;
@@ -1604,13 +1604,18 @@ begin
     LocalModel.LayerStructure.Assign(FNewLayerStructure);
     LocalModel.LayerStructure.NewDataSets := nil;
     UpdatedRequiredDataSets;
-    for Index := 0 to LocalModel.ChildModels.Count - 1 do
+    for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
     begin
-      ChildModel := LocalModel.ChildModels[Index].ChildModel;
+      ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
       ChildModel.UpdateGrid;
     end;
     frmGoPhast.PhastModel.ModflowGrid.NotifyGridChanged(nil);
     frmGoPhast.PhastModel.UpdateMapping;
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.DataArrayManager.InvalidateAllDataSets;
+    end;
     frmGoPhast.UpdateModelCubeBreaks;
   finally
     frmGoPhast.CanDraw := True;
@@ -1619,7 +1624,7 @@ end;
 
 procedure TUndoDefineLayers.Undo;
 var
-  Index: Integer;
+  ChildIndex: Integer;
   ChildModel: TChildModel;
   NewDis: TChildDiscretizationCollection;
 begin
@@ -1631,15 +1636,20 @@ begin
     frmGoPhast.PhastModel.LayerStructure.RemoveNewDataSets;
     frmGoPhast.PhastModel.LayerStructure.NewDataSets := nil;
     UpdatedRequiredDataSets;
-    for Index := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
     begin
-      ChildModel := frmGoPhast.PhastModel.ChildModels[Index].ChildModel;
-      NewDis := FChildDiscretizations[Index];
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      NewDis := FChildDiscretizations[ChildIndex];
       ChildModel.Discretization.Assign(NewDis);
       ChildModel.UpdateGrid;
     end;
     frmGoPhast.PhastModel.ModflowGrid.NotifyGridChanged(nil);
     frmGoPhast.PhastModel.UpdateMapping;
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.DataArrayManager.InvalidateAllDataSets;
+    end;
     frmGoPhast.UpdateModelCubeBreaks;
   finally
     frmGoPhast.CanDraw := True;

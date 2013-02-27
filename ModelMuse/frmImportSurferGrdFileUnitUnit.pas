@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, frmCustomImportSimpleFileUnit, StdCtrls,
   Buttons, ExtCtrls, Grids, RbwDataGrid4, SurferGridFileReaderUnit,
-  frmImportShapefileUnit;
+  frmImportShapefileUnit, FastGEO, AbstractGridUnit, SutraMeshUnit,
+  GoPhastTypes;
 
 type
   {@abstract(@name is the command used to import
@@ -20,12 +21,19 @@ type
   TfrmImportSurferGrdFile = class(TfrmCustomImportSimpleFile)
     rdgLimits: TRbwDataGrid4;
     Label1: TLabel;
+    rgFilterMethod: TRadioGroup;
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
+    procedure rgEvaluatedAtClick(Sender: TObject);
   private
     FGrd6: TSurfer6Grid;
     FFileType: TSurferFileType;
     FGrd7: TSurfer7Grid;
+    FGrid: TCustomModelGrid;
+    FMesh: TSutraMesh3D;
+    ImportMethod: TImportMethod;
+    EvalAt: TEvaluatedAt;
+    procedure HandleARasterPoint(Sender: TObject; APoint: TPoint3D);
     procedure SetData;
     { Private declarations }
   public
@@ -40,7 +48,8 @@ implementation
 
 uses
   frmGoPhastUnit, DataSetUnit, ScreenObjectUnit, ModelMuseUtilities,
-  GoPhastTypes, UndoItems, FastGEO, ValueArrayStorageUnit, GIS_Functions;
+  UndoItems, ValueArrayStorageUnit, GIS_Functions,
+  frmImportAsciiRasterUnit;
 
 resourcestring
   StrImportSurferGridF = 'import Surfer grid file';
@@ -168,6 +177,68 @@ begin
   end;
 end;
 
+procedure TfrmImportSurferGrdFile.HandleARasterPoint(Sender: TObject;
+  APoint: TPoint3D);
+var
+  Point2D: TPoint2D;
+begin
+  if (FGrid <> nil) and (FGrid.GridAngle <> 0) then
+  begin
+    Point2D.x := APoint.X;
+    Point2D.y := APoint.Y;
+    Point2D := FGrid.
+      RotateFromRealWorldCoordinatesToGridCoordinates(Point2D);
+    APoint.x := Point2D.x;
+    APoint.y := Point2D.y;
+  end;
+  HandleAPoint(APoint, ImportMethod, EvalAt, FGrid, FMesh);
+end;
+
+procedure TfrmImportSurferGrdFile.rgEvaluatedAtClick(Sender: TObject);
+var
+  NodeElemString: string;
+//  EvalAt: TEvaluatedAt;
+  CenterString: string;
+begin
+  inherited;
+  EvalAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
+  case frmGoPhast.PhastModel.ModelSelection of
+    msUndefined:
+      begin
+        Assert(False);
+      end;
+    msPhast, msSutra22:
+      begin
+        case EvalAt of
+          eaBlocks:
+            begin
+              NodeElemString := StrElement;
+              CenterString := StrElementCenter
+            end;
+          eaNodes:
+            begin
+              NodeElemString := StrCell;
+              CenterString := StrNode;
+            end;
+        end;
+      end;
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+      begin
+        NodeElemString := StrCell;
+        CenterString := StrCellCenter
+      end;
+    else Assert(False);
+  end;
+  rgFilterMethod.Items[Ord(imLowest)] :=
+    Format(StrLowestPointInS, [NodeElemString]);
+  rgFilterMethod.Items[Ord(imHighest)] :=
+    Format(StrHighestPointInS, [NodeElemString]);
+  rgFilterMethod.Items[Ord(imAverage)] :=
+    Format(StrAverageOfPointsIn, [NodeElemString]);
+  rgFilterMethod.Items[Ord(imClosest)] :=
+    Format(StrPointClosestToS, [CenterString]);
+end;
+
 procedure TfrmImportSurferGrdFile.SetData;
 var
   DataSetName: string;
@@ -185,7 +256,14 @@ var
   Position: integer;
   Count: Integer;
   PointCount: Integer;
+  function ConvertPoint2(ASurferPoint: TSurferPoint): TPoint3D;
+  begin
+    Result.x := ASurferPoint.X;
+    Result.Y := ASurferPoint.Y;
+    Result.z := ASurferPoint.Z;
+  end;
 begin
+  LocalModel := frmGoPhast.PhastModel;
   frmGoPhast.PhastModel.BeginScreenObjectUpdate;
   frmGoPhast.CanDraw := False;
   try
@@ -246,72 +324,156 @@ begin
           AScreenObject.EvaluatedAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
           AScreenObject.Visible := False;
 
+          if rgFilterMethod.ItemIndex <> 4 then
+          begin
+            ImportMethod := TImportMethod(rgFilterMethod.ItemIndex);
+            FGrid := LocalModel.Grid;
+            FMesh := LocalModel.Mesh;
+            InitializeArrays(ImportMethod);
+            GetDiscretizationMinMax
+          end;
+
           Position := -1;
           case FFileType of
             sft6, sftAscii:
               begin
-                AScreenObject.Capacity := FGrd6.Header.nx * FGrd6.Header.ny;
-                for PointIndex := 0 to Length(FGrd6.Points) - 1 do
+                if rgFilterMethod.ItemIndex = 4 then
                 begin
-                  AScreenObject.AddPoint(ConvertPoint(FGrd6.Points[PointIndex]), True);
-                end;
-                ScreenObjectList.Add(AScreenObject);
-                Position := AScreenObject.AddDataSet(DataSet);
-                Assert(Position >= 0);
+                  AScreenObject.Capacity := FGrd6.Header.nx * FGrd6.Header.ny;
+                  for PointIndex := 0 to Length(FGrd6.Points) - 1 do
+                  begin
+                    AScreenObject.AddPoint(ConvertPoint(FGrd6.Points[PointIndex]), True);
+                  end;
+                  ScreenObjectList.Add(AScreenObject);
+                  Position := AScreenObject.AddDataSet(DataSet);
+                  Assert(Position >= 0);
 
-                Item := AScreenObject.
-                  ImportedValues.Add as TValueArrayItem;
-                Item.Name := DataSet.Name;
-                Item.Values.DataType := DataSet.DataType;
-                Item.Values.Count := FGrd6.Header.nx * FGrd6.Header.ny;
+                  Item := AScreenObject.
+                    ImportedValues.Add as TValueArrayItem;
+                  Item.Name := DataSet.Name;
+                  Item.Values.DataType := DataSet.DataType;
+                  Item.Values.Count := FGrd6.Header.nx * FGrd6.Header.ny;
 
-                for PointIndex := 0 to Length(FGrd6.Points) - 1 do
+                  for PointIndex := 0 to Length(FGrd6.Points) - 1 do
+                  begin
+                    Item.Values.RealValues[PointIndex] := FGrd6.Points[PointIndex].Z;
+                  end;
+                  Item.CacheData;
+                end
+                else
                 begin
-                  Item.Values.RealValues[PointIndex] := FGrd6.Points[PointIndex].Z;
+                  ScreenObjectList.Add(AScreenObject);
+                  Position := AScreenObject.AddDataSet(DataSet);
+                  Assert(Position >= 0);
+                  for PointIndex := 0 to Length(FGrd6.Points) - 1 do
+                  begin
+                    HandleARasterPoint(nil, ConvertPoint2(FGrd6.Points[PointIndex]));
+                  end;
                 end;
-                Item.CacheData;
               end;
             sft7:
               begin
-                Count := 0;
-                for PointIndex := 0 to Length(FGrd7.Points) - 1 do
+                if rgFilterMethod.ItemIndex = 4 then
                 begin
-                  if FGrd7.Points[PointIndex].Z < FGrd7.Header.BlankValue then
+                  Count := 0;
+                  for PointIndex := 0 to Length(FGrd7.Points) - 1 do
                   begin
-                    Inc(Count);
+                    if FGrd7.Points[PointIndex].Z < FGrd7.Header.BlankValue then
+                    begin
+                      Inc(Count);
+                    end;
+                  end;
+
+                  AScreenObject.Capacity := Count;
+                  for PointIndex := 0 to Length(FGrd7.Points) - 1 do
+                  begin
+                    if FGrd7.Points[PointIndex].Z < FGrd7.Header.BlankValue then
+                    begin
+                      AScreenObject.AddPoint(ConvertPoint(FGrd7.Points[PointIndex]), True);
+                    end;
+                  end;
+                  ScreenObjectList.Add(AScreenObject);
+                  Position := AScreenObject.AddDataSet(DataSet);
+                  Assert(Position >= 0);
+
+                  Item := AScreenObject.
+                    ImportedValues.Add as TValueArrayItem;
+                  Item.Name := DataSet.Name;
+                  Item.Values.DataType := DataSet.DataType;
+                  Item.Values.Count := Count;
+
+                  PointCount := 0;
+                  for PointIndex := 0 to Length(FGrd7.Points) - 1 do
+                  begin
+                    if FGrd7.Points[PointIndex].Z < FGrd7.Header.BlankValue then
+                    begin
+                      Item.Values.RealValues[PointCount] := FGrd7.Points[PointIndex].Z;
+                      Inc(PointCount);
+                    end;
+                  end;
+                  Item.CacheData;
+                end
+                else
+                begin
+                  ScreenObjectList.Add(AScreenObject);
+                  Position := AScreenObject.AddDataSet(DataSet);
+                  Assert(Position >= 0);
+                  for PointIndex := 0 to Length(FGrd7.Points) - 1 do
+                  begin
+                    if FGrd7.Points[PointIndex].Z < FGrd7.Header.BlankValue then
+                    begin
+                      HandleARasterPoint(nil, ConvertPoint2(FGrd7.Points[PointIndex]));
+                    end;
                   end;
                 end;
-
-                AScreenObject.Capacity := Count;
-                for PointIndex := 0 to Length(FGrd7.Points) - 1 do
-                begin
-                  if FGrd7.Points[PointIndex].Z < FGrd7.Header.BlankValue then
-                  begin
-                    AScreenObject.AddPoint(ConvertPoint(FGrd7.Points[PointIndex]), True);
-                  end;
-                end;
-                ScreenObjectList.Add(AScreenObject);
-                Position := AScreenObject.AddDataSet(DataSet);
-                Assert(Position >= 0);
-
-                Item := AScreenObject.
-                  ImportedValues.Add as TValueArrayItem;
-                Item.Name := DataSet.Name;
-                Item.Values.DataType := DataSet.DataType;
-                Item.Values.Count := Count;
-
-                PointCount := 0;
-                for PointIndex := 0 to Length(FGrd7.Points) - 1 do
-                begin
-                  if FGrd7.Points[PointIndex].Z < FGrd7.Header.BlankValue then
-                  begin
-                    Item.Values.RealValues[PointCount] := FGrd7.Points[PointIndex].Z;
-                    Inc(PointCount);
-                  end;
-                end;
-                Item.CacheData;
               end;
             else Assert(False);
+          end;
+
+          if rgFilterMethod.ItemIndex <> 4 then
+          begin
+            ComputeAverage(ImportMethod);
+
+            Item := AScreenObject.
+              ImportedValues.Add as TValueArrayItem;
+            Item.Name := DataSet.Name;
+            Item.Values.DataType := DataSet.DataType;
+            if LocalModel.Grid <> nil then
+            begin
+              case EvalAt of
+                eaBlocks:
+                  begin
+                    AScreenObject.Capacity := FGrid.ColumnCount
+                      * FGrid.RowCount;
+                  end;
+                eaNodes:
+                  begin
+                    AScreenObject.Capacity :=
+                      (FGrid.ColumnCount+1)
+                      * (FGrid.RowCount + 1);
+                  end;
+                else
+                  Assert(False);
+              end;
+            end
+            else
+            begin
+              case EvalAt of
+                eaBlocks:
+                  begin
+                    AScreenObject.Capacity := FMesh.Mesh2D.Elements.Count;
+                  end;
+                eaNodes:
+                  begin
+                    AScreenObject.Capacity := FMesh.Mesh2D.Nodes.Count;
+                  end;
+                else
+                  Assert(False);
+              end;
+            end;
+
+            Item.Values.Count := AScreenObject.Capacity;
+            AssignPointsAndValues(FGrid, AScreenObject, Item{, DataSetIndex <> 0});
           end;
 
           Formula := rsObjectImportedValuesR + '("' + DataSet.Name + '")';

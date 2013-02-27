@@ -39,7 +39,8 @@ uses
   frameMt3dBasicPkgUnit, frameMt3dmsGcgPackageUnit, frameMt3dmsAdvPkgUnit,
   frameMt3dmsDispersionPkgUnit, Mt3dmsChemSpeciesUnit,
   frameMt3dmsChemReactionPkgUnit, frameMt3dmsTransObsPkgUnit, Mt3dmsTimesUnit,
-  framePackagePcgnUnit, framePackageWellUnit;
+  framePackagePcgnUnit, framePackageWellUnit, framePackageStrUnit,
+  framePackageFrmUnit;
 
 type
 
@@ -67,6 +68,7 @@ type
   public
     Frame: TframePackage;
     Node: TTreeNode;
+    AlternateNode: TTreeNode;
   end;
 
   TfrmModflowPackages = class(TfrmCustomGoPhast)
@@ -193,6 +195,17 @@ type
     framePkgMt3dmsTob: TframeMt3dmsTransObsPkg;
     jvspPCGN: TJvStandardPage;
     framePackagePcgn: TframePackagePcgn;
+    jvspSTR: TJvStandardPage;
+    framePkgStr: TframePackageStr;
+    frameStrParameterDefinition: TframeListParameterDefinition;
+    jvspSTOB: TJvStandardPage;
+    framePkgSTOB: TframePackage;
+    jvspFHB: TJvStandardPage;
+    framePkgFHB: TframePackage;
+    jvspFMP: TJvStandardPage;
+    framePkgFrm: TframePkgFarm;
+    frameFmpParameterDefinition: TframeListParameterDefinition;
+    jvntscpspltr1: TJvNetscapeSplitter;
     procedure tvPackagesChange(Sender: TObject; Node: TTreeNode);
     procedure btnOKClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject); override;
@@ -278,6 +291,7 @@ type
     procedure NwtSelectedChange(Sender: TObject);
     procedure UpwSelectedChange(Sender: TObject);
     procedure Mt3dmsGcgSelectedChange(Sender: TObject);
+    procedure StrSelectedChange(Sender: TObject);
     property CurrentPackages: TModflowPackages read FCurrentPackages
       write SetCurrentPackages;
     procedure StorePackageDataInFrames(Packages: TModflowPackages);
@@ -386,6 +400,7 @@ resourcestring
   StrSWasNotFound = '%s was not found.';
   StrYouWillNeedToRun = 'You will need to run MODFLOW again one time before ' +
   'running MODPATH.';
+  StrFarmProcess = 'Farm Process';
 
 {$R *.dfm}
 
@@ -708,6 +723,11 @@ begin
   begin
     NeedToDefineFluxObservations := True;
   end
+  else if framePkgStOB.Selected and
+    not ModflowPackages.StobPackage.IsSelected then
+  begin
+    NeedToDefineFluxObservations := True;
+  end
   else if framePkgMt3dmsTob.Selected and
     not ModflowPackages.Mt3dmsTransObs.IsSelected then
   begin
@@ -759,6 +779,15 @@ begin
   begin
     frmGoPhast.acLayersExecute(nil);
   end;
+
+{$IFDEF FMP}
+  if (frmGoPhast.ModelSelection = msModflowFmp)
+    and frmGoPhast.PhastModel.ModflowPackages.FarmProcess.IsSelected
+    and (frmGoPhast.PhastModel.FmpCrops.Count = 0) then
+  begin
+    frmGoPhast.acFarmCropsExecute(nil)
+  end;
+{$ENDIF}
 
   if frmErrorsAndWarnings.HasMessages then
   begin
@@ -937,6 +966,15 @@ begin
   if not framePkgRVOB.CanSelect then
   begin
     framePkgRVOB.Selected := False;
+  end;
+end;
+
+procedure TfrmModflowPackages.StrSelectedChange(Sender: TObject);
+begin
+  framePkgSTOB.CanSelect := framePkgSTR.Selected;
+  if not framePkgSTOB.CanSelect then
+  begin
+    framePkgSTOB.Selected := False;
   end;
 end;
 
@@ -1244,7 +1282,7 @@ begin
       begin
         FSteadyParameters.Remove(ActiveFrame.CurrentParameter);
       end;
-    ptCHD..ptDRT, ptSFR, ptRCH, ptEVT, ptETS:
+    ptCHD..ptDRT, ptSFR, ptRCH, ptEVT, ptETS, ptSTR, ptQMAX:
       begin
         FTransientListParameters.Remove(ActiveFrame.CurrentParameter);
       end;
@@ -1314,7 +1352,7 @@ begin
         begin
           Parameter := FSteadyParameters.Add as TModflowParameter;
         end;
-      ptCHD..ptSFR, ptRCH, ptEVT, ptETS:
+      ptCHD..ptSFR, ptRCH, ptEVT, ptETS, ptSTR, ptQMAX:
         begin
           Parameter := FTransientListParameters.Add as TModflowParameter;
         end;
@@ -1546,6 +1584,9 @@ var
   AControl: TControl;
   FTreeNodeList: TStringList;
   Link: TFrameNodeLink;
+  AltNodeIndex: Integer;
+  AltParentNode: TTreeNode;
+  AltChildNode: TTreeNode;
   procedure AddNode(const Key, Caption: string; var PriorNode: TTreeNode);
   begin
     PriorNode := tvPackages.Items.Add(PriorNode, Caption);
@@ -1583,6 +1624,12 @@ begin
     AddNode(StrSubSidence, StrSubSidence, PriorNode);
     AddNode(StrObservations, StrObservations, PriorNode);
     AddNode(StrOutput, StrOutput, PriorNode);
+  {$IFDEF FMP}
+    if frmGoPhast.ModelSelection = msModflowFMP then
+    begin
+      AddNode(StrFarmProcess, StrFarmProcess, PriorNode);
+    end;
+  {$ENDIF}
     AddNode(StrPostProcessors, StrPostProcessors, PriorNode);
     AddNode(StrMT3DMS_Classificaton, StrMT3DMS_Classificaton, PriorNode);
 
@@ -1604,9 +1651,22 @@ begin
       ParentNode := FTreeNodeList.Objects[NodeIndex] as TTreeNode;
       ChildNode := tvPackages.Items.AddChild(ParentNode, APackage.PackageIdentifier);
 
+      if APackage.AlternativeClassification = '' then
+      begin
+        AltChildNode := nil;
+      end
+      else
+      begin
+        AltNodeIndex := FTreeNodeList.IndexOf(APackage.AlternativeClassification);
+        Assert(AltNodeIndex >= 0, Format(StrSWasNotFound, [APackage.AlternativeClassification]));
+        AltParentNode := FTreeNodeList.Objects[AltNodeIndex] as TTreeNode;
+        AltChildNode := tvPackages.Items.AddChild(AltParentNode, APackage.PackageIdentifier);
+      end;
+
       Link := TFrameNodeLink.Create;
       Link.Frame := Frame;
       Link.Node := ChildNode;
+      Link.AlternateNode := AltChildNode;
       FFrameNodeLinks.Add(Link);
 
       AControl := Frame;
@@ -1621,7 +1681,12 @@ begin
       end;
       Assert(Page <> nil);
       ChildNode.Data := Page;
+      if AltChildNode <> nil then
+      begin
+        AltChildNode.Data := Page;
+      end;
       APackage.Node := ChildNode;
+      APackage.AlternateNode := AltChildNode;
       Frame.GetData(APackage);
     end;
   finally
@@ -1655,12 +1720,14 @@ begin
     framePkgDRN.OnSelectedChange :=  DrnSelectedChange;
     framePkgGHB.OnSelectedChange :=  GhbSelectedChange;
     framePkgRIV.OnSelectedChange :=  RivSelectedChange;
+    framePkgStr.OnSelectedChange :=  StrSelectedChange;
     framePkgNwt.OnSelectedChange :=  NwtSelectedChange;
     framePkgUpw.OnSelectedChange :=  UpwSelectedChange;
     framePkgCHOB.CanSelect := False;
     framePkgDROB.CanSelect := False;
     framePkgGBOB.CanSelect := False;
     framePkgRVOB.CanSelect := False;
+    framePkgSTOB.CanSelect := False;
     framePkgMt3dBasic.OnSelectedChange :=  Mt3dmsBasicSelectedChange;
     frameMt3dmsGcgPackage.CanSelect := False;
     frameMt3dmsGcgPackage.OnSelectedChange := Mt3dmsGcgSelectedChange;
@@ -1762,6 +1829,7 @@ begin
     Link := FFrameNodeLinks[Index];
     Assert(Frame = Link.Frame);
     APackage.Node := Link.Node;
+    APackage.AlternateNode := Link.AlternateNode;
     Frame.GetData(APackage);
   end;
 end;
@@ -1779,7 +1847,7 @@ begin
   Item := FNewPackages.Add;
   Item.Packages.Assign(frmGoPhast.PhastModel.ModflowPackages);
   comboModel.AddItem(StrParentModel, Item.Packages);
-  if frmGoPhast.PhastModel.ModelSelection = msModflowLGR then
+  if frmGoPhast.PhastModel.ModelSelection in [msModflowLGR, msModflowLGR2] then
   begin
     for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
     begin
@@ -1989,6 +2057,10 @@ begin
   begin
     CurrentParameterType := ptRiv;
   end
+  else if jvplPackages.ActivePage = jvspSTR then
+  begin
+    CurrentParameterType := ptStr;
+  end
   else if jvplPackages.ActivePage = jvspWEL then
   begin
     CurrentParameterType := ptQ;
@@ -2020,6 +2092,10 @@ begin
   else if jvplPackages.ActivePage = jvspPCGN then
   begin
     CurrentParameterType := ptUndefined;
+  end
+  else if jvplPackages.ActivePage = jvspFMP then
+  begin
+    CurrentParameterType := ptQMAX;
   end
   else
   begin
@@ -2111,6 +2187,8 @@ begin
     ptHUF_SYTP: Root := 'SYTP_Par';
     ptHUF_KDEP: Root := 'KDEP_Par';
     ptHUF_LVDA: Root := 'LVDA_Par';
+    ptSTR: Root := 'STR_Par';
+    ptQMAX: Root := 'QMAX_Par';
     else Assert(False);
   end;
   UpRoot := UpperCase(Root);
@@ -2136,7 +2214,7 @@ begin
           end;
         end;
       end;
-    ptCHD..ptSFR, ptRCH, ptEVT, ptETS:
+    ptCHD..ptSFR, ptRCH, ptEVT, ptETS, ptSTR, ptQMAX:
       begin
         for Index := 0 to FTransientListParameters.Count - 1 do
         begin
@@ -2355,7 +2433,8 @@ begin
     Param := FSteadyParameters[ParamIndex];
     case Param.ParameterType of
       ptLPF_HK, ptLPF_HANI, ptLPF_VK,
-        ptLPF_VANI, ptLPF_SS, ptLPF_SY, ptLPF_VKCB, ptHUF_SYTP, ptHUF_LVDA: ;  // do nothing
+        ptLPF_VANI, ptLPF_SS, ptLPF_SY, ptLPF_VKCB, ptHUF_SYTP, ptHUF_LVDA,
+        ptSTR, ptQMAX: ;  // do nothing
       ptHFB: ActiveFrame := frameHFBParameterDefinition;
       else Assert(False);
     end;
@@ -2390,6 +2469,8 @@ begin
   InitializeFrame(frameEvtParameterDefinition);
   InitializeFrame(frameEtsParameterDefinition);
   InitializeFrame(frameSfrParameterDefinition);
+  InitializeFrame(frameStrParameterDefinition);
+  InitializeFrame(frameFmpParameterDefinition);
 
   for ParamIndex := 0 to FTransientListParameters.Count - 1 do
   begin
@@ -2406,6 +2487,8 @@ begin
       ptEVT: ActiveFrame := frameEvtParameterDefinition;
       ptETS: ActiveFrame := frameEtsParameterDefinition;
       ptSFR: ActiveFrame := frameSfrParameterDefinition;
+      ptSTR: ActiveFrame := frameStrParameterDefinition;
+      ptQMAX: ActiveFrame := frameFmpParameterDefinition;
       else Assert(False);
     end;
     ActiveGrid := ActiveFrame.dgParameters;
@@ -2485,6 +2568,9 @@ begin
   Packages.SfrPackage.Frame := framePkgSFR;
   FPackageList.Add(Packages.SfrPackage);
 
+  Packages.StrPackage.Frame := framePkgSTR;
+  FPackageList.Add(Packages.StrPackage);
+
   Packages.HfbPackage.Frame := framePkgHFB;
   FPackageList.Add(Packages.HfbPackage);
 
@@ -2530,6 +2616,9 @@ begin
   Packages.RvobPackage.Frame := framePkgRVOB;
   FPackageList.Add(Packages.RvobPackage);
 
+  Packages.StobPackage.Frame := framePkgSTOB;
+  FPackageList.Add(Packages.StobPackage);
+
   Packages.ZoneBudget.Frame := frameZoneBudget;
   FPackageList.Add(Packages.ZoneBudget);
 
@@ -2556,6 +2645,17 @@ begin
 
   Packages.Mt3dmsTransObs.Frame := framePkgMt3dmsTob;
   FPackageList.Add(Packages.Mt3dmsTransObs);
+
+  Packages.FhbPackage.Frame := framePkgFHB;
+  FPackageList.Add(Packages.FhbPackage);
+
+{$IFDEF FMP}
+  if frmGoPhast.ModelSelection = msModflowFMP then
+  begin
+    Packages.FarmProcess.Frame := framePkgFrm;
+    FPackageList.Add(Packages.FarmProcess);
+  end;
+{$ENDIF}
 end;
 
 procedure TfrmModflowPackages.tvHufParameterTypesChange(Sender: TObject;
@@ -2661,7 +2761,7 @@ begin
 
   TempParentPackages := FOldPackages.Add;
   TempParentPackages.Packages.Assign(frmGoPhast.PhastModel.ModflowPackages);
-  if frmGoPhast.PhastModel.ModelSelection = msModflowLGR then
+  if frmGoPhast.PhastModel.ModelSelection in [msModflowLGR, msModflowLGR2] then
   begin
     for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
     begin
@@ -2720,7 +2820,7 @@ begin
     Mt3dmsNewlySelected := not OldPackages.Mt3dBasic.IsSelected
       and NewPackages.Mt3dBasic.IsSelected;
     PhastModel.ModflowPackages := NewPackages;
-    if PhastModel.ModelSelection = msModflowLGR then
+    if PhastModel.ModelSelection in [msModflowLGR, msModflowLGR2] then
     begin
       Assert(PhastModel.ChildModels.Count = FNewPackages.Count -1);
       for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
@@ -2811,7 +2911,7 @@ begin
       LayerGroup.AquiferType := FOldAquiferType[Index];
     end;
     frmGoPhast.PhastModel.ModflowPackages := FOldPackages[0].Packages;
-    if frmGoPhast.PhastModel.ModelSelection = msModflowLGR then
+    if frmGoPhast.PhastModel.ModelSelection in [msModflowLGR, msModflowLGR2] then
     begin
       Assert(frmGoPhast.PhastModel.ChildModels.Count = FOldPackages.Count -1);
       for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do

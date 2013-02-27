@@ -9,7 +9,7 @@ uses
   UndoItemsScreenObjects, Windows, SysUtils, Types, Classes, Variants,
   Graphics, Controls, Forms, Dialogs, StdCtrls, frmCustomGoPhastUnit, ComCtrls,
   Buttons, ExtCtrls, Menus, ScreenObjectUnit, VirtualTrees, Contnrs,
-  frmCustomSelectObjectsUnit;
+  frmCustomSelectObjectsUnit, ImgList;
 
 type
   {@abstract(@name is used to show or hide @link(TScreenObject)s either
@@ -26,6 +26,8 @@ type
     // @name is the Edit menu item of @link(pmSelectEdit).  Clicking
     // it edits the @link(TScreenObject) of the selected node.
     miEdit: TMenuItem;
+    ilAngles: TImageList;
+    ilDifferentAngle: TImageList;
     // @name calls Release and sets frmShowHideObjects to nil.
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     // @name is the event handler for the OnCreate event of @classname.
@@ -47,6 +49,12 @@ type
       const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
       TextType: TVSTTextType);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure vstObjectsMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure vstObjectsGetImageIndexEx(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
+      var Ghosted: Boolean; var ImageIndex: Integer;
+      var ImageList: TCustomImageList);
   private
     FUndoShowHide: TUndoShowHideScreenObject;
     FCount: integer;
@@ -59,6 +67,7 @@ type
     // if Node.Parent has a
     // list of @link(TScreenObject) in its Data.
     procedure vstEnablePopupMenuItems(Node: PVirtualNode);
+    procedure CreateAngleImages;
   { Private declarations }
   protected
     // See @link(TfrmCustomSelectObjects.CanEdit).
@@ -78,15 +87,53 @@ var
 implementation
 
 uses StrUtils, frmGoPhastUnit, DataSetUnit, GoPhastTypes, ModelMuseUtilities,
-  ModflowPackagesUnit;
+  ModflowPackagesUnit, InteractiveTools, FastGEO, UndoItems;
 
 {$R *.dfm}
 
 { TfrmShowHideObjects }
 
+procedure TfrmShowHideObjects.CreateAngleImages;
+var
+  BMP: TBitmap;
+  index: Integer;
+  Angle: double;
+  X: integer;
+  Y: integer;
+begin
+  BMP := TBitmap.Create;
+  try
+    BMP.Width := 20;
+    BMP.Height := 20;
+    BMP.Canvas.Brush.Color := clWindow;
+    for index := 0 to 360 do
+    begin
+      Angle := index*Pi/180;
+      X := Round(Cos(Angle)*10);
+      Y := Round(Sin(Angle)*10);
+
+      BMP.Canvas.Pen.Color := clRed;
+      BMP.Canvas.FillRect(Rect(0,0,20,20));
+      BMP.Canvas.MoveTo(10+X, 10-Y);
+      BMP.Canvas.LineTo(10-X, 10+Y);
+
+      ilAngles.Add(BMP, nil);
+
+      BMP.Canvas.Pen.Color := clGray;
+      BMP.Canvas.FillRect(Rect(0,0,20,20));
+      BMP.Canvas.MoveTo(10+X, 10-Y);
+      BMP.Canvas.LineTo(10-X, 10+Y);
+      ilDifferentAngle.Add(BMP, nil);
+    end;
+  finally
+    BMP.Free;
+  end;
+end;
+
 procedure TfrmShowHideObjects.FormCreate(Sender: TObject);
 begin
   inherited;
+  CreateAngleImages;
   FSupressUndo := False;
   GetData;
 end;
@@ -224,6 +271,78 @@ procedure TfrmShowHideObjects.vstObjectsContextPopup(Sender: TObject;
 begin
   inherited;
   vstEnablePopupMenuItems(vstObjects.FocusedNode);
+end;
+
+procedure TfrmShowHideObjects.vstObjectsGetImageIndexEx(
+  Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
+  Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer;
+  var ImageList: TCustomImageList);
+var
+  Data: PMyRec;
+  ScreenObject: TScreenObject;
+  Angle: double;
+begin
+  inherited;
+  ImageIndex := -1;
+  if (frmGoPhast.PhastModel.ModelSelection = msSutra22)
+    and (Kind in [ikNormal, ikSelected]) then
+  begin
+    Data := vstObjects.GetNodeData(Node.Parent);
+    if (Data <> nil) and (Data.ScreenObjects <> nil) then
+    begin
+      ScreenObject := Data.ScreenObjects[Node.Index];
+      if ScreenObject.ViewDirection = vdFront then
+      begin
+        Angle := ScreenObject.SutraAngle*180/Pi;
+        if Angle < 0 then
+        begin
+          Angle := Angle + 360;
+        end;
+        ImageIndex := Round(Angle);
+        if Abs(frmGoPhast.PhastModel.SutraMesh.CrossSection.Angle
+          - ScreenObject.SutraAngle) > 1e-6 then
+        begin
+          ImageList := ilDifferentAngle;
+        end
+        else
+        begin
+          ImageList := ilAngles;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmShowHideObjects.vstObjectsMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  HitInfo: THitInfo;
+  Data: PMyRec;
+  ScreenObject: TScreenObject;
+  NewLocation: TSegment2D;
+  Undo: TUndoSpecifyCrossSection;
+  Node: PVirtualNode;
+begin
+  inherited;
+  vstObjects.GetHitTestInfoAt(X, Y, False, HitInfo);
+  if hiOnNormalIcon in HitInfo.HitPositions then
+  begin
+    if (frmGoPhast.PhastModel.ModelSelection = msSutra22) then
+    begin
+      Node := vstObjects.GetNodeAt(X, Y);
+      Data := vstObjects.GetNodeData(Node.Parent);
+      if (Data <> nil) and (Data.ScreenObjects <> nil) then
+      begin
+        ScreenObject := Data.ScreenObjects[Node.Index];
+        if ScreenObject.ViewDirection = vdFront then
+        begin
+          SetNewCrossSectionAngle(ScreenObject.SutraAngle, NewLocation);
+          Undo := TUndoSpecifyCrossSection.Create(NewLocation);
+          frmGoPhast.UndoStack.Submit(Undo);
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmShowHideObjects.vstObjectsPaintText(Sender: TBaseVirtualTree;

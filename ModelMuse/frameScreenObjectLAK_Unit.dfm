@@ -162,7 +162,6 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
   end
   inherited pnlTop: TPanel
     Width = 463
-    Caption = ''
     ExplicitWidth = 463
     inherited pnlCaption: TPanel
       Width = 461
@@ -374,18 +373,10 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
     TabOrder = 3
     object tabLakeProperties: TTabSheet
       Caption = 'Lake Properties'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
     end
     object tabBathymetry: TTabSheet
       Caption = 'Bathymetry'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgLakeTable: TRbwDataGrid4
         Left = 0
         Top = 105
@@ -399,7 +390,7 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
         TabOrder = 1
         ExtendedAutoDistributeText = False
         AutoMultiEdit = False
-        AutoDistributeText = False
+        AutoDistributeText = True
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = False
         SelectedRowOrColumnColor = clAqua
@@ -499,10 +490,12 @@ inherited frameScreenObjectLAK: TframeScreenObjectLAK
           Top = 63
           Width = 445
           Height = 21
+          OnAfterDialog = feLakeBathymetryAfterDialog
           DisabledColor = clBtnFace
           Filter = '(*.lak_bath, *.txt)|*.lak_bath;*.txt|All files (*.*)|*.*'
           Enabled = False
           TabOrder = 1
+          OnKeyUp = feLakeBathymetryKeyUp
         end
       end
     end

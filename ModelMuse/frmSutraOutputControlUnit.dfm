@@ -1,52 +1,64 @@
 inherited frmSutraOutputControl: TfrmSutraOutputControl
+  HelpType = htKeyword
+  HelpKeyword = 'SUTRA_Output_Control_Dialog_Bo'
   Caption = 'SUTRA Output Control'
   ClientHeight = 394
-  ClientWidth = 703
-  ExplicitWidth = 719
-  ExplicitHeight = 432
-  PixelsPerInch = 96
+  ClientWidth = 722
+  ExplicitWidth = 740
+  ExplicitHeight = 439
+  PixelsPerInch = 120
   TextHeight = 18
-  object jvplMain: TJvPageList
-    Left = 121
+  object spl1: TSplitter
+    Left = 136
     Top = 0
-    Width = 582
+    Width = 5
+    Height = 344
+    ExplicitLeft = 0
+  end
+  object jvplMain: TJvPageList
+    Left = 141
+    Top = 0
+    Width = 581
     Height = 344
     ActivePage = jvspNodEle
     PropagateEnable = False
     Align = alClient
+    ExplicitLeft = 126
+    ExplicitWidth = 577
     object jvspListing: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 582
+      Width = 581
       Height = 344
       Caption = 'jvspListing'
+      ExplicitWidth = 577
       DesignSize = (
-        582
+        581
         344)
       object lblNprint: TLabel
-        Left = 129
-        Top = 6
+        Left = 133
+        Top = 19
         Width = 257
         Height = 18
         Caption = 'Print values every NPRINT time steps'
       end
       object seNprint: TJvSpinEdit
         Left = 6
-        Top = 3
+        Top = 16
         Width = 121
         Height = 26
         MaxValue = 2147483647.000000000000000000
         TabOrder = 0
       end
       object chklstOptions: TCheckListBox
-        Left = 3
-        Top = 35
-        Width = 576
+        Left = 6
+        Top = 48
+        Width = 572
         Height = 206
         Anchors = [akLeft, akTop, akRight]
         ItemHeight = 18
         Items.Strings = (
-          'Print output for the first time step (NPRINT)'
+          'Print output for the first time step (transient models) (NPRINT)'
           
             'Print coordinates, element thicknesses, and porosities of nodes ' +
             '(CNODAL)'
@@ -59,22 +71,22 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
           'Write a summary of simulation progress to the screen (CSCRN)'
           'Pause for a user response at the end of the simulation (CPAUSE)')
         TabOrder = 1
+        ExplicitWidth = 568
       end
     end
     object jvspNodEle: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 582
+      Width = 581
       Height = 344
       Caption = 'jvspNodEle'
-      ExplicitLeft = 6
-      ExplicitTop = 1
+      ExplicitWidth = 577
       DesignSize = (
-        582
+        581
         344)
       object lblNE_PrintFrequency: TLabel
-        Left = 143
-        Top = 19
+        Left = 133
+        Top = 11
         Width = 407
         Height = 36
         Caption = 
@@ -83,14 +95,14 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
         WordWrap = True
       end
       object lblNcol: TLabel
-        Left = 16
-        Top = 61
+        Left = 6
+        Top = 48
         Width = 119
         Height = 18
         Caption = 'NCOL and LCOL'
       end
       object seNE_PrintFrequency: TJvSpinEdit
-        Left = 16
+        Left = 6
         Top = 16
         Width = 121
         Height = 26
@@ -98,15 +110,15 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
         TabOrder = 0
       end
       object clbNcol: TCheckListBox
-        Left = 16
-        Top = 85
-        Width = 561
-        Height = 244
+        Left = 6
+        Top = 69
+        Width = 572
+        Height = 260
         Anchors = [akLeft, akTop, akRight]
         DoubleBuffered = False
         ItemHeight = 18
         Items.Strings = (
-          'Print data on first time step (NCOLPR, LCOLPR)'
+          'Print nodal data on first time step (transient models) (NCOLPR)'
           'Node and element numbers (N, E)'
           'Coordinates of node or element (X, Y, Z)'
           'Pressure (P)'
@@ -121,9 +133,10 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
     object jvspObsBound: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 582
+      Width = 581
       Height = 344
       Caption = '1'
+      ExplicitWidth = 577
       object lblNoblin: TLabel
         Left = 133
         Top = 6
@@ -220,7 +233,7 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
   object jvpltvNavigator: TJvPageListTreeView
     Left = 0
     Top = 0
-    Width = 121
+    Width = 136
     Height = 344
     PageDefault = 0
     PageList = jvplMain
@@ -232,16 +245,17 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
   object pnlBottom: TPanel
     Left = 0
     Top = 344
-    Width = 703
+    Width = 722
     Height = 50
     Align = alBottom
     ParentColor = True
     TabOrder = 2
+    ExplicitWidth = 703
     DesignSize = (
-      703
+      722
       50)
     object btnCancel: TBitBtn
-      Left = 593
+      Left = 612
       Top = 7
       Width = 91
       Height = 33
@@ -249,9 +263,10 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
       Kind = bkCancel
       NumGlyphs = 2
       TabOrder = 2
+      ExplicitLeft = 593
     end
     object btnOK: TBitBtn
-      Left = 496
+      Left = 515
       Top = 7
       Width = 91
       Height = 33
@@ -260,9 +275,10 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
       NumGlyphs = 2
       TabOrder = 1
       OnClick = btnOKClick
+      ExplicitLeft = 496
     end
     object btnHelp: TBitBtn
-      Left = 399
+      Left = 418
       Top = 7
       Width = 91
       Height = 33
@@ -270,6 +286,8 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
       Kind = bkHelp
       NumGlyphs = 2
       TabOrder = 0
+      OnClick = btnHelpClick
+      ExplicitLeft = 399
     end
   end
 end

@@ -658,6 +658,11 @@ begin
             begin
               Pos1 := Pos1 + 1;
               C := Copy(Temp, Pos1, 1);
+              if C = '' then
+              begin
+                result := '';
+                Exit;
+              end;
             end;
           // Find Pos2, position of first blank character following this string
           Pos2 := Pos1 + 1;
@@ -666,6 +671,11 @@ begin
             begin
               Pos2 := Pos2 + 1;
               C := Copy(Temp, Pos2, 1);
+              if C = '' then
+              begin
+                result := '';
+                Exit;
+              end;
             end;
           if I < Count then Pos1 := Pos2;
         end;

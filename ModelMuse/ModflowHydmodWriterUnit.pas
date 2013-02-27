@@ -175,368 +175,376 @@ var
     end
   end;
 begin
+  frmErrorsAndWarnings.BeginUpdate;
   try
-  SetLength(CheckArray, Model.Grid.RowCount, Model.Grid.ColumnCount);
-  X0 := Model.Grid.ColumnPosition[0];
-  Y0 := Model.Grid.RowPosition[Model.Grid.RowCount];
-  for Index := 0 to Model.ScreenObjectCount - 1 do
-  begin
-    ScreenObject := Model.ScreenObjects[Index];
-    if ScreenObject.Deleted then
+    frmErrorsAndWarnings.RemoveWarningGroup(frmGoPhast.PhastModel,
+      StrTheInterpolationAs);
+    SetLength(CheckArray, Model.Grid.RowCount, Model.Grid.ColumnCount);
+    X0 := Model.Grid.ColumnPosition[0];
+    Y0 := Model.Grid.RowPosition[Model.Grid.RowCount];
+    for Index := 0 to Model.ScreenObjectCount - 1 do
     begin
-      Continue;
-    end;
-    if not ScreenObject.UsedModels.UsesModel(Model) then
-    begin
-      Continue;
-    end;
-    HydmodData := ScreenObject.ModflowHydmodData;
-    if (HydmodData <> nil) and HydmodData.Used then
-    begin
-      CellList := TCellAssignmentList.Create;
-      try
-        ScreenObject.GetCellsToAssign(Model.Grid, '0',
-          nil, nil, CellList, alAll, Model);
-        if (ScreenObject.ViewDirection = vdTop)
-          and (ScreenObject.Count = ScreenObject.SectionCount)
-          and (not HydmodData.SfrStage)
-          and (not HydmodData.SfrInFlow)
-          and (not HydmodData.SfrOutFlow)
-          and (not HydmodData.SfrAquiferExchange) then
-        begin
-          AssignmentMethod := HydmodData.AssignmentMethod;
-        end
-        else
-        begin
-          AssignmentMethod := amCell;
-          if AssignmentMethod <> HydmodData.AssignmentMethod then
+      ScreenObject := Model.ScreenObjects[Index];
+      if ScreenObject.Deleted then
+      begin
+        Continue;
+      end;
+      if not ScreenObject.UsedModels.UsesModel(Model) then
+      begin
+        Continue;
+      end;
+      HydmodData := ScreenObject.ModflowHydmodData;
+      if (HydmodData <> nil) and HydmodData.Used then
+      begin
+        CellList := TCellAssignmentList.Create;
+        try
+          ScreenObject.GetCellsToAssign(Model.Grid, '0',
+            nil, nil, CellList, alAll, Model);
+          if (ScreenObject.ViewDirection = vdTop)
+            and (ScreenObject.Count = ScreenObject.SectionCount)
+            and (not HydmodData.SfrStage)
+            and (not HydmodData.SfrInFlow)
+            and (not HydmodData.SfrOutFlow)
+            and (not HydmodData.SfrAquiferExchange) then
           begin
-            frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
-              StrTheInterpolationAs, ScreenObject.Name);
+            AssignmentMethod := HydmodData.AssignmentMethod;
+          end
+          else
+          begin
+            AssignmentMethod := amCell;
+            if AssignmentMethod <> HydmodData.AssignmentMethod then
+            begin
+              frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
+                StrTheInterpolationAs, ScreenObject.Name);
+            end;
           end;
-        end;
-        case AssignmentMethod of
-          amCell:
-            begin
-              if HydmodData.Head or HydmodData.Drawdown then
+          case AssignmentMethod of
+            amCell:
               begin
-                for CellIndex := 0 to CellList.Count - 1 do
+                if HydmodData.Head or HydmodData.Drawdown then
                 begin
-                  ACell := CellList[CellIndex];
-                  APoint := Model.Grid.UnrotatedTwoDElementCenter(
-                    ACell.Column, ACell.Row);
-                  if HydmodData.Head then
+                  for CellIndex := 0 to CellList.Count - 1 do
                   begin
-                    Location := THydModLocation.Create;
-                    FLocations.Add(Location);
-                    Location.FXL := APoint.x - X0;
-                    Location.FYL := APoint.y - Y0;
-                    Location.FPackage := hmpBAS;
-                    Location.FArray := hmaHead;
-                    Location.FAssignmentMethod := amCell;
-                    Location.FLayer := ACell.Layer + 1;
-                    Location.FHydLabel := HydmodData.HydrographLabel;
-                    if CellList.Count > 1 then
+                    ACell := CellList[CellIndex];
+                    APoint := Model.Grid.UnrotatedTwoDElementCenter(
+                      ACell.Column, ACell.Row);
+                    if HydmodData.Head then
                     begin
-                      Location.FCellIndex := CellIndex;
-                    end
-                    else
-                    begin
-                      Location.FCellIndex := -1;
+                      Location := THydModLocation.Create;
+                      FLocations.Add(Location);
+                      Location.FXL := APoint.x - X0;
+                      Location.FYL := APoint.y - Y0;
+                      Location.FPackage := hmpBAS;
+                      Location.FArray := hmaHead;
+                      Location.FAssignmentMethod := amCell;
+                      Location.FLayer := ACell.Layer + 1;
+                      Location.FHydLabel := HydmodData.HydrographLabel;
+                      if CellList.Count > 1 then
+                      begin
+                        Location.FCellIndex := CellIndex;
+                      end
+                      else
+                      begin
+                        Location.FCellIndex := -1;
+                      end;
                     end;
-                  end;
-                  if HydmodData.Drawdown then
-                  begin
-                    Location := THydModLocation.Create;
-                    FLocations.Add(Location);
-                    Location.FXL := APoint.x - X0;
-                    Location.FYL := APoint.y - Y0;
-                    Location.FPackage := hmpBAS;
-                    Location.FArray := hmaDrawdown;
-                    Location.FAssignmentMethod := amCell;
-                    Location.FLayer := ACell.Layer + 1;
-                    Location.FHydLabel := HydmodData.HydrographLabel;
-                    if CellList.Count > 1 then
+                    if HydmodData.Drawdown then
                     begin
-                      Location.FCellIndex := CellIndex;
-                    end
-                    else
-                    begin
-                      Location.FCellIndex := -1;
+                      Location := THydModLocation.Create;
+                      FLocations.Add(Location);
+                      Location.FXL := APoint.x - X0;
+                      Location.FYL := APoint.y - Y0;
+                      Location.FPackage := hmpBAS;
+                      Location.FArray := hmaDrawdown;
+                      Location.FAssignmentMethod := amCell;
+                      Location.FLayer := ACell.Layer + 1;
+                      Location.FHydLabel := HydmodData.HydrographLabel;
+                      if CellList.Count > 1 then
+                      begin
+                        Location.FCellIndex := CellIndex;
+                      end
+                      else
+                      begin
+                        Location.FCellIndex := -1;
+                      end;
                     end;
                   end;
                 end;
-              end;
-              if Model.ModflowPackages.SubPackage.IsSelected
-                and (HydmodData.SubPreconsolidationHead
-                or HydmodData.SubCompaction or HydmodData.SubSubsidence) then
-              begin
-                HydmodData.SubLayerNumbers(IntArray);
-                InitializeCheckArray;
+                if Model.ModflowPackages.SubPackage.IsSelected
+                  and (HydmodData.SubPreconsolidationHead
+                  or HydmodData.SubCompaction or HydmodData.SubSubsidence) then
+                begin
+                  HydmodData.SubLayerNumbers(IntArray);
+                  InitializeCheckArray;
 
-                if (CellList.Count > 1) or (Length(IntArray) > 1) then
-                begin
-                  SubIndex := 0;
-                end
-                else
-                begin
-                  SubIndex := -1;
-                end;
-                for CellIndex := 0 to CellList.Count - 1 do
-                begin
-                  ACell := CellList[CellIndex];
-                  if not CheckArray[ACell.Row, ACell.Column] then
+                  if (CellList.Count > 1) or (Length(IntArray) > 1) then
                   begin
-                    CheckArray[ACell.Row, ACell.Column] := True;
-                    APoint := Model.Grid.UnrotatedTwoDElementCenter(
-                      ACell.Column, ACell.Row);
-                    for LayerIndex := 0 to Length(IntArray) - 1 do
+                    SubIndex := 0;
+                  end
+                  else
+                  begin
+                    SubIndex := -1;
+                  end;
+                  for CellIndex := 0 to CellList.Count - 1 do
+                  begin
+                    ACell := CellList[CellIndex];
+                    if not CheckArray[ACell.Row, ACell.Column] then
                     begin
-                      if HydmodData.SubPreconsolidationHead then
+                      CheckArray[ACell.Row, ACell.Column] := True;
+                      APoint := Model.Grid.UnrotatedTwoDElementCenter(
+                        ACell.Column, ACell.Row);
+                      for LayerIndex := 0 to Length(IntArray) - 1 do
                       begin
-                        Location := THydModLocation.Create;
-                        FLocations.Add(Location);
-                        Location.FXL := APoint.x - X0;
-                        Location.FYL := APoint.y - Y0;
-                        Location.FPackage := hmpSub;
-                        Location.FArray := hmaPreconsilidationHead;
-                        Location.FAssignmentMethod := amCell;
-                        Location.FLayer := IntArray[LayerIndex];
-                        Location.FHydLabel := HydmodData.HydrographLabel;
-                        Location.FCellIndex := SubIndex;
+                        if HydmodData.SubPreconsolidationHead then
+                        begin
+                          Location := THydModLocation.Create;
+                          FLocations.Add(Location);
+                          Location.FXL := APoint.x - X0;
+                          Location.FYL := APoint.y - Y0;
+                          Location.FPackage := hmpSub;
+                          Location.FArray := hmaPreconsilidationHead;
+                          Location.FAssignmentMethod := amCell;
+                          Location.FLayer := IntArray[LayerIndex];
+                          Location.FHydLabel := HydmodData.HydrographLabel;
+                          Location.FCellIndex := SubIndex;
+                        end;
+                        if HydmodData.SubCompaction then
+                        begin
+                          Location := THydModLocation.Create;
+                          FLocations.Add(Location);
+                          Location.FXL := APoint.x - X0;
+                          Location.FYL := APoint.y - Y0;
+                          Location.FPackage := hmpSub;
+                          Location.FArray := hmaCompaction;
+                          Location.FAssignmentMethod := amCell;
+                          Location.FLayer := IntArray[LayerIndex];
+                          Location.FHydLabel := HydmodData.HydrographLabel;
+                          Location.FCellIndex := SubIndex;
+                        end;
+                        if HydmodData.SubSubsidence then
+                        begin
+                          Location := THydModLocation.Create;
+                          FLocations.Add(Location);
+                          Location.FXL := APoint.x - X0;
+                          Location.FYL := APoint.y - Y0;
+                          Location.FPackage := hmpSub;
+                          Location.FArray := hmaSubsidence;
+                          Location.FAssignmentMethod := amCell;
+                          Location.FLayer := IntArray[LayerIndex];
+                          Location.FHydLabel := HydmodData.HydrographLabel;
+                          Location.FCellIndex := SubIndex;
+                        end;
+                        Inc(SubIndex);
                       end;
-                      if HydmodData.SubCompaction then
+                    end;
+                  end;
+                end;
+                SfrIndex := 0;
+                if Model.ModflowPackages.SfrPackage.IsSelected
+                  and (HydmodData.SfrStage or HydmodData.SfrInFlow
+                  or HydmodData.SfrOutFlow or HydmodData.SfrAquiferExchange) then
+                begin
+                  InitializeSegmentReachArray;
+
+                  for CellIndex := 0 to CellList.Count - 1 do
+                  begin
+                    ACell := CellList[CellIndex];
+                    List := SegmentReachArray[ACell.Layer, ACell.Row, ACell.Column];
+                    if List <> nil then
+                    begin
+                      APoint := Model.Grid.UnrotatedTwoDElementCenter(
+                        ACell.Column, ACell.Row);
+                      for ReachIndex := 0 to List.Count - 1 do
                       begin
-                        Location := THydModLocation.Create;
-                        FLocations.Add(Location);
-                        Location.FXL := APoint.x - X0;
-                        Location.FYL := APoint.y - Y0;
-                        Location.FPackage := hmpSub;
-                        Location.FArray := hmaCompaction;
-                        Location.FAssignmentMethod := amCell;
-                        Location.FLayer := IntArray[LayerIndex];
-                        Location.FHydLabel := HydmodData.HydrographLabel;
-                        Location.FCellIndex := SubIndex;
+                        SegmentReach := List[ReachIndex];
+                        if (ScreenObject.SfrSegmentNumber = SegmentReach.FSegment)
+                          or (ScreenObject.ModflowSfrBoundary = nil) then
+                        begin
+                          if HydmodData.SfrStage then
+                          begin
+                            SfrLocation := THydSfrModCell.Create;
+                            FLocations.Add(SfrLocation);
+                            SfrLocation.FSegment := SegmentReach.FSegment;
+                            SfrLocation.FReach := SegmentReach.FReach;
+                            SfrLocation.FPackage := hmpSFR;
+                            SfrLocation.FArray := hmaSfrStage;
+                            SfrLocation.FAssignmentMethod := amCell;
+                            SfrLocation.FLayer := ACell.Layer+1;
+                            SfrLocation.FHydLabel := HydmodData.HydrographLabel;
+                            SfrLocation.FCellIndex := SfrIndex;
+                          end;
+                          if HydmodData.SfrInFlow then
+                          begin
+                            SfrLocation := THydSfrModCell.Create;
+                            FLocations.Add(SfrLocation);
+                            SfrLocation.FSegment := SegmentReach.FSegment;
+                            SfrLocation.FReach := SegmentReach.FReach;
+                            SfrLocation.FPackage := hmpSFR;
+                            SfrLocation.FArray := hmaInflow;
+                            SfrLocation.FAssignmentMethod := amCell;
+                            SfrLocation.FLayer := ACell.Layer+1;
+                            SfrLocation.FHydLabel := HydmodData.HydrographLabel;
+                            SfrLocation.FCellIndex := SfrIndex;
+                          end;
+                          if HydmodData.SfrOutFlow then
+                          begin
+                            SfrLocation := THydSfrModCell.Create;
+                            FLocations.Add(SfrLocation);
+                            SfrLocation.FSegment := SegmentReach.FSegment;
+                            SfrLocation.FReach := SegmentReach.FReach;
+                            SfrLocation.FPackage := hmpSFR;
+                            SfrLocation.FArray := hmaOutflow;
+                            SfrLocation.FAssignmentMethod := amCell;
+                            SfrLocation.FLayer := ACell.Layer+1;
+                            SfrLocation.FHydLabel := HydmodData.HydrographLabel;
+                            SfrLocation.FCellIndex := SfrIndex;
+                          end;
+                          if HydmodData.SfrAquiferExchange then
+                          begin
+                            SfrLocation := THydSfrModCell.Create;
+                            FLocations.Add(SfrLocation);
+                            SfrLocation.FSegment := SegmentReach.FSegment;
+                            SfrLocation.FReach := SegmentReach.FReach;
+                            SfrLocation.FPackage := hmpSFR;
+                            SfrLocation.FArray := hmaExchange;
+                            SfrLocation.FAssignmentMethod := amCell;
+                            SfrLocation.FLayer := ACell.Layer+1;
+                            SfrLocation.FHydLabel := HydmodData.HydrographLabel;
+                            SfrLocation.FCellIndex := SfrIndex;
+                          end;
+                          Inc(SfrIndex);
+                        end;
                       end;
-                      if HydmodData.SubSubsidence then
-                      begin
-                        Location := THydModLocation.Create;
-                        FLocations.Add(Location);
-                        Location.FXL := APoint.x - X0;
-                        Location.FYL := APoint.y - Y0;
-                        Location.FPackage := hmpSub;
-                        Location.FArray := hmaSubsidence;
-                        Location.FAssignmentMethod := amCell;
-                        Location.FLayer := IntArray[LayerIndex];
-                        Location.FHydLabel := HydmodData.HydrographLabel;
-                        Location.FCellIndex := SubIndex;
-                      end;
-                      Inc(SubIndex);
                     end;
                   end;
                 end;
               end;
-              SfrIndex := 0;
-              if Model.ModflowPackages.SfrPackage.IsSelected
-                and (HydmodData.SfrStage or HydmodData.SfrInFlow
-                or HydmodData.SfrOutFlow or HydmodData.SfrAquiferExchange) then
+            amInterpolate:
               begin
-                InitializeSegmentReachArray;
-                for CellIndex := 0 to CellList.Count - 1 do
+                if HydmodData.Head or HydmodData.Drawdown then
                 begin
-                  ACell := CellList[CellIndex];
-                  List := SegmentReachArray[ACell.Layer, ACell.Row, ACell.Column];
-                  if List <> nil then
+                  for CellIndex := 0 to CellList.Count - 1 do
                   begin
-                    APoint := Model.Grid.UnrotatedTwoDElementCenter(
-                      ACell.Column, ACell.Row);
-                    for ReachIndex := 0 to List.Count - 1 do
+                    ACell := CellList[CellIndex];
+                    if HydmodData.Head then
                     begin
-                      SegmentReach := List[ReachIndex];
-                      if HydmodData.SfrStage then
+                      Location := THydModLocation.Create;
+                      FLocations.Add(Location);
+                      Location.FXL := ACell.Segment.X1 - X0;
+                      Location.FYL := ACell.Segment.Y1 - Y0;
+                      Location.FPackage := hmpBAS;
+                      Location.FArray := hmaHead;
+                      Location.FAssignmentMethod := amInterpolate;
+                      Location.FLayer := ACell.Layer + 1;
+                      Location.FHydLabel := HydmodData.HydrographLabel;
+                      if CellList.Count > 1 then
                       begin
-                        SfrLocation := THydSfrModCell.Create;
-                        FLocations.Add(SfrLocation);
-                        SfrLocation.FSegment := SegmentReach.FSegment;
-                        SfrLocation.FReach := SegmentReach.FReach;
-                        SfrLocation.FPackage := hmpSFR;
-                        SfrLocation.FArray := hmaSfrStage;
-                        SfrLocation.FAssignmentMethod := amCell;
-                        SfrLocation.FLayer := ACell.Layer+1;
-                        SfrLocation.FHydLabel := HydmodData.HydrographLabel;
-                        SfrLocation.FCellIndex := SfrIndex;
-                      end;
-                      if HydmodData.SfrInFlow then
+                        Location.FCellIndex := CellIndex;
+                      end
+                      else
                       begin
-                        SfrLocation := THydSfrModCell.Create;
-                        FLocations.Add(SfrLocation);
-                        SfrLocation.FSegment := SegmentReach.FSegment;
-                        SfrLocation.FReach := SegmentReach.FReach;
-                        SfrLocation.FPackage := hmpSFR;
-                        SfrLocation.FArray := hmaInflow;
-                        SfrLocation.FAssignmentMethod := amCell;
-                        SfrLocation.FLayer := ACell.Layer+1;
-                        SfrLocation.FHydLabel := HydmodData.HydrographLabel;
-                        SfrLocation.FCellIndex := SfrIndex;
+                        Location.FCellIndex := -1;
                       end;
-                      if HydmodData.SfrOutFlow then
+                    end;
+                    if HydmodData.Drawdown then
+                    begin
+                      Location := THydModLocation.Create;
+                      FLocations.Add(Location);
+                      Location.FXL := ACell.Segment.X1 - X0;
+                      Location.FYL := ACell.Segment.Y1 - Y0;
+                      Location.FPackage := hmpBAS;
+                      Location.FArray := hmaDrawdown;
+                      Location.FAssignmentMethod := amInterpolate;
+                      Location.FLayer := ACell.Layer + 1;
+                      Location.FHydLabel := HydmodData.HydrographLabel;
+                      if CellList.Count > 1 then
                       begin
-                        SfrLocation := THydSfrModCell.Create;
-                        FLocations.Add(SfrLocation);
-                        SfrLocation.FSegment := SegmentReach.FSegment;
-                        SfrLocation.FReach := SegmentReach.FReach;
-                        SfrLocation.FPackage := hmpSFR;
-                        SfrLocation.FArray := hmaOutflow;
-                        SfrLocation.FAssignmentMethod := amCell;
-                        SfrLocation.FLayer := ACell.Layer+1;
-                        SfrLocation.FHydLabel := HydmodData.HydrographLabel;
-                        SfrLocation.FCellIndex := SfrIndex;
-                      end;
-                      if HydmodData.SfrAquiferExchange then
+                        Location.FCellIndex := CellIndex;
+                      end
+                      else
                       begin
-                        SfrLocation := THydSfrModCell.Create;
-                        FLocations.Add(SfrLocation);
-                        SfrLocation.FSegment := SegmentReach.FSegment;
-                        SfrLocation.FReach := SegmentReach.FReach;
-                        SfrLocation.FPackage := hmpSFR;
-                        SfrLocation.FArray := hmaExchange;
-                        SfrLocation.FAssignmentMethod := amCell;
-                        SfrLocation.FLayer := ACell.Layer+1;
-                        SfrLocation.FHydLabel := HydmodData.HydrographLabel;
-                        SfrLocation.FCellIndex := SfrIndex;
+                        Location.FCellIndex := -1;
                       end;
-                      Inc(SfrIndex);
                     end;
                   end;
                 end;
-              end;
-            end;
-          amInterpolate:
-            begin
-              if HydmodData.Head or HydmodData.Drawdown then
-              begin
-                for CellIndex := 0 to CellList.Count - 1 do
+                if Model.ModflowPackages.SubPackage.IsSelected
+                  and (HydmodData.SubPreconsolidationHead
+                  or HydmodData.SubCompaction or HydmodData.SubSubsidence) then
                 begin
-                  ACell := CellList[CellIndex];
-                  if HydmodData.Head then
+                  HydmodData.SubLayerNumbers(IntArray);
+                  InitializeCheckArray;
+                  if (CellList.Count > 1) or (Length(IntArray) > 1) then
                   begin
-                    Location := THydModLocation.Create;
-                    FLocations.Add(Location);
-                    Location.FXL := ACell.Segment.X1 - X0;
-                    Location.FYL := ACell.Segment.Y1 - Y0;
-                    Location.FPackage := hmpBAS;
-                    Location.FArray := hmaHead;
-                    Location.FAssignmentMethod := amInterpolate;
-                    Location.FLayer := ACell.Layer + 1;
-                    Location.FHydLabel := HydmodData.HydrographLabel;
-                    if CellList.Count > 1 then
-                    begin
-                      Location.FCellIndex := CellIndex;
-                    end
-                    else
-                    begin
-                      Location.FCellIndex := -1;
-                    end;
-                  end;
-                  if HydmodData.Drawdown then
+                    SubIndex := 0;
+                  end
+                  else
                   begin
-                    Location := THydModLocation.Create;
-                    FLocations.Add(Location);
-                    Location.FXL := ACell.Segment.X1 - X0;
-                    Location.FYL := ACell.Segment.Y1 - Y0;
-                    Location.FPackage := hmpBAS;
-                    Location.FArray := hmaDrawdown;
-                    Location.FAssignmentMethod := amInterpolate;
-                    Location.FLayer := ACell.Layer + 1;
-                    Location.FHydLabel := HydmodData.HydrographLabel;
-                    if CellList.Count > 1 then
-                    begin
-                      Location.FCellIndex := CellIndex;
-                    end
-                    else
-                    begin
-                      Location.FCellIndex := -1;
-                    end;
+                    SubIndex := -1;
                   end;
+                  for CellIndex := 0 to CellList.Count - 1 do
+                  begin
+                    ACell := CellList[CellIndex];
+                    if not CheckArray[ACell.Row, ACell.Column] then
+                    begin
+                      CheckArray[ACell.Row, ACell.Column] := True;
+                      for LayerIndex := 0 to Length(IntArray) - 1 do
+                      begin
+                        if HydmodData.SubPreconsolidationHead then
+                        begin
+                          Location := THydModLocation.Create;
+                          FLocations.Add(Location);
+                          Location.FXL := ACell.Segment.X1 - X0;
+                          Location.FYL := ACell.Segment.Y1 - Y0;
+                          Location.FPackage := hmpSub;
+                          Location.FArray := hmaPreconsilidationHead;
+                          Location.FAssignmentMethod := amInterpolate;
+                          Location.FLayer := IntArray[LayerIndex];
+                          Location.FHydLabel := HydmodData.HydrographLabel;
+                          Location.FCellIndex := SubIndex;
+                        end;
+                        if HydmodData.SubCompaction then
+                        begin
+                          Location := THydModLocation.Create;
+                          FLocations.Add(Location);
+                          Location.FXL := ACell.Segment.X1 - X0;
+                          Location.FYL := ACell.Segment.Y1 - Y0;
+                          Location.FPackage := hmpSub;
+                          Location.FArray := hmaCompaction;
+                          Location.FAssignmentMethod := amInterpolate;
+                          Location.FLayer := IntArray[LayerIndex];
+                          Location.FHydLabel := HydmodData.HydrographLabel;
+                          Location.FCellIndex := SubIndex;
+                        end;
+                        if HydmodData.SubSubsidence then
+                        begin
+                          Location := THydModLocation.Create;
+                          FLocations.Add(Location);
+                          Location.FXL := ACell.Segment.X1 - X0;
+                          Location.FYL := ACell.Segment.Y1 - Y0;
+                          Location.FPackage := hmpSub;
+                          Location.FArray := hmaSubsidence;
+                          Location.FAssignmentMethod := amInterpolate;
+                          Location.FLayer := IntArray[LayerIndex];
+                          Location.FHydLabel := HydmodData.HydrographLabel;
+                          Location.FCellIndex := SubIndex;
+                        end;
+                        Inc(SubIndex);
+                      end;
+                    end;
+                  end
                 end;
+                Assert((not HydmodData.SfrStage)
+                  and (not HydmodData.SfrInFlow)
+                  and (not HydmodData.SfrOutFlow)
+                  and (not HydmodData.SfrAquiferExchange));
               end;
-              if Model.ModflowPackages.SubPackage.IsSelected
-                and (HydmodData.SubPreconsolidationHead
-                or HydmodData.SubCompaction or HydmodData.SubSubsidence) then
-              begin
-                HydmodData.SubLayerNumbers(IntArray);
-                InitializeCheckArray;
-                if (CellList.Count > 1) or (Length(IntArray) > 1) then
-                begin
-                  SubIndex := 0;
-                end
-                else
-                begin
-                  SubIndex := -1;
-                end;
-                for CellIndex := 0 to CellList.Count - 1 do
-                begin
-                  ACell := CellList[CellIndex];
-                  if not CheckArray[ACell.Row, ACell.Column] then
-                  begin
-                    CheckArray[ACell.Row, ACell.Column] := True;
-                    for LayerIndex := 0 to Length(IntArray) - 1 do
-                    begin
-                      if HydmodData.SubPreconsolidationHead then
-                      begin
-                        Location := THydModLocation.Create;
-                        FLocations.Add(Location);
-                        Location.FXL := ACell.Segment.X1 - X0;
-                        Location.FYL := ACell.Segment.Y1 - Y0;
-                        Location.FPackage := hmpSub;
-                        Location.FArray := hmaPreconsilidationHead;
-                        Location.FAssignmentMethod := amInterpolate;
-                        Location.FLayer := IntArray[LayerIndex];
-                        Location.FHydLabel := HydmodData.HydrographLabel;
-                        Location.FCellIndex := SubIndex;
-                      end;
-                      if HydmodData.SubCompaction then
-                      begin
-                        Location := THydModLocation.Create;
-                        FLocations.Add(Location);
-                        Location.FXL := ACell.Segment.X1 - X0;
-                        Location.FYL := ACell.Segment.Y1 - Y0;
-                        Location.FPackage := hmpSub;
-                        Location.FArray := hmaCompaction;
-                        Location.FAssignmentMethod := amInterpolate;
-                        Location.FLayer := IntArray[LayerIndex];
-                        Location.FHydLabel := HydmodData.HydrographLabel;
-                        Location.FCellIndex := SubIndex;
-                      end;
-                      if HydmodData.SubSubsidence then
-                      begin
-                        Location := THydModLocation.Create;
-                        FLocations.Add(Location);
-                        Location.FXL := ACell.Segment.X1 - X0;
-                        Location.FYL := ACell.Segment.Y1 - Y0;
-                        Location.FPackage := hmpSub;
-                        Location.FArray := hmaSubsidence;
-                        Location.FAssignmentMethod := amInterpolate;
-                        Location.FLayer := IntArray[LayerIndex];
-                        Location.FHydLabel := HydmodData.HydrographLabel;
-                        Location.FCellIndex := SubIndex;
-                      end;
-                      Inc(SubIndex);
-                    end;
-                  end;
-                end
-              end;
-              Assert((not HydmodData.SfrStage)
-                and (not HydmodData.SfrInFlow)
-                and (not HydmodData.SfrOutFlow)
-                and (not HydmodData.SfrAquiferExchange));
-            end;
+          end;
+        finally
+          CellList.Free;
         end;
-      finally
-        CellList.Free;
       end;
     end;
-  end;
 
   finally
     if Length(SegmentReachArray) > 0 then
@@ -552,6 +560,7 @@ begin
         end;
       end;
     end;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -749,9 +758,9 @@ begin
     begin
       HYDLBL_Root := Copy(HYDLBL_Root, 1, Length(HYDLBL_Root)-1);
     end;
-    result := ' ' + HYDLBL_Root + IntToStr(FCellIndex+1);
+    result := HYDLBL_Root + IntToStr(FCellIndex+1);
   end;
-  result := StringReplace(result, ' ', '_', [rfReplaceAll, rfIgnoreCase]);
+  result := ' ' + StringReplace(result, ' ', '_', [rfReplaceAll, rfIgnoreCase]);
 end;
 
 end.

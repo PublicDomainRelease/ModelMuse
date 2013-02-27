@@ -19,22 +19,18 @@ inherited frmSubdivide: TfrmSubdivide
     Top = 192
     Width = 91
     Height = 33
-    DoubleBuffered = True
     Kind = bkCancel
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 0
+    TabOrder = 5
   end
   object btnOK: TBitBtn
     Left = 525
     Top = 192
     Width = 91
     Height = 33
-    DoubleBuffered = True
     Kind = bkOK
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 1
+    TabOrder = 4
     OnClick = btnOKClick
   end
   object btnHelp: TBitBtn
@@ -43,11 +39,9 @@ inherited frmSubdivide: TfrmSubdivide
     Width = 91
     Height = 33
     HelpType = htKeyword
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    TabOrder = 2
+    TabOrder = 3
     OnClick = btnHelpClick
   end
   object GroupBox1: TGroupBox
@@ -56,7 +50,7 @@ inherited frmSubdivide: TfrmSubdivide
     Width = 233
     Height = 178
     Caption = 'Columns'
-    TabOrder = 3
+    TabOrder = 0
     object lblFromCol: TLabel
       Left = 16
       Top = 27
@@ -94,6 +88,7 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
+      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 0
       OnChange = seCol1Changed
@@ -105,6 +100,7 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
+      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 1
       OnChange = seCol2Changed
@@ -128,7 +124,7 @@ inherited frmSubdivide: TfrmSubdivide
     Width = 232
     Height = 178
     Caption = 'Rows'
-    TabOrder = 4
+    TabOrder = 1
     object lblFromRow: TLabel
       Left = 16
       Top = 27
@@ -166,7 +162,6 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
-      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 0
       OnChange = seRow1Changed
@@ -178,7 +173,6 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
-      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 1
       OnChange = seRow2Changed
@@ -202,7 +196,7 @@ inherited frmSubdivide: TfrmSubdivide
     Width = 232
     Height = 178
     Caption = 'Layers'
-    TabOrder = 5
+    TabOrder = 2
     object lblFromLayer: TLabel
       Left = 16
       Top = 27
@@ -240,6 +234,7 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
+      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 0
       OnChange = seLayer1Changed
@@ -251,6 +246,7 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
+      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 1
       OnChange = seLayer2Changed

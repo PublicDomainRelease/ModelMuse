@@ -1,0 +1,1421 @@
+unit ModflowFmpWellUnit;
+
+interface
+
+uses
+  Windows, ZLib, SysUtils, Classes, Contnrs, OrderedCollectionUnit,
+  ModflowBoundaryUnit, DataSetUnit, ModflowCellUnit, FormulaManagerUnit,
+  SubscriptionUnit, SparseDataSets, RbwParser, GoPhastTypes;
+
+type
+  TFmpWellRecord = record
+    Cell: TCellLocation;
+    MaxPumpingRate: double;
+    FarmID: Integer;
+//    FarmWellID: integer;
+    PumpOnlyIfCropRequiresWater:  Boolean;
+    StartingTime: double;
+    EndingTime: double;
+    MaxPumpingRateAnnotation: string;
+    PumpOnlyIfCropRequiresWaterAnnotation: string;
+    FarmIDAnnotation: string;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+    procedure RecordStrings(Strings: TStringList);
+  end;
+
+  TFmpWellArray = array of TFmpWellRecord;
+
+  TFmpWellStorage = class(TCustomBoundaryStorage)
+  private
+    FFmpWellArray: TFmpWellArray;
+    function GetFmpWellArray: TFmpWellArray;
+  protected
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
+    procedure Store(Compressor: TCompressionStream); override;
+    procedure Clear; override;
+  public
+    property FmpWellArray: TFmpWellArray read GetFmpWellArray;
+  end;
+
+  TFmpWellItem = class(TCustomModflowBoundaryItem)
+  private
+    const
+    MaxPumpingRatePosition = 0;
+    FarmIDPosition = 1;
+    PumpOnlyIfCropRequiresWaterPosition = 2;
+    var
+    FMaxPumpingRate: TFormulaObject;
+    FPumpOnlyIfCropRequiresWater: TFormulaObject;
+    FFarmID: TFormulaObject;
+    FConstructed: Boolean;
+    procedure SetMaxPumpingRate(const Value: string);
+    function GetMaxPumpingRate: string;
+    procedure SetPumpOnlyIfCropRequiresWater(const Value: string);
+    function GetPumpOnlyIfCropRequiresWater: string;
+    function GetFarmID: string;
+    procedure SetFarmID(const Value: string);
+  protected
+    procedure AssignObserverEvents(Collection: TCollection); override;
+    procedure CreateFormulaObjects; override;
+    procedure GetPropertyObserver(Sender: TObject; List: TList); override;
+    procedure RemoveFormulaObjects; override;
+    // See @link(BoundaryFormula).
+    function GetBoundaryFormula(Index: integer): string; override;
+    // See @link(BoundaryFormula).
+    procedure SetBoundaryFormula(Index: integer; const Value: string); override;
+    // @name checks whether AnotherItem is the same as the current @classname.
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    procedure InvalidateModel; override;
+    function BoundaryFormulaCount: integer; override;
+  public
+    constructor Create(Collection: TCollection); override;
+    Destructor Destroy; override;
+  published
+    // @name copies Source to this @classname.
+    procedure Assign(Source: TPersistent); override;
+    // @name is the formula used to set the maximum pumping rate
+    // or the maximum pumping rate multiplier of this boundary.
+    property MaxPumpingRate: string read GetMaxPumpingRate
+      write SetMaxPumpingRate;
+    property PumpOnlyIfCropRequiresWater: string
+      read GetPumpOnlyIfCropRequiresWater write SetPumpOnlyIfCropRequiresWater;
+    property FarmID: string read GetFarmID write SetFarmID;
+  end;
+
+  TMfFmpWelTimeListLink = class(TTimeListsModelLink)
+  private
+    // @name is used to compute the Max pumping rates for a series of
+    // FMP Wells over a series of time intervals.
+    FMaxPumpingRateData: TModflowTimeList;
+    FPumpOnlyIfCropRequiresWaterData: TModflowTimeList;
+    FWellIdData: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
+  public
+    Destructor Destroy; override;
+  end;
+
+  // @name represents MODFLOW FMP Well boundaries
+  // for a series of time intervals.
+  TFmpWellCollection = class(TCustomMF_ListBoundColl)
+  private
+    procedure InvalidateMaxPumpingRateData(Sender: TObject);
+    procedure InvalidatePumpOnlyIfCropRequiresWaterData(Sender: TObject);
+    procedure InvalidateFarmIdData(Sender: TObject);
+  protected
+    function OkDataTypes(BoundaryIndex: Integer): TRbwDataTypes; override;
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
+    function AdjustedFormula(FormulaIndex, ItemIndex: integer): string; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
+
+    // See @link(TCustomNonSpatialBoundColl.ItemClass
+    // TCustomNonSpatialBoundColl.ItemClass)
+    class function ItemClass: TBoundaryItemClass; override;
+    // @name calls inherited @name and then sets the length of
+    // the @link(TFmpWellStorage.FmpWellArray) at ItemIndex in
+    // @link(TCustomMF_BoundColl.Boundaries) to BoundaryCount.
+    // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
+    // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
+    procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
+    procedure InvalidateModel; override;
+    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
+      ACellList: TObject); override;
+    procedure AssignCellList(Expression: TExpression; ACellList: TObject;
+      BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
+      Variables, DataSets: TList; AModel: TBaseModel); override;
+  public
+    function TimeListCount(AModel: TBaseModel): integer; override;
+  end;
+
+  TFmpWellParamItem = class(TModflowParamItem)
+  protected
+    class function BoundaryClass: TMF_BoundCollClass; override;
+  end;
+
+  TFmpWell_Cell = class(TValueCell)
+  private
+    FValues: TFmpWellRecord;
+    FStressPeriod: integer;
+    function GetMaxPumpingRate: double;
+    function GetMaxPumpingRateAnnotation: string;
+    function GetPumpOnlyIfCropRequiresWater: boolean;
+    function GetPumpOnlyIfCropRequiresWaterAnnotation: string;
+    function GetFarmID: integer;
+    function GetFarmIDAnnotation: string;
+  protected
+    function GetColumn: integer; override;
+    function GetLayer: integer; override;
+    function GetRow: integer; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetBooleanValue(Index: integer;
+      AModel: TBaseModel): boolean; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetBooleanAnnotation(Index: integer;
+      AModel: TBaseModel): string; override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
+    function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
+  public
+//    property FarmWellId: Integer read FValues.FarmWellId write FValues.FarmWellId;
+    property MaxPumpingRate: double read GetMaxPumpingRate;
+    property MaxPumpingRateAnnotation: string read GetMaxPumpingRateAnnotation;
+    property PumpOnlyIfCropRequiresWater: boolean read GetPumpOnlyIfCropRequiresWater;
+    property PumpOnlyIfCropRequiresWaterAnnotation: string
+      read GetPumpOnlyIfCropRequiresWaterAnnotation;
+    property FarmID: integer read GetFarmID;
+    property FarmIDAnnotation: string read GetFarmIDAnnotation;
+    function IsIdentical(AnotherCell: TValueCell): boolean; override;
+  end;
+
+  TFmpWellBoundary = class(TSpecificModflowBoundary)
+  private
+//    FFarmId: TFormulaObject;
+//    FFarmIdObserver: TObserver;
+//    function GetFarmId: string;
+//    procedure SetFarmId(Value: string);
+//    procedure UpdateFormulaDependencies(OldFormula: string; var
+//      NewFormula: string; Observer: TObserver; Compiler: TRbwParser);
+  protected
+    // @name fills ValueTimeList with a series of TObjectLists - one for
+    // each stress period.  Each such TObjectList is filled with
+    // @link(TFmpWell_Cell)s for that stress period.
+    procedure AssignCells(BoundaryStorage: TCustomBoundaryStorage;
+      ValueTimeList: TList; AModel: TBaseModel); override;
+    // See @link(TModflowBoundary.BoundaryCollectionClass
+    // TModflowBoundary.BoundaryCollectionClass).
+    class function BoundaryCollectionClass: TMF_BoundCollClass; override;
+    // See @link(TModflowParamBoundary.ModflowParamItemClass
+    // TModflowParamBoundary.ModflowParamItemClass).
+    class function ModflowParamItemClass: TModflowParamItemClass; override;
+    function ParameterType: TParameterType; override;
+//    procedure GetPropertyObserver(Sender: TObject; List: TList); override;
+  public
+    // @name fills ValueTimeList via a call to AssignCells for each
+    // link  @link(TFmpWellStorage) in
+    // @link(TCustomMF_BoundColl.Boundaries Values.Boundaries);
+    // Those represent non-parameter boundary conditions.
+    // @name fills ParamList with the names of the
+    // MODFLOW FMP Well parameters that are in use.
+    // The Objects property of ParamList has TObjectLists
+    // Each such TObjectList is filled via a call to AssignCells
+    // with each @link(TFmpWellStorage) in @link(TCustomMF_BoundColl.Boundaries
+    // Param.Param.Boundaries)
+    // Those represent parameter boundary conditions.
+    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
+      AModel: TBaseModel); override;
+    // ultimately make this virtual;
+    procedure GetCellListValues(ValueTimeList: TList; ParamList: TStringList;
+      AModel: TBaseModel);
+    procedure InvalidateDisplay; override;
+//    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
+//    destructor Destroy; override;
+//    procedure Assign(Source: TPersistent);override;
+  published
+//    property FarmId: string read GetFarmId write SetFarmId;
+  end;
+
+implementation
+
+uses
+  ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit, TempFiles,
+  frmGoPhastUnit, GIS_Functions, ModflowPackageSelectionUnit;
+
+resourcestring
+  StrMaxPumpingRateMu = ' max pumping rate multiplier';
+
+
+{ TFrmWellRecord }
+
+procedure TFmpWellRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
+begin
+  WriteCompCell(Comp, Cell);
+  WriteCompReal(Comp, MaxPumpingRate);
+  WriteCompBoolean(Comp, PumpOnlyIfCropRequiresWater);
+  WriteCompInt(Comp, FarmID);
+  WriteCompReal(Comp, StartingTime);
+  WriteCompReal(Comp, EndingTime);
+  WriteCompInt(Comp, Strings.IndexOf(MaxPumpingRateAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(PumpOnlyIfCropRequiresWaterAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(FarmIDAnnotation));
+end;
+
+procedure TFmpWellRecord.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(MaxPumpingRateAnnotation);
+  Strings.Add(PumpOnlyIfCropRequiresWaterAnnotation);
+  Strings.Add(FarmIDAnnotation);
+end;
+
+procedure TFmpWellRecord.Restore(Decomp: TDecompressionStream;
+  Annotations: TStringList);
+begin
+  Cell := ReadCompCell(Decomp);
+  MaxPumpingRate := ReadCompReal(Decomp);
+  PumpOnlyIfCropRequiresWater := ReadCompBoolean(Decomp);
+  FarmID := ReadCompInt(Decomp);
+  StartingTime := ReadCompReal(Decomp);
+  EndingTime := ReadCompReal(Decomp);
+  MaxPumpingRateAnnotation := Annotations[ReadCompInt(Decomp)];
+  PumpOnlyIfCropRequiresWaterAnnotation := Annotations[ReadCompInt(Decomp)];
+end;
+
+{ TFmpWellStorage }
+
+procedure TFmpWellStorage.Clear;
+begin
+  SetLength(FFmpWellArray, 0);
+  FCleared := True;
+end;
+
+function TFmpWellStorage.GetFmpWellArray: TFmpWellArray;
+begin
+  if FCached and FCleared then
+  begin
+    RestoreData;
+  end;
+  result := FFmpWellArray;
+end;
+
+procedure TFmpWellStorage.Restore(DecompressionStream: TDecompressionStream;
+  Annotations: TStringList);
+var
+  Index: Integer;
+  Count: Integer;
+begin
+  DecompressionStream.Read(Count, SizeOf(Count));
+  SetLength(FFmpWellArray, Count);
+  for Index := 0 to Count - 1 do
+  begin
+    FFmpWellArray[Index].Restore(DecompressionStream, Annotations);
+  end;
+end;
+
+procedure TFmpWellStorage.Store(Compressor: TCompressionStream);
+var
+  Index: Integer;
+  Count: Integer;
+  Strings: TStringList;
+begin
+  Strings := TStringList.Create;
+  try
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    Count := Length(FFmpWellArray);
+    for Index := 0 to Count - 1 do
+    begin
+      FFmpWellArray[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FFmpWellArray[Index].Cache(Compressor, Strings);
+    end;
+
+  finally
+    Strings.Free;
+  end;
+end;
+
+{ TFmpWellItem }
+
+procedure TFmpWellItem.Assign(Source: TPersistent);
+var
+  SourceItem: TFmpWellItem;
+begin
+  // if Assign is updated, update IsSame too.
+  if Source is TFmpWellItem then
+  begin
+    SourceItem := TFmpWellItem(Source);
+    MaxPumpingRate := SourceItem.MaxPumpingRate;
+    PumpOnlyIfCropRequiresWater := SourceItem.PumpOnlyIfCropRequiresWater;
+    FarmID := SourceItem.FarmID;
+  end;
+  inherited;
+end;
+
+procedure TFmpWellItem.AssignObserverEvents(Collection: TCollection);
+var
+  ParentCollection: TFmpWellCollection;
+  MaxPumpingRateObserver: TObserver;
+  PumpOnlyIfCropRequiresWaterObserver: TObserver;
+  FarmIDObserver: TObserver;
+begin
+  ParentCollection := Collection as TFmpWellCollection;
+
+  MaxPumpingRateObserver := FObserverList[MaxPumpingRatePosition];
+  MaxPumpingRateObserver.OnUpToDateSet :=
+    ParentCollection.InvalidateMaxPumpingRateData;
+
+  FarmIDObserver := FObserverList[FarmIDPosition];
+  FarmIDObserver.OnUpToDateSet := ParentCollection.InvalidateFarmIdData;
+
+  if PumpOnlyIfCropRequiresWaterPosition < BoundaryFormulaCount then
+  begin
+    PumpOnlyIfCropRequiresWaterObserver :=
+      FObserverList[PumpOnlyIfCropRequiresWaterPosition];
+    PumpOnlyIfCropRequiresWaterObserver.OnUpToDateSet :=
+      ParentCollection.InvalidatePumpOnlyIfCropRequiresWaterData;
+  end;
+
+end;
+
+function TFmpWellItem.BoundaryFormulaCount: integer;
+var
+  CropIrrigationRequirement: TCropIrrigationRequirement;
+begin
+  result := -1;
+  if not FConstructed  then
+  begin
+    result := 3;
+    Exit;
+  end;
+  CropIrrigationRequirement :=
+    frmGoPhast.PhastModel.ModflowPackages.FarmProcess.CropIrrigationRequirement;
+  case CropIrrigationRequirement of
+    cirContinuously:
+      begin
+        result := 2;
+      end;
+    cirOnlyWhenNeeded:
+      begin
+        result := 3;
+      end;
+    else Assert(False);
+  end;
+end;
+
+constructor TFmpWellItem.Create(Collection: TCollection);
+begin
+  inherited;
+  FConstructed := True;
+end;
+
+procedure TFmpWellItem.CreateFormulaObjects;
+begin
+  FMaxPumpingRate := CreateFormulaObject(dso3D);
+  FPumpOnlyIfCropRequiresWater := CreateFormulaObject(dso3D);
+  FFarmID := CreateFormulaObject(dso3D);
+end;
+
+destructor TFmpWellItem.Destroy;
+begin
+  MaxPumpingRate := '0';
+  PumpOnlyIfCropRequiresWater := 'False';
+  FarmID := '0';
+  inherited;
+end;
+
+function TFmpWellItem.GetBoundaryFormula(Index: integer): string;
+begin
+  case Index of
+    MaxPumpingRatePosition: result := MaxPumpingRate;
+    PumpOnlyIfCropRequiresWaterPosition: result := PumpOnlyIfCropRequiresWater;
+    FarmIDPosition: result := FarmID;
+    else Assert(False);
+  end;
+end;
+
+function TFmpWellItem.GetFarmID: string;
+begin
+  Result := FFarmID.Formula;
+  ResetItemObserver(FarmIDPosition);
+end;
+
+function TFmpWellItem.GetMaxPumpingRate: string;
+begin
+  Result := FMaxPumpingRate.Formula;
+  ResetItemObserver(MaxPumpingRatePosition);
+end;
+
+procedure TFmpWellItem.GetPropertyObserver(Sender: TObject; List: TList);
+begin
+  if Sender = FMaxPumpingRate then
+  begin
+    List.Add(FObserverList[MaxPumpingRatePosition]);
+  end;
+  if Sender = FFarmID then
+  begin
+    List.Add(FObserverList[FarmIDPosition]);
+  end;
+  if Sender = FPumpOnlyIfCropRequiresWater then
+  begin
+    List.Add(FObserverList[PumpOnlyIfCropRequiresWaterPosition]);
+  end;
+end;
+
+function TFmpWellItem.GetPumpOnlyIfCropRequiresWater: string;
+begin
+  Result := FPumpOnlyIfCropRequiresWater.Formula;
+  if PumpOnlyIfCropRequiresWaterPosition < BoundaryFormulaCount then
+  begin
+    ResetItemObserver(PumpOnlyIfCropRequiresWaterPosition);
+  end;
+end;
+
+procedure TFmpWellItem.InvalidateModel;
+var
+  PhastModel: TPhastModel;
+begin
+  inherited;
+  PhastModel := Model as TPhastModel;
+  if (PhastModel <> nil)
+    and not (csDestroying in PhastModel.ComponentState) then
+  begin
+    PhastModel.InvalidateMfFmpMaxPumpingRate(self);
+    PhastModel.InvalidateMfFmpPumpOnlyIfCropRequiresWater(self);
+    PhastModel.InvalidateMfFmpWellFarmID(self);
+  end;
+
+end;
+
+function TFmpWellItem.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  Item: TFmpWellItem;
+begin
+  result := (AnotherItem is TFmpWellItem) and inherited IsSame(AnotherItem);
+  if result then
+  begin
+    Item := TFmpWellItem(AnotherItem);
+    result := (Item.MaxPumpingRate = MaxPumpingRate)
+      and (Item.PumpOnlyIfCropRequiresWater = PumpOnlyIfCropRequiresWater)
+      and (Item.FarmID = FarmID)
+  end;
+end;
+
+procedure TFmpWellItem.RemoveFormulaObjects;
+begin
+  frmGoPhast.PhastModel.FormulaManager.Remove(FMaxPumpingRate,
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
+  frmGoPhast.PhastModel.FormulaManager.Remove(FPumpOnlyIfCropRequiresWater,
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
+  frmGoPhast.PhastModel.FormulaManager.Remove(FFarmID,
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
+end;
+
+procedure TFmpWellItem.SetBoundaryFormula(Index: integer; const Value: string);
+begin
+  inherited;
+  case Index of
+    MaxPumpingRatePosition: MaxPumpingRate := Value;
+    FarmIDPosition: FarmID := Value;
+    PumpOnlyIfCropRequiresWaterPosition: PumpOnlyIfCropRequiresWater := Value;
+    else Assert(False);
+  end;
+end;
+
+procedure TFmpWellItem.SetFarmID(const Value: string);
+begin
+  UpdateFormula(Value, FarmIDPosition, FFarmID);
+end;
+
+procedure TFmpWellItem.SetMaxPumpingRate(const Value: string);
+begin
+  UpdateFormula(Value, MaxPumpingRatePosition, FMaxPumpingRate);
+end;
+
+procedure TFmpWellItem.SetPumpOnlyIfCropRequiresWater(const Value: string);
+begin
+  UpdateFormula(Value, PumpOnlyIfCropRequiresWaterPosition,
+    FPumpOnlyIfCropRequiresWater);
+end;
+
+{ TMfFmpWelTimeListLink }
+
+procedure TMfFmpWelTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  FMaxPumpingRateData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FMaxPumpingRateData.NonParamDescription := StrMaxPumpingRate;
+  FMaxPumpingRateData.ParamDescription := StrMaxPumpingRateMu;
+  if Model <> nil then
+  begin
+    FMaxPumpingRateData.OnInvalidate :=
+      (Model as TCustomModel).InvalidateMfFmpMaxPumpingRate;
+  end;
+  AddTimeList(FMaxPumpingRateData);
+
+  FWellIdData :=
+    TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FWellIdData.NonParamDescription :=
+    StrFarmID;
+  FWellIdData.ParamDescription :=
+    ' ' + LowerCase(StrFarmID);
+  if Model <> nil then
+  begin
+    FWellIdData.OnInvalidate :=
+      (Model as TCustomModel).InvalidateMfFmpWellFarmID;
+  end;
+  AddTimeList(FWellIdData);
+
+  FPumpOnlyIfCropRequiresWaterData :=
+    TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FPumpOnlyIfCropRequiresWaterData.NonParamDescription :=
+    StrPumpOnlyIfCropRequiresWater;
+  FPumpOnlyIfCropRequiresWaterData.ParamDescription :=
+    ' ' + LowerCase(StrPumpOnlyIfCropRequiresWater);
+  if Model <> nil then
+  begin
+    FPumpOnlyIfCropRequiresWaterData.OnInvalidate :=
+      (Model as TCustomModel).InvalidateMfFmpPumpOnlyIfCropRequiresWater;
+  end;
+  AddTimeList(FPumpOnlyIfCropRequiresWaterData);
+
+end;
+
+destructor TMfFmpWelTimeListLink.Destroy;
+begin
+  FWellIdData.Free;
+  FMaxPumpingRateData.Free;
+  FPumpOnlyIfCropRequiresWaterData.Free;
+  inherited;
+end;
+
+{ TFmpWellCollection }
+
+procedure TFmpWellCollection.AddSpecificBoundary(AModel: TBaseModel);
+begin
+  AddBoundary(TFmpWellStorage.Create(AModel));
+end;
+
+function TFmpWellCollection.AdjustedFormula(FormulaIndex,
+  ItemIndex: integer): string;
+var
+  Boundary: TFmpWellBoundary;
+  Item: TFmpWellItem;
+  ScreenObject: TScreenObject;
+begin
+  result := '';
+  Boundary := BoundaryGroup as TFmpWellBoundary;
+  ScreenObject := Boundary.ScreenObject as TScreenObject;
+  Item := Items[ItemIndex] as TFmpWellItem;
+  if FormulaIndex = TFmpWellItem.MaxPumpingRatePosition then
+  begin
+    case Boundary.FormulaInterpretation of
+      fiSpecific:
+        begin
+          if ScreenObject.ScreenObjectLength = 0 then
+          begin
+            result := Item.MaxPumpingRate;
+          end
+          else if ScreenObject.Closed then
+          begin
+            result := '(' + Item.MaxPumpingRate
+              + ') * ' + StrObjectIntersectArea;
+          end
+          else
+          begin
+            result := '(' + Item.MaxPumpingRate
+              + ') * ' + StrObjectSectionIntersectLength;
+          end;
+        end;
+      fiDirect:
+        begin
+          result := Item.MaxPumpingRate;
+        end;
+      fiTotal:
+        begin
+          if ScreenObject.ScreenObjectLength = 0 then
+          begin
+            result := Item.MaxPumpingRate;
+          end
+          else if ScreenObject.Closed then
+          begin
+            result := '((' + Item.MaxPumpingRate
+              + ') * ' + StrObjectIntersectArea + ') / ' + StrObjectArea;
+          end
+          else
+          begin
+            result := '((' + Item.MaxPumpingRate
+              + ') * ' + StrObjectSectionIntersectLength+ ') / ' + StrObjectLength;
+          end;
+        end;
+      else Assert(False);
+    end;
+  end
+  else
+  begin
+    result := Item.BoundaryFormula[FormulaIndex];
+  end;
+end;
+
+procedure TFmpWellCollection.AssignCellList(Expression: TExpression;
+  ACellList: TObject; BoundaryStorage: TCustomBoundaryStorage;
+  BoundaryFunctionIndex: integer; Variables, DataSets: TList;
+  AModel: TBaseModel);
+var
+  FmpWellStorage: TFmpWellStorage;
+  CellList: TCellAssignmentList;
+  Index: Integer;
+  ACell: TCellAssignment;
+begin
+  Assert(BoundaryFunctionIndex in
+    [TFmpWellItem.MaxPumpingRatePosition,
+    TFmpWellItem.PumpOnlyIfCropRequiresWaterPosition,
+    TFmpWellItem.FarmIDPosition]);
+  Assert(Expression <> nil);
+
+  FmpWellStorage := BoundaryStorage as TFmpWellStorage;
+  CellList := ACellList as TCellAssignmentList;
+  for Index := 0 to CellList.Count - 1 do
+  begin
+    ACell := CellList[Index];
+    UpdataRequiredData(DataSets, Variables, ACell, AModel);
+
+    Expression.Evaluate;
+    with FmpWellStorage.FmpWellArray[Index] do
+    begin
+      case BoundaryFunctionIndex of
+        TFmpWellItem.MaxPumpingRatePosition:
+          begin
+            MaxPumpingRate := Expression.DoubleResult;
+            MaxPumpingRateAnnotation := ACell.Annotation;
+          end;
+        TFmpWellItem.FarmIDPosition:
+          begin
+            FarmID := Expression.IntegerResult;
+            FarmIDAnnotation := ACell.Annotation;
+          end;
+        TFmpWellItem.PumpOnlyIfCropRequiresWaterPosition:
+          begin
+            PumpOnlyIfCropRequiresWater := Expression.BooleanResult;
+            PumpOnlyIfCropRequiresWaterAnnotation := ACell.Annotation;
+          end;
+        else
+          Assert(False);
+      end;
+    end;
+  end;
+end;
+
+procedure TFmpWellCollection.AssignCellLocation(
+  BoundaryStorage: TCustomBoundaryStorage; ACellList: TObject);
+var
+  FmpWellStorage: TFmpWellStorage;
+  CellList: TCellAssignmentList;
+  Index: Integer;
+  ACell: TCellAssignment;
+begin
+  FmpWellStorage := BoundaryStorage as TFmpWellStorage;
+  CellList := ACellList as TCellAssignmentList;
+  for Index := 0 to CellList.Count - 1 do
+  begin
+    ACell := CellList[Index];
+    if ACell.LgrEdge then
+    begin
+      Continue;
+    end;
+    with FmpWellStorage.FFmpWellArray[Index] do
+    begin
+      Cell.Layer := ACell.Layer;
+      Cell.Row := ACell.Row;
+      Cell.Column := ACell.Column;
+      Cell.Section := ACell.Section;
+    end;
+  end;
+end;
+
+function TFmpWellCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
+begin
+  result := TMfFmpWelTimeListLink;
+end;
+
+procedure TFmpWellCollection.InvalidateModel;
+var
+  PhastModel: TPhastModel;
+begin
+  inherited;
+  PhastModel := Model as TPhastModel;
+  if (PhastModel <> nil)
+    and not (csDestroying in PhastModel.ComponentState) then
+  begin
+    PhastModel.InvalidateMfFmpMaxPumpingRate(self);
+    PhastModel.InvalidateMfFmpPumpOnlyIfCropRequiresWater(self);
+  end;
+end;
+
+procedure TFmpWellCollection.InvalidateFarmIdData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TMfFmpWelTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  if not (Sender as TObserver).UpToDate then
+  begin
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TMfFmpWelTimeListLink;
+    Link.FWellIdData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TMfFmpWelTimeListLink;
+      Link.FWellIdData.Invalidate;
+    end;
+  end;
+end;
+
+procedure TFmpWellCollection.InvalidateMaxPumpingRateData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TMfFmpWelTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  if not (Sender as TObserver).UpToDate then
+  begin
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TMfFmpWelTimeListLink;
+    Link.FMaxPumpingRateData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TMfFmpWelTimeListLink;
+      Link.FMaxPumpingRateData.Invalidate;
+    end;
+  end;
+end;
+
+procedure TFmpWellCollection.InvalidatePumpOnlyIfCropRequiresWaterData(
+  Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TMfFmpWelTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  if not (Sender as TObserver).UpToDate then
+  begin
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TMfFmpWelTimeListLink;
+    Link.FPumpOnlyIfCropRequiresWaterData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TMfFmpWelTimeListLink;
+      Link.FPumpOnlyIfCropRequiresWaterData.Invalidate;
+    end;
+  end;
+end;
+
+class function TFmpWellCollection.ItemClass: TBoundaryItemClass;
+begin
+  result := TFmpWellItem;
+end;
+
+function TFmpWellCollection.OkDataTypes(BoundaryIndex: Integer): TRbwDataTypes;
+begin
+  case BoundaryIndex of
+    TFmpWellItem.MaxPumpingRatePosition:
+      begin
+        result := [rdtDouble, rdtInteger];
+      end;
+    TFmpWellItem.FarmIDPosition:
+      begin
+        result := [rdtInteger];
+      end;
+    TFmpWellItem.PumpOnlyIfCropRequiresWaterPosition:
+      begin
+        result := [rdtBoolean];
+      end;
+    else
+      Assert(False);
+  end;
+end;
+
+procedure TFmpWellCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
+  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
+begin
+  SetLength((Boundaries[ItemIndex, AModel] as TFmpWellStorage).FFmpWellArray,
+    BoundaryCount);
+  inherited;
+end;
+
+function TFmpWellCollection.TimeListCount(AModel: TBaseModel): integer;
+var
+  CropIrrigationRequirement: TCropIrrigationRequirement;
+begin
+  result := inherited;
+  CropIrrigationRequirement :=
+    frmGoPhast.PhastModel.ModflowPackages.FarmProcess.CropIrrigationRequirement;
+  case CropIrrigationRequirement of
+    cirContinuously:
+      begin
+        result := result-1;
+      end;
+    cirOnlyWhenNeeded:
+      begin
+        // do nothing;
+//        result := 3;
+      end;
+    else Assert(False);
+  end;
+
+end;
+
+{ TFmpWellParamItem }
+
+class function TFmpWellParamItem.BoundaryClass: TMF_BoundCollClass;
+begin
+  result := TFmpWellCollection;
+end;
+
+{ TFmpWell_Cell }
+
+procedure TFmpWell_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
+begin
+  inherited;
+  FValues.Cache(Comp, Strings);
+  WriteCompInt(Comp, FStressPeriod);
+end;
+
+function TFmpWell_Cell.GetBooleanAnnotation(Index: integer;
+  AModel: TBaseModel): string;
+begin
+  result := '';
+  case Index of
+    TFmpWellItem.PumpOnlyIfCropRequiresWaterPosition: result :=
+      PumpOnlyIfCropRequiresWaterAnnotation;
+    else Assert(False);
+  end;
+end;
+
+function TFmpWell_Cell.GetBooleanValue(Index: integer;
+  AModel: TBaseModel): boolean;
+begin
+  result := False;
+  case Index of
+    TFmpWellItem.PumpOnlyIfCropRequiresWaterPosition: result :=
+      PumpOnlyIfCropRequiresWater;
+    else Assert(False);
+  end;
+end;
+
+function TFmpWell_Cell.GetColumn: integer;
+begin
+  result := FValues.Cell.Column;
+end;
+
+function TFmpWell_Cell.GetFarmID: integer;
+begin
+  result := FValues.FarmID;
+end;
+
+function TFmpWell_Cell.GetFarmIDAnnotation: string;
+begin
+  result := FValues.FarmIDAnnotation;
+end;
+
+function TFmpWell_Cell.GetIntegerAnnotation(Index: integer;
+  AModel: TBaseModel): string;
+begin
+  result := '';
+  case Index of
+    TFmpWellItem.FarmIDPosition: result := FarmIDAnnotation;
+    else Assert(False);
+  end;
+end;
+
+function TFmpWell_Cell.GetIntegerValue(Index: integer;
+  AModel: TBaseModel): integer;
+begin
+  result := 0;
+  case Index of
+    TFmpWellItem.FarmIDPosition: result := FarmID;
+    else Assert(False);
+  end;
+end;
+
+function TFmpWell_Cell.GetLayer: integer;
+begin
+  result := FValues.Cell.Layer;
+end;
+
+function TFmpWell_Cell.GetMaxPumpingRate: double;
+begin
+  result := FValues.MaxPumpingRate;
+end;
+
+function TFmpWell_Cell.GetMaxPumpingRateAnnotation: string;
+begin
+  result := FValues.MaxPumpingRateAnnotation;
+end;
+
+function TFmpWell_Cell.GetPumpOnlyIfCropRequiresWater: boolean;
+begin
+  result := FValues.PumpOnlyIfCropRequiresWater;
+end;
+
+function TFmpWell_Cell.GetPumpOnlyIfCropRequiresWaterAnnotation: string;
+begin
+  result := FValues.PumpOnlyIfCropRequiresWaterAnnotation;
+end;
+
+function TFmpWell_Cell.GetRealAnnotation(Index: integer;
+  AModel: TBaseModel): string;
+begin
+  result := '';
+  case Index of
+    TFmpWellItem.MaxPumpingRatePosition: result := MaxPumpingRateAnnotation;
+    else Assert(False);
+  end;
+end;
+
+function TFmpWell_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
+begin
+  result := 0;
+  case Index of
+    TFmpWellItem.MaxPumpingRatePosition: result := MaxPumpingRate;
+    else Assert(False);
+  end;
+end;
+
+function TFmpWell_Cell.GetRow: integer;
+begin
+  result := FValues.Cell.Row;
+end;
+
+function TFmpWell_Cell.GetSection: integer;
+begin
+  result := FValues.Cell.Section;
+end;
+
+function TFmpWell_Cell.IsIdentical(AnotherCell: TValueCell): boolean;
+var
+  WEFmpL_Cell: TFmpWell_Cell;
+begin
+  result := AnotherCell is TFmpWell_Cell;
+  if result then
+  begin
+    WEFmpL_Cell := TFmpWell_Cell(AnotherCell);
+    result :=
+      (MaxPumpingRate = WEFmpL_Cell.MaxPumpingRate)
+      and (MaxPumpingRate = WEFmpL_Cell.MaxPumpingRate)
+      and (PumpOnlyIfCropRequiresWater = WEFmpL_Cell.PumpOnlyIfCropRequiresWater)
+      and (FarmID = WEFmpL_Cell.FarmID)
+      and (IFace = WEFmpL_Cell.IFace);
+  end;
+end;
+
+procedure TFmpWell_Cell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  FValues.RecordStrings(Strings);
+end;
+
+procedure TFmpWell_Cell.Restore(Decomp: TDecompressionStream;
+  Annotations: TStringList);
+begin
+  inherited;
+  FValues.Restore(Decomp, Annotations);
+  FStressPeriod := ReadCompInt(Decomp);
+end;
+
+procedure TFmpWell_Cell.SetColumn(const Value: integer);
+begin
+  FValues.Cell.Column := Value;
+end;
+
+procedure TFmpWell_Cell.SetLayer(const Value: integer);
+begin
+  FValues.Cell.Column := Layer;
+end;
+
+procedure TFmpWell_Cell.SetRow(const Value: integer);
+begin
+  FValues.Cell.Row := Layer;
+end;
+
+{ TMfFmpWellBoundary }
+
+//procedure TFmpWellBoundary.Assign(Source: TPersistent);
+//begin
+//  if Source is TFmpWellBoundary then
+//  begin
+//    FarmId := TFmpWellBoundary(Source).FarmId;
+//  end;
+//  inherited;
+//
+//end;
+
+procedure TFmpWellBoundary.AssignCells(
+  BoundaryStorage: TCustomBoundaryStorage; ValueTimeList: TList;
+  AModel: TBaseModel);
+var
+  Cell: TFmpWell_Cell;
+  BoundaryValues: TFmpWellRecord;
+  BoundaryIndex: Integer;
+  StressPeriod: TModflowStressPeriod;
+  TimeIndex: Integer;
+  Cells: TValueCellList;
+  LocalBoundaryStorage: TFmpWellStorage;
+  LocalModel: TCustomModel;
+begin
+  LocalModel := AModel as TCustomModel;
+  LocalBoundaryStorage := BoundaryStorage as TFmpWellStorage;
+  for TimeIndex := 0 to
+    LocalModel.ModflowFullStressPeriods.Count - 1 do
+  begin
+    if TimeIndex < ValueTimeList.Count then
+    begin
+      Cells := ValueTimeList[TimeIndex];
+    end
+    else
+    begin
+      Cells := TValueCellList.Create(TFmpWell_Cell);
+      ValueTimeList.Add(Cells);
+    end;
+    StressPeriod := LocalModel.ModflowFullStressPeriods[TimeIndex];
+    // Check if the stress period is completely enclosed within the times
+    // of the LocalBoundaryStorage;
+    if (StressPeriod.StartTime + LocalModel.SP_Epsilon >= LocalBoundaryStorage.StartingTime)
+      and (StressPeriod.EndTime - LocalModel.SP_Epsilon <= LocalBoundaryStorage.EndingTime) then
+    begin
+      if Cells.Capacity < Cells.Count + Length(LocalBoundaryStorage.FmpWellArray) then
+      begin
+        Cells.Capacity := Cells.Count + Length(LocalBoundaryStorage.FmpWellArray)
+      end;
+//      Cells.CheckRestore;
+      for BoundaryIndex := 0 to Length(LocalBoundaryStorage.FmpWellArray) - 1 do
+      begin
+        BoundaryValues := LocalBoundaryStorage.FmpWellArray[BoundaryIndex];
+        Cell := TFmpWell_Cell.Create;
+        Assert(ScreenObject <> nil);
+        Cell.IFace := (ScreenObject as TScreenObject).IFace;
+        Cells.Add(Cell);
+        Cell.FStressPeriod := TimeIndex;
+        Cell.FValues := BoundaryValues;
+        LocalModel.AdjustCellPosition(Cell);
+      end;
+      Cells.Cache;
+    end;
+  end;
+  LocalBoundaryStorage.CacheData;
+end;
+
+class function TFmpWellBoundary.BoundaryCollectionClass: TMF_BoundCollClass;
+begin
+  result := TFmpWellCollection;
+end;
+
+//constructor TFmpWellBoundary.Create(Model: TBaseModel; ScreenObject: TObject);
+//var
+//  LocalScreenObject: TScreenObject;
+//begin
+//  inherited;
+//  FFarmId := frmGoPhast.PhastModel.FormulaManager.Add;
+//  FFarmId.Parser := frmGoPhast.PhastModel.rpThreeDFormulaCompiler;
+//  { TODO -cFMP : This needs to be finished. }
+////  FFarmId.AddSubscriptionEvents(
+////    GlobalRemoveModflowBoundarySubscription,
+////    GlobalRestoreModflowBoundarySubscription, self);
+//
+//  FFarmIdObserver := TObserver.Create(nil);
+//
+//  LocalScreenObject := ScreenObject as TScreenObject;
+//  if (LocalScreenObject <> nil) and LocalScreenObject.CanInvalidateModel then
+//  begin
+//    LocalScreenObject.TalksTo(FFarmIdObserver);
+//  end;
+//
+////  AssignObserverEvents(Collection);
+//
+//end;
+
+//destructor TFmpWellBoundary.Destroy;
+//var
+//  LocalScreenObject: TScreenObject;
+//  PhastModel: TPhastModel;
+//begin
+//  LocalScreenObject := ScreenObject as TScreenObject;
+//  if (LocalScreenObject <> nil) then
+//  begin
+//    PhastModel := FModel as TPhastModel;
+//    if (PhastModel <> nil) and not PhastModel.Clearing
+//      and not (csDestroying in PhastModel.ComponentState) then
+//    begin
+//      LocalScreenObject.StopsTalkingTo(FFarmIdObserver);
+//    end;
+//  end;
+//  { TODO -cFMP : This needs to be finished. }
+//
+//   // consider using GlobalRemoveScreenObjectDataArraySubscription
+//   // and GlobalRestoreDataArraySubscription
+//
+////  frmGoPhast.PhastModel.FormulaManager.Remove(FFarmId,
+////    GlobalRemoveModflowBoundarySubscription,
+////    GlobalRestoreModflowBoundarySubscription, self);
+//
+//  FFarmIdObserver.Free;
+//
+//  inherited;
+//end;
+
+procedure TFmpWellBoundary.GetCellListValues(ValueTimeList: TList;
+  ParamList: TStringList; AModel: TBaseModel);
+var
+  ValueIndex: Integer;
+  BoundaryStorage: TFmpWellStorage;
+  ParamIndex: Integer;
+  Param: TModflowParamItem;
+  Times: TList;
+  Position: integer;
+  ParamName: string;
+begin
+  EvaluateListBoundaries(AModel);
+  for ValueIndex := 0 to Values.Count - 1 do
+  begin
+    if ValueIndex < Values.BoundaryCount[AModel] then
+    begin
+      BoundaryStorage := Values.Boundaries[ValueIndex, AModel] as TFmpWellStorage;
+      AssignCells(BoundaryStorage, ValueTimeList, AModel);
+    end;
+  end;
+  for ParamIndex := 0 to Parameters.Count - 1 do
+  begin
+    Param := Parameters[ParamIndex];
+    ParamName := Param.Param.ParamName;
+    Position := ParamList.IndexOf(ParamName);
+    if Position < 0 then
+    begin
+      Times := TObjectList.Create;
+      ParamList.AddObject(ParamName, Times);
+    end
+    else
+    begin
+      Times := ParamList.Objects[Position] as TList;
+    end;
+    for ValueIndex := 0 to Param.Param.Count - 1 do
+    begin
+      if ValueIndex < Param.Param.BoundaryCount[AModel] then
+      begin
+        BoundaryStorage := Param.Param.Boundaries[ValueIndex, AModel] as TFmpWellStorage;
+        AssignCells(BoundaryStorage, Times, AModel);
+      end;
+    end;
+  end;
+end;
+
+procedure TFmpWellBoundary.GetCellValues(ValueTimeList: TList;
+  ParamList: TStringList; AModel: TBaseModel);
+var
+  ValueIndex: Integer;
+  BoundaryStorage: TFmpWellStorage;
+  ParamIndex: Integer;
+  Param: TModflowParamItem;
+  Times: TList;
+  Position: integer;
+  ParamName: string;
+begin
+//  EvaluateArrayBoundaries;
+  EvaluateListBoundaries(AModel);
+  for ValueIndex := 0 to Values.Count - 1 do
+  begin
+    if ValueIndex < Values.BoundaryCount[AModel] then
+    begin
+      BoundaryStorage := Values.Boundaries[ValueIndex, AModel] as TFmpWellStorage;
+      AssignCells(BoundaryStorage, ValueTimeList, AModel);
+    end;
+  end;
+  for ParamIndex := 0 to Parameters.Count - 1 do
+  begin
+    Param := Parameters[ParamIndex];
+    ParamName := Param.Param.ParamName;
+    Position := ParamList.IndexOf(ParamName);
+    if Position < 0 then
+    begin
+      Times := TObjectList.Create;
+      ParamList.AddObject(ParamName, Times);
+    end
+    else
+    begin
+      Times := ParamList.Objects[Position] as TList;
+    end;
+    for ValueIndex := 0 to Param.Param.Count - 1 do
+    begin
+      if ValueIndex < Param.Param.BoundaryCount[AModel] then
+      begin
+        BoundaryStorage := Param.Param.Boundaries[ValueIndex, AModel] as TFmpWellStorage;
+        AssignCells(BoundaryStorage, Times, AModel);
+      end;
+    end;
+  end;
+end;
+
+//function TFmpWellBoundary.GetFarmId: string;
+//begin
+//  Result := FFarmId.Formula;
+//  { TODO -cFMP : This needs to be finished. }
+////  ResetItemObserver(0);
+//end;
+
+//procedure TFmpWellBoundary.GetPropertyObserver(Sender: TObject; List: TList);
+//begin
+//  inherited;
+//  List.Add(FFarmIdObserver);
+//end;
+
+procedure TFmpWellBoundary.InvalidateDisplay;
+var
+  Model: TPhastModel;
+begin
+  inherited;
+  if Used and (ParentModel <> nil) then
+  begin
+    Model := ParentModel as TPhastModel;
+    Model.InvalidateMfFmpMaxPumpingRate(self);
+    Model.InvalidateMfFmpPumpOnlyIfCropRequiresWater(self);
+  end;
+end;
+
+class function TFmpWellBoundary.ModflowParamItemClass: TModflowParamItemClass;
+begin
+  result := TFmpWellParamItem;
+end;
+
+function TFmpWellBoundary.ParameterType: TParameterType;
+begin
+  result := ptQMAX;
+end;
+
+//procedure TFmpWellBoundary.SetFarmId(Value: string);
+//var
+//  ParentModel: TPhastModel;
+//  Compiler: TRbwParser;
+//  Observer: TObserver;
+//  index: integer;
+//  AnItem: TFmpWellItem;
+//  ParameterIndex: integer;
+//  ParamItem: TCustomMF_BoundColl;
+//begin
+//  if FFarmId.Formula <> Value then
+//  begin
+//    ParentModel := FModel as TPhastModel;
+//    if ParentModel <> nil then
+//    begin
+//      Compiler := ParentModel.rpThreeDFormulaCompiler;
+//      Observer := FFarmIdObserver;
+//      UpdateFormulaDependencies(FFarmId.Formula, Value, Observer, Compiler);
+//    end;
+//    InvalidateModel;
+//
+//    for index := 0 to Values.Count - 1 do
+//    begin
+//      AnItem := Values[index] as TFmpWellItem;
+//      AnItem.FarmID := Value;
+//    end;
+//
+//    for ParameterIndex := 0 to Parameters.Count - 1 do
+//    begin
+//      ParamItem := Parameters[ParameterIndex].Param;
+//      for index := 0 to ParamItem.Count - 1 do
+//      begin
+//        AnItem := ParamItem[index] as TFmpWellItem;
+//        AnItem.FarmID := Value;
+//      end;
+//    end;
+//
+//    if not (csDestroying in frmGoPhast.PhastModel.ComponentState) then
+//    begin
+//  { TODO -cFMP : This needs to be finished. }
+//      frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
+//        FFarmId, Value, frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
+//        GlobalRemoveMFBoundarySubscription,
+//        GlobalRestoreMFBoundarySubscription, self);
+//    end;
+//  end;
+//end;
+
+//procedure TFmpWellBoundary.UpdateFormulaDependencies(OldFormula: string;
+//  var NewFormula: string; Observer: TObserver; Compiler: TRbwParser);
+//var
+//  OldUses: TStringList;
+//  NewUses: TStringList;
+//  Position: Integer;
+//  DS: TObserver;
+//  ParentScreenObject: TScreenObject;
+//  Index: integer;
+//  procedure CompileFormula(var AFormula: string;
+//    UsesList: TStringList);
+//  begin
+//    if AFormula <> '' then
+//    begin
+//      try
+//        Compiler.Compile(AFormula);
+//        UsesList.Assign(Compiler.CurrentExpression.VariablesUsed);
+//      except on E: ERbwParserError do
+//        begin
+//        end;
+//      end;
+//    end;
+//  end;
+//begin
+//  OldFormula := Trim(OldFormula);
+//  NewFormula := Trim(NewFormula);
+//  if OldFormula = NewFormula then
+//  begin
+//    Exit;
+//  end;
+//  if (frmGoPhast.PhastModel <> nil)
+//    and ((frmGoPhast.PhastModel.ComponentState * [csLoading, csReading]) <> []) then
+//  begin
+//    Exit;
+//  end;
+//  ParentScreenObject := ScreenObject as TScreenObject;
+//  if (ParentScreenObject = nil)
+////    or not ParentScreenObject.CanInvalidateModel then
+//    // 3
+//        {or not ParentScreenObject.CanInvalidateModel} then
+//  begin
+//    Exit;
+//  end;
+//  OldUses := TStringList.Create;
+//  NewUses := TStringList.Create;
+//  try
+//    CompileFormula(OldFormula, OldUses);
+//    CompileFormula(NewFormula, NewUses);
+//    for Index := OldUses.Count - 1 downto 0 do
+//    begin
+//      Position := NewUses.IndexOf(OldUses[Index]);
+//      if Position >= 0 then
+//      begin
+//        OldUses.Delete(Index);
+//        NewUses.Delete(Position);
+//      end;
+//    end;
+//    for Index := 0 to OldUses.Count - 1 do
+//    begin
+//      DS := frmGoPhast.PhastModel.GetObserverByName(OldUses[Index]);
+//      Assert(DS <> nil);
+//      DS.StopsTalkingTo(Observer);
+//    end;
+//    for Index := 0 to NewUses.Count - 1 do
+//    begin
+//      DS := frmGoPhast.PhastModel.GetObserverByName(NewUses[Index]);
+//      Assert(DS <> nil);
+//      DS.TalksTo(Observer);
+//    end;
+//  finally
+//    NewUses.Free;
+//    OldUses.Free;
+//  end;
+//end;
+
+end.

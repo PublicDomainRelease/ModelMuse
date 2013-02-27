@@ -15,29 +15,33 @@ object frameCustomColor: TframeCustomColor
     TabOrder = 0
     object tabSelection: TTabSheet
       Caption = 'Selection'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         562
-        400)
+        397)
       object lblDataSet: TLabel
         Left = 8
         Top = 4
-        Width = 149
-        Height = 13
+        Width = 175
+        Height = 16
         Caption = 'Data set or boundary condition'
       end
       object lblColorScheme: TLabel
         Left = 8
         Top = 236
-        Width = 64
-        Height = 13
+        Width = 78
+        Height = 16
         Anchors = [akLeft, akBottom]
         Caption = 'Color scheme'
       end
       object lblCycles: TLabel
         Left = 456
         Top = 263
-        Width = 31
-        Height = 13
+        Width = 36
+        Height = 16
         Anchors = [akRight, akBottom]
         Caption = 'Cycles'
       end
@@ -52,23 +56,23 @@ object frameCustomColor: TframeCustomColor
       object lblColorAdjustment: TLabel
         Left = 8
         Top = 339
-        Width = 82
-        Height = 13
+        Width = 98
+        Height = 16
         Anchors = [akLeft, akBottom]
         Caption = 'Color adjustment'
       end
       object lblComment: TLabel
         Left = 8
         Top = 61
-        Width = 143
-        Height = 13
+        Width = 171
+        Height = 16
         Caption = 'Data set comment (read only)'
       end
       object comboColorScheme: TComboBox
         Left = 8
         Top = 255
         Width = 442
-        Height = 21
+        Height = 24
         Style = csDropDownList
         Anchors = [akLeft, akRight, akBottom]
         DropDownCount = 12
@@ -94,7 +98,7 @@ object frameCustomColor: TframeCustomColor
         Left = 456
         Top = 300
         Width = 101
-        Height = 21
+        Height = 24
         ButtonKind = bkClassic
         MaxValue = 2147483647.000000000000000000
         MinValue = 1.000000000000000000
@@ -120,7 +124,7 @@ object frameCustomColor: TframeCustomColor
         Left = 160
         Top = 366
         Width = 65
-        Height = 21
+        Height = 24
         ButtonKind = bkClassic
         Increment = 0.010000000000000000
         MaxValue = 2.000000000000000000
@@ -142,8 +146,9 @@ object frameCustomColor: TframeCustomColor
       object udDataSets: TJvUpDown
         Left = 479
         Top = 28
-        Width = 17
+        Width = 21
         Height = 25
+        Anchors = [akTop, akRight]
         TabOrder = 1
         OnChangingEx = udDataSetsChangingEx
       end
@@ -164,11 +169,11 @@ object frameCustomColor: TframeCustomColor
         Left = 8
         Top = 25
         Width = 465
-        Height = 21
+        Height = 24
         Tree.Left = 0
         Tree.Top = 0
-        Tree.Width = 304
-        Tree.Height = 202
+        Tree.Width = 302
+        Tree.Height = 195
         Tree.Align = alClient
         Tree.Header.AutoSizeIndex = 0
         Tree.Header.Font.Charset = DEFAULT_CHARSET
@@ -222,6 +227,7 @@ object frameCustomColor: TframeCustomColor
         Font.Style = []
         ParentFont = False
         ReadOnly = True
+        ScrollBars = ssBoth
         TabOrder = 2
       end
       object btnColorSchemes: TButton
@@ -240,43 +246,47 @@ object frameCustomColor: TframeCustomColor
     object tabFilters: TTabSheet
       Caption = 'Filters'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         562
-        400)
+        397)
       object lblLowerLimit: TLabel
         Left = 8
         Top = 3
-        Width = 50
-        Height = 13
+        Width = 63
+        Height = 16
         Caption = 'Lower limit'
       end
       object lblUpperLimit: TLabel
         Left = 299
         Top = 3
-        Width = 50
-        Height = 13
+        Width = 62
+        Height = 16
         Caption = 'Upper limit'
       end
       object lblValuesToIgnore: TLabel
         Left = 8
         Top = 81
-        Width = 77
-        Height = 13
+        Width = 93
+        Height = 16
         Caption = 'Values to ignore'
       end
       object lblNumberOfValuesToIgnore: TLabel
         Left = 130
         Top = 370
-        Width = 130
-        Height = 13
+        Width = 155
+        Height = 16
         Anchors = [akLeft, akBottom]
         Caption = 'Number of values to ignore'
       end
       object lblEpsilon: TLabel
         Left = 203
         Top = 81
-        Width = 116
-        Height = 13
+        Width = 142
+        Height = 16
         Caption = 'Epsilon (margin of error)'
       end
       inline frameCheck3DMax: TframeDisplayLimit
@@ -290,9 +300,6 @@ object frameCustomColor: TframeCustomColor
         TabStop = True
         ExplicitLeft = 299
         ExplicitTop = 24
-        inherited cbCheck: TCheckBox
-          TabOrder = 2
-        end
         inherited rdeLimit: TRbwDataEntry
           Height = 28
           TabOrder = 0
@@ -302,6 +309,7 @@ object frameCustomColor: TframeCustomColor
           Left = 89
           TabOrder = 1
           ExplicitLeft = 89
+          ExplicitHeight = 24
         end
       end
       inline frameCheck3DMin: TframeDisplayLimit
@@ -318,6 +326,9 @@ object frameCustomColor: TframeCustomColor
         inherited rdeLimit: TRbwDataEntry
           Height = 28
           ExplicitHeight = 28
+        end
+        inherited comboBoolLimit: TComboBox
+          ExplicitHeight = 24
         end
       end
       object cbActiveOnly: TCheckBox
@@ -347,7 +358,6 @@ object frameCustomColor: TframeCustomColor
         SelectedRowOrColumnColor = clAqua
         UnselectableColor = clBtnFace
         ColorRangeSelection = False
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = False
@@ -377,7 +387,7 @@ object frameCustomColor: TframeCustomColor
         Left = 8
         Top = 367
         Width = 121
-        Height = 21
+        Height = 24
         CheckMinValue = True
         ButtonKind = bkClassic
         Anchors = [akLeft, akBottom]
@@ -401,11 +411,15 @@ object frameCustomColor: TframeCustomColor
       Caption = 'Legend'
       ImageIndex = 2
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object imLegend: TImage
         Left = 218
         Top = 0
         Width = 344
-        Height = 400
+        Height = 397
         Align = alClient
         ExplicitLeft = 224
         ExplicitTop = -2
@@ -416,25 +430,25 @@ object frameCustomColor: TframeCustomColor
         Left = 0
         Top = 0
         Width = 218
-        Height = 400
+        Height = 397
         Align = alLeft
         BevelOuter = bvNone
         TabOrder = 0
         DesignSize = (
           218
-          400)
+          397)
         object lblMethod: TLabel
           Left = 8
           Top = 6
-          Width = 36
-          Height = 13
+          Width = 42
+          Height = 16
           Caption = 'Method'
         end
         object lblColorLegendRows: TLabel
           Left = 8
           Top = 339
-          Width = 76
-          Height = 13
+          Width = 92
+          Height = 16
           Anchors = [akLeft, akBottom]
           Caption = 'Number of rows'
         end
@@ -442,7 +456,7 @@ object frameCustomColor: TframeCustomColor
           Left = 8
           Top = 27
           Width = 145
-          Height = 21
+          Height = 24
           Style = csDropDownList
           ItemIndex = 0
           TabOrder = 0
@@ -456,7 +470,7 @@ object frameCustomColor: TframeCustomColor
           Left = 8
           Top = 360
           Width = 121
-          Height = 21
+          Height = 24
           CheckMaxValue = False
           ButtonKind = bkClassic
           MinValue = 1.000000000000000000
@@ -488,7 +502,6 @@ object frameCustomColor: TframeCustomColor
           UnselectableColor = clBtnFace
           OnStateChange = rdgLegendStateChange
           ColorRangeSelection = False
-          ColorSelectedRow = True
           Columns = <
             item
               AutoAdjustRowHeights = False

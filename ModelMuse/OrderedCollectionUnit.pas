@@ -90,13 +90,17 @@ type
     hydraulic conductivity coefficient.))
   @value(ptHUF_LVDA ptHUF_LVDA represents the LVDA parameter type
     in the LVDA package. (ptHUF_LVDA defines values of horizontal anisotropy.))
+  @value(ptSTR ptSTR represents the STR parameter type
+    in the STR package. (ptSTR defines values of stream conductance.))
+  @value(ptQMAX ptQMAX represents the QMAX parameter type
+    in the Farm Process. (ptQMAX defines the maximum pumping rate.))
   }
   TParameterType = (ptUndefined, ptLPF_HK, ptLPF_HANI, ptLPF_VK,
     ptLPF_VANI, ptLPF_SS, ptLPF_SY, ptLPF_VKCB, ptRCH, ptEVT, ptETS,
     ptCHD, ptGHB, ptQ,
     ptRIV, ptDRN, ptDRT, ptSFR, ptHFB,
     ptHUF_HK, ptHUF_HANI, ptHUF_VK, ptHUF_VANI, ptHUF_SS, ptHUF_SY,
-    ptHUF_SYTP, ptHUF_KDEP, ptHUF_LVDA);
+    ptHUF_SYTP, ptHUF_KDEP, ptHUF_LVDA, ptSTR, ptQMAX);
 
   // @name is used to indicate groups of related MODFLOW parameters.
   TParameterTypes = set of TParameterType;
@@ -302,6 +306,8 @@ begin
     ptDRT: result := 'DRT' ;
     ptHUF_SYTP: result := 'SYTP' ;
     ptHUF_LVDA: result := 'LVDA' ;
+    ptSTR: result := 'STR' ;
+    ptQMAX: result := 'QMAX' ;
     else Assert(False);
   end;
 end;
@@ -673,6 +679,8 @@ begin
         NotifyHufKz;
       end;
     ptHUF_LVDA: ;
+    ptSTR: ;
+    ptQMAX: ;
     else Assert(False);
   end;
 end;
@@ -958,6 +966,27 @@ begin
         ptHUF_SYTP: ;
         ptHUF_KDEP: ;
         ptHUF_LVDA: ;
+        ptSTR:
+          begin
+            Assert(False);
+            for ObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+            begin
+              ScreenObject := PhastModel.ScreenObjects[ObjectIndex];
+              if ScreenObject.ModflowStrBoundary <> nil then
+              begin
+                Position := ScreenObject.ModflowStrBoundary.Parameters.
+                  IndexOfParam(self as TModflowTransientListParameter);
+                if Position >= 0 then
+                begin
+                  ScreenObject.ModflowStrBoundary.Parameters.Delete(Position);
+                end;
+              end;
+            end;
+          end;
+        ptQMAX:
+          begin
+            { TODO -cFMP : This needs to be finished }
+          end;
         else Assert(False);
       end;
     end;

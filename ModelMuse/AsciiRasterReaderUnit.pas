@@ -59,7 +59,7 @@ resourcestring
   StrSDoesNotExist = '%s does not exist.';
   StrErrorCallingTAscii = 'Error calling TAsciiRasterReader.ReadValues';
   StrErrorReadingDataV = 'Error reading data value for row = %0:d, column = ' +
-  '%1:d';
+  '%1:d. Value to be converted = %2:s.';
 
 { TAsciiRasterReader }
 
@@ -312,7 +312,7 @@ begin
           AValue := FortranStrToFloat(AString);
         except on EConvertError do
           raise EAsciiRasterError.Create(Format(StrErrorReadingDataV,
-            [RowIndex + 1, ColIndex + 1]));
+            [RowIndex + 1, ColIndex + 1, AString]));
         end;
         if AValue <> RasterHeader.IgnoreValue then
         begin

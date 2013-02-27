@@ -210,7 +210,7 @@ begin
       end;
       if FoundFirst then
       begin
-        FoundFirst := False;
+//        FoundFirst := False;
         MFLayer := -1;
         for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
         begin
@@ -223,7 +223,7 @@ begin
               begin
                 if (ActiveCells[MFLayer,RowIndex,ColIndex] = 1) then
                 begin
-                  frmErrorsAndWarnings.AddError(Model, StrThereIsNoHydrauli,
+                  frmErrorsAndWarnings.AddWarning(Model, StrThereIsNoHydrauli,
                     Format(StrLayerRowColumn,
                     [FirstLayer+1, FirstRow+1, FirstCol+1,
                     LayerIndex+1, RowIndex+1, ColIndex+1]));
@@ -382,7 +382,7 @@ begin
   TempArray := nil;
   try
     DataArray := Model.DataArrayManager.GetDataSetByName(rsActive);
-    if Model is TChildModel then
+    if {(Model.ModelSelection = msModflowLGR) and} (Model is TChildModel) then
     begin
       DummyAnnotation := 'none';
       LocalChildModel := TChildModel(Model);
@@ -544,67 +544,72 @@ end;
 
 procedure TModflowBasicWriter.WriteFile(const AFileName: string);
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrFileForTheInitial);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrWrongExtension);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrThereIsNoHydrauli);
-
-  frmProgressMM.AddMessage(StrCheckingModelConne);
-  CheckConnectivity;
-
-  FNameOfFile := FileName(AFileName);
-  if Model.PackageGeneratedExternally(StrBAS) then
-  begin
-    Exit;
-  end;
-  WriteToNameFile(StrBAS, Model.UnitNumbers.UnitNumber(StrBAS),
-    FNameOfFile, foInput);
-  OpenFile(FNameOfFile);
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    frmProgressMM.AddMessage(StrWritingBasicPackag);
-    frmProgressMM.AddMessage(StrWritingDataSet0);
-    WriteDataSet0;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrFileForTheInitial);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrWrongExtension);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrThereIsNoHydrauli);
+
+    frmProgressMM.AddMessage(StrCheckingModelConne);
+    CheckConnectivity;
+
+    FNameOfFile := FileName(AFileName);
+    if Model.PackageGeneratedExternally(StrBAS) then
     begin
       Exit;
     end;
+    WriteToNameFile(StrBAS, Model.UnitNumbers.UnitNumber(StrBAS),
+      FNameOfFile, foInput);
+    OpenFile(FNameOfFile);
+    try
+      frmProgressMM.AddMessage(StrWritingBasicPackag);
+      frmProgressMM.AddMessage(StrWritingDataSet0);
+      WriteDataSet0;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
 
-    frmProgressMM.AddMessage(StrWritingDataSet1);
-    WriteDataSet1;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
+      frmProgressMM.AddMessage(StrWritingDataSet1);
+      WriteDataSet1;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet2);
+      WriteDataSet2;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet3);
+      WriteDataSet3;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet4);
+      WriteDataSet4;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrCheckingStarting);
+      CheckStartingHeads;
+    finally
+      CloseFile;
     end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet2);
-    WriteDataSet2;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet3);
-    WriteDataSet3;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet4);
-    WriteDataSet4;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrCheckingStarting);
-    CheckStartingHeads;
   finally
-    CloseFile;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 

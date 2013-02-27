@@ -3,7 +3,7 @@ unit SutraOptionsUnit;
 interface
 
 uses
-  GoPhastTypes, Classes;
+  GoPhastTypes, Classes, SysUtils;
 
 type
   TTransportChoice = (tcSolute, tcSoluteHead, tcEnergy);
@@ -14,6 +14,7 @@ type
   TPressureSolutionMethod = (psmDirect, pcmCG, psmGMRES, psmOthomin);
   TUSolutionMethod = (usmDirect, usmGMRES, usmOthomin);
   TSorptionModel = (smNone, smLinear, smFreundlich, smLangmuir);
+  TReadStart = (rsNone, rsPressure, rsU, rsBoth);
 
   TSutraOptions = class(TGoPhastPersistent)
   private
@@ -22,7 +23,7 @@ type
     FTitleLines: AnsiString;
     FSimulationType: TSimulationType;
     FStartType: TStartType;
-    FRestartFileName: string;
+    FFullRestartFileName: string;
     FRestartFrequency: Integer;
     FMaxIterations: Integer;
     FUSolutionMethod: TUSolutionMethod;
@@ -61,6 +62,8 @@ type
     FStoredFluidThermalConductivity: TRealStorage;
     FStoredFluidDensityCoefficientTemperature: TRealStorage;
     FStoredBaseTemperature: TRealStorage;
+    FFullReadStartRestartFileName: string;
+    FReadStart: TReadStart;
     procedure SetTransportChoice(const Value: TTransportChoice);
     procedure SetSaturationChoice(const Value: TSaturationChoice);
     procedure SetTitleLines(const Value: AnsiString);
@@ -169,6 +172,12 @@ type
     procedure SetStoredBaseTemperature(const Value: TRealStorage);
     function GetBaseTemperature: double;
     procedure SetBaseTemperature(const Value: double);
+    procedure SetReadStart(const Value: TReadStart);
+    procedure SetFullReadStartRestartFileName(Value: string);
+    function GetRestartFileName: string;
+    procedure SetFullRestartFileName(Value: string);
+    function GetReadStartRestartFileName: string;
+    procedure SetReadStartRestartFileName(const Value: string);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
@@ -268,6 +277,11 @@ type
     property GravityY: double read GetGravityY write SetGravityY;
     // Data Set 13: GRAVZ
     property GravityZ: double read GetGravityZ write SetGravityZ;
+    property FullRestartFileName: string read FFullRestartFileName
+      write SetFullRestartFileName;
+    // ICS Data sets 2 and 3
+    property FullReadStartRestartFileName: string read FFullReadStartRestartFileName
+      write SetFullReadStartRestartFileName;
   published
     // Data Set 1: TITLE1 and TITLE2 plus some comments
     property TitleLines: AnsiString read FTitleLines write SetTitleLines;
@@ -282,7 +296,8 @@ type
       write SetSimulationType stored true;
     // Data Set 4: CREAD
     property StartType: TStartType read FStartType write SetStartType stored true;
-    property RestartFileName: string read FRestartFileName
+    // @name is a relative file name.
+    property RestartFileName: string read GetRestartFileName
       write SetRestartFileName;
     // Data Set 4: ISTORE
     property RestartFrequency: Integer read FRestartFrequency
@@ -412,9 +427,18 @@ type
     // Data Set 13: GRAVZ
     property StoredGravityZ: TRealStorage read FStoredGravityZ
       write SetStoredGravityZ;
+    // ICS Data sets 2 and 3
+    property ReadStart: TReadStart read FReadStart write SetReadStart;
+    // ICS Data sets 2 and 3
+    // @name is a relative file name.
+    property ReadStartRestartFileName: string read GetReadStartRestartFileName
+      write SetReadStartRestartFileName;
   end;
 
 implementation
+
+uses
+  PhastModelUnit, VectorDisplayUnit;
 
 { TSutraOptions }
 
@@ -430,7 +454,7 @@ begin
     TitleLines := SourceOptions.TitleLines;
     SimulationType := SourceOptions.SimulationType;
     StartType := SourceOptions.StartType;
-    RestartFileName := SourceOptions.RestartFileName;
+    FullRestartFileName := SourceOptions.FullRestartFileName;
     RestartFrequency := SourceOptions.RestartFrequency;
     FractionalUpstreamWeight := SourceOptions.FractionalUpstreamWeight;
     PressureFactor := SourceOptions.PressureFactor;
@@ -476,6 +500,10 @@ begin
     GravityX := SourceOptions.GravityX;
     GravityY := SourceOptions.GravityY;
     GravityZ := SourceOptions.GravityZ;
+
+    ReadStart := SourceOptions.ReadStart;
+    FullReadStartRestartFileName := SourceOptions.FullReadStartRestartFileName;
+
     // SimulationType := SourceOptions.SimulationType;
     // SimulationType := SourceOptions.SimulationType;
     // SimulationType := SourceOptions.SimulationType;
@@ -707,6 +735,28 @@ begin
   result := StoredPressureFactor.Value;
 end;
 
+function TSutraOptions.GetReadStartRestartFileName: string;
+//var
+//  BaseDir: string;
+begin
+  result := FFullReadStartRestartFileName;
+  if (Model <> nil) and (Result <> '') then
+  begin
+    result := (Model as TCustomModel).RelativeFileName(result);;
+  end;
+end;
+
+function TSutraOptions.GetRestartFileName: string;
+//var
+//  BaseDir: string;
+begin
+  result := FFullRestartFileName;
+  if (Model <> nil) and (Result <> '') then
+  begin
+    result := (Model as TCustomModel).RelativeFileName(result);;
+  end;
+end;
+
 function TSutraOptions.GetScaleFactor: double;
 begin
   result := StoredScaleFactor.Value;
@@ -769,7 +819,7 @@ begin
   SaturationChoice := scSaturated;
   SimulationType := stSteadyFlowSteadyTransport;
   StartType := stCold;
-  RestartFileName := '';
+  FullRestartFileName := '';
   RestartFrequency := 9999;
   StoredFractionalUpstreamWeight.Value := 0;
   StoredPressureFactor.Value := 0.1;
@@ -808,6 +858,8 @@ begin
   StoredGravityX.Value := 0;
   StoredGravityY.Value := 0;
   StoredGravityZ.Value := -9.81;
+  ReadStart := rsNone;
+  FullReadStartRestartFileName := '';
 end;
 
 procedure TSutraOptions.SetBaseFluidDensity(const Value: double);
@@ -876,6 +928,12 @@ begin
   StoredFractionalUpstreamWeight.Value := Value;
 end;
 
+procedure TSutraOptions.SetFullRestartFileName(Value: string);
+begin
+  Value := ExpandFileName(Value);
+  SetStringProperty(FFullRestartFileName, Value);
+end;
+
 procedure TSutraOptions.SetGravityX(const Value: double);
 begin
   StoredGravityX.Value := Value;
@@ -936,9 +994,29 @@ begin
   StoredPressureFactor.Value := Value;
 end;
 
+procedure TSutraOptions.SetReadStart(const Value: TReadStart);
+begin
+  if FReadStart <> Value then
+  begin
+    FReadStart := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSutraOptions.SetReadStartRestartFileName(const Value: string);
+begin
+  FullReadStartRestartFileName := Value;
+end;
+
+procedure TSutraOptions.SetFullReadStartRestartFileName(Value: string);
+begin
+  Value := ExpandFileName(Value);
+  SetStringProperty(FFullReadStartRestartFileName, Value);
+end;
+
 procedure TSutraOptions.SetRestartFileName(const Value: string);
 begin
-  SetStringProperty(FRestartFileName, Value);
+  FullRestartFileName := Value;
 end;
 
 procedure TSutraOptions.SetRestartFrequency(const Value: Integer);
@@ -1183,10 +1261,46 @@ begin
 end;
 
 procedure TSutraOptions.SetTransportChoice(const Value: TTransportChoice);
+var
+  PriorHeadUsed: Boolean;
+  PostHeadUsed: Boolean;
+  LocalModel: TPhastModel;
 begin
   if FTransportChoice <> Value then
   begin
+    PriorHeadUsed := FTransportChoice = tcSoluteHead;
     FTransportChoice := Value;
+    PostHeadUsed := FTransportChoice = tcSoluteHead;
+    if (PriorHeadUsed <> PostHeadUsed) and (Model <> nil) then
+    begin
+      if Model is TChildModel then
+      begin
+        LocalModel := TChildModel(Model).ParentModel as TPhastModel;
+      end
+      else
+      begin
+        LocalModel := Model as TPhastModel;
+      end;
+
+      if PostHeadUsed then
+      begin
+        if LocalModel.MaxVectors.VectorType = pvtPermeability then
+        begin
+          LocalModel.MaxVectors.VectorType := pvtConductivity;
+          LocalModel.MidVectors.VectorType := pvtConductivity;
+          LocalModel.MinVectors.VectorType := pvtConductivity;
+        end;
+      end
+      else
+      begin
+        if LocalModel.MaxVectors.VectorType = pvtConductivity then
+        begin
+          LocalModel.MaxVectors.VectorType := pvtPermeability;
+          LocalModel.MidVectors.VectorType := pvtPermeability;
+          LocalModel.MinVectors.VectorType := pvtPermeability;
+        end;
+      end;
+    end;
     InvalidateModel;
   end;
 end;

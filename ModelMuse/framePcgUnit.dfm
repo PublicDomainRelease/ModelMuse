@@ -1,13 +1,13 @@
 inherited framePCG: TframePCG
-  Width = 614
-  Height = 526
+  Width = 451
+  Height = 304
   Align = alClient
   Anchors = [akLeft, akTop, akBottom]
   ExplicitWidth = 451
   ExplicitHeight = 304
   DesignSize = (
-    614
-    526)
+    451
+    304)
   inherited lblComments: TLabel
     Top = 40
     ExplicitTop = 40
@@ -16,8 +16,8 @@ inherited framePCG: TframePCG
     AlignWithMargins = True
     Left = 13
     Top = 138
-    Width = 205
-    Height = 13
+    Width = 245
+    Height = 16
     Margins.Top = 6
     Anchors = [akLeft, akBottom]
     Caption = 'Max. number of outer iterations (MXITER):'
@@ -26,8 +26,8 @@ inherited framePCG: TframePCG
     AlignWithMargins = True
     Left = 13
     Top = 166
-    Width = 195
-    Height = 13
+    Width = 233
+    Height = 16
     Margins.Top = 6
     Anchors = [akLeft, akBottom]
     Caption = 'Max. number of inner iterations (ITER1):'
@@ -36,8 +36,8 @@ inherited framePCG: TframePCG
     AlignWithMargins = True
     Left = 13
     Top = 194
-    Width = 202
-    Height = 13
+    Width = 240
+    Height = 16
     Margins.Top = 7
     Anchors = [akLeft, akBottom]
     Caption = 'Matrix preconditioning method (NPCOND):'
@@ -46,89 +46,81 @@ inherited framePCG: TframePCG
     AlignWithMargins = True
     Left = 13
     Top = 314
-    Width = 178
-    Height = 13
+    Width = 211
+    Height = 16
     Margins.Top = 6
     Anchors = [akLeft, akBottom]
     Caption = 'Max. abs. change in head (HCLOSE):'
-    ExplicitTop = 261
   end
   object lblPCGMaxResidual: TLabel [6]
     AlignWithMargins = True
     Left = 13
     Top = 342
-    Width = 142
-    Height = 13
+    Width = 169
+    Height = 16
     Margins.Top = 6
     Anchors = [akLeft, akBottom]
     Caption = 'Max. abs. residual (RCLOSE):'
-    ExplicitTop = 289
   end
   object lblPCGRelaxation: TLabel [7]
     AlignWithMargins = True
     Left = 13
     Top = 370
-    Width = 150
-    Height = 13
+    Width = 179
+    Height = 16
     Margins.Top = 6
     Anchors = [akLeft, akBottom]
     Caption = 'Relaxation parameter (RELAX):'
-    ExplicitTop = 317
   end
   object lblPCGMaxEigen: TLabel [8]
     AlignWithMargins = True
     Left = 13
     Top = 398
-    Width = 223
-    Height = 13
+    Width = 263
+    Height = 16
     Margins.Top = 7
     Anchors = [akLeft, akBottom]
     Caption = 'Upper bound of the max. eigenvalue (NBPOL):'
-    ExplicitTop = 345
   end
   object lblPCGPrintInterval: TLabel [9]
     AlignWithMargins = True
     Left = 13
     Top = 425
-    Width = 129
-    Height = 13
+    Width = 151
+    Height = 16
     Margins.Top = 6
     Anchors = [akLeft, akBottom]
     Caption = 'Printout interval (IPRPCG):'
-    ExplicitTop = 372
   end
   object lblPCGPrintControl: TLabel [10]
     AlignWithMargins = True
     Left = 13
     Top = 453
-    Width = 128
-    Height = 13
+    Width = 154
+    Height = 16
     Margins.Top = 7
     Anchors = [akLeft, akBottom]
     Caption = 'Printing control (MUTPCG):'
-    ExplicitTop = 400
   end
   object lblPCGDampingFactor: TLabel [11]
     AlignWithMargins = True
     Left = 13
     Top = 480
-    Width = 136
-    Height = 13
+    Width = 162
+    Height = 16
     Margins.Top = 6
     Anchors = [akLeft, akBottom]
     Caption = 'Damping factor (DAMPPCG):'
-    ExplicitTop = 427
   end
   object lblPCGDampPcgT: TLabel [12]
     AlignWithMargins = True
     Left = 13
     Top = 508
-    Width = 189
-    Height = 13
+    Width = 227
+    Height = 16
     Margins.Top = 6
     Anchors = [akLeft, akBottom]
     Caption = 'Transient damping factor (DAMPPCGT):'
-    ExplicitTop = 455
   end
   inherited memoComments: TMemo
     Left = 13
@@ -137,7 +129,7 @@ inherited framePCG: TframePCG
     Height = 70
     ExplicitLeft = 13
     ExplicitTop = 59
-    ExplicitWidth = 420
+    ExplicitWidth = 583
     ExplicitHeight = 70
   end
   object rdePCGMaxOuter: TRbwDataEntry [14]
@@ -187,7 +179,7 @@ inherited framePCG: TframePCG
     Left = 343
     Top = 191
     Width = 254
-    Height = 21
+    Height = 24
     Hint = 
       'NPCOND = 2 is rarely used because it is generally slower than NP' +
       'COND = 1.'
@@ -231,13 +223,12 @@ inherited framePCG: TframePCG
     Anchors = [akLeft, akBottom]
     Color = clBtnFace
     Enabled = False
-    TabOrder = 4
+    TabOrder = 5
     Text = '0.001'
     DataType = dtReal
     Max = 1.000000000000000000
     CheckMin = True
     ChangeDisabledColor = True
-    ExplicitTop = 258
   end
   object rdePCGMaxResChange: TRbwDataEntry [18]
     AlignWithMargins = True
@@ -254,13 +245,12 @@ inherited framePCG: TframePCG
     Anchors = [akLeft, akBottom]
     Color = clBtnFace
     Enabled = False
-    TabOrder = 5
+    TabOrder = 6
     Text = '1000'
     DataType = dtReal
     Max = 1.000000000000000000
     CheckMin = True
     ChangeDisabledColor = True
-    ExplicitTop = 286
   end
   object rdePCGRelax: TRbwDataEntry [19]
     AlignWithMargins = True
@@ -278,20 +268,19 @@ inherited framePCG: TframePCG
     Anchors = [akLeft, akBottom]
     Color = clBtnFace
     Enabled = False
-    TabOrder = 6
+    TabOrder = 7
     Text = '1'
     DataType = dtReal
     Max = 1.000000000000000000
     CheckMin = True
     ChangeDisabledColor = True
-    ExplicitTop = 314
   end
   object comboPCGEigenValue: TJvImageComboBox [20]
     AlignWithMargins = True
     Left = 343
     Top = 395
     Width = 254
-    Height = 21
+    Height = 24
     Hint = 
       'In many cases you can speed up execution time slightly by settin' +
       'g NBPOL=2.  The estimated value is usually close to 2 and the nu' +
@@ -307,7 +296,7 @@ inherited framePCG: TframePCG
     ImageHeight = 0
     ImageWidth = 0
     ItemIndex = -1
-    TabOrder = 7
+    TabOrder = 8
     Items = <
       item
         Brush.Style = bsClear
@@ -319,7 +308,6 @@ inherited framePCG: TframePCG
         Indent = 0
         Text = 'Two (2)'
       end>
-    ExplicitTop = 342
   end
   object rdePCGPrintInt: TRbwDataEntry [21]
     AlignWithMargins = True
@@ -335,20 +323,19 @@ inherited framePCG: TframePCG
     Anchors = [akLeft, akBottom]
     Color = clBtnFace
     Enabled = False
-    TabOrder = 8
+    TabOrder = 9
     Text = '1'
     DataType = dtInteger
     Max = 1.000000000000000000
     CheckMin = True
     ChangeDisabledColor = True
-    ExplicitTop = 369
   end
   object comboPCGPrint: TJvImageComboBox [22]
     AlignWithMargins = True
     Left = 343
     Top = 450
     Width = 254
-    Height = 21
+    Height = 24
     Hint = 'MUTPCG controls the information that is to be printed.'
     HelpContext = 990
     Style = csDropDownList
@@ -360,7 +347,7 @@ inherited framePCG: TframePCG
     ImageHeight = 0
     ImageWidth = 0
     ItemIndex = -1
-    TabOrder = 9
+    TabOrder = 10
     Items = <
       item
         Brush.Style = bsClear
@@ -382,32 +369,11 @@ inherited framePCG: TframePCG
         Indent = 0
         Text = 'Print only if convergence fails (3)'
       end>
-    ExplicitTop = 397
   end
   object rdePCGDamp: TRbwDataEntry [23]
     AlignWithMargins = True
     Left = 343
     Top = 477
-    Width = 254
-    Height = 22
-    Hint = 'Damping factor for reducing oscillation.'
-    HelpContext = 1000
-    Anchors = [akLeft, akBottom]
-    Color = clBtnFace
-    Enabled = False
-    TabOrder = 10
-    Text = '1'
-    DataType = dtReal
-    Max = 1.000000000000000000
-    CheckMax = True
-    CheckMin = True
-    ChangeDisabledColor = True
-    ExplicitTop = 424
-  end
-  object rdePCGDampPcgT: TRbwDataEntry [24]
-    AlignWithMargins = True
-    Left = 343
-    Top = 505
     Width = 254
     Height = 22
     Hint = 'Damping factor for reducing oscillation.'
@@ -422,15 +388,33 @@ inherited framePCG: TframePCG
     CheckMax = True
     CheckMin = True
     ChangeDisabledColor = True
-    ExplicitTop = 452
+  end
+  object rdePCGDampPcgT: TRbwDataEntry [24]
+    AlignWithMargins = True
+    Left = 343
+    Top = 505
+    Width = 254
+    Height = 22
+    Hint = 'Damping factor for reducing oscillation.'
+    HelpContext = 1000
+    Anchors = [akLeft, akBottom]
+    Color = clBtnFace
+    Enabled = False
+    TabOrder = 12
+    Text = '1'
+    DataType = dtReal
+    Max = 1.000000000000000000
+    CheckMax = True
+    CheckMin = True
+    ChangeDisabledColor = True
   end
   object gbIHCOFADD: TGroupBox [25]
     Left = 13
     Top = 213
     Width = 583
     Height = 84
-    Caption = 'gbIHCOFADD'
-    TabOrder = 12
+    Caption = 'IHCOFADD'
+    TabOrder = 4
     object rbIHCOFADD_0: TRadioButton
       Left = 3
       Top = 21

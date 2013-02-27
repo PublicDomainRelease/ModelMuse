@@ -360,7 +360,7 @@ begin
   case DataArray.EvaluatedAt of
     eaBlocks: result := True;
     eaNodes: result := frmGoPhast.PhastModel.ModelSelection
-      in [msPhast {$IFDEF SUTRA}, msSutra22 {$ENDIF}];
+      in [msPhast, msSutra22];
     else Assert(False);
   end;
 end;

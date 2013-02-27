@@ -8,7 +8,7 @@
 			<FrameworkType>VCL</FrameworkType>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<ProjectVersion>13.4</ProjectVersion>
-			<Platform Condition="'$(Platform)'==''">Win64</Platform>
+			<Platform Condition="'$(Platform)'==''">Win32</Platform>
 			<TargetedPlatforms>3</TargetedPlatforms>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -59,20 +59,18 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<VerInfo_Release>1</VerInfo_Release>
 			<DCC_ExeOutput>.\$(Config)\$(Platform)</DCC_ExeOutput>
 			<VerInfo_Locale>1033</VerInfo_Locale>
-			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=2.19.1.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=2.19.1.0;Comments=</VerInfo_Keys>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=3.0.0.0;Comments=</VerInfo_Keys>
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 			<Manifest_File>None</Manifest_File>
 			<DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
 			<Icon_MainIcon>ModelMuse_Icon2.ico</Icon_MainIcon>
-			<VerInfo_MinorVer>19</VerInfo_MinorVer>
-			<VerInfo_MajorVer>2</VerInfo_MajorVer>
+			<VerInfo_MajorVer>3</VerInfo_MajorVer>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_UsePackage>vcl;rtl;vclx;vclactnband;xmlrtl;VclSmp;vclimg;svnui;svn;bdertl;TeeUI;TeeDB;Tee;vcldb;dbrtl;vcldbx;vcltouch;dsnap;dsnapcon;vclib;ibxpress;adortl;IndyCore;IndySystem;IndyProtocols;inet;intrawebdb_110_150;Intraweb_110_150;vclie;inetdb;webdsnap;websnap;inetdbbde;inetdbxpress;soaprtl;vclribbon;DbxCommonDriver;DBXInterBaseDriver;DBXMySQLDriver;dbexpress;dbxcds;DbxClientDriver;AzureCloud;MostRecentFilesXE;QuadTreePkgXE;RbwControllerPackageXE;RbwDataGridPkgXE;DynamicCursorXEPkg;RbwEditPkgXE;RbwParserPkgXE;RbwRulerPkgXE;XBasePkgXE;VirtualTreesR;GR32_DSGN_RSXE1;GR32_RSXE1;ZoomBox2PkgXE;ButtonEditPkgXE;ModelCubeXEPkg;VGlWidgetXEPkg;AdeXEPkg;GLScene_RunTime;addbtn95_DXEpkg;RbwRadioGroupPkgXE;datagridPkgXE;AbbreviaVCL;GsMemoPropXE;GsMemoXE;SynEdit_RXE;madBasic_;madDisAsm_;madExcept_;JclVcl;Jcl;JvCore;JvSystem;JvStdCtrls;JvAppFrm;JvBands;JvDB;JvDlgs;JvBDE;JvControls;JvCmp;JvCrypt;JvCustom;JvDocking;JvDotNetCtrls;JvGlobus;JvHMI;JvJans;JvManagedThreads;JvMM;JvNet;JvPageComps;JvPascalInterpreter;JclDeveloperTools;JvPluginSystem;JvPrintPreview;JvRuntimeDesign;JvTimeFramework;JvWizards;JvXPCtrls;$(DCC_UsePackage)</DCC_UsePackage>
-			<DCC_UnitSearchPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;D:\jedi\338\jcl\lib\d10\debug;D:\jedi\340\jcl\lib\d10\debug;D:\Colab\GWModelTools\ModelMuse\FastCode;D:\jedi\jvcl\run;D:\jedi\jvcl\common;D:\jedi\jcl\source\common;D:\jedi\jcl\source\windows;D:\jedi\jvcl\resources;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;D:\Colab\GWModelTools\ModelMuse\FastCode;D:\jedi\jvcl\run;D:\jedi\jvcl\common;D:\jedi\jcl\source\common;D:\jedi\jcl\source\windows;D:\jedi\jvcl\resources;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
 			<DCC_Define>LogMemoryLeakDetailToFile;AutoPatchRTL;madExcept;LGR;UseFastGeo;$(DCC_Define)</DCC_Define>
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
@@ -97,6 +95,7 @@
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
+			<BRCC_IncludePath>D:\jedi\jcl\jcl\lib\d16\win64;$(BRCC_IncludePath)</BRCC_IncludePath>
 			<DCC_DebugInformation>true</DCC_DebugInformation>
 			<DCC_LocalDebugSymbols>true</DCC_LocalDebugSymbols>
 		</PropertyGroup>
@@ -106,17 +105,17 @@
 			<DCC_ExeOutput>.\$(Config)\$(Platform)</DCC_ExeOutput>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<BRCC_Defines>SUTRA;$(BRCC_Defines)</BRCC_Defines>
 			<DCC_DebugDCUs>true</DCC_DebugDCUs>
 			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
-			<DCC_Define>DEBUG;SUTRA;$(DCC_Define)</DCC_Define>
+			<DCC_Define>DEBUG;FMP;$(DCC_Define)</DCC_Define>
 			<DCC_Optimize>false</DCC_Optimize>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
+			<BRCC_Defines>STR_Package;$(BRCC_Defines)</BRCC_Defines>
 			<VerInfo_AutoGenVersion>true</VerInfo_AutoGenVersion>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-			<Debugger_RunParams>&quot;D:\Colab\GWModelTools\ModelMuse\tests\WellTest.gpt&quot; -E -C</Debugger_RunParams>
+			<BRCC_Defines>STR_Package;$(BRCC_Defines)</BRCC_Defines>
 			<DCC_ExeOutput>.\$(Config)\$(Platform)</DCC_ExeOutput>
 		</PropertyGroup>
 		<ItemGroup>
@@ -1022,6 +1021,105 @@
 			<DCCReference Include="frmMeshInformationUnit.pas">
 				<Form>frmMeshInformation</Form>
 			</DCCReference>
+			<DCCReference Include="VectorDisplayUnit.pas"/>
+			<DCCReference Include="frameVectorsUnit.pas">
+				<Form>frameVectors</Form>
+				<FormType>dfm</FormType>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frmNodeLocationUnit.pas">
+				<Form>frmNodeLocation</Form>
+				<FormType>dfm</FormType>
+			</DCCReference>
+			<DCCReference Include="frmSpecifyMeshUnit.pas">
+				<Form>frmSpecifyMesh</Form>
+			</DCCReference>
+			<DCCReference Include="CuthillMcKeeRenumbering.pas"/>
+			<DCCReference Include="MeshRenumberingTypes.pas"/>
+			<DCCReference Include="SubPolygonUnit.pas"/>
+			<DCCReference Include="ModflowStrUnit.pas"/>
+			<DCCReference Include="framePackageStrUnit.pas">
+				<Form>framePackageStr</Form>
+				<FormType>dfm</FormType>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameScreenObjectStrUnit.pas">
+				<Form>frameScreenObjectStr</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="ModflowStrWriterUnit.pas"/>
+			<DCCReference Include="ModflowFhbUnit.pas"/>
+			<DCCReference Include="ModflowFhbWriterUnit.pas"/>
+			<DCCReference Include="frameScreenObjectFhbHeadUnit.pas">
+				<Form>frameScreenObjectFhbHead</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameScreenObjectFhbFlowUnit.pas">
+				<Form>frameScreenObjectFhbFlow</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="ModflowFmpWellUnit.pas"/>
+			<DCCReference Include="ModflowFmpFarmUnit.pas"/>
+			<DCCReference Include="ModflowFmpCropUnit.pas"/>
+			<DCCReference Include="ModflowFmpSoilUnit.pas"/>
+			<DCCReference Include="ModflowFmpClimateUnit.pas"/>
+			<DCCReference Include="ModflowFmpPrecipitationUnit.pas"/>
+			<DCCReference Include="framePackageFrmUnit.pas">
+				<Form>framePkgFarm</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frmCropPropertiesUnit.pas">
+				<Form>frmCropProperties</Form>
+			</DCCReference>
+			<DCCReference Include="frameFormulaGridUnit.pas">
+				<Form>frameFormulaGrid</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frmSoilPropertiesUnit.pas">
+				<Form>frmSoilProperties</Form>
+			</DCCReference>
+			<DCCReference Include="frmClimateUnit.pas">
+				<Form>frmClimate</Form>
+				<FormType>dfm</FormType>
+			</DCCReference>
+			<DCCReference Include="frameScreenObjectFarmUnit.pas">
+				<Form>frameScreenObjectFarm</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameDeliveryGridUnit.pas">
+				<Form>frameDeliveryGrid</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameFarmDiversionUnit.pas">
+				<Form>frameFarmDiversion</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="ModflowFmpBaseClasses.pas"/>
+			<DCCReference Include="AdjustSutraBoundaryValuesUnit.pas"/>
+			<DCCReference Include="ModflowFmpEvapUnit.pas"/>
+			<DCCReference Include="frameScreenObjectFmpBoundaryUnit.pas">
+				<Form>frameScreenObjectFmpBoundary</Form>
+				<FormType>dfm</FormType>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameScreenObjectFmpPrecipUnit.pas">
+				<Form>frameScreenObjectFmpPrecip</Form>
+				<FormType>dfm</FormType>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameScreenObjectFmpEvapUnit.pas">
+				<Form>frameScreenObjectFmpEvap</Form>
+				<FormType>dfm</FormType>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="ModflowFmpCropSpatialUnit.pas"/>
+			<DCCReference Include="frameScreenObjectCropIDUnit.pas">
+				<Form>frameScreenObjectCropID</Form>
+				<FormType>dfm</FormType>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="ModflowFmpWriterUnit.pas"/>
+			<None Include="ModelMuse.todo"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
@@ -1074,8 +1172,6 @@
 					<Excluded_Packages>
 						<Excluded_Packages Name="$(BDSBIN)\dcloffice2k160.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
 						<Excluded_Packages Name="$(BDSBIN)\dclofficexp160.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-						<Excluded_Packages Name="$(BDSBIN)\bcboffice2k160.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
-						<Excluded_Packages Name="$(BDSBIN)\bcbofficexp160.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
 					</Excluded_Packages>
 				</Delphi.Personality>
 				<Platforms>

@@ -7,7 +7,8 @@ unit ClassificationUnit;
 
 interface
 
-uses SysUtils, StrUtils, Classes, ComCtrls, VirtualTrees;
+uses SysUtils, StrUtils, Classes, ComCtrls, VirtualTrees, DataSetUnit,
+  StdCtrls, PhastDataSets, RbwParser;
 
 Type
   {@name is an abstract base class used in @link(TClassificationList),
@@ -65,7 +66,45 @@ Type
     ClassificationObject: TClassificationObject;
   end;
 
-  
+  // @name is used to store edited values associated with a @link(TDataArray)
+  // in a @link(TScreenObject)  while they are being edited
+  // prior to actually changing those values.
+  TScreenObjectDataEdit = class(TClassificationObject)
+  private
+    FDataArray: TDataArray;
+    FUsed: TCheckBoxState;
+    FFormula: string;
+    FInterpValue: TInterpValuesCollection;
+    FUsesList: TStringList;
+    FVariable: TCustomVariable;
+    FExpression: TExpression;
+    FShouldUpdateDataSet: boolean;
+    FUsedBy: TStringList;
+    FNode: TTreeNode;
+    procedure SetUsed(const Value: TCheckBoxState);
+    procedure SetFormula(const Value: string);
+  public
+    property DataArray: TDataArray read FDataArray;
+    property Used: TCheckBoxState read FUsed write SetUsed;
+    property Formula: string read FFormula write SetFormula;
+    // @name holds @link(TInterpValuesItem)s for @link(DataArray).
+    // Each one in @name corresponds to a different
+    // @link(TScreenObject).
+    property InterpValue: TInterpValuesCollection read FInterpValue
+      write FInterpValue;
+    Constructor Create(ListOfScreenObjects: TList; DataArray: TDataArray);
+    Destructor Destroy; override;
+    property UsesList: TStringList read FUsesList;
+    property Variable: TCustomVariable read FVariable write FVariable;
+    property Expression: TExpression read FExpression write FExpression;
+    property ShouldUpdateDataSet: boolean read FShouldUpdateDataSet;
+    property UsedBy: TStringList read FUsedBy;
+    procedure Invalidate;
+    property Node: TTreeNode read FNode write FNode;
+    function ClassificationName: string; override;
+    function FullClassification: string; override;
+  end;
+
     {@name fills ClassificationList with the classifications of all
     the @link(TClassificationObject)s in ClassificationObjects
     suitable for storage in
@@ -104,7 +143,7 @@ function CompareStrings(List: TStringList; Index1, Index2: Integer): Integer;
   
 implementation
 
-uses IntListUnit, DataSetUnit;
+uses IntListUnit, ScreenObjectUnit;
 
 function CompareStrings(List: TStringList; Index1, Index2: Integer): Integer;
 const
@@ -488,5 +527,159 @@ begin
 end;
 
 { TClassificationObject }
+
+{ TScreenObjectDataEdit }
+
+function TScreenObjectDataEdit.ClassificationName: string;
+begin
+  Assert(DataArray <> nil);
+  result := DataArray.DisplayName;
+end;
+
+constructor TScreenObjectDataEdit.Create(ListOfScreenObjects: TList;
+  DataArray: TDataArray);
+var
+  Index: Integer;
+  ScreenObject: TScreenObject;
+  FirstUsed: Boolean;
+  FirstFormula: Boolean;
+  NewUsed: TCheckBoxState;
+  InterpItem: TInterpValuesItem;
+  DataArrayUsed: boolean;
+  DataArrayPosition: integer;
+  NewFormula: string;
+begin
+  FUsesList := TStringList.Create;
+  FUsesList.Sorted := True;
+  FUsesList.Duplicates := dupIgnore;
+
+  FUsedBy := TStringList.Create;
+  FUsedBy.Sorted := True;
+  FUsedBy.Duplicates := dupIgnore;
+
+  FDataArray := DataArray;
+  if DataArray is TCustomPhastDataSet then
+  begin
+    FInterpValue := TInterpValuesCollection.Create(nil);
+  end
+  else
+  begin
+    FInterpValue := nil;
+  end;
+  FUsed := cbUnchecked;
+  FFormula := '';
+  FirstUsed := True;
+  FirstFormula := True;
+  for Index := 0 to ListOfScreenObjects.Count - 1 do
+  begin
+    ScreenObject := ListOfScreenObjects[Index];
+    if DataArray is TCustomPhastDataSet then
+    begin
+      InterpItem := FInterpValue.Add as TInterpValuesItem;
+    end
+    else
+    begin
+      InterpItem := nil;
+    end;
+    DataArrayPosition := ScreenObject.IndexOfDataSet(DataArray);
+    DataArrayUsed := DataArrayPosition >= 0;
+    if FirstUsed then
+    begin
+      if DataArrayUsed then
+      begin
+        FUsed := cbChecked;
+      end
+      else
+      begin
+        FUsed := cbUnChecked;
+      end;
+      FirstUsed := False;
+    end
+    else
+    begin
+      if DataArrayUsed then
+      begin
+        NewUsed := cbChecked;
+      end
+      else
+      begin
+        NewUsed := cbUnChecked;
+      end;
+      if FUsed <> NewUsed then
+      begin
+        FUsed := cbGrayed;
+      end;
+    end;
+    if DataArrayUsed then
+    begin
+      if FirstFormula then
+      begin
+        FFormula := ScreenObject.DataSetFormulas[DataArrayPosition];
+      end
+      else
+      begin
+        NewFormula := ScreenObject.DataSetFormulas[DataArrayPosition];
+        if FFormula <> NewFormula then
+        begin
+          FFormula := '';
+        end;
+      end;
+      if DataArray is TCustomPhastDataSet then
+      begin
+        ScreenObject.InterpValues.ItemOfDataSet[DataArray];
+        InterpItem.Assign(ScreenObject.InterpValues.ItemOfDataSet[DataArray]);
+      end;
+      FirstFormula := False;
+    end
+    else
+    begin
+      if DataArray is TCustomPhastDataSet then
+      begin
+        InterpItem.Values.Assign(DataArray);
+      end;
+    end;
+  end;
+end;
+
+destructor TScreenObjectDataEdit.Destroy;
+begin
+  FInterpValue.Free;
+  FUsesList.Free;
+  FUsedBy.Free;
+  inherited;
+end;
+
+function TScreenObjectDataEdit.FullClassification: string;
+begin
+  Assert(DataArray <> nil);
+  result := DataArray.FullClassification;
+end;
+
+procedure TScreenObjectDataEdit.Invalidate;
+begin
+  FShouldUpdateDataSet := True;
+end;
+
+procedure TScreenObjectDataEdit.SetFormula(const Value: string);
+begin
+  if FFormula <> Value then
+  begin
+    FFormula := Value;
+    FShouldUpdateDataSet := True;
+  end;
+end;
+
+procedure TScreenObjectDataEdit.SetUsed(const Value: TCheckBoxState);
+begin
+  if FUsed <> Value then
+  begin
+    FUsed := Value;
+    FShouldUpdateDataSet := True;
+    if Node <> nil then
+    begin
+      Node.StateIndex := Ord(FUsed) + 1;
+    end;
+  end;
+end;
 
 end.

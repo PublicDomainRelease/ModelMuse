@@ -661,6 +661,7 @@ procedure TModflowSWT_Writer.WriteDataSet2;
 var
   Index: Integer;
 begin
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoSWTLayersDefine);
   if FLNWT.Count = 0 then
   begin
     frmErrorsAndWarnings.AddError(Model, StrNoSWTLayersDefine,
@@ -796,115 +797,120 @@ begin
   begin
     Exit;
   end;
-  FNameOfFile := FileName(AFileName);
-  WriteToNameFile(StrSWT, Model.UnitNumbers.UnitNumber(StrSWT),
-    FNameOfFile, foInput);
-  RetrieveArrays;
-  OpenFile(FNameOfFile);
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    frmProgressMM.AddMessage(StrWritingSWTPackage);
+    FNameOfFile := FileName(AFileName);
+    WriteToNameFile(StrSWT, Model.UnitNumbers.UnitNumber(StrSWT),
+      FNameOfFile, foInput);
+    RetrieveArrays;
+    OpenFile(FNameOfFile);
+    try
+      frmProgressMM.AddMessage(StrWritingSWTPackage);
 
-    WriteDataSet0;
+      WriteDataSet0;
 
-    frmProgressMM.AddMessage(StrWritingDataSet1);
-    WriteDataSet1;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet2);
-    WriteDataSet2;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet3);
-    WriteDataSet3;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet4);
-    WriteDataSet4;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet5);
-    WriteDataSet5;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSet6);
-    WriteDataSet6;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    frmProgressMM.AddMessage(StrWritingDataSets7to13);
-    WriteDataSets7to13;
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    if FSwtPackage.PreconsolidationSource = pcOffsets then
-    begin
-      frmProgressMM.AddMessage(StrWritingDataSet14);
-      WriteDataSet14;
-      Application.ProcessMessages;
-      if not frmProgressMM.ShouldContinue then
-      begin
-        Exit;
-      end;
-    end;
-
-    if FSwtPackage.PreconsolidationSource = pcSpecified then
-    begin
-      frmProgressMM.AddMessage(StrWritingDataSet15);
-      WriteDataSet15;
-      Application.ProcessMessages;
-      if not frmProgressMM.ShouldContinue then
-      begin
-        Exit;
-      end;
-    end;
-
-    if FSwtPackage.PrintChoices.Count > 0 then
-    begin
-      frmProgressMM.AddMessage(StrWritingDataSet16);
-      WriteDataSet16;
+      frmProgressMM.AddMessage(StrWritingDataSet1);
+      WriteDataSet1;
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
 
-      frmProgressMM.AddMessage(StrWritingDataSet17);
-      WriteDataSet17;
+      frmProgressMM.AddMessage(StrWritingDataSet2);
+      WriteDataSet2;
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
-    end;
 
+      frmProgressMM.AddMessage(StrWritingDataSet3);
+      WriteDataSet3;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet4);
+      WriteDataSet4;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet5);
+      WriteDataSet5;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSet6);
+      WriteDataSet6;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      frmProgressMM.AddMessage(StrWritingDataSets7to13);
+      WriteDataSets7to13;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      if FSwtPackage.PreconsolidationSource = pcOffsets then
+      begin
+        frmProgressMM.AddMessage(StrWritingDataSet14);
+        WriteDataSet14;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+      end;
+
+      if FSwtPackage.PreconsolidationSource = pcSpecified then
+      begin
+        frmProgressMM.AddMessage(StrWritingDataSet15);
+        WriteDataSet15;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+      end;
+
+      if FSwtPackage.PrintChoices.Count > 0 then
+      begin
+        frmProgressMM.AddMessage(StrWritingDataSet16);
+        WriteDataSet16;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+
+        frmProgressMM.AddMessage(StrWritingDataSet17);
+        WriteDataSet17;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+      end;
+
+    finally
+      CloseFile;
+    end;
   finally
-    CloseFile;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 

@@ -33,6 +33,8 @@ type
       AssignmentMethod: TUpdateMethod; MultiplierArrayNames: TTransientMultCollection;
       ZoneArrayNames: TTransientZoneCollection); override;
     function ObsNameWarningString: string; override;
+    procedure Evaluate; override;
+    procedure CheckCell(ValueCell: TValueCell; const PackageName: string); override;
   public
     procedure WriteFile(const AFileName: string);
     procedure WriteFluxObservationFile(const AFileName: string;
@@ -54,12 +56,58 @@ resourcestring
   StrWritingDataSet2 = '  Writing Data Set 2.';
   StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
   StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
+  StrDrainElevationIsB = 'Drain elevation is below the bottom of the cell at' +
+  ' the following locations.';
+//  StrLayerRowColumn = 'Layer, Row Column = %0:d, %1:d, %2:d';
 
 { TModflowDRN_Writer }
 
 function TModflowDRN_Writer.CellType: TValueCellType;
 begin
   result := TDrn_Cell;
+end;
+
+procedure TModflowDRN_Writer.CheckCell(ValueCell: TValueCell;
+  const PackageName: string);
+var
+  Drn_Cell: TDrn_Cell;
+  ActiveDataArray: TDataArray;
+  ScreenObject: TScreenObject;
+begin
+  inherited;
+  Drn_Cell := ValueCell as TDrn_Cell;
+  ActiveDataArray := Model.DataArrayManager.GetDataSetByName(rsActive);
+  Assert(ActiveDataArray <> nil);
+  if ActiveDataArray.BooleanData[Drn_Cell.Layer, Drn_Cell.Row, Drn_Cell.Column]
+    and (Drn_Cell.Elevation < Model.Grid.CellElevation[
+    Drn_Cell.Column, Drn_Cell.Row, Drn_Cell.Layer+1]) then
+  begin
+    ScreenObject := Drn_Cell.ScreenObject as TScreenObject;
+    if Model.ModelSelection = msModflowNWT then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrDrainElevationIsB,
+        Format(StrLayerRowColObject, [
+        Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]));
+    end
+    else
+    begin
+      frmErrorsAndWarnings.AddWarning(Model, StrDrainElevationIsB,
+        Format(StrLayerRowColObject, [
+        Drn_Cell.Layer+1, Drn_Cell.Row+1, Drn_Cell.Column+1, ScreenObject.Name]));
+    end;
+  end;
+end;
+
+procedure TModflowDRN_Writer.Evaluate;
+begin
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrDrainElevationIsB);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrDrainElevationIsB);
+    inherited;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
+  end;
 end;
 
 class function TModflowDRN_Writer.Extension: string;
@@ -117,6 +165,7 @@ begin
     + VariableIdentifiers);
 
   NewLine;
+
 end;
 
 procedure TModflowDRN_Writer.WriteDataSet1;

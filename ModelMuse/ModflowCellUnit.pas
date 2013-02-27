@@ -40,17 +40,21 @@ type
       AModel: TBaseModel): integer; virtual; abstract;
     function GetRealValue(Index: integer;
       AModel: TBaseModel): double; virtual; abstract;
+    function GetBooleanValue(Index: integer;
+      AModel: TBaseModel): boolean; virtual;
     function GetRealAnnotation(Index: integer;
       AModel: TBaseModel): string; virtual; abstract;
     function GetIntegerAnnotation(Index: integer;
       AModel: TBaseModel): string; virtual; abstract;
+    function GetBooleanAnnotation(Index: integer;
+      AModel: TBaseModel): string; virtual;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); virtual;
     procedure Restore(Decomp: TDecompressionStream;
       Annotations: TStringList); virtual;
     function GetSection: integer; virtual; abstract;
     procedure RecordStrings(Strings: TStringList); virtual; abstract;
   public
-    Constructor Create; virtual; 
+    Constructor Create; virtual;
     // @name is the layer number for this cell. Valid values range from 0 to
     // the number of layers in the grid minus 1.
     property Layer: integer read GetLayer write SetLayer;
@@ -64,10 +68,14 @@ type
       read GetIntegerValue;
     property RealValue[Index: integer; AModel: TBaseModel]: double
       read GetRealValue;
+    property BooleanValue[Index: integer; AModel: TBaseModel]: boolean
+      read GetBooleanValue;
     property RealAnnotation[Index: integer; AModel: TBaseModel]: string
       read GetRealAnnotation;
     property IntegerAnnotation[Index: integer; AModel: TBaseModel]: string
       read GetIntegerAnnotation;
+    property BooleanAnnotation[Index: integer; AModel: TBaseModel]: string
+      read GetBooleanAnnotation;
     property IFace: TIface read FIFace write FIFace;
     // @name is the @link(TScreenObject) used to assign this
     // @classname.  @name is assigned in @link(TModflowBoundary.AssignCells).
@@ -80,6 +88,8 @@ type
     function AreRealValuesIdentical(AnotherCell: TValueCell;
       DataIndex: integer): boolean;
     function AreIntegerValuesIdentical(AnotherCell: TValueCell;
+      DataIndex: integer): boolean;
+    function AreBooleanValuesIdentical(AnotherCell: TValueCell;
       DataIndex: integer): boolean;
   end;
 
@@ -363,8 +373,8 @@ end;
 destructor TValueCellList.Destroy;
 begin
   ClearFileNames;
-  FTempFileNames.Free;
   inherited;
+  FTempFileNames.Free;
 end;
 
 function TValueCellList.GetCount: integer;
@@ -456,6 +466,13 @@ end;
 
 { TValueCell }
 
+function TValueCell.AreBooleanValuesIdentical(AnotherCell: TValueCell;
+  DataIndex: integer): boolean;
+begin
+  result := BooleanValue[DataIndex, nil] =
+    AnotherCell.BooleanValue[DataIndex, nil];
+end;
+
 function TValueCell.AreIntegerValuesIdentical(AnotherCell: TValueCell;
   DataIndex: integer): boolean;
 begin
@@ -485,6 +502,20 @@ end;
 constructor TValueCell.Create;
 begin
 
+end;
+
+function TValueCell.GetBooleanAnnotation(Index: integer;
+  AModel: TBaseModel): string;
+begin
+  result := '';
+  Assert(False);
+end;
+
+function TValueCell.GetBooleanValue(Index: integer;
+  AModel: TBaseModel): boolean;
+begin
+  result := False;
+  Assert(False);
 end;
 
 function TValueCell.IsIdentical(AnotherCell: TValueCell): boolean;

@@ -241,10 +241,25 @@ type
   end;
 
   TSutraLayerGroup = class(TCustomLayerGroup)
+  private
+    FStoredMinThickness: TRealStorage;
+    procedure SetStoredMinThickness(const Value: TRealStorage);
+    function GetMinThickness: Double;
+    procedure SetMinThickness(const Value: Double);
   protected
     function EvalAt: TEvaluatedAt; override;
     function ShouldCreateDataArray: Boolean; override;
     procedure InvalidateModel; override;
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    procedure MinThicknessChanged(Sender: TObject);
+  public
+    procedure Assign(Source: TPersistent); override;
+    constructor Create(Collection: TCollection); override;
+    destructor Destroy; override;
+    property MinThickness: Double read GetMinThickness write SetMinThickness;
+  published
+    property StoredMinThickness: TRealStorage read FStoredMinThickness
+      write SetStoredMinThickness;
   end;
 
   TCustomLayerStructure = class(TLayerOwnerCollection)
@@ -674,7 +689,7 @@ end;
 
 function TLayerGroup.ShouldCreateDataArray: Boolean;
 begin
-  result := Model.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
+  result := Model.ModelSelection in ModflowSelection;
 end;
 
 function TLayerGroup.StoreLayerCollection: boolean;
@@ -1672,6 +1687,7 @@ begin
         DataArray.TalksTo(Model.ThreeDGridObserver);
         Model.ThreeDGridObserver.StopsTalkingTo(DataArray);
         Model.UpdateDataArrayDimensions(DataArray);
+        DataArray.Classification := StrLayerDefinition;
       end;
     end;
     // DataArray.UpdateDimensions(Model.Grid.LayerCount,
@@ -1698,7 +1714,10 @@ begin
     end;
     UpdateDataArray(DataArrayName, FAquiferDisplayName);
     DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
-    Assert(DataArray <> nil);
+    if ShouldCreateDataArray then
+    begin
+      Assert(DataArray <> nil);
+    end;
   end;
   if DataArray <> nil then
   begin
@@ -1848,9 +1867,37 @@ end;
 
 { TSutraLayerGroup }
 
+procedure TSutraLayerGroup.Assign(Source: TPersistent);
+begin
+  if Source is TSutraLayerGroup then
+  begin
+    MinThickness := TSutraLayerGroup(Source).MinThickness;
+  end;
+  inherited;
+end;
+
+constructor TSutraLayerGroup.Create(Collection: TCollection);
+begin
+  inherited;
+  FStoredMinThickness := TRealStorage.Create;
+  FStoredMinThickness.Value := 1e-3;
+  FStoredMinThickness.OnChange := MinThicknessChanged;
+end;
+
+destructor TSutraLayerGroup.Destroy;
+begin
+  FStoredMinThickness.Free;
+  inherited;
+end;
+
 function TSutraLayerGroup.EvalAt: TEvaluatedAt;
 begin
   result := eaNodes;
+end;
+
+function TSutraLayerGroup.GetMinThickness: Double;
+begin
+  Result := FStoredMinThickness.Value;
 end;
 
 procedure TSutraLayerGroup.InvalidateModel;
@@ -1869,13 +1916,34 @@ begin
   end;
 end;
 
+function TSutraLayerGroup.IsSame(AnotherItem: TOrderedItem): boolean;
+begin
+  Result := (AnotherItem is TSutraLayerGroup) and inherited IsSame(AnotherItem);
+  if result then
+  begin
+    Result := MinThickness = TSutraLayerGroup(AnotherItem).MinThickness;
+  end;
+end;
+
+procedure TSutraLayerGroup.MinThicknessChanged(Sender: TObject);
+begin
+  InvalidateModel;
+end;
+
+procedure TSutraLayerGroup.SetMinThickness(const Value: Double);
+begin
+  FStoredMinThickness.Value := Value;
+end;
+
+procedure TSutraLayerGroup.SetStoredMinThickness(const Value: TRealStorage);
+begin
+  FStoredMinThickness.Assign(Value);
+end;
+
 function TSutraLayerGroup.ShouldCreateDataArray: Boolean;
-{$IFDEF SUTRA}
 var
   LocalModel: TCustomModel;
-{$ENDIF}
 begin
-  {$IFDEF SUTRA}
   Result := (Model.ModelSelection = msSutra22);
   if result then
   begin
@@ -1883,9 +1951,6 @@ begin
     result := (LocalModel.SutraMesh <> nil) and
       (LocalModel.SutraMesh.MeshType = mt3D);
   end;
-  {$ELSE}
-  result := False;
-  {$ENDIF}
 end;
 
 procedure TGrowthControls.SetGrowthMethod(const Value: TGrowthMethod);

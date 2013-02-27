@@ -1,24 +1,38 @@
 inherited frmSutraOptions: TfrmSutraOptions
+  HelpType = htKeyword
+  HelpKeyword = 'SUTRA_Options_Dialog_Box'
   Caption = 'SUTRA Options'
   ClientHeight = 443
-  ClientWidth = 759
-  ExplicitWidth = 775
+  ClientWidth = 777
+  ExplicitWidth = 793
   ExplicitHeight = 481
   PixelsPerInch = 96
   TextHeight = 18
+  object splttrVertical: TJvNetscapeSplitter
+    Left = 179
+    Top = 0
+    Height = 393
+    Align = alLeft
+    Maximized = False
+    Minimized = False
+    ButtonCursor = crDefault
+    ExplicitLeft = 128
+    ExplicitTop = 208
+    ExplicitHeight = 100
+  end
   object pnlBottom: TPanel
     Left = 0
     Top = 393
-    Width = 759
+    Width = 777
     Height = 50
     Align = alBottom
     ParentColor = True
     TabOrder = 2
     DesignSize = (
-      759
+      777
       50)
     object btnCancel: TBitBtn
-      Left = 649
+      Left = 667
       Top = 7
       Width = 91
       Height = 33
@@ -28,7 +42,7 @@ inherited frmSutraOptions: TfrmSutraOptions
       TabOrder = 2
     end
     object btnOK: TBitBtn
-      Left = 552
+      Left = 570
       Top = 7
       Width = 91
       Height = 33
@@ -39,7 +53,7 @@ inherited frmSutraOptions: TfrmSutraOptions
       OnClick = btnOKClick
     end
     object btnHelp: TBitBtn
-      Left = 455
+      Left = 473
       Top = 7
       Width = 91
       Height = 33
@@ -47,23 +61,27 @@ inherited frmSutraOptions: TfrmSutraOptions
       Kind = bkHelp
       NumGlyphs = 2
       TabOrder = 0
+      OnClick = btnHelpClick
     end
   end
   object jplMain: TJvPageList
-    Left = 169
+    Left = 189
     Top = 0
-    Width = 590
+    Width = 588
     Height = 393
-    ActivePage = jvspConfiguration
+    ActivePage = jvspInitialCondition
     PropagateEnable = False
     Align = alClient
+    OnChange = jplMainChange
     object jvspConfiguration: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 590
+      Width = 588
       Height = 393
+      HelpType = htKeyword
+      HelpKeyword = 'Configuration_Pane'
       DesignSize = (
-        590
+        588
         393)
       object lblGravX: TLabel
         Left = 106
@@ -104,7 +122,7 @@ inherited frmSutraOptions: TfrmSutraOptions
       object rgSaturation: TRadioGroup
         Left = 263
         Top = 147
-        Width = 314
+        Width = 312
         Height = 96
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Flow conditions (CUNSAT)'
@@ -131,7 +149,7 @@ inherited frmSutraOptions: TfrmSutraOptions
       object rgSimulationType: TRadioGroup
         Left = 6
         Top = 249
-        Width = 571
+        Width = 569
         Height = 105
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Simulation type (CSSFLO, CSSTRA)'
@@ -182,14 +200,15 @@ inherited frmSutraOptions: TfrmSutraOptions
     object jvspTitle: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 590
+      Width = 588
       Height = 393
+      HelpType = htKeyword
+      HelpKeyword = 'Title_Pane'
       Caption = 'jvspTitle'
-      ExplicitWidth = 581
       object jvedTitle: TJvEditor
         Left = 0
         Top = 49
-        Width = 590
+        Width = 588
         Height = 344
         Cursor = crIBeam
         Completion.ItemHeight = 13
@@ -205,17 +224,15 @@ inherited frmSutraOptions: TfrmSutraOptions
         Font.Height = -20
         Font.Name = 'Courier New'
         Font.Style = []
-        ExplicitWidth = 581
       end
       object pnlTitleCaption: TPanel
         Left = 0
         Top = 0
-        Width = 590
+        Width = 588
         Height = 49
         Align = alTop
         Alignment = taLeftJustify
         TabOrder = 0
-        ExplicitWidth = 581
         object lblTitle: TLabel
           AlignWithMargins = True
           Left = 4
@@ -232,31 +249,39 @@ inherited frmSutraOptions: TfrmSutraOptions
     object jvspInitialCondition: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 590
+      Width = 588
       Height = 393
+      HelpType = htKeyword
+      HelpKeyword = 'Initial_Conditions_Pane'
       Caption = 'jvspInitialCondition'
-      ExplicitWidth = 581
       DesignSize = (
-        590
+        588
         393)
       object lblRestartFile: TLabel
         Left = 6
-        Top = 87
-        Width = 74
+        Top = 119
+        Width = 172
         Height = 18
-        Caption = 'Restart file'
+        Caption = 'Restart file for warm start'
       end
       object lblRestartFrequency: TLabel
-        Left = 6
-        Top = 143
+        Left = 103
+        Top = 90
         Width = 287
         Height = 18
         Caption = 'Frequency for saving restart file (ISTORE)'
       end
+      object lblRestartInitialConditions: TLabel
+        Left = 6
+        Top = 334
+        Width = 211
+        Height = 18
+        Caption = 'Restart file for initial conditions'
+      end
       object rgStartType: TRadioGroup
         Left = 6
         Top = 3
-        Width = 573
+        Width = 571
         Height = 78
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Starting type (CREAD)'
@@ -266,35 +291,69 @@ inherited frmSutraOptions: TfrmSutraOptions
           'Warm start (start from restart file)')
         TabOrder = 0
         OnClick = rgStartTypeClick
-        ExplicitWidth = 564
       end
       object fedRestartFile: TJvFilenameEdit
         Left = 6
-        Top = 111
-        Width = 573
+        Top = 143
+        Width = 571
         Height = 26
+        DefaultExt = '.rst'
+        Filter = 'Restart Files (*.rst)|*.rst|All files (*.*)|*.*'
         Enabled = False
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 1
-        ExplicitWidth = 564
+        TabOrder = 2
+        OnChange = fedRestartFileChange
       end
       object seRestartFrequency: TJvSpinEdit
         Left = 6
-        Top = 167
+        Top = 87
         Width = 91
         Height = 26
         MaxValue = 2147483647.000000000000000000
         Value = 10000.000000000000000000
-        TabOrder = 2
+        TabOrder = 1
+      end
+      object rgInitialValues: TRadioGroup
+        Left = 6
+        Top = 175
+        Width = 571
+        Height = 153
+        Caption = 'Read initial conditions from a restart file'
+        ItemIndex = 0
+        Items.Strings = (
+          
+            'read neither the pressure/head nor the concentration/temperature' +
+            ' from the restart file'
+          'read the pressure/head from the restart file'
+          'read the concentration/temperature from the restart file'
+          
+            'read both the pressure/head and the concentration/temperature fr' +
+            'om the restart file')
+        TabOrder = 3
+        WordWrap = True
+        OnClick = rgInitialValuesClick
+      end
+      object fedRestartInitialConditions: TJvFilenameEdit
+        Left = 6
+        Top = 358
+        Width = 571
+        Height = 26
+        DefaultExt = '.rst'
+        Filter = 'Restart Files (*.rst)|*.rst|All files (*.*)|*.*'
+        Enabled = False
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 4
+        OnChange = fedRestartInitialConditionsChange
       end
     end
     object jvspNumericalControls: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 590
+      Width = 588
       Height = 393
+      HelpType = htKeyword
+      HelpKeyword = 'Numerical_Controls_Pane'
       Caption = 'jvspNumericalControls'
-      ExplicitWidth = 581
       object lblFractionalUpstreamWeight: TLabel
         Left = 79
         Top = 16
@@ -423,12 +482,13 @@ inherited frmSutraOptions: TfrmSutraOptions
     object jvspSolverControls: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 590
+      Width = 588
       Height = 393
+      HelpType = htKeyword
+      HelpKeyword = 'Solver_Pane'
       Caption = 'jvspSolverControls'
-      ExplicitWidth = 581
       DesignSize = (
-        590
+        588
         393)
       object lblMaxPressureIterations: TLabel
         Left = 111
@@ -473,7 +533,7 @@ inherited frmSutraOptions: TfrmSutraOptions
       object rgPressureSolution: TRadioGroup
         Left = 6
         Top = 3
-        Width = 581
+        Width = 579
         Height = 105
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Pressure solution solver (CSOLVP)'
@@ -484,7 +544,6 @@ inherited frmSutraOptions: TfrmSutraOptions
           'ILU-preconditioned orthomin (ORTHOMIN)')
         TabOrder = 0
         OnClick = rgPressureSolutionClick
-        ExplicitWidth = 572
       end
       object seMaxPressureIterations: TJvSpinEdit
         Left = 6
@@ -508,7 +567,7 @@ inherited frmSutraOptions: TfrmSutraOptions
       object rgUSolutionMethod: TRadioGroup
         Left = 6
         Top = 207
-        Width = 581
+        Width = 579
         Height = 90
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Transport solution solver (CSOLVU)'
@@ -518,7 +577,6 @@ inherited frmSutraOptions: TfrmSutraOptions
           'ILU-preconditioned orthomin (ORTHOMIN)')
         TabOrder = 3
         OnClick = rgUSolutionMethodClick
-        ExplicitWidth = 572
       end
       object seMaxTransportIterations: TJvSpinEdit
         Left = 6
@@ -543,10 +601,11 @@ inherited frmSutraOptions: TfrmSutraOptions
     object jvspFluidProperties: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 590
+      Width = 588
       Height = 393
+      HelpType = htKeyword
+      HelpKeyword = 'Fluid_Properties_Pane'
       Caption = 'jvspFluidProperties'
-      ExplicitWidth = 581
       object lblFluidCompressibility: TLabel
         Left = 106
         Top = 14
@@ -616,9 +675,9 @@ inherited frmSutraOptions: TfrmSutraOptions
       object lblFluidDensityCoefficientTemperature: TLabel
         Left = 106
         Top = 243
-        Width = 448
+        Width = 430
         Height = 18
-        Caption = 'Coefficient of fluid density change with or temperature (DRWDU) '
+        Caption = 'Coefficient of fluid density change with temperature (DRWDU) '
       end
       object lblBaseTemperature: TLabel
         Left = 106
@@ -762,151 +821,166 @@ inherited frmSutraOptions: TfrmSutraOptions
     object jvspSolidAdsorption: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 590
+      Width = 588
       Height = 393
+      HelpType = htKeyword
+      HelpKeyword = 'Solid_Matrix__Adsorption_Pane'
       Caption = 'jvspSolidAdsorption'
-      ExplicitWidth = 581
-      DesignSize = (
-        590
-        393)
-      object lblMatrixCompressibility: TLabel
-        Left = 106
-        Top = 14
-        Width = 276
-        Height = 18
-        Caption = 'Solid matrix compressibility (COMPMA)'
-      end
-      object lblSolidGrainSpecificHeat: TLabel
-        Left = 106
-        Top = 42
-        Width = 204
-        Height = 18
-        Caption = 'Solid grain specific heat (CS)'
-      end
-      object lblSolidGrainDiffusivity: TLabel
-        Left = 106
-        Top = 70
-        Width = 217
-        Height = 18
-        Caption = 'Solid grain diffusivity (SIGMAS)'
-      end
-      object lblSolidGrainDensity: TLabel
-        Left = 106
-        Top = 98
-        Width = 217
-        Height = 18
-        Caption = 'Density of a solid grain (RHOS)'
-      end
-      object lblFirstDistributionCoefficient: TLabel
-        Left = 106
-        Top = 237
-        Width = 235
-        Height = 18
-        Caption = 'First distribution coefficient (CHI1)'
-      end
-      object lblSecondDistributionCoefficient: TLabel
-        Left = 106
-        Top = 265
-        Width = 258
-        Height = 18
-        Caption = 'Second distribution coefficient (CHI2)'
-      end
-      object rdeMatrixCompressibility: TRbwDataEntry
-        Left = 6
-        Top = 11
-        Width = 94
-        Height = 22
+      object grpSolidMatrix: TGroupBox
+        Left = 0
+        Top = 0
+        Width = 588
+        Height = 145
+        Align = alTop
+        Caption = 'Solid matrix properties'
         TabOrder = 0
-        Text = '0'
-        DataType = dtReal
-        Max = 1.000000000000000000
-        CheckMin = True
-        ChangeDisabledColor = True
+        object lblMatrixCompressibility: TLabel
+          Left = 108
+          Top = 30
+          Width = 276
+          Height = 18
+          Caption = 'Solid matrix compressibility (COMPMA)'
+        end
+        object lblSolidGrainSpecificHeat: TLabel
+          Left = 108
+          Top = 58
+          Width = 204
+          Height = 18
+          Caption = 'Solid grain specific heat (CS)'
+        end
+        object lblSolidGrainDiffusivity: TLabel
+          Left = 108
+          Top = 87
+          Width = 217
+          Height = 18
+          Caption = 'Solid grain diffusivity (SIGMAS)'
+        end
+        object lblSolidGrainDensity: TLabel
+          Left = 108
+          Top = 114
+          Width = 217
+          Height = 18
+          Caption = 'Density of a solid grain (RHOS)'
+        end
+        object rdeSolidGrainDensity: TRbwDataEntry
+          Left = 8
+          Top = 111
+          Width = 94
+          Height = 22
+          TabOrder = 3
+          Text = '0'
+          DataType = dtReal
+          Max = 1.000000000000000000
+          CheckMin = True
+          ChangeDisabledColor = True
+        end
+        object rdeSolidGrainDiffusivity: TRbwDataEntry
+          Left = 8
+          Top = 83
+          Width = 94
+          Height = 22
+          TabOrder = 2
+          Text = '0'
+          DataType = dtReal
+          Max = 1.000000000000000000
+          CheckMin = True
+          ChangeDisabledColor = True
+        end
+        object rdeSolidGrainSpecificHeat: TRbwDataEntry
+          Left = 8
+          Top = 55
+          Width = 94
+          Height = 22
+          TabOrder = 1
+          Text = '0'
+          DataType = dtReal
+          Max = 1.000000000000000000
+          CheckMin = True
+          ChangeDisabledColor = True
+        end
+        object rdeMatrixCompressibility: TRbwDataEntry
+          Left = 8
+          Top = 27
+          Width = 94
+          Height = 22
+          TabOrder = 0
+          Text = '0'
+          DataType = dtReal
+          Max = 1.000000000000000000
+          CheckMin = True
+          ChangeDisabledColor = True
+        end
       end
-      object rdeSolidGrainSpecificHeat: TRbwDataEntry
-        Left = 6
-        Top = 39
-        Width = 94
-        Height = 22
+      object grpAdsorption: TGroupBox
+        Left = 0
+        Top = 145
+        Width = 588
+        Height = 193
+        Align = alTop
+        Caption = 'Adsorption parameters'
         TabOrder = 1
-        Text = '0'
-        DataType = dtReal
-        Max = 1.000000000000000000
-        CheckMin = True
-        ChangeDisabledColor = True
-      end
-      object rdeSolidGrainDiffusivity: TRbwDataEntry
-        Left = 6
-        Top = 67
-        Width = 94
-        Height = 22
-        TabOrder = 2
-        Text = '0'
-        DataType = dtReal
-        Max = 1.000000000000000000
-        CheckMin = True
-        ChangeDisabledColor = True
-      end
-      object rdeSolidGrainDensity: TRbwDataEntry
-        Left = 6
-        Top = 95
-        Width = 94
-        Height = 22
-        TabOrder = 3
-        Text = '0'
-        DataType = dtReal
-        Max = 1.000000000000000000
-        CheckMin = True
-        ChangeDisabledColor = True
-      end
-      object rgSorptionModel: TRadioGroup
-        Left = 6
-        Top = 123
-        Width = 573
-        Height = 105
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'Sorption model (ADSMOD)'
-        Items.Strings = (
-          'None'
-          'Linear'
-          'Freundlich'
-          'Langmuir')
-        TabOrder = 4
-        OnClick = rgSorptionModelClick
-        ExplicitWidth = 564
-      end
-      object rdeFirstDistributionCoefficient: TRbwDataEntry
-        Left = 6
-        Top = 234
-        Width = 94
-        Height = 22
-        TabOrder = 5
-        Text = '0'
-        DataType = dtReal
-        Max = 1.000000000000000000
-        CheckMin = True
-        ChangeDisabledColor = True
-      end
-      object rdeSecondDistributionCoefficient: TRbwDataEntry
-        Left = 6
-        Top = 262
-        Width = 94
-        Height = 22
-        TabOrder = 6
-        Text = '0'
-        DataType = dtReal
-        Max = 1.000000000000000000
-        CheckMin = True
-        ChangeDisabledColor = True
+        object lblFirstDistributionCoefficient: TLabel
+          Left = 106
+          Top = 132
+          Width = 235
+          Height = 18
+          Caption = 'First distribution coefficient (CHI1)'
+        end
+        object lblSecondDistributionCoefficient: TLabel
+          Left = 106
+          Top = 159
+          Width = 258
+          Height = 18
+          Caption = 'Second distribution coefficient (CHI2)'
+        end
+        object rgSorptionModel: TRadioGroup
+          Left = 6
+          Top = 21
+          Width = 417
+          Height = 105
+          Caption = 'Sorption model (ADSMOD)'
+          Items.Strings = (
+            'None'
+            'Linear'
+            'Freundlich'
+            'Langmuir')
+          TabOrder = 0
+          OnClick = rgSorptionModelClick
+        end
+        object rdeFirstDistributionCoefficient: TRbwDataEntry
+          Left = 6
+          Top = 129
+          Width = 94
+          Height = 22
+          TabOrder = 1
+          Text = '0'
+          DataType = dtReal
+          Max = 1.000000000000000000
+          CheckMin = True
+          ChangeDisabledColor = True
+        end
+        object rdeSecondDistributionCoefficient: TRbwDataEntry
+          Left = 6
+          Top = 155
+          Width = 94
+          Height = 22
+          TabOrder = 2
+          Text = '0'
+          DataType = dtReal
+          Max = 1.000000000000000000
+          CheckMin = True
+          ChangeDisabledColor = True
+        end
       end
     end
     object jvspProdGrav: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 590
+      Width = 588
       Height = 393
+      HelpType = htKeyword
+      HelpKeyword = 'Production_Pane'
       Caption = 'jvspProdGrav'
-      ExplicitWidth = 581
       object lblZeroFluidProd: TLabel
         Left = 106
         Top = 14
@@ -917,9 +991,9 @@ inherited frmSutraOptions: TfrmSutraOptions
       object lblZeroImmobProd: TLabel
         Left = 106
         Top = 42
-        Width = 425
+        Width = 438
         Height = 18
-        Caption = 'Zero-order rate of production in the imobile phase (PRODS'#216')'
+        Caption = 'Zero-order rate of production in the immobile phase (PRODS'#216')'
       end
       object lblFirstFluidProd: TLabel
         Left = 106
@@ -991,7 +1065,7 @@ inherited frmSutraOptions: TfrmSutraOptions
   object jvpltvNavigation: TJvPageListTreeView
     Left = 0
     Top = 0
-    Width = 169
+    Width = 179
     Height = 393
     PageDefault = 0
     PageList = jplMain

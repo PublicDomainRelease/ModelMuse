@@ -13,53 +13,7 @@ unit MeshRenumbering;
 interface
 
 uses
-  Generics.Collections, Generics.Defaults, FastGEO;
-
-type
-  TNodeType = (ntInner, ntEdge, ntSubDomain);
-
-  IElement = interface;
-
-  INode = interface(IInterface)
-    function GetActiveElementCount: integer;
-    function GetActiveElement(Index: integer): IElement;
-    function GetNodeNumber: integer;
-    procedure SetNodeNumber(Value: integer);
-    function GetLocation: TPoint2D;
-    procedure SetLocation(const Value: TPoint2D);
-    function GetNodeType: TNodeType;
-    property ActiveElementCount: integer read GetActiveElementCount;
-    property ActiveElements[Index: integer]: IElement read GetActiveElement;
-    property NodeNumber: integer read GetNodeNumber write SetNodeNumber;
-    property Location: TPoint2D read GetLocation write SetLocation;
-    property NodeType: TNodeType read GetNodeType;
-  end;
-
-  TINodeList = TList<INode>;
-
-  IElement = interface(IInterface)
-    function GetActiveNode(Index: integer): INode;
-    function GetActiveNodeCount: integer;
-    function GetElementNumber: integer;
-    procedure SetElementNumber(Value: integer);
-    property NodeCount: integer read GetActiveNodeCount;
-    property Nodes[Index: integer]: INode read GetActiveNode;
-    property ElementNumber: integer read GetElementNumber
-      write SetElementNumber;
-  end;
-
-  TIElementList = TList<IElement>;
-
-  IMesh = interface(IInterface)
-    function GetActiveNode(Index: integer): INode;
-    function GetActiveNodeCount: integer;
-    function GetActiveElementCount: integer;
-    function GetActiveElement(Index: integer): IElement;
-    property NodeCount: integer read GetActiveNodeCount;
-    property Nodes[Index: integer]: INode read GetActiveNode;
-    property ElementCount: integer read GetActiveElementCount;
-    property Elements[Index: integer]: IElement read GetActiveElement;
-  end;
+  Generics.Collections, Generics.Defaults, FastGEO, MeshRenumberingTypes;
 
 procedure RenumberMesh(Mesh: IMesh);
 
@@ -91,7 +45,7 @@ type
     FActive: Boolean;
     FAssigned: Boolean;
     FActiveNodeIncrement: integer;
-    FOrderingEfficiency: integer;
+    FOrderingEfficiency: Int64;
     FWidth: integer;
     FDepth: integer;
     FLevel: integer;
@@ -338,7 +292,7 @@ var
   AssignedNodes: TNodeHandlerList;
   NextNodeHandler: TNodeHandler;
   NextNodeIndex: integer;
-  OrderingEfficiency: integer;
+  OrderingEfficiency: Int64;
   StartingNode: TNodeHandler;
   StartingNodes: TNodeHandlerList;
   StartingNodeIndex: integer;

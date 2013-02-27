@@ -1,9 +1,11 @@
 inherited frmSutraProgramLocations: TfrmSutraProgramLocations
+  HelpType = htKeyword
+  HelpKeyword = 'SUTRA_Program_Locations_Dialog'
   Caption = 'SUTRA Program Location'
-  ClientHeight = 120
+  ClientHeight = 183
   ClientWidth = 613
-  ExplicitWidth = 629
-  ExplicitHeight = 158
+  ExplicitWidth = 631
+  ExplicitHeight = 228
   PixelsPerInch = 120
   TextHeight = 18
   object htlblSutra22: TJvHTLabel
@@ -22,6 +24,13 @@ inherited frmSutraProgramLocations: TfrmSutraProgramLocations
     Height = 18
     Caption = 'SUTRA 2.2'
   end
+  object lblTextEditor: TLabel
+    Left = 17
+    Top = 73
+    Width = 71
+    Height = 18
+    Caption = 'Text editor'
+  end
   object fedSutra22: TJvFilenameEdit
     Left = 16
     Top = 38
@@ -32,17 +41,16 @@ inherited frmSutraProgramLocations: TfrmSutraProgramLocations
       '.*)|*.*'
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 0
+    OnChange = fedSutra22Change
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 79
+    Top = 142
     Width = 613
     Height = 41
     Align = alBottom
-    TabOrder = 1
-    ExplicitLeft = -10
-    ExplicitTop = 185
-    ExplicitWidth = 623
+    BevelOuter = bvNone
+    TabOrder = 2
     DesignSize = (
       613
       41)
@@ -51,13 +59,12 @@ inherited frmSutraProgramLocations: TfrmSutraProgramLocations
       Top = 6
       Width = 82
       Height = 27
+      HelpType = htKeyword
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
-      ExplicitLeft = 359
+      OnClick = btnHelpClick
     end
     object btnOK: TBitBtn
       Left = 437
@@ -65,13 +72,10 @@ inherited frmSutraProgramLocations: TfrmSutraProgramLocations
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
-      ExplicitLeft = 447
     end
     object btnCancel: TBitBtn
       Left = 525
@@ -79,12 +83,21 @@ inherited frmSutraProgramLocations: TfrmSutraProgramLocations
       Width = 83
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
-      ExplicitLeft = 535
     end
+  end
+  object fedTextEditor: TJvFilenameEdit
+    Left = 17
+    Top = 94
+    Width = 588
+    Height = 26
+    Filter = 
+      'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
+      '.*)|*.*'
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 1
+    OnChange = fedTextEditorChange
   end
 end

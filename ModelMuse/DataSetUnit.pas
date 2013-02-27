@@ -13,7 +13,8 @@ interface
 
 uses Windows, Math, ZLib, GR32, TempFiles, IntListUnit, RealListUnit, SysUtils,
   Classes, Forms, RbwParser, FastGEO, GoPhastTypes, SubscriptionUnit,
-  SparseDataSets, ObserverIntfU, FormulaManagerUnit, Dialogs;
+  SparseDataSets, ObserverIntfU, FormulaManagerUnit, Dialogs,
+  Generics.Collections, Generics.Defaults;
 
 { TODO :
 Consider making dual data sets that can be evaluated at both elements
@@ -34,9 +35,9 @@ type
 
   TBoundaryType = (btUndefined, btPhastSpecifiedHead, btPhastFlux, btPhastLeaky,
     btPhastRiver, btPhastWell, btMfWell, btMfGhb, btMfDrn, btMfDrt, btMfRiv,
-    btMfChd, btMfEts, btMfEt, btMfRch, btMfSfr, btMfUzf, btMfObs, btMfMnw,
-    btMt3dSsm, btMfHfb, btSutraSpecifiedPressure, btSutraSpecifiedHead,
-    btSutraSpecConcTemp, btSutraFluidFlux, btMassEnergyFlux);
+    btMfChd, btMfEts, btMfEt, btMfRch, btMfSfr, btMfStr, btMfUzf, btMfObs,
+    btMfMnw, btMt3dSsm, btMfHfb, btSutraSpecifiedPressure, btSutraSpecifiedHead,
+    btSutraSpecConcTemp, btSutraFluidFlux, btMassEnergyFlux, btMfFhb);
 
   TBoundaryTypes = set of TBoundaryType;
 
@@ -277,7 +278,7 @@ type
 
   TCustomTimeList = Class;
 
-  TContours = class(TObject)
+  TContours = class(TPersistent)
   private
     FSpecifyContours: boolean;
     FLineThicknesses: TOneDRealArray;
@@ -289,25 +290,47 @@ type
     function GetCount: integer;
     procedure SetCount(const Value: integer);
     procedure SetContourStringValues(const Value: TStringList);
+  protected
+    procedure DefineProperties(Filer: TFiler); override;
+    procedure ReadContourValues(Reader: TReader);
+    procedure WriteContourValues(Writer: TWriter);
+    procedure ReadLineThicknesses(Reader: TReader);
+    procedure WriteLineThicknesses(Writer: TWriter);
+    procedure ReadContourColors(Reader: TReader);
+    procedure WriteContourColors(Writer: TWriter);
+
   public
     Constructor Create;
     Destructor Destroy; override;
-    property AutomaticColors: boolean read FAutomaticColors
-      write FAutomaticColors;
-    property Count: integer read GetCount write SetCount;
-    procedure Assign(Source: TContours);
-    property SpecifyContours: boolean read FSpecifyContours
-      write FSpecifyContours;
+    procedure Sort;
+    procedure Assign(Source: TPersistent); override;
     property ContourValues: TOneDRealArray read FContourValues
       write FContourValues;
     property LineThicknesses: TOneDRealArray read FLineThicknesses
       write FLineThicknesses;
     property ContourColors: TArrayOfColor32 read FContourColors
       write FContourColors;
+  published
+    property AutomaticColors: boolean read FAutomaticColors
+      write FAutomaticColors;
+    property Count: integer read GetCount write SetCount;
+    property SpecifyContours: boolean read FSpecifyContours
+      write FSpecifyContours;
     property LogTransform: boolean read FLogTransform write FLogTransform;
     property ContourStringValues: TStringList read FContourStringValues
       write SetContourStringValues;
   end;
+
+  TContourItem = class(TObject)
+    Value: double;
+    Color: TColor32;
+    LineThickness: Double;
+  end;
+
+  TContourItemObjectList = TObjectList<TContourItem>;
+  TContourComparer = TComparer<TContourItem>;
+
+
 
   {@abstract(@name provides an interface to a 3D array of data.)
 
@@ -425,6 +448,7 @@ type
     FContourAlg: TContourAlg;
     FMinMaxUpToDate: Boolean;
     FAngleType: TAngleType;
+    FContourInterval: TRealStorage;
     // See @link(TwoDInterpolatorClass).
     function GetTwoDInterpolatorClass: string;
     // @name is called if an invalid formula has been specified.
@@ -501,6 +525,8 @@ type
     function GetMinString: string;
     function GetMaxString: string;
     procedure SetAngleType(const Value: TAngleType);
+    procedure SetContourInterval(const Value: TRealStorage);
+    procedure OnValueChanged(Sender: TObject);
   protected
     // See @link(DimensionsChanged).
     FDimensionsChanged: boolean;
@@ -817,7 +843,7 @@ type
     property ContourAlg: TContourAlg read FContourAlg write SetContourAlg;
   published
     // @name indicates the hierarchical position of this instance of
-    // @classname when it is required by MODFLOW.
+    // @classname when it is required by the model.
     property Classification: string read GetClassification
       write SetClassification;
     {If @name is @true, attempting to set
@@ -888,6 +914,7 @@ type
     // @name has no effect.  It is maintained only for backwards compatibility.
     property Visible: boolean read FVisible write SetVisible stored False;
     property AngleType: TAngleType read FAngleType write SetAngleType;
+    property ContourInterval: TRealStorage read FContourInterval write SetContourInterval;
   end;
 
   TDataArrayList = class(TObject)
@@ -1011,6 +1038,7 @@ type
     // can be used with.
     class function ValidReturnTypes: TRbwDataTypes; virtual; abstract;
     class Function ValidOrientations: TDataSetOrientations; virtual;
+//    function HasData: boolean; virtual; abstract;
   published
     // @name can be used to respond to a change in the interpolator.
     property OnEdit: TNotifyEvent read FOnEdit write FOnEdit;
@@ -1415,7 +1443,9 @@ var
 
 resourcestring
   StrCircularReferenceI = 'Circular reference in %s';
+  StrCircularReferenceI2 = 'Circular reference in %0:s. Circle = %1:s';
   StrInvalidDataType = 'Invalid data type.';
+  StrMODFLOWMultinodeWe = 'MODFLOW Multinode Well';
 
 implementation
 
@@ -1460,15 +1490,20 @@ resourcestring
   StrMODFLOWDrainReturn = 'MODFLOW Drain Return';
   StrMODFLOWRiver = 'MODFLOW River';
   StrMODFLOWCHD = 'MODFLOW CHD';
+  StrMODFLOWFHB = 'MODFLOW Flow and Head Boundary';
   StrMODFLOWEvapoSegments = 'MODFLOW Evapotranspiration Segments';
   StrMODFLOWEvapotranspi = 'MODFLOW Evapotranspiration';
   StrMODFLOWRecharge = 'MODFLOW Recharge';
   StrMODFLOWStreamflowR = 'MODFLOW Streamflow Routing';
+  StrMODFLOWStream = 'MODFLOW Stream';
   StrMODFLOWUnsaturated = 'MODFLOW Unsaturated Zone Flow';
   StrMODFLOWObservations = 'MODFLOW Observations';
-  StrMODFLOWMultinodeWe = 'MODFLOW Multinode Well';
   StrMT3DMSSinkAndSour = 'MT3DMS Sink and Source Mixing';
   StrUndefined = 'Undefined';
+  DataSetInterpolatorExplanation = 'set via %s.';
+  StrSetViaDefaultForm = 'set via default formula: %s';
+  StrTheFormulaForThe = 'The formula for the "%0:s" data set is invalid beca' +
+  'use the data set or global variable "%1:s" does not exist.';
 
 { TDataArray }
 
@@ -1660,6 +1695,7 @@ begin
     end;
   end;
 
+  FContourInterval.Free;
   FLimits.Free;
   FContourLimits.Free;
   SetDimensions(True);
@@ -1861,14 +1897,19 @@ begin
   for Index := 0 to NewUseList.Count - 1 do
   begin
     ObservedItem := Model.GetObserverByName(NewUseList[Index]);
-    Assert(ObservedItem <> nil);
-    ObservedItem.TalksTo(self);
+    if ObservedItem = nil then
+    begin
+      frmFormulaErrors.AddFormulaError('', Name, Formula,
+        Format(StrTheFormulaForThe, [Name, NewUseList[Index]]));
+    end
+    else
+    begin
+      ObservedItem.TalksTo(self);
+    end;
   end;
 end;
 
-procedure TDataArray.Initialize;
-const
-  MaxReal = 3.4E38;
+resourcestring
   ErrorMessageInterpUnNamed = 'An invalid value assigned by an interpolator '
     + 'has been replaced by the maximum single-precision real number in an unamed data set.';
   ErrorMessageInterpNamed = 'An invalid value assigned by an interpolator '
@@ -1890,6 +1931,10 @@ const
     + 'has been replaced by "" in an unamed data set.';
   ErrorMessageFormulaNamedString = 'An invalid value assigned by a formula '
     + 'has been replaced by "" in Data Set: %s.';
+
+procedure TDataArray.Initialize;
+const
+  MaxReal = 3.4E38;
 var
   ColIndex, RowIndex, LayerIndex: integer;
   Compiler: TRbwParser;
@@ -1922,7 +1967,6 @@ var
 //  AValueInt: Integer;
   procedure GetLimits;
   begin
-    {$IFDEF SUTRA}
     if LocalModel.ModelSelection = msSutra22 then
     begin
       LayerLimit := LayerCount - 1;
@@ -1931,7 +1975,6 @@ var
     end
     else
     begin
-    {$ENDIF}
       case EvaluatedAt of
         eaBlocks:
           begin
@@ -1973,9 +2016,7 @@ var
       else
         Assert(False);
       end;
-    {$IFDEF SUTRA}
     end;
-    {$ENDIF}
   end;
   procedure HandleError;
   begin
@@ -2097,7 +2138,7 @@ begin
     if Stack.IndexOf(Name) >= 0 then
     begin
       UpToDate := True;
-      raise ECircularReference.Create(Format(StrCircularReferenceI, [Name]));
+      raise ECircularReference.Create(Format(StrCircularReferenceI2, [Name, Stack.Text]));
     end;
     Stack.Add(Name);
 
@@ -2122,8 +2163,8 @@ begin
         TwoDInterpolator.Initialize(self);
         if InterpAnnString = '' then
         begin
-          InterpAnnString := 'set via ' +
-            TwoDInterpolator.InterpolatorName + '.';
+          InterpAnnString := Format(DataSetInterpolatorExplanation,
+            [TwoDInterpolator.InterpolatorName]);
         end;
         case Orientation of
           dsoTop:
@@ -2587,7 +2628,7 @@ begin
             or ((Expression.ResultType = rdtInteger) and (Datatype = rdtDouble));
           if not ResultTypeOK then
           begin
-            ResetFormula(Compiler, 'Invalid data type.');
+            ResetFormula(Compiler, StrInvalidDataType);
             if ParameterUsed then
             begin
               TempFormula := ParameterFormula;
@@ -2612,8 +2653,8 @@ begin
           end
           else
           begin
-            AnnotationString :=
-              'set via default formula: ' + TempFormula;
+            AnnotationString := Format(
+              StrSetViaDefaultForm, [TempFormula]);
           end;
 
           SetLength(VariablePositions, TempUseList.Count);
@@ -2732,6 +2773,10 @@ begin
                     HandleError;
                   end;
                   on E: EDivByZero do
+                  begin
+                    HandleError;
+                  end;
+                  on E: EZeroDivide do
                   begin
                     HandleError;
                   end;
@@ -3456,6 +3501,13 @@ begin
   FVisible := True;
   FUseListUpToDate := False;
   FReadDataFromFile := False;
+  FContourInterval := TRealStorage.Create;
+  FContourInterval.OnChange := OnValueChanged;
+end;
+
+procedure TDataArray.OnValueChanged(Sender: TObject);
+begin
+  frmGoPhast.InvalidateModel;
 end;
 
 procedure TDataArray.SetEvaluatedAt(const Value: TEvaluatedAt);
@@ -3497,6 +3549,11 @@ end;
 procedure TDataArray.SetContourAlg(const Value: TContourAlg);
 begin
   FContourAlg := Value;
+end;
+
+procedure TDataArray.SetContourInterval(const Value: TRealStorage);
+begin
+  FContourInterval.Assign(Value);
 end;
 
 procedure TDataArray.SetContourLimits(const Value: TColoringLimits);
@@ -3575,7 +3632,7 @@ begin
       or (Name = rsSideLeakyThickness)
       then
     begin
-      result := 'PHAST Leaky';
+      result := StrPHASTLeaky;
     end
     else if (Name = rsRiverHydraulicConductivity)
       or (Name = rsRiverWidth)
@@ -3583,12 +3640,12 @@ begin
       or (Name = rsRiverBedThickness)
       then
     begin
-      result := 'PHAST River';
+      result := StrPHASTRiver;
     end
     else if (Name = rsSolutionType)
       then
     begin
-      result := 'PHAST Specified Head';
+      result := StrPHASTSpecifiedHead;
     end
     else
     begin
@@ -4911,7 +4968,6 @@ end;
 
 procedure TDataArray.GetLimits(out ColLimit, RowLimit, LayerLimit: Integer);
 begin
-    {$IFDEF SUTRA}
   if (Model as TCustomModel).ModelSelection = msSutra22 then
   begin
     LayerLimit := LayerCount - 1;
@@ -4920,7 +4976,6 @@ begin
   end
   else
   begin
-   {$ENDIF}
     case EvaluatedAt of
       eaBlocks:
         begin
@@ -4937,9 +4992,7 @@ begin
     else
       Assert(False);
     end;
-    {$IFDEF SUTRA}
   end;
-  {$ENDIF}
   case Orientation of
     dsoTop: LayerLimit := 0;
     dsoFront: RowLimit := 0;
@@ -5262,7 +5315,8 @@ begin
     AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
     if AScreenObject.Deleted
       or not AScreenObject.SetValuesByInterpolation
-      or not AScreenObject.UsedModels.UsesModel(DataSet.Model) then
+      or not AScreenObject.UsedModels.UsesModel(DataSet.Model)
+      or (AScreenObject.ElevationCount <> ecZero) then
     begin
       continue;
     end;
@@ -5378,6 +5432,12 @@ begin
       Continue;
     end;
 
+    if AScreenObject.Count = 0 then
+    begin
+      Continue;
+    end;
+
+
     result := True;
     break;
   end;
@@ -5470,7 +5530,7 @@ begin
     if Stack.IndexOf(Name) >= 0 then
     begin
       UpToDate := True;
-      raise ECircularReference.Create(Format(StrCircularReferenceI, [Name]));
+      raise ECircularReference.Create(Format(StrCircularReferenceI2, [Name, Stack.Text]));
     end;
     Stack.Add(Name);
 
@@ -5531,9 +5591,7 @@ var
   NumberOfColumns: Integer;
   LocalModel: TCustomModel;
   Grid: TCustomModelGrid;
-  {$IFDEF Sutra}
   Mesh: TSutraMesh2D;
-  {$ENDIF}
 begin
   // don't call inherited.
   // Do this instead.
@@ -5553,13 +5611,24 @@ begin
 
     if LocalModel <> nil then
     begin
-      {$IFDEF Sutra}
       if LocalModel.ModelSelection = msSutra22 then
       begin
         Mesh := LocalModel.Mesh.Mesh2D;
         if Mesh <> nil then
         begin
-          NumberOfLayers := 1;
+
+          if (LocalModel.Mesh.MeshType = mt3D)
+            and (EvaluatedAt = eaNodes)
+            and (Orientation = dso3D) then
+          begin
+            NumberOfLayers := frmGoPhast.PhastModel.
+              SutraLayerStructure.LayerCount+1;
+          end
+          else
+          begin
+            NumberOfLayers := frmGoPhast.PhastModel.
+              SutraLayerStructure.LayerCount;
+          end;
           NumberOfRows := 1;
           case EvaluatedAt of
             eaBlocks: NumberOfColumns := Mesh.Elements.Count;
@@ -5573,7 +5642,6 @@ begin
         end;
       end
       else
-      {$ENDIF}
       begin
         Grid := LocalModel.Grid;
         if Grid <> nil then
@@ -6554,6 +6622,22 @@ begin
   begin
     Result := btMfSfr;
   end
+  else if (Name = StrModflowStrSegment)
+    or (Name = StrModflowStrDownstreamSegment)
+    or (Name = StrModflowStrDiversionSegment)
+    or (Name = StrModflowStrReach)
+    or (Name = StrSTRStreamTopElev)
+    or (Name = StrSTRStreamBottomElev)
+    or (Name = StrSTRStreamStage)
+    or (Name = StrSTRStreamConductance)
+    or (Name = StrSTRStreamFlow)
+    or (Name = StrSTRStreamWidth)
+    or (Name = StrSTRStreamSlope)
+    or (Name = StrSTRStreamRoughness)
+    then
+  begin
+    Result := btMfStr;
+  end
   else if (Name = StrUzfInfiltrationRate)
     or (Name = StrUzfExtinctionDepth)
     or (Name = StrUzfWaterContent)
@@ -6611,6 +6695,11 @@ begin
     or (Name = StrEnergyFlux) then
   begin
     Result := btMassEnergyFlux;
+  end
+  else if (Name = StrMODFLOWFHBHeads)
+    or (Name = StrMODFLOWFHBFlows) then
+  begin
+    Result := btMfFhb;
   end
   else
   begin
@@ -6691,6 +6780,10 @@ begin
         begin
           Result := StrMODFLOWStreamflowR;
         end;
+      btMfStr:
+        begin
+          Result := StrMODFLOWStream;
+        end;
       btMfUzf:
         begin
           Result := StrMODFLOWUnsaturated;
@@ -6726,6 +6819,10 @@ begin
       btMassEnergyFlux:
         begin
           result := StrMassEnergyFlux;
+        end;
+      btMfFhb:
+        begin
+          result := StrMODFLOWFHB;
         end;
       else
         Assert(False);
@@ -7006,6 +7103,7 @@ begin
   Orientation := Source.Orientation;
   TwoDInterpolator := Source.TwoDInterpolator;
   Units := Source.Units;
+  ContourInterval := Source.ContourInterval;
   if (FModel <> nil) and (FModel is TPhastModel) then
   begin
     LocalModel := TPhastModel(FModel);
@@ -7345,21 +7443,43 @@ end;
 
 { TContours }
 
-procedure TContours.Assign(Source: TContours);
+procedure TContours.Assign(Source: TPersistent);
+var
+  SourceContours: TContours;
 begin
-  AutomaticColors := Source.AutomaticColors;
-  SpecifyContours := Source.SpecifyContours;
-  ContourValues := Copy(Source.ContourValues);
-  LineThicknesses := Copy(Source.LineThicknesses);
-  ContourColors := Copy(Source.ContourColors);
-  LogTransform := Source.LogTransform;
-  ContourStringValues := Source.ContourStringValues;
+  if Source is TContours then
+  begin
+    SourceContours := TContours(Source);
+    AutomaticColors := SourceContours.AutomaticColors;
+    SpecifyContours := SourceContours.SpecifyContours;
+    ContourValues := Copy(SourceContours.ContourValues);
+    LineThicknesses := Copy(SourceContours.LineThicknesses);
+    ContourColors := Copy(SourceContours.ContourColors);
+    LogTransform := SourceContours.LogTransform;
+    ContourStringValues := SourceContours.ContourStringValues;
+  end
+  else
+  begin
+    inherited;
+  end;
 end;
 
 constructor TContours.Create;
 begin
   FAutomaticColors := True;
   FContourStringValues := TStringList.Create;
+end;
+
+procedure TContours.DefineProperties(Filer: TFiler);
+begin
+  inherited;
+  Filer.DefineProperty('ContourValues', ReadContourValues,
+    WriteContourValues, Count > 0);
+  Filer.DefineProperty('LineThicknesses', ReadLineThicknesses,
+    WriteLineThicknesses, Count > 0);
+  Filer.DefineProperty('ContourColors', ReadContourColors,
+    WriteContourColors, Count > 0);
+
 end;
 
 destructor TContours.Destroy;
@@ -7371,6 +7491,48 @@ end;
 function TContours.GetCount: integer;
 begin
   result := Length(FContourValues);
+end;
+
+procedure TContours.ReadContourColors(Reader: TReader);
+var
+  Index : integer;
+begin
+  Reader.ReadListBegin;
+  Index := 0;
+  while not Reader.EndOfList do
+  begin
+    ContourColors[Index] := Reader.ReadInt64;
+    Inc(Index);
+  end;
+  Reader.ReadListEnd;
+end;
+
+procedure TContours.ReadContourValues(Reader: TReader);
+var
+  Index : integer;
+begin
+  Reader.ReadListBegin;
+  Index := 0;
+  while not Reader.EndOfList do
+  begin
+    ContourValues[Index] := Reader.ReadFloat;
+    Inc(Index);
+  end;
+  Reader.ReadListEnd;
+end;
+
+procedure TContours.ReadLineThicknesses(Reader: TReader);
+var
+  Index : integer;
+begin
+  Reader.ReadListBegin;
+  Index := 0;
+  while not Reader.EndOfList do
+  begin
+    LineThicknesses[Index] := Reader.ReadFloat;
+    Inc(Index);
+  end;
+  Reader.ReadListEnd;
 end;
 
 procedure TContours.SetContourStringValues(const Value: TStringList);
@@ -7386,6 +7548,76 @@ begin
     SetLength(FContourColors, Value);
     SetLength(FLineThicknesses, Value);
   end;
+end;
+
+procedure TContours.Sort;
+var
+  List: TContourItemObjectList;
+  index: Integer;
+  AnItem: TContourItem;
+begin
+  List := TContourItemObjectList.Create;
+  try
+    List.Capacity := Count;
+    for index := 0 to Count - 1 do
+    begin
+      AnItem := TContourItem.Create;
+      AnItem.Value := ContourValues[index];
+      AnItem.Color := ContourColors[index];
+      AnItem.LineThickness := LineThicknesses[index];
+      List.Add(AnItem);
+    end;
+    List.Sort(TContourComparer.Construct(
+        function (const L, R: TContourItem): Integer
+        begin
+          result := Sign(L.Value - R.Value);
+        end));
+    for index := 0 to Count - 1 do
+    begin
+      AnItem := List[index];
+      ContourValues[index] := AnItem.Value;
+      ContourColors[index] := AnItem.Color;
+      LineThicknesses[index] := AnItem.LineThickness;
+    end;
+  finally
+    List.Free;
+  end;
+end;
+
+procedure TContours.WriteContourColors(Writer: TWriter);
+var
+  Index: Integer;
+begin
+  Writer.WriteListBegin;
+  for Index := 0 to Count - 1 do
+  begin
+    Writer.WriteInteger(ContourColors[Index]);
+  end;
+  Writer.WriteListEnd;
+end;
+
+procedure TContours.WriteContourValues(Writer: TWriter);
+var
+  Index: Integer;
+begin
+  Writer.WriteListBegin;
+  for Index := 0 to Count - 1 do
+  begin
+    Writer.WriteFloat(ContourValues[Index]);
+  end;
+  Writer.WriteListEnd;
+end;
+
+procedure TContours.WriteLineThicknesses(Writer: TWriter);
+var
+  Index: Integer;
+begin
+  Writer.WriteListBegin;
+  for Index := 0 to Count - 1 do
+  begin
+    Writer.WriteFloat(LineThicknesses[Index]);
+  end;
+  Writer.WriteListEnd;
 end;
 
 procedure TCustom2DInterpolater.EvaluateExpression(Compiler: TRbwParser;

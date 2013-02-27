@@ -12,6 +12,7 @@ interface
         // Fields
         fParallel: boolean;
         fWait: double;
+        fWaitRunners: double;
         fTimeOutFactor: double;
         fVerboseRunner: integer;
         fNumRunnersToUse: integer;
@@ -22,6 +23,7 @@ interface
         // Properties
         property Parallel: boolean read fParallel write fParallel;
         property Wait: double read fWait write fWait;
+        property WaitRunners: double read fWaitRunners write fWaitRunners;
         property TimeOutFactor: double read fTimeOutFactor write fTimeOutFactor;
         property VerboseRunner: integer read fVerboseRunner write fVerboseRunner;
         property NumRunnersToUse: integer read fNumRunnersToUse write fNumRunnersToUse;
@@ -50,6 +52,7 @@ begin
       PCSource := Source as TParallelControl;
       Parallel := PCSource.Parallel;
       Wait := PCSource.Wait;
+      WaitRunners := PCSource.WaitRunners;
       TimeOutFactor := PCSource.TimeOutFactor;
       VerboseRunner := PCSource.VerboseRunner;
       NumRunnersToUse := PCSource.NumRunnersToUse;
@@ -64,6 +67,7 @@ begin
   inherited;
   fParallel := False;
   fWait := 0.001;
+  fWaitRunners := 0.001;
   fTimeOutFactor := 3.0;
   fVerboseRunner := 3;
   fNumRunnersToUse := 0;
@@ -83,13 +87,13 @@ begin
       PCSource := Source as TParallelControl;
       if not Parallel = PCSource.Parallel then result := False;
       if not SameValue(Wait, PCSource.Wait) then result := False;
+      if not SameValue(WaitRunners, PCSource.WaitRunners) then result := False;
       if not SameValue(TimeOutFactor, PCSource.TimeOutFactor) then result := False;
       if not SameValue(VerboseRunner, PCSource.VerboseRunner) then result := False;
       if not SameValue(NumRunnersToUse, PCSource.NumRunnersToUse) then result := False;
       if not AutoStopRunners = PCSource.AutoStopRunners then result := False;
       if not AutoStartLocalRunners = PCSource.AutoStartLocalRunners then result := False;
       if not AutoPopRunnerDirs = PCSource.AutoPopRunnerDirs then result := False;
-      
     end;
 end;
 

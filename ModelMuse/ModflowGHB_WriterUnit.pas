@@ -33,6 +33,8 @@ type
     class function ObservationExtension: string; override;
     class function ObservationOutputExtension: string; override;
     function ObsNameWarningString: string; override;
+    procedure CheckCell(ValueCell: TValueCell; const PackageName: string); override;
+    procedure Evaluate; override;
   public
     procedure WriteFile(const AFileName: string);
     procedure WriteFluxObservationFile(const AFileName: string;
@@ -42,7 +44,7 @@ type
 implementation
 
 uses ModflowTimeUnit, frmErrorsAndWarningsUnit, ModflowUnitNumbers, 
-  frmProgressUnit, Forms;
+  frmProgressUnit, Forms, DataSetUnit;
 
 resourcestring
   StrTheFollowingGHBOb = 'The following GHB observation names may be valid f' +
@@ -53,12 +55,57 @@ resourcestring
   StrWritingDataSet2 = '  Writing Data Set 2.';
   StrWritingDataSets3and4 = '  Writing Data Sets 3 and 4.';
   StrWritingDataSets5to7 = '  Writing Data Sets 5 to 7.';
+  StrGHBBoundaryHeadIs = 'GHB Boundary head is below the bottom of the cell ' +
+  'at the following locations.';
 
 { TModflowGHB_Writer }
 
 function TModflowGHB_Writer.CellType: TValueCellType;
 begin
   result := TGhb_Cell;
+end;
+
+procedure TModflowGHB_Writer.CheckCell(ValueCell: TValueCell;
+  const PackageName: string);
+var
+  Ghb_Cell: TGhb_Cell;
+  ActiveDataArray: TDataArray;
+  ScreenObject: TScreenObject;
+begin
+  inherited;
+  Ghb_Cell := ValueCell as TGhb_Cell;
+  ActiveDataArray := Model.DataArrayManager.GetDataSetByName(rsActive);
+  Assert(ActiveDataArray <> nil);
+  if ActiveDataArray.BooleanData[Ghb_Cell.Layer, Ghb_Cell.Row, Ghb_Cell.Column]
+    and (Ghb_Cell.BoundaryHead < Model.Grid.CellElevation[
+    Ghb_Cell.Column, Ghb_Cell.Row, Ghb_Cell.Layer+1]) then
+  begin
+    ScreenObject := Ghb_Cell.ScreenObject as TScreenObject;
+    if Model.ModelSelection = msModflowNWT then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrGHBBoundaryHeadIs,
+        Format(StrLayerRowColObject, [
+        Ghb_Cell.Layer+1, Ghb_Cell.Row+1, Ghb_Cell.Column+1, ScreenObject.Name]));
+    end
+    else
+    begin
+      frmErrorsAndWarnings.AddWarning(Model, StrGHBBoundaryHeadIs,
+        Format(StrLayerRowColObject, [
+        Ghb_Cell.Layer+1, Ghb_Cell.Row+1, Ghb_Cell.Column+1, ScreenObject.Name]));
+    end;
+  end;
+end;
+
+procedure TModflowGHB_Writer.Evaluate;
+begin
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrGHBBoundaryHeadIs);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrGHBBoundaryHeadIs);
+    inherited;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
+  end;
 end;
 
 class function TModflowGHB_Writer.Extension: string;

@@ -199,7 +199,7 @@ uses
   UndoItems, frmManageSettingsUnit,
   UndoItemsScreenObjects, ClassificationUnit, frmProgressUnit,
   frmErrorsAndWarningsUnit, Clipbrd, RbwParser, frmDisplayDataUnit,
-  SutraMeshUnit, pngimage, jpeg;
+  SutraMeshUnit, pngimage, jpeg, VectorDisplayUnit;
 
 resourcestring
   StrProgress = 'Progress';
@@ -261,12 +261,16 @@ var
   Extension: string;
   ImageIndex: Integer;
   PadIndex: integer;
+  Grid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
 begin
   inherited;
   FShouldStop := False;
   FRunning := True;
   DataSetList := TList.Create;
   Legend := TLegend.Create(nil);
+  Grid := frmGoPhast.Grid;
+  Mesh := frmGoPhast.PhastModel.Mesh;
   try
     for Index := 1 to rdgDataSets.RowCount - 1 do
     begin
@@ -306,75 +310,152 @@ begin
       end;
       frmProgressMM.Caption := Format(StrDisplayingS, [DataArray.Name]);
       Application.ProcessMessages;
-      case rgDisplayChoice.ItemIndex of
-        0:
-          begin
-            if Index > 0 then
+      if Grid <> nil then
+      begin
+        case rgDisplayChoice.ItemIndex of
+          0:
             begin
-              DataArray.Limits := PriorDataArray.Limits;
-              Legend.Assign(frmGoPhast.PhastModel.ColorLegend);
+              if Index > 0 then
+              begin
+                DataArray.Limits := PriorDataArray.Limits;
+                Legend.Assign(frmGoPhast.PhastModel.ColorLegend);
+              end;
+              case DataArray.Orientation of
+                dsoTop:
+                  begin
+                    Grid.TopDataSet := DataArray;
+                  end;
+                dsoFront:
+                  begin
+                    Grid.FrontDataSet := DataArray;
+                  end;
+                dsoSide:
+                  begin
+                    Grid.SideDataSet := DataArray;
+                  end;
+                dso3D:
+                  begin
+                    Grid.TopDataSet := DataArray;
+                    Grid.FrontDataSet := DataArray;
+                    Grid.SideDataSet := DataArray;
+                  end;
+                else
+                  Assert(False);
+              end;
+              frmGoPhast.PhastModel.ThreeDDataSet := DataArray;
             end;
-            case DataArray.Orientation of
-              dsoTop:
-                begin
-                  frmGoPhast.Grid.TopDataSet := DataArray;
-                end;
-              dsoFront:
-                begin
-                  frmGoPhast.Grid.FrontDataSet := DataArray;
-                end;
-              dsoSide:
-                begin
-                  frmGoPhast.Grid.SideDataSet := DataArray;
-                end;
-              dso3D:
-                begin
-                  frmGoPhast.Grid.TopDataSet := DataArray;
-                  frmGoPhast.Grid.FrontDataSet := DataArray;
-                  frmGoPhast.Grid.SideDataSet := DataArray;
-                end;
-              else
-                Assert(False);
-            end;
-            frmGoPhast.PhastModel.ThreeDDataSet := DataArray;
-          end;
-        1:
-          begin
-            if Index > 0 then
+          1:
             begin
-              DataArray.ContourLimits := PriorDataArray.ContourLimits;
-              DataArray.Contours := PriorDataArray.Contours;
-              DataArray.Contours.SpecifyContours := True;
-              Legend.Assign(frmGoPhast.PhastModel.ContourLegend);
+              if Index > 0 then
+              begin
+                DataArray.ContourLimits := PriorDataArray.ContourLimits;
+                DataArray.Contours := PriorDataArray.Contours;
+                DataArray.Contours.SpecifyContours := True;
+                Legend.Assign(frmGoPhast.PhastModel.ContourLegend);
+              end;
+              case DataArray.Orientation of
+                dsoTop:
+                  begin
+                    Grid.TopContourDataSet := DataArray;
+                  end;
+                dsoFront:
+                  begin
+                    Grid.FrontContourDataSet := DataArray;
+                  end;
+                dsoSide:
+                  begin
+                    Grid.SideContourDataSet := DataArray;
+                  end;
+                dso3D:
+                  begin
+                    Grid.TopContourDataSet := DataArray;
+                    Grid.FrontContourDataSet := DataArray;
+                    Grid.SideContourDataSet := DataArray;
+                  end;
+                else
+                  Assert(False);
+              end;
+              Grid.ThreeDContourDataSet := DataArray;
             end;
-            case DataArray.Orientation of
-              dsoTop:
-                begin
-                  frmGoPhast.Grid.TopContourDataSet := DataArray;
-                end;
-              dsoFront:
-                begin
-                  frmGoPhast.Grid.FrontContourDataSet := DataArray;
-                end;
-              dsoSide:
-                begin
-                  frmGoPhast.Grid.SideContourDataSet := DataArray;
-                end;
-              dso3D:
-                begin
-                  frmGoPhast.Grid.TopContourDataSet := DataArray;
-                  frmGoPhast.Grid.FrontContourDataSet := DataArray;
-                  frmGoPhast.Grid.SideContourDataSet := DataArray;
-                end;
-              else
-                Assert(False);
+          else
+            Assert(False);
+        end;
+        Grid.GridChanged;
+      end
+      else
+      begin
+        Assert(Mesh <> nil);
+        case rgDisplayChoice.ItemIndex of
+          0:
+            begin
+              if Index > 0 then
+              begin
+                DataArray.Limits := PriorDataArray.Limits;
+                Legend.Assign(frmGoPhast.PhastModel.ColorLegend);
+              end;
+              case DataArray.Orientation of
+                dsoTop:
+                  begin
+                    Mesh.TopDataSet := DataArray;
+                  end;
+                dsoFront:
+                  begin
+                    Mesh.ThreeDDataSet := DataArray;
+                  end;
+                dsoSide:
+                  begin
+//                    Mesh.SideDataSet := DataArray;
+                  end;
+                dso3D:
+                  begin
+                    Mesh.TopDataSet := DataArray;
+                    Mesh.ThreeDDataSet := DataArray;
+//                    Mesh.SideDataSet := DataArray;
+                  end;
+                else
+                  Assert(False);
+              end;
+              frmGoPhast.PhastModel.ThreeDDataSet := DataArray;
             end;
-            frmGoPhast.Grid.ThreeDContourDataSet := DataArray;
-          end;
-        else
-          Assert(False);
+          1:
+            begin
+              if Index > 0 then
+              begin
+                DataArray.ContourLimits := PriorDataArray.ContourLimits;
+                DataArray.Contours := PriorDataArray.Contours;
+                DataArray.Contours.SpecifyContours := True;
+                DataArray.ContourInterval.Value := PriorDataArray.ContourInterval.Value;
+                Legend.Assign(frmGoPhast.PhastModel.ContourLegend);
+              end;
+              case DataArray.Orientation of
+                dsoTop:
+                  begin
+                    Mesh.TopContourDataSet := DataArray;
+                  end;
+                dsoFront:
+                  begin
+                    Mesh.ThreeDContourDataSet := DataArray;
+                  end;
+                dsoSide:
+                  begin
+//                    Mesh.SideContourDataSet := DataArray;
+                  end;
+                dso3D:
+                  begin
+                    Mesh.TopContourDataSet := DataArray;
+                    Mesh.ThreeDContourDataSet := DataArray;
+//                    Mesh.SideContourDataSet := DataArray;
+                  end;
+                else
+                  Assert(False);
+              end;
+              Mesh.ThreeDContourDataSet := DataArray;
+            end;
+          else
+            Assert(False);
+        end;
+        Mesh.MeshChanged;
       end;
-      frmGoPhast.Grid.GridChanged;
 
       UpdateFrmDisplayData;
 //      UpdateFrmContourData;
@@ -810,6 +891,7 @@ var
   PhastModel: TPhastModel;
   Grid: TCustomModelGrid;
   ShowLegend: Boolean;
+  Mesh: TSutraMesh3D;
 begin
   ColorRect.Left := 0;
   ColorRect.Top := 0;
@@ -820,6 +902,7 @@ begin
     ViewDirection := TViewDirection(comboView.ItemIndex);
     PhastModel := frmGoPhast.PhastModel;
     Grid := PhastModel.Grid;
+    Mesh := PhastModel.Mesh;
     ShowLegend := False;
     if Grid <> nil then
     begin
@@ -836,6 +919,26 @@ begin
         vdSide:
           begin
             ShowLegend := (Grid.SideDataSet <> nil);
+          end;
+      else
+        Assert(False);
+      end;
+    end
+    else if Mesh <> nil then
+    begin
+      case ViewDirection of
+        vdTop:
+          begin
+            ShowLegend := (Mesh.TopDataSet <> nil)
+              or (PhastModel.EdgeDisplay <> nil);
+          end;
+        vdFront:
+          begin
+            ShowLegend := (Mesh.ThreeDDataSet <> nil);
+          end;
+        vdSide:
+          begin
+            ShowLegend := False
           end;
       else
         Assert(False);
@@ -859,6 +962,8 @@ var
   ChildIndex: Integer;
   ChildModel: TChildModel;
   Mesh: TSutraMesh3D;
+  VelocityVectors: TVectorCollection;
+  VItem: TVectorItem;
 begin
   if FModelImage = nil then
   begin
@@ -932,11 +1037,12 @@ begin
       else Assert(False);
     end;
 
-    if (LocalModel.ModelSelection in [msMODFLOW, msModflowLGR,msModflowNWT])
+    if (LocalModel.ModelSelection in ModflowSelection)
       and (ViewDirection = vdTop) then
     begin
       LocalModel.DrawHeadObservations(FModelImage, frmGoPhast.frameTopView.ZoomBox);
       LocalModel.DrawSfrStreamLinkages(FModelImage, frmGoPhast.frameTopView.ZoomBox);
+      LocalModel.DrawStrStreamLinkages(FModelImage, frmGoPhast.frameTopView.ZoomBox);
       if LocalModel.LgrUsed then
       begin
         for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
@@ -944,11 +1050,12 @@ begin
           ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
           ChildModel.DrawHeadObservations(FModelImage, frmGoPhast.frameTopView.ZoomBox);
           ChildModel.DrawSfrStreamLinkages(FModelImage, frmGoPhast.frameTopView.ZoomBox);
+          ChildModel.DrawStrStreamLinkages(FModelImage, frmGoPhast.frameTopView.ZoomBox);
         end;
       end;
 
     end;
-    if (LocalModel.ModelSelection in [msMODFLOW, msModflowLGR,msModflowNWT]) then
+    if (LocalModel.ModelSelection in ModflowSelection) then
     begin
       LocalModel.Pathlines.Draw(Orientation, FModelImage);
       LocalModel.EndPoints.Draw(Orientation, FModelImage);
@@ -964,6 +1071,20 @@ begin
         end;
       end;
     end;
+
+    if LocalModel.ModelSelection = msSutra22 then
+    begin
+      LocalModel.MaxVectors.PlotVectors2D(ViewDirection, FModelImage);
+      LocalModel.MidVectors.PlotVectors2D(ViewDirection, FModelImage);
+      LocalModel.MinVectors.PlotVectors2D(ViewDirection, FModelImage);
+      VelocityVectors := LocalModel.VelocityVectors;
+      if VelocityVectors.SelectedItem >= 0 then
+      begin
+        VItem := VelocityVectors.Items[VelocityVectors.SelectedItem] as TVectorItem;
+        VItem.Vectors.PlotVectors2D(ViewDirection, FModelImage);
+      end;
+    end;
+
 
     if ViewDirection = vdSide then
     begin
@@ -1130,43 +1251,84 @@ var
   Grid: TCustomModelGrid;
   DataArray: TDataArray;
   CommentLines: TStringList;
+  Mesh: TSutraMesh3D;
 begin
   PhastModel := frmGoPhast.PhastModel;
   Grid := PhastModel.Grid;
+  Mesh := PhastModel.Mesh;
   DataArray := nil;
-  case TViewDirection(comboView.ItemIndex) of
-    vdTop:
-      begin
-        DataArray := Grid.TopDataSet;
-      end;
-    vdFront:
-      begin
-        DataArray := Grid.FrontDataSet;
-      end;
-    vdSide:
-      begin
-        DataArray := Grid.SideDataSet;
-      end;
-  else
-    Assert(False);
-  end;
-  if DataArray = nil then
+  if (Grid <> nil) then
   begin
     case TViewDirection(comboView.ItemIndex) of
       vdTop:
         begin
-          DataArray := Grid.TopContourDataSet;
+          DataArray := Grid.TopDataSet;
         end;
       vdFront:
         begin
-          DataArray := Grid.FrontContourDataSet;
+          DataArray := Grid.FrontDataSet;
         end;
       vdSide:
         begin
-          DataArray := Grid.SideContourDataSet;
+          DataArray := Grid.SideDataSet;
         end;
     else
       Assert(False);
+    end;
+    if DataArray = nil then
+    begin
+      case TViewDirection(comboView.ItemIndex) of
+        vdTop:
+          begin
+            DataArray := Grid.TopContourDataSet;
+          end;
+        vdFront:
+          begin
+            DataArray := Grid.FrontContourDataSet;
+          end;
+        vdSide:
+          begin
+            DataArray := Grid.SideContourDataSet;
+          end;
+      else
+        Assert(False);
+      end;
+    end;
+  end
+  else
+  begin
+    case TViewDirection(comboView.ItemIndex) of
+      vdTop:
+        begin
+          DataArray := Mesh.TopDataSet;
+        end;
+      vdFront:
+        begin
+          DataArray := Mesh.ThreeDDataSet;
+        end;
+      vdSide:
+        begin
+        end;
+    else
+      Assert(False);
+    end;
+    if DataArray = nil then
+    begin
+      case TViewDirection(comboView.ItemIndex) of
+        vdTop:
+          begin
+            DataArray := Mesh.TopContourDataSet;
+          end;
+        vdFront:
+          begin
+            DataArray := Mesh.ThreeDContourDataSet;
+          end;
+        vdSide:
+          begin
+          end;
+      else
+        Assert(False);
+      end;
     end;
   end;
   if DataArray <> nil then
@@ -1495,6 +1657,7 @@ begin
     ContourDisplaySettings.Legend := frmGoPhast.PhastModel.ContourLegend;
     ContourDisplaySettings.Limits := DataArray.Limits;
     ContourDisplaySettings.ContourAlgorithm := DataArray.ContourAlg;
+    ContourDisplaySettings.Contours := DataArray.Contours;
   end;
 end;
 
@@ -1597,10 +1760,13 @@ var
   AScreenObject: TScreenObject;
   NewVisibility: Boolean;
   VisibilityChanged: Boolean;
+//  SutraSettings: TSutraSettings;
   UndoShowHideObjects: TUndoShowHideScreenObject;
+  SelectedVelocityDescription: string;
 begin
   PhastModel := frmGoPhast.PhastModel;
   DisplaySettings := PhastModel.DisplaySettings;
+//  SutraSettings := PhastModel.SutraSettings;
   ASetting := DisplaySettings.GetItemByName(comboSavedSettings.Text);
   if ASetting = nil then
   begin
@@ -1608,9 +1774,23 @@ begin
   end;
   comboView.ItemIndex := Ord(ASetting.ViewToDisplay);
   PhastModel.Exaggeration := ASetting.VerticalExaggeration;
-  {$IFDEF SUTRA}
   PhastModel.SutraMesh.Assign(ASetting.SutraSettings);
-  {$ENDIF}
+  PhastModel.MaxVectors := ASetting.MaxVectors;
+  PhastModel.MidVectors := ASetting.MidVectors;
+  PhastModel.MinVectors := ASetting.MinVectors;
+  PhastModel.VelocityVectors := ASetting.VelocityVectors;
+
+  if ASetting.VelocityVectors.SelectedItem >= 0 then
+  begin
+    SelectedVelocityDescription := (ASetting.VelocityVectors.Items[
+      ASetting.VelocityVectors.SelectedItem] as TVectorItem).Description;
+    PhastModel.VelocityVectors.SetItemByName(SelectedVelocityDescription);
+  end
+  else
+  begin
+    PhastModel.VelocityVectors.SelectedItem := -1;
+  end;
+
   frmGoPhast.frameTopView.ZoomBox.Magnification := ASetting.Magnification;
   frmGoPhast.frameFrontView.ZoomBox.Magnification := ASetting.Magnification;
   frmGoPhast.frameSideView.ZoomBox.Magnification := ASetting.Magnification;
@@ -1867,9 +2047,11 @@ begin
     ASetting.LabelContours := PhastModel.ShowContourLabels;
     ASetting.SfrStreamLinkPlot := PhastModel.SfrStreamLinkPlot;
 
-    {$IFDEF SUTRA}
     ASetting.SutraSettings.Assign(PhastModel.SutraMesh);
-    {$ENDIF}
+    ASetting.MaxVectors := PhastModel.MaxVectors;
+    ASetting.MidVectors := PhastModel.MidVectors;
+    ASetting.MinVectors := PhastModel.MinVectors;
+    ASetting.VelocityVectors := PhastModel.VelocityVectors;
 
     Undo := TUndoEditDisplaySettings.Create(ModifiedDisplaySettings);
     frmGoPhast.UndoStack.Submit(Undo);
@@ -1898,7 +2080,11 @@ begin
   begin
     DataArray := PhastModel.DataArrayManager.GetDataSetByName(
       ContourDisplaySettings.DataSetName);
-    DataArray.ContourAlg := ContourDisplaySettings.ContourAlgorithm;
+    if DataArray <> nil then
+    begin
+      DataArray.ContourAlg := ContourDisplaySettings.ContourAlgorithm;
+      DataArray.Contours := ContourDisplaySettings.Contours;
+    end;
   end;
   Grid := PhastModel.Grid;
   Mesh := PhastModel.Mesh;
@@ -1983,6 +2169,7 @@ begin
 
     PhastModel.ContourLegend.Assign(ContourDisplaySettings.Legend);
     PhastModel.ContourLegend.ValueSource := DataArray;
+    PhastModel.ContourLegend.Contours := DataArray.Contours;
     PhastModel.ContourLegend.AssignFractions;
     DataArray.UpdateMinMaxValues;
   end;
@@ -2342,7 +2529,8 @@ begin
   result := False;
   case DataArray.EvaluatedAt of
     eaBlocks: result := True;
-    eaNodes: result := frmGoPhast.PhastModel.ModelSelection = msPhast;
+    eaNodes: result := frmGoPhast.PhastModel.ModelSelection in
+      [msPhast, msSutra22];
     else Assert(False);
   end;
 end;
@@ -2361,6 +2549,7 @@ var
   PhastModel: TPhastModel;
   Grid: TCustomModelGrid;
   ShowLegend: Boolean;
+  Mesh: TSutraMesh3D;
 begin
   ContourRect.Left := 0;
   ContourRect.Top := 0;
@@ -2371,6 +2560,7 @@ begin
     ViewDirection := TViewDirection(comboView.ItemIndex);
     PhastModel := frmGoPhast.PhastModel;
     Grid := PhastModel.Grid;
+    Mesh := PhastModel.Mesh;
     ShowLegend := False;
     if Grid <> nil then
     begin
@@ -2386,6 +2576,25 @@ begin
         vdSide:
           begin
             ShowLegend := (Grid.SideContourDataSet <> nil);
+          end;
+      else
+        Assert(False);
+      end;
+    end
+    else if Mesh <> nil then
+    begin
+      case ViewDirection of
+        vdTop:
+          begin
+            ShowLegend := (Mesh.TopContourDataSet <> nil);
+          end;
+        vdFront:
+          begin
+            ShowLegend := (Mesh.ThreeDContourDataSet <> nil);
+          end;
+        vdSide:
+          begin
+            ShowLegend := False;
           end;
       else
         Assert(False);

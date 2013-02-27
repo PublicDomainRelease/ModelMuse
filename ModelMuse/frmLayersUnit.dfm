@@ -5,9 +5,9 @@ inherited frmLayers: TfrmLayers
   ClientHeight = 424
   ClientWidth = 583
   OnResize = FormResize
-  ExplicitWidth = 599
-  ExplicitHeight = 462
-  PixelsPerInch = 96
+  ExplicitWidth = 601
+  ExplicitHeight = 469
+  PixelsPerInch = 120
   TextHeight = 18
   object Splitter1: TSplitter
     Left = 137
@@ -21,7 +21,7 @@ inherited frmLayers: TfrmLayers
     Top = 0
     Width = 441
     Height = 383
-    ActivePage = tabDiscretization
+    ActivePage = tabDelay
     Align = alClient
     TabOrder = 1
     OnChange = pcLayerGroupsChange
@@ -243,7 +243,9 @@ inherited frmLayers: TfrmLayers
           end
           inherited pnl1: TPanel
             inherited lbl3: TLabel
-              ExplicitWidth = 142
+              Width = 179
+              Height = 36
+              ExplicitWidth = 179
               ExplicitHeight = 36
             end
           end
@@ -420,7 +422,6 @@ inherited frmLayers: TfrmLayers
         OnColSize = rdgDispersionColSize
         ColorRangeSelection = False
         OnHorizontalScroll = rdgDispersionHorizontalScroll
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = False
@@ -731,7 +732,7 @@ inherited frmLayers: TfrmLayers
     Left = 16
     Top = 16
     Bitmap = {
-      494C010105000900140010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010105000900240010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1023,7 +1024,7 @@ inherited frmLayers: TfrmLayers
     Left = 16
     Top = 56
     Bitmap = {
-      494C010106000900140010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010106000900240010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

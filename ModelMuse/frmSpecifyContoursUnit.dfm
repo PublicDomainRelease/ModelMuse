@@ -4,8 +4,8 @@ inherited frmSpecifyContours: TfrmSpecifyContours
   Caption = 'Specify Contours'
   ClientHeight = 301
   ClientWidth = 316
-  ExplicitWidth = 324
-  ExplicitHeight = 335
+  ExplicitWidth = 332
+  ExplicitHeight = 339
   PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
@@ -15,7 +15,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
     Height = 124
     Align = alBottom
     ParentColor = True
-    TabOrder = 0
+    TabOrder = 2
     object lblRowCount: TLabel
       Left = 95
       Top = 9
@@ -29,33 +29,27 @@ inherited frmSpecifyContours: TfrmSpecifyContours
       Top = 76
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 1
+      TabOrder = 5
     end
     object btnOK: TBitBtn
-      Left = 109
+      Left = 118
       Top = 76
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 2
+      TabOrder = 4
     end
     object btnHelp: TBitBtn
-      Left = 12
+      Left = 21
       Top = 76
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      TabOrder = 0
+      TabOrder = 3
       OnClick = btnHelpClick
     end
     object GridPanel1: TGridPanel
@@ -94,7 +88,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
         item
           Value = 100.000000000000000000
         end>
-      TabOrder = 3
+      TabOrder = 0
       DesignSize = (
         135
         32)
@@ -187,7 +181,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
       Width = 77
       Height = 26
       ButtonKind = bkClassic
-      TabOrder = 4
+      TabOrder = 1
       OnChange = seRowCountChange
     end
     object cbAutomaticColors: TJvCheckBox
@@ -196,7 +190,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
       Width = 137
       Height = 18
       Caption = 'Automatic colors'
-      TabOrder = 5
+      TabOrder = 2
       OnClick = cbAutomaticColorsClick
       LinkedControls = <>
       HotTrackFont.Charset = DEFAULT_CHARSET
@@ -331,7 +325,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
     Width = 316
     Height = 33
     Align = alTop
-    TabOrder = 2
+    TabOrder = 0
     object rdeLineThickness: TRbwDataEntry
       Left = 60
       Top = 5

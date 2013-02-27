@@ -9,7 +9,9 @@ inherited frmShowHideObjects: TfrmShowHideObjects
   Position = poDesigned
   OnClose = FormClose
   OnKeyUp = FormKeyUp
-  PixelsPerInch = 96
+  ExplicitWidth = 320
+  ExplicitHeight = 240
+  PixelsPerInch = 120
   TextHeight = 18
   inherited pnlBottom: TPanel
     inherited btnHelp: TBitBtn
@@ -17,11 +19,14 @@ inherited frmShowHideObjects: TfrmShowHideObjects
     end
   end
   inherited vstObjects: TVirtualStringTree
+    Images = ilAngles
     PopupMenu = pmSelectEdit
     OnChecked = vstObjectsChecked
     OnContextPopup = vstObjectsContextPopup
     OnDblClick = miEditClick
     OnPaintText = vstObjectsPaintText
+    OnGetImageIndexEx = vstObjectsGetImageIndexEx
+    OnMouseDown = vstObjectsMouseDown
   end
   object pmSelectEdit: TPopupMenu
     Left = 144
@@ -36,5 +41,19 @@ inherited frmShowHideObjects: TfrmShowHideObjects
       Enabled = False
       OnClick = miEditClick
     end
+  end
+  object ilAngles: TImageList
+    Height = 20
+    Masked = False
+    Width = 20
+    Left = 248
+    Top = 80
+  end
+  object ilDifferentAngle: TImageList
+    Height = 20
+    Masked = False
+    Width = 20
+    Left = 304
+    Top = 80
   end
 end

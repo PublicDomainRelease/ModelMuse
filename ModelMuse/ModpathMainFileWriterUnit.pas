@@ -97,21 +97,26 @@ procedure TModpathMainFileWriter.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
 begin
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrUndefinedLengthUni);
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrUnsupportedLengthU);
-
-  NameOfFile := FileName(AFileName);
-  OpenFile(NameOfFile);
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    WriteDataSet1;
-    WriteDataSet2;
-    WriteDataSet3;
-    WriteDataSet4;
-    WriteDataSet5;
-    WriteDataSet6a;
-    WriteDataSet6b;
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrUndefinedLengthUni);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, StrUnsupportedLengthU);
+
+    NameOfFile := FileName(AFileName);
+    OpenFile(NameOfFile);
+    try
+      WriteDataSet1;
+      WriteDataSet2;
+      WriteDataSet3;
+      WriteDataSet4;
+      WriteDataSet5;
+      WriteDataSet6a;
+      WriteDataSet6b;
+    finally
+      CloseFile;
+    end;
   finally
-    CloseFile;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 

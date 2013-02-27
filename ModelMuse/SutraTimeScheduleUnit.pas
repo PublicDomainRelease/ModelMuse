@@ -201,6 +201,7 @@ type
     function Add: TSutraTimeScheduleItem;
     property Items[Index: integer]: TSutraTimeScheduleItem read GetItem
       write SetItem; default;
+    function GetScheduleByName(AName: string): TSutraTimeSchedule;
   end;
 
   TSutraTimeOptions = class(TGophastPersistent)
@@ -679,6 +680,24 @@ begin
   result := inherited Items[Index] as TSutraTimeScheduleItem
 end;
 
+function TSutraTimeSchedules.GetScheduleByName(
+  AName: string): TSutraTimeSchedule;
+var
+  index: Integer;
+  AnItem: TSutraTimeScheduleItem;
+begin
+  result := nil;
+  for index := 0 to Count - 1 do
+  begin
+    AnItem := Items[index];
+    if AnsiSameText(string(AnItem.Schedule.Name), AName) then
+    begin
+      result := AnItem.Schedule;
+      exit;
+    end;
+  end;
+end;
+
 procedure TSutraTimeSchedules.SetItem(Index: integer;
   const Value: TSutraTimeScheduleItem);
 begin
@@ -788,6 +807,8 @@ var
   ScreenObjectIndex: Integer;
   AScreenObject: TScreenObject;
   Boundaries: TSutraBoundaries;
+  AValue1: single;
+  AValue2: single;
 begin
   { TODO -cSUTRA : Only do this when the FAllTimes is out of date. }
   FAllTimes.Clear;
@@ -855,6 +876,15 @@ begin
       begin
         FAllTimes.AddUnique(Boundaries.SpecifiedConcTemp.Values[TimeIndex].StartTime);
       end; 
+    end;
+  end;
+  for TimeIndex := FAllTimes.Count - 1 downto 1 do
+  begin
+    AValue1 := FAllTimes[TimeIndex];
+    AValue2 := FAllTimes[TimeIndex-1];
+    if AValue1 = AValue2 then
+    begin
+      FAllTimes.Delete(TimeIndex);
     end;
   end;
 end;

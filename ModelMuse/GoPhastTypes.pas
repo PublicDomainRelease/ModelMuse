@@ -6,7 +6,7 @@ interface
 
 uses
   GR32, // defines TColor32.
-  SysUtils, Types, Classes, FastGEO, Graphics;
+  SysUtils, Types, Classes, FastGEO, Graphics, Generics.Collections;
 
 type
   PReal = ^Real;
@@ -190,7 +190,16 @@ type
   // @name is used to indicate what type of model is active.
   // The type of model should never be set to msUndefined.
   TModelSelection = (msUndefined, msPhast, msModflow, msModflowLGR,
-    msModflowNWT {$IFDEF SUTRA}, msSutra22 {$ENDIF});
+    msModflowLGR2, msModflowNWT
+    {$IFDEF FMP}, msModflowFmp {$ENDIF}
+    , msSutra22);
+
+const
+  ModflowSelection = [msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}];
+  ModelsWithGrid  = [msPhast, msModflow, msModflowLGR, msModflowLGR2,
+    msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}];
+
+type
 
   //  @name is used to indicate how the spacing of layers within a unit
   // is specified.
@@ -237,6 +246,9 @@ type
 
   TBaseModel = class;
 
+  TGenericIntegerList = TList<integer>;
+  TListOfTIntegerList = TObjectList<TGenericIntegerList>;
+
   // @abstract(@name invalidates the model when it is changed.)
   TPhastCollection = class(TCollection)
   protected
@@ -245,7 +257,7 @@ type
     procedure InvalidateModel;
     property Model: TBaseModel read FModel;
     // @name invalidates the model.
-    procedure Notify(Item: TCollectionItem; Action: TCollectionNotification);
+    procedure Notify(Item: TCollectionItem; Action: Classes.TCollectionNotification);
       override;
     constructor Create(ItemClass: TCollectionItemClass; Model: TBaseModel);
   end;
@@ -367,7 +379,7 @@ type
   TGoPhastPersistent = class(TPersistent)
   protected
     FModel: TBaseModel;
-    procedure OnChangeEventHander(Sender: TObject);
+    procedure OnChangeEventHander(Sender: TObject); virtual;
     procedure InvalidateModel; virtual;
     procedure SetBooleanProperty(var AField: boolean; const NewValue: boolean);
     procedure SetIntegerProperty(var AField: integer; const NewValue: integer);
@@ -443,6 +455,7 @@ const
 
 resourcestring
   StrModelTop = kModelTop;
+  StrWritingDataSet0 = '  Writing Data Set 0.';
   StrWritingDataSet1 = '  Writing Data Set 1.';
   StrWritingDataSet2 = '  Writing Data Set 2.';
   StrWritingDataSet3 = '  Writing Data Set 3.';
@@ -451,7 +464,11 @@ resourcestring
   StrWritingDataSet6 = '  Writing Data Set 6.';
   StrWritingDataSet7 = '  Writing Data Set 7.';
   StrWritingDataSet8 = '  Writing Data Set 8.';
+  StrWritingDataSet9 = '  Writing Data Set 9.';
   StrWritingDataSet10 = '  Writing Data Set 10.';
+  StrWritingDataSet11 = '  Writing Data Set 11.';
+  StrWritingDataSet12 = '  Writing Data Set 12.';
+  StrWritingDataSet13 = '  Writing Data Set 13.';
   StrWritingDataSet14 = '  Writing Data Set 14.';
   StrWritingDataSet15 = '  Writing Data Set 15.';
   StrWritingDataSet16 = '  Writing Data Set 16.';
@@ -529,6 +546,14 @@ resourcestring
 
   StrLowerLimit = 'Lower limit';
   StrUpperLimit = 'Upper limit';
+  StrX = 'X';
+  StrY = 'Y';
+  StrRow = 'Row';
+  StrColumn = 'Column';
+  StrLayer = 'Layer';
+  StrF = 'F()';
+  StrInvalidResultType = 'Invalid result type';
+
 
 const
   StrObjectIntersectLength = 'ObjectIntersectLength';
@@ -551,6 +576,10 @@ resourcestring
   StrStartingHead = 'Starting head';
   StrEndingHead = 'Ending head';
   StrElevation = 'Elevation';
+  StrMaxPumpingRate = 'Max pumping rate';
+  StrMaxPumpingRateMultipl = 'Max pumping rate multiplier';
+  StrPumpOnlyIfCropRequiresWater = 'Pump only if crop requires water';
+  StrFarmID =  'FarmID';
 
 
   StrVariance = 'Variance (0)';
@@ -654,7 +683,7 @@ begin
 end;
 
 procedure TPhastCollection.Notify(Item: TCollectionItem;
-  Action: TCollectionNotification);
+  Action: Classes.TCollectionNotification);
 begin
   inherited;
 {$IFNDEF Testing}
@@ -823,7 +852,7 @@ function EvalAtToString(const Eval: TEvaluatedAt; const Model: TModelSelection;
 begin
   result := '';
   case Model of
-    msUndefined, msPhast {$IFDEF SUTRA}, msSutra22 {$ENDIF}:
+    msUndefined, msPhast, msSutra22:
       begin
         case Eval of
           eaBlocks:
@@ -852,7 +881,7 @@ begin
             Assert(False);
         end;
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         case Eval of
           eaBlocks:
@@ -1407,3 +1436,4 @@ finalization
   PredictionStatFlagLabels.Free;
 
 end.
+

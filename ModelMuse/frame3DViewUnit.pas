@@ -90,6 +90,7 @@ type
     procedure DrawAxes;
     procedure DrawGrid;
     procedure DrawMesh;
+    procedure DrawVectors(Magnification: Double);
     { Private declarations }
   public
     // @name creates an instance of @classname.
@@ -109,7 +110,8 @@ implementation
 {$R *.dfm}
 
 uses frmGoPhastUnit, CursorsFoiledAgain, Math, frmColorsUnit,
-  PhastModelUnit, AbstractGridUnit, SutraMeshUnit, GoPhastTypes;
+  PhastModelUnit, AbstractGridUnit, SutraMeshUnit, GoPhastTypes,
+  VectorDisplayUnit;
 
 resourcestring
   StrErrorInRenderS = 'Error in Render'#13'%s';
@@ -168,10 +170,10 @@ begin
     Mesh := frmGoPhast.PhastModel.Mesh;
     if (Mesh <> nil) and Mesh.CanDraw3D then
     begin
-      Limits := Mesh.MeshLimits(vdTop);
+      Limits := Mesh.MeshLimits(vdTop, 0);
       Z1 := (Limits.MaxX - Limits.MinX)/2;
       Z2 := (Limits.MaxY - Limits.MinY)/2;
-      Limits := Mesh.MeshLimits(vdFront);
+      Limits := Mesh.MeshLimits(vdFront, Mesh.CrossSection.Angle);
 
       FZScale := ((nearPosition - ZOffset) * TanAngle)
         / (Max(Z1, Z2) +
@@ -420,6 +422,25 @@ begin
   end;
 end;
 
+procedure Tframe3DView.DrawVectors(Magnification: Double);
+var
+  LocalModel: TPhastModel;
+  VelocityVectors: TVectorCollection;
+  VItem: TVectorItem;
+begin
+  Magnification := Magnification*10;
+  LocalModel := frmGoPhast.PhastModel;
+  LocalModel.MaxVectors.PlotVectors3D(Magnification);
+  LocalModel.MidVectors.PlotVectors3D(Magnification);
+  LocalModel.MinVectors.PlotVectors3D(Magnification);
+  VelocityVectors := LocalModel.VelocityVectors;
+  if VelocityVectors.SelectedItem >= 0 then
+  begin
+    VItem := VelocityVectors.Items[VelocityVectors.SelectedItem] as TVectorItem;
+    VItem.Vectors.PlotVectors3D(Magnification);
+  end;
+end;
+
 procedure Tframe3DView.DrawMesh;
 var
   XMove: Single;
@@ -438,10 +459,10 @@ begin
 
     Mesh := frmGoPhast.PhastModel.Mesh;
 
-    Limits := Mesh.MeshLimits(vdTop);
+    Limits := Mesh.MeshLimits(vdTop, 0);
     XMove := -(Limits.MaxX + Limits.MinX)/2;
     YMove := -(Limits.MaxY + Limits.MinY)/2;
-    Limits := Mesh.MeshLimits(vdFront);
+    Limits := Mesh.MeshLimits(vdFront, Mesh.CrossSection.Angle);
     ZMove := -(Limits.MaxZ + Limits.MinZ)/2;
 
     // The descriptions below are written as if they apply to the model
@@ -470,6 +491,8 @@ begin
       glEnable(GL_DEPTH_TEST);
 
       Mesh.Draw3D;
+
+      DrawVectors(FZScale * FZoomFactor);
 
     finally
       glPopMatrix;
@@ -548,6 +571,7 @@ begin
           Exit;
         end;
         DrawMesh;
+
       end
       else
       begin
@@ -686,6 +710,8 @@ begin
       glColor3d(1.0, 0.0, 0.0);
       glVertex3d(X, Y, Z);
       glVertex3d(X, Y, Z2);
+
+      glColor3d(0.0, 0.0, 0.0);
     finally
       glEnd;
     end;

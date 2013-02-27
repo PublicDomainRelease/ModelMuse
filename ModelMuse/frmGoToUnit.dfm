@@ -17,12 +17,10 @@ inherited frmGoTo: TfrmGoTo
     Top = 0
     Width = 299
     Height = 233
-    ActivePage = tabMesh
+    ActivePage = tabObject
     Align = alClient
     TabOrder = 0
     OnChange = pcMainChange
-    ExplicitWidth = 301
-    ExplicitHeight = 240
     object tabPosition: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'The_Position_Tab'
@@ -241,6 +239,8 @@ inherited frmGoTo: TfrmGoTo
       end
     end
     object tabMesh: TTabSheet
+      HelpType = htKeyword
+      HelpKeyword = 'The_Mesh_Tab'
       Caption = 'Mesh'
       ImageIndex = 4
       ExplicitLeft = 0
@@ -290,8 +290,8 @@ inherited frmGoTo: TfrmGoTo
       object lvScreenObjects: TListView
         Left = 0
         Top = 0
-        Width = 293
-        Height = 166
+        Width = 291
+        Height = 159
         Align = alClient
         Columns = <
           item
@@ -303,8 +303,8 @@ inherited frmGoTo: TfrmGoTo
       end
       object pnlObject: TPanel
         Left = 0
-        Top = 166
-        Width = 293
+        Top = 159
+        Width = 291
         Height = 41
         Align = alBottom
         ParentColor = True
@@ -352,8 +352,6 @@ inherited frmGoTo: TfrmGoTo
     Align = alBottom
     ParentColor = True
     TabOrder = 1
-    ExplicitTop = 240
-    ExplicitWidth = 301
     object btnCancel: TBitBtn
       Left = 197
       Top = 40

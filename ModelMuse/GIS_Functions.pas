@@ -160,6 +160,7 @@ function GetLayerPosition(const Lay, Row, Col: Integer;
   var InvalidIndex: boolean): Double;
 function GetLayerCenter(const Lay, Row, Col:  integer): double;
 
+function CurrentModel: TBaseModel;
 
 implementation
 
@@ -333,6 +334,11 @@ var
 
   InvalidNames: TStringList;
 
+function CurrentModel: TBaseModel;
+begin
+  result := GlobalCurrentModel;
+end;
+
 procedure PushGlobalStack;
 var
   Position : integer;
@@ -412,12 +418,10 @@ begin
         begin
           if Item = ActiveOnLayerSpecialImplementor then
           begin
-            {$IFDEF SUTRA}
             if frmGoPhast.ModelSelection = msSutra22 then
             begin
               Parser.SpecialImplementorList.Add(Item);
             end;
-            {$ENDIF}
           end
           else
           begin
@@ -581,13 +585,11 @@ var
   CC2D: TPoint2D;
   CC3D: T3DRealPoint;
   LocalModel: TCustomModel;
-  {$IFDEF SUTRA}
   Node: TSutraNode2D;
   Node3D: TSutraNode3D;
   Element: TSutraElement2D;
   ECenter: TPoint2D;
   Element3D: TSutraElement3D;
-  {$ENDIF}
 begin
   GlobalColumn := Col + 1;
   GlobalRow := Row + 1;
@@ -596,7 +598,6 @@ begin
   UpdateCurrentModel(Model);
   LocalModel := Model as TCustomModel;
 
-  {$IFDEF SUTRA}
   if LocalModel.ModelSelection = msSutra22 then
   begin
     case EvaluatedAt of
@@ -645,7 +646,6 @@ begin
   end
   else
   begin
-    {$ENDIF}
     case EvaluatedAt of
       eaBlocks:
         begin
@@ -672,10 +672,7 @@ begin
     else
       Assert(False);
     end;
-  {$IFDEF SUTRA}
   end;
-  {$ENDIF}
-
 end;
 
 procedure UpdateCurrentSection(const SectionIndex: integer);
@@ -1359,14 +1356,49 @@ begin
   Result := GlobalZ;
 end;
 
+function RotatedSutraLocation: TPoint2D;
+var
+  Temp: TPoint2D;
+  SutraAngle: Double;
+begin
+    Result.X := GlobalX;
+    Result.Y := GlobalY;
+    SutraAngle := GlobalCurrentScreenObject.SutraAngle;
+    temp.X := Cos(-SutraAngle) * Result.X - Sin(-SutraAngle) * Result.Y;
+    temp.Y := Sin(-SutraAngle) * Result.X + Cos(-SutraAngle) * Result.Y;
+    Result := temp;
+end;
+
 function _XPrime(Values: array of pointer): double;
 begin
-  Result := GlobalXPrime;
+  if (frmGoPhast.ModelSelection = msSutra22)
+    and (GlobalCurrentScreenObject <> nil)
+    and (GlobalCurrentScreenObject.ViewDirection = vdFront)
+    and (GlobalCurrentScreenObject.SutraAngle <> 0)
+    then
+  begin
+    result := RotatedSutraLocation.X;
+  end
+  else
+  begin
+    Result := GlobalXPrime;
+  end;
 end;
 
 function _YPrime(Values: array of pointer): double;
 begin
-  Result := GlobalYPrime;
+  if (frmGoPhast.ModelSelection = msSutra22)
+    and (GlobalCurrentScreenObject <> nil)
+    and (GlobalCurrentScreenObject.ViewDirection = vdFront)
+    and (GlobalCurrentScreenObject.SutraAngle <> 0)
+    then
+  begin
+    result := RotatedSutraLocation.Y;
+  end
+  else
+  begin
+    Result := GlobalYPrime;
+  end;
 end;
 
 function _Column(Values: array of pointer): integer;
@@ -1472,13 +1504,12 @@ begin
           else Assert(False);
         end;
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         Assert(GlobalEvaluatedAt = eaBlocks);
         result := TCustomModel(GlobalCurrentModel).ModflowGrid.
           GetContainingLayer(GlobalColumn-1, GlobalRow-1, Elevation);
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         Mesh := TCustomModel(GlobalCurrentModel).Mesh;
@@ -1520,7 +1551,6 @@ begin
             Assert(False);
         end;
       end;
-    {$ENDIF}
     else Assert(False);
   end;
   Inc(result);
@@ -1573,7 +1603,7 @@ begin
           else Assert(False);
         end;
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         Assert(GlobalEvaluatedAt = eaBlocks);
         result := frmGoPhast.PhastModel.ModflowGrid.
@@ -1599,12 +1629,10 @@ begin
         end;
         result := result - NonSimulatedUnits + 1;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         Result := _ElevationToLayer(Values);
       end;
-    {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -1618,13 +1646,11 @@ function GetColumnWidth(Column: Integer): Double;
 var
   LocalGrid : TCustomModelGrid;
 begin
-  {$IFDEF SUTRA}
   if frmGoPhast.ModelSelection = msSutra22 then
   begin
     result := 0;
     Exit;
   end;
-  {$ENDIF}
   LocalGrid := TCustomModel(GlobalCurrentModel).Grid;
   case GlobalEvaluatedAt of
     eaBlocks:
@@ -1688,13 +1714,11 @@ function GetRowWidth(Row: Integer): Double;
 var
   LocalGrid : TCustomModelGrid;
 begin
-  {$IFDEF SUTRA}
   if frmGoPhast.ModelSelection = msSutra22 then
   begin
     result := 0;
     Exit;
   end;
-  {$ENDIF}
   LocalGrid := TCustomModel(GlobalCurrentModel).Grid;
   case GlobalEvaluatedAt of
     eaBlocks:
@@ -1759,8 +1783,7 @@ var
   Layer: integer;
 begin
   Result := True;
-  if not (frmGoPhast.PhastModel.ModelSelection in
-    [msModflow, msModflowLGR, msModflowNWT]) then
+  if not (frmGoPhast.PhastModel.ModelSelection in ModflowSelection) then
   begin
     Exit;
   end;
@@ -1856,7 +1879,7 @@ begin
           end;
         end;
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         if (Lay < 0) or (Lay > TCustomModel(GlobalCurrentModel).ModflowGrid.LayerCount - 1)
           or (Row < 0) or (Row > TCustomModel(GlobalCurrentModel).ModflowGrid.RowCount - 1)
@@ -1869,7 +1892,6 @@ begin
           Result := TCustomModel(GlobalCurrentModel).ModflowGrid.CellThickness[Col, Row, Lay];
         end;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         Result := 0;
@@ -1893,7 +1915,6 @@ begin
             Assert(False);
         end;
       end;
-    {$ENDIF}
   else
     Assert(False);
   end;
@@ -1916,11 +1937,10 @@ var
 begin
   result := 0;
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         result := _ColumnWidth([Values[0]]) * _RowWidth([Values[1]]);
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         if (frmGoPhast.PhastModel <> nil)
@@ -1957,7 +1977,6 @@ begin
             Assert(False);
         end;
       end;
-    {$ENDIF}
     else
       Assert(False);
   end
@@ -1985,7 +2004,7 @@ begin
           result := _ColumnWidth([Values[0]]) * _LayerHeight([Values[2]]);
         end;
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         if Values[2] = nil then
         begin
@@ -2025,7 +2044,6 @@ begin
         CellOutline[0] := CellPoints[Col*2,Layer+1];
         result := Area(CellOutline);
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         result := 0;
@@ -2080,7 +2098,6 @@ begin
         result := Abs(Area(Polygons[Layer, Col]));
 
       end
-    {$ENDIF}
     else
       begin
         result := 0;
@@ -2107,7 +2124,7 @@ begin
           result := _RowWidth([Values[0]]) * _LayerHeight([Values[2]]);
         end;
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         if Values[2] = nil then
         begin
@@ -2147,12 +2164,10 @@ begin
         CellOutline[5] := CellPoints[Row*2,Layer+1];
         result := Area(CellOutline);
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         result := 0;
       end
-    {$ENDIF}
     else
       begin
         result := 0;
@@ -2173,12 +2188,11 @@ begin
   result := 0;
   ExtractColRowLayer(Lay, Row, Col, Values);
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         result := GetColumnWidth(Col) * GetRowWidth(Row) *
           GetLayerHeight(Col, Row, Lay);
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         result := 0;
@@ -2210,7 +2224,6 @@ begin
             Assert(False);
         end;
       end;
-    {$ENDIF}
     else
       Assert(False);
   end;
@@ -2221,13 +2234,11 @@ var
   Column: integer;
   LocalGrid : TCustomModelGrid;
 begin
-  {$IFDEF SUTRA}
   if frmGoPhast.ModelSelection = msSutra22 then
   begin
     result := 0;
     Exit;
   end;
-  {$ENDIF}
   LocalGrid := TCustomModel(GlobalCurrentModel).Grid;
   if Values[0] <> nil then
   begin
@@ -2252,13 +2263,11 @@ var
   Row: integer;
   LocalGrid : TCustomModelGrid;
 begin
-  {$IFDEF SUTRA}
   if frmGoPhast.ModelSelection = msSutra22 then
   begin
     result := 0;
     Exit;
   end;
-  {$ENDIF}
   LocalGrid := TCustomModel(GlobalCurrentModel).Grid;
   if Values[0] <> nil then
   begin
@@ -2301,7 +2310,7 @@ begin
           Result := frmGoPhast.PhastGrid.LayerElevation[Lay];
         end;
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         LocalGrid := TCustomModel(GlobalCurrentModel).ModflowGrid;
         if (Lay < 0) or (Lay > LocalGrid.LayerCount)
@@ -2316,7 +2325,6 @@ begin
           Result := LocalGrid.CellElevation[Col, Row, Lay];
         end;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         Mesh := TCustomModel(GlobalCurrentModel).Mesh;
@@ -2367,7 +2375,6 @@ begin
           else Assert(False);
         end;
       end;
-    {$ENDIF}
   else
     Assert(False);
   end;
@@ -2395,7 +2402,7 @@ var
 begin
   result := 0;
   case GlobalCurrentModel.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         BelowValue := GetLayerPosition(Lay, Row, Col, InvalidIndex);
         if InvalidIndex then
@@ -2415,7 +2422,6 @@ begin
           end;
         end;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         Mesh := (GlobalCurrentModel as TCustomModel).Mesh;
@@ -2439,7 +2445,6 @@ begin
             Assert(False);
         end;
       end;
-    {$ENDIF}
     else
       Assert(False);
   end;
@@ -2472,11 +2477,11 @@ begin
     LocalMesh := LocalModel.Mesh;
     if (LocalMesh = nil) or (LocalMesh.MeshType in [mt2D, mtProfile]) then
     begin
-      result := 0;
+      result := 1;
     end
     else
     begin
-      result := LocalMesh.LayerCount;
+      result := LocalMesh.LayerCount+1;
     end;
   end;
 end;
@@ -2827,8 +2832,7 @@ end;
 function _SpecifiedHeadOnLayer(Values: array of pointer): boolean;
 begin
   result := False;
-  if not (frmGoPhast.PhastModel.ModelSelection in
-    [msModflow, msModflowLGR, msModflowNWT]) then
+  if not (frmGoPhast.PhastModel.ModelSelection in ModflowSelection) then
   begin
     Exit;
   end;
@@ -3149,7 +3153,7 @@ var
 begin
   result := 0;
   AModel := TCustomModel(GlobalCurrentModel);
-  if not (AModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT]) then
+  if not (AModel.ModelSelection in ModflowSelection) then
   begin
     Exit;
   end;
@@ -3422,8 +3426,7 @@ var
   MultiplierDataArray: TDataArray;
 begin
   result := 0;
-  if not (frmGoPhast.PhastModel.ModelSelection in
-    [msModflow, msModflowLGR, msModflowNWT]) then
+  if not (frmGoPhast.PhastModel.ModelSelection in ModflowSelection) then
   begin
     Exit;
   end;
@@ -3507,8 +3510,7 @@ begin
   AModel := TCustomModel(GlobalCurrentModel);
 
   result := 0;
-  if not (AModel.ModelSelection in
-    [msModflow, msModflowLGR, msModflowNWT]) then
+  if not (AModel.ModelSelection in ModflowSelection) then
   begin
     Exit;
   end;
@@ -3582,7 +3584,7 @@ var
 begin
   result := 0;
   AModel := TCustomModel(GlobalCurrentModel);
-  if not (AModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT]) then
+  if not (AModel.ModelSelection in ModflowSelection) then
   begin
     Exit;
   end;
@@ -3735,8 +3737,7 @@ var
   ZeroResultErrorDisplayed: Boolean;
 begin
   result := 0;
-  if not (frmGoPhast.PhastModel.ModelSelection in
-    [msModflow, msModflowLGR, msModflowNWT]) then
+  if not (frmGoPhast.PhastModel.ModelSelection in ModflowSelection) then
   begin
     Exit;
   end;
@@ -4017,8 +4018,7 @@ end;
 function _HufSS(Values: array of pointer): double;
 begin
   result := 0;
-  if not (frmGoPhast.PhastModel.ModelSelection in
-    [msModflow, msModflowLGR, msModflowNWT]) then
+  if not (frmGoPhast.PhastModel.ModelSelection in ModflowSelection) then
   begin
     Exit;
   end;
@@ -4029,8 +4029,7 @@ end;
 function _HufAverageSY(Values: array of pointer): double;
 begin
   result := 0;
-  if not (frmGoPhast.PhastModel.ModelSelection in
-    [msModflow, msModflowLGR, msModflowNWT]) then
+  if not (frmGoPhast.PhastModel.ModelSelection in ModflowSelection) then
   begin
     Exit;
   end;
@@ -4043,8 +4042,7 @@ var
   ChildModel: TChildModel;
 begin
   result := 0;
-  if not (frmGoPhast.PhastModel.ModelSelection in
-    [msModflow, msModflowLGR, msModflowNWT]) then
+  if not (frmGoPhast.PhastModel.ModelSelection in ModflowSelection) then
   begin
     Exit;
   end;
@@ -4074,8 +4072,7 @@ var
   ChildModel: TChildModel;
 begin
   result := '';
-  if not (frmGoPhast.PhastModel.ModelSelection in
-    [msModflow, msModflowLGR, msModflowNWT]) then
+  if not (frmGoPhast.PhastModel.ModelSelection in ModflowSelection) then
   begin
     Exit;
   end;
@@ -4096,8 +4093,7 @@ end;
 function _ParentLayer(Values: array of pointer): integer;
 begin
   result := _Layer(Values);
-  if not (frmGoPhast.PhastModel.ModelSelection in
-    [msModflow, msModflowLGR, msModflowNWT]) then
+  if not (frmGoPhast.PhastModel.ModelSelection in ModflowSelection) then
   begin
     Exit;
   end;
@@ -4111,8 +4107,7 @@ end;
 function _ParentRow(Values: array of pointer): integer;
 begin
   result := _Row(Values);
-  if not (frmGoPhast.PhastModel.ModelSelection in
-    [msModflow, msModflowLGR, msModflowNWT]) then
+  if not (frmGoPhast.PhastModel.ModelSelection in ModflowSelection) then
   begin
     Exit;
   end;
@@ -4126,8 +4121,7 @@ end;
 function _ParentColumn(Values: array of pointer): integer;
 begin
   result := _Column(Values);
-  if not (frmGoPhast.PhastModel.ModelSelection in
-    [msModflow, msModflowLGR, msModflowNWT]) then
+  if not (frmGoPhast.PhastModel.ModelSelection in ModflowSelection) then
   begin
     Exit;
   end;
@@ -4280,11 +4274,10 @@ var
   LayerGroup: TSutraLayerGroup;
 begin
   result := inherited GetVariablesUsed;
-  if frmGoPhast.ModelSelection in [msPhast, msModflow, msModflowLGR, msModflowNWT] then
+  if frmGoPhast.ModelSelection in ModelsWithGrid then
   begin
     result.Add(rsActive);
   end
-  {$IFDEF SUTRA}
   else if frmGoPhast.ModelSelection = msSutra22 then
   begin
     if (frmGoPhast.PhastModel <> nil)
@@ -4298,8 +4291,6 @@ begin
       end;
     end;
   end;
-  {$ENDIF}
-
 end;
 
 function TActiveOnLayer.UsesVariable(const Variable: TCustomVariable): boolean;
@@ -4308,7 +4299,7 @@ var
   LayerIndex: Integer;
   LayerGroup: TSutraLayerGroup;
 begin
-  if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+  if frmGoPhast.ModelSelection in ModflowSelection then
   begin
     result := inherited UsesVariable(Variable)
       or (Variable.Name = UpperCase(rsActive));
@@ -4745,6 +4736,13 @@ begin
   end;
 end;
 
+resourcestring
+  StrGIS = 'GIS|';
+  StrGridOrMesh = 'Grid or Mesh|';
+  StrObject = 'Object|';
+  StrMODFLOW = 'MODFLOW|';
+  StrModflowLgr = 'MODFLOW-LGR|';
+
 initialization
   SpecialImplementors := TList.Create;
 
@@ -4754,7 +4752,7 @@ initialization
   XFunction.OptionalArguments := 0;
   XFunction.CanConvertToConstant := False;
   XFunction.Name := 'X';
-  XFunction.Prototype := 'GIS|X';
+  XFunction.Prototype := StrGIS+'X';
 
   YFunction.ResultType := rdtDouble;
   YFunction.RFunctionAddr := _Y;
@@ -4762,7 +4760,7 @@ initialization
   YFunction.OptionalArguments := 0;
   YFunction.CanConvertToConstant := False;
   YFunction.Name := 'Y';
-  YFunction.Prototype := 'GIS|Y';
+  YFunction.Prototype := StrGIS+'Y';
 
   ZFunction.ResultType := rdtDouble;
   ZFunction.RFunctionAddr := _Z;
@@ -4770,7 +4768,7 @@ initialization
   ZFunction.OptionalArguments := 0;
   ZFunction.CanConvertToConstant := False;
   ZFunction.Name := 'Z';
-  ZFunction.Prototype := 'GIS|Z';
+  ZFunction.Prototype := StrGIS+'Z';
 
   XPrimeFunction.ResultType := rdtDouble;
   XPrimeFunction.RFunctionAddr := _XPrime;
@@ -4778,7 +4776,7 @@ initialization
   XPrimeFunction.OptionalArguments := 0;
   XPrimeFunction.CanConvertToConstant := False;
   XPrimeFunction.Name := 'X_Prime';
-  XPrimeFunction.Prototype := 'GIS|X_Prime';
+  XPrimeFunction.Prototype := StrGIS+'X_Prime';
 
   YPrimeFunction.ResultType := rdtDouble;
   YPrimeFunction.RFunctionAddr := _YPrime;
@@ -4786,7 +4784,7 @@ initialization
   YPrimeFunction.OptionalArguments := 0;
   YPrimeFunction.CanConvertToConstant := False;
   YPrimeFunction.Name := 'Y_Prime';
-  YPrimeFunction.Prototype := 'GIS|Y_Prime';
+  YPrimeFunction.Prototype := StrGIS+'Y_Prime';
 
   ColumnFunction.ResultType := rdtInteger;
   ColumnFunction.IFunctionAddr := _Column;
@@ -4794,7 +4792,7 @@ initialization
   ColumnFunction.OptionalArguments := 0;
   ColumnFunction.CanConvertToConstant := False;
   ColumnFunction.Name := 'Column';
-  ColumnFunction.Prototype := 'Grid|Column';
+  ColumnFunction.Prototype := StrGridOrMesh+'Column';
 
   ElevationToModelLayerFunction.ResultType := rdtInteger;
   ElevationToModelLayerFunction.IFunctionAddr := _ElevationToModelLayer;
@@ -4803,7 +4801,7 @@ initialization
   ElevationToModelLayerFunction.OptionalArguments := 0;
   ElevationToModelLayerFunction.CanConvertToConstant := False;
   ElevationToModelLayerFunction.Name := 'ElevationToModelLayer';
-  ElevationToModelLayerFunction.Prototype := 'Grid|ElevationToModelLayer(Elevation)';
+  ElevationToModelLayerFunction.Prototype := StrGridOrMesh+'ElevationToModelLayer(Elevation)';
 
   ElevationToLayerFunction.ResultType := rdtInteger;
   ElevationToLayerFunction.IFunctionAddr := _ElevationToLayer;
@@ -4812,7 +4810,7 @@ initialization
   ElevationToLayerFunction.OptionalArguments := 0;
   ElevationToLayerFunction.CanConvertToConstant := False;
   ElevationToLayerFunction.Name := 'ElevationToLayer';
-  ElevationToLayerFunction.Prototype := 'Grid|ElevationToLayer(Elevation)';
+  ElevationToLayerFunction.Prototype := StrGridOrMesh+'ElevationToLayer(Elevation)';
 
   RowFunction.ResultType := rdtInteger;
   RowFunction.IFunctionAddr := _Row;
@@ -4820,7 +4818,7 @@ initialization
   RowFunction.OptionalArguments := 0;
   RowFunction.CanConvertToConstant := False;
   RowFunction.Name := 'Row';
-  RowFunction.Prototype := 'Grid|Row';
+  RowFunction.Prototype := StrGridOrMesh+'Row';
 
   LayerFunction.ResultType := rdtInteger;
   LayerFunction.IFunctionAddr := _Layer;
@@ -4828,7 +4826,7 @@ initialization
   LayerFunction.OptionalArguments := 0;
   LayerFunction.CanConvertToConstant := False;
   LayerFunction.Name := 'Layer';
-  LayerFunction.Prototype := 'Grid|Layer';
+  LayerFunction.Prototype := StrGridOrMesh+'Layer';
 
   ColumnWidthFunction.ResultType := rdtDouble;
   ColumnWidthFunction.RFunctionAddr := _ColumnWidth;
@@ -4837,7 +4835,7 @@ initialization
   ColumnWidthFunction.OptionalArguments := 1;
   ColumnWidthFunction.CanConvertToConstant := False;
   ColumnWidthFunction.Name := 'ColumnWidth';
-  ColumnWidthFunction.Prototype := 'Grid|ColumnWidth({Column})';
+  ColumnWidthFunction.Prototype := StrGridOrMesh+'ColumnWidth({Column})';
 
   RowWidthFunction.ResultType := rdtDouble;
   RowWidthFunction.RFunctionAddr := _RowWidth;
@@ -4846,7 +4844,7 @@ initialization
   RowWidthFunction.OptionalArguments := 1;
   RowWidthFunction.CanConvertToConstant := False;
   RowWidthFunction.Name := 'RowWidth';
-  RowWidthFunction.Prototype := 'Grid|RowWidth({Row})';
+  RowWidthFunction.Prototype := StrGridOrMesh+'RowWidth({Row})';
 
   LayerHeightFunction.ResultType := rdtDouble;
   LayerHeightFunction.RFunctionAddr := _LayerHeight;
@@ -4857,7 +4855,7 @@ initialization
   LayerHeightFunction.OptionalArguments := 3;
   LayerHeightFunction.CanConvertToConstant := False;
   LayerHeightFunction.Name := StrLayerHeight;
-  LayerHeightFunction.Prototype := 'Grid|'+StrLayerHeight+'({{Col, Row,} Layer})';
+  LayerHeightFunction.Prototype := StrGridOrMesh+''+StrLayerHeight+'({{Col, Row,} Layer})';
 
   BlockAreaTopFunction.ResultType := rdtDouble;
   BlockAreaTopFunction.RFunctionAddr := _BlockAreaTop;
@@ -4867,7 +4865,7 @@ initialization
   BlockAreaTopFunction.OptionalArguments := 2;
   BlockAreaTopFunction.CanConvertToConstant := False;
   BlockAreaTopFunction.Name := 'BlockAreaTop';
-  BlockAreaTopFunction.Prototype := 'Grid|BlockAreaTop({Column, Row})';
+  BlockAreaTopFunction.Prototype := StrGridOrMesh+'BlockAreaTop({Column, Row})';
 
   BlockAreaFrontFunction.ResultType := rdtDouble;
   BlockAreaFrontFunction.RFunctionAddr := _BlockAreaFront;
@@ -4879,7 +4877,7 @@ initialization
   BlockAreaFrontFunction.CanConvertToConstant := False;
   BlockAreaFrontFunction.Name := 'BlockAreaFront';
   BlockAreaFrontFunction.Prototype :=
-    'Grid|BlockAreaFront({Column, {Row,} Layer})';
+    StrGridOrMesh+'BlockAreaFront({Column, {Row,} Layer})';
 
   BlockAreaSideFunction.ResultType := rdtDouble;
   BlockAreaSideFunction.RFunctionAddr := _BlockAreaSide;
@@ -4890,7 +4888,7 @@ initialization
   BlockAreaSideFunction.OptionalArguments := 3;
   BlockAreaSideFunction.CanConvertToConstant := False;
   BlockAreaSideFunction.Name := 'BlockAreaSide';
-  BlockAreaSideFunction.Prototype := 'Grid|BlockAreaSide({{Col,} Row, Layer})';
+  BlockAreaSideFunction.Prototype := StrGridOrMesh+'BlockAreaSide({{Col,} Row, Layer})';
 
   BlockVolumeFunction.ResultType := rdtDouble;
   BlockVolumeFunction.RFunctionAddr := _BlockVolume;
@@ -4901,7 +4899,7 @@ initialization
   BlockVolumeFunction.OptionalArguments := 3;
   BlockVolumeFunction.CanConvertToConstant := False;
   BlockVolumeFunction.Name := 'BlockVolume';
-  BlockVolumeFunction.Prototype := 'Grid|BlockVolume({{Column, Row,} Layer})';
+  BlockVolumeFunction.Prototype := StrGridOrMesh+'BlockVolume({{Column, Row,} Layer})';
 
   ColumnPositionFunction.ResultType := rdtDouble;
   ColumnPositionFunction.RFunctionAddr := _ColumnPosition;
@@ -4910,7 +4908,7 @@ initialization
   ColumnPositionFunction.OptionalArguments := 1;
   ColumnPositionFunction.CanConvertToConstant := False;
   ColumnPositionFunction.Name := 'ColumnBoundaryPosition';
-  ColumnPositionFunction.Prototype := 'Grid|ColumnBoundaryPosition({Column})';
+  ColumnPositionFunction.Prototype := StrGridOrMesh+'ColumnBoundaryPosition({Column})';
 
   RowPositionFunction.ResultType := rdtDouble;
   RowPositionFunction.RFunctionAddr := _RowPosition;
@@ -4919,7 +4917,7 @@ initialization
   RowPositionFunction.OptionalArguments := 1;
   RowPositionFunction.CanConvertToConstant := False;
   RowPositionFunction.Name := 'RowBoundaryPosition';
-  RowPositionFunction.Prototype := 'Grid|RowBoundaryPosition({Row})';
+  RowPositionFunction.Prototype := StrGridOrMesh+'RowBoundaryPosition({Row})';
 
   LayerPositionFunction.ResultType := rdtDouble;
   LayerPositionFunction.RFunctionAddr := _LayerPosition;
@@ -4931,7 +4929,7 @@ initialization
   LayerPositionFunction.CanConvertToConstant := False;
   LayerPositionFunction.Name := StrLayerBoundaryPosition;
   LayerPositionFunction.Prototype :=
-    'Grid|' + StrLayerBoundaryPosition + '({{Column, Row,} Layer})';
+    StrGridOrMesh+'' + StrLayerBoundaryPosition + '({{Column, Row,} Layer})';
 
   LayerCenterFunction.ResultType := rdtDouble;
   LayerCenterFunction.RFunctionAddr := _LayerCenter;
@@ -4943,7 +4941,7 @@ initialization
   LayerCenterFunction.CanConvertToConstant := False;
   LayerCenterFunction.Name := 'LayerCenter';
   LayerCenterFunction.Prototype :=
-    'Grid|LayerCenter({{Column, Row,} Layer})';
+    StrGridOrMesh+'LayerCenter({{Column, Row,} Layer})';
 
   ColumnCenterFunction.ResultType := rdtDouble;
   ColumnCenterFunction.RFunctionAddr := _ColumnCenter;
@@ -4953,7 +4951,7 @@ initialization
   ColumnCenterFunction.CanConvertToConstant := False;
   ColumnCenterFunction.Name := 'ColumnCenter';
   ColumnCenterFunction.Prototype :=
-    'Grid|ColumnCenter({Column})';
+    StrGridOrMesh+'ColumnCenter({Column})';
 
   RowCenterFunction.ResultType := rdtDouble;
   RowCenterFunction.RFunctionAddr := _RowCenter;
@@ -4963,7 +4961,7 @@ initialization
   RowCenterFunction.CanConvertToConstant := False;
   RowCenterFunction.Name := 'RowCenter';
   RowCenterFunction.Prototype :=
-    'Grid|RowCenter({Row})';
+    StrGridOrMesh+'RowCenter({Row})';
 
   ColumnCountFunction.ResultType := rdtInteger;
   ColumnCountFunction.IFunctionAddr := _ColumnCount;
@@ -4971,7 +4969,7 @@ initialization
   ColumnCountFunction.OptionalArguments := 0;
   ColumnCountFunction.CanConvertToConstant := False;
   ColumnCountFunction.Name := 'ColumnCount';
-  ColumnCountFunction.Prototype := 'Grid|ColumnCount';
+  ColumnCountFunction.Prototype := StrGridOrMesh+'ColumnCount';
 
   RowCountFunction.ResultType := rdtInteger;
   RowCountFunction.IFunctionAddr := _RowCount;
@@ -4979,7 +4977,7 @@ initialization
   RowCountFunction.OptionalArguments := 0;
   RowCountFunction.CanConvertToConstant := False;
   RowCountFunction.Name := 'RowCount';
-  RowCountFunction.Prototype := 'Grid|RowCount';
+  RowCountFunction.Prototype := StrGridOrMesh+'RowCount';
 
   LayerCountFunction.ResultType := rdtInteger;
   LayerCountFunction.IFunctionAddr := _LayerCount;
@@ -4987,7 +4985,7 @@ initialization
   LayerCountFunction.OptionalArguments := 0;
   LayerCountFunction.CanConvertToConstant := False;
   LayerCountFunction.Name := 'LayerCount';
-  LayerCountFunction.Prototype := 'Grid|LayerCount';
+  LayerCountFunction.Prototype := StrGridOrMesh+'LayerCount';
 
   ObjectLengthFunction.ResultType := rdtDouble;
   ObjectLengthFunction.RFunctionAddr := _ObjectLength;
@@ -4995,7 +4993,7 @@ initialization
   ObjectLengthFunction.OptionalArguments := 0;
   ObjectLengthFunction.CanConvertToConstant := False;
   ObjectLengthFunction.Name := StrObjectLength;
-  ObjectLengthFunction.Prototype := 'Object|ObjectLength';
+  ObjectLengthFunction.Prototype := StrObject+'ObjectLength';
 
   ObjectAreaFunction.ResultType := rdtDouble;
   ObjectAreaFunction.RFunctionAddr := _ObjectArea;
@@ -5003,7 +5001,7 @@ initialization
   ObjectAreaFunction.OptionalArguments := 0;
   ObjectAreaFunction.CanConvertToConstant := False;
   ObjectAreaFunction.Name := StrObjectArea;
-  ObjectAreaFunction.Prototype := 'Object|ObjectArea';
+  ObjectAreaFunction.Prototype := StrObject+'ObjectArea';
 
   ObjectIntersectLengthFunction.ResultType := rdtDouble;
   ObjectIntersectLengthFunction.RFunctionAddr := _ObjectIntersectLength;
@@ -5015,7 +5013,7 @@ initialization
   ObjectIntersectLengthFunction.CanConvertToConstant := False;
   ObjectIntersectLengthFunction.Name := StrObjectIntersectLength;
   ObjectIntersectLengthFunction.Prototype :=
-    'Object|ObjectIntersectLength({Column, Row, Layer})';
+    StrObject+'ObjectIntersectLength({Column, Row, Layer})';
 
   ObjectSectionIntersectLengthFunction.ResultType := rdtDouble;
   ObjectSectionIntersectLengthFunction.RFunctionAddr := _ObjectIntersectSectionLength;
@@ -5028,7 +5026,7 @@ initialization
   ObjectSectionIntersectLengthFunction.CanConvertToConstant := False;
   ObjectSectionIntersectLengthFunction.Name := StrObjectSectionIntersectLength;
   ObjectSectionIntersectLengthFunction.Prototype :=
-    'Object|ObjectSectionIntersectLength({Section, Column, Row, Layer})';
+    StrObject+'ObjectSectionIntersectLength({Section, Column, Row, Layer})';
 
   ObjectIntersectAreaFunction.ResultType := rdtDouble;
   ObjectIntersectAreaFunction.RFunctionAddr := _ObjectIntersectArea;
@@ -5040,7 +5038,7 @@ initialization
   ObjectIntersectAreaFunction.CanConvertToConstant := False;
   ObjectIntersectAreaFunction.Name := StrObjectIntersectArea;
   ObjectIntersectAreaFunction.Prototype :=
-    'Object|ObjectIntersectArea({Column, Row, Layer})';
+    StrObject+'ObjectIntersectArea({Column, Row, Layer})';
 
   ObjectNameFunction.ResultType := rdtString;
   ObjectNameFunction.SFunctionAddr := _ObjectName;
@@ -5049,7 +5047,7 @@ initialization
   ObjectNameFunction.CanConvertToConstant := False;
   ObjectNameFunction.Name := 'ObjectName';
   ObjectNameFunction.Prototype :=
-    'Object|ObjectName';
+    StrObject+'ObjectName';
 
   NodeXFunction.ResultType := rdtDouble;
   NodeXFunction.RFunctionAddr := _XNodePosition;
@@ -5058,7 +5056,7 @@ initialization
   NodeXFunction.OptionalArguments := 0;
   NodeXFunction.CanConvertToConstant := False;
   NodeXFunction.Name := 'ObjectVertexX';
-  NodeXFunction.Prototype := 'Object|ObjectVertexX(VertexIndex)';
+  NodeXFunction.Prototype := StrObject+'ObjectVertexX(VertexIndex)';
   SetLength(NodeXFunction.Synonyms, 1);
   NodeXFunction.Synonyms[0] := 'ObjectNodeX';
 
@@ -5069,7 +5067,7 @@ initialization
   NodeYFunction.OptionalArguments := 0;
   NodeYFunction.CanConvertToConstant := False;
   NodeYFunction.Name := 'ObjectVertexY';
-  NodeYFunction.Prototype := 'Object|ObjectVertexY(VertexIndex)';
+  NodeYFunction.Prototype := StrObject+'ObjectVertexY(VertexIndex)';
   SetLength(NodeYFunction.Synonyms, 1);
   NodeYFunction.Synonyms[0] := 'ObjectNodeY';
 
@@ -5080,7 +5078,7 @@ initialization
   NodeZFunction.OptionalArguments := 0;
   NodeZFunction.CanConvertToConstant := False;
   NodeZFunction.Name := 'ObjectVertexZ';
-  NodeZFunction.Prototype := 'Object|ObjectVertexZ(VertexIndex)';
+  NodeZFunction.Prototype := StrObject+'ObjectVertexZ(VertexIndex)';
   SetLength(NodeZFunction.Synonyms, 1);
   NodeZFunction.Synonyms[0] := 'ObjectNodeZ';
 
@@ -5093,7 +5091,7 @@ initialization
   NodeDistanceFunction.OptionalArguments := 0;
   NodeDistanceFunction.CanConvertToConstant := False;
   NodeDistanceFunction.Name := 'ObjectVertexDistance';
-  NodeDistanceFunction.Prototype := 'Object|ObjectVertexDistance(VertexIndex)';
+  NodeDistanceFunction.Prototype := StrObject+'ObjectVertexDistance(VertexIndex)';
   SetLength(NodeDistanceFunction.Synonyms, 1);
   NodeDistanceFunction.Synonyms[0] := 'ObjectNodeDistance';
 
@@ -5102,7 +5100,7 @@ initialization
   CurrentNodeXFunction.OptionalArguments := 0;
   CurrentNodeXFunction.CanConvertToConstant := False;
   CurrentNodeXFunction.Name := ObjectCurrentVertexX;
-  CurrentNodeXFunction.Prototype := 'Object|' + ObjectCurrentVertexX;
+  CurrentNodeXFunction.Prototype := StrObject+'' + ObjectCurrentVertexX;
   SetLength(CurrentNodeXFunction.Synonyms, 1);
   CurrentNodeXFunction.Synonyms[0] := 'ObjectCurrentNodeX';
 
@@ -5111,7 +5109,7 @@ initialization
   CurrentNodeYFunction.OptionalArguments := 0;
   CurrentNodeYFunction.CanConvertToConstant := False;
   CurrentNodeYFunction.Name := ObjectCurrentVertexY;
-  CurrentNodeYFunction.Prototype := 'Object|' + ObjectCurrentVertexY;
+  CurrentNodeYFunction.Prototype := StrObject+'' + ObjectCurrentVertexY;
   SetLength(CurrentNodeYFunction.Synonyms, 1);
   CurrentNodeYFunction.Synonyms[0] := 'ObjectCurrentNodeY';
 
@@ -5120,7 +5118,7 @@ initialization
   CurrentNodeZFunction.OptionalArguments := 0;
   CurrentNodeZFunction.CanConvertToConstant := False;
   CurrentNodeZFunction.Name := ObjectCurrentVertexZ;
-  CurrentNodeZFunction.Prototype := 'Object|' + ObjectCurrentVertexZ;
+  CurrentNodeZFunction.Prototype := StrObject+'' + ObjectCurrentVertexZ;
   SetLength(CurrentNodeZFunction.Synonyms, 1);
   CurrentNodeZFunction.Synonyms[0] := 'ObjectCurrentNodeZ';
 
@@ -5129,42 +5127,42 @@ initialization
   CurrentSegmentAngleFunction.OptionalArguments := 0;
   CurrentSegmentAngleFunction.CanConvertToConstant := False;
   CurrentSegmentAngleFunction.Name := ObjectCurrentSegmentAngle;
-  CurrentSegmentAngleFunction.Prototype := 'Object|'+ObjectCurrentSegmentAngle;
+  CurrentSegmentAngleFunction.Prototype := StrObject+''+ObjectCurrentSegmentAngle;
 
   CurrentSegmentAngleDegreesFunction.ResultType := rdtDouble;
   CurrentSegmentAngleDegreesFunction.RFunctionAddr := _CurrentSegmentAngleDegrees;
   CurrentSegmentAngleDegreesFunction.OptionalArguments := 0;
   CurrentSegmentAngleDegreesFunction.CanConvertToConstant := False;
   CurrentSegmentAngleDegreesFunction.Name :=ObjectDegrees;
-  CurrentSegmentAngleDegreesFunction.Prototype := 'Object|' + ObjectDegrees;
+  CurrentSegmentAngleDegreesFunction.Prototype := StrObject+'' + ObjectDegrees;
 
   CurrentSegmentAngleLimitedegreesFunction.ResultType := rdtDouble;
   CurrentSegmentAngleLimitedegreesFunction.RFunctionAddr := _CurrentSegmentAngleLimitedDegrees;
   CurrentSegmentAngleLimitedegreesFunction.OptionalArguments := 0;
   CurrentSegmentAngleLimitedegreesFunction.CanConvertToConstant := False;
   CurrentSegmentAngleLimitedegreesFunction.Name := ObjectDegreesLimited;
-  CurrentSegmentAngleLimitedegreesFunction.Prototype := 'Object|'+ObjectDegreesLimited;
+  CurrentSegmentAngleLimitedegreesFunction.Prototype := StrObject+''+ObjectDegreesLimited;
 
   CurrentSegmentLengthFunction.ResultType := rdtDouble;
   CurrentSegmentLengthFunction.RFunctionAddr := _CurrentSegmentLength;
   CurrentSegmentLengthFunction.OptionalArguments := 0;
   CurrentSegmentLengthFunction.CanConvertToConstant := False;
   CurrentSegmentLengthFunction.Name := ObjectCurSegLength;
-  CurrentSegmentLengthFunction.Prototype := 'Object|' + ObjectCurSegLength;
+  CurrentSegmentLengthFunction.Prototype := StrObject+'' + ObjectCurSegLength;
 
   CurrentSectionIndexFunction.ResultType := rdtInteger;
   CurrentSectionIndexFunction.IFunctionAddr := _CurrentSectionIndex;
   CurrentSectionIndexFunction.OptionalArguments := 0;
   CurrentSectionIndexFunction.CanConvertToConstant := False;
   CurrentSectionIndexFunction.Name := 'ObjectCurrentSectionIndex';
-  CurrentSectionIndexFunction.Prototype := 'Object|ObjectCurrentSectionIndex';
+  CurrentSectionIndexFunction.Prototype := StrObject+'ObjectCurrentSectionIndex';
 
   FractionOfObjectLengthFunction.ResultType := rdtDouble;
   FractionOfObjectLengthFunction.RFunctionAddr := _FractionOfObjectLength;
   FractionOfObjectLengthFunction.OptionalArguments := 0;
   FractionOfObjectLengthFunction.CanConvertToConstant := False;
   FractionOfObjectLengthFunction.Name := 'FractionOfObjectLength';
-  FractionOfObjectLengthFunction.Prototype := 'Object|FractionOfObjectLength';
+  FractionOfObjectLengthFunction.Prototype := StrObject+'FractionOfObjectLength';
 
   InterpolationedValuesFunction.ResultType := rdtDouble;
   InterpolationedValuesFunction.RFunctionAddr := _InterpolatedVertexValues;
@@ -5173,7 +5171,7 @@ initialization
   InterpolationedValuesFunction.OptionalArguments := 1;
   InterpolationedValuesFunction.CanConvertToConstant := False;
   InterpolationedValuesFunction.Name := StrInterpolatedVertexValues;
-  InterpolationedValuesFunction.Prototype := 'Object|'
+  InterpolationedValuesFunction.Prototype := StrObject+''
     + StrInterpolatedVertexValues + '(Key)';
   InterpolationedValuesFunction.Hidden := False;
 
@@ -5182,7 +5180,7 @@ initialization
   NodeCountFunction.OptionalArguments := 0;
   NodeCountFunction.CanConvertToConstant := False;
   NodeCountFunction.Name := 'ObjectVertexCount';
-  NodeCountFunction.Prototype := 'Object|ObjectVertexCount';
+  NodeCountFunction.Prototype := StrObject+'ObjectVertexCount';
   SetLength(NodeCountFunction.Synonyms, 1);
   NodeCountFunction.Synonyms[0] := 'ObjectNodeCount';
 
@@ -5193,7 +5191,7 @@ initialization
   ImportedValuesRFunction.OptionalArguments := 1;
   ImportedValuesRFunction.CanConvertToConstant := False;
   ImportedValuesRFunction.Name := rsObjectImportedValuesR;
-  ImportedValuesRFunction.Prototype := 'Object|' + rsObjectImportedValuesR
+  ImportedValuesRFunction.Prototype := StrObject+'' + rsObjectImportedValuesR
     + '({Key})';
   ImportedValuesRFunction.Hidden := False;
 
@@ -5204,7 +5202,7 @@ initialization
   ImportedValuesIFunction.OptionalArguments := 1;
   ImportedValuesIFunction.CanConvertToConstant := False;
   ImportedValuesIFunction.Name := rsObjectImportedValuesI;
-  ImportedValuesIFunction.Prototype := 'Object|' + rsObjectImportedValuesI
+  ImportedValuesIFunction.Prototype := StrObject+'' + rsObjectImportedValuesI
     + '({Key})';
   ImportedValuesIFunction.Hidden := False;
 
@@ -5215,7 +5213,7 @@ initialization
   ImportedValuesBFunction.OptionalArguments := 1;
   ImportedValuesBFunction.CanConvertToConstant := False;
   ImportedValuesBFunction.Name := rsObjectImportedValuesB;
-  ImportedValuesBFunction.Prototype := 'Object|' + rsObjectImportedValuesB
+  ImportedValuesBFunction.Prototype := StrObject+'' + rsObjectImportedValuesB
     + '({Key})';
   ImportedValuesBFunction.Hidden := False;
 
@@ -5226,7 +5224,7 @@ initialization
   ImportedValuesTFunction.OptionalArguments := 1;
   ImportedValuesTFunction.CanConvertToConstant := False;
   ImportedValuesTFunction.Name := rsObjectImportedValuesT;
-  ImportedValuesTFunction.Prototype := 'Object|' + rsObjectImportedValuesT
+  ImportedValuesTFunction.Prototype := StrObject+'' + rsObjectImportedValuesT
     + '({Key})';
   ImportedValuesTFunction.Hidden := False;
 
@@ -5237,7 +5235,7 @@ initialization
   ListRealValueFunction.OptionalArguments := 0;
   ListRealValueFunction.CanConvertToConstant := False;
   ListRealValueFunction.Name := rsListRealValue;
-  ListRealValueFunction.Prototype := 'Object|' + rsListRealValue +
+  ListRealValueFunction.Prototype := StrObject+'' + rsListRealValue +
     '("DataSetName")';
   ListRealValueFunction.Hidden := True;
 
@@ -5248,7 +5246,7 @@ initialization
   ListIntegerValueFunction.OptionalArguments := 0;
   ListIntegerValueFunction.CanConvertToConstant := False;
   ListIntegerValueFunction.Name := rsListIntegerValue;
-  ListIntegerValueFunction.Prototype := 'Object|' + rsListIntegerValue +
+  ListIntegerValueFunction.Prototype := StrObject+'' + rsListIntegerValue +
     '("DataSetName")';
   ListIntegerValueFunction.Hidden := True;
 
@@ -5259,7 +5257,7 @@ initialization
   ModflowLayerSimulatedFunction.OptionalArguments := 1;
   ModflowLayerSimulatedFunction.CanConvertToConstant := False;
   ModflowLayerSimulatedFunction.Name := 'SimulatedLayer';
-  ModflowLayerSimulatedFunction.Prototype := 'MODFLOW|SimulatedLayer({Layer})';
+  ModflowLayerSimulatedFunction.Prototype := StrMODFLOW+'SimulatedLayer({Layer})';
 
   GridNumberFunction.ResultType := rdtInteger;
   GridNumberFunction.IFunctionAddr := _GridNumber;
@@ -5267,7 +5265,7 @@ initialization
   GridNumberFunction.OptionalArguments := 0;
   GridNumberFunction.CanConvertToConstant := False;
   GridNumberFunction.Name := StrGridNumber;
-  GridNumberFunction.Prototype := 'MODFLOW-LGR|' + StrGridNumber;
+  GridNumberFunction.Prototype := StrModflowLgr + StrGridNumber;
   GridNumberFunction.Hidden := False;
 
   GridNameFunction.ResultType := rdtString;
@@ -5276,7 +5274,7 @@ initialization
   GridNameFunction.OptionalArguments := 0;
   GridNameFunction.CanConvertToConstant := False;
   GridNameFunction.Name := StrGridName;
-  GridNameFunction.Prototype := 'MODFLOW-LGR|' + StrGridName;
+  GridNameFunction.Prototype := StrModflowLgr + StrGridName;
   GridNameFunction.Hidden := False;
 
   ParentLayerFunction.ResultType := rdtInteger;
@@ -5285,7 +5283,7 @@ initialization
   ParentLayerFunction.OptionalArguments := 0;
   ParentLayerFunction.CanConvertToConstant := False;
   ParentLayerFunction.Name := StrParentLayer;
-  ParentLayerFunction.Prototype := 'MODFLOW-LGR|' + StrParentLayer;
+  ParentLayerFunction.Prototype := StrModflowLgr + StrParentLayer;
   ParentLayerFunction.Hidden := False;
 
   ParentRowFunction.ResultType := rdtInteger;
@@ -5294,7 +5292,7 @@ initialization
   ParentRowFunction.OptionalArguments := 0;
   ParentRowFunction.CanConvertToConstant := False;
   ParentRowFunction.Name := StrParentRow;
-  ParentRowFunction.Prototype := 'MODFLOW-LGR|' + StrParentRow;
+  ParentRowFunction.Prototype := StrModflowLgr + StrParentRow;
   ParentRowFunction.Hidden := False;
 
   ParentColumnFunction.ResultType := rdtInteger;
@@ -5303,7 +5301,7 @@ initialization
   ParentColumnFunction.OptionalArguments := 0;
   ParentColumnFunction.CanConvertToConstant := False;
   ParentColumnFunction.Name := StrParentColumn;
-  ParentColumnFunction.Prototype := 'MODFLOW-LGR|' + StrParentColumn;
+  ParentColumnFunction.Prototype := StrModflowLgr + StrParentColumn;
   ParentColumnFunction.Hidden := False;
 
   NodeInterpolate := TFunctionClass.Create;
@@ -5311,7 +5309,7 @@ initialization
   NodeInterpolate.OptionalArguments := -1;
   NodeInterpolate.RFunctionAddr := _NodeInterpolate;
   NodeInterpolate.Name := StrVertexInterpolate;
-  NodeInterpolate.Prototype := 'Object|' + StrVertexInterpolate + '(Value1, Value2, ...)';
+  NodeInterpolate.Prototype := StrObject+'' + StrVertexInterpolate + '(Value1, Value2, ...)';
   NodeInterpolate.Synonyms.Add(StrNodeInterpolate);
   NodeInterpolate.InputDataTypes[0] := rdtDouble;
   NodeInterpolate.InputDataTypes[1] := rdtDouble;
@@ -5328,7 +5326,7 @@ initialization
   ActiveOnLayer.OptionalArguments := 0;
   ActiveOnLayer.BFunctionAddr := _ActiveOnLayer;
   ActiveOnLayer.Name := 'ActiveOnLayer';
-  ActiveOnLayer.Prototype := 'Grid|ActiveOnLayer(Layer)';
+  ActiveOnLayer.Prototype := StrGridOrMesh+'ActiveOnLayer(Layer)';
   ActiveOnLayer.InputDataTypes[0] := rdtInteger;
   ActiveOnLayer.AllowConversionToConstant := False;
 
@@ -5342,7 +5340,7 @@ initialization
 //  HighestActiveLayer.OptionalArguments := 0;
 //  HighestActiveLayer.IFunctionAddr := _HighestActiveLayer;
 //  HighestActiveLayer.Name := 'HighestActiveLayer';
-//  HighestActiveLayer.Prototype := 'Grid|HighestActiveLayer';
+//  HighestActiveLayer.Prototype := StrGridOrMesh+'HighestActiveLayer';
 //  HighestActiveLayer.AllowConversionToConstant := False;
 //
 //  HighestActiveLayerSpecialImplementor := TSpecialImplementor.Create;
@@ -5355,7 +5353,7 @@ initialization
   SpecifiedHeadOnLayer.OptionalArguments := 0;
   SpecifiedHeadOnLayer.BFunctionAddr := _SpecifiedHeadOnLayer;
   SpecifiedHeadOnLayer.Name := 'SpecifiedHeadOnLayer';
-  SpecifiedHeadOnLayer.Prototype := 'MODFLOW|SpecifiedHeadOnLayer(Layer)';
+  SpecifiedHeadOnLayer.Prototype := StrMODFLOW+'SpecifiedHeadOnLayer(Layer)';
   SpecifiedHeadOnLayer.InputDataTypes[0] := rdtInteger;
   SpecifiedHeadOnLayer.AllowConversionToConstant := False;
 
@@ -5369,7 +5367,7 @@ initialization
   BcfVcont.OptionalArguments := 3;
   BcfVcont.RFunctionAddr := _BcfGetVcont;
   BcfVcont.Name := StrBcfVCONT;
-  BcfVcont.Prototype := 'MODFLOW|' + StrBcfVCONT + '({Layer, Row, Column})';
+  BcfVcont.Prototype := StrMODFLOW+'' + StrBcfVCONT + '({Layer, Row, Column})';
   BcfVcont.OptionalType := rdtInteger;
   BcfVcont.AllowConversionToConstant := False;
 
@@ -5383,7 +5381,7 @@ initialization
   HufKx.OptionalArguments := 3;
   HufKx.RFunctionAddr := _HufKx;
   HufKx.Name := StrHufKx;
-  HufKx.Prototype := 'MODFLOW|' + StrHufKx + '(Head, {Layer, Row, Column})';
+  HufKx.Prototype := StrMODFLOW+'' + StrHufKx + '(Head, {Layer, Row, Column})';
   HufKx.OptionalType := rdtInteger;
   HufKx.AllowConversionToConstant := False;
   HufKx.InputDataTypes[0] := rdtDouble;
@@ -5401,7 +5399,7 @@ initialization
   HufKy.OptionalArguments := 3;
   HufKy.RFunctionAddr := _HufAverageKY;
   HufKy.Name := StrHufKy;
-  HufKy.Prototype := 'MODFLOW|' + StrHufKy + '(Head, {Layer, Row, Column})';
+  HufKy.Prototype := StrMODFLOW+'' + StrHufKy + '(Head, {Layer, Row, Column})';
   HufKy.OptionalType := rdtInteger;
   HufKy.AllowConversionToConstant := False;
   HufKy.InputDataTypes[0] := rdtDouble;
@@ -5419,7 +5417,7 @@ initialization
   HufKz.OptionalArguments := 3;
   HufKz.RFunctionAddr := _HufKz;
   HufKz.Name := StrHufKz;
-  HufKz.Prototype := 'MODFLOW|' + StrHufKz + '(Head, {Layer, Row, Column})';
+  HufKz.Prototype := StrMODFLOW+'' + StrHufKz + '(Head, {Layer, Row, Column})';
   HufKz.OptionalType := rdtInteger;
   HufKz.AllowConversionToConstant := False;
   HufKz.InputDataTypes[0] := rdtDouble;
@@ -5437,7 +5435,7 @@ initialization
   HufSS.OptionalArguments := 3;
   HufSS.RFunctionAddr := _HufSS;
   HufSS.Name := StrHufSs;
-  HufSS.Prototype := 'MODFLOW|' + StrHufSs + '(Head, {Layer, Row, Column})';
+  HufSS.Prototype := StrMODFLOW+'' + StrHufSs + '(Head, {Layer, Row, Column})';
   HufSS.OptionalType := rdtInteger;
   HufSS.AllowConversionToConstant := False;
   HufSS.InputDataTypes[0] := rdtDouble;
@@ -5455,7 +5453,7 @@ initialization
   HufAverageSY.OptionalArguments := 3;
   HufAverageSY.RFunctionAddr := _HufAverageSY;
   HufAverageSY.Name := StrHufAverageSy;
-  HufAverageSY.Prototype := 'MODFLOW|' + StrHufAverageSy + '(Head, {Layer, Row, Column})';
+  HufAverageSY.Prototype := StrMODFLOW+'' + StrHufAverageSy + '(Head, {Layer, Row, Column})';
   HufAverageSY.OptionalType := rdtInteger;
   HufAverageSY.AllowConversionToConstant := False;
   HufAverageSY.InputDataTypes[0] := rdtDouble;
@@ -5473,7 +5471,7 @@ initialization
   HufSY.OptionalArguments := 3;
   HufSY.RFunctionAddr := _GetHufSy;
   HufSY.Name := StrHufSy;
-  HufSY.Prototype := 'MODFLOW|' + StrHufSy + '(Head, {Layer, Row, Column})';
+  HufSY.Prototype := StrMODFLOW+'' + StrHufSy + '(Head, {Layer, Row, Column})';
   HufSY.OptionalType := rdtInteger;
   HufSY.AllowConversionToConstant := False;
   HufSY.InputDataTypes[0] := rdtDouble;
@@ -5491,7 +5489,7 @@ initialization
   HufSYTP.OptionalArguments := 2;
   HufSYTP.RFunctionAddr := _GetHufSytp;
   HufSYTP.Name := StrHufSytp;
-  HufSYTP.Prototype := 'MODFLOW|' + StrHufSytp + '({Row, Column})';
+  HufSYTP.Prototype := StrMODFLOW+'' + StrHufSytp + '({Row, Column})';
   HufSYTP.OptionalType := rdtInteger;
   HufSYTP.AllowConversionToConstant := False;
   HufSYTP.InputDataTypes[0] := rdtInteger;

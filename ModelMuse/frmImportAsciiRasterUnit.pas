@@ -47,11 +47,22 @@ type
 var
   frmImportAsciiRaster: TfrmImportAsciiRaster;
 
+resourcestring
+  StrElement = 'element';
+  StrElementCenter = 'element center';
+  StrCell = 'cell';
+  StrNode = 'node';
+  StrCellCenter = 'cell center';
+  StrLowestPointInS = 'Lowest point in %s';
+  StrHighestPointInS = 'Highest point in %s';
+  StrAverageOfPointsIn = 'Average of points in %s';
+  StrPointClosestToS = 'Point closest to %s';
+
 implementation
 
 uses
   frmProgressUnit, AsciiRasterReaderUnit, frmGoPhastUnit, DataSetUnit,
-  ScreenObjectUnit, UndoItems, ModelMuseUtilities, 
+  ScreenObjectUnit, UndoItems, ModelMuseUtilities,
   ValueArrayStorageUnit, GIS_Functions;
 
 resourcestring
@@ -68,15 +79,6 @@ resourcestring
   StrTheFileSIsNot = 'The file "%s" is not an ASCII raster file.';
   StrNoneImportAllS = 'None (import all %s points)';
   StrMultipleFiles = ' - multiple files';
-  StrElement = 'element';
-  StrElementCenter = 'element center';
-  StrCell = 'cell';
-  StrNode = 'node';
-  StrCellCenter = 'cell center';
-  StrLowestPointInS = 'Lowest point in %s';
-  StrHighestPointInS = 'Highest point in %s';
-  StrAverageOfPointsIn = 'Average of points in %s';
-  StrPointClosestToS = 'Point closest to %s';
   StrImportedFromAnAS = 'Imported from an ASCII Raster file';
   StrSampledFromAnASCI = 'Sampled from an ASCII Raster file';
   StrProgress = 'Progress';
@@ -254,7 +256,7 @@ begin
       begin
         Assert(False);
       end;
-    msPhast {$IFDEF SUTRA}, msSutra22 {$ENDIF}:
+    msPhast, msSutra22:
       begin
         case EvalAt of
           eaBlocks:
@@ -269,7 +271,7 @@ begin
             end;
         end;
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         NodeElemString := StrCell;
         CenterString := StrCellCenter

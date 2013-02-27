@@ -1114,57 +1114,62 @@ var
   ErrorRoot: string;
   WarningRoot: string;
 begin
-  if FOptions.RetardationOption = roUsed then
-  begin
-    frmProgressMM.AddMessage(StrWritingDataSets32and33);
-    RetardationDataArray := Model.DataArrayManager.GetDataSetByName(KModpathRetardation);
-    Assert(RetardationDataArray <> nil);
-    for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    if FOptions.RetardationOption = roUsed then
     begin
-      if Model.IsLayerSimulated(LayerIndex) then
+      frmProgressMM.AddMessage(StrWritingDataSets32and33);
+      RetardationDataArray := Model.DataArrayManager.GetDataSetByName(KModpathRetardation);
+      Assert(RetardationDataArray <> nil);
+      for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
       begin
-        DataSetName := 'Data Set 32: RetardationFactor ';
-      end
-      else
-      begin
-        DataSetName := 'Data Set 32: RetardationFactorCB ';
-      end;
-      WriteArray(RetardationDataArray, LayerIndex, DataSetName
-        + Model.ModflowLayerBottomDescription(LayerIndex));
-    end;
-
-    ErrorRoot := Format(StrThereIsAnIllegal,
-      [RetardationDataArray.DisplayName]);
-    WarningRoot := Format(StrInSAllValuesSh,
-      [RetardationDataArray.DisplayName]);
-    frmErrorsAndWarnings.RemoveErrorGroup(Model, ErrorRoot);
-    frmErrorsAndWarnings.RemoveWarningGroup(Model, WarningRoot);
-    ActiveDataArray := Model.DataArrayManager.GetDataSetByName(rsActive);
-    for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
-    begin
-      for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
-      begin
-        for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
+        if Model.IsLayerSimulated(LayerIndex) then
         begin
-          if ActiveDataArray.BooleanData[LayerIndex,RowIndex,ColIndex] then
+          DataSetName := 'Data Set 32: RetardationFactor ';
+        end
+        else
+        begin
+          DataSetName := 'Data Set 32: RetardationFactorCB ';
+        end;
+        WriteArray(RetardationDataArray, LayerIndex, DataSetName
+          + Model.ModflowLayerBottomDescription(LayerIndex));
+      end;
+
+      ErrorRoot := Format(StrThereIsAnIllegal,
+        [RetardationDataArray.DisplayName]);
+      WarningRoot := Format(StrInSAllValuesSh,
+        [RetardationDataArray.DisplayName]);
+      frmErrorsAndWarnings.RemoveErrorGroup(Model, ErrorRoot);
+      frmErrorsAndWarnings.RemoveWarningGroup(Model, WarningRoot);
+      ActiveDataArray := Model.DataArrayManager.GetDataSetByName(rsActive);
+      for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
+      begin
+        for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
+        begin
+          for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
           begin
-            AValue := RetardationDataArray.RealData[LayerIndex,RowIndex,ColIndex];
-            if AValue <= 0 then
+            if ActiveDataArray.BooleanData[LayerIndex,RowIndex,ColIndex] then
             begin
-              frmErrorsAndWarnings.AddError(Model, ErrorRoot,
-                Format(StrLayerRowColumn,
-                [LayerIndex+1, RowIndex+1, ColIndex+1]));
-            end
-            else if AValue < 1 then
-            begin
-              frmErrorsAndWarnings.AddWarning(Model, WarningRoot,
-                Format(StrLayerRowColumn,
-                [LayerIndex+1, RowIndex+1, ColIndex+1]));
+              AValue := RetardationDataArray.RealData[LayerIndex,RowIndex,ColIndex];
+              if AValue <= 0 then
+              begin
+                frmErrorsAndWarnings.AddError(Model, ErrorRoot,
+                  Format(StrLayerRowColumn,
+                  [LayerIndex+1, RowIndex+1, ColIndex+1]));
+              end
+              else if AValue < 1 then
+              begin
+                frmErrorsAndWarnings.AddWarning(Model, WarningRoot,
+                  Format(StrLayerRowColumn,
+                  [LayerIndex+1, RowIndex+1, ColIndex+1]));
+              end;
             end;
           end;
         end;
       end;
     end;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 

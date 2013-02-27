@@ -1,23 +1,25 @@
 inherited frmSutraTimes: TfrmSutraTimes
+  HelpType = htKeyword
+  HelpKeyword = 'SUTRA_Time_Controls_Dialog_Box'
   Caption = 'SUTRA Time Controls'
-  ClientHeight = 562
-  ClientWidth = 674
-  ExplicitWidth = 692
-  ExplicitHeight = 607
-  PixelsPerInch = 120
+  ClientHeight = 549
+  ClientWidth = 697
+  ExplicitWidth = 713
+  ExplicitHeight = 587
+  PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 518
-    Width = 674
+    Top = 505
+    Width = 697
     Height = 44
     Align = alBottom
     TabOrder = 1
     DesignSize = (
-      674
+      697
       44)
     object btnHelp: TBitBtn
-      Left = 322
+      Left = 345
       Top = 6
       Width = 108
       Height = 33
@@ -25,9 +27,10 @@ inherited frmSutraTimes: TfrmSutraTimes
       Kind = bkHelp
       NumGlyphs = 2
       TabOrder = 0
+      OnClick = btnHelpClick
     end
     object btnOK: TBitBtn
-      Left = 436
+      Left = 459
       Top = 6
       Width = 108
       Height = 33
@@ -38,7 +41,7 @@ inherited frmSutraTimes: TfrmSutraTimes
       OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
-      Left = 550
+      Left = 573
       Top = 6
       Width = 108
       Height = 33
@@ -51,31 +54,27 @@ inherited frmSutraTimes: TfrmSutraTimes
   object pcMain: TPageControl
     Left = 0
     Top = 0
-    Width = 674
-    Height = 518
+    Width = 697
+    Height = 505
     ActivePage = tabSchedules
     Align = alClient
     TabOrder = 0
     object tabSchedules: TTabSheet
       Caption = 'Schedules'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnl1: TPanel
         Left = 0
         Top = 0
         Width = 161
-        Height = 485
+        Height = 472
         Align = alLeft
         Caption = 'pnl1'
         TabOrder = 0
         DesignSize = (
           161
-          485)
+          472)
         object sbAddUnit: TSpeedButton
           Left = 15
-          Top = 454
+          Top = 442
           Width = 23
           Height = 22
           Hint = 'Add time schedule|Add a new time schedule'
@@ -96,7 +95,7 @@ inherited frmSutraTimes: TfrmSutraTimes
         end
         object sbDeleteUnit: TSpeedButton
           Left = 102
-          Top = 454
+          Top = 442
           Width = 23
           Height = 22
           Hint = 'Delete time schedule|Delete the selected time schedule'
@@ -135,7 +134,7 @@ inherited frmSutraTimes: TfrmSutraTimes
         end
         object sbUp: TSpeedButton
           Left = 44
-          Top = 454
+          Top = 442
           Width = 23
           Height = 22
           Hint = 'Move up|Move the selected time schedule up'
@@ -162,7 +161,7 @@ inherited frmSutraTimes: TfrmSutraTimes
         end
         object sbDown: TSpeedButton
           Left = 73
-          Top = 454
+          Top = 442
           Width = 23
           Height = 22
           Hint = 'Move down|Move the selected time schedule down'
@@ -191,9 +190,10 @@ inherited frmSutraTimes: TfrmSutraTimes
           Left = 1
           Top = 1
           Width = 159
-          Height = 447
+          Height = 434
           Align = alTop
           Anchors = [akLeft, akTop, akRight, akBottom]
+          CheckImageKind = ckLightCheck
           Colors.UnfocusedSelectionColor = clHighlight
           Colors.UnfocusedSelectionBorderColor = clHighlight
           Header.AutoSizeIndex = 0
@@ -213,31 +213,31 @@ inherited frmSutraTimes: TfrmSutraTimes
       object grp1: TGroupBox
         Left = 161
         Top = 0
-        Width = 505
-        Height = 485
+        Width = 528
+        Height = 472
         Align = alClient
         Caption = 'Temporal Control and Solution Cycling Data -> Dataset 6'
         TabOrder = 1
         DesignSize = (
-          505
-          485)
+          528
+          472)
         object lblScheduleType: TLabel
           Left = 158
-          Top = 69
+          Top = 61
           Width = 261
           Height = 18
           Caption = 'Type of time step schedule (SCHTYP)'
         end
         object lblScaleFactor: TLabel
           Left = 158
-          Top = 171
+          Top = 163
           Width = 212
           Height = 18
           Caption = 'Scale factor for times (SCALT)'
         end
         object comboScheduleType: TComboBox
           Left = 6
-          Top = 65
+          Top = 57
           Width = 145
           Height = 26
           Style = csDropDownList
@@ -251,42 +251,44 @@ inherited frmSutraTimes: TfrmSutraTimes
         end
         object jvpglstTemporal: TJvPageList
           Left = 8
-          Top = 200
-          Width = 481
-          Height = 282
+          Top = 188
+          Width = 517
+          Height = 281
           ActivePage = jvspTimeCycle
           PropagateEnable = False
           Anchors = [akLeft, akTop, akRight, akBottom]
           object jvspTimeList: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 481
-            Height = 282
+            Width = 517
+            Height = 281
             Caption = 'jvspTimeList'
             object grp5: TGroupBox
               Left = 0
               Top = 0
-              Width = 481
-              Height = 282
+              Width = 517
+              Height = 281
               Align = alClient
               Caption = 'List of Times'
               TabOrder = 0
               inline frameTimes: TframeGrid
                 Left = 2
                 Top = 20
-                Width = 477
-                Height = 260
+                Width = 513
+                Height = 259
                 Align = alClient
                 TabOrder = 0
                 ExplicitLeft = 2
                 ExplicitTop = 20
-                ExplicitWidth = 477
-                ExplicitHeight = 260
+                ExplicitWidth = 513
+                ExplicitHeight = 259
                 inherited Panel: TPanel
                   Top = 219
-                  Width = 477
+                  Width = 513
+                  Height = 40
                   ExplicitTop = 219
-                  ExplicitWidth = 477
+                  ExplicitWidth = 513
+                  ExplicitHeight = 40
                   inherited lbNumber: TLabel
                     Width = 55
                     Height = 18
@@ -294,16 +296,28 @@ inherited frmSutraTimes: TfrmSutraTimes
                     ExplicitHeight = 18
                   end
                   inherited sbAdd: TSpeedButton
-                    Left = 247
-                    ExplicitLeft = 282
+                    Left = 267
+                    Width = 26
+                    Height = 26
+                    ExplicitLeft = 247
+                    ExplicitWidth = 26
+                    ExplicitHeight = 26
                   end
                   inherited sbInsert: TSpeedButton
-                    Left = 293
-                    ExplicitLeft = 334
+                    Left = 316
+                    Width = 26
+                    Height = 26
+                    ExplicitLeft = 293
+                    ExplicitWidth = 26
+                    ExplicitHeight = 26
                   end
                   inherited sbDelete: TSpeedButton
-                    Left = 339
-                    ExplicitLeft = 386
+                    Left = 366
+                    Width = 26
+                    Height = 26
+                    ExplicitLeft = 339
+                    ExplicitWidth = 26
+                    ExplicitHeight = 26
                   end
                   inherited seNumber: TJvSpinEdit
                     Height = 26
@@ -311,7 +325,7 @@ inherited frmSutraTimes: TfrmSutraTimes
                   end
                 end
                 inherited Grid: TRbwDataGrid4
-                  Width = 477
+                  Width = 513
                   Height = 219
                   OnSelectCell = frameTimesGridSelectCell
                   Columns = <
@@ -337,7 +351,7 @@ inherited frmSutraTimes: TfrmSutraTimes
                       CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end>
-                  ExplicitWidth = 477
+                  ExplicitWidth = 513
                   ExplicitHeight = 219
                 end
               end
@@ -346,43 +360,43 @@ inherited frmSutraTimes: TfrmSutraTimes
           object jvspTimeCycle: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 481
-            Height = 282
+            Width = 517
+            Height = 281
             Caption = 'jvspTimeCycle'
             DesignSize = (
-              481
-              282)
+              517
+              281)
             object grp3: TGroupBox
               Left = 3
               Top = 3
-              Width = 478
+              Width = 514
               Height = 137
               Anchors = [akLeft, akTop, akRight]
               Caption = 'Basic Time Step Control'
               TabOrder = 0
               object lblNTMAX: TLabel
-                Left = 77
-                Top = 27
-                Width = 290
+                Left = 119
+                Top = 26
+                Width = 385
                 Height = 18
-                Caption = 'Maximum number of time cycles (NTMAX)'
+                Caption = 'Maximum number of times after the initial time (NTMAX)'
               end
               object lblTimei: TLabel
-                Left = 78
-                Top = 55
+                Left = 119
+                Top = 54
                 Width = 122
                 Height = 18
                 Caption = 'Initial time (TIMEI)'
               end
               object lblTimel: TLabel
-                Left = 77
+                Left = 119
                 Top = 83
                 Width = 148
                 Height = 18
                 Caption = 'Limiting time (TIMEL)'
               end
               object lblTimec: TLabel
-                Left = 78
+                Left = 119
                 Top = 111
                 Width = 203
                 Height = 18
@@ -391,7 +405,7 @@ inherited frmSutraTimes: TfrmSutraTimes
               object rdeTimei: TRbwDataEntry
                 Left = 7
                 Top = 51
-                Width = 65
+                Width = 106
                 Height = 22
                 TabOrder = 1
                 Text = '0'
@@ -403,7 +417,7 @@ inherited frmSutraTimes: TfrmSutraTimes
               object rdeTimel: TRbwDataEntry
                 Left = 7
                 Top = 80
-                Width = 65
+                Width = 106
                 Height = 22
                 TabOrder = 2
                 Text = '1e99'
@@ -415,7 +429,7 @@ inherited frmSutraTimes: TfrmSutraTimes
               object rdeTimec: TRbwDataEntry
                 Left = 7
                 Top = 108
-                Width = 65
+                Width = 106
                 Height = 22
                 TabOrder = 3
                 Text = '1'
@@ -427,7 +441,7 @@ inherited frmSutraTimes: TfrmSutraTimes
               object seNtmax: TJvSpinEdit
                 Left = 7
                 Top = 23
-                Width = 65
+                Width = 106
                 Height = 26
                 MaxValue = 2147483647.000000000000000000
                 MinValue = 1.000000000000000000
@@ -436,45 +450,45 @@ inherited frmSutraTimes: TfrmSutraTimes
               end
             end
             object grp4: TGroupBox
-              Left = -2
-              Top = 138
-              Width = 478
+              Left = 3
+              Top = 147
+              Width = 514
               Height = 135
               Anchors = [akLeft, akTop, akRight]
               Caption = 'Time-Step Multiplier Control'
               TabOrder = 1
               object lblNTCYC: TLabel
-                Left = 82
-                Top = 27
+                Left = 119
+                Top = 26
                 Width = 393
                 Height = 36
                 Caption = 'Number of time steps in time step change cycle (NTCYC)'#13#10
               end
               object lblTcmult: TLabel
-                Left = 82
+                Left = 119
                 Top = 55
                 Width = 322
                 Height = 36
                 Caption = 'Multiplier for time step change cycle (TCMULT)'#13#10
               end
               object lblDTMAX: TLabel
-                Left = 82
+                Left = 119
                 Top = 111
                 Width = 294
                 Height = 18
                 Caption = 'Maximum allowed time step size (TCMAX)'
               end
               object lblTCMIN: TLabel
-                Left = 82
+                Left = 119
                 Top = 83
                 Width = 282
                 Height = 18
                 Caption = 'Minimum allowed time step size (TCMIN)'
               end
               object rdeTcmult: TRbwDataEntry
-                Left = 12
+                Left = 7
                 Top = 52
-                Width = 65
+                Width = 106
                 Height = 22
                 TabOrder = 1
                 Text = '1.'
@@ -484,9 +498,9 @@ inherited frmSutraTimes: TfrmSutraTimes
                 ChangeDisabledColor = True
               end
               object rdeDTMAX: TRbwDataEntry
-                Left = 12
+                Left = 7
                 Top = 108
-                Width = 65
+                Width = 106
                 Height = 22
                 TabOrder = 3
                 Text = '1e99'
@@ -495,9 +509,9 @@ inherited frmSutraTimes: TfrmSutraTimes
                 ChangeDisabledColor = True
               end
               object rdeTCMIN: TRbwDataEntry
-                Left = 12
+                Left = 7
                 Top = 80
-                Width = 65
+                Width = 106
                 Height = 22
                 TabOrder = 2
                 Text = '1e-20'
@@ -506,9 +520,9 @@ inherited frmSutraTimes: TfrmSutraTimes
                 ChangeDisabledColor = True
               end
               object seNTCYC: TJvSpinEdit
-                Left = 12
+                Left = 7
                 Top = 23
-                Width = 65
+                Width = 106
                 Height = 26
                 MaxValue = 2147483647.000000000000000000
                 MinValue = 1.000000000000000000
@@ -520,33 +534,33 @@ inherited frmSutraTimes: TfrmSutraTimes
           object jvspStepList: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 481
-            Height = 282
+            Width = 517
+            Height = 281
             Caption = 'jvspStepList'
             object grp2: TGroupBox
               Left = 0
               Top = 0
-              Width = 481
-              Height = 282
+              Width = 517
+              Height = 281
               Align = alClient
               Caption = 'List of Time Steps'
               TabOrder = 0
               inline frameSteps: TframeGrid
                 Left = 2
                 Top = 20
-                Width = 477
-                Height = 260
+                Width = 513
+                Height = 259
                 Align = alClient
                 TabOrder = 0
                 ExplicitLeft = 2
                 ExplicitTop = 20
-                ExplicitWidth = 477
-                ExplicitHeight = 260
+                ExplicitWidth = 513
+                ExplicitHeight = 259
                 inherited Panel: TPanel
-                  Top = 219
-                  Width = 477
-                  ExplicitTop = 219
-                  ExplicitWidth = 477
+                  Top = 218
+                  Width = 513
+                  ExplicitTop = 218
+                  ExplicitWidth = 513
                   inherited lbNumber: TLabel
                     Width = 55
                     Height = 18
@@ -554,16 +568,28 @@ inherited frmSutraTimes: TfrmSutraTimes
                     ExplicitHeight = 18
                   end
                   inherited sbAdd: TSpeedButton
-                    Left = 247
-                    ExplicitLeft = 282
+                    Left = 267
+                    Width = 26
+                    Height = 26
+                    ExplicitLeft = 247
+                    ExplicitWidth = 26
+                    ExplicitHeight = 26
                   end
                   inherited sbInsert: TSpeedButton
-                    Left = 293
-                    ExplicitLeft = 334
+                    Left = 316
+                    Width = 26
+                    Height = 26
+                    ExplicitLeft = 293
+                    ExplicitWidth = 26
+                    ExplicitHeight = 26
                   end
                   inherited sbDelete: TSpeedButton
-                    Left = 339
-                    ExplicitLeft = 386
+                    Left = 366
+                    Width = 26
+                    Height = 26
+                    ExplicitLeft = 339
+                    ExplicitWidth = 26
+                    ExplicitHeight = 26
                   end
                   inherited seNumber: TJvSpinEdit
                     Height = 26
@@ -571,8 +597,8 @@ inherited frmSutraTimes: TfrmSutraTimes
                   end
                 end
                 inherited Grid: TRbwDataGrid4
-                  Width = 477
-                  Height = 219
+                  Width = 513
+                  Height = 218
                   Columns = <
                     item
                       AutoAdjustRowHeights = False
@@ -598,8 +624,8 @@ inherited frmSutraTimes: TfrmSutraTimes
                       CaseSensitivePicklist = False
                       AutoAdjustColWidths = True
                     end>
-                  ExplicitWidth = 477
-                  ExplicitHeight = 219
+                  ExplicitWidth = 513
+                  ExplicitHeight = 218
                 end
               end
             end
@@ -607,16 +633,16 @@ inherited frmSutraTimes: TfrmSutraTimes
           object jvspStepCyle: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 481
-            Height = 282
+            Width = 517
+            Height = 281
             Caption = 'jvspStepCyle'
             DesignSize = (
-              481
-              282)
+              517
+              281)
             object grp6: TGroupBox
               Left = 3
               Top = 3
-              Width = 478
+              Width = 514
               Height = 166
               Anchors = [akLeft, akTop, akRight]
               Caption = 'Basic Time Step Control'
@@ -692,11 +718,11 @@ inherited frmSutraTimes: TfrmSutraTimes
         end
         object rgMannerOfTimeSpecification: TRadioGroup
           Left = 6
-          Top = 97
-          Width = 481
+          Top = 89
+          Width = 504
           Height = 65
           Anchors = [akLeft, akTop, akRight]
-          Caption = 'Manner of Time Specification (CREFT)'
+          Caption = 'Manner of time specification (CREFT)'
           ItemIndex = 1
           Items.Strings = (
             'ABSOLUTE time (simulation clock time)'
@@ -706,7 +732,7 @@ inherited frmSutraTimes: TfrmSutraTimes
         end
         object lbledName: TLabeledEdit
           Left = 6
-          Top = 33
+          Top = 25
           Width = 145
           Height = 26
           EditLabel.Width = 191
@@ -720,7 +746,7 @@ inherited frmSutraTimes: TfrmSutraTimes
         end
         object rdeScaleFactor: TRbwDataEntry
           Left = 6
-          Top = 168
+          Top = 160
           Width = 145
           Height = 22
           TabOrder = 3
@@ -736,34 +762,44 @@ inherited frmSutraTimes: TfrmSutraTimes
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblInitialtime: TLabel
         Left = 87
-        Top = 27
+        Top = 29
         Width = 378
         Height = 18
         Caption = 'Time at which the initial conditions are specified (TICS)'
       end
       object lblPressureCycles: TLabel
         Left = 87
-        Top = 55
+        Top = 80
         Width = 385
         Height = 18
         Caption = 'Number of steps in the pressure solution cycle (NPCYC)'
       end
       object lblTransportCycles: TLabel
         Left = 87
-        Top = 87
+        Top = 113
         Width = 385
         Height = 18
         Caption = 'Number of steps in the transport solution cycle (NUCYC)'
       end
+      object jvgrphdrICS: TJvGroupHeader
+        Left = 3
+        Top = 3
+        Width = 510
+        Height = 17
+        Caption = 'ICS file, data set 1'
+      end
+      object jvgrphdrInput6: TJvGroupHeader
+        Left = 3
+        Top = 54
+        Width = 510
+        Height = 17
+        Caption = 'INP file, data set 6'
+      end
       object rdeInitialTime: TRbwDataEntry
         Left = 3
-        Top = 24
+        Top = 26
         Width = 78
         Height = 22
         TabOrder = 0
@@ -775,7 +811,7 @@ inherited frmSutraTimes: TfrmSutraTimes
       end
       object sePressureCycles: TJvSpinEdit
         Left = 3
-        Top = 51
+        Top = 77
         Width = 78
         Height = 26
         MaxValue = 2147483647.000000000000000000
@@ -786,7 +822,7 @@ inherited frmSutraTimes: TfrmSutraTimes
       end
       object seTransportCycles: TJvSpinEdit
         Left = 3
-        Top = 84
+        Top = 110
         Width = 78
         Height = 26
         MaxValue = 2147483647.000000000000000000

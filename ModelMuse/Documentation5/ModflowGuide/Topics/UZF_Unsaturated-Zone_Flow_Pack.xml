@@ -58,12 +58,12 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="6" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.usgs.gov/tm/2006/tm6a19/" target="_blank" styleclass="Citation" translate="true">Niswonger, R.G., Prudic, D.E., and Regan, R.S., 2006, Documentation of the Unsaturated-Zone Flow (UZF1) Package for modeling unsaturated flow between the land surface and the water table with MODFLOW-2005: U.S. Geological Techniques and Methods Book 6, Chapter A19, 62 p. </link></li>
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="filelink" href="readme_UZF.pdf" styleclass="Normal" translate="true">readme_UZF.pdf</link></li>
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="filelink" href="NWT_release.txt" styleclass="Normal" translate="true">release.txt for MODFLOW-NWT</link></li>
           </list>
-          <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="LAK_SFR_UZF_updates_MF2005.txt" styleclass="Citation" style="font-style:normal;" translate="true">LAK_SFR_UZF_updates_MF2005.txt</link></li>
           </list>
         </td>
@@ -81,15 +81,18 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
+          </list>
+          <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MF2005-FMP2</text></li>
           </list>
         </td>
       </tr>
@@ -98,7 +101,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Other Notes</text></para>
         </td>
         <td>
-          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="New Materials" translate="true">When the UZF package is used, the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" styleclass="New Materials" translate="true">RCH</link><text styleclass="New Materials" translate="true">, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" styleclass="New Materials" translate="true">EVT</link><text styleclass="New Materials" translate="true">, and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" styleclass="New Materials" translate="true">ETS</link><text styleclass="New Materials" translate="true"> packages should not normally be used because the UZF simulates recharge and evapotranspiration. &#160;However, MODFLOW does not prevent UZF being used in conjunction with the the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" styleclass="New Materials" translate="true">RCH</link><text styleclass="New Materials" translate="true">, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" styleclass="New Materials" translate="true">EVT</link><text styleclass="New Materials" translate="true">, and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ETS" styleclass="New Materials" translate="true">ETS</link><text styleclass="New Materials" translate="true"> packages.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Because the UZF package can simulate both ground-water flow, infiltration, and evapotranspiration, it is a combination of a ground-water flow package and a boundary condition package.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Because the UZF1 Package delays recharge to the water table, changes in stress do not necessarily correspond to the beginning of a stress period. Consequently, caution should be used when simulating time steps that increase during a stress period (specifying the variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DIS" anchor="TSMULT" styleclass="Normal" translate="true">TSMULT</link><text styleclass="Normal" translate="true">&gt;1.0 in the data input for the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DIS" styleclass="Normal" translate="true">Discretization</link><text styleclass="Normal" translate="true"> file; Harbaugh, 2005) because water percolating through the unsaturated zone may reach the water table at the end of a stress period, when the time step length is a maximum.</text></li>

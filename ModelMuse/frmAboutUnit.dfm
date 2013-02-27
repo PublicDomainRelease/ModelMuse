@@ -9,18 +9,18 @@ inherited frmAbout: TfrmAbout
   OnHide = FormHide
   ExplicitWidth = 750
   ExplicitHeight = 572
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 734
+    Width = 732
     Height = 129
     Align = alTop
     ParentColor = True
     TabOrder = 0
     DesignSize = (
-      734
+      732
       129)
     object ImageLogo: TImage
       Left = 5
@@ -3093,14 +3093,14 @@ inherited frmAbout: TfrmAbout
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 485
-    Width = 734
+    Top = 478
+    Width = 732
     Height = 49
     Align = alBottom
     ParentColor = True
     TabOrder = 2
     DesignSize = (
-      734
+      732
       49)
     object lblVersionCaption: TLabel
       Left = 8
@@ -3200,12 +3200,12 @@ inherited frmAbout: TfrmAbout
   object dgCredit: TRbwDataGrid4
     Left = 0
     Top = 129
-    Width = 734
-    Height = 356
+    Width = 732
+    Height = 349
     Align = alClient
     ColCount = 3
     FixedCols = 0
-    RowCount = 39
+    RowCount = 40
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
     TabOrder = 1
     ExtendedAutoDistributeText = False

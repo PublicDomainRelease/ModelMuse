@@ -38,6 +38,7 @@ type
     btnCancel: TBitBtn;
     btnOK: TBitBtn;
     btnHelp: TBitBtn;
+    spl1: TSplitter;
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
   private

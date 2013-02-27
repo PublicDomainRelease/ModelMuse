@@ -861,20 +861,20 @@ end;
 procedure TMnw2TimeItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FPumpingRate,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FReactivationPumpingRate,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FLimitingWaterLevel,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FInactivationPumpingRate,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FHeadCapacityMultiplier,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TMnw2TimeItem.SetBoundaryFormula(Index: integer; const Value: string);
@@ -2456,36 +2456,36 @@ end;
 procedure TMnw2SpatialItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FB,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 
   frmGoPhast.PhastModel.FormulaManager.Remove(FC,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 
   frmGoPhast.PhastModel.FormulaManager.Remove(FCellToWellConductance,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 
   frmGoPhast.PhastModel.FormulaManager.Remove(FP,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 
   frmGoPhast.PhastModel.FormulaManager.Remove(FPartialPenetration,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 
   frmGoPhast.PhastModel.FormulaManager.Remove(FSkinK,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 
   frmGoPhast.PhastModel.FormulaManager.Remove(FSkinRadius,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 
   frmGoPhast.PhastModel.FormulaManager.Remove(FWellRadius,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 
 end;
 
@@ -3403,32 +3403,32 @@ end;
 procedure TVerticalScreen.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FB,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 
   frmGoPhast.PhastModel.FormulaManager.Remove(FC,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 
   frmGoPhast.PhastModel.FormulaManager.Remove(FCellToWellConductance,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 
   frmGoPhast.PhastModel.FormulaManager.Remove(FP,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 
   frmGoPhast.PhastModel.FormulaManager.Remove(FSkinK,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 
   frmGoPhast.PhastModel.FormulaManager.Remove(FSkinRadius,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 
   frmGoPhast.PhastModel.FormulaManager.Remove(FWellRadius,
-    GlobalRemoveModflowBoundarySubscription,
-    GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription,
+    GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 function TVerticalScreen.ScreenObject: TObject;

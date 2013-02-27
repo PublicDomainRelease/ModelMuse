@@ -188,9 +188,9 @@ begin
 end;
 
 procedure TfrmModflowOutputControl.SetData;
-  var
-    Index: integer;
-    TimeItem: TOuptputTimeItem;
+var
+  Index: integer;
+  TimeItem: TOuptputTimeItem;
   AValue: Extended;
   Undo: TUndoOutputControl;
 begin

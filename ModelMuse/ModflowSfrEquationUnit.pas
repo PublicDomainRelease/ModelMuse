@@ -68,8 +68,8 @@ type
   TSfrEquationCollection = class(TCustomNonSpatialBoundColl)
   private
     FTimeValues: array of TSfrEquationRecord;
-    function GetChannelTimeValues(Index: integer): TSfrEquationRecord;
-    procedure SetChannelTimeValues(Index: integer;
+    function GetEquationTimeValues(Index: integer): TSfrEquationRecord;
+    procedure SetEquationTimeValues(Index: integer;
       const Value: TSfrEquationRecord);
   protected
     // See @link(TCustomNonSpatialBoundColl.ItemClass
@@ -78,7 +78,7 @@ type
   public
     procedure EvaluateBoundaries;
     property EquationTimeValues[Index: integer]: TSfrEquationRecord
-      read GetChannelTimeValues write SetChannelTimeValues;
+      read GetEquationTimeValues write SetEquationTimeValues;
     function GetEquationTimeValuesFromTime(StartTime: double): TSfrEquationRecord;
   end;
 
@@ -237,13 +237,13 @@ end;
 procedure TSfrEquationItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FWidthExponent,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FWidthCoefficient,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FDepthExponent,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   frmGoPhast.PhastModel.FormulaManager.Remove(FDepthCoefficient,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TSfrEquationItem.SetDepthExponent(const Value: string);
@@ -495,7 +495,7 @@ begin
   end;
 end;
 
-function TSfrEquationCollection.GetChannelTimeValues(
+function TSfrEquationCollection.GetEquationTimeValues(
   Index: integer): TSfrEquationRecord;
 begin
   Assert((Index >= 0) and (Index < Length(FTimeValues)));
@@ -535,7 +535,7 @@ begin
   result := TSfrEquationItem;
 end;
 
-procedure TSfrEquationCollection.SetChannelTimeValues(Index: integer;
+procedure TSfrEquationCollection.SetEquationTimeValues(Index: integer;
   const Value: TSfrEquationRecord);
 begin
   Assert((Index >= 0) and (Index < Length(FTimeValues)));

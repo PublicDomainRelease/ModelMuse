@@ -36,6 +36,7 @@ type
     procedure Evaluate; override;
     class function Extension: string; override;
     function Package: TModflowPackageSelection; override;
+    procedure GetFlowUnitNumber(var UnitNumber: Integer); override;
   public
     Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     // @name destroys the current instance of @classname.
@@ -47,7 +48,8 @@ type
 implementation
 
 uses ModflowUnitNumbers, DataSetUnit, ModflowUzfUnit, frmErrorsAndWarningsUnit,
-  frmProgressUnit, ModflowCellUnit, Forms, GoPhastTypes;
+  frmProgressUnit, ModflowCellUnit, Forms, GoPhastTypes,
+  ModflowOutputControlUnit;
 
 resourcestring
   StrUnspecifiedUZFData = 'Unspecified UZF data';
@@ -104,44 +106,61 @@ var
 begin
   NoAssignmentErrorRoot := Format(StrNoBoundaryConditio,
     [Package.PackageIdentifier]);
-  frmProgressMM.AddMessage(StrEvaluatingUZFPacka);
-  CountGages;
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, NoAssignmentErrorRoot);
+    frmProgressMM.AddMessage(StrEvaluatingUZFPacka);
+    CountGages;
 
-  for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
-  begin
-    ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
-    if ScreenObject.Deleted then
+    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
     begin
-      Continue;
-    end;
-    if not ScreenObject.UsedModels.UsesModel(Model) then
-    begin
-      Continue;
-    end;
-    Boundary := ScreenObject.ModflowUzfBoundary;
-    if Boundary <> nil then
-    begin
-      frmProgressMM.AddMessage(Format(StrEvaluatingS, [ScreenObject.Name]));
-      if not ScreenObject.SetValuesOfEnclosedCells
-        and not ScreenObject.SetValuesOfIntersectedCells then
+      ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
+      if ScreenObject.Deleted then
       begin
-        frmErrorsAndWarnings.AddError(Model,
-          NoAssignmentErrorRoot, ScreenObject.Name);
+        Continue;
       end;
-      Boundary.GetCellValues(Values, nil, Model);
-      if Model.ModflowPackages.UzfPackage.SimulateET then
+      if not ScreenObject.UsedModels.UsesModel(Model) then
       begin
-        Boundary.GetEvapotranspirationDemandCells(FEtDemand, Model);
-        Boundary.GetExtinctionDepthCells(FEExtinctionDepths, Model);
-        Boundary.GetWaterContentCells(FExtinctionWaterContent, Model);
+        Continue;
+      end;
+      Boundary := ScreenObject.ModflowUzfBoundary;
+      if Boundary <> nil then
+      begin
+        frmProgressMM.AddMessage(Format(StrEvaluatingS, [ScreenObject.Name]));
+        if not ScreenObject.SetValuesOfEnclosedCells
+          and not ScreenObject.SetValuesOfIntersectedCells then
+        begin
+          frmErrorsAndWarnings.AddError(Model,
+            NoAssignmentErrorRoot, ScreenObject.Name);
+        end;
+        Boundary.GetCellValues(Values, nil, Model);
+        if Model.ModflowPackages.UzfPackage.SimulateET then
+        begin
+          Boundary.GetEvapotranspirationDemandCells(FEtDemand, Model);
+          Boundary.GetExtinctionDepthCells(FEExtinctionDepths, Model);
+          Boundary.GetWaterContentCells(FExtinctionWaterContent, Model);
+        end;
       end;
     end;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
 class function TModflowUzfWriter.Extension: string;
 begin
   result := '.uzf';
+end;
+
+procedure TModflowUzfWriter.GetFlowUnitNumber(var UnitNumber: Integer);
+begin
+  inherited GetFlowUnitNumber(UnitNumber);
+  if Model.ModflowOutputControl.SaveCellFlows = csfListing then
+  begin
+    // UZF does not provide an option to save values to the
+    // listing file.
+    UnitNumber := 0;
+  end;
 end;
 
 function TModflowUzfWriter.Package: TModflowPackageSelection;
@@ -179,90 +198,95 @@ begin
     Exit;
   end;
 
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrUnspecifiedUZFData);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheInfiltrationRat);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheETDemandRateI);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheETExtinctionDe);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheETExtinctionWa);
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrUnspecifiedUZFData);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheInfiltrationRat);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheETDemandRateI);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheETExtinctionDe);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheETExtinctionWa);
 
-  Infiltration := TimeLists[0];
-  if Model.ModflowPackages.UzfPackage.SimulateET then
-  begin
-    EtDemand := TimeLists[1];
-    ExtinctionDepth := TimeLists[2];
-    WaterContent := TimeLists[3];
-  end
-  else
-  begin
-    EtDemand := nil;
-    ExtinctionDepth := nil;
-    WaterContent := nil;
-  end;
-  for TimeIndex := 0 to Values.Count - 1 do
-  begin
-    InfiltrationArray := Infiltration[TimeIndex]
-      as TModflowBoundaryDisplayDataArray;
-    CellList := Values[TimeIndex];
-//    CellList.CheckRestore;
-    AssignTransient2DArray(InfiltrationArray, 0, CellList, 0,
-      rdtDouble, Model.ModflowPackages.UzfPackage.AssignmentMethod);
-    Model.AdjustDataArray(InfiltrationArray);
-    CellList.Cache;
-
+    Infiltration := TimeLists[0];
     if Model.ModflowPackages.UzfPackage.SimulateET then
     begin
-      EtDemandArray := EtDemand[TimeIndex]
+      EtDemand := TimeLists[1];
+      ExtinctionDepth := TimeLists[2];
+      WaterContent := TimeLists[3];
+    end
+    else
+    begin
+      EtDemand := nil;
+      ExtinctionDepth := nil;
+      WaterContent := nil;
+    end;
+    for TimeIndex := 0 to Values.Count - 1 do
+    begin
+      InfiltrationArray := Infiltration[TimeIndex]
         as TModflowBoundaryDisplayDataArray;
-      if TimeIndex < FEtDemand.Count then
-      begin
-        CellList := FEtDemand[TimeIndex];
-//        CellList.CheckRestore;
-        AssignTransient2DArray(EtDemandArray, 0, CellList, 0,
-          rdtDouble, umAssign);
-        Model.AdjustDataArray(EtDemandArray);
-        CellList.Cache;
-      end
-      else
-      begin
-        frmErrorsAndWarnings.AddError(Model,
-          StrTheETDemandRateI, IntToStr(TimeIndex+1));
-      end;
+      CellList := Values[TimeIndex];
+  //    CellList.CheckRestore;
+      AssignTransient2DArray(InfiltrationArray, 0, CellList, 0,
+        rdtDouble, Model.ModflowPackages.UzfPackage.AssignmentMethod);
+      Model.AdjustDataArray(InfiltrationArray);
+      CellList.Cache;
 
-      ExtinctionDepthArray := ExtinctionDepth[TimeIndex]
-        as TModflowBoundaryDisplayDataArray;
-      if TimeIndex < FEExtinctionDepths.Count then
+      if Model.ModflowPackages.UzfPackage.SimulateET then
       begin
-        CellList := FEExtinctionDepths[TimeIndex];
-//        CellList.CheckRestore;
-        AssignTransient2DArray(ExtinctionDepthArray, 0, CellList, 0,
-          rdtDouble, umAssign);
-        CellList.Cache;
-      end
-      else
-      begin
-        frmErrorsAndWarnings.AddError(Model,
-          StrTheETExtinctionDe, IntToStr(TimeIndex+1));
-      end;
+        EtDemandArray := EtDemand[TimeIndex]
+          as TModflowBoundaryDisplayDataArray;
+        if TimeIndex < FEtDemand.Count then
+        begin
+          CellList := FEtDemand[TimeIndex];
+  //        CellList.CheckRestore;
+          AssignTransient2DArray(EtDemandArray, 0, CellList, 0,
+            rdtDouble, umAssign);
+          Model.AdjustDataArray(EtDemandArray);
+          CellList.Cache;
+        end
+        else
+        begin
+          frmErrorsAndWarnings.AddError(Model,
+            StrTheETDemandRateI, IntToStr(TimeIndex+1));
+        end;
+
+        ExtinctionDepthArray := ExtinctionDepth[TimeIndex]
+          as TModflowBoundaryDisplayDataArray;
+        if TimeIndex < FEExtinctionDepths.Count then
+        begin
+          CellList := FEExtinctionDepths[TimeIndex];
+  //        CellList.CheckRestore;
+          AssignTransient2DArray(ExtinctionDepthArray, 0, CellList, 0,
+            rdtDouble, umAssign);
+          CellList.Cache;
+        end
+        else
+        begin
+          frmErrorsAndWarnings.AddError(Model,
+            StrTheETExtinctionDe, IntToStr(TimeIndex+1));
+        end;
 
 
-      WaterContentArray := WaterContent[TimeIndex]
-        as TModflowBoundaryDisplayDataArray;
-      if TimeIndex <  FExtinctionWaterContent.Count then
-      begin
-        CellList := FExtinctionWaterContent[TimeIndex];
-//        CellList.CheckRestore;
-        AssignTransient2DArray(WaterContentArray, 0, CellList, 0,
-          rdtDouble, umAssign);
-        CellList.Cache;
-      end
-      else
-      begin
-        frmErrorsAndWarnings.AddError(Model,
-          StrTheETExtinctionWa, IntToStr(TimeIndex+1));
+        WaterContentArray := WaterContent[TimeIndex]
+          as TModflowBoundaryDisplayDataArray;
+        if TimeIndex <  FExtinctionWaterContent.Count then
+        begin
+          CellList := FExtinctionWaterContent[TimeIndex];
+  //        CellList.CheckRestore;
+          AssignTransient2DArray(WaterContentArray, 0, CellList, 0,
+            rdtDouble, umAssign);
+          CellList.Cache;
+        end
+        else
+        begin
+          frmErrorsAndWarnings.AddError(Model,
+            StrTheETExtinctionWa, IntToStr(TimeIndex+1));
+        end;
       end;
     end;
+    SetTimeListsUpToDate(TimeLists);
+  finally
+    frmErrorsAndWarnings.EndUpdate;
   end;
-  SetTimeListsUpToDate(TimeLists);
 
 end;
 
@@ -332,7 +356,7 @@ procedure TModflowUzfWriter.WriteDataSet1a;
 var
   UzfPackage: TUzfPackageSelection;
 begin
-  if Model.ModelSelection in [msModflowNWT, msModflow] then
+  if Model.ModelSelection in [msModflowNWT, msModflowLGR2, msModflow {$IFDEF FMP}, msModflowFmp {$ENDIF}] then
   begin
     UzfPackage := Model.ModflowPackages.UzfPackage;
     if UzfPackage.SpecifyResidualWaterContent
@@ -438,7 +462,7 @@ begin
   end;
   WriteInteger(NUZGAG);
   WriteFloat(SURFDEP);
-  if Model.ModelSelection in [msModflowNWT, msModflow] then
+  if Model.ModelSelection in [msModflowNWT, msModflowLGR2, msModflow {$IFDEF FMP}, msModflowFmp {$ENDIF}] then
   begin
     WriteString(' # Data Set 1b: NUZTOP IUZFOPT IRUNFLG IETFLG IUZFCB1 IUZFCB2');
   end
@@ -497,7 +521,7 @@ var
   THTS: TDataArray;
 begin
   THTS := Model.DataArrayManager.GetDataSetByName(StrUzfSaturatedWaterContent);
-  if Model.ModelSelection in [msModflowNWT, msModflow] then
+  if Model.ModelSelection in [msModflowNWT, msModflowLGR2, msModflow {$IFDEF FMP}, msModflowFmp {$ENDIF}] then
   begin
     WriteArray(THTS, 0, 'Data Set 6a: THTS');
   end
@@ -511,7 +535,7 @@ procedure TModflowUzfWriter.WriteDataSet6b;
 var
   THTR: TDataArray;
 begin
-  if (Model.ModelSelection in [msModflowNWT, msModflow])
+  if (Model.ModelSelection in [msModflowNWT, msModflowLGR2, msModflow{$IFDEF FMP}, msModflowFmp {$ENDIF}] )
     and Model.ModflowPackages.UzfPackage.SpecifyResidualWaterContent then
   begin
     THTR := Model.DataArrayManager.GetDataSetByName(StrUzfReisidualWaterContent);
@@ -524,7 +548,7 @@ var
   THTI: TDataArray;
 begin
   if Model.ModflowStressPeriods.CompletelyTransient
-    or ((Model.ModelSelection in [msModflowNWT, msModflow])
+    or ((Model.ModelSelection in [msModflowNWT, msModflowLGR2, msModflow {$IFDEF FMP}, msModflowFmp {$ENDIF}])
       and Model.ModflowPackages.UzfPackage.SpecifyInitialWaterContent) then
   begin
     THTI := Model.DataArrayManager.GetDataSetByName(StrUzfInitialUnsaturatedWaterContent);
@@ -728,7 +752,8 @@ begin
   DataTypeIndex := 0;
   Comment := '# Data Set 10: FINF';
   WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
-    CellList, Model.ModflowPackages.UzfPackage.AssignmentMethod, True, Dummy);
+    CellList, Model.ModflowPackages.UzfPackage.AssignmentMethod,
+    True, Dummy);
 end;
 
 

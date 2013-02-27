@@ -404,8 +404,8 @@ var
 begin
   OK := False;
   // No need for keyword "OperatingSystem" because in ModelMate, Windows is assumed.
-  Defaults := TBlockData.CreateAndAllocate(1,5);
-  bdParallelControl := TBlockData.CreateAndAllocate(1,5); // Max 5 keywords
+  Defaults := TBlockData.CreateAndAllocate(1,6);
+  bdParallelControl := TBlockData.CreateAndAllocate(1,6); // Max 6 keywords
   try
     with Defaults do
       begin
@@ -420,6 +420,8 @@ begin
         KeyValMatrix[3].SetNameVal(0,'AutostopRunners',True);
         KeyValMatrix[4].Vtype := vtDbl;
         KeyValMatrix[4].SetNameVal(0,'TimeoutFactor',3.0);
+        KeyValMatrix[5].Vtype := vtDbl;
+        KeyValMatrix[5].SetNameVal(0,'WaitRunners',0.001);
       end;
     bdParallelControl.Assign(Defaults);
     with bdParallelControl do
@@ -429,6 +431,7 @@ begin
         KeyValMatrix[2].SetVal(0,ParallelControl.VerboseRunner);
         KeyValMatrix[3].SetVal(0,ParallelControl.AutoStopRunners);
         KeyValMatrix[4].SetVal(0,ParallelControl.TimeOutFactor);
+        KeyValMatrix[5].SetVal(0,ParallelControl.WaitRunners);
       end;
     J_BuildInputBlockExclDef('Parallel_Control',bdParallelControl,
                                      Defaults, PCBlock, False);

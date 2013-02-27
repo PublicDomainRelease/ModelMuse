@@ -14,7 +14,8 @@ type
     lblPackage: TLabel;
     rcSelectionController: TRbwController;
   private
-    Node: TTreeNode;
+    FNode: TTreeNode;
+    FAlternateNode: TTreeNode;
     FSelected: boolean;
     FSelectionType: TSelectionType;
     FOnSelectedChange: TNotifyEvent;
@@ -60,42 +61,49 @@ end;
 
 procedure TframePackage.SetNodeStateIndex;
 begin
-  if Node <> nil then
+  if FNode <> nil then
   begin
     case SelectionType of
       stCheckBox:
         begin
           if CanSelect then
           begin
-            Node.StateIndex := Ord(FSelected) + 1;
+            FNode.StateIndex := Ord(FSelected) + 1;
           end
           else
           begin
-            Node.StateIndex := 6;
+            FNode.StateIndex := 6;
           end;
         end;
       stRadioButton:
         begin
           if CanSelect then
           begin
-            Node.StateIndex := Ord(FSelected) + 4;
+            FNode.StateIndex := Ord(FSelected) + 4;
           end
           else
           begin
-            Node.StateIndex := 7
+            FNode.StateIndex := 7
           end;
         end;
     end;
-    Node.TreeView.Invalidate;
+    if FAlternateNode <> nil then
+    begin
+      FAlternateNode.StateIndex := FNode.StateIndex;
+    end;
+
+    FNode.TreeView.Invalidate;
   end;
 end;
 
 procedure TframePackage.GetData(Package: TModflowPackageSelection);
 begin
   SelectionType := Package.SelectionType;
-  Node := Package.Node;
+  FNode := Package.Node;
+  FAlternateNode := Package.AlternateNode;
   Selected := Package.IsSelected;
   memoComments.Lines := Package.Comments;
+  lblPackage.Width := Width - lblPackage.Left - 8;
   lblPackage.Caption := Package.PackageIdentifier;
 end;
 
@@ -166,7 +174,8 @@ end;
 
 procedure TframePackage.NilNode;
 begin
-  Node := nil;
+  FNode := nil;
+  FAlternateNode := nil;
 end;
 
 

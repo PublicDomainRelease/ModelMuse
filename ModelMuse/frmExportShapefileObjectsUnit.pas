@@ -137,7 +137,7 @@ uses ClassificationUnit, PhastModelUnit, FastGEO,
   ModflowGhbUnit, ModflowDrnUnit, ModflowDrtUnit, ModflowRivUnit,
   ModflowConstantHeadBoundaryUnit, ModflowEvtUnit, ModflowEtsUnit,
   ModflowRchUnit, ModflowUzfUnit, ModflowHfbUnit, ModflowHfbDisplayUnit,
-  ModflowHobUnit;
+  ModflowHobUnit, ModflowMnw2Unit;
 
 resourcestring
   StrDataSet0sOb = ' Data set = %0:s; Object = %1:s';
@@ -162,6 +162,7 @@ var
   TimesSelected: Boolean;
   BoundIndex: Integer;
   BoundaryName: TBoundaryName;
+  TimeBoundaryUsed: Boolean;
 begin
   inherited;
   if FSelectedScreenObjects.Count = 0 then
@@ -177,7 +178,35 @@ begin
     for BoundIndex := 0 to FBoundaryNames.Count - 1 do
     begin
       BoundaryName := FBoundaryNames.Objects[BoundIndex] as TBoundaryName;
-      if not (BoundaryName.BoundaryType in [btMfHfb, btMfObs]) then
+      TimeBoundaryUsed := False;
+      if not (BoundaryName.BoundaryType in [btMfHfb, btMfMnw, btMfObs]) then
+      begin
+        TimeBoundaryUsed := True;
+      end;
+      if BoundaryName.BoundaryType = btMfMnw then
+      begin
+        if BoundaryName.Name = StrMnw2PumpingRate then
+        begin
+          TimeBoundaryUsed := True;
+        end
+        else if BoundaryName.Name = StrMnw2HeadCapacityMultip then
+        begin
+          TimeBoundaryUsed := True;
+        end
+        else if BoundaryName.Name = StrMnw2LimitingWaterLevel then
+        begin
+          TimeBoundaryUsed := True;
+        end
+        else if BoundaryName.Name = StrMnw2InactivationPumping then
+        begin
+          TimeBoundaryUsed := True;
+        end
+        else if BoundaryName.Name = StrMnw2ReactivationPumping then
+        begin
+          TimeBoundaryUsed := True;
+        end
+      end;
+      if TimeBoundaryUsed then
       begin
         TimesSelected := False;
         for TimeIndex := 0 to chklstTimes.Count - 1 do
@@ -372,7 +401,7 @@ begin
       begin
 //          if ScreenObject.StoreModflowMnw2Boundary then
         begin
-          result := False;
+          result := True;
 //          Exit;
         end;
       end;
@@ -569,7 +598,7 @@ begin
         begin
   //          if ScreenObject.StoreModflowMnw2Boundary then
           begin
-            result := False;
+            result := True;
   //          Exit;
           end;
         end;
@@ -1450,6 +1479,16 @@ begin
       begin
         Inc(FBoundDataSetCount);
       end
+      else if (BoundaryName.BoundaryType = btMfMnw)
+        and (BoundaryName.Name <> StrMnw2PumpingRate)
+        and (BoundaryName.Name <> StrMnw2HeadCapacityMultip)
+        and (BoundaryName.Name <> StrMnw2LimitingWaterLevel)
+        and (BoundaryName.Name <> StrMnw2InactivationPumping)
+        and (BoundaryName.Name <> StrMnw2ReactivationPumping)
+        then
+      begin
+        Inc(FBoundDataSetCount);
+      end
       else
       begin
         if not FTimeBoundaryFound then
@@ -1531,6 +1570,21 @@ begin
           Continue;
         end
         else if BoundaryName.BoundaryType = btMfHfb then
+        begin
+          FieldName := Copy(FieldName, 1, MaximumFieldNameLength);
+          FFieldDefinitions[StartIndex].DataArray := nil;
+          FFieldDefinitions[StartIndex].FieldType := 'C';
+          FFieldDefinitions[StartIndex].FieldName := AnsiString(FieldName);
+          FieldNames.Add(string(FFieldDefinitions[StartIndex].FieldName));
+          Inc(StartIndex);
+        end
+        else if (BoundaryName.BoundaryType = btMfMnw)
+          and (BoundaryName.Name <> StrMnw2PumpingRate)
+          and (BoundaryName.Name <> StrMnw2HeadCapacityMultip)
+          and (BoundaryName.Name <> StrMnw2LimitingWaterLevel)
+          and (BoundaryName.Name <> StrMnw2InactivationPumping)
+          and (BoundaryName.Name <> StrMnw2ReactivationPumping)
+          then
         begin
           FieldName := Copy(FieldName, 1, MaximumFieldNameLength);
           FFieldDefinitions[StartIndex].DataArray := nil;
@@ -1742,6 +1796,11 @@ var
     HfbBoundary: THfbBoundary;
     HeadObservations: THobBoundary;
     HobItem: THobItem;
+    Mnw2Boundary: TMnw2Boundary;
+    MnwSpatialItem: TMnw2SpatialItem;
+    Mnw2TimeValues: TMnw2TimeCollection;
+    Mnw2TimeItem: TMnw2TimeItem;
+    Mnw2TimeItemIndex: integer;
   begin
     StartIndex := BoundaryDataSetStart;
     if FTimeBoundaryFound then
@@ -2677,7 +2736,241 @@ var
 
           end;
         btMfMnw:
-          Assert(False);
+          begin
+//          Assert(False);
+            Mnw2Boundary := AScreenObject.ModflowMnw2Boundary;
+
+
+            if Mnw2Boundary = nil then
+            begin
+              Formula := FMissingValueString;
+              XBaseShapeFile.UpdFieldStr(
+                FFieldDefinitions[StartIndex].FieldName, Formula);
+              Inc(StartIndex);
+            end
+            else
+            begin
+              Values := Mnw2Boundary.Values;
+              Assert(Values.Count > 0);
+
+              MnwSpatialItem := Values[0] as TMnw2SpatialItem;
+              Mnw2TimeValues := Mnw2Boundary.TimeValues;
+              if MnwSpatialItem = nil then
+              begin
+                Formula := FMissingValueString;
+              end
+              else
+              begin
+                if BoundaryName.Name = StrWellRadius then
+                begin
+                  Formula := AnsiString(MnwSpatialItem.WellRadius);
+                  XBaseShapeFile.UpdFieldStr(
+                    FFieldDefinitions[StartIndex].FieldName, Formula);
+                  Inc(StartIndex);
+                end
+                else if BoundaryName.Name = StrSkinRadius then
+                begin
+                  Formula := AnsiString(MnwSpatialItem.SkinRadius);
+                  XBaseShapeFile.UpdFieldStr(
+                    FFieldDefinitions[StartIndex].FieldName, Formula);
+                  Inc(StartIndex);
+                end
+                else if BoundaryName.Name = StrSkinK then
+                begin
+                  Formula := AnsiString(MnwSpatialItem.SkinK);
+                  XBaseShapeFile.UpdFieldStr(
+                    FFieldDefinitions[StartIndex].FieldName, Formula);
+                  Inc(StartIndex);
+                end
+                else if BoundaryName.Name = StrB then
+                begin
+                  Formula := AnsiString(MnwSpatialItem.B);
+                  XBaseShapeFile.UpdFieldStr(
+                    FFieldDefinitions[StartIndex].FieldName, Formula);
+                  Inc(StartIndex);
+                end
+                else if BoundaryName.Name = StrC then
+                begin
+                  Formula := AnsiString(MnwSpatialItem.C);
+                  XBaseShapeFile.UpdFieldStr(
+                    FFieldDefinitions[StartIndex].FieldName, Formula);
+                  Inc(StartIndex);
+                end
+                else if BoundaryName.Name = StrP then
+                begin
+                  Formula := AnsiString(MnwSpatialItem.P);
+                  XBaseShapeFile.UpdFieldStr(
+                    FFieldDefinitions[StartIndex].FieldName, Formula);
+                  Inc(StartIndex);
+                end
+                else if BoundaryName.Name = StrCellToWellConductance then
+                begin
+                  Formula := AnsiString(MnwSpatialItem.CellToWellConductance);
+                  XBaseShapeFile.UpdFieldStr(
+                    FFieldDefinitions[StartIndex].FieldName, Formula);
+                  Inc(StartIndex);
+                end
+                else if BoundaryName.Name = StrPartialPenetration then
+                begin
+                  Formula := AnsiString(MnwSpatialItem.CellToWellConductance);
+                  XBaseShapeFile.UpdFieldStr(
+                    FFieldDefinitions[StartIndex].FieldName, Formula);
+                  Inc(StartIndex);
+                end
+                else if BoundaryName.Name = StrPartialPenetration then
+                begin
+                  Formula := AnsiString(MnwSpatialItem.PartialPenetration);
+                  XBaseShapeFile.UpdFieldStr(
+                    FFieldDefinitions[StartIndex].FieldName, Formula);
+                  Inc(StartIndex);
+                end
+                else if BoundaryName.Name = StrMnw2PumpingRate then
+                begin
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    Mnw2TimeItemIndex := Mnw2TimeValues.IndexOfContainedStartTime(
+                      TimeList[TimeIndex]);
+                    if Mnw2TimeItemIndex < 0 then
+                    begin
+                      Mnw2TimeItem := nil
+                    end
+                    else
+                    begin
+                      Mnw2TimeItem := Mnw2TimeValues.Items[Mnw2TimeItemIndex]
+                        as TMnw2TimeItem
+                    end;
+                    if Mnw2TimeItem = nil then
+                    begin
+                      Formula := FMissingValueString;
+                    end
+                    else
+                    begin
+                      Formula := AnsiString(Mnw2TimeItem.PumpingRate);
+                    end;
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end
+                end
+                else if BoundaryName.Name = StrMnw2HeadCapacityMultip then
+                begin
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    Mnw2TimeItemIndex := Mnw2TimeValues.IndexOfContainedStartTime(
+                      TimeList[TimeIndex]);
+                    if Mnw2TimeItemIndex < 0 then
+                    begin
+                      Mnw2TimeItem := nil
+                    end
+                    else
+                    begin
+                      Mnw2TimeItem := Mnw2TimeValues.Items[Mnw2TimeItemIndex]
+                        as TMnw2TimeItem
+                    end;
+                    if Mnw2TimeItem = nil then
+                    begin
+                      Formula := FMissingValueString;
+                    end
+                    else
+                    begin
+                      Formula := AnsiString(Mnw2TimeItem.HeadCapacityMultiplier);
+                    end;
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end
+                end
+                else if BoundaryName.Name = StrMnw2LimitingWaterLevel then
+                begin
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    Mnw2TimeItemIndex := Mnw2TimeValues.IndexOfContainedStartTime(
+                      TimeList[TimeIndex]);
+                    if Mnw2TimeItemIndex < 0 then
+                    begin
+                      Mnw2TimeItem := nil
+                    end
+                    else
+                    begin
+                      Mnw2TimeItem := Mnw2TimeValues.Items[Mnw2TimeItemIndex]
+                        as TMnw2TimeItem
+                    end;
+                    if Mnw2TimeItem = nil then
+                    begin
+                      Formula := FMissingValueString;
+                    end
+                    else
+                    begin
+                      Formula := AnsiString(Mnw2TimeItem.LimitingWaterLevel);
+                    end;
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end
+                end
+                else if BoundaryName.Name = StrMnw2InactivationPumping then
+                begin
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    Mnw2TimeItemIndex := Mnw2TimeValues.IndexOfContainedStartTime(
+                      TimeList[TimeIndex]);
+                    if Mnw2TimeItemIndex < 0 then
+                    begin
+                      Mnw2TimeItem := nil
+                    end
+                    else
+                    begin
+                      Mnw2TimeItem := Mnw2TimeValues.Items[Mnw2TimeItemIndex]
+                        as TMnw2TimeItem
+                    end;
+                    if Mnw2TimeItem = nil then
+                    begin
+                      Formula := FMissingValueString;
+                    end
+                    else
+                    begin
+                      Formula := AnsiString(Mnw2TimeItem.InactivationPumpingRate);
+                    end;
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end
+                end
+                else if BoundaryName.Name = StrMnw2ReactivationPumping then
+                begin
+                  for TimeIndex := 0 to TimeList.Count - 1 do
+                  begin
+                    Mnw2TimeItemIndex := Mnw2TimeValues.IndexOfContainedStartTime(
+                      TimeList[TimeIndex]);
+                    if Mnw2TimeItemIndex < 0 then
+                    begin
+                      Mnw2TimeItem := nil
+                    end
+                    else
+                    begin
+                      Mnw2TimeItem := Mnw2TimeValues.Items[Mnw2TimeItemIndex]
+                        as TMnw2TimeItem
+                    end;
+                    if Mnw2TimeItem = nil then
+                    begin
+                      Formula := FMissingValueString;
+                    end
+                    else
+                    begin
+                      Formula := AnsiString(Mnw2TimeItem.ReactivationPumpingRate);
+                    end;
+                    XBaseShapeFile.UpdFieldStr(
+                      FFieldDefinitions[StartIndex].FieldName, Formula);
+                    Inc(StartIndex);
+                  end
+                end
+                else
+                begin
+                  Assert(False);
+                end;
+              end;
+            end;
+          end;
         btMt3dSsm:
           Assert(False);
         btMfHfb:
@@ -3214,8 +3507,7 @@ var
 begin
   inherited;
 
-  if frmGoPhast.PhastModel.ModelSelection in
-    [msModflow, msModflowLGR, msModflowNWT] then
+  if frmGoPhast.PhastModel.ModelSelection in ModflowSelection then
   begin
     StressPeriods := frmGoPhast.PhastModel.ModflowStressPeriods;
     chklstTimes.Items.Capacity := StressPeriods.Count;
@@ -3229,7 +3521,7 @@ begin
   FSelectedBoundaries := [];
   FillVirtualStringTreeWithDataSets(vstDataSets, FObjectOwner, nil);
   FillVirtStrTreeWithBoundaryConditions(nil, nil, nil, FClassifiationList,
-    FEdgeList, vstDataSets, CanSelectBoundary);
+    FEdgeList, vstDataSets, CanSelectBoundary, True);
   Node := vstDataSets.GetFirst;
   While Node <> nil do
   begin

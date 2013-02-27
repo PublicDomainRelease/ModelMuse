@@ -25,6 +25,10 @@ type
 var
   framePackageLpf: TframePackageLpf;
 
+resourcestring
+  StrSkipCheckingThatA = 'Skip checking that a value is defined for all cell' +
+  's when parameters are used to define layer data (NOPARCHECK)';
+
 implementation
 
 resourcestring
@@ -38,8 +42,6 @@ resourcestring
   'OCVCORRECTION)';
   StrUseVerticalFlowCo = 'Use vertical flow correction under dewatered condi' +
   'tions (inverse of NOVFC)';
-  StrSkipCheckingThatA = 'Skip checking that a value is defined for all cell' +
-  's when parameters are used to define layer data (NOPARCHECK)';
 
 {$R *.dfm}
 

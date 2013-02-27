@@ -260,7 +260,10 @@ begin
     ErrorValues.Add('ERROR CANNOT REUSE');
     ErrorValues.Add('ERROR REACH ITEM');
     ErrorValues.Add('MUST BE GREATER THAN');
-    ErrorValues.Add('MUST BE LESS THAN');
+    // THETA MUST BE LESS THAN is an informative message not an error message.
+//    ErrorValues.Add('MUST BE LESS THAN');
+    ErrorValues.Add('MUST BE LESS THAN OR');
+    ErrorValues.Add('MUST BE LESS THAN 4');
     ErrorValues.Add('MUST NOT EQUAL');
     ErrorValues.Add('RTMAX EXCEEDS MODFLOW DELT');
     ErrorValues.Add('REACHNO EXCEEDS NREACHES');

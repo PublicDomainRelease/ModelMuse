@@ -2,7 +2,7 @@ unit SurferGridFileReaderUnit;
 
 // See http://www.geospatialdesigns.com/surfer6_format.htm,
 // http://www.geospatialdesigns.com/surfer7_format.htm,
-// and http://www.goldensoftware.com/activekb/questions/368/How+do+I+convert+an+ESRI+ASCII+grid+file+to+a+Surfer+GRD+file%3F
+// and http://www.goldensoftware.com/index.php?option=com_fss&view=kb&prodid=2&kbartid=970&Itemid=182
 // for the format of Surfer .grd files.
 
 interface

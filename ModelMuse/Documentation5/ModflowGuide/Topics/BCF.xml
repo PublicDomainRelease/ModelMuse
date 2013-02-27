@@ -80,6 +80,9 @@
           <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
           </list>
+          <list id="36" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MF2005-FMP2</text></li>
+          </list>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -87,7 +90,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Other Notes</text></para>
         </td>
         <td>
-          <para styleclass="Normal"><snippet src="Flow_Package_Requirement"/><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/></para>
+          <para styleclass="Normal"><snippet src="Flow_Package_Requirement"/><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-LGR,MODFLOW-NWT"/></para>
           <list id="17" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="New Materials" translate="true">If the BCF package is used together with the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" styleclass="New Materials" translate="true">UZF</link><text styleclass="New Materials" translate="true"> package, &#160;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="IUZFOPT" styleclass="New Materials" translate="true">IUZFOPT</link><text styleclass="New Materials" translate="true"> in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" styleclass="New Materials" translate="true">UZF</link><text styleclass="New Materials" translate="true"> package must be set to 1.</text></li>
           </list>
@@ -96,7 +99,7 @@
           </list>
           <para styleclass="Normal"><snippet src="RefToReadBinary"/></para>
           <list id="6" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:8pt; color:#000000;">
-            <li styleclass="Normal"><text styleclass="Normal" translate="true">The </text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000"/><link displaytype="text" defaultstyle="true" type="topiclink" href="SOR" styleclass="Normal" translate="true">SOR</link><text styleclass="Normal" translate="true">&#32;</text><conditional-text type="ELSE"/><text styleclass="Normal" translate="true">SOR </text><conditional-text type="END"/><text styleclass="Normal" translate="true">solver </text><conditional-text type="IF" value="MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Normal" translate="true">(not included in MODFLOW-2005, MODFLOW-LGR, and MODFLOW-CFP) </text><conditional-text type="END"/><text styleclass="Normal" translate="true">doesn&apos;t work well with the wetting capability. </text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">The </text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000"/><link displaytype="text" defaultstyle="true" type="topiclink" href="SOR" styleclass="Normal" translate="true">SOR</link><text styleclass="Normal" translate="true">&#32;</text><conditional-text type="ELSE"/><text styleclass="Normal" translate="true">SOR </text><conditional-text type="END"/><text styleclass="Normal" translate="true">solver </text><conditional-text type="IF" value="MODFLOW-2005,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Normal" translate="true">(not included in MODFLOW-22005 or versions of MODFLOW derived from MODFLOW-2005) </text><conditional-text type="END"/><text styleclass="Normal" translate="true">doesn&apos;t work well with the wetting capability. </text></li>
           </list>
         </td>
       </tr>
@@ -196,7 +199,7 @@
         </td>
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Ltype(NLAY)</text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">Read one value for each layer. These values are free format if the word FREE is specified in Item 1 of the Basic Package input file; otherwise, they have fixed-format fields. The fixed format fields are each 2 characters wide with 40 values per line. Use only as many lines as required for the number of model layers.</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Read one value for each layer. These values are free format if the word FREE is specified in Item 1 of the Basic Package input file; otherwise, they have fixed-format fields. The fixed format fields are each 2 characters wide with 40 values per line. Use only as many lines as required for the number of model layers.</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-LGR,MODFLOW-NWT"/></para>
           <para styleclass="Normal"><text styleclass="New Materials" translate="true">In MODFLOW-2005 v 1.5 and earlier versions of MODFLOW-2005, Ltype must always be in free format.</text><conditional-text type="END"/></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Ltype]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">

@@ -1175,6 +1175,27 @@ begin
         BoundaryTypes.Add(ISSTYPE_EVT);
       end;
     end;
+    if Packages.StrPackage.IsSelected then
+    begin
+      if (LocalScreenObject.ModflowStrBoundary <> nil)
+        and LocalScreenObject.ModflowStrBoundary.Used then
+      begin
+        BoundaryTypes.Add(ISSTYPE_STR);
+      end;
+    end;
+    if Packages.FhbPackage.IsSelected then
+    begin
+      if ((LocalScreenObject.ModflowFhbFlowBoundary <> nil)
+        and LocalScreenObject.ModflowFhbFlowBoundary.Used) then
+      begin
+        BoundaryTypes.Add(ISSTYPE_FHB);
+      end;
+      if ((LocalScreenObject.ModflowFhbHeadBoundary <> nil)
+        and LocalScreenObject.ModflowFhbHeadBoundary.Used) then
+      begin
+        BoundaryTypes.Add(ISSTYPE_CHD);
+      end;
+    end;
     if MassLoadingBoundary then
     begin
       BoundaryTypes.Add(ISSYTPE_Mass);

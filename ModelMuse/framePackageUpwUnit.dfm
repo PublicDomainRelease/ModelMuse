@@ -1,6 +1,9 @@
 inherited framePackageUpw: TframePackageUpw
-  Height = 192
-  ExplicitHeight = 192
+  Height = 219
+  ExplicitHeight = 219
+  DesignSize = (
+    304
+    219)
   object cbPrintHDRY: TCheckBox [3]
     Left = 16
     Top = 164
@@ -9,6 +12,16 @@ inherited framePackageUpw: TframePackageUpw
     Caption = 'Print HDRY in results for dry cells (IPHDRY)'
     Enabled = False
     TabOrder = 1
+  end
+  object cbNoParCheck: TCheckBox [4]
+    Left = 16
+    Top = 187
+    Width = 121
+    Height = 17
+    Caption = 'cbNoParCheck'
+    Enabled = False
+    TabOrder = 2
+    WordWrap = True
   end
   inherited rcSelectionController: TRbwController
     ControlList = <
@@ -20,6 +33,9 @@ inherited framePackageUpw: TframePackageUpw
       end
       item
         Control = cbPrintHDRY
+      end
+      item
+        Control = cbNoParCheck
       end>
   end
 end

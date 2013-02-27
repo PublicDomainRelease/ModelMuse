@@ -192,7 +192,15 @@ var
 begin
   with frmGoPhast.frameTopView.ZoomBox do
   begin
-    DeltaX := (X(frmGoPhast.frameFrontView.ZoomBox.Image32.Width) - X(0)) / 2;
+    if (frmGoPhast.ModelSelection = msSutra22)
+      and (frmGoPhast.PhastModel.SutraMesh.MeshType = mt3D) then
+    begin
+      DeltaX := (X(frmGoPhast.frameFrontView.ZoomBox.Image32.Width) - X(0)) / 2;
+    end
+    else
+    begin
+      DeltaX := (X(Image32.Width) - X(0)) / 2;
+    end;
     DeltaY := (Y(0) - Y(Image32.Height)) / 2;
     OriginX := XCoordinate - DeltaX;
     OriginY := YCoordinate - DeltaY;
@@ -398,7 +406,7 @@ begin
 
   QuadTree := TRbwQuadTree.Create(nil);
   try
-    Limits := Mesh.MeshLimits(vdTop);
+    Limits := Mesh.MeshLimits(vdTop, 0);
     QuadTree.XMax := Limits.MaxX;
     QuadTree.XMin := Limits.MinX;
     QuadTree.YMax := Limits.MaxY;
@@ -582,7 +590,6 @@ begin
   Screen.Cursor := crHourGlass;
   try
     Grid := frmGoPhast.Grid;
-    {$IFDEF SUTRA}
     if frmGoPhast.ModelSelection = msSutra22 then
     begin
       Mesh := frmGoPhast.PhastModel.SutraMesh;
@@ -591,9 +598,6 @@ begin
     begin
       Mesh := nil;
     end;
-    {$ELSE}
-      Mesh := nil;
-    {$ENDIF}
 
     with frmGoPhast.frameTopView.ZoomBox do
     begin
@@ -641,7 +645,7 @@ begin
             FrontCell := frmGoPhast.PhastGrid.FrontContainingCell(APoint, eaBlocks);
             SetGridSpinEditValue(seLayer,FrontCell.Lay+1);
           end;
-        msModflow, msModflowLGR, msModflowNWT:
+        msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
           begin
             Layer := frmGoPhast.ModflowGrid.NearestLayerPosition(seCol.AsInteger-1,
               frmGoPhast.ModflowGrid.SelectedRow, APoint.Y);
@@ -913,8 +917,7 @@ begin
     and (pcMain.ActivePage <> tabImage);
   cbFront.Enabled := cbTop.Enabled;
   cbSide.Enabled := cbTop.Enabled
-  {$IFDEF SUTRA}
-    and (frmGoPhast.ModelSelection <> msSutra22){$ENDIF};
+    and (frmGoPhast.ModelSelection <> msSutra22);
   HelpKeyWord := pcMain.ActivePage.HelpKeyword;
 end;
 
@@ -930,8 +933,9 @@ begin
   tabCell.Visible := seCol.Enabled;
   case frmGoPhast.ModelSelection of
     msUndefined: Assert(False);
-    msPhast{$IFDEF SUTRA}, msSutra22{$ENDIF}: tabCell.Caption := StrElement;
-    msModflow, msModflowLGR, msModflowNWT: tabCell.Caption := StrBlock;
+    msPhast, msSutra22: tabCell.Caption := StrElement;
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+      tabCell.Caption := StrBlock;
     else Assert(False);
   end;
 end;

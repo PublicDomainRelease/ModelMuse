@@ -25,6 +25,8 @@ type
     FSecondSorbParamDisplayName: string;
     FReactionRateDisolvedDisplayName: string;
     FReactionRateSorbedDisplayName: string;
+    FInitialConcentrationFileName: string;
+    FUseInitialConcentrationFile: boolean;
     procedure SetName(const Value: string); virtual;
     procedure SetInitialConcDataArrayName(const NewName: string);
     function Collection: TCustomChemSpeciesCollection;
@@ -37,6 +39,8 @@ type
     procedure SetReactionRateDisolvedDataArrayName(const NewName: string);
     procedure SetReactionRateSorbedDataArrayName(const NewName: string);
     procedure RenameDependents(NewName: string);
+    procedure SetInitialConcentrationFileName(const Value: string);
+    procedure SetUseInitialConcentrationFile(const Value: boolean);
   protected
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
     procedure SetIndex(Value: Integer); override;
@@ -67,6 +71,10 @@ type
     property ReactionRateSorbedDataArrayName: string
       read FReactionRateSorbedDataArrayName write
       SetReactionRateSorbedDataArrayName;
+    property UseInitialConcentrationFile: boolean
+      read FUseInitialConcentrationFile write SetUseInitialConcentrationFile;
+    property InitialConcentrationFileName: string
+      read FInitialConcentrationFileName write SetInitialConcentrationFileName;
   end;
 
   TCustomChemSpeciesCollection= class(TEnhancedOrderedCollection)
@@ -191,6 +199,9 @@ begin
     FReactionRateSorbedDataArrayName := '';
     ReactionRateSorbedDataArrayName :=
       SourceChem.ReactionRateSorbedDataArrayName;
+
+    UseInitialConcentrationFile := SourceChem.UseInitialConcentrationFile;
+    InitialConcentrationFileName := SourceChem.InitialConcentrationFileName;
   end;
   inherited;
 end;
@@ -347,6 +358,8 @@ begin
       and (SecondSorbParamDataArrayName = ChemItem.SecondSorbParamDataArrayName)
       and (ReactionRateDisolvedDataArrayName = ChemItem.ReactionRateDisolvedDataArrayName)
       and (ReactionRateSorbedDataArrayName = ChemItem.ReactionRateSorbedDataArrayName)
+      and (UseInitialConcentrationFile = ChemItem.UseInitialConcentrationFile)
+      and (InitialConcentrationFileName = ChemItem.InitialConcentrationFileName)
   end;
 end;
 
@@ -445,6 +458,18 @@ begin
   end;
 
   SetCaseSensitiveStringProperty(FInitialConcDataArrayName, NewName);
+end;
+
+procedure TChemSpeciesItem.SetInitialConcentrationFileName(const Value: string);
+begin
+  SetCaseInsensitiveStringProperty(FInitialConcentrationFileName, Value);
+  if (Model <> nil) and (Value <> '') then
+  begin
+    if frmGoPhast.PhastModel.FilesToArchive.IndexOf(Value) < 0 then
+    begin
+      frmGoPhast.PhastModel.FilesToArchive.Add(Value);
+    end;
+  end;
 end;
 
 procedure TChemSpeciesItem.SetName(const Value: string);
@@ -613,6 +638,11 @@ begin
       LocalModel.AnyMt3dSorbImmobConc);
   end;
   SetCaseSensitiveStringProperty(FSorbOrImmobInitialConcDataArrayName, NewName);
+end;
+
+procedure TChemSpeciesItem.SetUseInitialConcentrationFile(const Value: boolean);
+begin
+  SetBooleanProperty(FUseInitialConcentrationFile, Value);
 end;
 
 { TConcentrationCollection }

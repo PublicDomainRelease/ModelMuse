@@ -53,7 +53,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/usgspubs/ofr/ofr200092" target="_blank" styleclass="Citation" translate="true">Harbaugh, A.W., Banta, E.R., Hill, M.C., and McDonald, M.G., 2000, MODFLOW-2000, the U.S. Geological Survey modular ground-water model -- User guide to modularization concepts and the Ground-Water Flow Process: U.S. Geological Survey Open-File Report 00-92, 121 p.</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="Time-varying-parameters.pdf" styleclass="Normal" translate="true">Time-varying-parameters.pdf</link></li>
           </list>
@@ -64,7 +64,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Related Packages</text></para>
         </td>
         <td>
-          <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The Well package is used to simulate a specified flux to particular cells specified in units of length</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">3</text><text styleclass="Normal" translate="true">/time</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The Flow and Head Boundary package can be used to simulate a specified flux to particular cells specified in units of length</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">3</text><text styleclass="Normal" translate="true">/time and varying as a function of time within stress periods.</text></li>
           </list>
@@ -75,16 +75,19 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="17" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="17" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="18" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="18" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="19" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
+          </list>
+          <list id="20" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MF2005-FMP2</text></li>
           </list>
         </td>
       </tr>
@@ -93,7 +96,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Common Errors</text></para>
         </td>
         <td>
-          <list id="19" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="21" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Recharge is applied to the wrong cells because </text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" styleclass="Normal" translate="true">NRCHOP</link><text styleclass="Normal" translate="true"> was not set correctly.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Precipitation is assumed to be equal to recharge</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Recharge is applied at that are unreasonable when compared with the hydraulic conductivity.</text></li>
@@ -105,8 +108,8 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Other Notes</text></para>
         </td>
         <td>
-          <list id="20" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
-            <li styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="New Materials" translate="true">The </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" styleclass="New Materials" translate="true">UZF</link><text styleclass="New Materials" translate="true"> package simulates recharge so the RCH package should not be included in a model that includes the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" styleclass="New Materials" translate="true">UZF</link><text styleclass="New Materials" translate="true"> package.</text></li>
+          <list id="22" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-FMP2,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="New Materials" translate="true">The </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" styleclass="New Materials" translate="true">UZF</link><text styleclass="New Materials" translate="true"> package simulates recharge so the RCH package should not be included in a model that includes the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" styleclass="New Materials" translate="true">UZF</link><text styleclass="New Materials" translate="true"> package.</text></li>
             <li styleclass="Normal"><conditional-text type="END"/><link displaytype="text" defaultstyle="true" type="weblink" href="http://water.usgs.gov/ogw/gwrp/methods/" target="_blank" styleclass="Normal" translate="true">Methods for Estimating Ground-Water Recharge In Humid Regions<title translate="true">link to recharge web page</title></link><conditional-text type="IF" value="ALLMODELS,MODFLOW-LGR"/></li>
           </list>
           <para styleclass="Normal"><snippet src="Recharge_Option"/><conditional-text type="END"/></para>
@@ -171,7 +174,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="NRCHOP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">NRCHOP—is the recharge option code. Recharge fluxes are defined in a layer variable, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" anchor="RECH" styleclass="Normal" translate="true">RECH</link><text styleclass="Normal" translate="true">, with one value for each vertical column. Accordingly, recharge is applied to one cell in each vertical column, and the option code determines which cell in the column is selected for recharge.</text></para>
-                      <list id="21" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="23" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">1—Recharge is only to the top grid layer.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">2—Vertical distribution of recharge is specified in layer variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" anchor="IRCH" styleclass="Normal" translate="true">IRCH</link><text styleclass="Normal" translate="true">.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">3—Recharge is applied to the highest active cell in each vertical column. A constant-head node intercepts recharge and prevents deeper infiltration.</text></li>
@@ -186,7 +189,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="IRCHCB" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">IRCHCB—is a flag and a unit number.</text></para>
-                      <list id="22" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="24" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IRCHCB &gt; 0, it is the unit number to which cell-by-cell flow terms will be written when &quot;SAVE BUDGET&quot; or a non-zero value for ICBCFL is specified in Output Control.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IRCHCB </text><text styleclass="Normal" style="font-family:Symbol;" translate="true">£</text><text styleclass="Normal" translate="true"> 0, cell-by-cell flow terms will not be written.</text></li>
                       </list>
@@ -346,17 +349,17 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="INRECH" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">INRECH—is the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" anchor="RECH" styleclass="Indented bullet" translate="true">RECH</link><text styleclass="Normal" translate="true"> read flag. Its function depends on whether or not parameters are being used.</text></para>
-                      <list id="23" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="25" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If no parameters are being used (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" anchor="NPRCH" styleclass="Normal" translate="true">NPRCH</link><text styleclass="Normal" translate="true"> = 0):</text></li>
                       </list>
-                      <list id="24" type="ul" listtype="bullet" formatstring="&#111;" levelreset="true" legalstyle="false" startfrom="1" styleclass="Indented bullet" style="font-family:&apos;Courier New&apos;; font-size:12pt; color:#000000;">
+                      <list id="26" type="ul" listtype="bullet" formatstring="&#111;" levelreset="true" legalstyle="false" startfrom="1" styleclass="Indented bullet" style="font-family:&apos;Courier New&apos;; font-size:12pt; color:#000000;">
                         <li styleclass="Indented bullet"><text styleclass="Indented bullet" translate="true">If INRECH </text><text styleclass="Indented bullet" style="font-family:Symbol;" translate="true">³</text><text styleclass="Indented bullet" translate="true"> 0, a layer variable of recharge fluxes, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" anchor="RECH" styleclass="Indented bullet" translate="true">RECH</link><text styleclass="Indented bullet" translate="true">, is read.</text></li>
                         <li styleclass="Indented bullet"><text styleclass="Indented bullet" translate="true">If INRECH &lt; 0, recharge rates from the preceding stress period are used.</text></li>
                       </list>
-                      <list id="25" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="27" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If parameters are being used (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" anchor="NPRCH" styleclass="Normal" translate="true">NPRCH</link><text styleclass="Normal" translate="true"> &gt; 0):</text></li>
                       </list>
-                      <list id="26" type="ul" listtype="bullet" formatstring="&#111;" levelreset="true" legalstyle="false" startfrom="1" styleclass="Indented bullet" style="font-family:&apos;Courier New&apos;; font-size:12pt; color:#000000;">
+                      <list id="28" type="ul" listtype="bullet" formatstring="&#111;" levelreset="true" legalstyle="false" startfrom="1" styleclass="Indented bullet" style="font-family:&apos;Courier New&apos;; font-size:12pt; color:#000000;">
                         <li styleclass="Indented bullet"><text styleclass="Indented bullet" translate="true">If INRECH &gt; 0, INRECH is the number of parameters that will be used to define </text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" anchor="RECH" styleclass="Indented bullet" translate="true">RECH</link><text styleclass="Indented bullet" translate="true"> in the current stress period. Item 7 defines the names of the parameters.</text></li>
                         <li styleclass="Indented bullet"><text styleclass="Indented bullet" translate="true">If INRECH &lt; 0, recharge parameters from the preceding stress period are used.</text></li>
                         <li styleclass="Indented bullet"><text styleclass="Indented bullet" translate="true">INRECH = 0 is not allowed. That is, when parameters are used, at least one parameter must be specified each stress period.</text></li>
@@ -369,7 +372,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="INIRCH" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">INIRCH—is the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" anchor="IRCH" styleclass="Normal" translate="true">IRCH</link><text styleclass="Normal" translate="true"> read flag, which is read only if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" anchor="NRCHOP" styleclass="Normal" translate="true">NRCHOP</link><text styleclass="Normal" translate="true"> is two:</text></para>
-                      <list id="27" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="29" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INIRCH </text><text styleclass="Normal" style="font-family:Symbol;" translate="true">³</text><text styleclass="Normal" translate="true"> 0, a layer variable of layer numbers (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" anchor="IRCH" styleclass="Normal" translate="true">IRCH</link><text styleclass="Normal" translate="true">) is read.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INIRCH &lt; 0, the variable (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="RCH" anchor="IRCH" styleclass="Normal" translate="true">IRCH</link><text styleclass="Normal" translate="true">) used in the preceding stress period is reused.</text></li>
                       </list>

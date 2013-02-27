@@ -9,7 +9,7 @@ object frameModpathTimeSeriesDisplay: TframeModpathTimeSeriesDisplay
     Top = 0
     Width = 465
     Height = 398
-    ActivePage = tabOptions
+    ActivePage = tabBasic
     Align = alClient
     TabOrder = 0
     object tabBasic: TTabSheet

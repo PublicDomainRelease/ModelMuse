@@ -394,7 +394,7 @@ begin
       begin
         // do nothing
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         rdeSpacingRows.Text := '-100';
       end;

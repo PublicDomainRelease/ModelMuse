@@ -16,6 +16,7 @@ object frameCrossSection: TframeCrossSection
     RowCount = 9
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
     TabOrder = 0
+    OnSetEditText = dg8PointSetEditText
     ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = True

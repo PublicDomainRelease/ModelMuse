@@ -1,14 +1,23 @@
 inherited frameSutraBoundary: TframeSutraBoundary
   inherited pnlBottom: TPanel
+    inherited lblNumTimes: TLabel
+      Top = 12
+      ExplicitTop = 12
+    end
     inherited seNumberOfTimes: TJvSpinEdit
       Left = 9
-      Height = 24
+      Top = 9
+      TabOrder = 2
       ExplicitLeft = 9
-      ExplicitHeight = 24
+      ExplicitTop = 9
     end
     inherited btnDelete: TBitBtn
       Left = 236
+      TabOrder = 1
       ExplicitLeft = 236
+    end
+    inherited btnInsert: TBitBtn
+      TabOrder = 0
     end
   end
   inherited pnlGrid: TPanel
@@ -21,6 +30,7 @@ inherited frameSutraBoundary: TframeSutraBoundary
       Height = 146
       TabOrder = 1
       OnMouseUp = rdgSutraFeatureMouseUp
+      OnSelectCell = rdgSutraFeatureSelectCell
       OnSetEditText = rdgSutraFeatureSetEditText
       OnBeforeDrawCell = rdgSutraFeatureBeforeDrawCell
       OnColSize = rdgSutraFeatureColSize
@@ -145,6 +155,16 @@ inherited frameSutraBoundary: TframeSutraBoundary
         OnChange = rdeFormulaChange
         Max = 1.000000000000000000
         ChangeDisabledColor = True
+      end
+      object cbUsed: TCheckBox
+        Left = 63
+        Top = 27
+        Width = 67
+        Height = 17
+        Caption = 'Used'
+        Enabled = False
+        TabOrder = 1
+        OnClick = cbUsedClick
       end
     end
   end

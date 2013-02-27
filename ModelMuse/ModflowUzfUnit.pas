@@ -854,7 +854,7 @@ end;
 procedure TUzfExtinctDepthItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FUzfExtinctDepth,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TUzfExtinctDepthItem.SetBoundaryFormula(Index: integer;
@@ -944,7 +944,7 @@ end;
 procedure TUzfWaterContentItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FUzfWaterContent,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
 end;
 
 procedure TUzfWaterContentItem.SetBoundaryFormula(Index: integer;

@@ -14,11 +14,14 @@ type
     FOldProperties: TFishnetMeshGenerator;
     FNewProperties: TFishnetMeshElement;
     FElement: TFishnetMeshElement;
+    FOldNodes: TFishnetNodeList;
+    FNewNodes: TFishnetNodeList;
   protected
     function Description: string; override;
   public
     constructor Create(AnElement: TFishnetMeshElement;
-      var NewElement: TFishnetMeshElement);
+      var NewElement: TFishnetMeshElement;
+      var OldNodes, NewNodes: TFishnetNodeList);
     destructor Destroy; override;
     procedure DoCommand; override;
     procedure Undo; override;
@@ -70,6 +73,7 @@ begin
   rdgCornerCoordinates.Cells[0,0] := 'X';
   rdgCornerCoordinates.Cells[1,0] := 'Y';
   FElement := TFishnetMeshElement.Create(nil);
+  pc1.ActivePage := tabFirst;
 end;
 
 procedure TfrmFishnetElementProperties.FormDestroy(Sender: TObject);
@@ -120,46 +124,62 @@ var
   NodeIndex: Integer;
   ANode: TFishnetMeshNode;
   Generator: TFishnetMeshGenerator;
+  OldNodes, NewNodes: TFishnetNodeList;
 begin
-  Generator := (FExistingElement.Collection
-    as TFishnetMeshElementCollection).Generator;
-//  FElement.FirstControl.Count := seFirstCount.AsInteger;
-//  FElement.SecondControl.Count := seSecondCount.AsInteger;
-  for NodeIndex := 1 to rdgCornerCoordinates.RowCount - 1 do
-  begin
-    if TryStrToFloat(rdgCornerCoordinates.Cells[0,NodeIndex], X)
-    and TryStrToFloat(rdgCornerCoordinates.Cells[1,NodeIndex], Y) then
+  OldNodes := TFishnetNodeList.Create;
+  NewNodes := TFishnetNodeList.Create;
+  try
+    Generator := (FExistingElement.Collection
+      as TFishnetMeshElementCollection).Generator;
+  //  FElement.FirstControl.Count := seFirstCount.AsInteger;
+  //  FElement.SecondControl.Count := seSecondCount.AsInteger;
+    for NodeIndex := 1 to rdgCornerCoordinates.RowCount - 1 do
     begin
-      if NodeIndex <= FElement.Nodes.Count then
+      if TryStrToFloat(rdgCornerCoordinates.Cells[0,NodeIndex], X)
+      and TryStrToFloat(rdgCornerCoordinates.Cells[1,NodeIndex], Y) then
       begin
-        ANode := FElement.Nodes[NodeIndex-1];
-      end
-      else
-      begin
-        ANode := Generator.Nodes.Add;
-        FElement.Nodes.Add(ANode);
+        if NodeIndex <= FElement.Nodes.Count then
+        begin
+          ANode := FElement.Nodes[NodeIndex-1];
+        end
+        else
+        begin
+          ANode := Generator.Nodes.Add;
+          FElement.Nodes.Add(ANode);
+        end;
+        ANode.X := X;
+        ANode.Y := Y;
+        OldNodes.Add(FExistingElement.Nodes[NodeIndex-1]);
+        NewNodes.Add(ANode);
       end;
-      ANode.X := X;
-      ANode.Y := Y;
     end;
+    frmGoPhast.UndoStack.Submit(TUndoFishnetElementProperties.
+      Create(FExistingElement, FElement, OldNodes, NewNodes));
+  //  Generator.UpdateCount1(FElement);
+  //  Generator.UpdateCount2(FElement);
+    frmGoPhast.InvalidateTop;
+  finally
+    OldNodes.Free;
+    NewNodes.Free;
   end;
-  frmGoPhast.UndoStack.Submit(TUndoFishnetElementProperties.
-    Create(FExistingElement, FElement));
-//  Generator.UpdateCount1(FElement);
-//  Generator.UpdateCount2(FElement);
-  frmGoPhast.InvalidateTop;
 end;
 
 { TUndoFishnetElementProperties }
 
 constructor TUndoFishnetElementProperties.Create(
-  AnElement: TFishnetMeshElement; var NewElement: TFishnetMeshElement);
+  AnElement: TFishnetMeshElement; var NewElement: TFishnetMeshElement;
+  var OldNodes, NewNodes: TFishnetNodeList);
 begin
   FOldProperties := TFishnetMeshGenerator.Create(nil);
   FOldProperties.Assign(frmGoPhast.PhastModel.FishnetMeshGenerator);
   FNewProperties := NewElement;
   NewElement := nil;
-  FElement := AnElement
+  FElement := AnElement;
+  FOldNodes := OldNodes;
+  OldNodes := nil;
+  FNewNodes := NewNodes;
+  NewNodes := nil;
+  Assert(FOldNodes.Count = FNewNodes.Count);
 end;
 
 function TUndoFishnetElementProperties.Description: string;
@@ -169,17 +189,25 @@ end;
 
 destructor TUndoFishnetElementProperties.Destroy;
 begin
+  FOldNodes.Free;
+  FNewNodes.Free;
   FOldProperties.Free;
   FNewProperties.Free;
   inherited;
 end;
 
 procedure TUndoFishnetElementProperties.DoCommand;
+var
+  NodeIndex: Integer;
 begin
   inherited;
   FElement.Assign(FNewProperties);
   FElement.Generator.UpdateCount1(FElement);
   FElement.Generator.UpdateCount2(FElement);
+  for NodeIndex := 0 to FOldNodes.Count - 1 do
+  begin
+    FOldNodes[NodeIndex].Assign(FNewNodes[NodeIndex]);
+  end;
 end;
 
 procedure TUndoFishnetElementProperties.Undo;

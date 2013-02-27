@@ -1,7 +1,51 @@
 C
+C
+C     ******************************************************************
+C     CHECK FOR STEAMBED BELOW CELL BOTTOM. RECORD REACHES FOR PRINTING
+C     ******************************************************************
+      MODULE ICHKSTRBOT_MODULE
+      USE GWFSFRMODULE,ONLY:ISTRM,STRM,NSTRM
+      USE GLOBAL,ONLY:BOTM,IBOUND,LBOTM
+      implicit none
+      type check_bot
+        integer ltype,irchnum,iflag,iunit
+      end type check_bot      
+      public check_bot
+      CONTAINS
+      FUNCTION ICHKSTRBOT(self)
+      type (check_bot), intent(in) :: self
+      INTEGER JRCH,IRCH,KRCH,JSEG,ISEG,ICHKSTRBOT
+      ICHKSTRBOT = 0
+      KRCH = ISTRM(1,self%IRCHNUM)
+      IRCH = ISTRM(2,self%IRCHNUM)
+      JRCH = ISTRM(3,self%IRCHNUM)
+      JSEG = ISTRM(4,self%IRCHNUM)
+      ISEG = ISTRM(5,self%IRCHNUM)
+      IF ( self%LTYPE.GT.0  .AND. IBOUND(JRCH,IRCH,KRCH).GT.0 ) THEN 
+        IF ( STRM(4, self%IRCHNUM)-BOTM(JRCH,IRCH,LBOTM(KRCH))
+     +                                      .LT.-1.0E-12 ) THEN
+          IF ( self%IFLAG.EQ.0 ) THEN
+          WRITE(self%IUNIT,*)
+          WRITE(self%IUNIT,*)' REACHES WITH ALTITUDE ERRORS:'
+          WRITE(self%IUNIT,*)'   LAY    ROW    COL    SEG  REACH      ',
+     +                'STR.ELEV.      CELL-BOT.'
+          END IF
+          WRITE(self%IUNIT,100)KRCH,IRCH,JRCH,JSEG,ISEG,
+     +                STRM(4, self%IRCHNUM),BOTM(JRCH,IRCH,LBOTM(KRCH))
+          ICHKSTRBOT = 1
+        END IF
+      END IF
+      IF ( self%IFLAG.GT.0 .AND. self%IRCHNUM.EQ.NSTRM ) THEN
+        WRITE(self%IUNIT,*)' MODEL STOPPING DUE TO REACH ALTITUDE ERROR'
+        CALL USTOP(' ')
+      END IF
+  100 FORMAT(5I7,2F15.7)
+      END FUNCTION ICHKSTRBOT
+      END MODULE ICHKSTRBOT_MODULE
+C
 C-------SUBROUTINE GWF2SFR7AR
       SUBROUTINE GWF2SFR7AR(In, Iunitbcf, Iunitlpf, Iunithuf, Iunitgwt, 
-     +                      Nsol, Iouts, Igrid)
+     +                      Nsol, Iouts, Iunitupw, Iunituzf, Igrid)
 C     ******************************************************************
 C     ALLOCATE ARRAY STORAGE FOR STREAMS
 C     INITIALIZE VARIABLES FOR SFR PACKAGES
@@ -13,17 +57,20 @@ C     SPECIFICATIONS:
 C     ------------------------------------------------------------------
       USE GWFSFRMODULE
       USE GLOBAL,       ONLY: IOUT, IBOUND, BOTM, STRT, DELR, DELC,
-     +                        ITRSS,NCOL,NROW  !CJM added ncol and nrow
+     +                        ITRSS,NCOL,NROW,LAYHDT  !CJM added ncol and nrow
       USE GWFLPFMODULE, ONLY: SC2LPF=>SC2, LAYTYP
       USE GWFBCFMODULE, ONLY: SC1, SC2, LAYCON
       USE GWFHUFMODULE, ONLY: SC2HUF, LTHUF
+      USE GWFUPWMODULE, ONLY: SC2UPW
+      USE ICHKSTRBOT_MODULE
       IMPLICIT NONE
       INTRINSIC ABS, DBLE
+      type (check_bot) :: uzfar_check
 C     ------------------------------------------------------------------
 C     ARGUMENTS
 C     ------------------------------------------------------------------
       INTEGER In, Iunitbcf, Iunitlpf, Iunithuf, Iunitgwt, Nsol, Iouts, 
-     +        Igrid
+     +        Iunitupw, Iunituzf, Igrid
 C     ------------------------------------------------------------------
 C     LOCAL VARIABLES
 C     ------------------------------------------------------------------
@@ -36,7 +83,7 @@ C     ------------------------------------------------------------------
       INTEGER krck, irck, jrck, jsegck, ireachck, kkptflg, ib
       INTEGER lstsum, lstbeg, numinst, idum(1), ip, iterp, mstrmar
       INTEGER nssar, nstrmar, Ltyp, NPP, MXVL, IRFG, ITRFLG
-      INTEGER k, kkrch
+      INTEGER k, kkrch, IERR, IFLG
       REAL r, seglen, sumlen, thsslpe, thislpe, uhcslpe, rchlen, dist
       REAL epsslpe
 C     ------------------------------------------------------------------
@@ -80,6 +127,8 @@ C         DLEAK, ISTCB1, ISTCB2.
       NPP = 0
       ITRFLG = 0
       lloc = 1
+      IERR = 0
+      IFLG = 0
       CALL URDCOM(In, IOUT, line)
 ! Check for alternate input (replacement for setting NSTRM<0).
       CALL UPARLSTAL(IN,IOUT,LINE,NPP,MXVL)
@@ -192,6 +241,7 @@ C4------READ UNSATURATED FLOW VARIABLES WHEN ISFROPT GREATER THAN 1.
         nparseg = 0
       END IF
       IF ( nparseg.LT.0 ) nparseg = 0
+! RGN if ISFROPT=2 or 4 then you cannot use BCF Package.
       IF ( Iunitbcf.GT.0 ) THEN
         IF ( ISFROPT.EQ.2 .OR. ISFROPT.EQ.4 ) THEN
           WRITE(IOUT, 9045)
@@ -417,6 +467,7 @@ C11-----READ AND WRITE DATA FOR EACH REACH ON BASIS OF ISFROPT.
             READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii)
           END IF
         ELSE IF ( ISFROPT.EQ.1 ) THEN
+!IFACE
           IF (iface.eq.1) THEN
             READ (In, *) krch, irch, jrch, jseg, ireach, STRM(1, ii), 
      +                 STRM(3, ii), STRM(2, ii), STRM(8, ii), 
@@ -640,8 +691,8 @@ C14-----READ SEGMENT INFORMATION FOR FIRST STRESS PERIOD.
         nlst = NSS
         lb = 1
         ichk = 1
-        CALL SGWF2SFR7RDSEG(nlst, lb, In, Iunitgwt, NSEGCK, NSS, ichk,
-     +                      1, Nsol)
+        CALL SGWF2SFR7RDSEG(nlst, lb, In, Iunitgwt, Iunituzf, NSEGCK,
+     +                      NSS, ichk, 1, Nsol)
       END IF
 C
 C15-----COMPUTE UNSATURATED VARIABLE WHEN SPECIFIED BY SEGMENT.
@@ -810,8 +861,8 @@ Cdep  Revised to change ib loop counter
           DO i = ib, numinst
             IF ( i.GT.0 ) CALL UINSRP(i, In, IOUT, ip, iterp)
             ichk = 0
-            CALL SGWF2SFR7RDSEG(nlst, lb, In, Iunitgwt, idum, 1, ichk, 
-     +                          1, Nsol)
+            CALL SGWF2SFR7RDSEG(nlst, lb, In, Iunitgwt, Iunituzf, idum, 
+     +                          1, ichk, 1, Nsol)
 !            CALL SGWF2SFR7PRSEG(nlst, lb, Iunitgwt, 1, Nsol, Iouts)
             lb = lb + nlst
           END DO
@@ -886,7 +937,7 @@ C23-----SAVE POINTERS FOR GRID AND RETURN.
       END SUBROUTINE GWF2SFR7AR
 C
 C-------SUBROUTINE SGWF2SFR7UHC
-!      SUBROUTINE SGWF2SFR7UHC(Iunitlpf)
+!      SUBROUTINE SGWF2SFR7UHC(Iunitlpf, Iunithuf, Iunitupw)
 C     ******************************************************************
 C     SETS UNSATURATED VERTICAL HYDRAULIC CONDUCTIVITY TO VERTICAL
 C     HYDRAULIC CONDUCTIVITY IN THE LAYER-PROPERTY FLOW PACKAGE.
@@ -896,26 +947,29 @@ C
 C-------SUBROUTINE GWF2SFR7RP
       SUBROUTINE GWF2SFR7RP(In, Iunitgwt, Iunitlak, Kkper, Kkstp, Nsol,
      +                      Iouts, Iunitbcf, Iunitlpf, Iunithuf, 
-     +                      Igrid)
+     +                      Iunitupw, Iunituzf, Igrid)
 C     ******************************************************************
 C     READ STREAM DATA FOR STRESS PERIOD
 !--------REVISED FOR MODFLOW-2005 RELEASE 1.9, FEBRUARY 6, 2012
 C     Compute three new tables for lake outflow
 C     ******************************************************************
       USE GWFSFRMODULE
-      USE GLOBAL,       ONLY: IOUT, ISSFLG, IBOUND, BOTM, HNEW, NLAY
+      USE GLOBAL,       ONLY: IOUT, ISSFLG, IBOUND, BOTM, HNEW, NLAY, 
+     +                        LAYHDT
       USE PARAMMODULE,  ONLY: MXPAR, PARTYP, IACTIVE, IPLOC
+      USE ICHKSTRBOT_MODULE
       USE GWFLPFMODULE, ONLY: LAYTYP
       USE GWFBCFMODULE, ONLY: LAYCON
       USE GWFHUFMODULE, ONLY: LTHUF
       IMPLICIT NONE
 C     ------------------------------------------------------------------
 C     SPECIFICATIONS:
+      type (check_bot) :: uzfrp_check
 C     ------------------------------------------------------------------
 C     ARGUMENTS
 C     ------------------------------------------------------------------
       INTEGER Kkper, Kkstp, In, Iunitgwt, Iunitlak, Nsol, Iouts, Igrid
-      Integer Iunitbcf, Iunitlpf, Iunithuf
+      Integer Iunitbcf, Iunitlpf, Iunithuf, Iunitupw, Iunituzf
 C     ------------------------------------------------------------------
 C     LOCAL VARIABLES
 C     ------------------------------------------------------------------
@@ -929,11 +983,13 @@ C     ------------------------------------------------------------------
      +        ipt, ir, irch, irp, isoptflg, iss, istep, istsg, iwvcnt,
      +        jj, jk, k5, k6, k7, kk, ksfropt, kss, ktot, l, lstbeg,
      +        nseg, nstrpts,krck,irck,jrck,ireachck, j, numval, iunit,
-     +        Ltyp
+     +        Ltyp,ierr,IFLG
 C     ------------------------------------------------------------------
 C
 C-------SET POINTERS FOR CURRENT GRID.
       CALL SGWF2SFR7PNT(Igrid)
+      IERR = 0
+      IFLG = 0
 	WRITE(IOUT,*)'SFR:'
 C
 C1------READ ITMP FLAG TO REUSE NON-PARAMETER DATA, 2 PRINTING FLAGS,
@@ -1004,16 +1060,17 @@ C6------READ NON-PARAMETER STREAM SEGMENT DATA.
         ichk = 1
         IF ( ISFROPT.GT.0 ) THEN
           IF ( Kkper.GT.1 ) CALL SGWF2SFR7RDSEG(ITMP, lstbeg, In, 
-     +                                        Iunitgwt, NSEGCK, NSS,
-     +                                        ichk, Kkper, Nsol)
+     +                                        Iunitgwt, Iunituzf, 
+     +                                        NSEGCK, NSS, ichk, Kkper, 
+     +                                        Nsol)
 Crgn 10/16/06 fixed logic for calls to RDSEG
         ELSEIF( NSFRPAR.EQ.0 ) THEN
           IF ( Kkper.GT.1 )CALL SGWF2SFR7RDSEG(ITMP, lstbeg, In, 
-     +                        Iunitgwt, NSEGCK, NSS,
+     +                        Iunitgwt, Iunituzf, NSEGCK, NSS,
      +                        ichk, Kkper, Nsol)
         ELSEIF( NSFRPAR.GT.0 ) THEN
           CALL SGWF2SFR7RDSEG(ITMP, lstbeg, In, 
-     +                        Iunitgwt, NSEGCK, NSS,
+     +                        Iunitgwt, Iunituzf, NSEGCK, NSS,
      +                        ichk, Kkper, Nsol)
         END IF
       END IF
@@ -1731,7 +1788,6 @@ C     *****************************************************************
 C     ADD STREAM TERMS TO RHS AND HCOF IF FLOW OCCURS IN MODEL CELL
 C     VERSION  7.1: JUNE 29, 2006
 C     *****************************************************************
-C
 C-------SUBROUTINE GWF2SFR7BD
 !      SUBROUTINE GWF2SFR7BD(Kkstp, Kkper, Iunitgwt, Iunitlak, Iunitgage,
 !     +                      Iunituzf, Nlakesar, Vol, Nsol, Igrid)
@@ -1740,7 +1796,6 @@ C     CALCULATE VOLUMETRIC GROUND-WATER BUDGET FOR STREAMS AND SUM
 C     STREAMFLOWS IN MODELED AREA
 C     VERSION  7.1: JUNE 29, 2006
 C     *****************************************************************
-C
 C-------SUBROUTINE GWF2SFR7LAKOUTFLW
 !      SUBROUTINE GWF2SFR7LAKOUTFLW(kkiter)
 C     *****************************************************************
@@ -1749,21 +1804,18 @@ C     FLOWS FOR STREAM SEGMENTS THAT HAVE INFLOWS DETERMINED BY
 C     LAKE STAGE
 C     VERSION  7.1: JUNE 29, 2006
 C     *****************************************************************
-C
 C-------SUBROUTINE GWF2SFR7DIVERS
 !      SUBROUTINE GWF2SFR7DIVERS(Iprior, Idivseg, Upflw, Dvrsn)
 C     ******************************************************************
 C     COMPUTES DIVERSIONS FROM AN UPSTREAM SEGMENT
 C     VERSION  7.1: SEPTEMBER 20, 2006   DEP AND RGN
 C     ******************************************************************
-C
 C-------SUBROUTINE GWF2SFR7UZOT
 !      SUBROUTINE GWF2SFR7UZOT(Kkstp, Kkper)
 C     ******************************************************************
 C     PRINTS MASS BALANCE FOR ENTIRE UNSATURATED ZONE
 C     VERSION  7.1: JUNE 29, 2006
 C     ******************************************************************
-C
 C-------SUBROUTINE GWF2SFR7DPTH
 !      SUBROUTINE GWF2SFR7DPTH(Flow, Slope, Istsg, Nreach, Roughch, 
 !     +                        Roughbnk, Wetperm, Depth, Itstr, Totwdth, 
@@ -1772,7 +1824,6 @@ C     ******************************************************************
 C     COMPUTE STREAM DEPTH GIVEN FLOW USING 8-POINT CROSS SECTION
 C     VERSION  7.1: JUNE 29, 2006
 C     ******************************************************************
-C
 C-------SUBROUTINE GWF2SFR7FLW
 !      SUBROUTINE GWF2SFR7FLW(Depth, Istsg, Roughch, Roughbnk, Slope, 
 !     +                       Wetperm, Flow, Totwdth)
@@ -1780,7 +1831,6 @@ C     *******************************************************************
 C     COMPUTE FLOW IN STREAM GIVEN DEPTH USING 8-POINT CROSS SECTION
 C     VERSION  7.1: JUNE 29, 2006
 C     *******************************************************************
-C
 C-------SUBROUTINE GWF2SFR7TBD
 !      SUBROUTINE GWF2SFR7TBD(Flow, Depth, Width, Nstrpts, Istsg)
 C     *******************************************************************
@@ -1794,10 +1844,9 @@ C     *******************************************************************
 C     COMPUTE FLOW AND WIDTH IN STREAM GIVEN DEPTH USING RATING TABLES.
 C     VERSION  7.1: JUNE 29, 2006
 C     *******************************************************************
-C
 C-------SUBROUTINE SGWF2SFR7RDSEG
-      SUBROUTINE SGWF2SFR7RDSEG(Nlst, Lstbeg, In, Iunitgwt, Ischk, 
-     +                          Nischk, Ichk, Kkper, Nsol)
+      SUBROUTINE SGWF2SFR7RDSEG(Nlst, Lstbeg, In, Iunitgwt, Iunituzf, 
+     +                          Ischk, Nischk, Ichk, Kkper, Nsol)
 C     ******************************************************************
 C     READ STREAM SEGMENT DATA -- parameters or non parameters
 !--------REVISED FOR MODFLOW-2005 RELEASE 1.9, FEBRUARY 6, 2012
@@ -1814,7 +1863,7 @@ C     ------------------------------------------------------------------
 C     ARGUMENTS
 C     ------------------------------------------------------------------
       INTEGER Iunitgwt, Ichk, In, Ischk, Lstbeg, Nischk, Nlst, Kkper
-      INTEGER Nsol
+      INTEGER Nsol, Iunituzf
       DIMENSION Ischk(Nischk)
 C     ------------------------------------------------------------------
 C     LOCAL VARIABLES

@@ -4,25 +4,23 @@ inherited frmModflowOptions: TfrmModflowOptions
   Caption = 'MODFLOW Options'
   ClientHeight = 486
   ClientWidth = 543
-  ExplicitWidth = 551
-  ExplicitHeight = 520
-  PixelsPerInch = 96
+  ExplicitWidth = 561
+  ExplicitHeight = 531
+  PixelsPerInch = 120
   TextHeight = 18
   object pcOptions: TPageControl
     Left = 0
     Top = 0
     Width = 543
     Height = 404
-    ActivePage = TabSheet2
+    ActivePage = tabWetting
     Align = alClient
     TabOrder = 0
     OnChange = pcOptionsChange
-    ExplicitHeight = 384
     object TabSheet1: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'Description_Tab'
       Caption = 'Description'
-      ExplicitHeight = 351
       DesignSize = (
         535
         371)
@@ -88,7 +86,6 @@ inherited frmModflowOptions: TfrmModflowOptions
         ScrollBars = ssBoth
         TabOrder = 3
         WordWrap = False
-        ExplicitHeight = 212
       end
     end
     object TabSheet2: TTabSheet
@@ -96,7 +93,6 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpKeyword = 'Options_Tab'
       Caption = 'Options'
       ImageIndex = 1
-      ExplicitHeight = 351
       DesignSize = (
         535
         371)
@@ -110,7 +106,7 @@ inherited frmModflowOptions: TfrmModflowOptions
       object Label6: TLabel
         Left = 151
         Top = 265
-        Width = 127
+        Width = 126
         Height = 18
         Margins.Left = 0
         Caption = 'Time unit (ITMUNI)'
@@ -157,8 +153,8 @@ inherited frmModflowOptions: TfrmModflowOptions
         object cbPRINTTIME: TJvCheckBox
           Left = 3
           Top = 43
-          Width = 437
-          Height = 18
+          Width = 440
+          Height = 20
           Caption = 'Print the start time, end time, and elapsed time (PRINTTIME)'
           Checked = True
           State = cbChecked
@@ -174,8 +170,8 @@ inherited frmModflowOptions: TfrmModflowOptions
         object cbCHTOCH: TJvCheckBox
           Left = 3
           Top = 19
-          Width = 461
-          Height = 18
+          Width = 464
+          Height = 20
           Caption = 'Calculate flow between adjacent constant-head cells (CHTOCH)'
           Checked = True
           State = cbChecked
@@ -229,6 +225,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         Width = 145
         Height = 26
         Style = csDropDownList
+        ItemHeight = 18
         TabOrder = 6
         Text = 'seconds (1)'
         OnChange = comboTimeUnitChange
@@ -247,6 +244,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         Width = 145
         Height = 26
         Style = csDropDownList
+        ItemHeight = 18
         TabOrder = 5
         Text = 'meters (2)'
         OnChange = comboLengthUnitChange
@@ -272,7 +270,7 @@ inherited frmModflowOptions: TfrmModflowOptions
       object cbOpenInTextEditor: TJvCheckBox
         Left = 3
         Top = 206
-        Width = 366
+        Width = 462
         Height = 18
         Caption = 'Open listing file in text editor when model is done.'
         Checked = True
@@ -328,11 +326,10 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpKeyword = 'Wetting_Tab'
       Caption = 'Wetting'
       ImageIndex = 2
-      ExplicitHeight = 351
       object lblWetFact: TLabel
-        Left = 8
+        Left = 3
         Top = 35
-        Width = 213
+        Width = 262
         Height = 36
         Caption = 'Wetting Factor (WETFCT) (usually between zero and one)'
         Enabled = False
@@ -355,8 +352,8 @@ inherited frmModflowOptions: TfrmModflowOptions
         Enabled = False
       end
       object lblWettingDataSets: TLabel
-        Left = 245
-        Top = 3
+        Left = 8
+        Top = 235
         Width = 243
         Height = 90
         Caption = 
@@ -439,7 +436,6 @@ inherited frmModflowOptions: TfrmModflowOptions
     Height = 41
     Align = alBottom
     TabOrder = 2
-    ExplicitTop = 425
     DesignSize = (
       543
       41)
@@ -449,10 +445,8 @@ inherited frmModflowOptions: TfrmModflowOptions
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -464,7 +458,6 @@ inherited frmModflowOptions: TfrmModflowOptions
       Anchors = [akTop, akRight]
       Caption = 'OK'
       Default = True
-      DoubleBuffered = True
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         04000000000068010000120B0000120B00001000000010000000000000000000
@@ -484,7 +477,6 @@ inherited frmModflowOptions: TfrmModflowOptions
         0000}
       ModalResult = 1
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -494,10 +486,8 @@ inherited frmModflowOptions: TfrmModflowOptions
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
   end
@@ -508,7 +498,6 @@ inherited frmModflowOptions: TfrmModflowOptions
     Height = 41
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 384
     DesignSize = (
       543
       41)

@@ -57,7 +57,7 @@ uses
   frmGoPhastUnit, ColorSchemes, frmFormulaErrorsUnit,
   frmErrorsAndWarningsUnit, frmCustomGoPhastUnit, PhastModelUnit, GoPhastTypes,
   RbwParser, frmProgressUnit, LegendUnit, Contnrs, RealListUnit,
-  ClassificationUnit;
+  ClassificationUnit, SutraMeshUnit;
 
 resourcestring
   StrProgress = 'Progress';
@@ -384,6 +384,8 @@ var
   GridColors: TColorParameters;
   VirtNoneNode: PVirtualNode;
   EndTime: Double;
+  TimeIndex: Integer;
+  AllTimes: TRealList;
 begin
   Handle;
   FGettingData := True;
@@ -424,14 +426,26 @@ begin
   jsColorExponent.Value := Round(GridColors.ColorExponent*100);
   seColorExponent.Value := GridColors.ColorExponent;
 
-  if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+  if frmGoPhast.ModelSelection in ModflowSelection then
   begin
     frmGoPhast.PhastModel.ModflowStressPeriods.
       FillStringsWithStartTimes(comboTime3D.Items);
     EndTime := frmGoPhast.PhastModel.ModflowStressPeriods[
       frmGoPhast.PhastModel.ModflowStressPeriods.Count-1].EndTime;
     comboTime3D.Items.Add(FloatToStr(EndTime));
+  end
+  else if frmGoPhast.ModelSelection = msSutra22 then
+  begin
+    frmGoPhast.PhastModel.SutraTimeOptions.CalculateAllTimes;
+    AllTimes := frmGoPhast.PhastModel.SutraTimeOptions.AllTimes;
+    comboTime3D.Items.Clear;
+    for TimeIndex := 0 to AllTimes.Count - 1 do
+    begin
+      comboTime3D.Items.Add(FloatToStr(AllTimes[TimeIndex]));
+    end;
   end;
+
+
 end;
 
 function TframeColorGrid.GetSelectedArray: TDataArray;
@@ -449,6 +463,7 @@ end;
 procedure TframeColorGrid.HandleLimitChoice(DataSet: TDataArray);
 var
   ColorDataSet: TDataArray;
+  Mesh: TSutraMesh3D;
 begin
   case rgUpdateLimitChoice.ItemIndex of
     0:
@@ -457,14 +472,30 @@ begin
       end;
     1:
       begin
-        ColorDataSet := frmGoPhast.Grid.TopDataSet;
-        if ColorDataSet = nil then
+        ColorDataSet := nil;
+        if frmGoPhast.Grid <> nil then
         begin
-          ColorDataSet := frmGoPhast.Grid.FrontDataSet;
-        end;
-        if ColorDataSet = nil then
+          ColorDataSet := frmGoPhast.Grid.TopDataSet;
+          if ColorDataSet = nil then
+          begin
+            ColorDataSet := frmGoPhast.Grid.FrontDataSet;
+          end;
+          if ColorDataSet = nil then
+          begin
+            ColorDataSet := frmGoPhast.Grid.SideDataSet;
+          end;
+        end
+        else
         begin
-          ColorDataSet := frmGoPhast.Grid.SideDataSet;
+          Mesh := frmGoPhast.PhastModel.Mesh;
+          if Mesh <> nil then
+          begin
+            ColorDataSet := Mesh.TopDataSet;
+            if ColorDataSet = nil then
+            begin
+              ColorDataSet := Mesh.ThreeDDataSet;
+            end;
+          end;
         end;
         if ColorDataSet = nil then
         begin
@@ -609,6 +640,7 @@ begin
   end;
 
   UpdateLabelsAndLegend;
+  FLegend.Contours := nil;
   frmProgressMM.Hide;
 end;
 

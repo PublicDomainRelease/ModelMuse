@@ -103,96 +103,101 @@ var
   TempList: TList;
   SubLakeIndex: Integer;
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, DupNameErrorMessage);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, InvalidCenterLake);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheLakeBathymetry);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrLakeBathymetryFile);
-
-  frmProgressMM.AddMessage(StrEvaluatingLAKPacka);
-  TempList := TList.Create;
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
-    begin
-      ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
-      if ScreenObject.Deleted then
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, DupNameErrorMessage);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, InvalidCenterLake);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheLakeBathymetry);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrLakeBathymetryFile);
+
+    frmProgressMM.AddMessage(StrEvaluatingLAKPacka);
+    TempList := TList.Create;
+    try
+      for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
       begin
-        Continue;
-      end;
-      if not ScreenObject.UsedModels.UsesModel(Model) then
-      begin
-        Continue;
-      end;
-      if (ScreenObject.ModflowLakBoundary <> nil)
-        and ScreenObject.ModflowLakBoundary.Used
-        and (ScreenObject.ModflowLakBoundary.LakeID > 0) then
-      begin
-        While (FLakeList.Count <= ScreenObject.ModflowLakBoundary.LakeID) do
+        ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
+        if ScreenObject.Deleted then
         begin
-          FLakeList.Add(nil);
+          Continue;
         end;
-        if FLakeList[ScreenObject.ModflowLakBoundary.LakeID] <> nil then
+        if not ScreenObject.UsedModels.UsesModel(Model) then
         begin
-          OtherObject := FLakeList[ScreenObject.ModflowLakBoundary.LakeID];
-          frmErrorsAndWarnings.AddError(Model, DupNameErrorMessage,
-            Format(StrSAndS, [OtherObject.Name, ScreenObject.Name]));
+          Continue;
         end;
-        FLakeList[ScreenObject.ModflowLakBoundary.LakeID]
-          := ScreenObject;
-        TempList.Add(ScreenObject);
-        ScreenObject.ModflowLakBoundary.ClearSubLakes;
-      end;
-    end;
-    for ScreenObjectIndex := 0 to TempList.Count - 1 do
-    begin
-      ScreenObject := TempList[ScreenObjectIndex];
-      Assert(ScreenObject.ModflowLakBoundary <> nil);
-      ScreenObject.ModflowLakBoundary.TrueLakeID := -1;
-      if ScreenObject.ModflowLakBoundary.CenterLake < FLakeList.Count then
-      begin
-        if ScreenObject.ModflowLakBoundary.CenterLake <> 0 then
+        if (ScreenObject.ModflowLakBoundary <> nil)
+          and ScreenObject.ModflowLakBoundary.Used
+          and (ScreenObject.ModflowLakBoundary.LakeID > 0) then
         begin
-          OtherObject := FLakeList[ScreenObject.ModflowLakBoundary.CenterLake];
-          if OtherObject = nil then
+          While (FLakeList.Count <= ScreenObject.ModflowLakBoundary.LakeID) do
           begin
-            frmErrorsAndWarnings.AddError(Model, InvalidCenterLake, ScreenObject.Name)
-          end
-          else
+            FLakeList.Add(nil);
+          end;
+          if FLakeList[ScreenObject.ModflowLakBoundary.LakeID] <> nil then
           begin
-            OtherObject.ModflowLakBoundary.AddSubLake(
-              ScreenObject);
+            OtherObject := FLakeList[ScreenObject.ModflowLakBoundary.LakeID];
+            frmErrorsAndWarnings.AddError(Model, DupNameErrorMessage,
+              Format(StrSAndS, [OtherObject.Name, ScreenObject.Name]));
+          end;
+          FLakeList[ScreenObject.ModflowLakBoundary.LakeID]
+            := ScreenObject;
+          TempList.Add(ScreenObject);
+          ScreenObject.ModflowLakBoundary.ClearSubLakes;
+        end;
+      end;
+      for ScreenObjectIndex := 0 to TempList.Count - 1 do
+      begin
+        ScreenObject := TempList[ScreenObjectIndex];
+        Assert(ScreenObject.ModflowLakBoundary <> nil);
+        ScreenObject.ModflowLakBoundary.TrueLakeID := -1;
+        if ScreenObject.ModflowLakBoundary.CenterLake < FLakeList.Count then
+        begin
+          if ScreenObject.ModflowLakBoundary.CenterLake <> 0 then
+          begin
+            OtherObject := FLakeList[ScreenObject.ModflowLakBoundary.CenterLake];
+            if OtherObject = nil then
+            begin
+              frmErrorsAndWarnings.AddError(Model, InvalidCenterLake, ScreenObject.Name)
+            end
+            else
+            begin
+              OtherObject.ModflowLakBoundary.AddSubLake(
+                ScreenObject);
+            end;
+          end;
+        end
+        else
+        begin
+          frmErrorsAndWarnings.AddError(Model, InvalidCenterLake, ScreenObject.Name)
+        end;
+      end;
+      FLakeList.Pack;
+      FLakeList.Sort(SortLakes);
+      for ScreenObjectIndex := 0 to FLakeList.Count - 1 do
+      begin
+        ScreenObject := FLakeList[ScreenObjectIndex];
+        Assert(ScreenObject.ModflowLakBoundary <> nil);
+        ScreenObject.ModflowLakBoundary.TrueLakeID := ScreenObjectIndex + 1;
+      end;
+      for ScreenObjectIndex := 0 to FLakeList.Count - 1 do
+      begin
+        ScreenObject := FLakeList[ScreenObjectIndex];
+        Assert(ScreenObject.ModflowLakBoundary <> nil);
+        for SubLakeIndex :=
+          ScreenObject.ModflowLakBoundary.SubLakeCount - 1 downto 0 do
+        begin
+          OtherObject := ScreenObject.ModflowLakBoundary.
+            SubLakes[SubLakeIndex] as TScreenObject;
+          if OtherObject.ModflowLakBoundary.TrueLakeID < 0 then
+          begin
+            ScreenObject.ModflowLakBoundary.DeleteSubLake(SubLakeIndex);
           end;
         end;
-      end
-      else
-      begin
-        frmErrorsAndWarnings.AddError(Model, InvalidCenterLake, ScreenObject.Name)
       end;
-    end;
-    FLakeList.Pack;
-    FLakeList.Sort(SortLakes);
-    for ScreenObjectIndex := 0 to FLakeList.Count - 1 do
-    begin
-      ScreenObject := FLakeList[ScreenObjectIndex];
-      Assert(ScreenObject.ModflowLakBoundary <> nil);
-      ScreenObject.ModflowLakBoundary.TrueLakeID := ScreenObjectIndex + 1;
-    end;
-    for ScreenObjectIndex := 0 to FLakeList.Count - 1 do
-    begin
-      ScreenObject := FLakeList[ScreenObjectIndex];
-      Assert(ScreenObject.ModflowLakBoundary <> nil);
-      for SubLakeIndex :=
-        ScreenObject.ModflowLakBoundary.SubLakeCount - 1 downto 0 do
-      begin
-        OtherObject := ScreenObject.ModflowLakBoundary.
-          SubLakes[SubLakeIndex] as TScreenObject;
-        if OtherObject.ModflowLakBoundary.TrueLakeID < 0 then
-        begin
-          ScreenObject.ModflowLakBoundary.DeleteSubLake(SubLakeIndex);
-        end;
-      end;
+    finally
+      TempList.Free;
     end;
   finally
-    TempList.Free;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 

@@ -8,18 +8,19 @@ uses
   ComCtrls, JvExComCtrls, JvPageListTreeView, JvExControls, StdCtrls, Buttons,
   frameHeadObservationResultsUnit, frameModpathDisplayUnit,
   frameModpathTimeSeriesDisplayUnit, frameModpathEndpointDisplayUnit,
-  frameCustomColorUnit, frameColorGridUnit, frameContourDataUnit;
+  frameCustomColorUnit, frameColorGridUnit, frameContourDataUnit,
+  frameVectorsUnit;
 
 type
   TPostPages = (ppColorGrid, ppContourData, ppPathline, ppEndPoints,
-    ppTimeSeries, ppHeadObs, ppStreamLink);
+    ppTimeSeries, ppHeadObs, ppSfrStreamLink, ppStrStreamLink, ppVectors);
 
   TfrmDisplayData = class(TfrmCustomGoPhast)
     pglstMain: TJvPageList;
     tvpglstMain: TJvPageListTreeView;
     splSplit: TSplitter;
-    jvspStreamLinks: TJvStandardPage;
-    frameStreamLink: TframeStreamLink;
+    jvspSfrStreamLinks: TJvStandardPage;
+    frameSfrStreamLink: TframeStreamLink;
     pnlBottom: TPanel;
     btnHelp: TBitBtn;
     btnApply: TBitBtn;
@@ -36,6 +37,10 @@ type
     frameColorGrid: TframeColorGrid;
     jvspContourData: TJvStandardPage;
     frameContourData: TframeContourData;
+    jvspVectors: TJvStandardPage;
+    frameVectors: TframeVectors;
+    jvspStrStreamLinks: TJvStandardPage;
+    frameStrStreamLink: TframeStreamLink;
     procedure btnApplyClick(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
     procedure pglstMainChange(Sender: TObject);
@@ -54,11 +59,12 @@ type
     property ShouldUpdate: Boolean read FShouldUpdate write FShouldUpdate;
     procedure UpdateLabelsAndLegend;
     procedure UpdateColorSchemes;
+    procedure NilDisplay;
     { Public declarations }
   end;
 
 var
-  frmDisplayData: TfrmDisplayData;
+  frmDisplayData: TfrmDisplayData = nil;
 
 procedure UpdateFrmDisplayData(Force: boolean = false);
 
@@ -74,7 +80,9 @@ resourcestring
   StrMODPATHEndPoints = 'MODPATH End Points';
   StrMODPATHTimeSeries = 'MODPATH Time Series';
   StrHeadObservationRes = 'Head Observation Results';
-  StrStreamLinks = 'Stream Links';
+  StrStreamLinks = 'SFR Stream Links';
+  StrStreamStrLinks = 'STR Stream Links';
+  StrVectors = 'Vectors';
 
 {$R *.dfm}
 
@@ -118,6 +126,10 @@ begin
   Node.PageIndex := 2;
   Node := tvpglstMain.Items.Add(nil, StrStreamLinks) as TJvPageIndexNode;
   Node.PageIndex := 1;
+  Node := tvpglstMain.Items.Add(nil, StrStreamStrLinks) as TJvPageIndexNode;
+  Node.PageIndex := 8;
+  Node := tvpglstMain.Items.Add(nil, StrVectors) as TJvPageIndexNode;
+  Node.PageIndex := 7;
 end;
 
 procedure TfrmDisplayData.frameContourDatavirttreecomboDataSetsChange(
@@ -134,17 +146,21 @@ var
   ModpathSelected: Boolean;
 //  LocalPackages: TModflowPackages;
   SfrSelected: Boolean;
+  StrSelected: boolean;
   HeadObsSelected: Boolean;
+  VectorSelected: Boolean;
 //  Node: TTreeNode;
 begin
   Handle;
   tvpglstMain.Handle;
   LocalModel := frmGoPhast.PhastModel;
-  ModflowSelected := LocalModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
+  ModflowSelected := LocalModel.ModelSelection in ModflowSelection;
 //  LocalPackages := LocalModel.ModflowPackages;
   ModpathSelected := ModflowSelected and LocalModel.MODPATHIsSelected;
   SfrSelected := ModflowSelected and LocalModel.SfrIsSelected;
+  StrSelected := ModflowSelected and LocalModel.StrIsSelected;
   HeadObsSelected := ModflowSelected and LocalModel.HobIsSelected;
+  VectorSelected := LocalModel.ModelSelection = msSutra22;
 
 //  if tvpglstMain.Items.Count = 0 then
 //  begin
@@ -163,6 +179,11 @@ begin
 //    Node := tvpglstMain.Items.Add(Node, 'Stream Links');
 //    TJvPageIndexNode(Node).PageIndex := 1;
 //  end;
+  if Ord(High(TPostPages)) <> tvpglstMain.Items.Count-1 then
+  begin
+    Beep;
+    Exit
+  end;
   Assert(Ord(High(TPostPages)) = tvpglstMain.Items.Count-1);
 
   tvpglstMain.Items[Ord(ppPathline)].Enabled :=
@@ -179,21 +200,37 @@ begin
     or (LocalModel.TimeSeries.SeriesV6.Count > 0);
   tvpglstMain.Items[Ord(ppHeadObs)].Enabled :=
     HeadObsSelected or (LocalModel.HeadObsResults.Count > 0);
-  tvpglstMain.Items[Ord(ppStreamLink)].Enabled := SfrSelected;
+  tvpglstMain.Items[Ord(ppSfrStreamLink)].Enabled := SfrSelected;
+  tvpglstMain.Items[Ord(ppStrStreamLink)].Enabled := StrSelected;
 
-  if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+  tvpglstMain.Items[Ord(ppVectors)].Enabled := VectorSelected;
+
+
+
+  if frmGoPhast.ModelSelection in ModflowSelection then
   begin
-    frameStreamLink.GetData;
+    frameStrStreamLink.GetData(stSTR);
+    frameSfrStreamLink.GetData(stSFR);
     frameHeadObservationResults.GetData;
     frameModpathDisplay.GetData;
     frameModpathTimeSeriesDisplay.GetData;
     frameModpathEndpointDisplay1.GetData;
+  end
+  else if frmGoPhast.ModelSelection = msSutra22 then
+  begin
+    frameVectors.GetData;
   end;
   frameColorGrid.GetData;
   frameContourData.GetData;
 
 //  frameColorGrid.UpdateLabelsAndLegend;
 //  frameContourData.UpdateLabelsAndLegend;
+end;
+
+procedure TfrmDisplayData.NilDisplay;
+begin
+  frameColorGrid.LegendDataSource := nil;
+  frameContourData.LegendDataSource := nil;
 end;
 
 procedure TfrmDisplayData.pglstMainChange(Sender: TObject);
@@ -204,37 +241,44 @@ end;
 
 procedure TfrmDisplayData.SetData;
 begin
-  if pglstMain.ActivePage = jvspStreamLinks then
+  if pglstMain.ActivePage = jvspSfrStreamLinks then
   begin
-    if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+    if frmGoPhast.ModelSelection in ModflowSelection then
     begin
-      frameStreamLink.SetData;
+      frameSfrStreamLink.SetData;
+    end;
+  end
+  else if pglstMain.ActivePage = jvspStrStreamLinks then
+  begin
+    if frmGoPhast.ModelSelection in ModflowSelection then
+    begin
+      frameStrStreamLink.SetData;
     end;
   end
   else if pglstMain.ActivePage = jvspHeadObsResults then
   begin
-    if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+    if frmGoPhast.ModelSelection in ModflowSelection then
     begin
       frameHeadObservationResults.SetData;
     end;
   end
   else if pglstMain.ActivePage = jvspModpathPathline then
   begin
-    if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+    if frmGoPhast.ModelSelection in ModflowSelection then
     begin
       frameModpathDisplay.SetData;
     end;
   end
   else if pglstMain.ActivePage = jvspModpathTimeSeries then
   begin
-    if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+    if frmGoPhast.ModelSelection in ModflowSelection then
     begin
       frameModpathTimeSeriesDisplay.SetData;
     end;
   end
   else if pglstMain.ActivePage = jvspModpathEndpoints then
   begin
-    if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+    if frmGoPhast.ModelSelection in ModflowSelection then
     begin
       frameModpathEndpointDisplay1.SetData;
     end;
@@ -247,6 +291,10 @@ begin
   begin
     frameContourData.SetData;
   end
+  else if pglstMain.ActivePage = jvspVectors then
+  begin
+    frameVectors.SetData;
+  end;
 end;
 
 procedure TfrmDisplayData.SetPage(Page: TPostPages);

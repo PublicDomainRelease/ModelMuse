@@ -173,7 +173,7 @@ type
     function Add: TObservationFactor;
   end;
 
-  TFluxObsType = (fotHead, fotRiver, fotDrain, fotGHB);
+  TFluxObsType = (fotHead, fotRiver, fotDrain, fotGHB, fotSTR);
 
   TCustomFluxObservationGroup = class(TPhastCollectionItem)
   private
@@ -193,6 +193,7 @@ type
     destructor Destroy; override;
     // @name adds a new @link(TObservationFactor) to @link(ObservationFactors)
     // and makes ScreenObject its @link(TObservationFactor.ScreenObject).
+    // If ScreenObject has already been added, it will be skipped.
     function AddObject(ScreenObject: TObject): integer;
     // @name removes the @link(TObservationFactor) from
     // @link(ObservationFactors) that has ScreenObject as its
@@ -383,6 +384,12 @@ begin
           Boundary := ScreenObject.ModflowGhbBoundary;
           BoundaryPackageID := 'GHB';
           PackageID := 'GBOB';
+        end;
+      fotSTR:
+        begin
+          Boundary := ScreenObject.ModflowStrBoundary;
+          BoundaryPackageID := 'STR';
+          PackageID := 'STOB';
         end;
       else Assert(False);
     end;
@@ -969,3 +976,4 @@ begin
 end;
 
 end.
+

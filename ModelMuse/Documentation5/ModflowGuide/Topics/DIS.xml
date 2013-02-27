@@ -39,7 +39,7 @@
         </td>
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">The Discretization File &#160;is used to specify certain data used in all models. These include</text></para>
-          <list id="7" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="8" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">the number of rows, columns and layers</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">the cell sizes</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">the presence of Quasi-3D confining beds</text></li>
@@ -52,9 +52,10 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/usgspubs/ofr/ofr200092" target="_blank" styleclass="Citation" translate="true">Harbaugh, A.W., Banta, E.R., Hill, M.C., and McDonald, M.G., 2000, MODFLOW-2000, the U.S. Geological Survey modular ground-water model -- User guide to modularization concepts and the Ground-Water Flow Process: U.S. Geological Survey Open-File Report 00-92, 121 p.</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="Mf2k.txt" styleclass="Normal" translate="true">Mf2k.txt</link></li>
+            <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="RevisedMF2005Input.pdf" styleclass="Normal" translate="true">RevisedMF2005Input.pdf</link></li>
           </list>
         </td>
       </tr>
@@ -63,16 +64,19 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
+          </list>
+          <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MF2005-FMP2</text></li>
           </list>
         </td>
       </tr>
@@ -158,7 +162,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="ITMUNI" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">ITMUNI—indicates the time unit of model data, which must be consistent for all data values that involve time</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000"/><text styleclass="Normal" translate="true">&#32;</text><text styleclass="New Materials" translate="true">except for certain variables in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DAFLOW" styleclass="New Materials" translate="true">DAFLOW</link><text styleclass="New Materials" translate="true"> package</text><conditional-text type="END"/><text styleclass="Normal" translate="true">. For example, if years is the chosen time unit, stress-period length, time-step length, transmissivity, and so on, must all be expressed using years for their time units. Note that the program will still run even if “undefined” time units are specified because the fundamental equations used in MODFLOW do not require that the time unit be identified. But be sure to use consistent units for all input data even when ITMUNI indicates an undefined time unit. When the time unit is defined, MODFLOW uses it to print a table of elapsed simulation time:</text></para>
-                      <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">0 - undefined</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">1 - seconds</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">2 - minutes</text></li>
@@ -174,7 +178,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="LENUNI" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">LENUNI—indicates the length unit of model data, which must be consistent for all data values that involve length</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000"/><text styleclass="Normal" translate="true">&#32;</text><text styleclass="New Materials" translate="true">except for certain variables in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DAFLOW" styleclass="New Materials" translate="true">DAFLOW</link><text styleclass="New Materials" translate="true"> package</text><conditional-text type="END"/><text styleclass="Normal" translate="true">. For example, if feet is the chosen length unit, grid spacing, head, hydraulic conductivity, water volumes, and so forth, must all be expressed using feet for their length units. Note that the program will still run even if “undefined” length units are specified because the fundamental equations used in MODFLOW do not require that the length unit be identified. But be sure to use consistent units for all input data even when LENUNI indicates an undefined length unit:</text></para>
-                      <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">0 - undefined</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">1 - feet</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">2 - meters</text></li>
@@ -246,7 +250,7 @@
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal"><text styleclass="Normal" translate="true">Top—is the top elevation of layer 1. For the common situation in which the top layer represents a water-table aquifer, it may be reasonable to set Top equal to land-surface elevation.</text></para>
+                <para styleclass="Normal"><anchor id="Top" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Top—is the top elevation of layer 1. For the common situation in which the top layer represents a water-table aquifer, it may be reasonable to set Top equal to land-surface elevation.</text></para>
               </td>
             </tr>
           </table></para>
@@ -315,6 +319,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="Sstr" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Ss/tr—is a character variable that indicates if the stress period is transient or steady state. The only allowed options are “SS” and “TR”, but these are case insensitive.</text></para>
+                      <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><text styleclass="Normal" translate="true">If the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWI2_Seawater_Intrusion_Pack" styleclass="Normal" translate="true">SWI2</link><text styleclass="Normal" translate="true"> package is used, it is important to recognize that the steady-state head option does not mean that the steady-state density distribution is computed. The steady-state density distribution can only be computed by running the simulation until the density distribution is no longer changing.</text><conditional-text type="END"/></para>
                     </td>
                   </tr>
                 </table></para>

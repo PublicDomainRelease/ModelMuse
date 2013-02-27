@@ -8,8 +8,8 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
   PixelsPerInch = 120
   TextHeight = 18
   inherited lblDataSet: TLabel
-    Top = 136
-    ExplicitTop = 136
+    Top = 124
+    ExplicitTop = 124
   end
   inherited lblInterpolator: TLabel
     Top = 192
@@ -23,22 +23,22 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
     Caption = 'Grid file extent'
   end
   inherited comboDataSets: TComboBox
-    Top = 160
+    Top = 148
     Width = 547
     TabOrder = 1
-    ExplicitTop = 160
+    ExplicitTop = 148
     ExplicitWidth = 547
   end
   inherited comboInterpolators: TComboBox
     Top = 213
-    TabOrder = 2
+    TabOrder = 5
     ExplicitTop = 213
   end
   inherited cbEnclosedCells: TCheckBox
     Left = 496
     Top = 277
     Width = 41
-    TabOrder = 5
+    TabOrder = 6
     Visible = False
     ExplicitLeft = 496
     ExplicitTop = 277
@@ -46,33 +46,37 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
   end
   inherited cbIntersectedCells: TCheckBox
     Top = 245
+    Width = 329
     ExplicitTop = 245
+    ExplicitWidth = 329
   end
   inherited cbInterpolation: TCheckBox
     Left = 8
     Top = 276
+    Width = 321
     ExplicitLeft = 8
     ExplicitTop = 276
+    ExplicitWidth = 321
   end
   inherited rgEvaluatedAt: TRadioGroup
     Top = 313
-    TabOrder = 6
+    TabOrder = 7
     ExplicitTop = 313
   end
   inherited btnOK: TBitBtn
     Top = 324
-    TabOrder = 8
+    TabOrder = 9
     OnClick = btnOKClick
     ExplicitTop = 324
   end
   inherited btnCancel: TBitBtn
     Top = 324
-    TabOrder = 9
+    TabOrder = 10
     ExplicitTop = 324
   end
   inherited btnHelp: TBitBtn
     Top = 324
-    TabOrder = 7
+    TabOrder = 8
     ExplicitTop = 324
   end
   object rdgLimits: TRbwDataGrid4 [12]
@@ -93,7 +97,6 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
     SelectedRowOrColumnColor = clAqua
     UnselectableColor = clBtnFace
     ColorRangeSelection = False
-    ColorSelectedRow = True
     Columns = <
       item
         AutoAdjustRowHeights = False
@@ -183,6 +186,23 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
         CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
+  end
+  object rgFilterMethod: TRadioGroup [13]
+    Left = 346
+    Top = 178
+    Width = 190
+    Height = 140
+    Anchors = [akLeft, akTop, akRight]
+    Caption = 'Filter method'
+    ItemIndex = 2
+    Items.Strings = (
+      'Lowest point in cell'
+      'Highest point in cell'
+      'Average of points in cell'
+      'Point closest to cell center'
+      'None')
+    TabOrder = 2
+    ExplicitWidth = 208
   end
   inherited OpenDialogFile: TOpenDialog
     Filter = 'Surfer grid file (*.grd, *.dat)|*.grd;*.dat|All files (*.*)|*.*'

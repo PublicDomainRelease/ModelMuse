@@ -6,7 +6,7 @@ inherited frmManageParameters: TfrmManageParameters
   ClientWidth = 468
   ExplicitWidth = 476
   ExplicitHeight = 313
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object rdgParameters: TRbwDataGrid4
     Left = 0
@@ -32,7 +32,6 @@ inherited frmManageParameters: TfrmManageParameters
     OnBeforeDrawCell = rdgParametersBeforeDrawCell
     OnStateChange = rdgParametersStateChange
     ColorRangeSelection = False
-    ColorSelectedRow = True
     Columns = <
       item
         AutoAdjustRowHeights = True
@@ -203,7 +202,6 @@ inherited frmManageParameters: TfrmManageParameters
       Anchors = [akTop, akRight]
       Cancel = True
       Caption = '&Delete'
-      DoubleBuffered = True
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
         18000000000000030000120B0000120B00000000000000000000FFFFFFFFFFFF
@@ -231,7 +229,6 @@ inherited frmManageParameters: TfrmManageParameters
         000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnDeleteClick
     end
@@ -242,10 +239,8 @@ inherited frmManageParameters: TfrmManageParameters
       Height = 33
       Anchors = [akTop, akRight]
       Caption = '&OK'
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 4
       OnClick = btnOKClick
     end
@@ -256,10 +251,8 @@ inherited frmManageParameters: TfrmManageParameters
       Height = 33
       Anchors = [akTop, akRight]
       Caption = '&Cancel'
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 5
     end
     object btnHelp: TBitBtn
@@ -268,10 +261,8 @@ inherited frmManageParameters: TfrmManageParameters
       Width = 82
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 3
       OnClick = btnHelpClick
     end

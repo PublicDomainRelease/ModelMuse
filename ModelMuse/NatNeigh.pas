@@ -360,7 +360,14 @@ begin
       finally
         TestedPoints.Free;
       end;
-      result := WeightedSum/Sum;
+      if Sum = 0 then
+      begin
+        result := 0
+      end
+      else
+      begin
+        result := WeightedSum/Sum;
+      end;
     finally
       TestPolygon.Free;
     end;

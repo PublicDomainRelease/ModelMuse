@@ -17,15 +17,15 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
     object lblNumTimes: TLabel
       Left = 64
       Top = 15
-      Width = 78
-      Height = 13
+      Width = 95
+      Height = 16
       Caption = 'Number of times'
     end
     object seNumberOfTimes: TJvSpinEdit
       Left = 8
       Top = 6
       Width = 49
-      Height = 21
+      Height = 24
       ButtonKind = bkClassic
       MaxValue = 2147483647.000000000000000000
       TabOrder = 0
@@ -125,8 +125,8 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
       object lblFormula: TLabel
         Left = 136
         Top = 5
-        Width = 38
-        Height = 13
+        Width = 47
+        Height = 16
         Alignment = taCenter
         Caption = 'Formula'
       end
@@ -168,7 +168,6 @@ inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
       OnColSize = dgModflowBoundaryColSize
       ColorRangeSelection = False
       OnHorizontalScroll = dgModflowBoundaryHorizontalScroll
-      ColorSelectedRow = True
       Columns = <
         item
           AutoAdjustRowHeights = False

@@ -172,6 +172,7 @@ type
     procedure SetRow(const Value: integer);
   public
     procedure Assign(Source: TPersistent); override;
+    function IsSame(OtherReturnCell: TReturnCell): boolean;
   published
     property Col: integer read FCol write SetCol;
     property Row: integer read FRow write SetRow;
@@ -188,6 +189,7 @@ type
     procedure SetZ(const Value: real);
   public
     procedure Assign(Source: TPersistent); override;
+    function IsSame(OtherReturnLocation: TReturnLocation): boolean;
   published
     property X: real read FX write SetX;
     property Y: real read FY write SetY;
@@ -207,6 +209,7 @@ type
     procedure Assign(Source: TPersistent); override;
     property ScreenObject: TObject read GetScreenObject
       write SetScreenObject;
+    function IsSame(OtherReturnObject: TReturnObject): boolean;
   published
     property ObjectName: string read GetObjectName write SetObjectName;
   end;
@@ -233,6 +236,7 @@ type
     // If the @link(TCellLocation.Layer TCellLocation.Layer) = 0
     // no water is returned to the model.
     function ReturnCellLocation(AModel: TBaseModel): TCellLocation;
+    function IsSame(OtherDrainReturn: TDrainReturn): boolean;
   published
     property ReturnChoice: TReturnChoice read FReturnChoice
       write SetReturnChoice;
@@ -419,7 +423,7 @@ end;
 procedure TDrtItem.RemoveFormulaObjects;
 begin
   frmGoPhast.PhastModel.FormulaManager.Remove(FReturnFraction,
-    GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+    GlobalRemoveModflowBoundaryItemSubscription, GlobalRestoreModflowBoundaryItemSubscription, self);
   inherited;
 end;
 
@@ -991,6 +995,13 @@ begin
   end;
 end;
 
+function TReturnCell.IsSame(OtherReturnCell: TReturnCell): boolean;
+begin
+  result := (Col = OtherReturnCell.Col)
+    and (Row = OtherReturnCell.Row)
+    and (Lay = OtherReturnCell.Lay);
+end;
+
 procedure TReturnCell.SetCol(const Value: integer);
 begin
   if FCol <> Value then
@@ -1035,6 +1046,13 @@ begin
   begin
     inherited;
   end;
+end;
+
+function TReturnLocation.IsSame(OtherReturnLocation: TReturnLocation): boolean;
+begin
+  result := (X = OtherReturnLocation.X)
+    and (Y = OtherReturnLocation.Y)
+    and (Z = OtherReturnLocation.Z);
 end;
 
 procedure TReturnLocation.SetX(const Value: real);
@@ -1128,6 +1146,11 @@ begin
   begin
     result := nil;
   end;
+end;
+
+function TReturnObject.IsSame(OtherReturnObject: TReturnObject): boolean;
+begin
+  result := ObjectName = OtherReturnObject.ObjectName;
 end;
 
 procedure TReturnObject.SetObjectName(const Value: string);
@@ -1226,6 +1249,21 @@ begin
   FReturnLocation.Free;
   FReturnObject.Free;
   inherited;
+end;
+
+function TDrainReturn.IsSame(OtherDrainReturn: TDrainReturn): boolean;
+begin
+  result := ReturnChoice = OtherDrainReturn.ReturnChoice;
+  if Result then
+  begin
+    case ReturnChoice of
+      rtNone: ;
+      rtObject: result := ReturnObject.IsSame(OtherDrainReturn.ReturnObject);
+      rtLocation: result := ReturnLocation.IsSame(OtherDrainReturn.ReturnLocation);
+      rtCell: result := ReturnCell.IsSame(OtherDrainReturn.ReturnCell);
+      else Assert(False);
+    end;
+  end;
 end;
 
 function TDrainReturn.ReturnCellLocation(AModel: TBaseModel): TCellLocation;

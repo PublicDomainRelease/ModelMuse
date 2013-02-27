@@ -15,6 +15,7 @@ type
     // See @link(FrameLoaded).
     procedure SetFrameLoaded(const Value: boolean);
   protected
+    FLastTimeColumn: integer;
     // When the user sets the starting time for a boundary that matches the
     // starting time of a stress period, automatically
     // set the ending time to be the ending time to be the ending time of the
@@ -28,11 +29,18 @@ type
     // being set improperly when @link(TfrmScreenObjectProperties) is
     // reading data.
     property FrameLoaded: boolean read FFrameLoaded write SetFrameLoaded;
+    constructor Create(AOwner: TComponent); override;
   end;
 
 implementation
 
 {$R *.dfm}
+
+constructor TframeScreenObject.Create(AOwner: TComponent);
+begin
+  inherited;
+  FLastTimeColumn := 1;
+end;
 
 procedure TframeScreenObject.SetFrameLoaded(const Value: boolean);
 begin
@@ -44,7 +52,8 @@ procedure TframeScreenObject.UpdateNextTimeCell(DataGrid: TRbwDataGrid4;
 var
   SelectIndex: Integer;
 begin
-  if FrameLoaded and (ARow >= DataGrid.FixedRows) and (ACol in [0, 1]) then
+  if FrameLoaded and (ARow >= DataGrid.FixedRows) and (ACol in [0, 1])
+    and (FLastTimeColumn = 1) then
   begin
     SelectIndex := DataGrid.ItemIndex[ACol, ARow];
     if SelectIndex >= 0 then

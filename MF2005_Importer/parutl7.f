@@ -305,6 +305,9 @@ C     ******************************************************************
 C     Substitute parameter-based values into a 2-D array based on a
 C     parameter type.
 C     ******************************************************************
+C
+C        SPECIFICATIONS:
+C     ------------------------------------------------------------------
       SUBROUTINE UPARARRSUB2(ZZ,NCOL,NROW,ILAY,NP,IN,IOUT,PTYP,ANAME,
      1      PACK,IPF)
 C     ******************************************************************

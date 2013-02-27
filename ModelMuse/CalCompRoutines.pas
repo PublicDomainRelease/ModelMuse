@@ -10,7 +10,7 @@ unit CalCompRoutines;
 
 interface
 
-uses TriPackRoutines, GoPhastTypes;
+uses TriPackRoutines, GoPhastTypes, SubPolygonUnit;
 
 type
   // @name is a type of procedure used to display a contour plot.
@@ -65,9 +65,15 @@ var
   // Should be assigned before calling @link(TRICP_Pascal).
   ShowPlotObject: TShowPlotObject = nil;
 
+  MeshOutline: TOutline = nil;
+
 implementation
 
 uses LineStorage;
+
+var
+  GlobalContourLevel: Real = 0;
+  GlobalTriangleNumber: Integer = 0;
 
 procedure PLOTS; stdcall;
 begin
@@ -87,9 +93,13 @@ end;
 procedure SpecifyContourLevel(const ContourLevel: Real;
   const TriangleNumber, TriangleSide: longint);
 begin
-  Assert(CurrentLine <> nil);
-  CurrentLine.ContourLevel := ContourLevel;
-  CurrentLine.TriangleNumber := TriangleNumber;
+  GlobalContourLevel := ContourLevel;
+  GlobalTriangleNumber := TriangleNumber;
+  if (CurrentLine <> nil) then
+  begin
+    CurrentLine.ContourLevel := ContourLevel;
+    CurrentLine.TriangleNumber := TriangleNumber;
+  end;
 //  CurrentLine.StartingSide := TriangleSide;
 end;
 
@@ -116,8 +126,18 @@ begin
       ShowPlotObject;
     end;
     Exit;
-  end
-  else if (IPEN = 3) or (CurrentLine = nil) then
+  end;
+
+  if Assigned(MeshOutline) then
+  begin
+    if not MeshOutline.PointInside(X,Y) then
+    begin
+      CurrentLine := nil;
+      Exit;
+    end;
+  end;
+
+  if (IPEN = 3) or (CurrentLine = nil) then
   begin
     if CurrentLineList = nil then
     begin
@@ -126,6 +146,8 @@ begin
     end;
     CurrentLine := TLine.Create;
     CurrentLineList.Add(CurrentLine);
+    CurrentLine.ContourLevel := GlobalContourLevel;
+    CurrentLine.TriangleNumber := GlobalTriangleNumber;
   end;
   CurrentLine.Add(X,Y);
 end;

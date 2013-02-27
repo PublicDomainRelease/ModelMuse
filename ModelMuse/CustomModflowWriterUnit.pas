@@ -90,7 +90,7 @@ type
     // @param(Model is the @link(TCustomModel) to be exported.)
     Constructor Create(AModel: TCustomModel; EvaluationType: TEvaluationType); virtual;
     // @name writes an end of line to the output file.
-    procedure NewLine;
+    procedure NewLine; virtual;
     // @name writes Value to the output with a leading blank space.
     procedure WriteFloat(const Value: double);
     procedure WriteF10Float(const Value: double);
@@ -102,7 +102,7 @@ type
     procedure WriteI2Integer(Const Value: integer; const ErrorID: string);
     // @name writes Value to the output with NO leading blank space.
     procedure WriteString(const Value: String); overload;
-    procedure WriteString(const Value: AnsiString); overload;
+    procedure WriteString(const Value: AnsiString); overload; virtual;
   end;
 
   { @name is an abstract base class used as an ancestor for classes that
@@ -141,7 +141,7 @@ type
     function IPRN_Mt3dms_Real: integer;
     // @name retrieves the proper unit number for the cell-by-cell flow
     // file.
-    procedure GetFlowUnitNumber(var UnitNumber: Integer);
+    procedure GetFlowUnitNumber(var UnitNumber: Integer); virtual;
     // @name writes a U2DREL array based on the contents of List.
     //  List is sometimes a @link(TValueCellList)
     // or a list of list of @link(TValueCellList)
@@ -156,8 +156,8 @@ type
     // responsibility to free TransientArray
     procedure WriteTransient2DArray(const Comment: string;
       DataTypeIndex: Integer; DataType: TRbwDataType; DefaultValue: Double;
-      List: TList; AssignmentMethod: TUpdateMethod; AdjustForLGR: boolean; var TransientArray: TDataArray;
-      FreeArray: boolean = True);
+      List: TList; AssignmentMethod: TUpdateMethod; AdjustForLGR: boolean;
+      var TransientArray: TDataArray; FreeArray: boolean = True);
   public
     // @name converts a real number represented as a string to always use
     property ArrayWritingFormat: TArrayWritingFormat read FArrayWritingFormat;
@@ -278,7 +278,7 @@ type
       var Clusters: TOneDIntegerArray; var UniformLayers: TBooleanDynArray;
       LayerCount: Integer; Param: TModflowSteadyParameter);
     Function UcodeObsNameOK(Const AName: string): boolean;
-    procedure CheckCell(ValueCell: TValueCell; const PackageName: string);
+    procedure CheckCell(ValueCell: TValueCell; const PackageName: string); virtual;
   public
     destructor Destroy; override;
   end;
@@ -302,13 +302,18 @@ type
     // one for each stress period.
     // Each such list contains series of @link(TValueCell)s. Each
     // @link(TValueCell) defines one boundary cell for one stress period.
+    // @name is a TObjectList.
     FValues: TList;
+    function GetOwnsValueContents: Boolean;
+    procedure SetOwnsValueContents(const Value: Boolean);
   protected
     // @name reads the data from the model and processes it into a form
     // where it can be readily exported to the MODFLOW input file.
     procedure Evaluate; virtual; abstract;
     // @name stores the values at a list of cells.
     property Values: TList read FValues;
+    property OwnsValueContents: Boolean read GetOwnsValueContents
+      write SetOwnsValueContents;
 
     {@name updates @link(TModflowBoundaryDisplayDataArray DisplayArray)
     with the contents of List.
@@ -345,8 +350,6 @@ type
       DisplayArray: TModflowBoundaryDisplayDataArray; DataTypeIndex: Integer;
       List: TList; DefaultValue: double; DataType: TRbwDataType;
       UpdateMethod: TUpdateMethod);
-
-
   public
     // @name creates and instance of @classname.
     Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
@@ -465,7 +468,7 @@ type
    files that allow for both parameter and non-parameter cells.}
   TCustomListWriter = class(TCustomParameterTransientWriter)
   protected
-    // @name counts the maximum number of cells used any stress period. This
+    // @name counts the maximum number of cells used in any stress period. This
     // value is returned in MaximumNumberOfCells.
     procedure CountCells(var MaximumNumberOfCells: Integer);
     // @name counts the number of parameters and the maximum number of cells
@@ -585,7 +588,7 @@ type
     // the @link(TCustomVariable)s in Variables.)
     procedure WriteObservationCell(ACell: TValueCell; DataSet5: TStringList;
       var Expression: TExpression; DataSets, Variables: TList;
-      ObsFactor: TObservationFactor);
+      ObsFactor: TObservationFactor); virtual;
     // @name writes the cells to be include in the observation to DataSet5.
     // @param(Variables is a list of @link(TCustomVariable)s used by
     //  Expression.)
@@ -600,6 +603,11 @@ type
       var Expression: TExpression; DataSet5: TStringList; AllCells: TList;
       ScreenObject: TScreenObject; ObsFactor: TObservationFactor); virtual;
     function ObsNameWarningString: string; virtual; abstract;
+    procedure WriteDataSet5ForOneScreenObject(ObsFactor: TObservationFactor;
+      DataSet5: TStringList; AllCells: TList);
+    procedure EvaluateFactor(var Factor: Extended; var Expression: TExpression;
+      ACell: TValueCell; DataSets, Variables: TList;
+      ObsFactor: TObservationFactor);
   end;
 
   TCustomTransientArrayWriter = class(TCustomParameterTransientWriter)
@@ -742,9 +750,26 @@ function GetMaxUnitNumber: integer;
 
 procedure SetCurrentNameFileWriter(NameFileWriter: TCustomNameFileWriter);
 
+procedure AddOpenListFileLine(ListFile: string; OpenListFile: Boolean;
+  BatchFile: TStringList; ProgramLocations: TProgramLocations);
+
 resourcestring
   StrObservationFactor = '(Observation factor for the ' + sLineBreak + '%s)';
   StrNoValueAssigned = 'No value assigned';
+  StrNoBoundaryConditio = 'No boundary conditions assigned to the %s because' +
+  ' the object does not set the values of either enclosed or intersected cel' +
+  'ls.';
+  StrTheSPackageHasB = 'The %s package has been activated but no boundaries ' +
+  'for it have been defined.';
+  StrNoDefinedBoundarie = 'No defined boundaries in %s.';
+  StrInSNoFlowObser = 'In %s, no flow observations of the correct type have ' +
+  'been defined.';
+  StrSelectModelObserv = 'Select "Model|Observation Type" and make sure you ' +
+  'have the correct observation type selected.';
+  StrLayerRowCol = 'Layer, Row, Col = [%0:d, %1:d, %2:d]';
+  StrLayerRowColObject = 'Layer, Row, Col = [%0:d, %1:d, %2:d] defined by the object %3:s';
+  StrEvaluatingS = '  Evaluating %s';
+
 
 const
   // @name is the comment assigned to locations in a @link(TDataArray) where
@@ -752,7 +777,6 @@ const
   StrDATABINARY = 'DATA(BINARY)';
   StrDATA = 'DATA';
   StrArrays = 'arrays';
-
 
 implementation
 
@@ -765,20 +789,13 @@ uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmGoPhastUnit,
 resourcestring
   StrTheFollowingParame = 'The following %s parameters are being skipped ' +
   'because they have no cells associated with them.';
-  StrNoBoundaryConditio = 'No boundary conditions assigned to the %s because' +
-  ' the object does not set the values of either enclosed or intersected cel' +
-  'ls.';
   StrEvaluatingSData = 'Evaluating %s data.';
-  StrNoDefinedBoundarie = 'No defined boundaries in %s.';
-  StrTheSPackageHasB = 'The %s package has been activated but no boundaries ' +
-  'for it have been defined.';
   StrValueTooLong = 'Value too long';
   StrSIsTooLong10 = '%s is too long to be displayed with 10 characters';
   StrSIsTooLong2 = '%s is too long to be displayed with 2 characters';
   StrTheSInputFileCa = 'The %s input file can not be created.';
   StrInTheBoundaryPack = 'In the boundary package related to the %s package,' +
   ' no boundaries were defined.';
-  StrLayerRowCol = 'Layer, Row, Col = [%0:d, %1:d, %2:d]';
   StrNoBoundaryConditio1 = 'No boundary conditions for the %0:s in one or mor' +
   'e stress periods.';
   StrStressPeriod0d = 'Stress Period %0:d';
@@ -801,16 +818,13 @@ resourcestring
   StrWritingS = '    Writing %s';
   StrWriting0sFor = '    Writing %0:s for Layer %1:d';
   StrWritingArray = '    Writing array';
-  StrEvaluatingS = '  Evaluating %s';
   StrWritingParamter = '    Writing paramter: %s';
   StrWritingStressPer = '  Writing Stress Period %d';
   StrLayer0dRow1 = 'Layer: %0:d; Row: %1:d; Column: %2:d';
   StrInputFileDoesNot = 'Input file does not exist.';
   StrTheRequiredInputF = 'The required input file "%s" does not exist.';
-  StrInSNoFlowObser = 'In %s, no flow observations of the correct type have ' +
-  'been defined.';
-  StrSelectModelObserv = 'Select "Model|Observation Type" and make sure you ' +
-  'have the correct observation type selected.';
+  StrNoParametersAreBe = 'No parameters are being used in one or more stress' +
+  ' periods in the %s package.';
 
 var
 //  NameFile: TStringList;
@@ -939,10 +953,20 @@ begin
         begin
           ModflowLocation := ProgramLocations.ModflowLgrLocation;
         end;
+      msModflowLGR2:
+        begin
+          ModflowLocation := ProgramLocations.ModflowLgr2Location;
+        end;
       msModflowNWT:
         begin
           ModflowLocation := ProgramLocations.ModflowNwtLocation;
         end;
+      {$IFDEF FMP}
+      msModflowFmp:
+        begin
+          ModflowLocation := ProgramLocations.ModflowFmpLocation;
+        end;
+      {$ENDIF}
       else Assert(False);
     end;
 
@@ -1725,7 +1749,7 @@ begin
   end;
   if Pos(' ', FileName) > 0 then
   begin
-    if not FileExists(FileName) then
+    if not FileExists(FileName) and (Option <> foInputAlreadyExists) then
     begin
       TFile.Create(FileName).Free;
     end;
@@ -2045,6 +2069,11 @@ begin
   inherited;
 end;
 
+function TCustomTransientWriter.GetOwnsValueContents: Boolean;
+begin
+  result := (FValues as TObjectList).OwnsObjects;
+end;
+
 procedure TCustomParameterTransientWriter.Evaluate;
 var
   ScreenObjectIndex: Integer;
@@ -2055,65 +2084,70 @@ var
   NoAssignmentErrorRoot: string;
   NoDefinedErrorRoot: string;
 begin
-  NoDefinedErrorRoot := Format(StrNoDefinedBoundarie, [Package.PackageIdentifier]);
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, NoDefinedErrorRoot);
-  NoAssignmentErrorRoot := Format(StrNoBoundaryConditio, [Package.PackageIdentifier]);
-//  NoAssignmentErrorRoot := 'No boundary conditions assigned to the '
-//    + Package.PackageIdentifier
-//    + ' because the object does not '
-//    + 'set the values of either enclosed or intersected cells.';
-  frmProgressMM.AddMessage(Format(StrEvaluatingSData, [Package.PackageIdentifier]));
-//  frmProgressMM.AddMessage('Evaluating '
-//    + Package.PackageIdentifier + ' data.');
-  for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
-  begin
-    if not frmProgressMM.ShouldContinue then
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    NoDefinedErrorRoot := Format(StrNoDefinedBoundarie, [Package.PackageIdentifier]);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, NoDefinedErrorRoot);
+    NoAssignmentErrorRoot := Format(StrNoBoundaryConditio, [Package.PackageIdentifier]);
+  //  NoAssignmentErrorRoot := 'No boundary conditions assigned to the '
+  //    + Package.PackageIdentifier
+  //    + ' because the object does not '
+  //    + 'set the values of either enclosed or intersected cells.';
+    frmProgressMM.AddMessage(Format(StrEvaluatingSData, [Package.PackageIdentifier]));
+  //  frmProgressMM.AddMessage('Evaluating '
+  //    + Package.PackageIdentifier + ' data.');
+    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
     begin
-      Exit;
-    end;
-    ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
-    if ScreenObject.Deleted then
-    begin
-      Continue;
-    end;
-    if not ScreenObject.UsedModels.UsesModel(Model) then
-    begin
-      Continue;
-    end;
-    Boundary := GetBoundary(ScreenObject);
-    if Boundary <> nil then
-    begin
-      if not ScreenObject.SetValuesOfEnclosedCells
-        and not ScreenObject.SetValuesOfIntersectedCells then
+      if not frmProgressMM.ShouldContinue then
       begin
-        frmErrorsAndWarnings.AddError(Model, NoAssignmentErrorRoot,
-          ScreenObject.Name);
+        Exit;
       end;
-      frmProgressMM.AddMessage(Format(StrEvaluatingS,
-        [ScreenObject.Name]));
-      Boundary.GetCellValues(FValues, FParamValues, Model);
+      ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
+      if ScreenObject.Deleted then
+      begin
+        Continue;
+      end;
+      if not ScreenObject.UsedModels.UsesModel(Model) then
+      begin
+        Continue;
+      end;
+      Boundary := GetBoundary(ScreenObject);
+      if Boundary <> nil then
+      begin
+        if not ScreenObject.SetValuesOfEnclosedCells
+          and not ScreenObject.SetValuesOfIntersectedCells then
+        begin
+          frmErrorsAndWarnings.AddError(Model, NoAssignmentErrorRoot,
+            ScreenObject.Name);
+        end;
+        frmProgressMM.AddMessage(Format(StrEvaluatingS,
+          [ScreenObject.Name]));
+        Boundary.GetCellValues(FValues, FParamValues, Model);
+      end;
     end;
-  end;
-  for ParamIndex := 0 to FParamValues.Count - 1 do
-  begin
-    List := FParamValues.Objects[ParamIndex] as TList;
-    While List.Count > FValues.Count do
+    for ParamIndex := 0 to FParamValues.Count - 1 do
     begin
-      FValues.Add(TValueCellList.Create(CellType))
+      List := FParamValues.Objects[ParamIndex] as TList;
+      While List.Count > FValues.Count do
+      begin
+        FValues.Add(TValueCellList.Create(CellType))
+      end;
     end;
-  end;
-  for ParamIndex := 0 to FParamValues.Count - 1 do
-  begin
-    List := FParamValues.Objects[ParamIndex] as TList;
-    While List.Count < FValues.Count do
+    for ParamIndex := 0 to FParamValues.Count - 1 do
     begin
-      List.Add(TValueCellList.Create(CellType))
+      List := FParamValues.Objects[ParamIndex] as TList;
+      While List.Count < FValues.Count do
+      begin
+        List.Add(TValueCellList.Create(CellType))
+      end;
     end;
-  end;
-  if (FParamValues.Count = 0) and (FValues.Count = 0) then
-  begin
-    frmErrorsAndWarnings.AddError(Model, NoDefinedErrorRoot,
-      Format(StrTheSPackageHasB, [Package.PackageIdentifier]));
+    if (FParamValues.Count = 0) and (FValues.Count = 0) then
+    begin
+      frmErrorsAndWarnings.AddError(Model, NoDefinedErrorRoot,
+        Format(StrTheSPackageHasB, [Package.PackageIdentifier]));
+    end;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -2329,129 +2363,134 @@ begin
     UpdateNotUsedDisplay(TimeLists);
     Exit;
   end;
-  DataArrayList := TList.Create;
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    // evaluate all the data used in the package.
-    Evaluate;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-    ClearTimeLists(Model);
-
-    // Set PARTYP.
-    case ParameterType of
-      ptUndefined..ptLPF_VKCB:
-        begin
-          Assert(False);
-        end;
-      ptRch, ptEvt, ptETS, ptCHD..ptDRT:
-        begin
-          PARTYP := ' ' + ParmeterTypeToStr(ParameterType);
-        end
-      Else Assert(False);
-    end;
-    // Set the error message.
-    ErrorMessage := Format(StrOneOrMoreSParam, [Trim(PARTYP)]);
-
-    // loop over the parameters
-    for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
-    begin
-      Param := Model.ModflowTransientParameters[ParamIndex];
-      // Consider only those parameters that match the parameter type for the
-      // current package.
-      if Param.ParameterType = ParameterType then
+    DataArrayList := TList.Create;
+    try
+      // evaluate all the data used in the package.
+      Evaluate;
+      if not frmProgressMM.ShouldContinue then
       begin
-        Position := ParamValues.IndexOf(Param.ParameterName);
-        // The parameter name is erased from FParamValues in
-        // CountParametersAndParameterCells if there are no cells
-        // associated with it.
-        if Position < 0 then
-        begin
-          if frmErrorsAndWarnings <> nil then
+        Exit;
+      end;
+      ClearTimeLists(Model);
+
+      // Set PARTYP.
+      case ParameterType of
+        ptUndefined..ptLPF_VKCB:
           begin
-            frmErrorsAndWarnings.AddWarning(Model,
-              ErrorMessage, Param.ParameterName);
+            Assert(False);
           end;
-          Continue;
-        end;
-        ParameterValues := ParamValues.Objects[Position] as TList;
-        // ParameterValues contains lists of cells for a parameter for
-        // each stress period.
-        for TimeListIndex := 0 to TimeLists.Count - 1 do
-        begin
-          DisplayTimeList := TimeLists[TimeListIndex];
-          Assert(ParameterValues.Count = DisplayTimeList.Count);
-        end;
-        // For each stress period, transfer values from
-        // the cells lists to the data arrays.
-        for TimeIndex := 0 to ParameterValues.Count - 1 do
-        begin
-          CellList := ParameterValues[TimeIndex];
-          if CellList.Count > 0 then
+        ptRch, ptEvt, ptETS, ptCHD..ptDRT, ptSTR, ptQMAX:
           begin
-            DataArrayList.Clear;
-            for TimeListIndex := 0 to TimeLists.Count - 1 do
+            PARTYP := ' ' + ParmeterTypeToStr(ParameterType);
+          end
+        Else Assert(False);
+      end;
+      // Set the error message.
+      ErrorMessage := Format(StrOneOrMoreSParam, [Trim(PARTYP)]);
+
+      // loop over the parameters
+      for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
+      begin
+        Param := Model.ModflowTransientParameters[ParamIndex];
+        // Consider only those parameters that match the parameter type for the
+        // current package.
+        if Param.ParameterType = ParameterType then
+        begin
+          Position := ParamValues.IndexOf(Param.ParameterName);
+          // The parameter name is erased from FParamValues in
+          // CountParametersAndParameterCells if there are no cells
+          // associated with it.
+          if Position < 0 then
+          begin
+            if frmErrorsAndWarnings <> nil then
             begin
-              DisplayTimeList := TimeLists[TimeListIndex];
-              DataArray := DisplayTimeList[TimeIndex]
-                as TModflowBoundaryDisplayDataArray;
-              DataArrayList.Add(DataArray);
+              frmErrorsAndWarnings.AddWarning(Model,
+                ErrorMessage, Param.ParameterName);
             end;
-            UpdateCellDisplay(CellList, DataArrayList,
-              ParameterIndicies, Param);
+            Continue;
+          end;
+          ParameterValues := ParamValues.Objects[Position] as TList;
+          // ParameterValues contains lists of cells for a parameter for
+          // each stress period.
+          for TimeListIndex := 0 to TimeLists.Count - 1 do
+          begin
+            DisplayTimeList := TimeLists[TimeListIndex];
+            Assert(ParameterValues.Count = DisplayTimeList.Count);
+          end;
+          // For each stress period, transfer values from
+          // the cells lists to the data arrays.
+          for TimeIndex := 0 to ParameterValues.Count - 1 do
+          begin
+            CellList := ParameterValues[TimeIndex];
+            if CellList.Count > 0 then
+            begin
+              DataArrayList.Clear;
+              for TimeListIndex := 0 to TimeLists.Count - 1 do
+              begin
+                DisplayTimeList := TimeLists[TimeListIndex];
+                DataArray := DisplayTimeList[TimeIndex]
+                  as TModflowBoundaryDisplayDataArray;
+                DataArrayList.Add(DataArray);
+              end;
+              UpdateCellDisplay(CellList, DataArrayList,
+                ParameterIndicies, Param);
+            end;
           end;
         end;
       end;
-    end;
-    // Values contains lists of cells not associated with any parameter for
-    // each stress period.
-    for TimeListIndex := 0 to TimeLists.Count - 1 do
-    begin
-      DisplayTimeList := TimeLists[TimeListIndex];
-      // Values.Count can be zero if no objects define the boundary condition.
-      if (Values.Count <> 0) or (DisplayTimeList.Count = 0) then
+      // Values contains lists of cells not associated with any parameter for
+      // each stress period.
+      for TimeListIndex := 0 to TimeLists.Count - 1 do
       begin
-        Assert(Values.Count = DisplayTimeList.Count);
-      end;
-    end;
-
-    // For each stress period, transfer values from
-    // the cells lists to the data arrays.
-    for TimeIndex := 0 to Values.Count - 1 do
-    begin
-      CellList := Values[TimeIndex];
-      if CellList.Count > 0 then
-      begin
-        DataArrayList.Clear;
-        for TimeListIndex := 0 to TimeLists.Count - 1 do
+        DisplayTimeList := TimeLists[TimeListIndex];
+        // Values.Count can be zero if no objects define the boundary condition.
+        if (Values.Count <> 0) or (DisplayTimeList.Count = 0) then
         begin
-          DisplayTimeList := TimeLists[TimeListIndex];
+          Assert(Values.Count = DisplayTimeList.Count);
+        end;
+      end;
+
+      // For each stress period, transfer values from
+      // the cells lists to the data arrays.
+      for TimeIndex := 0 to Values.Count - 1 do
+      begin
+        CellList := Values[TimeIndex];
+        if CellList.Count > 0 then
+        begin
+          DataArrayList.Clear;
+          for TimeListIndex := 0 to TimeLists.Count - 1 do
+          begin
+            DisplayTimeList := TimeLists[TimeListIndex];
+            DataArray := DisplayTimeList[TimeIndex]
+              as TModflowBoundaryDisplayDataArray;
+            DataArrayList.Add(DataArray);
+          end;
+          UpdateCellDisplay(CellList, DataArrayList, ParameterIndicies);
+        end;
+      end;
+      // Mark all the data arrays and time lists as up to date.
+      for TimeListIndex := 0 to TimeLists.Count - 1 do
+      begin
+        DisplayTimeList := TimeLists[TimeListIndex];
+        for TimeIndex := 0 to DisplayTimeList.Count - 1 do
+        begin
           DataArray := DisplayTimeList[TimeIndex]
             as TModflowBoundaryDisplayDataArray;
-          DataArrayList.Add(DataArray);
+          DataArray.UpToDate := True;
         end;
-        UpdateCellDisplay(CellList, DataArrayList, ParameterIndicies);
+        DisplayTimeList.SetUpToDate(True);
       end;
+    finally
+      DataArrayList.Free;
     end;
-    // Mark all the data arrays and time lists as up to date.
-    for TimeListIndex := 0 to TimeLists.Count - 1 do
+    if frmErrorsAndWarnings.HasMessages then
     begin
-      DisplayTimeList := TimeLists[TimeListIndex];
-      for TimeIndex := 0 to DisplayTimeList.Count - 1 do
-      begin
-        DataArray := DisplayTimeList[TimeIndex]
-          as TModflowBoundaryDisplayDataArray;
-        DataArray.UpToDate := True;
-      end;
-      DisplayTimeList.SetUpToDate(True);
+      frmErrorsAndWarnings.Show;
     end;
   finally
-    DataArrayList.Free;
-  end;
-  if frmErrorsAndWarnings.HasMessages then
-  begin
-    frmErrorsAndWarnings.Show;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -2478,7 +2517,7 @@ var
 begin
   case ParameterType of
     ptUndefined..ptLPF_VKCB: Assert(False);
-    ptRch, ptEvt, ptETS, ptCHD..ptDRT: PARTYP := ' '
+    ptRch, ptEvt, ptETS, ptCHD..ptDRT, ptQMAX: PARTYP := ' '
       + ParmeterTypeToStr(ParameterType);
     Else Assert(False);
   end;
@@ -2978,79 +3017,99 @@ var
   DataArray: TModflowBoundaryDisplayDataArray;
   DataArrayList: TObjectList;
   SkippedParamWarning: string;
+  NoParametersError: string;
+  ParameterActive: Boolean;
+  ParametersUsed: Boolean;
 begin
-  case ParameterType of
-    ptUndefined..ptLPF_VKCB: Assert(False);
-    ptRCH, ptEVT, ptETS, ptCHD..ptDRT: PARTYP := ' '
-      + ParmeterTypeToStr(ParameterType);
-    Else Assert(False);
-  end;
-  ErrorMessage := Format(ErrorRoot, [Trim(PARTYP)]);
-  SkippedParamWarning := Format(StrTheFollowingParame, [Trim(PARTYP)]);
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, ErrorMessage);
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, SkippedParamWarning);
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    case ParameterType of
+      ptUndefined..ptLPF_VKCB: Assert(False);
+      ptRCH, ptEVT, ptETS, ptCHD..ptDRT, ptQMAX: PARTYP := ' '
+        + ParmeterTypeToStr(ParameterType);
+      Else Assert(False);
+    end;
+    ErrorMessage := Format(ErrorRoot, [Trim(PARTYP)]);
+    SkippedParamWarning := Format(StrTheFollowingParame, [Trim(PARTYP)]);
+    NoParametersError := Format(StrNoParametersAreBe, [Trim(PARTYP)]);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, ErrorMessage);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, SkippedParamWarning);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, NoParametersError);
 
-  for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
-  begin
-    Param := Model.ModflowTransientParameters[ParamIndex];
-    if Param.ParameterType = ParameterType then
+    ParameterActive := False;
+    ParametersUsed := False;
+    for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
     begin
-      Position := ParamValues.IndexOf(Param.ParameterName);
-      // The parameter name is erased from ParamValues in
-      // CountParametersAndParameterCells if there are no cells
-      // associated with it.
-      if Position < 0 then
+      Param := Model.ModflowTransientParameters[ParamIndex];
+      if Param.ParameterType = ParameterType then
       begin
-        if frmErrorsAndWarnings <> nil then
+        ParametersUsed := True;
+        Position := ParamValues.IndexOf(Param.ParameterName);
+        // The parameter name is erased from ParamValues in
+        // CountParametersAndParameterCells if there are no cells
+        // associated with it.
+        if Position < 0 then
         begin
           frmErrorsAndWarnings.AddWarning(Model,
             ErrorMessage, Param.ParameterName);
+          Continue;
         end;
-        Continue;
-      end;
-      ParameterValues := ParamValues.Objects[Position] as TList;
-      Assert(ParameterValues.Count > 0);
-      // Data set 3
-      GetNumCellsAndNumInstances(ParameterValues, NUMINST, NCLU);
-      if NCLU > 0 then
-      begin
-        NCLU := 1;
-        // Make sure the maximum length of the name of instance is <= 10.
-  //      GetInstanceRoot(PARNAM, ParameterValues, InstanceRoot);
-        // Data sets 4a and 4b
-        for TimeIndex := 0 to ParameterValues.Count - 1 do
+        ParameterValues := ParamValues.Objects[Position] as TList;
+        if ParameterValues.Count = 0 then
         begin
-          if List.Count > TimeIndex then
-          begin
-            DataArrayList := List[TimeIndex];
-          end
-          else
-          begin
-            DataArrayList:= TObjectList.Create;
-            List.Add(DataArrayList);
-          end;
-          CellList := ParameterValues[TimeIndex];
-          if CellList.Count > 0 then
-          begin
-            // Data set 4a
-            DataArray:= TModflowBoundaryDisplayDataArray.Create(Model);
-            DataArray.Orientation := dso3D;
-            DataArray.EvaluatedAt := eaBlocks;
-            DataArray.UpdateDimensions(Model.ModflowGrid.LayerCount,
-              Model.ModflowGrid.RowCount,
-              Model.ModflowGrid.ColumnCount);
-            DataArrayList.Add(DataArray);
-            EvaluateParameterCells(CellList, DataArray, Param, AssignmentMethod);
-            DataArray.CacheData;
-          end;
+          Continue;
         end;
-      end
-      else
-      begin
-        frmErrorsAndWarnings.AddWarning(Model,
-          SkippedParamWarning, Param.ParameterName);
+        ParameterActive := True;
+        Assert(ParameterValues.Count > 0);
+        // Data set 3
+        GetNumCellsAndNumInstances(ParameterValues, NUMINST, NCLU);
+        if NCLU > 0 then
+        begin
+          NCLU := 1;
+          // Make sure the maximum length of the name of instance is <= 10.
+    //      GetInstanceRoot(PARNAM, ParameterValues, InstanceRoot);
+          // Data sets 4a and 4b
+          for TimeIndex := 0 to ParameterValues.Count - 1 do
+          begin
+            if List.Count > TimeIndex then
+            begin
+              DataArrayList := List[TimeIndex];
+            end
+            else
+            begin
+              DataArrayList:= TObjectList.Create;
+              List.Add(DataArrayList);
+            end;
+            CellList := ParameterValues[TimeIndex];
+            if CellList.Count > 0 then
+            begin
+              // Data set 4a
+              DataArray:= TModflowBoundaryDisplayDataArray.Create(Model);
+              DataArray.Orientation := dso3D;
+              DataArray.EvaluatedAt := eaBlocks;
+              DataArray.UpdateDimensions(Model.ModflowGrid.LayerCount,
+                Model.ModflowGrid.RowCount,
+                Model.ModflowGrid.ColumnCount);
+              DataArrayList.Add(DataArray);
+              EvaluateParameterCells(CellList, DataArray, Param, AssignmentMethod);
+              DataArray.CacheData;
+            end;
+          end;
+        end
+        else
+        begin
+          frmErrorsAndWarnings.AddWarning(Model,
+            SkippedParamWarning, Param.ParameterName);
+        end;
       end;
     end;
+    if ParametersUsed and not ParameterActive then
+    begin
+      frmErrorsAndWarnings.AddError(Model, NoParametersError,
+        NoParametersError);
+    end;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -3083,6 +3142,10 @@ begin
         Continue;
       end;
       ParameterValues := ParamValues.Objects[Position] as TList;
+      if ParameterValues.Count = 0 then
+      begin
+        Continue;
+      end;
       Assert(ParameterValues.Count > 0);
       // Data set 3
       GetNumCellsAndNumInstances(ParameterValues, NUMINST, NCLU);
@@ -3119,7 +3182,7 @@ var
 begin
   case ParameterType of
     ptUndefined..ptLPF_VKCB: Assert(False);
-    ptRCH, ptEVT, ptETS, ptCHD..ptDRT: PARTYP := ' '
+    ptRCH, ptEVT, ptETS, ptCHD..ptDRT, ptQMAX: PARTYP := ' '
       + ParmeterTypeToStr(ParameterType);
     Else Assert(False);
   end;
@@ -3572,6 +3635,10 @@ var
     end;
   end;
 begin
+  if Model.ModelSelection = msModflowLGR2 then
+  begin
+    AdjustForLGR := False;
+  end;
   DummyAnnotation := 'none';
   ExportArray := TDataArray.Create(Model);
   try
@@ -3674,6 +3741,7 @@ constructor TCustomParameterTransientWriter.Create(Model: TCustomModel; Evaluati
 begin
   inherited;
   FParamValues := TStringList.Create;
+  FParamValues.OwnsObjects := True;
   FUsedInstanceNames := TStringList.Create;
   FUsedInstanceNames.Sorted := True;
   // FParameterNames should not be sorted.
@@ -3681,15 +3749,15 @@ begin
 end;
 
 destructor TCustomParameterTransientWriter.Destroy;
-var
-  Index: Integer;
+//var
+//  Index: Integer;
 begin
   FParameterNames.Free;
   FUsedInstanceNames.Free;
-  for Index := 0 to FParamValues.Count - 1 do
-  begin
-    FParamValues.Objects[Index].Free;
-  end;
+//  for Index := 0 to FParamValues.Count - 1 do
+//  begin
+//    FParamValues.Objects[Index].Free;
+//  end;
   FParamValues.Free;
 
   inherited;
@@ -3914,6 +3982,11 @@ begin
   end;
 end;
 
+procedure TCustomTransientWriter.SetOwnsValueContents(const Value: Boolean);
+begin
+  (FValues as TObjectList).OwnsObjects := Value;
+end;
+
 procedure TCustomTransientWriter.AssignTransient2DArray(
       DisplayArray: TModflowBoundaryDisplayDataArray; DataTypeIndex: Integer;
       List: TList; DefaultValue: double; DataType: TRbwDataType;
@@ -4029,6 +4102,7 @@ begin
     fotRiver: result := 'RVOB ';
     fotDrain: result := 'DROB ';
     fotGHB: result := 'GBOB ';
+    fotSTR: result := 'STOB ';
   end;
 end;
 
@@ -4133,55 +4207,13 @@ end;
 procedure TFluxObsWriter.WriteObservationDataSet5(DataSet5: TStringList;
       ObservationGroup: TFluxObservationGroup; AllCells: TList);
 var
-  ScreenObject: TScreenObject;
-  DataArray: TDataArray;
-  VariableIndex: Integer;
-  VariablesUsed: TStringList;
-  Variables: TList;
-  DataSets: TList;
-  Expression: TExpression;
-  FactorFormula: string;
   ObsFactor: TObservationFactor;
   ObjectIndex: Integer;
-  Observer: TObserver;
 begin
   for ObjectIndex := 0 to ObservationGroup.ObservationFactors.Count - 1 do
   begin
     ObsFactor := ObservationGroup.ObservationFactors[ObjectIndex];
-    FactorFormula := ObsFactor.Factor;
-    Model.rpThreeDFormulaCompiler.Compile(FactorFormula);
-    Expression := Model.rpThreeDFormulaCompiler.CurrentExpression;
-    Assert(Expression.ResultType in [rdtDouble, rdtInteger]);
-    DataSets := TList.Create;
-    Variables := TList.Create;
-    try
-      VariablesUsed := Expression.VariablesUsed;
-      Variables.Capacity := VariablesUsed.Count;
-      DataSets.Capacity := VariablesUsed.Count;
-      for VariableIndex := 0 to VariablesUsed.Count - 1 do
-      begin
-        Observer := Model.GetObserverByName(VariablesUsed[VariableIndex]);
-        if Observer is TDataArray then
-        begin
-          DataArray := TDataArray(Observer);
-          DataArray.Initialize;
-          Variables.Add(VariablesUsed.Objects[VariableIndex]);
-          DataSets.Add(DataArray);
-          Model.DataArrayManager.AddDataSetToCache(DataArray);
-        end
-        else
-        begin
-          Assert(Observer is TGlobalVariable);
-        end;
-      end;
-      ScreenObject := ObsFactor.ScreenObject as TScreenObject;
-      WriteObservationCells(Variables, DataSets, Expression, DataSet5,
-        AllCells, ScreenObject, ObsFactor);
-    finally
-      Variables.Free;
-      DataSets.Free;
-      Model.DataArrayManager.CacheDataArrays;
-    end;
+    WriteDataSet5ForOneScreenObject(ObsFactor, DataSet5, AllCells);
   end;
 end;
 
@@ -4228,122 +4260,128 @@ begin
     Exit;
   end;
 
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, ObsNameWarningString);
-
-  FluxObsCountWarning := Format(StrInSNoFlowObser,
-    [ObservationPackage.PackageIdentifier]);
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, FluxObsCountWarning);
-
-  // count the number of cell groups for which flux observations are listed
-  NQ_Pkg := 0;
-  for ObsIndex := 0 to Observations.Count - 1 do
-  begin
-    ObservationGroup := Observations[ObsIndex];
-    if Purpose = ObservationGroup.Purpose then
-    begin
-      Inc(NQ_Pkg);
-    end;
-  end;
-
-  if (Observations.Count > 0) and (NQ_Pkg = 0) then
-  begin
-    frmErrorsAndWarnings.AddWarning(Model, FluxObsCountWarning, StrSelectModelObserv);
-  end;
-
-  NQC_Pkg := 0;
-  NQT_Pkg := 0;
-
-  NameOfFile := ObservationFileName(AFileName);
-  WriteToNameFile(PackageAbbreviation, Model.UnitNumbers.
-    UnitNumber(PackageAbbreviation), NameOfFile, foInput);
-
-  IU_Pkg_OBSV := Model.UnitNumbers.UnitNumber(OutputUnitId);
-  OutputName := ObservationOutputFileName(AFileName);
-  WriteToNameFile(StrDATA, IU_Pkg_OBSV, OutputName, foOutput);
-
-  AllCells := TList.Create;
-  ObsFile := TStringList.Create;
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    // Values stores the values at a list of cells.
-    if Values.Count = 0 then
-    begin
-      ErrorRoot := Format(StrTheSInputFileCa, [PackageAbbreviation]);
-      DetailedMessage := Format(StrInTheBoundaryPack, [PackageAbbreviation]);
-      frmErrorsAndWarnings.AddError(Model, ErrorRoot, DetailedMessage);
-      Exit;
-    end;
-    // put the cells for the flux in AllCells
-    List := Values[0];
-    for CellIndex := 0 to List.Count - 1 do
-    begin
-      ACell := List[CellIndex];
-      AllCells.Add(ACell);
-    end;
-    for ParamIndex := 0 to ParamValues.Count - 1 do
-    begin
-      LocalParamValues := ParamValues.Objects[ParamIndex] as TList;
-      CellList := LocalParamValues[0];
-      for CellIndex := 0 to CellList.Count - 1 do
-      begin
-        ACell := CellList[CellIndex];
-        AllCells.Add(ACell);
-      end;
-    end;
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, ObsNameWarningString);
+
+    FluxObsCountWarning := Format(StrInSNoFlowObser,
+      [ObservationPackage.PackageIdentifier]);
+    frmErrorsAndWarnings.RemoveWarningGroup(Model, FluxObsCountWarning);
+
+    // count the number of cell groups for which flux observations are listed
+    NQ_Pkg := 0;
     for ObsIndex := 0 to Observations.Count - 1 do
     begin
       ObservationGroup := Observations[ObsIndex];
-      if ObsIndex = 0 then
-      begin
-        RemoveWarningGroups(ObservationGroup);
-      end;
       if Purpose = ObservationGroup.Purpose then
       begin
-        DataSet4 := TStringList.Create;
-        try
-          WriteObservationDataSet4(ObservationGroup, DataSet4);
-          NQOB_Pkg := DataSet4.Count;
-          NQT_Pkg := NQT_Pkg + NQOB_Pkg;
-          DataSet5 := TStringList.Create;
-          try
-            WriteObservationDataSet5(DataSet5, ObservationGroup, AllCells);
-            NQCL_Pkg := DataSet5.Count;
-            NQC_Pkg := NQC_Pkg + NQCL_Pkg;
-            ObsFile.Add(IntToStr(NQOB_Pkg) + ' ' + IntToStr(NQCL_Pkg)
-              + DataSet3Comment);
-            ObsFile.AddStrings(DataSet4);
-            ObsFile.AddStrings(DataSet5);
-          finally
-            DataSet5.Free;
-          end;
-        finally
-          DataSet4.Free;
-        end;
+        Inc(NQ_Pkg);
       end;
     end;
-    DataSet1 := IntToStr(NQ_Pkg) + ' ' + IntToStr(NQC_Pkg) + ' '
-      + IntToStr(NQT_Pkg) + ' ' + IntToStr(IU_Pkg_OBSV);
 
-    PrintObservations := Model.ModflowOutputControl.PrintObservations;
-    if not PrintObservations then
+    if (Observations.Count > 0) and (NQ_Pkg = 0) then
     begin
-      DataSet1 := DataSet1 +' NOPRINT';
+      frmErrorsAndWarnings.AddWarning(Model, FluxObsCountWarning,
+        StrSelectModelObserv);
     end;
-    DataSet1 := DataSet1 + DataSet1Comment;
-    if not PrintObservations then
-    begin
-      DataSet1 := DataSet1 +' NOPRINT';
+
+    NQC_Pkg := 0;
+    NQT_Pkg := 0;
+
+    NameOfFile := ObservationFileName(AFileName);
+    WriteToNameFile(PackageAbbreviation, Model.UnitNumbers.
+      UnitNumber(PackageAbbreviation), NameOfFile, foInput);
+
+    IU_Pkg_OBSV := Model.UnitNumbers.UnitNumber(OutputUnitId);
+    OutputName := ObservationOutputFileName(AFileName);
+    WriteToNameFile(StrDATA, IU_Pkg_OBSV, OutputName, foOutput);
+
+    AllCells := TList.Create;
+    ObsFile := TStringList.Create;
+    try
+      // Values stores the values at a list of cells.
+      if Values.Count = 0 then
+      begin
+        ErrorRoot := Format(StrTheSInputFileCa, [PackageAbbreviation]);
+        DetailedMessage := Format(StrInTheBoundaryPack, [PackageAbbreviation]);
+        frmErrorsAndWarnings.AddError(Model, ErrorRoot, DetailedMessage);
+        Exit;
+      end;
+      // put the cells for the flux in AllCells
+      List := Values[0];
+      for CellIndex := 0 to List.Count - 1 do
+      begin
+        ACell := List[CellIndex];
+        AllCells.Add(ACell);
+      end;
+      for ParamIndex := 0 to ParamValues.Count - 1 do
+      begin
+        LocalParamValues := ParamValues.Objects[ParamIndex] as TList;
+        CellList := LocalParamValues[0];
+        for CellIndex := 0 to CellList.Count - 1 do
+        begin
+          ACell := CellList[CellIndex];
+          AllCells.Add(ACell);
+        end;
+      end;
+      for ObsIndex := 0 to Observations.Count - 1 do
+      begin
+        ObservationGroup := Observations[ObsIndex];
+        if ObsIndex = 0 then
+        begin
+          RemoveWarningGroups(ObservationGroup);
+        end;
+        if Purpose = ObservationGroup.Purpose then
+        begin
+          DataSet4 := TStringList.Create;
+          try
+            WriteObservationDataSet4(ObservationGroup, DataSet4);
+            NQOB_Pkg := DataSet4.Count;
+            NQT_Pkg := NQT_Pkg + NQOB_Pkg;
+            DataSet5 := TStringList.Create;
+            try
+              WriteObservationDataSet5(DataSet5, ObservationGroup, AllCells);
+              NQCL_Pkg := DataSet5.Count;
+              NQC_Pkg := NQC_Pkg + NQCL_Pkg;
+              ObsFile.Add(IntToStr(NQOB_Pkg) + ' ' + IntToStr(NQCL_Pkg)
+                + DataSet3Comment);
+              ObsFile.AddStrings(DataSet4);
+              ObsFile.AddStrings(DataSet5);
+            finally
+              DataSet5.Free;
+            end;
+          finally
+            DataSet4.Free;
+          end;
+        end;
+      end;
+      DataSet1 := IntToStr(NQ_Pkg) + ' ' + IntToStr(NQC_Pkg) + ' '
+        + IntToStr(NQT_Pkg) + ' ' + IntToStr(IU_Pkg_OBSV);
+
+      PrintObservations := Model.ModflowOutputControl.PrintObservations;
+      if not PrintObservations then
+      begin
+        DataSet1 := DataSet1 +' NOPRINT';
+      end;
+      DataSet1 := DataSet1 + DataSet1Comment;
+      if not PrintObservations then
+      begin
+        DataSet1 := DataSet1 +' NOPRINT';
+      end;
+      ObsFile.Insert(0,DataSet1);
+      ObsFile.Insert(1, '1' + DataSet2Comment);
+      for Index := ObservationPackage.Comments.Count - 1 downto 0 do
+      begin
+        ObsFile.Insert(0, '# ' + ObservationPackage.Comments[Index]);
+      end;
+      ObsFile.Insert(0, '# ' + PackageID_Comment(ObservationPackage));
+      ObsFile.SaveToFile(NameOfFile);
+    finally
+      AllCells.Free;
+      ObsFile.Free;
     end;
-    ObsFile.Insert(0,DataSet1);
-    ObsFile.Insert(1, '1' + DataSet2Comment);
-    for Index := ObservationPackage.Comments.Count - 1 downto 0 do
-    begin
-      ObsFile.Insert(0, '# ' + ObservationPackage.Comments[Index]);
-    end;
-    ObsFile.Insert(0, '# ' + PackageID_Comment(ObservationPackage));
-    ObsFile.SaveToFile(NameOfFile);
   finally
-    AllCells.Free;
-    ObsFile.Free;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -4370,96 +4408,14 @@ var
   Layer: Integer;
   Row: Integer;
   Column: Integer;
-  RealVariable: TRealVariable;
-  IntegerVariable: TIntegerVariable;
-  BooleanVariable: TBooleanVariable;
-  StringVariable: TStringVariable;
   Factor: Extended;
-  Local_VariableIndex: Integer;
-  DataArray: TDataArray;
-  ScreenObject: TScreenObject;
-  Compiler: TRbwParser;
-  TempFormula: string;
-  DA_Layer: Integer;
-  DA_Row: Integer;
-  DA_Column: Integer;
 begin
   // Write cell
   Layer := Model.DataSetLayerToModflowLayer(ACell.Layer);
   Row := ACell.Row + 1;
   Column := ACell.Column + 1;
-  for Local_VariableIndex := 0 to Variables.Count - 1 do
-  begin
-    DataArray := DataSets[Local_VariableIndex];
-    DA_Layer := ACell.Layer;
-    DA_Row := ACell.Row;
-    DA_Column := ACell.Column;
-    case DataArray.Orientation of
-      dsoTop: DA_Layer := 0;
-      dsoFront: DA_Row := 0;
-      dsoSide: DA_Column := 0;
-      dso3D: ; // do nothing
-      else Assert(False);
-    end;
-//    DataArray.Initialize;
-    case DataArray.DataType of
-      rdtDouble:
-        begin
-          RealVariable := Variables[Local_VariableIndex];
-          RealVariable.Value := DataArray.RealData[DA_Layer,
-            DA_Row, DA_Column];
-        end;
-      rdtInteger:
-        begin
-          IntegerVariable := Variables[Local_VariableIndex];
-          IntegerVariable.Value := DataArray.IntegerData[DA_Layer,
-            DA_Row, DA_Column];
-        end;
-      rdtBoolean:
-        begin
-          BooleanVariable := Variables[Local_VariableIndex];
-          BooleanVariable.Value := DataArray.BooleanData[DA_Layer,
-            DA_Row, DA_Column];
-        end;
-      rdtString:
-        begin
-          StringVariable := Variables[Local_VariableIndex];
-          StringVariable.Value := DataArray.StringData[DA_Layer,
-            DA_Row, DA_Column];
-        end;
-    else
-      Assert(False);
-    end;
-  end;
-  UpdateCurrentScreenObject(ObsFactor.ScreenObject as TScreenObject);
-  UpdateCurrentSection(ACell.Section);
-  try
-    Expression.Evaluate;
-  except on E: ERbwParserError do
-    begin
-      ScreenObject := ObsFactor.ScreenObject as TScreenObject;
-      frmFormulaErrors.AddFormulaError(ScreenObject.Name,
-        Format(StrObservationFactor, [ObservationPackage.PackageIdentifier]),
-        Expression.Decompile, E.Message);
-
-      ObsFactor.Factor := '1.';
-      Compiler := Model.rpThreeDFormulaCompiler;
-
-      TempFormula := ObsFactor.Factor;
-      Compiler.Compile(TempFormula);
-      Expression :=  Compiler.CurrentExpression;
-      Expression.Evaluate;
-    end;
-  end;
-  Factor := Expression.DoubleResult;
-  if Factor > 1 then
-  begin
-    Factor := 1;
-  end
-  else if Factor < 0 then
-  begin
-    Factor := 0;
-  end;
+  EvaluateFactor(Factor, Expression, ACell,
+    DataSets, Variables, ObsFactor);
   DataSet5.Add(IntToStr(Layer) + ' ' + IntToStr(Row) + ' '
     + IntToStr(Column) + ' ' + FreeFormattedReal(Factor)
     + ' # Data Set 5: Layer Row Column Factor');
@@ -4515,6 +4471,152 @@ begin
     end;
   finally
     TempList.Free;
+  end;
+end;
+
+procedure TFluxObsWriter.WriteDataSet5ForOneScreenObject(
+  ObsFactor: TObservationFactor; DataSet5: TStringList; AllCells: TList);
+var
+  Expression: TExpression;
+  Observer: TObserver;
+  VariableIndex: Integer;
+  Variables: TList;
+  FactorFormula: string;
+  ScreenObject: TScreenObject;
+  DataSets: TList;
+  VariablesUsed: TStringList;
+  DataArray: TDataArray;
+begin
+  FactorFormula := ObsFactor.Factor;
+  Model.rpThreeDFormulaCompiler.Compile(FactorFormula);
+  Expression := Model.rpThreeDFormulaCompiler.CurrentExpression;
+  Assert(Expression.ResultType in [rdtDouble, rdtInteger]);
+  DataSets := TList.Create;
+  Variables := TList.Create;
+  try
+    VariablesUsed := Expression.VariablesUsed;
+    Variables.Capacity := VariablesUsed.Count;
+    DataSets.Capacity := VariablesUsed.Count;
+    for VariableIndex := 0 to VariablesUsed.Count - 1 do
+    begin
+      Observer := Model.GetObserverByName(VariablesUsed[VariableIndex]);
+      if Observer is TDataArray then
+      begin
+        DataArray := TDataArray(Observer);
+        DataArray.Initialize;
+        Variables.Add(VariablesUsed.Objects[VariableIndex]);
+        DataSets.Add(DataArray);
+        Model.DataArrayManager.AddDataSetToCache(DataArray);
+      end
+      else
+      begin
+        Assert(Observer is TGlobalVariable);
+      end;
+    end;
+    ScreenObject := ObsFactor.ScreenObject as TScreenObject;
+    WriteObservationCells(Variables, DataSets, Expression, DataSet5, AllCells, ScreenObject, ObsFactor);
+  finally
+    Variables.Free;
+    DataSets.Free;
+    Model.DataArrayManager.CacheDataArrays;
+  end;
+end;
+
+procedure TFluxObsWriter.EvaluateFactor(var Factor: Extended;
+  var Expression: TExpression; ACell: TValueCell; DataSets, Variables: TList;
+  ObsFactor: TObservationFactor);
+var
+  DA_Column: Integer;
+  DA_Row: Integer;
+  DA_Layer: Integer;
+  Compiler: TRbwParser;
+  ScreenObject: TScreenObject;
+  RealVariable: TRealVariable;
+  StringVariable: TStringVariable;
+  TempFormula: string;
+  IntegerVariable: TIntegerVariable;
+  Local_VariableIndex: Integer;
+  DataArray: TDataArray;
+  BooleanVariable: TBooleanVariable;
+begin
+//  Layer := Model.DataSetLayerToModflowLayer(ACell.Layer);
+//  Row := ACell.Row + 1;
+//  Column := ACell.Column + 1;
+  for Local_VariableIndex := 0 to Variables.Count - 1 do
+  begin
+    DataArray := DataSets[Local_VariableIndex];
+    DA_Layer := ACell.Layer;
+    DA_Row := ACell.Row;
+    DA_Column := ACell.Column;
+    case DataArray.Orientation of
+      dsoTop:
+        DA_Layer := 0;
+      dsoFront:
+        DA_Row := 0;
+      dsoSide:
+        DA_Column := 0;
+      dso3D:
+        ;
+    else
+      // do nothing
+      Assert(False);
+    end;
+    //    DataArray.Initialize;
+    case DataArray.DataType of
+      rdtDouble:
+        begin
+          RealVariable := Variables[Local_VariableIndex];
+          RealVariable.Value := DataArray.RealData[DA_Layer, DA_Row, DA_Column];
+        end;
+      rdtInteger:
+        begin
+          IntegerVariable := Variables[Local_VariableIndex];
+          IntegerVariable.Value := DataArray.IntegerData[
+            DA_Layer, DA_Row, DA_Column];
+        end;
+      rdtBoolean:
+        begin
+          BooleanVariable := Variables[Local_VariableIndex];
+          BooleanVariable.Value := DataArray.BooleanData[
+            DA_Layer, DA_Row, DA_Column];
+        end;
+      rdtString:
+        begin
+          StringVariable := Variables[Local_VariableIndex];
+          StringVariable.Value := DataArray.StringData[
+            DA_Layer, DA_Row, DA_Column];
+        end;
+    else
+      Assert(False);
+    end;
+  end;
+  UpdateCurrentScreenObject(ObsFactor.ScreenObject as TScreenObject);
+  UpdateCurrentSection(ACell.Section);
+  try
+    Expression.Evaluate;
+  except
+    on E: ERbwParserError do
+    begin
+      ScreenObject := ObsFactor.ScreenObject as TScreenObject;
+      frmFormulaErrors.AddFormulaError(ScreenObject.Name,
+        Format(StrObservationFactor, [ObservationPackage.PackageIdentifier]),
+        Expression.Decompile, E.Message);
+      ObsFactor.Factor := '1.';
+      Compiler := Model.rpThreeDFormulaCompiler;
+      TempFormula := ObsFactor.Factor;
+      Compiler.Compile(TempFormula);
+      Expression := Compiler.CurrentExpression;
+      Expression.Evaluate;
+    end;
+  end;
+  Factor := Expression.DoubleResult;
+  if Factor > 1 then
+  begin
+    Factor := 1;
+  end
+  else if Factor < 0 then
+  begin
+    Factor := 0;
   end;
 end;
 

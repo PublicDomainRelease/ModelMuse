@@ -75,16 +75,20 @@ var
   ParamCount, ParamCellCount: Integer;
   MXACTC: Integer;
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrErrorInCHDPackage);
-  inherited;
-  CountParametersAndParameterCells(ParamCount, ParamCellCount);
-  CountCells(MXACTC);
-  if (ParamCellCount = 0) and (MXACTC = 0) then
-  begin
-    frmErrorsAndWarnings.AddError(Model, StrErrorInCHDPackage,
-      StrTheCHDPackageIsA);
+  frmErrorsAndWarnings.BeginUpdate;
+  try
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrErrorInCHDPackage);
+    inherited;
+    CountParametersAndParameterCells(ParamCount, ParamCellCount);
+    CountCells(MXACTC);
+    if (ParamCellCount = 0) and (MXACTC = 0) then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrErrorInCHDPackage,
+        StrTheCHDPackageIsA);
+    end;
+  finally
+    frmErrorsAndWarnings.EndUpdate;
   end;
-
 end;
 
 class function TModflowCHD_Writer.Extension: string;

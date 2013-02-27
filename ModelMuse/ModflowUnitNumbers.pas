@@ -27,6 +27,8 @@ const
   StrRES = 'RES';
   StrLAK = 'LAK';
   StrSFR = 'SFR';
+  StrSTR = 'STR';
+  StrFHB = 'FHB';
   StrUZF = 'UZF';
   StrGMG = 'GMG';
   StrIUNITMHC = 'IUNITMHC';
@@ -104,6 +106,11 @@ const
   StrFTL                    = 'FTL';
   StrCNF                    = 'CNF';
   StrPHIRAMPOut = 'PHIRAMP_Out';
+
+  StrSTR_OUT = 'STR_OUT';
+  StrSTOB = 'STOB';
+  StrIUSTOBSV = 'IUSTOBSV';
+  StrFMP = 'FMP';
 
   Solvers: array[0..5] of string = (StrPCG, StrPCGN, StrGMG, StrSIP, StrDE4, StrNWT);
   FlowPackages: array[0..3] of string = (StrLPF, StrHUF2, StrBCF, StrUPW);
@@ -340,6 +347,12 @@ const
   PCGN_IPUNIT  = 140;
 
   NwtPhrampOut = 141;
+  STR_UNIT = 142;
+  STR_OutUNIT = 143;
+  STOB_UNIT = 144;
+  STOB_OutUnit = 145;
+  FHB_Unit = 146;
+  FMP_Unit = 147;
 
 
 
@@ -414,6 +427,8 @@ begin
   AddItem(StrRES, RES_Unit);
   AddItem(StrLAK, LAK_Unit);
   AddItem(StrSFR, SFR_Unit);
+  AddItem(StrSTR, STR_Unit);
+  AddItem(StrFHB, FHB_Unit);
   AddItem(StrUZF, UZF_Unit);
   AddItem(StrGMG, GMG_Unit);
   AddItem(StrIUNITMHC, GMG_HeadChangeUnit, 'GMG Head Change Unit');
@@ -489,8 +504,11 @@ begin
 
   AddItem(StrPHIRAMPOut, NwtPhrampOut);
 
+  AddItem(StrSTR_OUT, STR_OutUNIT);
 
-
+  AddItem(StrSTOB, STOB_UNIT);
+  AddItem(StrIUSTOBSV, STOB_OutUnit);
+  AddItem(StrFMP, FMP_Unit);
 end;
 
 procedure TUnitNumbers.RemoveObsoleteItems;

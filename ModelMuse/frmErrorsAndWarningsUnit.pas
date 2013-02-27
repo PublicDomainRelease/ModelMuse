@@ -69,6 +69,7 @@ type
     procedure btnSaveClick(Sender: TObject);
     procedure btnClearClick(Sender: TObject);
     procedure btnCopyClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     // @name is a list of the PVirtualNodes beneath @link(FErrorNode).
     FErrorChildNodes: TList;
@@ -135,6 +136,8 @@ type
     procedure RemoveWarningGroup(Model: TBaseModel; const TypeOfWarning: string);
     procedure RemoveErrorGroup(Model: TBaseModel; const TypeOfError: string);
     procedure ShowAfterDelay;
+    procedure BeginUpdate;
+    procedure EndUpdate;
     { Public declarations }
   end;
 
@@ -181,6 +184,7 @@ var
   Data: PErrorWarningRec;
   ErrorMessages: TStringList;
   ModelMessages: TModelMessages;
+  NewLeft: integer;
 begin
   Assert(Model <> nil);
   if RootNode = nil then
@@ -197,6 +201,8 @@ begin
     Data.List := ModelMessages.FMessages;
     vstWarningsAndErrors.HasChildren[ModelMessages.FNode] := True;
     RootList.Add(Model.DisplayName);
+//    vstWarningsAndErrors.Expanded[RootNode] := True;
+//    vstWarningsAndErrors.Expanded[ModelMessages.FNode] := True;
   end;
 
   RootIndex := ModelMessages.FMessages.IndexOf(TypeOfErrorOrWarning);
@@ -214,15 +220,39 @@ begin
     Data := vstWarningsAndErrors.GetNodeData(ChildNode);
     Data.List := ErrorMessages;
     vstWarningsAndErrors.HasChildren[ChildNode] := True;
+//    vstWarningsAndErrors.Expanded[ChildNode] := True;
     if frmProgressMM <> nil then
     begin
       frmProgressMM.AddMessage(TypeOfErrorOrWarning);
     end;
   end;
 
+  if ErrorMessages.Count = 1000 then
+  begin
+    ErrorMessages.Add('More than 1000 similar messages.');
+    vstWarningsAndErrors.ChildCount[ChildNode] :=
+      vstWarningsAndErrors.ChildCount[ChildNode] + 1;
+    Exit;
+  end
+  else if ErrorMessages.Count > 1000 then
+  begin
+    Exit;
+  end;
   ErrorMessages.Add(ErrorOrWarning);
   vstWarningsAndErrors.ChildCount[ChildNode] :=
     vstWarningsAndErrors.ChildCount[ChildNode] + 1;
+  if (frmProgressMM <> nil) and frmProgressMM.Visible then
+  begin
+    if (Left + Width > frmProgressMM.Left) and (Left > 0) then
+    begin
+      NewLeft := frmProgressMM.Left - Width;
+      if NewLeft < 0 then
+      begin
+        NewLeft := 0
+      end;
+      Left := NewLeft;
+    end;
+  end;
 end;
 
 procedure TfrmErrorsAndWarnings.InitializeRootNode(var Node: PVirtualNode;
@@ -235,6 +265,7 @@ begin
   Data := vstWarningsAndErrors.GetNodeData(Node);
   Data.List := List;
   vstWarningsAndErrors.HasChildren[Node] := True;
+//  vstWarningsAndErrors.Expanded[Node] := True;
 end;
 
 procedure TfrmErrorsAndWarnings.RemoveWarningOrErrorGroup(Model: TBaseModel;
@@ -371,6 +402,11 @@ begin
     FWarningNode, FWarningChildNodes, FWarningModelMessageList);
 end;
 
+procedure TfrmErrorsAndWarnings.BeginUpdate;
+begin
+  vstWarningsAndErrors.BeginUpdate;
+end;
+
 procedure TfrmErrorsAndWarnings.btnClearClick(Sender: TObject);
 begin
   inherited;
@@ -432,6 +468,11 @@ begin
   FErrorModelMessageList.Clear;
 end;
 
+procedure TfrmErrorsAndWarnings.EndUpdate;
+begin
+  vstWarningsAndErrors.EndUpdate;
+end;
+
 procedure TfrmErrorsAndWarnings.FormCreate(Sender: TObject);
 begin
   inherited;
@@ -477,6 +518,24 @@ begin
   Indent := vstWarningsAndErrors.Indent;
   vstWarningsAndErrors.Header.Columns[0].Width :=
     vstWarningsAndErrors.ClientWidth - Indent;
+end;
+
+procedure TfrmErrorsAndWarnings.FormShow(Sender: TObject);
+var
+  NewTop: integer;
+  NewBottom: Integer;
+begin
+  if (frmProgressMM <> nil) and frmProgressMM.Visible then
+  begin
+    NewTop := Top + frmProgressMM.Top;
+    NewBottom := NewTop + Height;
+    if NewBottom > Screen.Height then
+    begin
+      NewTop := Screen.Height - Height;
+    end;
+    Top := NewTop;
+  end;
+  inherited;
 end;
 
 function TfrmErrorsAndWarnings.HasMessages: boolean;

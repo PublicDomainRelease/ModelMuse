@@ -110,6 +110,8 @@ type
     procedure SetFrontDataSet(const Value: TDataArray); override;
   public
     procedure UpdateCellElevations;
+    // @name is used when the grid has changed so that the grid elevations
+    // will be updated.
     procedure NotifyGridChanged(Sender: TObject);
     {Copies the properties of Source into self.  Only those properties that
      normally would be saved to file are copied.}
@@ -416,8 +418,8 @@ begin
         if LayerGroup = ChildModel.Discretization.BottomLayerGroup then
         begin
           Discretization := ChildModel.Discretization;
-          if (LayerGroupIndex < Model.LayerStructure.Count -1)
-            or (Discretization.BottomLayerInUnit < LayerGroup.LayerCount -1) then
+          if ((LayerGroupIndex < Model.LayerStructure.Count -1)
+            or (Discretization.BottomLayerInUnit < LayerGroup.LayerCount -1)) then
           begin
             for ColIndex := 0 to ColumnCount - 1 do
             begin
@@ -431,8 +433,16 @@ begin
                 LayerBottom := UnitTop - UnitThickness/LayerGroup.LayerCount
                   * (Discretization.BottomLayerInUnit+1);
 
-                CellElevation[ColIndex,RowIndex,UnitBottomIndex] :=
-                  (LayerTop + LayerBottom)/2;
+                if (Model.ModelSelection <> msModflowLGR2) then
+                begin
+                  CellElevation[ColIndex,RowIndex,UnitBottomIndex] :=
+                    (LayerTop + LayerBottom)/2;
+                end
+                else
+                begin
+                  CellElevation[ColIndex,RowIndex,UnitBottomIndex] :=
+                    LayerBottom;
+                end;
               end;
             end;
           end;
@@ -1624,7 +1634,7 @@ begin
   if FModel is TPhastModel then
   begin
     LocalModel := TPhastModel(FModel);
-    if LocalModel.ModelSelection = msModflowLGR then
+    if LocalModel.ModelSelection in [msModflowLGR , msModflowLGR2] then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
       begin
@@ -1786,7 +1796,7 @@ begin
   if FModel is TPhastModel then
   begin
     LocalModel := TPhastModel(FModel);
-    if LocalModel.ModelSelection = msModflowLGR then
+    if LocalModel.ModelSelection in [msModflowLGR, msModflowLGR2] then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
       begin
@@ -1809,7 +1819,7 @@ begin
   if FModel is TPhastModel then
   begin
     LocalModel := TPhastModel(FModel);
-    if LocalModel.ModelSelection = msModflowLGR then
+    if LocalModel.ModelSelection in [msModflowLGR, msModflowLGR2] then
     begin
       for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
       begin

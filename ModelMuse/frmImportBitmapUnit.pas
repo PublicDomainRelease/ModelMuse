@@ -499,11 +499,8 @@ end;
 procedure TfrmImportBitmap.FormShow(Sender: TObject);
 begin
   inherited;
-  {$IFDEF SUTRA}
   rgViewDirection.Buttons[Ord(vdSide)].Enabled :=
     frmGoPhast.ModelSelection <> msSutra22;
-  {$ENDIF}
-
 end;
 
 procedure TfrmImportBitmap.GetData(ABitmapItem: TCompressedBitmapItem);

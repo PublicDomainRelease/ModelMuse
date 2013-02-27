@@ -51,128 +51,133 @@ var
     end;
   end;
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, CbfFileExistsError);
-  Options := Model.ModflowPackages.ModPath;
-  
-  NameFile := TStringList.Create;
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    AFileName := ExtractFileName(ChangeFileExt(FileName, '.mplst'));
-    NameFile.Add('LIST 11 ' + AFileName);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, CbfFileExistsError);
+    Options := Model.ModflowPackages.ModPath;
+  
+    NameFile := TStringList.Create;
+    try
+      AFileName := ExtractFileName(ChangeFileExt(FileName, '.mplst'));
+      NameFile.Add('LIST 11 ' + AFileName);
 
-    AFileName := ExtractFileName(ChangeFileExt(FileName,
-      TModpathMainFileWriter.Extension));
-    NameFile.Add('MAIN 12 ' + AFileName);
+      AFileName := ExtractFileName(ChangeFileExt(FileName,
+        TModpathMainFileWriter.Extension));
+      NameFile.Add('MAIN 12 ' + AFileName);
 
-    AFileName := ExtractFileName(ChangeFileExt(FileName,
-      TModflowDiscretizationWriter.Extension));
-    NameFile.Add('DIS 13 ' + AFileName);
-    CheckFileExists(AFileName);
+      AFileName := ExtractFileName(ChangeFileExt(FileName,
+        TModflowDiscretizationWriter.Extension));
+      NameFile.Add('DIS 13 ' + AFileName);
+      CheckFileExists(AFileName);
 
-    if Model.ModflowStressPeriods.TransientModel then
-    begin
-      AFileName := ExtractFileName(ChangeFileExt(FileName, '.cbf'));
-      NameFile.Add('CBF 14 ' + AFileName);
-      // The response file will direct MODPATH to generated
-      // the CBF file if it doesn't exist.
-//      CheckFileExists(AFileName);
-    end;
+      if Model.ModflowStressPeriods.TransientModel then
+      begin
+        AFileName := ExtractFileName(ChangeFileExt(FileName, '.cbf'));
+        NameFile.Add('CBF 14 ' + AFileName);
+        // The response file will direct MODPATH to generated
+        // the CBF file if it doesn't exist.
+  //      CheckFileExists(AFileName);
+      end;
 
-    if Options.Binary then
-    begin
-      AFileName := ExtractFileName(ChangeFileExt(FileName, '.end_bin'));
-    end
-    else
-    begin
-      AFileName := ExtractFileName(ChangeFileExt(FileName, '.end'));
-    end;
-    NameFile.Add('ENDPOINT 15 ' + AFileName);
-    case Options.OutputMode of
-      mopEndpoints:
-        begin
-          // do nothing
-        end;
-      mopPathline:
-        begin
-          if Options.Binary then
+      if Options.Binary then
+      begin
+        AFileName := ExtractFileName(ChangeFileExt(FileName, '.end_bin'));
+      end
+      else
+      begin
+        AFileName := ExtractFileName(ChangeFileExt(FileName, '.end'));
+      end;
+      NameFile.Add('ENDPOINT 15 ' + AFileName);
+      case Options.OutputMode of
+        mopEndpoints:
           begin
-            AFileName := ExtractFileName(ChangeFileExt(FileName, '.path_bin'));
-          end
-          else
-          begin
-            AFileName := ExtractFileName(ChangeFileExt(FileName, '.path'));
+            // do nothing
           end;
-          NameFile.Add('PATHLINE 16 ' + AFileName);
-        end;
-      mopTimeSeries:
-        begin
-          if Options.Binary then
+        mopPathline:
           begin
-            AFileName := ExtractFileName(ChangeFileExt(FileName, '.ts_bin'));
-          end
-          else
-          begin
-            AFileName := ExtractFileName(ChangeFileExt(FileName, '.ts'));
+            if Options.Binary then
+            begin
+              AFileName := ExtractFileName(ChangeFileExt(FileName, '.path_bin'));
+            end
+            else
+            begin
+              AFileName := ExtractFileName(ChangeFileExt(FileName, '.path'));
+            end;
+            NameFile.Add('PATHLINE 16 ' + AFileName);
           end;
-          NameFile.Add('TIME-SERIES 17 ' + AFileName);
-        end;
-      else Assert(False);
-    end;
-
-    if Options.ShouldCreateTimeFile then
-    begin
-      AFileName := ExtractFileName(ChangeFileExt(FileName, '.tim'));
-      NameFile.Add('TIME 18 ' + AFileName);
-    end;
-
-    AFileName := ExtractFileName(ChangeFileExt(FileName,
-      TModpathStartingLocationsWriter.Extension));
-    NameFile.Add('LOCATIONS 19 ' + AFileName);
-
-    AFileName := ExtractFileName(ChangeFileExt(FileName, StrCbcExt));
-    NameFile.Add('BUDGET 20 ' + AFileName);
-    CheckFileExists(AFileName);
-
-    if Model.ModflowOutputControl.HeadOC.SaveInExternalFile then
-    begin
-      case Model.ModflowOutputControl.HeadOC.OutputFileType of
-        oftText:
+        mopTimeSeries:
           begin
-            AFileName := ExtractFileName(ChangeFileExt(FileName, StrFhd));
-            NameFile.Add('HEAD 21 ' + AFileName);
-            CheckFileExists(AFileName);
-          end;
-        oftBinary:
-          begin
-            AFileName := ExtractFileName(ChangeFileExt(FileName, StrBhd));
-            NameFile.Add('HEAD(BINARY) 22 ' + AFileName);
-            CheckFileExists(AFileName);
+            if Options.Binary then
+            begin
+              AFileName := ExtractFileName(ChangeFileExt(FileName, '.ts_bin'));
+            end
+            else
+            begin
+              AFileName := ExtractFileName(ChangeFileExt(FileName, '.ts'));
+            end;
+            NameFile.Add('TIME-SERIES 17 ' + AFileName);
           end;
         else Assert(False);
       end;
-    end;
 
-    if Model.ModflowOutputControl.DrawdownOC.SaveInExternalFile then
-    begin
-      case Model.ModflowOutputControl.DrawdownOC.OutputFileType of
-        oftText:
-          begin
-            AFileName := ExtractFileName(ChangeFileExt(FileName, StrFdn));
-            NameFile.Add('DRAWDOWN 23 ' + AFileName);
-            CheckFileExists(AFileName);
-          end;
-        oftBinary:
-          begin
-            AFileName := ExtractFileName(ChangeFileExt(FileName, StrBdn));
-            NameFile.Add('DRAWDOWN(BINARY) 24 ' + AFileName);
-            CheckFileExists(AFileName);
-          end;
-        else Assert(False);
+      if Options.ShouldCreateTimeFile then
+      begin
+        AFileName := ExtractFileName(ChangeFileExt(FileName, '.tim'));
+        NameFile.Add('TIME 18 ' + AFileName);
       end;
-    end;
 
-    NameFile.SaveToFile(FileName);
+      AFileName := ExtractFileName(ChangeFileExt(FileName,
+        TModpathStartingLocationsWriter.Extension));
+      NameFile.Add('LOCATIONS 19 ' + AFileName);
+
+      AFileName := ExtractFileName(ChangeFileExt(FileName, StrCbcExt));
+      NameFile.Add('BUDGET 20 ' + AFileName);
+      CheckFileExists(AFileName);
+
+      if Model.ModflowOutputControl.HeadOC.SaveInExternalFile then
+      begin
+        case Model.ModflowOutputControl.HeadOC.OutputFileType of
+          oftText:
+            begin
+              AFileName := ExtractFileName(ChangeFileExt(FileName, StrFhd));
+              NameFile.Add('HEAD 21 ' + AFileName);
+              CheckFileExists(AFileName);
+            end;
+          oftBinary:
+            begin
+              AFileName := ExtractFileName(ChangeFileExt(FileName, StrBhd));
+              NameFile.Add('HEAD(BINARY) 22 ' + AFileName);
+              CheckFileExists(AFileName);
+            end;
+          else Assert(False);
+        end;
+      end;
+
+      if Model.ModflowOutputControl.DrawdownOC.SaveInExternalFile then
+      begin
+        case Model.ModflowOutputControl.DrawdownOC.OutputFileType of
+          oftText:
+            begin
+              AFileName := ExtractFileName(ChangeFileExt(FileName, StrFdn));
+              NameFile.Add('DRAWDOWN 23 ' + AFileName);
+              CheckFileExists(AFileName);
+            end;
+          oftBinary:
+            begin
+              AFileName := ExtractFileName(ChangeFileExt(FileName, StrBdn));
+              NameFile.Add('DRAWDOWN(BINARY) 24 ' + AFileName);
+              CheckFileExists(AFileName);
+            end;
+          else Assert(False);
+        end;
+      end;
+
+      NameFile.SaveToFile(FileName);
+    finally
+      NameFile.Free;
+    end;
   finally
-    NameFile.Free;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 
@@ -200,52 +205,57 @@ var
     end;
   end;
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, CbfFileExistsError);
-//  Options := Model.ModflowPackages.ModPath;
-
-  NameFile := TStringList.Create;
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    AFileName := ChangeFileExt(FileName,
-      TModpathBasicFileWriter.Extension);
-    frmGoPhast.PhastModel.AddModelInputFile(AFileName);
-    AFileName := ExtractFileName(AFileName);
-    NameFile.Add('MPBAS 12 ' + AFileName);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, CbfFileExistsError);
+  //  Options := Model.ModflowPackages.ModPath;
 
-    AFileName := ChangeFileExt(FileName,
-      TModflowDiscretizationWriter.Extension);
-    frmGoPhast.PhastModel.AddModelInputFile(AFileName);
-    AFileName := ExtractFileName(AFileName);
-    NameFile.Add('DIS 13 ' + AFileName);
-    CheckFileExists(AFileName);
+    NameFile := TStringList.Create;
+    try
+      AFileName := ChangeFileExt(FileName,
+        TModpathBasicFileWriter.Extension);
+      frmGoPhast.PhastModel.AddModelInputFile(AFileName);
+      AFileName := ExtractFileName(AFileName);
+      NameFile.Add('MPBAS 12 ' + AFileName);
 
-    AFileName := ChangeFileExt(FileName, StrCbcExt);
-    frmGoPhast.PhastModel.AddFileToArchive(AFileName);
-    AFileName := ExtractFileName(AFileName);
-    NameFile.Add('BUDGET 20 ' + AFileName);
-    CheckFileExists(AFileName);
+      AFileName := ChangeFileExt(FileName,
+        TModflowDiscretizationWriter.Extension);
+      frmGoPhast.PhastModel.AddModelInputFile(AFileName);
+      AFileName := ExtractFileName(AFileName);
+      NameFile.Add('DIS 13 ' + AFileName);
+      CheckFileExists(AFileName);
 
-    if Model.ModflowOutputControl.HeadOC.SaveInExternalFile then
-    begin
-      case Model.ModflowOutputControl.HeadOC.OutputFileType of
-        oftText:
-          begin
-          end;
-        oftBinary:
-          begin
-            AFileName := ChangeFileExt(FileName, StrBhd);
-            frmGoPhast.PhastModel.AddFileToArchive(AFileName);
-            AFileName := ExtractFileName(AFileName);
-            NameFile.Add('HEAD 22 ' + AFileName);
-            CheckFileExists(AFileName);
-          end;
-        else Assert(False);
+      AFileName := ChangeFileExt(FileName, StrCbcExt);
+      frmGoPhast.PhastModel.AddFileToArchive(AFileName);
+      AFileName := ExtractFileName(AFileName);
+      NameFile.Add('BUDGET 20 ' + AFileName);
+      CheckFileExists(AFileName);
+
+      if Model.ModflowOutputControl.HeadOC.SaveInExternalFile then
+      begin
+        case Model.ModflowOutputControl.HeadOC.OutputFileType of
+          oftText:
+            begin
+            end;
+          oftBinary:
+            begin
+              AFileName := ChangeFileExt(FileName, StrBhd);
+              frmGoPhast.PhastModel.AddFileToArchive(AFileName);
+              AFileName := ExtractFileName(AFileName);
+              NameFile.Add('HEAD 22 ' + AFileName);
+              CheckFileExists(AFileName);
+            end;
+          else Assert(False);
+        end;
       end;
-    end;
 
-    frmGoPhast.PhastModel.AddModelInputFile(FileName);
-    NameFile.SaveToFile(FileName);
+      frmGoPhast.PhastModel.AddModelInputFile(FileName);
+      NameFile.SaveToFile(FileName);
+    finally
+      NameFile.Free;
+    end;
   finally
-    NameFile.Free;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 

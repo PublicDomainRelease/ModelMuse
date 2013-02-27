@@ -1,9 +1,11 @@
 inherited frmImportSutraModelResults: TfrmImportSutraModelResults
+  HelpType = htKeyword
+  HelpKeyword = 'Import_SUTRA_Model_Results_Dia'
   Caption = 'Import SUTRA Model Results'
   ClientHeight = 417
   ClientWidth = 417
-  ExplicitWidth = 435
-  ExplicitHeight = 462
+  ExplicitWidth = 433
+  ExplicitHeight = 455
   PixelsPerInch = 120
   TextHeight = 18
   object lblTimeStepsToImport: TLabel
@@ -70,9 +72,12 @@ inherited frmImportSutraModelResults: TfrmImportSutraModelResults
       Width = 82
       Height = 30
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 2
+      OnClick = btnHelpClick
     end
     object btnOK: TBitBtn
       Left = 238
@@ -80,8 +85,10 @@ inherited frmImportSutraModelResults: TfrmImportSutraModelResults
       Width = 82
       Height = 30
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 3
       OnClick = btnOKClick
     end
@@ -91,8 +98,10 @@ inherited frmImportSutraModelResults: TfrmImportSutraModelResults
       Width = 83
       Height = 30
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 4
     end
     object rgDisplayChoice: TRadioGroup

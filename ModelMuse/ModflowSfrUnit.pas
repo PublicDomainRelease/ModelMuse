@@ -164,6 +164,7 @@ type
       var StartRangeExtended, EndRangeExtended: boolean); override;
     procedure Clear; override;
     property OutTypes: TByteSet read GetOutTypes;
+    procedure FixCollections;
   published
     property SegementNumber: integer read FSegementNumber
       write SetSegementNumber;
@@ -385,6 +386,124 @@ begin
   EquationValues.EvaluateBoundaries;
   TableCollection.EvaluateBoundaries;
   SegmentFlows.EvaluateBoundaries;
+end;
+
+procedure TSfrBoundary.FixCollections;
+var
+  ItemIndex: Integer;
+begin
+  if ChannelValues.Count >
+    ParamIcalc.Count then
+  begin
+    while ChannelValues.Count
+      > ParamIcalc.Count do
+    begin
+      ChannelValues.Last.Free;
+    end;
+    for ItemIndex := 0 to ChannelValues.Count - 1 do
+    begin
+      ChannelValues[ItemIndex].StartTime :=
+        ParamIcalc[ItemIndex].StartTime;
+      (ChannelValues[ItemIndex] as TCustomModflowBoundaryItem).EndTime :=
+        (ParamIcalc[ItemIndex] as TCustomModflowBoundaryItem).EndTime;
+    end;
+  end;
+  if UpstreamSegmentValues.Count >
+    ParamIcalc.Count then
+  begin
+    while UpstreamSegmentValues.Count
+      > ParamIcalc.Count do
+    begin
+      UpstreamSegmentValues.Last.Free;
+    end;
+    for ItemIndex := 0 to UpstreamSegmentValues.Count - 1 do
+    begin
+      UpstreamSegmentValues[ItemIndex].StartTime :=
+        ParamIcalc[ItemIndex].StartTime;
+      (UpstreamSegmentValues[ItemIndex] as TCustomModflowBoundaryItem).EndTime :=
+        (ParamIcalc[ItemIndex] as TCustomModflowBoundaryItem).EndTime;
+    end;
+  end;
+  if DownstreamSegmentValues.Count >
+    ParamIcalc.Count then
+  begin
+    while DownstreamSegmentValues.Count
+      > ParamIcalc.Count do
+    begin
+      DownstreamSegmentValues.Last.Free;
+    end;
+    for ItemIndex := 0 to DownstreamSegmentValues.Count - 1 do
+    begin
+      DownstreamSegmentValues[ItemIndex].StartTime :=
+        ParamIcalc[ItemIndex].StartTime;
+      (DownstreamSegmentValues[ItemIndex] as TCustomModflowBoundaryItem).EndTime :=
+        (ParamIcalc[ItemIndex] as TCustomModflowBoundaryItem).EndTime;
+    end;
+  end;
+  if UpstreamUnsatSegmentValues.Count >
+    ParamIcalc.Count then
+  begin
+    while UpstreamUnsatSegmentValues.Count
+      > ParamIcalc.Count do
+    begin
+      UpstreamUnsatSegmentValues.Last.Free;
+    end;
+    for ItemIndex := 0 to UpstreamUnsatSegmentValues.Count - 1 do
+    begin
+      UpstreamUnsatSegmentValues[ItemIndex].StartTime :=
+        ParamIcalc[ItemIndex].StartTime;
+      (UpstreamUnsatSegmentValues[ItemIndex] as TCustomModflowBoundaryItem).EndTime :=
+        (ParamIcalc[ItemIndex] as TCustomModflowBoundaryItem).EndTime;
+    end;
+  end;
+  if DownstreamUnsatSegmentValues.Count >
+    ParamIcalc.Count then
+  begin
+    while DownstreamUnsatSegmentValues.Count
+      > ParamIcalc.Count do
+    begin
+      DownstreamUnsatSegmentValues.Last.Free;
+    end;
+    for ItemIndex := 0 to DownstreamUnsatSegmentValues.Count - 1 do
+    begin
+      DownstreamUnsatSegmentValues[ItemIndex].StartTime :=
+        ParamIcalc[ItemIndex].StartTime;
+      (DownstreamUnsatSegmentValues[ItemIndex] as TCustomModflowBoundaryItem).EndTime :=
+        (ParamIcalc[ItemIndex] as TCustomModflowBoundaryItem).EndTime;
+    end;
+  end;
+  if SegmentFlows.Count >
+    ParamIcalc.Count then
+  begin
+    while SegmentFlows.Count
+      > ParamIcalc.Count do
+    begin
+      SegmentFlows.Last.Free;
+    end;
+    for ItemIndex := 0 to SegmentFlows.Count - 1 do
+    begin
+      SegmentFlows[ItemIndex].StartTime :=
+        ParamIcalc[ItemIndex].StartTime;
+      (SegmentFlows[ItemIndex] as TCustomModflowBoundaryItem).EndTime :=
+        (ParamIcalc[ItemIndex] as TCustomModflowBoundaryItem).EndTime;
+    end;
+  end;
+  if EquationValues.Count >
+    ParamIcalc.Count then
+  begin
+    while EquationValues.Count
+      > ParamIcalc.Count do
+    begin
+      EquationValues.Last.Free;
+    end;
+    for ItemIndex := 0 to EquationValues.Count - 1 do
+    begin
+      EquationValues[ItemIndex].StartTime :=
+        ParamIcalc[ItemIndex].StartTime;
+      (EquationValues[ItemIndex] as TCustomModflowBoundaryItem).EndTime :=
+        (ParamIcalc[ItemIndex] as TCustomModflowBoundaryItem).EndTime;
+    end;
+  end;
 end;
 
 procedure TSfrBoundary.GetCellValues(ValueTimeList: TList;
@@ -696,15 +815,19 @@ var
   LocalISFROPT: integer;
 begin
   LocalISFROPT := ISFROPT;
-  result := ((LocalISFROPT in [1,2,3]) and inherited Used)
-    or ChannelValues.Used
-    or ((LocalISFROPT in [0,4,5]) and
-      UpstreamSegmentValues.Used and DownstreamSegmentValues.Used)
-    or ((LocalISFROPT in [4,5]) and
-      UpstreamUnsatSegmentValues.Used and DownstreamUnsatSegmentValues.Used)
-    or TableCollection.Used
-    or SegmentFlows.Used
-    or EquationValues.Used;
+  result := inherited Used;
+  if result then
+  begin
+    result := (LocalISFROPT in [1,2,3])
+      or ChannelValues.Used
+      or ((LocalISFROPT in [0,4,5]) and
+        UpstreamSegmentValues.Used and DownstreamSegmentValues.Used)
+      or ((LocalISFROPT in [4,5]) and
+        UpstreamUnsatSegmentValues.Used and DownstreamUnsatSegmentValues.Used)
+      or TableCollection.Used
+      or SegmentFlows.Used
+      or EquationValues.Used;
+  end;
 end;
 
 { TFlowFileItem }

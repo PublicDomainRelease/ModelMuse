@@ -54,7 +54,7 @@ uses
 resourcestring
   StrAStartingTimeFor = 'A starting time for the MODPATH particles defined '
     + 'with the following objects are not valid. Adjust the beginning and '
-    + 'ending time for MODPATH or adjust the relese time.';
+    + 'ending time for MODPATH or adjust the release time.';
 //  StrNoMODPATHStarting = 'No MODPATH starting locations defined';
 //  StrNoObjectsDefineSt = 'No objects define starting locations for MODPATH';
 
@@ -92,33 +92,38 @@ var
   NameOfFile: string;
   StressPeriods: TModflowStressPeriods;
 begin
-  StressPeriods := Model.ModflowStressPeriods;
-  if StressPeriods.CompletelyTransient then
-  begin
-    FStartTime := Model.ModflowPackages.ModPath.BeginningTime;
-  end
-  else
-  begin
-    FStartTime := StressPeriods[0].StartTime;
-  end;
-  if StressPeriods.TransientModel then
-  begin
-    FEndTime := Model.ModflowPackages.ModPath.EndingTime;
-  end
-  else
-  begin
-    FEndTime := StressPeriods[StressPeriods.Count-1].EndTime;
-  end;
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrAStartingTimeFor);
-
-  NameOfFile := FileName(AFileName);
-  OpenFile(NameOfFile);
+  frmErrorsAndWarnings.BeginUpdate;
   try
-    AssignParticleLocationsToElements;
-    UpdateParticleLines;
-    WriteLines;
+    StressPeriods := Model.ModflowStressPeriods;
+    if StressPeriods.CompletelyTransient then
+    begin
+      FStartTime := Model.ModflowPackages.ModPath.BeginningTime;
+    end
+    else
+    begin
+      FStartTime := StressPeriods[0].StartTime;
+    end;
+    if StressPeriods.TransientModel then
+    begin
+      FEndTime := Model.ModflowPackages.ModPath.EndingTime;
+    end
+    else
+    begin
+      FEndTime := StressPeriods[StressPeriods.Count-1].EndTime;
+    end;
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, StrAStartingTimeFor);
+
+    NameOfFile := FileName(AFileName);
+    OpenFile(NameOfFile);
+    try
+      AssignParticleLocationsToElements;
+      UpdateParticleLines;
+      WriteLines;
+    finally
+      CloseFile;
+    end;
   finally
-    CloseFile;
+    frmErrorsAndWarnings.EndUpdate;
   end;
 end;
 

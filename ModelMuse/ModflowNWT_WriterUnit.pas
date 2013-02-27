@@ -10,6 +10,7 @@ type
     procedure WriteDataSet1;
     procedure WriteDataSet2a;
     procedure WriteDataSet2b;
+    procedure WriteFloat(const Value: double);
   protected
     function Package: TModflowPackageSelection; override;
     class function Extension: string; override;
@@ -35,6 +36,12 @@ end;
 function TNwtWriter.Package: TModflowPackageSelection;
 begin
   result := Model.ModflowPackages.NwtPackage;
+end;
+
+procedure TNwtWriter.WriteFloat(const Value: double);
+begin
+  WriteString(' ');
+  WriteF10Float(Value);
 end;
 
 procedure TNwtWriter.WriteDataSet1;
@@ -104,11 +111,13 @@ begin
     WriteFloat(BACKTOL);
     WriteFloat(BACKREDUCE);
   end;
+
   WriteString(' # Data Set 1, HEADTOL FLUXTOL MAXITEROUT THICKFACT LINMETH IPRNWT IBOTAV OPTIONS');
   if NWT.Option = noSpecified then
   begin
     WriteString(' DBDTHETA DBDKAPPA DBDGAMMA MOMFACT BACKFLAG MAXBACKITER BACKTOL BACKREDUCE');
   end;
+
   NewLine;
 
 end;
@@ -143,6 +152,7 @@ begin
     WriteInteger(MSDR);
 
     WriteString(' # Data set 2a, MAXITINNER ILUMETHOD LEVFILL STOPTOL MSDR');
+
     NewLine;
   end;
 end;

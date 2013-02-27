@@ -1,12 +1,12 @@
 inherited frmImportModflow: TfrmImportModflow
   HelpType = htKeyword
   HelpKeyword = 'Import_MODFLOW_Model_Dialog_Box'
-  Caption = 'Import MODFLOW-2005 Model'
-  ClientHeight = 279
+  Caption = 'Import MODFLOW-2005 on -NWT Model'
+  ClientHeight = 320
   ClientWidth = 468
-  ExplicitWidth = 476
-  ExplicitHeight = 313
-  PixelsPerInch = 96
+  ExplicitWidth = 486
+  ExplicitHeight = 365
+  PixelsPerInch = 120
   TextHeight = 18
   object Label1: TLabel
     Left = 8
@@ -38,8 +38,8 @@ inherited frmImportModflow: TfrmImportModflow
   end
   object lblWarning: TLabel
     Left = 8
-    Top = 104
-    Width = 412
+    Top = 128
+    Width = 411
     Height = 36
     Caption = 
       'Warning: Importing a model will cause the destruction of the out' +
@@ -90,7 +90,7 @@ inherited frmImportModflow: TfrmImportModflow
   end
   object btnHelp: TBitBtn
     Left = 201
-    Top = 175
+    Top = 207
     Width = 83
     Height = 33
     Anchors = [akTop, akRight]
@@ -98,12 +98,12 @@ inherited frmImportModflow: TfrmImportModflow
     Kind = bkHelp
     NumGlyphs = 2
     ParentDoubleBuffered = False
-    TabOrder = 4
+    TabOrder = 5
     OnClick = btnHelpClick
   end
   object btnOK: TBitBtn
     Left = 289
-    Top = 175
+    Top = 207
     Width = 83
     Height = 33
     Anchors = [akTop, akRight]
@@ -112,12 +112,12 @@ inherited frmImportModflow: TfrmImportModflow
     Kind = bkOK
     NumGlyphs = 2
     ParentDoubleBuffered = False
-    TabOrder = 5
+    TabOrder = 6
     OnClick = btnOKClick
   end
   object btnCancel: TBitBtn
     Left = 377
-    Top = 175
+    Top = 207
     Width = 83
     Height = 33
     Anchors = [akTop, akRight]
@@ -125,26 +125,38 @@ inherited frmImportModflow: TfrmImportModflow
     Kind = bkClose
     NumGlyphs = 2
     ParentDoubleBuffered = False
-    TabOrder = 6
+    TabOrder = 7
   end
   object sbStatusBar: TStatusBar
     Left = 0
-    Top = 253
+    Top = 294
     Width = 468
     Height = 26
     Panels = <>
     ParentFont = True
     SimplePanel = True
     UseSystemFont = False
+    ExplicitTop = 253
   end
   object pbProgress: TProgressBar
     AlignWithMargins = True
     Left = 3
-    Top = 224
+    Top = 265
     Width = 462
     Height = 29
     Margins.Bottom = 0
     Align = alBottom
-    TabOrder = 7
+    TabOrder = 8
+    ExplicitTop = 224
+  end
+  object cbOldStream: TCheckBox
+    Left = 8
+    Top = 104
+    Width = 411
+    Height = 17
+    Caption = 'The model is MODFLOW-2005 version 1.10 or older'
+    Checked = True
+    State = cbChecked
+    TabOrder = 4
   end
 end

@@ -1,13 +1,11 @@
 inherited frmUpdateDataSets: TfrmUpdateDataSets
-  Caption = 'frmUpdateDataSets'
+  Caption = 'Update Data Sets'
   ClientHeight = 189
   ClientWidth = 423
-  Font.Charset = ANSI_CHARSET
   Font.Height = -21
-  Font.Name = 'Arial'
-  ExplicitWidth = 431
-  ExplicitHeight = 223
-  PixelsPerInch = 96
+  ExplicitWidth = 441
+  ExplicitHeight = 234
+  PixelsPerInch = 120
   TextHeight = 24
   object Label1: TLabel
     Left = 16

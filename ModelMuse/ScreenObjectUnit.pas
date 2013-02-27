@@ -36,7 +36,9 @@ uses
   ModflowUzfUnit, ModflowHobUnit, ValueArrayStorageUnit, QuadTreeClass,
   ModflowHfbUnit, ModpathParticleUnit, GPC_Classes, ModflowGageUnit,
   FormulaManagerUnit, ModflowMnw2Unit, ModflowHydmodUnit, Mt3dmsChemUnit,
-  Mt3dmsTobUnit, SutraBoundariesUnit, SutraMeshUnit;
+  Mt3dmsTobUnit, SutraBoundariesUnit, SutraMeshUnit, SubPolygonUnit,
+  ModflowStrUnit, ModflowFhbUnit, ModflowFmpFarmUnit, ModflowFmpWellUnit,
+  ModflowFmpPrecipitationUnit, ModflowFmpEvapUnit, ModflowFmpCropSpatialUnit;
 
 type
   //
@@ -380,6 +382,7 @@ type
   // on a line faster.)
   // @Seealso(TScreenObject.EvaluateSubPolygon)
   // @Seealso(TScreenObject.IsAnyPointCloser)
+{
   TSubPolygon = class(TObject)
   private
     FOriginalCount: integer;
@@ -443,6 +446,7 @@ type
     property SectionIndex: integer read FSectionIndex;
     function IsPointInside(const X, Y: real): boolean;
   end;
+}
               
   TAssignmentMethod = (amEnclose, amIntersect);
 
@@ -1417,6 +1421,7 @@ view. }
     // @name is only created if needed.
     // @seealso(TScreenObject.CreateSfrBoundary)
     FModflowSfrBoundary: TSfrBoundary;
+    FModflowStrBoundary: TStrBoundary;
     // @name represents a Well boundary.
     // @name is only created if needed.
     // @seealso(TScreenObject.CreateWelBoundary)
@@ -1432,6 +1437,15 @@ view. }
     FModflowHydmodData: THydmodData;
     FMt3dmsConcBoundary: TMt3dmsConcBoundary;
     FMt3dmsTransObservations: TMt3dmsTransObservations;
+    FModflowFhbHeadBoundary: TFhbHeadBoundary;
+    FModflowFhbFlowBoundary: TFhbFlowBoundary;
+  {$IFDEF FMP}
+    FModflowFarm: TFarm;
+    FFmpWellBoundary: TFmpWellBoundary;
+    FFmpPrecipBoundary: TFmpPrecipBoundary;
+    FFmpRefEvapBoundary: TFmpRefEvapBoundary;
+    FFmpCropIDBoundary: TFmpCropIDBoundary;
+  {$ENDIF}
   public
     procedure RemoveModelLink(AModel: TBaseModel);
     procedure FreeUnusedBoundaries;
@@ -1460,6 +1474,8 @@ view. }
       write FModflowLakBoundary;
     property ModflowSfrBoundary: TSfrBoundary read FModflowSfrBoundary
       write FModflowSfrBoundary;
+    property ModflowStrBoundary: TStrBoundary read FModflowStrBoundary
+      write FModflowStrBoundary;
     property ModflowUzfBoundary: TUzfBoundary read FModflowUzfBoundary
       write FModflowUzfBoundary;
     property ModflowHeadObservations: THobBoundary read FModflowHeadObservations
@@ -1475,6 +1491,21 @@ view. }
       write FMt3dmsConcBoundary;
     property Mt3dmsTransObservations: TMt3dmsTransObservations read FMt3dmsTransObservations
       write FMt3dmsTransObservations;
+    property ModflowFhbHeadBoundary: TFhbHeadBoundary read FModflowFhbHeadBoundary
+      write FModflowFhbHeadBoundary;
+    property ModflowFhbFlowBoundary: TFhbFlowBoundary read FModflowFhbFlowBoundary
+      write FModflowFhbFlowBoundary;
+  {$IFDEF FMP}
+    property ModflowFarm: TFarm read FModflowFarm write FModflowFarm;
+    property FmpWellBoundary: TFmpWellBoundary read FFmpWellBoundary
+      write FFmpWellBoundary;
+    property FmpPrecipBoundary: TFmpPrecipBoundary read FFmpPrecipBoundary
+      write FFmpPrecipBoundary;
+    property FmpRefEvapBoundary: TFmpRefEvapBoundary read FFmpRefEvapBoundary
+      write FFmpRefEvapBoundary;
+    property FmpCropIDBoundary: TFmpCropIDBoundary read FFmpCropIDBoundary
+      write FFmpCropIDBoundary;
+  {$ENDIF}
     procedure Assign(Source: TModflowBoundaries);
   end;
 
@@ -1750,6 +1781,7 @@ view. }
     FStoredSutraAngle: TRealStorage;
     FSutraBoundaries: TSutraBoundaries;
     FDuplicatesAllowed: Boolean;
+    FSfrSegmentNumber: integer;
     procedure CreateLastSubPolygon;
     procedure DestroyLastSubPolygon;
     function GetSubPolygonCount: integer;
@@ -2446,6 +2478,34 @@ view. }
     procedure SetDuplicatesAllowed(const Value: Boolean);
     procedure EliminateDuplicates(CellList: TCellAssignmentList;
       AModel: TBaseModel);
+    function GetModflowStrBoundary: TStrBoundary;
+    procedure SetModflowStrBoundary(const Value: TStrBoundary);
+    function StoreModflowStrBoundary: Boolean;
+    function GetModflowFhbHeadBoundary: TFhbHeadBoundary;
+    procedure SetModflowFhbHeadBoundary(const Value: TFhbHeadBoundary);
+    function StoreModflowFhbHeadBoundary: Boolean;
+    function GetModflowFhbFlowBoundary: TFhbFlowBoundary;
+    procedure SetModflowFhbFlowBoundary(const Value: TFhbFlowBoundary);
+    function StoreModflowFhbFlowBoundary: Boolean;
+    function Get_SetValuesByInterpolation: boolean;
+  {$IFDEF FMP}
+    function GetModflowFmpFarm: TFarm;
+    procedure SetModflowFmpFarm(const Value: TFarm);
+    function StoreModflowFmpFarm: Boolean;
+    procedure SetModflowFmpWellBoundary(const Value: TFmpWellBoundary);
+    function GetModflowFmpWellBoundary: TFmpWellBoundary;
+    function StoreModflowFmpWellBoundary: Boolean;
+    function GetModflowFmpPrecip: TFmpPrecipBoundary;
+    procedure SetModflowFmpPrecip(const Value: TFmpPrecipBoundary);
+    function StoreModflowFmpPrecip: Boolean;
+    function GetModflowFmpRefEvap: TFmpRefEvapBoundary;
+    procedure SetModflowFmpRefEvap(const Value: TFmpRefEvapBoundary);
+    function StoreModflowFmpRefEvap: Boolean;
+    function GetModflowFmpCropID: TFmpCropIDBoundary;
+    procedure SetModflowFmpCropID(const Value: TFmpCropIDBoundary);
+    function StoreModflowFmpCropID: Boolean;
+
+  {$ENDIF}
     property SubPolygonCount: integer read GetSubPolygonCount;
     property SubPolygons[Index: integer]: TSubPolygon read GetSubPolygon;
     procedure DeleteExtraSections;
@@ -2956,6 +3016,7 @@ view. }
     procedure CreateResBoundary;
     procedure CreateRivBoundary;
     procedure CreateSfrBoundary;
+    procedure CreateStrBoundary;
     procedure CreateWelBoundary;
     procedure CreateUzfBoundary;
     procedure CreateHfbBoundary;
@@ -2964,6 +3025,15 @@ view. }
     procedure CreateMnw2Boundary;
     procedure CreateMt3dmsConcBoundary;
     procedure CreateMt3dmsTransObservations;
+    procedure CreateFhbHeadBoundary;
+    procedure CreateFhbFlowBoundary;
+  {$IFDEF FMP}
+    procedure CreateFarm;
+    procedure CreateFarmWell;
+    procedure CreateFarmPrecip;
+    procedure CreateFarmRefEvap;
+    procedure CreateFarmCropID;
+  {$ENDIF}
     function ModflowDataSetUsed(DataArray: TDataArray; AModel: TBaseModel): boolean;
     property SectionCount: integer read GetSectionCount;
     property SectionStart[const Index: integer]: integer read GetSectionStart;
@@ -3363,6 +3433,8 @@ having them take care of the subscriptions. }
     // @name is measured in radians.
     property SutraAngle: Double read GetSutraAngle write SetSutraAngle;
     procedure InvalidateCachedCells;
+    property SfrSegmentNumber: integer read FSfrSegmentNumber
+      write FSfrSegmentNumber;
   published
     // @name is deprecated.
     property ChildModelDiscretization: integer read FChildModelDiscretization
@@ -3436,7 +3508,7 @@ having them take care of the subscriptions. }
     // in the data according to the algorithm defined by the interpolator for
     // the data set.
     property SetValuesByInterpolation: boolean
-      read FSetValuesByInterpolation write Set_SetValuesByInterpolation;
+      read Get_SetValuesByInterpolation write Set_SetValuesByInterpolation;
 
     // @exclude
     // SetPropertiesByInterpolation is maintained only for backwards
@@ -3516,6 +3588,8 @@ having them take care of the subscriptions. }
       write SetModflowWellBoundary stored StoreModflowWellBoundary;
     property ModflowRivBoundary: TRivBoundary read GetModflowRivBoundary
       write SetModflowRivBoundary stored StoreModflowRivBoundary;
+    property ModflowStrBoundary: TStrBoundary read GetModflowStrBoundary
+      write SetModflowStrBoundary stored StoreModflowStrBoundary;
     property ModflowDrnBoundary: TDrnBoundary read GetModflowDrnBoundary
       write SetModflowDrnBoundary stored StoreModflowDrnBoundary;
     property ModflowDrtBoundary: TDrtBoundary read GetModflowDrtBoundary
@@ -3545,6 +3619,24 @@ having them take care of the subscriptions. }
       write SetModflowHfbBoundary stored StoreModflowHfbBoundary;
     property ModflowMnw2Boundary: TMnw2Boundary read GetModflowMnw2Boundary
       write SetModflowMnw2Boundary stored StoreModflowMnw2Boundary;
+    property ModflowFhbHeadBoundary: TFhbHeadBoundary read GetModflowFhbHeadBoundary
+      write SetModflowFhbHeadBoundary stored StoreModflowFhbHeadBoundary;
+    property ModflowFhbFlowBoundary: TFhbFlowBoundary read GetModflowFhbFlowBoundary
+      write SetModflowFhbFlowBoundary stored StoreModflowFhbFlowBoundary;
+  {$IFDEF FMP}
+    property ModflowFmpFarm: TFarm read GetModflowFmpFarm
+      write SetModflowFmpFarm stored StoreModflowFmpFarm;
+    property ModflowFmpWellBoundary: TFmpWellBoundary read GetModflowFmpWellBoundary
+      write SetModflowFmpWellBoundary stored StoreModflowFmpWellBoundary;
+    property ModflowFmpPrecip: TFmpPrecipBoundary read GetModflowFmpPrecip
+      write SetModflowFmpPrecip Stored StoreModflowFmpPrecip;
+    property ModflowFmpRefEvap: TFmpRefEvapBoundary read GetModflowFmpRefEvap
+      write SetModflowFmpRefEvap Stored StoreModflowFmpRefEvap;
+    property ModflowFmpCropID: TFmpCropIDBoundary read GetModflowFmpCropID
+      write SetModflowFmpCropID Stored StoreModflowFmpCropID;
+  {$ENDIF}
+
+
     property Mt3dmsConcBoundary: TMt3dmsConcBoundary read GetMt3dmsConcBoundary
       write SetMt3dmsConcBoundary stored StoreMt3dmsConcBoundary;
     property Mt3dmsTransObservations: TMt3dmsTransObservations read GetMt3dmsTransObservations
@@ -3617,6 +3709,7 @@ SectionStarts.}
     property Items[Index: integer]: TScreenObject read GetItems; default;
     constructor Create;
     destructor Destroy; override;
+    procedure Clear;
   end;
 
   // @abstract(@name provides functionality used in storing multiple values
@@ -3894,6 +3987,7 @@ SectionStarts.}
     function GetMixtureFormulas: TStrings;
     // See @link(ClassTypeName).
     procedure SetClassType(Value: string);
+    function GetPoints: TPointCollection;
   protected
     // @name updates @link(ScreenObject) with the values read from
     // the stream and stored in private data fields.
@@ -3941,7 +4035,7 @@ SectionStarts.}
     property LowerElevationFormula: string read GetLowerElevationFormula
       write FLowerElevationFormula;
     // @name stores the @link(TScreenObject.Points) of @link(ScreenObject).
-    property Points: TPointCollection read FPoints write FPoints;
+    property Points: TPointCollection read GetPoints write FPoints;
     // @name is set to a subcomponent in @link(SetScreenObject).
     // This is required
     // to have the properties of @link(TScreenObject) saved to file.
@@ -4193,9 +4287,19 @@ SectionStarts.}
     constructor Create(ScreenObject: TScreenObject); override;
   end;
 
+  TModflowLGR2Delegate = class(TModflowDelegate)
+    constructor Create(ScreenObject: TScreenObject); override;
+  end;
+
   TModflowNWTDelegate = class(TModflowDelegate)
     constructor Create(ScreenObject: TScreenObject); override;
   end;
+
+{$IFDEF FMP}
+  TModflowFmpDelegate = class(TModflowDelegate)
+    constructor Create(ScreenObject: TScreenObject); override;
+  end;
+{$ENDIF}
 
   TSutraDelegate = class(TCustomScreenObjectDelegate)
   private
@@ -4205,6 +4309,7 @@ SectionStarts.}
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
     function AssignElevations(Const ColIndex, RowIndex,
       LayerIndex: integer; AModel: TBaseModel): boolean;
+    procedure ShowWarningNoCells(CellList: TCellAssignmentList);
   protected
     procedure AssignValuesToFrontDataSet(
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
@@ -4614,11 +4719,20 @@ resourcestring
   StrHigherXYOrZC = '(Higher X, Y, or Z coordinate formula)';
   Str0sTreatedAs1s = '%0:s treated as %1:s';
   StrInvalidFormula = 'Invalid Formula';
+  StrThereWasAnErrorR = 'There was an error reading elevation data for %s. P' +
+  'lease contact the ModelMuse developer at rbwinst@usgs.gov regarding this ' +
+  'problem.';
+  StrThereWasAnErrorImported = 'There was an error reading imported data in ' +
+  '%s.';
+  StrTheFollowingObject = 'The following objects do not assign values to any' +
+  ' %s. Check that the object is not above, below, or outside the mesh.';
+  StrElements = 'elements';
+  StrNodes = 'nodes';
 
 const
   SquareSize = 3;
   DiamondSize = 5;
-  MaxPointsInSubPolygon = 4;
+//  MaxPointsInSubPolygon = 4;
   MaxReal = 3.4E38;
   ErrorMessageFormulaUnNamed = 'An invalid value assigned by a formula for '
     + 'an unamed data set in Object "%s" '
@@ -5323,6 +5437,7 @@ end;
 
 { TSubPolygon }
 
+{
 procedure TSubPolygon.BoxIntersect(const Point1, Point2: TPoint2D;
   SubPolygons: TList);
 var
@@ -5558,6 +5673,7 @@ begin
     Start + FSubPolygon1.FCount - 1, Section);
   SetMaxAndMinFromSubPolygons;
 end;
+}
 
 { TScreenObject }
 
@@ -5713,9 +5829,9 @@ begin
         for SubIndex := 0 to SubPolygonList.Count - 1 do
         begin
           SubPolygon := SubPolygonList[SubIndex];
-          for PointIndex := 0 to SubPolygon.FCount - 2 do
+          for PointIndex := 0 to SubPolygon.Count - 2 do
           begin
-            StartIndex := SubPolygon.FStart + PointIndex;
+            StartIndex := SubPolygon.Start + PointIndex;
             if StartIndex >= Count-2 then
             begin
               break;
@@ -5724,7 +5840,7 @@ begin
               IntersectPoint) = irDoIntersect then
             begin
               if not PointsNearlyTheSame(IntersectPoint, Points[Count - 1])
-                and not PointsNearlyTheSame(IntersectPoint, Points[FLastSubPolygon.FStart])
+                and not PointsNearlyTheSame(IntersectPoint, Points[FLastSubPolygon.Start])
                 and not PointsNearlyTheSame(IntersectPoint, APoint)
                 then
               begin
@@ -5882,7 +5998,20 @@ begin
   ImportedHigherSectionElevations := AScreenObject.ImportedHigherSectionElevations;
   AScreenObject.ImportedLowerSectionElevations.RestoreData;
   ImportedLowerSectionElevations := AScreenObject.ImportedLowerSectionElevations;
+  if AScreenObject.ImportedSectionElevations.ErrorRestoringData
+    or AScreenObject.ImportedHigherSectionElevations.ErrorRestoringData
+    or AScreenObject.ImportedLowerSectionElevations.ErrorRestoringData
+    then
+  begin
+    MessageDlg(Format(StrThereWasAnErrorR, [AScreenObject.Name]),
+      mtError, [mbOK], 0);
+  end;
 
+  if AScreenObject.ImportedValues.ErrorRestoringData then
+  begin
+    MessageDlg(Format(StrThereWasAnErrorImported, [AScreenObject.Name]),
+      mtError, [mbOK], 0);
+  end;
   AScreenObject.ImportedValues.RestoreData;
   ImportedValues := AScreenObject.ImportedValues;
   PositionLocked := AScreenObject.PositionLocked;
@@ -6027,6 +6156,7 @@ begin
   ModflowResBoundary := AScreenObject.ModflowResBoundary;
   ModflowLakBoundary := AScreenObject.ModflowLakBoundary;
   ModflowSfrBoundary := AScreenObject.ModflowSfrBoundary;
+  ModflowStrBoundary := AScreenObject.ModflowStrBoundary;
   ModflowUzfBoundary := AScreenObject.ModflowUzfBoundary;
   ModflowHeadObservations := AScreenObject.ModflowHeadObservations;
   ModflowHfbBoundary := AScreenObject.ModflowHfbBoundary;
@@ -6035,6 +6165,15 @@ begin
   Mt3dmsConcBoundary := AScreenObject.Mt3dmsConcBoundary;
   Mt3dmsTransObservations := AScreenObject.Mt3dmsTransObservations;
   ModflowHydmodData := AScreenObject.ModflowHydmodData;
+  ModflowFhbHeadBoundary := AScreenObject.ModflowFhbHeadBoundary;
+  ModflowFhbFlowBoundary := AScreenObject.ModflowFhbFlowBoundary;
+{$IFDEF FMP}
+  ModflowFmpFarm := AScreenObject.ModflowFmpFarm;
+  ModflowFmpWellBoundary := AScreenObject.ModflowFmpWellBoundary;
+  ModflowFmpPrecip := AScreenObject.ModflowFmpPrecip;
+  ModflowFmpRefEvap := AScreenObject.ModflowFmpRefEvap;
+  ModflowFmpCropID := AScreenObject.ModflowFmpCropID;
+{$ENDIF}
 
   SutraBoundaries := AScreenObject.SutraBoundaries;
 
@@ -6803,7 +6942,6 @@ begin
   if Model <> nil then
   begin
     LocalModel := FModel as TPhastModel;
-    {$IFDEF SUTRA}
     if ViewDirection = vdFront then
     begin
 
@@ -6816,7 +6954,6 @@ begin
         SutraAngle := LocalModel.Grid.GridAngle;
       end;
     end;
-    {$ENDIF}
     LocalModel.ResetSelectedScreenObjects;
   end;
   Selected := True;
@@ -7158,10 +7295,8 @@ end;
 
 procedure TScreenObject.Draw(Const Bitmap32: TBitmap32;
   const Direction: TViewDirection; const DrawAsSelected: Boolean = False);
-  {$IFDEF SUTRA}
 var
   Mesh3D: TSutraMesh3D;
-  {$ENDIF}
 begin
   if Deleted or not Visible then
     Exit;
@@ -7170,7 +7305,6 @@ begin
   begin
       Exit;
   end;
-  {$IFDEF SUTRA}
   if (ViewDirection = vdFront) and (Model.ModelSelection = msSutra22) then
   begin
     Mesh3D := (Model as TCustomModel).Mesh;
@@ -7179,7 +7313,6 @@ begin
       Exit;
     end;
   end;
-  {$ENDIF}
   case ElevationCount of
     ecZero:
       begin
@@ -7235,17 +7368,15 @@ begin
         begin
           Draw1ElevPhast(Direction, Bitmap32, DrawAsSelected);
         end;
-      msModflow, msModflowLGR, msModflowNWT:
+      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
         begin
           Draw1ElevModflow(Direction, Bitmap32, DrawAsSelected,
             (Model as TPhastModel).SelectedModel);
         end;
-      {$IFDEF Sutra}
       msSutra22:
         begin
           Draw1ElevSutra(Direction, Bitmap32, DrawAsSelected);
         end
-      {$ENDIF}
       else
         Assert(False);
     end;
@@ -8099,6 +8230,10 @@ begin
     begin
       ModflowSfrBoundary.InvalidateDisplay;
     end;
+    if ModflowStrBoundary <> nil then
+    begin
+      ModflowStrBoundary.InvalidateDisplay;
+    end;
     if ModflowUzfBoundary <> nil then
     begin
       ModflowUzfBoundary.InvalidateDisplay;
@@ -8585,20 +8720,12 @@ end;
 
 function TScreenObject.SaveSutraAngle: Boolean;
 begin
-  {$IFDEF SUTRA}
   Result := ViewDirection = vdFront;
-  {$ELSE}
-  result := False;
-  {$ENDIF}
 end;
 
 function TScreenObject.SaveSutraBoundaries: Boolean;
 begin
-  {$IFDEF SUTRA}
   Result := True;
-  {$ELSE}
-  result := False;
-  {$ENDIF}
 end;
 
 function TScreenObject.ScreenObjectArea: real;
@@ -9324,7 +9451,6 @@ var
   IntersectionContours: TGpcPolygonClass;
   ContourIndex: Integer;
   LocalGrid: TCustomModelGrid;
-  {$IFDEF SUTRA}
   LocalMesh: TSutraMesh3D;
   Element2D: TSutraElement2D;
   NodeIndex: Integer;
@@ -9332,7 +9458,6 @@ var
   NodeCellOutline: TVertexArray;
   Polygons: TCellElementPolygons2D;
   Limits: TLimitsArray;
-  {$ENDIF}
 begin
   if not Closed then
   begin
@@ -9347,7 +9472,6 @@ begin
   end;
 
   Assert(AModel <> nil);
-  {$IFDEF SUTRA}
   if AModel.ModelSelection = msSutra22 then
   begin
     LocalMesh := (AModel as TCustomModel).Mesh;
@@ -9398,9 +9522,7 @@ begin
         Assert(False);
     end;
   end
-  else
-  {$ENDIF}
-  if (AModel.ModelSelection <> msPhast)
+  else if (AModel.ModelSelection <> msPhast)
     and (ViewDirection <> vdTop) then
   begin
     ModflowGrid := (AModel as TCustomModel).Grid as TModflowGrid;
@@ -10295,7 +10417,7 @@ var
 begin
   Mesh := (Model as TCustomModel).Mesh;
   Mesh2D := Mesh.Mesh2D;
-  Limits := Mesh.MeshLimits(vdTop);
+  Limits := Mesh.MeshLimits(vdTop, 0);
   EpsilonX := (Limits.MaxX-Limits.MinX)/1e7;
   EpsilonY := (Limits.MaxY-Limits.MinY)/1e7;
   SetLength(SearchArray, 4);
@@ -10550,7 +10672,7 @@ var
               else Assert(False);
             end;
           end;
-        msModflow, msModflowLGR, msModflowNWT:
+        msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
           begin
             Assert(EvaluatedAt = eaBlocks);
             BlockTop := LocalModel.ModflowGrid.
@@ -11857,6 +11979,129 @@ begin
   end;
 end;
 
+procedure TScreenObject.SetModflowFhbFlowBoundary(const Value: TFhbFlowBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FModflowFhbFlowBoundary <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FModflowFhbFlowBoundary);
+  end
+  else
+  begin
+    CreateFhbFlowBoundary;
+    ModflowBoundaries.FModflowFhbFlowBoundary.Assign(Value);
+  end;
+end;
+
+procedure TScreenObject.SetModflowFhbHeadBoundary(const Value: TFhbHeadBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FModflowFhbHeadBoundary <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FModflowFhbHeadBoundary);
+  end
+  else
+  begin
+    CreateFhbHeadBoundary;
+    ModflowBoundaries.FModflowFhbHeadBoundary.Assign(Value);
+  end;
+end;
+
+{$IFDEF FMP}
+procedure TScreenObject.SetModflowFmpFarm(const Value: TFarm);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FModflowFarm <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FModflowFarm);
+  end
+  else
+  begin
+    CreateFarm;
+    ModflowBoundaries.FModflowFarm.Assign(Value);
+  end;
+end;
+
+procedure TScreenObject.SetModflowFmpPrecip(const Value: TFmpPrecipBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FFmpPrecipBoundary <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FFmpPrecipBoundary);
+  end
+  else
+  begin
+    CreateFarmPrecip;
+    ModflowBoundaries.FFmpPrecipBoundary.Assign(Value);
+  end;
+end;
+
+procedure TScreenObject.SetModflowFmpRefEvap(const Value: TFmpRefEvapBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FFmpRefEvapBoundary <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FFmpRefEvapBoundary);
+  end
+  else
+  begin
+    CreateFarmRefEvap;
+    ModflowBoundaries.FFmpRefEvapBoundary.Assign(Value);
+  end;
+end;
+
+procedure TScreenObject.SetModflowFmpCropID(const Value: TFmpCropIDBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FFmpCropIDBoundary <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FFmpCropIDBoundary);
+  end
+  else
+  begin
+    CreateFarmCropID;
+    ModflowBoundaries.FFmpCropIDBoundary.Assign(Value);
+  end;
+end;
+
+procedure TScreenObject.SetModflowFmpWellBoundary(const Value: TFmpWellBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FFmpWellBoundary <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FFmpWellBoundary);
+  end
+  else
+  begin
+    CreateFarmWell;
+    ModflowBoundaries.FFmpWellBoundary.Assign(Value);
+  end;
+end;
+
+
+{$ENDIF}
+
 procedure TScreenObject.SetModflowGhbBoundary(const Value: TGhbBoundary);
 begin
   if (Value = nil) or not Value.Used then
@@ -12025,6 +12270,23 @@ begin
   begin
     CreateSfrBoundary;
     ModflowBoundaries.FModflowSfrBoundary.Assign(Value);
+  end;
+end;
+
+procedure TScreenObject.SetModflowStrBoundary(const Value: TStrBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FModflowStrBoundary <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FModflowStrBoundary);
+  end
+  else
+  begin
+    CreateStrBoundary;
+    ModflowBoundaries.FModflowStrBoundary.Assign(Value);
   end;
 end;
 
@@ -12201,16 +12463,14 @@ begin
         begin
           Draw2ElevPhast(Direction, Bitmap32);
         end;
-      msModflow, msModflowLGR, msModflowNWT:
+      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
         begin
           Draw2ElevModflow(Direction, Bitmap32, (Model as TPhastModel).SelectedModel);
         end;
-      {$IFDEF Sutra}
       msSutra22:
         begin
           Draw2ElevSutra(Direction, Bitmap32);
         end
-      {$ENDIF}
       else
         Assert(False)
     end;
@@ -13251,8 +13511,8 @@ var
   SubPolygon: TSubPolygon;
 begin
   SubPolygon := TSubPolygon(Subject);
-  LowerBoundary := SubPolygon.FMinX;
-  UpperBoundary := SubPolygon.FMaxX;
+  LowerBoundary := SubPolygon.MinX;
+  UpperBoundary := SubPolygon.MaxX;
 end;
 
 procedure TScreenObject.SubPolygonYLimits(Subject: TObject;
@@ -13261,8 +13521,8 @@ var
   SubPolygon: TSubPolygon;
 begin
   SubPolygon := TSubPolygon(Subject);
-  LowerBoundary := SubPolygon.FMinY;
-  UpperBoundary := SubPolygon.FMaxY;
+  LowerBoundary := SubPolygon.MinY;
+  UpperBoundary := SubPolygon.MaxY;
 end;
 
 function TScreenObject.IsPointInside(const X, Y: real;
@@ -13451,6 +13711,11 @@ begin
     FNeedToUpdateLine := False;
   end;
   result := FSelectLines;
+end;
+
+function TScreenObject.Get_SetValuesByInterpolation: boolean;
+begin
+  result := FSetValuesByInterpolation and (ElevationCount = ecZero)
 end;
 
 function TScreenObject.GetSpecifiedHeadBoundary: TSpecifiedHeadBoundary;
@@ -15738,6 +16003,10 @@ begin
     begin
       HandleError(E);
     end;
+    on E: EZeroDivide do
+    begin
+      HandleError(E);
+    end;
   end;
 end;
 
@@ -15975,6 +16244,9 @@ procedure TScreenObject.Loaded;
 var
   Index: Integer;
   Observer: TObserver;
+  DataArrayIndex: Integer;
+  LocalModel: TPhastModel;
+  DataArray: TDataArray;
 begin
   inherited;
   if FLeakyBoundary <> nil then
@@ -16052,6 +16324,11 @@ begin
   begin
     FreeAndNil(ModflowBoundaries.FModflowSfrBoundary);
   end;
+  if (ModflowBoundaries.FModflowStrBoundary <> nil)
+    and not ModflowBoundaries.FModflowStrBoundary.Used then
+  begin
+    FreeAndNil(ModflowBoundaries.FModflowStrBoundary);
+  end;
   if (ModflowBoundaries.FModflowUzfBoundary <> nil)
     and not ModflowBoundaries.FModflowUzfBoundary.Used then
   begin
@@ -16082,6 +16359,66 @@ begin
   begin
     FreeAndNil(ModflowBoundaries.FModflowHydmodData);
   end;
+  if (ModflowBoundaries.FMt3dmsConcBoundary <> nil)
+    and not ModflowBoundaries.FMt3dmsConcBoundary.Used then
+  begin
+    FreeAndNil(ModflowBoundaries.FMt3dmsConcBoundary);
+  end;
+  if (ModflowBoundaries.FMt3dmsTransObservations <> nil)
+    and not ModflowBoundaries.FMt3dmsTransObservations.Used then
+  begin
+    FreeAndNil(ModflowBoundaries.FMt3dmsTransObservations);
+  end;
+  if (ModflowBoundaries.FModflowFhbHeadBoundary <> nil)
+    and not ModflowBoundaries.FModflowFhbHeadBoundary.Used then
+  begin
+    FreeAndNil(ModflowBoundaries.FModflowFhbHeadBoundary);
+  end;
+  if (ModflowBoundaries.FModflowFhbFlowBoundary <> nil)
+    and not ModflowBoundaries.FModflowFhbFlowBoundary.Used then
+  begin
+    FreeAndNil(ModflowBoundaries.FModflowFhbFlowBoundary);
+  end;
+  {$IFDEF FMP}
+  if (ModflowBoundaries.FModflowFarm <> nil)
+    and not ModflowBoundaries.FModflowFarm.Used then
+  begin
+    FreeAndNil(ModflowBoundaries.FModflowFarm);
+  end;
+  if (ModflowBoundaries.FFmpWellBoundary <> nil)
+    and not ModflowBoundaries.FFmpWellBoundary.Used then
+  begin
+    FreeAndNil(ModflowBoundaries.FFmpWellBoundary);
+  end;
+  if (ModflowBoundaries.FFmpPrecipBoundary <> nil)
+    and not ModflowBoundaries.FFmpPrecipBoundary.Used then
+  begin
+    FreeAndNil(ModflowBoundaries.FFmpPrecipBoundary);
+  end;
+  if (ModflowBoundaries.FFmpRefEvapBoundary <> nil)
+    and not ModflowBoundaries.FFmpRefEvapBoundary.Used then
+  begin
+    FreeAndNil(ModflowBoundaries.FFmpRefEvapBoundary);
+  end;
+  if (ModflowBoundaries.FFmpCropIDBoundary <> nil)
+    and not ModflowBoundaries.FFmpCropIDBoundary.Used then
+  begin
+    FreeAndNil(ModflowBoundaries.FFmpCropIDBoundary);
+  end;
+
+  if (ModflowBoundaries.FModflowFarm <> nil) then
+  begin
+    LocalModel := (Model as TPhastModel);
+    DataArray := LocalModel.DataArrayManager.GetDataSetByName(KFarmID);
+    DataArrayIndex := IndexOfDataSet(DataArray);
+    if DataArrayIndex < 0 then
+    begin
+      DataArrayIndex := AddDataSet(DataArray);
+      DataSetFormulas[DataArrayIndex] :=
+        IntToStr(ModflowBoundaries.FModflowFarm.FarmId);
+    end;
+  end;
+  {$ENDIF}
 
 
   if ModflowBoundaries.FModflowHydmodData <> nil then
@@ -16175,9 +16512,7 @@ end;
 procedure TScreenObject.SetSelected(const Value: boolean);
 var
   Index: integer;
-{$IFDEF SUTRA}
   NewLocation: TSegment2D;
-{$ENDIF}
 begin
   // You can't select a deleted object.
   if Value and Deleted then
@@ -16202,14 +16537,12 @@ begin
     end;
     CacheElevationArrays;
     InvalidateModel;
-    {$IFDEF SUTRA}
     if (FModel <> nil) and (ViewDirection = vdFront) and Selected
       and ((FModel as TPhastModel).ModelSelection = msSutra22) then
     begin
       SetNewCrossSectionAngle(SutraAngle, NewLocation);
       frmGoPhast.PhastModel.Mesh.CrossSection.Segment := NewLocation;
     end;
-    {$ENDIF}
   end;
 
   // If the object is not selected, it can't have any selected vertices.
@@ -16254,6 +16587,10 @@ begin
     ptRCH: result := ModflowRchBoundary;
     ptEVT: result := ModflowEvtBoundary;
     ptETS: result := ModflowEtsBoundary;
+    ptStr: result := ModflowStrBoundary;
+  {$IFDEF FMP}
+    ptQMax: result := ModflowFmpWellBoundary;
+  {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -16572,10 +16909,10 @@ function TScreenObject.IsOutsideSubPolygonBoxPlusBuffer(
 begin
   Assert(BufferDistance >= 0);
   result :=
-    ((Location.X - BufferDistance) >= SubPolygon.FMaxX) or
-    ((Location.X + BufferDistance) <= SubPolygon.FMinX) or
-    ((Location.Y*Anisotropy - BufferDistance) >= SubPolygon.FMaxY*Anisotropy) or
-    ((Location.Y*Anisotropy + BufferDistance) <= SubPolygon.FMinY*Anisotropy);
+    ((Location.X - BufferDistance) >= SubPolygon.MaxX) or
+    ((Location.X + BufferDistance) <= SubPolygon.MinX) or
+    ((Location.Y*Anisotropy - BufferDistance) >= SubPolygon.MaxY*Anisotropy) or
+    ((Location.Y*Anisotropy + BufferDistance) <= SubPolygon.MinY*Anisotropy);
 end;
 
 function TScreenObject.IsAnyPointInSubPolygonCloser(const Location: TPoint2D;
@@ -16595,22 +16932,22 @@ begin
     Exit;
   end;
 
-  if ASubPolygon.FSubPolygon1 <> nil then
+  if ASubPolygon.SubPolygon1 <> nil then
   begin
     result := IsAnyPointInSubPolygonCloser(Location, Distance,
-      ClosestLocation, Anisotropy, ASubPolygon.FSubPolygon1);
+      ClosestLocation, Anisotropy, ASubPolygon.SubPolygon1);
 
   // We want to know not only if any point is closer but, if so, what is the
   // closest point and how close is it.  Therefore we need to be sure to
   // evaluate both ASubPolygon.FSubPolygon1 and ASubPolygon.FSubPolygon2.
     result := IsAnyPointInSubPolygonCloser(Location, Distance,
-      ClosestLocation, Anisotropy, ASubPolygon.FSubPolygon2) or result;
+      ClosestLocation, Anisotropy, ASubPolygon.SubPolygon2) or result;
   end
   else
   begin
-    if ASubPolygon.FCount = 1 then
+    if ASubPolygon.Count = 1 then
     begin
-      TempLocation := Points[ASubPolygon.FStart];
+      TempLocation := Points[ASubPolygon.Start];
       temp := PointToPointDist(Location, TempLocation, Anisotropy);
       if temp < Distance then
       begin
@@ -16621,10 +16958,10 @@ begin
     end
     else
     begin
-      for VertexIndex := 0 to ASubPolygon.FCount - 2 do
+      for VertexIndex := 0 to ASubPolygon.Count - 2 do
       begin
-        FirstPoint := Points[ASubPolygon.FStart + VertexIndex];
-        SecondPoint := Points[ASubPolygon.FStart + VertexIndex + 1];
+        FirstPoint := Points[ASubPolygon.Start + VertexIndex];
+        SecondPoint := Points[ASubPolygon.Start + VertexIndex + 1];
         temp := MinDistPointLine(Location, FirstPoint, SecondPoint,
           TempLocation, Anisotropy);
         if temp < Distance then
@@ -18690,6 +19027,7 @@ Try using a range tree or other data structure to increase speed. }
   else if (Count > MaxPointsInSubPolygon) then
   begin
     ClosestLocation := Points[0];
+    SectionIndex := 0;
     result := PointToPointDist(ClosestLocation, Location, Anisotropy);
     IsAnyPointCloser(Location, result, ClosestLocation, SectionIndex, Anisotropy);
   end
@@ -19827,7 +20165,7 @@ begin
     else if frmGoPhast.PhastModel.Mesh <> nil then
     begin
       Limits := frmGoPhast.PhastModel.
-        Mesh.MeshLimits(FScreenObject.ViewDirection)
+        Mesh.MeshLimits(FScreenObject.ViewDirection, FScreenObject.SutraAngle)
     end
     else
     begin
@@ -19884,13 +20222,14 @@ begin
     begin
       Assert(frmGoPhast.PhastModel.Mesh <> nil);
       ModelOutline := frmGoPhast.PhastModel.
-        Mesh.MeshBox(FScreenObject.ViewDirection);
+        Mesh.MeshBox(FScreenObject.ViewDirection, FScreenObject.SutraAngle);
     end;
     for PointIndex := 0 to Length(ModelOutline) - 1 do
     begin
       ModelOutline[PointIndex].y := ModelOutline[PointIndex].y * Anisotropy;
     end;
-    if not PointInConvexPolygon(Location, ModelOutline) then
+    if (Length(ModelOutline) > 0)
+      and not PointInConvexPolygon(Location, ModelOutline) then
     begin
       // define the search circle.
       SearchCircle.x := Location.x;
@@ -20538,6 +20877,9 @@ begin
         break;
       end;
     end;
+
+    // Each delegate class referenced here must be registered in the
+    // initialization section.
     if FCachedDelegate = nil then
     begin
       Item := Add as TDelegateItem;
@@ -20558,16 +20900,24 @@ begin
           begin
             Item.DelegateClass := TModflowLGRDelegate.ClassName;
           end;
+        msModflowLGR2:
+          begin
+            Item.DelegateClass := TModflowLGR2Delegate.ClassName;
+          end;
         msModflowNWT:
           begin
             Item.DelegateClass := TModflowNWTDelegate.ClassName;
           end;
-        {$IFDEF SUTRA}
+      {$IFDEF FMP}
+        msModflowFmp:
+          begin
+            Item.DelegateClass := TModflowFmpDelegate.ClassName;
+          end;
+      {$ENDIF}
         msSutra22:
           begin
             Item.DelegateClass := TSutraDelegate.ClassName;
           end
-        {$ENDIF}
         else
           begin
             Assert(False);
@@ -27981,6 +28331,51 @@ begin
     and (ModflowEvtBoundary <> nil) and ModflowEvtBoundary.Used;
 end;
 
+function TScreenObject.StoreModflowFhbFlowBoundary: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowFhbFlowBoundary <> nil) and ModflowFhbFlowBoundary.Used;
+end;
+
+function TScreenObject.StoreModflowFhbHeadBoundary: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowFhbHeadBoundary <> nil) and ModflowFhbHeadBoundary.Used;
+end;
+
+{$IFDEF FMP}
+function TScreenObject.StoreModflowFmpCropID: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowFmpCropID <> nil) and ModflowFmpCropID.Used;
+end;
+
+function TScreenObject.StoreModflowFmpFarm: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowFmpFarm <> nil) and ModflowFmpFarm.Used;
+end;
+
+function TScreenObject.StoreModflowFmpPrecip: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowFmpPrecip <> nil) and ModflowFmpPrecip.Used;
+end;
+
+function TScreenObject.StoreModflowFmpRefEvap: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowFmpRefEvap <> nil) and ModflowFmpRefEvap.Used;
+end;
+
+function TScreenObject.StoreModflowFmpWellBoundary: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowFmpWellBoundary <> nil) and ModflowFmpWellBoundary.Used;
+end;
+
+{$ENDIF}
+
 function TScreenObject.StoreModflowGhbBoundary: Boolean;
 begin
   result := (FModflowBoundaries <> nil)
@@ -28033,6 +28428,12 @@ function TScreenObject.StoreModflowSfrBoundary: Boolean;
 begin
   result := (FModflowBoundaries <> nil)
     and (ModflowSfrBoundary <> nil) and ModflowSfrBoundary.Used;
+end;
+
+function TScreenObject.StoreModflowStrBoundary: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowStrBoundary <> nil) and ModflowStrBoundary.Used;
 end;
 
 function TScreenObject.StoreModflowStreamGage: Boolean;
@@ -28525,6 +28926,128 @@ begin
   end;
 end;
 
+function TScreenObject.GetModflowFhbFlowBoundary: TFhbFlowBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateFhbFlowBoundary;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FModflowFhbFlowBoundary;
+  end;
+end;
+
+function TScreenObject.GetModflowFhbHeadBoundary: TFhbHeadBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateFhbHeadBoundary;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FModflowFhbHeadBoundary;
+  end;
+end;
+
+{$IFDEF FMP}
+function TScreenObject.GetModflowFmpFarm: TFarm;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateFarm;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FModflowFarm;
+  end;
+end;
+
+function TScreenObject.GetModflowFmpPrecip: TFmpPrecipBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateFarmPrecip;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FFmpPrecipBoundary;
+  end;
+end;
+
+function TScreenObject.GetModflowFmpRefEvap: TFmpRefEvapBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateFarmRefEvap;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FFmpRefEvapBoundary;
+  end;
+end;
+
+function TScreenObject.GetModflowFmpCropID: TFmpCropIDBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateFarmCropID;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FFmpCropIDBoundary;
+  end;
+end;
+
+function TScreenObject.GetModflowFmpWellBoundary: TFmpWellBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateFarmWell;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FFmpWellBoundary;
+  end;
+end;
+
+{$ENDIF}
+
 function TScreenObject.GetModflowGhbBoundary: TGhbBoundary;
 begin
   if (FModel = nil)
@@ -28702,6 +29225,23 @@ begin
   else
   begin
     result := ModflowBoundaries.FModflowSfrBoundary;
+  end;
+end;
+
+function TScreenObject.GetModflowStrBoundary: TStrBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateStrBoundary;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FModflowStrBoundary;
   end;
 end;
 
@@ -29059,6 +29599,13 @@ begin
     Mt3dmsConcBoundary.UpdateTimes(ModflowTimes,
       StartTestTime, EndTestTime, StartRangeExtended,EndRangeExtended);
   end;
+  if PhastModel.StrIsSelected
+    and (ModflowStrBoundary <> nil)
+    and ModflowStrBoundary.Used then
+  begin
+    ModflowStrBoundary.UpdateTimes(ModflowTimes,
+      StartTestTime, EndTestTime, StartRangeExtended,EndRangeExtended);
+  end;
 
 end;
 
@@ -29124,6 +29671,7 @@ begin
   SO_Polygon := nil;
   ClosedSections := nil;
   TranslationIndices := nil;
+  EmptyPolygon := nil;
   try
     if Closed and (SectionCount > 1) then
     begin
@@ -29138,6 +29686,8 @@ begin
       end;
       if ClosedSections.Count > 1 then
       begin
+        EmptyPolygon := TGpcPolygonClass.Create;
+        EmptyPolygon.NumberOfContours := 0;
         SearchQuad := TRbwQuadTree.Create(nil);
         try
           SearchQuad.XMin := MinX;
@@ -29164,9 +29714,8 @@ begin
             end;
           end;
 
-          EmptyPolygon := TGpcPolygonClass.Create;
+          IntersectionPolygon := nil;
           try
-            EmptyPolygon.NumberOfContours := 0;
             IntersectionPolygon := TGpcPolygonClass.CreateFromOperation(
               GPC_DIFF, SO_Polygon, EmptyPolygon);
           finally
@@ -29223,6 +29772,7 @@ begin
   finally
     ClosedSections.Free;
     TranslationIndices.Free;
+    EmptyPolygon.Free;
   end;
 end;
 
@@ -32356,6 +32906,65 @@ begin
   end;
 end;
 
+{$IFDEF FMP}
+procedure TScreenObject.CreateFarm;
+begin
+  if (ModflowBoundaries.FModflowFarm = nil) then
+  begin
+    ModflowBoundaries.FModflowFarm := TFarm.Create(FModel, self);
+  end;
+end;
+
+procedure TScreenObject.CreateFarmWell;
+begin
+  if (ModflowBoundaries.FFmpWellBoundary = nil) then
+  begin
+    ModflowBoundaries.FFmpWellBoundary := TFmpWellBoundary.Create(FModel, self);
+  end;
+end;
+
+procedure TScreenObject.CreateFarmPrecip;
+begin
+  if (ModflowBoundaries.FFmpPrecipBoundary = nil) then
+  begin
+    ModflowBoundaries.FFmpPrecipBoundary := TFmpPrecipBoundary.Create(FModel, self);
+  end;
+end;
+
+procedure TScreenObject.CreateFarmRefEvap;
+begin
+  if (ModflowBoundaries.FFmpRefEvapBoundary = nil) then
+  begin
+    ModflowBoundaries.FFmpRefEvapBoundary := TFmpRefEvapBoundary.Create(FModel, self);
+  end;
+end;
+
+procedure TScreenObject.CreateFarmCropID;
+begin
+  if (ModflowBoundaries.FFmpCropIDBoundary = nil) then
+  begin
+    ModflowBoundaries.FFmpCropIDBoundary := TFmpCropIDBoundary.Create(FModel, self);
+  end;
+end;
+
+{$ENDIF}
+
+procedure TScreenObject.CreateFhbFlowBoundary;
+begin
+  if (ModflowBoundaries.FModflowFhbFlowBoundary = nil) then
+  begin
+    ModflowBoundaries.FModflowFhbFlowBoundary := TFhbFlowBoundary.Create(FModel, self);
+  end;
+end;
+
+procedure TScreenObject.CreateFhbHeadBoundary;
+begin
+  if (ModflowBoundaries.FModflowFhbHeadBoundary = nil) then
+  begin
+    ModflowBoundaries.FModflowFhbHeadBoundary := TFhbHeadBoundary.Create(FModel, self);
+  end;
+end;
+
 procedure TScreenObject.CreateWelBoundary;
 begin
   if (ModflowBoundaries.FModflowWellBoundary = nil) then
@@ -32468,6 +33077,14 @@ begin
   if (ModflowBoundaries.FModflowHfbBoundary = nil) then
   begin
     ModflowBoundaries.FModflowHfbBoundary := THfbBoundary.Create(FModel, self);
+  end;
+end;
+
+procedure TScreenObject.CreateStrBoundary;
+begin
+  if (ModflowBoundaries.FModflowStrBoundary = nil) then
+  begin
+    ModflowBoundaries.FModflowStrBoundary := TStrBoundary.Create(FModel, self);
   end;
 end;
 
@@ -34475,6 +35092,11 @@ begin
   Result := FMixtureFormulas;
 end;
 
+function TScreenObjectItem.GetPoints: TPointCollection;
+begin
+  Result := FPoints;
+end;
+
 { TScreenObjectCollection }
 
 constructor TScreenObjectCollection.Create(Model: TBaseModel);
@@ -34621,6 +35243,11 @@ end;
 function TScreenObjectList.Add(ScreenObject: TScreenObject): integer;
 begin
   result := FList.Add(ScreenObject);
+end;
+
+procedure TScreenObjectList.Clear;
+begin
+  FList.Clear;
 end;
 
 constructor TScreenObjectList.Create;
@@ -34845,6 +35472,19 @@ begin
     FModflowSfrBoundary.Assign(Source.FModflowSfrBoundary);
   end;
 
+  if Source.FModflowStrBoundary = nil then
+  begin
+    FreeAndNil(FModflowStrBoundary);
+  end
+  else
+  begin
+    if FModflowStrBoundary = nil then
+    begin
+      FModflowStrBoundary := TStrBoundary.Create(nil, nil);
+    end;
+    FModflowStrBoundary.Assign(Source.FModflowStrBoundary);
+  end;
+
   if Source.FModflowUzfBoundary = nil then
   begin
     FreeAndNil(FModflowUzfBoundary);
@@ -34949,11 +35589,114 @@ begin
     FMt3dmsTransObservations.Assign(Source.FMt3dmsTransObservations);
   end;
 
+  if Source.FModflowFhbHeadBoundary = nil then
+  begin
+    FreeAndNil(FModflowFhbHeadBoundary);
+  end
+  else
+  begin
+    if FModflowFhbHeadBoundary = nil then
+    begin
+      FModflowFhbHeadBoundary := TFhbHeadBoundary.Create(nil, nil);
+    end;
+    FModflowFhbHeadBoundary.Assign(Source.FModflowFhbHeadBoundary);
+  end;
+
+  if Source.FModflowFhbFlowBoundary = nil then
+  begin
+    FreeAndNil(FModflowFhbFlowBoundary);
+  end
+  else
+  begin
+    if FModflowFhbFlowBoundary = nil then
+    begin
+      FModflowFhbFlowBoundary := TFhbFlowBoundary.Create(nil, nil);
+    end;
+    FModflowFhbFlowBoundary.Assign(Source.FModflowFhbFlowBoundary);
+  end;
+
+{$IFDEF FMP}
+  if Source.FModflowFarm = nil then
+  begin
+    FreeAndNil(FModflowFarm);
+  end
+  else
+  begin
+    if FModflowFarm = nil then
+    begin
+      FModflowFarm := TFarm.Create(nil, nil);
+    end;
+    FModflowFarm.Assign(Source.FModflowFarm);
+  end;
+
+  if Source.FFmpWellBoundary = nil then
+  begin
+    FreeAndNil(FFmpWellBoundary);
+  end
+  else
+  begin
+    if FFmpWellBoundary = nil then
+    begin
+      FFmpWellBoundary := TFmpWellBoundary.Create(nil, nil);
+    end;
+    FFmpWellBoundary.Assign(Source.FFmpWellBoundary);
+  end;
+
+  if Source.FFmpPrecipBoundary = nil then
+  begin
+    FreeAndNil(FFmpPrecipBoundary);
+  end
+  else
+  begin
+    if FFmpPrecipBoundary = nil then
+    begin
+      FFmpPrecipBoundary := TFmpPrecipBoundary.Create(nil, nil);
+    end;
+    FFmpPrecipBoundary.Assign(Source.FFmpPrecipBoundary);
+  end;
+
+  if Source.FFmpRefEvapBoundary = nil then
+  begin
+    FreeAndNil(FFmpRefEvapBoundary);
+  end
+  else
+  begin
+    if FFmpRefEvapBoundary = nil then
+    begin
+      FFmpRefEvapBoundary := TFmpRefEvapBoundary.Create(nil, nil);
+    end;
+    FFmpRefEvapBoundary.Assign(Source.FFmpRefEvapBoundary);
+  end;
+
+  if Source.FFmpCropIDBoundary = nil then
+  begin
+    FreeAndNil(FFmpCropIDBoundary);
+  end
+  else
+  begin
+    if FFmpCropIDBoundary = nil then
+    begin
+      FFmpCropIDBoundary := TFmpCropIDBoundary.Create(nil, nil);
+    end;
+    FFmpCropIDBoundary.Assign(Source.FFmpCropIDBoundary);
+  end;
+
+{$ENDIF}
+
   FreeUnusedBoundaries;
 end;
 
 destructor TModflowBoundaries.Destroy;
 begin
+{$IFDEF FMP}
+  FmpCropIDBoundary.Free;
+  FFmpRefEvapBoundary.Free;
+  FFmpPrecipBoundary.Free;
+  FFmpWellBoundary.Free;
+  FModflowFarm.Free;
+{$ENDIF}
+  FModflowFhbFlowBoundary.Free;
+  FModflowFhbHeadBoundary.Free;
   FMt3dmsTransObservations.Free;
   FMt3dmsConcBoundary.Free;
   FModflowHydmodData.Free;
@@ -34962,6 +35705,7 @@ begin
   FModflowHfbBoundary.Free;
   FModflowHeadObservations.Free;
   FModflowUzfBoundary.Free;
+  FModflowStrBoundary.Free;
   FModflowSfrBoundary.Free;
   FModflowLakBoundary.Free;
   FModflowResBoundary.Free;
@@ -35023,6 +35767,10 @@ begin
   begin
     FreeAndNil(FModflowSfrBoundary);
   end;
+  if (FModflowStrBoundary <> nil) and not FModflowStrBoundary.Used then
+  begin
+    FreeAndNil(FModflowStrBoundary);
+  end;
   if (FModflowWellBoundary <> nil) and not FModflowWellBoundary.Used then
   begin
     FreeAndNil(FModflowWellBoundary);
@@ -35059,6 +35807,34 @@ begin
   begin
     FreeAndNil(FMt3dmsTransObservations);
   end;
+  if (FModflowFhbHeadBoundary <> nil) and not FModflowFhbHeadBoundary.Used then
+  begin
+    FreeAndNil(FModflowFhbHeadBoundary);
+  end;
+  if (FModflowFhbFlowBoundary <> nil) and not FModflowFhbFlowBoundary.Used then
+  begin
+    FreeAndNil(FModflowFhbFlowBoundary);
+  end;
+{$IFDEF FMP}
+  if (FModflowFarm <> nil) and not FModflowFarm.Used then
+  begin
+    FreeAndNil(FModflowFarm);
+  end;
+  if (FFmpWellBoundary <> nil) and not FFmpWellBoundary.Used then
+  begin
+    FreeAndNil(FFmpWellBoundary);
+  end;
+  if (FFmpPrecipBoundary <> nil) and not FFmpPrecipBoundary.Used then
+  begin
+    FreeAndNil(FFmpPrecipBoundary);
+  end;
+  if (FFmpRefEvapBoundary <> nil) and not FFmpRefEvapBoundary.Used then
+  begin
+    FreeAndNil(FFmpRefEvapBoundary);
+  end;
+
+
+{$ENDIF}
 end;
 
 procedure TModflowBoundaries.RemoveModelLink(AModel: TBaseModel);
@@ -35106,6 +35882,10 @@ begin
   if FModflowSfrBoundary <> nil then
   begin
     FModflowSfrBoundary.RemoveModelLink(AModel);
+  end;
+  if FModflowStrBoundary <> nil then
+  begin
+    FModflowStrBoundary.RemoveModelLink(AModel);
   end;
   if FModflowWellBoundary <> nil then
   begin
@@ -35596,14 +36376,14 @@ function FindIntersectionPoints(Poly1, Poly2: TSubPolygon;
     Index2: Integer;
   begin
     result := False;
-    for Index1 := Poly1.FStart to Poly1.FCount - 1 do
+    for Index1 := Poly1.Start to Poly1.Count - 1 do
     begin
-      for Index2 := Poly2.FStart to Poly2.FCount - 1 do
+      for Index2 := Poly2.Start to Poly2.Count - 1 do
       begin
-        if Intersect(Poly1.FPoints[Index1],
-          Poly1.FPoints[Index1+1],
-          Poly2.FPoints[Index2],
-          Poly2.FPoints[Index2+1]) then
+        if Intersect(Poly1.Points[Index1],
+          Poly1.Points[Index1+1],
+          Poly2.Points[Index2],
+          Poly2.Points[Index2+1]) then
         begin
           result := True;
 
@@ -35620,33 +36400,33 @@ function FindIntersectionPoints(Poly1, Poly2: TSubPolygon;
           end;
 
           Intersections[Count].Point :=
-            IntersectionPoint(Poly1.FPoints[Index1],Poly1.FPoints[Index1+1],
-            Poly2.FPoints[Index2],Poly2.FPoints[Index2+1]);
+            IntersectionPoint(Poly1.Points[Index1],Poly1.Points[Index1+1],
+            Poly2.Points[Index2],Poly2.Points[Index2+1]);
 
           Intersections[Count].Location1.Position := Index1+1;
           Intersections[Count].Location1.New := False;
-          if IsEqual(Poly1.FPoints[Index1+1],Intersections[Count].Point) then
+          if IsEqual(Poly1.Points[Index1+1],Intersections[Count].Point) then
           begin
-            Poly1.FPoints[Index1+1] := Intersections[Count].Point;
+            Poly1.Points[Index1+1] := Intersections[Count].Point;
             Intersections[Count].Location1.New := True;
           end
-          else if IsEqual(Poly1.FPoints[Index1],Intersections[Count].Point) then
+          else if IsEqual(Poly1.Points[Index1],Intersections[Count].Point) then
           begin
-            Poly1.FPoints[Index1] := Intersections[Count].Point;
+            Poly1.Points[Index1] := Intersections[Count].Point;
             Intersections[Count].Location1.New := True;
             Intersections[Count].Location1.Position := Index1;
           end;
 
           Intersections[Count].Location2.Position := Index2+1;
           Intersections[Count].Location2.New := False;
-          if IsEqual(Poly2.FPoints[Index2+1],Intersections[Count].Point) then
+          if IsEqual(Poly2.Points[Index2+1],Intersections[Count].Point) then
           begin
-            Poly2.FPoints[Index2+1] := Intersections[Count].Point;
+            Poly2.Points[Index2+1] := Intersections[Count].Point;
             Intersections[Count].Location2.New := True;
           end
-          else if IsEqual(Poly2.FPoints[Index2],Intersections[Count].Point) then
+          else if IsEqual(Poly2.Points[Index2],Intersections[Count].Point) then
           begin
-            Poly2.FPoints[Index2] := Intersections[Count].Point;
+            Poly2.Points[Index2] := Intersections[Count].Point;
             Intersections[Count].Location2.New := True;
             Intersections[Count].Location2.Position := Index2;
           end;
@@ -35658,39 +36438,39 @@ function FindIntersectionPoints(Poly1, Poly2: TSubPolygon;
   end;
 begin
   result := False;
-  if ((Poly1.FMinX <= Poly2.FMaxX) and (Poly1.FMaxX >= Poly2.FMinX)) or
-    ((Poly2.FMinX <= Poly1.FMaxX) and (Poly2.FMaxX >= Poly1.FMinX)) then
+  if ((Poly1.MinX <= Poly2.MaxX) and (Poly1.MaxX >= Poly2.MinX)) or
+    ((Poly2.MinX <= Poly1.MaxX) and (Poly2.MaxX >= Poly1.MinX)) then
   begin
-    if ((Poly1.FMinY <= Poly2.FMaxY) and (Poly1.FMaxY >= Poly2.FMinY)) or
-      ((Poly2.FMinY <= Poly1.FMaxY) and (Poly2.FMaxY >= Poly1.FMinY)) then
+    if ((Poly1.MinY <= Poly2.MaxY) and (Poly1.MaxY >= Poly2.MinY)) or
+      ((Poly2.MinY <= Poly1.MaxY) and (Poly2.MaxY >= Poly1.MinY)) then
     begin
-      if Poly1.FCount > Poly2.FCount then
+      if Poly1.Count > Poly2.Count then
       begin
-        if Poly1.FSubPolygon1 <> nil then
+        if Poly1.SubPolygon1 <> nil then
         begin
-          result := FindIntersectionPoints(Poly1.FSubPolygon1, Poly2,
+          result := FindIntersectionPoints(Poly1.SubPolygon1, Poly2,
             Intersections, Count)
-            or FindIntersectionPoints(Poly1.FSubPolygon2, Poly2,
+            or FindIntersectionPoints(Poly1.SubPolygon2, Poly2,
             Intersections, Count)
         end
         else
         begin
-          Assert(Poly2.FSubPolygon1 = nil);
+          Assert(Poly2.SubPolygon1 = nil);
           result := SimpleIntersection;
         end;
       end
       else
       begin
-        if Poly2.FSubPolygon1 <> nil then
+        if Poly2.SubPolygon1 <> nil then
         begin
-          result := FindIntersectionPoints(Poly1, Poly2.FSubPolygon1,
+          result := FindIntersectionPoints(Poly1, Poly2.SubPolygon1,
             Intersections, Count)
-            or FindIntersectionPoints(Poly1, Poly2.FSubPolygon2,
+            or FindIntersectionPoints(Poly1, Poly2.SubPolygon2,
             Intersections, Count)
         end
         else
         begin
-          Assert(Poly1.FSubPolygon1 = nil);
+          Assert(Poly1.SubPolygon1 = nil);
           result := SimpleIntersection;
         end;
       end;
@@ -36539,6 +37319,7 @@ begin
         InitializeVariables(UsedVariables, DataSet, Expression, Compiler);
         GetFrontCellsToAssign(DataSetFunction, OtherData, DataSet,
           CellList, alAll, AModel);
+        ShowWarningNoCells(CellList);
         FScreenObject.UpdateImportedValues(DataSet);
         for AssignmentIndex := 0 to CellList.Count - 1 do
         begin
@@ -36599,6 +37380,7 @@ begin
         InitializeVariables(UsedVariables, DataSet, Expression, Compiler);
         GetTopCellsToAssign(DataSetFunction, OtherData, DataSet,
           CellList, alAll, AModel);
+        ShowWarningNoCells(CellList);
         FScreenObject.UpdateImportedValues(DataSet);
         for AssignmentIndex := 0 to CellList.Count - 1 do
         begin
@@ -36623,9 +37405,7 @@ end;
 constructor TSutraDelegate.Create(ScreenObject: TScreenObject);
 begin
   inherited;
-  {$IFDEF SUTRA}
   FModelSelection := msSutra22;
-  {$ENDIF}
 end;
 
 procedure TSutraDelegate.GetCellsToAssign(const DataSetFunction: string;
@@ -37461,6 +38241,7 @@ begin
               if (FScreenObject.ElevationCount in [ecOne, ecTwo])
                 and (Mesh.MeshType = mt3D) then
               begin
+                Mesh.CheckUpdateElevations;
                 case EvalAt of
                   eaBlocks:
                     begin
@@ -37885,6 +38666,30 @@ begin
   end;
 end;
 
+procedure TSutraDelegate.ShowWarningNoCells(CellList: TCellAssignmentList);
+var
+  WarningMessage: string;
+begin
+  if (CellList.Count = 0) and
+    (FScreenObject.SetValuesOfEnclosedCells
+    or FScreenObject.SetValuesOfIntersectedCells) then
+  begin
+    case FScreenObject.EvaluatedAt of
+      eaBlocks:
+        begin
+          WarningMessage := Format(StrTheFollowingObject, [StrElements]);
+        end;
+      eaNodes:
+        begin
+          WarningMessage := Format(StrTheFollowingObject, [StrNodes]);
+        end;
+    else
+      Assert(False);
+    end;
+    frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, WarningMessage, FScreenObject.Name);
+  end;
+end;
+
 procedure TSutraDelegate.OtherIndex(const LayerOrRow, RowOrColumn: integer;
   out First, Last: integer; const DataSet: TDataArray);
 var
@@ -38221,7 +39026,7 @@ begin
         Segment2D[2] := APoint;
         Segment2D[1] := FScreenObject.Points[VertexIndex-1];
 
-        Limits := Mesh.MeshLimits(vdFront);
+        Limits := Mesh.MeshLimits(vdFront, FScreenObject.SutraAngle);
         EpsilonX := (Limits.MaxX - Limits.MinX)/1e8;
         EpsilonY := (Limits.MaxZ - Limits.MinZ)/1e8;
 
@@ -38291,17 +39096,41 @@ begin
   Assert(False);
 end;
 
+{ TModflowLGR2Delegate }
+
+constructor TModflowLGR2Delegate.Create(ScreenObject: TScreenObject);
+begin
+  inherited;
+  FModelSelection := msModflowLGR2;
+end;
+
+{ TModflowFmpDelegate }
+
+
+{$IFDEF FMP}
+constructor TModflowFmpDelegate.Create(ScreenObject: TScreenObject);
+begin
+  inherited;
+  FModelSelection := msModflowFmp;
+end;
+{$ENDIF}
+
 initialization
   RegisterClass(TScreenObject);
   RegisterClass(TPhastDelegate);
   RegisterClass(TModflowDelegate);
   RegisterClass(TModflowLGRDelegate);
+  RegisterClass(TModflowLGR2Delegate);
   RegisterClass(TModflowNWTDelegate);
+{$IFDEF FMP}
+  RegisterClass(TModflowFmpDelegate);
+{$ENDIF}
   RegisterClass(TSutraDelegate);
   RegisterClass(TMultiValueScreenObject);
   RegisterClass(TScreenObjectClipboard);
 
 end.
+
 
 
 

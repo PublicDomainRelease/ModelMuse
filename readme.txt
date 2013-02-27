@@ -1,4 +1,4 @@
-ModelMuse – Version 2.19.1.0
+ModelMuse – Version 3.0.0.0
 
 NOTE: Any use of trade, product or firm names is for descriptive purposes 
       only and does not imply endorsement by the U.S. Government.
@@ -27,11 +27,11 @@ Either version may be used for installing ModelMuse.  Both contain
 the same version of ModelMuse for use on personal computers:
 
 For 32 or 64-bit operating systems:
-         ModelMuseSetup32_2_19_1.exe
-         ModelMuse32_2_19_1.zip
+         ModelMuseSetup32_3_0.exe
+         ModelMuse32_3_0.zip
 For 64-bit operating systems:
-         ModelMuseSetup64_2_19_1.exe
-         ModelMuse64_2_19_1.zip
+         ModelMuseSetup64_3_0.exe
+         ModelMuse64_3_0.zip
 
 Both distribution files contain:
 
@@ -41,30 +41,33 @@ Both distribution files contain:
           Example models
           Supplementary materials
 
-The file ModelMuseSource2_19_1.zip contains the source code for ModelMuse, 
+The file ModelMuseSource3_0.zip contains the source code for ModelMuse, 
          ModelMonitor, and MF2005_Importer.exe.
 
 B. INSTALLING
 
 The distribution file is an installer.  Execution of the distribution 
 file will install ModelMuse in a directory chosen by the user. By default,
-ModelMuse will be installed in C:\Program Files\USGS\ModelMuse2_19_1 or
-C:\Program Files (x86)\USGS\ModelMuse2_19_1. If 
+ModelMuse will be installed in C:\Program Files\USGS\ModelMuse3_0 or
+C:\Program Files (x86)\USGS\ModelMuse3_0. If 
 the new version of ModelMuse is installed over an older version, the 
 program may be installed in the same directory as the older version of the 
 program. The installer will associate files with the extensions .gpt, 
 .gpb, and .mmZlib with ModelMuse.  The following directory structure will 
 be created in the installation directory:
 
-   |--ModelMuse2_19_1
+   |--ModelMuse3_0
    |  |--bin          ; ModelMuse, ModelMonitor, and MF2005_Importer 
    |  |                   executables.
    |  |--doc          ; Documentation file
+
+ModelMuse will also create a subdirectory of the "My Documents" directory named 
+"ModelMuse Examples" containing sample models and data.
    |  |--data         ; Data files and example models described in the 
    |  |                   documentation or the ModelMuse help.
    |  |--examples     ; Sample models.
 
-Included in directory ModelMuse2_19_1\doc is the report on ModelMuse as a 
+Included in directory ModelMuse3_0\doc is the report on ModelMuse as a 
 Portable Document Format (PDF) file. The PDF file is readable and 
 printable on various computer platforms using Acrobat Reader from Adobe.
 The Acrobat Reader is freely available from the following World Wide Web
@@ -136,6 +139,45 @@ Add the following JCL directories to the Library path if they are not added
 automatically when installing the JCL.
 source\common
 source\windows
+The following changes need to be made to JvxCheckListBox.pas in the JVCL
+1. Change
+    function TJvxCustomListBox.GetItemData(Index: Integer): longint; dynamic;
+to
+    function TJvxCustomListBox.GetItemData(Index: Integer): {$IFDEF DELPHI16_UP} NativeInt  {$ELSE} Longint {$ENDIF}; dynamic;
+
+2. Change
+    procedure TJvxCustomListBox.SetItemData(Index: Integer; AData: longint); dynamic;
+to
+    procedure TJvxCustomListBox.SetItemData(Index: Integer; AData: {$IFDEF DELPHI16_UP} NativeInt  {$ELSE} Longint {$ENDIF}); dynamic;
+
+3. Change
+    function TJvxCheckListBox.GetItemData(Index: Integer): longint; override;
+to
+    function TJvxCheckListBox.GetItemData(Index: Integer): {$IFDEF DELPHI16_UP} NativeInt  {$ELSE} Longint {$ENDIF}; override;
+
+4. Change
+    procedure TJvxCheckListBox.SetItemData(Index: Integer; AData: {$IFDEF DELPHI16_UP} NativeInt  {$ELSE} Longint {$ENDIF}); override;
+to 
+    procedure TJvxCheckListBox.SetItemData(Index: Integer; AData: NativeInt); override;
+
+5 In TJvxCheckListBox.FindCheckObject change
+  ItemData: longint;
+to
+  {$IFDEF DELPHI16_UP}
+  ItemData: NativeInt;
+  {$ELSE}
+  ItemData: Longint;
+  {$ENDIF}
+
+6 in TJvCheckListBoxItem change
+    FData: Longint;
+to
+    {$IFDEF DELPHI16_UP}
+    FData: NativeInt;
+    {$ELSE}
+    FData: Longint;
+    {$ENDIF}
+
 
 Installing Graphics32
 http://graphics32.org/wiki/

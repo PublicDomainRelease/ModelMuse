@@ -60,13 +60,13 @@ type
   private
     // See @link(CanEdit).
     FCanEdit: boolean;
-    FvstSutraSpecPressure: PVirtualNode;
+    FvstSutraSpecPressureNode: PVirtualNode;
     FSutraSpecPressureList: TList;
-    FvstSutraSpecU: PVirtualNode;
+    FvstSutraSpecUNode: PVirtualNode;
     FSutraSpecUList: TList;
-    FvstSutraFluidFlux: PVirtualNode;
+    FvstSutraFluidFluxNode: PVirtualNode;
     FSutraFluidFluxList: TList;
-    FvstSutraUFlux: PVirtualNode;
+    FvstSutraUFluxNode: PVirtualNode;
     FSutraUFluxList: TList;
     { Private declarations }
 
@@ -79,6 +79,7 @@ type
     FvstModflowHobNode: PVirtualNode;
     FvstModflowGagNode: PVirtualNode;
     FvstModflowSfrNode: PVirtualNode;
+    FvstModflowStrNode: PVirtualNode;
     FvstModflowResNode: PVirtualNode;
     FvstModflowEtsNode: PVirtualNode;
     FvstModflowEvtNode: PVirtualNode;
@@ -91,6 +92,14 @@ type
     FvstModflowLakNode: PVirtualNode;
     FvstModflowMnw2Node: PVirtualNode;
     FvstModflowGhbNode: PVirtualNode;
+
+    FvstModflowFhbHeadNode: PVirtualNode;
+    FvstModflowFhbFlowNode: PVirtualNode;
+    FvstModflowFarmNode: PVirtualNode;
+    FvstModflowFarmWellNode: PVirtualNode;
+    FvstModflowFarmPrecipNode: PVirtualNode;
+    FvstModflowFarmRefEvapNode: PVirtualNode;
+
     FvstModflowUzfNode: PVirtualNode;
     FvstMt3dmsSsm: PVirtualNode;
     FvstMt3dmsTob: PVirtualNode;
@@ -155,6 +164,12 @@ type
     // @name holds the lists of @link(TScreenObject)s that set MODFLOW GHB
     // boundary conditions.
     FGhbList: TList;
+    // @name holds the lists of @link(TScreenObject)s that set MODFLOW FHB Head
+    // boundary conditions.
+    FFhbHeadList: TList;
+    // @name holds the lists of @link(TScreenObject)s that set MODFLOW FHB Flow
+    // boundary conditions.
+    FFhbFlowList: TList;
     // @name holds the lists of @link(TScreenObject)s that set MODFLOW Chd
     // boundary condtions.
     FChdList: TList;
@@ -185,9 +200,14 @@ type
     FTobList: TList;
     FSfrGagList: TList;
     FSfrList: TList;
+    FStrList: TList;
     FResList: TList;
     FEtsList: TList;
     FEvtList: TList;
+    FFarmList: TList;
+    FFarmWellList: TList;
+    FFarmPrecipList: TList;
+    FFarmRefEvtList: TList;
     FSutraObsList: TList;
 
     // @name holds the lists of @link(TScreenObject)s that don't do anything.
@@ -299,6 +319,12 @@ resourcestring
   StrFluidFlux = 'Fluid Flux';
   StrMassFlux = 'Mass Flux';
   StrEnergyFlux = 'Energy Flux';
+  StrFarmsIn = 'Farms in %s';
+  StrFarmWellsIn = 'Farm Wells in %s';
+  StrPrecipInS = 'Precip. in %s';
+  StrRefEvapInS = 'Ref. Evap. in %s';
+  StrHeadsInS = 'Heads in %s';
+  StrFlowsInS = 'Flows in %s';
 
 {$R *.dfm}
 procedure TfrmCustomSelectObjects.vstObjectsInitNode(Sender: TBaseVirtualTree;
@@ -378,16 +404,14 @@ begin
           begin
             Data.Caption := StrSetGridElementSize;
           end;
-        msModflow, msModflowLGR, msModflowNWT:
+        msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
           begin
             Data.Caption := StrSetGridCellSize;
           end;
-        {$IFDEF Sutra}
         msSutra22:
           begin
             Data.Caption := StrSetMeshElementSize
           end
-        {$ENDIF}
         else Assert(False);
       end;
       Node.CheckType := ctTriStateCheckBox;
@@ -415,6 +439,16 @@ begin
     else if Node = FvstModflowGhbNode then
     begin
       Data.Caption := Packages.GhbBoundary.PackageIdentifier;
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstModflowFhbHeadNode then
+    begin
+      Data.Caption := Format(StrHeadsInS, [Packages.FhbPackage.PackageIdentifier]);
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstModflowFhbFlowNode then
+    begin
+      Data.Caption := Format(StrFlowsInS, [Packages.FhbPackage.PackageIdentifier]);
       Node.CheckType := ctTriStateCheckBox;
     end
     else if Node = FvstModflowLakNode then
@@ -488,6 +522,11 @@ begin
       Data.Caption := Packages.SfrPackage.PackageIdentifier;
       Node.CheckType := ctTriStateCheckBox;
     end
+    else if Node = FvstModflowStrNode then
+    begin
+      Data.Caption := Packages.StrPackage.PackageIdentifier;
+      Node.CheckType := ctTriStateCheckBox;
+    end
     else if Node = FvstModflowGagNode then
     begin
       Data.Caption := StrGAGEGagePackage;
@@ -506,6 +545,26 @@ begin
     else if Node = FvstModflowHfbNode then
     begin
       Data.Caption := Packages.HfbPackage.PackageIdentifier;
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstModflowFarmNode then
+    begin
+      Data.Caption := Format(StrFarmsIn, [Packages.FarmProcess.PackageIdentifier]);
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstModflowFarmWellNode then
+    begin
+      Data.Caption := Format(StrFarmWellsIn, [Packages.FarmProcess.PackageIdentifier]);
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstModflowFarmPrecipNode then
+    begin
+      Data.Caption := Format(StrPrecipInS, [Packages.FarmProcess.PackageIdentifier]);
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstModflowFarmRefEvapNode then
+    begin
+      Data.Caption := Format(StrRefEvapInS, [Packages.FarmProcess.PackageIdentifier]);
       Node.CheckType := ctTriStateCheckBox;
     end
     else if Node = FvstModpathRoot then
@@ -528,7 +587,7 @@ begin
       Data.Caption := StrSUTRAObservations;
       Node.CheckType := ctTriStateCheckBox;
     end
-    else if Node = FvstSutraSpecPressure then
+    else if Node = FvstSutraSpecPressureNode then
     begin
       case SutraOptions.TransportChoice of
         tcSolute, tcEnergy: Data.Caption := StrSpecifiedPressure;
@@ -537,7 +596,7 @@ begin
       end;
       Node.CheckType := ctTriStateCheckBox;
     end
-    else if Node = FvstSutraSpecU then
+    else if Node = FvstSutraSpecUNode then
     begin
       case SutraOptions.TransportChoice of
         tcSolute, tcSoluteHead: Data.Caption := StrSpecifiedConcentrat;
@@ -546,12 +605,12 @@ begin
       end;
       Node.CheckType := ctTriStateCheckBox;
     end
-    else if Node = FvstSutraFluidFlux then
+    else if Node = FvstSutraFluidFluxNode then
     begin
       Data.Caption := StrFluidFlux;
       Node.CheckType := ctTriStateCheckBox;
     end
-    else if Node = FvstSutraUFlux then
+    else if Node = FvstSutraUFluxNode then
     begin
       case SutraOptions.TransportChoice of
         tcSolute, tcSoluteHead: Data.Caption := StrMassFlux;
@@ -672,6 +731,11 @@ begin
     end;
 
     CellText := CellText + ' (' + AScreenObject.Methods;
+
+    if FvstSizeNode = Node.Parent then
+    begin
+      CellText := CellText + ', ' + FloatToStr(AScreenObject.CellSize);
+    end;
 
     If (ParentNode <> nil) and (ParentNode.Parent = FvstDataSetRootNode) then
     begin
@@ -884,6 +948,18 @@ begin
       InitializeData(FvstModflowGhbNode);
     end;
 
+    if (AScreenObject.ModflowFhbHeadBoundary <> nil)
+      and AScreenObject.ModflowFhbHeadBoundary.Used then
+    begin
+      InitializeData(FvstModflowFhbHeadNode);
+    end;
+
+    if (AScreenObject.ModflowFhbFlowBoundary <> nil)
+      and AScreenObject.ModflowFhbFlowBoundary.Used then
+    begin
+      InitializeData(FvstModflowFhbFlowNode);
+    end;
+
     if (AScreenObject.ModflowLakBoundary <> nil)
       and AScreenObject.ModflowLakBoundary.Used then
     begin
@@ -919,6 +995,33 @@ begin
     begin
       InitializeData(FvstModflowDrtNode);
     end;
+
+  {$IFDEF FMP}
+    if (AScreenObject.ModflowFmpFarm <> nil)
+      and AScreenObject.ModflowFmpFarm.Used then
+    begin
+      InitializeData(FvstModflowFarmNode);
+    end;
+
+    if (AScreenObject.ModflowFmpWellBoundary <> nil)
+      and AScreenObject.ModflowFmpWellBoundary.Used then
+    begin
+      InitializeData(FvstModflowFarmWellNode);
+    end;
+
+    if (AScreenObject.ModflowFmpPrecip <> nil)
+      and AScreenObject.ModflowFmpPrecip.Used then
+    begin
+      InitializeData(FvstModflowFarmPrecipNode);
+    end;
+
+    if (AScreenObject.ModflowFmpRefEvap <> nil)
+      and AScreenObject.ModflowFmpRefEvap.Used then
+    begin
+      InitializeData(FvstModflowFarmRefEvapNode);
+    end;
+
+  {$ENDIF}
 
     if AScreenObject.Tag = 1 then
     begin
@@ -959,6 +1062,12 @@ begin
       and AScreenObject.ModflowSfrBoundary.Used then
     begin
       InitializeData(FvstModflowSfrNode);
+    end;
+
+    if (AScreenObject.ModflowStrBoundary <> nil)
+      and AScreenObject.ModflowStrBoundary.Used then
+    begin
+      InitializeData(FvstModflowStrNode);
     end;
 
     if (AScreenObject.ModflowStreamGage <> nil)
@@ -1015,22 +1124,22 @@ begin
 
     if AScreenObject.SutraBoundaries.SpecifiedPressure.Used then
     begin
-      InitializeData(FvstSutraSpecPressure);
+      InitializeData(FvstSutraSpecPressureNode);
     end;
 
     if AScreenObject.SutraBoundaries.SpecifiedConcTemp.Used then
     begin
-      InitializeData(FvstSutraSpecU);
+      InitializeData(FvstSutraSpecUNode);
     end;
 
     if AScreenObject.SutraBoundaries.FluidSource.Used then
     begin
-      InitializeData(FvstSutraFluidFlux);
+      InitializeData(FvstSutraFluidFluxNode);
     end;
 
     if AScreenObject.SutraBoundaries.MassEnergySource.Used then
     begin
-      InitializeData(FvstSutraUFlux);
+      InitializeData(FvstSutraUFluxNode);
     end;
 
     if PutInOtherObjects then
@@ -1090,6 +1199,8 @@ begin
   vstCheckDeleteNode(FvstPhastBoundaryConditionsRoot);
 
   vstCheckDeleteNode(FvstModflowGhbNode);
+  vstCheckDeleteNode(FvstModflowFhbHeadNode);
+  vstCheckDeleteNode(FvstModflowFhbFlowNode);
   vstCheckDeleteNode(FvstModflowLakNode);
   vstCheckDeleteNode(FvstModflowMnw2Node);
   vstCheckDeleteNode(FvstModflowChdNode);
@@ -1104,18 +1215,23 @@ begin
   vstCheckDeleteNode(FvstModflowEtsNode);
   vstCheckDeleteNode(FvstModflowHydmodNode);
   vstCheckDeleteNode(FvstModflowSfrNode);
+  vstCheckDeleteNode(FvstModflowStrNode);
   vstCheckDeleteNode(FvstModflowGagNode);
   vstCheckDeleteNode(FvstModflowUzfNode);
   vstCheckDeleteNode(FvstModflowHobNode);
   vstCheckDeleteNode(FvstModflowHfbNode);
+  vstCheckDeleteNode(FvstModflowFarmNode);
+  vstCheckDeleteNode(FvstModflowFarmWellNode);
+  vstCheckDeleteNode(FvstModflowFarmPrecipNode);
+  vstCheckDeleteNode(FvstModflowFarmRefEvapNode);
   vstCheckDeleteNode(FvstMt3dmsSsm);
   vstCheckDeleteNode(FvstMt3dmsTob);
 
   vstCheckDeleteNode(FvstSutraObsNode);
-  vstCheckDeleteNode(FvstSutraSpecPressure);
-  vstCheckDeleteNode(FvstSutraSpecU);
-  vstCheckDeleteNode(FvstSutraFluidFlux);
-  vstCheckDeleteNode(FvstSutraUFlux);
+  vstCheckDeleteNode(FvstSutraSpecPressureNode);
+  vstCheckDeleteNode(FvstSutraSpecUNode);
+  vstCheckDeleteNode(FvstSutraFluidFluxNode);
+  vstCheckDeleteNode(FvstSutraUFluxNode);
 
   vstCheckDeleteNode(FvstModflowBoundaryConditionsRoot);
   vstCheckDeleteNode(FvstModpathRoot);
@@ -1403,20 +1519,26 @@ begin
   InitializeMF_BoundaryNode(FvstModflowEtsNode, PriorNode, FEtsList);
   InitializeMF_BoundaryNode(FvstModflowEvtNode, PriorNode, FEvtList);
   InitializeMF_BoundaryNode(FvstModflowGhbNode, PriorNode, FGhbList);
-
+  InitializeMF_BoundaryNode(FvstModflowFhbHeadNode, PriorNode, FFhbHeadList);
+  InitializeMF_BoundaryNode(FvstModflowFhbFlowNode, PriorNode, FFhbFlowList);
   InitializeMF_BoundaryNode(FvstModflowHydmodNode, PriorNode, FHydmodList);
-
   InitializeMF_BoundaryNode(FvstModflowLakNode, PriorNode, FLakList);
   InitializeMF_BoundaryNode(FvstModflowMnw2Node, PriorNode, FMnw2List);
   InitializeMF_BoundaryNode(FvstModflowRchNode, PriorNode, FRchList);
   InitializeMF_BoundaryNode(FvstModflowResNode, PriorNode, FResList);
   InitializeMF_BoundaryNode(FvstModflowRivNode, PriorNode, FRivList);
   InitializeMF_BoundaryNode(FvstModflowSfrNode, PriorNode, FSfrList);
+  InitializeMF_BoundaryNode(FvstModflowStrNode, PriorNode, FStrList);
   InitializeMF_BoundaryNode(FvstModflowGagNode, PriorNode, FSfrGagList);
   InitializeMF_BoundaryNode(FvstModflowUzfNode, PriorNode, FUzfList);
   InitializeMF_BoundaryNode(FvstModflowWellNode, PriorNode, FMfWellList);
   InitializeMF_BoundaryNode(FvstModflowHobNode, PriorNode, FHobList);
   InitializeMF_BoundaryNode(FvstModflowHfbNode, PriorNode, FHfbList);
+  InitializeMF_BoundaryNode(FvstModflowFarmNode, PriorNode, FFarmList);
+  InitializeMF_BoundaryNode(FvstModflowFarmWellNode, PriorNode, FFarmWellList);
+  InitializeMF_BoundaryNode(FvstModflowFarmPrecipNode, PriorNode, FFarmPrecipList);
+  InitializeMF_BoundaryNode(FvstModflowFarmRefEvapNode, PriorNode, FFarmRefEvtList);
+
   InitializeMF_BoundaryNode(FvstMt3dmsSsm, PriorNode, FSsmList);
   InitializeMF_BoundaryNode(FvstMt3dmsTob, PriorNode, FTobList);
 
@@ -1430,10 +1552,10 @@ begin
   InitializeNodeData(FvstSutraObsNode, FSutraObsList);
   PriorNode := FvstSutraObsNode;
 
-  InitializeMF_BoundaryNode(FvstSutraSpecPressure, PriorNode, FSutraSpecPressureList);
-  InitializeMF_BoundaryNode(FvstSutraSpecU, PriorNode, FSutraSpecUList);
-  InitializeMF_BoundaryNode(FvstSutraFluidFlux, PriorNode, FSutraFluidFluxList);
-  InitializeMF_BoundaryNode(FvstSutraUFlux, PriorNode, FSutraUFluxList);
+  InitializeMF_BoundaryNode(FvstSutraSpecPressureNode, PriorNode, FSutraSpecPressureList);
+  InitializeMF_BoundaryNode(FvstSutraSpecUNode, PriorNode, FSutraSpecUList);
+  InitializeMF_BoundaryNode(FvstSutraFluidFluxNode, PriorNode, FSutraFluidFluxList);
+  InitializeMF_BoundaryNode(FvstSutraUFluxNode, PriorNode, FSutraUFluxList);
 
 
   FDataSetLists.Clear;
@@ -1542,6 +1664,8 @@ begin
   FWellList.Free;
   FChdList.Free;
   FGhbList.Free;
+  FFhbHeadList.Free;
+  FFhbFlowList.Free;
   FHydmodList.Free;
   FLakList.Free;
   FMnw2List.Free;
@@ -1556,9 +1680,14 @@ begin
   FResList.Free;
   FSfrGagList.Free;
   FSfrList.Free;
+  FStrList.Free;
   FUzfList.Free;
   FHobList.Free;
   FHfbList.Free;
+  FFarmList.Free;
+  FFarmWellList.Free;
+  FFarmPrecipList.Free;
+  FFarmRefEvtList.Free;
   FSsmList.Free;
   FTobList.Free;
   FModpathList.Free;
@@ -1590,6 +1719,8 @@ begin
   FWellList:= TList.Create;
   FChdList := TList.Create;
   FGhbList := TList.Create;
+  FFhbHeadList := TList.Create;
+  FFhbFlowList := TList.Create;
   FHydmodList := TList.Create;
   FLakList := TList.Create;
   FMnw2List := TList.Create;
@@ -1603,8 +1734,13 @@ begin
   FEtsList := TList.Create;
   FResList := TList.Create;
   FSfrList := TList.Create;
+  FStrList := TList.Create;
   FSfrGagList := TList.Create;
   FUzfList := TList.Create;
+  FFarmList := TList.Create;
+  FFarmWellList := TList.Create;
+  FFarmPrecipList := TList.Create;
+  FFarmRefEvtList := TList.Create;
   FHobList := TList.Create;
   FHfbList := TList.Create;
   FSsmList := TList.Create;
@@ -1650,6 +1786,8 @@ begin
   FvstOtherObjectsNode := nil;
   FvstModflowChdNode := nil;
   FvstModflowGhbNode := nil;
+  FvstModflowFhbHeadNode := nil;
+  FvstModflowFhbFlowNode := nil;
   FvstModflowHydmodNode := nil;
   FvstModflowLakNode := nil;
   FvstModflowMnw2Node := nil;
@@ -1663,18 +1801,23 @@ begin
   FvstModflowEtsNode := nil;
   FvstModflowResNode := nil;
   FvstModflowSfrNode := nil;
+  FvstModflowStrNode := nil;
   FvstModflowUzfNode := nil;
   FvstModflowHobNode := nil;
   FvstModflowHfbNode := nil;
+  FvstModflowFarmNode := nil;
+  FvstModflowFarmWellNode := nil;
+  FvstModflowFarmPrecipNode := nil;
+  FvstModflowFarmRefEvapNode := nil;
   FvstMt3dmsSsm := nil;
   FvstMt3dmsTob := nil;
   FvstModflowGagNode := nil;
 
   FvstSutraObsNode := nil;
-  FvstSutraSpecPressure := nil;
-  FvstSutraSpecU := nil;
-  FvstSutraFluidFlux := nil;
-  FvstSutraUFlux := nil;
+  FvstSutraSpecPressureNode := nil;
+  FvstSutraSpecUNode := nil;
+  FvstSutraFluidFluxNode := nil;
+  FvstSutraUFluxNode := nil;
 
   FvstModpathRoot := nil;
   FvstChildModelNode := nil;
@@ -1763,6 +1906,8 @@ begin
 
   FChdList.Sort(ScreenObjectCompare);
   FGhbList.Sort(ScreenObjectCompare);
+  FFhbHeadList.Sort(ScreenObjectCompare);
+  FFhbFlowList.Sort(ScreenObjectCompare);
   FHydmodList.Sort(ScreenObjectCompare);
   FLakList.Sort(ScreenObjectCompare);
   FMnw2List.Sort(ScreenObjectCompare);
@@ -1776,12 +1921,17 @@ begin
   FEtsList.Sort(ScreenObjectCompare);
   FResList.Sort(ScreenObjectCompare);
   FSfrList.Sort(ScreenObjectCompare);
+  FStrList.Sort(ScreenObjectCompare);
   FSfrGagList.Sort(ScreenObjectCompare);
   FUzfList.Sort(ScreenObjectCompare);
   FHobList.Sort(ScreenObjectCompare);
   FHfbList.Sort(ScreenObjectCompare);
   FSsmList.Sort(ScreenObjectCompare);
   FTobList.Sort(ScreenObjectCompare);
+  FFarmList.Sort(ScreenObjectCompare);
+  FFarmWellList.Sort(ScreenObjectCompare);
+  FFarmPrecipList.Sort(ScreenObjectCompare);
+  FFarmRefEvtList.Sort(ScreenObjectCompare);
   FModpathList.Sort(ScreenObjectCompare);
   FChildModelList.Sort(ScreenObjectCompare);
 
@@ -2267,7 +2417,10 @@ begin
             begin
               ReturnLocationObject := DrainReturn.ReturnObject.
                 ScreenObject as TScreenObject;
-              ReturnLocationObject.Tag := 1;
+              if ReturnLocationObject <> nil then
+              begin
+                ReturnLocationObject.Tag := 1;
+              end;
             end;
           end;
         end;

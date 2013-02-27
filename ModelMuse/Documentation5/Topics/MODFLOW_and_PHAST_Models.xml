@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
-<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
-  <title translate="true">MODFLOW and PHAST Models</title>
+<topic template="Default" lasteditedby="rbwinst-pr" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+  <title translate="true">All Models</title>
   <body>
     <header>
-      <para styleclass="Heading1"><text styleclass="Heading1" translate="true">MODFLOW and PHAST Models</text></para>
+      <para styleclass="Heading1"><text styleclass="Heading1" translate="true">All Models</text></para>
     </header>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">ModelMuse has a comprehensive help system. &#160;The help system can be accessed from the Help menu in the main window. &#160;In addition, most dialog boxes have a help button that can be used to access help on that dialog box. &#160;In addition to documenting ModelMuse, the help system also has comprehensive documentation of MODFLOW.</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">New users will need to understand the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Basic_Concepts" styleclass="Normal" translate="true">basic concepts</link><text styleclass="Normal" translate="true"> behind ModelMuse to use it effectively. After learning the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Basic_Concepts" styleclass="Normal" translate="true">basic concepts</link><text styleclass="Normal" translate="true"> behind ModelMuse, the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Examples" styleclass="Normal" translate="true">example</link><text styleclass="Normal" translate="true"> models may be helpful for new users. One example is presented in </text><conditional-text type="IF" value="PRINT,PDF,EBOOK"/><text styleclass="Normal" translate="true">this</text><conditional-text type="ELSE"/><text styleclass="Normal" translate="true">the</text><conditional-text type="END"/><text styleclass="Normal" translate="true"> documentation. Additional examples are included in </text><conditional-text type="IF" value="PRINT,PDF,EBOOK"/><text styleclass="Normal" translate="true">the</text><conditional-text type="ELSE"/><text styleclass="Normal" translate="true">this</text><conditional-text type="END"/><text styleclass="Normal" translate="true"> help system.</text></para>

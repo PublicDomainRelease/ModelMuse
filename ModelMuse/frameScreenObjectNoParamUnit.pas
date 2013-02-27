@@ -81,14 +81,16 @@ type
     FSelectedText: string;
     FDeleting: Boolean;
     FDeletedCells: array of array of boolean;
-    procedure LayoutMultiRowEditControls;
+    FConductanceColumn: Integer;
     // See @link(DeletedCells)
     function GetDeletedCells(ACol, ARow: integer): boolean;
     // See @link(DeletedCells)
     procedure SetDeletedCells(ACol, ARow: integer; const Value: boolean);
     { Private declarations }
+  protected
+    procedure LayoutMultiRowEditControls;
   public
-    ConductanceColumn: Integer;
+    property ConductanceColumn: Integer read FConductanceColumn write FConductanceColumn;
     procedure ClearDeletedCells;
     property DeletedCells[ACol, ARow: integer]: boolean read GetDeletedCells
       write SetDeletedCells;
@@ -115,6 +117,9 @@ implementation
 
 uses OrderedCollectionUnit, frmGoPhastUnit, ModflowTimeUnit,
   frmCustomGoPhastUnit, GoPhastTypes;
+
+resourcestring
+  StrF = 'F()';
 
 
 {$R *.dfm}
@@ -154,7 +159,7 @@ begin
   dgModflowBoundary.Columns[1].Format := rcf4Real;
   dgModflowBoundary.Columns[0].ComboUsed := true;
   dgModflowBoundary.Columns[1].ComboUsed := true;
-  for Index := 2 to dgModflowBoundary.ColCount - 1 do
+  for Index := FLastTimeColumn+1 to dgModflowBoundary.ColCount - 1 do
   begin
     dgModflowBoundary.Columns[Index].ButtonUsed := true;
   end;
@@ -164,20 +169,25 @@ begin
   begin
     for Index := 0 to Boundary.Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
     begin
+      ColIndex := FLastTimeColumn+1+Index;
+//      if ColIndex >= dgModflowBoundary.ColCount then
+//      begin
+//        Continue;
+//      end;
 //      dgModflowBoundary.Columns[2+Index].AutoAdjustColWidths := True;
       TimeList := Boundary.Values.TimeLists[Index, frmGoPhast.PhastModel];
       if Index = ConductanceColumn then
       begin
-        dgModflowBoundary.Cells[2+Index, 0] :=
+        dgModflowBoundary.Cells[ColIndex, 0] :=
           ConductanceCaption(TimeList.NonParamDescription);
       end
       else
       begin
-        dgModflowBoundary.Cells[2+Index, 0] := TimeList.NonParamDescription;
+        dgModflowBoundary.Cells[ColIndex, 0] := TimeList.NonParamDescription;
       end;
-      dgModflowBoundary.Columns[2+Index].AutoAdjustColWidths := False;
-      dgModflowBoundary.ColWidths[2+Index] :=
-        dgModflowBoundary.WidthNeededToFitText(2+Index,0);
+      dgModflowBoundary.Columns[ColIndex].AutoAdjustColWidths := False;
+      dgModflowBoundary.ColWidths[ColIndex] :=
+        dgModflowBoundary.WidthNeededToFitText(ColIndex,0);
     end;
   end;
   GridRect.Left := 2;
@@ -268,7 +278,7 @@ begin
   ShouldEnable := False;
   for RowIndex := dgModflowBoundary.FixedRows to dgModflowBoundary.RowCount -1 do
   begin
-    for ColIndex := 2 to dgModflowBoundary.ColCount - 1 do
+    for ColIndex := FLastTimeColumn+1 to dgModflowBoundary.ColCount - 1 do
     begin
       ShouldEnable := dgModflowBoundary.IsSelectedCell(ColIndex,RowIndex);
       if ShouldEnable then
@@ -357,7 +367,7 @@ begin
     Exit
   end;
   LayoutControls(dgModflowBoundary, rdeFormula, lblFormula,
-    Max(2,dgModflowBoundary.LeftCol));
+    Max(FLastTimeColumn+1,dgModflowBoundary.LeftCol));
 end;
 
 procedure TframeScreenObjectNoParam.GetStartTimes(Col: integer);
@@ -374,7 +384,7 @@ begin
   for RowIndex := dgModflowBoundary.FixedRows to
     dgModflowBoundary.RowCount - 1 do
   begin
-    for ColIndex := 2 to dgModflowBoundary.ColCount - 1 do
+    for ColIndex := FLastTimeColumn+1 to dgModflowBoundary.ColCount - 1 do
     begin
       if dgModflowBoundary.IsSelectedCell(ColIndex, RowIndex) then
       begin
@@ -471,7 +481,7 @@ begin
   begin
     if dgModflowBoundary.Columns[Index].ButtonCaption = '...' then
     begin
-      dgModflowBoundary.Columns[Index].ButtonCaption := 'F()';
+      dgModflowBoundary.Columns[Index].ButtonCaption := StrF;
       dgModflowBoundary.Columns[Index].ButtonWidth := 35;
     end;
   end;

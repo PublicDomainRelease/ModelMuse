@@ -10,18 +10,20 @@ inherited frmImportShapeFile: TfrmImportShapeFile
   Caption = 'Import Shapefile'
   ExplicitWidth = 797
   ExplicitHeight = 580
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlButton: TPanel
     Left = 0
-    Top = 501
-    Width = 781
+    Top = 494
+    Width = 779
     Height = 41
     Align = alBottom
     ParentColor = True
     TabOrder = 1
+    ExplicitTop = 501
+    ExplicitWidth = 781
     DesignSize = (
-      781
+      779
       41)
     object lblNumShapes: TLabel
       Left = 10
@@ -84,11 +86,13 @@ inherited frmImportShapeFile: TfrmImportShapeFile
   object pcImportShape: TPageControl
     Left = 0
     Top = 0
-    Width = 781
-    Height = 501
+    Width = 779
+    Height = 494
     ActivePage = tabOptions
     Align = alClient
     TabOrder = 0
+    ExplicitWidth = 781
+    ExplicitHeight = 501
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 3
@@ -97,8 +101,8 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       ExplicitWidth = 0
       ExplicitHeight = 0
       DesignSize = (
-        773
-        468)
+        771
+        461)
       object lblImportCriterion: TLabel
         Left = 8
         Top = 154
@@ -449,7 +453,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           UnselectableColor = clBtnFace
           OnColSize = dgFieldsColSize
           ColorRangeSelection = False
-          ColorSelectedRow = True
           Columns = <
             item
               AutoAdjustRowHeights = False
@@ -581,14 +584,16 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       object pnlBoundaryCondition: TPanel
         Left = 0
         Top = 0
-        Width = 773
-        Height = 468
+        Width = 771
+        Height = 461
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 773
+        ExplicitHeight = 468
         object splitterBoundary: TSplitter
           Left = 1
-          Top = 208
-          Width = 771
+          Top = 201
+          Width = 769
           Height = 5
           Cursor = crVSplit
           Align = alBottom
@@ -598,10 +603,11 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         object pnlBoundaryControls: TPanel
           Left = 1
           Top = 1
-          Width = 771
+          Width = 769
           Height = 41
           Align = alTop
           TabOrder = 0
+          ExplicitWidth = 771
           object lblBoundaryTimeCount: TLabel
             Left = 602
             Top = 11
@@ -646,8 +652,8 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         object rdgBoundaryConditions: TRbwDataGrid4
           Left = 1
           Top = 42
-          Width = 771
-          Height = 166
+          Width = 769
+          Height = 159
           Align = alClient
           ColCount = 4
           Enabled = False
@@ -665,7 +671,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           OnBeforeDrawCell = BoundaryGridBeforeDrawCell
           ColorRangeSelection = False
           OnDistributeTextProgress = rdgBoundaryConditionsDistributeTextProgress
-          ColorSelectedRow = True
           Columns = <
             item
               AutoAdjustRowHeights = False
@@ -755,28 +760,34 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               CaseSensitivePicklist = False
               AutoAdjustColWidths = True
             end>
+          ExplicitWidth = 771
+          ExplicitHeight = 166
         end
         object plBoundary: TJvPageList
           Left = 1
-          Top = 213
-          Width = 771
+          Top = 206
+          Width = 769
           Height = 254
           ActivePage = jvspModflowDRT
           PropagateEnable = False
           Align = alBottom
+          ExplicitTop = 213
+          ExplicitWidth = 771
           object jvspNone: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 771
+            Width = 769
             Height = 254
             Caption = 'jvspNone'
+            ExplicitWidth = 771
           end
           object jvspPhastSpecifiedHead: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 771
+            Width = 769
             Height = 254
             Caption = 'jvspPhastSpecifiedHead'
+            ExplicitWidth = 771
             object lblSolutionType: TLabel
               Left = 16
               Top = 6
@@ -802,9 +813,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspPhastLeaky: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 771
+            Width = 769
             Height = 254
             Caption = 'jvspPhastLeaky'
+            ExplicitWidth = 771
             object lblLeakyHydraulicConductivity: TLabel
               Left = 8
               Top = 12
@@ -839,9 +851,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspPhastRiver: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 771
+            Width = 769
             Height = 254
             Caption = 'jvspPhastRiver'
+            ExplicitWidth = 771
             object lblRiverDescripton: TLabel
               Left = 8
               Top = 16
@@ -922,9 +935,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspPhastWell: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 771
+            Width = 769
             Height = 254
             Caption = 'jvspPhastWell'
+            ExplicitWidth = 771
             object pnlPhastWell: TPanel
               Left = 0
               Top = 0
@@ -1034,7 +1048,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
             object dgWellElevations: TRbwDataGrid4
               Left = 369
               Top = 0
-              Width = 402
+              Width = 400
               Height = 254
               Align = alClient
               ColCount = 3
@@ -1059,7 +1073,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               UnselectableColor = clBtnFace
               OnBeforeDrawCell = BoundaryGridBeforeDrawCell
               ColorRangeSelection = False
-              ColorSelectedRow = True
               Columns = <
                 item
                   AutoAdjustRowHeights = False
@@ -1130,6 +1143,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   CaseSensitivePicklist = False
                   AutoAdjustColWidths = True
                 end>
+              ExplicitWidth = 402
               ColWidths = (
                 20
                 26
@@ -1139,9 +1153,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspConductanceInterp: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 771
+            Width = 769
             Height = 254
             Caption = 'jvspConductanceInterp'
+            ExplicitWidth = 771
             object lblConductanceInterpretation: TLabel
               Left = 5
               Top = 6
@@ -1167,17 +1182,19 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspModflowSFR: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 771
+            Width = 769
             Height = 254
             Caption = 'jvspModflowSFR'
+            ExplicitWidth = 771
             object pcSFR: TPageControl
               Left = 0
               Top = 0
-              Width = 771
+              Width = 769
               Height = 254
               ActivePage = tabSfrBasic
               Align = alClient
               TabOrder = 0
+              ExplicitWidth = 771
               object tabSfrBasic: TTabSheet
                 Caption = 'Basic'
                 ExplicitLeft = 0
@@ -1339,9 +1356,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspModflowLAK: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 771
+            Width = 769
             Height = 254
             Caption = 'jvspModflowLAK'
+            ExplicitWidth = 771
             object LblLakeID: TLabel
               Left = 13
               Top = 9
@@ -1402,9 +1420,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspModflowDRT: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 771
+            Width = 769
             Height = 254
             Caption = 'jvspModflowDRT'
+            ExplicitWidth = 771
             object lblConductanceInterpretationDRT: TLabel
               Left = 5
               Top = 6
@@ -1622,9 +1641,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspModflowHFB: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 771
+            Width = 769
             Height = 254
             Caption = 'jvspModflowHFB'
+            ExplicitWidth = 771
             object lblHydraulicConductivity: TLabel
               Left = 8
               Top = 14
@@ -1676,9 +1696,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspModflowHOB: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 771
+            Width = 769
             Height = 254
             Caption = 'jvspModflowHOB'
+            ExplicitWidth = 771
             object lblHeadObservationNames: TLabel
               Left = 13
               Top = 9
@@ -1755,17 +1776,19 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           object jvspModflowMNW2: TJvStandardPage
             Left = 0
             Top = 0
-            Width = 771
+            Width = 769
             Height = 254
             Caption = 'jvspModflowMNW2'
+            ExplicitWidth = 771
             object pcMnw2: TPageControl
               Left = 0
               Top = 0
-              Width = 771
+              Width = 769
               Height = 254
               ActivePage = tabBasic
               Align = alClient
               TabOrder = 0
+              ExplicitWidth = 771
               object tabBasic: TTabSheet
                 HelpType = htKeyword
                 HelpKeyword = 'MNW2_Basic_Tab'

@@ -119,7 +119,8 @@ var
 implementation
 
 uses
-  frmGoPhastUnit, LayerStructureUnit, ScreenObjectUnit, frmDisplayDataUnit;
+  frmGoPhastUnit, LayerStructureUnit, ScreenObjectUnit, frmDisplayDataUnit,
+  GoPhastTypes;
 
 resourcestring
   StrChangeChildModels = 'change child models';
@@ -291,6 +292,18 @@ var
   Edit: TChildModelEdit;
   Node: TTreeNode;
 begin
+  case frmGoPhast.ModelSelection of
+      msModflowLGR:
+        begin
+          seCellCount.Increment := 2;
+        end;
+      msModflowLGR2:
+        begin
+          seCellCount.Increment := 1;
+        end;
+      else
+        Assert(False);
+  end;
   FChildModels.Capacity := frmGoPhast.PhastModel.ChildModels.Count;
   FChildModels.Assign(frmGoPhast.PhastModel.ChildModels);
 //  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
@@ -455,11 +468,26 @@ begin
   if (tvChildModels.Selected <> nil) then
   begin
     Edit := tvChildModels.Selected.Data;
-    if seCellCount.AsInteger <= 2 then
-    begin
-      seCellCount.AsInteger := 3;
+    case frmGoPhast.ModelSelection of
+      msModflowLGR:
+        begin
+          if seCellCount.AsInteger <= 2 then
+          begin
+            seCellCount.AsInteger := 3;
+          end;
+        end;
+      msModflowLGR2:
+        begin
+          if seCellCount.AsInteger <= 1 then
+          begin
+            seCellCount.AsInteger := 2;
+          end;
+        end;
+      else
+        Assert(False);
     end;
-    if not Odd(seCellCount.AsInteger) then
+    if (frmGoPhast.ModelSelection = msModflowLGR)
+      and not Odd(seCellCount.AsInteger) then
     begin
       seCellCount.AsInteger := seCellCount.AsInteger + 1;
     end;
@@ -503,7 +531,7 @@ begin
     for LayerGroupIndex := 0 to List.Count - 1 do
     begin
       LayerGroup := List[LayerGroupIndex];
-      if LayerGroupIndex = List.Count - 1 then
+      if (LayerGroupIndex = List.Count - 1) then
       begin
         ParentLayerCount := ParentLayerCount
           + Edit.Discretization.BottomLayerInUnit+1;
@@ -678,7 +706,7 @@ begin
     Item := Edit.Discretization.GetAnItemByGroupAndLayer(LayerGroup, Layer);
     Assert(Item <> nil);
     AValue := StrToInt(rdgDiscretization.Cells[Ord(dsDiscretization),RowIndex]);
-    If not Odd(AValue) then
+    If (frmGoPhast.ModelSelection = msModflowLGR) and not Odd(AValue) then
     begin
       Inc(AValue);
       rdgDiscretization.Cells[Ord(dsDiscretization),RowIndex] := IntToStr(AValue);

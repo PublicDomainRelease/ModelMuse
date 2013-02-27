@@ -491,13 +491,11 @@ end;
 
 procedure TRowSelector.ChangeSelectedItem;
 begin
-{$IFDEF SUTRA}
   if frmGoPhast.ModelSelection = msSutra22 then
   begin
     ChangeCrossSection;
   end
   else
-{$ENDIF}
   begin
     ChangeRow;
   end;

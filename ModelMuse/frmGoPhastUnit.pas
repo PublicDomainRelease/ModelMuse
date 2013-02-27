@@ -383,6 +383,35 @@ type
     btnFishnet: TToolButton;
     acFishnet: TAction;
     miViewMeshInformation1: TMenuItem;
+    tbDrawElement: TToolButton;
+    DeleteModelResults1: TMenuItem;
+    acMoveCrossSection: TAction;
+    miMoveCrossSection: TMenuItem;
+    acRotateCrossSection: TAction;
+    miRotateCrossSection: TMenuItem;
+    acMoveNodesOrElements: TAction;
+    miMoveNodesOrElements: TMenuItem;
+    acDrawElement: TAction;
+    miDrawElement: TMenuItem;
+    miFishnet: TMenuItem;
+    acDefaultCrossSection: TAction;
+    SetDefaultCrossSection1: TMenuItem;
+    N11: TMenuItem;
+    N12: TMenuItem;
+    miSpecifyMesh: TMenuItem;
+    miSpecifyFishnetQuadrilateral: TMenuItem;
+    acModflowLgr2Active: TAction;
+    MODFLOWLGRV21: TMenuItem;
+    acModflowFmpActive: TAction;
+    acRunModflowFmp: TAction;
+    acFarmCrops: TAction;
+    miFarmCrops: TMenuItem;
+    acFarmSoils: TAction;
+    FarmSoils1: TMenuItem;
+    acFarmClimate: TAction;
+    FarmClimate1: TMenuItem;
+    miModflowFmpActive: TMenuItem;
+    miMODFLOWFMP2InputFiles1: TMenuItem;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -508,13 +537,23 @@ type
     procedure miCustomizeSutraMeshClick(Sender: TObject);
     procedure tbRotateCrossSectionClick(Sender: TObject);
     procedure miSpecifyCrossSectionClick(Sender: TObject);
-    procedure miMeshGenerationControlsClick(Sender: TObject);
     procedure miRenumberMeshClick(Sender: TObject);
     procedure tbMoveNodesClick(Sender: TObject);
     procedure acShowTopMeshExecute(Sender: TObject);
     procedure acShowFrontMeshExecute(Sender: TObject);
     procedure acFishnetExecute(Sender: TObject);
     procedure miViewMeshInformation1Click(Sender: TObject);
+    procedure tbDrawElementClick(Sender: TObject);
+    procedure DeleteModelResults1Click(Sender: TObject);
+    procedure acDefaultCrossSectionExecute(Sender: TObject);
+    procedure miSpecifyMeshClick(Sender: TObject);
+    procedure miSpecifyFishnetQuadrilateralClick(Sender: TObject);
+    procedure acModflowLgr2ActiveExecute(Sender: TObject);
+    procedure acModflowFmpActiveExecute(Sender: TObject);
+    procedure acFarmCropsExecute(Sender: TObject);
+    procedure acFarmSoilsExecute(Sender: TObject);
+    procedure acFarmClimateExecute(Sender: TObject);
+    procedure acRunModflowFmpExecute(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -565,7 +604,6 @@ type
     procedure DeleteSelectedNodesOrSelectedScreenObjects;
     procedure CreatePhastModel;
     procedure UpdateDisplay(Sender: TObject);
-    procedure UpdatePermanantDialogBoxAppearances;
     procedure ShowOrHideAllScreenObjects(ShowAll: Boolean);
     procedure PlayIntroductoryVideo;
     procedure StoreInitalPosition;
@@ -585,6 +623,7 @@ type
     procedure ImportPvalFile(PValFile: string);
     procedure ImportGlobalVariablesFile(GloVarFile: string);
     procedure ExportSutra(ShouldRunSutra: Boolean; const FileName: string);
+    procedure NilDisplay;
   published
     // @name is the TAction for @link(miAddVerticalGridLine)
     // and @link(tbAddVerticalBoundary).
@@ -1579,6 +1618,11 @@ type
     procedure ScreenOnActiveFormChange(Sender: TObject);
     procedure ExportMt3dFromCommandLine(FileName: string);
     function GetSutraMesh: TSutraMesh3D;
+    function MfLgr2UpToDate: boolean;
+{$IFDEF FMP}
+    function MfFmpUpToDate: boolean;
+{$ENDIF}
+    procedure AdjustSutraBoundaries;
     { Private declarations }
   protected
     // @name is used to specify the format of the files that
@@ -1730,11 +1774,13 @@ type
     procedure InvalidateGrid;
     property CreateNewCompositeBudgetFile: boolean
       read FCreateNewCompositeBudgetFile write FCreateNewCompositeBudgetFile;
-    { Public declarations }
     property ObservationFileName[SD: TSaveDialog]: string read GetObservationFileName;
     property PredictionFileName[SD: TSaveDialog]: string read GetPredictionFileName;
     procedure EnableVisualization;
     procedure UpdateModelCubeBreaks;
+    procedure UpdatePermanantDialogBoxAppearances;
+    procedure SutraMeshTypeChanged(Sender: TObject);
+    { Public declarations }
   end;
 
 
@@ -1799,7 +1845,10 @@ uses
   SutraOptionsUnit, frmSutraProgramLocationsUnit, frmImportTprogsUnit,
   Generics.Collections, frmCustomizeMeshUnit, frmImportSutraModelResultsUnit,
   frmSutraAngleUnit, frmMeshGenerationControlVariablesUnit, MeshRenumbering,
-  frmRenumberingMethodUnit, frmMeshInformationUnit;
+  frmRenumberingMethodUnit, frmMeshInformationUnit, frmSpecifyMeshUnit,
+  CuthillMcKeeRenumbering, MeshRenumberingTypes, frmCropPropertiesUnit,
+  frmSoilPropertiesUnit, frmClimateUnit, AdjustSutraBoundaryValuesUnit,
+  SutraTimeScheduleUnit;
 
 const
   StrDisplayOption = 'DisplayOption';
@@ -1828,7 +1877,9 @@ resourcestring
   'han the version you are using. Do you want to continue?';
   StrMODFLOW2005 = 'MODFLOW-2005';
   StrMODFLOWNWT = 'MODFLOW-NWT';
-  StrMODFLOWLGR = 'MODFLOW-LGR';
+  StrMODFLOWLGR = 'MODFLOW-LGR Version 1';
+  StrMODFLOWLGR2 = 'MODFLOW-LGR Version 2';
+  StrMODFLOWFMP = 'MODFLOW-FMP';
   StrMODPATH = 'MODPATH';
   StrZONEBUDGET = 'ZONEBUDGET';
   StrModelMuseFilesMust = 'ModelMuse files must use one of the following ext' +
@@ -1915,6 +1966,8 @@ resourcestring
   StrYouMustGenerate3D = 'You must generate the 3D mesh before attempting to' +
   ' export the SUTRA input files.';
   StrTheBandwidthHasCh = 'The bandwidth has changed from %0:d to %1:d.';
+  StrNowMightBeAGood = 'Now might be a good time to activate the Upstream We' +
+  'ighting (UPW) package in MODFLOW-NWT.';
 
 
 {$R *.dfm}
@@ -1929,6 +1982,8 @@ var
   ModelMateDate: TDateTime;
   MfNwtDate: TDateTime;
   Modpath6Date: TDateTime;
+  MfLgr2Date: TDateTime;
+  MfFmpDate: TDateTime;
 
 const
 //  MfNwtDate = 40933; //40907;//40819;
@@ -1950,11 +2005,7 @@ var
 
 procedure TfrmGoPhast.splitVertTopMoved(Sender: TObject);
 begin
-  if FOtherSplitterMoving
-  {$IFDEF SUTRA}
-    or (ModelSelection = msSutra22)
-  {$ENDIF}
-    then
+  if FOtherSplitterMoving or (ModelSelection = msSutra22) then
   begin
     Exit;
   end;
@@ -2010,18 +2061,24 @@ begin
     case SourceView of
       vdTop:
         begin
-          CenterPoint.x := frameFrontView.ZoomBox.Width div 2;
+          if (frmGoPhast.ModelSelection = msSutra22)
+            and (frmGoPhast.PhastModel.SutraMesh.MeshType = mt3D) then
+          begin
+            CenterPoint.x := frameFrontView.ZoomBox.Width div 2;
+          end
+          else
+          begin
+            CenterPoint.x := frameTopView.ZoomBox.Width div 2;
+          end;
           CenterPoint.Y := frameTopView.ZoomBox.Height div 2;
           RealCenterPoint.x := frameTopView.ZoomBox.X(CenterPoint.x);
           RealCenterPoint.Y := frameTopView.ZoomBox.Y(CenterPoint.y);
-          {$IFDEF Sutra}
           if PhastModel.ModelSelection = msSutra22 then
           begin
             RotatedCenterPoint := PhastModel.Mesh.
               RotateFromRealWorldCoordinatesToMeshCoordinates(RealCenterPoint);
           end
           else
-          {$ENDIF}
           begin
             RotatedCenterPoint :=
               Grid.RotateFromRealWorldCoordinatesToGridCoordinates(RealCenterPoint);
@@ -2053,14 +2110,12 @@ begin
           CenterPoint.Y := frameTopView.ZoomBox.Height div 2;
           RealCenterPoint.x := frameTopView.ZoomBox.X(CenterPoint.x);
           RealCenterPoint.Y := frameTopView.ZoomBox.Y(CenterPoint.y);
-          {$IFDEF Sutra}
           if PhastModel.ModelSelection = msSutra22 then
           begin
             RotatedCenterPoint := PhastModel.Mesh.
               RotateFromRealWorldCoordinatesToMeshCoordinates(RealCenterPoint);
           end
           else
-          {$ENDIF}
           begin
             RotatedCenterPoint :=
               Grid.RotateFromRealWorldCoordinatesToGridCoordinates(RealCenterPoint);
@@ -2071,14 +2126,12 @@ begin
           ZInt := frameFrontView.ZoomBox.Height div 2;
           Z := frameFrontView.ZoomBox.Y(ZInt);
           RotatedCenterPoint.X := XPrime;
-          {$IFDEF Sutra}
           if PhastModel.ModelSelection = msSutra22 then
           begin
             RealCenterPoint := PhastModel.Mesh.
               RotateFromMeshCoordinatesToRealWorldCoordinates(RotatedCenterPoint);
           end
           else
-          {$ENDIF}
           begin
             RealCenterPoint :=
               Grid.RotateFromGridCoordinatesToRealWorldCoordinates(RotatedCenterPoint);
@@ -2108,13 +2161,11 @@ begin
           CenterPoint.Y := frameTopView.ZoomBox.Height div 2;
           RealCenterPoint.x := frameTopView.ZoomBox.X(CenterPoint.x);
           RealCenterPoint.Y := frameTopView.ZoomBox.Y(CenterPoint.y);
-          {$IFDEF Sutra}
           if PhastModel.ModelSelection = msSutra22 then
           begin
             RotatedCenterPoint := RealCenterPoint;
           end
           else
-          {$ENDIF}
           begin
             RotatedCenterPoint :=
               Grid.RotateFromRealWorldCoordinatesToGridCoordinates(RealCenterPoint);
@@ -2126,13 +2177,11 @@ begin
           ZInt := frameSideView.ZoomBox.Width div 2;
           Z := frameSideView.ZoomBox.X(ZInt);
           RotatedCenterPoint.Y := YPrime;
-          {$IFDEF Sutra}
           if PhastModel.ModelSelection = msSutra22 then
           begin
             RealCenterPoint := RotatedCenterPoint;
           end
           else
-          {$ENDIF}
           begin
             RealCenterPoint :=
               Grid.RotateFromGridCoordinatesToRealWorldCoordinates(RotatedCenterPoint);
@@ -2199,6 +2248,24 @@ begin
   end;
 end;
 
+procedure TfrmGoPhast.acFarmClimateExecute(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmClimate);
+end;
+
+procedure TfrmGoPhast.acFarmCropsExecute(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmCropProperties);
+end;
+
+procedure TfrmGoPhast.acFarmSoilsExecute(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmSoilProperties);
+end;
+
 procedure TfrmGoPhast.acFileNewModflowModelExecute(Sender: TObject);
 begin
   if CheckModel then
@@ -2216,6 +2283,7 @@ begin
 //    FreeAndNil(frmGridColor);
     FreeAndNil(frmDisplayData);
     FreeAndNil(frmGridValue);
+    FreeAndNil(frmMeshInformation);
     FreeFrmSelectedObjects;
 //    FreeAndNil(frmGridColor);
 //    FreeAndNil(frmContourData);
@@ -2297,12 +2365,10 @@ begin
           begin
             rgChoice.ItemIndex := Ord(scNewPhast);
           end
-        {$IFDEF SUTRA}
           else if Sender = acNewSutraModel then
           begin
             rgChoice.ItemIndex := Ord(scNewSutra);
           end
-        {$ENDIF}
           else
           begin
             Assert(False);
@@ -2421,11 +2487,8 @@ begin
   end;
 
   miShowVideoTips.Checked := FIniFile.ReadBool(StrCustomization, StrShowTips, True);
-  {$IFDEF SUTRA}
   LoadFont(FIniFile, StrCustomization, StrNodeFont, SutraMesh.NodeFont);
   LoadFont(FIniFile, StrCustomization, StrElementFont, SutraMesh.ElementFont);
-  {$ENDIF}
-
 
   DisplayChoices[dcColor] := FIniFile.ReadInteger(StrDisplayOption, StrColor, 0);
   DisplayChoices[dcContour] := FIniFile.ReadInteger(StrDisplayOption, StrContour, 0);
@@ -2543,10 +2606,8 @@ begin
   end;
 
   FIniFile.WriteBool(StrCustomization, StrShowTips, miShowVideoTips.Checked);
-  {$IFDEF SUTRA}
   SaveFont(FIniFile, StrCustomization, StrNodeFont, SutraMesh.NodeFont);
   SaveFont(FIniFile, StrCustomization, StrElementFont, SutraMesh.ElementFont);
-  {$ENDIF}
 
   FIniFile.WriteInteger(StrDisplayOption, StrColor, DisplayChoices[dcColor]);
   FIniFile.WriteInteger(StrDisplayOption, StrContour, DisplayChoices[dcContour]);
@@ -2688,18 +2749,30 @@ begin
     Height := 600 ;
   end;
 
-  {$IFNDEF SUTRA}
-//  tlbMesh.Visible := False;
-  acSutraActive.Visible := False;
-  acSutraLayers.Visible := False;
-  acSutraOptions.Visible := False;
-  acSutraTimes.Visible := False;
-  acRunSutra.Visible := False;
-  acSutraOutputControl.Visible := False;
-  acSutraProgramLocations.Visible := False;
-  miCustomizeSutraMesh.Visible := False;
-  acImportSutraModelResults.Visible := False;
-  {$ENDIF}
+//  {$IFNDEF SUTRA}
+////  tlbMesh.Visible := False;
+//  acSutraActive.Visible := False;
+//  acSutraLayers.Visible := False;
+//  acSutraOptions.Visible := False;
+//  acSutraTimes.Visible := False;
+//  acRunSutra.Visible := False;
+//  acSutraOutputControl.Visible := False;
+//  acSutraProgramLocations.Visible := False;
+//  miCustomizeSutraMesh.Visible := False;
+//  acImportSutraModelResults.Visible := False;
+//  {$ENDIF}
+
+{$IFNDEF FMP}
+  acFarmCrops.Visible := False;
+  acFarmSoils.Visible := False;
+  acFarmClimate.Visible := False;
+  acModflowFmpActive.Visible := False;
+{$ENDIF}
+
+//  {$IFNDEF ModflowLGR2}
+//  acModflowLgr2Active.Visible := False;
+//  {$ENDIF}
+
   FRunSutra := True;
 
   frameTopView.miEditSelectedObjects.Action := acEditSelecteObjects;
@@ -3324,7 +3397,7 @@ begin
   inherited;
   case ModelSelection of
     msPhast: ;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         with TfrmSelectResultToImport.Create(nil) do
         begin
@@ -3338,12 +3411,10 @@ begin
           end;
         end;
       end;
-  {$IFDEF SUTRA}
     msSutra22:
       begin
         ShowAForm(TfrmImportSutraModelResults);
       end
-  {$ENDIF}
     else Assert(False);
   end;
 
@@ -3389,58 +3460,79 @@ begin
   case PhastModel.ModelSelection of
     msUndefined: ; // ignore
     msPhast:
+        acPhastActive.Checked := True;
+    msModflow:
+        acModflowActive.Checked := True;
+    msModflowLGR:
+        acModflowLgrActive.Checked := True;
+    msModflowLGR2:
+        acModflowLgr2Active.Checked := True;
+    msModflowNWT:
+        acModflowNwtActive.Checked := True;
+    {$IFDEF FMP}
+    msModflowFmp:
+        acModflowFmpActive.Checked := True;
+    {$ENDIF}
+    msSutra22:
+        acSutraActive.Checked := True;
+    else
+      Assert(False);
+  end;
+  case PhastModel.ModelSelection of
+    msUndefined: ; // ignore
+    msPhast:
       begin
         frameSideView.Visible := True;
         splitVertTop.Visible := True;
         frameTopView.ModelCube.ZOrigin := zoBottom;
         frameFrontView.ModelCube.YOrigin := yoSouth;
-        acPhastActive.Checked := True;
         acSubdivide.Visible := True;
         acSubdivide.Caption := StrSubdivideGridElem;
         acSubdivide.Hint := StrSubdivideGridEleme;
         btnRunModel.DropDown := nil;
         miExportShapefile.Caption := StrGridDataToShapef;
+        acGenerateGrid.Caption := '&Generate Grid...';
+        acGenerateGrid.Hint := 'Generate grid'
       end;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         frameSideView.Visible := True;
         splitVertTop.Visible := True;
         frameTopView.ModelCube.ZOrigin := zoTop;
         frameFrontView.ModelCube.YOrigin := yoNorth;
-        acModflowActive.Checked := True;
         acSubdivide.Visible := True;
         acSubdivide.Caption := StrSubdivideGridCell;
         acSubdivide.Hint := StrSubdivideGridCells;
         btnRunModel.DropDown := pmExportModel;
         miExportShapefile.Caption := StrGridDataToShapef;
+        acGenerateGrid.Caption := '&Generate Grid...';
+        acGenerateGrid.Hint := 'Generate grid'
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         frameSideView.Visible := False;
         splitVertTop.Visible := False;
         frameTopView.ModelCube.ZOrigin := zoTop;
         frameFrontView.ModelCube.YOrigin := yoSouth;
-        acSutraActive.Checked := True;
         acSubdivide.Visible := False;
 //        acSubdivide.Caption := 'Subdivide Grid &Cells...';
 //        acSubdivide.Hint := 'Subdivide grid cells|'
 //          + 'Click down and drag to select cells to be subdivided.';
         btnRunModel.DropDown := nil;
         miExportShapefile.Caption := StrMeshDataToShapef;
+        acGenerateGrid.Caption := '&Generate Mesh...';
+        acGenerateGrid.Hint := 'Generate mesh'
       end;
-    {$ENDIF}
     else Assert(False);
   end;
+  EnableVisualization;
 
   if frameSideView.Visible and (frameSideView.Left < splitVertTop.Left) then
   begin
     splitVertTop.Left := frameSideView.Left;
   end;
 
-  {$IFDEF SUTRA}
-  GridModel := PhastModel.ModelSelection in [msPhast, msModflow,
-    msModflowLGR, msModflowNWT];
+  GridModel := PhastModel.ModelSelection in ModelsWithGrid;
   miGrid.Visible := GridModel;
   acShowGridShell.Visible := GridModel;
   acShowTopGrid.Visible := GridModel;
@@ -3456,11 +3548,15 @@ begin
   miMesh.Visible := PhastModel.ModelSelection = msSutra22;
   acShowTopMesh.Visible := PhastModel.ModelSelection = msSutra22;
   acShowFrontMesh.Visible := PhastModel.ModelSelection = msSutra22;
+
+  {$IFDEF FMP}
+  acFarmCrops.Visible := PhastModel.ModelSelection = msModflowFmp;
+  acFarmSoils.Visible := PhastModel.ModelSelection = msModflowFmp;
+  acFarmClimate.Visible := PhastModel.ModelSelection = msModflowFmp;
   {$ELSE}
-  miMesh.Visible := False;
-  acShowTopMesh.Visible := False;
-  acShowFrontMesh.Visible := False;
-  acNewSutraModel.Visible := False;
+  acFarmCrops.Visible := False;
+  acFarmSoils.Visible := False;
+  acFarmClimate.Visible := False;
   {$ENDIF}
 
   // update the cursors.
@@ -3471,24 +3567,19 @@ begin
   dcSubdivide.RedrawCursor;
   dcSetSpacing.RedrawCursor;
 
-  tbarEditGrid.Visible := PhastModel.ModelSelection in
-    [msPhast, msModflow, msModflowLGR, msModflowNWT];
+  tbarEditGrid.Visible := PhastModel.ModelSelection in ModelsWithGrid;
   tbarView3D.Visible := tbarEditGrid.Visible;
 
   acImportModelResults.Enabled :=
-    PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT
-      {$IFDEF SUTRA}, msSutra22{$ENDIF}];
-  {$IFDEF SUTRA}
+    PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowLGR2,
+      msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msSutra22];
   acImportSutraModelResults.Enabled :=
     PhastModel.ModelSelection = msSutra22;
   miGriddedData.Enabled :=
     PhastModel.ModelSelection <> msSutra22;
   tlbMesh.Visible := PhastModel.ModelSelection = msSutra22;
   tlb3dViewMesh.Visible := PhastModel.ModelSelection = msSutra22;
-  {$ELSE}
-  tlbMesh.Visible := False;
-  tlb3dViewMesh.Visible := False;
-  {$ENDIF}
 
   if tbarEditGrid.Visible then
   begin
@@ -3510,49 +3601,54 @@ begin
   end;
 
   acExportModpath.Enabled :=
-    PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
+    PhastModel.ModelSelection in ModflowSelection;
   miImportDistributedDatabyZone.Enabled := PhastModel.ModelSelection = msPhast;
-  miChildModels.Enabled := PhastModel.ModelSelection = msModflowLGR;
+  miChildModels.Enabled := PhastModel.ModelSelection in [msModflowLGR,
+    msModflowLGR2];
 
   acExportPhastInputFile.Enabled := PhastModel.ModelSelection = msPhast;
   acRunModflow.Enabled := PhastModel.ModelSelection = msModflow;
-  acRunModflowLgr.Enabled := PhastModel.ModelSelection = msModflowLGR;
+  acRunModflowLgr.Enabled := PhastModel.ModelSelection in [msModflowLGR,
+    msModflowLGR2];
   acRunModflowNWT.Enabled := PhastModel.ModelSelection = msModflowNWT;
-  {$IFDEF SUTRA}
   acRunSutra.Enabled := PhastModel.ModelSelection = msSutra22;
+  {$IFDEF FMP}
+  acRunModflowFmp.Enabled := PhastModel.ModelSelection = msModflowFmp;
   {$ELSE}
-  acRunSutra.Enabled := False;
+  acRunModflowFmp.Enabled := False;
+  acRunModflowFmp.Visible := False;
   {$ENDIF}
 
   UpdateRunShortCut(acExportPhastInputFile);
   UpdateRunShortCut(acRunModflow);
   UpdateRunShortCut(acRunModflowLgr);
   UpdateRunShortCut(acRunModflowNWT);
+  UpdateRunShortCut(acRunModflowFMP);
   UpdateRunShortCut(acRunSUTRA);
 
   miLayers.Enabled :=
-    PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
+    PhastModel.ModelSelection in ModflowSelection;
   EnableHufMenuItems;
   EnableMt3dmsMenuItems;
   miGeneral.Enabled :=
-    PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
+    PhastModel.ModelSelection in ModflowSelection;
   miTime.Enabled :=
-    PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
+    PhastModel.ModelSelection in ModflowSelection;
   miOutputControl.Enabled :=
-    PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
+    PhastModel.ModelSelection in ModflowSelection;
   miPackages.Enabled :=
-    PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
+    PhastModel.ModelSelection in ModflowSelection;
   miProgramLocations.Enabled :=
-    PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
+    PhastModel.ModelSelection in ModflowSelection;
   miManageParameters.Enabled :=
-    PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
+    PhastModel.ModelSelection in ModflowSelection;
   miModflowNameFile.Enabled :=
-    PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
+    PhastModel.ModelSelection in ModflowSelection;
   EnableLinkStreams;
   EnableManageFlowObservations;
   EnableManageHeadObservations;
   miObservationType.Enabled :=
-    PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
+    PhastModel.ModelSelection in ModflowSelection;
 
   miTitleAndUnits.Enabled := PhastModel.ModelSelection = msPhast;
   miGridOptions.Enabled := PhastModel.ModelSelection = msPhast;
@@ -3589,8 +3685,7 @@ begin
     ControlList.Add(acExportModpath);
     ControlList.Add(acExportZoneBudget);
     ControlList.Add(acRunMt3dms);
-    ShowControls := PhastModel.ModelSelection in
-      [msModflow, msModflowLGR, msModflowNWT];
+    ShowControls := PhastModel.ModelSelection in ModflowSelection;
     for ControlIndex := 0 to ControlList.Count - 1 do
     begin
       AComponent := ControlList[ControlIndex];
@@ -3651,11 +3746,7 @@ begin
     ControlList.Add(acRunSutra1);
     ControlList.Add(miCustomizeSutraMesh);
 
-    {$IFDEF SUTRA}
     ShowControls := PhastModel.ModelSelection = msSutra22;
-    {$ELSE}
-    ShowControls := False;
-    {$ENDIF}
     for ControlIndex := 0 to ControlList.Count - 1 do
     begin
       AComponent := ControlList[ControlIndex];
@@ -3714,7 +3805,11 @@ begin
   case PhastModel.ModelSelection of
     msModflow: result := Mf2005UpToDate;
     msModflowLGR: result := MfLgrUpToDate;
+    msModflowLGR2: result := MfLgr2UpToDate;
     msModflowNWT: result := MfNwtUpToDate;
+    {$IFDEF FMP}
+    msModflowFmp: result := MfFmpUpToDate;
+    {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -3787,6 +3882,14 @@ procedure TfrmGoPhast.miDataSetstoCSVClick(Sender: TObject);
 begin
   inherited;
   ShowAForm(TfrmExportCSV);
+end;
+
+procedure TfrmGoPhast.acDefaultCrossSectionExecute(Sender: TObject);
+begin
+  inherited;
+  frmGoPhast.UndoStack.Submit(
+    TUndoSpecifyCrossSection.Create(
+    PhastModel.SutraMesh.DefaultCrossSectionLocation));
 end;
 
 procedure TfrmGoPhast.acDeleteColumnRowExecute(Sender: TObject);
@@ -4058,6 +4161,29 @@ begin
   end;
 end;
 
+procedure TfrmGoPhast.acModflowFmpActiveExecute(Sender: TObject);
+begin
+  {$IFDEF FMP}
+  if ModelSelection <> msModflowFMP then
+  begin
+    UndoStack.Submit(TUndoModelSelectionChange.Create(msModflowFMP));
+  end;
+  {$ENDIF}
+end;
+
+procedure TfrmGoPhast.acModflowLgr2ActiveExecute(Sender: TObject);
+begin
+  inherited;
+  if ModelSelection <> msModflowLGR2 then
+  begin
+    UndoStack.Submit(TUndoModelSelectionChange.Create(msModflowLGR2));
+    if PhastModel.ChildModels.Count = 0 then
+    begin
+      miChildModelsClick(nil);
+    end;
+  end;
+end;
+
 procedure TfrmGoPhast.acModflowLgrActiveExecute(Sender: TObject);
 begin
   inherited;
@@ -4078,6 +4204,8 @@ begin
   if ModelSelection <> msModflowNWT then
   begin
     UndoStack.Submit(TUndoModelSelectionChange.Create(msModflowNWT));
+    Beep;
+    MessageDlg(StrNowMightBeAGood, mtInformation, [mbOK], 0);
   end;
 end;
 
@@ -4149,7 +4277,7 @@ begin
   AList.Add(tbRotateCrossSection);
   AList.Add(tbMoveNodes);
   AList.Add(btnFishnet);
-
+  AList.Add(tbDrawElement);
 end;
 
 procedure TfrmGoPhast.SetButtonsUp(const CurrentButton: TObject);
@@ -4341,12 +4469,10 @@ end;
 procedure TfrmGoPhast.acSutraActiveExecute(Sender: TObject);
 begin
   inherited;
-  {$IFDEF SUTRA}
   if ModelSelection <> msSutra22 then
   begin
     UndoStack.Submit(TUndoModelSelectionChange.Create(msSutra22));
   end;
-  {$ENDIF}
 end;
 
 procedure TfrmGoPhast.acSutraLayersExecute(Sender: TObject);
@@ -4636,7 +4762,7 @@ end;
 procedure TfrmGoPhast.EnableHufMenuItems;
 begin
   miMF_HydrogeologicUnits.Enabled :=
-    (PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    (PhastModel.ModelSelection in ModflowSelection)
     and PhastModel.ModflowPackages.HufPackage.IsSelected;
 end;
 
@@ -4764,6 +4890,41 @@ begin
 
 end;
 
+procedure TfrmGoPhast.SutraMeshTypeChanged(Sender: TObject);
+begin
+  acSutraLayers.Enabled := PhastModel.SutraMesh.MeshType = mt3D;
+end;
+
+procedure TfrmGoPhast.NilDisplay;
+begin
+  PhastModel.ThreeDDataSet := nil;
+  PhastModel.TopDataSet := nil;
+  PhastModel.FrontDataSet := nil;
+  PhastModel.SideDataSet := nil;
+  if PhastModel.Grid <> nil then
+  begin
+    PhastModel.Grid.ThreeDContourDataSet := nil;
+    PhastModel.Grid.TopContourDataSet := nil;
+    PhastModel.Grid.FrontContourDataSet := nil;
+    PhastModel.Grid.SideContourDataSet := nil;
+  end;
+  if PhastModel.Mesh <> nil then
+  begin
+    PhastModel.Mesh.TopContourDataSet := nil;
+    PhastModel.Mesh.ThreeDContourDataSet := nil;
+  end;
+  PhastModel.ThreeDTimeList := nil;
+  PhastModel.TopTimeList := nil;
+  PhastModel.FrontTimeList := nil;
+  PhastModel.SideTimeList := nil;
+  PhastModel.ContourLegend.ValueSource := nil;
+  PhastModel.ColorLegend.ValueSource := nil;
+  if frmDisplayData <> nil then
+  begin
+    frmDisplayData.NilDisplay;
+  end;
+end;
+
 procedure TfrmGoPhast.miPHASTProgramLocationClick(Sender: TObject);
 begin
   inherited;
@@ -4795,55 +4956,52 @@ end;
 procedure TfrmGoPhast.EnableManageFlowObservations;
 begin
   miManageFluxObservations.Enabled :=
-    (PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    (PhastModel.ModelSelection in ModflowSelection)
     and (PhastModel.ChobIsSelected
     or PhastModel.DrobIsSelected
     or PhastModel.GbobIsSelected
     or PhastModel.RvobIsSelected
+    or PhastModel.StobIsSelected
     or PhastModel.TobIsSelected);
 end;
 
 procedure TfrmGoPhast.EnableManageHeadObservations;
 begin
   miManageHeadObservations.Enabled :=
-    (PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    (PhastModel.ModelSelection in ModflowSelection)
     and PhastModel.HobIsSelected
 end;
 
 procedure TfrmGoPhast.EnableMeshRenumbering;
 begin
 
-{$IFDEF SUTRA}
   if PhastModel = nil then
   begin
     Exit;
   end;
-//  miRenumberMesh.Enabled := (PhastModel.Mesh <> nil) ;
-  miRenumberMesh.Enabled := (PhastModel.Mesh <> nil)
-    and (PhastModel.Mesh.MeshType = mt3D);
-{$ENDIF}
+  miRenumberMesh.Enabled := (PhastModel.Mesh <> nil) ;
+//  miRenumberMesh.Enabled := (PhastModel.Mesh <> nil)
+//    and (PhastModel.Mesh.MeshType = mt3D);
 end;
 
 procedure TfrmGoPhast.EnableMt3dmsMenuItems;
 begin
   acRunMt3dms.Enabled :=
-    (PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    (PhastModel.ModelSelection in ModflowSelection)
     and PhastModel.ModflowPackages.Mt3dBasic.IsSelected
 end;
 
 procedure TfrmGoPhast.EnableVisualization;
 var
   LocalGrid: TCustomModelGrid;
-{$IFDEF SUTRA}
   Mesh: TSutraMesh3D;
-{$ENDIF}
 begin
   if PhastModel = nil then
   begin
     Exit;
   end;
   case ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         LocalGrid := Grid;
         acDisplayData.Enabled := (LocalGrid <> nil)
@@ -4851,7 +5009,6 @@ begin
           and (LocalGrid.RowCount > 0)
           and (LocalGrid.LayerCount > 0);
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         Mesh := PhastModel.Mesh;
@@ -4859,7 +5016,6 @@ begin
           and (Mesh.Mesh2D.Nodes.Count > 0)
           and (Mesh.Mesh2D.Elements.Count > 0)
       end;
-    {$ENDIF}
     else
       begin
         acDisplayData.Enabled := False;
@@ -5022,7 +5178,7 @@ begin
       Assert(False);
     msPhast:
       Assert(False);
-    msModflow, msModflowNWT:
+    msModflow, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         NewFileName := ChangeFileExt(FileName, '.nam');
         NewFileName := PhastModel.FixFileName(NewFileName);
@@ -5039,7 +5195,7 @@ begin
           end;
         end;
       end;
-    msModflowLGR:
+    msModflowLGR, msModflowLGR2:
       begin
         NewFileName := PhastModel.FixFileName(ChangeFileExt(FileName, '.lgr'));
         if PhastModel.ModflowPackages.Mt3dBasic.IsSelected then
@@ -5055,12 +5211,10 @@ begin
           end;
         end;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         Assert(False);
       end
-    {$ENDIF}
   else
     Assert(False);
   end;
@@ -5073,11 +5227,9 @@ var
   ChildModelNameFile: string;
   NameWriter: TCustomNameFileWriter;
   Index: Integer;
-{$IFDEF SUTRA}
   RunSutraOK: Boolean;
   Options: TSutraOptions;
   SutraInputFileName: string;
-{$ENDIF}
 begin
   case PhastModel.ModelSelection of
     msUndefined:
@@ -5086,7 +5238,7 @@ begin
       begin
         ExportFile(ChangeFileExt(FileName, sdPhastInput.DefaultExt), False);
       end;
-    msModflow, msModflowNWT:
+    msModflow, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         NewFileName := ChangeFileExt(FileName, '.nam');
         NewFileName := PhastModel.FixFileName(NewFileName);
@@ -5121,7 +5273,7 @@ begin
           end;
         end;
       end;
-    msModflowLGR:
+    msModflowLGR, msModflowLGR2:
       begin
         NewFileName := PhastModel.FixFileName(ChangeFileExt(FileName, '.lgr'));
         NameWriter := TNameFileWriter.Create(PhastModel, FileName, etExport);
@@ -5169,7 +5321,6 @@ begin
           end;
         end;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         RunSutraOK := True;
@@ -5180,7 +5331,7 @@ begin
         Options := PhastModel.SutraOptions;
         if (Options.StartType = stWarm) then
         begin
-          if not FileExists(Options.RestartFileName) then
+          if not FileExists(Options.FullRestartFileName) then
           begin
             RunSutraOK := False;
           end;
@@ -5188,7 +5339,7 @@ begin
         SutraInputFileName := ChangeFileExt(FileName, '.inp');
         if (Options.StartType = stWarm) then
         begin
-          if UpperCase(SutraInputFileName) = UpperCase(Options.RestartFileName) then
+          if UpperCase(SutraInputFileName) = UpperCase(Options.FullRestartFileName) then
           begin
             RunSutraOK := False;
           end;
@@ -5199,7 +5350,6 @@ begin
           ExportSutra(False, SutraInputFileName);
         end;
       end
-    {$ENDIF}
   else
     Assert(False);
   end;
@@ -5455,8 +5605,8 @@ end;
 procedure TfrmGoPhast.EnableLinkStreams;
 begin
   miLinkSFRStreams.Enabled :=
-    (PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
-    and PhastModel.ModflowPackages.SfrPackage.IsSelected;
+    (PhastModel.ModelSelection in ModflowSelection)
+    and (PhastModel.SfrIsSelected or PhastModel.StrIsSelected);
 end;
 
 procedure TfrmGoPhast.ShowOrHideAllScreenObjects(ShowAll: Boolean);
@@ -5486,6 +5636,35 @@ begin
     else
     begin
       UndoStack.Submit(Undo);
+    end;
+  end;
+end;
+
+procedure TfrmGoPhast.miSpecifyFishnetQuadrilateralClick(Sender: TObject);
+begin
+  inherited;
+  with TfrmSpecifyMesh.Create(nil) do
+  begin
+    try
+      GetData(mkQuadrilaterals);
+      ShowModal;
+    finally
+      Free;
+    end;
+  end;
+
+end;
+
+procedure TfrmGoPhast.miSpecifyMeshClick(Sender: TObject);
+begin
+  inherited;
+  with TfrmSpecifyMesh.Create(nil) do
+  begin
+    try
+      GetData(mkComplete);
+      ShowModal;
+    finally
+      Free;
     end;
   end;
 end;
@@ -5522,7 +5701,6 @@ begin
     VerticalExaggeration := 1;
   end;
 
-{$IFDEF SUTRA}
   if (ModelSelection = msSutra22) and (PhastModel.SutraMesh.MeshType = mtProfile) then
   begin
     if (frameTopView <> nil) and (frameTopView.ZoomBox.Exaggeration <>
@@ -5549,7 +5727,6 @@ begin
     end;
   end
   else
-{$ENDIF}
   begin
     frameTopView.ZoomBox.Exaggeration := 1;
     if (frameFrontView <> nil) and (frameFrontView.ZoomBox.Exaggeration <>
@@ -5691,9 +5868,7 @@ selected font. }
   fdFontDialog.Font := Font;
   if fdFontDialog.Execute then
   begin
-    Font := fdFontDialog.Font;
-    GlobalFont := Font;
-    UpdatePermanantDialogBoxAppearances;
+    UndoStack.Submit(TUndoChangeFont.Create(fdFontDialog.Font));
   end;
 end;
 
@@ -5942,7 +6117,6 @@ end;
 
 procedure TfrmGoPhast.tbMoveNodesClick(Sender: TObject);
 begin
-{$IFDEF SUTRA}
   // Toggle the Checked state of the Sender or it's associated action.
   SetActionChecked(Sender);
 
@@ -5965,7 +6139,6 @@ begin
     CurrentTool := nil;
   end;
   SelectDefaultButton;
-{$ENDIF}
 end;
 
 procedure TfrmGoPhast.tbPolygonClick(Sender: TObject);
@@ -6126,7 +6299,12 @@ end;
 procedure TfrmGoPhast.miCustomizeSutraMeshClick(Sender: TObject);
 begin
   inherited;
-  ShowAForm(TfrmCustomizeMesh);
+  if frmCustomizeMesh = nil then
+  begin
+    Application.CreateForm(TfrmCustomizeMesh, frmCustomizeMesh);
+  end;
+  frmCustomizeMesh.GetData;
+  frmCustomizeMesh.Show;
 end;
 
 procedure TfrmGoPhast.ConvertPoint(Sender: TObject; VD: TViewDirection;
@@ -6437,16 +6615,33 @@ var
   procedure GetExag;
   begin
     result := XWidth / ZHeight;
-    if ((frameFrontView.ZoomBox.Height > 10)
-      and (frameFrontView.ZoomBox.Width > 10)) then
+    if (Mesh <> nil) and (Mesh.MeshType = mtProfile) then
     begin
-      FrameRatio := frameFrontView.ZoomBox.Width
-        / frameFrontView.ZoomBox.Height;
-      result := result/FrameRatio;
+      if ((frameTopView.ZoomBox.Height > 10)
+        and (frameTopView.ZoomBox.Width > 10)) then
+      begin
+        FrameRatio := frameTopView.ZoomBox.Width
+          / frameTopView.ZoomBox.Height;
+        result := result/FrameRatio;
+      end
+      else
+      begin
+        result := result/3;
+      end;
     end
     else
     begin
-      result := result/3;
+      if ((frameFrontView.ZoomBox.Height > 10)
+        and (frameFrontView.ZoomBox.Width > 10)) then
+      begin
+        FrameRatio := frameFrontView.ZoomBox.Width
+          / frameFrontView.ZoomBox.Height;
+        result := result/FrameRatio;
+      end
+      else
+      begin
+        result := result/3;
+      end;
     end;
     E := Floor(Log10(result));
     D := ceil(result*Power(10, -E));
@@ -6455,6 +6650,7 @@ var
 begin
   result := 20;
   LocalGrid := Grid;
+  Mesh := nil;
   if (LocalGrid <> nil)  then
   begin
     if (LocalGrid.LayerCount >= 1)
@@ -6477,14 +6673,30 @@ begin
     Mesh := PhastModel.Mesh;
     if Mesh <> nil then
     begin
-      Limits := Mesh.MeshLimits(vdFront);
-      ZHeight := Limits.MaxZ - Limits.MinZ;
-      if ZHeight > 0 then
+      if Mesh.MeshType = mtProfile then
       begin
-        XWidth := Limits.MaxX - Limits.MinX;
-        if XWidth > 0 then
+        Limits := Mesh.MeshLimits(vdTop, Mesh.CrossSection.Angle);
+        ZHeight := Limits.MaxY - Limits.MinY;
+        if ZHeight > 0 then
         begin
-          GetExag;
+          XWidth := Limits.MaxX - Limits.MinX;
+          if XWidth > 0 then
+          begin
+            GetExag;
+          end;
+        end;
+      end
+      else
+      begin
+        Limits := Mesh.MeshLimits(vdFront, Mesh.CrossSection.Angle);
+        ZHeight := Limits.MaxZ - Limits.MinZ;
+        if ZHeight > 0 then
+        begin
+          XWidth := Limits.MaxX - Limits.MinX;
+          if XWidth > 0 then
+          begin
+            GetExag;
+          end;
         end;
       end;
     end;
@@ -6551,6 +6763,12 @@ begin
   end;
 end;
 
+procedure TfrmGoPhast.DeleteModelResults1Click(Sender: TObject);
+begin
+  inherited;
+  UndoStack.Submit(TUndoDeleteModelResults.Create);
+end;
+
 procedure TfrmGoPhast.FormKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 const
@@ -6605,12 +6823,14 @@ begin
         begin
           DeleteLastPointInRuler;
         end
-      {$IFDEF SUTRA}
         else if CurrentTool = FishnetTool then
         begin
           FishnetTool.DeleteLastNode;
         end
-      {$ENDIF}
+        else if CurrentTool = DrawElementTool then
+        begin
+          DrawElementTool.DeleteLastNode;
+        end
         else if CurrentTool is TCustomCreateScreenObjectTool then
         begin
           DeleteLastPointInScreenObject;
@@ -6635,16 +6855,14 @@ begin
         begin
           DeleteLastPointInScreenObject;
         end
-      {$IFDEF SUTRA}
         else if CurrentTool = FishnetTool then
         begin
           FishnetTool.DeleteSelectedElement;
         end
         else if CurrentTool = MoveSutraNodesTool then
         begin
-          MoveSutraNodesTool.DeleteSelectedNodesOrElements;
+          MoveSutraNodesTool.DeleteSelectedNodesAndElements;
         end
-      {$ENDIF}
         else
         begin
           DeleteSelectedNodesOrSelectedScreenObjects;
@@ -6775,9 +6993,7 @@ begin
       begin
         ZoomOutTool.MouseUp(Sender, mbLeft, Shift, APoint.X, APoint.Y);
       end;
-    {$IFDEF SUTRA}
       FishnetTool.HideEdits;
-    {$ENDIF}
     end
     else
     begin
@@ -6807,8 +7023,6 @@ begin
             end;
           faFront:
             begin
-
-            {$IFDEF SUTRA}
               if ModelSelection = msSutra22 then
               begin
                 if Assigned(FCubeControl.OnMouseUp) then
@@ -6830,15 +7044,12 @@ begin
               end
               else
               begin
-            {$ENDIF}
                 PhastModel.CombinedDisplayRow :=
                   PhastModel.CombinedDisplayRow
                   - Sign(WheelDelta)*Increment;
                 sbMain.Panels[1].Text := Format(StrSelectedRowD,
                   [PhastModel.SelectedRow + 1]);
-            {$IFDEF SUTRA}
               end;
-            {$ENDIF}
             end;
           faSide:
             begin
@@ -6963,7 +7174,9 @@ begin
     PhastModel.ModelSelection := Value;
     case Value of
       msUndefined: Assert(False);
-      msPhast, msModflow, msModflowLGR, msModflowNWT {$IFDEF SUTRA}, msSutra22 {$ENDIF}:
+      msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+        {$IFDEF FMP}, msModflowFmp {$ENDIF}
+        , msSutra22:
         begin
           InvalidateViewOfModel;
           InvalidateAllViews;
@@ -6985,11 +7198,20 @@ begin
       begin
         acModflowLgrActive.Checked := True;
       end;
+    msModflowLGR2:
+      begin
+        acModflowLgr2Active.Checked := True;
+      end;
     msModflowNWT:
       begin
         acModflowNwtActive.Checked := True;
       end;
-    {$IFDEF SUTRA}
+    {$IFDEF FMP}
+    msModflowFmp:
+      begin
+        acModflowFmpActive.Checked := True;
+      end;
+    {$ENDIF}
     msSutra22:
       begin
         acSutraActive.Checked := True;
@@ -6998,7 +7220,6 @@ begin
           SutraMesh.OnSelectedLayerChange := frameTopView.ItemChange;
         end;
       end;
-    {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -7084,7 +7305,6 @@ var
   MaxY: TFloat;
   Fraction: double;
 begin
-{$IFDEF SUTRA}
   if (ModelSelection <> msSutra22) then
   begin
     Exit;
@@ -7138,8 +7358,6 @@ begin
 //  Fraction := 1-Fraction;
   frameFrontView.ModelCube.Selection1 := Fraction;
   frameFrontView.ModelCube.Selection2 := Fraction;
-{$ENDIF}
-
 end;
 
 procedure TfrmGoPhast.SetSideScreenObjectsChanged(const Value: boolean);
@@ -7175,19 +7393,60 @@ var
 begin
   Breaks := frameTopView.ModelCube.Breaks;
   Breaks.Clear;
-  if (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  if (ModelSelection in ModflowSelection)
     and (PhastModel.LayerStructure.Count > 0) then
   begin
     LayerCount := PhastModel.CombinedLayerCount;
-    for LayerIndex := 0 to LayerCount - 1 do
+    if PhastModel.LgrUsed then
     begin
-      if not PhastModel.CombinedLayerSimulated(LayerIndex) then
+      for LayerIndex := 0 to LayerCount - 1 do
       begin
-        ABreak := Breaks.Add;
-        ABreak.LowerFraction := (LayerCount - LayerIndex -1)/LayerCount;
-        ABreak.HigherFraction := (LayerCount - LayerIndex)/LayerCount;
+        if not PhastModel.CombinedLayerSimulated(LayerIndex) then
+        begin
+          ABreak := Breaks.Add;
+          ABreak.LowerFraction := (LayerCount - LayerIndex -1)/LayerCount;
+          ABreak.HigherFraction := (LayerCount - LayerIndex)/LayerCount;
+        end;
       end;
     end;
+  end;
+end;
+
+procedure TfrmGoPhast.AdjustSutraBoundaries;
+var
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  ABoundary: TSutraBoundary;
+  BoundValues: TCustomSutraBoundaryCollection;
+  ASchedule: TSutraTimeSchedule;
+  procedure AdjustABoundary;
+  begin
+    if ABoundary.Used then
+    begin
+      BoundValues := ABoundary.Values as TCustomSutraBoundaryCollection;
+      if BoundValues.ScheduleName <> '' then
+      begin
+        ASchedule := PhastModel.SutraTimeOptions.Schedules.GetScheduleByName(
+          string(BoundValues.ScheduleName));
+        if ASchedule <> nil then
+        begin
+          AdjustBoundaryValues(ASchedule, BoundValues);
+        end;
+      end;
+    end;
+  end;
+begin
+  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount   - 1 do
+  begin
+    AScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    ABoundary := AScreenObject.SutraBoundaries.FluidSource;
+    AdjustABoundary;
+    ABoundary := AScreenObject.SutraBoundaries.MassEnergySource;
+    AdjustABoundary;
+    ABoundary := AScreenObject.SutraBoundaries.SpecifiedPressure;
+    AdjustABoundary;
+    ABoundary := AScreenObject.SutraBoundaries.SpecifiedConcTemp;
+    AdjustABoundary;
   end;
 end;
 
@@ -7205,6 +7464,13 @@ var
   BoundaryWriter: TSutraBoundaryWriter;
   InputWriter: TSutraInputWriter;
   SpecifiedTempConcNodes: TIntegerList;
+  Schedules: TStringList;
+  Observations: TStringList;
+//  ScreenObjectIndex: Integer;
+//  AScreenObject: TScreenObject;
+//  ABoundary: TSutraBoundary;
+//  BoundValues: TCustomSutraBoundaryCollection;
+//  ASchedule: TSutraTimeSchedule;
 begin
   if frmProgressMM = nil then
   begin
@@ -7215,11 +7481,15 @@ begin
   frmProgressMM.ShouldContinue := True;
   try
     try
+      AdjustSutraBoundaries;
+
       SutraFileWriter := TSutraFileWriter.Create(PhastModel, FileName);
       FluidSourceNodes := TIntegerList.Create;
       MassEnergySourceNodes := TIntegerList.Create;
       SpecifiedPressureNodes := TIntegerList.Create;
       SpecifiedTempConcNodes := TIntegerList.Create;
+      Schedules := TStringList.Create;
+      Observations := TStringList.Create;
       try
         BoundaryWriter := TSutraBoundaryWriter.Create(PhastModel, etExport,
           sbtFluidSource);
@@ -7251,7 +7521,7 @@ begin
         end;
         TimeSchWriter := TSutraTimeScheduleWriter.Create(PhastModel);
         try
-          TimeSchWriter.WriteFile(FileName);
+          TimeSchWriter.WriteFile(Schedules);
         finally
           TimeSchWriter.Free;
         end;
@@ -7259,7 +7529,7 @@ begin
         // for the observations so it must be evaluated before the observations.
         ObsWriter := TSutraObservationWriter.Create(PhastModel, etExport);
         try
-          ObsWriter.WriteFile(FileName, NOBS);
+          ObsWriter.WriteFile(FileName, Observations, NOBS);
         finally
           ObsWriter.Free;
         end;
@@ -7267,7 +7537,7 @@ begin
         try
           InputWriter.WriteFile(FileName, FluidSourceNodes,
             MassEnergySourceNodes, SpecifiedPressureNodes,
-            SpecifiedTempConcNodes, NOBS);
+            SpecifiedTempConcNodes, NOBS, Schedules, Observations);
         finally
           InputWriter.Free;
         end;
@@ -7284,6 +7554,10 @@ begin
         BatchFile := TStringList.Create;
         try
           BatchFile.Add(PhastModel.ProgramLocations.Sutra22Location);
+
+          AddOpenListFileLine(ChangeFileExt(FileName, '.lst'), True, BatchFile,
+            PhastModel.ProgramLocations);
+
           BatchFile.Add('pause');
           BatchFile.SaveToFile(BatchFileName);
         finally
@@ -7296,7 +7570,14 @@ begin
         begin
           RunAProgram(BatchFileName);
         end;
+
+        if frmErrorsAndWarnings.HasMessages then
+        begin
+          frmErrorsAndWarnings.Show;
+        end;
       finally
+        Observations.Free;
+        Schedules.Free;
         FluidSourceNodes.Free;
         MassEnergySourceNodes.Free;
         SpecifiedPressureNodes.Free;
@@ -7533,6 +7814,20 @@ begin
   end;
 end;
 
+function TfrmGoPhast.MfLgr2UpToDate: boolean;
+var
+  WarningMessage: string;
+begin
+  result := ModelUpToDate(PhastModel.ProgramLocations.ModflowLgr2Location, MfLgr2Date);
+  if not result then
+  begin
+    Beep;
+    WarningMessage := Format(StrTheCurrentVersion, [StrMODFLOWLGR2]);
+    result := (MessageDlg(WarningMessage, mtWarning, [mbYes, mbNo], 0) = mrYes);
+  end;
+end;
+
+
 function TfrmGoPhast.MfNwtUpToDate: boolean;
 var
   WarningMessage: string;
@@ -7545,6 +7840,21 @@ begin
     result := (MessageDlg(WarningMessage, mtWarning, [mbYes, mbNo], 0) = mrYes);
   end;
 end;
+
+{$IFDEF FMP}
+function TfrmGoPhast.MfFmpUpToDate: boolean;
+var
+  WarningMessage: string;
+begin
+  result := ModelUpToDate(PhastModel.ProgramLocations.ModflowFmpLocation, MfFmpDate);
+  if not result then
+  begin
+    Beep;
+    WarningMessage := Format(StrTheCurrentVersion, [StrMODFLOWFMP]);
+    result := (MessageDlg(WarningMessage, mtWarning, [mbYes, mbNo], 0) = mrYes);
+  end;
+end;
+{$ENDIF}
 
 procedure TfrmGoPhast.miMakeSelectedVerticesASeparateObjectClick(
   Sender: TObject);
@@ -7593,12 +7903,6 @@ begin
   begin
     Undo.Free;
   end;
-end;
-
-procedure TfrmGoPhast.miMeshGenerationControlsClick(Sender: TObject);
-begin
-  inherited;
-  ShowAForm(TfrmMeshGenerationControlVariables);
 end;
 
 procedure TfrmGoPhast.miLinkSFRStreamsClick(Sender: TObject);
@@ -7789,11 +8093,11 @@ begin
     Mesh := PhastModel.Mesh;
     if Mesh.MeshType = mt3D then
     begin
-      MeshLimits := Mesh.MeshLimits(vdFront);
+      MeshLimits := Mesh.MeshLimits(vdFront, Mesh.CrossSection.Angle);
       X := (MeshLimits.MinX + MeshLimits.MaxX)/2;
       SetFrontPosition(X, (MeshLimits.MinZ + MeshLimits.MaxZ)/2);
     end;
-    MeshLimits := Mesh.MeshLimits(vdTop);
+    MeshLimits := Mesh.MeshLimits(vdTop, 0);
     X := (MeshLimits.MinX + MeshLimits.MaxX)/2;
     SetTopPosition(X, (MeshLimits.MinY + MeshLimits.MaxY)/2);
   end;
@@ -7967,11 +8271,15 @@ begin
     Mesh := PhastModel.Mesh;
     if Mesh.Mesh2D.Nodes.Count > 0 then
     begin
-      MeshLimits := Mesh.MeshLimits(vdTop);
+      MeshLimits := Mesh.MeshLimits(vdTop, 0);
       ModelXWidth := MeshLimits.MaxX - MeshLimits.MinX;
       ModelYWidth := MeshLimits.MaxY - MeshLimits.MinY;
-      MeshLimits := Mesh.MeshLimits(vdFront);
+      MeshLimits := Mesh.MeshLimits(vdFront, Mesh.CrossSection.Angle);
       ModelHeight := MeshLimits.MaxZ - MeshLimits.MinZ;
+      if Mesh.MeshType = mtProfile then
+      begin
+        ModelYWidth := ModelYWidth * PhastModel.Exaggeration;
+      end;
       InitializeView(ModelXWidth, ModelYWidth, ModelHeight);
     end;
   end;
@@ -8024,6 +8332,7 @@ var
   TempRivFlux: TFluxObservationGroups;
   BackUpName: string;
   FileStream: TFileStream;
+  TempStreamFlux: TFluxObservationGroups;
 //  FileSaved: Boolean;
 begin
   if FileExists(FileName) then
@@ -8056,16 +8365,19 @@ begin
     TempDrainFlux := TFluxObservationGroups.Create(nil);
     TempGhbFlux := TFluxObservationGroups.Create(nil);
     TempRivFlux := TFluxObservationGroups.Create(nil);
+    TempStreamFlux := TFluxObservationGroups.Create(nil);
     try
       TempHeadFlux.Assign(PhastModel.HeadFluxObservations);
       TempDrainFlux.Assign(PhastModel.DrainObservations);
       TempGhbFlux.Assign(PhastModel.GhbObservations);
       TempRivFlux.Assign(PhastModel.RiverObservations);
+      TempStreamFlux.Assign(PhastModel.StreamObservations);
 
       PhastModel.HeadFluxObservations.EliminatedDeletedScreenObjects;
       PhastModel.DrainObservations.EliminatedDeletedScreenObjects;
       PhastModel.GhbObservations.EliminatedDeletedScreenObjects;
       PhastModel.RiverObservations.EliminatedDeletedScreenObjects;
+      PhastModel.StreamObservations.EliminatedDeletedScreenObjects;
 
       PhastModel.DataArrayManager.StoreCachedData := true;
       try
@@ -8092,10 +8404,12 @@ begin
       PhastModel.DrainObservations.Assign(TempDrainFlux);
       PhastModel.GhbObservations.Assign(TempGhbFlux);
       PhastModel.RiverObservations.Assign(TempRivFlux);
+      PhastModel.StreamObservations.Assign(TempStreamFlux);
       TempHeadFlux.Free;
       TempDrainFlux.Free;
       TempGhbFlux.Free;
       TempRivFlux.Free;
+      TempStreamFlux.Free;
     end;
     PhastModel.UpToDate := True;
   finally
@@ -8154,7 +8468,6 @@ procedure TfrmGoPhast.acFishnetExecute(Sender: TObject);
 begin
   inherited;
   // Toggle the Checked state of the Sender or it's associated action.
-{$IFDEF SUTRA}
   SetActionChecked(Sender);
 
   if not (Sender is TToolButton) then
@@ -8175,8 +8488,6 @@ begin
     CurrentTool := nil;
   end;
   SelectDefaultButton;
-{$ENDIF}
-
 end;
 
 procedure TfrmGoPhast.AddMostRecentlyUsedFile(const FileName: string);
@@ -8237,6 +8548,7 @@ begin
   SetCurrentDir(ExtractFileDir(FileName));
   MenuItemsSetEnabled(False);
   try
+    UpdateVerticalExaggeration(1);
     FreeAndNil(frmModflowPackages);
     frmErrorsAndWarnings.Clear;
     Extension := LowerCase(ExtractFileExt(FileName));
@@ -8266,6 +8578,7 @@ begin
 
     FReadingFile := True;
     try
+
       ClearFileSaveDialogBoxNames;
 
 
@@ -8281,6 +8594,10 @@ begin
       FreeAndNil(frmGridValue);
       FreeAndNil(frmLinkStreams);
       FreeAndNil(frmDisplayData);
+      FreeAndNil(frmMeshInformation);
+      FreeAndNil(frmCustomizeMesh);
+
+
       tbSelectClick(tbSelect);
 
       frmFileProgress := TfrmProgressMM.Create(nil);
@@ -8369,18 +8686,30 @@ begin
           PhastModel.ChildModels.Loaded;
           PhastModel.UpdateScreenObjects;
           PhastModel.LayerStructure.Loaded;
-          {$IFDEF SUTRA}
           PhastModel.SutraLayerStructure.Loaded;
           PhastModel.UpdateSutraTimeListNames;
           PhastModel.SutraMesh.Loading := True;
           PhastModel.SutraMesh.CheckUpdateElevations;
           PhastModel.SutraMesh.Loading := False;
           PhastModel.FishnetMeshGenerator.Loaded;
-          {$ENDIF}
+
+          // These steps ensure that the vectors will update properly
+          // if the data they display changes.
+          PhastModel.MaxVectors.Visible := PhastModel.MaxVectors.Visible;
+          PhastModel.MidVectors.Visible := PhastModel.MidVectors.Visible;
+          PhastModel.MinVectors.Visible := PhastModel.MinVectors.Visible;
+          PhastModel.VelocityVectors.CheckDataSets;
+          if PhastModel.VelocityVectors.SelectedItem >= 0 then
+          begin
+            PhastModel.VelocityVectors.BeginUpdate;
+            PhastModel.VelocityVectors.EndUpdate;
+          end;
+
           PhastModel.HeadFluxObservations.Loaded;
           PhastModel.DrainObservations.Loaded;
           PhastModel.GhbObservations.Loaded;
           PhastModel.RiverObservations.Loaded;
+          PhastModel.StreamObservations.Loaded;
 
           PhastModel.Mt3dmsHeadMassFluxObservations.Loaded;
           PhastModel.Mt3dmsWellMassFluxObservations.Loaded;
@@ -8394,6 +8723,9 @@ begin
           PhastModel.Mt3dmsLakMassFluxObservations.Loaded;
           PhastModel.Mt3dmsDrtMassFluxObservations.Loaded;
           PhastModel.Mt3dmsEtsMassFluxObservations.Loaded;
+          PhastModel.Mt3dmsStrMassFluxObservations.Loaded;
+          PhastModel.Mt3dmsFhbHeadMassFluxObservations.Loaded;
+          PhastModel.Mt3dmsFhbFlowMassFluxObservations.Loaded;
 
           PhastModel.UpdateOnPostInitialize;
           PhastModel.UpdateDataArrayParameterUsed;
@@ -8461,8 +8793,10 @@ begin
         msPhast: acPhastActive.Checked := True;
         msModflow: acModflowActive.Checked := True;
         msModflowLGR: acModflowLgrActive.Checked := True;
+        msModflowLGR2: acModflowLgr2Active.Checked := True;
         msModflowNWT: acModflowNwtActive.Checked := True;
-        {$IFDEF SUTRA} msSutra22: acSutraActive.Checked := True; {$ENDIF}
+        {$IFDEF FMP}msModflowFmp: acModflowFmpActive.Checked := True; {$ENDIF}
+        msSutra22: acSutraActive.Checked := True;
         else Assert(False);
       end;
       miPathlinestoShapefile.Enabled := (PhastModel.PathLines.Lines.Count > 0)
@@ -8493,7 +8827,6 @@ begin
       EnableHufMenuItems;
       EnableMt3dmsMenuItems;
       EnableMeshRenumbering;
-      {$IFDEF SUTRA}
       if ModelSelection = msSutra22 then
       begin
         if SutraMesh <> nil then
@@ -8501,7 +8834,6 @@ begin
           SutraMesh.OnSelectedLayerChange := frameTopView.ItemChange;
         end;
       end;
-      {$ENDIF}
 
       if WindowState <> wsMaximized then
       begin
@@ -8822,35 +9154,41 @@ begin
 end;
 
 procedure TfrmGoPhast.acGenerateGridExecute(Sender: TObject);
-  {$IFDEF Sutra}
 var
   ErrorMessage: string;
-  {$ENDIF}
 begin
   SetButtonsUp(nil);
   SetZB_Cursors(crArrow);
-  {$IFDEF Sutra}
   if ModelSelection = msSutra22 then
   begin
     if ShowAForm(TfrmMeshGenerationControlVariables) = mrOK then
     begin
-      PhastModel.GenerateSutraMesh(ErrorMessage);
-      if ErrorMessage <> '' then
-      begin
-        Beep;
-        MessageDlg(ErrorMessage, mtError, [mbOK], 0);
+      Screen.Cursor := crHourGlass;
+      try
+        PhastModel.GenerateSutraMesh(ErrorMessage);
+        if ErrorMessage <> '' then
+        begin
+          Beep;
+          MessageDlg(ErrorMessage, mtError, [mbOK], 0);
+        end;
+        if SutraMesh <> nil then
+        begin
+          SutraMesh.OnSelectedLayerChange := frameTopView.ItemChange;
+          SutraMesh.CheckUpdateElevations;
+        end;
+        UpdateFrontCubeForSutraCrossSection(Self);
+        TopScreenObjectsChanged := True;
+        FrontScreenObjectsChanged := True;
+        frame3DView.SetDefaultOrientation;
+        InvalidateAllViews;
+      finally
+        Screen.Cursor := crDefault;
       end;
-      if SutraMesh <> nil then
-      begin
-        SutraMesh.OnSelectedLayerChange := frameTopView.ItemChange;
-      end;
-      UpdateFrontCubeForSutraCrossSection(Self);
     end;
   end
   else
-  {$ENDIF}
   begin
-    if (ModelSelection in [msModflow, msModflowLGR, msModflowNWT]) and
+    if (ModelSelection in ModflowSelection) and
       (PhastModel.LayerStructure.Count <= 1) then
     begin
       Beep;
@@ -9449,7 +9787,9 @@ begin
         case PhastModel.ModelSelection of
           msModflow: ModflowVersionName := StrMODFLOW;
           msModflowLGR: ModflowVersionName := StrMODFLOWLGR;
+          msModflowLGR2: ModflowVersionName := StrMODFLOWLGR2;
           msModflowNWT: ModflowVersionName := StrMODFLOWNWT;
+          {$IFDEF FMP}msModflowFmp: ModflowVersionName := StrMODFLOWFMP; {$ENDIF}
         end;
         if MessageDlg(Format(StrSDoesNotExistAt, [ModflowVersionName]),
           mtWarning, [mbYes, mbNo], 0) <> mrYes then
@@ -9499,18 +9839,7 @@ begin
     frmFormulaErrors.sgErrors.BeginUpdate;
     CanDraw := False;
     try
-      PhastModel.ThreeDDataSet := nil;
-      PhastModel.TopDataSet := nil;
-      PhastModel.FrontDataSet := nil;
-      PhastModel.SideDataSet := nil;
-      PhastModel.Grid.ThreeDContourDataSet := nil;
-      PhastModel.Grid.TopContourDataSet := nil;
-      PhastModel.Grid.FrontContourDataSet := nil;
-      PhastModel.Grid.SideContourDataSet := nil;
-      PhastModel.ThreeDTimeList := nil;
-      PhastModel.TopTimeList := nil;
-      PhastModel.FrontTimeList := nil;
-      PhastModel.SideTimeList := nil;
+      NilDisplay;
 
       FileName := PhastModel.FixFileName(FileName);
 
@@ -9706,8 +10035,14 @@ begin
           PhastModel.ProgramLocations.ModflowLocation;
         msModflowLGR: ModflowLocation :=
           PhastModel.ProgramLocations.ModflowLgrLocation;
+        msModflowLGR2: ModflowLocation :=
+          PhastModel.ProgramLocations.ModflowLgr2Location;
         msModflowNWT: ModflowLocation :=
           PhastModel.ProgramLocations.ModflowNwtLocation;
+        {$IFDEF FMP}
+        msModflowFmp: ModflowLocation :=
+          PhastModel.ProgramLocations.ModflowFmpLocation;
+        {$ENDIF}
         else
           Assert(False);
       end;
@@ -9852,6 +10187,7 @@ begin
     frmErrorsAndWarnings.Clear;
     frmFormulaErrors.sgErrors.BeginUpdate;
     try
+      NilDisplay;
       ExportFile(FileName, FRunPhast);
     finally
       frmFormulaErrors.sgErrors.EndUpdate;
@@ -10240,6 +10576,12 @@ begin
   SelectDefaultButton;
 end;
 
+procedure TfrmGoPhast.acRunModflowFmpExecute(Sender: TObject);
+begin
+  inherited;
+  miExportModflowClick(Sender);
+end;
+
 procedure TfrmGoPhast.acRunModflowLgrExecute(Sender: TObject);
 var
   FileName: string;
@@ -10292,38 +10634,83 @@ begin
       else Assert(False);
     end;
 
-    if not FileExists(PhastModel.ProgramLocations.ModflowLgrLocation) then
+    if ModelSelection = msModflowLGR then
     begin
-      case FRunModelSelection of
-        0, 1:
-          begin
-            UsedModel := PhastModel;
-          end;
-        else
-          begin
-            UsedModel := PhastModel.ChildModels[FRunModelSelection-2].ChildModel;
-          end;
-      end;
-      GetProgramLocations(UsedModel);
       if not FileExists(PhastModel.ProgramLocations.ModflowLgrLocation) then
       begin
-        Beep;
-        if MessageDlg(StrMODFLOWLGRDoesNot, mtWarning,
-          [mbYes, mbNo], 0) <> mrYes then
+        case FRunModelSelection of
+          0, 1:
+            begin
+              UsedModel := PhastModel;
+            end;
+          else
+            begin
+              UsedModel := PhastModel.ChildModels[FRunModelSelection-2].ChildModel;
+            end;
+        end;
+        GetProgramLocations(UsedModel);
+        if not FileExists(PhastModel.ProgramLocations.ModflowLgrLocation) then
         begin
-          Exit;
+          Beep;
+          if MessageDlg(StrMODFLOWLGRDoesNot, mtWarning,
+            [mbYes, mbNo], 0) <> mrYes then
+          begin
+            Exit;
+          end;
         end;
       end;
-    end;
-    if not MfLgrUpToDate then
+      if not MfLgrUpToDate then
+      begin
+        Exit;
+      end;
+    end
+    else
     begin
-      Exit;
+      Assert(ModelSelection = msModflowLGR2);
+      if not FileExists(PhastModel.ProgramLocations.ModflowLgr2Location) then
+      begin
+        case FRunModelSelection of
+          0, 1:
+            begin
+              UsedModel := PhastModel;
+            end;
+          else
+            begin
+              UsedModel := PhastModel.ChildModels[FRunModelSelection-2].ChildModel;
+            end;
+        end;
+        GetProgramLocations(UsedModel);
+        if not FileExists(PhastModel.ProgramLocations.ModflowLgr2Location) then
+        begin
+          Beep;
+          if MessageDlg(StrMODFLOWLGRDoesNot, mtWarning,
+            [mbYes, mbNo], 0) <> mrYes then
+          begin
+            Exit;
+          end;
+        end;
+      end;
+      if not MfLgr2UpToDate then
+      begin
+        Exit;
+      end;
     end;
     // erase the list of model input files to be stored in the archive.
     PhastModel.ModelInputFiles.Clear;
-    if FileExists(PhastModel.ProgramLocations.ModflowLgrLocation) then
+    if ModelSelection = msModflowLGR then
     begin
-      PhastModel.AddModelInputFile(PhastModel.ProgramLocations.ModflowLgrLocation);
+      if FileExists(PhastModel.ProgramLocations.ModflowLgrLocation) then
+      begin
+        PhastModel.AddModelInputFile(PhastModel.ProgramLocations.ModflowLgrLocation);
+      end;
+    end
+    else
+    begin
+      Assert(ModelSelection = msModflowLGR2);
+      if FileExists(PhastModel.ProgramLocations.ModflowLgr2Location) then
+      begin
+        PhastModel.AddModelInputFile(PhastModel.ProgramLocations.ModflowLgr2Location);
+      end;
     end;
     frmErrorsAndWarnings.Clear;
 
@@ -10331,18 +10718,7 @@ begin
     frmFormulaErrors.sgErrors.BeginUpdate;
     CanDraw := False;
     try
-      PhastModel.ThreeDDataSet := nil;
-      PhastModel.TopDataSet := nil;
-      PhastModel.FrontDataSet := nil;
-      PhastModel.SideDataSet := nil;
-      PhastModel.Grid.ThreeDContourDataSet := nil;
-      PhastModel.Grid.TopContourDataSet := nil;
-      PhastModel.Grid.FrontContourDataSet := nil;
-      PhastModel.Grid.SideContourDataSet := nil;
-      PhastModel.ThreeDTimeList := nil;
-      PhastModel.TopTimeList := nil;
-      PhastModel.FrontTimeList := nil;
-      PhastModel.SideTimeList := nil;
+      NilDisplay;
 
       FileName := PhastModel.FixFileName(FileName);
 
@@ -10363,7 +10739,8 @@ begin
               end;
               PhastModel.ExportModflowLgrModel(FileName, FRunModflow,
                 FRunModpath and PhastModel.ModflowPackages.ModPath.IsSelected,
-                FRunZoneBudget and PhastModel.ModflowPackages.ZoneBudget.IsSelected, True);
+                FRunZoneBudget
+                and PhastModel.ModflowPackages.ZoneBudget.IsSelected, True);
             finally
               PhastModel.NameFileWriter.Free;
               PhastModel.NameFileWriter := nil;
@@ -10382,7 +10759,8 @@ begin
               PhastModel.NameFileWriter := NameWriter;
               PhastModel.ExportSeparateLgrModel(FileName, FRunModflow,
                 FRunModpath and PhastModel.ModflowPackages.ModPath.IsSelected,
-                FRunZoneBudget and PhastModel.ModflowPackages.ZoneBudget.IsSelected, True);
+                FRunZoneBudget
+                and PhastModel.ModflowPackages.ZoneBudget.IsSelected, True);
             finally
               PhastModel.NameFileWriter.Free;
               PhastModel.NameFileWriter := nil;
@@ -10398,7 +10776,8 @@ begin
               ChildModel.NameFileWriter := NameWriter;
               ChildModel.ExportSeparateLgrModel(FileName, FRunModflow,
                 FRunModpath and PhastModel.ModflowPackages.ModPath.IsSelected,
-                FRunZoneBudget and PhastModel.ModflowPackages.ZoneBudget.IsSelected, True);
+                FRunZoneBudget
+                and PhastModel.ModflowPackages.ZoneBudget.IsSelected, True);
             finally
               ChildModel.NameFileWriter.Free;
               ChildModel.NameFileWriter := nil;
@@ -10508,7 +10887,7 @@ begin
   Options := PhastModel.SutraOptions;
   if (Options.StartType = stWarm) then
   begin
-    if not FileExists(Options.RestartFileName) then
+    if not FileExists(Options.FullRestartFileName) then
     begin
       Beep;
       MessageDlg(StrNoRestartFile, mtWarning, [mbOK], 0);
@@ -10520,7 +10899,7 @@ begin
   begin
     if (Options.StartType = stWarm) then
     begin
-      if UpperCase(sdSutraInput.FileName) = UpperCase(Options.RestartFileName) then
+      if UpperCase(sdSutraInput.FileName) = UpperCase(Options.FullRestartFileName) then
       begin
         Beep;
         MessageDlg(StrTheRestartFileUse, mtWarning, [mbOK], 0);
@@ -10528,6 +10907,7 @@ begin
       end;
     end;
 
+    NilDisplay;
     ExportSutra(FRunSutra, sdSutraInput.FileName);
   end;
 end;
@@ -10601,9 +10981,34 @@ begin
 
 end;
 
+procedure TfrmGoPhast.tbDrawElementClick(Sender: TObject);
+begin
+  // Toggle the Checked state of the Sender or it's associated action.
+  SetActionChecked(Sender);
+
+  if not (Sender is TToolButton) then
+  begin
+    tbDrawElement.OnMouseDown(tbDrawElement, mbLeft, [ssLeft], 0, 0);
+  end;
+
+  if tbDrawElement.Down then
+  begin
+    // Make sure all buttons except the current one are up.
+    SetButtonsUp(tbDrawElement);
+    // Set the cursors.
+    SetZB_Cursors(crMoveNode);
+    // don't draw a rectangle around the selected screen objects.
+    CurrentTool := DrawElementTool;
+  end
+  else
+  begin
+    CurrentTool := nil;
+  end;
+  SelectDefaultButton;
+end;
+
 procedure TfrmGoPhast.tbRotateCrossSectionClick(Sender: TObject);
 begin
-  {$IFDEF SUTRA}
   // Toggle the Checked state of the Sender or it's associated action.
   SetActionChecked(Sender);
 
@@ -10635,12 +11040,10 @@ begin
     CurrentTool := nil;
   end;
   SelectDefaultButton;
-  {$ENDIF}
 end;
 
 procedure TfrmGoPhast.tbCrossSectionClick(Sender: TObject);
 begin
-  {$IFDEF SUTRA}
   // Toggle the Checked state of the Sender or it's associated action.
   SetActionChecked(Sender);
 
@@ -10666,7 +11069,6 @@ begin
     CurrentTool := nil;
   end;
   SelectDefaultButton;
-  {$ENDIF}
 end;
 
 procedure TfrmGoPhast.miShowHideBitmapsClick(Sender: TObject);
@@ -10777,6 +11179,9 @@ begin
   end;
 end;
 
+resourcestring
+  StrRegnerateMesh = 'You must first generate the mesh before it can be renumbered.';
+
 procedure TfrmGoPhast.miRenumberMeshClick(Sender: TObject);
 var
   Mesh: TSutraMesh3D;
@@ -10784,27 +11189,57 @@ var
   OldBandWidth: Integer;
   NewBandWidth: Integer;
   Undo: TUndoRenumberMesh;
+  RenumberAlg: TRenumberingAlgorithm;
 begin
   inherited;
   Mesh := PhastModel.SutraMesh;
-//  RenumberMesh(Mesh.Mesh2D);
-  if Mesh.MeshType = mt3D then
+  if (Mesh = nil) or (Mesh.Mesh2D.Nodes.Count = 0) then
   begin
+    Beep;
+    MessageDlg(StrRegnerateMesh, mtWarning, [mbOK], 0);
+    Exit;
+  end;
+//  RenumberMesh(Mesh.Mesh2D);
+//  if Mesh.MeshType = mt3D then
+//  begin
     AForm := TfrmRenumberingMethod.Create(nil);
     try
       AForm.rgMethod.ItemIndex := FRenumberMethod;
       if AForm.ShowModal = mrOK then
       begin
+        NewBandWidth := -1;
         Screen.Cursor := crHourGlass;
         try
           FRenumberMethod := AForm.rgMethod.ItemIndex;
           OldBandWidth := Mesh.Bandwidth;
           Assert(FRenumberMethod in [0,1]);
+          Undo := nil;
           try
-            Undo := TUndoRenumberMesh.Create;
+            RenumberAlg := TRenumberingAlgorithm(
+              AForm.rgRenumberingMethod.ItemIndex);
+
+            Undo := TUndoRenumberMesh.Create(RenumberAlg);
             case FRenumberMethod of
-              0: Mesh.SimpleRenumber;
-              1: RenumberMesh(Mesh);
+              0:
+                begin
+                  case RenumberAlg of
+                    CuthillMcKee: CuthillMcKeeRenumbering.RenumberMesh(Mesh.Mesh2D);
+                    raSloanRandolph: MeshRenumbering.RenumberMesh(Mesh.Mesh2D);
+                  end;
+                  if Mesh.MeshType = mt3D then
+                  begin
+                    Mesh.SimpleRenumber;
+                  end;
+
+                end;
+              1:
+                begin
+                  Assert(Mesh.MeshType = mt3D);
+                  case RenumberAlg of
+                    CuthillMcKee: CuthillMcKeeRenumbering.RenumberMesh(Mesh);
+                    raSloanRandolph: MeshRenumbering.RenumberMesh(Mesh);
+                  end;
+                end
               else Assert(False);
             end;
             Undo.UpdateNumbers;
@@ -10820,13 +11255,16 @@ begin
           frameFrontView.MagnificationChanged := True;
           InvalidateAllViews;
         end;
+
+
+
         MessageDlg(Format(StrTheBandwidthHasCh, [OldBandWidth, NewBandWidth]),
           mtInformation, [mbOK], 0);
       end;
     finally
       AForm.Free;
     end;
-  end;
+//  end;
 end;
 
 procedure TfrmGoPhast.miObservationsClick(Sender: TObject);
@@ -11091,10 +11529,12 @@ begin
 end;
 
 initialization
-  Mf2005Date := EncodeDate(2013,2,22);
+  Mf2005Date := EncodeDate(2013,8,1);
   ModelMateDate := EncodeDate(2012,6,4);
-  MfNwtDate := EncodeDate(2012,5,14);
+  MfNwtDate := EncodeDate(2013,9,26);
   Modpath6Date := EncodeDate(2012,8,28);
+  MfLgr2Date := EncodeDate(2013, 9, 19);
+  MfFmpDate := EncodeDate(2010, 1, 14);
 
   {$IFDEF Win64}
   RegisterExpectedMemoryLeak(GR32_Blend.AlphaTable);

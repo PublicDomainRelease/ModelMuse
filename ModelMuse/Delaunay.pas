@@ -913,10 +913,18 @@ begin
         y1:= DelaunayTriangle[0].y;
         y2:= DelaunayTriangle[1].y;
         y3:= DelaunayTriangle[2].y;
+        if ((x1=x2) and (x1=x3)) or ((y1=y2) and (y1=y3)) then
+        begin
+          NewVertex.x := x2;
+          NewVertex.y := y2;
+        end
+        else
+        begin
         c1:= Sqr(x1)-Sqr(x2)+Sqr(y1)-Sqr(y2);
         c2:= Sqr(x2)-Sqr(x3)+Sqr(y2)-Sqr(y3);
         NewVertex.x:= 0.5*(c1*(y2-y3)-c2*(y1-y2))/((x1-x2)*(y2-y3)-(x2-x3)*(y1-y2));
         NewVertex.y:= 0.5*(c1*(x2-x3)-c2*(x1-x2))/((y1-y2)*(x2-x3)-(y2-y3)*(x1-x2));
+        end;
         NewVertex.SquareOfRadius:= Sqr(x1-NewVertex.x)+Sqr(y1-NewVertex.y);
         NewVertices.Add(NewVertex);
         if NewVertex.x<xmin then xmin:= NewVertex.x;

@@ -43,7 +43,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="vertical-align:top; width:161px;">
-          <para styleclass="Table Header" style="text-align:left;"><image src="Pan.PNG" scale="100.00%" styleclass="Image Caption"><title translate="true">Pan button</title></image><text styleclass="Image Caption" translate="true">&#32;</text><text styleclass="Table Header" translate="true">Pan</text></para>
+          <para styleclass="Table Header" style="text-align:left;"><image src="Pan.PNG" scale="100.00%" styleclass="Image Caption"><title translate="true">Pan button</title></image><anchor id="Pan" styleclass="Image Caption"></anchor><text styleclass="Image Caption" translate="true">&#32;</text><text styleclass="Table Header" translate="true">Pan</text></para>
         </td>
         <td style="vertical-align:top; width:465px;">
           <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Move the displayed area that is shown on the top, front, or side view of the model by clicking with the mouse and dragging while holding the mouse down.</text></para>

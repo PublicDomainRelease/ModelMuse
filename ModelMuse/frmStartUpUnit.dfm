@@ -2,7 +2,7 @@ inherited frmStartUp: TfrmStartUp
   Left = 303
   Top = 276
   Width = 769
-  Height = 413
+  Height = 451
   HelpType = htKeyword
   HelpKeyword = 'Start_Up_Dialog_Box'
   VertScrollBar.Range = 47
@@ -10,18 +10,20 @@ inherited frmStartUp: TfrmStartUp
   Caption = 'GoPhast'
   OnClose = FormClose
   ExplicitWidth = 769
-  ExplicitHeight = 413
+  ExplicitHeight = 451
   PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 321
+    Top = 359
     Width = 751
     Height = 47
     Align = alBottom
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 1
+    ExplicitTop = 366
+    ExplicitWidth = 753
     DesignSize = (
       751
       47)
@@ -80,11 +82,13 @@ inherited frmStartUp: TfrmStartUp
     Left = 0
     Top = 0
     Width = 751
-    Height = 321
-    ActivePage = tabInitialSutraMesh
+    Height = 359
+    ActivePage = tabModelChoice
     Align = alClient
     TabOrder = 0
     OnChange = pcStartupChange
+    ExplicitWidth = 753
+    ExplicitHeight = 366
     object tabModelChoice: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'Start_Up_Dialog_Box'
@@ -96,8 +100,8 @@ inherited frmStartUp: TfrmStartUp
       object rgChoice: TRadioGroup
         Left = 0
         Top = 0
-        Width = 743
-        Height = 288
+        Width = 745
+        Height = 333
         HelpType = htKeyword
         HelpKeyword = 'Start_Up_Dialog_Box'
         Align = alClient
@@ -108,7 +112,7 @@ inherited frmStartUp: TfrmStartUp
           'Create new PHAST model'
           'Create new SUTRA model'
           'Open an existing ModelMuse project'
-          'Import MODFLOW-2005 model')
+          'Import MODFLOW-2005 or MODFLOW-NWT model')
         TabOrder = 0
       end
     end
@@ -121,7 +125,7 @@ inherited frmStartUp: TfrmStartUp
         Left = 0
         Top = 0
         Width = 743
-        Height = 288
+        Height = 326
         Align = alClient
         Caption = 'Specify initial grid (optional)'
         TabOrder = 0
@@ -313,10 +317,12 @@ inherited frmStartUp: TfrmStartUp
         Left = 0
         Top = 0
         Width = 743
-        Height = 288
+        Height = 326
         Align = alClient
         Caption = 'Specify initial grid (optional)'
         TabOrder = 0
+        ExplicitWidth = 745
+        ExplicitHeight = 333
         object Label8: TLabel
           Left = 344
           Top = 68
@@ -425,7 +431,7 @@ inherited frmStartUp: TfrmStartUp
           Left = 455
           Top = 20
           Width = 286
-          Height = 266
+          Height = 304
           Align = alRight
           Anchors = [akLeft, akTop, akRight, akBottom]
           ColCount = 2
@@ -441,7 +447,6 @@ inherited frmStartUp: TfrmStartUp
           SelectedRowOrColumnColor = clAqua
           UnselectableColor = clBtnFace
           ColorRangeSelection = False
-          ColorSelectedRow = True
           Columns = <
             item
               AutoAdjustRowHeights = True
@@ -488,6 +493,8 @@ inherited frmStartUp: TfrmStartUp
               AutoAdjustColWidths = True
             end>
           OnEndUpdate = rdgInitialLayersEndUpdate
+          ExplicitLeft = 457
+          ExplicitHeight = 311
         end
       end
     end
@@ -500,7 +507,7 @@ inherited frmStartUp: TfrmStartUp
       ExplicitHeight = 0
       DesignSize = (
         743
-        288)
+        326)
       object lblLayerGroups: TLabel
         Left = 464
         Top = 8
@@ -510,10 +517,17 @@ inherited frmStartUp: TfrmStartUp
       end
       object lblModelPosition: TLabel
         Left = 6
-        Top = 107
+        Top = 179
         Width = 102
         Height = 18
         Caption = 'Model position'
+      end
+      object lblMinimumThickness: TLabel
+        Left = 6
+        Top = 101
+        Width = 132
+        Height = 18
+        Caption = 'Minimum thickness'
       end
       object rgMeshType: TRadioGroup
         Left = 6
@@ -533,19 +547,19 @@ inherited frmStartUp: TfrmStartUp
         Left = 464
         Top = 29
         Width = 269
-        Height = 256
+        Height = 294
         Anchors = [akLeft, akTop, akRight, akBottom]
         Enabled = False
         TabOrder = 2
         ExplicitLeft = 464
         ExplicitTop = 29
         ExplicitWidth = 269
-        ExplicitHeight = 256
+        ExplicitHeight = 294
         inherited Panel: TPanel
-          Top = 191
+          Top = 229
           Width = 269
           Height = 65
-          ExplicitTop = 191
+          ExplicitTop = 229
           ExplicitWidth = 269
           ExplicitHeight = 65
           inherited lbNumber: TLabel
@@ -585,7 +599,7 @@ inherited frmStartUp: TfrmStartUp
         end
         inherited Grid: TRbwDataGrid4
           Width = 269
-          Height = 191
+          Height = 229
           ColCount = 2
           RowCount = 5
           OnSelectCell = frameModelLayersGridSelectCell
@@ -636,7 +650,7 @@ inherited frmStartUp: TfrmStartUp
             end>
           OnEndUpdate = frameModelLayersGridEndUpdate
           ExplicitWidth = 269
-          ExplicitHeight = 191
+          ExplicitHeight = 229
         end
       end
       object rgTransport: TRadioGroup
@@ -645,23 +659,24 @@ inherited frmStartUp: TfrmStartUp
         Width = 230
         Height = 87
         Caption = 'Transport (SIMULA)'
-        ItemIndex = 0
+        ItemIndex = 1
         Items.Strings = (
           'Solute using pressure'
           'Solute using head'
           'Energy')
         TabOrder = 1
+        OnClick = rgTransportClick
       end
       object rdgLocation: TRbwDataGrid4
         Left = 6
-        Top = 128
+        Top = 203
         Width = 320
-        Height = 157
+        Height = 117
         ColCount = 3
         FixedCols = 1
         RowCount = 3
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
-        TabOrder = 3
+        TabOrder = 4
         ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = True
@@ -669,6 +684,7 @@ inherited frmStartUp: TfrmStartUp
         AutoIncreaseRowCount = False
         SelectedRowOrColumnColor = clAqua
         UnselectableColor = clBtnFace
+        OnBeforeDrawCell = rdgLocationBeforeDrawCell
         ColorRangeSelection = False
         ColorSelectedRow = False
         Columns = <
@@ -738,6 +754,32 @@ inherited frmStartUp: TfrmStartUp
             CaseSensitivePicklist = False
             AutoAdjustColWidths = False
           end>
+      end
+      object rdeMinimumThickness: TRbwDataEntry
+        Left = 6
+        Top = 125
+        Width = 100
+        Height = 22
+        TabOrder = 3
+        Text = '1e-3'
+        DataType = dtReal
+        Max = 1.000000000000000000
+        CheckMin = True
+        ChangeDisabledColor = True
+      end
+      object rgSaturation: TRadioGroup
+        Left = 216
+        Top = 101
+        Width = 230
+        Height = 96
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Flow conditions (CUNSAT)'
+        Enabled = False
+        ItemIndex = 0
+        Items.Strings = (
+          'Saturated'
+          'Unsaturated')
+        TabOrder = 5
       end
     end
   end

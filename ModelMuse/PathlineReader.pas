@@ -50,6 +50,7 @@ type
     FShowChoice: TShowChoice;
     FTimeLimits: TShowFloatLimit;
     FParticleGroupLimits: TShowIntegerLimit;
+    FLineNumberLimits: TShowIntegerLimit;
     procedure SetLimitToCurrentIn2D(const Value: boolean);
     procedure SetColumnLimits(const Value: TShowIntegerLimit);
     procedure SetLayerLimits(const Value: TShowIntegerLimit);
@@ -57,6 +58,7 @@ type
     procedure SetShowChoice(const Value: TShowChoice);
     procedure SetTimeLimits(const Value: TShowFloatLimit);
     procedure SetParticleGroupLimits(const Value: TShowIntegerLimit);
+    procedure SetLineNumberLimits(const Value: TShowIntegerLimit);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create;
@@ -73,6 +75,8 @@ type
     property TimeLimits: TShowFloatLimit read FTimeLimits write SetTimeLimits;
     property ParticleGroupLimits: TShowIntegerLimit read FParticleGroupLimits
       write SetParticleGroupLimits;
+    property LineNumberLimits: TShowIntegerLimit read FLineNumberLimits
+      write SetLineNumberLimits;
   end;
 
   TColorLimitChoice = (clcNone, clcTime, clcXPrime, clcYPrime, clcZ, clcGroup);
@@ -115,6 +119,7 @@ type
     FColumn: integer;
     FXPrime: double;
     FYPrime: double;
+    FHasV6Data: Boolean;
     function GetAbsoluteTime: double;
   protected
     function CheckLimits(Limits: TPathLineDisplayLimits): boolean; virtual;
@@ -141,6 +146,9 @@ type
     property Row: integer read FRow write FRow;
     property Column: integer read FColumn write FColumn;
     property TimeStep: integer read FTimeStep write FTimeStep;
+    // @name indicates whether the particle has information about
+    // GridIndex, LocalX, and LocalY.
+    property HasV6Data: Boolean read FHasV6Data write FHasV6Data;
   end;
 
   TPathLinePointV6 = class(TPathLinePoint)
@@ -148,6 +156,9 @@ type
     FTimePointIndex: integer;
     FLineSegmentIndex: Integer;
     FParticleGroup: integer;
+    FGridIndex: Integer;
+    FLocalX: double;
+    FLocalY: double;
   protected
     function CheckLimits(Limits: TPathLineDisplayLimits): boolean; override;
   public
@@ -156,6 +167,10 @@ type
     property ParticleGroup: integer read FParticleGroup write FParticleGroup;
     property TimePointIndex: integer read FTimePointIndex write FTimePointIndex;
     property LineSegmentIndex: Integer read FLineSegmentIndex write FLineSegmentIndex;
+    property GridIndex: Integer read FGridIndex write FGridIndex;
+    property LocalX: double read FLocalX write FLocalX;
+    property LocalY: double read FLocalY write FLocalY;
+
   end;
 
   TCustomPathLinePoints = class(TCollection)
@@ -309,6 +324,7 @@ type
     procedure ReadFileV6;
     procedure SetMaxParticleGroup(const Value: integer);
     procedure SetMinParticleGroup(const Value: integer);
+    function GetMaxLineNumber: integer;
   protected
     class property PathlineGLIndex: TGLuint read GetPathlineGLIndex;
   public
@@ -323,6 +339,7 @@ type
     property FrontQuadTree: TRbwQuadTree read FFrontQuadTree;
     property SideQuadTree: TRbwQuadTree read FSideQuadTree;
     procedure ExportShapefile(FileName: string);
+    property MaxLineNumber: integer read GetMaxLineNumber;
   published
     property Lines: TPathLines read FLinesV5 write SetLinesV5;
     property LinesV6: TPathLinesV6 read FLinesV6 write SetLinesV6;
@@ -702,7 +719,8 @@ type
     property RowLimits: TShowIntegerLimit read FRowLimits write SetRowLimits;
     property LayerLimits: TShowIntegerLimit read FLayerLimits
       write SetLayerLimits;
-    property ParticleGroupLimits: TShowIntegerLimit read FParticleGroupLimits write SetParticleGroupLimits;
+    property ParticleGroupLimits: TShowIntegerLimit read FParticleGroupLimits
+      write SetParticleGroupLimits;
   end;
 
   TTimeSeriesPoint = class(TCollectionItem)
@@ -1250,6 +1268,7 @@ begin
         DrawLines(Orientation,BitMap,LinesV6);
       end;
     else
+      Assert(False);
   end;
 end;
 
@@ -1265,6 +1284,7 @@ begin
         DrawLines3D(LinesV6);
       end;
     else
+      Assert(False);
   end;
 end;
 function TPathLineReader.CheckShowLine(Line: TCustomPathLine): Boolean;
@@ -1288,6 +1308,23 @@ begin
       end;
   else
     Assert(False);
+  end;
+end;
+
+function TPathLineReader.GetMaxLineNumber: integer;
+begin
+  result := -1;
+  case ModpathVersion of
+    pv5:
+      begin
+        result := Lines.count;
+      end;
+    pv6_0:
+      begin
+        result := LinesV6.count;
+      end;
+    else
+      Assert(False);
   end;
 end;
 
@@ -1435,6 +1472,7 @@ begin
         ReadFileV6;
       end;
     else
+      Assert(False);
   end;
 end;
 
@@ -1686,6 +1724,8 @@ begin
 end;
 
 function TPathLinePoint.CheckLimits(Limits: TPathLineDisplayLimits): boolean;
+var
+  LineNumber: Integer;
 begin
   result := True;
   if Limits.ColumnLimits.UseLimit then
@@ -1710,6 +1750,13 @@ begin
   begin
     result := (Limits.TimeLimits.StartLimit <= AbsoluteTime)
       and (AbsoluteTime <= Limits.TimeLimits.EndLimit);
+    if not result then Exit;
+  end;
+  if Limits.LineNumberLimits.UseLimit then
+  begin
+    LineNumber := ParentLine.Index+1;
+    result := (Limits.LineNumberLimits.StartLimit <= LineNumber)
+      and (LineNumber <= Limits.LineNumberLimits.EndLimit);
     if not result then Exit;
   end;
 end;
@@ -1753,7 +1800,71 @@ begin
     result := ColRowOrLayerToCheck = CurrentColRowOrLayer;
     if not result then
     begin
-      Exit;
+      if Abs(ColRowOrLayerToCheck - CurrentColRowOrLayer) = 1 then
+      begin
+        case Orientation of
+          dsoTop:
+            begin
+              if CurrentColRowOrLayer < ColRowOrLayerToCheck then
+              begin
+                if LocalZ = 1 then
+                begin
+                  Result := True;
+                end;
+              end
+              else
+              begin
+                if LocalZ = 0 then
+                begin
+                  Result := True;
+                end;
+              end;
+            end;
+          dsoFront:
+            begin
+              if not HasV6Data then
+              begin
+                Exit;
+              end;
+              if CurrentColRowOrLayer < ColRowOrLayerToCheck then
+              begin
+                if (Self as TPathLinePointV6).LocalY = 1 then
+                begin
+                  Result := True;
+                end;
+              end
+              else
+              begin
+                if (Self as TPathLinePointV6).LocalY = 0 then
+                begin
+                  Result := True;
+                end;
+              end;
+            end;
+          dsoSide:
+            begin
+              if not HasV6Data then
+              begin
+                Exit;
+              end;
+              if CurrentColRowOrLayer < ColRowOrLayerToCheck then
+              begin
+                if (Self as TPathLinePointV6).LocalX = 1 then
+                begin
+                  Result := True;
+                end;
+              end
+              else
+              begin
+                if (Self as TPathLinePointV6).LocalX = 0 then
+                begin
+                  Result := True;
+                end;
+              end;
+            end;
+        else Assert(False);
+        end;
+      end;
     end;
   end;
   case Limits.ShowChoice of
@@ -1978,6 +2089,7 @@ begin
     LayerLimits := SourceLimits.LayerLimits;
     TimeLimits := SourceLimits.TimeLimits;
     ParticleGroupLimits := SourceLimits.ParticleGroupLimits;
+    LineNumberLimits := SourceLimits.LineNumberLimits;
   end
   else
   begin
@@ -1993,11 +2105,13 @@ begin
   FColumnLimits := TShowIntegerLimit.Create;
   FTimeLimits := TShowFloatLimit.Create;
   FParticleGroupLimits := TShowIntegerLimit.Create;
+  FLineNumberLimits := TShowIntegerLimit.Create;
   FLimitToCurrentIn2D := True;
 end;
 
 destructor TPathLineDisplayLimits.Destroy;
 begin
+  FLineNumberLimits.Free;
   FParticleGroupLimits.Free;
   FTimeLimits.Free;
   FColumnLimits.Free;
@@ -2019,6 +2133,12 @@ end;
 procedure TPathLineDisplayLimits.SetLimitToCurrentIn2D(const Value: boolean);
 begin
   FLimitToCurrentIn2D := Value;
+end;
+
+procedure TPathLineDisplayLimits.SetLineNumberLimits(
+  const Value: TShowIntegerLimit);
+begin
+  FLineNumberLimits.Assign(Value);
 end;
 
 procedure TPathLineDisplayLimits.SetParticleGroupLimits(
@@ -2601,6 +2721,9 @@ end;
 
 procedure TEndPointReader.Draw(Orientation: TDataSetOrientation;
   const BitMap: TBitmap32);
+const
+  MaxCoord = MaxInt-1;
+  MinCoord = -MaxCoord;
 var
   EndPointIndex: Integer;
   EndPoint: TEndPoint;
@@ -2770,19 +2893,25 @@ begin
             end;
           end;
       end;
-      AColor := GetPointColor(MaxValue, MinValue, EndPoint);
-      AColor32 := Color32(AColor);
-      try
-        ARect.Top := ADisplayPoint.Y -2;
-        ARect.Bottom := ADisplayPoint.Y +2;
-        ARect.Left := ADisplayPoint.X -2;
-        ARect.Right := ADisplayPoint.X +2;
-      except on EIntOverflow do
-        begin
-          Continue;
+      if (ADisplayPoint.X <= MaxCoord)
+        and (ADisplayPoint.X >= MinCoord)
+        and (ADisplayPoint.Y <= MaxCoord)
+        and (ADisplayPoint.Y >= MinCoord) then
+      begin
+        AColor := GetPointColor(MaxValue, MinValue, EndPoint);
+        AColor32 := Color32(AColor);
+        try
+          ARect.Top := ADisplayPoint.Y -2;
+          ARect.Bottom := ADisplayPoint.Y +2;
+          ARect.Left := ADisplayPoint.X -2;
+          ARect.Right := ADisplayPoint.X +2;
+        except on EIntOverflow do
+          begin
+            Continue;
+          end;
         end;
+        DrawBigRectangle32(BitMap, AColor32, AColor32, 1, ARect);
       end;
-      DrawBigRectangle32(BitMap, AColor32, AColor32, 1, ARect);
     end;
   end;
 end;
@@ -3985,6 +4114,9 @@ end;
 
 procedure TTimeSeriesReader.Draw(Orientation: TDataSetOrientation;
   const BitMap: TBitmap32);
+const
+  MaxCoord = MaxInt -2;
+  MinCoord = -MaxCoord;
 var
   TimeSeriesIndex: Integer;
   TimeSeries: TCustomTimeSeries;
@@ -4087,13 +4219,19 @@ begin
               end;
             else Assert(False);
           end;
-          AColor := GetPointColor(MaxValue, MinValue, APoint);
-          AColor32 := Color32(AColor);
-          ARect.Top := ADisplayPoint.Y -2;
-          ARect.Bottom := ADisplayPoint.Y +2;
-          ARect.Left := ADisplayPoint.X -2;
-          ARect.Right := ADisplayPoint.X +2;
-          DrawBigRectangle32(BitMap, AColor32, AColor32, 1, ARect);
+          if (ADisplayPoint.X <= MaxCoord)
+            and (ADisplayPoint.X >= MinCoord)
+            and (ADisplayPoint.Y <= MaxCoord)
+            and (ADisplayPoint.Y >= MinCoord) then
+          begin
+            AColor := GetPointColor(MaxValue, MinValue, APoint);
+            AColor32 := Color32(AColor);
+            ARect.Top := ADisplayPoint.Y -2;
+            ARect.Bottom := ADisplayPoint.Y +2;
+            ARect.Left := ADisplayPoint.X -2;
+            ARect.Right := ADisplayPoint.X +2;
+            DrawBigRectangle32(BitMap, AColor32, AColor32, 1, ARect);
+          end;
         end;
       end;
     end;
@@ -5681,6 +5819,9 @@ end;
 
 procedure TPathLineReader.DrawLines(Orientation: TDataSetOrientation;
   const BitMap: TBitmap32; LocalLines: TCustomPathLines);
+const
+  MaxCoord = MaxInt -2;
+  MinCoord = -MaxCoord;
 var
   LineIndex: Integer;
   Line: TCustomPathLine;
@@ -5817,13 +5958,20 @@ begin
             end;
             if Line.Points.Count = 1 then
             begin
-              AColor := GetPointColor(MaxValue, MinValue, APoint);
-              AColor32 := Color32(AColor);
-              ARect.Top := ADisplayPoint.Y -2;
-              ARect.Bottom := ADisplayPoint.Y +2;
-              ARect.Left := ADisplayPoint.X -2;
-              ARect.Right := ADisplayPoint.X +2;
-              DrawBigRectangle32(BitMap, AColor32, AColor32, 1, ARect);
+
+              if (ADisplayPoint.X <= MaxCoord)
+                and (ADisplayPoint.X >= MinCoord)
+                and (ADisplayPoint.Y <= MaxCoord)
+                and (ADisplayPoint.Y >= MinCoord) then
+              begin
+                AColor := GetPointColor(MaxValue, MinValue, APoint);
+                AColor32 := Color32(AColor);
+                ARect.Top := ADisplayPoint.Y -2;
+                ARect.Bottom := ADisplayPoint.Y +2;
+                ARect.Left := ADisplayPoint.X -2;
+                ARect.Right := ADisplayPoint.X +2;
+                DrawBigRectangle32(BitMap, AColor32, AColor32, 1, ARect);
+              end;
             end
             else
             begin
@@ -5971,6 +6119,10 @@ var
     APoint.ParticleGroup := ParticleGroup;
     APoint.TimePointIndex := TimePointIndex;
     APoint.LineSegmentIndex := LineSegmentIndex;
+    APoint.HasV6Data := True;
+    APoint.GridIndex := GridIndex;
+    APoint.LocalX := LocalX;
+    APoint.LocalY := LocalY;
 
     Assert(APoint.FLayer >= 1);
     Assert(APoint.FRow >= 1);
@@ -6258,6 +6410,11 @@ begin
     ParticleGroup := SourcePoint.ParticleGroup;
     TimePointIndex := SourcePoint.TimePointIndex;
     LineSegmentIndex := SourcePoint.LineSegmentIndex;
+
+    HasV6Data := SourcePoint.HasV6Data;
+    GridIndex := SourcePoint.GridIndex;
+    LocalX := SourcePoint.LocalX;
+    LocalY := SourcePoint.LocalY;
   end;
   inherited;
 

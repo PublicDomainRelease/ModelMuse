@@ -31,7 +31,9 @@ uses Windows, Types, GuiSettingsUnit, SysUtils, Classes, Contnrs, Controls,
   Generics.Defaults, Mt3dmsTimesUnit, Mt3dmsChemSpeciesUnit,
   Mt3dmsFluxObservationsUnit, SutraMeshUnit, HashTableFacadeUnit,
   SutraOptionsUnit, SutraTimeScheduleUnit, frmSutraOutputControlUnit,
-  SutraOutputControlUnit, SutraBoundariesUnit, FishnetMeshGenerator;
+  SutraOutputControlUnit, SutraBoundariesUnit, FishnetMeshGenerator,
+  VectorDisplayUnit, ModflowFmpCropUnit, ModflowFmpSoilUnit,
+  ModflowFmpClimateUnit;
 
 const
   kHufThickness = '_Thickness';
@@ -191,6 +193,8 @@ const
   KInitialPressure = 'InitialPressure';
   KInitialConcentration = 'InitialConcentration';
   KInitialTemperature = 'InitialTemperature';
+  KFarmID = 'Farm_ID';
+  KSoilID = 'Soil_ID';
 
 
   // @name is the name of the @link(TDataArray) that specifies
@@ -333,11 +337,26 @@ const
     'SFR Downstream Brooks Corey Exponent';
   StrModflowSfrUpstreamMaxUnsaturatedKz = 'SFR Upstream Max Unsaturated Kz';
   StrModflowSfrDownstreamMaxUnsaturatedKz = 'SFR Downstream Max Unsaturated Kz';
+
+  StrModflowStrSegment = 'STR Segment';
+  StrModflowStrDownstreamSegment = 'STR Outflow Segment';
+  StrModflowStrDiversionSegment = 'STR Diversion Segment';
+  StrModflowStrReach = 'STR Reach';
+  StrSTRStreamTopElev = 'STR Streambed Top Elevation';
+  StrSTRStreamBottomElev = 'STR Streambed Bottom Elevation';
+  StrSTRStreamStage = 'STR Stream Head';
+  StrSTRStreamConductance = 'STR Streambed Conductance';
+  StrSTRStreamFlow = 'STR Flow into Upstream End';
+  StrSTRStreamWidth = 'STR Width';
+  StrSTRStreamSlope = 'STR Slope';
+  StrSTRStreamRoughness = 'STR Roughness';
+
   StrUzfInfiltrationRate = 'UZF Infiltration Rate';
   StrUzfExtinctionDepth = 'UZF Extinction Depth';
   StrUzfWaterContent = 'UZF Water Content';
   StrUzfEtDemand = 'UZF ET Demand';
   StrMODFLOWHeadObservations = 'Head Observations';
+
   StrWellRadius = 'Well Radius';
   StrSkinRadius = 'Skin Radius';
   StrSkinK = 'Skin K';
@@ -355,6 +374,8 @@ const
 
 resourcestring
   strUzfClassification = 'UZF';
+  StrUzfFmpClassifiation = 'UZF and FMP2';
+  StrFmp2Classifiation = 'FMP2';
   StrHydrology = 'Hydrology';
   StrChemistry = 'Chemistry';
   StrOutput = 'Output';
@@ -377,6 +398,10 @@ resourcestring
   StrMassFlux = 'Mass Flux';
   StrEnergyFlux = 'Energy Flux';
   StrNoStressPeriods = 'No stress periods have been defined for MT3DMS.';
+  StrMODFLOWFHBHeads = 'FHB Heads';
+  StrMODFLOWFHBFlows = 'FHB Flows';
+  StrFarmID = 'Farm_ID';
+  StrSoilID = 'Soil_ID';
 const
   WettableLayers = [1,3];
 
@@ -604,6 +629,8 @@ type
     FMt3dmsLocation: string;
     FModPathLocationV6: string;
     FSutra22Location: string;
+    FModflowLgr2Location: string;
+    FModflowFmpLocation: string;
     function GetTextEditorLocation: string;
     procedure SetModflowLocation(const Value: string);
     function RemoveQuotes(const Value: string): string;
@@ -617,6 +644,8 @@ type
     procedure SetMt3dmsLocation(const Value: string);
     procedure SetModPathLocationV6(const Value: string);
     procedure SetSutra22Location(const Value: string);
+    procedure SetModflowLgr2Location(const Value: string);
+    procedure SetModflowFmpLocation(const Value: string);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create;
@@ -640,8 +669,12 @@ type
       write SetModelMateLocation;
     property ModflowLgrLocation: string read FModflowLgrLocation
       write SetModflowLgrLocation;
+    property ModflowLgr2Location: string read FModflowLgr2Location
+      write SetModflowLgr2Location;
     property ModflowNwtLocation: string read FModflowNwtLocation
       write SetModflowNwtLocation;
+    property ModflowFmpLocation: string read FModflowFmpLocation
+      write SetModflowFmpLocation;
     property Mt3dmsLocation: string read FMt3dmsLocation
       write SetMt3dmsLocation;
     property Sutra22Location: string read FSutra22Location
@@ -1508,6 +1541,10 @@ by a ScreenObject.  Any special dialog box that has a preserved state
 that affects the model output should also have a comment. }
   TCustomModel = class;
 
+  {
+    @name manages the creation of @link(TDataArray)s. The @link(TDataArray)s
+    are defined in @link(DefinePackageDataArrays).
+  }
   TDataArrayManager = class(TObject)
   private
     FCustomModel: TCustomModel;
@@ -1661,7 +1698,6 @@ that affects the model output should also have a comment. }
     FrpTopFormulaCompiler: TRbwParser;
     FrpTopFormulaCompilerNodes: TRbwParser;
     FParsers: TList;
-    FGlobalVariables: TGlobalVariables;
     FThreeDGridObserver: TObserver;
     FTopGridObserver: TObserver;
     FEdgeDisplay: TCustomModflowGridEdgeDisplay;
@@ -1781,17 +1817,19 @@ that affects the model output should also have a comment. }
     FMt3dmsEvtMassFluxObservations: TMt3dmsFluxObservationGroups;
     FMt3dmsDrnMassFluxObservations: TMt3dmsFluxObservationGroups;
     FMt3dmsLakMassFluxObservations: TMt3dmsFluxObservationGroups;
+    FMt3dmsStrMassFluxObservations: TMt3dmsFluxObservationGroups;
+    FMt3dmsFhbHeadMassFluxObservations: TMt3dmsFluxObservationGroups;
+    FMt3dmsFhbFlowMassFluxObservations: TMt3dmsFluxObservationGroups;
     FSutraMesh: TSutraMesh3D;
     FSutraOptions: TSutraOptions;
     FSutraOutputControl: TSutraOutputControl;
-    {$IFDEF SUTRA}
+    FStrObservations: TFluxObservationGroups;
     FSutraSpecPressureTimeList: TSutraMergedTimeList;
     FSutraSpecPresUTimeList: TSutraMergedTimeList;
     FSutraConcTempTimeList: TSutraMergedTimeList;
     FSutraFluidFluxTimeList: TSutraMergedTimeList;
     FSutraFluidFluxUTimeList: TSutraMergedTimeList;
     FSutraMassEnergyFluxTimeList: TSutraMergedTimeList;
-    {$ENDIF}
     procedure SetAlternateFlowPackage(const Value: boolean);
     procedure SetAlternateSolver(const Value: boolean);
     procedure SetBatchFileAdditionsAfterModel(const Value: TStrings);
@@ -1811,7 +1849,7 @@ that affects the model output should also have a comment. }
 
     procedure ClearParsers;
     function GetParsers(Index: integer): TRbwParser;
-    procedure SetGlobalVariables(const Value: TGlobalVariables);
+    procedure SetGlobalVariables(const Value: TGlobalVariables); virtual; abstract;
     procedure SetEdgeDisplay(const Value: TCustomModflowGridEdgeDisplay);
     procedure AllObserversStopTalking;
     procedure FreeHufNotifiers;
@@ -1933,6 +1971,18 @@ that affects the model output should also have a comment. }
     function SutraPermeabilityUsed(Sender: TObject): boolean;
     function SutraMiddlePermeabilityUsed(Sender: TObject): boolean;
     function SutraMiddleHydraulicConductivityUsed(Sender: TObject): boolean;
+    function GetGlobalVariables: TGlobalVariables; virtual; abstract;
+    procedure SetStrObservations(const Value: TFluxObservationGroups);
+    function StoreStrObservations: Boolean;
+    procedure SetMt3dmsStrMassFluxObservations(
+      const Value: TMt3dmsFluxObservationGroups);
+    function StoreStrMassFluxObservations: Boolean;
+    procedure SetMt3dmsFhbHeadMassFluxObservations(
+      const Value: TMt3dmsFluxObservationGroups);
+    function StoreFhbHeadMassFluxObservations: Boolean;
+    procedure SetMt3dmsFhbFlowMassFluxObservations(
+      const Value: TMt3dmsFluxObservationGroups);
+    function StoreFhbFlowMassFluxObservations: Boolean;
   protected
     procedure GenerateIrregularMesh(var ErrorMessage: string);
     procedure GenerateFishNetMesh(var ErrorMessage: string); virtual;
@@ -1983,6 +2033,8 @@ that affects the model output should also have a comment. }
   protected
     function GetSfrStreamLinkPlot: TSfrStreamLinkPlot; virtual; abstract;
     procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot); virtual; abstract;
+    function GetStrStreamLinkPlot: TSfrStreamLinkPlot; virtual; abstract;
+    procedure SetStrStreamLinkPlot(const Value: TSfrStreamLinkPlot); virtual; abstract;
     procedure SetFileName(const Value: string); virtual;
     procedure SetFrontTimeList(const Value: TCustomTimeList); virtual;
     procedure SetSideTimeList(const Value: TCustomTimeList); virtual;
@@ -2043,6 +2095,8 @@ that affects the model output should also have a comment. }
       virtual; abstract;
   public
     procedure DrawSfrStreamLinkages(const BitMap: TBitmap32;
+      const ZoomBox: TQRbwZoomBox2);
+    procedure DrawStrStreamLinkages(const BitMap: TBitmap32;
       const ZoomBox: TQRbwZoomBox2);
     procedure RenameDataArray(DataArray: TDataArray;
       const NewName, NewDisplayName: string);
@@ -2160,8 +2214,10 @@ that affects the model output should also have a comment. }
     property Parsers[Index: integer]: TRbwParser read GetParsers;
     procedure ClearExpressionsAndVariables;
     procedure FillCompilerList(CompilerList: TList);
+{
     procedure RefreshGlobalVariables(CompilerList: TList);
     procedure CreateGlobalVariables;
+}
     // @name creates a TCustomVariable to represent DataSet in each TRbwParser
     // that should have one.
     // @seealso(RemoveVariables)
@@ -2170,7 +2226,6 @@ that affects the model output should also have a comment. }
     // expression.
     // @seealso(CreateVariables).
     procedure RemoveVariables(const DataSet: TDataArray);
-
     property ThreeDGridObserver: TObserver read GetThreeDGridObserver;
     property TopGridObserver: TObserver read FTopGridObserver;
     property HufKxNotifier: TObserver read FHufKxNotifier;
@@ -2204,6 +2259,8 @@ that affects the model output should also have a comment. }
     function ReservoirPackageUsed(Sender: TObject): boolean; virtual;
     function LakePackageUsed(Sender: TObject): boolean; virtual;
     function UzfPackageUsed(Sender: TObject): boolean; virtual;
+    function FarmProcessUsed(Sender: TObject): boolean; virtual;
+    function GroundSurfaceUsed(Sender: TObject): boolean; virtual;
     function UzfUnsatVertKUsed(Sender: TObject): boolean; virtual;
     function UzfInitialInfiltrationUsed(Sender: TObject): boolean; virtual;
     function UzfResidualWaterContentUsed(Sender: TObject): boolean; virtual;
@@ -2452,6 +2509,31 @@ that affects the model output should also have a comment. }
     procedure InvalidateMfUzfExtinctionDepth(Sender: TObject);
     procedure InvalidateMfUzfWaterContent(Sender: TObject);
     procedure InvalidateMt3dmsChemSources(Sender: TObject);
+
+    procedure InvalidateMfStrConductance(Sender: TObject);
+    procedure InvalidateMfStrStage(Sender: TObject);
+    procedure InvalidateMfStrBedTop(Sender: TObject);
+    procedure InvalidateMfStrBedBottom(Sender: TObject);
+    procedure InvalidateMfStrFlow(Sender: TObject);
+    procedure InvalidateMfStrWidth(Sender: TObject);
+    procedure InvalidateMfStrSlope(Sender: TObject);
+    procedure InvalidateMfStrRoughness(Sender: TObject);
+    procedure InvalidateMfStrSegmentNumber(Sender: TObject);
+    procedure InvalidateMfStrOutflowSegmentNumber(Sender: TObject);
+    procedure InvalidateMfStrDiversionSegmentNumber(Sender: TObject);
+    procedure InvalidateMfStrReachNumber(Sender: TObject);
+
+    procedure InvalidateMfFhbHeads(Sender: TObject);
+    procedure InvalidateMfFhbFlows(Sender: TObject);
+
+    procedure InvalidateMfFmpMaxPumpingRate(Sender: TObject);
+    procedure InvalidateMfFmpPumpOnlyIfCropRequiresWater(Sender: TObject);
+    procedure InvalidateMfFmpPrecip(Sender: TObject);
+    procedure InvalidateMfFmpEvap(Sender: TObject);
+    procedure InvalidateMfFmpCropID(Sender: TObject);
+    procedure InvalidateMfFmpWellFarmID(Sender: TObject);
+
+
     property NameFileWriter: TObject read FNameFileWriter write SetNameFileWriter;
     function ModflowLayerCount: integer; virtual;
     function ModflowConfiningBedCount: integer; virtual;
@@ -2515,6 +2597,8 @@ that affects the model output should also have a comment. }
     function TwoDElementCorner(const Column, Row: integer): TPoint2D;
     property SfrStreamLinkPlot: TSfrStreamLinkPlot read GetSfrStreamLinkPlot
       write SetSfrStreamLinkPlot;
+    property StrStreamLinkPlot: TSfrStreamLinkPlot read GetStrStreamLinkPlot
+      write SetStrStreamLinkPlot;
     procedure InvalidateSutraSpecPressure(Sender: TObject);
     procedure InvalidateSutraSpecPressureU(Sender: TObject);
     procedure InvalidateSutraFluidFlux(Sender: TObject);
@@ -2523,6 +2607,7 @@ that affects the model output should also have a comment. }
     procedure InvalidateSutraUFlux(Sender: TObject);
     procedure UpdateSutraTimeListNames;
     property SP_Epsilon: double read F_SP_Epsilon;
+    function RelativeFileName(const FullFileName: string): string;
   published
     // @name defines the grid used with PHAST.
     property PhastGrid: TPhastGrid read FPhastGrid write SetPhastGrid;
@@ -2552,6 +2637,10 @@ that affects the model output should also have a comment. }
     property RiverObservations: TFluxObservationGroups
       read FRiverObservations write SetRiverObservations
       stored StoreRiverObservations;
+    property StreamObservations: TFluxObservationGroups
+      read FStrObservations write SetStrObservations
+      stored StoreStrObservations;
+
     property Mt3dmsHeadMassFluxObservations: TMt3dmsFluxObservationGroups
       read FMt3dmsHeadMassFluxObservations write SetMt3dmsHeadMassFluxObservations
       stored StoreHeadMassFluxObservations;
@@ -2600,6 +2689,18 @@ that affects the model output should also have a comment. }
       read FMt3dmsEtsMassFluxObservations write SetMt3dmsEtsMassFluxObservations
       stored StoreEtsMassFluxObservations;
 
+    property Mt3dmsStrMassFluxObservations: TMt3dmsFluxObservationGroups
+      read FMt3dmsStrMassFluxObservations write SetMt3dmsStrMassFluxObservations
+      stored StoreStrMassFluxObservations;
+
+    property Mt3dmsFhbHeadMassFluxObservations: TMt3dmsFluxObservationGroups
+      read FMt3dmsFhbHeadMassFluxObservations write SetMt3dmsFhbHeadMassFluxObservations
+      stored StoreFhbHeadMassFluxObservations;
+
+    property Mt3dmsFhbFlowMassFluxObservations: TMt3dmsFluxObservationGroups
+      read FMt3dmsFhbFlowMassFluxObservations write SetMt3dmsFhbFlowMassFluxObservations
+      stored StoreFhbFlowMassFluxObservations;
+
     property HydrogeologicUnits: THydrogeologicUnits read FHydrogeologicUnits
       write SetHydrogeologicUnits stored StoreHydrogeologicUnits;
     property FilesToArchive: TStrings read FFilesToArchive
@@ -2612,7 +2713,7 @@ that affects the model output should also have a comment. }
       write SetModflowOptions;
     property ModflowWettingOptions: TWettingOptions read FModflowWettingOptions
       write SetModflowWettingOptions;
-    property GlobalVariables: TGlobalVariables read FGlobalVariables
+    property GlobalVariables: TGlobalVariables read GetGlobalVariables
       write SetGlobalVariables;
     property HeadObsResults: THeadObsCollection read GetHeadObsResults
       write SetHeadObsResults stored StoreHeadObsResults;
@@ -2635,12 +2736,11 @@ that affects the model output should also have a comment. }
     // @name is used only in MODFLOW models.
     property EndPoints: TEndPointReader read GetEndPoints Write SetEndPoints
       stored StoreEndPoints;
-    property SutraMesh: TSutraMesh3D read GetSutraMesh write SetSutraMesh
-      {$IFNDEF SUTRA} stored False {$ENDIF};
+    property SutraMesh: TSutraMesh3D read GetSutraMesh write SetSutraMesh;
     property SutraOptions: TSutraOptions read FSutraOptions
-      write SetSutraOptions {$IFNDEF SUTRA} stored False {$ENDIF};
+      write SetSutraOptions;
     property SutraOutputControl: TSutraOutputControl read FSutraOutputControl
-      write SetSutraOutputControl {$IFNDEF SUTRA} stored False {$ENDIF};
+      write SetSutraOutputControl;
   end;
 
   TMapping = record
@@ -2852,14 +2952,27 @@ that affects the model output should also have a comment. }
     FContourFont: TFont;
     FShowContourLabels: Boolean;
     FSfrStreamLinkPlot: TSfrStreamLinkPlot;
+    FStrStreamLinkPlot: TSfrStreamLinkPlot;
     FMt3dmsOutputControl: TMt3dmsOutputControl;
     FMt3dmsTimes: TMt3dmsTimeCollection;
     FImmobileComponents: TChemSpeciesCollection;
+    FGlobalVariables: TGlobalVariables;
     FMobileComponents: TMobileChemSpeciesCollection;
     FSutraLayerStructure: TSutraLayerStructure;
     FSutraTimeOptions: TSutraTimeOptions;
     FColorSchemes: TUserDefinedColorSchemeCollection;
     FFishnetMeshGenerator: TFishnetMeshGenerator;
+
+    FSutraSettings: TSutraSettings;
+    FMaxVectors: TPredefinedVectors;
+    FMinVectors: TPredefinedVectors;
+    FMidVectors: TPredefinedVectors;
+    FVelocityVectors: TVectorCollection;
+  {$IFDEF FMP}
+    FFmpCrops: TCropCollection;
+    FFmpSoils: TSoilCollection;
+    FFmpClimate: TClimateCollection;
+  {$ENDIF}
 //    FSutraOutputControl: TSutraOutputControl;
     // See @link(Exaggeration).
     function GetExaggeration: double;
@@ -3029,10 +3142,24 @@ that affects the model output should also have a comment. }
     procedure SetSutraTimeOptions(const Value: TSutraTimeOptions);
     procedure SetColorSchemes(const Value: TUserDefinedColorSchemeCollection);
     procedure SetFishnetMeshGenerator(const Value: TFishnetMeshGenerator);
+    procedure SetSutraSettings(const Value: TSutraSettings);
+    procedure SetMaxVectors(const Value: TPredefinedVectors);
+    procedure SetMidVectors(const Value: TPredefinedVectors);
+    procedure SetMinVectors(const Value: TPredefinedVectors);
+    procedure SetVelocityVectors(const Value: TVectorCollection);
+  {$IFDEF FMP}
+    procedure SetFmpCrops(const Value: TCropCollection);
+    procedure SetFmpSoils(const Value: TSoilCollection);
+    procedure SetFmpClimate(const Value: TClimateCollection);
+  {$ENDIF}
 //    procedure SetSutraOutputControl(const Value: TSutraOutputControl);
   protected
+    function GetGlobalVariables: TGlobalVariables; override;
+    procedure SetGlobalVariables(const Value: TGlobalVariables); override;
     function GetSfrStreamLinkPlot: TSfrStreamLinkPlot; override;
     procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot); override;
+    function GetStrStreamLinkPlot: TSfrStreamLinkPlot; override;
+    procedure SetStrStreamLinkPlot(const Value: TSfrStreamLinkPlot); override;
     procedure SetFileName(const Value: string); override;
     function GetFormulaManager: TFormulaManager; override;
     function GetLayerStructure: TLayerStructure;override;
@@ -3106,13 +3233,12 @@ that affects the model output should also have a comment. }
     procedure SetModelSelection(const Value: TModelSelection); override;
     procedure GenerateFishNetMesh(var ErrorMessage: string); override;
   public
+    procedure RefreshGlobalVariables(CompilerList: TList);
+    procedure CreateGlobalVariables;
     function LakBathymetryUsed: Boolean;
     function TobIsSelected: Boolean;
-//    procedure RenameDataArray(DataArray: TDataArray; const NewName: string);
     procedure DrawHeadObservations(const BitMap: TBitmap32;
       const ZoomBox: TQRbwZoomBox2); override;
-//    procedure DrawSfrStreamLinkages(const BitMap: TBitmap32;
-//      const ZoomBox: TQRbwZoomBox2);
     // Update relationships of parent grid with child grids.
     procedure UpdateMapping;
     function InitialWaterTableUsed(Sender: TObject): boolean; override;
@@ -3120,6 +3246,8 @@ that affects the model output should also have a comment. }
     function ReservoirPackageUsed(Sender: TObject): boolean; override;
     function LakePackageUsed(Sender: TObject): boolean; override;
     function UzfPackageUsed(Sender: TObject): boolean; override;
+    function FarmProcessUsed(Sender: TObject): boolean; override;
+//    function GroundSurfaceUsed(Sender: TObject): boolean; override;
     function UzfUnsatVertKUsed(Sender: TObject): boolean; override;
     function UzfInitialInfiltrationUsed(Sender: TObject): boolean; override;
     function UzfResidualWaterContentUsed(Sender: TObject): boolean; override;
@@ -3164,6 +3292,8 @@ that affects the model output should also have a comment. }
     // point in TestScreenObject.
     procedure LocateNearestLakeOrStream(TestScreenObject: TScreenObject;
       var NearestLake, NearestStream: TScreenObject; Tolerance: double = 0);
+    procedure LocateNearestStrStream(TestScreenObject: TScreenObject;
+      var NearestStream: TScreenObject; Tolerance: double = 0);
     // @name increments @link(FScreenObjectUpdateCount).  While
     // @link(FScreenObjectUpdateCount) is greater than zero the
     // @link(OnScreenObjectsChanged) event is not called.
@@ -3499,6 +3629,7 @@ that affects the model output should also have a comment. }
       write SetNeedToRecalculateSideCellColors;
     procedure UpdateDataSetDimensions;
     function LgrUsed: boolean;
+    function LgrV1Used: boolean;
     function BcfIsSelected: Boolean;
     function ChdIsSelected: Boolean;
     function ChobIsSelected: Boolean;
@@ -3508,6 +3639,7 @@ that affects the model output should also have a comment. }
     function DrtIsSelected: Boolean;
     function EtsIsSelected: Boolean;
     function EvtIsSelected: Boolean;
+    function FhbIsSelected: Boolean;
     function GbobIsSelected: Boolean;
     function GhbIsSelected: Boolean;
     function GmgIsSelected: Boolean;
@@ -3529,12 +3661,15 @@ that affects the model output should also have a comment. }
     function RivIsSelected: Boolean;
     function RvobIsSelected: Boolean;
     function SfrIsSelected: Boolean;
+    function StrIsSelected: Boolean;
     function SipIsSelected: Boolean;
     function SubIsSelected: Boolean;
     function SwtIsSelected: Boolean;
+    function StobIsSelected: Boolean;
     function UzfIsSelected: Boolean;
     function WelIsSelected: Boolean;
     function ZoneBudgetIsSelected: Boolean;
+    function FarmProcessIsSelected: Boolean;
     function PackageIsSelected(APackage: TObject): Boolean;
     procedure ExportModflowLgrModel(const FileName: string;
       RunModel, ExportModpath, ExportZoneBudget, ShowWarning: boolean);
@@ -3698,15 +3833,26 @@ that affects the model output should also have a comment. }
     property ContourFont;
     property ShowContourLabels;
     property SfrStreamLinkPlot;
+    property StrStreamLinkPlot;
     property SutraLayerStructure: TSutraLayerStructure read GetSutraLayerStructure
-      write SetSutraLayerStructure {$IFNDEF Sutra} stored False {$ENDIF};
+      write SetSutraLayerStructure;
     property SutraTimeOptions: TSutraTimeOptions read FSutraTimeOptions
-      write SetSutraTimeOptions {$IFNDEF Sutra} stored False {$ENDIF};
+      write SetSutraTimeOptions;
     // User defined color schemes for coloring the grid or mesh
     // or for contour lines.
     property ColorSchemes: TUserDefinedColorSchemeCollection read FColorSchemes write SetColorSchemes;
     property FishnetMeshGenerator: TFishnetMeshGenerator read FFishnetMeshGenerator
-      write SetFishnetMeshGenerator {$IFNDEF Sutra} stored False {$ENDIF};
+      write SetFishnetMeshGenerator;
+    property SutraSettings: TSutraSettings read FSutraSettings write SetSutraSettings;
+    property MaxVectors: TPredefinedVectors read FMaxVectors write SetMaxVectors;
+    property MidVectors: TPredefinedVectors read FMidVectors write SetMidVectors;
+    property MinVectors: TPredefinedVectors read FMinVectors write SetMinVectors;
+    property VelocityVectors: TVectorCollection read FVelocityVectors write SetVelocityVectors;
+  {$IFDEF FMP}
+    property FmpCrops: TCropCollection read FFmpCrops write SetFmpCrops;
+    property FmpSoils: TSoilCollection read FFmpSoils write SetFmpSoils;
+    property FmpClimate: TClimateCollection read FFmpClimate write SetFmpClimate;
+  {$ENDIF}
   end;
 
   TChildDiscretization = class(TOrderedItem)
@@ -3845,6 +3991,8 @@ that affects the model output should also have a comment. }
     function GetSaveBfhBoundaryConditions: boolean; override;
     procedure SetSaveBfhBoundaryConditions(const Value: boolean);  override;
   protected
+    function GetGlobalVariables: TGlobalVariables; override;
+    procedure SetGlobalVariables(const Value: TGlobalVariables); override;
     function StoreHydrogeologicUnits: Boolean; override;
     function GetScreenObjects(const Index: integer): TScreenObject; override;
     function GetScreenObjectCount: integer; override;
@@ -3903,6 +4051,8 @@ that affects the model output should also have a comment. }
     procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection); override;
     function GetSfrStreamLinkPlot: TSfrStreamLinkPlot; override;
     procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot); override;
+    function GetStrStreamLinkPlot: TSfrStreamLinkPlot; override;
+    procedure SetStrStreamLinkPlot(const Value: TSfrStreamLinkPlot); override;
   public
     property CanUpdateGrid: Boolean read FCanUpdateGrid write SetCanUpdateGrid;
     function LayerGroupUsed(LayerGroup: TLayerGroup): boolean; override;
@@ -5912,9 +6062,185 @@ const
   //         generating the input file for the UZF package if a flow package
   //         other than the LPF or UPW was used.
   //    '2.19.1.0' No additional changes.
+  //    '2.19.1.1' Bug fix: Changes to the "Print input cell lists" option
+  //         in the MODFLOW Output Control dialog box were not saved.
+  //    '2.19.1.2' Bug fix: Fixed handling of the RCH, EVT, and ETS package
+  //         in cases where parameters are defined but no parameters are used
+  //         for one or more stress periods.
+  //       Bug fix: Fixed handling of attempts to read DEMs that are in the
+  //         wrong format.
+  //       Bug fix: fixed bug in importing head and drawdown results from
+  //         profile models.
+  //    '2.19.1.3' Enhancement: The "Show or Hide Objects" dialog box now
+  //         displays the cell or element size that an object specifies.
+  //       Bug fix: A bug report is no longer generated if when attempting
+  //         to finish adding a new closed section to an object the final
+  //         edge of the new section crosses one of the earlier edges of the
+  //         same section of the object. Instead an error message is displayed
+  //         to the user.
+  //       Bug fix: Attempting to import an empty results file for MODFLOW
+  //         should no longer generate an I/O error.
+  //       Enhancement: The menu item Data|Delete Model Results has been added.
+  //         It deletes all the data sets and objects for the model results.
+  //       Bug fix: ModelMuse now displays an error message in the
+  //         Formula Errors dialog box when a data set formula is invalid
+  //         in some cases where it would previously generate a bug report.
+  //    '2.19.1.4' Bug fix: Fixed creating child models in which global
+  //         variables are used in some data sets.
+  //    '2.19.1.5' Same bug fix as in '2.19.1.4' -- Correct this time.
+  //    '2.19.1.6' Bug fix: Fixed bug with Natural Neighbor Interpolation that
+  //         could cause ModelMuse to enter an infinite loop.
+  //       Bug fix: Fixed a bug that caused inconsistencies in data set values
+  //         between parent and child models if the values were assigned by
+  //         interpolation. Previously, data points outside the grid might
+  //         not be assigned the correct values.
+  //    '2.19.1.7' Enhancement: When contouring data, the user can now specify
+  //         the contour interval easily.
+  //       Bug fix: When specifying contour values, the user no longer has to
+  //         specify the values in the correct order.
+  //    '2.19.1.8' Enhancement: Sorting of observation names in the
+  //         Data Visualization dialog box has been improved.
+  //       Enhancement: There is now a button for copying the observations
+  //         in the Data Visualization dialog box to the clipboard.
+  //    '2.19.1.9' Bug fix: Fixed bugs that resulted in invalid file names when
+  //         MT3DMS component names contained non-alphanumeric characters.
+  //    '2.19.1.10' Bug fix: If after importing data, the imported data becomes
+  //         corrupted, it is now possible to save the file although the
+  //         imported data will not be saved.
+  //    '2.19.1.11' Enhancement: The default value for the grid cell size shown
+  //         in the object properties dialog box is now set to a reasonable
+  //         value based on the dimensions of the model area.
+  //       Bug fix: Fixed bug in the "Delete Model Results" command
+  //         that invalidated formaulas incorrectly. Not in released version.
+  //    '2.19.1.12' Bug fix: Fixed bug in displaying the Show/Hide Objects
+  //         dialog box when drain return objects were not defined properly.
+  //    '2.19.1.13' Change: Changing the name of a "Model Results" data set
+  //         will now cause it to be listed under "User Defined" data sets.
+  //       Enhancement: Added ArcTan function.
+  //       Bug fix: When saving the settings for an image, specified contour
+  //         intervals are now saved properly.
+  //       Bug fix: Selecting "Data|Delete Models Results" for a model that
+  //         contains no model results no longer results in an error.
+  //       Bug fix: Displaying pathline or time series files from MODPATH with
+  //         very large coordinate values no longer causes ModelMuse to crash.
+  //         (The large coordinate values may indicate that the particle is
+  //         trapped in a dry cell.)
+  //       Bug fix: When creating contours with the ACM 626 contouring
+  //         method, contouring values of head in models in which some cells
+  //         have gone dry no longer causes and error.
+  //    '2.19.1.14' Bug fix: ModelMuse no longer displays an error message
+  //         about no parameters being used in a stress period unless recharge
+  //         parameters have been defined.
+  //       Enhancement: Added ability to use concentrations from a previous run
+  //         as initial concentrations for new run in MT3DMS.
+  //    '2.19.1.15' Bug fix: If an object has no vertices, ModelMuse no longer
+  //         attempts to use it in interpolation.
+  //    '2.19.1.16' Bug fix: Under rare circumstances, ModelMuse would
+  //         sometimes generate a bug report when a model was first opened
+  //         due to a variable not yet having been updated.
+  //       Bug fix: Fixed a bug sometimes encountered when a user attempts
+  //         to import an invalid DEM.
+  //       Bug fix: When a model contains non-simulated layers, the layer
+  //         numbers in multilayer head observations are now assigned correctly.
+  //       Enhancement: It is now possible to export MNW2 data for objects
+  //         to Shapefiles.
+  //    '2.19.1.17' Bug fix: Fixed editing of lake bathymetry file.
+  //    '2.19.1.18' Bug fix: fixed bug that caused access violations when
+  //         opening the MODFLOW Packages and Programs dialog box.
+  //       Enhancement: ModelMuse can now import MODFLOW-NWT models.
+  //    '2.19.1.19' Bug fix: Fixed bug importing Horizontal Flow Barrier
+  //         package from existing models that could result in the extra
+  //         flow barriers being included in the model.
+  //    '2.19.1.20' Enhancement: ModelMuse now compares drain elevation,
+  //         river stage and GHB head to the cell bottom elevation and
+  //         generates a warning or error message if the cell bottom elevation
+  //         is higher than the boundary value.
+  //    '2.19.1.21' Enhancement: Added support for STR and STOB packages.
+  //       Bug fix: Fixed bug that caused errors when editing the grid so that
+  //         it had only one grid line.
+  //    '2.19.1.22' Bug fix: Fixed bug in displaying Data Visualization
+  //         dialog box.
+  //    '2.19.1.23' Change: In the HYDMOD package, ModelMuse no longer
+  //         generates repeated data if two SFR reaches are in the same cell.
+  //       Enhancement: when exporting objects to shapefiles that contain
+  //         data for the MNW2 package, the time-varying data can now be
+  //         exported.
+  //    '2.19.1.24' Enhancement: Improved handling of errors in importing
+  //         DXF files.
+  //       Enhancement: MODFLOW Program Locations dialog box redesigned to
+  //         show only the programs used in the model.
+  //       Bug fix: fixed bug that caused an error when undoing a change
+  //         in the MODFLOW Packages and Programs dialog box when horizontal
+  //         flow barriers had already been defined.
+  //    '2.19.1.25' Enhancement: Added support for MODFLOW-LGR version 2.
+  //    '2.19.1.26' Bug fix: Fixed bug that caused errors when editing
+  //         objects that define SFR boundaries.
+  //    '2.19.1.27' Change: When importing existing models, the elevations
+  //         used to assign boundary conditions cells to layers are now
+  //         set to a value close to the top of the layer instead of the
+  //         center of the layer to facilitate converting the model to
+  //         a MODFLOW-LGR model.
+  //       Change: When importing existing models, objects used to define
+  //         boundaries in the CHD, RIV, DRN, DRT, and GHB packages now consist
+  //         of polygon sections rather than point sections to facilitate
+  //         converting the model to a MODFLOW-LGR2 model.
+  //       Bug fix: Fixed a bug that could cause access violation when coloring
+  //         the grid or exporting MODFLOW input files.
+  //       Enhancement: Speed up export of model input
+  //       Bug fix: Fixed bug that could cause errors when displaying values
+  //         for the Drain, GHB, or River boundaries if the corresponding
+  //         observation package is used.
+  //       Bug fix: Fixed bug that could cause circular reference errors when
+  //         interpolating data.
+  //       Bug fix: fixed bug in Natural Neighbor interpolation method that
+  //         could cause divide by zero errors.
+  //    '2.19.1.28' Change: Objects are now only allowed to assign data set
+  //         properties by interpolation if they have zero elevation formulas.
+  //    '2.19.1.29' Bug fix: Fixed import of multiplier and zone array names
+  //         when the name listed in a cluster is longer than 10 characters.
+  //    '2.19.1.30' Bug fix: Fixed bug that caused data for the SFR package to
+  //         be lost if multiple objects were edited and some of them were
+  //         defining streams in the SFR package and others were polygon
+  //         objects.
+  //    '2.19.1.31' Change: the Object Properties dialog box to uses fewer
+  //         Windows resources.
+  //    '2.19.1.32' Bug fix: Improved drawing of pathlines from MODPATH
+  //         version 6. Pathline segments are now drawn if segments that end at
+  //         the edge of either the previous or next column, row, or layer so
+  //         long as the segment crosses the current column, row, or layer.
+  //         This change also applies to MODPATH version 5 with respect to
+  //         layers but not rows or columns.
+  //    '2.19.1.33' Enhancement: Added support for the FHB package.
+  //       Bug fix: Divide by zero errors should now result in an error
+  //         message instead of a bug report.
+  //       Bug fix: Fixed importing MNW2 package from existing models when the
+  //         model contains non-simulated layers.
+  //       Bug fix: Fixed export of UZF package input when output to the
+  //         listing file is specified.
+  //    '2.19.1.34' Bug fix: Fixed export of MNW2 package in models with
+  //         non-simulated layers.
+  //    '2.19.1.35' Bug fix: Fixed bug that could cause exporting the SFR
+  //         package input file to fail.
+  //       Bug fix: Fixed bug that could make it impossible to open the
+  //         Object Properties dialog box with large models.
+  //       Bug fix: Fixed bug that could make it impossible to open objects
+  //         that define streams in the SFR package in the Object Properties
+  //         dialog box.
+  //    '2.19.1.36' Change: ModelMuse now will only generate up to 1000
+  //         error or warning messages of any one type.
+  //    '2.19.1.37' Enhancement: When importing a Surfer Grid file, the
+  //         imported data points can be filtered to reduce the number of
+  //         points imported.
+  //       Bug fix: Fixed backwards compatibility issue with SUTRA
+  //         (not in released version)
+  //    '2.19.1.38' Bug fix: Fixed display of legend for contour lines
+  //         when the contour colors are not specified directly.
+  //    '2.19.1.39' No Change.
+  //    '3.0.0.0' Bug fix: Fixed bug in interpolating.
+  //       Enhancement: Added support for SUTRA.
 
 const
-  IModelVersion = '2.19.1.0';
+  IModelVersion = '3.0.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -5970,6 +6296,9 @@ resourcestring
   StrSUTRASpecifiedConcTemp = 'SUTRA Specified Concentration or Temperature';
   StrSutraFluidFlux = 'SUTRA Fluid Flux';
   StrMassEnergyFlux = 'SUTRA Mass or Energy Flux';
+  StrMultiplierWarning = 'Multiplier <> 1 when UZF or LAK packages used.';
+  StrMultiplierFullWarning = 'When using the UZF or LAK packages, it is '
+    + 'usually best to set the time step multiplier to 1.';
 
 
 implementation
@@ -6004,19 +6333,22 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   Mt3dmsDspWriterUnit, Mt3dmsSsmWriterUnit, Mt3dmsRctWriterUnit,
   Mt3dmsGcgWriterUnit, Mt3dmsTobWriterUnit, ModflowMt3dmsLinkWriterUnit,
   QuadMeshGenerator, MeshRenumbering, ModflowPCGN_WriterUnit, Character,
-  SutraBoundaryWriterUnit, frmMeshGenerationControlVariablesUnit, QuadtreeClass;
+  SutraBoundaryWriterUnit, QuadtreeClass, frmMeshInformationUnit,
+  MeshRenumberingTypes, ModflowStrWriterUnit, ModflowFhbWriterUnit,
+  ModflowFmpWriterUnit;
 
 resourcestring
   StrMpathDefaultPath = 'C:\WRDAPP\Mpath.5_0\setup\Mpathr5_0.exe';
   StrMpathDefaultPathVersion6 = 'C:\WRDAPP\modpath.6_0\bin\mp6.exe';
   // See also Mf2005Date on frmGoPhastUnit.
-  StrModflowDefaultPath = 'C:\WRDAPP\MF2005.1_10\Bin\mf2005.exe';
+  StrModflowDefaultPath = 'C:\WRDAPP\MF2005.1_11\Bin\mf2005.exe';
   StrPhastDefaultPath = 'C:\Program Files\USGS\phast-1.5.1\bin\phast.bat';
   StrPhastDefaultPath64 = 'C:\Program Files (x86)\USGS\phast-1.5.1\bin\phast.bat';
   StrZoneBudgetDefaultPath = 'C:\WRDAPP\Zonbud.3_01\Bin\zonbud.exe';
   StrModelMateDefaultPath = 'C:\WRDAPP\ModelMate_1_0_1\Bin\ModelMate.exe';
   strModflowLgrDefaultPath = 'C:\WRDAPP\mflgr.1_2\bin\mflgr.exe';
-  strModflowNwtDefaultPath = 'C:\WRDAPP\MODFLOW-NWT_1.0.7\bin\MODFLOW-NWT.exe';
+  strModflowLgr2DefaultPath = 'C:\WRDAPP\mflgr.2_0\bin\mflgr.exe';
+  strModflowNwtDefaultPath = 'C:\WRDAPP\MODFLOW-NWT_1.0.8\bin\MODFLOW-NWT.exe';
 
   StrProgramLocations = 'Program Locations';
   StrMODFLOW2005 = 'MODFLOW-2005';
@@ -6032,7 +6364,9 @@ resourcestring
   StrAnyTimesBeforeThe = 'Any times before the beginning of the first define' +
   'd stress period will be ignored.';
   strModflowLgr = 'MODFLOW-LGR';
+  strModflowLgr2 = 'MODFLOW-LGR-V2';
   strModflowNWT = 'MODFLOW-NWT';
+  strModflowFMP = 'MODFLOW-FMP';
   StrAtLeastOneConvert = 'At least one layer must be convertible.';
   StrAtLeastOneUnconfConvert = 'At least one layer must be unconfined or ful' +
   'ly convertible.';
@@ -6080,7 +6414,7 @@ resourcestring
   StrNoObjects = 'The mesh was not created because no objects define the ele' +
   'ment size on the top view of the model.';
   StrNoPolygons = 'The mesh was not created because no polygons define the e' +
-  'lement size on the top view of the model.';
+  'lement size and constrain the mesh on the top view of the model.';
   StrInvalidTimesForMT = 'Invalid times for MT3DMS';
   StrTheStressPeriodsD = 'The stress periods defined for MT3DMS are not with' +
   'in the stress periods defined for MODFLOW.';
@@ -6089,8 +6423,8 @@ resourcestring
   StrValueOfZeroConver = 'Value of zero converted to 1 at active cell.';
   StrNonzeroValueOfZe = 'Non-zero value converted to 0 at inactive cell.';
   StrAddedTimes = 'The following objects define times at which stresses ' +
-    'change that were not defined as the beginning or ending or stress ' +
-    'periods. The stress periods will be adjusted to uses these times.';
+    'change that do not coincide with the beginning or ending of stress ' +
+    'periods. The stress periods will be adjusted to use these times.';
   StrTimesDoNotMatch = 'Times do not match';
   StrTheFinalTimeSpeci = 'The final time specified in the MT3DMS simulation ' +
   '(%0:g) is earlier than the final time specified in the MODFLOW simulation' +
@@ -6103,12 +6437,18 @@ resourcestring
   StrYouNeedToDrawQua = 'You need to draw quadrilaterals that will be used t' +
   'o define the mesh and assign the number of nodes along two edges of each ' +
   'quadrilateral.';
+  StrOneOrMoreInvalid = 'One or more invalid elements was created. ' +
+    'Adjusting the mesh generation parameters or inserting additional ' +
+    'control points may help.';
+  strModflowFmpDefaultPath = 'C:\WRDAPP\MF2005_FMP2.1_0\bin\MF2K5_FMP2_rls32.exe';
+
 
 const
   StatFlagStrings : array[Low(TStatFlag)..High(TStatFlag)] of string
     = ('VAR', 'SD', 'CV', 'WT', 'SQRWT');
 const
   UcodeDelimiter = '@';
+  StrMeshElementSize = 'Mesh Element Size';
 
 function DefaultPhastPath: string;
 begin
@@ -6140,7 +6480,14 @@ begin
   IsValidIdent(result, False);
   if not Alpha(result[1]) then
   begin
-    result[1] := '_';
+    if AlphaNumeric(result[1]) then
+    begin
+      result := '_' + Result;
+    end
+    else
+    begin
+      result[1] := '_';
+    end;
   end;
 
   for Index := 2 to Length(result) do
@@ -6283,7 +6630,7 @@ var
   AnnotationPosition: integer;
   RowIndex: Integer;
 begin
-  if LgrUsed then
+  if LgrV1Used then
   begin
     if ADataArray.DataType = rdtBoolean then
     begin
@@ -6667,6 +7014,13 @@ begin
     ImmobileComponents := SourceModel.ImmobileComponents;
     DataSetList := SourceModel.DataSetList;
     SfrStreamLinkPlot := SourceModel.SfrStreamLinkPlot;
+    StrStreamLinkPlot := SourceModel.StrStreamLinkPlot;
+    SutraSettings := SourceModel.SutraSettings;
+  {$IFDEF FMP}
+    FmpCrops := SourceModel.FmpCrops;
+    FmpSoils := SourceModel.FmpSoils;
+    FmpClimate := SourceModel.FmpClimate;
+  {$ENDIF}
   end;
   inherited;
 
@@ -6738,6 +7092,7 @@ var
 begin
   inherited;
 
+  FGlobalVariables := TGlobalVariables.Create(self);
   FFishnetMeshGenerator := TFishnetMeshGenerator.Create(self);
   FColorSchemes := TUserDefinedColorSchemeCollection.Create(self);
   FSaveBfhBoundaryConditions := True;
@@ -6858,17 +7213,32 @@ begin
   FShowContourLabels := True;
 
   FSfrStreamLinkPlot := TSfrStreamLinkPlot.Create(self);
+  FStrStreamLinkPlot := TSfrStreamLinkPlot.Create(self);
 
   FImmobileComponents := TChemSpeciesCollection.Create(Self);
   FMobileComponents := TMobileChemSpeciesCollection.Create(Self);
 
-  {$IFDEF Sutra}
   FSutraLayerStructure:= TSutraLayerStructure.Create(Self);
   FSutraTimeOptions := TSutraTimeOptions.Create(Self);
+  FSutraSettings := TSutraSettings.Create(Self);
 //  LayerGroup := FSutraLayerStructure.Add as TSutraLayerGroup;
 //  LayerGroup.AquiferName := 'SUTRA_Mesh_Top';
-  {$ENDIF}
+  FMaxVectors := TPredefinedVectors.Create(self);
+  FMidVectors := TPredefinedVectors.Create(self);
+  FMinVectors := TPredefinedVectors.Create(self);
+  FVelocityVectors := TVectorCollection.Create(self);
 
+  FMaxVectors.VectorDirection := pvdMax;
+  FMaxVectors.Color := clRed;
+  FMidVectors.VectorDirection := pvdMid;
+  FMidVectors.Color := clGreen;
+  FMinVectors.VectorDirection := pvdMin;
+  FMinVectors.Color := clBlue;
+{$IFDEF FMP}
+  FFmpCrops := TCropCollection.Create(self);
+  FFmpSoils := TSoilCollection.Create(self);
+  FFmpClimate := TClimateCollection.Create(self);
+{$ENDIF}
 end;
 
 procedure TPhastModel.CreateArchive(const FileName: string; const ArchiveCommand: string = '');
@@ -7037,11 +7407,14 @@ var
   ChildList: TCustomTimeList;
 begin
   inherited;
-  for ChildIndex := 0 to ChildModels.Count - 1 do
+  if LgrUsed then
   begin
-    ChildModel := ChildModels[ChildIndex].ChildModel;
-    ChildList := ChildModel.GetTimeListByName(TimeList.Name);
-    ChildModel.UpdateSideTimeDataSet(ChildList, Time);
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      ChildList := ChildModel.GetTimeListByName(TimeList.Name);
+      ChildModel.UpdateSideTimeDataSet(ChildList, Time);
+    end;
   end;
 end;
 
@@ -7063,9 +7436,15 @@ begin
       FClearing := False;
     end;
 
+    FVelocityVectors.Free;
+    FMaxVectors.Free;
+    FMidVectors.Free;
+    FMinVectors.Free;
+    FSutraSettings.Free;
     FImmobileComponents.Free;
     FMobileComponents.Free;
 
+    FStrStreamLinkPlot.Free;
     FSfrStreamLinkPlot.Free;
     FChildModels.Free;
     FHufParameters.Free;
@@ -7117,7 +7496,16 @@ begin
 //      Application.ProcessMessages;
     end;
     AllObserversStopTalking;
+
+  {$IFDEF FMP}
+    FFmpClimate.Free;
+    FFmpSoils.Free;
+    FFmpCrops.Free;
+  {$ENDIF}
+
+
     FreeHufNotifiers;
+    FGlobalVariables.Free;
 
 
     FLayerStructure.Free;
@@ -7365,7 +7753,7 @@ begin
   Result := False;
   case ModelSelection of
     msUndefined, msPhast: Exit;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         DataArray := Sender as TDataArray;
         for Index := 0 to LayerStructure.Count - 1 do
@@ -7378,7 +7766,6 @@ begin
           end;
         end;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         result := (SutraMesh <> nil) and (SutraMesh.MeshType = mt3D);
@@ -7396,7 +7783,6 @@ begin
           end;
         end;
       end;
-    {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -7497,6 +7883,68 @@ begin
   if NearestLake <> nil then
   begin
     NearestStream := nil;
+  end;
+end;
+
+procedure TPhastModel.LocateNearestStrStream(TestScreenObject: TScreenObject;
+  var NearestStream: TScreenObject; Tolerance: double);
+var
+  TestDist: Double;
+  TestLocation: TPoint2D;
+  AScreenObject: TScreenObject;
+  Index: Integer;
+  Dist: Double;
+  OutFlowLocation: TPoint2D;
+begin
+  OutFlowLocation := TestScreenObject.Points[TestScreenObject.Count - 1];
+  NearestStream := nil;
+  Dist := 0;
+  for Index := 0 to ScreenObjectCount - 1 do
+  begin
+    AScreenObject := ScreenObjects[Index];
+    if not AScreenObject.Deleted and (AScreenObject <> TestScreenObject)
+      and (AScreenObject.ModflowStrBoundary <> nil)
+      and AScreenObject.ModflowStrBoundary.Used then
+    begin
+      TestLocation := AScreenObject.Points[0];
+      if NearestStream = nil then
+      begin
+        TestDist := Distance(TestLocation, OutFlowLocation);
+        if Tolerance > 0 then
+        begin
+          if TestDist < Tolerance then
+          begin
+            Dist := TestDist;
+            NearestStream := AScreenObject;
+          end;
+        end
+        else
+        begin
+          Dist := TestDist;
+          NearestStream := AScreenObject;
+        end;
+      end
+      else
+      begin
+        TestDist := Distance(TestLocation, OutFlowLocation);
+        if TestDist < Dist then
+        begin
+          if (Tolerance > 0) then
+          begin
+            if TestDist < Tolerance then
+            begin
+              Dist := TestDist;
+              NearestStream := AScreenObject;
+            end;
+          end
+          else
+          begin
+            Dist := TestDist;
+            NearestStream := AScreenObject;
+          end;
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -7607,6 +8055,7 @@ begin
 //      frmFileProgress.pbProgress.StepIt;
 //      Application.ProcessMessages;
   end;
+
   Bitmaps.Clear;
   ClearViewedItems;
   FColorLegend.ValueSource := nil;
@@ -7634,6 +8083,12 @@ begin
   // Clear screen objects before clearing child models because
   // the screen objects access the child models while being destroyed.
   FScreenObjectList.Clear;
+
+{$IFDEF FMP}
+  FmpCrops.Clear;
+  FmpSoils.Clear;
+  FmpClimate.Clear;
+{$ENDIF}
 
   for ChildIndex := 0 to ChildModels.Count - 1 do
   begin
@@ -7671,6 +8126,7 @@ begin
   DrainObservations.Clear;
   GhbObservations.Clear;
   RiverObservations.Clear;
+  StreamObservations.Clear;
   Mt3dmsHeadMassFluxObservations.Clear;
   Mt3dmsWellMassFluxObservations.Clear;
   Mt3dmsDrnMassFluxObservations.Clear;
@@ -7683,6 +8139,9 @@ begin
   Mt3dmsLakMassFluxObservations.Clear;
   Mt3dmsDrtMassFluxObservations.Clear;
   Mt3dmsEtsMassFluxObservations.Clear;
+  Mt3dmsStrMassFluxObservations.Clear;
+  Mt3dmsFhbHeadMassFluxObservations.Clear;
+  Mt3dmsFhbFlowMassFluxObservations.Clear;
 
   FilesToArchive.Clear;
   ModelFileName := '';
@@ -7707,6 +8166,11 @@ begin
   Mt3dmsTimes.Clear;
   ModflowStressPeriods.Clear;
   FishnetMeshGenerator.Clear;
+
+  MaxVectors.InitializeVariables;
+  MidVectors.InitializeVariables;
+  MinVectors.InitializeVariables;
+  VelocityVectors.Clear;
 
   Invalidate;
   inherited;
@@ -8047,6 +8511,25 @@ begin
   end;
 end;
 
+function TPhastModel.StobIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.StobPackage.IsSelected;
+  if not result and frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.StobPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
 function TPhastModel.StoreChildModels: Boolean;
 begin
   result := FChildModels.Count > 0;
@@ -8235,6 +8718,21 @@ begin
   end;
 end;
 
+procedure TPhastModel.SetMaxVectors(const Value: TPredefinedVectors);
+begin
+  FMaxVectors.Assign(Value);
+end;
+
+procedure TPhastModel.SetMidVectors(const Value: TPredefinedVectors);
+begin
+  FMidVectors.Assign(Value);
+end;
+
+procedure TPhastModel.SetMinVectors(const Value: TPredefinedVectors);
+begin
+  FMinVectors.Assign(Value);
+end;
+
 procedure TPhastModel.SetMobileComponents(
   const Value: TMobileChemSpeciesCollection);
 begin
@@ -8271,16 +8769,14 @@ begin
 end;
 
 procedure TPhastModel.SetModelSelection(const Value: TModelSelection);
-    {$IFDEF SUTRA}
 var
   LayerGroup: TCustomLayerGroup;
-    {$ENDIF}
 begin
   inherited;
   case Value of
     msUndefined: ;
     msPhast: ;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         if not (csLoading in ComponentState) then
         begin
@@ -8294,7 +8790,6 @@ begin
           end;
         end;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         if FSutraLayerStructure.Count = 0 then
@@ -8303,7 +8798,6 @@ begin
           LayerGroup.AquiferName := kSUTRAMeshTop;
         end
       end
-    {$ENDIF}
     else Assert(False);
   end;
 
@@ -8314,16 +8808,14 @@ begin
   case FModelSelection of
     msUndefined: ; // do nothing
     msPhast: ;  // do nothing
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         ModflowGrid.NotifyGridChanged(Sender);
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         OnTopSutraMeshChanged(Sender);
       end;
-    {$ENDIF}
     else
       Assert(False);
   end;
@@ -8347,17 +8839,15 @@ begin
           PhastGrid.TopGridObserver := nil;
           PhastGrid.ThreeDGridObserver := nil;
         end;
-      msModflow, msModflowLGR, msModflowNWT:
+      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
         begin
           ModflowGrid.TopGridObserver := nil;
           ModflowGrid.ThreeDGridObserver := nil;
         end;
-      {$IFDEF SUTRA}
       msSutra22:
         begin
 
         end
-      {$ENDIF}
       else Assert(False);
     end;
     FModelSelection := Value;
@@ -8374,22 +8864,20 @@ begin
         begin
           FGrid := PhastGrid;
         end;
-      msModflow, msModflowLGR, msModflowNWT:
+      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
         begin
           FGrid := ModflowGrid;
 //          ThreeDGridObserver.OnUpToDateSet := ModflowGrid.NotifyGridChanged;
         end;
-      {$IFDEF SUTRA}
       msSutra22:
         begin
           FGrid := nil;
           TopGridObserver.OnUpToDateSet := OnTopSutraMeshChanged;
 //          ThreeDGridObserver.OnUpToDateSet := OnTopSutraMeshChanged;
         end
-      {$ENDIF}
       else Assert(False);
     end;
-    if (FModelSelection <> msModflowNWT) then
+    if (FModelSelection in [msModflow, msModflowLgr, msModflowLGR2 {$IFDEF FMP}, msModflowFmp {$ENDIF}]) then
     begin
       if ModflowPackages.UpwPackage.IsSelected then
       begin
@@ -8406,10 +8894,6 @@ begin
     begin
       Grid.TopGridObserver := TopGridObserver;
       Grid.ThreeDGridObserver := ThreeDGridObserver;
-    end;
-    if Assigned(OnModelSelectionChange) then
-    begin
-      OnModelSelectionChange(self);
     end;
     AddGIS_Functions(rpTopFormulaCompiler, FModelSelection, eaBlocks);
     AddGIS_Functions(rpFrontFormulaCompiler, FModelSelection, eaBlocks);
@@ -8448,6 +8932,10 @@ begin
     end;
     DataArrayManager.UpdateClassifications;
     Invalidate;
+    if Assigned(OnModelSelectionChange) then
+    begin
+      OnModelSelectionChange(self);
+    end;
   end;
 end;
 
@@ -8525,15 +9013,18 @@ begin
   if Grid <> nil then
   begin
     Grid.NeedToRecalculateFrontCellColors := Value;
-    for ChildIndex := 0 to ChildModels.Count - 1 do
+    if LgrUsed then
     begin
-      ChildModel := ChildModels[ChildIndex].ChildModel;
-      if ChildModel <> nil then
+      for ChildIndex := 0 to ChildModels.Count - 1 do
       begin
-        ChildGrid := ChildModel.Grid;
-        if ChildGrid <> nil then
+        ChildModel := ChildModels[ChildIndex].ChildModel;
+        if ChildModel <> nil then
         begin
-          ChildGrid.NeedToRecalculateFrontCellColors := Value;
+          ChildGrid := ChildModel.Grid;
+          if ChildGrid <> nil then
+          begin
+            ChildGrid.NeedToRecalculateFrontCellColors := Value;
+          end;
         end;
       end;
     end;
@@ -8554,15 +9045,18 @@ begin
   if Grid <> nil then
   begin
     Grid.NeedToRecalculateSideCellColors := Value;
-    for ChildIndex := 0 to ChildModels.Count - 1 do
+    if LgrUsed then
     begin
-      ChildModel := ChildModels[ChildIndex].ChildModel;
-      if ChildModel <> nil then
+      for ChildIndex := 0 to ChildModels.Count - 1 do
       begin
-        ChildGrid := ChildModel.Grid;
-        if ChildGrid <> nil then
+        ChildModel := ChildModels[ChildIndex].ChildModel;
+        if ChildModel <> nil then
         begin
-          ChildGrid.NeedToRecalculateSideCellColors := Value;
+          ChildGrid := ChildModel.Grid;
+          if ChildGrid <> nil then
+          begin
+            ChildGrid.NeedToRecalculateSideCellColors := Value;
+          end;
         end;
       end;
     end;
@@ -8578,16 +9072,19 @@ begin
   if Grid <> nil then
   begin
     Grid.NeedToRecalculateTopCellColors := Value;
-    for ChildIndex := 0 to ChildModels.Count - 1 do
+    if LgrUsed then
     begin
-      ChildModel := ChildModels[ChildIndex].ChildModel;
-
-      if ChildModel <> nil then
+      for ChildIndex := 0 to ChildModels.Count - 1 do
       begin
-        ChildGrid := ChildModel.Grid;
-        if ChildGrid <> nil then
+        ChildModel := ChildModels[ChildIndex].ChildModel;
+
+        if ChildModel <> nil then
         begin
-          ChildGrid.NeedToRecalculateTopCellColors := Value;
+          ChildGrid := ChildModel.Grid;
+          if ChildGrid <> nil then
+          begin
+            ChildGrid.NeedToRecalculateTopCellColors := Value;
+          end;
         end;
       end;
     end;
@@ -8601,7 +9098,6 @@ end;
 function TPhastModel.GetExaggeration: double;
 begin
   result := 1;
-{$IFDEF SUTRA}
   if (ModelSelection = msSutra22) and (SutraMesh <> nil)
     and (SutraMesh.MeshType = mtProfile) then
   begin
@@ -8611,7 +9107,6 @@ begin
     end
   end
   else
-{$ENDIF}
   begin
     if frmGoPhast.frameFrontView <> nil then
     begin
@@ -8632,7 +9127,6 @@ begin
   end;
   if Exaggeration <> Value then
   begin
-  {$IFDEF SUTRA}
     if (ModelSelection = msSutra22) and (SutraMesh <> nil)
       and (SutraMesh.MeshType = mtProfile) then
     begin
@@ -8642,7 +9136,6 @@ begin
       end;
     end
     else
-  {$ENDIF}
     begin
       if frmGoPhast.frameFrontView <> nil then
       begin
@@ -8668,6 +9161,11 @@ begin
   result := FFreeSurface;
 end;
 
+function TPhastModel.GetGlobalVariables: TGlobalVariables;
+begin
+  Result := FGlobalVariables;
+end;
+
 function TPhastModel.GetSoluteTransport: boolean;
 begin
   result := FSoluteTransport;
@@ -8676,6 +9174,11 @@ end;
 function TPhastModel.GetSomeSegmentsUpToDate: boolean;
 begin
   result := FSomeSegmentsUpToDate;
+end;
+
+function TPhastModel.GetStrStreamLinkPlot: TSfrStreamLinkPlot;
+begin
+  Result := FStrStreamLinkPlot;
 end;
 
 function TPhastModel.GetSutraLayerStructure: TSutraLayerStructure;
@@ -8786,6 +9289,11 @@ begin
   result := IModelVersion;
 end;
 
+procedure TPhastModel.SetVelocityVectors(const Value: TVectorCollection);
+begin
+  FVelocityVectors.Assign(Value);
+end;
+
 procedure TPhastModel.SetVersion(const Value: string);
 begin
   FFileVersion := Value;
@@ -8804,7 +9312,7 @@ var
   SpecifiedHeadArray: TDataArray;
   LakeComment: string;
 begin
-  if (ModelSelection in [msMODFLOW, msModflowLGR, msModflowNWT])
+  if (ModelSelection in ModflowSelection)
     and ModflowPackages.ChdBoundary.IsSelected then
   begin
     SpecifiedHeadArray := FDataArrayManager.GetDataSetByName(rsModflowSpecifiedHead);
@@ -8831,7 +9339,7 @@ begin
       end;
     end;
   end;
-  if (ModelSelection in [msMODFLOW, msModflowLGR, msModflowNWT])
+  if (ModelSelection in ModflowSelection)
     and ModflowPackages.LakPackage.IsSelected  then
   begin
     LakeIdArray := FDataArrayManager.GetDataSetByName(rsLakeID);
@@ -9112,6 +9620,16 @@ begin
 //      ExistingDataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
 //        Grid.ColumnCount);
 
+      if ExistingDataSet.Classification = StrLayerDefinition then
+      begin
+        ExistingDataSet.OnDataSetUsed := ModelLayerDataArrayUsed;
+      end
+      else if ExistingDataSet.Classification = StrHUF then
+      begin
+        ExistingDataSet.OnDataSetUsed := HufDataArrayUsed;
+      end;
+
+
       TempCompiler := GetCompiler(ExistingDataSet.Orientation,
         ExistingDataSet.EvaluatedAt);
       if TempCompiler.IndexOfVariable(ExistingDataSet.Name) < 0 then
@@ -9142,7 +9660,8 @@ begin
     ExistingDataSet := FDataArrayManager.GetDataSetByName(SearchName);
     Assert(ExistingDataSet <> nil);
     ExistingDataSet.Assign(ADataSet);
-    Compiler := GetCompiler(ExistingDataSet.Orientation, ExistingDataSet.EvaluatedAt);
+    Compiler := GetCompiler(ExistingDataSet.Orientation,
+      ExistingDataSet.EvaluatedAt);
     Compiler.Compile(Item.FDataSetFormula);
     ExistingDataSet.Formula := Item.FDataSetFormula;
     if ExistingDataSet is TCustomPhastDataSet then
@@ -9354,11 +9873,10 @@ begin
       begin
         Assert(False);
       end;
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         Grid.ThreeDDataSet := Value;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         if (Mesh <> nil) then
@@ -9366,7 +9884,6 @@ begin
           Mesh.ThreeDDataSet := Value;
         end;
       end;
-    {$ENDIF}
     else
        Assert(False);
   end;
@@ -9946,9 +10463,9 @@ begin
   case ModelSelection of
     msUndefined: Assert(False);
     msPhast: result := 'PHAST';
-    msModflow, msModflowNWT: result := 'MODFLOW';
-    msModflowLGR: result := 'Parent model';
-    {$IFDEF SUTRA} msSutra22: result := 'SUTRA'; {$ENDIF}
+    msModflow, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}: result := 'MODFLOW';
+    msModflowLGR, msModflowLGR2: result := 'Parent model';
+    msSutra22: result := 'SUTRA';
     else Assert(False);
   end;
 end;
@@ -9961,11 +10478,10 @@ begin
       begin
         Assert(False);
       end;
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         result := Grid.ThreeDDataSet;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         if (Mesh <> nil) then
@@ -9973,7 +10489,6 @@ begin
           result := Mesh.ThreeDDataSet;
         end;
       end;
-    {$ENDIF}
     else
        Assert(False);
   end;
@@ -10046,11 +10561,14 @@ var
   ChildList: TCustomTimeList;
 begin
   inherited;
-  for ChildIndex := 0 to ChildModels.Count - 1 do
+  if LgrUsed then
   begin
-    ChildModel := ChildModels[ChildIndex].ChildModel;
-    ChildList := ChildModel.GetTimeListByName(TimeList.Name);
-    ChildModel.UpdateFrontTimeDataSet(ChildList, Time);
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      ChildList := ChildModel.GetTimeListByName(TimeList.Name);
+      ChildModel.UpdateFrontTimeDataSet(ChildList, Time);
+    end;
   end;
 end;
 
@@ -10138,7 +10656,7 @@ var
   ScreenObjectIndex: Integer;
   ScreenObject: TScreenObject;
 begin
-  if (ModelSelection in [msMODFLOW, msModflowLGR, msModflowNWT])
+  if (ModelSelection in ModflowSelection)
     and ModflowPackages.LakPackage.IsSelected  then
   begin
     LakeList := TIntegerList.Create;
@@ -10205,7 +10723,7 @@ var
   SfrList: TIntegerList;
   ID_Position: integer;
 begin
-  if (ModelSelection in [msMODFLOW, msModflowLGR, msModflowNWT])
+  if (ModelSelection in ModflowSelection)
     and (ModflowPackages.LakPackage.IsSelected
     or ModflowPackages.SfrPackage.IsSelected)  then
   begin
@@ -10303,12 +10821,10 @@ var
   ResKvArray: TDataArray;
   Mt3dActiveArray: TDataArray;
 begin
-{$IFDEF SUTRA}
   if ModelSelection = msSutra22 then
   begin
     Exit;
   end;
-{$ENDIF}
   LakeIdArray := FDataArrayManager.GetDataSetByName(rsLakeID);
   ActiveArray := FDataArrayManager.GetDataSetByName(rsActive);
   WetDryArray := FDataArrayManager.GetDataSetByName(rsWetDryFlag);
@@ -10663,7 +11179,7 @@ var
   LayerIndex: Integer;
   IsLake: boolean;
 begin
-  if (ModelSelection in [msMODFLOW, msModflowLGR, msModflowNWT])
+  if (ModelSelection in ModflowSelection)
     and ModflowPackages.LakPackage.IsSelected  then
   begin
     LakeIdArray := FDataArrayManager.GetDataSetByName(rsLakeID);
@@ -11126,9 +11642,6 @@ begin
 end;
 
 procedure TPhastModel.UpdateMapping;
-var
-  ChildIndex: Integer;
-  ChildModel: TChildModel;
 begin
   if (Length(FColumnMapping) = 0)
     and (Grid <> nil) and (Grid.ColumnCount > 0)
@@ -11137,11 +11650,6 @@ begin
     UpdateAMapping(FColumnMapping, vdSide);
     UpdateAMapping(FRowMapping, vdFront);
     UpdateAMapping(FLayerMapping, vdTop);
-    for ChildIndex := 0 to ChildModels.Count - 1 do
-    begin
-      ChildModel := ChildModels[ChildIndex].ChildModel;
-      ChildModel.DataArrayManager.InvalidateAllDataSets;
-    end;
   end;
 end;
 
@@ -11163,8 +11671,8 @@ begin
   result := 0;
   case ModelSelection of
     msPhast: result := PhastGrid.ColumnCount;
-    msModflow, msModflowNWT: result := ModflowGrid.ColumnCount;
-    msModflowLGR:
+    msModflow, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}: result := ModflowGrid.ColumnCount;
+    msModflowLGR, msModflowLGR2:
       begin
         result := 0;
         for ColIndex := 0 to ModflowGrid.ColumnCount - 1 do
@@ -11250,8 +11758,8 @@ begin
   result := 0;
   case ModelSelection of
     msPhast: result := PhastGrid.RowCount;
-    msModflow, msModflowNWT: result := ModflowGrid.RowCount;
-    msModflowLGR:
+    msModflow, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}: result := ModflowGrid.RowCount;
+    msModflowLGR, msModflowLGR2:
       begin
         result := 0;
         for RowIndex := 0 to ModflowGrid.RowCount - 1 do
@@ -11271,8 +11779,8 @@ begin
   case ModelSelection of
     msUndefined: result := 0;
     msPhast: result := PhastGrid.LayerCount;
-    msModflow, msModflowNWT: result := ModflowGrid.LayerCount;
-    msModflowLGR:
+    msModflow, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}: result := ModflowGrid.LayerCount;
+    msModflowLGR, msModflowLGR2:
       begin
         result := 0;
         for LayerIndex := 0 to ModflowGrid.LayerCount - 1 do
@@ -11280,7 +11788,6 @@ begin
           Inc(result, MaxChildLayersPerLayer(LayerIndex));
         end;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         if SutraMesh = nil then
@@ -11292,7 +11799,6 @@ begin
           result := SutraMesh.LayerCount;
         end;
       end;
-    {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -11614,7 +12120,32 @@ end;
 
 function TCustomModel.LayerCount: integer;
 begin
-  result := LayerStructure.LayerCount;
+  result := -1;
+  case ModelSelection of
+    msUndefined: result := 0;
+    msPhast:
+      begin
+        Result := PhastGrid.LayerCount;
+      end;
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+      begin
+        result := LayerStructure.LayerCount;
+      end;
+    msSutra22:
+      begin
+        if self is TPhastModel then
+        begin
+          TPhastModel(self).SutraLayerStructure.LayerCount;
+        end
+        else
+        begin
+          result := 0
+        end;
+      end;
+    else
+      Assert(False);
+  end;
+
 end;
 
 function TCustomModel.LayerGroupUsed(LayerGroup: TLayerGroup): boolean;
@@ -11710,7 +12241,13 @@ end;
 
 function TPhastModel.LgrUsed: boolean;
 begin
-  result := (ModelSelection in [msModflowLGR])
+  result := (ModelSelection in [msModflowLGR, msModflowLGR2])
+    and (ChildModels.Count > 0);
+end;
+
+function TPhastModel.LgrV1Used: boolean;
+begin
+  result := (ModelSelection = msModflowLGR)
     and (ChildModels.Count > 0);
 end;
 
@@ -11741,13 +12278,14 @@ begin
     GuiSettings.SideWidth := 1;
   end;
   ModflowTransientParameters.Loaded;
-  if (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  if (ModelSelection in ModflowSelection)
     and not LgrUsed then
   begin
     CombinedDisplayColumn := Grid.DisplayColumn;
     CombinedDisplayRow := Grid.DisplayRow;
     CombinedDisplayLayer := Grid.DisplayLayer;
   end;
+  FSutraMesh.Assign(SutraSettings);
 end;
 
 procedure TPhastModel.InvalidateSegments;
@@ -11819,7 +12357,7 @@ var
 begin
   ChildModel := nil;
   result := False;
-  if LgrUsed then
+  if LgrV1Used then
   begin
     for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
@@ -11994,6 +12532,23 @@ begin
   SoluteTransport := not Value;
 end;
 
+{$IFDEF FMP}
+procedure TPhastModel.SetFmpClimate(const Value: TClimateCollection);
+begin
+  FFmpClimate.Assign(Value);
+end;
+
+procedure TPhastModel.SetFmpCrops(const Value: TCropCollection);
+begin
+  FFmpCrops.Assign(Value);
+end;
+
+procedure TPhastModel.SetFmpSoils(const Value: TSoilCollection);
+begin
+  FFmpSoils.Assign(Value);
+end;
+{$ENDIF}
+
 procedure TPhastModel.SetDiffusivity(const Value: double);
 begin
   if FDiffusivity <> Value then
@@ -12158,7 +12713,7 @@ var
     end;
   end;
 begin
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.Mt3dBasic.IsSelected
     and AnyDispersionMultiDiffusion;
   if result then
@@ -12188,7 +12743,7 @@ var
     end;
   end;
 begin
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.Mt3dBasic.IsSelected;
   if result then
   begin
@@ -12218,7 +12773,7 @@ var
     end;
   end;
 begin
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.Mt3dBasic.IsSelected
     and ModflowPackages.Mt3dmsChemReact.IsSelected
     and (ModflowPackages.Mt3dmsChemReact.SorptionChoice <> scNone);
@@ -12250,7 +12805,7 @@ var
     end;
   end;
 begin
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.Mt3dBasic.IsSelected
     and ModflowPackages.Mt3dmsChemReact.IsSelected
     and (ModflowPackages.Mt3dmsChemReact.SorptionChoice <> scNone);
@@ -12282,7 +12837,7 @@ var
     end;
   end;
 begin
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.Mt3dBasic.IsSelected
     and ModflowPackages.Mt3dmsChemReact.IsSelected
     and (ModflowPackages.Mt3dmsChemReact.KineticChoice <> kcNone);
@@ -12314,7 +12869,7 @@ var
     end;
   end;
 begin
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.Mt3dBasic.IsSelected
     and ModflowPackages.Mt3dmsChemReact.IsSelected
     and (ModflowPackages.Mt3dmsChemReact.KineticChoice <> kcNone);
@@ -12389,7 +12944,7 @@ var
     end;
   end;
 begin
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.Mt3dBasic.IsSelected
     and ModflowPackages.Mt3dmsChemReact.IsSelected
     and (ModflowPackages.Mt3dmsChemReact.OtherInitialConcChoice = oicUse);
@@ -12503,7 +13058,7 @@ var
   DelayItem: TSubDelayBedLayerItem;
   WT_Item: TSwtWaterTableItem;
 begin
-  result := (ModelSelection in [msMODFLOW, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.SubPackage.IsSelected;
   if result then
   begin
@@ -12549,7 +13104,7 @@ begin
       end;
     end;
   end;
-  result := (ModelSelection in [msMODFLOW, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.SwtPackage.IsSelected;
   if result then
   begin
@@ -12679,6 +13234,8 @@ var
   SegItem: TCustomModflowBoundaryItem;
   TempBool: boolean;
   TempSelected: Boolean;
+  ChannelItem: TSfrChannelItem;
+  ItemIndex: Integer;
 begin
    RenameOldVerticalLeakance;
 
@@ -12706,6 +13263,32 @@ begin
 //      end;
 //    end;
 //  end;
+  if SfrIsSelected then
+  begin
+    for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
+    begin
+      AScreenObject := ScreenObjects[ScreenObjectIndex];
+      SfrBoundary := AScreenObject.ModflowSfrBoundary;
+      if (SfrBoundary <> nil) and SfrBoundary.Used then
+      begin
+        if SfrBoundary.ParamIcalc.Count < SfrBoundary.ChannelValues.Count then
+        begin
+          for ItemIndex := SfrBoundary.ChannelValues.Count - 1 downto 0 do
+          begin
+            ChannelItem := SfrBoundary.ChannelValues.Items[ItemIndex];
+            if ChannelItem.StartTime >= ChannelItem.EndTime then
+            begin
+              SfrBoundary.ChannelValues.Delete(ItemIndex);
+            end;
+          end;
+          while SfrBoundary.ParamIcalc.Count < SfrBoundary.ChannelValues.Count do
+          begin
+            SfrBoundary.ChannelValues.Delete(SfrBoundary.ChannelValues.Count-1);
+          end;
+        end;
+      end;
+    end;
+  end;
   if FileVersionEqualOrEarlier('2.18.1.0')
     and
     (FormulaManager.FunctionUsed(ObjectCurrentSegmentAngle)
@@ -12845,6 +13428,19 @@ begin
       ModflowPackages.NwtPackage.ContinueNWT := TempBool;
     end;
   end;
+
+  if FileVersionEqualOrEarlier('2.19.1.25') then
+  begin
+    for ScreenObjectIndex := 0 to ScreenObjectCount -1 do
+    begin
+      AScreenObject := ScreenObjects[ScreenObjectIndex];
+      SfrBoundary := AScreenObject.ModflowSfrBoundary;
+      if SfrBoundary <> nil then
+      begin
+        SfrBoundary.FixCollections;
+      end;
+    end;
+  end;
 end;
 
 procedure TPhastModel.FreeSfrWriter;
@@ -12867,7 +13463,8 @@ const
     'VANI', 'SS', 'SY', 'VKCB', 'RCH', 'EVT', 'ETS',
     'CHD', 'GHB', 'Q',
     'RIV', 'DRN', 'DRT', 'SFR', 'HFB',
-    'HK', 'HANI', 'VK', 'VANI', 'SS', 'SY', 'SYTP', 'KDEP', 'LVDA');
+    'HK', 'HANI', 'VK', 'VANI', 'SS', 'SY', 'SYTP', 'KDEP', 'LVDA', 'STR',
+    'QMAX');
 var
   PIndex: integer;
   ValAttribute: TParameterAttribute;
@@ -13065,7 +13662,7 @@ procedure TPhastModel.UpdateModelMateFluxObservation(
   Project: TProject; Operation: TModelMateOperation);
 Const
   ObservationGroupNames : array[Low(TFluxObsType)..High(TFluxObsType)] of string
-    = ('CHOB_flows', 'RIV_flows', 'DRN_flows', 'GHB_flows');
+    = ('CHOB_flows', 'RIV_flows', 'DRN_flows', 'GHB_flows', 'STR_flows');
 var
   ModelMuseFluxObs: TFluxObservation;
   TimeIndex: Integer;
@@ -13471,6 +14068,51 @@ begin
   ImMobileComponents.UpdateDataArrays;
 end;
 
+function TPhastModel.FarmProcessIsSelected: Boolean;
+begin
+{$IFDEF FMP}
+  result := (ModelSelection = msModflowFmp)
+    and ModflowPackages.FarmProcess.IsSelected;
+{$ELSE}
+   result := False;
+{$ENDIF}
+
+end;
+
+function TPhastModel.FarmProcessUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited FarmProcessUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.FarmProcessUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.FhbIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.FhbPackage.IsSelected;
+  if not result and frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.FhbPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
 function TPhastModel.FileVersionEqualOrEarlier(TestVersion: string): boolean;
 var
   ProgramNum: Integer;
@@ -13757,6 +14399,17 @@ begin
       end;
     end;
   end;
+  if ModflowPackages.StobPackage.IsSelected then
+  begin
+    for Index := 0 to StreamObservations.Count - 1 do
+    begin
+      ModelMuseFluxObsGroup := StreamObservations[Index];
+      if ModelMuseFluxObsGroup.Purpose = ObservationPurpose then
+      begin
+        UpdateModelMateFluxObservation(ObservationList, ModelMuseFluxObsGroup, Project, Operation);
+      end;
+    end;
+  end;
   // Head observations
   for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
   begin
@@ -14006,6 +14659,25 @@ begin
   end;
 end;
 
+function TPhastModel.StrIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.StrPackage.IsSelected;
+  if not result and frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.StrPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
 function TPhastModel.SipIsSelected: Boolean;
 var
   ChildIndex: Integer;
@@ -14084,9 +14756,20 @@ begin
   FSomeSegmentsUpToDate := Value;
 end;
 
+procedure TPhastModel.SetStrStreamLinkPlot(const Value: TSfrStreamLinkPlot);
+begin
+  FStrStreamLinkPlot.Assign(Value);
+end;
+
 procedure TPhastModel.SetSutraLayerStructure(const Value: TSutraLayerStructure);
 begin
   FSutraLayerStructure.Assign(Value);
+end;
+
+procedure TPhastModel.SetSutraSettings(const Value: TSutraSettings);
+begin
+  FSutraSettings.Assign(Value);
+  SutraMesh.Assign(FSutraSettings)
 end;
 
 procedure TPhastModel.SetSutraTimeOptions(const Value: TSutraTimeOptions);
@@ -14128,11 +14811,14 @@ var
   ChildList: TCustomTimeList;
 begin
   inherited;
-  for ChildIndex := 0 to ChildModels.Count - 1 do
+  if LgrUsed then
   begin
-    ChildModel := ChildModels[ChildIndex].ChildModel;
-    ChildList := ChildModel.GetTimeListByName(TimeList.Name);
-    ChildModel.UpdateThreeDTimeDataSet(ChildList, Time);
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      ChildList := ChildModel.GetTimeListByName(TimeList.Name);
+      ChildModel.UpdateThreeDTimeDataSet(ChildList, Time);
+    end;
   end;
 end;
 
@@ -14160,11 +14846,14 @@ var
   ChildList: TCustomTimeList;
 begin
   inherited;
-  for ChildIndex := 0 to ChildModels.Count - 1 do
+  if LgrUsed then
   begin
-    ChildModel := ChildModels[ChildIndex].ChildModel;
-    ChildList := ChildModel.GetTimeListByName(TimeList.Name);
-    ChildModel.UpdateTopTimeDataSet(ChildList, Time);
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      ChildList := ChildModel.GetTimeListByName(TimeList.Name);
+      ChildModel.UpdateTopTimeDataSet(ChildList, Time);
+    end;
   end;
 end;
 
@@ -14312,6 +15001,143 @@ begin
   begin
     AScreenObject := ScreenObjects[Index];
     AScreenObject.Draw3D;
+  end;
+end;
+
+procedure TCustomModel.DrawStrStreamLinkages(const BitMap: TBitmap32;
+  const ZoomBox: TQRbwZoomBox2);
+const
+  SquareSize = 6;
+var
+  StreamList: TSfrStreamPlotList;
+  StreamNumbers: TIntegerList;
+  Index: Integer;
+  StreamToPlot: TSfrStreamPlot;
+  StreamIndex: Integer;
+  OtherStream: TSfrStreamPlot;
+  UpstreamPoint: TPoint2D;
+  Points: array[0..1] of TPoint;
+  DownstreamPoint: TPoint2D;
+  StreamColor: TColor32;
+  DiversionColor: TColor32;
+  UnconnectedColor: TColor32;
+  DownstreamObject: TScreenObject;
+  UpstreamObject: TScreenObject;
+  StreamObject: TScreenObject;
+begin
+  inherited;
+  StreamList := TSfrStreamPlotList.Create;
+  try
+    StrStreamLinkPlot.GetObjectsToPlot(StreamList);
+    if StreamList.Count > 0 then
+    begin
+      StreamColor := Color32(StrStreamLinkPlot.StreamColor);
+      DiversionColor := Color32(StrStreamLinkPlot.DiversionColor);
+      UnconnectedColor := Color32(StrStreamLinkPlot.UnconnectedColor);
+
+      StreamNumbers := TIntegerList.Create;
+      try
+        for Index := 0 to StreamList.Count - 1 do
+        begin
+          StreamToPlot := StreamList[Index];
+          StreamNumbers.Add(StreamToPlot.Segment);
+        end;
+        StreamNumbers.Sorted := True;
+        for Index := 0 to StreamList.Count - 1 do
+        begin
+          StreamToPlot := StreamList[Index];
+          if StrStreamLinkPlot.PlotUnconnected then
+          begin
+            if StreamToPlot.OutflowSegment = 0 then
+            begin
+              StreamObject := StreamToPlot.StreamObject as TScreenObject;
+              UpstreamPoint := StreamObject.Points[StreamObject.Count-1];
+              Points[0].X := ZoomBox.XCoord(UpstreamPoint.x);
+              Points[0].Y := ZoomBox.YCoord(UpstreamPoint.y);
+              DrawBigRectangle32(BitMap, UnconnectedColor, UnconnectedColor, 1,
+                Points[0].X - SquareSize, Points[0].Y - SquareSize,
+                Points[0].X + SquareSize, Points[0].Y + SquareSize);
+            end;
+          end;
+          if StrStreamLinkPlot.PlotStreamConnections then
+          begin
+            DownstreamObject := nil;
+            if StreamToPlot.OutflowSegment > 0 then
+            begin
+              StreamIndex := StreamNumbers.IndexOf(StreamToPlot.OutflowSegment);
+              if StreamIndex >= 0 then
+              begin
+                OtherStream := StreamList[StreamIndex];
+                DownstreamObject := OtherStream.StreamObject as TScreenObject;
+                Assert(StreamToPlot.OutflowSegment = OtherStream.Segment)
+              end;
+            end;
+            if DownstreamObject <> nil then
+            begin
+              StreamObject := StreamToPlot.StreamObject as TScreenObject;
+              UpstreamPoint := StreamObject.Points[StreamObject.Count-1];
+              Points[0].X := ZoomBox.XCoord(UpstreamPoint.x);
+              Points[0].Y := ZoomBox.YCoord(UpstreamPoint.y);
+
+              DownstreamPoint := DownstreamObject.Points[0];
+              Points[1].X := ZoomBox.XCoord(DownstreamPoint.x);
+              Points[1].Y := ZoomBox.YCoord(DownstreamPoint.y);
+
+              if (Points[0].X = Points[1].X) and (Points[0].Y = Points[1].Y) then
+              begin
+                DrawBigRectangle32(BitMap, StreamColor, StreamColor, 1,
+                  Points[0].X - SquareSize, Points[0].Y - SquareSize,
+                  Points[0].X + SquareSize, Points[0].Y + SquareSize);
+              end
+              else
+              begin
+                DrawBigPolyline32(BitMap, StreamColor, 2, Points, True);
+              end;
+            end;
+          end;
+          if StrStreamLinkPlot.PlotDiversions then
+          begin
+            UpstreamObject := nil;
+            if StreamToPlot.DiversionSegment > 0 then
+            begin
+              StreamIndex := StreamNumbers.IndexOf(StreamToPlot.DiversionSegment);
+              if StreamIndex >= 0 then
+              begin
+                OtherStream := StreamList[StreamIndex];
+                UpstreamObject := OtherStream.StreamObject as TScreenObject;
+                Assert(StreamToPlot.DiversionSegment = OtherStream.Segment)
+              end;
+            end;
+            if UpstreamObject <> nil then
+            begin
+              UpstreamPoint := UpstreamObject.Points[UpstreamObject.Count-1];
+              Points[0].X := ZoomBox.XCoord(UpstreamPoint.x);
+              Points[0].Y := ZoomBox.YCoord(UpstreamPoint.y);
+
+              StreamObject := StreamToPlot.StreamObject as TScreenObject;
+              DownstreamPoint := StreamObject.Points[0];
+              Points[1].X := ZoomBox.XCoord(DownstreamPoint.x);
+              Points[1].Y := ZoomBox.YCoord(DownstreamPoint.y);
+
+              if (Points[0].X = Points[1].X) and (Points[0].Y = Points[1].Y) then
+              begin
+                DrawBigRectangle32(BitMap, DiversionColor, DiversionColor, 1,
+                  Points[0].X - SquareSize, Points[0].Y - SquareSize,
+                  Points[0].X + SquareSize, Points[0].Y + SquareSize);
+              end
+              else
+              begin
+                DrawBigPolyline32(BitMap, DiversionColor, 2, Points, True);
+              end;
+            end;
+          end;
+        end;
+      finally
+        StreamNumbers.Free;
+      end;
+    end;
+  finally
+    StreamList.Free;
   end;
 end;
 
@@ -14635,6 +15461,51 @@ begin
   ModflowPackages.EvtPackage.MfEvtEvapSurface.Invalidate;
 end;
 
+procedure TCustomModel.InvalidateMfFhbFlows(Sender: TObject);
+begin
+  ModflowPackages.FhbPackage.MfFhbFlows.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfFhbHeads(Sender: TObject);
+begin
+  ModflowPackages.FhbPackage.MfFhbHeads.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfFmpCropID(Sender: TObject);
+begin
+  { TODO -cFMP : Need to finish this }
+end;
+
+procedure TCustomModel.InvalidateMfFmpEvap(Sender: TObject);
+begin
+  { TODO -cFMP : Need to finish this }
+end;
+
+procedure TCustomModel.InvalidateMfFmpMaxPumpingRate(Sender: TObject);
+begin
+//  Assert(False);
+  { TODO -cFMP : Need to finish this }
+end;
+
+procedure TCustomModel.InvalidateMfFmpPrecip(Sender: TObject);
+begin
+//  Assert(False);
+  { TODO -cFMP : Need to finish this }
+end;
+
+procedure TCustomModel.InvalidateMfFmpPumpOnlyIfCropRequiresWater(
+  Sender: TObject);
+begin
+//  Assert(False);
+  { TODO -cFMP : Need to finish this }
+end;
+
+procedure TCustomModel.InvalidateMfFmpWellFarmID(Sender: TObject);
+begin
+//  Assert(False);
+  { TODO -cFMP : Need to finish this }
+end;
+
 procedure TCustomModel.InvalidateMfGhbBoundaryHead(Sender: TObject);
 begin
   ModflowPackages.GhbBoundary.MfGhbBoundaryHead.Invalidate;
@@ -14788,11 +15659,10 @@ begin
       begin
         Assert(False);
       end;
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         Grid.GridChanged;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         if (Mesh <> nil) then
@@ -14800,7 +15670,6 @@ begin
           Mesh.MeshChanged;
         end;
       end;
-    {$ENDIF}
     else
        Assert(False);
   end;
@@ -14896,7 +15765,7 @@ begin
                 result := '0'
               end;
             end;
-          msModflow, msModflowLGR, msModflowNWT:
+          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
             begin
               if Grid.LayerCount > 0 then
               begin
@@ -14921,7 +15790,6 @@ begin
                 result := '0'
               end;
             end;
-          {$IFDEF SUTRA}
           msSutra22:
             begin
 
@@ -14960,7 +15828,7 @@ begin
                 end
                 else
                 begin
-                  MeshLimits := Mesh.MeshLimits(vdFront);
+                  MeshLimits := Mesh.MeshLimits(vdFront, 0);
                   result :=
                     FortranFloatToStr((MeshLimits.MaxZ + MeshLimits.MinZ)/2);
                 end;
@@ -14970,7 +15838,6 @@ begin
                 result := '0'
               end;
             end
-          {$ENDIF}
           else Assert(False);
         end;
 
@@ -14980,7 +15847,7 @@ begin
         Orientation :=  dsoFront;
         case ModelSelection of
           msUndefined: Assert(False);
-          msPhast, msModflow, msModflowLGR, msModflowNWT:
+          msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
             begin
               if Grid .RowCount > 0 then
               begin
@@ -14997,14 +15864,21 @@ begin
                 result := '0';
               end;
             end;
-          {$IFDEF SUTRA}
           msSutra22:
             begin
+
               ALine := EquateLine(Mesh.CrossSection.StartPoint,
                 Mesh.CrossSection.EndPoint);
-              ClosestPoint := ClosestPointOnLineFromPoint(
-                ALine, EquatePoint(0.0, 0.0));
-              ADistance := Distance(EquatePoint(0.0, 0.0), ClosestPoint);
+              if (ALine[1].x <> ALine[2].x) or (ALine[1].y <> ALine[2].y) then
+              begin
+                ClosestPoint := ClosestPointOnLineFromPoint(
+                  ALine, EquatePoint(0.0, 0.0));
+                ADistance := Distance(EquatePoint(0.0, 0.0), ClosestPoint);
+              end
+              else
+              begin
+                ADistance := 0;
+              end;
               if ADistance <> 0 then
               begin
                 if FastGEO.Orientation(EquatePoint(0.0, 0.0),
@@ -15016,15 +15890,12 @@ begin
               end;
               result := FortranFloatToStr(ADistance);
             end
-          {$ENDIF}
           else Assert(False);
         end;
       end;
     vdSide:
       begin
-        {$IFDEF SUTRA}
         Assert(ModelSelection <> msSutra22);
-        {$ENDIF}
         Orientation :=  dsoSide;
         if Grid.ColumnCount > 0 then
         begin
@@ -15062,7 +15933,7 @@ begin
   LocalLayerStructure := nil;
   case ModelSelection of
     msUndefined, msPhast: Assert(False);
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         Layer := Grid.SelectedLayer;
         if Layer >= Grid.LayerCount then
@@ -15083,7 +15954,6 @@ begin
 //          end;
 //        end;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         Layer := Mesh.SelectedLayer;
@@ -15105,7 +15975,6 @@ begin
 //          end;
 //        end;
       end
-    {$ENDIF}
     else Assert(False);
   end;
 
@@ -15166,7 +16035,7 @@ begin
                 result := '0'
               end;
             end;
-          msModflow, msModflowLGR, msModflowNWT:
+          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
             begin
               if Grid.LayerCount > 0 then
               begin
@@ -15189,7 +16058,6 @@ begin
                 result := '0';
               end;
             end;
-          {$IFDEF SUTRA}
           msSutra22:
             begin
               if (Mesh.LayerCount > 0) then
@@ -15221,7 +16089,7 @@ begin
                 end
                 else
                 begin
-                  MeshLimits := Mesh.MeshLimits(vdFront);
+                  MeshLimits := Mesh.MeshLimits(vdFront, 0);
                   result := FortranFloatToStr(MeshLimits.MaxZ);
                 end;
               end
@@ -15230,7 +16098,6 @@ begin
                 result := '0';
               end;
             end;
-          {$ENDIF}
           else Assert(False);
         end;
       end;
@@ -15239,7 +16106,7 @@ begin
         Orientation := dsoFront;
         case ModelSelection of
           msUndefined: Assert(False);
-          msPhast, msModflow, msModflowLGR, msModflowNWT:
+          msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
             begin
               if (Grid.RowCount > 0) then
               begin
@@ -15267,12 +16134,10 @@ begin
                 result := '0';
               end;
             end;
-          {$IFDEF SUTRA}
           msSutra22:
             begin
               result := FortranFloatToStr(Mesh.MaxDist);
             end
-          {$ENDIF}
           else Assert(False);
         end;
 
@@ -15280,9 +16145,7 @@ begin
     vdSide:
       begin
         Orientation := dsoSide;
-        {$IFDEF SUTRA}
         Assert(ModelSelection <> msSutra22);
-        {$ENDIF}
         if Grid.ColumnCount > 0 then
         begin
           Column := Grid.SelectedColumn;
@@ -15351,7 +16214,7 @@ begin
                 result := '0'
               end;
             end;
-          msModflow, msModflowLGR, msModflowNWT:
+          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
             begin
               if Grid.LayerCount > 0 then
               begin
@@ -15374,7 +16237,6 @@ begin
                 result := '0'
               end;
             end;
-          {$IFDEF SUTRA}
           msSutra22:
             begin
               if (Mesh.LayerCount > 0) then
@@ -15406,7 +16268,7 @@ begin
                 end
                 else
                 begin
-                  MeshLimits := Mesh.MeshLimits(vdFront);
+                  MeshLimits := Mesh.MeshLimits(vdFront, 0);
                   result := FortranFloatToStr(MeshLimits.MinZ);
                 end;
               end
@@ -15415,7 +16277,6 @@ begin
                 result := '0'
               end;
             end;
-          {$ENDIF}
           else Assert(False);
         end;
       end;
@@ -15424,7 +16285,7 @@ begin
         Orientation :=  dsoFront;
         case ModelSelection of
           msUndefined: Assert(False);
-          msPhast, msModflow, msModflowLGR, msModflowNWT:
+          msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
             begin
 
               if (Grid <> nil) and (Grid.RowCount > 0) then
@@ -15453,21 +16314,17 @@ begin
                 result := '0';
               end;
             end;
-          {$IFDEF SUTRA}
           msSutra22:
             begin
               result := FortranFloatToStr(Mesh.MinDist);
             end
-          {$ENDIF}
           else Assert(False);
         end;
       end;
     vdSide:
       begin
         Orientation :=  dsoSide;
-        {$IFDEF SUTRA}
         Assert(ModelSelection  <> msSutra22);
-        {$ENDIF}
         if Grid.ColumnCount > 0 then
         begin
           Column := Grid.SelectedColumn;
@@ -15638,6 +16495,66 @@ begin
   ModflowPackages.SfrPackage.MfSfrVerticalUnsatK.Invalidate;
 end;
 
+procedure TCustomModel.InvalidateMfStrBedBottom(Sender: TObject);
+begin
+  ModflowPackages.StrPackage.MfStrBedBottomElevation.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfStrBedTop(Sender: TObject);
+begin
+  ModflowPackages.StrPackage.MfStrBedTopElevation.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfStrConductance(Sender: TObject);
+begin
+  ModflowPackages.StrPackage.MfStrConductance.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfStrDiversionSegmentNumber(Sender: TObject);
+begin
+  ModflowPackages.StrPackage.MfStrDiversionSegmentNumber.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfStrFlow(Sender: TObject);
+begin
+  ModflowPackages.StrPackage.MfStrFlow.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfStrOutflowSegmentNumber(Sender: TObject);
+begin
+  ModflowPackages.StrPackage.MfStrOutflowSegmentNumber.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfStrReachNumber(Sender: TObject);
+begin
+  ModflowPackages.StrPackage.MfStrReachNumber.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfStrRoughness(Sender: TObject);
+begin
+  ModflowPackages.StrPackage.MfStrRoughness.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfStrSegmentNumber(Sender: TObject);
+begin
+  ModflowPackages.StrPackage.MfStrSegmentNumber.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfStrSlope(Sender: TObject);
+begin
+  ModflowPackages.StrPackage.MfStrSlope.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfStrStage(Sender: TObject);
+begin
+  ModflowPackages.StrPackage.MfStrStage.Invalidate;
+end;
+
+procedure TCustomModel.InvalidateMfStrWidth(Sender: TObject);
+begin
+  ModflowPackages.StrPackage.MfStrWidth.Invalidate;
+end;
+
 procedure TPhastModel.InvalidateMfSfrWidthCoefficient(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrWidthCoefficient.Invalidate
@@ -15716,7 +16633,8 @@ begin
   // 6. Multiplier Arrays
   result := 3;
   result := result + ModflowPackages.SelectedModflowPackageCount;
-  if ModflowPackages.SfrPackage.IsSelected or ModflowPackages.LakPackage.IsSelected then
+  if ModflowPackages.SfrPackage.IsSelected
+    or ModflowPackages.LakPackage.IsSelected then
   begin
     // gages
     Inc(result);
@@ -15823,9 +16741,7 @@ end;
 
 procedure TCustomModel.InvalidateMt3dmsChemSources(Sender: TObject);
 begin
-  // this needs to change.
-  { TODO 1 -cMT3DMS : This needs to change }
-//  Assert(False);
+  ModflowPackages.Mt3dmsSourceSink.Concentrations.Invalidate;
 end;
 
 procedure TPhastModel.InvalidateModflowBoundaries;
@@ -15888,6 +16804,7 @@ begin
   FWellSolutionGroup := TTimeListGroup.Create;
   FWellSolutionGroup.Add(FWellSolution);
   FWellSolutionGroup.Name := 'Well_Solution';
+
 end;
 
 procedure TPhastModel.CreateInitialDataSetsForPhastTimeLists;
@@ -16189,44 +17106,32 @@ end;
 
 procedure TCustomModel.InvalidateSutraFluidFlux(Sender: TObject);
 begin
-{$IFDEF SUTRA}
   FSutraFluidFluxTimeList.Invalidate;
-{$ENDIF}
 end;
 
 procedure TCustomModel.InvalidateSutraFluidFluxU(Sender: TObject);
 begin
-{$IFDEF SUTRA}
   FSutraFluidFluxUTimeList.Invalidate;
-{$ENDIF}
 end;
 
 procedure TCustomModel.InvalidateSutraSpecifiedU(Sender: TObject);
 begin
-{$IFDEF SUTRA}
   FSutraConcTempTimeList.Invalidate;
-{$ENDIF}
 end;
 
 procedure TCustomModel.InvalidateSutraSpecPressure(Sender: TObject);
 begin
-{$IFDEF SUTRA}
   FSutraSpecPressureTimeList.Invalidate;
-{$ENDIF}
 end;
 
 procedure TCustomModel.InvalidateSutraSpecPressureU(Sender: TObject);
 begin
-{$IFDEF SUTRA}
   FSutraSpecPresUTimeList.Invalidate;
-{$ENDIF}
 end;
 
 procedure TCustomModel.InvalidateSutraUFlux(Sender: TObject);
 begin
-{$IFDEF SUTRA}
   FSutraMassEnergyFluxTimeList.Invalidate;
-{$ENDIF}
 end;
 
 function TCustomModel.IsLayerSimulated(const LayerID: integer): boolean;
@@ -16416,7 +17321,8 @@ begin
       end;
     end;
   end;
-  if SutraMesh <> nil then
+
+  if (SutraMesh <> nil) and (ModelSelection = msSutra22) then
   begin
     SutraMesh.SelectedLayer := FCombinedDisplayLayer;
     FCombinedDisplayLayer := SutraMesh.SelectedLayer;
@@ -16618,6 +17524,14 @@ begin
   begin
     result := DrtIsSelected;
   end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.StrPackage then
+  begin
+    result := StrIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.FhbPackage then
+  begin
+    result := FhbIsSelected;
+  end
   else if APackage = frmGoPhast.PhastModel.ModflowPackages.RchPackage then
   begin
     result := RchIsSelected;
@@ -16685,6 +17599,10 @@ begin
   else if APackage = frmGoPhast.PhastModel.ModflowPackages.RvobPackage then
   begin
     result := RvobIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.StobPackage then
+  begin
+    result := StobIsSelected;
   end
   else if APackage = frmGoPhast.PhastModel.ModflowPackages.HufPackage then
   begin
@@ -18019,6 +18937,7 @@ begin
     ModflowNwtLocation := SourceLocations.ModflowNwtLocation;
     Mt3dmsLocation := SourceLocations.Mt3dmsLocation;
     Sutra22Location := SourceLocations.Sutra22Location;
+    ModflowFmpLocation := SourceLocations.ModflowFmpLocation;
   end
   else
   begin
@@ -18035,9 +18954,11 @@ begin
   PhastLocation := DefaultPhastPath;
   ZoneBudgetLocation := StrZoneBudgetDefaultPath;
   ModflowLgrLocation := strModflowLgrDefaultPath;
+  ModflowLgr2Location := strModflowLgr2DefaultPath;
   ModflowNwtLocation := strModflowNwtDefaultPath;
   Mt3dmsLocation := strMt3dmsDefaultPath;
   Sutra22Location := KSutraDefaultPath;
+  ModflowFmpLocation := strModflowFmpDefaultPath;
   ADirectory := GetCurrentDir;
   try
     SetCurrentDir(ExtractFileDir(ParamStr(0)));
@@ -18055,26 +18976,82 @@ var
 begin
   ModflowLocation := IniFile.ReadString(StrProgramLocations, StrMODFLOW2005,
     StrModflowDefaultPath);
+  if (ModflowLocation = '') and FileExists(StrModflowDefaultPath) then
+  begin
+    ModflowLocation := StrModflowDefaultPath;
+  end;
   TextEditorLocation := IniFile.ReadString(StrProgramLocations,
     StrTextEditor, '');
   ModPathLocation := IniFile.ReadString(StrProgramLocations, StrMODPATH,
     StrMpathDefaultPath);
-  ModPathLocationVersion6 := IniFile.ReadString(StrProgramLocations, StrMODPATHVersion6,
-    StrMpathDefaultPathVersion6);
+  if (ModPathLocation = '') and FileExists(StrModflowDefaultPath) then
+  begin
+    ModPathLocation := StrModflowDefaultPath;
+  end;
+  ModPathLocationVersion6 := IniFile.ReadString(StrProgramLocations,
+    StrMODPATHVersion6, StrMpathDefaultPathVersion6);
+  if (ModPathLocationVersion6 = '') and FileExists(StrMpathDefaultPathVersion6) then
+  begin
+    ModPathLocationVersion6 := StrMpathDefaultPathVersion6;
+  end;
   PhastLocation := IniFile.ReadString(StrProgramLocations, StrPHAST,
     DefaultPhastPath);
+  if (PhastLocation = '') and FileExists(DefaultPhastPath) then
+  begin
+    PhastLocation := DefaultPhastPath;
+  end;
   ZoneBudgetLocation := IniFile.ReadString(StrProgramLocations, StrZonebudget,
     StrZoneBudgetDefaultPath);
+  if (ZoneBudgetLocation = '') and FileExists(StrZoneBudgetDefaultPath) then
+  begin
+    ZoneBudgetLocation := StrZoneBudgetDefaultPath;
+  end;
   ModelMateLocation := IniFile.ReadString(StrProgramLocations, StrModelMate,
     StrModelMateDefaultPath);
+  if (ModelMateLocation = '') and FileExists(StrModelMateDefaultPath) then
+  begin
+    ModelMateLocation := StrModelMateDefaultPath;
+  end;
   ModflowLgrLocation := IniFile.ReadString(StrProgramLocations, strModflowLgr,
     strModflowLgrDefaultPath);
+  if (ModflowLgrLocation = '') and FileExists(strModflowLgrDefaultPath) then
+  begin
+    ModflowLgrLocation := strModflowLgrDefaultPath;
+  end;
+
+  ModflowLgr2Location := IniFile.ReadString(StrProgramLocations, strModflowLgr2,
+    strModflowLgr2DefaultPath);
+  if (ModflowLgr2Location = '') and FileExists(strModflowLgr2DefaultPath) then
+  begin
+    ModflowLgr2Location := strModflowLgr2DefaultPath;
+  end;
+
   ModflowNwtLocation := IniFile.ReadString(StrProgramLocations, strModflowNWT,
     strModflowNwtDefaultPath);
+  if (ModflowNwtLocation = '') and FileExists(strModflowNwtDefaultPath) then
+  begin
+    ModflowNwtLocation := strModflowNwtDefaultPath;
+  end;
+
+  ModflowFmpLocation := IniFile.ReadString(StrProgramLocations, strModflowFMP,
+    strModflowFmpDefaultPath);
+  if (ModflowFmpLocation = '') and FileExists(strModflowFmpDefaultPath) then
+  begin
+    ModflowFmpLocation := strModflowFmpDefaultPath;
+  end;
+
   Mt3dmsLocation := IniFile.ReadString(StrProgramLocations, StrMT3DMS,
     strMt3dmsDefaultPath);
+  if (Mt3dmsLocation = '') and FileExists(strMt3dmsDefaultPath) then
+  begin
+    Mt3dmsLocation := strMt3dmsDefaultPath;
+  end;
   Sutra22Location := IniFile.ReadString(StrProgramLocations, KSutra22,
     KSutraDefaultPath);
+  if (Sutra22Location = '') and FileExists(KSutraDefaultPath) then
+  begin
+    Sutra22Location := KSutraDefaultPath;
+  end;
 
   ADirectory := GetCurrentDir;
   try
@@ -18127,6 +19104,16 @@ end;
 procedure TProgramLocations.SetModelMonitorLocation(const Value: string);
 begin
   FModelMonitorLocation := RemoveQuotes(Value);
+end;
+
+procedure TProgramLocations.SetModflowFmpLocation(const Value: string);
+begin
+  FModflowFmpLocation := RemoveQuotes(Value);
+end;
+
+procedure TProgramLocations.SetModflowLgr2Location(const Value: string);
+begin
+  FModflowLgr2Location := RemoveQuotes(Value);
 end;
 
 procedure TProgramLocations.SetModflowLgrLocation(const Value: string);
@@ -18188,6 +19175,7 @@ begin
   IniFile.WriteString(StrProgramLocations, strModflowNWT, ModflowNwtLocation);
   IniFile.WriteString(StrProgramLocations, StrMT3DMS, Mt3dmsLocation);
   IniFile.WriteString(StrProgramLocations, KSutra22, Sutra22Location);
+  IniFile.WriteString(StrProgramLocations, strModflowFmp, ModflowFmpLocation);
 end;
 
 { TDataSetClassification }
@@ -18259,11 +19247,13 @@ begin
   FRiverObservations := TFluxObservationGroups.Create(self);
   FDrainObservations := TFluxObservationGroups.Create(self);
   FGhbObservations := TFluxObservationGroups.Create(self);
+  FStrObservations := TFluxObservationGroups.Create(self);
 
   FHeadFluxObservations.FluxObservationType := fotHead;
   FRiverObservations.FluxObservationType := fotRiver;
   FDrainObservations.FluxObservationType := fotDrain;
   FGhbObservations.FluxObservationType := fotGHB;
+  FStrObservations.FluxObservationType := fotSTR;
 
   FMt3dmsHeadMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
   FMt3dmsHeadMassFluxObservations.FluxObservationType := mfotHead;
@@ -18301,11 +19291,19 @@ begin
   FMt3dmsLakMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
   FMt3dmsLakMassFluxObservations.FluxObservationType := mfotLake;
 
+  FMt3dmsStrMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
+  FMt3dmsStrMassFluxObservations.FluxObservationType := mfotSTR;
+
+  FMt3dmsFhbHeadMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
+  FMt3dmsFhbHeadMassFluxObservations.FluxObservationType := mfotFHB_Head;
+
+  FMt3dmsFhbFlowMassFluxObservations := TMt3dmsFluxObservationGroups.Create(self);
+  FMt3dmsFhbFlowMassFluxObservations.FluxObservationType := mfotFHB_Flow;
+
   FHydrogeologicUnits := THydrogeologicUnits.Create(self);
   FFilesToArchive := TStringList.Create;
   FModelInputFiles := TStringList.Create;
   FModflowWettingOptions := TWettingOptions.Create(Self);
-  FGlobalVariables := TGlobalVariables.Create(self);
 
   FTopGridObserver:= TObserver.Create(nil);
   FThreeDGridObserver:= TObserver.Create(nil);
@@ -18334,8 +19332,6 @@ begin
   FDataArrayManager.DefinePackageDataArrays;
   CreateModflowDisplayTimeLists;
 
-
-{$IFDEF SUTRA}
   FSutraSpecPressureTimeList := TSutraMergedTimeList.Create(self);
   case SutraOptions.TransportChoice of
     tcSolute: FSutraSpecPressureTimeList.Name := StrSpecifiedPressure;
@@ -18394,14 +19390,10 @@ begin
   FSutraMassEnergyFluxTimeList.OnTimeListUsed := SutraUsed;
   FSutraMassEnergyFluxTimeList.OnInitialize := InitializeSutraMassEnergyFlux;
   AddTimeList(FSutraMassEnergyFluxTimeList);
-
-
-{$ENDIF}
 end;
 
 procedure TCustomModel.UpdateSutraTimeListNames;
 begin
-{$IFDEF SUTRA}
   case SutraOptions.TransportChoice of
     tcSolute:
       begin
@@ -18429,17 +19421,13 @@ begin
       end
     else Assert(False);
   end;
-{$ENDIF}
 end;
 
 procedure TCustomModel.InitializeSutraMassEnergyFlux(Sender: TObject);
-{$IFDEF SUTRA}
 var
   BoundaryWriter: TSutraBoundaryWriter;
   Dummy: TSutraMergedTimeList;
-{$ENDIF}
 begin
-{$IFDEF SUTRA}
   Dummy := TSutraMergedTimeList.Create(self);
   BoundaryWriter := TSutraBoundaryWriter.Create(Self, etDisplay, sbtMassEnergySource);
   try
@@ -18449,18 +19437,14 @@ begin
     BoundaryWriter.Free;
     Dummy.Free;
   end;
-{$ENDIF}
 end;
 
 
 procedure TCustomModel.InitializeSutraSpecifiedConcTemp(Sender: TObject);
-{$IFDEF SUTRA}
 var
   BoundaryWriter: TSutraBoundaryWriter;
   Dummy: TSutraMergedTimeList;
-{$ENDIF}
 begin
-{$IFDEF SUTRA}
   Dummy := TSutraMergedTimeList.Create(self);
   BoundaryWriter := TSutraBoundaryWriter.Create(Self, etDisplay, sbtSpecConcTemp);
   try
@@ -18470,16 +19454,12 @@ begin
     BoundaryWriter.Free;
     Dummy.Free;
   end;
-{$ENDIF}
 end;
 
 procedure TCustomModel.InitializeSutraFluidFlux(Sender: TObject);
-{$IFDEF SUTRA}
 var
   BoundaryWriter: TSutraBoundaryWriter;
-{$ENDIF}
 begin
-{$IFDEF SUTRA}
   BoundaryWriter := TSutraBoundaryWriter.Create(Self, etDisplay, sbtFluidSource);
   try
     BoundaryWriter.UpdateMergeLists(FSutraFluidFluxTimeList,
@@ -18487,16 +19467,12 @@ begin
   finally
     BoundaryWriter.Free;
   end;
-{$ENDIF}
 end;
 
 procedure TCustomModel.InitializeSutraSpecPres(Sender: TObject);
-{$IFDEF SUTRA}
 var
   BoundaryWriter: TSutraBoundaryWriter;
-{$ENDIF}
 begin
-{$IFDEF SUTRA}
   BoundaryWriter := TSutraBoundaryWriter.Create(Self, etDisplay, sbtSpecPress);
   try
     BoundaryWriter.UpdateMergeLists(FSutraSpecPressureTimeList,
@@ -18504,7 +19480,6 @@ begin
   finally
     BoundaryWriter.Free;
   end;
-{$ENDIF}
 end;
 
 //procedure TCustomModel.UpdateSutraSpecPresUseList(Sender: TObject;
@@ -18560,14 +19535,12 @@ end;
 
 destructor TCustomModel.Destroy;
 begin
-{$IFDEF SUTRA}
   FSutraSpecPressureTimeList.Free;
   FSutraSpecPresUTimeList.Free;
   FSutraConcTempTimeList.Free;
   FSutraFluidFluxTimeList.Free;
   FSutraFluidFluxUTimeList.Free;
   FSutraMassEnergyFluxTimeList.Free;
-{$ENDIF}
 //  FChangedDataArrayNames.Free;
 //  FBoundaryDataSets.Free;
 //  FDataSets.Free;
@@ -18599,14 +19572,17 @@ begin
   FMt3dmsEvtMassFluxObservations.Free;
   FMt3dmsDrnMassFluxObservations.Free;
   FMt3dmsLakMassFluxObservations.Free;
+  FMt3dmsStrMassFluxObservations.Free;
+  FMt3dmsFhbHeadMassFluxObservations.Free;
+  FMt3dmsFhbFlowMassFluxObservations.Free;
 
   FHeadFluxObservations.Free;
+  FStrObservations.Free;
   FRiverObservations.Free;
   FDrainObservations.Free;
   FGhbObservations.Free;
   FHydrogeologicUnits.Free;
   FParsers.Free;
-  FGlobalVariables.Free;
   FDataArrayManager.Free;
   FTransientMultiplierArrays.Free;
   FTransientZoneArrays.Free;
@@ -18696,8 +19672,14 @@ begin
       ProgramLocations.ModflowLocation := Value;
     msModflowLGR:
       ProgramLocations.ModflowLgrLocation := Value;
+    msModflowLGR2:
+      ProgramLocations.ModflowLgr2Location := Value;
     msModflowNWT:
       ProgramLocations.ModflowNwtLocation := Value;
+    {$IFDEF FMP}
+    msModflowFmp:
+      ProgramLocations.ModflowFmpLocation := Value;
+    {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -18804,11 +19786,10 @@ end;
 procedure TCustomModel.SetSelectedLayer(const Value: integer);
 begin
   case ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         Grid.SelectedLayer:= Value;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         if Mesh <> nil then
@@ -18816,7 +19797,6 @@ begin
           Mesh.SelectedLayer := Value;
         end;
       end
-    {$ENDIF}
   else
     Assert(False);
   end;
@@ -18834,16 +19814,14 @@ begin
       begin
         Assert(False);
       end;
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         Grid.SideDataSet := Value;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         // do nothing
       end;
-    {$ENDIF}
     else
        Assert(False);
   end;
@@ -18854,11 +19832,17 @@ begin
   FSideTimeList := Value;
 end;
 
+procedure TCustomModel.SetStrObservations(const Value: TFluxObservationGroups);
+begin
+  FStrObservations.Assign(Value);
+end;
+
 procedure TCustomModel.SetSutraMesh(const Value: TSutraMesh3D);
 begin
   if FSutraMesh = nil then
   begin
     FSutraMesh := TSutraMesh3D.Create(self);
+    FSutraMesh.OnMeshTypeChanged := frmGoPhast.SutraMeshTypeChanged;
   end;
   FSutraMesh.Assign(Value);
 end;
@@ -18880,11 +19864,10 @@ begin
       begin
         Assert(False);
       end;
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         Grid.TopDataSet := Value;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         if (Mesh <> nil) then
@@ -18892,7 +19875,6 @@ begin
           Mesh.TopDataSet := Value;
         end;
       end;
-    {$ENDIF}
     else
        Assert(False);
   end;
@@ -18931,16 +19913,14 @@ begin
       begin
         Assert(False);
       end;
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         Grid.FrontDataSet := Value;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         // do nothing
       end;
-    {$ENDIF}
     else
        Assert(False);
   end;
@@ -18995,6 +19975,18 @@ begin
   FMt3dmsEvtMassFluxObservations.Assign(Value);
 end;
 
+procedure TCustomModel.SetMt3dmsFhbFlowMassFluxObservations(
+  const Value: TMt3dmsFluxObservationGroups);
+begin
+  FMt3dmsFhbFlowMassFluxObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetMt3dmsFhbHeadMassFluxObservations(
+  const Value: TMt3dmsFluxObservationGroups);
+begin
+  FMt3dmsFhbHeadMassFluxObservations.Assign(Value);
+end;
+
 procedure TCustomModel.SetMt3dmsGhbMassFluxObservations(
   const Value: TMt3dmsFluxObservationGroups);
 begin
@@ -19035,6 +20027,12 @@ procedure TCustomModel.SetMt3dmsRivMassFluxObservations(
   const Value: TMt3dmsFluxObservationGroups);
 begin
   FMt3dmsRivMassFluxObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetMt3dmsStrMassFluxObservations(
+  const Value: TMt3dmsFluxObservationGroups);
+begin
+  FMt3dmsStrMassFluxObservations.Assign(Value)
 end;
 
 procedure TCustomModel.SetMt3dmsWellMassFluxObservations(
@@ -19148,6 +20146,31 @@ var
   StartIndex: Integer;
   EndIndex: Integer;
   Exag: Extended;
+  InvalidMesh: boolean;
+  OuterElementIndex: integer;
+  OuterElement: TSutraElement2D;
+  InnerElementIndex: integer;
+  InnerElement: TSutraElement2D;
+  InnerNodeIndex: integer;
+  NodeTree: TRbwQuadTree;
+  ALocation: TPoint2D;
+  Data: TPointerArray;
+  SearchX: double;
+  SearchY: double;
+  NodeList: TNodeList;
+  NodeScreenObjectsList: TList;
+  MaxX: double;
+  MinX: double;
+  MaxY: double;
+  MinY: double;
+  Epsilon: double;
+  CellSize: Real;
+  PointItem: TPointValuesItem;
+  SizePosition: Integer;
+  {$IFDEF DEBUG}
+//  StartTime: TDateTime;
+//  EndTime: TDateTime;
+  {$ENDIF}
 begin
   if SutraMesh.MeshType = mtProfile then
   begin
@@ -19198,56 +20221,153 @@ begin
 
     MeshCreator := TQuadMeshCreator.Create;
     try
+      InvalidMesh := False;
       MeshCreator.NodeAdjustmentMethod := namGiuliani;
-      for ScreenObjectIndex := 0 to List.Count - 1 do
-      begin
-        ScreenObject := List[ScreenObjectIndex];
-        for SectionIndex := 0 to ScreenObject.SectionCount - 1 do
+      MeshCreator.RenumberingAlgorithm := SutraMesh.Mesh2D.MeshGenControls.RenumberingAlgorithm;
+
+      NodeTree := TRbwQuadTree.Create(nil);
+      NodeList := TNodeList.Create;
+      NodeScreenObjectsList := TList.Create;
+      try
+        if List.Count > 0 then
         begin
-          ABoundary := MeshCreator.AddBoundary(ScreenObject.CellSize);
-          FirstNode := nil;
-          StartIndex := ScreenObject.SectionStart[SectionIndex];
-          EndIndex := ScreenObject.SectionEnd[SectionIndex];
-          if ScreenObject.SectionClosed[SectionIndex] then
+          ScreenObject := List[0];
+          MaxX := ScreenObject.MaxX;
+          MinX := ScreenObject.MinX;
+          MaxY := ScreenObject.MaxY;
+          MinY := ScreenObject.MinY;
+        end;
+        for ScreenObjectIndex := 0 to List.Count - 1 do
+        begin
+          ScreenObject := List[ScreenObjectIndex];
+          MaxX := Max(MaxX, ScreenObject.MaxX);
+          MinX := Min(MinX, ScreenObject.MinX);
+          MaxY := Max(MaxY, ScreenObject.MaxY);
+          MinY := Min(MinY, ScreenObject.MinY);
+        end;
+        Epsilon := Sqrt(Sqr(MaxX-MinX) + Sqr(MaxY-MinY))/1e7;
+        for ScreenObjectIndex := 0 to List.Count - 1 do
+        begin
+          ScreenObject := List[ScreenObjectIndex];
+          for SectionIndex := 0 to ScreenObject.SectionCount - 1 do
           begin
-            Dec(EndIndex);
-          end;
-          for NodeIndex := StartIndex to EndIndex do
-          begin
-            ANode := TNode.Create(MeshCreator, ScreenObject.CellSize);
-            ANode.Location := ScreenObject.Points[NodeIndex];
-            ANode.Y := ANode.Y*Exag;
-            if FirstNode = nil then
+            ABoundary := MeshCreator.AddBoundary(ScreenObject.CellSize);
+            FirstNode := nil;
+            StartIndex := ScreenObject.SectionStart[SectionIndex];
+            EndIndex := ScreenObject.SectionEnd[SectionIndex];
+            if ScreenObject.SectionClosed[SectionIndex] then
             begin
-              FirstNode := ANode;
+              Dec(EndIndex);
             end;
-            ABoundary.AddNode(ANode);
-          end;
-          if ScreenObject.SectionClosed[SectionIndex] then
-          begin
-            ABoundary.AddNode(FirstNode);
+            for NodeIndex := StartIndex to EndIndex do
+            begin
+              ALocation := ScreenObject.Points[NodeIndex];
+              ANode := nil;
+              if NodeTree.Count > 0 then
+              begin
+                SearchX := ALocation.x;
+                SearchY := ALocation.y;
+                NodeTree.FindClosestPointsData(SearchX, SearchY, Data);
+                if (Abs(SearchX - ALocation.x)<Epsilon) and (Abs(SearchY - ALocation.y)<Epsilon) then
+                begin
+                  ANode := Data[0];
+//                  if ScreenObject.CellSize < ANode.DesiredSpacing then
+                  begin
+                    ANode.DesiredSpacing := ScreenObject.CellSize;
+                  end;
+                end;
+              end;
+
+              if ANode = nil then
+              begin
+                CellSize := ScreenObject.CellSize;
+                PointItem := ScreenObject.PointPositionValues.
+                  GetItemByPosition(NodeIndex);
+                if PointItem <> nil then
+                begin
+                  SizePosition := PointItem.IndexOfName(StrMeshElementSize);
+                  if SizePosition >= 0 then
+                  begin
+                    CellSize := (PointItem.Values.Items[SizePosition] as TPointValue).Value;
+                  end;
+                end;
+
+                ANode := TNode.Create(MeshCreator, CellSize);
+                ANode.Location := ALocation;
+                ANode.Y := ANode.Y*Exag;
+                NodeTree.AddPoint(ALocation.x, ALocation.y, ANode);
+                NodeList.Add(ANode);
+                NodeScreenObjectsList.Add(ScreenObject);
+              end;
+              if FirstNode = nil then
+              begin
+                FirstNode := ANode;
+              end;
+              ABoundary.AddNode(ANode);
+            end;
+            if ScreenObject.SectionClosed[SectionIndex] then
+            begin
+              ABoundary.AddNode(FirstNode);
+            end;
           end;
         end;
+        { TODO -cSUTRA : Consider moving this inside TQuadMeshCreator.GenerateMesh }
+        for NodeIndex := 0 to NodeList.Count - 1 do
+        begin
+          ANode := NodeList[NodeIndex];
+          StartIndex := List.IndexOf(NodeScreenObjectsList[NodeIndex])+1;
+          for ScreenObjectIndex := StartIndex to List.Count - 1 do
+          begin
+            ScreenObject := List[ScreenObjectIndex];
+//            if (ScreenObject <> NodeScreenObjectsList[NodeIndex])
+//              and (ANode.DesiredSpacing > ScreenObject.CellSize) then
+            begin
+              SearchX := ANode.x;
+              SearchY := ANode.y/Exag;
+              if ScreenObject.IsPointInside(SearchX, SearchY, SectionIndex) then
+              begin
+                ANode.DesiredSpacing := ScreenObject.CellSize;
+              end;
+            end;
+          end;
+        end;
+      finally
+        NodeTree.Free;
+        NodeList.Free;
+        NodeScreenObjectsList.Free;
       end;
 
       SutraMesh.Mesh2D.MeshGenControls.Apply;
-      try
-        MeshCreator.GenerateMesh;
-      except on E: EInvalidElement do
-        begin
-          Beep;
-          MessageDlg(E.message, mtError, [mbOK], 0);
-          ShowAForm(TfrmMeshGenerationControlVariables);
-        end;
-      end;
-      for AdjustIndex := 1 to 10 do
+
+  {$IFDEF DEBUG}
+//      StartTime := Now;
+//      OutputDebugString('SAMPLING ON');
+
+  {$ENDIF}
+//      try
+      MeshCreator.GenerateMesh;
+//      except on E: EInvalidElement do
+//        begin
+//          InvalidMesh := True;
+//        end;
+//      end;
+
+      for AdjustIndex := 1 to 5 do
       begin
         MeshCreator.AdjustNodes;
       end;
+//      MeshCreator.FixFinalTriangularElements;
+  {$IFDEF DEBUG}
+//      OutputDebugString('SAMPLING OFF');
+
+//      EndTime := Now;
+  {$ENDIF}
+
 
       if FSutraMesh = nil then
       begin
         FSutraMesh := TSutraMesh3D.Create(self);
+        FSutraMesh.OnMeshTypeChanged := frmGoPhast.SutraMeshTypeChanged;
         if Self is TPhastModel then
         begin
           TPhastModel(Self).SutraLayerStructure.Loaded;
@@ -19272,9 +20392,52 @@ begin
             SutraElement := FSutraMesh.Mesh2D.Elements.Add;
             MeshElement := MeshCreator.Elements[ElementIndex];
             SutraElement.AssignIElement(MeshElement);
+//            SutraElement.SetCorrectOrienatation;
+          end;
+
+          for NodeIndex := 0 to FSutraMesh.Mesh2D.Nodes.Count - 1 do
+          begin
+            SutraNode := FSutraMesh.Mesh2D.Nodes[NodeIndex];
+            for OuterElementIndex := SutraNode.ElementCount - 2 downto 0 do
+            begin
+              OuterElement := SutraNode.Elements[OuterElementIndex];
+              for InnerElementIndex := SutraNode.ElementCount - 1 downto OuterElementIndex+1 do
+              begin
+                InnerElement := SutraNode.Elements[InnerElementIndex];
+                if OuterElement.HasSameNodes(InnerElement) then
+                begin
+//                  SutraNode.RemoveElement(InnerElement);
+                  for InnerNodeIndex := 0 to InnerElement.Nodes.Count - 1 do
+                  begin
+                    InnerElement.Nodes[InnerNodeIndex].Node.RemoveElement(InnerElement);
+                  end;
+                  InnerElement.Free;
+                end;
+              end;
+            end;
           end;
         finally
           FSutraMesh.Mesh2D.EndUpdate;
+        end;
+
+        for ElementIndex := 0 to FSutraMesh.Mesh2D.Elements.Count - 1 do
+        begin
+          SutraElement := FSutraMesh.Mesh2D.Elements[ElementIndex];
+          if SutraElement.Nodes.Count <> 4 then
+          begin
+            InvalidMesh := True;
+          end
+          else
+          begin
+            if not SutraElement.ElementOK then
+            begin
+              InvalidMesh := True;
+            end;
+          end;
+          if InvalidMesh then
+          begin
+            break;
+          end;
         end;
 
 //        FSutraMesh.UpdateElevations;
@@ -19289,7 +20452,34 @@ begin
         FSutraMesh.EndUpdate;
       end;
       frmGoPhast.InvalidateGrid;
+  {$IFDEF DEBUG}
+//      ShowMessage('Elapsed time in seconds = '
+//        + FloatToStr((EndTime-StartTime)*24*3600));
+  {$ENDIF}
 
+      if (frmMeshInformation <> nil) and frmMeshInformation.Visible then
+      begin
+        frmMeshInformation.GetData
+      end;
+      if InvalidMesh then
+      begin
+        Application.ProcessMessages;
+//        try
+//          MeshCreator.CheckInvalidElements;
+//        except
+//          on E: EInvalidElement do
+//          begin
+            Beep;
+            MessageDlg(StrOneOrMoreInvalid, mtError, [mbOK], 0);
+//            if ShowAForm(TfrmMeshGenerationControlVariables) = mrOK then
+//            begin
+//              GenerateIrregularMesh(ErrorMessage);
+//              Exit;
+//            end;
+//          end;
+//        end;
+
+      end;
     finally
       MeshCreator.Free;
     end;
@@ -19323,6 +20513,11 @@ begin
       else
         Assert(False);
     end;
+    if (frmMeshInformation <> nil) and frmMeshInformation.Visible then
+    begin
+      frmMeshInformation.GetData
+    end;
+
   finally
     SutraMesh.CanDraw := True;
   end;
@@ -19334,7 +20529,6 @@ begin
   begin
     DataArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount, Grid.ColumnCount);
   end
-  {$IFDEF Sutra}
   else if (FModelSelection = msSutra22) and (Mesh <> nil) and (self is TPhastModel) then
   begin
     case DataArray.EvaluatedAt of
@@ -19352,7 +20546,6 @@ begin
       Assert(False);
     end;
   end
-  {$ENDIF}
   else
   begin
     DataArray.UpdateDimensions(-1, -1, -1);
@@ -19364,10 +20557,8 @@ function TCustomModel.GetCompiler(const Orientation: TDataSetOrientation;
 begin
   result := nil;
 
-  {$IFDEF Sutra}
 //  Assert(ModelSelection <> msSutra);
   { TODO -cSUTRA : Need to get TRbwParser for SUTRA }
-  {$ENDIF}
 
   case EvaluatedAt of
     eaBlocks:
@@ -19490,11 +20681,10 @@ function TCustomModel.GetSelectedLayer: integer;
 begin
   result := 0;
   case ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         result := Grid.SelectedLayer;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         if Mesh <> nil then
@@ -19502,7 +20692,6 @@ begin
           result := Mesh.SelectedLayer;
         end;
       end
-    {$ENDIF}
   else
     Assert(False);
   end;
@@ -19528,11 +20717,10 @@ begin
       begin
         Assert(False);
       end;
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         result := Grid.SideDataSet;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         if (Mesh <> nil) then
@@ -19540,7 +20728,6 @@ begin
           // do nothing
         end;
       end;
-    {$ENDIF}
     else
        Assert(False);
   end;
@@ -19551,6 +20738,7 @@ begin
   if FSutraMesh = nil then
   begin
     FSutraMesh := TSutraMesh3D.Create(self);
+    FSutraMesh.OnMeshTypeChanged := frmGoPhast.SutraMeshTypeChanged;
     if not (csLoading in ComponentState) then
     begin
       if Self is TPhastModel then
@@ -19590,6 +20778,11 @@ begin
   rpSideFormulaCompilerNodes.ClearVariables;
   rpThreeDFormulaCompilerNodes.ClearExpressions;
   rpThreeDFormulaCompilerNodes.ClearVariables;
+end;
+
+function TCustomModel.FarmProcessUsed(Sender: TObject): boolean;
+begin
+  result := ModflowUsed(Sender) and ModflowPackages.FarmProcess.IsSelected;
 end;
 
 procedure TCustomModel.FillCompilerList(CompilerList: TList);
@@ -19633,7 +20826,7 @@ begin
   end;
 end;
 
-procedure TCustomModel.SetGlobalVariables(const Value: TGlobalVariables);
+procedure TPhastModel.SetGlobalVariables(const Value: TGlobalVariables);
 var
   OldVariables: TStringList;
   NewVariables: TStringList;
@@ -19811,12 +21004,14 @@ begin
   FGlobalVariables.Assign(Value);
 end;
 
-procedure TCustomModel.RefreshGlobalVariables(CompilerList: TList);
+procedure TPhastModel.RefreshGlobalVariables(CompilerList: TList);
 var
   Compiler: TRbwParser;
   Variable: TGlobalVariable;
   CompilerIndex: Integer;
   VariableIndex: Integer;
+  VariablePosition: integer;
+  ExistingVariable: TCustomValue;
 begin
   for CompilerIndex := 0 to CompilerList.Count - 1 do
   begin
@@ -19824,35 +21019,55 @@ begin
     for VariableIndex := 0 to GlobalVariables.Count - 1 do
     begin
       Variable := GlobalVariables[VariableIndex];
-      case Variable.Format of
-        rdtDouble:
-          begin
-            Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-              Variable.RealValue, Variable.Name);
-          end;
-        rdtInteger:
-          begin
-            Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-              Variable.IntegerValue, Variable.Name);
-          end;
-        rdtBoolean:
-          begin
-            Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-              Variable.BooleanValue, Variable.Name);
-          end;
-        rdtString:
-          begin
-            Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-              Variable.StringValue, Variable.Name);
-          end;
+      VariablePosition := Compiler.IndexOfVariable(Variable.Name);
+      if VariablePosition < 0 then
+      begin
+        case Variable.Format of
+          rdtDouble:
+            begin
+              Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
+                Variable.RealValue, Variable.Name);
+            end;
+          rdtInteger:
+            begin
+              Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
+                Variable.IntegerValue, Variable.Name);
+            end;
+          rdtBoolean:
+            begin
+              Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
+                Variable.BooleanValue, Variable.Name);
+            end;
+          rdtString:
+            begin
+              Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
+                Variable.StringValue, Variable.Name);
+            end;
+        else
+          Assert(False);
+        end;
+      end
       else
-        Assert(False);
+      begin
+        ExistingVariable := Compiler.Variables[VariablePosition];
+        case Variable.Format of
+          rdtDouble: (ExistingVariable as TRealVariableClass).Value :=
+            Variable.RealValue;
+          rdtInteger: (ExistingVariable as TIntegerVariable).Value :=
+            Variable.IntegerValue;
+          rdtBoolean: (ExistingVariable as TBooleanVariable).Value :=
+            Variable.BooleanValue;
+          rdtString: (ExistingVariable as TStringVariableClass).Value :=
+            Variable.StringValue;
+          else Assert(False);
+        end;
       end;
+
     end;
   end;
 end;
 
-procedure TCustomModel.CreateGlobalVariables;
+procedure TPhastModel.CreateGlobalVariables;
 var
   CompilerList: TList;
 begin
@@ -20064,7 +21279,6 @@ end;
 
 procedure TCustomModel.OnTopSutraMeshChanged(Sender: TObject);
 begin
-  {$IFDEF SUTRA}
   if (ModelSelection = msSutra22) and (FSutraMesh <> nil) then
   begin
     if not ThreeDGridObserver.UpToDate then
@@ -20073,7 +21287,6 @@ begin
       FSutraMesh.ElevationsNeedUpdating := True;
     end;
   end;
-  {$ENDIF}
 end;
 
 function TCustomModel.OptionalDataSet(Sender: TObject): boolean;
@@ -20480,6 +21693,7 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
       DataArray.OnDataSetUsed := ArrayNeeded;
       FCustomModel.CreateVariables(DataArray);
       DataArray.AngleType := AngleType;
+      DataArray.Classification := Classification;
     end
     else if ArrayNeeded(self)
       or (Assigned(ArrayArrayShouldBeCreated)
@@ -20555,6 +21769,14 @@ begin
   result := FDataSets.IndexOf(DataArray) >= 0
 end;
 
+resourcestring
+  StrAngleCounterclickwise = 'SUTRA Data Set 15B: ANGLE1' + sLineBreak
+    + 'Angle counterclockwise from +X direction';
+  StrAngleUpward = 'SUTRA Data Set 15B: ANGLE2' + sLineBreak
+    + 'Angle upward from the horizontal';
+  StrAngleAround = 'SUTRA Data Set 15B: ANGLE3' + SLineBreak
+    + 'Angle around PMAX direction';
+
 procedure TDataArrayManager.DefinePackageDataArrays;
   procedure NoCheck(var ARecord: TDataSetCreationData);
   begin
@@ -20563,16 +21785,12 @@ procedure TDataArrayManager.DefinePackageDataArrays;
     ARecord.Max := 1;
     ARecord.Min := 0;
   end;
-{$IFDEF SUTRA}
 const
-  ArrayCount = 92;
-{$ELSE}
-const
-  ArrayCount = 70;
-{$ENDIF}
+  ArrayCount = 94;
 var
   Index: integer;
 begin
+  // Whenever something in this is changed, be sure to update the help too.
   SetLength(FDataArrayCreationRecords, ArrayCount);
   Index := 0;
 
@@ -20604,7 +21822,7 @@ begin
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-Kx'+ sLineBreak + 'MODFLOW LPF: HK'
+    'PHAST: MEDIA-Kx'+ sLineBreak + 'MODFLOW LPF, UPW: HK'
     + sLineBreak + 'MODFLOW BCF: TRAN,HY';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
@@ -20622,7 +21840,7 @@ begin
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-Ky'+ sLineBreak + 'MODFLOW LPF: HANI'
+    'PHAST: MEDIA-Ky'+ sLineBreak + 'MODFLOW LPF, UPW: HANI'
     + sLineBreak + 'MODFLOW HUF and BCF: (not used)';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
@@ -20640,7 +21858,7 @@ begin
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-Kz'+ sLineBreak + 'MODFLOW LPF: VKA'
+    'PHAST: MEDIA-Kz'+ sLineBreak + 'MODFLOW LPF, UPW: VKA'
     + sLineBreak + 'MODFLOW BCF: Vcont';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
@@ -20660,7 +21878,7 @@ begin
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: MEDIA-porosity'
-    + sLineBreak + 'MODPATH: POR'
+    + sLineBreak + 'MODPATH: Basic Data File: Item 7: POR'
     + sLineBreak + 'MT3DMS BTN Package: PRSITY';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
@@ -20679,8 +21897,9 @@ begin
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-specific_storage'+ sLineBreak + 'MODFLOW LPF: Ss'
-    + sLineBreak + 'MODFLOW BCF: Sf1';
+    'PHAST: MEDIA-specific_storage'+ sLineBreak + 'MODFLOW LPF, UPW: Ss'
+    + sLineBreak + 'MODFLOW BCF: Sf1'
+    + sLineBreak + 'MODFLOW-NWT UPW: Ss';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
   FDataArrayCreationRecords[Index].Min := 0;
@@ -20757,7 +21976,8 @@ begin
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: HEAD_IC-head';
+    'PHAST: HEAD_IC-head' + sLineBreak + 'SUTRA, ICS: PVEC';
+    ;
   NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -21009,12 +22229,13 @@ begin
   FDataArrayCreationRecords[Index].Name := StrUzfLandSurface;
   FDataArrayCreationRecords[Index].DisplayName := StrUzfLandSurfaceDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.';
-  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
-  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfPackageUsed;
+  FDataArrayCreationRecords[Index].Classification := StrUzfFmpClassifiation;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.GroundSurfaceUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'UZF: IUZFBND (via the formula for ' + StrUzfLayer + ')';
+    'UZF: IUZFBND (via the formula for ' + StrUzfLayer + '); '
+    + 'FMP2: GSURF';
   NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -21187,7 +22408,7 @@ begin
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ConfiningBedKzUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: VKCB; BCF: VCONT';
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF, UPW: VKCB; BCF: VCONT';
   NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -21203,7 +22424,7 @@ begin
     FCustomModel.VerticalAnisotropyUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: VKA';
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF, UPW: VKA';
   NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -21218,7 +22439,7 @@ begin
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.HorizontalAnisotropyUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: HANI';
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF, UPW: HANI';
   NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -21232,7 +22453,7 @@ begin
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SpecificYieldUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: Sy; BCF: Sf1';
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF, UPW: Sy; BCF: Sf1';
   NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -21303,7 +22524,8 @@ begin
   FDataArrayCreationRecords[Index].CheckMin := False;
 //  FDataArrayCreationRecords[Index].Max := 1;
 //  FDataArrayCreationRecords[Index].Min := 0;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'MODPATH: IBOUND';
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'MODPATH v5: IBOUND'
+    + sLineBreak + 'MODPATH v6 Simulation File Item 32: Zones';
   Inc(Index);
 
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
@@ -21313,7 +22535,8 @@ begin
   FDataArrayCreationRecords[Index].DisplayName := StrHufReferenceSurfaceDisplayName;
   FDataArrayCreationRecords[Index].Formula := '0.';
   FDataArrayCreationRecords[Index].Classification := StrHUF;
-  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.HufReferenceSurfaceNeeded;
+  FDataArrayCreationRecords[Index].DataSetNeeded :=
+    FCustomModel.HufReferenceSurfaceNeeded;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].CheckMax := False;
@@ -21486,7 +22709,8 @@ begin
   FDataArrayCreationRecords[Index].Formula := '0';
   FDataArrayCreationRecords[Index].Classification := StrZonebudget;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ZoneBudgetSelected;
-  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := FCustomModel.ZoneBudgetSelected;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated :=
+    FCustomModel.ZoneBudgetSelected;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
@@ -21669,7 +22893,6 @@ begin
     'MODPATH Simulation file, Items 32 and 33: RetardationFactor and RetardationFactorCB';
   Inc(Index);
 
-{$IFDEF SUTRA}
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
   FDataArrayCreationRecords[Index].Orientation := dso3D;
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
@@ -21822,8 +23045,7 @@ begin
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock + [dcUnits];
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'SUTRA Data Set 15B: ANGLE1';
+  FDataArrayCreationRecords[Index].AssociatedDataSets := StrAngleCounterclickwise;
   Inc(Index);
 
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
@@ -21837,8 +23059,7 @@ begin
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Sutra3DModel;
   FDataArrayCreationRecords[Index].Lock := StandardLock + [dcUnits];
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'SUTRA Data Set 15B: ANGLE2';
+  FDataArrayCreationRecords[Index].AssociatedDataSets := StrAngleUpward;
   Inc(Index);
 
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
@@ -21852,8 +23073,7 @@ begin
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Sutra3DModel;
   FDataArrayCreationRecords[Index].Lock := StandardLock + [dcUnits];
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'SUTRA Data Set 15B: ANGLE3';
+  FDataArrayCreationRecords[Index].AssociatedDataSets := StrAngleAround;
   Inc(Index);
 
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
@@ -21981,7 +23201,34 @@ begin
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'SUTRA ICS Data Set 3: UVEC';
   Inc(Index);
-{$ENDIF}
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := KFarmID;
+  FDataArrayCreationRecords[Index].DisplayName := StrFarmID;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrFmp2Classifiation;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.FarmProcessUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'MODFLOW-FMP2 Data Set 6: FID';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := KSoilID;
+  FDataArrayCreationRecords[Index].DisplayName := StrSoilID;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrFmp2Classifiation;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.FarmProcessUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'MODFLOW-FMP2 Data Set 6: FID';
+  Inc(Index);
 
   Assert(Length(FDataArrayCreationRecords) = Index);
 end;
@@ -22566,6 +23813,7 @@ begin
     DrainObservations := SourceModel.DrainObservations;
     GhbObservations := SourceModel.GhbObservations;
     RiverObservations := SourceModel.RiverObservations;
+    StreamObservations := SourceModel.StreamObservations;
     HydrogeologicUnits := SourceModel.HydrogeologicUnits;
     FilesToArchive := SourceModel.FilesToArchive;
     ModelInputFiles := SourceModel.ModelInputFiles;
@@ -22586,6 +23834,9 @@ begin
     Mt3dmsLakMassFluxObservations := SourceModel.Mt3dmsLakMassFluxObservations;
     Mt3dmsDrtMassFluxObservations := SourceModel.Mt3dmsDrtMassFluxObservations;
     Mt3dmsEtsMassFluxObservations := SourceModel.Mt3dmsEtsMassFluxObservations;
+    Mt3dmsStrMassFluxObservations := SourceModel.Mt3dmsStrMassFluxObservations;
+    Mt3dmsFhbHeadMassFluxObservations := SourceModel.Mt3dmsFhbHeadMassFluxObservations;
+    Mt3dmsFhbFlowMassFluxObservations := SourceModel.Mt3dmsFhbFlowMassFluxObservations;
 //    SfrStreamLinkPlot := SourceModel.SfrStreamLinkPlot;
   end
   else
@@ -22621,7 +23872,7 @@ begin
   case ModelSelection of
     msUndefined: result := False;
     msPhast: result := True;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         if ModflowPackages.HufPackage.IsSelected then
         begin
@@ -22678,7 +23929,7 @@ begin
           end;
         end;
       end;
-    {$IFDEF SUTRA} msSutra22: result := False; {$ENDIF}
+    msSutra22: result := False;
     else Assert(False);
   end;
 end;
@@ -22686,7 +23937,7 @@ end;
 function TCustomModel.PorosityUsed(Sender: TObject): boolean;
 begin
   result := (ModelSelection = msPhast)
-    or ((ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+    or ((ModelSelection in ModflowSelection)
     and (ModflowPackages.ModPath.IsSelected
     or ModflowPackages.Mt3dBasic.IsSelected));
 end;
@@ -22697,7 +23948,7 @@ begin
   case ModelSelection of
     msUndefined: result := False;
     msPhast: result := True;
-    msModflow, msModflowLGR, msModflowNWT:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         if ModflowPackages.LpfPackage.IsSelected
           or ModflowPackages.BcfPackage.IsSelected
@@ -22710,7 +23961,7 @@ begin
           result := False;
         end;
       end;
-    {$IFDEF SUTRA} msSutra22: result := False; {$ENDIF}
+    msSutra22: result := False;
     else Assert(False);
   end;
 end;
@@ -22728,10 +23979,8 @@ end;
 function TCustomModel.InitialHeadUsed(Sender: TObject): boolean;
 begin
   result := ((ModelSelection = msPhast) and not InitialWaterTableUsed(Sender))
-  {$IFDEF SUTRA}
     or ((ModelSelection = msSutra22)
     and (SutraOptions.TransportChoice = tcSoluteHead));
-  {$ENDIF}
 end;
 
 function TCustomModel.SurfacesUsed(Sender: TObject): boolean;
@@ -22742,13 +23991,11 @@ end;
 function TCustomModel.Sutra3DModel(Sender: TObject): boolean;
 begin
   result := False;
-  {$IFDEF Sutra}
   if (frmGoPhast.PhastModel <> nil) then
   begin
     result := SutraUsed(Sender)
-      and (frmGoPhast.PhastModel.SutraLayerStructure.LayerCount > 1);
+      and (frmGoPhast.PhastModel.SutraMesh.MeshType = mt3D);
   end;
-  {$ENDIF}
 end;
 
 function TCustomModel.SutraConcentrationUsed(Sender: TObject): boolean;
@@ -22764,77 +24011,48 @@ end;
 
 function TCustomModel.SutraUsed(Sender: TObject): boolean;
 begin
-  {$IFDEF Sutra}
   result := (ModelSelection = msSutra22)
-  {$ELSE}
-  result := False;
-  {$ENDIF}
 end;
 
 function TCustomModel.SutraHydraulicConductivityUsed(Sender: TObject): boolean;
 begin
-  {$IFDEF Sutra}
   result := SutraUsed(Sender)
     and (SutraOptions.TransportChoice = tcSoluteHead);
-  {$ELSE}
-  result := False;
-  {$ENDIF}
 end;
 
 function TCustomModel.SutraMiddleHydraulicConductivityUsed(Sender: TObject): boolean;
 begin
-  {$IFDEF Sutra}
   result := SutraHydraulicConductivityUsed(Sender)
     and Sutra3DModel(Sender);
-  {$ELSE}
-  result := False;
-  {$ENDIF}
 end;
 
 function TCustomModel.SutraPermeabilityUsed(Sender: TObject): boolean;
 begin
-  {$IFDEF Sutra}
   result := SutraUsed(Sender)
     and (SutraOptions.TransportChoice in [tcSolute, tcEnergy]);
-  {$ELSE}
-  result := False;
-  {$ENDIF}
 end;
 
 function TCustomModel.SutraMiddlePermeabilityUsed(Sender: TObject): boolean;
 begin
-  {$IFDEF Sutra}
   result := SutraPermeabilityUsed(Sender)
     and Sutra3DModel(Sender);
-  {$ELSE}
-  result := False;
-  {$ENDIF}
 end;
 
 function TCustomModel.SutraThicknessUsed(Sender: TObject): boolean;
 begin
-  {$IFDEF Sutra}
   result := SutraUsed(Sender) and (FSutraMesh <> nil)
     and (FSutraMesh.MeshType in [mt2D, mtProfile]);
-  {$ELSE}
-  result := False;
-  {$ENDIF}
 end;
 
 function TCustomModel.SutraUnsatRegionUsed(Sender: TObject): boolean;
 begin
-  {$IFDEF Sutra}
   result := SutraUsed(Sender)
     and (SutraOptions.SaturationChoice = scUnsaturated);
-  {$ELSE}
-  result := False;
-  {$ENDIF}
 end;
 
 function TCustomModel.ModflowOrPhastUsed(Sender: TObject): boolean;
 begin
-  result := (ModelSelection in [msPhast, msModflow, msModflowLGR,
-    msModflowNWT])
+  result := (ModelSelection in ModelsWithGrid)
 end;
 
 function TCustomModel.ExchangeUsed(Sender: TObject): boolean;
@@ -22885,7 +24103,7 @@ begin
 //    else
 //    begin
       result := ModflowPackages.UzfPackage.SpecifyResidualWaterContent
-        and (ModelSelection in [msModflow, {msModflowLGR,} msModflowNWT]);
+        and (ModelSelection in [msModflow, {msModflowLGR,} msModflowLGR2,  msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}]);
 //    end;
   end;
 end;
@@ -22909,7 +24127,7 @@ end;
 
 function TCustomModel.ModflowUsed(Sender: TObject): boolean;
 begin
-  result := ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
+  result := ModelSelection in ModflowSelection;
 end;
 
 function TCustomModel.RouteUzfDischarge(Sender: TObject): boolean;
@@ -22933,7 +24151,7 @@ begin
 //    begin
       result := ModflowStressPeriods.CompletelyTransient or
         (ModflowPackages.UzfPackage.SpecifyInitialWaterContent
-        and (ModelSelection in [msModflow, {msModflowLGR,} msModflowNWT]));
+        and (ModelSelection in [msModflow, {msModflowLGR,} msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}]));
 //    end;
   end;
 end;
@@ -23005,7 +24223,7 @@ end;
 
 function TCustomModel.HorizontalAnisotropyUsed(Sender: TObject): boolean;
 begin
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and (ModflowPackages.LpfPackage.IsSelected
     or ModflowPackages.UpwPackage.IsSelected);
 end;
@@ -23062,6 +24280,16 @@ end;
 function TCustomModel.StoreEvtMassFluxObservations: Boolean;
 begin
   result := FMt3dmsEvtMassFluxObservations.Count > 0;
+end;
+
+function TCustomModel.StoreFhbFlowMassFluxObservations: Boolean;
+begin
+  result := FMt3dmsFhbFlowMassFluxObservations.Count > 0;
+end;
+
+function TCustomModel.StoreFhbHeadMassFluxObservations: Boolean;
+begin
+  result := FMt3dmsFhbHeadMassFluxObservations.Count > 0;
 end;
 
 function TCustomModel.StoreGhbMassFluxObservations: Boolean;
@@ -23124,6 +24352,16 @@ begin
   result := FMt3dmsRivMassFluxObservations.Count > 0;
 end;
 
+function TCustomModel.StoreStrMassFluxObservations: Boolean;
+begin
+  result := FMt3dmsStrMassFluxObservations.Count > 0;
+end;
+
+function TCustomModel.StoreStrObservations: Boolean;
+begin
+  result := FStrObservations.Count > 0;
+end;
+
 function TCustomModel.StoreWellMassFluxObservations: Boolean;
 begin
   result := FMt3dmsWellMassFluxObservations.Count > 0;
@@ -23158,14 +24396,14 @@ end;
 
 function TCustomModel.ModpathUsed(Sender: TObject): boolean;
 begin
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.ModPath.IsSelected;
 end;
 
 function TCustomModel.HufReferenceSurfaceNeeded(Sender: TObject): boolean;
 begin
   { TODO : In LGR, this function may need to updated. }
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.HufPackage.IsSelected
     and (ModflowPackages.HufPackage.ReferenceChoice = hrcReferenceLayer)
     and (HufParameters.CountParameters([ptHUF_KDEP]) > 0);
@@ -23173,7 +24411,7 @@ end;
 
 function TCustomModel.BcfUsed(Sender: TObject): boolean;
 begin
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.BcfPackage.IsSelected
 end;
 
@@ -23190,8 +24428,8 @@ begin
   result := False;
   case ModelSelection of
     msUndefined: result := False;
-    msPhast {$IFDEF SUTRA}, msSutra22 {$ENDIF}: result := False;
-    msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msSutra22: result := False;
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         if ModflowPackages.BcfPackage.IsSelected then
         begin
@@ -23208,7 +24446,7 @@ end;
 
 function TCustomModel.HufSelected(Sender: TObject): boolean;
 begin
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.HufPackage.IsSelected
 end;
 
@@ -23220,13 +24458,13 @@ end;
 
 function TCustomModel.ZoneBudgetSelected(Sender: TObject): boolean;
 begin
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.ZoneBudget.IsSelected
 end;
 
 function TCustomModel.SwtSelected(Sender: TObject): boolean;
 begin
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.SwtPackage.IsSelected
 end;
 
@@ -23264,7 +24502,7 @@ end;
 
 function TCustomModel.Mt3dMSUsed(Sender: TObject): boolean;
 begin
-  result := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  result := (ModelSelection in ModflowSelection)
     and ModflowPackages.Mt3dBasic.IsSelected;
 end;
 
@@ -23479,7 +24717,8 @@ var
   SpressPeriodCount: Integer;
   MtTime: TMt3dmsTimeItem;
   OutOfRangeMt3dTime: Boolean;
-//  StartTimeIndex: integer;
+  ShowUzfLakeWarning: boolean;
+  UzfLakUsed: boolean;
 begin
   if FUpdatingFullStressPeriods then
   begin
@@ -23488,18 +24727,30 @@ begin
   frmErrorsAndWarnings.RemoveWarningGroup(self, StrAnyTimesAfterThe);
   frmErrorsAndWarnings.RemoveWarningGroup(self, StrAnyTimesBeforeThe);
   frmErrorsAndWarnings.RemoveWarningGroup(self, StrAddedTimes);
-
+  frmErrorsAndWarnings.RemoveWarningGroup(self, StrMultiplierWarning);
 
   ModflowFullStressPeriods.Clear;
   TimeList := TRealList.Create;
   try
     FUpdatingFullStressPeriods := True;
     TimeList.Sort;
+    ShowUzfLakeWarning := False;
+    UzfLakUsed := ModflowPackages.UzfPackage.IsSelected
+      or ModflowPackages.LakPackage.IsSelected;
     for TimeIndex := 0 to ModflowStressPeriods.Count - 1 do
     begin
       StressPeriod := ModflowStressPeriods[TimeIndex];
       TimeList.AddUnique(StressPeriod.StartTime);
       TimeList.AddUnique(StressPeriod.EndTime);
+      if UzfLakUsed and (StressPeriod.TimeStepMultiplier <> 1) then
+      begin
+        ShowUzfLakeWarning := True;
+      end;
+    end;
+    if ShowUzfLakeWarning then
+    begin
+      frmErrorsAndWarnings.AddWarning(self, StrMultiplierWarning,
+        StrMultiplierFullWarning);
     end;
     TestFirstTime := TimeList[0];
     LastTestTime := TimeList[TimeList.Count-1];
@@ -23732,6 +24983,20 @@ begin
   end;
 end;
 
+function TCustomModel.RelativeFileName(const FullFileName: string): string;
+var
+  BaseDir: string;
+begin
+  Result := FullFileName;
+  BaseDir := ModelFileName;
+  if BaseDir <> '' then
+  begin
+    BaseDir := ExtractFileDir(BaseDir);
+    BaseDir := IncludeTrailingPathDelimiter(BaseDir);
+    Result := ExtractRelativePath(BaseDir, Result);
+  end;
+end;
+
 procedure TCustomModel.RemoveTimeList(TimeList: TCustomTimeList);
 begin
   FTimeLists.Remove(TimeList);
@@ -23847,7 +25112,6 @@ end;
 
 function TCustomModel.GetMesh: TSutraMesh3D;
 begin
-  {$IFDEF SUTRA}
   if ModelSelection = msSutra22 then
   begin
     result := SutraMesh;
@@ -23856,9 +25120,6 @@ begin
   begin
     result := nil;
   end;
-  {$ELSE}
-  result := nil;
-  {$ENDIF}
 end;
 
 procedure TCustomModel.GetMfHobHeadsUseList(Sender: TObject; NewUseList: TStringList);
@@ -23872,7 +25133,11 @@ begin
   case ModelSelection of
     msModflow: result := ProgramLocations.ModflowLocation;
     msModflowLGR: result := ProgramLocations.ModflowLgrLocation;
+    msModflowLGR2: result := ProgramLocations.ModflowLgr2Location;
     msModflowNWT: result := ProgramLocations.ModflowNwtLocation;
+    {$IFDEF FMP}
+    msModflowFmp: result := ProgramLocations.ModflowFmpLocation;
+    {$ENDIF}
     else result := ProgramLocations.ModflowLocation;
   end;
 end;
@@ -24480,6 +25745,11 @@ var
   ParentPhastModel: TPhastModel;
   LinkWriter: TModflowMt3dmsLinkWriter;
   PcgnWriter: TPcgnWriter;
+  StrWriter: TStrWriter;
+  FhbWriter: TModflowFhbWriter;
+{$IFDEF FMP}
+  FmpWriter: TModflowFmpWriter;
+{$ENDIF}
 begin
   // Note: MODFLOW can not read Unicode text files.
 
@@ -24860,6 +26130,41 @@ begin
         frmProgressMM.StepIt;
       end;
 
+      StrWriter := TStrWriter.Create(self, etExport);
+      try
+        StrWriter.WriteFile(FileName);
+        StrWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
+      finally
+        StrWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.StrPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      FhbWriter := TModflowFhbWriter.Create(self, etExport);
+      try
+        FhbWriter.WriteFile(FileName);
+      finally
+        FhbWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.FhbPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
       RchWriter := TModflowRCH_Writer.Create(self, etExport);
       try
         RchWriter.WriteFile(FileName);
@@ -24946,6 +26251,27 @@ begin
         frmProgressMM.StepIt;
       end;
 
+    {$IFDEF FMP}
+      FmpWriter := TModflowFmpWriter.Create(self, etExport);
+      try
+        FmpWriter.WriteFile(FileName);
+      finally
+        FmpWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.FarmProcess.IsSelected
+        and (ModelSelection = msModflowFmp) then
+      begin
+        frmProgressMM.StepIt;
+      end;
+    {$ENDIF}
+
+
       if Self is TPhastModel then
       begin
         LocalPhastModel := TPhastModel(Self);
@@ -24993,6 +26319,7 @@ begin
           Exit;
         end;
 
+
         if LocalPhastModel.LgrUsed then
         begin
           WriterList := TSfrWriterList.Create;
@@ -25013,6 +26340,9 @@ begin
             WriterList.Free;
           end;
         end;
+
+
+
 
         ExportSfrPackage(FileName);
         ExportUzfPackage(FileName);
@@ -25766,7 +27096,7 @@ var
   Item: TModflowSteadyParameter;
 begin
   ParameterFormula := '';
-  ParameterUsed := (ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
+  ParameterUsed := (ModelSelection in ModflowSelection)
     and (ModflowPackages.LpfPackage.IsSelected
     or ModflowPackages.UpwPackage.IsSelected);
   if ParameterUsed then
@@ -25991,6 +27321,10 @@ var
   Row: Integer;
   Layer: Integer;
 begin
+  if ModelSelection = msModflowLgr2 then
+  begin
+    Exit;
+  end;
   Column := AValueCell.Column;
   Row := AValueCell.Row;
   Layer := AValueCell.Layer;
@@ -26042,6 +27376,10 @@ end;
 
 procedure TChildModel.AdjustCellPosition(var Column, Row, Layer: integer);
 begin
+  if ModelSelection = msModflowLgr2 then
+  begin
+    Exit;
+  end;
   if Column = 0 then
   begin
     Column := 1;
@@ -26081,195 +27419,258 @@ var
   InnerGridIndex: Integer;
   RowIndex: Integer;
 begin
-  Assert(ADataArray.DataType in [rdtDouble, rdtBoolean]);
-  Assert(ADataArray.ColumnCount >= 3);
-  Assert(ADataArray.RowCount >= 3);
-  AnnotationList := TStringList.Create;
-  try
-    AnnotationList.Sorted := True;
-    for LayerIndex := 0 to ADataArray.LayerCount - 1 do
-    begin
-      for ColIndex := 0 to ADataArray.ColumnCount - 1 do
+  if ModelSelection = msModflowLGR then
+  begin
+    Assert(ADataArray.DataType in [rdtDouble, rdtBoolean]);
+    Assert(ADataArray.ColumnCount >= 3);
+    Assert(ADataArray.RowCount >= 3);
+    AnnotationList := TStringList.Create;
+    try
+      AnnotationList.Sorted := True;
+      for LayerIndex := 0 to ADataArray.LayerCount - 1 do
       begin
-        OuterGridIndex := 0;
-        InnerGridIndex := 1;
-        if ADataArray.IsValue[LayerIndex, OuterGridIndex, ColIndex] then
+        for ColIndex := 0 to ADataArray.ColumnCount - 1 do
         begin
-          OuterCellArea := ModflowGrid.ColumnWidth[ColIndex]
-            * ModflowGrid.RowWidth[OuterGridIndex];
-          InnerCellArea := ModflowGrid.ColumnWidth[ColIndex]
-            * ModflowGrid.RowWidth[InnerGridIndex];
-          if ADataArray.IsValue[LayerIndex, InnerGridIndex, ColIndex] then
+          OuterGridIndex := 0;
+          InnerGridIndex := 1;
+          if ADataArray.IsValue[LayerIndex, OuterGridIndex, ColIndex] then
           begin
-            NewAnnotation := 'Combined values for LGR: '
-              + ADataArray.Annotation[LayerIndex, OuterGridIndex, ColIndex]
-              + ', ' + ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex];
-            AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
-            if AnnotationPosition >= 0 then
+            OuterCellArea := ModflowGrid.ColumnWidth[ColIndex]
+              * ModflowGrid.RowWidth[OuterGridIndex];
+            InnerCellArea := ModflowGrid.ColumnWidth[ColIndex]
+              * ModflowGrid.RowWidth[InnerGridIndex];
+            if ADataArray.IsValue[LayerIndex, InnerGridIndex, ColIndex] then
             begin
-              NewAnnotation := AnnotationList[AnnotationPosition];
+              NewAnnotation := 'Combined values for LGR: '
+                + ADataArray.Annotation[LayerIndex, OuterGridIndex, ColIndex]
+                + ', ' + ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex];
+              AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+              if AnnotationPosition >= 0 then
+              begin
+                NewAnnotation := AnnotationList[AnnotationPosition];
+              end
+              else
+              begin
+                AnnotationList.Add(NewAnnotation)
+              end;
+              case ADataArray.DataType of
+                rdtDouble:
+                  ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
+                    := ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
+                    + ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex]
+                    * OuterCellArea / InnerCellArea;
+                rdtBoolean:
+                  ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex] :=
+                    ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex]
+                    or ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex];
+                else Assert(False);
+              end;
+              ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex]
+                := NewAnnotation;
             end
             else
             begin
-              AnnotationList.Add(NewAnnotation)
-            end;
-            case ADataArray.DataType of
-              rdtDouble:
-                ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
-                  := ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
-                  + ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex]
-                  * OuterCellArea / InnerCellArea;
-              rdtBoolean:
-                ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex] :=
+              case ADataArray.DataType of
+                rdtDouble:
+                  ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
+                    := ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex]
+                    * OuterCellArea / InnerCellArea;
+                rdtBoolean:
                   ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex]
-                  or ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex];
-              else Assert(False);
+                    := ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex];
+                else Assert(False);
+              end;
+              ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex] :=
+                ADataArray.Annotation[LayerIndex, OuterGridIndex, ColIndex];
             end;
-            ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex]
-              := NewAnnotation;
-          end
-          else
-          begin
             case ADataArray.DataType of
               rdtDouble:
-                ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
-                  := ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex]
-                  * OuterCellArea / InnerCellArea;
+                ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex] := 0;
               rdtBoolean:
-                ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex]
-                  := ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex];
+                ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex] := False;
               else Assert(False);
             end;
-            ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex] :=
-              ADataArray.Annotation[LayerIndex, OuterGridIndex, ColIndex];
           end;
-          case ADataArray.DataType of
-            rdtDouble:
-              ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex] := 0;
-            rdtBoolean:
-              ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex] := False;
-            else Assert(False);
-          end;
-        end;
 
-        OuterGridIndex := ADataArray.RowCount-1;
-        InnerGridIndex := ADataArray.RowCount-2;
-        if ADataArray.IsValue[LayerIndex, OuterGridIndex, ColIndex] then
-        begin
-          OuterCellArea := ModflowGrid.ColumnWidth[ColIndex]
-            * ModflowGrid.RowWidth[OuterGridIndex];
-          InnerCellArea := ModflowGrid.ColumnWidth[ColIndex]
-            * ModflowGrid.RowWidth[InnerGridIndex];
-          if ADataArray.IsValue[LayerIndex, InnerGridIndex, ColIndex] then
+          OuterGridIndex := ADataArray.RowCount-1;
+          InnerGridIndex := ADataArray.RowCount-2;
+          if ADataArray.IsValue[LayerIndex, OuterGridIndex, ColIndex] then
           begin
-            NewAnnotation := 'Combined values for LGR: '
-              + ADataArray.Annotation[LayerIndex, OuterGridIndex, ColIndex]
-              + ', ' + ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex];
-            AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
-            if AnnotationPosition >= 0 then
+            OuterCellArea := ModflowGrid.ColumnWidth[ColIndex]
+              * ModflowGrid.RowWidth[OuterGridIndex];
+            InnerCellArea := ModflowGrid.ColumnWidth[ColIndex]
+              * ModflowGrid.RowWidth[InnerGridIndex];
+            if ADataArray.IsValue[LayerIndex, InnerGridIndex, ColIndex] then
             begin
-              NewAnnotation := AnnotationList[AnnotationPosition];
+              NewAnnotation := 'Combined values for LGR: '
+                + ADataArray.Annotation[LayerIndex, OuterGridIndex, ColIndex]
+                + ', ' + ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex];
+              AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+              if AnnotationPosition >= 0 then
+              begin
+                NewAnnotation := AnnotationList[AnnotationPosition];
+              end
+              else
+              begin
+                AnnotationList.Add(NewAnnotation)
+              end;
+              case ADataArray.DataType of
+                rdtDouble:
+                  ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
+                    := ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
+                    + ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex]
+                    * OuterCellArea / InnerCellArea;
+                rdtBoolean:
+                  ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex]
+                    := ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex]
+                    or ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex]
+                else Assert(False);
+
+              end;
+              ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex]
+                := NewAnnotation;
             end
             else
             begin
-              AnnotationList.Add(NewAnnotation)
+              case ADataArray.DataType of
+                rdtDouble:
+                  ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
+                    := ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex]
+                    * OuterCellArea / InnerCellArea;
+                rdtBoolean:
+                  ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex]
+                    := ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex]
+                else Assert(False);
+              end;
+              ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex] :=
+                ADataArray.Annotation[LayerIndex, OuterGridIndex, ColIndex];
             end;
             case ADataArray.DataType of
               rdtDouble:
-                ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
-                  := ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
-                  + ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex]
-                  * OuterCellArea / InnerCellArea;
+                ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex] := 0;
               rdtBoolean:
-                ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex]
-                  := ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex]
-                  or ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex]
-              else Assert(False);
-
-            end;
-            ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex]
-              := NewAnnotation;
-          end
-          else
-          begin
-            case ADataArray.DataType of
-              rdtDouble:
-                ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
-                  := ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex]
-                  * OuterCellArea / InnerCellArea;
-              rdtBoolean:
-                ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex]
-                  := ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex]
+                ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex] := False;
               else Assert(False);
             end;
-            ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex] :=
-              ADataArray.Annotation[LayerIndex, OuterGridIndex, ColIndex];
-          end;
-          case ADataArray.DataType of
-            rdtDouble:
-              ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex] := 0;
-            rdtBoolean:
-              ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex] := False;
-            else Assert(False);
           end;
         end;
-      end;
 
 
-      for RowIndex := 0 to ADataArray.RowCount - 1 do
-      begin
-        OuterGridIndex := 0;
-        InnerGridIndex := 1;
-        if ADataArray.IsValue[LayerIndex, RowIndex, OuterGridIndex] then
+        for RowIndex := 0 to ADataArray.RowCount - 1 do
         begin
-          OuterCellArea := ModflowGrid.ColumnWidth[OuterGridIndex]
-            * ModflowGrid.RowWidth[RowIndex];
-          InnerCellArea := ModflowGrid.ColumnWidth[InnerGridIndex]
-            * ModflowGrid.RowWidth[RowIndex];
-          if ADataArray.IsValue[LayerIndex, RowIndex, InnerGridIndex] then
+          OuterGridIndex := 0;
+          InnerGridIndex := 1;
+          if ADataArray.IsValue[LayerIndex, RowIndex, OuterGridIndex] then
           begin
-            NewAnnotation := 'Combined values for LGR: '
-              + ADataArray.Annotation[LayerIndex, RowIndex, OuterGridIndex]
-              + ', ' + ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex];
-            AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
-            if AnnotationPosition >= 0 then
+            OuterCellArea := ModflowGrid.ColumnWidth[OuterGridIndex]
+              * ModflowGrid.RowWidth[RowIndex];
+            InnerCellArea := ModflowGrid.ColumnWidth[InnerGridIndex]
+              * ModflowGrid.RowWidth[RowIndex];
+            if ADataArray.IsValue[LayerIndex, RowIndex, InnerGridIndex] then
             begin
-              NewAnnotation := AnnotationList[AnnotationPosition];
+              NewAnnotation := 'Combined values for LGR: '
+                + ADataArray.Annotation[LayerIndex, RowIndex, OuterGridIndex]
+                + ', ' + ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex];
+              AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+              if AnnotationPosition >= 0 then
+              begin
+                NewAnnotation := AnnotationList[AnnotationPosition];
+              end
+              else
+              begin
+                AnnotationList.Add(NewAnnotation)
+              end;
+              case ADataArray.DataType of
+                rdtDouble:
+                  ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
+                    := ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
+                    + ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex]
+                    * OuterCellArea / InnerCellArea;
+                rdtBoolean:
+                  ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
+                    := ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
+                    or ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex]
+                else Assert(False);
+              end;
+              ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex]
+                := NewAnnotation;
             end
             else
             begin
-              AnnotationList.Add(NewAnnotation)
+              case ADataArray.DataType of
+                rdtDouble:
+                  ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
+                    := ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex]
+                    * OuterCellArea / InnerCellArea;
+                rdtBoolean:
+                  ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
+                    := ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex]
+                else Assert(False);
+              end;
+              ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex] :=
+                ADataArray.Annotation[LayerIndex, RowIndex, OuterGridIndex];
             end;
-            case ADataArray.DataType of
-              rdtDouble:
-                ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
-                  := ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
-                  + ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex]
-                  * OuterCellArea / InnerCellArea;
-              rdtBoolean:
-                ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
-                  := ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
-                  or ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex]
-              else Assert(False);
-            end;
-            ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex]
-              := NewAnnotation;
-          end
-          else
-          begin
-            case ADataArray.DataType of
-              rdtDouble:
-                ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
-                  := ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex]
-                  * OuterCellArea / InnerCellArea;
-              rdtBoolean:
-                ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
-                  := ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex]
-              else Assert(False);
-            end;
-            ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex] :=
-              ADataArray.Annotation[LayerIndex, RowIndex, OuterGridIndex];
+              case ADataArray.DataType of
+                rdtDouble:
+                  ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex] := 0;
+                rdtBoolean:
+                  ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex] := False;
+                else Assert(False);
+              end;
           end;
+
+          OuterGridIndex := ADataArray.ColumnCount-1;
+          InnerGridIndex := ADataArray.ColumnCount-2;
+          if ADataArray.IsValue[LayerIndex, RowIndex, OuterGridIndex] then
+          begin
+            OuterCellArea := ModflowGrid.ColumnWidth[OuterGridIndex]
+              * ModflowGrid.RowWidth[RowIndex];
+            InnerCellArea := ModflowGrid.ColumnWidth[InnerGridIndex]
+              * ModflowGrid.RowWidth[RowIndex];
+            if ADataArray.IsValue[LayerIndex, RowIndex, InnerGridIndex] then
+            begin
+              NewAnnotation := 'Combined values for LGR: '
+                + ADataArray.Annotation[LayerIndex, RowIndex, OuterGridIndex]
+                + ', ' + ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex];
+              AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+              if AnnotationPosition >= 0 then
+              begin
+                NewAnnotation := AnnotationList[AnnotationPosition];
+              end
+              else
+              begin
+                AnnotationList.Add(NewAnnotation)
+              end;
+              case ADataArray.DataType of
+                rdtDouble:
+                  ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
+                    := ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
+                    + ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex]
+                    * OuterCellArea / InnerCellArea;
+                rdtBoolean:
+                  ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
+                    := ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
+                    or ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex];
+                else Assert(False);
+              end;
+              ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex]
+                := NewAnnotation;
+            end
+            else
+            begin
+              case ADataArray.DataType of
+                rdtDouble:
+                  ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
+                    := ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex]
+                    * OuterCellArea / InnerCellArea;
+                rdtBoolean:
+                  ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
+                    := ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex]
+                else Assert(False);
+              end;
+              ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex] :=
+                ADataArray.Annotation[LayerIndex, RowIndex, OuterGridIndex];
+            end;
             case ADataArray.DataType of
               rdtDouble:
                 ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex] := 0;
@@ -26277,72 +27678,12 @@ begin
                 ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex] := False;
               else Assert(False);
             end;
-        end;
-
-        OuterGridIndex := ADataArray.ColumnCount-1;
-        InnerGridIndex := ADataArray.ColumnCount-2;
-        if ADataArray.IsValue[LayerIndex, RowIndex, OuterGridIndex] then
-        begin
-          OuterCellArea := ModflowGrid.ColumnWidth[OuterGridIndex]
-            * ModflowGrid.RowWidth[RowIndex];
-          InnerCellArea := ModflowGrid.ColumnWidth[InnerGridIndex]
-            * ModflowGrid.RowWidth[RowIndex];
-          if ADataArray.IsValue[LayerIndex, RowIndex, InnerGridIndex] then
-          begin
-            NewAnnotation := 'Combined values for LGR: '
-              + ADataArray.Annotation[LayerIndex, RowIndex, OuterGridIndex]
-              + ', ' + ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex];
-            AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
-            if AnnotationPosition >= 0 then
-            begin
-              NewAnnotation := AnnotationList[AnnotationPosition];
-            end
-            else
-            begin
-              AnnotationList.Add(NewAnnotation)
-            end;
-            case ADataArray.DataType of
-              rdtDouble:
-                ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
-                  := ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
-                  + ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex]
-                  * OuterCellArea / InnerCellArea;
-              rdtBoolean:
-                ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
-                  := ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
-                  or ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex];
-              else Assert(False);
-            end;
-            ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex]
-              := NewAnnotation;
-          end
-          else
-          begin
-            case ADataArray.DataType of
-              rdtDouble:
-                ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
-                  := ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex]
-                  * OuterCellArea / InnerCellArea;
-              rdtBoolean:
-                ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
-                  := ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex]
-              else Assert(False);
-            end;
-            ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex] :=
-              ADataArray.Annotation[LayerIndex, RowIndex, OuterGridIndex];
           end;
-          case ADataArray.DataType of
-            rdtDouble:
-              ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex] := 0;
-            rdtBoolean:
-              ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex] := False;
-            else Assert(False);
-          end;
-        end;
-      end
+        end
+      end;
+    finally
+      AnnotationList.Free;
     end;
-  finally
-    AnnotationList.Free;
   end;
 end;
 
@@ -26664,7 +28005,10 @@ begin
           if (GroupIndex <> LocalModel.LayerStructure.Count - 1)
             or (DisIndex <> AGroup.LayerCount - 1) then
           begin
-            result := result - DisItem.Discretization div 2;
+            if LocalModel.ModelSelection = msModflowLGR then
+            begin
+              result := result - DisItem.Discretization div 2;
+            end;
           end;
           Exit;
         end;
@@ -26680,14 +28024,22 @@ end;
 
 function TChildModel.ChildColToParentCol(ACol: integer): integer;
 begin
+  result := -1;
   if (ACol < 0) or (ACol >= Grid.ColumnCount) then
   begin
-    result := -1;
+    Exit;
   end
   else
   begin
-    result := ((ACol + (ChildCellsPerParentCell div 2))
-       div ChildCellsPerParentCell) + FFirstCol
+    case ModelSelection of
+      msModflowLGR:
+        result := ((ACol + (ChildCellsPerParentCell div 2))
+           div ChildCellsPerParentCell) + FFirstCol;
+      msModflowLGR2:
+        result := (ACol div ChildCellsPerParentCell) + FFirstCol;
+      else
+        Assert(False);
+    end;
   end;
 end;
 
@@ -26753,14 +28105,22 @@ end;
 
 function TChildModel.ChildRowToParentRow(ARow: integer): integer;
 begin
+  result := -1;
   if (ARow < 0) or (ARow >= Grid.RowCount) then
   begin
-    result := -1;
+    Exit;
   end
   else
   begin
-    result := ((ARow + (ChildCellsPerParentCell div 2))
-       div ChildCellsPerParentCell) + FFirstRow
+    case ModelSelection of
+      msModflowLGR:
+        result := ((ARow + (ChildCellsPerParentCell div 2))
+           div ChildCellsPerParentCell) + FFirstRow;
+      msModflowLGR2:
+        result := (ARow div ChildCellsPerParentCell) + FFirstRow;
+      else
+        Assert(False);
+    end;
   end;
 end;
 
@@ -26944,12 +28304,16 @@ var
   ChildIndex: Integer;
 begin
   PhastModel := ParentModel as TPhastModel;
-  result := -1;
+  result := 0;
   for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
   begin
     if PhastModel.ChildModels[ChildIndex].ChildModel = self then
     begin
-      result := -ChildIndex -2;
+      result := ChildIndex +2;
+      if ModelSelection = msModflowLGR then
+      begin
+        result := -result;
+      end;
       Exit;
     end;
   end;
@@ -27047,6 +28411,11 @@ end;
 function TChildModel.GetFreeSurface: boolean;
 begin
   result := ParentModel.GetFreeSurface;
+end;
+
+function TChildModel.GetGlobalVariables: TGlobalVariables;
+begin
+  result := ParentModel.GetGlobalVariables;
 end;
 
 function TChildModel.GetHufParameters: THufModflowParameters;
@@ -27162,6 +28531,8 @@ var
   ChildIndex: Integer;
   Start: Double;
   Delta: Double;
+  StartParentIndex: Integer;
+  EndParentIndex: Integer;
 begin
   if (Length(ParentPositions) = 0) then
   begin
@@ -27171,23 +28542,59 @@ begin
   Assert(0 <= StartPosition);
   Assert(StartPosition < EndPosition);
   Assert(EndPosition+1 < Length(ParentPositions));
-  NewLength := (EndPosition - StartPosition)*ChildCellsPerParentCell + 2;
+  case ModelSelection of
+    msModflowLGR:
+      NewLength := (EndPosition - StartPosition)*ChildCellsPerParentCell + 2;
+    msModflowLGR2:
+      NewLength := (EndPosition - StartPosition + 1)*ChildCellsPerParentCell+1;
+    else
+      begin
+        NewLength := 0
+      end;
+  end;
   SetLength(ChildPostions, NewLength);
   PositionIndex := 0;
 
   Start := ParentPositions[StartPosition];
   Delta := ParentPositions[StartPosition+1] - Start;
 
-  ChildPostions[PositionIndex] := (Start + ParentPositions[StartPosition+1])/2;
-  Inc(PositionIndex);
+//  case ModelSelection of
+//    msModflowLGR:
+//    msModflowLGR2:
+//      ChildPostions[PositionIndex] := Start;
+//    else
+//      Assert(False);
+//  end;
 
-  for ChildIndex := (ChildCellsPerParentCell div 2) + 1 to ChildCellsPerParentCell - 1 do
+  if ModelSelection = msModflowLGR then
   begin
-    ChildPostions[PositionIndex] := Start + ChildIndex*Delta/ChildCellsPerParentCell;
+    ChildPostions[PositionIndex] := (Start + ParentPositions[StartPosition+1])/2;
     Inc(PositionIndex);
+    for ChildIndex := (ChildCellsPerParentCell div 2) + 1 to ChildCellsPerParentCell - 1 do
+    begin
+      ChildPostions[PositionIndex] := Start + ChildIndex*Delta/ChildCellsPerParentCell;
+      Inc(PositionIndex);
+    end;
   end;
 
-  for ParentIndex := StartPosition+1 to EndPosition-1 do
+  StartParentIndex := 0;
+  EndParentIndex := -1;
+  case ModelSelection of
+    msModflowLGR:
+      begin
+        StartParentIndex := StartPosition+1;
+        EndParentIndex := EndPosition-1;
+      end;
+    msModflowLGR2:
+      begin
+        StartParentIndex := StartPosition;
+        EndParentIndex := EndPosition;
+      end;
+    else
+      Assert(False);
+  end;
+
+  for ParentIndex := StartParentIndex to EndParentIndex do
   begin
     Start := ParentPositions[ParentIndex];
     Delta := ParentPositions[ParentIndex+1] - Start;
@@ -27198,17 +28605,31 @@ begin
     end;
   end;
 
-  Start := ParentPositions[EndPosition];
-  Delta := ParentPositions[EndPosition+1] - Start;
+  case ModelSelection of
+    msModflowLGR:
+      begin
+        Start := ParentPositions[EndPosition];
+        Delta := ParentPositions[EndPosition+1] - Start;
 
-  for ChildIndex := 0 to (ChildCellsPerParentCell div 2) do
-  begin
-    ChildPostions[PositionIndex] := Start + ChildIndex*Delta/ChildCellsPerParentCell;
-    Inc(PositionIndex);
+        for ChildIndex := 0 to (ChildCellsPerParentCell div 2) do
+        begin
+          ChildPostions[PositionIndex] := Start
+            + ChildIndex*Delta/ChildCellsPerParentCell;
+          Inc(PositionIndex);
+        end;
+
+        ChildPostions[PositionIndex] :=
+          (Start + ParentPositions[EndPosition+1])/2;
+        Inc(PositionIndex);
+      end;
+    msModflowLGR2:
+      begin
+        ChildPostions[PositionIndex] := ParentPositions[EndPosition+1];
+        Inc(PositionIndex);
+      end;
+    else
+      Assert(False);
   end;
-
-  ChildPostions[PositionIndex] := (Start + ParentPositions[EndPosition+1])/2;
-  Inc(PositionIndex);
 
   Assert(PositionIndex = NewLength);
 end;
@@ -27263,6 +28684,11 @@ end;
 function TChildModel.GetSomeSegmentsUpToDate: boolean;
 begin
   result := FParentModel.SomeSegmentsUpToDate;
+end;
+
+function TChildModel.GetStrStreamLinkPlot: TSfrStreamLinkPlot;
+begin
+  result := ParentModel.GetStrStreamLinkPlot
 end;
 
 function TChildModel.GetUseWaterTable: boolean;
@@ -27357,7 +28783,10 @@ end;
 
 procedure TChildModel.SetChildCellsPerParentCell(const Value: integer);
 begin
-  Assert(Odd(Value));
+  if ModelSelection = msModflowLGR then
+  begin
+    Assert(Odd(Value));
+  end;
   if FChildCellsPerParentCell <> Value then
   begin
     FChildCellsPerParentCell := Value;
@@ -27407,6 +28836,11 @@ end;
 procedure TChildModel.SetFreeSurface(const Value: boolean);
 begin
   ParentModel.SetFreeSurface(Value);
+end;
+
+procedure TChildModel.SetGlobalVariables(const Value: TGlobalVariables);
+begin
+  // do nothing
 end;
 
 procedure TChildModel.SetHeadClosureCriterion(const Value: double);
@@ -27577,6 +29011,11 @@ begin
     FStartingHeadSource := Value;
     Invalidate;
   end;
+end;
+
+procedure TChildModel.SetStrStreamLinkPlot(const Value: TSfrStreamLinkPlot);
+begin
+  ParentModel.SetStrStreamLinkPlot(Value);
 end;
 
 procedure TChildModel.SetUseWaterTable(const Value: boolean);
@@ -27779,7 +29218,7 @@ begin
     FShouldUpdateGrid := True;
     Exit;
   end;
-  if FParentModel.ModelSelection <> msModflowLGR then
+  if not (FParentModel.ModelSelection in [msModflowLGR, msModflowLGR2]) then
   begin
     Exit;
   end;
@@ -27788,80 +29227,84 @@ begin
   LocalFirstRow := FirstRow;
   LocalLastRow := LastRow;
   try
-  ModflowGrid.GridAngle := (FParentModel as TCustomModel).ModflowGrid.GridAngle;
-  FShouldUpdateGrid := False;
-  FFirstCol := -1;
-  FLastCol := -1;
-  FFirstRow := -1;
-  FLastRow := -1;
-  if (HorizontalPositionScreenObject = nil)
-    or (ParentModel.ModflowGrid.RowCount < 3)
-    or (ParentModel.ModflowGrid.ColumnCount < 3)then
-  begin
-    ModflowGrid.RowCount := -1;
-    ModflowGrid.ColumnCount := -1;
-  end
-  else
-  begin
-    SegmentList := HorizontalPositionScreenObject.Segments[ParentModel];
-    if (SegmentList.Count >= 1) then
-    begin
-      Segment := SegmentList[0];
-      FFirstCol :=  Segment.Col;
-      FLastCol := FFirstCol;
-      FFirstRow :=  Segment.Row;
-      FLastRow := FFirstRow;
-      for SegIndex := 1 to SegmentList.Count - 1 do
-      begin
-        Segment := SegmentList[SegIndex];
-        if FFirstCol > Segment.Col then
-        begin
-          FFirstCol := Segment.Col;
-        end
-        else if FLastCol < Segment.Col then
-        begin
-          FLastCol := Segment.Col;
-        end;
-        if FFirstRow > Segment.Row then
-        begin
-          FFirstRow := Segment.Row;
-        end
-        else if FLastRow < Segment.Row then
-        begin
-          FLastRow := Segment.Row;
-        end;
-      end;
-      if FFirstCol = 0 then
-      begin
-        FFirstCol := 1;
-      end;
-      if FFirstRow = 0 then
-      begin
-        FFirstRow := 1;
-      end;
-      if FLastRow = ParentModel.ModflowGrid.RowCount-1 then
-      begin
-        FLastRow := ParentModel.ModflowGrid.RowCount-2;
-      end;
-      if FLastCol = ParentModel.ModflowGrid.ColumnCount-1 then
-      begin
-        FLastCol := ParentModel.ModflowGrid.ColumnCount-2;
-      end;
-
-      GetRowColPositions(FFirstCol, FLastCol,
-        ParentModel.ModflowGrid.ColumnPositions, NewColumnPositions);
-      ModflowGrid.ColumnPositions := NewColumnPositions;
-      GetRowColPositions(FFirstRow, FLastRow,
-        ParentModel.ModflowGrid.RowPositions, NewRowPositions);
-      ModflowGrid.RowPositions := NewRowPositions;
-    end
-    else
+    ModflowGrid.GridAngle := (FParentModel as TCustomModel).ModflowGrid.GridAngle;
+    FShouldUpdateGrid := False;
+    FFirstCol := -1;
+    FLastCol := -1;
+    FFirstRow := -1;
+    FLastRow := -1;
+    if (HorizontalPositionScreenObject = nil)
+      or (ParentModel.ModflowGrid.RowCount < 3)
+      or (ParentModel.ModflowGrid.ColumnCount < 3)then
     begin
       ModflowGrid.RowCount := -1;
       ModflowGrid.ColumnCount := -1;
+    end
+    else
+    begin
+      SegmentList := HorizontalPositionScreenObject.Segments[ParentModel];
+      if (SegmentList.Count >= 1) then
+      begin
+        Segment := SegmentList[0];
+        FFirstCol :=  Segment.Col;
+        FLastCol := FFirstCol;
+        FFirstRow :=  Segment.Row;
+        FLastRow := FFirstRow;
+        for SegIndex := 1 to SegmentList.Count - 1 do
+        begin
+          Segment := SegmentList[SegIndex];
+          if FFirstCol > Segment.Col then
+          begin
+            FFirstCol := Segment.Col;
+          end
+          else if FLastCol < Segment.Col then
+          begin
+            FLastCol := Segment.Col;
+          end;
+          if FFirstRow > Segment.Row then
+          begin
+            FFirstRow := Segment.Row;
+          end
+          else if FLastRow < Segment.Row then
+          begin
+            FLastRow := Segment.Row;
+          end;
+        end;
+
+        if FParentModel.ModelSelection = msModflowLGR then
+        begin
+          if FFirstCol = 0 then
+          begin
+            FFirstCol := 1;
+          end;
+          if FFirstRow = 0 then
+          begin
+            FFirstRow := 1;
+          end;
+          if FLastRow = ParentModel.ModflowGrid.RowCount-1 then
+          begin
+            FLastRow := ParentModel.ModflowGrid.RowCount-2;
+          end;
+          if FLastCol = ParentModel.ModflowGrid.ColumnCount-1 then
+          begin
+            FLastCol := ParentModel.ModflowGrid.ColumnCount-2;
+          end;
+        end;
+
+        GetRowColPositions(FFirstCol, FLastCol,
+          ParentModel.ModflowGrid.ColumnPositions, NewColumnPositions);
+        ModflowGrid.ColumnPositions := NewColumnPositions;
+        GetRowColPositions(FFirstRow, FLastRow,
+          ParentModel.ModflowGrid.RowPositions, NewRowPositions);
+        ModflowGrid.RowPositions := NewRowPositions;
+      end
+      else
+      begin
+        ModflowGrid.RowCount := -1;
+        ModflowGrid.ColumnCount := -1;
+      end;
     end;
-  end;
-  UpdateLayerCount;
+    UpdateLayerCount;
   finally
     if (LocalFirstCol <> FirstCol) or (LocalLastCol <> LastCol)
       or (LocalFirstRow <> FirstRow) or (LocalLastRow <> LastRow) then
@@ -27893,7 +29336,7 @@ begin
     Group := LayerStructure[GroupIndex];
     if Group.Simulated then
     begin
-      if Group = Discretization.BottomLayerGroup then
+      if (Group = Discretization.BottomLayerGroup) then
       begin
         EndLayer := Discretization.BottomLayerInUnit;
       end
@@ -27917,6 +29360,7 @@ begin
           NewItems := True;
         end;
         if (Group = Discretization.BottomLayerGroup)
+          and (ModelSelection  = msModflowLGR)
           and (DisIndex = EndLayer)
           and ((GroupIndex <> LayerStructure.Count - 1)
           or (EndLayer <> Group.LayerCount - 1)) then
@@ -27970,11 +29414,22 @@ begin
     ArrayLength := 0;
     if LayerGroup.Simulated then
     begin
-      for ParentLayerIndex := 0 to LayerGroup.LayerCount - 1 do
-      begin
-        Item := Discretization.GetAnItemByGroupAndLayer(LayerGroup as TLayerGroup, ParentLayerIndex);
-        Inc(ArrayLength, Item.Discretization);
-      end;
+//      if Discretization.BottomLayerGroup = LayerGroup then
+//      begin
+//        for ParentLayerIndex := 0 to Discretization.BottomLayerInUnit do
+//        begin
+//          Item := Discretization.GetAnItemByGroupAndLayer(LayerGroup as TLayerGroup, ParentLayerIndex);
+//          Inc(ArrayLength, Item.Discretization);
+//        end;
+//      end
+//      else
+//      begin
+        for ParentLayerIndex := 0 to LayerGroup.LayerCount - 1 do
+        begin
+          Item := Discretization.GetAnItemByGroupAndLayer(LayerGroup as TLayerGroup, ParentLayerIndex);
+          Inc(ArrayLength, Item.Discretization);
+        end;
+//      end;
     end
     else
     begin
@@ -27986,7 +29441,21 @@ begin
     HigherFracItem := nil;
     for ParentLayerIndex := 0 to LayerGroup.LayerCollection.Count do
     begin
-      if ParentLayerIndex < LayerGroup.LayerCollection.Count then
+      if Discretization.BottomLayerGroup = LayerGroup then
+      begin
+        if (ParentLayerIndex < LayerGroup.LayerCollection.Count)
+          and (ParentLayerIndex <= Discretization.BottomLayerInUnit) then
+        begin
+          FracItem := LayerGroup.LayerCollection.Items[ParentLayerIndex] as TLayerFraction;
+          Fraction := FracItem.Fraction;
+        end
+        else
+        begin
+          FracItem := nil;
+          Fraction := 0;
+        end;
+      end
+      else if ParentLayerIndex < LayerGroup.LayerCollection.Count then
       begin
         FracItem := LayerGroup.LayerCollection.Items[ParentLayerIndex] as TLayerFraction;
         Fraction := FracItem.Fraction;
@@ -28009,6 +29478,10 @@ begin
       Item := Discretization.GetAnItemByGroupAndLayer(LayerGroup as TLayerGroup, ParentLayerIndex);
       for ChildLayerIndex := Item.Discretization - 1 downto 1 do
       begin
+//        if LayerIndex >= Length(result) then
+//        begin
+//          break;
+//        end;
         result[LayerIndex] := Fraction
           + ChildLayerIndex/Item.Discretization * Delta;
         Inc(LayerIndex);
@@ -28021,7 +29494,8 @@ begin
       HigherFracItem := FracItem;
     end;
   end;
-  if not ((Discretization.BottomLayerGroup.Index > LayerGroup.Index)
+  if
+    not ((Discretization.BottomLayerGroup.Index > LayerGroup.Index)
     or ((LayerStructure[LayerStructure.Count-1] = Discretization.BottomLayerGroup)
     and (Discretization.BottomLayerInUnit = Discretization.BottomLayerGroup.LayerCount-1)))
 //    and (Discretization.BottomLayerInUnit < Discretization.BottomLayerGroup.LayerCount-1)))
@@ -28038,7 +29512,14 @@ begin
         Item := Discretization.GetAnItemByGroupAndLayer(LayerGroup as TLayerGroup, ParentLayerIndex);
         if Discretization.BottomLayerInUnit = ParentLayerIndex then
         begin
-          Inc(ArrayLength, Item.Discretization div 2);
+          if (ModelSelection <> msModflowLGR2) then
+          begin
+            Inc(ArrayLength, Item.Discretization div 2);
+          end
+          else
+          begin
+            Inc(ArrayLength, Item.Discretization-1);
+          end;
           break;
         end
         else
@@ -28186,17 +29667,38 @@ begin
   else if ACol = FFirstCol then
   begin
     result.First := 0;
-    result.Last := (ChildCellsPerParentCell div 2);
+    case ModelSelection of
+      msModflowLGR:
+        result.Last := (ChildCellsPerParentCell div 2);
+      msModflowLGR2:
+        result.Last := (ChildCellsPerParentCell - 1);
+      else
+        Assert(False);
+    end;
   end
   else if ACol = FLastCol then
   begin
     result.Last := Grid.ColumnCount-1;
-    result.First := result.Last - (ChildCellsPerParentCell div 2);
+    case ModelSelection of
+      msModflowLGR:
+        result.First := result.Last - (ChildCellsPerParentCell div 2);
+      msModflowLGR2:
+        result.First := result.Last - (ChildCellsPerParentCell - 1);
+      else
+        Assert(False);
+    end;
   end
   else
   begin
-    result.Last := (ACol-FFirstCol+1)*ChildCellsPerParentCell
-      - (ChildCellsPerParentCell div 2) - 1;
+    case ModelSelection of
+      msModflowLGR:
+        result.Last := (ACol-FFirstCol+1)*ChildCellsPerParentCell
+          - (ChildCellsPerParentCell div 2) - 1;
+      msModflowLGR2:
+        result.Last := (ACol-FFirstCol+1)*ChildCellsPerParentCell - 1;
+      else
+        Assert(False);
+    end;
     result.First  := result.Last - ChildCellsPerParentCell + 1;
   end;
 
@@ -28275,17 +29777,38 @@ begin
   else if ARow = FFirstRow then
   begin
     result.First := 0;
-    result.Last := (ChildCellsPerParentCell div 2);
+    case ModelSelection of
+      msModflowLGR:
+        result.Last := (ChildCellsPerParentCell div 2);
+      msModflowLGR2:
+        result.Last := (ChildCellsPerParentCell -1);
+      else
+        Assert(False);
+    end;
   end
   else if ARow = FLastRow then
   begin
     result.Last := Grid.RowCount-1;
-    result.First := result.Last - (ChildCellsPerParentCell div 2);
+    case ModelSelection of
+      msModflowLGR:
+        result.First := result.Last - (ChildCellsPerParentCell div 2);
+      msModflowLGR2:
+        result.First := result.Last - (ChildCellsPerParentCell - 1);
+      else
+        Assert(False);
+    end;
   end
   else
   begin
-    result.Last := (ARow-FFirstRow+1)*ChildCellsPerParentCell
-      - (ChildCellsPerParentCell div 2) - 1;
+    case ModelSelection of
+      msModflowLGR:
+        result.Last := (ARow-FFirstRow+1)*ChildCellsPerParentCell
+          - (ChildCellsPerParentCell div 2) - 1;
+      msModflowLGR2:
+        result.Last := (ARow-FFirstRow+1)*ChildCellsPerParentCell - 1;
+      else
+        Assert(False);
+    end;
     result.First  := result.Last - ChildCellsPerParentCell + 1;
   end;
 end;
@@ -28798,11 +30321,10 @@ begin
       begin
         Assert(False);
       end;
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         result := Grid.TopDataSet;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         if (Mesh <> nil) then
@@ -28810,10 +30332,14 @@ begin
           result := Mesh.TopDataSet;
         end;
       end;
-    {$ENDIF}
     else
        Assert(False);
   end;
+end;
+
+function TCustomModel.GroundSurfaceUsed(Sender: TObject): boolean;
+begin
+  result := UzfPackageUsed(Sender) or FarmProcessUsed(Sender);
 end;
 
 function TCustomModel.StoreEndPoints: boolean;
@@ -28838,16 +30364,14 @@ begin
       begin
         Assert(False);
       end;
-    msPhast, msModflow, msModflowLGR, msModflowNWT:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
       begin
         result := Grid.FrontDataSet;
       end;
-    {$IFDEF SUTRA}
     msSutra22:
       begin
         // do nothing
       end;
-    {$ENDIF}
     else
        Assert(False);
   end;
@@ -28868,7 +30392,3 @@ initialization
   RegisterClass(TChildModel);
 
 end.
-
-
-
-

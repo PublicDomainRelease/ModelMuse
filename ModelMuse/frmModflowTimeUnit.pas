@@ -102,7 +102,7 @@ implementation
 {$R *.dfm}
 
 uses Math, frmGoPhastUnit, frmTimeStepLengthCalculatorUnit, GoPhastTypes,
-  ModflowPackageSelectionUnit;
+  ModflowPackageSelectionUnit, frmErrorsAndWarningsUnit, PhastModelUnit;
 
 type
   TTimeColumn = (tcStressPeriod, tcStartTime, tcEndTime, tcLength,
@@ -156,12 +156,20 @@ var
   StressPeriod: TModflowStressPeriod;
   Steps: integer;
   TotalSteps: integer;
+  ShowUzfLakWarning: boolean;
+  UzfLakUsed: boolean;
 begin
   inherited;
   SetData;
   StressPeriods := frmGoPhast.PhastModel.ModflowStressPeriods;
   Steps := 0;
   TotalSteps := 0;
+  frmErrorsAndWarnings.RemoveWarningGroup(frmGoPhast.PhastModel,
+    StrMultiplierWarning);
+  UzfLakUsed := frmGoPhast.PhastModel.UzfIsSelected
+    or frmGoPhast.PhastModel.LakIsSelected;
+
+  ShowUzfLakWarning := False;
   for Index := 0 to StressPeriods.Count - 1 do
   begin
     StressPeriod := StressPeriods[Index];
@@ -170,7 +178,18 @@ begin
       Steps := StressPeriod.NumberOfSteps;
       TotalSteps := TotalSteps + StressPeriod.NumberOfSteps;
     end;
+    if UzfLakUsed and (StressPeriod.TimeStepMultiplier <> 1) then
+    begin
+      ShowUzfLakWarning := True;
+    end;
   end;
+
+  if ShowUzfLakWarning then
+  begin
+    frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrMultiplierWarning,
+      StrMultiplierFullWarning);
+  end;
+
   if dgTime.Checked[Ord(tcDrawDownReference), 1] then
   begin
     if dgTime.Cells[Ord(tcSteady), 1] =
@@ -197,6 +216,7 @@ begin
     Beep;
     MessageDlg(StrMT3DMSAllowsAMaxi, mtWarning, [mbOK], 0);
   end;
+
 end;
 
 procedure TfrmModflowTime.SetDeleteButtonEnabled;
