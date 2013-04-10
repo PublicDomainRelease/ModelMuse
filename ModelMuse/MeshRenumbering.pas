@@ -1,8 +1,8 @@
 {
-Based on:
-Sloan, S.W., and Randolph, M.F., 1983. Automatic element reordering for
-finite element analysis with frontal solution schemes. International
-Journal for Numerical Methods in Engineering. 19: 1153-1181.
+  Based on:
+  Sloan, S.W., and Randolph, M.F., 1983. Automatic element reordering for
+  finite element analysis with frontal solution schemes. International
+  Journal for Numerical Methods in Engineering. 19: 1153-1181.
 }
 
 unit MeshRenumbering;
@@ -16,42 +16,46 @@ type
   TNodeType = (ntInner, ntEdge, ntSubDomain);
 
   IElement = interface;
+
   INode = interface(IInterface)
     function GetActiveElementCount: integer;
-    function GetActiveElement(Index: Integer): IElement;
-    function GetNodeNumber: Integer;
-    procedure SetNodeNumber(Value: Integer);
+    function GetActiveElement(Index: integer): IElement;
+    function GetNodeNumber: integer;
+    procedure SetNodeNumber(Value: integer);
     function GetLocation: TPoint2D;
     procedure SetLocation(const Value: TPoint2D);
     function GetNodeType: TNodeType;
-    property ActiveElementCount: Integer read GetActiveElementCount;
-    property ActiveElements[Index: Integer]: IElement read GetActiveElement;
-    property NodeNumber: Integer read GetNodeNumber write SetNodeNumber;
+    property ActiveElementCount: integer read GetActiveElementCount;
+    property ActiveElements[Index: integer]: IElement read GetActiveElement;
+    property NodeNumber: integer read GetNodeNumber write SetNodeNumber;
     property Location: TPoint2D read GetLocation write SetLocation;
     property NodeType: TNodeType read GetNodeType;
   end;
+
   TINodeList = TList<INode>;
 
   IElement = interface(IInterface)
-    function GetActiveNode(Index: Integer): INode;
+    function GetActiveNode(Index: integer): INode;
     function GetActiveNodeCount: integer;
-    function GetElementNumber: Integer;
-    procedure SetElementNumber(Value: Integer);
-    property NodeCount: Integer read GetActiveNodeCount;
-    property Nodes[Index: Integer]: INode read GetActiveNode;
-    property ElementNumber: Integer read GetElementNumber write SetElementNumber;
+    function GetElementNumber: integer;
+    procedure SetElementNumber(Value: integer);
+    property NodeCount: integer read GetActiveNodeCount;
+    property Nodes[Index: integer]: INode read GetActiveNode;
+    property ElementNumber: integer read GetElementNumber
+      write SetElementNumber;
   end;
+
   TIElementList = TList<IElement>;
 
   IMesh = interface(IInterface)
-    function GetActiveNode(Index: Integer): INode;
+    function GetActiveNode(Index: integer): INode;
     function GetActiveNodeCount: integer;
     function GetActiveElementCount: integer;
-    function GetActiveElement(Index: Integer): IElement;
-    property NodeCount: Integer read GetActiveNodeCount;
-    property Nodes[Index: Integer]: INode read GetActiveNode;
-    property ElementCount: Integer read GetActiveElementCount;
-    property Elements[Index: Integer]: IElement read GetActiveElement;
+    function GetActiveElement(Index: integer): IElement;
+    property NodeCount: integer read GetActiveNodeCount;
+    property Nodes[Index: integer]: INode read GetActiveNode;
+    property ElementCount: integer read GetActiveElementCount;
+    property Elements[Index: integer]: IElement read GetActiveElement;
   end;
 
 procedure RenumberMesh(Mesh: IMesh);
@@ -68,6 +72,7 @@ type
     constructor Create(Element: IElement);
     destructor Destroy; override;
   end;
+
   TElementHandlerObjectList = TObjectList<TElementHandler>;
 
   TElementHandlerComparer = TComparer<TElementHandler>;
@@ -84,10 +89,10 @@ type
     FAssigned: Boolean;
     FActiveNodeIncrement: integer;
     FOrderingEfficiency: integer;
-    FWidth: Integer;
+    FWidth: integer;
     FDepth: integer;
-    FLevel: Integer;
-    FMaxFrontWidth: Integer;
+    FLevel: integer;
+    FMaxFrontWidth: integer;
     constructor Create(Node: INode);
     destructor Destroy; override;
   private
@@ -95,10 +100,11 @@ type
     procedure AssignActiveNodeIncrement;
   end;
 
-procedure GetNextNodeToAdd(ActiveNodes: TNodeHandlerList; var NextNodeIndex: Integer);
+procedure GetNextNodeToAdd(ActiveNodes: TNodeHandlerList;
+  var NextNodeIndex: integer);
 var
   NextNodeHandler: TNodeHandler;
-  NodeIndex: Integer;
+  NodeIndex: integer;
   NodeHandler: TNodeHandler;
 begin
   for NodeIndex := 0 to ActiveNodes.Count - 1 do
@@ -106,7 +112,6 @@ begin
     NodeHandler := ActiveNodes[NodeIndex];
     NodeHandler.AssignActiveNodeIncrement;
   end;
-
 
   // Find the node that will add the fewest nodes to the active nodes.
   NextNodeHandler := nil;
@@ -121,7 +126,8 @@ begin
     end
     else
     begin
-      if NodeHandler.FActiveNodeIncrement < NextNodeHandler.FActiveNodeIncrement then
+      if NodeHandler.FActiveNodeIncrement <
+        NextNodeHandler.FActiveNodeIncrement then
       begin
         NextNodeHandler := NodeHandler;
         NextNodeIndex := NodeIndex;
@@ -130,15 +136,16 @@ begin
   end;
 end;
 
-procedure GetPeripheralNodes(StartingNodes, AllNodeHandlers: TNodeHandlerList; Root: TNodeHandler);
+procedure GetPeripheralNodes(StartingNodes, AllNodeHandlers: TNodeHandlerList;
+  Root: TNodeHandler);
 var
   NodeQueue: TNodeHandlerList;
-  NodeIndex: Integer;
+  NodeIndex: integer;
   NodeHandler: TNodeHandler;
-  MaxWidth: Integer;
-  CurrentLevel: Integer;
-  CurrentWidth: Integer;
-  InnerNodeIndex: Integer;
+  MaxWidth: integer;
+  CurrentLevel: integer;
+  CurrentWidth: integer;
+  InnerNodeIndex: integer;
   AnotherNodeHandler: TNodeHandler;
   NewNodes: TNodeHandlerList;
 begin
@@ -231,26 +238,27 @@ begin
 
 end;
 
-function CompareNodes(Node1, Node2: TNodeHandler): Integer;
+function CompareNodes(Node1, Node2: TNodeHandler): integer;
 begin
   result := Node1.FDepth - Node2.FDepth;
   if result = 0 then
   begin
-    Result := Node2.FWidth - Node1.FWidth;
+    result := Node2.FWidth - Node1.FWidth;
   end;
 end;
 
-procedure UpdateStartingNodes(StartingNodes, AllNodeHandlers: TNodeHandlerList; Root: TNodeHandler);
+procedure UpdateStartingNodes(StartingNodes, AllNodeHandlers: TNodeHandlerList;
+  Root: TNodeHandler);
 var
-  NodeIndex: Integer;
+  NodeIndex: integer;
   BestNode: TNodeHandler;
   NodeHandler: TNodeHandler;
-  CompareResult: Integer;
-  InnerNodeIndex: Integer;
-  NewPositionIndex: Integer;
+  CompareResult: integer;
+  InnerNodeIndex: integer;
+  NewPositionIndex: integer;
 begin
   GetPeripheralNodes(StartingNodes, AllNodeHandlers, Root);
-  BestNode := StartingNodes[StartingNodes.Count -1];
+  BestNode := StartingNodes[StartingNodes.Count - 1];
   for NodeIndex := StartingNodes.Count - 2 downto 0 do
   begin
     NodeHandler := StartingNodes[NodeIndex];
@@ -289,7 +297,7 @@ end;
 
 procedure SetAllNodesInactive(AllNodes: TNodeHandlerObjectList);
 var
-  NodeIndex: Integer;
+  NodeIndex: integer;
   NodeHandler: TNodeHandler;
 begin
   for NodeIndex := 0 to AllNodes.Count - 1 do
@@ -303,7 +311,7 @@ end;
 procedure AddNewActiveNodes(NextNodeHandler: TNodeHandler;
   ActiveNodes: TNodeHandlerList);
 var
-  NodeIndex: Integer;
+  NodeIndex: integer;
   AnotherNodeHandler: TNodeHandler;
 begin
   for NodeIndex := 0 to NextNodeHandler.FAdjacentNodes.Count - 1 do
@@ -317,28 +325,27 @@ begin
   end;
 end;
 
-
 procedure RenumberMesh(Mesh: IMesh);
 var
   NodeHandlers: TNodeHandlerObjectList;
-  NodeIndex: Integer;
+  NodeIndex: integer;
   Node: INode;
   NodeHandler: TNodeHandler;
   ActiveNodes: TNodeHandlerList;
   AssignedNodes: TNodeHandlerList;
   NextNodeHandler: TNodeHandler;
-  NextNodeIndex: Integer;
+  NextNodeIndex: integer;
   OrderingEfficiency: integer;
   StartingNode: TNodeHandler;
   StartingNodes: TNodeHandlerList;
-  StartingNodeIndex: Integer;
-  MaxFrontWidth: Integer;
-  CurrentMaxFrontWidth: Integer;
-  ElementIndex: Integer;
+  StartingNodeIndex: integer;
+  MaxFrontWidth: integer;
+  CurrentMaxFrontWidth: integer;
+  ElementIndex: integer;
   Element: IElement;
   ElementList: TElementHandlerObjectList;
   ElementHandler: TElementHandler;
-  DeleteIndex: Integer;
+  DeleteIndex: integer;
 begin
   if Mesh.NodeCount = 0 then
   begin
@@ -347,7 +354,7 @@ begin
   NodeHandlers := TNodeHandlerObjectList.Create;
   try
     // Create node TNodeHandler's
-//    Assert(Mesh.NodeCount > 0);
+    // Assert(Mesh.NodeCount > 0);
     for NodeIndex := 0 to Mesh.NodeCount - 1 do
     begin
       Node := Mesh.Nodes[NodeIndex];
@@ -371,7 +378,7 @@ begin
       NodeHandler := NodeHandlers[0];
       UpdateStartingNodes(StartingNodes, NodeHandlers, NodeHandler);
       MaxFrontWidth := NodeHandlers.Count + 1;
-      for StartingNodeIndex := StartingNodes.Count -1 downto 0 do
+      for StartingNodeIndex := StartingNodes.Count - 1 downto 0 do
       begin
         SetAllNodesInactive(NodeHandlers);
 
@@ -402,7 +409,8 @@ begin
         while NextNodeIndex >= 0 do
         begin
           NextNodeHandler := ActiveNodes[NextNodeIndex];
-          NextNodeHandler.FNode.NodeNumber := AssignedNodes.Add(NextNodeHandler);
+          NextNodeHandler.FNode.NodeNumber :=
+            AssignedNodes.Add(NextNodeHandler);
           ActiveNodes.Delete(NextNodeIndex);
           NextNodeHandler.FAssigned := True;
           AddNewActiveNodes(NextNodeHandler, ActiveNodes);
@@ -430,7 +438,8 @@ begin
         if MaxFrontWidth > CurrentMaxFrontWidth then
         begin
           MaxFrontWidth := CurrentMaxFrontWidth;
-          for DeleteIndex := StartingNodes.Count -1 downto StartingNodeIndex+1 do
+          for DeleteIndex := StartingNodes.Count - 1
+            downto StartingNodeIndex + 1 do
           begin
             StartingNodes.Delete(DeleteIndex);
           end;
@@ -476,36 +485,36 @@ begin
     end;
 
     ElementList.Sort(TElementHandlerComparer.Construct(
-      function (const L, R: TElementHandler): integer
-        var
-          Index: Integer;
-        begin
-          result := 0;
-          for Index := 0 to L.FIntegerList.Count - 1 do
-          begin
-            result := L.FIntegerList[Index] - R.FIntegerList[Index];
-            if result <> 0 then
-            begin
-              break;
-            end;
-          end;
-        end));
-      for ElementIndex := 0 to ElementList.Count - 1 do
+      function(const L, R: TElementHandler): integer
+      var
+        Index: integer;
       begin
-        ElementHandler := ElementList[ElementIndex];
-        ElementHandler.FElement.ElementNumber := ElementIndex;
-      end;
+        result := 0;
+        for Index := 0 to L.FIntegerList.Count - 1 do
+        begin
+          result := L.FIntegerList[Index] - R.FIntegerList[Index];
+          if result <> 0 then
+          begin
+            break;
+          end;
+        end;
+      end));
+    for ElementIndex := 0 to ElementList.Count - 1 do
+    begin
+      ElementHandler := ElementList[ElementIndex];
+      ElementHandler.FElement.ElementNumber := ElementIndex;
+    end;
   finally
     ElementList.Free;
   end;
 
 end;
 
-  { TNodeHandler }
+{ TNodeHandler }
 
 procedure TNodeHandler.AssignActiveNodeIncrement;
 var
-  NodeIndex: Integer;
+  NodeIndex: integer;
   AnotherNode: TNodeHandler;
 begin
   FActiveNodeIncrement := -1;
@@ -534,10 +543,10 @@ end;
 
 procedure TNodeHandler.GetAdjacentNodes(NodeHandlers: TNodeHandlerObjectList);
 var
-  ElementIndex: Integer;
+  ElementIndex: integer;
   ANode: INode;
   Element: IElement;
-  NodeIndex: Integer;
+  NodeIndex: integer;
   Handler: TNodeHandler;
 begin
   for ElementIndex := 0 to FNode.ActiveElementCount - 1 do
@@ -546,7 +555,7 @@ begin
     for NodeIndex := 0 to Element.NodeCount - 1 do
     begin
       ANode := Element.Nodes[NodeIndex];
-      if (ANode <> FNode)  then
+      if (ANode <> FNode) then
       begin
         Handler := NodeHandlers[ANode.NodeNumber];
         if (FAdjacentNodes.IndexOf(Handler) < 0) then
@@ -562,7 +571,7 @@ end;
 
 constructor TElementHandler.Create(Element: IElement);
 var
-  NodeIndex: Integer;
+  NodeIndex: integer;
   Node: INode;
 begin
   FElement := Element;
@@ -582,4 +591,3 @@ begin
 end;
 
 end.
-

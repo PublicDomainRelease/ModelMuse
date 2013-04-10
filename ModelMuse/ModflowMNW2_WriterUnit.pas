@@ -83,9 +83,10 @@ resourcestring
   StrInvalidMnwTable2 = 'The following objects define multinode wells in w' +
   'hich LIFTq0 is greater than one or more values in the head capacity table.';
   StrWhenPumpingCapacit = 'When pumping capacity affects the flow rate in MN' +
-  'W2 wells, the first withdrawal rate is treated as the maximum possible pu' +
-  'mping rate and should be greater than the largest pumping rate in the pum' +
-  'p capacity table. The following objects specify wells that do';
+  'W2 wells, the withdrawal rate is treated as the maximum possible pumping ' +
+  'rate and should be greater than the largest pumping rate in the pump ' +
+  'capacity table. The following objects specify wells that do not meet this'
+  + ' criterion.';
 
 implementation
 
@@ -507,7 +508,7 @@ var
   UseNODTOT: boolean;
 begin
   MNWMAX := FWells.Count;
-  UseNODTOT := Model.ModelSelection = msModflowNWT;
+  UseNODTOT := Model.ModelSelection in [msModflow, msModflowNWT];
   if UseNODTOT then
   begin
     NODTOT := CountNodes;

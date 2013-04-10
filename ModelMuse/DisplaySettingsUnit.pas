@@ -5,7 +5,7 @@ interface
 uses
   Types, Classes, Graphics, GoPhastTypes, LegendUnit, AbstractGridUnit,
   PathlineReader, SysUtils, EdgeDisplayUnit, DataSetUnit,
-  Generics.Collections, Generics.Defaults;
+  Generics.Collections, Generics.Defaults, SutraMeshUnit;
 
 type
   TTextDisplay = class(TGoPhastPersistent)
@@ -63,10 +63,12 @@ type
     FLegend: TLegend;
     FLegendVisible: boolean;
     FLimits: TColoringLimits;
+    FContourAlgorithm: TContourAlg;
     procedure SetDataSetName(const Value: string);
     procedure SetLegend(const Value: TLegend);
     procedure SetLegendVisible(const Value: boolean);
     procedure SetLimits(const Value: TColoringLimits);
+    procedure SetContourAlgorithm(const Value: TContourAlg);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
@@ -76,6 +78,7 @@ type
     property Legend: TLegend read FLegend write SetLegend;
     property LegendVisible: boolean read FLegendVisible write SetLegendVisible;
     property Limits: TColoringLimits read FLimits write SetLimits;
+    property ContourAlgorithm: TContourAlg read FContourAlgorithm write SetContourAlgorithm;
   end;
 
   TColorDisplaySettings = class(TContourDisplaySettings)
@@ -200,10 +203,14 @@ type
     FNodeFont: TFont;
     FShowNodeNumbers: Boolean;
     FShowElementNumbers: Boolean;
+    FNodeDrawingChoice: TDrawingChoice;
+    FElementDrawingChoice: TDrawingChoice;
     procedure SetElementFont(const Value: TFont);
     procedure SetNodeFont(const Value: TFont);
     procedure SetShowElementNumbers(const Value: Boolean);
     procedure SetShowNodeNumbers(const Value: Boolean);
+    procedure SetElementDrawingChoice(const Value: TDrawingChoice);
+    procedure SetNodeDrawingChoice(const Value: TDrawingChoice);
   public
     procedure Assign(Source: TPersistent); override;
     procedure AssignTo(Dest: TPersistent); override;
@@ -212,8 +219,14 @@ type
   published
     property NodeFont: TFont read FNodeFont write SetNodeFont;
     property ElementFont: TFont read FElementFont write SetElementFont;
-    property ShowNodeNumbers: Boolean read FShowNodeNumbers write SetShowNodeNumbers;
-    property ShowElementNumbers: Boolean read FShowElementNumbers write SetShowElementNumbers;
+    property ShowNodeNumbers: Boolean read FShowNodeNumbers
+      write SetShowNodeNumbers;
+    property ShowElementNumbers: Boolean read FShowElementNumbers
+      write SetShowElementNumbers;
+    property ElementDrawingChoice: TDrawingChoice read FElementDrawingChoice
+      write SetElementDrawingChoice;
+    property NodeDrawingChoice: TDrawingChoice read FNodeDrawingChoice
+      write SetNodeDrawingChoice;
   end;
   {$ENDIF}
 
@@ -346,7 +359,7 @@ implementation
 
 uses
   DrawTextUnit, RbwRuler, ScreenObjectUnit, PhastModelUnit, ModflowSfrUnit,
-  ModflowSfrParamIcalcUnit, ModflowLakUnit, SutraMeshUnit;
+  ModflowSfrParamIcalcUnit, ModflowLakUnit;
 
 { TTextDisplay }
 
@@ -682,6 +695,8 @@ begin
     ElementFont := SourceSettings.ElementFont;
     ShowNodeNumbers := SourceSettings.ShowNodeNumbers;
     ShowElementNumbers := SourceSettings.ShowElementNumbers;
+    ElementDrawingChoice := SourceSettings.ElementDrawingChoice;
+    NodeDrawingChoice := SourceSettings.NodeDrawingChoice;
   end
   else if Source is TSutraMesh3D then
   begin
@@ -690,6 +705,8 @@ begin
     ElementFont := SourceMesh.ElementFont;
     ShowNodeNumbers := SourceMesh.DrawNodeNumbers;
     ShowElementNumbers := SourceMesh.DrawElementNumbers;
+    ElementDrawingChoice := SourceMesh.ElementDrawingChoice;
+    NodeDrawingChoice := SourceMesh.NodeDrawingChoice;
   end
   else
   begin
@@ -708,6 +725,8 @@ begin
     DestMesh.ElementFont := ElementFont;
     DestMesh.DrawNodeNumbers := ShowNodeNumbers;
     DestMesh.DrawElementNumbers := ShowElementNumbers;
+    DestMesh.ElementDrawingChoice := ElementDrawingChoice;
+    DestMesh.NodeDrawingChoice := NodeDrawingChoice;
   end
   else
   begin
@@ -730,6 +749,15 @@ begin
   inherited;
 end;
 
+procedure TSutraSettings.SetElementDrawingChoice(const Value: TDrawingChoice);
+begin
+  if FElementDrawingChoice <> Value then
+  begin
+    FElementDrawingChoice := Value;
+    InvalidateModel;
+  end;
+end;
+
 procedure TSutraSettings.SetElementFont(const Value: TFont);
 begin
   FElementFont.Assign(Value);
@@ -743,6 +771,15 @@ end;
 procedure TSutraSettings.SetShowNodeNumbers(const Value: Boolean);
 begin
   SetBooleanProperty(FShowNodeNumbers, Value);
+end;
+
+procedure TSutraSettings.SetNodeDrawingChoice(const Value: TDrawingChoice);
+begin
+  if FNodeDrawingChoice <> Value then
+  begin
+    FNodeDrawingChoice := Value;
+    InvalidateModel;
+  end;
 end;
 
 procedure TSutraSettings.SetNodeFont(const Value: TFont);
@@ -899,6 +936,7 @@ begin
     Legend := SourceDisplay.Legend;
     LegendVisible := SourceDisplay.LegendVisible;
     Limits := SourceDisplay.Limits;
+    ContourAlgorithm := SourceDisplay.ContourAlgorithm;
   end
   else
   begin
@@ -918,6 +956,15 @@ begin
   FLegend.Free;
   FLimits.Free;
   inherited;
+end;
+
+procedure TContourDisplaySettings.SetContourAlgorithm(const Value: TContourAlg);
+begin
+  if FContourAlgorithm <> Value then
+  begin
+    FContourAlgorithm := Value;
+    InvalidateModel;
+  end;
 end;
 
 procedure TContourDisplaySettings.SetDataSetName(const Value: string);

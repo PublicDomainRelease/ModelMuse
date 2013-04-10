@@ -451,7 +451,20 @@ uses
   frmImportTprogsUnit in 'frmImportTprogsUnit.pas' {frmImportTprogs},
   frmCustomizeMeshUnit in 'frmCustomizeMeshUnit.pas' {frmCustomizeMesh},
   ReadSutraNodEleUnit in 'ReadSutraNodEleUnit.pas',
-  frmImportSutraModelResultsUnit in 'frmImportSutraModelResultsUnit.pas' {frmImportSutraModelResults};
+  frmImportSutraModelResultsUnit in 'frmImportSutraModelResultsUnit.pas' {frmImportSutraModelResults},
+  VertexUnit in 'VertexUnit.pas',
+  doublePolyhedronUnit in 'doublePolyhedronUnit.pas',
+  SolidGeom in 'SolidGeom.pas',
+  SolidUnit in 'SolidUnit.pas',
+  SegmentUnit in 'SegmentUnit.pas',
+  frmSutraAngleUnit in 'frmSutraAngleUnit.pas' {frmSutraAngle},
+  frmMeshGenerationControlVariablesUnit in 'frmMeshGenerationControlVariablesUnit.pas' {frmMeshGenerationControlVariables},
+  TriCP_Routines in 'TriCP_Routines.pas',
+  CalCompRoutines in 'CalCompRoutines.pas',
+  TriPackRoutines in 'TriPackRoutines.pas',
+  TriPackMessages in 'TriPackMessages.pas',
+  LineStorage in 'LineStorage.pas',
+  frmColorSchemesUnit in 'frmColorSchemesUnit.pas' {frmColorSchemes};
 
 {$R *.res}
 {#BACKUP ModelMuse.cfg}

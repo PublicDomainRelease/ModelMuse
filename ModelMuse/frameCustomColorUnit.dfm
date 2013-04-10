@@ -15,10 +15,6 @@ object frameCustomColor: TframeCustomColor
     TabOrder = 0
     object tabSelection: TTabSheet
       Caption = 'Selection'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         562
         400)
@@ -77,7 +73,7 @@ object frameCustomColor: TframeCustomColor
         Anchors = [akLeft, akRight, akBottom]
         DropDownCount = 12
         ItemIndex = 0
-        TabOrder = 4
+        TabOrder = 5
         Text = 'Rainbow'
         OnChange = comboColorSchemeChange
         Items.Strings = (
@@ -98,13 +94,13 @@ object frameCustomColor: TframeCustomColor
         Left = 456
         Top = 300
         Width = 101
-        Height = 24
+        Height = 21
         ButtonKind = bkClassic
         MaxValue = 2147483647.000000000000000000
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
         Anchors = [akRight, akBottom]
-        TabOrder = 5
+        TabOrder = 6
         OnChange = seCyclesChange
         OnKeyUp = seCyclesKeyUp
       end
@@ -115,7 +111,7 @@ object frameCustomColor: TframeCustomColor
         Height = 40
         Increment = 2
         MaxValue = 200
-        TabOrder = 6
+        TabOrder = 7
         Value = 40
         Anchors = [akLeft, akBottom]
         OnChange = jsColorExponentChange
@@ -124,14 +120,14 @@ object frameCustomColor: TframeCustomColor
         Left = 160
         Top = 366
         Width = 65
-        Height = 24
+        Height = 21
         ButtonKind = bkClassic
         Increment = 0.010000000000000000
         MaxValue = 2.000000000000000000
         ValueType = vtFloat
         Value = 0.400000000000000000
         Anchors = [akLeft, akBottom]
-        TabOrder = 7
+        TabOrder = 8
         OnChange = seColorExponentChange
       end
       object cbLogTransform: TCheckBox
@@ -141,12 +137,12 @@ object frameCustomColor: TframeCustomColor
         Height = 17
         Anchors = [akLeft, akBottom]
         Caption = 'Log transform'
-        TabOrder = 8
+        TabOrder = 9
       end
       object udDataSets: TJvUpDown
         Left = 479
         Top = 28
-        Width = 21
+        Width = 17
         Height = 25
         TabOrder = 1
         OnChangingEx = udDataSetsChangingEx
@@ -156,7 +152,7 @@ object frameCustomColor: TframeCustomColor
         Top = 156
         Width = 305
         Height = 73
-        Anchors = [akLeft, akBottom]
+        Anchors = [akLeft, akRight, akBottom]
         Caption = 'When changing data sets:'
         ItemIndex = 0
         Items.Strings = (
@@ -168,7 +164,7 @@ object frameCustomColor: TframeCustomColor
         Left = 8
         Top = 25
         Width = 465
-        Height = 24
+        Height = 21
         Tree.Left = 0
         Tree.Top = 0
         Tree.Width = 304
@@ -228,14 +224,22 @@ object frameCustomColor: TframeCustomColor
         ReadOnly = True
         TabOrder = 2
       end
+      object btnColorSchemes: TButton
+        Left = 360
+        Top = 176
+        Width = 97
+        Height = 41
+        Anchors = [akRight, akBottom]
+        Cancel = True
+        Caption = 'Edit custom color schemes'
+        TabOrder = 4
+        WordWrap = True
+        OnClick = btnColorSchemesClick
+      end
     end
     object tabFilters: TTabSheet
       Caption = 'Filters'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         562
         400)
@@ -373,7 +377,7 @@ object frameCustomColor: TframeCustomColor
         Left = 8
         Top = 367
         Width = 121
-        Height = 24
+        Height = 21
         CheckMinValue = True
         ButtonKind = bkClassic
         Anchors = [akLeft, akBottom]
@@ -397,10 +401,6 @@ object frameCustomColor: TframeCustomColor
       Caption = 'Legend'
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object imLegend: TImage
         Left = 218
         Top = 0
@@ -420,7 +420,6 @@ object frameCustomColor: TframeCustomColor
         Align = alLeft
         BevelOuter = bvNone
         TabOrder = 0
-        ExplicitHeight = 397
         DesignSize = (
           218
           400)
@@ -457,7 +456,7 @@ object frameCustomColor: TframeCustomColor
           Left = 8
           Top = 360
           Width = 121
-          Height = 24
+          Height = 21
           CheckMaxValue = False
           ButtonKind = bkClassic
           MinValue = 1.000000000000000000

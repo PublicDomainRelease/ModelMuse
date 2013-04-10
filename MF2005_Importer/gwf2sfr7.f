@@ -2267,7 +2267,7 @@ C10-----READ DATA SET 4G FOR SEGMENT IF SOLUTES SPECIFIED.
         END IF
 C
 C10b----READ CELL INDECES THAT RECEIVE RECHARGE: i,1 = ROW, i,2 = COL  !cjm
-! REW. I have skipped this because it is undocumented and appears to be buggy.
+! RBW. I have skipped this because it is undocumented and appears to be buggy.
       END DO
 C
 C11-----RETURN.

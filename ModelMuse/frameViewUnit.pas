@@ -574,7 +574,8 @@ uses GR32_Polygons, frmGoPhastUnit, CursorsFoiledAgain, Math, RbwParser,
   frmScreenObjectPropertiesUnit, UndoItemsScreenObjects, frmGridAngleUnit,
   InteractiveTools, frmSetSpacingUnit, frmSubdivideUnit, BigCanvasMethods,
   frmRulerOptionsUnit, PhastModelUnit, frmGridValueUnit, EdgeDisplayUnit,
-  CustomModflowWriterUnit, frmProgressUnit, SutraMeshUnit, frmDisplayDataUnit;
+  CustomModflowWriterUnit, frmProgressUnit, SutraMeshUnit, frmDisplayDataUnit,
+  frmCustomGoPhastUnit;
 
 resourcestring
   StrTheSImageCanNo = 'The %s  image can not be shown at this magnification.' +
@@ -678,37 +679,61 @@ var
   NodeLayer: Integer;
 begin
   Mesh := frmGoPhast.PhastModel.Mesh;
+  if Mesh = nil then
+  begin
+    Exit;
+  end;
   GetRowCol(APoint, Row, Column);
-  ElementNumber := 0;
-  case Mesh.MeshType of
-    mt2D:
-      begin
-        ElementNumber := Mesh.Mesh2D.Elements[Column].DisplayNumber;
-      end;
-    mt3D:
-      begin
-        ElementLayer := Mesh.SelectedLayer;
-        if ElementLayer >= Mesh.LayerCount then
+  ElementNumber := -1;
+  if Column >= 0 then
+  begin
+    case Mesh.MeshType of
+      mt2D:
         begin
-          ElementLayer := Mesh.LayerCount-1;
+          ElementNumber := Mesh.Mesh2D.Elements[Column].DisplayNumber;
         end;
-        ElementNumber := Mesh.ElementArray[ElementLayer,Column].DisplayNumber;
-      end;
-    else Assert(False);
+      mt3D:
+        begin
+          ElementLayer := Mesh.SelectedLayer;
+          if ElementLayer >= Mesh.LayerCount then
+          begin
+            ElementLayer := Mesh.LayerCount-1;
+          end;
+          if Mesh.Elements.Count > 0 then
+          begin
+            ElementNumber := Mesh.ElementArray[ElementLayer,Column].DisplayNumber;
+          end
+          else
+          begin
+            ElementNumber := Mesh.Mesh2D.Elements[Column].DisplayNumber;
+          end;
+        end;
+      else Assert(False);
+    end;
   end;
   GetNodeRowCol(APoint, Row, Column);
-  NodeNumber := 0;
-  case Mesh.MeshType of
-    mt2D:
-      begin
-        NodeNumber := Mesh.Mesh2D.Nodes[Column].Number+1;
-      end;
-    mt3D:
-      begin
-        NodeLayer := Mesh.SelectedLayer;
-        NodeNumber := Mesh.NodeArray[NodeLayer,Column].Number+1;
-      end;
-    else Assert(False);
+  NodeNumber := -1;
+  if Column >= 0 then
+  begin
+    case Mesh.MeshType of
+      mt2D:
+        begin
+          NodeNumber := Mesh.Mesh2D.Nodes[Column].Number+1;
+        end;
+      mt3D:
+        begin
+          NodeLayer := Mesh.SelectedLayer;
+          if Mesh.Elements.count > 0 then
+          begin
+            NodeNumber := Mesh.NodeArray[NodeLayer,Column].Number+1;
+          end
+          else
+          begin
+            NodeNumber := Mesh.Mesh2D.Nodes[Column].Number+1;
+          end;
+        end;
+      else Assert(False);
+    end;
   end;
   frmGoPhast.sbMain.Panels[1].Text :=
     Format(StrElement0dNode, [ElementNumber, NodeNumber]);
@@ -1035,12 +1060,12 @@ end;
 
 function TframeView.GetNeedToRecalculateCellColors: boolean;
 begin
-  if frmGoPhast.Grid <> nil then
+  if frmGoPhast.PhastModel <> nil then
   begin
     case ViewDirection of
-      vdTop: result := frmGoPhast.Grid.NeedToRecalculateTopCellColors;
-      vdFront: result := frmGoPhast.Grid.NeedToRecalculateFrontCellColors;
-      vdSide: result := frmGoPhast.Grid.NeedToRecalculateSideCellColors;
+      vdTop: result := frmGoPhast.PhastModel.NeedToRecalculateTopCellColors;
+      vdFront: result := frmGoPhast.PhastModel.NeedToRecalculateFrontCellColors;
+      vdSide: result := frmGoPhast.PhastModel.NeedToRecalculateSideCellColors;
     else
       begin
         Assert(False);
@@ -1056,8 +1081,8 @@ end;
 
 procedure TframeView.SetNeedToRecalculateCellColors(const Value: boolean);
 begin
-    // See @link(NeedToRecalculateCellColors).
-  if frmGoPhast.Grid <> nil then
+  // See @link(NeedToRecalculateCellColors).
+  if frmGoPhast.PhastModel <> nil then
   begin
     case ViewDirection of
       vdTop: frmGoPhast.PhastModel.NeedToRecalculateTopCellColors := Value;
@@ -1132,24 +1157,53 @@ function TframeView.ColorDataSet: TDataArray;
 begin
     // @name returns the @link(TDataArray) the is used to color the grid
     // in this view of the model.
-  case ViewDirection of
-    vdTop:
+  if frmGoPhast.Grid <> nil then
+  begin
+    case ViewDirection of
+      vdTop:
+        begin
+          result := frmGoPhast.Grid.TopDataSet;
+        end;
+      vdFront:
+        begin
+          result := frmGoPhast.Grid.FrontDataSet;
+        end;
+      vdSide:
+        begin
+          result := frmGoPhast.Grid.SideDataSet;
+        end;
+    else
       begin
-        result := frmGoPhast.Grid.TopDataSet;
+        Assert(False);
+        result := nil;
       end;
-    vdFront:
-      begin
-        result := frmGoPhast.Grid.FrontDataSet;
-      end;
-    vdSide:
-      begin
-        result := frmGoPhast.Grid.SideDataSet;
-      end;
-  else
-    begin
-      Assert(False);
-      result := nil;
     end;
+  end
+  else if frmGoPhast.PhastModel.Mesh <> nil then
+  begin
+    case ViewDirection of
+      vdTop:
+        begin
+          result := frmGoPhast.PhastModel.Mesh.TopDataSet;
+        end;
+      vdFront:
+        begin
+          result := frmGoPhast.PhastModel.Mesh.ThreeDDataSet;
+        end;
+      vdSide:
+        begin
+          result := nil;
+        end;
+    else
+      begin
+        Assert(False);
+        result := nil;
+      end;
+    end;
+  end
+  else
+  begin
+    result := nil;
   end;
 end;
 
@@ -1221,6 +1275,7 @@ end;
 function TframeView.RecalculateCellColors: boolean;
 var
   ACursor: TCursor;
+  Mesh: TSutraMesh3D;
 begin
     // @name checks if the data set used to color the grid on this view of the
     // model is up to date.  If not, it initializes it.
@@ -1238,10 +1293,19 @@ begin
       Exit;
     end;
 
+    Mesh := frmGoPhast.PhastModel.Mesh;
+    if Mesh <> nil then
+    begin
+      Mesh.CheckUpdateElevations;
+    end;
+
     InitializeDataSet;
 
     ResetCellColors;
-    frmGoPhast.Grid.UpdateCellColors(ViewDirection);
+    if frmGoPhast.Grid <> nil then
+    begin
+      frmGoPhast.Grid.UpdateCellColors(ViewDirection);
+    end;
   finally
     Screen.Cursor := ACursor;
 //    Screen.Cursor := crDefault;
@@ -1283,6 +1347,7 @@ procedure TframeView.DrawGridAndScreenObjects;
 var
   BitmapIndex: integer;
   Item: TCompressedBitmapItem;
+  Mesh: TSutraMesh3D;
 begin
   FPaintingNeeded := True;
     // @name is the main routine for drawing the
@@ -1293,6 +1358,11 @@ begin
     frmGoPhast.Grid.Draw3DAllowed := False;
   end;
   try
+    Mesh := frmGoPhast.PhastModel.Mesh;
+    if (Mesh <> nil) and not Mesh.CanDraw then
+    begin
+      Exit;
+    end;
     try
       FBitMap32.Free;
       FBitMap32 := nil;
@@ -1312,7 +1382,7 @@ begin
 
       // draw a box around the drawing area
       DrawBigRectangle32(FBitMap32, clBlack32, clWhite32, 1.0, 0, 0,
-        ZoomBox.ClientWidth - 1, ZoomBox.ClientHeight - 1);
+        ZoomBox.Image32.ClientWidth-1, ZoomBox.Image32.ClientHeight-1);
 
       for BitmapIndex := 0 to frmGoPhast.PhastModel.Bitmaps.Count - 1 do
       begin
@@ -1416,9 +1486,12 @@ begin
         frmGoPhast.PhastModel.DrawSfrStreamLinkages(FBitMap32, ZoomBox);
       end;
 
-      DrawPathLines;
-      DrawTimeSeries;
-      DrawEndPoints;
+      if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+      begin
+        DrawPathLines;
+        DrawTimeSeries;
+        DrawEndPoints;
+      end;
 
 
     except on EInvalidGraphicOperation do
@@ -2473,6 +2546,7 @@ var
   ElCenter: TPoint2D;
   CenterDistance: TFloat;
   Node3D: TSutraNode3D;
+  ElCenter2D: TPoint2D;
 //  ElementList3D: TSutraElement3DList;
 begin
   NodeCol := -1;
@@ -2503,7 +2577,8 @@ begin
     end;
 
     SegmentAngle := Mesh.CrossSection.Angle;
-    StartPoint := Mesh.GetCrossSectionStart;
+//    StartPoint := Mesh.GetCrossSectionStart;
+    StartPoint := EquatePoint(0,0);
     ClosestNodeIndex := -1;
     TestValue := 0;
     for Node2D_Index := 0 to NodeList.Count - 1 do
@@ -2541,7 +2616,7 @@ begin
 
     Assert( Mesh.MeshType = mt3D);
     ClosestLayerIndex := -1;
-    FirstFound := False;
+//    FirstFound := False;
     NodePolygons := Mesh.FrontPolygons(SegmentAngle, eaNodes, Limits);
     for LayerIndex := 0 to Mesh.LayerCount do
     begin
@@ -2580,7 +2655,10 @@ begin
     for ElementIndex := 0 to ElementList.Count - 1 do
     begin
       AnElement2D := ElementList[ElementIndex];
-      ElCenter.X := Distance(StartPoint, AnElement2D.Center)*Cos(Angle)
+      ElCenter2D := AnElement2D.Center;
+      Angle := ArcTan2(ElCenter2D.y - StartPoint.y,
+        ElCenter2D.x - StartPoint.x) - SegmentAngle;
+      ElCenter.X := Distance(StartPoint, ElCenter2D)*Cos(Angle)
             + StartPoint.x;
       for LayerIndex := 0 to Mesh.LayerCount - 1 do
       begin
@@ -3105,6 +3183,10 @@ begin
         if Mesh <> nil then
         begin
           result := Mesh.TopDataSet;
+          if result = nil then
+          begin
+            result := Mesh.TopContourDataSet;
+          end;
         end;
       end;
     {$ENDIF}
@@ -3451,6 +3533,10 @@ begin
   if Mesh <> nil then
   begin
     DataSet := Mesh.ThreeDDataSet;
+    if DataSet = nil then
+    begin
+      DataSet := Mesh.ThreeDContourDataSet;
+    end;
     if (DataSet <> nil) then
     begin
       if frmGoPhast.PhastModel.TopTimeList = nil then
@@ -3461,10 +3547,14 @@ begin
       begin
         NameToDisplay := frmGoPhast.PhastModel.TopTimeList.Name;
       end;
+      if DataSet.Orientation = dsoTop then
+      begin
+        Layer := 0;
+      end;
       if DataSet.IsValue[Layer, 0, Column]  then
       begin
         ShowCurrentValue(DataSet, NameToDisplay, Column, 0, Layer,
-          Column, TrueRow, Layer, Location);
+          Column, 0, Layer, Location);
       end
       else
       begin
@@ -3555,6 +3645,10 @@ begin
   if Mesh <> nil then
   begin
     DataSet := Mesh.ThreeDDataSet;
+    if DataSet = nil then
+    begin
+      DataSet := Mesh.ThreeDContourDataSet;
+    end;
     if (DataSet <> nil) then
     begin
       if frmGoPhast.PhastModel.FrontTimeList = nil then
@@ -3565,10 +3659,14 @@ begin
       begin
         NameToDisplay := frmGoPhast.PhastModel.FrontTimeList.Name;
       end;
+      if DataSet.Orientation = dsoTop then
+      begin
+        Layer := 0;
+      end;
       if DataSet.IsValue[Layer, 0, Column]  then
       begin
         ShowCurrentValue(DataSet, NameToDisplay, Column, 0, Layer,
-          Column, TrueRow, Layer, Location);
+          Column, 0, Layer, Location);
       end
       else
       begin
@@ -3872,31 +3970,57 @@ end;
 procedure TframeView.UpdateStatusBarCoordinates(APoint: TPoint2D);
 var
   RotatedPoint: TPoint2D;
+  RotationAngle: Real;
 begin
   // Display the current coordinates.
   if (frmGoPhast.phastModel.ComponentState * [csLoading, csReading]) <> [] then
   begin
     Exit;
   end;
-  
+
   case ViewDirection of
     vdTop:
       begin
-        if (frmGoPhast.Grid = nil) or (frmGoPhast.Grid.GridAngle = 0) then
+        if frmGoPhast.Grid = nil then
         begin
-          frmGoPhast.sbMain.Panels[0].Text := Format(StrXY0s1s,
-            [FloatToStrF(APoint.X, ffGeneral, rulHorizontal.RulerPrecision, 1),
-            FloatToStrF(APoint.Y, ffGeneral, rulVertical.RulerPrecision, 1)]);
+          Assert(frmGoPhast.PhastModel.Mesh <> nil);
+          RotationAngle := frmGoPhast.PhastModel.Mesh.CrossSection.Angle;
+          if RotationAngle = 0 then
+          begin
+            frmGoPhast.sbMain.Panels[0].Text := Format(StrXY0s1s,
+              [FloatToStrF(APoint.X, ffGeneral, rulHorizontal.RulerPrecision, 1),
+              FloatToStrF(APoint.Y, ffGeneral, rulVertical.RulerPrecision, 1)]);
+          end
+          else
+          begin
+            RotatedPoint := frmGoPhast.PhastModel.Mesh.
+              RotateFromRealWorldCoordinatesToMeshCoordinates(APoint);
+            frmGoPhast.sbMain.Panels[0].Text := Format(StrXY0s1sRotated,
+              [FloatToStrF(APoint.X, ffGeneral, rulHorizontal.RulerPrecision, 1),
+              FloatToStrF(APoint.Y, ffGeneral, rulVertical.RulerPrecision, 1),
+              FloatToStrF(RotatedPoint.X, ffGeneral, rulHorizontal.RulerPrecision, 1),
+              FloatToStrF(RotatedPoint.Y, ffGeneral, rulVertical.RulerPrecision, 1)]);
+          end;
         end
         else
         begin
-          RotatedPoint := frmGoPhast.Grid.
-            RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
-          frmGoPhast.sbMain.Panels[0].Text := Format(StrXY0s1sRotated,
-            [FloatToStrF(APoint.X, ffGeneral, rulHorizontal.RulerPrecision, 1),
-            FloatToStrF(APoint.Y, ffGeneral, rulVertical.RulerPrecision, 1),
-            FloatToStrF(RotatedPoint.X, ffGeneral, rulHorizontal.RulerPrecision, 1),
-            FloatToStrF(RotatedPoint.Y, ffGeneral, rulVertical.RulerPrecision, 1)]);
+          RotationAngle := frmGoPhast.Grid.GridAngle;
+          if RotationAngle = 0 then
+          begin
+            frmGoPhast.sbMain.Panels[0].Text := Format(StrXY0s1s,
+              [FloatToStrF(APoint.X, ffGeneral, rulHorizontal.RulerPrecision, 1),
+              FloatToStrF(APoint.Y, ffGeneral, rulVertical.RulerPrecision, 1)]);
+          end
+          else
+          begin
+            RotatedPoint := frmGoPhast.Grid.
+              RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
+            frmGoPhast.sbMain.Panels[0].Text := Format(StrXY0s1sRotated,
+              [FloatToStrF(APoint.X, ffGeneral, rulHorizontal.RulerPrecision, 1),
+              FloatToStrF(APoint.Y, ffGeneral, rulVertical.RulerPrecision, 1),
+              FloatToStrF(RotatedPoint.X, ffGeneral, rulHorizontal.RulerPrecision, 1),
+              FloatToStrF(RotatedPoint.Y, ffGeneral, rulVertical.RulerPrecision, 1)]);
+          end;
         end;
       end;
     vdFront:
@@ -3997,7 +4121,7 @@ begin
     // @name is OnDblClick event handler for @link(rulHorizontal), and
     // @link(rulVertical).  It shows the @link(TfrmRulerOptions) form.
   frmGoPhast.ClickedRuler := Sender;
-  frmGoPhast.ShowAForm(TfrmRulerOptions);
+  ShowAForm(TfrmRulerOptions);
 end;
 
 //procedure DrawCompressedImage(const Source: TCompressedBitmapItem;
@@ -4517,5 +4641,6 @@ begin
 end;
 
 end.
+
 
 

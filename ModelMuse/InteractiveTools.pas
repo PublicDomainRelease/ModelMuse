@@ -23,7 +23,7 @@ uses
   GR32, // TBitmap32, and TFloatRect are declared in GR32.
   Types, SysUtils, Classes, Controls, Forms, Graphics, FastGEO, GoPhastTypes,
   AbstractGridUnit, frameViewUnit, SelectUnit, ScreenObjectUnit, UndoItems,
-  UndoItemsScreenObjects, QuadTreeClass;
+  UndoItemsScreenObjects, QuadTreeClass, SutraMeshUnit;
 
 const
   // @name is the color (silver) used to draw selected cells or elements.
@@ -1003,6 +1003,24 @@ Consider creating descendants that each only handle one view of the model. }
       X, Y: Integer); override;
   end;
 
+  TMoveSutraNodesTool = class(TCustomInteractiveTool)
+  private
+    FSelectedNodes: TSutraNode2D_List;
+    FNodeQuadTree: TRbwQuadTree;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    procedure Activate; override;
+    procedure MouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer); override;
+  end;
+
+{$IFDEF SUTRA}
+procedure CalculateCenterPoint(out FCenterPoint: TPoint2D);
+procedure SetNewCrossSectionAngle(NewAngle:
+  Double; out NewLocation: TSegment2D);
+{$ENDIF}
+
 {$REGION 'Global_Variables'}
   var
     // @name is the instance of @link(TZoomTool) used in ModelMuse.
@@ -1052,6 +1070,7 @@ Consider creating descendants that each only handle one view of the model. }
   {$IFDEF SUTRA}
     EditCrossSectionTool: TEditCrossSectionTool;
     RotateCrossSectionTool: TRotateCrossSectionTool;
+    MoveSutraNodesTool: TMoveSutraNodesTool;
   {$ENDIF}
 
 {$ENDREGION}
@@ -1068,8 +1087,8 @@ implementation
 
 uses Math, CursorsFoiledAgain, GR32_Polygons, frmGoPhastUnit, frmSubdivideUnit,
   frmSetSpacingUnit, frmScreenObjectPropertiesUnit, BigCanvasMethods,
-  LayerStructureUnit, DataSetUnit, ZoomBox2, Contnrs, frmPointValuesUnit, 
-  Dialogs, Generics.Collections, SutraMeshUnit;
+  LayerStructureUnit, DataSetUnit, ZoomBox2, Contnrs, frmPointValuesUnit,
+  Dialogs, Generics.Collections;
 
 resourcestring
   StrClickAndDragToZo = 'Click and drag to zoom in';
@@ -3569,10 +3588,10 @@ begin
   Assert(CurrentScreenObject <> nil);
   CurrentScreenObject.HigherElevationFormula :=
     frmGoPhast.PhastModel.DefaultHigherElevationFormula(
-    CurrentScreenObject.ViewDirection);
+    CurrentScreenObject.ViewDirection, CurrentScreenObject.EvaluatedAt);
   CurrentScreenObject.LowerElevationFormula :=
     frmGoPhast.PhastModel.DefaultLowerElevationFormula(
-    CurrentScreenObject.ViewDirection);
+    CurrentScreenObject.ViewDirection, CurrentScreenObject.EvaluatedAt);
   CurrentScreenObject.ElevationFormula :=
     frmGoPhast.PhastModel.DefaultElevationFormula(
     CurrentScreenObject.ViewDirection, CurrentScreenObject.EvaluatedAt);
@@ -6388,6 +6407,7 @@ end;
 procedure TRulerTool.Activate;
 begin
   inherited;
+  Cursor := crMeasure;
   CreateLayers;
 end;
 
@@ -6479,7 +6499,7 @@ begin
   if (FLine <> nil) and (FLine.ZoomBox = ZoomBox) then
   begin
     // set the correct cursor
-    Cursor := crArrow;
+//    Cursor := crArrow;
     APoint.x := ZoomBox.X(X);
     APoint.y := ZoomBox.Y(Y);
     FLine.Points[FLine.Count-1] := APoint;
@@ -6536,6 +6556,7 @@ begin
   CrossSection := frmGoPhast.PhastModel.SutraMesh.CrossSection;
   CrossSection.Editing := True;
   View.ModelChanged := True;
+  Cursor := crMoveCrossSection;
   UpdateAllViews;
 end;
 
@@ -6733,103 +6754,14 @@ end;
 
 procedure TRotateCrossSectionTool.Activate;
 var
-  PointList: TList<TPoint2D>;
-  Top, Left, Bottom, Right: double;
-  ZoomBox: TQRbwZoomBox2;
-  APoint: TPoint2D;
-  CrossSegSegment: TSegment2D;
-  EdgeSegment: TSegment2D;
-  InterSectPoint: TPoint2D;
   CrossSection: TCrossSection;
 begin
   inherited;
   CreateLayers;
   FStarted := False;
-  PointList := TList<TPoint2D>.Create;
-  try
-    ZoomBox := frmGoPhast.frameTopView.ZoomBox;
-    Left := ZoomBox.X(0);
-    Right := ZoomBox.X(ZoomBox.Width);
-    Top := ZoomBox.Y(0);
-    Bottom := ZoomBox.Y(ZoomBox.Height);
-    CrossSection := frmGoPhast.PhastModel.Mesh.CrossSection;
-    CrossSection.Editing := True;
-    APoint := CrossSection.StartPoint;
-    if (APoint.x >= Left) and (APoint.x <= Right)
-      and (APoint.y >= Bottom) and (APoint.y <= Top) then
-    begin
-      PointList.Add(APoint);
-    end;
-    APoint := CrossSection.EndPoint;
-    if (APoint.x >= Left) and (APoint.x <= Right)
-      and (APoint.y >= Bottom) and (APoint.y <= Top) then
-    begin
-      PointList.Add(APoint);
-    end;
-    CrossSegSegment := CrossSection.Segment;
-    if PointList.Count < 2 then
-    begin
-      EdgeSegment[1].x := Left;
-      EdgeSegment[2].x := Left;
-      EdgeSegment[2].y := Top;
-      EdgeSegment[2].y := Bottom;
-
-      if Intersect(CrossSegSegment, EdgeSegment) then
-      begin
-        InterSectPoint := IntersectionPoint(CrossSegSegment, EdgeSegment);
-        PointList.Add(InterSectPoint);
-      end;
-    end;
-    if PointList.Count < 2 then
-    begin
-      EdgeSegment[1].x := Left;
-      EdgeSegment[2].x := Right;
-      EdgeSegment[2].y := Top;
-      EdgeSegment[2].y := Top;
-
-      if Intersect(CrossSegSegment, EdgeSegment) then
-      begin
-        InterSectPoint := IntersectionPoint(CrossSegSegment, EdgeSegment);
-        PointList.Add(InterSectPoint);
-      end;
-    end;
-    if PointList.Count < 2 then
-    begin
-      EdgeSegment[1].x := Right;
-      EdgeSegment[2].x := Right;
-      EdgeSegment[2].y := Top;
-      EdgeSegment[2].y := Bottom;
-
-      if Intersect(CrossSegSegment, EdgeSegment) then
-      begin
-        InterSectPoint := IntersectionPoint(CrossSegSegment, EdgeSegment);
-        PointList.Add(InterSectPoint);
-      end;
-    end;
-    if PointList.Count < 2 then
-    begin
-      EdgeSegment[1].x := Left;
-      EdgeSegment[2].x := Right;
-      EdgeSegment[2].y := Bottom;
-      EdgeSegment[2].y := Bottom;
-
-      if Intersect(CrossSegSegment, EdgeSegment) then
-      begin
-        InterSectPoint := IntersectionPoint(CrossSegSegment, EdgeSegment);
-        PointList.Add(InterSectPoint);
-      end;
-    end;
-    if PointList.Count = 0 then
-    begin
-      PointList.Add(CrossSection.StartPoint);
-      PointList.Add(CrossSection.EndPoint);
-    end;
-    Assert(PointList.Count = 2);
-    FCenterPoint.x := (PointList[0].x + PointList[1].x)/2;
-    FCenterPoint.y := (PointList[0].y + PointList[1].y)/2;
-  finally
-    PointList.Free;
-  end;
+  CrossSection := frmGoPhast.PhastModel.Mesh.CrossSection;
+  CrossSection.Editing := True;
+  CalculateCenterPoint(FCenterPoint);
 end;
 
 procedure TRotateCrossSectionTool.MouseDown(Sender: TObject;
@@ -6879,6 +6811,123 @@ begin
   end;
 end;
 
+procedure CalculateCenterPoint(out FCenterPoint: TPoint2D);
+var
+  APoint: TPoint2D;
+  Bottom: Double;
+  InterSectPoint: TPoint2D;
+  CrossSection: TCrossSection;
+  CrossSegSegment: TSegment2D;
+  Left: Double;
+  Right: Double;
+  ZoomBox: TQRbwZoomBox2;
+  Top: Double;
+  PointList: Generics.Collections.TList<TPoint2D>;
+  EdgeSegment: TSegment2D;
+begin
+  PointList := TList<TPoint2D>.Create;
+  try
+    ZoomBox := frmGoPhast.frameTopView.ZoomBox;
+    Left := ZoomBox.X(0);
+    Right := ZoomBox.X(ZoomBox.Width);
+    Top := ZoomBox.Y(0);
+    Bottom := ZoomBox.Y(ZoomBox.Height);
+    CrossSection := frmGoPhast.PhastModel.Mesh.CrossSection;
+    APoint := CrossSection.StartPoint;
+    if (APoint.x >= Left) and (APoint.x <= Right)
+      and (APoint.y >= Bottom) and (APoint.y <= Top) then
+    begin
+      PointList.Add(APoint);
+    end;
+    APoint := CrossSection.EndPoint;
+    if (APoint.x >= Left) and (APoint.x <= Right)
+      and (APoint.y >= Bottom) and (APoint.y <= Top) then
+    begin
+      PointList.Add(APoint);
+    end;
+    CrossSegSegment := CrossSection.Segment;
+    if PointList.Count < 2 then
+    begin
+      EdgeSegment[1].x := Left;
+      EdgeSegment[2].x := Left;
+      EdgeSegment[2].y := Top;
+      EdgeSegment[2].y := Bottom;
+      if Intersect(CrossSegSegment, EdgeSegment) then
+      begin
+        InterSectPoint := IntersectionPoint(CrossSegSegment, EdgeSegment);
+        PointList.Add(InterSectPoint);
+      end;
+    end;
+    if PointList.Count < 2 then
+    begin
+      EdgeSegment[1].x := Left;
+      EdgeSegment[2].x := Right;
+      EdgeSegment[2].y := Top;
+      EdgeSegment[2].y := Top;
+      if Intersect(CrossSegSegment, EdgeSegment) then
+      begin
+        InterSectPoint := IntersectionPoint(CrossSegSegment, EdgeSegment);
+        PointList.Add(InterSectPoint);
+      end;
+    end;
+    if PointList.Count < 2 then
+    begin
+      EdgeSegment[1].x := Right;
+      EdgeSegment[2].x := Right;
+      EdgeSegment[2].y := Top;
+      EdgeSegment[2].y := Bottom;
+      if Intersect(CrossSegSegment, EdgeSegment) then
+      begin
+        InterSectPoint := IntersectionPoint(CrossSegSegment, EdgeSegment);
+        PointList.Add(InterSectPoint);
+      end;
+    end;
+    if PointList.Count < 2 then
+    begin
+      EdgeSegment[1].x := Left;
+      EdgeSegment[2].x := Right;
+      EdgeSegment[2].y := Bottom;
+      EdgeSegment[2].y := Bottom;
+      if Intersect(CrossSegSegment, EdgeSegment) then
+      begin
+        InterSectPoint := IntersectionPoint(CrossSegSegment, EdgeSegment);
+        PointList.Add(InterSectPoint);
+      end;
+    end;
+    if PointList.Count = 0 then
+    begin
+      PointList.Add(CrossSection.StartPoint);
+      PointList.Add(CrossSection.EndPoint);
+    end;
+    Assert(PointList.Count = 2);
+    FCenterPoint.x := (PointList[0].x + PointList[1].x) / 2;
+    FCenterPoint.y := (PointList[0].y + PointList[1].y) / 2;
+  finally
+    PointList.Free;
+  end;
+end;
+
+procedure SetNewCrossSectionAngle(NewAngle: Double;
+  out NewLocation: TSegment2D);
+var
+  DeltaX: Double;
+  DeltaY: Double;
+  SectionHalfLength: Double;
+  CrossSection: TCrossSection;
+  CenterPoint: TPoint2D;
+begin
+  CrossSection := frmGoPhast.PhastModel.Mesh.CrossSection;
+  CalculateCenterPoint(CenterPoint);
+  SectionHalfLength := Distance(CrossSection.StartPoint,
+    CrossSection.EndPoint) / 2;
+  DeltaX := SectionHalfLength * Cos(NewAngle);
+  DeltaY := SectionHalfLength * Sin(NewAngle);
+  NewLocation[1].x := CenterPoint.x - DeltaX;
+  NewLocation[1].y := CenterPoint.y - DeltaY;
+  NewLocation[2].x := CenterPoint.x + DeltaX;
+  NewLocation[2].y := CenterPoint.y + DeltaY;
+end;
+
 procedure TRotateCrossSectionTool.Deactivate;
 var
   CrossSection: TCrossSection;
@@ -6916,13 +6965,10 @@ end;
 procedure TRotateCrossSectionTool.GetNewLocation(X, Y: Integer;
   out NewLocation: TSegment2D);
 var
-  DeltaX: Double;
-  DeltaY: Double;
-  SectionHalfLength: Double;
   DeltaAngle: Double;
   NewAngle: Double;
   EndPoint: TPoint2D;
-  CrossSection: TCrossSection;
+//  CrossSection: TCrossSection;
 begin
   EndPoint.x := ZoomBox.X(X);
   EndPoint.y := ZoomBox.Y(Y);
@@ -6931,18 +6977,205 @@ begin
   begin
     DeltaAngle := 2 * pi - DeltaAngle;
   end;
-  CrossSection := frmGoPhast.PhastModel.Mesh.CrossSection;
+//  CrossSection := frmGoPhast.PhastModel.Mesh.CrossSection;
   NewAngle := frmGoPhast.PhastModel.Mesh.CrossSection.Angle + DeltaAngle;
-  SectionHalfLength := Distance(CrossSection.StartPoint, CrossSection.EndPoint) / 2;
-  DeltaX := SectionHalfLength * Cos(NewAngle);
-  DeltaY := SectionHalfLength * Sin(NewAngle);
-  NewLocation[1].x := FCenterPoint.x - DeltaX;
-  NewLocation[1].y := FCenterPoint.y - DeltaY;
-  NewLocation[2].x := FCenterPoint.x + DeltaX;
-  NewLocation[2].y := FCenterPoint.y + DeltaY;
+  while NewAngle > Pi/2 do
+  begin
+    NewAngle := NewAngle-Pi;
+  end;
+  while NewAngle < -Pi/2 do
+  begin
+    NewAngle := NewAngle+Pi;
+  end;
+  SetNewCrossSectionAngle(NewAngle, NewLocation);
 end;
   {$ENDIF}
 
+
+{ TMoveSutraNodesTool }
+
+procedure TMoveSutraNodesTool.Activate;
+var
+  FMesh: TSutraMesh3D;
+  Limits: TGridLimit;
+  Node2DIndex: Integer;
+  ANode: TSutraNode2D;
+  APoint: TPoint2D;
+begin
+  inherited;
+  FSelectedNodes.Clear;
+  FNodeQuadTree.Clear;
+  FMesh := frmGoPhast.PhastModel.Mesh;
+  Limits := FMesh.MeshLimits(vdTop);
+  FNodeQuadTree.XMin := Limits.MinX;
+  FNodeQuadTree.XMax := Limits.MaxX;
+  FNodeQuadTree.YMin := Limits.MinY;
+  FNodeQuadTree.YMax := Limits.MaxY;
+  for Node2DIndex := 0 to FMesh.Mesh2D.Nodes.Count - 1 do
+  begin
+    ANode := FMesh.Mesh2D.Nodes[Node2DIndex];
+    APoint := ANode.Location;
+    FNodeQuadTree.AddPoint(APoint.x, APoint.y, ANode);
+  end;
+end;
+
+constructor TMoveSutraNodesTool.Create(AOwner: TComponent);
+begin
+  inherited;
+  FSelectedNodes:= TSutraNode2D_List.Create;
+  FNodeQuadTree := TRbwQuadTree.Create(self);
+end;
+
+destructor TMoveSutraNodesTool.Destroy;
+begin
+  FSelectedNodes.Free;
+  inherited;
+end;
+
+procedure TMoveSutraNodesTool.MouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+const
+  SearchRadius = 3;
+var
+  APoint: TPoint2D;
+  SearchX: double;
+  SearchY: double;
+  Data: Pointer;
+  NewX: Integer;
+  NewY: Integer;
+  ANode: TSutraNode2D;
+  ElementIndex: Integer;
+  AnElement: TSutraElement2D;
+  AllSelected: Boolean;
+  AnotherNode: TSutraNode2D;
+  NodeIndex: Integer;
+  UpdateView: boolean;
+begin
+  inherited;
+  if ViewDirection <> vdTop then
+  begin
+    Exit;
+  end;
+  UpdateView := False;
+  if FNodeQuadTree.Count = 0 then
+  begin
+    Exit;
+  end;
+  APoint.X := ZoomBox.X(X);
+  APoint.Y := ZoomBox.Y(Y);
+  SearchX := APoint.x;
+  SearchY := APoint.y;
+  FNodeQuadTree.FirstNearestPoint(SearchX, SearchY, Data);
+  NewX := ZoomBox.XCoord(SearchX);
+  NewY := ZoomBox.YCoord(SearchY);
+  ANode := Data;
+  if not (ssShift in Shift) then
+  begin
+    for NodeIndex := 0 to FSelectedNodes.Count - 1 do
+    begin
+      AnotherNode := FSelectedNodes[NodeIndex];
+      AnotherNode.Selected := False;
+      UpdateView := True;
+    end;
+    FSelectedNodes.Clear;
+  end;
+
+  if (Abs(X-NewX) < SearchRadius) and (Abs(Y-NewY) < SearchRadius) then
+  begin
+    if ssShift in Shift then
+    begin
+      ANode.Selected := not ANode.Selected;
+      if ANode.Selected then
+      begin
+        FSelectedNodes.Add(ANode);
+        UpdateView := True;
+      end
+      else
+      begin
+        FSelectedNodes.Remove(ANode);
+        UpdateView := True;
+      end;
+    end
+    else
+    begin
+      ANode.Selected := True;
+      FSelectedNodes.Add(ANode);
+      UpdateView := True;
+    end;
+  end
+  else
+  begin
+
+    for ElementIndex := 0 to ANode.ElementCount - 1 do
+    begin
+      AnElement := ANode.Elements[ElementIndex];
+      if AnElement.IsInside(APoint) then
+      begin
+        if ssShift in Shift then
+        begin
+          AllSelected := True;
+          for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+          begin
+            AnotherNode := AnElement.Nodes[NodeIndex].Node;
+            if not AnotherNode.Selected then
+            begin
+              AllSelected := False;
+              Break;
+            end;
+          end;
+          if AllSelected then
+          begin
+            for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+            begin
+              AnotherNode := AnElement.Nodes[NodeIndex].Node;
+              if AnotherNode.Selected then
+              begin
+                AnotherNode.Selected := False;
+                FSelectedNodes.Remove(AnotherNode);
+                UpdateView := True;
+              end;
+            end;
+          end
+          else
+          begin
+            for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+            begin
+              AnotherNode := AnElement.Nodes[NodeIndex].Node;
+              if not AnotherNode.Selected then
+              begin
+                AnotherNode.Selected := True;
+                FSelectedNodes.Add(AnotherNode);
+                UpdateView := True;
+              end;
+            end;
+          end;
+        end
+        else
+        begin
+          for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+          begin
+            AnotherNode := AnElement.Nodes[NodeIndex].Node;
+            if not AnotherNode.Selected then
+            begin
+              AnotherNode.Selected := True;
+              FSelectedNodes.Add(AnotherNode);
+              UpdateView := True;
+            end;
+          end;
+        end;
+
+        Break;
+      end;
+    end;
+  end;
+
+  if UpdateView then
+  begin
+    frmGoPhast.InvalidateTop;
+    View.MagnificationChanged := True;
+  end;
+
+end;
 
 initialization
   ZoomTool := TZoomTool.Create(nil);
@@ -6973,6 +7206,7 @@ initialization
   {$IFDEF SUTRA}
   EditCrossSectionTool:= TEditCrossSectionTool.Create(nil);
   RotateCrossSectionTool:= TRotateCrossSectionTool.Create(nil);
+  MoveSutraNodesTool := TMoveSutraNodesTool.Create(nil);
   {$ENDIF}
 
 finalization
@@ -7003,6 +7237,7 @@ finalization
   {$IFDEF SUTRA}
   EditCrossSectionTool.Free;
   RotateCrossSectionTool.Free;
+  MoveSutraNodesTool.Free;
   {$ENDIF}
 
 end.

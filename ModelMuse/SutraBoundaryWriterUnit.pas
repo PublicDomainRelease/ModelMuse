@@ -363,6 +363,8 @@ begin
                 begin
                   MergedPQDataSet := PQTimeList[TimeIndex];
                   MergedUDataSet := UTimeList[TimeIndex];
+                  PositiveDataSet := PositiveFluxes[TimeIndex];
+                  PositiveUDataSet := PositiveUFluxes[TimeIndex];
                   for LayerIndex := PQDataSet.MinLayer to PQDataSet.MaxLayer do
                   begin
                     for RowIndex := PQDataSet.MinRow to PQDataSet.MaxRow do
@@ -1258,86 +1260,89 @@ begin
   WriteCommentLine('Data set 5');
   UDataArray := UTimeList[TimeIndex];
   PQDataArray := PQTimeList[TimeIndex];
-  if TimeIndex = 0 then
+  if (FNodeNumbers.MaxLayer >= 0) then
   begin
-    for LayerIndex := FNodeNumbers.MinLayer to FNodeNumbers.MaxLayer do
+    if (TimeIndex = 0) then
     begin
-      for RowIndex := FNodeNumbers.MinRow to FNodeNumbers.MaxRow do
+      for LayerIndex := FNodeNumbers.MinLayer to FNodeNumbers.MaxLayer do
       begin
-        for ColIndex := FNodeNumbers.MinCol to FNodeNumbers.MaxCol do
+        for RowIndex := FNodeNumbers.MinRow to FNodeNumbers.MaxRow do
         begin
-          if FNodeNumbers.IsValue[LayerIndex, RowIndex,ColIndex] then
+          for ColIndex := FNodeNumbers.MinCol to FNodeNumbers.MaxCol do
           begin
-            if UDataArray.IsValue[LayerIndex, RowIndex,ColIndex] then
+            if FNodeNumbers.IsValue[LayerIndex, RowIndex,ColIndex] then
             begin
-              Assert(PQDataArray.IsValue[LayerIndex, RowIndex,ColIndex]);
-              IPBC1 := FNodeNumbers[LayerIndex, RowIndex,ColIndex] + 1;
-              Assert(IPBC1 > 0);
-              PBC1 := PQDataArray.RealData[LayerIndex, RowIndex,ColIndex];
-              UBC1 := UDataArray.RealData[LayerIndex, RowIndex,ColIndex];
-            end
-            else
-            begin
-              Assert(not PQDataArray.IsValue[LayerIndex, RowIndex,ColIndex]);
-              IPBC1 := -FNodeNumbers[LayerIndex, RowIndex,ColIndex] - 1;
-              Assert(IPBC1 < 0);
-              PBC1 := 0.0;
-              UBC1 := 0.0;
+              if UDataArray.IsValue[LayerIndex, RowIndex,ColIndex] then
+              begin
+                Assert(PQDataArray.IsValue[LayerIndex, RowIndex,ColIndex]);
+                IPBC1 := FNodeNumbers[LayerIndex, RowIndex,ColIndex] + 1;
+                Assert(IPBC1 > 0);
+                PBC1 := PQDataArray.RealData[LayerIndex, RowIndex,ColIndex];
+                UBC1 := UDataArray.RealData[LayerIndex, RowIndex,ColIndex];
+              end
+              else
+              begin
+                Assert(not PQDataArray.IsValue[LayerIndex, RowIndex,ColIndex]);
+                IPBC1 := -FNodeNumbers[LayerIndex, RowIndex,ColIndex] - 1;
+                Assert(IPBC1 < 0);
+                PBC1 := 0.0;
+                UBC1 := 0.0;
+              end;
+              FBoundaryNodes.AddUnique(Abs(IPBC1));
+              WriteALine;
             end;
-            FBoundaryNodes.AddUnique(Abs(IPBC1));
-            WriteALine;
           end;
         end;
       end;
-    end;
-  end
-  else
-  begin
-    PriorUDataArray := UTimeList[TimeIndex-1];
-    PriorPQDataArray := PQTimeList[TimeIndex-1];
-    for LayerIndex := FNodeNumbers.MinLayer to FNodeNumbers.MaxLayer do
+    end
+    else
     begin
-      for RowIndex := FNodeNumbers.MinRow to FNodeNumbers.MaxRow do
+      PriorUDataArray := UTimeList[TimeIndex-1];
+      PriorPQDataArray := PQTimeList[TimeIndex-1];
+      for LayerIndex := FNodeNumbers.MinLayer to FNodeNumbers.MaxLayer do
       begin
-        for ColIndex := FNodeNumbers.MinCol to FNodeNumbers.MaxCol do
+        for RowIndex := FNodeNumbers.MinRow to FNodeNumbers.MaxRow do
         begin
-          Changed := False;
-          if PriorUDataArray.IsValue[LayerIndex, RowIndex,ColIndex]
-            <> UDataArray.IsValue[LayerIndex, RowIndex,ColIndex] then
+          for ColIndex := FNodeNumbers.MinCol to FNodeNumbers.MaxCol do
           begin
-            Changed := True;
-          end
-          else
-          begin
-            if UDataArray.IsValue[LayerIndex, RowIndex,ColIndex] then
+            Changed := False;
+            if PriorUDataArray.IsValue[LayerIndex, RowIndex,ColIndex]
+              <> UDataArray.IsValue[LayerIndex, RowIndex,ColIndex] then
             begin
-              Assert(PQDataArray.IsValue[LayerIndex, RowIndex,ColIndex]);
-              Assert(PriorPQDataArray.IsValue[LayerIndex, RowIndex,ColIndex]);
-              Changed := (UDataArray.RealData[LayerIndex, RowIndex,ColIndex]
-                <> PriorUDataArray.RealData[LayerIndex, RowIndex,ColIndex])
-                or (PQDataArray.RealData[LayerIndex, RowIndex,ColIndex]
-                <> PriorPqDataArray.RealData[LayerIndex, RowIndex,ColIndex])
-            end;
-          end;
-          if Changed then
-          begin
-            if UDataArray.IsValue[LayerIndex, RowIndex,ColIndex] then
-            begin
-              Assert(PQDataArray.IsValue[LayerIndex, RowIndex,ColIndex]);
-              IPBC1 := FNodeNumbers[LayerIndex, RowIndex,ColIndex] + 1;
-              Assert(IPBC1 > 0);
-              PBC1 := PQDataArray.RealData[LayerIndex, RowIndex,ColIndex];
-              UBC1 := UDataArray.RealData[LayerIndex, RowIndex,ColIndex];
+              Changed := True;
             end
             else
             begin
-              Assert(not PQDataArray.IsValue[LayerIndex, RowIndex,ColIndex]);
-              IPBC1 := -FNodeNumbers[LayerIndex, RowIndex,ColIndex] - 1;
-              Assert(IPBC1 < 0);
-              PBC1 := 0.0;
-              UBC1 := 0.0;
+              if UDataArray.IsValue[LayerIndex, RowIndex,ColIndex] then
+              begin
+                Assert(PQDataArray.IsValue[LayerIndex, RowIndex,ColIndex]);
+                Assert(PriorPQDataArray.IsValue[LayerIndex, RowIndex,ColIndex]);
+                Changed := (UDataArray.RealData[LayerIndex, RowIndex,ColIndex]
+                  <> PriorUDataArray.RealData[LayerIndex, RowIndex,ColIndex])
+                  or (PQDataArray.RealData[LayerIndex, RowIndex,ColIndex]
+                  <> PriorPqDataArray.RealData[LayerIndex, RowIndex,ColIndex])
+              end;
             end;
-            WriteALine;
+            if Changed then
+            begin
+              if UDataArray.IsValue[LayerIndex, RowIndex,ColIndex] then
+              begin
+                Assert(PQDataArray.IsValue[LayerIndex, RowIndex,ColIndex]);
+                IPBC1 := FNodeNumbers[LayerIndex, RowIndex,ColIndex] + 1;
+                Assert(IPBC1 > 0);
+                PBC1 := PQDataArray.RealData[LayerIndex, RowIndex,ColIndex];
+                UBC1 := UDataArray.RealData[LayerIndex, RowIndex,ColIndex];
+              end
+              else
+              begin
+                Assert(not PQDataArray.IsValue[LayerIndex, RowIndex,ColIndex]);
+                IPBC1 := -FNodeNumbers[LayerIndex, RowIndex,ColIndex] - 1;
+                Assert(IPBC1 < 0);
+                PBC1 := 0.0;
+                UBC1 := 0.0;
+              end;
+              WriteALine;
+            end;
           end;
         end;
       end;

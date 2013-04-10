@@ -227,6 +227,8 @@ resourcestring
   StrConcentratonObservationsError = 'Concentraton observations can only be '
     + 'defined using objects with a single vertex.  The following objects need '
     + 'to be fixed.';
+  StrInTheFollowingObj = 'In the following objects, no chemical species is d' +
+  'efined in one or more times for the MT3DMS transport observation package.';
 
 implementation
 
@@ -863,6 +865,7 @@ var
   TimeItem: TMt3dmsTobItem;
   ObsType: TObservationType;
   ObsFreq: Integer;
+  ComponentIndexError: Boolean;
 begin
   if UpToDate then
     Exit;
@@ -885,6 +888,7 @@ begin
     Grid := LocalModel.ModflowGrid;
     Assert(Grid <> nil);
 
+    ComponentIndexError := False;
     for Index := 0 to ObservationValues.Count - 1 do
     begin
       CellList := TMt3dmsTobsCellList.Create;
@@ -932,6 +936,12 @@ begin
       Value := ObservationValues.TobItems[Index].Concentration;
       Weight := ObservationValues.TobItems[Index].Weight;
       ComponentIndex := ObservationValues.TobItems[Index].ComponentIndex;
+
+      if ComponentIndex < 0 then
+      begin
+        ComponentIndexError := True;
+      end;
+
       DataArray := TRealSparseDataSet.Create(LocalModel);
       Add(Time, DataArray);
       DataArray.EvaluatedAt := eaBlocks;
@@ -987,6 +997,11 @@ begin
       LateTimes := Format(StrErrorObjectLateTimes,
         [LocalScreenObject.Name, LateTimes]);
       frmErrorsAndWarnings.AddWarning(Model, LateTimeWarning, LateTimes);
+    end;
+    if ComponentIndexError then
+    begin
+      frmErrorsAndWarnings.AddError(Model, StrInTheFollowingObj,
+        LocalScreenObject.Name);
     end;
   finally
     LocalModel.UpToDate := StoredUpToDate;

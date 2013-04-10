@@ -10,7 +10,7 @@ inherited frmCustomImportSimpleFile: TfrmCustomImportSimpleFile
   Caption = 'frmCustomImportSimpleFile'
   ExplicitWidth = 575
   ExplicitHeight = 308
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object lblDataSet: TLabel
     Left = 8
@@ -68,7 +68,7 @@ inherited frmCustomImportSimpleFile: TfrmCustomImportSimpleFile
     Width = 465
     Height = 31
     Caption = 'Set values of elements by interpolation'
-    TabOrder = 5
+    TabOrder = 4
     OnClick = cbEnclosedCellsClick
   end
   object rgEvaluatedAt: TRadioGroup
@@ -82,7 +82,7 @@ inherited frmCustomImportSimpleFile: TfrmCustomImportSimpleFile
     Items.Strings = (
       'Elements'
       'Nodes')
-    TabOrder = 7
+    TabOrder = 5
     OnClick = rgEvaluatedAtClick
   end
   object btnOK: TBitBtn
@@ -92,7 +92,7 @@ inherited frmCustomImportSimpleFile: TfrmCustomImportSimpleFile
     Height = 33
     Kind = bkOK
     NumGlyphs = 2
-    TabOrder = 4
+    TabOrder = 7
   end
   object btnCancel: TBitBtn
     Left = 464
@@ -101,7 +101,7 @@ inherited frmCustomImportSimpleFile: TfrmCustomImportSimpleFile
     Height = 33
     Kind = bkCancel
     NumGlyphs = 2
-    TabOrder = 6
+    TabOrder = 8
   end
   object btnHelp: TBitBtn
     Left = 272
@@ -110,7 +110,7 @@ inherited frmCustomImportSimpleFile: TfrmCustomImportSimpleFile
     Height = 33
     Kind = bkHelp
     NumGlyphs = 2
-    TabOrder = 8
+    TabOrder = 6
     OnClick = btnHelpClick
   end
   object OpenDialogFile: TOpenDialog

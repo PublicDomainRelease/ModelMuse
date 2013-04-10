@@ -4,9 +4,9 @@ inherited frmDataSetValues: TfrmDataSetValues
   Caption = 'Data Set Values'
   ClientHeight = 304
   ClientWidth = 548
-  ExplicitWidth = 566
-  ExplicitHeight = 349
-  PixelsPerInch = 120
+  ExplicitWidth = 564
+  ExplicitHeight = 342
+  PixelsPerInch = 96
   TextHeight = 18
   object Panel1: TPanel
     Left = 0
@@ -81,8 +81,8 @@ inherited frmDataSetValues: TfrmDataSetValues
       Height = 26
       Tree.Left = 0
       Tree.Top = 0
-      Tree.Width = 302
-      Tree.Height = 195
+      Tree.Width = 304
+      Tree.Height = 202
       Tree.Align = alClient
       Tree.Header.AutoSizeIndex = 0
       Tree.Header.Font.Charset = DEFAULT_CHARSET

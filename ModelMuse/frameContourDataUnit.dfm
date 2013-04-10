@@ -5,10 +5,10 @@ inherited frameContourData: TframeContourData
     Height = 399
     ExplicitHeight = 399
     inherited tabSelection: TTabSheet
-      ExplicitHeight = 368
+      ExplicitHeight = 371
       DesignSize = (
         562
-        368)
+        371)
       inherited lblColorScheme: TLabel
         Top = 253
         Anchors = [akLeft, akRight, akBottom]
@@ -28,6 +28,13 @@ inherited frameContourData: TframeContourData
         Top = 308
         Anchors = [akLeft, akRight, akBottom]
         ExplicitTop = 308
+      end
+      object lblAlgorithm: TLabel [6]
+        Left = 456
+        Top = 304
+        Width = 36
+        Height = 13
+        Caption = 'Method'
       end
       inherited comboColorScheme: TComboBox
         Top = 222
@@ -51,7 +58,7 @@ inherited frameContourData: TframeContourData
       end
       inherited cbLogTransform: TCheckBox
         Top = 339
-        TabOrder = 12
+        TabOrder = 13
         OnClick = cbLogTransformClick
         ExplicitTop = 339
       end
@@ -64,7 +71,6 @@ inherited frameContourData: TframeContourData
       end
       inherited rgUpdateLimitChoice: TRadioGroup
         Top = 143
-        Anchors = [akLeft, akRight, akBottom]
         TabOrder = 5
         ExplicitTop = 143
       end
@@ -79,9 +85,7 @@ inherited frameContourData: TframeContourData
       inherited reComment: TRichEdit
         Width = 551
         Height = 56
-        Font.Charset = ANSI_CHARSET
-        ParentFont = False
-        TabOrder = 4
+        TabOrder = 14
         ExplicitWidth = 551
         ExplicitHeight = 56
       end
@@ -136,12 +140,25 @@ inherited frameContourData: TframeContourData
         TabOrder = 7
         OnClick = btnContourFontClick
       end
+      object comboAlgorithm: TComboBox
+        Left = 384
+        Top = 335
+        Width = 145
+        Height = 21
+        Style = csDropDownList
+        ItemIndex = 0
+        TabOrder = 12
+        Text = 'Simple'
+        Items.Strings = (
+          'Simple'
+          'ACM 626')
+      end
     end
     inherited tabFilters: TTabSheet
-      ExplicitHeight = 368
+      ExplicitHeight = 371
       DesignSize = (
         562
-        368)
+        371)
       inherited lblNumberOfValuesToIgnore: TLabel
         Top = 341
         ExplicitTop = 441
@@ -156,17 +173,17 @@ inherited frameContourData: TframeContourData
       end
     end
     inherited tabLegend: TTabSheet
-      ExplicitHeight = 368
+      ExplicitHeight = 371
       inherited imLegend: TImage
-        Height = 368
+        Height = 371
         ExplicitHeight = 471
       end
       inherited pnlLegend: TPanel
-        Height = 368
-        ExplicitHeight = 368
+        Height = 371
+        ExplicitHeight = 371
         DesignSize = (
           218
-          368)
+          371)
         inherited lblColorLegendRows: TLabel
           Top = 310
           ExplicitTop = 410

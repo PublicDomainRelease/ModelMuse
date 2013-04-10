@@ -1,3 +1,7 @@
+{
+  The two main classes in @name are @link(TRbwIntervalTree) and
+  @link(TRbwRangeTree).
+}
 unit IntervalTree;
 
 interface
@@ -5,53 +9,83 @@ interface
 uses SysUtils, Classes, GoPhastTypes;
 
 Type
+  // @name is used in @link(TIntervalDefinition). See
+  // @link(TIntervalDefinition.OnFindObjectInterval).
+  // See @link(TScreenObject.SubPolygonXLimits) and
+  // @link(TScreenObject.SubPolygonYLimits).
+  // When an object @name is called to determine what the boundaries of
+  // the object are.
+  //
+  // @param(Subject) The object being added to an interval tree.
+  // @param(LowerBoundary) The lower boundary of the object.
+  // @param(UpperBoundary) The upper boundary of the object.
   TIntervalEvent = procedure(Subject: TObject;
     out LowerBoundary, UpperBoundary: double) of object;
-  TCheckObjectEvent = procedure(Subject: TObject; Point: TOneDRealArray;
-    var Accept: boolean) of object;
-  TSearchEvent = procedure(Sender: TObject; Subject: TObject);
 
 
+  // @name defines the range of values that will contain all the objects
+  // to be added to a @link(TRbwIntervalTree).
   TIntervalDefinition = record
     LowerBoundary: double;
     UpperBoundary: double;
     OnFindObjectInterval: TIntervalEvent;
-//    OnCheckObject: TCheckObjectEvent;
   end;
 
   TIntDefArray = array of TIntervalDefinition;
 
   IIntervalTree = interface
     procedure Add(AnObject: TObject);
-    procedure FindContainingObjects(Point, FullPoint: TOneDRealArray; List: TList);
+    procedure FindContainingObjects(Point, FullPoint: TOneDRealArray;
+      List: TList);
     function ArraySize: integer;
+    function GetOwnsObjects: Boolean;
+    procedure SetOwnsObjects(Value: Boolean);
+    property OwnsObjects: Boolean read GetOwnsObjects write SetOwnsObjects;
   end;
 
+  {
+  @name is used to find objects that enclose a particular location.
+  For each dimension of the object there must be a @link(TIntervalDefinition)
+  that defines the extents for all objects to be added to @name
+  and a procedure for determining the extent of the object being added.
+  The @link(TIntervalDefinition)s are contained in a @link(TIntDefArray)
+  that is passed to @name in @link(Create). @link(FindContainingObjects) is
+  used to find the objects that contain a particular location. The location
+  is specified in a @link(TOneDRealArray) which must have the same length as
+  the @link(TIntDefArray) passed in the constructor.
+  }
   TRbwIntervalTree = class(TObject)
   private
     FIntervalTree : IIntervalTree;
+    function GetOwnsObjects: Boolean;
+    procedure SetOwnsObjects(const Value: Boolean);
   public
     Constructor Create(IntervalDefinitions: TIntDefArray);
     Destructor Destroy; override;
     procedure Add(AnObject: TObject);
     procedure FindContainingObjects(Point: TOneDRealArray; List: TList);
+    property OwnsObjects: Boolean read GetOwnsObjects write SetOwnsObjects;
   end;
 
   TSearchInterval = record
     LowerBoundary: double;
     UpperBoundary: double;
-//    OnFindObjectInterval: TSearchEvent;
   end;
 
   TSearchArray = array of TSearchInterval;
 
+  // See @link(TCellElementLeaf)
   TRangeTreeLeaf = class(TObject)
   private
     FIsLeft: boolean;
   public
+    // @name must be overridden by descendants to specify a different value
+    // for different values of Depth. Depth will range from 0 to
+    // @link(TRangeTreeLeafList.CoordinateCount) -1.
     function GetCoordinate(Depth: integer): double; virtual; abstract;
   End;
 
+  // See @link(TCellElementLeafList)
   TRangeTreeLeafList = class(TObject)
   private
     FList: TList;
@@ -69,7 +103,10 @@ Type
     procedure Sort(Compare: TListSortCompare);
     property OwnsObjects: boolean read GetOwnsObjects write SetOwnsObjects;
   public
-    property Items[Index: Integer]: TRangeTreeLeaf read GetItem write SetItem; default;
+    property Items[Index: Integer]: TRangeTreeLeaf read GetItem
+      write SetItem; default;
+    // @name must be overridden by descendants to specify the number of
+    // different values per @link(TRangeTreeLeaf) that will be tested.
     function CoordinateCount: integer; virtual; abstract;
     Constructor Create;
     Destructor Destroy; override;
@@ -77,6 +114,7 @@ Type
     procedure Delete(Index: integer);
     property Capacity: integer read GetCapacity write SetCapacity;
     property Count: integer read GetCount;
+
   end;
 
   TRangeTreeLeafLists = class(TObject)
@@ -88,7 +126,8 @@ Type
     function GetCapacity: integer;
     procedure SetCapacity(const Value: integer);
   public
-    property Items[Index: Integer]: TRangeTreeLeafList read GetItem write SetItem; default;
+    property Items[Index: Integer]: TRangeTreeLeafList read GetItem
+      write SetItem; default;
     function Add(Item: TRangeTreeLeafList): integer;
     property Count: integer read GetCount;
     Constructor Create;
@@ -108,22 +147,31 @@ Type
     FParentTree: TRbwRangeTree;
     FBreakCoordinate: Double;
   public
-    Constructor Create(ParentTree: TRbwRangeTree; LeafLists: TRangeTreeLeafLists; DepthIndex: integer);
+    Constructor Create(ParentTree: TRbwRangeTree;
+      LeafLists: TRangeTreeLeafLists; DepthIndex: integer);
     Destructor Destroy; override;
     procedure Search(const Intervals: TSearchArray);
     procedure EnsureCenterTree;
     procedure EnsureLeftRightTrees;
   end;
 
+  {
+  @name is used to find @link(TRangeTreeLeaf)s that
+  }
   TRbwRangeTree = class(TObject)
   private
     FInternalTree: TInternalRangeTree;
     FLeafList: TRangeTreeLeafList;
     FResultList: TList;
   public
+    // @name takes ownership of the @link(TRangeTreeLeafList).
     Constructor Create(List: TRangeTreeLeafList);
     Destructor Destroy; override;
+    // @name returns a TList of @link(TRangeTreeLeaf)s that match the criteria
+    // defined by Intervals. The resulting list is owned by the @classname.
     function Search(const Intervals: TSearchArray): TList;
+    function Min(Depth: Integer): double;
+    function Max(Depth: Integer): double;
   end;
 
 implementation
@@ -135,15 +183,27 @@ uses Math, Contnrs;
 type
   TIntervalTree = class(TInterfacedObject, IIntervalTree)
   private
+    // all the objects in FLeftTree will have upper boundaries less than
+    // FCenter
     FLeftTree: TIntervalTree;
+    // all the objects in FRightTree will have lower boundaries less than
+    // FCenter
     FRightTree: TIntervalTree;
+    // all the objects in FCenterTree will have upper and lower boundaries
+    // that enclose FCenter
     FCenterTree: TIntervalTree;
     FIntervalDefinitions: TIntDefArray;
+    // @name is a list of all the objects that have been added whose
+    // lower and upper boundaries contain FCenter between them
+    // when FCenterTree can not be used to hold them.
     FCenterList: TList;
     FCenter: double;
     FContentsUpperLimit: double;
     FContentsLowerLimit: double;
     FFullPoint: TOneDRealArray;
+    FOwnsObjects: boolean;
+    function GetOwnsObjects: Boolean;
+    procedure SetOwnsObjects(Value: Boolean);
   public
     function ArraySize: integer;
     Constructor InternalCreate(IntervalDefinitions: TIntDefArray);
@@ -151,6 +211,7 @@ type
     procedure Add(AnObject: TObject);
     procedure FindContainingObjects(Point, FullPoint: TOneDRealArray; List: TList);
     class function Create(IntervalDefinitions: TIntDefArray): IIntervalTree;
+    property OwnsObjects: Boolean read GetOwnsObjects write SetOwnsObjects;
   end;
 
   TInternalRangeTreeLeafList = class(TRangeTreeLeafList)
@@ -180,6 +241,7 @@ begin
         SetLength(SubTreeIntervalDefinitions, Length(SubTreeIntervalDefinitions));
         SubTreeIntervalDefinitions[0].LowerBoundary := FCenter;
         FRightTree := TIntervalTree.InternalCreate(SubTreeIntervalDefinitions);
+        FRightTree.OwnsObjects := OwnsObjects;
       end;
       FRightTree.Add(AnObject);
     end
@@ -192,6 +254,7 @@ begin
         SetLength(SubTreeIntervalDefinitions, Length(SubTreeIntervalDefinitions));
         SubTreeIntervalDefinitions[0].UpperBoundary := FCenter;
         FLeftTree := TIntervalTree.InternalCreate(SubTreeIntervalDefinitions);
+        FLeftTree.OwnsObjects := OwnsObjects;
       end;
       FLeftTree.Add(AnObject);
     end
@@ -203,6 +266,7 @@ begin
         Move(FIntervalDefinitions[1], SubTreeIntervalDefinitions[0],
           Length(SubTreeIntervalDefinitions) * SizeOf(TIntervalDefinition));
         FCenterTree := TIntervalTree.InternalCreate(SubTreeIntervalDefinitions);
+        FCenterTree.OwnsObjects := OwnsObjects;
       end;
       FCenterTree.Add(AnObject);
       if FContentsUpperLimit < UpperBoundary then
@@ -218,7 +282,8 @@ begin
     begin
       if FCenterList = nil then
       begin
-        FCenterList := TList.Create;
+        FCenterList := TObjectList.Create;
+        TObjectList(FCenterList).OwnsObjects := OwnsObjects;
       end;
       FCenterList.Add(AnObject);
       if FContentsUpperLimit < UpperBoundary then
@@ -230,7 +295,8 @@ begin
         FContentsLowerLimit := LowerBoundary
       end;
     end;
-  end else if Length(FIntervalDefinitions) > 1 then
+  end
+  else if Length(FIntervalDefinitions) > 1 then
   begin
     if (LowerBoundary > FCenter) and (FRightTree <> nil) then
     begin
@@ -248,6 +314,7 @@ begin
         Move(FIntervalDefinitions[1], SubTreeIntervalDefinitions[0],
           Length(SubTreeIntervalDefinitions) * SizeOf(TIntervalDefinition));
         FCenterTree := TIntervalTree.InternalCreate(SubTreeIntervalDefinitions);
+        FCenterTree.OwnsObjects := OwnsObjects;
       end;
       FCenterTree.Add(AnObject);
       if FContentsUpperLimit < UpperBoundary then
@@ -264,7 +331,8 @@ begin
   begin
     if FCenterList = nil then
     begin
-      FCenterList := TList.Create;
+      FCenterList := TObjectList.Create;
+      TObjectList(FCenterList).OwnsObjects := OwnsObjects;
     end;
     FCenterList.Add(AnObject);
     if FContentsUpperLimit < UpperBoundary then
@@ -285,6 +353,11 @@ begin
     + FIntervalDefinitions[0].UpperBoundary) / 2;
   FContentsUpperLimit := FCenter;
   FContentsLowerLimit := FCenter;
+end;
+
+procedure TIntervalTree.SetOwnsObjects(Value: Boolean);
+begin
+  FOwnsObjects := Value;
 end;
 
 function TIntervalTree.ArraySize: integer;
@@ -361,20 +434,16 @@ begin
           LowerBoundary, UpperBoundary);
         if (LowerBoundary <= Point[0]) and (UpperBoundary >= Point[0]) then
         begin
-//          Accept := True;
-//          if Assigned(FIntervalDefinitions[0].OnCheckObject) then
-//          begin
-//            FIntervalDefinitions[0].OnCheckObject(AnObject,
-//              FFullPoint, Accept)
-//          end;
-//          if Accept then
-//          begin
-            List.Add(AnObject);
-//          end;
+          List.Add(AnObject);
         end;
       end;
     end;
   end;
+end;
+
+function TIntervalTree.GetOwnsObjects: Boolean;
+begin
+  result := FOwnsObjects;
 end;
 
 { TRbwIntervalTree }
@@ -410,6 +479,16 @@ begin
   Assert(Length(Point) = FIntervalTree.ArraySize);
   FIntervalTree.FindContainingObjects(Point, Point, List);
   List.Pack;
+end;
+
+function TRbwIntervalTree.GetOwnsObjects: Boolean;
+begin
+  Result := FIntervalTree.OwnsObjects;
+end;
+
+procedure TRbwIntervalTree.SetOwnsObjects(const Value: Boolean);
+begin
+  FIntervalTree.OwnsObjects := Value;
 end;
 
 var
@@ -784,6 +863,46 @@ begin
   FLeafList.Free;
   FResultList.Free;
   inherited;
+end;
+
+function TRbwRangeTree.Max(Depth: Integer): double;
+var
+  Leaf: TRangeTreeLeaf;
+  index: Integer;
+  Value: Double;
+begin
+  Assert(FLeafList.Count > 0);
+  Leaf := FLeafList[0];
+  result := Leaf.GetCoordinate(Depth);
+  for index := 1 to FLeafList.Count - 1 do
+  begin
+    Leaf := FLeafList[index];
+    Value := Leaf.GetCoordinate(Depth);
+    if Value > result then
+    begin
+      result := Value;
+    end;
+  end;
+end;
+
+function TRbwRangeTree.Min(Depth: Integer): double;
+var
+  Leaf: TRangeTreeLeaf;
+  index: Integer;
+  Value: Double;
+begin
+  Assert(FLeafList.Count > 0);
+  Leaf := FLeafList[0];
+  result := Leaf.GetCoordinate(Depth);
+  for index := 1 to FLeafList.Count - 1 do
+  begin
+    Leaf := FLeafList[index];
+    Value := Leaf.GetCoordinate(Depth);
+    if Value < result then
+    begin
+      result := Value;
+    end;
+  end;
 end;
 
 function TRbwRangeTree.Search(const Intervals: TSearchArray): TList;

@@ -12,6 +12,8 @@ uses
   AbstractGridUnit;
 
 type
+  TNavigationType = (ntPosition, ntGrid, mtMesh, ntObject, ntImage);
+
   {@abstract(@name is used to move the viewpoint to a selected position,
    cell, or @link(TScreenObject).)}
   TfrmGoTo = class(TfrmCustomGoPhast)
@@ -109,6 +111,10 @@ type
     lvImages: TListView;
     lblModel: TLabel;
     comboModel: TComboBox;
+    tabMesh: TTabSheet;
+    rgNodeElement: TRadioGroup;
+    lblNumber: TLabel;
+    seNumber: TJvSpinEdit;
     // @name calls @link(SetData).
     procedure btnOKClick(Sender: TObject);
     // @name enables and disables controls depending on which of
@@ -120,6 +126,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure pcMainChange(Sender: TObject);
     procedure comboModelChange(Sender: TObject);
+    procedure rgNodeElementClick(Sender: TObject);
   private
     // @name stores information about the current position.
     procedure GetData;
@@ -127,6 +134,7 @@ type
     // cell, object, or position.
     procedure SetData;
     procedure SetGridSpinEditMax(Grid: TCustomModelGrid);
+    procedure GetMeshItemClosestToCenter;
     { Private declarations }
   public
     { Public declarations }
@@ -167,7 +175,7 @@ procedure MoveToImage(BitMapItem: TCompressedBitmapItem);
 implementation
 
 uses frmGoPhastUnit, GoPhastTypes, ScreenObjectUnit,
-  DataSetUnit, FastGEO, PhastModelUnit;
+  DataSetUnit, FastGEO, PhastModelUnit, SutraMeshUnit, QuadTreeClass;
 
 resourcestring
   StrElement = 'Element';
@@ -319,6 +327,229 @@ end;
 
 { TfrmGoTo }
 
+procedure TfrmGoTo.GetMeshItemClosestToCenter;
+var
+  APoint: TPoint2D;
+  Z: double;
+  Index: Integer;
+  Mesh: TSutraMesh3D;
+  Limits: TGridLimit;
+  ANode: TSutraNode2D;
+  Location: TPoint2D;
+  AnElement: TSutraElement2D;
+  ANode3D: TSutraNode3D;
+  ClosestLayer: Integer;
+  LayerIndex: Integer;
+  AnElement3D: TSutraElement3D;
+  QuadTree: TRbwQuadTree;
+  ClosestDistance: double;
+  TestDistance: double;
+  FoundFirst: Boolean;
+begin
+  Mesh := frmGoPhast.PhastModel.Mesh;
+  if Mesh = nil then
+  begin
+    Exit;
+  end;
+  case Mesh.MeshType of
+    mt2D:
+      begin
+        case rgNodeElement.ItemIndex of
+          0:
+            begin
+              // Nodes
+              seNumber.MaxValue := Mesh.Mesh2D.Nodes.Count;
+            end;
+          1:
+            begin
+              // Elements
+              seNumber.MaxValue := Mesh.Mesh2D.Elements.Count;
+            end;
+          else Assert(False);
+        end;
+      end;
+    mt3D:
+      begin
+        case rgNodeElement.ItemIndex of
+          0:
+            begin
+              // Nodes
+              seNumber.MaxValue := Mesh.ActiveNodeCount;
+            end;
+          1:
+            begin
+              // Elements
+              seNumber.MaxValue := Mesh.ActiveElementCount;
+            end;
+          else Assert(False);
+        end;
+      end;
+    else Assert(False);
+  end;
+
+  with frmGoPhast.frameTopView.ZoomBox do
+  begin
+    APoint.X := X(Image32.Width div 2);
+    APoint.Y := Y(Image32.Height div 2);
+  end;
+
+  QuadTree := TRbwQuadTree.Create(nil);
+  try
+    Limits := Mesh.MeshLimits(vdTop);
+    QuadTree.XMax := Limits.MaxX;
+    QuadTree.XMin := Limits.MinX;
+    QuadTree.YMax := Limits.MaxY;
+    QuadTree.YMin := Limits.MinY;
+    case rgNodeElement.ItemIndex of
+      0:
+        begin
+          // Nodes
+          for Index := 0 to Mesh.Mesh2D.Nodes.Count - 1 do
+          begin
+            ANode := Mesh.Mesh2D.Nodes[Index];
+            if Mesh.MeshType = mt2D then
+            begin
+              Location := ANode.Location;
+              QuadTree.AddPoint(Location.x, Location.y, ANode);
+            end
+            else
+            begin
+              for LayerIndex := 0 to Mesh.LayerCount do
+              begin
+                ANode3D := Mesh.NodeArray[LayerIndex, ANode.Number];
+                if ANode3D.Active then
+                begin
+                  Location := ANode.Location;
+                  QuadTree.AddPoint(Location.x, Location.y, ANode);
+                  break;
+                end;
+              end;
+            end;
+          end;
+          ANode := QuadTree.NearestPointsFirstData(APoint.x, APoint.y);
+          case Mesh.MeshType of
+            mt2D:
+              begin
+                seNumber.AsInteger := ANode.Number + 1;
+              end;
+            mt3D:
+              begin
+                with frmGoPhast.frameFrontView.ZoomBox do
+                begin
+                  Z := Y(Image32.Height div 2);
+                end;
+                FoundFirst := False;
+                ClosestLayer := -1;
+                ClosestDistance := -1;
+                for LayerIndex := 0 to Mesh.LayerCount do
+                begin
+                  ANode3D := Mesh.NodeArray[LayerIndex, ANode.Number];
+                  if ANode3D.Active then
+                  begin
+                    TestDistance := Abs(Z - ANode3D.Z);
+                    if FoundFirst then
+                    begin
+                      if TestDistance < ClosestDistance then
+                      begin
+                        ClosestDistance := TestDistance;
+                        ClosestLayer := LayerIndex;
+                      end;
+                    end
+                    else
+                    begin
+                      ClosestLayer := LayerIndex;
+                      ClosestDistance := TestDistance;
+                      FoundFirst := True;
+                    end;
+                  end;
+                end;
+                ANode3D := Mesh.NodeArray[ClosestLayer, ANode.Number];
+                seNumber.AsInteger := ANode3D.Number + 1;
+              end;
+            else
+              Assert(False);
+          end;
+        end;
+      1:
+        begin
+          // Elements
+          for Index := 0 to Mesh.Mesh2D.Elements.Count - 1 do
+          begin
+            AnElement := Mesh.Mesh2D.Elements[Index];
+            if Mesh.MeshType = mt2D then
+            begin
+              Location := AnElement.Center;
+              QuadTree.AddPoint(Location.x, Location.y, AnElement);
+            end
+            else
+            begin
+              for LayerIndex := 0 to Mesh.LayerCount-1 do
+              begin
+                AnElement3D := Mesh.ElementArray[LayerIndex,
+                  AnElement.ElementNumber];
+                if AnElement3D.Active then
+                begin
+                  Location := AnElement.Center;
+                  QuadTree.AddPoint(Location.x, Location.y, AnElement);
+                  break;
+                end;
+              end;
+            end;
+          end;
+          AnElement := QuadTree.NearestPointsFirstData(APoint.x, APoint.y);
+          case Mesh.MeshType of
+            mt2D:
+              begin
+                seNumber.AsInteger := AnElement.ElementNumber + 1;
+              end;
+            mt3D:
+              begin
+                with frmGoPhast.frameFrontView.ZoomBox do
+                begin
+                  Z := Y(Image32.Height div 2);
+                end;
+                FoundFirst := False;
+                ClosestLayer := -1;
+                ClosestDistance := -1;
+                for LayerIndex := 0 to Mesh.LayerCount-1 do
+                begin
+                  AnElement3D := Mesh.ElementArray[LayerIndex,
+                    AnElement.ElementNumber];
+
+                  if AnElement3D.Active then
+                  begin
+                    TestDistance := Abs(Z - AnElement3D.CenterElevation);
+                    if FoundFirst then
+                    begin
+                      if TestDistance < ClosestDistance then
+                      begin
+                        ClosestDistance := TestDistance;
+                        ClosestLayer := LayerIndex;
+                      end;
+                    end
+                    else
+                    begin
+                      ClosestLayer := LayerIndex;
+                      ClosestDistance := TestDistance;
+                      FoundFirst := True;
+                    end;
+                  end;
+                end;
+                AnElement3D := Mesh.ElementArray[ClosestLayer, AnElement.ElementNumber];
+                seNumber.AsInteger := AnElement3D.ElementNumber + 1;
+              end;
+            else
+              Assert(False);
+          end;
+        end;
+    end;
+  finally
+    QuadTree.Free;
+  end;
+
+
+end;
+
 procedure TfrmGoTo.GetData;
 var
   APoint: TPoint2D;
@@ -332,6 +563,7 @@ var
   Layer: integer;
   BitMapItem: TCompressedBitmapItem;
   Grid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
   procedure SetGridSpinEditValue(SE: TJvSpinEdit; NewValue: integer);
   begin
     if NewValue <= SE.MaxValue then
@@ -346,14 +578,34 @@ var
 begin
   Screen.Cursor := crHourGlass;
   try
+    Grid := frmGoPhast.Grid;
+    {$IFDEF SUTRA}
+    if frmGoPhast.ModelSelection = msSutra22 then
+    begin
+      Mesh := frmGoPhast.PhastModel.SutraMesh;
+    end
+    else
+    begin
+      Mesh := nil;
+    end;
+    {$ELSE}
+      Mesh := nil;
+    {$ENDIF}
+
     with frmGoPhast.frameTopView.ZoomBox do
     begin
       APoint.X := X(Image32.Width div 2);
       APoint.Y := Y(Image32.Height div 2);
       rdeX.Text := FloatToStr(APoint.X);
       rdeY.Text := FloatToStr(APoint.Y);
-      APoint := frmGoPhast.Grid.
-        RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
+      if Grid <> nil then
+      begin
+        APoint := Grid.RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
+      end
+      else
+      begin
+        APoint := Mesh.RotateFromRealWorldCoordinatesToMeshCoordinates(APoint);
+      end;
       rdeXPrime.Text := FloatToStr(APoint.X);
       rdeYPrime.Text := FloatToStr(APoint.Y);
     end;
@@ -361,17 +613,17 @@ begin
     begin
       rdeZ.Text := FloatToStr(Y(Image32.Height div 2));
     end;
-    if (frmGoPhast.Grid.ColumnCount > 0)
-      and (frmGoPhast.Grid.RowCount > 0)
-      and (frmGoPhast.Grid.LayerCount > 0) then
+    if (Grid <> nil)
+      and (Grid.ColumnCount > 0)
+      and (Grid.RowCount > 0)
+      and (Grid.LayerCount > 0) then
     begin
-      Grid := frmGoPhast.Grid;
       SetGridSpinEditMax(Grid);
       seCol.MinValue := 1;
       seRow.MinValue := 1;
       seLayer.MinValue := 1;
 
-      TopCell := frmGoPhast.Grid.TopContainingCell(APoint, eaBlocks, False);
+      TopCell := Grid.TopContainingCell(APoint, eaBlocks, False);
       SetGridSpinEditValue(seCol,TopCell.Col+1);
       SetGridSpinEditValue(seRow,TopCell.Row+1);
       with frmGoPhast.frameFrontView.ZoomBox do
@@ -399,6 +651,16 @@ begin
     else
     begin
       tabCell.TabVisible := False;
+    end;
+
+    if (Mesh <> nil) and (Mesh.Mesh2D.Nodes.Count > 0)
+      and ((Mesh.MeshType = mt2D) or (Mesh.Nodes.Count > 0)) then
+    begin
+      GetMeshItemClosestToCenter;
+    end
+    else
+    begin
+      tabMesh.TabVisible := False;
     end;
 
     AList := TList.Create;
@@ -455,11 +717,22 @@ var
   UndoShowHide: TUndoShowHideScreenObject;
   BitMapItem: TCompressedBitmapItem;
   Model: TCustomModel;
+  Mesh: TSutraMesh3D;
+  ANode2D: TSutraNode2D;
+  TopLocation: TPoint2D;
+  AnElement2D: TSutraElement2D;
+  NodeNumber: Integer;
+  ElementNumber: Integer;
+  ANode3D: TSutraNode3D;
+  ElementLocation: TPoint3D;
+  NodeIndex: Integer;
+  ElementIndex: integer;
+  AnElement3D: TSutraElement3D;
 begin
   Screen.Cursor := crHourGlass;
   try
-    case pcMain.ActivePageIndex of
-      0: // Position
+    case TNavigationType(pcMain.ActivePageIndex) of
+      ntPosition: // Position
         begin
           if cbTop.Checked then
           begin
@@ -481,7 +754,7 @@ begin
           end;
 
         end;
-      1: //Cell
+      ntGrid: //Cell
         begin
           Column := seCol.AsInteger - 1;
           Row := seRow.AsInteger - 1;
@@ -501,7 +774,82 @@ begin
           end;
 
         end;
-      2: // Object
+      mtMesh:
+        begin
+          Mesh := frmGoPhast.PhastModel.SutraMesh;
+          case Mesh.MeshType of
+            mt2D:
+              begin
+                case rgNodeElement.ItemIndex of
+                  0:
+                    begin
+                      //Nodes
+                      ANode2D := Mesh.Mesh2D.Nodes[seNumber.AsInteger-1];
+                      TopLocation := ANode2D.Location;
+                      SetTopPosition(TopLocation.x, TopLocation.y);
+                    end;
+                  1:
+                    begin
+                      // Elements
+                      AnElement2D := Mesh.Mesh2D.Elements[seNumber.AsInteger-1];
+                      TopLocation := AnElement2D.Center;
+                      SetTopPosition(TopLocation.x, TopLocation.y);
+                    end;
+                  else Assert(False);
+                end;
+              end;
+            mt3D:
+              begin
+                case rgNodeElement.ItemIndex of
+                  0:
+                    begin
+                      //Nodes
+                      NodeNumber := seNumber.AsInteger-1;
+                      for NodeIndex := 0 to Mesh.Nodes.Count - 1 do
+                      begin
+                        ANode3D := Mesh.Nodes[NodeIndex];
+                        if ANode3D.Active and (ANode3D.Number = NodeNumber) then
+                        begin
+                          TopLocation := ANode3D.Node2D.Location;
+                          SetTopPosition(TopLocation.x, TopLocation.y);
+                          TopLocation := Mesh.
+                            RotateFromRealWorldCoordinatesToMeshCoordinates(
+                            TopLocation);
+                          SetFrontPosition(TopLocation.x, ANode3D.Z);
+                          break;
+                        end;
+                      end;
+                    end;
+                  1:
+                    begin
+                      // Elements
+                      ElementNumber := seNumber.AsInteger-1;
+                      for ElementIndex := 0 to Mesh.Elements.Count - 1 do
+                      begin
+                        AnElement3D := Mesh.Elements[ElementIndex];
+                        if AnElement3D.Active and (AnElement3D.ElementNumber =
+                          ElementNumber) then
+                        begin
+                          ElementLocation := AnElement3D.CenterLocation;
+                          SetTopPosition(ElementLocation.x, ElementLocation.y);
+                          TopLocation.x := ElementLocation.x;
+                          TopLocation.y := ElementLocation.y;
+                          TopLocation := Mesh.
+                            RotateFromRealWorldCoordinatesToMeshCoordinates(
+                            TopLocation);
+                          SetFrontPosition(TopLocation.x, ElementLocation.Z);
+                          break;
+                        end;
+                      end;
+                    end;
+                  else Assert(False);
+                end;
+              end;
+            else
+              Assert(False);
+          end;
+        end;
+      ntObject: // Object
         begin
           Item := lvScreenObjects.Selected;
           if Item <> nil then
@@ -555,7 +903,7 @@ begin
             end;
           end;
         end;
-      3: // Object
+      ntImage: // images
         begin
           Item := lvImages.Selected;
           if Item <> nil then
@@ -574,9 +922,12 @@ end;
 
 procedure TfrmGoTo.SetGridSpinEditMax(Grid: TCustomModelGrid);
 begin
-  seCol.MaxValue := Grid.ColumnCount;
-  seRow.MaxValue := Grid.RowCount;
-  seLayer.MaxValue := Grid.LayerCount;
+  if Grid <> nil then
+  begin
+    seCol.MaxValue := Grid.ColumnCount;
+    seRow.MaxValue := Grid.RowCount;
+    seLayer.MaxValue := Grid.LayerCount;
+  end;
 end;
 
 
@@ -626,8 +977,16 @@ begin
   cbTop.Enabled := (pcMain.ActivePage <> tabObject)
     and (pcMain.ActivePage <> tabImage);
   cbFront.Enabled := cbTop.Enabled;
-  cbSide.Enabled := cbTop.Enabled;
+  cbSide.Enabled := cbTop.Enabled
+  {$IFDEF SUTRA}
+    and (frmGoPhast.ModelSelection <> msSutra22){$ENDIF};
   HelpKeyWord := pcMain.ActivePage.HelpKeyword;
+end;
+
+procedure TfrmGoTo.rgNodeElementClick(Sender: TObject);
+begin
+  inherited;
+  GetMeshItemClosestToCenter;
 end;
 
 procedure TfrmGoTo.FormShow(Sender: TObject);
@@ -636,7 +995,7 @@ begin
   tabCell.Visible := seCol.Enabled;
   case frmGoPhast.ModelSelection of
     msUndefined: Assert(False);
-    msPhast: tabCell.Caption := StrElement;
+    msPhast{$IFDEF SUTRA}, msSutra22{$ENDIF}: tabCell.Caption := StrElement;
     msModflow, msModflowLGR, msModflowNWT: tabCell.Caption := StrBlock;
     else Assert(False);
   end;

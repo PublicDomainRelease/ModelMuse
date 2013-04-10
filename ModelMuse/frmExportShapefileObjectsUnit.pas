@@ -46,6 +46,7 @@ type
     chklstTimes: TCheckListBox;
     splRight: TSplitter;
     lblTimes: TLabel;
+    rgView: TRadioGroup;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure vstDataSetsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -58,6 +59,7 @@ type
     procedure vstObjectsChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure btnCloseClick(Sender: TObject);
     procedure splRightMoved(Sender: TObject);
+    procedure rgViewClick(Sender: TObject);
   protected
     function ShouldCheckBoxBeChecked(ScreenObject: TScreenObject): boolean;
       override;
@@ -144,6 +146,7 @@ resourcestring
   StrYouMustSelectOne = 'You must select one or more times at which you wish' +
   ' the MODFLOW Features to be exported.';
   StrYouMustSelectObject = 'You must select at least one object to export.';
+  StrYouMustSelectAtL = 'You must select at least one object on the %s';
 
 const
   StrFormulaTruncatedTo = 'Formula truncated to 254 characters';
@@ -211,6 +214,10 @@ begin
       end;
     end;
     SetData
+  end
+  else
+  begin
+    ModalResult := mrNone;
   end;
 end;
 
@@ -405,6 +412,10 @@ var
   Element: TBoundaryType;
 begin
   result := False;
+  if ScreenObject.ViewDirection <> TViewDirection(rgView.ItemIndex) then
+  begin
+    Exit;
+  end;
   for Index := 0 to FSelectedDataSets.Count - 1 do
   begin
     DataArray := FSelectedDataSets[Index];
@@ -1634,6 +1645,23 @@ begin
   end;
 end;
 
+procedure TfrmExportShapefileObjects.rgViewClick(Sender: TObject);
+var
+  ANode: PVirtualNode;
+  Data: PClassificationNodeData;
+begin
+  inherited;
+
+  ANode := vstDataSets.GetFirst;
+  while ANode <> nil do
+  begin
+    Data := vstDataSets.GetNodeData(ANode);
+    FCurrentNodeName := Data.ClassificationObject.ClassificationName;
+    vstDataSetsChecked(vstDataSets,ANode);
+    ANode := vstDataSets.GetNext(ANode)
+  end;
+end;
+
 procedure TfrmExportShapefileObjects.GetShapeType(var ShapeType: Integer);
 begin
   ShapeType := -1;
@@ -2608,7 +2636,7 @@ var
               begin
                 FloatValue := HobItem.Time;
               end;
-              XBaseShapeFile.UpdFieldNum('O_TIME' + IntToStr(TimeIndex),
+              XBaseShapeFile.UpdFieldNum(WString('O_TIME' + IntToStr(TimeIndex)),
                 FloatValue);
 
               if HobItem = nil then
@@ -2619,7 +2647,7 @@ var
               begin
                 FloatValue := HobItem.Head;
               end;
-              XBaseShapeFile.UpdFieldNum('O_HEAD' + IntToStr(TimeIndex),
+              XBaseShapeFile.UpdFieldNum(WString('O_HEAD' + IntToStr(TimeIndex)),
                 FloatValue);
 
               if HobItem = nil then
@@ -2630,7 +2658,7 @@ var
               begin
                 FloatValue := HobItem.Statistic;
               end;
-              XBaseShapeFile.UpdFieldNum('O_STAT' + IntToStr(TimeIndex),
+              XBaseShapeFile.UpdFieldNum(WString('O_STAT' + IntToStr(TimeIndex)),
                 FloatValue);
 
               if HobItem = nil then

@@ -92,7 +92,8 @@ end;
 constructor TModflowBasicWriter.Create(AModel: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
-  XSECTION := Model.ModflowGrid.RowCount = 1;
+  XSECTION := (Model.ModflowGrid.RowCount = 1)
+    and not Model.ModflowPackages.ModPath.IsSelected;
 end;
 
 class function TModflowBasicWriter.Extension: string;

@@ -49,6 +49,7 @@ type
     lblMt3dMsPrintMassBalance: TLabel;
     spinMt3dMsPrintMassBalance: TJvSpinEdit;
     cbSummarizeMassBalance: TCheckBox;
+    cbPrintObservations: TCheckBox;
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
     procedure jvPagesChange(Sender: TObject);
@@ -153,6 +154,7 @@ begin
   cbPrintInputArrays.Checked := OutputControl.PrintInputArrays;
   rgSaveCellFlows.ItemIndex := Ord(OutputControl.SaveCellFlows);
   cbPrintInputCellLists.Checked := OutputControl.PrintInputCellLists;
+  cbPrintObservations.Checked := OutputControl.PrintObservations;
   cbCompact.Checked := OutputControl.Compact;
   frameHead.GetData(OutputControl.HeadOC);
   frameDrawdown.GetData(OutputControl.DrawdownOC);
@@ -197,6 +199,7 @@ begin
   FOutputControl.PrintInputArrays := cbPrintInputArrays.Checked;
   FOutputControl.SaveCellFlows := TCellSaveFormat(rgSaveCellFlows.ItemIndex);
   FOutputControl.PrintInputCellLists := cbPrintInputCellLists.Checked;
+  FOutputControl.PrintObservations := cbPrintObservations.Checked;
   FOutputControl.Compact := cbCompact.Checked;
   frameHead.SetData(FOutputControl.HeadOC);
   frameDrawdown.SetData(FOutputControl.DrawdownOC);

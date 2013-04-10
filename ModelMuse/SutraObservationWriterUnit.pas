@@ -121,7 +121,7 @@ begin
         FObsGroups.Add(AnObsGroup);
         AnObsGroup.ObsName := Observations.ObservationName;
         AnObsGroup.ObservationFormat := Observations.ObservationFormat;
-        AnObsGroup.ObsSchedule := Observations.ExportScheduleName;
+        AnObsGroup.ObsSchedule := AnsiString(Observations.ExportScheduleName);
         AnObsGroup.TimeValues := Observations.Times;
 
         CellList := TCellAssignmentList.Create;

@@ -321,6 +321,7 @@ end;
 procedure TModflowHobWriter.WriteDataSet1;
 var
   HOBDRY: double;
+  PrintObservations: Boolean;
 begin
   HOBDRY := Model.ModflowPackages.HobPackage.DryHead;
   WriteInteger(NH);
@@ -328,7 +329,16 @@ begin
   WriteInteger(MAXM);
   WriteInteger(IUHOBSV);
   WriteFloat(HOBDRY);
+  PrintObservations := Model.ModflowOutputControl.PrintObservations;
+  if not PrintObservations then
+  begin
+    WriteString(' NOPRINT');
+  end;
   WriteString(' # Data Set 1: NH MOBS MAXM IUHOBSV HOBDRY');
+  if not PrintObservations then
+  begin
+    WriteString(' NOPRINT');
+  end;
   NewLine;
 end;
 

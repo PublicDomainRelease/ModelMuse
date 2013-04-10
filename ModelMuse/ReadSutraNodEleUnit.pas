@@ -66,9 +66,9 @@ type
   end;
 
   TEleReader = class(TCustomSutraOutputReader)
-    FXOrigin: TOneDRealArray;
-    FYOrigin: TOneDRealArray;
-    FZOrigin: TOneDRealArray;
+    FX: TOneDRealArray;
+    FY: TOneDRealArray;
+    FZ: TOneDRealArray;
     FXVelocity: TOneDRealArray;
     FYVelocity: TOneDRealArray;
     FZVelocity: TOneDRealArray;
@@ -80,9 +80,9 @@ type
     procedure ReadValues; override;
     procedure ZeroArrays; override;
   public
-    property XOrigin: TOneDRealArray read FXOrigin;
-    property YOrigin: TOneDRealArray read FYOrigin;
-    property ZOrigin: TOneDRealArray read FZOrigin;
+    property X: TOneDRealArray read FX;
+    property Y: TOneDRealArray read FY;
+    property Z: TOneDRealArray read FZ;
     property XVelocity: TOneDRealArray read FXVelocity;
     property YVelocity: TOneDRealArray read FYVelocity;
     property ZVelocity: TOneDRealArray read FZVelocity;
@@ -336,27 +336,27 @@ begin
   FHasElement := Pos('Element', ALine) > 0;
   if Pos('X origin', ALine) > 0 then
   begin
-    SetLength(FXOrigin, Count);
+    SetLength(FX, Count);
   end
   else
   begin
-    SetLength(FXOrigin, 0);
+    SetLength(FX, 0);
   end;
   if Pos('Y origin', ALine) > 0 then
   begin
-    SetLength(FYOrigin, Count);
+    SetLength(FY, Count);
   end
   else
   begin
-    SetLength(FYOrigin, 0);
+    SetLength(FY, 0);
   end;
   if Pos('Z origin', ALine) > 0 then
   begin
-    SetLength(FZOrigin, Count);
+    SetLength(FZ, Count);
   end
   else
   begin
-    SetLength(FZOrigin, 0);
+    SetLength(FZ, 0);
   end;
   if Pos('X velocity', ALine) > 0 then
   begin
@@ -409,23 +409,23 @@ begin
       begin
         Inc(ItemIndex);
       end;
-      ReadItem(FXOrigin);
-      ReadItem(FYOrigin);
-      ReadItem(FZOrigin);
+      ReadItem(FX);
+      ReadItem(FY);
+      ReadItem(FZ);
       ReadItem(FXVelocity);
       ReadItem(FYVelocity);
       ReadItem(FZVelocity);
     end;
   finally
-    StoredDecimalSeparator := FormatSettings.DecimalSeparator;
+    FormatSettings.DecimalSeparator := StoredDecimalSeparator;
   end;
 end;
 
 procedure TEleReader.ZeroArrays;
 begin
-  SetLength(FXOrigin, 0);
-  SetLength(FYOrigin, 0);
-  SetLength(FZOrigin, 0);
+  SetLength(FX, 0);
+  SetLength(FY, 0);
+  SetLength(FZ, 0);
   SetLength(FXVelocity, 0);
   SetLength(FYVelocity, 0);
   SetLength(FZVelocity, 0);

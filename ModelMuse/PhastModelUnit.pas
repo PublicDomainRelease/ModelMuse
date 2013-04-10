@@ -176,9 +176,12 @@ const
   KMaximumPermeability = 'Maximum_Permeability';
   KMiddlePermeability = 'Middle_Permeability';
   KMinimumPermeability = 'Minimum_Permeability';
-  KHorizontalAngle = 'Horizontal_Angle';
-  KVerticalAngle = 'Vertical_Angle';
-  KRotationalAngle = 'Rotational_Angle';
+  KMaximumK = 'Maximum_Hydraulic_Conductivity';
+  KMiddleK = 'Middle_Hydraulic_Conductivity';
+  KMinimumK = 'Minimum_Hydraulic_Conductivity';
+  KHorizontalAngle = 'Angle_Horizontal';
+  KVerticalAngle = 'Angle_Vertical';
+  KRotationalAngle = 'Angle_Rotational';
   KMaxLongitudinalDisp = 'Longitudinal_Dispersivity_Max_Dir';
   KMidLongitudinalDisp = 'Longitudinal_Dispersivity_Mid_Dir';
   KMinLongitudinalDisp = 'Longitudinal_Dispersivity_Min_Dir';
@@ -363,6 +366,7 @@ resourcestring
   StrMT3DMS_Classificaton = 'MT3DMS';
   StrSpecifiedPressure = 'Specified Pressure';
   StrAssocPresConc = 'SP Associated Conc.';
+  StrAssocHeadConc = 'SH Associated Conc.';
   StrAssocPresTemp = 'SP Associated Temp.';
   StrSpecifiedTemp = 'Specified Temperature';
   StrSpecifiedConc = 'Specified Concentration';
@@ -515,6 +519,9 @@ resourcestring
   StrMaximumPermeability = KMaximumPermeability;
   StrMiddlePermeability = KMiddlePermeability;
   StrMinimumPermeability = KMinimumPermeability;
+  StrMaximumK = KMaximumK;
+  StrMiddleK = KMiddleK;
+  StrMinimumK = KMinimumK;
   StrHorizontalAngle = KHorizontalAngle;
   StrVerticalAngle = KVerticalAngle;
   StrRotationalAngle = KRotationalAngle;
@@ -1919,6 +1926,11 @@ that affects the model output should also have a comment. }
     procedure InitializeSutraSpecifiedConcTemp(Sender: TObject);
     procedure InitializeSutraFluidFlux(Sender: TObject);
     procedure InitializeSutraMassEnergyFlux(Sender: TObject);
+    procedure DiscretizationChangedEvent(Sender: TObject);
+    function SutraHydraulicConductivityUsed(Sender: TObject): boolean;
+    function SutraPermeabilityUsed(Sender: TObject): boolean;
+    function SutraMiddlePermeabilityUsed(Sender: TObject): boolean;
+    function SutraMiddleHydraulicConductivityUsed(Sender: TObject): boolean;
   var
     LakWriter: TObject;
     SfrWriter: TObject;
@@ -1952,6 +1964,7 @@ that affects the model output should also have a comment. }
     FPathLine: TPathLineReader;
     FTimeSeries: TTimeSeriesReader;
     FEndPoints: TEndPointReader;
+    F_SP_Epsilon: double;
   strict private
     FHfbWriter: TObject;
     FMfHobHeads: THobDisplayTimeList;
@@ -2498,7 +2511,13 @@ that affects the model output should also have a comment. }
     property SfrStreamLinkPlot: TSfrStreamLinkPlot read GetSfrStreamLinkPlot
       write SetSfrStreamLinkPlot;
     procedure InvalidateSutraSpecPressure(Sender: TObject);
+    procedure InvalidateSutraSpecPressureU(Sender: TObject);
+    procedure InvalidateSutraFluidFlux(Sender: TObject);
+    procedure InvalidateSutraFluidFluxU(Sender: TObject);
+    procedure InvalidateSutraSpecifiedU(Sender: TObject);
+    procedure InvalidateSutraUFlux(Sender: TObject);
     procedure UpdateSutraTimeListNames;
+    property SP_Epsilon: double read F_SP_Epsilon;
   published
     // @name defines the grid used with PHAST.
     property PhastGrid: TPhastGrid read FPhastGrid write SetPhastGrid;
@@ -2834,6 +2853,7 @@ that affects the model output should also have a comment. }
     FMobileComponents: TMobileChemSpeciesCollection;
     FSutraLayerStructure: TSutraLayerStructure;
     FSutraTimeOptions: TSutraTimeOptions;
+    FColorSchemes: TUserDefinedColorSchemeCollection;
 //    FSutraOutputControl: TSutraOutputControl;
     // See @link(Exaggeration).
     function GetExaggeration: double;
@@ -3001,6 +3021,7 @@ that affects the model output should also have a comment. }
     procedure SetSutraLayerStructure(const Value: TSutraLayerStructure);
     procedure RenameOldVerticalLeakance; override;
     procedure SetSutraTimeOptions(const Value: TSutraTimeOptions);
+    procedure SetColorSchemes(const Value: TUserDefinedColorSchemeCollection);
 //    procedure SetSutraOutputControl(const Value: TSutraOutputControl);
   protected
     function GetSfrStreamLinkPlot: TSfrStreamLinkPlot; override;
@@ -3434,9 +3455,12 @@ that affects the model output should also have a comment. }
     property ArchiveName: string read GetArchiveName write SetArchiveName;
     procedure CreateArchive(const FileName: string; const ArchiveCommand: string = '');
 //    procedure InvalidateMfHobHeads(Sender: TObject);
-    function DefaultHigherElevationFormula(ViewDirection: TViewDirection): string;
-    function DefaultLowerElevationFormula(ViewDirection: TViewDirection): string;
-    function DefaultElevationFormula(ViewDirection: TViewDirection; EvalAt: TEvaluatedAt): string;
+    function DefaultHigherElevationFormula(ViewDirection: TViewDirection;
+      EvalAt: TEvaluatedAt): string;
+    function DefaultLowerElevationFormula(ViewDirection: TViewDirection;
+      EvalAt: TEvaluatedAt): string;
+    function DefaultElevationFormula(ViewDirection: TViewDirection;
+       EvalAt: TEvaluatedAt): string;
     function ParameterDataSetUsed(Sender: TObject): boolean;
     function GetScreenObjectByName(AName: string): TScreenObject; override;
     procedure CopyScreenObjectsToClipboard;
@@ -3457,9 +3481,15 @@ that affects the model output should also have a comment. }
     function CombinedColumnCount: integer;
     function CombinedRowCount: integer;
     function CombinedLayerCount: integer;
-    property NeedToRecalculateTopCellColors: boolean read GetNeedToRecalculateTopCellColors write SetNeedToRecalculateTopCellColors;
-    property NeedToRecalculateFrontCellColors: boolean read GetNeedToRecalculateFrontCellColors write SetNeedToRecalculateFrontCellColors;
-    property NeedToRecalculateSideCellColors: boolean read GetNeedToRecalculateSideCellColors write SetNeedToRecalculateSideCellColors;
+    property NeedToRecalculateTopCellColors: boolean
+      read GetNeedToRecalculateTopCellColors
+      write SetNeedToRecalculateTopCellColors;
+    property NeedToRecalculateFrontCellColors: boolean
+      read GetNeedToRecalculateFrontCellColors
+      write SetNeedToRecalculateFrontCellColors;
+    property NeedToRecalculateSideCellColors: boolean
+      read GetNeedToRecalculateSideCellColors
+      write SetNeedToRecalculateSideCellColors;
     procedure UpdateDataSetDimensions;
     function LgrUsed: boolean;
     function BcfIsSelected: Boolean;
@@ -3665,6 +3695,9 @@ that affects the model output should also have a comment. }
       write SetSutraLayerStructure {$IFNDEF Sutra} stored False {$ENDIF};
     property SutraTimeOptions: TSutraTimeOptions read FSutraTimeOptions
       write SetSutraTimeOptions {$IFNDEF Sutra} stored False {$ENDIF};
+    // User defined color schemes for coloring the grid or mesh
+    // or for contour lines.
+    property ColorSchemes: TUserDefinedColorSchemeCollection read FColorSchemes write SetColorSchemes;
 //    property SutraOutputControl: TSutraOutputControl read FSutraOutputControl
 //      write SetSutraOutputControl {$IFNDEF Sutra} stored False {$ENDIF};
   end;
@@ -5770,11 +5803,77 @@ const
   //     '2.18.0.4' Bug fix: Fixed a bug that would cause an error opening a
   //         ModelMuse file if an object used in the definition of a flux
   //         observation had been deleted.
-  //     '2.18.1.0' Fixed bug that allowed MT3DMS to have zero stress periods
-  //         defined.
+  //     '2.18.1.0' Bug fix: Fixed bug that allowed MT3DMS to have zero stress
+  //         periods defined.
+  //     '2.18.1.1' Bug fix: Attempting to import a file as a Surfer Grid file
+  //         when it really is not one now results in an error message to the
+  //         user instead of a bug report.
+  //       Change: ModelMuse will no longer use the XSECTION option in the
+  //         Basic package if MODPATH is active because MODPATH version 6
+  //         does not support the XSECTION option.
+  //       Bug fix: If the user attempts to import a TProgs file before
+  //         creating a grid, an error message is displayed to the user instead
+  //         of generating a bug report.
+  //       Bug fix: The following functions all had bugs which have been
+  //         corrected: ObjectCurrentVertexX, ObjectCurrentVertexY,
+  //         ObjectCurrentVertexZ, ObjectCurrentSegmentAngle,
+  //         ObjectCurrentSegmentAngleDegrees,
+  //         ObjectCurrentSegmentAngleLimitedDegrees,
+  //         ObjectCurrentSegmentLength
+  //       Bug fix: Fixed bug in checking parameters in the SFR package that
+  //         could cause ModelMuse to crash or to incorrect error messages.
+  //     '2.18.1.2' Bug fix: Fixed bug that could cause math errors when
+  //         coloring data sets by the logarithm of their values.
+  //       Failed Bug fix: Fixed bug that could cause extra stress periods of
+  //         negligible length to be generated when exporting from the 64-bit
+  //         version of ModelMuse.
+  //     '2.18.1.3' Bug fix: Fixed evaluating objects on rotated cross sections
+  //         in SUTRA. Bug not in released version.
+  //     '2.18.1.4' Made changes for SUTRA.
+  //     '2.18.1.5' Failed Bug fix: Fixed bug that could cause extra stress
+  //         periods of negligible length to be generated when exporting from
+  //         the 64-bit version of ModelMuse.
+  //     '2.18.1.6' Change: When importing Shapefiles, if the number of
+  //         Z-Formulas is set to 1 or 2, any new data sets that are created
+  //         will be 3D data sets.
+  //       Bug fix: Fixed bug that could cause extra stress periods of
+  //         negligible length to be generated when exporting from the 64-bit
+  //         version of ModelMuse.
+  //     '2.18.1.7' Bug fix: Fixed sampling of DEM data.
+  //     '2.18.1.8' No real change.
+  //     '2.18.1.9' Bug fix: When saving ModelMuse projects to text files
+  //         such as .gpt or .xml files, real numbers that were close to but
+  //         not equal to zero were saved as zero.
+  //       Bug fix: If the user enters an invalid formula for the Z coordinates
+  //         of an object, ModelMuse will now display an error message to the
+  //         user instead of generating a bug report.
+  //       Bug fix: Editing objects that defined streams in the SFR package
+  //         when SFR parameters are defined works properly now.
+  //     2.18.1.10' Bug fix: If ModelMuse is unable to save an ini file, it
+  //         displays a warning message to the user instead of generating a
+  //         bug report.
+  //       Bug fix: Attempting to merge point objects no longer results in
+  //         a bug report. However, point objects can not be merged.
+  //       Bug fix: Fixed a bug that sometimes caused an error when ModelMuse
+  //         was shutting down.
+  //    '2.18.1.11' Bug fix: Fixed bug that prevented layer elevations from
+  //         being updated correctly.
+  //    '2.18.1.12' Bug fix: Fixed bug that caused an error if two components
+  //         in MT3DMS were given the same name. Now if the user attempts to
+  //         assign the same name to more than one component in MT3DMS,
+  //         only the first one is accepted. The others are deleted.
+  //    '2.18.1.13' Enhancement: Added new contouring method based on
+  //         the Association for Computing Machinery (ACM) algorithm 651.
+  //       Enhancement: Added the ability for the user to add a custom
+  //         coloring scheme for coloring the grid or for contour lines.
+  //       Enhancement: Added support for the NOPRINT option in observation
+  //         files.
+  //    '2.18.1.14' Change: When drawing contour lines, a white background is
+  //         now drawn behind the contour labels.
+  //    '2.19.0.0' No additional changes.
 
 const
-  IModelVersion = '2.18.1.0';
+  IModelVersion = '2.19.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -5864,12 +5963,13 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   Mt3dmsDspWriterUnit, Mt3dmsSsmWriterUnit, Mt3dmsRctWriterUnit,
   Mt3dmsGcgWriterUnit, Mt3dmsTobWriterUnit, ModflowMt3dmsLinkWriterUnit,
   QuadMeshGenerator, MeshRenumbering, ModflowPCGN_WriterUnit, Character,
-  SutraBoundaryWriterUnit;
+  SutraBoundaryWriterUnit, frmMeshGenerationControlVariablesUnit;
 
 resourcestring
   StrMpathDefaultPath = 'C:\WRDAPP\Mpath.5_0\setup\Mpathr5_0.exe';
   StrMpathDefaultPathVersion6 = 'C:\WRDAPP\modpath.6_0\bin\mp6.exe';
-  StrModflowDefaultPath = 'C:\WRDAPP\MF2005.1_9\Bin\mf2005.exe';
+  // See also Mf2005Date on frmGoPhastUnit.
+  StrModflowDefaultPath = 'C:\WRDAPP\MF2005.1_10\Bin\mf2005.exe';
   StrPhastDefaultPath = 'C:\Program Files\USGS\phast-1.5.1\bin\phast.bat';
   StrPhastDefaultPath64 = 'C:\Program Files (x86)\USGS\phast-1.5.1\bin\phast.bat';
   StrZoneBudgetDefaultPath = 'C:\WRDAPP\Zonbud.3_01\Bin\zonbud.exe';
@@ -6595,6 +6695,7 @@ var
 begin
   inherited;
 
+  FColorSchemes := TUserDefinedColorSchemeCollection.Create(self);
   FSaveBfhBoundaryConditions := True;
   FSaveDataSetValues := sdsvAlways;
   FSelectedModel := self;
@@ -6626,7 +6727,7 @@ begin
 
   FLayerStructure := TLayerStructure.Create(self);
   FBitmaps := TCompressedBitmapCollection.Create;
-  ThreeDGridObserver.OnUpToDateSet := ModflowGrid.NotifyGridChanged;
+//  ThreeDGridObserver.OnUpToDateSet := DiscretizationChangedEvent;
 
   FDiffusivity := 1E-9;
   FModelTimes := TRealList.Create;
@@ -7059,6 +7160,7 @@ begin
 
     FSutraLayerStructure.Free;
     FSutraTimeOptions.Free;
+    FColorSchemes.Free;
   finally
     FreeAndNil(frmFileProgress);
   end;
@@ -7724,31 +7826,37 @@ var
 begin
   OldName := DataArray.Name;
   // rename data array.
-  TopGridObserver.StopsTalkingTo(DataArray);
-  DataArray.StopsTalkingTo(ThreeDGridObserver);
-  OldNames := TStringList.Create;
-  NewNames := TStringList.Create;
-  try
-    OldNames.Add(OldName);
-    NewNames.Add(NewName);
-    UpdateFormulas(OldNames, NewNames);
-  finally
-    NewNames.Free;
-    OldNames.Free;
+  if OldName <> NewName then
+  begin
+    TopGridObserver.StopsTalkingTo(DataArray);
+    DataArray.StopsTalkingTo(ThreeDGridObserver);
+    OldNames := TStringList.Create;
+    NewNames := TStringList.Create;
+    try
+      OldNames.Add(OldName);
+      NewNames.Add(NewName);
+      UpdateFormulas(OldNames, NewNames);
+    finally
+      NewNames.Free;
+      OldNames.Free;
+    end;
+    DataArray.Name := NewName;
   end;
-  DataArray.Name := NewName;
   DataArray.DisplayName := NewDisplayName;
-  Compiler := GetCompiler(DataArray.Orientation, DataArray.EvaluatedAt);
-  Position := Compiler.IndexOfVariable(OldName);
-  if Position >= 0 then
+  if OldName <> NewName then
   begin
-    Compiler.RenameVariable(Position, NewName, NewDisplayName);
-  end;
-  Compiler := GetCompiler(dso3D, DataArray.EvaluatedAt);
-  Position := Compiler.IndexOfVariable(OldName);
-  if Position >= 0 then
-  begin
-    Compiler.RenameVariable(Position, NewName, NewDisplayName);
+    Compiler := GetCompiler(DataArray.Orientation, DataArray.EvaluatedAt);
+    Position := Compiler.IndexOfVariable(OldName);
+    if Position >= 0 then
+    begin
+      Compiler.RenameVariable(Position, NewName, NewDisplayName);
+    end;
+    Compiler := GetCompiler(dso3D, DataArray.EvaluatedAt);
+    Position := Compiler.IndexOfVariable(OldName);
+    if Position >= 0 then
+    begin
+      Compiler.RenameVariable(Position, NewName, NewDisplayName);
+    end;
   end;
 end;
 
@@ -7946,17 +8054,46 @@ end;
 
 function TPhastModel.GetNeedToRecalculateFrontCellColors: boolean;
 begin
-  result := Grid.NeedToRecalculateFrontCellColors;
+  if Grid <> nil then
+  begin
+    result := Grid.NeedToRecalculateFrontCellColors;
+  end
+  else if Mesh <> nil then
+  begin
+    result := Mesh.NeedToRecalculateFrontColors;
+  end
+  else
+  begin
+    result := False;
+  end;
 end;
 
 function TPhastModel.GetNeedToRecalculateSideCellColors: boolean;
 begin
-  result := Grid.NeedToRecalculateSideCellColors;
+  if Grid <> nil then
+  begin
+    result := Grid.NeedToRecalculateSideCellColors;
+  end
+  else
+  begin
+    result := False;
+  end;
 end;
 
 function TPhastModel.GetNeedToRecalculateTopCellColors: boolean;
 begin
-  result := Grid.NeedToRecalculateTopCellColors;
+  if Grid <> nil then
+  begin
+    result := Grid.NeedToRecalculateTopCellColors;
+  end
+  else if Mesh <> nil then
+  begin
+    result := Mesh.NeedToRecalculateTopColors;
+  end
+  else
+  begin
+    result := False;
+  end;
 end;
 
 procedure TPhastModel.UpdateUseList(DataIndex: integer;
@@ -8116,6 +8253,26 @@ begin
 
 end;
 
+procedure TCustomModel.DiscretizationChangedEvent(Sender: TObject);
+begin
+  case FModelSelection of
+    msUndefined: ; // do nothing
+    msPhast: ;  // do nothing
+    msModflow, msModflowLGR, msModflowNWT:
+      begin
+        ModflowGrid.NotifyGridChanged(Sender);
+      end;
+    {$IFDEF SUTRA}
+    msSutra22:
+      begin
+        OnTopSutraMeshChanged(Sender);
+      end;
+    {$ENDIF}
+    else
+      Assert(False);
+  end;
+end;
+
 procedure TCustomModel.SetModelSelection(const Value: TModelSelection);
 var
   Index: Integer;
@@ -8164,14 +8321,14 @@ begin
       msModflow, msModflowLGR, msModflowNWT:
         begin
           FGrid := ModflowGrid;
-          ThreeDGridObserver.OnUpToDateSet := ModflowGrid.NotifyGridChanged;
+//          ThreeDGridObserver.OnUpToDateSet := ModflowGrid.NotifyGridChanged;
         end;
       {$IFDEF SUTRA}
       msSutra22:
         begin
           FGrid := nil;
           TopGridObserver.OnUpToDateSet := OnTopSutraMeshChanged;
-          ThreeDGridObserver.OnUpToDateSet := OnTopSutraMeshChanged;
+//          ThreeDGridObserver.OnUpToDateSet := OnTopSutraMeshChanged;
         end
       {$ENDIF}
       else Assert(False);
@@ -8309,18 +8466,25 @@ var
   ChildGrid: TCustomModelGrid;
   ChildModel: TChildModel;
 begin
-  Grid.NeedToRecalculateFrontCellColors := Value;
-  for ChildIndex := 0 to ChildModels.Count - 1 do
+  if Grid <> nil then
   begin
-    ChildModel := ChildModels[ChildIndex].ChildModel;
-    if ChildModel <> nil then
+    Grid.NeedToRecalculateFrontCellColors := Value;
+    for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
-      ChildGrid := ChildModel.Grid;
-      if ChildGrid <> nil then
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
       begin
-        ChildGrid.NeedToRecalculateFrontCellColors := Value;
+        ChildGrid := ChildModel.Grid;
+        if ChildGrid <> nil then
+        begin
+          ChildGrid.NeedToRecalculateFrontCellColors := Value;
+        end;
       end;
     end;
+  end
+  else if Mesh <> nil then
+  begin
+    Mesh.NeedToRecalculateFrontColors := Value;
   end;
 end;
 
@@ -8330,16 +8494,20 @@ var
   ChildGrid: TCustomModelGrid;
   ChildModel: TChildModel;
 begin
-  Grid.NeedToRecalculateSideCellColors := Value;
-  for ChildIndex := 0 to ChildModels.Count - 1 do
+
+  if Grid <> nil then
   begin
-    ChildModel := ChildModels[ChildIndex].ChildModel;
-    if ChildModel <> nil then
+    Grid.NeedToRecalculateSideCellColors := Value;
+    for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
-      ChildGrid := ChildModel.Grid;
-      if ChildGrid <> nil then
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
       begin
-        ChildGrid.NeedToRecalculateSideCellColors := Value;
+        ChildGrid := ChildModel.Grid;
+        if ChildGrid <> nil then
+        begin
+          ChildGrid.NeedToRecalculateSideCellColors := Value;
+        end;
       end;
     end;
   end;
@@ -8351,19 +8519,26 @@ var
   ChildGrid: TCustomModelGrid;
   ChildModel: TChildModel;
 begin
-  Grid.NeedToRecalculateTopCellColors := Value;
-  for ChildIndex := 0 to ChildModels.Count - 1 do
+  if Grid <> nil then
   begin
-    ChildModel := ChildModels[ChildIndex].ChildModel;
-
-    if ChildModel <> nil then
+    Grid.NeedToRecalculateTopCellColors := Value;
+    for ChildIndex := 0 to ChildModels.Count - 1 do
     begin
-      ChildGrid := ChildModel.Grid;
-      if ChildGrid <> nil then
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+
+      if ChildModel <> nil then
       begin
-        ChildGrid.NeedToRecalculateTopCellColors := Value;
+        ChildGrid := ChildModel.Grid;
+        if ChildGrid <> nil then
+        begin
+          ChildGrid.NeedToRecalculateTopCellColors := Value;
+        end;
       end;
     end;
+  end
+  else if Mesh <> nil then
+  begin
+    Mesh.NeedToRecalculateTopColors := Value;
   end;
 end;
 
@@ -9678,6 +9853,12 @@ var
   ResKvArray: TDataArray;
   Mt3dActiveArray: TDataArray;
 begin
+{$IFDEF SUTRA}
+  if ModelSelection = msSutra22 then
+  begin
+    Exit;
+  end;
+{$ENDIF}
   LakeIdArray := FDataArrayManager.GetDataSetByName(rsLakeID);
   ActiveArray := FDataArrayManager.GetDataSetByName(rsActive);
   WetDryArray := FDataArrayManager.GetDataSetByName(rsWetDryFlag);
@@ -11132,6 +11313,14 @@ begin
       AScreenObject.InvalidateSegments;
     end;
     SomeSegmentsUpToDate := False;
+  end
+  else
+  begin
+    for Index := 0 to ScreenObjectCount - 1 do
+    begin
+      AScreenObject := ScreenObjects[Index];
+      AScreenObject.InvalidateCachedCells;
+    end;
   end;
 end;
 
@@ -12061,6 +12250,19 @@ begin
 //      end;
 //    end;
 //  end;
+  if FileVersionEqualOrEarlier('2.18.1.0')
+    and
+    (FormulaManager.FunctionUsed(ObjectCurrentSegmentAngle)
+    or FormulaManager.FunctionUsed(ObjectDegrees)
+    or FormulaManager.FunctionUsed(ObjectDegreesLimited)
+    or FormulaManager.FunctionUsed(ObjectCurSegLength)
+    or FormulaManager.FunctionUsed(ObjectCurrentVertexX)
+    or FormulaManager.FunctionUsed(ObjectCurrentVertexY)
+    or FormulaManager.FunctionUsed(ObjectCurrentVertexZ)
+    ) then
+  begin
+    FDataArrayManager.InvalidateAllDataSets;
+  end;
 
   if (Grid <> nil) and (Grid.GridAngle <> 0)
     and FileVersionEqualOrEarlier('2.6.0.3')
@@ -14206,8 +14408,15 @@ var
   Column: Integer;
   Orientation: TDataSetOrientation;
   Compiler: TRbwParser;
+  ALine: TLine2D;
+  ADistance: TFloat;
+  SutraLayerGroup: TSutraLayerGroup;
+  ClosestPoint: TPoint2D;
+  MeshLimits: TGridLimit;
+  LayerCount: integer;
+  UnitIndex: integer;
 begin
-  if Grid = nil then
+  if (Grid = nil) and (Mesh = nil) then
   begin
     result := '0';
     Exit;
@@ -14217,63 +14426,149 @@ begin
     vdTop:
       begin
         Orientation :=  dsoTop;
-        if Grid.LayerCount > 0 then
-        begin
-          case ModelSelection of
-            msUndefined: Assert(False);
-            msPhast:
+
+        case ModelSelection of
+          msUndefined: Assert(False);
+          msPhast:
+            begin
+              if Grid.LayerCount > 0 then
               begin
                 result := FortranFloatToStr((Grid.HighestElevation + Grid.LowestElevation)/2);
+              end
+              else
+              begin
+                result := '0'
               end;
-            msModflow, msModflowLGR, msModflowNWT:
+            end;
+          msModflow, msModflowLGR, msModflowNWT:
+            begin
+              if Grid.LayerCount > 0 then
               begin
                 GetUnitID(UnitID);
                 if UnitID > 0 then
                 begin
-                  LayerGroup := frmGoPhast.PhastModel.LayerStructure.
-                    LayerGroups[UnitID-1];
-                  result :=
-                    LayerGroup.DataArrayName;
-                  LayerGroup := frmGoPhast.PhastModel.LayerStructure.
-                    LayerGroups[UnitID];
-                  result :=
-                    '(' + result + ' + '
+                  LayerGroup := LayerStructure.LayerGroups[UnitID-1];
+                  result := LayerGroup.DataArrayName;
+                  LayerGroup := LayerStructure.LayerGroups[UnitID];
+                  result := '(' + result + ' + '
                     + LayerGroup.DataArrayName + ')/2';
                 end
                 else
                 begin
                   result :=
-                    FortranFloatToStr((Grid.HighestElevation + Grid.LowestElevation)/2);
+                    FortranFloatToStr((Grid.HighestElevation
+                    + Grid.LowestElevation)/2);
                 end;
+              end
+              else
+              begin
+                result := '0'
               end;
-            else Assert(False);
-          end;
-        end
-        else
-        begin
-          result := '0'
+            end;
+          {$IFDEF SUTRA}
+          msSutra22:
+            begin
+
+              if (Mesh.LayerCount > 0) then
+              begin
+                GetUnitID(UnitID);
+                if UnitID > 0 then
+                begin
+                  case EvalAt of
+                    eaBlocks:
+                      begin
+                        LayerCount := 0;
+                        for UnitIndex := 1 to UnitID-1 do
+                        begin
+                          SutraLayerGroup := SutraLayerStructure.LayerGroups[
+                            UnitIndex];
+                          LayerCount := LayerCount + SutraLayerGroup.LayerCount;
+                        end;
+                        result := StrLayerBoundaryPosition + '('
+                          + IntToStr(LayerCount+1) + ')';
+                        SutraLayerGroup := SutraLayerStructure.LayerGroups[
+                          UnitID];
+                        LayerCount := LayerCount + SutraLayerGroup.LayerCount;
+                        result := '('+ result + ' + ' + StrLayerBoundaryPosition + '('
+                          + IntToStr(LayerCount+1) + '))/2';                      end;
+                    eaNodes:
+                      begin
+                        SutraLayerGroup := SutraLayerStructure.LayerGroups[UnitID-1];
+                        result := SutraLayerGroup.DataArrayName;
+                        SutraLayerGroup := SutraLayerStructure.LayerGroups[UnitID];
+                        result := '(' + result + ' + '
+                          + SutraLayerGroup.DataArrayName + ')/2';
+                      end;
+                    else Assert(False);
+                  end;
+                end
+                else
+                begin
+                  MeshLimits := Mesh.MeshLimits(vdFront);
+                  result :=
+                    FortranFloatToStr((MeshLimits.MaxZ + MeshLimits.MinZ)/2);
+                end;
+              end
+              else
+              begin
+                result := '0'
+              end;
+            end
+          {$ENDIF}
+          else Assert(False);
         end;
+
       end;
     vdFront:
       begin
         Orientation :=  dsoFront;
-        if Grid.RowCount > 0 then
-        begin
-          Row := Grid.SelectedRow;
-          if Row >= Grid.RowCount then
-          begin
-            Row := Grid.RowCount-1;
-          end;
-            result :=
-              FortranFloatToStr((Grid.RowPositions[Row]+ Grid.RowPositions[Row+1])/2);
-        end
-        else
-        begin
-          result := '0';
+        case ModelSelection of
+          msUndefined: Assert(False);
+          msPhast, msModflow, msModflowLGR, msModflowNWT:
+            begin
+              if Grid .RowCount > 0 then
+              begin
+                Row := Grid.SelectedRow;
+                if Row >= Grid.RowCount then
+                begin
+                  Row := Grid.RowCount-1;
+                end;
+                  result :=
+                    FortranFloatToStr((Grid.RowPositions[Row]+ Grid.RowPositions[Row+1])/2);
+              end
+              else
+              begin
+                result := '0';
+              end;
+            end;
+          {$IFDEF SUTRA}
+          msSutra22:
+            begin
+              ALine := EquateLine(Mesh.CrossSection.StartPoint,
+                Mesh.CrossSection.EndPoint);
+              ClosestPoint := ClosestPointOnLineFromPoint(
+                ALine, EquatePoint(0.0, 0.0));
+              ADistance := Distance(EquatePoint(0.0, 0.0), ClosestPoint);
+              if ADistance <> 0 then
+              begin
+                if FastGEO.Orientation(EquatePoint(0.0, 0.0),
+                  Mesh.CrossSection.StartPoint, Mesh.CrossSection.EndPoint) =
+                  LeftHandSide then
+                begin
+                  ADistance := -ADistance;
+                end;
+              end;
+              result := FortranFloatToStr(ADistance);
+            end
+          {$ENDIF}
+          else Assert(False);
         end;
       end;
     vdSide:
       begin
+        {$IFDEF SUTRA}
+        Assert(ModelSelection <> msSutra22);
+        {$ENDIF}
         Orientation :=  dsoSide;
         if Grid.ColumnCount > 0 then
         begin
@@ -14299,28 +14594,78 @@ end;
 
 procedure TPhastModel.GetUnitID(var UnitID: Integer);
 var
-  LayerGroup: TLayerGroup;
+//  LayerGroup: TLayerGroup;
   UnitIndex: Integer;
   LayersInUnitCount: Integer;
   Layer: Integer;
+//  SutraLayerGroup: TSutraLayerGroup;
+  LocalLayerStructure: TCustomLayerStructure;
+  ALayerGroup: TCustomLayerGroup;
 begin
-  Layer := Grid.SelectedLayer;
-  if Layer >= Grid.LayerCount then
-  begin
-    Layer := Grid.LayerCount - 1;
+  Layer := -1;
+  LocalLayerStructure := nil;
+  case ModelSelection of
+    msUndefined, msPhast: Assert(False);
+    msModflow, msModflowLGR, msModflowNWT:
+      begin
+        Layer := Grid.SelectedLayer;
+        if Layer >= Grid.LayerCount then
+        begin
+          Layer := Grid.LayerCount - 1;
+        end;
+        LocalLayerStructure := LayerStructure;
+//        LayersInUnitCount := 0;
+//        UnitID := -1;
+//        for UnitIndex := 1 to LayerStructure.Count - 1 do
+//        begin
+//          LayerGroup := LayerStructure.LayerGroups[UnitIndex];
+//          LayersInUnitCount := LayersInUnitCount + LayerGroup.LayerCount;
+//          if LayersInUnitCount >= Layer + 1 then
+//          begin
+//            UnitID := UnitIndex;
+//            break;
+//          end;
+//        end;
+      end;
+    {$IFDEF SUTRA}
+    msSutra22:
+      begin
+        Layer := Mesh.SelectedLayer;
+        if Layer >= Mesh.LayerCount then
+        begin
+          Layer := Mesh.LayerCount - 1;
+        end;
+        LocalLayerStructure := SutraLayerStructure;
+//        LayersInUnitCount := 0;
+//        UnitID := -1;
+//        for UnitIndex := 1 to SutraLayerStructure.Count - 1 do
+//        begin
+//          SutraLayerGroup := SutraLayerStructure.LayerGroups[UnitIndex];
+//          LayersInUnitCount := LayersInUnitCount + SutraLayerGroup.LayerCount;
+//          if LayersInUnitCount >= Layer + 1 then
+//          begin
+//            UnitID := UnitIndex;
+//            break;
+//          end;
+//        end;
+      end
+    {$ENDIF}
+    else Assert(False);
   end;
+
   LayersInUnitCount := 0;
   UnitID := -1;
-  for UnitIndex := 1 to LayerStructure.Count - 1 do
+  for UnitIndex := 1 to LocalLayerStructure.Count - 1 do
   begin
-    LayerGroup := LayerStructure.LayerGroups[UnitIndex];
-    LayersInUnitCount := LayersInUnitCount + LayerGroup.LayerCount;
+    ALayerGroup := LocalLayerStructure.Items[UnitIndex] as TCustomLayerGroup;
+    LayersInUnitCount := LayersInUnitCount + ALayerGroup.LayerCount;
     if LayersInUnitCount >= Layer + 1 then
     begin
       UnitID := UnitIndex;
       break;
     end;
   end;
+
 end;
 
 function TPhastModel.GetUseWaterTable: boolean;
@@ -14329,30 +14674,45 @@ begin
 end;
 
 function TPhastModel.DefaultHigherElevationFormula(
-  ViewDirection: TViewDirection): string;
+  ViewDirection: TViewDirection; EvalAt: TEvaluatedAt): string;
 var
   UnitID: Integer;
   LayerGroup: TLayerGroup;
   Row: Integer;
   Column: Integer;
+  SutraLayerGroup: TSutraLayerGroup;
+  LayerCount: integer;
+  UnitIndex: Integer;
+  MeshLimits: TGridLimit;
+  Orientation: TDataSetOrientation;
+  Compiler: TRbwParser;
 begin
-  if Grid = nil then
+  if (Grid = nil) and (Mesh = nil) then
   begin
     result := '0';
     Exit;
   end;
+  Orientation := dsoTop;
   case ViewDirection of
     vdTop:
       begin
-        if Grid.LayerCount > 0 then
-        begin
-          case ModelSelection of
-            msUndefined: Assert(False);
-            msPhast:
+        Orientation := dsoTop;
+        case ModelSelection of
+          msUndefined: Assert(False);
+          msPhast:
+            begin
+              if Grid.LayerCount > 0 then
               begin
                 result := FortranFloatToStr(Grid.HighestElevation);
+              end
+              else
+              begin
+                result := '0'
               end;
-            msModflow, msModflowLGR, msModflowNWT:
+            end;
+          msModflow, msModflowLGR, msModflowNWT:
+            begin
+              if Grid.LayerCount > 0 then
               begin
                 GetUnitID(UnitID);
                 if UnitID > 0 then
@@ -14367,45 +14727,106 @@ begin
                   result :=
                     FortranFloatToStr(Grid.HighestElevation);
                 end;
+              end
+              else
+              begin
+                result := '0';
               end;
-            else Assert(False);
-          end;
-        end
-        else
-        begin
-          result := '0'
+            end;
+          {$IFDEF SUTRA}
+          msSutra22:
+            begin
+              if (Mesh.LayerCount > 0) then
+              begin
+                GetUnitID(UnitID);
+                if UnitID > 0 then
+                begin
+                  case EvalAt of
+                    eaBlocks:
+                      begin
+                        LayerCount := 0;
+                        for UnitIndex := 1 to UnitID-1 do
+                        begin
+                          SutraLayerGroup := SutraLayerStructure.LayerGroups[
+                            UnitIndex];
+                          LayerCount := LayerCount + SutraLayerGroup.LayerCount;
+                        end;
+                        result := StrLayerBoundaryPosition + '('
+                          + IntToStr(LayerCount+1) + ')';
+                      end;
+                    eaNodes:
+                      begin
+                        SutraLayerGroup := frmGoPhast.PhastModel.SutraLayerStructure.
+                          LayerGroups[UnitID-1];
+                        result := SutraLayerGroup.DataArrayName;
+                      end;
+                    else Assert(False);
+                  end;
+                end
+                else
+                begin
+                  MeshLimits := Mesh.MeshLimits(vdFront);
+                  result := FortranFloatToStr(MeshLimits.MaxZ);
+                end;
+              end
+              else
+              begin
+                result := '0';
+              end;
+            end;
+          {$ENDIF}
+          else Assert(False);
         end;
       end;
     vdFront:
       begin
-        if Grid.RowCount > 0 then
-        begin
-          Row := Grid.SelectedRow;
-          if Row >= Grid.RowCount then
-          begin
-            Row := Grid.RowCount-1;
-          end;
-          case Grid.RowDirection of
-            rdSouthToNorth:
+        Orientation := dsoFront;
+        case ModelSelection of
+          msUndefined: Assert(False);
+          msPhast, msModflow, msModflowLGR, msModflowNWT:
+            begin
+              if (Grid.RowCount > 0) then
               begin
-                result :=
-                  FortranFloatToStr(Grid.RowPositions[Row+1]);
-              end;
-            rdNorthToSouth:
+                Row := Grid.SelectedRow;
+                if Row >= Grid.RowCount then
+                begin
+                  Row := Grid.RowCount-1;
+                end;
+                case Grid.RowDirection of
+                  rdSouthToNorth:
+                    begin
+                      result :=
+                        FortranFloatToStr(Grid.RowPositions[Row+1]);
+                    end;
+                  rdNorthToSouth:
+                    begin
+                      result :=
+                        FortranFloatToStr(Grid.RowPositions[Row]);
+                    end;
+                  else Assert(False);
+                end;
+              end
+              else
               begin
-                result :=
-                  FortranFloatToStr(Grid.RowPositions[Row]);
+                result := '0';
               end;
-            else Assert(False);
-          end;
-        end
-        else
-        begin
-          result := '0';
+            end;
+          {$IFDEF SUTRA}
+          msSutra22:
+            begin
+              result := FortranFloatToStr(Mesh.MaxDist);
+            end
+          {$ENDIF}
+          else Assert(False);
         end;
+
       end;
     vdSide:
       begin
+        Orientation := dsoSide;
+        {$IFDEF SUTRA}
+        Assert(ModelSelection <> msSutra22);
+        {$ENDIF}
         if Grid.ColumnCount > 0 then
         begin
           Column := Grid.SelectedColumn;
@@ -14433,33 +14854,50 @@ begin
       end;
     else Assert(False);
   end;
+  Compiler := GetCompiler(Orientation, EvalAt);
+  Compiler.Compile(result);
 end;
 
 function TPhastModel.DefaultLowerElevationFormula(
-  ViewDirection: TViewDirection): string;
+  ViewDirection: TViewDirection; EvalAt: TEvaluatedAt): string;
 var
   UnitID: Integer;
   LayerGroup: TLayerGroup;
   Row: Integer;
   Column: Integer;
+  SutraLayerGroup: TSutraLayerGroup;
+  MeshLimits: TGridLimit;
+  LayerCount: integer;
+  UnitIndex: Integer;
+  Orientation: TDataSetOrientation;
+  Compiler: TRbwParser;
 begin
-  if Grid = nil then
+  if (Grid = nil) and (Mesh = nil) then
   begin
     result := '0';
     Exit;
   end;
+  Orientation :=  dsoTop;
   case ViewDirection of
     vdTop:
       begin
-        if Grid.LayerCount > 0 then
-        begin
-          case ModelSelection of
-            msUndefined: Assert(False);
-            msPhast:
+        Orientation :=  dsoTop;
+        case ModelSelection of
+          msUndefined: Assert(False);
+          msPhast:
+            begin
+              if Grid.LayerCount > 0 then
               begin
                 result := FortranFloatToStr(Grid.LowestElevation);
+              end
+              else
+              begin
+                result := '0'
               end;
-            msModflow, msModflowLGR, msModflowNWT:
+            end;
+          msModflow, msModflowLGR, msModflowNWT:
+            begin
+              if Grid.LayerCount > 0 then
               begin
                 GetUnitID(UnitID);
                 if UnitID > 0 then
@@ -14474,45 +14912,106 @@ begin
                   result :=
                     FortranFloatToStr(Grid.LowestElevation);
                 end;
+              end
+              else
+              begin
+                result := '0'
               end;
-            else Assert(False);
-          end;
-        end
-        else
-        begin
-          result := '0'
+            end;
+          {$IFDEF SUTRA}
+          msSutra22:
+            begin
+              if (Mesh.LayerCount > 0) then
+              begin
+                GetUnitID(UnitID);
+                if UnitID > 0 then
+                begin
+                  case EvalAt of
+                    eaBlocks:
+                      begin
+                        LayerCount := 0;
+                        for UnitIndex := 1 to UnitID do
+                        begin
+                          SutraLayerGroup := SutraLayerStructure.LayerGroups[
+                            UnitIndex];
+                          LayerCount := LayerCount + SutraLayerGroup.LayerCount;
+                        end;
+                        result := StrLayerBoundaryPosition + '('
+                          + IntToStr(LayerCount+1) + ')';
+                      end;
+                    eaNodes:
+                      begin
+                        SutraLayerGroup := frmGoPhast.PhastModel.SutraLayerStructure.
+                          LayerGroups[UnitID];
+                        result := SutraLayerGroup.DataArrayName;
+                      end;
+                    else Assert(False);
+                  end;
+                end
+                else
+                begin
+                  MeshLimits := Mesh.MeshLimits(vdFront);
+                  result := FortranFloatToStr(MeshLimits.MinZ);
+                end;
+              end
+              else
+              begin
+                result := '0'
+              end;
+            end;
+          {$ENDIF}
+          else Assert(False);
         end;
       end;
     vdFront:
       begin
-        if Grid.RowCount > 0 then
-        begin
-          Row := Grid.SelectedRow;
-          if Row >= Grid.RowCount then
-          begin
-            Row := Grid.RowCount-1;
-          end;
-          case Grid.RowDirection of
-            rdSouthToNorth:
+        Orientation :=  dsoFront;
+        case ModelSelection of
+          msUndefined: Assert(False);
+          msPhast, msModflow, msModflowLGR, msModflowNWT:
+            begin
+
+              if (Grid <> nil) and (Grid.RowCount > 0) then
               begin
-                result :=
-                  FortranFloatToStr(Grid.RowPositions[Row]);
-              end;
-            rdNorthToSouth:
+                Row := Grid.SelectedRow;
+                if Row >= Grid.RowCount then
+                begin
+                  Row := Grid.RowCount-1;
+                end;
+                case Grid.RowDirection of
+                  rdSouthToNorth:
+                    begin
+                      result :=
+                        FortranFloatToStr(Grid.RowPositions[Row]);
+                    end;
+                  rdNorthToSouth:
+                    begin
+                      result :=
+                        FortranFloatToStr(Grid.RowPositions[Row+1]);
+                    end;
+                  else Assert(False);
+                end;
+              end
+              else
               begin
-                result :=
-                  FortranFloatToStr(Grid.RowPositions[Row+1]);
+                result := '0';
               end;
-            else Assert(False);
-          end;
-        end
-        else
-        begin
-          result := '0';
+            end;
+          {$IFDEF SUTRA}
+          msSutra22:
+            begin
+              result := FortranFloatToStr(Mesh.MinDist);
+            end
+          {$ENDIF}
+          else Assert(False);
         end;
       end;
     vdSide:
       begin
+        Orientation :=  dsoSide;
+        {$IFDEF SUTRA}
+        Assert(ModelSelection  <> msSutra22);
+        {$ENDIF}
         if Grid.ColumnCount > 0 then
         begin
           Column := Grid.SelectedColumn;
@@ -14540,6 +15039,8 @@ begin
       end;
     else Assert(False);
   end;
+  Compiler := GetCompiler(Orientation, EvalAt);
+  Compiler.Compile(result);
 end;
 
 function TCustomModel.DefaultModflowOutputFileName: string;
@@ -15230,12 +15731,46 @@ begin
   end;
 end;
 
+procedure TCustomModel.InvalidateSutraFluidFlux(Sender: TObject);
+begin
+{$IFDEF SUTRA}
+  FSutraFluidFluxTimeList.Invalidate;
+{$ENDIF}
+end;
+
+procedure TCustomModel.InvalidateSutraFluidFluxU(Sender: TObject);
+begin
+{$IFDEF SUTRA}
+  FSutraFluidFluxUTimeList.Invalidate;
+{$ENDIF}
+end;
+
+procedure TCustomModel.InvalidateSutraSpecifiedU(Sender: TObject);
+begin
+{$IFDEF SUTRA}
+  FSutraConcTempTimeList.Invalidate;
+{$ENDIF}
+end;
+
 procedure TCustomModel.InvalidateSutraSpecPressure(Sender: TObject);
 begin
 {$IFDEF SUTRA}
   FSutraSpecPressureTimeList.Invalidate;
 {$ENDIF}
-//  ModflowPackages.EvtPackage.InvalidateMfEvtEvapLayer(Sender);
+end;
+
+procedure TCustomModel.InvalidateSutraSpecPressureU(Sender: TObject);
+begin
+{$IFDEF SUTRA}
+  FSutraSpecPresUTimeList.Invalidate;
+{$ENDIF}
+end;
+
+procedure TCustomModel.InvalidateSutraUFlux(Sender: TObject);
+begin
+{$IFDEF SUTRA}
+  FSutraMassEnergyFluxTimeList.Invalidate;
+{$ENDIF}
 end;
 
 function TCustomModel.IsLayerSimulated(const LayerID: integer): boolean;
@@ -15261,6 +15796,12 @@ end;
 procedure TPhastModel.SetChildModels(const Value: TChildModelCollection);
 begin
   FChildModels.Assign(Value);
+end;
+
+procedure TPhastModel.SetColorSchemes(
+  const Value: TUserDefinedColorSchemeCollection);
+begin
+  FColorSchemes.Assign(Value);
 end;
 
 procedure TPhastModel.SetCombinedDisplayColumn(const Value: integer);
@@ -15850,18 +16391,33 @@ begin
 end;
 
 procedure TPhastModel.NotifyGridColorsChanged(Sender: TObject);
+var
+  LocalMesh: TSutraMesh3D;
 begin
-  if Grid.TopDataSet <> nil then
+  if Grid <> nil then
   begin
-    Grid.NeedToRecalculateTopCellColors := True;
-  end;
-  if Grid.FrontDataSet <> nil then
+    if Grid.TopDataSet <> nil then
+    begin
+      Grid.NeedToRecalculateTopCellColors := True;
+    end;
+    if Grid.FrontDataSet <> nil then
+    begin
+      Grid.NeedToRecalculateFrontCellColors := True;
+    end;
+    if Grid.SideDataSet <> nil then
+    begin
+      Grid.NeedToRecalculateSideCellColors := True;
+    end;
+  end
+  else
   begin
-    Grid.NeedToRecalculateFrontCellColors := True;
-  end;
-  if Grid.SideDataSet <> nil then
-  begin
-    Grid.NeedToRecalculateSideCellColors := True;
+    LocalMesh := Mesh;
+    if LocalMesh <> nil then
+    begin
+      LocalMesh.NeedToRecalculateTopColors := True;
+      LocalMesh.NeedToRecalculateFrontColors := True;
+      frmGoPhast.InvalidateImage32AllViews;
+    end;
   end;
 end;
 
@@ -17299,6 +17855,7 @@ begin
   FThreeDGridObserver:= TObserver.Create(nil);
   FTopGridObserver.Name := 'TopGridObserver';
   FThreeDGridObserver.Name := 'ThreeDGridObserver';
+  FThreeDGridObserver.OnUpToDateSet := DiscretizationChangedEvent;
 
   FTopGridObserver.TalksTo(FThreeDGridObserver);
 
@@ -17332,6 +17889,7 @@ begin
   FSutraSpecPresUTimeList := TSutraMergedTimeList.Create(self);
   case SutraOptions.TransportChoice of
     tcSolute: FSutraSpecPresUTimeList.Name := StrAssocPresConc;
+    tcSoluteHead: FSutraSpecPresUTimeList.Name := StrAssocHeadConc;
     tcEnergy: FSutraSpecPresUTimeList.Name := StrAssocPresTemp;
     else Assert(False);
   end;
@@ -17341,7 +17899,7 @@ begin
 
   FSutraConcTempTimeList := TSutraMergedTimeList.Create(self);
   case SutraOptions.TransportChoice of
-    tcSolute: FSutraConcTempTimeList.Name := StrSpecifiedConc;
+    tcSolute, tcSoluteHead: FSutraConcTempTimeList.Name := StrSpecifiedConc;
     tcEnergy: FSutraConcTempTimeList.Name := StrSpecifiedTemp;
     else Assert(False);
   end;
@@ -17358,7 +17916,7 @@ begin
 
   FSutraFluidFluxUTimeList := TSutraMergedTimeList.Create(self);
   case SutraOptions.TransportChoice of
-    tcSolute: FSutraFluidFluxUTimeList.Name := StrFluxAssocPresConc;
+    tcSolute, tcSoluteHead: FSutraFluidFluxUTimeList.Name := StrFluxAssocPresConc;
     tcEnergy: FSutraFluidFluxUTimeList.Name := StrFluxAssocPresTemp;
     else Assert(False);
   end;
@@ -17368,7 +17926,7 @@ begin
 
   FSutraMassEnergyFluxTimeList := TSutraMergedTimeList.Create(self);
   case SutraOptions.TransportChoice of
-    tcSolute: FSutraMassEnergyFluxTimeList.Name := StrMassFlux;
+    tcSolute, tcSoluteHead: FSutraMassEnergyFluxTimeList.Name := StrMassFlux;
     tcEnergy: FSutraMassEnergyFluxTimeList.Name := StrEnergyFlux;
     else Assert(False);
   end;
@@ -17388,6 +17946,13 @@ begin
       begin
         FSutraConcTempTimeList.Name := StrSpecifiedConc;
         FSutraSpecPresUTimeList.Name := StrAssocPresConc;
+        FSutraFluidFluxUTimeList.Name := StrFluxAssocPresConc;
+        FSutraMassEnergyFluxTimeList.Name := StrMassFlux;
+      end;
+    tcSoluteHead:
+      begin
+        FSutraConcTempTimeList.Name := StrSpecifiedConc;
+        FSutraSpecPresUTimeList.Name := StrAssocHeadConc;
         FSutraFluidFluxUTimeList.Name := StrFluxAssocPresConc;
         FSutraMassEnergyFluxTimeList.Name := StrMassFlux;
       end;
@@ -18120,6 +18685,8 @@ var
   EndIndex: Integer;
 begin
   ErrorMessage := '';
+  SutraMesh.CanDraw := False;
+  SutraMesh.Loading := False;
   List := TList.Create;
   try
     for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
@@ -18192,7 +18759,16 @@ begin
         end;
       end;
 
-      MeshCreator.GenerateMesh;
+      Mesh.Mesh2D.MeshGenControls.Apply;
+      try
+        MeshCreator.GenerateMesh;
+      except on E: EInvalidElement do
+        begin
+          Beep;
+          MessageDlg(E.message, mtError, [mbOK], 0);
+          ShowAForm(TfrmMeshGenerationControlVariables);
+        end;
+      end;
       for AdjustIndex := 1 to 10 do
       begin
         MeshCreator.AdjustNodes;
@@ -18234,8 +18810,8 @@ begin
         DataArrayManager.InvalidateAllDataSets;
         DataArrayManager.CreateInitialDataSets;
 
-        FSutraMesh.NodeDrawingChoice := dcEdge;
-        FSutraMesh.ElementDrawingChoice := dcAll;
+//        FSutraMesh.NodeDrawingChoice := dcEdge;
+//        FSutraMesh.ElementDrawingChoice := dcAll;
         FSutraMesh.ElevationsNeedUpdating := true;
 
         FSutraMesh.EndUpdate;
@@ -18248,6 +18824,7 @@ begin
 
   finally
     List.Free;
+    SutraMesh.CanDraw := True;
   end;
 end;
 
@@ -18258,17 +18835,17 @@ begin
     DataArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount, Grid.ColumnCount);
   end
   {$IFDEF Sutra}
-  else if (FModelSelection = msSutra22) and (Mesh <> nil) then
+  else if (FModelSelection = msSutra22) and (Mesh <> nil) and (self is TPhastModel) then
   begin
     case DataArray.EvaluatedAt of
       eaBlocks:
         begin
-          DataArray.UpdateDimensions((Self as TPhastModel).
+          DataArray.UpdateDimensions(TPhastModel(Self).
             SutraLayerStructure.LayerCount, 1, Mesh.Mesh2D.Elements.Count);
         end;
       eaNodes:
         begin
-          DataArray.UpdateDimensions((Self as TPhastModel).
+          DataArray.UpdateDimensions(TPhastModel(Self).
             SutraLayerStructure.NodeLayerCount, 1, Mesh.Mesh2D.Nodes.Count);
         end;
     else
@@ -19484,7 +20061,7 @@ procedure TDataArrayManager.DefinePackageDataArrays;
   end;
 {$IFDEF SUTRA}
 const
-  ArrayCount = 89;
+  ArrayCount = 92;
 {$ELSE}
 const
   ArrayCount = 70;
@@ -20652,7 +21229,7 @@ begin
   FDataArrayCreationRecords[Index].DisplayName := StrMaximumPermeability;
   FDataArrayCreationRecords[Index].Formula := '1E-10';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUsed;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraPermeabilityUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
@@ -20666,7 +21243,7 @@ begin
   FDataArrayCreationRecords[Index].DisplayName := StrMiddlePermeability;
   FDataArrayCreationRecords[Index].Formula := KMaximumPermeability;
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Sutra3DModel;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraMiddlePermeabilityUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
@@ -20680,12 +21257,55 @@ begin
   FDataArrayCreationRecords[Index].DisplayName := StrMinimumPermeability;
   FDataArrayCreationRecords[Index].Formula := KMaximumPermeability;
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUsed;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraPermeabilityUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'SUTRA Data Set 15B: PMIN';
   Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KMaximumK;
+  FDataArrayCreationRecords[Index].DisplayName := StrMaximumK;
+  FDataArrayCreationRecords[Index].Formula := '1E-3';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraHydraulicConductivityUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: PMAX';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrMiddleK;
+  FDataArrayCreationRecords[Index].DisplayName := KMiddleK;
+  FDataArrayCreationRecords[Index].Formula := KMaximumK;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraMiddleHydraulicConductivityUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: PMID';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := KMinimumK;
+  FDataArrayCreationRecords[Index].DisplayName := StrMinimumK;
+  FDataArrayCreationRecords[Index].Formula := KMaximumK;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraHydraulicConductivityUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SUTRA Data Set 15B: PMIN';
+  Inc(Index);
+
 
   FDataArrayCreationRecords[Index].DataSetType := TDataArray;
   FDataArrayCreationRecords[Index].Orientation := dso3D;
@@ -20820,7 +21440,7 @@ begin
   FDataArrayCreationRecords[Index].DisplayName := StrInitialPressure;
   FDataArrayCreationRecords[Index].Formula := '0.';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUsed;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraPermeabilityUsed;
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
@@ -21600,7 +22220,11 @@ end;
 
 function TCustomModel.InitialHeadUsed(Sender: TObject): boolean;
 begin
-  result := (ModelSelection = msPhast) and not InitialWaterTableUsed(Sender);
+  result := ((ModelSelection = msPhast) and not InitialWaterTableUsed(Sender))
+  {$IFDEF SUTRA}
+    or ((ModelSelection = msSutra22)
+    and (SutraOptions.TransportChoice = tcSoluteHead));
+  {$ENDIF}
 end;
 
 function TCustomModel.SurfacesUsed(Sender: TObject): boolean;
@@ -21622,7 +22246,8 @@ end;
 
 function TCustomModel.SutraConcentrationUsed(Sender: TObject): boolean;
 begin
-  result := SutraUsed(Sender) and (SutraOptions.TransportChoice = tcSolute);
+  result := SutraUsed(Sender)
+    and (SutraOptions.TransportChoice in [tcSolute, tcSoluteHead]);
 end;
 
 function TCustomModel.SutraTemperatureUsed(Sender: TObject): boolean;
@@ -21634,6 +22259,46 @@ function TCustomModel.SutraUsed(Sender: TObject): boolean;
 begin
   {$IFDEF Sutra}
   result := (ModelSelection = msSutra22)
+  {$ELSE}
+  result := False;
+  {$ENDIF}
+end;
+
+function TCustomModel.SutraHydraulicConductivityUsed(Sender: TObject): boolean;
+begin
+  {$IFDEF Sutra}
+  result := SutraUsed(Sender)
+    and (SutraOptions.TransportChoice = tcSoluteHead);
+  {$ELSE}
+  result := False;
+  {$ENDIF}
+end;
+
+function TCustomModel.SutraMiddleHydraulicConductivityUsed(Sender: TObject): boolean;
+begin
+  {$IFDEF Sutra}
+  result := SutraHydraulicConductivityUsed(Sender)
+    and Sutra3DModel(Sender);
+  {$ELSE}
+  result := False;
+  {$ENDIF}
+end;
+
+function TCustomModel.SutraPermeabilityUsed(Sender: TObject): boolean;
+begin
+  {$IFDEF Sutra}
+  result := SutraUsed(Sender)
+    and (SutraOptions.TransportChoice in [tcSolute, tcEnergy]);
+  {$ELSE}
+  result := False;
+  {$ENDIF}
+end;
+
+function TCustomModel.SutraMiddlePermeabilityUsed(Sender: TObject): boolean;
+begin
+  {$IFDEF Sutra}
+  result := SutraPermeabilityUsed(Sender)
+    and Sutra3DModel(Sender);
   {$ELSE}
   result := False;
   {$ENDIF}
@@ -22345,6 +23010,16 @@ begin
       end;
     end;
 
+    Assert(TimeList.Count >= 2);
+    F_SP_Epsilon := (TimeList[1] - TimeList[0]);
+    for TimeIndex := 2 to TimeList.Count - 1 do
+    begin
+      F_SP_Epsilon := Min(F_SP_Epsilon,
+        TimeList[TimeIndex] - TimeList[TimeIndex-1]);
+    end;
+    F_SP_Epsilon := F_SP_Epsilon*TimeEpsilon;
+    F_SP_Epsilon := Max(0, F_SP_Epsilon);
+
     if OutOfRangeMt3dTime then
     begin
       frmErrorsAndWarnings.AddWarning(self,
@@ -22380,6 +23055,16 @@ begin
         if SpressPeriodCount <> TimeList.Count then
         begin
           frmErrorsAndWarnings.AddWarning(self, StrAddedTimes, ScreenObject.Name);
+        end;
+      end;
+
+      // In the 64-bit version, TRealList.AddUnique can result in values
+      // being added that should not have been added.
+      for TimeIndex := TimeList.Count - 1 downto 1 do
+      begin
+        if TimeList[TimeIndex] - TimeList[TimeIndex-1] < F_SP_Epsilon then
+        begin
+          TimeList.Delete(TimeIndex);
         end;
       end;
 
@@ -25677,10 +26362,14 @@ end;
 procedure TChildModel.DefineProperties(Filer: TFiler);
 begin
   inherited;
-  Filer.DefineProperty('HeadRelaxationFactor', ReadHeadRelaxationFactor, WriteHeadRelaxationFactor, FHeadRelaxationFactor = 0);
-  Filer.DefineProperty('FluxRelaxationFactor', ReadFluxRelaxationFactor, WriteFluxRelaxationFactor, FFluxRelaxationFactor = 0);
-  Filer.DefineProperty('HeadClosureCriterion', ReadHeadClosureCriterion, WriteHeadClosureCriterion, FHeadClosureCriterion = 0);
-  Filer.DefineProperty('FluxClosureCriterion', ReadFluxClosureCriterion, WriteFluxClosureCriterion, FFluxClosureCriterion = 0);
+  Filer.DefineProperty('HeadRelaxationFactor', ReadHeadRelaxationFactor,
+    WriteHeadRelaxationFactor, FHeadRelaxationFactor = 0);
+  Filer.DefineProperty('FluxRelaxationFactor', ReadFluxRelaxationFactor,
+    WriteFluxRelaxationFactor, FFluxRelaxationFactor = 0);
+  Filer.DefineProperty('HeadClosureCriterion', ReadHeadClosureCriterion,
+    WriteHeadClosureCriterion, FHeadClosureCriterion = 0);
+  Filer.DefineProperty('FluxClosureCriterion', ReadFluxClosureCriterion,
+    WriteFluxClosureCriterion, FFluxClosureCriterion = 0);
 end;
 
 destructor TChildModel.Destroy;
@@ -26570,6 +27259,10 @@ begin
   if not FCanUpdateGrid then
   begin
     FShouldUpdateGrid := True;
+    Exit;
+  end;
+  if FParentModel.ModelSelection <> msModflowLGR then
+  begin
     Exit;
   end;
   LocalFirstCol := FirstCol;

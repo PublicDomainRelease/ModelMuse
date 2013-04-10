@@ -6,7 +6,7 @@ uses
   GoPhastTypes, Classes;
 
 type
-  TTransportChoice = (tcSolute, tcEnergy);
+  TTransportChoice = (tcSolute, tcSoluteHead, tcEnergy);
   TSaturationChoice = (scSaturated, scUnsaturated);
   TSimulationType = (stSteadyFlowSteadyTransport,
     stSteadyFlowTransientTransport, stTransientFlowTransientTransport);

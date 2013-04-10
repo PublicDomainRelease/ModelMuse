@@ -85,6 +85,10 @@ resourcestring
   StrImportTPROGSBinar = 'import T-PROGS binary grid file';
   StrNoBgrFileHasBee = 'No .bgr file has been specified.';
   StrThereWasAnErrorR = 'There was an error reading %s';
+  StrYouMustCreateAGr = 'You must create a grid before you can import a TPro' +
+  'gs file.';
+  StrYouMustCreateAMe = 'You must create a mesh before you can import a TPro' +
+  'gs file.';
 
 procedure TfrmImportTprogs.btnOKClick(Sender: TObject);
 begin
@@ -115,6 +119,18 @@ var
   MinX: Double;
   MinY: Double;
   MinZ: Double;
+  procedure ShowGridError;
+  begin
+    Beep;
+    MessageDlg(StrYouMustCreateAGr, mtError, [mbOK], 0);
+    ModalResult := mrCancel;
+  end;
+  procedure ShowMeshError;
+  begin
+    Beep;
+    MessageDlg(StrYouMustCreateAMe, mtError, [mbOK], 0);
+    ModalResult := mrCancel;
+  end;
 begin
   GridAngle := 0;
   MinX := 0;
@@ -126,24 +142,48 @@ begin
         rgEvaluatedAt.ItemIndex := 1;
         if frmGoPhast.Grid <> nil then
         begin
+          if (frmGoPhast.Grid.LayerCount < 1) or
+            (frmGoPhast.Grid.RowCount < 1) or
+            (frmGoPhast.Grid.ColumnCount < 1) then
+          begin
+            ShowGridError;
+            Exit;
+          end;
           GridAngle := frmGoPhast.Grid.GridAngle;
           Origin := frmGoPhast.Grid.TwoDElementCorner(0, 0);
           MinX := Origin.X;
           MinY := Origin.Y;
           MinZ := frmGoPhast.Grid.LowestElevation;
         end
+        else
+        begin
+          ShowGridError;
+          Exit;
+        end;
       end;
     msModflow, msModflowLGR, msModflowNWT:
       begin
         rgEvaluatedAt.Enabled := False;
         if frmGoPhast.Grid <> nil then
         begin
+          if (frmGoPhast.Grid.LayerCount < 1) or
+            (frmGoPhast.Grid.RowCount < 1) or
+            (frmGoPhast.Grid.ColumnCount < 1) then
+          begin
+            ShowGridError;
+            Exit;
+          end;
           GridAngle := frmGoPhast.Grid.GridAngle;
           Origin := frmGoPhast.Grid.TwoDElementCenter(0,
             frmGoPhast.Grid.RowCount-1);
           MinX := Origin.X;
           MinY := Origin.Y;
           MinZ := frmGoPhast.Grid.LowestElevation;
+        end
+        else
+        begin
+          ShowGridError;
+          Exit;
         end
       end;
 {$IFDEF SUTRA}
@@ -153,10 +193,22 @@ begin
         GridAngle := 0;
         if frmGoPhast.PhastModel.Mesh <> nil then
         begin
+          if frmGoPhast.PhastModel.Mesh.Mesh2D.Nodes.Count = 0 then
+          begin
+            ShowMeshError;
+            Exit;
+          end;
           MeshLimits := frmGoPhast.PhastModel.Mesh.MeshLimits(vdFront);
           MinX := MeshLimits.MinX;
-          MinY := MeshLimits.MinY;
           MinZ := MeshLimits.MinZ;
+
+          MeshLimits := frmGoPhast.PhastModel.Mesh.MeshLimits(vdTop);
+          MinY := MeshLimits.MinY;
+        end
+        else
+        begin
+          ShowMeshError;
+          Exit;
         end;
       end;
 {$ENDIF}

@@ -919,7 +919,10 @@ var
   Observer: TObserver;
 begin
   Observer := FObserverList[Index];
-  Observer.UpToDate := True;
+  if not Observer.UpToDate then
+  begin
+    Observer.UpToDate := True;
+  end;
 end;
 
 procedure TCustomModflowBoundaryItem.SetEndTime(const Value: double);

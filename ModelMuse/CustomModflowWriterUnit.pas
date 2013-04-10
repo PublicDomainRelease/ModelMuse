@@ -101,7 +101,8 @@ type
     // @name writes Value to the output in I2 format.
     procedure WriteI2Integer(Const Value: integer; const ErrorID: string);
     // @name writes Value to the output with NO leading blank space.
-    procedure WriteString(const Value: String);
+    procedure WriteString(const Value: String); overload;
+    procedure WriteString(const Value: AnsiString); overload;
   end;
 
   { @name is an abstract base class used as an ancestor for classes that
@@ -1662,16 +1663,26 @@ begin
   WriteString(ValueAsString);
 end;
 
-procedure TCustomFileWriter.WriteString(const Value: String);
-var
-  StringToWrite: AnsiString;
+procedure TCustomFileWriter.WriteString(const Value: AnsiString);
 begin
-  StringToWrite := AnsiString(Value);
-  if Length(StringToWrite) > 0 then
+  if Length(Value) > 0 then
   begin
-    FFileStream.Write(StringToWrite[1], Length(StringToWrite)*SizeOf(AnsiChar));
+    FFileStream.Write(Value[1], Length(Value)*SizeOf(AnsiChar));
 //    UpdateExportTime;
   end;
+end;
+
+procedure TCustomFileWriter.WriteString(const Value: String);
+//var
+//  StringToWrite: AnsiString;
+begin
+  WriteString(AnsiString(Value));
+//  StringToWrite := AnsiString(Value);
+//  if Length(StringToWrite) > 0 then
+//  begin
+//    FFileStream.Write(StringToWrite[1], Length(StringToWrite)*SizeOf(AnsiChar));
+////    UpdateExportTime;
+//  end;
 end;
 
 class procedure TCustomModflowWriter.WriteToMt3dMsNameFile(const Ftype: string;
@@ -4202,6 +4213,8 @@ var
   ErrorRoot: string;
   DetailedMessage: string;
   FluxObsCountWarning: string;
+  DataSet1: string;
+  PrintObservations: Boolean;
 begin
   // if the package is not selected, quit.
   if not ObservationPackage.IsSelected then
@@ -4306,8 +4319,20 @@ begin
         end;
       end;
     end;
-    ObsFile.Insert(0, IntToStr(NQ_Pkg) + ' ' + IntToStr(NQC_Pkg) + ' '
-      + IntToStr(NQT_Pkg) + ' ' + IntToStr(IU_Pkg_OBSV) + DataSet1Comment);
+    DataSet1 := IntToStr(NQ_Pkg) + ' ' + IntToStr(NQC_Pkg) + ' '
+      + IntToStr(NQT_Pkg) + ' ' + IntToStr(IU_Pkg_OBSV);
+
+    PrintObservations := Model.ModflowOutputControl.PrintObservations;
+    if not PrintObservations then
+    begin
+      DataSet1 := DataSet1 +' NOPRINT';
+    end;
+    DataSet1 := DataSet1 + DataSet1Comment;
+    if not PrintObservations then
+    begin
+      DataSet1 := DataSet1 +' NOPRINT';
+    end;
+    ObsFile.Insert(0,DataSet1);
     ObsFile.Insert(1, '1' + DataSet2Comment);
     for Index := ObservationPackage.Comments.Count - 1 downto 0 do
     begin

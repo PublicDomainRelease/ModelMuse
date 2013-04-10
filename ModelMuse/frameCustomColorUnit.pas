@@ -62,6 +62,7 @@ type
     rdgLegend: TRbwDataGrid4;
     timerLegend: TTimer;
     reComment: TRichEdit;
+    btnColorSchemes: TButton;
     procedure seNumberOfValuesToIgnoreChange(Sender: TObject);
     procedure seLegendRowsChange(Sender: TObject);
     // @name gives a preview of the color scheme
@@ -92,6 +93,7 @@ type
       const Value: TCheckBoxState);
     procedure FrameResize(Sender: TObject);
     procedure timerLegendTimer(Sender: TObject);
+    procedure btnColorSchemesClick(Sender: TObject);
   private
     // @name is implemented as a TObjectList.
     FDataSetDummyObjects: TList;
@@ -142,6 +144,7 @@ type
     property SelectedVirtNode: PVirtualNode read FSelectedVirtNode;
     destructor Destroy; override;
     procedure SetData; virtual; abstract;
+    procedure UpdateColorSchemes;
     { Public declarations }
   end;
 
@@ -152,12 +155,24 @@ implementation
 
 uses
   GoPhastTypes, frmGoPhastUnit, frmCustomGoPhastUnit, PhastModelUnit,
-  ModelMuseUtilities, Clipbrd, Contnrs;
+  ModelMuseUtilities, Clipbrd, Contnrs, frmColorSchemesUnit;
 
 resourcestring
   StrValuesToIgnore = 'Values to ignore';
   StrValues = 'Values';
   StrNone = 'none';
+  StrRainbow = 'Rainbow';
+  StrGreenToMagenta = 'Green to Magenta';
+  StrBlueToRed = 'Blue to Red';
+  StrBlueToDarkOrange = 'Blue to Dark Orange';
+  StrBlueToGreen = 'Blue to Green';
+  StrBrownToBlue = 'Brown to Blue';
+  StrBlueToGray = 'Blue to Gray';
+  StrBlueToOrange = 'Blue to Orange';
+  StrBlueToOrangeRed = 'Blue to Orange-Red';
+  StrLightBlueToDarkB = 'Light Blue to Dark Blue';
+  StrModifiedSpectralSc = 'Modified Spectral Scheme';
+  StrSteppedSequential = 'Stepped Sequential';
 
 {$R *.dfm}
 
@@ -331,6 +346,12 @@ begin
     Assert(False);
   end;
   Limits.Update;
+end;
+
+procedure TframeCustomColor.btnColorSchemesClick(Sender: TObject);
+
+begin
+  ShowAForm(TfrmColorSchemes)
 end;
 
 function TframeCustomColor.CanColorDataSet(DataArray: TDataArray): boolean;
@@ -754,6 +775,63 @@ begin
   end;
   udDataSets.ControlStyle := udDataSets.ControlStyle - [csCaptureMouse];
 
+end;
+
+procedure TframeCustomColor.UpdateColorSchemes;
+var
+  StoredIndex: integer;
+  StoredName: string;
+  index: Integer;
+  NewIndex: Integer;
+begin
+  StoredIndex := comboColorScheme.ItemIndex;
+  StoredName := comboColorScheme.Text;
+  comboColorScheme.Items.Clear;
+  comboColorScheme.Items.Add(StrRainbow);
+  comboColorScheme.Items.Add(StrGreenToMagenta);
+  comboColorScheme.Items.Add(StrBlueToRed);
+  comboColorScheme.Items.Add(StrBlueToDarkOrange);
+  comboColorScheme.Items.Add(StrBlueToGreen);
+  comboColorScheme.Items.Add(StrBrownToBlue);
+  comboColorScheme.Items.Add(StrBlueToGray);
+  comboColorScheme.Items.Add(StrBlueToOrange);
+  comboColorScheme.Items.Add(StrBlueToOrangeRed);
+  comboColorScheme.Items.Add(StrLightBlueToDarkB);
+  comboColorScheme.Items.Add(StrModifiedSpectralSc);
+  comboColorScheme.Items.Add(StrSteppedSequential);
+
+  for index := 0 to frmGoPhast.PhastModel.ColorSchemes.Count - 1 do
+  begin
+    comboColorScheme.Items.Add(frmGoPhast.PhastModel.ColorSchemes[index].Name);
+  end;
+  NewIndex := comboColorScheme.Items.IndexOf(StoredName);
+  if (NewIndex < 0) then
+  begin
+    if StoredIndex < comboColorScheme.Items.Count then
+    begin
+      NewIndex := StoredIndex;
+    end
+    else
+    begin
+      NewIndex := 0
+    end;
+  end;
+  comboColorScheme.ItemIndex := NewIndex;
+  pbColorScheme.Invalidate;
+{
+Rainbow
+Green to Magenta
+Blue to Red
+Blue to Dark Orange
+Blue to Green
+Brown to Blue
+Blue to Gray
+Blue to Orange
+Blue to Orange-Red
+Light Blue to Dark Blue
+Modified Spectral Scheme
+Stepped Sequential
+}
 end;
 
 procedure TframeCustomColor.UpdateLegend;

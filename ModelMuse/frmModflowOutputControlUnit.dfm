@@ -4,9 +4,9 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
   Caption = 'MODFLOW Output Control'
   ClientHeight = 403
   ClientWidth = 549
-  ExplicitWidth = 565
-  ExplicitHeight = 441
-  PixelsPerInch = 96
+  ExplicitWidth = 567
+  ExplicitHeight = 448
+  PixelsPerInch = 120
   TextHeight = 18
   object JvNetscapeSplitter1: TJvNetscapeSplitter
     Left = 121
@@ -93,7 +93,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
     Top = 0
     Width = 418
     Height = 362
-    ActivePage = jvspDrawdown
+    ActivePage = jvspGeneral
     PropagateEnable = False
     Align = alClient
     OnChange = jvPagesChange
@@ -110,7 +110,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
         362)
       object Comments: TLabel
         Left = 6
-        Top = 49
+        Top = 80
         Width = 76
         Height = 18
         Caption = 'Comments'
@@ -118,8 +118,8 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       object cbPrintInputArrays: TJvCheckBox
         Left = 6
         Top = 3
-        Width = 137
-        Height = 18
+        Width = 140
+        Height = 20
         Caption = 'Print input arrays'
         Checked = True
         State = cbChecked
@@ -135,8 +135,8 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       object cbPrintInputCellLists: TJvCheckBox
         Left = 6
         Top = 26
-        Width = 148
-        Height = 18
+        Width = 151
+        Height = 20
         Caption = 'Print input cell lists'
         Checked = True
         State = cbChecked
@@ -151,10 +151,18 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       end
       object memoComments: TMemo
         Left = 6
-        Top = 72
+        Top = 104
         Width = 409
-        Height = 284
+        Height = 252
         Anchors = [akLeft, akTop, akRight, akBottom]
+        TabOrder = 3
+      end
+      object cbPrintObservations: TCheckBox
+        Left = 6
+        Top = 50
+        Width = 403
+        Height = 17
+        Caption = 'Print observation data (inverse of NOPRINT option)'
         TabOrder = 2
       end
     end
@@ -340,8 +348,8 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       object cbCompact: TJvCheckBox
         Left = 16
         Top = 31
-        Width = 137
-        Height = 18
+        Width = 140
+        Height = 20
         Caption = 'Compact budget'
         Checked = True
         State = cbChecked

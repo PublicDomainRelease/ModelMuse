@@ -1,5 +1,10 @@
 {@name registers @link(TRbwQuadTree) which is used to
-quickly retrieve data by their X and Y coordinates.)}
+quickly retrieve data by their X and Y coordinates.
+
+@author(Richard B. Winston <rbwinst@usgs.gov>).
+
+This file is in the public domain.
+}
 unit QuadTreeClass;
 
 interface
@@ -347,12 +352,12 @@ type
     // the location that was found and the Data pointers are copied into Data.
     procedure FindClosestPointsData(var X, Y: double;
       var Data: TPointerArray);
-    // @name finds the @link(Count) locations in the @link(TRbwQuadTree) that are
+    // @name finds the Count locations in the @link(TRbwQuadTree) that are
     // closest to CenterX, CenterY and returns them and their associated data
     // in Points. In the event of ties, the length of Points may be larger than
-    // @link(Count).  If the number of locations in the TRbwQuadTree is
-    // less than @link(Count), all the locations will be returned.  Points
-    // is sorted from the closest locations to CenterX, CenterY to those
+    // Count.  If the number of locations in the TRbwQuadTree is
+    // less than Count, all the locations will be returned.  Points
+    // are sorted from the closest locations to CenterX, CenterY to those
     // that are most distant.
     //
     // See also @link(FirstNearestPoint), @link(NearestPointsFirstData)

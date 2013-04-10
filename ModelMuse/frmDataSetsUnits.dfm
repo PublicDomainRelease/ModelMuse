@@ -12,27 +12,27 @@ inherited frmDataSets: TfrmDataSets
   OnClose = FormClose
   ExplicitWidth = 656
   ExplicitHeight = 507
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 19
   object Splitter1: TSplitter
-    Left = 315
+    Left = 313
     Top = 0
     Width = 5
-    Height = 401
+    Height = 394
     Align = alRight
     ExplicitLeft = 325
     ExplicitHeight = 405
   end
   object pnlButtons: TPanel
     Left = 0
-    Top = 401
-    Width = 640
+    Top = 394
+    Width = 638
     Height = 41
     Align = alBottom
     ParentColor = True
     TabOrder = 2
     DesignSize = (
-      640
+      638
       41)
     object btnOK: TBitBtn
       Left = 432
@@ -61,7 +61,7 @@ inherited frmDataSets: TfrmDataSets
         0000}
       ModalResult = 1
       NumGlyphs = 2
-      TabOrder = 0
+      TabOrder = 2
       OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
@@ -90,7 +90,7 @@ inherited frmDataSets: TfrmDataSets
       Width = 73
       Height = 33
       Caption = 'Delete'
-      TabOrder = 1
+      TabOrder = 0
       OnClick = btnDeleteClick
     end
     object btnHelp: TBitBtn
@@ -101,14 +101,14 @@ inherited frmDataSets: TfrmDataSets
       Anchors = [akTop, akRight]
       Kind = bkHelp
       NumGlyphs = 2
-      TabOrder = 2
+      TabOrder = 1
       OnClick = btnHelpClick
     end
   end
   object sbStatusBar: TStatusBar
     Left = 0
-    Top = 442
-    Width = 640
+    Top = 435
+    Width = 638
     Height = 27
     Panels = <>
     ParentColor = True
@@ -117,8 +117,8 @@ inherited frmDataSets: TfrmDataSets
   object tvDataSets: TTreeView
     Left = 0
     Top = 0
-    Width = 315
-    Height = 401
+    Width = 313
+    Height = 394
     Align = alClient
     HideSelection = False
     Indent = 21
@@ -129,18 +129,18 @@ inherited frmDataSets: TfrmDataSets
     OnChange = tvDataSetsChange
   end
   object pcDataSets: TJvPageControl
-    Left = 320
+    Left = 318
     Top = 0
     Width = 320
-    Height = 401
-    ActivePage = tabComment
+    Height = 394
+    ActivePage = tabBasic
     Align = alRight
     TabOrder = 1
     object tabBasic: TTabSheet
       Caption = 'Basic'
       DesignSize = (
         312
-        367)
+        360)
       object lblName: TLabel
         Left = 3
         Top = 3
@@ -433,6 +433,7 @@ inherited frmDataSets: TfrmDataSets
           Width = 245
           Height = 34
           Caption = 'Use PHAST-style interpolation for all cells'
+          TabOrder = 0
           WordWrap = True
           OnClick = framePhastInterpolationcbPhastInterpolationClick
           AutoSize = False
@@ -484,6 +485,7 @@ inherited frmDataSets: TfrmDataSets
           Width = 272
           Height = 78
           Columns = 2
+          TabOrder = 1
           OnClick = framePhastInterpolationrgInterpolationDirectionClick
           ExplicitLeft = 12
           ExplicitTop = 43
@@ -519,7 +521,7 @@ inherited frmDataSets: TfrmDataSets
       ImageIndex = 2
       object Splitter2: TSplitter
         Left = 0
-        Top = 175
+        Top = 168
         Width = 312
         Height = 5
         Cursor = crVSplit
@@ -530,7 +532,7 @@ inherited frmDataSets: TfrmDataSets
         Left = 0
         Top = 0
         Width = 312
-        Height = 175
+        Height = 168
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 0
@@ -547,9 +549,9 @@ inherited frmDataSets: TfrmDataSets
         object reComment: TRichEdit
           AlignWithMargins = True
           Left = 3
-          Top = 28
+          Top = 25
           Width = 306
-          Height = 144
+          Height = 140
           Align = alClient
           ScrollBars = ssBoth
           TabOrder = 0
@@ -560,7 +562,7 @@ inherited frmDataSets: TfrmDataSets
       end
       object pnlDescription: TPanel
         Left = 0
-        Top = 180
+        Top = 173
         Width = 312
         Height = 187
         Align = alBottom
@@ -579,9 +581,9 @@ inherited frmDataSets: TfrmDataSets
         object memoAssociatedDataSets: TMemo
           AlignWithMargins = True
           Left = 3
-          Top = 28
+          Top = 25
           Width = 306
-          Height = 156
+          Height = 159
           Align = alClient
           ReadOnly = True
           ScrollBars = ssBoth

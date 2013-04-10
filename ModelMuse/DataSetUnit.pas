@@ -40,6 +40,10 @@ type
 
   TBoundaryTypes = set of TBoundaryType;
 
+  TContourAlg = (caSimple, caACM626);
+
+
+
   // @abstract(@name is raised if a formula is assigned that, when compiled
   // gives a type of data that is incompatible with the type of data
   // stored in the @link(TDataArray).)
@@ -416,6 +420,8 @@ type
     FUseLgrEdgeCells: TLgrCellTreatment;
     FUnicodeSaved: Boolean;
     FDisplayName: string;
+    FContourAlg: TContourAlg;
+    FMinMaxUpToDate: Boolean;
     // See @link(TwoDInterpolatorClass).
     function GetTwoDInterpolatorClass: string;
     // @name is called if an invalid formula has been specified.
@@ -481,6 +487,16 @@ type
     procedure SetDisplayName(const Value: string);
     function GetDisplayName: string;
     function GetDisplayFormula: string;
+    procedure SetContourAlg(const Value: TContourAlg);
+    function GetMaxReal: double;
+    function GetMinReal: double;
+    function GetMinRealPositive: double;
+    function GetMinInteger: integer;
+    function GetMaxInteger: integer;
+    function GetMinBoolean: boolean;
+    function GetMaxBoolean: boolean;
+    function GetMinString: string;
+    function GetMaxString: string;
   protected
     // See @link(DimensionsChanged).
     FDimensionsChanged: boolean;
@@ -774,15 +790,15 @@ type
     // @name is a string representation of the minimum value in the @classname.
     // See @link(UpdateMinMaxValues).
     property MinValue: string read GetMinValue;
-    property MinReal: double read FMinReal;
-    property MaxReal: double read FMaxReal;
-    property MinRealPositive: double read FMinRealPositive;
-    property MinInteger: integer read FMinInteger;
-    property MaxInteger: integer read FMaxInteger;
-    property MinBoolean: boolean read FMinBoolean;
-    property MaxBoolean: boolean read FMaxBoolean;
-    property MinString: string read FMinString;
-    property MaxString: string read FMaxString;
+    property MinReal: double read GetMinReal;
+    property MaxReal: double read GetMaxReal;
+    property MinRealPositive: double read GetMinRealPositive;
+    property MinInteger: integer read GetMinInteger;
+    property MaxInteger: integer read GetMaxInteger;
+    property MinBoolean: boolean read GetMinBoolean;
+    property MaxBoolean: boolean read GetMaxBoolean;
+    property MinString: string read GetMinString;
+    property MaxString: string read GetMaxString;
     // @name records the contouring data used to contour the data set.
     // @name may be nil.
     property Contours: TContours read FContours write SetContours;
@@ -794,6 +810,7 @@ type
     property Model: TBaseModel read FModel;
     property UseLgrEdgeCells: TLgrCellTreatment read FUseLgrEdgeCells write FUseLgrEdgeCells;
     property DisplayName: string read GetDisplayName write SetDisplayName;
+    property ContourAlg: TContourAlg read FContourAlg write SetContourAlg;
   published
     // @name indicates the hierarchical position of this instance of
     // @classname when it is required by MODFLOW.
@@ -3172,6 +3189,10 @@ begin
   frmGoPhast.InvalidateModel;
   RefreshUseList;
   FUseListUpToDate := False;
+  if not Value then
+  begin
+    FMinMaxUpToDate := False;
+  end;
 
   Updated := Value and not UpToDate;
   inherited;
@@ -3185,42 +3206,82 @@ begin
   end; }
   if Updated then
   begin
-    UpdateMinMaxValues;
+//    UpdateMinMaxValues;
   end;
   LocalModel := FModel as TCustomModel;
-  if (LocalModel <> nil) and (LocalModel.Grid <> nil) then
+  if (LocalModel <> nil) then
   begin
-    if ((LocalModel.Grid.TopDataSet <> nil)
-      and not LocalModel.Grid.TopDataSet.UpToDate)
-      or ((LocalModel.Grid.TopContourDataSet <> nil)
-      and not LocalModel.Grid.TopContourDataSet.UpToDate) then
+
+    if (LocalModel.Grid <> nil) then
     begin
-      LocalModel.Grid.NeedToRecalculateTopCellColors := True;
-      frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
-    end;
-    if ((LocalModel.Grid.FrontDataSet <> nil)
-      and not LocalModel.Grid.FrontDataSet.UpToDate)
-      or ((LocalModel.Grid.FrontContourDataSet <> nil)
-      and not LocalModel.Grid.FrontContourDataSet.UpToDate) then
+      if ((LocalModel.Grid.TopDataSet <> nil)
+        and not LocalModel.Grid.TopDataSet.UpToDate)
+        or ((LocalModel.Grid.TopContourDataSet <> nil)
+        and not LocalModel.Grid.TopContourDataSet.UpToDate) then
+      begin
+        LocalModel.Grid.NeedToRecalculateTopCellColors := True;
+        frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+      end;
+      if ((LocalModel.Grid.FrontDataSet <> nil)
+        and not LocalModel.Grid.FrontDataSet.UpToDate)
+        or ((LocalModel.Grid.FrontContourDataSet <> nil)
+        and not LocalModel.Grid.FrontContourDataSet.UpToDate) then
+      begin
+        LocalModel.Grid.NeedToRecalculateFrontCellColors := True;
+        frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
+      end;
+      if ((LocalModel.Grid.SideDataSet <> nil)
+        and not LocalModel.Grid.SideDataSet.UpToDate)
+        or ((LocalModel.Grid.SideContourDataSet <> nil)
+        and not LocalModel.Grid.SideContourDataSet.UpToDate) then
+      begin
+        LocalModel.Grid.NeedToRecalculateSideCellColors := True;
+        frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
+      end;
+      if ((LocalModel.ThreeDDataSet <> nil)
+        and not LocalModel.ThreeDDataSet.UpToDate)
+        or ((LocalModel.Grid.ThreeDContourDataSet <> nil)
+        and not LocalModel.Grid.ThreeDContourDataSet.UpToDate) then
+      begin
+        LocalModel.Grid.NeedToRecalculate3DCellColors := True;
+        LocalModel.DiscretizationChanged;
+      end;
+    end
+    else if LocalModel.Mesh <> nil then
     begin
-      LocalModel.Grid.NeedToRecalculateFrontCellColors := True;
-      frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
-    end;
-    if ((LocalModel.Grid.SideDataSet <> nil)
-      and not LocalModel.Grid.SideDataSet.UpToDate)
-      or ((LocalModel.Grid.SideContourDataSet <> nil)
-      and not LocalModel.Grid.SideContourDataSet.UpToDate) then
-    begin
-      LocalModel.Grid.NeedToRecalculateSideCellColors := True;
-      frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
-    end;
-    if ((LocalModel.ThreeDDataSet <> nil)
-      and not LocalModel.ThreeDDataSet.UpToDate)
-      or ((LocalModel.Grid.ThreeDContourDataSet <> nil)
-      and not LocalModel.Grid.ThreeDContourDataSet.UpToDate) then
-    begin
-      LocalModel.Grid.NeedToRecalculate3DCellColors := True;
-      LocalModel.DiscretizationChanged;
+      if ((LocalModel.Mesh.TopDataSet <> nil)
+        and not LocalModel.Mesh.TopDataSet.UpToDate)
+        {or ((LocalModel.Mesh.TopContourDataSet <> nil)
+        and not LocalModel.Mesh.TopContourDataSet.UpToDate)} then
+      begin
+        LocalModel.Mesh.NeedToRecalculateTopColors := True;
+        frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+      end;
+      {if ((LocalModel.Mesh.FrontDataSet <> nil)
+        and not LocalModel.Mesh.FrontDataSet.UpToDate)
+        or ((LocalModel.Mesh.FrontContourDataSet <> nil)
+        and not LocalModel.Mesh.FrontContourDataSet.UpToDate) then
+      begin
+        LocalModel.Mesh.NeedToRecalculateFrontCellColors := True;
+        frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
+      end; }
+      {if ((LocalModel.Mesh.SideDataSet <> nil)
+        and not LocalModel.Mesh.SideDataSet.UpToDate)
+        or ((LocalModel.Mesh.SideContourDataSet <> nil)
+        and not LocalModel.Mesh.SideContourDataSet.UpToDate) then
+      begin
+//        LocalModel.Mesh.NeedToRecalculateSideCellColors := True;
+        frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
+      end;       }
+      if ((LocalModel.ThreeDDataSet <> nil)
+        and not LocalModel.ThreeDDataSet.UpToDate)
+        {or ((LocalModel.Mesh.ThreeDContourDataSet <> nil)
+        and not LocalModel.Mesh.ThreeDContourDataSet.UpToDate)} then
+      begin
+        LocalModel.Mesh.NeedToRecalculateFrontColors := True;
+        LocalModel.DiscretizationChanged;
+      end;
+
     end;
   end;
 end;
@@ -3426,6 +3487,11 @@ begin
     FComment := Value;
     frmGoPhast.InvalidateModel;
   end;
+end;
+
+procedure TDataArray.SetContourAlg(const Value: TContourAlg);
+begin
+  FContourAlg := Value;
 end;
 
 procedure TDataArray.SetContourLimits(const Value: TColoringLimits);
@@ -3983,8 +4049,26 @@ var
   AnIntValue: Integer;
   MinimumRealPositive: double;
   Mesh: TSutraMesh3D;
+  OkLocation: Boolean;
 begin
   if not UpToDate then
+  begin
+    Exit;
+  end;
+  if (FModel <> nil) then
+  begin
+    PhastModel := FModel as TCustomModel;
+    Grid := PhastModel.Grid;
+    Mesh := PhastModel.Mesh;
+  end
+  else
+  begin
+//    PhastModel := nil;
+    Grid := nil;
+    Mesh := nil;
+  end;
+
+  if FMinMaxUpToDate then
   begin
     Exit;
   end;
@@ -4006,7 +4090,19 @@ begin
             begin
               for ColIndex := ColMin to ColLimit do
               begin
-                if IsValue[LayerIndex, RowIndex, ColIndex] then
+                if Grid <> nil then
+                begin
+                  OkLocation := Grid.OkLocation(self, LayerIndex, RowIndex, ColIndex);
+                end
+                else if Mesh <> nil then
+                begin
+                  OkLocation := Mesh.OkLocation(self, LayerIndex, RowIndex, ColIndex);
+                end
+                else
+                begin
+                  OkLocation := IsValue[LayerIndex, RowIndex, ColIndex]
+                end;
+                if OkLocation then
                 begin
                   if FirstValue then
                   begin
@@ -4029,8 +4125,9 @@ begin
                     begin
                       MaximumReal := ARealValue;
                     end;
-                    if (MinimumRealPositive > ARealValue)
-                      and (ARealValue > 0) then
+                    if (ARealValue > 0)
+                      and ((MinimumRealPositive > ARealValue)
+                      or (MinimumRealPositive = 0)) then
                     begin
                       MinimumRealPositive := ARealValue;
                     end;
@@ -4069,7 +4166,19 @@ begin
             begin
               for ColIndex := ColMin to ColLimit do
               begin
-                if IsValue[LayerIndex, RowIndex, ColIndex] then
+                if Grid <> nil then
+                begin
+                  OkLocation := Grid.OkLocation(self, LayerIndex, RowIndex, ColIndex);
+                end
+                else if Mesh <> nil then
+                begin
+                  OkLocation := Mesh.OkLocation(self, LayerIndex, RowIndex, ColIndex);
+                end
+                else
+                begin
+                  OkLocation := IsValue[LayerIndex, RowIndex, ColIndex]
+                end;
+                if OkLocation then
                 begin
                   if FirstValue then
                   begin
@@ -4122,7 +4231,19 @@ begin
             begin
               for ColIndex := ColMin to ColLimit do
               begin
-                if IsValue[LayerIndex, RowIndex, ColIndex] then
+                if Grid <> nil then
+                begin
+                  OkLocation := Grid.OkLocation(self, LayerIndex, RowIndex, ColIndex);
+                end
+                else if Mesh <> nil then
+                begin
+                  OkLocation := Mesh.OkLocation(self, LayerIndex, RowIndex, ColIndex);
+                end
+                else
+                begin
+                  OkLocation := IsValue[LayerIndex, RowIndex, ColIndex]
+                end;
+                if OkLocation then
                 begin
                   if FirstValue then
                   begin
@@ -4190,7 +4311,19 @@ begin
               begin
                 for ColIndex := ColMin to ColLimit do
                 begin
-                  if IsValue[LayerIndex, RowIndex, ColIndex] then
+                  if Grid <> nil then
+                  begin
+                    OkLocation := Grid.OkLocation(self, LayerIndex, RowIndex, ColIndex);
+                  end
+                  else if Mesh <> nil then
+                  begin
+                    OkLocation := Mesh.OkLocation(self, LayerIndex, RowIndex, ColIndex);
+                  end
+                  else
+                  begin
+                    OkLocation := IsValue[LayerIndex, RowIndex, ColIndex]
+                  end;
+                  if OkLocation then
                   begin
                     StringValues.Add(StringData[LayerIndex, RowIndex, ColIndex]);
                     if StringValues.Count > 2 then
@@ -4277,6 +4410,7 @@ begin
       end;
     end;
   end;
+  FMinMaxUpToDate := True;
 end;
 
 procedure TDataArray.ReadData(DecompressionStream: TDecompressionStream);
@@ -4802,16 +4936,53 @@ begin
 end;
 
 
+function TDataArray.GetMaxBoolean: boolean;
+begin
+  UpdateMinMaxValues;
+  result := FMaxBoolean;
+end;
+
+function TDataArray.GetMaxInteger: integer;
+begin
+  UpdateMinMaxValues;
+  result := FMaxInteger;
+end;
+
+function TDataArray.GetMaxReal: double;
+begin
+  UpdateMinMaxValues;
+  result := FMaxReal
+end;
+
+function TDataArray.GetMaxString: string;
+begin
+  UpdateMinMaxValues;
+  result := FMaxString;
+end;
+
 function TDataArray.GetMaxValue: string;
 begin
   if UpToDate then
   begin
+    UpdateMinMaxValues;
     result := FMaxValue
   end
   else
   begin
     result := '?'
   end;
+end;
+
+function TDataArray.GetMinBoolean: boolean;
+begin
+  UpdateMinMaxValues;
+  result := FMinBoolean;
+end;
+
+function TDataArray.GetMinInteger: integer;
+begin
+  UpdateMinMaxValues;
+  result := FMinInteger;
 end;
 
 procedure TDataArray.GetMinMaxStoredLimits(out LayerMin, RowMin, ColMin,
@@ -4823,10 +4994,29 @@ begin
   LayerMin := 0;
 end;
 
+function TDataArray.GetMinReal: double;
+begin
+  UpdateMinMaxValues;
+  result := FMinReal
+end;
+
+function TDataArray.GetMinRealPositive: double;
+begin
+  UpdateMinMaxValues;
+  result := FMinRealPositive;
+end;
+
+function TDataArray.GetMinString: string;
+begin
+  UpdateMinMaxValues;
+  result := FMinString;
+end;
+
 function TDataArray.GetMinValue: string;
 begin
   if UpToDate then
   begin
+    UpdateMinMaxValues;
     result := FMinValue
   end
   else
@@ -4933,26 +5123,40 @@ begin
 end;
 
 procedure TDataArray.LimitsChanged(Sender: TObject);
+var
+  Mesh: TSutraMesh3D;
 begin
-  if (frmGoPhast <> nil) and (frmGoPhast.PhastModel <> nil)
-    and (frmGoPhast.PhastModel.Grid <> nil) then
+  if (frmGoPhast <> nil) and (frmGoPhast.PhastModel <> nil) then
   begin
-    if self = frmGoPhast.PhastModel.Grid.TopDataSet then
+    if (frmGoPhast.PhastModel.Grid <> nil) then
     begin
-      frmGoPhast.PhastModel.Grid.NeedToRecalculateTopCellColors := True;
-    end;
-    if self = frmGoPhast.PhastModel.Grid.FrontDataSet then
+      if self = frmGoPhast.PhastModel.Grid.TopDataSet then
+      begin
+        frmGoPhast.PhastModel.Grid.NeedToRecalculateTopCellColors := True;
+      end;
+      if self = frmGoPhast.PhastModel.Grid.FrontDataSet then
+      begin
+        frmGoPhast.PhastModel.Grid.NeedToRecalculateFrontCellColors := True;
+      end;
+      if self = frmGoPhast.PhastModel.Grid.SideDataSet then
+      begin
+        frmGoPhast.PhastModel.Grid.NeedToRecalculateSideCellColors := True;
+      end;
+      if self = frmGoPhast.PhastModel.Grid.ThreeDDataSet then
+      begin
+        frmGoPhast.PhastModel.Grid.NeedToRecalculate3DCellColors := True;
+        frmGoPhast.PhastModel.Grid.GridChanged;
+      end;
+    end
+    else
     begin
-      frmGoPhast.PhastModel.Grid.NeedToRecalculateFrontCellColors := True;
-    end;
-    if self = frmGoPhast.PhastModel.Grid.SideDataSet then
-    begin
-      frmGoPhast.PhastModel.Grid.NeedToRecalculateSideCellColors := True;
-    end;
-    if self = frmGoPhast.PhastModel.Grid.ThreeDDataSet then
-    begin
-      frmGoPhast.PhastModel.Grid.NeedToRecalculate3DCellColors := True;
-      frmGoPhast.PhastModel.Grid.GridChanged;
+      Mesh := frmGoPhast.PhastModel.Mesh;
+      if Mesh <> nil then
+      begin
+        Mesh.NeedToRecalculateTopColors := True;
+        Mesh.NeedToRecalculateFrontColors := True;
+        frmGoPhast.InvalidateImage32AllViews;
+      end;
     end;
   end;
 end;
@@ -6063,6 +6267,12 @@ begin
       if Model.Grid <> nil then
       begin
         Model.Grid.GridChanged;
+      end
+      else if Model.Mesh <> nil then
+      begin
+        Model.Mesh.NeedToRecalculateFrontColors := True;
+        Model.Mesh.NeedToRecalculateTopColors := True;
+        Model.Mesh.MeshChanged;
       end;
     end;
     if (Name <> '') and (Model is TPhastModel) then
@@ -7389,3 +7599,4 @@ initialization
   RegisterClasses([TDataArray, TCustom2DInterpolater, TRealSparseDataSet]);
 
 end.
+

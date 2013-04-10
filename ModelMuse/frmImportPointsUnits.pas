@@ -134,6 +134,7 @@ type
     procedure dgDataEndUpdate(Sender: TObject);
     procedure comboBoundaryChoiceChange(Sender: TObject);
     procedure cbLayerClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     // @name is the column that specifies the X coordinate.
     XCol: integer;
@@ -246,7 +247,8 @@ begin
     frmGoPhast.PhastModel.ModelSelection, True, True);
   rgEvaluatedAt.Items[Ord(eaNodes)] := EvalAtToString(eaNodes,
     frmGoPhast.PhastModel.ModelSelection, True, True);
-  rgEvaluatedAt.Enabled := frmGoPhast.PhastModel.ModelSelection = msPhast;
+  rgEvaluatedAt.Enabled := frmGoPhast.PhastModel.ModelSelection
+    in [msPhast {$IFDEF SUTRA} , msSutra22 {$ENDIF}];
   if not rgEvaluatedAt.Enabled then
   begin
     rgEvaluatedAt.ItemIndex := 0;
@@ -609,6 +611,18 @@ begin
       Lines.Free;
     end;
   end;
+end;
+
+procedure TfrmImportPoints.FormShow(Sender: TObject);
+begin
+  inherited;
+  {$IFDEF SUTRA}
+  if frmGoPhast.PhastModel.ModelSelection = msSutra22 then
+  begin
+    rgViewDirection.Buttons[Ord(vdSide)].Enabled := False;
+  end;
+  {$ENDIF}
+
 end;
 
 procedure TfrmImportPoints.UpdateDimensionColumns;
@@ -1762,15 +1776,19 @@ var
   ColIndex: Integer;
 begin
   inherited;
-  DataSetSelected := False;
-  for Index := 0 to jvclbDataSets.Items.Count - 1 do
+  DataSetSelected := comboBoundaryChoice.ItemIndex > 0;
+  if not DataSetSelected  then
   begin
-    DataSetSelected := jvclbDataSets.Checked[Index];
-    if DataSetSelected then
+    for Index := 0 to jvclbDataSets.Items.Count - 1 do
     begin
-      break;
+      DataSetSelected := jvclbDataSets.Checked[Index];
+      if DataSetSelected then
+      begin
+        break;
+      end;
     end;
   end;
+
   if not DataSetSelected then
   begin
     Beep;

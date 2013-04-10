@@ -21,7 +21,7 @@ type
   TTimeValuesDictionary = TObjectDictionary<string, TTimeValues>;
 
   TScreenObjectSchedule = class(TObject)
-    Name: string;
+    Name: AnsiString;
     Times: TRealCollection;
   end;
 
@@ -43,7 +43,7 @@ type
     FirstTimeValues: TTimeValues;
     ExtraTimesDefined: Boolean;
     ScheduleList: TTimeValuesList;
-    function CustomScheduleName(AScreenObject: TScreenObject): string;
+    function CustomScheduleName(AScreenObject: TScreenObject): AnsiString;
     procedure Evaluate;
     procedure EvaluateDefinedSchedules;
     procedure EvaluateObjectSchedules;
@@ -121,17 +121,20 @@ begin
   FSchedules := FTimeOptions.Schedules;
 end;
 
-function TSutraTimeScheduleWriter.CustomScheduleName(AScreenObject: TScreenObject): string;
+function TSutraTimeScheduleWriter.CustomScheduleName(AScreenObject: TScreenObject): AnsiString;
+var
+  StrResult: string;
 begin
   // maximum length of a schedule name is 10 characters.
-  result := Copy(string(AnsiString(AScreenObject.Name)), 1, 10);
-  while ItemDictionary.ContainsKey(result) or
-    (CustomScheduleNames.IndexOf(result) >= 0) do
+  StrResult := Copy(string(AnsiString(AScreenObject.Name)), 1, 10);
+  while ItemDictionary.ContainsKey(StrResult) or
+    (CustomScheduleNames.IndexOf(StrResult) >= 0) do
   begin
     Inc(CustomScheduleIndex);
-    result := 'SCHED_' + IntToStr(CustomScheduleIndex);
+    StrResult := 'SCHED_' + IntToStr(CustomScheduleIndex);
   end;
-  CustomScheduleNames.Add(result);
+  CustomScheduleNames.Add(StrResult);
+  result := AnsiString(StrResult);
 end;
 
 procedure TSutraTimeScheduleWriter.WriteASchedule(SCHNAM: AnsiString;
@@ -226,7 +229,7 @@ begin
   SCHNAM := '''' + SCHNAM + '''';
   if NameLength < 10 then
   begin
-    SCHNAM := SCHNAM + StringOfChar(' ', 10 - NameLength);
+    SCHNAM := SCHNAM + AnsiString(StringOfChar(' ', 10 - NameLength));
   end;
   result := SCHNAM;
 end;
@@ -476,7 +479,8 @@ begin
     ACustomSchedule := CustomSchedules[ScheduleIndex];
     Inc(ScheduleCount);
     WriteCommentLine('Schedule ' + IntToStr(ScheduleCount));
-    WriteASchedule(ReformatScheduleName(ACustomSchedule.Name), ACustomSchedule.Times);
+    WriteASchedule(ReformatScheduleName(ACustomSchedule.Name),
+      ACustomSchedule.Times);
   end;
 
   WriteString('-');
@@ -523,7 +527,7 @@ begin
     Boundaries := AScreenObject.SutraBoundaries;
     if Boundaries.Observations.Used then
     begin
-      AName := UpperCase(Boundaries.Observations.ScheduleName);
+      AName := UpperCase(string(Boundaries.Observations.ScheduleName));
       if (AName <> '') and ItemDictionary.ContainsKey(AName) then
       begin
         TimeValues := ItemDictionary.Items[AName];
@@ -534,7 +538,7 @@ begin
       end
       else
       begin
-        TimeValues := nil;
+//        TimeValues := nil;
         UseScheduleTimes := False;
       end;
       if not UseScheduleTimes then
@@ -600,11 +604,12 @@ begin
     begin
       FirstTimeValues := TimeValues;
     end;
-    AName := UpperCase(ASchedule.Name);
+    AName := UpperCase(string(ASchedule.Name));
     if ItemDictionary.ContainsKey(AName) then
     begin
       Beep;
-      frmErrorsAndWarnings.AddError(Model, StrTheFollowingTimeS, ASchedule.Name);
+      frmErrorsAndWarnings.AddError(Model, StrTheFollowingTimeS,
+        string(ASchedule.Name));
       Continue;
     end
     else

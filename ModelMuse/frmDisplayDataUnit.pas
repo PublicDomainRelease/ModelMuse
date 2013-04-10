@@ -53,6 +53,7 @@ type
     procedure SetPage(Page: TPostPages);
     property ShouldUpdate: Boolean read FShouldUpdate write FShouldUpdate;
     procedure UpdateLabelsAndLegend;
+    procedure UpdateColorSchemes;
     { Public declarations }
   end;
 
@@ -272,6 +273,12 @@ begin
   begin
     tvpglstMain.Canvas.Font.Color := clBtnShadow;
   end;
+end;
+
+procedure TfrmDisplayData.UpdateColorSchemes;
+begin
+  frameColorGrid.UpdateColorSchemes;
+  frameContourData.UpdateColorSchemes;
 end;
 
 procedure TfrmDisplayData.UpdateLabelsAndLegend;

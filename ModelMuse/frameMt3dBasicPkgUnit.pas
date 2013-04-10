@@ -23,6 +23,7 @@ type
       AFrame: TframeGrid);
     procedure SetMt3dComponents(Mt3DComponents: TCustomChemSpeciesCollection;
       AFrame: TframeGrid);
+    procedure FixNames(Names: TStringList; AFrame: TframeGrid);
     { Private declarations }
   public
     procedure GetData(Package: TModflowPackageSelection); override;
@@ -40,6 +41,9 @@ var
   frameMt3dBasicPkg: TframeMt3dBasicPkg;
 
 implementation
+
+uses
+  PhastModelUnit;
 
 {$R *.dfm}
 
@@ -74,6 +78,25 @@ begin
   BasicPackage.MinimumSaturatedFraction := StrToFloat(rdeMinimumSaturatedFraction.Text);
 end;
 
+procedure TframeMt3dBasicPkg.FixNames(Names: TStringList; AFrame: TframeGrid);
+var
+  Index: Integer;
+  AName: string;
+begin
+  for Index := 1 to AFrame.seNumber.AsInteger do
+  begin
+    AName := GenerateNewRoot(Trim(AFrame.Grid.Cells[0, Index]));
+    if Names.IndexOf(AName) >= 0 then
+    begin
+      AFrame.Grid.Cells[0, Index] := '';
+    end
+    else
+    begin
+      Names.Add(AName);
+    end;
+  end;
+end;
+
 procedure TframeMt3dBasicPkg.SetMt3dComponents(
   Mt3DComponents: TCustomChemSpeciesCollection; AFrame: TframeGrid);
 var
@@ -81,6 +104,8 @@ var
   Index: Integer;
   Item: TChemSpeciesItem;
   AList: TList;
+  GridCol: TStrings;
+  ItemRow: integer;
 begin
   AList := TList.Create;
   try
@@ -91,10 +116,17 @@ begin
         AList.Add(AFrame.Grid.Objects[0, Index]);
       end;
     end;
+    GridCol := AFrame.Grid.Cols[0];
     for Index := Mt3DComponents.Count - 1 downto 0 do
     begin
       if AList.IndexOf(Mt3DComponents[Index]) < 0 then
       begin
+        Item := Mt3DComponents[Index];
+        ItemRow := GridCol.IndexOfObject(Item);
+        if ItemRow >= 1 then
+        begin
+          AFrame.Grid.Objects[0, ItemRow] := nil;
+        end;
         Mt3DComponents.Delete(Index);
       end;
     end;
@@ -121,7 +153,19 @@ end;
 procedure TframeMt3dBasicPkg.SetMt3dmsChemSpecies(
   MobileComponents: TMobileChemSpeciesCollection;
   ImmobileComponents: TChemSpeciesCollection);
+var
+  Names: TStringList;
 begin
+  Names := TStringList.Create;
+  try
+    Names.Sorted := True;
+    Names.CaseSensitive := False;
+    FixNames(Names, frameGridMobile);
+    FixNames(Names, frameGridImmobile);
+  finally
+    Names.Free;
+  end;
+
   SetMt3dComponents(MobileComponents, frameGridMobile);
   SetMt3dComponents(ImmobileComponents, frameGridImmobile);
 end;

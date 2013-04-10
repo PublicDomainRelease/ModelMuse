@@ -558,12 +558,12 @@ C1A1----READ INITIAL CONDITIONS FOR ALL LAKES (ONLY READ ONCE)
                  IF ( IRDTAB.GT.0 ) THEN
                    IF(ISS.NE.0) READ (IN,'(3F10.4,I5)') STAGES(LM),
      1                                SSMN(LM),SSMX(LM),LAKTAB(LM)
-                   IF(ISS.EQ.0) READ (IN,'(3F10.4,I5)') STAGES(LM),
+                   IF(ISS.EQ.0) READ (IN,'(F10.4,I5)') STAGES(LM),
      2                                               LAKTAB(LM)
                  ELSE
                    IF(ISS.NE.0) READ (IN,'(3F10.4)') STAGES(LM),
      1              SSMN(LM),SSMX(LM)
-                   IF(ISS.EQ.0) READ (IN,'(3F10.4)') STAGES(LM)
+                   IF(ISS.EQ.0) READ (IN,'(F10.4)') STAGES(LM)
                  END IF
                ELSE
                  IF ( IRDTAB.GT.0 ) THEN
@@ -641,6 +641,27 @@ C
  822  FORMAT(//1X,'If any subsequent steady-state stress periods, min. a
      1nd max. stages for each lake will be read in Record 9a.'//)
 C
+
+! RGN 9/25/12 moved this to read lake bathymetry before stress period information.
+      IF ( KKPER==1 .AND. IRDTAB.GT.0 ) THEN
+! Read tables for stage,volume, and area relations.
+        DO L1=1,NLAKES
+!          WRITE(IOUT,1399) L1
+          iunit = LAKTAB(L1)
+Cdep  revised print statement to include area
+! 1399 FORMAT(//1X,'STAGE/VOLUME RELATION FOR LAKE',I3//6X,'STAGE',
+!     1        8X,'VOLUME',8X,'AREA'/)
+	    WRITE(IOUT,*) 'L1, DEPTHTABLE, VOLUMETABLE, AREATABLE:'
+          WRITE(IOUT,*) L1
+          DO  INC=1,151
+          READ(iunit,*) DEPTHTABLE(INC,L1), VOLUMETABLE(INC,L1), 
+     +                    AREATABLE(INC,L1) 
+          WRITE(IOUT,*) DEPTHTABLE(INC,L1), VOLUMETABLE(INC,L1), 
+     +                    AREATABLE(INC,L1) 
+
+          END DO
+        END DO      
+      END IF
 C1B-----READ ITMP (FLAG TO REUSE LAKE-GEOMETRY DATA).
       IF(IFREFM.EQ.0) THEN
          READ(IN,'(3I10)') ITMP, ITMP1, LWRT
@@ -767,7 +788,11 @@ Cdep      IF(LKARR1(I,J,K).NE.0) LID = LKARR1(I,J,K)
       END IF
       ILAKE(4,M) = LID
       ILAKE(5,M) = 6
-      BEDLAK(M) = BDLKN1(I,J,K-1)
+      IF ( K.GT.1 ) THEN             !RGN 5/21/12 added IF test
+        BEDLAK(M) = BDLKN1(I,J,K-1)
+      ELSE                           !RGN
+        BEDLAK(M) = BDLKN1(I,J,K)    !RGN
+      END IF                         !RGN
       IF(K.EQ.NLAY.AND.LKARR1(I,J,K).NE.0) BEDLAK(M) = 0.0
       BGAREA(LID) = BGAREA(LID) + DELC(J)*DELR(I)
 !      WRITE(IOUT,5) (ILAKE(I1,M),I1=1,5), BEDLAK(M)
@@ -900,7 +925,7 @@ C-- COMPUTE AND PRINT STAGE/VOLUME TABLES WHEN MORE THAN ONE LAYER
 Cdep  revised print statement to include stage/area tables
 C
       IF ( IRDTAB.EQ.0 ) THEN
-      IF(NLAY.EQ.1) GO TO 1331
+!      IF(NLAY.EQ.1) GO TO 1331       !RGN 5/21/12
       DO 1330 L1=1,NLAKES
 !      WRITE(IOUT,1306) L1
 Cdep  revised print statement to include area
@@ -939,7 +964,9 @@ Cdep   WRITE(IOUT,1315) TBELV, EVOL
             LAKEFLG = 0
             K = 1
             MOSTBOT: DO WHILE (LAKEFLG.EQ.0)
-              IF(LKARR1(I,J,K).EQ.L1) LAKEFLG = K
+              IF(LKARR1(I,J,K).EQ.L1) THEN
+                LAKEFLG = K
+              END IF
               IF(K.EQ.NLAY)EXIT MOSTBOT
               K = K + 1
             END DO MOSTBOT
@@ -951,7 +978,7 @@ Cdep   WRITE(IOUT,1315) TBELV, EVOL
               END DO FINDBOT
               BOTIJ = BOTM(I,J,LBOTM(K-1))
               IF(INC.EQ.1) THEN     
-                IF(TBELV+1.0E-04.GT.BOTIJ) THEN
+                IF(TBELV+1.0E-03.GT.BOTIJ) THEN
                   AREATABLE(INC,L1)=AREATABLE(INC,L1)+DELC(J)*DELR(I)
                   DEPTHTABLE(INC,L1)=TBELV
                 END IF
@@ -983,24 +1010,6 @@ Cdep  set minimum and maximum lake stages for transient simulations
       END IF
  1330 CONTINUE
  1331 CONTINUE
-      ELSE IF ( KKPER==1 ) THEN
-! Read tables for stage,volume, and area relations.
-        DO L1=1,NLAKES
-!          WRITE(IOUT,1399) L1
-          iunit = LAKTAB(L1)
-Cdep  revised print statement to include area
-! 1399 FORMAT(//1X,'STAGE/VOLUME RELATION FOR LAKE',I3//6X,'STAGE',
-!     1        8X,'VOLUME',8X,'AREA'/)
-	    WRITE(IOUT,*) 'L1, DEPTHTABLE, VOLUMETABLE, AREATABLE:'
-          WRITE(IOUT,*) L1
-          DO  INC=1,151
-          READ(iunit,*) DEPTHTABLE(INC,L1), VOLUMETABLE(INC,L1), 
-     +                    AREATABLE(INC,L1) 
-          WRITE(IOUT,*) DEPTHTABLE(INC,L1), VOLUMETABLE(INC,L1), 
-     +                    AREATABLE(INC,L1) 
-
-          END DO
-        END DO      
       END IF
       IF(IUNITSFR.LE.0) THEN
          NDV=0
@@ -1309,7 +1318,10 @@ C          OF LAKE STAGE TO CACULATE LAKE VOLUME.
           IFLG = 1
         END IF
         I = I + 1
-        IF( I.GT.150 ) IFLG = 1 
+        IF( I.GT.150 ) THEN
+          IFLG = 1 
+          VOLUME = VOLUMETABLE(151,LN)
+        END IF
       END DO
       VOLTERP = VOLUME
       IF ( VOLTERP.LT.TOLF2 ) VOLTERP = TOLF2

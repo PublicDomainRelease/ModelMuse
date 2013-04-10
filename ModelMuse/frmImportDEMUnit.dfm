@@ -74,7 +74,7 @@ inherited frmImportDEM: TfrmImportDEM
   object memoCorners: TMemo [13]
     Left = 319
     Top = 85
-    Width = 235
+    Width = 219
     Height = 247
     Anchors = [akLeft, akTop, akRight]
     ScrollBars = ssBoth

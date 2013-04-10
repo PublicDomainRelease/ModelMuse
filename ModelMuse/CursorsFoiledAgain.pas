@@ -112,6 +112,11 @@ const
 
   crVertexValue = 38;
 
+  crMeasure = 39;
+  crMoveCrossSection = 40;
+
+  // cursor numbers 41-46 are defined dynamically in frmGoPhast.
+
 implementation
 
 // Force GExperts' "Backup Project" to backup ModelMuseCursors.res.
@@ -272,6 +277,10 @@ initialization
   LoadACursor('CRZOOMBYY', crZoomByY);
   LoadACursor('CRSNAPSELECTPOINT', crSnapSelectPoint);
   LoadACursor('CRVERTEXVALUE', crVertexValue);
+  LoadACursor('CRMEASURE', crMeasure);
+  LoadACursor('CRMOVECROSSSECTION', crMoveCrossSection);
+
+
 
 {
   CreateMaskedCursor('CRHANDFLAT', 'MASKHANDFLAT', crHandFlat, 14, 11);

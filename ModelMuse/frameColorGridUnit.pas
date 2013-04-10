@@ -388,6 +388,10 @@ begin
   Handle;
   FGettingData := True;
   try
+    if frmGoPhast.PhastModel.ColorSchemes.Count > 0 then
+    begin
+      UpdateColorSchemes;
+    end;
     virttreecomboDataSets.Tree.Clear;
 
     FFrontItems.Clear;

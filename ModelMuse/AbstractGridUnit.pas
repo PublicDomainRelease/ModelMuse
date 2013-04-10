@@ -127,8 +127,6 @@ type
   protected
     function ValueOK(DataSet: TDataArray;
       const Layer, Row, Col: integer): boolean;
-    function OkLocation(const DataSet: TDataArray;
-      const Layer, Row, Col: integer): boolean; virtual;
     procedure InitializeMinMax(const Layer, Row, Col: integer;
       DataSet: TDataArray; var MinMaxInitialized: boolean; var MinMax: TMinMax;
       StringValues: TStringList);
@@ -142,6 +140,8 @@ type
       var MinMaxInitialized: boolean; var MinMax: TMinMax;
       StringValues: TStringList); virtual; abstract;
   public
+    function OkLocation(const DataSet: TDataArray;
+      const Layer, Row, Col: integer): boolean; virtual;
     procedure GetMinMax(var MinMax: TMinMax; DataSet: TDataArray;
       StringValues: TStringList); virtual; abstract;
   end;
@@ -426,8 +426,6 @@ side views of the model.}
     function GetThreeDGridObserver: TObserver;
     function GetCanDraw: boolean;
   protected
-    function OkLocation(const DataSet: TDataArray;
-      const Layer, Row, Col: integer): boolean; override;
     procedure UpdateMinMax(const Layer, Row, Col: integer; DataSet: TDataArray;
       var MinMaxInitialized: boolean;  var MinMax: TMinMax;
       StringValues: TStringList); override;
@@ -654,6 +652,8 @@ side views of the model.}
     function GetChildDataArray(const Value: TDataArray;
       ChildModel: TBaseModel): TDataArray;
   public
+    function OkLocation(const DataSet: TDataArray;
+      const Layer, Row, Col: integer): boolean; override;
     procedure GetRealMinMax(DataSet: TDataArray; var MinMax: TMinMax);
     procedure GetIntegerMinMax(DataSet: TDataArray; var MinMax: TMinMax);
     procedure GetBooleanMinMax(DataSet: TDataArray; var MinMax: TMinMax);
@@ -5056,7 +5056,10 @@ begin
     NeedToRecalculateFrontCellColors := True;
 
     // This ensures that the selected row is still valid for the new data set.
-    frmGoPhast.Grid.SelectedRow := frmGoPhast.Grid.SelectedRow;
+    if frmGoPhast.Grid <> nil then
+    begin
+      frmGoPhast.Grid.SelectedRow := frmGoPhast.Grid.SelectedRow;
+    end;
 
     frmGoPhast.frameFrontView.ItemChange(nil);
     frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
@@ -5073,7 +5076,10 @@ begin
 
     // This ensures that the selected column
     // is still valid for the new data set.
-    frmGoPhast.Grid.SelectedColumn := frmGoPhast.Grid.SelectedColumn;
+    if frmGoPhast.Grid <> nil then
+    begin
+      frmGoPhast.Grid.SelectedColumn := frmGoPhast.Grid.SelectedColumn;
+    end;
 
     frmGoPhast.frameSideView.ItemChange(nil);
     frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
@@ -5090,7 +5096,10 @@ begin
 
     // This ensures that the selected layer
     // is still valid for the new data set.
-    frmGoPhast.Grid.SelectedLayer := frmGoPhast.Grid.SelectedLayer;
+    if frmGoPhast.Grid <> nil then
+    begin
+      frmGoPhast.Grid.SelectedLayer := frmGoPhast.Grid.SelectedLayer;
+    end;
 
     frmGoPhast.frameTopView.ItemChange(nil);
     frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;

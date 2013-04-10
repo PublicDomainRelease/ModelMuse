@@ -8,7 +8,8 @@ unit ColorSchemes;
 
 interface
 
-uses Classes, Graphics;
+uses Classes, Graphics, GoPhastTypes, Generics.Collections,
+  Generics.Defaults;
 
 type
   // @name is used to index @link(TColorArray).
@@ -78,6 +79,66 @@ function ModifiedSpectralScheme(Fraction, ColorAdjustmentFactor: real): TColor;
 function SteppedSequential(Fraction, ColorAdjustmentFactor: real): TColor;
 
 type
+  TColorItem = class(TPhastCollectionItem)
+  private
+    FColor: TColor;
+    FStoredFraction: TRealStorage;
+    procedure SetColor(const Value: TColor);
+    procedure SetStoredFraction(const Value: TRealStorage);
+    procedure Changed(Sender: TObject);
+    function GetFraction: double;
+    procedure SetFraction(const Value: double);
+  public
+    constructor Create(Collection: TCollection); override;
+    destructor Destroy; override;
+    property Fraction: double read GetFraction write SetFraction;
+    procedure Assign(Source: TPersistent); override;
+  published
+    property Color: TColor read FColor write SetColor;
+    property StoredFraction: TRealStorage read FStoredFraction
+      write SetStoredFraction;
+  end;
+  TColorComparer = TComparer<TColorItem>;
+  TColorList = TList<TColorItem>;
+
+  TColorCollection = class(TPhastCollection)
+  private
+    FSorted: Boolean;
+    function GetItem(Index: Integer): TColorItem;
+    procedure SetItem(Index: Integer; const Value: TColorItem);
+  public
+    constructor Create(Model: TBaseModel);
+    function Add: TColorItem;
+    property Items[Index: Integer]: TColorItem read GetItem write SetItem; default;
+    procedure SortColors;
+  end;
+
+  TUserDefinedColorSchemeItem = class(TPhastCollectionItem)
+  private
+    FColors: TColorCollection;
+    FName: string;
+    procedure SetColors(const Value: TColorCollection);
+    procedure SetName(const Value: string);
+  public
+    constructor Create(Collection: TCollection); override;
+    destructor Destroy; override;
+    procedure Assign(Source: TPersistent); override;
+  published
+    property Colors: TColorCollection read FColors write SetColors;
+    property Name: string read FName write SetName;
+  end;
+
+  TUserDefinedColorSchemeCollection = class(TPhastCollection)
+  private
+    function GetItem(Index: Integer): TUserDefinedColorSchemeItem;
+    procedure SetItem(Index: Integer; const Value: TUserDefinedColorSchemeItem);
+  public
+    function Add: TUserDefinedColorSchemeItem;
+    constructor Create(Model: TBaseModel);
+    property Items[Index: Integer]: TUserDefinedColorSchemeItem
+      read GetItem write SetItem; default;
+  end;
+
   TColorParameters = class(TPersistent)
   private
     procedure Changed;
@@ -99,7 +160,9 @@ type
      TModel.@link(ColorScheme), @link(ColorCycles),
      and TModel.@link(ColorExponent).
     }
-    function FracToColor(Fraction: real): TColor;
+    function FracToColor(Fraction: real): TColor; overload;
+    function FracToColor(Fraction: real;
+      ColorScheme: TUserDefinedColorSchemeItem): TColor; overload;
   published
     // @name is used to specify how many times the range of colors specified
     // by @link(ColorScheme) is repeated when assigning colors to grid cells
@@ -115,9 +178,11 @@ type
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
+const MaxColorScheme = 11;
+
 implementation
 
-uses Math;
+uses Math, frmGoPhastUnit;
 
 procedure AdjustColorFactor(var ColorAdjustmentFactor: Real);
 begin
@@ -650,28 +715,128 @@ begin
   Clear;
 end;
 
-function TColorParameters.FracToColor(Fraction: real): TColor;
+function TColorParameters.FracToColor(Fraction: real;
+  ColorScheme: TUserDefinedColorSchemeItem): TColor;
+var
+  ColorAdjustmentFactor: Real;
+  ColorIndex: Integer;
+  Frac1: Double;
+  Frac2: Double;
+  Color1: TColor;
+  Color2: TColor;
+  Comp1: Integer;
+  Comp2: Integer;
 begin
+  Result := clBlack;
+  Fraction := 1-Fraction;
+  if ColorScheme.Colors.Count = 0 then
+  begin
+    Exit;
+  end;
+  ColorScheme.Colors.SortColors;
   if Fraction <> 1 then
   begin
     Fraction := Frac(Fraction*ColorCycles);
   end;
-  case ColorScheme of
-    0: result := FracToSpectrum(Fraction, ColorExponent);
-    1: result := FracToGreenMagenta(1 - Fraction, ColorExponent);
-    2: result := FracToBlueRed(1 - Fraction, ColorExponent);
-    3: result := FracToBlueDarkOrange(1 - Fraction, ColorExponent);
-    4: result := FracToBlueGreen(1 - Fraction, ColorExponent);
-    5: result := FracToBrownBlue(1 - Fraction, ColorExponent);
-    6: result := FracToBlueGray(1 - Fraction, ColorExponent);
-    7: result := FracToBlueOrange(1 - Fraction, ColorExponent);
-    8: result := FracToBlue_OrangeRed(1 - Fraction, ColorExponent);
-    9: result := FracToLightBlue_DarkBlue(1 - Fraction, ColorExponent);
-    10: result := ModifiedSpectralScheme(1 - Fraction, ColorExponent);
-    11: result := SteppedSequential(1 - Fraction, ColorExponent);
+  Assert((Fraction >= 0) and (Fraction <= 1));
+  ColorAdjustmentFactor := ColorExponent;
+  AdjustColorFactor(ColorAdjustmentFactor);
+//  fraction := 1- Power((1-fraction), ColorAdjustmentFactor);
+  if fraction <= ColorScheme.Colors[0].Fraction then
+  begin
+    result := ColorScheme.Colors[0].Color;
+  end
+  else if fraction >= ColorScheme.Colors[ColorScheme.Colors.Count-1].Fraction then
+  begin
+    result := ColorScheme.Colors[ColorScheme.Colors.Count-1].Color;
+  end
   else
-    result := clWhite;
-    Assert(False);
+  begin
+    for ColorIndex := 1 to ColorScheme.Colors.Count - 1 do
+    begin
+      Frac1 := ColorScheme.Colors[ColorIndex-1].Fraction;
+      Frac2 := ColorScheme.Colors[ColorIndex].Fraction;
+      if fraction = Frac2 then
+      begin
+        result := ColorScheme.Colors[ColorIndex].Color;
+        Break;
+      end
+      else if (fraction > Frac1) and (fraction <= Frac2) then
+      begin
+        fraction := (fraction-Frac1)/(Frac2-Frac1);
+        if Odd(ColorIndex) then
+        begin
+          if ColorAdjustmentFactor = 0 then
+          begin
+            ColorAdjustmentFactor := MAXINT;
+          end
+          else
+          begin
+            ColorAdjustmentFactor := 1/ColorAdjustmentFactor;
+          end;
+        end;
+        fraction := 1- Power((1-fraction), ColorAdjustmentFactor);
+        Color1 := ColorScheme.Colors[ColorIndex-1].Color;
+        Color2 := ColorScheme.Colors[ColorIndex].Color;
+        Comp1 := (Color1 and $FF0000) shr 16;
+        Comp2 := (Color2 and $FF0000) shr 16;
+        result := (Round(Comp1*(1-fraction) + Comp2*fraction) and $FF) shl 16;
+        Comp1 := (Color1 and $FF00) shr 8;
+        Comp2 := (Color2 and $FF00) shr 8;
+        result := result +
+          (Round(Comp1*(1-fraction) + Comp2*fraction) and $FF) shl 8;
+        Comp1 := (Color1 and $FF);
+        Comp2 := (Color2 and $FF);
+        result := result +
+          (Round(Comp1*(1-fraction) + Comp2*fraction) and $FF);
+        Break;
+      end;
+    end;
+  end;
+end;
+
+function TColorParameters.FracToColor(Fraction: real): TColor;
+var
+  CustomIndex: Integer;
+  CustomColorScheme: TUserDefinedColorSchemeItem;
+begin
+  Assert(ColorScheme >= 0);
+  if ColorScheme <= MaxColorScheme then
+  begin
+    if Fraction <> 1 then
+    begin
+      Fraction := Frac(Fraction*ColorCycles);
+    end;
+    case ColorScheme of
+      0: result := FracToSpectrum(Fraction, ColorExponent);
+      1: result := FracToGreenMagenta(1 - Fraction, ColorExponent);
+      2: result := FracToBlueRed(1 - Fraction, ColorExponent);
+      3: result := FracToBlueDarkOrange(1 - Fraction, ColorExponent);
+      4: result := FracToBlueGreen(1 - Fraction, ColorExponent);
+      5: result := FracToBrownBlue(1 - Fraction, ColorExponent);
+      6: result := FracToBlueGray(1 - Fraction, ColorExponent);
+      7: result := FracToBlueOrange(1 - Fraction, ColorExponent);
+      8: result := FracToBlue_OrangeRed(1 - Fraction, ColorExponent);
+      9: result := FracToLightBlue_DarkBlue(1 - Fraction, ColorExponent);
+      10: result := ModifiedSpectralScheme(1 - Fraction, ColorExponent);
+      11: result := SteppedSequential(1 - Fraction, ColorExponent);
+    else
+      result := clWhite;
+      Assert(False);
+    end;
+  end
+  else
+  begin
+    CustomIndex := ColorScheme-MaxColorScheme-1;
+    if CustomIndex <= frmGoPhast.PhastModel.ColorSchemes.Count then
+    begin
+      CustomColorScheme := frmGoPhast.PhastModel.ColorSchemes[CustomIndex];
+      result := FracToColor(Fraction, CustomColorScheme);
+    end
+    else
+    begin
+      result := clBlack;
+    end;
   end;
 end;
 
@@ -715,6 +880,189 @@ begin
 end;
 
 
+
+{ TColorItem }
+
+procedure TColorItem.Assign(Source: TPersistent);
+var
+  SourceItem: TColorItem;
+begin
+  if Source is TColorItem then
+  begin
+    SourceItem := TColorItem(Source);
+    Color := SourceItem.Color;
+    Fraction := SourceItem.Fraction;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+procedure TColorItem.Changed(Sender: TObject);
+begin
+  InvalidateModel;
+  (Collection as TColorCollection).FSorted := False;
+end;
+
+constructor TColorItem.Create(Collection: TCollection);
+begin
+  inherited;
+  FStoredFraction := TRealStorage.Create;
+  FStoredFraction.OnChange := Changed;
+end;
+
+destructor TColorItem.Destroy;
+begin
+  FStoredFraction.Free;
+  inherited;
+end;
+
+function TColorItem.GetFraction: double;
+begin
+  result := FStoredFraction.Value;
+end;
+
+procedure TColorItem.SetColor(const Value: TColor);
+begin
+  if FColor <> Value then
+  begin
+    FColor := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TColorItem.SetFraction(const Value: double);
+begin
+  FStoredFraction.Value := Value;
+end;
+
+procedure TColorItem.SetStoredFraction(const Value: TRealStorage);
+begin
+  FStoredFraction.Assign(Value);
+end;
+
+{ TColorCollection }
+
+function TColorCollection.Add: TColorItem;
+begin
+  Result := inherited Add as TColorItem;
+end;
+
+constructor TColorCollection.Create(Model: TBaseModel);
+begin
+  inherited Create(TColorItem, Model);
+end;
+
+function TColorCollection.GetItem(Index: Integer): TColorItem;
+begin
+  result := inherited Items[Index] as TColorItem;
+end;
+
+procedure TColorCollection.SetItem(Index: Integer; const Value: TColorItem);
+begin
+  inherited Items[Index] := Value;
+end;
+
+procedure TColorCollection.SortColors;
+var
+  SortList: TColorList;
+  Index: Integer;
+begin
+  if FSorted then
+  begin
+    Exit;
+  end;
+  SortList := TColorList.Create;
+  try
+    SortList.Capacity := Count;
+    for Index := 0 to Count - 1 do
+    begin
+      SortList.Add(Items[Index]);
+    end;
+    SortList.Sort(TColorComparer.Construct(
+      function (const L, R: TColorItem): integer
+      begin
+        result := Sign(L.Fraction - R.Fraction);
+        if result = 0 then
+        begin
+          result := L.Index - R.Index;
+        end;
+      end
+      )) ;
+    for Index := 0 to SortList.Count - 1 do
+    begin
+      SortList[Index].Index := Index;
+    end;
+  finally
+    SortList.Free;
+  end;
+  FSorted := True;
+end;
+
+{ TUserDefinedColorSchemeItem }
+
+procedure TUserDefinedColorSchemeItem.Assign(Source: TPersistent);
+var
+  SourceScheme: TUserDefinedColorSchemeItem;
+begin
+  if Source is (TUserDefinedColorSchemeItem) then
+  begin
+    SourceScheme := TUserDefinedColorSchemeItem(Source);
+    Colors := SourceScheme.Colors;
+    Name := SourceScheme.Name;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+constructor TUserDefinedColorSchemeItem.Create(Collection: TCollection);
+begin
+  inherited;
+  FColors:= TColorCollection.Create(Model);
+end;
+
+destructor TUserDefinedColorSchemeItem.Destroy;
+begin
+  FColors.Free;
+  inherited;
+end;
+
+procedure TUserDefinedColorSchemeItem.SetColors(const Value: TColorCollection);
+begin
+  FColors.Assign(Value);
+end;
+
+procedure TUserDefinedColorSchemeItem.SetName(const Value: string);
+begin
+  SetStringProperty(FName, Value);
+end;
+
+{ TUserDefinedColorSchemeCollection }
+
+function TUserDefinedColorSchemeCollection.Add: TUserDefinedColorSchemeItem;
+begin
+  result := inherited Add as TUserDefinedColorSchemeItem;
+end;
+
+constructor TUserDefinedColorSchemeCollection.Create(Model: TBaseModel);
+begin
+  inherited Create(TUserDefinedColorSchemeItem, Model);
+end;
+
+function TUserDefinedColorSchemeCollection.GetItem(
+  Index: Integer): TUserDefinedColorSchemeItem;
+begin
+  result := inherited Items[Index] as TUserDefinedColorSchemeItem;
+end;
+
+procedure TUserDefinedColorSchemeCollection.SetItem(Index: Integer;
+  const Value: TUserDefinedColorSchemeItem);
+begin
+  inherited Items[Index] := Value;
+end;
 
 end.
 

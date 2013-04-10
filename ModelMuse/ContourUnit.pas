@@ -1,5 +1,5 @@
 {@name is used to create a series of contour lines
-based on a grid of data values.
+based on a grid of data values or data values at arbitrary locations.
 @author(Richard B. Winston <rbwinst@usgs.gov>)
 }
 unit ContourUnit;
@@ -7,7 +7,8 @@ unit ContourUnit;
 interface
 
 uses Classes, Graphics, FastGeo, GR32, ZoomBox2, GoPhastTypes, DataSetUnit,
-  ColorSchemes, QuadTreeClass, Generics.Collections;
+  ColorSchemes, QuadTreeClass, Generics.Collections, Types, TriPackRoutines,
+  SparseDataSets;
 
 const
   DefaultLineThickness = 2;
@@ -28,6 +29,25 @@ type
 
   T2DGrid = array of array of T2DGridPoint;
   TSquares = array of array of TGridSquare;
+
+  TTriangulationData = class(TObject)
+  private
+    FVertexNumbers: T3DSparseIntegerArray;
+    function GetVertexNumber(Layer, Row, Col: Integer): Integer;
+    procedure SetVertexNumber(Layer, Row, Col: Integer; const Value: Integer);
+    procedure EliminateUniformTriangles;
+  public
+    Triangulation: TIntArray;
+    X: TRealArray;
+    Y: TRealArray;
+    Values: TRealArray;
+    IADJ: TIntArray;
+    IEND: TIntArray;
+    property VertexNumbers[Layer, Row, Col: Integer]: Integer
+      read GetVertexNumber write SetVertexNumber;
+    constructor Create;
+    destructor Destroy; override;
+  end;
 
   TExtractSegmentEvent = procedure (Sender: TObject;
     const Segments: TLine2DArray) of Object;
@@ -85,14 +105,22 @@ type
     FDataSet: TDataArray;
     FViewDirection: TViewDirection;
     FGrid: T2DGrid;
+    FMesh: TObject;
+    FTriangulationData: TTriangulationData;
     procedure EvaluateMinMaxLgr(out MaxValue, MinValue: Double;
-      DSValues: TStringList; 
+      DSValues: TStringList;
       ViewDirection: TViewDirection);
+    procedure EvaluateMinMaxMesh(out MaxValue, MinValue: Double;
+      DSValues: TStringList;
+      ViewDirection: TViewDirection);
+    procedure SetMesh(const Value: TObject);
   protected
     // @name set Active for the selected column, row, or layer based
     // on @link(ActiveDataSet)
     procedure EvaluateActive(var Active: T3DBooleanDataSet;
       AnActiveDataSet: TDataArray);
+    procedure EvaluateActiveMesh(var Active: T3DBooleanDataSet;
+      ADataSet: TDataArray);
     {If @link(DataSet).DataType is rdtString, DSValues will contain a sorted
     list of the unigue values in @link(DataSet).  Otherwise,
     MaxValue and MinValue will be set to the maximum and minimum values in
@@ -103,25 +131,42 @@ type
       // @name calls @link(EvaluateActive) and @link(EvaluateMinMax)
       // and then assigns values to @link(FGrid).
     procedure AssignGridValues(out MinValue, MaxValue: double;
-      SelectedColRowLayer: integer; DSValues: TStringList; ViewDirection: TViewDirection);
+      SelectedColRowLayer: integer; DSValues: TStringList;
+      ViewDirection: TViewDirection);
+    procedure AssignTriangulationValuesFromGrid(out MinValue, MaxValue: double;
+      SelectedColRowLayer: integer; DSValues: TStringList;
+      ViewDirection: TViewDirection);
+    procedure AssignTriangulationValuesFromMesh(out MinValue, MaxValue: double;
+      SelectedColRowLayer: integer; DSValues: TStringList;
+      ViewDirection: TViewDirection);
+    procedure PerformAlg626(C: TRealArray);
+    procedure CreateSimpleContoursFromMesh(const ContourValues: TOneDRealArray);
   public
+    destructor Destroy; override;
     property ActiveDataSet: TDataArray read FActiveDataSet write FActiveDataSet;
     property DataSet: TDataArray read FDataSet write FDataSet;
     property ViewDirection: TViewDirection read FViewDirection
       write FViewDirection;
     property Grid: T2DGrid read FGrid write FGrid;
+    property Mesh: TObject read FMesh write SetMesh;
   end;
 
+
+  {@name is used to create contours for drawing. If @name is changed,
+  consider changing @link(TContourExtractor) in @link(ContourExport)
+  and @link(TfrmExportImage) too.}
   TMultipleContourCreator = class(TCustomContourCreator)
   private
     FBitMap: TBitmap32;
     FZoomBox: TQRbwZoomBox2;
     FLabelLocations: TRbwQuadTree;
     FLabels: TLabelObjectList;
+    FAlgorithm: TContourAlg;
     // @name calls @link(TContourCreator.DrawContour) for each memeber of
     // ContourValues.
     procedure CreateAndDrawContours(const ContourValues,
-      LineThicknesses: TOneDRealArray; const ContourColors: TArrayOfColor32; ContourLabels: TStringList);
+      LineThicknesses: TOneDRealArray; const ContourColors: TArrayOfColor32;
+      ContourLabels: TStringList);
     // @name initializes the @link(TDataArray)s and then calls
     // @link(AssignGridValues) and @link(CreateAndDrawContours).
     // @name is called if @link(TContours.SpecifyContours
@@ -131,7 +176,7 @@ type
         ViewDirection: TViewDirection; ContourLabels: TStringList); overload;
     // @name updates MinValue and MaxValue base on limits
     // in @link(DataSet).ContourLimits.
-    procedure GetSpecifiedMinMax(var MinValue: Double; var MaxValue: Double;
+    procedure GetSpecifiedMinMax(var MinValue, MaxValue: Double;
       DSValues: TStringList);
     // @name returns the values need to define the contour values.
     procedure GetContouringParameters(var RequiredSize: Integer;
@@ -158,7 +203,8 @@ type
 implementation
 
 uses Math, RbwParser, BigCanvasMethods, PhastModelUnit,
-  SysUtils, Types, frmGoPhastUnit, frmDisplayDataUnit;
+  SysUtils, frmGoPhastUnit, frmDisplayDataUnit,
+  SutraMeshUnit, SparseArrayUnit, LineStorage, TriCP_Routines, RealListUnit;
 
 function Interpolate(const C1, C2 : TPoint2D; Val1, Val2 : TFloat;
   ContourValue: TFloat) : TPoint2D;
@@ -181,21 +227,63 @@ type TPointArray4 = array[0..3] of TPoint2D;
 
 { TContourCreator }
 
-procedure TContourCreator.ConvertAndDrawSegments(Sender: TObject;
-  const SegmentArray: TLine2DArray);
 const
   LabelSpacing = 100;
+
+procedure PlotLabel(const CenterX, CenterY: Integer; const LabelLocations:
+  TRbwQuadTree; const AContourLabel: string; const Labels: TLabelObjectList;
+  BitMap: TBitmap32);
+var
+  PointX: double;
+  PointY: double;
+  LabelObject: TLabel;
+  Data: Pointer;
+  ASize: TSize;
+begin
+  if (CenterX > 0) and (CenterY > 0)
+    and (CenterX < LabelLocations.XMax)
+    and (CenterY < LabelLocations.YMax) then
+  begin
+    PointX := CenterX;
+    PointY := CenterY;
+
+    if LabelLocations.Count > 0 then
+    begin
+      LabelLocations.FirstNearestPoint(PointX, PointY, Data);
+    end;
+    if (LabelLocations.Count = 0) or (Data <> nil) then
+    begin
+      if (LabelLocations.Count = 0)
+        or (Distance(CenterX, CenterY, PointX, PointY) > LabelSpacing) then
+      begin
+        LabelLocations.AddPoint(CenterX, CenterY, Pointer(1));
+
+        LabelObject := TLabel.Create;
+        LabelObject.Value := AContourLabel;
+        ASize := Bitmap.TextExtent(LabelObject.Value);
+        LabelObject.X := CenterX - ASize.cx div 2;
+        LabelObject.Y := CenterY - ASize.cy div 2;
+        Labels.Add(LabelObject);
+      end;
+    end;
+  end;
+end;
+
+
+
+procedure TContourCreator.ConvertAndDrawSegments(Sender: TObject;
+  const SegmentArray: TLine2DArray);
 var
   SegmentI: array[0..3] of TPoint;
   Index: Integer;
   CenterX: Integer;
   CenterY: Integer;
-  PointX: double;
-  PointY: double;
-  Data: Pointer;
+//  PointX: double;
+//  PointY: double;
+//  Data: Pointer;
 //  ALabel: string;
-  ASize: tagSIZE;
-  LabelObject: TLabel;
+//  ASize: tagSIZE;
+//  LabelObject: TLabel;
 begin
   for Index := 0 to Length(SegmentArray) - 1 do
   begin
@@ -216,29 +304,8 @@ begin
       if (CenterX > 0) and (CenterY > 0)
         and (CenterX < LabelLocations.XMax) and (CenterY < LabelLocations.YMax) then
       begin
-        PointX := CenterX;
-        PointY := CenterY;
-
-        if LabelLocations.Count > 0 then
-        begin
-          LabelLocations.FirstNearestPoint(PointX, PointY, Data);
-        end;
-        if (LabelLocations.Count = 0) or (Data <> nil) then
-        begin
-          if (LabelLocations.Count = 0)
-            or (Distance(CenterX, CenterY, PointX, PointY) > LabelSpacing) then
-          begin
-            LabelLocations.AddPoint(CenterX, CenterY, Pointer(1));
-
-            LabelObject := TLabel.Create;
-//            LabelObject.Value := FloatToStrF(Value, ffGeneral, 7, 0);
-            LabelObject.Value := ContourLabel;
-            ASize := Bitmap.TextExtent(LabelObject.Value);
-            LabelObject.X := CenterX - ASize.cx div 2;
-            LabelObject.Y := CenterY - ASize.cy div 2;
-            Labels.Add(LabelObject);
-          end;
-        end;
+        PlotLabel(CenterX, CenterY, LabelLocations, ContourLabel,
+          Labels, BitMap);
       end;
     end;
   end;
@@ -545,21 +612,65 @@ var
   DSValues: TStringList;
   MinValue, MaxValue: double;
 begin
-  Assert(Assigned(ActiveDataSet));
+
+  case FAlgorithm of
+    caSimple:
+      begin
+        Assert(Assigned(Grid));
+        Assert(Assigned(ActiveDataSet));
+      end;
+    caACM626:
+      begin
+        if Assigned(Grid) then
+        begin
+          Assert(Assigned(ActiveDataSet));
+        end
+        else
+        begin
+          Assert(Assigned(Mesh));
+        end;
+      end
+    else Assert(False);
+  end;
+
+
+//  Assert(Assigned(ActiveDataSet));
   Assert(Assigned(DataSet));
   Assert(Assigned(BitMap));
-  Assert(Assigned(Grid));
+//  Assert(Assigned(Grid));
   Assert(Assigned(ZoomBox));
   Assert(Length(ContourValues) = Length(ContourColors));
   Assert(Length(ContourValues) = Length(LineThicknesses));
 
   DataSet.Initialize;
-  ActiveDataSet.Initialize;
+  if Assigned(ActiveDataSet) then
+  begin
+    ActiveDataSet.Initialize;
+  end;
 
   DSValues := TStringList.Create;
   try
-    AssignGridValues(MinValue, MaxValue, SelectedColRowLayer, DSValues,
-      ViewDirection);
+    case FAlgorithm of
+      caSimple:
+        begin
+          AssignGridValues(MinValue, MaxValue, SelectedColRowLayer,
+            DSValues, ViewDirection);
+        end;
+      caACM626:
+        begin
+          if Assigned(Grid) then
+          begin
+            AssignTriangulationValuesFromGrid(MinValue, MaxValue,
+              SelectedColRowLayer, DSValues, ViewDirection);
+          end
+          else
+          begin
+            AssignTriangulationValuesFromMesh(MinValue, MaxValue,
+              SelectedColRowLayer, DSValues, ViewDirection);
+          end;
+        end;
+      else Assert(False);
+    end;
   finally
     DSValues.Free;
   end;
@@ -801,11 +912,40 @@ var
   LabelEnd: Integer;
   MidLabelPostion: Integer;
 begin
-  Assert(Assigned(ActiveDataSet));
   Assert(Assigned(DataSet));
+  FAlgorithm := DataSet.ContourAlg;
+//  {$IFDEF SUTRA}
+//  if (DataSet.Model as TCustomModel).ModelSelection = msSutra22 then
+//  begin
+//    FAlgorithm := caACM626
+//  end;
+//  {$ENDIF}
   Assert(Assigned(BitMap));
-  Assert(Assigned(Grid));
+//  case FAlgorithm of
+//    caSimple:
+//      begin
+//        Assert(Assigned(Grid));
+//        Assert(Assigned(ActiveDataSet));
+//      end;
+//    caACM626:
+//      begin
+        if Assigned(Grid) then
+        begin
+          Assert(Assigned(ActiveDataSet));
+        end
+        else
+        begin
+          Assert(Assigned(Mesh));
+        end;
+//      end
+//    else Assert(False);
+//  end;
   Assert(Assigned(ZoomBox));
+
+  if frmGoPhast.PhastModel.ShowContourLabels then
+  begin
+    BitMap.Font := frmGoPhast.PhastModel.ContourFont;
+  end;
 
   try
     Contours :=  DataSet.Contours;
@@ -842,115 +982,145 @@ begin
 
       DrawContours(ContourValues, LineThicknesses,
         ContourColors, SelectedColRowLayer, ViewDirection, ContourLabels);
-      Exit;
-    end;
-
-    DataSet.Initialize;
-    ActiveDataSet.Initialize;
-
-
-    DSValues := TStringList.Create;
-    ContourLabels := TStringList.Create;
-    try
-      AssignGridValues(MinValue, MaxValue, SelectedColRowLayer, DSValues,
-        ViewDirection);
-      GetSpecifiedMinMax(MinValue, MaxValue, DSValues);
-
-      if MaxValue > MinValue then
+    end
+    else
+    begin
+      DataSet.Initialize;
+      if Assigned(Grid) then
       begin
-        if DataSet.DataType = rdtBoolean then
+        ActiveDataSet.Initialize;
+      end;
+
+      DSValues := TStringList.Create;
+      ContourLabels := TStringList.Create;
+      try
+
+        case FAlgorithm of
+          caSimple:
+            begin
+
+              if Assigned(Grid) then
+              begin
+                AssignGridValues(MinValue, MaxValue, SelectedColRowLayer,
+                  DSValues, ViewDirection);
+              end
+              else
+              begin
+                AssignTriangulationValuesFromMesh(MinValue, MaxValue,
+                  SelectedColRowLayer, DSValues, ViewDirection);
+              end;
+            end;
+          caACM626:
+            begin
+              if Assigned(Grid) then
+              begin
+                AssignTriangulationValuesFromGrid(MinValue, MaxValue,
+                  SelectedColRowLayer, DSValues, ViewDirection);
+              end
+              else
+              begin
+                AssignTriangulationValuesFromMesh(MinValue, MaxValue,
+                  SelectedColRowLayer, DSValues, ViewDirection);
+              end;
+            end;
+          else Assert(False);
+        end;
+
+        GetSpecifiedMinMax(MinValue, MaxValue, DSValues);
+
+        if MaxValue > MinValue then
         begin
-          SetLength(ContourValues, 1);
-          SetLength(ContourColors, 1);
-          SetLength(LineThicknesses, 1);
-          ContourValues[0] := 0.5;
-          LineThicknesses[0] := DefaultLineThickness;
-          ContourColors[0] := Color32(ColorParameters.FracToColor(0.5));
+          if DataSet.DataType = rdtBoolean then
+          begin
+            SetLength(ContourValues, 1);
+            SetLength(ContourColors, 1);
+            SetLength(LineThicknesses, 1);
+            ContourValues[0] := 0.5;
+            LineThicknesses[0] := DefaultLineThickness;
+            ContourColors[0] := Color32(ColorParameters.FracToColor(0.5));
+          end
+          else
+          begin
+            GetContouringParameters(RequiredSize, MinValue, MaxValue,
+              DesiredSpacing, SmallestContour, LargestContour);
+            GetContourValues(LargestContour, SmallestContour, RequiredSize,
+              ContourValues);
+            GetContourColorsAndThicknesses(DesiredSpacing, RequiredSize,
+              LineThicknesses, ContourColors, ContourValues, ColorParameters);
+            if DataSet.DataType = rdtString then
+            begin
+              DupLabels := TStringList.Create;
+              try
+                DupLabels.Duplicates := dupIgnore;
+                DupLabels.Sorted := True;
+                for ContourIndex := 0 to Length(ContourValues) - 1 do
+                begin
+                  ALabel := DSValues[Round(ContourValues[ContourIndex])];
+                  ContourLabels.Add(ALabel);
+                  DupLabels.Add(ALabel);
+                end;
+                if DupLabels.Count <> ContourLabels.Count then
+                begin
+                  SetLength(NewLineThicknesses, DupLabels.Count);
+                  SetLength(NewContourColors, DupLabels.Count);
+                  SetLength(NewContourValues, DupLabels.Count);
+                  for Index := 0 to DupLabels.Count - 1 do
+                  begin
+                    ALabel := DupLabels[Index];
+                    LabelStart := ContourLabels.IndexOf(ALabel);
+                    if Index < DupLabels.Count - 1 then
+                    begin
+                      NextLabel := DupLabels[Index+1];
+                      LabelEnd := ContourLabels.IndexOf(NextLabel)-1;
+                    end
+                    else
+                    begin
+                      LabelEnd := ContourLabels.Count - 1;
+                    end;
+                    MidLabelPostion := (LabelStart + LabelEnd) div 2;
+                    NewLineThicknesses[Index] := LineThicknesses[MidLabelPostion];
+                    NewContourColors[Index] := ContourColors[MidLabelPostion];
+                    NewContourValues[Index] := ContourValues[MidLabelPostion];
+                  end;
+                  LineThicknesses := NewLineThicknesses;
+                  ContourValues := NewContourValues;
+                  ContourColors := NewContourColors;
+                  ContourLabels.Assign(DupLabels);
+                end;
+              finally
+                DupLabels.Free;
+              end;
+
+            end;
+          end;
         end
         else
         begin
-          GetContouringParameters(RequiredSize, MinValue, MaxValue,
-            DesiredSpacing, SmallestContour, LargestContour);
-          GetContourValues(LargestContour, SmallestContour, RequiredSize,
-            ContourValues);
-          GetContourColorsAndThicknesses(DesiredSpacing, RequiredSize,
-            LineThicknesses, ContourColors, ContourValues, ColorParameters);
-          if DataSet.DataType = rdtString then
-          begin
-            DupLabels := TStringList.Create;
-            try
-              DupLabels.Duplicates := dupIgnore;
-              DupLabels.Sorted := True;
-              for ContourIndex := 0 to Length(ContourValues) - 1 do
-              begin
-                ALabel := DSValues[Round(ContourValues[ContourIndex])];
-                ContourLabels.Add(ALabel);
-                DupLabels.Add(ALabel);
-              end;
-              if DupLabels.Count <> ContourLabels.Count then
-              begin
-                SetLength(NewLineThicknesses, DupLabels.Count);
-                SetLength(NewContourColors, DupLabels.Count);
-                SetLength(NewContourValues, DupLabels.Count);
-                for Index := 0 to DupLabels.Count - 1 do
-                begin
-                  ALabel := DupLabels[Index];
-                  LabelStart := ContourLabels.IndexOf(ALabel);
-                  if Index < DupLabels.Count - 1 then
-                  begin
-                    NextLabel := DupLabels[Index+1];
-                    LabelEnd := ContourLabels.IndexOf(NextLabel)-1;
-                  end
-                  else
-                  begin
-                    LabelEnd := ContourLabels.Count - 1;
-                  end;
-                  MidLabelPostion := (LabelStart + LabelEnd) div 2;
-                  NewLineThicknesses[Index] := LineThicknesses[MidLabelPostion];
-                  NewContourColors[Index] := ContourColors[MidLabelPostion];
-                  NewContourValues[Index] := ContourValues[MidLabelPostion];
-                end;
-                LineThicknesses := NewLineThicknesses;
-                ContourValues := NewContourValues;
-                ContourColors := NewContourColors;
-                ContourLabels.Assign(DupLabels);
-              end;
-            finally
-              DupLabels.Free;
-            end;
-
-          end;
+          SetLength(LineThicknesses,0);
+          SetLength(ContourColors,0);
+          SetLength(ContourValues,0);
         end;
-      end
-      else
-      begin
-        SetLength(LineThicknesses,0);
-        SetLength(ContourColors,0);
-        SetLength(ContourValues,0);
-      end;
 
-      CreateAndDrawContours(ContourValues, LineThicknesses, ContourColors, ContourLabels);
-      Contours := TContours.Create;
-      try
-        Assert(Length(ContourValues) = Length(LineThicknesses));
-        Assert(Length(ContourValues) = Length(ContourColors));
-        Contours.ContourValues := ContourValues;
-        Contours.LineThicknesses := LineThicknesses;
-        Contours.ContourColors := ContourColors;
-        Contours.ContourStringValues := DSValues;
-        DataSet.Contours := Contours;
+        CreateAndDrawContours(ContourValues, LineThicknesses, ContourColors,
+          ContourLabels);
+        Contours := TContours.Create;
+        try
+          Assert(Length(ContourValues) = Length(LineThicknesses));
+          Assert(Length(ContourValues) = Length(ContourColors));
+          Contours.ContourValues := ContourValues;
+          Contours.LineThicknesses := LineThicknesses;
+          Contours.ContourColors := ContourColors;
+          Contours.ContourStringValues := DSValues;
+          DataSet.Contours := Contours;
+        finally
+          Contours.Free;
+        end;
       finally
-        Contours.Free;
+        DSValues.Free;
+        ContourLabels.Free;
       end;
-    finally
-      DSValues.Free;
-      ContourLabels.Free;
     end;
   finally
-//    if frmContourData <> nil then
-//    begin
-//      frmContourData.UpdateContours;
-//    end;
     if frmDisplayData <> nil then
     begin
       frmDisplayData.frameContourData.UpdateContours;
@@ -1051,7 +1221,8 @@ begin
   RequiredSize := Round((LargestContour - SmallestContour) / DesiredSpacing) + 1;
 end;
 
-procedure TMultipleContourCreator.GetSpecifiedMinMax(var MinValue: Double; var MaxValue: Double; DSValues: TStringList);
+procedure TMultipleContourCreator.GetSpecifiedMinMax(var MinValue,
+  MaxValue: Double; DSValues: TStringList);
 var
   StringValue: string;
   StringPos: integer;
@@ -1122,7 +1293,7 @@ begin
 end;
 
 procedure TCustomContourCreator.EvaluateMinMaxLgr(out MaxValue, MinValue: Double;
-  DSValues: TStringList; 
+  DSValues: TStringList;
   ViewDirection: TViewDirection);
 var
   LocalPhastModel: TPhastModel;
@@ -1208,6 +1379,87 @@ begin
   end;
 end;
 
+procedure TCustomContourCreator.EvaluateMinMaxMesh(out MaxValue,
+  MinValue: Double; DSValues: TStringList; ViewDirection: TViewDirection);
+var
+  LocalPhastModel: TPhastModel;
+  Active: T3DBooleanDataSet;
+//  AnActiveDataSet: TDataArray;
+//  ChildIndex: Integer;
+//  ChildModel: TChildModel;
+//  ChildMaxValue: Double;
+//  ChildMinValue: Double;
+begin
+  if DataSet.Model is TPhastModel then
+  begin
+    LocalPhastModel := TPhastModel(DataSet.Model);
+  end
+  else
+  begin
+    LocalPhastModel := (DataSet.Model as TChildModel).ParentModel as TPhastModel;
+  end;
+
+//  AnActiveDataSet := LocalPhastModel.DataArrayManager.GetDataSetByName(rsActive);
+  EvaluateActiveMesh(Active, DataSet);
+//  case ViewDirection of
+//    vdTop:
+//      begin
+        EvaluateMinMax(MaxValue, MinValue, DSValues, Active,
+          DataSet,
+          LocalPhastModel.Mesh.SelectedLayer);
+//      end;
+//    vdFront:
+//      begin
+//        EvaluateMinMax(MaxValue, MinValue, DSValues, Active,
+//          LocalPhastModel.Grid.FrontContourDataSet,
+//          LocalPhastModel.Grid.SelectedRow);
+//      end
+//    else
+//      Assert(False);
+//  end;
+
+
+end;
+
+procedure TCustomContourCreator.PerformAlg626(C: TRealArray);
+var
+  ND: Integer;
+  WK: TRealArray;
+  NC: Integer;
+  IPL: TIntArray;
+  NewLength: Integer;
+  NT: Integer;
+begin
+  Assert(FTriangulationData <> nil);
+  PlotList.Clear;
+  CurrentLineList := nil;
+  CurrentLine := nil;
+  if Length(FTriangulationData.Triangulation) = 0 then
+  begin
+    Exit;
+  end;
+  ND := Length(FTriangulationData.X);
+  SetLength(WK, ND*5);
+  NC := Length(C);
+  SetLength(IPL, 6*ND);
+  NT:= Length(FTriangulationData.Triangulation) div 3;
+  NewLength := ND*6-15;
+  Assert(NewLength >= Length(FTriangulationData.Triangulation));
+  SetLength(FTriangulationData.Triangulation, NewLength);
+  TRICP_Pascal(FTriangulationData.X, FTriangulationData.Y,
+    FTriangulationData.Values, C, WK, ND, NCP, NC, 1, NT,
+    FTriangulationData.Triangulation, IPL);
+end;
+
+procedure TCustomContourCreator.SetMesh(const Value: TObject);
+begin
+  if Value <> nil then
+  begin
+    Assert(Value is TSutraMesh3D);
+  end;
+  FMesh := Value;
+end;
+
 procedure TCustomContourCreator.EvaluateMinMax(out MaxValue, MinValue: Double;
   DSValues: TStringList; Active: T3DBooleanDataSet; ADataArray: TDataArray;
   SelectedColRowLayer: Integer);
@@ -1248,7 +1500,8 @@ begin
       begin
         if ADataArray.Orientation = dsoTop then
         begin
-          ActiveLayer := SelectedColRowLayer;
+//          ActiveLayer := SelectedColRowLayer;
+          ActiveLayer := 0;
         end
         else
         begin
@@ -1338,6 +1591,813 @@ begin
   end;
 end;
 
+procedure TCustomContourCreator.AssignTriangulationValuesFromGrid(out MinValue,
+  MaxValue: double; SelectedColRowLayer: integer; DSValues: TStringList;
+  ViewDirection: TViewDirection);
+var
+  Active: T3DBooleanDataSet;
+  ColIndex: Integer;
+  RowIndex: Integer;
+  LayerIndex: Integer;
+  Column: Integer;
+  Row: Integer;
+  Layer: Integer;
+  DSCol: Integer;
+  DSRow: Integer;
+  DSLayer: Integer;
+  Value: Double;
+  ColumnLimit, RowLimit, LayerLimit: integer;
+  MaxLength: Integer;
+  PointIndex: Integer;
+  APoint: TPoint2D;
+  TriangleIndex: Integer;
+  NodeUL: Integer;
+  NodeLL: Integer;
+  NodeUR: Integer;
+  NodeLR: Integer;
+  Model: TCustomModel;
+begin
+  EvaluateMinMaxLgr(MaxValue, MinValue, DSValues, ViewDirection);
+  EvaluateActive(Active, ActiveDataSet);
+
+  LayerLimit := -1;
+  RowLimit := -1;
+  ColumnLimit := -1;
+  case DataSet.EvaluatedAt of
+    eaBlocks:
+      begin
+        ColumnLimit := DataSet.ColumnCount;
+        RowLimit := DataSet.RowCount;
+        LayerLimit := DataSet.LayerCount;
+      end;
+    eaNodes:
+      begin
+        ColumnLimit := DataSet.ColumnCount+1;
+        RowLimit := DataSet.RowCount+1;
+        LayerLimit := DataSet.LayerCount+1;
+      end;
+    else Assert(False);
+  end;
+  case DataSet.Orientation of
+    dsoTop: LayerLimit := 1;
+    dsoFront: RowLimit := 1;
+    dsoSide: ColumnLimit := 1;
+    dso3D: ;  // do nothing
+    else Assert(False);
+  end;
+
+  MaxLength := 0;
+  case ViewDirection of
+    vdTop:
+      begin
+        MaxLength := ColumnLimit*RowLimit;
+      end;
+    vdFront:
+      begin
+        MaxLength := ColumnLimit*LayerLimit;
+      end;
+    vdSide:
+      begin
+        MaxLength := RowLimit*LayerLimit;
+      end;
+    else Assert(False);
+  end;
+
+  FTriangulationData.Free;
+  FTriangulationData := TTriangulationData.Create;
+  SetLength(FTriangulationData.Triangulation, MaxLength*6);
+  SetLength(FTriangulationData.X, MaxLength);
+  SetLength(FTriangulationData.Y, MaxLength);
+  SetLength(FTriangulationData.Values, MaxLength);
+
+  PointIndex := 0;
+  for ColIndex := 0 to ColumnLimit - 1 do
+  begin
+    if (ViewDirection = vdSide) and (ColIndex <> SelectedColRowLayer)
+      and (DataSet.Orientation <> dsoSide) then
+    begin
+      Continue;
+    end;
+    for RowIndex := 0 to RowLimit - 1 do
+    begin
+      if (ViewDirection = vdFront) and (RowIndex <> SelectedColRowLayer)
+        and (DataSet.Orientation <> dsoFront) then
+      begin
+        Continue;
+      end;
+      for LayerIndex := 0 to LayerLimit - 1 do
+      begin
+        if (ViewDirection = vdTop) and (LayerIndex <> SelectedColRowLayer)
+          and (DataSet.Orientation <> dsoTop) then
+        begin
+          Continue;
+        end;
+        Column := -1;
+        Row := -1;
+        Layer := -1;
+        case ViewDirection of
+          vdTop:
+            begin
+              Column := ColIndex;
+              Row := RowIndex;
+              Layer := SelectedColRowLayer;
+            end;
+          vdFront:
+            begin
+              Column := ColIndex;
+              Row := SelectedColRowLayer;
+              Layer := LayerIndex;
+            end;
+          vdSide:
+            begin
+              Column := SelectedColRowLayer;
+              Row := RowIndex;
+              Layer := LayerIndex;
+            end;
+          else Assert(False);
+        end;
+        if Active[Column,Row,Layer]
+          and DataSet.ContourGridValueOK(LayerIndex, RowIndex, ColIndex) then
+        begin
+          DSCol := Column;
+          DSRow := Row;
+          DSLayer := Layer;
+
+          case DataSet.Orientation of
+            dsoTop:
+              begin
+                DSLayer := 0;
+              end;
+            dsoFront:
+              begin
+                DSRow := 0;
+              end;
+            dsoSide:
+              begin
+                DSCol := 0;
+              end;
+            dso3D: ; // do nothing
+            else Assert(False);
+          end;
+
+          Value := 0;
+          case DataSet.DataType of
+            rdtDouble:
+              begin
+                Value := DataSet.RealData[DSLayer,DSRow,DSCol];
+                if DataSet.ContourLimits.LogTransform then
+                begin
+                  Assert(Value > 0);
+                  Value := Log10(Value);
+                end;
+              end;
+            rdtInteger:
+              begin
+                Value := DataSet.IntegerData[DSLayer,DSRow,DSCol];
+              end;
+            rdtBoolean:
+              begin
+                Value := Ord(DataSet.BooleanData[DSLayer,DSRow,DSCol]);
+              end;
+            rdtString:
+              begin
+                Value := DSValues.IndexOf(DataSet.StringData[DSLayer,DSRow,DSCol]);
+              end;
+            else Assert(False);
+          end;
+
+
+          case ViewDirection of
+            vdTop:
+              begin
+                APoint := Grid[ColIndex+1,RowIndex+1].P;
+              end;
+            vdFront:
+              begin
+                APoint := Grid[ColIndex+1,LayerIndex+1].P;
+              end;
+            vdSide:
+              begin
+                APoint := Grid[RowIndex+1,LayerIndex+1].P;
+              end;
+            else
+              Assert(False);
+          end;
+
+          FTriangulationData.X[PointIndex] := APoint.x;
+          FTriangulationData.Y[PointIndex] := APoint.y;
+          FTriangulationData.Values[PointIndex] := Value;
+          FTriangulationData.VertexNumbers[DSLayer,DSRow,DSCol] := PointIndex;
+
+          Inc(PointIndex);
+        end;
+      end;
+    end;
+  end;
+  SetLength(FTriangulationData.X, PointIndex);
+  SetLength(FTriangulationData.Y, PointIndex);
+  SetLength(FTriangulationData.Values, PointIndex);
+  if PointIndex = 0 then
+  begin
+    SetLength(FTriangulationData.Triangulation, 0);
+    Exit;
+  end;
+
+  TriangleIndex := 0;
+  Model := FDataSet.Model as TCustomModel;
+  case ViewDirection of
+    vdTop:
+      begin
+        if DataSet.Orientation = dsoTop then
+        begin
+          DSLayer := 0
+        end
+        else
+        begin
+          DSLayer := SelectedColRowLayer;
+        end;
+        for ColIndex := 0 to ColumnLimit - 2 do
+        begin
+          for RowIndex := 0 to RowLimit - 2 do
+          begin
+            if Active[ColIndex,RowIndex,SelectedColRowLayer]
+              and Active[ColIndex+1,RowIndex,SelectedColRowLayer]
+              and Active[ColIndex,RowIndex+1,SelectedColRowLayer]
+              and Active[ColIndex+1,RowIndex+1,SelectedColRowLayer] then
+            begin
+              NodeUL := FTriangulationData.VertexNumbers[DSLayer,RowIndex,ColIndex];
+              NodeLL := FTriangulationData.VertexNumbers[DSLayer,RowIndex+1,ColIndex];
+              NodeUR := FTriangulationData.VertexNumbers[DSLayer,RowIndex,ColIndex+1];
+              NodeLR := FTriangulationData.VertexNumbers[DSLayer,RowIndex+1,ColIndex+1];
+              Assert(NodeUL >= 0);
+              Assert(NodeLL >= 0);
+              Assert(NodeUR >= 0);
+              Assert(NodeLR >= 0);
+
+              if Model.ModelSelection <> msPhast then
+              begin
+                FTriangulationData.Triangulation[TriangleIndex] := NodeUL;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeLL;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeUR;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeLL;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeLR;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeUR;
+                Inc(TriangleIndex);
+              end
+              else
+              begin
+                FTriangulationData.Triangulation[TriangleIndex] := NodeLL;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeUL;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeLR;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeUL;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeUR;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeLR;
+                Inc(TriangleIndex);
+              end;
+            end;
+          end;
+        end;
+      end;
+    vdFront:
+      begin
+        if DataSet.Orientation = dsoFront then
+        begin
+          DSRow := 0
+        end
+        else
+        begin
+          DSRow := SelectedColRowLayer;
+        end;
+        for ColIndex := 0 to ColumnLimit - 2 do
+        begin
+          for LayerIndex := 0 to LayerLimit - 2 do
+          begin
+            if Active[ColIndex,SelectedColRowLayer,LayerIndex]
+              and Active[ColIndex+1,SelectedColRowLayer,LayerIndex]
+              and Active[ColIndex,SelectedColRowLayer,LayerIndex+1]
+              and Active[ColIndex+1,SelectedColRowLayer,LayerIndex+1] then
+            begin
+              NodeUL := FTriangulationData.VertexNumbers[LayerIndex,DSRow,ColIndex];
+              NodeLL := FTriangulationData.VertexNumbers[LayerIndex+1,DSRow,ColIndex];
+              NodeUR := FTriangulationData.VertexNumbers[LayerIndex,DSRow,ColIndex+1];
+              NodeLR := FTriangulationData.VertexNumbers[LayerIndex+1,DSRow,ColIndex+1];
+              Assert(NodeUL >= 0);
+              Assert(NodeLL >= 0);
+              Assert(NodeUR >= 0);
+              Assert(NodeLR >= 0);
+
+              if Model.ModelSelection <> msPhast then
+              begin
+                FTriangulationData.Triangulation[TriangleIndex] := NodeUL;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeLL;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeUR;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeLL;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeLR;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeUR;
+                Inc(TriangleIndex);
+              end
+              else
+              begin
+                FTriangulationData.Triangulation[TriangleIndex] := NodeLL;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeUL;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeLR;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeUL;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeUR;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeLR;
+                Inc(TriangleIndex);
+              end;
+            end;
+          end;
+        end;
+      end;
+    vdSide:
+      begin
+        if DataSet.Orientation = dsoSide then
+        begin
+          DSCol := 0;
+        end
+        else
+        begin
+          DSCol := SelectedColRowLayer;
+        end;
+        for RowIndex := 0 to RowLimit - 2 do
+        begin
+          for LayerIndex := 0 to LayerLimit - 2 do
+          begin
+            if Active[SelectedColRowLayer,RowIndex,LayerIndex]
+              and Active[SelectedColRowLayer,RowIndex+1,LayerIndex]
+              and Active[SelectedColRowLayer,RowIndex,LayerIndex+1]
+              and Active[SelectedColRowLayer,RowIndex+1,LayerIndex+1] then
+            begin
+              NodeUR := FTriangulationData.VertexNumbers[LayerIndex,RowIndex,DSCol];
+              NodeUL := FTriangulationData.VertexNumbers[LayerIndex+1,RowIndex,DSCol];
+              NodeLR := FTriangulationData.VertexNumbers[LayerIndex,RowIndex+1,DSCol];
+              NodeLL := FTriangulationData.VertexNumbers[LayerIndex+1,RowIndex+1,DSCol];
+              Assert(NodeUL >= 0);
+              Assert(NodeLL >= 0);
+              Assert(NodeUR >= 0);
+              Assert(NodeLR >= 0);
+
+              if Model.ModelSelection <> msPhast then
+              begin
+                FTriangulationData.Triangulation[TriangleIndex] := NodeUL;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeLL;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeUR;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeLL;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeLR;
+                Inc(TriangleIndex);
+                FTriangulationData.Triangulation[TriangleIndex] := NodeUR;
+                Inc(TriangleIndex);
+              end
+              else
+              begin
+                if ViewDirection = vdSide then
+                begin
+                  FTriangulationData.Triangulation[TriangleIndex] := NodeUL;
+                  Inc(TriangleIndex);
+                  FTriangulationData.Triangulation[TriangleIndex] := NodeLL;
+                  Inc(TriangleIndex);
+                  FTriangulationData.Triangulation[TriangleIndex] := NodeUR;
+                  Inc(TriangleIndex);
+                  FTriangulationData.Triangulation[TriangleIndex] := NodeLL;
+                  Inc(TriangleIndex);
+                  FTriangulationData.Triangulation[TriangleIndex] := NodeLR;
+                  Inc(TriangleIndex);
+                  FTriangulationData.Triangulation[TriangleIndex] := NodeUR;
+                  Inc(TriangleIndex);
+                end
+                else
+                begin
+                  FTriangulationData.Triangulation[TriangleIndex] := NodeLL;
+                  Inc(TriangleIndex);
+                  FTriangulationData.Triangulation[TriangleIndex] := NodeUL;
+                  Inc(TriangleIndex);
+                  FTriangulationData.Triangulation[TriangleIndex] := NodeLR;
+                  Inc(TriangleIndex);
+                  FTriangulationData.Triangulation[TriangleIndex] := NodeUL;
+                  Inc(TriangleIndex);
+                  FTriangulationData.Triangulation[TriangleIndex] := NodeUR;
+                  Inc(TriangleIndex);
+                  FTriangulationData.Triangulation[TriangleIndex] := NodeLR;
+                  Inc(TriangleIndex);
+                end;
+              end;
+            end;
+          end;
+        end;
+      end;
+    else Assert(False);
+  end;
+  SetLength(FTriangulationData.Triangulation, TriangleIndex);
+  FTriangulationData.EliminateUniformTriangles;
+end;
+
+procedure TCustomContourCreator.AssignTriangulationValuesFromMesh(out MinValue,
+  MaxValue: double; SelectedColRowLayer: integer; DSValues: TStringList;
+  ViewDirection: TViewDirection);
+var
+  Active: T3DBooleanDataSet;
+  ColIndex: Integer;
+//  RowIndex: Integer;
+  LayerIndex: Integer;
+//  Column: Integer;
+//  Row: Integer;
+//  Layer: Integer;
+  DSCol: Integer;
+  DSRow: Integer;
+  DSLayer: Integer;
+  Value: Double;
+//  ColumnLimit, RowLimit, LayerLimit: integer;
+  MaxLength: Integer;
+  PointIndex: Integer;
+  APoint: TPoint2D;
+//  TriangleIndex: Integer;
+//  NodeUL: Integer;
+//  NodeLL: Integer;
+//  NodeUR: Integer;
+//  NodeLR: Integer;
+//  Model: TCustomModel;
+  LocalMesh: TSutraMesh3D;
+  AnNode2D: TSutraNode2D;
+  N: integer;
+  IADJ: TIntArray;
+  IEND: TIntArray;
+  IER: Integer;
+  NT: Integer;
+  IPL: TIntArray;
+  IPT: TIntArray;
+  NodeList: TSutraNode2D_List;
+  ElementList: TSutraElement2D_List;
+  ALine: TLine2D;
+  ClosestPoint: TPoint2D;
+  OffSet: TFloat;
+  Node2D: TSutraNode2D;
+  ADistance: TFloat;
+  StartPoint: TPoint2D;
+  Angle: double;
+  X_Float: TFloat;
+  Node3D: TSutraNode3D;
+  Node2D_Index: Integer;
+  SegmentAngle: Double;
+  Element3D: TSutraElement3D;
+  Element2D_Index: Integer;
+  AnElement2D: TSutraElement2D;
+//  Index: Integer;
+//  Temp: Real;
+//  N1: Integer;
+//  N2: Integer;
+//  N3: Integer;
+//  NewIndex: Integer;
+  procedure AssignValue;
+  begin
+    Value := 0;
+    case DataSet.DataType of
+      rdtDouble:
+        begin
+          Value := DataSet.RealData[DSLayer,DSRow,DSCol];
+          if DataSet.ContourLimits.LogTransform then
+          begin
+            Assert(Value > 0);
+            Value := Log10(Value);
+          end;
+        end;
+      rdtInteger:
+        begin
+          Value := DataSet.IntegerData[DSLayer,DSRow,DSCol];
+        end;
+      rdtBoolean:
+        begin
+          Value := Ord(DataSet.BooleanData[DSLayer,DSRow,DSCol]);
+        end;
+      rdtString:
+        begin
+          Value := DSValues.IndexOf(DataSet.StringData[DSLayer,DSRow,DSCol]);
+        end;
+      else Assert(False);
+    end
+  end;
+  procedure ComputeNodeCrossSectionDistance;
+  begin
+    ClosestPoint := ClosestPointOnLineFromPoint(
+      ALine, Node2D.Location);
+    ADistance := -Distance(Node2D.Location, ClosestPoint);
+    if ADistance <> 0 then
+    begin
+      if FastGEO.Orientation(Node2D.Location,
+        LocalMesh.CrossSection.StartPoint, LocalMesh.CrossSection.EndPoint) =
+        LeftHandSide then
+      begin
+        ADistance := -ADistance;
+      end;
+    end;
+    ADistance := ADistance + OffSet;
+  end;
+begin
+  EvaluateMinMaxMesh(MaxValue, MinValue, DSValues, ViewDirection);
+  EvaluateActiveMesh(Active, DataSet);
+
+  LocalMesh := Mesh as TSutraMesh3D;
+  MaxLength := 0;
+
+  case LocalMesh.MeshType of
+    mt2D:
+      begin
+        case DataSet.EvaluatedAt of
+          eaBlocks:
+            begin
+              MaxLength := LocalMesh.Mesh2D.Elements.Count;
+            end;
+          eaNodes:
+            begin
+              MaxLength := LocalMesh.Mesh2D.Nodes.Count;
+            end;
+          else Assert(False);
+        end;
+      end;
+    mt3D:
+      begin
+        case DataSet.EvaluatedAt of
+          eaBlocks:
+            begin
+              MaxLength := LocalMesh.Elements.Count;
+            end;
+          eaNodes:
+            begin
+              MaxLength := LocalMesh.Nodes.Count;
+            end;
+          else Assert(False);
+        end;
+      end;
+    else
+      Assert(False);
+  end;
+
+  FTriangulationData.Free;
+  FTriangulationData := TTriangulationData.Create;
+  SetLength(FTriangulationData.Triangulation, MaxLength*6);
+  SetLength(FTriangulationData.X, MaxLength);
+  SetLength(FTriangulationData.Y, MaxLength);
+  SetLength(FTriangulationData.Values, MaxLength);
+
+  PointIndex := 0;
+  case ViewDirection of
+    vdTop:
+      begin
+        if SelectedColRowLayer >= DataSet.LayerCount then
+        begin
+          SelectedColRowLayer := DataSet.LayerCount-1;
+        end;
+        DSLayer := SelectedColRowLayer;
+        DSRow := 0;
+        case DataSet.EvaluatedAt of
+          eaBlocks:
+            begin
+              for ColIndex := 0 to LocalMesh.Mesh2D.Elements.Count - 1 do
+              begin
+                if Active[ColIndex,0,SelectedColRowLayer] then
+                begin
+                  APoint := LocalMesh.Mesh2D.Elements[ColIndex].Center;
+                  FTriangulationData.X[PointIndex] := APoint.X;
+                  FTriangulationData.Y[PointIndex] := APoint.Y;
+                  DSCol := ColIndex;
+                  AssignValue;
+                  FTriangulationData.Values[PointIndex] := Value;
+                  Inc(PointIndex);
+                end;
+              end;
+            end;
+          eaNodes:
+            begin
+              for ColIndex := 0 to LocalMesh.Mesh2D.Nodes.Count - 1 do
+              begin
+                if Active[ColIndex,0,SelectedColRowLayer] then
+                begin
+                  AnNode2D := LocalMesh.Mesh2D.Nodes[ColIndex];
+                  FTriangulationData.X[PointIndex] := AnNode2D.X;
+                  FTriangulationData.Y[PointIndex] := AnNode2D.Y;
+                  DSCol := ColIndex;
+                  AssignValue;
+                  FTriangulationData.Values[PointIndex] := Value;
+                  Inc(PointIndex);
+                end;
+              end;
+            end;
+        end;
+
+      end;
+    vdFront:
+      begin
+        ALine := EquateLine(LocalMesh.CrossSection.StartPoint, LocalMesh.CrossSection.EndPoint);
+        SegmentAngle := LocalMesh.CrossSection.Angle;
+
+        ClosestPoint := ClosestPointOnLineFromPoint(
+          ALine, EquatePoint(0.0, 0.0));
+        OffSet := Distance(EquatePoint(0.0, 0.0), ClosestPoint);
+        if OffSet <> 0 then
+        begin
+          if FastGEO.Orientation(EquatePoint(0.0, 0.0),
+            LocalMesh.CrossSection.StartPoint, LocalMesh.CrossSection.EndPoint) =
+            LeftHandSide then
+          begin
+            OffSet := -OffSet;
+          end;
+        end;
+
+        DSRow := 0;
+        StartPoint := EquatePoint(0.0, 0.0);
+        case DataSet.EvaluatedAt of
+          eaBlocks:
+            begin
+              ElementList := TSutraElement2D_List.Create;
+              try
+                LocalMesh.GetElementsOnCrossSection(ElementList);
+                for Element2D_Index := 0 to ElementList.Count - 1 do
+                begin
+                  AnElement2D := ElementList[Element2D_Index];
+                  DSCol := AnElement2D.ElementNumber;
+                  APoint := AnElement2D.Center;
+                  Angle := ArcTan2(APoint.y - StartPoint.y,
+                    APoint.x - StartPoint.x) - SegmentAngle;
+                  X_Float := Distance(StartPoint, APoint)*Cos(Angle)
+                    + StartPoint.x;
+                  for LayerIndex := 0 to LocalMesh.LayerCount - 1 do
+                  begin
+
+                    Element3D := LocalMesh.ElementArray[LayerIndex,
+                      AnElement2D.ElementNumber];
+                    if Element3D.Active then
+                    begin
+                      DSLayer := LayerIndex;
+                      FTriangulationData.X[PointIndex] := X_Float;
+                      FTriangulationData.Y[PointIndex] := Element3D.CenterElevation;
+//                      DSCol := ColIndex;
+                      AssignValue;
+                      FTriangulationData.Values[PointIndex] := Value;
+                      Inc(PointIndex);
+                    end;
+                  end;
+                end;
+//                MaxLength := ElementList.Count;
+              finally
+                ElementList.Free;
+              end;
+            end;
+          eaNodes:
+            begin
+              NodeList := TSutraNode2D_List.Create;
+              try
+                LocalMesh.GetNodesOnCrossSection(NodeList);
+
+                for Node2D_Index := 0 to NodeList.Count - 1 do
+                begin
+                  Node2D := NodeList[Node2D_Index];
+                  DSCol := Node2D.Number;
+                  Angle := ArcTan2(Node2D.y - StartPoint.y,
+                    Node2D.x - StartPoint.x) - SegmentAngle;
+                  X_Float := Distance(StartPoint, Node2D.Location)*Cos(Angle)
+                    + StartPoint.x;
+                  for LayerIndex := 0 to LocalMesh.LayerCount do
+                  begin
+                    Node3D := LocalMesh.NodeArray[LayerIndex, Node2D.Number];
+                    if Node3D.Active then
+                    begin
+                      DSLayer := LayerIndex;
+                      FTriangulationData.X[PointIndex] := X_Float;
+                      FTriangulationData.Y[PointIndex] := Node3D.Z;
+//                      DSCol := ColIndex;
+                      AssignValue;
+                      FTriangulationData.Values[PointIndex] := Value;
+                      Inc(PointIndex);
+                    end;
+                  end;
+                end;
+              finally
+                NodeList.Free;
+              end;
+            end;
+          else Assert(False);
+        end;
+      end;
+    else
+      Assert(False);
+  end;
+
+  N := PointIndex;
+  SetLength(FTriangulationData.X, N);
+  SetLength(FTriangulationData.Y, N);
+  SetLength(FTriangulationData.Values, N);
+  SetLength(IADJ, 6*N-9);
+  SetLength(IEND, N);
+
+//  Index := 2;
+//  while Collinear(FTriangulationData.X[0], FTriangulationData.Y[0],
+//    FTriangulationData.X[1], FTriangulationData.Y[1],
+//    FTriangulationData.X[Index], FTriangulationData.Y[Index]) do
+//  begin
+//    Inc(Index);
+//    if Index = N then
+//    begin
+//      SetLength(FTriangulationData.Triangulation, 0);
+//      Exit;
+//    end;
+//  end;
+//  if Index <> 2 then
+//  begin
+//    Temp := FTriangulationData.X[2];
+//    FTriangulationData.X[2] := FTriangulationData.X[Index];
+//    FTriangulationData.X[Index] := Temp;
+//
+//    Temp := FTriangulationData.Y[2];
+//    FTriangulationData.Y[2] := FTriangulationData.Y[Index];
+//    FTriangulationData.Y[Index] := Temp;
+//
+//    Temp := FTriangulationData.Values[2];
+//    FTriangulationData.Values[2] := FTriangulationData.Values[Index];
+//    FTriangulationData.Values[Index] := Temp;
+//  end;
+
+  TRMESH (N, FTriangulationData.X, FTriangulationData.Y, IADJ, IEND, IER);
+  if IER <> 0 then
+  begin
+    SetLength(FTriangulationData.Triangulation, 0);
+    Exit;
+  end;
+  FTriangulationData.IADJ := IADJ;
+  FTriangulationData.IEND := IEND;
+
+  SetLength(IPL, 6*N);
+  SetLength(IPT, 6*N-15);
+
+  Trmesh_2_Idtang(NT, IEND, IADJ, IPL, IPT, N);
+  FTriangulationData.Triangulation := IPT;
+  SetLength(FTriangulationData.Triangulation, NT*3);
+//  FTriangulationData.EliminateUniformTriangles;
+end;
+
+destructor TCustomContourCreator.Destroy;
+begin
+  FTriangulationData.Free;
+  inherited;
+end;
+
+procedure TTriangulationData.EliminateUniformTriangles;
+var
+  Index: Integer;
+  NT: integer;
+  N1: Integer;
+  N2: Integer;
+  N3: Integer;
+  NewIndex: Integer;
+begin
+  NT := Length(Triangulation) div 3;
+  NewIndex := 0;
+  for Index := 0 to NT - 1 do
+  begin
+    N1 := Triangulation[Index * 3];
+    N2 := Triangulation[Index * 3 + 1];
+    N3 := Triangulation[Index * 3 + 2];
+    if Index <> NewIndex then
+    begin
+      Triangulation[NewIndex * 3] := N1;
+      Triangulation[NewIndex * 3 + 1] := N2;
+      Triangulation[NewIndex * 3 + 2] := N3;
+    end;
+    if (Values[N1] <> Values[N2])
+      or (Values[N1] <> Values[N3]) then
+    begin
+      Inc(NewIndex);
+    end;
+  end;
+  if NewIndex <> NT then
+  begin
+    SetLength(Triangulation, NewIndex * 3);
+  end;
+end;
+
 procedure TCustomContourCreator.EvaluateActive(var Active: T3DBooleanDataSet;
   AnActiveDataSet: TDataArray);
 var
@@ -1404,11 +2464,216 @@ begin
   end;
 end;
 
+procedure TCustomContourCreator.EvaluateActiveMesh(
+  var Active: T3DBooleanDataSet; ADataSet: TDataArray);
+var
+  LayerIndex: Integer;
+  RowIndex: Integer;
+  ColIndex: Integer;
+  LocalMesh: TSutraMesh3D;
+  AnElement: TSutraElement3D;
+  ANode: TSutraNode3D;
+begin
+//  AnActiveDataSet.Initialize;
+  SetLength(Active, ADataSet.ColumnCount,
+    ADataSet.RowCount, ADataSet.LayerCount);
+  LocalMesh := Mesh as TSutraMesh3D;
+  case LocalMesh.MeshType of
+    mt2D:
+      begin
+        for ColIndex := 0 to ADataSet.ColumnCount-1 do
+        begin
+          for RowIndex := 0 to ADataSet.RowCount-1 do
+          begin
+            for LayerIndex := 0 to ADataSet.LayerCount-1 do
+            begin
+              Active[ColIndex, RowIndex, LayerIndex] := True;
+            end;
+          end;
+        end;
+      end;
+    mt3D:
+      begin
+        case DataSet.EvaluatedAt of
+          eaBlocks:
+            begin
+              for ColIndex := 0 to ADataSet.ColumnCount - 1 do
+              begin
+                if ADataSet.Orientation = dsoTop then
+                begin
+                  for LayerIndex := 0 to LocalMesh.LayerCount - 1 do
+                  begin
+                    AnElement := LocalMesh.ElementArray[LayerIndex, ColIndex];
+                    Active[ColIndex, 0, 0] :=
+                      Active[ColIndex, 0, 0] or AnElement.Active;
+                  end;
+                end
+                else
+                begin
+                  for LayerIndex := 0 to ADataSet.LayerCount - 1 do
+                  begin
+                    AnElement := LocalMesh.ElementArray[LayerIndex, ColIndex];
+                    Active[ColIndex, 0, LayerIndex] := AnElement.Active;
+                  end;
+                end;
+              end;
+            end;
+          eaNodes:
+            begin
+              for ColIndex := 0 to ADataSet.ColumnCount - 1 do
+              begin
+                if ADataSet.Orientation = dsoTop then
+                begin
+                  for LayerIndex := 0 to LocalMesh.LayerCount do
+                  begin
+                    ANode := LocalMesh.NodeArray[LayerIndex, ColIndex];
+                    Active[ColIndex, 0, 0] := Active[ColIndex, 0, 0]
+                      or ANode.Active;
+                  end;
+                end
+                else
+                begin
+                  for LayerIndex := 0 to ADataSet.LayerCount -1 do
+                  begin
+                    ANode := LocalMesh.NodeArray[LayerIndex, ColIndex];
+                    Active[ColIndex, 0, LayerIndex] := ANode.Active;
+                  end;
+                end;
+              end;
+            end;
+          else
+            Assert(False);
+        end;
+      end;
+    else
+      Assert(False);
+  end;
+end;
+
 constructor TMultipleContourCreator.Create;
 begin
   inherited;
+  FAlgorithm := caSimple;
   FLabelLocations := TRbwQuadTree.Create(nil);
   FLabels := TLabelObjectList.Create;
+end;
+
+procedure TCustomContourCreator.CreateSimpleContoursFromMesh
+  (const ContourValues: TOneDRealArray);
+var
+  NeighborStart: Integer;
+  ALineList: TLineList;
+  PointIndex: Integer;
+  NeighborStop: Integer;
+  NeighborNode2: Integer;
+  NeighborIndex: Integer;
+  NeighborNode1: Integer;
+  PointValue: Real;
+  Neighbor1Value: Real;
+  Neighbor2Value: Real;
+  PointX: Real;
+  Neighbor1X: Real;
+  Neighbor2X: Real;
+  PointY: Real;
+  Neighbor1Y: Real;
+  Neighbor2Y: Real;
+  ContourIndex: Integer;
+  AValue: Double;
+  Frac1: Extended;
+  Frac2: Extended;
+  CrossX1: Real;
+  CrossY1: Real;
+  CrossX2: Real;
+  CrossY2: Real;
+  ALine: TLine;
+begin
+  Assert(Assigned(Mesh));
+  Assert(Assigned(FTriangulationData));
+  NeighborStart := 0;
+  PlotList.Clear;
+  CurrentLineList := nil;
+  CurrentLine := nil;
+
+  ALineList := TLineList.Create;
+  PlotList.Add(ALineList);
+  for PointIndex := 0 to Length(FTriangulationData.X) - 1 do
+  begin
+    // Values in FTriangulationData.IEND and FTriangulationData.IADJ
+    // are offset by 1.
+    NeighborStop := FTriangulationData.IEND[PointIndex] -1;
+    NeighborNode2 := FTriangulationData.IADJ[NeighborStop]-1;
+    for NeighborIndex := NeighborStart to NeighborStop do
+    begin
+      NeighborNode1 := FTriangulationData.IADJ[NeighborIndex]-1;
+
+      if (NeighborNode1 >= 0) and (NeighborNode2 >= 0) then
+      begin
+        PointValue := FTriangulationData.Values[PointIndex];
+        Neighbor1Value := FTriangulationData.Values[NeighborNode1];
+        Neighbor2Value := FTriangulationData.Values[NeighborNode2];
+        if (PointValue <> Neighbor1Value)
+          or (PointValue <> Neighbor2Value)  then
+        begin
+          PointX := FTriangulationData.X[PointIndex];
+          Neighbor1X := FTriangulationData.X[NeighborNode1];
+          Neighbor2X := FTriangulationData.X[NeighborNode2];
+          PointY := FTriangulationData.Y[PointIndex];
+          Neighbor1Y := FTriangulationData.Y[NeighborNode1];
+          Neighbor2Y := FTriangulationData.Y[NeighborNode2];
+          for ContourIndex := 0 to Length(ContourValues) - 1 do
+          begin
+            AValue := ContourValues[ContourIndex];
+            if ((PointValue >= AValue) <> (Neighbor1Value >= AValue))
+              and ((PointValue >= AValue) <> (Neighbor2Value >= AValue)) then
+            begin
+              Frac1 := (PointValue-AValue)/(PointValue-Neighbor1Value);
+              Frac2 := (PointValue-AValue)/(PointValue-Neighbor2Value);
+              if PointX = Neighbor1X then
+              begin
+                CrossX1 := PointX;
+              end
+              else
+              begin
+                CrossX1 := PointX + Frac1*(Neighbor1X-PointX);
+              end;
+              if PointY = Neighbor1Y then
+              begin
+                CrossY1 := PointY;
+              end
+              else
+              begin
+                CrossY1 := PointY + Frac1*(Neighbor1Y-PointY);
+              end;
+              if PointX = Neighbor2X then
+              begin
+                CrossX2 := PointX;
+              end
+              else
+              begin
+                CrossX2 := PointX + Frac2*(Neighbor2X-PointX);
+              end;
+              if PointY = Neighbor2Y then
+              begin
+                CrossY2 := PointY;
+              end
+              else
+              begin
+                CrossY2 := PointY + Frac2*(Neighbor2Y-PointY);
+              end;
+
+              ALine := TLine.Create;
+              ALineList.Add(ALine);
+              ALine.ContourLevel := AValue;
+              ALine.Add(CrossX1, CrossY1);
+              ALine.Add(CrossX2, CrossY2);
+            end;
+          end;
+        end;
+      end;
+      NeighborNode2 := NeighborNode1;
+    end;
+    NeighborStart := NeighborStop+1
+  end
 end;
 
 procedure TMultipleContourCreator.CreateAndDrawContours(
@@ -1420,57 +2685,242 @@ var
   AValue: Double;
   LabelIndex: Integer;
   ALabel: TLabel;
+  C: TRealArray;
+  index: Integer;
+  APlot: TLineList;
+  ContVals: TRealList;
+  AContourLine: TLine;
+  Points: array of TPoint;
+  ALocation: TLocation;
+  ValueIndex: Integer;
+  AColor: TColor32;
+  LineThickness: Double;
+  LabelLocations: TRbwQuadTree;
+  Labels: TLabelObjectList;
+  CenterIndex: Integer;
+  CenterX: Integer;
+  CenterY: Integer;
+  AContourLabel: string;
+  ASize: TSize;
+  procedure PlotContourLines;
+  var
+    ContourIndex: integer;
+    PointIndex: integer;
+  begin
+    if PlotList.Count = 0 then
+    begin
+      Exit;
+    end;
+    Assert(PlotList.Count = 1);
+    APlot := PlotList[0];
+    if frmGoPhast.PhastModel.ShowContourLabels then
+    begin
+      LabelLocations := FLabelLocations;
+      Labels := FLabels;
+    end
+    else
+    begin
+      LabelLocations := nil;
+      Labels := nil;
+    end;
+    for ContourIndex := 0 to APlot.Count - 1 do
+    begin
+      AContourLine := APlot[ContourIndex];
+      if AContourLine.Count = 0 then
+      begin
+        Continue;
+      end;
+      ValueIndex := ContVals.IndexOfClosest(AContourLine.ContourLevel);
+      AColor := ContourColors[ValueIndex];
+      LineThickness := LineThicknesses[ValueIndex];
+      SetLength(Points, AContourLine.Count);
+      for PointIndex := 0 to AContourLine.Count - 1 do
+      begin
+        ALocation := AContourLine.Items[PointIndex];
+        Points[PointIndex].X := ZoomBox.XCoord(ALocation.x);
+        Points[PointIndex].Y := ZoomBox.YCoord(ALocation.y);
+      end;
+      DrawBigPolyline32(Bitmap, AColor, LineThickness,
+        Points, True);
+
+
+      if LabelLocations <> nil then
+      begin
+        Assert(Labels <> nil);
+        if AContourLine.Count = 2 then
+        begin
+          CenterX := (Points[0].X + Points[1].X) div 2;
+          CenterY := (Points[0].Y + Points[1].Y) div 2;
+        end
+        else
+        begin
+          CenterIndex := AContourLine.Count div 2;
+          CenterX := Points[CenterIndex].X;
+          CenterY := Points[CenterIndex].Y;
+        end;
+        if ContourLabels.Count = 0 then
+        begin
+          AValue := AContourLine.ContourLevel;
+          if DataSet.ContourLimits.LogTransform then
+          begin
+            AValue := Power(10, AValue);
+          end;
+
+          AContourLabel := FloatToStrF(AValue,
+            ffGeneral, 7, 0);
+        end
+        else
+        begin
+          AContourLabel := ContourLabels[ValueIndex];
+        end;
+        if (CenterX > 0) and (CenterY > 0)
+          and (CenterX < LabelLocations.XMax)
+          and (CenterY < LabelLocations.YMax) then
+        begin
+
+          PlotLabel(CenterX, CenterY, LabelLocations, AContourLabel,
+            Labels, BitMap);
+        end;
+      end;
+    end
+  end;
 begin
   Assert(Length(ContourValues) = Length(LineThicknesses));
   Assert(Length(ContourValues) = Length(ContourColors));
-  ContourCreator := TContourCreator.Create;
-  try
-    ContourCreator.BitMap := BitMap;
-    ContourCreator.Grid := Grid;
-    ContourCreator.ZoomBox := ZoomBox;
-    ContourCreator.EvaluatedAt := DataSet.EvaluatedAt;
-    FLabelLocations.Clear;
-    FLabels.Clear;
-    FLabelLocations.XMin := 0;
-    FLabelLocations.YMin := 0;
-    FLabelLocations.XMax := ZoomBox.Width;
-    FLabelLocations.YMax := ZoomBox.Height;
-    for ContourIndex := 0 to Length(ContourValues) - 1 do
-    begin
-      AValue := ContourValues[ContourIndex];
-      ContourCreator.Value := AValue;
 
-      if ContourLabels.Count = 0 then
-      begin
-        ContourCreator.ContourLabel := FloatToStrF(AValue, ffGeneral, 7, 0);
-      end
-      else
-      begin
-        ContourCreator.ContourLabel := ContourLabels[ContourIndex];
-      end;
+  FLabelLocations.Clear;
+  FLabels.Clear;
+  FLabelLocations.XMin := 0;
+  FLabelLocations.YMin := 0;
+  FLabelLocations.XMax := ZoomBox.Width;
+  FLabelLocations.YMax := ZoomBox.Height;
 
-      ContourCreator.Color := ContourColors[ContourIndex];
-      ContourCreator.LineThickness := LineThicknesses[ContourIndex];
-      if frmGoPhast.PhastModel.ShowContourLabels then
+  case FAlgorithm of
+    caSimple:
       begin
-        ContourCreator.LabelLocations := FLabelLocations;
-        ContourCreator.Labels := FLabels;
-      end
-      else
-      begin
-        ContourCreator.LabelLocations := nil;
-        ContourCreator.Labels := nil;
+        if Assigned(Grid) then
+        begin
+          ContourCreator := TContourCreator.Create;
+          try
+            ContourCreator.BitMap := BitMap;
+            ContourCreator.Grid := Grid;
+            ContourCreator.ZoomBox := ZoomBox;
+            ContourCreator.EvaluatedAt := DataSet.EvaluatedAt;
+            for ContourIndex := 0 to Length(ContourValues) - 1 do
+            begin
+              AValue := ContourValues[ContourIndex];
+              ContourCreator.Value := AValue;
+
+              if DataSet.ContourLimits.LogTransform then
+              begin
+                AValue := Power(10, AValue);
+              end;
+
+              if ContourLabels.Count = 0 then
+              begin
+                ContourCreator.ContourLabel := FloatToStrF(AValue, ffGeneral, 7, 0);
+              end
+              else
+              begin
+                ContourCreator.ContourLabel := ContourLabels[ContourIndex];
+              end;
+
+              ContourCreator.Color := ContourColors[ContourIndex];
+              ContourCreator.LineThickness := LineThicknesses[ContourIndex];
+              if frmGoPhast.PhastModel.ShowContourLabels then
+              begin
+                ContourCreator.LabelLocations := FLabelLocations;
+                ContourCreator.Labels := FLabels;
+              end
+              else
+              begin
+                ContourCreator.LabelLocations := nil;
+                ContourCreator.Labels := nil;
+              end;
+              ContourCreator.DrawContour;
+            end;
+          finally
+            ContourCreator.Free;
+          end;
+        end
+        else
+        begin
+          CreateSimpleContoursFromMesh(ContourValues);
+
+          ContVals := TRealList.Create;
+          try
+            ContVals.Capacity := Length(ContourValues);
+            for index := 0 to Length(ContourValues) - 1 do
+            begin
+              ContVals.Add(ContourValues[index]);
+            end;
+            PlotContourLines;
+          finally
+            ContVals.Free;
+          end;
+        end;
       end;
-      ContourCreator.DrawContour;
-    end;
-    for LabelIndex := 0 to FLabels.Count - 1 do
-    begin
-      ALabel := FLabels[LabelIndex];
-      FBitMap.Textout(ALabel.X, ALabel.Y, ALabel.Value);
-    end;
-  finally
-    ContourCreator.Free;
+    caACM626:
+      begin
+        ContVals := TRealList.Create;
+        try
+          ContVals.Capacity := Length(ContourValues);
+          SetLength(C, Length(ContourValues));
+          for index := 0 to Length(ContourValues) - 1 do
+          begin
+            C[index] := ContourValues[index];
+            ContVals.Add(ContourValues[index]);
+          end;
+          PerformAlg626(C);
+
+          PlotContourLines;
+        finally
+          ContVals.Free;
+        end;
+      end;
+    else
+      Assert(False);
   end;
+
+  for LabelIndex := 0 to FLabels.Count - 1 do
+  begin
+    ALabel := FLabels[LabelIndex];
+    ASize := FBitMap.TextExtent(ALabel.Value);
+    FBitMap.FillRectS(ALabel.X, ALabel.Y,
+      ALabel.X+ASize.cx, ALabel.Y+ASize.cy, clWhite32);
+    FBitMap.Textout(ALabel.X, ALabel.Y, ALabel.Value);
+  end;
+end;
+
+{ TTriangulationData }
+
+constructor TTriangulationData.Create;
+begin
+  FVertexNumbers:= T3DSparseIntegerArray.Create(SPASmall);
+end;
+
+destructor TTriangulationData.Destroy;
+begin
+  FVertexNumbers.Free;
+  inherited;
+end;
+
+function TTriangulationData.GetVertexNumber(Layer, Row, Col: Integer): Integer;
+begin
+  if FVertexNumbers.IsValue[Layer, Row, Col] then
+  begin
+    result := FVertexNumbers.Items[Layer, Row, Col]
+  end
+  else
+  begin
+    result := -1;
+  end;
+end;
+
+procedure TTriangulationData.SetVertexNumber(Layer, Row, Col: Integer;
+  const Value: Integer);
+begin
+  FVertexNumbers.Items[Layer, Row, Col] := Value;
 end;
 
 end.

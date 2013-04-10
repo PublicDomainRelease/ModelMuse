@@ -1,90 +1,84 @@
 inherited frmImportAsciiRaster: TfrmImportAsciiRaster
-  Width = 582
-  Height = 304
+  Width = 660
   HelpKeyword = 'Import_ASCII_Raster_File'
   Caption = 'Import ASCII Raster File'
-  ExplicitWidth = 582
-  ExplicitHeight = 304
+  ExplicitWidth = 660
   PixelsPerInch = 120
   TextHeight = 18
   inherited lblDataSet: TLabel
-    Top = 7
-    Anchors = [akLeft, akBottom]
-    ExplicitTop = 305
+    Top = 13
+    ExplicitTop = 13
   end
   inherited lblInterpolator: TLabel
-    Top = 59
-    Anchors = [akLeft, akBottom]
-    ExplicitTop = 357
+    Top = 67
+    ExplicitTop = 67
   end
   inherited comboDataSets: TComboBox
-    Top = 31
-    Width = 519
-    Anchors = [akLeft, akBottom]
-    TabOrder = 2
-    ExplicitTop = 329
-    ExplicitWidth = 519
+    Top = 37
+    Width = 626
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 1
+    ExplicitTop = 37
+    ExplicitWidth = 584
   end
   inherited comboInterpolators: TComboBox
-    Top = 80
-    Anchors = [akLeft, akBottom]
+    Top = 91
     TabOrder = 4
-    ExplicitTop = 378
+    ExplicitTop = 91
   end
   inherited cbEnclosedCells: TCheckBox
     Left = 132
-    Top = 2
-    Anchors = [akLeft, akBottom]
+    Top = 0
     TabOrder = 0
     Visible = False
     ExplicitLeft = 132
-    ExplicitTop = 300
+    ExplicitTop = 0
   end
   inherited cbIntersectedCells: TCheckBox
-    Top = 112
-    Anchors = [akLeft, akBottom]
+    Top = 118
     TabOrder = 5
-    ExplicitTop = 410
+    ExplicitTop = 118
   end
   inherited cbInterpolation: TCheckBox
     Left = 8
-    Top = 144
-    Anchors = [akLeft, akBottom]
+    Top = 150
     TabOrder = 6
     ExplicitLeft = 8
-    ExplicitTop = 442
+    ExplicitTop = 150
   end
   inherited rgEvaluatedAt: TRadioGroup
-    Top = 209
-    Anchors = [akLeft, akBottom]
+    Top = 215
     TabOrder = 8
-    ExplicitTop = 507
+    ExplicitTop = 215
   end
   inherited btnOK: TBitBtn
-    Top = 221
-    Anchors = [akLeft, akBottom]
+    Left = 446
+    Top = 230
     TabOrder = 10
     OnClick = btnOKClick
-    ExplicitTop = 519
+    ExplicitLeft = 446
+    ExplicitTop = 230
   end
   inherited btnCancel: TBitBtn
-    Top = 221
-    Anchors = [akLeft, akBottom]
+    Left = 543
+    Top = 230
     TabOrder = 11
-    ExplicitTop = 519
+    ExplicitLeft = 543
+    ExplicitTop = 230
   end
   inherited btnHelp: TBitBtn
-    Top = 221
-    Anchors = [akLeft, akBottom]
+    Left = 351
+    Top = 230
     TabOrder = 9
-    ExplicitTop = 519
+    ExplicitLeft = 351
+    ExplicitTop = 230
   end
   object rgFilterMethod: TRadioGroup [11]
-    Left = 306
-    Top = 67
-    Width = 250
+    Left = 360
+    Top = 84
+    Width = 274
     Height = 140
-    Anchors = [akLeft, akRight, akBottom]
+    Anchors = [akLeft, akTop, akRight]
     Caption = 'Filter method'
     ItemIndex = 2
     Items.Strings = (
@@ -96,8 +90,8 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
     TabOrder = 3
   end
   object rdgFilesAndDataSets: TRbwDataGrid4 [12]
-    Left = 528
-    Top = 8
+    Left = 530
+    Top = 79
     Width = 49
     Height = 65
     ColCount = 3
@@ -105,7 +99,7 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
     FixedCols = 1
     RowCount = 2
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowMoving, goEditing, goAlwaysShowEditor]
-    TabOrder = 1
+    TabOrder = 2
     Visible = False
     ExtendedAutoDistributeText = False
     AutoMultiEdit = False
@@ -189,20 +183,18 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
   end
   object comboModel: TComboBox [13]
     Left = 8
-    Top = 181
+    Top = 187
     Width = 281
     Height = 26
     Style = csDropDownList
-    Anchors = [akLeft, akBottom]
     TabOrder = 7
-    ExplicitTop = 479
   end
   inherited OpenDialogFile: TOpenDialog
     Filter = 'Text files (*.txt)|*.txt|All files (*.*)|*.*'
     FilterIndex = 1
     Options = [ofHideReadOnly, ofAllowMultiSelect, ofEnableSizing]
     Title = 'Open a ASCII raster file(s)'
-    Left = 536
-    Top = 80
+    Left = 528
+    Top = 23
   end
 end

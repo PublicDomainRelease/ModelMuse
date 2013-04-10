@@ -151,7 +151,16 @@ var
 begin
   WriteCommentLine('Data set 2');
 
-  InitialPressure := Model.DataArrayManager.GetDataSetByName(KInitialPressure);
+  InitialPressure := nil;
+  case (Model as TPhastModel).SutraOptions.TransportChoice of
+    tcSolute, tcEnergy:
+      InitialPressure := Model.DataArrayManager.GetDataSetByName(KInitialPressure);
+    tcSoluteHead:
+      InitialPressure := Model.DataArrayManager.GetDataSetByName(rsInitial_Head);
+    else
+      Assert(False);
+  end;
+
   WriteDataArray(InitialPressure);
 end;
 
@@ -163,7 +172,7 @@ begin
 
   InitialU := nil;
   case Model.SutraOptions.TransportChoice of
-    tcSolute: InitialU := Model.DataArrayManager.GetDataSetByName(
+    tcSolute, tcSoluteHead: InitialU := Model.DataArrayManager.GetDataSetByName(
       KInitialConcentration);
     tcEnergy: InitialU := Model.DataArrayManager.GetDataSetByName(
       KInitialTemperature);

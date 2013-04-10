@@ -36,6 +36,10 @@ type
     ATMAX: double;
     ATMID: double;
     ATMIN: double;
+    // X, Y, and Z are used when importing model results.
+    X: Double;
+    Y: double;
+    Z: Double;
   end;
 
   TElementDataList = TObjectList<TElementData>;
@@ -163,8 +167,11 @@ begin
   WriteCommentLine('Data set 10');
   COMPMA := FOptions.MatrixCompressibility;
 
+  CS := 0.;
+  SIGMAS := 0.;
+  RHOS := 0.;
   case FOptions.TransportChoice of
-    tcSolute:
+    tcSolute, tcSoluteHead:
       begin
         CS := 0;
         SIGMAS := 0;
@@ -201,7 +208,7 @@ var
 begin
   WriteCommentLine('Data set 11');
   case FOptions.TransportChoice of
-    tcSolute:
+    tcSolute, tcSoluteHead:
       begin
         ADSMOD := '';
         CHI1 := 0.;
@@ -273,16 +280,32 @@ var
   GRAVY: Double;
   GRAVZ: Double;
 begin
+  GRAVX := 0;
+  GRAVY := 0;
+  GRAVZ := 0;
   WriteCommentLine('Data set 13');
-  GRAVX := FOptions.GravityX;
-  GRAVY := FOptions.GravityY;
-  if FMesh.MeshType = mt2D then
-  begin
-    GRAVZ := 0;
-  end
-  else
-  begin
-    GRAVZ := FOptions.GravityZ;
+  case FOptions.TransportChoice of
+    tcSolute, tcEnergy:
+      begin
+        GRAVX := FOptions.GravityX;
+        GRAVY := FOptions.GravityY;
+        if FMesh.MeshType = mt2D then
+        begin
+          GRAVZ := 0;
+        end
+        else
+        begin
+          GRAVZ := FOptions.GravityZ;
+        end;
+      end;
+    tcSoluteHead:
+      begin
+        GRAVX := 0;
+        GRAVY := 0;
+        GRAVZ := 0;
+      end;
+    else
+      Assert(False);
   end;
   WriteFloat(GRAVX);
   WriteFloat(GRAVY);
@@ -509,18 +532,39 @@ begin
   begin
     UnsatRegion := nil;
   end;
-  MaxPerm := Model.DataArrayManager.GetDataSetByName(KMaximumPermeability);
+  MaxPerm := nil;
+  case FOptions.TransportChoice of
+    tcSolute, tcEnergy:
+      MaxPerm := Model.DataArrayManager.GetDataSetByName(KMaximumPermeability);
+    tcSoluteHead:
+      MaxPerm := Model.DataArrayManager.GetDataSetByName(KMaximumK);
+    else Assert(False);
+  end;
   MaxPerm.Initialize;
+  MidPerm := nil;
   if FMesh.MeshType = mt3D then
   begin
-    MidPerm := Model.DataArrayManager.GetDataSetByName(KMiddlePermeability);
+    case FOptions.TransportChoice of
+      tcSolute, tcEnergy:
+        MidPerm := Model.DataArrayManager.GetDataSetByName(KMiddlePermeability);
+      tcSoluteHead:
+        MidPerm := Model.DataArrayManager.GetDataSetByName(KMiddleK);
+      else Assert(False);
+    end;
     MidPerm.Initialize;
   end
   else
   begin
     MidPerm := nil;
   end;
-  MinPerm := Model.DataArrayManager.GetDataSetByName(KMinimumPermeability);
+  MinPerm := nil;
+  case FOptions.TransportChoice of
+    tcSolute, tcEnergy:
+      MinPerm := Model.DataArrayManager.GetDataSetByName(KMinimumPermeability);
+    tcSoluteHead:
+      MinPerm := Model.DataArrayManager.GetDataSetByName(KMinimumK);
+    else Assert(False);
+  end;
   MinPerm.Initialize;
   HorizAngle := Model.DataArrayManager.GetDataSetByName(KHorizontalAngle);
   HorizAngle.Initialize;
@@ -720,47 +764,56 @@ procedure TSutraInputWriter.WriteDataSet17;
 var
   NodeIndex: Integer;
 begin
-  WriteCommentLine('Data set 17');
-  for NodeIndex := 0 to FFluidSourceNodes.Count - 1 do
+  if FFluidSourceNodes.Count > 0 then
   begin
-    WriteInteger(FFluidSourceNodes[NodeIndex]);
-    WriteFloat(0.0);
-    WriteFloat(0.0);
+    WriteCommentLine('Data set 17');
+    for NodeIndex := 0 to FFluidSourceNodes.Count - 1 do
+    begin
+      WriteInteger(FFluidSourceNodes[NodeIndex]);
+      WriteFloat(0.0);
+      WriteFloat(0.0);
+      NewLine;
+    end;
+    WriteInteger(0);
     NewLine;
   end;
-  WriteInteger(0);
-  NewLine;
 end;
 
 procedure TSutraInputWriter.WriteDataSet18;
 var
   NodeIndex: Integer;
 begin
-  WriteCommentLine('Data set 18');
-  for NodeIndex := 0 to FMassEnergySourceNodes.Count - 1 do
+  if FMassEnergySourceNodes.Count > 0 then
   begin
-    WriteInteger(FMassEnergySourceNodes[NodeIndex]);
-    WriteFloat(0.0);
+    WriteCommentLine('Data set 18');
+    for NodeIndex := 0 to FMassEnergySourceNodes.Count - 1 do
+    begin
+      WriteInteger(FMassEnergySourceNodes[NodeIndex]);
+      WriteFloat(0.0);
+      NewLine;
+    end;
+    WriteInteger(0);
     NewLine;
   end;
-  WriteInteger(0);
-  NewLine;
 end;
 
 procedure TSutraInputWriter.WriteDataSet19;
 var
   NodeIndex: Integer;
 begin
-  WriteCommentLine('Data set 19');
-  for NodeIndex := 0 to FSpecifiedPressureNodes.Count - 1 do
+  if FSpecifiedPressureNodes.Count > 0 then
   begin
-    WriteInteger(FSpecifiedPressureNodes[NodeIndex]);
-    WriteFloat(0.0);
-    WriteFloat(0.0);
+    WriteCommentLine('Data set 19');
+    for NodeIndex := 0 to FSpecifiedPressureNodes.Count - 1 do
+    begin
+      WriteInteger(FSpecifiedPressureNodes[NodeIndex]);
+      WriteFloat(0.0);
+      WriteFloat(0.0);
+      NewLine;
+    end;
+    WriteInteger(0);
     NewLine;
   end;
-  WriteInteger(0);
-  NewLine;
 end;
 
 procedure TSutraInputWriter.WriteDataSet9;
@@ -775,8 +828,12 @@ var
 begin
   WriteCommentLine('Data set 9');
   COMPFL := FOptions.FluidCompressibility;
-  RHOWØ := FOptions.BaseFluidDensity;
 
+  CW := 0.;
+  SIGMAW := 0.;
+  URHOWØ := 0.;
+  DRWDU := 0.;
+  VISCØ := 0.;
   case FOptions.TransportChoice of
     tcSolute:
       begin
@@ -785,6 +842,16 @@ begin
         URHOWØ := FOptions.BaseConcentration;
         DRWDU := FOptions.FluidDensityCoefficientConcentration;
         VISCØ := FOptions.Viscosity;
+        RHOWØ := FOptions.BaseFluidDensity;
+      end;
+    tcSoluteHead:
+      begin
+        CW := 0.;
+        SIGMAW := FOptions.FluidDiffusivity;
+        URHOWØ := 0;
+        DRWDU := 0;
+        VISCØ := 1;
+        RHOWØ := 1;
       end;
     tcEnergy:
       begin
@@ -793,6 +860,7 @@ begin
         URHOWØ := FOptions.BaseTemperature;
         DRWDU := FOptions.FluidDensityCoefficientTemperature;
         VISCØ := FOptions.ScaleFactor;
+        RHOWØ := FOptions.BaseFluidDensity;
       end
     else
       Assert(False);
@@ -811,15 +879,18 @@ procedure TSutraInputWriter.WriteDataSet20;
 var
   NodeIndex: Integer;
 begin
-  WriteCommentLine('Data set 20');
-  for NodeIndex := 0 to FSpecifiedTempConcNodes.Count - 1 do
+  if FSpecifiedTempConcNodes.Count > 0 then
   begin
-    WriteInteger(FSpecifiedTempConcNodes[NodeIndex]);
-    WriteFloat(0.0);
+    WriteCommentLine('Data set 20');
+    for NodeIndex := 0 to FSpecifiedTempConcNodes.Count - 1 do
+    begin
+      WriteInteger(FSpecifiedTempConcNodes[NodeIndex]);
+      WriteFloat(0.0);
+      NewLine;
+    end;
+    WriteInteger(0);
     NewLine;
   end;
-  WriteInteger(0);
-  NewLine;
 end;
 
 procedure TSutraInputWriter.WriteDataSet22;
@@ -919,7 +990,7 @@ var
 begin
   WriteCommentLine('Data set 2A');
   case FOptions.TransportChoice of
-    tcSolute:
+    tcSolute, tcSoluteHead:
       SIMULA := '''SUTRA VERSION 2.2 SOLUTE TRANSPORT''';
     tcEnergy:
       SIMULA := '''SUTRA VERSION 2.2 ENERGY TRANSPORT''';
@@ -961,6 +1032,8 @@ var
   NSOU: Integer;
 begin
   WriteCommentLine('Data set 3');
+  NN := 0;
+  NE := 0;
   case FMesh.MeshType of
     mt2D:
       begin

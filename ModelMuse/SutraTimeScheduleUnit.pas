@@ -375,13 +375,13 @@ begin
   FMinIncrementStored.Value := 1E-20;
   FScaleFactorStored.Value := 1;
   FSutraTimeChoice := stcElapsed;
-  FName := StrASchedule;
+  FName := AnsiString(StrASchedule);
 end;
 
 procedure TSutraTimeSchedule.Initialize(Index: integer);
 begin
   Initialize;
-  FName := Format(StrScheduled, [Index + 1]);
+  FName := AnsiString(Format(StrScheduled, [Index + 1]));
 end;
 
 procedure TSutraTimeSchedule.SetIncrementUpdateCount(const Value: integer);

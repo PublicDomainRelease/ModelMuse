@@ -3000,7 +3000,8 @@ begin
       Boundary.ParamIcalc := ParamIcalcValues;
       SfrItem := Boundary.Values.Items[0] as TSfrItem;
       SfrItem.StartTime := ParamIcalcValues[0].StartTime;
-      LastItem := ParamIcalcValues[ParamIcalcValues.Count-1] as TSfrItem;
+//      LastItem := ParamIcalcValues[ParamIcalcValues.Count-1] as TSfrItem;
+      LastItem := Boundary.Values.Items[Boundary.Values.Count-1] as TSfrItem;
       SfrItem.EndTime := LastItem.EndTime;
     end
     else if FTimesChanged then

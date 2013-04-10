@@ -5,7 +5,8 @@ interface
 uses
   Windows, FastGEO, Classes, GoPhastTypes, GR32, ZoomBox2, MeshRenumbering,
   AbstractGridUnit, Generics.Collections, gpc, Generics.Defaults, Types,
-  DataSetUnit, Graphics, SubscriptionUnit;
+  DataSetUnit, Graphics, SubscriptionUnit, doublePolyhedronUnit, IntervalTree,
+  QuadtreeClass;
 
 Type
   TDrawingChoice = (dcAll, dcEdge);
@@ -32,6 +33,7 @@ Type
 
   TVertexList = TList<Tgpc_vertex>;
   TVertexArray = array of Tgpc_vertex;
+  TSutraElement2D = class;
   TSutraElement2D_List = class;
   TPoint2DComparer = TComparer<TPoint2D>;
 
@@ -40,6 +42,12 @@ Type
     FLocation: TPoint2D;
     FNodeType: TNodeType;
     FElements: TSutraElement2D_List;
+    FCellOutline: TVertexArray;
+    FMinX: TFloat;
+    FMaxX: TFloat;
+    FMinY: TFloat;
+    FMaxY: TFloat;
+    FSelected: Boolean;
     procedure SetLocation(const Value: TPoint2D);
     procedure SetX(const Value: FastGEO.TFloat);
     procedure SetY(const Value: FastGEO.TFloat);
@@ -48,6 +56,14 @@ Type
       const ZoomBox: TQRbwZoomBox2; DrawingChoice: TDrawingChoice;
       DataArray: TDataArray; SelectedLayer: integer; StringValues : TStringList);
     function DisplayNumber: integer;
+    function GetElement(Index: Integer): TSutraElement2D;
+    function GetElementCount: Integer;
+    procedure InvalidateOutlines;
+    function GetMaxX: Double;
+    function GetMaxY: Double;
+    function GetMinX: Double;
+    function GetMinY: Double;
+    procedure SetSelected(const Value: Boolean);
   public
     property Location: TPoint2D read FLocation write SetLocation;
     procedure Assign(Source: TPersistent); override;
@@ -59,14 +75,42 @@ Type
       out IntersectingSegments: TSegment2DArray): boolean;
     function EdgeNode: boolean;
     procedure GetCellOutline(var CellOutline: TVertexArray);
+    function CellArea: double;
+    property ElementCount: Integer read GetElementCount;
+    property Elements[Index: Integer]: TSutraElement2D read GetElement;
+    function IsInside(APoint: TPoint2D): Boolean;
+    procedure InvalidateCellOutline;
+    property Selected: Boolean read FSelected write SetSelected;
   published
     property X: FastGEO.TFloat read FLocation.x write SetX;
     property Y: FastGEO.TFloat read FLocation.y write SetY;
     property NodeType: TNodeType read FNodeType write SetNodeType;
+    property MaxX: Double read GetMaxX;
+    property MinX: Double read GetMinX;
+    property MaxY: Double read GetMaxY;
+    property MinY: Double read GetMinY;
   end;
 
   TSutraNode2D_List = TList<TSutraNode2D>;
 
+  TSutraNode2DLeaf = class(TRangeTreeLeaf)
+  private
+    FNode: TSutraNode2D;
+  public
+    constructor Create(ANode: TSutraNode2D);
+    // 0 = MinX
+    // 1 = MaxX
+    // 2 = MinY
+    // 3 = MaxY
+    function GetCoordinate(Depth: integer): double; override;
+    property Node: TSutraNode2D read FNode;
+  end;
+
+  TSutraNode2DLeafList = class(TRangeTreeLeafList)
+  public
+    function CoordinateCount: integer; override;
+    Constructor Create;
+  end;
 
   TCustomSutraCollection = class(TPhastCollection)
   public
@@ -79,13 +123,26 @@ Type
   TSutraNode2D_Collection = class(TCustomSutraCollection)
   private
     FMesh2D: TSutraMesh2D;
+    FNodeIntervals: TRbwIntervalTree;
+    FNodeRanges: TRbwRangeTree;
+    FNodesLocations: TRbwQuadTree;
     function GetItem(Index: integer): TSutraNode2D;
+    procedure NodeXLimits(Subject: TObject; out LowerBoundary,
+      UpperBoundary: double);
+    procedure NodeYLimits(Subject: TObject; out LowerBoundary,
+      UpperBoundary: double);
+    procedure InvalidateNodeIntervals;
+    function GetNodeRanges: TRbwRangeTree;
+    function GetNodesLocations: TRbwQuadTree;
   public
     constructor Create(Model: TBaseModel; ParentMesh: TSutraMesh2D);
+    destructor Destroy; override;
     property Items[Index: integer]: TSutraNode2D read GetItem; default;
     function Add: TSutraNode2D;
     function TopContainingCell(APoint: TPoint2D): T2DTopCell;
     property Mesh2D: TSutraMesh2D read FMesh2D;
+    property NodeRanges: TRbwRangeTree read GetNodeRanges;
+    property NodesLocations: TRbwQuadTree read GetNodesLocations;
   end;
 
   TCustomSutraNodeNumberItem = class(TCustomSutraItem)
@@ -115,8 +172,6 @@ Type
   public
     property Node: TSutraNode2D read GetNode write SetNode;
   end;
-
-  TSutraElement2D = class;
 
   TSutraNodeNumber2D_Collection = class(TCustomSutraCollection)
   private
@@ -153,6 +208,10 @@ Type
       const ZoomBox: TQRbwZoomBox2; DrawingChoice: TDrawingChoice;
       DataArray: TDataArray; SelectedLayer: integer; StringValues : TStringList;
       Mesh3D: TSutraMesh3D);
+    function GetMaxX: Double;
+    function GetMaxY: Double;
+    function GetMinX: Double;
+    function GetMinY: Double;
   public
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
@@ -163,20 +222,64 @@ Type
     function Intersection(const Input: TSegment2D;
       out IntersectingSegment: TSegment2D): boolean;
     function Edge(Index: integer): TSegment2D;
+    function ElementArea: double;
+    property MinX: Double read GetMinX;
+    property MaxX: Double read GetMaxX;
+    property MinY: Double read GetMinY;
+    property MaxY: Double read GetMaxY;
   published
     property Nodes: TSutraNodeNumber2D_Collection read FNodes write SetNodes;
   end;
 
   TSutraElement2D_List = class(TList<TSutraElement2D>);
 
+  TSutraElement2DLeaf = class(TRangeTreeLeaf)
+  private
+    FElement: TSutraElement2D;
+    FMinX: Double;
+    FMaxX: Double;
+    FMinY: Double;
+    FMaxY: Double;
+  public
+    constructor Create(AnElement: TSutraElement2D);
+    // 0 = MinX
+    // 1 = MaxX
+    // 2 = MinY
+    // 3 = MaxY
+    function GetCoordinate(Depth: integer): double; override;
+    property Element: TSutraElement2D read FElement;
+
+  end;
+
+  TSutraElement2DLeafList = class(TRangeTreeLeafList)
+  public
+    function CoordinateCount: integer; override;
+    Constructor Create;
+  end;
+
   TSutraElement2D_Collection = class(TCustomSutraCollection)
   private
+    FMesh2D: TSutraMesh2D;
+    FElementIntervals: TRbwIntervalTree;
+    FElementRanges: TRbwRangeTree;
+    FElementCenters: TRbwQuadTree;
     function GetItems(Index: integer): TSutraElement2D;
+    procedure ElementXLimits(Subject: TObject; out LowerBoundary,
+      UpperBoundary: double);
+    procedure ElementYLimits(Subject: TObject; out LowerBoundary,
+      UpperBoundary: double);
+    function GetElementRanges: TRbwRangeTree;
+    function GetElementCenters: TRbwQuadTree;
   public
-    constructor Create(Model: TBaseModel);
+    constructor Create(Model: TBaseModel; ParentMesh: TSutraMesh2D);
+    destructor Destroy; override;
     property Items[Index: integer]: TSutraElement2D read GetItems; default;
     function Add: TSutraElement2D;
     function TopContainingElement(APoint: TPoint2D): T2DTopCell;
+    procedure InvalidateElementIntervals;
+    property Mesh2D: TSutraMesh2D read FMesh2D;
+    property ElementRanges: TRbwRangeTree read GetElementRanges;
+    property ElementCenters: TRbwQuadTree read GetElementCenters;
   end;
 
   TCustomSutraMesh = class abstract(TCustomDiscretization)
@@ -209,6 +312,57 @@ Type
     constructor Create(CrossSectionAngle: Double; StartPoint: TPoint2D);
   end;
 
+  TMeshGenerationControls = class(TGoPhastPersistent)
+  private
+    FAltLineLength: TRealStorage;
+    FConcave: TRealStorage;
+    FSymmetry: TRealStorage;
+    FNodePlacementError: TRealStorage;
+    FSplittingAngle: TRealStorage;
+    FStructure: TRealStorage;
+    FAltConcave: TRealStorage;
+    FAltSymmetry: TRealStorage;
+    FAltNodePlacementError: TRealStorage;
+    FLineLength: TRealStorage;
+    FAltSplittingAngle: TRealStorage;
+    FAltStructure: TRealStorage;
+    FElementGrowthRate: TRealStorage;
+    procedure SetAltConcave(const Value: TRealStorage);
+    procedure SetAltLineLength(const Value: TRealStorage);
+    procedure SetAltNodePlacementError(const Value: TRealStorage);
+    procedure SetAltSplittingAngle(const Value: TRealStorage);
+    procedure SetAltStructure(const Value: TRealStorage);
+    procedure SetAltSymmetry(const Value: TRealStorage);
+    procedure SetConcave(const Value: TRealStorage);
+    procedure SetLineLength(const Value: TRealStorage);
+    procedure SetNodePlacementError(const Value: TRealStorage);
+    procedure SetSplittingAngle(const Value: TRealStorage);
+    procedure SetStructure(const Value: TRealStorage);
+    procedure SetSymmetry(const Value: TRealStorage);
+    procedure ValueChanged(Sender: TObject);
+    procedure SetElementGrowthRate(const Value: TRealStorage);
+  public
+    Constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
+    procedure Assign(Source: TPersistent); override;
+    procedure SetDefaults;
+    procedure Apply;
+  published
+    property SplittingAngle: TRealStorage read FSplittingAngle write SetSplittingAngle;
+    property Structure: TRealStorage read FStructure write SetStructure;
+    property NodePlacementError: TRealStorage read FNodePlacementError write SetNodePlacementError;
+    property LineLength: TRealStorage read FLineLength write SetLineLength;
+    property Symmetry: TRealStorage read FSymmetry write SetSymmetry;
+    property Concave: TRealStorage read FConcave write SetConcave;
+    property AltSplittingAngle: TRealStorage read FAltSplittingAngle write SetAltSplittingAngle;
+    property AltStructure: TRealStorage read FAltStructure write SetAltStructure;
+    property AltNodePlacementError: TRealStorage read FAltNodePlacementError write SetAltNodePlacementError;
+    property AltLineLength: TRealStorage read FAltLineLength write SetAltLineLength;
+    property AltSymmetry: TRealStorage read FAltSymmetry write SetAltSymmetry;
+    property AltConcave: TRealStorage read FAltConcave write SetAltConcave;
+    property ElementGrowthRate: TRealStorage read FElementGrowthRate write SetElementGrowthRate;
+  end;
+
   TSutraMesh2D = class (TCustomSutraMesh)
   private
     FElements: TSutraElement2D_Collection;
@@ -224,6 +378,9 @@ Type
     FMesh3D: TSutraMesh3D;
     FElementFont: TFont;
     FNodeFont: TFont;
+    FMeshGenControls: TMeshGenerationControls;
+    FTopContourDataSet: TDataArray;
+    FThreeDContourDataSet: TDataArray;
     procedure SetElements(const Value: TSutraElement2D_Collection);
     procedure SetNodes(const Value: TSutraNode2D_Collection);
     procedure DrawTop(const BitMap: TBitmap32;
@@ -231,7 +388,6 @@ Type
     procedure SetElementDrawingChoice(const Value: TDrawingChoice);
     function MeshLimits: TGridLimit;
     function MeshBox: TPolygon2D;
-    function MeshOutline: TPolygon2D;
     procedure SetThreeDDataSet(const Value: TDataArray);
     procedure SetTopDataSet(const Value: TDataArray);
     procedure SetSelectedLayer(const Value: integer);
@@ -245,6 +401,17 @@ Type
     procedure SetNodeDrawingChoice(const Value: TDrawingChoice);
     procedure SetElementFont(const Value: TFont);
     procedure SetNodeFont(const Value: TFont);
+    procedure DrawElements(StringValues: TStringList;
+      ColorDataArray: TDataArray; const ZoomBox: TQRbwZoomBox2;
+      const BitMap: TBitmap32);
+    procedure DrawNodes(ColorDataArray: TDataArray; const BitMap: TBitmap32;
+      const ZoomBox: TQRbwZoomBox2; StringValues: TStringList);
+    function GetSelectedLayer: integer;
+    procedure SetMeshGenControls(const Value: TMeshGenerationControls);
+    procedure SetThreeDContourDataSet(const Value: TDataArray);
+    procedure SetTopContourDataSet(const Value: TDataArray);
+    procedure DrawTopContours(const ZoomBox: TQRbwZoomBox2;
+      const BitMap: TBitmap32);
   protected
     procedure CalculateMinMax(DataSet: TDataArray;
       var MinMaxInitialized: boolean; var MinMax: TMinMax;
@@ -271,15 +438,20 @@ Type
     property ThreeDDataSet: TDataArray read FThreeDDataSet
       write SetThreeDDataSet;
     property TopDataSet: TDataArray read FTopDataSet write SetTopDataSet;
-    property SelectedLayer: integer read FSelectedLayer write SetSelectedLayer;
+    property TopContourDataSet: TDataArray read FTopContourDataSet write SetTopContourDataSet;
+    property ThreeDContourDataSet: TDataArray read FThreeDContourDataSet write SetThreeDContourDataSet;
+    property SelectedLayer: integer read GetSelectedLayer write SetSelectedLayer;
     property TopGridObserver: TObserver read FTopGridObserver
       write SetTopGridObserver;
     procedure EndUpdate; override;
     property Mesh3D: TSutraMesh3D read FMesh3D;
+    function MeshOutline: TPolygon2D;
   published
     property Nodes: TSutraNode2D_Collection read FNodes write SetNodes;
     property Elements: TSutraElement2D_Collection read FElements
       write SetElements;
+    property MeshGenControls: TMeshGenerationControls read FMeshGenControls
+      write SetMeshGenControls;
   end;
 
   TSutraElement3D = class;
@@ -293,6 +465,9 @@ Type
     FElements: TSutraElement3DList;
     FActiveElements: TSutraElement3DList;
     FActive: Boolean;
+    FVolume: Extended;
+    FBottom: Double;
+    FTop: Double;
     function GetNode2D_Number: integer;
     procedure SetNode2D_Number(const Value: integer);
     procedure SetZ(const Value: FastGEO.TFloat);
@@ -301,6 +476,8 @@ Type
     function GetX: TFloat;
     function GetY: TFloat;
     procedure UpdateActiveElementList;
+    function CreatePolyhedron: TPolyhedron;
+    function GetVolume: Extended;
   protected
     function GetActiveElementCount: integer;
     function GetActiveElement(Index: Integer): IElement;
@@ -321,6 +498,9 @@ Type
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
     function NodeLocation: TPoint3D;
+    property Volume: Extended read GetVolume;
+    property Top: Double read FTop;
+    property Bottom: Double read FBottom;
   published
     property Z: FastGEO.TFloat read FZ write SetZ;
     property Node2D_Number: integer read GetNode2D_Number write SetNode2D_Number;
@@ -329,13 +509,42 @@ Type
 
   TSutraNode3D_List = TList<TSutraNode3D>;
 
+  TStoredNodeOrElement = class(TObject)
+  private
+    FX: double;
+    FY: double;
+    FZ: double;
+    FCol: integer;
+    FLayer: integer;
+    FNodeOrElement: Pointer;
+  public
+    constructor Create(CenterPoint: TPoint3D; Angle: double;
+      ACol, ALayer: Integer; AnObject: TObject);
+    property X: double read FX;
+    property Y: double read FY;
+    property Z: double read FZ;
+    property Col: integer read FCol;
+    property Layer: integer read FLayer;
+    property NodeOrElement: Pointer read FNodeOrElement;
+  end;
+
+  TStoredLocations = TObjectList<TStoredNodeOrElement>;
+
   TSutraNode3D_Collection = class(TCustomSutraCollection)
   private
+    FRotatedNodeCenters: TRbwQuadTree;
+    FAngle: double;
+    FStoredRotatedLocations: TStoredLocations;
+    FMesh: TSutraMesh3D;
     function GetItem(Index: integer): TSutraNode3D;
+    function GetNodeLocations(Angle: Double): TRbwQuadTree;
   public
-    constructor Create(Model: TBaseModel);
+    constructor Create(Model: TBaseModel; ParentMesh: TSutraMesh3D);
+    destructor Destroy; override;
     property Items[Index: integer]: TSutraNode3D read GetItem; default;
     function Add: TSutraNode3D;
+    property NodeLocations[Angle: Double]: TRbwQuadTree read GetNodeLocations;
+    procedure InvalidateStoredLocations;
   end;
 
   TSutraNodeNumber3D_Item = class(TCustomSutraNodeNumberItem)
@@ -368,10 +577,15 @@ Type
     FNodes: TSutraNodeNumber3D_Collection;
     FActiveNodes: TSutraNode3D_List;
     FActive: Boolean;
+    FVolume: Extended;
     procedure SetNodes(const Value: TSutraNodeNumber3D_Collection);
     procedure UpdateNodes;
     function GetCenterLocation: TPoint3d;
     procedure UpdateActiveNodeList;
+    function GetVolume: extended;
+    function CreatePolyhedron: TPolyhedron;
+    procedure AddFacesToNodePolyhedron(CornerNode : TSutraNode3D;
+      APolyHedron : TPolyhedron; var LastVertex, LastFace : integer);
   protected
     function GetActiveNode(Index: Integer): INode;
     function GetActiveNodeCount: integer;
@@ -389,6 +603,7 @@ Type
     function CellSection(Node: TSutraNode3D): TQuadPair3D;
     function ElementShape: TQuadPair3D;
     property CenterLocation: TPoint3d read GetCenterLocation;
+    property Volume: Extended read GetVolume;
   published
     property Nodes: TSutraNodeNumber3D_Collection read FNodes write SetNodes;
     property Active: Boolean read FActive write FActive;
@@ -398,11 +613,19 @@ Type
 
   TSutraElement3D_Collection = class(TCustomSutraCollection)
   private
+    FRotatedElementCenters: TRbwQuadTree;
+    FAngle: double;
+    FStoredRotatedLocations: TStoredLocations;
+    FMesh: TSutraMesh3D;
     function GetItems(Index: integer): TSutraElement3D;
+    function GetElementCenters(Angle: Double): TRbwQuadTree;
   public
-    constructor Create(Model: TBaseModel);
+    constructor Create(Model: TBaseModel; ParentMesh: TSutraMesh3D);
+    destructor Destroy; override;
     property Items[Index: integer]: TSutraElement3D read GetItems; default;
     function Add: TSutraElement3D;
+    property ElementCenters[Angle: Double]: TRbwQuadTree read GetElementCenters;
+    procedure InvalidateStoredLocations;
   end;
 
   TCrossSection = class(TGoPhastPersistent)
@@ -450,6 +673,33 @@ Type
   TCellElementPolygons2D = array of array of TPolygon2D;
   TLimitsArray = array of array of TLimits;
 
+  TFrontPolygon = class(TRangeTreeLeaf)
+  private
+    FLayer: Integer;
+    FPolygon: TPolygon2D;
+    FCol: Integer;
+    FMaxX: double;
+    FMaxY: double;
+    FMinX: double;
+    FMinY: double;
+  public
+    constructor Create(ACol, ALayer: Integer; APolygon: TPolygon2D);
+    property Col: Integer read FCol;
+    property Layer: Integer read FLayer;
+    property Polygon: TPolygon2D read FPolygon;
+    property MinX: double read FMinX;
+    property MaxX: double read FMaxX;
+    property MinY: double read FMinY;
+    property MaxY: double read FMaxY;
+    function GetCoordinate(Depth: integer): double; override;
+  end;
+
+  TFrontPolygonList = class(TRangeTreeLeafList)
+  public
+    function CoordinateCount: integer; override;
+    Constructor Create;
+  end;
+
   TSutraMesh3D = class (TCustomSutraMesh, IMesh)
   private
     FElements: TSutraElement3D_Collection;
@@ -469,6 +719,21 @@ Type
     FOnSelectedLayerChange: TNotifyEvent;
     FActiveNodes: TSutraNode3D_List;
     FActiveElements: TSutraElement3DList;
+    FNeedToRecalculateTopColors: Boolean;
+    FNeedToRecalculateFrontColors: Boolean;
+    FStoredBlockAngle: double;
+    FStoredBlockPolygons: TCellElementPolygons2D;
+    FStoredBlockLimits: TLimitsArray;
+    FStoredNodeAngle: double;
+    FStoredNodePolygons: TCellElementPolygons2D;
+    FStoredNodeLimits: TLimitsArray;
+    FMaxDist: double;
+    FMinDist: double;
+    FLoading: Boolean;
+    FNodeIntervalTree: TRbwIntervalTree;
+    FElementIntervalTree: TRbwIntervalTree;
+    FNodeRangeTree: TRbwRangeTree;
+    FElementRangeTree: TRbwRangeTree;
     procedure SetElements(const Value: TSutraElement3D_Collection);
     procedure SetNodes(const Value: TSutraNode3D_Collection);
     procedure SetMesh2D(const Value: TSutraMesh2D);
@@ -491,7 +756,6 @@ Type
     function GetTopGridObserver: TObserver;
     procedure SetThreeDGridObserver(const Value: TObserver);
     procedure SetTopGridObserver(const Value: TObserver);
-    procedure CheckUpdateElevations;
     procedure UpdateElevations;
     procedure SetNodeDrawingChoice(const Value: TDrawingChoice);
     function GetElementFont: TFont;
@@ -502,6 +766,23 @@ Type
     procedure SetDrawNodeNumbers(const Value: Boolean);
     function GetDrawElementNumbers: Boolean;
     procedure SetDrawElementNumbers(const Value: Boolean);
+    procedure SetNeedToRecalculateFrontColors(const Value: Boolean);
+    procedure SetNeedToRecalculateTopColors(const Value: Boolean);
+    function GetIntervalTree(EvalAt: TEvaluatedAt;
+      Angle: Double): TRbwIntervalTree;
+    function GetRangeTree(EvalAt: TEvaluatedAt; Angle: Double): TRbwRangeTree;
+    procedure GetXIntervalLimits(Subject: TObject; out LowerBoundary,
+      UpperBoundary: double);
+    procedure GetYIntervalLimits(Subject: TObject; out LowerBoundary,
+      UpperBoundary: double);
+    function Bandwidth: Integer;
+    procedure SimpleRenumber;
+    procedure SetThreeDContourDataSet(const Value: TDataArray);
+    procedure SetTopContourDataSet(const Value: TDataArray);
+    function GetThreeDContourDataSet: TDataArray;
+    function GetTopContourDataSet: TDataArray;
+    procedure DrawFrontContours(const ZoomBox: TQRbwZoomBox2;
+      const BitMap: TBitmap32);
   protected
     procedure CalculateMinMax(DataSet: TDataArray;
       var MinMaxInitialized: Boolean; var MinMax: TMinMax;
@@ -513,6 +794,8 @@ Type
     function GetActiveElementCount: integer;
     function GetActiveElement(Index: Integer): IElement;
   public
+    function OkLocation(const DataSet: TDataArray;
+      const Layer, Row, Col: integer): boolean; override;
     property ActiveNodeCount: Integer read GetActiveNodeCount;
     property ActiveElementCount: Integer read GetActiveElementCount;
     function QueryInterface(const IID: TGUID; out Obj): HResult; virtual; stdcall;
@@ -534,6 +817,8 @@ Type
     property ThreeDDataSet: TDataArray read GetThreeDDataSet
       write SetThreeDDataSet;
     property TopDataSet: TDataArray read GetTopDataSet write SetTopDataSet;
+    property TopContourDataSet: TDataArray read GetTopContourDataSet write SetTopContourDataSet;
+    property ThreeDContourDataSet: TDataArray read GetThreeDContourDataSet write SetThreeDContourDataSet;
     procedure MeshChanged;
     property CanDraw: boolean read GetCanDraw write SetCanDraw;
     // @name is the number of layers of elements.
@@ -552,20 +837,43 @@ Type
       write FOnSelectedLayerChange;
     property NodeFont: TFont read GetNodeFont write SetNodeFont;
     property ElementFont: TFont read GetElementFont write SetElementFont;
-    property DrawNodeNumbers: Boolean read GetDrawNodeNumbers write SetDrawNodeNumbers;
-    property DrawElementNumbers: Boolean read GetDrawElementNumbers write SetDrawElementNumbers;
+    property DrawNodeNumbers: Boolean read GetDrawNodeNumbers
+      write SetDrawNodeNumbers;
+    property DrawElementNumbers: Boolean read GetDrawElementNumbers
+      write SetDrawElementNumbers;
     procedure GetNodesOnCrossSection(NodeList: TSutraNode2D_List);
     function GetCrossSectionStart: TPoint2D;
     procedure GetElementsOnCrossSection(ElementList: TSutraElement2D_List);
+    property NeedToRecalculateTopColors: Boolean
+      read FNeedToRecalculateTopColors write SetNeedToRecalculateTopColors;
+    property NeedToRecalculateFrontColors: Boolean
+      read FNeedToRecalculateFrontColors write SetNeedToRecalculateFrontColors;
+    // @name is the relative position of the node on the cross section that is
+    // furthest from the cross section in the positive direction.
+    property MaxDist: Double read FMaxDist;
+    // @name is the relative position of the node on the cross section that is
+    // furthest from the cross section in the negative direction.
+    property MinDist: Double read FMinDist;
+    function RotateFromRealWorldCoordinatesToMeshCoordinates
+      (const APoint: TPoint2D): TPoint2D;
+    function RotateFromMeshCoordinatesToRealWorldCoordinates
+      (const APoint: TPoint2D): TPoint2D;  overload;
+    procedure CheckUpdateElevations;
+    procedure InvalidatePolygons;
+    property Loading: Boolean read FLoading write FLoading;
+    property IntervalTree[EvalAt: TEvaluatedAt; Angle: Double]: TRbwIntervalTree
+      read GetIntervalTree;
+    property RangeTree[EvalAt: TEvaluatedAt; Angle: Double]: TRbwRangeTree
+      read GetRangeTree;
   published
     property Nodes: TSutraNode3D_Collection read FNodes write SetNodes;
     property Elements: TSutraElement3D_Collection read FElements
       write SetElements;
     property Mesh2D: TSutraMesh2D read FMesh2D write SetMesh2D;
     property ElementDrawingChoice: TDrawingChoice read FElementDrawingChoice
-      write SetElementDrawingChoice;
+      write SetElementDrawingChoice Stored True;
     property NodeDrawingChoice: TDrawingChoice read FNodeDrawingChoice
-      write SetNodeDrawingChoice;
+      write SetNodeDrawingChoice Stored True;
     property MeshType: TMeshType read FMeshType write SetMeshType stored True;
     property SelectedLayer: integer read GetSelectedLayer
       write SetSelectedLayer stored True;
@@ -578,11 +886,17 @@ Function ComparePointRightDown(const P1, P2: TPoint2D): integer;
 Function ComparePointLeftUp(const P1, P2: TPoint2D): integer;
 Function ComparePointLeftDown(const P1, P2: TPoint2D): integer;
 
+procedure UpdateSegmentOrientation(const Input: TSegment2D;
+   var IntersectingSegment: TSegment2D);
+
+
 implementation
 
 uses
   frmGoPhastUnit, BigCanvasMethods, PhastModelUnit, SysUtils, GPC_Classes, Math,
-  Dialogs, LayerStructureUnit, RbwParser, GR32_Polygons;
+  Dialogs, LayerStructureUnit, RbwParser, GR32_Polygons, SolidGeom,
+  OctTreeClass, ScreenObjectUnit, Contnrs, QuadMeshGenerator,
+  ContourUnit, GR32_Backends;
 
 resourcestring
   StrErrorGeneratingCel = 'Error generating cell for Node %d.';
@@ -611,7 +925,7 @@ begin
             begin
               if DataArray.MaxReal <> DataArray.MinRealPositive then
               begin
-                Fraction := (Log10(DataArray.MaxReal-Log10(AValue)))
+                Fraction := (Log10(DataArray.MaxReal)-Log10(AValue))
                   /(Log10(DataArray.MaxReal) - Log10(DataArray.MinRealPositive));
               end
               else
@@ -707,7 +1021,63 @@ begin
 
 end;
 
+procedure UpdateSegmentOrientation(const Input: TSegment2D;
+   var IntersectingSegment: TSegment2D);
+begin
+  if Input[1].x > Input[2].x then
+  begin
+    if IntersectingSegment[1].x <= IntersectingSegment[2].x then
+    begin
+      IntersectingSegment := EquateSegment(IntersectingSegment[2],
+        IntersectingSegment[1]);
+    end;
+  end
+  else if Input[1].x < Input[2].x then
+  begin
+    if IntersectingSegment[1].x >= IntersectingSegment[2].x then
+    begin
+      IntersectingSegment := EquateSegment(IntersectingSegment[2],
+        IntersectingSegment[1]);
+    end;
+  end
+  else
+  begin
+    if Input[1].y > Input[2].y then
+    begin
+      if IntersectingSegment[1].y <= IntersectingSegment[2].y then
+      begin
+        IntersectingSegment := EquateSegment(IntersectingSegment[2],
+          IntersectingSegment[1]);
+      end;
+    end
+    else if Input[1].y < Input[2].y then
+    begin
+      if IntersectingSegment[1].y >= IntersectingSegment[2].y then
+      begin
+        IntersectingSegment := EquateSegment(IntersectingSegment[2],
+          IntersectingSegment[1]);
+      end;
+    end;
+  end;
+end;
+
+
 { TSutraNode2D }
+
+function TSutraNode2D.CellArea: double;
+var
+  Outline: TVertexArray;
+  OutlinePolygon: TPolygon2D;
+  PolyIndex: Integer;
+begin
+  GetCellOutline(Outline);
+  SetLength(OutlinePolygon, Length(Outline));
+  for PolyIndex := 0 to Length(Outline) - 1 do
+  begin
+    OutlinePolygon[PolyIndex] := Outline[PolyIndex];
+  end;
+  result := Abs(Area(OutlinePolygon));
+end;
 
 procedure TSutraNode2D.Assign(Source: TPersistent);
 var
@@ -747,7 +1117,7 @@ var
   Node3D: TSutraNode3D;
 begin
   Mesh := (Collection as  TSutraNode2D_Collection).Mesh2D.Mesh3D;
-  if Mesh.MeshType = mt3D then
+  if (Mesh.MeshType = mt3D) and (Mesh.Elements.Count > 0) then
   begin
     Node3D := Mesh.NodeArray[Mesh.SelectedLayer, Number];
     result := Node3D.Number + 1;
@@ -762,6 +1132,8 @@ end;
 procedure TSutraNode2D.DrawTop(const BitMap: TBitmap32;
   const ZoomBox: TQRbwZoomBox2; DrawingChoice: TDrawingChoice;
   DataArray: TDataArray; SelectedLayer: integer; StringValues : TStringList);
+const
+  NodeRadius = 3;
 var
   Outline: TVertexArray;
   NodeIndex: Integer;
@@ -771,7 +1143,9 @@ var
   Dummy: TPolygon32;
   ShowColor: Boolean;
   APoint: TPoint;
-  NumString: string;
+  ACanvas: TCanvas;
+//  APoint: TPoint;
+//  NumString: string;
 begin
   Dummy := nil;
   GetCellOutline(Outline);
@@ -806,6 +1180,26 @@ begin
     dcEdge: ; // do nothing
     else
       Assert(False);
+  end;
+
+  if Selected then
+  begin
+    APoint := ConvertTop2D_Point(ZoomBox, Location);
+    if (APoint.x >= 0) and (APoint.x < BitMap.Width)
+      and (APoint.y >= 0) and (APoint.y < BitMap.Height) then
+    begin
+      ACanvas := TCanvas.Create;
+      try
+        ACanvas.Handle := BitMap.Handle;
+        ACanvas.Pen.Color := clBlack;
+        ACanvas.Brush.Style := bsClear;
+        ACanvas.Ellipse(APoint.X-NodeRadius,APoint.Y-NodeRadius,
+          APoint.X+NodeRadius+1,APoint.Y+NodeRadius+1);
+      finally
+        ACanvas.Free;
+      end;
+    end;
+
   end;
 
 //  if DrawNumbers then
@@ -871,28 +1265,8 @@ var
 begin
   { TODO -cSUTRA : Check that segments are created along the edge of the mesh. }
   result := False;
-  GetCellOutline(Outline);
-  IntersectionList := TVertexList.Create;
   try
-    IntersectionList.Capacity := Length(Outline)+2;
-    EdgeSegment[2] := Outline[Length(Outline)-1];
-    for NodeIndex := 0 to Length(Outline) - 1 do
-    begin
-      EdgeSegment[1] := Outline[NodeIndex];
-      if Collinear(EdgeSegment[1], Input[1], Input[2])
-        and Collinear(EdgeSegment[2], Input[1], Input[2]) then
-      begin
-        IntersectionList.Add(EdgeSegment[1]);
-        IntersectionList.Add(EdgeSegment[2]);
-      end
-      else
-      if Intersect(EdgeSegment, Input, APoint.x, APoint.y) then
-      begin
-        IntersectionList.Add(APoint);
-      end;
-      EdgeSegment[2] := EdgeSegment[1];
-    end;
-    if (IntersectionList.Count = 0) then
+    if (Input[1].x = Input[2].x) and (Input[1].y = Input[2].y) then
     begin
       if IsInsideCell(Input[1]) then
       begin
@@ -902,63 +1276,103 @@ begin
       end;
       Exit;
     end;
-    IntersectionList.Add(Input[1]);
-    IntersectionList.Add(Input[2]);
-    if Input[2].x >= Input[1].x then
-    begin
-      if Input[2].y >= Input[1].y then
+    GetCellOutline(Outline);
+    IntersectionList := TVertexList.Create;
+    try
+      IntersectionList.Capacity := Length(Outline)+2;
+      EdgeSegment[2] := Outline[Length(Outline)-1];
+      for NodeIndex := 0 to Length(Outline) - 1 do
       begin
-        IntersectionList.Sort(TPoint2DComparer.Construct(ComparePointRightUp));
+        EdgeSegment[1] := Outline[NodeIndex];
+        if Collinear(EdgeSegment[1], Input[1], Input[2])
+          and Collinear(EdgeSegment[2], Input[1], Input[2]) then
+        begin
+          IntersectionList.Add(EdgeSegment[1]);
+          IntersectionList.Add(EdgeSegment[2]);
+        end
+        else
+        if Intersect(EdgeSegment, Input, APoint.x, APoint.y) then
+        begin
+          IntersectionList.Add(APoint);
+        end;
+        EdgeSegment[2] := EdgeSegment[1];
+      end;
+      if (IntersectionList.Count = 0) then
+      begin
+        if IsInsideCell(Input[1]) then
+        begin
+          SetLength(IntersectingSegments, 1);
+          IntersectingSegments[0] := Input;
+          result := true;
+        end;
+        Exit;
+      end;
+      IntersectionList.Add(Input[1]);
+      IntersectionList.Add(Input[2]);
+      if Input[2].x >= Input[1].x then
+      begin
+        if Input[2].y >= Input[1].y then
+        begin
+          IntersectionList.Sort(TPoint2DComparer.Construct(ComparePointRightUp));
+        end
+        else
+        begin
+          IntersectionList.Sort(TPoint2DComparer.Construct(ComparePointRightDown));
+        end;
       end
       else
       begin
-        IntersectionList.Sort(TPoint2DComparer.Construct(ComparePointRightDown));
+        if Input[2].y >= Input[1].y then
+        begin
+          IntersectionList.Sort(TPoint2DComparer.Construct(ComparePointLeftUp));
+        end
+        else
+        begin
+          IntersectionList.Sort(TPoint2DComparer.Construct(ComparePointLeftDown));
+        end;
       end;
-    end
-    else
-    begin
-      if Input[2].y >= Input[1].y then
+      for PointIndex := IntersectionList.Count-2 downto 0 do
       begin
-        IntersectionList.Sort(TPoint2DComparer.Construct(ComparePointLeftUp));
-      end
-      else
-      begin
-        IntersectionList.Sort(TPoint2DComparer.Construct(ComparePointLeftDown));
+        if IsEqual(IntersectionList[PointIndex],
+          IntersectionList[PointIndex+1], Epsilon) then
+        begin
+          IntersectionList.Delete(PointIndex);
+        end;
       end;
-    end;
-    for PointIndex := IntersectionList.Count-2 downto 0 do
-    begin
-      if IsEqual(IntersectionList[PointIndex],
-        IntersectionList[PointIndex+1], Epsilon) then
+      if IntersectionList.Count = 1 then
       begin
-        IntersectionList.Delete(PointIndex);
+        IntersectionList.Add(IntersectionList[0]);
       end;
-    end;
-    if IntersectionList.Count = 1 then
-    begin
-      IntersectionList.Add(IntersectionList[0]);
-    end;
-    SetLength(IntersectingSegments, IntersectionList.Count-1);
-    IntersectIndex := 0;
-    for PointIndex := 0 to IntersectionList.Count - 2 do
-    begin
-      APoint.x := (IntersectionList[PointIndex].x
-        + IntersectionList[PointIndex+1].x)/2;
-      APoint.y := (IntersectionList[PointIndex].y
-        + IntersectionList[PointIndex+1].y)/2;
-      if IsInsideCell(APoint) then
+      SetLength(IntersectingSegments, IntersectionList.Count-1);
+      IntersectIndex := 0;
+      for PointIndex := 0 to IntersectionList.Count - 2 do
       begin
-        IntersectingSegments[IntersectIndex] :=
-          EquateSegment(IntersectionList[PointIndex],
-          IntersectionList[PointIndex+1]);
-        Inc(IntersectIndex);
+        APoint.x := (IntersectionList[PointIndex].x
+          + IntersectionList[PointIndex+1].x)/2;
+        APoint.y := (IntersectionList[PointIndex].y
+          + IntersectionList[PointIndex+1].y)/2;
+        if IsInsideCell(APoint) then
+        begin
+          IntersectingSegments[IntersectIndex] :=
+            EquateSegment(IntersectionList[PointIndex],
+            IntersectionList[PointIndex+1]);
+          Inc(IntersectIndex);
+        end;
       end;
+    finally
+      IntersectionList.Free;
     end;
+    SetLength(IntersectingSegments, IntersectIndex);
+    result := IntersectIndex > 0;
   finally
-    IntersectionList.Free;
+    if result then
+    begin
+      for IntersectIndex := 0 to Length(IntersectingSegments) - 1 do
+      begin
+        UpdateSegmentOrientation(Input, IntersectingSegments[IntersectIndex]);
+      end;
+    end;
   end;
-  SetLength(IntersectingSegments, IntersectIndex);
-  result := IntersectIndex > 0;
 end;
 
 procedure TSutraNode2D.GetCellOutline(var CellOutline: TVertexArray);
@@ -982,117 +1396,226 @@ var
   ReduceCount: Integer;
   PriorNode: TSutraNode2D;
   SelfIndex: Integer;
+  PointIndex: Integer;
 const
   MaxReduceCount = 10;
 begin
-  // For now, generate the cell outline each time.
-  { TODO -cSUTRA : Generate SUTRA cell outline only when needed. }
-  VertexList := TVertexList.Create;
-  ElementPolygons := TGpcPolygonClass.Create;
-  NodeList := TSutraNode2D_List.Create;
-  try
-    SelfVertex.x := X;
-    SelfVertex.y := Y;
-    ElementPolygons.NumberOfContours := FElements.Count;
-    for ElementIndex := 0 to FElements.Count - 1 do
-    begin
-      Element := FElements[ElementIndex];
-      ElementPolygons.VertexCount[ElementIndex] := 4;
-      ElementPolygons.Vertices[ElementIndex, 0] := SelfVertex;
-      SelfIndex := Element.Nodes.IndexOfNode(self);
-      Assert(SelfIndex >= 0);
-      if SelfIndex = Element.Nodes.Count - 1 then
-      begin
-        NextIndex := 0;
-      end
-      else
-      begin
-        NextIndex := SelfIndex + 1;
-      end;
-      NextNode := Element.Nodes[NextIndex].Node;
-      NodePosition := NodeList.IndexOf(NextNode);
-      if NodePosition < 0 then
-      begin
-        AVertex.X := (X + NextNode.X) / 2;
-        AVertex.Y := (Y + NextNode.Y) / 2;
-        NodeList.Add(NextNode);
-        VertexList.Add(AVertex);
-      end
-      else
-      begin
-        AVertex := VertexList[NodePosition];
-      end;
-      ElementPolygons.Vertices[ElementIndex, 1] := AVertex;
-      ElCenter := Element.Center;
-      AVertex.x := ElCenter.x;
-      AVertex.y := ElCenter.y;
-      ElementPolygons.Vertices[ElementIndex, 2] := AVertex;
-      if SelfIndex = 0 then
-      begin
-        PriorIndex := Element.Nodes.Count - 1;
-      end
-      else
-      begin
-        PriorIndex := SelfIndex - 1;
-      end;
-      PriorNode := Element.Nodes[PriorIndex].Node;
-      NodePosition := NodeList.IndexOf(PriorNode);
-      if NodePosition < 0 then
-      begin
-        AVertex.X := (X + PriorNode.X) / 2;
-        AVertex.Y := (Y + PriorNode.Y) / 2;
-        NodeList.Add(PriorNode);
-        VertexList.Add(AVertex);
-      end
-      else
-      begin
-        AVertex := VertexList[NodePosition];
-      end;
-      ElementPolygons.Vertices[ElementIndex, 3] := AVertex;
-    end;
-    EmptyPolygon := TGpcPolygonClass.Create;
+  if Length(FCellOutline) = 0 then
+  begin
+    VertexList := TVertexList.Create;
+    ElementPolygons := TGpcPolygonClass.Create;
+    NodeList := TSutraNode2D_List.Create;
     try
-      EmptyPolygon.NumberOfContours := 0;
-      UnionPolygon := TGpcPolygonClass.CreateFromOperation(GPC_UNION,
-        ElementPolygons, EmptyPolygon);
-      try
-        ReduceCount := 0;
-        while UnionPolygon.NumberOfContours > 1 do
+      SelfVertex.x := X;
+      SelfVertex.y := Y;
+      ElementPolygons.NumberOfContours := FElements.Count;
+      for ElementIndex := 0 to FElements.Count - 1 do
+      begin
+        Element := FElements[ElementIndex];
+        ElementPolygons.VertexCount[ElementIndex] := 4;
+        ElementPolygons.Vertices[ElementIndex, 0] := SelfVertex;
+        SelfIndex := Element.Nodes.IndexOfNode(self);
+        Assert(SelfIndex >= 0);
+        if SelfIndex = Element.Nodes.Count - 1 then
         begin
+          NextIndex := 0;
+        end
+        else
+        begin
+          NextIndex := SelfIndex + 1;
+        end;
+        NextNode := Element.Nodes[NextIndex].Node;
+        NodePosition := NodeList.IndexOf(NextNode);
+        if NodePosition < 0 then
+        begin
+          AVertex.X := (X + NextNode.X) / 2;
+          AVertex.Y := (Y + NextNode.Y) / 2;
+          NodeList.Add(NextNode);
+          VertexList.Add(AVertex);
+        end
+        else
+        begin
+          AVertex := VertexList[NodePosition];
+        end;
+        ElementPolygons.Vertices[ElementIndex, 1] := AVertex;
+        ElCenter := Element.Center;
+        AVertex.x := ElCenter.x;
+        AVertex.y := ElCenter.y;
+        ElementPolygons.Vertices[ElementIndex, 2] := AVertex;
+        if SelfIndex = 0 then
+        begin
+          PriorIndex := Element.Nodes.Count - 1;
+        end
+        else
+        begin
+          PriorIndex := SelfIndex - 1;
+        end;
+        PriorNode := Element.Nodes[PriorIndex].Node;
+        NodePosition := NodeList.IndexOf(PriorNode);
+        if NodePosition < 0 then
+        begin
+          AVertex.X := (X + PriorNode.X) / 2;
+          AVertex.Y := (Y + PriorNode.Y) / 2;
+          NodeList.Add(PriorNode);
+          VertexList.Add(AVertex);
+        end
+        else
+        begin
+          AVertex := VertexList[NodePosition];
+        end;
+        ElementPolygons.Vertices[ElementIndex, 3] := AVertex;
+      end;
+      EmptyPolygon := TGpcPolygonClass.Create;
+      try
+        EmptyPolygon.NumberOfContours := 0;
+        UnionPolygon := TGpcPolygonClass.CreateFromOperation(GPC_UNION,
+          ElementPolygons, EmptyPolygon);
+        try
+          ReduceCount := 0;
+          while UnionPolygon.NumberOfContours > 1 do
+          begin
+            PriorUnion := UnionPolygon;
+            UnionPolygon := TGpcPolygonClass.CreateFromOperation(GPC_UNION,
+              PriorUnion, EmptyPolygon);
+            PriorUnion.Free;
+            Inc(ReduceCount);
+            if ReduceCount >= MaxReduceCount then
+            begin
+              {$IFDEF DEBUG}
+              SetLength(FCellOutline, 0);
+              Beep;
+              ShowMessage(IntToStr(Number));
+              Exit;
+              {$ELSE}
+              raise Exception.Create(Format(StrErrorGeneratingCel, [Number + 1]));
+              {$ENDIF}
+            end;
+          end;
+
           PriorUnion := UnionPolygon;
           UnionPolygon := TGpcPolygonClass.CreateFromOperation(GPC_UNION,
             PriorUnion, EmptyPolygon);
           PriorUnion.Free;
-          Inc(ReduceCount);
-          if ReduceCount >= MaxReduceCount then
+
+          Assert(UnionPolygon.NumberOfContours = 1);
+          SetLength(FCellOutline, UnionPolygon.VertexCount[0]);
+          for VertexIndex := 0 to UnionPolygon.VertexCount[0] - 1 do
           begin
-            {$IFDEF DEBUG}
-            SetLength(CellOutline, 0);
-            Beep;
-            ShowMessage(IntToStr(Number));
-            Exit;
-            {$ELSE}
-            raise Exception.Create(Format(StrErrorGeneratingCel, [Number + 1]));
-            {$ENDIF}
+            FCellOutline[VertexIndex] := UnionPolygon.Vertices[0, VertexIndex];
           end;
-        end;
-        Assert(UnionPolygon.NumberOfContours = 1);
-        SetLength(CellOutline, UnionPolygon.VertexCount[0]);
-        for VertexIndex := 0 to UnionPolygon.VertexCount[0] - 1 do
-        begin
-          CellOutline[VertexIndex] := UnionPolygon.Vertices[0, VertexIndex];
+
+
+
+        finally
+          UnionPolygon.Free;
         end;
       finally
-        UnionPolygon.Free;
+        EmptyPolygon.Free;
       end;
     finally
-      EmptyPolygon.Free;
+      NodeList.Free;
+      ElementPolygons.Free;
+      VertexList.Free;
     end;
-  finally
-    NodeList.Free;
-    ElementPolygons.Free;
-    VertexList.Free;
+    if Length(FCellOutline) > 0 then
+    begin
+      FMinX := FCellOutline[0].x;
+      FMaxX := FCellOutline[0].x;
+      FMinY := FCellOutline[0].y;
+      FMaxY := FCellOutline[0].y;
+      for PointIndex := 1 to Length(FCellOutline) - 1 do
+      begin
+        if FMaxX < FCellOutline[PointIndex].x then
+        begin
+          FMaxX := FCellOutline[PointIndex].x;
+        end
+        else if FMinX > FCellOutline[PointIndex].x then
+        begin
+          FMinX := FCellOutline[PointIndex].x;
+        end;
+
+        if FMaxY < FCellOutline[PointIndex].y then
+        begin
+          FMaxY := FCellOutline[PointIndex].y;
+        end
+        else if FMinY > FCellOutline[PointIndex].y then
+        begin
+          FMinY := FCellOutline[PointIndex].y;
+        end;
+      end;
+    end
+    else
+    begin
+      FMinX := 0;
+      FMaxX := 0;
+      FMinY := 0;
+      FMaxY := 0;
+    end;
   end;
+  CellOutline := FCellOutline;
+  SetLength(CellOutline, Length(CellOutline));
+end;
+
+function TSutraNode2D.GetElement(Index: Integer): TSutraElement2D;
+begin
+  result := FElements[Index];
+end;
+
+function TSutraNode2D.GetElementCount: Integer;
+begin
+  result := FElements.Count;
+end;
+
+function TSutraNode2D.GetMaxX: Double;
+var
+  Dummy: TVertexArray;
+begin
+  GetCellOutline(Dummy);
+  result := FMaxX;
+end;
+
+function TSutraNode2D.GetMaxY: Double;
+var
+  Dummy: TVertexArray;
+begin
+  GetCellOutline(Dummy);
+  result := FMaxY;
+end;
+
+function TSutraNode2D.GetMinX: Double;
+var
+  Dummy: TVertexArray;
+begin
+  GetCellOutline(Dummy);
+  result := FMinX;
+end;
+
+function TSutraNode2D.GetMinY: Double;
+var
+  Dummy: TVertexArray;
+begin
+  GetCellOutline(Dummy);
+  result := FMinY;
+end;
+
+procedure TSutraNode2D.InvalidateCellOutline;
+begin
+  SetLength(FCellOutline, 0)
+end;
+
+function TSutraNode2D.IsInside(APoint: TPoint2D): Boolean;
+var
+  Outline: TVertexArray;
+  OutlinePolygon: TPolygon2D;
+  PolyIndex: Integer;
+begin
+  GetCellOutline(Outline);
+  SetLength(OutlinePolygon, Length(Outline));
+  for PolyIndex := 0 to Length(Outline) - 1 do
+  begin
+    OutlinePolygon[PolyIndex] := Outline[PolyIndex];
+  end;
+  result := PointInConcavePolygon(APoint, OutlinePolygon);
 end;
 
 function TSutraNode2D.IsInsideCell(APoint: TPoint2D): Boolean;
@@ -1153,31 +1676,57 @@ begin
   end;
 end;
 
+procedure TSutraNode2D.SetSelected(const Value: Boolean);
+begin
+  FSelected := Value;
+end;
+
 procedure TSutraNode2D.SetLocation(const Value: TPoint2D);
 begin
   X := Value.x;
   Y := Value.y;
 end;
 
+procedure TSutraNode2D.InvalidateOutlines;
+var
+  ElIndex: integer;
+  Element: TSutraElement2D;
+  NodeIndex: integer;
+  Node: TSutraNode2D;
+  LocalCol:TSutraNode2D_Collection;
+begin
+  for ElIndex := 0 to ElementCount - 1 do
+  begin
+    Element := Elements[ElIndex];
+    for NodeIndex := 0 to Element.Nodes.Count - 1 do
+    begin
+      Node := Element.Nodes[NodeIndex].Node;
+      Node.InvalidateCellOutline;
+    end;
+  end;
+  LocalCol := Collection as TSutraNode2D_Collection;
+  LocalCol.InvalidateNodeIntervals;
+  LocalCol.Mesh2D.Elements.InvalidateElementIntervals;
+  LocalCol.Mesh2D.Mesh3D.InvalidatePolygons;
+end;
+
 procedure TSutraNode2D.SetX(const Value: FastGEO.TFloat);
 begin
+  if FLocation.x <> Value then
+  begin
+    InvalidateOutlines;
+  end;
   SetRealProperty(FLocation.x, Value);
 end;
 
 procedure TSutraNode2D.SetY(const Value: FastGEO.TFloat);
 begin
+  if FLocation.y <> Value then
+  begin
+    InvalidateOutlines;
+  end;
   SetRealProperty(FLocation.y, Value);
 end;
-
-//function TSutraNode2D.ThreeDNodeNumber: integer;
-//var
-//  Mesh: TSutraMesh3D;
-//  Node3D: TSutraNode3D;
-//begin
-//  Mesh := (Collection as  TSutraNode2D_Collection).Mesh2D.Mesh3D;
-//  Node3D := Mesh.NodeArray[Mesh.SelectedLayer, Number];
-//  result := Node3D.Number;
-//end;
 
 { TSutraNode2D_Collection }
 
@@ -1190,6 +1739,14 @@ constructor TSutraNode2D_Collection.Create(Model: TBaseModel; ParentMesh: TSutra
 begin
   inherited Create(TSutraNode2D, Model);
   FMesh2D := ParentMesh;
+end;
+
+destructor TSutraNode2D_Collection.Destroy;
+begin
+  FNodesLocations.Free;
+  FNodeIntervals.Free;
+  FNodeRanges.Free;
+  inherited;
 end;
 
 procedure TCustomSutraNode.Assign(Source: TPersistent);
@@ -1271,25 +1828,146 @@ begin
   result := inherited Items[Index] as TSutraNode2D;
 end;
 
+function TSutraNode2D_Collection.GetNodeRanges: TRbwRangeTree;
+var
+  LeafList: TSutraNode2DLeafList;
+  NodeIndex: Integer;
+  ANode: TSutraNode2D;
+  ALeaf: TSutraNode2DLeaf;
+begin
+  if FNodeRanges = nil then
+  begin
+    LeafList := TSutraNode2DLeafList.Create;
+    for NodeIndex := 0 to Count - 1 do
+    begin
+      ANode := Items[NodeIndex];
+      ALeaf := TSutraNode2DLeaf.Create(ANode);
+      LeafList.Add(ALeaf);
+    end;
+    FNodeRanges := TRbwRangeTree.Create(LeafList);
+  end;
+  result := FNodeRanges;
+end;
+
+function TSutraNode2D_Collection.GetNodesLocations: TRbwQuadTree;
+var
+  Limits: TGridLimit;
+  index: Integer;
+  Node: TSutraNode2D;
+begin
+  if FNodesLocations = nil then
+  begin
+    FNodesLocations := TRbwQuadTree.Create(nil);
+    FNodesLocations.MaxPoints := 20;
+    Limits := Mesh2D.MeshLimits;
+    FNodesLocations.XMax := Limits.MaxX;
+    FNodesLocations.XMin := Limits.MinX;
+    FNodesLocations.YMax := Limits.MaxY;
+    FNodesLocations.YMin := Limits.MinY;
+    for index := 0 to Count - 1 do
+    begin
+      Node := Items[index];
+      FNodesLocations.AddPoint(Node.X, Node.Y, Node);
+    end;
+  end;
+  result := FNodesLocations;
+end;
+
+procedure TSutraNode2D_Collection.InvalidateNodeIntervals;
+begin
+  FreeAndNil(FNodeIntervals);
+  FreeAndNil(FNodeRanges);
+  FreeAndNil(FNodesLocations);
+end;
+
+procedure TSutraNode2D_Collection.NodeXLimits(Subject: TObject;
+  out LowerBoundary, UpperBoundary: double);
+var
+  Node2D: TSutraNode2D;
+begin
+  Node2D := Subject as TSutraNode2D;
+  LowerBoundary := Node2D.MinX;
+  UpperBoundary := Node2D.MaxX;
+end;
+
+procedure TSutraNode2D_Collection.NodeYLimits(Subject: TObject;
+  out LowerBoundary, UpperBoundary: double);
+var
+  Node2D: TSutraNode2D;
+begin
+  Node2D := Subject as TSutraNode2D;
+  LowerBoundary := Node2D.MinY;
+  UpperBoundary := Node2D.MaxY;
+end;
+
 function TSutraNode2D_Collection.TopContainingCell(
   APoint: TPoint2D): T2DTopCell;
 var
   index: Integer;
   Node: TSutraNode2D;
+  IntervalDef: TIntDefArray;
+  Limits: TGridLimit;
+  AList: TList;
+  Location: TOneDRealArray;
 begin
-  { TODO -cSUTRA : For now, use a simple, inefficient solution. }
   Result.Row := -1;
   Result.Col := -1;
-  for index := 0 to Count - 1 do
+
+  if Count = 0 then
   begin
-    Node := Items[index];
-    if Node.IsInsideCell(APoint) then
+    Exit;
+  end;
+
+  if FNodeIntervals = nil then
+  begin
+    Limits := Mesh2D.MeshLimits;
+    SetLength(IntervalDef, 2);
+    IntervalDef[0].LowerBoundary := Limits.MinX;
+    IntervalDef[0].UpperBoundary := Limits.MaxX;
+    IntervalDef[0].OnFindObjectInterval  := NodeXLimits;
+    IntervalDef[1].LowerBoundary := Limits.MinY;
+    IntervalDef[1].UpperBoundary := Limits.MaxY;
+    IntervalDef[1].OnFindObjectInterval  := NodeYLimits;
+
+    FNodeIntervals := TRbwIntervalTree.Create(IntervalDef);
+    for index := 0 to Count - 1 do
     begin
-      Result.Row := 0;
-      Result.Col := Node.Number;
-      Exit;
+      Node := Items[index];
+      FNodeIntervals.Add(Node);
     end;
   end;
+
+  AList := TList.Create;
+  try
+    SetLength(Location, 2);
+    Location[0] := APoint.x;
+    Location[1] := APoint.y;
+    FNodeIntervals.FindContainingObjects(Location, AList);
+
+    for index := 0 to AList.Count - 1 do
+    begin
+      Node := AList[index];
+      if Node.IsInsideCell(APoint) then
+      begin
+        Result.Row := 0;
+        Result.Col := Node.Number;
+        Exit;
+      end;
+    end;
+  finally
+    AList.Free;
+  end;
+
+//  for index := 0 to Count - 1 do
+//  begin
+//    Node := Items[index];
+//    if Node.IsInsideCell(APoint) then
+//    begin
+//      Result.Row := 0;
+//      Result.Col := Node.Number;
+//      Exit;
+//    end;
+//  end;
 end;
 
 { TSutraNodeNumber2D_Item }
@@ -1494,7 +2172,8 @@ begin
   Dummy := nil;
   SumX := 0;
   SumY := 0;
-  if (DataArray <> nil) or (DrawingChoice = dcAll) or Mesh3D.DrawElementNumbers then
+  if (DataArray <> nil) or (DrawingChoice = dcAll)
+    or Mesh3D.DrawElementNumbers then
   begin
     SetLength(Points, 5);
     Assert(Nodes.Count = 4);
@@ -1512,7 +2191,8 @@ begin
         StringValues, ShowColor, Fraction);
       if ShowColor then
       begin
-        AColor := frmGoPhast.PhastModel.GridColorParameters.FracToColor(Fraction);
+        AColor := frmGoPhast.PhastModel.GridColorParameters.
+          FracToColor(Fraction);
         DrawBigPolygon32(BitMap, Color32(AColor), Color32(AColor),
           0, Points, Dummy, False, True);
       end;
@@ -1549,7 +2229,7 @@ begin
   if Mesh3D.DrawElementNumbers then
   begin
     ShowElement := True;
-    if Mesh3D.MeshType = mt3D then
+    if (Mesh3D.MeshType = mt3D) and (Mesh3D.Elements.Count > 0) then
     begin
       Element3D := Mesh3D.ElementArray[SelectedLayer, ElementNumber];
       LocalDisplayNumber := Element3D.DisplayNumber;
@@ -1583,6 +2263,111 @@ begin
   Result[2] := Nodes[Index].Node.Location;
 end;
 
+function TSutraElement2D.ElementArea: double;
+var
+  OutlinePolygon: TPolygon2D;
+  PolyIndex: Integer;
+begin
+  SetLength(OutlinePolygon, Nodes.Count);
+  for PolyIndex := 0 to Nodes.Count - 1 do
+  begin
+    OutlinePolygon[PolyIndex] := Nodes[PolyIndex].Node.Location;
+  end;
+  result := Abs(Area(OutlinePolygon));
+end;
+
+function TSutraElement2D.GetMaxX: Double;
+var
+  NodeIndex: Integer;
+  ANode: TSutraNode2D;
+begin
+  if Nodes.Count > 0 then
+  begin
+    result := Nodes[0].Node.x;
+    for NodeIndex := 1 to Nodes.Count - 1 do
+    begin
+      ANode := Nodes[NodeIndex].Node;
+      if ANode.x > result then
+      begin
+        result := ANode.x;
+      end;
+    end;
+  end
+  else
+  begin
+    result := 0;
+  end;
+end;
+
+function TSutraElement2D.GetMaxY: Double;
+var
+  NodeIndex: Integer;
+  ANode: TSutraNode2D;
+begin
+  if Nodes.Count > 0 then
+  begin
+    result := Nodes[0].Node.y;
+    for NodeIndex := 1 to Nodes.Count - 1 do
+    begin
+      ANode := Nodes[NodeIndex].Node;
+      if ANode.y > result then
+      begin
+        result := ANode.y;
+      end;
+    end;
+  end
+  else
+  begin
+    result := 0;
+  end;
+end;
+
+function TSutraElement2D.GetMinX: Double;
+var
+  NodeIndex: Integer;
+  ANode: TSutraNode2D;
+begin
+  if Nodes.Count > 0 then
+  begin
+    result := Nodes[0].Node.x;
+    for NodeIndex := 1 to Nodes.Count - 1 do
+    begin
+      ANode := Nodes[NodeIndex].Node;
+      if ANode.x < result then
+      begin
+        result := ANode.x;
+      end;
+    end;
+  end
+  else
+  begin
+    result := 0;
+  end;
+end;
+
+function TSutraElement2D.GetMinY: Double;
+var
+  NodeIndex: Integer;
+  ANode: TSutraNode2D;
+begin
+  if Nodes.Count > 0 then
+  begin
+    result := Nodes[0].Node.y;
+    for NodeIndex := 1 to Nodes.Count - 1 do
+    begin
+      ANode := Nodes[NodeIndex].Node;
+      if ANode.y < result then
+      begin
+        result := ANode.y;
+      end;
+    end;
+  end
+  else
+  begin
+    result := 0;
+  end;
+end;
+
 function TSutraElement2D.Intersection(const Input: TSegment2D;
   out IntersectingSegment: TSegment2D): boolean;
 var
@@ -1594,6 +2379,10 @@ begin
     Quad[NodeIndex+1] := Nodes[NodeIndex].Node.Location;
   end;
   result := Clip(Input, Quad, IntersectingSegment);
+  if result then
+  begin
+    UpdateSegmentOrientation(Input, IntersectingSegment);
+  end;
 end;
 
 function TSutraElement2D.IsInside(APoint: TPoint2D): Boolean;
@@ -1631,9 +2420,66 @@ begin
   result := inherited Add as TSutraElement2D;
 end;
 
-constructor TSutraElement2D_Collection.Create(Model: TBaseModel);
+constructor TSutraElement2D_Collection.Create(Model: TBaseModel;
+  ParentMesh: TSutraMesh2D);
 begin
   inherited Create(TSutraElement2D, Model);
+  FMesh2D := ParentMesh;
+end;
+
+destructor TSutraElement2D_Collection.Destroy;
+begin
+  FElementCenters.Free;
+  FElementIntervals.Free;
+  FElementRanges.Free;
+  inherited;
+end;
+
+function TSutraElement2D_Collection.GetElementCenters: TRbwQuadTree;
+var
+  Limits: TGridLimit;
+  index: Integer;
+  Element: TSutraElement2D;
+  Center: TPoint2D;
+begin
+  if FElementCenters = nil then
+  begin
+    FElementCenters := TRbwQuadTree.Create(nil);
+    FElementCenters.MaxPoints := 20;
+    Limits := Mesh2D.MeshLimits;
+    FElementCenters.XMax := Limits.MaxX;
+    FElementCenters.XMin := Limits.MinX;
+    FElementCenters.YMax := Limits.MaxY;
+    FElementCenters.YMin := Limits.MinY;
+    for index := 0 to Count - 1 do
+    begin
+      Element := Items[index];
+      Center := Element.Center;
+      FElementCenters.AddPoint(Center.X, Center.Y, Element);
+    end;
+  end;
+  result := FElementCenters;
+end;
+
+function TSutraElement2D_Collection.GetElementRanges: TRbwRangeTree;
+var
+  LeafList: TSutraElement2DLeafList;
+  ElementIndex: Integer;
+  AnElement: TSutraElement2D;
+  Leaf: TSutraElement2DLeaf;
+begin
+  if FElementRanges = nil then
+  begin
+    LeafList := TSutraElement2DLeafList.Create;
+    for ElementIndex := 0 to Count - 1 do
+    begin
+      AnElement := Items[ElementIndex];
+      Leaf := TSutraElement2DLeaf.Create(AnElement);
+      LeafList.Add(Leaf);
+    end;
+    FElementRanges := TRbwRangeTree.Create(LeafList);
+  end;
+  result := FElementRanges
 end;
 
 function TSutraElement2D_Collection.GetItems(Index: integer): TSutraElement2D;
@@ -1641,25 +2487,150 @@ begin
   result := inherited Items[Index] as TSutraElement2D
 end;
 
+procedure TSutraElement2D_Collection.InvalidateElementIntervals;
+begin
+  FreeAndNil(FElementIntervals);
+  FreeAndNil(FElementRanges);
+  FreeAndNil(FElementCenters);
+end;
+
+procedure TSutraElement2D_Collection.ElementXLimits(Subject: TObject;
+  out LowerBoundary, UpperBoundary: double);
+var
+  Element: TSutraElement2D;
+  NodeIndex: integer;
+  ANode: TSutraNode2D;
+begin
+  Element := Subject as TSutraElement2D;
+
+  if Element.Nodes.Count > 0 then
+  begin
+    ANode := Element.Nodes[0].Node;
+    LowerBoundary := ANode.x;
+    UpperBoundary := ANode.x;
+    for NodeIndex := 1 to Element.Nodes.Count - 1 do
+    begin
+      ANode := Element.Nodes[NodeIndex].Node;
+      if UpperBoundary < ANode.x then
+      begin
+        UpperBoundary := ANode.x;
+      end
+      else if LowerBoundary > ANode.x then
+      begin
+        LowerBoundary := ANode.x;
+      end;
+    end;
+  end
+  else
+  begin
+    LowerBoundary := 0;
+    UpperBoundary := 0;
+  end;
+
+end;
+
+procedure TSutraElement2D_Collection.ElementYLimits(Subject: TObject;
+  out LowerBoundary, UpperBoundary: double);
+var
+  Element: TSutraElement2D;
+  NodeIndex: integer;
+  ANode: TSutraNode2D;
+begin
+  Element := Subject as TSutraElement2D;
+
+  if Element.Nodes.Count > 0 then
+  begin
+    ANode := Element.Nodes[0].Node;
+    LowerBoundary := ANode.y;
+    UpperBoundary := ANode.y;
+    for NodeIndex := 1 to Element.Nodes.Count - 1 do
+    begin
+      ANode := Element.Nodes[NodeIndex].Node;
+      if UpperBoundary < ANode.y then
+      begin
+        UpperBoundary := ANode.y;
+      end
+      else if LowerBoundary > ANode.y then
+      begin
+        LowerBoundary := ANode.y;
+      end;
+    end;
+  end
+  else
+  begin
+    LowerBoundary := 0;
+    UpperBoundary := 0;
+  end;
+
+end;
+
 function TSutraElement2D_Collection.TopContainingElement(
   APoint: TPoint2D): T2DTopCell;
 var
   index: Integer;
   Element: TSutraElement2D;
+  IntervalDef: TIntDefArray;
+  Limits: TGridLimit;
+  AList: TList;
+  Location: TOneDRealArray;
 begin
-  { TODO -cSUTRA : For now, use a simple, inefficient solution. }
   Result.Row := -1;
   Result.Col := -1;
-  for index := 0 to Count - 1 do
+  if Count = 0 then
   begin
-    Element := Items[index];
-    if Element.IsInside(APoint) then
+    Exit;
+  end;
+
+  if FElementIntervals = nil then
+  begin
+    Limits := Mesh2D.MeshLimits;
+    SetLength(IntervalDef, 2);
+    IntervalDef[0].LowerBoundary := Limits.MinX;
+    IntervalDef[0].UpperBoundary := Limits.MaxX;
+    IntervalDef[0].OnFindObjectInterval  := ElementXLimits;
+    IntervalDef[1].LowerBoundary := Limits.MinY;
+    IntervalDef[1].UpperBoundary := Limits.MaxY;
+    IntervalDef[1].OnFindObjectInterval  := ElementYLimits;
+
+    FElementIntervals := TRbwIntervalTree.Create(IntervalDef);
+    for index := 0 to Count - 1 do
     begin
-      Result.Row := 0;
-      Result.Col := Element.ElementNumber;
-      Exit;
+      Element := Items[index];
+      FElementIntervals.Add(Element);
     end;
   end;
+
+  AList := TList.Create;
+  try
+    SetLength(Location, 2);
+    Location[0] := APoint.x;
+    Location[1] := APoint.y;
+    FElementIntervals.FindContainingObjects(Location, AList);
+
+    for index := 0 to AList.Count - 1 do
+    begin
+      Element := AList[index];
+      if Element.IsInside(APoint) then
+      begin
+        Result.Row := 0;
+        Result.Col := Element.ElementNumber;
+        Exit;
+      end;
+    end;
+  finally
+    AList.Free;
+  end;
+
+//  for index := 0 to Count - 1 do
+//  begin
+//    Element := Items[index];
+//    if Element.IsInside(APoint) then
+//    begin
+//      Result.Row := 0;
+//      Result.Col := Element.ElementNumber;
+//      Exit;
+//    end;
+//  end;
 end;
 
 { TSutraMesh2D }
@@ -1676,7 +2647,6 @@ procedure TSutraMesh2D.Clear;
 begin
   Nodes.Clear;
   Elements.Clear;
-  ElementDrawingChoice := dcAll;
 end;
 
 constructor TSutraMesh2D.Create(Model: TBaseModel; ParentMesh: TSutraMesh3D);
@@ -1684,16 +2654,22 @@ var
   LocalModel: TCustomModel;
 begin
   inherited Create(Model);
+  FMeshGenControls := TMeshGenerationControls.Create(Model);
   FMesh3D := ParentMesh;
   FNodeFont := TFont.Create;
   FElementFont := TFont.Create;
   FNodes := TSutraNode2D_Collection.Create(Model, self);
-  FElements := TSutraElement2D_Collection.Create(Model);
+  FElements := TSutraElement2D_Collection.Create(Model, self);
   LocalModel := Model as TCustomModel;
   FTopGridObserver := LocalModel.TopGridObserver;
-  FTopGridObserver.OnUpToDateSet := LocalModel.OnTopSutraMeshChanged;
-  FDrawNodeNumbers := True;
-  FDrawElementNumbers := True;
+  {$IFDEF SUTRA}
+  if LocalModel.ModelSelection = msSutra22 then
+  begin
+    FTopGridObserver.OnUpToDateSet := LocalModel.OnTopSutraMeshChanged;
+  end;
+  {$ENDIF}
+  FDrawNodeNumbers := False;
+  FDrawElementNumbers := False;
 end;
 
 destructor TSutraMesh2D.Destroy;
@@ -1702,6 +2678,7 @@ begin
   FNodes.Free;
   FElementFont.Free;
   FNodeFont.Free;
+  FMeshGenControls.Free;
   inherited;
 end;
 
@@ -1713,23 +2690,17 @@ end;
 procedure TSutraMesh2D.DrawTop(const BitMap: TBitmap32;
   const ZoomBox: TQRbwZoomBox2);
 var
-  ElementIndex: Integer;
   NodeIndex: Integer;
   ANode: TSutraNode2D;
   APoint: TPoint;
   ColorDataArray: TDataArray;
-  Layer: Integer;
+//  Layer: Integer;
   StringValues : TStringList;
   LayerIndex: integer;
   RowIndex: integer;
   ColIndex: integer;
   Node3D: TSutraNode3D;
-  ElementLayer: Integer;
-  Element2D: TSutraElement2D;
-  Element3D: TSutraElement3D;
-  DrawNode: Boolean;
-  DrawElement: Boolean;
-  DisplayNumber: Integer;
+//  DisplayNumber: Integer;
   ActiveNode: Boolean;
 begin
   StringValues := TStringList.Create;
@@ -1743,23 +2714,8 @@ begin
     begin
       ColorDataArray := TopDataSet;
     end;
-    Layer := 0;
     if ColorDataArray <> nil then
     begin
-      ColorDataArray.Initialize;
-      case ColorDataArray.Orientation of
-        dsoTop: Layer := 0;
-        dso3D: Layer := SelectedLayer;
-        else Assert(False);
-      end;
-//      if (Mesh3D.MeshType = mt3D) and (Layer >= Mesh3D.LayerCount) then
-//      begin
-//        ElementLayer := Mesh3D.LayerCount-1
-//      end
-//      else
-//      begin
-//        ElementLayer := Layer;
-//      end;
       if ColorDataArray.DataType = rdtString then
       begin
         StringValues.Sorted := True;
@@ -1784,67 +2740,25 @@ begin
       end;
     end;
 
-    BitMap.Font := ElementFont;
-    ElementLayer := SelectedLayer;
-    if ElementLayer >= FMesh3D.LayerCount then
+
+    if (ColorDataArray = nil) or (ColorDataArray.EvaluatedAt = eaBlocks) then
     begin
-      ElementLayer := FMesh3D.LayerCount-1;
-    end;
-    for ElementIndex := 0 to Elements.Count - 1 do
+      DrawElements(StringValues, ColorDataArray, ZoomBox, BitMap);
+      DrawNodes(ColorDataArray, BitMap, ZoomBox, StringValues);
+    end
+    else
     begin
-      Element2D := Elements[ElementIndex];
-      DrawElement := True;
-      if FMesh3D.MeshType = mt3d then
-      begin
-        Element3D := FMesh3D.elementArray[ElementLayer,
-          Element2D.ElementNumber];
-        DrawElement := Element3D.Active;
-      end;
-      if DrawElement then
-      begin
-        if (ColorDataArray <> nil)
-          and (ColorDataArray.EvaluatedAt = eaBlocks) then
-        begin
-          Element2D.DrawTop(BitMap, ZoomBox, ElementDrawingChoice,
-            ColorDataArray, ElementLayer, StringValues, Mesh3D);
-        end
-        else
-        begin
-          Element2D.DrawTop(BitMap, ZoomBox, ElementDrawingChoice, nil,
-            ElementLayer, StringValues, Mesh3D);
-        end;
-      end;
+      DrawNodes(ColorDataArray, BitMap, ZoomBox, StringValues);
+      DrawElements(StringValues, ColorDataArray, ZoomBox, BitMap);
     end;
-    BitMap.Font := NodeFont;
-    for NodeIndex := 0 to Nodes.Count - 1 do
-    begin
-      ANode := Nodes[NodeIndex];
-      DrawNode := True;
-      if FMesh3D.MeshType = mt3d then
-      begin
-        Node3D := FMesh3D.NodeArray[SelectedLayer, ANode.Number];
-        DrawNode := Node3D.Active;
-      end;
-      if DrawNode then
-      begin
-        if (ColorDataArray <> nil) and (ColorDataArray.EvaluatedAt = eaNodes) then
-        begin
-          ANode.DrawTop(BitMap, ZoomBox, NodeDrawingChoice, ColorDataArray,
-            Layer, StringValues);
-        end
-        else
-        begin
-          ANode.DrawTop(BitMap, ZoomBox, NodeDrawingChoice, nil, Layer, StringValues);
-        end;
-      end;
-    end;
+
     if DrawNodeNumbers then
     begin
       for NodeIndex := 0 to Nodes.Count - 1 do
       begin
         ANode := Nodes[NodeIndex];
         ActiveNode := True;
-        if Mesh3D.MeshType = mt3D then
+        if (Mesh3D.MeshType = mt3D) and (Mesh3D.Elements.Count > 0) then
         begin
           Node3D := Mesh3D.NodeArray[Mesh3D.SelectedLayer, ANode.Number];
 //          DisplayNumber := Node3D.DisplayNumber;
@@ -1864,6 +2778,34 @@ begin
   finally
     StringValues.free;
   end;
+
+  DrawTopContours(ZoomBox, BitMap);
+end;
+
+procedure TSutraMesh2D.DrawTopContours(const ZoomBox: TQRbwZoomBox2;
+  const BitMap: TBitmap32);
+var
+  Contourer: TMultipleContourCreator;
+//  LocalModel: TCustomModel;
+begin
+  if (Nodes.Count > 0) and (TopContourDataSet <> nil) then
+  begin
+      Contourer := TMultipleContourCreator.Create;
+      try
+        Contourer.DataSet := TopContourDataSet;
+//        LocalModel := FModel as TCustomModel;
+        Contourer.ActiveDataSet := nil;
+//          LocalModel.DataArrayManager.GetDataSetByName(rsActive);
+        Contourer.BitMap := BitMap;
+        Contourer.ViewDirection := vdTop;
+        Contourer.Mesh := Self.Mesh3D;
+        Contourer.ZoomBox := ZoomBox;
+        Contourer.DrawContours(SelectedLayer,
+          frmGoPhast.PhastModel.ContourColorParameters, vdTop);
+      finally
+        Contourer.Free;
+      end;
+  end;
 end;
 
 procedure TSutraMesh2D.EndUpdate;
@@ -1876,6 +2818,118 @@ begin
     begin
       TopGridObserver.UpToDate := False;
       TopGridObserver.UpToDate := True;
+    end;
+  end;
+end;
+
+procedure TSutraMesh2D.DrawNodes(ColorDataArray: TDataArray;
+  const BitMap: TBitmap32; const ZoomBox: TQRbwZoomBox2;
+  StringValues: TStringList);
+var
+  ANode: TSutraNode2D;
+  NodeIndex: Integer;
+  Node3D: TSutraNode3D;
+  DrawNode: Boolean;
+  Layer: Integer;
+begin
+  if ColorDataArray <> nil then
+  begin
+    Layer := -1;
+    case ColorDataArray.Orientation of
+      dsoTop: Layer := 0;
+      dso3D: Layer := SelectedLayer;
+      else Assert(False);
+    end;
+  end
+  else
+  begin
+    Layer := SelectedLayer;
+  end;
+
+  BitMap.Font := NodeFont;
+  for NodeIndex := 0 to Nodes.Count - 1 do
+  begin
+    ANode := Nodes[NodeIndex];
+    DrawNode := True;
+    if (FMesh3D.MeshType = mt3d) and (FMesh3D.Elements.Count > 0) then
+    begin
+      if (ColorDataArray = nil) or (ColorDataArray.Orientation = dso3D) then
+      begin
+        Node3D := FMesh3D.NodeArray[SelectedLayer, ANode.Number];
+        DrawNode := Node3D.Active;
+      end;
+    end;
+    if DrawNode then
+    begin
+      if (ColorDataArray <> nil) and (ColorDataArray.EvaluatedAt = eaNodes) then
+      begin
+        ANode.DrawTop(BitMap, ZoomBox, NodeDrawingChoice, ColorDataArray,
+          Layer, StringValues);
+      end
+      else
+      begin
+        ANode.DrawTop(BitMap, ZoomBox, NodeDrawingChoice, nil,
+          Layer, StringValues);
+      end;
+    end;
+  end;
+end;
+
+procedure TSutraMesh2D.DrawElements(StringValues: TStringList;
+  ColorDataArray: TDataArray; const ZoomBox: TQRbwZoomBox2;
+  const BitMap: TBitmap32);
+var
+  ElementIndex: Integer;
+  DrawElement: Boolean;
+  Element3D: TSutraElement3D;
+  Element2D: TSutraElement2D;
+  ElementLayer: Integer;
+begin
+  BitMap.Font := ElementFont;
+  ElementLayer := -1;
+  if ColorDataArray <> nil then
+  begin
+    case ColorDataArray.Orientation of
+      dsoTop: ElementLayer := 0;
+      dso3D: ElementLayer := SelectedLayer;
+      else Assert(False);
+    end;
+  end
+  else
+  begin
+    ElementLayer := SelectedLayer;
+  end;
+  if ElementLayer >= FMesh3D.LayerCount then
+  begin
+    ElementLayer := FMesh3D.LayerCount - 1;
+  end;
+  for ElementIndex := 0 to Elements.Count - 1 do
+  begin
+    Element2D := Elements[ElementIndex];
+    DrawElement := True;
+    if FMesh3D.MeshType = mt3d then
+    begin
+      if FMesh3D.Elements.Count > 0 then
+      begin
+        if (ColorDataArray = nil) or (ColorDataArray.Orientation = dso3D)  then
+        begin
+          Element3D := FMesh3D.elementArray[ElementLayer, Element2D.ElementNumber];
+          DrawElement := Element3D.Active;
+        end;
+      end;
+    end;
+    if DrawElement then
+    begin
+      if (ColorDataArray <> nil) and (ColorDataArray.EvaluatedAt = eaBlocks) then
+      begin
+        Element2D.DrawTop(BitMap, ZoomBox, ElementDrawingChoice,
+          ColorDataArray, ElementLayer, StringValues, Mesh3D);
+      end
+      else
+      begin
+        Element2D.DrawTop(BitMap, ZoomBox, ElementDrawingChoice,
+          nil, ElementLayer, StringValues, Mesh3D);
+      end;
     end;
   end;
 end;
@@ -2001,6 +3055,23 @@ begin
 
 end;
 
+function TSutraMesh2D.GetSelectedLayer: integer;
+begin
+  result := -1;
+  case Mesh3D.MeshType of
+    mt2D: result := 0;
+    mt3D:
+      begin
+        result := FSelectedLayer;
+        if result >= Mesh3D.LayerCount then
+        begin
+          result := Mesh3D.LayerCount;
+        end;
+      end;
+    else Assert(False);
+  end;
+end;
+
 function TSutraMesh2D.MeshBox: TPolygon2D;
 var
   Limits: TGridLimit;
@@ -2078,6 +3149,12 @@ var
     AnElement: TSutraElement2D;
     AnotherNode: TSutraNode2D;
     NodePosition: Integer;
+    function IsNextEdgeNode: boolean;
+    begin
+      result := (AnotherNode.NodeType = ntEdge) and (AnotherNode <> ANode)
+        and (AnotherNode <> FirstNode)
+        and (PriorNodes.IndexOf(AnotherNode) < 0);
+    end;
   begin
     result := nil;
     for ElementIndex := 0 to ANode.FElements.Count - 1 do
@@ -2092,9 +3169,7 @@ var
       begin
         AnotherNode := AnElement.Nodes[NodePosition+1].Node;
       end;
-      if (AnotherNode.NodeType = ntEdge) and (AnotherNode <> ANode)
-        and (AnotherNode <> FirstNode)
-        and (PriorNodes.IndexOf(AnotherNode) < 0) then
+      if IsNextEdgeNode then
       begin
         result := AnotherNode;
         Exit;
@@ -2108,9 +3183,7 @@ var
       begin
         AnotherNode := AnElement.Nodes[NodePosition-1].Node;
       end;
-      if (AnotherNode.NodeType = ntEdge) and (AnotherNode <> ANode)
-        and (AnotherNode <> FirstNode)
-        and (PriorNodes.IndexOf(AnotherNode) < 0) then
+      if IsNextEdgeNode then
       begin
         result := AnotherNode;
         Exit;
@@ -2186,6 +3259,11 @@ begin
   FElements.Assign(Value);
 end;
 
+procedure TSutraMesh2D.SetMeshGenControls(const Value: TMeshGenerationControls);
+begin
+  FMeshGenControls.Assign(Value);
+end;
+
 procedure TSutraMesh2D.SetNodeDrawingChoice(const Value: TDrawingChoice);
 begin
   FNodeDrawingChoice := Value;
@@ -2209,7 +3287,6 @@ end;
 function TSutraMesh2D.TopContainingCellOrElement(APoint: TPoint2D;
   const EvaluatedAt: TEvaluatedAt): T2DTopCell;
 begin
-  { TODO -cSUTRA : For now, use a simple, inefficient solution. }
   case EvaluatedAt of
     eaBlocks:
       begin
@@ -2249,6 +3326,62 @@ begin
   FActive := False;
   FElements:= TSutraElement3DList.Create;
   FActiveElements:= TSutraElement3DList.Create;
+end;
+
+function TSutraNode3D.CreatePolyhedron: TPolyhedron;
+var
+  LastFace, LastVertex : integer;
+  AnElement : TSutraElement3D;
+  Index : integer;
+//  FaceCount, VertexCount : integer;
+//  AllocatedMemory : integer;
+begin
+//  AllocatedMemory := GetHeapStatus.TotalAddrSpace;
+  result := TPolyhedron.Create(FElements.Count*8,FElements.Count*12);
+  result.OctTree.MaxPoints := 5;
+  if Length(VI_array) < FElements.Count*8 then
+  begin
+    setLength(VI_array,FElements.Count*8);
+    for Index := 0 to FElements.Count*8 -1 do
+    begin
+      VI_array[Index] := Index;
+    end;
+  end;
+
+  result.OctTree.XMax := X;
+  result.OctTree.XMin := X;
+  result.OctTree.YMax := Y;
+  result.OctTree.YMin := Y;
+  result.OctTree.ZMax := Z;
+  result.OctTree.ZMin := Z;
+
+  LastFace := -1;
+  LastVertex := -1;
+  for Index := 0 to FElements.Count -1 do
+  begin
+    AnElement := FElements[Index];
+    if AnElement.Active then
+    begin
+      AnElement.AddFacesToNodePolyhedron(self, result,LastVertex,LastFace);
+    end;
+  end;
+  Assert(LastVertex<FElements.Count*8);
+  Assert(LastFace<FElements.Count*12);
+  result.SetArrayLengths(LastFace,LastVertex);
+{  result.EliminateInternalFaces(LastFace, LastVertex);
+
+  FaceCount := result.FaceCount;
+  VertexCount := result.VertexCount;
+  Assert((VertexCount = 8)
+    or (VertexCount = 12)
+    or (VertexCount = 18)
+    or (VertexCount = 26));
+  Assert((FaceCount = 12)
+    or (FaceCount = 20)
+    or (FaceCount = 32)
+    or (FaceCount = 48));  }
+//  AllocatedMemory := GetHeapStatus.TotalAddrSpace - AllocatedMemory;
+//  ShowMessage(IntToStr(AllocatedMemory));
 end;
 
 destructor TSutraNode3D.Destroy;
@@ -2303,6 +3436,23 @@ end;
 function TSutraNode3D.GetNodeType: TNodeType;
 begin
   result := ntInner;
+end;
+
+function TSutraNode3D.GetVolume: Extended;
+var
+  Polyhedron: TPolyhedron;
+  AnArea: Extended;
+begin
+  if FVolume = 0 then
+  begin
+    Polyhedron := CreatePolyhedron;
+    try
+      Polyhedron.GetProps(FVolume, AnArea);
+    finally
+      Polyhedron.Free;
+    end;
+  end;
+  result := FVolume
 end;
 
 function TSutraNode3D.GetX: TFloat;
@@ -2401,14 +3551,102 @@ begin
   result := inherited Add as TSutraNode3D
 end;
 
-constructor TSutraNode3D_Collection.Create(Model: TBaseModel);
+constructor TSutraNode3D_Collection.Create(Model: TBaseModel; ParentMesh: TSutraMesh3D);
 begin
   inherited Create(TSutraNode3D, Model);
+  FMesh := ParentMesh;
+  FStoredRotatedLocations:= TStoredLocations.Create;
+end;
+
+destructor TSutraNode3D_Collection.Destroy;
+begin
+  FRotatedNodeCenters.Free;
+  FStoredRotatedLocations.Free;
+  inherited;
 end;
 
 function TSutraNode3D_Collection.GetItem(Index: integer): TSutraNode3D;
 begin
   result := inherited Items[index] as TSutraNode3D
+end;
+
+function TSutraNode3D_Collection.GetNodeLocations(Angle: Double): TRbwQuadTree;
+var
+  index: integer;
+  ANode: TSutraNode3D;
+  CenterPoint: TPoint3D;
+  StoredPoint: TStoredNodeOrElement;
+  LayerIndex: Integer;
+  ColIndex: Integer;
+  RandomIndex: integer;
+begin
+  if Angle <> FAngle then
+  begin
+    FreeAndNil(FRotatedNodeCenters);
+    FAngle := Angle
+  end;
+  if FRotatedNodeCenters = nil then
+  begin
+    FStoredRotatedLocations.Clear;
+    FRotatedNodeCenters := TRbwQuadTree.Create(nil);
+
+    for LayerIndex := 0 to FMesh.LayerCount do
+    begin
+      for ColIndex := 0 to FMesh.Mesh2D.Nodes.Count - 1 do
+      begin
+        ANode := FMesh.NodeArray[LayerIndex,ColIndex];
+        if ANode.Active then
+        begin
+          CenterPoint := ANode.NodeLocation;
+          StoredPoint := TStoredNodeOrElement.Create(
+            CenterPoint, FAngle, ColIndex, LayerIndex, ANode);
+          FStoredRotatedLocations.Add(StoredPoint);
+        end;
+      end;
+    end;
+
+    if FStoredRotatedLocations.Count > 0 then
+    begin
+      StoredPoint := FStoredRotatedLocations[0];
+      FRotatedNodeCenters.XMin := StoredPoint.X;
+      FRotatedNodeCenters.XMax := StoredPoint.X;
+      FRotatedNodeCenters.YMin := StoredPoint.Z;
+      FRotatedNodeCenters.YMax := StoredPoint.Z;
+      for Index := 1 to Min(100, FStoredRotatedLocations.Count - 1) do
+      begin
+        RandomIndex := Random(FStoredRotatedLocations.Count);
+        StoredPoint := FStoredRotatedLocations[RandomIndex];
+        if FRotatedNodeCenters.XMin > StoredPoint.X then
+        begin
+          FRotatedNodeCenters.XMin := StoredPoint.X;
+        end
+        else if FRotatedNodeCenters.XMax < StoredPoint.X then
+        begin
+          FRotatedNodeCenters.XMax := StoredPoint.X;
+        end;
+
+        if FRotatedNodeCenters.YMin > StoredPoint.Z then
+        begin
+          FRotatedNodeCenters.YMin := StoredPoint.Z;
+        end
+        else if FRotatedNodeCenters.YMax < StoredPoint.Z then
+        begin
+          FRotatedNodeCenters.YMax := StoredPoint.Z;
+        end;
+      end;
+      for Index := 0 to FStoredRotatedLocations.Count - 1 do
+      begin
+        StoredPoint := FStoredRotatedLocations[Index];
+        FRotatedNodeCenters.AddPoint(StoredPoint.X, StoredPoint.Z, StoredPoint);
+      end;
+    end;
+  end;
+  result := FRotatedNodeCenters;
+end;
+
+procedure TSutraNode3D_Collection.InvalidateStoredLocations;
+begin
+  FreeAndNil(FRotatedNodeCenters);
 end;
 
 { TSutraNodeNumber3D_Collection }
@@ -2445,6 +3683,316 @@ begin
 end;
 
 { TSutraElement3D }
+
+procedure TSutraElement3D.AddFacesToNodePolyhedron(CornerNode: TSutraNode3D;
+  APolyHedron: TPolyhedron; var LastVertex, LastFace: integer);
+var
+  AFace : TList;
+  Anode : TSutraNode3D;
+  function GetFaceCenterArray : TPointd;
+  var
+    Index : integer;
+  begin
+    result[X] := 0;
+    result[Y] := 0;
+    result[Z] := 0;
+    for Index := 0 to AFace.Count -1 do
+    begin
+      Anode := AFace[Index];
+      result[X] := result[X] + Anode.X;
+      result[Y] := result[Y] + Anode.Y;
+      result[Z] := result[Z] + Anode.Z;
+    end;
+    result[X] := result[X]/AFace.Count;
+    result[Y] := result[Y]/AFace.Count;
+    result[Z] := result[Z]/AFace.Count;
+  end;
+var
+  Node0, Node1, Node2, Node3, Node4, Node5, Node6, Node7 : TSutraNode3D;
+  FirstNode, SecondNode : TSutraNode3D;
+  FaceList : TList;
+  Index : integer;
+  NodeIndex : integer;
+  ElementCenter, FaceCenter, EdgeCenter, Corner : TPointd;
+  ElementCenterIndex, FaceCenterIndex, EdgeCenterIndex1, EdgeCenterIndex2, CornerIndex : integer;
+  temp : double;
+  EpsilonX, EpsilonY, EpsilonZ : double;
+  MinX, MinY, MinZ, MaxX, MaxY, MaxZ : double;
+  CenterPoint : TPoint3d;
+begin
+  ANode := Nodes[0].Node;
+  MinX := ANode.X;
+  MaxX := MinX;
+  MinY := ANode.Y;
+  MaxY := MinY;
+  MinZ := ANode.Z;
+  MaxZ := MinZ;
+  for Index := 1 to Nodes.Count -1 do
+  begin
+    ANode := Nodes[Index].Node;
+    temp := ANode.X;
+    if temp < MinX then
+    begin
+      MinX := temp
+    end
+    else if temp > MaxX then
+    begin
+      MaxX := temp;
+    end;
+    temp := ANode.Y;
+    if temp < MinY then
+    begin
+      MinY := temp
+    end
+    else if temp > MaxY then
+    begin
+      MaxY := temp;
+    end;
+    temp := ANode.Z;
+    if temp < MinZ then
+    begin
+      MinZ := temp
+    end
+    else if temp > MaxZ then
+    begin
+      MaxZ := temp;
+    end;
+  end;
+  EpsilonX := (MaxX-MinX)/200000000;
+  EpsilonY := (MaxY-MinY)/200000000;
+  EpsilonZ := (MaxZ-MinZ)/2000000000;
+
+  Assert(CornerNode <> nil);
+  Corner[X] := CornerNode.X;
+  Corner[Y] := CornerNode.Y;
+  Corner[Z] := CornerNode.Z;
+
+  CornerIndex := APolyHedron.VertexIndex(Corner,LastVertex,EpsilonX,EpsilonY,EpsilonZ);
+  if CornerIndex = -1 then
+  begin
+    Inc(LastVertex);
+    CornerIndex := LastVertex;
+    APolyHedron.Vertices[CornerIndex] := Corner;
+    APolyHedron.OctTree.AddPoint(Corner[X], Corner[Y], Corner[Z],
+      @VI_array[LastVertex]);
+  end;
+  // take care of the special case where the corner is at (0,0,0);
+{  else if (CornerIndex = LastVertex + 1) then
+  begin
+//    LastVertex := 0;
+    Inc(LastVertex);
+    CornerIndex := LastVertex;
+    APolyHedron.Vertices[CornerIndex] := Corner;
+  end;  }
+
+  CenterPoint := CenterLocation;
+  ElementCenter[X] := CenterPoint.X;
+  ElementCenter[Y] := CenterPoint.Y;
+  ElementCenter[Z] := CenterPoint.Z;
+
+  ElementCenterIndex := APolyHedron.VertexIndex(ElementCenter,LastVertex,EpsilonX,EpsilonY,EpsilonZ);
+  if ElementCenterIndex = -1 then
+  begin
+    Inc(LastVertex);
+    ElementCenterIndex := LastVertex;
+    APolyHedron.Vertices[ElementCenterIndex] := ElementCenter;
+    APolyHedron.OctTree.AddPoint(ElementCenter[X], ElementCenter[Y], ElementCenter[Z],
+      @VI_array[LastVertex]);
+  end;
+{  else if (ElementCenterIndex = LastVertex + 1) then
+  begin
+//    LastVertex := 0;
+    Inc(LastVertex);
+    ElementCenterIndex := LastVertex;
+    APolyHedron.Vertices[ElementCenterIndex] := ElementCenter;
+  end; }
+
+  Node0 := Nodes[0].Node;
+  Node1 := Nodes[1].Node;
+  Node2 := Nodes[2].Node;
+  Node3 := Nodes[3].Node;
+  Node4 := Nodes[4].Node;
+  Node5 := Nodes[5].Node;
+  Node6 := Nodes[6].Node;
+  Node7 := Nodes[7].Node;
+  FaceList := TList.Create;
+  try
+    FaceList.Capacity := 6;
+    for Index := 1 to 6 do
+    begin
+      AFace := TList.Create;
+      AFace.Capacity := 4;
+      FaceList.Add(AFace);
+    end;
+
+    AFace := FaceList[0];
+    AFace.Add(Node0);
+    AFace.Add(Node1);
+    AFace.Add(Node2);
+    AFace.Add(Node3);
+
+    AFace := FaceList[1];
+    AFace.Add(Node1);
+    AFace.Add(Node5);
+    AFace.Add(Node6);
+    AFace.Add(Node2);
+
+    AFace := FaceList[2];
+    AFace.Add(Node0);
+    AFace.Add(Node4);
+    AFace.Add(Node5);
+    AFace.Add(Node1);
+
+    AFace := FaceList[3];
+    AFace.Add(Node3);
+    AFace.Add(Node7);
+    AFace.Add(Node4);
+    AFace.Add(Node0);
+
+    AFace := FaceList[4];
+    AFace.Add(Node2);
+    AFace.Add(Node6);
+    AFace.Add(Node7);
+    AFace.Add(Node3);
+
+    AFace := FaceList[5];
+    AFace.Add(Node7);
+    AFace.Add(Node6);
+    AFace.Add(Node5);
+    AFace.Add(Node4);
+
+    for Index := 0 to FaceList.Count -1 do
+    begin
+      AFace := FaceList[Index];
+      NodeIndex := AFace.IndexOf(CornerNode);
+      if NodeIndex > -1 then
+      begin
+        FaceCenter := GetFaceCenterArray;
+
+        FaceCenterIndex := APolyHedron.VertexIndex(FaceCenter,LastVertex,EpsilonX,EpsilonY,EpsilonZ);
+        if FaceCenterIndex = -1 then
+        begin
+          Inc(LastVertex);
+          FaceCenterIndex := LastVertex;
+          APolyHedron.Vertices[FaceCenterIndex] := FaceCenter;
+          APolyHedron.OctTree.AddPoint(FaceCenter[X], FaceCenter[Y], FaceCenter[Z],
+            @VI_array[LastVertex]);
+        end;
+{        else if (FaceCenterIndex = LastVertex + 1) then
+        begin
+          Inc(LastVertex);
+          FaceCenterIndex := LastVertex;
+          APolyHedron.Vertices[FaceCenterIndex] := FaceCenter;
+        end;  }
+
+        case NodeIndex of
+          0,1,2:
+            begin
+              FirstNode := AFace[NodeIndex];
+              SecondNode := AFace[NodeIndex+1];
+              EdgeCenter[X] := (FirstNode.X + SecondNode.X)/2;
+              EdgeCenter[Y] := (FirstNode.Y + SecondNode.Y)/2;
+              EdgeCenter[Z] := (FirstNode.Z + SecondNode.Z)/2;
+            end;
+          3:
+            begin
+              FirstNode := AFace[0];
+              SecondNode := AFace[3];
+              EdgeCenter[X] := (FirstNode.X + SecondNode.X)/2;
+              EdgeCenter[Y] := (FirstNode.Y + SecondNode.Y)/2;
+              EdgeCenter[Z] := (FirstNode.Z + SecondNode.Z)/2;
+            end;
+          else
+            begin
+              Assert(False);
+            end;
+        end;
+
+        EdgeCenterIndex1 := APolyHedron.VertexIndex(EdgeCenter,LastVertex,EpsilonX,EpsilonY,EpsilonZ);
+        if EdgeCenterIndex1 = -1 then
+        begin
+          Inc(LastVertex);
+          EdgeCenterIndex1 := LastVertex;
+          APolyHedron.Vertices[EdgeCenterIndex1] := EdgeCenter;
+          APolyHedron.OctTree.AddPoint(EdgeCenter[X], EdgeCenter[Y], EdgeCenter[Z],
+            @VI_array[LastVertex]);
+        end;
+{        else if (EdgeCenterIndex1 = LastVertex + 1) then
+        begin
+          Inc(LastVertex);
+          EdgeCenterIndex1 := LastVertex;
+          APolyHedron.Vertices[EdgeCenterIndex1] := EdgeCenter;
+        end; }
+
+        Inc(LastFace);
+        APolyHedron.FaceValue[LastFace,0] := EdgeCenterIndex1;
+        APolyHedron.FaceValue[LastFace,1] := ElementCenterIndex;
+        APolyHedron.FaceValue[LastFace,2] := FaceCenterIndex;
+
+        case NodeIndex of
+          0:
+            begin
+              FirstNode := AFace[0];
+              SecondNode := AFace[3];
+              EdgeCenter[X] := (FirstNode.X + SecondNode.X)/2;
+              EdgeCenter[Y] := (FirstNode.Y + SecondNode.Y)/2;
+              EdgeCenter[Z] := (FirstNode.Z + SecondNode.Z)/2;
+            end;
+          1,2,3:
+            begin
+              FirstNode := AFace[NodeIndex];
+              SecondNode := AFace[NodeIndex-1];
+              EdgeCenter[X] := (FirstNode.X + SecondNode.X)/2;
+              EdgeCenter[Y] := (FirstNode.Y + SecondNode.Y)/2;
+              EdgeCenter[Z] := (FirstNode.Z + SecondNode.Z)/2;
+            end;
+          else
+            begin
+              Assert(False);
+            end;
+        end;
+
+        EdgeCenterIndex2 := APolyHedron.VertexIndex(EdgeCenter,LastVertex,EpsilonX,EpsilonY,EpsilonZ);
+        if EdgeCenterIndex2 = -1 then
+        begin
+          Inc(LastVertex);
+          EdgeCenterIndex2 := LastVertex;
+          APolyHedron.Vertices[EdgeCenterIndex2] := EdgeCenter;
+          APolyHedron.OctTree.AddPoint(EdgeCenter[X], EdgeCenter[Y], EdgeCenter[Z],
+            @VI_array[LastVertex]);
+        end;
+{        else if (EdgeCenterIndex2 = LastVertex + 1) then
+        begin
+          Inc(LastVertex);
+          EdgeCenterIndex2 := LastVertex;
+          APolyHedron.Vertices[EdgeCenterIndex2] := EdgeCenter;
+        end; }
+
+        Inc(LastFace);
+        APolyHedron.FaceValue[LastFace,0] := EdgeCenterIndex2;
+        APolyHedron.FaceValue[LastFace,1] := FaceCenterIndex;
+        APolyHedron.FaceValue[LastFace,2] := ElementCenterIndex;
+
+        Inc(LastFace);
+        APolyHedron.FaceValue[LastFace,0] := EdgeCenterIndex2;
+        APolyHedron.FaceValue[LastFace,1] := EdgeCenterIndex1;
+        APolyHedron.FaceValue[LastFace,2] := FaceCenterIndex;
+
+        Inc(LastFace);
+        APolyHedron.FaceValue[LastFace,0] := EdgeCenterIndex1;
+        APolyHedron.FaceValue[LastFace,1] := EdgeCenterIndex2;
+        APolyHedron.FaceValue[LastFace,2] := CornerIndex;
+      end;
+    end;
+  finally
+    for Index := 0 to FaceList.Count -1 do
+    begin
+      TList(FaceList[Index]).Free;
+    end;
+    FaceList.Free;
+  end;
+
+end;
 
 procedure TSutraElement3D.Assign(Source: TPersistent);
 var
@@ -2682,7 +4230,7 @@ begin
       begin
         if Area < Abs(resultP.ContourArea(Index)) then
         begin
-          Assert(Area = 0);
+          Assert(Area < 1e-15);
           Area := Abs(resultP.ContourArea(Index));
           ContourIndex := Index;
         end;
@@ -2749,7 +4297,7 @@ begin
     Nodes[LayerAdd].Node.NodeLocation,
     Nodes[LayerAdd+1].Node.NodeLocation,
     Nodes[LayerAdd+2].Node.NodeLocation,
-    Nodes[LayerAdd+2].Node.NodeLocation);
+    Nodes[LayerAdd+3].Node.NodeLocation);
   Result[0][4] := Average2Point3D(
     Node.NodeLocation,
     Nodes[LayerAdd+PriorNode].Node.NodeLocation);
@@ -2762,7 +4310,7 @@ begin
     Nodes[4-LayerAdd].Node.NodeLocation,
     Nodes[4-LayerAdd+1].Node.NodeLocation,
     Nodes[4-LayerAdd+2].Node.NodeLocation,
-    Nodes[4-LayerAdd+2].Node.NodeLocation);
+    Nodes[4-LayerAdd+3].Node.NodeLocation);
   Result[1][4] := Average2Point3D(
     Nodes[4-LayerAdd+NodePostion].Node.NodeLocation,
     Nodes[4-LayerAdd+PriorNode].Node.NodeLocation);
@@ -2843,6 +4391,181 @@ begin
   result.x := result.x/8;
   result.y := result.y/8;
   result.z := result.z/8;
+end;
+
+function TSutraElement3D.CreatePolyhedron: TPolyhedron;
+var
+  Index: integer;
+  Node1: TSutraNode3D;
+  Node0: TSutraNode3D;
+  Node2: TSutraNode3D;
+  Node3: TSutraNode3D;
+  Node4: TSutraNode3D;
+  Node5: TSutraNode3D;
+  Node6: TSutraNode3D;
+  Node7: TSutraNode3D;
+begin
+  result := TPolyhedron.Create(14, 24);
+
+  for Index := 0 to 7 do
+  begin
+    Node1 := Nodes[Index].Node;
+    result.VertexValue[Index,X] := Node1.X;
+    result.VertexValue[Index,Y] := Node1.Y;
+    result.VertexValue[Index,Z] := Node1.Z;
+  end;
+
+  Node0 := Nodes[0].Node;
+  Node1 := Nodes[1].Node;
+  Node2 := Nodes[2].Node;
+  Node3 := Nodes[3].Node;
+  Node4 := Nodes[4].Node;
+  Node5 := Nodes[5].Node;
+  Node6 := Nodes[6].Node;
+  Node7 := Nodes[7].Node;
+
+  result.VertexValue[8,X] := (Node0.X + Node1.X + Node2.X + Node3.X)/4;
+  result.VertexValue[8,Y] := (Node0.Y + Node1.Y + Node2.Y + Node3.Y)/4;
+  result.VertexValue[8,Z] := (Node0.Z + Node1.Z + Node2.Z + Node3.Z)/4;
+
+  result.VertexValue[9,X] := (Node0.X + Node1.X + Node4.X + Node5.X)/4;
+  result.VertexValue[9,Y] := (Node0.Y + Node1.Y + Node4.Y + Node5.Y)/4;
+  result.VertexValue[9,Z] := (Node0.Z + Node1.Z + Node4.Z + Node5.Z)/4;
+
+  result.VertexValue[10,X] := (Node1.X + Node2.X + Node5.X + Node6.X)/4;
+  result.VertexValue[10,Y] := (Node1.Y + Node2.Y + Node5.Y + Node6.Y)/4;
+  result.VertexValue[10,Z] := (Node1.Z + Node2.Z + Node5.Z + Node6.Z)/4;
+
+  result.VertexValue[11,X] := (Node4.X + Node5.X + Node6.X + Node7.X)/4;
+  result.VertexValue[11,Y] := (Node4.Y + Node5.Y + Node6.Y + Node7.Y)/4;
+  result.VertexValue[11,Z] := (Node4.Z + Node5.Z + Node6.Z + Node7.Z)/4;
+
+  result.VertexValue[12,X] := (Node0.X + Node3.X + Node4.X + Node7.X)/4;
+  result.VertexValue[12,Y] := (Node0.Y + Node3.Y + Node4.Y + Node7.Y)/4;
+  result.VertexValue[12,Z] := (Node0.Z + Node3.Z + Node4.Z + Node7.Z)/4;
+
+  result.VertexValue[13,X] := (Node2.X + Node3.X + Node6.X + Node7.X)/4;
+  result.VertexValue[13,Y] := (Node2.Y + Node3.Y + Node6.Y + Node7.Y)/4;
+  result.VertexValue[13,Z] := (Node2.Z + Node3.Z + Node6.Z + Node7.Z)/4;
+
+  result.FaceValue[0,0] := 0;
+  result.FaceValue[0,1] := 8;
+  result.FaceValue[0,2] := 1;
+
+  result.FaceValue[1,0] := 1;
+  result.FaceValue[1,1] := 8;
+  result.FaceValue[1,2] := 2;
+
+  result.FaceValue[2,0] := 2;
+  result.FaceValue[2,1] := 8;
+  result.FaceValue[2,2] := 3;
+
+  result.FaceValue[3,0] := 3;
+  result.FaceValue[3,1] := 8;
+  result.FaceValue[3,2] := 0;
+
+
+  result.FaceValue[4,0] := 1;
+  result.FaceValue[4,1] := 9;
+  result.FaceValue[4,2] := 0;
+
+  result.FaceValue[5,0] := 0;
+  result.FaceValue[5,1] := 9;
+  result.FaceValue[5,2] := 4;
+
+  result.FaceValue[6,0] := 4;
+  result.FaceValue[6,1] := 9;
+  result.FaceValue[6,2] := 5;
+
+  result.FaceValue[7,0] := 5;
+  result.FaceValue[7,1] := 9;
+  result.FaceValue[7,2] := 1;
+
+
+  result.FaceValue[8,0] := 2;
+  result.FaceValue[8,1] := 10;
+  result.FaceValue[8,2] := 1;
+
+  result.FaceValue[9,0] := 6;
+  result.FaceValue[9,1] := 10;
+  result.FaceValue[9,2] := 2;
+
+  result.FaceValue[10,0] := 5;
+  result.FaceValue[10,1] := 10;
+  result.FaceValue[10,2] := 6;
+
+  result.FaceValue[11,0] := 1;
+  result.FaceValue[11,1] := 10;
+  result.FaceValue[11,2] := 5;
+
+
+  result.FaceValue[12,0] := 7;
+  result.FaceValue[12,1] := 11;
+  result.FaceValue[12,2] := 6;
+
+  result.FaceValue[13,0] := 4;
+  result.FaceValue[13,1] := 11;
+  result.FaceValue[13,2] := 7;
+
+  result.FaceValue[14,0] := 5;
+  result.FaceValue[14,1] := 11;
+  result.FaceValue[14,2] := 4;
+
+  result.FaceValue[15,0] := 6;
+  result.FaceValue[15,1] := 11;
+  result.FaceValue[15,2] := 5;
+
+
+  result.FaceValue[16,0] := 3;
+  result.FaceValue[16,1] := 12;
+  result.FaceValue[16,2] := 2;
+
+  result.FaceValue[17,0] := 2;
+  result.FaceValue[17,1] := 12;
+  result.FaceValue[17,2] := 6;
+
+  result.FaceValue[18,0] := 6;
+  result.FaceValue[18,1] := 12;
+  result.FaceValue[18,2] := 7;
+
+  result.FaceValue[19,0] := 7;
+  result.FaceValue[19,1] := 12;
+  result.FaceValue[19,2] := 3;
+
+
+  result.FaceValue[20,0] := 0;
+  result.FaceValue[20,1] := 13;
+  result.FaceValue[20,2] := 3;
+
+  result.FaceValue[21,0] := 3;
+  result.FaceValue[21,1] := 13;
+  result.FaceValue[21,2] := 7;
+
+  result.FaceValue[22,0] := 7;
+  result.FaceValue[22,1] := 13;
+  result.FaceValue[22,2] := 4;
+
+  result.FaceValue[23,0] := 4;
+  result.FaceValue[23,1] := 13;
+  result.FaceValue[23,2] := 0;
+
+end;
+
+function TSutraElement3D.GetVolume: Extended;
+var
+  APolyhdron: TPolyhedron;
+  AnArea: Extended;
+begin
+  if FVolume = 0 then
+  begin
+    APolyhdron := CreatePolyhedron;
+    try
+      APolyhdron.GetProps(FVolume, AnArea);
+    finally
+      APolyhdron.Free;
+    end;
+  end;
+  result := FVolume;
 end;
 
 function TSutraElement3D.LowerElevation: double;
@@ -2927,6 +4650,46 @@ end;
 
 { TSutraMesh3D }
 
+function TSutraMesh3D.Bandwidth: Integer;
+var
+  index: Integer;
+  LowNode: TSutraNode3D;
+  AnElement: TSutraElement3D;
+  NodeIndex: Integer;
+  HighNode: TSutraNode3D;
+  ANode: TSutraNode3D;
+  Delta: Integer;
+begin
+  Result := 0;
+  for index := 0 to Elements.Count -1 do
+  begin
+    AnElement := Elements[index];
+    if AnElement.Active then
+    begin
+      LowNode := AnElement.Nodes[0].Node;
+      HighNode := LowNode;
+      for NodeIndex := 1 to AnElement.Nodes.Count - 1 do
+      begin
+        ANode := AnElement.Nodes[NodeIndex].Node;
+        if ANode.Number < LowNode.Number then
+        begin
+          LowNode := ANode;
+        end;
+        if ANode.Number > HighNode.Number then
+        begin
+          HighNode := ANode;
+        end;
+      end;
+      Delta := HighNode.Number - LowNode.Number;
+      if Delta > Result then
+      begin
+        Result := Delta
+      end;
+    end;
+  end;
+  result := result*2 + 1;
+end;
+
 procedure TSutraMesh3D.CalculateMinMax(DataSet: TDataArray;
   var MinMaxInitialized: Boolean; var MinMax: TMinMax;
   StringValues: TStringList);
@@ -2965,6 +4728,14 @@ begin
   end;
 end;
 
+procedure TSutraMesh3D.InvalidatePolygons;
+begin
+  FStoredNodePolygons := nil;
+  FStoredBlockPolygons := nil;
+  Nodes.InvalidateStoredLocations;
+  Elements.InvalidateStoredLocations;
+end;
+
 procedure TSutraMesh3D.Clear;
 begin
   BeginUpdate;
@@ -2982,10 +4753,13 @@ var
   LocalModel: TCustomModel;
 begin
   inherited Create(Model);
+  FLoading := True;
+  FStoredBlockAngle := -1000;
+  FStoredNodeAngle := -1000;
   FElevationsNeedUpdating := True;
   FCrossSection := TCrossSection.Create(Model);
-  FElements := TSutraElement3D_Collection.Create(Model);
-  FNodes := TSutraNode3D_Collection.Create(Model);
+  FElements := TSutraElement3D_Collection.Create(Model, self);
+  FNodes := TSutraNode3D_Collection.Create(Model, self);
   FMesh2D := TSutraMesh2D.Create(Model, self);
   FActiveNodes := TSutraNode3D_List.Create;
   FActiveElements := TSutraElement3DList.Create;
@@ -2994,11 +4768,25 @@ begin
   FMeshType := mt3D;
   LocalModel := Model as TCustomModel;
   FThreeDGridObserver := LocalModel.ThreeDGridObserver;
-  FThreeDGridObserver.OnUpToDateSet := LocalModel.OnTopSutraMeshChanged;
+//  {$IFDEF SUTRA}
+//  if LocalModel.ModelSelection = msSutra22 then
+//  begin
+//    FThreeDGridObserver.OnUpToDateSet := LocalModel.OnTopSutraMeshChanged;
+//  end;
+//  {$ENDIF}
+  NodeDrawingChoice := dcEdge;
+  ElementDrawingChoice := dcAll;
+
+  FCanDraw := True;
+
 end;
 
 destructor TSutraMesh3D.Destroy;
 begin
+  FNodeIntervalTree.Free;
+  FElementIntervalTree.Free;
+  FNodeRangeTree.Free;
+  FElementRangeTree.Free;
   FActiveElements.Free;
   FActiveNodes.Free;
   FMesh2D.Free;
@@ -3025,6 +4813,66 @@ begin
   Mesh2D.GetNodesOnSegment(CrossSection.Segment, NodeList);
 end;
 
+function TSutraMesh3D.GetRangeTree(EvalAt: TEvaluatedAt;
+  Angle: Double): TRbwRangeTree;
+var
+  Limits: TLimitsArray;
+  Polygons: TCellElementPolygons2D;
+  procedure CreateRangeTree(var RangeTree: TRbwRangeTree);
+  var
+    LayerIndex: integer;
+    ColIndex: integer;
+    PolyObject: TFrontPolygon;
+    PolyList: TFrontPolygonList;
+  begin
+    PolyList := TFrontPolygonList.Create;
+    for LayerIndex := 0 to Length(Polygons) - 1 do
+    begin
+      for ColIndex := 0 to Length(Polygons[0]) - 1 do
+      begin
+        if Length(Polygons[LayerIndex,ColIndex]) > 0 then
+        begin
+          PolyObject := TFrontPolygon.Create(ColIndex,LayerIndex,
+            Polygons[LayerIndex,ColIndex]);
+          PolyList.Add(PolyObject)
+        end;
+      end;
+    end;
+    RangeTree := TRbwRangeTree.Create(PolyList);
+  end;
+begin
+  result := nil;
+  case EvalAt of
+    eaBlocks:
+      begin
+        if (Angle <> FStoredBlockAngle) then
+        begin
+          FreeAndNil(FElementRangeTree);
+        end;
+        if FElementRangeTree = nil then
+        begin
+          Polygons := FrontPolygons(Angle, EvalAt, Limits);
+          CreateRangeTree(FElementRangeTree);
+        end;
+        result := FElementRangeTree;
+      end;
+    eaNodes:
+      begin
+        if (Angle <> FStoredNodeAngle) then
+        begin
+          FreeAndNil(FNodeRangeTree);
+        end;
+        if FNodeRangeTree = nil then
+        begin
+          Polygons := FrontPolygons(Angle, EvalAt, Limits);
+          CreateRangeTree(FNodeRangeTree);
+        end;
+        result := FNodeRangeTree;
+      end;
+    else Assert(False);
+  end;
+end;
+
 function TSutraMesh3D.GetCrossSectionStart: TPoint2D;
 var
   Origin: TPoint2D;
@@ -3040,6 +4888,128 @@ end;
 procedure TSutraMesh3D.GetElementsOnCrossSection(ElementList: TSutraElement2D_List);
 begin
   Mesh2D.GetElementsOnSegment(CrossSection.Segment, ElementList);
+end;
+
+procedure TSutraMesh3D.GetXIntervalLimits(Subject: TObject;
+    out LowerBoundary, UpperBoundary: double);
+var
+  PolyObject: TFrontPolygon;
+begin
+  PolyObject := TFrontPolygon(Subject);
+  LowerBoundary := PolyObject.MinX;
+  UpperBoundary := PolyObject.MaxX;
+end;
+
+procedure TSutraMesh3D.GetYIntervalLimits(Subject: TObject;
+    out LowerBoundary, UpperBoundary: double);
+var
+  PolyObject: TFrontPolygon;
+begin
+  PolyObject := TFrontPolygon(Subject);
+  LowerBoundary := PolyObject.MinY;
+  UpperBoundary := PolyObject.MaxY;
+end;
+
+function TSutraMesh3D.GetIntervalTree(EvalAt: TEvaluatedAt;
+  Angle: Double): TRbwIntervalTree;
+var
+  Limits: TLimitsArray;
+  Polygons: TCellElementPolygons2D;
+  procedure CreateIntevalTree(var IntervalTree: TRbwIntervalTree);
+  var
+    LayerIndex: integer;
+    ColIndex: integer;
+    AList: TObjectList;
+    PolyObject: TFrontPolygon;
+    IntDefs: TIntDefArray;
+    Index: Integer;
+  begin
+    AList := TObjectList.Create;
+    try
+      AList.OwnsObjects := False;
+      AList.Capacity := Length(Polygons)*Length(Polygons[0]);
+      SetLength(IntDefs, 2);
+      IntDefs[0].OnFindObjectInterval := GetXIntervalLimits;
+      IntDefs[1].OnFindObjectInterval := GetYIntervalLimits;
+      for LayerIndex := 0 to Length(Polygons) - 1 do
+      begin
+        for ColIndex := 0 to Length(Polygons[0]) - 1 do
+        begin
+          if Length(Polygons[LayerIndex,ColIndex]) > 0 then
+          begin
+            PolyObject := TFrontPolygon.Create(ColIndex,LayerIndex,
+              Polygons[LayerIndex,ColIndex]);
+            if AList.Count = 0 then
+            begin
+              IntDefs[0].LowerBoundary := PolyObject.MinX;
+              IntDefs[0].UpperBoundary := PolyObject.MaxX;
+              IntDefs[1].LowerBoundary := PolyObject.MinY;
+              IntDefs[1].UpperBoundary := PolyObject.MaxY;
+            end
+            else
+            begin
+              if IntDefs[0].LowerBoundary > PolyObject.MinX then
+              begin
+                IntDefs[0].LowerBoundary := PolyObject.MinX;
+              end;
+              if IntDefs[0].UpperBoundary < PolyObject.MaxX then
+              begin
+                IntDefs[0].UpperBoundary := PolyObject.MaxX;
+              end;
+              if IntDefs[1].LowerBoundary > PolyObject.MinY then
+              begin
+                IntDefs[1].LowerBoundary := PolyObject.MinY;
+              end;
+              if IntDefs[1].UpperBoundary < PolyObject.MaxY then
+              begin
+                IntDefs[1].UpperBoundary := PolyObject.MaxY;
+              end;
+            end;
+            AList.Add(PolyObject)
+          end;
+        end;
+      end;
+      IntervalTree := TRbwIntervalTree.Create(IntDefs);
+      IntervalTree.OwnsObjects := True;
+      for Index := 0 to AList.Count - 1 do
+      begin
+        IntervalTree.Add(AList[Index]);
+      end;
+    finally
+      AList.Free;
+    end;
+  end;
+begin
+  result := nil;
+  case EvalAt of
+    eaBlocks:
+      begin
+        if (Angle <> FStoredBlockAngle) then
+        begin
+          FreeAndNil(FElementIntervalTree);
+        end;
+        if FElementIntervalTree = nil then
+        begin
+          Polygons := FrontPolygons(Angle, EvalAt, Limits);
+          CreateIntevalTree(FElementIntervalTree);
+        end;
+        result := FElementIntervalTree;
+      end;
+    eaNodes:
+      begin
+        if (Angle <> FStoredNodeAngle) then
+        begin
+          FreeAndNil(FNodeIntervalTree);
+        end;
+        if FNodeIntervalTree = nil then
+        begin
+          Polygons := FrontPolygons(Angle, EvalAt, Limits);
+          CreateIntevalTree(FNodeIntervalTree);
+        end;
+        result := FNodeIntervalTree;
+      end;
+    else Assert(False);
+  end;
 end;
 
 procedure TSutraMesh3D.DrawFront(const BitMap: TBitmap32);
@@ -3080,17 +5050,42 @@ var
   Fraction: Double;
   AColor: TColor;
   Dummy: TPolygon32;
-  Origin: TPoint2D;
+//  Origin: TPoint2D;
   StartPoint: TPoint2D;
-  CrossSectionLine: TLine2D;
+//  CrossSectionLine: TLine2D;
   NumString: string;
+  ALine: TLine2D;
+  ClosestPoint: TPoint2D;
+  ADistance: double;
+  OffSet: TFloat;
+  DrawEdge: Boolean;
 //  Extent: TSize;
   function Point2DtoPoint(const APoint: TPoint2D): TPoint;
   begin
     Result.X := ZoomBox.XCoord(APoint.x);
     Result.Y := ZoomBox.YCoord(APoint.y);
   end;
+  procedure ComputeNodeCrossSectionDistance;
+  begin
+    ClosestPoint := ClosestPointOnLineFromPoint(
+      ALine, Node2D.Location);
+    ADistance := -Distance(Node2D.Location, ClosestPoint);
+    if ADistance <> 0 then
+    begin
+      if FastGEO.Orientation(Node2D.Location,
+        CrossSection.StartPoint, CrossSection.EndPoint) =
+        LeftHandSide then
+      begin
+        ADistance := -ADistance;
+      end;
+    end;
+    ADistance := ADistance + OffSet;
+  end;
 begin
+  if FUpdatingElevations then
+  begin
+    Exit;
+  end;
   Dummy := nil;
   NodeList := TSutraNode2D_List.Create;
   ElementList := TSutraElement2D_List.Create;
@@ -3098,7 +5093,36 @@ begin
     GetNodesOnCrossSection(NodeList);
     if NodeList.Count = 0 then
     begin
+      FMaxDist := 0;
+      FMinDist := 0;
       Exit;
+    end;
+
+    ALine := EquateLine(CrossSection.StartPoint, CrossSection.EndPoint);
+
+    ClosestPoint := ClosestPointOnLineFromPoint(
+      ALine, EquatePoint(0.0, 0.0));
+    OffSet := Distance(EquatePoint(0.0, 0.0), ClosestPoint);
+    if OffSet <> 0 then
+    begin
+      if FastGEO.Orientation(EquatePoint(0.0, 0.0),
+        CrossSection.StartPoint, CrossSection.EndPoint) =
+        LeftHandSide then
+      begin
+        OffSet := -OffSet;
+      end;
+    end;
+
+    Node2D := NodeList[0];
+    ComputeNodeCrossSectionDistance;
+    FMaxDist := ADistance;
+    FMinDist := ADistance;
+    for Node2D_Index := 1 to NodeList.Count - 1 do
+    begin
+      Node2D := NodeList[Node2D_Index];
+      ComputeNodeCrossSectionDistance;
+      FMaxDist := Max(ADistance, FMaxDist);
+      FMinDist := Min(ADistance, FMinDist);
     end;
 
     SetLength(ElementOutlines, LayerCount+1, NodeList.Count);
@@ -3108,7 +5132,8 @@ begin
     SetLength(Points, 5);
 
     ZoomBox := frmGoPhast.frameFrontView.ZoomBox;
-    StartPoint := GetCrossSectionStart;
+//    StartPoint := GetCrossSectionStart;
+    StartPoint := EquatePoint(0.0, 0.0);
 
     // Determine the locations of the outlines of the elements in cross section.
     for Node2D_Index := 0 to NodeList.Count - 1 do
@@ -3171,151 +5196,187 @@ begin
       PriorNode2D := Node2D;
     end;
 
-    if (ThreeDDataSet <> nil) and (ThreeDDataSet.Orientation = dso3D) then
+    if ((ThreeDDataSet <> nil) and (ThreeDDataSet.Orientation = dso3D))
+      or (NodeDrawingChoice = dcAll) then
     begin
 
       StringValues := TStringlist.Create;
       try
-        ThreeDDataSet.Initialize;
-        if ThreeDDataSet.DataType = rdtString then
+
+        if ThreeDDataSet <> nil then
         begin
-          StringValues.Sorted := True;
-          StringValues.Duplicates := dupIgnore;
-          StringValues.CaseSensitive := True;
-          StringValues.Capacity := ThreeDDataSet.LayerCount *
-            ThreeDDataSet.RowCount * ThreeDDataSet.ColumnCount;
-          for LayerIndex := 0 to ThreeDDataSet.LayerCount - 1 do
+          ThreeDDataSet.Initialize;
+          if ThreeDDataSet.DataType = rdtString then
           begin
-            for RowIndex := 0 to ThreeDDataSet.RowCount - 1 do
+            StringValues.Sorted := True;
+            StringValues.Duplicates := dupIgnore;
+            StringValues.CaseSensitive := True;
+            StringValues.Capacity := ThreeDDataSet.LayerCount *
+              ThreeDDataSet.RowCount * ThreeDDataSet.ColumnCount;
+            for LayerIndex := 0 to ThreeDDataSet.LayerCount - 1 do
             begin
-              for ColIndex := 0 to ThreeDDataSet.ColumnCount - 1 do
+              for RowIndex := 0 to ThreeDDataSet.RowCount - 1 do
               begin
-                if ThreeDDataSet.IsValue[LayerIndex, RowIndex, ColIndex] then
+                for ColIndex := 0 to ThreeDDataSet.ColumnCount - 1 do
                 begin
-                  StringValues.Add(ThreeDDataSet.StringData[
-                    LayerIndex, RowIndex, ColIndex]);
+                  if ThreeDDataSet.IsValue[LayerIndex, RowIndex, ColIndex] then
+                  begin
+                    StringValues.Add(ThreeDDataSet.StringData[
+                      LayerIndex, RowIndex, ColIndex]);
+                  end;
                 end;
               end;
             end;
           end;
         end;
-      finally
-        StringValues.Free;
-      end;
 
-      case ThreeDDataSet.EvaluatedAt of
-        eaBlocks:
+        if (ThreeDDataSet <> nil) and (ThreeDDataSet.EvaluatedAt = eaBlocks) then
+        begin
+          // color the elements.
+          for Node2D_Index := 0 to NodeList.Count - 2 do
           begin
-            for Node2D_Index := 0 to NodeList.Count - 2 do
+            Element2D := TwoDElements[Node2D_Index];
+            if Element2D = nil then
             begin
-              Element2D := TwoDElements[Node2D_Index];
-              if Element2D = nil then
+              Continue;
+            end;
+
+            for LayerIndex := 0 to LayerCount - 1 do
+            begin
+              if not ElementArray[LayerIndex,
+                Element2D.ElementNumber].Active then
               begin
                 Continue;
               end;
 
-              for LayerIndex := 0 to LayerCount - 1 do
+              GetDataSetValue(ThreeDDataSet, LayerIndex,
+                Element2D.ElementNumber, StringValues, ShowColor, Fraction);
+              if ShowColor then
               begin
-                if not ElementArray[LayerIndex,
-                  Element2D.ElementNumber].Active then
-                begin
-                  Continue;
-                end;
-
                 Points[0] := ElementOutlines[LayerIndex, Node2D_Index];
                 Points[1] := ElementOutlines[LayerIndex+1, Node2D_Index];
                 Points[2] := ElementOutlines[LayerIndex+1, Node2D_Index+1];
                 Points[3] := ElementOutlines[LayerIndex, Node2D_Index+1];
                 Points[4] := Points[0];
 
-                GetDataSetValue(ThreeDDataSet, LayerIndex,
-                  Element2D.ElementNumber, StringValues, ShowColor, Fraction);
-                if ShowColor then
-                begin
-                  AColor := frmGoPhast.PhastModel.GridColorParameters.
-                    FracToColor(Fraction);
-                  DrawBigPolygon32(BitMap, Color32(AColor), Color32(AColor),
-                    0, Points, Dummy, False, True);
-                end;
+                AColor := frmGoPhast.PhastModel.GridColorParameters.
+                  FracToColor(Fraction);
+                DrawBigPolygon32(BitMap, Color32(AColor), Color32(AColor),
+                  0, Points, Dummy, False, True);
               end;
             end;
-
           end;
-        eaNodes:
-          begin
-            // Determine the outlines of the cells.
-            SetLength(CellOutlines, LayerCount+2, NodeList.Count*2-1);
-            // Set the corners at the top right and lower right.
-            CellOutlines[0,NodeList.Count*2-2] :=
-              Point2DtoPoint(ElementOutlinesFloat[0,NodeList.Count-1]);
-            CellOutlines[LayerCount+1,NodeList.Count*2-2] :=
-              Point2DtoPoint(ElementOutlinesFloat[LayerCount,NodeList.Count-1]);
 
-            // Set the locations of the cell edge at the top and bottom edges
+        end;
+
+        if ((ThreeDDataSet <> nil) and (ThreeDDataSet.EvaluatedAt = eaNodes))
+          or (NodeDrawingChoice = dcAll) then
+        begin
+          // color the cell around the nodes.
+
+          // Determine the outlines of the cells.
+          SetLength(CellOutlines, LayerCount+2, NodeList.Count*2-1);
+          // Set the corners at the top right and lower right.
+          CellOutlines[0,NodeList.Count*2-2] :=
+            Point2DtoPoint(ElementOutlinesFloat[0,NodeList.Count-1]);
+          CellOutlines[LayerCount+1,NodeList.Count*2-2] :=
+            Point2DtoPoint(ElementOutlinesFloat[LayerCount,NodeList.Count-1]);
+
+          // Set the locations of the cell edge at the top and bottom edges
+          for Index2 := 0 to NodeList.Count - 2 do
+          begin
+            CellOutlines[0,Index2*2] := Point2DtoPoint(ElementOutlinesFloat[0, Index2]);
+            CellOutlines[0,Index2*2+1] := Point2DtoPoint(Average2Point(
+              ElementOutlinesFloat[0,Index2+1], ElementOutlinesFloat[0, Index2]));
+
+            CellOutlines[LayerCount+1,Index2*2] := Point2DtoPoint(ElementOutlinesFloat[LayerCount, Index2]);
+            CellOutlines[LayerCount+1,Index2*2+1] := Point2DtoPoint(Average2Point(
+              ElementOutlinesFloat[LayerCount,Index2+1], ElementOutlinesFloat[LayerCount, Index2]));
+          end;
+
+          // Set the locations of the cell corners at the right edge.
+          for Index1 := 1 to LayerCount do
+          begin
+            CellOutlines[Index1,NodeList.Count*2-2] := Point2DtoPoint(Average2Point(
+              ElementOutlinesFloat[Index1,NodeList.Count-1],
+              ElementOutlinesFloat[Index1-1,NodeList.Count-1]));
+          end;
+
+          // Set the location of the cell corners in the interior
+          for Index1 := 1 to LayerCount do
+          begin
             for Index2 := 0 to NodeList.Count - 2 do
             begin
-              CellOutlines[0,Index2*2] := Point2DtoPoint(ElementOutlinesFloat[0, Index2]);
-              CellOutlines[0,Index2*2+1] := Point2DtoPoint(Average2Point(
-                ElementOutlinesFloat[0,Index2+1], ElementOutlinesFloat[0, Index2]));
+              CellOutlines[Index1,Index2*2] := Point2DtoPoint(Average2Point(
+                ElementOutlinesFloat[Index1-1,Index2],
+                ElementOutlinesFloat[Index1, Index2]));
 
-              CellOutlines[LayerCount+1,Index2*2] := Point2DtoPoint(ElementOutlinesFloat[LayerCount, Index2]);
-              CellOutlines[LayerCount+1,Index2*2+1] := Point2DtoPoint(Average2Point(
-                ElementOutlinesFloat[LayerCount,Index2+1], ElementOutlinesFloat[LayerCount, Index2]));
+              CellOutlines[Index1,Index2*2+1] := Point2DtoPoint(Average4Point(
+                ElementOutlinesFloat[Index1-1,Index2+1],
+                ElementOutlinesFloat[Index1, Index2+1],
+                ElementOutlinesFloat[Index1-1,Index2],
+                ElementOutlinesFloat[Index1, Index2]));
             end;
+          end;
 
-            // Set the locations of the cell corners at the right edge.
-            for Index1 := 1 to LayerCount do
+          SetLength(Points,5);
+          SetLength(Points2,7);
+          for Node2D_Index := 0 to NodeList.Count-1 do
+          begin
+            Node2D := NodeList[Node2D_Index];
+            for LayerIndex := 0 to LayerCount do
             begin
-              CellOutlines[Index1,NodeList.Count*2-2] := Point2DtoPoint(Average2Point(
-                ElementOutlinesFloat[Index1,NodeList.Count-1],
-                ElementOutlinesFloat[Index1-1,NodeList.Count-1]));
-            end;
-
-            // Set the location of the cell corners in the interior
-            for Index1 := 1 to LayerCount do
-            begin
-              for Index2 := 0 to NodeList.Count - 2 do
+              if not NodeArray[LayerIndex, Node2D.Number].Active then
               begin
-                CellOutlines[Index1,Index2*2] := Point2DtoPoint(Average2Point(
-                  ElementOutlinesFloat[Index1-1,Index2],
-                  ElementOutlinesFloat[Index1, Index2]));
-
-                CellOutlines[Index1,Index2*2+1] := Point2DtoPoint(Average4Point(
-                  ElementOutlinesFloat[Index1-1,Index2+1],
-                  ElementOutlinesFloat[Index1, Index2+1],
-                  ElementOutlinesFloat[Index1-1,Index2],
-                  ElementOutlinesFloat[Index1, Index2]));
+                Continue;
               end;
-            end;
 
-            SetLength(Points,5);
-            SetLength(Points2,7);
-            for Node2D_Index := 0 to NodeList.Count-1 do
-            begin
-              Node2D := NodeList[Node2D_Index];
-              for LayerIndex := 0 to LayerCount do
+              if ((ThreeDDataSet <> nil)
+                and (ThreeDDataSet.EvaluatedAt = eaNodes)) then
               begin
-                if not NodeArray[LayerIndex, Node2D.Number].Active then
-                begin
-                  Continue;
-                end;
-
                 GetDataSetValue(ThreeDDataSet, LayerIndex,
                   Node2D.Number, StringValues, ShowColor, Fraction);
+              end
+              else
+              begin
+                ShowColor := False;
+              end;
+              if ShowColor or (NodeDrawingChoice = dcAll) then
+              begin
+
                 if ShowColor then
                 begin
                   AColor := frmGoPhast.PhastModel.GridColorParameters.
                     FracToColor(Fraction);
+                end
+                else
+                begin
+                  AColor := clBlack;
+                end;
+
+                if Length(CellOutlines[LayerIndex]) > Node2D_Index*2 then
+                begin
                   if (Node2D_Index = 0) or (TwoDElements[Node2D_Index-1] = nil) then
                   begin
-                    Points[0] := CellOutlines[LayerIndex, Node2D_Index*2];
-                    Points[1] := CellOutlines[LayerIndex, Node2D_Index*2+1];
-                    Points[2] := CellOutlines[LayerIndex+1, Node2D_Index*2+1];
-                    Points[3] := CellOutlines[LayerIndex+1, Node2D_Index*2];
-                    Points[4] := Points[0];
+                    if Length(CellOutlines[LayerIndex]) > Node2D_Index*2+1 then
+                    begin
+                      Points[0] := CellOutlines[LayerIndex, Node2D_Index*2];
+                      Points[1] := CellOutlines[LayerIndex, Node2D_Index*2+1];
+                      Points[2] := CellOutlines[LayerIndex+1, Node2D_Index*2+1];
+                      Points[3] := CellOutlines[LayerIndex+1, Node2D_Index*2];
+                      Points[4] := Points[0];
 
-                    DrawBigPolygon32(BitMap, Color32(AColor), Color32(AColor),
-                      0, Points, Dummy, False, True);
+                      if ShowColor then
+                      begin
+                        DrawBigPolygon32(BitMap, Color32(AColor), Color32(AColor),
+                          0, Points, Dummy, False, True);
+                      end;
+                      if (NodeDrawingChoice = dcAll) then
+                      begin
+                        DrawBigPolyline32(BitMap, clBlack32,
+                          OrdinaryGridLineThickness, Points, True, True);
+                      end;
+                    end;
                   end
                   else if (Node2D_Index = NodeList.Count-1)
                     or (TwoDElements[Node2D_Index] = nil) then
@@ -3326,8 +5387,16 @@ begin
                     Points[3] := CellOutlines[LayerIndex+1, Node2D_Index*2-1];
                     Points[4] := Points[0];
 
-                    DrawBigPolygon32(BitMap, Color32(AColor), Color32(AColor),
-                      0, Points, Dummy, False, True);
+                    if ShowColor then
+                    begin
+                      DrawBigPolygon32(BitMap, Color32(AColor), Color32(AColor),
+                        0, Points, Dummy, False, True);
+                    end;
+                    if (NodeDrawingChoice = dcAll) then
+                    begin
+                      DrawBigPolyline32(BitMap, clBlack32,
+                        OrdinaryGridLineThickness, Points, True, True);
+                    end;
                   end
                   else
                   begin
@@ -3339,15 +5408,25 @@ begin
                     Points2[5] := CellOutlines[LayerIndex+1, Node2D_Index*2-1];
                     Points2[6] := Points2[0];
 
-                    DrawBigPolygon32(BitMap, Color32(AColor), Color32(AColor),
-                      0, Points2, Dummy, False, True);
+                    if ShowColor then
+                    begin
+                      DrawBigPolygon32(BitMap, Color32(AColor), Color32(AColor),
+                        0, Points2, Dummy, False, True);
+                    end;
+                    if (NodeDrawingChoice = dcAll) then
+                    begin
+                      DrawBigPolyline32(BitMap, clBlack32,
+                        OrdinaryGridLineThickness, Points2, True, True);
+                    end;
                   end;
                 end;
               end;
-
             end;
-          end
-        else Assert(False);
+
+          end;
+        end
+      finally
+        StringValues.Free;
       end;
     end;
 
@@ -3380,8 +5459,99 @@ begin
         Points[3] := ElementOutlines[LayerIndex, Node2D_Index+1];
         Points[4] := Points[0];
 
-        DrawBigPolyline32(BitMap, clBlack32, OrdinaryGridLineThickness,
-          Points, True);
+
+        case ElementDrawingChoice of
+          dcEdge:
+            begin
+              // draw left edge
+              if (Node2D_Index = 0) then
+              begin
+                DrawEdge := True;
+              end
+              else
+              begin
+                Node2D := NodeList[Node2D_Index-1];
+                DrawEdge :=
+                  (not NodeArray[LayerIndex, Node2D.Number].Active)
+                  or (not NodeArray[LayerIndex+1, Node2D.Number].Active)
+              end;
+              if DrawEdge then
+              begin
+                DrawBigPolyline32(BitMap, clBlack32, OrdinaryGridLineThickness,
+                  Points, True, False, 0, 2);
+              end;
+
+              // draw right edge
+              if (Node2D_Index = NodeList.Count - 2) then
+              begin
+                DrawEdge := True;
+              end
+              else
+              begin
+                Node2D := NodeList[Node2D_Index+1];
+                DrawEdge :=
+                  (not NodeArray[LayerIndex, Node2D.Number].Active)
+                  or (not NodeArray[LayerIndex+1, Node2D.Number].Active)
+              end;
+              if DrawEdge then
+              begin
+                DrawBigPolyline32(BitMap, clBlack32, OrdinaryGridLineThickness,
+                  Points, True, False, 2, 2);
+              end;
+
+              // draw top edge
+              if (LayerIndex = 0) then
+              begin
+                DrawEdge := True;
+              end
+              else
+              begin
+                Node2D := NodeList[Node2D_Index];
+                DrawEdge :=
+                  (not NodeArray[LayerIndex-1, Node2D.Number].Active);
+                if not DrawEdge then
+                begin
+                  Node2D := NodeList[Node2D_Index+1];
+                  DrawEdge :=
+                    (not NodeArray[LayerIndex-1, Node2D.Number].Active);
+                end;
+              end;
+              if DrawEdge then
+              begin
+                DrawBigPolyline32(BitMap, clBlack32, OrdinaryGridLineThickness,
+                  Points, True, False, 3, 2);
+              end;
+
+              // draw bottom edge
+              if (LayerIndex = LayerCount - 1) then
+              begin
+                DrawEdge := True;
+              end
+              else
+              begin
+                Node2D := NodeList[Node2D_Index];
+                DrawEdge :=
+                  (not NodeArray[LayerIndex+1, Node2D.Number].Active);
+                if not DrawEdge then
+                begin
+                  Node2D := NodeList[Node2D_Index+1];
+                  DrawEdge :=
+                    (not NodeArray[LayerIndex+1, Node2D.Number].Active);
+                end;
+              end;
+              if DrawEdge then
+              begin
+                DrawBigPolyline32(BitMap, clBlack32, OrdinaryGridLineThickness,
+                  Points, True, False, 1, 2);
+              end;
+            end;
+          dcAll:
+            begin
+              DrawBigPolyline32(BitMap, clBlack32, OrdinaryGridLineThickness,
+                Points, True);
+            end;
+          else Assert(False);
+        end;
       end;
 
       // draw the selected layer last using a different color.
@@ -3391,6 +5561,7 @@ begin
         begin
           Continue;
         end;
+        LayerIndex := SelectedLayer;
         Points[0] := ElementOutlines[SelectedLayer, Node2D_Index];
         Points[1] := ElementOutlines[SelectedLayer+1, Node2D_Index];
         Points[2] := ElementOutlines[SelectedLayer+1, Node2D_Index+1];
@@ -3403,6 +5574,7 @@ begin
         begin
           Continue;
         end;
+        LayerIndex := SelectedLayer-1;
         Points[0] := ElementOutlines[SelectedLayer-1, Node2D_Index];
         Points[1] := ElementOutlines[SelectedLayer, Node2D_Index];
         Points[2] := ElementOutlines[SelectedLayer, Node2D_Index+1];
@@ -3410,8 +5582,99 @@ begin
         Points[4] := Points[0];
       end;
 
-      DrawBigPolyline32(BitMap, Color32(CrossSection.Color),
-        OrdinaryGridLineThickness, Points, True);
+      case ElementDrawingChoice of
+        dcEdge:
+          begin
+            // draw left edge
+            if (Node2D_Index = 0) then
+            begin
+              DrawEdge := (SelectedLayer <> LayerCount);
+            end
+            else
+            begin
+              Node2D := NodeList[Node2D_Index-1];
+              DrawEdge :=
+                (not NodeArray[LayerIndex, Node2D.Number].Active)
+                or (not NodeArray[LayerIndex+1, Node2D.Number].Active)
+            end;
+            if DrawEdge then
+            begin
+              DrawBigPolyline32(BitMap, Color32(CrossSection.Color),
+                OrdinaryGridLineThickness, Points, True, False, 0, 2);
+            end;
+
+            // draw right edge
+            if (Node2D_Index = NodeList.Count - 2) then
+            begin
+              DrawEdge := (SelectedLayer <> LayerCount);
+            end
+            else
+            begin
+              Node2D := NodeList[Node2D_Index+1];
+              DrawEdge :=
+                (not NodeArray[LayerIndex, Node2D.Number].Active)
+                or (not NodeArray[LayerIndex+1, Node2D.Number].Active)
+            end;
+            if DrawEdge then
+            begin
+              DrawBigPolyline32(BitMap, Color32(CrossSection.Color),
+                OrdinaryGridLineThickness, Points, True, False, 2, 2);
+            end;
+
+            // draw top edge
+//            if (LayerIndex = 0) then
+//            begin
+              DrawEdge := (SelectedLayer <> LayerCount);
+//            end
+//            else
+//            begin
+//              Node2D := NodeList[Node2D_Index];
+//              DrawEdge :=
+//                (not NodeArray[LayerIndex-1, Node2D.Number].Active);
+//              if not DrawEdge then
+//              begin
+//                Node2D := NodeList[Node2D_Index+1];
+//                DrawEdge :=
+//                  (not NodeArray[LayerIndex-1, Node2D.Number].Active);
+//              end;
+//            end;
+            if DrawEdge then
+            begin
+              DrawBigPolyline32(BitMap, Color32(CrossSection.Color),
+                OrdinaryGridLineThickness, Points, True, False, 3, 2);
+            end;
+
+            // draw bottom edge
+//            if (LayerIndex = LayerCount - 1) then
+//            begin
+              DrawEdge := (ThreeDDataSet = nil)
+                or (ThreeDDataSet.EvaluatedAt = eaBlocks);
+//            end
+//            else
+//            begin
+//              Node2D := NodeList[Node2D_Index];
+//              DrawEdge :=
+//                (not NodeArray[LayerIndex+1, Node2D.Number].Active);
+//              if not DrawEdge then
+//              begin
+//                Node2D := NodeList[Node2D_Index+1];
+//                DrawEdge :=
+//                  (not NodeArray[LayerIndex+1, Node2D.Number].Active);
+//              end;
+//            end;
+            if DrawEdge then
+            begin
+              DrawBigPolyline32(BitMap, Color32(CrossSection.Color),
+                OrdinaryGridLineThickness, Points, True, False, 1, 2);
+            end;
+          end;
+        dcAll:
+          begin
+            DrawBigPolyline32(BitMap, Color32(CrossSection.Color),
+              OrdinaryGridLineThickness, Points, True);
+          end;
+        else Assert(False);
+      end;
     end;
 
     if DrawNodeNumbers then
@@ -3442,7 +5705,9 @@ begin
     end;
 
 
-    // Draw dots at the center of each element intersected by the cross section.
+    // Draw dots at the center of each element intersected by the cross section
+    // and element numbers.
+    BitMap.Font := ElementFont;
     SetLength(Points, 5);
     for Element2D_Index := 0 to ElementList.Count - 1 do
     begin
@@ -3489,6 +5754,34 @@ begin
     ElementList.Free;
     NodeList.Free;
   end;
+
+  DrawFrontContours(ZoomBox, BitMap);
+end;
+
+procedure TSutraMesh3D.DrawFrontContours(const ZoomBox: TQRbwZoomBox2;
+  const BitMap: TBitmap32);
+var
+  Contourer: TMultipleContourCreator;
+//  LocalModel: TCustomModel;
+begin
+  if (Nodes.Count > 0) and (ThreeDContourDataSet <> nil) then
+  begin
+      Contourer := TMultipleContourCreator.Create;
+      try
+        Contourer.DataSet := ThreeDContourDataSet;
+//        LocalModel := FModel as TCustomModel;
+        Contourer.ActiveDataSet := nil;
+//          LocalModel.DataArrayManager.GetDataSetByName(rsActive);
+        Contourer.BitMap := BitMap;
+        Contourer.ViewDirection := vdTop;
+        Contourer.Mesh := Self;
+        Contourer.ZoomBox := ZoomBox;
+        Contourer.DrawContours(SelectedLayer,
+          frmGoPhast.PhastModel.ContourColorParameters, vdFront);
+      finally
+        Contourer.Free;
+      end;
+  end;
 end;
 
 procedure TSutraMesh3D.DrawPointsOnCrossSection(BitMap: TBitmap32);
@@ -3506,6 +5799,10 @@ var
   ElementLayer: Integer;
   AnElement3D: TSutraElement3D;
 begin
+  if Elements.Count = 0 then
+  begin
+    Exit;
+  end;
   ZoomBox := frmGoPhast.frameTopView.ZoomBox;
   NodesOnSegment := TSutraNode2D_List.Create;
   try
@@ -3572,7 +5869,7 @@ end;
 procedure TSutraMesh3D.Draw(const BitMap: TBitmap32;
   const ViewDirection: TViewDirection);
 begin
-  if FUpdateCount > 0 then
+  if (FUpdateCount > 0) or FUpdatingElevations then
   begin
     Exit;
   end;
@@ -3586,6 +5883,7 @@ begin
           CrossSection.Draw(BitMap);
           DrawPointsOnCrossSection(BitMap);
         end;
+        FNeedToRecalculateTopColors := False;
       end;
     vdFront:
       begin
@@ -3593,6 +5891,7 @@ begin
         begin
           DrawFront(BitMap);
         end;
+        FNeedToRecalculateFrontColors := False;
       end;
     vdSide: ;
     else Assert(False);
@@ -3621,7 +5920,8 @@ end;
 
 function TSutraMesh3D.GetCanDraw: boolean;
 begin
-  result := FCanDraw and (frmGoPhast.PhastModel.DataSetUpdateCount = 0);
+  result := FCanDraw and (frmGoPhast.PhastModel.DataSetUpdateCount = 0)
+    and not FUpdatingElevations;
 end;
 
 function TSutraMesh3D.GetDrawElementNumbers: Boolean;
@@ -3657,11 +5957,37 @@ var
   NodeIndex: Integer;
 begin
   result := nil;
+  Limits := nil;
+  CheckUpdateElevations;
+  case EvaluatedAt of
+    eaBlocks:
+      begin
+        if (Angle = FStoredBlockAngle) and (FStoredBlockPolygons <> nil) then
+        begin
+          result := FStoredBlockPolygons;
+          Limits := FStoredBlockLimits;
+          Exit;
+        end;
+      end;
+    eaNodes:
+      begin
+        if (Angle = FStoredNodeAngle) and (FStoredNodePolygons <> nil) then
+        begin
+          result := FStoredNodePolygons;
+          Limits := FStoredNodeLimits;
+          Exit;
+        end;
+      end;
+    else
+      Assert(False);
+  end;
   QuadPairList := TQuadPair3DList.Create;
   try
     case EvaluatedAt of
       eaBlocks:
         begin
+          FreeAndNil(FElementIntervalTree);
+          FreeAndNil(FElementRangeTree);
           SetLength(result, Length(FElementArray), Length(FElementArray[0]));
           SetLength(Limits, Length(FElementArray), Length(FElementArray[0]));
           for LayerIndex := 0 to Length(FElementArray) - 1 do
@@ -3690,6 +6016,8 @@ begin
         end;
       eaNodes:
         begin
+          FreeAndNil(FNodeIntervalTree);
+          FreeAndNil(FNodeRangeTree);
           SetLength(result, Length(FNodeArray), Length(FNodeArray[0]));
           SetLength(Limits, Length(FNodeArray), Length(FNodeArray[0]));
           for LayerIndex := 0 to Length(FNodeArray) - 1 do
@@ -3722,6 +6050,22 @@ begin
       else Assert(False);
     end;
   finally
+    case EvaluatedAt of
+      eaBlocks:
+        begin
+          FStoredBlockAngle := Angle;
+          FStoredBlockPolygons := result;
+          FStoredBlockLimits := Limits;
+        end;
+      eaNodes:
+        begin
+          FStoredNodeAngle := Angle;
+          FStoredNodePolygons := result;
+          FStoredNodeLimits := Limits;
+        end;
+      else
+        Assert(False);
+    end;
     QuadPairList.Free;
   end;
 end;
@@ -3777,9 +6121,19 @@ begin
   result := Mesh2D.SelectedLayer;
 end;
 
+function TSutraMesh3D.GetThreeDContourDataSet: TDataArray;
+begin
+  result := Mesh2D.ThreeDContourDataSet;
+end;
+
 function TSutraMesh3D.GetThreeDDataSet: TDataArray;
 begin
   result := Mesh2D.ThreeDDataSet;
+end;
+
+function TSutraMesh3D.GetTopContourDataSet: TDataArray;
+begin
+  result := Mesh2D.TopContourDataSet;
 end;
 
 function TSutraMesh3D.GetTopDataSet: TDataArray;
@@ -3843,11 +6197,68 @@ begin
   end;
 end;
 
+function TSutraMesh3D.OkLocation(const DataSet: TDataArray; const Layer, Row,
+  Col: integer): boolean;
+begin
+  result := inherited;
+  if result then
+  begin
+    if (MeshType = mt2D) or (DataSet.Orientation <> dso3D) then
+    begin
+      Exit;
+    end;
+    case DataSet.EvaluatedAt of
+      eaBlocks:
+        begin
+          result := ElementArray[Layer, Col].Active;
+        end;
+      eaNodes:
+        begin
+          result := NodeArray[Layer, Col].Active;
+        end;
+      else Assert(False);
+    end;
+  end;
+end;
+
 function TSutraMesh3D.QueryInterface(const IID: TGUID; out Obj): HResult;
 const
   E_NOINTERFACE = HResult($80004002);
 begin
   if GetInterface(IID, Obj) then Result := 0 else Result := E_NOINTERFACE;
+end;
+
+function TSutraMesh3D.RotateFromMeshCoordinatesToRealWorldCoordinates(
+  const APoint: TPoint2D): TPoint2D;
+var
+  temp: TPoint2D;
+  MeshAngle: Double;
+begin
+  result := APoint;
+  MeshAngle := CrossSection.Angle;
+  if (MeshType = mt2D) or (MeshAngle <> 0) then
+  begin
+    temp.X := Cos(MeshAngle) * result.X - Sin(MeshAngle) * result.Y;
+    temp.Y := Sin(MeshAngle) * result.X + Cos(MeshAngle) * result.Y;
+    result := temp;
+  end;
+end;
+
+function TSutraMesh3D.RotateFromRealWorldCoordinatesToMeshCoordinates(
+  const APoint: TPoint2D): TPoint2D;
+var
+  temp: TPoint2D;
+  MeshAngle: Double;
+begin
+  result := APoint;
+  MeshAngle := CrossSection.Angle;
+  if (MeshType = mt2D) or (MeshAngle <> 0) then
+  begin
+    temp.X := Cos(-MeshAngle) * result.X - Sin(-MeshAngle) * result.Y;
+    temp.Y := Sin(-MeshAngle) * result.X + Cos(-MeshAngle) * result.Y;
+    result := temp;
+  end;
+
 end;
 
 function TSutraMesh3D.MeshBox(ViewDirection: TViewDirection): TPolygon2D;
@@ -3957,7 +6368,24 @@ begin
     frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
     frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
     frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
+    frmGoPhast.PhastModel.InvalidateSegments;
     InvalidateModel;
+  end;
+end;
+
+procedure TSutraMesh3D.SetNeedToRecalculateFrontColors(const Value: Boolean);
+begin
+  if Value then
+  begin
+    FNeedToRecalculateFrontColors := Value;
+  end;
+end;
+
+procedure TSutraMesh3D.SetNeedToRecalculateTopColors(const Value: Boolean);
+begin
+  if Value then
+  begin
+    FNeedToRecalculateTopColors := Value;
   end;
 end;
 
@@ -4022,6 +6450,11 @@ begin
   end;
 end;
 
+procedure TSutraMesh3D.SetThreeDContourDataSet(const Value: TDataArray);
+begin
+  Mesh2D.ThreeDContourDataSet := Value;
+end;
+
 procedure TSutraMesh3D.SetThreeDDataSet(const Value: TDataArray);
 begin
   frmGoPhast.TopDiscretizationChanged := True;
@@ -4040,6 +6473,11 @@ begin
   end;
 end;
 
+procedure TSutraMesh3D.SetTopContourDataSet(const Value: TDataArray);
+begin
+  Mesh2D.TopContourDataSet := Value;
+end;
+
 procedure TSutraMesh3D.SetTopDataSet(const Value: TDataArray);
 begin
   Mesh2D.TopDataSet := Value;
@@ -4048,6 +6486,20 @@ end;
 procedure TSutraMesh3D.SetTopGridObserver(const Value: TObserver);
 begin
   Mesh2D.TopGridObserver := Value;
+end;
+
+procedure TSutraMesh2D.SetThreeDContourDataSet(const Value: TDataArray);
+begin
+  if FThreeDContourDataSet <> Value then
+  begin
+    FThreeDContourDataSet := Value;
+
+//    NeedToRecalculate3DCellColors := True;
+//    GridChanged;
+  end;
+  frmGoPhast.TopDiscretizationChanged := True;
+  frmGoPhast.FrontDiscretizationChanged := True;
+  frmGoPhast.InvalidateImage32AllViews;
 end;
 
 procedure TSutraMesh2D.SetThreeDDataSet(const Value: TDataArray);
@@ -4060,6 +6512,25 @@ begin
 //    NeedToRecalculate3DCellColors := True;
 //    GridChanged;
   end;
+end;
+
+procedure TSutraMesh2D.SetTopContourDataSet(const Value: TDataArray);
+begin
+  Assert((Value = nil) or (Value.Orientation in [dsoTop, dso3D]));
+  if FTopContourDataSet <> Value then
+  begin
+    FTopContourDataSet := Value;
+//    NeedToRecalculateTopCellColors := True;
+//
+//    // This ensures that the selected layer
+//    // is still valid for the new data set.
+//    frmGoPhast.Grid.SelectedLayer := frmGoPhast.Grid.SelectedLayer;
+//
+//    frmGoPhast.frameTopView.ItemChange(nil);
+//    frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
+  end;
+  frmGoPhast.TopDiscretizationChanged := True;
+  frmGoPhast.InvalidateImage32AllViews;
 end;
 
 procedure TSutraMesh2D.SetTopDataSet(const Value: TDataArray);
@@ -4147,6 +6618,7 @@ var
   ElementIndex: Integer;
   NodeActive: Boolean;
   TempActive: Boolean;
+  NodeAbove: TSutraNode3D;
 begin
   if FUpdatingElevations then
   begin
@@ -4154,6 +6626,8 @@ begin
   end;
   FUpdatingElevations := True;
   try
+    InvalidatePolygons;
+
     frmGoPhast.PhastModel.UpdateDataSetDimensions;
     frmGoPhast.PhastModel.InvalidateScreenObjects;
 
@@ -4228,7 +6702,7 @@ begin
       end;
 
       ElementLayerCount := LocalModel.SutraLayerStructure.ElementLayerCount;
-        SetLength(FElementArray, ElementLayerCount, Mesh2D.Elements.Count);
+      SetLength(FElementArray, ElementLayerCount, Mesh2D.Elements.Count);
       for LayerIndex := 0 to ElementLayerCount - 1 do
       begin
         for ColIndex := 0 to Mesh2D.Elements.Count - 1 do
@@ -4281,10 +6755,13 @@ begin
       Limits := MeshLimits(vdTop);
       Width := Limits.MaxX - Limits.MinX;
       MidY := (Limits.MaxY + Limits.MinY)/2;
-      CrossSection.StartX := Limits.MinX - Width/10;
-      CrossSection.EndX := Limits.MaxX + Width/10;
-      CrossSection.StartY := MidY;
-      CrossSection.EndY := MidY;
+      if not Loading then
+      begin
+        CrossSection.StartX := Limits.MinX - Width/10;
+        CrossSection.EndX := Limits.MaxX + Width/10;
+        CrossSection.StartY := MidY;
+        CrossSection.EndY := MidY;
+      end;
     finally
       EndUpdate;
     end;
@@ -4310,6 +6787,24 @@ begin
 
     end;
 
+    for ColIndex := 0 to Mesh2D.Nodes .Count - 1 do
+    begin
+      NodeAbove := nil;
+      for LayerIndex := 0 to LayerCount do
+      begin
+        Node3D := NodeArray[LayerIndex, ColIndex];
+        Node3D.FTop := Node3D.Z;
+        Node3D.FBottom := Node3D.Z;
+        if Node3D.Active and (NodeAbove <> nil) and NodeAbove.Active then
+        begin
+          Node3D.FTop := (NodeAbove.Z + Node3D.Z)/2;
+          NodeAbove.FBottom := Node3D.FTop;
+        end;
+
+        NodeAbove := Node3D
+      end;            ;
+    end;
+
     FActiveNodes.Clear;
     for NodeIndex := 0 to Nodes.Count - 1 do
     begin
@@ -4332,10 +6827,86 @@ begin
       end;
     end;
 
-    RenumberMesh(self);
+    SimpleRenumber;
+//    RenumberMesh(self);
 
   finally
     FUpdatingElevations := False;
+  end;
+end;
+
+procedure TSutraMesh3D.SimpleRenumber;
+var
+  Count: Integer;
+  ColIndex: Integer;
+  LayerIndex: Integer;
+  ANode: TSutraNode3D;
+  AnElement: TSutraElement3D;
+begin
+  if MeshType = mt3D then
+  begin
+    Count := 0;
+    if Mesh2D.Nodes.Count > LayerCount then
+    begin
+      for ColIndex := 0 to Mesh2D.Nodes.Count - 1 do
+      begin
+        for LayerIndex := 0 to LayerCount do
+        begin
+          ANode := NodeArray[LayerIndex, ColIndex];
+          if ANode.Active then
+          begin
+            ANode.Number := Count;
+            Inc(Count);
+          end;
+        end;
+      end;
+    end
+    else
+    begin
+      for LayerIndex := 0 to LayerCount do
+      begin
+        for ColIndex := 0 to Mesh2D.Nodes.Count - 1 do
+        begin
+          ANode := NodeArray[LayerIndex, ColIndex];
+          if ANode.Active then
+          begin
+            ANode.Number := Count;
+            Inc(Count);
+          end;
+        end;
+      end;
+    end;
+    Count := 0;
+    if Mesh2D.Elements.Count > LayerCount-1 then
+    begin
+      for ColIndex := 0 to Mesh2D.Elements.Count - 1 do
+      begin
+        for LayerIndex := 0 to LayerCount-1 do
+        begin
+          AnElement := ElementArray[LayerIndex, ColIndex];
+          if AnElement.Active then
+          begin
+            AnElement.ElementNumber := Count;
+            Inc(Count);
+          end;
+        end;
+      end;
+    end
+    else
+    begin
+      for LayerIndex := 0 to LayerCount-1 do
+      begin
+        for ColIndex := 0 to Mesh2D.Elements.Count - 1 do
+        begin
+          AnElement := ElementArray[LayerIndex, ColIndex];
+          if AnElement.Active then
+          begin
+            AnElement.ElementNumber := Count;
+            Inc(Count);
+          end;
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -4385,14 +6956,105 @@ begin
   result := inherited Add as TSutraElement3D;
 end;
 
-constructor TSutraElement3D_Collection.Create(Model: TBaseModel);
+constructor TSutraElement3D_Collection.Create(Model: TBaseModel;
+  ParentMesh: TSutraMesh3D);
 begin
   inherited Create(TSutraElement3D, Model);
+  FMesh := ParentMesh;
+  FAngle := -1000;
+  FStoredRotatedLocations:= TStoredLocations.Create;
+end;
+
+destructor TSutraElement3D_Collection.Destroy;
+begin
+  FStoredRotatedLocations.Free;
+  FRotatedElementCenters.Free;
+  inherited;
+end;
+
+function TSutraElement3D_Collection.GetElementCenters(
+  Angle: Double): TRbwQuadTree;
+var
+  index: integer;
+  AnElement: TSutraElement3D;
+  CenterPoint: TPoint3D;
+  StoredPoint: TStoredNodeOrElement;
+  LayerIndex: Integer;
+  ColIndex: Integer;
+  RandomIndex: integer;
+begin
+  if Angle <> FAngle then
+  begin
+    FreeAndNil(FRotatedElementCenters);
+    FAngle := Angle
+  end;
+  if FRotatedElementCenters = nil then
+  begin
+    FStoredRotatedLocations.Clear;
+    FRotatedElementCenters := TRbwQuadTree.Create(nil);
+
+    for LayerIndex := 0 to FMesh.LayerCount - 1 do
+    begin
+      for ColIndex := 0 to FMesh.Mesh2D.Elements.Count - 1 do
+      begin
+        AnElement := FMesh.ElementArray[LayerIndex,ColIndex];
+        if AnElement.Active then
+        begin
+          CenterPoint := AnElement.CenterLocation;
+          StoredPoint := TStoredNodeOrElement.Create(
+            CenterPoint, FAngle, ColIndex, LayerIndex, AnElement);
+          FStoredRotatedLocations.Add(StoredPoint);
+        end;
+      end;
+    end;
+
+    if FStoredRotatedLocations.Count > 0 then
+    begin
+      StoredPoint := FStoredRotatedLocations[0];
+      FRotatedElementCenters.XMin := StoredPoint.X;
+      FRotatedElementCenters.XMax := StoredPoint.X;
+      FRotatedElementCenters.YMin := StoredPoint.Z;
+      FRotatedElementCenters.YMax := StoredPoint.Z;
+      for Index := 1 to Min(100, FStoredRotatedLocations.Count - 1) do
+      begin
+        RandomIndex := Random(FStoredRotatedLocations.Count);
+        StoredPoint := FStoredRotatedLocations[RandomIndex];
+        if FRotatedElementCenters.XMin > StoredPoint.X then
+        begin
+          FRotatedElementCenters.XMin := StoredPoint.X;
+        end
+        else if FRotatedElementCenters.XMax < StoredPoint.X then
+        begin
+          FRotatedElementCenters.XMax := StoredPoint.X;
+        end;
+
+        if FRotatedElementCenters.YMin > StoredPoint.Z then
+        begin
+          FRotatedElementCenters.YMin := StoredPoint.Z;
+        end
+        else if FRotatedElementCenters.YMax < StoredPoint.Z then
+        begin
+          FRotatedElementCenters.YMax := StoredPoint.Z;
+        end;
+      end;
+      for Index := 0 to FStoredRotatedLocations.Count - 1 do
+      begin
+        StoredPoint := FStoredRotatedLocations[Index];
+        FRotatedElementCenters.AddPoint(StoredPoint.X, StoredPoint.Z, StoredPoint);
+      end;
+    end;
+  end;
+  result := FRotatedElementCenters;
 end;
 
 function TSutraElement3D_Collection.GetItems(Index: integer): TSutraElement3D;
 begin
   result := inherited Items[index] as TSutraElement3D;
+end;
+
+procedure TSutraElement3D_Collection.InvalidateStoredLocations;
+begin
+  FreeAndNil(FRotatedElementCenters);
 end;
 
 { TCustomSutraMesh }
@@ -4411,21 +7073,6 @@ begin
     frmGoPhast.EnableVisualization;
   end;
 end;
-
-//{ TCustomSutraNodeCollection }
-//
-//function TCustomSutraNodeCollection.Add: TSutraNode2D;
-//var
-//  Mesh: TSutraMesh3D;
-//begin
-//  Mesh := (Model as TCustomModel).SutraMesh;
-//  Mesh.BeginUpdate;
-//  try
-//    result := inherited Add as TSutraNode2D;
-//  finally
-//    Mesh.EndUpdate
-//  end;
-//end;
 
 { TCustomSutraItem }
 
@@ -4637,4 +7284,344 @@ begin
   FAngle := CrossSectionAngle;
 end;
 
+{ TSutraNode2DLeaf }
+
+constructor TSutraNode2DLeaf.Create(ANode: TSutraNode2D);
+begin
+  FNode := ANode;
+end;
+
+function TSutraNode2DLeaf.GetCoordinate(Depth: integer): double;
+begin
+  result := 0;
+  case Depth of
+    0: result := FNode.MinX;
+    1: result := FNode.MaxX;
+    2: result := FNode.MinY;
+    3: result := FNode.MaxY;
+    else Assert(False);
+  end;
+end;
+
+{ TSutraNode2DLeafList }
+
+function TSutraNode2DLeafList.CoordinateCount: integer;
+begin
+  Result := 4;
+end;
+
+constructor TSutraNode2DLeafList.Create;
+begin
+  inherited;
+  OwnsObjects := True;
+end;
+
+{ TSutraElement2DLeaf }
+
+constructor TSutraElement2DLeaf.Create(AnElement: TSutraElement2D);
+begin
+  FElement := AnElement;
+  FMinX := FElement.MinX;
+  FMaxX := FElement.MaxX;
+  FMinY := FElement.MinY;
+  FMaxY := FElement.MaxY;
+end;
+
+function TSutraElement2DLeaf.GetCoordinate(Depth: integer): double;
+begin
+  result := 0;
+  case Depth of
+    0: result := FMinX;
+    1: result := FMaxX;
+    2: result := FMinY;
+    3: result := FMaxY;
+    else Assert(False);
+  end;
+end;
+
+{ TSutraElement2DLeafList }
+
+function TSutraElement2DLeafList.CoordinateCount: integer;
+begin
+  result := 4;
+end;
+
+constructor TSutraElement2DLeafList.Create;
+begin
+  inherited;
+  OwnsObjects := True;
+end;
+
+{ TFrontPolygon }
+
+constructor TFrontPolygon.Create(ACol, ALayer: Integer; APolygon: TPolygon2D);
+var
+  PointIndex: integer;
+begin
+  FCol := ACol;
+  FLayer := ALayer;
+  FPolygon := APolygon;
+  Assert(Length(FPolygon) > 0);
+  FMinX := FPolygon[0].x;
+  FMaxX := FPolygon[0].x;
+  FMinY := FPolygon[0].y;
+  FMaxY := FPolygon[0].y;
+  for PointIndex := 1 to Length(FPolygon) - 1 do
+  begin
+    if FPolygon[PointIndex].x < FMinX then
+    begin
+      FMinX := FPolygon[PointIndex].x;
+    end
+    else if FPolygon[PointIndex].x > FMaxX then
+    begin
+      FMaxX := FPolygon[PointIndex].x;
+    end;
+
+    if FPolygon[PointIndex].y < FMinY then
+    begin
+      FMinY := FPolygon[PointIndex].y;
+    end
+    else if FPolygon[PointIndex].y > FMaxY then
+    begin
+      FMaxY := FPolygon[PointIndex].y;
+    end;
+  end;
+end;
+
+function TFrontPolygon.GetCoordinate(Depth: integer): double;
+begin
+  result := 0;
+  case Depth of
+    0: result := MinX;
+    1: result := MaxX;
+    2: result := MinY;
+    3: result := MaxY;
+    else Assert(False);
+  end;
+end;
+
+{ TFrontPolygonList }
+
+function TFrontPolygonList.CoordinateCount: integer;
+begin
+  result := 4;
+end;
+
+constructor TFrontPolygonList.Create;
+begin
+  inherited;
+  OwnsObjects := True;
+end;
+
+{ TStoredNodeOrElement }
+
+constructor TStoredNodeOrElement.Create(CenterPoint: TPoint3D; Angle: double;
+  ACol, ALayer: Integer; AnObject: TObject);
+var
+  PointDistance: Extended;
+  PointAngle: Extended;
+begin
+  PointDistance := sqrt(Sqr(CenterPoint.x) + Sqr(CenterPoint.y));
+  PointAngle := ArcTan2(CenterPoint.y,CenterPoint.x);
+  FX := Cos(PointAngle-Angle)*PointDistance;
+  FY := Sin(PointAngle-Angle)*PointDistance;
+  FZ := CenterPoint.Z;
+  FCol := ACol;
+  FLayer := ALayer;
+  FNodeOrElement := AnObject;
+end;
+
+{ TMeshGenerationControls }
+
+procedure TMeshGenerationControls.Apply;
+begin
+  C1 := SplittingAngle.Value;
+  C2 := Structure.Value;
+  C3 := NodePlacementError.Value;
+  C4 := LineLength.Value;
+  C5 := Symmetry.Value;
+  C6 := Concave.Value;
+  AltC1 := AltSplittingAngle.Value;
+  AltC2 := AltStructure.Value;
+  AltC3 := AltNodePlacementError.Value;
+  AltC4 := AltLineLength.Value;
+  AltC5 := AltSymmetry.Value;
+  AltC6 := AltConcave.Value;
+  QuadMeshGenerator.ElementGrowthRate := ElementGrowthRate.Value;
+
+end;
+
+procedure TMeshGenerationControls.Assign(Source: TPersistent);
+var
+  SourceControls: TMeshGenerationControls;
+begin
+
+  if Source is TMeshGenerationControls then
+  begin
+    SourceControls := TMeshGenerationControls(Source);
+    SplittingAngle := SourceControls.SplittingAngle;
+    Structure := SourceControls.Structure;
+    NodePlacementError := SourceControls.NodePlacementError;
+    LineLength := SourceControls.LineLength;
+    Symmetry := SourceControls.Symmetry;
+    Concave := SourceControls.Concave;
+    AltSplittingAngle := SourceControls.AltSplittingAngle;
+    AltStructure := SourceControls.AltStructure;
+    NodePlacementError := SourceControls.NodePlacementError;
+    AltLineLength := SourceControls.AltLineLength;
+    AltSymmetry := SourceControls.AltSymmetry;
+    AltConcave := SourceControls.AltConcave;
+    ElementGrowthRate := SourceControls.ElementGrowthRate;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+constructor TMeshGenerationControls.Create(Model: TBaseModel);
+begin
+  inherited;
+
+  FAltConcave := TRealStorage.Create;
+  FAltLineLength := TRealStorage.Create;
+  FAltNodePlacementError := TRealStorage.Create;
+  FAltSplittingAngle := TRealStorage.Create;
+  FAltStructure := TRealStorage.Create;
+  FAltSymmetry := TRealStorage.Create;
+  FConcave := TRealStorage.Create;
+  FLineLength := TRealStorage.Create;
+  FNodePlacementError := TRealStorage.Create;
+  FSplittingAngle := TRealStorage.Create;
+  FStructure := TRealStorage.Create;
+  FSymmetry := TRealStorage.Create;
+  FElementGrowthRate := TRealStorage.Create;
+
+  SetDefaults;
+
+  FAltConcave.OnChange := ValueChanged;
+  FAltLineLength.OnChange := ValueChanged;
+  FAltNodePlacementError.OnChange := ValueChanged;
+  FAltSplittingAngle.OnChange := ValueChanged;
+  FAltStructure.OnChange := ValueChanged;
+  FAltSymmetry.OnChange := ValueChanged;
+  FConcave.OnChange := ValueChanged;
+  FLineLength.OnChange := ValueChanged;
+  FNodePlacementError.OnChange := ValueChanged;
+  FSplittingAngle.OnChange := ValueChanged;
+  FStructure.OnChange := ValueChanged;
+  FSymmetry.OnChange := ValueChanged;
+  FElementGrowthRate.OnChange := ValueChanged;
+end;
+
+destructor TMeshGenerationControls.Destroy;
+begin
+  FElementGrowthRate.Free;
+  FAltLineLength.Free;
+  FConcave.Free;
+  FSymmetry.Free;
+  FNodePlacementError.Free;
+  FSplittingAngle.Free;
+  FStructure.Free;
+  FAltConcave.Free;
+  FAltSymmetry.Free;
+  FAltNodePlacementError.Free;
+  FLineLength.Free;
+  FAltSplittingAngle.Free;
+  FAltStructure.Free;
+  inherited;
+end;
+
+procedure TMeshGenerationControls.SetAltConcave(const Value: TRealStorage);
+begin
+  FAltConcave.Assign(Value);
+end;
+
+procedure TMeshGenerationControls.SetAltLineLength(const Value: TRealStorage);
+begin
+  FAltLineLength.Assign(Value);
+end;
+
+procedure TMeshGenerationControls.SetAltNodePlacementError(
+  const Value: TRealStorage);
+begin
+  FAltNodePlacementError.Assign(Value);
+end;
+
+procedure TMeshGenerationControls.SetAltSplittingAngle(
+  const Value: TRealStorage);
+begin
+  FAltSplittingAngle.Assign(Value);
+end;
+
+procedure TMeshGenerationControls.SetAltStructure(const Value: TRealStorage);
+begin
+  FAltStructure.Assign(Value);
+end;
+
+procedure TMeshGenerationControls.SetAltSymmetry(const Value: TRealStorage);
+begin
+  FAltSymmetry.Assign(Value);
+end;
+
+procedure TMeshGenerationControls.SetConcave(const Value: TRealStorage);
+begin
+  FConcave.Assign(Value);
+end;
+
+procedure TMeshGenerationControls.SetDefaults;
+begin
+  SplittingAngle.Value := 0.52;
+  Structure.Value := 0.17;
+  NodePlacementError.Value := 0;
+  LineLength.Value := 0.17;
+  Symmetry.Value := 0.14;
+  Concave.Value := 0.3;
+  AltSplittingAngle.Value := 0.56;
+  AltStructure.Value := 0.33;
+  AltNodePlacementError.Value := 0.11;
+  AltLineLength.Value := 0.0;
+  AltSymmetry.Value := 0.0;
+  AltConcave.Value := 1.2;
+  ElementGrowthRate.Value := 1.2;
+end;
+
+procedure TMeshGenerationControls.SetElementGrowthRate(
+  const Value: TRealStorage);
+begin
+  FElementGrowthRate.Assign(Value);
+end;
+
+procedure TMeshGenerationControls.SetLineLength(const Value: TRealStorage);
+begin
+  FLineLength.Assign(Value);
+end;
+
+procedure TMeshGenerationControls.SetNodePlacementError(
+  const Value: TRealStorage);
+begin
+  FNodePlacementError.Assign(Value);
+end;
+
+procedure TMeshGenerationControls.SetSplittingAngle(const Value: TRealStorage);
+begin
+  FSplittingAngle.Assign(Value);
+end;
+
+procedure TMeshGenerationControls.SetStructure(const Value: TRealStorage);
+begin
+  FStructure.Assign(Value);
+end;
+
+procedure TMeshGenerationControls.SetSymmetry(const Value: TRealStorage);
+begin
+  FSymmetry.Assign(Value);
+end;
+
+procedure TMeshGenerationControls.ValueChanged(Sender: TObject);
+begin
+  InvalidateModel;
+end;
+
 end.
+

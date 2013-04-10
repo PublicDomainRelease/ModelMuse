@@ -1,10 +1,10 @@
 inherited frmSutraLayers: TfrmSutraLayers
-  Caption = 'frmSutraLayers'
+  Caption = 'Sutra Layer Groups'
   ClientHeight = 436
   ClientWidth = 585
-  ExplicitWidth = 601
-  ExplicitHeight = 474
-  PixelsPerInch = 96
+  ExplicitWidth = 603
+  ExplicitHeight = 481
+  PixelsPerInch = 120
   TextHeight = 18
   object spl1: TSplitter
     Left = 137
@@ -118,7 +118,6 @@ inherited frmSutraLayers: TfrmSutraLayers
       ReadOnly = True
       TabOrder = 0
       OnChange = tvLayerGroupsChange
-      ExplicitLeft = 2
     end
   end
   object pnlMain: TPanel
@@ -199,8 +198,8 @@ inherited frmSutraLayers: TfrmSutraLayers
           Width = 193
           ExplicitWidth = 193
           inherited lbl3: TLabel
-            Width = 193
-            Height = 41
+            Width = 179
+            Height = 36
             ExplicitWidth = 179
             ExplicitHeight = 36
           end

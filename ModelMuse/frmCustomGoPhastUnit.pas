@@ -3,7 +3,10 @@ May 22, 2006: introduced CustomizeControls.
 }
 
 {@abstract(The purpose of @name is to declare @link(TfrmCustomGoPhast),
-  the ancestor of all TForms in ModelMuse.)}
+  the ancestor of all TForms in ModelMuse.)
+
+It also provides the @link(ShowAForm) method.
+}
 unit frmCustomGoPhastUnit;
 
 interface
@@ -48,8 +51,7 @@ type
 
   {@abstract(@name is the ancestor of all TForms in GoPhast.)
    @name handles setting the color and font. @name also tries
-   to keep from appearing at a location where it can't be seen.
-   It also provides the @link(TfrmCustomGoPhast.ShowAForm) method. )}
+   to keep from appearing at a location where it can't be seen. )}
   TfrmCustomGoPhast = class(TForm)
     // @name is the event handler for OnCreate.
     // It calls @link(CustomizeControls).
@@ -104,9 +106,6 @@ type
     // to be the same as in Application.MainForm via a call to
     // @link(SetAppearance).
     procedure CustomizeControls;
-    // @name creates an instance of FormClass and calls ShowModal
-    // on that instance.
-    function ShowAForm(const FormClass: TFormClass): integer;
   { Public declarations }
   end;
 
@@ -125,6 +124,9 @@ type
     Col: integer); overload;
   procedure EnableMultiEditControl(Grid: TRbwDataGrid4; AControl: TControl;
     Cols: array of integer); overload;
+  // @name creates an instance of FormClass and calls ShowModal
+  // on that instance.
+  function ShowAForm(const FormClass: TFormClass): integer;
 
   // @name sets the Left and Width of Control and ALabel so that they are
 // lined up over Column in Grid. ALabel.Alignment should be taCenter.
@@ -315,8 +317,7 @@ var
 begin
   KeyWord := HelpKeyword;
   HelpControl := ActiveControl;
-  while (HelpControl <> nil)
-    and (HelpControl <> self) do
+  while (HelpControl <> nil) do
   begin
     if HelpControl.HelpKeyword <> '' then
     begin
@@ -325,6 +326,10 @@ begin
     end
     else
     begin
+      if (HelpControl = self) then
+      begin
+        Break;
+      end;
       HelpControl := HelpControl.Parent;
     end;
   end;
@@ -376,7 +381,7 @@ begin
 end;
 
 
-function TfrmCustomGoPhast.ShowAForm(const FormClass: TFormClass): integer;
+function ShowAForm(const FormClass: TFormClass): integer;
 begin
   with FormClass.Create(nil) do
   begin
@@ -385,7 +390,7 @@ begin
       begin
         ShowModal;
       end;
-      result :=ModalResult;
+      result := ModalResult;
     finally
       Free;
     end;

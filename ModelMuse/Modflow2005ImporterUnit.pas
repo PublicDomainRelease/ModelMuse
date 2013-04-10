@@ -4648,7 +4648,7 @@ begin
 
   // Only define CHD objects in first stress period.  The constant
   // head boundary will persist into later stress periods where it
-  // may be overriden by objects in the CHD package.
+  // may be overridden by objects in the CHD package.
   // If the CHD objects based on negative IBOUND are defined for
   // all stress periods, the specified heads might incorrectly include
   // the sum of specified heads initially defined in the CHD pacakge and

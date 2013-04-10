@@ -125,7 +125,7 @@
           <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 1</text></para>
         </td>
         <td>
-          <para styleclass="Normal"><table rowcount="2" colcount="2" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+          <para styleclass="Normal"><table rowcount="3" colcount="2" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
             <tr style="vertical-align:top">
               <td>
                 <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2000: </text><conditional-text type="END"/></para>
@@ -136,10 +136,18 @@
             </tr>
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2005, MODFLOW-CFP, MODFLOW-NWT, and MODFLOW-LGR: </text><conditional-text type="END"/></para>
+                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2005: </text><conditional-text type="END"/></para>
               </td>
               <td>
-                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Normal" translate="true">NQST NQCST NQTST IUSTOBSV(free format)</text><conditional-text type="END"/></para>
+                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005"/><text styleclass="Normal" translate="true">NQST NQCST NQTST IUSTOBSV </text><text styleclass="Keywords" translate="true">[NOPRINT] </text><text styleclass="Normal" translate="true">(free format)</text><conditional-text type="END"/></para>
+              </td>
+            </tr>
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-CFP, MODFLOW-NWT, and MODFLOW-LGR: </text><conditional-text type="END"/></para>
+              </td>
+              <td>
+                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/><text styleclass="Normal" translate="true">NQST NQCST NQTST IUSTOBSV (free format)</text><conditional-text type="END"/></para>
               </td>
             </tr>
           </table></para>
@@ -176,6 +184,14 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">IUSTOBSV</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Normal" translate="true"> (MODFLOW-2005 and MODFLOW-LGR)</text><conditional-text type="END"/><text styleclass="Normal" translate="true">—File unit for saving observation data in a file. Specify 0 for no observation output file. The file for this unit must be included as type “DATA” in the Name File.</text></para>
+                    </td>
+                  </tr>
+                </table></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><conditional-text type="END"/><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005"/><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Keywords"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Keywords"><caption translate="true"><![CDATA[NOPRINT]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+                  <tr style="vertical-align:top">
+                    <td>
+                      <para styleclass="Normal"><text styleclass="Keywords" translate="true">NOPRINT</text><text styleclass="Normal" translate="true">—is an option keyword that turns off printing of input and output data in the Listing File.</text></para>
                     </td>
                   </tr>
                 </table></para>

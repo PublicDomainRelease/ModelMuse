@@ -173,6 +173,9 @@ resourcestring
   StrErrorInTRMESH = 'Error in TRMESH';
   StrErrorInTRLIST2 = 'Error in TRLIST2';
 
+const
+  NROW=9;
+
 function GetLimitsAndEpsilon(const X, Y: TFloatArray;
   out XMax, XMin, YMax, YMin: double): double;
 var

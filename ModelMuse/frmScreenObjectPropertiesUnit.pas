@@ -1960,6 +1960,17 @@ var
   // used in GoPhast.
   frmScreenObjectProperties: TfrmScreenObjectProperties = nil;
 
+resourcestring
+  StrLowerZcoordinate = 'Lower Z-coordinate';
+  StrLowerYcoordinate = 'Lower Y-coordinate';
+  StrLowerXcoordinate = 'Lower X-coordinate';
+  StrHigherZcoordinate = 'Higher Z-coordinate';
+  StrHigherYcoordinate = 'Higher Y-coordinate';
+  StrHigherXcoordinate = 'Higher X-coordinate';
+  StrZcoordinate = 'Z-coordinate';
+  StrYcoordinate = 'Y-coordinate';
+  StrXcoordinate = 'X-coordinate';
+
 implementation
 
 uses Math, StrUtils, JvToolEdit, frmGoPhastUnit, AbstractGridUnit,
@@ -2006,15 +2017,6 @@ resourcestring
   StrSorryThisFunction = 'Sorry, This function can only be performed when a ' +
   'single object is being edited.';
   StrThereIsNoOtherSt = 'There is no other stream or lake';
-  StrLowerZcoordinate = 'Lower Z-coordinate';
-  StrLowerYcoordinate = 'Lower Y-coordinate';
-  StrLowerXcoordinate = 'Lower X-coordinate';
-  StrHigherZcoordinate = 'Higher Z-coordinate';
-  StrHigherYcoordinate = 'Higher Y-coordinate';
-  StrHigherXcoordinate = 'Higher X-coordinate';
-  StrZcoordinate = 'Z-coordinate';
-  StrYcoordinate = 'Y-coordinate';
-  StrXcoordinate = 'X-coordinate';
   StrTime = 'Time';
   StrSolution = 'Solution';
   StrHead = 'Head';
@@ -3855,6 +3857,7 @@ var
   ScreenObject: TScreenObject;
   Item: TScreenObjectEditItem;
   ScreenObjectClass: TScreenObjectClass;
+  PriorCanInvalidateModel: boolean;
 begin
   Collection.Clear;
   for Index := 0 to List.Count - 1 do
@@ -3863,8 +3866,15 @@ begin
     Item := Collection.Add as TScreenObjectEditItem;
     ScreenObjectClass := TScreenObjectClass(ScreenObject.ClassType);
     Item.ScreenObject := ScreenObjectClass.Create(nil);
+    Item.ScreenObject.CanInvalidateModel := False;
 //    ScreenObject := List[Index];
-    Item.ScreenObject.Assign(ScreenObject);
+    PriorCanInvalidateModel := ScreenObject.CanInvalidateModel;
+    try
+      ScreenObject.CanInvalidateModel := False;
+      Item.ScreenObject.Assign(ScreenObject);
+    finally
+      ScreenObject.CanInvalidateModel := PriorCanInvalidateModel;
+    end;
   end;
 end;
 
@@ -5815,70 +5825,73 @@ end;
 function TfrmScreenObjectProperties.GetLowerCoordinateCaption(
   const AScreenObject: TScreenObject): string;
 begin
-  case AScreenObject.ViewDirection of
-    vdTop:
-      begin
-        result := StrLowerZcoordinate;
-      end;
-    vdFront:
-      begin
-        result := StrLowerYcoordinate;
-      end;
-    vdSide:
-      begin
-        result := StrLowerXcoordinate;
-      end;
-  else
-    begin
-      Assert(False);
-    end;
-  end;
+  result := AScreenObject.LowerCoordinateCaption;
+//  case AScreenObject.ViewDirection of
+//    vdTop:
+//      begin
+//        result := StrLowerZcoordinate;
+//      end;
+//    vdFront:
+//      begin
+//        result := StrLowerYcoordinate;
+//      end;
+//    vdSide:
+//      begin
+//        result := StrLowerXcoordinate;
+//      end;
+//  else
+//    begin
+//      Assert(False);
+//    end;
+//  end;
 end;
 
 function TfrmScreenObjectProperties.GetHigherCoordinateCaption(
   const AScreenObject: TScreenObject): string;
 begin
-  case AScreenObject.ViewDirection of
-    vdTop:
-      begin
-        result := StrHigherZcoordinate;
-      end;
-    vdFront:
-      begin
-        result := StrHigherYcoordinate;
-      end;
-    vdSide:
-      begin
-        result := StrHigherXcoordinate;
-      end;
-  else
-    begin
-      Assert(False);
-    end;
-  end;
+  result := AScreenObject.HigherCoordinateCaption;
+//  case AScreenObject.ViewDirection of
+//    vdTop:
+//      begin
+//        result := StrHigherZcoordinate;
+//      end;
+//    vdFront:
+//      begin
+//        result := StrHigherYcoordinate;
+//      end;
+//    vdSide:
+//      begin
+//        result := StrHigherXcoordinate;
+//      end;
+//  else
+//    begin
+//      Assert(False);
+//    end;
+//  end;
 end;
 
 function TfrmScreenObjectProperties.GetCoordinateCaption(
   const AScreenObject: TScreenObject): string;
 begin
-  case AScreenObject.ViewDirection of
-    vdTop:
-      begin
-        result := StrZcoordinate;
-      end;
-    vdFront:
-      begin
-        result := StrYcoordinate;
-      end;
-    vdSide:
-      begin
-        result := StrXcoordinate;
-      end;
-  else
-    begin
-      Assert(False);
-    end;
-  end;
+  result := AScreenObject.CoordinateCaption;
+//  case AScreenObject.ViewDirection of
+//    vdTop:
+//      begin
+//        result := StrZcoordinate;
+//      end;
+//    vdFront:
+//      begin
+//        result := StrYcoordinate;
+//      end;
+//    vdSide:
+//      begin
+//        result := StrXcoordinate;
+//      end;
+//  else
+//    begin
+//      Assert(False);
+//    end;
+//  end;
 end;
 
 procedure TfrmScreenObjectProperties.AssignImportedValuesColumn(
@@ -5968,12 +5981,12 @@ begin
   if not edHighZ.Enabled then
   begin
     edHighZ.Text := frmGoPhast.PhastModel.DefaultHigherElevationFormula(
-      FirstScreenObject.ViewDirection);
+      FirstScreenObject.ViewDirection, EvalAt);
   end;
   if not edLowZ.Enabled then
   begin
     edLowZ.Text := frmGoPhast.PhastModel.DefaultLowerElevationFormula(
-      FirstScreenObject.ViewDirection);
+      FirstScreenObject.ViewDirection, EvalAt);
   end;
 end;
 
@@ -6670,6 +6683,7 @@ var
   LayerEdits: TClassificationList;
   HydrogeologicUnitNames: TStringList;
   HufDataArrays: TClassificationList;
+  SelectedNode: TTreeNode;
 begin
 
   { TODO : Nearly the same code is use in TfrmFormulaUnit, TFrmGridColor,
@@ -6760,6 +6774,24 @@ begin
       end;
 
       UpdateDataSetTreeViewNodeStates;
+
+      SelectedNode := nil;
+      for Index := 0 to tvDataSets.Items.Count - 1 do
+      begin
+        Node := tvDataSets.Items[Index];
+        if Node.HasChildren and (Node.StateIndex <> Ord(cbUnchecked) + 1) then
+        begin
+          Node.Expanded := True;
+        end;
+        if (SelectedNode = nil) and not Node.HasChildren
+          and (Node.StateIndex <> Ord(cbUnchecked) + 1) then
+        begin
+          SelectedNode := Node;
+          tvDataSets.Selected := SelectedNode;
+        end;
+      end;
+
+
     end;
   finally
     ClassifiedDataSets.Free;
@@ -8727,7 +8759,7 @@ begin
     Node := nil;
     TransportChoice := frmGoPhast.PhastModel.SutraOptions.TransportChoice;
     case TransportChoice of
-      tcSolute:
+      tcSolute, tcSoluteHead:
         begin
           Node := jvpltvSutraFeatures.Items.AddChild(nil,
             StrSpecifiedConc) as TJvPageIndexNode;
@@ -8783,7 +8815,7 @@ begin
     Node := nil;
     TransportChoice := frmGoPhast.PhastModel.SutraOptions.TransportChoice;
     case TransportChoice of
-      tcSolute:
+      tcSolute, tcSoluteHead:
         begin
           Node := jvpltvSutraFeatures.Items.AddChild(nil,
             StrMassFlux) as TJvPageIndexNode;

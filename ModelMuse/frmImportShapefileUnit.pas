@@ -26,7 +26,7 @@ uses Windows,
   ModflowPackagesUnit, ModflowBoundaryUnit, DataSetUnit, UndoItems, RbwEdit,
   JvExComCtrls, JvComCtrls, ModflowPackageSelectionUnit,
   frameLocationMethodUnit, JvToolEdit, ModflowTransientListParameterUnit,
-  OrderedCollectionUnit, Mt3dmsChemUnit, Mt3dmsChemSpeciesUnit;
+  OrderedCollectionUnit, Mt3dmsChemUnit, Mt3dmsChemSpeciesUnit, GoPhastTypes;
 
 type
   TSfrColumns = (scStartTime, scEndTime, scIcalc,
@@ -579,7 +579,8 @@ type
       DataSetsOK: boolean = True): string; overload;
     function GetIntegerFormulaFromText(const text: String;
       DataSetsOK: boolean = True): string; overload;
-    procedure CreateDataSetVariables(Parser: TRbwParser);
+    procedure CreateDataSetVariables(Parser: TRbwParser;
+      EvalAt: TEvaluatedAt);
     function DataArrayOrientationOK(DataArray: TDataArray): boolean;
     procedure AddModflowPackageToImportChoices(
       APackage: TModflowPackageSelection);
@@ -632,7 +633,7 @@ type
 
 implementation
 
-uses Math, Contnrs , frmGoPhastUnit, GoPhastTypes, frmProgressUnit,
+uses Math, Contnrs , frmGoPhastUnit, frmProgressUnit,
   frmDataSetsUnits, ModelMuseUtilities, frmShowHideObjectsUnit,
   CoordinateConversionUnit, frmFormulaUnit, FastGEO, RealListUnit,
   ValueArrayStorageUnit, GIS_Functions, PhastModelUnit, TimeUnit,
@@ -1528,7 +1529,8 @@ begin
   end;
 end;
 
-procedure TfrmImportShapefile.CreateDataSetVariables(Parser: TRbwParser);
+procedure TfrmImportShapefile.CreateDataSetVariables(Parser: TRbwParser;
+  EvalAt: TEvaluatedAt);
 var
   DataArray: TDataArray;
   Index: Integer;
@@ -1538,6 +1540,10 @@ begin
   for Index := 0 to DataArrayManager.DataSetCount - 1 do
   begin
     DataArray := DataArrayManager.DataSets[Index];
+    if DataArray.EvaluatedAt <> EvalAt then
+    begin
+      Continue;
+    end;
     if (DataArray.Orientation = dsoTop)
       and (Parser.IndexOfVariable(DataArray.Name) < 0) then
     begin
@@ -1656,7 +1662,8 @@ end;
 procedure TfrmImportShapefile.EnableEvalAt;
 begin
   rgEvaluatedAt.Enabled := cbImportObjects.Checked
-    and (frmGoPhast.PhastModel.ModelSelection = msPhast);
+    and (frmGoPhast.PhastModel.ModelSelection in
+    [msPhast {$IFDEF SUTRA}, msSutra22{$ENDIF}]);
 end;
 
 procedure TfrmImportShapefile.AssignColFeatureProperties;
@@ -6385,6 +6392,7 @@ var
   NewDataType: TRbwDataType;
   NewProperties: TPhastDataSetStorage;
   OldProperties: TPhastDataSetStorage;
+  Orient: TDataSetOrientation;
 begin
   for Index := 1 to dgFields.RowCount - 1 do
   begin
@@ -6427,9 +6435,18 @@ begin
         Assert(False);
       end;
 
+      if rgElevationCount.ItemIndex = 0 then
+      begin
+        Orient := dsoTop;
+      end
+      else
+      begin
+        Orient := dso3D;
+      end;
+
       DataSet := frmGoPhast.PhastModel.DataArrayManager.CreateNewDataArray(
         TDataArray, NewDataSetName, NewFormula, NewDataSetName, [], NewDataType,
-        TEvaluatedAt(rgEvaluatedAt.ItemIndex), dsoTop,
+        TEvaluatedAt(rgEvaluatedAt.ItemIndex), Orient,
         strDefaultClassification + '|' + StrCreatedFromShapefi);
 
       NewDataSets.Add(DataSet);
@@ -6551,7 +6568,8 @@ begin
           rpShapeCompiler.ClearVariables;
           rpShapeCompiler.ClearExpressions;
           CreateVariables(rpShapeCompiler);
-          CreateDataSetVariables(rpShapeCompiler);
+          CreateDataSetVariables(rpShapeCompiler,
+            TEValuatedAt(rgEvaluatedAt.ItemIndex));
           frmGoPhast.PhastModel.RegisterGlobalVariables(rpShapeCompiler);
           for DataSetIndex := 1 to dgFields.RowCount - 1 do
           begin
@@ -7818,7 +7836,14 @@ begin
       DataSet := FNewDataSets[Index];
       if FTopDataSet = DataSet then
       begin
-        frmGoPhast.PhastModel.Grid.TopDataSet := DataSet;
+        if frmGoPhast.PhastModel.Grid = nil then
+        begin
+          frmGoPhast.PhastModel.Mesh.TopDataSet := DataSet;
+        end
+        else
+        begin
+          frmGoPhast.PhastModel.Grid.TopDataSet := DataSet;
+        end;
       end;
       if FThreeDDataSet = DataSet then
       begin
@@ -8004,7 +8029,8 @@ begin
       // register the appropriate variables with the
       // parser.
       CreateVariables(rbFormulaParser);
-      CreateDataSetVariables(rbFormulaParser);
+      CreateDataSetVariables(rbFormulaParser,
+        TEValuatedAt(rgEvaluatedAt.ItemIndex));
       frmGoPhast.PhastModel.RegisterGlobalVariables(rpShapeCompiler);
 
       RemoveGIS_Functions;
@@ -8643,7 +8669,8 @@ begin
     rpShapeCompiler.ClearExpressions;
     rpShapeCompiler.ClearVariables;
     CreateVariables(rpShapeCompiler);
-    CreateDataSetVariables(rpShapeCompiler);
+    CreateDataSetVariables(rpShapeCompiler,
+      TEValuatedAt(rgEvaluatedAt.ItemIndex));
     frmGoPhast.PhastModel.RegisterGlobalVariables(rpShapeCompiler);
     try
       rpShapeCompiler.Compile(AFormula);

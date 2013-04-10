@@ -146,11 +146,18 @@ const
   ObjectDegrees = 'ObjectCurrentSegmentAngleDegrees';
   ObjectDegreesLimited = 'ObjectCurrentSegmentAngleLimitedDegrees';
 
+  ObjectCurSegLength = 'ObjectCurrentSegmentLength';
+  ObjectCurrentVertexX = 'ObjectCurrentVertexX';
+  ObjectCurrentVertexY = 'ObjectCurrentVertexY';
+  ObjectCurrentVertexZ = 'ObjectCurrentVertexZ';
+
+
 function GetColumnWidth(Column: Integer): Double;
 function GetRowWidth(Row: Integer): Double;
 function GetLayerHeight(Col, Row, Lay: Integer): Double;
 
-function GetLayerPosition(const Lay, Row, Col: Integer; var InvalidIndex: boolean): Double;
+function GetLayerPosition(const Lay, Row, Col: Integer;
+  var InvalidIndex: boolean): Double;
 function GetLayerCenter(const Lay, Row, Col:  integer): double;
 
 
@@ -181,6 +188,8 @@ resourcestring
   StrBecauseHorizontalH = 'Because horizontal hyraulic conductivity is zero ' +
   'in the following cells (Layer, Row, Column), vertical conductivity can no' +
   't be calculated. (This message can be ignored for inactive cells.)';
+  StrTheSFunctionDoes = 'The %s function does not apply to locations that ar' +
+  'e not intersected by an object.';
 
 var  
   SpecialImplementors: TList;
@@ -199,6 +208,7 @@ type
     GlobalCurrentSegment: TCellElementSegment;
     GlobalSection: integer;
     GlobalCurrentModel: TBaseModel;
+    GlobalEvaluatedAt: TEvaluatedAt;
   end;
 
 
@@ -213,6 +223,7 @@ var
   GlobalCurrentScreenObject: TScreenObject;
   GlobalCurrentSegment: TCellElementSegment;
   GlobalSection: integer;
+//  GlobalEvalAt: TEvaluatedAt;
 
 
   GlobalStack: array of TGlobalValues;
@@ -339,6 +350,7 @@ begin
   GlobalStack[Position].GlobalCurrentSegment := GlobalCurrentSegment;
   GlobalStack[Position].GlobalSection := GlobalSection;
   GlobalStack[Position].GlobalCurrentModel := GlobalCurrentModel;
+  GlobalStack[Position].GlobalEvaluatedAt := GlobalEvaluatedAt;
 end;
 
 procedure PopGlobalStack;
@@ -359,6 +371,7 @@ begin
   GlobalCurrentSegment := GlobalStack[Position].GlobalCurrentSegment;
   GlobalSection := GlobalStack[Position].GlobalSection;
   GlobalCurrentModel := GlobalStack[Position].GlobalCurrentModel;
+  GlobalEvaluatedAt := GlobalStack[Position].GlobalEvaluatedAt;
 
   SetLength(GlobalStack, Position);
 end;
@@ -395,7 +408,16 @@ begin
         end;
       eaNodes:
         begin
-          if (Item <> ActiveOnLayerSpecialImplementor) then
+          if Item = ActiveOnLayerSpecialImplementor then
+          begin
+            {$IFDEF SUTRA}
+            if frmGoPhast.ModelSelection = msSutra22 then
+            begin
+              Parser.SpecialImplementorList.Add(Item);
+            end;
+            {$ENDIF}
+          end
+          else
           begin
             Parser.SpecialImplementorList.Add(Item);
           end;
@@ -568,6 +590,7 @@ begin
   GlobalColumn := Col + 1;
   GlobalRow := Row + 1;
   GlobalLayer := Layer + 1;
+  GlobalEvaluatedAt := EvaluatedAt;
   UpdateCurrentModel(Model);
   LocalModel := Model as TCustomModel;
 
@@ -602,12 +625,21 @@ begin
           end
           else
           begin
-            Node3D :=  LocalModel.Mesh.NodeArray[Layer,Col];
-            GlobalZ := Node3D.Z;
+            if LocalModel.Mesh.Nodes.Count > 0 then
+            begin
+              Node3D :=  LocalModel.Mesh.NodeArray[Layer,Col];
+              GlobalZ := Node3D.Z;
+            end
+            else
+            begin
+              GlobalZ := 0;
+            end;
           end;
         end;
       else Assert(False);
     end;
+    GlobalXPrime := GlobalX;
+    GlobalYPrime := GlobalY;
   end
   else
   begin
@@ -812,7 +844,14 @@ begin
     case GlobalCurrentScreenObject.ViewDirection of
       vdTop, vdFront:
         begin
-          result := GlobalCurrentSegment.X1;
+          if GlobalCurrentSegment.EndPosition = epLast then
+          begin
+            result := GlobalCurrentSegment.X2;
+          end
+          else
+          begin
+            result := GlobalCurrentSegment.X1;
+          end;
         end;
       vdSide:
         begin
@@ -836,7 +875,14 @@ begin
     case GlobalCurrentScreenObject.ViewDirection of
       vdTop:
         begin
-          result := GlobalCurrentSegment.Y1;
+          if GlobalCurrentSegment.EndPosition = epLast then
+          begin
+            result := GlobalCurrentSegment.Y2;
+          end
+          else
+          begin
+            result := GlobalCurrentSegment.Y1;
+          end;
         end;
       vdFront:
         begin
@@ -844,7 +890,14 @@ begin
         end;
       vdside:
         begin
-          result := GlobalCurrentSegment.X1;
+          if GlobalCurrentSegment.EndPosition = epLast then
+          begin
+            result := GlobalCurrentSegment.X2;
+          end
+          else
+          begin
+            result := GlobalCurrentSegment.X1;
+          end;
         end;
     else
       Assert(False);
@@ -866,9 +919,28 @@ begin
         begin
           Result:= 0;
         end;
-      vdFront, vdSide:
+      vdFront:
         begin
-          result := GlobalCurrentSegment.Y1;
+          if GlobalCurrentSegment.EndPosition = epLast then
+          begin
+            result := GlobalCurrentSegment.Y2;
+          end
+          else
+          begin
+            result := GlobalCurrentSegment.Y1;
+          end;
+        end;
+      vdSide:
+        begin
+          if GlobalCurrentSegment.EndPosition = epLast then
+          begin
+            result := GlobalCurrentSegment.X2;
+          end
+          else
+          begin
+            result := GlobalCurrentSegment.X1;
+          end;
+//          result := GlobalCurrentSegment.Y1;
         end;
     else
       Assert(False);
@@ -900,11 +972,20 @@ begin
   end
   else
   begin
-    Point1 := GlobalCurrentScreenObject.Points[GlobalCurrentSegment.VertexIndex];
-    Point2 := GlobalCurrentScreenObject.Points[
-      GlobalCurrentSegment.VertexIndex + 1];
-
     result := 0;
+    if (GlobalCurrentSegment.X1 = GlobalCurrentSegment.X2)
+      and (GlobalCurrentSegment.Y1 = GlobalCurrentSegment.Y2) then
+    begin
+      Exit;
+    end;
+
+    Point1 := GlobalCurrentSegment.StartPoint;
+    Point2 := GlobalCurrentSegment.EndPoint;
+
+//    Point1 := GlobalCurrentScreenObject.Points[GlobalCurrentSegment.VertexIndex];
+//    Point2 := GlobalCurrentScreenObject.Points[
+//      GlobalCurrentSegment.VertexIndex + 1];
+
     case GlobalCurrentScreenObject.ViewDirection of
       vdTop, vdFront:
         begin
@@ -951,13 +1032,19 @@ function _CurrentSegmentLength(Values: array of pointer): double;
 var
   Point1, Point2: TPoint2D;
 begin
+  result := 0;
   if (GlobalCurrentSegment = nil) or (GlobalCurrentScreenObject = nil)
     or (GlobalCurrentScreenObject.Count <= 1) then
   begin
-    result := 0;
+    Exit;
   end
   else
   begin
+    if GlobalCurrentScreenObject.SectionLength[
+      GlobalCurrentSegment.SectionIndex] = 1 then
+    begin
+      Exit;
+    end;
     Point1 := GlobalCurrentScreenObject.Points[GlobalCurrentSegment.VertexIndex];
     Point2 := GlobalCurrentScreenObject.Points[
       GlobalCurrentSegment.VertexIndex + 1];
@@ -1061,20 +1148,27 @@ begin
     or (GlobalCurrentScreenObject.PointPositionValues = nil) then
   begin
     result := 0;
-    if (GlobalCurrentSegment = nil) or (GlobalCurrentScreenObject = nil) then
+    if  (GlobalCurrentScreenObject = nil) then
     begin
-        frmErrorsAndWarnings.AddWarning(GlobalCurrentModel,
-          Format(StrTheSFunctionCan,
-          [ StrInterpolatedVertexValues]), '');
-        frmErrorsAndWarnings.Show;
+      frmErrorsAndWarnings.AddWarning(GlobalCurrentModel,
+        Format(StrTheSFunctionCan,
+        [ StrInterpolatedVertexValues]), '');
+      frmErrorsAndWarnings.Show;
+    end
+    else if (GlobalCurrentSegment = nil) then
+    begin
+      frmErrorsAndWarnings.AddWarning(GlobalCurrentModel,Format(
+        StrTheSFunctionDoes, [StrInterpolatedVertexValues]),
+        GlobalCurrentScreenObject.Name);
+      frmErrorsAndWarnings.Show;
     end
     else
     begin
-        frmErrorsAndWarnings.AddWarning(GlobalCurrentModel,
-          Format(StrThe0sFunctionIs, [StrInterpolatedVertexValues]),
-          Format(StrObject0sInvali, [GlobalCurrentScreenObject.Name,
-          VertexValueName]));
-        frmErrorsAndWarnings.Show;
+      frmErrorsAndWarnings.AddWarning(GlobalCurrentModel,
+        Format(StrThe0sFunctionIs, [StrInterpolatedVertexValues]),
+        Format(StrObject0sInvali, [GlobalCurrentScreenObject.Name,
+        VertexValueName]));
+      frmErrorsAndWarnings.Show;
     end;
   end
   else
@@ -1331,6 +1425,105 @@ begin
   end;
 end;
 
+function _ElevationToLayer(Values: array of pointer): integer;
+var
+  Elevation: double;
+  Mesh: TSutraMesh3D;
+  LayerIndex: Integer;
+  Element: TSutraElement3D;
+  Node: TSutraNode3D;
+begin
+  result := -1;
+  Elevation := PDouble(Values[0])^;
+  case frmGoPhast.PhastModel.ModelSelection of
+    msUndefined:
+      begin
+        Assert(False);
+      end;
+    msPhast:
+      begin
+        case GlobalEvaluatedAt of
+          eaBlocks:
+            begin
+              result := frmGoPhast.PhastModel.PhastGrid.
+                GetContainingLayer(GlobalColumn-1, GlobalRow-1, Elevation)
+                +1;
+            end;
+          eaNodes:
+            begin
+              if Elevation < frmGoPhast.PhastModel.
+                PhastGrid.LowestElevation then
+              begin
+                result := 0;
+              end
+              else if Elevation > frmGoPhast.PhastModel.
+                PhastGrid.HighestElevation then
+              begin
+                result := frmGoPhast.PhastModel.PhastGrid.LayerCount + 2
+              end
+              else
+              begin
+                result := frmGoPhast.PhastModel.
+                  PhastGrid.NearestLayerCenter(Elevation)+1;
+              end;
+            end;
+          else Assert(False);
+        end;
+      end;
+    msModflow, msModflowLGR, msModflowNWT:
+      begin
+        Assert(GlobalEvaluatedAt = eaBlocks);
+        result := TCustomModel(GlobalCurrentModel).ModflowGrid.
+          GetContainingLayer(GlobalColumn-1, GlobalRow-1, Elevation);
+      end;
+    {$IFDEF SUTRA}
+    msSutra22:
+      begin
+        Mesh := TCustomModel(GlobalCurrentModel).Mesh;
+        Result := 0;
+        if (Mesh = nil) or (Mesh.MeshType = mt2D) then
+        begin
+          Exit;
+        end;
+        case GlobalEvaluatedAt of
+          eaBlocks:
+            begin
+              for LayerIndex := 0 to Mesh.LayerCount - 1 do
+              begin
+                Element:= Mesh.ElementArray[LayerIndex, GlobalColumn-1];
+                if Element.Active
+                  and (Elevation <= Element.UpperElevation)
+                  and (Elevation >= Element.LowerElevation) then
+                begin
+                  result := LayerIndex+1;
+                  Exit;
+                end;
+              end;
+            end;
+          eaNodes:
+            begin
+              for LayerIndex := 0 to Mesh.LayerCount do
+              begin
+                Node := Mesh.NodeArray[LayerIndex, GlobalColumn-1];
+                if Node.Active
+                  and (Elevation <= Node.Top)
+                  and (Elevation >= Node.Bottom) then
+                begin
+                  result := LayerIndex+1;
+                  Exit;
+                end;
+              end;
+            end;
+          else
+            Assert(False);
+        end;
+      end;
+    {$ENDIF}
+    else Assert(False);
+  end;
+  Inc(result);
+end;
+
 function _ElevationToModelLayer(Values: array of pointer): integer;
 var
   Elevation: double;
@@ -1404,60 +1597,14 @@ begin
         end;
         result := result - NonSimulatedUnits + 1;
       end;
+    {$IFDEF SUTRA}
+    msSutra22:
+      begin
+        Result := _ElevationToLayer(Values);
+      end;
+    {$ENDIF}
     else Assert(False);
   end;
-end;
-
-function _ElevationToLayer(Values: array of pointer): integer;
-var
-  Elevation: double;
-begin
-  result := -1;
-  Elevation := PDouble(Values[0])^;
-  case frmGoPhast.PhastModel.ModelSelection of
-    msUndefined:
-      begin
-        Assert(False);
-      end;
-    msPhast:
-      begin
-        case GlobalEvaluatedAt of
-          eaBlocks:
-            begin
-              result := frmGoPhast.PhastModel.PhastGrid.
-                GetContainingLayer(GlobalColumn-1, GlobalRow-1, Elevation)
-                +1;
-            end;
-          eaNodes:
-            begin
-              if Elevation < frmGoPhast.PhastModel.
-                PhastGrid.LowestElevation then
-              begin
-                result := 0;
-              end
-              else if Elevation > frmGoPhast.PhastModel.
-                PhastGrid.HighestElevation then
-              begin
-                result := frmGoPhast.PhastModel.PhastGrid.LayerCount + 2
-              end
-              else
-              begin
-                result := frmGoPhast.PhastModel.
-                  PhastGrid.NearestLayerCenter(Elevation)+1;
-              end;
-            end;
-          else Assert(False);
-        end;
-      end;
-    msModflow, msModflowLGR, msModflowNWT:
-      begin
-        Assert(GlobalEvaluatedAt = eaBlocks);
-        result := TCustomModel(GlobalCurrentModel).ModflowGrid.
-          GetContainingLayer(GlobalColumn-1, GlobalRow-1, Elevation);
-      end;
-    else Assert(False);
-  end;
-  Inc(result);
 end;
 
 function _Layer(Values: array of pointer): integer;
@@ -1609,6 +1756,12 @@ function _SimulatedModflowLayer(Values: array of pointer): boolean;
 var
   Layer: integer;
 begin
+  Result := True;
+  if not (frmGoPhast.PhastModel.ModelSelection in
+    [msModflow, msModflowLGR, msModflowNWT]) then
+  begin
+    Exit;
+  end;
   if Values[0] <> nil then
   begin
     Layer := PInteger(Values[0])^ - 1;
@@ -1650,6 +1803,10 @@ begin
 end;
 
 function GetLayerHeight(Col, Row, Lay: Integer): Double;
+var
+  Mesh: TSutraMesh3D;
+  Element: TSutraElement3D;
+  Node: TSutraNode3D;
 begin
   result := 0;
   case frmGoPhast.ModelSelection of
@@ -1713,8 +1870,26 @@ begin
     {$IFDEF SUTRA}
     msSutra22:
       begin
-        { TODO -cSUTRA : Need to implement this. }
-        result := 0;
+        Result := 0;
+        Mesh := TCustomModel(GlobalCurrentModel).Mesh;
+        if Mesh.MeshType = mt2D then
+        begin
+          Exit;
+        end;
+        case GlobalEvaluatedAt of
+          eaBlocks:
+            begin
+              Element := Mesh.ElementArray[Lay, Col];
+              Result := Element.UpperElevation - Element.LowerElevation;
+            end;
+          eaNodes:
+            begin
+              Node := Mesh.NodeArray[Lay, Col];
+              Result := Node.Top - Node.Bottom;
+            end;
+          else
+            Assert(False);
+        end;
       end;
     {$ENDIF}
   else
@@ -1733,8 +1908,57 @@ begin
 end;
 
 function _BlockAreaTop(Values: array of pointer): double;
+var
+  Column: Integer;
+  Mesh: TSutraMesh3D;
 begin
-  result := _ColumnWidth([Values[0]]) * _RowWidth([Values[1]]);
+  result := 0;
+  case frmGoPhast.ModelSelection of
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        result := _ColumnWidth([Values[0]]) * _RowWidth([Values[1]]);
+      end;
+    {$IFDEF SUTRA}
+    msSutra22:
+      begin
+        if (frmGoPhast.PhastModel <> nil)
+          and (frmGoPhast.PhastModel.Mesh <> nil) then
+        begin
+          Mesh := frmGoPhast.PhastModel.Mesh;
+        end
+        else
+        begin
+          Exit;
+        end;
+        if Values[0] <> nil then
+        begin
+          Column := PInteger(Values[0])^ - 1;
+        end
+        else
+        begin
+          Column := GlobalColumn - 1;
+        end;
+        if Mesh.Mesh2D.Nodes.Count = 0 then
+        begin
+          Exit;
+        end;
+        case GlobalEvaluatedAt of
+          eaBlocks:
+            begin
+              result := Mesh.Mesh2D.Elements[Column].ElementArea
+            end;
+          eaNodes:
+            begin
+              result := Mesh.Mesh2D.Nodes[Column].CellArea
+            end;
+          else
+            Assert(False);
+        end;
+      end;
+    {$ENDIF}
+    else
+      Assert(False);
+  end
 end;
 
 function _BlockAreaFront(Values: array of pointer): double;
@@ -1742,6 +1966,10 @@ var
   Col, Row, Layer: integer;
   CellPoints: T2DRealPointArray;
   CellOutline: TPolygon2D;
+  Mesh: TSutraMesh3D;
+  Limits: TLimitsArray;
+  Polygons: TCellElementPolygons2D;
+  Angle: Extended;
 begin
   case frmGoPhast.ModelSelection of
     msPhast:
@@ -1795,6 +2023,62 @@ begin
         CellOutline[0] := CellPoints[Col*2,Layer+1];
         result := Area(CellOutline);
       end;
+    {$IFDEF SUTRA}
+    msSutra22:
+      begin
+        result := 0;
+        Mesh := frmGoPhast.PhastModel.Mesh;
+        if Mesh = nil then
+        begin
+          Exit;
+        end;
+        if Mesh.MeshType = mt2D then
+        begin
+          Exit;
+        end;
+        if Values[2] = nil then
+        begin
+//          Row := GlobalRow - 1;
+
+          if Values[0] <> nil then
+          begin
+            Col := PInteger(Values[0])^ - 1;
+          end
+          else
+          begin
+            Col := GlobalColumn - 1;
+          end;
+
+          if Values[1] <> nil then
+          begin
+            Layer := PInteger(Values[1])^ - 1;
+          end
+          else
+          begin
+            Layer := GlobalLayer - 1;
+          end;
+        end
+        else
+        begin
+          Col := PInteger(Values[0])^ - 1;
+//          Row := PInteger(Values[1])^ - 1;
+          Layer := PInteger(Values[2])^ - 1;
+        end;
+
+        if GlobalCurrentScreenObject = nil then
+        begin
+          Angle := 0.;
+        end
+        else
+        begin
+          Angle := GlobalCurrentScreenObject.SutraAngle;
+        end;
+
+        Polygons := Mesh.FrontPolygons(Angle, GlobalEvaluatedAt, Limits);
+        result := Abs(Area(Polygons[Layer, Col]));
+
+      end
+    {$ENDIF}
     else
       begin
         result := 0;
@@ -1861,6 +2145,12 @@ begin
         CellOutline[5] := CellPoints[Row*2,Layer+1];
         result := Area(CellOutline);
       end;
+    {$IFDEF SUTRA}
+    msSutra22:
+      begin
+        result := 0;
+      end
+    {$ENDIF}
     else
       begin
         result := 0;
@@ -1874,10 +2164,54 @@ var
   Col: Integer;
   Row: Integer;
   Lay: Integer;
+  Mesh: TSutraMesh3D;
+  AnElement: TSutraElement3D;
+  AnNode: TSutraNode3D;
 begin
+  result := 0;
   ExtractColRowLayer(Lay, Row, Col, Values);
-  result := GetColumnWidth(Col) * GetRowWidth(Row) *
-    GetLayerHeight(Col, Row, Lay);
+  case frmGoPhast.ModelSelection of
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        result := GetColumnWidth(Col) * GetRowWidth(Row) *
+          GetLayerHeight(Col, Row, Lay);
+      end;
+    {$IFDEF SUTRA}
+    msSutra22:
+      begin
+        result := 0;
+        Mesh := frmGoPhast.PhastModel.Mesh;
+        if Mesh = nil then
+        begin
+          Exit;
+        end;
+        case Mesh.MeshType of
+          mt2D: Exit;
+          mt3D:
+            begin
+              case GlobalEvaluatedAt of
+                eaBlocks:
+                  begin
+                    AnElement := Mesh.ElementArray[Lay,Col];
+                    result := AnElement.Volume;
+                  end;
+                eaNodes:
+                  begin
+                    AnNode := Mesh.NodeArray[Lay,Col];
+                    result := AnNode.Volume;
+                  end;
+                else
+                  Assert(False);
+              end;
+            end;
+          else
+            Assert(False);
+        end;
+      end;
+    {$ENDIF}
+    else
+      Assert(False);
+  end;
 end;
 
 function _ColumnPosition(Values: array of pointer): double;
@@ -1942,9 +2276,13 @@ begin
   end;
 end;
 
-function GetLayerPosition(const Lay, Row, Col: Integer; var InvalidIndex: boolean): Double;
+function GetLayerPosition(const Lay, Row, Col: Integer;
+  var InvalidIndex: boolean): Double;
 var
   LocalGrid: TModflowGrid;
+  Mesh: TSutraMesh3D;
+  Element: TSutraElement3D;
+  Node: TSutraNode3D;
 begin
   result := 0;
   InvalidIndex := False;
@@ -1979,7 +2317,53 @@ begin
     {$IFDEF SUTRA}
     msSutra22:
       begin
-        result := 0;
+        Mesh := TCustomModel(GlobalCurrentModel).Mesh;
+        if Mesh.MeshType = mt2D then
+        begin
+          result := 0;
+          Exit;
+        end;
+        case GlobalEvaluatedAt of
+          eaBlocks:
+            begin
+              if (Lay < 0) or (Lay > Mesh.LayerCount)
+               or (Row <> 0)
+               or (Col < 0) or (Col >= Mesh.Mesh2D.Elements.Count) then
+              begin
+                Result := 0;
+                InvalidIndex := True;
+              end
+              else
+              begin
+                if Lay = Mesh.LayerCount then
+                begin
+                  Element := Mesh.ElementArray[Lay-1, Col];
+                  result := Element.LowerElevation;
+                end
+                else
+                begin
+                  Element := Mesh.ElementArray[Lay, Col];
+                  result := Element.UpperElevation;
+                end;
+              end;
+            end;
+          eaNodes:
+            begin
+              if (Lay < 0) or (Lay > Mesh.LayerCount)
+               or (Row <> 0)
+               or (Col < 0) or (Col >= Mesh.Mesh2D.Nodes.Count) then
+              begin
+                Result := 0;
+                InvalidIndex := True;
+              end
+              else
+              begin
+                Node := Mesh.NodeArray[Lay,Col];
+                Result := Node.Z;
+              end;
+            end;
+          else Assert(False);
+        end;
       end;
     {$ENDIF}
   else
@@ -2003,23 +2387,59 @@ var
   BelowValue: Double;
   AboveValue: Double;
   InvalidIndex: boolean;
+  Mesh: TSutraMesh3D;
+  Element: TSutraElement3D;
+  Node: TSutraNode3D;
 begin
-  BelowValue := GetLayerPosition(Lay, Row, Col, InvalidIndex);
-  if InvalidIndex then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    AboveValue := GetLayerPosition(Lay+1, Row, Col, InvalidIndex);
-    if InvalidIndex then
-    begin
-      result := 0;
-    end
+  result := 0;
+  case GlobalCurrentModel.ModelSelection of
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        BelowValue := GetLayerPosition(Lay, Row, Col, InvalidIndex);
+        if InvalidIndex then
+        begin
+          result := 0;
+        end
+        else
+        begin
+          AboveValue := GetLayerPosition(Lay+1, Row, Col, InvalidIndex);
+          if InvalidIndex then
+          begin
+            result := 0;
+          end
+          else
+          begin
+            result := (BelowValue + AboveValue)/2;
+          end;
+        end;
+      end;
+    {$IFDEF SUTRA}
+    msSutra22:
+      begin
+        Mesh := (GlobalCurrentModel as TCustomModel).Mesh;
+        result := 0;
+        if Mesh.MeshType = mt2D then
+        begin
+          Exit;
+        end;
+        case GlobalEvaluatedAt of
+          eaBlocks:
+            begin
+              Element:= Mesh.ElementArray[Lay, Col];
+              result := Element.CenterElevation;
+            end;
+          eaNodes:
+            begin
+              Node:= Mesh.NodeArray[Lay, Col];
+              result := Node.Z;
+            end;
+          else
+            Assert(False);
+        end;
+      end;
+    {$ENDIF}
     else
-    begin
-      result := (BelowValue + AboveValue)/2;
-    end;
+      Assert(False);
   end;
 end;
 
@@ -2062,11 +2482,20 @@ end;
 function _RowCount(Values: array of pointer): integer;
 var
   LocalGrid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
 begin
   LocalGrid := TCustomModel(GlobalCurrentModel).Grid;
   if LocalGrid = nil then
   begin
-    result := 0;
+    Mesh := TCustomModel(GlobalCurrentModel).Mesh;
+    if Mesh = nil then
+    begin
+      result := 0;
+    end
+    else
+    begin
+      result := 1;
+    end;
   end
   else
   begin
@@ -2077,11 +2506,30 @@ end;
 function _ColumnCount(Values: array of pointer): integer;
 var
   LocalGrid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
 begin
   LocalGrid := TCustomModel(GlobalCurrentModel).Grid;
   if LocalGrid = nil then
   begin
     result := 0;
+    Mesh := TCustomModel(GlobalCurrentModel).Mesh;
+    if Mesh = nil then
+    begin
+      Exit;
+    end
+    else
+    begin
+      case GlobalEvaluatedAt of
+        eaBlocks:
+          begin
+            result := Mesh.Mesh2D.Elements.Count;
+          end;
+        eaNodes:
+          begin
+            result := Mesh.Mesh2D.Nodes.Count;
+          end;
+      end;
+    end;
   end
   else
   begin
@@ -2298,29 +2746,90 @@ var
   Layer: Integer;
   DataArray: TDataArray;
   ArrayLength: Integer;
+  Column: Integer;
+  Mesh: TSutraMesh3D;
 begin
-  DataArray := TCustomModel(GlobalCurrentModel).
-    DataArrayManager.GetDataSetByName(rsActive);
-  Assert(DataArray <> nil);
-  PushGlobalStack;
-  try
-    DataArray.Initialize;
-  finally
-    PopGlobalStack;
-  end;
-  ArrayLength := Length(Values);
-  Assert(ArrayLength = 1);
-  Layer := PInteger(Values[0])^ - 1;
-  if Layer >= DataArray.LayerCount then
+  result := False;
+  if TCustomModel(GlobalCurrentModel).Grid <> nil then
   begin
-    result := False;
-    Exit;
+    DataArray := TCustomModel(GlobalCurrentModel).
+      DataArrayManager.GetDataSetByName(rsActive);
+    Assert(DataArray <> nil);
+    PushGlobalStack;
+    try
+      DataArray.Initialize;
+    finally
+      PopGlobalStack;
+    end;
+    ArrayLength := Length(Values);
+    Assert(ArrayLength = 1);
+    Layer := PInteger(Values[0])^ - 1;
+    if Layer >= DataArray.LayerCount then
+    begin
+      result := False;
+      Exit;
+    end;
+    result := EvaluateBooleanDataSetOnLayer(rsActive, Values);
+  end
+  else if TCustomModel(GlobalCurrentModel).Mesh <> nil then
+  begin
+    Mesh := TCustomModel(GlobalCurrentModel).Mesh;
+    if Mesh = nil then
+    begin
+      result := False;
+      Exit;
+    end;
+    ArrayLength := Length(Values);
+    Assert(ArrayLength = 1);
+    Layer := PInteger(Values[0])^ - 1;
+    if Layer < 0 then
+    begin
+      result := False;
+    end
+    else
+    begin
+      if Mesh.MeshType = mt2D then
+      begin
+        result := Layer = 0;
+        Exit;
+      end;
+      Column := GlobalColumn - 1;
+      case GlobalEvaluatedAt of
+        eaBlocks:
+          begin
+            if Layer < Mesh.LayerCount then
+            begin
+              result := Mesh.ElementArray[Layer,Column].Active;
+            end
+            else
+            begin
+              result := False;
+            end;
+          end;
+        eaNodes:
+          begin
+            if Layer <= Mesh.LayerCount then
+            begin
+              result := Mesh.NodeArray[Layer,Column].Active;
+            end
+            else
+            begin
+              result := False;
+            end;
+          end;
+      end;
+    end;
   end;
-  result := EvaluateBooleanDataSetOnLayer(rsActive, Values);
 end;
 
 function _SpecifiedHeadOnLayer(Values: array of pointer): boolean;
 begin
+  result := False;
+  if not (frmGoPhast.PhastModel.ModelSelection in
+    [msModflow, msModflowLGR, msModflowNWT]) then
+  begin
+    Exit;
+  end;
   result := EvaluateBooleanDataSetOnLayer(rsModflowSpecifiedHead, Values);
 end;
 
@@ -2604,10 +3113,13 @@ var
   VK: Double;
   ASum: double;
 begin
-  GetCellIndicies(Column, Row, Layer, Values);
-
   result := 0;
   AModel := TCustomModel(GlobalCurrentModel);
+  if not (AModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT]) then
+  begin
+    Exit;
+  end;
+  GetCellIndicies(Column, Row, Layer, Values);
   Grid := AModel.ModflowGrid;
   if (Grid = nil) or (Grid.LayerCount -1 <= Layer)
     or (Layer < 0) then
@@ -2875,6 +3387,12 @@ var
   AValue: Double;
   MultiplierDataArray: TDataArray;
 begin
+  result := 0;
+  if not (frmGoPhast.PhastModel.ModelSelection in
+    [msModflow, msModflowLGR, msModflowNWT]) then
+  begin
+    Exit;
+  end;
   if (Length(Values) >= 1) and (Values[0] <> nil) then
   begin
     Row := PInteger(Values[0])^ - 1;
@@ -2894,7 +3412,6 @@ begin
 //  GetCellIndicies(Dummy, Column, Row,  Values);
   SteadyParameters := frmGoPhast.PhastModel.ModflowSteadyParameters;
   DataArrayManager := TCustomModel(GlobalCurrentModel).DataArrayManager;
-  result := 0;
   for Index := 0 to SteadyParameters.Count - 1 do
   begin
     AParam := SteadyParameters[Index];
@@ -2956,6 +3473,11 @@ begin
   AModel := TCustomModel(GlobalCurrentModel);
 
   result := 0;
+  if not (AModel.ModelSelection in
+    [msModflow, msModflowLGR, msModflowNWT]) then
+  begin
+    Exit;
+  end;
   if not AModel.IsLayerSimulated(Layer) then
   begin
     Exit;
@@ -3024,6 +3546,13 @@ var
   Head: double;
   HufLayerThickness: Double;
 begin
+  result := 0;
+  AModel := TCustomModel(GlobalCurrentModel);
+  if not (AModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT]) then
+  begin
+    Exit;
+  end;
+
   // does not account for LVDA.  SGWF2HUF7VDHT?
 
   // affected by simulated layer
@@ -3042,9 +3571,6 @@ begin
 
   GetCellIndicies(Column, Row, Layer, Values, 1);
 
-  AModel := TCustomModel(GlobalCurrentModel);
-
-  result := 0;
   if not AModel.IsLayerSimulated(Layer) then
   begin
     Exit;
@@ -3174,6 +3700,13 @@ var
   HufIntervalThickness: Double;
   ZeroResultErrorDisplayed: Boolean;
 begin
+  result := 0;
+  if not (frmGoPhast.PhastModel.ModelSelection in
+    [msModflow, msModflowLGR, msModflowNWT]) then
+  begin
+    Exit;
+  end;
+
   // affected by everything in _HufKx plus the
   // by zone arrays and multiplier arrays of ptHUF_VK and ptHUF_VANI
   // parameters
@@ -3187,7 +3720,6 @@ begin
 
   AModel := TCustomModel(GlobalCurrentModel);
 
-  result := 0;
   if not AModel.IsLayerSimulated(Layer) then
   begin
     Exit;
@@ -3450,11 +3982,24 @@ end;
 
 function _HufSS(Values: array of pointer): double;
 begin
+  result := 0;
+  if not (frmGoPhast.PhastModel.ModelSelection in
+    [msModflow, msModflowLGR, msModflowNWT]) then
+  begin
+    Exit;
+  end;
+
   result := HufAveragParam(Values, ptHUF_SS);
 end;
 
 function _HufAverageSY(Values: array of pointer): double;
 begin
+  result := 0;
+  if not (frmGoPhast.PhastModel.ModelSelection in
+    [msModflow, msModflowLGR, msModflowNWT]) then
+  begin
+    Exit;
+  end;
   result := HufAveragParam(Values, ptHUF_SY);
 end;
 
@@ -3464,6 +4009,11 @@ var
   ChildModel: TChildModel;
 begin
   result := 0;
+  if not (frmGoPhast.PhastModel.ModelSelection in
+    [msModflow, msModflowLGR, msModflowNWT]) then
+  begin
+    Exit;
+  end;
   if GlobalCurrentModel = frmGoPhast.PhastModel then
   begin
     result := 1;
@@ -3490,6 +4040,11 @@ var
   ChildModel: TChildModel;
 begin
   result := '';
+  if not (frmGoPhast.PhastModel.ModelSelection in
+    [msModflow, msModflowLGR, msModflowNWT]) then
+  begin
+    Exit;
+  end;
   if GlobalCurrentModel = frmGoPhast.PhastModel then
   begin
     result := 'Parent Grid';
@@ -3507,6 +4062,11 @@ end;
 function _ParentLayer(Values: array of pointer): integer;
 begin
   result := _Layer(Values);
+  if not (frmGoPhast.PhastModel.ModelSelection in
+    [msModflow, msModflowLGR, msModflowNWT]) then
+  begin
+    Exit;
+  end;
   if GlobalCurrentModel <> frmGoPhast.PhastModel then
   begin
     result := (GlobalCurrentModel as TChildModel).
@@ -3517,6 +4077,11 @@ end;
 function _ParentRow(Values: array of pointer): integer;
 begin
   result := _Row(Values);
+  if not (frmGoPhast.PhastModel.ModelSelection in
+    [msModflow, msModflowLGR, msModflowNWT]) then
+  begin
+    Exit;
+  end;
   if GlobalCurrentModel <> frmGoPhast.PhastModel then
   begin
     result := (GlobalCurrentModel as TChildModel).
@@ -3527,6 +4092,11 @@ end;
 function _ParentColumn(Values: array of pointer): integer;
 begin
   result := _Column(Values);
+  if not (frmGoPhast.PhastModel.ModelSelection in
+    [msModflow, msModflowLGR, msModflowNWT]) then
+  begin
+    Exit;
+  end;
   if GlobalCurrentModel <> frmGoPhast.PhastModel then
   begin
     result := (GlobalCurrentModel as TChildModel).
@@ -3670,15 +4240,67 @@ end;
 { TActiveOnLayer }
 
 function TActiveOnLayer.GetVariablesUsed: TStringList;
+var
+  LayerIndex: Integer;
+  SutraLayerStructure: TSutraLayerStructure;
+  LayerGroup: TSutraLayerGroup;
 begin
   result := inherited GetVariablesUsed;
-  result.Add(rsActive);
+  if frmGoPhast.ModelSelection in [msPhast, msModflow, msModflowLGR, msModflowNWT] then
+  begin
+    result.Add(rsActive);
+  end
+  {$IFDEF SUTRA}
+  else if frmGoPhast.ModelSelection = msSutra22 then
+  begin
+    if (frmGoPhast.PhastModel <> nil)
+      and (frmGoPhast.PhastModel.SutraLayerStructure <> nil) then
+    begin
+      SutraLayerStructure := frmGoPhast.PhastModel.SutraLayerStructure;
+      for LayerIndex := 0 to SutraLayerStructure.Count - 1 do
+      begin
+        LayerGroup := SutraLayerStructure[LayerIndex];
+        result.Add(LayerGroup.DataArrayName);
+      end;
+    end;
+  end;
+  {$ENDIF}
+
 end;
 
 function TActiveOnLayer.UsesVariable(const Variable: TCustomVariable): boolean;
+var
+  SutraLayerStructure: TSutraLayerStructure;
+  LayerIndex: Integer;
+  LayerGroup: TSutraLayerGroup;
 begin
-  result := inherited UsesVariable(Variable)
-    or (Variable.Name = UpperCase(rsActive));
+  if frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
+  begin
+    result := inherited UsesVariable(Variable)
+      or (Variable.Name = UpperCase(rsActive));
+  end
+  else
+  begin
+    result := inherited UsesVariable(Variable);
+    if not result then
+    begin
+    if (frmGoPhast.PhastModel <> nil)
+      and (frmGoPhast.PhastModel.SutraLayerStructure <> nil) then
+    begin
+      SutraLayerStructure := frmGoPhast.PhastModel.SutraLayerStructure;
+      for LayerIndex := 0 to SutraLayerStructure.Count - 1 do
+      begin
+        LayerGroup := SutraLayerStructure[LayerIndex];
+
+        result := (Variable.Name = UpperCase(LayerGroup.DataArrayName));
+        if result then
+        begin
+          exit;
+        end;
+      end;
+    end;
+    end;
+  end;
 end;
 
 { TSpecifiedHeadOnLayer }
@@ -4273,9 +4895,9 @@ initialization
   LayerPositionFunction.InputDataTypes[2] := rdtInteger;
   LayerPositionFunction.OptionalArguments := 3;
   LayerPositionFunction.CanConvertToConstant := False;
-  LayerPositionFunction.Name := 'LayerBoundaryPosition';
+  LayerPositionFunction.Name := StrLayerBoundaryPosition;
   LayerPositionFunction.Prototype :=
-    'Grid|LayerBoundaryPosition({{Column, Row,} Layer})';
+    'Grid|' + StrLayerBoundaryPosition + '({{Column, Row,} Layer})';
 
   LayerCenterFunction.ResultType := rdtDouble;
   LayerCenterFunction.RFunctionAddr := _LayerCenter;
@@ -4445,8 +5067,8 @@ initialization
   CurrentNodeXFunction.RFunctionAddr := _CurrentXNodePosition;
   CurrentNodeXFunction.OptionalArguments := 0;
   CurrentNodeXFunction.CanConvertToConstant := False;
-  CurrentNodeXFunction.Name := 'ObjectCurrentVertexX';
-  CurrentNodeXFunction.Prototype := 'Object|ObjectCurrentVertexX';
+  CurrentNodeXFunction.Name := ObjectCurrentVertexX;
+  CurrentNodeXFunction.Prototype := 'Object|' + ObjectCurrentVertexX;
   SetLength(CurrentNodeXFunction.Synonyms, 1);
   CurrentNodeXFunction.Synonyms[0] := 'ObjectCurrentNodeX';
 
@@ -4454,8 +5076,8 @@ initialization
   CurrentNodeYFunction.RFunctionAddr := _CurrentYNodePosition;
   CurrentNodeYFunction.OptionalArguments := 0;
   CurrentNodeYFunction.CanConvertToConstant := False;
-  CurrentNodeYFunction.Name := 'ObjectCurrentVertexY';
-  CurrentNodeYFunction.Prototype := 'Object|ObjectCurrentVertexY';
+  CurrentNodeYFunction.Name := ObjectCurrentVertexY;
+  CurrentNodeYFunction.Prototype := 'Object|' + ObjectCurrentVertexY;
   SetLength(CurrentNodeYFunction.Synonyms, 1);
   CurrentNodeYFunction.Synonyms[0] := 'ObjectCurrentNodeY';
 
@@ -4463,8 +5085,8 @@ initialization
   CurrentNodeZFunction.RFunctionAddr := _CurrentZNodePosition;
   CurrentNodeZFunction.OptionalArguments := 0;
   CurrentNodeZFunction.CanConvertToConstant := False;
-  CurrentNodeZFunction.Name := 'ObjectCurrentVertexZ';
-  CurrentNodeZFunction.Prototype := 'Object|ObjectCurrentVertexZ';
+  CurrentNodeZFunction.Name := ObjectCurrentVertexZ;
+  CurrentNodeZFunction.Prototype := 'Object|' + ObjectCurrentVertexZ;
   SetLength(CurrentNodeZFunction.Synonyms, 1);
   CurrentNodeZFunction.Synonyms[0] := 'ObjectCurrentNodeZ';
 
@@ -4493,8 +5115,8 @@ initialization
   CurrentSegmentLengthFunction.RFunctionAddr := _CurrentSegmentLength;
   CurrentSegmentLengthFunction.OptionalArguments := 0;
   CurrentSegmentLengthFunction.CanConvertToConstant := False;
-  CurrentSegmentLengthFunction.Name := 'ObjectCurrentSegmentLength';
-  CurrentSegmentLengthFunction.Prototype := 'Object|ObjectCurrentSegmentLength';
+  CurrentSegmentLengthFunction.Name := ObjectCurSegLength;
+  CurrentSegmentLengthFunction.Prototype := 'Object|' + ObjectCurSegLength;
 
   CurrentSectionIndexFunction.ResultType := rdtInteger;
   CurrentSectionIndexFunction.IFunctionAddr := _CurrentSectionIndex;

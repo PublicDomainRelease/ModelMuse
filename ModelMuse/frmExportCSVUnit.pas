@@ -52,10 +52,13 @@ implementation
 
 uses
   Contnrs, ClassificationUnit, frmGoPhastUnit, PhastModelUnit, AbstractGridUnit,
-  CustomModflowWriterUnit, RbwParser;
+  CustomModflowWriterUnit, RbwParser, SutraMeshUnit,
+  Generics.Collections, FastGEO, Generics.Defaults;
 
 resourcestring
   StrYouMustDefineThe = 'You must define the grid before you can export data' +
+  '.';
+  StrYouMustDefineMesh = 'You must define the mesh before you can export data' +
   '.';
   StrNoDataSetsHaveBe = 'No data sets have been selected. Do you want to jus' +
   't export the coordinates?';
@@ -63,6 +66,18 @@ resourcestring
   StrXYZColu = '"X", "Y", "Z", "Column", "Row", "Layer"';
 
 {$R *.dfm}
+
+type
+  TSortItem = class(TObject)
+    Location: T3DRealPoint;
+    Number: Integer;
+    Layer: integer;
+    Column: Integer;
+  end;
+
+  TSortList = TObjectList<TSortItem>;
+
+  TSortComparer = TComparer<TSortItem>;
 
 { TfrmExportCSV }
 
@@ -79,7 +94,8 @@ var
 begin
   inherited;
   FDataSets := TObjectList.Create;
-  rgEvaluatedAt.Enabled := frmGoPhast.PhastModel.ModelSelection = msPhast;
+  rgEvaluatedAt.Enabled := frmGoPhast.PhastModel.ModelSelection
+    in [msPhast {$IFDEF SUTRA}, msSutra22 {$ENDIF}];
 
   comboModel.AddItem(StrParentModel, frmGoPhast.PhastModel);
   if frmGoPhast.PhastModel.LgrUsed then
@@ -181,12 +197,68 @@ var
   Location: T3DRealPoint;
   DataArrayManager: TDataArrayManager;
   LocalModel: TCustomModel;
+  Mesh: TSutraMesh3D;
+  ColIndex: Integer;
+  Element2D: TSutraElement2D;
+  Location2D: TPoint2D;
+  SortItem: TSortItem;
+  Element3D: TSutraElement3D;
+  SortList: TSortList;
+  Node2D: TSutraNode2D;
+  Node3D: TSutraNode3D;
+  SortIndex: Integer;
   function FreeFormattedReal(
     const Value: double): string;
   begin
     result := TCustomModflowWriter.FortranDecimal(Format('%.13e', [Value]));
   end;
-  procedure WriteALine;
+  procedure WriteAMeshLine;
+  var
+    Index: integer;
+  begin
+    WriteString(FreeFormattedReal(SortItem.Location.X) + ', ');
+    WriteString(FreeFormattedReal(SortItem.Location.Y));
+    if (Orientation = dso3D) then
+    begin
+      WriteString(', ' + FreeFormattedReal(SortItem.Location.Z));
+    end;
+    WriteString(', ' + IntToStr(SortItem.Number+1));
+    for Index := 0 to DataArrayList.Count - 1 do
+    begin
+      ADataArray := DataArrayList[Index];
+      case ADataArray.DataType of
+        rdtDouble:
+          begin
+            WriteString(', ' + FreeFormattedReal(
+              ADataArray.RealData[SortItem.Layer, 0, SortItem.Column]));
+          end;
+        rdtInteger:
+          begin
+            WriteString(', ' + IntToStr(
+              ADataArray.IntegerData[SortItem.Layer, 0, SortItem.Column]));
+          end;
+        rdtBoolean:
+          begin
+            if ADataArray.BooleanData[SortItem.Layer, 0, SortItem.Column] then
+            begin
+              WriteString(', True');
+            end
+            else
+            begin
+              WriteString(', False');
+            end;
+          end;
+        rdtString:
+          begin
+            WriteString(', "' +
+              ADataArray.StringData[SortItem.Layer, 0, SortItem.Column] + '"' );
+          end;
+        else Assert(False);
+      end;
+    end;
+    NewLine;
+  end;
+  procedure WriteAGridLine;
   var
     Index: integer;
   begin
@@ -239,13 +311,46 @@ var
   end;
 begin
   LocalModel := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
-  Grid := LocalModel.Grid;
-  if (Grid.ColumnCount = 0)
-    or (Grid.RowCount = 0)
-    or (Grid.LayerCount = 0) then
-  begin
-    MessageDlg(StrYouMustDefineThe, mtError, [mbOK], 0);
-    Exit;
+  Grid := nil;
+  Mesh := nil;
+  case LocalModel.ModelSelection of
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        Grid := LocalModel.Grid;
+        if (Grid.ColumnCount = 0)
+          or (Grid.RowCount = 0)
+          or (Grid.LayerCount = 0) then
+        begin
+          MessageDlg(StrYouMustDefineThe, mtError, [mbOK], 0);
+          Exit;
+        end;
+      end;
+    {$IFDEF SUTRA}
+    msSutra22:
+      begin
+        Mesh := LocalModel.Mesh;
+        case Mesh.MeshType of
+          mt2D:
+            begin
+              if Mesh.Mesh2D.Elements.Count = 0 then
+              begin
+                MessageDlg(StrYouMustDefineMesh, mtError, [mbOK], 0);
+                Exit;
+              end;
+            end;
+          mt3D:
+            begin
+              if Mesh.Elements.Count = 0 then
+              begin
+                MessageDlg(StrYouMustDefineMesh, mtError, [mbOK], 0);
+                Exit;
+              end;
+            end;
+          else Assert(False);
+        end;
+      end;
+    {$ENDIF}
+    else Assert(False);
   end;
   Screen.Cursor := crHourGlass;
   DataArrayList := TList.Create;
@@ -291,16 +396,55 @@ begin
         FFileStream := TFileStream.Create(sdSaveCSV.FileName,
           fmCreate or fmShareDenyWrite);
         try
-          case Orientation of
-            dsoTop:
-              begin
-                WriteString(StrXYColumn);
-              end;
-            dso3D:
-              begin
-                WriteString(StrXYZColu);
-              end;
-            else Assert(False)
+          if Mesh = nil then
+          begin
+            case Orientation of
+              dsoTop:
+                begin
+                  WriteString(StrXYColumn);
+                end;
+              dso3D:
+                begin
+                  WriteString(StrXYZColu);
+                end;
+              else Assert(False)
+            end;
+          end
+          else
+          begin
+            case Orientation of
+              dsoTop:
+                begin
+                  case EvaluatedAt of
+                    eaBlocks:
+                      begin
+                        WriteString('"X", "Y", "Element"');
+                      end;
+                    eaNodes:
+                      begin
+                        WriteString('"X", "Y", "Node"');
+                      end;
+                    else Assert(False);
+                  end;
+
+                end;
+              dso3D:
+                begin
+                  case EvaluatedAt of
+                    eaBlocks:
+                      begin
+                        WriteString('"X", "Y", "Z", "Element"');
+                      end;
+                    eaNodes:
+                      begin
+                        WriteString('"X", "Y", "Z", "Node"');
+                      end;
+                    else Assert(False);
+                  end;
+
+                end;
+              else Assert(False)
+            end;
           end;
           for Index := 0 to DataArrayList.Count - 1 do
           begin
@@ -310,80 +454,224 @@ begin
           end;
           NewLine;
 
-          case EvaluatedAt of
-            eaBlocks:
-              begin
-                case Orientation of
-                  dsoTop:
-                    begin
-                      LayerIndex := 0;
-                      for RowIndex := 0 to Grid.RowCount - 1 do
-                      begin
-                        for ColumnIndex := 0 to Grid.ColumnCount - 1 do
+          if Mesh = nil then
+          begin
+            case EvaluatedAt of
+              eaBlocks:
+                begin
+                    case Orientation of
+                      dsoTop:
                         begin
-                          Location := Grid.
-                            RotatedThreeDElementCenter(
-                            ColumnIndex, RowIndex, 0);
-                          WriteALine;
-                        end;
-                      end;
-                    end;
-                  dso3D:
-                    begin
-                      for LayerIndex := 0 to Grid.LayerCount - 1 do
-                      begin
-                        for RowIndex := 0 to Grid.RowCount - 1 do
-                        begin
-                          for ColumnIndex := 0 to Grid.ColumnCount - 1 do
+                          LayerIndex := 0;
+                          for RowIndex := 0 to Grid.RowCount - 1 do
                           begin
-                            Location := Grid.
-                              RotatedThreeDElementCenter(
-                              ColumnIndex, RowIndex, LayerIndex);
-                            WriteALine;
+                            for ColumnIndex := 0 to Grid.ColumnCount - 1 do
+                            begin
+                              Location := Grid.
+                                RotatedThreeDElementCenter(
+                                ColumnIndex, RowIndex, 0);
+                              WriteAGridLine;
+                            end;
                           end;
                         end;
-                      end;
-                    end;
-                  else Assert(False);
-                end;
-              end;
-            eaNodes:
-              begin
-                case Orientation of
-                  dsoTop:
-                    begin
-                      LayerIndex := 0;
-                      for RowIndex := 0 to Grid.RowCount do
-                      begin
-                        for ColumnIndex := 0 to Grid.ColumnCount do
+                      dso3D:
                         begin
-                          Location := Grid.
-                            RotatedThreeDElementCorner(
-                            ColumnIndex, RowIndex, 0);
-                          WriteALine;
+                          for LayerIndex := 0 to Grid.LayerCount - 1 do
+                          begin
+                            for RowIndex := 0 to Grid.RowCount - 1 do
+                            begin
+                              for ColumnIndex := 0 to Grid.ColumnCount - 1 do
+                              begin
+                                Location := Grid.
+                                  RotatedThreeDElementCenter(
+                                  ColumnIndex, RowIndex, LayerIndex);
+                                WriteAGridLine;
+                              end;
+                            end;
+                          end;
                         end;
-                      end;
+                      else Assert(False);
                     end;
-                  dso3D:
-                    begin
-                      for LayerIndex := 0 to Grid.LayerCount do
+                end;
+              eaNodes:
+                begin
+                  case Orientation of
+                    dsoTop:
                       begin
+                        LayerIndex := 0;
                         for RowIndex := 0 to Grid.RowCount do
                         begin
                           for ColumnIndex := 0 to Grid.ColumnCount do
                           begin
                             Location := Grid.
                               RotatedThreeDElementCorner(
-                              ColumnIndex, RowIndex, LayerIndex);
-                            WriteALine;
+                              ColumnIndex, RowIndex, 0);
+                            WriteAGridLine;
                           end;
                         end;
                       end;
-                    end;
-                  else Assert(False);
+                    dso3D:
+                      begin
+                        for LayerIndex := 0 to Grid.LayerCount do
+                        begin
+                          for RowIndex := 0 to Grid.RowCount do
+                          begin
+                            for ColumnIndex := 0 to Grid.ColumnCount do
+                            begin
+                              Location := Grid.
+                                RotatedThreeDElementCorner(
+                                ColumnIndex, RowIndex, LayerIndex);
+                              WriteAGridLine;
+                            end;
+                          end;
+                        end;
+                      end;
+                    else Assert(False);
+                  end;
                 end;
+              else Assert(False);
+            end;
+          end
+          else
+          begin
+            SortList := TSortList.Create;
+            try
+              case EvaluatedAt of
+                eaBlocks:
+                  begin
+                    for ColIndex := 0 to Mesh.Mesh2D.Elements.Count - 1 do
+                    begin
+                      Element2D := Mesh.Mesh2D.Elements[ColIndex];
+                      Location2D := Element2D.Center;
+                      Location.X := Location2D.X;
+                      Location.Y := Location2D.Y;
+                      if (Mesh.MeshType = mt3D) and (Orientation = dso3D) then
+                      begin
+                        for LayerIndex := 0 to Mesh.LayerCount - 1 do
+                        begin
+                          Element3D := Mesh.ElementArray[LayerIndex, ColIndex];
+                          if Element3D.Active then
+                          begin
+                            SortItem := TSortItem.Create;
+                            SortList.Add(SortItem);
+                            SortItem.Number := Element3D.ElementNumber;
+                            Location.Z := Element3D.CenterElevation;
+                            SortItem.Location := Location;
+                            SortItem.Layer := LayerIndex;
+                            SortItem.Column := ColIndex;
+                          end;
+                        end;
+                      end
+                      else
+                      begin
+                        SortItem := nil;
+                        if (Mesh.MeshType = mt3D) then
+                        begin
+                          for LayerIndex := 0 to Mesh.LayerCount - 1 do
+                          begin
+                            Element3D := Mesh.ElementArray[LayerIndex, ColIndex];
+                            if Element3D.Active then
+                            begin
+                              SortItem := TSortItem.Create;
+                              SortList.Add(SortItem);
+                              SortItem.Number := Element3D.ElementNumber;
+                              Location.Z := Element3D.CenterElevation;
+                              SortItem.Location := Location;
+                              SortItem.Layer := 0;
+                              SortItem.Column := ColIndex;
+                              Break;
+                            end;
+                          end;
+                        end
+                        else
+                        begin
+                          SortItem := TSortItem.Create;
+                          SortList.Add(SortItem);
+                          SortItem.Number := Element2D.ElementNumber;
+                          Location.Z := 0;
+                          SortItem.Location := Location;
+                          SortItem.Layer := 0;
+                          SortItem.Column := ColIndex;
+                        end;
+
+                      end;
+                    end;
+                  end;
+                eaNodes:
+                  begin
+                    for ColIndex := 0 to Mesh.Mesh2D.Nodes.Count - 1 do
+                    begin
+                      Node2D := Mesh.Mesh2D.Nodes[ColIndex];
+                      Location.X := Node2D.X;
+                      Location.Y := Node2D.Y;
+                      if (Mesh.MeshType = mt3D) and (Orientation = dso3D) then
+                      begin
+                        for LayerIndex := 0 to Mesh.LayerCount do
+                        begin
+                          Node3D := Mesh.NodeArray[LayerIndex, ColIndex];
+                          if Node3D.Active then
+                          begin
+                            SortItem := TSortItem.Create;
+                            SortList.Add(SortItem);
+                            SortItem.Number := Node3D.Number;
+                            Location.Z := Node3D.Z;
+                            SortItem.Location := Location;
+                            SortItem.Layer := LayerIndex;
+                            SortItem.Column := ColIndex;
+                          end;
+                        end;
+                      end
+                      else
+                      begin
+                        SortItem := nil;
+                        if (Mesh.MeshType = mt3D) then
+                        begin
+                          for LayerIndex := 0 to Mesh.LayerCount do
+                          begin
+                            Node3D := Mesh.NodeArray[LayerIndex, ColIndex];
+                            if Node3D.Active then
+                            begin
+                              SortItem := TSortItem.Create;
+                              SortList.Add(SortItem);
+                              SortItem.Number := Node3D.Number;
+                              Location.Z := Node3D.Z;
+                              SortItem.Location := Location;
+                              SortItem.Layer := 0;
+                              SortItem.Column := ColIndex;
+                              Break;
+                            end;
+                          end;
+                        end
+                        else
+                        begin
+                          SortItem := TSortItem.Create;
+                          SortList.Add(SortItem);
+                          SortItem.Number := Node2D.Number;
+                          Location.Z := 0;
+                          SortItem.Location := Location;
+                          SortItem.Layer := 0;
+                          SortItem.Column := ColIndex;
+                        end;
+
+                      end;
+                    end;
+                  end;
+                else Assert(False);
               end;
-            else Assert(False);
+              SortList.Sort(TSortComparer.Construct(
+                function(const Item1, Item2: TSortItem): Integer
+                begin
+                  result := Item1.Number - Item2.Number;
+                end)
+                );
+                for SortIndex := 0 to SortList.Count - 1 do
+                begin
+                  SortItem := SortList[SortIndex];
+                  WriteAMeshLine;
+                end;
+            finally
+              SortList.Free;
+            end;
           end;
         finally
           FFileStream.Free;

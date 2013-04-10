@@ -480,6 +480,22 @@ begin
     dgCredit.Cells[1, Row] := 'EC Software';
     dgCredit.Cells[2, Row] := 'http://www.ec-software.com';
 
+    Inc(Row);
+    Assert(Row < dgCredit.RowCount);
+    dgCredit.Cells[0, Row] := 'TripackProcedures.pas, TriPackRoutines.pas';
+    dgCredit.Cells[1, Row] := 'Robert Renka';
+    dgCredit.Cells[2, Row] := 'http://www.netlib.org/toms/751, '
+      + 'http://www.netlib.org/toms/, '
+      + 'http://www.acm.org/publications/policies/softwarecrnotice';
+
+    Inc(Row);
+    Assert(Row < dgCredit.RowCount);
+    dgCredit.Cells[0, Row] := 'TriCP_Routines.pas';
+    dgCredit.Cells[1, Row] := 'A. Preusser';
+    dgCredit.Cells[2, Row] := 'http://www.netlib.org/toms/626, http://' +
+      'www.netlib.org/toms/, http://www.acm.org/publications/policies/' +
+      'softwarecrnotice';
+
     Assert(Row = dgCredit.RowCount-1);
   finally
     dgCredit.EndUpdate

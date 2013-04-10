@@ -629,6 +629,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Cross_Sectional_Model_Set_Hydr" value="3624"/>
       <helpcontext-number href="Cross_Sectional_Model_Specifie" value="3621"/>
       <helpcontext-number href="Cross_Sectional_Model_Specifyi" value="3618"/>
+      <helpcontext-number href="Custom_Color_Schemes_Dialog_Bo" value="3674"/>
       <helpcontext-number href="Customize" value="2360"/>
       <helpcontext-number href="Data" value="1740"/>
       <helpcontext-number href="Data_displayed_in_the_Imported" value="3444"/>

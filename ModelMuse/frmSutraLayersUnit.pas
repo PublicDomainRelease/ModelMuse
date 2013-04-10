@@ -462,6 +462,7 @@ begin
       LocalModel.Mesh.ElevationsNeedUpdating := True;
     end;
     frmGoPhast.InvalidateImage32AllViews;
+    frmGoPhast.EnableMeshRenumbering;
 //    for Index := 0 to LocalModel.ChildModels.Count - 1 do
 //    begin
 //      ChildModel := LocalModel.ChildModels[Index].ChildModel;
@@ -489,8 +490,12 @@ begin
     UpdatedRequiredDataSets;
     LocalModel.UpdateDataSetDimensions;
     frmGoPhast.FrontDiscretizationChanged := True;
-    LocalModel.Mesh.ElevationsNeedUpdating := True;
+    if Assigned(LocalModel.Mesh) then
+    begin
+      LocalModel.Mesh.ElevationsNeedUpdating := True;
+    end;
     frmGoPhast.InvalidateImage32AllViews;
+    frmGoPhast.EnableMeshRenumbering;
 //    for Index := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
 //    begin
 //      ChildModel := frmGoPhast.PhastModel.ChildModels[Index].ChildModel;

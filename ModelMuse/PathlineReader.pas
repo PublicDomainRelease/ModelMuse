@@ -208,7 +208,7 @@ type
     procedure UpdateShapeFileFields(ALine: TCustomPathLine;
       ShapeDataBase: TXBase); virtual;
     procedure ExportShapefile(FileName: string);
-    function XbaseFieldName(AName: string): Ansistring;
+    function XbaseFieldName(AName: Ansistring): Ansistring;
   public
     property Lines[Index: integer]: TCustomPathLine read GetLine; default;
     function TestGetMaxTime(var Maxtime: double): boolean;
@@ -1911,21 +1911,21 @@ begin
   ShapeDataBase.UpdFieldNum(XbaseFieldName(StrENDTIME), LastPoint.FTime);
 end;
 
-function TCustomPathLines.XbaseFieldName(AName: string): Ansistring;
+function TCustomPathLines.XbaseFieldName(AName: Ansistring): Ansistring;
 begin
   result := AnsiString(Copy(AName, 1, 10));
 end;
 
 procedure TCustomPathLines.DefineShapeFileFields(Fields: TStringList);
 begin
-  Fields.Add(XbaseFieldName(StrSTARTLAY) + '=N');
-  Fields.Add(XbaseFieldName(StrSTARTROW) + '=N');
-  Fields.Add(XbaseFieldName(StrSTARTCOL) + '=N');
-  Fields.Add(XbaseFieldName(StrSTARTTIME) + '=N18,10');
-  Fields.Add(XbaseFieldName(StrENDLAY) + '=N');
-  Fields.Add(XbaseFieldName(StrENDROW) + '=N');
-  Fields.Add(XbaseFieldName(StrENDCOL) + '=N');
-  Fields.Add(XbaseFieldName(StrENDTIME) + '=N18,10');
+  Fields.Add(string(XbaseFieldName(StrSTARTLAY)) + '=N');
+  Fields.Add(string(XbaseFieldName(StrSTARTROW)) + '=N');
+  Fields.Add(string(XbaseFieldName(StrSTARTCOL)) + '=N');
+  Fields.Add(string(XbaseFieldName(StrSTARTTIME)) + '=N18,10');
+  Fields.Add(string(XbaseFieldName(StrENDLAY)) + '=N');
+  Fields.Add(string(XbaseFieldName(StrENDROW)) + '=N');
+  Fields.Add(string(XbaseFieldName(StrENDCOL)) + '=N');
+  Fields.Add(string(XbaseFieldName(StrENDTIME)) + '=N18,10');
 end;
 
 function TCustomPathLines.GetLine(Index: integer): TCustomPathLine;
@@ -3344,7 +3344,7 @@ var
   StartCellFace: Integer;
   StartLocalX: double;
   StartLocalY: double;
-  FinallGrid: Integer;
+  FinalGrid: Integer;
   FinalCellFace: Integer;
   EndLocalX: double;
   EndLocalY: double;
@@ -3481,7 +3481,7 @@ begin
       StartXPrime := FortranStrtoFloat(Splitter[14]);
       StartYPrime := FortranStrtoFloat(Splitter[15]);
       StartZ := FortranStrtoFloat(Splitter[16]);
-      FinallGrid := StrToInt(Splitter[17]);
+      FinalGrid := StrToInt(Splitter[17]);
       FinalLayer := StrToInt(Splitter[18]);
       FinalRow := StrToInt(Splitter[19]);
       FinalColumn := StrToInt(Splitter[20]);
@@ -4746,8 +4746,8 @@ var
   TrackingTime: single;
   Column: integer;
   TS: integer;
-  NRow: integer;
-  NCol: integer;
+//  NRow: integer;
+//  NCol: integer;
   Layer: integer;
   Row: integer;
   TimeSeries: TTimeSeriesV6;
@@ -4819,8 +4819,8 @@ begin
   FSeries.Clear;
   FSeriesV6.Clear;
 
-  NRow := Grid.RowCount;
-  NCol := Grid.ColumnCount;
+//  NRow := Grid.RowCount;
+//  NCol := Grid.ColumnCount;
 
   Splitter:= TStringList.Create;
   AssignFile(FTextFile, FFileName);
@@ -5658,7 +5658,7 @@ end;
 procedure TPathLinesV6.DefineShapeFileFields(Fields: TStringList);
 begin
   inherited;
-  Fields.Add(XbaseFieldName(StrParticleGroup) + '=N');
+  Fields.Add(string(XbaseFieldName(StrParticleGroup) + '=N'));
 end;
 
 { TPathLineReader }

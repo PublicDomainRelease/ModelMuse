@@ -184,6 +184,7 @@ var
   SortedObjects: TStringList;
   SpecialGroupList: TClassificationList;
   GroupIndex: integer;
+  ItemIndex: Integer;
 begin
   FullClassificationList := TStringList.Create;
   LocalClassificationList := TStringList.Create;
@@ -220,16 +221,18 @@ begin
             end;
           end;
           LayerGroupPositions.Sort;
+          ItemIndex := 0;
           for Index := 0 to SpecialGroupList.Count - 1 do
           begin
             ClassificationObject := SpecialGroupList[Index];
             if ClassificationObject <> nil then
             begin
-              Position := LayerGroupPositions[Index];
+              Position := LayerGroupPositions[ItemIndex];
               SortedObjects[Position] :=
                 ClassificationObject.FullClassification + '|'
                 + ClassificationObject.ClassificationName;
               SortedObjects.Objects[Position] := ClassificationObject;
+              Inc(ItemIndex);
             end;
           end;
         finally

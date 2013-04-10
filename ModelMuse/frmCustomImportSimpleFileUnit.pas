@@ -12,7 +12,7 @@ uses
   Dialogs, StdCtrls, frmCustomGoPhastUnit, Buttons, ExtCtrls,
   Grids, IntListUnit, ScreenObjectUnit, DXF_Structs, DXF_read, DXF_Utils,
   frmImportShapefileUnit, FastGEO, AbstractGridUnit, GoPhastTypes,
-  ValueArrayStorageUnit, PhastModelUnit;
+  ValueArrayStorageUnit, PhastModelUnit, SutraMeshUnit, QuadTreeClass;
 
 type
   TImportMethod = (imLowest, imHighest, imAverage, imClosest);
@@ -74,6 +74,10 @@ type
     // @name changes the captions of @link(cbEnclosedCells),
     // @link(cbIntersectedCells), and @link(cbInterpolation).
     procedure rgEvaluatedAtClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
+  private
+//    FQuadTree: TRbwQuadTree;
+//    FOutline: TSubPolygon;
   protected
     Values: array of array of double;
     Counts: array of array of integer;
@@ -84,8 +88,9 @@ type
     MinY: Real;
     MaxY: Real;
     LocalModel: TCustomModel;
-    procedure GetGridMinMax;
-    procedure HandleAPoint(APoint3D: TPoint3D; ImportMethod: TImportMethod; EvalAt: TEvaluatedAt; Grid: TCustomModelGrid);
+    procedure GetDiscretizationMinMax;
+    procedure HandleAPoint(APoint3D: TPoint3D; ImportMethod: TImportMethod;
+      EvalAt: TEvaluatedAt; Grid: TCustomModelGrid; Mesh: TSutraMesh3D);
     // @name updates the contents of rgEvaluatedAt to the appropriate
     // values depending on what model (PHAST or MODFLOW) is selected.
     procedure UpdateEvalAt;
@@ -141,6 +146,12 @@ begin
   cbEnclosedCellsClick(nil);
   SetCheckBoxCaptions;
   GetInterpolators;
+end;
+
+procedure TfrmCustomImportSimpleFile.FormDestroy(Sender: TObject);
+begin
+  inherited;
+//  FOutline.Free;
 end;
 
 procedure TfrmCustomImportSimpleFile.MakeNewDataSet(NewDataSets: TList;
@@ -229,12 +240,84 @@ begin
 end;
 
 procedure TfrmCustomImportSimpleFile.HandleAPoint(APoint3D: TPoint3D;
-  ImportMethod: TImportMethod; EvalAt: TEvaluatedAt; Grid: TCustomModelGrid);
+  ImportMethod: TImportMethod; EvalAt: TEvaluatedAt; Grid: TCustomModelGrid;
+  Mesh: TSutraMesh3D);
+//const
+  // These two constants were determined empirically.
+  // In a test case, the desired element was always found
+  // among those retrieved from the mesh using these constants.
+  // In a test case, the desired node was either always found
+  // among those retrieved from the mesh using these constants or
+  // was the first node among the additional nodes tested.
+//  PointCountForElements = 6;
+//  PointCountForNodes = 6;
 var
   ADistance: TFloat;
   ARow: Integer;
   ACol: Integer;
   APoint2D: TPoint2D;
+//  ElementIndex: Integer;
+//  AnElement: TSutraElement2D;
+//  Location: TPoint2D;
+//  ANode: TSutraNode2D;
+//  NodeIndex: Integer;
+//  MeshOutline: TRealPointArray;
+//  NodeList: TSutraNode2D_List;
+//  ElementList: TSutraElement2D_List;
+//  NodeElIndex: Integer;
+//  InnerNode: TSutraNode2D;
+//  InnerElement: TSutraElement2D;
+//  Points: TQuadPointArray;
+//  Data: TPointerArray;
+//  DataIndex: Integer;
+//  NextElement: Integer;
+//  NextNode: Integer;
+  MeshLocation: T2DTopCell;
+//  procedure AddNewElements;
+//  var
+//    NodeIndex: integer;
+//    NodeElIndex: integer;
+//  begin
+//    for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+//    begin
+//      ANode := AnElement.Nodes[NodeIndex].Node;
+//      if NodeList.IndexOf(ANode) < 0 then
+//      begin
+//        NodeList.Add(ANode);
+//        for NodeElIndex := 0 to ANode.ElementCount - 1 do
+//        begin
+//          InnerElement := ANode.Elements[NodeElIndex];
+//          if ElementList.IndexOf(InnerElement) < 0 then
+//          begin
+//            ElementList.Add(InnerElement);
+//          end;
+//        end;
+//      end;
+//    end;
+//  end;
+//  procedure AddNewNodes;
+//  var
+//    ElementIndex: integer;
+//    NodeElIndex: integer;
+//  begin
+//    for ElementIndex := 0 to ANode.ElementCount - 1 do
+//    begin
+//      AnElement := ANode.Elements[ElementIndex];
+//      if ElementList.IndexOf(AnElement) < 0 then
+//      begin
+//        ElementList.Add(AnElement);
+//        for NodeElIndex := 0 to AnElement.Nodes.Count - 1 do
+//        begin
+//          InnerNode := AnElement.Nodes[NodeElIndex].Node;
+//          if NodeList.IndexOf(InnerNode) < 0 then
+//          begin
+//            NodeList.Add(InnerNode);
+//          end;
+//        end;
+//      end;
+//    end;
+//
+//  end;
 begin
   if (APoint3D.x >= MinX)
     and (APoint3D.x <= MaxX)
@@ -243,23 +326,199 @@ begin
   begin
     ACol := -1;
     ARow := -1;
-    case EvalAt of
-      eaBlocks:
-        begin
-          ACol := Grid.GetContainingColumn(APoint3D.x);
-          ARow := Grid.GetContainingRow(APoint3D.y);
-        end;
-      eaNodes:
-        begin
-          ACol := Grid.NearestColumnPosition(APoint3D.x);
-          ARow := Grid.NearestRowPosition(APoint3D.y);
-        end;
+    if Grid <> nil then
+    begin
+      case EvalAt of
+        eaBlocks:
+          begin
+            ACol := Grid.GetContainingColumn(APoint3D.x);
+            ARow := Grid.GetContainingRow(APoint3D.y);
+          end;
+        eaNodes:
+          begin
+            ACol := Grid.NearestColumnPosition(APoint3D.x);
+            ARow := Grid.NearestRowPosition(APoint3D.y);
+          end;
+      else
+        Assert(False);
+      end;
+    end
     else
-      Assert(False);
+    begin
+      Assert(Mesh <> nil);
+      ARow := 0;
+
+      APoint2D.x := APoint3D.x;
+      APoint2D.y := APoint3D.y;
+      MeshLocation := Mesh.Mesh2D.TopContainingCellOrElement(APoint2D, EvalAt);
+      ACol := MeshLocation.Col;
+      if ACol < 0 then
+      begin
+        Exit;
+      end;
+
+{      if FOutline = nil then
+      begin
+        MeshOutline := Mesh.Mesh2D.MeshOutline;
+        SetLength(MeshOutline, Length(MeshOutline)+ 1);
+        MeshOutline[Length(MeshOutline)-1] := MeshOutline[0];
+        FOutline := TSubPolygon.Create(MeshOutline, Length(MeshOutline), 0, 0);
+      end;
+
+      if not FOutline.IsPointInside(APoint3D.x, APoint3D.y) then
+      begin
+        Exit;
+      end;
+
+      APoint2D.x := APoint3D.x;
+      APoint2D.y := APoint3D.y;
+      NodeList := TSutraNode2D_List.Create;
+      ElementList:= TSutraElement2D_List.Create;
+      try
+        case EvalAt of
+          eaBlocks:
+            begin
+              if FQuadTree = nil then
+              begin
+                FQuadTree := TRbwQuadTree.Create(self);
+                FQuadTree.XMax := MaxX;
+                FQuadTree.XMin := MinX;
+                FQuadTree.YMax := MaxY;
+                FQuadTree.YMin := MinY;
+                for ElementIndex := 0 to Mesh.Mesh2D.Elements.Count - 1 do
+                begin
+                  AnElement := Mesh.Mesh2D.Elements[ElementIndex];
+                  Location := AnElement.Center;
+                  FQuadTree.AddPoint(Location.x, Location.y, AnElement);
+                end;
+              end;
+
+              FQuadTree.FindNearestPoints(APoint3D.x, APoint3D.y,
+                PointCountForElements, Points);
+
+              for ElementIndex := 0 to Length(Points) - 1 do
+              begin
+                Data := Points[ElementIndex].Data;
+                for DataIndex := 0 to Length(Data) - 1 do
+                begin
+                  AnElement := Data[DataIndex];
+                  if AnElement.IsInside(APoint2D) then
+                  begin
+                    ACol := AnElement.ElementNumber;
+                    break;
+                  end;
+                  ElementList.Add(AnElement);
+                end;
+                if ACol >= 0 then
+                begin
+                  Break;
+                end;
+              end;
+
+              if ACol < 0 then
+              begin
+                NextElement := ElementList.Count;
+                for ElementIndex := 0 to NextElement - 1 do
+                begin
+                  AnElement := ElementList[ElementIndex];
+                  AddNewElements;
+                end;
+                ElementIndex := NextElement;
+                while ElementIndex < ElementList.Count do
+                begin
+                  AnElement := ElementList[ElementIndex];
+                  if AnElement.IsInside(APoint2D) then
+                  begin
+                    ACol := AnElement.ElementNumber;
+                    break;
+                  end
+                  else
+                  begin
+                    Inc(ElementIndex);
+                    AddNewElements;
+                  end;
+                end;
+              end;
+            end;
+          eaNodes:
+            begin
+              if FQuadTree = nil then
+              begin
+                FQuadTree := TRbwQuadTree.Create(self);
+                FQuadTree.XMax := MaxX;
+                FQuadTree.XMin := MinX;
+                FQuadTree.YMax := MaxY;
+                FQuadTree.YMin := MinY;
+                for NodeIndex := 0 to Mesh.Mesh2D.Nodes.Count - 1 do
+                begin
+                  ANode := Mesh.Mesh2D.Nodes[NodeIndex];
+                  Location := ANode.Location;
+                  FQuadTree.AddPoint(Location.x, Location.y, ANode);
+                end;
+              end;
+
+              FQuadTree.FindNearestPoints(APoint3D.x, APoint3D.y,
+                PointCountForNodes, Points);
+
+              for NodeIndex := 0 to Length(Points) - 1 do
+              begin
+                Data := Points[NodeIndex].Data;
+                for DataIndex := 0 to Length(Data) - 1 do
+                begin
+                  ANode := Data[DataIndex];
+                  if ANode.IsInside(APoint2D) then
+                  begin
+                    ACol := ANode.Number;
+                    break;
+                  end;
+                  NodeList.Add(ANode);
+                end;
+                if ACol >= 0 then
+                begin
+                  Break;
+                end;
+              end;
+
+              if ACol < 0 then
+              begin
+                NextNode := NodeList.Count;
+                for NodeIndex := 0 to NextNode - 1 do
+                begin
+                  ANode := NodeList[NodeIndex];
+                  AddNewNodes;
+                end;
+                NodeIndex := NextNode;
+                while NodeIndex < NodeList.Count do
+                begin
+                  ANode := NodeList[NodeIndex];
+                  if ANode.IsInside(APoint2D) then
+                  begin
+                    ACol := ANode.Number;
+                    break;
+                  end
+                  else
+                  begin
+                    Inc(NodeIndex);
+                    AddNewNodes;
+                  end;
+                end;
+              end;
+            end;
+          else Assert(False);
+        end;
+      finally
+        NodeList.Free;
+        ElementList.Free;
+      end;
+
+      if ACol < 0 then
+      begin
+        Exit;
+      end;    }
     end;
+
     if Counts[ARow, ACol] = 0 then
     begin
-      Counts[ARow, ACol] := 1;
       Values[ARow, ACol] := APoint3D.z;
       if ImportMethod = imClosest then
       begin
@@ -268,6 +527,7 @@ begin
         Distances[ARow, ACol] := Distance(APoint2D, CenterPoints[ARow, ACol]);
       end;
     end;
+    Counts[ARow, ACol] := Counts[ARow, ACol] + 1;
     case ImportMethod of
       imLowest:
         begin
@@ -285,8 +545,11 @@ begin
         end;
       imAverage:
         begin
-          Values[ARow, ACol] := Values[ARow, ACol] + APoint3D.z;
-          Counts[ARow, ACol] := Counts[ARow, ACol] + 1;
+          if Counts[ARow, ACol] <> 1 then
+          begin
+            // The first value has already been set if Counts[ARow, ACol] = 1.
+            Values[ARow, ACol] := Values[ARow, ACol] + APoint3D.z;
+          end;
         end;
       imClosest:
         begin
@@ -300,6 +563,8 @@ begin
           end;
         end;
     end;
+
+
   end;
 end;
 
@@ -310,64 +575,118 @@ var
   ColIndex: Integer;
   Grid: TCustomModelGrid;
   EvalAt: TEvaluatedAt;
+  Mesh: TSutraMesh3D;
+  ColumnCount: Integer;
+  RowCount: Integer;
 begin
   if LocalModel = nil then
   begin
     LocalModel := frmGoPhast.PhastModel;
   end;
   Grid := LocalModel.Grid;
+  Mesh := LocalModel.Mesh;
   EvalAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
-  case EvalAt of
-    eaBlocks:
-      begin
-        SetLength(Values, Grid.RowCount, Grid.ColumnCount);
-        SetLength(Counts, Grid.RowCount, Grid.ColumnCount);
-        for RowIndex := 0 to Grid.RowCount - 1 do
+  ColumnCount := -1;
+  RowCount := -1;
+  if Grid <> nil then
+  begin
+    case EvalAt of
+      eaBlocks:
         begin
-          for ColIndex := 0 to Grid.ColumnCount - 1 do
-          begin
-            Counts[RowIndex, ColIndex] := 0;
-          end;
+          ColumnCount := Grid.ColumnCount;
+          RowCount := Grid.RowCount;
         end;
-        SetLength(CenterPoints, Grid.RowCount, Grid.ColumnCount);
-        for RowIndex := 0 to Grid.RowCount - 1 do
+      eaNodes:
         begin
-          for ColIndex := 0 to Grid.ColumnCount - 1 do
-          begin
-            CenterPoints[RowIndex, ColIndex] := Grid.UnrotatedTwoDElementCenter(ColIndex, RowIndex);
-          end;
+          ColumnCount := Grid.ColumnCount+1;
+          RowCount := Grid.RowCount+1;
         end;
-        if ImportMethod = imClosest then
+    end;
+  end
+  else if Mesh <> nil then
+  begin
+    RowCount := 1;
+    case EvalAt of
+      eaBlocks:
         begin
-          SetLength(Distances, Grid.RowCount, Grid.ColumnCount);
+          ColumnCount := Mesh.Mesh2D.Elements.Count;
         end;
-      end;
-    eaNodes:
-      begin
-        SetLength(Values, Grid.RowCount + 1, Grid.ColumnCount + 1);
-        SetLength(Counts, Grid.RowCount + 1, Grid.ColumnCount + 1);
-        for RowIndex := 0 to Grid.RowCount do
+      eaNodes:
         begin
-          for ColIndex := 0 to Grid.ColumnCount do
-          begin
-            Counts[RowIndex, ColIndex] := 0;
-          end;
+          ColumnCount := Mesh.Mesh2D.Nodes.Count;
         end;
-        SetLength(CenterPoints, Grid.RowCount + 1, Grid.ColumnCount + 1);
-        for RowIndex := 0 to Grid.RowCount do
-        begin
-          for ColIndex := 0 to Grid.ColumnCount do
-          begin
-            CenterPoints[RowIndex, ColIndex] := Grid.UnrotatedTwoDElementCorner(ColIndex, RowIndex);
-          end;
-        end;
-        if ImportMethod = imClosest then
-        begin
-          SetLength(Distances, Grid.RowCount + 1, Grid.ColumnCount + 1);
-        end;
-      end;
+    end;
+  end
   else
+  begin
     Assert(False);
+  end;
+
+  SetLength(Values, RowCount, ColumnCount);
+  SetLength(Counts, RowCount, ColumnCount);
+  for RowIndex := 0 to RowCount - 1 do
+  begin
+    for ColIndex := 0 to ColumnCount - 1 do
+    begin
+      Counts[RowIndex, ColIndex] := 0;
+    end;
+  end;
+  if ImportMethod = imClosest then
+  begin
+    SetLength(Distances, RowCount, ColumnCount);
+  end;
+  SetLength(CenterPoints, RowCount, ColumnCount);
+  if Grid <> nil then
+  begin
+    case EvalAt of
+      eaBlocks:
+        begin
+          for RowIndex := 0 to RowCount - 1 do
+          begin
+            for ColIndex := 0 to ColumnCount - 1 do
+            begin
+              CenterPoints[RowIndex, ColIndex] :=
+                Grid.UnrotatedTwoDElementCenter(ColIndex, RowIndex);
+            end;
+          end;
+        end;
+      eaNodes:
+        begin
+          for RowIndex := 0 to RowCount do
+          begin
+            for ColIndex := 0 to ColumnCount do
+            begin
+              CenterPoints[RowIndex, ColIndex] :=
+                Grid.UnrotatedTwoDElementCorner(ColIndex, RowIndex);
+            end;
+          end;
+        end;
+      else Assert(False);
+    end;
+  end
+  else
+  begin
+    Assert(Mesh <> nil);
+    RowIndex := 0;
+    case EvalAt of
+      eaBlocks:
+        begin
+            for ColIndex := 0 to ColumnCount - 1 do
+            begin
+              CenterPoints[RowIndex, ColIndex] :=
+                Mesh.Mesh2D.Elements[ColIndex].Center;
+            end;
+        end;
+      eaNodes:
+        begin
+            for ColIndex := 0 to ColumnCount-1 do
+            begin
+              CenterPoints[RowIndex, ColIndex] :=
+                Mesh.Mesh2D.Nodes[ColIndex].Location;
+            end;
+        end;
+      else Assert(False);
+    end;
   end;
 end;
 
@@ -417,7 +736,8 @@ begin
   rgEvaluatedAt.Items[Ord(eaNodes)] :=
     EvalAtToString(eaNodes, frmGoPhast.PhastModel.ModelSelection, True, True);
   rgEvaluatedAt.Enabled :=
-    frmGoPhast.PhastModel.ModelSelection = msPhast;
+    frmGoPhast.PhastModel.ModelSelection in [msPhast
+    {$IFDEF SUTRA}, msSutra22 {$ENDIF}];
 end;
 
 procedure TfrmCustomImportSimpleFile.rgEvaluatedAtClick(Sender: TObject);
@@ -451,27 +771,47 @@ var
 begin
   if ImportMethod = imAverage then
   begin
-    for RowIndex := 0 to Length(Values) - 1 do
+    if Length(Values) > 0 then
     begin
-      if Assigned(ImportProgress) then
-      begin
-        ImportProgress(self, RowIndex / Length(Values));
-      end;
       for ColIndex := 0 to Length(Values[0]) - 1 do
       begin
-        if Counts[RowIndex, ColIndex] > 1 then
+        if Assigned(ImportProgress) then
         begin
-          Values[RowIndex, ColIndex] := Values[RowIndex, ColIndex]
-            / Counts[RowIndex, ColIndex];
+          ImportProgress(self, ColIndex / Length(Values[0]));
+        end;
+        for RowIndex := 0 to Length(Values) - 1 do
+        begin
+          if Counts[RowIndex, ColIndex] > 1 then
+          begin
+            Values[RowIndex, ColIndex] := Values[RowIndex, ColIndex]
+              / Counts[RowIndex, ColIndex];
+          end;
         end;
       end;
     end;
+//    for RowIndex := 0 to Length(Values) - 1 do
+//    begin
+//      if Assigned(ImportProgress) then
+//      begin
+//        ImportProgress(self, RowIndex / Length(Values));
+//      end;
+//      for ColIndex := 0 to Length(Values[0]) - 1 do
+//      begin
+//        if Counts[RowIndex, ColIndex] > 1 then
+//        begin
+//          Values[RowIndex, ColIndex] := Values[RowIndex, ColIndex]
+//            / Counts[RowIndex, ColIndex];
+//        end;
+//      end;
+//    end;
   end;
 end;
 
-procedure TfrmCustomImportSimpleFile.GetGridMinMax;
+procedure TfrmCustomImportSimpleFile.GetDiscretizationMinMax;
 var
   Grid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
+  MeshLimits: TGridLimit;
   procedure EnsureMinMax(var MinValue, MaxValue: Real);
   var
     Temp: Real;
@@ -489,12 +829,26 @@ begin
     LocalModel := frmGoPhast.PhastModel;
   end;
   Grid := LocalModel.Grid;
-  MinX := Grid.ColumnPosition[0];
-  MaxX := Grid.ColumnPosition[Grid.ColumnCount];
-  EnsureMinMax(MinX, MaxX);
-  MinY := Grid.RowPosition[0];
-  MaxY := Grid.RowPosition[Grid.RowCount];
-  EnsureMinMax(MinY, MaxY);
+  Mesh := LocalModel.Mesh;
+
+  if Grid <> nil then
+  begin
+    MinX := Grid.ColumnPosition[0];
+    MaxX := Grid.ColumnPosition[Grid.ColumnCount];
+    EnsureMinMax(MinX, MaxX);
+    MinY := Grid.RowPosition[0];
+    MaxY := Grid.RowPosition[Grid.RowCount];
+    EnsureMinMax(MinY, MaxY);
+  end
+  else
+  begin
+    Assert(Mesh <> nil);
+    MeshLimits := Mesh.MeshLimits(vdTop);
+    MinX := MeshLimits.MinX;
+    MaxX := MeshLimits.MaxX;
+    MinY := MeshLimits.MinY;
+    MaxY := MeshLimits.MaxY;
+  end;
 
 end;
 
@@ -519,8 +873,11 @@ begin
       if Counts[RowIndex, ColIndex] > 0 then
       begin
         GridPoint2D := CenterPoints[RowIndex, ColIndex];
-        GridPoint2D :=
-          Grid.RotateFromGridCoordinatesToRealWorldCoordinates(GridPoint2D);
+        if Grid <> nil then
+        begin
+          GridPoint2D :=
+            Grid.RotateFromGridCoordinatesToRealWorldCoordinates(GridPoint2D);
+        end;
         if ComparePoints then
         begin
           if not PointsEqual(AScreenObject.Points[ValueIndex], GridPoint2D) then

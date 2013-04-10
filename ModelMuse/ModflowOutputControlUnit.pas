@@ -93,6 +93,7 @@ type
     FComments: TStrings;
     FBudgetFrequencyChoice: TFrequencyChoice;
     FBudgetFrequency: integer;
+    FPrintObservations: boolean;
     procedure SetPrintInputArrays(const Value: boolean);
     procedure SetSaveCellFlows(const Value: TCellSaveFormat);
     procedure SetPrintInputCellLists(const Value: boolean);
@@ -102,6 +103,7 @@ type
     procedure SetComments(const Value: TStrings);
     procedure SetBudgetFrequency(const Value: integer);
     procedure SetBudgetFrequencyChoice(const Value: TFrequencyChoice);
+    procedure SetPrintObservations(const Value: boolean);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
@@ -112,6 +114,8 @@ type
       write SetPrintInputArrays default True;
     property PrintInputCellLists: boolean read FPrintInputCellLists
       write SetPrintInputCellLists default True;
+    property PrintObservations: boolean read FPrintObservations
+      write SetPrintObservations default True;
     property SaveCellFlows: TCellSaveFormat read FSaveCellFlows
       write SetSaveCellFlows default csfBinary;
     property Compact: boolean read FCompact write SetCompact;
@@ -188,6 +192,7 @@ begin
     SourceOutputControl := TModflowOutputControl(Source);
     PrintInputArrays := SourceOutputControl.PrintInputArrays;
     SaveCellFlows := SourceOutputControl.SaveCellFlows;
+    PrintObservations := SourceOutputControl.PrintObservations;
     Compact := SourceOutputControl.Compact;
     HeadOC := SourceOutputControl.HeadOC;
     DrawdownOC := SourceOutputControl.DrawdownOC;
@@ -224,6 +229,7 @@ begin
   FBudgetFrequencyChoice := fcTimeSteps;
   FPrintInputArrays := True;
   FPrintInputCellLists := True;
+  FPrintObservations := True;
   FSaveCellFlows := csfBinary;
   FCompact := True;
   FComments.Clear;
@@ -310,6 +316,15 @@ begin
   if FPrintInputCellLists <> Value then
   begin
     FPrintInputCellLists := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TModflowOutputControl.SetPrintObservations(const Value: boolean);
+begin
+  if FPrintObservations <> Value then
+  begin
+    FPrintObservations := Value;
     InvalidateModel;
   end;
 end;

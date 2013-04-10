@@ -33,6 +33,8 @@ type
     btnOK: TBitBtn;
     btnCancel: TBitBtn;
     dlgFont: TFontDialog;
+    cbNodeCellOutline: TCheckBox;
+    cbShowElements: TCheckBox;
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject); override;
@@ -116,6 +118,8 @@ begin
   Mesh := frmGoPhast.PhastModel.SutraMesh;
   cbShowNodeNumbers.Checked := Mesh.DrawNodeNumbers;
   cbShowElementNumbers.Checked := Mesh.DrawElementNumbers;
+  cbNodeCellOutline.Checked := Mesh.NodeDrawingChoice = dcAll;
+  cbShowElements.Checked := Mesh.ElementDrawingChoice = dcAll;
   FSutraSettings.Assign(Mesh);
   {$ENDIF}
 end;
@@ -129,6 +133,22 @@ begin
   {$IFDEF SUTRA}
   FSutraSettings.ShowNodeNumbers := cbShowNodeNumbers.Checked;
   FSutraSettings.ShowElementNumbers := cbShowElementNumbers.Checked;
+  if cbNodeCellOutline.Checked then
+  begin
+    FSutraSettings.NodeDrawingChoice := dcAll;
+  end
+  else
+  begin
+    FSutraSettings.NodeDrawingChoice := dcEdge;
+  end;
+  if cbShowElements.Checked then
+  begin
+    FSutraSettings.ElementDrawingChoice := dcAll;
+  end
+  else
+  begin
+    FSutraSettings.ElementDrawingChoice := dcEdge;
+  end;
   Undo := TUndoSutraMeshDisplay.Create(FSutraSettings);
   frmGoPhast.UndoStack.Submit(Undo);
   {$ENDIF}

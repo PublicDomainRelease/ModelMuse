@@ -36,6 +36,7 @@ type
     function IsSame(AnotherLayerCollection: TLayerCollection): boolean;
     procedure Assign(Source: TPersistent); override;
     constructor Create(LayerGroup: TCustomLayerGroup);
+    destructor Destroy; override;
   end;
 
   TCustomLayerStructure = class;
@@ -187,6 +188,7 @@ type
   protected
     function EvalAt: TEvaluatedAt; override;
     function ShouldCreateDataArray: Boolean; override;
+    procedure InvalidateModel; override;
   end;
 
   TCustomLayerStructure = class(TLayerOwnerCollection)
@@ -1304,6 +1306,13 @@ begin
   inherited Create(TLayerFraction);
   Assert(LayerGroup <> nil);
   FLayerGroup := LayerGroup;
+  InvalidateModel;
+end;
+
+destructor TLayerCollection.Destroy;
+begin
+  InvalidateModel;
+  inherited;
 end;
 
 //function TLayerCollection.GetItem(Index: Integer): TLayerFraction;
@@ -1425,11 +1434,13 @@ begin
   inherited;
   FLayerCollection:= TLayerCollection.Create(self);
   FGrowthRate := 1.2;
+  InvalidateModel;
 end;
 
 destructor TCustomLayerGroup.Destroy;
 begin
   FLayerCollection.Free;
+  InvalidateModel;
   inherited;
 end;
 
@@ -1747,6 +1758,22 @@ end;
 function TSutraLayerGroup.EvalAt: TEvaluatedAt;
 begin
   result := eaNodes;
+end;
+
+procedure TSutraLayerGroup.InvalidateModel;
+var
+  Mesh: TSutraMesh3D;
+begin
+  inherited;
+  if Model <> nil then
+  begin
+    Mesh := (Model as TCustomModel).Mesh;
+    if Mesh <> nil then
+    begin
+      Mesh.InvalidatePolygons;
+      Mesh.ElevationsNeedUpdating := True
+    end;
+  end;
 end;
 
 function TSutraLayerGroup.ShouldCreateDataArray: Boolean;

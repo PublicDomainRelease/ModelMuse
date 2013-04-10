@@ -240,7 +240,7 @@ type
     acPositionBackward: TAction;
     miUndoPosition: TMenuItem;
     RedoPosition: TMenuItem;
-    GriddedData1: TMenuItem;
+    miGriddedData: TMenuItem;
     miExportModpath: TMenuItem;
     acExportModpath: TAction;
     sdModpathInput: TSaveDialog;
@@ -366,6 +366,11 @@ type
     tbRotateCrossSection: TToolButton;
     acImportSutraModelResults: TAction;
     mniImportSutraModelResults: TMenuItem;
+    miMesh: TMenuItem;
+    miSpecifyCrossSection: TMenuItem;
+    miMeshGenerationControls: TMenuItem;
+    miOptimizeBandwidth: TMenuItem;
+    tbMoveNodes: TToolButton;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -411,7 +416,7 @@ type
     procedure sdPhastInputClose(Sender: TObject);
     procedure acPositionForwardExecute(Sender: TObject);
     procedure acPositionBackwardExecute(Sender: TObject);
-    procedure GriddedData1Click(Sender: TObject);
+    procedure miGriddedDataClick(Sender: TObject);
     procedure sdModpathInputShow(Sender: TObject);
     procedure sdModpathInputClose(Sender: TObject);
     procedure acExportModpathExecute(Sender: TObject);
@@ -491,6 +496,10 @@ type
     procedure miCustomizeSutraMeshClick(Sender: TObject);
     procedure tbRotateCrossSectionClick(Sender: TObject);
     procedure acImportSutraModelResultsExecute(Sender: TObject);
+    procedure miSpecifyCrossSectionClick(Sender: TObject);
+    procedure miMeshGenerationControlsClick(Sender: TObject);
+    procedure miOptimizeBandwidthClick(Sender: TObject);
+    procedure tbMoveNodesClick(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -1564,6 +1573,7 @@ type
     procedure OnAppIdle(Sender: TObject; var Done: Boolean);
   public
     FCubeControl: TRbwModelCube;
+    procedure EnableMeshRenumbering;
     procedure InvalidateImage32AllViews;
     procedure EnableHufMenuItems;
     procedure EnableMt3dmsMenuItems;
@@ -1769,7 +1779,8 @@ uses
   SutraFileWriterUnit, SutraInitialConditionsWriterUnit,
   SutraObservationWriterUnit, SutraInputWriterUnit, SutraTimeScheduleWriterUnit,
   SutraOptionsUnit, frmSutraProgramLocationsUnit, frmImportTprogsUnit,
-  Generics.Collections, frmCustomizeMeshUnit, frmImportSutraModelResultsUnit;
+  Generics.Collections, frmCustomizeMeshUnit, frmImportSutraModelResultsUnit,
+  frmSutraAngleUnit, frmMeshGenerationControlVariablesUnit, MeshRenumbering;
 
 const
   StrDisplayOption = 'DisplayOption';
@@ -1822,8 +1833,8 @@ resourcestring
   'ed. Do you still want to export the MODPATH input files?';
   StrMt3dmsDoesNotExi = 'MT3DMS does not exist at the location you specifi' +
   'ed. Do you still want to export the MT3DMS input files?';
-  StrYouMustContourDat = 'You must contour data on the grid to export contou' +
-  'rs to a Shapefile.';
+  StrYouMustContourDat = 'You must contour data on the grid or mesh to ' +
+  'export contours to a Shapefile.';
   StrSorryYouCantDel = 'Sorry; You can''t delete that node.';
   StrDoYouWantToCreat = 'Do you want to create a model archive too?';
   StrSDoesNotContain = '%s does not contain any data.';
@@ -1976,7 +1987,8 @@ begin
           {$IFDEF Sutra}
           if PhastModel.ModelSelection = msSutra22 then
           begin
-            RotatedCenterPoint := RealCenterPoint;
+            RotatedCenterPoint := PhastModel.Mesh.
+              RotateFromRealWorldCoordinatesToMeshCoordinates(RealCenterPoint);
           end
           else
           {$ENDIF}
@@ -2014,7 +2026,9 @@ begin
           {$IFDEF Sutra}
           if PhastModel.ModelSelection = msSutra22 then
           begin
-            RotatedCenterPoint := RealCenterPoint;
+//            RotatedCenterPoint := RealCenterPoint;
+            RotatedCenterPoint := PhastModel.Mesh.
+              RotateFromRealWorldCoordinatesToMeshCoordinates(RealCenterPoint);
           end
           else
           {$ENDIF}
@@ -2031,7 +2045,9 @@ begin
           {$IFDEF Sutra}
           if PhastModel.ModelSelection = msSutra22 then
           begin
-            RealCenterPoint := RotatedCenterPoint;
+//            RealCenterPoint := RotatedCenterPoint;
+            RealCenterPoint := PhastModel.Mesh.
+              RotateFromMeshCoordinatesToRealWorldCoordinates(RotatedCenterPoint);
           end
           else
           {$ENDIF}
@@ -2302,6 +2318,12 @@ begin
     splitHoriz.Top :=
       pnlBottom.Top - splitHoriz.Height;
   end;
+end;
+
+procedure TfrmGoPhast.miSpecifyCrossSectionClick(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmSutraAngle);
 end;
 
 procedure TfrmGoPhast.miSplitObjectAtSelectedVerticesClick(Sender: TObject);
@@ -3339,6 +3361,14 @@ begin
     else Assert(False);
   end;
 
+  {$IFDEF SUTRA}
+  miGrid.Visible := PhastModel.ModelSelection in [msPhast, msModflow,
+    msModflowLGR, msModflowNWT];
+  miMesh.Visible := PhastModel.ModelSelection = msSutra22;
+  {$ELSE}
+  miMesh.Visible := False;
+  {$ENDIF}
+
   // update the cursors.
   dcMoveColCursor.RedrawCursor;
   dcMoveRowCursor.RedrawCursor;
@@ -3352,6 +3382,8 @@ begin
   {$IFDEF SUTRA}
   acImportSutraModelResults.Enabled :=
     PhastModel.ModelSelection = msSutra22;
+  miGriddedData.Enabled :=
+    PhastModel.ModelSelection <> msSutra22;
   {$ENDIF}
 
   acExportModpath.Enabled :=
@@ -3992,6 +4024,8 @@ begin
   AList.Add(tbMeasure);
   AList.Add(tbCrossSection);
   AList.Add(tbRotateCrossSection);
+  AList.Add(tbMoveNodes);
+
 end;
 
 procedure TfrmGoPhast.SetButtonsUp(const CurrentButton: TObject);
@@ -4647,6 +4681,19 @@ begin
   miManageHeadObservations.Enabled :=
     (PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
     and PhastModel.HobIsSelected
+end;
+
+procedure TfrmGoPhast.EnableMeshRenumbering;
+begin
+
+{$IFDEF SUTRA}
+  if PhastModel = nil then
+  begin
+    Exit;
+  end;
+  miOptimizeBandWidth.Enabled := (PhastModel.Mesh <> nil)
+    and (PhastModel.Mesh.MeshType = mt3D);
+{$ENDIF}
 end;
 
 procedure TfrmGoPhast.EnableMt3dmsMenuItems;
@@ -5680,6 +5727,34 @@ begin
   SelectDefaultButton;
 end;
 
+procedure TfrmGoPhast.tbMoveNodesClick(Sender: TObject);
+begin
+{$IFDEF SUTRA}
+  // Toggle the Checked state of the Sender or it's associated action.
+  SetActionChecked(Sender);
+
+  if not (Sender is TToolButton) then
+  begin
+    tbMoveNodes.OnMouseDown(tbMoveNodes, mbLeft, [ssLeft], 0, 0);
+  end;
+
+  if tbMoveNodes.Down then
+  begin
+    // Make sure all buttons except the current one are up.
+    SetButtonsUp(tbMoveNodes);
+    // Set the cursors.
+    SetZB_Cursors(crSelectPoint);
+    // don't draw a rectangle around the selected screen objects.
+    CurrentTool := MoveSutraNodesTool;
+  end
+  else
+  begin
+    CurrentTool := nil;
+  end;
+  SelectDefaultButton;
+{$ENDIF}
+end;
+
 procedure TfrmGoPhast.tbPolygonClick(Sender: TObject);
 begin
   // Toggle the Checked state of the Sender or it's associated action.
@@ -5801,9 +5876,19 @@ end;
 procedure TfrmGoPhast.miContourstoShapefileClick(Sender: TObject);
 var
   ContourExporter: TContourExtractor;
+  ContourDataSet: TDataArray;
 begin
   inherited;
-  if Grid.TopContourDataSet = nil then
+  if Grid <> nil then
+  begin
+    ContourDataSet := Grid.TopContourDataSet;
+  end
+  else
+  begin
+    Assert(PhastModel.Mesh <> nil);
+    ContourDataSet := PhastModel.Mesh.TopContourDataSet;
+  end;
+  if ContourDataSet = nil then
   begin
     Beep;
     MessageDlg(StrYouMustContourDat, mtWarning, [mbOK], 0);
@@ -5811,13 +5896,13 @@ begin
   else
   begin
     sdShapefile.FileName := IncludeTrailingPathDelimiter(GetCurrentDir)
-      + Grid.TopContourDataSet.Name + '.shp';
+      + ContourDataSet.Name + '.shp';
     if sdShapefile.Execute then
     begin
       ContourExporter := TContourExtractor.Create(PhastModel);
       try
-        ContourExporter.CreateShapes(PhastModel.ContourLegend.Values, Grid.TopContourDataSet,
-          sdShapefile.FileName);
+        ContourExporter.CreateShapes(PhastModel.ContourLegend.Values,
+          ContourDataSet, sdShapefile.FileName);
       finally
         ContourExporter.Free;
       end;
@@ -6787,6 +6872,10 @@ var
   InputWriter: TSutraInputWriter;
   SpecifiedTempConcNodes: TIntegerList;
 begin
+  if frmProgressMM = nil then
+  begin
+    frmProgressMM := TfrmProgressMM.Create(nil);
+  end;
   frmGoPhast.PhastModel.ModelInputFiles.Clear;
   //    frmGoPhast.PhastModel.FilesToArchive.Clear;
   frmProgressMM.ShouldContinue := True;
@@ -6889,6 +6978,12 @@ begin
     end;
   finally
     frmProgressMM.ShouldContinue := False;
+    frmProgressMM.btnAbort.Visible := False;
+    frmProgressMM.Hide;
+    if frmProgressMM.Owner = nil then
+    begin
+      FreeAndNil(frmProgressMM);
+    end;
   end;
 end;
 
@@ -7164,6 +7259,12 @@ begin
   begin
     Undo.Free;
   end;
+end;
+
+procedure TfrmGoPhast.miMeshGenerationControlsClick(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmMeshGenerationControlVariables);
 end;
 
 procedure TfrmGoPhast.miLinkSFRStreamsClick(Sender: TObject);
@@ -7904,6 +8005,9 @@ begin
           {$IFDEF SUTRA}
           PhastModel.SutraLayerStructure.Loaded;
           PhastModel.UpdateSutraTimeListNames;
+          PhastModel.SutraMesh.Loading := True;
+          PhastModel.SutraMesh.CheckUpdateElevations;
+          PhastModel.SutraMesh.Loading := False;
           {$ENDIF}
           PhastModel.HeadFluxObservations.Loaded;
           PhastModel.DrainObservations.Loaded;
@@ -7941,7 +8045,7 @@ begin
 
           DataArrayManager := PhastModel.DataArrayManager;
           DataArray := DataArrayManager.GetDataSetByName(rsActive);
-          if not Assigned(DataArray.OnUpToDateSet) then
+          if Assigned(DataArray) and not Assigned(DataArray.OnUpToDateSet) then
           begin
             DataArray.OnUpToDateSet := PhastModel.OnActiveDataSetChanged;
           end;
@@ -8019,6 +8123,7 @@ begin
       EnableManageHeadObservations;
       EnableHufMenuItems;
       EnableMt3dmsMenuItems;
+      EnableMeshRenumbering;
       {$IFDEF SUTRA}
       if ModelSelection = msSutra22 then
       begin
@@ -8170,7 +8275,7 @@ begin
   end;
 end;
 
-procedure TfrmGoPhast.GriddedData1Click(Sender: TObject);
+procedure TfrmGoPhast.miGriddedDataClick(Sender: TObject);
 var
   LocalGrid: TCustomModelGrid;
 begin
@@ -9730,7 +9835,7 @@ begin
     // Make sure all buttons except the current one are up.
     SetButtonsUp(tbMeasure);
     // Set the cursors.
-    SetZB_Cursors(crArrow);
+    SetZB_Cursors(crMeasure);
   end;
   CurrentTool := RulerTool;
   SelectDefaultButton;
@@ -10060,6 +10165,11 @@ end;
 
 procedure TfrmGoPhast.BringFormsToFront(Sender: TObject);
 begin
+  if (csDestroying in ComponentState)
+    or (csDestroying in Application.ComponentState) then
+  begin
+    Exit;
+  end;
   if frmProgressMM <> nil then
   begin
     if frmProgressMM.Visible then
@@ -10137,7 +10247,7 @@ begin
     // Make sure all buttons except the current one are up.
     SetButtonsUp(tbCrossSection);
     // Set the cursors.
-    SetZB_Cursors(crArrow);
+    SetZB_Cursors(crMoveCrossSection);
     // Show a rectangle around the selected nodes.
 //    frameTopView.UpdateSelectRectangle;
 //    frameFrontView.UpdateSelectRectangle;
@@ -10257,6 +10367,18 @@ begin
   begin
     Item := Sender as TRecentFileMenuItem;
     OpenAFile(Item.FileName);
+  end;
+end;
+
+procedure TfrmGoPhast.miOptimizeBandwidthClick(Sender: TObject);
+var
+  Mesh: TSutraMesh3D;
+begin
+  inherited;
+  Mesh := PhastModel.SutraMesh;
+  if Mesh.MeshType = mt3D then
+  begin
+    RenumberMesh(Mesh);
   end;
 end;
 
@@ -10522,7 +10644,7 @@ begin
 end;
 
 initialization
-  Mf2005Date := EncodeDate(2012,4,24);
+  Mf2005Date := EncodeDate(2013,2,22);
   ModelMateDate := EncodeDate(2012,6,4);
   MfNwtDate := EncodeDate(2012,5,14);
   Modpath6Date := EncodeDate(2012,8,28);

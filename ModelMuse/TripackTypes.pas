@@ -9,7 +9,7 @@ interface
 
 uses FastGeo;
 
-const
+//const
   // Tripack values
 //  NROW=9;
 //  NMAX = 100;
@@ -19,14 +19,14 @@ const
 //  LWK=2*NMAX;
 
 // SRFPACK values
-  NROW=9;
-  NMAX = 5000;
-  NCMAX=5;
-  NTMX=2*NMAX;
-  N6=6*NMAX;
-  LWK=2*NMAX;
-  NJ=13;
-  NI=13;
+//  NROW=9;
+//  NMAX = 5000;
+//  NCMAX=5;
+//  NTMX=2*NMAX;
+//  N6=6*NMAX;
+//  LWK=2*NMAX;
+//  NJ=13;
+//  NI=13;
 
 type
   // These array types are all fixed length arrays in the original Fortran.

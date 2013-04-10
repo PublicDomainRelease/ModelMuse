@@ -16,6 +16,8 @@ type
     fdContourFont: TFontDialog;
     cbLabelContours: TCheckBox;
     btnContourFont: TButton;
+    comboAlgorithm: TComboBox;
+    lblAlgorithm: TLabel;
     procedure cbSpecifyContoursClick(Sender: TObject);
     procedure btnEditContoursClick(Sender: TObject);
     procedure virttreecomboDataSetsChange(Sender: TObject);
@@ -57,7 +59,8 @@ implementation
 uses
   RbwParser, GoPhastTypes, frmGoPhastUnit, ColorSchemes, frmFormulaErrorsUnit,
   frmErrorsAndWarningsUnit, frmProgressUnit, PhastModelUnit, LegendUnit,
-  frmSpecifyContoursUnit, ClassificationUnit, Math;
+  frmSpecifyContoursUnit, ClassificationUnit, Math, AbstractGridUnit,
+  SutraMeshUnit;
 
 resourcestring
   StrMinValueS = ' (Min value = %s)';
@@ -154,6 +157,9 @@ var
   DataArrayManager: TDataArrayManager;
   ChildIndex: Integer;
   ChildModel: TChildModel;
+  ContourDataSetAssigned: boolean;
+  Grid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
 begin
   Application.ProcessMessages;
   frmProgressMM.ShouldContinue := True;
@@ -169,7 +175,13 @@ begin
       DataArrayManager.AddDataSetToCache(DataArrayManager.DataSets[Index]);
     end;
     DataArrayManager.CacheDataArrays;
-    if (frmGoPhast.Grid.ThreeDContourDataSet <> nil)
+
+    ContourDataSetAssigned := ((frmGoPhast.Grid <> nil) and
+      (frmGoPhast.Grid.ThreeDContourDataSet <> nil))
+      or ((frmGoPhast.PhastModel.Mesh <> nil) and
+      (frmGoPhast.PhastModel.Mesh.ThreeDContourDataSet <> nil));
+
+    if ContourDataSetAssigned
       and (rgUpdateLimitChoice.ItemIndex = 1)
       and not cbSpecifyContours.Checked then
     begin
@@ -179,62 +191,108 @@ begin
   end;
   if (AnObject = nil) then
   begin
-    frmGoPhast.Grid.TopContourDataSet := nil;
-    frmGoPhast.Grid.FrontContourDataSet := nil;
-    frmGoPhast.Grid.SideContourDataSet := nil;
-    frmGoPhast.Grid.ThreeDContourDataSet := nil;
-    FLegend.ValueSource := nil;
-    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    Grid := frmGoPhast.Grid;
+
+    if Grid <> nil then
     begin
-      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
-      ChildModel.Grid.TopContourDataSet := nil;
-      ChildModel.Grid.FrontContourDataSet := nil;
-      ChildModel.Grid.SideContourDataSet := nil;
-      ChildModel.Grid.ThreeDContourDataSet := nil;
+      Grid.TopContourDataSet := nil;
+      Grid.FrontContourDataSet := nil;
+      Grid.SideContourDataSet := nil;
+      Grid.ThreeDContourDataSet := nil;
+      for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+        ChildModel.Grid.TopContourDataSet := nil;
+        ChildModel.Grid.FrontContourDataSet := nil;
+        ChildModel.Grid.SideContourDataSet := nil;
+        ChildModel.Grid.ThreeDContourDataSet := nil;
+      end;
+    end
+    else
+    begin
+      Mesh :=  frmGoPhast.PhastModel.Mesh;
+      Assert(Mesh <> nil);
+      Mesh.TopContourDataSet := nil;
+      Mesh.ThreeDContourDataSet := nil;
     end;
+    FLegend.ValueSource := nil;
   end
   else if (AnObject is TDataArray) then
   begin
     DataSet := TDataArray(AnObject);
+    DataSet.ContourAlg := TContourAlg(comboAlgorithm.ItemIndex);
     AssignLimits(DataSet.DataType, DataSet.ContourLimits);
     if FContours <> nil then
     begin
       FContours.SpecifyContours := cbSpecifyContours.Checked;
     end;
     DataSet.Contours := FContours;
-    if frmGoPhast.Grid.ThreeDContourDataSet <> DataSet then
+
+    Grid := frmGoPhast.Grid;
+    if Grid <> nil then
     begin
-      comboMethod.ItemIndex := 0;
-    end;
-    frmGoPhast.Grid.ThreeDContourDataSet := DataSet;
-    if FTopItems.IndexOfObject(AnObject) >= 0 then
-    begin
-      frmGoPhast.Grid.TopContourDataSet := DataSet;
+      if Grid.ThreeDContourDataSet <> DataSet then
+      begin
+        comboMethod.ItemIndex := 0;
+      end;
+      Grid.ThreeDContourDataSet := DataSet;
+      if FTopItems.IndexOfObject(AnObject) >= 0 then
+      begin
+        Grid.TopContourDataSet := DataSet;
+      end
+      else
+      begin
+        Grid.TopContourDataSet := nil;
+      end;
+      if FFrontItems.IndexOfObject(AnObject) >= 0 then
+      begin
+        Grid.FrontContourDataSet := DataSet;
+      end
+      else
+      begin
+        Grid.FrontContourDataSet := nil;
+      end;
+      if FSideItems.IndexOfObject(AnObject) >= 0 then
+      begin
+        Grid.SideContourDataSet := DataSet;
+      end
+      else
+      begin
+        Grid.SideContourDataSet := nil;
+      end;
     end
     else
     begin
-      frmGoPhast.Grid.TopContourDataSet := nil;
-    end;
-    if FFrontItems.IndexOfObject(AnObject) >= 0 then
-    begin
-      frmGoPhast.Grid.FrontContourDataSet := DataSet;
-    end
-    else
-    begin
-      frmGoPhast.Grid.FrontContourDataSet := nil;
-    end;
-    if FSideItems.IndexOfObject(AnObject) >= 0 then
-    begin
-      frmGoPhast.Grid.SideContourDataSet := DataSet;
-    end
-    else
-    begin
-      frmGoPhast.Grid.SideContourDataSet := nil;
+      Mesh :=  frmGoPhast.PhastModel.Mesh;
+      Assert(Mesh <> nil);
+      if Mesh.ThreeDContourDataSet <> DataSet then
+      begin
+        comboMethod.ItemIndex := 0;
+      end;
+      if DataSet.Orientation = dso3D then
+      begin
+        Mesh.ThreeDContourDataSet := DataSet;
+      end
+      else
+      begin
+        Mesh.ThreeDContourDataSet := nil;
+      end;
+      if FTopItems.IndexOfObject(AnObject) >= 0 then
+      begin
+        Mesh.TopContourDataSet := DataSet;
+      end
+      else
+      begin
+        Mesh.TopContourDataSet := nil;
+      end;
     end;
     FLegend.ValueSource := DataSet;
     FLegend.ColoringLimits := DataSet.ContourLimits;
   end;
-  frmGoPhast.PhastModel.Grid.GridChanged;
+  if frmGoPhast.Grid <> nil then
+  begin
+    frmGoPhast.Grid.GridChanged;
+  end;
   ContourColors := frmGoPhast.PhastModel.ContourColorParameters;
   ContourColors.ColorScheme := comboColorScheme.ItemIndex;
   ContourColors.ColorCycles := seCycles.AsInteger;
@@ -273,8 +331,13 @@ var
   VirtNoneNode: PVirtualNode;
 begin
   Handle;
+
   FGettingData := True;
   try
+    if frmGoPhast.PhastModel.ColorSchemes.Count > 0 then
+    begin
+      UpdateColorSchemes;
+    end;
     cbLabelContours.Checked := frmGoPhast.PhastModel.ShowContourLabels;
     FContourFont.Assign(frmGoPhast.PhastModel.ContourFont);
     virttreecomboDataSets.Tree.Clear;
@@ -310,7 +373,11 @@ function TframeContourData.GetSelectedArray: TDataArray;
 begin
   if frmGoPhast.Grid = nil then
   begin
-    result := nil;
+    result := frmGoPhast.PhastModel.Mesh.TopContourDataSet;
+    if result = nil then
+    begin
+      result := frmGoPhast.PhastModel.Mesh.ThreeDContourDataSet;
+    end;
   end
   else
   begin
@@ -371,6 +438,7 @@ begin
     frameCheck3DMin.Enabled := true;
     frameCheck3DMax.Enabled := true;
     DataSet := TDataArray(AnObject);
+    comboAlgorithm.ItemIndex := Ord(DataSet.ContourAlg);
     rdgValuesToIgnore.Enabled := DataSet.DataType <> rdtBoolean;
     seNumberOfValuesToIgnore.Enabled := DataSet.DataType <> rdtBoolean;
     if not seNumberOfValuesToIgnore.Enabled then

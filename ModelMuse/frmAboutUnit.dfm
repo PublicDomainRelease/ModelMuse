@@ -14,13 +14,13 @@ inherited frmAbout: TfrmAbout
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 742
+    Width = 734
     Height = 129
     Align = alTop
     ParentColor = True
     TabOrder = 0
     DesignSize = (
-      742
+      734
       129)
     object ImageLogo: TImage
       Left = 5
@@ -3054,7 +3054,7 @@ inherited frmAbout: TfrmAbout
     object lblFileVersion: TLabel
       Left = 320
       Top = 92
-      Width = 95
+      Width = 94
       Height = 18
       Caption = 'lblFileVersion'
       Visible = False
@@ -3093,19 +3093,19 @@ inherited frmAbout: TfrmAbout
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 489
-    Width = 742
+    Top = 485
+    Width = 734
     Height = 49
     Align = alBottom
     ParentColor = True
     TabOrder = 2
     DesignSize = (
-      742
+      734
       49)
     object lblVersionCaption: TLabel
       Left = 8
       Top = 8
-      Width = 54
+      Width = 53
       Height = 18
       Caption = 'Version'
     end
@@ -3122,10 +3122,8 @@ inherited frmAbout: TfrmAbout
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkClose
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
     end
     object btnGoToWeb: TBitBtn
@@ -3135,7 +3133,6 @@ inherited frmAbout: TfrmAbout
       Height = 33
       Anchors = [akTop, akRight]
       Caption = 'Go to web site'
-      DoubleBuffered = True
       Glyph.Data = {
         56070000424D560700000000000036040000280000001F000000190000000100
         0800000000002003000000000000000000000001000000000000000000000000
@@ -3196,7 +3193,6 @@ inherited frmAbout: TfrmAbout
         0000000000000000000000000000000000000100080808080800080808080808
         00FBFBFBFBFB00FEFEFEFE00F9FDF9FDF9F90000080808080800080808080808
         0800000000000000000000000000000000000000080808080800}
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnGoToWebClick
     end
@@ -3204,12 +3200,12 @@ inherited frmAbout: TfrmAbout
   object dgCredit: TRbwDataGrid4
     Left = 0
     Top = 129
-    Width = 742
-    Height = 360
+    Width = 734
+    Height = 356
     Align = alClient
     ColCount = 3
     FixedCols = 0
-    RowCount = 37
+    RowCount = 39
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
     TabOrder = 1
     ExtendedAutoDistributeText = False

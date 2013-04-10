@@ -2683,10 +2683,6 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
     object tabGage: TTabSheet
       Caption = 'Gage'
       ImageIndex = 8
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         553
         475)

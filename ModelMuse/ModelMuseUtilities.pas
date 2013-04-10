@@ -5,7 +5,7 @@ unit ModelMuseUtilities;
 interface
 
 uses
-  Windows, SysUtils, Graphics, OpenGL12x, GoPhastTypes;
+  Windows, SysUtils, Graphics, OpenGL12x, GoPhastTypes, ColorSchemes;
 
 resourcestring
   StrSorryItLooksLike = 'Sorry. It looks like some other program has locked ' +
@@ -46,7 +46,7 @@ function ExtractFileRoot(const FileName: string): string;
 10: @link(ModifiedSpectralScheme) (reversed); )
 }
 
-function FracAndSchemeToColor(const ColorSchemeIndex: integer;
+function FracAndSchemeToColor(ColorSchemeIndex: integer;
   Fraction, ColorAdjustmentFactor: real; const Cycles: integer): TColor;
 
 // @abstract(@name calculates the normal
@@ -83,10 +83,13 @@ procedure CantOpenFileMessage(AFileName: string);
 
 implementation
 
-uses ColorSchemes, JvCreateProcess, AnsiStrings, StrUtils, Dialogs, Math;
+uses JvCreateProcess, AnsiStrings, StrUtils, Dialogs, Math, frmGoPhastUnit;
 
 resourcestring
   StrBadProcessHandle = 'Bad process handle';
+
+var
+  ColorParameters: TColorParameters;
 
 function FileLength(fileName : string) : Int64;
  var
@@ -170,29 +173,50 @@ begin
   result.Z := result.Z / d;
 end;
 
-function FracAndSchemeToColor(const ColorSchemeIndex: integer;
+function FracAndSchemeToColor(ColorSchemeIndex: integer;
   Fraction, ColorAdjustmentFactor: real; const Cycles: integer): TColor;
+var
+  ColorScheme: TUserDefinedColorSchemeItem;
 begin
-  if Fraction <> 1 then
+  if ColorSchemeIndex <= MaxColorScheme then
   begin
-    Fraction := Frac(Fraction*Cycles);
-  end;
-  case ColorSchemeIndex of
-    0: result := FracToSpectrum(Fraction, ColorAdjustmentFactor);
-    1: result := FracToGreenMagenta(1 - Fraction, ColorAdjustmentFactor);
-    2: result := FracToBlueRed(1 - Fraction, ColorAdjustmentFactor);
-    3: result := FracToBlueDarkOrange(1 - Fraction, ColorAdjustmentFactor);
-    4: result := FracToBlueGreen(1 - Fraction, ColorAdjustmentFactor);
-    5: result := FracToBrownBlue(1 - Fraction, ColorAdjustmentFactor);
-    6: result := FracToBlueGray(1 - Fraction, ColorAdjustmentFactor);
-    7: result := FracToBlueOrange(1 - Fraction, ColorAdjustmentFactor);
-    8: result := FracToBlue_OrangeRed(1 - Fraction, ColorAdjustmentFactor);
-    9: result := FracToLightBlue_DarkBlue(1 - Fraction, ColorAdjustmentFactor);
-    10: result := ModifiedSpectralScheme(1 - Fraction, ColorAdjustmentFactor);
-    11: result := SteppedSequential(1 - Fraction, ColorAdjustmentFactor);
+    if Fraction <> 1 then
+    begin
+      Fraction := Frac(Fraction*Cycles);
+    end;
+
+    case ColorSchemeIndex of
+      0: result := FracToSpectrum(Fraction, ColorAdjustmentFactor);
+      1: result := FracToGreenMagenta(1 - Fraction, ColorAdjustmentFactor);
+      2: result := FracToBlueRed(1 - Fraction, ColorAdjustmentFactor);
+      3: result := FracToBlueDarkOrange(1 - Fraction, ColorAdjustmentFactor);
+      4: result := FracToBlueGreen(1 - Fraction, ColorAdjustmentFactor);
+      5: result := FracToBrownBlue(1 - Fraction, ColorAdjustmentFactor);
+      6: result := FracToBlueGray(1 - Fraction, ColorAdjustmentFactor);
+      7: result := FracToBlueOrange(1 - Fraction, ColorAdjustmentFactor);
+      8: result := FracToBlue_OrangeRed(1 - Fraction, ColorAdjustmentFactor);
+      9: result := FracToLightBlue_DarkBlue(1 - Fraction, ColorAdjustmentFactor);
+      10: result := ModifiedSpectralScheme(1 - Fraction, ColorAdjustmentFactor);
+      11: result := SteppedSequential(1 - Fraction, ColorAdjustmentFactor);
+    else
+      result := clWhite;
+      Assert(False);
+    end;
+  end
   else
-    result := clWhite;
-    Assert(False);
+  begin
+    ColorSchemeIndex := ColorSchemeIndex-MaxColorScheme-1;
+    if ColorSchemeIndex <= frmGoPhast.PhastModel.ColorSchemes.Count then
+    begin
+      ColorParameters.ColorCycles := Cycles;
+      ColorParameters.ColorExponent := ColorAdjustmentFactor;
+      ColorScheme:= frmGoPhast.PhastModel.ColorSchemes[ColorSchemeIndex];
+      result := ColorParameters.FracToColor(Fraction, ColorScheme)
+    end
+    else
+    begin
+      result := clWhite;
+    end;
   end;
 end;
 
@@ -382,6 +406,12 @@ begin
   Beep;
   MessageDlg(Format(StrSorryItLooksLike, [AFileName]), mtError, [mbOK], 0);
 end;
+
+initialization
+  ColorParameters := TColorParameters.Create;
+
+finalization
+  ColorParameters.Free;
 
 end.
 

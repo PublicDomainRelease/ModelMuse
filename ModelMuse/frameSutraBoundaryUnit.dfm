@@ -2,7 +2,13 @@ inherited frameSutraBoundary: TframeSutraBoundary
   inherited pnlBottom: TPanel
     inherited seNumberOfTimes: TJvSpinEdit
       Left = 9
+      Height = 24
       ExplicitLeft = 9
+      ExplicitHeight = 24
+    end
+    inherited btnDelete: TBitBtn
+      Left = 236
+      ExplicitLeft = 236
     end
   end
   inherited pnlGrid: TPanel
@@ -43,7 +49,7 @@ inherited frameSutraBoundary: TframeSutraBoundary
           AutoAdjustColWidths = True
         end
         item
-          AutoAdjustRowHeights = False
+          AutoAdjustRowHeights = True
           ButtonCaption = '...'
           ButtonFont.Charset = DEFAULT_CHARSET
           ButtonFont.Color = clWindowText
@@ -59,7 +65,7 @@ inherited frameSutraBoundary: TframeSutraBoundary
           LimitToList = False
           MaxLength = 0
           ParentButtonFont = False
-          WordWrapCaptions = False
+          WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
           AutoAdjustColWidths = False
@@ -109,7 +115,7 @@ inherited frameSutraBoundary: TframeSutraBoundary
           AutoAdjustColWidths = True
         end>
       OnEndUpdate = rdgSutraFeatureEndUpdate
-      ExplicitTop = 52
+      ExplicitTop = 51
       ExplicitHeight = 146
     end
     object pnlEditGrid: TPanel
@@ -145,6 +151,9 @@ inherited frameSutraBoundary: TframeSutraBoundary
   inherited pnlTop: TPanel
     Height = 81
     ExplicitHeight = 81
+    DesignSize = (
+      320
+      81)
     inherited lblSchedule: TLabel
       Left = 1
       Top = 30

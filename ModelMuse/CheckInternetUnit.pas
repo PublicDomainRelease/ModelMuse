@@ -223,7 +223,21 @@ begin
   end;
   FIniFile.WriteDateTime(StrCustomization, StrTipDate, Now);
   FIniFile.WriteDateTime(StrCustomization, StrInternetCheckDate, Now);
-  FIniFile.UpdateFile;
+  try
+    FIniFile.UpdateFile;
+  except on EFCreateError do
+    begin
+      Sleep(100);
+      try
+        FIniFile.UpdateFile;
+      except on E: EFCreateError do
+        begin
+        Beep;
+        MessageDlg(E.message, mtWarning, [mbOK], 0);
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TCheckInternetThread.GetAppName;

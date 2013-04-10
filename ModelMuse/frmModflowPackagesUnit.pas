@@ -384,6 +384,8 @@ resourcestring
   ' run MODFLOW again.';
   FormatStr = 'Number of %s parameters';
   StrSWasNotFound = '%s was not found.';
+  StrYouWillNeedToRun = 'You will need to run MODFLOW again one time before ' +
+  'running MODPATH.';
 
 {$R *.dfm}
 
@@ -710,6 +712,14 @@ begin
     not ModflowPackages.Mt3dmsTransObs.IsSelected then
   begin
     NeedToDefineFluxObservations := True;
+  end;
+
+  if frameModpath.Selected and
+    not ModflowPackages.ModPath.IsSelected
+    and (frmGoPhast.Grid.RowCount = 1) then
+  begin
+    Beep;
+    MessageDlg(StrYouWillNeedToRun, mtInformation, [mbOK], 0);
   end;
 
   SetData;

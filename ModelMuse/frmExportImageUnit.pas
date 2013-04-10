@@ -1434,24 +1434,51 @@ procedure TfrmExportImage.SaveContourSettings(
 var
   DataArray: TDataArray;
   Grid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
 begin
   Grid := frmGoPhast.PhastModel.Grid;
+  Mesh := frmGoPhast.PhastModel.Mesh;
   DataArray := nil;
-  case TViewDirection(comboView.ItemIndex) of
-    vdTop:
-      begin
-        DataArray := Grid.TopContourDataSet;
-      end;
-    vdFront:
-      begin
-        DataArray := Grid.FrontContourDataSet;
-      end;
-    vdSide:
-      begin
-        DataArray := Grid.SideContourDataSet;
-      end;
+
+
+  if Grid <> nil then
+  begin
+    case TViewDirection(comboView.ItemIndex) of
+      vdTop:
+        begin
+          DataArray := Grid.TopContourDataSet;
+        end;
+      vdFront:
+        begin
+          DataArray := Grid.FrontContourDataSet;
+        end;
+      vdSide:
+        begin
+          DataArray := Grid.SideContourDataSet;
+        end;
+    else
+      Assert(False);
+    end;
+  end
   else
-    Assert(False);
+  begin
+    Assert(Mesh <> nil);
+    case TViewDirection(comboView.ItemIndex) of
+      vdTop:
+        begin
+          DataArray := Mesh.TopContourDataSet;
+        end;
+      vdFront:
+        begin
+          DataArray := Mesh.ThreeDContourDataSet;
+        end;
+      vdSide:
+        begin
+          DataArray := nil;
+        end;
+    else
+      Assert(False);
+    end;
   end;
   if DataArray = nil then
   begin
@@ -1464,6 +1491,7 @@ begin
     ContourDisplaySettings.LegendVisible := cbContourLegend.Checked;
     ContourDisplaySettings.Legend := frmGoPhast.PhastModel.ContourLegend;
     ContourDisplaySettings.Limits := DataArray.Limits;
+    ContourDisplaySettings.ContourAlgorithm := DataArray.ContourAlg;
   end;
 end;
 
@@ -1475,28 +1503,54 @@ var
   DataArray: TDataArray;
   Grid: TCustomModelGrid;
   PhastModel: TPhastModel;
+  Mesh: TSutraMesh3D;
 begin
   PhastModel := frmGoPhast.PhastModel;
   Grid := frmGoPhast.PhastModel.Grid;
+  Mesh := frmGoPhast.PhastModel.Mesh;
   TimeList := nil;
   DataArray := nil;
   ATime := 0;
   case TViewDirection(comboView.ItemIndex) of
     vdTop:
       begin
-        DataArray := Grid.TopDataSet;
+        if Assigned(Grid) then
+        begin
+          DataArray := Grid.TopDataSet;
+        end
+        else
+        begin
+          Assert(Assigned(Mesh));
+          DataArray := Mesh.TopDataSet;
+        end;
         TimeList := PhastModel.TopTimeList;
         ATime := PhastModel.TopDisplayTime;
       end;
     vdFront:
       begin
-        DataArray := Grid.FrontDataSet;
+        if Assigned(Grid) then
+        begin
+          DataArray := Grid.FrontDataSet;
+        end
+        else
+        begin
+          Assert(Assigned(Mesh));
+          DataArray := Mesh.ThreeDDataSet;
+        end;
         TimeList := PhastModel.FrontTimeList;
         ATime := PhastModel.FrontDisplayTime;
       end;
     vdSide:
       begin
-        DataArray := Grid.SideDataSet;
+        if Assigned(Grid) then
+        begin
+          DataArray := Grid.SideDataSet;
+        end
+        else
+        begin
+          Assert(Assigned(Mesh));
+          DataArray := Mesh.ThreeDDataSet;
+        end;
         TimeList := PhastModel.SideTimeList;
         ATime := PhastModel.SideDisplayTime;
       end;
@@ -1604,26 +1658,29 @@ begin
   seImageHeight.AsInteger := ASetting.ImageHeight;
   seImageWidth.AsInteger := ASetting.ImageWidth;
   cbShowColoredGridLines.Checked := ASetting.ShowColoredGridLines;
-  case ASetting.GridDisplayChoice of
-    gldcAll:
-      begin
-        frmGoPhast.acShowAllGridLines.Checked := True;
-      end;
-    gldcExterior:
-      begin
-        frmGoPhast.acShowExteriorGridLines.Checked := True;
-      end;
-    gldcActive:
-      begin
-        frmGoPhast.acShowActiveGridLines.Checked := True;
-      end;
-    gldcActiveEdge:
-      begin
-        frmGoPhast.acShowActiveEdge.Checked := True;
-      end;
-    else Assert(false);
+  if PhastModel.Grid <> nil then
+  begin
+    case ASetting.GridDisplayChoice of
+      gldcAll:
+        begin
+          frmGoPhast.acShowAllGridLines.Checked := True;
+        end;
+      gldcExterior:
+        begin
+          frmGoPhast.acShowExteriorGridLines.Checked := True;
+        end;
+      gldcActive:
+        begin
+          frmGoPhast.acShowActiveGridLines.Checked := True;
+        end;
+      gldcActiveEdge:
+        begin
+          frmGoPhast.acShowActiveEdge.Checked := True;
+        end;
+      else Assert(false);
+    end;
+    frmGoPhast.SetGridLineDrawingChoice(nil);
   end;
-  frmGoPhast.SetGridLineDrawingChoice(nil);
 
   UndoShowHideObjects := TUndoShowHideScreenObject.Create;
   try
@@ -1761,7 +1818,15 @@ begin
     ASetting.ImageWidth := seImageWidth.AsInteger;
 
     ASetting.ShowColoredGridLines := cbShowColoredGridLines.Checked;
-    ASetting.GridDisplayChoice := PhastModel.Grid.GridLineDrawingChoice;
+
+    if PhastModel.Grid <> nil then
+    begin
+      ASetting.GridDisplayChoice := PhastModel.Grid.GridLineDrawingChoice;
+    end
+    else
+    begin
+      ASetting.GridDisplayChoice := gldcAll
+    end;
     ASetting.ModpathEndPointSettings := PhastModel.EndPoints;
     ASetting.ModpathPathLineSettings := PhastModel.PathLines;
     ASetting.ModpathTimeSeriesSettings := PhastModel.TimeSeries;
@@ -1818,6 +1883,8 @@ procedure TfrmExportImage.ApplyContourDisplaySettings(
 var
   DataArray: TDataArray;
   PhastModel: TPhastModel;
+  Grid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
 begin
   PhastModel := frmGoPhast.PhastModel;
   if ContourDisplaySettings.DataSetName = '' then
@@ -1828,46 +1895,89 @@ begin
   begin
     DataArray := PhastModel.DataArrayManager.GetDataSetByName(
       ContourDisplaySettings.DataSetName);
+    DataArray.ContourAlg := ContourDisplaySettings.ContourAlgorithm;
   end;
+  Grid := PhastModel.Grid;
+  Mesh := PhastModel.Mesh;
   if DataArray = nil then
   begin
-    PhastModel.Grid.TopContourDataSet := nil;
-    PhastModel.Grid.FrontContourDataSet := nil;
-    PhastModel.Grid.SideContourDataSet := nil;
-    PhastModel.Grid.ThreeDContourDataSet := nil;
+
+    if Assigned(Grid) then
+    begin
+      Grid.TopContourDataSet := nil;
+      Grid.FrontContourDataSet := nil;
+      Grid.SideContourDataSet := nil;
+      Grid.ThreeDContourDataSet := nil;
+    end
+    else
+    begin
+      Assert(Assigned(Mesh));
+      Mesh.TopContourDataSet := nil;
+      Mesh.ThreeDContourDataSet := nil;
+    end;
   end
   else
   begin
     DataArray.Initialize;
-    case DataArray.Orientation of
-      dsoTop:
-        begin
-          PhastModel.Grid.TopContourDataSet := DataArray;
-          PhastModel.Grid.FrontContourDataSet := nil;
-          PhastModel.Grid.SideContourDataSet := nil;
-        end;
-      dsoFront:
-        begin
-          PhastModel.Grid.TopContourDataSet := nil;
-          PhastModel.Grid.FrontContourDataSet := DataArray;
-          PhastModel.Grid.SideContourDataSet := nil;
-        end;
-      dsoSide:
-        begin
-          PhastModel.Grid.TopContourDataSet := nil;
-          PhastModel.Grid.FrontContourDataSet := nil;
-          PhastModel.Grid.SideContourDataSet := DataArray;
-        end;
-      dso3D:
-        begin
-          PhastModel.Grid.TopContourDataSet := DataArray;
-          PhastModel.Grid.FrontContourDataSet := DataArray;
-          PhastModel.Grid.SideContourDataSet := DataArray;
-        end;
+
+    if Assigned(Grid) then
+    begin
+      case DataArray.Orientation of
+        dsoTop:
+          begin
+            Grid.TopContourDataSet := DataArray;
+            Grid.FrontContourDataSet := nil;
+            Grid.SideContourDataSet := nil;
+          end;
+        dsoFront:
+          begin
+            Grid.TopContourDataSet := nil;
+            Grid.FrontContourDataSet := DataArray;
+            Grid.SideContourDataSet := nil;
+          end;
+        dsoSide:
+          begin
+            Grid.TopContourDataSet := nil;
+            Grid.FrontContourDataSet := nil;
+            Grid.SideContourDataSet := DataArray;
+          end;
+        dso3D:
+          begin
+            Grid.TopContourDataSet := DataArray;
+            Grid.FrontContourDataSet := DataArray;
+            Grid.SideContourDataSet := DataArray;
+          end;
+      else
+        Assert(false);
+      end;
+      Grid.ThreeDContourDataSet := DataArray;
+    end
     else
-      Assert(false);
+    begin
+      Assert(Assigned(Mesh));
+      case DataArray.Orientation of
+        dsoTop:
+          begin
+            Mesh.TopContourDataSet := DataArray;
+          end;
+        dsoFront:
+          begin
+            Mesh.TopContourDataSet := nil;
+          end;
+        dsoSide:
+          begin
+            Mesh.TopContourDataSet := nil;
+          end;
+        dso3D:
+          begin
+            Mesh.TopContourDataSet := DataArray;
+          end;
+      else
+        Assert(false);
+      end;
+      Mesh.ThreeDContourDataSet := DataArray;
     end;
-    PhastModel.Grid.ThreeDContourDataSet := DataArray;
+
     PhastModel.ContourLegend.Assign(ContourDisplaySettings.Legend);
     PhastModel.ContourLegend.ValueSource := DataArray;
     PhastModel.ContourLegend.AssignFractions;
@@ -1885,8 +1995,12 @@ var
   ADataArray: TDataArray;
   DataArray: TDataArray;
   PhastModel: TPhastModel;
+//  Grid: TCustomModelGrid;
+//  Mesh: TSutraMesh3D;
 begin
   PhastModel := frmGoPhast.PhastModel;
+//  Grid := PhastModel.Grid;
+//  Mesh := PhastModel.Mesh;
   if ColorDisplaySettings.TimeListName = '' then
   begin
     TimeList := nil;
@@ -1918,24 +2032,24 @@ begin
       dsoTop:
         begin
           PhastModel.UpdateTopTimeDataSet(TimeList, Time);
-          PhastModel.Grid.FrontDataSet := nil;
+          PhastModel.FrontDataSet := nil;
           PhastModel.FrontTimeList := nil;
-          PhastModel.Grid.SideDataSet := nil;
+          PhastModel.SideDataSet := nil;
           PhastModel.SideTimeList := nil;
         end;
       dsoFront:
         begin
-          PhastModel.Grid.TopDataSet := nil;
+          PhastModel.TopDataSet := nil;
           PhastModel.TopTimeList := nil;
           PhastModel.UpdateFrontTimeDataSet(TimeList, Time);
-          PhastModel.Grid.SideDataSet := nil;
+          PhastModel.SideDataSet := nil;
           PhastModel.SideTimeList := nil;
         end;
       dsoSide:
         begin
-          PhastModel.Grid.TopDataSet := nil;
+          PhastModel.TopDataSet := nil;
           PhastModel.TopTimeList := nil;
-          PhastModel.Grid.FrontDataSet := nil;
+          PhastModel.FrontDataSet := nil;
           PhastModel.FrontTimeList := nil;
           PhastModel.UpdateSideTimeDataSet(TimeList, Time);
         end;

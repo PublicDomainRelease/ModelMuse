@@ -238,6 +238,8 @@ type
     // @name is in the coordinate system of the grid rather
     // than global coordinate system.
     property Y2: double read FSegment[2].y write FSegment[2].y;
+    Property StartPoint: TPoint2D read FSegment[1];
+    Property EndPoint: TPoint2D read FSegment[2];
     function FirstPointRealCoord(ViewDirection: TViewDirection): TPoint2D;
     function SecondPointRealCoord(ViewDirection: TViewDirection): TPoint2D;
     property SectionIndex: integer read FSectionIndex write FSectionIndex;
@@ -407,18 +409,6 @@ type
     FSubPolygon2: TSubPolygon;
     FPoints: TRealPointArray;
     FSectionIndex: integer;
-    // @name creates and instance of TSubPolygon.
-    // If Count is large enough, it will create @link(FSubPolygon1)
-    // and @link(FSubPolygon2) to handle what it needs to do.
-    // @param(Points is the array of TPoint2Ds
-    // to be used by @classname.)
-    // @param(Count is the number of TPoint2Ds
-    // in Points to be used by @classname.)
-    // @param(Count is the index of the  first TPoint2Ds
-    // in Points to be used by @classname.)
-
-    constructor Create(const Points: TRealPointArray;
-      const Count, Start, Section: integer);  
     procedure CreateSubPolygons(const Points: TRealPointArray;
       const Count, Start, Section: Integer);
     procedure SetMaxAndMinWhenNoSubPolygons(const Count, Start: Integer;
@@ -426,13 +416,32 @@ type
     procedure SetMaxAndMinFromSubPolygons;
     procedure InternalBoxIntersect(SubPolygons: TList;
       const BoxMinX, BoxMaxX, BoxMinY, BoxMaxY: Double);
+    procedure EvaluateSubPolygon(
+      const X, Y: real; var IsInside: boolean);
   public
+    // @name creates an instance of TSubPolygon.
+    // If Count is large enough, it will create @link(FSubPolygon1)
+    // and @link(FSubPolygon2) to handle what it needs to do.
+    // @param(Points is the array of TPoint2Ds
+    // to be used by @classname.)
+    // @param(Count is the number of TPoint2Ds
+    // in Points to be used by @classname.)
+    // @param(Start is the index of the  first TPoint2Ds
+    // in Points to be used by @classname.)
+    // @param(Section indicates the part of the @link(TScreenObject) that
+    // this @name represents.)
+
+    constructor Create(const Points: TRealPointArray;
+      const Count, Start, Section: integer);
     // @name destroys the current instance of @classname.
     // Do not call @name directly. Call Free instead.
     destructor Destroy; override;
     procedure GrowByOne;
     Procedure BoxIntersect(const Point1, Point2: TPoint2D; SubPolygons: TList);
+    // If @name is created for a part of a @link(TScreenObject),
+    // @namd indicates which part of the @link(TScreenObject) it represents.
     property SectionIndex: integer read FSectionIndex;
+    function IsPointInside(const X, Y: real): boolean;
   end;
               
   TAssignmentMethod = (amEnclose, amIntersect);
@@ -2428,6 +2437,10 @@ view. }
     procedure SetSutraAngle(const Value: Double);
     procedure SetSutraBoundaries(const Value: TSutraBoundaries);
     function SaveSutraBoundaries: Boolean;
+    procedure ResetFormula(const Compiler: TRbwParser;
+      const ErrorMessage, Source: string; var Formula: string;
+      DataType: TRbwDataType);
+    procedure SetCanInvalidateModel(const Value: boolean);
     property SubPolygonCount: integer read GetSubPolygonCount;
     property SubPolygons[Index: integer]: TSubPolygon read GetSubPolygon;
     procedure DeleteExtraSections;
@@ -2858,6 +2871,9 @@ view. }
     procedure UpdateMixtureExpression;
     procedure UpdateFormulaExpression;
   public
+    function CoordinateCaption: string;
+    function HigherCoordinateCaption: string;
+    function LowerCoordinateCaption: string;
     function StoreModflowHfbBoundary: Boolean;
     function StoreModflowMnw2Boundary: Boolean;
     function StoreMt3dmsConcBoundary: Boolean;
@@ -2889,11 +2905,14 @@ view. }
     property ModflowBoundaries: TModflowBoundaries read GetModflowBoundaries;
     // @name contains a set of higher elevations for points that
     // could be in the @classname.  It is indexed by [Layer, Row, Column].
-    property Higher3DElevations[AModel: TBaseModel]: T3DSparseRealArray read GetHigher3DElevations;
-    function IsHigher3DElevationAssigned(Col, Row, Layer: integer; Model: TBaseModel): boolean;
+    property Higher3DElevations[AModel: TBaseModel]: T3DSparseRealArray
+      read GetHigher3DElevations;
+    function IsHigher3DElevationAssigned(Col, Row, Layer: integer;
+      Model: TBaseModel): boolean;
     // @name contains a set of lower elevations for points that
     // could be in the @classname.  It is indexed by [Layer, Row, Column].
-    property Lower3DElevations[AModel: TBaseModel]: T3DSparseRealArray read GetLower3DElevations;
+    property Lower3DElevations[AModel: TBaseModel]: T3DSparseRealArray
+      read GetLower3DElevations;
     function IsLower3DElevationAssigned(Col, Row, Layer: integer;
       Model: TBaseModel): boolean;
     procedure GetCellsToAssign(const Grid: TCustomModelGrid;
@@ -3034,7 +3053,7 @@ view. }
     // affects a boundary condition.
     function BoundaryTypeUsed: TPhastBoundaryTypes;
     property CanInvalidateModel: boolean read FCanInvalidateModel
-      write FCanInvalidateModel;
+      write SetCanInvalidateModel;
     // @name is an array of TPoints that represent the object.
     // These coordinates are recalculate as needed when the magnification or
     // view of the model changes.  For example, panning causes them to be
@@ -3336,7 +3355,9 @@ having them take care of the subscriptions. }
     procedure CacheValueArrays;
     property ChildModel: TBaseModel read GetChildModel write SetChildModel;
     procedure RemoveModelLink(AModel: TBaseModel);
+    // @name is measured in radians.
     property SutraAngle: Double read GetSutraAngle write SetSutraAngle;
+    procedure InvalidateCachedCells;
   published
     // @name is deprecated.
     property ChildModelDiscretization: integer read FChildModelDiscretization
@@ -3566,6 +3587,7 @@ SectionStarts.}
       write SetUsedModels stored  True;
     property PositionLocked: boolean read FPositionLocked
       write SetPositionLocked;
+    // @name is measured in radians.
     property StoredSutraAngle: TRealStorage read FStoredSutraAngle write
       SetStoredSutraAngle stored SaveSutraAngle;
     property SutraBoundaries: TSutraBoundaries read FSutraBoundaries
@@ -4209,6 +4231,7 @@ SectionStarts.}
 //    function DataSetUsed(const DataSet: TDataArray;
 //      var OtherData: TObject; AModel: TBaseModel): boolean; override;
   public
+    constructor Create(ScreenObject: TScreenObject); override;
     procedure InitializeExpression(out Compiler: TRbwParser;
       out DataSetFunction: string; out Expression: TExpression;
       const DataSet: TDataArray; const OtherData: TObject); override;
@@ -4569,7 +4592,8 @@ uses Math, UndoItemsScreenObjects, BigCanvasMethods,
   GIS_Functions, frmFormulaErrorsUnit, SparseArrayUnit, ModelMuseUtilities,
   InteractiveTools, PhastModelUnit, CountObjectsUnit, GlobalVariablesUnit,
   IntListUnit, frmGoPhastUnit, IsosurfaceUnit, TempFiles, LayerStructureUnit,
-  gpc, frmGridValueUnit, frmErrorsAndWarningsUnit;
+  gpc, frmGridValueUnit, frmErrorsAndWarningsUnit,
+  frmScreenObjectPropertiesUnit;
 
 resourcestring
   StrInvalidVertex0 = 'Invalid vertex (#%0:d) in "%1:s". %2:s';
@@ -5338,6 +5362,17 @@ begin
   end;
 end;
 
+function TSubPolygon.IsPointInside(const X, Y: real): boolean;
+begin
+  Result := False;
+  if (FPoints[0].x <> FPoints[Length(FPoints)-1].x)
+    or (FPoints[0].y <> FPoints[Length(FPoints)-1].y) then
+  begin
+    Exit;
+  end;
+  EvaluateSubPolygon(X, Y, Result);
+end;
+
 procedure TSubPolygon.SetMaxAndMinFromSubPolygons;
 begin
   // Determine the Maximum Y value, Minimum Y value and
@@ -5405,6 +5440,37 @@ begin
   FSubPolygon1.Free;
   FSubPolygon2.Free;
   inherited;
+end;
+
+procedure TSubPolygon.EvaluateSubPolygon(
+  const X, Y: real; var IsInside: boolean);
+var
+  VertexIndex: integer;
+  APoint, AnotherPoint: TPoint2D;
+begin
+  if (Y < FMinY) or (Y > FMaxY)
+    or (X > FMaxX) then
+    Exit;
+  if FSubPolygon1 <> nil then
+  begin
+    FSubPolygon1.EvaluateSubPolygon(X, Y, IsInside);
+    FSubPolygon2.EvaluateSubPolygon(X, Y, IsInside);
+  end
+  else
+  begin
+    for VertexIndex := 0 to self.FCount - 2 do
+    begin
+      APoint := FPoints[self.FStart + VertexIndex];
+      AnotherPoint := FPoints[self.FStart + VertexIndex + 1];
+      if ((Y <= APoint.Y) = (Y > AnotherPoint.Y)) and
+        (X - APoint.X - (Y - APoint.Y) *
+        (AnotherPoint.X - APoint.X) /
+        (AnotherPoint.Y - APoint.Y) < 0) then
+      begin
+        IsInside := not IsInside;
+      end;
+    end;
+  end;
 end;
 
 procedure TSubPolygon.GrowByOne;
@@ -6716,6 +6782,7 @@ constructor TScreenObject.CreateWithViewDirection(const Model: TBaseModel;
   const UndoAble: boolean = True);
 var
   AName: string;
+  LocalModel: TPhastModel;
 begin
   AName := ObjectPrefix + IntToStr(ObjectsCreated);
   Name := AName;
@@ -6725,7 +6792,22 @@ begin
     UndoCreateScreenObject, UndoAble);
   if Model <> nil then
   begin
-    (FModel as TPhastModel).ResetSelectedScreenObjects;
+    LocalModel := FModel as TPhastModel;
+    {$IFDEF SUTRA}
+    if ViewDirection = vdFront then
+    begin
+
+      if LocalModel.ModelSelection = msSutra22 then
+      begin
+        SutraAngle := LocalModel.Mesh.CrossSection.Angle;
+      end
+      else
+      begin
+        SutraAngle := LocalModel.Grid.GridAngle;
+      end;
+    end;
+    {$ENDIF}
+    LocalModel.ResetSelectedScreenObjects;
   end;
   Selected := True;
 end;
@@ -7082,7 +7164,7 @@ begin
   if (ViewDirection = vdFront) and (Model.ModelSelection = msSutra22) then
   begin
     Mesh3D := (Model as TCustomModel).Mesh;
-    if Mesh3D.CrossSection.Angle <> self.SutraAngle then
+    if Abs(Mesh3D.CrossSection.Angle - self.SutraAngle) > 1e-6 then
     begin
       Exit;
     end;
@@ -7421,6 +7503,28 @@ begin
   Capacity := FCapacity + Amount;
 end;
 
+function TScreenObject.HigherCoordinateCaption: string;
+begin
+  case ViewDirection of
+    vdTop:
+      begin
+        result := StrHigherZcoordinate;
+      end;
+    vdFront:
+      begin
+        result := StrHigherYcoordinate;
+      end;
+    vdSide:
+      begin
+        result := StrHigherXcoordinate;
+      end;
+  else
+    begin
+      Assert(False);
+    end;
+  end;
+end;
+
 function TScreenObject.IsHigher3DElevationAssigned(Col, Row,
   Layer: integer; Model: TBaseModel): boolean;
 begin
@@ -7618,6 +7722,11 @@ begin
   end;
   FCachedCells.Invalidate;
 //  FSegments.UpToDate := False;
+end;
+
+procedure TScreenObject.InvalidateCachedCells;
+begin
+  FCachedCells.Invalidate;
 end;
 
 procedure TScreenObject.InvalidateCoordinates;
@@ -7927,6 +8036,11 @@ begin
 ////      ModflowMnw2Boundary.InvalidateDisplay
 //    end;
   end;
+end;
+
+procedure TScreenObject.SetCanInvalidateModel(const Value: boolean);
+begin
+  FCanInvalidateModel := Value;
 end;
 
 procedure TScreenObject.SetCapacity(Value: integer);
@@ -8303,33 +8417,34 @@ end;
 
 procedure TScreenObject.EvaluateSubPolygon(const ASubPolygon: TSubPolygon;
   const X, Y: real; var IsInside: boolean);
-var
-  VertexIndex: integer;
-  APoint, AnotherPoint: TPoint2D;
+//var
+//  VertexIndex: integer;
+//  APoint, AnotherPoint: TPoint2D;
 begin
-  if (Y < ASubPolygon.FMinY) or (Y > ASubPolygon.FMaxY)
-    or (X > ASubPolygon.FMaxX) then
-    Exit;
-  if ASubPolygon.FSubPolygon1 <> nil then
-  begin
-    EvaluateSubPolygon(ASubPolygon.FSubPolygon1, X, Y, IsInside);
-    EvaluateSubPolygon(ASubPolygon.FSubPolygon2, X, Y, IsInside);
-  end
-  else
-  begin
-    for VertexIndex := 0 to ASubPolygon.FCount - 2 do
-    begin
-      APoint := Points[ASubPolygon.FStart + VertexIndex];
-      AnotherPoint := Points[ASubPolygon.FStart + VertexIndex + 1];
-      if ((Y <= APoint.Y) = (Y > AnotherPoint.Y)) and
-        (X - APoint.X - (Y - APoint.Y) *
-        (AnotherPoint.X - APoint.X) /
-        (AnotherPoint.Y - APoint.Y) < 0) then
-      begin
-        IsInside := not IsInside;
-      end;
-    end;
-  end;
+  ASubPolygon.EvaluateSubPolygon(X, Y, IsInside);
+//  if (Y < ASubPolygon.FMinY) or (Y > ASubPolygon.FMaxY)
+//    or (X > ASubPolygon.FMaxX) then
+//    Exit;
+//  if ASubPolygon.FSubPolygon1 <> nil then
+//  begin
+//    EvaluateSubPolygon(ASubPolygon.FSubPolygon1, X, Y, IsInside);
+//    EvaluateSubPolygon(ASubPolygon.FSubPolygon2, X, Y, IsInside);
+//  end
+//  else
+//  begin
+//    for VertexIndex := 0 to ASubPolygon.FCount - 2 do
+//    begin
+//      APoint := Points[ASubPolygon.FStart + VertexIndex];
+//      AnotherPoint := Points[ASubPolygon.FStart + VertexIndex + 1];
+//      if ((Y <= APoint.Y) = (Y > AnotherPoint.Y)) and
+//        (X - APoint.X - (Y - APoint.Y) *
+//        (AnotherPoint.X - APoint.X) /
+//        (AnotherPoint.Y - APoint.Y) < 0) then
+//      begin
+//        IsInside := not IsInside;
+//      end;
+//    end;
+//  end;
 end;
 
 procedure TScreenObject.SetGeometryUpToDate;
@@ -9895,6 +10010,13 @@ var
   IntsectSeg: TSegment2D;
   Mesh: TSutraMesh3D;
   LayerIndex: Integer;
+  TopItem: T2DTopCell;
+  SearchArray: TSearchArray;
+  Limits: TGridLimit;
+  NodeLeafList: TList;
+  NodeLeaf: TSutraNode2DLeaf;
+  ElementLeafList: TList;
+  ElementLeaf: TSutraElement2DLeaf;
   procedure AddElementSegment(Layer: integer; ASeg: TSegment2D);
   begin
     Segment := TCellElementSegment.Create(self);
@@ -9904,7 +10026,7 @@ var
     Segment.Layer := Layer;
     Segment.StartPosition := epFirst;
     Segment.EndPosition := epLast;
-    Segment.VertexIndex := SectionStart[SectionIndex];
+    Segment.VertexIndex := PointIndex;
     Segment.SectionIndex := SectionIndex;
   end;
   procedure AddNodeSegment(Layer: integer; ASeg: TSegment2D);
@@ -9916,7 +10038,7 @@ var
     Segment.Layer := Layer;
     Segment.StartPosition := epFirst;
     Segment.EndPosition := epLast;
-    Segment.VertexIndex := SectionStart[SectionIndex];
+    Segment.VertexIndex := PointIndex;
     Segment.SectionIndex := SectionIndex;
 //    FSegments.Add(Segment);
   end;
@@ -10087,58 +10209,50 @@ begin
   { TODO -cSUTRA : Still need to deal with 1D and 2D objects }
   Mesh := (Model as TCustomModel).Mesh;
   Mesh2D := Mesh.Mesh2D;
+  Limits := Mesh.MeshLimits(vdTop);
+  SetLength(SearchArray, 4);
+  SearchArray[0].LowerBoundary := Limits.MinX;
+  SearchArray[1].UpperBoundary := Limits.MaxX;
+  SearchArray[2].LowerBoundary := Limits.MinY;
+  SearchArray[3].UpperBoundary := Limits.MaxY;
   for SectionIndex := 0 to SectionCount - 1 do
   begin
     if SectionLength[SectionIndex] = 1 then
     begin
+      PointIndex := SectionStart[SectionIndex];
       Segment2D[1] := Points[SectionStart[SectionIndex]];
       Segment2D[2] := Segment2D[1];
-      case EvaluatedAt of
-        eaBlocks:
-          begin
-            for ElementIndex := 0 to Mesh2D.Elements.Count - 1 do
+
+      TopItem := Mesh2D.TopContainingCellOrElement(Segment2D[1], EvaluatedAt);
+
+      if TopItem.Col >= 0 then
+      begin
+        case EvaluatedAt of
+          eaBlocks:
             begin
-              Element := Mesh2D.Elements[ElementIndex];
-              if Element.IsInside(Segment2D[1]) then
-              begin
-//                AddElementSegment(0, Segment2D);
-                case Mesh.MeshType of
-                  mt2D:
+              Element := Mesh2D.Elements[TopItem.Col];
+              case Mesh.MeshType of
+                mt2D:
+                  begin
+                    AddElementSegment(0, Segment2D);
+                    AddSomeSegments;
+                  end;
+                mt3D:
+                  begin
+                    for LayerIndex := 0 to Mesh.LayerCount - 1 do
                     begin
-                      AddElementSegment(0, Segment2D);
+                      AddElementSegment(LayerIndex, Segment2D);
                       AddSomeSegments;
                     end;
-                  mt3D:
-                    begin
-                      for LayerIndex := 0 to Mesh.LayerCount - 1 do
-                      begin
-                        AddElementSegment(LayerIndex, Segment2D);
-                        AddSomeSegments;
-                      end;
-                    end;
-                end;
-//                Segment := TCellElementSegment.Create(self);
-//                Segment.FSegment := Segment2D;
-//                Segment.Col := Element.ElementNumber;
-//                Segment.Row := 0;
-//                Segment.Layer := 0;
-//                Segment.StartPosition := epFirst;
-//                Segment.EndPosition := epLast;
-//                Segment.VertexIndex := SectionStart[SectionIndex];
-//                Segment.SectionIndex := SectionIndex;
-//                FSegments.Add(Segment);
+                  end;
+                else
+                  Assert(False);
               end;
             end;
-          end;
-        eaNodes:
-          begin
-            for NodeIndex := 0 to Mesh2D.Nodes.Count - 1 do
+          eaNodes:
             begin
-              Node := Mesh2D.Nodes[NodeIndex];
-              if Node.IsInsideCell(Segment2D[1]) then
-              begin
-//                AddNodeSegment(0, Segment2D);
-                case Mesh.MeshType of
+              Node := Mesh2D.Nodes[TopItem.Col];
+              case Mesh.MeshType of
                   mt2D:
                     begin
                       AddNodeSegment(0, Segment2D);
@@ -10152,23 +10266,78 @@ begin
                         AddSomeSegments;
                       end;
                     end;
+                  else
+                    Assert(False);
                 end;
-//                Segment := TCellElementSegment.Create(self);
-//                Segment.FSegment := Segment2D;
-//                Segment.Col := Node.Number;
-//                Segment.Row := 0;
-//                Segment.Layer := 0;
-//                Segment.StartPosition := epFirst;
-//                Segment.EndPosition := epLast;
-//                Segment.VertexIndex := SectionStart[SectionIndex];
-//                Segment.SectionIndex := SectionIndex;
-//                FSegments.Add(Segment);
-              end;
             end;
-          end;
-      else
-        Assert(False);
+          else Assert(False);
+        end;
       end;
+
+//      case EvaluatedAt of
+//        eaBlocks:
+//          begin
+//            for ElementIndex := 0 to Mesh2D.Elements.Count - 1 do
+//            begin
+//              Element := Mesh2D.Elements[ElementIndex];
+//              if Element.IsInside(Segment2D[1]) then
+//              begin
+//                case Mesh.MeshType of
+//                  mt2D:
+//                    begin
+//                      AddElementSegment(0, Segment2D);
+//                      AddSomeSegments;
+//                    end;
+//                  mt3D:
+//                    begin
+//                      for LayerIndex := 0 to Mesh.LayerCount - 1 do
+//                      begin
+//                        AddElementSegment(LayerIndex, Segment2D);
+//                        AddSomeSegments;
+//                      end;
+//                    end;
+//                end;
+//              end;
+//            end;
+//          end;
+//        eaNodes:
+//          begin
+//            for NodeIndex := 0 to Mesh2D.Nodes.Count - 1 do
+//            begin
+//              Node := Mesh2D.Nodes[NodeIndex];
+//              if Node.IsInsideCell(Segment2D[1]) then
+//              begin
+//                case Mesh.MeshType of
+//                  mt2D:
+//                    begin
+//                      AddNodeSegment(0, Segment2D);
+//                      AddSomeSegments;
+//                    end;
+//                  mt3D:
+//                    begin
+//                      for LayerIndex := 0 to Mesh.LayerCount do
+//                      begin
+//                        AddNodeSegment(LayerIndex, Segment2D);
+//                        AddSomeSegments;
+//                      end;
+//                    end;
+//                end;
+////                Segment := TCellElementSegment.Create(self);
+////                Segment.FSegment := Segment2D;
+////                Segment.Col := Node.Number;
+////                Segment.Row := 0;
+////                Segment.Layer := 0;
+////                Segment.StartPosition := epFirst;
+////                Segment.EndPosition := epLast;
+////                Segment.VertexIndex := SectionStart[SectionIndex];
+////                Segment.SectionIndex := SectionIndex;
+////                FSegments.Add(Segment);
+//              end;
+//            end;
+//          end;
+//      else
+//        Assert(False);
+//      end;
     end
     else
     begin
@@ -10177,16 +10346,22 @@ begin
       begin
         Segment2D[1] := Points[PointIndex];
         Segment2D[2] := Points[PointIndex + 1];
+
+        SearchArray[0].UpperBoundary := Max(Segment2D[1].x, Segment2D[2].x);
+        SearchArray[1].LowerBoundary := Min(Segment2D[1].x, Segment2D[2].x);
+        SearchArray[2].UpperBoundary := Max(Segment2D[1].y, Segment2D[2].y);
+        SearchArray[3].LowerBoundary := Min(Segment2D[1].y, Segment2D[2].y);
+
         case EvaluatedAt of
           eaBlocks:
             begin
-              for ElementIndex := 0 to Mesh2D.Elements.Count - 1 do
+              ElementLeafList := Mesh2D.Elements.ElementRanges.Search(SearchArray);
+              for ElementIndex := 0 to ElementLeafList.Count - 1 do
               begin
-                Element := Mesh2D.Elements[ElementIndex];
+                ElementLeaf := ElementLeafList[ElementIndex];
+                Element := ElementLeaf.Element;
                 if Element.Intersection(Segment2D, IntsectSeg) then
                 begin
-//                  AddElementSegment(0, IntsectSeg);
-//                  SetStartEndPostions;
                   case Mesh.MeshType of
                     mt2D:
                       begin
@@ -10205,47 +10380,78 @@ begin
                       end;
                   end;
 
-
-//                  Segment := TCellElementSegment.Create(self);
-//                  Segment.FSegment := IntsectSeg;
-//                  Segment.Col := Element.ElementNumber;
-//                  Segment.Row := 0;
-//                  Segment.Layer := 0;
-//                  if IsEqual(IntsectSeg[1], Segment2D[1], Epsilon) then
-//                  begin
-//                    Segment.StartPosition := epFirst;
-//                  end
-//                  else if IsEqual(IntsectSeg[1], Segment2D[2], Epsilon) then
-//                  begin
-//                    Segment.StartPosition := epLast;
-//                  end
-//                  else
-//                  begin
-//                    Segment.StartPosition := epMiddle;
-//                  end;
-//                  if IsEqual(IntsectSeg[2], Segment2D[1], Epsilon) then
-//                  begin
-//                    Segment.EndPosition := epFirst;
-//                  end
-//                  else if IsEqual(IntsectSeg[2], Segment2D[2], Epsilon) then
-//                  begin
-//                    Segment.EndPosition := epLast;
-//                  end
-//                  else
-//                  begin
-//                    Segment.EndPosition := epMiddle;
-//                  end;
-//                  Segment.VertexIndex := PointIndex;
-//                  Segment.SectionIndex := SectionIndex;
-//                  FSegments.Add(Segment);
-                end;
+                end
               end;
+
+
+//              for ElementIndex := 0 to Mesh2D.Elements.Count - 1 do
+//              begin
+//                Element := Mesh2D.Elements[ElementIndex];
+//                if Element.Intersection(Segment2D, IntsectSeg) then
+//                begin
+////                  AddElementSegment(0, IntsectSeg);
+////                  SetStartEndPostions;
+//                  case Mesh.MeshType of
+//                    mt2D:
+//                      begin
+//                        AddElementSegment(0, IntsectSeg);
+//                        SetStartEndPostions;
+//                        AddSomeSegments;
+//                      end;
+//                    mt3D:
+//                      begin
+//                        for LayerIndex := 0 to Mesh.LayerCount - 1 do
+//                        begin
+//                          AddElementSegment(LayerIndex, IntsectSeg);
+//                          SetStartEndPostions;
+//                          AddSomeSegments;
+//                        end;
+//                      end;
+//                  end;
+//
+//
+////                  Segment := TCellElementSegment.Create(self);
+////                  Segment.FSegment := IntsectSeg;
+////                  Segment.Col := Element.ElementNumber;
+////                  Segment.Row := 0;
+////                  Segment.Layer := 0;
+////                  if IsEqual(IntsectSeg[1], Segment2D[1], Epsilon) then
+////                  begin
+////                    Segment.StartPosition := epFirst;
+////                  end
+////                  else if IsEqual(IntsectSeg[1], Segment2D[2], Epsilon) then
+////                  begin
+////                    Segment.StartPosition := epLast;
+////                  end
+////                  else
+////                  begin
+////                    Segment.StartPosition := epMiddle;
+////                  end;
+////                  if IsEqual(IntsectSeg[2], Segment2D[1], Epsilon) then
+////                  begin
+////                    Segment.EndPosition := epFirst;
+////                  end
+////                  else if IsEqual(IntsectSeg[2], Segment2D[2], Epsilon) then
+////                  begin
+////                    Segment.EndPosition := epLast;
+////                  end
+////                  else
+////                  begin
+////                    Segment.EndPosition := epMiddle;
+////                  end;
+////                  Segment.VertexIndex := PointIndex;
+////                  Segment.SectionIndex := SectionIndex;
+////                  FSegments.Add(Segment);
+//                end;
+//              end;
             end;
           eaNodes:
             begin
-              for NodeIndex := 0 to Mesh2D.Nodes.Count - 1 do
+              NodeLeafList := Mesh2D.Nodes.NodeRanges.Search(SearchArray);
+              for NodeIndex := 0 to NodeLeafList.Count - 1 do
               begin
-                Node := Mesh2D.Nodes[NodeIndex];
+                NodeLeaf := NodeLeafList[NodeIndex];
+                Node := NodeLeaf.Node;
                 if Node.CellIntersection(Segment2D, IntsectSegs) then
                 begin
                   for IntIndex := 0 to Length(IntsectSegs) - 1 do
@@ -10271,43 +10477,75 @@ begin
                           end;
                         end;
                     end;
-
-//                    Segment := TCellElementSegment.Create(self);
-//                    Segment.FSegment := IntsectSeg;
-//                    Segment.Col := Node.Number;
-//                    Segment.Row := 0;
-//                    Segment.Layer := 0;
-//
-//                    if IsEqual(IntsectSeg[1], Segment2D[1], Epsilon) then
-//                    begin
-//                      Segment.StartPosition := epFirst;
-//                    end
-//                    else if IsEqual(IntsectSeg[1], Segment2D[2], Epsilon) then
-//                    begin
-//                      Segment.StartPosition := epLast;
-//                    end
-//                    else
-//                    begin
-//                      Segment.StartPosition := epMiddle;
-//                    end;
-//                    if IsEqual(IntsectSeg[2], Segment2D[1], Epsilon) then
-//                    begin
-//                      Segment.EndPosition := epFirst;
-//                    end
-//                    else if IsEqual(IntsectSeg[2], Segment2D[2], Epsilon) then
-//                    begin
-//                      Segment.EndPosition := epLast;
-//                    end
-//                    else
-//                    begin
-//                      Segment.EndPosition := epMiddle;
-//                    end;
-//                    Segment.VertexIndex := PointIndex;
-//                    Segment.SectionIndex := SectionIndex;
-//                    FSegments.Add(Segment);
                   end;
-                end;
+                end
               end;
+
+//              for NodeIndex := 0 to Mesh2D.Nodes.Count - 1 do
+//              begin
+//                Node := Mesh2D.Nodes[NodeIndex];
+//                if Node.CellIntersection(Segment2D, IntsectSegs) then
+//                begin
+//                  for IntIndex := 0 to Length(IntsectSegs) - 1 do
+//                  begin
+//                    IntsectSeg := IntsectSegs[IntIndex];
+//
+////                    AddNodeSegment(0, IntsectSeg);
+////                    SetStartEndPostions;
+//                    case Mesh.MeshType of
+//                      mt2D:
+//                        begin
+//                          AddNodeSegment(0, IntsectSeg);
+//                          SetStartEndPostions;
+//                          AddSomeSegments;
+//                        end;
+//                      mt3D:
+//                        begin
+//                          for LayerIndex := 0 to Mesh.LayerCount do
+//                          begin
+//                            AddNodeSegment(LayerIndex, IntsectSeg);
+//                            SetStartEndPostions;
+//                            AddSomeSegments;
+//                          end;
+//                        end;
+//                    end;
+//
+////                    Segment := TCellElementSegment.Create(self);
+////                    Segment.FSegment := IntsectSeg;
+////                    Segment.Col := Node.Number;
+////                    Segment.Row := 0;
+////                    Segment.Layer := 0;
+////
+////                    if IsEqual(IntsectSeg[1], Segment2D[1], Epsilon) then
+////                    begin
+////                      Segment.StartPosition := epFirst;
+////                    end
+////                    else if IsEqual(IntsectSeg[1], Segment2D[2], Epsilon) then
+////                    begin
+////                      Segment.StartPosition := epLast;
+////                    end
+////                    else
+////                    begin
+////                      Segment.StartPosition := epMiddle;
+////                    end;
+////                    if IsEqual(IntsectSeg[2], Segment2D[1], Epsilon) then
+////                    begin
+////                      Segment.EndPosition := epFirst;
+////                    end
+////                    else if IsEqual(IntsectSeg[2], Segment2D[2], Epsilon) then
+////                    begin
+////                      Segment.EndPosition := epLast;
+////                    end
+////                    else
+////                    begin
+////                      Segment.EndPosition := epMiddle;
+////                    end;
+////                    Segment.VertexIndex := PointIndex;
+////                    Segment.SectionIndex := SectionIndex;
+////                    FSegments.Add(Segment);
+//                  end;
+//                end;
+//              end;
             end;
         else
           Assert(False);
@@ -14204,6 +14442,58 @@ begin
   end;
 end;
 
+procedure TScreenObject.ResetFormula(const Compiler: TRbwParser;
+  const ErrorMessage, Source: string; var Formula: string;
+  DataType: TRbwDataType);
+begin
+  if (FModel <> nil)
+    and not (csDestroying in FModel.ComponentState)
+    and not (FModel as TCustomModel).Clearing
+    and not ClearingDeletedDataSets then
+  begin
+    frmFormulaErrors.AddFormulaError(Name, Source, Formula, ErrorMessage);
+  end;
+  case DataType of
+    rdtDouble, rdtInteger:
+      begin
+        Formula := '0';
+      end;
+    rdtBoolean:
+      begin
+        Formula := 'False';
+      end;
+    rdtString:
+      begin
+        Formula := '"0"';
+      end;
+  else
+    Assert(False);
+  end;
+  Compiler.Compile(Formula);
+end;
+
+function TScreenObject.CoordinateCaption: string;
+begin
+  case ViewDirection of
+    vdTop:
+      begin
+        result := StrZcoordinate;
+      end;
+    vdFront:
+      begin
+        result := StrYcoordinate;
+      end;
+    vdSide:
+      begin
+        result := StrXcoordinate;
+      end;
+  else
+    begin
+      Assert(False);
+    end;
+  end;
+end;
+
 procedure TScreenObject.UpdateTopSegments(
   const EvaluatedAt: TEvaluatedAt; const PointsRotated: boolean;
   var RotatedPoints: TEdgePointArray; AModel: TBaseModel);
@@ -14235,7 +14525,14 @@ begin
         begin
           TempFormula := ElevationFormula;
           Compiler := GetCompiler(dso3D);
-          Compiler.Compile(TempFormula);
+          try
+            Compiler.Compile(TempFormula);
+          except on E: ERbwParserError do
+            begin
+              ResetFormula(Compiler, E.Message, CoordinateCaption,
+                TempFormula, rdtDouble);
+            end;
+          end;
           HigherElevExpression := Compiler.CurrentExpression;
           InitializeUsedDataSets(LocalModel, Compiler, HigherElevExpression,
             HigherElevVariables, HigherElevDataSets);
@@ -14244,14 +14541,28 @@ begin
         begin
           TempFormula := HigherElevationFormula;
           Compiler := GetCompiler(dso3D);
-          Compiler.Compile(TempFormula);
+          try
+            Compiler.Compile(TempFormula);
+          except on E: ERbwParserError do
+            begin
+              ResetFormula(Compiler, E.Message, HigherCoordinateCaption,
+                TempFormula, rdtDouble);
+            end;
+          end;
           HigherElevExpression := Compiler.CurrentExpression;
           InitializeUsedDataSets(LocalModel, Compiler, HigherElevExpression,
             HigherElevVariables, HigherElevDataSets);
 
           TempFormula := LowerElevationFormula;
           Compiler := GetCompiler(dso3D);
-          Compiler.Compile(TempFormula);
+          try
+            Compiler.Compile(TempFormula);
+          except on E: ERbwParserError do
+            begin
+              ResetFormula(Compiler, E.Message, LowerCoordinateCaption,
+                TempFormula, rdtDouble);
+            end;
+          end;
           LowerElevExpression := Compiler.CurrentExpression;
           InitializeUsedDataSets(LocalModel, Compiler, LowerElevExpression,
             LowerElevVariables, LowerElevDataSets);
@@ -15903,6 +16214,28 @@ begin
 
 end;
 
+function TScreenObject.LowerCoordinateCaption: string;
+begin
+  case ViewDirection of
+    vdTop:
+      begin
+        result := StrLowerZcoordinate;
+      end;
+    vdFront:
+      begin
+        result := StrLowerYcoordinate;
+      end;
+    vdSide:
+      begin
+        result := StrLowerXcoordinate;
+      end;
+  else
+    begin
+      Assert(False);
+    end;
+  end;
+end;
+
 function TScreenObject.GetSelectedVertices(const index: integer): boolean;
 begin
   ValidateIndex(Index);
@@ -15945,6 +16278,9 @@ end;
 procedure TScreenObject.SetSelected(const Value: boolean);
 var
   Index: integer;
+{$IFDEF SUTRA}
+  NewLocation: TSegment2D;
+{$ENDIF}
 begin
   // You can't select a deleted object.
   if Value and Deleted then
@@ -15969,6 +16305,14 @@ begin
     end;
     CacheElevationArrays;
     InvalidateModel;
+    {$IFDEF SUTRA}
+    if (FModel <> nil) and (ViewDirection = vdFront) and Selected
+      and ((FModel as TPhastModel).ModelSelection = msSutra22) then
+    begin
+      SetNewCrossSectionAngle(SutraAngle, NewLocation);
+      frmGoPhast.PhastModel.Mesh.CrossSection.Segment := NewLocation;
+    end;
+    {$ENDIF}
   end;
 
   // If the object is not selected, it can't have any selected vertices.
@@ -19337,20 +19681,16 @@ var
   Segment: TCellElementSegment;
   Index: Integer;
   Closest: TPoint2D;
-//  StartPosition, EndPostion: TPoint2D;
   MinX: double;
   MinY: double;
   MaxX: double;
   MaxY: double;
   Position: Integer;
   IntervalDefinitions: TSearchArray;
-//  InIntervalList: TList;
-//  PointArray: TOneDRealArray;
   LeafList: TCellElementLeafList;
   SectionList: TList;
   SegmentIndex: Integer;
   Leaf: TCellElementLeaf;
-//  Grid: TCustomModelGrid;
   Limits: TGridLimit;
   RotatedLocation: TPoint2D;
   FirstPoint, SecondPoint: TPoint2D;
@@ -36121,7 +36461,13 @@ var
   CellList: TCellAssignmentList;
   CellAssignment: TCellAssignment;
   AssignmentIndex: Integer;
+  LocalModel: TCustomModel;
 begin
+  LocalModel := AModel as TCustomModel;
+  if LocalModel.Mesh.MeshType = mt2D then
+  begin
+    Exit;
+  end;
   CellList := TCellAssignmentList.Create;
   try
     Assert(DataSet <> nil);
@@ -36223,6 +36569,14 @@ begin
   end;
 end;
 
+constructor TSutraDelegate.Create(ScreenObject: TScreenObject);
+begin
+  inherited;
+  {$IFDEF SUTRA}
+  FModelSelection := msSutra22;
+  {$ENDIF}
+end;
+
 procedure TSutraDelegate.GetCellsToAssign(const DataSetFunction: string;
   OtherData: TObject; const EvaluatedAt: TEvaluatedAt;
   CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
@@ -36257,16 +36611,16 @@ var
   Mesh: TSutraMesh3D;
   IAnnotation: string;
   EAnnotation: string;
-  LayerLimit: Integer;
-  ColLimit: Integer;
+//  LayerLimit: Integer;
+//  ColLimit: Integer;
   LayerIndex: Integer;
   ColIndex: Integer;
-  Element3D: TSutraElement3D;
-  Node3D: TSutraNode3D;
-  CenterPoint: TPoint3D;
+//  Element3D: TSutraElement3D;
+//  Node3D: TSutraNode3D;
+//  CenterPoint: TPoint3D;
   SectionIndex: Integer;
-  PointDistance: Extended;
-  RotatedX: Extended;
+//  PointDistance: Extended;
+//  RotatedX: Extended;
   RotatedY: Extended;
   Limits: TLimitsArray;
   UpperLimit: Double;
@@ -36278,8 +36632,13 @@ var
   SelectX: Double;
   SelectY: Double;
   SegmentIndex: Integer;
-  PointAngle: Extended;
+//  PointAngle: Extended;
   ACellAssignment: TCellAssignment;
+  Block: T2DBlock;
+  Points: TQuadPointInRegionArray;
+  Locations: TRbwQuadTree;
+  StoredPoint: TStoredNodeOrElement;
+  index: integer;
   procedure GetCellBounds(LayerIndex,ColIndex: integer);
   begin
     UpperLimit := Limits[LayerIndex,ColIndex].UpperLimit;
@@ -36307,11 +36666,207 @@ var
     end;
 
   end;
+  function SegmentOK(ASegment: TCellElementSegment): boolean;
+  var
+    TopSeg: TSegment2D;
+    Element2D: TSutraElement2D;
+    Node2D: TSutraNode2D;
+    IntSectSeg: TSegment2D;
+    IntSectSegArray: TSegment2DArray;
+    TopPolygon: TPolygon2D;
+    PointIndex: Integer;
+    TempPoints: TRealPointArray;
+    NodeCellOutline: TVertexArray;
+    NodeIndex: Integer;
+    CellOutline: TGpcPolygonClass;
+    AVertex: Tgpc_vertex;
+    TopPoly: TGpcPolygonClass;
+    IntersectArea: double;
+    IntersectionContours: TGpcPolygonClass;
+    ContourIndex: Integer;
+    procedure RotatePoint(var APoint: TPoint2D);
+    var
+      temp: TPoint2D;
+      Angle: Double;
+    begin
+      Angle := FScreenObject.SutraAngle;
+      if (Angle <> 0) then
+      begin
+        temp.X := Cos(Angle) * APoint.X - Sin(Angle) * APoint.Y;
+        temp.Y := Sin(Angle) * APoint.X + Cos(Angle) * APoint.Y;
+        APoint := temp;
+      end;
+    end;
+  begin
+    result := False;
+    case FScreenObject.ElevationCount of
+      ecZero: ;  // do nothing
+      ecOne:
+        begin
+          TopSeg[1].x := ASegment.X1;
+          TopSeg[1].y := FScreenObject.FTopElevation;
+          TopSeg[2].x := ASegment.X2;
+          TopSeg[2].y := TopSeg[1].y;
+
+          RotatePoint(TopSeg[1]);
+          RotatePoint(TopSeg[2]);
+
+          case FScreenObject.EvaluatedAt of
+            eaBlocks:
+              begin
+                Element2D := Mesh.Mesh2D.Elements[ASegment.Col];
+                if not Element2D.Intersection(TopSeg, IntSectSeg) then
+                begin
+                  Exit;
+                end;
+              end;
+            eaNodes:
+              begin
+                Node2D := Mesh.Mesh2D.Nodes[ASegment.Col];
+                if not Node2D.CellIntersection(TopSeg, IntSectSegArray) then
+                begin
+                  Exit;
+                end;
+              end;
+            else
+              Assert(False);
+          end;
+        end;
+      ecTwo:
+        begin
+          if ASegment.X1 = ASegment.X2 then
+          begin
+            TopSeg[1].x := ASegment.X1;
+            TopSeg[1].y := FScreenObject.FTopElevation;
+            TopSeg[2].x := ASegment.X2;
+            TopSeg[2].y := FScreenObject.FBottomElevation;
+
+            RotatePoint(TopSeg[1]);
+            RotatePoint(TopSeg[2]);
+
+            case FScreenObject.EvaluatedAt of
+              eaBlocks:
+                begin
+                  Element2D := Mesh.Mesh2D.Elements[ASegment.Col];
+                  if not Element2D.Intersection(TopSeg, IntSectSeg) then
+                  begin
+                    Exit;
+                  end;
+                end;
+              eaNodes:
+                begin
+                  Node2D := Mesh.Mesh2D.Nodes[ASegment.Col];
+                  if not Node2D.CellIntersection(TopSeg, IntSectSegArray) then
+                  begin
+                    Exit;
+                  end;
+                end;
+              else
+                Assert(False);
+            end;
+          end
+          else
+          begin
+            SetLength(TopPolygon, 4);
+            TopPolygon[0].x := ASegment.x1;
+            TopPolygon[0].y := FScreenObject.FTopElevation;
+            TopPolygon[1].x := ASegment.x2;
+            TopPolygon[1].y := FScreenObject.FTopElevation;
+            TopPolygon[2].x := ASegment.x2;
+            TopPolygon[2].y := FScreenObject.FBottomElevation;
+            TopPolygon[3].x := ASegment.x1;
+            TopPolygon[3].y := FScreenObject.FBottomElevation;
+            for PointIndex := 0 to Length(TopPolygon) - 1 do
+            begin
+              RotatePoint(TopPolygon[PointIndex]);
+            end;
+
+            case FScreenObject.EvaluatedAt of
+              eaBlocks:
+                begin
+                  Element2D := Mesh.Mesh2D.Elements[ASegment.Col];
+                  Assert(Element2D.Nodes.Count = 4);
+                  SetLength(TempPoints,4);
+                  for NodeIndex := 0 to Element2D.Nodes.Count - 1 do
+                  begin
+                    TempPoints[NodeIndex] :=
+                      Element2D.Nodes[NodeIndex].Node.Location;
+                  end;
+                end;
+              eaNodes:
+                begin
+                  Node2D := Mesh.Mesh2D.Nodes[ASegment.Col];
+                  Node2D.GetCellOutline(NodeCellOutline);
+                  SetLength(TempPoints, Length(NodeCellOutline));
+                  for NodeIndex := 0 to Length(NodeCellOutline) - 1 do
+                  begin
+                    TempPoints[NodeIndex] := NodeCellOutline[NodeIndex];
+                  end;
+                end;
+              else Assert(False);
+            end;
+
+            CellOutline := TGpcPolygonClass.Create;
+            TopPoly := TGpcPolygonClass.Create;
+            try
+              CellOutline.NumberOfContours := 1;
+              CellOutline.VertexCount[0] := Length(TempPoints);
+              for PointIndex := 0 to Length(TempPoints) - 1 do
+              begin
+                AVertex.x := TempPoints[PointIndex].x;
+                AVertex.y := TempPoints[PointIndex].y;
+                CellOutline.Vertices[0,PointIndex] := AVertex;
+              end;
+
+              TopPoly.NumberOfContours := 1;
+              TopPoly.VertexCount[0] := Length(TopPolygon);
+              for PointIndex := 0 to Length(TopPolygon) - 1 do
+              begin
+                AVertex.x := TopPolygon[PointIndex].x;
+                AVertex.y := TopPolygon[PointIndex].y;
+                TopPoly.Vertices[0,PointIndex] := AVertex;
+              end;
+
+
+              IntersectionContours := TGpcPolygonClass.CreateFromOperation(
+                GPC_INT, CellOutline, TopPoly);
+              try
+                IntersectArea := 0.;
+                for ContourIndex := 0 to IntersectionContours.NumberOfContours - 1 do
+                begin
+                  if IntersectionContours.Holes[ContourIndex] then
+                  begin
+                    IntersectArea := IntersectArea
+                      - Abs(IntersectionContours.ContourArea(ContourIndex));
+                  end
+                  else
+                  begin
+                    IntersectArea := IntersectArea
+                      + Abs(IntersectionContours.ContourArea(ContourIndex));
+                  end;
+                end;
+                if IntersectArea = 0 then
+                begin
+                  Exit;
+                end;
+              finally
+                IntersectionContours.Free;
+              end;
+            finally
+              CellOutline.Free;
+              TopPoly.Free;
+            end
+          end;
+        end;
+      else Assert(False);
+    end;
+    result := True;
+  end;
 begin
   Assert(CellList.Count = 0);
   if DataSet = nil then
   begin
-    EvaluatedAt := eaBlocks;
+    EvaluatedAt := FScreenObject.EvaluatedAt;
     Orientation := dso3D;
   end
   else
@@ -36337,108 +36892,185 @@ begin
   try
     UpdateCurrentScreenObject(FScreenObject);
 
-    LayerLimit := -1;
-    ColLimit := -1;
-    case EvaluatedAt of
-      eaBlocks:
-        begin
-          LayerLimit := Mesh.LayerCount;
-          ColLimit := Mesh.Mesh2D.Elements.Count;
-        end;
-      eaNodes:
-        begin
-          LayerLimit := Mesh.LayerCount+1;
-          ColLimit := Mesh.Mesh2D.Nodes.Count;
-        end;
-      else Assert(False);
-    end;
+//    LayerLimit := -1;
+//    ColLimit := -1;
+//    case EvaluatedAt of
+//      eaBlocks:
+//        begin
+//          LayerLimit := Mesh.LayerCount;
+//          ColLimit := Mesh.Mesh2D.Elements.Count;
+//        end;
+//      eaNodes:
+//        begin
+//          LayerLimit := Mesh.LayerCount+1;
+//          ColLimit := Mesh.Mesh2D.Nodes.Count;
+//        end;
+//      else Assert(False);
+//    end;
 
     if (FScreenObject.SetValuesOfEnclosedCells
       or (FScreenObject.SetValuesOfIntersectedCells
       and (FScreenObject.ElevationCount <> ecZero)))
       and FScreenObject.Closed then
     begin
-      for LayerIndex := 0 to LayerLimit - 1 do
-      begin
-        for ColIndex := 0 to ColLimit - 1 do
-        begin
-          case EvaluatedAt of
-            eaBlocks:
-              begin
-                Element3D := Mesh.ElementArray[LayerIndex,ColIndex];
-                CenterPoint := Element3D.CenterLocation;
-              end;
-            eaNodes:
-              begin
-                Node3D := Mesh.NodeArray[LayerIndex,ColIndex];
-                CenterPoint := Node3D.NodeLocation;
-              end
-            else Assert(False);
-          end;
-          // need to rotate point here.
-          PointDistance := sqrt(Sqr(CenterPoint.x) + Sqr(CenterPoint.y));
-          PointAngle := ArcTan2(CenterPoint.y,CenterPoint.x);
-          RotatedX := Cos(PointAngle-FScreenObject.SutraAngle)*PointDistance;
-          RotatedY := Sin(PointAngle-FScreenObject.SutraAngle)*PointDistance;
+      Locations := nil;
+      case EvaluatedAt of
+        eaBlocks: Locations := Mesh.Elements.
+          ElementCenters[FScreenObject.SutraAngle];
+        eaNodes: Locations := Mesh.Nodes.
+          NodeLocations[FScreenObject.SutraAngle];
+        else Assert(False);
+      end;
 
-          if FScreenObject.IsPointInside(
-            RotatedX, CenterPoint.Z, SectionIndex) then
+      Block.XMin := FScreenObject.MinX;
+      Block.XMax := FScreenObject.MaxX;
+      Block.YMin := FScreenObject.MinY;
+      Block.YMax := FScreenObject.MaxY;
+      Locations.FindPointsInBlock(Block,Points);
+      for index := 0 to Length(Points) - 1 do
+      begin
+        if FScreenObject.IsPointInside(
+          Points[index].X, Points[index].Y, SectionIndex) then
+        begin
+          StoredPoint := Points[index].Data[0];
+          LayerIndex := StoredPoint.Layer;
+          ColIndex := StoredPoint.Col;
+          RotatedY := StoredPoint.Y;
+          if Orientation = dso3D then
           begin
-            if Orientation = dso3D then
+            if not AssignElevations(ColIndex, 0, LayerIndex, AModel) then
             begin
-              if not AssignElevations(ColIndex, 0, LayerIndex, AModel) then
+              Continue;
+            end;
+
+            if (FScreenObject.ElevationCount = ecTwo)
+              and not FScreenObject.SetValuesOfEnclosedCells then
+            begin
+              GetCellBounds(LayerIndex,ColIndex);
+              if not (((UpperLimit >= FScreenObject.FTopElevation)
+                and (LowerLimit <= FScreenObject.FTopElevation))
+                or ((UpperLimit >= FScreenObject.FBottomElevation)
+                and (LowerLimit <= FScreenObject.FBottomElevation))) then
               begin
                 Continue;
               end;
-
-              if (FScreenObject.ElevationCount = ecTwo)
-                and not FScreenObject.SetValuesOfEnclosedCells then
+            end
+            else
+            begin
+              GetCellBounds(LayerIndex,ColIndex);
+              if not ElevationOk then
               begin
-                GetCellBounds(LayerIndex,ColIndex);
-                if not (((UpperLimit >= FScreenObject.FTopElevation)
-                  and (LowerLimit <= FScreenObject.FTopElevation))
-                  or ((UpperLimit >= FScreenObject.FBottomElevation)
-                  and (LowerLimit <= FScreenObject.FBottomElevation))) then
-                begin
-                  Continue;
-                end;
-              end
-              else
-              begin
-                GetCellBounds(LayerIndex,ColIndex);
-                if not ElevationOk then
-                begin
-                  Continue;
-                end;
+                Continue;
               end;
-
-              if FScreenObject.SetValuesOfIntersectedCells
-                and (FScreenObject.ElevationCount <> ecZero) then
-              begin
-                AssignmentMethod := amIntersect;
-                if IAnnotation = '' then
-                begin
-                  IAnnotation := IntersectAnnotation(DataSetFunction, OtherData);
-                end;
-                Annotation := IAnnotation;
-              end
-              else
-              begin
-                AssignmentMethod := amEnclose;
-                if EAnnotation = '' then
-                begin
-                  EAnnotation := EncloseAnnotation(DataSetFunction, OtherData);
-                end;
-                Annotation := EAnnotation;
-              end;
-              UpdateCurrentSection(SectionIndex);
-              CellList.Add(TCellAssignment.Create(LayerIndex, 0, ColIndex,
-                nil, SectionIndex, Annotation, AssignmentMethod));
             end;
-          end;
 
+            if FScreenObject.SetValuesOfIntersectedCells
+              and (FScreenObject.ElevationCount <> ecZero) then
+            begin
+              AssignmentMethod := amIntersect;
+              if IAnnotation = '' then
+              begin
+                IAnnotation := IntersectAnnotation(DataSetFunction, OtherData);
+              end;
+              Annotation := IAnnotation;
+            end
+            else
+            begin
+              AssignmentMethod := amEnclose;
+              if EAnnotation = '' then
+              begin
+                EAnnotation := EncloseAnnotation(DataSetFunction, OtherData);
+              end;
+              Annotation := EAnnotation;
+            end;
+            UpdateCurrentSection(SectionIndex);
+            CellList.Add(TCellAssignment.Create(LayerIndex, 0, ColIndex,
+              nil, SectionIndex, Annotation, AssignmentMethod));
+          end
         end;
       end;
+
+//      for LayerIndex := 0 to LayerLimit - 1 do
+//      begin
+//        for ColIndex := 0 to ColLimit - 1 do
+//        begin
+//          case EvaluatedAt of
+//            eaBlocks:
+//              begin
+//                Element3D := Mesh.ElementArray[LayerIndex,ColIndex];
+//                CenterPoint := Element3D.CenterLocation;
+//              end;
+//            eaNodes:
+//              begin
+//                Node3D := Mesh.NodeArray[LayerIndex,ColIndex];
+//                CenterPoint := Node3D.NodeLocation;
+//              end
+//            else Assert(False);
+//          end;
+//          // need to rotate point here.
+//          PointDistance := sqrt(Sqr(CenterPoint.x) + Sqr(CenterPoint.y));
+//          PointAngle := ArcTan2(CenterPoint.y,CenterPoint.x);
+//          RotatedX := Cos(PointAngle-FScreenObject.SutraAngle)*PointDistance;
+//          RotatedY := Sin(PointAngle-FScreenObject.SutraAngle)*PointDistance;
+//
+//          if FScreenObject.IsPointInside(
+//            RotatedX, CenterPoint.Z, SectionIndex) then
+//          begin
+//            if Orientation = dso3D then
+//            begin
+//              if not AssignElevations(ColIndex, 0, LayerIndex, AModel) then
+//              begin
+//                Continue;
+//              end;
+//
+//              if (FScreenObject.ElevationCount = ecTwo)
+//                and not FScreenObject.SetValuesOfEnclosedCells then
+//              begin
+//                GetCellBounds(LayerIndex,ColIndex);
+//                if not (((UpperLimit >= FScreenObject.FTopElevation)
+//                  and (LowerLimit <= FScreenObject.FTopElevation))
+//                  or ((UpperLimit >= FScreenObject.FBottomElevation)
+//                  and (LowerLimit <= FScreenObject.FBottomElevation))) then
+//                begin
+//                  Continue;
+//                end;
+//              end
+//              else
+//              begin
+//                GetCellBounds(LayerIndex,ColIndex);
+//                if not ElevationOk then
+//                begin
+//                  Continue;
+//                end;
+//              end;
+//
+//              if FScreenObject.SetValuesOfIntersectedCells
+//                and (FScreenObject.ElevationCount <> ecZero) then
+//              begin
+//                AssignmentMethod := amIntersect;
+//                if IAnnotation = '' then
+//                begin
+//                  IAnnotation := IntersectAnnotation(DataSetFunction, OtherData);
+//                end;
+//                Annotation := IAnnotation;
+//              end
+//              else
+//              begin
+//                AssignmentMethod := amEnclose;
+//                if EAnnotation = '' then
+//                begin
+//                  EAnnotation := EncloseAnnotation(DataSetFunction, OtherData);
+//                end;
+//                Annotation := EAnnotation;
+//              end;
+//              UpdateCurrentSection(SectionIndex);
+//              CellList.Add(TCellAssignment.Create(LayerIndex, 0, ColIndex,
+//                nil, SectionIndex, Annotation, AssignmentMethod));
+//            end;
+//          end;
+//
+//        end;
+//      end;
     end;
     if FScreenObject.SetValuesOfIntersectedCells then
     begin
@@ -36516,7 +37148,12 @@ begin
             Continue;
           end;
 
-          case EvaluatedAt of
+          if not SegmentOK(ASegment) then
+          begin
+            Continue;
+          end;
+
+          {case EvaluatedAt of
             eaBlocks:
               begin
                 Element3D := Mesh.ElementArray[ASegment.Layer,ASegment.Col];
@@ -36540,7 +37177,7 @@ begin
           if not ElevationOK then
           begin
             Continue;
-          end;
+          end;   }
 
           UpdateCurrentSegment(ASegment);
           if IAnnotation = '' then
@@ -36621,7 +37258,7 @@ var
   EvalAt: TEvaluatedAt;
   Orientation: TDataSetOrientation;
   AssignmentMethod: TAssignmentMethod;
-  Limit: Integer;
+//  Limit: Integer;
   Element3D: TSutraElement3D;
   Node3D: TSutraNode3D;
   Node2: TSutraNode3D;
@@ -36629,6 +37266,12 @@ var
   LayerIndex: Integer;
   Intersected: Boolean;
   PriorLayer: Integer;
+  Locations: TRbwQuadTree;
+  Block: T2DBlock;
+  Points: TQuadPointInRegionArray;
+  PointIndex: Integer;
+  Element2D: TSutraElement2D;
+  Node2D: TSutraNode2D;
 begin
   if DataSet = nil then
   begin
@@ -36674,24 +37317,44 @@ begin
       and (FScreenObject.ElevationCount <> ecZero)))
       and FScreenObject.Closed then
     begin
-
-      Limit := 0;
+      Locations := nil;
       case EvalAt of
-        eaBlocks: Limit := Mesh.Mesh2D.Elements.Count;
-        eaNodes: Limit := Mesh.Mesh2D.Nodes.Count;
+        eaBlocks:
+          begin
+            Locations := Mesh.Mesh2D.Elements.ElementCenters;
+          end;
+        eaNodes:
+          begin
+            Locations := Mesh.Mesh2D.Nodes.NodesLocations;
+          end;
         else Assert(False);
       end;
-      // Find the cells inside the screen object and assign values to them.
-      for ColIndex := 0 to Limit-1 do
+
+      Block.XMin := FScreenObject.MinX;
+      Block.XMax := FScreenObject.MaxX;
+      Block.YMin := FScreenObject.MinY;
+      Block.YMax := FScreenObject.MaxY;
+
+      Locations.FindPointsInBlock(Block, Points);
+      for PointIndex := 0 to Length(Points) - 1 do
       begin
-        case EvalAt of
-          eaBlocks: APoint := Mesh.Mesh2D.Elements[ColIndex].Center;
-          eaNodes: APoint := Mesh.Mesh2D.Nodes[ColIndex].Location;
-          else Assert(False);
-        end;
-        if FScreenObject.IsPointInside(APoint.X,
-          APoint.Y, SectionIndex) then
+        if FScreenObject.IsPointInside(Points[PointIndex].X,
+          Points[PointIndex].Y, SectionIndex) then
         begin
+          ColIndex := -1;
+          case EvalAt of
+            eaBlocks:
+              begin
+                Element2D := Points[PointIndex].Data[0];
+                ColIndex := Element2D.ElementNumber;
+              end;
+            eaNodes:
+              begin
+                Node2D := Points[PointIndex].Data[0];
+                ColIndex := Node2D.Number;
+              end;
+            else Assert(False);
+          end;
           OtherIndex(0, ColIndex, FirstElevationIndex,
             LastElevationIndex, DataSet);
           if (FirstElevationIndex >= 0)
@@ -36757,24 +37420,26 @@ begin
                   eaNodes:
                     begin
                       Node3D := Mesh.NodeArray[ElevationIndex, ColIndex];
-                      if ElevationIndex > 0 then
-                      begin
-                        Node2 := Mesh.NodeArray[ElevationIndex-1, ColIndex];
-                        UpperBound := (Node3D.Z+Node2.Z)/2;
-                      end
-                      else
-                      begin
-                        UpperBound := Node3D.Z;
-                      end;
-                      if ElevationIndex < LastElevationIndex then
-                      begin
-                        Node2 := Mesh.NodeArray[ElevationIndex+1, ColIndex];
-                        LowerBound := (Node3D.Z+Node2.Z)/2;
-                      end
-                      else
-                      begin
-                        LowerBound := Node3D.Z;
-                      end;
+                      UpperBound := Node3D.Top;
+                      LowerBound := Node3D.Bottom;
+//                      if ElevationIndex > 0 then
+//                      begin
+//                        Node2 := Mesh.NodeArray[ElevationIndex-1, ColIndex];
+//                        UpperBound := (Node3D.Z+Node2.Z)/2;
+//                      end
+//                      else
+//                      begin
+//                        UpperBound := Node3D.Z;
+//                      end;
+//                      if ElevationIndex < LastElevationIndex then
+//                      begin
+//                        Node2 := Mesh.NodeArray[ElevationIndex+1, ColIndex];
+//                        LowerBound := (Node3D.Z+Node2.Z)/2;
+//                      end
+//                      else
+//                      begin
+//                        LowerBound := Node3D.Z;
+//                      end;
                     end;
                 else
                   Assert(False);
@@ -36801,9 +37466,11 @@ begin
                         begin
                           if (Orientation = dsoTop) or
                             ((FScreenObject.TopElevation >= LowerBound)
-                            and ((FScreenObject.BottomElevation < UpperBound)
+                            and ((FScreenObject.BottomElevation < UpperBound))
                             or ((FScreenObject.BottomElevation = UpperBound)
-                            and (ElevationIndex = LayerLimit)))) then
+                            and (ElevationIndex = LayerLimit))
+                            or ((FScreenObject.TopElevation = UpperBound)
+                            and (ElevationIndex = 0))) then
                           begin
                             CellList.Add(TCellAssignment.Create(ElevationIndex,
                               0, ColIndex, nil, SectionIndex, Annotation,
@@ -36865,8 +37532,201 @@ begin
               end;
             end;
           end;
-        end;
+        end
       end;
+
+//      Limit := 0;
+//      case EvalAt of
+//        eaBlocks: Limit := Mesh.Mesh2D.Elements.Count;
+//        eaNodes: Limit := Mesh.Mesh2D.Nodes.Count;
+//        else Assert(False);
+//      end;
+//      // Find the cells inside the screen object and assign values to them.
+//      for ColIndex := 0 to Limit-1 do
+//      begin
+//        case EvalAt of
+//          eaBlocks: APoint := Mesh.Mesh2D.Elements[ColIndex].Center;
+//          eaNodes: APoint := Mesh.Mesh2D.Nodes[ColIndex].Location;
+//          else Assert(False);
+//        end;
+//        if FScreenObject.IsPointInside(APoint.X,
+//          APoint.Y, SectionIndex) then
+//        begin
+//          OtherIndex(0, ColIndex, FirstElevationIndex,
+//            LastElevationIndex, DataSet);
+//          if (FirstElevationIndex >= 0)
+//            and (LastElevationIndex <= LayerLimit) then
+//          begin
+//            for ElevationIndex := FirstElevationIndex to LastElevationIndex do
+//            begin
+//              case FScreenObject.ElevationCount of
+//                ecZero: ; // do nothing
+//                ecOne:
+//                  begin
+//                    FScreenObject.FTopElevation :=
+//                      FScreenObject.Higher3DElevations[AModel][
+//                        ElevationIndex, 0, ColIndex];
+//                    FScreenObject.FBottomElevation :=
+//                      FScreenObject.TopElevation
+//                  end;
+//                ecTwo:
+//                  begin
+//                    FScreenObject.FTopElevation :=
+//                      FScreenObject.Higher3DElevations[AModel][
+//                        ElevationIndex, 0, ColIndex];
+//                    FScreenObject.FBottomElevation :=
+//                      FScreenObject.Lower3DElevations[AModel][
+//                        ElevationIndex, 0, ColIndex];
+//                  end;
+//                else Assert(False);
+//              end;
+//
+//              if not FScreenObject.SetValuesOfEnclosedCells then
+//              begin
+//                AssignmentMethod := amIntersect;
+//                if IAnnotation = '' then
+//                begin
+//                  IAnnotation := IntersectAnnotation(
+//                    DataSetFunction, OtherData);
+//                end;
+//                Annotation := IAnnotation;
+//              end
+//              else
+//              begin
+//                AssignmentMethod := amEnclose;
+//                if EAnnotation = '' then
+//                begin
+//                  EAnnotation := EncloseAnnotation(DataSetFunction, OtherData);
+//                end;
+//                Annotation := EAnnotation;
+//              end;
+//              UpdateCurrentSection(SectionIndex);
+//
+//              UpperBound := 0;
+//              LowerBound := 0;
+//              if (FScreenObject.ElevationCount in [ecOne, ecTwo])
+//                and (Mesh.MeshType = mt3D) then
+//              begin
+//                case EvalAt of
+//                  eaBlocks:
+//                    begin
+//                      Element3D := Mesh.ElementArray[ElevationIndex, ColIndex];
+//                      UpperBound := Element3D.UpperElevation;
+//                      LowerBound := Element3D.LowerElevation;
+//                    end;
+//                  eaNodes:
+//                    begin
+//                      Node3D := Mesh.NodeArray[ElevationIndex, ColIndex];
+//                      if ElevationIndex > 0 then
+//                      begin
+//                        Node2 := Mesh.NodeArray[ElevationIndex-1, ColIndex];
+//                        UpperBound := (Node3D.Z+Node2.Z)/2;
+//                      end
+//                      else
+//                      begin
+//                        UpperBound := Node3D.Z;
+//                      end;
+//                      if ElevationIndex < LastElevationIndex then
+//                      begin
+//                        Node2 := Mesh.NodeArray[ElevationIndex+1, ColIndex];
+//                        LowerBound := (Node3D.Z+Node2.Z)/2;
+//                      end
+//                      else
+//                      begin
+//                        LowerBound := Node3D.Z;
+//                      end;
+//                    end;
+//                else
+//                  Assert(False);
+//                end;
+//              end;
+//
+//              case Mesh.MeshType of
+//                mt2D:
+//                  begin
+//                    CellList.Add(TCellAssignment.Create(ElevationIndex,
+//                      0, ColIndex, nil, SectionIndex, Annotation,
+//                      AssignmentMethod));
+//                  end;
+//                mt3D:
+//                  begin
+//                    case FScreenObject.ElevationCount of
+//                      ecZero:
+//                        begin
+//                          CellList.Add(TCellAssignment.Create(ElevationIndex,
+//                            0, ColIndex, nil, SectionIndex, Annotation,
+//                            AssignmentMethod));
+//                        end;
+//                      ecOne:
+//                        begin
+//                          if (Orientation = dsoTop) or
+//                            ((FScreenObject.TopElevation >= LowerBound)
+//                            and ((FScreenObject.BottomElevation < UpperBound)
+//                            or ((FScreenObject.BottomElevation = UpperBound)
+//                            and (ElevationIndex = LayerLimit)))) then
+//                          begin
+//                            CellList.Add(TCellAssignment.Create(ElevationIndex,
+//                              0, ColIndex, nil, SectionIndex, Annotation,
+//                              AssignmentMethod));
+//                          end;
+//                        end;
+//                      ecTwo:
+//                        begin
+//                          if not FScreenObject.SetValuesOfEnclosedCells then
+//                          begin
+//                            if (Orientation = dsoTop)
+//                              or ((UpperBound >= FScreenObject.TopElevation)
+//                              and (LowerBound <= FScreenObject.TopElevation))
+//                              or ((UpperBound >= FScreenObject.BottomElevation)
+//                              and (LowerBound <= FScreenObject.BottomElevation)) then
+//                            begin
+//                              CellList.Add(TCellAssignment.Create(ElevationIndex,
+//                                0, ColIndex, nil, SectionIndex, Annotation,
+//                                AssignmentMethod));
+//                            end;
+//                          end
+//                          else
+//                          begin
+//                            case FScreenObject.EvaluatedAt of
+//                              eaBlocks:
+//                                begin
+//                                  Middle := (LowerBound + UpperBound)/2;
+//                                  if (Orientation = dsoTop) or
+//                                    ((FScreenObject.TopElevation >= Middle)
+//                                    and (FScreenObject.BottomElevation <= Middle)) then
+//                                  begin
+//                                    CellList.Add(TCellAssignment.Create(
+//                                      ElevationIndex, 0,
+//                                      ColIndex, nil, SectionIndex, Annotation,
+//                                      AssignmentMethod));
+//                                  end;
+//                                end;
+//                              eaNodes:
+//                                begin
+//                                  if (Orientation = dsoTop) or
+//                                    ((FScreenObject.TopElevation >= LowerBound)
+//                                    and (FScreenObject.BottomElevation <= UpperBound))
+//                                    then
+//                                  begin
+//                                    CellList.Add(TCellAssignment.Create(
+//                                      ElevationIndex, 0,
+//                                      ColIndex, nil, SectionIndex, Annotation,
+//                                      AssignmentMethod));
+//                                  end;
+//                                end;
+//                              else Assert(False);
+//                            end;
+//                          end;
+//                        end;
+//                      else Assert(False);
+//                    end;
+//                  end
+//                else Assert(False);
+//              end;
+//            end;
+//          end;
+//        end;
+//      end;
     end;
     if FScreenObject.SetValuesOfIntersectedCells then
     begin
@@ -36888,12 +37748,13 @@ begin
           PriorRow := ASegment.Row;
           PriorLayer := ASegment.Layer;
         end;
-        if (FirstElevationIndex >= 0) and (LastElevationIndex <= LayerLimit)
-          and (ASegment.Layer >= FirstElevationIndex)
-          and (ASegment.Layer <= LastElevationIndex) then
+        if (FirstElevationIndex >= 0)
+          and (LastElevationIndex <= LayerLimit)
+          and ((Orientation = dsoTop)
+            or (ASegment.Layer >= FirstElevationIndex)
+              and (ASegment.Layer <= LastElevationIndex)) then
         begin
           for LayerIndex := FirstElevationIndex to LastElevationIndex do
-
           begin
             UpdateCurrentSegment(ASegment);
             if IAnnotation = '' then
@@ -36948,38 +37809,40 @@ begin
                       begin
                         Continue;
                       end;
-                      if LayerIndex > 0 then
-                      begin
-                        Node2 := Mesh.NodeArray[LayerIndex-1, ASegment.Col];
-                        if Node2.Active then
-                        begin
-                          UpperBound := (Node3D.Z+Node2.Z)/2;
-                        end
-                        else
-                        begin
-                          UpperBound := Node3D.Z;
-                        end;
-                      end
-                      else
-                      begin
-                        UpperBound := Node3D.Z;
-                      end;
-                      if LayerIndex < LastElevationIndex then
-                      begin
-                        Node2 := Mesh.NodeArray[LayerIndex+1, ASegment.Col];
-                        if Node2.Active then
-                        begin
-                          LowerBound := (Node3D.Z+Node2.Z)/2;
-                        end
-                        else
-                        begin
-                          LowerBound := Node3D.Z;
-                        end;
-                      end
-                      else
-                      begin
-                        LowerBound := Node3D.Z;
-                      end;
+//                      if LayerIndex > 0 then
+//                      begin
+//                        Node2 := Mesh.NodeArray[LayerIndex-1, ASegment.Col];
+//                        if Node2.Active then
+//                        begin
+//                          UpperBound := (Node3D.Z+Node2.Z)/2;
+//                        end
+//                        else
+//                        begin
+//                          UpperBound := Node3D.Z;
+//                        end;
+//                      end
+//                      else
+//                      begin
+//                        UpperBound := Node3D.Z;
+//                      end;
+                      UpperBound := Node3D.Top;
+//                      if LayerIndex < LastElevationIndex then
+//                      begin
+//                        Node2 := Mesh.NodeArray[LayerIndex+1, ASegment.Col];
+//                        if Node2.Active then
+//                        begin
+//                          LowerBound := (Node3D.Z+Node2.Z)/2;
+//                        end
+//                        else
+//                        begin
+//                          LowerBound := Node3D.Z;
+//                        end;
+//                      end
+//                      else
+//                      begin
+//                        LowerBound := Node3D.Z;
+//                      end;
+                      LowerBound := Node3D.Bottom;
                     end;
                 else
                   Assert(False);
@@ -37286,97 +38149,108 @@ var
   IntersectIndex: integer;
   APoint: TPoint2D;
 begin
-  PointList := TVertexList.Create;
+  result := False;
   try
-    PointList.Capacity := Length(Polygon) + 2;
-    if PointInConcavePolygon(Segment[1], Polygon) then
-    begin
-      PointList.Add(Segment[1]);
-    end;
-    if PointInConcavePolygon(Segment[2], Polygon) then
-    begin
-      PointList.Add(Segment[2]);
-    end;
-    PriorIndex := Length(Polygon) - 1;
-    for NodelIndex := 0 to Length(Polygon) - 1 do
-    begin
-      if Intersect(Segment,
-        EquateSegment(Polygon[NodelIndex], Polygon[PriorIndex]),
-        IntersectPoint.x, IntersectPoint.y) then
+    PointList := TVertexList.Create;
+    try
+      PointList.Capacity := Length(Polygon) + 2;
+      if PointInConcavePolygon(Segment[1], Polygon) then
       begin
-        PointList.Add(IntersectPoint);
+        PointList.Add(Segment[1]);
       end;
-      PriorIndex := NodelIndex
-    end;
-
-    if PointList.Count > 1 then
-    begin
-      if Segment[2].x >= Segment[1].x then
+      if PointInConcavePolygon(Segment[2], Polygon) then
       begin
-        if Segment[2].y >= Segment[1].y then
+        PointList.Add(Segment[2]);
+      end;
+      PriorIndex := Length(Polygon) - 1;
+      for NodelIndex := 0 to Length(Polygon) - 1 do
+      begin
+        if Intersect(Segment,
+          EquateSegment(Polygon[NodelIndex], Polygon[PriorIndex]),
+          IntersectPoint.x, IntersectPoint.y) then
         begin
-          PointList.Sort(TPoint2DComparer.Construct(ComparePointRightUp));
+          PointList.Add(IntersectPoint);
+        end;
+        PriorIndex := NodelIndex
+      end;
+
+      if PointList.Count > 1 then
+      begin
+        if Segment[2].x >= Segment[1].x then
+        begin
+          if Segment[2].y >= Segment[1].y then
+          begin
+            PointList.Sort(TPoint2DComparer.Construct(ComparePointRightUp));
+          end
+          else
+          begin
+            PointList.Sort(TPoint2DComparer.Construct(ComparePointRightDown));
+          end;
         end
         else
         begin
-          PointList.Sort(TPoint2DComparer.Construct(ComparePointRightDown));
+          if Segment[2].y >= Segment[1].y then
+          begin
+            PointList.Sort(TPoint2DComparer.Construct(ComparePointLeftUp));
+          end
+          else
+          begin
+            PointList.Sort(TPoint2DComparer.Construct(ComparePointLeftDown));
+          end;
         end;
+      end;
+      for PointIndex := PointList.Count-2 downto 0 do
+      begin
+        if IsEqual(PointList[PointIndex],
+          PointList[PointIndex+1], Epsilon) then
+        begin
+          PointList.Delete(PointIndex);
+        end;
+      end;
+      if PointList.Count = 1 then
+      begin
+        PointList.Add(PointList[0]);
+      end;
+
+      if PointList.Count > 0 then
+      begin
+        SetLength(IntersectArray, PointList.Count-1);
       end
       else
       begin
-        if Segment[2].y >= Segment[1].y then
+        SetLength(IntersectArray, 0);
+        result := False;
+        Exit;
+      end;
+      IntersectIndex := 0;
+      for PointIndex := 0 to PointList.Count - 2 do
+      begin
+        APoint.x := (PointList[PointIndex].x
+          + PointList[PointIndex+1].x)/2;
+        APoint.y := (PointList[PointIndex].y
+          + PointList[PointIndex+1].y)/2;
+        if PointInConcavePolygon(APoint, Polygon) then
         begin
-          PointList.Sort(TPoint2DComparer.Construct(ComparePointLeftUp));
-        end
-        else
-        begin
-          PointList.Sort(TPoint2DComparer.Construct(ComparePointLeftDown));
+          IntersectArray[IntersectIndex] :=
+            EquateSegment(PointList[PointIndex],
+            PointList[PointIndex+1]);
+          Inc(IntersectIndex);
         end;
       end;
-    end;
-    for PointIndex := PointList.Count-2 downto 0 do
-    begin
-      if IsEqual(PointList[PointIndex],
-        PointList[PointIndex+1], Epsilon) then
-      begin
-        PointList.Delete(PointIndex);
-      end;
-    end;
-    if PointList.Count = 1 then
-    begin
-      PointList.Add(PointList[0]);
-    end;
+      SetLength(IntersectArray, IntersectIndex);
+      result := IntersectIndex > 0;
 
-    if PointList.Count > 0 then
-    begin
-      SetLength(IntersectArray, PointList.Count-1);
-    end
-    else
-    begin
-      SetLength(IntersectArray, 0);
-      result := False;
-      Exit;
+    finally
+      PointList.Free;
     end;
-    IntersectIndex := 0;
-    for PointIndex := 0 to PointList.Count - 2 do
-    begin
-      APoint.x := (PointList[PointIndex].x
-        + PointList[PointIndex+1].x)/2;
-      APoint.y := (PointList[PointIndex].y
-        + PointList[PointIndex+1].y)/2;
-      if PointInConcavePolygon(APoint, Polygon) then
-      begin
-        IntersectArray[IntersectIndex] :=
-          EquateSegment(PointList[PointIndex],
-          PointList[PointIndex+1]);
-        Inc(IntersectIndex);
-      end;
-    end;
-    SetLength(IntersectArray, IntersectIndex);
-    result := IntersectIndex > 0;
-
   finally
-    PointList.Free;
+    if result then
+    begin
+      for IntersectIndex := 0 to Length(IntersectArray) - 1 do
+      begin
+        UpdateSegmentOrientation(Segment, IntersectArray[IntersectIndex]);
+      end;
+    end;
   end;
 end;
 
@@ -37384,14 +38258,14 @@ procedure TSutraDelegate.UpdateFrontSegments(AModel: TBaseModel;
   const EvaluatedAt: TEvaluatedAt);
 var
   Mesh: TSutraMesh3D;
-  Polygons: TCellElementPolygons2D;
+//  Polygons: TCellElementPolygons2D;
   VertexIndex: Integer;
 //  EndSection: Boolean;
   SectionIndex: integer;
   IncrementedSectionIndex: Boolean;
   APoint: TPoint2D;
-  LayerCount: integer;
-  ColCount: integer;
+//  LayerCount: integer;
+//  ColCount: integer;
   LayerIndex: integer;
   ColIndex: integer;
   ASegment: TCellElementSegment;
@@ -37399,10 +38273,24 @@ var
   Segments2D: TSegment2DArray;
 //  Seg: TSegment2D;
   InterSectIndex: Integer;
-  Limits: TLimitsArray;
+//  Limits: TLimitsArray;
+  PriorVertex: Integer;
+  StartPos: TEdgePosition;
+  EndPos: TEdgePosition;
+  IntersectSeg: TSegment2D;
+  IntervalTree: TRbwIntervalTree;
+  PointArray: TOneDRealArray;
+  AList: TList;
+  ObjectIndex: integer;
+  PolyObject: TFrontPolygon;
+  RangeTree: TRbwRangeTree;
+  SearchIntervals: TSearchArray;
   procedure CreateSegment(Point1, Point2: TPoint2D);
   begin
+
     ASegment := TCellElementSegment.Create(FScreenObject);
+    ASegment.StartPosition := StartPos;
+    ASegment.EndPosition := EndPos;
     ASegment.X1 := Point1.X;
     ASegment.X2 := Point2.X;
     ASegment.Y1 := Point1.Y;
@@ -37410,7 +38298,7 @@ var
     ASegment.Col := ColIndex;
     ASegment.Row := 0;
     ASegment.Layer := LayerIndex;
-    ASegment.VertexIndex := VertexIndex;
+    ASegment.VertexIndex := PriorVertex;
     if IncrementedSectionIndex then
     begin
       ASegment.SectionIndex := SectionIndex-1;
@@ -37426,12 +38314,15 @@ begin
   Mesh := (AModel as TCustomModel).SutraMesh;
   FScreenObject.FSegments.Clear;
   SectionIndex := 0;
+  IntervalTree := nil;
+  RangeTree := nil;
   if Mesh <> nil then
   begin
-    Polygons:= Mesh.FrontPolygons(FScreenObject.SutraAngle,
-      FScreenObject.EvaluatedAt, Limits);
-    LayerCount := Length(Polygons);
-    ColCount := Length(Polygons[0]);
+    SetLength(PointArray,2);
+//    Polygons:= Mesh.FrontPolygons(FScreenObject.SutraAngle,
+//      FScreenObject.EvaluatedAt, Limits);
+//    LayerCount := Length(Polygons);
+//    ColCount := Length(Polygons[0]);
     for VertexIndex := 0 to FScreenObject.Count - 1 do
     begin
 //      EndSection := False;
@@ -37439,29 +38330,45 @@ begin
       if (SectionIndex < FScreenObject.SectionCount)
         and (FScreenObject.SectionLength[SectionIndex] = 1) then
       begin
-        for LayerIndex := 0 to LayerCount - 1 do
+        StartPos := epFirst;
+        EndPos := epLast;
+        IncrementedSectionIndex := False;
+        PriorVertex := VertexIndex;
+        PointArray[0] := APoint.x;
+        PointArray[1] := APoint.y;
+
+        if IntervalTree = nil then
         begin
-          for ColIndex := 0 to ColCount - 1 do
+          IntervalTree := Mesh.IntervalTree[FScreenObject.EvaluatedAt,
+            FScreenObject.SutraAngle];
+        end;
+        AList := TList.Create;
+        try
+          IntervalTree.FindContainingObjects(PointArray, AList);
+          for ObjectIndex := 0 to AList.Count - 1 do
           begin
-            if PointInConcavePolygon(APoint, Polygons[LayerIndex, ColIndex]) then
+            PolyObject := AList[ObjectIndex];
+            if PointInConcavePolygon(APoint, PolyObject.Polygon) then
             begin
-//              ASegment := nil;
-//              case FScreenObject.ElevationCount of
-//                ecZero:
-//                  begin
-                    CreateSegment(APoint, APoint);
-//                  end;
-//                ecOne: Assert(False);
-//                ecTwo: Assert(False);
-//                else  Assert(False);
-//              end;
-//              if ASegment <> nil then
-//              begin
-//                FScreenObject.FSegments.Add(ASegment);
-//              end;
+              ColIndex := PolyObject.Col;
+              LayerIndex := PolyObject.Layer;
+              CreateSegment(APoint, APoint);
             end;
           end;
+        finally
+          AList.Free;
         end;
+
+//        for LayerIndex := 0 to LayerCount - 1 do
+//        begin
+//          for ColIndex := 0 to ColCount - 1 do
+//          begin
+//            if PointInConcavePolygon(APoint, Polygons[LayerIndex, ColIndex]) then
+//            begin
+//              CreateSegment(APoint, APoint);
+//            end;
+//          end;
+//        end;
         Inc(SectionIndex);
       end
       else
@@ -37471,6 +38378,7 @@ begin
         begin
           Continue;
         end;
+        PriorVertex := VertexIndex-1;
         IncrementedSectionIndex := False;
         if (VertexIndex = FScreenObject.SectionEnd[SectionIndex]) then
         begin
@@ -37479,34 +38387,91 @@ begin
           IncrementedSectionIndex := True;
         end;
         Segments2D := nil;
-        Segment2D[1] := APoint;
-        Segment2D[2] := FScreenObject.Points[VertexIndex-1];
-        for LayerIndex := 0 to LayerCount - 1 do
+        Segment2D[2] := APoint;
+        Segment2D[1] := FScreenObject.Points[VertexIndex-1];
+
+        if RangeTree = nil then
         begin
-          for ColIndex := 0 to ColCount - 1 do
+          RangeTree := Mesh.RangeTree[FScreenObject.EvaluatedAt,
+            FScreenObject.SutraAngle];
+          SetLength(SearchIntervals, 4);
+          SearchIntervals[0].LowerBoundary := RangeTree.Min(0);
+          SearchIntervals[1].UpperBoundary := RangeTree.Max(1);
+          SearchIntervals[2].LowerBoundary := RangeTree.Min(2);
+          SearchIntervals[3].UpperBoundary := RangeTree.Max(3);
+        end;
+        SearchIntervals[0].UpperBoundary := Max(Segment2D[1].x, Segment2D[2].x);
+        SearchIntervals[1].LowerBoundary := Min(Segment2D[1].x, Segment2D[2].x);
+        SearchIntervals[2].UpperBoundary := Max(Segment2D[1].y, Segment2D[2].y);
+        SearchIntervals[3].LowerBoundary := Min(Segment2D[1].y, Segment2D[2].y);
+
+        AList := RangeTree.Search(SearchIntervals);
+        for ObjectIndex := 0 to AList.Count - 1 do
+        begin
+          PolyObject := AList[ObjectIndex];
+          if Intersect(Segment2D, PolyObject.Polygon, Segments2D) then
           begin
-            if Intersect(Segment2D, Polygons[LayerIndex, ColIndex], Segments2D) then
+            ColIndex := PolyObject.Col;
+            LayerIndex := PolyObject.Layer;
+            for InterSectIndex := 0 to Length(Segments2D) -1 do
             begin
-              for InterSectIndex := 0 to Length(Segments2D) -1 do
+              IntersectSeg := Segments2D[InterSectIndex];
+              if (IntersectSeg[1].x = Segment2D[1].x)
+                and (IntersectSeg[1].y = Segment2D[1].y) then
               begin
-//                ASegment := nil;
-//                case FScreenObject.ElevationCount of
-//                  ecZero:
-//                    begin
-                      CreateSegment(Segments2D[InterSectIndex][1],
-                        Segments2D[InterSectIndex][2]);
-//                    end;
-//                  ecOne: Assert(False);
-//                  ecTwo: Assert(False);
-//                end;
-//                if ASegment <> nil then
-//                begin
-//                  FScreenObject.FSegments.Add(ASegment);
-//                end;
+                StartPos := epFirst;
+              end
+              else
+              begin
+                StartPos := epMiddle;
               end;
+              if (IntersectSeg[2].x = Segment2D[2].x)
+                and (IntersectSeg[2].y = Segment2D[2].y) then
+              begin
+                EndPos := epLast;
+              end
+              else
+              begin
+                EndPos := epMiddle;
+              end;
+              CreateSegment(IntersectSeg[1], IntersectSeg[2]);
             end;
           end;
         end;
+
+
+//        for LayerIndex := 0 to LayerCount - 1 do
+//        begin
+//          for ColIndex := 0 to ColCount - 1 do
+//          begin
+//            if Intersect(Segment2D, Polygons[LayerIndex, ColIndex], Segments2D) then
+//            begin
+//              for InterSectIndex := 0 to Length(Segments2D) -1 do
+//              begin
+//                IntersectSeg := Segments2D[InterSectIndex];
+//                if (IntersectSeg[1].x = Segment2D[1].x)
+//                  and (IntersectSeg[1].y = Segment2D[1].y) then
+//                begin
+//                  StartPos := epFirst;
+//                end
+//                else
+//                begin
+//                  StartPos := epMiddle;
+//                end;
+//                if (IntersectSeg[2].x = Segment2D[2].x)
+//                  and (IntersectSeg[2].y = Segment2D[2].y) then
+//                begin
+//                  EndPos := epLast;
+//                end
+//                else
+//                begin
+//                  EndPos := epMiddle;
+//                end;
+//                CreateSegment(IntersectSeg[1], IntersectSeg[2]);
+//              end;
+//            end;
+//          end;
+//        end;
       end;
     end;
     FScreenObject.FSegments.UpToDate := True;

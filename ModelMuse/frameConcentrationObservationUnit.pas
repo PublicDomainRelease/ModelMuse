@@ -39,7 +39,7 @@ implementation
 
 uses
   frmGoPhastUnit, Mt3dmsChemSpeciesUnit, frmCustomGoPhastUnit, Mt3dmsTobUnit,
-  GoPhastTypes, ModflowHobUnit;
+  GoPhastTypes, ModflowHobUnit, frmErrorsAndWarningsUnit;
 
 resourcestring
   StrSpecies = 'Species (iComp)';
@@ -385,6 +385,7 @@ var
   ObsItem: TMt3dmsTobItem;
   ObsLayer: TMultiHeadItem;
   ItemIndex: Integer;
+  ComponentError: boolean;
 begin
   if not FChanged then
   begin
@@ -395,6 +396,7 @@ begin
     Item := List.Items[Index];
     Observations := Item.ScreenObject.Mt3dmsTransObservations;
     ObservationUsed := (Observations <> nil) and Observations.Used;
+    ComponentError := False;
 
     if ClearAll then
     begin
@@ -485,6 +487,10 @@ begin
             begin
               ObsItem.SpeciesName := rdgObservations.Cells[Ord(cocSpecies), RowIndex];
             end;
+            if ObsItem.SpeciesName = '' then
+            begin
+              ComponentError := True;
+            end;
             NewComment := rdgObservations.Cells[Ord(cocComment), RowIndex];
             if (List.Count = 1) or (NewComment <> '') then
             begin
@@ -530,6 +536,12 @@ begin
           Inc(ValueCount);
         end;
       end;
+    end;
+    if ComponentError then
+    begin
+      frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
+        StrInTheFollowingObj, Item.ScreenObject.Name);
+      frmErrorsAndWarnings.Show;
     end;
   end;
 end;

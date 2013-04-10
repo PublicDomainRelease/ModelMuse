@@ -161,7 +161,15 @@ begin
                   end
                   else
                   begin
-                    AFraction := 1 - (Log10(Values.RealValues[Index]) - MinReal)/RealRange;
+                    if Values.RealValues[Index] = 0 then
+                    begin
+                      AFraction := 0;
+                    end
+                    else
+                    begin
+                      AFraction := 1 - (Log10(
+                        Values.RealValues[Index]) - MinReal)/RealRange;
+                    end;
                   end;
                   if AFraction < 0 then
                   begin
@@ -545,7 +553,7 @@ begin
                     if ColoringLimits.LogTransform then
                     begin
                       MinReal := Contours.ContourValues[0];
-                      if MinReal > 0 then
+//                      if MinReal > 0 then
                       begin
                         for Index := 0 to Contours.Count - 1 do
                         begin
@@ -903,7 +911,7 @@ begin
     end
     else
     begin
-      Mesh := Model.SutraMesh;
+      Mesh := Model.Mesh;
       if Mesh <> nil then
       begin
         Mesh.GetMinMax(MinMax, DataArray, StringList);
@@ -932,6 +940,7 @@ var
   Model: TCustomModel;
   MinMax: TMinMax;
   StringList: TStringList;
+  Mesh: TSutraMesh3D;
 begin
   Model := DataArray.Model as TCustomModel;
 
@@ -940,6 +949,14 @@ begin
     if Model.Grid <> nil then
     begin
       Model.Grid.GetMinMax(MinMax, DataArray, StringList);
+    end
+    else
+    begin
+      Mesh := Model.Mesh;
+      if Mesh <> nil then
+      begin
+        Mesh.GetMinMax(MinMax, DataArray, StringList);
+      end;
     end;
   finally
     StringList.Free;

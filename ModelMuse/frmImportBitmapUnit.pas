@@ -112,6 +112,7 @@ type
     procedure sbInsertRowClick(Sender: TObject);
     procedure sbDeleteRowClick(Sender: TObject);
     procedure dgPointsEndUpdate(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     // @name is the bitmap that is being imported or edited.
     FBitMap: TBitmap;
@@ -489,6 +490,16 @@ procedure TfrmImportBitmap.FormDestroy(Sender: TObject);
 begin
   inherited;
   FBitMap.Free;
+end;
+
+procedure TfrmImportBitmap.FormShow(Sender: TObject);
+begin
+  inherited;
+  {$IFDEF SUTRA}
+  rgViewDirection.Buttons[Ord(vdSide)].Enabled :=
+    frmGoPhast.ModelSelection <> msSutra22;
+  {$ENDIF}
+
 end;
 
 procedure TfrmImportBitmap.GetData(ABitmapItem: TCompressedBitmapItem);

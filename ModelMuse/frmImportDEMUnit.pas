@@ -45,7 +45,7 @@ implementation
 uses
   frmGoPhastUnit, DemReaderUnit, 
   ModelMuseUtilities, DataSetUnit, frmProgressUnit, UndoItems,
-  GIS_Functions, CoordinateConversionUnit;
+  GIS_Functions, CoordinateConversionUnit, SutraMeshUnit;
 
 resourcestring
   StrSampleDigitalEleva = 'sample Digital Elevation Model';
@@ -56,6 +56,8 @@ resourcestring
   ' assistance contact rbwinst@usgs.gov.';
   StrImportingData = 'Importing data';
   StrYouMustCreateThe = 'You must create the grid before importing a Digital' +
+  ' Elevation Model.';
+  StrYouMustCreateTheMesh = 'You must create the mesh before importing a Digital' +
   ' Elevation Model.';
   StrElement = 'element';
   StrElementCenter = 'element center';
@@ -173,17 +175,40 @@ end;
 function TfrmImportDEM.GetData: boolean;
 var
   Grid: TCustomModelGrid;
+  Mesh: TSutraMesh3D;
 begin
-  Grid := frmGoPhast.PhastModel.Grid;
-  result := (Grid <> nil) and (Grid.ColumnCount > 0)
-    and (Grid.RowCount > 0);
-  if result then
-  begin
-    result := OpenDialogFile.Execute;
-  end
-  else
-  begin
-    MessageDlg(StrYouMustCreateThe, mtInformation, [mbOK], 0);
+  result := False;
+  case frmGoPhast.ModelSelection of
+    {$IFDEF SUTRA}
+    msSutra22:
+      begin
+        Mesh := frmGoPhast.PhastModel.Mesh;
+        result := (Mesh <> nil) and (Mesh.Mesh2D.Nodes.Count > 0);
+        if result then
+        begin
+          result := OpenDialogFile.Execute;
+        end
+        else
+        begin
+          MessageDlg(StrYouMustCreateTheMesh, mtInformation, [mbOK], 0);
+        end;
+      end;
+    {$ENDIF}
+    msPhast, msModflow, msModflowLGR, msModflowNWT:
+      begin
+        Grid := frmGoPhast.PhastModel.Grid;
+        result := (Grid <> nil) and (Grid.ColumnCount > 0)
+          and (Grid.RowCount > 0);
+        if result then
+        begin
+          result := OpenDialogFile.Execute;
+        end
+        else
+        begin
+          MessageDlg(StrYouMustCreateThe, mtInformation, [mbOK], 0);
+        end;
+      end;
+    else Assert(False);
   end;
   if result then
   begin
@@ -222,7 +247,7 @@ begin
       begin
         Assert(False);
       end;
-    msPhast:
+    msPhast {$IFDEF SUTRA}, msSutra22 {$ENDIF}:
       begin
         case EvalAt of
           eaBlocks:
@@ -279,11 +304,13 @@ var
   DS_Position: Integer;
   IgnoreValue: Integer;
   APoint3D: TPoint3D;
+  Mesh: TSutraMesh3D;
+  DivAmount: Integer;
+  Fraction: Extended;
 begin
   frmProgressMM.Caption := StrProgress;
   frmProgressMM.Show;
   try
-    Grid := frmGoPhast.PhastModel.Grid;
     EvalAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
     ImportMethod := TImportMethod(rgFilterMethod.ItemIndex);
     InitializeArrays(ImportMethod);
@@ -302,7 +329,10 @@ begin
         Exit;
       end;
     end;
-    GetGridMinMax;
+    GetDiscretizationMinMax;
+
+    Grid := frmGoPhast.PhastModel.Grid;
+    Mesh := frmGoPhast.PhastModel.Mesh;
 
     IgnoreValue := StrToInt(rdeIgnore.Text);
     try
@@ -314,6 +344,8 @@ begin
           DemReader.OnProgress := DemProgress;
           DemReader.CentralMeridianRadians := CentralMeridian;
           DemReader.ReadFile(OpenDialogFile.Files[DemIndex], False);
+          DivAmount := DemReader.PointCount div 1000;
+          frmProgressMM.ProgressLabelCaption := StrImportingData;
           for PointIndex := 0 to DemReader.PointCount - 1 do
           begin
             APoint := DemReader.Points[PointIndex];
@@ -322,14 +354,31 @@ begin
               Continue
             end;
 
-            Point2D.x := APoint.X;
-            Point2D.y := APoint.Y;
-            Point2D := Grid.
-              RotateFromRealWorldCoordinatesToGridCoordinates(Point2D);
-            APoint3D.x := Point2D.x;
-            APoint3D.y := Point2D.y;
+            if PointIndex mod DivAmount = 0 then
+            begin
+              Fraction := PointIndex/DemReader.PointCount/2 + 0.5;
+              frmProgressMM.pbProgress.Position
+                := Round(frmProgressMM.pbProgress.Max * Fraction);
+//              frmProgressMM.ProgressLabelCaption := StrImportingData;
+              Application.ProcessMessages;
+            end;
+
+            if Grid <> nil then
+            begin
+              Point2D.x := APoint.X;
+              Point2D.y := APoint.Y;
+              Point2D := Grid.
+                RotateFromRealWorldCoordinatesToGridCoordinates(Point2D);
+              APoint3D.x := Point2D.x;
+              APoint3D.y := Point2D.y;
+            end
+            else
+            begin
+              APoint3D.x := APoint.x;
+              APoint3D.y := APoint.y;
+            end;
             APoint3D.z := APoint.Elevation;
-            HandleAPoint(APoint3D, ImportMethod, EvalAt, Grid);
+            HandleAPoint(APoint3D, ImportMethod, EvalAt, Grid, Mesh);
           end;
         finally
           DemReader.Free;

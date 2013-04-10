@@ -2,9 +2,9 @@ inherited frmSutraOptions: TfrmSutraOptions
   Caption = 'SUTRA Options'
   ClientHeight = 443
   ClientWidth = 750
-  ExplicitWidth = 766
-  ExplicitHeight = 481
-  PixelsPerInch = 96
+  ExplicitWidth = 768
+  ExplicitHeight = 488
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -54,7 +54,7 @@ inherited frmSutraOptions: TfrmSutraOptions
     Top = 0
     Width = 581
     Height = 393
-    ActivePage = jvspSolidAdsorption
+    ActivePage = jvspFluidProperties
     PropagateEnable = False
     Align = alClient
     object jvspConfiguration: TJvStandardPage
@@ -104,7 +104,7 @@ inherited frmSutraOptions: TfrmSutraOptions
         Left = 263
         Top = 171
         Width = 305
-        Height = 72
+        Height = 96
         Caption = 'Flow conditions (CUNSAT)'
         ItemIndex = 0
         Items.Strings = (
@@ -116,18 +116,19 @@ inherited frmSutraOptions: TfrmSutraOptions
         Left = 6
         Top = 170
         Width = 251
-        Height = 73
+        Height = 97
         Caption = 'Transport (SIMULA)'
         ItemIndex = 0
         Items.Strings = (
-          'Solute'
+          'Solute using pressure'
+          'Solute using Head'
           'Energy')
         TabOrder = 4
         OnClick = rgTransportClick
       end
       object rgSimulationType: TRadioGroup
         Left = 6
-        Top = 249
+        Top = 273
         Width = 564
         Height = 105
         Anchors = [akLeft, akTop, akRight]
@@ -214,12 +215,14 @@ inherited frmSutraOptions: TfrmSutraOptions
           AlignWithMargins = True
           Left = 4
           Top = 4
-          Width = 458
-          Height = 36
+          Width = 573
+          Height = 44
           Align = alClient
           Caption = 
             'The first 80 characters of the first two lines are TITLE1 and TI' +
             'TLE2.'#13#10'The remaining lines will be treated as comments.'
+          ExplicitWidth = 458
+          ExplicitHeight = 36
         end
       end
     end

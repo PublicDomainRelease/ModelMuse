@@ -56,12 +56,12 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="25" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="106" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/usgspubs/wri/wri004167" target="_blank" styleclass="Citation" translate="true">Merritt, M.L., and Konikow, L.F., 2000, Documentation of a Computer Program to Simulate Lake-Aquifer Interaction Using the MODFLOW Ground-Water Flow Model and the MOC3D Solute-Transport Model: U.S. Geological Survey Water-Resources Investigations Report 00-4167, 146 p.</link><text styleclass="Citation" translate="true"> (</text><link displaytype="text" defaultstyle="true" type="weblink" href="http://water.usgs.gov/nrp/gwsoftware/modflow2000/wri00_4167.pdf" target="_blank" styleclass="Citation" translate="true">PDF version</link><text styleclass="Citation" translate="true">)</text></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="readme_LAK.pdf" styleclass="Normal" translate="true">readme_LAK.pdf</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="readme_LAK3.pdf" styleclass="Normal" translate="true">readme_LAK3.pdf</link></li>
           </list>
-          <list id="26" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="107" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="LAK_SFR_UZF_updates_MF2005.txt" styleclass="Citation" style="font-style:normal;" translate="true">LAK_SFR_UZF_updates_MF2005.txt</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="Lake3_Input_Modified.pdf" styleclass="Citation" style="font-style:normal;" translate="true">Lake3_Input_Modified.pdf</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="NWT_release.txt" styleclass="Citation" style="font-style:normal;" translate="true">Release.txt</link><text styleclass="Citation" style="font-style:normal;" translate="true"> for MODFLOW-NWT</text></li>
@@ -73,7 +73,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Related Packages</text></para>
         </td>
         <td>
-          <list id="27" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="108" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="GAGE" styleclass="Normal" translate="true">Gage</link><text styleclass="Normal" translate="true"> package</text></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="Head-Dependent_Flux_Boundary_P" styleclass="Normal" translate="true">Head-Dependent Flux Boundary</link><text styleclass="Normal" translate="true"> packages</text></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="RES" styleclass="Normal" translate="true">Reservoir</link><text styleclass="Normal" translate="true"> package</text></li>
@@ -85,15 +85,15 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="28" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="109" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="29" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="110" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="30" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="111" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
           </list>
         </td>
@@ -103,10 +103,10 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Other Notes</text></para>
         </td>
         <td>
-          <list id="31" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="112" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Rejected recharge in the </text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" styleclass="Normal" translate="true">UZF</link><conditional-text type="ELSE"/><text styleclass="Normal" translate="true">UZF (not included in MODFLOW-2000)</text><conditional-text type="END"/><text styleclass="Normal" translate="true"> package can be routed to lakes in the &#160;LAK package.</text></li>
           </list>
-          <list id="32" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="113" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The vertical flow from or to a lake is calculated incorrectly when the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="HUF2" styleclass="Normal" translate="true">HUF</link><text styleclass="Normal" translate="true"> package is used. This bug is present in MODFLOW-2005 version 1.9.1 and in all earlier versions. This has been fixed in MODFLOW-NWT version 1.7</text></li>
           </list>
         </td>
@@ -174,10 +174,10 @@
         </td>
       </tr>
       <tr style="vertical-align:top">
-        <td>
+        <td style="height:1541px;">
           <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 2</text></para>
         </td>
-        <td>
+        <td style="height:1541px;">
           <para styleclass="Normal"><text styleclass="Normal" translate="true">THETA [NSSITR SSCNCR] [SURFDEPTH]</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">If data are being read using the fixed format mode, then the data should be entered using format (F10.4,I10,F10.4).</text></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
@@ -190,9 +190,8 @@
                     <td>
                       <para styleclass="Normal"><anchor id="THETA" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">THETA Explicit (THETA = 0.0), semi-implicit (0.0 &lt; THETA &lt; 1.0), or implicit (THETA = 1.0) solution for lake stages.</text></para>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">SURFDEPTH is read only if THETA is assigned a negative value (the negative value of THETA is then changed to a positive value internally by the code).</text></para>
-                      <list id="33" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
-                        <li styleclass="Normal"><text styleclass="Normal" translate="true">THETA is automatically set to a value of 1.0 for all steady-state stress periods. </text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:line-through; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">THETA for transient simulations has been revised and is now limited to range from 0.5 to 1.0.</text><text styleclass="Normal" translate="true"> A value of 0.5 represents the stage midway between the previous time step and the end of the current time step. A value of 1.0 (fully implicit) represents the lake stage at the end of the current time step. A THETA of less than 0.5 does not perform well and a zero value is undefined in the Newton iteration method. Slight errors in the solution of lake stage and seepage may result when THETA is greater than 0.5 (Fread, 1993). Values greater than 0.5 have been recommended for damping oscillations in streamflow-routing equations (Fread, 1993). A value of 0.5 represents a semi-implicit method that is often called Crank-Nicolson (Wang and Anderson, 1982, p. 81). Wang and Anderson present results for drawdown for a simple confined aquifer with pumping in which the Crank-Nicolson method produced the best results when compared with the Theis solution for different times. A value of 0.5 is generally recommended.</text></li>
-                        <li styleclass="Normal"><text styleclass="Normal" translate="true">A fully explicit method originally documented by Merritt and Konikow (2000, p. 8) for computing groundwater interaction with lakes using the lake stage from the previous time step was added back to the program. This was done because all of the transient problems listed in the original document used the fully explicit method for computing groundwater interactions with lakes (including the two test problems l1a2k and l1b2k distributed with MODFLOW, in which THETA is set to 0.00). The fully explicit method skips the Newton iteration loop used to solve lake stage during a time step. To implement a fully explicit solution of groundwater interaction with lakes, specify a THETA value that is greater than 0.0 and less than 0.5. THETA is set to zero when values less than 0.5 are specified. The lake stage from the end of the previous time step is used to compute groundwater interaction and a new lake stage. The user is cautioned that small lake oscillations can result each time step. When a lake is connected to an outlet stream, the lake oscillations can affect groundwater interactions along the stream below the lake. Because the fully explicit method skips the Newton iteration loop, it is not recommended for simulations that include inflows from and outflows to streams.</text></li>
+                      <list id="114" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                        <li><text styleclass="Normal" translate="true">A new method of solving for lake stage uses only the time-weighting factor THETA (Merritt and Konikow, 2000, p. 52) for transient simulations. THETA is automatically set to a value of 1.0 for all steady-state stress periods. For transient stress periods, Explicit (THETA = 0.0), semi-implicit (0.0 &lt; THETA &lt; 1.0), or implicit (THETA = 1.0) solutions can be used to calculate lake stages. The option to specify negative values for THETA is supported to allow specification of additional variables (NSSITER, SSCNCR, SURFDEP) for simulations that only include transient stress periods. If THETA is specified as a negative value, then it is converted to a positive value for calculations of lake stage. </text></li>
                       </list>
                       <para styleclass="Normal"><snippet src="LakeTransient"/></para>
                     </td>
@@ -202,12 +201,12 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">NSSITR Maximum number of iterations for Newton’s method solution for equilibrium lake stages in each MODFLOW iteration for steady-state aquifer head solution. Only read if ISS (option flag input to BCF Package of MODFLOW indicating steady-state solution) is not zero. </text><text styleclass="New Materials" translate="true">&#32;</text></para>
-                      <list id="34" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Maximum number of iterations for Newton’s method of solution for equilibrium lake stages in each MODFLOW iteration for steady-state aquifer head solution. Only read if ISS (option flag input to DIS Package of MODFLOW indicating steady-state solution) is not zero or if THETA is specified as a negative value. </text></para>
+                      <list id="115" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">NSSITR and SSCNCR may be omitted for transient solutions (ISS = 0). &#160;</text></li>
                       </list>
                       <para styleclass="Normal"><snippet src="LakeTransient"/></para>
-                      <list id="34" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="115" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If NSSITR = 0, a value of 100 will be used instead.</text></li>
                       </list>
                     </td>
@@ -217,12 +216,12 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">SSCNCR Convergence criterion for equilibrium lake stage solution by Newton’s method. Only read if ISS is not zero. </text></para>
-                      <list id="35" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Convergence criterion for equilibrium lake stage solution by Newton’s method. Only read if ISS is not zero or if THETA is specified as a negative value. </text></para>
+                      <list id="116" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">NSSITR and SSCNCR may be omitted for transient solutions (ISS = 0). </text></li>
                       </list>
                       <para styleclass="Normal"><snippet src="LakeTransient"/></para>
-                      <list id="35" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="116" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If SSCNCR = 0, a value of 0.0001 will be used instead.</text></li>
                       </list>
                     </td>
@@ -232,10 +231,14 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><anchor id="SURFDEPTH" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Variable SURFDEPTH has been added to the Lake Package to reduce numerical oscillations caused by vertical groundwater discharge across a dry lakebed or when the lake stage is nearly the same as the lakebed (less than the value of SURFDEPTH). SURFDEPTH allows the user to specify the height of small topological variations (undulations) in lake-bottom elevations that can affect groundwater discharge to lakes. SURFDEPTH decreases the lakebed conductance for vertical flow across a horizontal lakebed caused both by a groundwater head that is between the lakebed and the lakebed plus SURFDEPTH and a lake stage that is also between the lakebed and the lakebed plus SURFDEPTH. This method provides a smooth transition from a condition of no groundwater discharge to a lake, when groundwater head is below the lakebed, to a condition of increasing groundwater discharge to a lake as groundwater head becomes greater than the elevation of the dry lakebed. The method also allows for the transition of seepage from a lake to groundwater when the lake stage decreases to the lakebed elevation. The method is similar to that implemented in the Unsaturated-Zone Flow (UZF1) Package for the GSFLOW model (Markstrom and others, 2008, p. 59-60). The original documentation for UZF1 (Niswonger and others, 2006) did not include SURFDEPTH. SURFDEPTH is specified in Record 2 of the Lake Package input file, following variables THETA, NSSITR, and SSCNCR. To activate SURFDEPTH, THETA should be assigned a negative value (the negative value is then changed to a positive value internally by the code). If THETA is assigned a positive value, then SURFDEPTH is not read; THETA, NSSITR, and SSCNCR are read using the fixed format F10.2, I10, and F10.2, or a free format if option “FREE” has been specified in the BAS Package input file. In this case, a default value of zero is set for SURFDEPTH in the code. If THETA is assigned a negative value, then THETA, NSSITR, SSCNCR, and SURFDEPTH are read using the fixed format F10.2, I10, E10.5, and E10.5, or a free format if option “FREE” has been specified in the BAS Package input file. Values of SURFDEPTH ranging from 0.01 to 0.5 have been used successfully in test simulations. </text></para>
+                      <para styleclass="Normal"><anchor id="SURFDEPTH" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">The height of small topological variations (undulations) in lake-bottom elevations that can affect groundwater discharge to lakes. </text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">SURFDEPTH decreases the lakebed conductance for vertical flow across a horizontal lakebed caused both by a groundwater head that is between the lakebed and the lakebed plus SURFDEPTH and a lake stage that is also between the lakebed and the lakebed plus SURFDEPTH. This method provides a smooth transition from a condition of no groundwater discharge to a lake, when groundwater head is below the lakebed, to a condition of increasing groundwater discharge to a lake as groundwater head becomes greater than the elevation of the dry lakebed. The method also allows for the transition of seepage from a lake to groundwater when the lake stage decreases to the lakebed elevation. Values of SURFDEPTH ranging from 0.01 to 0.5 have been used successfully in test simulations. SURFDEP is read only if THETA is specified as a negative value. </text></para>
                     </td>
                   </tr>
                 </table></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Notes:</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">1. If data are being read using the fixed format mode, then the data should be entered using F10.4 format for floating point numbers and I10 format for integer numbers. </text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">2. If the model simulation includes a steady-state stress period, then the number of iterations (NSSITER) and the closure tolerance (SSCNCR) defined by Merritt and Konikow (2000, p. 52) for ending the Newton iteration method is used for all subsequent transient or steady-state stress periods. If the model simulation only includes transient stress periods, a default value of 0.0001 is assigned to SSCNCR and a default value of 100 is assigned to NSSITR. An option was added in which values of SSCNCR and NSSITR can be read for a transient-only simulation by specifying a negative value for THETA. If THETA is specified as a negative value then it is converted to a positive value for calculations of lake stage. </text></para>
               </td>
             </tr>
           </table></para>
@@ -305,7 +308,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><anchor id="IUNITLAKTAB" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">A value must be specified for each lake if the key word </text><link displaytype="text" defaultstyle="true" type="topiclink" href="LAK" anchor="TABLEINPUT" styleclass="Normal" translate="true">“TABLEINPUT”</link><text styleclass="Normal" translate="true"> is specified in item 1a (that is, if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="LAK" anchor="TABLEINPUT" styleclass="Normal" translate="true">TABLEINPUT</link><text styleclass="Normal" translate="true"> is specified then all lakes must have their bathymetry specified through </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Lake_Bathymetry_File" styleclass="Normal" translate="true">external text files</link><text styleclass="Normal" translate="true">).</text></para>
+                      <para styleclass="Normal"><anchor id="IUNITLAKTAB" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">The unit number of the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Lake_Bathymetry_File" styleclass="Normal" translate="true">text files</link><text styleclass="Normal" translate="true"> containing data describing relations among lake stage, surface area, and volume. Only read if the keyword </text><link displaytype="text" defaultstyle="true" type="topiclink" href="LAK" anchor="TABLEINPUT" styleclass="Normal" translate="true">“TABLEINPUT”</link><text styleclass="Normal" translate="true"> is entered on the first line (record) of the input file. </text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -317,6 +320,11 @@
                     </td>
                   </tr>
                 </table></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Notes:</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">1. This data set should consist of one line for each lake, where line 1 includes data for lake 1, and line n includes data for lake n. There must be exactly NLAKES lines of data. </text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">2. SSMN and SSMX must be omitted when the solution is transient. For simulations that do not include a steady-state stress period, the minimum and maximum values of lake stage for calculated based on the lowest elevation of the lakebed and the and highest cell-top elevation for all lake cells for a particular lake, respectively. </text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">3. If data are being read using the fixed format mode, then each field should be entered using F10.4 format. </text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">4. IUNITAB is used to indicate that the table of values of lake stage, surface area, and volume will be read from a separate input file. These files and associated file unit numbers must be included within the MODFLOW Name file as type ‘Data.’ </text></para>
               </td>
             </tr>
           </table></para>

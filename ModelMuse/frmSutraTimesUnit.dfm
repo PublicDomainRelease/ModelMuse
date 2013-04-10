@@ -58,6 +58,10 @@ inherited frmSutraTimes: TfrmSutraTimes
     TabOrder = 0
     object tabSchedules: TTabSheet
       Caption = 'Schedules'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnl1: TPanel
         Left = 0
         Top = 0
@@ -732,6 +736,10 @@ inherited frmSutraTimes: TfrmSutraTimes
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblInitialtime: TLabel
         Left = 87
         Top = 27

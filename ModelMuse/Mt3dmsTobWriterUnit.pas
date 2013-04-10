@@ -487,6 +487,7 @@ begin
   frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNoConcentrationObs);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, MissingConcObsNameError);
   frmErrorsAndWarnings.RemoveWarningGroup(Model, ConcObsNameWarning);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInTheFollowingObj);
 
   for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin

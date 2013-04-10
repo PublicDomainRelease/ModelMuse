@@ -9,6 +9,7 @@ inherited frmImportBitmap: TfrmImportBitmap
   VertScrollBar.Range = 98
   ActiveControl = btnSelectImage
   Caption = 'Import Image'
+  ExplicitTop = -188
   ExplicitWidth = 800
   ExplicitHeight = 594
   PixelsPerInch = 96
@@ -16,19 +17,19 @@ inherited frmImportBitmap: TfrmImportBitmap
   object Splitter1: TSplitter
     Left = 369
     Top = 0
-    Height = 432
+    Height = 428
     ExplicitHeight = 465
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 432
-    Width = 792
+    Top = 428
+    Width = 784
     Height = 128
     Align = alBottom
     ParentColor = True
     TabOrder = 1
     DesignSize = (
-      792
+      784
       128)
     object lblName: TLabel
       Left = 279
@@ -75,7 +76,6 @@ inherited frmImportBitmap: TfrmImportBitmap
       Anchors = [akTop, akRight]
       Caption = 'OK'
       Default = True
-      DoubleBuffered = True
       Enabled = False
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
@@ -96,7 +96,6 @@ inherited frmImportBitmap: TfrmImportBitmap
         0000}
       ModalResult = 1
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 8
       OnClick = btnOKClick
     end
@@ -106,10 +105,8 @@ inherited frmImportBitmap: TfrmImportBitmap
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 9
     end
     object edName: TEdit
@@ -126,10 +123,8 @@ inherited frmImportBitmap: TfrmImportBitmap
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 7
       OnClick = btnHelpClick
     end
@@ -205,7 +200,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         135
         32)
       object sbAddRow: TSpeedButton
-        Left = 10
+        Left = 11
         Top = 5
         Width = 23
         Height = 22
@@ -223,11 +218,10 @@ inherited frmImportBitmap: TfrmImportBitmap
         ParentShowHint = False
         ShowHint = True
         OnClick = sbAddRowClick
-        ExplicitLeft = 11
         ExplicitTop = 6
       end
       object sbInsertRow: TSpeedButton
-        Left = 54
+        Left = 56
         Top = 5
         Width = 23
         Height = 22
@@ -245,11 +239,10 @@ inherited frmImportBitmap: TfrmImportBitmap
         ParentShowHint = False
         ShowHint = True
         OnClick = sbInsertRowClick
-        ExplicitLeft = 56
         ExplicitTop = 6
       end
       object sbDeleteRow: TSpeedButton
-        Left = 100
+        Left = 101
         Top = 5
         Width = 23
         Height = 22
@@ -294,7 +287,7 @@ inherited frmImportBitmap: TfrmImportBitmap
     Left = 0
     Top = 0
     Width = 369
-    Height = 432
+    Height = 428
     Align = alLeft
     FixedColor = 14803425
     FixedCols = 1
@@ -304,7 +297,7 @@ inherited frmImportBitmap: TfrmImportBitmap
     OnExit = dgPointsExit
     OnSetEditText = dgPointsSetEditText
     ExtendedAutoDistributeText = False
-    AutoMultiEdit = False
+    AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = True
@@ -428,8 +421,8 @@ inherited frmImportBitmap: TfrmImportBitmap
   object ScrollBox1: TScrollBox
     Left = 372
     Top = 0
-    Width = 420
-    Height = 432
+    Width = 412
+    Height = 428
     Align = alClient
     TabOrder = 2
     object ZoomBox: TQRbwZoomBox2

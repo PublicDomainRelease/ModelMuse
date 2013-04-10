@@ -88,7 +88,7 @@ type
     FScheduleName: AnsiString;
     FTimes: TRealCollection;
     FObservationFormat: TObservationFormat;
-    FExportScheduleName: string;
+    FExportScheduleName: AnsiString;
     procedure SetObservationName(Value: AnsiString);
     procedure SetScheduleName(const Value: AnsiString);
     procedure SetTimes(const Value: TRealCollection);
@@ -98,7 +98,7 @@ type
     constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     function Used: boolean;
-    property ExportScheduleName: string read FExportScheduleName
+    property ExportScheduleName: AnsiString read FExportScheduleName
       write FExportScheduleName;
   published
     // OBSNAM
@@ -151,7 +151,7 @@ type
     FScheduleName: AnsiString;
     procedure SetScheduleName(const Value: AnsiString);
   protected
-    procedure UChangeHandler(Sender: TObject);
+    procedure UChangeHandler(Sender: TObject); virtual;
     procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
@@ -161,6 +161,7 @@ type
       override;
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
+    function CanInvalidate: boolean;
   public
     procedure Assign(Source: TPersistent); override;
   published
@@ -196,7 +197,7 @@ type
 
   TCustomAssociatedSutraBoundaryCollection = class(TCustomSutraBoundaryCollection)
   protected
-    procedure PQChangeHandler(Sender: TObject);
+    procedure PQChangeHandler(Sender: TObject); virtual;
   end;
 
   TSutraFluidBoundaryItem = class(TCustomSutraAssociatedBoundaryItem)
@@ -210,6 +211,8 @@ type
   TSutraFluidBoundaryCollection = class(TCustomAssociatedSutraBoundaryCollection)
   protected
     class function ItemClass: TBoundaryItemClass; override;
+    procedure PQChangeHandler(Sender: TObject); override;
+    procedure UChangeHandler(Sender: TObject); override;
   public
     constructor Create(Boundary: TModflowBoundary;
       Model: TBaseModel; ScreenObject: TObject); override;
@@ -237,6 +240,7 @@ type
   TSutraMassEnergySourceSinkCollection = class(TCustomSutraBoundaryCollection)
   protected
     class function ItemClass: TBoundaryItemClass; override;
+    procedure UChangeHandler(Sender: TObject); override;
   public
     constructor Create(Boundary: TModflowBoundary;
       Model: TBaseModel; ScreenObject: TObject); override;
@@ -264,6 +268,8 @@ type
   TSutraSpecifiedPressureCollection = class(TCustomAssociatedSutraBoundaryCollection)
   protected
     class function ItemClass: TBoundaryItemClass; override;
+    procedure PQChangeHandler(Sender: TObject); override;
+    procedure UChangeHandler(Sender: TObject); override;
   public
     constructor Create(Boundary: TModflowBoundary;
       Model: TBaseModel; ScreenObject: TObject); override;
@@ -291,6 +297,7 @@ type
   TSutraSpecifiedConcTempCollection = class(TCustomSutraBoundaryCollection)
   protected
     class function ItemClass: TBoundaryItemClass; override;
+    procedure UChangeHandler(Sender: TObject); override;
   public
     constructor Create(Boundary: TModflowBoundary;
       Model: TBaseModel; ScreenObject: TObject); override;
@@ -369,6 +376,12 @@ begin
   Assert(False);
 end;
 
+function TCustomSutraBoundaryCollection.CanInvalidate: boolean;
+begin
+  result := (Model <> nil) and (ScreenObject <> nil)
+    and (ScreenObject as TScreenObject).CanInvalidateModel;
+end;
+
 function TCustomSutraBoundaryCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
   result := nil;
@@ -432,6 +445,7 @@ end;
 
 procedure TCustomSutraBoundaryCollection.UChangeHandler(Sender: TObject);
 begin
+ { TODO 1 -cSUTRA : This needs to be changed so that a TCustomTimeList is invalidated. }
   // this needs to be changed.
   // so that a TCustomTimeList is invalidated.
   InvalidateModel;
@@ -892,6 +906,7 @@ end;
 procedure TCustomAssociatedSutraBoundaryCollection.PQChangeHandler(
   Sender: TObject);
 begin
+  { TODO 1 -cSUTRA : This needs to be changed so that a TCustomTimeList is invalidated. }
   // this needs to be changed.
   // so that a TCustomTimeList is invalidated.
 //  Assert(False);
@@ -912,6 +927,24 @@ begin
   result := TSutraFluidBoundaryItem;
 end;
 
+procedure TSutraFluidBoundaryCollection.PQChangeHandler(Sender: TObject);
+begin
+  inherited;
+  if CanInvalidate then
+  begin
+    (Model as TCustomModel).InvalidateSutraFluidFlux(Sender);
+  end;
+end;
+
+procedure TSutraFluidBoundaryCollection.UChangeHandler(Sender: TObject);
+begin
+  inherited;
+  if CanInvalidate then
+  begin
+    (Model as TCustomModel).InvalidateSutraFluidFluxU(Sender);
+  end;
+end;
+
 { TSutraMassEnergySourceSinkCollection }
 
 constructor TSutraMassEnergySourceSinkCollection.Create(
@@ -923,6 +956,15 @@ end;
 class function TSutraMassEnergySourceSinkCollection.ItemClass: TBoundaryItemClass;
 begin
   result := TSutraMassEnergySourceSinkItem;
+end;
+
+procedure TSutraMassEnergySourceSinkCollection.UChangeHandler(Sender: TObject);
+begin
+  inherited;
+  if CanInvalidate then
+  begin
+    (Model as TCustomModel).InvalidateSutraUFlux(Sender);
+  end;
 end;
 
 { TSutraSpecifiedPressureCollection }
@@ -939,6 +981,24 @@ begin
   result := TSutraSpecifiedPressureBoundaryItem;
 end;
 
+procedure TSutraSpecifiedPressureCollection.PQChangeHandler(Sender: TObject);
+begin
+  inherited;
+  if CanInvalidate then
+  begin
+    (Model as TCustomModel).InvalidateSutraSpecPressure(Sender);
+  end;
+end;
+
+procedure TSutraSpecifiedPressureCollection.UChangeHandler(Sender: TObject);
+begin
+  inherited;
+  if CanInvalidate then
+  begin
+    (Model as TCustomModel).InvalidateSutraSpecPressureU(Sender);
+  end;
+end;
+
 { TSutraSpecifiedConcTempCollection }
 
 constructor TSutraSpecifiedConcTempCollection.Create(Boundary: TModflowBoundary;
@@ -951,6 +1011,15 @@ end;
 class function TSutraSpecifiedConcTempCollection.ItemClass: TBoundaryItemClass;
 begin
   result := TSutraSpecifiedConcTempItem;
+end;
+
+procedure TSutraSpecifiedConcTempCollection.UChangeHandler(Sender: TObject);
+begin
+  inherited;
+  if CanInvalidate then
+  begin
+    (Model as TCustomModel).InvalidateSutraSpecifiedU(Sender);
+  end;
 end;
 
 { TSutraFluidBoundary }

@@ -44,7 +44,7 @@ type
     FCentralMeridianRadians: Double;
     FCoordInSec: Boolean;
     FOnProgress: TProgressProcedure;
-    function ReadCharacters(const Count: integer; Out EndOfLine: boolean): string;
+    function ReadCharacters(const Count: integer; Out EndOfLine: boolean): AnsiString;
     procedure ReadRecordA(const GetCentralMeridian : boolean);
     procedure ReadRecordB;
     procedure ReadRestOfRecord;
@@ -158,10 +158,10 @@ begin
 end;
 
 function TDemReader.ReadCharacters(const Count: integer;
-  out EndOfLine: boolean): string;
+  out EndOfLine: boolean): AnsiString;
 var
   I : integer;
-  AChar : Char;
+  AChar : AnsiChar;
   I2: integer;
 begin
   EndOfLine := False;
@@ -208,7 +208,7 @@ begin
 
   try
     FormatSettings.DecimalSeparator := '.';
-    Reset(DemFile, SizeOf(Char));
+    Reset(DemFile, SizeOf(AnsiChar));
     ReadRecordA(ReadCentralMeridian);
     for Index := 1 to ColumnCount do
     begin
@@ -238,7 +238,7 @@ begin
   try
     FormatSettings.DecimalSeparator := '.';
     try
-      Reset(DemFile, SizeOf(Char));
+      Reset(DemFile, SizeOf(AnsiChar));
     except on EInOutError do
       begin
         CanCloseFile := False;
@@ -267,30 +267,30 @@ var
   CornerPoint : TCornerPoint;
   MinOrMax : double;
   EndOfLine: boolean;
-  DemName: string;
-  Free_Format_Text: string;
-  Filler: string;
-  Process_Code: string;
-  Sectional_Indicator: string;
-  MC_origin_code: string;
-  Code: string;
-  Number: string;
-  Accuracy_code: string;
+  DemName: AnsiString;
+  Free_Format_Text: AnsiString;
+  Filler: AnsiString;
+  Process_Code: AnsiString;
+  Sectional_Indicator: AnsiString;
+  MC_origin_code: AnsiString;
+  Code: AnsiString;
+  Number: AnsiString;
+  Accuracy_code: AnsiString;
   Rows: string;
-  Largest: string;
-  Source: string;
-  Smallest: string;
-  Data_source_date: string;
-  Inspection: string;
-  Data_date: string;
-  Suspect: string;
-  Vertical_datum: string;
-  Percent_Void: string;
-  DEM_level_code: string;
-  Planimetric_code: string;
-  Data_validation_flag: string;
-  Horizontal_datum: string;
-  Data_Edition: string;
+  Largest: AnsiString;
+  Source: AnsiString;
+  Smallest: AnsiString;
+  Data_source_date: AnsiString;
+  Inspection: AnsiString;
+  Data_date: AnsiString;
+  Suspect: AnsiString;
+  Vertical_datum: AnsiString;
+  Percent_Void: AnsiString;
+  DEM_level_code: AnsiString;
+  Planimetric_code: AnsiString;
+  Data_validation_flag: AnsiString;
+  Horizontal_datum: AnsiString;
+  Data_Edition: AnsiString;
 begin
   FCorners.Clear;
   CharCount := 0;
@@ -316,7 +316,7 @@ begin
   Code := ReadCharacters(6, EndOfLine);
 
   // Code defining ground planimetric reference system
-  AString := ReadCharacters(6, EndOfLine);
+  AString := string(ReadCharacters(6, EndOfLine));
   FCoordInSec := StrToInt(Trim(AString)) = 0;
   if EndOfLine then Exit;
 
@@ -342,9 +342,9 @@ begin
   if EndOfLine then Exit;
   for Index := 1 to CornerCount do
   begin
-    XString := ReadCharacters(24, EndOfLine);
+    XString := string(ReadCharacters(24, EndOfLine));
     if EndOfLine then Exit;
-    YString := ReadCharacters(24, EndOfLine);
+    YString := string(ReadCharacters(24, EndOfLine));
     X := FortranStrToFloat(XString);
     Y := FortranStrToFloat(YString);
 
@@ -381,41 +381,41 @@ begin
 
   end;
   // min or max elevation
-  AString := ReadCharacters(24, EndOfLine);
+  AString := string(ReadCharacters(24, EndOfLine));
   MinOrMax := FortranStrToFloat(AString);
   RangeList.Add(MinOrMax);
   if EndOfLine then Exit;
 
   // min or max elevation
-  AString := ReadCharacters(24, EndOfLine);
+  AString := string(ReadCharacters(24, EndOfLine));
   MinOrMax := FortranStrToFloat(AString);
   RangeList.Add(MinOrMax);
   if EndOfLine then Exit;
 
   // angle (radians)
-  AString := ReadCharacters(24, EndOfLine);
+  AString := string(ReadCharacters(24, EndOfLine));
   Angle := FortranStrToFloat(AString);
   if EndOfLine then Exit;
 
   Accuracy_code := ReadCharacters(6, EndOfLine);
   if EndOfLine then Exit;
 
-  AString := ReadCharacters(12, EndOfLine);
+  AString := string(ReadCharacters(12, EndOfLine));
   ResolutionX := FortranStrToFloat(AString);
   if EndOfLine then Exit;
 
-  AString := ReadCharacters(12, EndOfLine);
+  AString := string(ReadCharacters(12, EndOfLine));
   ResolutionY := FortranStrToFloat(AString);
   if EndOfLine then Exit;
 
-  AString := ReadCharacters(12, EndOfLine);
+  AString := string(ReadCharacters(12, EndOfLine));
   ResolutionZ := FortranStrToFloat(AString);
   if EndOfLine then Exit;
 
-  Rows := ReadCharacters(6, EndOfLine);
+  Rows := string(ReadCharacters(6, EndOfLine));
   if EndOfLine then Exit;
 
-  ColumncountString := ReadCharacters(6, EndOfLine);
+  ColumncountString := string(ReadCharacters(6, EndOfLine));
   ColumnCount := StrToInt(ColumncountString);
   if EndOfLine then Exit;
 
@@ -482,7 +482,7 @@ var
   mString, nString : string;
   Index : integer;
   FirstX, FirstY : double;
-  FirstXString, FirstYString, DatumString : String;
+  FirstXString, FirstYString, DatumString : string;
   X, Y, Datum : double;
   AString : string;
   ElevationPoint : TElevationPoint;
@@ -497,14 +497,14 @@ begin
   ReadCharacters(6, EndOfLine);
   if EndOfLine then Exit;
 
-  mString := ReadCharacters(6, EndOfLine);
-  nString := ReadCharacters(6, EndOfLine);
+  mString := string(ReadCharacters(6, EndOfLine));
+  nString := string(ReadCharacters(6, EndOfLine));
   if EndOfLine then Exit;
-  FirstXString := ReadCharacters(24, EndOfLine);
+  FirstXString := string(ReadCharacters(24, EndOfLine));
   if EndOfLine then Exit;
-  FirstYString := ReadCharacters(24, EndOfLine);
+  FirstYString := string(ReadCharacters(24, EndOfLine));
   if EndOfLine then Exit;
-  DatumString := ReadCharacters(24, EndOfLine);
+  DatumString := string(ReadCharacters(24, EndOfLine));
   if EndOfLine then Exit;
 
   // min or max
@@ -548,7 +548,7 @@ begin
         X, Y);
     end;
 
-    AString := ReadCharacters(6, EndOfLine);
+    AString := string(ReadCharacters(6, EndOfLine));
     if EndOfLine then Exit;
 
 

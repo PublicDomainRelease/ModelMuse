@@ -9,31 +9,18 @@ inherited frameMt3dBasicPkg: TframeMt3dBasicPkg
   object lblInactiveConcentration: TLabel [2]
     Left = 87
     Top = 149
-    Width = 193
-    Height = 13
+    Width = 228
+    Height = 16
     Caption = 'Concentration at inactive cells (CINACT)'
   end
   object lblMinimumSaturatedFraction: TLabel [3]
     Left = 87
     Top = 177
-    Width = 179
-    Height = 13
+    Width = 216
+    Height = 16
     Caption = 'Minimum saturated fraction (THKMIN)'
   end
-  object edMassUnit: TLabeledEdit [4]
-    Left = 16
-    Top = 119
-    Width = 50
-    Height = 21
-    EditLabel.Width = 88
-    EditLabel.Height = 13
-    EditLabel.Caption = 'Mass unit (MUNIT)'
-    Enabled = False
-    LabelPosition = lpRight
-    MaxLength = 4
-    TabOrder = 1
-  end
-  object pnlSpecies: TPanel [5]
+  object pnlSpecies: TPanel [4]
     Left = 0
     Top = 224
     Width = 528
@@ -100,7 +87,7 @@ inherited frameMt3dBasicPkg: TframeMt3dBasicPkg
       end
     end
   end
-  object rdeMinimumSaturatedFraction: TRbwDataEntry [6]
+  object rdeMinimumSaturatedFraction: TRbwDataEntry [5]
     Left = 16
     Top = 174
     Width = 65
@@ -115,7 +102,7 @@ inherited frameMt3dBasicPkg: TframeMt3dBasicPkg
     CheckMin = True
     ChangeDisabledColor = True
   end
-  object rdeInactiveConcentration: TRbwDataEntry [7]
+  object rdeInactiveConcentration: TRbwDataEntry [6]
     Left = 16
     Top = 146
     Width = 65
@@ -127,6 +114,19 @@ inherited frameMt3dBasicPkg: TframeMt3dBasicPkg
     DataType = dtReal
     Max = 1.000000000000000000
     ChangeDisabledColor = True
+  end
+  object edMassUnit: TLabeledEdit [7]
+    Left = 16
+    Top = 119
+    Width = 50
+    Height = 24
+    EditLabel.Width = 106
+    EditLabel.Height = 16
+    EditLabel.Caption = 'Mass unit (MUNIT)'
+    Enabled = False
+    LabelPosition = lpRight
+    MaxLength = 4
+    TabOrder = 1
   end
   inherited memoComments: TMemo
     Width = 497

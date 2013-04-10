@@ -110,7 +110,24 @@
           <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 1</text></para>
         </td>
         <td>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">MXITER ITER1 NPCOND [IHCOFADD]</text></para>
+          <para styleclass="Normal"><table styleclass="Default" rowcount="2" colcount="2">
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2000, MODFLOW-LGR, and MODFLOW-CFP:</text><conditional-text type="END"/></para>
+              </td>
+              <td>
+                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000,MODFLOW-CFP,MODFLOW-NWT"/><text styleclass="Normal" translate="true">MXITER ITER1 NPCOND</text><conditional-text type="END"/></para>
+              </td>
+            </tr>
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2005, and MODFLOW-NWT</text><conditional-text type="END"/></para>
+              </td>
+              <td>
+                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><text styleclass="Normal" translate="true">MXITER ITER1 NPCOND [IHCOFADD]</text><conditional-text type="END"/></para>
+              </td>
+            </tr>
+          </table></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
             <tr style="vertical-align:top">
@@ -138,7 +155,7 @@
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">NPCOND—is the flag used to select the matrix conditioning method:</text></para>
                       <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">1—is for Modified Incomplete Cholesky (for use on scalar computers)</text></li>
-                        <li styleclass="Normal"><text styleclass="Normal" translate="true">2—is for Polynomial (for use on vector computers or to conserve computer memory)</text></li>
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">2—is for Polynomial (for use on vector computers or to conserve computer memory)</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/></li>
                       </list>
                     </td>
                   </tr>
@@ -147,7 +164,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">When an active cell is surrounded by dry cells, the cell normally converts to dry. &#160;The new option causes the cell to convert to dry only if storage and head-dependent boundary flow are also 0. &#160;IHCOFADD is a 4th integer input item read on the first input line. &#160;A non-zero value activates the option. &#160;An unspecified or 0 value turns the option off. (MODFLOW-2005 only)</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">When an active cell is surrounded by dry cells, the cell normally converts to dry. &#160;The new option causes the cell to convert to dry only if storage and head-dependent boundary flow are also 0. &#160;IHCOFADD is a 4th integer input item read on the first input line. &#160;A non-zero value activates the option. &#160;An unspecified or 0 value turns the option off. (MODFLOW-2005 only)</text><conditional-text type="END"/></para>
                     </td>
                   </tr>
                 </table></para>

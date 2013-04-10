@@ -1,10 +1,10 @@
 inherited frmCustomizeMesh: TfrmCustomizeMesh
   Caption = 'Customize SUTRA Mesh'
-  ClientHeight = 122
+  ClientHeight = 181
   ClientWidth = 400
-  ExplicitWidth = 418
-  ExplicitHeight = 167
-  PixelsPerInch = 120
+  ExplicitWidth = 416
+  ExplicitHeight = 219
+  PixelsPerInch = 96
   TextHeight = 18
   object cbShowNodeNumbers: TCheckBox
     Left = 16
@@ -42,40 +42,50 @@ inherited frmCustomizeMesh: TfrmCustomizeMesh
   end
   object btnHelp: TBitBtn
     Left = 105
-    Top = 75
+    Top = 139
     Width = 89
     Height = 33
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 4
     OnClick = btnHelpClick
   end
   object btnOK: TBitBtn
     Left = 200
-    Top = 75
+    Top = 139
     Width = 89
     Height = 33
     Caption = '&OK'
-    DoubleBuffered = True
     Kind = bkOK
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 5
     OnClick = btnOKClick
   end
   object btnCancel: TBitBtn
     Left = 295
-    Top = 75
+    Top = 139
     Width = 89
     Height = 33
     Caption = '&Cancel'
-    DoubleBuffered = True
     Kind = bkCancel
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 6
+  end
+  object cbNodeCellOutline: TCheckBox
+    Left = 16
+    Top = 80
+    Width = 201
+    Height = 17
+    Caption = 'Show cell outlines'
+    TabOrder = 7
+  end
+  object cbShowElements: TCheckBox
+    Left = 16
+    Top = 112
+    Width = 209
+    Height = 17
+    Caption = 'Show element outlines'
+    TabOrder = 8
   end
   object dlgFont: TFontDialog
     Font.Charset = DEFAULT_CHARSET
@@ -83,7 +93,6 @@ inherited frmCustomizeMesh: TfrmCustomizeMesh
     Font.Height = -13
     Font.Name = 'Tahoma'
     Font.Style = []
-    Left = 48
-    Top = 80
+    Left = 216
   end
 end

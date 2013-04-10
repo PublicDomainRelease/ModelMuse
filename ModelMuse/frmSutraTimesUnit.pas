@@ -388,7 +388,7 @@ begin
   if SelectedSchedule <> nil then
   begin
     Schedule := SelectedSchedule.Schedule;
-    Schedule.Name := lbledName.Text;
+    Schedule.Name := AnsiString(lbledName.Text);
     Schedule.ScheduleType := TScheduleType(comboScheduleType.ItemIndex);
     Schedule.ScaleFactor := StrToFloat(rdeScaleFactor.Text);
     Schedule.SutraTimeChoice :=
@@ -581,7 +581,7 @@ begin
       end;
 
       Schedule := SelectedSchedule.Schedule;
-      lbledName.Text := Schedule.Name;
+      lbledName.Text := string(Schedule.Name);
       comboScheduleType.ItemIndex := Ord(Schedule.ScheduleType);
       comboScheduleTypeChange(nil);
       rdeScaleFactor.Text := FloatToStr(Schedule.ScaleFactor);
@@ -697,7 +697,7 @@ begin
   inherited;
   if SelectedSchedule <> nil then
   begin
-    SelectedSchedule.Schedule.Name := lbledName.Text;
+    SelectedSchedule.Schedule.Name := AnsiString(lbledName.Text);
     vstScedules.Invalidate;
   end;
 end;
@@ -760,7 +760,8 @@ begin
   end
   else
   begin
-    CellText := SutraTimeScheduleNodeData.SutraTimeScheduleItem.Schedule.Name;
+    CellText := string(SutraTimeScheduleNodeData.
+      SutraTimeScheduleItem.Schedule.Name);
   end;
 end;
 

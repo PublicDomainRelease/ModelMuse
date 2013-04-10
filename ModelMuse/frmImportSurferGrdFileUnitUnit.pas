@@ -101,7 +101,16 @@ begin
   result := OpenDialogFile.Execute;
   if result then
   begin
-    FFileType := SurferFileType(OpenDialogFile.FileName);
+    try
+      FFileType := SurferFileType(OpenDialogFile.FileName);
+    except on E: EGrdReadError do
+      begin
+        result := False;
+        Beep;
+        MessageDlg(E.message, mtError, [mbOK], 0);
+        Exit;
+      end;
+    end;
     case FFileType of
       sft6:
         begin

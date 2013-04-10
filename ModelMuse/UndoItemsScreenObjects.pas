@@ -85,6 +85,7 @@ type
   strict private
     FOldChildModelScreenObjects: TList;
   private
+    FOldSegment: TSegment2D;
     procedure ResetVisible(const ScreenObjects: TList);
   protected
     {
@@ -1121,6 +1122,12 @@ procedure TUndoChangeSelection.SetPriorSelection;
 begin
   SetSelection(FOldSelectedScreenObjects, FOldSelectedVertices);
   StoreVisible(FOldVisibleScreenObjects);
+  {$IFDEF SUTRA}
+  if frmGoPhast.PhastModel.Mesh <> nil then
+  begin
+    FOldSegment := frmGoPhast.PhastModel.Mesh.CrossSection.Segment;
+  end;
+  {$ENDIF}
 end;
 
 procedure TUndoChangeSelection.StoreVisible(const ScreenObjects: TList);
@@ -1200,6 +1207,13 @@ begin
 
   InvalidateImages;
   FShouldUpdateShowHideObjectsDisplay := True;
+  {$IFDEF SUTRA}
+  if frmGoPhast.PhastModel.Mesh <> nil then
+  begin
+    frmGoPhast.PhastModel.Mesh.CrossSection.Segment := FOldSegment;
+  end;
+  {$ENDIF}
+
   UpdateDisplay;
 end;
 
@@ -3000,12 +3014,12 @@ begin
   for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
-    if ScreenObject.Selected and (ScreenObject.SectionCount = 1) then
+    if ScreenObject.Selected
+      and (ScreenObject.SectionCount = 1)
+      and (not ScreenObject.Closed)
+      and (not (ScreenObject.Count = 1)) then
     begin
-      if not ScreenObject.Closed then
-      begin
-        FScreenObjects.Add(ScreenObject);
-      end;
+      FScreenObjects.Add(ScreenObject);
     end;
   end;
   FScreenObjects.Capacity := FScreenObjects.Count;
@@ -3139,7 +3153,7 @@ begin
     begin
       FQuadTree.AddPoint(APoint.x, APoint.y, ScreenObject);
     end;
-    if not ScreenObject.Closed then
+    if (not ScreenObject.Closed) and (ScreenObject.Count > 1) then
     begin
       APoint := ScreenObject.Points[ScreenObject.Count-1];
       X := APoint.x;

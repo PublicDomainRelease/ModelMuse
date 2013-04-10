@@ -1,5 +1,10 @@
 {@name registers @link(TRbwOctTree) which is used to
-quickly retrieve data by their X, Y, and Z coordinates.)}
+quickly retrieve data by their X, Y, and Z coordinates.
+
+@author(Richard B. Winston <rbwinst@usgs.gov>).
+
+This file is in the public domain.
+}
 unit OctTreeClass;
 
 interface

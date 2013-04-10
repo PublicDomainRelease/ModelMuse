@@ -13,6 +13,8 @@ type
 const
   FirstNodeItem = iiPressure;
   LastNodeItem = iiSaturation;
+  FirstElementItem = iiXVel;
+  LastElementItem = iiZVel;
 
 type
   TUndoImportSutraResults = class(TUndoImportShapefile)
@@ -40,8 +42,11 @@ type
     procedure GetData;
     procedure SetData;
     procedure CreateNodeScreenObject(out ScreenObject: TScreenObject);
+    procedure CreateElementScreenObject(out ScreenObject: TScreenObject);
     procedure CreateNodeDataSets(StepIndex: Integer; NewDataSets: TList);
+    procedure CreateElementDataSets(StepIndex: Integer; NewDataSets: TList);
     procedure AssignNodeValues(NewDataSets: TList; AScreenObject: TScreenObject);
+    procedure AssignElementValues(NewDataSets: TList; AScreenObject: TScreenObject);
     { Private declarations }
   public
     { Public declarations }
@@ -52,6 +57,7 @@ var
 
 var
   SutraNodeResults: string;
+  SutraElementResults: string;
 
 implementation
 
@@ -76,6 +82,8 @@ resourcestring
   StrYouMustSpecifyAt = 'You must specify at least one type of data and one ' +
   'time step.';
   StrUnableToImportNod = 'Unable to import node data because the node locati' +
+  'ons were not saved in the .nod file.';
+  StrUnableToImportEle = 'Unable to import element data because the element locati' +
   'ons were not saved in the .nod file.';
 
 
@@ -126,7 +134,7 @@ begin
   inherited;
   chklstDataToImport.CheckAll(cbChecked);
   case frmGoPhast.PhastModel.SutraOptions.TransportChoice of
-    tcSolute:
+    tcSolute, tcSoluteHead:
       begin
         chklstDataToImport.Items[Ord(iiU)] := StrConcentration;
       end;
@@ -298,6 +306,7 @@ begin
   Mesh := frmGoPhast.PhastModel.SutraMesh;
   Nodes := TNodeDataList.Create;
   try
+    NeedLocations := False;
     case Mesh.MeshType of
       mt2D:
         begin
@@ -310,19 +319,19 @@ begin
               MessageDlg(StrUnableToImportNod, mtError, [mbOK], 0);
               Exit;
             end;
-            Nodes.Capacity := Mesh.Mesh2D.Nodes.Count;
-            for NodeIndex := 0 to Mesh.Mesh2D.Nodes.Count - 1 do
-            begin
-              ANode2D := Mesh.Mesh2D.Nodes[NodeIndex];
-              NodeData := TNodeData.Create;
-              Nodes.Add(NodeData);
-              NodeData.Number := ANode2D.Number;
-              NodeData.NREG := 0;
-              NodeData.X := ANode2D.X;
-              NodeData.Y := ANode2D.Y;
-              NodeData.Z := 0;
-              NodeData.Porosity := 0
-            end;
+          end;
+          Nodes.Capacity := Mesh.Mesh2D.Nodes.Count;
+          for NodeIndex := 0 to Mesh.Mesh2D.Nodes.Count - 1 do
+          begin
+            ANode2D := Mesh.Mesh2D.Nodes[NodeIndex];
+            NodeData := TNodeData.Create;
+            Nodes.Add(NodeData);
+            NodeData.Number := ANode2D.Number;
+            NodeData.NREG := 0;
+            NodeData.X := ANode2D.X;
+            NodeData.Y := ANode2D.Y;
+            NodeData.Z := 0;
+            NodeData.Porosity := 0
           end;
         end;
       mt3D:
@@ -338,26 +347,26 @@ begin
               MessageDlg(StrUnableToImportNod, mtError, [mbOK], 0);
               Exit;
             end;
-            Nodes.Capacity := Mesh.ActiveNodeCount;
-            for LayerIndex := 0 to Mesh.LayerCount do
-            begin
-              for NodeIndex := 0 to Mesh.Mesh2D.Nodes.Count - 1 do
-              begin
-                ANode3D := Mesh.NodeArray[LayerIndex,NodeIndex];
-                if ANode3D.Active then
-                begin
-                  NodeData := TNodeData.Create;
-                  Nodes.Add(NodeData);
-                  NodeData.Number := ANode3D.Number;
-                  NodeData.NREG := 0;
-                  NodeData.X := ANode3D.X;
-                  NodeData.Y := ANode3D.Y;
-                  NodeData.Z := ANode3D.Z;
-                  NodeData.Porosity := 0;
-                end;
-              end;
-            end
           end;
+          Nodes.Capacity := Mesh.ActiveNodeCount;
+          for LayerIndex := 0 to Mesh.LayerCount do
+          begin
+            for NodeIndex := 0 to Mesh.Mesh2D.Nodes.Count - 1 do
+            begin
+              ANode3D := Mesh.NodeArray[LayerIndex,NodeIndex];
+              if ANode3D.Active then
+              begin
+                NodeData := TNodeData.Create;
+                Nodes.Add(NodeData);
+                NodeData.Number := ANode3D.Number;
+                NodeData.NREG := 0;
+                NodeData.X := ANode3D.X;
+                NodeData.Y := ANode3D.Y;
+                NodeData.Z := ANode3D.Z;
+                NodeData.Porosity := 0;
+              end;
+            end;
+          end
         end;
       else Assert(False);
     end;
@@ -376,6 +385,7 @@ begin
       UndoCreateScreenObject, False);
     ScreenObject.SetPropertiesOfIntersectedCells := True;
     ScreenObject.EvaluatedAt := eaNodes;
+    ScreenObject.Visible := False;
     case Mesh.MeshType of
       mt2D: ScreenObject.ElevationCount := ecZero;
       mt3D:
@@ -391,31 +401,40 @@ begin
 
     for NodeIndex := 0 to FNodeReader.Count - 1 do
     begin
-      if Length(FNodeReader.X) = 0 then
+      if (Length(FNodeReader.X) = 0) or not NeedLocations then
       begin
+        // The X coordinates were NOT stored in the .node file
         APoint.X := Nodes[NodeIndex].X;
       end
       else
       begin
+        // The X coordinates WERE stored in the .node file
         APoint.X := FNodeReader.X[NodeIndex];
       end;
-      if Length(FNodeReader.Y) = 0 then
+      if (Length(FNodeReader.Y) = 0) or not NeedLocations then
       begin
+        // The Y coordinates were NOT stored in the .node file
         APoint.Y := Nodes[NodeIndex].Y;
       end
       else
       begin
+        // The Y coordinates WERE stored in the .node file
         APoint.Y := FNodeReader.Y[NodeIndex];
       end;
       ScreenObject.AddPoint(APoint, True);
+
+
       if ScreenObject.ElevationCount = ecOne then
       begin
-        if Length(FNodeReader.Z) = 0 then
+        // 3D model
+        if (Length(FNodeReader.Z) = 0) or not NeedLocations then
         begin
+          // The Z coordinates were NOT stored in the .node file
           Z := Nodes[NodeIndex].Z;
         end
         else
         begin
+          // The Z coordinates WERE stored in the .node file
           Z := FNodeReader.Z[NodeIndex];
         end;
         ScreenObject.ImportedSectionElevations.Add(Z);
@@ -423,6 +442,222 @@ begin
     end;
   finally
     Nodes.Free;
+  end;
+
+end;
+
+procedure TfrmImportSutraModelResults.CreateElementDataSets(StepIndex: Integer;
+  NewDataSets: TList);
+var
+  index: TImportItems;
+  NewName: string;
+  DataSet: TDataArray;
+  NewFormula: string;
+  NewDataType: TRbwDataType;
+begin
+  for index := FirstElementItem to LastElementItem do
+  begin
+    if chklstDataToImport.Checked[Ord(index)] then
+    begin
+      case index of
+        iiXVel:
+          begin
+            if Length(FEleReader.FXVelocity) = 0 then
+            begin
+              Continue;
+            end;
+          end;
+        iiYVel:
+          begin
+            if Length(FEleReader.FYVelocity) = 0 then
+            begin
+              Continue;
+            end;
+          end;
+        iiZVel:
+          begin
+            if Length(FEleReader.FZVelocity) = 0 then
+            begin
+              Continue;
+            end;
+          end;
+        else
+          Assert(False);
+      end;
+      NewName := GenerateNewName(chklstDataToImport.Items[Ord(index)] + '_'
+        + IntToStr(FResultList[StepIndex].TimeStep));
+
+      NewDataType := rdtDouble;
+      NewFormula := '0.';
+
+      DataSet := frmGoPhast.PhastModel.DataArrayManager.CreateNewDataArray(
+        TDataArray, NewName, NewFormula, NewName, [], NewDataType,
+        eaBlocks, dso3D, SutraElementResults);
+
+      NewDataSets.Add(DataSet);
+      frmGoPhast.PhastModel.UpdateDataArrayDimensions(DataSet);
+
+      DataSet.Units := '';
+
+    end;
+  end;
+end;
+
+procedure TfrmImportSutraModelResults.CreateElementScreenObject(
+  out ScreenObject: TScreenObject);
+var
+  UndoCreateScreenObject: TCustomUndo;
+  NeedLocations: Boolean;
+  Mesh: TSutraMesh3D;
+  ElementIndex: Integer;
+  AnElement2D: TSutraElement2D;
+  ElementData: TElementData;
+  LayerIndex: Integer;
+  AnElement3D: TSutraElement3D;
+  Elements: TElementDataList;
+  APoint: TPoint2D;
+  Z: Extended;
+  CenterPoint: TPoint2D;
+  CenterLocation: TPoint3D;
+begin
+  ScreenObject := nil;
+  Mesh := frmGoPhast.PhastModel.SutraMesh;
+  Elements := TElementDataList.Create;
+  try
+    NeedLocations := False;
+    case Mesh.MeshType of
+      mt2D:
+        begin
+          NeedLocations := (Mesh.Mesh2D.Elements.Count <> FEleReader.Count);
+          if NeedLocations then
+          begin
+            if (Length(FEleReader.X) = 0) or (Length(FEleReader.Y) = 0)  then
+            begin
+              Beep;
+              MessageDlg(StrUnableToImportEle, mtError, [mbOK], 0);
+              Exit;
+            end;
+          end;
+          Elements.Capacity := Mesh.Mesh2D.Elements.Count;
+          for ElementIndex := 0 to Mesh.Mesh2D.Elements.Count - 1 do
+          begin
+            AnElement2D := Mesh.Mesh2D.Elements[ElementIndex];
+            ElementData := TElementData.Create;
+            Elements.Add(ElementData);
+            ElementData.Number := AnElement2D.ElementNumber;
+            CenterPoint := AnElement2D.Center;
+            ElementData.X := CenterPoint.X;
+            ElementData.Y := CenterPoint.Y;
+            ElementData.Z := 0;
+          end;
+        end;
+      mt3D:
+        begin
+          NeedLocations := (Mesh.ActiveElementCount <> FEleReader.Count);
+          if NeedLocations then
+          begin
+            if (Length(FEleReader.X) = 0)
+              or (Length(FEleReader.Y) = 0)
+              or (Length(FEleReader.Z) = 0)  then
+            begin
+              Beep;
+              MessageDlg(StrUnableToImportEle, mtError, [mbOK], 0);
+              Exit;
+            end;
+          end;
+          Elements.Capacity := Mesh.ActiveElementCount;
+          for LayerIndex := 0 to Mesh.LayerCount-1 do
+          begin
+            for ElementIndex := 0 to Mesh.Mesh2D.Elements.Count - 1 do
+            begin
+              AnElement3D := Mesh.ElementArray[LayerIndex,ElementIndex];
+              if AnElement3D.Active then
+              begin
+                ElementData := TElementData.Create;
+                Elements.Add(ElementData);
+                ElementData.Number := AnElement3D.ElementNumber;
+                CenterLocation := AnElement3D.CenterLocation;
+                ElementData.X := CenterLocation.X;
+                ElementData.Y := CenterLocation.Y;
+                ElementData.Z := CenterLocation.Z;
+              end;
+            end;
+          end
+        end;
+      else Assert(False);
+    end;
+
+    if Elements.Count > 0 then
+    begin
+      Elements.Sort(TElementDataComparer.Construct(
+        function (const L, R: TElementData): integer
+        begin
+          result := L.Number - R.Number;
+        end));
+    end;
+
+    ScreenObject := TScreenObject.CreateWithViewDirection(
+      frmGoPhast.PhastModel, vdTop,
+      UndoCreateScreenObject, False);
+    ScreenObject.SetPropertiesOfIntersectedCells := True;
+    ScreenObject.EvaluatedAt := eaBlocks;
+    ScreenObject.Visible := False;
+    case Mesh.MeshType of
+      mt2D: ScreenObject.ElevationCount := ecZero;
+      mt3D:
+        begin
+          ScreenObject.ElevationCount := ecOne;
+          ScreenObject.ElevationFormula :=
+            rsObjectImportedValuesR
+            + '("' + StrImportedElevations + '")';
+
+        end;
+      else Assert(False);
+    end;
+
+    for ElementIndex := 0 to FEleReader.Count - 1 do
+    begin
+      if (Length(FEleReader.X) = 0) or not NeedLocations then
+      begin
+        // The X coordinates were NOT stored in the .node file
+        APoint.X := Elements[ElementIndex].X;
+      end
+      else
+      begin
+        // The X coordinates WERE stored in the .node file
+        APoint.X := FEleReader.X[ElementIndex];
+      end;
+      if (Length(FEleReader.Y) = 0) or not NeedLocations then
+      begin
+        // The Y coordinates were NOT stored in the .node file
+        APoint.Y := Elements[ElementIndex].Y;
+      end
+      else
+      begin
+        // The Y coordinates WERE stored in the .node file
+        APoint.Y := FEleReader.Y[ElementIndex];
+      end;
+      ScreenObject.AddPoint(APoint, True);
+
+
+      if ScreenObject.ElevationCount = ecOne then
+      begin
+        // 3D model
+        if (Length(FEleReader.Z) = 0) or not NeedLocations then
+        begin
+          // The Z coordinates were NOT stored in the .node file
+          Z := Elements[ElementIndex].Z;
+        end
+        else
+        begin
+          // The Z coordinates WERE stored in the .node file
+          Z := FEleReader.Z[ElementIndex];
+        end;
+        ScreenObject.ImportedSectionElevations.Add(Z);
+      end;
+    end;
+  finally
+    Elements.Free;
   end;
 
 end;
@@ -482,6 +717,85 @@ begin
 
     end;
   end;
+end;
+
+procedure TfrmImportSutraModelResults.AssignElementValues(NewDataSets: TList;
+  AScreenObject: TScreenObject);
+var
+  DSIndex: Integer;
+  DataArray: TDataArray;
+  ValueArray: TOneDRealArray;
+  Item: TValueArrayItem;
+  ValueIndex: Integer;
+  DataSetPosition: integer;
+  ItemIndex: TImportItems;
+begin
+  DSIndex := 0;
+  for ItemIndex := FirstElementItem to LastElementItem do
+  begin
+    if chklstDataToImport.Checked[Ord(ItemIndex)] then
+    begin
+      DataArray := nil;
+      case ItemIndex of
+        iiXVel:
+          begin
+            if Length(FEleReader.XVelocity) = 0 then
+            begin
+              Continue;
+            end
+            else
+            begin
+              ValueArray := FEleReader.XVelocity;
+              DataArray := NewDataSets[DSIndex];
+              Inc(DSIndex);
+            end;
+          end;
+        iiYVel:
+          begin
+            if Length(FEleReader.YVelocity) = 0 then
+            begin
+              Continue;
+            end
+            else
+            begin
+              ValueArray := FEleReader.YVelocity;
+              DataArray := NewDataSets[DSIndex];
+              Inc(DSIndex);
+            end;
+          end;
+        iiZVel:
+          begin
+            if Length(FEleReader.ZVelocity) = 0 then
+            begin
+              Continue;
+            end
+            else
+            begin
+              ValueArray := FEleReader.ZVelocity;
+              DataArray := NewDataSets[DSIndex];
+              Inc(DSIndex);
+            end;
+          end;
+        else
+          Assert(False);
+      end;
+
+      Item := AScreenObject.ImportedValues.Add as TValueArrayItem;
+      Item.Name := DataArray.Name;
+      Item.Values.DataType := DataArray.DataType;
+      Item.Values.Count := FEleReader.Count;
+
+      for ValueIndex := 0 to FEleReader.Count - 1 do
+      begin
+        Item.Values.RealValues[ValueIndex] := ValueArray[ValueIndex];
+      end;
+
+      DataSetPosition := AScreenObject.AddDataSet(DataArray);
+      AScreenObject.DataSetFormulas[DataSetPosition] :=
+        rsObjectImportedValuesR + '("' + DataArray.Name + '")';
+
+    end;
+  end
 end;
 
 procedure TfrmImportSutraModelResults.AssignNodeValues(NewDataSets: TList;
@@ -574,6 +888,7 @@ var
   DataSetIndex: integer;
   NewScreenObjects: TList;
   Undo: TUndoImportSutraResults;
+  ElementScreenObject: TScreenObject;
 begin
   NewDataSets := TList.Create;
   AllNewDataSets := TList.Create;
@@ -631,6 +946,59 @@ begin
           end;
         end;
       end;
+
+      if chklstDataToImport.Checked[Ord(iiXVel)]
+        or chklstDataToImport.Checked[Ord(iiYVel)]
+        or chklstDataToImport.Checked[Ord(iiZVel)] then
+      begin
+        StepList.Clear;
+        for index := 0 to Length(FEleReader.StoredResults) - 1 do
+        begin
+          StepList.Add(FEleReader.StoredResults[index].TimeStep);
+        end;
+        StepList.Sorted := True;
+        Assert(FResultList.Count = chklstTimeStepsToImport.Items.Count);
+        FirstResults := True;
+        ElementScreenObject := nil;
+        for index := 0 to FResultList.Count - 1 do
+        begin
+          if StepList.IndexOf(FResultList[index].TimeStep) >= 0 then
+          begin
+            if chklstTimeStepsToImport.Checked[index] then
+            begin
+              FEleReader.ReadNextResults;
+              NewDataSets.Clear;
+              CreateElementDataSets(index, NewDataSets);
+              if NewDataSets.Count > 0 then
+              begin
+                for DataSetIndex := 0 to NewDataSets.Count -1 do
+                begin
+                  AllNewDataSets.Add(NewDataSets[DataSetIndex]);
+                end;
+                if FirstResults then
+                begin
+                  CreateElementScreenObject(ElementScreenObject);
+                  if ElementScreenObject = nil then
+                  begin
+                    Exit;
+                  end;
+                  NewScreenObjects.Add(ElementScreenObject);
+                  FirstResults := False;
+                end;
+
+                AssignElementValues(NewDataSets, ElementScreenObject);
+              end;
+
+            end
+            else
+            begin
+              FEleReader.SkipNextResults
+            end;
+          end;
+        end;
+      end;
+
+
       Undo.StoreNewScreenObjects(NewScreenObjects);
       Undo.StoreNewDataSets(AllNewDataSets);
       frmGoPhast.UndoStack.Submit(Undo)
@@ -654,5 +1022,6 @@ end;
 
 initialization
   SutraNodeResults := StrModelResults + '|' + 'SUTRA Nodal Results';
+  SutraElementResults := StrModelResults + '|' + 'SUTRA Element Results';
 
 end.

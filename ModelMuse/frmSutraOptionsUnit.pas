@@ -168,50 +168,55 @@ procedure TfrmSutraOptions.btnOKClick(Sender: TObject);
 var
   Tilted: Boolean;
   Count: Integer;
+  TransportChoice: TTransportChoice;
 begin
   inherited;
-  Tilted := False;
-  case TMeshType(rgMeshType.ItemIndex) of
-    mt2D:
-      begin
-        Tilted := (rdeGravX.RealValue <> 0) and (rdeGravY.RealValue <> 0);
-      end;
-    mt3D:
-      begin
-        Count := 0;
-        if (rdeGravX.RealValue <> 0) then
-        begin
-          Inc(Count);
-        end;
-        if (rdeGravY.RealValue <> 0) then
-        begin
-          Inc(Count);
-        end;
-        if (rdeGravZ.RealValue <> 0) then
-        begin
-          Inc(Count);
-        end;
-        if Count = 0 then
-        begin
-          Beep;
-          MessageDlg(StrYouMustSetAtLeas, mtError, [mbOK], 0);
-          ModalResult := mrNone;
-          Exit;
-        end;
-        Tilted := Count <> 1;
-      end;
-    else
-      Assert(False);
-  end;
 
-  if Tilted then
+  TransportChoice := TTransportChoice(rgTransport.ItemIndex);
+  if TransportChoice <> tcSoluteHead then
   begin
-    Beep;
-    if (MessageDlg(StrYouHaveSetMoreTh, mtWarning, [mbYes, mbNo], 0) <>
-      mrYes) then
+    case TMeshType(rgMeshType.ItemIndex) of
+      mt2D:
+        begin
+          Tilted := (rdeGravX.RealValue <> 0) and (rdeGravY.RealValue <> 0);
+        end;
+      mt3D:
+        begin
+          Count := 0;
+          if (rdeGravX.RealValue <> 0) then
+          begin
+            Inc(Count);
+          end;
+          if (rdeGravY.RealValue <> 0) then
+          begin
+            Inc(Count);
+          end;
+          if (rdeGravZ.RealValue <> 0) then
+          begin
+            Inc(Count);
+          end;
+          if Count = 0 then
+          begin
+            Beep;
+            MessageDlg(StrYouMustSetAtLeas, mtError, [mbOK], 0);
+            ModalResult := mrNone;
+            Exit;
+          end;
+          Tilted := Count <> 1;
+        end;
+      else
+        Assert(False);
+    end;
+
+    if Tilted then
     begin
-      ModalResult := mrNone;
-      Exit;
+      Beep;
+      if (MessageDlg(StrYouHaveSetMoreTh, mtWarning, [mbYes, mbNo], 0) <>
+        mrYes) then
+      begin
+        ModalResult := mrNone;
+        Exit;
+      end;
     end;
   end;
 
@@ -284,7 +289,7 @@ begin
     end;
     rgTransport.ItemIndex := Ord(SutraOptions.TransportChoice);
     rgSaturation.ItemIndex := Ord(SutraOptions.SaturationChoice);
-    jvedTitle.Lines.Text := SutraOptions.TitleLines;
+    jvedTitle.Lines.Text := string(SutraOptions.TitleLines);
     rgSimulationType.ItemIndex := Ord(SutraOptions.SimulationType);
     rgStartType.ItemIndex := Ord(SutraOptions.StartType);
     fedRestartFile.FileName := SutraOptions.RestartFileName;
@@ -362,13 +367,17 @@ begin
 end;
 
 procedure TfrmSutraOptions.rgMeshTypeClick(Sender: TObject);
+var
+  TransportChoice: TTransportChoice;
 begin
   if  csLoading in ComponentState then
   begin
     Exit;
   end;
   inherited;
-  rdeGravZ.Enabled := TMeshType(rgMeshType.ItemIndex) = mt3D;
+  TransportChoice := TTransportChoice(rgTransport.ItemIndex);
+  rdeGravZ.Enabled := (TMeshType(rgMeshType.ItemIndex) = mt3D)
+    and (TransportChoice in [tcSolute, tcEnergy]);
 end;
 
 procedure TfrmSutraOptions.rgPressureSolutionClick(Sender: TObject);
@@ -412,9 +421,9 @@ begin
 
   TransportChoice := TTransportChoice(rgTransport.ItemIndex);
 
-  rdeFirstDistributionCoefficient.Enabled := (TransportChoice = tcSolute)
+  rdeFirstDistributionCoefficient.Enabled := (TransportChoice in [tcSolute, tcSoluteHead])
     and (TSorptionModel(rgSorptionModel.ItemIndex) <> smNone);
-  rdeSecondDistributionCoefficient.Enabled :=(TransportChoice = tcSolute)
+  rdeSecondDistributionCoefficient.Enabled :=(TransportChoice in [tcSolute, tcSoluteHead])
     and (TSorptionModel(rgSorptionModel.ItemIndex)
     in [smFreundlich, smLangmuir]);
 end;
@@ -454,14 +463,27 @@ begin
   rdeSolidGrainSpecificHeat.Enabled := TransportChoice = tcEnergy;
   rdeSolidGrainDiffusivity.Enabled := TransportChoice = tcEnergy;
 
-  // solute transport
-  rgSorptionModel.Enabled := TransportChoice = tcSolute;
-  rdeFirstFluidProd.Enabled := TransportChoice = tcSolute;
-  rdeFirstImmobProd.Enabled := TransportChoice = tcSolute;
+  // solute transport with pressure or head
+  rgSorptionModel.Enabled := TransportChoice in [tcSolute, tcSoluteHead];
+  rdeFirstFluidProd.Enabled := TransportChoice in [tcSolute, tcSoluteHead];
+  rdeFirstImmobProd.Enabled := TransportChoice in [tcSolute, tcSoluteHead];
+  rdeFluidDiffusivity.Enabled := TransportChoice in [tcSolute, tcSoluteHead];
+
+  // solute transport with pressure
   rdeViscosity.Enabled := TransportChoice = tcSolute;
-  rdeFluidDiffusivity.Enabled := TransportChoice = tcSolute;
   rdeFluidDensityCoefficientConcentration.Enabled := TransportChoice = tcSolute;
-  rdeBaseConcentration.Enabled := TransportChoice = tcSolute;
+  rdeBaseConcentration.Enabled := TransportChoice in [tcSolute];
+
+  // solute with pressure or energy
+  rdeBaseFluidDensity.Enabled := TransportChoice in [tcSolute, tcEnergy];
+  rdeGravX.Enabled := TransportChoice in [tcSolute, tcEnergy];
+  rdeGravY.Enabled := TransportChoice in [tcSolute, tcEnergy];
+  rgMeshTypeClick(nil);
+  rgSaturation.Enabled := TransportChoice in [tcSolute, tcEnergy];
+  if not rgSaturation.Enabled then
+  begin
+    rgSaturation.ItemIndex := 0;
+  end;
 
   EnableRhos;
 end;
@@ -518,7 +540,7 @@ begin
     SutraOptions.TransportChoice := TTransportChoice(rgTransport.ItemIndex);
     SutraOptions.SaturationChoice := TSaturationChoice(rgSaturation.ItemIndex);
     SutraOptions.SimulationType := TSimulationType(rgSimulationType.ItemIndex);
-    SutraOptions.TitleLines := jvedTitle.Lines.Text;
+    SutraOptions.TitleLines := AnsiString(jvedTitle.Lines.Text);
     SutraOptions.StartType := TStartType(rgStartType.ItemIndex);
     SutraOptions.RestartFileName := fedRestartFile.FileName;
     SutraOptions.RestartFrequency := seRestartFrequency.AsInteger;
@@ -618,7 +640,11 @@ begin
   frmGoPhast.PhastModel.SutraOptions := FNewSutraOptions;
   frmGoPhast.PhastModel.SutraLayerStructure.Loaded;
   frmGoPhast.PhastModel.DataArrayManager.CreateInitialDataSets;
-  frmGoPhast.PhastModel.UpdateSutraTimeListNames
+  frmGoPhast.PhastModel.UpdateSutraTimeListNames;
+  if FNewMeshType <> FOldMeshType then
+  begin
+    frmGoPhast.PhastModel.InvalidateSegments;
+  end;
 end;
 
 procedure TUndoChangeSutraOptions.Undo;
@@ -631,7 +657,11 @@ begin
   frmGoPhast.PhastModel.SutraOptions := FOldSutraOptions;
   frmGoPhast.PhastModel.SutraLayerStructure.Loaded;
   frmGoPhast.PhastModel.DataArrayManager.CreateInitialDataSets;
-  frmGoPhast.PhastModel.UpdateSutraTimeListNames
+  frmGoPhast.PhastModel.UpdateSutraTimeListNames;
+  if FNewMeshType <> FOldMeshType then
+  begin
+    frmGoPhast.PhastModel.InvalidateSegments;
+  end;
 end;
 
 end.

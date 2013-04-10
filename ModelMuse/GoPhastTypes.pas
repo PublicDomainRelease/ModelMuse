@@ -300,7 +300,9 @@ type
     procedure SetValue(const Value: double);
   protected
     procedure ReadValue(Reader: TReader);
+    procedure ReadStringValue(Reader: TReader);
     procedure WriteValue(Writer: TWriter);
+    procedure WriteStringValue(Writer: TWriter);
     procedure DefineProperties(Filer: TFiler); override;
   public
     procedure Assign(Source: TPersistent); override;
@@ -336,7 +338,9 @@ type
     procedure SetValue(const Value: real);
   protected
     procedure ReadValue(Reader: TReader);
+    procedure ReadStringValue(Reader: TReader);
     procedure WriteValue(Writer: TWriter);
+    procedure WriteStringValue(Writer: TWriter);
     procedure DefineProperties(Filer: TFiler); override;
   public
     procedure Assign(Source: TPersistent); override;
@@ -420,6 +424,8 @@ type
   function OrientationToViewDirection(Orientation: TDataSetOrientation): TViewDirection;
 
 const
+  TimeEpsilon = 1e-6;
+
   kModelTop = 'Model_Top';
 
 
@@ -524,11 +530,16 @@ resourcestring
 
   StrLowerLimit = 'Lower limit';
   StrUpperLimit = 'Upper limit';
+
+const
   StrObjectIntersectLength = 'ObjectIntersectLength';
   StrObjectSectionIntersectLength = 'ObjectSectionIntersectLength';
   StrObjectIntersectArea = 'ObjectIntersectArea';
   StrObjectArea = 'ObjectArea';
   StrObjectLength = 'ObjectLength';
+  StrLayerBoundaryPosition = 'LayerBoundaryPosition';
+
+resourcestring
   StrStartingTime = 'Starting time';
   StrEndingTime = 'Ending time';
   StrPumpingRate = 'Pumping rate';
@@ -669,7 +680,14 @@ end;
 procedure TRealStorage.DefineProperties(Filer: TFiler);
 begin
   inherited DefineProperties(Filer);
-  Filer.DefineProperty('Value', ReadValue, WriteValue, Value = 0)
+  Filer.DefineProperty('Value', ReadValue, WriteValue, Value = 0);
+  Filer.DefineProperty('StringValue', ReadStringValue, WriteStringValue,
+   (Value <> 0) and (Abs(Value) < 1e-10));
+end;
+
+procedure TRealStorage.ReadStringValue(Reader: TReader);
+begin
+  Value := StrToFloat(Reader.ReadString)
 end;
 
 procedure TRealStorage.ReadValue(Reader: TReader);
@@ -687,6 +705,14 @@ begin
       OnChange(self);
     end;
   end;
+end;
+
+var
+  LFormatSettings: TFormatSettings;
+
+procedure TRealStorage.WriteStringValue(Writer: TWriter);
+begin
+  Writer.WriteString(FloatToStrF(Value, ffGeneral, 16, 18, LFormatSettings));
 end;
 
 procedure TRealStorage.WriteValue(Writer: TWriter);
@@ -1113,12 +1139,19 @@ end;
 procedure TRealItem.DefineProperties(Filer: TFiler);
 begin
   inherited DefineProperties(Filer);
-  Filer.DefineProperty('Value', ReadValue, WriteValue, Value = 0)
+  Filer.DefineProperty('Value', ReadValue, WriteValue, Value = 0);
+  Filer.DefineProperty('StringValue', ReadStringValue, WriteStringValue,
+   (Value <> 0) and (Abs(Value) < 1e-10));
 end;
 
 function TRealItem.IsSame(Item: TRealItem): Boolean;
 begin
   Result := Value = Item.Value;
+end;
+
+procedure TRealItem.ReadStringValue(Reader: TReader);
+begin
+  Value := StrToFloat(Reader.ReadString)
 end;
 
 procedure TRealItem.ReadValue(Reader: TReader);
@@ -1137,6 +1170,11 @@ begin
       OnChange(self);
     end;
   end;
+end;
+
+procedure TRealItem.WriteStringValue(Writer: TWriter);
+begin
+  Writer.WriteString(FloatToStrF(Value, ffGeneral, 16, 18, LFormatSettings));
 end;
 
 procedure TRealItem.WriteValue(Writer: TWriter);
@@ -1355,6 +1393,8 @@ end;
 
 initialization
   InitializeStatTypeLabels;
+  LFormatSettings := TFormatSettings.Create('en-US'); // do not localize
+  LFormatSettings.DecimalSeparator := AnsiChar('.');
 
 finalization
   ObservationStatFlagLabels.Free;

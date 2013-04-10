@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomImportSimpleFileUnit, StdCtrls, Buttons, ExtCtrls, FastGEO, 
   frmImportShapefileUnit, AbstractGridUnit, GoPhastTypes, Grids, RbwDataGrid4,
-  PhastModelUnit;
+  PhastModelUnit, SutraMeshUnit;
 
 type
 
@@ -29,9 +29,10 @@ type
   private
     FAsciiRasterFileName: string;
     FValues: TPoint3DArray;
-    Grid: TCustomModelGrid;
+    FGrid: TCustomModelGrid;
     ImportMethod: TImportMethod;
     EvalAt: TEvaluatedAt;
+    FMesh: TSutraMesh3D;
     procedure SetData;
     procedure HandleARasterPoint(Sender: TObject; APoint: TPoint3D);
     { Private declarations }
@@ -55,6 +56,8 @@ uses
 
 resourcestring
   StrYouMustHaveAVali = 'You must have a valid grid before attempting ' +
+    'to sample a raster file.';
+  StrYouMustHaveAMesh = 'You must have a valid mesh before attempting ' +
     'to sample a raster file.';
   StrTheLocationsInS = 'The locations in %s that have data are different fro' +
   'm the locations in %s that have data.';
@@ -215,16 +218,16 @@ procedure TfrmImportAsciiRaster.HandleARasterPoint(Sender: TObject; APoint: TPoi
 var
   Point2D: TPoint2D;
 begin
-  if Grid.GridAngle <> 0 then
+  if (FGrid <> nil) and (FGrid.GridAngle <> 0) then
   begin
     Point2D.x := APoint.X;
     Point2D.y := APoint.Y;
-    Point2D := Grid.
+    Point2D := FGrid.
       RotateFromRealWorldCoordinatesToGridCoordinates(Point2D);
     APoint.x := Point2D.x;
     APoint.y := Point2D.y;
   end;
-  HandleAPoint(APoint, ImportMethod, EvalAt, Grid);
+  HandleAPoint(APoint, ImportMethod, EvalAt, FGrid, FMesh);
 end;
 
 procedure TfrmImportAsciiRaster.rdgFilesAndDataSetsButtonClick(Sender: TObject;
@@ -251,7 +254,7 @@ begin
       begin
         Assert(False);
       end;
-    msPhast:
+    msPhast {$IFDEF SUTRA}, msSutra22 {$ENDIF}:
       begin
         case EvalAt of
           eaBlocks:
@@ -346,20 +349,38 @@ begin
           AScreenObject.SetValuesByInterpolation
             := cbInterpolation.Checked;
           AScreenObject.ElevationCount := ecZero;
-          case TEvaluatedAt(rgEvaluatedAt.ItemIndex) of
-            eaBlocks:
-              begin
-                AScreenObject.Capacity := LocalModel.Grid.ColumnCount
-                  * LocalModel.Grid.RowCount;
-              end;
-            eaNodes:
-              begin
-                AScreenObject.Capacity :=
-                  (LocalModel.Grid.ColumnCount+1)
-                  * (LocalModel.Grid.RowCount + 1);
-              end;
-            else
-              Assert(False);
+          if LocalModel.Grid <> nil then
+          begin
+            case TEvaluatedAt(rgEvaluatedAt.ItemIndex) of
+              eaBlocks:
+                begin
+                  AScreenObject.Capacity := LocalModel.Grid.ColumnCount
+                    * LocalModel.Grid.RowCount;
+                end;
+              eaNodes:
+                begin
+                  AScreenObject.Capacity :=
+                    (LocalModel.Grid.ColumnCount+1)
+                    * (LocalModel.Grid.RowCount + 1);
+                end;
+              else
+                Assert(False);
+            end;
+          end
+          else
+          begin
+            case TEvaluatedAt(rgEvaluatedAt.ItemIndex) of
+              eaBlocks:
+                begin
+                  AScreenObject.Capacity := LocalModel.Mesh.Mesh2D.Elements.Count;
+                end;
+              eaNodes:
+                begin
+                  AScreenObject.Capacity := LocalModel.Mesh.Mesh2D.Nodes.Count;
+                end;
+              else
+                Assert(False);
+            end;
           end;
           AScreenObject.EvaluatedAt :=
             TEvaluatedAt(rgEvaluatedAt.ItemIndex);
@@ -467,16 +488,30 @@ begin
               end
               else
               begin
-                if (LocalModel.Grid.ColumnCount <= 0)
-                  or (LocalModel.Grid.RowCount <= 0) then
+
+                if (LocalModel.Grid <> nil) then
                 begin
-                  AScreenObject.Free;
-                  Beep;
-                  MessageDlg(StrYouMustHaveAVali , mtError, [mbOK], 0);
-                  Exit;
+                  if (LocalModel.Grid.ColumnCount <= 0)
+                    or (LocalModel.Grid.RowCount <= 0) then
+                  begin
+                    AScreenObject.Free;
+                    Beep;
+                    MessageDlg(StrYouMustHaveAVali , mtError, [mbOK], 0);
+                    Exit;
+                  end;
+                end
+                else
+                begin
+                  if LocalModel.Mesh.Mesh2D.Elements.Count = 0 then
+                  begin
+                    AScreenObject.Free;
+                    Beep;
+                    MessageDlg(StrYouMustHaveAMesh , mtError, [mbOK], 0);
+                    Exit;
+                  end;
                 end;
                 try
-                  GetGridMinMax;
+                  GetDiscretizationMinMax;
                 except on EInvalidGrid do
                   begin
                     AScreenObject.Free;
@@ -488,7 +523,8 @@ begin
                 AsciiReader.OnReadPoint := HandleARasterPoint;
                 EvalAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
                 ImportMethod := TImportMethod(rgFilterMethod.ItemIndex);
-                Grid := LocalModel.Grid;
+                FGrid := LocalModel.Grid;
+                FMesh := LocalModel.Mesh;
                 InitializeArrays(ImportMethod);
 
                 frmProgressMM.PopupParent := self;
@@ -506,15 +542,48 @@ begin
                   ImportedValues.Add as TValueArrayItem;
                 Item.Name := DataArray.Name;
                 Item.Values.DataType := DataArray.DataType;
-                case EvalAt of
-                  eaBlocks: AScreenObject.Capacity
-                    := Grid.ColumnCount * Grid.RowCount;
-                  eaNodes: AScreenObject.Capacity
-                    := (Grid.ColumnCount+1) * (Grid.RowCount+1);
-                  else Assert(False);
+                if LocalModel.Grid <> nil then
+                begin
+                  case EvalAt of
+                    eaBlocks:
+                      begin
+                        AScreenObject.Capacity := FGrid.ColumnCount
+                          * FGrid.RowCount;
+                      end;
+                    eaNodes:
+                      begin
+                        AScreenObject.Capacity :=
+                          (FGrid.ColumnCount+1)
+                          * (FGrid.RowCount + 1);
+                      end;
+                    else
+                      Assert(False);
+                  end;
+                end
+                else
+                begin
+                  case EvalAt of
+                    eaBlocks:
+                      begin
+                        AScreenObject.Capacity := FMesh.Mesh2D.Elements.Count;
+                      end;
+                    eaNodes:
+                      begin
+                        AScreenObject.Capacity := FMesh.Mesh2D.Nodes.Count;
+                      end;
+                    else
+                      Assert(False);
+                  end;
                 end;
+//                case EvalAt of
+//                  eaBlocks: AScreenObject.Capacity
+//                    := FGrid.ColumnCount * FGrid.RowCount;
+//                  eaNodes: AScreenObject.Capacity
+//                    := (FGrid.ColumnCount+1) * (FGrid.RowCount+1);
+//                  else Assert(False);
+//                end;
                 Item.Values.Count := AScreenObject.Capacity;
-                AssignPointsAndValues(Grid, AScreenObject, Item, DataSetIndex <> 0);
+                AssignPointsAndValues(FGrid, AScreenObject, Item, DataSetIndex <> 0);
               end;
             finally
               AsciiReader.Free;

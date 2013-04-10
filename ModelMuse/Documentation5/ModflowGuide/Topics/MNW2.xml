@@ -80,6 +80,7 @@
           </list>
           <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="NWT_release.txt" styleclass="Citation" style="font-style:normal;" translate="true">Release.txt</link><text styleclass="Citation" style="font-style:normal;" translate="true"> for MODFLOW-NWT</text></li>
+            <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="readme_MNW2.txt" styleclass="Citation" style="font-style:normal;" translate="true">readme_MNW2.txt</link></li>
           </list>
         </td>
       </tr>
@@ -159,18 +160,18 @@
           <para styleclass="Normal"><table styleclass="Default" rowcount="2" colcount="2" style="cell-padding:2px; cell-spacing:2px;">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2000, MODFLOW-2005, MODFLOW-LGR, MODFLOW-CFP</text><conditional-text type="END"/></para>
+                <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2000, &#160;MODFLOW-LGR, MODFLOW-CFP</text><conditional-text type="END"/></para>
               </td>
               <td>
-                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR"/><text styleclass="Normal" translate="true">MNWMAX IWL2CB MNWPRNT [OPTION]</text><conditional-text type="END"/></para>
+                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000,MODFLOW-CFP,MODFLOW-LGR"/><text styleclass="Normal" translate="true">MNWMAX IWL2CB MNWPRNT [OPTION]</text><conditional-text type="END"/></para>
               </td>
             </tr>
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal" style="text-align:center;"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-NWT</text><conditional-text type="END"/></para>
+                <para styleclass="Normal" style="text-align:center;"><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Table Header" translate="true">MODFLOW-2005, MODFLOW-NWT</text><conditional-text type="END"/></para>
               </td>
               <td>
-                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><text styleclass="Normal" translate="true">MNWMAX [NODTOT] IWL2CB MNWPRNT [OPTION]</text><conditional-text type="END"/></para>
+                <para styleclass="Normal"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><text styleclass="Normal" translate="true">MNWMAX [NODTOT] IWL2CB MNWPRNT [OPTION]</text><conditional-text type="END"/></para>
               </td>
             </tr>
           </table></para>
@@ -182,11 +183,11 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><anchor id="MNWMAX" styleclass="Normal"></anchor><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><text styleclass="Normal" translate="true">The absolute value of </text><conditional-text type="END"/><text styleclass="Normal" translate="true">MNWMAX is the maximum number of multi-node wells (MNW) to be simulated.</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><text styleclass="Normal" translate="true"> If MNWMAX is a negative number, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW2" anchor="NODTOT" styleclass="Normal" translate="true">NODTOT</link><text styleclass="Normal" translate="true"> is read.</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Normal" translate="true"> Negative values of MNWMAX are only currently supported in MOFLOW-NWT.</text><conditional-text type="END"/></para>
+                      <para styleclass="Normal"><anchor id="MNWMAX" styleclass="Normal"></anchor><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><text styleclass="Normal" translate="true">The absolute value of </text><conditional-text type="END"/><text styleclass="Normal" translate="true">MNWMAX is the maximum number of multi-node wells (MNW) to be simulated.</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><text styleclass="Normal" translate="true"> If MNWMAX is a negative number, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MNW2" anchor="NODTOT" styleclass="Normal" translate="true">NODTOT</link><text styleclass="Normal" translate="true"> is read.</text><conditional-text type="IF" value="ALLMODELS"/><text styleclass="Normal" translate="true"> Negative values of MNWMAX are only currently supported in MOFLOW-2005 and MOFLOW-NWT.</text><conditional-text type="END"/></para>
                     </td>
                   </tr>
                 </table></para>
-                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><conditional-text type="IF" value="ALLMODELS,MODFLOW-NWT"/><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[NODTOT]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-NWT"/><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[NODTOT]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>

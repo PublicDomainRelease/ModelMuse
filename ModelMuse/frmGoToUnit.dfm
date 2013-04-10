@@ -10,18 +10,17 @@ inherited frmGoTo: TfrmGoTo
   Caption = 'Go To'
   ExplicitWidth = 317
   ExplicitHeight = 360
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object pcMain: TPageControl
     Left = 0
     Top = 0
-    Width = 299
-    Height = 233
-    ActivePage = tabCell
+    Width = 301
+    Height = 240
+    ActivePage = tabMesh
     Align = alClient
     TabOrder = 0
     OnChange = pcMainChange
-    ExplicitWidth = 286
     object tabPosition: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'The_Position_Tab'
@@ -29,10 +28,10 @@ inherited frmGoTo: TfrmGoTo
       ExplicitLeft = 0
       ExplicitTop = 0
       ExplicitWidth = 0
-      ExplicitHeight = 199
+      ExplicitHeight = 0
       DesignSize = (
-        291
-        200)
+        293
+        207)
       object lblX: TLabel
         Left = 268
         Top = 11
@@ -149,10 +148,13 @@ inherited frmGoTo: TfrmGoTo
       HelpKeyword = 'The_Element_Tab'
       Caption = 'Element'
       ImageIndex = 1
-      ExplicitWidth = 278
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
-        291
-        200)
+        293
+        207)
       object lblCol: TLabel
         Left = 234
         Top = 41
@@ -200,7 +202,6 @@ inherited frmGoTo: TfrmGoTo
         Value = 1.000000000000000000
         Anchors = [akTop, akRight]
         TabOrder = 1
-        ExplicitLeft = 3
       end
       object seRow: TJvSpinEdit
         Left = 16
@@ -213,7 +214,6 @@ inherited frmGoTo: TfrmGoTo
         Value = 1.000000000000000000
         Anchors = [akTop, akRight]
         TabOrder = 2
-        ExplicitLeft = 3
       end
       object seLayer: TJvSpinEdit
         Left = 16
@@ -226,7 +226,6 @@ inherited frmGoTo: TfrmGoTo
         Value = 1.000000000000000000
         Anchors = [akTop, akRight]
         TabOrder = 3
-        ExplicitLeft = 3
       end
       object comboModel: TComboBox
         Left = 3
@@ -237,7 +236,44 @@ inherited frmGoTo: TfrmGoTo
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
         OnChange = comboModelChange
-        ExplicitWidth = 212
+      end
+    end
+    object tabMesh: TTabSheet
+      Caption = 'Mesh'
+      ImageIndex = 4
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+      object lblNumber: TLabel
+        Left = 130
+        Top = 115
+        Width = 55
+        Height = 18
+        Caption = 'Number'
+      end
+      object rgNodeElement: TRadioGroup
+        Left = 3
+        Top = 16
+        Width = 185
+        Height = 81
+        Caption = 'Node or element'
+        ItemIndex = 0
+        Items.Strings = (
+          'Node'
+          'Element')
+        TabOrder = 0
+        OnClick = rgNodeElementClick
+      end
+      object seNumber: TJvSpinEdit
+        Left = 3
+        Top = 112
+        Width = 121
+        Height = 26
+        MaxValue = 2147483647.000000000000000000
+        MinValue = 1.000000000000000000
+        Value = 1.000000000000000000
+        TabOrder = 1
       end
     end
     object tabObject: TTabSheet
@@ -252,8 +288,8 @@ inherited frmGoTo: TfrmGoTo
       object lvScreenObjects: TListView
         Left = 0
         Top = 0
-        Width = 288
-        Height = 158
+        Width = 293
+        Height = 166
         Align = alClient
         Columns = <
           item
@@ -265,8 +301,8 @@ inherited frmGoTo: TfrmGoTo
       end
       object pnlObject: TPanel
         Left = 0
-        Top = 158
-        Width = 288
+        Top = 166
+        Width = 293
         Height = 41
         Align = alBottom
         ParentColor = True
@@ -288,13 +324,13 @@ inherited frmGoTo: TfrmGoTo
       ImageIndex = 3
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 305
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object lvImages: TListView
         Left = 0
         Top = 0
-        Width = 288
-        Height = 199
+        Width = 293
+        Height = 207
         Align = alClient
         Columns = <
           item
@@ -303,19 +339,17 @@ inherited frmGoTo: TfrmGoTo
         ReadOnly = True
         TabOrder = 0
         ViewStyle = vsReport
-        ExplicitWidth = 305
       end
     end
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 233
-    Width = 299
+    Top = 240
+    Width = 301
     Height = 82
     Align = alBottom
     ParentColor = True
     TabOrder = 1
-    ExplicitWidth = 286
     object btnCancel: TBitBtn
       Left = 197
       Top = 40

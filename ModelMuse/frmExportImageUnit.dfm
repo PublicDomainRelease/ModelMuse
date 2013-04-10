@@ -330,6 +330,7 @@ inherited frmExportImage: TfrmExportImage
         Caption = 'View'
         TabOrder = 0
         OnExpand = cpViewExpand
+        ExplicitWidth = 185
         object Panel3: TPanel
           Left = 0
           Top = 0

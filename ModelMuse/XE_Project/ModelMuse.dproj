@@ -921,6 +921,25 @@
 			<DCCReference Include="..\frmImportSutraModelResultsUnit.pas">
 				<Form>frmImportSutraModelResults</Form>
 			</DCCReference>
+			<DCCReference Include="..\VertexUnit.pas"/>
+			<DCCReference Include="..\doublePolyhedronUnit.pas"/>
+			<DCCReference Include="..\SolidGeom.pas"/>
+			<DCCReference Include="..\SolidUnit.pas"/>
+			<DCCReference Include="..\SegmentUnit.pas"/>
+			<DCCReference Include="..\frmSutraAngleUnit.pas">
+				<Form>frmSutraAngle</Form>
+			</DCCReference>
+			<DCCReference Include="..\frmMeshGenerationControlVariablesUnit.pas">
+				<Form>frmMeshGenerationControlVariables</Form>
+			</DCCReference>
+			<DCCReference Include="..\TriCP_Routines.pas"/>
+			<DCCReference Include="..\CalCompRoutines.pas"/>
+			<DCCReference Include="..\TriPackRoutines.pas"/>
+			<DCCReference Include="..\TriPackMessages.pas"/>
+			<DCCReference Include="..\LineStorage.pas"/>
+			<DCCReference Include="..\frmColorSchemesUnit.pas">
+				<Form>frmColorSchemes</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
@@ -947,8 +966,8 @@
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">2</VersionInfo>
-						<VersionInfo Name="MinorVer">18</VersionInfo>
-						<VersionInfo Name="Release">1</VersionInfo>
+						<VersionInfo Name="MinorVer">19</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
 						<VersionInfo Name="Build">0</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
@@ -961,13 +980,13 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">2.18.1.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">2.19.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename"/>
 						<VersionInfoKeys Name="ProductName"/>
-						<VersionInfoKeys Name="ProductVersion">2.18.1.0</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">2.19.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Excluded_Packages>

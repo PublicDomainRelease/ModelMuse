@@ -817,18 +817,21 @@ begin
       begin
         Exit;
       end;
+      ParameterNames.Clear;
       InstancesList.Clear;
       Segment := FSegments[Index];
       ScreenObject := Segment.FScreenObject;
       Assert(ScreenObject.ModflowSfrBoundary <> nil);
-      for ScreenObjectParamIndex := 0 to ScreenObject.ModflowSfrBoundary.ParamIcalc.Count - 1 do
+      for ScreenObjectParamIndex := 0 to ScreenObject.ModflowSfrBoundary.
+        ParamIcalc.Count - 1 do
       begin
         Application.ProcessMessages;
         if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
-        ParamScreenObjectItem := ScreenObject.ModflowSfrBoundary.ParamIcalc.Items[ScreenObjectParamIndex];
+        ParamScreenObjectItem := ScreenObject.ModflowSfrBoundary.
+          ParamIcalc.Items[ScreenObjectParamIndex];
         if ParamScreenObjectItem.Param = '' then
         begin
           Continue;

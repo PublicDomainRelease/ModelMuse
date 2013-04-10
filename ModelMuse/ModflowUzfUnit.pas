@@ -432,8 +432,8 @@ begin
     StressPeriod := LocalModel.ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
-    if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
-      and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
+    if (StressPeriod.StartTime + LocalModel.SP_Epsilon >= LocalBoundaryStorage.StartingTime)
+      and (StressPeriod.EndTime - LocalModel.SP_Epsilon <= LocalBoundaryStorage.EndingTime) then
     begin
       if Cells.Capacity < Cells.Count + Length(LocalBoundaryStorage.RchArray) then
       begin

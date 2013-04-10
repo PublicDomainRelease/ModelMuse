@@ -761,6 +761,11 @@ type
     function Description: string; override;
   end;
 
+  TUndoSpecifyCrossSection = class(TUndoMoveCrossSection)
+  protected
+    function Description: string; override;
+  end;
+
 implementation
 
 uses SysUtils, Math, frmGoPhastUnit, InteractiveTools, frmSubdivideUnit,
@@ -797,6 +802,7 @@ resourcestring
   Str0sColumns1d2 = '%0:s columns %1:d-%2:d, ';
   StrMoveCrossSection = 'move cross section';
   StrRotateCrossSection = 'rotate cross section';
+  StrSpecifyCrossSectio = 'specify cross section';
 
 { TUndoDeleteRow }
 
@@ -2766,9 +2772,8 @@ begin
   frmGoPhast.PhastModel.SutraMesh.CrossSection.Segment := FNewLocation;
   frmGoPhast.TopDiscretizationChanged := True;
   frmGoPhast.FrontDiscretizationChanged := True;
-  frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
-  frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
-  frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
+  frmGoPhast.SynchronizeViews(vdTop);
+  frmGoPhast.InvalidateImage32AllViews;
 end;
 
 procedure TUndoMoveCrossSection.Undo;
@@ -2777,9 +2782,8 @@ begin
   frmGoPhast.PhastModel.SutraMesh.CrossSection.Segment := FOldLocation;
   frmGoPhast.TopDiscretizationChanged := True;
   frmGoPhast.FrontDiscretizationChanged := True;
-  frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
-  frmGoPhast.frameFrontView.ZoomBox.InvalidateImage32;
-  frmGoPhast.frameSideView.ZoomBox.InvalidateImage32;
+  frmGoPhast.SynchronizeViews(vdTop);
+  frmGoPhast.InvalidateImage32AllViews;
 end;
 
 { TUndoRotateCrossSection }
@@ -2787,6 +2791,13 @@ end;
 function TUndoRotateCrossSection.Description: string;
 begin
   result := StrRotateCrossSection;
+end;
+
+{ TUndoSpecifyCrossSectionAngle }
+
+function TUndoSpecifyCrossSection.Description: string;
+begin
+  result := StrSpecifyCrossSectio;
 end;
 
 end.

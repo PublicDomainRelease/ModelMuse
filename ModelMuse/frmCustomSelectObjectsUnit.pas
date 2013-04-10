@@ -60,6 +60,14 @@ type
   private
     // See @link(CanEdit).
     FCanEdit: boolean;
+    FvstSutraSpecPressure: PVirtualNode;
+    FSutraSpecPressureList: TList;
+    FvstSutraSpecU: PVirtualNode;
+    FSutraSpecUList: TList;
+    FvstSutraFluidFlux: PVirtualNode;
+    FSutraFluidFluxList: TList;
+    FvstSutraUFlux: PVirtualNode;
+    FSutraUFluxList: TList;
     { Private declarations }
 
   { Public declarations }
@@ -86,6 +94,8 @@ type
     FvstModflowUzfNode: PVirtualNode;
     FvstMt3dmsSsm: PVirtualNode;
     FvstMt3dmsTob: PVirtualNode;
+    FvstSutraFeaturesNode: PVirtualNode;
+    FvstSutraObsNode: PVirtualNode;
 
     FvstModflowHydmodNode: PVirtualNode;
     // @name holds a PVirtualNode for each @link(TScreenObject)
@@ -178,6 +188,8 @@ type
     FResList: TList;
     FEtsList: TList;
     FEvtList: TList;
+    FSutraObsList: TList;
+
     // @name holds the lists of @link(TScreenObject)s that don't do anything.
     FOtherObjectsList: TList;
     FRchList: TList;
@@ -271,7 +283,21 @@ uses StrUtils, ModflowPackagesUnit, ModflowPackageSelectionUnit,
   GoPhastTypes, frmGoPhastUnit, PhastModelUnit, SubscriptionUnit,
   ModflowHfbUnit, ModflowSfrUnit, ModflowEvtUnit, ModflowGageUnit, DataSetUnit,
   ModpathParticleUnit, ModflowUzfUnit, ModflowHobUnit, ModflowRchUnit,
-  ModflowEtsUnit, ModflowBoundaryUnit, ClassificationUnit, ModflowDrtUnit;
+  ModflowEtsUnit, ModflowBoundaryUnit, ClassificationUnit, ModflowDrtUnit,
+  SutraOptionsUnit;
+
+resourcestring
+  StrSUTRAFeatures = 'SUTRA Features';
+  StrChildModels = 'Child Models';
+  StrSUTRAObservations = 'SUTRA Observations';
+  StrGAGEGagePackage = 'GAGE: Gage package';
+  StrReturnLocationFor = 'Return location for ';
+  StrSpecifiedPressure = 'Specified Pressure';
+  StrSpecifiedConcentrat = 'Specified Concentration';
+  StrSpecifiedTemperatur = 'Specified Temperature';
+  StrFluidFlux = 'Fluid Flux';
+  StrMassFlux = 'Mass Flux';
+  StrEnergyFlux = 'Energy Flux';
 
 {$R *.dfm}
 procedure TfrmCustomSelectObjects.vstObjectsInitNode(Sender: TBaseVirtualTree;
@@ -281,11 +307,13 @@ var
   AScreenObject: TScreenObject;
   Packages: TModflowPackages;
   ScreenObjectCount: cardinal;
+  SutraOptions: TSutraOptions;
 begin
   inherited;
   with Sender do
   begin
     Packages := frmGoPhast.PhastModel.ModflowPackages;
+    SutraOptions := frmGoPhast.PhastModel.SutraOptions;
     Data := GetNodeData(Node);
     // Construct a node caption. This event is triggered once for each node but
     // appears asynchronously, which means when the node
@@ -311,6 +339,11 @@ begin
       begin
         Data.Caption := StrModflowBoundaryConditions;
       end;
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstSutraFeaturesNode then
+    begin
+      Data.Caption := StrSUTRAFeatures;
       Node.CheckType := ctTriStateCheckBox;
     end
     else if Node = FvstDataSetRootNode then
@@ -425,7 +458,7 @@ begin
     end
     else if Node = FvstModflowDrtReturnLocation then
     begin
-      Data.Caption := 'Return location for '
+      Data.Caption := StrReturnLocationFor
         + Packages.DrtPackage.PackageIdentifier;
       Node.CheckType := ctTriStateCheckBox;
     end
@@ -456,7 +489,7 @@ begin
     end
     else if Node = FvstModflowGagNode then
     begin
-      Data.Caption := 'GAGE: Gage package';
+      Data.Caption := StrGAGEGagePackage;
       Node.CheckType := ctTriStateCheckBox;
     end
     else if Node = FvstModflowUzfNode then
@@ -481,12 +514,45 @@ begin
     end
     else if Node = FvstChildModelNode then
     begin
-      Data.Caption := 'Child Models';
+      Data.Caption := StrChildModels;
       Node.CheckType := ctTriStateCheckBox;
     end
     else if Node = FvstModflowHydmodNode then
     begin
       Data.Caption := Packages.HydmodPackage.PackageIdentifier;
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstSutraObsNode then
+    begin
+      Data.Caption := StrSUTRAObservations;
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstSutraSpecPressure then
+    begin
+      Data.Caption := StrSpecifiedPressure;
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstSutraSpecU then
+    begin
+      case SutraOptions.TransportChoice of
+        tcSolute, tcSoluteHead: Data.Caption := StrSpecifiedConcentrat;
+        tcEnergy: Data.Caption := StrSpecifiedTemperatur;
+        else Assert(False);
+      end;
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstSutraFluidFlux then
+    begin
+      Data.Caption := StrFluidFlux;
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstSutraUFlux then
+    begin
+      case SutraOptions.TransportChoice of
+        tcSolute, tcSoluteHead: Data.Caption := StrMassFlux;
+        tcEnergy: Data.Caption := StrEnergyFlux;
+        else Assert(False);
+      end;
       Node.CheckType := ctTriStateCheckBox;
     end;
 
@@ -937,6 +1003,31 @@ begin
       InitializeData(FvstChildModelNode);
     end;
 
+    if AScreenObject.SutraBoundaries.Observations.Used then
+    begin
+      InitializeData(FvstSutraObsNode);
+    end;
+
+    if AScreenObject.SutraBoundaries.SpecifiedPressure.Used then
+    begin
+      InitializeData(FvstSutraSpecPressure);
+    end;
+
+    if AScreenObject.SutraBoundaries.SpecifiedConcTemp.Used then
+    begin
+      InitializeData(FvstSutraSpecU);
+    end;
+
+    if AScreenObject.SutraBoundaries.FluidSource.Used then
+    begin
+      InitializeData(FvstSutraFluidFlux);
+    end;
+
+    if AScreenObject.SutraBoundaries.MassEnergySource.Used then
+    begin
+      InitializeData(FvstSutraUFlux);
+    end;
+
     if PutInOtherObjects then
     begin
       InitializeData(FvstOtherObjectsNode);
@@ -1015,9 +1106,17 @@ begin
   vstCheckDeleteNode(FvstMt3dmsSsm);
   vstCheckDeleteNode(FvstMt3dmsTob);
 
+  vstCheckDeleteNode(FvstSutraObsNode);
+  vstCheckDeleteNode(FvstSutraSpecPressure);
+  vstCheckDeleteNode(FvstSutraSpecU);
+  vstCheckDeleteNode(FvstSutraFluidFlux);
+  vstCheckDeleteNode(FvstSutraUFlux);
+
   vstCheckDeleteNode(FvstModflowBoundaryConditionsRoot);
   vstCheckDeleteNode(FvstModpathRoot);
   vstCheckDeleteNode(FvstChildModelNode);
+  vstCheckDeleteNode(FvstSutraFeaturesNode);
+
 
   ParentNodes := TList.Create;
   try
@@ -1221,10 +1320,19 @@ begin
   if FvstChildModelNode = nil then
   begin
     FvstChildModelNode := vstObjects.InsertNode(
-      FvstModflowBoundaryConditionsRoot, amInsertAfter);
+      FvstModpathRoot, amInsertAfter);
     vstObjects.ReinitNode(FvstChildModelNode, False);
   end;
   InitializeNodeData(FvstChildModelNode, FChildModelList);
+
+  if FvstSutraFeaturesNode = nil then
+  begin
+    FvstSutraFeaturesNode := vstObjects.InsertNode(
+      FvstChildModelNode, amInsertAfter);
+    vstObjects.ReinitNode(FvstSutraFeaturesNode, False);
+  end;
+  InitializeNodeData(FvstSutraFeaturesNode, nil);
+
 
   if FvstOtherObjectsNode = nil then
   begin
@@ -1307,6 +1415,20 @@ begin
   InitializeMF_BoundaryNode(FvstMt3dmsSsm, PriorNode, FSsmList);
   InitializeMF_BoundaryNode(FvstMt3dmsTob, PriorNode, FTobList);
 
+  // Add children of FvstSutraFeaturesNode
+  if FvstSutraObsNode = nil then
+  begin
+    FvstSutraObsNode := vstObjects.InsertNode(
+      FvstSutraFeaturesNode, amAddChildFirst);
+    vstObjects.ReinitNode(FvstSutraObsNode, False);
+  end;
+  InitializeNodeData(FvstSutraObsNode, FSutraObsList);
+  PriorNode := FvstSutraObsNode;
+
+  InitializeMF_BoundaryNode(FvstSutraSpecPressure, PriorNode, FSutraSpecPressureList);
+  InitializeMF_BoundaryNode(FvstSutraSpecU, PriorNode, FSutraSpecUList);
+  InitializeMF_BoundaryNode(FvstSutraFluidFlux, PriorNode, FSutraFluidFluxList);
+  InitializeMF_BoundaryNode(FvstSutraUFlux, PriorNode, FSutraUFluxList);
 
 
   FDataSetLists.Clear;
@@ -1437,6 +1559,12 @@ begin
   FModpathList.Free;
   FChildModelList.Free;
 
+  FSutraObsList.Free;
+  FSutraSpecPressureList.Free;
+  FSutraSpecUList.Free;
+  FSutraFluidFluxList.Free;
+  FSutraUFluxList.Free;
+
   inherited;
 end;
 
@@ -1478,6 +1606,12 @@ begin
   FTobList := TList.Create;
   FModpathList := TList.Create;
   FChildModelList := TList.Create;
+
+  FSutraObsList := TList.Create;
+  FSutraSpecPressureList := TList.Create;
+  FSutraSpecUList := TList.Create;
+  FSutraFluidFluxList := TList.Create;
+  FSutraUFluxList := TList.Create;
 
   FCanEdit := True;
 
@@ -1531,8 +1665,15 @@ begin
   FvstMt3dmsTob := nil;
   FvstModflowGagNode := nil;
 
+  FvstSutraObsNode := nil;
+  FvstSutraSpecPressure := nil;
+  FvstSutraSpecU := nil;
+  FvstSutraFluidFlux := nil;
+  FvstSutraUFlux := nil;
+
   FvstModpathRoot := nil;
   FvstChildModelNode := nil;
+  FvstSutraFeaturesNode := nil;
 end;
 
 procedure TfrmCustomSelectObjects.SetCanEdit(const Value: boolean);
@@ -1638,6 +1779,13 @@ begin
   FTobList.Sort(ScreenObjectCompare);
   FModpathList.Sort(ScreenObjectCompare);
   FChildModelList.Sort(ScreenObjectCompare);
+
+  FSutraObsList.Sort(ScreenObjectCompare);
+  FSutraSpecPressureList.Sort(ScreenObjectCompare);
+  FSutraSpecUList.Sort(ScreenObjectCompare);
+  FSutraFluidFluxList.Sort(ScreenObjectCompare);
+  FSutraUFluxList.Sort(ScreenObjectCompare);
+
   for Index := 0 to FDataSetLists.Count - 1 do
   begin
     List := FDataSetLists[Index] as TList;
@@ -1867,7 +2015,9 @@ var
 begin
   if (Node = FvstDataSetRootNode)
     or (Node = FvstPhastBoundaryConditionsRoot)
-    or (Node = FvstModflowBoundaryConditionsRoot) then
+    or (Node = FvstModflowBoundaryConditionsRoot)
+    or (Node = FvstSutraFeaturesNode)
+    then
   begin
     if Sender.CheckState[Node] <> csMixedNormal then
     begin
@@ -2031,7 +2181,9 @@ begin
       end;
       ChildNode := nil;
       if (vstNode = FvstPhastBoundaryConditionsRoot)
-        or (vstNode = FvstModflowBoundaryConditionsRoot) then
+        or (vstNode = FvstModflowBoundaryConditionsRoot)
+        or (vstNode = FvstSutraFeaturesNode)
+        then
       begin
         // Convert vstObjects.ChildCount[Node] from Cardinal to integer to
         // prevent Interger overflow when  vstObjects.ChildCount[Node] = 0.
@@ -2141,6 +2293,7 @@ begin
   UpdateChildCheck(FvstOtherObjectsNode);
   SetRootNodeStates(FvstPhastBoundaryConditionsRoot);
   SetRootNodeStates(FvstModflowBoundaryConditionsRoot);
+  SetRootNodeStates(FvstSutraFeaturesNode);
   UpdateChildCheck(FvstModpathRoot);
   SetRootNodeStates(FvstDataSetRootNode);
   UpdateChildCheck(FvstChildModelNode);

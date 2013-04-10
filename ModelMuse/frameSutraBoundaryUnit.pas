@@ -19,8 +19,6 @@ type
     procedure edNameChange(Sender: TObject);
     procedure seNumberOfTimesChange(Sender: TObject);
     procedure comboScheduleChange(Sender: TObject);
-    procedure btnDeleteClick(Sender: TObject);
-    procedure btnInsertClick(Sender: TObject);
     procedure edNameExit(Sender: TObject);
     procedure rdgSutraFeatureColSize(Sender: TObject; ACol,
       PriorWidth: Integer);
@@ -33,6 +31,8 @@ type
     procedure rdgSutraFeatureBeforeDrawCell(Sender: TObject; ACol,
       ARow: Integer);
     procedure rdgSutraFeatureEndUpdate(Sender: TObject);
+    procedure btnDeleteClick(Sender: TObject);
+    procedure btnInsertClick(Sender: TObject);
   private
     FInitialTime: Double;
     FBoundaryType: TSutraBoundaryType;
@@ -47,6 +47,7 @@ type
     procedure AdjustBoundaryValues(SutraValues: TCustomSutraBoundaryCollection);
     procedure LayoutMultiEditControls;
     function GetValidTime(ACol, ARow: integer): Boolean;
+    procedure UpdateColWidths;
     { Private declarations }
   public
     property BoundaryType: TSutraBoundaryType read FBoundaryType write SetBoundaryType;
@@ -68,7 +69,7 @@ uses
   ModflowBoundaryUnit, Generics.Collections, ScreenObjectUnit,
   frmGoPhastUnit, SutraTimeScheduleUnit,
   frmSutraTimeAdjustChoiceUnit, RealListUnit, frmCustomGoPhastUnit,
-  SutraOptionsUnit;
+  SutraOptionsUnit, frmErrorsAndWarningsUnit;
 
 resourcestring
   StrFluidSource = 'Fluid source';
@@ -77,6 +78,7 @@ resourcestring
   StrSoluteSource = 'Solute source';
   StrEnergySouce = 'Energy source';
   StrSpecifiedPressure = 'Specified pressure';
+  StrSpecifiedHead = 'Specified head';
   StrSpecifiedTemperatur = 'Specified temperature';
   StrSpecifiedConcentration = 'Specified concentration';
   StrTime = 'Time';
@@ -85,6 +87,11 @@ resourcestring
   'al to the initial time.';
   StrYouMustSpecifyG = 'You must specify a time that is greater than ' +
   'the initial time.';
+  StrFluidSourcesAndSi = 'Fluid Sources and Sinks';
+  StrMassOrEnergySourc = 'Mass or Energy Sources and Sinks';
+  StrInvalidBoundaryTim = 'Invalid boundary time';
+  StrInSTheFirstSpe = 'In %s, the first specified time must be after the ini' +
+  'tial time';
 
 {$R *.dfm}
 
@@ -249,16 +256,6 @@ begin
       ABoundary := BoundaryList[index];
       BoundValues := ABoundary.Values as TCustomSutraBoundaryCollection;
 
-//      if BoundaryList.Count = 1 then
-//      begin
-//        BoundaryName := Trim(edName.Text);
-//        if BoundaryName = '' then
-//        begin
-//          BoundaryName := LocalScreenObjects.Items[index].Name;
-//        end;
-//        BoundValues.BoundaryName := AnsiString(BoundaryName);
-//      end;
-
       if comboSchedule.ItemIndex > 0 then
       begin
         BoundValues.ScheduleName := AnsiString(comboSchedule.Text);
@@ -274,6 +271,26 @@ begin
   finally
     BoundaryList.Free;
     LocalScreenObjects.Free;
+  end;
+end;
+
+procedure TframeSutraBoundary.UpdateColWidths;
+var
+  NewColWidth: Integer;
+  ColIndex: Integer;
+begin
+  NewColWidth := rdgSutraFeature.ClientWidth - (rdgSutraFeature.ColWidths[0] + rdgSutraFeature.ColWidths[1]);
+  if rdgSutraFeature.ColCount = 4 then
+  begin
+    NewColWidth := (NewColWidth div 2) - 20;
+  end
+  else
+  begin
+    NewColWidth := NewColWidth - 20;
+  end;
+  for ColIndex := 2 to rdgSutraFeature.ColCount - 1 do
+  begin
+    rdgSutraFeature.ColWidths[ColIndex] := NewColWidth;
   end;
 end;
 
@@ -415,226 +432,87 @@ var
   BoundItem: TCustomSutraBoundaryItem;
   ATime: Extended;
   OK: Boolean;
+  Initialtime: Double;
+  BoundaryTypeString: string;
 begin
-//  FSettingData := True;
-//  try
-    if seNumberOfTimes.AsInteger > 0 then
+  if seNumberOfTimes.AsInteger > 0 then
+  begin
+    Initialtime := frmGoPhast.PhastModel.SutraTimeOptions.InitialTime;
+    ItemIndex := 0;
+    for RowIndex := 1 to seNumberOfTimes.AsInteger do
     begin
-      ItemIndex := 0;
-      for RowIndex := 1 to seNumberOfTimes.AsInteger do
+      if TryStrToFloat(rdgSutraFeature.Cells[0, RowIndex], ATime) then
       begin
-        if TryStrToFloat(rdgSutraFeature.Cells[0, RowIndex], ATime) then
+        OK := False;
+        if not rdgSutraFeature.Checked[1, RowIndex] then
         begin
-          OK := False;
-          if not rdgSutraFeature.Checked[1, RowIndex] then
+          OK := True;
+        end
+        else
+        begin
+          for ColIndex := 2 to rdgSutraFeature.ColCount - 1 do
           begin
-            OK := True;
+            OK := rdgSutraFeature.Cells[ColIndex, RowIndex] <> '';
+            if not OK then
+            begin
+              Break;
+            end;
+          end;
+        end;
+        if OK then
+        begin
+          if ItemIndex < BoundValues.Count then
+          begin
+            BoundItem := BoundValues.Items[ItemIndex] as TCustomSutraBoundaryItem;
           end
           else
           begin
-            for ColIndex := 2 to rdgSutraFeature.ColCount - 1 do
-            begin
-              OK := rdgSutraFeature.Cells[ColIndex, RowIndex] <> '';
-              if not OK then
-              begin
-                Break;
-              end;
-            end;
+            BoundItem := BoundValues.Add as TCustomSutraBoundaryItem;
           end;
-          if OK then
+          if (BoundaryType in [sbtFluidSource, sbtMassEnergySource] )
+            and (ATime <= Initialtime) then
           begin
-            if ItemIndex < BoundValues.Count then
+            case BoundaryType of
+              sbtFluidSource:
+                begin
+                  BoundaryTypeString := StrFluidSourcesAndSi;
+                end;
+              sbtMassEnergySource:
+                begin
+                  BoundaryTypeString := StrMassOrEnergySourc;
+                end;
+            end;
+            frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
+              StrInvalidBoundaryTim,
+              Format(StrInSTheFirstSpe, [BoundaryTypeString])
+              );
+          end;
+          BoundItem.StartTime := ATime;
+          BoundItem.Used := rdgSutraFeature.Checked[1, RowIndex];
+          if BoundItem.Used then
+          begin
+            if BoundItem is TCustomSutraAssociatedBoundaryItem then
             begin
-              BoundItem := BoundValues.Items[ItemIndex] as TCustomSutraBoundaryItem;
+              AssocItem := TCustomSutraAssociatedBoundaryItem(BoundItem);
+              AssocItem.PQFormula := rdgSutraFeature.Cells[2, RowIndex];
+              AssocItem.UFormula := rdgSutraFeature.Cells[3, RowIndex];
             end
             else
             begin
-              BoundItem := BoundValues.Add as TCustomSutraBoundaryItem;
+              BoundItem.UFormula := rdgSutraFeature.Cells[2, RowIndex];
             end;
-            BoundItem.StartTime := ATime;
-            BoundItem.Used := rdgSutraFeature.Checked[1, RowIndex];
-            if BoundItem.Used then
-            begin
-              if BoundItem is TCustomSutraAssociatedBoundaryItem then
-              begin
-                AssocItem := TCustomSutraAssociatedBoundaryItem(BoundItem);
-                AssocItem.PQFormula := rdgSutraFeature.Cells[2, RowIndex];
-                AssocItem.UFormula := rdgSutraFeature.Cells[3, RowIndex];
-              end
-              else
-              begin
-                BoundItem.UFormula := rdgSutraFeature.Cells[2, RowIndex];
-              end;
-            end;
-            Inc(ItemIndex);
           end;
+          Inc(ItemIndex);
         end;
       end;
-      while BoundValues.Count > ItemIndex do
-      begin
-        BoundValues.Delete(BoundValues.Count - 1);
-      end;
     end;
-//  finally
-//    FSettingData := False;
-//  end;
+    while BoundValues.Count > ItemIndex do
+    begin
+      BoundValues.Delete(BoundValues.Count - 1);
+    end;
+  end;
 end;
 
-//procedure AdjustBoundaryTimes(TimeValues: TOneDRealArray;
-//  Values: TCustomSutraBoundaryCollection);
-//var
-//  StartIndex: Integer;
-//  TimeIndex: Integer;
-//  Item: TCustomBoundaryItem;
-//  InsertNewItem: Boolean;
-//  DeleteItem: Boolean;
-//  AnotherItem: TCustomBoundaryItem;
-//  NewItem: TCustomBoundaryItem;
-//  InsertPosition: integer;
-//begin
-//  StartIndex := Length(TimeValues)-1;
-//  for TimeIndex := Values.Count - 1 downto 0 do
-//  begin
-//    if Length(TimeValues) = Values.Count then
-//    begin
-//      break;
-//    end;
-//    Item := Values[TimeIndex];
-//    InsertNewItem := False;
-//    DeleteItem := False;
-//
-//    InsertPosition := -1;
-//    if (StartIndex < 0) then
-//    begin
-//      InsertNewItem := True;
-//      InsertPosition := 0;
-//    end
-//    else if (Item.StartTime <> TimeValues[StartIndex]) then
-//    begin
-//      if Item.StartTime > TimeValues[StartIndex] then
-//      begin
-//        if (TimeIndex >= 1) then
-//        begin
-//          // Check if the item before this one has a starting time
-//          // that is equal to or after the time value in the
-//          // schedule. If so, delete this item.
-//          AnotherItem := Values[TimeIndex-1];
-//          if AnotherItem.StartTime >= TimeValues[StartIndex] then
-//          begin
-//            DeleteItem := True;
-//          end;
-//        end
-//        else
-//        begin
-//          // this is the first item so you have to insert a new
-//          // item.
-//          InsertNewItem := True;
-//          InsertPosition := 0;
-//        end;
-//      end
-//      else
-//      begin
-//        // Item.StartTime is less than TimeValues[StartIndex]
-//        if StartIndex >= 1 then
-//        begin
-//          if Item.StartTime <= TimeValues[StartIndex-1] then
-//          begin
-//            InsertNewItem := True;
-//            InsertPosition := TimeIndex+1;
-//          end;
-//        end
-//        else
-//        begin
-//          DeleteItem := True;
-//        end;
-//      end;
-//    end;
-//    if InsertNewItem then
-//    begin
-//      if (InsertPosition-1 >= 0) and (InsertPosition-1 < Values.Count) then
-//      begin
-//        AnotherItem := Values[InsertPosition-1]
-//      end
-//      else if (InsertPosition >= 0) and (InsertPosition < Values.Count) then
-//      begin
-//        AnotherItem := Values[InsertPosition]
-//      end
-//      else
-//      begin
-//        AnotherItem := nil;
-//      end;
-//      NewItem := Values.Insert(InsertPosition)
-//        as TCustomBoundaryItem;
-//      if AnotherItem <> nil then
-//      begin
-//        NewItem.Assign(AnotherItem);
-//      end;
-//      Dec(StartIndex);
-//    end
-//    else if DeleteItem then
-//    begin
-//      Values.Delete(TimeIndex);
-//      // Don't decrement StartIndex.
-//    end
-//    else
-//    begin
-//      Dec(StartIndex);
-//    end;
-//  end;
-//  if Values.Count > 0 then
-//  begin
-//    AnotherItem := Values[0];
-//  end
-//  else
-//  begin
-//    AnotherItem := nil;
-//  end;
-//  TimeIndex := Length(TimeValues) - Values.Count;
-//  while TimeIndex > 0 do
-//  begin
-//    Dec(TimeIndex);
-//    NewItem := Values.Insert(0) as TCustomBoundaryItem;
-//    if AnotherItem <> nil then
-//    begin
-//      NewItem.Assign(AnotherItem);
-//    end;
-//  end;
-//  while Values.Count > Length(TimeValues) do
-//  begin
-//    Values.Delete(Values.Count-1);
-//  end;
-//  for TimeIndex := 0 to Values.Count - 1 do
-//  begin
-//    Values[TimeIndex].StartTime := TimeValues[TimeIndex];
-//  end;
-//end;
-
-procedure TframeSutraBoundary.btnDeleteClick(Sender: TObject);
-begin
-  inherited;
-//
-end;
-
-procedure TframeSutraBoundary.btnInsertClick(Sender: TObject);
-begin
-  inherited;
-//
-end;
-//
-//procedure TframeSutraBoundary.CheckSchedule(
-//  BoundaryList: TSutraBoundaryList);
-//var
-//  Values: TCustomSutraBoundaryCollection;
-//  FirstBoundary: TSutraBoundary;
-//begin
-//  if FBoundariesTheSame and (comboSchedule.ItemIndex >= 1) then
-//  begin
-//    FirstBoundary := BoundaryList[0];
-//    Values := FirstBoundary.Values as TCustomSutraBoundaryCollection;
-//    AdjustBoundaryValues(Values);
-//
-//  end;
-//end;
 
 procedure TframeSutraBoundary.GetBoundaryValues(
   BoundaryList: TSutraBoundaryList);
@@ -671,6 +549,18 @@ begin
   begin
     ClearBoundaries;
   end;
+end;
+
+procedure TframeSutraBoundary.btnDeleteClick(Sender: TObject);
+begin
+  inherited;
+//
+end;
+
+procedure TframeSutraBoundary.btnInsertClick(Sender: TObject);
+begin
+  inherited;
+//
 end;
 
 procedure TframeSutraBoundary.ClearBoundaries;
@@ -718,11 +608,11 @@ begin
       for TimeIndex := 0 to Length(TimeValues) - 1 do
       begin
         case FBoundaryType of
-          sbtFluidSource, sbtSpecPress:
+          sbtSpecPress, sbtSpecConcTemp:
             begin
               TimeList.Add(TimeValues[TimeIndex]);
             end;
-          sbtMassEnergySource, sbtSpecConcTemp:
+          sbtFluidSource, sbtMassEnergySource:
             begin
               if TimeValues[TimeIndex] <> Initialtime then
               begin
@@ -844,7 +734,7 @@ begin
     end;
     rdgSutraFeature.Columns[0].LimitToList := False;
   end;
-
+  UpdateColWidths;
 end;
 
 procedure TframeSutraBoundary.DisplayBoundaries(
@@ -937,28 +827,12 @@ end;
 
 procedure TframeSutraBoundary.InitializeColumnHeadings;
 var
-  NewColWidth: Integer;
   ColIndex: Integer;
   TransportChoice: TTransportChoice;
 begin
   rdgSutraFeature.Cells[0,0] := StrTime;
   rdgSutraFeature.Cells[1,0] := StrUsed;
-
-  NewColWidth := rdgSutraFeature.ClientWidth -
-    (rdgSutraFeature.ColWidths[0] + rdgSutraFeature.ColWidths[1]);
-  if rdgSutraFeature.ColCount = 4 then
-  begin
-    NewColWidth := (NewColWidth div 2) -20;
-  end
-  else
-  begin
-    NewColWidth := NewColWidth -20;
-  end;
-
-  for ColIndex := 2 to rdgSutraFeature.ColCount - 1 do
-  begin
-    rdgSutraFeature.ColWidths[ColIndex] := NewColWidth;
-  end;
+  UpdateColWidths;
 
   TransportChoice := frmGoPhast.PhastModel.SutraOptions.TransportChoice;
 
@@ -967,7 +841,7 @@ begin
       begin
         rdgSutraFeature.Cells[2,0] := StrFluidSource;
         case TransportChoice of
-          tcSolute: rdgSutraFeature.Cells[3,0] := StrAssociatedConcentra;
+          tcSolute, tcSoluteHead: rdgSutraFeature.Cells[3,0] := StrAssociatedConcentra;
           tcEnergy: rdgSutraFeature.Cells[3,0] := StrAssociatedTemp;
           else Assert(False);
         end;
@@ -975,16 +849,25 @@ begin
     sbtMassEnergySource:
       begin
         case TransportChoice of
-          tcSolute: rdgSutraFeature.Cells[2,0] := StrSoluteSource;
+          tcSolute, tcSoluteHead: rdgSutraFeature.Cells[2,0] := StrSoluteSource;
           tcEnergy: rdgSutraFeature.Cells[2,0] := StrEnergySouce;
           else Assert(False);
         end;
       end;
     sbtSpecPress:
       begin
-        rdgSutraFeature.Cells[2,0] := StrSpecifiedPressure;
         case TransportChoice of
-          tcSolute: rdgSutraFeature.Cells[3,0] := StrAssociatedConcentra;
+          tcSolute, tcEnergy:
+            begin
+              rdgSutraFeature.Cells[2,0] := StrSpecifiedPressure;
+            end;
+          tcSoluteHead:
+            begin
+              rdgSutraFeature.Cells[2,0] := StrSpecifiedHead;
+            end;
+        end;
+        case TransportChoice of
+          tcSolute, tcSoluteHead: rdgSutraFeature.Cells[3,0] := StrAssociatedConcentra;
           tcEnergy: rdgSutraFeature.Cells[3,0] := StrAssociatedTemp;
           else Assert(False);
         end;
@@ -992,7 +875,7 @@ begin
     sbtSpecConcTemp:
       begin
         case TransportChoice of
-          tcSolute: rdgSutraFeature.Cells[2,0] := StrSpecifiedConcentration;
+          tcSolute, tcSoluteHead: rdgSutraFeature.Cells[2,0] := StrSpecifiedConcentration;
           tcEnergy: rdgSutraFeature.Cells[2,0] := StrSpecifiedTemperatur;
           else Assert(False);
         end;
@@ -1082,7 +965,7 @@ begin
       end;
     end;
   end;
-
+  UpdateColWidths;
 end;
 
 procedure TframeSutraBoundary.rdgSutraFeatureHorizontalScroll(Sender: TObject);
