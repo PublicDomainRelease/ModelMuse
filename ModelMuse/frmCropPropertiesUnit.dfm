@@ -1,10 +1,12 @@
 inherited frmCropProperties: TfrmCropProperties
+  HelpType = htKeyword
+  HelpKeyword = 'Farm_Crop_Properties_Dialog_Bo'
   Caption = 'Farm Crop Properties'
   ClientHeight = 325
   ClientWidth = 683
-  ExplicitWidth = 701
-  ExplicitHeight = 370
-  PixelsPerInch = 120
+  ExplicitWidth = 699
+  ExplicitHeight = 363
+  PixelsPerInch = 96
   TextHeight = 18
   object splitterMain: TJvNetscapeSplitter
     Left = 225
@@ -31,6 +33,7 @@ inherited frmCropProperties: TfrmCropProperties
     Indent = 19
     TabOrder = 0
     OnChange = jvpltvMainChange
+    OnCustomDrawItem = jvpltvMainCustomDrawItem
     Items.Links = {00000000}
   end
   object jplMain: TJvPageList
@@ -38,14 +41,17 @@ inherited frmCropProperties: TfrmCropProperties
     Top = 0
     Width = 448
     Height = 281
-    ActivePage = jvspRootDepth
+    ActivePage = jvspLosses
     PropagateEnable = False
     Align = alClient
+    OnChange = jplMainChange
     object jvspCropName: TJvStandardPage
       Left = 0
       Top = 0
       Width = 448
       Height = 281
+      HelpType = htKeyword
+      HelpKeyword = 'Crops_Pane'
       Caption = 'jvspCropName'
       inline frameCropName: TframeFormulaGrid
         Left = 0
@@ -94,7 +100,6 @@ inherited frmCropProperties: TfrmCropProperties
         inherited Grid: TRbwDataGrid4
           Width = 448
           Height = 183
-          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
           OnSetEditText = frameCropNameGridSetEditText
           OnButtonClick = GridButtonClick
           ExplicitWidth = 448
@@ -120,6 +125,8 @@ inherited frmCropProperties: TfrmCropProperties
       Top = 0
       Width = 448
       Height = 281
+      HelpType = htKeyword
+      HelpKeyword = 'Rooting_Depth_Pane'
       Caption = 'jvspRootDepth'
       inline frameRootDepth: TframeFormulaGrid
         Left = 0
@@ -161,7 +168,6 @@ inherited frmCropProperties: TfrmCropProperties
         inherited Grid: TRbwDataGrid4
           Width = 448
           Height = 183
-          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
           OnSetEditText = GridSetEditText
           OnButtonClick = GridButtonClick
           OnEndUpdate = frameRootDepthGridEndUpdate
@@ -188,6 +194,8 @@ inherited frmCropProperties: TfrmCropProperties
       Top = 0
       Width = 448
       Height = 281
+      HelpType = htKeyword
+      HelpKeyword = 'Consumptive_Use_Flux_or_Crop_C'
       Caption = 'jvspEvapFractions'
       inline frameEvapFractions: TframeFormulaGrid
         Left = 0
@@ -229,7 +237,6 @@ inherited frmCropProperties: TfrmCropProperties
         inherited Grid: TRbwDataGrid4
           Width = 448
           Height = 183
-          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
           OnSetEditText = GridSetEditText
           OnButtonClick = GridButtonClick
           OnEndUpdate = frameEvapFractionsGridEndUpdate
@@ -256,6 +263,8 @@ inherited frmCropProperties: TfrmCropProperties
       Top = 0
       Width = 448
       Height = 281
+      HelpType = htKeyword
+      HelpKeyword = 'Inefficiency_Losses_to_Surface'
       Caption = 'jvspLosses'
       inline frameLosses: TframeFormulaGrid
         Left = 0
@@ -297,7 +306,6 @@ inherited frmCropProperties: TfrmCropProperties
         inherited Grid: TRbwDataGrid4
           Width = 448
           Height = 183
-          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
           OnSetEditText = GridSetEditText
           OnButtonClick = GridButtonClick
           OnEndUpdate = frameLossesGridEndUpdate
@@ -324,6 +332,8 @@ inherited frmCropProperties: TfrmCropProperties
       Top = 0
       Width = 448
       Height = 281
+      HelpType = htKeyword
+      HelpKeyword = 'Crop_Price_Function_Pane'
       Caption = 'jvspCropFunction'
       inline frameCropFunction: TframeFormulaGrid
         Left = 0
@@ -365,7 +375,6 @@ inherited frmCropProperties: TfrmCropProperties
         inherited Grid: TRbwDataGrid4
           Width = 448
           Height = 183
-          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
           OnSetEditText = GridSetEditText
           OnButtonClick = GridButtonClick
           OnEndUpdate = frameCropFunctionGridEndUpdate
@@ -392,6 +401,8 @@ inherited frmCropProperties: TfrmCropProperties
       Top = 0
       Width = 448
       Height = 281
+      HelpType = htKeyword
+      HelpKeyword = 'Consumptive_Use_Factors_Pane'
       Caption = 'jvspCropWaterUse'
       inline frameCropWaterUse: TframeFormulaGrid
         Left = 0
@@ -433,7 +444,6 @@ inherited frmCropProperties: TfrmCropProperties
         inherited Grid: TRbwDataGrid4
           Width = 448
           Height = 183
-          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
           OnSetEditText = GridSetEditText
           OnButtonClick = GridButtonClick
           OnEndUpdate = frameCropWaterUseGridEndUpdate
@@ -469,10 +479,8 @@ inherited frmCropProperties: TfrmCropProperties
       Top = 6
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
     object btnOK: TBitBtn
@@ -480,10 +488,8 @@ inherited frmCropProperties: TfrmCropProperties
       Top = 6
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -492,11 +498,10 @@ inherited frmCropProperties: TfrmCropProperties
       Top = 6
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
+      OnClick = btnHelpClick
     end
   end
   object rbwprsrGlobal: TRbwParser

@@ -184,6 +184,8 @@ resourcestring
   '.jpg;*.jpeg|Portable Network Graphics (*.png)|*.png|Enhanced Windows Meta' +
   'files (*.emf)|*.emf|Windows Metafiles (*.wmf)|*.wmf';
   StrSorryThereWasAP = 'Sorry, there was a problem reading this file.';
+  StrThisFileDoesNotA = 'This file does not appear to be in the correct form' +
+  'at. Please contact the software developer for help.';
 
 {$R *.dfm}
 
@@ -264,7 +266,10 @@ end;
 procedure TfrmImportBitmap.dgPointsEndUpdate(Sender: TObject);
 begin
   inherited;
-  seNumRows.AsInteger := dgPoints.RowCount -1;
+  if seNumRows <> nil then
+  begin
+    seNumRows.AsInteger := dgPoints.RowCount -1;
+  end;
 end;
 
 procedure TfrmImportBitmap.dgPointsExit(Sender: TObject);
@@ -828,6 +833,12 @@ begin
           end;
         sftRaster:
           begin
+            if WorldFile.Count < 6 then
+            begin
+              Beep;
+              MessageDlg(StrThisFileDoesNotA, mtError, [mbOK], 0);
+              Exit;
+            end;
             Assert(WorldFile.Count >= 6);
             A := FortranStrToFloat(Trim(WorldFile[0]));
             D := FortranStrToFloat(Trim(WorldFile[1]));

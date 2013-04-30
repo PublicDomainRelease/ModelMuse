@@ -62,6 +62,8 @@ type
     FMaxResidual: double;
     FMaxSymbolSize: integer;
     FDisplayResiduals: boolean;
+    FMaxLayerLimit: TColoringLimit;
+    FMinLayerLimit: TColoringLimit;
     procedure SetFileName(const Value: string);
     procedure SetFileDate(const Value: TDateTime);
     procedure SetMaxResidualLimit(const Value: TColoringLimit);
@@ -69,20 +71,23 @@ type
     procedure SetMinResidualLimit(const Value: TColoringLimit);
     procedure SetMinTimeLimit(const Value: TColoringLimit);
     function GetHeadObs(Index: Integer): THeadObsItem;
-    procedure UpdateVisibleItems(Sender: TObject);
+    procedure UpdateVisibleItems(AModel: TObject);
     procedure SetNegativeColor(const Value: TColor);
     procedure SetPositiveColor(const Value: TColor);
     procedure SetMaxSymbolSize(const Value: integer);
     procedure SetDisplayResiduals(const Value: boolean);
+    procedure SetMaxLayerLimit(const Value: TColoringLimit);
+    procedure SetMinLayerLimit(const Value: TColoringLimit);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure Draw(const BitMap: TBitmap32; const ZoomBox: TQRbwZoomBox2);
     property HeadObs[Index: Integer]: THeadObsItem read GetHeadObs; default;
-    function ReadFromFile: boolean;
-    procedure CalculateMaxResidual;
+    function ReadFromFile(AModel: TBaseModel): boolean;
+    procedure CalculateMaxResidual(AModel: TBaseModel);
     property MaxResidual: double read FMaxResidual write FMaxResidual;
+    procedure ExportToShapeFile(const FileName: string);
   published
     property FileName: string read FFileName write SetFileName;
     property FileDate: TDateTime read FFileDate write SetFileDate;
@@ -94,6 +99,8 @@ type
       write SetMaxTimeLimit;
     property MinTimeLimit: TColoringLimit read FMinTimeLimit
       write SetMinTimeLimit;
+    property MaxLayerLimit: TColoringLimit read FMaxLayerLimit write SetMaxLayerLimit;
+    property MinLayerLimit: TColoringLimit read FMinLayerLimit write SetMinLayerLimit;
     property NegativeColor: TColor read FNegativeColor write SetNegativeColor default clRed;
     property PositiveColor: TColor read FPositiveColor write SetPositiveColor default clBlue;
     property MaxSymbolSize: integer read FMaxSymbolSize write SetMaxSymbolSize default 20;
@@ -105,7 +112,8 @@ implementation
 uses
   StrUtils, ModelMuseUtilities, frmGoPhastUnit, ScreenObjectUnit,
   ModflowHobUnit, FastGEO, BigCanvasMethods, GR32_Polygons, Math,
-  PhastModelUnit, frmErrorsAndWarningsUnit;
+  PhastModelUnit, frmErrorsAndWarningsUnit, RbwParser, ShapefileUnit, XBase1,
+  frmExportShapefileUnit;
 
 resourcestring
   StrTheFileFromWhich = 'The file from which you are attempting to read ' +
@@ -256,11 +264,18 @@ begin
   FMaxResidualLimit := TColoringLimit.Create;
   FMinTimeLimit := TColoringLimit.Create;
   FMinResidualLimit := TColoringLimit.Create;
+  FMaxLayerLimit := TColoringLimit.Create;
+  FMinLayerLimit := TColoringLimit.Create;
 
-  FMaxTimeLimit.OnChange := UpdateVisibleItems;
-  FMaxResidualLimit.OnChange := UpdateVisibleItems;
-  FMinTimeLimit.OnChange := UpdateVisibleItems;
-  FMinResidualLimit.OnChange := UpdateVisibleItems;
+  FMaxLayerLimit.DataType := rdtInteger;
+  FMinLayerLimit.DataType := rdtInteger;
+
+//  FMaxTimeLimit.OnChange := UpdateVisibleItems;
+//  FMaxResidualLimit.OnChange := UpdateVisibleItems;
+//  FMinTimeLimit.OnChange := UpdateVisibleItems;
+//  FMinResidualLimit.OnChange := UpdateVisibleItems;
+//  FMaxLayerLimit.OnChange := UpdateVisibleItems;
+//  FMinLayerLimit.OnChange := UpdateVisibleItems;
 
   NegativeColor := clRed;
   PositiveColor := clBlue;
@@ -271,6 +286,8 @@ end;
 
 destructor THeadObsCollection.Destroy;
 begin
+  FMinLayerLimit.Free;
+  FMaxLayerLimit.Free;
   FMaxTimeLimit.Free;
   FMaxResidualLimit.Free;
   FMinTimeLimit.Free;
@@ -298,6 +315,116 @@ begin
   end;
 end;
 
+procedure THeadObsCollection.ExportToShapeFile(const FileName: string);
+var
+  ShapeWriter: TShapefileGeometryWriter;
+  ObsScreenObjects: TStringList;
+  HeadObsResults: integer;
+  ObsIndex: Integer;
+  ObsItem: THeadObsItem;
+  AShape: TShapeObject;
+  XBase: TXBase;
+  Fields: TStringList;
+  LocalModel: TCustomModel;
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  ObsevationIndex: Integer;
+  Observations: THobBoundary;
+  CellList: TObsCellList;
+  ACell: THob_Cell;
+  MaxLayer: Integer;
+  MinLayer: Integer;
+  CellIndex: Integer;
+begin
+  ShapeWriter := TShapefileGeometryWriter.Create(stPoint, True);
+  ObsScreenObjects := TStringList.Create;
+  XBase := TXBase.Create(nil);
+  try
+    Fields := TStringList.Create;
+    try
+      Fields.Add('OBSERVED=N18,10');
+      Fields.Add('SIMULATED=N18,10');
+      Fields.Add('TIME=N18,10');
+      Fields.Add('MIN_LAYER=N');
+      Fields.Add('MAX_LAYER=N');
+      InitializeDataBase(ChangeFileExt(FileName, '.dbf'), XBase, Fields);
+    finally
+      Fields.Free;
+    end;
+    LocalModel := Model as TCustomModel;
+    for ObsevationIndex := 0 to Count - 1 do
+    begin
+      ObsItem := HeadObs[ObsevationIndex];
+      AShape := TShapeObject.Create;
+      AShape.FShapeType := stPoint;
+      ShapeWriter.AddShape(AShape);
+      AShape.FNumPoints := 1;
+      AShape.FNumParts := 0;
+      SetLength(AShape.FPoints, 1);
+      AShape.FPoints[0].X := ObsItem.X;
+      AShape.FPoints[0].Y := ObsItem.Y;
+
+      XBase.AppendBlank;
+      XBase.UpdFieldNum('OBSERVED', ObsItem.ObservedValue);
+      XBase.UpdFieldNum('SIMULATED', ObsItem.SimulatedValue);
+      XBase.UpdFieldNum('TIME', ObsItem.Time);
+      XBase.UpdFieldInt('MIN_LAYER', 0);
+      XBase.UpdFieldInt('MAX_LAYER', 0);
+      AScreenObject := LocalModel.GetScreenObjectByName(ObsItem.ScreenObjectName);
+      if (AScreenObject <> nil) then
+      begin
+        ObsIndex := ObsScreenObjects.IndexOf(ObsItem.ScreenObjectName);
+        if ObsIndex < 0 then
+        begin
+          AScreenObject.ModflowHeadObservations.EvaluateHeadObservations(
+            LocalModel.ObservationPurpose, LocalModel);
+          ObsScreenObjects.AddObject(ObsItem.ScreenObjectName, AScreenObject);
+        end
+        else
+        begin
+          AScreenObject := ObsScreenObjects.Objects[ObsIndex] as TScreenObject;
+        end;
+
+        Observations := AScreenObject.ModflowHeadObservations;
+        if Observations.CellListCount > 0 then
+        begin
+          CellList := Observations.CellLists[0];
+          if CellList.Count > 0 then
+          begin
+            ACell := CellList[0];
+            MaxLayer := ACell.Layer;
+            MinLayer := ACell.Layer;
+            for CellIndex := 1 to CellList.Count - 1 do
+            begin
+              ACell := CellList[CellIndex];
+              if ACell.Layer > MaxLayer then
+              begin
+                MaxLayer := ACell.Layer
+              end;
+              if ACell.Layer < MinLayer then
+              begin
+                MinLayer := ACell.Layer
+              end;
+            end;
+            MinLayer := LocalModel.DataSetLayerToModflowLayer(MinLayer);
+            MaxLayer := LocalModel.DataSetLayerToModflowLayer(MaxLayer);
+            XBase.UpdFieldInt('MIN_LAYER', MinLayer);
+            XBase.UpdFieldInt('MAX_LAYER', MaxLayer);
+          end;
+        end;
+      end;
+      XBase.PostChanges;
+    end;
+    ShapeWriter.WriteToFile(FileName, ChangeFileExt(FileName, '.shx'));
+  finally
+    XBase.Active := False;
+    XBase.Free;
+    ObsScreenObjects.Free;
+    ShapeWriter.Free;
+  end;
+
+end;
+
 function THeadObsCollection.GetHeadObs(Index: Integer): THeadObsItem;
 begin
   Result := Items[Index] as THeadObsItem;
@@ -313,7 +440,7 @@ begin
   result := Sign(Abs(ObsItem2.Residual) - Abs(ObsItem1.Residual));
 end;
 
-function THeadObsCollection.ReadFromFile: boolean;
+function THeadObsCollection.ReadFromFile(AModel: TBaseModel): boolean;
 var
   HeadFile: TStringList;
   LineIndex: Integer;
@@ -439,7 +566,7 @@ begin
     finally
       HeadFile.Free;
     end;
-    UpdateVisibleItems(nil);
+    UpdateVisibleItems(AModel);
     FileAge(FileName, FFileDate);
     Sorter := TList.Create;
     try
@@ -481,12 +608,14 @@ begin
     NegativeColor := SourceHeadObs.NegativeColor;
     PositiveColor := SourceHeadObs.PositiveColor;
     MaxSymbolSize := SourceHeadObs.MaxSymbolSize;
+    MaxLayerLimit := SourceHeadObs.MaxLayerLimit;
+    MinLayerLimit := SourceHeadObs.MinLayerLimit;
     Visible := SourceHeadObs.Visible;
   end;
   inherited;
 end;
 
-procedure THeadObsCollection.CalculateMaxResidual;
+procedure THeadObsCollection.CalculateMaxResidual(AModel: TBaseModel);
 var
   Item: THeadObsItem;
   ItemIndex: Integer;
@@ -494,6 +623,7 @@ begin
   FMaxResidual := 0;
   if Visible then
   begin
+    UpdateVisibleItems(AModel);
     for ItemIndex := 0 to Count - 1 do
     begin
       Item := HeadObs[ItemIndex];
@@ -505,33 +635,109 @@ begin
   end;
 end;
 
-procedure THeadObsCollection.UpdateVisibleItems(Sender: TObject);
+procedure THeadObsCollection.UpdateVisibleItems(AModel: TObject);
 var
   ItemIndex: Integer;
   Item: THeadObsItem;
   ItemResidual: Double;
+  LocalModel: TCustomModel;
+  AScreenObject: TScreenObject;
+  Segments: TCellElementSegmentList;
+  ObsScreenObjects: TStringList;
+  ObsIndex: Integer;
+  Observations: THobBoundary;
+  CellList: TObsCellList;
+  CellIndex: Integer;
+  ACell: THob_Cell;
+  MaxLayer: Integer;
+  MinLayer: Integer;
 begin
-  for ItemIndex := 0 to Count - 1 do
+  if AModel = nil then
   begin
-    Item := HeadObs[ItemIndex];
-    Item.Visible := True;
-    ItemResidual := Item.Residual;
-    if FMaxResidualLimit.UseLimit and (ItemResidual > FMaxResidualLimit.RealLimitValue) then
+    Exit;
+  end;
+  ObsScreenObjects := TStringList.Create;
+  try
+    for ItemIndex := 0 to Count - 1 do
     begin
-      Item.Visible := False;
+      Item := HeadObs[ItemIndex];
+      Item.Visible := True;
+      ItemResidual := Item.Residual;
+      if FMaxResidualLimit.UseLimit and (ItemResidual > FMaxResidualLimit.RealLimitValue) then
+      begin
+        Item.Visible := False;
+      end;
+      if FMinResidualLimit.UseLimit and (ItemResidual < FMinResidualLimit.RealLimitValue) then
+      begin
+        Item.Visible := False;
+      end;
+      if FMaxTimeLimit.UseLimit and (Item.Time > FMaxTimeLimit.RealLimitValue) then
+      begin
+        Item.Visible := False;
+      end;
+      if FMinTimeLimit.UseLimit and (Item.Time < FMinTimeLimit.RealLimitValue) then
+      begin
+        Item.Visible := False;
+      end;
+      if MaxLayerLimit.UseLimit or MinLayerLimit.UseLimit then
+      begin
+        LocalModel := AModel as TCustomModel;
+        AScreenObject := LocalModel.GetScreenObjectByName(Item.ScreenObjectName);
+        if (AScreenObject <> nil) and AScreenObject.UsedModels.UsesModel(LocalModel)
+          and (AScreenObject.ModflowHeadObservations <> nil)
+          and AScreenObject.ModflowHeadObservations.Used then
+        begin
+          ObsIndex := ObsScreenObjects.IndexOf(Item.ScreenObjectName);
+          if ObsIndex < 0 then
+          begin
+            AScreenObject.ModflowHeadObservations.EvaluateHeadObservations(
+              LocalModel.ObservationPurpose, LocalModel);
+            ObsScreenObjects.AddObject(Item.ScreenObjectName, AScreenObject);
+          end
+          else
+          begin
+            AScreenObject := ObsScreenObjects.Objects[ObsIndex] as TScreenObject;
+          end;
+
+          Observations := AScreenObject.ModflowHeadObservations;
+          if Observations.CellListCount > 0 then
+          begin
+            CellList := Observations.CellLists[0];
+            if CellList.Count > 0 then
+            begin
+              ACell := CellList[0];
+              MaxLayer := ACell.Layer;
+              MinLayer := ACell.Layer;
+              for CellIndex := 1 to CellList.Count - 1 do
+              begin
+                ACell := CellList[CellIndex];
+                if ACell.Layer > MaxLayer then
+                begin
+                  MaxLayer := ACell.Layer
+                end;
+                if ACell.Layer < MinLayer then
+                begin
+                  MinLayer := ACell.Layer
+                end;
+              end;
+              if MaxLayerLimit.UseLimit
+                and (MinLayer > MaxLayerLimit.IntegerLimitValue-1) then
+              begin
+                Item.Visible := False;
+              end;
+              if MinLayerLimit.UseLimit
+                and (MaxLayer < MinLayerLimit.IntegerLimitValue-1) then
+              begin
+                Item.Visible := False;
+              end;
+            end;
+          end;
+
+        end;
+      end;
     end;
-    if FMinResidualLimit.UseLimit and (ItemResidual < FMinResidualLimit.RealLimitValue) then
-    begin
-      Item.Visible := False;
-    end;
-    if FMaxTimeLimit.UseLimit and (Item.Time > FMaxTimeLimit.RealLimitValue) then
-    begin
-      Item.Visible := False;
-    end;
-    if FMinTimeLimit.UseLimit and (Item.Time < FMinTimeLimit.RealLimitValue) then
-    begin
-      Item.Visible := False;
-    end;
+  finally
+    ObsScreenObjects.Free;
   end;
 end;
 
@@ -558,6 +764,11 @@ begin
   end;
 end;
 
+procedure THeadObsCollection.SetMaxLayerLimit(const Value: TColoringLimit);
+begin
+  FMaxLayerLimit.Assign(Value);
+end;
+
 procedure THeadObsCollection.SetMaxResidualLimit(
   const Value: TColoringLimit);
 begin
@@ -576,6 +787,11 @@ end;
 procedure THeadObsCollection.SetMaxTimeLimit(const Value: TColoringLimit);
 begin
   FMaxTimeLimit.Assign(Value);
+end;
+
+procedure THeadObsCollection.SetMinLayerLimit(const Value: TColoringLimit);
+begin
+  FMinLayerLimit.Assign(Value);
 end;
 
 procedure THeadObsCollection.SetMinResidualLimit(

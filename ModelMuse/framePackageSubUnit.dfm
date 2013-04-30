@@ -30,47 +30,47 @@ inherited framePackageSub: TframePackageSub
       ExplicitHeight = 0
       DesignSize = (
         436
-        255)
+        252)
       object lblNumberOfNodes: TLabel
         Left = 65
         Top = 7
-        Width = 201
-        Height = 13
+        Width = 239
+        Height = 16
         Caption = 'Number of nodes for delay interbeds (NN)'
       end
       object lblAccel1: TLabel
         Left = 88
         Top = 35
-        Width = 164
-        Height = 13
+        Width = 196
+        Height = 16
         Caption = 'First acceleration parameter (AC!)'
       end
       object lblAccel2: TLabel
         Left = 88
         Top = 63
-        Width = 180
-        Height = 13
+        Width = 216
+        Height = 16
         Caption = 'Second acceleration parameter (AC2)'
       end
       object lblMinIterations: TLabel
         Left = 88
         Top = 91
-        Width = 248
-        Height = 13
+        Width = 301
+        Height = 16
         Caption = 'Minimum number of iterations for SIP solver (ITMIN)'
       end
       object lbReadRestart: TLabel
         Left = 12
         Top = 142
-        Width = 264
-        Height = 13
+        Width = 321
+        Height = 16
         Caption = 'File from which the restart record will be read (IDREST)'
       end
       object lblOutputChoice: TLabel
         Left = 12
         Top = 192
-        Width = 98
-        Height = 13
+        Width = 115
+        Height = 16
         Caption = 'Binary output choice'
         Enabled = False
       end
@@ -152,7 +152,7 @@ inherited framePackageSub: TframePackageSub
         Left = 12
         Top = 208
         Width = 145
-        Height = 23
+        Height = 26
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
         Color = clBtnFace
@@ -160,7 +160,7 @@ inherited framePackageSub: TframePackageSub
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 17
+        ItemHeight = 20
         ItemIndex = -1
         TabOrder = 6
         Items = <
@@ -179,14 +179,18 @@ inherited framePackageSub: TframePackageSub
     object tabPrintSave: TTabSheet
       Caption = 'Print/Save'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         436
-        255)
+        252)
       object lblNumExportPeriods: TLabel
         Left = 75
         Top = 230
-        Width = 123
-        Height = 13
+        Width = 146
+        Height = 16
         Anchors = [akLeft, akBottom]
         Caption = 'Number of export periods'
       end
@@ -283,7 +287,7 @@ inherited framePackageSub: TframePackageSub
         Height = 17
         Caption = 'Set multiple check boxes'
         Enabled = False
-        TabOrder = 0
+        TabOrder = 1
         OnClick = cbMultiPrintSaveClick
       end
       object rdgOutput: TRbwDataGrid4
@@ -296,7 +300,7 @@ inherited framePackageSub: TframePackageSub
         Enabled = False
         FixedCols = 0
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
-        TabOrder = 1
+        TabOrder = 2
         OnMouseUp = rdgOutputMouseUp
         OnSelectCell = rdgOutputSelectCell
         ExtendedAutoDistributeText = False
@@ -309,7 +313,6 @@ inherited framePackageSub: TframePackageSub
         OnColSize = rdgOutputColSize
         ColorRangeSelection = False
         OnHorizontalScroll = rdgOutputHorizontalScroll
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = True
@@ -331,6 +334,7 @@ inherited framePackageSub: TframePackageSub
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -353,6 +357,7 @@ inherited framePackageSub: TframePackageSub
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -388,6 +393,7 @@ inherited framePackageSub: TframePackageSub
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -410,6 +416,7 @@ inherited framePackageSub: TframePackageSub
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -432,6 +439,7 @@ inherited framePackageSub: TframePackageSub
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -454,6 +462,7 @@ inherited framePackageSub: TframePackageSub
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -476,6 +485,7 @@ inherited framePackageSub: TframePackageSub
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -498,6 +508,7 @@ inherited framePackageSub: TframePackageSub
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -520,6 +531,7 @@ inherited framePackageSub: TframePackageSub
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -542,6 +554,7 @@ inherited framePackageSub: TframePackageSub
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -564,6 +577,7 @@ inherited framePackageSub: TframePackageSub
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -586,6 +600,7 @@ inherited framePackageSub: TframePackageSub
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -608,6 +623,7 @@ inherited framePackageSub: TframePackageSub
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -630,6 +646,7 @@ inherited framePackageSub: TframePackageSub
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -652,9 +669,11 @@ inherited framePackageSub: TframePackageSub
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
         OnEndUpdate = rdgOutputEndUpdate
+        WordWrapRowCaptions = False
       end
       object seNumExportPeriods: TJvSpinEdit
         Left = 12
@@ -665,14 +684,14 @@ inherited framePackageSub: TframePackageSub
         Value = 1.000000000000000000
         Enabled = False
         Anchors = [akLeft, akBottom]
-        TabOrder = 2
+        TabOrder = 3
         OnChange = seNumExportPeriodsChange
       end
       object comboMultiFomat: TJvImageComboBox
         Left = 32
         Top = 3
         Width = 89
-        Height = 23
+        Height = 26
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
         Color = clBtnFace
@@ -680,9 +699,9 @@ inherited framePackageSub: TframePackageSub
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 17
+        ItemHeight = 20
         ItemIndex = -1
-        TabOrder = 3
+        TabOrder = 0
         OnChange = comboMultiFomatChange
         Items = <
           item

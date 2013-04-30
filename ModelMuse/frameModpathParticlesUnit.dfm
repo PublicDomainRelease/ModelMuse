@@ -225,7 +225,7 @@ object frameModpathParticles: TframeModpathParticles
           Left = 9
           Top = 98
           Width = 49
-          Height = 21
+          Height = 24
           CheckMaxValue = False
           ButtonKind = bkClassic
           MinValue = 1.000000000000000000
@@ -236,7 +236,7 @@ object frameModpathParticles: TframeModpathParticles
           Left = 9
           Top = 133
           Width = 49
-          Height = 21
+          Height = 24
           CheckMaxValue = False
           ButtonKind = bkClassic
           MinValue = 1.000000000000000000
@@ -247,7 +247,7 @@ object frameModpathParticles: TframeModpathParticles
           Left = 9
           Top = 168
           Width = 49
-          Height = 21
+          Height = 24
           CheckMaxValue = False
           ButtonKind = bkClassic
           MinValue = 1.000000000000000000
@@ -301,7 +301,7 @@ object frameModpathParticles: TframeModpathParticles
           Left = 9
           Top = 87
           Width = 57
-          Height = 21
+          Height = 24
           CheckMaxValue = False
           ButtonKind = bkClassic
           MinValue = 1.000000000000000000
@@ -312,7 +312,7 @@ object frameModpathParticles: TframeModpathParticles
           Left = 9
           Top = 122
           Width = 57
-          Height = 21
+          Height = 24
           CheckMaxValue = False
           ButtonKind = bkClassic
           MinValue = 1.000000000000000000
@@ -323,7 +323,7 @@ object frameModpathParticles: TframeModpathParticles
           Left = 9
           Top = 154
           Width = 57
-          Height = 21
+          Height = 24
           ButtonKind = bkClassic
           Increment = 0.100000000000000000
           MaxValue = 0.500000000000000000
@@ -378,7 +378,7 @@ object frameModpathParticles: TframeModpathParticles
           Left = 9
           Top = 87
           Width = 57
-          Height = 21
+          Height = 24
           CheckMaxValue = False
           ButtonKind = bkClassic
           MinValue = 1.000000000000000000
@@ -389,7 +389,7 @@ object frameModpathParticles: TframeModpathParticles
           Left = 9
           Top = 122
           Width = 57
-          Height = 21
+          Height = 24
           CheckMaxValue = False
           ButtonKind = bkClassic
           MinValue = 2.000000000000000000
@@ -402,7 +402,7 @@ object frameModpathParticles: TframeModpathParticles
           Left = 9
           Top = 157
           Width = 57
-          Height = 21
+          Height = 24
           ButtonKind = bkClassic
           Increment = 0.100000000000000000
           MaxValue = 0.500000000000000000
@@ -438,7 +438,6 @@ object frameModpathParticles: TframeModpathParticles
           SelectedRowOrColumnColor = clAqua
           UnselectableColor = clBtnFace
           ColorRangeSelection = False
-          ColorSelectedRow = True
           Columns = <
             item
               AutoAdjustRowHeights = False
@@ -460,6 +459,7 @@ object frameModpathParticles: TframeModpathParticles
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -483,6 +483,7 @@ object frameModpathParticles: TframeModpathParticles
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -506,6 +507,7 @@ object frameModpathParticles: TframeModpathParticles
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -529,9 +531,11 @@ object frameModpathParticles: TframeModpathParticles
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end>
           OnEndUpdate = rdgSpecificEndUpdate
+          WordWrapRowCaptions = False
         end
         object pnlBottom: TPanel
           Left = 0
@@ -632,7 +636,7 @@ object frameModpathParticles: TframeModpathParticles
             Left = 3
             Top = 10
             Width = 62
-            Height = 21
+            Height = 24
             CheckMinValue = True
             ButtonKind = bkClassic
             TabOrder = 0
@@ -651,7 +655,7 @@ object frameModpathParticles: TframeModpathParticles
       Left = 414
       Top = 203
       Width = 62
-      Height = 21
+      Height = 24
       CheckMaxValue = False
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
@@ -677,7 +681,6 @@ object frameModpathParticles: TframeModpathParticles
       SelectedRowOrColumnColor = clAqua
       UnselectableColor = clBtnFace
       ColorRangeSelection = False
-      ColorSelectedRow = True
       Columns = <
         item
           AutoAdjustRowHeights = False
@@ -699,6 +702,7 @@ object frameModpathParticles: TframeModpathParticles
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -721,9 +725,11 @@ object frameModpathParticles: TframeModpathParticles
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end>
       OnEndUpdate = rdgReleaseTimesEndUpdate
+      WordWrapRowCaptions = False
     end
   end
   object OctTree: TRbwOctTree

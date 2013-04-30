@@ -3,9 +3,9 @@ inherited frmExportCSV: TfrmExportCSV
   HelpKeyword = 'Export_Data_as_CSV_Dialog_Box'
   Caption = 'Export Data as CSV'
   ClientHeight = 407
-  ExplicitWidth = 442
-  ExplicitHeight = 452
-  PixelsPerInch = 120
+  ExplicitWidth = 440
+  ExplicitHeight = 445
+  PixelsPerInch = 96
   TextHeight = 18
   object Panel1: TPanel
     Left = 0

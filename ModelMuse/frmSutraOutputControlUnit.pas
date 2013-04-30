@@ -41,6 +41,8 @@ type
     spl1: TSplitter;
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
+    procedure jvpltvNavigatorCustomDrawItem(Sender: TCustomTreeView;
+      Node: TTreeNode; State: TCustomDrawState; var DefaultDraw: Boolean);
   private
     procedure GetData;
     procedure SetData;
@@ -131,6 +133,17 @@ begin
   seNbcupr.AsInteger := SutraOutputControl.SpecifiedConcTempPrintFrequency;
 
   cbCinact.Checked := SutraOutputControl.ListAll;
+end;
+
+procedure TfrmSutraOutputControl.jvpltvNavigatorCustomDrawItem(
+  Sender: TCustomTreeView; Node: TTreeNode; State: TCustomDrawState;
+  var DefaultDraw: Boolean);
+begin
+  inherited;
+  if Node.Selected and not Sender.Focused then
+  begin
+    Sender.Canvas.Brush.Color := clMenuHighlight;
+  end;
 end;
 
 procedure TfrmSutraOutputControl.SetData;

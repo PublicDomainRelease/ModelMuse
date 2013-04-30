@@ -207,6 +207,7 @@ type
     // See @link(Items).
     procedure SetItems(const Layer, Row, Col: NativeInt; const Value: NativeInt);
   public
+    procedure RemoveValue(const Layer, Row, Col: NativeInt);
     // @name removes all the members of @classname.
     procedure Clear; override;
     // @name creates an instance of @classname.
@@ -581,6 +582,11 @@ begin
   resultPtr := inherited Items[Layer, Row, Col];
   Assert(resultPtr <> nil);
   result := FValues[Pred(longint(resultPtr))];
+end;
+
+procedure T3DSparseIntegerArray.RemoveValue(const Layer, Row, Col: NativeInt);
+begin
+  inherited Items[Layer, Row, Col] := nil;
 end;
 
 procedure T3DSparseIntegerArray.SetItems(const Layer, Row, Col,

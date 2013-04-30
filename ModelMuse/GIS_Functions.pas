@@ -1504,7 +1504,9 @@ begin
           else Assert(False);
         end;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         Assert(GlobalEvaluatedAt = eaBlocks);
         result := TCustomModel(GlobalCurrentModel).ModflowGrid.
@@ -1603,7 +1605,9 @@ begin
           else Assert(False);
         end;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         Assert(GlobalEvaluatedAt = eaBlocks);
         result := frmGoPhast.PhastModel.ModflowGrid.
@@ -1879,7 +1883,9 @@ begin
           end;
         end;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         if (Lay < 0) or (Lay > TCustomModel(GlobalCurrentModel).ModflowGrid.LayerCount - 1)
           or (Row < 0) or (Row > TCustomModel(GlobalCurrentModel).ModflowGrid.RowCount - 1)
@@ -1937,7 +1943,9 @@ var
 begin
   result := 0;
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         result := _ColumnWidth([Values[0]]) * _RowWidth([Values[1]]);
       end;
@@ -2004,7 +2012,9 @@ begin
           result := _ColumnWidth([Values[0]]) * _LayerHeight([Values[2]]);
         end;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         if Values[2] = nil then
         begin
@@ -2124,7 +2134,9 @@ begin
           result := _RowWidth([Values[0]]) * _LayerHeight([Values[2]]);
         end;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         if Values[2] = nil then
         begin
@@ -2188,7 +2200,9 @@ begin
   result := 0;
   ExtractColRowLayer(Lay, Row, Col, Values);
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         result := GetColumnWidth(Col) * GetRowWidth(Row) *
           GetLayerHeight(Col, Row, Lay);
@@ -2310,7 +2324,9 @@ begin
           Result := frmGoPhast.PhastGrid.LayerElevation[Lay];
         end;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         LocalGrid := TCustomModel(GlobalCurrentModel).ModflowGrid;
         if (Lay < 0) or (Lay > LocalGrid.LayerCount)
@@ -2402,7 +2418,9 @@ var
 begin
   result := 0;
   case GlobalCurrentModel.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         BelowValue := GetLayerPosition(Lay, Row, Col, InvalidIndex);
         if InvalidIndex then

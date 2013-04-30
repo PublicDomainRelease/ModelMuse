@@ -863,7 +863,10 @@ end;
 procedure TfrmStartUp.rdgInitialLayersEndUpdate(Sender: TObject);
 begin
   inherited;
-  rdeModflowLayerCount.Text := IntToStr(rdgInitialLayers.RowCount-2);
+  if rdeModflowLayerCount <> nil then
+  begin
+    rdeModflowLayerCount.Text := IntToStr(rdgInitialLayers.RowCount-2);
+  end;
 end;
 
 procedure TfrmStartUp.rdgInitialLayersSelectCell(Sender: TObject; ACol,
@@ -921,7 +924,10 @@ end;
 procedure TfrmStartUp.frameModelLayersGridEndUpdate(Sender: TObject);
 begin
   inherited;
-  frameModelLayers.seNumber.AsInteger := frameModelLayers.Grid.RowCount -2;
+  if (frameModelLayers <> nil) and (frameModelLayers.seNumber <> nil) then
+  begin
+    frameModelLayers.seNumber.AsInteger := frameModelLayers.Grid.RowCount -2;
+  end;
 //  frameModelLayers.GridEndUpdate(Sender);
 
 end;

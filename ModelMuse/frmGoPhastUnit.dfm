@@ -20,12 +20,12 @@ inherited frmGoPhast: TfrmGoPhast
   OnResize = FormResize
   ExplicitWidth = 776
   ExplicitHeight = 566
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object splitHoriz: TJvNetscapeSplitter
     Left = 0
-    Top = 325
-    Width = 758
+    Top = 357
+    Width = 760
     Height = 10
     Cursor = crVSplit
     Hint = 'Click and drag to resize the windows.'
@@ -41,16 +41,16 @@ inherited frmGoPhast: TfrmGoPhast
   object pnlTop: TPanel
     Left = 0
     Top = 100
-    Width = 758
-    Height = 225
+    Width = 760
+    Height = 257
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 1
     object splitVertTop: TJvNetscapeSplitter
-      Left = 519
+      Left = 521
       Top = 0
-      Height = 225
+      Height = 257
       Hint = 'Click and drag to resize the windows.'
       Align = alRight
       MinSize = 1
@@ -65,22 +65,22 @@ inherited frmGoPhast: TfrmGoPhast
     inline frameTopView: TframeView
       Left = 0
       Top = 0
-      Width = 519
-      Height = 225
+      Width = 521
+      Height = 257
       HorzScrollBar.Range = 36
       VertScrollBar.Range = 40
       Align = alClient
       TabOrder = 0
       TabStop = True
-      ExplicitWidth = 519
-      ExplicitHeight = 225
+      ExplicitWidth = 521
+      ExplicitHeight = 257
       inherited rulVertical: TRbwRuler
-        Height = 171
+        Height = 203
         ExplicitTop = 39
         ExplicitHeight = 173
       end
       inherited Panel1: TPanel
-        Width = 519
+        Width = 521
         ExplicitWidth = 519
         inherited rulHorizontal: TRbwRuler
           Width = 470
@@ -88,8 +88,8 @@ inherited frmGoPhast: TfrmGoPhast
         end
       end
       inherited ZoomBox: TQRbwZoomBox2
-        Width = 470
-        Height = 171
+        Width = 472
+        Height = 203
         Image32.Left = 1
         Image32.Top = 1
         Image32.Width = 468
@@ -108,21 +108,21 @@ inherited frmGoPhast: TfrmGoPhast
       end
     end
     inline frameSideView: TframeView
-      Left = 529
+      Left = 531
       Top = 0
       Width = 229
-      Height = 225
+      Height = 257
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alRight
       TabOrder = 1
       TabStop = True
-      ExplicitLeft = 529
+      ExplicitLeft = 531
       ExplicitWidth = 229
-      ExplicitHeight = 225
+      ExplicitHeight = 257
       inherited rulVertical: TRbwRuler
         Left = 180
-        Height = 171
+        Height = 203
         Align = alRight
         RulerPosition = rpRight
         ExplicitLeft = 194
@@ -156,7 +156,7 @@ inherited frmGoPhast: TfrmGoPhast
       inherited ZoomBox: TQRbwZoomBox2
         Left = 0
         Width = 180
-        Height = 171
+        Height = 203
         ExaggerationDirection = edHorizontal
         HorizontalDirection = hdLeft
         Image32.Left = 1
@@ -180,8 +180,8 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 335
-    Width = 758
+    Top = 367
+    Width = 760
     Height = 133
     Align = alBottom
     BevelOuter = bvNone
@@ -192,7 +192,7 @@ inherited frmGoPhast: TfrmGoPhast
     TabOrder = 2
     OnMouseMove = pnlLowerRightMouseMove
     object splitVertBottom: TJvNetscapeSplitter
-      Left = 519
+      Left = 521
       Top = 0
       Height = 133
       Hint = 'Click and drag to resize the windows.'
@@ -208,14 +208,14 @@ inherited frmGoPhast: TfrmGoPhast
     inline frameFrontView: TframeView
       Left = 0
       Top = 0
-      Width = 519
+      Width = 521
       Height = 133
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alClient
       TabOrder = 0
       TabStop = True
-      ExplicitWidth = 519
+      ExplicitWidth = 521
       ExplicitHeight = 133
       inherited rulVertical: TRbwRuler
         Top = 0
@@ -225,7 +225,7 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited Panel1: TPanel
         Top = 79
-        Width = 519
+        Width = 521
         Align = alBottom
         TabOrder = 1
         ExplicitTop = 79
@@ -250,7 +250,7 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited ZoomBox: TQRbwZoomBox2
         Top = 0
-        Width = 470
+        Width = 472
         Height = 79
         TabOrder = 0
         Image32.Left = 1
@@ -268,7 +268,7 @@ inherited frmGoPhast: TfrmGoPhast
       end
     end
     inline frame3DView: Tframe3DView
-      Left = 529
+      Left = 531
       Top = 0
       Width = 229
       Height = 133
@@ -291,8 +291,8 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object sbMain: TStatusBar
     Left = 0
-    Top = 468
-    Width = 758
+    Top = 500
+    Width = 760
     Height = 28
     Hint = 'Drag with the mouse to resize status bar panels'
     Panels = <
@@ -314,11 +314,13 @@ inherited frmGoPhast: TfrmGoPhast
     OnMouseMove = sbMainMouseMove
     OnMouseUp = sbMainMouseUp
     OnDrawPanel = sbMainDrawPanel
+    ExplicitTop = 468
+    ExplicitWidth = 758
   end
   object cbControlBar: TControlBar
     Left = 0
     Top = 0
-    Width = 758
+    Width = 760
     Height = 100
     Align = alTop
     AutoSize = True
@@ -327,6 +329,7 @@ inherited frmGoPhast: TfrmGoPhast
     ShowHint = True
     TabOrder = 0
     OnMouseMove = pnlLowerRightMouseMove
+    ExplicitWidth = 758
     object tbarEdit: TToolBar
       Left = 185
       Top = 2
@@ -1170,8 +1173,11 @@ inherited frmGoPhast: TfrmGoPhast
         object miExportModflowNwt: TMenuItem
           Action = acRunModflowNwt
         end
-        object miMODFLOWFMP2InputFiles1: TMenuItem
+        object miMODFLOWFMP2InputFiles: TMenuItem
           Action = acRunModflowFmp
+        end
+        object miRunModflowCfp: TMenuItem
+          Action = acRunModflowCfp
         end
         object miExportModpath: TMenuItem
           Action = acExportModpath
@@ -1226,6 +1232,9 @@ inherited frmGoPhast: TfrmGoPhast
             Enabled = False
             HelpContext = 1550
             OnClick = miTimeSeriestoShapefileClick
+          end
+          object miHeadObsToShapefile: TMenuItem
+            Action = acHeadObsToShapefile
           end
         end
         object miDataSetstoCSV: TMenuItem
@@ -1800,6 +1809,11 @@ inherited frmGoPhast: TfrmGoPhast
         GroupIndex = 1
         RadioItem = True
       end
+      object miModflowCfpActive: TMenuItem
+        Action = acModflowCfpActive
+        GroupIndex = 1
+        RadioItem = True
+      end
       object miModflowFmpActive: TMenuItem
         Action = acModflowFmpActive
         GroupIndex = 1
@@ -1934,8 +1948,12 @@ inherited frmGoPhast: TfrmGoPhast
         Action = acFarmSoils
         GroupIndex = 1
       end
-      object FarmClimate1: TMenuItem
+      object miFarmClimate: TMenuItem
         Action = acFarmClimate
+        GroupIndex = 1
+      end
+      object miFarmAllotment: TMenuItem
+        Action = acFarmAllotment
         GroupIndex = 1
       end
       object N8: TMenuItem
@@ -2073,8 +2091,21 @@ inherited frmGoPhast: TfrmGoPhast
         Hint = 'Open a description of the example models'
         OnClick = miExamplesClick
       end
+      object miUseLocalHelp: TMenuItem
+        Caption = 'Use Local Help'
+        GroupIndex = 1
+        RadioItem = True
+        OnClick = miUseLocalHelpClick
+      end
+      object miUseOnlineHelp: TMenuItem
+        Caption = 'Use Online Help'
+        GroupIndex = 1
+        RadioItem = True
+        OnClick = miUseOnlineHelpClick
+      end
       object miAbout: TMenuItem
         Caption = '&About'
+        GroupIndex = 1
         HelpContext = 2910
         Hint = 'Display the about box with contact information'
         OnClick = miAboutClick
@@ -3030,12 +3061,36 @@ inherited frmGoPhast: TfrmGoPhast
       Caption = 'Farm Climate'
       OnExecute = acFarmClimateExecute
     end
+    object acFarmAllotment: TAction
+      Category = 'Model'
+      Caption = 'Farm Allotment'
+      OnExecute = acFarmAllotmentExecute
+    end
+    object acModflowCfpActive: TAction
+      Category = 'Model'
+      Caption = 'MODFLOW-CFP'
+      GroupIndex = 1
+      HelpContext = 2390
+      HelpKeyword = 'Model'
+      Hint = 'Make MODFLOW-CFP the selected model type'
+      OnExecute = acModflowCfpActiveExecute
+    end
+    object acRunModflowCfp: TAction
+      Category = 'File'
+      Caption = 'MODFLOW-CFP Input Files'
+      ImageIndex = 72
+      OnExecute = acRunModflowCfpExecute
+    end
+    object acHeadObsToShapefile: TAction
+      Caption = 'Head Observations to Shapefile'
+      OnExecute = acHeadObsToShapefileExecute
+    end
   end
   object ilDisabledImageList: TImageList
     Left = 104
     Top = 128
     Bitmap = {
-      494C010148004A00FC0210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010148004A00480310001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003001000001002000000000000030
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -5679,7 +5734,7 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 176
     Top = 80
     Bitmap = {
-      494C01016000D0016C0310001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01016000D001B80310001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000009001000001002000000000000090
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -9107,5 +9162,13 @@ inherited frmGoPhast: TfrmGoPhast
     Title = 'Save SUTRA input files'
     Left = 176
     Top = 264
+  end
+  object dlgSaveHeadObsToShapefile: TSaveDialog
+    DefaultExt = '.shp'
+    Filter = 'Shapefiles|*.shp'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing]
+    Title = 'Export Head Observations'
+    Left = 416
+    Top = 240
   end
 end

@@ -482,10 +482,13 @@ end;
 procedure TframeSutraObservations.rdgSutraFeatureEndUpdate(Sender: TObject);
 begin
   inherited;
-  seNumberOfTimes.AsInteger := rdgSutraFeature.RowCount -1;
-  if not FGettingData and not FDisplayingTime then
+  if (seNumberOfTimes <> nil) and (comboSchedule <> nil) then
   begin
-    comboSchedule.ItemIndex := 0;
+    seNumberOfTimes.AsInteger := rdgSutraFeature.RowCount -1;
+    if not FGettingData and not FDisplayingTime then
+    begin
+      comboSchedule.ItemIndex := 0;
+    end;
   end;
 end;
 

@@ -468,6 +468,7 @@ inherited frmStartUp: TfrmStartUp
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -490,9 +491,11 @@ inherited frmStartUp: TfrmStartUp
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end>
           OnEndUpdate = rdgInitialLayersEndUpdate
+          WordWrapRowCaptions = False
           ExplicitLeft = 457
           ExplicitHeight = 311
         end
@@ -624,6 +627,7 @@ inherited frmStartUp: TfrmStartUp
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -646,6 +650,7 @@ inherited frmStartUp: TfrmStartUp
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end>
           OnEndUpdate = frameModelLayersGridEndUpdate
@@ -708,6 +713,7 @@ inherited frmStartUp: TfrmStartUp
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end
           item
@@ -730,6 +736,7 @@ inherited frmStartUp: TfrmStartUp
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end
           item
@@ -752,8 +759,10 @@ inherited frmStartUp: TfrmStartUp
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end>
+        WordWrapRowCaptions = False
       end
       object rdeMinimumThickness: TRbwDataEntry
         Left = 6

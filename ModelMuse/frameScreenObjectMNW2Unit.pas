@@ -1197,8 +1197,11 @@ end;
 
 procedure TframeScreenObjectMNW2.rdgLiftTableEndUpdate(Sender: TObject);
 begin
-  seLiftTableRows.AsInteger := rdgLiftTable.RowCount - 1;
-  Changed;
+  if seLiftTableRows <> nil then
+  begin
+    seLiftTableRows.AsInteger := rdgLiftTable.RowCount - 1;
+    Changed;
+  end;
 end;
 
 procedure TframeScreenObjectMNW2.rdgTimeTableColSize(Sender: TObject; ACol,
@@ -1209,8 +1212,11 @@ end;
 
 procedure TframeScreenObjectMNW2.rdgTimeTableEndUpdate(Sender: TObject);
 begin
-  seTimeTableRows.AsInteger := rdgTimeTable.RowCount - 1;
-  Changed;
+  if seTimeTableRows <> nil then
+  begin
+    seTimeTableRows.AsInteger := rdgTimeTable.RowCount - 1;
+    Changed;
+  end;
 end;
 
 procedure TframeScreenObjectMNW2.rdgTimeTableHorizontalScroll(Sender: TObject);
@@ -1314,17 +1320,20 @@ procedure TframeScreenObjectMNW2.rdgVerticalScreensEndUpdate(Sender: TObject);
 var
   NewCount: integer;
 begin
-  NewCount := rdgVerticalScreens.RowCount - 1;
-  if NewCount = 1 then
+  if seVerticalScreens <> nil then
   begin
-    if (rdgVerticalScreens.Cells[Ord(vsZTop),1] = '')
-      and (rdgVerticalScreens.Cells[Ord(vsZBot),1] = '') then
+    NewCount := rdgVerticalScreens.RowCount - 1;
+    if NewCount = 1 then
     begin
-      NewCount := 0;
+      if (rdgVerticalScreens.Cells[Ord(vsZTop),1] = '')
+        and (rdgVerticalScreens.Cells[Ord(vsZBot),1] = '') then
+      begin
+        NewCount := 0;
+      end;
     end;
+    seVerticalScreens.AsInteger := NewCount;
+    Changed;
   end;
-  seVerticalScreens.AsInteger := NewCount;
-  Changed;
 end;
 
 procedure TframeScreenObjectMNW2.rdgVerticalScreensHorizontalScroll(

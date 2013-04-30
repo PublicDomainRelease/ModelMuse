@@ -503,7 +503,18 @@ uses
   frameScreenObjectFmpEvapUnit in '..\frameScreenObjectFmpEvapUnit.pas' {frameScreenObjectFmpEvap: TFrame},
   ModflowFmpCropSpatialUnit in '..\ModflowFmpCropSpatialUnit.pas',
   frameScreenObjectCropIDUnit in '..\frameScreenObjectCropIDUnit.pas' {frameScreenObjectCropID: TFrame},
-  ModflowFmpWriterUnit in '..\ModflowFmpWriterUnit.pas';
+  ModflowFmpWriterUnit in '..\ModflowFmpWriterUnit.pas',
+  ModflowFmpAllotmentUnit in '..\ModflowFmpAllotmentUnit.pas',
+  frmFarmAllotmentUnit in '..\frmFarmAllotmentUnit.pas' {frmFarmAllotment},
+  frameRadioGridUnit in '..\frameRadioGridUnit.pas' {frameRadioGrid: TFrame},
+  framePackageCFPUnit in '..\framePackageCFPUnit.pas' {framePackageCFP: TFrame},
+  ModflowCfpPipeUnit in '..\ModflowCfpPipeUnit.pas',
+  frameScreenObjectCfpPipesUnit in '..\frameScreenObjectCfpPipesUnit.pas' {frameScreenObjectCfpPipes: TFrame},
+  ModflowCfpFixedUnit in '..\ModflowCfpFixedUnit.pas',
+  frameScreenObjectCfpFixedUnit in '..\frameScreenObjectCfpFixedUnit.pas' {frameScreenObjectCfpFixed: TFrame},
+  frmHelpVersionUnit in '..\frmHelpVersionUnit.pas' {frmHelpVersion},
+  ModflowCfpWriterUnit in '..\ModflowCfpWriterUnit.pas',
+  ModflowCfpRechargeUnit in '..\ModflowCfpRechargeUnit.pas';
 
 {$R *.res}
 

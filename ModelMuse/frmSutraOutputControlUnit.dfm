@@ -23,15 +23,12 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
     ActivePage = jvspNodEle
     PropagateEnable = False
     Align = alClient
-    ExplicitLeft = 126
-    ExplicitWidth = 577
     object jvspListing: TJvStandardPage
       Left = 0
       Top = 0
       Width = 581
       Height = 344
       Caption = 'jvspListing'
-      ExplicitWidth = 577
       DesignSize = (
         581
         344)
@@ -71,7 +68,6 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
           'Write a summary of simulation progress to the screen (CSCRN)'
           'Pause for a user response at the end of the simulation (CPAUSE)')
         TabOrder = 1
-        ExplicitWidth = 568
       end
     end
     object jvspNodEle: TJvStandardPage
@@ -80,7 +76,6 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
       Width = 581
       Height = 344
       Caption = 'jvspNodEle'
-      ExplicitWidth = 577
       DesignSize = (
         581
         344)
@@ -136,7 +131,6 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
       Width = 581
       Height = 344
       Caption = '1'
-      ExplicitWidth = 577
       object lblNoblin: TLabel
         Left = 133
         Top = 6
@@ -240,6 +234,7 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
     Align = alLeft
     Indent = 19
     TabOrder = 0
+    OnCustomDrawItem = jvpltvNavigatorCustomDrawItem
     Items.Links = {00000000}
   end
   object pnlBottom: TPanel
@@ -250,7 +245,6 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
     Align = alBottom
     ParentColor = True
     TabOrder = 2
-    ExplicitWidth = 703
     DesignSize = (
       722
       50)
@@ -263,7 +257,6 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
       Kind = bkCancel
       NumGlyphs = 2
       TabOrder = 2
-      ExplicitLeft = 593
     end
     object btnOK: TBitBtn
       Left = 515
@@ -275,7 +268,6 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
       NumGlyphs = 2
       TabOrder = 1
       OnClick = btnOKClick
-      ExplicitLeft = 496
     end
     object btnHelp: TBitBtn
       Left = 418
@@ -287,7 +279,6 @@ inherited frmSutraOutputControl: TfrmSutraOutputControl
       NumGlyphs = 2
       TabOrder = 0
       OnClick = btnHelpClick
-      ExplicitLeft = 399
     end
   end
 end

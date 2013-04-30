@@ -111,6 +111,26 @@ const
   StrSTOB = 'STOB';
   StrIUSTOBSV = 'IUSTOBSV';
   StrFMP = 'FMP';
+  StrFmpSupplyDemand = 'FMPSupDem';
+  StrFmpFarmBudgetCompact = 'FmpFarmBudgetCompact';
+  StrFmpFarmBudgetDetailed = 'FmpFarmBudgetDetailed';
+  StrFmpOFE = 'FmpOFE';
+  StrFmpCID = 'FmpCID';
+  StrFmpRoot = 'FmpRoot';
+  StrFmpCropUse = 'FmpCropUse';
+  StrFmpETR = 'FmpETR';
+  StrFmpETFrac = 'FmpETFrac';
+  StrFmpSwLosses = 'FmpSwLosses';
+  StrFmpPFLX = 'FmpPFLX';
+  StrFmpCropFunc = 'FmpCropFunc';
+  StrFmpWaterCost = 'FmpWaterCost';
+  StrFmpDeliveries = 'FmpDeliveries';
+  StrFmpSemiRouteDeliv = 'FmpSemiRouteDeliv';
+  StrFmpSemiRouteReturn = 'FmpSemiRouteReturn';
+  StrFmpCall= 'FmpCall';
+  StrCFP = 'CFP';
+  StrCRCH = 'CRCH';
+  StrCOC = 'COC';
 
   Solvers: array[0..5] of string = (StrPCG, StrPCGN, StrGMG, StrSIP, StrDE4, StrNWT);
   FlowPackages: array[0..3] of string = (StrLPF, StrHUF2, StrBCF, StrUPW);
@@ -213,7 +233,9 @@ const
   UZF_GageStartUnit = 32;
 
   MODPATH reserves several numbers in the range
-  80 to 99 for internal use. 
+  80 to 99 for internal use.
+
+  FMP uses unit numbers 1001-1009
 }
   CellFlowsUnitNumber = 9;
   // @name is the unit number in MODFLOW
@@ -353,10 +375,28 @@ const
   STOB_OutUnit = 145;
   FHB_Unit = 146;
   FMP_Unit = 147;
+  FmpSupDem_Unit = 148;
+  FmpFarmBudgetCompact_Unit = 149;
+  FmpFarmBudgetDetailed_Unit = 150;
+  FmpOFE_Unit = 151;
+  FmpCID_Unit = 152;
+  FmpRoot_Unit = 153;
+  FmpCropUse_Unit = 154;
+  FmpETR_Unit = 155;
+  FmpETFrac_Unit = 156;
+  FmpSwLosses_Unit = 157;
+  FmpPFLX_Unit = 158;
+  FmpCropFunc_Unit = 159;
+  FmpWaterCost_Unit = 160;
+  FmpDeliveries_Unit = 161;
+  FmpSemiRouteDeliv_Unit = 162;
+  FmpSemiRouteReturn_Unit = 163;
+  FmpCall_Unit = 164;
+  CFP_Unit = 165;
+  CRCH_Unit = 166;
+  COC_Unit = 167;
 
-
-
-  GageOutputStartUnit = 205;
+  GageOutputStartUnit = 20205;
 
 implementation
 
@@ -509,6 +549,28 @@ begin
   AddItem(StrSTOB, STOB_UNIT);
   AddItem(StrIUSTOBSV, STOB_OutUnit);
   AddItem(StrFMP, FMP_Unit);
+  AddItem(StrFmpSupplyDemand, FmpSupDem_Unit);
+  AddItem(StrFmpFarmBudgetCompact, FmpFarmBudgetCompact_Unit);
+  AddItem(StrFmpFarmBudgetDetailed, FmpFarmBudgetDetailed_Unit);
+  AddItem(StrFmpOFE, FmpOFE_Unit);
+  AddItem(StrFmpCID, FmpCID_Unit);
+  AddItem(StrFmpRoot, FmpRoot_Unit);
+  AddItem(StrFmpCropUse, FmpCropUse_Unit);
+  AddItem(StrFmpETR, FmpETR_Unit);
+  AddItem(StrFmpETFrac, FmpETFrac_Unit);
+  AddItem(StrFmpSwLosses, FmpSwLosses_Unit);
+  AddItem(StrFmpPFLX, FmpPFLX_Unit);
+  AddItem(StrFmpCropFunc, FmpCropFunc_Unit);
+  AddItem(StrFmpWaterCost, FmpWaterCost_Unit);
+  AddItem(StrFmpDeliveries, FmpDeliveries_Unit);
+  AddItem(StrFmpSemiRouteDeliv, FmpSemiRouteDeliv_Unit);
+  AddItem(StrFmpSemiRouteReturn, FmpSemiRouteReturn_Unit);
+  AddItem(StrFmpCall, FmpCall_Unit);
+  AddItem(StrCFP, CFP_Unit);
+  AddItem(StrCRCH, CRCH_Unit);
+  AddItem(StrCOC, COC_Unit);
+
+
 end;
 
 procedure TUnitNumbers.RemoveObsoleteItems;

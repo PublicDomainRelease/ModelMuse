@@ -938,6 +938,11 @@ C6------SPECIAL CHECK FOR 1ST FILE.
      &             6X,'U.S. GEOLOGICAL SURVEY MODULAR',
      &             ' FINITE-DIFFERENCE GROUND-WATER FLOW MODEL',/,
      &             A,'VERSION ',A,/)
+          WRITE(IOUT,65) 
+65        FORMAT('If you are attempting to run MODFLOW, you '
+     &     'are making a big ***ERROR***. This is not MODFLOW. This '
+     &     'program should only be used for importing existing models '
+     &     'into ModelMuse.')
           WRITE(IOUT,78) FNAME(1:IFLEN),IOUT
 78        FORMAT(1X,'LIST FILE: ',A,/25X,'UNIT ',I4)
         ELSE

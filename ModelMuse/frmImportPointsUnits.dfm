@@ -377,6 +377,7 @@ inherited frmImportPoints: TfrmImportPoints
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -399,9 +400,11 @@ inherited frmImportPoints: TfrmImportPoints
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
         OnEndUpdate = dgDataEndUpdate
+        WordWrapRowCaptions = False
         ExplicitWidth = 552
       end
     end

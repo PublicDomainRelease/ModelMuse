@@ -175,13 +175,16 @@ type
 
   TCustomPathLinePoints = class(TCollection)
   private
+    FLength: double;
     function GetPoint(Index: integer): TPathLinePoint;
+    function GetLength: double;
   protected
     FPathLine: TCustomPathLine;
   public
     property Points[Index: integer]: TPathLinePoint read GetPoint; default;
     Constructor Create(ItemClass: TCollectionItemClass; PathLine: TCustomPathLine);
     function TestGetMaxTime(var Maxtime: double): boolean;
+    property Length: double read GetLength;
   end;
 
   TPathLinePoints = class(TCustomPathLinePoints)
@@ -198,9 +201,11 @@ type
   private
     FPoints: TCustomPathLinePoints;
     procedure SetPoints(const Value: TCustomPathLinePoints);
+    function GetLength: Double;
   public
     procedure Assign(Source: TPersistent); override;
     Destructor Destroy; override;
+    property Length: Double read GetLength;
   published
     property Points: TCustomPathLinePoints read FPoints write SetPoints;
   end;
@@ -1202,6 +1207,11 @@ begin
   inherited;
 end;
 
+function TCustomPathLine.GetLength: Double;
+begin
+  result := FPoints.Length;
+end;
+
 procedure TCustomPathLine.SetPoints(const Value: TCustomPathLinePoints);
 begin
   FPoints.Assign(Value);
@@ -1915,6 +1925,24 @@ constructor TPathLinePoints.Create(PathLine: TPathLine);
 begin
   inherited Create(TPathLinePoint, PathLine);
 //  FPathLine := PathLine;
+end;
+
+function TCustomPathLinePoints.GetLength: double;
+var
+  PointIndex: Integer;
+  P1: TPathLinePoint;
+  P2: TPathLinePoint;
+begin
+  if FLength = 0 then
+  begin
+    for PointIndex := 1 to Count - 1 do
+    begin
+      P1 := Points[PointIndex-1];
+      P2 := Points[PointIndex];
+      FLength := FLength + Distance(P1.X, P1.Y, P1.Z, P2.X, P2.Y, P2.Z);
+    end;
+  end;
+  result := FLength;
 end;
 
 function TCustomPathLinePoints.GetPoint(Index: integer): TPathLinePoint;

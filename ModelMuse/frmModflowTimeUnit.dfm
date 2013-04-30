@@ -204,7 +204,6 @@ inherited frmModflowTime: TfrmModflowTime
         OnColSize = dgTimeColSize
         ColorRangeSelection = False
         OnHorizontalScroll = dgTimeHorizontalScroll
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = False
@@ -227,6 +226,7 @@ inherited frmModflowTime: TfrmModflowTime
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -250,6 +250,7 @@ inherited frmModflowTime: TfrmModflowTime
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -273,6 +274,7 @@ inherited frmModflowTime: TfrmModflowTime
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -296,6 +298,7 @@ inherited frmModflowTime: TfrmModflowTime
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -319,6 +322,7 @@ inherited frmModflowTime: TfrmModflowTime
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -344,6 +348,7 @@ inherited frmModflowTime: TfrmModflowTime
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -370,6 +375,7 @@ inherited frmModflowTime: TfrmModflowTime
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -393,6 +399,7 @@ inherited frmModflowTime: TfrmModflowTime
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -416,8 +423,10 @@ inherited frmModflowTime: TfrmModflowTime
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
+        WordWrapRowCaptions = False
         ColWidths = (
           64
           64
@@ -531,14 +540,17 @@ inherited frmModflowTime: TfrmModflowTime
           end
           inherited sbAdd: TSpeedButton
             Left = 393
+            Hint = 'Add row|Add a row below the bottom row.'
             ExplicitLeft = 393
           end
           inherited sbInsert: TSpeedButton
             Left = 465
+            Hint = 'Insert row|Insert a row above the selected row.'
             ExplicitLeft = 465
           end
           inherited sbDelete: TSpeedButton
             Left = 537
+            Hint = 'Delete row|Delete the selected row.'
             ExplicitLeft = 537
           end
           inherited seNumber: TJvSpinEdit
@@ -554,6 +566,7 @@ inherited frmModflowTime: TfrmModflowTime
           FixedCols = 1
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
           OnSelectCell = frameGridGridSelectCell
+          OnBeforeDrawCell = frameGridGridBeforeDrawCell
           Columns = <
             item
               AutoAdjustRowHeights = False
@@ -575,6 +588,7 @@ inherited frmModflowTime: TfrmModflowTime
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -597,6 +611,7 @@ inherited frmModflowTime: TfrmModflowTime
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -619,6 +634,7 @@ inherited frmModflowTime: TfrmModflowTime
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -641,6 +657,7 @@ inherited frmModflowTime: TfrmModflowTime
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -663,6 +680,7 @@ inherited frmModflowTime: TfrmModflowTime
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -687,6 +705,7 @@ inherited frmModflowTime: TfrmModflowTime
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -709,6 +728,7 @@ inherited frmModflowTime: TfrmModflowTime
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -731,6 +751,7 @@ inherited frmModflowTime: TfrmModflowTime
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = False
             end>
           ExplicitWidth = 746

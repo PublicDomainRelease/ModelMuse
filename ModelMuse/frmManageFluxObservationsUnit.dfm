@@ -113,6 +113,10 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object tabObservationsTimes: TTabSheet
         Caption = 'Observation times and values'
         OnResize = tabObservationsTimesResize
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         DesignSize = (
           653
           252)
@@ -172,6 +176,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -194,6 +199,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -216,6 +222,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -238,6 +245,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -266,6 +274,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -288,9 +297,11 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
               WordWrapCaptions = False
               WordWrapCells = True
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = False
             end>
           OnEndUpdate = rdgFluxObsTimesEndUpdate
+          WordWrapRowCaptions = False
           ColWidths = (
             64
             64
@@ -387,6 +398,10 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
         Caption = 'Mass flux observation times and values'
         ImageIndex = 2
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         DesignSize = (
           653
           252)
@@ -501,6 +516,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -523,6 +539,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -548,6 +565,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -570,6 +588,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -592,6 +611,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -614,6 +634,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
               WordWrapCaptions = True
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end
             item
@@ -636,9 +657,11 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
               WordWrapCaptions = True
               WordWrapCells = True
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = False
             end>
           OnEndUpdate = rdgConcFluxObsTimesEndUpdate
+          WordWrapRowCaptions = False
           ColWidths = (
             40
             40
@@ -682,6 +705,10 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object tabObjects: TTabSheet
         Caption = 'Objects'
         ImageIndex = 1
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         DesignSize = (
           653
           252)

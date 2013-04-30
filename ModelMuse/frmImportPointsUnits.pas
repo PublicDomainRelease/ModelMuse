@@ -1208,8 +1208,11 @@ end;
 procedure TfrmImportPoints.dgDataEndUpdate(Sender: TObject);
 begin
   inherited;
-  seRows.Value := dgData.RowCount -1;
-  EnableOkButton;
+  if seRows <> nil then
+  begin
+    seRows.Value := dgData.RowCount -1;
+    EnableOkButton;
+  end;
 end;
 
 procedure TfrmImportPoints.rgElevationCountClick(Sender: TObject);

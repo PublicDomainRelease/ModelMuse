@@ -9,19 +9,19 @@ inherited frmAbout: TfrmAbout
   OnHide = FormHide
   ExplicitWidth = 750
   ExplicitHeight = 572
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 732
-    Height = 129
+    Width = 734
+    Height = 153
     Align = alTop
     ParentColor = True
     TabOrder = 0
     DesignSize = (
-      732
-      129)
+      734
+      153)
     object ImageLogo: TImage
       Left = 5
       Top = 6
@@ -3066,7 +3066,7 @@ inherited frmAbout: TfrmAbout
       Height = 19
       Caption = '<u><a href="mailto:rbwinst@usgs.gov">rbwinst@usgs.gov</a></u>'
     end
-    object JvHTLabel2: TJvHTLabel
+    object htlblVersion2: TJvHTLabel
       Left = 472
       Top = 105
       Width = 217
@@ -3074,6 +3074,15 @@ inherited frmAbout: TfrmAbout
       Caption = 
         '<u><a href="http://pubs.usgs.gov/tm/tm6A29">http://pubs.usgs.gov' +
         '/tm/tm6A29</a></u>'
+    end
+    object htlblVersion3: TJvHTLabel
+      Left = 472
+      Top = 128
+      Width = 225
+      Height = 19
+      Caption = 
+        '<u><a href="http://dx.doi.org/10.3133/tm6a49">http://dx.doi.org/' +
+        '10.3133/tm6a49</a></u>'
     end
     object reReference: TRichEdit
       Left = 472
@@ -3085,22 +3094,28 @@ inherited frmAbout: TfrmAbout
         
           'Winston, R.B., 2009, ModelMuse'#8212'A graphical user interface for MO' +
           'DFLOW'#8211'2005 and PHAST: U.S. Geological Survey Techniques and Meth' +
-          'ods 6'#8211'A29, 52 p.')
+          'ods 6'#8211'A29, 52 p.'
+        
+          'Winston, R.B., 2014, Modifications made to ModelMuse to add supp' +
+          'ort for the Saturated-Unsaturated Transport model (SUTRA): U.S. ' +
+          'Geological Survey Techniques and Methods, book 6, chap. A49, 6 p' +
+          '., http://dx.doi.org/10.3133/tm6a49. ')
       ReadOnly = True
+      ScrollBars = ssVertical
       TabOrder = 0
       WordWrap = False
     end
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 478
-    Width = 732
+    Top = 485
+    Width = 734
     Height = 49
     Align = alBottom
     ParentColor = True
     TabOrder = 2
     DesignSize = (
-      732
+      734
       49)
     object lblVersionCaption: TLabel
       Left = 8
@@ -3199,13 +3214,13 @@ inherited frmAbout: TfrmAbout
   end
   object dgCredit: TRbwDataGrid4
     Left = 0
-    Top = 129
-    Width = 732
-    Height = 349
+    Top = 153
+    Width = 734
+    Height = 332
     Align = alClient
     ColCount = 3
     FixedCols = 0
-    RowCount = 40
+    RowCount = 41
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
     TabOrder = 1
     ExtendedAutoDistributeText = False
@@ -3238,6 +3253,7 @@ inherited frmAbout: TfrmAbout
         WordWrapCaptions = False
         WordWrapCells = True
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -3260,6 +3276,7 @@ inherited frmAbout: TfrmAbout
         WordWrapCaptions = False
         WordWrapCells = True
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -3282,7 +3299,9 @@ inherited frmAbout: TfrmAbout
         WordWrapCaptions = False
         WordWrapCells = True
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end>
+    WordWrapRowCaptions = False
   end
 end

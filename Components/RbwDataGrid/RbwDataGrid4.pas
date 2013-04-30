@@ -206,6 +206,8 @@ type
 
   TCustomRBWDataGrid = class;
 
+  TCheckStyle = (csCheck, csRadio);
+
   // @name is the abstract ancestor of @link(TRbwColumn4) and
   // @link(TRbwRow).
   TCustomRowOrColumn = class (TCollectionItem)
@@ -248,6 +250,7 @@ type
     FWordWrapCells: boolean;
     // See @link(ComboUsed).
     FComboUsed: boolean;
+    FCheckStyle: TCheckStyle;
     // @name checks that the contents of a cell specified by
     // ACol and ARow match the constraints on the cell
     // as specified in @link(Format), @link(CheckMax),
@@ -293,6 +296,7 @@ type
     procedure SetWordWrapCells(const Value: boolean);
     function GetCaseSensitivePicklist: boolean;
     procedure SetCaseSensitivePicklist(const Value: boolean);
+    procedure SetCheckStyle(const Value: TCheckStyle);
   protected
     // @name checks that all the cells in the @classname have values
     // that are between @link(Max) and @link(Min)
@@ -386,6 +390,7 @@ type
     property WordWrapCells: boolean read FWordWrapCells write SetWordWrapCells;
     property CaseSensitivePicklist: boolean read GetCaseSensitivePicklist
       write SetCaseSensitivePicklist;
+    property CheckStyle: TCheckStyle read FCheckStyle write SetCheckStyle;
   end;
 
   TRbwColumn4 = class(TCustomRowOrColumn)
@@ -534,8 +539,6 @@ type
     procedure MoveCheckStateWithColumn(FromColIndex, ToColIndex: Integer);
     procedure MoveCheckStateWithRow(FromRowIndex, ToRowIndex: Integer);
     procedure SetChecked(const ACol, ARow: integer; const Value: boolean);
-    procedure SetCheckState(const ACol, ARow: integer;
-      const Value: TCheckBoxState);
     procedure SetColCount(const Value: Longint);
     procedure SetdgColumn(const Value: integer);
     procedure SetdgRow(const Value: integer);
@@ -622,6 +625,9 @@ type
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure KeyUp(var Key: Word; Shift: TShiftState); override;
     procedure KeyPress(var Key: Char); override;
+    function GetCheckStyle(const ACol, ARow: integer): TCheckStyle; virtual; abstract;
+    procedure SetCheckState(const ACol, ARow: integer;
+      const Value: TCheckBoxState); virtual;
   public
     function WidthNeededToFitText(const ACol, ARow: Integer): integer;
     procedure SelectAll;
@@ -670,6 +676,8 @@ type
     property ItemIndex[const ACol, ARow: integer]: integer read GetItemIndex
       write SetItemIndex;
     procedure SettingsChanged(Sender: TObject; Flag: Integer; const Section: string; var Result: Longint);
+    property CheckStyle[const ACol, ARow: integer]: TCheckStyle
+      read GetCheckStyle;
   published
     property ExtendedAutoDistributeText: boolean
       read FExtendedAutoDistributeText write SetExtendedAutoDistributeText;
@@ -724,9 +732,11 @@ type
     FWordWrapColTitles: boolean;
     FUpdateCount: Integer;
     FOnEndUpdate: TNotifyEvent;
+    FWordWrapRowCaptions: Boolean;
 
     procedure SetColumns(const Value: TRbwDataGridColumns4);
     procedure SetWordWrapColTitles(const Value: boolean);
+    procedure SetWordWrapRowCaptions(const Value: Boolean);
 
   { Private declarations }
   protected
@@ -743,6 +753,9 @@ type
     procedure RowMoved(FromIndex, ToIndex: Longint); override;
     //    procedure SetCells(ACol, ARow: Integer; const Value: string); override;
     procedure SizeChanged(OldColCount, OldRowCount: Longint); override;
+    function GetCheckStyle(const ACol, ARow: integer): TCheckStyle; override;
+    procedure SetCheckState(const ACol, ARow: integer;
+      const Value: TCheckBoxState); override;
     { Protected declarations }
   public
     procedure AdjustRowHeights(const ARow: integer);override;
@@ -765,6 +778,8 @@ type
       write SetColorSelectedColumnOrRow default True;
     property Columns : TRbwDataGridColumns4 read FColumns write SetColumns;
     property OnEndUpdate: TNotifyEvent read FOnEndUpdate write FOnEndUpdate;
+    property WordWrapRowCaptions: Boolean read FWordWrapRowCaptions
+      write SetWordWrapRowCaptions;
     // @name is only for backwards compatibility.
     property WordWrapColTitles : boolean read FWordWrapColTitles
       write SetWordWrapColTitles Stored False;
@@ -884,6 +899,9 @@ type
     // @name adds or removes items in @link(Columns) and @link(Rows)
     // if the number of columns or rows changes.
     procedure SizeChanged(OldColCount, OldRowCount: Longint); override;
+    function GetCheckStyle(const ACol, ARow: integer): TCheckStyle; override;
+    procedure SetCheckState(const ACol, ARow: integer;
+      const Value: TCheckBoxState); override;
   public
     procedure BeginUpdate; override;
     procedure EndUpdate; override;
@@ -956,7 +974,7 @@ procedure Register;
 implementation
 
 uses
-  Math;
+  Math, Themes;
 
 resourcestring
   StrThereWasAnErrorA = 'There was an error adjusting the column width.';
@@ -973,8 +991,12 @@ begin
 end;
 
 var
-    FbmpChecked : TBitMap;
-    FbmpUnchecked : TBitMap;
+  // @name is a bitmap that represents a checkbox
+  // that is checked and not disabled.
+  FbmpChecked : TBitMap;
+  // @name is a bitmap that represents a checkbox
+  // that is unchecked and not disabled.
+  FbmpUnchecked : TBitMap;
   // @name is a bitmap that represents a checkbox
   // that is checked and disabled.
   FBmpDisabledChecked: TBitMap;
@@ -988,6 +1010,12 @@ var
   // that is in a grayed or indeterminate state and enabled.
   FBmpGrayed: TBitMap;
 
+  FBmpRadioChecked : TBitMap;
+  FBmpRadioUnChecked : TBitMap;
+  FBmpRadioGrayed: TBitMap;
+  FBmpDisabledRadioChecked : TBitMap;
+  FBmpDisabledRadioUnChecked : TBitMap;
+  FBmpDisabledRadioGrayed: TBitMap;
 
 { TRbwColumn4 }
 
@@ -1279,7 +1307,7 @@ end;
 
 function TRbwDataGrid4.IsCaptionCell(ACol, ARow: integer): boolean;
 begin
-  result := ARow < FixedRows;
+  result := (ARow < FixedRows) or (WordWrapRowCaptions and (ACol < FixedCols));
 end;
 
 procedure TRbwDataGrid4.Loaded;
@@ -1287,6 +1315,24 @@ begin
   inherited;
   FixedCols := FFixedCols;
   HideEditor;
+end;
+
+procedure TRbwDataGrid4.SetCheckState(const ACol, ARow: integer;
+  const Value: TCheckBoxState);
+var
+  RowIndex: Integer;
+begin
+  inherited;
+  if (Value = cbChecked) and (CheckStyle[ACol, ARow] = csRadio)  then
+  begin
+    for RowIndex := 0 to RowCount - 1 do
+    begin
+      if RowIndex <> ARow then
+      begin
+        CheckState[ACol, RowIndex] := cbUnchecked
+      end;
+    end;
+  end;
 end;
 
 procedure TRbwDataGrid4.SetColumns(const Value: TRbwDataGridColumns4);
@@ -1309,6 +1355,15 @@ begin
     Columns[Index].WordWrapCaptions := Value;
   end;
   Invalidate;
+end;
+
+procedure TRbwDataGrid4.SetWordWrapRowCaptions(const Value: Boolean);
+begin
+  if FWordWrapRowCaptions <> Value then
+  begin
+    FWordWrapRowCaptions := Value;
+    Invalidate;
+  end;
 end;
 
 function TRbwDataGrid4.ShouldAdujstColWidths(ACol: integer): boolean;
@@ -1525,6 +1580,11 @@ begin
     LocalSelection := Selection;
     Selection := LocalSelection;
   end;
+end;
+
+function TRbwDataGrid4.GetCheckStyle(const ACol, ARow: integer): TCheckStyle;
+begin
+  result := Columns[ACol].CheckStyle;
 end;
 
 procedure TRbwDataGrid4.RowMoved(FromIndex, ToIndex: Integer);
@@ -1775,6 +1835,15 @@ begin
   if FCheckMin then CheckRange;
 end;
 
+procedure TCustomRowOrColumn.SetCheckStyle(const Value: TCheckStyle);
+begin
+  FCheckStyle := Value;
+  if (Grid <> nil) then
+  begin
+    Grid.Invalidate;
+  end;
+end;
+
 procedure TCustomRowOrColumn.SetComboUsed(const Value: boolean);
 begin
   if FComboUsed <> Value then
@@ -1812,6 +1881,7 @@ begin
       PickList := TCustomRowOrColumn(Source).PickList;
       WordWrapCaptions := TCustomRowOrColumn(Source).WordWrapCaptions;
       WordWrapCells := TCustomRowOrColumn(Source).WordWrapCells;
+      CheckStyle := TCustomRowOrColumn(Source).CheckStyle;
     finally
       if Assigned(Collection) then Collection.EndUpdate;
     end;
@@ -2990,6 +3060,11 @@ begin
   end;
 end;
 
+function TRbwRowDataGrid.GetCheckStyle(const ACol, ARow: integer): TCheckStyle;
+begin
+  result := Rows[ARow].CheckStyle;
+end;
+
 function TRbwRowDataGrid.GetFixedRows: integer;
 begin
   result := inherited FixedRows;
@@ -3035,6 +3110,24 @@ begin
   inherited;
   Rows[FromIndex].Index := ToIndex;
   MoveCheckStateWithRow(FromIndex, ToIndex);
+end;
+
+procedure TRbwRowDataGrid.SetCheckState(const ACol, ARow: integer;
+  const Value: TCheckBoxState);
+var
+  ColIndex: Integer;
+begin
+  inherited;
+  if (Value = cbChecked) and (CheckStyle[ACol, ARow] = csRadio) then
+  begin
+    for ColIndex := 0 to ColCount - 1 do
+    begin
+      if ColIndex <> ACol then
+      begin
+        CheckState[ColIndex, ARow] := cbUnchecked
+      end;
+    end;
+  end;
 end;
 
 procedure TRbwRowDataGrid.SetColumns(const Value: TAutoAdjustColumns);
@@ -3625,6 +3718,8 @@ procedure TCustomRBWDataGrid.DrawCheckBoxCell(ACol, ARow: Integer;
 var
   OldStyle : TBrushStyle;
   Dest: TRect;
+  ChkStyle: TCheckStyle;
+  CheckBitMap: TBitMap;
 begin
   if not (gdFixed in AState) then
   begin
@@ -3634,6 +3729,9 @@ begin
     try
       Canvas.Brush.Style := bsSolid;
 
+      ChkStyle := CheckStyle[ACol, ARow];
+      CheckBitMap := nil;
+
       Dest.Left := ARect.Left + 2;
       Dest.Top := ARect.Top + (ARect.Bottom - ARect.Top - CheckBoxSize) div 2;
       Dest.Right := Dest.Left + CheckBoxSize;
@@ -3642,17 +3740,53 @@ begin
       begin
         if State[ACol, ARow] = cbChecked then
         begin
-          canvas.copyrect(Dest, FbmpChecked.canvas, Rect(0,0,
+          case ChkStyle of
+            csCheck:
+              begin
+                CheckBitMap := FbmpChecked;
+              end;
+            csRadio:
+              begin
+                CheckBitMap := FBmpRadioChecked;
+              end;
+            else
+              Assert(False);
+          end;
+          canvas.copyrect(Dest, CheckBitMap.canvas, Rect(0,0,
             Succ(CheckBoxSize),Succ(CheckBoxSize)));
         end
         else if State[ACol, ARow] = cbUnChecked then
         begin
-          canvas.copyrect(Dest, FbmpUnchecked.canvas,
+          case ChkStyle of
+            csCheck:
+              begin
+                CheckBitMap := FbmpUnchecked;
+              end;
+            csRadio:
+              begin
+                CheckBitMap := FBmpRadioUnChecked;
+              end;
+            else
+              Assert(False);
+          end;
+          canvas.copyrect(Dest, CheckBitMap.canvas,
             Rect(0,0,CheckBoxSize,CheckBoxSize));
         end
         else
         begin
-          canvas.copyrect(Dest, FBmpGrayed.canvas,
+          case ChkStyle of
+            csCheck:
+              begin
+                CheckBitMap := FBmpGrayed;
+              end;
+            csRadio:
+              begin
+                CheckBitMap := FBmpRadioGrayed;
+              end;
+            else
+              Assert(False);
+          end;
+          canvas.copyrect(Dest, CheckBitMap.canvas,
             Rect(0,0,CheckBoxSize,CheckBoxSize));
         end;
       end
@@ -3660,21 +3794,57 @@ begin
       begin
         if State[ACol, ARow] = cbChecked then
         begin
+          case ChkStyle of
+            csCheck:
+              begin
+                CheckBitMap := FBmpDisabledChecked;
+              end;
+            csRadio:
+              begin
+                CheckBitMap := FBmpDisabledRadioChecked;
+              end;
+            else
+              Assert(False);
+          end;
           Canvas.Draw(ARect.Left + 2,
             ARect.Top + (ARect.Bottom - ARect.Top - 13) div 2,
-            FBmpDisabledChecked);
+            CheckBitMap);
         end
         else if State[ACol, ARow] = cbUnChecked then
         begin
+          case ChkStyle of
+            csCheck:
+              begin
+                CheckBitMap := FBmpDisabledUnchecked;
+              end;
+            csRadio:
+              begin
+                CheckBitMap := FBmpDisabledRadioUnChecked;
+              end;
+            else
+              Assert(False);
+          end;
           Canvas.Draw(ARect.Left + 2,
             ARect.Top + (ARect.Bottom - ARect.Top - 13) div 2,
-            FBmpDisabledUnchecked);
+            CheckBitMap);
         end
         else
         begin
+          case ChkStyle of
+            csCheck:
+              begin
+                CheckBitMap := FBmpDisabledGrayed;
+              end;
+            csRadio:
+              begin
+                CheckBitMap := FBmpDisabledRadioGrayed;
+              end;
+            else
+              Assert(False);
+          end;
           Canvas.Draw(ARect.Left + 2,
             ARect.Top + (ARect.Bottom - ARect.Top - 13) div 2,
-            FBmpDisabledGrayed);
+            CheckBitMap);
         end;
       end;
       Canvas.Font := Font;
@@ -4977,6 +5147,8 @@ end;
 {$R-}
 
 procedure TRbwInplaceEdit4.PaintWindow(DC: HDC);
+const
+  PaintMessage: array[Boolean] of Cardinal = (WM_PAINT, WM_PRINTCLIENT);
 var
   Message: TMessage;
   R: TRect;
@@ -5047,7 +5219,11 @@ begin
     finally
       LocalGrid.FDrawing := TempDrawing;
     end;
-    Message.Msg := WM_PAINT;
+    {$IFDEF Delphi_2009_UP}
+    Message.Msg := PaintMessage[csPrintClient in ControlState];
+    {$ELSE}
+    Message.Msg := PaintMessage[False];
+    {$ENDIF}
     Message.WParam := DC;
     Message.LParam := 0;
     Message.Result := 0;
@@ -5100,6 +5276,99 @@ begin
   else
     inherited;
 end;
+
+function GetRadioButtonBitmap(Checked: TCheckBoxState; Hot : boolean; BgColor : TColor): TBitmap;
+const
+  CtrlState : array[TCheckBoxState] of integer = (DFCS_BUTTONRADIO,
+    DFCS_BUTTONRADIO or DFCS_CHECKED, DFCS_BUTTON3STATE);
+// modified from http://delphi.longzu.net/viewthread.php?tid=48097&extra=page%3D76
+var
+  CBRect : TRect;
+  { $IFDEF VER150}
+  Details : TThemedElementDetails;
+  { $ENDIF}
+//  BgOld : TColor;
+  ChkBmp : TBitmap;
+  ThemeOK : boolean;
+  x, {x2,} y : integer;
+begin
+//  Result := nil;
+  try
+    Result := TBitmap.Create;
+    ChkBmp := TBitmap.Create;
+    try
+      ThemeOK := False;
+      with Result do
+      begin
+        Width := CheckBoxSize;
+        Height := CheckBoxSize;
+        with Canvas do
+        begin
+          Brush.Color := BgColor;
+          FillRect(ClipRect);
+          ChkBmp.Assign(Result);
+          CBRect := ClipRect;
+          CBRect.Top := 1;
+          CBRect.Left := 1;
+          { $IFDEF VER150}
+          if ThemeServices.ThemesAvailable then
+          begin
+
+            if Checked = cbChecked then
+            begin
+              if Hot = True then
+                Details := ThemeServices.GetElementDetails(tbRadioButtonCheckedHot)
+              else
+                Details :=
+                  ThemeServices.GetElementDetails(tbRadioButtonCheckedNormal);
+            end
+            else if Checked = cbUnChecked then
+            begin
+              if Hot = True then
+                Details :=
+                  ThemeServices.GetElementDetails(tbRadioButtonUncheckedHot)
+              else
+                Details :=
+                  ThemeServices.GetElementDetails(tbRadioButtonUncheckedNormal);
+            end
+            else
+            begin
+              if Hot = True then
+                Details :=
+                  ThemeServices.GetElementDetails(tbRadioButtonUncheckedHot)
+              else
+                Details :=
+                  ThemeServices.GetElementDetails(tbRadioButtonUncheckedNormal);
+            end;
+            ThemeServices.DrawElement(Handle, Details, CBRect);
+
+            for x := 15 downto 0 do
+              for y := 15 downto 0 do
+                if ChkBmp.Canvas.Pixels[x, y] <> Pixels[x, y] then
+                begin
+                  ThemeOK := True;
+                  break;
+                end;
+          end;
+          { $ENDIF}
+          if ThemeOK = False then
+          begin
+
+            CBRect.Left := ClipRect.Left + 2;
+            CBRect.Right := ClipRect.Right - 1;
+            CBRect.Top := ClipRect.Top + 2;
+            CBRect.Bottom := ClipRect.Bottom - 1;
+            DrawFrameControl(Handle, CBRect, DFC_BUTTON, CtrlState[Checked]);
+          end;
+        end;
+      end;
+    finally
+      ChkBmp.Free;
+    end;
+  finally
+  end;
+end;
+
 
 procedure CreateBitmaps;
 var
@@ -5193,6 +5462,90 @@ begin
     ARect.Bottom := 10;
     Canvas.FillRect(ARect);
   end;
+
+  FBmpRadioUnChecked := GetRadioButtonBitmap(cbUnChecked, False, clWhite);
+{
+  FBmpRadioUnChecked := TBitMap.Create;
+  with FBmpRadioUnChecked do
+  begin
+    Width := CheckBoxSize;
+    Height := CheckBoxSize;
+    PixelFormat := pf8bit;
+    Canvas.Brush.Color := clWhite;
+    ARect.Top := 1;
+    ARect.Left := 1;
+    ARect.Right := Succ(CheckBoxSize);
+    ARect.Bottom := Succ(CheckBoxSize);
+    Canvas.FillRect(ARect);
+
+    Canvas.Pen.Color := clBlack;
+    Canvas.Ellipse(1, 1, Pred(CheckBoxSize), Pred(CheckBoxSize));
+  end;
+}
+
+  FBmpRadioChecked := GetRadioButtonBitmap(cbChecked, False, clWhite);
+
+(*  FBmpRadioChecked := TBitMap.Create;
+  with FBmpRadioChecked do
+  begin
+{
+    Assign(FBmpRadioUnChecked);
+    Canvas.Brush.Color := clBlack;
+    Canvas.Ellipse(3, 3, CheckBoxSize-3, CheckBoxSize-3);
+}
+    Canvas.Pen.Color := clBlack;
+    Canvas.Brush.Color := clBlack;
+    if not DrawFrameControl(Canvas.Handle, ARect, DFC_BUTTON,
+      DFCS_BUTTONRADIO or DFCS_CHECKED)  then
+    begin
+      Beep;
+    end;
+  end;
+  *)
+
+  FBmpRadioGrayed := TBitMap.Create;
+  with FBmpRadioGrayed  do
+  begin
+    Assign(FBmpRadioUnChecked);
+    Canvas.Pen.Color := clDkGray;
+    Canvas.Brush.Color := clDkGray;
+    Canvas.Ellipse(3, 3, CheckBoxSize-3, CheckBoxSize-3);
+  end;
+
+  FBmpDisabledRadioUnChecked := TBitMap.Create;
+  with FBmpDisabledRadioUnChecked do
+  begin
+    Width := CheckBoxSize;
+    Height := CheckBoxSize;
+    PixelFormat := pf8bit;
+    Canvas.Brush.Color := clWhite;
+    ARect.Top := 1;
+    ARect.Left := 1;
+    ARect.Right := Succ(CheckBoxSize);
+    ARect.Bottom := Succ(CheckBoxSize);
+    Canvas.FillRect(ARect);
+
+    Canvas.Pen.Color := $D0D0D0;
+    Canvas.Ellipse(1, 1, Pred(CheckBoxSize), Pred(CheckBoxSize));
+  end;
+
+  FBmpDisabledRadioChecked := TBitMap.Create;
+  with FBmpDisabledRadioChecked do
+  begin
+    Assign(FBmpDisabledRadioUnChecked);
+    Canvas.Brush.Color := $D0D0D0;
+    Canvas.Ellipse(3, 3, CheckBoxSize-3, CheckBoxSize-3);
+  end;
+
+  FBmpDisabledRadioGrayed := TBitMap.Create;
+  with FBmpDisabledRadioGrayed do
+  begin
+    Assign(FBmpDisabledRadioUnChecked);
+    Canvas.Pen.Color := $D0D0D0;
+    Canvas.Brush.Color := clDkGray;
+    Canvas.Ellipse(3, 3, CheckBoxSize-3, CheckBoxSize-3);
+  end;
+
 end;
 
 initialization
@@ -5208,4 +5561,12 @@ finalization
   FBmpDisabledChecked.Free;
   FBmpDisabledGrayed.Free;
 
+  FBmpRadioUnChecked.Free;
+  FBmpRadioChecked.Free;
+  FBmpRadioGrayed.Free;
+  FBmpDisabledRadioUnChecked.Free;
+  FBmpDisabledRadioChecked.Free;
+  FBmpDisabledRadioGrayed.Free;
+
 end.
+

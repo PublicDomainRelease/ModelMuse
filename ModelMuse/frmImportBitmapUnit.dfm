@@ -27,8 +27,6 @@ inherited frmImportBitmap: TfrmImportBitmap
     Align = alBottom
     ParentColor = True
     TabOrder = 2
-    ExplicitTop = 428
-    ExplicitWidth = 784
     DesignSize = (
       782
       128)
@@ -326,6 +324,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -348,6 +347,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -370,6 +370,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -392,6 +393,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -414,10 +416,11 @@ inherited frmImportBitmap: TfrmImportBitmap
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end>
     OnEndUpdate = dgPointsEndUpdate
-    ExplicitHeight = 428
+    WordWrapRowCaptions = False
   end
   object ScrollBox1: TScrollBox
     Left = 372
@@ -426,8 +429,6 @@ inherited frmImportBitmap: TfrmImportBitmap
     Height = 421
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 412
-    ExplicitHeight = 428
     object ZoomBox: TQRbwZoomBox2
       Left = 0
       Top = 0

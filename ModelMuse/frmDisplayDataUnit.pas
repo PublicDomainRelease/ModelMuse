@@ -162,23 +162,6 @@ begin
   HeadObsSelected := ModflowSelected and LocalModel.HobIsSelected;
   VectorSelected := LocalModel.ModelSelection = msSutra22;
 
-//  if tvpglstMain.Items.Count = 0 then
-//  begin
-//    Node := tvpglstMain.Items.Add(nil, 'Color Grid');
-//    TJvPageIndexNode(Node).PageIndex := 5;
-//    Node := tvpglstMain.Items.Add(Node, 'Contour Data');
-//    TJvPageIndexNode(Node).PageIndex := 6;
-//    Node := tvpglstMain.Items.Add(Node, 'MODPATH Pathlines');
-//    TJvPageIndexNode(Node).PageIndex := 0;
-//    Node := tvpglstMain.Items.Add(Node, 'MODPATH EndPoints');
-//    TJvPageIndexNode(Node).PageIndex := 4;
-//    Node := tvpglstMain.Items.Add(Node, 'MODPATH Time Series');
-//    TJvPageIndexNode(Node).PageIndex := 3;
-//    Node := tvpglstMain.Items.Add(Node, 'Head Observation Results');
-//    TJvPageIndexNode(Node).PageIndex := 2;
-//    Node := tvpglstMain.Items.Add(Node, 'Stream Links');
-//    TJvPageIndexNode(Node).PageIndex := 1;
-//  end;
   if Ord(High(TPostPages)) <> tvpglstMain.Items.Count-1 then
   begin
     Beep;
@@ -320,6 +303,10 @@ begin
   else
   begin
     tvpglstMain.Canvas.Font.Color := clBtnShadow;
+  end;
+  if Node.Selected and not Sender.Focused then
+  begin
+    Sender.Canvas.Brush.Color := clMenuHighlight;
   end;
 end;
 

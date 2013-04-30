@@ -4,9 +4,9 @@ inherited frmSutraOptions: TfrmSutraOptions
   Caption = 'SUTRA Options'
   ClientHeight = 443
   ClientWidth = 777
-  ExplicitWidth = 793
-  ExplicitHeight = 481
-  PixelsPerInch = 96
+  ExplicitWidth = 795
+  ExplicitHeight = 488
+  PixelsPerInch = 120
   TextHeight = 18
   object splttrVertical: TJvNetscapeSplitter
     Left = 179
@@ -237,12 +237,14 @@ inherited frmSutraOptions: TfrmSutraOptions
           AlignWithMargins = True
           Left = 4
           Top = 4
-          Width = 458
-          Height = 36
+          Width = 580
+          Height = 41
           Align = alClient
           Caption = 
             'The first 80 characters of the first two lines are TITLE1 and TI' +
             'TLE2.'#13#10'The remaining lines will be treated as comments.'
+          ExplicitWidth = 458
+          ExplicitHeight = 36
         end
       end
     end
@@ -1073,6 +1075,7 @@ inherited frmSutraOptions: TfrmSutraOptions
     HideSelection = False
     Indent = 19
     TabOrder = 0
+    OnCustomDrawItem = jvpltvNavigationCustomDrawItem
     Items.NodeData = {
       0303000000380000000000000000000000FFFFFFFFFFFFFFFF00000000000000
       0000000000010D43006F006E00660069006700750072006100740069006F006E

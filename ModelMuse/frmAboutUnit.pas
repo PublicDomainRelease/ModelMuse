@@ -49,8 +49,9 @@ type
     dgCredit: TRbwDataGrid4;
     JvHTLabel1: TJvHTLabel;
     reReference: TRichEdit;
-    JvHTLabel2: TJvHTLabel;
+    htlblVersion2: TJvHTLabel;
     btnGoToWeb: TBitBtn;
+    htlblVersion3: TJvHTLabel;
     // @name initialized the data in @link(dgCredit) as well as
     // @link(lblFileVersion) and @link(lblVersion).
     procedure FormCreate(Sender: TObject); override;
@@ -62,6 +63,7 @@ type
     // is currently open.
     procedure ImageLogoDblClick(Sender: TObject);
     procedure btnGoToWebClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
   public
@@ -83,6 +85,12 @@ begin
   inherited;
   frmAbout := nil;
   Release
+end;
+
+procedure TfrmAbout.FormShow(Sender: TObject);
+begin
+  inherited;
+  reReference.CaretPos := Point(0,0);
 end;
 
 procedure TfrmAbout.btnGoToWebClick(Sender: TObject);
@@ -499,8 +507,14 @@ begin
     Inc(Row);
     Assert(Row < dgCredit.RowCount);
     dgCredit.Cells[0, Row] := 'CuthillMcKeeRenumbering.pas';
-    dgCredit.Cells[1, Row] := 'Ciprian Zavoianu ';
+    dgCredit.Cells[1, Row] := 'Ciprian Zavoianu';
     dgCredit.Cells[2, Row] := 'http://ciprian-zavoianu.blogspot.com/2009/01/project-bandwidth-reduction_18.html';
+
+    Inc(Row);
+    Assert(Row < dgCredit.RowCount);
+    dgCredit.Cells[0, Row] := 'TMMJLabel, MMJLabel.pas';
+    dgCredit.Cells[1, Row] := 'Mihaela Mihaljevic Jakic';
+    dgCredit.Cells[2, Row] := 'mickj@hi.hinet.hr';
 
     Assert(Row = dgCredit.RowCount-1);
   finally

@@ -4,7 +4,7 @@ interface
 
 uses
 ModflowBoundaryUnit, FormulaManagerUnit, Classes,
-  OrderedCollectionUnit, SysUtils, GoPhastTypes;
+  OrderedCollectionUnit, SysUtils, GoPhastTypes, RealListUnit;
 
 type
   TCustomFarmItem = class(TCustomModflowBoundaryItem)
@@ -32,6 +32,10 @@ type
   TCustomFarmCollection = class(TCustomNonSpatialBoundColl)
   public
     constructor Create(Model: TBaseModel); reintroduce;
+    function ItemByStartTime(ATime: Double): TCustomBoundaryItem;
+    procedure UpdateTimes(Times: TRealList;
+      StartTestTime, EndTestTime: double;
+      var StartRangeExtended, EndRangeExtended: boolean);
   end;
 
   TDefineGlobalObject = class(TObject)
@@ -161,6 +165,67 @@ end;
 constructor TCustomFarmCollection.Create(Model: TBaseModel);
 begin
   inherited Create(nil, Model, nil);
+end;
+
+function TCustomFarmCollection.ItemByStartTime(
+  ATime: Double): TCustomBoundaryItem;
+var
+  TimeIndex: Integer;
+  AnItem: TCustomBoundaryItem;
+begin
+  result := nil;
+  for TimeIndex := 0 to Count - 1 do
+  begin
+    AnItem := Items[TimeIndex];
+    if AnItem.StartTime <= ATime then
+    begin
+      result := AnItem;
+      Break;
+    end;
+  end;
+end;
+
+procedure TCustomFarmCollection.UpdateTimes(Times: TRealList;
+  StartTestTime, EndTestTime: double; var StartRangeExtended,
+  EndRangeExtended: boolean);
+var
+  BoundaryIndex: Integer;
+  Boundary: TCustomModflowBoundaryItem;
+  CosestIndex: Integer;
+  ExistingTime: Double;
+  SP_Epsilon: Extended;
+begin
+  SP_Epsilon := (Model as TCustomModel).SP_Epsilon;
+  for BoundaryIndex := 0 to Count - 1 do
+  begin
+    Boundary := Items[BoundaryIndex] as TCustomModflowBoundaryItem;
+    CosestIndex := Times.IndexOfClosest(Boundary.StartTime);
+    if CosestIndex >= 0 then
+    begin
+      ExistingTime := Times[CosestIndex];
+      if Abs(ExistingTime-Boundary.StartTime) >  SP_Epsilon then
+      begin
+        Times.AddUnique(Boundary.StartTime);
+      end;
+    end;
+    CosestIndex := Times.IndexOfClosest(Boundary.EndTime);
+    if CosestIndex >= 0 then
+    begin
+      ExistingTime := Times[CosestIndex];
+      if Abs(ExistingTime-Boundary.EndTime) >  SP_Epsilon then
+      begin
+        Times.AddUnique(Boundary.EndTime);
+      end;
+    end;
+    if (Boundary.StartTime < StartTestTime-SP_Epsilon) then
+    begin
+      StartRangeExtended := True;
+    end;
+    if (Boundary.EndTime > EndTestTime+SP_Epsilon) then
+    begin
+      EndRangeExtended := True;
+    end;
+  end;
 end;
 
 { TDefineGlobalObject }

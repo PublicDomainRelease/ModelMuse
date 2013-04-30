@@ -58,6 +58,9 @@ type
     lbledtTrackingTime: TLabeledEdit;
     rdgEndPoints: TRbwDataGrid4;
     spl1: TSplitter;
+    pnlPathLength: TPanel;
+    lblLength: TLabel;
+    edLength: TEdit;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject); override;
     procedure edCellValueKeyUp(Sender: TObject; var Key: Word;
@@ -253,7 +256,9 @@ begin
   FDataSetDummyObjects := TObjectList.Create;
 
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}, msSutra22:
+    msPhast, msModflow, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp, msSutra22:
       begin
         comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel)
       end;
@@ -622,7 +627,9 @@ var
     MaxCount := 0;
     VarLabel := '';
     case frmGoPhast.ModelSelection of
-      msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+      msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+        {$IFDEF FMP}, msModflowFmp {$ENDIF}
+        , msModflowCfp:
         begin
           Grid := frmGoPhast.Grid;
 
@@ -1083,7 +1090,9 @@ var
 begin
   result := False;
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         Grid := frmGoPhast.Grid;
         result := (Grid <> nil) and (Grid.LayerCount >= 1)
@@ -1456,6 +1465,7 @@ begin
     if DisplayPoint then
     begin
       PathLine := PathLinePoint.ParentLine;
+      edLength.Text := FloatToStr(PathLine.Length);
       FirstPoint :=PathLine.Points[0];
       LastPoint :=PathLine.Points[PathLine.Points.Count -1];
       List := TList.Create;

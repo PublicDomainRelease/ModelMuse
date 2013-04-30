@@ -924,7 +924,8 @@ begin
         comboOrientation.Items[2].Brush.Color := clWhite;
       end;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF} , msSutra22:
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp, msSutra22:
       begin
         comboOrientation.Items[1].Brush.Color := clBtnFace;
         comboOrientation.Items[2].Brush.Color := clBtnFace;
@@ -1021,6 +1022,10 @@ begin
     for Index := 0 to DataArrayManager.DataSetCount - 1 do
     begin
       DataArray := DataArrayManager.DataSets[Index];
+      if not DataArray.Visible then
+      begin
+        continue;
+      end;
       DataArrayEdit:= TDataArrayEdit.Create(DataArray);
       FArrayEdits.Add(DataArrayEdit);
       CreateVariable(DataArrayEdit);
@@ -1263,7 +1268,8 @@ begin
           TDataSetOrientation(comboOrientation.ItemIndex);
       end;
     msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
-      {$IFDEF FMP}, msModflowFmp {$ENDIF} , msSutra22:
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp, msSutra22:
       begin
         case comboOrientation.ItemIndex of
           0,3:

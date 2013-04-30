@@ -106,7 +106,6 @@ begin
     ErrorValues.Add('CODE STOPPING');
     ErrorValues.Add('SEGMENT NUMBER (NSEG) OUT OF RANGE:');
     ErrorValues.Add('Blank instance name');
-    ErrorValues.Add('file specifies undefined instance');
     ErrorValues.Add('GREATER THAN MXACTS');
     ErrorValues.Add('SUBSIDENCE CANNOT BE USED');
     ErrorValues.Add('STOPPING');
@@ -298,6 +297,38 @@ begin
     ErrorValues.Add('SWR STAGE FILE NOT');
     ErrorValues.Add('NO DATA READ FROM SPECIFIED SWR1 STAGE FILE');
 
+    // FMP
+    ErrorValues.Add('INPUT-ERROR:');
+    ErrorValues.Add('CROP CONSUMPTIVE USE FLAG MUST BE 1,2,3,OR 4!');
+    ErrorValues.Add('NON-ROUTED SW-DELIVERY FLAG MUST BE 0 OR 1!');
+    ErrorValues.Add('IRDFL MUST BE -1, 0, OR 1!');
+    ErrorValues.Add('NOT A VALID ENTRY IF SFR PACKAGE IS USED');
+    ErrorValues.Add('ROUTED SW-DELIVERY FLAG MUST BE -1 OR 1!');
+    ErrorValues.Add('SOIL-ID CANNOT BE ZERO IN CELLS THAT HOLD A NON-ZERO FARM-ID:');
+    ErrorValues.Add('INPUT ERROR:');
+    ErrorValues.Add('YOU HAVE TWO OPTIONS TO CORRECT THE ERROR:');
+    ErrorValues.Add('FRACTION OF INEFFICIENT LOSSES TO SURFACEWATER RUNOFF');
+    ErrorValues.Add('THE SCALE FACTOR DOES NOT APPLY TO ANY FIELD');
+    ErrorValues.Add('NUMBER OF CONSTRAINTS NOT EQUAL TO LHS<=RHS + LHS>=RHS + LHS=RHS');
+    ErrorValues.Add('BAD INPUT TABLEAU IN LINOPT');
+    ErrorValues.Add('ROOT MUST BE BRACKETED IN RTFUNC');
+    ErrorValues.Add('TOO MANY BISECTIONS WHEN SOLVING ANALTYICAL FUNCTION');
+    ErrorValues.Add('IS GREATER THAN MXACTFW');
+    ErrorValues.Add('CANNOT BE COMBINED WITH IALLOT>1');
+    ErrorValues.Add('MUST HAVE A NEGATIVE FARM-WELL ID');
+    ErrorValues.Add('Blank instance name in the');
+    ErrorValues.Add('HAS ALREADY BEEN ACTIVATED THIS STRESS PERIOD');
+//    ErrorValues.Add('aaa');
+//    ErrorValues.Add('aaa');
+//    ErrorValues.Add('aaa');
+//    ErrorValues.Add('aaa');
+//    ErrorValues.Add('aaa');
+//    ErrorValues.Add('aaa');
+//    ErrorValues.Add('aaa');
+//    ErrorValues.Add('aaa');
+//    ErrorValues.Add('aaa');
+//    ErrorValues.Add('aaa');
+
 
 //    WarningValues.Add('**WARNING**');
 //    WarningValues.Add('*** WARNING ***');
@@ -425,7 +456,24 @@ begin
     WarningValues.Add('UNRECOGNIZED SWR1 OPTION:');
     WarningValues.Add('*** MODFLOW CONVERGENCE FAILURE ***');
 
+//    FMP
+    WarningValues.Add('CORRECTION FOR');
+    WarningValues.Add('SOLVER CONTINUES TO ITERATE WITH ADJUSTED');
+    WarningValues.Add('HCLOSE MUST BE SMALLER');
+    WarningValues.Add('RESOURCES THAT ARE AVAILABLE AT THE RATE OF A CONSTRAINED SUPPLY');
+    WarningValues.Add('GROUNDWATER PUMPING REQ.  < CUMULATIVE MAXIMUM CAPACITY');
+    WarningValues.Add('ROUTED SURFACE-WATER REQ. < AVAILABLE ROUTED SW DELIVERY');
+    WarningValues.Add('NON-ROUTED SW. REQ.       < AVAILABLE NON-ROUTED SW DELIVERY');
+    WarningValues.Add('NO ACTIVE FARM CANAL REACHES ARE WITHIN');
+    WarningValues.Add('NO POINT OF DIVERSION FOR SEMI-ROUTED DELIVERY SPECIFIED:');
+    WarningValues.Add('NO ACTIVE FARM DRAIN REACHES ARE WITHIN');
+    WarningValues.Add('NO POINT OF RECHARGE FOR SEMI-ROUTED RETURNFLOW SPECIFIED:');
+//    WarningValues.Add('aaa');
 
+//    WarningValues.Add('aaa');
+//    WarningValues.Add('aaa');
+//    WarningValues.Add('aaa');
+//    WarningValues.Add('aaa');
 end;
 
 initialization

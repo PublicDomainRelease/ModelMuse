@@ -129,6 +129,8 @@ type
     procedure rgInitialValuesClick(Sender: TObject);
     procedure fedRestartFileChange(Sender: TObject);
     procedure fedRestartInitialConditionsChange(Sender: TObject);
+    procedure jvpltvNavigationCustomDrawItem(Sender: TCustomTreeView;
+      Node: TTreeNode; State: TCustomDrawState; var DefaultDraw: Boolean);
   private
     FGettingData: Boolean;
     procedure GetData;
@@ -421,6 +423,17 @@ begin
   inherited;
   HelpKeyWord := jplMain.ActivePage.HelpKeyword;
 
+end;
+
+procedure TfrmSutraOptions.jvpltvNavigationCustomDrawItem(
+  Sender: TCustomTreeView; Node: TTreeNode; State: TCustomDrawState;
+  var DefaultDraw: Boolean);
+begin
+  inherited;
+  if Node.Selected and not Sender.Focused then
+  begin
+    Sender.Canvas.Brush.Color := clMenuHighlight;
+  end;
 end;
 
 procedure TfrmSutraOptions.rdeFractionalUpstreamWeightChange(Sender: TObject);

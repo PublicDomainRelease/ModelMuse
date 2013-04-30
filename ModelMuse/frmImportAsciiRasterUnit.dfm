@@ -3,7 +3,7 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
   HelpKeyword = 'Import_ASCII_Raster_File'
   Caption = 'Import ASCII Raster File'
   ExplicitWidth = 660
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   inherited lblDataSet: TLabel
     Top = 13
@@ -15,11 +15,11 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
   end
   inherited comboDataSets: TComboBox
     Top = 37
-    Width = 558
+    Width = 542
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 1
     ExplicitTop = 37
-    ExplicitWidth = 558
+    ExplicitWidth = 542
   end
   inherited comboInterpolators: TComboBox
     Top = 91
@@ -76,7 +76,7 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
   object rgFilterMethod: TRadioGroup [11]
     Left = 360
     Top = 84
-    Width = 206
+    Width = 190
     Height = 140
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Filter method'
@@ -132,6 +132,7 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = False
       end
       item
@@ -155,6 +156,7 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -178,8 +180,10 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end>
+    WordWrapRowCaptions = False
   end
   object comboModel: TComboBox [13]
     Left = 8

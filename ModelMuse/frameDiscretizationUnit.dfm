@@ -10,15 +10,15 @@ object frameDiscretization: TframeDiscretization
   object lbl1: TLabel
     Left = 8
     Top = 8
-    Width = 101
-    Height = 13
+    Width = 122
+    Height = 16
     Caption = 'Vertical discretization'
   end
   object lbl2: TLabel
     Left = 8
     Top = 59
-    Width = 93
-    Height = 13
+    Width = 114
+    Height = 16
     Caption = 'Layer size multiplier'
   end
   object pnlDiscritization: TPanel
@@ -83,9 +83,11 @@ object frameDiscretization: TframeDiscretization
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end>
       OnEndUpdate = rdgSubLayerBoundariesEndUpdate
+      WordWrapRowCaptions = False
     end
     object pnl1: TPanel
       Left = 0
@@ -98,15 +100,13 @@ object frameDiscretization: TframeDiscretization
       object lbl3: TLabel
         Left = 0
         Top = 0
-        Width = 185
-        Height = 41
+        Width = 183
+        Height = 16
         Align = alClient
         Alignment = taCenter
         Caption = 'Discretization within layer group'
         Layout = tlCenter
         WordWrap = True
-        ExplicitWidth = 153
-        ExplicitHeight = 13
       end
     end
     object pnlPaintboxParent: TPanel

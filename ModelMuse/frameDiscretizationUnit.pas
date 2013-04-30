@@ -387,15 +387,18 @@ var
   NewDiscretization: Integer;
 begin
   inherited;
-  if rdgSubLayerBoundaries.Enabled then
+  if rdeVDiscretization <> nil then
   begin
-    NewDiscretization := rdgSubLayerBoundaries.RowCount;
-  end
-  else
-  begin
-    NewDiscretization := 1
+    if rdgSubLayerBoundaries.Enabled then
+    begin
+      NewDiscretization := rdgSubLayerBoundaries.RowCount;
+    end
+    else
+    begin
+      NewDiscretization := 1
+    end;
+    rdeVDiscretization.Text := IntToStr(NewDiscretization);
   end;
-  rdeVDiscretization.Text := IntToStr(NewDiscretization);
 end;
 
 procedure TframeDiscretization.rdgSubLayerBoundariesExit(Sender: TObject);

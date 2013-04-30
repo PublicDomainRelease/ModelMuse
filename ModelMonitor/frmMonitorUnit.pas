@@ -1520,6 +1520,14 @@ var
 begin
   IsError := False;
   IsWarning := False;
+  if Pos('BUDGET ERROR:', ALine) > 0 then
+  begin
+    Exit;
+  end;
+  if Pos('NO WARNINGS', ALine) > 0 then
+  begin
+    Exit;
+  end;
   AnisLine := AnsiString(ALine);
   Key := PAnsiChar(AnisLine);
   while Key^ <> AnsiChar(0) do

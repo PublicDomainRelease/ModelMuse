@@ -40,7 +40,7 @@ uses
   frameMt3dmsDispersionPkgUnit, Mt3dmsChemSpeciesUnit,
   frameMt3dmsChemReactionPkgUnit, frameMt3dmsTransObsPkgUnit, Mt3dmsTimesUnit,
   framePackagePcgnUnit, framePackageWellUnit, framePackageStrUnit,
-  framePackageFrmUnit;
+  framePackageFrmUnit, frameRadioGridUnit, framePackageCFPUnit;
 
 type
 
@@ -203,9 +203,10 @@ type
     jvspFHB: TJvStandardPage;
     framePkgFHB: TframePackage;
     jvspFMP: TJvStandardPage;
-    framePkgFrm: TframePkgFarm;
     frameFmpParameterDefinition: TframeListParameterDefinition;
-    jvntscpspltr1: TJvNetscapeSplitter;
+    framePkgFrm: TframePkgFarm;
+    jvspCFP: TJvStandardPage;
+    framePkgCFP: TframePackageCFP;
     procedure tvPackagesChange(Sender: TObject; Node: TTreeNode);
     procedure btnOKClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject); override;
@@ -242,6 +243,14 @@ type
     procedure FormShow(Sender: TObject);
     procedure framePkgNwtpcNWTChange(Sender: TObject);
     procedure framePkgNwtrcSelectionControllerEnabledChange(Sender: TObject);
+    procedure framePkgFrmrcSelectionControllerEnabledChange(Sender: TObject);
+    procedure tvPackagesCustomDrawItem(Sender: TCustomTreeView; Node: TTreeNode;
+      State: TCustomDrawState; var DefaultDraw: Boolean);
+    procedure frameCropConsumptiveUserdgGridSelectCell(Sender: TObject; ACol,
+      ARow: Integer; var CanSelect: Boolean);
+    procedure framePkgFrmjvplFarmChange(Sender: TObject);
+    procedure framePkgCFPrcSelectionControllerEnabledChange(Sender: TObject);
+    procedure framePkgCFPcbPipesClick(Sender: TObject);
   private
     IsLoaded: boolean;
     CurrentParameterType: TParameterType;
@@ -299,6 +308,8 @@ type
     procedure EnableLpfParameterControls;
     procedure Mt3dmsBasicSelectedChange(Sender: TObject);
     procedure CheckMt3dChemSpeciesDefined;
+    procedure EnableFarmPrintRouting;
+    procedure EnableConduitRecharge;
     { Private declarations }
   public
     procedure GetData;
@@ -401,6 +412,7 @@ resourcestring
   StrYouWillNeedToRun = 'You will need to run MODFLOW again one time before ' +
   'running MODPATH.';
   StrFarmProcess = 'Farm Process';
+  StrConduitFlowProcess = 'Conduit Flow Process';
 
 {$R *.dfm}
 
@@ -782,10 +794,26 @@ begin
 
 {$IFDEF FMP}
   if (frmGoPhast.ModelSelection = msModflowFmp)
-    and frmGoPhast.PhastModel.ModflowPackages.FarmProcess.IsSelected
-    and (frmGoPhast.PhastModel.FmpCrops.Count = 0) then
+    and frmGoPhast.PhastModel.ModflowPackages.FarmProcess.IsSelected then
   begin
-    frmGoPhast.acFarmCropsExecute(nil)
+    if (frmGoPhast.PhastModel.FmpCrops.Count = 0) then
+    begin
+      frmGoPhast.acFarmCropsExecute(nil);
+    end;
+    if (frmGoPhast.PhastModel.FmpSoils.Count = 0) then
+    begin
+      frmGoPhast.acFarmSoilsExecute(nil);
+    end;
+    if frmGoPhast.acFarmClimate.Enabled
+      and (frmGoPhast.PhastModel.FmpClimate.Count = 0) then
+    begin
+      frmGoPhast.acFarmClimateExecute(nil);
+    end;
+    if frmGoPhast.acFarmAllotment.Enabled
+      and (frmGoPhast.PhastModel.FmpAllotment.Count = 0) then
+    begin
+      frmGoPhast.acFarmAllotmentExecute(nil);
+    end;
   end;
 {$ENDIF}
 
@@ -894,11 +922,40 @@ begin
   EnableUzfVerticalKSource;
 end;
 
+procedure TfrmModflowPackages.framePkgCFPcbPipesClick(Sender: TObject);
+begin
+  inherited;
+  framePkgCFP.cbPipesClick(Sender);
+  EnableConduitRecharge;
+end;
+
+procedure TfrmModflowPackages.framePkgCFPrcSelectionControllerEnabledChange(
+  Sender: TObject);
+begin
+  inherited;
+  framePkgCFP.rcSelectionControllerEnabledChange(Sender);
+  EnableConduitRecharge;
+end;
+
 procedure TfrmModflowPackages.framePkgEVTrcSelectionControllerEnabledChange(
   Sender: TObject);
 begin
   inherited;
   EnableEvtModpathOption;
+end;
+
+procedure TfrmModflowPackages.framePkgFrmjvplFarmChange(Sender: TObject);
+begin
+  inherited;
+  HelpKeyword := framePkgFrm.jvplFarm.ActivePage.HelpKeyword;
+end;
+
+procedure TfrmModflowPackages.framePkgFrmrcSelectionControllerEnabledChange(
+  Sender: TObject);
+begin
+  inherited;
+  framePkgFrm.rcSelectionControllerEnabledChange(Sender);
+  EnableFarmPrintRouting;
 end;
 
 procedure TfrmModflowPackages.framePkgHufrcSelectionControllerEnabledChange(
@@ -1023,7 +1080,7 @@ begin
       framePcg.Selected := True;
     end;
   end;
-       
+
 end;
 
 procedure TfrmModflowPackages.framePkgRCHrcSelectionControllerEnabledChange(
@@ -1031,6 +1088,7 @@ procedure TfrmModflowPackages.framePkgRCHrcSelectionControllerEnabledChange(
 begin
   inherited;
   EnableRchModpathOption;
+  EnableConduitRecharge;
 end;
 
 procedure TfrmModflowPackages.EnableSfrParameters;
@@ -1091,6 +1149,7 @@ begin
   inherited;
   framePkgSFR.rcSelectionControllerEnabledChange(Sender);
   EnableSfrParameters;
+  EnableFarmPrintRouting;
 end;
 
 procedure TfrmModflowPackages.framePkgSFRrgSfr2ISFROPTClick(Sender: TObject);
@@ -1260,6 +1319,16 @@ begin
   EnableLpfParameterControls;
 end;
 
+procedure TfrmModflowPackages.frameCropConsumptiveUserdgGridSelectCell(
+  Sender: TObject; ACol, ARow: Integer; var CanSelect: Boolean);
+begin
+  inherited;
+  if (ARow = 2) and not framePkgUZF.Selected then
+  begin
+    CanSelect := False;
+  end;
+end;
+
 procedure TfrmModflowPackages.frameModpathrcSelectionControllerEnabledChange(
   Sender: TObject);
 begin
@@ -1282,7 +1351,7 @@ begin
       begin
         FSteadyParameters.Remove(ActiveFrame.CurrentParameter);
       end;
-    ptCHD..ptDRT, ptSFR, ptRCH, ptEVT, ptETS, ptSTR, ptQMAX:
+    ptCHD..ptDRT, ptSFR, ptRCH, ptEVT, ptETS, ptSTR{$IFDEF FMP}, ptQMAX {$ENDIF}:
       begin
         FTransientListParameters.Remove(ActiveFrame.CurrentParameter);
       end;
@@ -1352,7 +1421,7 @@ begin
         begin
           Parameter := FSteadyParameters.Add as TModflowParameter;
         end;
-      ptCHD..ptSFR, ptRCH, ptEVT, ptETS, ptSTR, ptQMAX:
+      ptCHD..ptSFR, ptRCH, ptEVT, ptETS, ptSTR{$IFDEF FMP}, ptQMAX {$ENDIF}:
         begin
           Parameter := FTransientListParameters.Add as TModflowParameter;
         end;
@@ -1624,6 +1693,11 @@ begin
     AddNode(StrSubSidence, StrSubSidence, PriorNode);
     AddNode(StrObservations, StrObservations, PriorNode);
     AddNode(StrOutput, StrOutput, PriorNode);
+    if frmGoPhast.ModelSelection = msModflowCFP then
+    begin
+      AddNode(StrConduitFlowProcess, StrConduitFlowProcess, PriorNode);
+    end;
+
   {$IFDEF FMP}
     if frmGoPhast.ModelSelection = msModflowFMP then
     begin
@@ -1703,6 +1777,9 @@ end;
 
 procedure TfrmModflowPackages.GetData;
 begin
+  frameFmpParameterDefinition.Parent := framePkgFrm.jvspParameters;
+  frameFmpParameterDefinition.Align := alClient;
+
   IsLoaded := False;
   try
     StorePackages;
@@ -1771,6 +1848,21 @@ begin
     pnlModel.Visible := frmGoPhast.PhastModel.LgrUsed;
   finally
     IsLoaded := True;
+  end;
+end;
+
+procedure TfrmModflowPackages.EnableFarmPrintRouting;
+begin
+  framePkgFrm.frameRoutingInformationPrintFlag.Enabled :=
+    framePkgFrm.rcSelectionController.Enabled
+    and framePkgSFR.rcSelectionController.Enabled;
+  if framePkgFrm.frameRoutingInformationPrintFlag.Enabled then
+  begin
+    framePkgFrm.frameRoutingInformationPrintFlag.rdgGrid.Color := clWindow;
+  end
+  else
+  begin
+    framePkgFrm.frameRoutingInformationPrintFlag.rdgGrid.Color := clBtnFace;
   end;
 end;
 
@@ -1992,6 +2084,14 @@ begin
     and framePkgRCH.rcSelectionController.Enabled;
 end;
 
+procedure TfrmModflowPackages.EnableConduitRecharge;
+begin
+  framePkgCFP.cbConduitRecharge.Enabled :=
+    framePkgCFP.rcSelectionController.Enabled
+    and framePkgCFP.cbPipes.Checked
+    and framePkgRCH.rcSelectionController.Enabled;
+end;
+
 procedure TfrmModflowPackages.EnableEvtModpathOption;
 begin
   frameModpath.comboEvtSink.Enabled :=
@@ -2093,10 +2193,12 @@ begin
   begin
     CurrentParameterType := ptUndefined;
   end
+{$IFDEF FMP}
   else if jvplPackages.ActivePage = jvspFMP then
   begin
     CurrentParameterType := ptQMAX;
   end
+{$ENDIF}
   else
   begin
     CurrentParameterType := ptUndefined;
@@ -2188,7 +2290,9 @@ begin
     ptHUF_KDEP: Root := 'KDEP_Par';
     ptHUF_LVDA: Root := 'LVDA_Par';
     ptSTR: Root := 'STR_Par';
+  {$IFDEF FMP}
     ptQMAX: Root := 'QMAX_Par';
+  {$ENDIF}
     else Assert(False);
   end;
   UpRoot := UpperCase(Root);
@@ -2214,7 +2318,7 @@ begin
           end;
         end;
       end;
-    ptCHD..ptSFR, ptRCH, ptEVT, ptETS, ptSTR, ptQMAX:
+    ptCHD..ptSFR, ptRCH, ptEVT, ptETS, ptSTR{$IFDEF FMP}, ptQMAX {$ENDIF}:
       begin
         for Index := 0 to FTransientListParameters.Count - 1 do
         begin
@@ -2326,6 +2430,16 @@ begin
   end;
 end;
 
+procedure TfrmModflowPackages.tvPackagesCustomDrawItem(Sender: TCustomTreeView;
+  Node: TTreeNode; State: TCustomDrawState; var DefaultDraw: Boolean);
+begin
+  inherited;
+  if Node.Selected and not Sender.Focused then
+  begin
+    Sender.Canvas.Brush.Color := clMenuHighlight;
+  end;
+end;
+
 procedure TfrmModflowPackages.tvPackagesMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
@@ -2434,7 +2548,7 @@ begin
     case Param.ParameterType of
       ptLPF_HK, ptLPF_HANI, ptLPF_VK,
         ptLPF_VANI, ptLPF_SS, ptLPF_SY, ptLPF_VKCB, ptHUF_SYTP, ptHUF_LVDA,
-        ptSTR, ptQMAX: ;  // do nothing
+        ptSTR{$IFDEF FMP}, ptQMAX {$ENDIF}: ;  // do nothing
       ptHFB: ActiveFrame := frameHFBParameterDefinition;
       else Assert(False);
     end;
@@ -2488,7 +2602,9 @@ begin
       ptETS: ActiveFrame := frameEtsParameterDefinition;
       ptSFR: ActiveFrame := frameSfrParameterDefinition;
       ptSTR: ActiveFrame := frameStrParameterDefinition;
+    {$IFDEF FMP}
       ptQMAX: ActiveFrame := frameFmpParameterDefinition;
+    {$ENDIF}
       else Assert(False);
     end;
     ActiveGrid := ActiveFrame.dgParameters;
@@ -2656,6 +2772,12 @@ begin
     FPackageList.Add(Packages.FarmProcess);
   end;
 {$ENDIF}
+
+  if frmGoPhast.ModelSelection = msModflowCFP then
+  begin
+    Packages.ConduitFlowProcess.Frame := framePkgCFP;
+    FPackageList.Add(Packages.ConduitFlowProcess);
+  end;
 end;
 
 procedure TfrmModflowPackages.tvHufParameterTypesChange(Sender: TObject;
@@ -2864,6 +2986,7 @@ begin
   frmGoPhast.EnableManageHeadObservations;
   frmGoPhast.EnableHufMenuItems;
   frmGoPhast.EnableMt3dmsMenuItems;
+  frmGoPhast.EnableFarmMenuItems;
   if Mt3dmsNewlySelected then
   begin
     Beep;
@@ -2934,6 +3057,7 @@ begin
   frmGoPhast.EnableMt3dmsMenuItems;
   frmGoPhast.EnableManageFlowObservations;
   frmGoPhast.EnableManageHeadObservations;
+  frmGoPhast.EnableFarmMenuItems;
 end;
 
 procedure TUndoChangeLgrPackageSelection.UpdateLayerGroupProperties(

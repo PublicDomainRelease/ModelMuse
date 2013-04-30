@@ -100,7 +100,7 @@ type
     ptCHD, ptGHB, ptQ,
     ptRIV, ptDRN, ptDRT, ptSFR, ptHFB,
     ptHUF_HK, ptHUF_HANI, ptHUF_VK, ptHUF_VANI, ptHUF_SS, ptHUF_SY,
-    ptHUF_SYTP, ptHUF_KDEP, ptHUF_LVDA, ptSTR, ptQMAX);
+    ptHUF_SYTP, ptHUF_KDEP, ptHUF_LVDA, ptSTR {$IFDEF FMP}, ptQMAX {$ENDIF});
 
   // @name is used to indicate groups of related MODFLOW parameters.
   TParameterTypes = set of TParameterType;
@@ -307,7 +307,9 @@ begin
     ptHUF_SYTP: result := 'SYTP' ;
     ptHUF_LVDA: result := 'LVDA' ;
     ptSTR: result := 'STR' ;
+  {$IFDEF FMP}
     ptQMAX: result := 'QMAX' ;
+  {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -680,7 +682,9 @@ begin
       end;
     ptHUF_LVDA: ;
     ptSTR: ;
+  {$IFDEF FMP}
     ptQMAX: ;
+  {$ENDIF}
     else Assert(False);
   end;
 end;
@@ -983,10 +987,24 @@ begin
               end;
             end;
           end;
+      {$IFDEF FMP}
         ptQMAX:
           begin
-            { TODO -cFMP : This needs to be finished }
+            for ObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+            begin
+              ScreenObject := PhastModel.ScreenObjects[ObjectIndex];
+              if ScreenObject.ModflowFmpWellBoundary <> nil then
+              begin
+                Position := ScreenObject.ModflowFmpWellBoundary.Parameters.
+                  IndexOfParam(self as TModflowTransientListParameter);
+                if Position >= 0 then
+                begin
+                  ScreenObject.ModflowFmpWellBoundary.Parameters.Delete(Position);
+                end;
+              end;
+            end;
           end;
+      {$ENDIF}
         else Assert(False);
       end;
     end;

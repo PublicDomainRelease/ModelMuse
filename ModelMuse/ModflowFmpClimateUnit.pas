@@ -316,8 +316,6 @@ begin
     end;
   end;
   ErrorMessage := Format(IDError, [StartTime]);
-//  ErrorMessage := 'Object = ' + ScreenObjectName
-//    + '; Time = ' + FloatToStr(StartTime);
   frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
     StrIncompleteClimateD, ErrorMessage);
 end;

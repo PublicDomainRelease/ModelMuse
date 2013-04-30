@@ -66,6 +66,7 @@ type
     btnSaveMultipleImages: TBitBtn;
     rdgDataSets: TRbwDataGrid4;
     vstDataSets: TVirtualStringTree;
+    cbHeadObsLegend: TCheckBox;
     procedure FormCreate(Sender: TObject); override;
     procedure seImageHeightChange(Sender: TObject);
     procedure seImageWidthChange(Sender: TObject);
@@ -111,6 +112,7 @@ type
     procedure cpAnimationExpand(Sender: TObject);
     procedure cpViewExpand(Sender: TObject);
     procedure cpTextExpand(Sender: TObject);
+    procedure cbHeadObsLegendClick(Sender: TObject);
   private
     FShouldDraw: Boolean;
     FTextItems: TList;
@@ -144,6 +146,8 @@ type
       out ContourRect: TRect);
     function CanColorDataSet(DataArray: TDataArray): boolean;
     procedure GetDataSets;
+    procedure DrawHeadObsLegend(ACanvas: TCanvas; var LegendY: Integer;
+      out HeadObsRect: TRect);
     property SelectedItem: TDrawItem read FSelectedItem write SetSelectedItem;
     procedure SelectItemToDrag(X: Integer; Y: Integer);
     function DragItem(X, Y: Integer): Boolean;
@@ -199,7 +203,7 @@ uses
   UndoItems, frmManageSettingsUnit,
   UndoItemsScreenObjects, ClassificationUnit, frmProgressUnit,
   frmErrorsAndWarningsUnit, Clipbrd, RbwParser, frmDisplayDataUnit,
-  SutraMeshUnit, pngimage, jpeg, VectorDisplayUnit;
+  SutraMeshUnit, pngimage, jpeg, VectorDisplayUnit, ModflowHeadObsResults;
 
 resourcestring
   StrProgress = 'Progress';
@@ -635,6 +639,13 @@ begin
 end;
 
 procedure TfrmExportImage.cbContourLegendClick(Sender: TObject);
+begin
+  inherited;
+  DrawImage;
+  FQuerySaveSettings := True;
+end;
+
+procedure TfrmExportImage.cbHeadObsLegendClick(Sender: TObject);
 begin
   inherited;
   DrawImage;
@@ -1531,6 +1542,7 @@ var
   LegendY: Integer;
   ColorRect: TRect;
   ContourRect: TRect;
+  HeadObsRect: TRect;
   StartRight: integer;
 begin
   ACanvas.Font := Font;
@@ -1538,8 +1550,11 @@ begin
   DrawColorLegend(ACanvas, LegendY, ColorRect);
   LegendY := ColorRect.Bottom + 40;
   DrawContourLegend(ACanvas, LegendY, ContourRect);
+  LegendY := ColorRect.Bottom + ContourRect.Bottom + 40;
+  DrawHeadObsLegend(ACanvas, LegendY, HeadObsRect);
 
   DrawingRect.Left := Max(ColorRect.Right, ContourRect.Right);
+  DrawingRect.Left := Max(DrawingRect.Left, HeadObsRect.Right);
   DrawingRect.Top := 0;
     DrawingRect.Right := CanvasWidth;
   DrawingRect.Bottom := CanvasHeight;
@@ -1838,6 +1853,7 @@ begin
   end;
   cbHorizontalScale.Checked := ASetting.HorizontalRuler.Visible;
   cbVerticalScale.Checked := ASetting.VerticalRuler.Visible;
+  cbHeadObsLegend.Checked := ASetting.ShowHeadObsLegend;
   seImageHeight.AsInteger := ASetting.ImageHeight;
   seImageWidth.AsInteger := ASetting.ImageWidth;
   cbShowColoredGridLines.Checked := ASetting.ShowColoredGridLines;
@@ -2052,6 +2068,7 @@ begin
     ASetting.MidVectors := PhastModel.MidVectors;
     ASetting.MinVectors := PhastModel.MinVectors;
     ASetting.VelocityVectors := PhastModel.VelocityVectors;
+    ASetting.ShowHeadObsLegend := cbHeadObsLegend.Checked;
 
     Undo := TUndoEditDisplaySettings.Create(ModifiedDisplaySettings);
     frmGoPhast.UndoStack.Submit(Undo);
@@ -2542,6 +2559,89 @@ begin
     FDataSetDummyObjects, nil, CanColorDataSet);
 end;
 
+procedure TfrmExportImage.DrawHeadObsLegend(ACanvas: TCanvas;
+  var LegendY: Integer; out HeadObsRect: TRect);
+const
+  Offset = 8;
+var
+  ViewDirection: TViewDirection;
+  PhastModel: TPhastModel;
+  MaxResid: Double;
+  ChildIndex: Integer;
+  AChild: TChildModel;
+  MaxSymbolSize: Integer;
+  ResidString: string;
+  Extent: TSize;
+  TextLeft: Integer;
+  TextTop: Integer;
+  PriorMaxSymbolSize: Integer;
+  SymbolLeft: Integer;
+  AColor: TColor;
+begin
+  HeadObsRect.Left := 0;
+  HeadObsRect.Top := 0;
+  HeadObsRect.BottomRight := HeadObsRect.TopLeft;
+
+  ViewDirection := TViewDirection(comboView.ItemIndex);
+  if cbHeadObsLegend.Checked and (ViewDirection = vdTop) then
+  begin
+    PhastModel := frmGoPhast.PhastModel;
+    PhastModel.HeadObsResults.CalculateMaxResidual(frmGoPhast.PhastModel);
+    MaxResid := PhastModel.HeadObsResults.MaxResidual;
+    if frmGoPhast.PhastModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+      begin
+        AChild := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+        AChild.HeadObsResults.CalculateMaxResidual(AChild);
+        if MaxResid < AChild.HeadObsResults.MaxResidual then
+        begin
+          MaxResid := AChild.HeadObsResults.MaxResidual;
+        end;
+      end;
+    end;
+    MaxSymbolSize := PhastModel.HeadObsResults.MaxSymbolSize;
+
+    AColor := ACanvas.Brush.Color;
+    try
+      ACanvas.Brush.Color := PhastModel.HeadObsResults.PositiveColor;
+      ACanvas.Ellipse(Offset,LegendY,MaxSymbolSize+Offset,LegendY+MaxSymbolSize);
+    finally
+      ACanvas.Brush.Color := AColor;
+    end;
+
+    ResidString := FloatToStr(MaxResid);
+    Extent := ACanvas.TextExtent(ResidString);
+    TextLeft := MaxSymbolSize+2*Offset;
+    TextTop :=  LegendY + (MaxSymbolSize-Extent.cy) div 2;
+    ACanvas.TextOut(TextLeft, TextTop, ResidString);
+    HeadObsRect.Right := TextLeft + Extent.cx;
+
+    LegendY := LegendY+MaxSymbolSize + Offset;
+
+    PriorMaxSymbolSize := MaxSymbolSize;
+    MaxSymbolSize := Round(Sqrt(Sqr(MaxSymbolSize/2)/2)*2);
+    SymbolLeft := Offset + (PriorMaxSymbolSize - MaxSymbolSize) div 2;
+    AColor := ACanvas.Brush.Color;
+    try
+      ACanvas.Brush.Color := PhastModel.HeadObsResults.NegativeColor;
+      ACanvas.Ellipse(SymbolLeft,LegendY,MaxSymbolSize+SymbolLeft,LegendY+MaxSymbolSize);
+    finally
+      ACanvas.Brush.Color := AColor;
+    end;
+
+    ResidString := FloatToStr(-MaxResid/2);
+    Extent := ACanvas.TextExtent(ResidString);
+    TextLeft := PriorMaxSymbolSize+2*Offset;
+    TextTop :=  LegendY + (MaxSymbolSize-Extent.cy) div 2;
+    ACanvas.TextOut(TextLeft, TextTop, ResidString);
+    HeadObsRect.Right := Max(HeadObsRect.Right, TextLeft + Extent.cx);
+    HeadObsRect.Right := HeadObsRect.Right + Offset;
+
+    LegendY := LegendY+MaxSymbolSize + Offset;
+  end;
+end;
+
 procedure TfrmExportImage.DrawContourLegend(ACanvas: TCanvas;
   var LegendY: Integer; out ContourRect: TRect);
 var
@@ -2554,7 +2654,7 @@ begin
   ContourRect.Left := 0;
   ContourRect.Top := 0;
   ContourRect.BottomRight := ContourRect.TopLeft;
-  
+
   if cbContourLegend.Checked then
   begin
     ViewDirection := TViewDirection(comboView.ItemIndex);

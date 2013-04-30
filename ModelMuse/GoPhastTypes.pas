@@ -192,12 +192,15 @@ type
   TModelSelection = (msUndefined, msPhast, msModflow, msModflowLGR,
     msModflowLGR2, msModflowNWT
     {$IFDEF FMP}, msModflowFmp {$ENDIF}
-    , msSutra22);
+    , msModflowCfp, msSutra22);
 
 const
-  ModflowSelection = [msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}];
+  ModflowSelection = [msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+    {$IFDEF FMP}, msModflowFmp {$ENDIF}
+    , msModflowCfp];
   ModelsWithGrid  = [msPhast, msModflow, msModflowLGR, msModflowLGR2,
-    msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}];
+    msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}
+    , msModflowCfp];
 
 type
 
@@ -473,6 +476,10 @@ resourcestring
   StrWritingDataSet15 = '  Writing Data Set 15.';
   StrWritingDataSet16 = '  Writing Data Set 16.';
   StrWritingDataSet17 = '  Writing Data Set 17.';
+  StrWritingDataSet18 = '  Writing Data Set 18.';
+  StrWritingDataSet19 = '  Writing Data Set 19.';
+  StrWritingDataSet20 = '  Writing Data Set 20.';
+  StrWritingDataSet21 = '  Writing Data Set 21.';
   StrWritingDataSet22 = '  Writing Data Set 22.';
   StrWritingDataSet23 = '  Writing Data Set 23.';
   StrWritingDataSet24 = '  Writing Data Set 24.';
@@ -483,6 +490,11 @@ resourcestring
   StrWritingDataSet29 = '  Writing Data Set 29.';
   StrWritingDataSet30 = '  Writing Data Set 30.';
   StrWritingDataSet31 = '  Writing Data Set 31.';
+  StrWritingDataSet32 = '  Writing Data Set 32.';
+  StrWritingDataSet33 = '  Writing Data Set 33.';
+  StrWritingDataSet34 = '  Writing Data Set 34.';
+  StrWritingDataSet35 = '  Writing Data Set 35.';
+  StrWritingDataSet36 = '  Writing Data Set 36.';
   {@name is used as the default name for a new data set.
 
   @longcode(#
@@ -576,9 +588,9 @@ resourcestring
   StrStartingHead = 'Starting head';
   StrEndingHead = 'Ending head';
   StrElevation = 'Elevation';
-  StrMaxPumpingRate = 'Max pumping rate';
-  StrMaxPumpingRateMultipl = 'Max pumping rate multiplier';
-  StrPumpOnlyIfCropRequiresWater = 'Pump only if crop requires water';
+  StrMaxPumpingRate = 'Max pumping rate (QMAX)';
+//  StrMaxPumpingRateMultipl = 'Max pumping rate multiplier (QMAXfact)';
+  StrPumpOnlyIfCropRequiresWater = 'Pump only if irrigation required in cell';
   StrFarmID =  'FarmID';
 
 
@@ -633,7 +645,7 @@ implementation
 
 
 {$IFNDEF Testing}
-uses PhastModelUnit, Character, Math;
+uses PhastModelUnit, Character, Math, ModelMuseUtilities;
 {$ENDIF}
 
 function SortLayerSorts(Item1, Item2: Pointer): Integer;
@@ -715,7 +727,7 @@ end;
 
 procedure TRealStorage.ReadStringValue(Reader: TReader);
 begin
-  Value := StrToFloat(Reader.ReadString)
+  Value := FortranStrToFloat(Reader.ReadString)
 end;
 
 procedure TRealStorage.ReadValue(Reader: TReader);
@@ -881,7 +893,9 @@ begin
             Assert(False);
         end;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         case Eval of
           eaBlocks:
@@ -953,6 +967,8 @@ var
   Index: integer;
   AChar: Char;
 begin
+  // See also PhastModelUnit.GenerateNewName
+
   result :=  Trim(OriginalName);
   result := StringReplace(result, ' ', '_', [rfReplaceAll]);
   result := StringReplace(result, '"', '', [rfReplaceAll]);

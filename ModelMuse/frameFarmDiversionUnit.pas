@@ -140,6 +140,8 @@ begin
           Grid.Columns[Ord(docChoice)+2].CheckMin := False;
           Grid.Columns[Ord(docChoice)+2].PickList := comboPositionChoice.Items;
           Grid.Columns[Ord(docObject)+2].PickList := comboSfrObjects.Items;
+          Grid.Columns[Ord(docObject)+2].LimitToList := True;
+          Grid.Columns[Ord(docChoice)+2].LimitToList := True;
         end;
       rtLocation:
         begin
@@ -152,6 +154,8 @@ begin
           Grid.Columns[Ord(dlcY)+2].CheckMax := False;
           Grid.Columns[Ord(dlcX)+2].CheckMin := False;
           Grid.Columns[Ord(dlcY)+2].CheckMin := False;
+          Grid.Columns[Ord(docObject)+2].LimitToList := False;
+          Grid.Columns[Ord(docChoice)+2].LimitToList := False;
         end;
       rtCell:
         begin
@@ -169,6 +173,8 @@ begin
           Grid.Columns[Ord(dccColumn)+2].Max := ModflowGrid.ColumnCount;
           Grid.Columns[Ord(dccRow)+2].Min := 1;
           Grid.Columns[Ord(dccColumn)+2].Min := 1;
+          Grid.Columns[Ord(docObject)+2].LimitToList := False;
+          Grid.Columns[Ord(docChoice)+2].LimitToList := False;
         end;
       else
         Assert(False);
@@ -563,6 +569,7 @@ var
   DiversionObject: TSfrDiversionObject;
   DiversionLocation: TReturnLocation;
   DiversionCell: TReturnCell;
+  GridItemIndex: Integer;
 {$ENDIF}
 begin
 {$IFDEF FMP}
@@ -588,7 +595,7 @@ begin
       for TimeIndex := 1 to seNumber.AsInteger do
       begin
         if TryStrToFloat(Grid.Cells[Ord(dtcStart), TimeIndex], StartTime)
-          or TryStrToFloat(Grid.Cells[Ord(dtcEnd), TimeIndex], EndTime) then
+          and TryStrToFloat(Grid.Cells[Ord(dtcEnd), TimeIndex], EndTime) then
         begin
           if Count < DelivReturn.Count then
           begin
@@ -608,8 +615,17 @@ begin
             rtObject:
               begin
                 DiversionObject := LinkedStream.DiversionObject;
-                DiversionObject.ObjectName :=
-                  Grid.Cells[Ord(docObject)+2,TimeIndex];
+                GridItemIndex := Grid.ItemIndex[Ord(docObject)+2,TimeIndex];
+                if GridItemIndex >= 0 then
+                begin
+                  DiversionObject.ScreenObject := Grid.Columns[Ord(docObject)+2].PickList.Objects[GridItemIndex];
+                end
+                else
+                begin
+                  DiversionObject.ScreenObject := nil;
+                end;
+//                DiversionObject.ObjectName :=
+//                  Grid.Cells[Ord(docObject)+2,TimeIndex];
                 DiversionObject.DiversionPosition :=
                   TDiversionPosition(Grid.ItemIndex[Ord(docChoice)+2,TimeIndex]);
                 if DiversionObject.DiversionPosition = dpMiddle then

@@ -103,7 +103,6 @@ type
     procedure UpdateLegendAfterDelay;
     function GetLegendDataSource: TObserver;
     procedure SetLegendDataSource(const Value: TObserver);
-    function CanColorDataSet(DataArray: TDataArray): boolean;
     { Private declarations }
   protected
     FStoredLegend: TLegend;
@@ -137,6 +136,7 @@ type
     procedure ReadLimits(DataType: TRbwDataType; Limits: TColoringLimits);
     procedure UpdateLegend;
     procedure Loaded; override;
+    function CanColorDataSet(DataArray: TDataArray): boolean; virtual;
   public
     property LegendDataSource: TObserver read GetLegendDataSource
       write SetLegendDataSource;
@@ -178,109 +178,6 @@ resourcestring
 
 const
   OneSecond = 1/24/3600;
-
-{ TBoundaryClassification }
-
-//function TBoundaryClassification.ClassificationName: string;
-//begin
-//  if FDataArray <> nil then
-//  begin
-//    result := FDataArray.DisplayName;
-//    Assert(FTimeList = nil);
-//    Assert(FEdgeDisplay = nil);
-//  end
-//  else if FTimeList <> nil then
-//  begin
-//    result := FTimeList.Name;
-//    Assert(FEdgeDisplay = nil);
-//  end
-//  else
-//  begin
-//    result := FName;
-//  end;
-//end;
-//
-//
-//constructor TBoundaryClassification.Create(AnObject: TDataArray);
-//begin
-//  FDataArray := AnObject;
-//  FTimeList := nil;
-//  FEdgeDisplay := nil;
-//end;
-//
-//constructor TBoundaryClassification.Create(AnObject: TCustomTimeList);
-//begin
-//  FTimeList := AnObject;
-//  FDataArray := nil;
-//  FEdgeDisplay := nil;
-//end;
-//
-//function TBoundaryClassification.FullClassification: string;
-//begin
-//  result := ''
-//end;
-//
-//function TBoundaryClassification.GetBoundaryType: TBoundaryType;
-//begin
-//  if FEdgeDisplay <> nil then
-//  begin
-//    result := btMfHfb;
-//  end
-//  else
-//  begin
-//    result := FTimeList.BoundaryType;
-//  end;
-//
-//end;
-//
-//function TBoundaryClassification.GetClassifiedObject: TObject;
-//begin
-//  if FDataArray <> nil then
-//  begin
-//    result := FDataArray;
-//  end
-//  else if FTimeList <> nil then
-//  begin
-//    result := FTimeList;
-//  end
-//  else
-//  begin
-//    result := FEdgeDisplay;
-//    Assert(result <> nil);
-//  end;
-//end;
-//
-//
-//constructor TBoundaryClassification.Create(const Name: string;
-//  AnObject: TEdgeDisplayEdit);
-//begin
-//  FName := Name;
-//  FEdgeDisplay := AnObject;
-//  FDataArray := nil;
-//  FTimeList := nil;
-//end;
-//
-//constructor TBoundaryClassification.Create(const Name: string;
-//  AnObject: TObject);
-//begin
-//  FName := Name;
-//  if AnObject is TDataArray then
-//  begin
-//    Create(TDataArray(AnObject));
-//  end
-//  else if AnObject is TCustomTimeList then
-//  begin
-//    Create(TCustomTimeList(AnObject));
-//  end
-//  else if AnObject is TEdgeDisplayEdit then
-//  begin
-//    Create(Name, TEdgeDisplayEdit(AnObject));
-//  end
-//  else
-//  begin
-//    Assert(False);
-//  end;
-//end;
 
 { TframeCustomColor }
 
@@ -471,26 +368,32 @@ var
   AColor: TColor;
   ColorAdjustmentFactor: Real;
 begin
-  for X := 0 to pbColorScheme.Width - 1 do
+  if comboColorScheme.ItemIndex >= 0 then
   begin
-    Fraction := 1 - X / pbColorScheme.Width;
-    ColorAdjustmentFactor := seColorExponent.Value;
-
-    AColor := FracAndSchemeToColor(comboColorScheme.ItemIndex,
-      Fraction, ColorAdjustmentFactor, seCycles.AsInteger);
-
-    with pbColorScheme.Canvas do
+    for X := 0 to pbColorScheme.Width - 1 do
     begin
-      Pen.Color := AColor;
-      MoveTo(X, 0);
-      LineTo(X, pbColorScheme.Height - 1);
+      Fraction := 1 - X / pbColorScheme.Width;
+      ColorAdjustmentFactor := seColorExponent.Value;
+
+      AColor := FracAndSchemeToColor(comboColorScheme.ItemIndex,
+        Fraction, ColorAdjustmentFactor, seCycles.AsInteger);
+
+      with pbColorScheme.Canvas do
+      begin
+        Pen.Color := AColor;
+        MoveTo(X, 0);
+        LineTo(X, pbColorScheme.Height - 1);
+      end;
     end;
   end;
 end;
 
 procedure TframeCustomColor.rdgLegendEndUpdate(Sender: TObject);
 begin
-  seLegendRows.AsInteger := rdgLegend.RowCount -1;
+  if seLegendRows <> nil then
+  begin
+    seLegendRows.AsInteger := rdgLegend.RowCount -1;
+  end;
 end;
 
 procedure TframeCustomColor.rdgLegendSetEditText(Sender: TObject; ACol,
@@ -509,12 +412,15 @@ procedure TframeCustomColor.rdgValuesToIgnoreEndUpdate(Sender: TObject);
 var
   NewCount: integer;
 begin
-  NewCount := rdgValuesToIgnore.RowCount-1;
-  if (NewCount = 1) and (rdgValuesToIgnore.Cells[0,1] = '') then
+  if seNumberOfValuesToIgnore <> nil then
   begin
-    NewCount := 0;
+    NewCount := rdgValuesToIgnore.RowCount-1;
+    if (NewCount = 1) and (rdgValuesToIgnore.Cells[0,1] = '') then
+    begin
+      NewCount := 0;
+    end;
+    seNumberOfValuesToIgnore.AsInteger := NewCount;
   end;
-  seNumberOfValuesToIgnore.AsInteger := NewCount;
 end;
 
 procedure TframeCustomColor.ReadLimits(DataType: TRbwDataType;

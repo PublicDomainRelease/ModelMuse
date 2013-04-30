@@ -308,7 +308,9 @@ begin
             RealList.AddUnique(TimeItem.EndingTime);
           end;
         end;
-      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+        {$IFDEF FMP}, msModflowFmp {$ENDIF}
+        , msModflowCfp:
         begin
           for Index := 0 to
             frmGoPhast.PhastModel.ModflowStressPeriods.Count - 1 do
@@ -1646,7 +1648,9 @@ var
   ChildIndex: Integer;
 begin
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}, msSutra22:
+    msPhast, msModflow, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp, msSutra22:
       begin
         comboModel.Items.AddObject(StrParentModel, frmGoPhast.PhastModel);
         comboModel.Visible := False;
@@ -2050,7 +2054,9 @@ begin
         lblNodes.Caption := StrNodeShapefileName;
         Caption := StrExportGridDataTo;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         lblElements.Caption := StrCellShapefileName;
         lblNodes.Caption := StrCellCornerShapefi;

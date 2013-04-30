@@ -1349,12 +1349,30 @@ Var
   FieldNum: Integer ;
   TmpS    : String ;
   Index : integer;
+//  AString: string;
+  {$IF CompilerVersion < 23}
+  CharArray: array of AnsiChar;
+  {$IFEND}
 Begin
   TmpS := VIDE ;
   FieldNum := GetFieldNumberFromName(FieldName);
   If FieldNum > 0 Then Begin
      with FieldStruct[FieldNum] do begin
+//          Move(Addr(RecordBuffer[Address]), CharArray[0], FieldLength*Size(AnsiChar));
+//          AString := string(RecordBuffer);
+//          TmpS := Copy(AString, Address, FieldLength);
+  {$IF CompilerVersion >= 23}
           TmpS := Copy(string(RecordBuffer), Address, FieldLength);
+  {$ELSE}
+          // In Delphi 2006, string(RecordBuffer) returns a shortstring.
+          SetLength(CharArray, FieldLength+1);
+          CharArray[FieldLength] := Char(0);
+          for Index := 0 to FieldLength-1 do
+          begin
+            CharArray[Index] := RecordBuffer[Address+Index];
+          end;
+          TmpS := string(PChar(CharArray));
+  {$IFEND}
      end ;
      Index := Pos(#0, TmpS);
      if Index > 0 then

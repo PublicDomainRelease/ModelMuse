@@ -4,7 +4,7 @@ inherited frmCustomSelectObjects: TfrmCustomSelectObjects
   ClientWidth = 422
   ExplicitWidth = 440
   ExplicitHeight = 459
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0

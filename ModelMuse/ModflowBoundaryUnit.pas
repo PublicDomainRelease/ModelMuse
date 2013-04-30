@@ -223,6 +223,8 @@ type
 
   TTimeListsModelLinkClass = class of TTimeListsModelLink;
 
+  // @name manages the link between a @link(TPhastModel) or
+  // @link(TChildModel) and a @link(TCustomMF_BoundColl)
   TTimeListModelLinkList = class(TObject)
   private
     // @name is actually a TObjectList.
@@ -598,6 +600,9 @@ type
     procedure GetPropertyObserver(Sender: TObject; List: TList); virtual;
     procedure RemoveSubscription(Sender: TObject; const AName: string);
     procedure RestoreSubscription(Sender: TObject; const AName: string);
+    procedure AddBoundaryTimes(BoundCol: TCustomNonSpatialBoundColl;
+      Times: TRealList; StartTestTime, EndTestTime: double;
+      var StartRangeExtended, EndRangeExtended: boolean); virtual;
   public
     function Used: boolean; virtual; abstract;
     // @name is either nil or the the current @link(TPhastModel).
@@ -606,6 +611,39 @@ type
     // this @classname.
     property ScreenObject: TObject read FScreenObject;
     Constructor Create(Model: TBaseModel; ScreenObject: TObject);
+  end;
+
+  TModflowSteadyBoundary = class(TModflowScreenObjectProperty)
+  private
+    FBoundaryObserver: TObserver;
+    FUsed: boolean;
+    procedure SetUsed(const Value: boolean);
+  protected
+    FObserverList: TList;
+    FUsedObserver: TObserver;
+    procedure HandleChangedValue(Observer: TObserver); virtual; abstract;
+    function GetUsedObserver: TObserver; virtual; abstract;
+    procedure ResetItemObserver(Index: integer);
+    procedure UpdateFormulaDependencies(OldFormula: string;
+      var NewFormula: string; Observer: TObserver; Compiler: TRbwParser);
+    procedure UpdateFormula(Value: string; Position: integer;
+      var FormulaObject: TFormulaObject);
+    function CreateFormulaObject(Orientation: TDataSetOrientation)
+      : TFormulaObject;
+    procedure CreateFormulaObjects; virtual; abstract;
+    procedure CreateObserver(ObserverNameRoot: string;
+      var Observer: TObserver);
+    function BoundaryObserverPrefix: string; virtual; abstract;
+    procedure CreateObservers; virtual; abstract;
+    property UsedObserver: TObserver read GetUsedObserver;
+  public
+    Procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
+    destructor Destroy; override;
+    function Used: boolean; override;
+    property BoundaryObserver: TObserver read FBoundaryObserver;
+  published
+    property IsUsed: boolean read FUsed write SetUsed;
   end;
 
   // @name represents the MODFLOW boundaries associated with
@@ -621,9 +659,10 @@ type
     procedure SetValues(const Value: TCustomMF_BoundColl);
 
   protected
-    procedure AddBoundaryTimes(BoundCol: TCustomNonSpatialBoundColl;
-      Times: TRealList; StartTestTime, EndTestTime: double;
-      var StartRangeExtended, EndRangeExtended: boolean); virtual;
+//    procedure AddBoundaryTimes(BoundCol: TCustomNonSpatialBoundColl;
+//      Times: TRealList; StartTestTime, EndTestTime: double;
+//      var StartRangeExtended, EndRangeExtended: boolean); virtual;
+
     // In descendants, @name fills ValueTimeList with a series of TObjectLists
     // - one for
     // each stress period.  Each such TObjectList is filled with
@@ -758,6 +797,12 @@ procedure GlobalRemoveMFBoundarySubscription(Sender: TObject; Subject: TObject;
   const AName: string);
 
 procedure GlobalRestoreMFBoundarySubscription(Sender: TObject; Subject: TObject;
+  const AName: string);
+
+procedure RemoveModflowSteadyBoundarySubscription(Sender: TObject; Subject: TObject;
+  const AName: string);
+
+procedure RestoreModflowSteadyBoundarySubscription(Sender: TObject; Subject: TObject;
   const AName: string);
 
 implementation
@@ -2536,26 +2581,56 @@ begin
   result := Values.Used;
 end;
 
-procedure TModflowBoundary.AddBoundaryTimes(
+procedure TModflowScreenObjectProperty.AddBoundaryTimes(
   BoundCol: TCustomNonSpatialBoundColl; Times: TRealList;
   StartTestTime, EndTestTime: double; var StartRangeExtended, EndRangeExtended: boolean);
 var
   BoundaryIndex: Integer;
   Boundary: TCustomModflowBoundaryItem;
+  SP_Epsilon: Double;
+  CosestIndex: Integer;
+  ExistingTime: Double;
 begin
+  SP_Epsilon := (FModel as TCustomModel).SP_Epsilon;
   for BoundaryIndex := 0 to BoundCol.Count - 1 do
   begin
     Boundary := BoundCol[BoundaryIndex] as TCustomModflowBoundaryItem;
-    Times.AddUnique(Boundary.StartTime);
-    Times.AddUnique(Boundary.EndTime);
-    if (Boundary.StartTime < StartTestTime) then
+    CosestIndex := Times.IndexOfClosest(Boundary.StartTime);
+    if CosestIndex >= 0 then
+    begin
+      ExistingTime := Times[CosestIndex];
+      if Abs(ExistingTime-Boundary.StartTime) >  SP_Epsilon then
+      begin
+        Times.AddUnique(Boundary.StartTime);
+      end;
+    end;
+    CosestIndex := Times.IndexOfClosest(Boundary.EndTime);
+    if CosestIndex >= 0 then
+    begin
+      ExistingTime := Times[CosestIndex];
+      if Abs(ExistingTime-Boundary.EndTime) >  SP_Epsilon then
+      begin
+        Times.AddUnique(Boundary.EndTime);
+      end;
+    end;
+//    Times.AddUnique(Boundary.StartTime);
+//    Times.AddUnique(Boundary.EndTime);
+    if (Boundary.StartTime < StartTestTime-SP_Epsilon) then
     begin
       StartRangeExtended := True;
     end;
-    if (Boundary.EndTime > EndTestTime) then
+    if (Boundary.EndTime > EndTestTime+SP_Epsilon) then
     begin
       EndRangeExtended := True;
     end;
+//    if (Boundary.StartTime < StartTestTime) then
+//    begin
+//      StartRangeExtended := True;
+//    end;
+//    if (Boundary.EndTime > EndTestTime) then
+//    begin
+//      EndRangeExtended := True;
+//    end;
   end;
 end;
 
@@ -2871,6 +2946,18 @@ begin
         GlobalRestoreModflowBoundaryItemSubscription, self);
     end;
   end;
+end;
+
+procedure RemoveModflowSteadyBoundarySubscription(Sender: TObject; Subject: TObject;
+  const AName: string);
+begin
+  (Subject as TModflowSteadyBoundary).RemoveSubscription(Sender, AName);
+end;
+
+procedure RestoreModflowSteadyBoundarySubscription(Sender: TObject; Subject: TObject;
+  const AName: string);
+begin
+  (Subject as TModflowSteadyBoundary).RestoreSubscription(Sender, AName);
 end;
 
 procedure GlobalRemoveModflowBoundaryItemSubscription(Sender: TObject; Subject: TObject;
@@ -3192,6 +3279,230 @@ begin
     FStartTime := Value;
     InvalidateModel;
   end;
+end;
+
+{ TModflowSteadyBoundary }
+
+procedure TModflowSteadyBoundary.Assign(Source: TPersistent);
+var
+  SourceSteady: TModflowSteadyBoundary;
+begin
+  if Source is TModflowSteadyBoundary then
+  begin
+    SourceSteady := TModflowSteadyBoundary(Source);
+    IsUsed := SourceSteady.IsUsed;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+constructor TModflowSteadyBoundary.Create(Model: TBaseModel;
+  ScreenObject: TObject);
+begin
+  inherited;
+  FObserverList := TObjectList.Create;
+  CreateFormulaObjects;
+
+  Assert((ScreenObject = nil) or (ScreenObject is TScreenObject));
+  FModel := Model;
+  if ScreenObject <> nil then
+  begin
+    if TScreenObject(FScreenObject).CanInvalidateModel then
+    begin
+      FBoundaryObserver := TObserver.Create(nil);
+      FBoundaryObserver.UpdateWithName(BoundaryObserverPrefix
+        + TScreenObject(FScreenObject).Name);
+      TScreenObject(FScreenObject).TalksTo(FBoundaryObserver);
+      FBoundaryObserver.UpToDate:= True;
+    end;
+  end;
+
+  CreateObservers;
+end;
+
+destructor TModflowSteadyBoundary.Destroy;
+begin
+  FBoundaryObserver.Free;
+  FObserverList.Free;
+  FUsedObserver.Free;
+  inherited;
+end;
+
+procedure TModflowSteadyBoundary.ResetItemObserver(Index: integer);
+var
+  Observer: TObserver;
+begin
+  Observer := FObserverList[Index];
+  Observer.UpToDate := True;
+end;
+
+procedure TModflowSteadyBoundary.UpdateFormulaDependencies(OldFormula: string;
+  var NewFormula: string; Observer: TObserver; Compiler: TRbwParser);
+var
+  OldUses: TStringList;
+  NewUses: TStringList;
+  Position: integer;
+  DS: TObserver;
+  ParentScreenObject: TScreenObject;
+  Index: integer;
+  procedure CompileFormula(var AFormula: string; UsesList: TStringList);
+  begin
+    if AFormula <> '' then
+    begin
+      try
+        Compiler.Compile(AFormula);
+        UsesList.Assign(Compiler.CurrentExpression.VariablesUsed);
+      except
+        on E: ERbwParserError do
+        begin
+        end;
+      end;
+    end;
+  end;
+
+begin
+  OldFormula := Trim(OldFormula);
+  NewFormula := Trim(NewFormula);
+  if OldFormula = NewFormula then
+  begin
+    Exit;
+  end;
+  if (frmGoPhast.PhastModel <> nil) and
+    ((frmGoPhast.PhastModel.ComponentState * [csLoading, csReading]) <> []) then
+  begin
+    Exit;
+  end;
+  ParentScreenObject := ScreenObject as TScreenObject;
+  if (ParentScreenObject = nil)
+  // or not ParentScreenObject.CanInvalidateModel then
+  // 3
+  { or not ParentScreenObject.CanInvalidateModel } then
+  begin
+    Exit;
+  end;
+  OldUses := TStringList.Create;
+  NewUses := TStringList.Create;
+  try
+    CompileFormula(OldFormula, OldUses);
+    CompileFormula(NewFormula, NewUses);
+    for Index := OldUses.Count - 1 downto 0 do
+    begin
+      Position := NewUses.IndexOf(OldUses[Index]);
+      if Position >= 0 then
+      begin
+        OldUses.Delete(Index);
+        NewUses.Delete(Position);
+      end;
+    end;
+    for Index := 0 to OldUses.Count - 1 do
+    begin
+      DS := frmGoPhast.PhastModel.GetObserverByName(OldUses[Index]);
+      Assert(DS <> nil);
+      DS.StopsTalkingTo(Observer);
+    end;
+    for Index := 0 to NewUses.Count - 1 do
+    begin
+      DS := frmGoPhast.PhastModel.GetObserverByName(NewUses[Index]);
+      Assert(DS <> nil);
+      DS.TalksTo(Observer);
+    end;
+  finally
+    NewUses.Free;
+    OldUses.Free;
+  end;
+end;
+
+procedure TModflowSteadyBoundary.UpdateFormula(Value: string; Position: integer; var FormulaObject: TFormulaObject);
+var
+  LocalModel: TPhastModel;
+  Compiler: TRbwParser;
+  Observer: TObserver;
+begin
+  if FormulaObject.Formula <> Value then
+  begin
+    LocalModel := ParentModel as TPhastModel;
+    if LocalModel <> nil then
+    begin
+      Compiler := LocalModel.rpThreeDFormulaCompiler;
+      Observer := FObserverList[Position];
+      UpdateFormulaDependencies(FormulaObject.Formula, Value, Observer,
+        Compiler);
+    end;
+    InvalidateModel;
+    if not(csDestroying in frmGoPhast.PhastModel.ComponentState) then
+    begin
+      frmGoPhast.PhastModel.FormulaManager.ChangeFormula(FormulaObject, Value,
+        frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
+        RemoveModflowSteadyBoundarySubscription,
+        RestoreModflowSteadyBoundarySubscription, self);
+    end;
+  end;
+end;
+
+function TModflowSteadyBoundary.CreateFormulaObject
+  (Orientation: TDataSetOrientation): TFormulaObject;
+begin
+  result := frmGoPhast.PhastModel.FormulaManager.Add;
+  case Orientation of
+    dsoTop:
+      begin
+        result.Parser := frmGoPhast.PhastModel.rpTopFormulaCompiler;
+      end;
+    dso3D:
+      begin
+        result.Parser := frmGoPhast.PhastModel.rpThreeDFormulaCompiler;
+      end;
+  else
+    Assert(False);
+  end;
+  result.AddSubscriptionEvents(RemoveModflowSteadyBoundarySubscription,
+    RestoreModflowSteadyBoundarySubscription, self);
+end;
+
+procedure TModflowSteadyBoundary.CreateObserver(ObserverNameRoot: string;
+  var Observer: TObserver);
+var
+  ScreenObject: TScreenObject;
+  Model: TPhastModel;
+begin
+  ScreenObject := FScreenObject as TScreenObject;
+  Observer := TObserver.Create(nil);
+  Observer.UpdateWithName(ObserverNameRoot + ScreenObject.Name);
+  if ScreenObject.CanInvalidateModel then
+  begin
+    Model := FModel as TPhastModel;
+    Assert(Model <> nil);
+    BoundaryObserver.TalksTo(Model.HfbDisplayer);
+    Observer.TalksTo(Model.HfbDisplayer);
+    BoundaryObserver.TalksTo(Observer);
+    Model.HfbDisplayer.Invalidate;
+  end;
+end;
+
+procedure TModflowSteadyBoundary.SetUsed(const Value: boolean);
+var
+  ScreenObject: TScreenObject;
+begin
+  if FUsed <> Value then
+  begin
+    ScreenObject := FScreenObject as TScreenObject;
+    if FScreenObject <> nil then
+    begin
+      if ScreenObject.CanInvalidateModel then
+      begin
+        HandleChangedValue(UsedObserver);
+      end;
+    end;
+    FUsed := Value;
+    InvalidateModel;
+  end;
+end;
+
+function TModflowSteadyBoundary.Used: boolean;
+begin
+  result := IsUsed;
 end;
 
 end.

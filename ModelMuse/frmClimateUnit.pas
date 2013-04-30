@@ -40,11 +40,11 @@ type
     FClimate: TClimateCollection;
     procedure InitializeGridCaptions;
     procedure GetStartingAndEndingTimes;
-    procedure GetData;
     procedure CreateBoundaryFormula(const DataGrid: TRbwDataGrid4;
       const ACol, ARow: integer; Formula: string;
       const Orientation: TDataSetOrientation; const EvaluatedAt: TEvaluatedAt);
     procedure GetGlobalVariables;
+    procedure GetData;
     procedure SetData;
     { Private declarations }
   public
@@ -325,31 +325,36 @@ begin
 end;
 
 procedure TfrmClimate.GetStartingAndEndingTimes;
-var
-  EndTimes: TStringList;
-  StartTimes: TStringList;
-  StressPeriods: TModflowStressPeriods;
-  TimeIndex: Integer;
-  AStressPeriod: TModflowStressPeriod;
+//var
+//  EndTimes: TStringList;
+//  StartTimes: TStringList;
+//  StressPeriods: TModflowStressPeriods;
+//  TimeIndex: Integer;
+//  AStressPeriod: TModflowStressPeriod;
 begin
-  StartTimes := TStringList.Create;
-  EndTimes := TStringList.Create;
-  try
-    StressPeriods := frmGoPhast.PhastModel.ModflowStressPeriods;
-    for TimeIndex := 0 to StressPeriods.Count - 1 do
-    begin
-      AStressPeriod := StressPeriods[TimeIndex];
-      StartTimes.Add(FloatToStr(AStressPeriod.StartTime));
-      EndTimes.Add(FloatToStr(AStressPeriod.EndTime));
-    end;
-    frameClimate.Grid.Columns[Ord(ccStartingTime)].PickList := StartTimes;
+  frmGoPhast.PhastModel.ModflowStressPeriods.FillPickListWithStartTimes
+    (frameClimate.Grid, Ord(ccStartingTime));
+  frmGoPhast.PhastModel.ModflowStressPeriods.FillPickListWithEndTimes
+    (frameClimate.Grid, Ord(ccEndingTime));
+
+//  StartTimes := TStringList.Create;
+//  EndTimes := TStringList.Create;
+//  try
+//    StressPeriods := frmGoPhast.PhastModel.ModflowStressPeriods;
+//    for TimeIndex := 0 to StressPeriods.Count - 1 do
+//    begin
+//      AStressPeriod := StressPeriods[TimeIndex];
+//      StartTimes.Add(FloatToStr(AStressPeriod.StartTime));
+//      EndTimes.Add(FloatToStr(AStressPeriod.EndTime));
+//    end;
+//    frameClimate.Grid.Columns[Ord(ccStartingTime)].PickList := StartTimes;
     frameClimate.Grid.Columns[Ord(ccStartingTime)].ComboUsed := True;
-    frameClimate.Grid.Columns[Ord(ccEndingTime)].PickList := EndTimes;
+//    frameClimate.Grid.Columns[Ord(ccEndingTime)].PickList := EndTimes;
     frameClimate.Grid.Columns[Ord(ccEndingTime)].ComboUsed := True;
-  finally
-    EndTimes.Free;
-    StartTimes.Free;
-  end;
+//  finally
+//    EndTimes.Free;
+//    StartTimes.Free;
+//  end;
 end;
 
 { TUndoClimate }

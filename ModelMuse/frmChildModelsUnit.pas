@@ -718,10 +718,17 @@ end;
 { TUndoChildModelChange }
 
 procedure TUndoChildModelChange.ChangeChildModel(Source: TCollection);
+var
+  ChildIndex: Integer;
 begin
   frmGoPhast.CanDraw := False;
   try
     frmGoPhast.PhastModel.ChildModels.Assign(Source);
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      frmGoPhast.PhastModel.ChildModels[ChildIndex].
+        ChildModel.OnHeadOBsChanged := frmGoPhast.EnableExportHeadObs;
+    end;
     if frmDisplayData <> nil then
     begin
       frmDisplayData.frameHeadObservationResults.UpdateSelectedModel;

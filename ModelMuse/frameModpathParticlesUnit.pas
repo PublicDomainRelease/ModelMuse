@@ -386,19 +386,25 @@ end;
 
 procedure TframeModpathParticles.rdgReleaseTimesEndUpdate(Sender: TObject);
 begin
-  seTimeCount.AsInteger := rdgReleaseTimes.RowCount -1;
-  if Assigned(seTimeCount.OnChange) then
+  if seTimeCount <> nil then
   begin
-    seTimeCount.OnChange(seTimeCount);
+    seTimeCount.AsInteger := rdgReleaseTimes.RowCount -1;
+    if Assigned(seTimeCount.OnChange) then
+    begin
+      seTimeCount.OnChange(seTimeCount);
+    end;
   end;
 
 end;
 
 procedure TframeModpathParticles.rdgSpecificEndUpdate(Sender: TObject);
 begin
-  seSpecificParticleCount.AsInteger := rdgSpecific.RowCount -1;
-  Assert(Assigned(seSpecificParticleCount.OnChange));
-  seSpecificParticleCount.OnChange(seSpecificParticleCount);
+  if seSpecificParticleCount <> nil then
+  begin
+    seSpecificParticleCount.AsInteger := rdgSpecific.RowCount -1;
+    Assert(Assigned(seSpecificParticleCount.OnChange));
+    seSpecificParticleCount.OnChange(seSpecificParticleCount);
+  end;
 end;
 
 procedure TframeModpathParticles.sbAddRowClick(Sender: TObject);

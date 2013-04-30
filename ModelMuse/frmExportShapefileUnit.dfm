@@ -6,7 +6,7 @@ inherited frmExportShapefile: TfrmExportShapefile
   ClientWidth = 449
   ExplicitWidth = 465
   ExplicitHeight = 593
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -281,8 +281,10 @@ inherited frmExportShapefile: TfrmExportShapefile
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end>
+      WordWrapRowCaptions = False
     end
     object seTimeCount: TJvSpinEdit
       Left = 244
@@ -315,7 +317,7 @@ inherited frmExportShapefile: TfrmExportShapefile
     Left = 136
     Top = 96
     Bitmap = {
-      494C010104000500380010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101040005003C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

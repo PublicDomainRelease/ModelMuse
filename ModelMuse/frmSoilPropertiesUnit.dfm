@@ -1,11 +1,13 @@
 inherited frmSoilProperties: TfrmSoilProperties
+  HelpType = htKeyword
+  HelpKeyword = 'Farm_Soil_Properties_Dialog_Bo'
   Caption = 'Farm Soil Properties'
   ClientHeight = 305
   ClientWidth = 681
   OnResize = FormResize
   ExplicitWidth = 697
   ExplicitHeight = 343
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -20,10 +22,8 @@ inherited frmSoilProperties: TfrmSoilProperties
       Top = 6
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
     object btnOK: TBitBtn
@@ -31,10 +31,8 @@ inherited frmSoilProperties: TfrmSoilProperties
       Top = 6
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -43,11 +41,10 @@ inherited frmSoilProperties: TfrmSoilProperties
       Top = 6
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
+      OnClick = btnHelpClick
     end
   end
   inline frameSoils: TframeFormulaGrid
@@ -94,7 +91,9 @@ inherited frmSoilProperties: TfrmSoilProperties
       Height = 163
       ColCount = 9
       FixedCols = 1
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowMoving, goEditing, goAlwaysShowEditor]
       OnMouseUp = frameSoilsGridMouseUp
+      OnRowMoved = frameSoilsGridRowMoved
       OnSelectCell = frameSoilsGridSelectCell
       OnSetEditText = frameSoilsGridSetEditText
       OnButtonClick = frameSoilsGridButtonClick
@@ -120,6 +119,7 @@ inherited frmSoilProperties: TfrmSoilProperties
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -142,6 +142,7 @@ inherited frmSoilProperties: TfrmSoilProperties
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -164,6 +165,7 @@ inherited frmSoilProperties: TfrmSoilProperties
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -191,6 +193,7 @@ inherited frmSoilProperties: TfrmSoilProperties
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -213,6 +216,7 @@ inherited frmSoilProperties: TfrmSoilProperties
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -235,6 +239,7 @@ inherited frmSoilProperties: TfrmSoilProperties
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -257,6 +262,7 @@ inherited frmSoilProperties: TfrmSoilProperties
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -279,6 +285,7 @@ inherited frmSoilProperties: TfrmSoilProperties
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -301,6 +308,7 @@ inherited frmSoilProperties: TfrmSoilProperties
           WordWrapCaptions = False
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end>
       ExplicitWidth = 681

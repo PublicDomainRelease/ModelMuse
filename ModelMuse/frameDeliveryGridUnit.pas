@@ -26,6 +26,8 @@ type
     procedure comboHowUsedChange(Sender: TObject);
     procedure GridMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure GridSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
   private
     FChanged: boolean;
     FChanging: Boolean;
@@ -51,7 +53,7 @@ type
 
 type
   TDeliveryTimeColumns = (dtcStart, dtcEnd);
-  TDeliveryColumns = (dcVolume, dcRank, dcHowUsed);
+  TDeliveryColumns = (dcVolume, dcRank, dcHowUsed, dcVirtualFarm);
 
 var
   frameDeliveryGrid: TframeDeliveryGrid;
@@ -69,19 +71,20 @@ resourcestring
   StrVolumeNRDV = 'Volume (NRDV)';
   StrRankNRDR = 'Rank (NRDR)';
   StrHowUsedNRDU = 'How used (NRDU)';
+  StrVirtualFarm0 = 'Virtual Farm (<0)';
+  StrVirtualFarmNumber = 'Virtual farm number (NRDU)';
+
+const
+  DeliveryColumns = Ord(High(TDeliveryColumns))+1;
 
 {$R *.dfm}
-
-//type
-//  TDeliveryTimeColumns = (dtcStart, dtcEnd);
-//  TDeliveryColumns = (dcVolume, dcRank, dcHowUsed);
 
 {$IFDEF FMP}
 procedure TframeDeliveryGrid.CheckValidCell(Sender: TObject; ACol,
   ARow: Integer; var ValidCell: Boolean);
 begin
   ValidCell := (ARow >= 1) and (ACol > Ord(dtcEnd))
-    and (((ACol-2) mod 3) <> Ord(dcHowUsed));
+    and (((ACol-2) mod DeliveryColumns) <> Ord(dcHowUsed));
 end;
 
 procedure TframeDeliveryGrid.ClearGrid(Grid: TRbwDataGrid4);
@@ -101,11 +104,13 @@ end;
 {$ENDIF}
 
 procedure TframeDeliveryGrid.comboHowUsedChange(Sender: TObject);
+{$IFDEF FMP}
 var
   ColIndex: Integer;
   RowIndex: Integer;
   TempOptions: TGridOptions;
   ValidCell: Boolean;
+{$ENDIF}
 begin
 {$IFDEF FMP}
   for RowIndex := Grid.FixedRows to
@@ -178,6 +183,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF FMP}
+  Changing := True;
   try
     Assert(ScreenObjectList.Count > 0);
     MaxCount := 0;
@@ -224,9 +230,10 @@ begin
           TimeItem := DelivItem.DeliveryParam[TimeIndex];
           Grid.Cells[Ord(dtcStart), TimeIndex+1] := FloatToStr(TimeItem.StartTime);
           Grid.Cells[Ord(dtcEnd), TimeIndex+1] := FloatToStr(TimeItem.EndTime);
-          Grid.Cells[Ord(dcVolume) + OuterIndex*3 + 2, TimeIndex+1] := TimeItem.Volume;
-          Grid.Cells[Ord(dcRank) + OuterIndex*3 + 2, TimeIndex+1] := TimeItem.Rank;
-          Grid.ItemIndex[Ord(dcHowUsed) + OuterIndex*3 + 2, TimeIndex+1] := Ord(TimeItem.NonRoutedDeliveryType);
+          Grid.Cells[Ord(dcVolume) + OuterIndex*DeliveryColumns + 2, TimeIndex+1] := TimeItem.Volume;
+          Grid.Cells[Ord(dcRank) + OuterIndex*DeliveryColumns + 2, TimeIndex+1] := TimeItem.Rank;
+          Grid.ItemIndex[Ord(dcHowUsed) + OuterIndex*DeliveryColumns + 2, TimeIndex+1] := Ord(TimeItem.NonRoutedDeliveryType);
+          Grid.Cells[Ord(dcVirtualFarm) + OuterIndex*DeliveryColumns + 2, TimeIndex+1] := TimeItem.VirtualFarm;
         end;
       end;
     finally
@@ -234,15 +241,18 @@ begin
     end;
   finally
     FChanged := False;
+    Changing := False;
   end;
 {$ENDIF}
 end;
 
 procedure TframeDeliveryGrid.GridMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
+{$IFDEF FMP}
 var
   ShouldEnable: boolean;
   ColIndex, RowIndex: Integer;
+{$ENDIF}
 begin
   inherited;
 {$IFDEF FMP}
@@ -269,6 +279,24 @@ begin
   comboHowUsed.Enabled := ShouldEnable;
   lblHowUsed.Enabled := ShouldEnable;
 {$ENDIF}
+end;
+
+procedure TframeDeliveryGrid.GridSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+var
+  ColumnType: TDeliveryColumns;
+  DelivType: TNonRoutedDeliveryType;
+begin
+  inherited;
+  if ACol >= 2 then
+  begin
+    ColumnType := TDeliveryColumns((ACol-2) mod DeliveryColumns);
+    if ColumnType = dcVirtualFarm then
+    begin
+      DelivType := TNonRoutedDeliveryType(Grid.ItemIndex[ACol-1,ARow]);
+      CanSelect  := DelivType = nrdtVirtualFarm;
+    end;
+  end;
 end;
 
 procedure TframeDeliveryGrid.GridSetEditText(Sender: TObject; ACol,
@@ -308,6 +336,7 @@ begin
 end;
 
 procedure TframeDeliveryGrid.seNumberOfDeliveryTypesChange(Sender: TObject);
+
 var
   PickList: TStringList;
   PriorColCount: Integer;
@@ -317,19 +346,21 @@ begin
   inherited;
   PriorColCount := Grid.ColCount;
   Assert(PriorColCount >= 2);
-  Grid.ColCount := seNumberOfDeliveryTypes.AsInteger * 3 + 2;
+  Grid.ColCount := seNumberOfDeliveryTypes.AsInteger * DeliveryColumns + 2;
 
   PickList := TStringList.Create;
   try
     PickList.Add(StrOnlyTheAmountRequ);
     PickList.Add(StrSurplusDischargedT);
     PickList.Add(StrSurplusStoredInGr);
+    PickList.Add(StrVirtualFarm0);
+    comboHowUsed.Items := PickList;
 
     Grid.BeginUpdate;
     try
       for ColIndex := PriorColCount to Grid.ColCount - 1 do
       begin
-        ColumnType := TDeliveryColumns((ColIndex-2) mod 3);
+        ColumnType := TDeliveryColumns((ColIndex-2) mod DeliveryColumns);
         case ColumnType of
           dcVolume:
             begin
@@ -351,7 +382,14 @@ begin
               Grid.Columns[ColIndex].ComboUsed := True;
               Grid.Columns[ColIndex].LimitToList := True;
               Grid.Columns[ColIndex].PickList := PickList;
-            end
+            end;
+          dcVirtualFarm:
+            begin
+              Grid.Cells[ColIndex,0] := StrVirtualFarmNumber;
+              Grid.Columns[ColIndex].ButtonUsed := True;
+              Grid.Columns[ColIndex].ButtonCaption := StrF;
+              Grid.Columns[ColIndex].ButtonWidth := 35;
+            end;
           else
             Assert(False);
         end;
@@ -430,7 +468,7 @@ begin
         for DeliveryIndex := 0 to seNumberOfDeliveryTypes.AsInteger - 1 do
         begin
           DeliveryItem := Delivery[DeliveryIndex];
-          ColStart := DeliveryIndex*3+2;
+          ColStart := DeliveryIndex*DeliveryColumns+2;
           for RowIndex := 0 to Rows.Count-1 do
           begin
             ARow := Rows[RowIndex];
@@ -448,6 +486,10 @@ begin
             DeliveryTimeItem.Rank := Grid.Cells[ColStart + Ord(dcRank),ARow];
             DeliveryTimeItem.NonRoutedDeliveryType :=
               TNonRoutedDeliveryType(Grid.ItemIndex[ColStart + Ord(dcHowUsed),ARow]);
+            if DeliveryTimeItem.NonRoutedDeliveryType = nrdtVirtualFarm then
+            begin
+              DeliveryTimeItem.VirtualFarm := Grid.Cells[ColStart + Ord(dcVirtualFarm),ARow];
+            end;
           end;
           while DeliveryItem.DeliveryParam.Count > Rows.Count do
           begin
@@ -472,13 +514,15 @@ procedure TframeDeliveryGrid.GetValidHowUsed(ColIndex, RowIndex: Integer;
   var ValidCell: Boolean);
 begin
   ValidCell := (RowIndex >= 1) and (ColIndex > Ord(dtcEnd))
-    and (((ColIndex - 2) mod 3) = Ord(dcHowUsed));
+    and (((ColIndex - 2) mod DeliveryColumns) = Ord(dcHowUsed));
 end;
 {$ENDIF}
 
 procedure TframeDeliveryGrid.InitializeControls;
+{$IFDEF FMP}
 var
   StressPeriods: TModflowStressPeriods;
+{$ENDIF}
 begin
 {$IFDEF FMP}
   FirstFormulaColumn := Succ(Ord(dtcEnd));
@@ -490,17 +534,20 @@ begin
   StressPeriods.FillPickListWithStartTimes(Grid, Ord(dtcStart));
   StressPeriods.FillPickListWithEndTimes(Grid, Ord(dtcEnd));
   seNumberOfDeliveryTypes.AsInteger := 0;
+  seNumber.AsInteger := 0;
   LayoutMultiRowEditControls;
 {$ENDIF}
 
 end;
 
 procedure TframeDeliveryGrid.LayoutMultiRowEditControls;
+{$IFDEF FMP}
 var
   Column: integer;
 //  Row: Integer;
   ColIndex: Integer;
   ValidCell: Boolean;
+{$ENDIF}
 begin
   inherited;
 {$IFDEF FMP}

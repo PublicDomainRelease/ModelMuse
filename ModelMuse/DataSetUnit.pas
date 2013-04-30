@@ -37,7 +37,8 @@ type
     btPhastRiver, btPhastWell, btMfWell, btMfGhb, btMfDrn, btMfDrt, btMfRiv,
     btMfChd, btMfEts, btMfEt, btMfRch, btMfSfr, btMfStr, btMfUzf, btMfObs,
     btMfMnw, btMt3dSsm, btMfHfb, btSutraSpecifiedPressure, btSutraSpecifiedHead,
-    btSutraSpecConcTemp, btSutraFluidFlux, btMassEnergyFlux, btMfFhb);
+    btSutraSpecConcTemp, btSutraFluidFlux, btMassEnergyFlux, btMfFhb, btCFP,
+    btMfFarm);
 
   TBoundaryTypes = set of TBoundaryType;
 
@@ -909,9 +910,6 @@ type
     property Units: string read FUnits write SetUnits;
     // @name indicates whether the @classname will be shown or not
     // when editing a @link(TScreenObject).
-    { TODO : Eliminate commented out code for Visible property. }
-
-    // @name has no effect.  It is maintained only for backwards compatibility.
     property Visible: boolean read FVisible write SetVisible stored False;
     property AngleType: TAngleType read FAngleType write SetAngleType;
     property ContourInterval: TRealStorage read FContourInterval write SetContourInterval;
@@ -1201,6 +1199,7 @@ type
     procedure SetIsValue(const Layer, Row, Col: Integer;
       const Value: boolean); override;
   public
+    procedure RemoveValue(const Layer, Row, Col: Integer);
     // @name creates an instance of @classname and sets
     // @link(TDataArray.DataType) to rdtInteger.
     constructor Create(AnOwner: TComponent); override;
@@ -1499,6 +1498,8 @@ resourcestring
   StrMODFLOWUnsaturated = 'MODFLOW Unsaturated Zone Flow';
   StrMODFLOWObservations = 'MODFLOW Observations';
   StrMT3DMSSinkAndSour = 'MT3DMS Sink and Source Mixing';
+  StrMODFLOW_Farm = 'MODFLOW Farm Process';
+  StrMODFLOW_CFP = 'MODFLOW Conduit Flow Process';
   StrUndefined = 'Undefined';
   DataSetInterpolatorExplanation = 'set via %s.';
   StrSetViaDefaultForm = 'set via default formula: %s';
@@ -3472,6 +3473,7 @@ var
   LocalPhastModel : TPhastModel;
   LocalChildModel: TChildModel;
 begin
+  FVisible := True;
   FUseLgrEdgeCells := lctUse;
   Assert(AnOwner <> nil);
   FModel := AnOwner as TCustomModel;
@@ -5859,6 +5861,14 @@ begin
   ColMax := FIntegerValues.MaxCol;
 end;
 
+procedure TIntegerSparseDataSet.RemoveValue(const Layer, Row, Col: Integer);
+begin
+  if IsValue[Layer, Row, Col] then
+  begin
+    FIntegerValues.RemoveValue(Layer, Row, Col);
+  end;
+end;
+
 function TIntegerSparseDataSet.GetIntegerData(const Layer, Row,
   Col: integer): integer;
 begin
@@ -6701,6 +6711,19 @@ begin
   begin
     Result := btMfFhb;
   end
+  else if (Name = StrFarmEvap)
+    or (Name = StrFarmPrecip)
+    or (Name = StrFarmCropID)
+    or (Name = StrFarmMaxPumpRate)
+    or (Name = StrFarmWellFarmID)
+    or (Name = StrFarmWellPumpRequired) then
+  begin
+    Result := btMfFarm;
+  end
+  else if (Name = StrCfpRecharge) then
+  begin
+    Result := btCFP;
+  end
   else
   begin
     result := btUndefined;
@@ -6823,6 +6846,14 @@ begin
       btMfFhb:
         begin
           result := StrMODFLOWFHB;
+        end;
+      btMfFarm:
+        begin
+          result := StrMODFLOW_Farm;
+        end;
+      btCFP:
+        begin
+          result := StrMODFLOW_CFP;
         end;
       else
         Assert(False);

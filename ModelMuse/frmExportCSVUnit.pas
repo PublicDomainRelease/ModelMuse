@@ -62,8 +62,12 @@ resourcestring
   '.';
   StrNoDataSetsHaveBe = 'No data sets have been selected. Do you want to jus' +
   't export the coordinates?';
-  StrXYColumn = '"X", "Y", "Column", "Row"';
-  StrXYZColu = '"X", "Y", "Z", "Column", "Row", "Layer"';
+  StrXYPrimesLocation = 'X, Y, X_Prime, Y_Prime, Column, Row';
+  StrXYZPrimesLocation = 'X, Y, Z, X_Prime, Y_Prime, Column, Row, Layer';
+  StrXYElement = 'X, Y, Element';
+  StrXYNode = 'X, Y, Node';
+  StrXYZElement = 'X, Y, Z, Element';
+  StrXYZNode = 'X, Y, Z, Node';
 
 {$R *.dfm}
 
@@ -207,6 +211,7 @@ var
   Node2D: TSutraNode2D;
   Node3D: TSutraNode3D;
   SortIndex: Integer;
+  NonRotatedLocation: TPoint3D;
   function FreeFormattedReal(
     const Value: double): string;
   begin
@@ -268,6 +273,11 @@ var
     begin
       WriteString(', ' + FreeFormattedReal(Location.Z));
     end;
+    if Mesh = nil then
+    begin
+      WriteString(', ' + FreeFormattedReal(NonRotatedLocation.X));
+      WriteString(', ' + FreeFormattedReal(NonRotatedLocation.Y));
+    end;
     WriteString(', ' + IntToStr(ColumnIndex+1));
     WriteString(', ' + IntToStr(RowIndex+1));
     if (Orientation = dso3D) then
@@ -314,7 +324,9 @@ begin
   Grid := nil;
   Mesh := nil;
   case LocalModel.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         Grid := LocalModel.Grid;
         if (Grid.ColumnCount = 0)
@@ -399,11 +411,11 @@ begin
             case Orientation of
               dsoTop:
                 begin
-                  WriteString(StrXYColumn);
+                  WriteString(StrXYPrimesLocation);
                 end;
               dso3D:
                 begin
-                  WriteString(StrXYZColu);
+                  WriteString(StrXYZPrimesLocation);
                 end;
               else Assert(False)
             end;
@@ -416,11 +428,11 @@ begin
                   case EvaluatedAt of
                     eaBlocks:
                       begin
-                        WriteString('"X", "Y", "Element"');
+                        WriteString(StrXYElement);
                       end;
                     eaNodes:
                       begin
-                        WriteString('"X", "Y", "Node"');
+                        WriteString(StrXYNode);
                       end;
                     else Assert(False);
                   end;
@@ -431,11 +443,11 @@ begin
                   case EvaluatedAt of
                     eaBlocks:
                       begin
-                        WriteString('"X", "Y", "Z", "Element"');
+                        WriteString(StrXYZElement);
                       end;
                     eaNodes:
                       begin
-                        WriteString('"X", "Y", "Z", "Node"');
+                        WriteString(StrXYZNode);
                       end;
                     else Assert(False);
                   end;
@@ -447,7 +459,7 @@ begin
           for Index := 0 to DataArrayList.Count - 1 do
           begin
             ADataArray := DataArrayList[Index];
-            WriteString(', "' + ADataArray.Name + '"');
+            WriteString(', ' + ADataArray.Name);
             ADataArray.Initialize;
           end;
           NewLine;
@@ -468,6 +480,9 @@ begin
                               Location := Grid.
                                 RotatedThreeDElementCenter(
                                 ColumnIndex, RowIndex, 0);
+                              NonRotatedLocation :=
+                                Grid.ThreeDElementCenter(
+                                ColumnIndex, RowIndex, 0);
                               WriteAGridLine;
                             end;
                           end;
@@ -482,6 +497,9 @@ begin
                               begin
                                 Location := Grid.
                                   RotatedThreeDElementCenter(
+                                  ColumnIndex, RowIndex, LayerIndex);
+                                NonRotatedLocation :=
+                                  Grid.ThreeDElementCenter(
                                   ColumnIndex, RowIndex, LayerIndex);
                                 WriteAGridLine;
                               end;

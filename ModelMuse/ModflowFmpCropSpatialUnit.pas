@@ -161,7 +161,6 @@ type
   //
   // @seealso(TFmpCropIDCollection)
   TFmpCropIDBoundary = class(TModflowBoundary)
-  private
   protected
     // @name fills ValueTimeList with a series of TObjectLists - one for
     // each stress period.  Each such TObjectList is filled with
@@ -383,7 +382,7 @@ var
   ALink: TFmpCropIDTimeListLink;
   CropIDData: TModflowTimeList;
   DataArrayIndex: Integer;
-  DataArray: TTransientRealSparseDataSet;
+  DataArray: TTransientIntegerSparseDataSet;
   Grid: TCustomModelGrid;
   RowIndex: Integer;
   ColIndex: Integer;
@@ -408,7 +407,7 @@ begin
     Grid := (AModel as TCustomModel).Grid;
     for DataArrayIndex := 0 to CropIDData.Count - 1 do
     begin
-      DataArray := CropIDData[DataArrayIndex] as TTransientRealSparseDataSet;
+      DataArray := CropIDData[DataArrayIndex] as TTransientIntegerSparseDataSet;
       for RowIndex := 0 to Grid.RowCount - 1 do
       begin
         for ColIndex := 0 to Grid.ColumnCount - 1 do
@@ -500,11 +499,10 @@ end;
 function TCropID_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
-  Assert(False);
-//  case Index of
-//    PrecipPosition: result := StrAssignedFromTheCe;
-//    else Assert(False);
-//  end;
+  case Index of
+    CropIDPosition: result := CropIDAnnotation;
+    else Assert(False);
+  end;
 end;
 
 function TCropID_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
@@ -533,7 +531,10 @@ end;
 function TCropID_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
-  Assert(False);
+  case Index of
+    CropIDPosition: result := CropID;
+    else Assert(False);
+  end;
 end;
 
 function TCropID_Cell.GetCropID: integer;
@@ -871,11 +872,10 @@ begin
   FCropIDData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FCropIDData.NonParamDescription := StrCropID;
   FCropIDData.ParamDescription := ' ' + LowerCase(StrCropID);
+  FCropIDData.DataType := rdtInteger;
   AddTimeList(FCropIDData);
   if Model <> nil then
   begin
-    { TODO -cFMP : This needs to be finished. }
-//    Assert(False);
     FCropIDData.OnInvalidate := (Model as TCustomModel).InvalidateMfFmpCropID;
   end;
 end;

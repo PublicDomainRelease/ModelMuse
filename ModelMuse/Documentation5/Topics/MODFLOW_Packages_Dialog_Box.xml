@@ -58,6 +58,8 @@
     <para styleclass="Normal" style="text-align:left; text-indent:0px; margin-top:0px; margin-right:0px; margin-bottom:0px; margin-left:24px; line-height:1.0; white-space:normal; page-break-inside:auto; page-break-after:auto; tabstops:none;"><link displaytype="text" defaultstyle="true" type="topiclink" href="STOB_Stream_Observation_Packag" styleclass="Normal" translate="true">STOB: Stream Observation package</link></para>
     <para><link displaytype="text" defaultstyle="true" type="topiclink" href="Output" styleclass="Normal" translate="true">Output</link></para>
     <para style="margin-left:24px;"><link displaytype="text" defaultstyle="true" type="topiclink" href="HYD_HYDMOD_Package" styleclass="Normal" translate="true">HYD: HYDMOD package</link></para>
+    <para><text styleclass="Normal" translate="true">Conduit Flow Process</text></para>
+    <para style="margin-left:24px;"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Normal" translate="true">CFP: Conduit Flow Process</link></para>
     <para><link displaytype="text" defaultstyle="true" type="topiclink" href="Post_Processors" styleclass="Normal" translate="true">Post Processors</link></para>
     <para style="margin-left:24px;"><link displaytype="text" defaultstyle="true" type="topiclink" href="MODPATH" styleclass="Normal" translate="true">MODPATH</link></para>
     <para style="margin-left:24px;"><link displaytype="text" defaultstyle="true" type="topiclink" href="ZONEBUDGET" styleclass="Normal" translate="true">ZONEBUDGET</link></para>

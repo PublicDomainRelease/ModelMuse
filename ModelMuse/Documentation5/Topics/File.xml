@@ -8,7 +8,7 @@
     </header>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The menu items under File are listed in table 3. &#160;The commands under this menu have to do with opening, saving, importing or exporting files. &#160;Many of the choices under File|Import refer to features of data sets and objects that are described under &#160;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="Data_Sets_Dialog_Box" styleclass="Normal" translate="true">Data Sets Dialog Box</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Object_Properties_Dialog_Box" styleclass="Normal" translate="true">Object Properties Dialog Box</link><text styleclass="Normal" translate="true">.</text></para>
     <para styleclass="Table Caption"><text styleclass="Table Caption" translate="true">Table 3. File Menu</text></para>
-    <para styleclass="Normal" style="text-align:center;"><table rowcount="44" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal" style="text-align:center;"><table rowcount="46" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td colspan="2" style="width:626px;">
           <para styleclass="Normal"><line style="height:1px; color:#000000;" /></para>
@@ -213,6 +213,14 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="width:221px;">
+          <para styleclass="Table Header" style="text-align:left;"><image src="RunButton.bmp" scale="100.00%" styleclass="Image Caption"></image><text styleclass="Image Caption" translate="true">&#32;</text><text styleclass="Table Header" translate="true">Export|MODFLOW-CFP Input Files</text></para>
+        </td>
+        <td style="width:405px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Creates the input files for MODFLOW-CFP (Conduit Flow Process) and optionally executes MODFLOW-CFP. &#160;See also: </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Batch_File_Additions_Dialog" styleclass="Strong" translate="true">Batch File Additions</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:221px;">
           <para styleclass="Table Header" style="text-align:left;"><image src="RunButton.bmp" scale="100.00%" styleclass="Image Caption"></image><text styleclass="Image Caption" translate="true">&#32;</text><text styleclass="Table Header" translate="true">Export|SUTRA Input Files</text></para>
         </td>
         <td style="width:405px;">
@@ -297,6 +305,14 @@
         </td>
         <td style="width:405px;">
           <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Times series from MODPATH are exported to a 3D Shapefile. &#160;All the particles at each time point will be part of the same shape. If the model has one or more child models, you must select the model that has the time series you want to export.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:221px;">
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Shapefile|Head Observations to Shapefile</text></para>
+        </td>
+        <td style="width:405px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">If the user has </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Head_Observation_Results" styleclass="Table Cell" translate="true">imported head observation</link><text styleclass="Table Cell" translate="true"> results, those results can be exported to a Shapefile. For each observation, a point object will be created with the observed value, the simulated value, the simulation time and the minimum and maximum layers included in the observation.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">

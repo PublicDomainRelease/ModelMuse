@@ -764,9 +764,16 @@ begin
   LocalScreenObject := ScreenObject as TScreenObject;
   Assert(LocalScreenObject <> nil);
   LocalModel := AModel as TCustomModel;
-  EarliestAllowedTime := LocalModel.ModflowFullStressPeriods[0].StartTime;
-  LatestAllowedTime := LocalModel.ModflowFullStressPeriods[
-    LocalModel.ModflowFullStressPeriods.Count-1].EndTime;
+  if LocalModel.ModflowFullStressPeriods.Count > 0 then
+  begin
+    EarliestAllowedTime := LocalModel.ModflowFullStressPeriods.First.StartTime;
+    LatestAllowedTime := LocalModel.ModflowFullStressPeriods.Last.EndTime;
+  end
+  else
+  begin
+    EarliestAllowedTime := LocalModel.ModflowStressPeriods.First.StartTime;
+    LatestAllowedTime := LocalModel.ModflowStressPeriods.Last.EndTime;
+  end;
   Assert(LocalModel <> nil);
   StoredUpToDate := LocalModel.UpToDate;
   Times := TRealList.Create;

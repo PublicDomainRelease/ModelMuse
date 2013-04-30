@@ -32,10 +32,6 @@ inherited frameDeliveryGrid: TframeDeliveryGrid
       WordWrap = True
       OnClick = lblNumberOfDeliveryTypesClick
     end
-    inherited seNumber: TJvSpinEdit
-      Height = 24
-      ExplicitHeight = 24
-    end
     object seNumberOfDeliveryTypes: TJvSpinEdit
       Left = 176
       Top = 6
@@ -50,6 +46,7 @@ inherited frameDeliveryGrid: TframeDeliveryGrid
     Width = 393
     Height = 112
     ColCount = 2
+    OnSelectCell = GridSelectCell
     OnSetEditText = GridSetEditText
     Columns = <
       item
@@ -72,6 +69,7 @@ inherited frameDeliveryGrid: TframeDeliveryGrid
         WordWrapCaptions = True
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -94,6 +92,7 @@ inherited frameDeliveryGrid: TframeDeliveryGrid
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = False
       end>
     ExplicitWidth = 393
@@ -109,13 +108,6 @@ inherited frameDeliveryGrid: TframeDeliveryGrid
       Height = 16
       Caption = 'How used'
       Enabled = False
-    end
-    inherited edFormula: TLabeledEdit
-      Height = 24
-      EditLabel.ExplicitLeft = 0
-      EditLabel.ExplicitTop = -19
-      EditLabel.ExplicitWidth = 61
-      ExplicitHeight = 24
     end
     object comboHowUsed: TComboBox
       Left = 255

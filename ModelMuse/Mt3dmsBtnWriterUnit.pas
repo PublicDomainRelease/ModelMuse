@@ -223,8 +223,16 @@ var
                 end;
               else Assert(False);
             end;
-            if (StressPeriod >= KPER) and (KSTP >= TimeStep)
-              and (TransportStep >= NTRANS) then
+            if KPER > StressPeriod then
+            begin
+              break
+            end
+            else if (KPER = StressPeriod) and (KSTP > TimeStep) then
+            begin
+              break;
+            end
+            else if (KPER = StressPeriod) and (KSTP = TimeStep)
+              and (NTRANS >= TransportStep) then
             begin
               break;
             end;

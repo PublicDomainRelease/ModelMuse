@@ -12,31 +12,31 @@ inherited frmDataSets: TfrmDataSets
   OnClose = FormClose
   ExplicitWidth = 656
   ExplicitHeight = 507
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 19
   object Splitter1: TSplitter
-    Left = 313
+    Left = 315
     Top = 0
     Width = 5
-    Height = 394
+    Height = 401
     Align = alRight
     ExplicitLeft = 325
     ExplicitHeight = 405
   end
   object pnlButtons: TPanel
     Left = 0
-    Top = 394
-    Width = 638
+    Top = 401
+    Width = 640
     Height = 41
     Align = alBottom
     ParentColor = True
     TabOrder = 2
     DesignSize = (
-      638
+      640
       41)
     object btnOK: TBitBtn
       Left = 432
-      Top = 4
+      Top = 6
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
@@ -107,8 +107,8 @@ inherited frmDataSets: TfrmDataSets
   end
   object sbStatusBar: TStatusBar
     Left = 0
-    Top = 435
-    Width = 638
+    Top = 442
+    Width = 640
     Height = 27
     Panels = <>
     ParentColor = True
@@ -117,8 +117,8 @@ inherited frmDataSets: TfrmDataSets
   object tvDataSets: TTreeView
     Left = 0
     Top = 0
-    Width = 313
-    Height = 394
+    Width = 315
+    Height = 401
     Align = alClient
     HideSelection = False
     Indent = 21
@@ -129,10 +129,10 @@ inherited frmDataSets: TfrmDataSets
     OnChange = tvDataSetsChange
   end
   object pcDataSets: TJvPageControl
-    Left = 318
+    Left = 320
     Top = 0
     Width = 320
-    Height = 394
+    Height = 401
     ActivePage = tabBasic
     Align = alRight
     TabOrder = 1
@@ -144,7 +144,7 @@ inherited frmDataSets: TfrmDataSets
       ExplicitHeight = 0
       DesignSize = (
         312
-        360)
+        367)
       object lblName: TLabel
         Left = 3
         Top = 3
@@ -441,7 +441,6 @@ inherited frmDataSets: TfrmDataSets
           Width = 245
           Height = 34
           Caption = 'Use PHAST-style interpolation for all cells'
-          TabOrder = 0
           WordWrap = True
           OnClick = framePhastInterpolationcbPhastInterpolationClick
           AutoSize = False
@@ -493,7 +492,6 @@ inherited frmDataSets: TfrmDataSets
           Width = 272
           Height = 78
           Columns = 2
-          TabOrder = 1
           OnClick = framePhastInterpolationrgInterpolationDirectionClick
           ExplicitLeft = 12
           ExplicitTop = 43
@@ -533,7 +531,7 @@ inherited frmDataSets: TfrmDataSets
       ExplicitHeight = 0
       object Splitter2: TSplitter
         Left = 0
-        Top = 168
+        Top = 175
         Width = 312
         Height = 5
         Cursor = crVSplit
@@ -544,7 +542,7 @@ inherited frmDataSets: TfrmDataSets
         Left = 0
         Top = 0
         Width = 312
-        Height = 168
+        Height = 175
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 0
@@ -560,9 +558,9 @@ inherited frmDataSets: TfrmDataSets
         object reComment: TRichEdit
           AlignWithMargins = True
           Left = 3
-          Top = 25
+          Top = 28
           Width = 306
-          Height = 140
+          Height = 144
           Align = alClient
           ScrollBars = ssBoth
           TabOrder = 0
@@ -573,7 +571,7 @@ inherited frmDataSets: TfrmDataSets
       end
       object pnlDescription: TPanel
         Left = 0
-        Top = 173
+        Top = 180
         Width = 312
         Height = 187
         Align = alBottom
@@ -591,9 +589,9 @@ inherited frmDataSets: TfrmDataSets
         object memoAssociatedDataSets: TMemo
           AlignWithMargins = True
           Left = 3
-          Top = 25
+          Top = 28
           Width = 306
-          Height = 159
+          Height = 156
           Align = alClient
           ReadOnly = True
           ScrollBars = ssBoth

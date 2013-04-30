@@ -67,7 +67,8 @@ Type
     // @name is used to set up a hierarchical arrangement of
     // @link(PackageIdentifier)s.
     property Classification: string read FClassification write FClassification;
-    property AlternativeClassification: string read FAlternativeClassification write FAlternativeClassification;
+    property AlternativeClassification: string read FAlternativeClassification
+      write FAlternativeClassification;
     // @name is used in @link(TfrmModflowPackages) to associate a particular
     // package with a particular TFrame.
     property Frame: pointer read FFrame write FFrame;
@@ -698,39 +699,48 @@ Type
     procedure InitializeVariables; override;
   published
     // @name is HEADTOL.
-    property HeadTolerance: TRealStorage read FHeadTolerance write SetHeadTolerance;
+    property HeadTolerance: TRealStorage read FHeadTolerance
+      write SetHeadTolerance;
     // @name is FLUXTOL.
-    property FluxTolerance: TRealStorage read FFluxTolerance write SetFluxTolerance;
+    property FluxTolerance: TRealStorage read FFluxTolerance
+      write SetFluxTolerance;
     // @name is MAXITEROUT.
-    property MaxOuterIterations: integer read FMaxOuterIterations write SetMaxOuterIterations stored True;
+    property MaxOuterIterations: integer read FMaxOuterIterations
+      write SetMaxOuterIterations stored True;
     // @name is THICKFACT.
     // range = 0 to 1;
-    property ThicknessFactor: TRealStorage read FThicknessFactor write SetThicknessFactor;
+    property ThicknessFactor: TRealStorage read FThicknessFactor
+      write SetThicknessFactor;
     // @name is LINMETH.
-    property SolverMethod: TNewtonSolverMethod read FSolverMethod write SetSolverMethod stored True;
+    property SolverMethod: TNewtonSolverMethod read FSolverMethod
+      write SetSolverMethod stored True;
     // @name is IPRNWT.
     property PrintFlag: integer read FPrintFlag write SetPrintFlag stored True;
     // @name is IBOTAV.
     // Zero or one.
-    Property CorrectForCellBottom: integer read FCorrectForCellBottom write SetCorrectForCellBottom stored True;
+    Property CorrectForCellBottom: integer read FCorrectForCellBottom
+      write SetCorrectForCellBottom stored True;
     // @name is OPTIONS.
     property Option: TNewtonOption read FOption write SetOption stored True;
     property DBDTheta: TRealStorage read FDBDTheta write SetDBDTheta;
     property DBDKappa: TRealStorage read FDBDKappa write SetDBDKappa;
     property DBDGamma: TRealStorage read FDBDGamma write SetDBDGamma;
     // @name is MOMFACT.
-    property MomementumCoefficient: TRealStorage read FMomementumCoefficient write SetMomementumCoefficient;
+    property MomementumCoefficient: TRealStorage read FMomementumCoefficient
+      write SetMomementumCoefficient;
     // Zero or one.
     property BackFlag: integer read FBackFlag write SetBackFlag stored True;
     // @name is MAXBACKITER.
-    property MaxBackIterations: integer read FMaxBackIterations write SetMaxBackIterations stored True;
+    property MaxBackIterations: integer read FMaxBackIterations
+      write SetMaxBackIterations stored True;
     // @name is BACKTOL.
     // range = 1 to 2;
     property BackTol: TRealStorage read FBackTol write SetBackTol;
     // @name is BACKREDUCE.
     property BackReduce: TRealStorage read FBackReduce write SetBackReduce;
     // @name is MAXITINNER.
-    property MaxIterInner: integer read FMaxIterInner write SetMaxIterInner stored True;
+    property MaxIterInner: integer read FMaxIterInner
+      write SetMaxIterInner stored True;
     // @name is ILUMETHOD.
     property IluMethod: TNewtonIluMethod read FIluMethod
       write SetIluMethod stored True;
@@ -777,7 +787,8 @@ Type
     property MaxInnerIterations: integer read FMaxInnerIterations
       write SetMaxInnerIterations stored True;
     // @name is the GOFAIL OPTION in NWT now renamed CONTINUE.
-    property GoFail: Boolean read FContinueNWT write SetContinueNWT stored False;
+    property GoFail: Boolean read FContinueNWT
+      write SetContinueNWT stored False;
     // @name is the CONTINUE OPTION in NWT.
     property ContinueNWT: Boolean read FContinueNWT write SetContinueNWT;
   end;
@@ -824,8 +835,8 @@ Type
   published
     property TimeVaryingLayers: boolean read GetTimeVaryingLayers
       write SetTimeVaryingLayers;
-    property MultiplierArrayNames: TTransientMultCollection read FMultiplierArrayNames
-      write SetMultiplierArrayNames;
+    property MultiplierArrayNames: TTransientMultCollection
+      read FMultiplierArrayNames write SetMultiplierArrayNames;
     property ZoneArrayNames: TTransientZoneCollection read FZoneArrayNames
       write SetZoneArrayNames;
   end;
@@ -933,8 +944,10 @@ Type
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
   published
-    property PrintStage: boolean read FPrintStage write SetPrintStage default True;
-    property TableStages: integer read FTableStages write SetTableStages default 15;
+    property PrintStage: boolean read FPrintStage
+      write SetPrintStage default True;
+    property TableStages: integer read FTableStages
+      write SetTableStages default 15;
   end;
 
   TExternalLakeChoice = (elcNone, elcAll);
@@ -989,7 +1002,8 @@ Type
     procedure Assign(Source: TPersistent); override;
   published
     property ParameterName: string read FParameterName write SetParameterName;
-    property ParameterInstance: string read FParameterInstance write SetParameterInstance;
+    property ParameterInstance: string read FParameterInstance
+      write SetParameterInstance;
     property StartTime: double read FStartTime write SetStartTime;
     property EndTime: double read FEndTime write SetEndTime;
   end;
@@ -1000,8 +1014,10 @@ Type
     procedure SetItems(Index: integer; const Value: TSfrParamInstance);
   public
     constructor Create(Model: TBaseModel);
-    property Items[Index: integer]: TSfrParamInstance read GetItems write SetItems;
-    function ParameterInstanceExists(const ParamName, InstaName: string): boolean;
+    property Items[Index: integer]: TSfrParamInstance read GetItems
+      write SetItems;
+    function ParameterInstanceExists
+     (const ParamName, InstaName: string): boolean;
     procedure DeleteInstancesOfParameter(const ParamName: string);
     procedure UpdateParamName(const OldParamName, NewParamName: string);
   end;
@@ -1076,7 +1092,8 @@ Type
     procedure InitializeVariables; override;
   published
     // ICALC
-    property CalculateStage: Boolean read FCalculateStage write SetCalculateStage;
+    property CalculateStage: Boolean read FCalculateStage
+      write SetCalculateStage;
   end;
 
   TSfrPackageSelection = class(TModflowPackageSelection)
@@ -1365,7 +1382,8 @@ Type
       default pfListing;
     property ParameterInstances: TSfrParamInstances read FParameterInstances
       write SetParameterInstances stored FIsSelected;
-    property KinematicRouting: boolean read FKinematicRouting write SetKinematicRouting;
+    property KinematicRouting: boolean read FKinematicRouting
+      write SetKinematicRouting;
     property TimeStepsForKinematicRouting: integer
       read FTimeStepsForKinematicRouting write SetTimeStepsForKinematicRouting
       default 1;
@@ -1375,7 +1393,8 @@ Type
       write SetKinematicRoutingWeight stored True;
     property GageOverallBudget: boolean read FGageOverallBudget
       write SetGageOverallBudget;
-    property UseGsflowFormat: boolean read FUseGsflowFormat write SetUseGsflowFormat;
+    property UseGsflowFormat: boolean read FUseGsflowFormat
+      write SetUseGsflowFormat;
   end;
 
   TUzfPackageSelection = class(TCustomLayerPackageSelection)
@@ -1403,7 +1422,8 @@ Type
     procedure SetPrintSummary(const Value: integer);
     procedure SetDepthOfUndulations(const Value: double);
     procedure InitializeUzfDisplay(Sender: TObject);
-    procedure GetMfUzfInfiltrationUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetMfUzfInfiltrationUseList(Sender: TObject;
+      NewUseList: TStringList);
     procedure GetMfUzfExtinctionDepthUseList(Sender: TObject;
       NewUseList: TStringList);
     function ModflowUztEtSimulated(Sender: TObject): boolean;
@@ -1430,14 +1450,19 @@ Type
     procedure InvalidateAllTimeLists; override;
     procedure InitializeVariables; override;
   published
-    property VerticalKSource: integer read FVerticalKSource write SetVerticalKSource;
-    property RouteDischargeToStreams: boolean read FRouteDischargeToStreams write SetRouteDischargeToStreams;
+    property VerticalKSource: integer read FVerticalKSource
+      write SetVerticalKSource;
+    property RouteDischargeToStreams: boolean read FRouteDischargeToStreams
+      write SetRouteDischargeToStreams;
     property SimulateET: boolean read FSimulateET write SetSimulateET;
-    property NumberOfTrailingWaves: integer read FNumberOfTrailingWaves write SetNumberOfTrailingWaves;
-    property NumberOfWaveSets: integer read FNumberOfWaveSets write SetNumberOfWaveSets;
+    property NumberOfTrailingWaves: integer read FNumberOfTrailingWaves
+      write SetNumberOfTrailingWaves;
+    property NumberOfWaveSets: integer read FNumberOfWaveSets
+      write SetNumberOfWaveSets;
     // IFTUNIT
     property PrintSummary: integer read FPrintSummary write SetPrintSummary;
-    property DepthOfUndulations: double read FDepthOfUndulations write SetDepthOfUndulations;
+    property DepthOfUndulations: double read FDepthOfUndulations
+      write SetDepthOfUndulations;
     property AssignmentMethod: TUpdateMethod read FAssignmentMethod
       write SetAssignmentMethod stored True;
     // SPECIFYTHTR
@@ -1707,7 +1732,8 @@ Type
     constructor Create(Collection: TCollection); override;
     Destructor Destroy; override;
   published
-    property CompositeZone: TCompositeZone read FCompositeZone write SetCompositeZone;
+    property CompositeZone: TCompositeZone read FCompositeZone
+      write SetCompositeZone;
   end;
 
   TCompositeZoneCollection = class(TOrderedCollection)
@@ -1736,10 +1762,13 @@ Type
     Destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
   published
-    property CompositeZones: TCompositeZoneCollection read FCompositeZones write SetCompositeZones;
-    property ExportZBLST: boolean read FExportZBLST write SetExportZBLST Stored True;
+    property CompositeZones: TCompositeZoneCollection read FCompositeZones
+      write SetCompositeZones;
+    property ExportZBLST: boolean read FExportZBLST
+      write SetExportZBLST Stored True;
     property ExportCSV: boolean read FExportCSV write SetExportCSV Stored True;
-    property ExportCSV2: boolean read FExportCSV2 write SetExportCSV2 Stored True;
+    property ExportCSV2: boolean read FExportCSV2
+      write SetExportCSV2 Stored True;
   end;
 
   TMnw2PrintOption = (mpoNone, mpoIntermediate, mpoMost);
@@ -1763,7 +1792,8 @@ Type
     procedure SetSummarizeByNode(const Value: Boolean);
     procedure SetSummarizeByWell(const Value: Boolean);
     procedure InitializeMnw2Display(Sender: TObject);
-    procedure GetMfMnwWellRadiusUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetMfMnwWellRadiusUseList(Sender: TObject;
+      NewUseList: TStringList);
     procedure GetMfMnwSkinRadiusUseList(Sender: TObject;
       NewUseList: TStringList);
     procedure GetMfMnwUseList(Sender: TObject; NewUseList: TStringList;
@@ -1795,9 +1825,12 @@ Type
   published
     property PrintOption: TMnw2PrintOption read FPrintOption
       write SetPrintOption default mpoMost;
-    property CreateWellFile: Boolean read FCreateWellFile write SetCreateWellFile;
-    property SummarizeByWell: Boolean read FSummarizeByWell write SetSummarizeByWell;
-    property SummarizeByNode: Boolean read FSummarizeByNode write SetSummarizeByNode;
+    property CreateWellFile: Boolean read FCreateWellFile
+      write SetCreateWellFile;
+    property SummarizeByWell: Boolean read FSummarizeByWell
+      write SetSummarizeByWell;
+    property SummarizeByNode: Boolean read FSummarizeByNode
+      write SetSummarizeByNode;
   end;
 
   TCustomPrintItem = class(TOrderedItem)
@@ -2348,7 +2381,8 @@ Type
     property HYDNOH: double read GetHYDNOH write SetHYDNOH;
     procedure InitializeVariables; override;
   published
-    property StoredHYDNOH: TRealStorage read FStoredHYDNOH write SetStoredHYDNOH;
+    property StoredHYDNOH: TRealStorage read FStoredHYDNOH
+      write SetStoredHYDNOH;
   end;
 
   TFhbSteadyStateInterpolation = (fssiNoInterpolation, fssiInterpolationUsed);
@@ -2377,7 +2411,8 @@ Type
   published
     // not used
     property SteadyStateInterpolation: TFhbSteadyStateInterpolation
-      read FSteadyStateInterpolation write SetSteadyStateInterpolation stored False;
+      read FSteadyStateInterpolation
+      write SetSteadyStateInterpolation stored False;
   end;
 
   TMt3dBasic = class(TModflowPackageSelection)
@@ -2485,7 +2520,8 @@ Type
       write SetStoredRelaxationFactor stored True;
     // CCLOSE
     property StoredConvergenceCriterion: TRealStorage
-      read FStoredConvergenceCriterion write SetStoredConvergenceCriterion stored True;
+      read FStoredConvergenceCriterion
+      write SetStoredConvergenceCriterion stored True;
     // IPRGCG
     property PrintoutInterval: integer read FPrintoutInterval
       write SetPrintoutInterval stored True;
@@ -2581,16 +2617,19 @@ Type
       read FStoredRelCelConcGrad write SetStoredRelCelConcGrad stored True;
     // NPLANE
     property ParticlePlacementMethod: TParticlePlacementMethod
-      read FParticlePlacementMethod write SetParticlePlacementMethod stored True;
+      read FParticlePlacementMethod
+      write SetParticlePlacementMethod stored True;
     // NPLANE
     property NumberOfParticlePlanes: integer
       read FNumberOfParticlePlanes write SetNumberOfParticlePlanes stored True;
     // NPL
     property LowGradientParticleCount: integer
-      read FLowGradientParticleCount write SetLowGradientParticleCount stored True;
+      read FLowGradientParticleCount
+      write SetLowGradientParticleCount stored True;
     // NPH
     property HighGradientParticleCount: integer
-      read FHighGradientParticleCount write SetHighGradientParticleCount stored True;
+      read FHighGradientParticleCount
+      write SetHighGradientParticleCount stored True;
     // NPMIN
     property MinParticlePerCell: integer
       read FMinParticlePerCell write SetMinParticlePerCell stored True;
@@ -2599,10 +2638,12 @@ Type
       read FMaxParticlesPerCell write SetMaxParticlesPerCell stored True;
     // NLSINK
     property SinkParticlePlacementMethod: TParticlePlacementMethod
-      read FSinkParticlePlacementMethod write SetSinkParticlePlacementMethod stored True;
+      read FSinkParticlePlacementMethod
+      write SetSinkParticlePlacementMethod stored True;
     // NLSINK
     property SinkNumberOfParticlePlanes: integer
-      read FSinkNumberOfParticlePlanes write SetSinkNumberOfParticlePlanes stored True;
+      read FSinkNumberOfParticlePlanes
+      write SetSinkNumberOfParticlePlanes stored True;
     // NPSINK
     property SinkParticleCount: integer
       read FSinkParticleCount write SetSinkParticleCount stored True;
@@ -2639,8 +2680,8 @@ Type
       read FConcentrations;
   end;
 
-  TSorptionChoice = (scNone, scLinear, scFreundlich, scLangmuir, scFirstOrderKinetic,
-    scDualDomainNoSorption, scDualDomainWithSorption);
+  TSorptionChoice = (scNone, scLinear, scFreundlich, scLangmuir,
+    scFirstOrderKinetic, scDualDomainNoSorption, scDualDomainWithSorption);
   TKineticChoice = (kcNone, kcFirstOrder, kcZeroOrder);
   TOtherInitialConcChoice = (oicDontUse, oicUse);
 
@@ -2711,7 +2752,8 @@ Type
       write SetFluxScaleFactor;
   published
     // inSaveObs
-    property SaveBinary: TSaveBinary read FSaveBinary write SetSaveBinary stored True;
+    property SaveBinary: TSaveBinary read FSaveBinary
+      write SetSaveBinary stored True;
     // CScale
     property StoredConcScaleFactor: TRealStorage read FStoredConcScaleFactor
       write SetStoredConcScaleFactor stored True;
@@ -2738,13 +2780,13 @@ Type
   TConsumptiveUse = (cuCalculated, cuPotentialET, cuPotentialAndReferenceET,
     cuCropCoefficient);
   // IPFL (2, 3)
-  TPrecipitation = (pTimeSeries, pSpatiallyDistributed);
+  TPrecipitation = (pSpatiallyDistributed, pTimeSeries);
   // IIESWFL (0, 1 and 2)
-  TFractionOfInefficiencyLoses = (filCalculated, filSpecified);
+  TFractionOfInefficiencyLosses = (filCalculated, filSpecified);
   // IEBFL (0 and 1, 2 and 3)
   // @name is used in conjunction with @link(TEfficiencyReset)
   // to specify IEBFL.
-  TEfficiencyGroundwaterFunction = (egfConstant, egfVaries);
+  TEfficiencyGroundwaterFunction = (egfDeliveriesVary, egfEfficienciesVary);
   // IEBFL (0 and 2, 1 and 3)
   // @name is used in conjunction with @link(TEfficiencyGroundwaterFunction)
   // to specify IEBFL.
@@ -2752,8 +2794,10 @@ Type
   // IDEFFL (-2, -1, 0, 1, 2)
   TDeficiencyPolicy = (dpWaterStacking, dpDeficitIrrigation, dpNoPolicy,
     dpAcreageOptimization, dpAcreageOptimizationWithConservationPool);
-  // ICOST (0, 1 and 2)
-  TWaterCostCoefficients = (wccLumped, wccByFarm);
+
+  // ICOST (0, 1 and 2) The Farm process does not allow ICOST to be equal to 0.
+//  TWaterCostCoefficients = (wccLumped, wccByFarm);
+
   // ICCFL (1 and 3, 2 and 4)
   // @name is used in conjunction with @link(TCropConsumptiveLinkage)
   // to specify ICCFL
@@ -2762,23 +2806,31 @@ Type
   // @name is used in conjunction with @link(TCropConsumptiveConcept)
   // to specify ICCFL
   TCropConsumptiveLinkage = (cclNotLinked, cclLinked);
-  // IALLOT
+  // IALLOT (0, 1, 2, 3)
   TSurfaceWaterAllotment = (swaNone, swaEqual, swaPriorWithCalls,
     swaPriorWithoutCalls);
   // IFWLCB
-  // swfrBudget is for backwards compatibility but is not used.
-  TSaveWellFlowRates = (swfrListing, swfrNone, swfrAscii, swfrBinary, swfrBudget);
+  // swfrListing and above are for backwards compatibility but are not used.
+  TSaveWellFlowRates = (swfrDefault, swfrAscii,
+    swfrListing, swfrNone, swfrBinary, swfrBudget);
+  // IFNRCB snrListing and above are for backwards compatibility but are not used.
+  TSaveNetRecharge = (snrDefault, snrAsciiByCell, snrAsciiByFarm, snrBinary,
+    snrListing, snrNone);
 
-  // IFNRCB
-  TSaveNetRecharge = (snrListing, snrNone, snrAsciiByCell, snrAsciiByFarm,
-    snrBinary);
   // ISDPFL
-  TSupplyAndDemand = (sadListingEveryIteration, sadListingEachTimeStep,
-     sadListingEachTimeStepWhenBudgetSaved, sadNone, sadAscii, sadBinary);
+  TSupplyAndDemand = (sadDefault, sadListingEveryIteration,
+    sadListingEachTimeStep, sadAscii);
+
   // IFBPFL
-  TFarmBudgetPrintFlags = (fbpNone, fbpAsciiCompact, fbpAscii, fbpBinary);
+  // fbpAsciiCompact is not used. it is retained for backwards compatibility.
+  // (0, 1 or 2, > 2)
+  TFarmBudgetPrintFlags = (fbpNone, fbpAscii, fbpBinary, fbpAsciiCompact);
+  // IFBPFL: (odd number, even number)
+  TFarmBudgetPrintHowMuch = (fbpCompact, fbpDetailed);
   // IRTPFL (-2 and -1, 0, 1 and 2)
-  TPrintRouting = (prListingFile, prNoRoutingPrinted, prAscii);
+  TPrintRouting = (prNoRoutingPrinted, prListingFile, prAscii);
+  // IRTPFL (1 and -1, 2 and -2)
+  TPrintRoutingFrequency = (prfAllPeriods, prfFirstPeriod);
   // IOPFL (0, 1 and -1, 2 and -2, 3 and -3, 4 and -4)
   // @name is used in conjunction with @link(TAcerageOptimizationPrintLocation)
   // to specify IOPFL
@@ -2794,6 +2846,16 @@ Type
   // inverse of AUX NOCIRNOQ
   TCropIrrigationRequirement = (cirContinuously, cirOnlyWhenNeeded);
 
+  //  IRDFL 0, 1, -1
+  TRoutedDelivery = (rdNone, rdDiversion, rdAny);
+
+  //  IRRFL 1, -1
+  //  IRRFL = 0 can be inferred
+  TRoutedReturn = ({rrNone,} rrNonDiversion, rrAny);
+
+  // RECOMP_Q_BD option
+  TRecomputeOption = (roNotComputed, roComputed);
+
   TFarmProcess = class(TModflowPackageSelection)
   private
     FCropIrrigationRequirement: TCropIrrigationRequirement;
@@ -2802,13 +2864,13 @@ Type
     FEfficiencyReset: TEfficiencyReset;
     FSurfaceWaterAllotment: TSurfaceWaterAllotment;
     FFarmBudgetPrintFlags: TFarmBudgetPrintFlags;
-    FWaterCostCoefficients: TWaterCostCoefficients;
+//    FWaterCostCoefficients: TWaterCostCoefficients;
     FPrecipitation: TPrecipitation;
     FConsumptiveUse: TConsumptiveUse;
     FAcerageOptimizationPrintLocation: TAcerageOptimizationPrintLocation;
     FEfficiencyGroundwaterFunction: TEfficiencyGroundwaterFunction;
     FSaveWellFlowRates: TSaveWellFlowRates;
-    FFractionOfInefficiencyLoses: TFractionOfInefficiencyLoses;
+    FFractionOfInefficiencyLosses: TFractionOfInefficiencyLosses;
     FSupplyAndDemand: TSupplyAndDemand;
     FAcerageOptimizationPrintChoice: TAcerageOptimizationPrintChoice;
     FCropConsumptiveLinkage: TCropConsumptiveLinkage;
@@ -2817,6 +2879,19 @@ Type
     FDeficiencyPolicy: TDeficiencyPolicy;
     FRootingDepth: TRootingDepth;
     FAssignmentMethod: TUpdateMethod;
+    FRoutedDelivery: TRoutedDelivery;
+    FRoutedReturn: TRoutedReturn;
+    FStoredSurfaceWaterClosure: TRealStorage;
+    FFarmBudgetPrintHowMuch: TFarmBudgetPrintHowMuch;
+    FRecomputeOption: TRecomputeOption;
+    FMfFmpEvapRate: TModflowBoundaryDisplayTimeList;
+    FMfFmpPrecip: TModflowBoundaryDisplayTimeList;
+    FMfFmpCropID: TModflowBoundaryDisplayTimeList;
+    FMfFmpMaxPumpingRate: TModflowBoundaryDisplayTimeList;
+    FMfFmpFarmID: TModflowBoundaryDisplayTimeList;
+    FMfFmpFarmWellPumpIfRequired: TModflowBoundaryDisplayTimeList;
+    FPrintRoutingFrequency: TPrintRoutingFrequency;
+//    FWellFieldOption: TWellFieldOption;
     procedure SetAcerageOptimizationPrintChoice(
       const Value: TAcerageOptimizationPrintChoice);
     procedure SetAcerageOptimizationPrintLocation(
@@ -2831,22 +2906,63 @@ Type
     procedure SetEfficiencyGroundwaterFunction(
       const Value: TEfficiencyGroundwaterFunction);
     procedure SetEfficiencyReset(const Value: TEfficiencyReset);
-    procedure SetFarmBudgetPrintFlags(const Value: TFarmBudgetPrintFlags);
-    procedure SetFractionOfInefficiencyLoses(
-      const Value: TFractionOfInefficiencyLoses);
+    procedure SetFarmBudgetPrintFlags(Value: TFarmBudgetPrintFlags);
+    procedure SetFractionOfInefficiencyLosses(
+      const Value: TFractionOfInefficiencyLosses);
     procedure SetPrecipitation(const Value: TPrecipitation);
     procedure SetPrintRouting(const Value: TPrintRouting);
     procedure SetRootingDepth(const Value: TRootingDepth);
-    procedure SetSaveNetRecharge(const Value: TSaveNetRecharge);
+    procedure SetSaveNetRecharge(Value: TSaveNetRecharge);
     procedure SetSaveWellFlowRates(Value: TSaveWellFlowRates);
     procedure SetSupplyAndDemand(const Value: TSupplyAndDemand);
     procedure SetSurfaceWaterAllotment(const Value: TSurfaceWaterAllotment);
-    procedure SetWaterCostCoefficients(const Value: TWaterCostCoefficients);
+//    procedure SetWaterCostCoefficients(const Value: TWaterCostCoefficients);
     procedure SetAssignmentMethod(const Value: TUpdateMethod);
+    procedure SetRoutedDelivery(const Value: TRoutedDelivery);
+    procedure SetRoutedReturn(const Value: TRoutedReturn);
+    procedure SetStoredSurfaceWaterClosure(const Value: TRealStorage);
+    function GetSurfaceWaterClosure: Double;
+    procedure SetSurfaceWaterClosure(const Value: Double);
+    procedure SetFarmBudgetPrintHowMuch(const Value: TFarmBudgetPrintHowMuch);
+    procedure SetRecomputeOption(const Value: TRecomputeOption);
+//    procedure GetMfFarmUseList(Sender: TObject; NewUseList: TStringList;
+//      DataIndex: integer);
+    procedure GetMfFmpEvapUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetMfFmpPrecipUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetMfFmpCropIDUseList(Sender: TObject; NewUseList: TStringList);
+    procedure GetMfFmpMaxPumpRateUseList(Sender: TObject;
+      NewUseList: TStringList);
+    procedure GetMfFmpFarmWellFarmIDUseList(Sender: TObject;
+      NewUseList: TStringList);
+    procedure GetMfFmpFarmWellPumpIfRequiredUseList(Sender: TObject;
+      NewUseList: TStringList);
+    procedure InitializeFarmRefEtDisplay(Sender: TObject);
+    procedure InitializeFarmPrecipDisplay(Sender: TObject);
+    procedure InitializeFarmCropIdDisplay(Sender: TObject);
+    procedure InitializeFarmWellDisplay(Sender: TObject);
+    procedure SetPrintRoutingFrequency(const Value: TPrintRoutingFrequency);
+//    procedure SetWellFieldOption(const Value: TWellFieldOption);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
     procedure InitializeVariables; override;
+    function EvapUsed (Sender: TObject): boolean;
+    function PrecipUsed (Sender: TObject): boolean;
+    function CropIdUsed (Sender: TObject): boolean;
+    function FarmWellsUsed (Sender: TObject): boolean;
+    function FarmWellsPumpRequiredUsed (Sender: TObject): boolean;
+    property MfFmpEvapRate: TModflowBoundaryDisplayTimeList read FMfFmpEvapRate;
+    property MfFmpPrecip: TModflowBoundaryDisplayTimeList read FMfFmpPrecip;
+    property MfFmpCropID: TModflowBoundaryDisplayTimeList read FMfFmpCropID;
+    property MfFmpMaxPumpingRate: TModflowBoundaryDisplayTimeList
+      read FMfFmpMaxPumpingRate;
+    property MfFmpFarmID: TModflowBoundaryDisplayTimeList read FMfFmpFarmID;
+    property MfFmpFarmWellPumpIfRequired: TModflowBoundaryDisplayTimeList
+      read FMfFmpFarmWellPumpIfRequired;
+    // PCLOSE
+    property SurfaceWaterClosure: Double read GetSurfaceWaterClosure
+      write SetSurfaceWaterClosure;
   published
   // IRTFL (1 & 2, 3)
     property RootingDepth: TRootingDepth read FRootingDepth
@@ -2858,8 +2974,8 @@ Type
     property Precipitation: TPrecipitation read FPrecipitation
       write SetPrecipitation;
     // IIESWFL (0, 1 and 2)
-    property FractionOfInefficiencyLoses: TFractionOfInefficiencyLoses
-      read FFractionOfInefficiencyLoses write SetFractionOfInefficiencyLoses;
+    property FractionOfInefficiencyLosses: TFractionOfInefficiencyLosses
+      read FFractionOfInefficiencyLosses write SetFractionOfInefficiencyLosses;
     // IEBFL (0 and 1, 2 and 3)
     // @name is used in conjunction with @link(EfficiencyReset)
     // to specify IEBFL.
@@ -2874,9 +2990,10 @@ Type
     // IDEFFL (-2, -1, 0, 1, 2)
     property DeficiencyPolicy: TDeficiencyPolicy read FDeficiencyPolicy
       write SetDeficiencyPolicy;
-    // ICOST (0, 1 and 2)
-    property WaterCostCoefficients: TWaterCostCoefficients
-      read FWaterCostCoefficients write SetWaterCostCoefficients;
+    // ICOST (0, 1 and 2) ICOST = 0 is not allowed.
+//    property WaterCostCoefficients: TWaterCostCoefficients
+//      read FWaterCostCoefficients write SetWaterCostCoefficients;
+
     // ICCFL (1 and 3, 2 and 4)
     // @name is used in conjunction with @link(CropConsumptiveLinkage)
     // to specify ICCFL
@@ -2900,11 +3017,18 @@ Type
     property SupplyAndDemand: TSupplyAndDemand read FSupplyAndDemand
       write SetSupplyAndDemand;
     // IFBPFL
+    // (0, 1 or 2, > 2)
     property FarmBudgetPrintFlags: TFarmBudgetPrintFlags
       read FFarmBudgetPrintFlags write SetFarmBudgetPrintFlags;
+    // IFBPFL: (odd number, even number)
+    property FarmBudgetPrintHowMuch: TFarmBudgetPrintHowMuch
+      read FFarmBudgetPrintHowMuch write SetFarmBudgetPrintHowMuch;
     // IRTPFL (-2 and -1, 0, 1 and 2)
     property PrintRouting: TPrintRouting read FPrintRouting
       write SetPrintRouting;
+  // IRTPFL (1 and -1, 2 and -2)
+    property PrintRoutingFrequency: TPrintRoutingFrequency
+      read FPrintRoutingFrequency write SetPrintRoutingFrequency;
     // IOPFL (0, 1 and -1, 2 and -2, 3 and -3, 4 and -4)
     // @name is used in conjunction with @link(AcerageOptimizationPrintLocation)
     // to specify IOPFL
@@ -2923,8 +3047,126 @@ Type
     // inverse of AUX NOCIRNOQ
     property CropIrrigationRequirement: TCropIrrigationRequirement
       read FCropIrrigationRequirement write SetCropIrrigationRequirement;
+    //  IRDFL 0, 1, -1
+    property RoutedDelivery: TRoutedDelivery read FRoutedDelivery
+      write SetRoutedDelivery;
+    //  IRRFL 0, 1, -1
+    property RoutedReturn: TRoutedReturn read FRoutedReturn
+      write SetRoutedReturn;
+    // PCLOSE
+    property StoredSurfaceWaterClosure: TRealStorage
+      read FStoredSurfaceWaterClosure write SetStoredSurfaceWaterClosure;
+    // RECOMP_Q_BD option
+    property RecomputeOption: TRecomputeOption read FRecomputeOption
+      write SetRecomputeOption;
     property AssignmentMethod: TUpdateMethod read FAssignmentMethod
       write SetAssignmentMethod Stored True;
+  end;
+
+  TCfpElevationChoice = (cecIndividual, cecGroup);
+  TCfpExchange = (ceNodeConductance, ceWallPermeability);
+  TCfpPrintIterations = (cpiNoPrint, cpiPrint);
+
+  TConduitFlowProcess = class(TModflowPackageSelection)
+  private
+    FConduitLayersUsed: Boolean;
+    FStoredLayerTemperature: TRealStorage;
+    FCfpPrintIterations: TCfpPrintIterations;
+    FPipesUsed: Boolean;
+    FMaxIterations: integer;
+    FStoredRelax: TRealStorage;
+    FStoredElevationOffset: TRealStorage;
+    FStoredEpsilon: TRealStorage;
+    FCfpExchange: TCfpExchange;
+    FCfpElevationChoice: TCfpElevationChoice;
+    FStoredConduitTemperature: TRealStorage;
+    FMfConduitRechargeFraction: TModflowBoundaryDisplayTimeList;
+    FConduitRechargeUsed: boolean;
+    FOutputInterval: integer;
+    function GetConduitTemperature: double;
+    function GetElevationOffset: double;
+    function GetEpsilon: double;
+    function GetLayerTemperature: double;
+    function GetRelax: double;
+    procedure SetCfpElevationChoice(const Value: TCfpElevationChoice);
+    procedure SetCfpExchange(const Value: TCfpExchange);
+    procedure SetCfpPrintIterations(const Value: TCfpPrintIterations);
+    procedure SetConduitLayersUsed(const Value: Boolean);
+    procedure SetConduitTemperature(const Value: double);
+    procedure SetElevationOffset(const Value: double);
+    procedure SetEpsilon(const Value: double);
+    procedure SetLayerTemperature(const Value: double);
+    procedure SetMaxIterations(const Value: integer);
+    procedure SetPipesUsed(const Value: Boolean);
+    procedure SetRelax(const Value: double);
+    procedure SetStoredConduitTemperature(const Value: TRealStorage);
+    procedure SetStoredElevationOffset(const Value: TRealStorage);
+    procedure SetStoredEpsilon(const Value: TRealStorage);
+    procedure SetStoredLayerTemperature(const Value: TRealStorage);
+    procedure SetStoredRelax(const Value: TRealStorage);
+    procedure ModelChanged(Sender: TObject);
+    procedure SetConduitRechargeUsed(const Value: boolean);
+    procedure SetOutputInterval(const Value: integer);
+    procedure InitializeRchFractionDisplay(Sender: TObject);
+    procedure GetMfRechargeFractionUseList(Sender: TObject;
+      NewUseList: TStringList);
+    function RechargeFractionUsed (Sender: TObject): boolean;
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
+    procedure InitializeVariables; override;
+    // data set 6
+    property ConduitTemperature: double read GetConduitTemperature
+      write SetConduitTemperature;
+    // data set 12.
+    property ElevationOffset: double read GetElevationOffset
+      write SetElevationOffset;
+    // data set 16.
+    property Epsilon: double read GetEpsilon write SetEpsilon;
+    // data set 20.
+    property Relax: double read GetRelax write SetRelax;
+    // data set 36
+    property LayerTemperature: double read GetLayerTemperature
+      write SetLayerTemperature;
+    property MfConduitRechargeFraction: TModflowBoundaryDisplayTimeList
+      read FMfConduitRechargeFraction;
+  published
+    // Mode 1 (or 3)
+    property PipesUsed: Boolean read FPipesUsed write SetPipesUsed stored True;
+    // Mode 2 (or 3)
+    property ConduitLayersUsed: Boolean read FConduitLayersUsed
+      write SetConduitLayersUsed stored True;
+    property ConduitRechargeUsed: boolean read FConduitRechargeUsed
+      write SetConduitRechargeUsed stored True;
+    // data set 6
+    property StoredConduitTemperature: TRealStorage
+      read FStoredConduitTemperature write SetStoredConduitTemperature;
+    // data set 12.
+    property CfpElevationChoice: TCfpElevationChoice read FCfpElevationChoice
+      write SetCfpElevationChoice stored True;
+    // data set 12.
+    property StoredElevationOffset: TRealStorage read FStoredElevationOffset
+      write SetStoredElevationOffset;
+    // data set 14.
+    property CfpExchange: TCfpExchange read FCfpExchange write SetCfpExchange;
+    // data set 16.
+    property StoredEpsilon: TRealStorage read FStoredEpsilon
+      write SetStoredEpsilon;
+    // data set 18.
+    property MaxIterations: integer read FMaxIterations
+      write SetMaxIterations stored True;
+    // data set 20.
+    property StoredRelax: TRealStorage read FStoredRelax write SetStoredRelax;
+    // data set 22.
+    property CfpPrintIterations: TCfpPrintIterations read FCfpPrintIterations
+      write SetCfpPrintIterations;
+    // data set 36
+    property StoredLayerTemperature: TRealStorage read FStoredLayerTemperature
+      write SetStoredLayerTemperature;
+    // COC file: N_NTS and T_NTS
+    property OutputInterval: integer read FOutputInterval
+      write SetOutputInterval stored True;
   end;
 
 implementation
@@ -2942,7 +3184,9 @@ uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
   LayerStructureUnit, ModflowSubsidenceDefUnit, frmGridValueUnit,
   frmGoPhastUnit, CustomModflowWriterUnit, frmDisplayDataUnit,
   Mt3dmsSsmWriterUnit, Mt3dmsChemUnit, ModflowStrUnit, ModflowStrWriterUnit,
-  ModflowFhbWriterUnit;
+  ModflowFhbWriterUnit, ModflowFmpEvapUnit, ModflowFmpWriterUnit,
+  ModflowFmpPrecipitationUnit, ModflowFmpCropUnit, ModflowFmpCropSpatialUnit,
+  ModflowFmpWellUnit, ModflowCfpWriterUnit, ModflowCfpRechargeUnit;
 
 resourcestring
   StrLengthUnitsForMod = 'Length units for model are undefined';
@@ -3136,7 +3380,8 @@ begin
   end;
 end;
 
-procedure TCustomTransientLayerPackageSelection.UpdateWithElevationFormula(Formula: string;
+procedure TCustomTransientLayerPackageSelection.
+  UpdateWithElevationFormula(Formula: string;
   ScreenObject: TScreenObject; NewUseList: TStringList);
 var
   TempUseList: TStringList;
@@ -3670,7 +3915,8 @@ begin
       begin
         for ValueIndex := 0 to Boundary.EvapotranspirationLayers.Count -1 do
         begin
-          Item := Boundary.EvapotranspirationLayers[ValueIndex] as TEvtLayerItem;
+          Item := Boundary.EvapotranspirationLayers[ValueIndex]
+            as TEvtLayerItem;
           UpdateUseList(0, NewUseList, Item);
         end;
       end
@@ -3907,7 +4153,8 @@ begin
     begin
       for ValueIndex := 0 to Boundary.EtsSurfDepthCollection.Count -1 do
       begin
-        Item := Boundary.EtsSurfDepthCollection[ValueIndex] as TCustomModflowBoundaryItem;
+        Item := Boundary.EtsSurfDepthCollection[ValueIndex]
+          as TCustomModflowBoundaryItem;
         UpdateUseList(DataIndex, NewUseList, Item);
       end;
     end;
@@ -4261,7 +4508,8 @@ begin
     begin
       for ValueIndex := 0 to Boundary.EvtSurfDepthCollection.Count -1 do
       begin
-        Item := Boundary.EvtSurfDepthCollection[ValueIndex] as TCustomModflowBoundaryItem;
+        Item := Boundary.EvtSurfDepthCollection[ValueIndex]
+          as TCustomModflowBoundaryItem;
         UpdateUseList(DataIndex, NewUseList, Item);
       end;
     end;
@@ -4360,7 +4608,8 @@ begin
     FMfSfrStreamK.Name := StrModflowSfrStreamK;
     AddTimeList(FMfSfrStreamK);
 
-    FMfSfrSaturatedWaterContent := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfSfrSaturatedWaterContent :=
+      TModflowBoundaryDisplayTimeList.Create(Model);
     FMfSfrSaturatedWaterContent.OnTimeListUsed :=
       ModflowSfrUnsatSpatialVariationSelected;
     FMfSfrSaturatedWaterContent.OnInitialize := InitializeSfrDisplay;
@@ -5997,7 +6246,8 @@ begin
     begin
       for ValueIndex := 0 to Boundary.ExtinctionDepth.Count -1 do
       begin
-        Item := Boundary.ExtinctionDepth[ValueIndex] as TCustomModflowBoundaryItem;
+        Item := Boundary.ExtinctionDepth[ValueIndex]
+          as TCustomModflowBoundaryItem;
         UpdateUseList(0, NewUseList, Item);
       end;
     end;
@@ -6087,7 +6337,8 @@ begin
     begin
       for ValueIndex := 0 to Boundary.EvapotranspirationDemand.Count -1 do
       begin
-        Item := Boundary.EvapotranspirationDemand[ValueIndex] as TCustomModflowBoundaryItem;
+        Item := Boundary.EvapotranspirationDemand[ValueIndex]
+          as TCustomModflowBoundaryItem;
         UpdateUseList(0, NewUseList, Item);
       end;
     end;
@@ -7960,9 +8211,11 @@ begin
     MfMnwP.Name := StrP;
     AddTimeList(MfMnwP);
 
-    FMfMnwCellToWellConductance := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfMnwCellToWellConductance :=
+      TModflowBoundaryDisplayTimeList.Create(Model);
     MfMnwCellToWellConductance.OnInitialize := InitializeMnw2Display;
-    MfMnwCellToWellConductance.OnGetUseList := GetMfMnwCellToWellConductanceUseList;
+    MfMnwCellToWellConductance.OnGetUseList :=
+      GetMfMnwCellToWellConductanceUseList;
     MfMnwCellToWellConductance.OnTimeListUsed := PackageUsed;
     MfMnwCellToWellConductance.Name := StrCellToWellConductance;
     AddTimeList(MfMnwCellToWellConductance);
@@ -8156,8 +8409,10 @@ begin
     SaveSubsidence := SourceItem.SaveSubsidence;
     PrintCompactionByModelLayer := SourceItem.PrintCompactionByModelLayer;
     SaveCompactionByModelLayer := SourceItem.SaveCompactionByModelLayer;
-    PrintCompactionByInterbedSystem := SourceItem.PrintCompactionByInterbedSystem;
-    SaveCompactionByInterbedSystem := SourceItem.SaveCompactionByInterbedSystem;
+    PrintCompactionByInterbedSystem :=
+      SourceItem.PrintCompactionByInterbedSystem;
+    SaveCompactionByInterbedSystem :=
+      SourceItem.SaveCompactionByInterbedSystem;
     PrintVerticalDisplacement := SourceItem.PrintVerticalDisplacement;
     SaveVerticalDisplacement := SourceItem.SaveVerticalDisplacement;
     PrintCriticalHeadNoDelay := SourceItem.PrintCriticalHeadNoDelay;
@@ -8283,7 +8538,8 @@ var
   Index: Integer;
   PrintChoice: TSubPrintItem;
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(frmGoPhast.PhastModel, StrInTheSubsidencePa);
+  frmErrorsAndWarnings.RemoveErrorGroup(frmGoPhast.PhastModel,
+    StrInTheSubsidencePa);
   for Index := 0 to Count -1 do
   begin
     PrintChoice := Items[Index];
@@ -11410,11 +11666,11 @@ begin
     RootingDepth := SourceFarm.RootingDepth;
     ConsumptiveUse := SourceFarm.ConsumptiveUse;
     Precipitation := SourceFarm.Precipitation;
-    FractionOfInefficiencyLoses := SourceFarm.FractionOfInefficiencyLoses;
+    FractionOfInefficiencyLosses := SourceFarm.FractionOfInefficiencyLosses;
     EfficiencyGroundwaterFunction := SourceFarm.EfficiencyGroundwaterFunction;
     EfficiencyReset := SourceFarm.EfficiencyReset;
     DeficiencyPolicy := SourceFarm.DeficiencyPolicy;
-    WaterCostCoefficients := SourceFarm.WaterCostCoefficients;
+//    WaterCostCoefficients := SourceFarm.WaterCostCoefficients;
     CropConsumptiveConcept := SourceFarm.CropConsumptiveConcept;
     CropConsumptiveLinkage := SourceFarm.CropConsumptiveLinkage;
     SurfaceWaterAllotment := SourceFarm.SurfaceWaterAllotment;
@@ -11422,12 +11678,19 @@ begin
     SaveNetRecharge := SourceFarm.SaveNetRecharge;
     SupplyAndDemand := SourceFarm.SupplyAndDemand;
     FarmBudgetPrintFlags := SourceFarm.FarmBudgetPrintFlags;
+    FarmBudgetPrintHowMuch := SourceFarm.FarmBudgetPrintHowMuch;
     PrintRouting := SourceFarm.PrintRouting;
+    PrintRoutingFrequency := SourceFarm.PrintRoutingFrequency;
     AcerageOptimizationPrintChoice := SourceFarm.AcerageOptimizationPrintChoice;
     AcerageOptimizationPrintLocation := SourceFarm.AcerageOptimizationPrintLocation;
     DiversionBudgetLocation := SourceFarm.DiversionBudgetLocation;
     CropIrrigationRequirement := SourceFarm.CropIrrigationRequirement;
+    RoutedDelivery := SourceFarm.RoutedDelivery;
+    RoutedReturn := SourceFarm.RoutedReturn;
     AssignmentMethod := SourceFarm.AssignmentMethod;
+    SurfaceWaterClosure := SourceFarm.SurfaceWaterClosure;
+    RecomputeOption := SourceFarm.RecomputeOption;
+//    WellFieldOption := SourceFarm.WellFieldOption;
   end;
   inherited;
 
@@ -11436,7 +11699,389 @@ end;
 constructor TFarmProcess.Create(Model: TBaseModel);
 begin
   inherited;
+  FStoredSurfaceWaterClosure := TRealStorage.Create;
   InitializeVariables;
+
+  if Model <> nil then
+  begin
+    FMfFmpEvapRate := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfFmpEvapRate.OnInitialize := InitializeFarmRefEtDisplay;
+    FMfFmpEvapRate.OnGetUseList := GetMfFmpEvapUseList;
+    FMfFmpEvapRate.OnTimeListUsed := EvapUsed;
+    FMfFmpEvapRate.Name := StrFarmEvap;
+    AddTimeList(FMfFmpEvapRate);
+
+    FMfFmpPrecip := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfFmpPrecip.OnInitialize := InitializeFarmPrecipDisplay;
+    FMfFmpPrecip.OnGetUseList := GetMfFmpPrecipUseList;
+    FMfFmpPrecip.OnTimeListUsed := PrecipUsed;
+    FMfFmpPrecip.Name := StrFarmPrecip;
+    AddTimeList(FMfFmpPrecip);
+
+    FMfFmpCropID := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfFmpCropID.OnInitialize := InitializeFarmCropIdDisplay;
+    FMfFmpCropID.OnGetUseList := GetMfFmpCropIDUseList;
+    FMfFmpCropID.OnTimeListUsed := CropIdUsed;
+    FMfFmpCropID.Name := StrFarmCropID;
+    AddTimeList(FMfFmpCropID);
+
+    FMfFmpMaxPumpingRate := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfFmpMaxPumpingRate.OnInitialize := InitializeFarmWellDisplay;
+    FMfFmpMaxPumpingRate.OnGetUseList := GetMfFmpMaxPumpRateUseList;
+    FMfFmpMaxPumpingRate.OnTimeListUsed := FarmWellsUsed;
+    FMfFmpMaxPumpingRate.Name := StrFarmMaxPumpRate;
+    AddTimeList(FMfFmpMaxPumpingRate);
+
+    FMfFmpFarmID := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfFmpFarmID.OnInitialize := InitializeFarmWellDisplay;
+    FMfFmpFarmID.OnGetUseList := GetMfFmpFarmWellFarmIDUseList;
+    FMfFmpFarmID.OnTimeListUsed := FarmWellsUsed;
+    FMfFmpFarmID.Name := StrFarmWellFarmID;
+    AddTimeList(FMfFmpFarmID);
+
+    FMfFmpFarmWellPumpIfRequired := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfFmpFarmWellPumpIfRequired.OnInitialize := InitializeFarmWellDisplay;
+    FMfFmpFarmWellPumpIfRequired.OnGetUseList := GetMfFmpFarmWellPumpIfRequiredUseList;
+    FMfFmpFarmWellPumpIfRequired.OnTimeListUsed := FarmWellsPumpRequiredUsed;
+    FMfFmpFarmWellPumpIfRequired.Name := StrFarmWellPumpRequired;
+    AddTimeList(FMfFmpFarmWellPumpIfRequired);
+  end;
+
+end;
+
+function TFarmProcess.CropIdUsed(Sender: TObject): boolean;
+begin
+  result := PackageUsed(Sender);
+end;
+
+destructor TFarmProcess.Destroy;
+begin
+  FMfFmpFarmWellPumpIfRequired.Free;
+  FMfFmpFarmID.Free;
+  FMfFmpMaxPumpingRate.Free;
+  FMfFmpCropID.Free;
+  FMfFmpPrecip.Free;
+  FMfFmpEvapRate.Free;
+  FStoredSurfaceWaterClosure.Free;
+  inherited;
+end;
+
+function TFarmProcess.EvapUsed(Sender: TObject): boolean;
+begin
+  result := PackageUsed(Sender)
+    and (ConsumptiveUse in [cuPotentialAndReferenceET, cuCropCoefficient]);
+end;
+
+function TFarmProcess.FarmWellsPumpRequiredUsed(Sender: TObject): boolean;
+begin
+  Result := FarmWellsUsed(Sender)
+    and (CropIrrigationRequirement = cirOnlyWhenNeeded);
+end;
+
+function TFarmProcess.FarmWellsUsed(Sender: TObject): boolean;
+begin
+  result := PackageUsed(Sender);
+end;
+
+//procedure TFarmProcess.GetMfFarmUseList(Sender: TObject;
+//  NewUseList: TStringList; DataIndex: integer);
+//var
+//  ScreenObjectIndex: Integer;
+//  ScreenObject: TScreenObject;
+//  Item: TCustomModflowBoundaryItem;
+//  ValueIndex: Integer;
+//  PhastModel: TCustomModel;
+//  Boundary: TFmpRefEvapBoundary;
+//begin
+//  PhastModel := FModel as TCustomModel;
+//  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+//  begin
+//    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+//    if ScreenObject.Deleted then
+//    begin
+//      Continue;
+//    end;
+//    Boundary := ScreenObject.ModflowFmpRefEvap;
+//    if (Boundary <> nil) and Boundary.Used then
+//    begin
+////      if Boundary.DataTypeUsed(DataIndex) then
+//      begin
+//        for ValueIndex := 0 to Boundary.Values.Count -1 do
+//        begin
+//          Item := Boundary.Values[ValueIndex] as TCustomModflowBoundaryItem;
+//          UpdateUseList(DataIndex, NewUseList, Item);
+//        end;
+//      end;
+//    end;
+//  end;
+//end;
+
+procedure TFarmProcess.GetMfFmpCropIDUseList(Sender: TObject;
+  NewUseList: TStringList);
+{$IFDEF FMP}
+var
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  Item: TCustomModflowBoundaryItem;
+  ValueIndex: Integer;
+  PhastModel: TCustomModel;
+  Boundary: TFmpCropIDBoundary;
+{$ENDIF}
+begin
+{$IFDEF FMP}
+  PhastModel := FModel as TCustomModel;
+  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    Boundary := ScreenObject.ModflowFmpCropID;
+    if (Boundary <> nil) and Boundary.Used then
+    begin
+      for ValueIndex := 0 to Boundary.Values.Count -1 do
+      begin
+        Item := Boundary.Values[ValueIndex] as TCustomModflowBoundaryItem;
+        UpdateUseList(0, NewUseList, Item);
+      end;
+    end;
+  end;
+{$ENDIF}
+end;
+
+procedure TFarmProcess.GetMfFmpEvapUseList(Sender: TObject;
+  NewUseList: TStringList);
+{$IFDEF FMP}
+var
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  Item: TCustomModflowBoundaryItem;
+  ValueIndex: Integer;
+  PhastModel: TCustomModel;
+  Boundary: TFmpRefEvapBoundary;
+{$ENDIF}
+begin
+{$IFDEF FMP}
+  PhastModel := FModel as TCustomModel;
+  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    Boundary := ScreenObject.ModflowFmpRefEvap;
+    if (Boundary <> nil) and Boundary.Used then
+    begin
+      for ValueIndex := 0 to Boundary.Values.Count -1 do
+      begin
+        Item := Boundary.Values[ValueIndex] as TCustomModflowBoundaryItem;
+        UpdateUseList(0, NewUseList, Item);
+      end;
+    end;
+  end;
+{$ENDIF}
+end;
+
+procedure TFarmProcess.GetMfFmpFarmWellFarmIDUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+{$IFDEF FMP}
+  UpdateDisplayUseList(NewUseList, ptQMAX,
+    FmpWellFarmIDPosition, StrFarmWellFarmID);
+{$ENDIF}
+end;
+
+procedure TFarmProcess.GetMfFmpFarmWellPumpIfRequiredUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+{$IFDEF FMP}
+  UpdateDisplayUseList(NewUseList, ptQMAX,
+    FmpWellPumpOnlyIfCropRequiresWaterPosition, StrFarmWellPumpRequired);
+{$ENDIF}
+end;
+
+procedure TFarmProcess.GetMfFmpMaxPumpRateUseList(Sender: TObject;
+  NewUseList: TStringList);
+begin
+{$IFDEF FMP}
+  UpdateDisplayUseList(NewUseList, ptQMAX,
+    FmpWellMaxPumpingRatePosition, StrFarmMaxPumpRate);
+{$ENDIF}
+end;
+
+procedure TFarmProcess.GetMfFmpPrecipUseList(Sender: TObject;
+  NewUseList: TStringList);
+{$IFDEF FMP}
+var
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  Item: TCustomModflowBoundaryItem;
+  ValueIndex: Integer;
+  PhastModel: TCustomModel;
+  Boundary: TFmpPrecipBoundary;
+{$ENDIF}
+begin
+{$IFDEF FMP}
+  PhastModel := FModel as TCustomModel;
+  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    Boundary := ScreenObject.ModflowFmpPrecip;
+    if (Boundary <> nil) and Boundary.Used then
+    begin
+      for ValueIndex := 0 to Boundary.Values.Count -1 do
+      begin
+        Item := Boundary.Values[ValueIndex] as TCustomModflowBoundaryItem;
+        UpdateUseList(0, NewUseList, Item);
+      end;
+    end;
+  end;
+{$ENDIF}
+end;
+
+function TFarmProcess.GetSurfaceWaterClosure: Double;
+begin
+  result := StoredSurfaceWaterClosure.Value;
+end;
+
+procedure TFarmProcess.InitializeFarmCropIdDisplay(Sender: TObject);
+{$IFDEF FMP}
+var
+  List: TModflowBoundListOfTimeLists;
+  FarmWriter: TModflowFmpWriter;
+  Index: Integer;
+  TimeList: TModflowBoundaryDisplayTimeList;
+{$ENDIF}
+begin
+{$IFDEF FMP}
+  List := TModflowBoundListOfTimeLists.Create;
+  FarmWriter := TModflowFmpWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfFmpCropID);
+
+    for Index := 0 to List.Count - 1 do
+    begin
+      TimeList := List[Index];
+      TimeList.CreateDataSets;
+    end;
+
+    FarmWriter.UpdateCropIDDisplay(List);
+
+    for Index := 0 to List.Count - 1 do
+    begin
+      TimeList := List[Index];
+      TimeList.ComputeAverage;
+    end;
+  finally
+    FarmWriter.Free;
+    List.Free;
+  end;
+{$ENDIF}
+end;
+
+procedure TFarmProcess.InitializeFarmPrecipDisplay(Sender: TObject);
+{$IFDEF FMP}
+var
+  List: TModflowBoundListOfTimeLists;
+  FarmWriter: TModflowFmpWriter;
+  Index: Integer;
+  TimeList: TModflowBoundaryDisplayTimeList;
+{$ENDIF}
+begin
+{$IFDEF FMP}
+  List := TModflowBoundListOfTimeLists.Create;
+  FarmWriter := TModflowFmpWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfFmpPrecip);
+
+    for Index := 0 to List.Count - 1 do
+    begin
+      TimeList := List[Index];
+      TimeList.CreateDataSets;
+    end;
+
+    FarmWriter.UpdatePrecipDisplay(List);
+
+    for Index := 0 to List.Count - 1 do
+    begin
+      TimeList := List[Index];
+      TimeList.ComputeAverage;
+    end;
+  finally
+    FarmWriter.Free;
+    List.Free;
+  end;
+{$ENDIF}
+end;
+
+procedure TFarmProcess.InitializeFarmRefEtDisplay(Sender: TObject);
+{$IFDEF FMP}
+var
+  List: TModflowBoundListOfTimeLists;
+  FarmWriter: TModflowFmpWriter;
+  Index: Integer;
+  TimeList: TModflowBoundaryDisplayTimeList;
+{$ENDIF}
+begin
+{$IFDEF FMP}
+  List := TModflowBoundListOfTimeLists.Create;
+  FarmWriter := TModflowFmpWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfFmpEvapRate);
+
+    for Index := 0 to List.Count - 1 do
+    begin
+      TimeList := List[Index];
+      TimeList.CreateDataSets;
+    end;
+
+    FarmWriter.UpdateRefEtDisplay(List);
+
+    for Index := 0 to List.Count - 1 do
+    begin
+      TimeList := List[Index];
+      TimeList.ComputeAverage;
+    end;
+  finally
+    FarmWriter.Free;
+    List.Free;
+  end;
+{$ENDIF}
+end;
+
+procedure TFarmProcess.InitializeFarmWellDisplay(Sender: TObject);
+{$IFDEF FMP}
+var
+  FarmWriter: TModflowFmpWriter;
+  List: TModflowBoundListOfTimeLists;
+{$ENDIF}
+begin
+{$IFDEF FMP}
+  MfFmpMaxPumpingRate.CreateDataSets;
+  MfFmpFarmID.CreateDataSets;
+  MfFmpFarmWellPumpIfRequired.CreateDataSets;
+
+  List := TModflowBoundListOfTimeLists.Create;
+  FarmWriter := TModflowFmpWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfFmpMaxPumpingRate);
+    List.Add(MfFmpFarmID);
+    List.Add(MfFmpFarmWellPumpIfRequired);
+    FarmWriter.UpdateDisplay(List, [FmpWellMaxPumpingRatePosition]);
+  finally
+    FarmWriter.Free;
+    List.Free;
+  end;
+  MfFmpMaxPumpingRate.LabelAsSum;
+  MfFmpFarmID.ComputeAverage;
+  MfFmpFarmWellPumpIfRequired.ComputeAverage;
+{$ENDIF}
 end;
 
 procedure TFarmProcess.InitializeVariables;
@@ -11445,24 +12090,36 @@ begin
   RootingDepth := rdSpecified;
   ConsumptiveUse := cuPotentialAndReferenceET;
   Precipitation := pTimeSeries;
-  FractionOfInefficiencyLoses := filCalculated;
-  EfficiencyGroundwaterFunction := egfConstant;
+  FractionOfInefficiencyLosses := filCalculated;
+  EfficiencyGroundwaterFunction := egfDeliveriesVary;
   EfficiencyReset := erStressPeriod;
   DeficiencyPolicy := dpNoPolicy;
-  WaterCostCoefficients := wccLumped;
+//  WaterCostCoefficients := wccLumped;
   CropConsumptiveConcept := cccConcept1;
   CropConsumptiveLinkage := cclNotLinked;
   SurfaceWaterAllotment := swaNone;
-  SaveWellFlowRates := swfrBinary;
-  SaveNetRecharge := snrBinary;
-  SupplyAndDemand := sadBinary;
+  SaveWellFlowRates := swfrDefault;
+  SaveNetRecharge := snrDefault;
+  SupplyAndDemand := sadDefault;
   FarmBudgetPrintFlags := fbpNone;
+  FarmBudgetPrintHowMuch := fbpCompact;
   PrintRouting := prListingFile;
+  PrintRoutingFrequency := prfAllPeriods;
   AcerageOptimizationPrintChoice := aopcCellFractionsAndResourceConstraints;
   AcerageOptimizationPrintLocation := aoplListing;
   DiversionBudgetLocation := dblListing;
   CropIrrigationRequirement := cirContinuously;
+  RoutedDelivery := rdNone;
+  RoutedReturn := rrAny;
   AssignmentMethod := umAssign;
+  SurfaceWaterClosure := 0.001;
+  RecomputeOption := roNotComputed;
+end;
+
+function TFarmProcess.PrecipUsed(Sender: TObject): boolean;
+begin
+  result := PackageUsed(Sender)
+    and (Precipitation = pSpatiallyDistributed);
 end;
 
 procedure TFarmProcess.SetAcerageOptimizationPrintChoice(
@@ -11493,9 +12150,7 @@ begin
     InvalidateModel;
     if FModel <> nil then
     begin
-      Assert(False);
-      { TODO -cFMP : Need to finish this }
-//      MfUzfInfiltration.Invalidate;
+      MfFmpPrecip.Invalidate;
     end;
   end;
 end;
@@ -11577,9 +12232,12 @@ begin
   end;
 end;
 
-procedure TFarmProcess.SetFarmBudgetPrintFlags(
-  const Value: TFarmBudgetPrintFlags);
+procedure TFarmProcess.SetFarmBudgetPrintFlags(Value: TFarmBudgetPrintFlags);
 begin
+  if Value = fbpAsciiCompact then
+  begin
+    Value := fbpAscii;
+  end;
   if FFarmBudgetPrintFlags <> Value then
   begin
     FFarmBudgetPrintFlags := Value;
@@ -11587,12 +12245,22 @@ begin
   end;
 end;
 
-procedure TFarmProcess.SetFractionOfInefficiencyLoses(
-  const Value: TFractionOfInefficiencyLoses);
+procedure TFarmProcess.SetFarmBudgetPrintHowMuch(
+  const Value: TFarmBudgetPrintHowMuch);
 begin
-  if FFractionOfInefficiencyLoses <> Value then
+  if FFarmBudgetPrintHowMuch <> Value then
   begin
-    FFractionOfInefficiencyLoses := Value;
+    FFarmBudgetPrintHowMuch := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetFractionOfInefficiencyLosses(
+  const Value: TFractionOfInefficiencyLosses);
+begin
+  if FFractionOfInefficiencyLosses <> Value then
+  begin
+    FFractionOfInefficiencyLosses := Value;
     InvalidateModel;
   end;
 end;
@@ -11615,6 +12283,25 @@ begin
   end;
 end;
 
+procedure TFarmProcess.SetPrintRoutingFrequency(
+  const Value: TPrintRoutingFrequency);
+begin
+  if FPrintRoutingFrequency <> Value then
+  begin
+    FPrintRoutingFrequency := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetRecomputeOption(const Value: TRecomputeOption);
+begin
+  if FRecomputeOption <> Value then
+  begin
+    FRecomputeOption := Value;
+    InvalidateModel;
+  end;
+end;
+
 procedure TFarmProcess.SetRootingDepth(const Value: TRootingDepth);
 begin
   if FRootingDepth <> Value then
@@ -11624,8 +12311,30 @@ begin
   end;
 end;
 
-procedure TFarmProcess.SetSaveNetRecharge(const Value: TSaveNetRecharge);
+procedure TFarmProcess.SetRoutedDelivery(const Value: TRoutedDelivery);
 begin
+  if FRoutedDelivery <> Value then
+  begin
+    FRoutedDelivery := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetRoutedReturn(const Value: TRoutedReturn);
+begin
+  if FRoutedReturn <> Value then
+  begin
+    FRoutedReturn := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TFarmProcess.SetSaveNetRecharge(Value: TSaveNetRecharge);
+begin
+  if Value in [snrListing, snrNone] then
+  begin
+    Value := snrDefault;
+  end;
   if FSaveNetRecharge <> Value then
   begin
     FSaveNetRecharge := Value;
@@ -11635,15 +12344,21 @@ end;
 
 procedure TFarmProcess.SetSaveWellFlowRates(Value: TSaveWellFlowRates);
 begin
-  if Value = swfrBudget then
-  begin
-    Value := swfrBinary;
+  case Value of
+    swfrDefault: ;
+    swfrAscii: ;
+    swfrListing, swfrNone, swfrBinary, swfrBudget: Value := swfrDefault;
   end;
   if FSaveWellFlowRates <> Value then
   begin
     FSaveWellFlowRates := Value;
     InvalidateModel;
   end;
+end;
+
+procedure TFarmProcess.SetStoredSurfaceWaterClosure(const Value: TRealStorage);
+begin
+  FStoredSurfaceWaterClosure.Assign(Value);
 end;
 
 procedure TFarmProcess.SetSupplyAndDemand(const Value: TSupplyAndDemand);
@@ -11665,14 +12380,314 @@ begin
   end;
 end;
 
-procedure TFarmProcess.SetWaterCostCoefficients(
-  const Value: TWaterCostCoefficients);
+procedure TFarmProcess.SetSurfaceWaterClosure(const Value: Double);
 begin
-  if FWaterCostCoefficients <> Value then
+  StoredSurfaceWaterClosure.Value := Value;
+end;
+
+//procedure TFarmProcess.SetWaterCostCoefficients(
+//  const Value: TWaterCostCoefficients);
+//begin
+//  if FWaterCostCoefficients <> Value then
+//  begin
+//    FWaterCostCoefficients := Value;
+//    InvalidateModel;
+//  end;
+//end;
+
+//procedure TFarmProcess.SetWellFieldOption(const Value: TWellFieldOption);
+//begin
+//  if FWellFieldOption <> Value then
+//  begin
+//    FWellFieldOption := Value;
+//    InvalidateModel;
+//  end;
+//end;
+
+{ TConduitFlowProcess }
+
+procedure TConduitFlowProcess.Assign(Source: TPersistent);
+var
+  ConduitSource: TConduitFlowProcess;
+begin
+  if Source is TConduitFlowProcess then
   begin
-    FWaterCostCoefficients := Value;
+    ConduitSource := TConduitFlowProcess(Source);
+    ConduitTemperature := ConduitSource.ConduitTemperature;
+    ElevationOffset := ConduitSource.ElevationOffset;
+    Epsilon := ConduitSource.Epsilon;
+    Relax := ConduitSource.Relax;
+    LayerTemperature := ConduitSource.LayerTemperature;
+    PipesUsed := ConduitSource.PipesUsed;
+    ConduitLayersUsed := ConduitSource.ConduitLayersUsed;
+    CfpElevationChoice := ConduitSource.CfpElevationChoice;
+    CfpExchange := ConduitSource.CfpExchange;
+    MaxIterations := ConduitSource.MaxIterations;
+    CfpPrintIterations := ConduitSource.CfpPrintIterations;
+    ConduitRechargeUsed := ConduitSource.ConduitRechargeUsed;
+    OutputInterval := ConduitSource.OutputInterval;
+  end;
+  inherited;
+end;
+
+constructor TConduitFlowProcess.Create(Model: TBaseModel);
+begin
+  inherited;
+  FStoredLayerTemperature := TRealStorage.Create;
+  FStoredRelax := TRealStorage.Create;
+  FStoredElevationOffset := TRealStorage.Create;
+  FStoredEpsilon := TRealStorage.Create;
+  FStoredConduitTemperature := TRealStorage.Create;
+
+  FStoredLayerTemperature.OnChange := ModelChanged;
+  FStoredRelax.OnChange := ModelChanged;
+  FStoredElevationOffset.OnChange := ModelChanged;
+  FStoredEpsilon.OnChange := ModelChanged;
+  FStoredConduitTemperature.OnChange := ModelChanged;
+
+  InitializeVariables;
+
+  if Model <> nil then
+  begin
+    FMfConduitRechargeFraction := TModflowBoundaryDisplayTimeList.Create(Model);
+    FMfConduitRechargeFraction.OnInitialize := InitializeRchFractionDisplay;
+    FMfConduitRechargeFraction.OnGetUseList := GetMfRechargeFractionUseList;
+    FMfConduitRechargeFraction.OnTimeListUsed := RechargeFractionUsed;
+    FMfConduitRechargeFraction.Name := StrCfpRecharge;
+    AddTimeList(FMfConduitRechargeFraction);
+  end;
+
+end;
+
+destructor TConduitFlowProcess.Destroy;
+begin
+  FMfConduitRechargeFraction.Free;
+  FStoredConduitTemperature.Free;
+  FStoredEpsilon.Free;
+  FStoredElevationOffset.Free;
+  FStoredRelax.Free;
+  FStoredLayerTemperature.Free;
+  inherited;
+end;
+
+function TConduitFlowProcess.GetConduitTemperature: double;
+begin
+  result := StoredConduitTemperature.Value;
+end;
+
+function TConduitFlowProcess.GetElevationOffset: double;
+begin
+  result := StoredElevationOffset.Value;
+end;
+
+function TConduitFlowProcess.GetEpsilon: double;
+begin
+  result := StoredEpsilon.Value;
+end;
+
+function TConduitFlowProcess.GetLayerTemperature: double;
+begin
+  result := StoredLayerTemperature.Value;
+end;
+
+procedure TConduitFlowProcess.GetMfRechargeFractionUseList(Sender: TObject;
+  NewUseList: TStringList);
+var
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  Item: TCustomModflowBoundaryItem;
+  ValueIndex: Integer;
+  PhastModel: TCustomModel;
+  Boundary: TCfpRchFractionBoundary;
+begin
+  PhastModel := FModel as TCustomModel;
+  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    Boundary := ScreenObject.ModflowCfpRchFraction;
+    if (Boundary <> nil) and Boundary.Used then
+    begin
+      for ValueIndex := 0 to Boundary.Values.Count -1 do
+      begin
+        Item := Boundary.Values[ValueIndex] as TCustomModflowBoundaryItem;
+        UpdateUseList(0, NewUseList, Item);
+      end;
+    end;
+  end;
+end;
+
+function TConduitFlowProcess.GetRelax: double;
+begin
+  result := StoredRelax.Value;
+end;
+
+procedure TConduitFlowProcess.InitializeRchFractionDisplay(Sender: TObject);
+var
+  CfpWriter: TModflowCfpWriter;
+  List: TModflowBoundListOfTimeLists;
+  ADataArray: TDataArray;
+  DataArrayIndex: Integer;
+begin
+  MfConduitRechargeFraction.CreateDataSets;
+
+
+  List := TModflowBoundListOfTimeLists.Create;
+  CfpWriter := TModflowCfpWriter.Create(FModel as TCustomModel, etDisplay);
+  try
+    List.Add(MfConduitRechargeFraction);
+    CfpWriter.UpdateDisplay(List);
+  finally
+    CfpWriter.Free;
+    List.Free;
+  end;
+  for DataArrayIndex := 0 to MfConduitRechargeFraction.Count - 1 do
+  begin
+    ADataArray := MfConduitRechargeFraction[DataArrayIndex];
+    ADataArray.UpToDate := True;
+  end;
+  MfConduitRechargeFraction.SetUpToDate(True);
+end;
+
+procedure TConduitFlowProcess.InitializeVariables;
+begin
+  inherited;
+  ConduitTemperature := 25;
+  ElevationOffset := 0;
+  Epsilon := 1e-10;
+  Relax := 1;
+  LayerTemperature := 25;
+  PipesUsed := False;
+  ConduitLayersUsed := True;
+  CfpElevationChoice := cecIndividual;
+  CfpExchange := ceNodeConductance;
+  MaxIterations := 1000;
+  CfpPrintIterations := cpiPrint;
+  FOutputInterval := 1;
+end;
+
+procedure TConduitFlowProcess.ModelChanged(Sender: TObject);
+begin
+  InvalidateModel;
+end;
+
+function TConduitFlowProcess.RechargeFractionUsed(Sender: TObject): boolean;
+var
+  LocalModel: TCustomModel;
+begin
+  LocalModel:= FModel as TCustomModel;
+  result := IsSelected and PipesUsed and ConduitRechargeUsed
+    and LocalModel.ModflowPackages.RchPackage.IsSelected;
+end;
+
+procedure TConduitFlowProcess.SetCfpElevationChoice(
+  const Value: TCfpElevationChoice);
+begin
+  if FCfpElevationChoice <> Value then
+  begin
+    FCfpElevationChoice := Value;
     InvalidateModel;
   end;
+end;
+
+procedure TConduitFlowProcess.SetCfpExchange(const Value: TCfpExchange);
+begin
+  if FCfpExchange <> Value then
+  begin
+    FCfpExchange := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TConduitFlowProcess.SetCfpPrintIterations(
+  const Value: TCfpPrintIterations);
+begin
+  if FCfpPrintIterations <> Value then
+  begin
+    FCfpPrintIterations := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TConduitFlowProcess.SetConduitLayersUsed(const Value: Boolean);
+begin
+  SetBooleanProperty(FConduitLayersUsed, Value);
+end;
+
+procedure TConduitFlowProcess.SetConduitRechargeUsed(const Value: boolean);
+begin
+  SetBooleanProperty(FConduitRechargeUsed, Value);
+end;
+
+procedure TConduitFlowProcess.SetConduitTemperature(const Value: double);
+begin
+  StoredConduitTemperature.Value := Value;
+end;
+
+procedure TConduitFlowProcess.SetElevationOffset(const Value: double);
+begin
+  StoredElevationOffset.Value := Value;
+end;
+
+procedure TConduitFlowProcess.SetEpsilon(const Value: double);
+begin
+  StoredEpsilon.Value := Value;
+end;
+
+procedure TConduitFlowProcess.SetLayerTemperature(const Value: double);
+begin
+  StoredLayerTemperature.Value := Value;
+end;
+
+procedure TConduitFlowProcess.SetMaxIterations(const Value: integer);
+begin
+  SetIntegerProperty(FMaxIterations, Value);
+end;
+
+procedure TConduitFlowProcess.SetOutputInterval(const Value: integer);
+begin
+  SetIntegerProperty(FOutputInterval, Value);
+end;
+
+procedure TConduitFlowProcess.SetPipesUsed(const Value: Boolean);
+begin
+  SetBooleanProperty(FPipesUsed, Value);
+end;
+
+procedure TConduitFlowProcess.SetRelax(const Value: double);
+begin
+  StoredRelax.Value := Value;
+end;
+
+procedure TConduitFlowProcess.SetStoredConduitTemperature(
+  const Value: TRealStorage);
+begin
+  FStoredConduitTemperature.Assign(Value);
+end;
+
+procedure TConduitFlowProcess.SetStoredElevationOffset(
+  const Value: TRealStorage);
+begin
+  FStoredElevationOffset.Assign(Value);
+end;
+
+procedure TConduitFlowProcess.SetStoredEpsilon(const Value: TRealStorage);
+begin
+  FStoredEpsilon.Assign(Value);
+end;
+
+procedure TConduitFlowProcess.SetStoredLayerTemperature(
+  const Value: TRealStorage);
+begin
+  FStoredLayerTemperature.Assign(Value);
+end;
+
+procedure TConduitFlowProcess.SetStoredRelax(const Value: TRealStorage);
+begin
+  FStoredRelax.Assign(Value);
 end;
 
 end.

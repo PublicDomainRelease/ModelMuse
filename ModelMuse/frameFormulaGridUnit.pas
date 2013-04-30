@@ -28,6 +28,7 @@ type
     property FirstFormulaColumn: Integer read FFirstFormulaColumn
       write FFirstFormulaColumn;
     property OnValidCell: TValidCellEvent read FOnValidCell write FOnValidCell;
+    procedure ClearGrid;
     { Public declarations }
   end;
 
@@ -41,6 +42,26 @@ uses
 
 {$R *.dfm}
 
+procedure TframeFormulaGrid.ClearGrid;
+var
+  RowIndex: Integer;
+  ColIndex: Integer;
+begin
+  Grid.BeginUpdate;
+  try
+    for RowIndex := Grid.FixedRows to Grid.RowCount - 1 do
+    begin
+      for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
+      begin
+        Grid.Cells[ColIndex,RowIndex] := '';
+        Grid.Checked[ColIndex,RowIndex] := False;
+      end;
+    end;
+  finally
+    Grid.EndUpdate;
+  end;
+end;
+
 procedure TframeFormulaGrid.edFormulaChange(Sender: TObject);
 var
   ColIndex: Integer;
@@ -48,29 +69,34 @@ var
   TempOptions: TGridOptions;
   ValidCell: Boolean;
 begin
-  for RowIndex := Grid.FixedRows to
-    Grid.RowCount - 1 do
-  begin
-    for ColIndex := FirstFormulaColumn to Grid.ColCount - 1 do
+  Grid.BeginUpdate;
+  try
+    for RowIndex := Grid.FixedRows to
+      Grid.RowCount - 1 do
     begin
-      if Grid.IsSelectedCell(ColIndex, RowIndex) then
+      for ColIndex := FirstFormulaColumn to Grid.ColCount - 1 do
       begin
-        ValidCell := True;
-        if Assigned (OnValidCell) then
+        if Grid.IsSelectedCell(ColIndex, RowIndex) then
         begin
-          OnValidCell(Grid, ColIndex, RowIndex, ValidCell);
-        end;
-        if ValidCell then
-        begin
-          Grid.Cells[ColIndex, RowIndex] := edFormula.Text;
-          if Assigned(Grid.OnSetEditText) then
+          ValidCell := True;
+          if Assigned (OnValidCell) then
           begin
-            Grid.OnSetEditText(
-              Grid,ColIndex,RowIndex, edFormula.Text);
+            OnValidCell(Grid, ColIndex, RowIndex, ValidCell);
+          end;
+          if ValidCell then
+          begin
+            Grid.Cells[ColIndex, RowIndex] := edFormula.Text;
+            if Assigned(Grid.OnSetEditText) then
+            begin
+              Grid.OnSetEditText(
+                Grid,ColIndex,RowIndex, edFormula.Text);
+            end;
           end;
         end;
       end;
     end;
+  finally
+    Grid.EndUpdate
   end;
   TempOptions := Grid.Options;
   try

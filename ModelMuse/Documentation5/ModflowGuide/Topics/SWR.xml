@@ -28,7 +28,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="4" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Citation"><text styleclass="Citation" translate="true">Hughes, J.D., Langevin, C.D., Chartier, K.L., and White, J.T., 2012, Documentation of the Surface-Water Routing (SWR1) Process for modeling surface-water flow with the U.S. Geological Survey Modular Ground-Water Model (MODFLOW-2005): U.S. Geological Survey Techniques and Methods, book 6, chap. A40 (Version 1.0), 113 p. </text><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/publication/tm6A40" target="_blank" styleclass="Normal" translate="true">http://pubs.er.usgs.gov/publication/tm6A40</link></li>
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="filelink" href="SWR1_AdditionsForNWT_1.01.0.txt" styleclass="Normal" translate="true">SWR1_AdditionsForNWT_1.01.0.txt</link></li>
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="filelink" href="SWRProcessInputInstructions_v1.03.pdf" styleclass="Normal" translate="true">SWRProcessInputInstructions_v1.03.pdf</link></li>
@@ -40,10 +40,10 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Related Packages</text></para>
         </td>
         <td>
-          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="5" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" styleclass="Normal" translate="true"> (STR)</link><text styleclass="Normal" translate="true"> package</text></li>
           </list>
-          <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="6" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" styleclass="Normal" translate="true">Streamflow-Routing (SFR)</link><text styleclass="Normal" translate="true"> package</text></li>
           </list>
         </td>
@@ -73,6 +73,7 @@
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">The stream network is assumed to remain fixed in space over the duration of a simulation. However, the active part of the stream network can be made to vary over time by making selected reaches inactive for selected stress periods. Inactive reaches would be specified by setting the reach </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="ISWRBND" styleclass="Normal" translate="true">ISWRBND</link><text styleclass="Normal" translate="true"> in Item 6 to zero for the specific stress periods when they are known to be inactive or dry. </text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">If the finite-difference cell corresponding to a surface-water reach is inactive, no aquifer-reach exchanges are allowed. </text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Overland runoff in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" styleclass="Normal" translate="true">Unsaturated Zone Flow</link><text styleclass="Normal" translate="true"> package can be directed toward reaches in the Surface Water Flow process by specifying the reach number plus 100,000 in </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="IRUNBND" styleclass="Normal" translate="true">IRUNBND</link><text styleclass="Normal" translate="true">.</text></para>
         </td>
       </tr>
     </table></para>
@@ -232,9 +233,9 @@
                       <para styleclass="Normal"><text styleclass="Keywords" translate="true">SAVE_CONVERGENCE_HISTORY</text><text styleclass="Normal" translate="true">, The convergence history for each SWR1 time step is written to an ASCII output file (IOPTUNIT is required and defines the convergence history output unit number). Convergence history is written using a column format with a separate row for each SWR1 time step.</text></para>
                       <para styleclass="Normal"><text styleclass="Keywords" translate="true">SAVE_RIVER_PACKAGE</text><text styleclass="Normal" translate="true">, A standard MODFLOW river (RIV) package is written to an ASCII output file (IOPTUNIT is required and defines the river package output unit number). SWR1 data for all active SWR1 reaches (ISWRBND ≠ 0) are written at the SWR1 output frequency (RTPRN).</text></para>
                       <para styleclass="Normal"><text styleclass="Keywords" translate="true">SAVE_RIVER_PACKAGE_ALL</text><text styleclass="Normal" translate="true">, A standard MODFLOW river (RIV) package is written to an ASCII output file (IOPTUNIT is required and defines the river package output unit number). SWR1 data for all SWR1 reaches (active and inactive) are written at the SWR1 output frequency (RTPRN).</text></para>
-                      <para styleclass="Normal"><text styleclass="Keywords" translate="true">SAVE_SWROBSERVATIONS</text><text styleclass="Normal" translate="true">, Simulated reach stage, water depth, flow to another reach, baseflow, and/or structure flow to another reach at select locations will be written to an ASCII or binary output file (IOPTUNIT is required and defines the SWR1 observation output unit number). Average simulated results for each SWR1 output time are saved to the observation file if SAVE_AVERAGE_RESULTS is specified in Item 4b.</text></para>
+                      <para styleclass="Normal"><text styleclass="Keywords" translate="true">SAVE_SWROBSERVATIONS</text><text styleclass="Normal" translate="true">, Simulated reach stage, water depth, flow to another reach, baseflow, and/or structure flow to another reach at select locations will be written to an ASCII or binary output file (IOPTUNIT is required and defines the SWR1 observation output unit number). Average simulated results for each SWR1 output time are saved to the observation file if SAVE_AVERAGE_RESULTS is specified in Item </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="4b" styleclass="Normal" translate="true">4b</link><text styleclass="Normal" translate="true">.</text></para>
                       <para styleclass="Normal"><text styleclass="Keywords" translate="true">SAVE_SWROBSERVATIONS_ALL</text><text styleclass="Normal" translate="true">, Simulated reach stage, water depth, flow to another reach, baseflow, and/or structure flow to another reach at select locations for each SWR time step will be written to an ASCII or binary output file (IOPTUNIT is required and defines the the SWR1 observation output unit number).</text></para>
-                      <para styleclass="Normal"><anchor id="USE_TABFILES" styleclass="Keywords"></anchor><text styleclass="Keywords" translate="true">USE_TABFILES</text><text styleclass="Normal" translate="true">, Tabular data are specified in item 4c and 4d.</text></para>
+                      <para styleclass="Normal"><anchor id="USE_TABFILES" styleclass="Keywords"></anchor><text styleclass="Keywords" translate="true">USE_TABFILES</text><text styleclass="Normal" translate="true">, Tabular data are specified in item </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="4c" styleclass="Normal" translate="true">4c</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="4d" styleclass="Normal" translate="true">4d</link><text styleclass="Normal" translate="true">.</text></para>
                       <para styleclass="Normal"><text styleclass="Keywords" translate="true">USE_DIRECT_RUNOFF</text><text styleclass="Normal" translate="true">, Direct runoff to specified SWR1 reaches will be calculated based on information provided in an external ASCII input file (see </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR1_Direct_Runoff_Subroutine_" styleclass="Normal" translate="true">Input Instructions for SWR Direct Runoff File</link><text styleclass="Normal" translate="true">). IOPTUNIT is required and defines the SWR1 direct runoff input unit number.</text></para>
                       <para styleclass="Normal"><text styleclass="Keywords" translate="true">USE_NONCONVERGENCE_CONTINUE</text><text styleclass="Normal" translate="true">, The simulation will continue even if convergence is not achieved in the MODFLOW groundwater flow process and/or the SWR1 Process (non-convergence continuation option).</text></para>
                       <para styleclass="Normal"><text styleclass="Keywords" translate="true">USE_UPSTREAM_WEIGHTING</text><text styleclass="Normal" translate="true">, An upstream-weighting approach will be used to simulate lateral flow between reach groups that use the diffusive-wave approximation (IROUTETYPE = 3). The area and wetted perimeter of the reach-group with the highest stage are used in equation 6.</text></para>
@@ -554,7 +555,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 4a</text></para>
+          <para styleclass="Heading2_atoc_"><anchor id="4a" styleclass="Heading2_atoc_"></anchor><text styleclass="Heading2_atoc_" translate="true">Data Set 4a</text></para>
         </td>
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">IRCH4A IROUTETYPE IRGNUM KRCH IRCH JRCH RLEN</text></para>
@@ -677,7 +678,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 4c</text></para>
+          <para styleclass="Heading2_atoc_"><anchor id="4c" styleclass="Heading2_atoc_"></anchor><text styleclass="Heading2_atoc_" translate="true">Data Set 4c</text></para>
         </td>
         <td>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[NTABS]]></caption></toggle></para>
@@ -766,7 +767,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 4e</text></para>
+          <para styleclass="Heading2_atoc_"><anchor id="4e" styleclass="Heading2_atoc_"></anchor><text styleclass="Heading2_atoc_" translate="true">Data Set 4e</text></para>
         </td>
         <td>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[NOBS]]></caption></toggle></para>
@@ -786,7 +787,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 4f</text></para>
+          <para styleclass="Heading2_atoc_"><anchor id="4f" styleclass="Heading2_atoc_"></anchor><text styleclass="Heading2_atoc_" translate="true">Data Set 4f</text></para>
         </td>
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">COBSNAME COBSTYPE IOBSLOC [IOBSLOC2] [IOBSLAY]</text></para>
@@ -807,7 +808,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">COBSTYPE— a string value that specifies the data type the selected observation data item represents.</text></para>
-                      <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">COBSTYPE = STAGE, the observation data item represents reach stage.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">COBSTYPE = DEPTH, the observation data item represents reach water depth.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">COBSTYPE = RBOTTOM, the observation data item represents reach bottom elevation.</text></li>
@@ -1334,9 +1335,7 @@
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">XB(1) ELEVB(1) </text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">XB(2) ELEVB(2) </text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">. </text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">. </text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">. </text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">. . . </text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">XB(</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="NGEOPTS" styleclass="Normal" translate="true">NGEOPTS</link><text styleclass="Normal" translate="true">) ELEVB(</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="NGEOPTS" styleclass="Normal" translate="true">NGEOPTS</link><text styleclass="Normal" translate="true">)</text></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
@@ -1365,7 +1364,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td colspan="2" style="height:5px;">
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">If GEOTYPE = 4 repeat </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="NGEOPTS" styleclass="Normal" translate="true">NGEOPTS</link><text styleclass="Normal" translate="true"> times:</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">If </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="IGEOTYPE" styleclass="Normal" translate="true">IGEOTYPE</link><text styleclass="Normal" translate="true"> = 4 repeat </text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="NGEOPTS" styleclass="Normal" translate="true">NGEOPTS</link><text styleclass="Normal" translate="true"> times:</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -1375,9 +1374,7 @@
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">ELEV(1) VOL(1) WETPER(1) SAREA(1) XAREA(1) </text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">ELEV(2) VOL(2) WETPER(2) SAREA(2) XAREA(2) </text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">. </text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">. </text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">. </text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">. . . </text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">ELEV(</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="NGEOPTS" styleclass="Normal" translate="true">NGEOPTS</link><text styleclass="Normal" translate="true">) VOL(</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="NGEOPTS" styleclass="Normal" translate="true">NGEOPTS</link><text styleclass="Normal" translate="true">) WETPER(</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="NGEOPTS" styleclass="Normal" translate="true">NGEOPTS</link><text styleclass="Normal" translate="true">) SAREA(</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="NGEOPTS" styleclass="Normal" translate="true">NGEOPTS</link><text styleclass="Normal" translate="true">) XAREA(</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="NGEOPTS" styleclass="Normal" translate="true">NGEOPTS</link><text styleclass="Normal" translate="true">)</text></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
@@ -1753,9 +1750,7 @@
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">STRELEV(1) STRQ(1) </text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">STRELEV(2) STRQ(2) </text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">. </text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">. </text></para>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">. </text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">. . . </text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">STRELEV(</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="NSTRPTS" styleclass="Normal" translate="true">NSTRPTS</link><text styleclass="Normal" translate="true">) STRQ(</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SWR" anchor="NSTRPTS" styleclass="Normal" translate="true">NSTRPTS</link><text styleclass="Normal" translate="true">)</text></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">

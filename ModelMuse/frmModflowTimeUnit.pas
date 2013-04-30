@@ -8,10 +8,10 @@ uses
   RbwDataGrid4, ComCtrls, Mask, JvExMask, JvSpin, JvExStdCtrls, JvCombobox,
   JvListComb, ArgusDataEntry, ModflowTimeUnit, UndoItems,
   RequiredDataSetsUndoUnit, Mt3dmsTimesUnit, frameGridUnit;
-         
+
 type
-  TMt3dmsTimeColumns = (mtStressPeriod, mtcStartTime, mtcEndTime, mtcStepSize, mtcMaxSteps,
-    mtcMultiplier, mtcMaxStepSize, mtcSteadyState);
+  TMt3dmsTimeColumns = (mtStressPeriod, mtcStartTime, mtcEndTime, mtcStepSize,
+    mtcMaxSteps, mtcMultiplier, mtcMaxStepSize, mtcSteadyState);
 
   TfrmModflowTime = class(TfrmCustomGoPhast)
     pnlTop: TPanel;
@@ -63,6 +63,7 @@ type
     procedure frameGridGridSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure pgcMainChange(Sender: TObject);
+    procedure frameGridGridBeforeDrawCell(Sender: TObject; ACol, ARow: Integer);
   private
     FModflowStressPeriods: TModflowStressPeriods;
     FDeleting: Boolean;
@@ -933,6 +934,28 @@ procedure TfrmModflowTime.FormResize(Sender: TObject);
 begin
   inherited;
   LayoutMultiRowEditControls;
+end;
+
+procedure TfrmModflowTime.frameGridGridBeforeDrawCell(Sender: TObject; ACol,
+  ARow: Integer);
+var
+  StepSize: double;
+  MaxStepSize: double;
+  Grid: TRbwDataGrid4;
+begin
+  inherited;
+  if (ARow >= 1) and (TMt3dmsTimeColumns(ACol) in [mtcStepSize, mtcMaxStepSize]) then
+  begin
+    Grid := frameGrid.Grid;
+    if TryStrToFloat(Grid.Cells[Ord(mtcStepSize), ARow], StepSize) and
+      TryStrToFloat(Grid.Cells[Ord(mtcMaxStepSize), ARow], MaxStepSize) then
+    begin
+      if StepSize > MaxStepSize then
+      begin
+        Grid.Canvas.Brush.Color := clRed;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmModflowTime.frameGridGridSelectCell(Sender: TObject; ACol,

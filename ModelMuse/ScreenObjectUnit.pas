@@ -38,7 +38,8 @@ uses
   FormulaManagerUnit, ModflowMnw2Unit, ModflowHydmodUnit, Mt3dmsChemUnit,
   Mt3dmsTobUnit, SutraBoundariesUnit, SutraMeshUnit, SubPolygonUnit,
   ModflowStrUnit, ModflowFhbUnit, ModflowFmpFarmUnit, ModflowFmpWellUnit,
-  ModflowFmpPrecipitationUnit, ModflowFmpEvapUnit, ModflowFmpCropSpatialUnit;
+  ModflowFmpPrecipitationUnit, ModflowFmpEvapUnit, ModflowFmpCropSpatialUnit,
+  ModflowCfpPipeUnit, ModflowCfpFixedUnit, ModflowCfpRechargeUnit;
 
 type
   //
@@ -1344,36 +1345,6 @@ Replace the commands that do things on one view of the TScreenObject
 a separate "strategy" object that is delegated with responsibility for one
 view. }
 
-  {
-  @abstract(@name is the internal representation of an object on the screen.)
-  @name has a series of 0 or more points that defines its location in two
-  dimensions.  It may also have zero, one, or two associated elevation
-  formulas that define its position in the third dimension.
-  (See @link(TScreenObject.ElevationFormula),
-  @link(TScreenObject.HigherElevationFormula),
-  and @link(TScreenObject.LowerElevationFormula).)
-  It can be used
-  to set the values of zero or more @link(TDataArray)s.  For each
-  such @link(TDataArray),
-  it has a formula (See @link(TScreenObject.DataSetFormulas))
-  that describes how it sets the values for them.
-  The @link(TScreenObject.ViewDirection) of the @link(TScreenObject)
-  determine whether the 2D location of
-  the object is with respect to the top, front, or side view of the model.
-  It has properties that define boundary conditions in
-  PHAST and it has methods to deal with PHAST-style interpolation.
-  (See the following list.)
-  @unorderedList(
-    @item(@link(TScreenObject.InterpValues))
-    @item(FluxBoundary)
-    @item(LeakyBoundary)
-    @item(RiverBoundary)
-    @item(SpecifiedHeadBoundary)
-    @item(WellBoundary)
-  )
-
-  @seealso(TPhastInterpolationValues)
-  }
 
   TModflowBoundaries = class(TObject)
   private
@@ -1446,7 +1417,12 @@ view. }
     FFmpRefEvapBoundary: TFmpRefEvapBoundary;
     FFmpCropIDBoundary: TFmpCropIDBoundary;
   {$ENDIF}
+    FCfpPipes: TCfpPipeBoundary;
+    FCfpFixedHeads: TCfpFixedBoundary;
+    FCfpRchFraction: TCfpRchFractionBoundary;
   public
+    // @name removes a link between a @link(TPhastModel) or @link(TChildModel)
+    // and a @link(TModflowBoundary)
     procedure RemoveModelLink(AModel: TBaseModel);
     procedure FreeUnusedBoundaries;
     Destructor Destroy; override;
@@ -1506,6 +1482,11 @@ view. }
     property FmpCropIDBoundary: TFmpCropIDBoundary read FFmpCropIDBoundary
       write FFmpCropIDBoundary;
   {$ENDIF}
+    property CfpPipes: TCfpPipeBoundary read FCfpPipes write FCfpPipes;
+    property CfpFixedHeads: TCfpFixedBoundary read FCfpFixedHeads
+      write FCfpFixedHeads;
+    property CfpRchFraction: TCfpRchFractionBoundary read FCfpRchFraction
+      write FCfpRchFraction;
     procedure Assign(Source: TModflowBoundaries);
   end;
 
@@ -1540,6 +1521,37 @@ view. }
   end;
 
   TModflowDelegate = class;
+
+  {
+  @abstract(@name is the internal representation of an object on the screen.)
+  @name has a series of 0 or more points that defines its location in two
+  dimensions.  It may also have zero, one, or two associated elevation
+  formulas that define its position in the third dimension.
+  (See @link(TScreenObject.ElevationFormula),
+  @link(TScreenObject.HigherElevationFormula),
+  and @link(TScreenObject.LowerElevationFormula).)
+  It can be used
+  to set the values of zero or more @link(TDataArray)s.  For each
+  such @link(TDataArray),
+  it has a formula (See @link(TScreenObject.DataSetFormulas))
+  that describes how it sets the values for them.
+  The @link(TScreenObject.ViewDirection) of the @link(TScreenObject)
+  determine whether the 2D location of
+  the object is with respect to the top, front, or side view of the model.
+  It has properties that define boundary conditions in
+  PHAST and it has methods to deal with PHAST-style interpolation.
+  (See the following list.)
+  @unorderedList(
+    @item(@link(TScreenObject.InterpValues))
+    @item(FluxBoundary)
+    @item(LeakyBoundary)
+    @item(RiverBoundary)
+    @item(SpecifiedHeadBoundary)
+    @item(WellBoundary)
+  )
+
+  @seealso(TPhastInterpolationValues)
+  }
 
   TScreenObject = class(TObserver)
   strict private
@@ -2504,8 +2516,16 @@ view. }
     function GetModflowFmpCropID: TFmpCropIDBoundary;
     procedure SetModflowFmpCropID(const Value: TFmpCropIDBoundary);
     function StoreModflowFmpCropID: Boolean;
-
   {$ENDIF}
+    function GetModflowCfpPipes: TCfpPipeBoundary;
+    procedure SetModflowCfpPipes(const Value: TCfpPipeBoundary);
+    function StoreModflowCfpPipes: Boolean;
+    function GetModflowCfpFixedHeads: TCfpFixedBoundary;
+    procedure SetModflowCfpFixedHeads(const Value: TCfpFixedBoundary);
+    function StoreModflowCfpFixedHeads: Boolean;
+    function GetModflowCfpRchFraction: TCfpRchFractionBoundary;
+    procedure SetModfloCfpRchFraction(const Value: TCfpRchFractionBoundary);
+    function StoreModflowCfpRchFraction: Boolean;
     property SubPolygonCount: integer read GetSubPolygonCount;
     property SubPolygons[Index: integer]: TSubPolygon read GetSubPolygon;
     procedure DeleteExtraSections;
@@ -3034,6 +3054,9 @@ view. }
     procedure CreateFarmRefEvap;
     procedure CreateFarmCropID;
   {$ENDIF}
+    procedure CreateCfpBoundary;
+    procedure CreateCfpFixedHeads;
+    procedure CreateCfpRchFraction;
     function ModflowDataSetUsed(DataArray: TDataArray; AModel: TBaseModel): boolean;
     property SectionCount: integer read GetSectionCount;
     property SectionStart[const Index: integer]: integer read GetSectionStart;
@@ -3415,7 +3438,8 @@ having them take care of the subscriptions. }
     // the @name does not intersect the MODFLOW grid.
     function SingleCellLocation(AModel: TBaseModel): TCellLocation;
     procedure UpdateModflowTimes(ModflowTimes: TRealList;
-      StartTestTime, EndTestTime: double; var StartRangeExtended, EndRangeExtended: boolean);
+      StartTestTime, EndTestTime: double;
+      var StartRangeExtended, EndRangeExtended: boolean);
     property CurrentValues: TValueArrayStorage read FCurrentValues;
     procedure UpdateImportedValues(DataArray: TDataArray);
     procedure ReverseDirection;
@@ -3635,6 +3659,12 @@ having them take care of the subscriptions. }
     property ModflowFmpCropID: TFmpCropIDBoundary read GetModflowFmpCropID
       write SetModflowFmpCropID Stored StoreModflowFmpCropID;
   {$ENDIF}
+    property ModflowCfpPipes: TCfpPipeBoundary read GetModflowCfpPipes
+      write SetModflowCfpPipes stored StoreModflowCfpPipes;
+    property ModflowCfpFixedHeads: TCfpFixedBoundary read GetModflowCfpFixedHeads
+      write SetModflowCfpFixedHeads stored StoreModflowCfpFixedHeads;
+    property ModflowCfpRchFraction: TCfpRchFractionBoundary read GetModflowCfpRchFraction
+      write SetModfloCfpRchFraction stored StoreModflowCfpRchFraction;
 
 
     property Mt3dmsConcBoundary: TMt3dmsConcBoundary read GetMt3dmsConcBoundary
@@ -4300,6 +4330,10 @@ SectionStarts.}
     constructor Create(ScreenObject: TScreenObject); override;
   end;
 {$ENDIF}
+
+  TModflowCfpDelegate = class(TModflowDelegate)
+    constructor Create(ScreenObject: TScreenObject); override;
+  end;
 
   TSutraDelegate = class(TCustomScreenObjectDelegate)
   private
@@ -6174,6 +6208,9 @@ begin
   ModflowFmpRefEvap := AScreenObject.ModflowFmpRefEvap;
   ModflowFmpCropID := AScreenObject.ModflowFmpCropID;
 {$ENDIF}
+  ModflowCfpPipes := AScreenObject.ModflowCfpPipes;
+  ModflowCfpFixedHeads := AScreenObject.ModflowCfpFixedHeads;
+  ModflowCfpRchFraction := AScreenObject.ModflowCfpRchFraction;
 
   SutraBoundaries := AScreenObject.SutraBoundaries;
 
@@ -7368,7 +7405,9 @@ begin
         begin
           Draw1ElevPhast(Direction, Bitmap32, DrawAsSelected);
         end;
-      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+        {$IFDEF FMP}, msModflowFmp {$ENDIF}
+        , msModflowCfp:
         begin
           Draw1ElevModflow(Direction, Bitmap32, DrawAsSelected,
             (Model as TPhastModel).SelectedModel);
@@ -10672,7 +10711,9 @@ var
               else Assert(False);
             end;
           end;
-        msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+        msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+          {$IFDEF FMP}, msModflowFmp {$ENDIF}
+          , msModflowCfp:
           begin
             Assert(EvaluatedAt = eaBlocks);
             BlockTop := LocalModel.ModflowGrid.
@@ -11894,6 +11935,58 @@ begin
   end;
 end;
 
+procedure TScreenObject.SetModfloCfpRchFraction(
+  const Value: TCfpRchFractionBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FCfpRchFraction <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FCfpRchFraction);
+  end
+  else
+  begin
+    CreateCfpRchFraction;
+    ModflowBoundaries.FCfpRchFraction.Assign(Value);
+  end;
+end;
+
+procedure TScreenObject.SetModflowCfpFixedHeads(const Value: TCfpFixedBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FCfpFixedHeads <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FCfpFixedHeads);
+  end
+  else
+  begin
+    CreateCfpFixedHeads;
+    ModflowBoundaries.FCfpFixedHeads.Assign(Value);
+  end;
+end;
+
+procedure TScreenObject.SetModflowCfpPipes(const Value: TCfpPipeBoundary);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FCfpPipes <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FCfpPipes);
+  end
+  else
+  begin
+    CreateCfpBoundary;
+    ModflowBoundaries.FCfpPipes.Assign(Value);
+  end;
+end;
+
 procedure TScreenObject.SetModflowChdBoundary(const Value: TChdBoundary);
 begin
   if (Value = nil) or not Value.Used then
@@ -12463,7 +12556,9 @@ begin
         begin
           Draw2ElevPhast(Direction, Bitmap32);
         end;
-      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+      msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+        {$IFDEF FMP}, msModflowFmp {$ENDIF}
+        , msModflowCfp:
         begin
           Draw2ElevModflow(Direction, Bitmap32, (Model as TPhastModel).SelectedModel);
         end;
@@ -16408,6 +16503,8 @@ begin
 
   if (ModflowBoundaries.FModflowFarm <> nil) then
   begin
+    ModflowBoundaries.FModflowFarm.Loaded;
+
     LocalModel := (Model as TPhastModel);
     DataArray := LocalModel.DataArrayManager.GetDataSetByName(KFarmID);
     DataArrayIndex := IndexOfDataSet(DataArray);
@@ -20914,6 +21011,10 @@ begin
             Item.DelegateClass := TModflowFmpDelegate.ClassName;
           end;
       {$ENDIF}
+        msModflowCfp:
+          begin
+            Item.DelegateClass := TModflowCfpDelegate.ClassName;
+          end;
         msSutra22:
           begin
             Item.DelegateClass := TSutraDelegate.ClassName;
@@ -28300,6 +28401,27 @@ begin
     or (LeakyBoundary.Solution.Count > 0));
 end;
 
+function TScreenObject.StoreModflowCfpFixedHeads: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowCfpFixedHeads <> nil)
+    and ModflowCfpFixedHeads.Used;
+end;
+
+function TScreenObject.StoreModflowCfpPipes: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowCfpPipes <> nil)
+    and ModflowCfpPipes.Used;
+end;
+
+function TScreenObject.StoreModflowCfpRchFraction: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowCfpRchFraction <> nil)
+    and ModflowCfpRchFraction.Used;
+end;
+
 function TScreenObject.StoreModflowChdBoundary: Boolean;
 begin
   result := (FModflowBoundaries <> nil)
@@ -28839,6 +28961,57 @@ begin
     FModflowBoundaries := TModflowBoundaries.Create;
   end;
   result := FModflowBoundaries
+end;
+
+function TScreenObject.GetModflowCfpFixedHeads: TCfpFixedBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateCfpFixedHeads;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.CfpFixedHeads;
+  end;
+end;
+
+function TScreenObject.GetModflowCfpPipes: TCfpPipeBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateCfpBoundary;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.CfpPipes;
+  end;
+end;
+
+function TScreenObject.GetModflowCfpRchFraction: TCfpRchFractionBoundary;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateCfpRchFraction;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.CfpRchFraction;
+  end;
 end;
 
 function TScreenObject.GetModflowChdBoundary: TChdBoundary;
@@ -29606,7 +29779,44 @@ begin
     ModflowStrBoundary.UpdateTimes(ModflowTimes,
       StartTestTime, EndTestTime, StartRangeExtended,EndRangeExtended);
   end;
-
+  {$IFDEF FMP}
+  if PhastModel.FarmProcessIsSelected then
+  begin
+    if (ModflowFmpFarm <> nil) and ModflowFmpFarm.Used then
+    begin
+      ModflowFmpFarm.UpdateTimes(ModflowTimes,
+        StartTestTime, EndTestTime, StartRangeExtended,EndRangeExtended);
+    end;
+    if (ModflowFmpWellBoundary <> nil) and ModflowFmpWellBoundary.Used then
+    begin
+      ModflowFmpWellBoundary.UpdateTimes(ModflowTimes,
+        StartTestTime, EndTestTime, StartRangeExtended,EndRangeExtended);
+    end;
+    if (ModflowFmpPrecip <> nil) and ModflowFmpPrecip.Used then
+    begin
+      ModflowFmpPrecip.UpdateTimes(ModflowTimes,
+        StartTestTime, EndTestTime, StartRangeExtended,EndRangeExtended);
+    end;
+    if (ModflowFmpRefEvap <> nil) and ModflowFmpRefEvap.Used then
+    begin
+      ModflowFmpRefEvap.UpdateTimes(ModflowTimes,
+        StartTestTime, EndTestTime, StartRangeExtended,EndRangeExtended);
+    end;
+    if (ModflowFmpCropID <> nil) and ModflowFmpCropID.Used then
+    begin
+      ModflowFmpCropID.UpdateTimes(ModflowTimes,
+        StartTestTime, EndTestTime, StartRangeExtended,EndRangeExtended);
+    end;
+  end;
+  {$ENDIF}
+  if PhastModel.CfpRechargeIsSelected(nil) then
+  begin
+    if (ModflowCfpRchFraction <> nil) and ModflowCfpRchFraction.Used then
+    begin
+      ModflowCfpRchFraction.UpdateTimes(ModflowTimes,
+        StartTestTime, EndTestTime, StartRangeExtended,EndRangeExtended);
+    end;
+  end;
 end;
 
 procedure TScreenObject.CreateValueArrayStorage(
@@ -32890,6 +33100,31 @@ begin
   end;
 end;
 
+procedure TScreenObject.CreateCfpBoundary;
+begin
+  if (ModflowBoundaries.FCfpPipes = nil) then
+  begin
+    ModflowBoundaries.FCfpPipes := TCfpPipeBoundary.Create(FModel, self);
+  end;
+end;
+
+procedure TScreenObject.CreateCfpFixedHeads;
+begin
+  if (ModflowBoundaries.FCfpFixedHeads = nil) then
+  begin
+    ModflowBoundaries.FCfpFixedHeads := TCfpFixedBoundary.Create(FModel, self);
+  end;
+
+end;
+
+procedure TScreenObject.CreateCfpRchFraction;
+begin
+  if (ModflowBoundaries.FCfpRchFraction = nil) then
+  begin
+    ModflowBoundaries.FCfpRchFraction := TCfpRchFractionBoundary.Create(FModel, self);
+  end;
+end;
+
 procedure TScreenObject.CreateChdBoundary;
 begin
   if (ModflowBoundaries.FModflowChdBoundary = nil) then
@@ -35680,14 +35915,55 @@ begin
     end;
     FFmpCropIDBoundary.Assign(Source.FFmpCropIDBoundary);
   end;
-
 {$ENDIF}
+
+  if Source.FCfpPipes = nil then
+  begin
+    FreeAndNil(FCfpPipes);
+  end
+  else
+  begin
+    if FCfpPipes = nil then
+    begin
+      FCfpPipes := TCfpPipeBoundary.Create(nil, nil);
+    end;
+    FCfpPipes.Assign(Source.FCfpPipes);
+  end;
+
+  if Source.FCfpFixedHeads = nil then
+  begin
+    FreeAndNil(FCfpFixedHeads);
+  end
+  else
+  begin
+    if FCfpFixedHeads = nil then
+    begin
+      FCfpFixedHeads := TCfpFixedBoundary.Create(nil, nil);
+    end;
+    FCfpFixedHeads.Assign(Source.FCfpFixedHeads);
+  end;
+
+  if Source.FCfpRchFraction = nil then
+  begin
+    FreeAndNil(FCfpRchFraction);
+  end
+  else
+  begin
+    if FCfpRchFraction = nil then
+    begin
+      FCfpRchFraction := TCfpRchFractionBoundary.Create(nil, nil);
+    end;
+    FCfpRchFraction.Assign(Source.FCfpRchFraction);
+  end;
 
   FreeUnusedBoundaries;
 end;
 
 destructor TModflowBoundaries.Destroy;
 begin
+  FCfpRchFraction.Free;
+  CfpFixedHeads.Free;
+  CfpPipes.Free;
 {$IFDEF FMP}
   FmpCropIDBoundary.Free;
   FFmpRefEvapBoundary.Free;
@@ -35832,9 +36108,20 @@ begin
   begin
     FreeAndNil(FFmpRefEvapBoundary);
   end;
-
-
 {$ENDIF}
+  if (FCfpPipes <> nil) and not FCfpPipes.Used then
+  begin
+    FreeAndNil(FCfpPipes);
+  end;
+  if (FCfpFixedHeads <> nil) and not FCfpFixedHeads.Used then
+  begin
+    FreeAndNil(FCfpFixedHeads);
+  end;
+  if (FCfpRchFraction <> nil) and not FCfpRchFraction.Used then
+  begin
+    FreeAndNil(FCfpRchFraction);
+  end;
+
 end;
 
 procedure TModflowBoundaries.RemoveModelLink(AModel: TBaseModel);
@@ -35923,6 +36210,49 @@ begin
   begin
     FMt3dmsTransObservations.RemoveModelLink(AModel);
   end;
+  if FModflowFhbHeadBoundary <> nil then
+  begin
+    FModflowFhbHeadBoundary.RemoveModelLink(AModel);
+  end;
+  if FModflowFhbFlowBoundary <> nil then
+  begin
+    FModflowFhbFlowBoundary.RemoveModelLink(AModel);
+  end;
+{$IFDEF FMP}
+//  if FModflowFarm <> nil then
+//  begin
+//    FModflowFarm.RemoveModelLink(AModel);
+//  end;
+  if FFmpWellBoundary <> nil then
+  begin
+    FFmpWellBoundary.RemoveModelLink(AModel);
+  end;
+  if FFmpPrecipBoundary <> nil then
+  begin
+    FFmpPrecipBoundary.RemoveModelLink(AModel);
+  end;
+  if FFmpRefEvapBoundary <> nil then
+  begin
+    FFmpRefEvapBoundary.RemoveModelLink(AModel);
+  end;
+  if FFmpCropIDBoundary <> nil then
+  begin
+    FFmpCropIDBoundary.RemoveModelLink(AModel);
+  end;
+{$ENDIF}
+  if FCfpRchFraction <> nil then
+  begin
+    FCfpRchFraction.RemoveModelLink(AModel);
+  end;
+
+//  if FCfpPipes <> nil then
+//  begin
+//    FCfpPipes.RemoveModelLink(AModel);
+//  end;
+//  if FCfpFixedHeads <> nil then
+//  begin
+//    FCfpFixedHeads.RemoveModelLink(AModel);
+//  end;
 end;
 
 { TSelectedCells }
@@ -39115,6 +39445,14 @@ begin
 end;
 {$ENDIF}
 
+{ TModflowCfpDelegate }
+
+constructor TModflowCfpDelegate.Create(ScreenObject: TScreenObject);
+begin
+  inherited;
+  FModelSelection := msModflowCfp;
+end;
+
 initialization
   RegisterClass(TScreenObject);
   RegisterClass(TPhastDelegate);
@@ -39125,6 +39463,7 @@ initialization
 {$IFDEF FMP}
   RegisterClass(TModflowFmpDelegate);
 {$ENDIF}
+  RegisterClass(TModflowCfpDelegate);
   RegisterClass(TSutraDelegate);
   RegisterClass(TMultiValueScreenObject);
   RegisterClass(TScreenObjectClipboard);

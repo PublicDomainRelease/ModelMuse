@@ -31,7 +31,8 @@ uses Windows,
   frameScreenObjectFhbHeadUnit, frameScreenObjectFhbFlowUnit,
   frameScreenObjectFarmUnit, frameScreenObjectFmpBoundaryUnit,
   frameScreenObjectFmpPrecipUnit, frameScreenObjectFmpEvapUnit,
-  frameScreenObjectCropIDUnit;
+  frameScreenObjectCropIDUnit, frameScreenObjectCfpPipesUnit,
+  frameScreenObjectCfpFixedUnit;
 
   { TODO : Consider making this a property sheet like the Object Inspector that
   could stay open at all times.  Boundary conditions and vertices might be
@@ -311,6 +312,12 @@ type
     frameFarmRefEvap: TframeScreenObjectFmpEvap;
     jvspFarmCropID: TJvStandardPage;
     frameFarmCropID: TframeScreenObjectCropID;
+    jvspCfpPipes: TJvStandardPage;
+    frameCfpPipes: TframeScreenObjectCfpPipes;
+    jvspCfpFixedHeads: TJvStandardPage;
+    frameCfpFixedHeads: TframeScreenObjectCfpFixed;
+    jvspCfpRechargeFraction: TJvStandardPage;
+    frameCfpRechargeFraction: TframeScreenObjectNoParam;
     // @name changes which check image is displayed for the selected item
     // in @link(jvtlModflowBoundaryNavigator).
     procedure jvtlModflowBoundaryNavigatorMouseDown(Sender: TObject;
@@ -532,6 +539,14 @@ type
     procedure frameFarmWelldgModflowBoundaryEndUpdate(Sender: TObject);
     procedure frameFarmWellseNumberOfTimesChange(Sender: TObject);
     procedure frameFarmWellcomboFormulaInterpChange(Sender: TObject);
+    procedure jvpltvSutraFeaturesCustomDrawItem(Sender: TCustomTreeView;
+      Node: TTreeNode; State: TCustomDrawState; var DefaultDraw: Boolean);
+    procedure frameScreenObjectFarmpcMainChange(Sender: TObject);
+    procedure frameCfpRechargeFractiondgModflowBoundaryEndUpdate(
+      Sender: TObject);
+    procedure frameCfpRechargeFractiondgModflowBoundarySetEditText(
+      Sender: TObject; ACol, ARow: Integer; const Value: string);
+    procedure frameCfpRechargeFractionseNumberOfTimesChange(Sender: TObject);
   published
     // Clicking @name closes the @classname without changing anything.
     // See @link(btnCancelClick),
@@ -1347,6 +1362,9 @@ type
     FFarmPrecip_Node: TJvPageIndexNode;
     FFarmRevEvap_Node: TJvPageIndexNode;
     FFarmCropID_Node: TJvPageIndexNode;
+    FCfpPipe_Node: TJvPageIndexNode;
+    FCfpFixedHead_Node: TJvPageIndexNode;
+    FCRCH_Node: TJvPageIndexNode;
     // @name is used to store the column that the user last selected
     // in one of the grids for boundary-condition, time-varying stress.
     // For boundary conditions that allow PHAST-style interpolation,
@@ -1827,7 +1845,7 @@ type
     procedure FhbFlowChanged(Sender: TObject);
     procedure CreateFhbFlowNode;
     procedure GetFhbFlowBoundary(const ScreenObjectList: TList);
-    procedure CreateFarmNode;
+    procedure CreateFarmNode(AScreenObject: TScreenObject);
     procedure FarmChanged(Sender: TObject);
     procedure FarmPrecipChanged(Sender: TObject);
     procedure FarmRefEvapChanged(Sender: TObject);
@@ -1838,6 +1856,15 @@ type
     procedure GetFarmRefEvap(const ScreenObjectList: TList);
     procedure GetFarmCropID(const ScreenObjectList: TList);
   {$ENDIF}
+    procedure CreateCfpPipeNode(AScreenObject: TScreenObject);
+    procedure CfpPipesChanged(Sender: TObject);
+    procedure GetCfpPipes(const ScreenObjectList: TList);
+    procedure CreateCfpFixedHeadNode(AScreenObject: TScreenObject);
+    procedure CfpFixedHeadsChanged(Sender: TObject);
+    procedure GetCfpFixedHeads(const ScreenObjectList: TList);
+    procedure CreateCfpRechargeNode;
+    procedure GetCfpRechargeBoundary(ScreenObjectList: TList);
+    procedure StoreCfpRechargeFraction;
 
     // @name is set to @true when the @classname has stored values of the
     // @link(TScreenObject)s being edited.
@@ -1911,9 +1938,9 @@ type
     procedure CreateStrNode(AScreenObject: TScreenObject);
     procedure CreateUzfNode;
     procedure CreateFarmWelNode;
-    procedure CreateFarmPrecipNode;
-    procedure CreateFarmRefEvapNode;
-    procedure CreateFarmCropIDNode;
+    procedure CreateFarmPrecipNode(AScreenObject: TScreenObject);
+    procedure CreateFarmRefEvapNode(AScreenObject: TScreenObject);
+    procedure CreateFarmCropIDNode(AScreenObject: TScreenObject);
     procedure SetSelectedMfBoundaryNode;
     procedure InitializeVertexGrid;
     procedure InitializePhastSpecifiedHeadGrid;
@@ -2069,7 +2096,8 @@ uses Math, StrUtils, JvToolEdit, frmGoPhastUnit, AbstractGridUnit,
   SutraBoundariesUnit, SutraMeshUnit, SutraOptionsUnit, ZoomBox2,
   ModflowStrUnit, ModflowFhbUnit, ModflowFmpFarmUnit, frameDeliveryGridUnit,
   ModflowFmpPrecipitationUnit, ModflowFmpEvapUnit, ModflowFmpCropSpatialUnit,
-  ModflowFmpWellUnit;
+  ModflowFmpWellUnit, ModflowCfpPipeUnit, ModflowCfpFixedUnit,
+  ModflowCfpRechargeUnit;
 
 resourcestring
   StrConcentrationObserv = 'Concentration Observations: ';
@@ -2114,6 +2142,7 @@ resourcestring
   StrNewSection = 'New section';
   StrX = 'X';
   StrY = 'Y';
+  StrZ = 'Z';
   StrGAGEForS = 'GAGE: for %s';
   StrErrorThereAppears = 'Error: There appears to be a cirular reference to ' +
   '"%0:s" in the formula for %1:s.  Do you wish to restore the old formula';
@@ -2167,10 +2196,14 @@ resourcestring
   StrDuplicateSAllowed = 'Duplicate %s allowed';
   StrThereIsNoOtherSteam = 'There is no other stream.';
   StrFarmWellsInS = 'Farm Wells in %s';
-  StrFarmPrecipInS = 'Farm Precip. in %s';
-  StrFarmRefEvapIn = 'Farm Ref. Evap. in %s';
+  StrFarmPrecipInS = 'Precip. in %s';
+  StrFarmRefEvapIn = 'Ref. Evap. in %s';
   StrFarmsInS = 'Farms in %s';
   StrCropIDInS = 'Crop ID in %s';
+  StrCFPFixedHeads = 'CFP: Fixed Heads';
+  StrCRCHConduitRechar = 'CRCH: Conduit Recharge';
+  StrYouCanOnlyDefine = 'You can only define conduits in CFP with objects th' +
+  'at have one %s formula on the Properties tab.';
 //  StrMassOrEnergyFlux = 'Mass or Energy Flux';
 
 {$R *.dfm}
@@ -2524,8 +2557,11 @@ procedure TfrmScreenObjectProperties.jvplModflowBoundariesChange(
   Sender: TObject);
 begin
   inherited;
-  HelpKeyWord := jvplModflowBoundaries.ActivePage.HelpKeyword;
-  btnHelp.HelpKeyword := HelpKeyWord;
+  if IsLoaded then
+  begin
+    HelpKeyWord := jvplModflowBoundaries.ActivePage.HelpKeyword;
+    btnHelp.HelpKeyword := HelpKeyWord;
+  end;
 end;
 
 procedure TfrmScreenObjectProperties.jvplSutraFeaturesChange(Sender: TObject);
@@ -2533,6 +2569,17 @@ begin
   inherited;
   HelpKeyWord := jvplSutraFeatures.ActivePage.HelpKeyword;
   btnHelp.HelpKeyword := HelpKeyWord;
+end;
+
+procedure TfrmScreenObjectProperties.jvpltvSutraFeaturesCustomDrawItem(
+  Sender: TCustomTreeView; Node: TTreeNode; State: TCustomDrawState;
+  var DefaultDraw: Boolean);
+begin
+  inherited;
+  if Node.Selected and not Sender.Focused then
+  begin
+    Sender.Canvas.Brush.Color := clMenuHighlight;
+  end;
 end;
 
 procedure TfrmScreenObjectProperties.jvpltvSutraFeaturesMouseDown(
@@ -2589,7 +2636,7 @@ begin
   end;
   if Node.Selected then
   begin
-    Sender.Canvas.Brush.Color := clBlue;
+    Sender.Canvas.Brush.Color := clMenuHighlight;
     Sender.Canvas.Font.Color := clWhite;
   end;
 end;
@@ -2598,13 +2645,26 @@ procedure TfrmScreenObjectProperties.jvtlModflowBoundaryNavigatorMouseDown(
   Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   CanSelectNode: Boolean;
+  ANode: TTreeNode;
+  ViewDirString: string;
 begin
   inherited;
   CanSelectNode := True;
+  ANode := jvtlModflowBoundaryNavigator.GetNodeAt(X,Y);
   jvtlModflowBoundaryNavigatorChanging(Sender,
-    jvtlModflowBoundaryNavigator.GetNodeAt(X,Y), CanSelectNode);
+    ANode, CanSelectNode);
   if not CanSelectNode then
   begin
+    if ANode = FCfpPipe_Node then
+    begin
+      Beep;
+      case FViewDirection of
+        vdTop: ViewDirString := StrZ;
+        vdFront: ViewDirString := StrY;
+        vdSide: ViewDirString := StrX;
+      end;
+      MessageDlg(Format(StrYouCanOnlyDefine, [ViewDirString]), mtInformation, [mbOK], 0);
+    end;
     Exit;
   end;
   if htOnStateIcon in jvtlModflowBoundaryNavigator.GetHitTestInfoAt(X, Y) then
@@ -2790,6 +2850,18 @@ begin
     begin
       // do nothing
     end
+    else if jvtlModflowBoundaryNavigator.Selected = FCfpPipe_Node then
+    begin
+      // do nothing
+    end
+    else if jvtlModflowBoundaryNavigator.Selected = FCfpFixedHead_Node then
+    begin
+      // do nothing
+    end
+    else if jvtlModflowBoundaryNavigator.Selected = FCRCH_Node then
+    begin
+      StoreCfpRechargeFraction;
+    end
     else
     begin
       Assert(False);
@@ -2907,11 +2979,14 @@ begin
   CreateGageNode;
   CreateUzfNode;
   CreateWelNode;
-  CreateFarmNode;
+  CreateCfpPipeNode(AScreenObject);
+  CreateCfpFixedHeadNode(AScreenObject);
+  CreateCfpRechargeNode;
+  CreateFarmNode(AScreenObject);
   CreateFarmWelNode;
-  CreateFarmPrecipNode;
-  CreateFarmRefEvapNode;
-  CreateFarmCropIDNode;
+  CreateFarmCropIDNode(AScreenObject);
+  CreateFarmPrecipNode(AScreenObject);
+  CreateFarmRefEvapNode(AScreenObject);
   CreateModpathNode;
   CreateMt3dmsSsmNode;
   CreateMt3dmsTobConcNode(AScreenObject);
@@ -3434,6 +3509,10 @@ begin
         BoundaryNodeList.Add(FFarmPrecip_Node);
         BoundaryNodeList.Add(FFarmRevEvap_Node);
         BoundaryNodeList.Add(FFarmCropID_Node);
+        BoundaryNodeList.Add(FCfpPipe_Node);
+        BoundaryNodeList.Add(FCfpFixedHead_Node);
+        BoundaryNodeList.Add(FCRCH_Node);
+
 
         BoundaryNodeList.Pack;
         ShowError := False;
@@ -3722,11 +3801,13 @@ begin
         begin
           // do nothing
         end;
+    {$IFDEF FMP}
       ptQMAX:
         begin
           frameFarmWell.clbParameters.Items.
             AddObject(Param.ParameterName, Param);
         end;
+    {$ENDIF}
       else Assert(False);
     end;
   end;
@@ -3837,6 +3918,23 @@ begin
     FFarmCropID_Node.StateIndex := 2;
   end;
 end;
+
+procedure TfrmScreenObjectProperties.CfpPipesChanged(Sender: TObject);
+begin
+  if (FCfpPipe_Node <> nil) and (FCfpPipe_Node.StateIndex <> 3) then
+  begin
+    FCfpPipe_Node.StateIndex := 2;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.CfpFixedHeadsChanged(Sender: TObject);
+begin
+  if (FCfpFixedHead_Node <> nil) and (FCfpFixedHead_Node.StateIndex <> 3) then
+  begin
+    FCfpFixedHead_Node.StateIndex := 2;
+  end;
+end;
+
 
 procedure TfrmScreenObjectProperties.FhbFlowChanged(Sender: TObject);
 begin
@@ -4172,6 +4270,8 @@ begin
   frameFarmPrecip.OnChange := FarmPrecipChanged;
   frameFarmRefEvap.OnChange := FarmRefEvapChanged;
   frameFarmCropID.OnChange := FarmCropIDChanged;
+  frameCfpPipes.OnChange := CfpPipesChanged;
+  frameCfpFixedHeads.OnChange := CfpFixedHeadsChanged;
 
   frameDrnParam.ConductanceColumn := 1;
   frameDrtParam.ConductanceColumn := 1;
@@ -4827,7 +4927,7 @@ begin
     begin
       AllowChange := True;
     end
-    else if (FFmpFarm_Node <> nil) and (FFmpFarm_Node.StateIndex <> 1) then
+    {else if (FFmpFarm_Node <> nil) and (FFmpFarm_Node.StateIndex <> 1) then
     begin
       AllowChange := True;
     end
@@ -4847,7 +4947,24 @@ begin
     begin
       AllowChange := True;
     end
-  end;
+    else if (FCfpPipe_Node <> nil) and (FCfpPipe_Node.StateIndex <> 1)
+      and (rgElevationCount.ItemIndex = 1) then
+    begin
+      AllowChange := True;
+    end
+    else if (FCfpFixedHead_Node <> nil) and (FCfpFixedHead_Node.StateIndex <> 1) then
+    begin
+      AllowChange := True;
+    end  }
+
+  end
+  else if (Node = FCfpPipe_Node) then
+  begin
+    if (rgElevationCount.ItemIndex <> 1) then
+    begin
+      AllowChange := False;
+    end
+  end
 
 //  end
 //  else if (Node = FMt3dms_Node) then
@@ -5201,6 +5318,20 @@ procedure TfrmScreenObjectProperties.SetFrameData;
 var
   DataSetIndex: Integer;
   FarmEdit: TScreenObjectDataEdit;
+  PipeIndex: Integer;
+  AnEdit: TScreenObjectEditItem;
+  Pipes: TCfpPipeBoundary;
+  CfpEdit: TScreenObjectDataEdit;
+  DiameterDataArray: TDataArray;
+  TortuosityDataArray: TDataArray;
+  RoughnessHeightDataArray: TDataArray;
+  LowerCriticalRDataArray: TDataArray;
+  UpperCriticalRDataArray: TDataArray;
+  CondOrPermDataArray: TDataArray;
+  PipeElevation: TDataArray;
+  CfpFixedHeadsDataArray: TDataArray;
+  FixedHeadIndex: Integer;
+  CfpFixedHeads: TCfpFixedBoundary;
 begin
   if (FHOB_Node <> nil) then
   begin
@@ -5340,6 +5471,140 @@ begin
   end;
 {$ENDIF}
 
+  if (FCfpPipe_Node <> nil) then
+  begin
+    frameCfpPipes.SetData(FNewProperties,
+      (FCfpPipe_Node.StateIndex = 2),
+      (FCfpPipe_Node.StateIndex = 1) and frmGoPhast.PhastModel.CfpIsSelected);
+
+    DataSetIndex := self.GetDataSetIndexByName(KPipeDiameter);
+    CfpEdit := FDataEdits[DataSetIndex];
+    DiameterDataArray := CfpEdit.DataArray;
+
+    DataSetIndex := self.GetDataSetIndexByName(KTortuosity);
+    CfpEdit := FDataEdits[DataSetIndex];
+    TortuosityDataArray := CfpEdit.DataArray;
+
+    DataSetIndex := self.GetDataSetIndexByName(KRoughnessHeight);
+    CfpEdit := FDataEdits[DataSetIndex];
+    RoughnessHeightDataArray := CfpEdit.DataArray;
+
+    DataSetIndex := self.GetDataSetIndexByName(KLowerCriticalR);
+    CfpEdit := FDataEdits[DataSetIndex];
+    LowerCriticalRDataArray := CfpEdit.DataArray;
+
+    DataSetIndex := self.GetDataSetIndexByName(KUpperCriticalR);
+    CfpEdit := FDataEdits[DataSetIndex];
+    UpperCriticalRDataArray := CfpEdit.DataArray;
+
+    DataSetIndex := self.GetDataSetIndexByName(KPipeConductanceOrPer);
+    CfpEdit := FDataEdits[DataSetIndex];
+    CondOrPermDataArray := CfpEdit.DataArray;
+
+    DataSetIndex := self.GetDataSetIndexByName(KCfpNodeElevation);
+    CfpEdit := FDataEdits[DataSetIndex];
+    PipeElevation := CfpEdit.DataArray;
+
+    for PipeIndex := 0 to FNewProperties.Count - 1 do
+    begin
+      AnEdit := FNewProperties[PipeIndex];
+      Pipes := AnEdit.ScreenObject.ModflowCfpPipes;
+      if (Pipes <> nil)  then
+      begin
+        if Pipes.Used then
+        begin
+          DataSetIndex := AnEdit.ScreenObject.AddDataSet(DiameterDataArray);
+          AnEdit.ScreenObject.DataSetFormulas[DataSetIndex] :=
+            Pipes.Diameter;
+
+          DataSetIndex := AnEdit.ScreenObject.AddDataSet(TortuosityDataArray);
+          AnEdit.ScreenObject.DataSetFormulas[DataSetIndex] :=
+            Pipes.Tortuosity;
+
+          DataSetIndex := AnEdit.ScreenObject.AddDataSet(RoughnessHeightDataArray);
+          AnEdit.ScreenObject.DataSetFormulas[DataSetIndex] :=
+            Pipes.RoughnessHeight;
+
+          DataSetIndex := AnEdit.ScreenObject.AddDataSet(LowerCriticalRDataArray);
+          AnEdit.ScreenObject.DataSetFormulas[DataSetIndex] :=
+            Pipes.LowerCriticalR;
+
+          DataSetIndex := AnEdit.ScreenObject.AddDataSet(UpperCriticalRDataArray);
+          AnEdit.ScreenObject.DataSetFormulas[DataSetIndex] :=
+            Pipes.HigherCriticalR;
+
+          DataSetIndex := AnEdit.ScreenObject.AddDataSet(CondOrPermDataArray);
+          AnEdit.ScreenObject.DataSetFormulas[DataSetIndex] :=
+            Pipes.ConductancePermeability;
+
+          if frameCfpPipes.edElevation.Enabled then
+          begin
+            DataSetIndex := AnEdit.ScreenObject.AddDataSet(PipeElevation);
+            AnEdit.ScreenObject.DataSetFormulas[DataSetIndex] :=
+              Pipes.Elevation;
+          end
+          else
+          begin
+            AnEdit.ScreenObject.RemoveDataSet(PipeElevation);
+          end;
+        end
+        else
+        begin
+          AnEdit.ScreenObject.RemoveDataSet(DiameterDataArray);
+          AnEdit.ScreenObject.RemoveDataSet(TortuosityDataArray);
+          AnEdit.ScreenObject.RemoveDataSet(RoughnessHeightDataArray);
+          AnEdit.ScreenObject.RemoveDataSet(LowerCriticalRDataArray);
+          AnEdit.ScreenObject.RemoveDataSet(UpperCriticalRDataArray);
+          AnEdit.ScreenObject.RemoveDataSet(CondOrPermDataArray);
+          AnEdit.ScreenObject.RemoveDataSet(PipeElevation);
+        end;
+      end
+      else
+      begin
+        AnEdit.ScreenObject.RemoveDataSet(DiameterDataArray);
+        AnEdit.ScreenObject.RemoveDataSet(TortuosityDataArray);
+        AnEdit.ScreenObject.RemoveDataSet(RoughnessHeightDataArray);
+        AnEdit.ScreenObject.RemoveDataSet(LowerCriticalRDataArray);
+        AnEdit.ScreenObject.RemoveDataSet(UpperCriticalRDataArray);
+        AnEdit.ScreenObject.RemoveDataSet(CondOrPermDataArray);
+        AnEdit.ScreenObject.RemoveDataSet(PipeElevation);
+      end;
+    end;
+  end;
+
+  if (FCfpFixedHead_Node <> nil) then
+  begin
+    frameCfpFixedHeads.SetData(FNewProperties,
+      (FCfpFixedHead_Node.StateIndex = 2),
+      (FCfpFixedHead_Node.StateIndex = 1) and frmGoPhast.PhastModel.CfpIsSelected);
+
+    DataSetIndex := self.GetDataSetIndexByName(KCfpFixedHeads);
+    CfpEdit := FDataEdits[DataSetIndex];
+    CfpFixedHeadsDataArray := CfpEdit.DataArray;
+
+    for FixedHeadIndex := 0 to FNewProperties.Count - 1 do
+    begin
+      AnEdit := FNewProperties[FixedHeadIndex];
+      CfpFixedHeads := AnEdit.ScreenObject.ModflowCfpFixedHeads;
+      if (CfpFixedHeads <> nil)  then
+      begin
+        if CfpFixedHeads.Used then
+        begin
+          DataSetIndex := AnEdit.ScreenObject.AddDataSet(CfpFixedHeadsDataArray);
+          AnEdit.ScreenObject.DataSetFormulas[DataSetIndex] :=
+            CfpFixedHeads.FixedHead;
+        end
+        else
+        begin
+          AnEdit.ScreenObject.RemoveDataSet(CfpFixedHeadsDataArray);
+        end;
+      end
+      else
+      begin
+        AnEdit.ScreenObject.RemoveDataSet(CfpFixedHeadsDataArray);
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmScreenObjectProperties.UpdateVertices;
@@ -7100,6 +7365,7 @@ begin
     end;
   end;
   CanEdit := CanEdit and not (dcFormula in Edit.DataArray.Lock);
+  CanEdit := CanEdit and Edit.DataArray.Visible;
   // Check that Edit.DataArray.Orientation is correct.
   case Edit.DataArray.Orientation of
     dsoTop:
@@ -8884,6 +9150,23 @@ begin
   end;
 end;
 
+procedure TfrmScreenObjectProperties.CreateCfpRechargeNode;
+var
+  Node: TJvPageIndexNode;
+begin
+  FCRCH_Node := nil;
+  if frmGoPhast.PhastModel.CfpRechargeIsSelected(nil) then
+  begin
+    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
+      StrCRCHConduitRechar)
+      as TJvPageIndexNode;
+    Node.PageIndex := jvspCfpRechargeFraction.PageIndex;
+    frameCfpRechargeFraction.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FCRCH_Node := Node;
+  end;
+end;
+
 procedure TfrmScreenObjectProperties.CreateSfrNode(AScreenObject: TScreenObject);
 var
   Node: TJvPageIndexNode;
@@ -9273,12 +9556,15 @@ begin
   end;
 end;
 
-procedure TfrmScreenObjectProperties.CreateFarmPrecipNode;
+procedure TfrmScreenObjectProperties.CreateFarmPrecipNode(AScreenObject: TScreenObject);
 var
   Node: TJvPageIndexNode;
 begin
   FFarmPrecip_Node := nil;
-  if frmGoPhast.PhastModel.FarmProcessIsSelected then
+  if frmGoPhast.PhastModel.FarmProcessIsSelected
+    and (frmGoPhast.PhastModel.ModflowPackages.
+    FarmProcess.Precipitation = pSpatiallyDistributed)
+    and (AScreenObject.ViewDirection = vdTop) then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil, Format(StrFarmPrecipInS,
       [frmGoPhast.PhastModel.ModflowPackages.FarmProcess.PackageIdentifier]))
@@ -9290,12 +9576,16 @@ begin
   end;
 end;
 
-procedure TfrmScreenObjectProperties.CreateFarmRefEvapNode;
+procedure TfrmScreenObjectProperties.CreateFarmRefEvapNode(AScreenObject: TScreenObject);
 var
   Node: TJvPageIndexNode;
 begin
   FFarmRevEvap_Node := nil;
-  if frmGoPhast.PhastModel.FarmProcessIsSelected then
+  if frmGoPhast.PhastModel.FarmProcessIsSelected
+    and (frmGoPhast.PhastModel.ModflowPackages.
+    FarmProcess.ConsumptiveUse in
+    [cuPotentialAndReferenceET, cuCropCoefficient])
+    and (AScreenObject.ViewDirection = vdTop) then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil, Format(StrFarmRefEvapIn,
       [frmGoPhast.PhastModel.ModflowPackages.FarmProcess.PackageIdentifier]))
@@ -9307,12 +9597,13 @@ begin
   end;
 end;
 
-procedure TfrmScreenObjectProperties.CreateFarmCropIDNode;
+procedure TfrmScreenObjectProperties.CreateFarmCropIDNode(AScreenObject: TScreenObject);
 var
   Node: TJvPageIndexNode;
 begin
   FFarmCropID_Node := nil;
-  if frmGoPhast.PhastModel.FarmProcessIsSelected then
+  if frmGoPhast.PhastModel.FarmProcessIsSelected
+    and (AScreenObject.ViewDirection = vdTop) then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil, Format(StrCropIDInS,
       [frmGoPhast.PhastModel.ModflowPackages.FarmProcess.PackageIdentifier]))
@@ -9343,13 +9634,16 @@ begin
   end;
 end;
 
-procedure TfrmScreenObjectProperties.CreateFarmNode;
+procedure TfrmScreenObjectProperties.CreateFarmNode(AScreenObject: TScreenObject);
+{$IFDEF FMP}
 var
   Node: TJvPageIndexNode;
+{$ENDIF}
 begin
   FFmpFarm_Node := nil;
 {$IFDEF FMP}
-  if frmGoPhast.PhastModel.FarmProcessIsSelected then
+  if frmGoPhast.PhastModel.FarmProcessIsSelected
+    and (AScreenObject.ViewDirection = vdTop) then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil, Format(StrFarmsInS,
       [frmGoPhast.PhastModel.ModflowPackages.FarmProcess.PackageIdentifier]))
@@ -9527,6 +9821,44 @@ begin
     FCHD_Node := Node;
   end;
 end;
+
+procedure TfrmScreenObjectProperties.CreateCfpPipeNode(AScreenObject: TScreenObject);
+var
+  Node: TJvPageIndexNode;
+begin
+  FCfpPipe_Node := nil;
+  if frmGoPhast.PhastModel.CfpPipesSelected(nil)
+    and (AScreenObject.Count > 1) and not AScreenObject.Closed
+    {and (AScreenObject.ElevationCount = ecOne)} then
+  begin
+    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
+      frmGoPhast.PhastModel.ModflowPackages.ConduitFlowProcess.PackageIdentifier)
+      as TJvPageIndexNode;
+    Node.PageIndex := jvspCfpPipes.PageIndex;
+    frameCfpPipes.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FCfpPipe_Node := Node;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.CreateCfpFixedHeadNode(AScreenObject: TScreenObject);
+var
+  Node: TJvPageIndexNode;
+begin
+  FCfpFixedHead_Node := nil;
+  if frmGoPhast.PhastModel.CfpPipesSelected(nil)
+    and (AScreenObject.ElevationCount in [ecOne, ecTwo]) then
+  begin
+    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
+      StrCFPFixedHeads)
+      as TJvPageIndexNode;
+    Node.PageIndex := jvspCfpFixedHeads.PageIndex;
+    frameCfpFixedHeads.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FCfpFixedHead_Node := Node;
+  end;
+end;
+
 
 procedure TfrmScreenObjectProperties.UpdateNodeState(Node: TJvPageIndexNode);
 begin
@@ -9735,7 +10067,63 @@ begin
   end;
   frameFarmCropID.GetData(FNewProperties);
 end;
+{$ENDIF}
 
+procedure TfrmScreenObjectProperties.GetCfpPipes
+  (const ScreenObjectList: TList);
+var
+  State: TCheckBoxState;
+  ScreenObjectIndex: integer;
+  AScreenObject: TScreenObject;
+  Boundary: TCfpPipeBoundary;
+begin
+  if not frmGoPhast.PhastModel.CfpIsSelected then
+  begin
+    Exit;
+  end;
+  State := cbUnchecked;
+  for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+  begin
+    AScreenObject := ScreenObjectList[ScreenObjectIndex];
+    Boundary := AScreenObject.ModflowCfpPipes;
+    UpdateBoundaryState(Boundary, ScreenObjectIndex, State);
+  end;
+
+  if FCfpPipe_Node <> nil then
+  begin
+    FCfpPipe_Node.StateIndex := Ord(State)+1;
+  end;
+  frameCfpPipes.GetData(FNewProperties);
+end;
+
+procedure TfrmScreenObjectProperties.GetCfpFixedHeads
+  (const ScreenObjectList: TList);
+var
+  State: TCheckBoxState;
+  ScreenObjectIndex: integer;
+  AScreenObject: TScreenObject;
+  Boundary: TCfpFixedBoundary;
+begin
+  if not frmGoPhast.PhastModel.CfpIsSelected then
+  begin
+    Exit;
+  end;
+  State := cbUnchecked;
+  for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+  begin
+    AScreenObject := ScreenObjectList[ScreenObjectIndex];
+    Boundary := AScreenObject.ModflowCfpFixedHeads;
+    UpdateBoundaryState(Boundary, ScreenObjectIndex, State);
+  end;
+
+  if FCfpFixedHead_Node <> nil then
+  begin
+    FCfpFixedHead_Node.StateIndex := Ord(State)+1;
+  end;
+  frameCfpFixedHeads.GetData(FNewProperties);
+end;
+
+{$IFDEF FMP}
 procedure TfrmScreenObjectProperties.GetFarmCropID
   (const ScreenObjectList: TList);
 var
@@ -10907,6 +11295,9 @@ begin
   GetFarmRefEvap(AScreenObjectList);
   GetFarmCropID(AScreenObjectList);
 {$ENDIF}
+  GetCfpPipes(AScreenObjectList);
+  GetCfpFixedHeads(AScreenObjectList);
+  GetCfpRechargeBoundary(AScreenObjectList);
   GetMt3dmsChemBoundary(AScreenObjectList);
   GetMt3dConcObservations(AScreenObjectList);
   GetMt3dmsFluxObservations(AScreenObjectList);
@@ -11385,6 +11776,18 @@ begin
     begin
       AScreenObject.ModflowUzfBoundary := nil;
     end;
+
+    frameCfpRechargeFraction.dgModflowBoundary.RowHeights[0] :=
+      frameCfpRechargeFraction.dgModflowBoundary.DefaultRowHeight;
+    AScreenObject.CreateCfpRchFraction;
+    frameCfpRechargeFraction.InitializeNoParamFrame(AScreenObject.ModflowCfpRchFraction);
+    frameCfpRechargeFraction.dgModflowBoundary.ColCount := 3;
+    if (AScreenObject.ModflowCfpRchFraction <> nil)
+      and not AScreenObject.ModflowCfpRchFraction.Used then
+    begin
+      AScreenObject.ModflowCfpRchFraction := nil;
+    end;
+
   finally
     AScreenObject.CanInvalidateModel := PriorCanInvalidateModel;
     frmGoPhast.PhastModel.UpToDate := StoredUpToDate;
@@ -11974,6 +12377,7 @@ begin
 end;
 
 procedure TfrmScreenObjectProperties.GetFarmWell(ScreenObjectList: TList);
+{$IFDEF FMP}
 var
   Frame: TframeScreenObjectCondParam;
   Parameter: TParameterType;
@@ -11981,6 +12385,7 @@ var
 //  AScreenObject: TScreenObject;
 //  Boundary: TFmpWellBoundary;
 //  FoundFirst: Boolean;
+{$ENDIF}
 begin
 {$IFDEF FMP}
   if not frmGoPhast.PhastModel.FarmProcessIsSelected then
@@ -12037,6 +12442,150 @@ end;
 function TfrmScreenObjectProperties.GetSfrParser(Sender: TObject): TRbwParser;
 begin
   result := rparserThreeDFormulaElements;
+end;
+
+procedure TfrmScreenObjectProperties.GetCfpRechargeBoundary(ScreenObjectList: TList);
+var
+//  FirstScreenObjectFound: boolean;
+  TimeList: TParameterTimeList;
+  State: TCheckBoxState;
+  ScreenObjectIndex: integer;
+  AScreenObject: TScreenObject;
+  Boundary: TCfpRchFractionBoundary;
+  TimeIndex: Integer;
+  Item: TCustomModflowBoundaryItem;
+  Time: TParameterTime;
+  Time1: TParameterTime;
+  Time2: TParameterTime;
+  DataGrid: TRbwDataGrid4;
+  ColumnOffset: integer;
+  AnotherValues: TCustomMF_BoundColl;
+//  AScreenObject: TScreenObject;
+//  Boundary :TModflowBoundary;
+  Values: TCustomMF_BoundColl;
+  ValuesIdentical: boolean;
+  AnotherBoundary: TCfpRchFractionBoundary;
+  RowIndex: integer;
+  BoundaryIndex: integer;
+begin
+  if not frmGoPhast.PhastModel.CfpRechargeIsSelected(nil) then
+  begin
+    Exit;
+  end;
+//  FirstScreenObjectFound := False;
+  TimeList := TParameterTimeList.Create;
+  try
+    State := cbUnchecked;
+    for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+    begin
+      AScreenObject := ScreenObjectList[ScreenObjectIndex];
+      Boundary := AScreenObject.ModflowCfpRchFraction;
+      UpdateBoundaryState(Boundary, ScreenObjectIndex, State);
+    end;
+    if FCRCH_Node <> nil then
+    begin
+      FCRCH_Node.StateIndex := Ord(State)+1;
+    end;
+    for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+    begin
+      AScreenObject := ScreenObjectList[ScreenObjectIndex];
+      Boundary := AScreenObject.ModflowCfpRchFraction;
+      if Boundary <> nil then
+      begin
+        // get all the times associated with the boundary.
+        for TimeIndex := 0 to Boundary.Values.Count - 1 do
+        begin
+          Item := Boundary.Values[TimeIndex] as TCustomModflowBoundaryItem;
+          Time := TParameterTime.Create;
+          Time.StartTime := Item.StartTime;
+          Time.EndTime := Item.EndTime;
+          TimeList.Add(Time);
+        end;
+      end;
+    end;
+    // Sort the times in ascending order.
+    TimeList.Sort;
+    // get rid of duplicate times.
+    for TimeIndex := TimeList.Count - 1 downto 1 do
+    begin
+      Time1 := TimeList[TimeIndex];
+      Time2 := TimeList[TimeIndex - 1];
+      if (Time1.StartTime = Time2.StartTime) and (Time1.EndTime = Time2.EndTime) then
+      begin
+        TimeList.Delete(TimeIndex);
+      end;
+    end;
+
+// display the times that are left.
+    frameCfpRechargeFraction.seNumberOfTimes.Value := TimeList.Count;
+    DataGrid := frameCfpRechargeFraction.dgModflowBoundary;
+    DataGrid.BeginUpdate;
+    try
+      for TimeIndex := 0 to TimeList.Count - 1 do
+      begin
+        Time := TimeList[TimeIndex];
+        DataGrid.Cells[0, TimeIndex + 1] := FloatToStr(Time.StartTime);
+        DataGrid.Cells[1, TimeIndex + 1] := FloatToStr(Time.EndTime);
+      end;
+
+      ColumnOffset := 2;
+
+      AScreenObject := ScreenObjectList[0];
+      Boundary := AScreenObject.ModflowCfpRchFraction;
+      if Boundary = nil then
+      begin
+        Values := nil;
+      end
+      else
+      begin
+        Values := Boundary.Values;
+      end;
+      ValuesIdentical := True;
+      for ScreenObjectIndex := 1 to ScreenObjectList.Count - 1 do
+      begin
+        AScreenObject := ScreenObjectList[ScreenObjectIndex];
+        AnotherBoundary := AScreenObject.ModflowCfpRchFraction;
+        if (Boundary = nil) and (AnotherBoundary = nil) then
+        begin
+          ValuesIdentical := True;
+        end
+        else if (Boundary = nil) or (AnotherBoundary = nil) then
+        begin
+          ValuesIdentical := False;
+        end
+        else
+        begin
+          AnotherValues := AnotherBoundary.Values;
+          ValuesIdentical := Values.IsSame(AnotherValues);
+        end;
+        if not ValuesIdentical then
+        begin
+          break;
+        end;
+      end;
+      if ValuesIdentical and (Values <> nil) then
+      begin
+        for TimeIndex := 0 to Values.Count - 1 do
+        begin
+          Item := Values[TimeIndex] as TCustomModflowBoundaryItem;
+          RowIndex := TimeList.IndexOfTime(Item.StartTime, Item.EndTime) + 1;
+          Assert(RowIndex >= 1);
+          for BoundaryIndex := 0 to Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
+          begin
+            DataGrid.Cells[ColumnOffset + BoundaryIndex, RowIndex] :=
+              Item.BoundaryFormula[BoundaryIndex];
+          end;
+        end;
+      end;
+
+    finally
+      DataGrid.EndUpdate;
+    end
+
+
+  finally
+    TimeList.Free;
+  end;
 end;
 
 procedure TfrmScreenObjectProperties.GetUzfBoundary(ScreenObjectList: TList);
@@ -13336,7 +13885,8 @@ end;
 procedure TfrmScreenObjectProperties.dgVerticiesEndUpdate(Sender: TObject);
 begin
   inherited;
-  if FSettingVerticies then
+
+  if FSettingVerticies or (csReading in ComponentState) then
   begin
     Exit;
   end;
@@ -13781,10 +14331,13 @@ begin
   end;
 end;
 
+Type
+  TCustomEditCrack = class(TCustomEdit);
+
 procedure TfrmScreenObjectProperties.btnFormulaClick(Sender: TObject);
 var
   FunctionString: string;
-  ed: TEdit;
+  ed: TCustomEdit;
   VariableList: TList;
   VarIndex, Index: integer;
   Variable: TCustomValue;
@@ -13848,6 +14401,39 @@ begin
   else if Sender = framePhastInterpolationBoundaries.btnEditMixtureFormula then
   begin
     ed := framePhastInterpolationBoundaries.edMixFormula;
+  end
+
+  else if Sender = frameCfpPipes.btnDiameter then
+  begin
+    ed := frameCfpPipes.edDiameter;
+  end
+  else if Sender = frameCfpPipes.btnTortuosity then
+  begin
+    ed := frameCfpPipes.edTortuosity;
+  end
+  else if Sender = frameCfpPipes.btnRoughnessHeight then
+  begin
+    ed := frameCfpPipes.edRoughnessHeight;
+  end
+  else if Sender = frameCfpPipes.btnLowerCriticalR then
+  begin
+    ed := frameCfpPipes.edLowerCriticalR;
+  end
+  else if Sender = frameCfpPipes.btnHigherCriticalR then
+  begin
+    ed := frameCfpPipes.edHigherCriticalR;
+  end
+  else if Sender = frameCfpPipes.btnConductancePermeability then
+  begin
+    ed := frameCfpPipes.edConductancePermeability;
+  end
+  else if Sender = frameCfpPipes.btnElevation then
+  begin
+    ed := frameCfpPipes.edElevation;
+  end
+  else if Sender = frameCfpFixedHeads.btnFixedHead then
+  begin
+    ed := frameCfpFixedHeads.edFixedHead;
   end
   else
   begin
@@ -13986,6 +14572,18 @@ begin
   begin
     Compiler := GetElevationCompiler;
   end
+  else if (ed = frameCfpPipes.edDiameter)
+    or (ed = frameCfpPipes.edTortuosity)
+    or (ed = frameCfpPipes.edRoughnessHeight)
+    or (ed = frameCfpPipes.edLowerCriticalR)
+    or (ed = frameCfpPipes.edHigherCriticalR)
+    or (ed = frameCfpPipes.edConductancePermeability)
+    or (ed = frameCfpPipes.edElevation)
+    or (ed = frameCfpFixedHeads.edFixedHead)
+    then
+  begin
+    Compiler := GetCompiler(dso3D, eaBlocks);
+  end
   else
   begin
     Compiler := GetCompiler(dso3D, eaNodes);
@@ -14113,7 +14711,7 @@ begin
     // check that the formula is OK.
     if not (CompiledFormula.ResultType in [rdtDouble, rdtInteger]) then
     begin
-      ed.Color := clRed;
+      TCustomEditCrack(ed).Color := clRed;
       Beep;
       MessageDlg(StrErrorTheFormulaI, mtError, [mbOK], 0);
       Exit;
@@ -14124,13 +14722,13 @@ begin
       if FunctionString <> ed.Text then
       begin
         ed.Text := FunctionString;
-        if Assigned(ed.OnChange) then
+        if Assigned(TCustomEditCrack(ed).OnChange) then
         begin
-          ed.OnChange(ed);
+          TCustomEditCrack(ed).OnChange(ed);
         end;
-        if Assigned(ed.OnExit) then
+        if Assigned(TCustomEditCrack(ed).OnExit) then
         begin
-          ed.OnExit(ed);
+          TCustomEditCrack(ed).OnExit(ed);
         end;
       end;
     end
@@ -14152,8 +14750,17 @@ begin
   else if (ed = edLeakyHydraulicConductivity)
     or (ed = edLeakyThickness) or (ed = edRiverHydraulicConductivity)
     or (ed = edRiverWidth) or (ed = edRiverDepth)
-    or (ed = edRiverBedThickness) or (ed =
-    framePhastInterpolationBoundaries.edMixFormula) then
+    or (ed = edRiverBedThickness)
+    or (ed = framePhastInterpolationBoundaries.edMixFormula)
+    or (ed = frameCfpPipes.edDiameter)
+    or (ed = frameCfpPipes.edTortuosity)
+    or (ed = frameCfpPipes.edRoughnessHeight)
+    or (ed = frameCfpPipes.edLowerCriticalR)
+    or (ed = frameCfpPipes.edHigherCriticalR)
+    or (ed = frameCfpPipes.edConductancePermeability)
+    or (ed = frameCfpPipes.edElevation)
+    or (ed = frameCfpFixedHeads.edFixedHead)
+    then
   begin
     // do nothing
   end
@@ -14784,7 +15391,9 @@ begin
         cbSetGridCellSize.Caption := StrUseToSetGridElem;
         lblGridCellSize.Caption := StrGridElementSize;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         cbSetGridCellSize.Caption := StrUseToSetGridCell;
         lblGridCellSize.Caption := StrGridCellSize;
@@ -15366,8 +15975,10 @@ end;
 
 procedure TfrmScreenObjectProperties.frameFarmWellcomboFormulaInterpChange(
   Sender: TObject);
+{$IFDEF FMP}
 var
   Item: TScreenObjectEditItem;
+{$ENDIF}
 begin
   inherited;
 {$IFDEF FMP}
@@ -15387,9 +15998,11 @@ end;
 
 procedure TfrmScreenObjectProperties.frameFarmWelldgModflowBoundarySetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
+{$IFDEF FMP}
 var
   Item: TScreenObjectEditItem;
   StartParamCol: Integer;
+{$ENDIF}
 begin
   inherited;
 {$IFDEF FMP}
@@ -15461,6 +16074,17 @@ begin
   if IsLoaded then
   begin
     FRvob_Node.StateIndex := 2;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.frameScreenObjectFarmpcMainChange(
+  Sender: TObject);
+begin
+  inherited;
+  if IsLoaded then
+  begin
+    HelpKeyword := frameScreenObjectFarm.pcMain.ActivePage.HelpKeyword;
+    btnHelp.HelpKeyword := HelpKeyword;
   end;
 end;
 
@@ -15665,7 +16289,7 @@ begin
   frameScreenObjectUZF.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
   if not frameScreenObjectUZF.dgModflowBoundary.DistributingText then
   begin
-    StoreUzfBoundary  
+    StoreUzfBoundary
   end;
 end;
 
@@ -17008,12 +17632,14 @@ begin
 end;
 
 procedure TfrmScreenObjectProperties.StoreFarmWell;
+{$IFDEF FMP}
 var
   ParamType: TParameterType;
   Frame: TframeScreenObjectCondParam;
   Index: Integer;
   Item: TScreenObjectEditItem;
 //  Boundary: TFmpWellBoundary;
+{$ENDIF}
 begin
 {$IFDEF FMP}
   if IsLoaded then
@@ -17062,6 +17688,36 @@ begin
     end;
     StoreFormulaInterpretation(Frame, ParamType);
     StoreModflowBoundary(Frame, ParamType, FRIV_Node);
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.StoreCfpRechargeFraction;
+var
+  Frame: TframeScreenObjectNoParam;
+  Index: Integer;
+  Times: TTimeArray;
+  Item: TScreenObjectEditItem;
+  Boundary: TCfpRchFractionBoundary;
+begin
+  if IsLoaded then
+  begin
+    Frame := frameCfpRechargeFraction;
+    GetMF_BoundaryTimes(Times, Frame);
+    for Index := 0 to FNewProperties.Count - 1 do
+    begin
+      Item := FNewProperties[Index];
+      Item.ScreenObject.CreateCfpRchFraction;
+      Boundary := Item.ScreenObject.ModflowCfpRchFraction;
+      Assert(Boundary <> nil);
+      if ShouldStoreBoundary(FCRCH_Node, Boundary) then
+      begin
+        StoreModflowBoundaryValues(Frame, Times, Boundary);
+      end
+      else if  FUZF_Node.StateIndex = 1 then
+      begin
+        Boundary.Clear;
+      end;
+    end;
   end;
 end;
 
@@ -17147,6 +17803,35 @@ begin
     end;
     StoreModflowBoundary(Frame, ParamType, FCHD_Node);
   end;
+end;
+
+procedure TfrmScreenObjectProperties.frameCfpRechargeFractiondgModflowBoundaryEndUpdate(
+  Sender: TObject);
+begin
+  inherited;
+  StoreCfpRechargeFraction
+end;
+
+procedure TfrmScreenObjectProperties.frameCfpRechargeFractiondgModflowBoundarySetEditText(
+  Sender: TObject; ACol, ARow: Integer; const Value: string);
+begin
+  inherited;
+  frameCfpRechargeFraction.dgModflowBoundarySetEditText(Sender, ACol, ARow,
+  Value);
+  UpdateNodeState(FCRCH_Node);
+  frameCfpRechargeFraction.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+  if not frameCfpRechargeFraction.dgModflowBoundary.DistributingText then
+  begin
+    StoreCfpRechargeFraction
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.frameCfpRechargeFractionseNumberOfTimesChange(
+  Sender: TObject);
+begin
+  inherited;
+  frameCfpRechargeFraction.seNumberOfTimesChange(Sender);
+  StoreCfpRechargeFraction;
 end;
 
 procedure TfrmScreenObjectProperties.frameChdParamclbParametersStateChange(

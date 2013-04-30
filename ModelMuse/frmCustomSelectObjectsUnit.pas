@@ -99,6 +99,9 @@ type
     FvstModflowFarmWellNode: PVirtualNode;
     FvstModflowFarmPrecipNode: PVirtualNode;
     FvstModflowFarmRefEvapNode: PVirtualNode;
+    FvstModflowFarmCropIDNode: PVirtualNode;
+
+    FvstModflowCfpRechargeNode: PVirtualNode;
 
     FvstModflowUzfNode: PVirtualNode;
     FvstMt3dmsSsm: PVirtualNode;
@@ -208,7 +211,9 @@ type
     FFarmWellList: TList;
     FFarmPrecipList: TList;
     FFarmRefEvtList: TList;
+    FFarmCropIDList: TList;
     FSutraObsList: TList;
+    FCfpRechargeList: TList;
 
     // @name holds the lists of @link(TScreenObject)s that don't do anything.
     FOtherObjectsList: TList;
@@ -323,8 +328,10 @@ resourcestring
   StrFarmWellsIn = 'Farm Wells in %s';
   StrPrecipInS = 'Precip. in %s';
   StrRefEvapInS = 'Ref. Evap. in %s';
+  StrCropIDInS = 'Crop ID in %s';
   StrHeadsInS = 'Heads in %s';
   StrFlowsInS = 'Flows in %s';
+  StrConduitRechargeFra = 'CRCH: Conduit Recharge';
 
 {$R *.dfm}
 procedure TfrmCustomSelectObjects.vstObjectsInitNode(Sender: TBaseVirtualTree;
@@ -404,7 +411,9 @@ begin
           begin
             Data.Caption := StrSetGridElementSize;
           end;
-        msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+        msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+          {$IFDEF FMP}, msModflowFmp {$ENDIF}
+          , msModflowCfp:
           begin
             Data.Caption := StrSetGridCellSize;
           end;
@@ -567,6 +576,11 @@ begin
       Data.Caption := Format(StrRefEvapInS, [Packages.FarmProcess.PackageIdentifier]);
       Node.CheckType := ctTriStateCheckBox;
     end
+    else if Node = FvstModflowFarmCropIDNode then
+    begin
+      Data.Caption := Format(StrCropIDInS, [Packages.FarmProcess.PackageIdentifier]);
+      Node.CheckType := ctTriStateCheckBox;
+    end
     else if Node = FvstModpathRoot then
     begin
       Data.Caption := Packages.ModPath.PackageIdentifier;
@@ -618,7 +632,13 @@ begin
         else Assert(False);
       end;
       Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstModflowCfpRechargeNode then
+    begin
+      Data.Caption := StrConduitRechargeFra;
+      Node.CheckType := ctTriStateCheckBox;
     end;
+
 
     If (ParentNode = nil) then
     begin
@@ -1021,7 +1041,19 @@ begin
       InitializeData(FvstModflowFarmRefEvapNode);
     end;
 
+    if (AScreenObject.ModflowFmpCropID <> nil)
+      and AScreenObject.ModflowFmpCropID.Used then
+    begin
+      InitializeData(FvstModflowFarmCropIDNode);
+    end;
+
   {$ENDIF}
+
+    if (AScreenObject.ModflowCfpRchFraction <> nil)
+      and AScreenObject.ModflowCfpRchFraction.Used then
+    begin
+      InitializeData(FvstModflowCfpRechargeNode);
+    end;
 
     if AScreenObject.Tag = 1 then
     begin
@@ -1224,6 +1256,8 @@ begin
   vstCheckDeleteNode(FvstModflowFarmWellNode);
   vstCheckDeleteNode(FvstModflowFarmPrecipNode);
   vstCheckDeleteNode(FvstModflowFarmRefEvapNode);
+  vstCheckDeleteNode(FvstModflowFarmCropIDNode);
+  vstCheckDeleteNode(FvstModflowCfpRechargeNode);
   vstCheckDeleteNode(FvstMt3dmsSsm);
   vstCheckDeleteNode(FvstMt3dmsTob);
 
@@ -1538,6 +1572,8 @@ begin
   InitializeMF_BoundaryNode(FvstModflowFarmWellNode, PriorNode, FFarmWellList);
   InitializeMF_BoundaryNode(FvstModflowFarmPrecipNode, PriorNode, FFarmPrecipList);
   InitializeMF_BoundaryNode(FvstModflowFarmRefEvapNode, PriorNode, FFarmRefEvtList);
+  InitializeMF_BoundaryNode(FvstModflowFarmCropIDNode, PriorNode, FFarmCropIDList);
+  InitializeMF_BoundaryNode(FvstModflowCfpRechargeNode, PriorNode, FCfpRechargeList);
 
   InitializeMF_BoundaryNode(FvstMt3dmsSsm, PriorNode, FSsmList);
   InitializeMF_BoundaryNode(FvstMt3dmsTob, PriorNode, FTobList);
@@ -1688,6 +1724,8 @@ begin
   FFarmWellList.Free;
   FFarmPrecipList.Free;
   FFarmRefEvtList.Free;
+  FFarmCropIDList.Free;
+  FCfpRechargeList.Free;
   FSsmList.Free;
   FTobList.Free;
   FModpathList.Free;
@@ -1741,6 +1779,8 @@ begin
   FFarmWellList := TList.Create;
   FFarmPrecipList := TList.Create;
   FFarmRefEvtList := TList.Create;
+  FFarmCropIDList := TList.Create;
+  FCfpRechargeList := TList.Create;
   FHobList := TList.Create;
   FHfbList := TList.Create;
   FSsmList := TList.Create;
@@ -1809,6 +1849,8 @@ begin
   FvstModflowFarmWellNode := nil;
   FvstModflowFarmPrecipNode := nil;
   FvstModflowFarmRefEvapNode := nil;
+  FvstModflowFarmCropIDNode := nil;
+  FvstModflowCfpRechargeNode := nil;
   FvstMt3dmsSsm := nil;
   FvstMt3dmsTob := nil;
   FvstModflowGagNode := nil;
@@ -1932,6 +1974,8 @@ begin
   FFarmWellList.Sort(ScreenObjectCompare);
   FFarmPrecipList.Sort(ScreenObjectCompare);
   FFarmRefEvtList.Sort(ScreenObjectCompare);
+  FFarmCropIDList.Sort(ScreenObjectCompare);
+  FCfpRechargeList.Sort(ScreenObjectCompare);
   FModpathList.Sort(ScreenObjectCompare);
   FChildModelList.Sort(ScreenObjectCompare);
 

@@ -54,6 +54,7 @@ type
     FStobPackage: TModflowPackageSelection;
     FFhbPackage: TFhbPackageSelection;
     FFarmProcess: TFarmProcess;
+    FConduitFlowProcess: TConduitFlowProcess;
     procedure SetChdBoundary(const Value: TChdPackage);
     procedure SetLpfPackage(const Value: TLpfSelection);
     procedure SetPcgPackage(const Value: TPcgSelection);
@@ -100,6 +101,7 @@ type
     procedure SetStobPackage(const Value: TModflowPackageSelection);
     procedure SetFhbPackage(const Value: TFhbPackageSelection);
     procedure SetFarmProcess(const Value: TFarmProcess);
+    procedure SetConduitFlowProcess(const Value: TConduitFlowProcess);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Model: TBaseModel);
@@ -194,6 +196,8 @@ type
       stored False
     {$ENDIF}
       ;
+    property ConduitFlowProcess: TConduitFlowProcess read FConduitFlowProcess
+      write SetConduitFlowProcess;
     // Assign, Create, Destroy, SelectedModflowPackageCount
     // and Reset must be updated each time a new package is added.
   end;
@@ -268,7 +272,10 @@ resourcestring
   'th Improved Nonlinear Control';
   StrSTRStreamPackage = 'STR: Stream package';
   StrSTOBStreamObserva = 'STOB: Stream Observation package';
-  StrFarmProcess = 'Farm Process';
+  StrFarmProcess = 'FMP: Farm Process';
+  StrFarmProcessClassification = 'Farm Process';
+  StrCFPConduitFlowPr = 'CFP: Conduit Flow Process';
+  StrConduitFlowProcess = 'Conduit Flow Process';
 
 { TModflowPackages }
 
@@ -325,6 +332,7 @@ begin
     Mt3dmsTransObs := SourcePackages.Mt3dmsTransObs;
     FhbPackage := SourcePackages.FhbPackage;
     FarmProcess := SourcePackages.FarmProcess;
+    ConduitFlowProcess := SourcePackages.ConduitFlowProcess;
   end
   else
   begin
@@ -553,12 +561,19 @@ begin
 
   FFarmProcess := TFarmProcess.Create(Model);
   FFarmProcess.PackageIdentifier := StrFarmProcess;
-  FFarmProcess.Classification := StrFarmProcess;
+  FFarmProcess.Classification := StrFarmProcessClassification;
   FFarmProcess.SelectionType := stCheckBox;
+
+  FConduitFlowProcess := TConduitFlowProcess.Create(Model);
+  FConduitFlowProcess.PackageIdentifier := StrCFPConduitFlowPr;
+  FConduitFlowProcess.Classification := StrConduitFlowProcess;
+  FConduitFlowProcess.SelectionType := stCheckBox;
+
 end;
 
 destructor TModflowPackages.Destroy;
 begin
+  FConduitFlowProcess.Free;
   FFarmProcess.Free;
   FMt3dmsTransObs.Free;
   FMt3dmsChemReaction.Free;
@@ -655,6 +670,7 @@ begin
   StrPackage.InitializeVariables;
   FhbPackage.InitializeVariables;
   FFarmProcess.InitializeVariables;
+  ConduitFlowProcess.InitializeVariables;
 end;
 
 function TModflowPackages.SelectedModflowPackageCount: integer;
@@ -830,6 +846,11 @@ begin
   end;
 {$ENDIF}
 
+  if FConduitFlowProcess.IsSelected and (Model.ModelSelection = msModflowCfp) then
+  begin
+    Inc(Result);
+  end;
+
   // Don't count Modpath or ZoneBudget
   // because they are exported seperately from MODFLOW.
 //  if ZoneBudget.IsSelected then
@@ -853,6 +874,12 @@ procedure TModflowPackages.SetChobPackage(
   const Value: TModflowPackageSelection);
 begin
   FChobPackage.Assign(Value);
+end;
+
+procedure TModflowPackages.SetConduitFlowProcess(
+  const Value: TConduitFlowProcess);
+begin
+  FConduitFlowProcess.Assign(Value);
 end;
 
 procedure TModflowPackages.SetDe4Package(const Value: TDE4PackageSelection);

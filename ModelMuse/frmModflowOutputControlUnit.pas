@@ -55,6 +55,8 @@ type
     procedure jvPagesChange(Sender: TObject);
     procedure comboSaveMt3msResultsChange(Sender: TObject);
     procedure FormDestroy(Sender: TObject); override;
+    procedure pltrPageNavigatorCustomDrawItem(Sender: TCustomTreeView;
+      Node: TTreeNode; State: TCustomDrawState; var DefaultDraw: Boolean);
   private
     FOutputControl: TModflowOutputControl;
     FMt3dmsOutputControl: TMt3dmsOutputControl;
@@ -185,6 +187,17 @@ procedure TfrmModflowOutputControl.jvPagesChange(Sender: TObject);
 begin
   inherited;
   HelpKeyWord := jvPages.ActivePage.HelpKeyword;
+end;
+
+procedure TfrmModflowOutputControl.pltrPageNavigatorCustomDrawItem(
+  Sender: TCustomTreeView; Node: TTreeNode; State: TCustomDrawState;
+  var DefaultDraw: Boolean);
+begin
+  inherited;
+  if Node.Selected and not Sender.Focused then
+  begin
+    Sender.Canvas.Brush.Color := clMenuHighlight;
+  end;
 end;
 
 procedure TfrmModflowOutputControl.SetData;

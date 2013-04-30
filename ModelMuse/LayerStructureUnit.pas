@@ -151,6 +151,51 @@ type
     property Simulated: boolean read GetSimulated write SetSimulated;
   end;
 
+  TConduitLayerItem = class(TOrderedItem)
+  private
+    FStoredLowerCriticalReynoldsNumber: TRealStorage;
+    FStoredHigherCriticalReynoldsNumber: TRealStorage;
+    FStoredVoid: TRealStorage;
+    FIsConduitLayer: boolean;
+    function GetHigherCriticalReynoldsNumber: Double;
+    function GetLowerCriticalReynoldsNumber: Double;
+    function GetVoid: Double;
+    procedure SetHigherCriticalReynoldsNumber(const Value: Double);
+    procedure SetIsConduitLayer(const Value: boolean);
+    procedure SetLowerCriticalReynoldsNumber(const Value: Double);
+    procedure SetStoredHigherCriticalReynoldsNumber(const Value: TRealStorage);
+    procedure SetStoredLowerCriticalReynoldsNumber(const Value: TRealStorage);
+    procedure SetStoredVoid(const Value: TRealStorage);
+    procedure SetVoid(const Value: Double);
+    procedure ValueChanged(Sender: TObject);
+  protected
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+  public
+    procedure Assign(Source: TPersistent); override;
+    constructor Create(Collection: TCollection); override;
+    destructor Destroy; override;
+    property Void: Double read GetVoid Write SetVoid;
+    property LowerCriticalReynoldsNumber: Double
+      read GetLowerCriticalReynoldsNumber Write SetLowerCriticalReynoldsNumber;
+    property HigherCriticalReynoldsNumber: Double
+      read GetHigherCriticalReynoldsNumber Write SetHigherCriticalReynoldsNumber;
+  published
+    property IsConduitLayer: boolean read FIsConduitLayer write SetIsConduitLayer;
+    property StoredVoid: TRealStorage read FStoredVoid write SetStoredVoid;
+    property StoredLowerCriticalReynoldsNumber: TRealStorage read FStoredLowerCriticalReynoldsNumber write SetStoredLowerCriticalReynoldsNumber;
+    property StoredHigherCriticalReynoldsNumber: TRealStorage read FStoredHigherCriticalReynoldsNumber write SetStoredHigherCriticalReynoldsNumber;
+  end;
+
+  TConduitLayerCollection = class(TOrderedCollection)
+  private
+    function GetItem(index: Integer): TConduitLayerItem;
+    procedure SetItem(index: Integer; const Value: TConduitLayerItem);
+  public
+    constructor Create(Model: TBaseModel);
+    property Items[index: Integer] : TConduitLayerItem read GetItem
+      write SetItem; default;
+  end;
+
   TLayerGroup = class(TCustomLayerGroup)
   private
     FSimulated: boolean;
@@ -165,6 +210,7 @@ type
     FMt3dmsHorzTransDisp: TRealCollection;
     FMt3dmsDiffusionCoef: TRealCollection;
     FMt3dmsVertTransDisp: TRealCollection;
+    FConduitLayers: TConduitLayerCollection;
     procedure SetSimulated(const Value: boolean); override;
     procedure SetAquiferType(const Value: integer);
     procedure SetInterblockTransmissivityMethod(const Value: integer);
@@ -180,6 +226,7 @@ type
     procedure SetMt3dmsDiffusionCoef(const Value: TRealCollection);
     procedure SetMt3dmsHorzTransDisp(const Value: TRealCollection);
     procedure SetMt3dmsVertTransDisp(const Value: TRealCollection);
+    procedure SetConduitLayers(const Value: TConduitLayerCollection);
   protected
     procedure Loaded; override;
     procedure SetLayerCollection(const Value: TLayerCollection); override;
@@ -238,6 +285,8 @@ type
       write SetMt3dmsVertTransDisp;
     property Mt3dmsDiffusionCoef: TRealCollection read FMt3dmsDiffusionCoef
       write SetMt3dmsDiffusionCoef;
+    property ConduitLayers: TConduitLayerCollection read FConduitLayers
+      write SetConduitLayers;
   end;
 
   TSutraLayerGroup = class(TCustomLayerGroup)
@@ -368,6 +417,7 @@ begin
     Mt3dmsHorzTransDisp := AnotherLayerGroup.Mt3dmsHorzTransDisp;
     Mt3dmsVertTransDisp := AnotherLayerGroup.Mt3dmsVertTransDisp;
     Mt3dmsDiffusionCoef := AnotherLayerGroup.Mt3dmsDiffusionCoef;
+    ConduitLayers := AnotherLayerGroup.ConduitLayers;
   end;
 end;
 
@@ -383,6 +433,7 @@ begin
   FSubNoDelayBedLayers := TSubNoDelayBedLayers.Create(Model);
   FSubDelayBedLayers := TSubDelayBedLayers.Create(Model);
   FWaterTableLayers := TWaterTableLayers.Create(Model);
+  FConduitLayers := TConduitLayerCollection.Create(Model);
 //  AquiferName := 'New Layer Group';
 //  AquiferName := '';
   FHorizontalAnisotropy := 1;
@@ -405,6 +456,7 @@ var
   DisIndex: Integer;
   DisItem: TChildDiscretization;
 begin
+  FConduitLayers.Free;
   FWaterTableLayers.Free;
   FSubDelayBedLayers.Free;
   FSubNoDelayBedLayers.Free;
@@ -497,6 +549,7 @@ begin
       and AnotherLayerGroup.Mt3dmsHorzTransDisp.IsSame(Mt3dmsHorzTransDisp)
       and AnotherLayerGroup.Mt3dmsVertTransDisp.IsSame(Mt3dmsVertTransDisp)
       and AnotherLayerGroup.Mt3dmsDiffusionCoef.IsSame(Mt3dmsDiffusionCoef)
+      and AnotherLayerGroup.ConduitLayers.IsSame(ConduitLayers)
   end;
 end;
 
@@ -587,6 +640,11 @@ begin
     Notifier.UpToDate := True;
     InvalidateModel;
   end;
+end;
+
+procedure TLayerGroup.SetConduitLayers(const Value: TConduitLayerCollection);
+begin
+  FConduitLayers.Assign(Value);
 end;
 
 procedure TLayerGroup.SetHorizontalAnisotropy(const Value: double);
@@ -2014,6 +2072,137 @@ end;
 function TGrowItem.StoreLayerCollection: boolean;
 begin
   result := True;
+end;
+
+{ TConduitLayerItem }
+
+procedure TConduitLayerItem.Assign(Source: TPersistent);
+var
+  SourceItem: TConduitLayerItem;
+begin
+  if Source is TConduitLayerItem then
+  begin
+    SourceItem := TConduitLayerItem(Source);
+    IsConduitLayer := SourceItem.IsConduitLayer;
+    Void := SourceItem.Void;
+    LowerCriticalReynoldsNumber := SourceItem.LowerCriticalReynoldsNumber;
+    HigherCriticalReynoldsNumber := SourceItem.HigherCriticalReynoldsNumber;
+  end;
+  inherited;
+end;
+
+constructor TConduitLayerItem.Create(Collection: TCollection);
+begin
+  inherited;
+  FStoredLowerCriticalReynoldsNumber := TRealStorage.Create;
+  FStoredHigherCriticalReynoldsNumber := TRealStorage.Create;
+  FStoredVoid := TRealStorage.Create;
+  LowerCriticalReynoldsNumber := 2000;
+  HigherCriticalReynoldsNumber := 4000;
+  Void := 0.25;
+
+  FStoredLowerCriticalReynoldsNumber.OnChange := ValueChanged;
+  FStoredHigherCriticalReynoldsNumber.OnChange := ValueChanged;
+  FStoredVoid.OnChange := ValueChanged;
+end;
+
+destructor TConduitLayerItem.Destroy;
+begin
+  FStoredVoid.Free;
+  FStoredHigherCriticalReynoldsNumber.Free;
+  FStoredLowerCriticalReynoldsNumber.Free;
+  inherited;
+end;
+
+function TConduitLayerItem.GetHigherCriticalReynoldsNumber: Double;
+begin
+  result := StoredHigherCriticalReynoldsNumber.Value;
+end;
+
+function TConduitLayerItem.GetLowerCriticalReynoldsNumber: Double;
+begin
+  result := StoredLowerCriticalReynoldsNumber.Value;
+end;
+
+function TConduitLayerItem.GetVoid: Double;
+begin
+  result := StoredVoid.Value;
+end;
+
+function TConduitLayerItem.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  SourceItem: TConduitLayerItem;
+begin
+  result := AnotherItem is TConduitLayerItem;
+  if result then
+  begin
+    SourceItem := TConduitLayerItem(AnotherItem);
+    result := (IsConduitLayer = SourceItem.IsConduitLayer)
+      and (Void = SourceItem.Void)
+      and (LowerCriticalReynoldsNumber = SourceItem.LowerCriticalReynoldsNumber)
+      and (HigherCriticalReynoldsNumber = SourceItem.HigherCriticalReynoldsNumber);
+  end;
+end;
+
+procedure TConduitLayerItem.SetHigherCriticalReynoldsNumber(
+  const Value: Double);
+begin
+  StoredHigherCriticalReynoldsNumber.Value := Value;
+end;
+
+procedure TConduitLayerItem.SetIsConduitLayer(const Value: boolean);
+begin
+  SetBooleanProperty(FIsConduitLayer, Value);
+end;
+
+procedure TConduitLayerItem.SetLowerCriticalReynoldsNumber(const Value: Double);
+begin
+  StoredLowerCriticalReynoldsNumber.Value := Value;
+end;
+
+procedure TConduitLayerItem.SetStoredHigherCriticalReynoldsNumber(
+  const Value: TRealStorage);
+begin
+  FStoredHigherCriticalReynoldsNumber.Assign(Value);
+end;
+
+procedure TConduitLayerItem.SetStoredLowerCriticalReynoldsNumber(
+  const Value: TRealStorage);
+begin
+  FStoredLowerCriticalReynoldsNumber.Assign(Value);
+end;
+
+procedure TConduitLayerItem.SetStoredVoid(const Value: TRealStorage);
+begin
+  FStoredVoid.Assign(Value);
+end;
+
+procedure TConduitLayerItem.SetVoid(const Value: Double);
+begin
+  StoredVoid.Value := Value;
+end;
+
+procedure TConduitLayerItem.ValueChanged(Sender: TObject);
+begin
+  InvalidateModel
+end;
+
+{ TConduitLayerCollection }
+
+constructor TConduitLayerCollection.Create(Model: TBaseModel);
+begin
+  inherited Create(TConduitLayerItem, Model);
+end;
+
+function TConduitLayerCollection.GetItem(index: Integer): TConduitLayerItem;
+begin
+  result := inherited Items[index] as TConduitLayerItem;
+end;
+
+procedure TConduitLayerCollection.SetItem(index: Integer;
+  const Value: TConduitLayerItem);
+begin
+  inherited Items[index] := Value;
 end;
 
 end.

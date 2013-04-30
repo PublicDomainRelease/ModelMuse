@@ -85,7 +85,7 @@ type
 
   TFmpPrecipTimeListLink = class(TTimeListsModelLink)
   private
-    // @name is used to compute the recharge rates for a series of
+    // @name is used to compute the precipitation rates for a series of
     // cells over a series of time intervals.
     FPrecipRateData: TModflowTimeList;
   protected
@@ -891,8 +891,6 @@ begin
   AddTimeList(FPrecipRateData);
   if Model <> nil then
   begin
-    { TODO -cFMP : This needs to be finished. }
-//    Assert(False);
     FPrecipRateData.OnInvalidate := (Model as TCustomModel).InvalidateMfFmpPrecip;
   end;
 end;

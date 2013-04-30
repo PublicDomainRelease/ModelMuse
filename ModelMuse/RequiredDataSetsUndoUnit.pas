@@ -154,7 +154,8 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
   else if ArrayNeeded(self)
     or (Assigned(CreateDataSet) and CreateDataSet(self)) then
   begin
-    DataArray := DataArrayManager.CreateNewDataArray(TDataArray, DataSetName,
+    DataArray := DataArrayManager.CreateNewDataArray(
+      DataArrayManager.FDataArrayCreationRecords[Index].DataSetType, DataSetName,
       NewFormula, DataSetName,
       Lock, DataType, DataArrayManager.FDataArrayCreationRecords[Index].EvaluatedAt,
       Orientation, Classification);
@@ -164,6 +165,8 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
     DataArray.CheckMin := DataArrayManager.FDataArrayCreationRecords[Index].CheckMin;
     DataArray.Max := DataArrayManager.FDataArrayCreationRecords[Index].Max;
     DataArray.Min := DataArrayManager.FDataArrayCreationRecords[Index].Min;
+
+    DataArray.Visible := DataArrayManager.FDataArrayCreationRecords[Index].Visible;
 
     FNewPackageDataSets.Add(DataArray);
   end;

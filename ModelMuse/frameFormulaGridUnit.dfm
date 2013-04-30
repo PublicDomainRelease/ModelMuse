@@ -6,10 +6,24 @@ inherited frameFormulaGrid: TframeFormulaGrid
     Top = 123
     TabOrder = 2
     ExplicitTop = 123
+    inherited sbAdd: TSpeedButton
+      Hint = 'Add row|Add a row below the bottom row.'
+    end
+    inherited sbInsert: TSpeedButton
+      Hint = 'Insert row|Insert a row above the selected row.'
+    end
+    inherited sbDelete: TSpeedButton
+      Hint = 'Delete row|Delete the selected row.'
+    end
+    inherited seNumber: TJvSpinEdit
+      Height = 24
+      ExplicitHeight = 24
+    end
   end
   inherited Grid: TRbwDataGrid4
     Top = 57
     Height = 66
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
     TabOrder = 1
     OnMouseUp = GridMouseUp
     OnColSize = GridColSize
@@ -29,7 +43,7 @@ inherited frameFormulaGrid: TframeFormulaGrid
       Left = 128
       Top = 30
       Width = 121
-      Height = 21
+      Height = 24
       EditLabel.Width = 47
       EditLabel.Height = 16
       EditLabel.Caption = 'Formula'

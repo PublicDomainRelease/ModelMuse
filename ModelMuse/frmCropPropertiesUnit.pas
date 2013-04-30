@@ -68,6 +68,9 @@ type
     procedure frameCropNamesbAddClick(Sender: TObject);
     procedure frameCropNamesbInsertClick(Sender: TObject);
     procedure frameCropNamesbDeleteClick(Sender: TObject);
+    procedure jvpltvMainCustomDrawItem(Sender: TCustomTreeView; Node: TTreeNode;
+      State: TCustomDrawState; var DefaultDraw: Boolean);
+    procedure jplMainChange(Sender: TObject);
   private
 {$IFDEF FMP}
     FNameStart: integer;
@@ -86,6 +89,7 @@ type
     FLosses: TLossesCollection;
     FCropFunctions: TCropFunctionCollection;
     FWaterUseCollection: TCropWaterUseCollection;
+    FGettingData: Boolean;
 {$IFDEF FMP}
     procedure SetUpCropNameTable(Model: TCustomModel);
     procedure SetCropNameTableColumns(Model: TCustomModel);
@@ -150,7 +154,7 @@ resourcestring
   StrIrrigFraction = 'Evaporative fraction related to irrigation (FEI)';
   StrCropConsumptiveUse = 'Crop consumptive use flux (CU)';
   StrConsumptiveUseFlux = 'Consumptive Use Flux';
-  StrCropCoefficient = 'Crop coefficient (CU)';
+  StrCropCoefficient = 'Crop Coefficient (CU)';
   StrErrorInFormulaS = 'Error in formula: %s';
   StrPrecipitationrelate = 'Precipitation-related loss fraction (FIESWP)';
   StrIrrigationrelatedL = 'Irrigation-related loss fraction (FIESWI)';
@@ -160,10 +164,10 @@ resourcestring
   StrIrrigatedInverseO = 'Irrigated (inverse of NONIRR)';
   StrCropIDCID = 'Crop ID (CID)';
   StrCropName = 'Crop Name';
-  StrPSI1 = 'PSI(1)';
-  StrPSI2 = 'PSI(2)';
-  StrPSI3 = 'PSI(3)';
-  StrPSI4 = 'PSI(4)';
+  StrPSI1 = 'PSI(1) Anoxia';
+  StrPSI2 = 'PSI(2) Optimal';
+  StrPSI3 = 'PSI(3) Optimal';
+  StrPSI4 = 'PSI(4) Wilting';
   StrBaseTemperatureBa = 'Base Temperature (BaseT)';
   StrMinimumCutoffTempe = 'Minimum Cutoff Temperature (MinCutT)';
   StrMaximumCutoffTempe = 'Maximum Cutoff Temperature (MaxCutT)';
@@ -175,11 +179,11 @@ resourcestring
   StrMaximumRootDepth = 'Maximum Root Depth (MaxRootD)';
   StrRootGrowthCoeffici = 'Root Growth Coefficient (RootGC)';
 //  StrIrrigatedInverseO = 'Irrigated (Inverse of NONIRR)';
-  StrFallowIFALLOW = 'Fallow (IFALLOW)';
+  StrFallowIFALLOW = 'Can be fallow (IFALLOW)';
   StrRootingDepth = 'Rooting Depth';
   StrConsumptiveUse = 'Consumptive Use Factors';
-  StrInefficiencylosses = 'Inefficiency-losses to surface water';
-  StrCropPriceFunction = 'Crop price function';
+  StrInefficiencylosses = 'Inefficiency-Losses to Surface Water';
+  StrCropPriceFunction = 'Crop Price Function';
   StrChangeFarmCrops = 'change farm crops';
 
 type
@@ -234,6 +238,11 @@ begin
   frameCropName.Grid.FixedCols := 1;
   frameCropName.Grid.Cells[Ord(ncID), 0] := StrCropIDCID;
   frameCropName.Grid.Cells[Ord(ncName), 0] := StrCropName;
+  if FFallowStart >= 0 then
+  begin
+    frameCropName.Grid.Cells[FFallowStart + Ord(fcFallow), 0]
+      := StrFallowIFALLOW;
+  end;
   if FPressureStart >= 0 then
   begin
     frameCropName.Grid.Cells[FPressureStart + Ord(pc1), 0] := StrPSI1;
@@ -266,11 +275,6 @@ begin
     frameCropName.Grid.Cells[FCropPropStart + Ord(cpIrrigated), 0]
       := StrIrrigatedInverseO;
   end;
-  if FFallowStart >= 0 then
-  begin
-    frameCropName.Grid.Cells[FFallowStart + Ord(fcFallow), 0]
-      := StrFallowIFALLOW;
-  end;
 
   SetGridColumnProperties(frameCropName.Grid);
   SetUseButton(frameCropName.Grid, Ord(ncName) + 1);
@@ -290,6 +294,7 @@ begin
   frameCropWaterUse.Grid.Cells[Ord(cwuStart), 0] := StrStartingTime;
   frameCropWaterUse.Grid.Cells[Ord(cwuEnd), 0] := StrEndingTime;
   case Model.ModflowPackages.FarmProcess.ConsumptiveUse of
+    cuCalculated: ; // do nothing
     cuPotentialET, cuPotentialAndReferenceET:
       frameCropWaterUse.Grid.Cells[Ord(cwuCropValue), 0] := StrCropConsumptiveUse;
     cuCropCoefficient:
@@ -456,15 +461,18 @@ begin
     ANode.PageIndex := jvspRootDepth.PageIndex;
     ANode.Data := ACrop.FmpRootDepthCollection;
   end;
+
   ANode := jvpltvMain.Items.AddChild(CropNode, StrConsumptiveUse) as TJvPageIndexNode;
   ANode.PageIndex := jvspEvapFractions.PageIndex;
   ANode.Data := ACrop.EvapFractionsCollection;
-  if FFarmProcess.FractionOfInefficiencyLoses = filSpecified then
+
+  if FFarmProcess.FractionOfInefficiencyLosses = filSpecified then
   begin
     ANode := jvpltvMain.Items.AddChild(CropNode, StrInefficiencylosses) as TJvPageIndexNode;
     ANode.PageIndex := jvspLosses.PageIndex;
     ANode.Data := ACrop.LossesCollection;
   end;
+
   if FFarmProcess.DeficiencyPolicy in
     [dpAcreageOptimization, dpAcreageOptimizationWithConservationPool] then
   begin
@@ -472,6 +480,7 @@ begin
     ANode.PageIndex := jvspCropFunction.PageIndex;
     ANode.Data := ACrop.CropFunctionCollection;
   end;
+
   if FFarmProcess.ConsumptiveUse in
     [cuPotentialET, cuPotentialAndReferenceET, cuCropCoefficient] then
   begin
@@ -531,6 +540,10 @@ var
   AnItem: TCropFunctionItem;
 begin
   inherited;
+  if FGettingData then
+  begin
+    Exit;
+  end;
   frameCropFunction.GridEndUpdate(Sender);
   if FCropFunctions <> nil then
   begin
@@ -623,6 +636,10 @@ var
   NewName: string;
 begin
   inherited;
+  if (csReading in ComponentState) or (FCrops = nil) then
+  begin
+    Exit;
+  end;
   if ACol = Ord(ncName) then
   begin
     if ARow > frameCropName.seNumber.AsInteger then
@@ -797,6 +814,10 @@ var
   AnItem: TCropWaterUseItem;
 begin
   inherited;
+  if FGettingData then
+  begin
+    Exit;
+  end;
   frameCropWaterUse.GridEndUpdate(Sender);
   if FWaterUseCollection <> nil then
   begin
@@ -836,6 +857,10 @@ var
   AnItem: TEvapFractionsItem;
 begin
   inherited;
+  if FGettingData then
+  begin
+    Exit;
+  end;
   frameEvapFractions.GridEndUpdate(Sender);
   if FEvapFract <> nil then
   begin
@@ -876,6 +901,10 @@ var
   AnItem: TLossesItem;
 begin
   inherited;
+  if FGettingData then
+  begin
+    Exit;
+  end;
   frameLosses.GridEndUpdate(Sender);
   if FLosses <> nil then
   begin
@@ -915,6 +944,10 @@ var
   AnItem: TRootingDepthItem;
 begin
   inherited;
+  if FGettingData then
+  begin
+    Exit;
+  end;
   frameRootDepth.GridEndUpdate(Sender);
   if FRootDepth <> nil then
   begin
@@ -951,6 +984,7 @@ var
   AnItem: TCropFunctionItem;
 begin
   FCropFunctions := CropFunctions;
+  frameCropFunction.ClearGrid;
   frameCropFunction.seNumber.AsInteger := CropFunctions.Count;
   frameCropFunction.seNumber.OnChange(frameCropFunction.seNumber);
   if frameCropFunction.seNumber.AsInteger = 0 then
@@ -980,6 +1014,7 @@ var
   ACrop: TCropItem;
   Grid: TRbwDataGrid4;
 begin
+  frameCropName.ClearGrid;
   frameCropName.seNumber.AsInteger := CropCollection.Count;
   Grid := frameCropName.Grid;
   Grid.BeginUpdate;
@@ -1040,6 +1075,7 @@ var
   AnItem: TCropWaterUseItem;
 begin
   FWaterUseCollection := WaterUseCollection;
+  frameCropWaterUse.ClearGrid;
   frameCropWaterUse.seNumber.AsInteger := WaterUseCollection.Count;
   frameCropWaterUse.seNumber.OnChange(frameCropWaterUse.seNumber);
   if frameCropWaterUse.seNumber.AsInteger = 0 then
@@ -1164,6 +1200,7 @@ var
   AnItem: TEvapFractionsItem;
 begin
   FEvapFract := EvapFract;
+  frameEvapFractions.ClearGrid;
   frameEvapFractions.seNumber.AsInteger := EvapFract.Count;
   frameEvapFractions.seNumber.OnChange(frameEvapFractions.seNumber);
   if frameEvapFractions.seNumber.AsInteger = 0 then
@@ -1193,6 +1230,7 @@ var
   AnItem: TLossesItem;
 begin
   FLosses := Losses;
+  frameLosses.ClearGrid;
   frameLosses.seNumber.AsInteger := Losses.Count;
   frameLosses.seNumber.OnChange(frameLosses.seNumber);
   if frameLosses.seNumber.AsInteger = 0 then
@@ -1222,6 +1260,7 @@ var
   AnItem: TRootingDepthItem;
 begin
   FRootDepth := RootDepth;
+  frameRootDepth.ClearGrid;
   frameRootDepth.seNumber.AsInteger := RootDepth.Count;
   frameRootDepth.seNumber.OnChange(frameRootDepth.seNumber);
   if frameRootDepth.seNumber.AsInteger = 0 then
@@ -1243,6 +1282,12 @@ begin
   end;
 end;
 
+procedure TfrmCropProperties.jplMainChange(Sender: TObject);
+begin
+  inherited;
+  HelpKeyword := jplMain.ActivePage.HelpKeyword;
+end;
+
 procedure TfrmCropProperties.jvpltvMainChange(Sender: TObject; Node: TTreeNode);
 var
   AnObject: TObject;
@@ -1250,33 +1295,48 @@ begin
   inherited;
   if Node.Data <> nil then
   begin
-    AnObject := Node.Data;
-    if AnObject is TCropCollection then
-    begin
-      GetCrops(TCropCollection(AnObject));
-    end
-    else if AnObject is TFmpRootDepthCollection then
-    begin
-      GetRootingDepth(TFmpRootDepthCollection(AnObject));
-    end
-    else if AnObject is TEvapFractionsCollection then
-    begin
-      GetEvapFractions(TEvapFractionsCollection(AnObject));
-    end
-    else if AnObject is TLossesCollection then
-    begin
-      GetLosses(TLossesCollection(AnObject));
-    end
-    else if AnObject is TCropFunctionCollection then
-    begin
-      GetCropFunction(TCropFunctionCollection(AnObject));
-    end
-    else if AnObject is TCropWaterUseCollection then
-    begin
-      GetCropWaterUseFunction(TCropWaterUseCollection(AnObject));
-    end
-    else
-      Assert(False);
+    FGettingData := True;
+    try
+      AnObject := Node.Data;
+      if AnObject is TCropCollection then
+      begin
+        GetCrops(TCropCollection(AnObject));
+      end
+      else if AnObject is TFmpRootDepthCollection then
+      begin
+        GetRootingDepth(TFmpRootDepthCollection(AnObject));
+      end
+      else if AnObject is TEvapFractionsCollection then
+      begin
+        GetEvapFractions(TEvapFractionsCollection(AnObject));
+      end
+      else if AnObject is TLossesCollection then
+      begin
+        GetLosses(TLossesCollection(AnObject));
+      end
+      else if AnObject is TCropFunctionCollection then
+      begin
+        GetCropFunction(TCropFunctionCollection(AnObject));
+      end
+      else if AnObject is TCropWaterUseCollection then
+      begin
+        GetCropWaterUseFunction(TCropWaterUseCollection(AnObject));
+      end
+      else
+        Assert(False);
+    finally
+      FGettingData := False;
+    end;
+  end;
+end;
+
+procedure TfrmCropProperties.jvpltvMainCustomDrawItem(Sender: TCustomTreeView;
+  Node: TTreeNode; State: TCustomDrawState; var DefaultDraw: Boolean);
+begin
+  inherited;
+  if Node.Selected and not Sender.Focused then
+  begin
+    Sender.Canvas.Brush.Color := clMenuHighlight;
   end;
 end;
 
@@ -1288,12 +1348,21 @@ begin
   FarmProcess := Model.ModflowPackages.FarmProcess;
   FNameStart := 0;
   FLastCol := Ord(High(TNameCol));
+
+  FFallowStart := -1;
+  if FarmProcess.DeficiencyPolicy = dpWaterStacking then
+  begin
+    FFallowStart := Succ(FLastCol);
+    FLastCol := FFallowStart + Ord(High(TFallowCol));
+  end;
+
   FPressureStart := -1;
-  if FarmProcess.WaterCostCoefficients = wccLumped then
+  if FarmProcess.CropConsumptiveConcept = cccConcept1 then
   begin
     FPressureStart := Succ(FLastCol);
     FLastCol := FPressureStart + Ord(High(TPressureCol));
   end;
+
   FCropPropStart := -1;
   if (FarmProcess.RootingDepth = rdCalculated)
     or (FarmProcess.ConsumptiveUse = cuCalculated)
@@ -1301,12 +1370,6 @@ begin
   begin
     FCropPropStart := Succ(FLastCol);
     FLastCol := FCropPropStart + Ord(High(TCropProp));
-  end;
-  FFallowStart := -1;
-  if FarmProcess.DeficiencyPolicy = dpWaterStacking then
-  begin
-    FFallowStart := Succ(FLastCol);
-    FLastCol := FFallowStart + Ord(High(TFallowCol));
   end;
 end;
 {$ENDIF}

@@ -36,6 +36,7 @@ inherited frmExportImage: TfrmExportImage
       Width = 249
       Height = 448
       VertScrollBar.Tracking = True
+      Align = alClient
       HeaderFont.Charset = DEFAULT_CHARSET
       HeaderFont.Color = clWindowText
       HeaderFont.Height = -11
@@ -51,20 +52,20 @@ inherited frmExportImage: TfrmExportImage
         OnExpand = cpAnimationExpand
         ExpandedHeight = 386
         object pnlAnimation: TPanel
-          Left = 5
+          Left = 0
           Top = 0
-          Width = 240
+          Width = 245
           Height = 0
-          Align = alRight
+          Align = alClient
           BevelOuter = bvNone
           TabOrder = 0
           object JvNetscapeSplitter1: TJvNetscapeSplitter
             Left = 0
-            Top = -225
-            Width = 240
+            Top = 168
+            Width = 245
             Height = 10
             Cursor = crVSplit
-            Align = alBottom
+            Align = alTop
             MinSize = 3
             Maximized = False
             Minimized = False
@@ -76,15 +77,19 @@ inherited frmExportImage: TfrmExportImage
           object Panel1: TPanel
             Left = 0
             Top = -84
-            Width = 240
+            Width = 245
             Height = 84
             Align = alBottom
-            TabOrder = 1
+            TabOrder = 0
+            DesignSize = (
+              245
+              84)
             object rgDisplayChoice: TRadioGroup
               Left = 3
               Top = 6
               Width = 238
               Height = 43
+              Anchors = [akLeft, akTop, akRight]
               Caption = 'Display choice'
               Columns = 2
               ItemIndex = 0
@@ -137,15 +142,15 @@ inherited frmExportImage: TfrmExportImage
           end
           object rdgDataSets: TRbwDataGrid4
             Left = 0
-            Top = -215
-            Width = 240
-            Height = 131
-            Align = alBottom
+            Top = 178
+            Width = 245
+            Height = 98
+            Align = alClient
             ColCount = 2
             FixedCols = 1
             RowCount = 2
             Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowMoving, goEditing, goAlwaysShowEditor]
-            TabOrder = 0
+            TabOrder = 2
             ExtendedAutoDistributeText = False
             AutoMultiEdit = True
             AutoDistributeText = True
@@ -175,6 +180,7 @@ inherited frmExportImage: TfrmExportImage
                 WordWrapCaptions = False
                 WordWrapCells = False
                 CaseSensitivePicklist = False
+                CheckStyle = csCheck
                 AutoAdjustColWidths = False
               end
               item
@@ -197,8 +203,10 @@ inherited frmExportImage: TfrmExportImage
                 WordWrapCaptions = False
                 WordWrapCells = False
                 CaseSensitivePicklist = False
+                CheckStyle = csCheck
                 AutoAdjustColWidths = True
               end>
+            WordWrapRowCaptions = False
             ColWidths = (
               19
               64)
@@ -206,9 +214,9 @@ inherited frmExportImage: TfrmExportImage
           object vstDataSets: TVirtualStringTree
             Left = 0
             Top = 0
-            Width = 240
-            Height = 135
-            Align = alClient
+            Width = 245
+            Height = 168
+            Align = alTop
             CheckImageKind = ckLightCheck
             Header.AutoSizeIndex = 0
             Header.Font.Charset = DEFAULT_CHARSET
@@ -218,7 +226,7 @@ inherited frmExportImage: TfrmExportImage
             Header.Font.Style = []
             Header.MainColumn = -1
             PopupMenu = pmChangeStates
-            TabOrder = 2
+            TabOrder = 1
             TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toWheelPanning]
             TreeOptions.SelectionOptions = [toMultiSelect]
             OnChecked = vstDataSetsChecked
@@ -336,7 +344,6 @@ inherited frmExportImage: TfrmExportImage
           Width = 245
           Height = 360
           Align = alClient
-          Caption = 'pnlText'
           TabOrder = 0
           object lblSelectedView: TLabel
             Left = 3
@@ -428,26 +435,37 @@ inherited frmExportImage: TfrmExportImage
             OnClick = cbContourLegendClick
           end
           object cbHorizontalScale: TCheckBox
-            Left = 3
-            Top = 280
+            Left = 4
+            Top = 304
             Width = 190
             Height = 17
             Caption = 'Horizontal scale'
             Checked = True
             State = cbChecked
-            TabOrder = 6
+            TabOrder = 7
             OnClick = cbHorizontalScaleClick
           end
           object cbVerticalScale: TCheckBox
-            Left = 3
-            Top = 303
+            Left = 4
+            Top = 327
             Width = 190
             Height = 17
             Caption = 'Vertical scale'
             Checked = True
             State = cbChecked
-            TabOrder = 7
+            TabOrder = 8
             OnClick = cbVerticalScaleClick
+          end
+          object cbHeadObsLegend: TCheckBox
+            Left = 3
+            Top = 280
+            Width = 238
+            Height = 17
+            Caption = 'Show head observation legend'
+            Checked = True
+            State = cbChecked
+            TabOrder = 6
+            OnClick = cbHeadObsLegendClick
           end
         end
       end

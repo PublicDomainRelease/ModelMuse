@@ -429,7 +429,9 @@ begin
               ColumnsForward := True;
               RowsForward := False;
             end;
-          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+            {$IFDEF FMP}, msModflowFmp {$ENDIF}
+            , msModflowCfp:
             begin
               ColumnsForward := True;
               RowsForward := True;
@@ -477,7 +479,9 @@ begin
               ColumnsForward := True;
               RowsForward := False;
             end;
-          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+            {$IFDEF FMP}, msModflowFmp {$ENDIF}
+            , msModflowCfp:
             begin
               ColumnsForward := True;
               RowsForward := True;
@@ -525,7 +529,9 @@ begin
               ColumnsForward := True;
               RowsForward := False;
             end;
-          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+            {$IFDEF FMP}, msModflowFmp {$ENDIF}
+            , msModflowCfp:
             begin
               ColumnsForward := False;
               RowsForward := True;
@@ -611,7 +617,9 @@ begin
                 ColumnsForward := True;
                 RowsForward := False;
               end;
-            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+              {$IFDEF FMP}, msModflowFmp {$ENDIF}
+              , msModflowCfp:
               begin
                 ColumnsForward := True;
                 RowsForward := True;
@@ -669,13 +677,19 @@ end;
 procedure TfrmImportGriddedData.rdgIgnoreValuesEndUpdate(Sender: TObject);
 begin
   inherited;
-  seIgnoreValueCount.AsInteger := rdgIgnoreValues.RowCount -1;
+  if seIgnoreValueCount <> nil then
+  begin
+    seIgnoreValueCount.AsInteger := rdgIgnoreValues.RowCount -1;
+  end;
 end;
 
 procedure TfrmImportGriddedData.rdgListEndUpdate(Sender: TObject);
 begin
   inherited;
-  seNumberOfRows.AsInteger := rdgList.RowCount -1;
+  if seNumberOfRows <> nil then
+  begin
+    seNumberOfRows.AsInteger := rdgList.RowCount -1;
+  end;
 end;
 
 procedure TfrmImportGriddedData.sbAddRowClick(Sender: TObject);
@@ -1145,7 +1159,9 @@ begin
                 Row := Grid.ColCount - RowIndex;
                 Layer := 1;
               end;
-            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+              {$IFDEF FMP}, msModflowFmp {$ENDIF}
+              , msModflowCfp:
               begin
                 Column := ColIndex;
                 Row := RowIndex;
@@ -1168,7 +1184,9 @@ begin
                 Row := 1;
                 Layer := Grid.RowCount - RowIndex;
               end;
-            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+              {$IFDEF FMP}, msModflowFmp {$ENDIF}
+              , msModflowCfp:
               begin
                 Column := ColIndex;
                 Row := 1;
@@ -1191,7 +1209,9 @@ begin
                 Row := ColIndex;
                 Layer := Grid.RowCount - RowIndex;
               end;
-            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+              {$IFDEF FMP}, msModflowFmp {$ENDIF}
+              , msModflowCfp:
               begin
                 Column := 1;
                 Row := Grid.ColCount - ColIndex;
@@ -1214,7 +1234,9 @@ begin
                 Row := Grid.ColCount - RowIndex;
                 Layer := GridIndex + 1;
               end;
-            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+            msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+              {$IFDEF FMP}, msModflowFmp {$ENDIF}
+              , msModflowCfp:
               begin
                 Column := ColIndex;
                 Row := RowIndex;

@@ -282,5 +282,51 @@
         </td>
       </tr>
     </table></para>
+    <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">List of Scale Factors:</text></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">A list of scale factors can be applied to parameters of a data list that requires different multipliers for each parameter. This option is available only for lists read by utility module [5]. As before, item b must begin with the first keyword “SFAC.” A second control record keyword indicates whether the file containing the list of scale factors is specified directly by its file name, or by a file unit number, that cross-references to a file name contained in the Name File.</text></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">The first column in a list of scale factors contains the attribute or field number of a data list. The second column contains the individual scale factor for each respective attribute. For example, multiple scale factors for the three different attributes (1: WPF-Slope, 2: WPF-Int, 3: Crop-Price) in item 18 could be defined as follows:</text></para>
+    <para styleclass="Normal"><table styleclass="Default" rowcount="5" colcount="2" style="cell-padding:2px; cell-spacing:2px; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color;">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Attribute</text></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Scale factor</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">1</text></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">1.0</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">2</text></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">2.0</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">3</text></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">1.0</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">4</text></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">10.0</text></para>
+        </td>
+      </tr>
+    </table></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">The first attribute always defines an ID, which is why the scale factor always must be 1.0. Parameters related to any other attribute that is not to be scaled, must also be equipped with a scale factor of one. In the example, the slope of the water-production function was multiplied by 2.0, and the crop market price per unit weight was multiplied by 10.</text></para>
   </body>
 </topic>

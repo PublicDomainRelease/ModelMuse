@@ -275,7 +275,7 @@ type
 implementation
 
 uses Math, AbstractGridUnit, RealListUnit, TripackTypes, GIS_Functions, Types,
-  SutraMeshUnit;
+  SutraMeshUnit, Generics.Collections;
 
 resourcestring
   StrErrorEncoutereredI = 'Error encouterered in initializing %0:s for the ' +
@@ -436,7 +436,9 @@ begin
               Cell := frmGoPhast.PhastGrid.GetCell(ClosestLocation,
                 AScreenObject.ViewDirection, DataSet.EvaluatedAt);
             end;
-          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+          msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+            {$IFDEF FMP}, msModflowFmp {$ENDIF}
+            , msModflowCfp:
             begin
               TopCell := frmGoPhast.Grid.TopContainingCell(ClosestLocation,
                 DataSet.EvaluatedAt);
@@ -1100,7 +1102,9 @@ begin
         Cell := Model.PhastGrid.GetCell(Location,
           AScreenObject.ViewDirection, DataSet.EvaluatedAt);
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         // With MODFLOW, the only 2D data sets are in the top view.
         Assert(DataSet.Orientation = dsoTop);
@@ -1134,7 +1138,9 @@ begin
     Cell.Row := 0;
   end;
   case Model.ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         case DataSet.EvaluatedAt of
           eaBlocks:
@@ -2081,33 +2087,77 @@ var
   Index: Integer;
   AScreenObject: TScreenObject;
   DataSetIndex: Integer;
-  PointCount: integer;
+//  PointCount: integer;
+//  PointList: TList<TPoint2D>;
+  PointIndex: Integer;
+  APoint: TPoint2D;
+  QuadTree: TRbwQuadTree;
+  X: TFloat;
+  Y: TFloat;
+  Data: TPointerArray;
 begin
   result := False;
-  PointCount := 0;
-  for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
-  begin
-    AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
-    if AScreenObject.Deleted or not AScreenObject.SetValuesByInterpolation
-      then
+//  PointCount := 0;
+  QuadTree := TRbwQuadTree.Create(nil);
+  try
+    for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
     begin
-      continue;
+      AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
+      if AScreenObject.Deleted or not AScreenObject.SetValuesByInterpolation
+        then
+      begin
+        continue;
+      end;
+      DataSetIndex := AScreenObject.IndexOfDataSet(DataSet);
+      if DataSetIndex < 0 then
+      begin
+        continue;
+      end;
+      if not AScreenObject.UsedModels.UsesModel(DataSet.Model) then
+      begin
+        Continue;
+      end;
+      for PointIndex := 0 to AScreenObject.Count - 1 do
+      begin
+        APoint := AScreenObject.Points[PointIndex];
+        if QuadTree.Count = 0 then
+        begin
+          QuadTree.AddPoint(APoint.x, APoint.y, nil);
+        end
+        else
+        begin
+          X := APoint.x;
+          Y := APoint.y;
+          QuadTree.FindClosestPointsData(X, Y, Data);
+          if (X <> APoint.x) or (Y <> APoint.y) then
+          begin
+            QuadTree.AddPoint(APoint.x, APoint.y, nil);
+            if QuadTree.Count >= 3 then
+            begin
+              result := True;
+              Exit;
+            end;
+          end;
+        end;
+//        if PointList.IndexOf(APoint) < 0 then
+//        begin
+//          PointList.Add(APoint);
+//          if PointList.Count >= 3 then
+//          begin
+//            result := True;
+//            Exit;
+//          end;
+//        end;
+      end;
+//      PointCount := PointCount + AScreenObject.Count;
+//      if PointCount >= 3 then
+//      begin
+//        result := True;
+//        break;
+//      end;
     end;
-    DataSetIndex := AScreenObject.IndexOfDataSet(DataSet);
-    if DataSetIndex < 0 then
-    begin
-      continue;
-    end;
-    if not AScreenObject.UsedModels.UsesModel(DataSet.Model) then
-    begin
-      Continue;
-    end;
-    PointCount := PointCount + AScreenObject.Count;
-    if PointCount >= 3 then
-    begin
-      result := True;
-      break;
-    end;
+  finally
+    QuadTree.Free
   end;
 end;
 

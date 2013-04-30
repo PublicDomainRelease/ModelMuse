@@ -19,8 +19,8 @@ object frameListParameterDefinition: TframeListParameterDefinition
     object lblNumParameters: TLabel
       Left = 63
       Top = 9
-      Width = 108
-      Height = 13
+      Width = 130
+      Height = 16
       Caption = 'Number of parameters'
     end
     object btnDelete: TBitBtn
@@ -31,7 +31,6 @@ object frameListParameterDefinition: TframeListParameterDefinition
       Anchors = [akTop, akRight]
       Cancel = True
       Caption = '&Delete'
-      DoubleBuffered = True
       Enabled = False
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
@@ -60,7 +59,6 @@ object frameListParameterDefinition: TframeListParameterDefinition
         000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnDeleteClick
     end
@@ -102,7 +100,6 @@ object frameListParameterDefinition: TframeListParameterDefinition
     OnBeforeDrawCell = dgParametersBeforeDrawCell
     OnStateChange = dgParametersStateChange
     ColorRangeSelection = False
-    ColorSelectedRow = True
     Columns = <
       item
         AutoAdjustRowHeights = False
@@ -124,6 +121,7 @@ object frameListParameterDefinition: TframeListParameterDefinition
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -146,8 +144,10 @@ object frameListParameterDefinition: TframeListParameterDefinition
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end>
     OnEndUpdate = dgParametersEndUpdate
+    WordWrapRowCaptions = False
   end
 end

@@ -492,7 +492,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="width:217px;">
-          <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" styleclass="Table Header" translate="true">FMP</link><conditional-text type="END"/></para>
+          <para styleclass="Table Header"><conditional-text type="IF" value="ALLMODELS,MODFLOW-FMP2"/><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" styleclass="Table Header" translate="true">FMP</link><conditional-text type="ELSE"/><text styleclass="Table Header" translate="true">FMP</text><conditional-text type="END"/></para>
         </td>
         <td style="width:112px;">
           <para styleclass="Normal" style="text-align:center;"></para>

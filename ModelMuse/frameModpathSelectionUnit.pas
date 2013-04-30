@@ -351,8 +351,11 @@ end;
 procedure TframeModpathSelection.rdgTimesEndUpdate(Sender: TObject);
 begin
   inherited;
-  seTimeCount.AsInteger := rdgTimes.RowCount-1;
-  UpdateTimes;
+  if seTimeCount <> nil then
+  begin
+    seTimeCount.AsInteger := rdgTimes.RowCount-1;
+    UpdateTimes;
+  end;
 end;
 
 procedure TframeModpathSelection.rgModpathVersionClick(Sender: TObject);

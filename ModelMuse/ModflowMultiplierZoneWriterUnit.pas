@@ -100,7 +100,7 @@ begin
   case UsedParam.Parameter.ParameterType of
     ptUndefined, ptLPF_HK, ptLPF_HANI, ptLPF_VK, ptLPF_VANI, ptLPF_SS,
     ptLPF_SY, ptLPF_VKCB, ptRCH, ptEVT, ptETS, ptCHD, ptGHB, ptQ, ptRIV,
-    ptDRN, ptDRT, ptSFR, ptHFB, ptSTR, ptQMAX:
+    ptDRN, ptDRT, ptSFR, ptHFB, ptSTR {$IFDEF FMP}, ptQMAX {$ENDIF}:
       begin
         Assert(False);
       end;
@@ -149,7 +149,7 @@ begin
     ptUndefined, ptRCH, ptEVT, ptETS, ptCHD, ptGHB, ptQ,
     ptRIV, ptDRN, ptDRT, ptSFR,
     ptHUF_HK, ptHUF_HANI, ptHUF_VK, ptHUF_VANI, ptHUF_SS, ptHUF_SY,
-    ptHUF_KDEP, ptSTR, ptQMAX:
+    ptHUF_KDEP, ptSTR{$IFDEF FMP}, ptQMAX {$ENDIF}:
       begin
         Assert(False);
       end;

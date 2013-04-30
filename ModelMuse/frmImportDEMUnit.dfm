@@ -5,7 +5,7 @@ inherited frmImportDEM: TfrmImportDEM
   Caption = 'Sample Digital Elevation Model'
   ExplicitWidth = 580
   ExplicitHeight = 424
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object Label1: TLabel [2]
     Left = 319
@@ -74,7 +74,7 @@ inherited frmImportDEM: TfrmImportDEM
   object memoCorners: TMemo [13]
     Left = 319
     Top = 85
-    Width = 151
+    Width = 135
     Height = 247
     Anchors = [akLeft, akTop, akRight]
     ScrollBars = ssBoth

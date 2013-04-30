@@ -6,7 +6,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
   ClientWidth = 316
   ExplicitWidth = 332
   ExplicitHeight = 339
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
@@ -187,8 +187,8 @@ inherited frmSpecifyContours: TfrmSpecifyContours
     object cbAutomaticColors: TJvCheckBox
       Left = 12
       Top = 49
-      Width = 137
-      Height = 18
+      Width = 140
+      Height = 20
       Caption = 'Automatic colors'
       TabOrder = 2
       OnClick = cbAutomaticColorsClick
@@ -227,7 +227,6 @@ inherited frmSpecifyContours: TfrmSpecifyContours
     OnColSize = rdgContourDataColSize
     ColorRangeSelection = False
     OnHorizontalScroll = rdgContourDataHorizontalScroll
-    ColorSelectedRow = True
     Columns = <
       item
         AutoAdjustRowHeights = False
@@ -249,6 +248,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -271,6 +271,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
         WordWrapCaptions = True
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -293,6 +294,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
         WordWrapCaptions = True
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -315,9 +317,11 @@ inherited frmSpecifyContours: TfrmSpecifyContours
         WordWrapCaptions = True
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end>
     OnEndUpdate = rdgContourDataEndUpdate
+    WordWrapRowCaptions = False
   end
   object Panel1: TPanel
     Left = 0

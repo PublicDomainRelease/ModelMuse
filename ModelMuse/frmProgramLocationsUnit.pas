@@ -59,7 +59,10 @@ type
     fedModelMonitor: TJvFilenameEdit;
     jvrltModflowFmp: TJvRollOut;
     fedModflowFmp: TJvFilenameEdit;
-    htlbl1: TJvHTLabel;
+    htlblModflowFmp: TJvHTLabel;
+    jvrltModflowCFP: TJvRollOut;
+    htlblModflowCFP: TJvHTLabel;
+    fedModflowCFP: TJvFilenameEdit;
     procedure fedModflowChange(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure jvrltExpand(Sender: TObject);
@@ -90,8 +93,13 @@ resourcestring
 
 procedure TfrmProgramLocations.AdjustHeight;
 begin
-  ClientHeight := jvrltModelMonitor.Top + jvrltModelMonitor.Height
+{$IFNDEF FMP}
+  ClientHeight := jvrltModflowCFP.Top + jvrltModflowCFP.Height
     + pnlBottom.Height;
+{$ELSE}
+  ClientHeight := jvrltModflowFmp.Top + jvrltModflowFmp.Height
+    + pnlBottom.Height;
+{$ENDIF}
 end;
 
 procedure TfrmProgramLocations.btnOKClick(Sender: TObject);
@@ -145,6 +153,8 @@ begin
   fedModflowLgr2.FileName := Locations.ModflowLgr2Location;
   fedModflowNwt.FileName := Locations.ModflowNwtLocation;
   fedMt3dms.FileName := Locations.Mt3dmsLocation;
+  fedModflowFmp.FileName := Locations.ModflowFmpLocation;
+  fedModflowCfp.FileName := Locations.ModflowCfpLocation;
 
   HighlightControls;
 end;
@@ -172,6 +182,8 @@ begin
     Locations.ModflowLgrLocation := fedModflowLgr.FileName;
     Locations.ModflowLgr2Location := fedModflowLgr2.FileName;
     Locations.ModflowNwtLocation := fedModflowNwt.FileName;
+    Locations.ModflowFmpLocation := fedModflowFmp.FileName;
+    Locations.ModflowCfpLocation := fedModflowCfp.FileName;
     Locations.Mt3dmsLocation := fedMt3dms.FileName;
     Undo := TUndoChangeProgramLocations.Create(Locations);
     frmGoPhast.UndoStack.Submit(Undo);
@@ -192,6 +204,7 @@ var
 {$IFDEF FMP}
   ModflowFmpOK: Boolean;
 {$ENDIF}
+  ModflowCfpOK: Boolean;
   function CheckControl(Edit: TJvFilenameEdit): boolean;
   begin
     result := ExtractFileName(Edit.FileName) <> 'ModelMuse.exe';
@@ -264,6 +277,11 @@ begin
   jvrltModflowFmp.Visible := False;
 {$ENDIF}
 
+  jvrltModflowCFP.Collapsed :=
+    (frmGoPhast.PhastModel.ModelSelection  <> msModflowCFP);
+  ModflowCfpOK := CheckControl(fedModflowCfp)
+    or (frmGoPhast.PhastModel.ModelSelection  <> msModflowCFP);
+
   jvrltModpath.Collapsed := not frmGoPhast.PhastModel.ModPathIsSelected;
   ModpathOK := CheckControl(fedModpath)
     or not frmGoPhast.PhastModel.ModPathIsSelected;
@@ -287,7 +305,7 @@ begin
 {$IFDEF FMP}
     and ModflowFmpOK
 {$ENDIF}
-    and ModpathOK and ZoneBudgetOK and FileEditorOK;
+    and ModflowCfpOK and ModpathOK and ZoneBudgetOK and FileEditorOK;
 
 end;
 

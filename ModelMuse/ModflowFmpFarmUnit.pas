@@ -5,7 +5,7 @@ interface
 uses
   Classes, ModflowBoundaryUnit,
   OrderedCollectionUnit, GoPhastTypes, ModflowDrtUnit, ModflowCellUnit,
-  Generics.Collections, ModflowFmpBaseClasses;
+  Generics.Collections, ModflowFmpBaseClasses, RealListUnit;
 
 type
   // FMP data sets 19 or 32.
@@ -85,6 +85,7 @@ type
     property ScreenObject: TObject read GetScreenObject
       write SetScreenObject;
     function IsSame(OtherReturnObject: TSfrDiversionObject): boolean;
+    procedure Loaded;
   published
     property ObjectName: string read GetObjectName write SetObjectName;
     property DiversionPosition: TDiversionPosition read FDiversionPosition
@@ -94,6 +95,11 @@ type
     // (starting at 1) of the object that is in the desired reach.
     property DiversionVertex: integer read FDiversionVertex
       write SetDiversionVertex;
+  end;
+
+  TSegmentReach = record
+    Segment: integer;
+    Reach: integer;
   end;
 
   TSfrDiversion = class(TGoPhastPersistent)
@@ -113,12 +119,15 @@ type
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
-    // @name returns the cell where the drain returns extracted water
+    // @name returns the cell where the farm gets or returns water.
     // The cell numbers in the @link(TCellLocation) will be 1 based.
-    // If the @link(TCellLocation.Layer TCellLocation.Layer) = 0
-    // no water is returned to the model.
+    // The @link(TCellLocation.Layer TCellLocation.Layer) is always 0.
     function ReturnCellLocation(AModel: TBaseModel): TCellLocation;
+    // @name returns the segment and reach where the farm gets or returns water.
+    // The cell numbers in the @link(TSegmentReach) will be 1 based.
+    function SegmentReach: TSegmentReach;
     function IsSame(OtherDrainReturn: TSfrDiversion): boolean;
+    procedure Loaded;
   published
     property DiversionChoice: TReturnChoice read FDiversinChoice
       write SetDiversionChoice;
@@ -147,6 +156,7 @@ type
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    procedure Loaded;
   published
     property LinkedStream: TSfrDiversion read FLinkedStream write SetLinkedStream;
   end;
@@ -164,9 +174,11 @@ type
     function Add: TSemiRoutedDeliveriesAndRunoffItem;
     property Items[Index: Integer]: TSemiRoutedDeliveriesAndRunoffItem
       read GetItem write SetItem; default;
+    procedure Loaded;
   end;
 
-  TNonRoutedDeliveryType = (nrdtFarmDemand, nrdtDischarged, nrdtStored);
+  TNonRoutedDeliveryType = (nrdtFarmDemand, nrdtDischarged, nrdtStored,
+    nrdtVirtualFarm);
 
   //Data Set 33
   TNonRoutedDeliveryParameterItem = class(TCustomZeroFarmItem)
@@ -174,6 +186,7 @@ type
   const
     VolumePostion = 0;
     RankPosition = 1;
+    VirtualFarmPosition = 2;
   var
     FNonRoutedDeliveryType: TNonRoutedDeliveryType;
     procedure SetNonRoutedDeliveryType(const Value: TNonRoutedDeliveryType);
@@ -181,6 +194,8 @@ type
     function GetVolume: string;
     procedure SetRank(const Value: string);
     procedure SetVolume(const Value: string);
+    function GetVirtualFarm: string;
+    procedure SetVirtualFarm(const Value: string);
   protected
     // See @link(BoundaryFormula).
     function GetBoundaryFormula(Index: integer): string; override;
@@ -193,6 +208,7 @@ type
   published
     property Volume: string read GetVolume write SetVolume;
     property Rank: string read GetRank write SetRank;
+    property VirtualFarm: string read GetVirtualFarm write SetVirtualFarm;
     property NonRoutedDeliveryType: TNonRoutedDeliveryType
       read FNonRoutedDeliveryType write SetNonRoutedDeliveryType;
   end;
@@ -356,6 +372,9 @@ type
     procedure Assign(Source: TPersistent); override;
     constructor Create(Model: TBaseModel; ScreenObject: TObject);
     destructor Destroy; override;
+    procedure Loaded;
+    procedure UpdateTimes(Times: TRealList; StartTestTime, EndTestTime: double;
+      var StartRangeExtended, EndRangeExtended: boolean); virtual;
 //    function IsSame(AnOrderedCollection: TOrderedCollection): boolean; override;
   published
     // FID, FMP Data set 6.
@@ -625,6 +644,11 @@ begin
   end;
 end;
 
+procedure TSemiRoutedDeliveriesAndRunoffItem.Loaded;
+begin
+  LinkedStream.Loaded;
+end;
+
 procedure TSemiRoutedDeliveriesAndRunoffItem.SetBoundaryFormula(Index: integer;
   const Value: string);
 begin
@@ -657,6 +681,16 @@ begin
   result := TSemiRoutedDeliveriesAndRunoffItem;
 end;
 
+procedure TSemiRoutedDeliveriesAndReturnFlowCollection.Loaded;
+var
+  index: Integer;
+begin
+  for index := 0 to Count - 1 do
+  begin
+    Items[index].Loaded;
+  end;
+end;
+
 procedure TSemiRoutedDeliveriesAndReturnFlowCollection.SetItem(Index: Integer;
   const Value: TSemiRoutedDeliveriesAndRunoffItem);
 begin
@@ -678,7 +712,7 @@ end;
 
 function TNonRoutedDeliveryParameterItem.BoundaryFormulaCount: integer;
 begin
-  result := 2;
+  result := 3;
 end;
 
 function TNonRoutedDeliveryParameterItem.GetBoundaryFormula(
@@ -689,6 +723,8 @@ begin
       result := Volume;
     RankPosition:
       result := Rank;
+    VirtualFarmPosition:
+      result := VirtualFarm;
     else Assert(False);
   end;
 end;
@@ -697,6 +733,12 @@ function TNonRoutedDeliveryParameterItem.GetRank: string;
 begin
   Result := FFormulaObjects[RankPosition].Formula;
   ResetItemObserver(RankPosition);
+end;
+
+function TNonRoutedDeliveryParameterItem.GetVirtualFarm: string;
+begin
+  Result := FFormulaObjects[VirtualFarmPosition].Formula;
+  ResetItemObserver(VirtualFarmPosition);
 end;
 
 function TNonRoutedDeliveryParameterItem.GetVolume: string;
@@ -723,6 +765,8 @@ begin
       Volume := Value;
     RankPosition:
       Rank := Value;
+    VirtualFarmPosition:
+      VirtualFarm := Value;
     else Assert(False);
   end;
 end;
@@ -742,6 +786,18 @@ begin
   if FFormulaObjects[RankPosition].Formula <> Value then
   begin
     UpdateFormula(Value, RankPosition, FFormulaObjects[RankPosition]);
+  end;
+end;
+
+procedure TNonRoutedDeliveryParameterItem.SetVirtualFarm(const Value: string);
+begin
+  if Value = '' then
+  begin
+    Exit;
+  end;
+  if FFormulaObjects[VirtualFarmPosition].Formula <> Value then
+  begin
+    UpdateFormula(Value, VirtualFarmPosition, FFormulaObjects[VirtualFarmPosition]);
   end;
 end;
 
@@ -1041,6 +1097,12 @@ begin
   inherited;
 end;
 
+procedure TFarm.Loaded;
+begin
+  SemiRoutedDeliveries.Loaded;
+  SemiRoutedReturnFlow.Loaded;
+end;
+
 //function TFarm.IsSame(AnOrderedCollection: TOrderedCollection): boolean;
 //begin
 //
@@ -1110,6 +1172,40 @@ procedure TFarm.SetWaterRights(
   const Value: TWaterRightsCollection);
 begin
   FWaterRights.Assign(Value);
+end;
+
+procedure TFarm.UpdateTimes(Times: TRealList; StartTestTime,
+  EndTestTime: double; var StartRangeExtended, EndRangeExtended: boolean);
+var
+  DelivIndex: Integer;
+  Deliv: TNonRoutedDeliveryParameterCollection;
+  EffIndex: Integer;
+  EfficiencyCol: TCropEfficiencyCollection;
+begin
+  AddBoundaryTimes(FWaterRights, Times, StartTestTime, EndTestTime,
+    StartRangeExtended, EndRangeExtended);
+  AddBoundaryTimes(FSemiRoutedDeliveries, Times, StartTestTime, EndTestTime,
+    StartRangeExtended, EndRangeExtended);
+  AddBoundaryTimes(FSemiRoutedReturnFlow, Times, StartTestTime, EndTestTime,
+    StartRangeExtended, EndRangeExtended);
+  AddBoundaryTimes(FFarmCostsCollection, Times, StartTestTime, EndTestTime,
+    StartRangeExtended, EndRangeExtended);
+
+  for EffIndex := 0 to FFarmEfficiencyCollection.Count - 1 do
+  begin
+    EfficiencyCol := FFarmEfficiencyCollection[EffIndex].FCropEfficiency;
+    AddBoundaryTimes(EfficiencyCol, Times, StartTestTime, EndTestTime,
+      StartRangeExtended, EndRangeExtended);
+  end;
+
+  for DelivIndex := 0 to FDeliveryParamCollection.Count - 1 do
+  begin
+    Deliv := FDeliveryParamCollection[DelivIndex].FDeliveryParam;
+    AddBoundaryTimes(Deliv, Times, StartTestTime, EndTestTime,
+      StartRangeExtended, EndRangeExtended);
+  end;
+
+
 end;
 
 function TFarm.Used: boolean;
@@ -1220,6 +1316,31 @@ begin
     and (DiversionVertex = OtherReturnObject.DiversionVertex);
 end;
 
+procedure TSfrDiversionObject.Loaded;
+var
+  index: Integer;
+  LocalModel: TCustomModel;
+  AScreenObject: TScreenObject;
+begin
+  if (Model <> nil) and (FObjectName <> '') and (FScreenObject = nil) then
+  begin
+    LocalModel := Model as TCustomModel;
+    for index := 0 to LocalModel.ScreenObjectCount - 1 do
+    begin
+      AScreenObject := LocalModel.ScreenObjects[index];
+      if AScreenObject.Deleted then
+      begin
+        Continue;
+      end;
+      if FObjectName = AScreenObject.Name then
+      begin
+        FScreenObject := AScreenObject;
+        break;
+      end;
+    end;
+  end;
+end;
+
 procedure TSfrDiversionObject.SetDiversionPosition(
   const Value: TDiversionPosition);
 begin
@@ -1298,6 +1419,7 @@ end;
 
 constructor TSfrDiversion.Create(Model: TBaseModel);
 begin
+  inherited;
   FDiversionCell := TReturnCell.Create(Model);
   FDiversionLocation := TReturnLocation.Create(Model);
   FDiversionObject := TSfrDiversionObject.Create(Model);
@@ -1326,10 +1448,18 @@ begin
   end;
 end;
 
+procedure TSfrDiversion.Loaded;
+begin
+  if DiversionChoice = rtObject then
+  begin
+    DiversionObject.Loaded;
+  end;
+end;
+
 function TSfrDiversion.ReturnCellLocation(AModel: TBaseModel): TCellLocation;
 var
   ScreenObject: TScreenObject;
-  X, Y {, Z}: double;
+//  X, Y {, Z}: double;
   Model: TCustomModel;
   Grid: TModflowGrid;
   APoint: TPoint2D;
@@ -1337,11 +1467,12 @@ var
   begin
     Model := AModel as TCustomModel;
     Grid := Model.ModflowGrid;
-    if (X < Grid.ColumnPosition[Grid.ColumnCount]) and
-      (Y > Grid.RowPosition[Grid.RowCount]) then
+    APoint := Grid.RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
+    if (APoint.X < Grid.ColumnPosition[Grid.ColumnCount]) and
+      (APoint.Y > Grid.RowPosition[Grid.RowCount]) then
     begin
-      result.Column := Grid.GetContainingColumn(X);
-      result.Row := Grid.GetContainingRow(Y);
+      result.Column := Grid.GetContainingColumn(APoint.X)+1;
+      result.Row := Grid.GetContainingRow(APoint.Y)+1;
       result.Layer := 0;
 //      if (result.Column >= 0) and (result.Row >= 0) then
 //      begin
@@ -1357,8 +1488,8 @@ var
     else
     begin
       result.Layer := 0;
-      result.Row := 1;
-      result.Column := 1;
+      result.Row := 0;
+      result.Column := 0;
     end;
   end;
 
@@ -1367,8 +1498,8 @@ begin
     rtNone:
       begin
         result.Layer := 0;
-        result.Row := 1;
-        result.Column := 1;
+        result.Row := 0;
+        result.Column := 0;
       end;
     rtObject:
       begin
@@ -1376,8 +1507,8 @@ begin
         if ScreenObject = nil then
         begin
           result.Layer := 0;
-          result.Row := 1;
-          result.Column := 1;
+          result.Row := 0;
+          result.Column := 0;
         end
         else
         begin
@@ -1388,9 +1519,9 @@ begin
               end;
             dpMiddle:
               begin
-                if DiversionObject.DiversionVertex < ScreenObject.Count then
+                if DiversionObject.DiversionVertex <= ScreenObject.Count then
                 begin
-                  APoint := ScreenObject.Points[DiversionObject.DiversionVertex];
+                  APoint := ScreenObject.Points[DiversionObject.DiversionVertex-1];
                 end
                 else
                 begin
@@ -1404,15 +1535,15 @@ begin
             else
               Assert(False);
           end;
-          X := APoint.x;
-          Y := APoint.y;
+//          X := APoint.x;
+//          Y := APoint.y;
           result := LocationToCell;
         end;
       end;
     rtLocation:
       begin
-        X := DiversionLocation.X;
-        Y := DiversionLocation.Y;
+        APoint.X := DiversionLocation.X;
+        APoint.Y := DiversionLocation.Y;
 //        Z := DiversionLocation.Z;
         result := LocationToCell;
       end;
@@ -1429,6 +1560,69 @@ end;
 procedure TSfrDiversion.SetDiversionObject(const Value: TSfrDiversionObject);
 begin
   FDiversionObject.Assign(Value);
+end;
+
+function TSfrDiversion.SegmentReach: TSegmentReach;
+var
+  ScreenObject: TScreenObject;
+  PointNumber: Integer;
+  SegmentIndex: Integer;
+  ASegment: TCellElementSegment;
+  ReachNumber: Integer;
+  PriorSegment: TCellElementSegment;
+begin
+  Result.Segment := 0;
+  Result.Reach := 0;
+  if DiversionChoice = rtObject then
+  begin
+    ScreenObject := DiversionObject.ScreenObject as TScreenObject;
+    if ScreenObject <> nil then
+    begin
+      Result.Segment := ScreenObject.SfrSegmentNumber;
+      PointNumber := -1;
+      case DiversionObject.DiversionPosition of
+        dpStart:
+          begin
+            PointNumber := 0;
+          end;
+        dpMiddle:
+          begin
+            if DiversionObject.DiversionVertex <= ScreenObject.Count then
+            begin
+              PointNumber := DiversionObject.DiversionVertex-1;
+            end
+            else
+            begin
+              PointNumber := ScreenObject.Count-1;
+            end;
+          end;
+        dpEnd:
+          begin
+            PointNumber := ScreenObject.Count-1;
+          end;
+        else
+          Assert(False);
+      end;
+      ReachNumber := 0;
+      PriorSegment := nil;
+      for SegmentIndex := 0 to ScreenObject.Segments[Model].Count - 1 do
+      begin
+        ASegment := ScreenObject.Segments[Model][SegmentIndex];
+        if (PriorSegment = nil) or (PriorSegment.Col <> ASegment.Col)
+          or (PriorSegment.Row <> ASegment.Row)
+          or (PriorSegment.Layer <> ASegment.Layer) then
+        begin
+          Inc(ReachNumber);
+        end;
+        if ASegment.VertexIndex = PointNumber then
+        begin
+          Result.Reach := ReachNumber;
+          break;
+        end;
+        PriorSegment := ASegment;
+      end;
+    end;
+  end;
 end;
 
 procedure TSfrDiversion.SetDiversionCell(const Value: TReturnCell);

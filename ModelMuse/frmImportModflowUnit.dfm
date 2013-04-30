@@ -84,7 +84,9 @@ inherited frmImportModflow: TfrmImportModflow
     Top = 72
     Width = 357
     Height = 26
-    Filter = 'Name files (*.nam, *.mfn)|*.nam;*.mfn|All Files (*.*)|*.*'
+    Filter = 
+      'Name files (*.nam, *.mfn, *.modflow.in)|*.nam;*.mfn;*.modflow.in' +
+      '|All Files (*.*)|*.*'
     TabOrder = 3
     OnChange = edNameFileChange
   end
@@ -94,10 +96,8 @@ inherited frmImportModflow: TfrmImportModflow
     Width = 83
     Height = 33
     Anchors = [akTop, akRight]
-    DoubleBuffered = True
     Kind = bkHelp
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 5
     OnClick = btnHelpClick
   end
@@ -107,11 +107,9 @@ inherited frmImportModflow: TfrmImportModflow
     Width = 83
     Height = 33
     Anchors = [akTop, akRight]
-    DoubleBuffered = True
     Enabled = False
     Kind = bkOK
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 6
     OnClick = btnOKClick
   end
@@ -121,10 +119,8 @@ inherited frmImportModflow: TfrmImportModflow
     Width = 83
     Height = 33
     Anchors = [akTop, akRight]
-    DoubleBuffered = True
     Kind = bkClose
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 7
   end
   object sbStatusBar: TStatusBar
@@ -136,7 +132,6 @@ inherited frmImportModflow: TfrmImportModflow
     ParentFont = True
     SimplePanel = True
     UseSystemFont = False
-    ExplicitTop = 253
   end
   object pbProgress: TProgressBar
     AlignWithMargins = True
@@ -147,7 +142,6 @@ inherited frmImportModflow: TfrmImportModflow
     Margins.Bottom = 0
     Align = alBottom
     TabOrder = 8
-    ExplicitTop = 224
   end
   object cbOldStream: TCheckBox
     Left = 8

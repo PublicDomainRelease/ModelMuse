@@ -2257,7 +2257,9 @@ begin
       begin
         result := StrClickOnGridLineA;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         case ViewDirection of
           vdTop: result := StrClickOnGridLineA;
@@ -2605,7 +2607,9 @@ begin
       begin
         result := StrClickOnGridBounda;
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         case ViewDirection of
           vdTop: result := StrClickOnGridBounda;
@@ -3256,7 +3260,9 @@ begin
         DrawBigPolygon32(BitMap, SelectColor32,
           SelectColor32, 0, Polygon, P, MultiplePolygons, True);
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         FrontPoints := frmGoPhast.PhastModel.SelectedModel.ModflowGrid.FrontCellPoints(
           frmGoPhast.PhastModel.SelectedModel.ModflowGrid.SelectedRow);
@@ -3388,7 +3394,9 @@ begin
         DrawBigPolygon32(BitMap, SelectColor32,
           SelectColor32, 0, Polygon, P, MultiplePolygons, True);
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         SidePoints := frmGoPhast.PhastModel.SelectedModel.ModflowGrid.SideCellPoints(
           frmGoPhast.PhastModel.SelectedModel.ModflowGrid.SelectedColumn);

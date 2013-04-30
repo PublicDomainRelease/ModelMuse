@@ -447,10 +447,12 @@ begin
           (Model as TPhastModel).InvalidateMfStrConductance(self);
         end;
       end;
+  {$IFDEF FMP}
     ptQMAX:
       begin
         { TODO -cFMP : This needs to be finished }
       end
+  {$ENDIF}
     else Assert(False);
   end;
 end;

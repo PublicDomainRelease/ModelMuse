@@ -45,7 +45,6 @@ inherited frmImportGriddedData: TfrmImportGriddedData
         SelectedRowOrColumnColor = clAqua
         UnselectableColor = clBtnFace
         ColorRangeSelection = False
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = False
@@ -67,6 +66,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end
           item
@@ -89,6 +89,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end
           item
@@ -111,6 +112,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end
           item
@@ -133,9 +135,11 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end>
         OnEndUpdate = rdgListEndUpdate
+        WordWrapRowCaptions = False
       end
       object pnlListControls: TPanel
         Left = 0
@@ -420,9 +424,11 @@ inherited frmImportGriddedData: TfrmImportGriddedData
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end>
       OnEndUpdate = rdgIgnoreValuesEndUpdate
+      WordWrapRowCaptions = False
     end
     object seIgnoreValueCount: TJvSpinEdit
       Left = 96

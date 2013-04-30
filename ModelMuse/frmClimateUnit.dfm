@@ -1,10 +1,12 @@
 inherited frmClimate: TfrmClimate
+  HelpType = htKeyword
+  HelpKeyword = 'Farm_Climate_Dialog_Box'
   Caption = 'Farm Climate'
   ClientHeight = 275
   ClientWidth = 599
   ExplicitWidth = 615
   ExplicitHeight = 313
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   inline frameClimate: TframeFormulaGrid
     Left = 0
@@ -71,6 +73,7 @@ inherited frmClimate: TfrmClimate
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -93,6 +96,7 @@ inherited frmClimate: TfrmClimate
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end
         item
@@ -115,6 +119,7 @@ inherited frmClimate: TfrmClimate
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -137,6 +142,7 @@ inherited frmClimate: TfrmClimate
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -159,6 +165,7 @@ inherited frmClimate: TfrmClimate
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end
         item
@@ -181,6 +188,7 @@ inherited frmClimate: TfrmClimate
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = False
         end>
       ExplicitWidth = 599
@@ -213,10 +221,8 @@ inherited frmClimate: TfrmClimate
       Top = 6
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
     object btnOK: TBitBtn
@@ -224,10 +230,8 @@ inherited frmClimate: TfrmClimate
       Top = 6
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -236,11 +240,10 @@ inherited frmClimate: TfrmClimate
       Top = 6
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
+      OnClick = btnHelpClick
     end
   end
   object rbwprsrGlobal: TRbwParser

@@ -7,7 +7,7 @@
       <para style="margin-bottom:10px; line-height:2.0;"><text styleclass="Heading1" translate="true">Data Sets Required by MODFLOW</text></para>
     </header>
     <para styleclass="Table Caption"><text styleclass="Table Caption" translate="true">Table 8. Data Sets required by MODFLOW</text></para>
-    <para styleclass="Normal" style="text-align:center;"><table id="ModflowDataSets_srt_" rowcount="46" colcount="5" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal" style="text-align:center;"><table id="ModflowDataSets_srt_" rowcount="56" colcount="5" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <thead style="vertical-align:top">
         <td>
           <para styleclass="Table Header"><anchor id="_sortable_MODFLOW_DataSets_cicons-graphic_" styleclass="Table Header"></anchor><text styleclass="Table Header" translate="true">Data Set</text></para>
@@ -422,13 +422,13 @@
           <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">The elevation of the land surface.</text></para>
         </td>
         <td>
-          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">UZF</link></para>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">UZF</link><text styleclass="Table Cell" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">FMP</link></para>
         </td>
         <td>
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">used to assign </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="IUZFBND" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">IUZFBND</link></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">used to assign </text><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" anchor="IUZFBND" domain=".\ModflowGuide\ModflowGuide.hmxp" styleclass="Table Cell" translate="true">IUZFBND</link><text styleclass="Table Cell" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="GSURF" domain="ModflowGuide.hmxp" styleclass="Normal" translate="true">GSURF</link></para>
         </td>
         <td>
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When the Unsaturated-Zone Flow package is used.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When either the Unsaturated-Zone Flow &#160;package or the Farm Process is used.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -821,6 +821,176 @@
         </td>
         <td>
           <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">never used directly.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">PipeDiameter</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">This data set can not be specified directly by the user or used in formulas.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP" anchor="DIAMETER" domain="ModflowGuide.hmxp" styleclass="Normal" translate="true">DIAMETER</link><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">&#32;</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link><text styleclass="Table Cell" translate="true"> is used and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" anchor="Mode" styleclass="Table Cell" translate="true">individual conduits are simulated</link><text styleclass="Table Cell" translate="true">.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Tortuosity</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">This data set is used for visualization. It can not be specified directly by the user or used in formulas because it does not have a value defined in every cell.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP" anchor="TORTUOSITY" domain="ModflowGuide.hmxp" styleclass="Normal" translate="true">TORTUOSITY</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link><text styleclass="Table Cell" translate="true"> is used and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" anchor="Mode" styleclass="Table Cell" translate="true">individual conduits are simulated</link><text styleclass="Table Cell" translate="true">.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">RoughnessHeight</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">This data set is used for visualization. It can not be specified directly by the user or used in formulas because it does not have a value defined in every cell.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP" anchor="RHEIGHT" domain="ModflowGuide.hmxp" styleclass="Normal" translate="true">RHEIGHT</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link><text styleclass="Table Cell" translate="true"> is used and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" anchor="Mode" styleclass="Table Cell" translate="true">individual conduits are simulated</link><text styleclass="Table Cell" translate="true">.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">LowerCriticalR</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">This data set is used for visualization. It can not be specified directly by the user or used in formulas because it does not have a value defined in every cell.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP" anchor="LCRITREY_P" domain="ModflowGuide.hmxp" styleclass="Normal" translate="true">LCRITREY_P</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link><text styleclass="Table Cell" translate="true"> is used and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" anchor="Mode" styleclass="Table Cell" translate="true">individual conduits are simulated</link><text styleclass="Table Cell" translate="true">.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">UpperCriticalR</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">This data set is used for visualization. It can not be specified directly by the user or used in formulas because it does not have a value defined in every cell.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP" anchor="TCRITREY_P" domain="ModflowGuide.hmxp" styleclass="Normal" translate="true">TCRITREY_P</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link><text styleclass="Table Cell" translate="true"> is used and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" anchor="Mode" styleclass="Table Cell" translate="true">individual conduits are simulated</link><text styleclass="Table Cell" translate="true">.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">PipeConductanceOrPermeabilty</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">This data set is used for visualization. It can not be specified directly by the user or used in formulas because it does not have a value defined in every cell.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP" anchor="K_EXCHANGE" domain="ModflowGuide.hmxp" styleclass="Normal" translate="true">K_EXCHANGE</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link><text styleclass="Table Cell" translate="true"> is used and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" anchor="Mode" styleclass="Table Cell" translate="true">individual conduits are simulated</link><text styleclass="Table Cell" translate="true">.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">CfpNodeElevation</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">This data set is used for visualization. It can not be specified directly by the user or used in formulas because it does not have a value defined in every cell.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP" anchor="GEOHEIGHT" domain="ModflowGuide.hmxp" styleclass="Normal" translate="true">GEOHEIGHT</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link><text styleclass="Table Cell" translate="true"> is used and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" anchor="Mode" styleclass="Table Cell" translate="true">individual conduits are simulated</link><text styleclass="Table Cell" translate="true">.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">CfpFixedHeads</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">This data set is used for visualization. It can not be specified directly by the user or used in formulas because it does not have a value defined in every cell.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP" anchor="N_HEAD" domain="ModflowGuide.hmxp" styleclass="Normal" translate="true">N_HEAD</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" styleclass="Table Cell" translate="true">CFP</link><text styleclass="Table Cell" translate="true"> is used and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP_Conduit_Flow_Process" anchor="Mode" styleclass="Table Cell" translate="true">individual conduits are simulated</link><text styleclass="Table Cell" translate="true">.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Farm_ID</text></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Specifies the spatial distribution of farms. Values are set automatically by the ID specified for each </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Crop_Efficiencies" styleclass="Normal" translate="true">farm</link><text styleclass="Normal" translate="true">.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">FMP</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="DataSet5" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">FID</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">FMP</link><text styleclass="Table Cell" translate="true"> is used.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Table Cell"><anchor id="Soil_ID" styleclass="Table Cell"></anchor><text styleclass="Table Cell" translate="true">Soil_ID</text></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Specifies the spatial distribution of soils.</text></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">FMP</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" anchor="SID" domain="ModflowGuide.hmxp" styleclass="Normal" translate="true">SID</link></para>
+        </td>
+        <td>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Farm_Process" domain="ModflowGuide.hmxp" styleclass="Table Cell" translate="true">FMP</link><text styleclass="Table Cell" translate="true"> is used.</text></para>
         </td>
       </tr>
     </table></para>

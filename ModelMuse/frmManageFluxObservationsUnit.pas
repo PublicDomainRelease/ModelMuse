@@ -2589,7 +2589,7 @@ procedure TfrmManageFluxObservations.rdgConcFluxObsTimesEndUpdate(
   Sender: TObject);
 begin
   inherited;
-  if not FSettingTimeCount then
+  if (not FSettingTimeCount) and (seNumMt3dmsObsTimes <> nil) then
   begin
     seNumMt3dmsObsTimes.AsInteger := rdgConcFluxObsTimes.RowCount -1;
   end;
@@ -2727,7 +2727,7 @@ end;
 procedure TfrmManageFluxObservations.rdgFluxObsTimesEndUpdate(Sender: TObject);
 begin
   inherited;
-  if not FSettingTimeCount then
+  if (not FSettingTimeCount) and (seNumObsTimes <> nil) then
   begin
     seNumObsTimes.AsInteger := rdgFluxObsTimes.RowCount -1;
   end;

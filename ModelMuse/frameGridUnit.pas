@@ -39,7 +39,10 @@ uses
 
 procedure TframeGrid.GridEndUpdate(Sender: TObject);
 begin
-  seNumber.AsInteger := Grid.RowCount -1;
+  if seNumber <> nil then
+  begin
+    seNumber.AsInteger := Grid.RowCount -1;
+  end;
 end;
 
 procedure TframeGrid.sbAddClick(Sender: TObject);
@@ -111,8 +114,29 @@ begin
 end;
 
 procedure TframeGrid.seNumberChange(Sender: TObject);
+var
+  NewRowCount: integer;
+  RowIndex: Integer;
+  ColIndex: Integer;
 begin
-  Grid.RowCount := Max(2, seNumber.AsInteger+1);
+  NewRowCount := Max(2, seNumber.AsInteger+1);
+  if NewRowCount < Grid.RowCount then
+  begin
+    Grid.BeginUpdate;
+    try
+      for RowIndex := NewRowCount to Grid.RowCount - 1 do
+      begin
+        for ColIndex := Grid.FixedCols to Grid.ColCount - 1 do
+        begin
+          Grid.Cells[ColIndex, RowIndex] := '';
+          Grid.Checked[ColIndex, RowIndex] := False
+        end;
+      end;
+    finally
+      Grid.EndUpdate;
+    end;
+  end;
+  Grid.RowCount := NewRowCount;
   sbDelete.Enabled := seNumber.AsInteger > 0;
 end;
 

@@ -109,7 +109,6 @@ inherited frmGridSpacing: TfrmGridSpacing
         SelectedRowOrColumnColor = clAqua
         UnselectableColor = clBtnFace
         ColorRangeSelection = True
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = False
@@ -131,6 +130,7 @@ inherited frmGridSpacing: TfrmGridSpacing
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end
           item
@@ -153,8 +153,10 @@ inherited frmGridSpacing: TfrmGridSpacing
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end>
+        WordWrapRowCaptions = False
         ExplicitWidth = 429
         ExplicitHeight = 162
         RowHeights = (
@@ -250,7 +252,6 @@ inherited frmGridSpacing: TfrmGridSpacing
         SelectedRowOrColumnColor = clAqua
         UnselectableColor = clBtnFace
         ColorRangeSelection = False
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = False
@@ -272,6 +273,7 @@ inherited frmGridSpacing: TfrmGridSpacing
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end
           item
@@ -294,8 +296,10 @@ inherited frmGridSpacing: TfrmGridSpacing
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end>
+        WordWrapRowCaptions = False
         ExplicitWidth = 429
         ExplicitHeight = 162
         RowHeights = (
@@ -391,7 +395,6 @@ inherited frmGridSpacing: TfrmGridSpacing
         SelectedRowOrColumnColor = clAqua
         UnselectableColor = clBtnFace
         ColorRangeSelection = False
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = False
@@ -413,6 +416,7 @@ inherited frmGridSpacing: TfrmGridSpacing
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end
           item
@@ -435,8 +439,10 @@ inherited frmGridSpacing: TfrmGridSpacing
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end>
+        WordWrapRowCaptions = False
         ExplicitWidth = 429
         ExplicitHeight = 162
         RowHeights = (

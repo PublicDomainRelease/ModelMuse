@@ -192,7 +192,8 @@ type
     procedure Assign(Source: TPersistent);override;
     // @name is the formula used to set the recharge rate
     // or the recharge rate multiplier of this boundary.
-    property EvapotranspirationLayer: string read GetEvapotranspirationLayer write SetEvapotranspirationLayer;
+    property EvapotranspirationLayer: string read GetEvapotranspirationLayer
+      write SetEvapotranspirationLayer;
   end;
 
   // @name represents a MODFLOW ET layer for one time interval.
@@ -269,7 +270,8 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer;
+      AModel: TBaseModel); override;
     procedure InvalidateEtRateData(Sender: TObject);
   end;
 
@@ -286,7 +288,6 @@ type
   end;
 
   TEvtLayerCollection = class(TCustomMF_ArrayBoundColl)
-  private
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary(AModel: TBaseModel); override;
@@ -1535,7 +1536,8 @@ begin
   Values.RecordStrings(Strings);
 end;
 
-procedure TEvapotranspirationLayerCell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+procedure TEvapotranspirationLayerCell.Restore(Decomp: TDecompressionStream;
+  Annotations: TStringList);
 begin
   inherited;
   Values.Restore(Decomp, Annotations);
@@ -1862,7 +1864,8 @@ end;
 
 { TEvtSurfDepth_Cell }
 
-procedure TEvtSurfDepth_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
+procedure TEvtSurfDepth_Cell.Cache(Comp: TCompressionStream;
+  Strings: TStringList);
 begin
   inherited;
   Values.Cache(Comp, Strings);
@@ -1894,13 +1897,15 @@ begin
   result := Values.EvapotranspirationSurfaceAnnotation;
 end;
 
-function TEvtSurfDepth_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
+function TEvtSurfDepth_Cell.GetIntegerAnnotation(Index: integer;
+  AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TEvtSurfDepth_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
+function TEvtSurfDepth_Cell.GetIntegerValue(Index: integer;
+  AModel: TBaseModel): integer;
 begin
   result := 0;
   Assert(False);
@@ -1911,7 +1916,8 @@ begin
   result := Values.Cell.Layer;
 end;
 
-function TEvtSurfDepth_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
+function TEvtSurfDepth_Cell.GetRealAnnotation(Index: integer;
+  AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -1921,7 +1927,8 @@ begin
   end;
 end;
 
-function TEvtSurfDepth_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
+function TEvtSurfDepth_Cell.GetRealValue(Index: integer;
+  AModel: TBaseModel): double;
 begin
   result := 0;
   case Index of
@@ -1947,7 +1954,8 @@ begin
   Values.RecordStrings(Strings);
 end;
 
-procedure TEvtSurfDepth_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+procedure TEvtSurfDepth_Cell.Restore(Decomp: TDecompressionStream;
+  Annotations: TStringList);
 begin
   inherited;
   Values.Restore(Decomp, Annotations);
@@ -2010,7 +2018,8 @@ begin
   end;
 end;
 
-procedure TEvtStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
+procedure TEvtStorage.Restore(DecompressionStream: TDecompressionStream;
+  Annotations: TStringList);
 var
   Index: Integer;
   Count: Integer;
@@ -2073,7 +2082,8 @@ begin
   end;
 end;
 
-procedure TEvtLayerStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
+procedure TEvtLayerStorage.Restore(DecompressionStream: TDecompressionStream;
+  Annotations: TStringList);
 var
   Index: Integer;
   Count: Integer;
@@ -2136,7 +2146,8 @@ begin
   end;
 end;
 
-procedure TEvtSurfDepthStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
+procedure TEvtSurfDepthStorage.Restore(
+  DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Index: Integer;
   Count: Integer;
@@ -2182,7 +2193,8 @@ begin
   Strings.Add(EvapotranspirationRateAnnotation);
 end;
 
-procedure TEvtRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+procedure TEvtRecord.Restore(Decomp: TDecompressionStream;
+  Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   EvapotranspirationRate := ReadCompReal(Decomp);
@@ -2194,7 +2206,8 @@ end;
 
 { TEvtSurfDepthRecord }
 
-procedure TEvtSurfDepthRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
+procedure TEvtSurfDepthRecord.Cache(Comp: TCompressionStream;
+  Strings: TStringList);
 //var
 //  CommentLength: Integer;
 begin
@@ -2224,7 +2237,8 @@ begin
   Strings.Add(EvapotranspirationDepthAnnotation);
 end;
 
-procedure TEvtSurfDepthRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+procedure TEvtSurfDepthRecord.Restore(Decomp: TDecompressionStream;
+  Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   EvapotranspirationSurface := ReadCompReal(Decomp);
@@ -2260,7 +2274,8 @@ begin
   Strings.Add(EvapotranspirationLayerAnnotation);
 end;
 
-procedure TEvtLayerRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+procedure TEvtLayerRecord.Restore(Decomp: TDecompressionStream;
+  Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   EvapotranspirationLayer := ReadCompInt(Decomp);
@@ -2281,7 +2296,8 @@ begin
   AddTimeList(FEvapotranspirationRateData);
   if Model <> nil then
   begin
-    FEvapotranspirationRateData.OnInvalidate := (Model as TCustomModel).InvalidateMfEvtEvapRate;
+    FEvapotranspirationRateData.OnInvalidate :=
+      (Model as TCustomModel).InvalidateMfEvtEvapRate;
   end;
 end;
 

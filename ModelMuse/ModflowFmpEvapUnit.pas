@@ -878,8 +878,6 @@ begin
   AddTimeList(FRefEvapRateData);
   if Model <> nil then
   begin
-    { TODO -cFMP : This needs to be finished. }
-//    Assert(False);
     FRefEvapRateData.OnInvalidate := (Model as TCustomModel).InvalidateMfFmpEvap;
   end;
 end;

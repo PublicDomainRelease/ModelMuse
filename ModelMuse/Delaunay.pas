@@ -841,7 +841,7 @@ begin
 
     LastDelaunayPoint := FPoints.Last;
     VertexToTextIndex:= 0;
-    // Check whether any of the neigboring vertices are closer to
+    // Check whether any of the neighboring vertices are closer to
     // the last Delaunay then to any of their forming points.
     // If so, add those vertex positions to VerticesToDelete.
     while (VertexToTextIndex < VerticesToDelete.Count) do

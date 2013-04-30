@@ -9,7 +9,7 @@ inherited frmGridValue: TfrmGridValue
   OnResize = FormResize
   ExplicitWidth = 520
   ExplicitHeight = 558
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object btnHelp: TBitBtn
     Left = 306
@@ -21,7 +21,6 @@ inherited frmGridValue: TfrmGridValue
     NumGlyphs = 2
     TabOrder = 1
     OnClick = btnHelpClick
-    ExplicitLeft = 311
   end
   object btnClose: TBitBtn
     Left = 403
@@ -32,7 +31,6 @@ inherited frmGridValue: TfrmGridValue
     Kind = bkClose
     NumGlyphs = 2
     TabOrder = 2
-    ExplicitLeft = 408
   end
   object pnlTabs: TPanel
     Left = 0
@@ -42,7 +40,6 @@ inherited frmGridValue: TfrmGridValue
     Align = alTop
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
-    ExplicitWidth = 507
     object spl1: TSplitter
       Left = 471
       Top = 1
@@ -225,7 +222,7 @@ inherited frmGridValue: TfrmGridValue
     object jvrltAllDataSets: TJvRollOut
       Left = 23
       Top = 1
-      Width = 426
+      Width = 22
       Height = 465
       Align = alLeft
       ButtonFont.Charset = ANSI_CHARSET
@@ -235,12 +232,12 @@ inherited frmGridValue: TfrmGridValue
       ButtonFont.Style = []
       Caption = 'All Data Sets'
       Placement = plLeft
+      Collapsed = True
       SmartExpand = False
       SmartShow = False
       TabOrder = 1
-      ExplicitWidth = 145
       DesignSize = (
-        426
+        22
         465)
       FAWidth = 426
       FAHeight = 511
@@ -267,8 +264,8 @@ inherited frmGridValue: TfrmGridValue
         Height = 26
         Tree.Left = 0
         Tree.Top = 0
-        Tree.Width = 302
-        Tree.Height = 195
+        Tree.Width = 304
+        Tree.Height = 202
         Tree.Align = alClient
         Tree.Header.AutoSizeIndex = 0
         Tree.Header.Font.Charset = DEFAULT_CHARSET
@@ -318,13 +315,14 @@ inherited frmGridValue: TfrmGridValue
       object memoSelectExplanation: TMemo
         Left = 31
         Top = 87
-        Width = 389
+        Width = 0
         Height = 335
         Anchors = [akLeft, akTop, akRight, akBottom]
         ReadOnly = True
         ScrollBars = ssVertical
         TabOrder = 2
         OnKeyUp = memoExplanationKeyUp
+        ExplicitWidth = 389
       end
       object btnUpdate: TButton
         Left = 31
@@ -338,9 +336,9 @@ inherited frmGridValue: TfrmGridValue
       end
     end
     object jvrltPathline: TJvRollOut
-      Left = 449
+      Left = 45
       Top = 1
-      Width = 22
+      Width = 426
       Height = 465
       Align = alLeft
       ButtonFont.Charset = ANSI_CHARSET
@@ -350,12 +348,12 @@ inherited frmGridValue: TfrmGridValue
       ButtonFont.Style = []
       Caption = 'Pathline'
       Placement = plLeft
-      Collapsed = True
       SmartExpand = False
       SmartShow = False
       TabOrder = 2
       OnExpand = jvrltPathlineExpand
       OnCollapse = jvrltPathlineCollapse
+      ExplicitWidth = 145
       FAWidth = 426
       FAHeight = 511
       FCWidth = 22
@@ -363,8 +361,8 @@ inherited frmGridValue: TfrmGridValue
       object rdgPathline: TRbwDataGrid4
         Left = 21
         Top = 1
-        Width = 0
-        Height = 463
+        Width = 404
+        Height = 427
         Align = alClient
         ColCount = 4
         FixedCols = 1
@@ -400,6 +398,7 @@ inherited frmGridValue: TfrmGridValue
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -422,6 +421,7 @@ inherited frmGridValue: TfrmGridValue
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -444,6 +444,7 @@ inherited frmGridValue: TfrmGridValue
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -466,8 +467,36 @@ inherited frmGridValue: TfrmGridValue
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
+        WordWrapRowCaptions = False
+        ExplicitWidth = 0
+        ExplicitHeight = 463
+      end
+      object pnlPathLength: TPanel
+        Left = 21
+        Top = 428
+        Width = 404
+        Height = 36
+        Align = alBottom
+        TabOrder = 1
+        ExplicitLeft = 19
+        ExplicitTop = 430
+        object lblLength: TLabel
+          Left = 7
+          Top = 6
+          Width = 62
+          Height = 18
+          Caption = 'lblLength'
+        end
+        object edLength: TEdit
+          Left = 75
+          Top = 0
+          Width = 214
+          Height = 26
+          TabOrder = 0
+        end
       end
     end
     object jvrltEndPoint: TJvRollOut
@@ -577,6 +606,7 @@ inherited frmGridValue: TfrmGridValue
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -599,6 +629,7 @@ inherited frmGridValue: TfrmGridValue
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -621,8 +652,10 @@ inherited frmGridValue: TfrmGridValue
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
+        WordWrapRowCaptions = False
       end
     end
   end

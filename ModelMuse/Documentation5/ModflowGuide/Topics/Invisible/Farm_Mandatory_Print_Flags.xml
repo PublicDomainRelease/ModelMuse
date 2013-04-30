@@ -33,7 +33,7 @@
           <list id="5" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">&lt; 0 A cell-by-cell 2D-array of farm net recharge flow rates is printed to list file for time steps, for which in Output Control “Save Budget” is specified (using words) or ICBCFL is not zero (using numeric codes)</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">= 0 farm net recharge flow rates not written</text></li>
-            <li styleclass="Normal"><text styleclass="Normal" translate="true">= 1 A cell-by-cell 2D-array of farm net recharge flow rates is saved on ASCII file “FNRCH_ARRAY OUT” for all time steps</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">= 1 A cell-by-cell 2D-array of farm net recharge flow rates is saved on ASCII file “FNRCH_ARRAY.OUT” for all time steps</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">= 2 A list (stress period, time step, total time, farm ID, cumulative farm net recharge flow rates) will be saved as ASCII file “FNRCH_LIST.OUT”</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">= 3 A list (stress period, time step, total time, farm ID, cumulative farm net recharge flow rates) will be saved as binary file “FNRCH_LIST_BIN.OUT” for all time steps</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">&gt; 3</text></li>
@@ -52,7 +52,7 @@
     <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">Farm supply and demand print flags</text></para>
+          <para styleclass="Normal"><anchor id="ISDPFL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Farm supply and demand print flags</text></para>
           <list id="6" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">= –3 A list (A) of current demand and supply flow rates will be printed to the list file at each iteration, and a list (B) of final demand and supply flow rates will be printed to the list file for each time step:</text></li>
           </list>
@@ -87,10 +87,10 @@
     <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">Farm budget print flags</text></para>
+          <para styleclass="Normal"><anchor id="IFBPFL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Farm budget print flags</text></para>
           <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">= 0 Farm budget flow rates not written</text></li>
-            <li styleclass="Normal"><text styleclass="Normal" translate="true">= 1 A compact list of Farm Budget components (flow rates [L</text><text styleclass="Normal" style="font-size:8pt; vertical-align:super;" translate="true">3</text><text styleclass="Normal" translate="true">/T] and cumulative volumes [L3] into and out of a farm) is saved on ASCII file “FB_COMPACT.OUT” for all time steps:</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">= 1 A compact list of Farm Budget components (flow rates [L</text><text styleclass="Normal" style="font-size:8pt; vertical-align:super;" translate="true">3</text><text styleclass="Normal" translate="true">/T] and cumulative volumes [L</text><text styleclass="Normal" style="font-size:8pt; vertical-align:super;" translate="true">3</text><text styleclass="Normal" translate="true">] into and out of a farm) is saved on ASCII file “FB_COMPACT.OUT” for all time steps:</text></li>
           </list>
           <para styleclass="Normal" style="margin-left:24px;"><text styleclass="Normal" translate="true">List: (PER, TSTP, TIME, FID,</text></para>
           <para styleclass="Normal" style="margin-left:24px;"><text styleclass="Normal" translate="true">Q-p-in, Q-sw-in, Q-gw-in, Q-ext-in, Q-tot-in,</text></para>

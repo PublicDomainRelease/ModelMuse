@@ -2391,6 +2391,7 @@ var
   ArcCoshFunction: TFunctionRecord;
   ArcSinFunction: TFunctionRecord;
   ArcSinhFunction: TFunctionRecord;
+  ArcTanFunction: TFunctionRecord;
   ArcTan2Function: TFunctionRecord;
   ArcTanhFunction: TFunctionRecord;
 
@@ -6246,6 +6247,13 @@ end;
 {$WARNINGS ON}
 
 {$WARNINGS OFF}
+function _Arctan(Values: array of pointer): double;
+begin
+  result := ArcTan(PDouble(Values[0])^);
+end;
+{$WARNINGS ON}
+
+{$WARNINGS OFF}
 function _Arctan2(Values: array of pointer): double;
 begin
   result := ArcTan2(PDouble(Values[0])^, PDouble(Values[1])^);
@@ -7478,6 +7486,12 @@ begin
   inherited;
 end;
 
+resourcestring
+  StrMath = 'Math|';
+  StrLogical = 'Logical|';
+  StrTrig = 'Trig|';
+  StrText = 'Text|';
+
 constructor TFunctionStringList.Create;
 begin
   inherited;
@@ -7487,7 +7501,7 @@ begin
 
   AbsFunctionI.ResultType := rdtInteger;
   AbsFunctionI.Name := 'AbsI';
-  AbsFunctionI.Prototype := 'Math|AbsI(Value)';
+  AbsFunctionI.Prototype := StrMath+'AbsI(Value)';
   SetLength(AbsFunctionI.InputDataTypes, 1);
   AbsFunctionI.InputDataTypes[0] := rdtInteger;
   AbsFunctionI.OptionalArguments := 0;
@@ -7497,7 +7511,7 @@ begin
 
   AbsFunctionR.ResultType := rdtDouble;
   AbsFunctionR.Name := 'AbsR';
-  AbsFunctionR.Prototype := 'Math|AbsR(Value)';
+  AbsFunctionR.Prototype := StrMath+'AbsR(Value)';
   SetLength(AbsFunctionR.InputDataTypes, 1);
   AbsFunctionR.InputDataTypes[0] := rdtDouble;
   AbsFunctionR.OptionalArguments := 0;
@@ -7507,7 +7521,7 @@ begin
 
   ArcCosFunction.ResultType := rdtDouble;
   ArcCosFunction.Name := 'ArcCos';
-  ArcCosFunction.Prototype := 'Trig|ArcCos(Value)';
+  ArcCosFunction.Prototype := StrTrig+'ArcCos(Value)';
   SetLength(ArcCosFunction.InputDataTypes, 1);
   ArcCosFunction.InputDataTypes[0] := rdtDouble;
   ArcCosFunction.OptionalArguments := 0;
@@ -7517,7 +7531,7 @@ begin
 
   ArcCoshFunction.ResultType := rdtDouble;
   ArcCoshFunction.Name := 'ArcCosh';
-  ArcCoshFunction.Prototype := 'Trig|ArcCosh(Value)';
+  ArcCoshFunction.Prototype := StrTrig+'ArcCosh(Value)';
   SetLength(ArcCoshFunction.InputDataTypes, 1);
   ArcCoshFunction.InputDataTypes[0] := rdtDouble;
   ArcCoshFunction.OptionalArguments := 0;
@@ -7527,7 +7541,7 @@ begin
 
   ArcSinFunction.ResultType := rdtDouble;
   ArcSinFunction.Name := 'ArcSin';
-  ArcSinFunction.Prototype := 'Trig|ArcSin(Value)';
+  ArcSinFunction.Prototype := StrTrig+'ArcSin(Value)';
   SetLength(ArcSinFunction.InputDataTypes, 1);
   ArcSinFunction.InputDataTypes[0] := rdtDouble;
   ArcSinFunction.OptionalArguments := 0;
@@ -7537,7 +7551,7 @@ begin
 
   ArcSinhFunction.ResultType := rdtDouble;
   ArcSinhFunction.Name := 'ArcSinh';
-  ArcSinhFunction.Prototype := 'Trig|ArcSinh(Value)';
+  ArcSinhFunction.Prototype := StrTrig+'ArcSinh(Value)';
   SetLength(ArcSinhFunction.InputDataTypes, 1);
   ArcSinhFunction.InputDataTypes[0] := rdtDouble;
   ArcSinhFunction.OptionalArguments := 0;
@@ -7545,9 +7559,19 @@ begin
   ArcSinhFunction.RFunctionAddr := _arcsinh;
   Add(ArcSinhFunction);
 
+  ArcTanFunction.ResultType := rdtDouble;
+  ArcTanFunction.Name := 'ArcTan';
+  ArcTanFunction.Prototype := StrTrig+'ArcTan(Value)';
+  SetLength(ArcTanFunction.InputDataTypes, 1);
+  ArcTanFunction.InputDataTypes[0] := rdtDouble;
+  ArcTanFunction.OptionalArguments := 0;
+  ArcTanFunction.CanConvertToConstant := True;
+  ArcTanFunction.RFunctionAddr := _arctan;
+  Add(ArcTanFunction);
+
   ArcTan2Function.ResultType := rdtDouble;
   ArcTan2Function.Name := 'ArcTan2';
-  ArcTan2Function.Prototype := 'Trig|ArcTan2(Y, X)';
+  ArcTan2Function.Prototype := StrTrig+'ArcTan2(Y, X)';
   SetLength(ArcTan2Function.InputDataTypes, 2);
   ArcTan2Function.InputDataTypes[0] := rdtDouble;
   ArcTan2Function.InputDataTypes[1] := rdtDouble;
@@ -7558,7 +7582,7 @@ begin
 
   ArcTanhFunction.ResultType := rdtDouble;
   ArcTanhFunction.Name := 'ArcTanh';
-  ArcTanhFunction.Prototype := 'Trig|ArcTanh(Value)';
+  ArcTanhFunction.Prototype := StrTrig+'ArcTanh(Value)';
   SetLength(ArcTanhFunction.InputDataTypes, 1);
   ArcTanhFunction.InputDataTypes[0] := rdtDouble;
   ArcTanhFunction.OptionalArguments := 0;
@@ -7568,7 +7592,7 @@ begin
 
   CopyFunction.ResultType := rdtString;
   CopyFunction.Name := 'Copy';
-  CopyFunction.Prototype := 'Text|Copy(Text_Value, StartIndex, Count)';
+  CopyFunction.Prototype := StrText+'Copy(Text_Value, StartIndex, Count)';
   SetLength(CopyFunction.InputDataTypes, 3);
   CopyFunction.InputDataTypes[0] := rdtString;
   CopyFunction.InputDataTypes[1] := rdtInteger;
@@ -7580,7 +7604,7 @@ begin
 
   CosFunction.ResultType := rdtDouble;
   CosFunction.Name := 'Cos';
-  CosFunction.Prototype := 'Trig|Cos(Value)';
+  CosFunction.Prototype := StrTrig+'Cos(Value)';
   SetLength(CosFunction.InputDataTypes, 1);
   CosFunction.InputDataTypes[0] := rdtDouble;
   CosFunction.OptionalArguments := 0;
@@ -7590,7 +7614,7 @@ begin
 
   CoshFunction.ResultType := rdtDouble;
   CoshFunction.Name := 'Cosh';
-  CoshFunction.Prototype := 'Trig|Cosh(Value)';
+  CoshFunction.Prototype := StrTrig+'Cosh(Value)';
   SetLength(CoshFunction.InputDataTypes, 1);
   CoshFunction.InputDataTypes[0] := rdtDouble;
   CoshFunction.OptionalArguments := 0;
@@ -7601,7 +7625,7 @@ begin
   CaseBooleanFunction.ResultType := rdtBoolean;
   CaseBooleanFunction.Name := 'CaseB';
   CaseBooleanFunction.Prototype :=
-    'Logical|CaseB(Index, Boolean_Result1, Boolean_Result2, ...)';
+    StrLogical+'CaseB(Index, Boolean_Result1, Boolean_Result2, ...)';
   SetLength(CaseBooleanFunction.InputDataTypes, 4);
   CaseBooleanFunction.InputDataTypes[0] := rdtInteger;
   CaseBooleanFunction.InputDataTypes[1] := rdtBoolean;
@@ -7615,7 +7639,7 @@ begin
   CaseIntegerFunction.ResultType := rdtInteger;
   CaseIntegerFunction.Name := 'CaseI';
   CaseIntegerFunction.Prototype :=
-    'Logical|CaseI(Index, Integer_Result1, Integer_Result2, ...)';
+    StrLogical+'CaseI(Index, Integer_Result1, Integer_Result2, ...)';
   SetLength(CaseIntegerFunction.InputDataTypes, 4);
   CaseIntegerFunction.InputDataTypes[0] := rdtInteger;
   CaseIntegerFunction.InputDataTypes[1] := rdtInteger;
@@ -7629,7 +7653,7 @@ begin
   CaseDoubleFunction.ResultType := rdtDouble;
   CaseDoubleFunction.Name := 'CaseR';
   CaseDoubleFunction.Prototype :=
-    'Logical|CaseR(Index, Real_Result1, Real_Result2, ...)';
+    StrLogical+'CaseR(Index, Real_Result1, Real_Result2, ...)';
   SetLength(CaseDoubleFunction.InputDataTypes, 4);
   CaseDoubleFunction.InputDataTypes[0] := rdtInteger;
   CaseDoubleFunction.InputDataTypes[1] := rdtDouble;
@@ -7643,7 +7667,7 @@ begin
   CaseStringFunction.ResultType := rdtString;
   CaseStringFunction.Name := 'CaseT';
   CaseStringFunction.Prototype :=
-    'Logical|CaseT(Index, Text_Result1, Text_Result2, ...)';
+    StrLogical+'CaseT(Index, Text_Result1, Text_Result2, ...)';
   SetLength(CaseStringFunction.InputDataTypes, 4);
   CaseStringFunction.InputDataTypes[0] := rdtInteger;
   CaseStringFunction.InputDataTypes[1] := rdtString;
@@ -7659,7 +7683,7 @@ begin
   ClosestFunction.ResultType := rdtInteger;
   ClosestFunction.Name := 'Closest';
   ClosestFunction.Prototype :=
-    'Math|Closest(TestValue, Value1, Value2, ...)';
+    StrMath+'Closest(TestValue, Value1, Value2, ...)';
   SetLength(ClosestFunction.InputDataTypes, 2);
   ClosestFunction.InputDataTypes[0] := rdtDouble;
   ClosestFunction.InputDataTypes[1] := rdtDouble;
@@ -7671,7 +7695,7 @@ begin
 
   DegToRadFunction.ResultType := rdtDouble;
   DegToRadFunction.Name := 'DegToRad';
-  DegToRadFunction.Prototype := 'Trig|DegToRad(Value)';
+  DegToRadFunction.Prototype := StrTrig+'DegToRad(Value)';
   SetLength(DegToRadFunction.InputDataTypes, 1);
   DegToRadFunction.InputDataTypes[0] := rdtDouble;
   DegToRadFunction.OptionalArguments := 0;
@@ -7681,7 +7705,7 @@ begin
 
   ExpFunction.ResultType := rdtDouble;
   ExpFunction.Name := 'Exp';
-  ExpFunction.Prototype := 'Math|Exp(Value)';
+  ExpFunction.Prototype := StrMath+'Exp(Value)';
   SetLength(ExpFunction.InputDataTypes, 1);
   ExpFunction.InputDataTypes[0] := rdtDouble;
   ExpFunction.OptionalArguments := 0;
@@ -7691,7 +7715,7 @@ begin
 
   FactorialFunction.ResultType := rdtInteger;
   FactorialFunction.Name := 'FactorialI';
-  FactorialFunction.Prototype := 'Math|FactorialI(Value_Less_Than_13)';
+  FactorialFunction.Prototype := StrMath+'FactorialI(Value_Less_Than_13)';
   SetLength(FactorialFunction.InputDataTypes, 1);
   FactorialFunction.InputDataTypes[0] := rdtInteger;
   FactorialFunction.OptionalArguments := 0;
@@ -7701,7 +7725,7 @@ begin
 
   FactorialFFunction.ResultType := rdtDouble;
   FactorialFFunction.Name := 'FactorialR';
-  FactorialFFunction.Prototype := 'Math|FactorialR(Value_Less_Than_171)';
+  FactorialFFunction.Prototype := StrMath+'FactorialR(Value_Less_Than_171)';
   SetLength(FactorialFFunction.InputDataTypes, 1);
   FactorialFFunction.InputDataTypes[0] := rdtInteger;
   FactorialFFunction.OptionalArguments := 0;
@@ -7711,7 +7735,7 @@ begin
 
   FracFunction.ResultType := rdtDouble;
   FracFunction.Name := 'Frac';
-  FracFunction.Prototype := 'Math|Frac(Value)';
+  FracFunction.Prototype := StrMath+'Frac(Value)';
   SetLength(FracFunction.InputDataTypes, 1);
   FracFunction.InputDataTypes[0] := rdtDouble;
   FracFunction.OptionalArguments := 0;
@@ -7721,7 +7745,7 @@ begin
 
   FloatToStrFunction.ResultType := rdtString;
   FloatToStrFunction.Name := 'FloatToText';
-  FloatToStrFunction.Prototype := 'Text|FloatToText(Value)';
+  FloatToStrFunction.Prototype := StrText+'FloatToText(Value)';
   SetLength(FloatToStrFunction.InputDataTypes, 1);
   FloatToStrFunction.InputDataTypes[0] := rdtDouble;
   FloatToStrFunction.OptionalArguments := 0;
@@ -7734,7 +7758,7 @@ begin
   IfBooleanFunction.ResultType := rdtBoolean;
   IfBooleanFunction.Name := 'IfB';
   IfBooleanFunction.Prototype :=
-    'Logical|IfB(Boolean_Value, If_True_Boolean_Result, If_False_Boolean_Result)';
+    StrLogical+'IfB(Boolean_Value, If_True_Boolean_Result, If_False_Boolean_Result)';
   SetLength(IfBooleanFunction.InputDataTypes, 3);
   IfBooleanFunction.InputDataTypes[0] := rdtBoolean;
   IfBooleanFunction.InputDataTypes[1] := rdtBoolean;
@@ -7747,7 +7771,7 @@ begin
   IfIntegerFunction.ResultType := rdtInteger;
   IfIntegerFunction.Name := 'IfI';
   IfIntegerFunction.Prototype :=
-    'Logical|IfI(Boolean_Value, If_True_Integer_Result, If_False_Integer_Result)';
+    StrLogical+'IfI(Boolean_Value, If_True_Integer_Result, If_False_Integer_Result)';
   SetLength(IfIntegerFunction.InputDataTypes, 3);
   IfIntegerFunction.InputDataTypes[0] := rdtBoolean;
   IfIntegerFunction.InputDataTypes[1] := rdtInteger;
@@ -7760,7 +7784,7 @@ begin
   IfRealFunction.ResultType := rdtDouble;
   IfRealFunction.Name := 'IfR';
   IfRealFunction.Prototype :=
-    'Logical|IfR(Boolean_Value, If_True_Real_Result, If_False_Real_Result)';
+    StrLogical+'IfR(Boolean_Value, If_True_Real_Result, If_False_Real_Result)';
   SetLength(IfRealFunction.InputDataTypes, 3);
   IfRealFunction.InputDataTypes[0] := rdtBoolean;
   IfRealFunction.InputDataTypes[1] := rdtDouble;
@@ -7773,7 +7797,7 @@ begin
   IfStringFunction.ResultType := rdtString;
   IfStringFunction.Name := 'IfT';
   IfStringFunction.Prototype :=
-    'Logical|IfT(Boolean_Value, If_True_Text_Result, If_False_Text_Result)';
+    StrLogical+'IfT(Boolean_Value, If_True_Text_Result, If_False_Text_Result)';
   SetLength(IfStringFunction.InputDataTypes, 3);
   IfStringFunction.InputDataTypes[0] := rdtBoolean;
   IfStringFunction.InputDataTypes[1] := rdtString;
@@ -7787,7 +7811,7 @@ begin
 
   IntPowerFunction.ResultType := rdtDouble;
   IntPowerFunction.Name := 'IntPower';
-  IntPowerFunction.Prototype := 'Math|IntPower(Base, Exponent)';
+  IntPowerFunction.Prototype := StrMath+'IntPower(Base, Exponent)';
   SetLength(IntPowerFunction.InputDataTypes, 2);
   IntPowerFunction.InputDataTypes[0] := rdtDouble;
   IntPowerFunction.InputDataTypes[1] := rdtInteger;
@@ -7798,7 +7822,7 @@ begin
 
   IntToStrFunction.ResultType := rdtString;
   IntToStrFunction.Name := 'IntToText';
-  IntToStrFunction.Prototype := 'Text|IntToText(Value)';
+  IntToStrFunction.Prototype := StrText+'IntToText(Value)';
   SetLength(IntToStrFunction.InputDataTypes, 1);
   IntToStrFunction.InputDataTypes[0] := rdtInteger;
   IntToStrFunction.OptionalArguments := 0;
@@ -7810,7 +7834,7 @@ begin
 
   LengthFunction.ResultType := rdtInteger;
   LengthFunction.Name := 'Length';
-  LengthFunction.Prototype := 'Text|Length(Text_Value)';
+  LengthFunction.Prototype := StrText+'Length(Text_Value)';
   SetLength(LengthFunction.InputDataTypes, 1);
   LengthFunction.InputDataTypes[0] := rdtString;
   LengthFunction.OptionalArguments := 0;
@@ -7820,7 +7844,7 @@ begin
 
   LnFunction.ResultType := rdtDouble;
   LnFunction.Name := 'ln';
-  LnFunction.Prototype := 'Math|ln(Value)';
+  LnFunction.Prototype := StrMath+'ln(Value)';
   SetLength(LnFunction.InputDataTypes, 1);
   LnFunction.InputDataTypes[0] := rdtDouble;
   LnFunction.OptionalArguments := 0;
@@ -7830,7 +7854,7 @@ begin
 
   Log10Function.ResultType := rdtDouble;
   Log10Function.Name := 'log10';
-  Log10Function.Prototype := 'Math|log10(Value)';
+  Log10Function.Prototype := StrMath+'log10(Value)';
   SetLength(Log10Function.InputDataTypes, 1);
   Log10Function.InputDataTypes[0] := rdtDouble;
   Log10Function.OptionalArguments := 0;
@@ -7840,7 +7864,7 @@ begin
 
   LogNFunction.ResultType := rdtDouble;
   LogNFunction.Name := 'logN';
-  LogNFunction.Prototype := 'Math|logN(Base, Value)';
+  LogNFunction.Prototype := StrMath+'logN(Base, Value)';
   SetLength(LogNFunction.InputDataTypes, 2);
   LogNFunction.InputDataTypes[0] := rdtDouble;
   LogNFunction.InputDataTypes[1] := rdtDouble;
@@ -7851,7 +7875,7 @@ begin
 
   LowerCaseFunction.ResultType := rdtString;
   LowerCaseFunction.Name := 'LowerCase';
-  LowerCaseFunction.Prototype := 'Text|LowerCase(Text_Value)';
+  LowerCaseFunction.Prototype := StrText+'LowerCase(Text_Value)';
   SetLength(LowerCaseFunction.InputDataTypes, 1);
   LowerCaseFunction.InputDataTypes[0] := rdtString;
   LowerCaseFunction.OptionalArguments := 0;
@@ -7861,7 +7885,7 @@ begin
 
   MaxIFunction.ResultType := rdtInteger;
   MaxIFunction.Name := 'MaxI';
-  MaxIFunction.Prototype := 'Math|MaxI(Integer_Value1, Integer_Value2, ...)';
+  MaxIFunction.Prototype := StrMath+'MaxI(Integer_Value1, Integer_Value2, ...)';
   SetLength(MaxIFunction.InputDataTypes, 3);
   MaxIFunction.InputDataTypes[0] := rdtInteger;
   MaxIFunction.InputDataTypes[1] := rdtInteger;
@@ -7873,7 +7897,7 @@ begin
 
   MaxRFunction.ResultType := rdtDouble;
   MaxRFunction.Name := 'MaxR';
-  MaxRFunction.Prototype := 'Math|MaxR(Real_Value1, Real_Value2, ...)';
+  MaxRFunction.Prototype := StrMath+'MaxR(Real_Value1, Real_Value2, ...)';
   SetLength(MaxRFunction.InputDataTypes, 3);
   MaxRFunction.InputDataTypes[0] := rdtDouble;
   MaxRFunction.InputDataTypes[1] := rdtDouble;
@@ -7885,7 +7909,7 @@ begin
 
   MinIFunction.ResultType := rdtInteger;
   MinIFunction.Name := 'MinI';
-  MinIFunction.Prototype := 'Math|MinI(Integer_Value1, Integer_Value2, ...)';
+  MinIFunction.Prototype := StrMath+'MinI(Integer_Value1, Integer_Value2, ...)';
   SetLength(MinIFunction.InputDataTypes, 3);
   MinIFunction.InputDataTypes[0] := rdtInteger;
   MinIFunction.InputDataTypes[1] := rdtInteger;
@@ -7897,7 +7921,7 @@ begin
 
   MinRFunction.ResultType := rdtDouble;
   MinRFunction.Name := 'MinR';
-  MinRFunction.Prototype := 'Math|MinR(Real_Value1, Real_Value2, ...)';
+  MinRFunction.Prototype := StrMath+'MinR(Real_Value1, Real_Value2, ...)';
   SetLength(MinRFunction.InputDataTypes, 3);
   MinRFunction.InputDataTypes[0] := rdtDouble;
   MinRFunction.InputDataTypes[1] := rdtDouble;
@@ -7909,7 +7933,7 @@ begin
 
   OddFunction.ResultType := rdtBoolean;
   OddFunction.Name := 'Odd';
-  OddFunction.Prototype := 'Math|Odd(Value)';
+  OddFunction.Prototype := StrMath+'Odd(Value)';
   SetLength(OddFunction.InputDataTypes, 1);
   OddFunction.InputDataTypes[0] := rdtInteger;
   OddFunction.CanConvertToConstant := True;
@@ -7918,7 +7942,7 @@ begin
 
   PiFunction.ResultType := rdtDouble;
   PiFunction.Name := 'Pi';
-  PiFunction.Prototype := 'Math|Pi';
+  PiFunction.Prototype := StrMath+'Pi';
   SetLength(PiFunction.InputDataTypes, 0);
   PiFunction.OptionalArguments := 0;
   PiFunction.CanConvertToConstant := True;
@@ -7927,7 +7951,7 @@ begin
 
   PosFunction.ResultType := rdtInteger;
   PosFunction.Name := 'Pos';
-  PosFunction.Prototype := 'Text|Pos(SubText, Text_Value)';
+  PosFunction.Prototype := StrText+'Pos(SubText, Text_Value)';
   SetLength(PosFunction.InputDataTypes, 2);
   PosFunction.InputDataTypes[0] := rdtString;
   PosFunction.InputDataTypes[1] := rdtString;
@@ -7938,7 +7962,7 @@ begin
 
   PosExFunction.ResultType := rdtInteger;
   PosExFunction.Name := 'PosEx';
-  PosExFunction.Prototype := 'Text|PosEx(SubText, Text_Value, Offset)';
+  PosExFunction.Prototype := StrText+'PosEx(SubText, Text_Value, Offset)';
   SetLength(PosExFunction.InputDataTypes, 3);
   PosExFunction.InputDataTypes[0] := rdtString;
   PosExFunction.InputDataTypes[1] := rdtString;
@@ -7952,7 +7976,7 @@ begin
   PositionInList.ResultType := rdtInteger;
   PositionInList.Name := 'PositionInList';
   PositionInList.Prototype :=
-    'Text|PositionInList(TestTextItem, FirstTextItem, SecondTextItem, ...)';
+    StrText+'PositionInList(TestTextItem, FirstTextItem, SecondTextItem, ...)';
   SetLength(PositionInList.InputDataTypes, 2);
   PositionInList.InputDataTypes[0] := rdtString;
   PositionInList.InputDataTypes[1] := rdtString;
@@ -7965,7 +7989,7 @@ begin
 
   PowerFunction.ResultType := rdtDouble;
   PowerFunction.Name := 'Power';
-  PowerFunction.Prototype := 'Math|Power(Base, Exponent)';
+  PowerFunction.Prototype := StrMath+'Power(Base, Exponent)';
   SetLength(PowerFunction.InputDataTypes, 2);
   PowerFunction.InputDataTypes[0] := rdtDouble;
   PowerFunction.InputDataTypes[1] := rdtDouble;
@@ -7976,7 +8000,7 @@ begin
 
   RadToDegFunction.ResultType := rdtDouble;
   RadToDegFunction.Name := 'RadToDeg';
-  RadToDegFunction.Prototype := 'Trig|RadToDeg(Value)';
+  RadToDegFunction.Prototype := StrTrig+'RadToDeg(Value)';
   SetLength(RadToDegFunction.InputDataTypes, 1);
   RadToDegFunction.InputDataTypes[0] := rdtDouble;
   RadToDegFunction.OptionalArguments := 0;
@@ -7986,7 +8010,7 @@ begin
 
   RoundFunction.ResultType := rdtInteger;
   RoundFunction.Name := 'Round';
-  RoundFunction.Prototype := 'Math|Round(Value)';
+  RoundFunction.Prototype := StrMath+'Round(Value)';
   SetLength(RoundFunction.InputDataTypes, 1);
   RoundFunction.InputDataTypes[0] := rdtDouble;
   RoundFunction.OptionalArguments := 0;
@@ -7996,7 +8020,7 @@ begin
 
   SinFunction.ResultType := rdtDouble;
   SinFunction.Name := 'Sin';
-  SinFunction.Prototype := 'Trig|Sin(Value)';
+  SinFunction.Prototype := StrTrig+'Sin(Value)';
   SetLength(SinFunction.InputDataTypes, 1);
   SinFunction.InputDataTypes[0] := rdtDouble;
   SinFunction.OptionalArguments := 0;
@@ -8006,7 +8030,7 @@ begin
 
   SinhFunction.ResultType := rdtDouble;
   SinhFunction.Name := 'Sinh';
-  SinhFunction.Prototype := 'Trig|Sinh(Value)';
+  SinhFunction.Prototype := StrTrig+'Sinh(Value)';
   SetLength(SinhFunction.InputDataTypes, 1);
   SinhFunction.InputDataTypes[0] := rdtDouble;
   SinhFunction.OptionalArguments := 0;
@@ -8016,7 +8040,7 @@ begin
 
   SqrIFunction.ResultType := rdtInteger;
   SqrIFunction.Name := 'SqrI';
-  SqrIFunction.Prototype := 'Math|SqrI(Integer_Value)';
+  SqrIFunction.Prototype := StrMath+'SqrI(Integer_Value)';
   SetLength(SqrIFunction.InputDataTypes, 1);
   SqrIFunction.InputDataTypes[0] := rdtInteger;
   SqrIFunction.OptionalArguments := 0;
@@ -8026,7 +8050,7 @@ begin
 
   SqrRFunction.ResultType := rdtDouble;
   SqrRFunction.Name := 'SqrR';
-  SqrRFunction.Prototype := 'Math|SqrR(Real_Value)';
+  SqrRFunction.Prototype := StrMath+'SqrR(Real_Value)';
   SetLength(SqrRFunction.InputDataTypes, 1);
   SqrRFunction.InputDataTypes[0] := rdtDouble;
   SqrRFunction.OptionalArguments := 0;
@@ -8036,7 +8060,7 @@ begin
 
   SqrtFunction.ResultType := rdtDouble;
   SqrtFunction.Name := 'Sqrt';
-  SqrtFunction.Prototype := 'Math|Sqrt(Value)';
+  SqrtFunction.Prototype := StrMath+'Sqrt(Value)';
   SetLength(SqrtFunction.InputDataTypes, 1);
   SqrtFunction.InputDataTypes[0] := rdtDouble;
   SqrtFunction.OptionalArguments := 0;
@@ -8046,7 +8070,7 @@ begin
 
   StrToIntFunction.ResultType := rdtInteger;
   StrToIntFunction.Name := 'TextToInt';
-  StrToIntFunction.Prototype := 'Text|TextToInt(Value)';
+  StrToIntFunction.Prototype := StrText+'TextToInt(Value)';
   SetLength(StrToIntFunction.InputDataTypes, 1);
   StrToIntFunction.InputDataTypes[0] := rdtString;
   StrToIntFunction.OptionalArguments := 0;
@@ -8058,7 +8082,7 @@ begin
 
   StrToIntDefFunction.ResultType := rdtInteger;
   StrToIntDefFunction.Name := 'TextToIntDef';
-  StrToIntDefFunction.Prototype := 'Text|TextToIntDef(Value, DefaultResult)';
+  StrToIntDefFunction.Prototype := StrText+'TextToIntDef(Value, DefaultResult)';
   SetLength(StrToIntDefFunction.InputDataTypes, 2);
   StrToIntDefFunction.InputDataTypes[0] := rdtString;
   StrToIntDefFunction.InputDataTypes[1] := rdtInteger;
@@ -8071,7 +8095,7 @@ begin
 
   StrToFloatFunction.ResultType := rdtDouble;
   StrToFloatFunction.Name := 'TextToFloat';
-  StrToFloatFunction.Prototype := 'Text|TextToFloat(Text_Value)';
+  StrToFloatFunction.Prototype := StrText+'TextToFloat(Text_Value)';
   SetLength(StrToFloatFunction.InputDataTypes, 1);
   StrToFloatFunction.InputDataTypes[0] := rdtString;
   StrToFloatFunction.OptionalArguments := 0;
@@ -8084,7 +8108,7 @@ begin
   StrToFloatDefFunction.ResultType := rdtDouble;
   StrToFloatDefFunction.Name := 'TextToFloatDef';
   StrToFloatDefFunction.Prototype :=
-    'Text|TextToFloatDef(Text_Value, DefaultResult)';
+    StrText+'TextToFloatDef(Text_Value, DefaultResult)';
   SetLength(StrToFloatDefFunction.InputDataTypes, 2);
   StrToFloatDefFunction.InputDataTypes[0] := rdtString;
   StrToFloatDefFunction.InputDataTypes[1] := rdtDouble;
@@ -8097,7 +8121,7 @@ begin
 
   TanFunction.ResultType := rdtDouble;
   TanFunction.Name := 'Tan';
-  TanFunction.Prototype := 'Trig|Tan(Value)';
+  TanFunction.Prototype := StrTrig+'Tan(Value)';
   SetLength(TanFunction.InputDataTypes, 1);
   TanFunction.InputDataTypes[0] := rdtDouble;
   TanFunction.OptionalArguments := 0;
@@ -8107,7 +8131,7 @@ begin
 
   TanhFunction.ResultType := rdtDouble;
   TanhFunction.Name := 'Tanh';
-  TanhFunction.Prototype := 'Trig|Tanh(Value)';
+  TanhFunction.Prototype := StrTrig+'Tanh(Value)';
   SetLength(TanhFunction.InputDataTypes, 1);
   TanhFunction.InputDataTypes[0] := rdtDouble;
   TanhFunction.OptionalArguments := 0;
@@ -8117,7 +8141,7 @@ begin
 
   TrimMunction.ResultType := rdtString;
   TrimMunction.Name := 'Trim';
-  TrimMunction.Prototype := 'Text|Trim(Text_Value)';
+  TrimMunction.Prototype := StrText+'Trim(Text_Value)';
   SetLength(TrimMunction.InputDataTypes, 1);
   TrimMunction.InputDataTypes[0] := rdtString;
   TrimMunction.OptionalArguments := 0;
@@ -8127,7 +8151,7 @@ begin
 
   TruncFunction.ResultType := rdtInteger;
   TruncFunction.Name := 'Trunc';
-  TruncFunction.Prototype := 'Math|Trunc(Value)';
+  TruncFunction.Prototype := StrMath+'Trunc(Value)';
   SetLength(TruncFunction.InputDataTypes, 1);
   TruncFunction.InputDataTypes[0] := rdtDouble;
   TruncFunction.OptionalArguments := 0;
@@ -8137,7 +8161,7 @@ begin
 
   UpperCaseFunction.ResultType := rdtString;
   UpperCaseFunction.Name := 'UpperCase';
-  UpperCaseFunction.Prototype := 'Text|UpperCase(Text_Value)';
+  UpperCaseFunction.Prototype := StrText+'UpperCase(Text_Value)';
   SetLength(UpperCaseFunction.InputDataTypes, 1);
   UpperCaseFunction.InputDataTypes[0] := rdtString;
   UpperCaseFunction.OptionalArguments := 0;
@@ -8148,7 +8172,7 @@ begin
   InterpolateFunction.ResultType := rdtDouble;
   InterpolateFunction.Name := 'Interpolate';
   InterpolateFunction.Prototype :=
-    'Math|Interpolate(Position, Value1, Distance1, Value2, Distance2)';
+    StrMath+'Interpolate(Position, Value1, Distance1, Value2, Distance2)';
   SetLength(InterpolateFunction.InputDataTypes, 5);
   InterpolateFunction.InputDataTypes[0] := rdtDouble;
   InterpolateFunction.InputDataTypes[1] := rdtDouble;
@@ -8162,7 +8186,7 @@ begin
 
   DistanceFunction.ResultType := rdtDouble;
   DistanceFunction.Name := 'Distance';
-  DistanceFunction.Prototype := 'Math|Distance(X1, Y1, X2, Y2)';
+  DistanceFunction.Prototype := StrMath+'Distance(X1, Y1, X2, Y2)';
   SetLength(DistanceFunction.InputDataTypes, 4);
   DistanceFunction.InputDataTypes[0] := rdtDouble;
   DistanceFunction.InputDataTypes[1] := rdtDouble;
@@ -8595,7 +8619,7 @@ begin
   NotOperator.InputDataCount := 1;
   NotOperator.BFunctionAddr := _not;
   NotOperator.Name := 'not';
-  NotOperator.Prototype := 'Logical|not';
+  NotOperator.Prototype := StrLogical+'not';
   NotOperator.InputDataTypes[0] := rdtBoolean;
   NotOperator.OptionalArguments := 0;
 
@@ -8604,7 +8628,7 @@ begin
   XorOperator.InputDataCount := 2;
   XorOperator.BFunctionAddr := _Xor;
   XorOperator.Name := 'xor';
-  XorOperator.Prototype := 'Logical|xor';
+  XorOperator.Prototype := StrLogical+'xor';
   XorOperator.InputDataTypes[0] := rdtBoolean;
   XorOperator.InputDataTypes[1] := rdtBoolean;
   XorOperator.OptionalArguments := 0;
@@ -8614,7 +8638,7 @@ begin
   TimesIOperator.InputDataCount := 2;
   TimesIOperator.IFunctionAddr := _TimesI;
   TimesIOperator.Name := '*';
-  TimesIOperator.Prototype := 'Math|*';
+  TimesIOperator.Prototype := StrMath+'*';
   TimesIOperator.InputDataTypes[0] := rdtInteger;
   TimesIOperator.InputDataTypes[1] := rdtInteger;
   TimesIOperator.OptionalArguments := 0;
@@ -8624,7 +8648,7 @@ begin
   TimesROperator.InputDataCount := 2;
   TimesROperator.RFunctionAddr := _TimesR;
   TimesROperator.Name := '*';
-  TimesROperator.Prototype := 'Math|*';
+  TimesROperator.Prototype := StrMath+'*';
   TimesROperator.InputDataTypes[0] := rdtDouble;
   TimesROperator.InputDataTypes[1] := rdtDouble;
   TimesROperator.OptionalArguments := 0;
@@ -8634,7 +8658,7 @@ begin
   DivideROperator.InputDataCount := 2;
   DivideROperator.RFunctionAddr := _DivideR;
   DivideROperator.Name := '/';
-  DivideROperator.Prototype := 'Math|/';
+  DivideROperator.Prototype := StrMath+'/';
   DivideROperator.InputDataTypes[0] := rdtDouble;
   DivideROperator.InputDataTypes[1] := rdtDouble;
   DivideROperator.OptionalArguments := 0;
@@ -8644,7 +8668,7 @@ begin
   DivideIOperator.InputDataCount := 2;
   DivideIOperator.RFunctionAddr := _DivideI;
   DivideIOperator.Name := '/';
-  DivideIOperator.Prototype := 'Math|/';
+  DivideIOperator.Prototype := StrMath+'/';
   DivideIOperator.InputDataTypes[0] := rdtInteger;
   DivideIOperator.InputDataTypes[1] := rdtInteger;
   DivideIOperator.OptionalArguments := 0;
@@ -8654,7 +8678,7 @@ begin
   DivOperator.InputDataCount := 2;
   DivOperator.IFunctionAddr := _Div;
   DivOperator.Name := 'div';
-  DivOperator.Prototype := 'Math|div';
+  DivOperator.Prototype := StrMath+'div';
   DivOperator.InputDataTypes[0] := rdtInteger;
   DivOperator.InputDataTypes[1] := rdtInteger;
   DivOperator.OptionalArguments := 0;
@@ -8664,7 +8688,7 @@ begin
   ModOperator.InputDataCount := 2;
   ModOperator.IFunctionAddr := _Mod;
   ModOperator.Name := 'mod';
-  ModOperator.Prototype := 'Math|mod';
+  ModOperator.Prototype := StrMath+'mod';
   ModOperator.InputDataTypes[0] := rdtInteger;
   ModOperator.InputDataTypes[1] := rdtInteger;
   ModOperator.OptionalArguments := 0;
@@ -8674,7 +8698,7 @@ begin
   AndOperator.InputDataCount := 2;
   AndOperator.BFunctionAddr := _And;
   AndOperator.Name := 'and';
-  AndOperator.Prototype := 'Logical|and';
+  AndOperator.Prototype := StrLogical+'and';
   AndOperator.InputDataTypes[0] := rdtBoolean;
   AndOperator.InputDataTypes[1] := rdtBoolean;
   AndOperator.OptionalArguments := 0;
@@ -8684,7 +8708,7 @@ begin
   OrOperator.InputDataCount := 2;
   OrOperator.BFunctionAddr := _Or;
   OrOperator.Name := 'or';
-  OrOperator.Prototype := 'Logical|or';
+  OrOperator.Prototype := StrLogical+'or';
   OrOperator.InputDataTypes[0] := rdtBoolean;
   OrOperator.InputDataTypes[1] := rdtBoolean;
   OrOperator.OptionalArguments := 0;
@@ -8694,7 +8718,7 @@ begin
   PlusSignIOperator.InputDataCount := 1;
   PlusSignIOperator.IFunctionAddr := _PlusSignI;
   PlusSignIOperator.Name := '+';
-  PlusSignIOperator.Prototype := 'Math|+';
+  PlusSignIOperator.Prototype := StrMath+'+';
   PlusSignIOperator.InputDataTypes[0] := rdtInteger;
   PlusSignIOperator.OptionalArguments := 0;
 
@@ -8703,7 +8727,7 @@ begin
   PlusSignROperator.InputDataCount := 1;
   PlusSignROperator.RFunctionAddr := _PlusSignR;
   PlusSignROperator.Name := '+';
-  PlusSignROperator.Prototype := 'Math|+';
+  PlusSignROperator.Prototype := StrMath+'+';
   PlusSignROperator.InputDataTypes[0] := rdtDouble;
   PlusSignROperator.OptionalArguments := 0;
 
@@ -8712,7 +8736,7 @@ begin
   MinusSignIOperator.InputDataCount := 1;
   MinusSignIOperator.IFunctionAddr := _MinusSignI;
   MinusSignIOperator.Name := '-';
-  MinusSignIOperator.Prototype := 'Math|-';
+  MinusSignIOperator.Prototype := StrMath+'-';
   MinusSignIOperator.InputDataTypes[0] := rdtInteger;
   MinusSignIOperator.OptionalArguments := 0;
 
@@ -8721,7 +8745,7 @@ begin
   MinusSignROperator.InputDataCount := 1;
   MinusSignROperator.RFunctionAddr := _MinusSignR;
   MinusSignROperator.Name := '-';
-  MinusSignROperator.Prototype := 'Math|-';
+  MinusSignROperator.Prototype := StrMath+'-';
   MinusSignROperator.InputDataTypes[0] := rdtDouble;
   MinusSignROperator.OptionalArguments := 0;
 
@@ -8730,7 +8754,7 @@ begin
   PlusIOperator.InputDataCount := 2;
   PlusIOperator.IFunctionAddr := _PlusI;
   PlusIOperator.Name := '+';
-  PlusIOperator.Prototype := 'Math|+';
+  PlusIOperator.Prototype := StrMath+'+';
   PlusIOperator.InputDataTypes[0] := rdtInteger;
   PlusIOperator.InputDataTypes[1] := rdtInteger;
   PlusIOperator.OptionalArguments := 0;
@@ -8740,7 +8764,7 @@ begin
   PlusROperator.InputDataCount := 2;
   PlusROperator.RFunctionAddr := _PlusR;
   PlusROperator.Name := '+';
-  PlusROperator.Prototype := 'Math|+';
+  PlusROperator.Prototype := StrMath+'+';
   PlusROperator.InputDataTypes[0] := rdtDouble;
   PlusROperator.InputDataTypes[1] := rdtDouble;
   PlusROperator.OptionalArguments := 0;
@@ -8750,7 +8774,7 @@ begin
   PlusSOperator.InputDataCount := 2;
   PlusSOperator.SFunctionAddr := _PlusS;
   PlusSOperator.Name := '+';
-  PlusSOperator.Prototype := 'Text|+';
+  PlusSOperator.Prototype := StrText+'+';
   PlusSOperator.InputDataTypes[0] := rdtString;
   PlusSOperator.InputDataTypes[1] := rdtString;
   PlusSOperator.OptionalArguments := 0;
@@ -8760,7 +8784,7 @@ begin
   MinusIOperator.InputDataCount := 2;
   MinusIOperator.IFunctionAddr := _MinusI;
   MinusIOperator.Name := '-';
-  MinusIOperator.Prototype := 'Math|-';
+  MinusIOperator.Prototype := StrMath+'-';
   MinusIOperator.InputDataTypes[0] := rdtInteger;
   MinusIOperator.InputDataTypes[1] := rdtInteger;
   MinusIOperator.OptionalArguments := 0;
@@ -8770,7 +8794,7 @@ begin
   MinusROperator.InputDataCount := 2;
   MinusROperator.RFunctionAddr := _MinusR;
   MinusROperator.Name := '-';
-  MinusROperator.Prototype := 'Math|-';
+  MinusROperator.Prototype := StrMath+'-';
   MinusROperator.InputDataTypes[0] := rdtDouble;
   MinusROperator.InputDataTypes[1] := rdtDouble;
   MinusROperator.OptionalArguments := 0;
@@ -8780,7 +8804,7 @@ begin
   EqualIOperator.InputDataCount := 2;
   EqualIOperator.BFunctionAddr := _EqualI;
   EqualIOperator.Name := '=';
-  EqualIOperator.Prototype := 'Logical|=';
+  EqualIOperator.Prototype := StrLogical+'=';
   EqualIOperator.InputDataTypes[0] := rdtInteger;
   EqualIOperator.InputDataTypes[1] := rdtInteger;
   EqualIOperator.OptionalArguments := 0;
@@ -8790,7 +8814,7 @@ begin
   EqualROperator.InputDataCount := 2;
   EqualROperator.BFunctionAddr := _EqualR;
   EqualROperator.Name := '=';
-  EqualROperator.Prototype := 'Logical|=';
+  EqualROperator.Prototype := StrLogical+'=';
   EqualROperator.InputDataTypes[0] := rdtDouble;
   EqualROperator.InputDataTypes[1] := rdtDouble;
   EqualROperator.OptionalArguments := 0;
@@ -8800,7 +8824,7 @@ begin
   EqualSOperator.InputDataCount := 2;
   EqualSOperator.BFunctionAddr := _EqualS;
   EqualSOperator.Name := '=';
-  EqualSOperator.Prototype := 'Logical|=';
+  EqualSOperator.Prototype := StrLogical+'=';
   EqualSOperator.InputDataTypes[0] := rdtString;
   EqualSOperator.InputDataTypes[1] := rdtString;
   EqualSOperator.OptionalArguments := 0;
@@ -8810,7 +8834,7 @@ begin
   EqualBOperator.InputDataCount := 2;
   EqualBOperator.BFunctionAddr := _EqualB;
   EqualBOperator.Name := '=';
-  EqualBOperator.Prototype := 'Logical|=';
+  EqualBOperator.Prototype := StrLogical+'=';
   EqualBOperator.InputDataTypes[0] := rdtBoolean;
   EqualBOperator.InputDataTypes[1] := rdtBoolean;
   EqualBOperator.OptionalArguments := 0;
@@ -8820,7 +8844,7 @@ begin
   NotEqualIOperator.InputDataCount := 2;
   NotEqualIOperator.BFunctionAddr := _NotEqualI;
   NotEqualIOperator.Name := '<>';
-  NotEqualIOperator.Prototype := 'Logical|<>';
+  NotEqualIOperator.Prototype := StrLogical+'<>';
   NotEqualIOperator.InputDataTypes[0] := rdtInteger;
   NotEqualIOperator.InputDataTypes[1] := rdtInteger;
   NotEqualIOperator.OptionalArguments := 0;
@@ -8830,7 +8854,7 @@ begin
   NotEqualROperator.InputDataCount := 2;
   NotEqualROperator.BFunctionAddr := _NotEqualR;
   NotEqualROperator.Name := '<>';
-  NotEqualROperator.Prototype := 'Logical|<>';
+  NotEqualROperator.Prototype := StrLogical+'<>';
   NotEqualROperator.InputDataTypes[0] := rdtDouble;
   NotEqualROperator.InputDataTypes[1] := rdtDouble;
   NotEqualROperator.OptionalArguments := 0;
@@ -8840,7 +8864,7 @@ begin
   NotEqualSOperator.InputDataCount := 2;
   NotEqualSOperator.BFunctionAddr := _NotEqualS;
   NotEqualSOperator.Name := '<>';
-  NotEqualSOperator.Prototype := 'Logical|<>';
+  NotEqualSOperator.Prototype := StrLogical+'<>';
   NotEqualSOperator.InputDataTypes[0] := rdtString;
   NotEqualSOperator.InputDataTypes[1] := rdtString;
   NotEqualSOperator.OptionalArguments := 0;
@@ -8850,7 +8874,7 @@ begin
   NotEqualBOperator.InputDataCount := 2;
   NotEqualBOperator.BFunctionAddr := _NotEqualB;
   NotEqualBOperator.Name := '<>';
-  NotEqualBOperator.Prototype := 'Logical|<>';
+  NotEqualBOperator.Prototype := StrLogical+'<>';
   NotEqualBOperator.InputDataTypes[0] := rdtBoolean;
   NotEqualBOperator.InputDataTypes[1] := rdtBoolean;
   NotEqualBOperator.OptionalArguments := 0;
@@ -8860,7 +8884,7 @@ begin
   LessThanIOperator.InputDataCount := 2;
   LessThanIOperator.BFunctionAddr := _LessThanI;
   LessThanIOperator.Name := '<';
-  LessThanIOperator.Prototype := 'Logical|<';
+  LessThanIOperator.Prototype := StrLogical+'<';
   LessThanIOperator.InputDataTypes[0] := rdtInteger;
   LessThanIOperator.InputDataTypes[1] := rdtInteger;
   LessThanIOperator.OptionalArguments := 0;
@@ -8870,7 +8894,7 @@ begin
   LessThanROperator.InputDataCount := 2;
   LessThanROperator.BFunctionAddr := _LessThanR;
   LessThanROperator.Name := '<';
-  LessThanROperator.Prototype := 'Logical|<';
+  LessThanROperator.Prototype := StrLogical+'<';
   LessThanROperator.InputDataTypes[0] := rdtDouble;
   LessThanROperator.InputDataTypes[1] := rdtDouble;
   LessThanROperator.OptionalArguments := 0;
@@ -8880,7 +8904,7 @@ begin
   LessThanSOperator.InputDataCount := 2;
   LessThanSOperator.BFunctionAddr := _LessThanS;
   LessThanSOperator.Name := '<';
-  LessThanSOperator.Prototype := 'Logical|<';
+  LessThanSOperator.Prototype := StrLogical+'<';
   LessThanSOperator.InputDataTypes[0] := rdtString;
   LessThanSOperator.InputDataTypes[1] := rdtString;
   LessThanSOperator.OptionalArguments := 0;
@@ -8890,7 +8914,7 @@ begin
   LessThanBOperator.InputDataCount := 2;
   LessThanBOperator.BFunctionAddr := _LessThanB;
   LessThanBOperator.Name := '<';
-  LessThanBOperator.Prototype := 'Logical|<';
+  LessThanBOperator.Prototype := StrLogical+'<';
   LessThanBOperator.InputDataTypes[0] := rdtBoolean;
   LessThanBOperator.InputDataTypes[1] := rdtBoolean;
   LessThanBOperator.OptionalArguments := 0;
@@ -8900,7 +8924,7 @@ begin
   GreaterThanIOperator.InputDataCount := 2;
   GreaterThanIOperator.BFunctionAddr := _GreaterThanI;
   GreaterThanIOperator.Name := '>';
-  GreaterThanIOperator.Prototype := 'Logical|>';
+  GreaterThanIOperator.Prototype := StrLogical+'>';
   GreaterThanIOperator.InputDataTypes[0] := rdtInteger;
   GreaterThanIOperator.InputDataTypes[1] := rdtInteger;
   GreaterThanIOperator.OptionalArguments := 0;
@@ -8910,7 +8934,7 @@ begin
   GreaterThanROperator.InputDataCount := 2;
   GreaterThanROperator.BFunctionAddr := _GreaterThanR;
   GreaterThanROperator.Name := '>';
-  GreaterThanROperator.Prototype := 'Logical|>';
+  GreaterThanROperator.Prototype := StrLogical+'>';
   GreaterThanROperator.InputDataTypes[0] := rdtDouble;
   GreaterThanROperator.InputDataTypes[1] := rdtDouble;
   GreaterThanROperator.OptionalArguments := 0;
@@ -8920,7 +8944,7 @@ begin
   GreaterThanSOperator.InputDataCount := 2;
   GreaterThanSOperator.BFunctionAddr := _GreaterThanS;
   GreaterThanSOperator.Name := '>';
-  GreaterThanSOperator.Prototype := 'Logical|>';
+  GreaterThanSOperator.Prototype := StrLogical+'>';
   GreaterThanSOperator.InputDataTypes[0] := rdtString;
   GreaterThanSOperator.InputDataTypes[1] := rdtString;
   GreaterThanSOperator.OptionalArguments := 0;
@@ -8930,7 +8954,7 @@ begin
   GreaterThanBOperator.InputDataCount := 2;
   GreaterThanBOperator.BFunctionAddr := _GreaterThanB;
   GreaterThanBOperator.Name := '>';
-  GreaterThanBOperator.Prototype := 'Logical|>';
+  GreaterThanBOperator.Prototype := StrLogical+'>';
   GreaterThanBOperator.InputDataTypes[0] := rdtBoolean;
   GreaterThanBOperator.InputDataTypes[1] := rdtBoolean;
   GreaterThanBOperator.OptionalArguments := 0;
@@ -8940,7 +8964,7 @@ begin
   LessThanOrEqualsIOperator.InputDataCount := 2;
   LessThanOrEqualsIOperator.BFunctionAddr := _LessThanOrEqualsI;
   LessThanOrEqualsIOperator.Name := '<=';
-  LessThanOrEqualsIOperator.Prototype := 'Logical|<=';
+  LessThanOrEqualsIOperator.Prototype := StrLogical+'<=';
   LessThanOrEqualsIOperator.InputDataTypes[0] := rdtInteger;
   LessThanOrEqualsIOperator.InputDataTypes[1] := rdtInteger;
   LessThanOrEqualsIOperator.OptionalArguments := 0;
@@ -8950,7 +8974,7 @@ begin
   LessThanOrEqualsROperator.InputDataCount := 2;
   LessThanOrEqualsROperator.BFunctionAddr := _LessThanOrEqualsR;
   LessThanOrEqualsROperator.Name := '<=';
-  LessThanOrEqualsROperator.Prototype := 'Logical|<=';
+  LessThanOrEqualsROperator.Prototype := StrLogical+'<=';
   LessThanOrEqualsROperator.InputDataTypes[0] := rdtDouble;
   LessThanOrEqualsROperator.InputDataTypes[1] := rdtDouble;
   LessThanOrEqualsROperator.OptionalArguments := 0;
@@ -8960,7 +8984,7 @@ begin
   LessThanOrEqualsSOperator.InputDataCount := 2;
   LessThanOrEqualsSOperator.BFunctionAddr := _LessThanOrEqualsS;
   LessThanOrEqualsSOperator.Name := '<=';
-  LessThanOrEqualsSOperator.Prototype := 'Logical|<=';
+  LessThanOrEqualsSOperator.Prototype := StrLogical+'<=';
   LessThanOrEqualsSOperator.InputDataTypes[0] := rdtString;
   LessThanOrEqualsSOperator.InputDataTypes[1] := rdtString;
   LessThanOrEqualsSOperator.OptionalArguments := 0;
@@ -8970,7 +8994,7 @@ begin
   LessThanOrEqualsBOperator.InputDataCount := 2;
   LessThanOrEqualsBOperator.BFunctionAddr := _LessThanOrEqualsB;
   LessThanOrEqualsBOperator.Name := '<=';
-  LessThanOrEqualsBOperator.Prototype := 'Logical|<=';
+  LessThanOrEqualsBOperator.Prototype := StrLogical+'<=';
   LessThanOrEqualsBOperator.InputDataTypes[0] := rdtBoolean;
   LessThanOrEqualsBOperator.InputDataTypes[1] := rdtBoolean;
   LessThanOrEqualsBOperator.OptionalArguments := 0;
@@ -8980,7 +9004,7 @@ begin
   GreaterThanOrEqualsIOperator.InputDataCount := 2;
   GreaterThanOrEqualsIOperator.BFunctionAddr := _GreaterThanOrEqualsI;
   GreaterThanOrEqualsIOperator.Name := '>=';
-  GreaterThanOrEqualsIOperator.Prototype := 'Logical|>=';
+  GreaterThanOrEqualsIOperator.Prototype := StrLogical+'>=';
   GreaterThanOrEqualsIOperator.InputDataTypes[0] := rdtInteger;
   GreaterThanOrEqualsIOperator.InputDataTypes[1] := rdtInteger;
   GreaterThanOrEqualsIOperator.OptionalArguments := 0;
@@ -8990,7 +9014,7 @@ begin
   GreaterThanOrEqualsROperator.InputDataCount := 2;
   GreaterThanOrEqualsROperator.BFunctionAddr := _GreaterThanOrEqualsR;
   GreaterThanOrEqualsROperator.Name := '>=';
-  GreaterThanOrEqualsROperator.Prototype := 'Logical|>=';
+  GreaterThanOrEqualsROperator.Prototype := StrLogical+'>=';
   GreaterThanOrEqualsROperator.InputDataTypes[0] := rdtDouble;
   GreaterThanOrEqualsROperator.InputDataTypes[1] := rdtDouble;
   GreaterThanOrEqualsROperator.OptionalArguments := 0;
@@ -9000,7 +9024,7 @@ begin
   GreaterThanOrEqualsSOperator.InputDataCount := 2;
   GreaterThanOrEqualsSOperator.BFunctionAddr := _GreaterThanOrEqualsS;
   GreaterThanOrEqualsSOperator.Name := '>=';
-  GreaterThanOrEqualsSOperator.Prototype := 'Logical|>=';
+  GreaterThanOrEqualsSOperator.Prototype := StrLogical+'>=';
   GreaterThanOrEqualsSOperator.InputDataTypes[0] := rdtString;
   GreaterThanOrEqualsSOperator.InputDataTypes[1] := rdtString;
   GreaterThanOrEqualsSOperator.OptionalArguments := 0;
@@ -9010,7 +9034,7 @@ begin
   GreaterThanOrEqualsBOperator.InputDataCount := 2;
   GreaterThanOrEqualsBOperator.BFunctionAddr := _GreaterThanOrEqualsB;
   GreaterThanOrEqualsBOperator.Name := '>=';
-  GreaterThanOrEqualsBOperator.Prototype := 'Logical|>=';
+  GreaterThanOrEqualsBOperator.Prototype := StrLogical+'>=';
   GreaterThanOrEqualsBOperator.InputDataTypes[0] := rdtBoolean;
   GreaterThanOrEqualsBOperator.InputDataTypes[1] := rdtBoolean;
   GreaterThanOrEqualsBOperator.OptionalArguments := 0;
@@ -9022,7 +9046,7 @@ begin
   AbsIOverloadedFunction.InputDataCount := 1;
   AbsIOverloadedFunction.IFunctionAddr := _AbsI;
   AbsIOverloadedFunction.Name := 'Abs';
-  AbsIOverloadedFunction.Prototype := 'Math|Abs(Value)';
+  AbsIOverloadedFunction.Prototype := StrMath+'Abs(Value)';
   AbsIOverloadedFunction.InputDataTypes[0] := rdtInteger;
   AbsIOverloadedFunction.OptionalArguments := 0;
 
@@ -9031,7 +9055,7 @@ begin
   AbsROverloadedFunction.InputDataCount := 1;
   AbsROverloadedFunction.RFunctionAddr := _AbsR;
   AbsROverloadedFunction.Name := 'Abs';
-  AbsROverloadedFunction.Prototype := 'Math|Abs(Value)';
+  AbsROverloadedFunction.Prototype := StrMath+'Abs(Value)';
   AbsROverloadedFunction.InputDataTypes[0] := rdtDouble;
   AbsROverloadedFunction.OptionalArguments := 0;
 
@@ -9041,7 +9065,7 @@ begin
   MaxIOverloadedFunction.OptionalArguments := -1;
   MaxIOverloadedFunction.IFunctionAddr := _MaxI;
   MaxIOverloadedFunction.Name := 'Max';
-  MaxIOverloadedFunction.Prototype := 'Math|Max(Value1, Value2, ...)';
+  MaxIOverloadedFunction.Prototype := StrMath+'Max(Value1, Value2, ...)';
   MaxIOverloadedFunction.InputDataTypes[0] := rdtInteger;
   MaxIOverloadedFunction.InputDataTypes[1] := rdtInteger;
   MaxIOverloadedFunction.InputDataTypes[2] := rdtInteger;
@@ -9052,7 +9076,7 @@ begin
   MaxROverloadedFunction.OptionalArguments := -1;
   MaxROverloadedFunction.RFunctionAddr := _MaxR;
   MaxROverloadedFunction.Name := 'Max';
-  MaxROverloadedFunction.Prototype := 'Math|Max(Value1, Value2, ...)';
+  MaxROverloadedFunction.Prototype := StrMath+'Max(Value1, Value2, ...)';
   MaxROverloadedFunction.InputDataTypes[0] := rdtDouble;
   MaxROverloadedFunction.InputDataTypes[1] := rdtDouble;
   MaxROverloadedFunction.InputDataTypes[2] := rdtDouble;
@@ -9063,7 +9087,7 @@ begin
   MinIOverloadedFunction.OptionalArguments := -1;
   MinIOverloadedFunction.IFunctionAddr := _MinI;
   MinIOverloadedFunction.Name := 'Min';
-  MinIOverloadedFunction.Prototype := 'Math|Min(Value1, Value2, ...)';
+  MinIOverloadedFunction.Prototype := StrMath+'Min(Value1, Value2, ...)';
   MinIOverloadedFunction.InputDataTypes[0] := rdtInteger;
   MinIOverloadedFunction.InputDataTypes[1] := rdtInteger;
   MinIOverloadedFunction.InputDataTypes[2] := rdtInteger;
@@ -9074,7 +9098,7 @@ begin
   MinROverloadedFunction.OptionalArguments := -1;
   MinROverloadedFunction.RFunctionAddr := _MinR;
   MinROverloadedFunction.Name := 'Min';
-  MinROverloadedFunction.Prototype := 'Math|Min(Value1, Value2, ...)';
+  MinROverloadedFunction.Prototype := StrMath+'Min(Value1, Value2, ...)';
   MinROverloadedFunction.InputDataTypes[0] := rdtDouble;
   MinROverloadedFunction.InputDataTypes[1] := rdtDouble;
   MinROverloadedFunction.InputDataTypes[2] := rdtDouble;
@@ -9085,7 +9109,7 @@ begin
   SqrIOverloadedFunction.OptionalArguments := 0;
   SqrIOverloadedFunction.IFunctionAddr := _SqrI;
   SqrIOverloadedFunction.Name := 'Sqr';
-  SqrIOverloadedFunction.Prototype := 'Math|Sqr(Value)';
+  SqrIOverloadedFunction.Prototype := StrMath+'Sqr(Value)';
   SqrIOverloadedFunction.InputDataTypes[0] := rdtInteger;
 
   SqrROverloadedFunction := TFunctionClass.Create;
@@ -9094,7 +9118,7 @@ begin
   SqrROverloadedFunction.OptionalArguments := 0;
   SqrROverloadedFunction.RFunctionAddr := _SqrR;
   SqrROverloadedFunction.Name := 'Sqr';
-  SqrROverloadedFunction.Prototype := 'Math|Sqr(Value)';
+  SqrROverloadedFunction.Prototype := StrMath+'Sqr(Value)';
   SqrROverloadedFunction.InputDataTypes[0] := rdtDouble;
 
   CaseBOverloadedFunction := TFunctionClass.Create;
@@ -9104,7 +9128,7 @@ begin
   CaseBOverloadedFunction.BFunctionAddr := _CaseBoolean;
   CaseBOverloadedFunction.Name := 'Case';
   CaseBOverloadedFunction.Prototype :=
-    'Logical|Case(Index, Result1, Result2, ...)';
+    StrLogical+'Case(Index, Result1, Result2, ...)';
   CaseBOverloadedFunction.InputDataTypes[0] := rdtInteger;
   CaseBOverloadedFunction.InputDataTypes[1] := rdtBoolean;
   CaseBOverloadedFunction.InputDataTypes[2] := rdtBoolean;
@@ -9117,7 +9141,7 @@ begin
   CaseIOverloadedFunction.IFunctionAddr := _CaseInteger;
   CaseIOverloadedFunction.Name := 'Case';
   CaseIOverloadedFunction.Prototype :=
-    'Logical|Case(Index, Result1, Result2, ...)';
+    StrLogical+'Case(Index, Result1, Result2, ...)';
   CaseIOverloadedFunction.InputDataTypes[0] := rdtInteger;
   CaseIOverloadedFunction.InputDataTypes[1] := rdtInteger;
   CaseIOverloadedFunction.InputDataTypes[2] := rdtInteger;
@@ -9130,7 +9154,7 @@ begin
   CaseROverloadedFunction.RFunctionAddr := _CaseDouble;
   CaseROverloadedFunction.Name := 'Case';
   CaseROverloadedFunction.Prototype :=
-    'Logical|Case(Index, Result1, Result2, ...)';
+    StrLogical+'Case(Index, Result1, Result2, ...)';
   CaseROverloadedFunction.InputDataTypes[0] := rdtInteger;
   CaseROverloadedFunction.InputDataTypes[1] := rdtDouble;
   CaseROverloadedFunction.InputDataTypes[2] := rdtDouble;
@@ -9143,7 +9167,7 @@ begin
   CaseSOverloadedFunction.SFunctionAddr := _CaseString;
   CaseSOverloadedFunction.Name := 'Case';
   CaseSOverloadedFunction.Prototype :=
-    'Logical|Case(Index, Result1, Result2, ...)';
+    StrLogical+'Case(Index, Result1, Result2, ...)';
   CaseSOverloadedFunction.InputDataTypes[0] := rdtInteger;
   CaseSOverloadedFunction.InputDataTypes[1] := rdtString;
   CaseSOverloadedFunction.InputDataTypes[2] := rdtString;
@@ -9156,7 +9180,7 @@ begin
   IfBOverloadedFunction.BFunctionAddr := _IfBoolean;
   IfBOverloadedFunction.Name := 'If';
   IfBOverloadedFunction.Prototype :=
-    'Logical|If(Boolean_Value, If_True_Result, If_False_Result)';
+    StrLogical+'If(Boolean_Value, If_True_Result, If_False_Result)';
   IfBOverloadedFunction.InputDataTypes[0] := rdtBoolean;
   IfBOverloadedFunction.InputDataTypes[1] := rdtBoolean;
   IfBOverloadedFunction.InputDataTypes[2] := rdtBoolean;
@@ -9168,7 +9192,7 @@ begin
   IfIOverloadedFunction.IFunctionAddr := _IfInteger;
   IfIOverloadedFunction.Name := 'If';
   IfIOverloadedFunction.Prototype :=
-    'Logical|If(Boolean_Value, If_True_Result, If_False_Result)';
+    StrLogical+'If(Boolean_Value, If_True_Result, If_False_Result)';
   IfIOverloadedFunction.InputDataTypes[0] := rdtBoolean;
   IfIOverloadedFunction.InputDataTypes[1] := rdtInteger;
   IfIOverloadedFunction.InputDataTypes[2] := rdtInteger;
@@ -9180,7 +9204,7 @@ begin
   IfROverloadedFunction.RFunctionAddr := _IfDouble;
   IfROverloadedFunction.Name := 'If';
   IfROverloadedFunction.Prototype :=
-    'Logical|If(Boolean_Value, If_True_Result, If_False_Result)';
+    StrLogical+'If(Boolean_Value, If_True_Result, If_False_Result)';
   IfROverloadedFunction.InputDataTypes[0] := rdtBoolean;
   IfROverloadedFunction.InputDataTypes[1] := rdtDouble;
   IfROverloadedFunction.InputDataTypes[2] := rdtDouble;
@@ -9192,7 +9216,7 @@ begin
   IfSOverloadedFunction.SFunctionAddr := _IfString;
   IfSOverloadedFunction.Name := 'If';
   IfSOverloadedFunction.Prototype :=
-    'Logical|If(Boolean_Value, If_True_Result, If_False_Result)';
+    StrLogical+'If(Boolean_Value, If_True_Result, If_False_Result)';
   IfSOverloadedFunction.InputDataTypes[0] := rdtBoolean;
   IfSOverloadedFunction.InputDataTypes[1] := rdtString;
   IfSOverloadedFunction.InputDataTypes[2] := rdtString;
@@ -9204,7 +9228,7 @@ begin
   MultiInterpolateFunction.RFunctionAddr := _MultiInterpolate;
   MultiInterpolateFunction.Name := 'MultiInterpolate';
   MultiInterpolateFunction.Prototype :=
-    'Math|MultiInterpolate(Position, Value1, Distance1, [Value2, Distance2,] ...)';
+    StrMath+'MultiInterpolate(Position, Value1, Distance1, [Value2, Distance2,] ...)';
   MultiInterpolateFunction.InputDataTypes[0] := rdtDouble;
   MultiInterpolateFunction.InputDataTypes[1] := rdtDouble;
   MultiInterpolateFunction.InputDataTypes[2] := rdtDouble;

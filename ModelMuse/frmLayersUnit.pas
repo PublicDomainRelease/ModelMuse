@@ -12,6 +12,8 @@ uses
 
 type
   TDispersionCols = (drLayerNumber, drHorzTransDisp, drVerTransDisp, drDiffCoef);
+  TConduitLayerColumns = (clcLayerNumber, clcUsed, clcVoid, clcLowerR,
+    clcHigherR);
 
   TfrmLayers = class(TfrmCustomGoPhast)
     Splitter1: TSplitter;
@@ -62,6 +64,10 @@ type
     pnlMultiEdit: TPanel;
     rdeMultiDispersionValues: TRbwDataEntry;
     frameDiscretization: TframeDiscretization;
+    tabConduitLayers: TTabSheet;
+    rdgConduitLayers: TRbwDataGrid4;
+    pnl1: TPanel;
+    rdeConduitLayers: TRbwDataEntry;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
@@ -86,6 +92,19 @@ type
     procedure rdgDispersionMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure rdeMultiDispersionValuesChange(Sender: TObject);
+    procedure rdeConduitLayersChange(Sender: TObject);
+    procedure rdgConduitLayersColSize(Sender: TObject; ACol,
+      PriorWidth: Integer);
+    procedure rdgConduitLayersHorizontalScroll(Sender: TObject);
+    procedure rdgConduitLayersMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure rdgConduitLayersSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
+    procedure rdgConduitLayersSetEditText(Sender: TObject; ACol, ARow: Integer;
+      const Value: string);
+    procedure rdgConduitLayersStateChange(Sender: TObject; ACol, ARow: Integer;
+      const Value: TCheckBoxState);
+    procedure frameDiscretizationrdeVDiscretizationExit(Sender: TObject);
   private
     FLayerStructure: TLayerStructure;
     FSettingUnit: boolean;
@@ -113,6 +132,9 @@ type
     // Set the dispersion values
     procedure UpdateDispersionValues(ACol, ARow: Integer);
     procedure LayoutMultiDispersionControl;
+    procedure LayoutConduitLayerControl;
+    procedure AssignLayerCount(var ATab: TTabSheet; Grid: TRbwDataGrid4;
+      LayerColumn: Integer);
     { Private declarations }
   public
     { Public declarations }
@@ -169,6 +191,11 @@ resourcestring
   StrFullyConvertible = 'Fully convertible';
   StrConvertible = 'Convertible';
   StrAquiferNamesMustS = 'Aquifer names must start with a letter.';
+  StrLayer = 'Layer';
+  StrConduitLayerCL = 'Conduit Layer (CL)';
+  StrMeanVoidDiameter = 'Mean void diameter (VOID)';
+  StrLowerCriticalReyno = 'Lower critical Reynolds number (LCRITREY_L)';
+  StrUpperCriticalReyno = 'Upper critical Reynolds number (TCRITREY_L)';
 
 {$R *.dfm}
 
@@ -241,9 +268,27 @@ begin
   pcLayerGroups.ActivePageIndex := 0;
   FLayerStructure:= TLayerStructure.Create(nil);
 //  rdgSubLayerBoundaries.Cells[0,0] := StrLayerBoundary;
-  rdgDispersion.Cells[Ord(drHorzTransDisp),0] := StrHorizontalTransvers;
-  rdgDispersion.Cells[Ord(drVerTransDisp),0] := StrVerticalTransverse;
-  rdgDispersion.Cells[Ord(drDiffCoef),0] := StrDiffusionCoefficien;
+
+  rdgDispersion.BeginUpdate;
+  try
+    rdgDispersion.Cells[Ord(drHorzTransDisp),0] := StrHorizontalTransvers;
+    rdgDispersion.Cells[Ord(drVerTransDisp),0] := StrVerticalTransverse;
+    rdgDispersion.Cells[Ord(drDiffCoef),0] := StrDiffusionCoefficien;
+  finally
+    rdgDispersion.EndUpdate;
+  end;
+
+  rdgConduitLayers.BeginUpdate;
+  try
+    rdgConduitLayers.Cells[Ord(clcLayerNumber), 0] := StrLayer;
+    rdgConduitLayers.Cells[Ord(clcUsed), 0] := StrConduitLayerCL;
+    rdgConduitLayers.Cells[Ord(clcVoid), 0] := StrMeanVoidDiameter;
+    rdgConduitLayers.Cells[Ord(clcLowerR), 0] := StrLowerCriticalReyno;
+    rdgConduitLayers.Cells[Ord(clcHigherR), 0] := StrUpperCriticalReyno;
+  finally
+    rdgConduitLayers.EndUpdate;
+  end;
+
   frameSubNoDelayBeds.OnGetSelectedSubLayers := GetSubsidenceLayers;
   frameSubDelayBeds.OnGetSelectedSubLayers := GetSubsidenceLayers;
   frameSwt.OnGetSelectedSubLayers := GetSubsidenceLayers;
@@ -267,6 +312,13 @@ procedure TfrmLayers.FormResize(Sender: TObject);
 begin
   inherited;
   LayoutMultiDispersionControl;
+end;
+
+procedure TfrmLayers.frameDiscretizationrdeVDiscretizationExit(Sender: TObject);
+begin
+  inherited;
+  AssignLayerCount(tabDispersion, rdgDispersion, Ord(drLayerNumber));
+  AssignLayerCount(tabConduitLayers, rdgConduitLayers, Ord(clcLayerNumber));
 end;
 
 procedure TfrmLayers.SetUpAveragingOptions;
@@ -494,6 +546,12 @@ end;
 procedure TfrmLayers.LayoutMultiDispersionControl;
 begin
   LayoutControls(rdgDispersion, rdeMultiDispersionValues, nil, rdgDispersion.LeftCol);
+end;
+
+procedure TfrmLayers.LayoutConduitLayerControl;
+begin
+  LayoutControls(rdgConduitLayers, rdeConduitLayers, nil,
+    Max(rdgConduitLayers.LeftCol, Ord(clcVoid)));
 end;
 
 procedure TfrmLayers.GetSubsidenceLayers(Sender: TObject;
@@ -724,6 +782,18 @@ begin
   btnHelp.HelpKeyword := pcLayerGroups.ActivePage.HelpKeyword;
 end;
 
+procedure TfrmLayers.rdeConduitLayersChange(Sender: TObject);
+var
+  ColIndex: integer;
+begin
+  inherited;
+  for ColIndex := Ord(clcVoid) to Ord(clcHigherR) do
+  begin
+    ChangeSelectedCellsInColumn(rdgConduitLayers, ColIndex,
+      rdeConduitLayers.Text);
+  end;
+end;
+
 procedure TfrmLayers.rdeAnisotropyChange(Sender: TObject);
 var
   Index: Integer;
@@ -883,6 +953,115 @@ begin
   UpdateDiscretization;
 end;
 
+procedure TfrmLayers.rdgConduitLayersColSize(Sender: TObject; ACol,
+  PriorWidth: Integer);
+begin
+  inherited;
+  LayoutConduitLayerControl;
+end;
+
+procedure TfrmLayers.rdgConduitLayersHorizontalScroll(Sender: TObject);
+begin
+  inherited;
+  LayoutConduitLayerControl;
+end;
+
+procedure TfrmLayers.rdgConduitLayersMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  inherited;
+  EnableMultiEditControl(rdgConduitLayers, rdeConduitLayers,
+    [Ord(clcVoid),Ord(clcLowerR),Ord(clcHigherR)]);
+end;
+
+procedure TfrmLayers.rdgConduitLayersSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+begin
+  inherited;
+  if (ARow >= 1) and (ACol in [Ord(clcVoid),Ord(clcLowerR),Ord(clcHigherR)]) then
+  begin
+    CanSelect := rdgConduitLayers.Checked[Ord(clcUsed), ARow];
+  end;
+end;
+
+procedure TfrmLayers.rdgConduitLayersSetEditText(Sender: TObject; ACol,
+  ARow: Integer; const Value: string);
+var
+  FloatValue: double;
+  ItemIndex: integer;
+  SelectIndex: integer;
+  SelectedUnit: TLayerGroup;
+  ConduitItem: TConduitLayerItem;
+begin
+  inherited;
+  if FSelectedUnits = nil then
+  begin
+    Exit;
+  end;
+  if not FSettingUnit and (ARow > 0)
+    and (ACol in [Ord(clcVoid),Ord(clcLowerR),Ord(clcHigherR)])
+    and TryStrToFloat(Value, FloatValue) then
+  begin
+    ItemIndex := ARow-1;
+    for SelectIndex := 0 to FSelectedUnits.Count - 1 do
+    begin
+      SelectedUnit := FSelectedUnits[SelectIndex];
+      while ItemIndex >= SelectedUnit.ConduitLayers.Count do
+      begin
+        SelectedUnit.ConduitLayers.Add;
+      end;
+      ConduitItem := SelectedUnit.ConduitLayers[ItemIndex];
+      case ACol of
+        Ord(clcVoid):
+          begin
+            ConduitItem.Void := FloatValue;
+          end;
+        Ord(clcLowerR):
+          begin
+            ConduitItem.LowerCriticalReynoldsNumber := FloatValue;
+          end;
+        Ord(clcHigherR):
+          begin
+            ConduitItem.HigherCriticalReynoldsNumber := FloatValue;
+          end;
+        else
+          Assert(False);
+      end;
+    end;
+  end;
+
+end;
+
+procedure TfrmLayers.rdgConduitLayersStateChange(Sender: TObject; ACol,
+  ARow: Integer; const Value: TCheckBoxState);
+var
+  ItemIndex: integer;
+  SelectIndex: integer;
+  SelectedUnit: TLayerGroup;
+  ConduitItem: TConduitLayerItem;
+begin
+  inherited;
+  if FSelectedUnits = nil then
+  begin
+    Exit;
+  end;
+  if not FSettingUnit and (ARow > 0)
+    and (ACol = Ord(clcUsed)) then
+  begin
+    ItemIndex := ARow-1;
+    for SelectIndex := 0 to FSelectedUnits.Count - 1 do
+    begin
+      SelectedUnit := FSelectedUnits[SelectIndex];
+      while ItemIndex >= SelectedUnit.ConduitLayers.Count do
+      begin
+        SelectedUnit.ConduitLayers.Add;
+      end;
+      ConduitItem := SelectedUnit.ConduitLayers[ItemIndex];
+      ConduitItem.IsConduitLayer := Value = cbChecked;
+    end;
+  end;
+end;
+
 procedure TfrmLayers.rdgDispersionColSize(Sender: TObject; ACol,
   PriorWidth: Integer);
 begin
@@ -968,6 +1147,37 @@ begin
   else
   begin
     sbAddUnitClick(nil);
+  end;
+end;
+
+procedure TfrmLayers.AssignLayerCount(var ATab: TTabSheet; Grid: TRbwDataGrid4;
+  LayerColumn: Integer);
+var
+  SelectIndex: Integer;
+  RowCount: Integer;
+  RowIndex: Integer;
+  SelectedUnit: TLayerGroup;
+begin
+  RowCount := -1;
+  for SelectIndex := 0 to FSelectedUnits.Count - 1 do
+  begin
+    SelectedUnit := FSelectedUnits[SelectIndex];
+    if SelectedUnit.Simulated then
+    begin
+      RowCount := Max(SelectedUnit.LayerCount, RowCount);
+    end;
+  end;
+  if RowCount < 0 then
+  begin
+    ATab.Visible := False;
+    Exit;
+  end;
+  ATab.Visible := True;
+  Inc(RowCount);
+  Grid.RowCount := RowCount;
+  for RowIndex := 1 to Grid.RowCount - 1 do
+  begin
+    Grid.Cells[LayerColumn, RowIndex] := IntToStr(RowIndex);
   end;
 end;
 
@@ -1251,7 +1461,6 @@ var
   procedure AssignDispersion;
   var
     SelectIndex: Integer;
-    RowCount: Integer;
     DisplayDispersion: Boolean;
     DispersionSame: Boolean;
     FirstSimUnit: TLayerGroup;
@@ -1267,26 +1476,10 @@ var
     end;
     rdgDispersion.BeginUpdate;
     try
-      RowCount := -1;
-      for SelectIndex := 0 to FSelectedUnits.Count - 1 do
+      AssignLayerCount(tabDispersion, rdgDispersion, Ord(drLayerNumber));
+      if not tabDispersion.Visible then
       begin
-        SelectedUnit := FSelectedUnits[SelectIndex];
-        if SelectedUnit.Simulated then
-        begin
-          RowCount := Max(SelectedUnit.LayerCount, RowCount);
-        end;
-      end;
-      if RowCount < 0 then
-      begin
-        tabDispersion.Visible := False;
         Exit;
-      end;
-      tabDispersion.Visible := True;
-      Inc(RowCount);
-      rdgDispersion.RowCount := RowCount;
-      for RowIndex := 1 to rdgDispersion.RowCount - 1 do
-      begin
-        rdgDispersion.Cells[Ord(drLayerNumber), RowIndex] := IntToStr(RowIndex)
       end;
 
       DispersionSame := True;
@@ -1394,12 +1587,96 @@ var
         begin
           for ColIndex := drHorzTransDisp to drDiffCoef do
           begin
-            rdgDispersion.Cells[Ord(drHorzTransDisp), RowIndex] := '';
+            rdgDispersion.Cells[Ord(ColIndex), RowIndex] := '';
           end;
         end;
       end;
     finally
       rdgDispersion.EndUpdate
+    end;
+  end;
+  procedure AssignConduitLayers;
+  var
+    DisplayConduitLayers: Boolean;
+    ConduitsSame: Boolean;
+    SelectedUnit: TLayerGroup;
+    FirstConduit: TConduitLayerCollection;
+    SelectIndex: Integer;
+    RowIndex: Integer;
+    ColIndex: TConduitLayerColumns;
+    AnItem: TConduitLayerItem;
+  begin
+    DisplayConduitLayers :=
+      (frmGoPhast.PhastModel.ModelSelection = msModflowCfp)
+      and frmGoPhast.PhastModel.ModflowPackages.ConduitFlowProcess.IsSelected
+      and frmGoPhast.PhastModel.ModflowPackages.ConduitFlowProcess.ConduitLayersUsed;
+    tabConduitLayers.TabVisible := DisplayConduitLayers;
+    if not DisplayConduitLayers then
+    begin
+      Exit;
+    end;
+    rdgConduitLayers.BeginUpdate;
+    try
+      AssignLayerCount(tabConduitLayers, rdgConduitLayers, Ord(clcLayerNumber));
+      if not tabConduitLayers.Visible then
+      begin
+        Exit;
+      end;
+
+      ConduitsSame := true;
+      SelectedUnit := FSelectedUnits[0];
+      FirstConduit := SelectedUnit.ConduitLayers;
+
+      for SelectIndex := 1 to FSelectedUnits.Count - 1 do
+      begin
+        SelectedUnit := FSelectedUnits[SelectIndex];
+        if not FirstConduit.IsSame(SelectedUnit.ConduitLayers) then
+        begin
+          ConduitsSame := False;
+          break;
+        end;
+      end;
+
+      if ConduitsSame then
+      begin
+        for RowIndex := 1 to rdgConduitLayers.RowCount - 1 do
+        begin
+          if (RowIndex-1) < FirstConduit.Count then
+          begin
+            AnItem := FirstConduit[RowIndex-1];
+            rdgConduitLayers.Checked[Ord(clcUsed), RowIndex] :=
+              AnItem.IsConduitLayer;
+            rdgConduitLayers.Cells[Ord(clcVoid), RowIndex] :=
+              FloatToStr(AnItem.Void);
+            rdgConduitLayers.Cells[Ord(clcLowerR), RowIndex] :=
+              FloatToStr(AnItem.LowerCriticalReynoldsNumber);
+            rdgConduitLayers.Cells[Ord(clcHigherR), RowIndex] :=
+              FloatToStr(AnItem.HigherCriticalReynoldsNumber);
+          end
+          else
+          begin
+            rdgConduitLayers.Checked[Ord(clcUsed), RowIndex] := False;
+            for ColIndex := clcVoid to clcLowerR do
+            begin
+              rdgConduitLayers.Cells[Ord(ColIndex), RowIndex] := '';
+            end;
+          end;
+        end;
+      end
+      else
+      begin
+        for RowIndex := 1 to rdgConduitLayers.RowCount - 1 do
+        begin
+          rdgConduitLayers.Checked[Ord(clcUsed), RowIndex] := False;
+          for ColIndex := clcVoid to clcLowerR do
+          begin
+            rdgConduitLayers.Cells[Ord(ColIndex), RowIndex] := '';
+          end;
+        end;
+      end;
+
+    finally
+      rdgConduitLayers.EndUpdate;
     end;
   end;
 begin
@@ -1439,6 +1716,7 @@ begin
     AssignDelayBeds;
     AssignSwtBeds;
     AssignDispersion;
+    AssignConduitLayers;
   finally
     FSettingUnit := False;
   end;

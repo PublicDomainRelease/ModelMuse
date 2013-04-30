@@ -262,8 +262,11 @@ end;
 
 procedure TfrmSpecifyContours.UpdateRowCount;
 begin
-  seRowCount.AsInteger := rdgContourData.RowCount -1;
-  NumberGrid;
+  if seRowCount <> nil then
+  begin
+    seRowCount.AsInteger := rdgContourData.RowCount -1;
+    NumberGrid;
+  end;
 end;
 
 procedure TfrmSpecifyContours.rdgContourDataEndUpdate(Sender: TObject);

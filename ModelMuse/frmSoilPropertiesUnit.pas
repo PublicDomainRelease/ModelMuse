@@ -46,6 +46,8 @@ type
       const Value: string);
     procedure frameSoilsseNumberChange(Sender: TObject);
     procedure frameSoilsGridButtonClick(Sender: TObject; ACol, ARow: Integer);
+    procedure frameSoilsGridRowMoved(Sender: TObject; FromIndex,
+      ToIndex: Integer);
   private
     FSoils: TSoilCollection;
     procedure SetGridCaptions;
@@ -273,6 +275,19 @@ begin
   comboSoilType.Enabled := ShouldEnable;
 end;
 
+procedure TfrmSoilProperties.frameSoilsGridRowMoved(Sender: TObject; FromIndex,
+  ToIndex: Integer);
+var
+  index: Integer;
+begin
+  inherited;
+  for index := 1 to frameSoils.Grid.RowCount - 1 do
+  begin
+    frameSoils.Grid.Cells[ord(scID), index] := IntToStr(index);
+
+  end;
+end;
+
 procedure TfrmSoilProperties.frameSoilsGridSelectCell(Sender: TObject; ACol,
   ARow: Integer; var CanSelect: Boolean);
 begin
@@ -385,6 +400,7 @@ var
   RowIndex: Integer;
   Grid: TRbwDataGrid4;
   ASoil: TSoilItem;
+  Index: Integer;
 begin
   Count := 0;
   Grid := frameSoils.Grid;
@@ -414,6 +430,15 @@ begin
   begin
     FSoils.Last.Free;
   end;
+
+  // Ensure that the soils are sorted consistently.
+  for Index := 0 to FSoils.Count - 1 do
+  begin
+    ASoil := FSoils[Index];
+    ASoil.StartTime := Index;
+    ASoil.EndTime := Index + 1;
+  end;
+
   frmGoPhast.UndoStack.Submit(TUndoSoils.Create(FSoils));
 end;
 
@@ -441,6 +466,10 @@ begin
   end;
   for ColIndex := 0 to frameSoils.Grid.ColCount - 1 do
   begin
+    if ColIndex in [Ord(scName)] then
+    begin
+      Continue;
+    end;
     frameSoils.Grid.Columns[ColIndex].AutoAdjustColWidths := False;
   end;
 end;

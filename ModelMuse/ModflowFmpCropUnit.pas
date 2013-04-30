@@ -5,7 +5,7 @@ interface
 uses
   ModflowBoundaryUnit, FormulaManagerUnit, Classes,
   OrderedCollectionUnit, SysUtils, GoPhastTypes, ModflowFmpFarmUnit,
-  ModflowFmpBaseClasses;
+  ModflowFmpBaseClasses, RealListUnit;
 
 type
   // FMP Data Sets 11 and 26
@@ -86,10 +86,13 @@ type
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     function BoundaryFormulaCount: integer; override;
   published
+    // FTR
     property TranspirationFraction: string read GetTranspirationFraction
       write SetTranspirationFraction;
+    // FEP
     property PrecipFraction: string read GetPrecipFraction
       write SetPrecipFraction;
+    // FEI
     property IrrigFraction: string read GetIrrigFraction write SetIrrigFraction;
   end;
 
@@ -198,12 +201,11 @@ type
     // See @link(BoundaryFormula).
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     function BoundaryFormulaCount: integer; override;
+    procedure GetPropertyObserver(Sender: TObject; List: TList); override;
   published
-    property Slope: string read GetSlope
-      write SetSlope;
-    property Intercept: string read GetPrice
-      write SetPrice;
-    property Price: string read GetIntercept write SetIntercept;
+    property Slope: string read GetSlope write SetSlope;
+    property Intercept: string read GetIntercept write SetIntercept;
+    property Price: string read GetPrice write SetPrice;
   end;
 
   TCropFunctionCollection = class(TCustomFarmCollection)
@@ -366,7 +368,7 @@ type
     procedure SetCoefficient1(const Value: string);
     procedure SetCoefficient2(const Value: string);
     procedure SetCoefficient3(const Value: string);
-    procedure SetCropName(const Value: string);
+    procedure SetCropName(Value: string);
     procedure SetIrrigated(const Value: string);
     procedure SetMaximumCutoffTemperature(const Value: string);
     procedure SetMaximumRootDepth(const Value: string);
@@ -395,10 +397,13 @@ type
     function BoundaryFormulaCount: integer; override;
     procedure InitializeFormulas;
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    procedure SetIndex(Value: Integer); override;
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Collection: TCollection); override;
     Destructor Destroy; override;
+    procedure UpdateTimes(Times: TRealList; StartTestTime, EndTestTime: double;
+      var StartRangeExtended, EndRangeExtended: boolean);
   published
     property CropName: string read FCropName write SetCropName;
     property PSI1: string read GetPSI1 write SetPSI1;
@@ -1148,6 +1153,12 @@ begin
   ResetItemObserver(PricePosition);
 end;
 
+procedure TCropFunctionItem.GetPropertyObserver(Sender: TObject; List: TList);
+begin
+  inherited;
+
+end;
+
 function TCropFunctionItem.GetSlope: string;
 begin
   Result := FFormulaObjects[SlopePosition].Formula;
@@ -1742,7 +1753,8 @@ end;
 
 function TCropItem.GetFallow: string;
 begin
-
+  Result := FFallow.Formula;
+  ResetItemObserver(FAllowPosition);
 end;
 
 function TCropItem.GetIrrigated: string;
@@ -1896,11 +1908,25 @@ end;
 function TCropItem.IsSame(AnotherItem: TOrderedItem): boolean;
 var
   OtherItem: TCropItem;
+  PropIndex: Integer;
 begin
+  OtherItem := nil;
   result := (AnotherItem is TCropItem) and inherited IsSame(AnotherItem);
   if result then
   begin
     OtherItem := TCropItem(AnotherItem);
+    for PropIndex := 0 to BoundaryFormulaCount - 1 do
+    begin
+      Result := BoundaryFormula[PropIndex] = OtherItem.BoundaryFormula[PropIndex];
+      if not result then
+      begin
+        break;
+      end;
+    end;
+  end;
+  if result then
+  begin
+//    OtherItem := TCropItem(AnotherItem);
     result := (CropName = OtherItem.CropName)
       and FmpRootDepthCollection.IsSame(OtherItem.FmpRootDepthCollection)
       and EvapFractionsCollection.IsSame(OtherItem.EvapFractionsCollection)
@@ -2071,7 +2097,7 @@ begin
   FCropFunctionCollection.Assign(Value);
 end;
 
-procedure TCropItem.SetCropName(const Value: string);
+procedure TCropItem.SetCropName(Value: string);
 var
   ChangeGlobals: TDefineGlobalObject;
   FarmList: TFarmList;
@@ -2080,6 +2106,11 @@ var
   CropEffIndex: Integer;
   AFarmEff: TFarmEfficienciesItem;
 begin
+  if (FCropName <> Value) and (Model <> nil)
+    and not (csReading in Model.ComponentState) then
+  begin
+    Value := GenerateNewName(Value, nil, '_');
+  end;
   ChangeGlobals := TDefineGlobalObject.Create(Model, FCropName, Value,
     StrCropVariable);
   try
@@ -2140,13 +2171,34 @@ end;
 
 procedure TCropItem.SetFallow(const Value: string);
 begin
-
+  if FFallow.Formula <> Value then
+  begin
+    UpdateFormula(Value, FAllowPosition, FFallow);
+  end;
 end;
 
 procedure TCropItem.SetFmpRootDepthCollection(
   const Value: TFmpRootDepthCollection);
 begin
   FFmpRootDepthCollection.Assign(Value);
+end;
+
+procedure TCropItem.SetIndex(Value: Integer);
+var
+  ChangeGlobals: TDefineGlobalObject;
+begin
+  if {(Index <> Value) and} (Model <> nil) and (FCropName <> '') then
+  begin
+    ChangeGlobals := TDefineGlobalObject.Create(Model, FCropName, FCropName,
+      StrCropVariable);
+    try
+      ChangeGlobals.SetValue(Value+1);
+    finally
+      ChangeGlobals.Free;
+    end;
+  end;
+  inherited;
+
 end;
 
 procedure TCropItem.SetIrrigated(const Value: string);
@@ -2224,6 +2276,23 @@ begin
   begin
     UpdateFormula(Value, RootGrowthCoefficientPosition, FRootGrowthCoefficient);
   end;
+end;
+
+procedure TCropItem.UpdateTimes(Times: TRealList; StartTestTime,
+  EndTestTime: double; var StartRangeExtended, EndRangeExtended: boolean);
+begin
+  StartRangeExtended := False;
+  EndRangeExtended := False;
+  FmpRootDepthCollection.UpdateTimes(Times, StartTestTime, EndTestTime,
+    StartRangeExtended, EndRangeExtended);
+  EvapFractionsCollection.UpdateTimes(Times, StartTestTime, EndTestTime,
+    StartRangeExtended, EndRangeExtended);
+  LossesCollection.UpdateTimes(Times, StartTestTime, EndTestTime,
+    StartRangeExtended, EndRangeExtended);
+  CropFunctionCollection.UpdateTimes(Times, StartTestTime, EndTestTime,
+    StartRangeExtended, EndRangeExtended);
+  CropWaterUseCollection.UpdateTimes(Times, StartTestTime, EndTestTime,
+    StartRangeExtended, EndRangeExtended);
 end;
 
 { TCropCollection }
@@ -2648,7 +2717,7 @@ begin
 
     CurrentItem.EvapFractionsCollection.EvaluateBoundaries;
 
-    if FarmProcess.FractionOfInefficiencyLoses = filSpecified then
+    if FarmProcess.FractionOfInefficiencyLosses = filSpecified then
     begin
       CurrentItem.LossesCollection.EvaluateBoundaries;
     end;

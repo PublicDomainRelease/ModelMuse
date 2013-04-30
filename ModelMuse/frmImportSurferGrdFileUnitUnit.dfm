@@ -5,7 +5,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
   Caption = 'Import Surfer Grid File'
   ExplicitWidth = 578
   ExplicitHeight = 406
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   inherited lblDataSet: TLabel
     Top = 124
@@ -118,6 +118,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -140,6 +141,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -162,6 +164,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -184,13 +187,15 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end>
+    WordWrapRowCaptions = False
   end
   object rgFilterMethod: TRadioGroup [13]
     Left = 346
     Top = 178
-    Width = 190
+    Width = 174
     Height = 140
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Filter method'

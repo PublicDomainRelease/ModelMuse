@@ -57,6 +57,8 @@ type
   // should be to the right or to the left of the main form.
   TDesiredPosition = (dpLeft, dpRight, dpBottomLeft, dpBottomRight);
 
+  THelpFormat = (hfUndefined, hfLocal, hfWeb);
+
   {@abstract(@name is the ancestor of all TForms in GoPhast.)
    @name handles setting the color and font. @name also tries
    to keep from appearing at a location where it can't be seen. )}
@@ -96,10 +98,6 @@ type
      A side effect is that it sets Form.Position to
      poDesigned.}
     procedure AdjustFormPosition(DesiredPosition: TDesiredPosition);
-    // @name checks that at least one of the TCheckBoxes in CheckBoxArray is
-    // checked.  If not the color of all of them is set to clRed and all
-    // have their fonts changed to bold.
-    procedure EmphasizeCheckBoxes(const CheckBoxArray: array of TCheckBox);
     // @name checks if @link(GlobalFont) is nil. If not, it sets the
     // color, font, and icon used in the form
     // to be @link(GlobalFont), @link(GlobalColor) and Application.Icon.
@@ -176,7 +174,12 @@ procedure FillVirtStrTreeWithBoundaryConditions(
   CanSelectBoundary: TCanSelectBoundary = nil;
   IncludeMnw2TimeData: Boolean = false);
 
-function ShowHelp(const Keyword: string): boolean;
+// @name checks that at least one of the TCheckBoxes in CheckBoxArray is
+// checked.  If not the color of all of them is set to clRed and all
+// have their fonts changed to bold.
+procedure EmphasizeCheckBoxes(const CheckBoxArray: array of TCheckBox);
+
+function ShowHelp(const Keyword: string; HelpFormat: THelpFormat): boolean;
 
 var
   GlobalFont: TFont = nil;
@@ -197,7 +200,7 @@ implementation
 
 uses SubscriptionUnit, GoPhastTypes, ModflowPackagesUnit,
   frmGoPhastUnit, PhastModelUnit, ModflowPackageSelectionUnit,
-  frameCustomColorUnit, JvRollOut, Messages, ShellAPI;
+  frameCustomColorUnit, JvRollOut, Messages, ShellAPI, RbwInternetUtilities;
 
 {$R *.dfm}
 
@@ -224,9 +227,13 @@ begin
 end;
 
 
-function ShowHelp(const Keyword: string): boolean;
+function ShowHelp(const Keyword: string; HelpFormat: THelpFormat): boolean;
+const
+  HelpUrl = 'http://water.usgs.gov/nrp/gwsoftware/ModelMuse/Help/index.html';
 //var
 //  AppHandle:THandle;
+var
+  Browser: string;
 begin
 {
   AppHandle:=FindWindow(Nil, 'ModelMuse Help');
@@ -264,19 +271,37 @@ begin
   end;
 }
 
-  KillApp('ModelMuse Help');
-  if Keyword = '' then
-  begin
-    Result := ShellExecute(0, 'open', 'HH', PChar(Application.HelpFile),
-      nil, SW_SHOWNORMAL) > 32;
-  end
-  else
-  begin
-    Result := ShellExecute(0, 'open', 'HH',
-      PChar(Application.HelpFile + '::/' + Keyword + '.htm'),
-      nil, SW_SHOWNORMAL) > 32;
+  case HelpFormat of
+    hfLocal:
+      begin
+        KillApp('ModelMuse Help');
+        if Keyword = '' then
+        begin
+          Result := ShellExecute(0, 'open', 'HH', PChar(Application.HelpFile),
+            nil, SW_SHOWNORMAL) > 32;
+        end
+        else
+        begin
+          Result := ShellExecute(0, 'open', 'HH',
+            PChar(Application.HelpFile + '::/' + Keyword + '.htm'),
+            nil, SW_SHOWNORMAL) > 32;
+        end;
+      end;
+    hfWeb:
+      begin
+        if Keyword = '' then
+        begin
+          result := LaunchURL(Browser, HelpUrl);
+        end
+        else
+        begin
+          result := LaunchURL(Browser, HelpUrl + '?' + LowerCase(Keyword) + '.htm');
+        end;
+      end;
+    else
+      result := False;
+      Assert(False);
   end;
-
 
 end;
 
@@ -353,7 +378,7 @@ begin
       HelpControl := HelpControl.Parent;
     end;
   end;
-  result := not ShowHelp(KeyWord);
+  result := not ShowHelp(KeyWord, frmGoPhast.HelpFormat);
 //  result := Application.HelpJump(KeyWord);
 //  result := HelpRouter.HelpJump('', KeyWord);
 end;
@@ -809,10 +834,10 @@ begin
           RowGrid.Rows[Index].ButtonFont := Font;
         end;
       end;
-      if Component is TJvRollOut then
-      begin
-        TJvRollOut(Component).ButtonFont := Font;
-      end;
+    end;
+    if Component is TJvRollOut then
+    begin
+      TJvRollOut(Component).ButtonFont := Font;
     end;
     UpdateSubComponents(Component);
   end;
@@ -1016,7 +1041,7 @@ begin
   Top := NewTop;
 end;
 
-procedure TfrmCustomGoPhast.EmphasizeCheckBoxes(
+procedure EmphasizeCheckBoxes(
   const CheckBoxArray: array of TCheckBox);
 var
   Index: integer;

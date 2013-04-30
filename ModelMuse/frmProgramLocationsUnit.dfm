@@ -2,21 +2,20 @@ inherited frmProgramLocations: TfrmProgramLocations
   HelpType = htKeyword
   HelpKeyword = 'MODFLOW_Program_Locations_Dialog_Box'
   Caption = 'MODFLOW Program Locations'
-  ClientHeight = 512
+  ClientHeight = 586
   ClientWidth = 623
-  ExplicitTop = -29
-  ExplicitWidth = 639
-  ExplicitHeight = 550
-  PixelsPerInch = 120
+  ExplicitWidth = 641
+  ExplicitHeight = 631
+  PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 471
+    Top = 545
     Width = 623
     Height = 41
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 395
+    ExplicitTop = 471
     DesignSize = (
       623
       41)
@@ -26,10 +25,8 @@ inherited frmProgramLocations: TfrmProgramLocations
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -39,10 +36,8 @@ inherited frmProgramLocations: TfrmProgramLocations
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
     end
@@ -52,10 +47,8 @@ inherited frmProgramLocations: TfrmProgramLocations
       Width = 83
       Height = 27
       Anchors = [akTop, akRight]
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
     end
   end
@@ -63,10 +56,10 @@ inherited frmProgramLocations: TfrmProgramLocations
     Left = 0
     Top = 0
     Width = 623
-    Height = 471
+    Height = 545
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 395
+    ExplicitHeight = 471
     object jvrltModflow2005: TJvRollOut
       Left = 1
       Top = 1
@@ -450,21 +443,23 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object jvrltModflowFmp: TJvRollOut
       Left = 1
-      Top = 351
+      Top = 433
       Width = 621
-      Height = 170
+      Height = 82
       Align = alTop
       Caption = 'MF2005-FMP2'
-      TabOrder = 10
+      ImageOptions.Images = ilShowHide
+      TabOrder = 11
       ExplicitLeft = 2
+      ExplicitTop = 431
       DesignSize = (
         621
-        170)
+        82)
       FAWidth = 145
-      FAHeight = 170
+      FAHeight = 82
       FCWidth = 22
       FCHeight = 22
-      object htlbl1: TJvHTLabel
+      object htlblModflowFmp: TJvHTLabel
         Left = 15
         Top = 25
         Width = 466
@@ -487,6 +482,44 @@ inherited frmProgramLocations: TfrmProgramLocations
         OnChange = fedModflowChange
       end
     end
+    object jvrltModflowCFP: TJvRollOut
+      Left = 1
+      Top = 351
+      Width = 621
+      Height = 82
+      Align = alTop
+      Caption = 'MF2005-CFP'
+      ImageOptions.Images = ilShowHide
+      TabOrder = 10
+      DesignSize = (
+        621
+        82)
+      FAWidth = 145
+      FAHeight = 82
+      FCWidth = 22
+      FCHeight = 22
+      object htlblModflowCFP: TJvHTLabel
+        Left = 15
+        Top = 25
+        Width = 253
+        Height = 19
+        Caption = 
+          '<a href="http://water.usgs.gov/ogw/cfp/cfp.htm">http://water.usg' +
+          's.gov/ogw/cfp/cfp.htm</a>'
+      end
+      object fedModflowCFP: TJvFilenameEdit
+        Left = 15
+        Top = 48
+        Width = 588
+        Height = 26
+        Filter = 
+          'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
+          '.*)|*.*'
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        OnChange = fedModflowChange
+      end
+    end
   end
   object ilShowHide: TImageList
     Height = 12
@@ -494,7 +527,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     Left = 448
     Top = 48
     Bitmap = {
-      494C0101020028005C000C000C00FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010200280068000C000C00FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000300000000C00000001002000000000000009
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

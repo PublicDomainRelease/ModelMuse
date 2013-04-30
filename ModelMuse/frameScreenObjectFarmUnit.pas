@@ -96,7 +96,7 @@ implementation
 uses
   GoPhastTypes, frmGoPhastUnit,
   ModflowTimeUnit, Generics.Collections, ScreenObjectUnit, DataSetUnit,
-  PhastModelUnit;
+  PhastModelUnit, ModflowPackagesUnit, ModflowPackageSelectionUnit;
 
 resourcestring
   StrGWBaseMaintenance = 'GW base maintenance costs / volume (GWCost1)';
@@ -110,7 +110,7 @@ resourcestring
   'ance (SWCost3)';
   StrFixedPriceOfNonr = 'Fixed price of non-routed SW / volume (SWCost4)';
   StrWaterRightsCallC = 'Water Rights Call (CALL)';
-  StrCropEfficiency = '%s efficiency';
+  StrCropEfficiency = '%s on-farm efficiency (OFE)';
 
 type
   TCropColumns = (ccStartTime, ccEndTime, ccCrop);
@@ -169,12 +169,32 @@ var
   AFarmItem: TScreenObjectEditItem;
 //  ShouldContinue: Boolean;
   FirstFarm: TFarm;
+  FarmProcess: TFarmProcess;
+  Packages: TModflowPackages;
+  SfrPackage: TSfrPackageSelection;
 {$ENDIF}
 begin
 {$IFDEF FMP}
   Changing := True;
   try
     InitializeControls;
+
+    Packages := frmGoPhast.PhastModel.ModflowPackages;
+    FarmProcess := Packages.FarmProcess;
+    tabCosts.TabVisible :=
+      (FarmProcess.DeficiencyPolicy in
+      [dpAcreageOptimization, dpAcreageOptimizationWithConservationPool])
+      and (FarmProcess.DeficiencyPolicy in
+      [dpAcreageOptimization, dpAcreageOptimizationWithConservationPool]);
+
+
+    SfrPackage := Packages.SfrPackage;
+    tabDiversionLocation.TabVisible := SfrPackage.IsSelected;
+    tabReturnFlowLocation.TabVisible := SfrPackage.IsSelected;
+
+    tabWaterRights.TabVisible :=
+      FarmProcess.SurfaceWaterAllotment = swaPriorWithCalls;
+
     FarmObjects := TScreenObjectEditCollection.Create;
     try
       FarmObjects.OwnScreenObject := True;
@@ -664,6 +684,7 @@ begin
     frameFormulaGridDiversion.InitializeControls;
     frameFormulaGridReturnFlow.InitializeControls;
 
+//    frameDelivery
     frameDelivery.InitializeControls;
 
     Grid := frameFormulaGridWaterRights.Grid;
@@ -807,18 +828,18 @@ begin
           SetWaterRights(Farm);
         end;
       end;
-      if FarmCreated or frameFormulaGridDiversion.DataChanged then
-      begin
-        frameFormulaGridDiversion.SetData(List, dtDiversion);
-      end;
-      if FarmCreated or frameFormulaGridReturnFlow.DataChanged then
-      begin
-        frameFormulaGridReturnFlow.SetData(List, dtReturnFlow);
-      end;
-      if FarmCreated or frameDelivery.DataChanged then
-      begin
-        frameDelivery.SetData(List);
-      end;
+    end;
+    if FarmCreated or frameFormulaGridDiversion.DataChanged then
+    begin
+      frameFormulaGridDiversion.SetData(List, dtDiversion);
+    end;
+    if FarmCreated or frameFormulaGridReturnFlow.DataChanged then
+    begin
+      frameFormulaGridReturnFlow.SetData(List, dtReturnFlow);
+    end;
+    if FarmCreated or frameDelivery.DataChanged then
+    begin
+      frameDelivery.SetData(List);
     end;
   end;
 {$ENDIF}

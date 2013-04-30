@@ -513,7 +513,9 @@ var
   UseNODTOT: boolean;
 begin
   MNWMAX := FWells.Count;
-  UseNODTOT := Model.ModelSelection in [msModflow, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}];
+  UseNODTOT := Model.ModelSelection in [msModflow, msModflowLGR2, msModflowNWT
+    {$IFDEF FMP}, msModflowFmp {$ENDIF}
+    , msModflowCfp];
   if UseNODTOT then
   begin
     NODTOT := CountNodes;

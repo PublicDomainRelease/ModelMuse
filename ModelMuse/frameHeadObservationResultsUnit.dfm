@@ -2,37 +2,35 @@ object frameHeadObservationResults: TframeHeadObservationResults
   Left = 0
   Top = 0
   Width = 528
-  Height = 383
+  Height = 441
   TabOrder = 0
   object pgcHeadObs: TPageControl
     Left = 0
     Top = 0
     Width = 528
-    Height = 318
-    ActivePage = tabValues
+    Height = 376
+    ActivePage = tabControls
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 342
     object tabControls: TTabSheet
       Caption = 'Controls'
-      ExplicitHeight = 311
       object lblNegativeColor: TLabel
         Left = 3
-        Top = 234
+        Top = 274
         Width = 157
         Height = 16
         Caption = 'Color for negative residuals'
       end
       object lblColorPositive: TLabel
         Left = 255
-        Top = 234
+        Top = 274
         Width = 152
         Height = 16
         Caption = 'Color for positive residuals'
       end
       object lblMaxSymbolSize: TLabel
         Left = 130
-        Top = 283
+        Top = 323
         Width = 171
         Height = 16
         Caption = 'Maximum symbol size (pixels)'
@@ -57,7 +55,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
         Left = 3
         Top = 82
         Width = 505
-        Height = 146
+        Height = 191
         Caption = 'Filters'
         TabOrder = 2
         object lblMaximumTime: TLabel
@@ -87,6 +85,20 @@ object frameHeadObservationResults: TframeHeadObservationResults
           Width = 101
           Height = 16
           Caption = 'Minimum residual'
+        end
+        object lblMinLayer: TLabel
+          Left = 3
+          Top = 138
+          Width = 84
+          Height = 16
+          Caption = 'Minimum layer'
+        end
+        object lblMaxLayer: TLabel
+          Left = 252
+          Top = 138
+          Width = 87
+          Height = 16
+          Caption = 'Maximum layer'
         end
         inline framelmtMaximumTime: TframeDisplayLimit
           Left = 3
@@ -164,10 +176,40 @@ object frameHeadObservationResults: TframeHeadObservationResults
             ExplicitHeight = 24
           end
         end
+        inline framelmtMinLayer: TframeDisplayLimit
+          Left = 3
+          Top = 160
+          Width = 243
+          Height = 35
+          HorzScrollBar.Range = 188
+          VertScrollBar.Range = 30
+          TabOrder = 4
+          TabStop = True
+          ExplicitLeft = 3
+          ExplicitTop = 160
+          inherited comboBoolLimit: TComboBox
+            ExplicitHeight = 24
+          end
+        end
+        inline framelmtMaxLayer: TframeDisplayLimit
+          Left = 252
+          Top = 160
+          Width = 243
+          Height = 35
+          HorzScrollBar.Range = 188
+          VertScrollBar.Range = 30
+          TabOrder = 5
+          TabStop = True
+          ExplicitLeft = 252
+          ExplicitTop = 160
+          inherited comboBoolLimit: TComboBox
+            ExplicitHeight = 24
+          end
+        end
       end
       object clrbtnNegative: TJvColorButton
         Left = 3
-        Top = 255
+        Top = 295
         Width = 92
         OtherCaption = '&Other...'
         Options = []
@@ -176,7 +218,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
       end
       object clrbtnPositive: TJvColorButton
         Left = 255
-        Top = 255
+        Top = 295
         Width = 92
         OtherCaption = '&Other...'
         Options = []
@@ -185,13 +227,14 @@ object frameHeadObservationResults: TframeHeadObservationResults
       end
       object spinSymbolSize: TJvSpinEdit
         Left = 3
-        Top = 280
+        Top = 320
         Width = 121
         Height = 24
         MaxValue = 2147483647.000000000000000000
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
         TabOrder = 5
+        OnChange = spinSymbolSizeChange
       end
       object cbShow: TCheckBox
         Left = 6
@@ -205,12 +248,11 @@ object frameHeadObservationResults: TframeHeadObservationResults
     object tabValues: TTabSheet
       Caption = 'Values (read only)'
       ImageIndex = 1
-      ExplicitHeight = 311
       object rdgHeadObs: TRbwDataGrid4
         Left = 0
         Top = 0
         Width = 520
-        Height = 287
+        Height = 345
         Align = alClient
         ColCount = 8
         FixedCols = 0
@@ -225,7 +267,6 @@ object frameHeadObservationResults: TframeHeadObservationResults
         SelectedRowOrColumnColor = clAqua
         UnselectableColor = clBtnFace
         ColorRangeSelection = True
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = True
@@ -247,6 +288,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -269,6 +311,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -291,6 +334,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -313,6 +357,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -335,6 +380,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -357,6 +403,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -379,6 +426,7 @@ object frameHeadObservationResults: TframeHeadObservationResults
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end
           item
@@ -401,20 +449,52 @@ object frameHeadObservationResults: TframeHeadObservationResults
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
-        ExplicitHeight = 311
+        WordWrapRowCaptions = False
+      end
+    end
+    object tabLegend: TTabSheet
+      Caption = 'Legend'
+      ImageIndex = 2
+      object shpMax: TShape
+        Left = 3
+        Top = 3
+        Width = 65
+        Height = 22
+        Shape = stCircle
+      end
+      object shpHalfMax: TShape
+        Left = 3
+        Top = 31
+        Width = 65
+        Height = 26
+        Shape = stCircle
+      end
+      object lblMax: TLabel
+        Left = 56
+        Top = 9
+        Width = 36
+        Height = 16
+        Caption = 'lblMax'
+      end
+      object lblHalfMax: TLabel
+        Left = 56
+        Top = 41
+        Width = 58
+        Height = 16
+        Caption = 'lblHalfMax'
       end
     end
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 318
+    Top = 376
     Width = 528
     Height = 65
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 304
     object comboModels: TComboBox
       Left = 231
       Top = 6

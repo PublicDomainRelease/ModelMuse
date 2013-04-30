@@ -409,9 +409,20 @@ type
     acFarmSoils: TAction;
     FarmSoils1: TMenuItem;
     acFarmClimate: TAction;
-    FarmClimate1: TMenuItem;
+    miFarmClimate: TMenuItem;
     miModflowFmpActive: TMenuItem;
-    miMODFLOWFMP2InputFiles1: TMenuItem;
+    miMODFLOWFMP2InputFiles: TMenuItem;
+    acFarmAllotment: TAction;
+    miFarmAllotment: TMenuItem;
+    acModflowCfpActive: TAction;
+    miModflowCfpActive: TMenuItem;
+    miUseOnlineHelp: TMenuItem;
+    miUseLocalHelp: TMenuItem;
+    acRunModflowCfp: TAction;
+    miRunModflowCfp: TMenuItem;
+    acHeadObsToShapefile: TAction;
+    miHeadObsToShapefile: TMenuItem;
+    dlgSaveHeadObsToShapefile: TSaveDialog;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -554,6 +565,12 @@ type
     procedure acFarmSoilsExecute(Sender: TObject);
     procedure acFarmClimateExecute(Sender: TObject);
     procedure acRunModflowFmpExecute(Sender: TObject);
+    procedure acFarmAllotmentExecute(Sender: TObject);
+    procedure acModflowCfpActiveExecute(Sender: TObject);
+    procedure miUseLocalHelpClick(Sender: TObject);
+    procedure miUseOnlineHelpClick(Sender: TObject);
+    procedure acRunModflowCfpExecute(Sender: TObject);
+    procedure acHeadObsToShapefileExecute(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -1469,6 +1486,7 @@ type
     // See @link(IniFile).
     FIniFile: TMemInifile;
     FChangingSelection: boolean;
+    FHelpFormat: THelpFormat;
     function ModelUpToDate(const FileName: string;
       CorrectDate: TDateTime): boolean;
     function ModflowUpToDate: boolean;
@@ -1622,7 +1640,9 @@ type
 {$IFDEF FMP}
     function MfFmpUpToDate: boolean;
 {$ENDIF}
+    function MfCfpUpToDate: boolean;
     procedure AdjustSutraBoundaries;
+    function GetHelpFormat: THelpFormat;
     { Private declarations }
   protected
     // @name is used to specify the format of the files that
@@ -1633,6 +1653,7 @@ type
     procedure OnAppIdle(Sender: TObject; var Done: Boolean);
   public
     FCubeControl: TRbwModelCube;
+    procedure EnableFarmMenuItems;
     procedure UpdateFrontCubeForSutraCrossSection(Sender: TObject);
     procedure UpdateVerticalExaggeration(VerticalExaggeration: Double);
     procedure EnableMeshRenumbering;
@@ -1733,7 +1754,7 @@ type
     property OldWidth: integer read FOldWidth;
     // @name is used to read a GoPhast file from the disk.
     // @param(FileName is the name of the file that is to be read.)
-    procedure OpenAFile(const FileName: string);
+    function OpenAFile(const FileName: string): boolean;
     // @name is the @link(TCustomModel.PhastGrid) of @link(PhastModel).
     property PhastGrid: TPhastGrid read GetPhastGrid;
     // @name sets the @link(TScreenObject.Selected) property of
@@ -1780,6 +1801,8 @@ type
     procedure UpdateModelCubeBreaks;
     procedure UpdatePermanantDialogBoxAppearances;
     procedure SutraMeshTypeChanged(Sender: TObject);
+    property HelpFormat: THelpFormat read GetHelpFormat write FHelpFormat;
+    procedure EnableExportHeadObs(Sender: TObject);
     { Public declarations }
   end;
 
@@ -1848,7 +1871,8 @@ uses
   frmRenumberingMethodUnit, frmMeshInformationUnit, frmSpecifyMeshUnit,
   CuthillMcKeeRenumbering, MeshRenumberingTypes, frmCropPropertiesUnit,
   frmSoilPropertiesUnit, frmClimateUnit, AdjustSutraBoundaryValuesUnit,
-  SutraTimeScheduleUnit;
+  SutraTimeScheduleUnit, frmFarmAllotmentUnit, frmHelpVersionUnit,
+  ModflowCfpWriterUnit;
 
 const
   StrDisplayOption = 'DisplayOption';
@@ -1857,6 +1881,7 @@ const
   StrDisplayNone = 'None';
   StrNodeFont = 'Node Font';
   StrElementFont = 'Element Font';
+  StrHelpFormat = 'Help Format';
 
 resourcestring
   StrModelMate = 'ModelMate';
@@ -1880,6 +1905,7 @@ resourcestring
   StrMODFLOWLGR = 'MODFLOW-LGR Version 1';
   StrMODFLOWLGR2 = 'MODFLOW-LGR Version 2';
   StrMODFLOWFMP = 'MODFLOW-FMP';
+  StrMODFLOWCFP = 'MODFLOW-CFP';
   StrMODPATH = 'MODPATH';
   StrZONEBUDGET = 'ZONEBUDGET';
   StrModelMuseFilesMust = 'ModelMuse files must use one of the following ext' +
@@ -1984,6 +2010,7 @@ var
   Modpath6Date: TDateTime;
   MfLgr2Date: TDateTime;
   MfFmpDate: TDateTime;
+  MfCfpDate: TDateTime;
 
 const
 //  MfNwtDate = 40933; //40907;//40819;
@@ -2248,6 +2275,12 @@ begin
   end;
 end;
 
+procedure TfrmGoPhast.acFarmAllotmentExecute(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmFarmAllotment);
+end;
+
 procedure TfrmGoPhast.acFarmClimateExecute(Sender: TObject);
 begin
   inherited;
@@ -2465,6 +2498,7 @@ var
   ShownURL: Boolean;
   LastTipDate: TDateTime;
   LastCheckInternetDate: TDateTime;
+  LocalHelpFormat: THelpFormat;
 begin
   FIniFile.Free;
   IniFName := IniFileName(Handle, Application.ExeName);
@@ -2489,6 +2523,19 @@ begin
   miShowVideoTips.Checked := FIniFile.ReadBool(StrCustomization, StrShowTips, True);
   LoadFont(FIniFile, StrCustomization, StrNodeFont, SutraMesh.NodeFont);
   LoadFont(FIniFile, StrCustomization, StrElementFont, SutraMesh.ElementFont);
+
+  LocalHelpFormat := THelpFormat(FIniFile.ReadInteger(StrCustomization,
+    StrHelpFormat, Ord(hfUndefined)));
+  if (FHelpFormat <> LocalHelpFormat) and (LocalHelpFormat <> hfUndefined) then
+  begin
+    FHelpFormat := LocalHelpFormat;
+  end;
+  case FHelpFormat of
+    hfUndefined: ;
+    hfLocal: miUseLocalHelp.Checked := True;
+    hfWeb: miUseOnlineHelp.Checked := True;
+    else Assert(False);
+  end;
 
   DisplayChoices[dcColor] := FIniFile.ReadInteger(StrDisplayOption, StrColor, 0);
   DisplayChoices[dcContour] := FIniFile.ReadInteger(StrDisplayOption, StrContour, 0);
@@ -2608,6 +2655,7 @@ begin
   FIniFile.WriteBool(StrCustomization, StrShowTips, miShowVideoTips.Checked);
   SaveFont(FIniFile, StrCustomization, StrNodeFont, SutraMesh.NodeFont);
   SaveFont(FIniFile, StrCustomization, StrElementFont, SutraMesh.ElementFont);
+  FIniFile.WriteInteger(StrCustomization, StrHelpFormat, Ord(FHelpFormat));
 
   FIniFile.WriteInteger(StrDisplayOption, StrColor, DisplayChoices[dcColor]);
   FIniFile.WriteInteger(StrDisplayOption, StrContour, DisplayChoices[dcContour]);
@@ -2767,6 +2815,7 @@ begin
   acFarmSoils.Visible := False;
   acFarmClimate.Visible := False;
   acModflowFmpActive.Visible := False;
+  acFarmAllotment.Visible := False;
 {$ENDIF}
 
 //  {$IFNDEF ModflowLGR2}
@@ -2985,8 +3034,7 @@ begin
         FileName := ExpandFileName(FileName);
         PhastModel.UpToDate := True;
         try
-          OpenAFile(FileName);
-          OpenedFile := True;
+          OpenedFile :=OpenAFile(FileName);
         except on E: Exception do
           begin
             Beep;
@@ -3397,7 +3445,9 @@ begin
   inherited;
   case ModelSelection of
     msPhast: ;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+    {$IFDEF FMP}, msModflowFmp {$ENDIF}
+    , msModflowCfp:
       begin
         with TfrmSelectResultToImport.Create(nil) do
         begin
@@ -3473,6 +3523,8 @@ begin
     msModflowFmp:
         acModflowFmpActive.Checked := True;
     {$ENDIF}
+    msModflowCfp:
+        acModflowCfpActive.Checked := True;
     msSutra22:
         acSutraActive.Checked := True;
     else
@@ -3494,7 +3546,9 @@ begin
         acGenerateGrid.Caption := '&Generate Grid...';
         acGenerateGrid.Hint := 'Generate grid'
       end;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         frameSideView.Visible := True;
         splitVertTop.Visible := True;
@@ -3550,14 +3604,20 @@ begin
   acShowFrontMesh.Visible := PhastModel.ModelSelection = msSutra22;
 
   {$IFDEF FMP}
+  // Make these actions permanently visible when FMP support is released.
   acFarmCrops.Visible := PhastModel.ModelSelection = msModflowFmp;
   acFarmSoils.Visible := PhastModel.ModelSelection = msModflowFmp;
   acFarmClimate.Visible := PhastModel.ModelSelection = msModflowFmp;
+  acFarmAllotment.Visible := PhastModel.ModelSelection = msModflowFmp;
+
   {$ELSE}
   acFarmCrops.Visible := False;
   acFarmSoils.Visible := False;
   acFarmClimate.Visible := False;
+  acFarmAllotment.Visible := False;
   {$ENDIF}
+
+  EnableFarmMenuItems;
 
   // update the cursors.
   dcMoveColCursor.RedrawCursor;
@@ -3572,8 +3632,9 @@ begin
 
   acImportModelResults.Enabled :=
     PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowLGR2,
-      msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}
-      , msSutra22];
+      msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp, msSutra22];
   acImportSutraModelResults.Enabled :=
     PhastModel.ModelSelection = msSutra22;
   miGriddedData.Enabled :=
@@ -3617,13 +3678,16 @@ begin
   {$ELSE}
   acRunModflowFmp.Enabled := False;
   acRunModflowFmp.Visible := False;
+  miMODFLOWFMP2InputFiles.Visible := False;
   {$ENDIF}
+  acRunModflowCfp.Enabled := PhastModel.ModelSelection = msModflowCfp;
 
   UpdateRunShortCut(acExportPhastInputFile);
   UpdateRunShortCut(acRunModflow);
   UpdateRunShortCut(acRunModflowLgr);
   UpdateRunShortCut(acRunModflowNWT);
   UpdateRunShortCut(acRunModflowFMP);
+  UpdateRunShortCut(acRunModflowCFP);
   UpdateRunShortCut(acRunSUTRA);
 
   miLayers.Enabled :=
@@ -3682,6 +3746,10 @@ begin
     ControlList.Add(acRunModflow);
     ControlList.Add(acRunModflowLgr);
     ControlList.Add(acRunModflowNwt);
+  {$IFDEF FMP}
+    ControlList.Add(acRunModflowFMP);
+  {$ENDIF}
+    ControlList.Add(acRunModflowCfp);
     ControlList.Add(acExportModpath);
     ControlList.Add(acExportZoneBudget);
     ControlList.Add(acRunMt3dms);
@@ -3794,7 +3862,7 @@ end;
 procedure TfrmGoPhast.ModflowReference1Click(Sender: TObject);
 begin
   inherited;
-  ShowHelp('Introduction');
+  ShowHelp('Introduction', frmGoPhast.HelpFormat);
 //  Application.HelpJump('Introduction');
 //  HelpRouter.HelpJump('', 'Introduction');
 end;
@@ -3810,6 +3878,7 @@ begin
     {$IFDEF FMP}
     msModflowFmp: result := MfFmpUpToDate;
     {$ENDIF}
+    msModflowCFP: result := MfCfpUpToDate;
     else Assert(False);
   end;
 end;
@@ -3869,6 +3938,7 @@ begin
   PhastModel.OnModelSelectionChange := ModelSelectionChange;
   PhastModel.OnScreenObjectsChanged := ScreenObjectsChanged;
   PhastModel.OnRefreshScreenObjects := UpdateDisplay;
+  PhastModel.OnHeadOBsChanged := EnableExportHeadObs;
   PhastModel.GuiSettings := TGuiSettings.Create;
   ModelSelectionChange(PhastModel);
 
@@ -4158,6 +4228,14 @@ begin
   if ModelSelection <> msModflow then
   begin
     UndoStack.Submit(TUndoModelSelectionChange.Create(msModflow));
+  end;
+end;
+
+procedure TfrmGoPhast.acModflowCfpActiveExecute(Sender: TObject);
+begin
+  if ModelSelection <> msModflowCFP then
+  begin
+    UndoStack.Submit(TUndoModelSelectionChange.Create(msModflowCFP));
   end;
 end;
 
@@ -4895,6 +4973,26 @@ begin
   acSutraLayers.Enabled := PhastModel.SutraMesh.MeshType = mt3D;
 end;
 
+procedure TfrmGoPhast.EnableFarmMenuItems;
+{$IFDEF FMP}
+var
+  FarmProcess: TFarmProcess;
+{$ENDIF}
+begin
+{$IFDEF FMP}
+  FarmProcess := PhastModel.ModflowPackages.FarmProcess;
+  acFarmClimate.Enabled := (PhastModel.ModelSelection = msModflowFmp)
+    and FarmProcess.IsSelected
+    and ((FarmProcess.RootingDepth = rdCalculated)
+    or (FarmProcess.ConsumptiveUse = cuCalculated)
+    or (FarmProcess.Precipitation = pTimeSeries));
+
+  acFarmAllotment.Enabled := (PhastModel.ModelSelection = msModflowFmp)
+    and FarmProcess.IsSelected
+    and (FarmProcess.SurfaceWaterAllotment = swaEqual);
+{$ENDIF}
+end;
+
 procedure TfrmGoPhast.NilDisplay;
 begin
   PhastModel.ThreeDDataSet := nil;
@@ -5001,7 +5099,9 @@ begin
     Exit;
   end;
   case ModelSelection of
-    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
       begin
         LocalGrid := Grid;
         acDisplayData.Enabled := (LocalGrid <> nil)
@@ -5178,7 +5278,9 @@ begin
       Assert(False);
     msPhast:
       Assert(False);
-    msModflow, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+    , msModflowCfp:
       begin
         NewFileName := ChangeFileExt(FileName, '.nam');
         NewFileName := PhastModel.FixFileName(NewFileName);
@@ -5238,7 +5340,9 @@ begin
       begin
         ExportFile(ChangeFileExt(FileName, sdPhastInput.DefaultExt), False);
       end;
-    msModflow, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+    msModflow, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+    , msModflowCfp:
       begin
         NewFileName := ChangeFileExt(FileName, '.nam');
         NewFileName := PhastModel.FixFileName(NewFileName);
@@ -5869,6 +5973,56 @@ selected font. }
   if fdFontDialog.Execute then
   begin
     UndoStack.Submit(TUndoChangeFont.Create(fdFontDialog.Font));
+  end;
+end;
+
+procedure TfrmGoPhast.acHeadObsToShapefileExecute(Sender: TObject);
+var
+  FileRoot: TFileName;
+  ModelIndex: Integer;
+  AChild: TChildModel;
+  FileName: TFileName;
+begin
+  inherited;
+  //
+  if dlgSaveHeadObsToShapefile.Execute then
+  begin
+    PhastModel.ExportHeadObservationsToShapeFile(dlgSaveHeadObsToShapefile.FileName);
+    if PhastModel.LgrUsed then
+    begin
+      FileRoot := ChangeFileExt(dlgSaveHeadObsToShapefile.FileName, '');
+      for ModelIndex := 0 to PhastModel.ChildModels.Count - 1 do
+      begin
+        AChild := PhastModel.ChildModels[ModelIndex].ChildModel;
+        FileName := FileRoot + AChild.ModelName + '.shp';
+        AChild.ExportHeadObservationsToShapeFile(FileName);
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmGoPhast.EnableExportHeadObs(Sender: TObject);
+var
+  ActionEnabled: boolean;
+  ChildIndex: integer;
+begin
+  ActionEnabled :=  PhastModel.HeadObsResults.Count > 0;
+  if not ActionEnabled and PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ActionEnabled := PhastModel.ChildModels[
+        ChildIndex].ChildModel.HeadObsResults.Count > 0;
+      if ActionEnabled then
+      begin
+        break;
+      end;
+    end;
+  end;
+  acHeadObsToShapefile.Enabled := ActionEnabled;
+  if frmDisplayData <> nil then
+  begin
+    frmDisplayData.frameHeadObservationResults.UpdateSelectedModel;
   end;
 end;
 
@@ -7176,7 +7330,7 @@ begin
       msUndefined: Assert(False);
       msPhast, msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
         {$IFDEF FMP}, msModflowFmp {$ENDIF}
-        , msSutra22:
+        , msModflowCfp, msSutra22:
         begin
           InvalidateViewOfModel;
           InvalidateAllViews;
@@ -7212,6 +7366,8 @@ begin
         acModflowFmpActive.Checked := True;
       end;
     {$ENDIF}
+    msModflowCfp:
+        acModflowCfpActive.Checked := True;
     msSutra22:
       begin
         acSutraActive.Checked := True;
@@ -7737,6 +7893,21 @@ begin
   end;
 end;
 
+function TfrmGoPhast.GetHelpFormat: THelpFormat;
+begin
+  if FHelpFormat = hfUndefined then
+  begin
+    ShowAForm(TfrmHelpVersion)
+  end;
+  Result := FHelpFormat;
+  case Result of
+    hfLocal: miUseLocalHelp.Checked := True;
+    hfWeb: miUseOnlineHelp.Checked := True;
+    else
+      Assert(False);
+  end;
+end;
+
 function TfrmGoPhast.GetModelSelection: TModelSelection;
 begin
   result := PhastModel.ModelSelection;
@@ -7797,6 +7968,19 @@ begin
   begin
     Beep;
     WarningMessage := Format(StrTheCurrentVersion, [StrMODFLOW2005]);
+    result := (MessageDlg(WarningMessage, mtWarning, [mbYes, mbNo], 0) = mrYes);
+  end;
+end;
+
+function TfrmGoPhast.MfCfpUpToDate: boolean;
+var
+  WarningMessage: string;
+begin
+  result := ModelUpToDate(PhastModel.ProgramLocations.ModflowCfpLocation, MfCfpDate);
+  if not result then
+  begin
+    Beep;
+    WarningMessage := Format(StrTheCurrentVersion, [StrMODFLOWCFP]);
     result := (MessageDlg(WarningMessage, mtWarning, [mbYes, mbNo], 0) = mrYes);
   end;
 end;
@@ -8521,7 +8705,7 @@ end;
 
 
 
-procedure TfrmGoPhast.OpenAFile(const FileName: string);
+function TfrmGoPhast.OpenAFile(const FileName: string): boolean;
 var
   TempStream: TMemoryStream;
   NewTop, NewLeft: integer;
@@ -8533,6 +8717,7 @@ var
   WarningMessage: string;
 //  AValue: Boolean;
 begin
+  Result := False;
   if not FileExists(FileName) then
   begin
     Beep;
@@ -8673,6 +8858,7 @@ begin
               TempStream.Position := 0;
               TempStream.ReadComponent(PhastModel);
             end;
+            result := True;
           finally
             TempStream.Free;
             DecompressionStream.Free;
@@ -8796,6 +8982,7 @@ begin
         msModflowLGR2: acModflowLgr2Active.Checked := True;
         msModflowNWT: acModflowNwtActive.Checked := True;
         {$IFDEF FMP}msModflowFmp: acModflowFmpActive.Checked := True; {$ENDIF}
+        msModflowCFP: acModflowCfpActive.Checked := True;
         msSutra22: acSutraActive.Checked := True;
         else Assert(False);
       end;
@@ -8811,6 +8998,8 @@ begin
       miTimeSeriestoShapefile.Enabled :=
         (PhastModel.TimeSeries.Series.Count > 0)
         or (PhastModel.TimeSeries.SeriesV6.Count > 0);
+
+      EnableExportHeadObs(nil);
 
       Application.Title := ExtractFileName(FileName) + ' ' + StrModelName;
       InvalidateImage32AllViews;
@@ -8887,6 +9076,7 @@ begin
     PhastModel.ProgramLocations.ReadFromIniFile(IniFile);
 
     EnableDeleteImage;
+    EnableFarmMenuItems;
 
     WriteIniFile;
     acRestoreDefaultViewExecute(nil);
@@ -9281,6 +9471,20 @@ begin
   finally
     AList.Free;
   end;
+end;
+
+procedure TfrmGoPhast.miUseLocalHelpClick(Sender: TObject);
+begin
+  inherited;
+  HelpFormat := hfLocal;
+  miUseLocalHelp.Checked := True;
+end;
+
+procedure TfrmGoPhast.miUseOnlineHelpClick(Sender: TObject);
+begin
+  inherited;
+  HelpFormat := hfWeb;
+  miUseOnlineHelp.Checked := True;
 end;
 
 procedure TfrmGoPhast.miSteadyFlowClick(Sender: TObject);
@@ -9790,6 +9994,7 @@ begin
           msModflowLGR2: ModflowVersionName := StrMODFLOWLGR2;
           msModflowNWT: ModflowVersionName := StrMODFLOWNWT;
           {$IFDEF FMP}msModflowFmp: ModflowVersionName := StrMODFLOWFMP; {$ENDIF}
+          msModflowCfp: ModflowVersionName := StrMODFLOWCFP;
         end;
         if MessageDlg(Format(StrSDoesNotExistAt, [ModflowVersionName]),
           mtWarning, [mbYes, mbNo], 0) <> mrYes then
@@ -10219,7 +10424,7 @@ begin
 ////    CloseWindow(HelpHandle);
 //  end;
 
-  ShowHelp('');
+  ShowHelp('', frmGoPhast.HelpFormat);
 //  HelpHandle := ShellExecute(HelpHandle, 'open', 'HH', PChar(Application.HelpFile),
 //    {nil,} nil, SW_SHOWNORMAL);
 
@@ -10574,6 +10779,12 @@ begin
   end;
   CurrentTool := RulerTool;
   SelectDefaultButton;
+end;
+
+procedure TfrmGoPhast.acRunModflowCfpExecute(Sender: TObject);
+begin
+  inherited;
+  miExportModflowClick(Sender);
 end;
 
 procedure TfrmGoPhast.acRunModflowFmpExecute(Sender: TObject);
@@ -11171,11 +11382,15 @@ end;
 procedure TfrmGoPhast.OpenMostRecentlyUsed(Sender: TObject);
 var
   Item: TRecentFileMenuItem;
+  FileName: string;
 begin
+  Item := Sender as TRecentFileMenuItem;
+  FileName := Item.FileName;
+  // Item might be destroyed during CheckModel so get the file name before
+  // calling CheckModel.
   if CheckModel then
   begin
-    Item := Sender as TRecentFileMenuItem;
-    OpenAFile(Item.FileName);
+    OpenAFile(FileName);
   end;
 end;
 
@@ -11330,14 +11545,14 @@ end;
 
 procedure TfrmGoPhast.miExamplesClick(Sender: TObject);
 begin
-  ShowHelp('Examples');
+  ShowHelp('Examples', frmGoPhast.HelpFormat);
 //  Application.HelpJump('Examples');
 //  HelpRouter.HelpJump('', 'Examples');
 end;
 
 procedure TfrmGoPhast.miHelpOnMainWindowClick(Sender: TObject);
 begin
-  ShowHelp(HelpKeyword);
+  ShowHelp(HelpKeyword, frmGoPhast.HelpFormat);
 //  HelpHandle := ShellExecute(HelpHandle, 'open', 'HH',
 //    PChar(Application.HelpFile + '::/' + HelpKeyword + '.htm'),
 //    {nil,} nil, SW_SHOWNORMAL);
@@ -11535,6 +11750,7 @@ initialization
   Modpath6Date := EncodeDate(2012,8,28);
   MfLgr2Date := EncodeDate(2013, 9, 19);
   MfFmpDate := EncodeDate(2010, 1, 14);
+  MfCfpDate := EncodeDate(2011, 2, 23);
 
   {$IFDEF Win64}
   RegisterExpectedMemoryLeak(GR32_Blend.AlphaTable);

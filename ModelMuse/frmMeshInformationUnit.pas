@@ -113,6 +113,8 @@ resourcestring
   StrDeviation = 'Deviation';
   StrNode = 'Node';
   StrAspectRatio = 'Aspect Ratio';
+  StrYouMustDefineOne = 'You must define one or more layers before some mesh' +
+  ' data for 3D meshes can be displayed.';
 
 {$R *.dfm}
 
@@ -197,6 +199,11 @@ begin
           [Mesh.ActiveNodeCount]);
         lblNumberOfElements.Caption := Format(StrNumberOfElements,
           [Mesh.ActiveElementCount]);
+        if Mesh.LayerCount = 0 then
+        begin
+          Beep;
+          MessageDlg(StrYouMustDefineOne, mtWarning, [mbOK], 0);
+        end;
       end;
     else Assert(False);
   end;
@@ -610,6 +617,10 @@ begin
         NodeNumber := -1;
         if Mesh3D.MeshType = mt3D then
         begin
+          if Mesh3D.LayerCount = 0 then
+          begin
+            Exit;
+          end;
           for LayerIndex := 0 to Mesh3D.LayerCount do
           begin
             ANode3D := Mesh3D.NodeArray[
@@ -618,7 +629,7 @@ begin
             begin
               NodeNumber := ANode3D.Number+1;
               break;
-            end;
+            end
           end;
         end
         else

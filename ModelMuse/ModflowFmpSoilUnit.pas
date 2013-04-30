@@ -43,6 +43,7 @@ type
     function BoundaryFormulaCount: integer; override;
     // @name checks whether AnotherItem is the same as the current @classname.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    procedure SetIndex(Value: Integer); override;
   public
     procedure Assign(Source: TPersistent); override;
     destructor Destroy; override;
@@ -275,11 +276,33 @@ begin
   end;
 end;
 
+procedure TSoilItem.SetIndex(Value: Integer);
+var
+  ChangeGlobals: TDefineGlobalObject;
+begin
+  if {(Index <> Value) and} (Model <> nil) and (FSoilName <> '') then
+  begin
+    ChangeGlobals := TDefineGlobalObject.Create(Model, FSoilName, FSoilName,
+      StrSoilVariable);
+    try
+      ChangeGlobals.SetValue(Value+1);
+    finally
+      ChangeGlobals.Free;
+    end;
+  end;
+  inherited;
+
+end;
+
 procedure TSoilItem.SetSoilName(Value: string);
 var
   ChangeGlobals: TDefineGlobalObject;
 begin
-  Value := ValidName(Value);
+  if (FSoilName <> Value) and (Model <> nil)
+    and not (csReading in Model.ComponentState) then
+  begin
+    Value := GenerateNewName(Value, nil, '_');
+  end;
   ChangeGlobals := TDefineGlobalObject.Create(Model, FSoilName, Value,
     StrSoilVariable);
   try

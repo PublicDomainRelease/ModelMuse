@@ -53,9 +53,10 @@ type
   TArrayWritingFormat = (awfModflow, awfMt3dms);
 
   TCustomFileWriter = class(TObject)
-  private
+  strict private
     // name is the file that is created by @classname.
     FFileStream: TFileStream;
+  private
     // See @link(Model).
     FModel: TCustomModel;
   protected
@@ -191,13 +192,13 @@ type
     // @link(FArrayWritingFormat)
     // for cases when the array is a constant.
     procedure WriteConstantU2DINT(const Comment: string;
-      const Value: integer);
+      const Value: integer); virtual;
     // @name writes value to the output file using the U2DREL format in MODFLOW
     // or the RARRAY array reader in MT3DMS depending on the value of
     // @link(FArrayWritingFormat)
     // for cases when the array is a constant.
     procedure WriteConstantU2DREL(const Comment: string;
-      const Value: double);
+      const Value: double); virtual;
     // @name writes DataArray in cross section format.
     procedure WriteCrossSectionArray(const DataArray: TDataArray;
       const ArrayName: string);
@@ -212,7 +213,7 @@ type
     // or the RARRAY array reader in MT3DMS depending on the value of
     // @link(FArrayWritingFormat).
     // @param(Comment is used to identify the array being written.)
-    Procedure WriteU2DRELHeader(const Comment: string);
+    Procedure WriteU2DRELHeader(const Comment: string); virtual;
     // @name writes a line to the name file.
     class procedure WriteToNameFile(const Ftype: string;
       const UnitNumber: integer; FileName: string;
@@ -278,7 +279,10 @@ type
       var Clusters: TOneDIntegerArray; var UniformLayers: TBooleanDynArray;
       LayerCount: Integer; Param: TModflowSteadyParameter);
     Function UcodeObsNameOK(Const AName: string): boolean;
-    procedure CheckCell(ValueCell: TValueCell; const PackageName: string); virtual;
+    procedure CheckCell(ValueCell: TValueCell;
+      const PackageName: string); virtual;
+    procedure RemoveNoDefinedError(var NoDefinedErrorRoot: string); virtual;
+    procedure ShowNoBoundaryError(const NoDefinedErrorRoot: string); virtual;
   public
     destructor Destroy; override;
   end;
@@ -368,6 +372,7 @@ type
     FUsedInstanceNames: TStringList;
     // See @link(ParamValues).
     FParamValues: TStringList;
+
     // @name is used to create a @link(TValueCellList) for a particular type
     // of @link(TValueCell).
     function CellType: TValueCellType; virtual; abstract;
@@ -467,6 +472,7 @@ type
   {@name is used as a base class for writing typical boundary condition
    files that allow for both parameter and non-parameter cells.}
   TCustomListWriter = class(TCustomParameterTransientWriter)
+  private
   protected
     // @name counts the maximum number of cells used in any stress period. This
     // value is returned in MaximumNumberOfCells.
@@ -519,6 +525,10 @@ type
     procedure WriteStressPeriods(const VariableIdentifiers, DataSetIdentifier,
       DS5, D7PNameIname, D7PName: string); override;
     // Check that the cell is in an active cell.
+
+    // @name can be overridden to write additional information for
+    // a stress period.
+    procedure WriteCustomStressPeriod(TimeIndex: Integer); virtual;
   public
     // @name is used to update the display of transient data used to color the
     // grid.
@@ -769,6 +779,7 @@ resourcestring
   StrLayerRowCol = 'Layer, Row, Col = [%0:d, %1:d, %2:d]';
   StrLayerRowColObject = 'Layer, Row, Col = [%0:d, %1:d, %2:d] defined by the object %3:s';
   StrEvaluatingS = '  Evaluating %s';
+  StrEvaluatingSData = 'Evaluating %s data.';
 
 
 const
@@ -789,7 +800,6 @@ uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmGoPhastUnit,
 resourcestring
   StrTheFollowingParame = 'The following %s parameters are being skipped ' +
   'because they have no cells associated with them.';
-  StrEvaluatingSData = 'Evaluating %s data.';
   StrValueTooLong = 'Value too long';
   StrSIsTooLong10 = '%s is too long to be displayed with 10 characters';
   StrSIsTooLong2 = '%s is too long to be displayed with 2 characters';
@@ -967,6 +977,10 @@ begin
           ModflowLocation := ProgramLocations.ModflowFmpLocation;
         end;
       {$ENDIF}
+      msModflowCFP:
+        begin
+          ModflowLocation := ProgramLocations.ModflowCfpLocation;
+        end;
       else Assert(False);
     end;
 
@@ -2048,6 +2062,10 @@ begin
     begin
       Continue;
     end;
+    if not ScreenObject.UsedModels.UsesModel(Model) then
+    begin
+      Continue;
+    end;
     Boundary := GetBoundary(ScreenObject);
     if Boundary <> nil then
     begin
@@ -2086,8 +2104,7 @@ var
 begin
   frmErrorsAndWarnings.BeginUpdate;
   try
-    NoDefinedErrorRoot := Format(StrNoDefinedBoundarie, [Package.PackageIdentifier]);
-    frmErrorsAndWarnings.RemoveErrorGroup(Model, NoDefinedErrorRoot);
+    RemoveNoDefinedError(NoDefinedErrorRoot);
     NoAssignmentErrorRoot := Format(StrNoBoundaryConditio, [Package.PackageIdentifier]);
   //  NoAssignmentErrorRoot := 'No boundary conditions assigned to the '
   //    + Package.PackageIdentifier
@@ -2143,8 +2160,7 @@ begin
     end;
     if (FParamValues.Count = 0) and (FValues.Count = 0) then
     begin
-      frmErrorsAndWarnings.AddError(Model, NoDefinedErrorRoot,
-        Format(StrTheSPackageHasB, [Package.PackageIdentifier]));
+      ShowNoBoundaryError(NoDefinedErrorRoot);
     end;
   finally
     frmErrorsAndWarnings.EndUpdate;
@@ -2381,7 +2397,7 @@ begin
           begin
             Assert(False);
           end;
-        ptRch, ptEvt, ptETS, ptCHD..ptDRT, ptSTR, ptQMAX:
+        ptRch, ptEvt, ptETS, ptCHD..ptDRT, ptSTR{$IFDEF FMP}, ptQMAX {$ENDIF}:
           begin
             PARTYP := ' ' + ParmeterTypeToStr(ParameterType);
           end
@@ -2517,7 +2533,7 @@ var
 begin
   case ParameterType of
     ptUndefined..ptLPF_VKCB: Assert(False);
-    ptRch, ptEvt, ptETS, ptCHD..ptDRT, ptQMAX: PARTYP := ' '
+    ptRch, ptEvt, ptETS, ptCHD..ptDRT{$IFDEF FMP}, ptQMAX {$ENDIF}: PARTYP := ' '
       + ParmeterTypeToStr(ParameterType);
     Else Assert(False);
   end;
@@ -2607,6 +2623,11 @@ begin
   end;
 end;
 
+procedure TCustomListWriter.WriteCustomStressPeriod(TimeIndex: Integer);
+begin
+
+end;
+
 procedure TCustomListWriter.WriteStressPeriods(const VariableIdentifiers,
   DataSetIdentifier, DS5, D7PNameIname, D7PName: string);
 var
@@ -2673,7 +2694,10 @@ begin
         // data set 5;
         WriteInteger(ITMP);
         WriteInteger(NP);
-        WriteString(DS5 + ' Stress period ' + IntToStr(TimeIndex+1));
+        if DS5 <> '' then
+        begin
+          WriteString(DS5 + ' Stress period ' + IntToStr(TimeIndex+1));
+        end;
         NewLine;
         // data set 6
         if ITMP > 0 then
@@ -2708,6 +2732,8 @@ begin
       finally
         ParametersUsed.Free;
       end;
+      WriteCustomStressPeriod(TimeIndex);
+
     end;
   finally
     ParamValues.Free;
@@ -3025,7 +3051,7 @@ begin
   try
     case ParameterType of
       ptUndefined..ptLPF_VKCB: Assert(False);
-      ptRCH, ptEVT, ptETS, ptCHD..ptDRT, ptQMAX: PARTYP := ' '
+      ptRCH, ptEVT, ptETS, ptCHD..ptDRT{$IFDEF FMP}, ptQMAX {$ENDIF}: PARTYP := ' '
         + ParmeterTypeToStr(ParameterType);
       Else Assert(False);
     end;
@@ -3182,7 +3208,7 @@ var
 begin
   case ParameterType of
     ptUndefined..ptLPF_VKCB: Assert(False);
-    ptRCH, ptEVT, ptETS, ptCHD..ptDRT, ptQMAX: PARTYP := ' '
+    ptRCH, ptEVT, ptETS, ptCHD..ptDRT{$IFDEF FMP}, ptQMAX {$ENDIF}: PARTYP := ' '
       + ParmeterTypeToStr(ParameterType);
     Else Assert(False);
   end;
@@ -3376,6 +3402,10 @@ begin
       begin
         AssignCellValues(List as TValueCellList);
       end;
+    end
+    else if List is TValueCellList then
+    begin
+      AssignCellValues(TValueCellList(List));
     end;
 
     for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
@@ -4982,5 +5012,19 @@ begin
   frmGoPhast.PhastModel.AddModelInputFile(AFileName);
 end;
 
-end.
+procedure TCustomPackageWriter.RemoveNoDefinedError
+  (var NoDefinedErrorRoot: string);
+begin
+  NoDefinedErrorRoot := Format(StrNoDefinedBoundarie,
+    [Package.PackageIdentifier]);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, NoDefinedErrorRoot);
+end;
 
+procedure TCustomPackageWriter.ShowNoBoundaryError
+  (const NoDefinedErrorRoot: string);
+begin
+  frmErrorsAndWarnings.AddError(Model, NoDefinedErrorRoot,
+    Format(StrTheSPackageHasB, [Package.PackageIdentifier]));
+end;
+
+end.

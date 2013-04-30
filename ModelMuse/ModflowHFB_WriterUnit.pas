@@ -476,7 +476,7 @@ begin
     for ScreenObjectIndex := 0 to ScreenObjectList.ScreenObjectCount - 1 do
     begin
       ScreenObject := ScreenObjectList.ScreenObjects[ScreenObjectIndex];
-      ScreenObject.ModflowHfbBoundary.HfbObserver.UpToDate := True;
+      ScreenObject.ModflowHfbBoundary.BoundaryObserver.UpToDate := True;
     end;
   end;
   Model.HfbDisplayer.UpToDate := True;

@@ -43,6 +43,7 @@ type
   protected
     function GetSelectedArray: TDataArray; override;
     procedure Loaded; override;
+    function CanColorDataSet(DataArray: TDataArray): boolean; override;
   public
     procedure GetData;
     procedure SetData; override;
@@ -98,6 +99,11 @@ begin
   finally
     frmSpecifyContours.Free;
   end;
+end;
+
+function TframeContourData.CanColorDataSet(DataArray: TDataArray): boolean;
+begin
+  Result := inherited CanColorDataSet(DataArray) and DataArray.Visible;
 end;
 
 procedure TframeContourData.cbLabelContoursClick(Sender: TObject);

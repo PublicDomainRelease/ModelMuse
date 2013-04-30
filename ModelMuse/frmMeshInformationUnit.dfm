@@ -6,7 +6,7 @@ inherited frmMeshInformation: TfrmMeshInformation
   ClientWidth = 524
   ExplicitWidth = 540
   ExplicitHeight = 443
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object pnl1: TPanel
     Left = 0
@@ -21,10 +21,8 @@ inherited frmMeshInformation: TfrmMeshInformation
       Top = 6
       Width = 89
       Height = 33
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
     end
@@ -33,10 +31,8 @@ inherited frmMeshInformation: TfrmMeshInformation
       Top = 6
       Width = 89
       Height = 33
-      DoubleBuffered = True
       Kind = bkClose
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
     end
   end
@@ -184,7 +180,6 @@ inherited frmMeshInformation: TfrmMeshInformation
           UnselectableColor = clBtnFace
           OnButtonClick = rdgBadElementsButtonClick
           ColorRangeSelection = False
-          ColorSelectedRow = True
           Columns = <
             item
               AutoAdjustRowHeights = True
@@ -206,8 +201,10 @@ inherited frmMeshInformation: TfrmMeshInformation
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end>
+          WordWrapRowCaptions = False
         end
         object rdgElementAngles: TRbwDataGrid4
           Left = 0
@@ -229,7 +226,6 @@ inherited frmMeshInformation: TfrmMeshInformation
           UnselectableColor = clBtnFace
           OnButtonClick = rdgElementAnglesButtonClick
           ColorRangeSelection = False
-          ColorSelectedRow = True
           Columns = <
             item
               AutoAdjustRowHeights = False
@@ -251,6 +247,7 @@ inherited frmMeshInformation: TfrmMeshInformation
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = False
             end
             item
@@ -273,8 +270,10 @@ inherited frmMeshInformation: TfrmMeshInformation
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end>
+          WordWrapRowCaptions = False
           ColWidths = (
             55
             125)
@@ -347,7 +346,6 @@ inherited frmMeshInformation: TfrmMeshInformation
         UnselectableColor = clBtnFace
         OnButtonClick = rdgAspectRatioButtonClick
         ColorRangeSelection = False
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = True
@@ -369,6 +367,7 @@ inherited frmMeshInformation: TfrmMeshInformation
             WordWrapCaptions = True
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end
           item
@@ -391,8 +390,10 @@ inherited frmMeshInformation: TfrmMeshInformation
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
+        WordWrapRowCaptions = False
         ColWidths = (
           74
           95)
@@ -489,7 +490,6 @@ inherited frmMeshInformation: TfrmMeshInformation
         UnselectableColor = clBtnFace
         OnButtonClick = rdgNodesButtonClick
         ColorRangeSelection = False
-        ColorSelectedRow = True
         Columns = <
           item
             AutoAdjustRowHeights = False
@@ -511,6 +511,7 @@ inherited frmMeshInformation: TfrmMeshInformation
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = False
           end
           item
@@ -533,8 +534,10 @@ inherited frmMeshInformation: TfrmMeshInformation
             WordWrapCaptions = False
             WordWrapCells = False
             CaseSensitivePicklist = False
+            CheckStyle = csCheck
             AutoAdjustColWidths = True
           end>
+        WordWrapRowCaptions = False
         ColWidths = (
           74
           95)

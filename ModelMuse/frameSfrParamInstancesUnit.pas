@@ -80,7 +80,10 @@ end;
 procedure TframeSfrParamInstances.rdgSfrParamInstancesEndUpdate(
   Sender: TObject);
 begin
-  seInstanceCount.AsInteger := rdgSfrParamInstances.RowCount -1;
+  if seInstanceCount <> nil then
+  begin
+    seInstanceCount.AsInteger := rdgSfrParamInstances.RowCount -1;
+  end;
 end;
 
 procedure TframeSfrParamInstances.rdgSfrParamInstancesExit(Sender: TObject);

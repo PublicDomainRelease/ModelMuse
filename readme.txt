@@ -1,13 +1,15 @@
-ModelMuse – Version 3.0.0.0
+ModelMuse – Version 3.1.0.0
 
 NOTE: Any use of trade, product or firm names is for descriptive purposes 
       only and does not imply endorsement by the U.S. Government.
 
 This version of ModelMuse is packaged for personal computers using
 the Microsoft Windows XP, Vista, 7 or 8 operating systems.  Executable files
-for personal computers are provided as well as the source code.
+for personal computers are provided as well as the source code. Although not 
+a supported operating system, some users have reported success on using 
+ModelMuse on Linux computers under WINE.
 
-Instructions for installation, execution, and testing are provided below.
+Instructions for installation, execution, and compiling are provided below.
 
 
 
@@ -27,11 +29,11 @@ Either version may be used for installing ModelMuse.  Both contain
 the same version of ModelMuse for use on personal computers:
 
 For 32 or 64-bit operating systems:
-         ModelMuseSetup32_3_0.exe
-         ModelMuse32_3_0.zip
+         ModelMuseSetup32_3_1.exe
+         ModelMuse32_3_1.zip
 For 64-bit operating systems:
-         ModelMuseSetup64_3_0.exe
-         ModelMuse64_3_0.zip
+         ModelMuseSetup64_3_1.exe
+         ModelMuse64_3_1.zip
 
 Both distribution files contain:
 
@@ -41,22 +43,22 @@ Both distribution files contain:
           Example models
           Supplementary materials
 
-The file ModelMuseSource3_0.zip contains the source code for ModelMuse, 
+The file ModelMuseSource3_1.zip contains the source code for ModelMuse, 
          ModelMonitor, and MF2005_Importer.exe.
 
 B. INSTALLING
 
 The distribution file is an installer.  Execution of the distribution 
 file will install ModelMuse in a directory chosen by the user. By default,
-ModelMuse will be installed in C:\Program Files\USGS\ModelMuse3_0 or
-C:\Program Files (x86)\USGS\ModelMuse3_0. If 
+ModelMuse will be installed in C:\Program Files\USGS\ModelMuse3_1 or
+C:\Program Files (x86)\USGS\ModelMuse3_1. If 
 the new version of ModelMuse is installed over an older version, the 
 program may be installed in the same directory as the older version of the 
 program. The installer will associate files with the extensions .gpt, 
 .gpb, and .mmZlib with ModelMuse.  The following directory structure will 
 be created in the installation directory:
 
-   |--ModelMuse3_0
+   |--ModelMuse3_1
    |  |--bin          ; ModelMuse, ModelMonitor, and MF2005_Importer 
    |  |                   executables.
    |  |--doc          ; Documentation file
@@ -67,7 +69,7 @@ ModelMuse will also create a subdirectory of the "My Documents" directory named
    |  |                   documentation or the ModelMuse help.
    |  |--examples     ; Sample models.
 
-Included in directory ModelMuse3_0\doc is the report on ModelMuse as a 
+Included in directory ModelMuse3_1\doc is the report on ModelMuse as a 
 Portable Document Format (PDF) file. The PDF file is readable and 
 printable on various computer platforms using Acrobat Reader from Adobe.
 The Acrobat Reader is freely available from the following World Wide Web
@@ -95,11 +97,12 @@ There are several ways to execute the software.
 
 D. EXAMPLES
 
-Several example models are included in the examples folder  Many of the 
-ones for PHAST reproduce sample models distributed with PHAST or described
-in the ModelMuse help. The ones for MODFLOW are described in the ModelMuse 
-help.  Data files used in the examples described in the ModelMuse 
-documentation or help are in the data folder.
+Several example models are included in the "ModelMuse Examples\examples" 
+folder under Public Documents. Many of the  ones for PHAST reproduce sample 
+models distributed with PHAST or described in the ModelMuse help. Most of 
+the ones for MODFLOW are described in the ModelMuse help.  Data files used 
+in the examples described in the ModelMuse documentation or help are in the 
+"ModelMuse Examples\data" folder.
 
 E. COMPILING
 
@@ -124,7 +127,7 @@ ModelMuse source code.  Additional required files or components are
 listed below.  In some cases, the files must be altered before they 
 can be used with ModelMuse.  The required changes are listed below.
 
-General instructions for installing packages in Delphi XE2
+General instructions for installing packages in Delphi XE or XE2
 1. If the component comes with an installer run the installer.
 2. If you are compiling the components from source code, you need to add the 
 directories containing the source code to the Library path for both the 
@@ -191,9 +194,8 @@ C:\Users\Public\Documents\RAD Studio\9.0\Dcp;C:\Users\Public\Documents\RAD Studi
 
 Installing GLScene
 http://glscene.sourceforge.net
-For compiling with Delphi XE, use GLScene_v1.1_March_2011_SVN_revision_5593.7z.
-For compiling with Delphi XE2, the version of GLScene downloaded from the SVN repository 
-on Jan. 22, 2013 was used.
+For compiling with Delphi XE, use GLScene_v1.1.
+For compiling with Delphi XE2, use GLScene_v1.2.
 Open and read the readme.html file in the source directory of GLScene. 
 Graphics 32 support must be added by modifing GLScene.inc so make the 
 required change. This is done by changing 
@@ -205,10 +207,12 @@ to
 Build DelphiXE2\GLScene_RunTime.dpk and then install 
 DelphiXE2\GLScene_DesignTime.dpk.
 As with Graphics32 the projects search path may need to include the dcp and/or bpl
-output directories. 
+output directories. Typical paths for those would be the following.
+C:\Users\Public\Documents\RAD Studio\9.0\Bpl
+C:\Users\Public\Documents\RAD Studio\9.0\Dcp
 In the design time package, be sure that the correct package is listed under "Requires".
 
-Get and install VirtualTreeView version 5.0.0 or later.
+Get and install VirtualTreeView version 5.3.0 or later.
 http://www.soft-gems.net/
 
 MadExcept version 4 or later must be installed.  It can be obtained from 
@@ -226,6 +230,7 @@ ButtonEdit
 datagrid
 GLWidget
 ModelCube
+MMJLabel
 QMostRecentlyUsedFiles
 Quadtree
 QZoomBox2

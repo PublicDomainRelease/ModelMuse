@@ -237,7 +237,7 @@ var
   NumRows: Integer;
 begin
   inherited;
-  if not FChangingRowCount then
+  if (not FChangingRowCount) and (seNumExportPeriods <> nil) then
   begin
     NumRows := rdgOutput.RowCount - FirstStateRow;
     if (NumRows = FirstStateRow-1)

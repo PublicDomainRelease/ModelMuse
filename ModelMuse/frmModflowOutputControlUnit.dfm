@@ -77,6 +77,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
     Indent = 20
     RowSelect = True
     TabOrder = 0
+    OnCustomDrawItem = pltrPageNavigatorCustomDrawItem
     Items.NodeData = {
       03050000002C0000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF000000
       00000000000107470065006E006500720061006C002600000000000000000000
@@ -572,6 +573,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
               WordWrapCaptions = False
               WordWrapCells = False
               CaseSensitivePicklist = False
+              CheckStyle = csCheck
               AutoAdjustColWidths = True
             end>
           ExplicitWidth = 418

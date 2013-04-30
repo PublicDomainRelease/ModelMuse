@@ -83,6 +83,15 @@ type
     btnHightlightObjects: TButton;
     btnRestore: TButton;
     btnCopy: TButton;
+    framelmtMinLayer: TframeDisplayLimit;
+    lblMinLayer: TLabel;
+    lblMaxLayer: TLabel;
+    framelmtMaxLayer: TframeDisplayLimit;
+    tabLegend: TTabSheet;
+    shpMax: TShape;
+    shpHalfMax: TShape;
+    lblMax: TLabel;
+    lblHalfMax: TLabel;
     procedure flnmedHeadObsResultsChange(Sender: TObject);
     procedure comboModelsChange(Sender: TObject);
     procedure btnHightlightObjectsClick(Sender: TObject);
@@ -90,6 +99,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure btnRestoreClick(Sender: TObject);
     procedure btnCopyClick(Sender: TObject);
+    procedure spinSymbolSizeChange(Sender: TObject);
   private
     FUndoType: TUndoType;
     FCurrentModelLink: TObsHeadLink;
@@ -98,9 +108,9 @@ type
     ObsLinkList : TObsHeadLinkList;
     procedure SetCurrentModelLink(Value: TObsHeadLink);
     procedure Initialize(AHeadObsColl: THeadObsCollection);
-    procedure DisplayValues(AHeadObsColl: THeadObsCollection);
-    procedure GetDataForAModel(AHeadObsColl: THeadObsCollection);
-    function ReadFileForAModel(AHeadObsColl: THeadObsCollection;
+    procedure DisplayValues(AModel: TBaseModel; AHeadObsColl: THeadObsCollection);
+    procedure GetDataForAModel(AModel: TBaseModel; AHeadObsColl: THeadObsCollection);
+    function ReadFileForAModel(AModel: TBaseModel; AHeadObsColl: THeadObsCollection;
       const FileName: string; ShowDialog: boolean): Boolean;
     procedure SetDataForAModel(HeadObs: THeadObsCollection);
     property CurrentModelLink: TObsHeadLink read FCurrentModelLink
@@ -374,6 +384,7 @@ procedure TCustomUndoChangeHeadObsResults.UpdateGUI;
 begin
   frmGoPhast.TopDiscretizationChanged := True;
   frmGoPhast.frameTopView.ZoomBox.InvalidateImage32;
+  frmGoPhast.EnableExportHeadObs(nil);
 
   if frmDisplayData <> nil then
   begin
@@ -537,7 +548,7 @@ begin
     begin
       SortOrder.Extract(CM);
       SortOrder.Insert(0, CM);
-      GetDataForAModel(FCurrentModelLink.FNewHeadObsCollection);
+      GetDataForAModel(FCurrentModelLink.FModel, FCurrentModelLink.FNewHeadObsCollection);
       break;
     end;
   end;
@@ -582,7 +593,7 @@ begin
   inherited;
 end;
 
-procedure TframeHeadObservationResults.DisplayValues(
+procedure TframeHeadObservationResults.DisplayValues(AModel: TBaseModel;
   AHeadObsColl: THeadObsCollection);
 var
   Item: THeadObsItem;
@@ -612,6 +623,14 @@ begin
         rdgHeadObs.Cells[Ord(ocResidual), Index + 1] := FloatToStr(Item.Residual);
         rdgHeadObs.Cells[Ord(ocObjectName), Index + 1] := Item.ScreenObjectName;
       end;
+      tabLegend.TabVisible := AHeadObsColl.Count > 0;
+      if AHeadObsColl.Count > 0 then
+      begin
+        AHeadObsColl.CalculateMaxResidual(AModel);
+        lblMax.Caption := FloatToStr(AHeadObsColl.MaxResidual);
+        lblHalfMax.Caption := FloatToStr(AHeadObsColl.MaxResidual/2);
+        spinSymbolSizeChange(nil);
+      end;
     finally
       AList.Free;
     end;
@@ -630,7 +649,7 @@ begin
   if FileExists(flnmedHeadObsResults.FileName) then
   begin
     CurrentModelLink.FNewHeadObsCollection.FileName := flnmedHeadObsResults.FileName;
-    FImportResult := CurrentModelLink.FNewHeadObsCollection.ReadFromFile;
+    FImportResult := CurrentModelLink.FNewHeadObsCollection.ReadFromFile(CurrentModelLink.FModel);
     FUndoType := utImport
   end
   else
@@ -649,14 +668,14 @@ begin
   CurrentModelLink := ObsLinkList[0];
 end;
 
-procedure TframeHeadObservationResults.GetDataForAModel(
+procedure TframeHeadObservationResults.GetDataForAModel(AModel: TBaseModel;
   AHeadObsColl: THeadObsCollection);
 begin
   FGettingDate := True;
   try
     Initialize(AHeadObsColl);
     flnmedHeadObsResults.FileName := AHeadObsColl.FileName;
-    DisplayValues(AHeadObsColl);
+    DisplayValues(AModel, AHeadObsColl);
   finally
     FGettingDate := False;
   end;
@@ -670,6 +689,9 @@ begin
   framelmtMaxResidual.Limit := AHeadObsColl.MaxResidualLimit;
   framelmtMinimumTime.Limit := AHeadObsColl.MinTimeLimit;
   framelmtMaximumTime.Limit := AHeadObsColl.MaxTimeLimit;
+  framelmtMinLayer.Limit := AHeadObsColl.MinLayerLimit;
+  framelmtMaxLayer.Limit := AHeadObsColl.MaxLayerLimit;
+
   clrbtnNegative.Color := AHeadObsColl.NegativeColor;
   clrbtnPositive.Color := AHeadObsColl.PositiveColor;
   spinSymbolSize.AsInteger := AHeadObsColl.MaxSymbolSize;
@@ -684,6 +706,8 @@ begin
   framelmtMaxResidual.Enabled := True;
   framelmtMinimumTime.Enabled := True;
   framelmtMaximumTime.Enabled := True;
+  framelmtMinLayer.Enabled := True;
+  framelmtMaxLayer.Enabled := True;
 
   rdgHeadObs.BeginUpdate;
   try
@@ -725,7 +749,7 @@ begin
         begin
           SortOrder.Extract(CM);
           SortOrder.Insert(0, CM);
-          GetDataForAModel(FCurrentModelLink.FNewHeadObsCollection);
+          GetDataForAModel(FCurrentModelLink.FModel, FCurrentModelLink.FNewHeadObsCollection);
           break;
         end;
       end;
@@ -755,7 +779,7 @@ begin
       AFileName := FileName;
     end;
     FCurrentModelLink := ObsItem;
-    Result := ReadFileForAModel(ObsItem.FNewHeadObsCollection, AFileName, Index=0);
+    Result := ReadFileForAModel(ObsItem.FModel, ObsItem.FNewHeadObsCollection, AFileName, Index=0);
     if not result then
     begin
       Exit;
@@ -765,7 +789,7 @@ begin
   CurrentModelLink := ObsLinkList[0];
 end;
 
-function TframeHeadObservationResults.ReadFileForAModel(
+function TframeHeadObservationResults.ReadFileForAModel(AModel: TBaseModel;
   AHeadObsColl: THeadObsCollection; const FileName: string;
   ShowDialog: boolean): Boolean;
 begin
@@ -785,7 +809,7 @@ begin
     flnmedHeadObsResults.FileName := flnmedHeadObsResults.Dialog.FileName;
     result := FImportResult;
   end;
-  DisplayValues(AHeadObsColl);
+  DisplayValues(AModel, AHeadObsColl);
 end;
 
 procedure TframeHeadObservationResults.SetCurrentModelLink(Value: TObsHeadLink);
@@ -807,7 +831,7 @@ begin
       FCurrentModelLink.FNewHeadObsCollection.MaxSymbolSize :=
         FOldModelLink.FNewHeadObsCollection.MaxSymbolSize
     end;
-    GetDataForAModel(FCurrentModelLink.FNewHeadObsCollection)
+    GetDataForAModel(FCurrentModelLink.FModel, FCurrentModelLink.FNewHeadObsCollection)
   end;
 end;
 
@@ -836,6 +860,8 @@ end;
 procedure TframeHeadObservationResults.SetDataForAModel(
   HeadObs: THeadObsCollection);
 begin
+  HeadObs.MinLayerLimit := framelmtMinLayer.Limit;
+  HeadObs.MaxLayerLimit := framelmtMaxLayer.Limit;
   HeadObs.MinResidualLimit := framelmtMinResidual.Limit;
   HeadObs.MaxResidualLimit := framelmtMaxResidual.Limit;
   HeadObs.MinTimeLimit := framelmtMinimumTime.Limit;
@@ -844,6 +870,19 @@ begin
   HeadObs.PositiveColor := clrbtnPositive.Color;
   HeadObs.MaxSymbolSize := spinSymbolSize.AsInteger;
   HeadObs.Visible := cbShow.Checked;
+end;
+
+procedure TframeHeadObservationResults.spinSymbolSizeChange(Sender: TObject);
+begin
+  shpMax.Height := spinSymbolSize.AsInteger;
+  shpMax.Width := spinSymbolSize.AsInteger;
+  shpHalfMax.Width := shpMax.Width;
+  shpHalfMax.Height := Round(Sqrt(Sqr(spinSymbolSize.AsInteger/2)/2)*2);
+  shpHalfMax.Top := shpMax.Top + shpMax.Height + 8;
+  lblMax.Left := shpMax.Left + shpMax.Width + 8;
+  lblMax.Top := shpMax.Top + (shpMax.Height-lblMax.Height) div 2;
+  lblHalfMax.Left := lblMax.Left;
+  lblHalfMax.Top := shpHalfMax.Top + (shpHalfMax.Height-lblHalfMax.Height) div 2;
 end;
 
 procedure TframeHeadObservationResults.TestForNewFiles;
@@ -892,7 +931,7 @@ begin
         FileAge(ObsItem.FNewHeadObsCollection.FileName, FileDate);
         if FileDate <> ObsItem.FNewHeadObsCollection.FileDate then
         begin
-          ObsItem.FNewHeadObsCollection.ReadFromFile;
+          ObsItem.FNewHeadObsCollection.ReadFromFile(ObsItem.FModel);
         end;
       end;
       if ObsItem.FNewHeadObsCollection.FileName = '' then

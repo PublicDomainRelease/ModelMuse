@@ -3676,7 +3676,9 @@ var
   SfrPackage: TSfrPackageSelection;
 begin
   SfrPackage := Package as TSfrPackageSelection;
-  Result := (Model.ModelSelection in [msModflow, msModflowNWT, msModflowLGR2 {$IFDEF FMP}, msModflowFmp {$ENDIF}])
+  Result := (Model.ModelSelection in [msModflow, msModflowNWT, msModflowLGR2
+    {$IFDEF FMP}, msModflowFmp {$ENDIF}
+    {, msModflowCfp}])
     or SfrPackage.UseGsflowFormat;
 end;
 

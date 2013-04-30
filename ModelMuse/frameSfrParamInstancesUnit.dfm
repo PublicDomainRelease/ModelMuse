@@ -20,8 +20,8 @@ object frameSfrParamInstances: TframeSfrParamInstances
     object lblInstanceCount: TLabel
       Left = 71
       Top = 6
-      Width = 141
-      Height = 39
+      Width = 167
+      Height = 48
       Caption = 
         'Number of instances'#13#10'Specify at least one instance '#13#10'for each SF' +
         'R parameter.'
@@ -44,7 +44,6 @@ object frameSfrParamInstances: TframeSfrParamInstances
       Anchors = [akTop, akRight]
       Cancel = True
       Caption = '&Insert'
-      DoubleBuffered = True
       Glyph.Data = {
         F6000000424DF600000000000000760000002800000010000000100000000100
         0400000000008000000000000000000000001000000000000000000000000000
@@ -54,7 +53,6 @@ object frameSfrParamInstances: TframeSfrParamInstances
         FF0FFFFF0FFFFFFFFF0FFFFF00000000000FF0FF0CCCCCCCCC0F000F0CCCCCCC
         CC0FF0FF0CCCCCCCCC0FFFFF00000000000FFFFF0FFFFFFFFF0FFFFF0FFFFFFF
         FF0FFFFF0FFFFFFFFF0FFFFF00000000000FFFFFFFFFFFFFFFFF}
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnInsertFlowTableRowClick
     end
@@ -66,7 +64,6 @@ object frameSfrParamInstances: TframeSfrParamInstances
       Anchors = [akTop, akRight]
       Cancel = True
       Caption = '&Delete'
-      DoubleBuffered = True
       Enabled = False
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
@@ -95,7 +92,6 @@ object frameSfrParamInstances: TframeSfrParamInstances
         000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnDeleteFlowTableRowClick
     end
@@ -122,7 +118,6 @@ object frameSfrParamInstances: TframeSfrParamInstances
     SelectedRowOrColumnColor = clAqua
     UnselectableColor = clBtnFace
     ColorRangeSelection = False
-    ColorSelectedRow = True
     Columns = <
       item
         AutoAdjustRowHeights = True
@@ -144,6 +139,7 @@ object frameSfrParamInstances: TframeSfrParamInstances
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -166,6 +162,7 @@ object frameSfrParamInstances: TframeSfrParamInstances
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -188,9 +185,11 @@ object frameSfrParamInstances: TframeSfrParamInstances
         WordWrapCaptions = False
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end>
     OnEndUpdate = rdgSfrParamInstancesEndUpdate
+    WordWrapRowCaptions = False
   end
   object pnlLabel: TPanel
     Left = 0

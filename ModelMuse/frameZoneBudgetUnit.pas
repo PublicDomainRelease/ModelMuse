@@ -157,17 +157,20 @@ procedure TframeZoneBudget.UpdateSpinEdit;
 var
   NumZones: Integer;
 begin
-  NumZones := rdgCompositeZones.RowCount - 1;
-  if (NumZones = 1)
-    and (Trim(rdgCompositeZones.Cells[0, 1]) = '')
-    and (Trim(rdgCompositeZones.Cells[1, 1]) = '') then
+  if seNumberOfZones <> nil then
   begin
-    NumZones := 0;
-  end;
-  if seNumberOfZones.AsInteger <> NumZones then
-  begin
-    seNumberOfZones.AsInteger := NumZones;
-    seNumberOfZonesChange(nil);
+    NumZones := rdgCompositeZones.RowCount - 1;
+    if (NumZones = 1)
+      and (Trim(rdgCompositeZones.Cells[0, 1]) = '')
+      and (Trim(rdgCompositeZones.Cells[1, 1]) = '') then
+    begin
+      NumZones := 0;
+    end;
+    if seNumberOfZones.AsInteger <> NumZones then
+    begin
+      seNumberOfZones.AsInteger := NumZones;
+      seNumberOfZonesChange(nil);
+    end;
   end;
 end;
 

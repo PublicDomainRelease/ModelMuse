@@ -645,7 +645,9 @@ begin
             FrontCell := frmGoPhast.PhastGrid.FrontContainingCell(APoint, eaBlocks);
             SetGridSpinEditValue(seLayer,FrontCell.Lay+1);
           end;
-        msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
+        msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+          {$IFDEF FMP}, msModflowFmp {$ENDIF}
+          , msModflowCfp:
           begin
             Layer := frmGoPhast.ModflowGrid.NearestLayerPosition(seCol.AsInteger-1,
               frmGoPhast.ModflowGrid.SelectedRow, APoint.Y);
@@ -934,8 +936,12 @@ begin
   case frmGoPhast.ModelSelection of
     msUndefined: Assert(False);
     msPhast, msSutra22: tabCell.Caption := StrElement;
-    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT {$IFDEF FMP}, msModflowFmp {$ENDIF}:
-      tabCell.Caption := StrBlock;
+    msModflow, msModflowLGR, msModflowLGR2, msModflowNWT
+      {$IFDEF FMP}, msModflowFmp {$ENDIF}
+      , msModflowCfp:
+      begin
+        tabCell.Caption := StrBlock;
+      end
     else Assert(False);
   end;
 end;

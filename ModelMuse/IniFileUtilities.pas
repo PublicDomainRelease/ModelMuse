@@ -105,10 +105,16 @@ begin
   AppDir := GetAppDirectory(Handle, ExeName);
   if not DirectoryExists(AppDir) then
   begin
-    CreateDirectoryAndParents(AppDir);
+    try
+      CreateDirectoryAndParents(AppDir);
+    except on EOSError do
+      begin
+        AppDir := ExtractFileDir(ExeName);
+      end;
+    end;
   end;
   result := ExtractFileName(ChangeFileExt(ExeName, '.ini'));
-  result := AppDir + PathDelim + result;
+  result := IncludeTrailingPathDelimiter(AppDir) + result;
 end;
 
 end.

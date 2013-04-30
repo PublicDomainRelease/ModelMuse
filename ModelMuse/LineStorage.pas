@@ -9,8 +9,8 @@ unit LineStorage;
 interface
 
 Uses Classes, Contnrs, //TriCP_Routines,
-  RealListUnit, QuadTreeClass, TriPackRoutines, GoPhastTypes;{, System.SysUtils,
-  Vcl.Dialogs;   }
+  RealListUnit, QuadTreeClass, TriPackRoutines, GoPhastTypes;{, SysUtils,
+  Dialogs;   }
 
 Type
   // @name represents the location where a symbol should be plotted.

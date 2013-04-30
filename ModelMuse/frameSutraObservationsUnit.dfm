@@ -48,6 +48,7 @@ inherited frameSutraObservations: TframeSutraObservations
           WordWrapCaptions = True
           WordWrapCells = False
           CaseSensitivePicklist = False
+          CheckStyle = csCheck
           AutoAdjustColWidths = True
         end>
       OnEndUpdate = rdgSutraFeatureEndUpdate

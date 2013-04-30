@@ -4,8 +4,8 @@ inherited frmManageParameters: TfrmManageParameters
   Caption = 'Manage Parameters'
   ClientHeight = 279
   ClientWidth = 468
-  ExplicitWidth = 476
-  ExplicitHeight = 313
+  ExplicitWidth = 486
+  ExplicitHeight = 324
   PixelsPerInch = 120
   TextHeight = 18
   object rdgParameters: TRbwDataGrid4
@@ -48,11 +48,12 @@ inherited frmManageParameters: TfrmManageParameters
         ComboUsed = False
         Format = rcf4String
         LimitToList = False
-        MaxLength = 0
+        MaxLength = 10
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -75,6 +76,7 @@ inherited frmManageParameters: TfrmManageParameters
         WordWrapCaptions = True
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -97,6 +99,7 @@ inherited frmManageParameters: TfrmManageParameters
         WordWrapCaptions = True
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -119,6 +122,7 @@ inherited frmManageParameters: TfrmManageParameters
         WordWrapCaptions = True
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -141,6 +145,7 @@ inherited frmManageParameters: TfrmManageParameters
         WordWrapCaptions = True
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end
       item
@@ -163,8 +168,10 @@ inherited frmManageParameters: TfrmManageParameters
         WordWrapCaptions = True
         WordWrapCells = False
         CaseSensitivePicklist = False
+        CheckStyle = csCheck
         AutoAdjustColWidths = True
       end>
+    WordWrapRowCaptions = False
   end
   object pnlBottom: TPanel
     Left = 0

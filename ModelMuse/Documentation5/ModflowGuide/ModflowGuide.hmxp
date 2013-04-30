@@ -108,7 +108,7 @@
         <config-value name="MODFLOW-FMP2">MODFLOW-FMP2</config-value>
       </config-group>
       <config-value name="imageshortcuts_includebaggage">1</config-value>
-      <config-value name="make0include">CHM,ALLMODELS,OPT_ATOC,OPT_BREADTRAIL,OPT_COMMENTS,OPT_FB,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
+      <config-value name="make0include">CHM,ALLMODELS,OPT_ATOC,OPT_BREADTRAIL,OPT_COMMENTS,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_TOGGLE,OPT_TOGTOC</config-value>
       <config-value name="make0status">*</config-value>
       <config-value name="make3include">HTML,ALLMODELS,INSIDE-MODFLOW,OPT_ATOC,OPT_BREADTRAIL,OPT_FB,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC</config-value>
       <config-value name="make3status">*</config-value>

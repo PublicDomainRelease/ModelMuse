@@ -110,18 +110,21 @@ procedure TframeListParameterDefinition.dgParametersEndUpdate(Sender: TObject);
 var
   NumParam: Integer;
 begin
-  NumParam := dgParameters.RowCount -1;
-  if NumParam = 1 then
+  if (seNumberOfParameters <> nil) then
   begin
-    if (dgParameters.Cells[0,1] = '') and (dgParameters.Cells[1,1] = '') then
+    NumParam := dgParameters.RowCount -1;
+    if NumParam = 1 then
     begin
-      NumParam := 0;
+      if (dgParameters.Cells[0,1] = '') and (dgParameters.Cells[1,1] = '') then
+      begin
+        NumParam := 0;
+      end;
     end;
-  end;
-  seNumberOfParameters.AsInteger := NumParam;
-  if Assigned(seNumberOfParameters.OnChange) then
-  begin
-    seNumberOfParameters.OnChange(seNumberOfParameters);
+    seNumberOfParameters.AsInteger := NumParam;
+    if Assigned(seNumberOfParameters.OnChange) then
+    begin
+      seNumberOfParameters.OnChange(seNumberOfParameters);
+    end;
   end;
 end;
 

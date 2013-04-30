@@ -8,7 +8,7 @@
 			<FrameworkType>VCL</FrameworkType>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<ProjectVersion>13.4</ProjectVersion>
-			<Platform Condition="'$(Platform)'==''">Win32</Platform>
+			<Platform Condition="'$(Platform)'==''">Win64</Platform>
 			<TargetedPlatforms>3</TargetedPlatforms>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -59,9 +59,10 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<VerInfo_MinorVer>1</VerInfo_MinorVer>
 			<DCC_ExeOutput>.\$(Config)\$(Platform)</DCC_ExeOutput>
 			<VerInfo_Locale>1033</VerInfo_Locale>
-			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=3.0.0.0;Comments=</VerInfo_Keys>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.1.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=3.1.0.0;Comments=</VerInfo_Keys>
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 			<Manifest_File>None</Manifest_File>
 			<DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
@@ -107,7 +108,7 @@
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
 			<DCC_DebugDCUs>true</DCC_DebugDCUs>
 			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
-			<DCC_Define>DEBUG;FMP;$(DCC_Define)</DCC_Define>
+			<DCC_Define>DEBUG;CFP;$(DCC_Define)</DCC_Define>
 			<DCC_Optimize>false</DCC_Optimize>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
@@ -1119,6 +1120,35 @@
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="ModflowFmpWriterUnit.pas"/>
+			<DCCReference Include="ModflowFmpAllotmentUnit.pas"/>
+			<DCCReference Include="frmFarmAllotmentUnit.pas">
+				<Form>frmFarmAllotment</Form>
+			</DCCReference>
+			<DCCReference Include="frameRadioGridUnit.pas">
+				<Form>frameRadioGrid</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="framePackageCFPUnit.pas">
+				<Form>framePackageCFP</Form>
+				<FormType>dfm</FormType>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="ModflowCfpPipeUnit.pas"/>
+			<DCCReference Include="frameScreenObjectCfpPipesUnit.pas">
+				<Form>frameScreenObjectCfpPipes</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="ModflowCfpFixedUnit.pas"/>
+			<DCCReference Include="frameScreenObjectCfpFixedUnit.pas">
+				<Form>frameScreenObjectCfpFixed</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frmHelpVersionUnit.pas">
+				<Form>frmHelpVersion</Form>
+				<FormType>dfm</FormType>
+			</DCCReference>
+			<DCCReference Include="ModflowCfpWriterUnit.pas"/>
+			<DCCReference Include="ModflowCfpRechargeUnit.pas"/>
 			<None Include="ModelMuse.todo"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>

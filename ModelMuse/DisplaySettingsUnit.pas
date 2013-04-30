@@ -281,6 +281,7 @@ type
     FVelocityVectors: TVectorCollection;
     FMinVectors: TPredefinedVectors;
     FMidVectors: TPredefinedVectors;
+    FShowHeadObsLegend: Boolean;
     procedure OnChangeEventHandler(Sender: TObject);
     procedure SetAdditionalText(const Value: TTextCollection);
     procedure SetGridDisplayChoice(const Value: TGridLineDrawingChoice);
@@ -309,6 +310,7 @@ type
     procedure SetMidVectors(const Value: TPredefinedVectors);
     procedure SetMinVectors(const Value: TPredefinedVectors);
     procedure SetVelocityVectors(const Value: TVectorCollection);
+    procedure SetShowHeadObsLegend(const Value: Boolean);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Collection: TCollection); override;
@@ -365,6 +367,7 @@ type
       write SetMinVectors;
     property VelocityVectors: TVectorCollection read FVelocityVectors
       write SetVelocityVectors;
+    property ShowHeadObsLegend: Boolean read FShowHeadObsLegend write SetShowHeadObsLegend;
   end;
 
   { @name is a collection of @link(TDisplaySettingsItem)s.
@@ -602,6 +605,7 @@ begin
     MidVectors := SourceDisplay.MidVectors;
     MinVectors := SourceDisplay.MinVectors;
     VelocityVectors := SourceDisplay.VelocityVectors;
+    ShowHeadObsLegend := SourceDisplay.ShowHeadObsLegend;
   end
   else
   begin
@@ -896,6 +900,11 @@ end;
 procedure TDisplaySettingsItem.SetShowColoredGridLines(const Value: boolean);
 begin
   SetBooleanProperty(FShowColoredGridLines, Value);
+end;
+
+procedure TDisplaySettingsItem.SetShowHeadObsLegend(const Value: Boolean);
+begin
+  SetBooleanProperty(FShowHeadObsLegend, Value);
 end;
 
 procedure TDisplaySettingsItem.SetModpathEndPointSettings(const Value: TEndPointSettings);
