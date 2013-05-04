@@ -341,6 +341,8 @@ type
     function Add: TRealItem;
     property InitialValue: Real read FInitialValue write SetInitialValue;
     procedure Sort;
+    function First: TRealItem;
+    function Last: TRealItem;
   end;
 
   TPointArray = array of TPoint;
@@ -1258,6 +1260,18 @@ begin
   end;
 end;
 
+function TRealCollection.First: TRealItem;
+begin
+  if Count > 0 then
+  begin
+    result := Items[0];
+  end
+  else
+  begin
+    result := nil;
+  end;
+end;
+
 function TRealCollection.GetItems(Index: Integer): TRealItem;
 begin
   result := inherited Items[index] as TRealItem
@@ -1280,6 +1294,18 @@ begin
         Exit;
       end;
     end;
+  end;
+end;
+
+function TRealCollection.Last: TRealItem;
+begin
+  if Count > 0 then
+  begin
+    result := Items[Count-1];
+  end
+  else
+  begin
+    result := nil;
   end;
 end;
 

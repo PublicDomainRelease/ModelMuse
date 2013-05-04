@@ -65,6 +65,7 @@ type
     FUseCOC: Boolean;
     FShouldWriteCRCH: Boolean;
     FShouldWriteCOC: Boolean;
+    NameOfFile: string;
     procedure Evaluate;
     procedure EvaluateConduitRecharge;
     procedure WriteDataSet0;
@@ -196,10 +197,6 @@ var
   AScreenObject: TScreenObject;
   PipeBoundary: TCfpPipeBoundary;
   Diameter: TDataArray;
-  Segments: TCellElementSegmentList;
-  SegIndex: Integer;
-  Seg1: TCellElementSegment;
-  Seg2: TCellElementSegment;
   PipeDiameter: double;
   Node1: TCfpNode;
   Node2: TCfpNode;
@@ -221,190 +218,203 @@ var
   ANode: TCfpNode;
   FixedHeadsArray: TDataArray;
   FixedHeads: TCfpFixedBoundary;
+  CellList: TCellAssignmentList;
+  OtherData: TObject;
+  CellIndex: Integer;
+  ACell1: TCellAssignment;
+  ACell2: TCellAssignment;
 begin
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTooManyConduitsAt);
   frmErrorsAndWarnings.RemoveWarningGroup(Model, StrTheFollowingObject);
   FUseCOC := False;
   if FConduitFlowProcess.PipesUsed then
   begin
-    Diameter := Model.DataArrayManager.GetDataSetByName(KPipeDiameter);
-    Tortuosity := Model.DataArrayManager.GetDataSetByName(KTortuosity);
-    RoughnessHeight := Model.DataArrayManager.GetDataSetByName(KRoughnessHeight);
-    LowerCriticalR := Model.DataArrayManager.GetDataSetByName(KLowerCriticalR);
-    UpperCriticalR := Model.DataArrayManager.GetDataSetByName(KUpperCriticalR);
-    PipeConducOrPerm := Model.DataArrayManager.GetDataSetByName(KPipeConductanceOrPer);
-    PipeElevation := Model.DataArrayManager.GetDataSetByName(KCfpNodeElevation);
-    Assert(Diameter <> nil);
-    Assert(Tortuosity <> nil);
-    Assert(RoughnessHeight <> nil);
-    Assert(LowerCriticalR <> nil);
-    Assert(UpperCriticalR <> nil);
-    Assert(PipeConducOrPerm <> nil);
-    Assert(PipeElevation <> nil);
-    TRealSparseDataSetCrack(PipeConducOrPerm).Clear;
-    TRealSparseDataSetCrack(PipeElevation).Clear;
-//    TRealSparseDataSetCrack(FixedHeadsArray).Clear;
-    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
-    begin
-      AScreenObject := Model.ScreenObjects[ScreenObjectIndex];
-      if AScreenObject.Deleted
-        or not (AScreenObject.Count > 1)
-        or (AScreenObject.ElevationCount <> ecOne)
-        or not AScreenObject.UsedModels.UsesModel(Model) then
+    OtherData := nil;
+    CellList := TCellAssignmentList.Create;
+    try
+      Diameter := Model.DataArrayManager.GetDataSetByName(KPipeDiameter);
+      Tortuosity := Model.DataArrayManager.GetDataSetByName(KTortuosity);
+      RoughnessHeight := Model.DataArrayManager.GetDataSetByName(KRoughnessHeight);
+      LowerCriticalR := Model.DataArrayManager.GetDataSetByName(KLowerCriticalR);
+      UpperCriticalR := Model.DataArrayManager.GetDataSetByName(KUpperCriticalR);
+      PipeConducOrPerm := Model.DataArrayManager.GetDataSetByName(KPipeConductanceOrPer);
+      PipeElevation := Model.DataArrayManager.GetDataSetByName(KCfpNodeElevation);
+      Assert(Diameter <> nil);
+      Assert(Tortuosity <> nil);
+      Assert(RoughnessHeight <> nil);
+      Assert(LowerCriticalR <> nil);
+      Assert(UpperCriticalR <> nil);
+      Assert(PipeConducOrPerm <> nil);
+      Assert(PipeElevation <> nil);
+      TRealSparseDataSetCrack(PipeConducOrPerm).Clear;
+      TRealSparseDataSetCrack(PipeElevation).Clear;
+  //    TRealSparseDataSetCrack(FixedHeadsArray).Clear;
+      for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
       begin
-        Continue;
-      end;
-      PipeBoundary := AScreenObject.ModflowCfpPipes;
-      if (PipeBoundary <> nil) and PipeBoundary.Used then
-      begin
-        FixedHeads := AScreenObject.ModflowCfpFixedHeads;
-        if (FixedHeads <> nil) and FixedHeads.Used then
+        AScreenObject := Model.ScreenObjects[ScreenObjectIndex];
+        if AScreenObject.Deleted
+          or not (AScreenObject.Count > 1)
+          or (AScreenObject.ElevationCount <> ecOne)
+          or not AScreenObject.UsedModels.UsesModel(Model) then
         begin
-          frmErrorsAndWarnings.AddWarning(Model,
-            StrTheFollowingObject, AScreenObject.Name);
+          Continue;
         end;
-        TRealSparseDataSetCrack(Diameter).Clear;
-        TRealSparseDataSetCrack(Tortuosity).Clear;
-        TRealSparseDataSetCrack(RoughnessHeight).Clear;
-        TRealSparseDataSetCrack(LowerCriticalR).Clear;
-        TRealSparseDataSetCrack(UpperCriticalR).Clear;
-        // don't clear PipeConducOrPerm or PipeElevation because
-        // they are a cell properties not a pipe properties.
-        AScreenObject.AssignValuesToDataSet(Diameter, Model, lctIgnore);
-        AScreenObject.AssignValuesToDataSet(Tortuosity, Model, lctIgnore);
-        AScreenObject.AssignValuesToDataSet(RoughnessHeight, Model, lctIgnore);
-        AScreenObject.AssignValuesToDataSet(LowerCriticalR, Model, lctIgnore);
-        AScreenObject.AssignValuesToDataSet(UpperCriticalR, Model, lctIgnore);
-        AScreenObject.AssignValuesToDataSet(PipeConducOrPerm, Model, lctIgnore);
-        if FConduitFlowProcess.CfpElevationChoice = cecIndividual then
+        PipeBoundary := AScreenObject.ModflowCfpPipes;
+        if (PipeBoundary <> nil) and PipeBoundary.Used then
         begin
-          AScreenObject.AssignValuesToDataSet(PipeElevation, Model, lctIgnore);
-        end;
-
-        Segments := AScreenObject.Segments[Model];
-        if Segments.Count > 1 then
-        begin
-          for SegIndex := 1 to Segments.Count - 1 do
+          FixedHeads := AScreenObject.ModflowCfpFixedHeads;
+          if (FixedHeads <> nil) and FixedHeads.Used then
           begin
-            Seg1 := Segments[SegIndex-1];
-            Seg2 := Segments[SegIndex];
-            if ((Seg1.Col <> Seg2.Col)
-              or (Seg1.Row <> Seg2.Row)
-              or (Seg1.Layer <> Seg2.Layer))
-              and ((Abs(Seg1.Col - Seg2.Col) <= 1)
-              and (Abs(Seg1.Row - Seg2.Row) <= 1)
-              and (Abs(Seg1.Layer - Seg2.Layer) <= 1))
-              then
+            frmErrorsAndWarnings.AddWarning(Model,
+              StrTheFollowingObject, AScreenObject.Name);
+          end;
+          TRealSparseDataSetCrack(Diameter).Clear;
+          TRealSparseDataSetCrack(Tortuosity).Clear;
+          TRealSparseDataSetCrack(RoughnessHeight).Clear;
+          TRealSparseDataSetCrack(LowerCriticalR).Clear;
+          TRealSparseDataSetCrack(UpperCriticalR).Clear;
+          // don't clear PipeConducOrPerm or PipeElevation because
+          // they are a cell properties not a pipe properties.
+          AScreenObject.AssignValuesToDataSet(Diameter, Model, lctIgnore);
+          AScreenObject.AssignValuesToDataSet(Tortuosity, Model, lctIgnore);
+          AScreenObject.AssignValuesToDataSet(RoughnessHeight, Model, lctIgnore);
+          AScreenObject.AssignValuesToDataSet(LowerCriticalR, Model, lctIgnore);
+          AScreenObject.AssignValuesToDataSet(UpperCriticalR, Model, lctIgnore);
+          AScreenObject.AssignValuesToDataSet(PipeConducOrPerm, Model, lctIgnore);
+          if FConduitFlowProcess.CfpElevationChoice = cecIndividual then
+          begin
+            AScreenObject.AssignValuesToDataSet(PipeElevation, Model, lctIgnore);
+          end;
+
+          CellList.Clear;
+//          Segments := AScreenObject.Segments[Model];
+          AScreenObject.GetCellsToAssign(Model.ModflowGrid, '0', OtherData, Diameter, CellList, alAll, Model);
+
+          if CellList.Count > 1 then
+          begin
+            for CellIndex := 1 to CellList.Count - 1 do
             begin
-              Assert(Diameter.IsValue[Seg1.Layer, Seg1.Row, Seg1.Col]);
-              Assert(Diameter.IsValue[Seg2.Layer, Seg2.Row, Seg2.Col]);
-              PipeDiameter := (Diameter.RealData[Seg1.Layer, Seg1.Row, Seg1.Col]
-                + Diameter.RealData[Seg2.Layer, Seg2.Row, Seg2.Col])/2;
-
-              Assert(Tortuosity.IsValue[Seg1.Layer, Seg1.Row, Seg1.Col]);
-              Assert(Tortuosity.IsValue[Seg2.Layer, Seg2.Row, Seg2.Col]);
-              TortuosityValue := (Tortuosity.RealData[Seg1.Layer, Seg1.Row, Seg1.Col]
-                + Tortuosity.RealData[Seg2.Layer, Seg2.Row, Seg2.Col])/2;
-
-              Assert(RoughnessHeight.IsValue[Seg1.Layer, Seg1.Row, Seg1.Col]);
-              Assert(RoughnessHeight.IsValue[Seg2.Layer, Seg2.Row, Seg2.Col]);
-              RoughnessHeightValue := (RoughnessHeight.RealData[Seg1.Layer, Seg1.Row, Seg1.Col]
-                + RoughnessHeight.RealData[Seg2.Layer, Seg2.Row, Seg2.Col])/2;
-
-              Assert(LowerCriticalR.IsValue[Seg1.Layer, Seg1.Row, Seg1.Col]);
-              Assert(LowerCriticalR.IsValue[Seg2.Layer, Seg2.Row, Seg2.Col]);
-              LowerCriticalRValue := (LowerCriticalR.RealData[Seg1.Layer, Seg1.Row, Seg1.Col]
-                + LowerCriticalR.RealData[Seg2.Layer, Seg2.Row, Seg2.Col])/2;
-
-              Assert(UpperCriticalR.IsValue[Seg1.Layer, Seg1.Row, Seg1.Col]);
-              Assert(UpperCriticalR.IsValue[Seg2.Layer, Seg2.Row, Seg2.Col]);
-              UpperCriticalRValue := (UpperCriticalR.RealData[Seg1.Layer, Seg1.Row, Seg1.Col]
-                + UpperCriticalR.RealData[Seg2.Layer, Seg2.Row, Seg2.Col])/2;
-
-              Node1 := FNodeGrid[Seg1.Layer, Seg1.Row, Seg1.Col];
-              Node2 := FNodeGrid[Seg2.Layer, Seg2.Row, Seg2.Col];
-              NodeCreated := (Node1 = nil) or (Node2 = nil);
-              if Node1 = nil then
+              ACell1 := CellList[CellIndex-1];
+              ACell2 := CellList[CellIndex];
+              if ((ACell1.Column <> ACell2.Column)
+                or (ACell1.Row <> ACell2.Row)
+                or (ACell1.Layer <> ACell2.Layer))
+                and ((Abs(ACell1.Column - ACell2.Column) <= 1)
+                and (Abs(ACell1.Row - ACell2.Row) <= 1)
+                and (Abs(ACell1.Layer - ACell2.Layer) <= 1))
+                then
               begin
-                Node1 := TCfpNode.Create;
-                FNodes.Add(Node1);
-                Node1.FNumber := FNodes.Count;
-                FNodeGrid[Seg1.Layer, Seg1.Row, Seg1.Col] := Node1;
-                Node1.FLayer := Seg1.Layer;
-                Node1.FRow := Seg1.Row;
-                Node1.FColumn := Seg1.Col;
-              end;
-              Node1.FRecordData :=
-                PipeBoundary.RecordNodeValues or Node1.FRecordData;
-              if Node2 = nil then
-              begin
-                Node2 := TCfpNode.Create;
-                FNodes.Add(Node2);
-                Node2.FNumber := FNodes.Count;
-                FNodeGrid[Seg2.Layer, Seg2.Row, Seg2.Col] := Node2;
-                Node2.FLayer := Seg2.Layer;
-                Node2.FRow := Seg2.Row;
-                Node2.FColumn := Seg2.Col;
-              end;
-              Node2.FRecordData :=
-                PipeBoundary.RecordNodeValues or Node2.FRecordData;
-              Pipe := nil;
-              if not NodeCreated then
-              begin
-                for PipeIndex := 0 to Node1.FPipes.Count - 1 do
+                Assert(Diameter.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]);
+                Assert(Diameter.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column]);
+                PipeDiameter := (Diameter.RealData[ACell1.Layer, ACell1.Row, ACell1.Column]
+                  + Diameter.RealData[ACell2.Layer, ACell2.Row, ACell2.Column])/2;
+
+                Assert(Tortuosity.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]);
+                Assert(Tortuosity.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column]);
+                TortuosityValue := (Tortuosity.RealData[ACell1.Layer, ACell1.Row, ACell1.Column]
+                  + Tortuosity.RealData[ACell2.Layer, ACell2.Row, ACell2.Column])/2;
+
+                Assert(RoughnessHeight.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]);
+                Assert(RoughnessHeight.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column]);
+                RoughnessHeightValue := (RoughnessHeight.RealData[ACell1.Layer, ACell1.Row, ACell1.Column]
+                  + RoughnessHeight.RealData[ACell2.Layer, ACell2.Row, ACell2.Column])/2;
+
+                Assert(LowerCriticalR.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]);
+                Assert(LowerCriticalR.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column]);
+                LowerCriticalRValue := (LowerCriticalR.RealData[ACell1.Layer, ACell1.Row, ACell1.Column]
+                  + LowerCriticalR.RealData[ACell2.Layer, ACell2.Row, ACell2.Column])/2;
+
+                Assert(UpperCriticalR.IsValue[ACell1.Layer, ACell1.Row, ACell1.Column]);
+                Assert(UpperCriticalR.IsValue[ACell2.Layer, ACell2.Row, ACell2.Column]);
+                UpperCriticalRValue := (UpperCriticalR.RealData[ACell1.Layer, ACell1.Row, ACell1.Column]
+                  + UpperCriticalR.RealData[ACell2.Layer, ACell2.Row, ACell2.Column])/2;
+
+                Node1 := FNodeGrid[ACell1.Layer, ACell1.Row, ACell1.Column];
+                Node2 := FNodeGrid[ACell2.Layer, ACell2.Row, ACell2.Column];
+                NodeCreated := (Node1 = nil) or (Node2 = nil);
+                if Node1 = nil then
                 begin
-                  APipe := Node1.FPipes[PipeIndex];
-                  if APipe.SameNodes(Node1, Node2) then
+                  Node1 := TCfpNode.Create;
+                  FNodes.Add(Node1);
+                  Node1.FNumber := FNodes.Count;
+                  FNodeGrid[ACell1.Layer, ACell1.Row, ACell1.Column] := Node1;
+                  Node1.FLayer := ACell1.Layer;
+                  Node1.FRow := ACell1.Row;
+                  Node1.FColumn := ACell1.Column;
+                end;
+                Node1.FRecordData :=
+                  PipeBoundary.RecordNodeValues or Node1.FRecordData;
+                if Node2 = nil then
+                begin
+                  Node2 := TCfpNode.Create;
+                  FNodes.Add(Node2);
+                  Node2.FNumber := FNodes.Count;
+                  FNodeGrid[ACell2.Layer, ACell2.Row, ACell2.Column] := Node2;
+                  Node2.FLayer := ACell2.Layer;
+                  Node2.FRow := ACell2.Row;
+                  Node2.FColumn := ACell2.Column;
+                end;
+                Node2.FRecordData :=
+                  PipeBoundary.RecordNodeValues or Node2.FRecordData;
+                Pipe := nil;
+                if not NodeCreated then
+                begin
+                  for PipeIndex := 0 to Node1.FPipes.Count - 1 do
                   begin
-                    Pipe := APipe;
-                    break;
+                    APipe := Node1.FPipes[PipeIndex];
+                    if APipe.SameNodes(Node1, Node2) then
+                    begin
+                      Pipe := APipe;
+                      break;
+                    end;
                   end;
                 end;
+                if Pipe = nil then
+                begin
+                  Pipe := TCfpPipe.Create;
+                  FPipes.Add(Pipe);
+                  Pipe.FNumber := FPipes.Count;
+                  Pipe.FNode1 := Node1;
+                  Pipe.FNode2 := Node2;
+                  Node1.FPipes.Add(Pipe);
+                  Node2.FPipes.Add(Pipe);
+                end;
+                Pipe.FDiameter := PipeDiameter;
+                Pipe.FTortuosity := TortuosityValue;
+                Pipe.FRoughnessHeight := RoughnessHeightValue;
+                Pipe.FLowerR := LowerCriticalRValue;
+                Pipe.FHigherR := UpperCriticalRValue;
+                Pipe.FRecordData := PipeBoundary.RecordPipeValues;
               end;
-              if Pipe = nil then
-              begin
-                Pipe := TCfpPipe.Create;
-                FPipes.Add(Pipe);
-                Pipe.FNumber := FPipes.Count;
-                Pipe.FNode1 := Node1;
-                Pipe.FNode2 := Node2;
-                Node1.FPipes.Add(Pipe);
-                Node2.FPipes.Add(Pipe);
-              end;
-              Pipe.FDiameter := PipeDiameter;
-              Pipe.FTortuosity := TortuosityValue;
-              Pipe.FRoughnessHeight := RoughnessHeightValue;
-              Pipe.FLowerR := LowerCriticalRValue;
-              Pipe.FHigherR := UpperCriticalRValue;
-              Pipe.FRecordData := PipeBoundary.RecordPipeValues;
             end;
           end;
         end;
       end;
-    end;
 
-    FixedHeadsArray := Model.DataArrayManager.GetDataSetByName(KCfpFixedHeads);
-    Assert(FixedHeadsArray <> nil);
-    FixedHeadsArray.Initialize;
-    for NodeIndex := 0 to FNodes.Count - 1 do
-    begin
-      ANode := FNodes[NodeIndex];
-      Assert(PipeConducOrPerm.IsValue[ANode.FLayer, ANode.FRow, ANode.FColumn]);
-      ANode.FExchange := PipeConducOrPerm.RealData[ANode.FLayer, ANode.FRow, ANode.FColumn];
-
-      if FConduitFlowProcess.CfpElevationChoice = cecIndividual then
+      FixedHeadsArray := Model.DataArrayManager.GetDataSetByName(KCfpFixedHeads);
+      Assert(FixedHeadsArray <> nil);
+      FixedHeadsArray.Initialize;
+      for NodeIndex := 0 to FNodes.Count - 1 do
       begin
-        Assert(PipeElevation.IsValue[ANode.FLayer, ANode.FRow, ANode.FColumn]);
-        ANode.FElevation := PipeElevation.RealData[ANode.FLayer, ANode.FRow, ANode.FColumn];
-      end;
+        ANode := FNodes[NodeIndex];
+        Assert(PipeConducOrPerm.IsValue[ANode.FLayer, ANode.FRow, ANode.FColumn]);
+        ANode.FExchange := PipeConducOrPerm.RealData[ANode.FLayer, ANode.FRow, ANode.FColumn];
 
-      ANode.FIsFixed := FixedHeadsArray.IsValue[ANode.FLayer, ANode.FRow, ANode.FColumn];
-      if ANode.FIsFixed then
-      begin
-        ANode.FFixedHead := FixedHeadsArray.RealData[ANode.FLayer, ANode.FRow, ANode.FColumn];
+        if FConduitFlowProcess.CfpElevationChoice = cecIndividual then
+        begin
+          Assert(PipeElevation.IsValue[ANode.FLayer, ANode.FRow, ANode.FColumn]);
+          ANode.FElevation := PipeElevation.RealData[ANode.FLayer, ANode.FRow, ANode.FColumn];
+        end;
+
+        ANode.FIsFixed := FixedHeadsArray.IsValue[ANode.FLayer, ANode.FRow, ANode.FColumn];
+        if ANode.FIsFixed then
+        begin
+          ANode.FFixedHead := FixedHeadsArray.RealData[ANode.FLayer, ANode.FRow, ANode.FColumn];
+        end;
       end;
+    finally
+      CellList.Free;
     end;
-
   end;
   FCrchUsed := FConduitFlowProcess.PipesUsed
     and FConduitFlowProcess.ConduitRechargeUsed
@@ -569,6 +579,8 @@ end;
 procedure TModflowCfpWriter.WriteDataSet1;
 var
   Mode: Integer;
+  OutDir: string;
+  OutputFileName: string;
 begin
   Mode := 0;
   if FConduitFlowProcess.PipesUsed then
@@ -578,6 +590,11 @@ begin
   if FConduitFlowProcess.ConduitLayersUsed then
   begin
     Mode := Mode + 2;
+
+    OutDir := ExtractFileDir(NameOfFile);
+    OutDir := IncludeTrailingPathDelimiter(OutDir);
+    OutputFileName := OutDir + 'turblam.txt';
+    Model.AddFileToArchive(OutputFileName);
   end;
   WriteInteger(Mode);
   WriteString(' # Data Set 1: MODE');
@@ -1082,7 +1099,6 @@ end;
 
 procedure TModflowCfpWriter.WriteFile(const AFileName: string);
 var
-  NameOfFile: string;
   ShouldWriteFile: boolean;
 begin
   if not Package.IsSelected or (Model.ModelSelection <> msModflowCfp) then

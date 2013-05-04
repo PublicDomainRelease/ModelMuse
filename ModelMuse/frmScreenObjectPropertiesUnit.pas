@@ -3066,6 +3066,9 @@ var
   TreeViewFilled: boolean;
   SelectCell: TGridRect;
 begin
+  // This line should always be the first line.
+  IsLoaded := False;
+
   SetModflowBoundaryColCount;
 
 //  clbChildModels.Handle;
@@ -3105,7 +3108,6 @@ begin
   edObjectOrder.Text := IntToStr(
     frmGoPhast.PhastModel.IndexOfScreenObject(AScreenObject)+1);
 
-  IsLoaded := False;
   InitializeGridObjects;
   seBoundaryTimes.Value := 1;
   rgEvaluatedAt.Enabled := frmGoPhast.PhastModel.ModelSelection in
@@ -4604,6 +4606,9 @@ var
   Compiler: TRbwParser;
   FirstScreenObject: TScreenObject;
 begin
+  // This line should always be the first line.
+  IsLoaded := False;
+
   FCanFillTreeView := False;
 //  OutputDebugString('SAMPLING ON');
   if FNewProperties = nil then
@@ -4613,7 +4618,6 @@ begin
   end;
   FillPropertyCollection(FNewProperties, AScreenObjectList);
 
-  IsLoaded := False;
   TempList := TStringList.Create;
   try
     if AScreenObjectList.Count >= 1 then

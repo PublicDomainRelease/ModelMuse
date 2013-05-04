@@ -203,6 +203,7 @@ const
   KPipeConductanceOrPer = 'PipeConductanceOrPermeabilty';
   KCfpNodeElevation = 'CfpNodeElevation';
   KCfpFixedHeads = 'CfpFixedHeads';
+  KActive_Surface_Elevation = 'Active_Surface_Elevation';
 
 
   // @name is the name of the @link(TDataArray) that specifies
@@ -1615,6 +1616,7 @@ that affects the model output should also have a comment. }
     procedure UpdateDataSetDimensions;
   public
     FDataArrayCreationRecords: array of TDataSetCreationData;
+    FZetaDataDefinition: TDataSetCreationData;
     procedure Assign(Source: TDataArrayManager);
     procedure AddDataSetToLookUpList(const DataSet: TDataArray);
     Constructor Create(Model: TCustomModel);
@@ -1796,6 +1798,8 @@ that affects the model output should also have a comment. }
     function SutraConcentrationUsed(Sender: TObject): boolean;
     function SutraTemperatureUsed(Sender: TObject): boolean;
     function ModflowOrPhastUsed(Sender: TObject): boolean; virtual;
+    function SwiUsed(Sender: TObject): boolean;
+    function ZetaUsed(Sender: TObject): boolean;
     function IndenticalTransientArray(DataArray: TDataArray; DataArrays: TList;
       var CachedIndex: integer): TDataArray;
     // See @link(TimeLists).
@@ -6340,9 +6344,13 @@ const
   //    '3.1.0.0' Bug fix: Specifying a file of the wrong type on the command
   //         line when starting ModelMuse no longer leads to the generation
   //         of a bug report.
+  //    '3.1.1.0' Bug fix: Fixed bug that could cause an access violation when
+  //         opening the Object Properties dialog box.
+  //       Bug fix: Fixed using objects on the front or side views to define
+  //         pipes in MODFLOW-CFP.
 
 const
-  IModelVersion = '3.1.0.0';
+  IModelVersion = '3.1.1.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -6562,6 +6570,8 @@ resourcestring
   StrCfpNodeElevation = 'CfpNodeElevation';
   StrCfpFixedHeads = 'CfpFixedHeads';
   strModflowCfpDefaultPath = 'C:\WRDAPP\CFP\mf2005cfp.exe';
+  StrActiveSurfaceEleva = 'Active_Surface_Elevation';
+  StrSWI = 'SWI';
 
 
 const
@@ -21985,10 +21995,75 @@ var
   Lock: TDataLock;
   DisplayName: string;
   AngleType: TAngleType;
+  procedure HandleDataArray(
+    const DataSetCreationData: TDataSetCreationData);
+  begin
+    DataArray := GetDataSetByName(DataSetName);
+    Assert(Assigned(ArrayNeeded));
+    if DataArray <> nil then
+    begin
+      DataArray.Name := DataSetName;
+      DataArray.DisplayName := DisplayName;
+      DataArray.Lock := Lock;
+      DataArray.OnDataSetUsed := ArrayNeeded;
+      FCustomModel.CreateVariables(DataArray);
+      DataArray.AngleType := AngleType;
+      DataArray.Classification := Classification;
+      DataArray.Visible := DataSetCreationData.Visible;
+    end
+    else if ArrayNeeded(self)
+      or (Assigned(ArrayArrayShouldBeCreated)
+      and ArrayArrayShouldBeCreated(self)) then
+    begin
+      DataArray := CreateNewDataArray(
+        DataSetCreationData.DataSetType, DataSetName, NewFormula,
+        DisplayName,
+        Lock, DataType, DataSetCreationData.EvaluatedAt,
+        Orientation, Classification);
+      DataArray.OnDataSetUsed := ArrayNeeded;
+      DataArray.Lock := Lock;
+      DataArray.CheckMax := DataSetCreationData.CheckMax;
+      DataArray.CheckMin := DataSetCreationData.CheckMin;
+      DataArray.Max := DataSetCreationData.Max;
+      DataArray.Min := DataSetCreationData.Min;
+      DataArray.DisplayName := DisplayName;
+      DataArray.AngleType := AngleType;
+      DataArray.Visible := DataSetCreationData.Visible;
+    end;
+    if DataArray <> nil then
+    begin
+      FCustomModel.UpdateDataArrayDimensions(DataArray);
+//      if FCustomModel.Grid <> nil then
+//      begin
+//        DataArray.UpdateDimensions(FCustomModel.Grid.LayerCount, FCustomModel.Grid.RowCount,
+//          FCustomModel.Grid.ColumnCount);
+//      end;
+      DataArray.AssociatedDataSets := DataSetCreationData.AssociatedDataSets;
+      DataArray.Classification := DataSetCreationData.Classification;
+    end;
+  end;
 begin
   { TODO : Find a way to extract common code from
 TPhastModel.CreateModflowDataSets and
 TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
+  if FCustomModel.SwiUsed(nil) then
+  begin
+    for Index := 1 to FCustomModel.ModflowPackages.SwiPackage.NumberOfSurfaces do
+    begin
+      DataSetName := FZetaDataDefinition.Name + IntToStr(Index);
+      DisplayName := FZetaDataDefinition.DisplayName + IntToStr(Index);
+      Orientation := FZetaDataDefinition.Orientation;
+      DataType := FZetaDataDefinition.DataType;
+      ArrayNeeded := FZetaDataDefinition.DataSetNeeded;
+      ArrayArrayShouldBeCreated :=
+        FZetaDataDefinition.DataSetShouldBeCreated;
+      NewFormula := FZetaDataDefinition.Formula;
+      Classification := FZetaDataDefinition.Classification;
+      Lock := FZetaDataDefinition.Lock;
+      AngleType := FZetaDataDefinition.AngleType;
+    end;
+    HandleDataArray(FZetaDataDefinition);
+  end;
 
   // See DefinePackageDataArrays for the definition of the
   // contents of DataArrayCreationRecords.
@@ -22006,50 +22081,51 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
     Lock := FDataArrayCreationRecords[Index].Lock;
     AngleType := FDataArrayCreationRecords[Index].AngleType;
 
-    DataArray := GetDataSetByName(DataSetName);
-    Assert(Assigned(ArrayNeeded));
-    if DataArray <> nil then
-    begin
-      DataArray.Name := DataSetName;
-      DataArray.DisplayName := DisplayName;
-      DataArray.Lock := Lock;
-      DataArray.OnDataSetUsed := ArrayNeeded;
-      FCustomModel.CreateVariables(DataArray);
-      DataArray.AngleType := AngleType;
-      DataArray.Classification := Classification;
-      DataArray.Visible := FDataArrayCreationRecords[Index].Visible;
-    end
-    else if ArrayNeeded(self)
-      or (Assigned(ArrayArrayShouldBeCreated)
-      and ArrayArrayShouldBeCreated(self)) then
-    begin
-      DataArray := CreateNewDataArray(
-        FDataArrayCreationRecords[Index].DataSetType, DataSetName, NewFormula,
-        DisplayName,
-        Lock, DataType, FDataArrayCreationRecords[Index].EvaluatedAt,
-        Orientation, Classification);
-      DataArray.OnDataSetUsed := ArrayNeeded;
-      DataArray.Lock := Lock;
-      DataArray.CheckMax := FDataArrayCreationRecords[Index].CheckMax;
-      DataArray.CheckMin := FDataArrayCreationRecords[Index].CheckMin;
-      DataArray.Max := FDataArrayCreationRecords[Index].Max;
-      DataArray.Min := FDataArrayCreationRecords[Index].Min;
-      DataArray.DisplayName := DisplayName;
-      DataArray.AngleType := AngleType;
-      DataArray.Visible := FDataArrayCreationRecords[Index].Visible;
-    end;
-    if DataArray <> nil then
-    begin
-      FCustomModel.UpdateDataArrayDimensions(DataArray);
-//      if FCustomModel.Grid <> nil then
-//      begin
-//        DataArray.UpdateDimensions(FCustomModel.Grid.LayerCount, FCustomModel.Grid.RowCount,
-//          FCustomModel.Grid.ColumnCount);
-//      end;
-      DataArray.AssociatedDataSets := FDataArrayCreationRecords[
-        Index].AssociatedDataSets;
-      DataArray.Classification := FDataArrayCreationRecords[Index].Classification;
-    end;
+    HandleDataArray(FDataArrayCreationRecords[Index]);
+//    DataArray := GetDataSetByName(DataSetName);
+//    Assert(Assigned(ArrayNeeded));
+//    if DataArray <> nil then
+//    begin
+//      DataArray.Name := DataSetName;
+//      DataArray.DisplayName := DisplayName;
+//      DataArray.Lock := Lock;
+//      DataArray.OnDataSetUsed := ArrayNeeded;
+//      FCustomModel.CreateVariables(DataArray);
+//      DataArray.AngleType := AngleType;
+//      DataArray.Classification := Classification;
+//      DataArray.Visible := FDataArrayCreationRecords[Index].Visible;
+//    end
+//    else if ArrayNeeded(self)
+//      or (Assigned(ArrayArrayShouldBeCreated)
+//      and ArrayArrayShouldBeCreated(self)) then
+//    begin
+//      DataArray := CreateNewDataArray(
+//        FDataArrayCreationRecords[Index].DataSetType, DataSetName, NewFormula,
+//        DisplayName,
+//        Lock, DataType, FDataArrayCreationRecords[Index].EvaluatedAt,
+//        Orientation, Classification);
+//      DataArray.OnDataSetUsed := ArrayNeeded;
+//      DataArray.Lock := Lock;
+//      DataArray.CheckMax := FDataArrayCreationRecords[Index].CheckMax;
+//      DataArray.CheckMin := FDataArrayCreationRecords[Index].CheckMin;
+//      DataArray.Max := FDataArrayCreationRecords[Index].Max;
+//      DataArray.Min := FDataArrayCreationRecords[Index].Min;
+//      DataArray.DisplayName := DisplayName;
+//      DataArray.AngleType := AngleType;
+//      DataArray.Visible := FDataArrayCreationRecords[Index].Visible;
+//    end;
+//    if DataArray <> nil then
+//    begin
+//      FCustomModel.UpdateDataArrayDimensions(DataArray);
+////      if FCustomModel.Grid <> nil then
+////      begin
+////        DataArray.UpdateDimensions(FCustomModel.Grid.LayerCount, FCustomModel.Grid.RowCount,
+////          FCustomModel.Grid.ColumnCount);
+////      end;
+//      DataArray.AssociatedDataSets := FDataArrayCreationRecords[
+//        Index].AssociatedDataSets;
+//      DataArray.Classification := FDataArrayCreationRecords[Index].Classification;
+//    end;
   end;
 
   DataArray := GetDataSetByName(rsActive);
@@ -22115,6 +22191,20 @@ const
 var
   Index: integer;
 begin
+  FZetaDataDefinition.DataSetType := TDataArray;
+  FZetaDataDefinition.Orientation := dso3D;
+  FZetaDataDefinition.DataType := rdtDouble;
+  FZetaDataDefinition.Name := KActive_Surface_Elevation;
+  FZetaDataDefinition.DisplayName := StrActiveSurfaceEleva;
+  FZetaDataDefinition.Formula := '0';
+  FZetaDataDefinition.Classification := StrSWI;
+  FZetaDataDefinition.DataSetNeeded := FCustomModel.ZetaUsed;
+  FZetaDataDefinition.Lock := StandardLock;
+  FZetaDataDefinition.EvaluatedAt := eaBlocks;
+  FZetaDataDefinition.AssociatedDataSets := 'MODFLOW SWI: ZETA';
+  NoCheck(FZetaDataDefinition);
+
+
   // Whenever something in this is changed, be sure to update the help too.
   SetLength(FDataArrayCreationRecords, ArrayCount);
   for Index := 0 to ArrayCount - 1 do
@@ -24916,6 +25006,26 @@ begin
     and ModflowStressPeriods.TransientModel;
 end;
 
+function TCustomModel.ZetaUsed(Sender: TObject): boolean;
+var
+  DataArray: TDataArray;
+  AnInt: Integer;
+begin
+  result := SwiUsed(Sender);
+  if result then
+  begin
+    Assert(Sender <> nil);
+    DataArray := Sender as TDataArray;
+    Assert(Pos(KActive_Surface_Elevation, DataArray.Name) = 1);
+    Result := False;
+    if TryStrToInt(Copy(DataArray.Name,
+      Length(KActive_Surface_Elevation)+1, MaxInt), AnInt) then
+    begin
+      result := AnInt <= ModflowPackages.SwiPackage.NumberOfSurfaces;
+    end;
+  end;
+end;
+
 function TCustomModel.ZoneBudgetSelected(Sender: TObject): boolean;
 begin
   result := (ModelSelection in ModflowSelection)
@@ -24926,6 +25036,12 @@ function TCustomModel.SwtSelected(Sender: TObject): boolean;
 begin
   result := (ModelSelection in ModflowSelection)
     and ModflowPackages.SwtPackage.IsSelected
+end;
+
+function TCustomModel.SwiUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection in [msModflow, msModflowNWT])
+    and ModflowPackages.SwiPackage.IsSelected;
 end;
 
 function TCustomModel.SwtOffsetsUsed(Sender: TObject): boolean;

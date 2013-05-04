@@ -235,7 +235,9 @@ const
   MODPATH reserves several numbers in the range
   80 to 99 for internal use.
 
-  FMP uses unit numbers 1001-1009
+  FMP2 uses unit numbers 1001-1009
+
+  CFp uses unit number 999 and consecutive unit numbers beginning at 201
 }
   CellFlowsUnitNumber = 9;
   // @name is the unit number in MODFLOW

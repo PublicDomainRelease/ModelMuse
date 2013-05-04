@@ -3169,6 +3169,123 @@ Type
       write SetOutputInterval stored True;
   end;
 
+  TDensityChoice = (dcLinear, dcZoned);
+  TSwiObsChoice = (socNone, socAscii, socBinary);
+  TSwiSolver = (ssDirect, ssPCG);
+  TSwiSolverPrintChoice = (sspcTables, sspcIterationCount, sspcNone,
+    sspcOnFailure);
+
+  TSwiPackage = class(TModflowPackageSelection)
+  private
+    FTipSlope: TRealStorage;
+    FSolver: TSwiSolver;
+    FAdaptive: Boolean;
+    FRELAX: TRealStorage;
+    FZCLOSE: TRealStorage;
+    FObsChoice: TSwiObsChoice;
+    FMaxAdaptiveTimeSteps: integer;
+    FZoneDimensionlessDensities: TRealCollection;
+    FNBPOL: TPcgEstimateMaxEigenvalue;
+    FDensityChoice: TDensityChoice;
+    FRCLOSE: TRealStorage;
+    FSaveZeta: Boolean;
+    FNumberOfSurfaces: integer;
+    FAlpha: TRealStorage;
+    FDAMPT: TRealStorage;
+    FMinAdaptiveTimeSteps: integer;
+    FDAMP: TRealStorage;
+    FAdaptiveFactor: TRealStorage;
+    FToeSlope: TRealStorage;
+    FNPCOND: TPcgMethod;
+    FSolverPrintChoice: TSwiSolverPrintChoice;
+    FMXITER: integer;
+    FBeta: TRealStorage;
+    FITER1: integer;
+    FSolverPrintoutInterval: integer;
+    procedure SetAdaptive(const Value: Boolean);
+    procedure SetAdaptiveFactor(const Value: TRealStorage);
+    procedure SetAlpha(const Value: TRealStorage);
+    procedure SetBeta(const Value: TRealStorage);
+    procedure SetDAMP(const Value: TRealStorage);
+    procedure SetDAMPT(const Value: TRealStorage);
+    procedure SetDensityChoice(const Value: TDensityChoice);
+    procedure SetITER1(const Value: integer);
+    procedure SetMaxAdaptiveTimeSteps(const Value: integer);
+    procedure SetMinAdaptiveTimeSteps(const Value: integer);
+    procedure SetMXITER(const Value: integer);
+    procedure SetNBPOL(const Value: TPcgEstimateMaxEigenvalue);
+    procedure SetNPCOND(const Value: TPcgMethod);
+    procedure SetNumberOfSurfaces(const Value: integer);
+    procedure SetObsChoice(const Value: TSwiObsChoice);
+    procedure SetRCLOSE(const Value: TRealStorage);
+    procedure SetRELAX(const Value: TRealStorage);
+    procedure SetSaveZeta(const Value: Boolean);
+    procedure SetSolver(const Value: TSwiSolver);
+    procedure SetSolverPrintChoice(const Value: TSwiSolverPrintChoice);
+    procedure SetSolverPrintoutInterval(const Value: integer);
+    procedure SetTipSlope(const Value: TRealStorage);
+    procedure SetToeSlope(const Value: TRealStorage);
+    procedure SetZCLOSE(const Value: TRealStorage);
+    procedure SetZoneDimensionlessDensities(const Value: TRealCollection);
+    procedure ValuesChanged(Sender: TObject);
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
+    procedure InitializeVariables; override;
+  published
+    // NSRF
+    property NumberOfSurfaces: integer read FNumberOfSurfaces
+      write SetNumberOfSurfaces;
+    // ISTRAT
+    property DensityChoice: TDensityChoice read FDensityChoice
+      write SetDensityChoice;
+    // ISWIZT
+    property SaveZeta: Boolean read FSaveZeta write SetSaveZeta;
+    // ISWIOBS  (0, positive number, negative number)
+    property ObsChoice: TSwiObsChoice read FObsChoice write SetObsChoice;
+    // OPTIONS
+    property Adaptive: Boolean read FAdaptive write SetAdaptive;
+    // NSOLVER
+    property Solver: TSwiSolver read FSolver write SetSolver;
+    // IPRSOL
+    property SolverPrintoutInterval: integer read FSolverPrintoutInterval
+      write SetSolverPrintoutInterval;
+    // MUTSOL
+    property SolverPrintChoice: TSwiSolverPrintChoice read FSolverPrintChoice
+      write SetSolverPrintChoice;
+
+    property MXITER: integer read FMXITER write SetMXITER default 20;
+    property ITER1: integer read FITER1 write SetITER1 default 30;
+    property NPCOND: TPcgMethod read FNPCOND write SetNPCOND;
+    property ZCLOSE: TRealStorage read FZCLOSE write SetZCLOSE;
+    property RCLOSE: TRealStorage read FRCLOSE write SetRCLOSE;
+    property RELAX: TRealStorage read FRELAX write SetRELAX;
+    property NBPOL: TPcgEstimateMaxEigenvalue read FNBPOL write SetNBPOL;
+    property DAMP: TRealStorage read FDAMP write SetDAMP;
+    property DAMPT: TRealStorage read FDAMPT write SetDAMPT;
+    // TOESLOPE
+    property ToeSlope: TRealStorage read FToeSlope write SetToeSlope;
+    // TIPSLOPE
+    property TipSlope: TRealStorage read FTipSlope write SetTipSlope;
+    // ALPHA
+    property Alpha: TRealStorage read FAlpha write SetAlpha;
+    // BETA
+    property Beta: TRealStorage read FBeta write SetBeta;
+    // NADPTMX
+    property MaxAdaptiveTimeSteps: integer read FMaxAdaptiveTimeSteps
+      write SetMaxAdaptiveTimeSteps;
+    // NADPTMN
+    property MinAdaptiveTimeSteps: integer read FMinAdaptiveTimeSteps
+      write SetMinAdaptiveTimeSteps;
+    // ADPTFCT
+    property AdaptiveFactor: TRealStorage read FAdaptiveFactor
+      write SetAdaptiveFactor;
+    // NU
+    property ZoneDimensionlessDensities: TRealCollection
+      read FZoneDimensionlessDensities write SetZoneDimensionlessDensities;
+  end;
+
 implementation
 
 uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
@@ -12688,6 +12805,286 @@ end;
 procedure TConduitFlowProcess.SetStoredRelax(const Value: TRealStorage);
 begin
   FStoredRelax.Assign(Value);
+end;
+
+{ TSwiPackage }
+
+procedure TSwiPackage.Assign(Source: TPersistent);
+var
+  SourcePackage: TSwiPackage;
+begin
+  inherited;
+  if Source is TSwiPackage then
+  begin
+    SourcePackage := TSwiPackage(Source);
+    NumberOfSurfaces := SourcePackage.NumberOfSurfaces;
+    DensityChoice := SourcePackage.DensityChoice;
+    SaveZeta := SourcePackage.SaveZeta;
+    ObsChoice := SourcePackage.ObsChoice;
+    Adaptive := SourcePackage.Adaptive;
+    Solver := SourcePackage.Solver;
+    SolverPrintoutInterval := SourcePackage.SolverPrintoutInterval;
+    SolverPrintChoice := SourcePackage.SolverPrintChoice;
+    MXITER := SourcePackage.MXITER;
+    ITER1 := SourcePackage.ITER1;
+    NPCOND := SourcePackage.NPCOND;
+    ZCLOSE := SourcePackage.ZCLOSE;
+    RCLOSE := SourcePackage.RCLOSE;
+    RELAX := SourcePackage.RELAX;
+    NBPOL := SourcePackage.NBPOL;
+    DAMP := SourcePackage.DAMP;
+    DAMPT := SourcePackage.DAMPT;
+    ToeSlope := SourcePackage.ToeSlope;
+    TipSlope := SourcePackage.TipSlope;
+    Alpha := SourcePackage.Alpha;
+    Beta := SourcePackage.Beta;
+    MaxAdaptiveTimeSteps := SourcePackage.MaxAdaptiveTimeSteps;
+    MinAdaptiveTimeSteps := SourcePackage.MinAdaptiveTimeSteps;
+    AdaptiveFactor := SourcePackage.AdaptiveFactor;
+    ZoneDimensionlessDensities := SourcePackage.ZoneDimensionlessDensities;
+  end;
+end;
+
+constructor TSwiPackage.Create(Model: TBaseModel);
+begin
+  inherited;
+  FTipSlope := TRealStorage.Create;
+  FRELAX := TRealStorage.Create;
+  FZCLOSE := TRealStorage.Create;
+  FRCLOSE := TRealStorage.Create;
+  FDAMP := TRealStorage.Create;
+  FDAMPT := TRealStorage.Create;
+  FAdaptiveFactor := TRealStorage.Create;
+  FToeSlope := TRealStorage.Create;
+  FAlpha := TRealStorage.Create;
+  FBeta := TRealStorage.Create;
+
+  FTipSlope.OnChange := ValuesChanged;
+  FRELAX.OnChange := ValuesChanged;
+  FZCLOSE.OnChange := ValuesChanged;
+  FRCLOSE.OnChange := ValuesChanged;
+  FAlpha.OnChange := ValuesChanged;
+  FDAMP.OnChange := ValuesChanged;
+  FDAMPT.OnChange := ValuesChanged;
+  FAdaptiveFactor.OnChange := ValuesChanged;
+  FToeSlope.OnChange := ValuesChanged;
+  FAlpha.OnChange := ValuesChanged;
+  FBeta.OnChange := ValuesChanged;
+
+  FZoneDimensionlessDensities := TRealCollection.Create(Model);
+
+  InitializeVariables;
+end;
+
+destructor TSwiPackage.Destroy;
+begin
+  FTipSlope.Free;
+  FRELAX.Free;
+  FZCLOSE.Free;
+  FRCLOSE.Free;
+  FDAMP.Free;
+  FDAMPT.Free;
+  FAdaptiveFactor.Free;
+  FToeSlope.Free;
+  FAlpha.Free;
+  FBeta.Free;
+
+  FZoneDimensionlessDensities.Free;
+
+
+  inherited;
+end;
+
+procedure TSwiPackage.InitializeVariables;
+begin
+  inherited;
+  FNumberOfSurfaces := 1;
+  FDensityChoice := dcLinear;
+  FSaveZeta := True;
+  FObsChoice := socNone;
+  FAdaptive := False;
+  FSolver := ssDirect;
+  FSolverPrintoutInterval := 1;
+  FSolverPrintChoice := sspcTables;
+  FMXITER := 20;
+  FITER1 := 30;
+  FZCLOSE.Value := 0.001;
+  FRCLOSE.Value := 0.001;
+  FRELAX.Value := 1;
+  FDAMP.Value := 1;
+  FDAMPT.Value := 1;
+  NPCOND := pmCholesky;
+  NBPOL := peeEstimate;
+  TipSlope.Value := 0.2;
+  ToeSlope.Value := 0.2;
+  Alpha.Value := 0.1;
+  Beta.Value := 0.1;
+  MinAdaptiveTimeSteps := 1;
+  MaxAdaptiveTimeSteps := 10;
+  AdaptiveFactor.Value := 0.5
+
+
+
+//    // NU
+//    property ZoneDimensionlessDensities: TRealCollection
+//      read FZoneDimensionlessDensities write SetZoneDimensionlessDensities;
+
+
+end;
+
+procedure TSwiPackage.SetAdaptive(const Value: Boolean);
+begin
+  SetBooleanProperty(FAdaptive, Value);
+end;
+
+procedure TSwiPackage.SetAdaptiveFactor(const Value: TRealStorage);
+begin
+  FAdaptiveFactor.Assign(Value);
+end;
+
+procedure TSwiPackage.SetAlpha(const Value: TRealStorage);
+begin
+  FAlpha.Assign(Value);
+end;
+
+procedure TSwiPackage.SetBeta(const Value: TRealStorage);
+begin
+  FBeta.Assign(Value);
+end;
+
+procedure TSwiPackage.SetDAMP(const Value: TRealStorage);
+begin
+  FDAMP.Assign(Value);
+end;
+
+procedure TSwiPackage.SetDAMPT(const Value: TRealStorage);
+begin
+  FDAMPT.Assign(Value);
+end;
+
+procedure TSwiPackage.SetDensityChoice(const Value: TDensityChoice);
+begin
+  if FDensityChoice <> Value then
+  begin
+    FDensityChoice := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwiPackage.SetITER1(const Value: integer);
+begin
+  SetIntegerProperty(FITER1, Value);
+end;
+
+procedure TSwiPackage.SetMaxAdaptiveTimeSteps(const Value: integer);
+begin
+  SetIntegerProperty(FMaxAdaptiveTimeSteps, Value);
+end;
+
+procedure TSwiPackage.SetMinAdaptiveTimeSteps(const Value: integer);
+begin
+  SetIntegerProperty(FMinAdaptiveTimeSteps, Value);
+end;
+
+procedure TSwiPackage.SetMXITER(const Value: integer);
+begin
+  SetIntegerProperty(FMXITER, Value);
+end;
+
+procedure TSwiPackage.SetNBPOL(const Value: TPcgEstimateMaxEigenvalue);
+begin
+  if FNBPOL <> Value then
+  begin
+    FNBPOL := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwiPackage.SetNPCOND(const Value: TPcgMethod);
+begin
+  if FNPCOND <> Value then
+  begin
+    FNPCOND := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwiPackage.SetNumberOfSurfaces(const Value: integer);
+begin
+  SetIntegerProperty(FNumberOfSurfaces, Value);
+end;
+
+procedure TSwiPackage.SetObsChoice(const Value: TSwiObsChoice);
+begin
+  if FObsChoice <> Value then
+  begin
+    FObsChoice := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwiPackage.SetRCLOSE(const Value: TRealStorage);
+begin
+  FRCLOSE.Assign(Value);
+end;
+
+procedure TSwiPackage.SetRELAX(const Value: TRealStorage);
+begin
+  FRELAX.Assign(Value);
+end;
+
+procedure TSwiPackage.SetSaveZeta(const Value: Boolean);
+begin
+  SetBooleanProperty(FSaveZeta, Value);
+end;
+
+procedure TSwiPackage.SetSolver(const Value: TSwiSolver);
+begin
+  if FSolver <> Value then
+  begin
+    FSolver := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwiPackage.SetSolverPrintChoice(const Value: TSwiSolverPrintChoice);
+begin
+  if FSolverPrintChoice <> Value then
+  begin
+    FSolverPrintChoice := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwiPackage.SetSolverPrintoutInterval(const Value: integer);
+begin
+  SetIntegerProperty(FSolverPrintoutInterval, Value);
+end;
+
+procedure TSwiPackage.SetTipSlope(const Value: TRealStorage);
+begin
+  FTipSlope.Assign(Value);
+end;
+
+procedure TSwiPackage.SetToeSlope(const Value: TRealStorage);
+begin
+  FToeSlope.Assign(Value);
+end;
+
+procedure TSwiPackage.SetZCLOSE(const Value: TRealStorage);
+begin
+  FZCLOSE.Assign(Value);
+end;
+
+procedure TSwiPackage.SetZoneDimensionlessDensities(
+  const Value: TRealCollection);
+begin
+  FZoneDimensionlessDensities.Assign(Value);
+end;
+
+procedure TSwiPackage.ValuesChanged(Sender: TObject);
+begin
+  InvalidateModel;
 end;
 
 end.

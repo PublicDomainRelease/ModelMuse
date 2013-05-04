@@ -55,6 +55,7 @@ type
     FFhbPackage: TFhbPackageSelection;
     FFarmProcess: TFarmProcess;
     FConduitFlowProcess: TConduitFlowProcess;
+    FSwiPackage: TSwiPackage;
     procedure SetChdBoundary(const Value: TChdPackage);
     procedure SetLpfPackage(const Value: TLpfSelection);
     procedure SetPcgPackage(const Value: TPcgSelection);
@@ -102,6 +103,7 @@ type
     procedure SetFhbPackage(const Value: TFhbPackageSelection);
     procedure SetFarmProcess(const Value: TFarmProcess);
     procedure SetConduitFlowProcess(const Value: TConduitFlowProcess);
+    procedure SetSwiPackage(const Value: TSwiPackage);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Model: TBaseModel);
@@ -198,6 +200,11 @@ type
       ;
     property ConduitFlowProcess: TConduitFlowProcess read FConduitFlowProcess
       write SetConduitFlowProcess;
+    property SwiPackage: TSwiPackage read FSwiPackage write SetSwiPackage
+    {$IFNDEF SWI}
+      stored False
+    {$ENDIF}
+    ;
     // Assign, Create, Destroy, SelectedModflowPackageCount
     // and Reset must be updated each time a new package is added.
   end;
@@ -276,6 +283,7 @@ resourcestring
   StrFarmProcessClassification = 'Farm Process';
   StrCFPConduitFlowPr = 'CFP: Conduit Flow Process';
   StrConduitFlowProcess = 'Conduit Flow Process';
+  StrSWI2SeawaterIntru = 'SWI2: Seawater Intrusion Package';
 
 { TModflowPackages }
 
@@ -333,6 +341,7 @@ begin
     FhbPackage := SourcePackages.FhbPackage;
     FarmProcess := SourcePackages.FarmProcess;
     ConduitFlowProcess := SourcePackages.ConduitFlowProcess;
+    SwiPackage := SourcePackages.SwiPackage;
   end
   else
   begin
@@ -569,10 +578,16 @@ begin
   FConduitFlowProcess.Classification := StrConduitFlowProcess;
   FConduitFlowProcess.SelectionType := stCheckBox;
 
+  FSwiPackage := TSwiPackage.Create(Model);
+  FSwiPackage.PackageIdentifier := StrSWI2SeawaterIntru;
+  FSwiPackage.Classification := StrFlow;
+  FSwiPackage.SelectionType := stCheckBox;
+
 end;
 
 destructor TModflowPackages.Destroy;
 begin
+  FSwiPackage.Free;
   FConduitFlowProcess.Free;
   FFarmProcess.Free;
   FMt3dmsTransObs.Free;
@@ -669,8 +684,9 @@ begin
   Mt3dmsTransObs.InitializeVariables;
   StrPackage.InitializeVariables;
   FhbPackage.InitializeVariables;
-  FFarmProcess.InitializeVariables;
+  FarmProcess.InitializeVariables;
   ConduitFlowProcess.InitializeVariables;
+  SwiPackage.InitializeVariables;
 end;
 
 function TModflowPackages.SelectedModflowPackageCount: integer;
@@ -840,13 +856,19 @@ begin
   end;
 
 {$IFDEF FMP}
-  if FFarmProcess.IsSelected and (Model.ModelSelection = msModflowFmp) then
+  if FarmProcess.IsSelected and (Model.ModelSelection = msModflowFmp) then
   begin
     Inc(Result);
   end;
 {$ENDIF}
 
-  if FConduitFlowProcess.IsSelected and (Model.ModelSelection = msModflowCfp) then
+  if ConduitFlowProcess.IsSelected and (Model.ModelSelection = msModflowCfp) then
+  begin
+    Inc(Result);
+  end;
+
+  if SwiPackage.IsSelected
+    and (Model.ModelSelection in [msModflow, msModflowNWT]) then
   begin
     Inc(Result);
   end;
@@ -1088,6 +1110,11 @@ end;
 procedure TModflowPackages.SetSubPackage(const Value: TSubPackageSelection);
 begin
   FSubPackage.Assign(Value);
+end;
+
+procedure TModflowPackages.SetSwiPackage(const Value: TSwiPackage);
+begin
+  FSwiPackage.Assign(Value);
 end;
 
 procedure TModflowPackages.SetSwtPackage(const Value: TSwtPackageSelection);

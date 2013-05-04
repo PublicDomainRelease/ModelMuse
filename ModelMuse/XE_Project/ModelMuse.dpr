@@ -514,7 +514,8 @@ uses
   frameScreenObjectCfpFixedUnit in '..\frameScreenObjectCfpFixedUnit.pas' {frameScreenObjectCfpFixed: TFrame},
   frmHelpVersionUnit in '..\frmHelpVersionUnit.pas' {frmHelpVersion},
   ModflowCfpWriterUnit in '..\ModflowCfpWriterUnit.pas',
-  ModflowCfpRechargeUnit in '..\ModflowCfpRechargeUnit.pas';
+  ModflowCfpRechargeUnit in '..\ModflowCfpRechargeUnit.pas',
+  framePackageSwiUnit in '..\framePackageSwiUnit.pas' {framePackageSWI: TFrame};
 
 {$R *.res}
 

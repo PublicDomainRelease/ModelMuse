@@ -40,7 +40,8 @@ uses
   frameMt3dmsDispersionPkgUnit, Mt3dmsChemSpeciesUnit,
   frameMt3dmsChemReactionPkgUnit, frameMt3dmsTransObsPkgUnit, Mt3dmsTimesUnit,
   framePackagePcgnUnit, framePackageWellUnit, framePackageStrUnit,
-  framePackageFrmUnit, frameRadioGridUnit, framePackageCFPUnit;
+  framePackageFrmUnit, frameRadioGridUnit, framePackageCFPUnit,
+  framePackageSwiUnit;
 
 type
 
@@ -207,6 +208,8 @@ type
     framePkgFrm: TframePkgFarm;
     jvspCFP: TJvStandardPage;
     framePkgCFP: TframePackageCFP;
+    jvspSWI: TJvStandardPage;
+    framePackageSWI: TframePackageSWI;
     procedure tvPackagesChange(Sender: TObject; Node: TTreeNode);
     procedure btnOKClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject); override;
@@ -2778,6 +2781,15 @@ begin
     Packages.ConduitFlowProcess.Frame := framePkgCFP;
     FPackageList.Add(Packages.ConduitFlowProcess);
   end;
+
+{$IFDEF SWI}
+  if frmGoPhast.ModelSelection in [msModflow, msModflowNWT] then
+  begin
+    Packages.SwiPackage.Frame := framePackageSWI;
+    FPackageList.Add(Packages.SwiPackage);
+  end;
+{$ENDIF}
+
 end;
 
 procedure TfrmModflowPackages.tvHufParameterTypesChange(Sender: TObject;
