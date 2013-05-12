@@ -2945,7 +2945,7 @@ begin
     Importer.ImportModel;
   finally
     Importer.Free;
-  frmGoPhast.PhastModel.ImportingModel := False;
+    frmGoPhast.PhastModel.ImportingModel := False;
     frmGoPhast.CanDraw := True;
   end;
 end;
@@ -3740,6 +3740,7 @@ var
     AboveActive: Boolean;
     AltLayerIndex: Integer;
     AltModelMuseLayIndex: Integer;
+    LIndex: integer;
   begin
     for RowIndex := 0 to NROW - 1 do
     begin
@@ -3812,6 +3813,24 @@ var
               ConvertElevToVariable(ModelMuseLayIndex);
             end;
             FElevations[ModelMuseLayIndex, RowIndex, ColIndex] := TopElevation;
+            for LIndex := ModelMuseLayIndex-1 downto 0 do
+            begin
+              TopElevation := FElevations[LIndex, RowIndex, ColIndex];
+              BottomElevation := FElevations[LIndex+1, RowIndex, ColIndex];
+              if TopElevation <= BottomElevation then
+              begin
+                TopElevation := BottomElevation + MinThickness;
+                if FConstantElevations[LIndex].IsConstant then
+                begin
+                  ConvertElevToVariable(LIndex);
+                end;
+                FElevations[LIndex, RowIndex, ColIndex] := TopElevation;
+              end
+              else
+              begin
+                break;
+              end;
+            end;
           end;
         end;
       end;
@@ -3826,6 +3845,7 @@ var
     BottomElevation: Double;
     BelowActive: Boolean;
     AltModelMuseLayIndex: Integer;
+    LIndex: integer;
   begin
     for RowIndex := 0 to NROW - 1 do
     begin
@@ -3890,6 +3910,24 @@ var
               ConvertElevToVariable(ModelMuseLayIndex);
             end;
             FElevations[ModelMuseLayIndex, RowIndex, ColIndex] := BottomElevation;
+            for LIndex := ModelMuseLayIndex+1 to NLAY - 1 do
+            begin
+              TopElevation := FElevations[LIndex-1, RowIndex, ColIndex];
+              BottomElevation := FElevations[LIndex, RowIndex, ColIndex];
+              if TopElevation <= BottomElevation then
+              begin
+                BottomElevation := TopElevation - MinThickness;
+                if FConstantElevations[LIndex].IsConstant then
+                begin
+                  ConvertElevToVariable(LIndex);
+                end;
+                FElevations[LIndex, RowIndex, ColIndex] := BottomElevation;
+              end
+              else
+              begin
+                break;
+              end;
+            end;
           end;
         end;
       end;

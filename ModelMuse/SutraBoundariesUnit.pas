@@ -445,11 +445,7 @@ end;
 
 procedure TCustomSutraBoundaryCollection.UChangeHandler(Sender: TObject);
 begin
- { TODO 1 -cSUTRA : This needs to be changed so that a TCustomTimeList is invalidated. }
-  // this needs to be changed.
-  // so that a TCustomTimeList is invalidated.
   InvalidateModel;
-//  Assert(False);
 end;
 
 procedure TSutraObservations.Assign(Source: TPersistent);
@@ -867,6 +863,7 @@ begin
   begin
     Item := TCustomSutraBoundaryItem(AnotherItem);
     result := (Item.UFormula = UFormula)
+      and (Item.Used = Used);
   end;
 end;
 
@@ -906,10 +903,6 @@ end;
 procedure TCustomAssociatedSutraBoundaryCollection.PQChangeHandler(
   Sender: TObject);
 begin
-  { TODO 1 -cSUTRA : This needs to be changed so that a TCustomTimeList is invalidated. }
-  // this needs to be changed.
-  // so that a TCustomTimeList is invalidated.
-//  Assert(False);
   InvalidateModel;
 end;
 

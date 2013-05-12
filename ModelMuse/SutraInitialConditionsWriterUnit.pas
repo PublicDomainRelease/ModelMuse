@@ -69,7 +69,7 @@ begin
     try
 
       case Model.SutraMesh.MeshType of
-        mt2D:
+        mt2D, mtProfile:
           begin
             Mesh2D := Model.SutraMesh.Mesh2D;
             for NodeIndex := 0 to Mesh2D.Nodes.Count - 1 do

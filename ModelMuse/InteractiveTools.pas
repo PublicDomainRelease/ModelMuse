@@ -23,7 +23,8 @@ uses
   GR32, // TBitmap32, and TFloatRect are declared in GR32.
   Types, SysUtils, Classes, Controls, Forms, Graphics, FastGEO, GoPhastTypes,
   AbstractGridUnit, frameViewUnit, SelectUnit, ScreenObjectUnit, UndoItems,
-  UndoItemsScreenObjects, QuadTreeClass, SutraMeshUnit;
+  UndoItemsScreenObjects, QuadTreeClass, SutraMeshUnit, FishnetMeshGenerator,
+  ArgusDataEntry, Generics.Collections, ZoomBox2;
 
 const
   // @name is the color (silver) used to draw selected cells or elements.
@@ -1006,14 +1007,113 @@ Consider creating descendants that each only handle one view of the model. }
   TMoveSutraNodesTool = class(TCustomInteractiveTool)
   private
     FSelectedNodes: TSutraNode2D_List;
+    FSelectedElements: TSutraElement2D_List;
     FNodeQuadTree: TRbwQuadTree;
+    FStartX: Integer;
+    FStartY: Integer;
+    procedure UpdateQuadTree;
+  protected
+    function GetCursor: TCursor; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    procedure DeleteSelectedNodesOrElements;
+    procedure Activate; override;
+    procedure MouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseMove(Sender: TObject; Shift: TShiftState;
+      X, Y: Integer); override;
+    procedure MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer); override;
+  end;
+{$IFDEF SUTRA}
+
+  TFishnetMeshGenerationTool = class(TCustomInteractiveTool)
+  private
+    FNodes: TRbwQuadTree;
+    FFishnetGenerator: TFishnetMeshGenerator;
+    FElement: TFishnetMeshElement;
+    FEdit1: TRbwDataEntry;
+    FEdit2: TRbwDataEntry;
+    FSelectedElement: TFishnetMeshElement;
+    FPanning: Boolean;
+    FSelectedNode: TFishnetMeshNode;
+    FUndoValues: TUndoFishnetMeshValues;
+    FUndoGeometry: TUndoFishnetMesh;
+    procedure EditChanged(Sender: TObject);
+    procedure UpdateEdits(AnElement: TFishnetMeshElement);
+    procedure SubmitUndo;
+    procedure SubmitUndoValues;
+  protected
+    function GetCursor: TCursor; override;
+    procedure CreateLayers; override;
+    procedure DrawOnBitMap32(Sender: TObject; Buffer: TBitmap32); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Activate; override;
+    procedure Deactivate; override;
     procedure MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseMove(Sender: TObject; Shift: TShiftState;
+      X, Y: Integer); override;
+    procedure MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer); override;
+    procedure DoubleClick(Sender: TObject); override;
+    procedure DeleteSelectedElement;
+    procedure DeleteLastNode;
+    procedure HideEdits;
+    procedure UpdateQuadTree;
   end;
+
+  TNewElement = class;
+  TNewElementList = TList<TNewElement>;
+
+  TNewNode = class(TObject)
+  private
+    FNode: TSutraNode2D;
+    FLocation: TPoint2D;
+    FNewElements: TNewElementList;
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+  TNewNodeList = TList<TNewNode>;
+  TNewNodeObjectList = TObjectList<TNewNode>;
+
+  TNewElement = class(TObject)
+  private
+    FNodes: TNewNodeList;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure DrawEdges(const BitMap: TBitmap32; const ZoomBox: TQRbwZoomBox2);
+  end;
+
+  TNewElementObjectList = TObjectList<TNewElement>;
+
+  TDrawElementTool = class(TCustomInteractiveTool)
+  private
+    FNewNodes: TNewNodeObjectList;
+    FNewElements: TNewElementObjectList;
+    FNodeQuadTree: TRbwQuadTree;
+    FNewNodeQuadTree: TRbwQuadTree;
+    FMesh: TSutraMesh3D;
+    FCurrentElement: TNewElement;
+  protected
+    procedure CreateLayers; override;
+    procedure DrawOnBitMap32(Sender: TObject; Buffer: TBitmap32); override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    procedure MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer); override;
+    procedure Activate; override;
+    procedure Deactivate; override;
+
+  end;
+{$ENDIF}
 
 {$IFDEF SUTRA}
 procedure CalculateCenterPoint(out FCenterPoint: TPoint2D);
@@ -1071,6 +1171,7 @@ procedure SetNewCrossSectionAngle(NewAngle:
     EditCrossSectionTool: TEditCrossSectionTool;
     RotateCrossSectionTool: TRotateCrossSectionTool;
     MoveSutraNodesTool: TMoveSutraNodesTool;
+    FishnetTool: TFishnetMeshGenerationTool;
   {$ENDIF}
 
 {$ENDREGION}
@@ -1087,8 +1188,8 @@ implementation
 
 uses Math, CursorsFoiledAgain, GR32_Polygons, frmGoPhastUnit, frmSubdivideUnit,
   frmSetSpacingUnit, frmScreenObjectPropertiesUnit, BigCanvasMethods,
-  LayerStructureUnit, DataSetUnit, ZoomBox2, Contnrs, frmPointValuesUnit,
-  Dialogs, Generics.Collections;
+  LayerStructureUnit, DataSetUnit, Contnrs, frmPointValuesUnit,
+  Dialogs, frmFishnetElementPropertiesUnit;
 
 resourcestring
   StrClickAndDragToZo = 'Click and drag to zoom in';
@@ -1113,6 +1214,9 @@ resourcestring
   StrClickOnObjectToS = 'Click on object to select it or click and drag';
   StrClickToChangeSele = 'Click to change selected column, row, and layer.';
   StrClickToStartMeasu = 'Click to start measuring. Double-click to stop.';
+  StrYouCanNotMoveThe = 'Moving the node located at (%0g, %1g) ' +
+  'would cause one or more elements to be invalid. Are you sure you'
+  + ' want to do this?';
 
 function ConvertSidePoint(APoint: TPoint2D): TPoint2D;
 begin
@@ -6998,12 +7102,10 @@ procedure TMoveSutraNodesTool.Activate;
 var
   FMesh: TSutraMesh3D;
   Limits: TGridLimit;
-  Node2DIndex: Integer;
-  ANode: TSutraNode2D;
-  APoint: TPoint2D;
 begin
   inherited;
   FSelectedNodes.Clear;
+  FSelectedElements.Clear;
   FNodeQuadTree.Clear;
   FMesh := frmGoPhast.PhastModel.Mesh;
   Limits := FMesh.MeshLimits(vdTop);
@@ -7011,31 +7113,114 @@ begin
   FNodeQuadTree.XMax := Limits.MaxX;
   FNodeQuadTree.YMin := Limits.MinY;
   FNodeQuadTree.YMax := Limits.MaxY;
-  for Node2DIndex := 0 to FMesh.Mesh2D.Nodes.Count - 1 do
-  begin
-    ANode := FMesh.Mesh2D.Nodes[Node2DIndex];
-    APoint := ANode.Location;
-    FNodeQuadTree.AddPoint(APoint.x, APoint.y, ANode);
-  end;
+  UpdateQuadTree;
 end;
 
 constructor TMoveSutraNodesTool.Create(AOwner: TComponent);
 begin
   inherited;
   FSelectedNodes:= TSutraNode2D_List.Create;
+  FSelectedElements:= TSutraElement2D_List.Create;
   FNodeQuadTree := TRbwQuadTree.Create(self);
+end;
+
+procedure TMoveSutraNodesTool.DeleteSelectedNodesOrElements;
+var
+  NodeIndex: Integer;
+  Mesh: TSutraMesh3D;
+  ElementIndex: Integer;
+  ANode: TSutraNode2D;
+  AnElement: TSutraElement2D;
+  NodePosition: Integer;
+  Undo: TUndoChangeMesh;
+begin
+  Mesh := frmGoPhast.PhastModel.Mesh;
+  if (Mesh <> nil) and ((FSelectedNodes.Count > 0)
+    or (FSelectedElements.Count > 0)) then
+  begin
+    Undo := TUndoChangeMesh.Create;
+    try
+      Mesh.BeginUpdate;
+      Mesh.Mesh2D.BeginUpdate;
+      try
+        if FSelectedElements.Count = 0 then
+        begin
+          for NodeIndex := 0 to FSelectedNodes.Count - 1 do
+          begin
+            ANode := FSelectedNodes[NodeIndex];
+            for ElementIndex := 0 to ANode.ElementCount - 1 do
+            begin
+              AnElement := ANode.Elements[ElementIndex];
+              NodePosition := AnElement.Nodes.IndexOfNode(ANode);
+              AnElement.Nodes.Delete(NodePosition);
+            end;
+            ANode.Free;
+          end;
+          for ElementIndex := Mesh.Mesh2D.Elements.Count - 1 downto 0 do
+          begin
+            if Mesh.Mesh2D.Elements[ElementIndex].Nodes.Count < 4 then
+            begin
+              AnElement := Mesh.Mesh2D.Elements[ElementIndex];
+              for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+              begin
+                ANode := AnElement.Nodes[NodeIndex].Node;
+                ANode.RemoveElement(AnElement);
+                if ANode.ElementCount = 0 then
+                begin
+                  ANode.Free;
+                end;
+              end;
+              Mesh.Mesh2D.Elements.Delete(ElementIndex);
+            end;
+          end;
+        end
+        else
+        begin
+          for ElementIndex := 0 to FSelectedElements.Count - 1 do
+          begin
+            AnElement := FSelectedElements[ElementIndex];
+            for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+            begin
+              ANode := AnElement.Nodes[NodeIndex].Node;
+              ANode.RemoveElement(AnElement);
+              if ANode.ElementCount = 0 then
+              begin
+                ANode.Free;
+              end;
+            end;
+            AnElement.Free;
+          end;
+        end;
+      finally
+        Mesh.Mesh2D.Renumber;
+        Mesh.Mesh2D.EndUpdate;
+        Mesh.EndUpdate;
+      end;
+      Undo.UpdataNewMesh(frmGoPhast.PhastModel.SutraMesh);
+      frmGoPhast.UndoStack.Submit(Undo);
+      Activate;
+    except
+      Undo.Free;
+    end;
+  end;
 end;
 
 destructor TMoveSutraNodesTool.Destroy;
 begin
   FSelectedNodes.Free;
+  FSelectedElements.Free;
   inherited;
+end;
+
+function TMoveSutraNodesTool.GetCursor: TCursor;
+begin
+  result := crMoveNode;
 end;
 
 procedure TMoveSutraNodesTool.MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 const
-  SearchRadius = 3;
+  SearchRadius = 5;
 var
   APoint: TPoint2D;
   SearchX: double;
@@ -7046,10 +7231,13 @@ var
   ANode: TSutraNode2D;
   ElementIndex: Integer;
   AnElement: TSutraElement2D;
-  AllSelected: Boolean;
+//  AllSelected: Boolean;
   AnotherNode: TSutraNode2D;
   NodeIndex: Integer;
   UpdateView: boolean;
+  Undo: TUndoSelectNodes;
+  Mesh2D: TSutraMesh2D;
+  index: Integer;
 begin
   inherited;
   if ViewDirection <> vdTop then
@@ -7061,27 +7249,40 @@ begin
   begin
     Exit;
   end;
+  Undo := TUndoSelectNodes.Create;
+  FStartX := X;
+  FStartY := Y;
   APoint.X := ZoomBox.X(X);
   APoint.Y := ZoomBox.Y(Y);
   SearchX := APoint.x;
   SearchY := APoint.y;
+  UpdateQuadTree;
   FNodeQuadTree.FirstNearestPoint(SearchX, SearchY, Data);
   NewX := ZoomBox.XCoord(SearchX);
   NewY := ZoomBox.YCoord(SearchY);
   ANode := Data;
+  Mesh2D := frmGoPhast.PhastModel.SutraMesh.Mesh2D;
   if not (ssShift in Shift) then
   begin
-    for NodeIndex := 0 to FSelectedNodes.Count - 1 do
+    for NodeIndex := 0 to Mesh2D.Nodes.Count - 1 do
     begin
-      AnotherNode := FSelectedNodes[NodeIndex];
-      AnotherNode.Selected := False;
-      UpdateView := True;
+      AnotherNode := Mesh2D.Nodes[NodeIndex];
+      if AnotherNode <> ANode then
+      begin
+        AnotherNode.Selected := False;
+        UpdateView := True;
+      end;
     end;
     FSelectedNodes.Clear;
   end;
 
   if (Abs(X-NewX) < SearchRadius) and (Abs(Y-NewY) < SearchRadius) then
   begin
+    for index := 0 to FSelectedElements.Count - 1 do
+    begin
+      FSelectedElements[index].Selected := False;
+    end;
+    FSelectedElements.Clear;
     if ssShift in Shift then
     begin
       ANode.Selected := not ANode.Selected;
@@ -7099,8 +7300,11 @@ begin
     else
     begin
       ANode.Selected := True;
-      FSelectedNodes.Add(ANode);
-      UpdateView := True;
+      if FSelectedNodes.IndexOf(ANode) < 0 then
+      begin
+        FSelectedNodes.Add(ANode);
+        UpdateView := True;
+      end;
     end;
   end
   else
@@ -7113,55 +7317,76 @@ begin
       begin
         if ssShift in Shift then
         begin
-          AllSelected := True;
-          for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+          AnElement.Selected := not AnElement.Selected;
+          if AnElement.Selected then
           begin
-            AnotherNode := AnElement.Nodes[NodeIndex].Node;
-            if not AnotherNode.Selected then
-            begin
-              AllSelected := False;
-              Break;
-            end;
-          end;
-          if AllSelected then
-          begin
-            for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
-            begin
-              AnotherNode := AnElement.Nodes[NodeIndex].Node;
-              if AnotherNode.Selected then
-              begin
-                AnotherNode.Selected := False;
-                FSelectedNodes.Remove(AnotherNode);
-                UpdateView := True;
-              end;
-            end;
+            FSelectedElements.Add(AnElement);
           end
           else
           begin
-            for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
-            begin
-              AnotherNode := AnElement.Nodes[NodeIndex].Node;
-              if not AnotherNode.Selected then
-              begin
-                AnotherNode.Selected := True;
-                FSelectedNodes.Add(AnotherNode);
-                UpdateView := True;
-              end;
-            end;
+            FSelectedElements.Remove(AnElement);
           end;
+          UpdateView := True;
+//          AllSelected := True;
+//          for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+//          begin
+//            AnotherNode := AnElement.Nodes[NodeIndex].Node;
+//            if not AnotherNode.Selected then
+//            begin
+//              AllSelected := False;
+//              Break;
+//            end;
+//          end;
+//          if AllSelected then
+//          begin
+//            for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+//            begin
+//              AnotherNode := AnElement.Nodes[NodeIndex].Node;
+//              if AnotherNode.Selected then
+//              begin
+//                AnotherNode.Selected := False;
+//                FSelectedNodes.Remove(AnotherNode);
+//                UpdateView := True;
+//              end;
+//            end;
+//          end
+//          else
+//          begin
+//            for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+//            begin
+//              AnotherNode := AnElement.Nodes[NodeIndex].Node;
+//              if not AnotherNode.Selected then
+//              begin
+//                AnotherNode.Selected := True;
+//                FSelectedNodes.Add(AnotherNode);
+//                UpdateView := True;
+//              end;
+//            end;
+//          end;
         end
         else
         begin
-          for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+          if (FSelectedElements.Count <> 1) or not AnElement.Selected then
           begin
-            AnotherNode := AnElement.Nodes[NodeIndex].Node;
-            if not AnotherNode.Selected then
+            UpdateView := True;
+            for index := 0 to FSelectedElements.Count - 1 do
             begin
-              AnotherNode.Selected := True;
-              FSelectedNodes.Add(AnotherNode);
-              UpdateView := True;
+              FSelectedElements[index].Selected := False;
             end;
+            FSelectedElements.Clear;
+            AnElement.Selected := True;
+            FSelectedElements.Add(AnElement);
           end;
+//          for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+//          begin
+//            AnotherNode := AnElement.Nodes[NodeIndex].Node;
+//            if not AnotherNode.Selected then
+//            begin
+//              AnotherNode.Selected := True;
+//              FSelectedNodes.Add(AnotherNode);
+//              UpdateView := True;
+//            end;
+//          end;
         end;
 
         Break;
@@ -7171,11 +7396,1155 @@ begin
 
   if UpdateView then
   begin
+    Undo.UpdateSelectedNodes(FSelectedNodes);
+    Undo.UpdateSelectedElements(FSelectedElements);
+    frmGoPhast.UndoStack.Submit(Undo);
+    Activate;
+  end
+  else
+  begin
+    Undo.Free;
+  end;
+end;
+
+procedure TMoveSutraNodesTool.MouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  inherited;
+  UpdateCursors;
+end;
+
+procedure TMoveSutraNodesTool.MouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+const
+  MinDistance = 3;
+var
+  StartX: Extended;
+  StartY: Extended;
+  EndX: Extended;
+  EndY: Extended;
+  DeltaX: Extended;
+  DeltaY: Extended;
+  ANode: TSutraNode2D;
+  index: Integer;
+  MoveOk: Boolean;
+  NodePoint: TPoint2D;
+  ElementIndex: Integer;
+  AnElement: TSutraElement2D;
+  NodePosition: Integer;
+  Neighbor1Position: Integer;
+  Neighbor2Position: Integer;
+  OppositePosition: Integer;
+  Neighbor1: TSutraNode2D;
+  Neighbor2: TSutraNode2D;
+  Opposite: TSutraNode2D;
+  Neighbor1Point: TPoint2D;
+  Neighbor2Point: TPoint2D;
+  OppositePoint: TPoint2D;
+  ErrorMessage: string;
+  Nodes: TSutraNode2D_Collection;
+  Undo: TUndoMoveSutraNodes;
+  NodeIndex: integer;
+  Mesh2D: TSutraMesh2D;
+  Elements: TSutraElement2D_Collection;
+  procedure SetErrorMessage;
+  var
+    NodeLocation: TPoint2D;
+  begin
+    NodeLocation := ANode.Location;
+    ErrorMessage := Format(StrYouCanNotMoveThe,
+      [NodeLocation.x, NodeLocation.y]);
+    Beep;
+  end;
+begin
+  inherited;
+  if ((Abs(X-FStartX)>MinDistance) or (Abs(Y-FStartY)>MinDistance))
+    and ((FSelectedNodes.Count > 0) or (FSelectedElements.Count > 0)) then
+  begin
+    FSelectedNodes.Clear;
+    FSelectedElements.Clear;
+    Mesh2D := frmGoPhast.PhastModel.SutraMesh.Mesh2D;
+    for index := 0 to Mesh2D.Nodes.Count - 1 do
+    begin
+      ANode := Mesh2D.Nodes[index];
+      if ANode.Selected then
+      begin
+        FSelectedNodes.Add(ANode);
+      end;
+    end;
+    for Index := 0 to Mesh2D.Elements.Count - 1 do
+    begin
+      AnElement := Mesh2D.Elements[Index];
+      if AnElement.Selected then
+      begin
+        for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+        begin
+          ANode := AnElement.Nodes[NodeIndex].Node;
+          if not ANode.Selected then
+          begin
+            FSelectedNodes.Add(ANode);
+          end;
+        end;
+      end;
+    end;
+    StartX := ZoomBox.X(FStartX);
+    StartY := ZoomBox.Y(FStartY);
+    EndX := ZoomBox.X(X);
+    EndY := ZoomBox.Y(Y);
+    DeltaX := EndX-StartX;
+    DeltaY := EndY-StartY;
+    MoveOk := True;
+    ErrorMessage := '';
+    for index := 0 to FSelectedNodes.Count - 1 do
+    begin
+      ANode := FSelectedNodes[index];
+      NodePoint := ANode.Location;
+      NodePoint.x := NodePoint.x + DeltaX;
+      NodePoint.y := NodePoint.y + DeltaY;
+      for ElementIndex := 0 to ANode.ElementCount - 1 do
+      begin
+        AnElement := ANode.Elements[ElementIndex];
+        Assert(AnElement.Nodes.Count = 4);
+        NodePosition := AnElement.Nodes.IndexOfNode(ANode);
+        Assert(NodePosition >= 0);
+        if NodePosition > 0 then
+        begin
+          Neighbor1Position := NodePosition - 1;
+        end
+        else
+        begin
+          Neighbor1Position := 3;
+        end;
+        if NodePosition < 3 then
+        begin
+          Neighbor2Position := NodePosition + 1;
+        end
+        else
+        begin
+          Neighbor2Position := 0;
+        end;
+        OppositePosition := NodePosition - 2;
+        if OppositePosition < 0 then
+        begin
+          Inc(OppositePosition, 4);
+        end;
+        Neighbor1 := AnElement.Nodes[Neighbor1Position].Node;
+        Neighbor2 := AnElement.Nodes[Neighbor2Position].Node;
+        Opposite := AnElement.Nodes[OppositePosition].Node;
+        Neighbor1Point := Neighbor1.Location;
+        if Neighbor1.Selected then
+        begin
+          Neighbor1Point.x := Neighbor1Point.x + DeltaX;
+          Neighbor1Point.y := Neighbor1Point.y + DeltaY;
+        end;
+        Neighbor2Point := Neighbor2.Location;
+        if Neighbor2.Selected then
+        begin
+          Neighbor2Point.x := Neighbor2Point.x + DeltaX;
+          Neighbor2Point.y := Neighbor2Point.y + DeltaY;
+        end;
+        OppositePoint := Opposite.Location;
+        if Opposite.Selected then
+        begin
+          OppositePoint.x := OppositePoint.x + DeltaX;
+          OppositePoint.y := OppositePoint.y + DeltaY;
+        end;
+        if Intersect(EquateSegment(NodePoint, Neighbor1Point),
+          EquateSegment(Neighbor2Point, OppositePoint)) then
+        begin
+          MoveOk := False;
+          SetErrorMessage;
+          break;
+        end;
+        if Intersect(EquateSegment(NodePoint, Neighbor2Point),
+          EquateSegment(Neighbor1Point, OppositePoint)) then
+        begin
+          MoveOk := False;
+          SetErrorMessage;
+          break;
+        end;
+      end;
+    end;
+    if MoveOk
+      or (MessageDlg(ErrorMessage, mtWarning, [mbYes, mbNo], 0, mbNo) = mrYes)
+      then
+    begin
+
+      Undo := TUndoMoveSutraNodes.Create;
+      try
+        Nodes := frmGoPhast.PhastModel.Mesh.Mesh2D.Nodes;
+        for NodeIndex := 0 to Nodes.Count - 1 do
+        begin
+          ANode := Nodes[NodeIndex];
+          if ANode.Selected then
+          begin
+            ANode.X := ANode.X + DeltaX;
+            ANode.Y := ANode.Y + DeltaY;
+          end;
+        end;
+        Elements := frmGoPhast.PhastModel.Mesh.Mesh2D.Elements;
+        for Index := 0 to Elements.Count - 1 do
+        begin
+          AnElement := Elements[Index];
+          if AnElement.Selected then
+          begin
+            for NodeIndex := 0 to AnElement.Nodes.Count - 1 do
+            begin
+              ANode := AnElement.Nodes[NodeIndex].Node;
+              if not ANode.Selected then
+              begin
+                ANode.X := ANode.X + DeltaX;
+                ANode.Y := ANode.Y + DeltaY;
+              end;
+            end;
+          end;
+        end;
+        Undo.UpdataNewMesh(frmGoPhast.PhastModel.SutraMesh);
+      except
+        Undo.Free;
+        raise;
+      end;
+
+      frmGoPhast.UndoStack.Submit(Undo);
+
+//      frmGoPhast.UndoStack.Submit(TUndoMoveSutraNodes.Create(DeltaX, DeltaY));
+      Activate;
+    end;
+  end;
+end;
+
+procedure TMoveSutraNodesTool.UpdateQuadTree;
+var
+  FMesh: TSutraMesh3D;
+  APoint: TPoint2D;
+  Node2DIndex: Integer;
+  ANode: TSutraNode2D;
+  ElementIndex: Integer;
+  AnElement: TSutraElement2D;
+begin
+  FMesh := frmGoPhast.PhastModel.Mesh;
+  FNodeQuadTree.Clear;
+  for Node2DIndex := 0 to FMesh.Mesh2D.Nodes.Count - 1 do
+  begin
+    ANode := FMesh.Mesh2D.Nodes[Node2DIndex];
+    APoint := ANode.Location;
+    FNodeQuadTree.AddPoint(APoint.x, APoint.y, ANode);
+    if ANode.Selected then
+    begin
+      FSelectedNodes.Add(ANode);
+    end;
+  end;
+  FSelectedElements.Clear;
+  for ElementIndex := 0 to FMesh.Mesh2D.Elements.Count - 1 do
+  begin
+    AnElement := FMesh.Mesh2D.Elements[ElementIndex];
+    if AnElement.Selected then
+    begin
+      FSelectedElements.Add(AnElement);
+    end;
+  end;
+end;
+
+{ TFishnetMeshGenerationTool }
+{$IFDEF SUTRA}
+
+procedure TFishnetMeshGenerationTool.Activate;
+  procedure SetEditProperties(Edit: TRbwDataEntry);
+  begin
+    Edit.Visible := False;
+    Edit.Parent := ZoomBox.Image32;
+    Edit.Text := '1';
+    Edit.DataType := dtInteger;
+    Edit.Min := 1;
+    Edit.CheckMin := True;
+    Edit.OnChange := EditChanged;
+    Edit.Width := 60;
+  end;
+var
+  LastElement: TFishnetMeshElement;
+begin
+  inherited;
+  if FUndoValues = nil then
+  begin
+    FUndoValues := TUndoFishnetMeshValues.Create;
+  end;
+  if FUndoGeometry = nil then
+  begin
+    FUndoGeometry := TUndoFishnetMesh.Create;
+  end;
+  if FEdit1 = nil then
+  begin
+    Assert(FEdit2 = nil);
+
+    FEdit1 := TRbwDataEntry.Create(self);
+    SetEditProperties(FEdit1);
+
+    FEdit2 := TRbwDataEntry.Create(self);
+    SetEditProperties(FEdit2);
+  end;
+
+
+  CreateLayers;
+  FFishnetGenerator := frmGoPhast.PhastModel.FishnetMeshGenerator;
+  UpdateQuadTree;
+
+  if FFishnetGenerator.Elements.Count > 0 then
+  begin
+    LastElement := FFishnetGenerator.Elements[
+      FFishnetGenerator.Elements.Count-1];
+    if LastElement.Nodes.Count < 4 then
+    begin
+      FElement := LastElement;
+      FSelectedElement := LastElement;
+      LastElement.Selected := True;
+    end;
+  end;
+end;
+
+constructor TFishnetMeshGenerationTool.Create(AOwner: TComponent);
+begin
+  inherited;
+  FNodes := TRbwQuadTree.Create(self);
+
+end;
+
+procedure TFishnetMeshGenerationTool.CreateLayers;
+  function CreateLayer(ZoomBox: TQRbwZoomBox2): TPositionedLayer;
+  begin
+    result := ZoomBox.Image32.Layers.Add(TPositionedLayer) as
+      TPositionedLayer;
+    result.OnPaint := DrawOnBitMap32;
+  end;
+begin
+  if FTopLayer = nil then
+  begin
+    FTopLayer := CreateLayer(frmGoPhast.frameTopView.ZoomBox);
+  end;
+end;
+
+procedure TFishnetMeshGenerationTool.DeActivate;
+begin
+  inherited;
+  HideEdits;
+end;
+
+procedure TFishnetMeshGenerationTool.DeleteLastNode;
+var
+  LastElement: TFishnetMeshElement;
+  LastNode: TFishnetMeshNode;
+begin
+  if FFishnetGenerator.Elements.Count > 0 then
+  begin
+    LastElement := FFishnetGenerator.Elements[
+      FFishnetGenerator.Elements.Count-1];
+    LastNode := LastElement.Nodes.Items[LastElement.Nodes.Count-1];
+    LastElement.Nodes.Delete(LastElement.Nodes.Count-1);
+    LastNode.Elements.Remove(LastElement);
+    if LastNode.Elements.Count = 0 then
+    begin
+      LastNode.Free;
+    end;
+    if LastElement.Nodes.Count = 0 then
+    begin
+      if FElement = LastElement then
+      begin
+        FElement := nil;
+      end;
+      LastElement.Free;
+      SubmitUndo;
+    end
+    else
+    begin
+      FElement := LastElement;
+      FElement.Selected := True;
+    end;
+    FSelectedElement := nil;
+    HideEdits;
+    UpdateQuadTree;
     frmGoPhast.InvalidateTop;
-    View.MagnificationChanged := True;
+  end;
+end;
+
+procedure TFishnetMeshGenerationTool.SubmitUndoValues;
+begin
+  FUndoValues.UpdateNewFishnetMesh;
+  FUndoGeometry.UpdateOldFishnetMesh;
+  frmGoPhast.UndoStack.Submit(FUndoValues);
+  FUndoValues := TUndoFishnetMeshValues.Create;
+end;
+
+procedure TFishnetMeshGenerationTool.SubmitUndo;
+begin
+  FUndoValues.UpdateOldFishnetMesh;
+  FUndoGeometry.UpdateNewFishnetMesh;
+  frmGoPhast.UndoStack.Submit(FUndoGeometry);
+  FUndoGeometry := TUndoFishnetMesh.Create;
+end;
+
+procedure TFishnetMeshGenerationTool.DeleteSelectedElement;
+var
+  NodeIndex: Integer;
+  ANode: TFishnetMeshNode;
+begin
+  if FSelectedElement <> nil then
+  begin
+    for NodeIndex := 0 to FSelectedElement.Nodes.Count - 1 do
+    begin
+      ANode := FSelectedElement.Nodes.Items[NodeIndex];
+      ANode.Elements.Remove(FSelectedElement);
+      if ANode.Elements.Count = 0 then
+      begin
+         ANode.Free;
+      end;
+    end;
+    if FSelectedElement = FElement then
+    begin
+      FElement := nil;
+    end;
+    FSelectedElement.Free;
+    FSelectedElement := nil;
+    SubmitUndo;
+    HideEdits;
+    frmGoPhast.InvalidateTop;
+    UpdateQuadTree;
+  end;
+end;
+
+destructor TFishnetMeshGenerationTool.Destroy;
+begin
+  FUndoValues.Free;
+  FUndoGeometry.Free;
+  inherited;
+end;
+
+procedure TFishnetMeshGenerationTool.DoubleClick(Sender: TObject);
+var
+  AForm: TfrmFishnetElementProperties;
+begin
+  inherited;
+  if FSelectedElement <> nil then
+  begin
+    AForm := TfrmFishnetElementProperties.Create(nil);
+    try
+      AForm.GetData(FSelectedElement);
+      if AForm.ShowModal = mrOK then
+      begin
+        UpdateEdits(FSelectedElement);
+        SubmitUndoValues;
+      end;
+
+    finally
+      AForm.Free
+    end;
+  end;
+end;
+
+procedure TFishnetMeshGenerationTool.DrawOnBitMap32(Sender: TObject;
+  Buffer: TBitmap32);
+begin
+  inherited;
+  if frmGoPhast.CurrentTool <> self then Exit;
+  if ViewDirection <> vdTop then
+  begin
+    Exit;
+  end;
+  FFishnetGenerator.DrawTop(Buffer, ZoomBox);
+end;
+
+procedure TFishnetMeshGenerationTool.EditChanged(Sender: TObject);
+var
+  Value: Integer;
+begin
+  if FSelectedElement = nil then
+  begin
+    Exit;
+  end;
+  if Sender = FEdit1 then
+  begin
+    if not FEdit1.Visible then
+    begin
+      Exit;
+    end;
+    if TryStrToInt(FEdit1.Text, Value) then
+    begin
+      if Value >= 1 then
+      begin
+        FSelectedElement.FirstControl.Count := Value;
+        FFishnetGenerator.UpdateCount1(FSelectedElement);
+        SubmitUndoValues;
+      end;
+    end;
+  end
+  else if Sender = FEdit2 then
+  begin
+    if not FEdit2.Visible then
+    begin
+      Exit;
+    end;
+    if TryStrToInt(FEdit2.Text, Value) then
+    begin
+      if Value >= 1 then
+      begin
+        FSelectedElement.SecondControl.Count := Value;
+        FFishnetGenerator.UpdateCount2(FSelectedElement);
+        SubmitUndoValues;
+      end;
+    end;
+  end
+  else
+  begin
+    Exit;
   end;
 
 end;
+
+function TFishnetMeshGenerationTool.GetCursor: TCursor;
+begin
+  if FPanning then
+  begin
+    Result := PanTool.Cursor;
+  end
+  else
+  begin
+    result := crFishnet;
+  end;
+
+end;
+
+procedure TFishnetMeshGenerationTool.HideEdits;
+begin
+  if FEdit1 <> nil then
+  begin
+    FEdit1.Visible := False;
+    FEdit2.Visible := False;
+  end;
+end;
+
+procedure TFishnetMeshGenerationTool.UpdateQuadTree;
+var
+  MinX: double;
+  MaxX: double;
+  MinY: double;
+  MaxY: double;
+  Local_index: Integer;
+  Local_index1: Integer;
+  AZoomBox: TQRbwZoomBox2;
+  ANode: TFishnetMeshNode;
+begin
+  FNodes.Clear;
+  MinX := 0;
+  MaxX := 0;
+  MinY := 0;
+  MaxY := 0;
+  for Local_index := FFishnetGenerator.Nodes.Count - 1 downto 0 do
+  begin
+    ANode := FFishnetGenerator.Nodes[Local_index];
+    if ANode.Elements.Count = 0 then
+    begin
+      ANode.Free;
+    end;
+  end;
+  if FFishnetGenerator.Nodes.Count > 0 then
+  begin
+    ANode := FFishnetGenerator.Nodes[0];
+    MinX := ANode.X;
+    MinY := ANode.Y;
+    MaxX := MinX;
+    MaxY := MinY;
+    for Local_index := 1 to FFishnetGenerator.Nodes.Count - 1 do
+    begin
+      ANode := FFishnetGenerator.Nodes[Local_index];
+      if ANode.X < MinX then
+      begin
+        MinX := ANode.X;
+      end
+      else if ANode.X > MaxX then
+      begin
+        MaxX := ANode.X;
+      end;
+      if ANode.Y < MinY then
+      begin
+        MinY := ANode.Y;
+      end
+      else if ANode.Y > MaxY then
+      begin
+        MaxY := ANode.Y;
+      end;
+    end;
+  end;
+  AZoomBox := ZoomBox;
+  FNodes.XMax := AZoomBox.XCoord(MaxX);
+  FNodes.XMin := AZoomBox.XCoord(MinX);
+  FNodes.YMin := AZoomBox.YCoord(MaxY);
+  FNodes.YMax := AZoomBox.YCoord(MinY);
+  for Local_index1 := 0 to FFishnetGenerator.Nodes.Count - 1 do
+  begin
+    ANode := FFishnetGenerator.Nodes[Local_index1];
+    FNodes.AddPoint(AZoomBox.XCoord(ANode.X), AZoomBox.YCoord(ANode.Y), ANode);
+  end;
+end;
+
+procedure TFishnetMeshGenerationTool.MouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+const
+  SelectionWidth = 5;
+var
+  ANode: TFishnetMeshNode;
+  LocalX: double;
+  LocalY: double;
+  Data: TPointerArray;
+begin
+  inherited;
+  FPanning := False;
+  FSelectedNode := nil;
+  if ssShift in Shift then
+  begin
+    ANode := nil;
+    if FFishnetGenerator.Nodes.Count > 0 then
+    begin
+      LocalX := X;
+      LocalY := Y;
+      FNodes.FindClosestPointsData(LocalX, LocalY, Data);
+      if (Abs(X-LocalX) <= SelectionWidth)
+        and  (Abs(Y-LocalY) <= SelectionWidth) then
+      begin
+        ANode := Data[0];
+      end;
+    end;
+    if ANode <> nil then
+    begin
+      FSelectedNode := ANode;
+      FSelectedNode.Selected := True;
+      frmGoPhast.InvalidateTop;
+    end
+    else
+    begin
+      FPanning := True;
+      UpdateCursors;
+    end;
+
+  end;
+  if FPanning then
+  begin
+    PanTool.MouseDown(Sender, Button, Shift, X, Y);
+  end;
+end;
+
+procedure TFishnetMeshGenerationTool.MouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  inherited;
+  UpdateCursors;
+end;
+
+procedure TFishnetMeshGenerationTool.UpdateEdits(AnElement: TFishnetMeshElement);
+begin
+  AnElement.ComputeNumberCenterLocations(ZoomBox);
+
+  FEdit1.Left := AnElement.CenterLocation1.X - FEdit1.Width div 2;
+  FEdit1.Top := AnElement.CenterLocation1.Y - FEdit1.Height div 2;
+  FEdit1.Text := IntToStr(AnElement.FirstControl.Count);
+  FEdit1.Visible := True;
+
+  FEdit2.Left := AnElement.CenterLocation2.X - FEdit2.Width div 2;
+  FEdit2.Top := AnElement.CenterLocation2.Y - FEdit2.Height div 2;
+  FEdit2.Text := IntToStr(AnElement.SecondControl.Count);
+  FEdit2.Visible := True;
+end;
+
+procedure TFishnetMeshGenerationTool.MouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+const
+  SelectionWidth = 5;
+var
+  ANode: TFishnetMeshNode;
+  LocalX: double;
+  LocalY: double;
+  Data: TPointerArray;
+  AZoomBox: TQRbwZoomBox2;
+  APoint: TPoint2D;
+  OkLocation: Boolean;
+  ElementIndex: Integer;
+  AnElement: TFishnetMeshElement;
+  Segment1: TSegment2D;
+  Segment2: TSegment2D;
+  InsideElement: TFishnetMeshElement;
+  AnotherNode: TFishnetMeshNode;
+  NodeIndex: Integer;
+begin
+  inherited;
+  AZoomBox := ZoomBox;
+  if FSelectedNode <> nil then
+  begin
+    FSelectedNode.X := AZoomBox.X(X);
+    FSelectedNode.Y := AZoomBox.Y(Y);
+    HideEdits;
+    FSelectedNode.Selected := False;
+    frmGoPhast.InvalidateTop;
+    SubmitUndo;
+    Exit;
+  end;
+  if FPanning then
+  begin
+    PanTool.MouseUp(Sender, Button, Shift, X, Y);
+    FPanning := False;
+    HideEdits;
+    UpdateCursors;
+    Exit;
+  end;
+  if ViewDirection <> vdTop then
+  begin
+    Exit;
+  end;
+  if FEdit1.Visible then
+  begin
+    if FSelectedElement <> nil then
+    begin
+      FFishnetGenerator.UpdateCount1(FSelectedElement);
+      FFishnetGenerator.UpdateCount2(FSelectedElement);
+    end;
+    HideEdits;
+    ZoomBox.InvalidateImage32;
+    Exit;
+  end;
+  ANode := nil;
+  if FFishnetGenerator.Nodes.Count > 0 then
+  begin
+    LocalX := X;
+    LocalY := Y;
+    FNodes.FindClosestPointsData(LocalX, LocalY, Data);
+    if (Abs(X-LocalX) <= SelectionWidth)
+      and  (Abs(Y-LocalY) <= SelectionWidth) then
+    begin
+      ANode := Data[0];
+    end;
+  end;
+  InsideElement := nil;
+
+  APoint.X := AZoomBox.X(X);
+  APoint.Y := AZoomBox.Y(Y);
+  OkLocation :=  True;
+  if (FElement <> nil) and (FElement.Nodes.Count = 3) then
+  begin
+    Segment1 := EquateSegment(
+      FElement.Nodes[0].Location, FElement.Nodes[2].Location);
+    Segment2 := EquateSegment(
+      FElement.Nodes[1].Location, APoint);
+    OkLocation := Intersect(Segment1, Segment2);
+  end;
+  if not OkLocation then
+  begin
+    Beep;
+    Exit;
+  end;
+
+  if ANode = nil then
+  begin
+    if OkLocation then
+    begin
+      for ElementIndex := 0 to FFishnetGenerator.Elements.Count - 1 do
+      begin
+        AnElement := FFishnetGenerator.Elements[ElementIndex];
+        if AnElement = FElement then
+        begin
+          Continue;
+        end;
+        if AnElement.IsInside(APoint) then
+        begin
+          InsideElement := AnElement;
+          OkLocation := False;
+          break;
+        end;
+      end;
+    end;
+    if OkLocation and (FElement <> nil) and (FElement.Nodes.Count >= 1) then
+    begin
+      if FElement.Nodes.Count = 3 then
+      begin
+        Segment1 := EquateSegment(
+          FElement.Nodes[0].Location, APoint);
+        Segment2 := EquateSegment(
+          FElement.Nodes[2].Location, APoint);
+        for ElementIndex := 0 to FFishnetGenerator.Elements.Count - 1 do
+        begin
+          AnElement := FFishnetGenerator.Elements[ElementIndex];
+          if AnElement = FElement then
+          begin
+            Continue;
+          end;
+          OkLocation := not AnElement.Intersect(Segment1, FElement.Nodes)
+            and not AnElement.Intersect(Segment2, FElement.Nodes);
+          if not OkLocation then
+          begin
+            break;
+          end;
+        end;
+      end
+      else
+      begin
+        Segment1 := EquateSegment(
+          FElement.Nodes[FElement.Nodes.Count-1].Location, APoint);
+        for ElementIndex := 0 to FFishnetGenerator.Elements.Count - 1 do
+        begin
+          AnElement := FFishnetGenerator.Elements[ElementIndex];
+          if AnElement = FElement then
+          begin
+            Continue;
+          end;
+          OkLocation := not AnElement.Intersect(Segment1, FElement.Nodes);
+          if not OkLocation then
+          begin
+            break;
+          end;
+        end;
+      end;
+    end;
+    if OkLocation then
+    begin
+      ANode := FFishnetGenerator.Nodes.Add;
+      ANode.Location := APoint;
+      FNodes.AddPoint(X, Y, ANode);
+    end;
+  end;
+  if ANode <> nil then
+  begin
+    for ElementIndex := 0 to FFishnetGenerator.Elements.Count - 1 do
+    begin
+      AnElement := FFishnetGenerator.Elements[ElementIndex];
+      if AnElement <> FElement then
+      begin
+        AnElement.Selected := False;
+      end;
+    end;
+    if FElement = nil then
+    begin
+      HideEdits;
+      FElement := FFishnetGenerator.Elements.Add;
+      FElement.Selected := True;
+      FSelectedElement := nil;
+    end;
+    FElement.Nodes.Add(ANode);
+    if ANode.Elements.IndexOf(FElement) < 0 then
+    begin
+      ANode.Elements.Add(FElement);
+    end;
+
+
+    if FElement.Nodes.Count >= 3 then
+    begin
+      for NodeIndex := 0 to FFishnetGenerator.Nodes.Count - 1 do
+      begin
+        AnotherNode := FFishnetGenerator.Nodes[NodeIndex];
+        if FElement.Nodes.IndexOf(AnotherNode) >= 0 then
+        begin
+          Continue;
+        end;
+        if FElement.IsInside(AnotherNode.Location) then
+        begin
+          FElement.Nodes.Remove(ANode);
+          ANode.Elements.Remove(FElement);
+          if ANode.Elements.Count = 0 then
+          begin
+            ANode.Free;
+          end;
+          Beep;
+          Exit;
+        end;
+      end;
+    end;
+
+    if FElement.Nodes.Count = 4 then
+    begin
+      FSelectedElement := FElement;
+      FFishnetGenerator.GetCountsFromNeighbors(FElement);
+
+      UpdateEdits(FSelectedElement);
+      FElement.Selected := False;
+      FElement := nil;
+      SubmitUndo;
+      FEdit1.Visible := True;
+      FEdit2.Visible := True;
+    end;
+  end
+  else
+  begin
+    if (FElement = nil) and (InsideElement <> nil) then
+    begin
+      InsideElement.Selected := True;
+      FSelectedElement := InsideElement;
+      UpdateEdits(FSelectedElement);
+    end;
+  end;
+  ZoomBox.InvalidateImage32;
+end;
+{$ENDIF}
+
+{ TNewElement }
+
+{$IFDEF SUTRA}
+constructor TNewElement.Create;
+begin
+  FNodes:= TNewNodeList.Create;
+end;
+
+destructor TNewElement.Destroy;
+begin
+  FNodes.Free;
+  inherited;
+end;
+
+procedure TNewElement.DrawEdges(const BitMap: TBitmap32;
+  const ZoomBox: TQRbwZoomBox2);
+var
+  Points: GoPhastTypes.TPointArray;
+  ANode: TNewNode;
+  NodeIndex: Integer;
+begin
+  if FNodes.Count > 0 then
+  begin
+    SetLength(Points, FNodes.Count+1);
+    for NodeIndex := 0 to FNodes.Count - 1 do
+    begin
+      ANode := FNodes[NodeIndex];
+      Points[NodeIndex] := ConvertTop2D_Point(ZoomBox, ANode.FLocation);
+    end;
+    Points[FNodes.Count] := Points[0];
+    DrawBigPolyline32(BitMap, clBlack32, OrdinaryGridLineThickness,
+      Points, True);
+  end;
+
+end;
+{$ENDIF}
+
+{ TDrawElementTool }
+
+{$IFDEF SUTRA}
+
+procedure TDrawElementTool.Activate;
+var
+  Node2DIndex: Integer;
+  ANode: TSutraNode2D;
+  APoint: TPoint2D;
+  Limits: TGridLimit;
+begin
+  inherited;
+  FMesh := frmGoPhast.PhastModel.Mesh;
+  Limits := FMesh.MeshLimits(vdTop);
+  FNodeQuadTree.Clear;
+  FNodeQuadTree.XMin := Limits.MinX;
+  FNodeQuadTree.XMax := Limits.MaxX;
+  FNodeQuadTree.YMin := Limits.MinY;
+  FNodeQuadTree.YMax := Limits.MaxY;
+
+  FNewNodeQuadTree.XMin := Limits.MinX;
+  FNewNodeQuadTree.XMax := Limits.MaxX;
+  FNewNodeQuadTree.YMin := Limits.MinY;
+  FNewNodeQuadTree.YMax := Limits.MaxY;
+
+  for Node2DIndex := 0 to FMesh.Mesh2D.Nodes.Count - 1 do
+  begin
+    ANode := FMesh.Mesh2D.Nodes[Node2DIndex];
+    APoint := ANode.Location;
+    FNodeQuadTree.AddPoint(APoint.x, APoint.y, ANode);
+  end;
+end;
+
+constructor TDrawElementTool.Create(AOwner: TComponent);
+begin
+  inherited;
+  FNewNodeQuadTree := TRbwQuadTree.Create(self);
+  FNodeQuadTree := TRbwQuadTree.Create(self);
+  FNewNodes := TNewNodeObjectList.Create;
+  FNewElements := TNewElementObjectList.Create;
+end;
+
+procedure TDrawElementTool.CreateLayers;
+  function CreateLayer(ZoomBox: TQRbwZoomBox2): TPositionedLayer;
+  begin
+    result := ZoomBox.Image32.Layers.Add(TPositionedLayer) as
+      TPositionedLayer;
+    result.OnPaint := DrawOnBitMap32;
+  end;
+begin
+  if FTopLayer = nil then
+  begin
+    FTopLayer := CreateLayer(frmGoPhast.frameTopView.ZoomBox);
+  end;
+end;
+
+procedure TDrawElementTool.DeActivate;
+var
+  index: Integer;
+  LastElement: TNewElement;
+  Undo: TUndoDrawElements;
+  NodeIndex: Integer;
+  NewNode: TNewNode;
+  Mesh2D: TSutraMesh2D;
+  ElementIndex: Integer;
+  NewElement: TNewElement;
+  AnElement: TSutraElement2D;
+  NodeNumberItem: TSutraNodeNumber2D_Item;
+begin
+  inherited;
+  if FNewElements.Count > 0 then
+  begin
+    LastElement := FNewElements.Last;
+    if LastElement.FNodes.Count <> 4 then
+    begin
+      for index := 0 to LastElement.FNodes.Count - 1 do
+      begin
+        LastElement.FNodes[index].FNewElements.Remove(LastElement);
+      end;
+      FNewElements.Delete(FNewElements.Count-1);
+    end;
+  end;
+  if FNewElements.Count > 0 then
+  begin
+    Undo := TUndoDrawElements.Create;
+    try
+      Mesh2D := frmGoPhast.PhastModel.SutraMesh.Mesh2D;
+      for NodeIndex := 0 to FNewNodes.Count - 1 do
+      begin
+        NewNode := FNewNodes[NodeIndex];
+        if (NewNode.FNewElements.Count > 0) and (NewNode.FNode = nil) then
+        begin
+          NewNode.FNode := Mesh2D.Nodes.Add;
+          NewNode.FNode.Location := NewNode.FLocation;
+        end;
+      end;
+      for ElementIndex := 0 to FNewElements.Count - 1 do
+      begin
+        NewElement := FNewElements[ElementIndex];
+        AnElement := Mesh2D.Elements.Add;
+        for NodeIndex := 0 to NewElement.FNodes.Count - 1 do
+        begin
+          NewNode := NewElement.FNodes[NodeIndex];
+          NodeNumberItem := AnElement.Nodes.Add;
+          NodeNumberItem.Node := NewNode.FNode;
+        end;
+      end;
+      Undo.UpdataNewMesh(frmGoPhast.PhastModel.SutraMesh);
+    except on E: Exception do
+      begin
+        Undo.Free;
+        raise
+      end;
+    end;
+    frmGoPhast.UndoStack.Submit(Undo);
+  end;
+end;
+
+destructor TDrawElementTool.Destroy;
+begin
+  FNewElements.Free;
+  FNewNodes.Free;
+  inherited;
+end;
+
+procedure TDrawElementTool.DrawOnBitMap32(Sender: TObject; Buffer: TBitmap32);
+var
+  index: Integer;
+  NewElement: TNewElement;
+  AZoomBox: TQRbwZoomBox2;
+begin
+  if frmGoPhast.CurrentTool <> self then Exit;
+  if ViewDirection <> vdTop then
+  begin
+    Exit;
+  end;
+  AZoomBox := ZoomBox;
+  for index := 0 to FNewElements.Count - 1 do
+  begin
+    NewElement := FNewElements[index];
+    NewElement.DrawEdges(Buffer, AZoomBox);
+  end;
+//  FFishnetGenerator.DrawTop(Buffer, ZoomBox);
+end;
+
+procedure TDrawElementTool.MouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+const
+  SelectionWidth = 5;
+var
+  AZoomBox: TQRbwZoomBox2;
+  APoint: TPoint2D;
+  NewNode: TNewNode;
+  NodeX: Integer;
+  NodeY: Integer;
+  Node2D: TSutraNode2D;
+begin
+  inherited;
+  AZoomBox := ZoomBox;
+  APoint.X := AZoomBox.X(X);
+  APoint.Y := AZoomBox.Y(Y);
+  NewNode := nil;
+  if FNewNodeQuadTree.Count > 0 then
+  begin
+    NewNode := FNewNodeQuadTree.NearestPointsFirstData(APoint.X, APoint.Y);
+    NodeX := AZoomBox.XCoord(NewNode.FLocation.x);
+    NodeY := AZoomBox.YCoord(NewNode.FLocation.y);
+    if (Abs(NodeX-X) > SelectionWidth) or (Abs(NodeY-Y) > SelectionWidth) then
+    begin
+      NewNode := nil;
+    end;
+  end;
+  if NewNode = nil then
+  begin
+    if FNodeQuadTree.Count > 0 then
+    begin
+      Node2D := FNodeQuadTree.NearestPointsFirstData(APoint.X, APoint.Y);
+      NodeX := AZoomBox.XCoord(Node2D.x);
+      NodeY := AZoomBox.YCoord(Node2D.y);
+      if (Abs(NodeX-X) <= SelectionWidth) and (Abs(NodeY-Y) <= SelectionWidth) then
+      begin
+        NewNode := TNewNode.Create;
+        FNewNodes.Add(NewNode);
+        NewNode.FNode := Node2D;
+        NewNode.FLocation := Node2D.Location;
+        FNewNodeQuadTree.AddPoint(NewNode.FLocation.x,
+          NewNode.FLocation.y, NewNode);
+      end;
+    end;
+  end;
+  if NewNode = nil then
+  begin
+    NewNode := TNewNode.Create;
+    FNewNodes.Add(NewNode);
+    NewNode.FNode := nil;
+    NewNode.FLocation := APoint;
+    FNewNodeQuadTree.AddPoint(NewNode.FLocation.x,
+      NewNode.FLocation.y, NewNode);
+  end;
+
+  if FCurrentElement = nil then
+  begin
+    FCurrentElement := TNewElement.Create;
+    FNewElements.Add(FCurrentElement);
+  end;
+
+  FCurrentElement.FNodes.Add(NewNode);
+  NewNode.FNewElements.Add(FCurrentElement);
+
+  if FCurrentElement.FNodes.Count = 4 then
+  begin
+    FCurrentElement := nil;
+  end;
+
+end;
+
+{ TNewNode }
+
+constructor TNewNode.Create;
+begin
+  FNewElements := TNewElementList.Create;
+end;
+
+destructor TNewNode.Destroy;
+begin
+  FNewElements.Free;
+  inherited;
+end;
+{$ENDIF}
 
 initialization
   ZoomTool := TZoomTool.Create(nil);
@@ -7207,6 +8576,7 @@ initialization
   EditCrossSectionTool:= TEditCrossSectionTool.Create(nil);
   RotateCrossSectionTool:= TRotateCrossSectionTool.Create(nil);
   MoveSutraNodesTool := TMoveSutraNodesTool.Create(nil);
+  FishnetTool := TFishnetMeshGenerationTool.Create(nil);
   {$ENDIF}
 
 finalization
@@ -7238,6 +8608,7 @@ finalization
   EditCrossSectionTool.Free;
   RotateCrossSectionTool.Free;
   MoveSutraNodesTool.Free;
+  FishnetTool.Free;
   {$ENDIF}
 
 end.

@@ -31,7 +31,7 @@ uses Windows, Types, GuiSettingsUnit, SysUtils, Classes, Contnrs, Controls,
   Generics.Defaults, Mt3dmsTimesUnit, Mt3dmsChemSpeciesUnit,
   Mt3dmsFluxObservationsUnit, SutraMeshUnit, HashTableFacadeUnit,
   SutraOptionsUnit, SutraTimeScheduleUnit, frmSutraOutputControlUnit,
-  SutraOutputControlUnit, SutraBoundariesUnit;
+  SutraOutputControlUnit, SutraBoundariesUnit, FishnetMeshGenerator;
 
 const
   kHufThickness = '_Thickness';
@@ -364,7 +364,8 @@ resourcestring
   rsResClassificaton = 'Reservoir';
   rsLakeClassificaton = 'Lake';
   StrMT3DMS_Classificaton = 'MT3DMS';
-  StrSpecifiedPressure = 'Specified Pressure';
+  StrSpecifiedPressure = 'SUTRA Specified Pressure';
+  StrSutraSpecifiedHead = 'SUTRA Specified Head';
   StrAssocPresConc = 'SP Associated Conc.';
   StrAssocHeadConc = 'SH Associated Conc.';
   StrAssocPresTemp = 'SP Associated Temp.';
@@ -576,6 +577,7 @@ type
     Min: double;
     EvaluatedAt: TEvaluatedAt;
     AssociatedDataSets: string;
+    AngleType: TAngleType;
   end;
 
   TDataSetClassification = class(TClassificationObject)
@@ -1931,6 +1933,9 @@ that affects the model output should also have a comment. }
     function SutraPermeabilityUsed(Sender: TObject): boolean;
     function SutraMiddlePermeabilityUsed(Sender: TObject): boolean;
     function SutraMiddleHydraulicConductivityUsed(Sender: TObject): boolean;
+  protected
+    procedure GenerateIrregularMesh(var ErrorMessage: string);
+    procedure GenerateFishNetMesh(var ErrorMessage: string); virtual;
   var
     LakWriter: TObject;
     SfrWriter: TObject;
@@ -2854,6 +2859,7 @@ that affects the model output should also have a comment. }
     FSutraLayerStructure: TSutraLayerStructure;
     FSutraTimeOptions: TSutraTimeOptions;
     FColorSchemes: TUserDefinedColorSchemeCollection;
+    FFishnetMeshGenerator: TFishnetMeshGenerator;
 //    FSutraOutputControl: TSutraOutputControl;
     // See @link(Exaggeration).
     function GetExaggeration: double;
@@ -3022,6 +3028,7 @@ that affects the model output should also have a comment. }
     procedure RenameOldVerticalLeakance; override;
     procedure SetSutraTimeOptions(const Value: TSutraTimeOptions);
     procedure SetColorSchemes(const Value: TUserDefinedColorSchemeCollection);
+    procedure SetFishnetMeshGenerator(const Value: TFishnetMeshGenerator);
 //    procedure SetSutraOutputControl(const Value: TSutraOutputControl);
   protected
     function GetSfrStreamLinkPlot: TSfrStreamLinkPlot; override;
@@ -3097,7 +3104,7 @@ that affects the model output should also have a comment. }
     procedure SetImmobileComponents(const Value: TChemSpeciesCollection); override;
     procedure SetMobileComponents(const Value: TMobileChemSpeciesCollection); override;
     procedure SetModelSelection(const Value: TModelSelection); override;
-//    procedure SetGlobalVariables(const Value: TGlobalVariables); override;
+    procedure GenerateFishNetMesh(var ErrorMessage: string); override;
   public
     function LakBathymetryUsed: Boolean;
     function TobIsSelected: Boolean;
@@ -3698,8 +3705,8 @@ that affects the model output should also have a comment. }
     // User defined color schemes for coloring the grid or mesh
     // or for contour lines.
     property ColorSchemes: TUserDefinedColorSchemeCollection read FColorSchemes write SetColorSchemes;
-//    property SutraOutputControl: TSutraOutputControl read FSutraOutputControl
-//      write SetSutraOutputControl {$IFNDEF Sutra} stored False {$ENDIF};
+    property FishnetMeshGenerator: TFishnetMeshGenerator read FFishnetMeshGenerator
+      write SetFishnetMeshGenerator {$IFNDEF Sutra} stored False {$ENDIF};
   end;
 
   TChildDiscretization = class(TOrderedItem)
@@ -5871,9 +5878,43 @@ const
   //    '2.18.1.14' Change: When drawing contour lines, a white background is
   //         now drawn behind the contour labels.
   //    '2.19.0.0' No additional changes.
+  //    '2.19.0.1' Bug fix: Attempting to import a .dxf file that is locked
+  //         by another program will result in an error message to the user
+  //         instead of generating a bug report.
+  //       Bug fix: Fixed bug that caused problems on computers in which the
+  //         decimal symbol is not a period when closing the "MODFLOW
+  //         Packages and Programs" dialog box.
+  //       Bug fix: When reading an empty endpoint file, ModelMuse now displays
+  //         a warning message to the user instead of generating a bug report.
+  //    '2.19.0.2' Bug fix: When an object is defining multiple values at the
+  //         same cell or element, holes in the object no longer define such
+  //         values. An example would be an object that defines wells in MODFLOW
+  //         with an object that contains multiple sections and in which some
+  //         of those sections define holes.
+  //       Change: A new checkbox has been added to the "Object Properties"
+  //         dialog box labeled "Duplicates <cells/elements> allowed. It is
+  //         checked by default. Under some conditions, a single object can
+  //         allow multiple values to be assigned at a single cell.
+  //         For example, in MODFLOW models, an object might define two or
+  //         more wells at a single cell by having two separate point sections
+  //         that are in the same cell. This ability can be turned off by
+  //         unchecking this check box.
+  //    '2.19.0.3' Bug fix: Fixed bug that could cause ModelMuse to hang when
+  //         importing an existing MODFLOW-2005 model.
+  //    '2.19.0.4' Bug fix: Fixed bug introduced in '2.19.0.2'. Not in released
+  //         version.
+  //    '2.19.0.5' Bug fix: Fixed bug in limiting display of MODPATH end points
+  //         with tracking time.
+  //       Change: On some computers, bugs are encountered related to
+  //         the 3D view. The 3D view is hidden on such computers to allow the
+  //         program to continue running.
+  //    '2.19.0.6' Bug fix: Fixed bug that would cause access violations when
+  //         generating the input file for the UZF package if a flow package
+  //         other than the LPF or UPW was used.
+  //    '2.19.1.0' No additional changes.
 
 const
-  IModelVersion = '2.19.0.0';
+  IModelVersion = '2.19.1.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -5963,7 +6004,7 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   Mt3dmsDspWriterUnit, Mt3dmsSsmWriterUnit, Mt3dmsRctWriterUnit,
   Mt3dmsGcgWriterUnit, Mt3dmsTobWriterUnit, ModflowMt3dmsLinkWriterUnit,
   QuadMeshGenerator, MeshRenumbering, ModflowPCGN_WriterUnit, Character,
-  SutraBoundaryWriterUnit, frmMeshGenerationControlVariablesUnit;
+  SutraBoundaryWriterUnit, frmMeshGenerationControlVariablesUnit, QuadtreeClass;
 
 resourcestring
   StrMpathDefaultPath = 'C:\WRDAPP\Mpath.5_0\setup\Mpathr5_0.exe';
@@ -6059,6 +6100,9 @@ resourcestring
   StrMODPATHVersion6Re = 'MODPATH version 6 requires that if heads are saved, ' +
   'they must be saved in a binary format. That isn''t the case for this ' +
   'model. Do you want to export the MODPATH input anyway?';
+  StrYouNeedToDrawQua = 'You need to draw quadrilaterals that will be used t' +
+  'o define the mesh and assign the number of nodes along two edges of each ' +
+  'quadrilateral.';
 
 const
   StatFlagStrings : array[Low(TStatFlag)..High(TStatFlag)] of string
@@ -6691,15 +6735,14 @@ end;
 constructor TPhastModel.Create(AnOwner: TComponent);
 var
   ChangeNotifier: IChangeNotifier;
-//  LayerGroup: TSutraLayerGroup;
 begin
   inherited;
 
+  FFishnetMeshGenerator := TFishnetMeshGenerator.Create(self);
   FColorSchemes := TUserDefinedColorSchemeCollection.Create(self);
   FSaveBfhBoundaryConditions := True;
   FSaveDataSetValues := sdsvAlways;
   FSelectedModel := self;
-//  FCurrentModel := self;
   UpdateCurrentModel(self);
   FChildModels := TChildModelCollection.Create(self);
   FDisplaySettings := TDisplaySettingsCollection.Create(self);
@@ -7161,6 +7204,7 @@ begin
     FSutraLayerStructure.Free;
     FSutraTimeOptions.Free;
     FColorSchemes.Free;
+    FFishnetMeshGenerator.Free;
   finally
     FreeAndNil(frmFileProgress);
   end;
@@ -7662,6 +7706,7 @@ begin
 
   Mt3dmsTimes.Clear;
   ModflowStressPeriods.Clear;
+  FishnetMeshGenerator.Clear;
 
   Invalidate;
   inherited;
@@ -8228,22 +8273,33 @@ end;
 procedure TPhastModel.SetModelSelection(const Value: TModelSelection);
     {$IFDEF SUTRA}
 var
-  LayerGroup: TSutraLayerGroup;
+  LayerGroup: TCustomLayerGroup;
     {$ENDIF}
 begin
   inherited;
   case Value of
     msUndefined: ;
     msPhast: ;
-    msModflow: ;
-    msModflowLGR: ;
-    msModflowNWT: ;
+    msModflow, msModflowLGR, msModflowNWT:
+      begin
+        if not (csLoading in ComponentState) then
+        begin
+          if LayerStructure.Count = 0 then
+          begin
+//            LayerGroup := LayerStructure.Add as TCustomLayerGroup;
+//            LayerGroup.AquiferName := kModelTop;
+            ModflowGrid.RowCount := -1;
+            ModflowGrid.ColumnCount := -1;
+            ModflowGrid.LayerCount := -1;
+          end;
+        end;
+      end;
     {$IFDEF SUTRA}
     msSutra22:
       begin
         if FSutraLayerStructure.Count = 0 then
         begin
-          LayerGroup := FSutraLayerStructure.Add as TSutraLayerGroup;
+          LayerGroup := FSutraLayerStructure.Add as TCustomLayerGroup;
           LayerGroup.AquiferName := kSUTRAMeshTop;
         end
       end
@@ -8545,13 +8601,26 @@ end;
 function TPhastModel.GetExaggeration: double;
 begin
   result := 1;
-  if frmGoPhast.frameFrontView <> nil then
+{$IFDEF SUTRA}
+  if (ModelSelection = msSutra22) and (SutraMesh <> nil)
+    and (SutraMesh.MeshType = mtProfile) then
   begin
-    result := frmGoPhast.frameFrontView.ZoomBox.Exaggeration;
+    if frmGoPhast.frameTopView <> nil then
+    begin
+      result := frmGoPhast.frameTopView.ZoomBox.Exaggeration;
+    end
   end
-  else if frmGoPhast.frameSideView <> nil then
+  else
+{$ENDIF}
   begin
-    result := frmGoPhast.frameSideView.ZoomBox.Exaggeration;
+    if frmGoPhast.frameFrontView <> nil then
+    begin
+      result := frmGoPhast.frameFrontView.ZoomBox.Exaggeration;
+    end
+    else if frmGoPhast.frameSideView <> nil then
+    begin
+      result := frmGoPhast.frameSideView.ZoomBox.Exaggeration;
+    end;
   end;
 end;
 
@@ -8563,16 +8632,29 @@ begin
   end;
   if Exaggeration <> Value then
   begin
-    if frmGoPhast.frameFrontView <> nil then
+  {$IFDEF SUTRA}
+    if (ModelSelection = msSutra22) and (SutraMesh <> nil)
+      and (SutraMesh.MeshType = mtProfile) then
     begin
-      frmGoPhast.frameFrontView.ZoomBox.Exaggeration := Value;
-    end;
-    if frmGoPhast.frameSideView <> nil then
+      if frmGoPhast.frameTopView <> nil then
+      begin
+        frmGoPhast.frameTopView.ZoomBox.Exaggeration := Value;
+      end;
+    end
+    else
+  {$ENDIF}
     begin
-      frmGoPhast.frameSideView.ZoomBox.Exaggeration := Value;
+      if frmGoPhast.frameFrontView <> nil then
+      begin
+        frmGoPhast.frameFrontView.ZoomBox.Exaggeration := Value;
+      end;
+      if frmGoPhast.frameSideView <> nil then
+      begin
+        frmGoPhast.frameSideView.ZoomBox.Exaggeration := Value;
+      end;
+      frmGoPhast.PhastGrid.GridChanged;
+      frmGoPhast.ModflowGrid.GridChanged;
     end;
-    frmGoPhast.PhastGrid.GridChanged;
-    frmGoPhast.ModflowGrid.GridChanged;
   end;
 end;
 
@@ -9429,6 +9511,374 @@ begin
         result := result or ChildModel.ModflowPackages.GbobPackage.IsSelected;
       end;
     end;
+  end;
+end;
+
+procedure TPhastModel.GenerateFishNetMesh(var ErrorMessage: string);
+var
+  QuadTree: TRbwQuadTree;
+  FishNetNode: TFishnetMeshNode;
+  FishNetNodeIndex: Integer;
+  XMin: Double;
+  YMin: Double;
+  ElementIndex: Integer;
+  FishNetElement: TFishnetMeshElement;
+  Node1: TFishnetMeshNode;
+  Node2: TFishnetMeshNode;
+  Node3: TFishnetMeshNode;
+  Node4: TFishnetMeshNode;
+  ElementOrientation: Integer;
+  TempNode: TFishnetMeshNode;
+  OuterCount: Integer;
+  InnerCount: Integer;
+  Distance1: TFloat;
+  Distance2: TFloat;
+  StartPoint: TPoint2D;
+  EndPoint: TPoint2D;
+  InnerIndex: Integer;
+  FirstFound: Boolean;
+  XMax: Double;
+  YMax: Double;
+  OuterIndex: Integer;
+  Distance3: TFloat;
+  NewPoint: TPoint2D;
+  NewNode: TSutraNode2D;
+  LocalEpsilonX: double;
+  LocalEpsilonY: Extended;
+  NodeArray: array of array of TSutraNode2D;
+  ElementArray: array  of array of TSutraElement2D;
+  NewElement: TSutraElement2D;
+  NodeNumberItem: TSutraNodeNumber2D_Item;
+  NodeCount: Integer;
+  FishnetElementCount: Integer;
+  NodeList: TSutraNode2D_List;
+  index: integer;
+  ElementCount: Integer;
+  ElementList: TSutraElement2D_List;
+  F1: TRealArray;
+  F2: TRealArray;
+begin
+  if (FishnetMeshGenerator.Elements.Count = 0)
+    or (FishnetMeshGenerator.Nodes.Count = 0) then
+  begin
+    ErrorMessage := StrYouNeedToDrawQua;
+    Exit;
+  end;
+
+  FirstFound := False;
+  XMin := 0;
+  XMax := 0;
+  YMin := 0;
+  YMax := 0;
+  for FishNetNodeIndex := 0 to FishnetMeshGenerator.Nodes.Count - 1 do
+  begin
+    FishNetNode := FishnetMeshGenerator.Nodes[FishNetNodeIndex];
+    if FishNetNode.Elements.Count > 0 then
+    begin
+      if not FirstFound then
+      begin
+        XMin := FishNetNode.X;
+        XMax := XMin;
+        YMin := FishNetNode.Y;
+        YMax := YMin;
+        FirstFound := True;
+      end
+      else
+      begin
+        if XMin > FishNetNode.X then
+        begin
+          XMin := FishNetNode.X;
+        end
+        else if XMax < FishNetNode.X then
+        begin
+          XMax := FishNetNode.X
+        end;
+
+        if YMin > FishNetNode.Y then
+        begin
+          YMin := FishNetNode.Y;
+        end
+        else if YMax < FishNetNode.Y then
+        begin
+          YMax := FishNetNode.Y
+        end;
+      end;
+    end;
+  end;
+  if not FirstFound then
+  begin
+    ErrorMessage := StrYouNeedToDrawQua;
+    Exit;
+  end;
+
+  QuadTree := TRbwQuadTree.Create(nil);
+  try
+    QuadTree.XMax := XMax;
+    QuadTree.XMin := XMin;
+    QuadTree.YMax := YMax;
+    QuadTree.YMin := YMin;
+    LocalEpsilonX := (XMax-XMin)/1e7;
+    LocalEpsilonY := (YMax-YMin)/1e7;
+
+    NodeCount := 0;
+    FishnetElementCount := 0;
+    ElementCount := 0;
+    FSutraMesh.BeginUpdate;
+    FSutraMesh.Mesh2D.BeginUpdate;
+    try
+      FSutraMesh.Mesh2D.Nodes.Clear;
+      FSutraMesh.Mesh2D.Elements.Clear;
+      for ElementIndex := 0 to FishnetMeshGenerator.Elements.Count - 1 do
+      begin
+        FishNetElement := FishnetMeshGenerator.Elements[ElementIndex];
+        if FishNetElement.Nodes.Count = 4 then
+        begin
+          Inc(FishnetElementCount);
+          Node1 := FishNetElement.Nodes[0];
+          Node2 := FishNetElement.Nodes[1];
+          Node3 := FishNetElement.Nodes[2];
+          Node4 := FishNetElement.Nodes[3];
+          ElementOrientation :=
+            Orientation(Node1.Location, Node2.Location, Node3.Location);
+          if (ElementOrientation <> Clockwise)
+            and  (ElementOrientation <> CounterClockwise) then
+          begin
+            ElementOrientation :=
+              Orientation(Node2.Location, Node3.Location, Node3.Location);
+          end;
+          Assert((ElementOrientation = Clockwise)
+            or  (ElementOrientation = CounterClockwise));
+          if ElementOrientation = Clockwise then
+          begin
+            TempNode := Node2;
+            Node2 := Node4;
+            Node4 := TempNode;
+            OuterCount := FishNetElement.SecondControl.Count;
+            InnerCount := FishNetElement.FirstControl.Count;
+            F1 := FishNetElement.Fractions2;
+            F2 := FishNetElement.Fractions1;
+          end
+          else
+          begin
+            OuterCount := FishNetElement.FirstControl.Count;
+            InnerCount := FishNetElement.SecondControl.Count;
+            F1 := FishNetElement.Fractions1;
+            F2 := FishNetElement.Fractions2;
+          end;
+
+          SetLength(NodeArray, OuterCount+1, InnerCount+1);
+          SetLength(ElementArray, OuterCount, InnerCount);
+
+          Distance1 := Distance(Node1.Location, Node2.Location);
+          Distance2 := Distance(Node4.Location, Node3.Location);
+          for OuterIndex := 0 to OuterCount do
+          begin
+            if OuterIndex = 0 then
+            begin
+              StartPoint := Node1.Location;
+              EndPoint := Node4.Location;
+            end
+            else if OuterIndex = OuterCount then
+            begin
+              StartPoint := Node2.Location;
+              EndPoint := Node3.Location;
+            end
+            else
+            begin
+              StartPoint := ProjectPoint(Node1.Location,Node2.Location,
+                Distance1 * F1[OuterIndex]);
+              EndPoint := ProjectPoint(Node4.Location,Node3.Location,
+                Distance2 * F1[OuterIndex]);
+            end;
+            Distance3 := Distance(StartPoint, EndPoint);
+            for InnerIndex := 0 to InnerCount do
+            begin
+              if InnerIndex = 0 then
+              begin
+                NewPoint := StartPoint;
+              end
+              else if InnerIndex = InnerCount then
+              begin
+                NewPoint := EndPoint;
+              end
+              else
+              begin
+                NewPoint := ProjectPoint(StartPoint,EndPoint,
+                  Distance3 * F2[InnerIndex]);
+              end;
+              NewNode := nil;
+              if (OuterIndex = 0) or (OuterIndex = OuterCount)
+                or (InnerIndex = 0) or (InnerIndex = InnerCount) then
+              begin
+                if QuadTree.Count > 0 then
+                begin
+                  NewNode := QuadTree.NearestPointsFirstData
+                    (NewPoint.x, NewPoint.y);
+                  if (Abs(NewNode.X - NewPoint.x) > LocalEpsilonX)
+                    or (Abs(NewNode.Y - NewPoint.y) > LocalEpsilonY) then
+                  begin
+                    NewNode := nil;
+                  end;
+                  if NewNode <> nil then
+                  begin
+                    if not (((OuterIndex = 0) or (OuterIndex = OuterCount))
+                      and ((InnerIndex = 0) or (InnerIndex = InnerCount))) then
+                    begin
+                      NewNode.NodeType := ntSubDomain;
+                    end;
+                  end;
+                end;
+              end;
+              if NewNode = nil then
+              begin
+                NewNode := SutraMesh.Mesh2D.Nodes.Add;
+                NewNode.Number := -1;
+                NewNode.Location := NewPoint;
+                if (OuterIndex = 0) or (OuterIndex = OuterCount)
+                  or (InnerIndex = 0) or (InnerIndex = InnerCount) then
+                begin
+                  NewNode.NodeType := ntEdge;
+                  QuadTree.AddPoint(NewNode.X, NewNode.Y, NewNode);
+                end
+                else
+                begin
+                  NewNode.NodeType := ntInner;
+                end;
+              end;
+              NodeArray[OuterIndex, InnerIndex] := NewNode;
+            end;
+          end;
+          for OuterIndex := 0 to OuterCount -1 do
+          begin
+            for InnerIndex := 0 to InnerCount-1 do
+            begin
+              NewElement := SutraMesh.Mesh2D.Elements.Add;
+              ElementArray[OuterIndex, InnerIndex] := NewElement;
+
+              NodeNumberItem := NewElement.Nodes.Add;
+              NodeNumberItem.Node := NodeArray[OuterIndex, InnerIndex];
+//              NodeNumberItem.Node.FElements.Add(NewElement);
+
+              NodeNumberItem := NewElement.Nodes.Add;
+              NodeNumberItem.Node := NodeArray[OuterIndex+1, InnerIndex];
+//              NodeNumberItem.Node.FElements.Add(NewElement);
+
+              NodeNumberItem := NewElement.Nodes.Add;
+              NodeNumberItem.Node := NodeArray[OuterIndex+1, InnerIndex+1];
+//              NodeNumberItem.Node.FElements.Add(NewElement);
+
+              NodeNumberItem := NewElement.Nodes.Add;
+              NodeNumberItem.Node := NodeArray[OuterIndex, InnerIndex+1];
+//              NodeNumberItem.Node.FElements.Add(NewElement);
+
+            end;
+          end;
+          if OuterCount > InnerCount then
+          begin
+            for OuterIndex := 0 to OuterCount do
+            begin
+              for InnerIndex := 0 to InnerCount do
+              begin
+                if NodeArray[OuterIndex, InnerIndex].Number < 0 then
+                begin
+                  NodeArray[OuterIndex, InnerIndex].Number := NodeCount;
+                  Inc(NodeCount);
+                end;
+              end;
+            end;
+            for OuterIndex := 0 to OuterCount-1 do
+            begin
+              for InnerIndex := 0 to InnerCount-1 do
+              begin
+                ElementArray[OuterIndex, InnerIndex].ElementNumber := ElementCount;
+                Inc(ElementCount);
+              end;
+            end;
+          end
+          else
+          begin
+            for InnerIndex := 0 to InnerCount do
+            begin
+              for OuterIndex := 0 to OuterCount do
+              begin
+                if NodeArray[OuterIndex, InnerIndex].Number < 0 then
+                begin
+                  NodeArray[OuterIndex, InnerIndex].Number := NodeCount;
+                  Inc(NodeCount);
+                end;
+              end;
+            end;
+            for InnerIndex := 0 to InnerCount-1 do
+            begin
+              for OuterIndex := 0 to OuterCount-1 do
+              begin
+                ElementArray[OuterIndex, InnerIndex].ElementNumber := ElementCount;
+                Inc(ElementCount);
+              end;
+            end;
+          end;
+        end;
+      end;
+    finally
+      NodeList := TSutraNode2D_List.Create;
+      try
+        NodeList.Capacity := FSutraMesh.Mesh2D.Nodes.Count;
+        for index := 0 to FSutraMesh.Mesh2D.Nodes.Count - 1 do
+        begin
+          NodeList.Add(FSutraMesh.Mesh2D.Nodes[index]);
+        end;
+        NodeList.Sort(TSutraNode2DNumberComparer.Construct(
+          function(const L, R: TSutraNode2D): Integer
+          begin
+            result := L.Number - R.Number;
+          end));
+        for Index := 0 to NodeList.Count - 1 do
+        begin
+          NodeList.Items[index].Index := index;
+        end;
+      finally
+        NodeList.Free;
+      end;
+
+      if FishnetElementCount > 1 then
+      begin
+        FSutraMesh.Mesh2D.Renumber;
+      end
+      else
+      begin
+        ElementList := TSutraElement2D_List.Create;
+        try
+          ElementList.Capacity := FSutraMesh.Mesh2D.Elements.Count;
+          for index := 0 to FSutraMesh.Mesh2D.Elements.Count - 1 do
+          begin
+            ElementList.Add(FSutraMesh.Mesh2D.Elements[index]);
+          end;
+          ElementList.Sort(TSutraElement2DNumberComparer.Construct(
+            function(const L, R: TSutraElement2D): Integer
+            begin
+              result := L.ElementNumber - R.ElementNumber;
+            end));
+          for Index := 0 to ElementList.Count - 1 do
+          begin
+            ElementList.Items[index].Index := index;
+          end;
+        finally
+          ElementList.Free;
+        end;
+
+      end;
+      FSutraMesh.Mesh2D.EndUpdate;
+//      RenumberMesh(FSutraMesh.Mesh2D);
+
+
+      DataArrayManager.InvalidateAllDataSets;
+      DataArrayManager.CreateInitialDataSets;
+      FSutraMesh.ElevationsNeedUpdating := true;
+      FSutraMesh.EndUpdate;
+    end;
+    frmGoPhast.InvalidateGrid;
+  finally
+    QuadTree.Free;
   end;
 end;
 
@@ -11531,6 +11981,12 @@ begin
       ChildModel.SetFileName(Value);
     end;
   end;
+end;
+
+procedure TPhastModel.SetFishnetMeshGenerator(
+  const Value: TFishnetMeshGenerator);
+begin
+  FFishnetMeshGenerator.Assign(Value);
 end;
 
 procedure TPhastModel.SetFlowOnly(const Value: boolean);
@@ -17881,7 +18337,12 @@ begin
 
 {$IFDEF SUTRA}
   FSutraSpecPressureTimeList := TSutraMergedTimeList.Create(self);
-  FSutraSpecPressureTimeList.Name := StrSpecifiedPressure;
+  case SutraOptions.TransportChoice of
+    tcSolute: FSutraSpecPressureTimeList.Name := StrSpecifiedPressure;
+    tcSoluteHead: FSutraSpecPressureTimeList.Name := StrSutraSpecifiedHead;
+    tcEnergy: FSutraSpecPressureTimeList.Name := StrSpecifiedPressure;
+    else Assert(False);
+  end;
   FSutraSpecPressureTimeList.OnTimeListUsed := SutraUsed;
   FSutraSpecPressureTimeList.OnInitialize := InitializeSutraSpecPres;
   AddTimeList(FSutraSpecPressureTimeList);
@@ -17944,6 +18405,7 @@ begin
   case SutraOptions.TransportChoice of
     tcSolute:
       begin
+        FSutraSpecPressureTimeList.Name := StrSpecifiedPressure;
         FSutraConcTempTimeList.Name := StrSpecifiedConc;
         FSutraSpecPresUTimeList.Name := StrAssocPresConc;
         FSutraFluidFluxUTimeList.Name := StrFluxAssocPresConc;
@@ -17951,6 +18413,7 @@ begin
       end;
     tcSoluteHead:
       begin
+        FSutraSpecPressureTimeList.Name := StrSutraSpecifiedHead;
         FSutraConcTempTimeList.Name := StrSpecifiedConc;
         FSutraSpecPresUTimeList.Name := StrAssocHeadConc;
         FSutraFluidFluxUTimeList.Name := StrFluxAssocPresConc;
@@ -17958,6 +18421,7 @@ begin
       end;
     tcEnergy:
       begin
+        FSutraSpecPressureTimeList.Name := StrSpecifiedPressure;
         FSutraConcTempTimeList.Name := StrSpecifiedTemp;
         FSutraSpecPresUTimeList.Name := StrAssocPresTemp;
         FSutraFluidFluxUTimeList.Name := StrFluxAssocPresTemp;
@@ -18661,7 +19125,7 @@ begin
   FreeAndNil(FEndPoints);
 end;
 
-procedure TCustomModel.GenerateSutraMesh(var ErrorMessage: string);
+procedure TCustomModel.GenerateIrregularMesh(var ErrorMessage: string);
 var
   List: TList;
   ScreenObjectIndex: integer;
@@ -18683,10 +19147,16 @@ var
   MeshElement: IElement;
   StartIndex: Integer;
   EndIndex: Integer;
+  Exag: Extended;
 begin
-  ErrorMessage := '';
-  SutraMesh.CanDraw := False;
-  SutraMesh.Loading := False;
+  if SutraMesh.MeshType = mtProfile then
+  begin
+    Exag := frmGoPhast.PhastModel.Exaggeration;
+  end
+  else
+  begin
+    Exag := 1;
+  end;
   List := TList.Create;
   try
     for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
@@ -18746,6 +19216,7 @@ begin
           begin
             ANode := TNode.Create(MeshCreator, ScreenObject.CellSize);
             ANode.Location := ScreenObject.Points[NodeIndex];
+            ANode.Y := ANode.Y*Exag;
             if FirstNode = nil then
             begin
               FirstNode := ANode;
@@ -18759,7 +19230,7 @@ begin
         end;
       end;
 
-      Mesh.Mesh2D.MeshGenControls.Apply;
+      SutraMesh.Mesh2D.MeshGenControls.Apply;
       try
         MeshCreator.GenerateMesh;
       except on E: EInvalidElement do
@@ -18794,6 +19265,7 @@ begin
             SutraNode := FSutraMesh.Mesh2D.Nodes.Add;
             MeshNode := MeshCreator.Nodes[NodeIndex];
             SutraNode.AssignINode(MeshNode);
+            SutraNode.Y := SutraNode.Y/Exag;
           end;
           for ElementIndex := 0 to MeshCreator.ElementCount - 1 do
           begin
@@ -18821,9 +19293,37 @@ begin
     finally
       MeshCreator.Free;
     end;
-
   finally
     List.Free;
+  end;
+end;
+
+procedure TCustomModel.GenerateFishNetMesh(var ErrorMessage: string);
+begin
+end;
+
+procedure TCustomModel.GenerateSutraMesh(var ErrorMessage: string);
+var
+  MeshGenControls: TMeshGenerationControls;
+begin
+  ErrorMessage := '';
+  SutraMesh.CanDraw := False;
+  SutraMesh.Loading := False;
+  try
+    MeshGenControls := SutraMesh.Mesh2D.MeshGenControls;
+    case MeshGenControls.MeshGenerationMethod of
+      mgmFishnet:
+        begin
+          GenerateFishNetMesh(ErrorMessage);
+        end;
+      mgmIrregular:
+        begin
+          GenerateIrregularMesh(ErrorMessage);
+        end;
+      else
+        Assert(False);
+    end;
+  finally
     SutraMesh.CanDraw := True;
   end;
 end;
@@ -19948,6 +20448,7 @@ var
   NewFormula, Classification: string;
   Lock: TDataLock;
   DisplayName: string;
+  AngleType: TAngleType;
 begin
   { TODO : Find a way to extract common code from
 TPhastModel.CreateModflowDataSets and
@@ -19967,6 +20468,7 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
     NewFormula := FDataArrayCreationRecords[Index].Formula;
     Classification := FDataArrayCreationRecords[Index].Classification;
     Lock := FDataArrayCreationRecords[Index].Lock;
+    AngleType := FDataArrayCreationRecords[Index].AngleType;
 
     DataArray := GetDataSetByName(DataSetName);
     Assert(Assigned(ArrayNeeded));
@@ -19977,6 +20479,7 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
       DataArray.Lock := Lock;
       DataArray.OnDataSetUsed := ArrayNeeded;
       FCustomModel.CreateVariables(DataArray);
+      DataArray.AngleType := AngleType;
     end
     else if ArrayNeeded(self)
       or (Assigned(ArrayArrayShouldBeCreated)
@@ -19994,6 +20497,7 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
       DataArray.Max := FDataArrayCreationRecords[Index].Max;
       DataArray.Min := FDataArrayCreationRecords[Index].Min;
       DataArray.DisplayName := DisplayName;
+      DataArray.AngleType := AngleType;
     end;
     if DataArray <> nil then
     begin
@@ -21312,10 +21816,11 @@ begin
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := KHorizontalAngle;
   FDataArrayCreationRecords[Index].DisplayName := StrHorizontalAngle; 
+  FDataArrayCreationRecords[Index].AngleType := atDegrees;
   FDataArrayCreationRecords[Index].Formula := '0';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SutraUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcUnits];
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'SUTRA Data Set 15B: ANGLE1';
@@ -21326,10 +21831,11 @@ begin
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := KVerticalAngle;
   FDataArrayCreationRecords[Index].DisplayName := StrVerticalAngle;
+  FDataArrayCreationRecords[Index].AngleType := atDegrees;
   FDataArrayCreationRecords[Index].Formula := '0';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Sutra3DModel;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcUnits];
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'SUTRA Data Set 15B: ANGLE2';
@@ -21340,10 +21846,11 @@ begin
   FDataArrayCreationRecords[Index].DataType := rdtDouble;
   FDataArrayCreationRecords[Index].Name := KRotationalAngle;
   FDataArrayCreationRecords[Index].DisplayName := StrRotationalAngle;
+  FDataArrayCreationRecords[Index].AngleType := atDegrees;
   FDataArrayCreationRecords[Index].Formula := '0';
   FDataArrayCreationRecords[Index].Classification := StrHydrology;
   FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.Sutra3DModel;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcUnits];
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'SUTRA Data Set 15B: ANGLE3';
@@ -22308,7 +22815,7 @@ function TCustomModel.SutraThicknessUsed(Sender: TObject): boolean;
 begin
   {$IFDEF Sutra}
   result := SutraUsed(Sender) and (FSutraMesh <> nil)
-    and (FSutraMesh.MeshType = mt2D);
+    and (FSutraMesh.MeshType in [mt2D, mtProfile]);
   {$ELSE}
   result := False;
   {$ENDIF}
@@ -22384,9 +22891,20 @@ begin
 end;
 
 function TCustomModel.UzfUnsatVertKUsed(Sender: TObject): boolean;
+var
+  IUZFOPT: integer;
 begin
-  result := UzfPackageUsed(Sender) and
-    (ModflowPackages.UzfPackage.VerticalKSource = 1);
+  result := False;
+  if UzfPackageUsed(Sender) then
+  begin
+    IUZFOPT := ModflowPackages.UzfPackage.VerticalKSource;
+    if not (ModflowPackages.LpfPackage.IsSelected
+      or ModflowPackages.UpwPackage.IsSelected) then
+    begin
+      IUZFOPT := 1;
+    end;
+    result := IUZFOPT = 1;
+  end;
 end;
 
 function TCustomModel.ModflowUsed(Sender: TObject): boolean;
@@ -28350,6 +28868,7 @@ initialization
   RegisterClass(TChildModel);
 
 end.
+
 
 
 

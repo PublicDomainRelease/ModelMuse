@@ -1,22 +1,22 @@
 inherited frmMeshGenerationControlVariables: TfrmMeshGenerationControlVariables
   Caption = 'Mesh Generation Control Variables'
-  ClientHeight = 264
+  ClientHeight = 317
   ClientWidth = 415
-  ExplicitWidth = 433
-  ExplicitHeight = 309
-  PixelsPerInch = 120
+  ExplicitWidth = 431
+  ExplicitHeight = 355
+  PixelsPerInch = 96
   TextHeight = 18
   object rdgControlVariables: TRbwDataGrid4
     Left = 0
-    Top = 0
+    Top = 57
     Width = 415
-    Height = 188
+    Height = 184
     Align = alClient
     ColCount = 3
     FixedCols = 1
     RowCount = 7
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
-    TabOrder = 0
+    TabOrder = 1
     ExtendedAutoDistributeText = False
     AutoMultiEdit = False
     AutoDistributeText = False
@@ -25,7 +25,7 @@ inherited frmMeshGenerationControlVariables: TfrmMeshGenerationControlVariables
     SelectedRowOrColumnColor = clAqua
     UnselectableColor = clBtnFace
     ColorRangeSelection = False
-    ColorSelectedRow = True
+    ColorSelectedRow = False
     Columns = <
       item
         AutoAdjustRowHeights = False
@@ -96,11 +96,11 @@ inherited frmMeshGenerationControlVariables: TfrmMeshGenerationControlVariables
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 188
+    Top = 241
     Width = 415
     Height = 76
     Align = alBottom
-    TabOrder = 1
+    TabOrder = 2
     object lblElementGrowthRate: TLabel
       Left = 103
       Top = 9
@@ -114,10 +114,8 @@ inherited frmMeshGenerationControlVariables: TfrmMeshGenerationControlVariables
       Width = 89
       Height = 33
       HelpType = htKeyword
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnHelpClick
     end
@@ -126,10 +124,8 @@ inherited frmMeshGenerationControlVariables: TfrmMeshGenerationControlVariables
       Top = 38
       Width = 89
       Height = 33
-      DoubleBuffered = True
       Kind = bkOK
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 3
       OnClick = btnOKClick
     end
@@ -138,10 +134,8 @@ inherited frmMeshGenerationControlVariables: TfrmMeshGenerationControlVariables
       Top = 38
       Width = 91
       Height = 33
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 4
     end
     object btnResetDefaults: TButton
@@ -166,5 +160,19 @@ inherited frmMeshGenerationControlVariables: TfrmMeshGenerationControlVariables
       CheckMin = True
       ChangeDisabledColor = True
     end
+  end
+  object rgMethod: TRadioGroup
+    Left = 0
+    Top = 0
+    Width = 415
+    Height = 57
+    Align = alTop
+    Caption = 'Mesh generation method'
+    Columns = 2
+    Items.Strings = (
+      'Fishnet'
+      'Irregular')
+    TabOrder = 0
+    OnClick = rgMethodClick
   end
 end

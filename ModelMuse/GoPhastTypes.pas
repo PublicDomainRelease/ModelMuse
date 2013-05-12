@@ -45,11 +45,7 @@ type
 
   {@abstract(@name represents a 3D point with real-number coordinates.)
   }
-  T3DRealPoint = record
-    X: real;
-    Y: real;
-    Z: real;
-  end;
+  T3DRealPoint = TPoint3D;
   P3DRealPoint = ^T3DRealPoint;
 
   TRealArray = array of Real;
@@ -81,6 +77,7 @@ type
   // @link(ScreenObjectUnit.TScreenObject)s are
   // viewed from.
   TViewDirection = (vdTop, vdFront, vdSide);
+  TViewDirections = set of TViewDirection;
 
   // @name is used to specify the columns in the table on
   // @link(frmDataSetsUnits.TfrmDataSets).
@@ -235,6 +232,8 @@ type
   // either at a specific time or at a desired frequency using the same
   // variable. @name is used to indicate which form is to be used.
   TObservationType = (otTime, otFrequency);
+
+  TDisplayChoice = (dcColor, dcContour, dcNone);
 
   TBaseModel = class;
 
@@ -979,7 +978,14 @@ end;
 
 function TPhastCollectionItem.Model: TBaseModel;
 begin
-  result := (Collection as TPhastCollection).Model;
+  if Collection = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := (Collection as TPhastCollection).Model;
+  end;
 end;
 
 procedure TPhastCollectionItem.SetBooleanProperty(var AField: boolean;

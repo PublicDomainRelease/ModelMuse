@@ -464,7 +464,11 @@ uses
   TriPackRoutines in 'TriPackRoutines.pas',
   TriPackMessages in 'TriPackMessages.pas',
   LineStorage in 'LineStorage.pas',
-  frmColorSchemesUnit in 'frmColorSchemesUnit.pas' {frmColorSchemes};
+  frmColorSchemesUnit in 'frmColorSchemesUnit.pas' {frmColorSchemes},
+  FishnetMeshGenerator in 'FishnetMeshGenerator.pas',
+  frmFishnetElementPropertiesUnit in 'frmFishnetElementPropertiesUnit.pas' {frmFishnetElementProperties},
+  frmRenumberingMethodUnit in 'frmRenumberingMethodUnit.pas' {frmRenumberingMethod},
+  frmMeshInformationUnit in 'frmMeshInformationUnit.pas' {frmMeshInformation};
 
 {$R *.res}
 {#BACKUP ModelMuse.cfg}

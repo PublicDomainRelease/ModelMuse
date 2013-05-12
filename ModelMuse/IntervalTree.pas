@@ -35,7 +35,7 @@ Type
 
   IIntervalTree = interface
     procedure Add(AnObject: TObject);
-    procedure FindContainingObjects(Point, FullPoint: TOneDRealArray;
+    procedure FindContainingObjects(const Point, FullPoint: TOneDRealArray;
       List: TList);
     function ArraySize: integer;
     function GetOwnsObjects: Boolean;
@@ -209,7 +209,7 @@ type
     Constructor InternalCreate(IntervalDefinitions: TIntDefArray);
     Destructor Destroy; override;
     procedure Add(AnObject: TObject);
-    procedure FindContainingObjects(Point, FullPoint: TOneDRealArray; List: TList);
+    procedure FindContainingObjects(const Point, FullPoint: TOneDRealArray; List: TList);
     class function Create(IntervalDefinitions: TIntDefArray): IIntervalTree;
     property OwnsObjects: Boolean read GetOwnsObjects write SetOwnsObjects;
   end;
@@ -226,10 +226,26 @@ procedure TIntervalTree.Add(AnObject: TObject);
 var
   LowerBoundary, UpperBoundary: double;
   SubTreeIntervalDefinitions: TIntDefArray;
+//  ShouldUpdateLimits: boolean;
+  function Epsilon: double;
+  begin
+    Result := (FIntervalDefinitions[0].UpperBoundary
+      -FIntervalDefinitions[0].LowerBoundary)/1e6;
+  end;
+//  procedure UpdateLimits;
+//  var
+//    Epsilon: double;
+//  begin
+//    Epsilon := (FIntervalDefinitions[0].UpperBoundary
+//      -FIntervalDefinitions[0].LowerBoundary)/1e6;
+//    FContentsUpperLimit := FContentsUpperLimit + Epsilon;
+//    FContentsLowerLimit := FContentsLowerLimit - Epsilon;
+//  end;
 begin
   FIntervalDefinitions[0].OnFindObjectInterval(AnObject,
     LowerBoundary, UpperBoundary);
   Assert(LowerBoundary <= UpperBoundary);
+//  ShouldUpdateLimits := False;
   if LowerBoundary < UpperBoundary then
   begin
     if LowerBoundary > FCenter then
@@ -271,11 +287,13 @@ begin
       FCenterTree.Add(AnObject);
       if FContentsUpperLimit < UpperBoundary then
       begin
-        FContentsUpperLimit := UpperBoundary
+        FContentsUpperLimit := UpperBoundary+Epsilon;
+//        ShouldUpdateLimits:= True;
       end;
       if FContentsLowerLimit > LowerBoundary then
       begin
-        FContentsLowerLimit := LowerBoundary
+        FContentsLowerLimit := LowerBoundary-Epsilon;
+//        ShouldUpdateLimits:= True;
       end;
     end
     else
@@ -288,11 +306,13 @@ begin
       FCenterList.Add(AnObject);
       if FContentsUpperLimit < UpperBoundary then
       begin
-        FContentsUpperLimit := UpperBoundary
+        FContentsUpperLimit := UpperBoundary+Epsilon;
+//        ShouldUpdateLimits:= True;
       end;
       if FContentsLowerLimit > LowerBoundary then
       begin
-        FContentsLowerLimit := LowerBoundary
+        FContentsLowerLimit := LowerBoundary-Epsilon;
+//        ShouldUpdateLimits:= True;
       end;
     end;
   end
@@ -319,11 +339,13 @@ begin
       FCenterTree.Add(AnObject);
       if FContentsUpperLimit < UpperBoundary then
       begin
-        FContentsUpperLimit := UpperBoundary
+        FContentsUpperLimit := UpperBoundary+Epsilon;
+//        ShouldUpdateLimits:= True;
       end;
       if FContentsLowerLimit > LowerBoundary then
       begin
-        FContentsLowerLimit := LowerBoundary
+        FContentsLowerLimit := LowerBoundary-Epsilon;
+//        ShouldUpdateLimits:= True;
       end;
     end;
   end
@@ -337,13 +359,19 @@ begin
     FCenterList.Add(AnObject);
     if FContentsUpperLimit < UpperBoundary then
     begin
-      FContentsUpperLimit := UpperBoundary
+      FContentsUpperLimit := UpperBoundary+Epsilon;
+//      ShouldUpdateLimits:= True;
     end;
     if FContentsLowerLimit > LowerBoundary then
     begin
-      FContentsLowerLimit := LowerBoundary
+      FContentsLowerLimit := LowerBoundary-Epsilon;
+//      ShouldUpdateLimits:= True;
     end;
   end;
+//  if ShouldUpdateLimits then
+//  begin
+//    UpdateLimits;
+//  end;
 end;
 
 constructor TIntervalTree.InternalCreate(IntervalDefinitions: TIntDefArray);
@@ -380,7 +408,8 @@ begin
   inherited;
 end;
 
-procedure TIntervalTree.FindContainingObjects(Point, FullPoint: TOneDRealArray; List: TList);
+procedure TIntervalTree.FindContainingObjects
+  (const Point, FullPoint: TOneDRealArray; List: TList);
 var
   NewPoint: TOneDRealArray;
   Index: Integer;
@@ -388,6 +417,7 @@ var
   LowerBoundary: Double;
   UpperBoundary: Double;
   OldCount: Integer;
+  Epsilon: Extended;
 //  Accept: Boolean;
 begin
   FFullPoint := FullPoint;
@@ -414,25 +444,33 @@ begin
       Move(Point[1], NewPoint[0], Length(NewPoint)*SizeOf(double));
       OldCount := List.Count;
       FCenterTree.FindContainingObjects(NewPoint, FFullPoint, List);
-      for Index := OldCount to List.Count - 1 do
+      if List.Count - 1 >= OldCount then
       begin
-        AnObject := List[Index];
-        FIntervalDefinitions[0].OnFindObjectInterval(AnObject,
-          LowerBoundary, UpperBoundary);
-        if (LowerBoundary > Point[0]) or (UpperBoundary < Point[0]) then
+        Epsilon := (FIntervalDefinitions[0].UpperBoundary -
+          FIntervalDefinitions[0].LowerBoundary)/1e6;
+        for Index := OldCount to List.Count - 1 do
         begin
-          List[Index] := nil;
+          AnObject := List[Index];
+          FIntervalDefinitions[0].OnFindObjectInterval(AnObject,
+            LowerBoundary, UpperBoundary);
+          if (LowerBoundary-Epsilon > Point[0])
+            or (UpperBoundary+Epsilon < Point[0]) then
+          begin
+            List[Index] := nil;
+          end;
         end;
       end;
     end;
     if FCenterList <> nil then
     begin
+      Epsilon := (FIntervalDefinitions[0].UpperBoundary -
+        FIntervalDefinitions[0].LowerBoundary)/1e6;
       for Index := 0 to FCenterList.Count - 1 do
       begin
         AnObject := FCenterList[Index];
         FIntervalDefinitions[0].OnFindObjectInterval(AnObject,
           LowerBoundary, UpperBoundary);
-        if (LowerBoundary <= Point[0]) and (UpperBoundary >= Point[0]) then
+        if (LowerBoundary-Epsilon <= Point[0]) and (UpperBoundary+Epsilon >= Point[0]) then
         begin
           List.Add(AnObject);
         end;

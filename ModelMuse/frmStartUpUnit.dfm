@@ -11,21 +11,19 @@ inherited frmStartUp: TfrmStartUp
   OnClose = FormClose
   ExplicitWidth = 769
   ExplicitHeight = 413
-  PixelsPerInch = 96
+  PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 328
-    Width = 753
+    Top = 321
+    Width = 751
     Height = 47
     Align = alBottom
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 1
-    ExplicitTop = 332
-    ExplicitWidth = 761
     DesignSize = (
-      753
+      751
       47)
     object btnNext: TBitBtn
       Left = 655
@@ -81,14 +79,12 @@ inherited frmStartUp: TfrmStartUp
   object pcStartup: TPageControl
     Left = 0
     Top = 0
-    Width = 753
-    Height = 328
-    ActivePage = tabInitialModflowGrid
+    Width = 751
+    Height = 321
+    ActivePage = tabInitialSutraMesh
     Align = alClient
     TabOrder = 0
     OnChange = pcStartupChange
-    ExplicitWidth = 761
-    ExplicitHeight = 332
     object tabModelChoice: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'Start_Up_Dialog_Box'
@@ -100,8 +96,8 @@ inherited frmStartUp: TfrmStartUp
       object rgChoice: TRadioGroup
         Left = 0
         Top = 0
-        Width = 753
-        Height = 299
+        Width = 743
+        Height = 288
         HelpType = htKeyword
         HelpKeyword = 'Start_Up_Dialog_Box'
         Align = alClient
@@ -110,6 +106,7 @@ inherited frmStartUp: TfrmStartUp
         Items.Strings = (
           'Create new MODFLOW model'
           'Create new PHAST model'
+          'Create new SUTRA model'
           'Open an existing ModelMuse project'
           'Import MODFLOW-2005 model')
         TabOrder = 0
@@ -123,8 +120,8 @@ inherited frmStartUp: TfrmStartUp
       object gbInitialGrid: TGroupBox
         Left = 0
         Top = 0
-        Width = 745
-        Height = 295
+        Width = 743
+        Height = 288
         Align = alClient
         Caption = 'Specify initial grid (optional)'
         TabOrder = 0
@@ -315,13 +312,11 @@ inherited frmStartUp: TfrmStartUp
       object gbInitialGridModflow: TGroupBox
         Left = 0
         Top = 0
-        Width = 745
-        Height = 295
+        Width = 743
+        Height = 288
         Align = alClient
         Caption = 'Specify initial grid (optional)'
         TabOrder = 0
-        ExplicitWidth = 753
-        ExplicitHeight = 299
         object Label8: TLabel
           Left = 344
           Top = 68
@@ -427,10 +422,10 @@ inherited frmStartUp: TfrmStartUp
           ChangeDisabledColor = True
         end
         object rdgInitialLayers: TRbwDataGrid4
-          Left = 457
+          Left = 455
           Top = 20
           Width = 286
-          Height = 273
+          Height = 266
           Align = alRight
           Anchors = [akLeft, akTop, akRight, akBottom]
           ColCount = 2
@@ -493,9 +488,256 @@ inherited frmStartUp: TfrmStartUp
               AutoAdjustColWidths = True
             end>
           OnEndUpdate = rdgInitialLayersEndUpdate
-          ExplicitLeft = 464
-          ExplicitHeight = 277
         end
+      end
+    end
+    object tabInitialSutraMesh: TTabSheet
+      Caption = 'tabInitialSutraMesh'
+      ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+      DesignSize = (
+        743
+        288)
+      object lblLayerGroups: TLabel
+        Left = 464
+        Top = 8
+        Width = 91
+        Height = 18
+        Caption = 'Layer groups'
+      end
+      object lblModelPosition: TLabel
+        Left = 6
+        Top = 107
+        Width = 102
+        Height = 18
+        Caption = 'Model position'
+      end
+      object rgMeshType: TRadioGroup
+        Left = 6
+        Top = 8
+        Width = 204
+        Height = 87
+        Caption = 'Mesh type (MSHSTR)'
+        ItemIndex = 0
+        Items.Strings = (
+          '2D areal'
+          '2D profile'
+          '3D')
+        TabOrder = 0
+        OnClick = rgMeshTypeClick
+      end
+      inline frameModelLayers: TframeGrid
+        Left = 464
+        Top = 29
+        Width = 269
+        Height = 256
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        Enabled = False
+        TabOrder = 2
+        ExplicitLeft = 464
+        ExplicitTop = 29
+        ExplicitWidth = 269
+        ExplicitHeight = 256
+        inherited Panel: TPanel
+          Top = 191
+          Width = 269
+          Height = 65
+          ExplicitTop = 191
+          ExplicitWidth = 269
+          ExplicitHeight = 65
+          inherited lbNumber: TLabel
+            Width = 161
+            Height = 18
+            Caption = 'Number of layer groups'
+            ExplicitWidth = 161
+            ExplicitHeight = 18
+          end
+          inherited sbAdd: TSpeedButton
+            Left = 6
+            Top = 38
+            OnClick = frameModelLayerssbAddClick
+            ExplicitLeft = 8
+            ExplicitTop = 38
+          end
+          inherited sbInsert: TSpeedButton
+            Left = 32
+            Top = 38
+            OnClick = frameModelLayerssbInsertClick
+            ExplicitLeft = 37
+            ExplicitTop = 38
+          end
+          inherited sbDelete: TSpeedButton
+            Left = 58
+            Top = 38
+            OnClick = frameModelLayerssbDeleteClick
+            ExplicitLeft = 66
+            ExplicitTop = 38
+          end
+          inherited seNumber: TJvSpinEdit
+            Height = 26
+            Value = 3.000000000000000000
+            OnChange = frameModelLayersseNumberChange
+            ExplicitHeight = 26
+          end
+        end
+        inherited Grid: TRbwDataGrid4
+          Width = 269
+          Height = 191
+          ColCount = 2
+          RowCount = 5
+          OnSelectCell = frameModelLayersGridSelectCell
+          Columns = <
+            item
+              AutoAdjustRowHeights = False
+              ButtonCaption = '...'
+              ButtonFont.Charset = DEFAULT_CHARSET
+              ButtonFont.Color = clWindowText
+              ButtonFont.Height = -11
+              ButtonFont.Name = 'Tahoma'
+              ButtonFont.Style = []
+              ButtonUsed = False
+              ButtonWidth = 20
+              CheckMax = False
+              CheckMin = False
+              ComboUsed = False
+              Format = rcf4String
+              LimitToList = False
+              MaxLength = 0
+              ParentButtonFont = False
+              WordWrapCaptions = True
+              WordWrapCells = False
+              CaseSensitivePicklist = False
+              AutoAdjustColWidths = True
+            end
+            item
+              AutoAdjustRowHeights = False
+              ButtonCaption = '...'
+              ButtonFont.Charset = DEFAULT_CHARSET
+              ButtonFont.Color = clWindowText
+              ButtonFont.Height = -13
+              ButtonFont.Name = 'Tahoma'
+              ButtonFont.Style = []
+              ButtonUsed = False
+              ButtonWidth = 20
+              CheckMax = False
+              CheckMin = False
+              ComboUsed = False
+              Format = rcf4Real
+              LimitToList = False
+              MaxLength = 0
+              ParentButtonFont = False
+              WordWrapCaptions = False
+              WordWrapCells = False
+              CaseSensitivePicklist = False
+              AutoAdjustColWidths = True
+            end>
+          OnEndUpdate = frameModelLayersGridEndUpdate
+          ExplicitWidth = 269
+          ExplicitHeight = 191
+        end
+      end
+      object rgTransport: TRadioGroup
+        Left = 216
+        Top = 8
+        Width = 230
+        Height = 87
+        Caption = 'Transport (SIMULA)'
+        ItemIndex = 0
+        Items.Strings = (
+          'Solute using pressure'
+          'Solute using head'
+          'Energy')
+        TabOrder = 1
+      end
+      object rdgLocation: TRbwDataGrid4
+        Left = 6
+        Top = 128
+        Width = 320
+        Height = 157
+        ColCount = 3
+        FixedCols = 1
+        RowCount = 3
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
+        TabOrder = 3
+        ExtendedAutoDistributeText = False
+        AutoMultiEdit = True
+        AutoDistributeText = True
+        AutoIncreaseColCount = False
+        AutoIncreaseRowCount = False
+        SelectedRowOrColumnColor = clAqua
+        UnselectableColor = clBtnFace
+        ColorRangeSelection = False
+        ColorSelectedRow = False
+        Columns = <
+          item
+            AutoAdjustRowHeights = False
+            ButtonCaption = '...'
+            ButtonFont.Charset = DEFAULT_CHARSET
+            ButtonFont.Color = clWindowText
+            ButtonFont.Height = -13
+            ButtonFont.Name = 'Tahoma'
+            ButtonFont.Style = []
+            ButtonUsed = False
+            ButtonWidth = 20
+            CheckMax = False
+            CheckMin = False
+            ComboUsed = False
+            Format = rcf4String
+            LimitToList = False
+            MaxLength = 0
+            ParentButtonFont = False
+            WordWrapCaptions = False
+            WordWrapCells = False
+            CaseSensitivePicklist = False
+            AutoAdjustColWidths = False
+          end
+          item
+            AutoAdjustRowHeights = False
+            ButtonCaption = '...'
+            ButtonFont.Charset = DEFAULT_CHARSET
+            ButtonFont.Color = clWindowText
+            ButtonFont.Height = -13
+            ButtonFont.Name = 'Tahoma'
+            ButtonFont.Style = []
+            ButtonUsed = False
+            ButtonWidth = 20
+            CheckMax = False
+            CheckMin = False
+            ComboUsed = False
+            Format = rcf4String
+            LimitToList = False
+            MaxLength = 0
+            ParentButtonFont = False
+            WordWrapCaptions = False
+            WordWrapCells = False
+            CaseSensitivePicklist = False
+            AutoAdjustColWidths = False
+          end
+          item
+            AutoAdjustRowHeights = False
+            ButtonCaption = '...'
+            ButtonFont.Charset = DEFAULT_CHARSET
+            ButtonFont.Color = clWindowText
+            ButtonFont.Height = -13
+            ButtonFont.Name = 'Tahoma'
+            ButtonFont.Style = []
+            ButtonUsed = False
+            ButtonWidth = 20
+            CheckMax = False
+            CheckMin = False
+            ComboUsed = False
+            Format = rcf4String
+            LimitToList = False
+            MaxLength = 0
+            ParentButtonFont = False
+            WordWrapCaptions = False
+            WordWrapCells = False
+            CaseSensitivePicklist = False
+            AutoAdjustColWidths = False
+          end>
       end
     end
   end

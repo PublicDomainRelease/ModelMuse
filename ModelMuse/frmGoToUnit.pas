@@ -9,10 +9,11 @@ uses
   UndoItemsScreenObjects, SysUtils, Types, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, frmCustomGoPhastUnit, ComCtrls, Buttons,
   CompressedImageUnit, ExtCtrls, Spin, ArgusDataEntry, Mask, JvExMask, JvSpin,
-  AbstractGridUnit;
+  AbstractGridUnit, GoPhastTypes;
 
 type
   TNavigationType = (ntPosition, ntGrid, mtMesh, ntObject, ntImage);
+  TMeshMoveTo = (mmtNode, mmtElement);
 
   {@abstract(@name is used to move the viewpoint to a selected position,
    cell, or @link(TScreenObject).)}
@@ -171,11 +172,13 @@ procedure MoveToFrontCell(Grid: TCustomModelGrid; const Column, Layer: integer);
 procedure MoveToSideCell(Grid: TCustomModelGrid; const Row, Layer: integer);
 
 procedure MoveToImage(BitMapItem: TCompressedBitmapItem);
+procedure MoveToMesh(NodeOrElementNumber: Integer; MeshMoveTo: TMeshMoveTo;
+  MoveToViews: TViewDirections);
 
 implementation
 
-uses frmGoPhastUnit, GoPhastTypes, ScreenObjectUnit,
-  DataSetUnit, FastGEO, PhastModelUnit, SutraMeshUnit, QuadTreeClass;
+uses frmGoPhastUnit, ScreenObjectUnit,
+  DataSetUnit, FastGEO, PhastModelUnit, SutraMeshUnit, QuadTreeClass, UndoItems;
 
 resourcestring
   StrElement = 'Element';
@@ -189,7 +192,7 @@ var
 begin
   with frmGoPhast.frameTopView.ZoomBox do
   begin
-    DeltaX := (X(Image32.Width) - X(0)) / 2;
+    DeltaX := (X(frmGoPhast.frameFrontView.ZoomBox.Image32.Width) - X(0)) / 2;
     DeltaY := (Y(0) - Y(Image32.Height)) / 2;
     OriginX := XCoordinate - DeltaX;
     OriginY := YCoordinate - DeltaY;
@@ -352,7 +355,7 @@ begin
     Exit;
   end;
   case Mesh.MeshType of
-    mt2D:
+    mt2D, mtProfile:
       begin
         case rgNodeElement.ItemIndex of
           0:
@@ -407,7 +410,7 @@ begin
           for Index := 0 to Mesh.Mesh2D.Nodes.Count - 1 do
           begin
             ANode := Mesh.Mesh2D.Nodes[Index];
-            if Mesh.MeshType = mt2D then
+            if Mesh.MeshType in [mt2D, mtProfile] then
             begin
               Location := ANode.Location;
               QuadTree.AddPoint(Location.x, Location.y, ANode);
@@ -428,7 +431,7 @@ begin
           end;
           ANode := QuadTree.NearestPointsFirstData(APoint.x, APoint.y);
           case Mesh.MeshType of
-            mt2D:
+            mt2D, mtProfile:
               begin
                 seNumber.AsInteger := ANode.Number + 1;
               end;
@@ -476,7 +479,7 @@ begin
           for Index := 0 to Mesh.Mesh2D.Elements.Count - 1 do
           begin
             AnElement := Mesh.Mesh2D.Elements[Index];
-            if Mesh.MeshType = mt2D then
+            if Mesh.MeshType in [mt2D, mtProfile] then
             begin
               Location := AnElement.Center;
               QuadTree.AddPoint(Location.x, Location.y, AnElement);
@@ -498,7 +501,7 @@ begin
           end;
           AnElement := QuadTree.NearestPointsFirstData(APoint.x, APoint.y);
           case Mesh.MeshType of
-            mt2D:
+            mt2D, mtProfile:
               begin
                 seNumber.AsInteger := AnElement.ElementNumber + 1;
               end;
@@ -654,7 +657,7 @@ begin
     end;
 
     if (Mesh <> nil) and (Mesh.Mesh2D.Nodes.Count > 0)
-      and ((Mesh.MeshType = mt2D) or (Mesh.Nodes.Count > 0)) then
+      and ((Mesh.MeshType in [mt2D, mtProfile]) or (Mesh.Nodes.Count > 0)) then
     begin
       GetMeshItemClosestToCenter;
     end
@@ -717,17 +720,9 @@ var
   UndoShowHide: TUndoShowHideScreenObject;
   BitMapItem: TCompressedBitmapItem;
   Model: TCustomModel;
-  Mesh: TSutraMesh3D;
-  ANode2D: TSutraNode2D;
-  TopLocation: TPoint2D;
-  AnElement2D: TSutraElement2D;
-  NodeNumber: Integer;
-  ElementNumber: Integer;
-  ANode3D: TSutraNode3D;
-  ElementLocation: TPoint3D;
-  NodeIndex: Integer;
-  ElementIndex: integer;
-  AnElement3D: TSutraElement3D;
+  MeshMoveTo: TMeshMoveTo;
+  NodeOrElementNumber: Integer;
+  MoveToViews: TViewDirections;
 begin
   Screen.Cursor := crHourGlass;
   try
@@ -776,78 +771,18 @@ begin
         end;
       mtMesh:
         begin
-          Mesh := frmGoPhast.PhastModel.SutraMesh;
-          case Mesh.MeshType of
-            mt2D:
-              begin
-                case rgNodeElement.ItemIndex of
-                  0:
-                    begin
-                      //Nodes
-                      ANode2D := Mesh.Mesh2D.Nodes[seNumber.AsInteger-1];
-                      TopLocation := ANode2D.Location;
-                      SetTopPosition(TopLocation.x, TopLocation.y);
-                    end;
-                  1:
-                    begin
-                      // Elements
-                      AnElement2D := Mesh.Mesh2D.Elements[seNumber.AsInteger-1];
-                      TopLocation := AnElement2D.Center;
-                      SetTopPosition(TopLocation.x, TopLocation.y);
-                    end;
-                  else Assert(False);
-                end;
-              end;
-            mt3D:
-              begin
-                case rgNodeElement.ItemIndex of
-                  0:
-                    begin
-                      //Nodes
-                      NodeNumber := seNumber.AsInteger-1;
-                      for NodeIndex := 0 to Mesh.Nodes.Count - 1 do
-                      begin
-                        ANode3D := Mesh.Nodes[NodeIndex];
-                        if ANode3D.Active and (ANode3D.Number = NodeNumber) then
-                        begin
-                          TopLocation := ANode3D.Node2D.Location;
-                          SetTopPosition(TopLocation.x, TopLocation.y);
-                          TopLocation := Mesh.
-                            RotateFromRealWorldCoordinatesToMeshCoordinates(
-                            TopLocation);
-                          SetFrontPosition(TopLocation.x, ANode3D.Z);
-                          break;
-                        end;
-                      end;
-                    end;
-                  1:
-                    begin
-                      // Elements
-                      ElementNumber := seNumber.AsInteger-1;
-                      for ElementIndex := 0 to Mesh.Elements.Count - 1 do
-                      begin
-                        AnElement3D := Mesh.Elements[ElementIndex];
-                        if AnElement3D.Active and (AnElement3D.ElementNumber =
-                          ElementNumber) then
-                        begin
-                          ElementLocation := AnElement3D.CenterLocation;
-                          SetTopPosition(ElementLocation.x, ElementLocation.y);
-                          TopLocation.x := ElementLocation.x;
-                          TopLocation.y := ElementLocation.y;
-                          TopLocation := Mesh.
-                            RotateFromRealWorldCoordinatesToMeshCoordinates(
-                            TopLocation);
-                          SetFrontPosition(TopLocation.x, ElementLocation.Z);
-                          break;
-                        end;
-                      end;
-                    end;
-                  else Assert(False);
-                end;
-              end;
-            else
-              Assert(False);
+          MeshMoveTo := TMeshMoveTo(rgNodeElement.ItemIndex);
+          NodeOrElementNumber := seNumber.AsInteger-1;
+          MoveToViews := [];
+          if cbTop.Checked then
+          begin
+            Include(MoveToViews, vdTop);
           end;
+          if cbFront.Checked then
+          begin
+            Include(MoveToViews, vdFront);
+          end;
+          MoveToMesh(NodeOrElementNumber, MeshMoveTo, MoveToViews);
         end;
       ntObject: // Object
         begin
@@ -1029,6 +964,154 @@ begin
     vdSide: SetSidePosition(Y,X);
     else Assert(False);
   end;
+end;
+
+procedure MoveToMesh(NodeOrElementNumber: Integer; MeshMoveTo: TMeshMoveTo;
+  MoveToViews: TViewDirections);
+var
+  Mesh: TSutraMesh3D;
+  ANode2D: TSutraNode2D;
+  TopLocation: TPoint2D;
+  AnElement2D: TSutraElement2D;
+  ANode3D: TSutraNode3D;
+  ElementLocation: TPoint3D;
+  NodeIndex: Integer;
+  ElementIndex: integer;
+  AnElement3D: TSutraElement3D;
+  LayerIndex: integer;
+  ALine: TLine2D;
+  ClosestPoint: TPoint2D;
+  NewCrossSection: TSegment2D;
+begin
+  Mesh := frmGoPhast.PhastModel.SutraMesh;
+  case Mesh.MeshType of
+    mt2D, mtProfile:
+      begin
+        case MeshMoveTo of
+          mmtNode:
+            begin
+              //Nodes
+              if vdTop in MoveToViews then
+              begin
+                ANode2D := Mesh.Mesh2D.Nodes[NodeOrElementNumber];
+                TopLocation := ANode2D.Location;
+                SetTopPosition(TopLocation.x, TopLocation.y);
+              end;
+            end;
+          mmtElement:
+            begin
+              // Elements
+              if vdTop in MoveToViews then
+              begin
+                AnElement2D := Mesh.Mesh2D.Elements[NodeOrElementNumber];
+                TopLocation := AnElement2D.Center;
+                SetTopPosition(TopLocation.x, TopLocation.y);
+              end;
+            end;
+          else Assert(False);
+        end;
+      end;
+    mt3D:
+      begin
+        case MeshMoveTo of
+          mmtNode:
+            begin
+              //Nodes
+              for NodeIndex := 0 to Mesh.Nodes.Count - 1 do
+              begin
+                ANode3D := Mesh.Nodes[NodeIndex];
+                if ANode3D.Active and (ANode3D.Number = NodeOrElementNumber) then
+                begin
+                  TopLocation := ANode3D.Node2D.Location;
+                  if vdTop in MoveToViews then
+                  begin
+                    for LayerIndex := 0 to Mesh.LayerCount do
+                    begin
+                      if Mesh.NodeArray[LayerIndex,ANode3D.Node2D.Number]
+                        = ANode3D then
+                      begin
+                        frmGoPhast.PhastModel.CombinedDisplayLayer := LayerIndex;
+                        break;
+                      end;
+                    end;
+                    SetTopPosition(TopLocation.x, TopLocation.y);
+                  end;
+
+                  if vdFront in MoveToViews then
+                  begin
+                    ALine := EquateLine(Mesh.CrossSection.StartPoint,
+                      Mesh.CrossSection.EndPoint);
+                    ClosestPoint := ClosestPointOnLineFromPoint(ALine,
+                      TopLocation);
+                    NewCrossSection[1].x := ALine[1].x + TopLocation.x-ClosestPoint.x;
+                    NewCrossSection[1].y := ALine[1].y + TopLocation.y-ClosestPoint.y;
+                    NewCrossSection[2].x := ALine[2].x + TopLocation.x-ClosestPoint.x;
+                    NewCrossSection[2].y := ALine[2].y + TopLocation.y-ClosestPoint.y;
+                    frmGoPhast.UndoStack.Submit(TUndoMoveCrossSection.Create(NewCrossSection));
+
+                    TopLocation := Mesh.
+                      RotateFromRealWorldCoordinatesToMeshCoordinates(
+                      TopLocation);
+                    SetFrontPosition(TopLocation.x, ANode3D.Z);
+                  end;
+                  break;
+                end;
+              end;
+            end;
+          mmtElement:
+            begin
+              // Elements
+//                      ElementNumber := NodeOrElementNumber;
+              for ElementIndex := 0 to Mesh.Elements.Count - 1 do
+              begin
+                AnElement3D := Mesh.Elements[ElementIndex];
+                if AnElement3D.Active and (AnElement3D.ElementNumber =
+                  NodeOrElementNumber) then
+                begin
+                  ElementLocation := AnElement3D.CenterLocation;
+                  if vdTop in MoveToViews then
+                  begin
+                    for LayerIndex := 0 to Mesh.LayerCount-1 do
+                    begin
+                      if Mesh.ElementArray[LayerIndex,AnElement3D.Element2D.ElementNumber]
+                        = AnElement3D then
+                      begin
+                        frmGoPhast.PhastModel.CombinedDisplayLayer := LayerIndex;
+                      end;
+                    end;
+                    SetTopPosition(ElementLocation.x, ElementLocation.y);
+                  end;
+                  if vdFront in MoveToViews then
+                  begin
+                    TopLocation.x := ElementLocation.x;
+                    TopLocation.y := ElementLocation.y;
+
+                    ALine := EquateLine(Mesh.CrossSection.StartPoint,
+                      Mesh.CrossSection.EndPoint);
+                    ClosestPoint := ClosestPointOnLineFromPoint(ALine,
+                      TopLocation);
+                    NewCrossSection[1].x := ALine[1].x + TopLocation.x-ClosestPoint.x;
+                    NewCrossSection[1].y := ALine[1].y + TopLocation.y-ClosestPoint.y;
+                    NewCrossSection[2].x := ALine[2].x + TopLocation.x-ClosestPoint.x;
+                    NewCrossSection[2].y := ALine[2].y + TopLocation.y-ClosestPoint.y;
+                    frmGoPhast.UndoStack.Submit(TUndoMoveCrossSection.Create(NewCrossSection));
+
+                    TopLocation := Mesh.
+                      RotateFromRealWorldCoordinatesToMeshCoordinates(
+                      TopLocation);
+                    SetFrontPosition(TopLocation.x, ElementLocation.Z);
+                  end;
+                  break;
+                end;
+              end;
+            end;
+          else Assert(False);
+        end;
+      end;
+    else
+      Assert(False);
+  end;
+
 end;
 
 end.

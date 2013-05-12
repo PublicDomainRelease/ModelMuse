@@ -183,6 +183,7 @@ resourcestring
   'ng;*.wmf;*.emf;*.mng;|Bitmaps (*.bmp)|*.bmp|Jpeg images (*.jpg, *.jpeg)|*' +
   '.jpg;*.jpeg|Portable Network Graphics (*.png)|*.png|Enhanced Windows Meta' +
   'files (*.emf)|*.emf|Windows Metafiles (*.wmf)|*.wmf';
+  StrSorryThereWasAP = 'Sorry, there was a problem reading this file.';
 
 {$R *.dfm}
 
@@ -434,7 +435,10 @@ there is no loss in resolution at higher magnifications. }
 {$ENDIF}
     else
     begin
-      Assert(False);
+      Beep;
+      MessageDlg(StrSorryThereWasAP, mtError, [mbOK], 0);
+      Exit;
+//      Assert(False);
 //      with TLinearBitmap.Create do
 //      try
 //        try

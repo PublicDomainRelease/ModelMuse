@@ -303,14 +303,6 @@ inherited frmDataSets: TfrmDataSets
             Text = 'Nodes'
           end>
       end
-      object edUnits: TRbwEdit
-        Left = 149
-        Top = 146
-        Width = 128
-        Height = 27
-        TabOrder = 4
-        OnChange = edUnitsChange
-      end
       object comboInterpolation: TJvImageComboBox
         Left = 3
         Top = 206
@@ -359,6 +351,18 @@ inherited frmDataSets: TfrmDataSets
         ScrollBars = ssBoth
         TabOrder = 8
         OnExit = reDefaultFormulaExit
+      end
+      object comboUnits: TComboBox
+        Left = 149
+        Top = 146
+        Width = 128
+        Height = 27
+        Style = csSimple
+        TabOrder = 4
+        OnChange = comboUnitsChange
+        Items.Strings = (
+          'Degrees'
+          'Radians')
       end
     end
     object tabPHAST: TTabSheet

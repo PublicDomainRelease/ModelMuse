@@ -746,6 +746,9 @@
         <caption translate="true">Data Visualization Dialog Box</caption>
         <topicref type="topic" id="393876868789405" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2011-10-17T11:21:52.284Z" icon="0" href="Color_Grid_Dialog_Box">
           <caption translate="true">Color Grid Pane</caption>
+          <topicref type="topic" id="413693284169459" build="ALL" modified="2013-04-05T10:45:00.301Z" icon="0" href="Custom_Color_Schemes_Dialog_Bo">
+            <caption translate="true">Custom Color Schemes Dialog Box</caption>
+          </topicref>
         </topicref>
         <topicref type="topic" id="397666392955845" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2011-10-17T11:22:04.708Z" icon="0" href="Contour_Data_Dialog_Box">
           <caption translate="true">Contour Data Pane</caption>

@@ -43,6 +43,7 @@ type
     FirstTimeValues: TTimeValues;
     ExtraTimesDefined: Boolean;
     ScheduleList: TTimeValuesList;
+    FMaxTimes: Integer;
     function CustomScheduleName(AScreenObject: TScreenObject): AnsiString;
     procedure Evaluate;
     procedure EvaluateDefinedSchedules;
@@ -66,7 +67,8 @@ function SameValues(List1: TRealList; List2: TRealCollection): Boolean;
 implementation
 
 uses
-  frmErrorsAndWarningsUnit, SutraBoundariesUnit, SutraBoundaryWriterUnit;
+  frmErrorsAndWarningsUnit, SutraBoundariesUnit, SutraBoundaryWriterUnit,
+  Math;
 
 resourcestring
   StrTheFollowingTimeS = 'The following time schedule names are defined more' +
@@ -401,7 +403,7 @@ begin
       stStepCycle:
         begin
           SCHTYP := ' ''STEP CYCLE''';
-          NSMAX := ASchedule.Schedule.MaxSteps;
+          NSMAX := Min(ASchedule.Schedule.MaxSteps, FMaxTimes);
           ISTEPI := ASchedule.Schedule.InitialTimeStep;
           ISTEPL := ASchedule.Schedule.LimitingTimeStep;
           ISTEPC := ASchedule.Schedule.TimeStepIncrement;
@@ -427,8 +429,19 @@ var
   ASchedule: TTimeValues;
   ScheduleCount: integer;
   ACustomSchedule: TScreenObjectSchedule;
+  FirstSchedule: TSutraTimeSchedule;
+  TimeValues: TOneDRealArray;
 begin
   ScheduleCount := 0;
+  if (ScheduleList.Count > 0) and (not ExtraTimesDefined) then
+  begin
+    FirstSchedule := FSchedules[0].Schedule;
+
+    TimeValues := FirstSchedule.TimeValues(FTimeOptions.InitialTime,
+      FSchedules);
+
+    FMaxTimes := Length(TimeValues);
+  end;
   for ScheduleIndex := 0 to ScheduleList.Count - 1 do
   begin
     ASchedule := ScheduleList[ScheduleIndex];

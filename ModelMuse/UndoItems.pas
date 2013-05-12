@@ -1,5 +1,5 @@
 {@abstract(@name defines a series of @link(TUndoItem)s used with GoPhast.
-  Others are defined in @link(ScreenObjectUnit), 
+  Others are defined in @link(ScreenObjectUnit),
   @link(frmChemistryOptionsUnit), @link(frmImportShapefileUnit),
   @link(frmPhastGridOptionsUnit), @link(frmPrintFrequencyUnit),
   @link(frmPrintInitialUnit), @link(frmImportDXFUnit),
@@ -14,7 +14,8 @@ interface
 
 uses Classes, Contnrs, Controls, Forms, RbwParser, Undo, GoPhastTypes, AbstractGridUnit,
   DataSetUnit, PhastDataSets, FluxObservationUnit, FormulaManagerUnit,
-  DisplaySettingsUnit, Mt3dmsFluxObservationsUnit, FastGEO;
+  DisplaySettingsUnit, Mt3dmsFluxObservationsUnit, FastGEO, SutraMeshUnit,
+  IntListUnit;
 
 type
   {@abstract(@name is an abstract base class used as an ancestor
@@ -570,6 +571,7 @@ type
     // See @link(DataType).
     FDataType: TRbwDataType;
     FComment: string;
+    FAngleType: TAngleType;
     // See @link(PhastInterpolationValues).
     procedure SetPhastInterpolationValues(
       const Value: TPhastInterpolationValues);
@@ -611,6 +613,7 @@ type
     property DataType: TRbwDataType read FDataType write FDataType;
     // @name is the Units property to assign to the @link(TDataArray).
     property Units: string read FUnits write FUnits;
+    property AngleType: TAngleType read FAngleType write FAngleType;
     // @name is the TwoDInterpolator property to assign to the @link(TDataArray).
     property TwoDInterpolator: TCustom2DInterpolater read FTwoDInterpolator
       write SetTwoDInterpolator;
@@ -750,6 +753,7 @@ type
     FOldLocation: TSegment2D;
   protected
     function Description: string; override;
+    function Rotated: boolean;
   public
     Constructor Create(Location: TSegment2D);
     procedure DoCommand; override;
@@ -764,6 +768,70 @@ type
   TUndoSpecifyCrossSection = class(TUndoMoveCrossSection)
   protected
     function Description: string; override;
+  end;
+
+  // @name is used to change which @link(TSutraNode2D)s are selected.
+  TUndoSelectNodes = class(TCustomUndo)
+  private
+    FOldSelectedNodes: TIntegerList;
+    FNewSelectedNodes: TIntegerList;
+    FOldSelectedElements: TIntegerList;
+    FNewSelectedElements: TIntegerList;
+    procedure SetSelectedNodesAndElements(SelectedNodes,
+      SelectedElements: TIntegerList);
+  protected
+    function Description: string; override;
+  public
+    procedure DoCommand; override;
+    procedure Undo; override;
+    procedure UpdateSelectedNodes(NewSelectedNodes: TSutraNode2D_List);
+    procedure UpdateSelectedElements(NewSelectedElements: TSutraElement2D_List);
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+  TUndoChangeMesh = class(TCustomUndo)
+  private
+    FOldMesh: TSutraMesh3D;
+    FNewMesh: TSutraMesh3D;
+  protected
+    function Description: string; override;
+    procedure AssignMesh(Mesh: TSutraMesh3D);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure UpdataNewMesh(NewMesh: TSutraMesh3D);
+    procedure UpdataOldMesh(OldMesh: TSutraMesh3D);
+    procedure DoCommand; override;
+    procedure Undo; override;
+  end;
+
+  TUndoMoveSutraNodes = class(TUndoChangeMesh)
+  protected
+    function Description: string; override;
+  end;
+
+  TUndoDrawElements = class(TUndoChangeMesh)
+  protected
+    function Description: string; override;
+  end;
+
+  TUndoRenumberMesh = class(TCustomUndo)
+  private
+    FOldElementNumbers: TIntegerCollection;
+    FOldNodeNumbers: TIntegerCollection;
+    FNewElementNumbers: TIntegerCollection;
+    FNewNodeNumbers: TIntegerCollection;
+    procedure AssignNumbers(Nodes, Elements: TIntegerCollection);
+  protected
+    function Description: string; override;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure UpdateNumbers;
+    procedure DoCommand; override;
+    procedure Undo; override;
+    procedure Redo; override;
   end;
 
 implementation
@@ -803,6 +871,11 @@ resourcestring
   StrMoveCrossSection = 'move cross section';
   StrRotateCrossSection = 'rotate cross section';
   StrSpecifyCrossSectio = 'specify cross section';
+  StrDrawNewElements = 'draw new elements';
+  StrMoveNodes = 'move nodes';
+  StrRenumberMesh = 'renumber mesh';
+  StrChangeSUTRAMesh = 'change SUTRA mesh';
+  StrChangeSelectedNode = 'change selected nodes';
 
 { TUndoDeleteRow }
 
@@ -1707,72 +1780,61 @@ end;
 
 class function TUndoVerticalExaggeration.GetOldVE: real;
 begin
-  result := 1;
-  if frmGoPhast.frameFrontView <> nil then
-  begin
-    result := frmGoPhast.frameFrontView.ZoomBox.Exaggeration;
-  end
-  else if frmGoPhast.frameSideView <> nil then
-  begin
-    result := frmGoPhast.frameSideView.ZoomBox.Exaggeration;
-  end;
+  result := frmGoPhast.PhastModel.Exaggeration;
 end;
 
 
 procedure TUndoVerticalExaggeration.SetVE(
   VerticalExaggeration: real);
-var
-  FrontCenter: TPoint2D;
-  SideCenter: TPoint2D;
-  Temp: TPoint2D;
 begin
-  if VerticalExaggeration = 0 then
-  begin
-    VerticalExaggeration := 1;
-  end;
-  with frmGoPhast do
-  begin
-    if (frameFrontView <> nil) and (frameFrontView.ZoomBox.Exaggeration <>
-      VerticalExaggeration)
-      or (frameSideView <> nil) and (frameSideView.ZoomBox.Exaggeration <>
-      VerticalExaggeration) then
-    begin
-      FrontCenter.X := frameFrontView.ZoomBox.X(
-        frameFrontView.ZoomBox.Image32.Width div 2);
-      FrontCenter.Y := frameFrontView.ZoomBox.Y(
-        frameFrontView.ZoomBox.Image32.Height div 2);
-      SideCenter.X := frameSideView.ZoomBox.X(
-        frameSideView.ZoomBox.Image32.Width div 2);
-      SideCenter.Y := frameSideView.ZoomBox.Y(
-        frameSideView.ZoomBox.Image32.Height div 2);
-
-      PhastModel.Exaggeration := VerticalExaggeration;
-
-      Temp.X := frameFrontView.ZoomBox.X(
-        frameFrontView.ZoomBox.Image32.Width div 2);
-      Temp.Y := frameFrontView.ZoomBox.Y(
-        frameFrontView.ZoomBox.Image32.Height div 2);
-      frameFrontView.ZoomBox.OriginX := frameFrontView.ZoomBox.OriginX
-        - Temp.X + FrontCenter.X;
-      frameFrontView.ZoomBox.OriginY := frameFrontView.ZoomBox.OriginY
-        - Temp.Y + FrontCenter.Y;
-
-      Temp.X := frameSideView.ZoomBox.X(
-        frameSideView.ZoomBox.Image32.Width div 2);
-      Temp.Y := frameSideView.ZoomBox.Y(
-        frameSideView.ZoomBox.Image32.Height div 2);
-      frameSideView.ZoomBox.OriginX := frameSideView.ZoomBox.OriginX
-        - Temp.X + SideCenter.X;
-      frameSideView.ZoomBox.OriginY := frameSideView.ZoomBox.OriginY
-        - Temp.Y + SideCenter.Y;
-
-      frmGoPhast.FrontDiscretizationChanged := True;
-      frmGoPhast.SideDiscretizationChanged := True;
-      frameSideView.ZoomBox.InvalidateImage32;
-      frameFrontView.ZoomBox.InvalidateImage32;
-      AdjustScales;
-    end;
-  end;
+  frmGoPhast.UpdateVerticalExaggeration(VerticalExaggeration);
+//  if VerticalExaggeration = 0 then
+//  begin
+//    VerticalExaggeration := 1;
+//  end;
+//  with frmGoPhast do
+//  begin
+//    if (frameFrontView <> nil) and (frameFrontView.ZoomBox.Exaggeration <>
+//      VerticalExaggeration)
+//      or (frameSideView <> nil) and (frameSideView.ZoomBox.Exaggeration <>
+//      VerticalExaggeration) then
+//    begin
+//      FrontCenter.X := frameFrontView.ZoomBox.X(
+//        frameFrontView.ZoomBox.Image32.Width div 2);
+//      FrontCenter.Y := frameFrontView.ZoomBox.Y(
+//        frameFrontView.ZoomBox.Image32.Height div 2);
+//      SideCenter.X := frameSideView.ZoomBox.X(
+//        frameSideView.ZoomBox.Image32.Width div 2);
+//      SideCenter.Y := frameSideView.ZoomBox.Y(
+//        frameSideView.ZoomBox.Image32.Height div 2);
+//
+//      PhastModel.Exaggeration := VerticalExaggeration;
+//
+//      Temp.X := frameFrontView.ZoomBox.X(
+//        frameFrontView.ZoomBox.Image32.Width div 2);
+//      Temp.Y := frameFrontView.ZoomBox.Y(
+//        frameFrontView.ZoomBox.Image32.Height div 2);
+//      frameFrontView.ZoomBox.OriginX := frameFrontView.ZoomBox.OriginX
+//        - Temp.X + FrontCenter.X;
+//      frameFrontView.ZoomBox.OriginY := frameFrontView.ZoomBox.OriginY
+//        - Temp.Y + FrontCenter.Y;
+//
+//      Temp.X := frameSideView.ZoomBox.X(
+//        frameSideView.ZoomBox.Image32.Width div 2);
+//      Temp.Y := frameSideView.ZoomBox.Y(
+//        frameSideView.ZoomBox.Image32.Height div 2);
+//      frameSideView.ZoomBox.OriginX := frameSideView.ZoomBox.OriginX
+//        - Temp.X + SideCenter.X;
+//      frameSideView.ZoomBox.OriginY := frameSideView.ZoomBox.OriginY
+//        - Temp.Y + SideCenter.Y;
+//
+//      frmGoPhast.FrontDiscretizationChanged := True;
+//      frmGoPhast.SideDiscretizationChanged := True;
+//      frameSideView.ZoomBox.InvalidateImage32;
+//      frameFrontView.ZoomBox.InvalidateImage32;
+//      AdjustScales;
+//    end;
+//  end;
 end;
 
 procedure TUndoVerticalExaggeration.Undo;
@@ -2250,6 +2312,7 @@ begin
   EvaluatedAt := DataSet.EvaluatedAt;
   DataType := DataSet.DataType;
   Units := DataSet.Units;
+  AngleType := DataSet.AngleType;
   TwoDInterpolator := DataSet.TwoDInterpolator;
   Formula := DataSet.Formula;
   Comment := DataSet.Comment;
@@ -2371,6 +2434,7 @@ begin
           ChildDataArray.EvaluatedAt := EvaluatedAt;
           ChildDataArray.DataType := DataType;
           ChildDataArray.Units := Units;
+          ChildDataArray.AngleType := AngleType;
           ChildDataArray.TwoDInterpolator := TwoDInterpolator;
           ChildDataArray.Comment := Comment;
         end;
@@ -2382,7 +2446,9 @@ begin
     or (FDataSet.Orientation <> Orientation)
     or (FDataSet.EvaluatedAt <> EvaluatedAt)
     or (FDataSet.DataType <> DataType)
-    or (FDataSet.Units <> Units) then
+    or (FDataSet.Units <> Units)
+    or (FDataSet.AngleType <> AngleType)
+    then
   begin
     ShouldInvalidate := True;
   end
@@ -2405,6 +2471,7 @@ begin
   FDataSet.EvaluatedAt := EvaluatedAt;
   FDataSet.DataType := DataType;
   FDataSet.Units := Units;
+  FDataSet.AngleType := AngleType;
   FDataSet.TwoDInterpolator := TwoDInterpolator;
   FDataSet.Comment := Comment;
   FNeedToInvalidate := False;
@@ -2429,6 +2496,7 @@ begin
     or (Formula <> FDataSet.Formula)
     or (Orientation <> FDataSet.Orientation)
     or (Units <> FDataSet.Units)
+    or (AngleType <> FDataSet.AngleType)
     or (Comment <> FDataSet.Comment);
 //    or (Visible <> FDataSet.Visible);
   if not result then
@@ -2770,19 +2838,45 @@ procedure TUndoMoveCrossSection.DoCommand;
 begin
   inherited;
   frmGoPhast.PhastModel.SutraMesh.CrossSection.Segment := FNewLocation;
+  frmGoPhast.UpdateFrontCubeForSutraCrossSection(self);
   frmGoPhast.TopDiscretizationChanged := True;
   frmGoPhast.FrontDiscretizationChanged := True;
-  frmGoPhast.SynchronizeViews(vdTop);
+  if Rotated then
+  begin
+    frmGoPhast.SynchronizeViews(vdTop);
+  end;
   frmGoPhast.InvalidateImage32AllViews;
+  frmGoPhast.frame3DView.glWidModelView.Invalidate;
+end;
+
+function TUndoMoveCrossSection.Rotated: boolean;
+  function NearlyTheSame(const X, Y: extended): boolean;
+  const
+    Epsilon = 1e-8;
+  begin
+    result := (X = Y) or (Abs(X - Y) < Epsilon) or
+      (Abs(X - Y) / (Abs(X) + Abs(Y) + Epsilon) < Epsilon);
+  end;
+begin
+  result :=
+    not NearlyTheSame((FNewLocation[1].x-FOldLocation[1].x),
+    (FNewLocation[2].x-FOldLocation[2].x))
+    or
+    not NearlyTheSame((FNewLocation[1].y-FOldLocation[1].y),
+    (FNewLocation[2].y-FOldLocation[2].y))
 end;
 
 procedure TUndoMoveCrossSection.Undo;
 begin
   inherited;
   frmGoPhast.PhastModel.SutraMesh.CrossSection.Segment := FOldLocation;
+  frmGoPhast.UpdateFrontCubeForSutraCrossSection(self);
   frmGoPhast.TopDiscretizationChanged := True;
   frmGoPhast.FrontDiscretizationChanged := True;
-  frmGoPhast.SynchronizeViews(vdTop);
+  if Rotated then
+  begin
+    frmGoPhast.SynchronizeViews(vdTop);
+  end;
   frmGoPhast.InvalidateImage32AllViews;
 end;
 
@@ -2800,5 +2894,276 @@ begin
   result := StrSpecifyCrossSectio;
 end;
 
-end.
+{ TCustomUndoEdit2DNodes }
 
+constructor TUndoSelectNodes.Create;
+var
+  Nodes: TSutraNode2D_Collection;
+  NodeIndex: Integer;
+  ANode: TSutraNode2D;
+  ElementIndex: Integer;
+  Elements: TSutraElement2D_Collection;
+  AnElement: TSutraElement2D;
+begin
+  FOldSelectedNodes := TIntegerList.Create;
+  FNewSelectedNodes := TIntegerList.Create;
+  FOldSelectedElements := TIntegerList.Create;
+  FNewSelectedElements := TIntegerList.Create;
+  Nodes := frmGoPhast.PhastModel.Mesh.Mesh2D.Nodes;
+  for NodeIndex := 0 to Nodes.Count - 1 do
+  begin
+    ANode := Nodes[NodeIndex];
+    if ANode.Selected then
+    begin
+      FOldSelectedNodes.Add(NodeIndex);
+    end;
+  end;
+  Elements := frmGoPhast.PhastModel.Mesh.Mesh2D.Elements;
+  for ElementIndex := 0 to Elements.Count - 1 do
+  begin
+    AnElement := Elements[ElementIndex];
+    if AnElement.Selected then
+    begin
+      FOldSelectedElements.Add(ElementIndex);
+    end;
+  end;
+end;
+
+destructor TUndoSelectNodes.Destroy;
+begin
+  FOldSelectedNodes.Free;
+  FNewSelectedNodes.Free;
+  FOldSelectedElements.Free;
+  FNewSelectedElements.Free;
+  inherited;
+end;
+
+procedure TUndoSelectNodes.UpdateSelectedElements(
+  NewSelectedElements: TSutraElement2D_List);
+var
+  Index: Integer;
+  AnElement: TSutraElement2D;
+begin
+  FNewSelectedElements.Clear;
+  for Index := 0 to NewSelectedElements.Count - 1 do
+  begin
+    AnElement := NewSelectedElements[Index];
+    FNewSelectedElements.Add(AnElement.Index);
+  end;
+end;
+
+procedure TUndoSelectNodes.UpdateSelectedNodes(
+  NewSelectedNodes: TSutraNode2D_List);
+var
+  Index: Integer;
+  ANode: TSutraNode2D;
+begin
+  FNewSelectedNodes.Clear;
+  for Index := 0 to NewSelectedNodes.Count - 1 do
+  begin
+    ANode := NewSelectedNodes[Index];
+    FNewSelectedNodes.Add(ANode.Index);
+  end;
+end;
+
+{ TUndoSelectNodes }
+
+function TUndoSelectNodes.Description: string;
+begin
+  result := StrChangeSelectedNode;
+end;
+
+procedure TUndoSelectNodes.DoCommand;
+begin
+  inherited;
+  SetSelectedNodesAndElements(FNewSelectedNodes, FNewSelectedElements);
+  frmGoPhast.InvalidateTop;
+  frmGoPhast.frameTopView.MagnificationChanged := True;
+end;
+
+procedure TUndoSelectNodes.SetSelectedNodesAndElements(
+  SelectedNodes, SelectedElements: TIntegerList);
+var
+  Nodes: TSutraNode2D_Collection;
+  NodeIndex: Integer;
+  ANode: TSutraNode2D;
+  Elements: TSutraElement2D_Collection;
+  ElementIndex: Integer;
+  AnElement: TSutraElement2D;
+begin
+  Nodes := frmGoPhast.PhastModel.Mesh.Mesh2D.Nodes;
+  for NodeIndex := 0 to Nodes.Count - 1 do
+  begin
+    ANode := Nodes[NodeIndex];
+    ANode.Selected := False;
+  end;
+  for NodeIndex := 0 to SelectedNodes.Count - 1 do
+  begin
+    ANode := Nodes[SelectedNodes[NodeIndex]];
+    ANode.Selected := True;
+  end;
+  Elements := frmGoPhast.PhastModel.Mesh.Mesh2D.Elements;
+  for ElementIndex := 0 to Elements.Count - 1 do
+  begin
+    AnElement := Elements[ElementIndex];
+    AnElement.Selected := False;
+  end;
+  for ElementIndex := 0 to SelectedElements.Count - 1 do
+  begin
+    AnElement := Elements[SelectedElements[ElementIndex]];
+    AnElement.Selected := True;
+  end;
+end;
+
+procedure TUndoSelectNodes.Undo;
+begin
+  inherited;
+  SetSelectedNodesAndElements(FOldSelectedNodes, FOldSelectedElements);
+  frmGoPhast.InvalidateTop;
+  frmGoPhast.frameTopView.MagnificationChanged := True;
+end;
+
+{ TUndoChangeMesh }
+
+procedure TUndoChangeMesh.AssignMesh(Mesh: TSutraMesh3D);
+begin
+  frmGoPhast.PhastModel.SutraMesh := Mesh;
+  frmGoPhast.PhastModel.Mesh.ElevationsNeedUpdating := True;
+  frmGoPhast.InvalidateAllViews;
+  frmGoPhast.frameTopView.MagnificationChanged := True;
+  frmGoPhast.frameFrontView.MagnificationChanged := True;
+end;
+
+constructor TUndoChangeMesh.Create;
+begin
+  FOldMesh := TSutraMesh3D.Create(nil);
+  UpdataOldMesh(frmGoPhast.PhastModel.SutraMesh);
+  FNewMesh := TSutraMesh3D.Create(nil);
+  UpdataNewMesh(frmGoPhast.PhastModel.SutraMesh);
+end;
+
+function TUndoChangeMesh.Description: string;
+begin
+  Result := StrChangeSUTRAMesh;
+end;
+
+destructor TUndoChangeMesh.Destroy;
+begin
+  FOldMesh.Free;
+  FNewMesh.Free;
+  inherited;
+end;
+
+procedure TUndoChangeMesh.DoCommand;
+begin
+  inherited;
+  AssignMesh(FNewMesh);
+end;
+
+procedure TUndoChangeMesh.Undo;
+begin
+  inherited;
+  AssignMesh(FOldMesh);
+end;
+
+{ TUndoRenumberMesh }
+
+procedure TUndoRenumberMesh.AssignNumbers(Nodes, Elements: TIntegerCollection);
+var
+  Mesh: TSutraMesh3D;
+begin
+  Mesh := frmGoPhast.PhastModel.SutraMesh;
+  Mesh.ElementNumbers := Elements;
+  Mesh.NodeNumbers := Nodes;
+  Mesh.RestoreNodeNumbers;
+  Mesh.RestoreElementNumbers;
+  frmGoPhast.frameTopView.MagnificationChanged := True;
+  frmGoPhast.frameFrontView.MagnificationChanged := True;
+  frmGoPhast.InvalidateAllViews;
+end;
+
+constructor TUndoRenumberMesh.Create;
+var
+  Mesh: TSutraMesh3D;
+begin
+  inherited;
+  FOldElementNumbers := TIntegerCollection.Create(nil);
+  FOldNodeNumbers := TIntegerCollection.Create(nil);
+  FNewElementNumbers := TIntegerCollection.Create(nil);
+  FNewNodeNumbers := TIntegerCollection.Create(nil);
+
+  Mesh := frmGoPhast.PhastModel.SutraMesh;
+  Mesh.UpdateNodeNumbers;
+  Mesh.UpdateElementNumbers;
+  FOldElementNumbers.Assign(Mesh.ElementNumbers);
+  FOldNodeNumbers.Assign(Mesh.NodeNumbers);
+end;
+
+function TUndoRenumberMesh.Description: string;
+begin
+  Result := StrRenumberMesh;
+end;
+
+destructor TUndoRenumberMesh.Destroy;
+begin
+  FOldElementNumbers.Free;
+  FOldNodeNumbers.Free;
+  FNewElementNumbers.Free;
+  FNewNodeNumbers.Free;
+  inherited;
+end;
+
+procedure TUndoRenumberMesh.DoCommand;
+begin
+//  inherited;
+  // do nothing
+end;
+
+procedure TUndoRenumberMesh.Redo;
+begin
+//  inherited;
+  AssignNumbers(FNewNodeNumbers, FNewElementNumbers);
+end;
+
+procedure TUndoRenumberMesh.Undo;
+begin
+//  inherited;
+  AssignNumbers(FOldNodeNumbers, FOldElementNumbers);
+end;
+
+procedure TUndoRenumberMesh.UpdateNumbers;
+var
+  Mesh: TSutraMesh3D;
+begin
+  Mesh := frmGoPhast.PhastModel.SutraMesh;
+  Mesh.UpdateNodeNumbers;
+  Mesh.UpdateElementNumbers;
+  FNewElementNumbers.Assign(Mesh.ElementNumbers);
+  FNewNodeNumbers.Assign(Mesh.NodeNumbers);
+end;
+
+{ TNewUndoMoveSutraNodes }
+
+function TUndoMoveSutraNodes.Description: string;
+begin
+  result := StrMoveNodes
+end;
+
+procedure TUndoChangeMesh.UpdataOldMesh(OldMesh: TSutraMesh3D);
+begin
+  FOldMesh.Assign(OldMesh);
+end;
+
+procedure TUndoChangeMesh.UpdataNewMesh(NewMesh: TSutraMesh3D);
+begin
+  FNewMesh.Assign(NewMesh);
+end;
+
+{ TUndoDrawElements }
+
+function TUndoDrawElements.Description: string;
+begin
+  result := StrDrawNewElements;
+end;
+
+end.

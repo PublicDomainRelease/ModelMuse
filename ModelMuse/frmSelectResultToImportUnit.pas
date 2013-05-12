@@ -20,8 +20,6 @@ type
 
   TDataArrayForm = (dafLayer, dafSystem, dafSubsidence, dafWaterTable);
 
-  TDisplayChoice = (dcColor, dcContour, dcNone);
-
   TUndoImportModelResults = class(TCustomUndo)
   private
     FNewTopDataSet: TDataArray;
@@ -207,7 +205,6 @@ type
       AFileName: string);
     procedure UpdateOldComments(OldComments: TStringList;
       ADataArray: TDataArray; OldComment: string);
-//    procedure SetData;
   public
     function SelectFiles: boolean;
     { Public declarations }

@@ -9,7 +9,6 @@ inherited frmImportBitmap: TfrmImportBitmap
   VertScrollBar.Range = 98
   ActiveControl = btnSelectImage
   Caption = 'Import Image'
-  ExplicitTop = -188
   ExplicitWidth = 800
   ExplicitHeight = 594
   PixelsPerInch = 96
@@ -450,10 +449,6 @@ inherited frmImportBitmap: TfrmImportBitmap
       Image32.ScaleMode = smNormal
       Image32.TabOrder = 0
       Image32.OnMouseUp = ZoomBoxImage32MouseUp
-      Image32.ExplicitLeft = 0
-      Image32.ExplicitTop = 0
-      Image32.ExplicitWidth = 575
-      Image32.ExplicitHeight = 427
       ImmediateResize = True
       Magnification = 1.000000000000000000
       VerticalDirection = vdUp

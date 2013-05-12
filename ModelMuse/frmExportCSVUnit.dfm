@@ -5,7 +5,7 @@ inherited frmExportCSV: TfrmExportCSV
   ClientHeight = 407
   ExplicitWidth = 440
   ExplicitHeight = 445
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object Panel1: TPanel
     Left = 0
@@ -71,10 +71,8 @@ inherited frmExportCSV: TfrmExportCSV
       Width = 104
       Height = 27
       Anchors = [akRight, akBottom]
-      DoubleBuffered = True
       Kind = bkHelp
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 3
       OnClick = btnHelpClick
     end
@@ -85,7 +83,6 @@ inherited frmExportCSV: TfrmExportCSV
       Height = 27
       Anchors = [akRight, akBottom]
       Caption = 'Save Data'
-      DoubleBuffered = True
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000130B0000130B00001000000000000000000000000000
@@ -100,7 +97,6 @@ inherited frmExportCSV: TfrmExportCSV
         99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
         93337FFFF7737777733300000033333333337777773333333333}
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 4
       OnClick = btnSaveClick
     end

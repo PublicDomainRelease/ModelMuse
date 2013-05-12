@@ -35,12 +35,14 @@ type
   TBoundaryType = (btUndefined, btPhastSpecifiedHead, btPhastFlux, btPhastLeaky,
     btPhastRiver, btPhastWell, btMfWell, btMfGhb, btMfDrn, btMfDrt, btMfRiv,
     btMfChd, btMfEts, btMfEt, btMfRch, btMfSfr, btMfUzf, btMfObs, btMfMnw,
-    btMt3dSsm, btMfHfb, btSutraSpecifiedPressure, btSutraSpecConcTemp,
-    btSutraFluidFlux, btMassEnergyFlux);
+    btMt3dSsm, btMfHfb, btSutraSpecifiedPressure, btSutraSpecifiedHead,
+    btSutraSpecConcTemp, btSutraFluidFlux, btMassEnergyFlux);
 
   TBoundaryTypes = set of TBoundaryType;
 
   TContourAlg = (caSimple, caACM626);
+
+  TAngleType = (atNone, atDegrees, atRadians);
 
 
 
@@ -422,6 +424,7 @@ type
     FDisplayName: string;
     FContourAlg: TContourAlg;
     FMinMaxUpToDate: Boolean;
+    FAngleType: TAngleType;
     // See @link(TwoDInterpolatorClass).
     function GetTwoDInterpolatorClass: string;
     // @name is called if an invalid formula has been specified.
@@ -497,6 +500,7 @@ type
     function GetMaxBoolean: boolean;
     function GetMinString: string;
     function GetMaxString: string;
+    procedure SetAngleType(const Value: TAngleType);
   protected
     // See @link(DimensionsChanged).
     FDimensionsChanged: boolean;
@@ -883,6 +887,7 @@ type
 
     // @name has no effect.  It is maintained only for backwards compatibility.
     property Visible: boolean read FVisible write SetVisible stored False;
+    property AngleType: TAngleType read FAngleType write SetAngleType;
   end;
 
   TDataArrayList = class(TObject)
@@ -3834,6 +3839,15 @@ begin
 //  UpdateEvalTime;
 end;
 
+procedure TDataArray.SetAngleType(const Value: TAngleType);
+begin
+  if FAngleType <> Value then
+  begin
+    FAngleType := Value;
+    frmGoPhast.InvalidateModel;
+  end;
+end;
+
 procedure TDataArray.SetAnnotation(const Layer, Row, Col: integer;
   const Value: string);
 begin
@@ -6576,6 +6590,12 @@ begin
   begin
     Result := btSutraSpecifiedPressure;
   end
+  else if (Name = StrSutraSpecifiedHead)
+    or (Name = StrAssocHeadConc)
+    then
+  begin
+    Result := btSutraSpecifiedHead;
+  end
   else if (Name = StrSpecifiedTemp)
     or (Name = StrSpecifiedConc) then
   begin
@@ -6690,6 +6710,10 @@ begin
       btSutraSpecifiedPressure:
         begin
           result := StrSUTRASpecifiedPres;
+        end;
+      btSutraSpecifiedHead:
+        begin
+          result := StrSUTRASpecifiedHead;
         end;
       btSutraSpecConcTemp:
         begin

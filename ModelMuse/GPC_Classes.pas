@@ -116,7 +116,8 @@ begin
   FPolygon.num_contours := 0;
 end;
 
-constructor TGpcPolygonClass.CreateFromOperation(Operation: Tgpc_op; Subject, Clip: TGpcPolygonClass);
+constructor TGpcPolygonClass.CreateFromOperation(Operation: Tgpc_op;
+  Subject, Clip: TGpcPolygonClass);
 begin
   Create;
   gpc_free_polygon(@FPolygon);

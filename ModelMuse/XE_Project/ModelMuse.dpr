@@ -461,7 +461,11 @@ uses
   TriPackRoutines in '..\TriPackRoutines.pas',
   TriPackMessages in '..\TriPackMessages.pas',
   LineStorage in '..\LineStorage.pas',
-  frmColorSchemesUnit in '..\frmColorSchemesUnit.pas' {frmColorSchemes};
+  frmColorSchemesUnit in '..\frmColorSchemesUnit.pas' {frmColorSchemes},
+  FishnetMeshGenerator in '..\FishnetMeshGenerator.pas',
+  frmFishnetElementPropertiesUnit in '..\frmFishnetElementPropertiesUnit.pas' {frmFishnetElementProperties},
+  frmRenumberingMethodUnit in '..\frmRenumberingMethodUnit.pas' {frmRenumberingMethod},
+  frmMeshInformationUnit in '..\frmMeshInformationUnit.pas' {frmMeshInformation};
 
 {$R *.res}
 
@@ -475,13 +479,6 @@ begin
   Application.CreateForm(TfrmGoPhast, frmGoPhast);
   Application.CreateForm(TfrmScreenObjectProperties, frmScreenObjectProperties);
   Application.CreateForm(TfrmProgressMM, frmProgressMM);
-  Application.CreateForm(TfrmSutraTimeAdjustChoice, frmSutraTimeAdjustChoice);
-  Application.CreateForm(TfrmSutraOutputControl, frmSutraOutputControl);
-  Application.CreateForm(TfrmImportTprogs, frmImportTprogs);
-  Application.CreateForm(TfrmSutraProgramLocations, frmSutraProgramLocations);
-  Application.CreateForm(TfrmImportTprogs, frmImportTprogs);
-  Application.CreateForm(TfrmSutraProgramLocations, frmSutraProgramLocations);
-  Application.CreateForm(TfrmCustomizeMesh, frmCustomizeMesh);
   //  Application.CreateForm(TfrmSelectedObjects, frmSelectedObjects);
   Application.CreateForm(TfrmColors, frmColors);
   Application.Run;

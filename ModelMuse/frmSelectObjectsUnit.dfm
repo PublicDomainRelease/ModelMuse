@@ -2,21 +2,21 @@ inherited frmSelectObjects: TfrmSelectObjects
   Left = 558
   Top = 411
   Width = 363
-  Height = 398
+  Height = 420
   HelpType = htKeyword
   HelpKeyword = 'Select_Objects_by_Name'
   VertScrollBar.Range = 162
   ActiveControl = btnCancel
   Caption = 'Select Objects by Name'
   ExplicitWidth = 363
-  ExplicitHeight = 398
+  ExplicitHeight = 420
   PixelsPerInch = 120
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 176
+    Top = 192
     Width = 345
-    Height = 177
+    Height = 183
     Align = alBottom
     ParentColor = True
     TabOrder = 1
@@ -29,7 +29,7 @@ inherited frmSelectObjects: TfrmSelectObjects
     end
     object btnCancel: TBitBtn
       Left = 228
-      Top = 134
+      Top = 144
       Width = 108
       Height = 33
       Kind = bkCancel
@@ -38,7 +38,7 @@ inherited frmSelectObjects: TfrmSelectObjects
     end
     object btnOK: TBitBtn
       Left = 116
-      Top = 134
+      Top = 144
       Width = 108
       Height = 33
       Kind = bkOK
@@ -48,7 +48,7 @@ inherited frmSelectObjects: TfrmSelectObjects
     end
     object btnHelp: TBitBtn
       Left = 4
-      Top = 134
+      Top = 144
       Width = 108
       Height = 33
       Kind = bkHelp
@@ -58,7 +58,7 @@ inherited frmSelectObjects: TfrmSelectObjects
     end
     object btnSelectAll: TButton
       Left = 4
-      Top = 54
+      Top = 64
       Width = 108
       Height = 33
       Caption = 'Select All'
@@ -67,7 +67,7 @@ inherited frmSelectObjects: TfrmSelectObjects
     end
     object btnSelectNone: TButton
       Left = 116
-      Top = 54
+      Top = 64
       Width = 108
       Height = 33
       Caption = 'Select None'
@@ -76,7 +76,7 @@ inherited frmSelectObjects: TfrmSelectObjects
     end
     object btnToggle: TButton
       Left = 228
-      Top = 54
+      Top = 64
       Width = 108
       Height = 33
       Caption = 'Toggle'
@@ -85,7 +85,7 @@ inherited frmSelectObjects: TfrmSelectObjects
     end
     object cbIncludeHiddenObjects: TCheckBox
       Left = 8
-      Top = 17
+      Top = 27
       Width = 305
       Height = 31
       Caption = 'Include hidden objects'
@@ -96,7 +96,7 @@ inherited frmSelectObjects: TfrmSelectObjects
     end
     object edSearchTerm: TEdit
       Left = 228
-      Top = 94
+      Top = 104
       Width = 105
       Height = 26
       TabOrder = 5
@@ -104,7 +104,7 @@ inherited frmSelectObjects: TfrmSelectObjects
     end
     object btnSelectByName: TButton
       Left = 4
-      Top = 94
+      Top = 104
       Width = 220
       Height = 33
       Caption = 'Select Names Containing:'
@@ -116,20 +116,19 @@ inherited frmSelectObjects: TfrmSelectObjects
     Left = 0
     Top = 0
     Width = 345
-    Height = 176
-    ActivePage = tabSide
+    Height = 192
+    ActivePage = tabTop
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 330
-    ExplicitHeight = 180
+    ExplicitHeight = 176
     object tabTop: TTabSheet
       Caption = 'Top'
-      ExplicitHeight = 151
+      ExplicitHeight = 165
       object lvTop: TListView
         Left = 0
         Top = 0
         Width = 337
-        Height = 143
+        Height = 159
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -141,18 +140,18 @@ inherited frmSelectObjects: TfrmSelectObjects
         ViewStyle = vsReport
         OnChange = lvTopChange
         OnDblClick = lvTopDblClick
-        ExplicitHeight = 151
+        ExplicitHeight = 165
       end
     end
     object tabFront: TTabSheet
       Caption = 'Front'
       ImageIndex = 1
-      ExplicitHeight = 151
+      ExplicitHeight = 165
       object lvFront: TListView
         Left = 0
         Top = 0
         Width = 337
-        Height = 143
+        Height = 159
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -164,19 +163,18 @@ inherited frmSelectObjects: TfrmSelectObjects
         ViewStyle = vsReport
         OnChange = lvTopChange
         OnDblClick = lvTopDblClick
-        ExplicitHeight = 151
+        ExplicitHeight = 165
       end
     end
     object tabSide: TTabSheet
       Caption = 'Side'
       ImageIndex = 2
-      ExplicitWidth = 322
-      ExplicitHeight = 147
+      ExplicitHeight = 143
       object lvSide: TListView
         Left = 0
         Top = 0
         Width = 337
-        Height = 143
+        Height = 159
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -188,8 +186,7 @@ inherited frmSelectObjects: TfrmSelectObjects
         ViewStyle = vsReport
         OnChange = lvTopChange
         OnDblClick = lvTopDblClick
-        ExplicitWidth = 322
-        ExplicitHeight = 147
+        ExplicitHeight = 143
       end
     end
   end

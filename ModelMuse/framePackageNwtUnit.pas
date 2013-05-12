@@ -94,6 +94,9 @@ var
 
 implementation
 
+uses
+  ModelMuseUtilities;
+
 {$R *.dfm}
 
 { TframePackageNwt }
@@ -193,29 +196,29 @@ var
 begin
   inherited;
   NwtPackage := Package as TNwtPackageSelection;
-  NwtPackage.HeadTolerance.Value := StrToFloat(rdeHeadTolerance.Text);
-  NwtPackage.FluxTolerance.Value := StrToFloat(rdeFluxTolerance.Text);
+  NwtPackage.HeadTolerance.Value := FortranStrToFloat(rdeHeadTolerance.Text);
+  NwtPackage.FluxTolerance.Value := FortranStrToFloat(rdeFluxTolerance.Text);
   NwtPackage.MaxOuterIterations := spinMaxOuterIt.AsInteger;
-  NwtPackage.ThicknessFactor.Value := StrToFloat(rdeThicknessFactor.Text);
+  NwtPackage.ThicknessFactor.Value := FortranStrToFloat(rdeThicknessFactor.Text);
   NwtPackage.SolverMethod := TNewtonSolverMethod(comboSolverMethod.ItemIndex);
   NwtPackage.PrintFlag := Ord(cbPrintFlag.Checked);
   NwtPackage.CorrectForCellBottom := Ord(cbCorrectForCellBottom.Checked);
   NwtPackage.Option := TNewtonOption(comboOptions.ItemIndex);
 
-  NwtPackage.DBDTheta.Value := StrToFloat(rdeDbdTheta.Text);
-  NwtPackage.DBDKappa.Value := StrToFloat(rdeDbdKappa.Text);
-  NwtPackage.DBDGamma.Value := StrToFloat(rdeDbdGamma.Text);
-  NwtPackage.MomementumCoefficient.Value := StrToFloat(rdeMomentumCoefficient.Text);
+  NwtPackage.DBDTheta.Value := FortranStrToFloat(rdeDbdTheta.Text);
+  NwtPackage.DBDKappa.Value := FortranStrToFloat(rdeDbdKappa.Text);
+  NwtPackage.DBDGamma.Value := FortranStrToFloat(rdeDbdGamma.Text);
+  NwtPackage.MomementumCoefficient.Value := FortranStrToFloat(rdeMomentumCoefficient.Text);
   NwtPackage.BackFlag := Ord(cbUseResidualControl.Checked);
   NwtPackage.MaxBackIterations := seMaxReductions.AsInteger;
-  NwtPackage.BackTol.Value := StrToFloat(rdeBackTol.Text);
-  NwtPackage.BackReduce.Value := StrToFloat(rdeReductionFactor.Text);
+  NwtPackage.BackTol.Value := FortranStrToFloat(rdeBackTol.Text);
+  NwtPackage.BackReduce.Value := FortranStrToFloat(rdeReductionFactor.Text);
 
   NwtPackage.MaxIterInner := seMaxIterationsGmres.AsInteger;
   NwtPackage.IluMethod := TNewtonIluMethod(comboIluMethod.ItemIndex);
   NwtPackage.FillLimit := seFillLimit1.AsInteger;
   NwtPackage.FillLevel := seFillLimit2.AsInteger;
-  NwtPackage.StopTolerance.Value := StrToFloat(rdeTolerance.Text);
+  NwtPackage.StopTolerance.Value := FortranStrToFloat(rdeTolerance.Text);
   NwtPackage.MaxGmresRestarts := seRestarts.AsInteger;
 
   NwtPackage.AccelMethod := TNewtonAccelMethod(comboAccelMethod.ItemIndex);
@@ -223,10 +226,10 @@ begin
   NwtPackage.Level := seFillLevel.AsInteger;
   NwtPackage.NumberOfOrthogonalizations := seNumOrtho.AsInteger;
   NwtPackage.ApplyReducedPrecondition := TNewtonApplyReducedPrecondition(cbApplyReducedPreconditioning.Checked);
-  NwtPackage.ResidReducConv.Value := StrToFloat(rdeResRedCrit.Text);
+  NwtPackage.ResidReducConv.Value := FortranStrToFloat(rdeResRedCrit.Text);
   NwtPackage.UseDropTolerance := TNewtonUseDropTolerance(cbUseDropTolerance.Checked);
-  NwtPackage.DropTolerancePreconditioning.Value := StrToFloat(rdeDropTolerance.Text);
-  NwtPackage.InnerHeadClosureCriterion.Value := StrToFloat(rdeHeadClosure.Text);
+  NwtPackage.DropTolerancePreconditioning.Value := FortranStrToFloat(rdeDropTolerance.Text);
+  NwtPackage.InnerHeadClosureCriterion.Value := FortranStrToFloat(rdeHeadClosure.Text);
   NwtPackage.MaxInnerIterations := seMaxIterChimd.AsInteger;
   NwtPackage.ContinueNWT := cbContinue.Checked;
 end;

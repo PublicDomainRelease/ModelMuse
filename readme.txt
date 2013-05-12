@@ -1,10 +1,10 @@
-ModelMuse – Version 2.19.0.0
+ModelMuse – Version 2.19.1.0
 
 NOTE: Any use of trade, product or firm names is for descriptive purposes 
       only and does not imply endorsement by the U.S. Government.
 
 This version of ModelMuse is packaged for personal computers using
-the Microsoft Windows XP or Vista operating systems.  Executable files
+the Microsoft Windows XP, Vista, 7 or 8 operating systems.  Executable files
 for personal computers are provided as well as the source code.
 
 Instructions for installation, execution, and testing are provided below.
@@ -27,11 +27,11 @@ Either version may be used for installing ModelMuse.  Both contain
 the same version of ModelMuse for use on personal computers:
 
 For 32 or 64-bit operating systems:
-         ModelMuseSetup32_2_19.exe
-         ModelMuse32_2_19.zip
+         ModelMuseSetup32_2_19_1.exe
+         ModelMuse32_2_19_1.zip
 For 64-bit operating systems:
-         ModelMuseSetup64_2_19.exe
-         ModelMuse64_2_19.zip
+         ModelMuseSetup64_2_19_1.exe
+         ModelMuse64_2_19_1.zip
 
 Both distribution files contain:
 
@@ -41,22 +41,22 @@ Both distribution files contain:
           Example models
           Supplementary materials
 
-The file ModelMuseSource2_19.zip contains the source code for ModelMuse, 
+The file ModelMuseSource2_19_1.zip contains the source code for ModelMuse, 
          ModelMonitor, and MF2005_Importer.exe.
 
 B. INSTALLING
 
 The distribution file is an installer.  Execution of the distribution 
 file will install ModelMuse in a directory chosen by the user. By default,
-ModelMuse will be installed in C:\Program Files\USGS\ModelMuse2_19 or
-C:\Program Files (x86)\USGS\ModelMuse2_19. If 
+ModelMuse will be installed in C:\Program Files\USGS\ModelMuse2_19_1 or
+C:\Program Files (x86)\USGS\ModelMuse2_19_1. If 
 the new version of ModelMuse is installed over an older version, the 
 program may be installed in the same directory as the older version of the 
 program. The installer will associate files with the extensions .gpt, 
 .gpb, and .mmZlib with ModelMuse.  The following directory structure will 
 be created in the installation directory:
 
-   |--ModelMuse2_19
+   |--ModelMuse2_19_1
    |  |--bin          ; ModelMuse, ModelMonitor, and MF2005_Importer 
    |  |                   executables.
    |  |--doc          ; Documentation file
@@ -64,7 +64,7 @@ be created in the installation directory:
    |  |                   documentation or the ModelMuse help.
    |  |--examples     ; Sample models.
 
-Included in directory ModelMuse2_19\doc is the report on ModelMuse as a 
+Included in directory ModelMuse2_19_1\doc is the report on ModelMuse as a 
 Portable Document Format (PDF) file. The PDF file is readable and 
 printable on various computer platforms using Acrobat Reader from Adobe.
 The Acrobat Reader is freely available from the following World Wide Web
@@ -117,7 +117,7 @@ MF2005_Importer is compiled with the Intel Fortran compiler.
 
 ModelMuse uses a number of custom comoponents which must be installed 
 in Delphi XE or Delphi XE2 before compiling ModelMuse.  Some are included with the 
-ModelMuse source code.  Addition required files or components are 
+ModelMuse source code.  Additional required files or components are 
 listed below.  In some cases, the files must be altered before they 
 can be used with ModelMuse.  The required changes are listed below.
 

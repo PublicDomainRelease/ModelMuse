@@ -24,6 +24,9 @@ var
 
 implementation
 
+uses
+  ModelMuseUtilities;
+
 {$R *.dfm}
 
 { TframePackageWell }
@@ -36,7 +39,7 @@ end;
 
 procedure TframePackageWell.SetData(Package: TModflowPackageSelection);
 begin
-  (Package as TWellPackage).PhiRamp := StrToFloat(rdePhiRamp.Text);
+  (Package as TWellPackage).PhiRamp := FortranStrToFloat(rdePhiRamp.Text);
   inherited;
 end;
 

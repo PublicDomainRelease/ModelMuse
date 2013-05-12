@@ -3,6 +3,9 @@
   Sloan, S.W., and Randolph, M.F., 1983. Automatic element reordering for
   finite element analysis with frontal solution schemes. International
   Journal for Numerical Methods in Engineering. 19: 1153-1181.
+
+  There is a small change in TNodeHandler.AssignActiveNodeIncrement
+  from what is described in Sloan and Randolph.
 }
 
 unit MeshRenumbering;
@@ -376,6 +379,40 @@ begin
     try
       // Pick a node as the first node
       NodeHandler := NodeHandlers[0];
+
+      // Spending effort picking a "good" first node doesn't help.
+
+      {
+      for NodeIndex := 0 to NodeHandlers.Count - 1 do
+      begin
+        NodeHandler := NodeHandlers[NodeIndex];
+        NodeHandler.AssignActiveNodeIncrement;
+      end;
+
+      NextNodeHandler := nil;
+//      NextNodeIndex := -1;
+      for NodeIndex := 0 to NodeHandlers.Count - 1 do
+      begin
+        NodeHandler := NodeHandlers[NodeIndex];
+        if NextNodeHandler = nil then
+        begin
+          NextNodeHandler := NodeHandler;
+//          NextNodeIndex := NodeIndex;
+        end
+        else
+        begin
+          if NodeHandler.FActiveNodeIncrement <
+            NextNodeHandler.FActiveNodeIncrement then
+          begin
+            NextNodeHandler := NodeHandler;
+//            NextNodeIndex := NodeIndex;
+          end
+        end;
+      end;
+      NodeHandler := NextNodeHandler;
+      }
+
+
       UpdateStartingNodes(StartingNodes, NodeHandlers, NodeHandler);
       MaxFrontWidth := NodeHandlers.Count + 1;
       for StartingNodeIndex := StartingNodes.Count - 1 downto 0 do
@@ -526,6 +563,41 @@ begin
       Inc(FActiveNodeIncrement);
     end;
   end;
+
+  // This step is different from what is in the original source.
+  // It provides a little improvement for Fishnet meshes.
+  if (FNode.ActiveElementCount in [1,2]) and (FActiveNodeIncrement <= 0) then
+  begin
+    Inc(FActiveNodeIncrement);
+  end;
+
+  // This was no better than the above method.
+//  if (FNode.ActiveElementCount = 1) and (FActiveNodeIncrement <= 0) then
+//  begin
+//    Inc(FActiveNodeIncrement);
+//  end;
+//  if (FNode.ActiveElementCount = 2) and (FActiveNodeIncrement <= 0) then
+//  begin
+//    Inc(FActiveNodeIncrement, 2);
+//  end;
+
+// These ways of djusting the way FActiveNodeIncrement is assigned don't help.
+//  if FNode.ActiveElementCount in [1,2] then
+//  begin
+//    Inc(FActiveNodeIncrement);
+//  end;
+//  if FNode.NodeType <> ntInner  then
+//  begin
+//    Inc(FActiveNodeIncrement);
+//    if FNode.ActiveElementCount = 1 then
+//    begin
+//      Inc(FActiveNodeIncrement,2);
+//    end;
+//    if FNode.ActiveElementCount = 2 then
+//    begin
+//      Inc(FActiveNodeIncrement);
+//    end;
+//  end;
 end;
 
 constructor TNodeHandler.Create(Node: INode);

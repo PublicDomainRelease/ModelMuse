@@ -22,11 +22,11 @@ type
     procedure sbDeleteClick(Sender: TObject);
     procedure sbInsertClick(Sender: TObject);
   private
-    procedure ClearSelectedRow;
     { Private declarations }
   protected
     procedure SetEnabled(Value: boolean); override;
   public
+    procedure ClearSelectedRow;
     { Public declarations }
   end;
 

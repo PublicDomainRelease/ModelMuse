@@ -1,7 +1,7 @@
 {@abstract(@name defines a series of cursor constants.
   It creates the associated cursors in the initialization section and
   destroys them in the finalization section.)
-  The bitmaps for the cursors are stored in CustomCursor.res.}
+  The bitmaps for the cursors are stored in ModelMuseCursors.res.}
 unit CursorsFoiledAgain;
 
 interface
@@ -114,6 +114,8 @@ const
 
   crMeasure = 39;
   crMoveCrossSection = 40;
+  crFishnet = 50;
+  crMoveNode = 51;
 
   // cursor numbers 41-46 are defined dynamically in frmGoPhast.
 
@@ -279,6 +281,8 @@ initialization
   LoadACursor('CRVERTEXVALUE', crVertexValue);
   LoadACursor('CRMEASURE', crMeasure);
   LoadACursor('CRMOVECROSSSECTION', crMoveCrossSection);
+  LoadACursor('CRFISHNET', crFishnet);
+  LoadACursor('CRMOVENODE', crMoveNode);
 
 
 

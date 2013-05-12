@@ -729,7 +729,7 @@ begin
           if FNodeNumbers.IsValue[LayerIndex,RowIndex,ColIndex] then
           begin
             Assert(RowIndex = 0);
-            if Mesh.MeshType = mt2D then
+            if Mesh.MeshType in [mt2D, mtProfile] then
             begin
               Assert(LayerIndex = 0);
               ANode2D := Mesh.Mesh2D.Nodes[ColIndex];

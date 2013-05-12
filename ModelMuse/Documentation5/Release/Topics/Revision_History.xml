@@ -6,6 +6,44 @@
     <header>
       <para styleclass="Heading1"><text styleclass="Heading1" translate="true">Revision History</text></para>
     </header>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.19.1, May 13, 2013]]></caption></toggle></para>
+    <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Enhancements]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">In MODFLOW models, ModelMuse now checks that there is a hydraulic connection between all the active cells.</text></para>
+              </td>
+            </tr>
+          </table></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Changes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">On some computers, bugs are encountered related to the 3D view. The 3D view is hidden on such computers to allow the program to continue running.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">A new checkbox has been added to the &quot;Object Properties&quot; dialog box labeled &quot;Duplicates &lt;cells/elements&gt; allowed. It is checked by default. Under some conditions, a single object can allow multiple values to be assigned at a single cell. For example, in MODFLOW models, an object might define two or more wells at a single cell by having two separate point sections that are in the same cell. This ability can be turned off by unchecking this check box.</text></para>
+              </td>
+            </tr>
+          </table></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading3_atocs_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading3_atocs_"><caption translate="true"><![CDATA[Bug fixes]]></caption></toggle></para>
+          <para styleclass="Heading3_atocs_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Attempting to import a .dxf file that is locked by another program will result in an error message to the user instead of generating a bug report.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that caused problems on computers in which the decimal symbol is not a period when closing the &quot;MODFLOW Packages and Programs&quot; dialog box.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">When reading an empty endpoint file, ModelMuse now displays a warning message to the user instead of generating a bug report. </text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">When an object is defining multiple values at the same cell or element, holes in the object no longer define such values. An example would be an object that defines wells in MODFLOW with an object that contains multiple sections and in which some of those sections define holes.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that could cause ModelMuse to hang when importing an existing MODFLOW-2005 model.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug in limiting display of MODPATH end points with tracking time.</text></para>
+                <para styleclass="Normal"><text styleclass="Normal" translate="true">Fixed bug that would cause access violations when generating the input file for the UZF package if a flow package other than the LPF or UPW was used.</text></para>
+              </td>
+            </tr>
+          </table></para>
+        </td>
+      </tr>
+    </table></para>
     <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Heading2_atoc_"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="true" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Heading2_atoc_"><caption translate="true"><![CDATA[Version 2.19, April 11, 2013]]></caption></toggle></para>
     <para styleclass="Heading2_atoc_" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">

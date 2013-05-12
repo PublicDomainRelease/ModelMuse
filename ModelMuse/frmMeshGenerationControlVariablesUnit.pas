@@ -35,9 +35,11 @@ type
     btnResetDefaults: TButton;
     rdeGrowthRate: TRbwDataEntry;
     lblElementGrowthRate: TLabel;
+    rgMethod: TRadioGroup;
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
     procedure btnResetDefaultsClick(Sender: TObject);
+    procedure rgMethodClick(Sender: TObject);
   private
     procedure GetData;
     procedure SetData;
@@ -112,6 +114,21 @@ begin
   AssignValues(MeshGenControls);
 end;
 
+procedure TfrmMeshGenerationControlVariables.rgMethodClick(Sender: TObject);
+begin
+  inherited;
+  rdgControlVariables.Enabled := rgMethod.ItemIndex = 1;
+  rdeGrowthRate.Enabled := rdgControlVariables.Enabled;
+  if rdgControlVariables.Enabled then
+  begin
+    rdgControlVariables.Color := clWindow;
+  end
+  else
+  begin
+    rdgControlVariables.Color := clBtnFace;
+  end;
+end;
+
 procedure TfrmMeshGenerationControlVariables.SetData;
 var
   MeshGenControls: TMeshGenerationControls;
@@ -119,6 +136,8 @@ var
 begin
   MeshGenControls := TMeshGenerationControls.Create(nil);
   try
+    MeshGenControls.MeshGenerationMethod :=
+      TMeshGenerationMethod(rgMethod.ItemIndex);
     MeshGenControls.SplittingAngle.Value :=
       StrToFloat(rdgControlVariables.Cells[Ord(mtlGeneral),
       Ord(mctSplittingAngle)]);
@@ -163,6 +182,7 @@ end;
 procedure TfrmMeshGenerationControlVariables.AssignValues(MeshGenControls
   : TMeshGenerationControls);
 begin
+  rgMethod.ItemIndex := Ord(MeshGenControls.MeshGenerationMethod);
   rdgControlVariables.Cells[Ord(mtlGeneral), Ord(mctSplittingAngle)] :=
     FloatToStr(MeshGenControls.SplittingAngle.Value);
   rdgControlVariables.Cells[Ord(mtlGeneral), Ord(mctStructure)] :=

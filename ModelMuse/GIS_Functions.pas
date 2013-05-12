@@ -190,6 +190,8 @@ resourcestring
   't be calculated. (This message can be ignored for inactive cells.)';
   StrTheSFunctionDoes = 'The %s function does not apply to locations that ar' +
   'e not intersected by an object.';
+  StrProblemEvaluating = 'Problem evaluating %s';
+  StrThereAreTooFewIm = 'There are too few imported values for %0:s in %1:s.';
 
 var  
   SpecialImplementors: TList;
@@ -604,7 +606,7 @@ begin
           ECenter := Element.Center;
           GlobalX := ECenter.X;
           GlobalY := ECenter.Y;
-          if LocalModel.Mesh.MeshType = mt2D then
+          if LocalModel.Mesh.MeshType in [mt2D, mtProfile] then
           begin
             GlobalZ := 0;
           end
@@ -619,7 +621,7 @@ begin
           Node := LocalModel.Mesh.Mesh2D.Nodes[Col];
           GlobalX := Node.X;
           GlobalY := Node.Y;
-          if LocalModel.Mesh.MeshType = mt2D then
+          if LocalModel.Mesh.MeshType in [mt2D, mtProfile] then
           begin
             GlobalZ := 0;
           end
@@ -1481,7 +1483,7 @@ begin
       begin
         Mesh := TCustomModel(GlobalCurrentModel).Mesh;
         Result := 0;
-        if (Mesh = nil) or (Mesh.MeshType = mt2D) then
+        if (Mesh = nil) or (Mesh.MeshType in [mt2D, mtProfile]) then
         begin
           Exit;
         end;
@@ -1872,7 +1874,7 @@ begin
       begin
         Result := 0;
         Mesh := TCustomModel(GlobalCurrentModel).Mesh;
-        if Mesh.MeshType = mt2D then
+        if Mesh.MeshType in [mt2D, mtProfile] then
         begin
           Exit;
         end;
@@ -2032,7 +2034,7 @@ begin
         begin
           Exit;
         end;
-        if Mesh.MeshType = mt2D then
+        if Mesh.MeshType in [mt2D, mtProfile] then
         begin
           Exit;
         end;
@@ -2186,7 +2188,7 @@ begin
           Exit;
         end;
         case Mesh.MeshType of
-          mt2D: Exit;
+          mt2D, mtProfile: Exit;
           mt3D:
             begin
               case GlobalEvaluatedAt of
@@ -2318,7 +2320,7 @@ begin
     msSutra22:
       begin
         Mesh := TCustomModel(GlobalCurrentModel).Mesh;
-        if Mesh.MeshType = mt2D then
+        if Mesh.MeshType in [mt2D, mtProfile] then
         begin
           result := 0;
           Exit;
@@ -2418,7 +2420,7 @@ begin
       begin
         Mesh := (GlobalCurrentModel as TCustomModel).Mesh;
         result := 0;
-        if Mesh.MeshType = mt2D then
+        if Mesh.MeshType in [mt2D, mtProfile] then
         begin
           Exit;
         end;
@@ -2468,7 +2470,7 @@ begin
   else
   begin
     LocalMesh := LocalModel.Mesh;
-    if (LocalMesh = nil) or (LocalMesh.MeshType = mt2D) then
+    if (LocalMesh = nil) or (LocalMesh.MeshType in [mt2D, mtProfile]) then
     begin
       result := 0;
     end
@@ -2788,7 +2790,7 @@ begin
     end
     else
     begin
-      if Mesh.MeshType = mt2D then
+      if Mesh.MeshType in [mt2D, mtProfile] then
       begin
         result := Layer = 0;
         Exit;
@@ -2895,6 +2897,14 @@ begin
       begin
         Exit;
       end;
+      if Index >= ImportedValues.Count then
+      begin
+        frmErrorsAndWarnings.AddError(GlobalCurrentModel,
+          Format(StrProblemEvaluating, [rsObjectImportedValuesR]),
+          Format(StrThereAreTooFewIm,
+          [ImportedName, GlobalCurrentScreenObject.Name]));
+        Exit;
+      end;
       Assert(Index < ImportedValues.Count);
       if ImportedValues.DataType <> rdtDouble then
       begin
@@ -2936,6 +2946,14 @@ begin
       Index := GlobalSection;
       if Index < 0 then
       begin
+        Exit;
+      end;
+      if Index >= ImportedValues.Count then
+      begin
+        frmErrorsAndWarnings.AddError(GlobalCurrentModel,
+          Format(StrProblemEvaluating, [rsObjectImportedValuesI]),
+          Format(StrThereAreTooFewIm,
+          [ImportedName, GlobalCurrentScreenObject.Name]));
         Exit;
       end;
       Assert(Index < ImportedValues.Count);
@@ -2982,6 +3000,14 @@ begin
       begin
         Exit;
       end;
+      if Index >= ImportedValues.Count then
+      begin
+        frmErrorsAndWarnings.AddError(GlobalCurrentModel,
+          Format(StrProblemEvaluating, [rsObjectImportedValuesB]),
+          Format(StrThereAreTooFewIm,
+          [ImportedName, GlobalCurrentScreenObject.Name]));
+        Exit;
+      end;
       Assert(Index < ImportedValues.Count);
       if ImportedValues.DataType <> rdtBoolean then
       begin
@@ -3024,6 +3050,14 @@ begin
       Index := GlobalSection;
       if Index < 0 then
       begin
+        Exit;
+      end;
+      if Index >= ImportedValues.Count then
+      begin
+        frmErrorsAndWarnings.AddError(GlobalCurrentModel,
+          Format(StrProblemEvaluating, [rsObjectImportedValuesT]),
+          Format(StrThereAreTooFewIm,
+          [ImportedName, GlobalCurrentScreenObject.Name]));
         Exit;
       end;
       Assert(Index < ImportedValues.Count);

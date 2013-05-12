@@ -78,7 +78,7 @@ resourcestring
   StrSoluteSource = 'Solute source';
   StrEnergySouce = 'Energy source';
   StrSpecifiedPressure = 'Specified pressure';
-  StrSpecifiedHead = 'Specified head';
+  StrSutraSpecifiedHead = 'SUTRA specified head';
   StrSpecifiedTemperatur = 'Specified temperature';
   StrSpecifiedConcentration = 'Specified concentration';
   StrTime = 'Time';
@@ -470,7 +470,9 @@ begin
             BoundItem := BoundValues.Add as TCustomSutraBoundaryItem;
           end;
           if (BoundaryType in [sbtFluidSource, sbtMassEnergySource] )
-            and (ATime <= Initialtime) then
+            and (ATime <= Initialtime)
+            and (frmGoPhast.PhastModel.SutraOptions.SimulationType
+            <> stSteadyFlowSteadyTransport) then
           begin
             case BoundaryType of
               sbtFluidSource:
@@ -863,7 +865,7 @@ begin
             end;
           tcSoluteHead:
             begin
-              rdgSutraFeature.Cells[2,0] := StrSpecifiedHead;
+              rdgSutraFeature.Cells[2,0] := StrSutraSpecifiedHead;
             end;
         end;
         case TransportChoice of

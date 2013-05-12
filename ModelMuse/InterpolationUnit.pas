@@ -230,6 +230,8 @@ type
   TNaturalNeighborInterp = class(TCustomTriangleInterpolator)
   private
     FNatNeigh: TNaturalNeighborInterpolatorTripack;
+    FSinNatNeigh: TNaturalNeighborInterpolatorTripack;
+    FCosNatNeigh: TNaturalNeighborInterpolatorTripack;
     procedure StoreData(Sender: TObject; const DataSet: TDataArray);
   public
     constructor Create(AOwner: TComponent); override;
@@ -246,6 +248,8 @@ type
   private
     FValidData: boolean;
     FSfrInterpolator: TSfrInterpolator;
+    FSinSfrInterpolator: TSfrInterpolator;
+    FCosSfrInterpolator: TSfrInterpolator;
   public
     // @name tells with what types of data this interpolator can be used.
     // (real numbers)
@@ -371,9 +375,13 @@ var
   LocalAnisotropy: Real;
   SectionIndex: Integer;
   NearestSegment: TCellElementSegment;
+  SumSin: real;
+  SumCos: Real;
 begin
   SumWeights := 0;
   Sum := 0;
+  SumSin:= 0;
+  SumCos:= 0;
 
   ListOfScreenObjects := TList.Create;
   try
@@ -521,7 +529,26 @@ begin
       begin
         Weight := 1 / Sqr(ScreenObjectDistance);
         SumWeights := SumWeights + Weight;
-        Sum := Sum + Value * Weight;
+
+        case DataSet.AngleType of
+          atNone:
+            begin
+              Sum := Sum + Value * Weight;
+            end;
+          atDegrees:
+            begin
+              Value := Value/180*Pi;
+              SumSin := SumSin + Sin(Value)*Weight;
+              SumCos := SumCos + Cos(Value)*Weight;
+            end;
+          atRadians:
+            begin
+              SumSin := SumSin + Sin(Value)*Weight;
+              SumCos := SumCos + Cos(Value)*Weight;
+            end;
+          else Assert(False);
+        end;
+
       end;
     end;
     if SumWeights = 0 then
@@ -530,7 +557,38 @@ begin
     end
     else
     begin
-      result := Sum / SumWeights;
+      result := 0;
+      case DataSet.AngleType of
+        atNone:
+          begin
+            result := Sum / SumWeights;
+          end;
+        atDegrees:
+          begin
+            if (SumSin = 0) and (SumCos = 0) then
+            begin
+              result := 0;
+            end
+            else
+            begin
+              result := ArcTan2(SumSin, SumCos);
+              result := result/pi*180;
+            end;
+          end;
+        atRadians:
+          begin
+            if (SumSin = 0) and (SumCos = 0) then
+            begin
+              result := 0;
+            end
+            else
+            begin
+              result := ArcTan2(SumSin, SumCos);
+            end;
+          end;
+        else Assert(False)
+      end;
+
     end;
 
   finally
@@ -1513,12 +1571,16 @@ constructor TCustomSfrpackInterpolator.Create(AOwner: TComponent);
 begin
   inherited;
   FSfrInterpolator := TSfrInterpolator.Create;
+  FSinSfrInterpolator := TSfrInterpolator.Create;
+  FCosSfrInterpolator := TSfrInterpolator.Create;
   OnInitialize := StoreData;
 end;
 
 destructor TCustomSfrpackInterpolator.Destroy;
 begin
   FSfrInterpolator.Free;
+  FSinSfrInterpolator.Free;
+  FCosSfrInterpolator.Free;
   inherited;
 end;
 
@@ -1526,6 +1588,8 @@ procedure TCustomSfrpackInterpolator.Finalize(const DataSet: TDataArray);
 begin
   inherited;
   FSfrInterpolator.Finalize;
+  FSinSfrInterpolator.Finalize;
+  FCosSfrInterpolator.Finalize;
 end;
 
 procedure TCustomSfrpackInterpolator.StoreData(Sender: TObject;
@@ -1542,6 +1606,8 @@ var
   XArray: TFloatArray;
   YArray: TFloatArray;
   ZArray: TFloatArray;
+  ZSinArray: TFloatArray;
+  ZCosArray: TFloatArray;
   Index: Integer;
   SectionIndex: integer;
   SortArray: array of TSortRecord;
@@ -1640,7 +1706,19 @@ begin
       // transfer X, Y, and Z to XArray, YArray, and ZArray.
       SetLength(XArray, Count);
       SetLength(YArray, Count);
-      SetLength(ZArray, Count);
+      case DataSet.AngleType of
+        atNone:
+          begin
+            SetLength(ZArray, Count);
+          end;
+        atDegrees, atRadians:
+          begin
+            SetLength(ZSinArray, Count);
+            SetLength(ZCosArray, Count);
+          end;
+        else Assert(False);
+      end;
+
 
       SortIndex := 0;
       for Index := 0 to SortList.Count - 1 do
@@ -1649,7 +1727,23 @@ begin
         begin
           XArray[SortIndex] := SortArray[Index].Location.X;
           YArray[SortIndex] := SortArray[Index].Location.Y;
-          ZArray[SortIndex] := SortArray[Index].Value;
+          case DataSet.AngleType of
+            atNone:
+              begin
+                ZArray[SortIndex] := SortArray[Index].Value;
+              end;
+            atDegrees:
+              begin
+                ZSinArray[SortIndex] := Sin(SortArray[Index].Value/180*Pi);
+                ZCosArray[SortIndex] := Cos(SortArray[Index].Value/180*Pi);
+              end;
+            atRadians:
+              begin
+                ZSinArray[SortIndex] := Sin(SortArray[Index].Value);
+                ZCosArray[SortIndex] := Cos(SortArray[Index].Value);
+              end;
+            else Assert(False);
+          end;
           Inc(SortIndex);
         end;
       end;
@@ -1661,7 +1755,19 @@ begin
     // indicate that the data is valid.  Otherwise, inform the user
     // of the problem.
     try
-      FSfrInterpolator.Initialize(XArray, YArray, ZArray);
+      case DataSet.AngleType of
+        atNone:
+          begin
+            FSfrInterpolator.Initialize(XArray, YArray, ZArray);
+          end;
+        atDegrees, atRadians:
+          begin
+            FSinSfrInterpolator.Initialize(XArray, YArray, ZSinArray);
+            FCosSfrInterpolator.Initialize(XArray, YArray, ZCosArray);
+          end;
+        else Assert(False);
+      end;
+
       FValidData := True;
     except on E: ESfrError do
       begin
@@ -1691,12 +1797,52 @@ end;
 function TLinearSfrpackInterpolator.RealResult(const Location: TPoint2D): real;
 var
   ErrorMessage: string;
+  InterpSin: TFloat;
+  InterpCos: TFloat;
 begin
   if FValidData then
   begin
     try
-      result := FSfrInterpolator.Interpolate1(
-        Location.x, Location.y * Anisotropy)
+      result := 0;
+      case DataSet.AngleType of
+        atNone:
+          begin
+            result := FSfrInterpolator.Interpolate1(
+              Location.x, Location.y * Anisotropy);
+          end;
+        atDegrees:
+          begin
+            InterpSin := FSinSfrInterpolator.Interpolate1(
+              Location.x, Location.y * Anisotropy);
+            InterpCos := FCosSfrInterpolator.Interpolate1(
+              Location.x, Location.y * Anisotropy);
+            if (InterpSin = 0) and (InterpCos = 0) then
+            begin
+              result := 0;
+            end
+            else
+            begin
+              result := ArcTan2(InterpSin, InterpCos);
+              result := result/Pi*180;
+            end;
+          end;
+        atRadians:
+          begin
+            InterpSin := FSinSfrInterpolator.Interpolate1(
+              Location.x, Location.y * Anisotropy);
+            InterpCos := FCosSfrInterpolator.Interpolate1(
+              Location.x, Location.y * Anisotropy);
+            if (InterpSin = 0) and (InterpCos = 0) then
+            begin
+              result := 0;
+            end
+            else
+            begin
+              result := ArcTan2(InterpSin, InterpCos);
+            end;
+          end;
+        else Assert(False);
+      end;
     except on E: ESfrError do
       begin
         FValidData := False;
@@ -1725,12 +1871,52 @@ function TFittedSurfaceIntepolator.RealResult(
   const Location: TPoint2D): real;
 var
   ErrorMessage: string;
+  InterpSin: TFloat;
+  InterpCos: TFloat;
 begin
   if FValidData then
   begin
     try
-      result := FSfrInterpolator.Interpolate2(
-        Location.x, Location.y * Anisotropy)
+      result := 0;
+      case DataSet.AngleType of
+        atNone:
+          begin
+            result := FSfrInterpolator.Interpolate2(
+              Location.x, Location.y * Anisotropy);
+          end;
+        atDegrees:
+          begin
+            InterpSin := FSinSfrInterpolator.Interpolate2(
+              Location.x, Location.y * Anisotropy);
+            InterpCos := FCosSfrInterpolator.Interpolate2(
+              Location.x, Location.y * Anisotropy);
+            if (InterpSin = 0) and (InterpCos = 0) then
+            begin
+              result := 0;
+            end
+            else
+            begin
+              result := ArcTan2(InterpSin, InterpCos);
+              result := result/Pi*180;
+            end;
+          end;
+        atRadians:
+          begin
+            InterpSin := FSinSfrInterpolator.Interpolate2(
+              Location.x, Location.y * Anisotropy);
+            InterpCos := FCosSfrInterpolator.Interpolate2(
+              Location.x, Location.y * Anisotropy);
+            if (InterpSin = 0) and (InterpCos = 0) then
+            begin
+              result := 0;
+            end
+            else
+            begin
+              result := ArcTan2(InterpSin, InterpCos);
+            end;
+          end;
+        else Assert(False);
+      end;
     except on E: ESfrError do
       begin
         FValidData := False;
@@ -1772,9 +1958,13 @@ var
   Sum: real;
   Value: real;
   AdjustedLocaton: TPoint2D;
+  SumSin: Real;
+  SumCos: Real;
 begin
   SumWeights := 0;
   Sum := 0;
+  SumSin := 0;
+  SumCos := 0;
 
   AdjustedLocaton.x := Location.x;
   AdjustedLocaton.y := Location.y * Anisotropy;
@@ -1792,7 +1982,25 @@ begin
     begin
       Weight := 1 / Sqr(PointDistance);
       SumWeights := SumWeights + Weight;
-      Sum := Sum + Value * Weight;
+      case DataSet.AngleType of
+        atNone:
+          begin
+            Sum := Sum + Value * Weight;
+          end;
+        atDegrees:
+          begin
+            Value := Value/180*Pi;
+            SumSin := SumSin + Sin(Value) * Weight;
+            SumCos := SumCos + Cos(Value) * Weight;
+          end;
+        atRadians:
+          begin
+            SumSin := SumSin + Sin(Value) * Weight;
+            SumCos := SumCos + Cos(Value) * Weight;
+          end;
+        else Assert(False);
+      end;
+
     end;
   end;
   if SumWeights = 0 then
@@ -1801,7 +2009,38 @@ begin
   end
   else
   begin
-    result := Sum / SumWeights;
+    result := 0;
+    case DataSet.AngleType of
+      atNone:
+        begin
+          result := Sum / SumWeights;
+        end;
+      atDegrees:
+        begin
+          if (SumSin = 0) and (SumCos = 0) then
+          begin
+            result := 0;
+          end
+          else
+          begin
+            result := ArcTan2(SumSin, SumCos);
+            result := result*180/Pi;
+          end;
+        end;
+      atRadians:
+        begin
+          if (SumSin = 0) and (SumCos = 0) then
+          begin
+            result := 0;
+          end
+          else
+          begin
+            result := ArcTan2(SumSin, SumCos);
+          end;
+        end;
+      else
+        Assert(False);
+    end;
   end;
 end;
 
@@ -1876,6 +2115,8 @@ end;
 destructor TNaturalNeighborInterp.Destroy;
 begin
   FNatNeigh.Free;
+  FSinNatNeigh.Free;
+  FCosNatNeigh.Free;
   inherited;
 end;
 
@@ -1883,6 +2124,8 @@ procedure TNaturalNeighborInterp.Finalize(const DataSet: TDataArray);
 begin
   inherited;
   FreeAndNil(FNatNeigh);
+  FreeAndNil(FSinNatNeigh);
+  FreeAndNil(FCosNatNeigh);
 end;
 
 class function TNaturalNeighborInterp.InterpolatorName: string;
@@ -1891,8 +2134,46 @@ begin
 end;
 
 function TNaturalNeighborInterp.RealResult(const Location: TPoint2D): real;
+var
+  InterpSin: Double;
+  InterpCos: Double;
 begin
-  result := FNatNeigh.Interpolate(Location.x, Location.y);
+  result := 0;
+  case DataSet.AngleType of
+    atNone:
+      begin
+        result := FNatNeigh.Interpolate(Location.x, Location.y);
+      end;
+    atDegrees:
+      begin
+        InterpSin := FSinNatNeigh.Interpolate(Location.x, Location.y);
+        InterpCos := FCosNatNeigh.Interpolate(Location.x, Location.y);
+        if (InterpSin = 0) and (InterpCos = 0) then
+        begin
+          result := 0;
+        end
+        else
+        begin
+          result := ArcTan2(InterpSin, InterpCos);
+          result := result/Pi*180;
+        end;
+      end;
+    atRadians:
+      begin
+        InterpSin := FSinNatNeigh.Interpolate(Location.x, Location.y);
+        InterpCos := FCosNatNeigh.Interpolate(Location.x, Location.y);
+        if (InterpSin = 0) and (InterpCos = 0) then
+        begin
+          result := 0;
+        end
+        else
+        begin
+          result := ArcTan2(InterpSin, InterpCos)
+        end;
+      end;
+    else Assert(False);
+  end;
+
 end;
 
 procedure TNaturalNeighborInterp.StoreData(Sender: TObject;
@@ -1909,6 +2190,8 @@ var
   XArray: TFloatArray;
   YArray: TFloatArray;
   ZArray: TFloatArray;
+  ZSinArray: TFloatArray;
+  ZCosArray: TFloatArray;
   Index: Integer;
   SectionIndex: integer;
   SortArray: array of TSortRecord;
@@ -2009,7 +2292,18 @@ begin
       // transfer X, Y, and Z to XArray, YArray, and ZArray.
       SetLength(XArray, Count);
       SetLength(YArray, Count);
-      SetLength(ZArray, Count);
+      case DataSet.AngleType of
+        atNone:
+          begin
+            SetLength(ZArray, Count);
+          end;
+        atDegrees, atRadians:
+          begin
+            SetLength(ZSinArray, Count);
+            SetLength(ZCosArray, Count);
+          end;
+        else Assert(False);
+      end;
 
       SortIndex := 0;
       for Index := 0 to SortList.Count - 1 do
@@ -2018,7 +2312,24 @@ begin
         begin
           XArray[SortIndex] := SortArray[Index].Location.X;
           YArray[SortIndex] := SortArray[Index].Location.Y;
-          ZArray[SortIndex] := SortArray[Index].Value;
+          case DataSet.AngleType of
+            atNone:
+              begin
+                ZArray[SortIndex] := SortArray[Index].Value;
+              end;
+            atDegrees:
+              begin
+                ZSinArray[SortIndex] := Sin(SortArray[Index].Value/180*Pi);
+                ZCosArray[SortIndex] := Cos(SortArray[Index].Value/180*Pi);
+              end;
+            atRadians:
+              begin
+                ZSinArray[SortIndex] := Sin(SortArray[Index].Value);
+                ZCosArray[SortIndex] := Cos(SortArray[Index].Value);
+              end;
+            else
+              Assert(False);
+          end;
           Inc(SortIndex);
         end;
       end;
@@ -2029,8 +2340,22 @@ begin
     ListOfScreenObjects.Free;
   end;
   GetLimits(MinY, MaxY, MinX, MaxX, DataSet);
-  FNatNeigh := TNaturalNeighborInterpolatorTripack.Create(
-    XArray, YArray, ZArray, MinX, MinY, MaxX, MaxY);
+  case DataSet.AngleType of
+    atNone:
+      begin
+        FNatNeigh := TNaturalNeighborInterpolatorTripack.Create(
+          XArray, YArray, ZArray, MinX, MinY, MaxX, MaxY);
+      end;
+    atDegrees, atRadians:
+      begin
+        FSinNatNeigh := TNaturalNeighborInterpolatorTripack.Create(
+          XArray, YArray, ZSinArray, MinX, MinY, MaxX, MaxY);
+        FCosNatNeigh := TNaturalNeighborInterpolatorTripack.Create(
+          XArray, YArray, ZCosArray, MinX, MinY, MaxX, MaxY);
+      end;
+    else Assert(False);
+  end;
+  
 end;
 
 class function TNaturalNeighborInterp.ValidReturnTypes: TRbwDataTypes;

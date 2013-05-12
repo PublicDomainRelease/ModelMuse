@@ -4,7 +4,7 @@ inherited frmSutraLayers: TfrmSutraLayers
   ClientWidth = 585
   ExplicitWidth = 603
   ExplicitHeight = 481
-  PixelsPerInch = 120
+  PixelsPerInch = 96
   TextHeight = 18
   object spl1: TSplitter
     Left = 137

@@ -94,6 +94,7 @@ type
     FSelectedTreeNodes: TList;
     FUseSaturatedThickness: Boolean;
     FEditDiffusion: boolean;
+    procedure UpdateDiscretization;
     procedure EnableOkButton;
     procedure GetData;
     Procedure SetData;
@@ -391,6 +392,26 @@ begin
   else
   begin
     Assert(False);
+  end;
+end;
+
+procedure TfrmLayers.UpdateDiscretization;
+var
+  List: TList;
+  index: Integer;
+  Group: TLayerGroup;
+begin
+  List := TList.Create;
+  try
+    List.Capacity := FSelectedUnits.Count;
+    for index := 0 to FSelectedUnits.Count - 1 do
+    begin
+      Group := FSelectedUnits[index];
+      List.Add(Group.GrowthControls)
+    end;
+    frameDiscretization.UpdateSelectedUnits(List);
+  finally
+    List.Free;
   end;
 end;
 
@@ -804,7 +825,7 @@ begin
   end;
   FSelectedTreeNodes.Clear;
   FSelectedUnits.Clear;
-  frameDiscretization.UpdateSelectedUnits(FSelectedUnits);
+  UpdateDiscretization;
   if FLayerStructure.Count = 0 then
   begin
     LayerGroup := FLayerStructure.Insert(0) as TLayerGroup;
@@ -859,7 +880,7 @@ begin
       end;
     end;
   end;
-  frameDiscretization.UpdateSelectedUnits(FSelectedUnits);
+  UpdateDiscretization;
 end;
 
 procedure TfrmLayers.rdgDispersionColSize(Sender: TObject; ACol,
@@ -1407,7 +1428,7 @@ begin
       edName.Text := '';
     end;
     FirstUnit := FSelectedUnits[0];
-    frameDiscretization.UpdateSelectedUnits(FSelectedUnits);
+    UpdateDiscretization;
     frameDiscretization.SetControlValues;
     AssignAquiferType;
     AssignTransmissivityMethod;

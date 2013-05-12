@@ -98,7 +98,18 @@ type
 implementation
 
 uses
-  DataSetUnit, SutraFileWriterUnit;
+  DataSetUnit, SutraFileWriterUnit, frmErrorsAndWarningsUnit;
+
+resourcestring
+  StrMaxPermMinPerm = 'Maximum permeability < Minimum permeability';
+  StrMaxKMinK = 'Maximum hydraulic conductivity < Minimum hydraulic conducti' +
+  'vity';
+  StrMaxPermMidPerm = 'Maximum permeability < Middle permeability';
+  StrMaxKMidK = 'Maximum hydraulic conductivity < Middle hydraulic conductiv' +
+  'ity';
+  StrMidPermMinPerm = 'Middle permeability < Minimum permeability';
+  StrMidKMinK = 'Middle hydraulic conductivity < Minimum hydraulic conductiv' +
+  'ity';
 
 { TSutraInputWriter }
 
@@ -353,7 +364,7 @@ begin
   begin
     UnsatRegion := nil;
   end;
-  if FMesh.MeshType = mt2D then
+  if FMesh.MeshType in [mt2D, mtProfile] then
   begin
     Thickness := Model.DataArrayManager.GetDataSetByName(KNodalThickness);
     Thickness.Initialize;
@@ -366,7 +377,7 @@ begin
   Nodes := TNodeDataList.Create;
   try
 
-    if FMesh.MeshType = mt2D then
+    if FMesh.MeshType in [mt2D, mtProfile] then
     begin
       Nodes.Capacity := FMesh.Mesh2D.Nodes.Count;
       for NodeIndex := 0 to FMesh.Mesh2D.Nodes.Count - 1 do
@@ -611,7 +622,7 @@ begin
 
   ElementList := TElementDataList.Create;
   try
-    if FMesh.MeshType = mt2D then
+    if FMesh.MeshType in [mt2D, mtProfile] then
     begin
       ElementList.Capacity := FMesh.Mesh2D.Elements.Count;
       for ElementIndex := 0 to FMesh.Mesh2D.Elements.Count - 1 do
@@ -717,6 +728,90 @@ begin
       end;
       WriteFloat(ElData.ATMIN);
       NewLine;
+      case FMesh.MeshType of
+        mt2D, mtProfile:
+          begin
+            if ElData.PMAX < ElData.PMIN then
+            begin
+              case FOptions.TransportChoice of
+                tcSolute, tcEnergy:
+                  begin
+                    frmErrorsAndWarnings.AddWarning(Model,
+                      StrMaxPermMinPerm, IntToStr(ElData.Number+1));
+                  end;
+                tcSoluteHead:
+                  begin
+                    frmErrorsAndWarnings.AddWarning(Model,
+                      StrMaxKMinK, IntToStr(ElData.Number+1));
+                  end;
+                else Assert(False);
+              end;
+            end;
+
+//            if ElData.ALMAX < ElData.ALMIN then
+//            begin
+//
+//            end;
+//
+//            if ElData.ATMAX < ElData.ATMIN then
+//            begin
+//
+//            end;
+          end;
+        mt3D:
+          begin
+            if ElData.PMAX < ElData.PMID then
+            begin
+              case FOptions.TransportChoice of
+                tcSolute, tcEnergy:
+                  begin
+                    frmErrorsAndWarnings.AddWarning(Model,
+                      StrMaxPermMidPerm, IntToStr(ElData.Number+1));
+                  end;
+                tcSoluteHead:
+                  begin
+                    frmErrorsAndWarnings.AddWarning(Model,
+                      StrMaxKMidK, IntToStr(ElData.Number+1));
+                  end;
+                else Assert(False);
+              end;
+            end;
+            if ElData.PMID < ElData.PMIN then
+            begin
+              case FOptions.TransportChoice of
+                tcSolute, tcEnergy:
+                  begin
+                    frmErrorsAndWarnings.AddWarning(Model,
+                      StrMidPermMinPerm, IntToStr(ElData.Number+1));
+                  end;
+                tcSoluteHead:
+                  begin
+                    frmErrorsAndWarnings.AddWarning(Model,
+                      StrMidKMinK, IntToStr(ElData.Number+1));
+                  end;
+                else Assert(False);
+              end;
+            end;
+
+//            if ElData.ALMAX < ElData.ALMID then
+//            begin
+//
+//            end;
+//            if ElData.ALMID < ElData.ALMIN then
+//            begin
+//
+//            end;
+//
+//            if ElData.ATMAX < ElData.ATMID then
+//            begin
+//
+//            end;
+//            if ElData.ATMID < ElData.ATMIN then
+//            begin
+//
+//            end;
+          end;
+      end;
     end;
 
   finally
@@ -834,6 +929,7 @@ begin
   URHOWØ := 0.;
   DRWDU := 0.;
   VISCØ := 0.;
+  RHOWØ := 0.;
   case FOptions.TransportChoice of
     tcSolute:
       begin
@@ -907,7 +1003,7 @@ begin
   WriteCommentLine('Data set 22');
   WriteString('INCIDENCE');
   NewLine;
-  if FMesh.MeshType = mt2D then
+  if FMesh.MeshType in [mt2D, mtProfile] then
   begin
     El2DList := TSutraElement2D_List.Create;
     try
@@ -1007,7 +1103,7 @@ var
 begin
   WriteCommentLine('Data set 2B');
   case Model.SutraMesh.MeshType of
-    mt2D:
+    mt2D, mtProfile:
       begin
         MSHSTR := '''2D IRREGULAR''';
       end;
@@ -1035,7 +1131,7 @@ begin
   NN := 0;
   NE := 0;
   case FMesh.MeshType of
-    mt2D:
+    mt2D, mtProfile:
       begin
         NN := FMesh.Mesh2D.Nodes.Count;
         NE := FMesh.Mesh2D.Elements.Count;

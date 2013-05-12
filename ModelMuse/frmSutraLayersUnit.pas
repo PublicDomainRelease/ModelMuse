@@ -43,6 +43,7 @@ type
     procedure SetControlValues;
     function AddNewUnit(Position: integer): TTreeNode;
     procedure EnableOkButton;
+    procedure UpdateDiscretization;
     { Private declarations }
   public
     { Public declarations }
@@ -75,6 +76,26 @@ uses
 
 { TfrmSutraLayers }
 
+procedure TfrmSutraLayers.UpdateDiscretization;
+var
+  List: TList;
+  index: Integer;
+  Group: TSutraLayerGroup;
+begin
+  List := TList.Create;
+  try
+    List.Capacity := FSelectedUnits.Count;
+    for index := 0 to FSelectedUnits.Count - 1 do
+    begin
+      Group := FSelectedUnits[index];
+      List.Add(Group.GrowthControls)
+    end;
+    frameDiscretization.UpdateSelectedUnits(List);
+  finally
+    List.Free;
+  end;
+end;
+
 function TfrmSutraLayers.AddNewUnit(Position: integer): TTreeNode;
 var
   LayerGroup: TSutraLayerGroup;
@@ -89,7 +110,7 @@ begin
   end;
   FSelectedTreeNodes.Clear;
   FSelectedUnits.Clear;
-  frameDiscretization.UpdateSelectedUnits(FSelectedUnits);
+  UpdateDiscretization;
   if FLayerStructure.Count = 0 then
   begin
     LayerGroup := FLayerStructure.Insert(0) as TSutraLayerGroup;
@@ -364,7 +385,7 @@ begin
       edName.Text := '';
     end;
 //    FirstUnit := FSelectedUnits[0];
-    frameDiscretization.UpdateSelectedUnits(FSelectedUnits);
+    UpdateDiscretization;
     frameDiscretization.SetControlValues;
   finally
     FSettingUnit := False;
@@ -410,7 +431,7 @@ begin
       end;
     end;
   end;
-  frameDiscretization.UpdateSelectedUnits(FSelectedUnits);
+  UpdateDiscretization;
 end;
 
 { TUndoDefineSutraLayers }

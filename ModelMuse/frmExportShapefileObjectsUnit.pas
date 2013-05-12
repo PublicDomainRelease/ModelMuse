@@ -1631,7 +1631,9 @@ begin
       FFieldDefinitions[StartIndex].FieldType := 'C';
       FFieldDefinitions[StartIndex].FieldName := 'LOW_Z';
       FieldNames.Add('LOW_Z');
-      Inc(StartIndex);
+      // uncomment the following line if additional items should be added to
+      // FFieldDefinitions.
+//      Inc(StartIndex);
     end;
     FieldDefinitions := TStringList.Create;
     try

@@ -6,11 +6,20 @@ uses
   Windows, FastGEO, Classes, GoPhastTypes, GR32, ZoomBox2, MeshRenumbering,
   AbstractGridUnit, Generics.Collections, gpc, Generics.Defaults, Types,
   DataSetUnit, Graphics, SubscriptionUnit, doublePolyhedronUnit, IntervalTree,
-  QuadtreeClass;
+  QuadtreeClass, Forms,
+  {$IF CompilerVersion >= 23.0}
+  // Delphi XE2 and up
+  UITypes,
+  {$ELSE}
+  // Delphi XE and earlier
+  Controls,
+  {$IFEND}
+  OpenGL12x;
 
 Type
   TDrawingChoice = (dcAll, dcEdge);
-  TMeshType = (mt2D, mt3D);
+  TMeshType = (mt2D, mtProfile, mt3D);
+  TMeshGenerationMethod = (mgmFishnet, mgmIrregular);
 
   TCustomSutraMesh = class;
 
@@ -27,17 +36,22 @@ Type
   public
     constructor Create(Collection: TCollection); override;
     procedure Assign(Source: TPersistent); override;
+    function QueryInterface(const IID: TGUID; out Obj): HRESULT;
+      virtual; stdcall;
   published
     property Number: Integer read FNumber write SetNumber;
+  protected
+    function _AddRef: Integer; stdcall;
+    function _Release: Integer; stdcall;
   end;
 
   TVertexList = TList<Tgpc_vertex>;
   TVertexArray = array of Tgpc_vertex;
   TSutraElement2D = class;
-  TSutraElement2D_List = class;
+  TSutraElement2D_List = TList<TSutraElement2D>;
   TPoint2DComparer = TComparer<TPoint2D>;
 
-  TSutraNode2D = class(TCustomSutraNode)
+  TSutraNode2D = class(TCustomSutraNode, INode)
   private
     FLocation: TPoint2D;
     FNodeType: TNodeType;
@@ -64,6 +78,13 @@ Type
     function GetMinX: Double;
     function GetMinY: Double;
     procedure SetSelected(const Value: Boolean);
+  protected
+    function GetActiveElementCount: integer;
+    function GetActiveElement(Index: Integer): IElement;
+    function GetNodeNumber: Integer;
+    procedure SetNodeNumber(Value: Integer);
+    function GetLocation: TPoint2D;
+    function GetNodeType: TNodeType;
   public
     property Location: TPoint2D read FLocation write SetLocation;
     procedure Assign(Source: TPersistent); override;
@@ -74,6 +95,9 @@ Type
     function CellIntersection(const Input: TSegment2D;
       out IntersectingSegments: TSegment2DArray): boolean;
     function EdgeNode: boolean;
+    // @name gets a polygon that defines the cell around the node.
+    // The last point in the outline is not the same as the first point
+    // so a connecting line is needed between the first and last points.
     procedure GetCellOutline(var CellOutline: TVertexArray);
     function CellArea: double;
     property ElementCount: Integer read GetElementCount;
@@ -81,6 +105,7 @@ Type
     function IsInside(APoint: TPoint2D): Boolean;
     procedure InvalidateCellOutline;
     property Selected: Boolean read FSelected write SetSelected;
+    procedure RemoveElement(AnElement: TSutraElement2D);
   published
     property X: FastGEO.TFloat read FLocation.x write SetX;
     property Y: FastGEO.TFloat read FLocation.y write SetY;
@@ -112,17 +137,22 @@ Type
     Constructor Create;
   end;
 
+  TSutraMesh3D = class;
+
   TCustomSutraCollection = class(TPhastCollection)
+  private
+    FMesh: TSutraMesh3D;
   public
     procedure BeginUpdate; override;
     procedure EndUpdate; override;
+    constructor Create(ItemClass: TCollectionItemClass; Model: TBaseModel; Mesh: TSutraMesh3D);
   end;
 
   TSutraMesh2D = class;
 
   TSutraNode2D_Collection = class(TCustomSutraCollection)
   private
-    FMesh2D: TSutraMesh2D;
+//    FMesh2D: TSutraMesh2D;
     FNodeIntervals: TRbwIntervalTree;
     FNodeRanges: TRbwRangeTree;
     FNodesLocations: TRbwQuadTree;
@@ -134,13 +164,14 @@ Type
     procedure InvalidateNodeIntervals;
     function GetNodeRanges: TRbwRangeTree;
     function GetNodesLocations: TRbwQuadTree;
+    function GetMesh2D: TSutraMesh2D;
   public
-    constructor Create(Model: TBaseModel; ParentMesh: TSutraMesh2D);
+    constructor Create(Model: TBaseModel; ParentMesh: TSutraMesh3D);
     destructor Destroy; override;
     property Items[Index: integer]: TSutraNode2D read GetItem; default;
     function Add: TSutraNode2D;
     function TopContainingCell(APoint: TPoint2D): T2DTopCell;
-    property Mesh2D: TSutraMesh2D read FMesh2D;
+    property Mesh2D: TSutraMesh2D read GetMesh2D;
     property NodeRanges: TRbwRangeTree read GetNodeRanges;
     property NodesLocations: TRbwQuadTree read GetNodesLocations;
   end;
@@ -178,7 +209,7 @@ Type
     FElement: TSutraElement2D;
     function GetItem(Index: integer): TSutraNodeNumber2D_Item;
   public
-    constructor Create(Model: TBaseModel; Element: TSutraElement2D);
+    constructor Create(Model: TBaseModel; Element: TSutraElement2D; Mesh3D: TSutraMesh3D);
     property Items[Index: integer]: TSutraNodeNumber2D_Item read GetItem; default;
     function Add: TSutraNodeNumber2D_Item;
     function IndexOfNode(Node: TSutraNode2D): Integer;
@@ -192,17 +223,21 @@ Type
     function GetDisplayNumber: Integer;
   public
     procedure Assign(Source: TPersistent); override;
+    function QueryInterface(const IID: TGUID; out Obj): HRESULT;
+      virtual; stdcall;
     property DisplayNumber: Integer read GetDisplayNumber;
   published
     property ElementNumber: integer read GetElementNumber
       write SetElementNumber;
+  protected
+    function _AddRef: Integer; stdcall;
+    function _Release: Integer; stdcall;
   end;
 
-  TSutraMesh3D = class;
-
-  TSutraElement2D = class(TCustomSutraElement)
+  TSutraElement2D = class(TCustomSutraElement, IElement)
   private
     FNodes: TSutraNodeNumber2D_Collection;
+    FSelected: Boolean;
     procedure SetNodes(const Value: TSutraNodeNumber2D_Collection);
     procedure DrawTop(const BitMap: TBitmap32;
       const ZoomBox: TQRbwZoomBox2; DrawingChoice: TDrawingChoice;
@@ -212,6 +247,10 @@ Type
     function GetMaxY: Double;
     function GetMinX: Double;
     function GetMinY: Double;
+    procedure SetSelected(const Value: Boolean);
+  protected
+    function GetActiveNode(Index: Integer): INode;
+    function GetActiveNodeCount: integer;
   public
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
@@ -227,11 +266,10 @@ Type
     property MaxX: Double read GetMaxX;
     property MinY: Double read GetMinY;
     property MaxY: Double read GetMaxY;
+    property Selected: Boolean read FSelected write SetSelected;
   published
     property Nodes: TSutraNodeNumber2D_Collection read FNodes write SetNodes;
   end;
-
-  TSutraElement2D_List = class(TList<TSutraElement2D>);
 
   TSutraElement2DLeaf = class(TRangeTreeLeaf)
   private
@@ -259,7 +297,7 @@ Type
 
   TSutraElement2D_Collection = class(TCustomSutraCollection)
   private
-    FMesh2D: TSutraMesh2D;
+//    FMesh2D: TSutraMesh2D;
     FElementIntervals: TRbwIntervalTree;
     FElementRanges: TRbwRangeTree;
     FElementCenters: TRbwQuadTree;
@@ -270,14 +308,15 @@ Type
       UpperBoundary: double);
     function GetElementRanges: TRbwRangeTree;
     function GetElementCenters: TRbwQuadTree;
+    function GetMesh2D: TSutraMesh2D;
   public
-    constructor Create(Model: TBaseModel; ParentMesh: TSutraMesh2D);
+    constructor Create(Model: TBaseModel; ParentMesh: TSutraMesh3D);
     destructor Destroy; override;
     property Items[Index: integer]: TSutraElement2D read GetItems; default;
     function Add: TSutraElement2D;
     function TopContainingElement(APoint: TPoint2D): T2DTopCell;
     procedure InvalidateElementIntervals;
-    property Mesh2D: TSutraMesh2D read FMesh2D;
+    property Mesh2D: TSutraMesh2D read GetMesh2D;
     property ElementRanges: TRbwRangeTree read GetElementRanges;
     property ElementCenters: TRbwQuadTree read GetElementCenters;
   end;
@@ -285,9 +324,13 @@ Type
   TCustomSutraMesh = class abstract(TCustomDiscretization)
   protected
     FUpdateCount: Integer;
+    function _AddRef: Integer; stdcall;
+    function _Release: Integer; stdcall;
   public
     procedure BeginUpdate; virtual;
     procedure EndUpdate; virtual;
+    function QueryInterface(const IID: TGUID; out Obj): HRESULT;
+      virtual; stdcall;
   end;
 
   ISutraNode2DComparer = IComparer<TSutraNode2D>;
@@ -301,6 +344,11 @@ Type
     constructor Create(CrossSectionAngle: Double; StartPoint: TPoint2D);
   end;
 
+  TSutraNode2DNumberComparer = class(TComparer<TSutraNode2D>)
+  public
+    function Compare(const Left, Right: TSutraNode2D): Integer; override;
+  end;
+
   ISutraElement2DComparer = IComparer<TSutraElement2D>;
 
   TSutraElement2DComparer = class(TComparer<TSutraElement2D>)
@@ -311,6 +359,12 @@ Type
     function Compare(const Left, Right: TSutraElement2D): Integer; override;
     constructor Create(CrossSectionAngle: Double; StartPoint: TPoint2D);
   end;
+
+  TSutraElement2DNumberComparer = class(TComparer<TSutraElement2D>)
+  public
+    function Compare(const Left, Right: TSutraElement2D): Integer; override;
+  end;
+
 
   TMeshGenerationControls = class(TGoPhastPersistent)
   private
@@ -327,6 +381,7 @@ Type
     FAltSplittingAngle: TRealStorage;
     FAltStructure: TRealStorage;
     FElementGrowthRate: TRealStorage;
+    FMeshGenerationMethod: TMeshGenerationMethod;
     procedure SetAltConcave(const Value: TRealStorage);
     procedure SetAltLineLength(const Value: TRealStorage);
     procedure SetAltNodePlacementError(const Value: TRealStorage);
@@ -341,6 +396,7 @@ Type
     procedure SetSymmetry(const Value: TRealStorage);
     procedure ValueChanged(Sender: TObject);
     procedure SetElementGrowthRate(const Value: TRealStorage);
+    procedure SetMeshGenerationMethod(const Value: TMeshGenerationMethod);
   public
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
@@ -348,22 +404,31 @@ Type
     procedure SetDefaults;
     procedure Apply;
   published
-    property SplittingAngle: TRealStorage read FSplittingAngle write SetSplittingAngle;
+    property SplittingAngle: TRealStorage read FSplittingAngle
+      write SetSplittingAngle;
     property Structure: TRealStorage read FStructure write SetStructure;
-    property NodePlacementError: TRealStorage read FNodePlacementError write SetNodePlacementError;
+    property NodePlacementError: TRealStorage read FNodePlacementError
+      write SetNodePlacementError;
     property LineLength: TRealStorage read FLineLength write SetLineLength;
     property Symmetry: TRealStorage read FSymmetry write SetSymmetry;
     property Concave: TRealStorage read FConcave write SetConcave;
-    property AltSplittingAngle: TRealStorage read FAltSplittingAngle write SetAltSplittingAngle;
-    property AltStructure: TRealStorage read FAltStructure write SetAltStructure;
-    property AltNodePlacementError: TRealStorage read FAltNodePlacementError write SetAltNodePlacementError;
-    property AltLineLength: TRealStorage read FAltLineLength write SetAltLineLength;
+    property AltSplittingAngle: TRealStorage read FAltSplittingAngle
+      write SetAltSplittingAngle;
+    property AltStructure: TRealStorage read FAltStructure
+      write SetAltStructure;
+    property AltNodePlacementError: TRealStorage read FAltNodePlacementError
+      write SetAltNodePlacementError;
+    property AltLineLength: TRealStorage read FAltLineLength
+      write SetAltLineLength;
     property AltSymmetry: TRealStorage read FAltSymmetry write SetAltSymmetry;
     property AltConcave: TRealStorage read FAltConcave write SetAltConcave;
-    property ElementGrowthRate: TRealStorage read FElementGrowthRate write SetElementGrowthRate;
+    property ElementGrowthRate: TRealStorage read FElementGrowthRate
+      write SetElementGrowthRate;
+    property MeshGenerationMethod: TMeshGenerationMethod
+      read FMeshGenerationMethod write SetMeshGenerationMethod stored True;
   end;
 
-  TSutraMesh2D = class (TCustomSutraMesh)
+  TSutraMesh2D = class (TCustomSutraMesh, IMesh)
   private
     FElements: TSutraElement2D_Collection;
     FNodes: TSutraNode2D_Collection;
@@ -412,11 +477,17 @@ Type
     procedure SetTopContourDataSet(const Value: TDataArray);
     procedure DrawTopContours(const ZoomBox: TQRbwZoomBox2;
       const BitMap: TBitmap32);
+    function Bandwidth: Integer;
   protected
     procedure CalculateMinMax(DataSet: TDataArray;
       var MinMaxInitialized: boolean; var MinMax: TMinMax;
       StringValues: TStringList); override;
+    function GetActiveNode(Index: Integer): INode;
+    function GetActiveNodeCount: integer;
+    function GetActiveElementCount: integer;
+    function GetActiveElement(Index: integer): IElement;
   public
+    procedure Assign(Source: TPersistent); override;
     procedure GetMinMax(var MinMax: TMinMax; DataSet: TDataArray;
       StringValues: TStringList); override;
     Constructor Create(Model: TBaseModel; ParentMesh: TSutraMesh3D);
@@ -446,6 +517,7 @@ Type
     procedure EndUpdate; override;
     property Mesh3D: TSutraMesh3D read FMesh3D;
     function MeshOutline: TPolygon2D;
+    procedure Renumber;
   published
     property Nodes: TSutraNode2D_Collection read FNodes write SetNodes;
     property Elements: TSutraElement2D_Collection read FElements
@@ -486,10 +558,7 @@ Type
     function GetLocation: TPoint2D;
     procedure SetLocation(const Value: TPoint2D);
     function GetNodeType: TNodeType;
-    function _AddRef: Integer; stdcall;
-    function _Release: Integer; stdcall;
   public
-    function QueryInterface(const IID: TGUID; out Obj): HResult; virtual; stdcall;
     procedure Assign(Source: TPersistent); override;
     procedure AssignINode(Source: INode);
     property Node2D: TSutraNode2D read GetNode2D;
@@ -535,7 +604,6 @@ Type
     FRotatedNodeCenters: TRbwQuadTree;
     FAngle: double;
     FStoredRotatedLocations: TStoredLocations;
-    FMesh: TSutraMesh3D;
     function GetItem(Index: integer): TSutraNode3D;
     function GetNodeLocations(Angle: Double): TRbwQuadTree;
   public
@@ -562,7 +630,7 @@ Type
   private
     function GetItem(Index: integer): TSutraNodeNumber3D_Item;
   public
-    constructor Create(Model: TBaseModel);
+    constructor Create(Model: TBaseModel; Mesh3D: TSutraMesh3D);
     property Items[Index: integer]: TSutraNodeNumber3D_Item read GetItem; default;
     function Add: TSutraNodeNumber3D_Item;
     function IndexOfNode(Node: TSutraNode3D): Integer;
@@ -578,6 +646,7 @@ Type
     FActiveNodes: TSutraNode3D_List;
     FActive: Boolean;
     FVolume: Extended;
+    FElement2D: TSutraElement2D;
     procedure SetNodes(const Value: TSutraNodeNumber3D_Collection);
     procedure UpdateNodes;
     function GetCenterLocation: TPoint3d;
@@ -589,10 +658,7 @@ Type
   protected
     function GetActiveNode(Index: Integer): INode;
     function GetActiveNodeCount: integer;
-    function _AddRef: Integer; stdcall;
-    function _Release: Integer; stdcall;
   public
-    function QueryInterface(const IID: TGUID; out Obj): HResult; virtual; stdcall;
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
@@ -604,6 +670,7 @@ Type
     function ElementShape: TQuadPair3D;
     property CenterLocation: TPoint3d read GetCenterLocation;
     property Volume: Extended read GetVolume;
+    property Element2D: TSutraElement2D read FElement2D write FElement2D;
   published
     property Nodes: TSutraNodeNumber3D_Collection read FNodes write SetNodes;
     property Active: Boolean read FActive write FActive;
@@ -616,7 +683,7 @@ Type
     FRotatedElementCenters: TRbwQuadTree;
     FAngle: double;
     FStoredRotatedLocations: TStoredLocations;
-    FMesh: TSutraMesh3D;
+//    FMesh: TSutraMesh3D;
     function GetItems(Index: integer): TSutraElement3D;
     function GetElementCenters(Angle: Double): TRbwQuadTree;
   public
@@ -636,6 +703,9 @@ Type
     FEndY: double;
     FColor: TColor;
     FEditing: Boolean;
+    FOnMoved: TNotifyEvent;
+    procedure Moved;
+    procedure SetEndPointValue(var AField: double; const NewValue: double);
     procedure SetEndX(const Value: Double);
     procedure SetEndY(const Value: double);
     procedure SetStartX(const Value: Double);
@@ -657,6 +727,7 @@ Type
     // cross section angle in radians.
     function Angle: Double;
     property Editing: Boolean read FEditing write FEditing;
+    property OnMoved: TNotifyEvent read FOnMoved write FOnMoved;
   published
     property StartX: Double read FStartX write SetStartX;
     property EndX: Double read FEndX write SetEndX;
@@ -734,6 +805,15 @@ Type
     FElementIntervalTree: TRbwIntervalTree;
     FNodeRangeTree: TRbwRangeTree;
     FElementRangeTree: TRbwRangeTree;
+    FCanDraw3D: boolean;
+    FNeedToRedraw3d: Boolean;
+    FListsCreated: Boolean;
+    FCrossSectionGLIndex: GLuint;
+    FLayerGLIndex: GLuint;
+    FNeedToRecordLayer: Boolean;
+    FNeedToRecordCrossSection: Boolean;
+    FElementNumbers: TIntegerCollection;
+    FNodeNumbers: TIntegerCollection;
     procedure SetElements(const Value: TSutraElement3D_Collection);
     procedure SetNodes(const Value: TSutraNode3D_Collection);
     procedure SetMesh2D(const Value: TSutraMesh2D);
@@ -775,34 +855,43 @@ Type
       UpperBoundary: double);
     procedure GetYIntervalLimits(Subject: TObject; out LowerBoundary,
       UpperBoundary: double);
-    function Bandwidth: Integer;
-    procedure SimpleRenumber;
     procedure SetThreeDContourDataSet(const Value: TDataArray);
     procedure SetTopContourDataSet(const Value: TDataArray);
     function GetThreeDContourDataSet: TDataArray;
     function GetTopContourDataSet: TDataArray;
     procedure DrawFrontContours(const ZoomBox: TQRbwZoomBox2;
       const BitMap: TBitmap32);
+    function GetCanDraw3D: Boolean;
+    procedure RecordLayer;
+    procedure RecordCrossSection;
+    procedure CrossSectionMoved(Sender: TObject);
+    procedure SetElementNumbers(const Value: TIntegerCollection);
+    procedure SetNodeNumbers(const Value: TIntegerCollection);
+    procedure SetElevationsNeedUpdating(const Value: boolean);
   protected
     procedure CalculateMinMax(DataSet: TDataArray;
       var MinMaxInitialized: Boolean; var MinMax: TMinMax;
       StringValues: TStringList); override;
-    function _AddRef: Integer; stdcall;
-    function _Release: Integer; stdcall;
     function GetActiveNodeCount: integer;
     function GetActiveNode(Index: Integer): INode;
     function GetActiveElementCount: integer;
     function GetActiveElement(Index: Integer): IElement;
   public
+    Constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
+    procedure UpdateNodeNumbers;
+    procedure UpdateElementNumbers;
+    procedure RestoreNodeNumbers;
+    procedure RestoreElementNumbers;
+    procedure Assign(Source: TPersistent); override;
+    procedure SimpleRenumber;
+    function Bandwidth: Integer;
     function OkLocation(const DataSet: TDataArray;
       const Layer, Row, Col: integer): boolean; override;
     property ActiveNodeCount: Integer read GetActiveNodeCount;
     property ActiveElementCount: Integer read GetActiveElementCount;
-    function QueryInterface(const IID: TGUID; out Obj): HResult; virtual; stdcall;
     property ElevationsNeedUpdating: boolean read FElevationsNeedUpdating
-      write FElevationsNeedUpdating;
-    Constructor Create(Model: TBaseModel);
-    destructor Destroy; override;
+      write SetElevationsNeedUpdating;
     procedure Clear;
     procedure Draw(const BitMap: TBitmap32;
       const ViewDirection: TViewDirection);
@@ -865,10 +954,12 @@ Type
       read GetIntervalTree;
     property RangeTree[EvalAt: TEvaluatedAt; Angle: Double]: TRbwRangeTree
       read GetRangeTree;
+    property CanDraw3D: Boolean read GetCanDraw3D write FCanDraw3D;
+    procedure Draw3D;
   published
-    property Nodes: TSutraNode3D_Collection read FNodes write SetNodes;
+    property Nodes: TSutraNode3D_Collection read FNodes write SetNodes stored False;
     property Elements: TSutraElement3D_Collection read FElements
-      write SetElements;
+      write SetElements stored False;
     property Mesh2D: TSutraMesh2D read FMesh2D write SetMesh2D;
     property ElementDrawingChoice: TDrawingChoice read FElementDrawingChoice
       write SetElementDrawingChoice Stored True;
@@ -879,6 +970,10 @@ Type
       write SetSelectedLayer stored True;
     property CrossSection: TCrossSection read FCrossSection
       write SetCrossSection;
+    property NodeNumbers: TIntegerCollection read FNodeNumbers
+      write SetNodeNumbers;
+    property ElementNumbers: TIntegerCollection read FElementNumbers
+      write SetElementNumbers;
   end;
 
 Function ComparePointRightUp(const P1, P2: TPoint2D): integer;
@@ -1088,6 +1183,7 @@ begin
     SourceNode := TSutraNode2D(Source);
     Location := SourceNode.Location;
     NodeType := SourceNode.NodeType;
+    Selected := SourceNode.Selected;
   end;
   inherited;
 end;
@@ -1262,8 +1358,8 @@ var
   IntersectIndex: integer;
   APoint: TPoint2D;
   PointIndex: Integer;
+  InputLength: double;
 begin
-  { TODO -cSUTRA : Check that segments are created along the edge of the mesh. }
   result := False;
   try
     if (Input[1].x = Input[2].x) and (Input[1].y = Input[2].y) then
@@ -1281,11 +1377,14 @@ begin
     try
       IntersectionList.Capacity := Length(Outline)+2;
       EdgeSegment[2] := Outline[Length(Outline)-1];
+      InputLength := Distance(Input[1], Input[2]);
       for NodeIndex := 0 to Length(Outline) - 1 do
       begin
         EdgeSegment[1] := Outline[NodeIndex];
-        if Collinear(EdgeSegment[1], Input[1], Input[2])
-          and Collinear(EdgeSegment[2], Input[1], Input[2]) then
+//        if Collinear(EdgeSegment[1], Input[1], Input[2])
+//          and Collinear(EdgeSegment[2], Input[1], Input[2]) then
+        if (Distance(EdgeSegment[1], Input)/InputLength < 1e-7)
+          and (Distance(EdgeSegment[2], Input)/InputLength < 1e-7) then
         begin
           IntersectionList.Add(EdgeSegment[1]);
           IntersectionList.Add(EdgeSegment[2]);
@@ -1334,7 +1433,7 @@ begin
       for PointIndex := IntersectionList.Count-2 downto 0 do
       begin
         if IsEqual(IntersectionList[PointIndex],
-          IntersectionList[PointIndex+1], Epsilon) then
+          IntersectionList[PointIndex+1], FastGEO.Epsilon) then
         begin
           IntersectionList.Delete(PointIndex);
         end;
@@ -1375,6 +1474,16 @@ begin
   end;
 end;
 
+function TSutraNode2D.GetActiveElement(Index: Integer): IElement;
+begin
+  result := Elements[Index];
+end;
+
+function TSutraNode2D.GetActiveElementCount: integer;
+begin
+  result := FElements.Count;
+end;
+
 procedure TSutraNode2D.GetCellOutline(var CellOutline: TVertexArray);
 var
   PriorUnion: TGpcPolygonClass;
@@ -1397,6 +1506,10 @@ var
   PriorNode: TSutraNode2D;
   SelfIndex: Integer;
   PointIndex: Integer;
+  ContourIndex: Integer;
+  AnArea: double;
+  TestArea: double;
+  CIndex: Integer;
 const
   MaxReduceCount = 10;
 begin
@@ -1481,6 +1594,7 @@ begin
             Inc(ReduceCount);
             if ReduceCount >= MaxReduceCount then
             begin
+              Break;
               {$IFDEF DEBUG}
               SetLength(FCellOutline, 0);
               Beep;
@@ -1497,11 +1611,26 @@ begin
             PriorUnion, EmptyPolygon);
           PriorUnion.Free;
 
-          Assert(UnionPolygon.NumberOfContours = 1);
-          SetLength(FCellOutline, UnionPolygon.VertexCount[0]);
-          for VertexIndex := 0 to UnionPolygon.VertexCount[0] - 1 do
+          ContourIndex := 0;
+          if UnionPolygon.NumberOfContours > 1 then
           begin
-            FCellOutline[VertexIndex] := UnionPolygon.Vertices[0, VertexIndex];
+            AnArea := Abs(UnionPolygon.ContourArea(0));
+            for CIndex := 1 to UnionPolygon.NumberOfContours - 1 do
+            begin
+              TestArea := Abs(UnionPolygon.ContourArea(CIndex));
+              if TestArea > AnArea then
+              begin
+                AnArea := TestArea;
+                ContourIndex := CIndex;
+              end;
+            end;
+          end;
+
+//          Assert(UnionPolygon.NumberOfContours = 1);
+          SetLength(FCellOutline, UnionPolygon.VertexCount[ContourIndex]);
+          for VertexIndex := 0 to UnionPolygon.VertexCount[ContourIndex] - 1 do
+          begin
+            FCellOutline[VertexIndex] := UnionPolygon.Vertices[ContourIndex, VertexIndex];
           end;
 
 
@@ -1566,6 +1695,11 @@ begin
   result := FElements.Count;
 end;
 
+function TSutraNode2D.GetLocation: TPoint2D;
+begin
+  result := Location;
+end;
+
 function TSutraNode2D.GetMaxX: Double;
 var
   Dummy: TVertexArray;
@@ -1598,6 +1732,16 @@ begin
   result := FMinY;
 end;
 
+function TSutraNode2D.GetNodeNumber: Integer;
+begin
+  result := Number;
+end;
+
+function TSutraNode2D.GetNodeType: TNodeType;
+begin
+  result := FNodeType;
+end;
+
 procedure TSutraNode2D.InvalidateCellOutline;
 begin
   SetLength(FCellOutline, 0)
@@ -1619,11 +1763,15 @@ begin
 end;
 
 function TSutraNode2D.IsInsideCell(APoint: TPoint2D): Boolean;
+const
+  DistEpsilon = 1e-8;
 var
   AVertex: Tgpc_vertex;
   CellOutline : TVertexArray;
   VertexIndex: Integer;
   PriorVertex: Tgpc_vertex;
+  SegDistance: double;
+
   function NearlyTheSame(A, B: Single): Boolean;
   const
     Epsilon = 1e-6;
@@ -1656,10 +1804,35 @@ begin
     begin
       result := not result;
     end;
+    SegDistance := Distance(AVertex, PriorVertex);
+    if SegDistance <> 0 then
+    begin
+      if Distance(APoint, EquateSegment(AVertex, PriorVertex))
+        /SegDistance < DistEpsilon then
+      begin
+        result := True;
+        Exit;
+      end;
+    end;
+//    if Collinear(AVertex, PriorVertex, APoint) then
+//    begin
+//      result := True;
+//      Exit;
+//    end;
     PriorVertex := AVertex;
   end;
 
 
+end;
+
+procedure TSutraNode2D.RemoveElement(AnElement: TSutraElement2D);
+begin
+  FElements.Remove(AnElement);
+end;
+
+procedure TSutraNode2D.SetNodeNumber(Value: Integer);
+begin
+  Number := Value;
 end;
 
 procedure TSutraNode2D.SetNodeType(const Value: TNodeType);
@@ -1735,10 +1908,10 @@ begin
   result := inherited Add as TSutraNode2D;
 end;
 
-constructor TSutraNode2D_Collection.Create(Model: TBaseModel; ParentMesh: TSutraMesh2D);
+constructor TSutraNode2D_Collection.Create(Model: TBaseModel; ParentMesh: TSutraMesh3D);
 begin
-  inherited Create(TSutraNode2D, Model);
-  FMesh2D := ParentMesh;
+  inherited Create(TSutraNode2D, Model, ParentMesh);
+//  FMesh2D := ParentMesh.Mesh2D;
 end;
 
 destructor TSutraNode2D_Collection.Destroy;
@@ -1828,6 +2001,11 @@ begin
   result := inherited Items[Index] as TSutraNode2D;
 end;
 
+function TSutraNode2D_Collection.GetMesh2D: TSutraMesh2D;
+begin
+  result := FMesh.Mesh2D;
+end;
+
 function TSutraNode2D_Collection.GetNodeRanges: TRbwRangeTree;
 var
   LeafList: TSutraNode2DLeafList;
@@ -1909,6 +2087,8 @@ var
   Limits: TGridLimit;
   AList: TList;
   Location: TOneDRealArray;
+  EpsilonX: Extended;
+  EpsilonY: Extended;
 begin
   Result.Row := -1;
   Result.Col := -1;
@@ -1922,11 +2102,13 @@ begin
   begin
     Limits := Mesh2D.MeshLimits;
     SetLength(IntervalDef, 2);
-    IntervalDef[0].LowerBoundary := Limits.MinX;
-    IntervalDef[0].UpperBoundary := Limits.MaxX;
+    EpsilonX := (Limits.MaxX-Limits.MinX)/1e8;
+    EpsilonY := (Limits.MaxY-Limits.MinY)/1e8;
+    IntervalDef[0].LowerBoundary := Limits.MinX-EpsilonX;
+    IntervalDef[0].UpperBoundary := Limits.MaxX+EpsilonX;
     IntervalDef[0].OnFindObjectInterval  := NodeXLimits;
-    IntervalDef[1].LowerBoundary := Limits.MinY;
-    IntervalDef[1].UpperBoundary := Limits.MaxY;
+    IntervalDef[1].LowerBoundary := Limits.MinY-EpsilonY;
+    IntervalDef[1].UpperBoundary := Limits.MaxY+EpsilonY;
     IntervalDef[1].OnFindObjectInterval  := NodeYLimits;
 
     FNodeIntervals := TRbwIntervalTree.Create(IntervalDef);
@@ -1978,19 +2160,26 @@ begin
 end;
 
 procedure TSutraNodeNumber2D_Item.SetNode(const Value: TSutraNode2D);
+var
+  Element: TSutraElement2D;
 begin
   inherited SetNode(Value);
+  Element := (Collection as TSutraNodeNumber2D_Collection).FElement;
+  if (Element <> nil) and (Value.FElements.IndexOf(Element) < 0) then
+  begin
+    Value.FElements.Add(Element);
+  end;
 end;
 
 procedure TSutraNodeNumber2D_Item.UpdateNode;
 var
-  LocalModel: TCustomModel;
+//  LocalModel: TCustomModel;
   Mesh: TSutraMesh2D;
   NewNode: TSutraNode2D;
   Element: TSutraElement2D;
 begin
-  LocalModel := Model as TCustomModel;
-  Mesh := LocalModel.Mesh.Mesh2D;
+//  LocalModel := Model as TCustomModel;
+  Mesh := (Collection as TSutraNodeNumber2D_Collection).FMesh.Mesh2D;
   if (FStoredNodeNumber >= 0) and (FStoredNodeNumber < Mesh.Nodes.Count) then
   begin
     NewNode := Mesh.Nodes[FStoredNodeNumber];
@@ -2027,10 +2216,10 @@ begin
 end;
 
 constructor TSutraNodeNumber2D_Collection.Create(Model: TBaseModel;
-  Element: TSutraElement2D);
+  Element: TSutraElement2D; Mesh3D: TSutraMesh3D);
 begin
   FElement := Element;
-  inherited Create(TSutraNodeNumber2D_Item, Model);
+  inherited Create(TSutraNodeNumber2D_Item, Model, Mesh3D);
 end;
 
 function TSutraNodeNumber2D_Collection.GetItem(
@@ -2096,6 +2285,7 @@ begin
   begin
     SourceElement := TSutraElement2D(Source);
     Nodes := SourceElement.Nodes;
+    Selected := SourceElement.Selected;
   end;
   inherited;
 end;
@@ -2138,7 +2328,8 @@ end;
 constructor TSutraElement2D.Create(Collection: TCollection);
 begin
   inherited;
-  FNodes := TSutraNodeNumber2D_Collection.Create(Model, self);
+  FNodes := TSutraNodeNumber2D_Collection.Create(Model, self,
+    (Collection as TSutraElement2D_Collection).FMesh);
 end;
 
 destructor TSutraElement2D.Destroy;
@@ -2199,31 +2390,39 @@ begin
     end;
   end;
 
-  case DrawingChoice of
-    dcAll:
-      begin
-        DrawBigPolyline32(BitMap, clBlack32, OrdinaryGridLineThickness,
-          Points, True);
-      end;
-    dcEdge:
-      begin
-        SetLength(Points, 2);
-        Node1 := Nodes[3].Node;
-        for NodeIndex := 0 to Nodes.Count - 1 do
+  if Selected then
+  begin
+    DrawBigPolyline32(BitMap, clBlack32, ThickGridLineThickness,
+      Points, True);
+  end
+  else
+  begin
+    case DrawingChoice of
+      dcAll:
         begin
-          Node2 := Nodes[NodeIndex].Node;
-          if Node1.EdgeNode and Node2.EdgeNode then
-          begin
-            Points[0] := ConvertTop2D_Point(ZoomBox, Node1.Location);
-            Points[1] := ConvertTop2D_Point(ZoomBox, Node2.Location);
-            DrawBigPolyline32(BitMap, clBlack32, OrdinaryGridLineThickness,
-              Points, True);
-          end;
-          Node1 := Node2;
+          DrawBigPolyline32(BitMap, clBlack32, OrdinaryGridLineThickness,
+            Points, True);
         end;
-      end;
-    else
-      Assert(False);
+      dcEdge:
+        begin
+          SetLength(Points, 2);
+          Node1 := Nodes[3].Node;
+          for NodeIndex := 0 to Nodes.Count - 1 do
+          begin
+            Node2 := Nodes[NodeIndex].Node;
+            if Node1.EdgeNode and Node2.EdgeNode then
+            begin
+              Points[0] := ConvertTop2D_Point(ZoomBox, Node1.Location);
+              Points[1] := ConvertTop2D_Point(ZoomBox, Node2.Location);
+              DrawBigPolyline32(BitMap, clBlack32, OrdinaryGridLineThickness,
+                Points, True);
+            end;
+            Node1 := Node2;
+          end;
+        end;
+      else
+        Assert(False);
+    end;
   end;
 
   if Mesh3D.DrawElementNumbers then
@@ -2274,6 +2473,16 @@ begin
     OutlinePolygon[PolyIndex] := Nodes[PolyIndex].Node.Location;
   end;
   result := Abs(Area(OutlinePolygon));
+end;
+
+function TSutraElement2D.GetActiveNode(Index: Integer): INode;
+begin
+  result := Nodes[Index].Node;
+end;
+
+function TSutraElement2D.GetActiveNodeCount: integer;
+begin
+  result := Nodes.Count;
 end;
 
 function TSutraElement2D.GetMaxX: Double;
@@ -2413,6 +2622,11 @@ begin
   FNodes.Assign(Value);
 end;
 
+procedure TSutraElement2D.SetSelected(const Value: Boolean);
+begin
+  FSelected := Value;
+end;
+
 { TSutraElement2D_Collection }
 
 function TSutraElement2D_Collection.Add: TSutraElement2D;
@@ -2421,10 +2635,10 @@ begin
 end;
 
 constructor TSutraElement2D_Collection.Create(Model: TBaseModel;
-  ParentMesh: TSutraMesh2D);
+  ParentMesh: TSutraMesh3D);
 begin
-  inherited Create(TSutraElement2D, Model);
-  FMesh2D := ParentMesh;
+  inherited Create(TSutraElement2D, Model, ParentMesh);
+//  FMesh2D := ParentMesh.Mesh2D;
 end;
 
 destructor TSutraElement2D_Collection.Destroy;
@@ -2485,6 +2699,11 @@ end;
 function TSutraElement2D_Collection.GetItems(Index: integer): TSutraElement2D;
 begin
   result := inherited Items[Index] as TSutraElement2D
+end;
+
+function TSutraElement2D_Collection.GetMesh2D: TSutraMesh2D;
+begin
+  result := FMesh.Mesh2D;
 end;
 
 procedure TSutraElement2D_Collection.InvalidateElementIntervals;
@@ -2573,6 +2792,8 @@ var
   Limits: TGridLimit;
   AList: TList;
   Location: TOneDRealArray;
+  EpsilonX: Extended;
+  EpsilonY: Extended;
 begin
   Result.Row := -1;
   Result.Col := -1;
@@ -2585,11 +2806,13 @@ begin
   begin
     Limits := Mesh2D.MeshLimits;
     SetLength(IntervalDef, 2);
-    IntervalDef[0].LowerBoundary := Limits.MinX;
-    IntervalDef[0].UpperBoundary := Limits.MaxX;
+    EpsilonX := (Limits.MaxX-Limits.MinX)/1e8;
+    EpsilonY := (Limits.MaxY-Limits.MinY)/1e8;
+    IntervalDef[0].LowerBoundary := Limits.MinX-EpsilonX;
+    IntervalDef[0].UpperBoundary := Limits.MaxX+EpsilonX;
     IntervalDef[0].OnFindObjectInterval  := ElementXLimits;
-    IntervalDef[1].LowerBoundary := Limits.MinY;
-    IntervalDef[1].UpperBoundary := Limits.MaxY;
+    IntervalDef[1].LowerBoundary := Limits.MinY-EpsilonY;
+    IntervalDef[1].UpperBoundary := Limits.MaxY+EpsilonY;
     IntervalDef[1].OnFindObjectInterval  := ElementYLimits;
 
     FElementIntervals := TRbwIntervalTree.Create(IntervalDef);
@@ -2635,6 +2858,63 @@ end;
 
 { TSutraMesh2D }
 
+procedure TSutraMesh2D.Assign(Source: TPersistent);
+var
+  SourceMesh: TSutraMesh2D;
+begin
+  if Source is TSutraMesh2D then
+  begin
+    SourceMesh := TSutraMesh2D(Source);
+    Nodes := SourceMesh.Nodes;
+    Elements := SourceMesh.Elements;
+    MeshGenControls := SourceMesh.MeshGenControls;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+function TSutraMesh2D.Bandwidth: Integer;
+var
+  index: Integer;
+  LowNode: TSutraNode2D;
+  AnElement: TSutraElement2D;
+  NodeIndex: Integer;
+  HighNode: TSutraNode2D;
+  ANode: TSutraNode2D;
+  Delta: Integer;
+begin
+  Result := 0;
+  for index := 0 to Elements.Count -1 do
+  begin
+    AnElement := Elements[index];
+//    if AnElement.Active then
+    begin
+      LowNode := AnElement.Nodes[0].Node;
+      HighNode := LowNode;
+      for NodeIndex := 1 to AnElement.Nodes.Count - 1 do
+      begin
+        ANode := AnElement.Nodes[NodeIndex].Node;
+        if ANode.Number < LowNode.Number then
+        begin
+          LowNode := ANode;
+        end;
+        if ANode.Number > HighNode.Number then
+        begin
+          HighNode := ANode;
+        end;
+      end;
+      Delta := HighNode.Number - LowNode.Number;
+      if Delta > Result then
+      begin
+        Result := Delta
+      end;
+    end;
+  end;
+  result := result*2 + 1;
+end;
+
 procedure TSutraMesh2D.CalculateMinMax(DataSet: TDataArray;
   var MinMaxInitialized: boolean; var MinMax: TMinMax;
   StringValues: TStringList);
@@ -2658,16 +2938,23 @@ begin
   FMesh3D := ParentMesh;
   FNodeFont := TFont.Create;
   FElementFont := TFont.Create;
-  FNodes := TSutraNode2D_Collection.Create(Model, self);
-  FElements := TSutraElement2D_Collection.Create(Model, self);
+  FNodes := TSutraNode2D_Collection.Create(Model, ParentMesh);
+  FElements := TSutraElement2D_Collection.Create(Model, ParentMesh);
   LocalModel := Model as TCustomModel;
-  FTopGridObserver := LocalModel.TopGridObserver;
-  {$IFDEF SUTRA}
-  if LocalModel.ModelSelection = msSutra22 then
+  if LocalModel <> nil then
   begin
-    FTopGridObserver.OnUpToDateSet := LocalModel.OnTopSutraMeshChanged;
+    FTopGridObserver := LocalModel.TopGridObserver;
+    {$IFDEF SUTRA}
+    if LocalModel.ModelSelection = msSutra22 then
+    begin
+      FTopGridObserver.OnUpToDateSet := LocalModel.OnTopSutraMeshChanged;
+    end;
+    {$ENDIF}
+  end
+  else
+  begin
+    FTopGridObserver := nil;
   end;
-  {$ENDIF}
   FDrawNodeNumbers := False;
   FDrawElementNumbers := False;
 end;
@@ -2934,6 +3221,26 @@ begin
   end;
 end;
 
+function TSutraMesh2D.GetActiveElement(Index: integer): IElement;
+begin
+  result := Elements[Index];
+end;
+
+function TSutraMesh2D.GetActiveElementCount: integer;
+begin
+  result := Elements.Count;
+end;
+
+function TSutraMesh2D.GetActiveNode(Index: Integer): INode;
+begin
+  result := Nodes[Index];
+end;
+
+function TSutraMesh2D.GetActiveNodeCount: integer;
+begin
+  result := Nodes.Count;
+end;
+
 procedure TSutraMesh2D.GetElementsOnSegment(Segment: TSegment2D;
   ElementsOnSegment: TSutraElement2D_List);
 var
@@ -3059,7 +3366,7 @@ function TSutraMesh2D.GetSelectedLayer: integer;
 begin
   result := -1;
   case Mesh3D.MeshType of
-    mt2D: result := 0;
+    mt2D, mtProfile: result := 0;
     mt3D:
       begin
         result := FSelectedLayer;
@@ -3228,6 +3535,69 @@ begin
       PriorNodes.Free;
     end;
   end;
+end;
+
+procedure TSutraMesh2D.Renumber;
+var
+  NodeList: TSutraNode2D_List;
+  index: Integer;
+  ElementList: TSutraElement2D_List;
+begin
+  Elements.InvalidateElementIntervals;
+  Nodes.InvalidateNodeIntervals;
+
+  RenumberMesh(self);
+
+  NodeList := TSutraNode2D_List.Create;
+  try
+    NodeList.Capacity := FNodes.Count;
+    for index := 0 to FNodes.Count - 1 do
+    begin
+      NodeList.Add(FNodes[index]);
+    end;
+//    NodeList.Sort(TSutraNode2DNumberComparer.Default);
+    NodeList.Sort(TSutraNode2DNumberComparer.Construct(
+      function(const L, R: TSutraNode2D): Integer
+      begin
+        result := L.Number - R.Number;
+      end));
+    for Index := 0 to NodeList.Count - 1 do
+    begin
+      NodeList.Items[index].Index := index;
+    end;
+  finally
+    NodeList.Free;
+  end;
+
+  ElementList := TSutraElement2D_List.Create;
+  try
+    ElementList.Capacity := FElements.Count;
+    for index := 0 to FElements.Count - 1 do
+    begin
+      ElementList.Add(FElements[index]);
+    end;
+//    ElementList.Sort(TSutraElement2DNumberComparer.Default);
+    ElementList.Sort(TSutraElement2DNumberComparer.Construct(
+      function(const L, R: TSutraElement2D): Integer
+      begin
+        result := L.ElementNumber - R.ElementNumber;
+      end));
+    for Index := 0 to ElementList.Count - 1 do
+    begin
+      ElementList.Items[index].Index := index;
+    end;
+  finally
+    ElementList.Free;
+  end;
+
+//  FElements.Sort(TIElementComparer.Construct(
+//    function(const L, R: IElement): Integer
+//    begin
+//      result := L.ElementNumber - R.ElementNumber;
+//    end));
+
+
+
 end;
 
 procedure TSutraMesh2D.SetDrawElementNumbers(const Value: boolean);
@@ -3472,13 +3842,6 @@ begin
   Result.z := z;
 end;
 
-function TSutraNode3D.QueryInterface(const IID: TGUID; out Obj): HResult;
-const
-  E_NOINTERFACE = HResult($80004002);
-begin
-  if GetInterface(IID, Obj) then Result := 0 else Result := E_NOINTERFACE;
-end;
-
 procedure TSutraNode3D.SetLocation(const Value: TPoint2D);
 begin
   Node2D.X := Value.x;
@@ -3533,17 +3896,6 @@ begin
     FNode2D := nil;
   end;
 end;
-
-function TSutraNode3D._AddRef: Integer;
-begin
-  result := -1;
-end;
-
-function TSutraNode3D._Release: Integer;
-begin
-  result := -1;
-end;
-
 { TSutraNode3D_Collection }
 
 function TSutraNode3D_Collection.Add: TSutraNode3D;
@@ -3553,8 +3905,7 @@ end;
 
 constructor TSutraNode3D_Collection.Create(Model: TBaseModel; ParentMesh: TSutraMesh3D);
 begin
-  inherited Create(TSutraNode3D, Model);
-  FMesh := ParentMesh;
+  inherited Create(TSutraNode3D, Model, ParentMesh);
   FStoredRotatedLocations:= TStoredLocations.Create;
 end;
 
@@ -3656,9 +4007,10 @@ begin
   result := inherited Add as TSutraNodeNumber3D_Item
 end;
 
-constructor TSutraNodeNumber3D_Collection.Create(Model: TBaseModel);
+constructor TSutraNodeNumber3D_Collection.Create(Model: TBaseModel;
+  Mesh3D: TSutraMesh3D);
 begin
-  inherited Create(TSutraNodeNumber3D_Item, Model);
+  inherited Create(TSutraNodeNumber3D_Item, Model, Mesh3D);
 end;
 
 function TSutraNodeNumber3D_Collection.GetItem(
@@ -4057,7 +4409,8 @@ var
   Epsilon: double;
   Index: Integer;
   ContourIndex: Integer;
-  Area: double;
+  Area, NewArea: double;
+  PriorArea: double;
 begin
   Assert(QP.Count > 0);
   Old_resultP := nil;
@@ -4219,6 +4572,7 @@ begin
     end;
 
     Area := 0;
+    PriorArea := 0;
     ContourIndex := 0;
     for Index := 0 to resultP.NumberOfContours - 1 do
     begin
@@ -4228,13 +4582,19 @@ begin
       end
       else
       begin
-        if Area < Abs(resultP.ContourArea(Index)) then
+        NewArea := Abs(resultP.ContourArea(Index));
+        if Area < NewArea then
         begin
-          Assert(Area < 1e-15);
-          Area := Abs(resultP.ContourArea(Index));
+          PriorArea := Area;
+          Area := NewArea;
           ContourIndex := Index;
         end;
       end;
+    end;
+
+    if PriorArea > 0 then
+    begin
+      Assert(PriorArea/Area < 1e-8, 'Area = ' + FloatToStr(Area));
     end;
 
     SetLength(Result, resultP.VertexCount[ContourIndex]);
@@ -4339,7 +4699,8 @@ end;
 constructor TSutraElement3D.Create(Collection: TCollection);
 begin
   inherited;
-  FNodes := TSutraNodeNumber3D_Collection.Create(Model);
+  FNodes := TSutraNodeNumber3D_Collection.Create(Model,
+    (Collection as TSutraElement3D_Collection).FMesh);
   FActiveNodes := TSutraNode3D_List.Create;
 end;
 
@@ -4583,13 +4944,6 @@ begin
   result := result/4;
 end;
 
-function TSutraElement3D.QueryInterface(const IID: TGUID; out Obj): HResult;
-const
-  E_NOINTERFACE = HResult($80004002);
-begin
-  if GetInterface(IID, Obj) then Result := 0 else Result := E_NOINTERFACE;
-end;
-
 procedure TSutraElement3D.SetNodes(const Value: TSutraNodeNumber3D_Collection);
 begin
   FNodes.Assign(Value);
@@ -4637,18 +4991,28 @@ begin
   end;
   result := result/4;
 end;
-
-function TSutraElement3D._AddRef: Integer;
-begin
-  result := -1;
-end;
-
-function TSutraElement3D._Release: Integer;
-begin
-  result := -1;
-end;
-
 { TSutraMesh3D }
+
+procedure TSutraMesh3D.Assign(Source: TPersistent);
+var
+  SouceMesh: TSutraMesh3D;
+begin
+  if Source is TSutraMesh3D then
+  begin
+    SouceMesh := TSutraMesh3D(Source);
+//    Nodes := SouceMesh.Nodes;
+//    Elements := SouceMesh.Elements;
+    Mesh2D := SouceMesh.Mesh2D;
+    ElementDrawingChoice := SouceMesh.ElementDrawingChoice;
+    NodeDrawingChoice := SouceMesh.NodeDrawingChoice;
+    SelectedLayer := SouceMesh.SelectedLayer;
+    CrossSection := SouceMesh.CrossSection;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
 
 function TSutraMesh3D.Bandwidth: Integer;
 var
@@ -4660,6 +5024,11 @@ var
   ANode: TSutraNode3D;
   Delta: Integer;
 begin
+  if MeshType <> mt3D then
+  begin
+    result := Mesh2D.Bandwidth;
+    Exit;
+  end;
   Result := 0;
   for index := 0 to Elements.Count -1 do
   begin
@@ -4740,6 +5109,10 @@ procedure TSutraMesh3D.Clear;
 begin
   BeginUpdate;
   try
+    ThreeDDataSet := nil;
+    TopDataSet := nil;
+    ThreeDContourDataSet := nil;
+    TopContourDataSet := nil;
     Elements.Clear;
     Nodes.Clear;
     Mesh2D.Clear;
@@ -4748,16 +5121,27 @@ begin
   end;
 end;
 
+procedure TSutraMesh3D.CrossSectionMoved(Sender: TObject);
+begin
+  FNeedToRedraw3d := True;
+  FNeedToRecordCrossSection := True;
+//  frmGoPhast.Invalidate3DView;
+end;
+
 constructor TSutraMesh3D.Create(Model: TBaseModel);
 var
   LocalModel: TCustomModel;
 begin
   inherited Create(Model);
+  FElementNumbers := TIntegerCollection.Create(Model);
+  FNodeNumbers := TIntegerCollection.Create(Model);
+  FCanDraw3D := True;
   FLoading := True;
   FStoredBlockAngle := -1000;
   FStoredNodeAngle := -1000;
   FElevationsNeedUpdating := True;
   FCrossSection := TCrossSection.Create(Model);
+  FCrossSection.OnMoved := CrossSectionMoved;
   FElements := TSutraElement3D_Collection.Create(Model, self);
   FNodes := TSutraNode3D_Collection.Create(Model, self);
   FMesh2D := TSutraMesh2D.Create(Model, self);
@@ -4767,7 +5151,14 @@ begin
 
   FMeshType := mt3D;
   LocalModel := Model as TCustomModel;
-  FThreeDGridObserver := LocalModel.ThreeDGridObserver;
+  if LocalModel <> nil then
+  begin
+    FThreeDGridObserver := LocalModel.ThreeDGridObserver;
+  end
+  else
+  begin
+    FThreeDGridObserver := nil;
+  end;
 //  {$IFDEF SUTRA}
 //  if LocalModel.ModelSelection = msSutra22 then
 //  begin
@@ -4777,6 +5168,10 @@ begin
   NodeDrawingChoice := dcEdge;
   ElementDrawingChoice := dcAll;
 
+  FListsCreated := False;
+  FNeedToRedraw3d := True;
+  FNeedToRecordCrossSection := True;
+  FNeedToRecordLayer := True;
   FCanDraw := True;
 
 end;
@@ -4793,6 +5188,8 @@ begin
   FNodes.Free;
   FElements.Free;
   FCrossSection.Free;
+  FElementNumbers.Free;
+  FNodeNumbers.Free;
   inherited;
 end;
 
@@ -5898,6 +6295,292 @@ begin
   end;
 end;
 
+procedure TSutraMesh3D.RecordLayer;
+var
+  Layer: Integer;
+  ColIndex: Integer;
+  AnElement3D: TSutraElement3D;
+  NodeIndex: Integer;
+  Element2D: TSutraElement2D;
+  ANode2D: TSutraNode2D;
+  ANode3D: TSutraNode3D;
+  NodeLayer: Integer;
+  X, Y, Z: single;
+begin
+  try
+    glNewList(FLayerGLIndex, GL_COMPILE);
+    try
+      glLineWidth(ThinLine);
+      glColor3f(0.0, 0.0, 0.0);
+
+      Layer := SelectedLayer;
+      NodeLayer := Layer;
+      if Layer >= LayerCount then
+      begin
+        Layer := LayerCount -1;
+      end;
+
+      for ColIndex := 0 to Mesh2D.Elements.Count - 1 do
+      begin
+        AnElement3D := ElementArray[Layer,ColIndex];
+        if AnElement3D.Active then
+        begin
+          glBegin(GL_LINE_LOOP);
+          try
+            Element2D := Mesh2D.Elements[ColIndex];
+            for NodeIndex := 0 to Element2D.Nodes.Count - 1 do
+            begin
+              ANode2D := Element2D.Nodes[NodeIndex].Node;
+              ANode3D := NodeArray[NodeLayer, ANode2D.Number];
+              X := ANode2D.X;
+              Y := ANode2D.Y;
+              Z := ANode3D.Z;
+              glVertex3f(X, Y, Z);
+            end;
+          finally
+            glEnd;
+          end;
+        end;
+      end;
+    finally
+      glEndList;
+    end;
+  finally
+    FNeedToRecordLayer := False;
+  end;
+end;
+
+procedure TSutraMesh3D.RestoreElementNumbers;
+var
+  Index: Integer;
+begin
+  if FElementNumbers.Count = Elements.Count then
+  begin
+    for Index := 0 to Elements.Count - 1 do
+    begin
+      Elements[Index].ElementNumber := FElementNumbers[Index].Value
+    end;
+    FElementNumbers.Clear;
+  end;
+end;
+
+procedure TSutraMesh3D.RestoreNodeNumbers;
+var
+  Index: Integer;
+begin
+  if FNodeNumbers.Count = Nodes.Count then
+  begin
+    for Index := 0 to Nodes.Count - 1 do
+    begin
+      Nodes[Index].Number := FNodeNumbers[Index].Value
+    end;
+    FNodeNumbers.Clear;
+  end;
+end;
+
+procedure TSutraMesh3D.RecordCrossSection;
+var
+  NodeList: TSutraNode2D_List;
+  NodeIndex: Integer;
+  ANode2D: TSutraNode2D;
+  LineStarted: Boolean;
+  LayerIndex: Integer;
+  X, Y, Z: single;
+  ANode3D: TSutraNode3D;
+  PriorNode2D: TSutraNode2D;
+  SharedElement: Boolean;
+  ElementIndex: Integer;
+  Element2D: TSutraElement2D;
+begin
+  if FUpdatingElevations then
+  begin
+    Exit;
+  end;
+  NodeList := TSutraNode2D_List.Create;
+  try
+    GetNodesOnCrossSection(NodeList);
+    if NodeList.Count = 0 then
+    begin
+      Exit;
+    end;
+
+    try
+      glNewList(FCrossSectionGLIndex, GL_COMPILE);
+      try
+        glLineWidth(ThinLine);
+        glColor3f(0.0, 0.0, 0.0);
+        for NodeIndex := 0 to NodeList.Count - 1 do
+        begin
+          ANode2D := NodeList[NodeIndex];
+          LineStarted := False;
+          for LayerIndex := 0 to LayerCount do
+          begin
+            ANode3D := NodeArray[LayerIndex, ANode2D.Number];
+            if ANode3D.Active then
+            begin
+              if not LineStarted then
+              begin
+                glBegin(GL_LINE_STRIP);
+                LineStarted := True;
+              end;
+              X := ANode2D.X;
+              Y := ANode2D.Y;
+              Z := ANode3D.Z;
+              glVertex3f(X, Y, Z);
+            end
+            else
+            begin
+              if LineStarted then
+              begin
+                glEnd;
+                LineStarted := False;
+              end;
+            end;
+          end;
+          if LineStarted then
+          begin
+            glEnd;
+//            LineStarted := False;
+          end;
+        end;
+
+        for LayerIndex := 0 to LayerCount do
+        begin
+          LineStarted := False;
+          PriorNode2D := nil;
+          for NodeIndex := 0 to NodeList.Count - 1 do
+          begin
+            ANode2D := NodeList[NodeIndex];
+            ANode3D := NodeArray[LayerIndex, ANode2D.Number];
+            if ANode3D.Active then
+            begin
+              if not LineStarted then
+              begin
+                glBegin(GL_LINE_STRIP);
+                LineStarted := True;
+              end
+              else if PriorNode2D <> nil then
+              begin
+                SharedElement := False;
+                for ElementIndex := 0 to PriorNode2D.ElementCount - 1 do
+                begin
+                  Element2D := PriorNode2D.Elements[ElementIndex];
+                  if ANode2D.FElements.IndexOf(Element2D) >= 0 then
+                  begin
+                    SharedElement := True;
+                    break;
+                  end;
+                end;
+                if not SharedElement then
+                begin
+                  glEnd;
+                  glBegin(GL_LINE_STRIP);
+                end;
+              end;
+              X := ANode2D.X;
+              Y := ANode2D.Y;
+              Z := ANode3D.Z;
+              glVertex3f(X, Y, Z);
+            end
+            else
+            begin
+              if LineStarted then
+              begin
+                glEnd;
+                LineStarted := False;
+              end;
+            end;
+            PriorNode2D := ANode2D;
+          end;
+          if LineStarted then
+          begin
+            glEnd;
+//            LineStarted := False;
+          end;
+        end;
+
+      finally
+        glEndList;
+      end;
+    finally
+      FNeedToRecordCrossSection := False;
+    end;
+  finally
+    NodeList.Free;
+  end;
+end;
+
+
+procedure TSutraMesh3D.Draw3D;
+const
+  NumberOfLists = 2;
+var
+  Colors: array[0..2] of TGLint;
+begin
+
+  glDisable(GL_LIGHTING);
+  glDisable(GL_LIGHT0);
+  glMatrixMode(GL_MODELVIEW);
+
+  glPushMatrix;
+  try
+
+    glEnable(GL_LINE_SMOOTH);
+    Colors[0] := 0;
+    Colors[1] := 0;
+    Colors[2] := 0;
+    glMaterialiv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, @Colors);
+
+
+    if FNeedToRedraw3d or FNeedToRecordLayer or FNeedToRecordCrossSection then
+    begin
+      if not FListsCreated then
+      begin
+        FLayerGLIndex := glGenLists(NumberOfLists);
+        FCrossSectionGLIndex := Succ(FLayerGLIndex);
+        FListsCreated := True;
+      end;
+
+      if FNeedToRecordLayer and frmGoPhast.acShowTopMesh.Checked then
+      begin
+        RecordLayer;
+      end;
+
+      if FNeedToRecordCrossSection and frmGoPhast.acShowFrontMesh.Checked then
+      begin
+        RecordCrossSection
+      end;
+
+      FNeedToRedraw3d := False;
+    end;
+
+    if not FNeedToRecordLayer and frmGoPhast.acShowTopMesh.Checked then
+    begin
+      glCallList(FLayerGLIndex);
+    end;
+
+    if not FNeedToRecordCrossSection and frmGoPhast.acShowFrontMesh.Checked then
+    begin
+      glCallList(FCrossSectionGLIndex);
+    end;
+
+  finally
+    glPopMatrix;
+  end;
+
+end;
+
+procedure TSutraMesh3D.UpdateNodeNumbers;
+var
+  index: Integer;
+begin
+  FNodeNumbers.Clear;
+  for index := 0 to Nodes.Count - 1 do
+  begin
+    FNodeNumbers.Add.Value := Nodes[index].Number;
+  end;
+end;
+
 function TSutraMesh3D.GetActiveElement(Index: Integer): IElement;
 begin
   result := FActiveElements[Index];
@@ -5924,6 +6607,12 @@ begin
     and not FUpdatingElevations;
 end;
 
+function TSutraMesh3D.GetCanDraw3D: Boolean;
+begin
+  Result := FCanDraw3D and CanDraw
+    and (MeshType = mt3D) and (Elements.Count > 0);
+end;
+
 function TSutraMesh3D.GetDrawElementNumbers: Boolean;
 begin
   result := Mesh2D.DrawElementNumbers;
@@ -5945,6 +6634,12 @@ function TSutraMesh3D.GetElementFont: TFont;
 begin
   result := Mesh2D.ElementFont;
 end;
+
+//function TSutraMesh3D.GetElementNumbers: TIntegerCollection;
+//var
+//  index: Integer;
+//begin
+//end;
 
 function TSutraMesh3D.FrontPolygons(Angle: Double;
   EvaluatedAt: TEvaluatedAt; out Limits: TLimitsArray): TCellElementPolygons2D;
@@ -5981,6 +6676,7 @@ begin
     else
       Assert(False);
   end;
+  Screen.Cursor := crHourGlass;
   QuadPairList := TQuadPair3DList.Create;
   try
     case EvaluatedAt of
@@ -6067,6 +6763,7 @@ begin
         Assert(False);
     end;
     QuadPairList.Free;
+    Screen.Cursor := crDefault;
   end;
 end;
 
@@ -6203,7 +6900,7 @@ begin
   result := inherited;
   if result then
   begin
-    if (MeshType = mt2D) or (DataSet.Orientation <> dso3D) then
+    if (MeshType in [mt2D, mtProfile]) or (DataSet.Orientation <> dso3D) then
     begin
       Exit;
     end;
@@ -6221,13 +6918,6 @@ begin
   end;
 end;
 
-function TSutraMesh3D.QueryInterface(const IID: TGUID; out Obj): HResult;
-const
-  E_NOINTERFACE = HResult($80004002);
-begin
-  if GetInterface(IID, Obj) then Result := 0 else Result := E_NOINTERFACE;
-end;
-
 function TSutraMesh3D.RotateFromMeshCoordinatesToRealWorldCoordinates(
   const APoint: TPoint2D): TPoint2D;
 var
@@ -6236,7 +6926,7 @@ var
 begin
   result := APoint;
   MeshAngle := CrossSection.Angle;
-  if (MeshType = mt2D) or (MeshAngle <> 0) then
+  if (MeshType in [mt2D, mtProfile]) or (MeshAngle <> 0) then
   begin
     temp.X := Cos(MeshAngle) * result.X - Sin(MeshAngle) * result.Y;
     temp.Y := Sin(MeshAngle) * result.X + Cos(MeshAngle) * result.Y;
@@ -6252,7 +6942,7 @@ var
 begin
   result := APoint;
   MeshAngle := CrossSection.Angle;
-  if (MeshType = mt2D) or (MeshAngle <> 0) then
+  if (MeshType in [mt2D, mtProfile]) or (MeshAngle <> 0) then
   begin
     temp.X := Cos(-MeshAngle) * result.X - Sin(-MeshAngle) * result.Y;
     temp.Y := Sin(-MeshAngle) * result.X + Cos(-MeshAngle) * result.Y;
@@ -6312,7 +7002,9 @@ begin
 
   if frmGoPhast.frame3DView.glWidModelView <> nil then
   begin
-//    FNeedToRedraw3d := True;
+    FNeedToRedraw3d := True;
+    FNeedToRecordLayer := True;
+    FNeedToRecordCrossSection := True;
   end;
   frmGoPhast.EnableVisualization;
 //  ViewsChanged;
@@ -6349,9 +7041,19 @@ begin
   Mesh2D.ElementFont := Value;
 end;
 
+procedure TSutraMesh3D.SetElementNumbers(const Value: TIntegerCollection);
+begin
+  FElementNumbers.Assign(Value);
+end;
+
 procedure TSutraMesh3D.SetElements(const Value: TSutraElement3D_Collection);
 begin
   FElements.Assign(Value);
+end;
+
+procedure TSutraMesh3D.SetElevationsNeedUpdating(const Value: boolean);
+begin
+  FElevationsNeedUpdating := Value;
 end;
 
 procedure TSutraMesh3D.SetMesh2D(const Value: TSutraMesh2D);
@@ -6400,6 +7102,11 @@ begin
   Mesh2D.NodeFont := Value;
 end;
 
+procedure TSutraMesh3D.SetNodeNumbers(const Value: TIntegerCollection);
+begin
+  FNodeNumbers.Assign(Value);
+end;
+
 procedure TSutraMesh3D.SetNodes(const Value: TSutraNode3D_Collection);
 begin
   FNodes.Assign(Value);
@@ -6438,6 +7145,8 @@ begin
   if Mesh2D.SelectedLayer <> Value then
   begin
     Mesh2D.SelectedLayer := Value;
+    FNeedToRecordLayer := True;
+    FNeedToRedraw3d := True;
 //    if not (csLoading in frmGoPhast.PhastModel.ComponentState) then
 //    begin
 //      FDisplayLayer := Value;
@@ -6569,6 +7278,17 @@ begin
   result := Mesh2D.TopContainingCellOrElement(APoint, EvaluatedAt)
 end;
 
+procedure TSutraMesh3D.UpdateElementNumbers;
+var
+  index: Integer;
+begin
+  FElementNumbers.Clear;
+  for index := 0 to Elements.Count - 1 do
+  begin
+    FElementNumbers.Add.Value := Elements[index].ElementNumber;
+  end;
+end;
+
 procedure TSutraMesh3D.UpdateElementsInNodes;
 var
   NodeIndex: Integer;
@@ -6624,6 +7344,7 @@ begin
   begin
     Exit;
   end;
+
   FUpdatingElevations := True;
   try
     InvalidatePolygons;
@@ -6639,7 +7360,7 @@ begin
       begin
         Exit;
       end;
-      if MeshType = mt2D then
+      if MeshType in [mt2D, mtProfile] then
       begin
         Exit;
       end
@@ -6709,6 +7430,7 @@ begin
         begin
           Element2D := Mesh2D.Elements[ColIndex];
           AnElement := Elements.Add;
+          AnElement.Element2D := Element2D;
           FElementArray[LayerIndex, ColIndex] := AnElement;
           for NodeIndex := 0 to Element2D.Nodes.Count - 1 do
           begin
@@ -6828,10 +7550,16 @@ begin
     end;
 
     SimpleRenumber;
+    RestoreNodeNumbers;
+    RestoreElementNumbers;
+
 //    RenumberMesh(self);
 
   finally
     FUpdatingElevations := False;
+    FNeedToRecordLayer := True;
+    FNeedToRecordCrossSection := True;
+    FNeedToRedraw3d := True;
   end;
 end;
 
@@ -6909,17 +7637,6 @@ begin
     end;
   end;
 end;
-
-function TSutraMesh3D._AddRef: Integer;
-begin
-  Result := -1;
-end;
-
-function TSutraMesh3D._Release: Integer;
-begin
-  Result := -1;
-end;
-
 { TSutraNodeNumber3D_Item }
 
 function TSutraNodeNumber3D_Item.GetNode: TSutraNode3D;
@@ -6959,8 +7676,7 @@ end;
 constructor TSutraElement3D_Collection.Create(Model: TBaseModel;
   ParentMesh: TSutraMesh3D);
 begin
-  inherited Create(TSutraElement3D, Model);
-  FMesh := ParentMesh;
+  inherited Create(TSutraElement3D, Model, ParentMesh);
   FAngle := -1000;
   FStoredRotatedLocations:= TStoredLocations.Create;
 end;
@@ -7091,21 +7807,26 @@ end;
 { TCustomSutraCollection }
 
 procedure TCustomSutraCollection.BeginUpdate;
-var
-  Mesh: TSutraMesh3D;
 begin
   inherited;
-  Mesh := (Model as TCustomModel).SutraMesh;
-  Mesh.BeginUpdate;
+  if FMesh = nil then
+  begin
+    showMessage(ClassName);
+  end;
+  FMesh.BeginUpdate;
+end;
+
+constructor TCustomSutraCollection.Create(ItemClass: TCollectionItemClass;
+  Model: TBaseModel; Mesh: TSutraMesh3D);
+begin
+  inherited Create(ItemClass, Model);
+  FMesh := Mesh;
 end;
 
 procedure TCustomSutraCollection.EndUpdate;
-var
-  Mesh: TSutraMesh3D;
 begin
   inherited;
-  Mesh := (Model as TCustomModel).SutraMesh;
-  Mesh.EndUpdate;
+  FMesh.EndUpdate;
 end;
 
 { TCrossSection }
@@ -7187,6 +7908,14 @@ begin
   Result.y := StartY;
 end;
 
+procedure TCrossSection.Moved;
+begin
+  if Assigned(FOnMoved) then
+  begin
+    FOnMoved(Self);
+  end;
+end;
+
 procedure TCrossSection.SetColor(const Value: TColor);
 begin
   if FColor <> Value then
@@ -7202,14 +7931,24 @@ begin
   EndY := Value.y;
 end;
 
+procedure TCrossSection.SetEndPointValue(var AField: double;
+  const NewValue: double);
+begin
+  if AField <> NewValue then
+  begin
+    Moved;
+  end;
+  SetRealProperty(AField, NewValue);
+end;
+
 procedure TCrossSection.SetEndX(const Value: Double);
 begin
-  SetRealProperty(FEndX, Value);
+  SetEndPointValue(FEndX, Value);
 end;
 
 procedure TCrossSection.SetEndY(const Value: double);
 begin
-  SetRealProperty(FEndY, Value);
+  SetEndPointValue(FEndY, Value);
 end;
 
 procedure TCrossSection.SetSegement(const Value: TSegment2D);
@@ -7226,12 +7965,12 @@ end;
 
 procedure TCrossSection.SetStartX(const Value: Double);
 begin
-  SetRealProperty(FStartX, Value);
+  SetEndPointValue(FStartX, Value);
 end;
 
 procedure TCrossSection.SetStartY(const Value: double);
 begin
-  SetRealProperty(FStartY, Value);
+  SetEndPointValue(FStartY, Value);
 end;
 
 { TSutraNode2Comparer }
@@ -7472,6 +8211,7 @@ begin
     AltSymmetry := SourceControls.AltSymmetry;
     AltConcave := SourceControls.AltConcave;
     ElementGrowthRate := SourceControls.ElementGrowthRate;
+    MeshGenerationMethod := SourceControls.MeshGenerationMethod
   end
   else
   begin
@@ -7584,6 +8324,7 @@ begin
   AltSymmetry.Value := 0.0;
   AltConcave.Value := 1.2;
   ElementGrowthRate.Value := 1.2;
+  MeshGenerationMethod := mgmIrregular;
 end;
 
 procedure TMeshGenerationControls.SetElementGrowthRate(
@@ -7595,6 +8336,16 @@ end;
 procedure TMeshGenerationControls.SetLineLength(const Value: TRealStorage);
 begin
   FLineLength.Assign(Value);
+end;
+
+procedure TMeshGenerationControls.SetMeshGenerationMethod(
+  const Value: TMeshGenerationMethod);
+begin
+  if FMeshGenerationMethod <> Value then
+  begin
+    FMeshGenerationMethod := Value;
+    InvalidateModel;
+  end;
 end;
 
 procedure TMeshGenerationControls.SetNodePlacementError(
@@ -7623,5 +8374,80 @@ begin
   InvalidateModel;
 end;
 
-end.
+{ TSutraNode2DNumberComparer }
 
+function TSutraNode2DNumberComparer.Compare(const Left,
+  Right: TSutraNode2D): Integer;
+begin
+  result := Left.Number - Right.Number;
+end;
+
+function TCustomSutraMesh.QueryInterface(const IID: TGUID; out Obj): HRESULT;
+const
+  E_NOINTERFACE = HRESULT($80004002);
+begin
+  if GetInterface(IID, Obj) then
+    result := 0
+  else
+    result := E_NOINTERFACE;
+end;
+
+function TCustomSutraMesh._AddRef: Integer;
+begin
+  result := -1;
+end;
+
+function TCustomSutraMesh._Release: Integer;
+begin
+  result := -1;
+end;
+
+function TCustomSutraElement._AddRef: Integer;
+begin
+  result := -1;
+end;
+
+function TCustomSutraElement._Release: Integer;
+begin
+  result := -1;
+end;
+
+function TCustomSutraElement.QueryInterface(const IID: TGUID; out Obj): HRESULT;
+const
+  E_NOINTERFACE = HRESULT($80004002);
+begin
+  if GetInterface(IID, Obj) then
+    result := 0
+  else
+    result := E_NOINTERFACE;
+end;
+
+function TCustomSutraNode._AddRef: Integer;
+begin
+  result := -1;
+end;
+
+function TCustomSutraNode._Release: Integer;
+begin
+  result := -1;
+end;
+
+function TCustomSutraNode.QueryInterface(const IID: TGUID; out Obj): HRESULT;
+const
+  E_NOINTERFACE = HRESULT($80004002);
+begin
+  if GetInterface(IID, Obj) then
+    result := 0
+  else
+    result := E_NOINTERFACE;
+end;
+
+{ TSutraElement2DNumberComparer }
+
+function TSutraElement2DNumberComparer.Compare(const Left,
+  Right: TSutraElement2D): Integer;
+begin
+  result := Left.ElementNumber - Right.ElementNumber;
+end;
+
+end.

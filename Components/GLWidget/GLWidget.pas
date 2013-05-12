@@ -478,7 +478,13 @@ begin
 {$IFDEF MSWindows}
   if FActivated then
 {$ENDIF}
-  SwapBuffers(FDC);
+  begin
+    try
+      SwapBuffers(FDC);
+    except
+      Visible := False;
+    end;
+  end;
 end;
 
 procedure TGLWidget.InitGL;

@@ -688,7 +688,7 @@ begin
   if Column >= 0 then
   begin
     case Mesh.MeshType of
-      mt2D:
+      mt2D, mtProfile:
         begin
           ElementNumber := Mesh.Mesh2D.Elements[Column].DisplayNumber;
         end;
@@ -716,7 +716,7 @@ begin
   if Column >= 0 then
   begin
     case Mesh.MeshType of
-      mt2D:
+      mt2D, mtProfile:
         begin
           NodeNumber := Mesh.Mesh2D.Nodes[Column].Number+1;
         end;
@@ -778,18 +778,19 @@ begin
   case ViewDirection of
     vdTop:
       begin
-        if Grid <> nil then
-        begin
-          DataSet := Grid.TopDataSet;
-        end
-        else if Mesh <> nil then
-        begin
-          DataSet := Mesh.TopDataSet;
-        end
-        else
-        begin
-          DataSet := nil;
-        end;
+        DataSet := GetTopDisplayDataSet;
+//        if Grid <> nil then
+//        begin
+//          DataSet := Grid.TopDataSet;
+//        end
+//        else if Mesh <> nil then
+//        begin
+//          DataSet := Mesh.TopDataSet;
+//        end
+//        else
+//        begin
+//          DataSet := nil;
+//        end;
         if (DataSet = nil) or (DataSet.EvaluatedAt = eaBlocks) then
         begin
           // Get the column and row containing the current cursor position.
@@ -887,6 +888,10 @@ begin
         if Mesh <> nil then
         begin
           DataSet := Mesh.ThreeDDataSet;
+          if DataSet = nil then
+          begin
+            DataSet := Mesh.ThreeDContourDataSet;
+          end;
           GetMeshColLayer(APoint, NodeCol, NodeLayer, ElCol, ElLayer);
           if (NodeCol >= 0) and  (NodeLayer >= 0)
             and  (ElCol >= 0) and  (ElLayer >= 0) then
@@ -919,6 +924,10 @@ begin
           else
           begin
             DataSet := Grid.FrontDataSet;
+            if DataSet = nil then
+            begin
+              DataSet := Grid.FrontContourDataSet;
+            end;
           end;
           if (DataSet = nil) or (DataSet.EvaluatedAt = eaBlocks) then
           begin
@@ -975,6 +984,10 @@ begin
         else
         begin
           DataSet := Grid.SideDataSet;
+          if DataSet = nil then
+          begin
+            DataSet := Grid.SideContourDataSet;
+          end;
         end;
         if (DataSet = nil) or (DataSet.EvaluatedAt = eaBlocks) then
         begin
@@ -2558,7 +2571,7 @@ begin
   begin
     Exit;
   end;
-  if( Mesh.MeshType = mt2D) then
+  if( Mesh.MeshType in [mt2D, mtProfile]) then
   begin
     Exit;
   end;

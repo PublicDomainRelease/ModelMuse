@@ -1460,6 +1460,7 @@ var
   BoolValue: Boolean;
   Uniform: boolean;
 begin
+  Assert(DataArray <> nil);
   if ArrayName <> '' then
   begin
     frmProgressMM.AddMessage(Format(StrWritingS, [ArrayName]));

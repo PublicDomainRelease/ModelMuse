@@ -212,7 +212,7 @@ type
     miLinkSFRStreams: TMenuItem;
     IntroductoryVideo1: TMenuItem;
     comboZCount: TComboBox;
-    ExportShapefile1: TMenuItem;
+    miExportShapefile: TMenuItem;
     miModflow2005Model: TMenuItem;
     ilImageList: TImageList;
     miModelResults: TMenuItem;
@@ -365,12 +365,24 @@ type
     miCustomizeSutraMesh: TMenuItem;
     tbRotateCrossSection: TToolButton;
     acImportSutraModelResults: TAction;
-    mniImportSutraModelResults: TMenuItem;
     miMesh: TMenuItem;
     miSpecifyCrossSection: TMenuItem;
     miMeshGenerationControls: TMenuItem;
-    miOptimizeBandwidth: TMenuItem;
+    miRenumberMesh: TMenuItem;
     tbMoveNodes: TToolButton;
+    btnGenerateMesh: TToolButton;
+    tlb3dViewMesh: TToolBar;
+    acShowTopMesh: TAction;
+    acShowFrontMesh: TAction;
+    btnShowTopMesh: TToolButton;
+    btnShowFrontMesh: TToolButton;
+    ShowTopMesh1: TMenuItem;
+    ShowFrontMesh1: TMenuItem;
+    acNewSutraModel: TAction;
+    acNewSutraModel1: TMenuItem;
+    btnFishnet: TToolButton;
+    acFishnet: TAction;
+    miViewMeshInformation1: TMenuItem;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -402,7 +414,7 @@ type
     procedure ModflowReference1Click(Sender: TObject);
     procedure miLinkSFRStreamsClick(Sender: TObject);
     procedure IntroductoryVideo1Click(Sender: TObject);
-    procedure ExportShapefile1Click(Sender: TObject);
+    procedure miExportShapefileClick(Sender: TObject);
     procedure sdSaveDialogTypeChange(Sender: TObject);
     procedure miModelResultsClick(Sender: TObject);
     procedure miScaleRotateorMoveObjectsClick(Sender: TObject);
@@ -495,11 +507,14 @@ type
     procedure sdSutraInputClose(Sender: TObject);
     procedure miCustomizeSutraMeshClick(Sender: TObject);
     procedure tbRotateCrossSectionClick(Sender: TObject);
-    procedure acImportSutraModelResultsExecute(Sender: TObject);
     procedure miSpecifyCrossSectionClick(Sender: TObject);
     procedure miMeshGenerationControlsClick(Sender: TObject);
-    procedure miOptimizeBandwidthClick(Sender: TObject);
+    procedure miRenumberMeshClick(Sender: TObject);
     procedure tbMoveNodesClick(Sender: TObject);
+    procedure acShowTopMeshExecute(Sender: TObject);
+    procedure acShowFrontMeshExecute(Sender: TObject);
+    procedure acFishnetExecute(Sender: TObject);
+    procedure miViewMeshInformation1Click(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -538,6 +553,7 @@ type
     FRunModpathModelSelection: integer;
     FExportModpathShapefileForm: TfrmExportModpathShapefile;
     FExportModpathShapeFileModelChoice: Integer;
+    FRenumberMethod: integer;
     procedure SetCreateArchive(const Value: Boolean);
     property CreateArchive: Boolean read FCreateArchive write SetCreateArchive;
     procedure WMMenuSelect(var Msg: TWMMenuSelect); message WM_MENUSELECT;
@@ -1573,6 +1589,8 @@ type
     procedure OnAppIdle(Sender: TObject; var Done: Boolean);
   public
     FCubeControl: TRbwModelCube;
+    procedure UpdateFrontCubeForSutraCrossSection(Sender: TObject);
+    procedure UpdateVerticalExaggeration(VerticalExaggeration: Double);
     procedure EnableMeshRenumbering;
     procedure InvalidateImage32AllViews;
     procedure EnableHufMenuItems;
@@ -1780,7 +1798,8 @@ uses
   SutraObservationWriterUnit, SutraInputWriterUnit, SutraTimeScheduleWriterUnit,
   SutraOptionsUnit, frmSutraProgramLocationsUnit, frmImportTprogsUnit,
   Generics.Collections, frmCustomizeMeshUnit, frmImportSutraModelResultsUnit,
-  frmSutraAngleUnit, frmMeshGenerationControlVariablesUnit, MeshRenumbering;
+  frmSutraAngleUnit, frmMeshGenerationControlVariablesUnit, MeshRenumbering,
+  frmRenumberingMethodUnit, frmMeshInformationUnit;
 
 const
   StrDisplayOption = 'DisplayOption';
@@ -1844,7 +1863,7 @@ resourcestring
   StrYouMustDefineThe = 'You must define the layer groups in your MODFLOW mo' +
   'del before generating the grid.';
   StrYouMustCreateAGr = 'You must create a grid in order to export Shapefile' +
-  's';
+  's.';
   StrYouMustDefineThe2 = 'You must define the grid before you can export the ' +
   'MODFLOW input files.';
   StrSpaceCharactersAre = 'Space characters are not allowed in the names of ' +
@@ -1889,6 +1908,13 @@ resourcestring
   'port the SUTRA input files.';
   StrNoRestartFile = 'The restart file used for initial conditions does ' +
   'not exist.';
+  StrGridDataToShapef = '&Grid Data to Shapefile...';
+  StrMeshDataToShapef = '&Mesh Data to Shapefile...';
+  StrYouMustCreateAMe = 'You must create a mesh in order to export Shapefile' +
+  's.';
+  StrYouMustGenerate3D = 'You must generate the 3D mesh before attempting to' +
+  ' export the SUTRA input files.';
+  StrTheBandwidthHasCh = 'The bandwidth has changed from %0:d to %1:d.';
 
 
 {$R *.dfm}
@@ -1924,7 +1950,11 @@ var
 
 procedure TfrmGoPhast.splitVertTopMoved(Sender: TObject);
 begin
-  if FOtherSplitterMoving then
+  if FOtherSplitterMoving
+  {$IFDEF SUTRA}
+    or (ModelSelection = msSutra22)
+  {$ENDIF}
+    then
   begin
     Exit;
   end;
@@ -1980,7 +2010,7 @@ begin
     case SourceView of
       vdTop:
         begin
-          CenterPoint.x := frameTopView.ZoomBox.Width div 2;
+          CenterPoint.x := frameFrontView.ZoomBox.Width div 2;
           CenterPoint.Y := frameTopView.ZoomBox.Height div 2;
           RealCenterPoint.x := frameTopView.ZoomBox.X(CenterPoint.x);
           RealCenterPoint.Y := frameTopView.ZoomBox.Y(CenterPoint.y);
@@ -2019,14 +2049,13 @@ begin
         end;
       vdFront:
         begin
-          CenterPoint.x := frameTopView.ZoomBox.Width div 2;
+          CenterPoint.x := frameFrontView.ZoomBox.Width div 2;
           CenterPoint.Y := frameTopView.ZoomBox.Height div 2;
           RealCenterPoint.x := frameTopView.ZoomBox.X(CenterPoint.x);
           RealCenterPoint.Y := frameTopView.ZoomBox.Y(CenterPoint.y);
           {$IFDEF Sutra}
           if PhastModel.ModelSelection = msSutra22 then
           begin
-//            RotatedCenterPoint := RealCenterPoint;
             RotatedCenterPoint := PhastModel.Mesh.
               RotateFromRealWorldCoordinatesToMeshCoordinates(RealCenterPoint);
           end
@@ -2045,7 +2074,6 @@ begin
           {$IFDEF Sutra}
           if PhastModel.ModelSelection = msSutra22 then
           begin
-//            RealCenterPoint := RotatedCenterPoint;
             RealCenterPoint := PhastModel.Mesh.
               RotateFromMeshCoordinatesToRealWorldCoordinates(RotatedCenterPoint);
           end
@@ -2263,12 +2291,18 @@ begin
         try
           if Sender = acFileNewModflowModel then
           begin
-            rgChoice.ItemIndex := 0;
+            rgChoice.ItemIndex := Ord(scNewModflow);
           end
           else if Sender = acFileNewPhastModel then
           begin
-            rgChoice.ItemIndex := 1;
+            rgChoice.ItemIndex := Ord(scNewPhast);
           end
+        {$IFDEF SUTRA}
+          else if Sender = acNewSutraModel then
+          begin
+            rgChoice.ItemIndex := Ord(scNewSutra);
+          end
+        {$ENDIF}
           else
           begin
             Assert(False);
@@ -2655,7 +2689,7 @@ begin
   end;
 
   {$IFNDEF SUTRA}
-  tlbMesh.Visible := False;
+//  tlbMesh.Visible := False;
   acSutraActive.Visible := False;
   acSutraLayers.Visible := False;
   acSutraOptions.Visible := False;
@@ -3173,6 +3207,17 @@ begin
   ShowAForm(TfrmVerticalExaggeration);
 end;
 
+procedure TfrmGoPhast.miViewMeshInformation1Click(Sender: TObject);
+begin
+  inherited;
+  if frmMeshInformation = nil then
+  begin
+    Application.CreateForm(TfrmMeshInformation, frmMeshInformation);
+  end;
+  frmMeshInformation.GetData;
+  frmMeshInformation.Show;
+end;
+
 procedure TfrmGoPhast.AdjustScales;
 begin
   // Synchronize the horizontal and vertical scales with the views of the grid.
@@ -3277,17 +3322,31 @@ end;
 procedure TfrmGoPhast.miModelResultsClick(Sender: TObject);
 begin
   inherited;
-  with TfrmSelectResultToImport.Create(nil) do
-  begin
-    try
-      if SelectFiles then
+  case ModelSelection of
+    msPhast: ;
+    msModflow, msModflowLGR, msModflowNWT:
       begin
-        ShowModal;
+        with TfrmSelectResultToImport.Create(nil) do
+        begin
+          try
+            if SelectFiles then
+            begin
+              ShowModal;
+            end;
+          finally
+            Free;
+          end;
+        end;
       end;
-    finally
-      Free;
-    end;
+  {$IFDEF SUTRA}
+    msSutra22:
+      begin
+        ShowAForm(TfrmImportSutraModelResults);
+      end
+  {$ENDIF}
+    else Assert(False);
   end;
+
 end;
 
 function TfrmGoPhast.ModelMateUpToDate: boolean;
@@ -3304,6 +3363,9 @@ begin
 end;
 
 procedure TfrmGoPhast.ModelSelectionChange(Sender: TObject);
+const
+  MinimumToolbarLeft = 11;
+  ToolbarExtraWidth = 3;
   procedure UpdateRunShortCut(Action: TAction);
   begin
     if Action.Enabled then
@@ -3322,11 +3384,14 @@ var
   ShowControls: Boolean;
   ControlIndex: Integer;
   AComponent: TComponent;
+  GridModel: Boolean;
 begin
   case PhastModel.ModelSelection of
     msUndefined: ; // ignore
     msPhast:
       begin
+        frameSideView.Visible := True;
+        splitVertTop.Visible := True;
         frameTopView.ModelCube.ZOrigin := zoBottom;
         frameFrontView.ModelCube.YOrigin := yoSouth;
         acPhastActive.Checked := True;
@@ -3334,9 +3399,12 @@ begin
         acSubdivide.Caption := StrSubdivideGridElem;
         acSubdivide.Hint := StrSubdivideGridEleme;
         btnRunModel.DropDown := nil;
+        miExportShapefile.Caption := StrGridDataToShapef;
       end;
     msModflow, msModflowLGR, msModflowNWT:
       begin
+        frameSideView.Visible := True;
+        splitVertTop.Visible := True;
         frameTopView.ModelCube.ZOrigin := zoTop;
         frameFrontView.ModelCube.YOrigin := yoNorth;
         acModflowActive.Checked := True;
@@ -3344,29 +3412,55 @@ begin
         acSubdivide.Caption := StrSubdivideGridCell;
         acSubdivide.Hint := StrSubdivideGridCells;
         btnRunModel.DropDown := pmExportModel;
+        miExportShapefile.Caption := StrGridDataToShapef;
       end;
     {$IFDEF SUTRA}
     msSutra22:
       begin
+        frameSideView.Visible := False;
+        splitVertTop.Visible := False;
         frameTopView.ModelCube.ZOrigin := zoTop;
-        frameFrontView.ModelCube.YOrigin := yoNorth;
+        frameFrontView.ModelCube.YOrigin := yoSouth;
         acSutraActive.Checked := True;
         acSubdivide.Visible := False;
 //        acSubdivide.Caption := 'Subdivide Grid &Cells...';
 //        acSubdivide.Hint := 'Subdivide grid cells|'
 //          + 'Click down and drag to select cells to be subdivided.';
         btnRunModel.DropDown := nil;
+        miExportShapefile.Caption := StrMeshDataToShapef;
       end;
     {$ENDIF}
     else Assert(False);
   end;
 
+  if frameSideView.Visible and (frameSideView.Left < splitVertTop.Left) then
+  begin
+    splitVertTop.Left := frameSideView.Left;
+  end;
+
   {$IFDEF SUTRA}
-  miGrid.Visible := PhastModel.ModelSelection in [msPhast, msModflow,
+  GridModel := PhastModel.ModelSelection in [msPhast, msModflow,
     msModflowLGR, msModflowNWT];
+  miGrid.Visible := GridModel;
+  acShowGridShell.Visible := GridModel;
+  acShowTopGrid.Visible := GridModel;
+  acShowFrontGrid.Visible := GridModel;
+  acShowSideGrid.Visible := GridModel;
+  acColoredGrid.Visible := GridModel;
+  miShow2DGridlines.Visible := GridModel;
+
+  // This may need to be changed later.
+  acShow3DObjects.Visible := GridModel;
+
+
   miMesh.Visible := PhastModel.ModelSelection = msSutra22;
+  acShowTopMesh.Visible := PhastModel.ModelSelection = msSutra22;
+  acShowFrontMesh.Visible := PhastModel.ModelSelection = msSutra22;
   {$ELSE}
   miMesh.Visible := False;
+  acShowTopMesh.Visible := False;
+  acShowFrontMesh.Visible := False;
+  acNewSutraModel.Visible := False;
   {$ENDIF}
 
   // update the cursors.
@@ -3377,14 +3471,43 @@ begin
   dcSubdivide.RedrawCursor;
   dcSetSpacing.RedrawCursor;
 
+  tbarEditGrid.Visible := PhastModel.ModelSelection in
+    [msPhast, msModflow, msModflowLGR, msModflowNWT];
+  tbarView3D.Visible := tbarEditGrid.Visible;
+
   acImportModelResults.Enabled :=
-    PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
+    PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT
+      {$IFDEF SUTRA}, msSutra22{$ENDIF}];
   {$IFDEF SUTRA}
   acImportSutraModelResults.Enabled :=
     PhastModel.ModelSelection = msSutra22;
   miGriddedData.Enabled :=
     PhastModel.ModelSelection <> msSutra22;
+  tlbMesh.Visible := PhastModel.ModelSelection = msSutra22;
+  tlb3dViewMesh.Visible := PhastModel.ModelSelection = msSutra22;
+  {$ELSE}
+  tlbMesh.Visible := False;
+  tlb3dViewMesh.Visible := False;
   {$ENDIF}
+
+  if tbarEditGrid.Visible then
+  begin
+    tbarEditGrid.Left := MinimumToolbarLeft;
+    tbarCreateScreenObject.Left := tbarEditGrid.Left + tbarEditGrid.Width
+      + ToolbarExtraWidth;
+    tbarView3D.Left := tbarCreateScreenObject.Left
+      + tbarCreateScreenObject.Width + ToolbarExtraWidth;
+  end
+  else
+  begin
+    tlbMesh.Left := MinimumToolbarLeft;
+    tbarCreateScreenObject.Left := tlbMesh.Left + tlbMesh.Width
+      + ToolbarExtraWidth;
+    tlb3dViewMesh.Left := tbarCreateScreenObject.Left
+      + tbarCreateScreenObject.Width + ToolbarExtraWidth;
+    tlb3dViewMesh.Top := tbarCreateScreenObject.Top;
+    tlbMesh.Top := tbarCreateScreenObject.Top;
+  end;
 
   acExportModpath.Enabled :=
     PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT];
@@ -4025,6 +4148,7 @@ begin
   AList.Add(tbCrossSection);
   AList.Add(tbRotateCrossSection);
   AList.Add(tbMoveNodes);
+  AList.Add(btnFishnet);
 
 end;
 
@@ -4404,6 +4528,9 @@ begin
       end;
     end;
     try
+      PhastModel.SutraMesh.UpdateNodeNumbers;
+      PhastModel.SutraMesh.UpdateElementNumbers;
+
       case FileFormat of
         ffAscii:
           begin
@@ -4583,7 +4710,7 @@ begin
 //  begin
 //    Exit;
 //  end;
-  CenterPoint.x := frameTopView.ZoomBox.Width div 2;
+  CenterPoint.x := frameFrontView.ZoomBox.Width div 2;
   CenterPoint.Y := frameTopView.ZoomBox.Height div 2;
   RealCenterPoint.x := frameTopView.ZoomBox.X(CenterPoint.x);
   RealCenterPoint.Y := frameTopView.ZoomBox.Y(CenterPoint.y);
@@ -4691,7 +4818,8 @@ begin
   begin
     Exit;
   end;
-  miOptimizeBandWidth.Enabled := (PhastModel.Mesh <> nil)
+//  miRenumberMesh.Enabled := (PhastModel.Mesh <> nil) ;
+  miRenumberMesh.Enabled := (PhastModel.Mesh <> nil)
     and (PhastModel.Mesh.MeshType = mt3D);
 {$ENDIF}
 end;
@@ -5220,7 +5348,7 @@ begin
   Dec(FSupressDrawing);
   if FSupressDrawing = 0 then
   begin
-    frame3DView.glWidModelView.Invalidate;
+    Invalidate3DView(nil);
   end;
 end;
 
@@ -5379,6 +5507,91 @@ begin
   if frmGridValue <> nil then
   begin
     frmGridValue.CustomizeControls;
+  end;
+end;
+
+procedure TfrmGoPhast.UpdateVerticalExaggeration(VerticalExaggeration: Double);
+var
+  FrontCenter: TPoint2D;
+  SideCenter: TPoint2D;
+  TopCenter: TPoint2D;
+  Temp: TPoint2D;
+begin
+  if VerticalExaggeration = 0 then
+  begin
+    VerticalExaggeration := 1;
+  end;
+
+{$IFDEF SUTRA}
+  if (ModelSelection = msSutra22) and (PhastModel.SutraMesh.MeshType = mtProfile) then
+  begin
+    if (frameTopView <> nil) and (frameTopView.ZoomBox.Exaggeration <>
+      VerticalExaggeration) then
+    begin
+      FrontCenter.X := frameTopView.ZoomBox.X(
+        frameTopView.ZoomBox.Image32.Width div 2);
+      FrontCenter.Y := frameTopView.ZoomBox.Y(
+        frameTopView.ZoomBox.Image32.Height div 2);
+
+      PhastModel.Exaggeration := VerticalExaggeration;
+
+      Temp.X := frameTopView.ZoomBox.X(
+        frameTopView.ZoomBox.Image32.Width div 2);
+      Temp.Y := frameTopView.ZoomBox.Y(
+        frameTopView.ZoomBox.Image32.Height div 2);
+      frameTopView.ZoomBox.OriginX := frameTopView.ZoomBox.OriginX
+        - Temp.X + TopCenter.X;
+      frameTopView.ZoomBox.OriginY := frameTopView.ZoomBox.OriginY
+        - Temp.Y + TopCenter.Y;
+
+      TopDiscretizationChanged := True;
+      AdjustScales;
+    end;
+  end
+  else
+{$ENDIF}
+  begin
+    frameTopView.ZoomBox.Exaggeration := 1;
+    if (frameFrontView <> nil) and (frameFrontView.ZoomBox.Exaggeration <>
+      VerticalExaggeration)
+      or (frameSideView <> nil) and (frameSideView.ZoomBox.Exaggeration <>
+      VerticalExaggeration) then
+    begin
+      FrontCenter.X := frameFrontView.ZoomBox.X(
+        frameFrontView.ZoomBox.Image32.Width div 2);
+      FrontCenter.Y := frameFrontView.ZoomBox.Y(
+        frameFrontView.ZoomBox.Image32.Height div 2);
+      SideCenter.X := frameSideView.ZoomBox.X(
+        frameSideView.ZoomBox.Image32.Width div 2);
+      SideCenter.Y := frameSideView.ZoomBox.Y(
+        frameSideView.ZoomBox.Image32.Height div 2);
+
+      PhastModel.Exaggeration := VerticalExaggeration;
+
+      Temp.X := frameFrontView.ZoomBox.X(
+        frameFrontView.ZoomBox.Image32.Width div 2);
+      Temp.Y := frameFrontView.ZoomBox.Y(
+        frameFrontView.ZoomBox.Image32.Height div 2);
+      frameFrontView.ZoomBox.OriginX := frameFrontView.ZoomBox.OriginX
+        - Temp.X + FrontCenter.X;
+      frameFrontView.ZoomBox.OriginY := frameFrontView.ZoomBox.OriginY
+        - Temp.Y + FrontCenter.Y;
+
+      Temp.X := frameSideView.ZoomBox.X(
+        frameSideView.ZoomBox.Image32.Width div 2);
+      Temp.Y := frameSideView.ZoomBox.Y(
+        frameSideView.ZoomBox.Image32.Height div 2);
+      frameSideView.ZoomBox.OriginX := frameSideView.ZoomBox.OriginX
+        - Temp.X + SideCenter.X;
+      frameSideView.ZoomBox.OriginY := frameSideView.ZoomBox.OriginY
+        - Temp.Y + SideCenter.Y;
+
+      FrontDiscretizationChanged := True;
+      SideDiscretizationChanged := True;
+      frameSideView.ZoomBox.InvalidateImage32;
+      frameFrontView.ZoomBox.InvalidateImage32;
+      AdjustScales;
+    end;
   end;
 end;
 
@@ -5743,7 +5956,7 @@ begin
     // Make sure all buttons except the current one are up.
     SetButtonsUp(tbMoveNodes);
     // Set the cursors.
-    SetZB_Cursors(crSelectPoint);
+    SetZB_Cursors(crMoveNode);
     // don't draw a rectangle around the selected screen objects.
     CurrentTool := MoveSutraNodesTool;
   end
@@ -6388,8 +6601,20 @@ begin
   case Key of
     Key_Escape:
       begin
-        DeleteLastPointInScreenObject;
-        DeleteLastPointInRuler;
+        if CurrentTool = RulerTool then
+        begin
+          DeleteLastPointInRuler;
+        end
+      {$IFDEF SUTRA}
+        else if CurrentTool = FishnetTool then
+        begin
+          FishnetTool.DeleteLastNode;
+        end
+      {$ENDIF}
+        else if CurrentTool is TCustomCreateScreenObjectTool then
+        begin
+          DeleteLastPointInScreenObject;
+        end;
       end;
     Key_Return:
       begin
@@ -6410,6 +6635,16 @@ begin
         begin
           DeleteLastPointInScreenObject;
         end
+      {$IFDEF SUTRA}
+        else if CurrentTool = FishnetTool then
+        begin
+          FishnetTool.DeleteSelectedElement;
+        end
+        else if CurrentTool = MoveSutraNodesTool then
+        begin
+          MoveSutraNodesTool.DeleteSelectedNodesOrElements;
+        end
+      {$ENDIF}
         else
         begin
           DeleteSelectedNodesOrSelectedScreenObjects;
@@ -6540,6 +6775,9 @@ begin
       begin
         ZoomOutTool.MouseUp(Sender, mbLeft, Shift, APoint.X, APoint.Y);
       end;
+    {$IFDEF SUTRA}
+      FishnetTool.HideEdits;
+    {$ENDIF}
     end
     else
     begin
@@ -6569,11 +6807,38 @@ begin
             end;
           faFront:
             begin
-              PhastModel.CombinedDisplayRow :=
-                PhastModel.CombinedDisplayRow
-                - Sign(WheelDelta)*Increment;
-              sbMain.Panels[1].Text := Format(StrSelectedRowD,
-                [PhastModel.SelectedRow + 1]);
+
+            {$IFDEF SUTRA}
+              if ModelSelection = msSutra22 then
+              begin
+                if Assigned(FCubeControl.OnMouseUp) then
+                begin
+                  if Sign(WheelDelta) > 0 then
+                  begin
+                    FCubeControl.OnMouseUp(FCubeControl, mbLeft, Shift,
+                      FCubeControl.Height * 4 div 5, //44,
+                      FCubeControl.Width div 5); // 10
+                  end
+                  else
+                  begin
+                    FCubeControl.OnMouseUp(FCubeControl, mbLeft, Shift,
+                      FCubeControl.Height div 5, // 20,
+                      FCubeControl.Width * 4 div 5); // 30
+                  end;
+                end;
+
+              end
+              else
+              begin
+            {$ENDIF}
+                PhastModel.CombinedDisplayRow :=
+                  PhastModel.CombinedDisplayRow
+                  - Sign(WheelDelta)*Increment;
+                sbMain.Panels[1].Text := Format(StrSelectedRowD,
+                  [PhastModel.SelectedRow + 1]);
+            {$IFDEF SUTRA}
+              end;
+            {$ENDIF}
             end;
           faSide:
             begin
@@ -6805,7 +7070,76 @@ begin
   TopScreenObjectsChanged := True;
   FrontScreenObjectsChanged := True;
   SideScreenObjectsChanged := True;
-  frame3DView.glWidModelView.Invalidate;
+  Invalidate3DView(nil);
+end;
+
+procedure TfrmGoPhast.UpdateFrontCubeForSutraCrossSection(Sender: TObject);
+var
+  Mesh: TSutraMesh3D;
+  CrossSection: TCrossSection;
+  Outline: TPolygon2D;
+  APoint: TPoint2D;
+  PointIndex: Integer;
+  MinY: TFloat;
+  MaxY: TFloat;
+  Fraction: double;
+begin
+{$IFDEF SUTRA}
+  if (ModelSelection <> msSutra22) then
+  begin
+    Exit;
+  end;
+  Mesh := PhastModel.SutraMesh;
+  if (Mesh.MeshType <> mt3D) or (Mesh.Mesh2D.Elements.Count = 0) then
+  begin
+    Exit;
+  end;
+  CrossSection := Mesh.CrossSection;
+  Outline := Mesh.Mesh2D.MeshOutline;
+  APoint := CrossSection.StartPoint;
+  if CrossSection.Angle <> 0 then
+  begin
+    APoint := Mesh.RotateFromRealWorldCoordinatesToMeshCoordinates(APoint);
+    for PointIndex := 0 to Length(Outline) - 1 do
+    begin
+      Outline[PointIndex] :=
+        Mesh.RotateFromRealWorldCoordinatesToMeshCoordinates(Outline[PointIndex]);
+    end;
+  end;
+  MinY := Outline[0].y;
+  MaxY := MinY;
+  for PointIndex := 1 to Length(Outline) - 1 do
+  begin
+    if MinY > Outline[PointIndex].y then
+    begin
+      MinY := Outline[PointIndex].y;
+    end
+    else if MaxY < Outline[PointIndex].y then
+    begin
+      MaxY := Outline[PointIndex].y;
+    end;
+  end;
+  if MinY = MaxY then
+  begin
+    Fraction := 0.5;
+  end
+  else
+  begin
+    Fraction := (APoint.y - MinY)/(MaxY-MinY);
+    if Fraction < 0 then
+    begin
+      Fraction := 0;
+    end
+    else if Fraction > 1 then
+    begin
+      Fraction := 1;
+    end;
+  end;
+//  Fraction := 1-Fraction;
+  frameFrontView.ModelCube.Selection1 := Fraction;
+  frameFrontView.ModelCube.Selection2 := Fraction;
+{$ENDIF}
+
 end;
 
 procedure TfrmGoPhast.SetSideScreenObjectsChanged(const Value: boolean);
@@ -7422,16 +7756,19 @@ var
 begin
   // Set the magnification so that the grid will fill most of the screen.
   frameTopView.ZoomBox.Magnification := 0.9 *
-    Min(frameTopView.ZoomBox.Width / ModelXWidth,
+    Min(frameFrontView.ZoomBox.Width / ModelXWidth,
     frameTopView.ZoomBox.Height / ModelYWidth);
   // the following statement may not be required because the
   // magnification is set in SynchronizeViews.
   if ModelHeight <> 0 then
   begin
-    frameFrontView.ZoomBox.Magnification := 0.9 *
+    frameFrontView.ZoomBox.Magnification := Min(
+      frameTopView.ZoomBox.Magnification,
+      0.9 *
       Min(frameFrontView.ZoomBox.Width / ModelXWidth,
       frameFrontView.ZoomBox.Height /
-      (ModelHeight * frameFrontView.ZoomBox.Exaggeration));
+      (ModelHeight * frameFrontView.ZoomBox.Exaggeration)));
+    frameTopView.ZoomBox.Magnification := frameFrontView.ZoomBox.Magnification;
   end;
 
   LocalGrid := Grid;
@@ -7450,15 +7787,15 @@ begin
   else
   begin
     Mesh := PhastModel.Mesh;
-    MeshLimits := Mesh.MeshLimits(vdTop);
-    X := (MeshLimits.MinX + MeshLimits.MaxX)/2;
-    SetTopPosition(X, (MeshLimits.MinY + MeshLimits.MaxY)/2);
     if Mesh.MeshType = mt3D then
     begin
       MeshLimits := Mesh.MeshLimits(vdFront);
       X := (MeshLimits.MinX + MeshLimits.MaxX)/2;
       SetFrontPosition(X, (MeshLimits.MinZ + MeshLimits.MaxZ)/2);
     end;
+    MeshLimits := Mesh.MeshLimits(vdTop);
+    X := (MeshLimits.MinX + MeshLimits.MaxX)/2;
+    SetTopPosition(X, (MeshLimits.MinY + MeshLimits.MaxY)/2);
   end;
 
   SynchronizeViews(vdTop);
@@ -7694,8 +8031,8 @@ begin
     try
       FileStream := nil;
       try
-        FileStream := TFileStream.Create(FileName, fmOpenReadWrite or fmShareDenyWrite,
-          ReadWritePermissions);
+        FileStream := TFileStream.Create(FileName,
+          fmOpenReadWrite or fmShareDenyWrite, ReadWritePermissions);
       finally
         FileStream.Free;
       end;
@@ -7813,6 +8150,35 @@ begin
   end;
 end;
 
+procedure TfrmGoPhast.acFishnetExecute(Sender: TObject);
+begin
+  inherited;
+  // Toggle the Checked state of the Sender or it's associated action.
+{$IFDEF SUTRA}
+  SetActionChecked(Sender);
+
+  if not (Sender is TToolButton) then
+  begin
+    btnFishnet.OnMouseDown(btnFishnet, mbLeft, [ssLeft], 0, 0);
+  end;
+
+  if btnFishnet.Down then
+  begin
+    // Make sure all buttons except the current one are up.
+    SetButtonsUp(btnFishnet);
+    // Set the cursors.
+    SetZB_Cursors(crFishnet);
+    CurrentTool := FishnetTool;
+  end
+  else
+  begin
+    CurrentTool := nil;
+  end;
+  SelectDefaultButton;
+{$ENDIF}
+
+end;
+
 procedure TfrmGoPhast.AddMostRecentlyUsedFile(const FileName: string);
 begin
   N5.Visible := True;
@@ -7915,6 +8281,7 @@ begin
       FreeAndNil(frmGridValue);
       FreeAndNil(frmLinkStreams);
       FreeAndNil(frmDisplayData);
+      tbSelectClick(tbSelect);
 
       frmFileProgress := TfrmProgressMM.Create(nil);
       FFileStream := TFileStream.Create(FileName,
@@ -8008,6 +8375,7 @@ begin
           PhastModel.SutraMesh.Loading := True;
           PhastModel.SutraMesh.CheckUpdateElevations;
           PhastModel.SutraMesh.Loading := False;
+          PhastModel.FishnetMeshGenerator.Loaded;
           {$ENDIF}
           PhastModel.HeadFluxObservations.Loaded;
           PhastModel.DrainObservations.Loaded;
@@ -8058,6 +8426,7 @@ begin
           begin
             DataArrayManager.DataSets[Index].RestoreUpToDateStatus;
           end;
+          UpdateFrontCubeForSutraCrossSection(Self);
 
           PhastModel.UpToDate := True;
         finally
@@ -8463,15 +8832,19 @@ begin
   {$IFDEF Sutra}
   if ModelSelection = msSutra22 then
   begin
-    PhastModel.GenerateSutraMesh(ErrorMessage);
-    if ErrorMessage <> '' then
+    if ShowAForm(TfrmMeshGenerationControlVariables) = mrOK then
     begin
-      Beep;
-      MessageDlg(ErrorMessage, mtError, [mbOK], 0);
-    end;
-    if SutraMesh <> nil then
-    begin
-      SutraMesh.OnSelectedLayerChange := frameTopView.ItemChange;
+      PhastModel.GenerateSutraMesh(ErrorMessage);
+      if ErrorMessage <> '' then
+      begin
+        Beep;
+        MessageDlg(ErrorMessage, mtError, [mbOK], 0);
+      end;
+      if SutraMesh <> nil then
+      begin
+        SutraMesh.OnSelectedLayerChange := frameTopView.ItemChange;
+      end;
+      UpdateFrontCubeForSutraCrossSection(Self);
     end;
   end
   else
@@ -8995,18 +9368,34 @@ begin
   end;
 end;
 
-procedure TfrmGoPhast.ExportShapefile1Click(Sender: TObject);
+procedure TfrmGoPhast.miExportShapefileClick(Sender: TObject);
+var
+  GridOK: boolean;
+  MeshOK: Boolean;
 begin
   inherited;
-  if (Grid.ColumnCount > 0) and (Grid.RowCount > 0)
-    and (Grid.LayerCount > 0) then
+  GridOK := (Grid <> nil) and (Grid.ColumnCount > 0) and (Grid.RowCount > 0)
+    and (Grid.LayerCount > 0);
+  MeshOK := (PhastModel.Mesh <> nil) and (PhastModel.Mesh.Mesh2d.Nodes.Count > 0);
+  if MeshOK and (PhastModel.Mesh.MeshType = mt3D) then
+  begin
+    MeshOK := PhastModel.Mesh.Nodes.Count > 0;
+  end;
+  if GridOK or MeshOK then
   begin
     ShowAForm(TfrmExportShapefile)
   end
   else
   begin
     Beep;
-    MessageDlg(StrYouMustCreateAGr, mtError, [mbOK], 0);
+    if (Grid <> nil) then
+    begin
+      MessageDlg(StrYouMustCreateAGr, mtError, [mbOK], 0);
+    end
+    else
+    begin
+      MessageDlg(StrYouMustCreateAMe, mtError, [mbOK], 0);
+    end;
   end;
 end;
 
@@ -9530,12 +9919,6 @@ begin
   end;
 end;
 
-procedure TfrmGoPhast.acImportSutraModelResultsExecute(Sender: TObject);
-begin
-  inherited;
-  ShowAForm(TfrmImportSutraModelResults);
-end;
-
 procedure TfrmGoPhast.acImportTprogsExecute(Sender: TObject);
 begin
   inherited;
@@ -9782,41 +10165,57 @@ end;
 
 procedure TfrmGoPhast.tbShellClick(Sender: TObject);
 begin
-  frame3DView.glWidModelView.Invalidate;
+  Invalidate3DView(nil);
 end;
 
 procedure TfrmGoPhast.acShowGridShellExecute(Sender: TObject);
 begin
   acShowGridShell.Checked := not acShowGridShell.Checked;
   tbShell.Down := acShowGridShell.Checked;
-  frame3DView.glWidModelView.Invalidate;
+  Invalidate3DView(nil);
 end;
 
 procedure TfrmGoPhast.acShowTopGridExecute(Sender: TObject);
 begin
   acShowTopGrid.Checked := not acShowTopGrid.Checked;
   tbTopGrid.Down := acShowTopGrid.Checked;
-  frame3DView.glWidModelView.Invalidate;
+  Invalidate3DView(nil);
+end;
+
+procedure TfrmGoPhast.acShowTopMeshExecute(Sender: TObject);
+begin
+  inherited;
+  acShowTopMesh.Checked := not acShowTopMesh.Checked;
+  btnShowTopMesh.Down := acShowTopMesh.Checked;
+  Invalidate3DView(nil);
 end;
 
 procedure TfrmGoPhast.acShowFrontGridExecute(Sender: TObject);
 begin
   acShowFrontGrid.Checked := not acShowFrontGrid.Checked;
   tbFrontGrid.Down := acShowFrontGrid.Checked;
-  frame3DView.glWidModelView.Invalidate;
+  Invalidate3DView(nil);
+end;
+
+procedure TfrmGoPhast.acShowFrontMeshExecute(Sender: TObject);
+begin
+  inherited;
+  acShowFrontMesh.Checked := not acShowFrontMesh.Checked;
+  btnShowFrontMesh.Down := acShowFrontMesh.Checked;
+  Invalidate3DView(nil);
 end;
 
 procedure TfrmGoPhast.acShowSideGridExecute(Sender: TObject);
 begin
   acShowSideGrid.Checked := not acShowSideGrid.Checked;
   tbSideGrid.Down := acShowSideGrid.Checked;
-  frame3DView.glWidModelView.Invalidate;
+  Invalidate3DView(nil);
 end;
 
 procedure TfrmGoPhast.acRestoreDefaultViewExecute(Sender: TObject);
 begin
   frame3DView.SetDefaultOrientation;
-  frame3DView.glWidModelView.Invalidate;
+  Invalidate3DView(nil);
 end;
 
 procedure TfrmGoPhast.acMeasureExecute(Sender: TObject);
@@ -10092,10 +10491,18 @@ var
   Options: TSutraOptions;
 begin
   inherited;
-  if PhastModel.SutraMesh = nil then
+  if (PhastModel.SutraMesh = nil)
+    or (PhastModel.SutraMesh.Mesh2D.Elements.Count = 0) then
   begin
     Beep;
     MessageDlg(StrYouMustGenerateTh, mtError, [mbOK], 0);
+    Exit;
+  end
+  else if (PhastModel.SutraMesh.MeshType = mt3D)
+    and (PhastModel.SutraMesh.Elements.Count = 0) then
+  begin
+    Beep;
+    MessageDlg(StrYouMustGenerate3D, mtError, [mbOK], 0);
     Exit;
   end;
   Options := PhastModel.SutraOptions;
@@ -10154,7 +10561,7 @@ procedure TfrmGoPhast.tb3DObjectsClick(Sender: TObject);
 begin
   acShow3DObjects.Checked := not acShow3DObjects.Checked;
   tb3DObjects.Down := acShow3DObjects.Checked;
-  frame3DView.glWidModelView.Invalidate;
+  Invalidate3DView(nil);
   UpdateDisplay(nil);
 end;
 
@@ -10370,15 +10777,55 @@ begin
   end;
 end;
 
-procedure TfrmGoPhast.miOptimizeBandwidthClick(Sender: TObject);
+procedure TfrmGoPhast.miRenumberMeshClick(Sender: TObject);
 var
   Mesh: TSutraMesh3D;
+  AForm: TfrmRenumberingMethod;
+  OldBandWidth: Integer;
+  NewBandWidth: Integer;
+  Undo: TUndoRenumberMesh;
 begin
   inherited;
   Mesh := PhastModel.SutraMesh;
+//  RenumberMesh(Mesh.Mesh2D);
   if Mesh.MeshType = mt3D then
   begin
-    RenumberMesh(Mesh);
+    AForm := TfrmRenumberingMethod.Create(nil);
+    try
+      AForm.rgMethod.ItemIndex := FRenumberMethod;
+      if AForm.ShowModal = mrOK then
+      begin
+        Screen.Cursor := crHourGlass;
+        try
+          FRenumberMethod := AForm.rgMethod.ItemIndex;
+          OldBandWidth := Mesh.Bandwidth;
+          Assert(FRenumberMethod in [0,1]);
+          try
+            Undo := TUndoRenumberMesh.Create;
+            case FRenumberMethod of
+              0: Mesh.SimpleRenumber;
+              1: RenumberMesh(Mesh);
+              else Assert(False);
+            end;
+            Undo.UpdateNumbers;
+            UndoStack.Submit(Undo);
+          except
+            Undo.Free;
+            raise
+          end;
+          NewBandWidth := Mesh.Bandwidth;
+        finally
+          Screen.Cursor := crDefault;
+          frameTopView.MagnificationChanged := True;
+          frameFrontView.MagnificationChanged := True;
+          InvalidateAllViews;
+        end;
+        MessageDlg(Format(StrTheBandwidthHasCh, [OldBandWidth, NewBandWidth]),
+          mtInformation, [mbOK], 0);
+      end;
+    finally
+      AForm.Free;
+    end;
   end;
 end;
 

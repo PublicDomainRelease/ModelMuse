@@ -196,7 +196,7 @@ const
 implementation
 
 uses Math, CalCompRoutines, Classes, Contnrs, QuadTreeClass, FastGEO,
-  Generics.Collections, IntListUnit, Generics.Defaults;
+  Generics.Collections, IntListUnit, Generics.Defaults, Dialogs;
 
 
 Type
@@ -1288,8 +1288,26 @@ begin
       end;
     end;
     JPD0 :=5*IP0;
-    PD[JPD0] :=-NMX/NMZ;
-    PD[JPD0+1] :=-NMY/NMZ;
+//    if NMZ = 0 then
+//    begin
+//      ShowMessage(IntToStr(IP0));
+//    end;
+    if NMX = 0 then
+    begin
+      PD[JPD0] := 0;
+    end
+    else
+    begin
+      PD[JPD0] :=-NMX/NMZ;
+    end;
+    if NMY = 0 then
+    begin
+      PD[JPD0+1] := 0;
+    end
+    else
+    begin
+      PD[JPD0+1] :=-NMY/NMZ;
+    end;
  end;
  for IP0 := 0 to NDP0-1 do
  begin
@@ -1349,9 +1367,32 @@ begin
         NMZ  :=NMZ +DNMZ;
       end;
     end;
-    PD[JPD0+2] :=-NMXX/NMZ;
-    PD[JPD0+3] :=-(NMXY+NMYX)/(2.0*NMZ);
-    PD[JPD0+4]  :=-NMYY/NMZ;
+    if NMXX = 0 then
+    begin
+      PD[JPD0+2] := 0;
+    end
+    else
+    begin
+      PD[JPD0+2] :=-NMXX/NMZ;
+    end;
+
+    if (NMXY+NMYX) = 0 then
+    begin
+      PD[JPD0+3] := 0
+    end
+    else
+    begin
+      PD[JPD0+3] :=-(NMXY+NMYX)/(2.0*NMZ);
+    end;
+
+    if NMYY = 0 then
+    begin
+      PD[JPD0+4]  := 0;
+    end
+    else
+    begin
+      PD[JPD0+4]  :=-NMYY/NMZ;
+    end;
   end;
 end;
 

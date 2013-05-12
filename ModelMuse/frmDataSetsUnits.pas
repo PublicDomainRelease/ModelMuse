@@ -64,6 +64,7 @@ Type
     FComment: string;
     FNotifier: TEditorNotifierComponent;
     FDisplayName: string;
+    FAngleType: TAngleType;
     procedure SetTwoDInterpolator(const Value: TCustom2DInterpolater);
     procedure SetInterpValues(const Value: TPhastInterpolationValues);
     procedure SetNewUses(const Value: TStringList);
@@ -80,6 +81,7 @@ Type
       write FOrientation;
     property EvaluatedAt: TEvaluatedAt read FEvaluatedAt write FEvaluatedAt;
     property Units: string read FUnits write FUnits;
+    property AngleType: TAngleType read FAngleType write FAngleType;
     property Formula: string read FFormula write FFormula;
     property TwoDInterpolator: TCustom2DInterpolater read FTwoDInterpolator
       write SetTwoDInterpolator;
@@ -176,7 +178,6 @@ Type
     lblEvaluatedAt: TLabel;
     lblUnits: TLabel;
     comboEvaluatedAt: TJvImageComboBox;
-    edUnits: TRbwEdit;
     lblInterpolation: TLabel;
     lblAnisotropy: TLabel;
     comboInterpolation: TJvImageComboBox;
@@ -195,6 +196,8 @@ Type
     Splitter2: TSplitter;
     reDefaultFormula: TRichEdit;
     reComment: TRichEdit;
+    // @name displays the units with which the selected data set is measured.
+    comboUnits: TComboBox;
     // @name adds a new @link(TDataArray) at the end of @link(tvDataSets).
     procedure btnAddClick(Sender: TObject);
     // @name closes the @classname without making any changes to the
@@ -248,8 +251,6 @@ Type
     procedure comboOrientationChange(Sender: TObject);
     // See @link(comboEvaluatedAt).
     procedure comboEvaluatedAtChange(Sender: TObject);
-    // See @link(edUnits).
-    procedure edUnitsChange(Sender: TObject);
     // See @link(comboInterpolation).
     procedure comboInterpolationChange(Sender: TObject);
     // See @link(reDefaultFormula).
@@ -264,6 +265,7 @@ Type
     procedure FormActivate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure reCommentEnter(Sender: TObject);
+    procedure comboUnitsChange(Sender: TObject);
   private
     { @name is the @link(TCustom2DInterpolater) of the currently
       selected @link(TDataArray).
@@ -497,6 +499,10 @@ begin
 
   reDefaultFormula.DoubleBuffered := False;
   reComment.DoubleBuffered := False;
+
+{$IFNDEF SUTRA}
+  comboUnits.Items.Clear;
+{$ENDIF}
 end;
 
 
@@ -569,6 +575,7 @@ begin
     DataEdit.Orientation := dsoTop;
     DataEdit.EvaluatedAt := eaBlocks;
     DataEdit.Units := '';
+    DataEdit.AngleType := atNone;
     DataEdit.Formula := '0';
     DataEdit.TwoDInterpolator := nil;
   finally
@@ -1111,6 +1118,7 @@ begin
 
           DataStorage.Datatype := ArrayEdit.Datatype;
           DataStorage.Units := ArrayEdit.Units;
+          DataStorage.AngleType := ArrayEdit.AngleType;
 
           DataStorage.TwoDInterpolator := ArrayEdit.TwoDInterpolator;
           DataStorage.Formula := ArrayEdit.Formula;
@@ -1848,15 +1856,15 @@ begin
   end;
 end;
 
-procedure TfrmDataSets.edUnitsChange(Sender: TObject);
-begin
-  inherited;
-  if FLoading or (SelectedEdit = nil) then
-  begin
-    Exit;
-  end;
-  SelectedEdit.Units := edUnits.Text;
-end;
+//procedure TfrmDataSets.edUnitsChange(Sender: TObject);
+//begin
+//  inherited;
+//  if FLoading or (SelectedEdit = nil) then
+//  begin
+//    Exit;
+//  end;
+//  SelectedEdit.Units := edUnits.Text;
+//end;
 
 procedure TfrmDataSets.EnableOK_Button(ForceCheck: boolean = False);
 var
@@ -2115,8 +2123,11 @@ begin
 
   if FSelectedEdit.FDataArray <> nil then
   begin
-    ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
-    if ActiveDataSet.IsListeningTo(FSelectedEdit.FDataArray) then
+    ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.
+      GetDataSetByName(rsActive);
+
+    if (ActiveDataSet <> nil) and
+      ActiveDataSet.IsListeningTo(FSelectedEdit.FDataArray) then
     begin
       OK_Var.ActiveOK := False;
     end;
@@ -2672,7 +2683,8 @@ begin
       comboType.Enabled := False;
       comboOrientation.Enabled := False;
       comboEvaluatedAt.Enabled := False;
-      edUnits.Enabled := False;
+//      edUnits.Enabled := False;
+      comboUnits.Enabled := False;
       comboInterpolation.Enabled := False;
       rdeAnisotropy.Enabled := False;
       reDefaultFormula.Enabled := False;
@@ -2705,9 +2717,20 @@ begin
         and ((FSelectedEdit.DataArray = nil)
         or not (dcEvaluatedAt in FSelectedEdit.DataArray.Lock));
 
-      edUnits.Text := FSelectedEdit.Units;
-      edUnits.Enabled := (FSelectedEdit.DataArray = nil)
+//      edUnits.Text := FSelectedEdit.Units;
+//      edUnits.Enabled := (FSelectedEdit.DataArray = nil)
+//        or not (dcUnits in FSelectedEdit.DataArray.Lock);
+
+      comboUnits.Text := FSelectedEdit.Units;
+      comboUnits.Enabled := (FSelectedEdit.DataArray = nil)
         or not (dcUnits in FSelectedEdit.DataArray.Lock);
+
+    {$IFDEF SUTRA}
+      if FSelectedEdit.AngleType <> atNone then
+      begin
+        comboUnits.Text := comboUnits.Items[Ord(FSelectedEdit.AngleType)-1];
+      end;
+    {$ENDIF}
 
       UpdateInterpolationChoice(FSelectedEdit);
       comboInterpolation.Enabled := (comboInterpolation.Items.Count > 1)
@@ -3287,6 +3310,7 @@ begin
     Orientation := FDataArray.Orientation;
     EvaluatedAt := FDataArray.EvaluatedAt;
     Units := FDataArray.Units;
+    AngleType := FDataArray.AngleType;
     Formula := FDataArray.DisplayFormula;
     TwoDInterpolator := FDataArray.TwoDInterpolator;
     Comment := FDataArray.Comment;
@@ -3428,6 +3452,18 @@ begin
     FEditor.FExpression := nil;
   end;
   inherited;
+end;
+
+procedure TfrmDataSets.comboUnitsChange(Sender: TObject);
+begin
+  inherited;
+  if FLoading or (SelectedEdit = nil) then
+  begin
+    Exit;
+  end;
+  SelectedEdit.Units := comboUnits.Text;
+  SelectedEdit.AngleType := TAngleType(comboUnits.ItemIndex+1)
+
 end;
 
 end.

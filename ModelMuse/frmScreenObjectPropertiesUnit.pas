@@ -287,6 +287,7 @@ type
     frameSutraFluidFlux: TframeSutraBoundary;
     frameSutraMassEnergyFlux: TframeSutraBoundary;
     jvspSutraBlank: TJvStandardPage;
+    cbDuplicatesAllowed: TCheckBox;
     // @name changes which check image is displayed for the selected item
     // in @link(jvtlModflowBoundaryNavigator).
     procedure jvtlModflowBoundaryNavigatorMouseDown(Sender: TObject;
@@ -490,6 +491,7 @@ type
     procedure frameSutraObservationsedNameExit(Sender: TObject);
     procedure SutraBoundaryButtonClick(
       Sender: TObject; ACol, ARow: Integer);
+    procedure cbDuplicatesAllowedClick(Sender: TObject);
   published
     // Clicking @name closes the @classname without changing anything.
     // See @link(btnCancelClick),
@@ -1763,6 +1765,8 @@ type
     procedure CreateSutraFluidFluxNode;
     procedure CreateSutraMassEnergyFluxNode;
     procedure SetSelectedSutraBoundaryNode;
+    procedure GetDuplicatesAllowedForAdditionalObject(
+      AScreenObject: TScreenObject);
 
     // @name is set to @true when the @classname has stored values of the
     // @link(TScreenObject)s being edited.
@@ -2076,6 +2080,7 @@ resourcestring
   'closed cells" nor "Set properties of intersected cells" is checked.'#13#10 +
   #13#10'Is this really what you want?';
   StrSutraObservations = 'Sutra Observations';
+  StrDuplicateSAllowed = 'Duplicate %s allowed';
 //  StrMassOrEnergyFlux = 'Mass or Energy Flux';
 
 {$R *.dfm}
@@ -2923,6 +2928,9 @@ begin
   EdName.Text := FScreenObject.Name;
   GetColorDataForSingleObject;
   GetAssignmentMethodForSingleObject;
+  cbDuplicatesAllowed.Checked := FScreenObject.DuplicatesAllowed;
+  cbDuplicatesAllowed.AllowGrayed := False;
+
 
   // Set AllowGrayed.
   MultipleScreenObjects := False;
@@ -3801,6 +3809,23 @@ begin
   SetGageNodeStateIndex;
 end;
 
+procedure TfrmScreenObjectProperties.cbDuplicatesAllowedClick(Sender: TObject);
+var
+  Index: Integer;
+  Item: TScreenObjectEditItem;
+begin
+  inherited;
+  DisableAllowGrayed(cbDuplicatesAllowed);
+  if IsLoaded then
+  begin
+    for Index := 0 to FNewProperties.Count - 1 do
+    begin
+      Item := FNewProperties[Index];
+      Item.ScreenObject.DuplicatesAllowed := cbDuplicatesAllowed.Checked;
+    end;
+  end;
+end;
+
 procedure TfrmScreenObjectProperties.cbEnclosedCellsClick(Sender: TObject);
 var
   Index: integer;
@@ -4330,6 +4355,7 @@ begin
         GetColorDataForAdditionalObject(AScreenObject);
         GetAssignmentMethodForAdditionalObject(AScreenObject);
         GetIFaceForAdditionalObject(AScreenObject);
+        GetDuplicatesAllowedForAdditionalObject(AScreenObject);
 
         GetPhastBoundaryConditionsForAdditionalObjects(AScreenObject, TempType);
       end;
@@ -4406,7 +4432,7 @@ begin
   result := (LocalModel.ModelSelection = msSutra22)
     and (LocalModel.SutraMesh <> nil)
     and (rgEvaluatedAt.ItemIndex = Ord(eaNodes))
-    and ((LocalModel.SutraMesh.MeshType = mt2D)
+    and ((LocalModel.SutraMesh.MeshType in [mt2D, mtProfile])
     or (rgElevationCount.ItemIndex in [1, 2]));
   {$ELSE}
     result := False;
@@ -7120,6 +7146,18 @@ begin
   end;
 end;
 
+procedure TfrmScreenObjectProperties.GetDuplicatesAllowedForAdditionalObject
+  (AScreenObject: TScreenObject);
+begin
+  if cbDuplicatesAllowed.Checked <> AScreenObject.DuplicatesAllowed then
+  begin
+    cbDuplicatesAllowed.AllowGrayed := True;
+    cbDuplicatesAllowed.State := cbGrayed;
+    cbEnclosedCellsClick(nil);
+  end;
+end;
+
+
 procedure TfrmScreenObjectProperties.GetAssignmentMethodForAdditionalObject(AScreenObject: TScreenObject);
 begin
   if AScreenObject.Closed then
@@ -8710,7 +8748,7 @@ begin
   LocalModel := frmGoPhast.PhastModel;
   if (LocalModel.ModelSelection = msSutra22)
     and (LocalModel.SutraMesh <> nil)
-    and ((LocalModel.SutraMesh.MeshType = mt2D)
+    and ((LocalModel.SutraMesh.MeshType in [mt2D, mtProfile])
     or (rgElevationCount.ItemIndex in [1,2])) then
   begin
     Node := jvpltvSutraFeatures.Items.AddChild(nil,
@@ -8728,14 +8766,28 @@ procedure TfrmScreenObjectProperties.CreateSutraSpecPressNode;
   {$IFDEF SUTRA}
 var
   Node: TJvPageIndexNode;
+  NodeName: string;
   {$ENDIF}
 begin
   FSutraSpecPressure_Node := nil;
   {$IFDEF SUTRA}
   if ShouldCreateSutraBoundary then
   begin
+    NodeName := '';
+    case frmGoPhast.PhastModel.SutraOptions.TransportChoice of
+      tcSolute, tcEnergy:
+        begin
+          NodeName := StrSpecifiedPressure;
+        end;
+      tcSoluteHead:
+        begin
+          NodeName := StrSutraSpecifiedHead;
+        end;
+      else
+        Assert(False);
+    end;
     Node := jvpltvSutraFeatures.Items.AddChild(nil,
-      StrSpecifiedPressure) as TJvPageIndexNode;
+      NodeName) as TJvPageIndexNode;
     Node.PageIndex := jvspSutraSpecifiedPressure.PageIndex;
     frameSutraSpecifiedPressure.pnlCaption.Caption := Node.Text;
     Node.ImageIndex := 1;
@@ -13743,6 +13795,7 @@ begin
   cbEnclosedCells.Caption := rsSetValueOfEnclosed + NodeElemString;
   cbIntersectedCells.Caption := rsSetValueOfIntersected + NodeElemString;
   cbInterpolation.Caption := rsSetValueOf + NodeElemString + rsByInterpolation;
+  cbDuplicatesAllowed.Caption := Format(StrDuplicateSAllowed, [NodeElemString]);
   case frmGoPhast.ModelSelection of
     msUndefined, msPhast:
       begin

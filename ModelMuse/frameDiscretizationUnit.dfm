@@ -98,13 +98,15 @@ object frameDiscretization: TframeDiscretization
       object lbl3: TLabel
         Left = 0
         Top = 0
-        Width = 153
-        Height = 13
+        Width = 185
+        Height = 41
         Align = alClient
         Alignment = taCenter
         Caption = 'Discretization within layer group'
         Layout = tlCenter
         WordWrap = True
+        ExplicitWidth = 153
+        ExplicitHeight = 13
       end
     end
     object pnlPaintboxParent: TPanel

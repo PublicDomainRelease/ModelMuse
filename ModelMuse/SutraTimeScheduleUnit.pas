@@ -240,7 +240,7 @@ type
 implementation
 
 uses
-  SysUtils, frmGoPhastUnit, ScreenObjectUnit, SutraBoundariesUnit;
+  SysUtils, frmGoPhastUnit, ScreenObjectUnit, SutraBoundariesUnit, Math;
 
 resourcestring
   StrASchedule = 'A_Schedule';
@@ -625,7 +625,7 @@ begin
         TimeSteps := AllSchedules[0].Schedule.TimeValues(InitialTime,
           AllSchedules);
 
-        SetLength(result, MaxSteps);
+        SetLength(result, Min(MaxSteps, Length(TimeSteps)));
         TimeIndex := InitialTimeStep;
         TimeCount := 0;
         while (TimeCount >= 0) and (TimeCount < Length(result)) do

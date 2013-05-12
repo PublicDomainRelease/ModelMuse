@@ -293,6 +293,7 @@ resourcestring
   StrGAGEGagePackage = 'GAGE: Gage package';
   StrReturnLocationFor = 'Return location for ';
   StrSpecifiedPressure = 'Specified Pressure';
+  StrSpecifiedHead = 'Specified Head';
   StrSpecifiedConcentrat = 'Specified Concentration';
   StrSpecifiedTemperatur = 'Specified Temperature';
   StrFluidFlux = 'Fluid Flux';
@@ -529,7 +530,11 @@ begin
     end
     else if Node = FvstSutraSpecPressure then
     begin
-      Data.Caption := StrSpecifiedPressure;
+      case SutraOptions.TransportChoice of
+        tcSolute, tcEnergy: Data.Caption := StrSpecifiedPressure;
+        tcSoluteHead: Data.Caption := StrSpecifiedHead;
+        else Assert(False);
+      end;
       Node.CheckType := ctTriStateCheckBox;
     end
     else if Node = FvstSutraSpecU then

@@ -7,14 +7,14 @@ uses
   Generics.Collections, Generics.Defaults;
 
 type
-  TStoredResults = record
+  TStoredResults = class(TObject)
     TimeStep: Integer;
     Time: double;
   end;
 
   TStoredResultsArray = array of TStoredResults;
 
-  TStoredResultsList = TList<TStoredResults>;
+  TStoredResultsList = TObjectList<TStoredResults>;
 
   TStoredResultsComparer = TComparer<TStoredResults>;
 
@@ -22,7 +22,7 @@ type
   private
     FReader: TStreamReader;
     FSplitter: TStringList;
-    FStoredResults: TStoredResultsArray;
+    FStoredResults: TStoredResultsList;
     FCount: integer;
     FCurrentTimeStep: Integer;
     procedure ReadHeader;
@@ -34,7 +34,7 @@ type
   public
     constructor Create(const FileName: string);
     destructor Destroy; override;
-    property StoredResults: TStoredResultsArray read FStoredResults;
+    property StoredResults: TStoredResultsList read FStoredResults;
     property Count: Integer read FCount;
     procedure ReadNextResults;
     procedure SkipNextResults;
@@ -102,6 +102,7 @@ begin
   FSplitter := TStringList.Create;
   FSplitter.Delimiter := ' ';
   FCurrentTimeStep := -1;
+  FStoredResults:= TStoredResultsList.Create;
   ReadHeader;
 end;
 
@@ -109,6 +110,7 @@ destructor TCustomSutraOutputReader.Destroy;
 begin
   FSplitter.Free;
   FReader.Free;
+  FStoredResults.Free;
   inherited;
 end;
 
@@ -125,6 +127,7 @@ var
   TimeStepsIndex: Integer;
   TimeStepCount: Integer;
   StoredDecimalSeparator: Char;
+  StoredR: TStoredResults;
 begin
   StoredDecimalSeparator := FormatSettings.DecimalSeparator;
   FormatSettings.DecimalSeparator := '.';
@@ -146,7 +149,8 @@ begin
     TimeStepsIndex := FSplitter.IndexOf('Time')-1;
     Assert(TimeStepsIndex >= 0);
     TimeStepCount := StrToInt(FSplitter[TimeStepsIndex]);
-    SetLength(FStoredResults, TimeStepCount);
+    FStoredResults.Capacity := TimeStepCount;
+//    SetLength(FStoredResults, TimeStepCount);
 
     for LineIndex := 0 to SkipLines3 - 1 do
     begin
@@ -155,8 +159,10 @@ begin
     for LineIndex := 0 to TimeStepCount-1 do
     begin
       FSplitter.Delimitedtext := FReader.ReadLine;
-      FStoredResults[LineIndex].TimeStep := StrToInt(FSplitter[TimeStepPosition]);
-      FStoredResults[LineIndex].Time := FortranStrToFloat(FSplitter[TimePosition]);
+      StoredR := TStoredResults.Create;
+      FStoredResults.Add(StoredR);
+      StoredR.TimeStep := StrToInt(FSplitter[TimeStepPosition]);
+      StoredR.Time := FortranStrToFloat(FSplitter[TimePosition]);
     end;
   finally
     FormatSettings.DecimalSeparator := StoredDecimalSeparator;

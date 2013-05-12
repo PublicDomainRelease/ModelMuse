@@ -71,6 +71,7 @@ resourcestring
   StrProgress = 'Progress';
   StrSampledFromDEMFil = 'Sampled from DEM files using ';
   StrNoneOfThePointsI = 'None of the points in the DEM are inside the grid.';
+  StrMeshNoneOfThePoints = 'None of the points in the DEM are inside the mesh.';
 
 {$R *.dfm}
 
@@ -445,7 +446,14 @@ begin
           if AScreenObject.Count = 0 then
           begin
             Beep;
-            MessageDlg(StrNoneOfThePointsI, mtError, [mbOK], 0);
+            if Grid <> nil then
+            begin
+              MessageDlg(StrNoneOfThePointsI, mtError, [mbOK], 0);
+            end
+            else
+            begin
+              MessageDlg(StrMeshNoneOfThePoints, mtError, [mbOK], 0);
+            end;
             AScreenObject.Free;
           end
           else

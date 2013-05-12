@@ -962,7 +962,10 @@ implementation
 uses
   Contnrs, frmGoPhastUnit, FastGEO, ZoomBox2, ModflowGridUnit, BigCanvasMethods,
   ModelMuseUtilities, PhastModelUnit, frmExportShapefileUnit,
-  ShapefileUnit, AbstractGridUnit;
+  ShapefileUnit, AbstractGridUnit, Dialogs;
+
+resourcestring
+  StrAbortingTheNumber = 'Aborting. The number of endpoints is zero.';
 
 const
   StrSTARTLAY: AnsiString = 'START_LAY';
@@ -2438,8 +2441,8 @@ begin
   end;
   if Limits.TrackingTimeLimits.UseLimit then
   begin
-    result := (Limits.TrackingTimeLimits.StartLimit <= Time)
-      and (Time <= Limits.TrackingTimeLimits.EndLimit);
+    result := (Limits.TrackingTimeLimits.StartLimit <= TrackingTime)
+      and (TrackingTime <= Limits.TrackingTimeLimits.EndLimit);
     if not result then Exit;
   end;
 
@@ -2769,10 +2772,16 @@ begin
       end;
       AColor := GetPointColor(MaxValue, MinValue, EndPoint);
       AColor32 := Color32(AColor);
-      ARect.Top := ADisplayPoint.Y -2;
-      ARect.Bottom := ADisplayPoint.Y +2;
-      ARect.Left := ADisplayPoint.X -2;
-      ARect.Right := ADisplayPoint.X +2;
+      try
+        ARect.Top := ADisplayPoint.Y -2;
+        ARect.Bottom := ADisplayPoint.Y +2;
+        ARect.Left := ADisplayPoint.X -2;
+        ARect.Right := ADisplayPoint.X +2;
+      except on EIntOverflow do
+        begin
+          Continue;
+        end;
+      end;
       DrawBigRectangle32(BitMap, AColor32, AColor32, 1, ARect);
     end;
   end;
@@ -3445,6 +3454,13 @@ begin
     ZoneTerminated := StrToInt(Splitter[3]);
     Unreleased := StrToInt(Splitter[4]);
     Stranded := StrToInt(Splitter[5]);
+
+    if TotalCount = 0 then
+    begin
+      Beep;
+      MessageDlg(StrAbortingTheNumber, mtWarning, [mbOK], 0);
+      Exit;
+    end;
 
     // line 4
     Readln(FTextFile, GroupCount);

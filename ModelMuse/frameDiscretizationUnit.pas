@@ -75,6 +75,7 @@ type
     procedure SetControlValues;
     constructor Create(AnOwner: TComponent); override;
     destructor Destroy; override;
+    // List must contain Link(TGrowthControls)s.
     procedure UpdateSelectedUnits(List: TList);
     procedure Loaded; override;
     { Public declarations }
@@ -163,7 +164,7 @@ end;
 procedure TframeDiscretization.InsertLine(Y: integer);
 var
   NumLayers: integer;
-  LayerGroup: TCustomLayerGroup;
+  LayerGroup: TGrowthControls;
   LayerIndex: integer;
 begin
   rgMethod.ItemIndex := Integer(gmCustom);
@@ -311,7 +312,7 @@ end;
 procedure TframeDiscretization.rdeGrowthRateExit(Sender: TObject);
 var
   Index: integer;
-  SelectedUnit: TCustomLayerGroup;
+  SelectedUnit: TGrowthControls;
 begin
   inherited;
   if not FSettingUnit then
@@ -430,7 +431,7 @@ var
   Index: Integer;
   Fractions: TRealArray;
   LayerIndex: Integer;
-  LayerGroup: TCustomLayerGroup;
+  LayerGroup: TGrowthControls;
 begin
   for LayerIndex := 0 to FSelectedUnits.Count - 1 do
   begin
@@ -456,7 +457,7 @@ end;
 procedure TframeDiscretization.rgMethodClick(Sender: TObject);
 var
   Index: integer;
-  SelectedUnit: TCustomLayerGroup;
+  SelectedUnit: TGrowthControls;
 begin
   inherited;
   EnableGrowthRateControl;
@@ -476,8 +477,8 @@ end;
 
 procedure TframeDiscretization.SetControlValues;
 var
-  SelectedUnit: TCustomLayerGroup;
-  FirstUnit: TCustomLayerGroup;
+  SelectedUnit: TGrowthControls;
+  FirstUnit: TGrowthControls;
   Same: boolean;
   procedure AssignGrowthRate;
   var
@@ -730,7 +731,7 @@ begin
               begin
                 Fractions[SubLayers - 2 - Index] := Sum;
                 CurrentLength := CurrentLength / GrowthRate;
-               Sum := Sum + CurrentLength;
+                Sum := Sum + CurrentLength;
               end;
               for Index := 0 to SubLayers - 2 do
               begin
@@ -870,7 +871,7 @@ var
   Fractions: TRealArray;
   Index: integer;
   LayerFraction: TLayerFraction;
-  SelectedUnit: TCustomLayerGroup;
+  SelectedUnit: TGrowthControls;
   GroupIndex: integer;
   LayerCount: integer;
 begin
@@ -907,6 +908,7 @@ end;
 
 procedure TframeDiscretization.UpdateSelectedUnits(List: TList);
 begin
+  // List must contain TGrowthControls s
   FSelectedUnits.Assign(List);
 end;
 

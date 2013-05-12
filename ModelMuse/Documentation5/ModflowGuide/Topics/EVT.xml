@@ -35,7 +35,7 @@
     <header>
       <para styleclass="Heading1"><text styleclass="Heading1" translate="true">EVT - Evapotranspiration Package</text></para>
     </header>
-    <para styleclass="Table Header"><table rowcount="6" colcount="2" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Table Header"><table rowcount="7" colcount="2" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td style="vertical-align:middle;">
           <para styleclass="Table Header"><snippet src="Abbreviation"/></para>
@@ -57,7 +57,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Citation" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/usgspubs/ofr/ofr200092" target="_blank" styleclass="Citation" translate="true">Harbaugh, A.W., Banta, E.R., Hill, M.C., and McDonald, M.G., 2000, MODFLOW-2000, the U.S. Geological Survey modular ground-water model -- User guide to modularization concepts and the Ground-Water Flow Process: U.S. Geological Survey Open-File Report 00-92, 121 p.</link></li>
             <li styleclass="Citation"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/usgspubs/wri/wri004167" target="_blank" styleclass="Citation" translate="true">Merritt, M.L., and Konikow, L.F., 2000, Documentation of a Computer Program to Simulate Lake-Aquifer Interaction Using the MODFLOW Ground-Water Flow Model and the MOC3D Solute-Transport Model: U.S. Geological Survey Water-Resources Investigations Report 00-4167, 146 p.</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="Time-varying-parameters.pdf" styleclass="Normal" translate="true">Time-varying-parameters.pdf</link></li>
@@ -77,17 +77,25 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
           </list>
-          <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
           </list>
-          <list id="30" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="17" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
           </list>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:middle;">
+          <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Common Errors</text></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Evapotranspiration is applied to the wrong cells because </text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="NEVTOP" styleclass="Normal" translate="true">NEVTOP</link><text styleclass="Normal" translate="true"> was not set correctly.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -95,7 +103,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Other Notes</text></para>
         </td>
         <td>
-          <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="18" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="New Materials" translate="true">The </text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" styleclass="New Materials" translate="true">UZF</link><conditional-text type="ELSE"/><text styleclass="New Materials" translate="true">UZF (not included in MODFLOW-2000)</text><conditional-text type="END"/><text styleclass="New Materials" translate="true"> package simulates evapotranspiration so the EVT package should not be included in a model that includes the </text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/><link displaytype="text" defaultstyle="true" type="topiclink" href="UZF_Unsaturated-Zone_Flow_Pack" styleclass="New Materials" translate="true">UZF</link><conditional-text type="ELSE"/><text styleclass="New Materials" translate="true">UZF</text><conditional-text type="END"/><text styleclass="New Materials" translate="true"> package.</text></li>
           </list>
         </td>
@@ -159,7 +167,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="NEVTOP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">NEVTOP—is the evapotranspiration (ET) option code. ET variables (ET surface, maximum ET rate, and extinction depth) are specified in layer variables, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="SURF" styleclass="Normal" translate="true">SURF</link><text styleclass="Normal" translate="true">, </text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="EVTR" styleclass="Normal" translate="true">EVTR</link><text styleclass="Normal" translate="true">, and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="EXDP" styleclass="Normal" translate="true">EXDP</link><text styleclass="Normal" translate="true">, with one value for each vertical column. Accordingly, ET is calculated for one cell in each vertical column. The option codes determine the cell within a column for which ET will be calculated.</text></para>
-                      <list id="17" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="19" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">1—ET is calculated only for cells in the top grid layer.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">2—The cell for each vertical column is specified by the user in variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="IEVT" styleclass="Normal" translate="true">IEVT</link><text styleclass="Normal" translate="true">.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">3—Evapotranspiration is applied to the highest active cell in each vertical column. (This option is described in Merritt and Konikow (2000).)</text></li>
@@ -172,7 +180,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">IEVTCB—is a flag and a unit number.</text></para>
-                      <list id="18" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="20" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IEVTCB &gt; 0, it is the unit number to which cell-by-cell flow terms will be written when &quot;SAVE BUDGET&quot; or a non-zero value for ICBCFL is specified in Output Control.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If IEVTCB </text><text styleclass="Normal" style="font-family:Symbol;" translate="true">£</text><text styleclass="Normal" translate="true"> 0, cell-by-cell flow terms will not be written.</text></li>
                       </list>
@@ -331,7 +339,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="INSURF" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">INSURF—is the ET surface (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="SURF" styleclass="Normal" translate="true">SURF</link><text styleclass="Normal" translate="true">) read flag.</text></para>
-                      <list id="19" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="21" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INSURF </text><text styleclass="Normal" style="font-family:Symbol;" translate="true">³</text><text styleclass="Normal" translate="true"> 0, a layer variable containing the ET surface elevation (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="SURF" styleclass="Normal" translate="true">SURF</link><text styleclass="Normal" translate="true">) will be read.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INSURF &lt; 0, the ET surface from the preceding stress period will be reused.</text></li>
                       </list>
@@ -343,17 +351,17 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="INEVTR" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">INEVTR—is the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="EVTR" styleclass="Normal" translate="true">EVTR</link><text styleclass="Normal" translate="true"> read flag. Its function depends on whether or not parameters are being used.</text></para>
-                      <list id="20" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="22" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If no parameters are being used (NPEVT=0):</text></li>
                       </list>
-                      <list id="21" type="ul" listtype="bullet" formatstring="&#111;" levelreset="true" legalstyle="false" startfrom="1" styleclass="Indented bullet" style="font-family:&apos;Courier New&apos;; font-size:12pt; color:#000000;">
+                      <list id="23" type="ul" listtype="bullet" formatstring="&#111;" levelreset="true" legalstyle="false" startfrom="1" styleclass="Indented bullet" style="font-family:&apos;Courier New&apos;; font-size:12pt; color:#000000;">
                         <li styleclass="Indented bullet"><text styleclass="Indented bullet" translate="true">If INEVTR </text><text styleclass="Indented bullet" style="font-family:Symbol;" translate="true">³</text><text styleclass="Indented bullet" translate="true"> 0, a layer variable containing the maximum ET rate (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="EVTR" styleclass="Normal" translate="true">EVTR</link><text styleclass="Indented bullet" translate="true">) will be read.</text></li>
                         <li styleclass="Indented bullet"><text styleclass="Indented bullet" translate="true">If INEVTR &lt; 0, the maximum ET rate from the preceding stress period will be reused.</text></li>
                       </list>
-                      <list id="22" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="24" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If parameters are being used (NPEVT&gt;0):</text></li>
                       </list>
-                      <list id="23" type="ul" listtype="bullet" formatstring="&#111;" levelreset="true" legalstyle="false" startfrom="1" styleclass="Indented bullet" style="font-family:&apos;Courier New&apos;; font-size:12pt; color:#000000;">
+                      <list id="25" type="ul" listtype="bullet" formatstring="&#111;" levelreset="true" legalstyle="false" startfrom="1" styleclass="Indented bullet" style="font-family:&apos;Courier New&apos;; font-size:12pt; color:#000000;">
                         <li styleclass="Indented bullet"><text styleclass="Indented bullet" translate="true">If INEVTR &gt; 0, INEVTR is the number of parameters that will be used to define </text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="EVTR" styleclass="Normal" translate="true">EVTR</link><text styleclass="Indented bullet" translate="true"> in the current stress period. Item 8 defines the names of the parameters.</text></li>
                         <li styleclass="Indented bullet"><text styleclass="Indented bullet" translate="true">If INEVTR &lt; 0, EVT parameters from the preceding stress period are used.</text></li>
                         <li styleclass="Indented bullet"><text styleclass="Indented bullet" translate="true">INEVTR = 0 is not allowed. That is, when parameters are used, at least one parameter must be specified each stress period</text></li>
@@ -366,7 +374,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="INEXDP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">INEXDP—is the extinction depth (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="EXDP" styleclass="Normal" translate="true">EXDP</link><text styleclass="Normal" translate="true">) read flag.</text></para>
-                      <list id="24" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="26" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INEXDP </text><text styleclass="Normal" style="font-family:Symbol;" translate="true">³</text><text styleclass="Normal" translate="true"> 0, a layer variable containing the extinction depth (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="EXDP" styleclass="Normal" translate="true">EXDP</link><text styleclass="Normal" translate="true">) will be read.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INEXDP &lt; 0, the extinction depth from the preceding stress period will be reused.</text></li>
                       </list>
@@ -378,7 +386,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="INIEVT" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">INIEVT—is the layer indicator (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="IEVT" styleclass="Normal" translate="true">IEVT</link><text styleclass="Normal" translate="true">) read flag. It is read only if the ET option (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="NEVTOP" styleclass="Normal" translate="true">NEVTOP</link><text styleclass="Normal" translate="true">) is equal to two.</text></para>
-                      <list id="25" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="27" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INIEVT </text><text styleclass="Normal" style="font-family:Symbol;" translate="true">³</text><text styleclass="Normal" translate="true"> 0, a layer variable containing the layer indicators (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="EVT" anchor="IEVT" styleclass="Normal" translate="true">IEVT</link><text styleclass="Normal" translate="true">) will be read.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">If INIEVT &lt; 0, layer indicators used during the preceding stress period will be reused.</text></li>
                       </list>

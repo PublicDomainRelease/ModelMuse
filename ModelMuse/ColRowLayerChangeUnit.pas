@@ -98,6 +98,7 @@ type
   private
     // @name changes the selected row.
     procedure ChangeRow;
+    procedure ChangeCrossSection;
     // @name displays the selected row on the status bar.
     procedure DisplayRow;
     // @name is used to change how the row is displayed in
@@ -144,7 +145,8 @@ type
 
 implementation
 
-uses frmGoPhastUnit, frameViewUnit, ScreenObjectUnit, PhastModelUnit;
+uses frmGoPhastUnit, frameViewUnit, ScreenObjectUnit, PhastModelUnit,
+  SutraMeshUnit, FastGEO, UndoItems;
 
 //resourcestring
 //  StrSelectedColD = 'Selected Col: %d';
@@ -489,12 +491,173 @@ end;
 
 procedure TRowSelector.ChangeSelectedItem;
 begin
-  ChangeRow;
+{$IFDEF SUTRA}
+  if frmGoPhast.ModelSelection = msSutra22 then
+  begin
+    ChangeCrossSection;
+  end
+  else
+{$ENDIF}
+  begin
+    ChangeRow;
+  end;
 end;
 
 procedure TRowSelector.DisplayItem;
 begin
   DisplayRow;
+end;
+
+procedure TRowSelector.ChangeCrossSection;
+var
+  ClickDirection: TRbwClickDirection;
+  Increment: Extended;
+  Mesh: TSutraMesh3D;
+  CrossSection: TCrossSection;
+//  Outline: TPolygon2D;
+  StartPoint: TPoint2D;
+  EndPoint: TPoint2D;
+  APoint: TPoint2D;
+  Done: Boolean;
+  DeltaY: double;
+//  PointIndex: integer;
+  MinY: TFloat;
+  MaxY: TFloat;
+  NodeIndex: Integer;
+begin
+  ClickDirection := FModelCube.ClickDirection(FCubeX, FCubeY);
+  Assert(ClickDirection in [cdNorth, cdSouth]);
+  if FJumpType = jtBig then
+  begin
+    Increment := 0.1;
+  end
+  else
+  begin
+    Increment := 0.01;
+  end;
+
+  Mesh := frmGoPhast.PhastModel.SutraMesh;
+  if (Mesh.MeshType <> mt3D) or (Mesh.Mesh2D.Elements.Count = 0) then
+  begin
+    Exit;
+  end;
+  CrossSection := Mesh.CrossSection;
+
+  APoint := Mesh.Mesh2D.Nodes[0].Location;
+  if CrossSection.Angle <> 0 then
+  begin
+    APoint := Mesh.RotateFromRealWorldCoordinatesToMeshCoordinates(APoint);
+  end;
+  MinY := APoint.y;
+  MaxY := MinY;
+
+  for NodeIndex := 0 to Mesh.Mesh2D.Nodes.Count - 1 do
+  begin
+    APoint := Mesh.Mesh2D.Nodes[NodeIndex].Location;
+    if CrossSection.Angle <> 0 then
+    begin
+      APoint := Mesh.RotateFromRealWorldCoordinatesToMeshCoordinates(APoint);
+    end;
+    if MinY > APoint.y then
+    begin
+      MinY := APoint.y;
+    end
+    else if MaxY < APoint.y then
+    begin
+      MaxY := APoint.y;
+    end;
+  end;
+
+//  Outline := Mesh.Mesh2D.MeshOutline;
+//  APoint := CrossSection.StartPoint;
+//  if CrossSection.Angle <> 0 then
+//  begin
+//    APoint := Mesh.RotateFromRealWorldCoordinatesToMeshCoordinates(APoint);
+//    for PointIndex := 0 to Length(Outline) - 1 do
+//    begin
+//      Outline[PointIndex] :=
+//        Mesh.RotateFromRealWorldCoordinatesToMeshCoordinates(Outline[PointIndex]);
+//    end;
+//  end;
+//  MinY := Outline[0].y;
+//  MaxY := MinY;
+//  for PointIndex := 1 to Length(Outline) - 1 do
+//  begin
+//    if MinY > Outline[PointIndex].y then
+//    begin
+//      MinY := Outline[PointIndex].y;
+//    end
+//    else if MaxY < Outline[PointIndex].y then
+//    begin
+//      MaxY := Outline[PointIndex].y;
+//    end;
+//  end;
+  if MinY = MaxY then
+  begin
+    Exit
+  end;
+  DeltaY := (MaxY-MinY)*Increment;
+
+  Done := False;
+  while not Done do
+  begin
+    StartPoint := CrossSection.StartPoint;
+    EndPoint := CrossSection.EndPoint;
+    if CrossSection.Angle <> 0 then
+    begin
+      StartPoint := Mesh.RotateFromRealWorldCoordinatesToMeshCoordinates(StartPoint);
+      EndPoint := Mesh.RotateFromRealWorldCoordinatesToMeshCoordinates(EndPoint);
+    end;
+    Assert(FModelCube.YOrigin = yoSouth);
+    if ClickDirection = cdNorth then
+    begin
+      StartPoint.Y := StartPoint.Y + DeltaY;
+      EndPoint.Y := EndPoint.Y + DeltaY;
+      if StartPoint.y > MaxY then
+      begin
+        StartPoint.y := MaxY;
+        Done := True;
+      end;
+      if EndPoint.y > MaxY then
+      begin
+        EndPoint.y := MaxY;
+        Done := True;
+      end;
+    end
+    else if ClickDirection = cdSouth then
+    begin
+      StartPoint.Y := StartPoint.Y - DeltaY;
+      EndPoint.Y := EndPoint.Y - DeltaY;
+      if StartPoint.y < MinY then
+      begin
+        StartPoint.y := MinY;
+        Done := True;
+      end;
+      if EndPoint.y < MinY then
+      begin
+        EndPoint.y := MinY;
+        Done := True;
+      end;
+    end;
+    if CrossSection.Angle <> 0 then
+    begin
+      StartPoint := Mesh.RotateFromMeshCoordinatesToRealWorldCoordinates(StartPoint);
+      EndPoint := Mesh.RotateFromMeshCoordinatesToRealWorldCoordinates(EndPoint);
+    end;
+    frmGoPhast.UndoStack.Submit(
+      TUndoMoveCrossSection.Create(EquateSegment(StartPoint, EndPoint)));
+
+    if FJumpType = jtToMouse then
+    begin
+      Done := Done or (ClickDirection <> FModelCube.ClickDirection(FCubeX, FCubeY));
+    end
+    else
+    begin
+      Done := True;
+    end;
+  end;
+
+
 end;
 
 procedure TRowSelector.ChangeRow;
@@ -534,13 +697,13 @@ begin
     begin
       if ClickDirection = cdNorth then
       begin
-        frmGoPhast.PhastModel.CombinedDisplayRow := frmGoPhast.PhastModel.CombinedDisplayRow -
-          Increment;
+        frmGoPhast.PhastModel.CombinedDisplayRow :=
+          frmGoPhast.PhastModel.CombinedDisplayRow - Increment;
       end
       else if ClickDirection = cdSouth then
       begin
-        frmGoPhast.PhastModel.CombinedDisplayRow := frmGoPhast.PhastModel.CombinedDisplayRow +
-          Increment;
+        frmGoPhast.PhastModel.CombinedDisplayRow :=
+          frmGoPhast.PhastModel.CombinedDisplayRow + Increment;
       end;
     end;
     if FJumpType = jtToMouse then

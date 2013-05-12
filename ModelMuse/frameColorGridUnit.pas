@@ -762,6 +762,10 @@ begin
   end
   else if TryStrToFloat(comboTime3D.Text, ATime) then
   begin
+    if comboTime3D.Items.Count = 0 then
+    begin
+      Exit;
+    end;
     RealList := TRealList.Create;
     try
       RealList.Capacity:= comboTime3D.Items.Count;

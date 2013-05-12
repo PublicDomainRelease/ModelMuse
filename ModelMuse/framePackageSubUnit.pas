@@ -76,7 +76,8 @@ var
 implementation
 
 uses
-  GoPhastTypes, frmCustomGoPhastUnit, frmGoPhastUnit, ModflowTimeUnit;
+  GoPhastTypes, frmCustomGoPhastUnit, frmGoPhastUnit, ModflowTimeUnit,
+  ModelMuseUtilities;
 
 resourcestring
   StrPrintSubsidenceIf = 'Print subsidence (Ifm1, Ifl1)';
@@ -498,8 +499,8 @@ begin
   inherited;
   SubPackage := Package as TSubPackageSelection;
   SubPackage.NumberOfNodes := seNumberOfNodes.AsInteger;
-  SubPackage.AccelerationParameter1 := StrToFloat(rdeAccel1.Text);
-  SubPackage.AccelerationParameter2 := StrToFloat(rdeAccel2.Text);
+  SubPackage.AccelerationParameter1 := FortranStrToFloat(rdeAccel1.Text);
+  SubPackage.AccelerationParameter2 := FortranStrToFloat(rdeAccel2.Text);
   SubPackage.MinIterations := StrToInt(rdeMinIterations.Text);
   SubPackage.SaveDelayRestart := cbSaveRestart.Checked;
   SubPackage.ReadDelayRestartFileName := feReadRestart.FileName;

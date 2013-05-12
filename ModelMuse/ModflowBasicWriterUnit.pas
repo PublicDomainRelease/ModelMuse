@@ -16,6 +16,7 @@ type
     procedure WriteDataSet3;
     procedure WriteDataSet4;
     procedure WriteDataSet(const DataSetName: string; DataArray: TDataArray);
+    procedure CheckConnectivity;
   protected
     class function Extension: string; override;
   public
@@ -26,7 +27,7 @@ type
 implementation
 
 uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmProgressUnit, Forms, 
-  RbwParser, GoPhastTypes, ModflowOptionsUnit;
+  RbwParser, GoPhastTypes, ModflowOptionsUnit, Generics.Collections;
 
 resourcestring
   StrFileForTheInitial = 'File for the initial heads does not exist.';
@@ -42,8 +43,217 @@ resourcestring
   StrWritingDataSet4 = '  Writing Data Set 4.';
   StrCheckingStarting = '  Checking starting heads.';
   StrInitialHeadIsBelo = 'Initial Head is below or equal to the bottom of the layer.';
+  StrThereIsNoHydrauli = 'There is no hydraulic connection between the follo' +
+  'wing cells.';
+  StrLayerRowColumn = '(Layer, Row, Column) = (%0:d, %1:d,%2:d) and (%3:d, %' +
+  '4:d, %5:d)';
+  StrCheckingModelConne = 'Checking model connectivity';
+
+Type
+  TActiveCell = class(TObject)
+    MFLayer: integer;
+    Layer: integer;
+    Row: integer;
+    Column: integer;
+  end;
+
+  TActiveCellQueue = TObjectQueue<TActiveCell>;
 
 { TModflowBasicWriter }
+
+procedure TModflowBasicWriter.CheckConnectivity;
+var
+  DataArray: TDataArray;
+  ActiveCells: array of array of array of integer;
+  MFLayer: Integer;
+  Queue: TActiveCellQueue;
+  FoundFirst: Boolean;
+  ACell: TActiveCell;
+  MfLayerCount: integer;
+  LayerIndex: Integer;
+  RowIndex: integer;
+  ColIndex: integer;
+  NewCell: TActiveCell;
+  FirstCol: Integer;
+  FirstRow: Integer;
+  FirstLayer: Integer;
+begin
+  DataArray := Model.DataArrayManager.GetDataSetByName(rsActive);
+  DataArray.Initialize;
+  MfLayerCount := Model.ModflowLayerCount;
+  SetLength(ActiveCells, MfLayerCount, DataArray.RowCount, DataArray.ColumnCount);
+  Queue := TActiveCellQueue.Create(True);
+  try
+    FoundFirst := False;
+    MFLayer := -1;
+    for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
+    begin
+      if Model.IsLayerSimulated(LayerIndex) then
+      begin
+        Inc(MFLayer);
+        for RowIndex := 0 to DataArray.RowCount - 1 do
+        begin
+          for ColIndex := 0 to DataArray.ColumnCount - 1 do
+          begin
+            ActiveCells[MFLayer,RowIndex,ColIndex] :=
+              Ord(DataArray.BooleanData[LayerIndex,RowIndex,ColIndex]);
+            if not FoundFirst
+              and (ActiveCells[MFLayer,RowIndex,ColIndex] <> 0) then
+            begin
+              ACell := TActiveCell.Create;
+              ACell.MFLayer := MFLayer;
+              ACell.Layer := LayerIndex;
+              ACell.Row := RowIndex;
+              ACell.Column := ColIndex;
+              Queue.Enqueue(ACell);
+              FoundFirst := True;
+              ActiveCells[MFLayer,RowIndex,ColIndex] := 2;
+            end;
+          end;
+        end;
+      end;
+    end;
+    repeat
+      FirstCol := -1;
+      FirstRow := -1;
+      FirstLayer := -1;
+      FoundFirst := False;
+      While Queue.Count > 0 do
+      begin
+        ACell := Queue.Peek;
+        if not FoundFirst then
+        begin
+          FirstCol := ACell.Column;
+          FirstRow := ACell.Row;
+          FirstLayer := ACell.Layer;
+          FoundFirst := True;
+        end;
+        if ACell.MFLayer > 0 then
+        begin
+          if (ActiveCells[ACell.MFLayer-1,ACell.Row,ACell.Column] = 1) then
+          begin
+            NewCell := TActiveCell.Create;
+            NewCell.MFLayer := ACell.MFLayer-1;
+            NewCell.Layer := Model.ModflowLayerToDataSetLayer(NewCell.MFLayer+1);
+            NewCell.Row := ACell.Row;
+            NewCell.Column := ACell.Column;
+            Queue.Enqueue(NewCell);
+            ActiveCells[NewCell.MFLayer,NewCell.Row,NewCell.Column] := 2;
+          end;
+        end;
+        if ACell.MFLayer < MfLayerCount-1 then
+        begin
+          if (ActiveCells[ACell.MFLayer+1,ACell.Row,ACell.Column] = 1) then
+          begin
+            NewCell := TActiveCell.Create;
+            NewCell.MFLayer := ACell.MFLayer+1;
+            NewCell.Layer := Model.ModflowLayerToDataSetLayer(NewCell.MFLayer+1);
+            NewCell.Row := ACell.Row;
+            NewCell.Column := ACell.Column;
+            Queue.Enqueue(NewCell);
+            ActiveCells[NewCell.MFLayer,NewCell.Row,NewCell.Column] := 2;
+          end;
+        end;
+        if ACell.Row > 0 then
+        begin
+          if (ActiveCells[ACell.MFLayer,ACell.Row-1,ACell.Column] = 1) then
+          begin
+            NewCell := TActiveCell.Create;
+            NewCell.MFLayer := ACell.MFLayer;
+            NewCell.Layer := ACell.Layer;
+            NewCell.Row := ACell.Row-1;
+            NewCell.Column := ACell.Column;
+            Queue.Enqueue(NewCell);
+            ActiveCells[NewCell.MFLayer,NewCell.Row,NewCell.Column] := 2;
+          end;
+        end;
+        if ACell.Row < DataArray.RowCount-1 then
+        begin
+          if (ActiveCells[ACell.MFLayer,ACell.Row+1,ACell.Column] = 1) then
+          begin
+            NewCell := TActiveCell.Create;
+            NewCell.MFLayer := ACell.MFLayer;
+            NewCell.Layer := ACell.Layer;
+            NewCell.Row := ACell.Row+1;
+            NewCell.Column := ACell.Column;
+            Queue.Enqueue(NewCell);
+            ActiveCells[NewCell.MFLayer,NewCell.Row,NewCell.Column] := 2;
+          end;
+        end;
+        if ACell.Column > 0 then
+        begin
+          if (ActiveCells[ACell.MFLayer,ACell.Row,ACell.Column-1] = 1) then
+          begin
+            NewCell := TActiveCell.Create;
+            NewCell.MFLayer := ACell.MFLayer;
+            NewCell.Layer := ACell.Layer;
+            NewCell.Row := ACell.Row;
+            NewCell.Column := ACell.Column-1;
+            Queue.Enqueue(NewCell);
+            ActiveCells[NewCell.MFLayer,NewCell.Row,NewCell.Column] := 2;
+          end;
+        end;
+        if ACell.Column < DataArray.ColumnCount-1 then
+        begin
+          if (ActiveCells[ACell.MFLayer,ACell.Row,ACell.Column+1] = 1) then
+          begin
+            NewCell := TActiveCell.Create;
+            NewCell.MFLayer := ACell.MFLayer;
+            NewCell.Layer := ACell.Layer;
+            NewCell.Row := ACell.Row;
+            NewCell.Column := ACell.Column+1;
+            Queue.Enqueue(NewCell);
+            ActiveCells[NewCell.MFLayer,NewCell.Row,NewCell.Column] := 2;
+          end;
+        end;
+        Queue.Dequeue;
+      end;
+      if FoundFirst then
+      begin
+        FoundFirst := False;
+        MFLayer := -1;
+        for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
+        begin
+          if Model.IsLayerSimulated(LayerIndex) then
+          begin
+            Inc(MFLayer);
+            for RowIndex := 0 to DataArray.RowCount - 1 do
+            begin
+              for ColIndex := 0 to DataArray.ColumnCount - 1 do
+              begin
+                if (ActiveCells[MFLayer,RowIndex,ColIndex] = 1) then
+                begin
+                  frmErrorsAndWarnings.AddError(Model, StrThereIsNoHydrauli,
+                    Format(StrLayerRowColumn,
+                    [FirstLayer+1, FirstRow+1, FirstCol+1,
+                    LayerIndex+1, RowIndex+1, ColIndex+1]));
+                  ACell := TActiveCell.Create;
+                  ACell.MFLayer := MFLayer;
+                  ACell.Layer := LayerIndex;
+                  ACell.Row := RowIndex;
+                  ACell.Column := ColIndex;
+                  Queue.Enqueue(ACell);
+                  ActiveCells[MFLayer,RowIndex,ColIndex] := 2;
+                  break;
+                end;
+              end;
+              if Queue.Count > 0 then
+              begin
+                Break;
+              end;
+            end;
+          end;
+          if Queue.Count > 0 then
+          begin
+            Break;
+          end;
+        end;
+      end;
+    until Queue.Count = 0;
+  finally
+    Queue.Free;
+  end;
+end;
 
 procedure TModflowBasicWriter.CheckStartingHeads;
 var
@@ -336,6 +546,10 @@ procedure TModflowBasicWriter.WriteFile(const AFileName: string);
 begin
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrFileForTheInitial);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrWrongExtension);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrThereIsNoHydrauli);
+
+  frmProgressMM.AddMessage(StrCheckingModelConne);
+  CheckConnectivity;
 
   FNameOfFile := FileName(AFileName);
   if Model.PackageGeneratedExternally(StrBAS) then

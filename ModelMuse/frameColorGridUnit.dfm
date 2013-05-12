@@ -5,10 +5,7 @@ inherited frameColorGrid: TframeColorGrid
     Width = 608
     ExplicitWidth = 608
     inherited tabSelection: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 24
       ExplicitWidth = 600
-      ExplicitHeight = 400
       DesignSize = (
         600
         400)
@@ -65,6 +62,7 @@ inherited frameColorGrid: TframeColorGrid
       inherited virttreecomboDataSets: TRbwStringTreeCombo
         Tree.OnGetNodeDataSize = virttreecomboDataSetsTreeGetNodeDataSize
         Text = '0'
+        ExplicitWidth = 481
       end
       inherited reComment: TRichEdit
         Width = 587
@@ -94,32 +92,16 @@ inherited frameColorGrid: TframeColorGrid
       end
     end
     inherited tabFilters: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 24
       ExplicitWidth = 600
-      ExplicitHeight = 400
       DesignSize = (
         600
         400)
-      inherited seNumberOfValuesToIgnore: TJvSpinEdit
-        Height = 21
-        ExplicitHeight = 21
-      end
     end
     inherited tabLegend: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 24
       ExplicitWidth = 600
-      ExplicitHeight = 400
       inherited imLegend: TImage
         Width = 382
         ExplicitWidth = 395
-      end
-      inherited pnlLegend: TPanel
-        inherited seLegendRows: TJvSpinEdit
-          Height = 21
-          ExplicitHeight = 21
-        end
       end
     end
   end

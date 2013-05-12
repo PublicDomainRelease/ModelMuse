@@ -224,6 +224,10 @@ inherited framePackageNwt: TframePackageNwt
       HelpKeyword = 'Additional_Options_Tab_Newton_'
       Caption = 'Additional Options'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblDbdTheta: TLabel
         Left = 87
         Top = 3
@@ -406,6 +410,10 @@ inherited framePackageNwt: TframePackageNwt
       HelpKeyword = '_GMRES_Variables_Tab_Newton_So'
       Caption = 'GMRES Variables'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblMaxIterationsGmres: TLabel
         Left = 90
         Top = 6
@@ -543,6 +551,10 @@ inherited framePackageNwt: TframePackageNwt
       HelpKeyword = 'Chi_MD_Variables_Tab_Newton_So'
       Caption = 'Chi MD Variables'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblAccelMethod: TLabel
         Left = 183
         Top = 6

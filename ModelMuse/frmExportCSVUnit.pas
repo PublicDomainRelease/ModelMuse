@@ -330,7 +330,7 @@ begin
       begin
         Mesh := LocalModel.Mesh;
         case Mesh.MeshType of
-          mt2D:
+          mt2D, mtProfile:
             begin
               if Mesh.Mesh2D.Elements.Count = 0 then
               begin

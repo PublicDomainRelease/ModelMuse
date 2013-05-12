@@ -50,6 +50,7 @@ type
     FObsGroups: TObsGroupList;
     FNOBS: Integer;
     FUsedFormats: TObservationFormats;
+    FFileName: string;
     procedure Evaluate;
     procedure WriteDataSet1;
     procedure WriteObservationGroups;
@@ -131,7 +132,7 @@ begin
           if (ScreenObject.SectionCount = ScreenObject.Count)
             and (ScreenObject.ViewDirection = vdTop)
             and ((ScreenObject.ElevationCount = ecOne)
-            or (Mesh.MeshType = mt2D))
+            or (Mesh.MeshType in [mt2D, mtProfile]))
           then
           begin
             // make observations at the exact locations of the points
@@ -202,7 +203,7 @@ begin
                 eaBlocks:
                   begin
                     case Mesh.MeshType of
-                      mt2D:
+                      mt2D, mtProfile:
                         begin
                           AnElement2D := Mesh.Mesh2D.Elements[ACell.Column];
                           Obs := TObsLocation.Create;
@@ -225,7 +226,7 @@ begin
                 eaNodes:
                   begin
                     case Mesh.MeshType of
-                      mt2D:
+                      mt2D, mtProfile:
                         begin
                           ANode2D := Mesh.Mesh2D.Nodes[ACell.Column];
                           Obs := TObsLocation.Create;
@@ -277,12 +278,12 @@ var
 begin
   Evaluate;
 
-  FileName := ChangeFileExt(FileName, '.8d');
-  OpenFile(FileName);
+  FFileName := ChangeFileExt(FileName, '.8d');
+  OpenFile(FFileName);
   try
     WriteDataSet1;
     WriteObservationGroups;
-    ObsRoot := ChangeFileExt(FileName, '');
+    ObsRoot := ChangeFileExt(FFileName, '');
     if ofOBS in FUsedFormats then
     begin
       SutraFileWriter.AddFile(sftObs, ObsRoot);
@@ -291,7 +292,7 @@ begin
     begin
       SutraFileWriter.AddFile(sftObc, ObsRoot);
     end;
-    Model.AddModelInputFile(FileName);
+    Model.AddModelInputFile(FFileName);
   finally
     CloseFile;
   end;
@@ -307,11 +308,10 @@ var
   LocationIndex: Integer;
   ObsLocation: TObsLocation;
   OBSNAM: AnsiString;
-//  ObsLength: Integer;
-//  CharIndex: Integer;
   OBSSCH: AnsiString;
   OBSFMT: AnsiString;
   MeshType: TMeshType;
+  OutputFileName: string;
 begin
   FNOBS := 0;
   MeshType := Model.SutraMesh.MeshType;
@@ -320,16 +320,29 @@ begin
     Group := FObsGroups[GroupIndex];
 
     OBSNAM := Group.ObsName;
-//    ObsLength := Length(OBSNAM);
     OBSNAM := '''' + OBSNAM + ''' ';
 
+    OutputFileName := ChangeFileExt(FFileName, '') + '_';
+
     OBSSCH := '''' + Group.ObsSchedule + ''' ';
+    OutputFileName := OutputFileName + string(Group.ObsSchedule);
 
     case Group.ObservationFormat of
-      ofOBS: OBSFMT := ' ''OBS''';
-      ofOBC: OBSFMT := ' ''OBC''';
+      ofOBS:
+        begin
+          OBSFMT := ' ''OBS''';
+          OutputFileName := ChangeFileExt(OutputFileName, '.OBS');
+        end;
+      ofOBC:
+        begin
+          OBSFMT := ' ''OBC''';
+          OutputFileName := ChangeFileExt(OutputFileName, '.OBC');
+        end
       else Assert(False);
     end;
+
+    Model.AddModelInputFile(OutputFileName);
+
     Include(FUsedFormats, Group.ObservationFormat);
 
     for LocationIndex := 0 to Group.FLocations.Count - 1 do

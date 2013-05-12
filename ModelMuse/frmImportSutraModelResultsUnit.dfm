@@ -1,37 +1,39 @@
 inherited frmImportSutraModelResults: TfrmImportSutraModelResults
   Caption = 'Import SUTRA Model Results'
-  ClientHeight = 265
-  ExplicitWidth = 442
-  ExplicitHeight = 310
+  ClientHeight = 417
+  ClientWidth = 417
+  ExplicitWidth = 435
+  ExplicitHeight = 462
   PixelsPerInch = 120
   TextHeight = 18
   object lblTimeStepsToImport: TLabel
-    Left = 255
-    Top = 16
+    Left = 223
+    Top = 8
     Width = 141
     Height = 18
     Caption = 'Time steps to import'
   end
   object lblDataToImport: TLabel
-    Left = 16
-    Top = 16
+    Left = 8
+    Top = 8
     Width = 99
     Height = 18
     Caption = 'Data to import'
   end
   object chklstTimeStepsToImport: TCheckListBox
-    Left = 255
-    Top = 40
-    Width = 161
-    Height = 176
+    Left = 223
+    Top = 29
+    Width = 186
+    Height = 240
     Anchors = [akLeft, akTop, akRight, akBottom]
     ItemHeight = 18
     TabOrder = 1
+    OnClick = chklstTimeStepsToImportClick
   end
   object chklstDataToImport: TCheckListBox
-    Left = 16
-    Top = 40
-    Width = 225
+    Left = 8
+    Top = 29
+    Width = 209
     Height = 137
     ItemHeight = 18
     Items.Strings = (
@@ -42,54 +44,127 @@ inherited frmImportSutraModelResults: TfrmImportSutraModelResults
       'Y velocity'
       'Z velocity')
     TabOrder = 0
+    OnClick = chklstDataToImportClick
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 224
-    Width = 424
-    Height = 41
+    Top = 276
+    Width = 417
+    Height = 141
     Align = alBottom
-    TabOrder = 2
+    BevelOuter = bvNone
+    TabOrder = 6
     DesignSize = (
-      424
-      41)
+      417
+      141)
+    object lblColorMesh: TLabel
+      Left = 8
+      Top = 50
+      Width = 153
+      Height = 18
+      Caption = 'Color or contour mesh'
+    end
     object btnHelp: TBitBtn
-      Left = 160
-      Top = 6
+      Left = 150
+      Top = 103
       Width = 82
-      Height = 27
+      Height = 30
       Anchors = [akTop, akRight]
       Kind = bkHelp
       NumGlyphs = 2
-      TabOrder = 0
+      TabOrder = 2
     end
     object btnOK: TBitBtn
-      Left = 248
-      Top = 6
+      Left = 238
+      Top = 103
       Width = 82
-      Height = 27
+      Height = 30
       Anchors = [akTop, akRight]
       Kind = bkOK
       NumGlyphs = 2
-      TabOrder = 1
+      TabOrder = 3
       OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
-      Left = 336
-      Top = 6
+      Left = 326
+      Top = 103
       Width = 83
-      Height = 27
+      Height = 30
       Anchors = [akTop, akRight]
       Kind = bkCancel
       NumGlyphs = 2
-      TabOrder = 2
+      TabOrder = 4
     end
+    object rgDisplayChoice: TRadioGroup
+      Left = 8
+      Top = 2
+      Width = 401
+      Height = 42
+      Anchors = [akLeft, akTop, akRight]
+      Caption = 'Display choice'
+      Columns = 3
+      ItemIndex = 0
+      Items.Strings = (
+        'Color mesh'
+        'Contour mesh'
+        'Neither')
+      TabOrder = 0
+    end
+    object comboColorMesh: TComboBox
+      Left = 8
+      Top = 71
+      Width = 401
+      Height = 26
+      Style = csDropDownList
+      Anchors = [akLeft, akTop, akRight]
+      TabOrder = 1
+    end
+  end
+  object btnSelectAll: TButton
+    Left = 8
+    Top = 172
+    Width = 104
+    Height = 47
+    Caption = 'Select all data sets'
+    TabOrder = 2
+    WordWrap = True
+    OnClick = btnSelectAllClick
+  end
+  object btnSelectNone: TButton
+    Left = 8
+    Top = 223
+    Width = 104
+    Height = 47
+    Caption = 'Deselect all data sets'
+    TabOrder = 4
+    WordWrap = True
+    OnClick = btnSelectNoneClick
+  end
+  object btnSelectAllTimes: TButton
+    Left = 113
+    Top = 172
+    Width = 104
+    Height = 47
+    Caption = 'Select all times'
+    TabOrder = 3
+    WordWrap = True
+    OnClick = btnSelectAllTimesClick
+  end
+  object btnDeselectAllTimes: TButton
+    Left = 113
+    Top = 223
+    Width = 104
+    Height = 47
+    Caption = 'Deselect all times'
+    TabOrder = 5
+    WordWrap = True
+    OnClick = btnDeselectAllTimesClick
   end
   object dlgOpenSutraFile: TOpenDialog
     DefaultExt = '.nod'
     Filter = 'SUTRA output files (*.nod; *.ele)|*.nod;*.ele'
     Options = [ofHideReadOnly, ofFileMustExist, ofEnableSizing]
-    Left = 96
-    Top = 192
+    Left = 144
+    Top = 88
   end
 end

@@ -932,7 +932,8 @@ begin
       else Assert(False);
     end;
 
-    if ViewDirection = vdTop then
+    if (LocalModel.ModelSelection in [msMODFLOW, msModflowLGR,msModflowNWT])
+      and (ViewDirection = vdTop) then
     begin
       LocalModel.DrawHeadObservations(FModelImage, frmGoPhast.frameTopView.ZoomBox);
       LocalModel.DrawSfrStreamLinkages(FModelImage, frmGoPhast.frameTopView.ZoomBox);
@@ -947,18 +948,20 @@ begin
       end;
 
     end;
-
-    LocalModel.Pathlines.Draw(Orientation, FModelImage);
-    LocalModel.EndPoints.Draw(Orientation, FModelImage);
-    LocalModel.TimeSeries.Draw(Orientation, FModelImage);
-    if LocalModel.LgrUsed then
+    if (LocalModel.ModelSelection in [msMODFLOW, msModflowLGR,msModflowNWT]) then
     begin
-      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      LocalModel.Pathlines.Draw(Orientation, FModelImage);
+      LocalModel.EndPoints.Draw(Orientation, FModelImage);
+      LocalModel.TimeSeries.Draw(Orientation, FModelImage);
+      if LocalModel.LgrUsed then
       begin
-        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
-        ChildModel.Pathlines.Draw(Orientation, FModelImage);
-        ChildModel.EndPoints.Draw(Orientation, FModelImage);
-        ChildModel.TimeSeries.Draw(Orientation, FModelImage);
+        for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+        begin
+          ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+          ChildModel.Pathlines.Draw(Orientation, FModelImage);
+          ChildModel.EndPoints.Draw(Orientation, FModelImage);
+          ChildModel.TimeSeries.Draw(Orientation, FModelImage);
+        end;
       end;
     end;
 

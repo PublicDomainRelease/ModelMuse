@@ -151,7 +151,7 @@ var
 implementation
 
 uses
-  frmGoPhastUnit;
+  frmGoPhastUnit, frmShowHideObjectsUnit;
 
 resourcestring
   StrYouMustSetAtLeas = 'You must set at least one of the gravity vector com' +
@@ -173,10 +173,11 @@ begin
   inherited;
 
   TransportChoice := TTransportChoice(rgTransport.ItemIndex);
+  Tilted := False;
   if TransportChoice <> tcSoluteHead then
   begin
     case TMeshType(rgMeshType.ItemIndex) of
-      mt2D:
+      mt2D, mtProfile:
         begin
           Tilted := (rdeGravX.RealValue <> 0) and (rdeGravY.RealValue <> 0);
         end;
@@ -370,6 +371,8 @@ procedure TfrmSutraOptions.rgMeshTypeClick(Sender: TObject);
 var
   TransportChoice: TTransportChoice;
 begin
+  // Note that if the TMeshType changes, corresponding changes
+  // need to be made in TfrmStartUp.
   if  csLoading in ComponentState then
   begin
     Exit;
@@ -436,7 +439,8 @@ begin
   begin
     Exit;
   end;
-  if fedRestartFile.Enabled and (fedRestartFile.FileName = '') then
+  if not FGettingData and fedRestartFile.Enabled
+    and (fedRestartFile.FileName = '') then
   begin
     fedRestartFile.Dialog.Execute;
   end;
@@ -631,8 +635,20 @@ begin
 end;
 
 procedure TUndoChangeSutraOptions.DoCommand;
+var
+  AdjustVerticalExag: Boolean;
+  VerticalExag: Double;
 begin
   inherited;
+  AdjustVerticalExag := (FNewMeshType = mtProfile) <> (FOldMeshType = mtProfile);
+  if AdjustVerticalExag then
+  begin
+    VerticalExag := frmGoPhast.PhastModel.Exaggeration;
+  end
+  else
+  begin
+    VerticalExag := 0;
+  end;
   if frmGoPhast.PhastModel.SutraMesh <> nil then
   begin
     frmGoPhast.PhastModel.SutraMesh.MeshType := FNewMeshType;
@@ -641,15 +657,38 @@ begin
   frmGoPhast.PhastModel.SutraLayerStructure.Loaded;
   frmGoPhast.PhastModel.DataArrayManager.CreateInitialDataSets;
   frmGoPhast.PhastModel.UpdateSutraTimeListNames;
+  if AdjustVerticalExag then
+  begin
+    frmGoPhast.UpdateVerticalExaggeration(VerticalExag);
+  end;
+  if (frmShowHideObjects <> nil) and (frmShowHideObjects.Visible) then
+  begin
+    frmShowHideObjects.UpdateScreenObjects;
+  end;
   if FNewMeshType <> FOldMeshType then
   begin
     frmGoPhast.PhastModel.InvalidateSegments;
+    frmGoPhast.frameTopView.MagnificationChanged := True;
+    frmGoPhast.frameFrontView.MagnificationChanged := True;
+    frmGoPhast.InvalidateAllViews;
   end;
 end;
 
 procedure TUndoChangeSutraOptions.Undo;
+var
+  AdjustVerticalExag: Boolean;
+  VerticalExag: Double;
 begin
   inherited;
+  AdjustVerticalExag := (FNewMeshType = mtProfile) <> (FOldMeshType = mtProfile);
+  if AdjustVerticalExag then
+  begin
+    VerticalExag := frmGoPhast.PhastModel.Exaggeration;
+  end
+  else
+  begin
+    VerticalExag := 0;
+  end;
   if frmGoPhast.PhastModel.SutraMesh <> nil then
   begin
     frmGoPhast.PhastModel.SutraMesh.MeshType := FOldMeshType;
@@ -658,9 +697,20 @@ begin
   frmGoPhast.PhastModel.SutraLayerStructure.Loaded;
   frmGoPhast.PhastModel.DataArrayManager.CreateInitialDataSets;
   frmGoPhast.PhastModel.UpdateSutraTimeListNames;
+  if AdjustVerticalExag then
+  begin
+    frmGoPhast.UpdateVerticalExaggeration(VerticalExag);
+  end;
+  if (frmShowHideObjects <> nil) and (frmShowHideObjects.Visible) then
+  begin
+    frmShowHideObjects.UpdateScreenObjects;
+  end;
   if FNewMeshType <> FOldMeshType then
   begin
     frmGoPhast.PhastModel.InvalidateSegments;
+    frmGoPhast.frameTopView.MagnificationChanged := True;
+    frmGoPhast.frameFrontView.MagnificationChanged := True;
+    frmGoPhast.InvalidateAllViews;
   end;
 end;
 

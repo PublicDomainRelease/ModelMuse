@@ -616,8 +616,10 @@ begin
   case FAlgorithm of
     caSimple:
       begin
-        Assert(Assigned(Grid));
-        Assert(Assigned(ActiveDataSet));
+        if Assigned(Grid) then
+        begin
+          Assert(Assigned(ActiveDataSet));
+        end;
       end;
     caACM626:
       begin
@@ -653,8 +655,16 @@ begin
     case FAlgorithm of
       caSimple:
         begin
-          AssignGridValues(MinValue, MaxValue, SelectedColRowLayer,
-            DSValues, ViewDirection);
+          if Assigned(Grid) then
+          begin
+            AssignGridValues(MinValue, MaxValue, SelectedColRowLayer,
+              DSValues, ViewDirection);
+          end
+          else
+          begin
+            AssignTriangulationValuesFromMesh(MinValue, MaxValue,
+              SelectedColRowLayer, DSValues, ViewDirection);
+          end;
         end;
       caACM626:
         begin
@@ -1446,9 +1456,21 @@ begin
   NewLength := ND*6-15;
   Assert(NewLength >= Length(FTriangulationData.Triangulation));
   SetLength(FTriangulationData.Triangulation, NewLength);
-  TRICP_Pascal(FTriangulationData.X, FTriangulationData.Y,
-    FTriangulationData.Values, C, WK, ND, NCP, NC, 1, NT,
-    FTriangulationData.Triangulation, IPL);
+  if (FMesh <> nil)
+    and ((FMesh as TSutraMesh3D).Mesh2D.MeshGenControls.
+    MeshGenerationMethod = mgmFishnet) then
+  begin
+    // TRIMESH doesn't get a good triangulation for fishnet meshes.
+    TRICP_Pascal(FTriangulationData.X, FTriangulationData.Y,
+      FTriangulationData.Values, C, WK, ND, NCP, NC, 0, NT,
+      FTriangulationData.Triangulation, IPL);
+  end
+  else
+  begin
+    TRICP_Pascal(FTriangulationData.X, FTriangulationData.Y,
+      FTriangulationData.Values, C, WK, ND, NCP, NC, 1, NT,
+      FTriangulationData.Triangulation, IPL);
+  end;
 end;
 
 procedure TCustomContourCreator.SetMesh(const Value: TObject);
@@ -2022,25 +2044,14 @@ procedure TCustomContourCreator.AssignTriangulationValuesFromMesh(out MinValue,
 var
   Active: T3DBooleanDataSet;
   ColIndex: Integer;
-//  RowIndex: Integer;
   LayerIndex: Integer;
-//  Column: Integer;
-//  Row: Integer;
-//  Layer: Integer;
   DSCol: Integer;
   DSRow: Integer;
   DSLayer: Integer;
   Value: Double;
-//  ColumnLimit, RowLimit, LayerLimit: integer;
   MaxLength: Integer;
   PointIndex: Integer;
   APoint: TPoint2D;
-//  TriangleIndex: Integer;
-//  NodeUL: Integer;
-//  NodeLL: Integer;
-//  NodeUR: Integer;
-//  NodeLR: Integer;
-//  Model: TCustomModel;
   LocalMesh: TSutraMesh3D;
   AnNode2D: TSutraNode2D;
   N: integer;
@@ -2066,12 +2077,9 @@ var
   Element3D: TSutraElement3D;
   Element2D_Index: Integer;
   AnElement2D: TSutraElement2D;
-//  Index: Integer;
-//  Temp: Real;
-//  N1: Integer;
-//  N2: Integer;
-//  N3: Integer;
-//  NewIndex: Integer;
+//  MovedX: TRealArray;
+//  MovedY: TRealArray;
+//  PIndex: Integer;
   procedure AssignValue;
   begin
     Value := 0;
@@ -2124,7 +2132,7 @@ begin
   MaxLength := 0;
 
   case LocalMesh.MeshType of
-    mt2D:
+    mt2D, mtProfile:
       begin
         case DataSet.EvaluatedAt of
           eaBlocks:
@@ -2254,14 +2262,12 @@ begin
                       DSLayer := LayerIndex;
                       FTriangulationData.X[PointIndex] := X_Float;
                       FTriangulationData.Y[PointIndex] := Element3D.CenterElevation;
-//                      DSCol := ColIndex;
                       AssignValue;
                       FTriangulationData.Values[PointIndex] := Value;
                       Inc(PointIndex);
                     end;
                   end;
                 end;
-//                MaxLength := ElementList.Count;
               finally
                 ElementList.Free;
               end;
@@ -2288,7 +2294,6 @@ begin
                       DSLayer := LayerIndex;
                       FTriangulationData.X[PointIndex] := X_Float;
                       FTriangulationData.Y[PointIndex] := Node3D.Z;
-//                      DSCol := ColIndex;
                       AssignValue;
                       FTriangulationData.Values[PointIndex] := Value;
                       Inc(PointIndex);
@@ -2313,34 +2318,24 @@ begin
   SetLength(IADJ, 6*N-9);
   SetLength(IEND, N);
 
-//  Index := 2;
-//  while Collinear(FTriangulationData.X[0], FTriangulationData.Y[0],
-//    FTriangulationData.X[1], FTriangulationData.Y[1],
-//    FTriangulationData.X[Index], FTriangulationData.Y[Index]) do
+//  MovedX := FTriangulationData.X;
+//  SetLength(MovedX, Length(MovedX));
+//  for PIndex := 0 to Length(MovedX) - 1 do
 //  begin
-//    Inc(Index);
-//    if Index = N then
-//    begin
-//      SetLength(FTriangulationData.Triangulation, 0);
-//      Exit;
-//    end;
+//    MovedX[PIndex] := MovedX[PIndex] + (Random-0.5)*1e-7;
 //  end;
-//  if Index <> 2 then
+//
+//  MovedY := FTriangulationData.Y;
+//  SetLength(MovedY, Length(MovedY));
+//  for PIndex := 0 to Length(MovedY) - 1 do
 //  begin
-//    Temp := FTriangulationData.X[2];
-//    FTriangulationData.X[2] := FTriangulationData.X[Index];
-//    FTriangulationData.X[Index] := Temp;
-//
-//    Temp := FTriangulationData.Y[2];
-//    FTriangulationData.Y[2] := FTriangulationData.Y[Index];
-//    FTriangulationData.Y[Index] := Temp;
-//
-//    Temp := FTriangulationData.Values[2];
-//    FTriangulationData.Values[2] := FTriangulationData.Values[Index];
-//    FTriangulationData.Values[Index] := Temp;
+//    MovedY[PIndex] := MovedY[PIndex] + (Random-0.5)*1e-7;
 //  end;
 
+
   TRMESH (N, FTriangulationData.X, FTriangulationData.Y, IADJ, IEND, IER);
+//  TRMESH (N, MovedX, MovedY, IADJ, IEND, IER);
+
   if IER <> 0 then
   begin
     SetLength(FTriangulationData.Triangulation, 0);
@@ -2355,7 +2350,6 @@ begin
   Trmesh_2_Idtang(NT, IEND, IADJ, IPL, IPT, N);
   FTriangulationData.Triangulation := IPT;
   SetLength(FTriangulationData.Triangulation, NT*3);
-//  FTriangulationData.EliminateUniformTriangles;
 end;
 
 destructor TCustomContourCreator.Destroy;
@@ -2479,7 +2473,7 @@ begin
     ADataSet.RowCount, ADataSet.LayerCount);
   LocalMesh := Mesh as TSutraMesh3D;
   case LocalMesh.MeshType of
-    mt2D:
+    mt2D, mtProfile:
       begin
         for ColIndex := 0 to ADataSet.ColumnCount-1 do
         begin

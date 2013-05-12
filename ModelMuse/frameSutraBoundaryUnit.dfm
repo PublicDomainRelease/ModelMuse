@@ -129,8 +129,8 @@ inherited frameSutraBoundary: TframeSutraBoundary
       object lblFormula: TLabel
         Left = 136
         Top = 5
-        Width = 47
-        Height = 16
+        Width = 38
+        Height = 13
         Alignment = taCenter
         Caption = 'Formula'
       end
@@ -157,11 +157,11 @@ inherited frameSutraBoundary: TframeSutraBoundary
     inherited lblSchedule: TLabel
       Left = 1
       Top = 30
-      Width = 113
+      Width = 93
       Caption = 'Schedule (BCSSCH)'
       ExplicitLeft = 1
       ExplicitTop = 30
-      ExplicitWidth = 113
+      ExplicitWidth = 93
     end
     inherited comboSchedule: TComboBox
       Left = 1

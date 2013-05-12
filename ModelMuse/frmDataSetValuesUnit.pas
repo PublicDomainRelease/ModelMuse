@@ -113,7 +113,7 @@ begin
 
   Mesh := frmGoPhast.PhastModel.Mesh;
   case Mesh.MeshType of
-    mt2D:
+    mt2D, mtProfile:
       begin
         case DataArray.EvaluatedAt of
           eaBlocks:
@@ -184,7 +184,7 @@ begin
 
         Row := -1;
         case Mesh.MeshType of
-          mt2D:
+          mt2D, mtProfile:
             begin
               Row := ColIndex + 1;
             end;

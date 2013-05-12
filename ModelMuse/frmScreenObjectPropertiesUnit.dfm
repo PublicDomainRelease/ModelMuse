@@ -22,7 +22,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
     Top = 0
     Width = 776
     Height = 502
-    ActivePage = tabSutraFeatures
+    ActivePage = tabProperties
     Align = alClient
     TabHeight = 28
     TabOrder = 0
@@ -92,7 +92,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Width = 225
         Height = 30
         Caption = 'Set object line color'
-        TabOrder = 7
+        TabOrder = 8
         OnClick = btnColorClick
       end
       object btnFillColor: TButton
@@ -101,7 +101,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Width = 225
         Height = 30
         Caption = 'Set object fill color'
-        TabOrder = 9
+        TabOrder = 10
         OnClick = btnColorClick
       end
       object cbIntersectedCells: TCheckBox
@@ -111,7 +111,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Height = 31
         AllowGrayed = True
         Caption = 'Set values of intersected cells'
-        TabOrder = 11
+        TabOrder = 12
         OnClick = cbIntersectedCellsClick
       end
       object cbEnclosedCells: TCheckBox
@@ -121,7 +121,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Height = 31
         AllowGrayed = True
         Caption = 'Set values of enclosed cells'
-        TabOrder = 10
+        TabOrder = 11
         OnClick = cbEnclosedCellsClick
       end
       object cbFillColor: TCheckBox
@@ -131,7 +131,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Height = 31
         AllowGrayed = True
         Caption = 'Color object interior'
-        TabOrder = 8
+        TabOrder = 9
         OnClick = cbFillColorClick
       end
       object cbLineColor: TCheckBox
@@ -141,7 +141,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Height = 31
         AllowGrayed = True
         Caption = 'Color object line'
-        TabOrder = 6
+        TabOrder = 7
         OnClick = cbLineColorClick
       end
       object edName: TEdit
@@ -162,7 +162,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Anchors = [akLeft, akTop, akRight]
         Color = clBtnFace
         Enabled = False
-        TabOrder = 17
+        TabOrder = 18
         Text = '0'
         OnExit = edHighZExit
       end
@@ -175,7 +175,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Anchors = [akLeft, akTop, akRight]
         Color = clBtnFace
         Enabled = False
-        TabOrder = 19
+        TabOrder = 20
         Text = '0'
         OnExit = edLowZExit
       end
@@ -187,7 +187,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Anchors = [akTop, akRight]
         Caption = 'Edit F()...'
         Enabled = False
-        TabOrder = 14
+        TabOrder = 15
         OnClick = btnFormulaClick
       end
       object btnHighZ: TButton
@@ -198,7 +198,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Anchors = [akTop, akRight]
         Caption = 'Edit F()...'
         Enabled = False
-        TabOrder = 16
+        TabOrder = 17
         OnClick = btnFormulaClick
       end
       object btnLowZ: TButton
@@ -209,7 +209,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Anchors = [akTop, akRight]
         Caption = 'Edit F()...'
         Enabled = False
-        TabOrder = 18
+        TabOrder = 19
         OnClick = btnFormulaClick
       end
       object cbInterpolation: TCheckBox
@@ -219,7 +219,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Height = 31
         AllowGrayed = True
         Caption = 'Set values of cells by interpolation'
-        TabOrder = 12
+        TabOrder = 13
         OnClick = cbInterpolationClick
       end
       object rdeGridCellSize: TRbwDataEntry
@@ -230,7 +230,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Cursor = crIBeam
         Color = clBtnFace
         Enabled = False
-        TabOrder = 5
+        TabOrder = 6
         Text = '1'
         OnExit = rdeGridCellSizeExit
         DataType = dtReal
@@ -250,7 +250,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
           'Zero'
           'One'
           'Two')
-        TabOrder = 13
+        TabOrder = 14
         OnClick = rgElevationCountClick
       end
       object cbSetGridCellSize: TCheckBox
@@ -284,7 +284,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Anchors = [akLeft, akTop, akRight]
         Color = clBtnFace
         Enabled = False
-        TabOrder = 15
+        TabOrder = 16
         Text = '0'
         OnExit = edZExit
       end
@@ -393,6 +393,16 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Caption = 'Position locked'
         TabOrder = 1
         OnClick = cbLockClick
+      end
+      object cbDuplicatesAllowed: TCheckBox
+        Left = 248
+        Top = 97
+        Width = 225
+        Height = 17
+        AllowGrayed = True
+        Caption = 'Duplicates allowed'
+        TabOrder = 5
+        OnClick = cbDuplicatesAllowedClick
       end
     end
     object tabLGR: TTabSheet
@@ -1192,7 +1202,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             object edLeakyHydraulicConductivity: TEdit
               Left = 200
               Top = 8
-              Width = 455
+              Width = 457
               Height = 27
               Cursor = crIBeam
               Anchors = [akLeft, akTop, akRight]
@@ -1202,7 +1212,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             object edLeakyThickness: TEdit
               Left = 200
               Top = 56
-              Width = 455
+              Width = 457
               Height = 27
               Cursor = crIBeam
               Anchors = [akLeft, akTop, akRight]
@@ -1210,7 +1220,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               OnExit = edLeakyHydraulicConductivityExit
             end
             object btnLeakyHydraulicConductivity: TButton
-              Left = 662
+              Left = 664
               Top = 8
               Width = 94
               Height = 30
@@ -1220,7 +1230,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               OnClick = btnFormulaClick
             end
             object btnLeakyThickness: TButton
-              Left = 662
+              Left = 664
               Top = 56
               Width = 94
               Height = 30
@@ -4505,7 +4515,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             inherited pnlBottom: TPanel
               Top = 207
               Width = 573
-              TabOrder = 2
               ExplicitTop = 207
               ExplicitWidth = 573
               DesignSize = (
@@ -4842,7 +4851,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Top = 218
               Width = 573
               Height = 0
-              TabOrder = 3
               ExplicitTop = 218
               ExplicitWidth = 573
               ExplicitHeight = 0
@@ -5252,6 +5260,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   inherited comboMultiIprior: TJvImageComboBox
                     Height = 29
                     ItemHeight = 23
+                    ItemIndex = -1
                     ExplicitHeight = 29
                   end
                 end
@@ -6322,8 +6331,8 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               end
               inherited tabGage: TTabSheet
                 ExplicitTop = 30
-                ExplicitWidth = 565
-                ExplicitHeight = 430
+                ExplicitWidth = 567
+                ExplicitHeight = 437
                 inherited gbObservationTypes: TGroupBox
                   Width = 652
                   ExplicitWidth = 652
@@ -7263,15 +7272,15 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             end
             inherited rdgObservationGroups: TRbwDataGrid4
               Top = 64
-              Width = 569
-              Height = 404
+              Width = 571
+              Height = 411
               Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
               OnSetEditText = frameCHOBrdgObservationGroupsSetEditText
               OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
               OnStateChange = frameCHOBrdgObservationGroupsStateChange
               ExplicitTop = 64
-              ExplicitWidth = 569
-              ExplicitHeight = 404
+              ExplicitWidth = 571
+              ExplicitHeight = 411
             end
             inherited btnAddOrRemoveFluxObservations: TButton
               Top = 33
@@ -7308,14 +7317,14 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               ExplicitHeight = 19
             end
             inherited rdgObservationGroups: TRbwDataGrid4
-              Width = 569
-              Height = 436
+              Width = 571
+              Height = 443
               Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
               OnSetEditText = frameDROBrdgObservationGroupsSetEditText
               OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
               OnStateChange = frameDROBrdgObservationGroupsStateChange
-              ExplicitWidth = 569
-              ExplicitHeight = 436
+              ExplicitWidth = 571
+              ExplicitHeight = 443
             end
             inherited btnAddOrRemoveFluxObservations: TButton
               OnClick = frameFluxObsbtnAddOrRemoveFluxObservationsClick
@@ -7351,15 +7360,15 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             end
             inherited rdgObservationGroups: TRbwDataGrid4
               Top = 64
-              Width = 569
-              Height = 405
+              Width = 571
+              Height = 412
               Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
               OnSetEditText = frameGBOBrdgObservationGroupsSetEditText
               OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
               OnStateChange = frameGBOBrdgObservationGroupsStateChange
               ExplicitTop = 64
-              ExplicitWidth = 569
-              ExplicitHeight = 405
+              ExplicitWidth = 571
+              ExplicitHeight = 412
             end
             inherited btnAddOrRemoveFluxObservations: TButton
               Top = 33
@@ -7396,14 +7405,14 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               ExplicitHeight = 19
             end
             inherited rdgObservationGroups: TRbwDataGrid4
-              Width = 569
-              Height = 436
+              Width = 571
+              Height = 443
               Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
               OnSetEditText = frameRVOBrdgObservationGroupsSetEditText
               OnButtonClick = frameChdParamdgModflowBoundaryButtonClick
               OnStateChange = frameRVOBrdgObservationGroupsStateChange
-              ExplicitWidth = 569
-              ExplicitHeight = 436
+              ExplicitWidth = 571
+              ExplicitHeight = 443
             end
             inherited btnAddOrRemoveFluxObservations: TButton
               OnClick = frameFluxObsbtnAddOrRemoveFluxObservationsClick
@@ -7555,6 +7564,9 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 ExplicitTop = 29
                 ExplicitWidth = 601
                 ExplicitHeight = 393
+                inherited comboLossType: TJvImageComboBox
+                  ItemIndex = -1
+                end
                 inherited edPartialPenetration: TJvComboEdit
                   OnButtonClick = frameScreenObjectSFRjceButtonClick
                 end
@@ -8157,8 +8169,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 Width = 595
                 Height = 285
                 OnButtonClick = SutraBoundaryButtonClick
-                ExplicitLeft = 6
-                ExplicitTop = 52
                 ExplicitWidth = 595
                 ExplicitHeight = 285
               end
@@ -8983,7 +8993,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
     Left = 136
     Top = 96
     Bitmap = {
-      494C010104000500E80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000500F40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

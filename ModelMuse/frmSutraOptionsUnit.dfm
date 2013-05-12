@@ -1,24 +1,24 @@
 inherited frmSutraOptions: TfrmSutraOptions
   Caption = 'SUTRA Options'
   ClientHeight = 443
-  ClientWidth = 750
-  ExplicitWidth = 768
-  ExplicitHeight = 488
-  PixelsPerInch = 120
+  ClientWidth = 759
+  ExplicitWidth = 775
+  ExplicitHeight = 481
+  PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
     Top = 393
-    Width = 750
+    Width = 759
     Height = 50
     Align = alBottom
     ParentColor = True
     TabOrder = 2
     DesignSize = (
-      750
+      759
       50)
     object btnCancel: TBitBtn
-      Left = 640
+      Left = 649
       Top = 7
       Width = 91
       Height = 33
@@ -28,7 +28,7 @@ inherited frmSutraOptions: TfrmSutraOptions
       TabOrder = 2
     end
     object btnOK: TBitBtn
-      Left = 543
+      Left = 552
       Top = 7
       Width = 91
       Height = 33
@@ -39,7 +39,7 @@ inherited frmSutraOptions: TfrmSutraOptions
       OnClick = btnOKClick
     end
     object btnHelp: TBitBtn
-      Left = 446
+      Left = 455
       Top = 7
       Width = 91
       Height = 33
@@ -52,37 +52,36 @@ inherited frmSutraOptions: TfrmSutraOptions
   object jplMain: TJvPageList
     Left = 169
     Top = 0
-    Width = 581
+    Width = 590
     Height = 393
-    ActivePage = jvspFluidProperties
+    ActivePage = jvspConfiguration
     PropagateEnable = False
     Align = alClient
     object jvspConfiguration: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 581
+      Width = 590
       Height = 393
-      Caption = 'jvspConfiguration'
       DesignSize = (
-        581
+        590
         393)
       object lblGravX: TLabel
         Left = 106
-        Top = 90
+        Top = 66
         Width = 362
         Height = 18
         Caption = 'Component of gravity vector in +x direction (GRAVX)'
       end
       object lblGravY: TLabel
         Left = 106
-        Top = 118
+        Top = 94
         Width = 362
         Height = 18
         Caption = 'Component of gravity vector in +Y direction (GRAVY)'
       end
       object lblGravZ: TLabel
         Left = 106
-        Top = 145
+        Top = 121
         Width = 362
         Height = 18
         Caption = 'Component of gravity vector in +Z direction (GRAVZ)'
@@ -90,21 +89,24 @@ inherited frmSutraOptions: TfrmSutraOptions
       object rgMeshType: TRadioGroup
         Left = 6
         Top = 8
-        Width = 251
-        Height = 73
+        Width = 331
+        Height = 49
         Caption = 'Mesh type (MSHSTR)'
-        ItemIndex = 1
+        Columns = 3
+        ItemIndex = 2
         Items.Strings = (
-          '2D'
+          '2D areal'
+          '2D profile'
           '3D')
         TabOrder = 0
         OnClick = rgMeshTypeClick
       end
       object rgSaturation: TRadioGroup
         Left = 263
-        Top = 171
-        Width = 305
+        Top = 147
+        Width = 314
         Height = 96
+        Anchors = [akLeft, akTop, akRight]
         Caption = 'Flow conditions (CUNSAT)'
         ItemIndex = 0
         Items.Strings = (
@@ -114,22 +116,22 @@ inherited frmSutraOptions: TfrmSutraOptions
       end
       object rgTransport: TRadioGroup
         Left = 6
-        Top = 170
+        Top = 146
         Width = 251
         Height = 97
         Caption = 'Transport (SIMULA)'
         ItemIndex = 0
         Items.Strings = (
           'Solute using pressure'
-          'Solute using Head'
+          'Solute using head'
           'Energy')
         TabOrder = 4
         OnClick = rgTransportClick
       end
       object rgSimulationType: TRadioGroup
         Left = 6
-        Top = 273
-        Width = 564
+        Top = 249
+        Width = 571
         Height = 105
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Simulation type (CSSFLO, CSSTRA)'
@@ -142,7 +144,7 @@ inherited frmSutraOptions: TfrmSutraOptions
       end
       object rdeGravX: TRbwDataEntry
         Left = 6
-        Top = 87
+        Top = 63
         Width = 94
         Height = 22
         TabOrder = 1
@@ -154,7 +156,7 @@ inherited frmSutraOptions: TfrmSutraOptions
       end
       object rdeGravY: TRbwDataEntry
         Left = 6
-        Top = 114
+        Top = 90
         Width = 94
         Height = 22
         TabOrder = 2
@@ -166,7 +168,7 @@ inherited frmSutraOptions: TfrmSutraOptions
       end
       object rdeGravZ: TRbwDataEntry
         Left = 6
-        Top = 142
+        Top = 118
         Width = 94
         Height = 22
         TabOrder = 3
@@ -180,13 +182,14 @@ inherited frmSutraOptions: TfrmSutraOptions
     object jvspTitle: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 581
+      Width = 590
       Height = 393
       Caption = 'jvspTitle'
+      ExplicitWidth = 581
       object jvedTitle: TJvEditor
         Left = 0
         Top = 49
-        Width = 581
+        Width = 590
         Height = 344
         Cursor = crIBeam
         Completion.ItemHeight = 13
@@ -202,38 +205,39 @@ inherited frmSutraOptions: TfrmSutraOptions
         Font.Height = -20
         Font.Name = 'Courier New'
         Font.Style = []
+        ExplicitWidth = 581
       end
       object pnlTitleCaption: TPanel
         Left = 0
         Top = 0
-        Width = 581
+        Width = 590
         Height = 49
         Align = alTop
         Alignment = taLeftJustify
         TabOrder = 0
+        ExplicitWidth = 581
         object lblTitle: TLabel
           AlignWithMargins = True
           Left = 4
           Top = 4
-          Width = 573
-          Height = 44
+          Width = 458
+          Height = 36
           Align = alClient
           Caption = 
             'The first 80 characters of the first two lines are TITLE1 and TI' +
             'TLE2.'#13#10'The remaining lines will be treated as comments.'
-          ExplicitWidth = 458
-          ExplicitHeight = 36
         end
       end
     end
     object jvspInitialCondition: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 581
+      Width = 590
       Height = 393
       Caption = 'jvspInitialCondition'
+      ExplicitWidth = 581
       DesignSize = (
-        581
+        590
         393)
       object lblRestartFile: TLabel
         Left = 6
@@ -252,7 +256,7 @@ inherited frmSutraOptions: TfrmSutraOptions
       object rgStartType: TRadioGroup
         Left = 6
         Top = 3
-        Width = 564
+        Width = 573
         Height = 78
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Starting type (CREAD)'
@@ -262,15 +266,17 @@ inherited frmSutraOptions: TfrmSutraOptions
           'Warm start (start from restart file)')
         TabOrder = 0
         OnClick = rgStartTypeClick
+        ExplicitWidth = 564
       end
       object fedRestartFile: TJvFilenameEdit
         Left = 6
         Top = 111
-        Width = 564
+        Width = 573
         Height = 26
         Enabled = False
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 1
+        ExplicitWidth = 564
       end
       object seRestartFrequency: TJvSpinEdit
         Left = 6
@@ -285,9 +291,10 @@ inherited frmSutraOptions: TfrmSutraOptions
     object jvspNumericalControls: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 581
+      Width = 590
       Height = 393
       Caption = 'jvspNumericalControls'
+      ExplicitWidth = 581
       object lblFractionalUpstreamWeight: TLabel
         Left = 79
         Top = 16
@@ -416,11 +423,12 @@ inherited frmSutraOptions: TfrmSutraOptions
     object jvspSolverControls: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 581
+      Width = 590
       Height = 393
       Caption = 'jvspSolverControls'
+      ExplicitWidth = 581
       DesignSize = (
-        581
+        590
         393)
       object lblMaxPressureIterations: TLabel
         Left = 111
@@ -465,7 +473,7 @@ inherited frmSutraOptions: TfrmSutraOptions
       object rgPressureSolution: TRadioGroup
         Left = 6
         Top = 3
-        Width = 572
+        Width = 581
         Height = 105
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Pressure solution solver (CSOLVP)'
@@ -476,6 +484,7 @@ inherited frmSutraOptions: TfrmSutraOptions
           'ILU-preconditioned orthomin (ORTHOMIN)')
         TabOrder = 0
         OnClick = rgPressureSolutionClick
+        ExplicitWidth = 572
       end
       object seMaxPressureIterations: TJvSpinEdit
         Left = 6
@@ -499,7 +508,7 @@ inherited frmSutraOptions: TfrmSutraOptions
       object rgUSolutionMethod: TRadioGroup
         Left = 6
         Top = 207
-        Width = 572
+        Width = 581
         Height = 90
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Transport solution solver (CSOLVU)'
@@ -509,6 +518,7 @@ inherited frmSutraOptions: TfrmSutraOptions
           'ILU-preconditioned orthomin (ORTHOMIN)')
         TabOrder = 3
         OnClick = rgUSolutionMethodClick
+        ExplicitWidth = 572
       end
       object seMaxTransportIterations: TJvSpinEdit
         Left = 6
@@ -533,9 +543,10 @@ inherited frmSutraOptions: TfrmSutraOptions
     object jvspFluidProperties: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 581
+      Width = 590
       Height = 393
       Caption = 'jvspFluidProperties'
+      ExplicitWidth = 581
       object lblFluidCompressibility: TLabel
         Left = 106
         Top = 14
@@ -751,11 +762,12 @@ inherited frmSutraOptions: TfrmSutraOptions
     object jvspSolidAdsorption: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 581
+      Width = 590
       Height = 393
       Caption = 'jvspSolidAdsorption'
+      ExplicitWidth = 581
       DesignSize = (
-        581
+        590
         393)
       object lblMatrixCompressibility: TLabel
         Left = 106
@@ -850,7 +862,7 @@ inherited frmSutraOptions: TfrmSutraOptions
       object rgSorptionModel: TRadioGroup
         Left = 6
         Top = 123
-        Width = 564
+        Width = 573
         Height = 105
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Sorption model (ADSMOD)'
@@ -861,6 +873,7 @@ inherited frmSutraOptions: TfrmSutraOptions
           'Langmuir')
         TabOrder = 4
         OnClick = rgSorptionModelClick
+        ExplicitWidth = 564
       end
       object rdeFirstDistributionCoefficient: TRbwDataEntry
         Left = 6
@@ -890,9 +903,10 @@ inherited frmSutraOptions: TfrmSutraOptions
     object jvspProdGrav: TJvStandardPage
       Left = 0
       Top = 0
-      Width = 581
+      Width = 590
       Height = 393
       Caption = 'jvspProdGrav'
+      ExplicitWidth = 581
       object lblZeroFluidProd: TLabel
         Left = 106
         Top = 14

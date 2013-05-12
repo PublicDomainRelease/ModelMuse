@@ -64,6 +64,9 @@ var
 
 implementation
 
+uses
+  ModelMuseUtilities;
+
 {$R *.dfm}
 
 procedure TframePackagePcgn.comboAcnvgChange(Sender: TObject);
@@ -126,22 +129,22 @@ begin
   PcgnPkg := Package as TPcgnSelection;
   PcgnPkg.ITER_MO := seIter_mo.AsInteger;
   PcgnPkg.ITER_MI := seIter_mi.AsInteger;
-  PcgnPkg.CLOSE_R.Value := StrToFloat(rdeCLOSE_R.Text);
-  PcgnPkg.CLOSE_H.Value := StrToFloat(rdeClose_H.Text);
-  PcgnPkg.RELAX.Value := StrToFloat(rdeRelax.Text);
+  PcgnPkg.CLOSE_R.Value := FortranStrToFloat(rdeCLOSE_R.Text);
+  PcgnPkg.CLOSE_H.Value := FortranStrToFloat(rdeClose_H.Text);
+  PcgnPkg.RELAX.Value := FortranStrToFloat(rdeRelax.Text);
   PcgnPkg.IFILL := seIfill.AsInteger;
   PcgnPkg.UNIT_PC := cbUnit_pc.Checked;
   PcgnPkg.UNIT_TS := cbUnit_ts.Checked;
 
   PcgnPkg.ADAMP := TDamping(comboDampingMode.ItemIndex);
-  PcgnPkg.DAMP.Value := StrToFloat(rdeDamp.Text);
-  PcgnPkg.DAMP_LB.Value := StrToFloat(rdeDamp_Lb.Text);
-  PcgnPkg.RATE_D.Value := StrToFloat(rdeRate_D.Text);
-  PcgnPkg.CHGLIMIT.Value := StrToFloat(rdeChglimit.Text);
+  PcgnPkg.DAMP.Value := FortranStrToFloat(rdeDamp.Text);
+  PcgnPkg.DAMP_LB.Value := FortranStrToFloat(rdeDamp_Lb.Text);
+  PcgnPkg.RATE_D.Value := FortranStrToFloat(rdeRate_D.Text);
+  PcgnPkg.CHGLIMIT.Value := FortranStrToFloat(rdeChglimit.Text);
   PcgnPkg.ACNVG := TConvergenceMode(comboAcnvg.ItemIndex);
-  PcgnPkg.CNVG_LB.Value := StrToFloat(rdeCnvg_Lb.Text);
+  PcgnPkg.CNVG_LB.Value := FortranStrToFloat(rdeCnvg_Lb.Text);
   PcgnPkg.MCNVG := seMcnvg.AsInteger;
-  PcgnPkg.RATE_C.Value := StrToFloat(rdeRate_C.Text);
+  PcgnPkg.RATE_C.Value := FortranStrToFloat(rdeRate_C.Text);
   PcgnPkg.IPUNIT := TProgressReporting(comboIpunit.ItemIndex);
 end;
 

@@ -17,8 +17,8 @@ object frameGrid: TframeGrid
     object lbNumber: TLabel
       Left = 79
       Top = 9
-      Width = 37
-      Height = 13
+      Width = 45
+      Height = 16
       Caption = 'Number'
     end
     object sbAdd: TSpeedButton
@@ -105,7 +105,7 @@ object frameGrid: TframeGrid
       Left = 8
       Top = 6
       Width = 65
-      Height = 21
+      Height = 24
       MaxValue = 1000000.000000000000000000
       TabOrder = 0
       OnChange = seNumberChange
@@ -151,6 +151,7 @@ object frameGrid: TframeGrid
         ParentButtonFont = False
         WordWrapCaptions = True
         WordWrapCells = False
+        CaseSensitivePicklist = False
         AutoAdjustColWidths = True
       end>
     OnEndUpdate = GridEndUpdate

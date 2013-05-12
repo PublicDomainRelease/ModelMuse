@@ -29,6 +29,9 @@ type
 
 implementation
 
+uses
+  ModelMuseUtilities;
+
 {$R *.dfm}
 
 { TframePackageLAK }
@@ -53,10 +56,10 @@ var
 begin
   inherited;
   Lake := Package as TLakePackageSelection;
-  Lake.Theta := StrToFloat(rdeTheta.Text);
+  Lake.Theta := FortranStrToFloat(rdeTheta.Text);
   Lake.NumberOfIterations := StrToInt(rdeIterations.Text);
-  Lake.ConvergenceCriterion := StrToFloat(rdeConvergenceCriterion.Text);
-  Lake.SurfDepth.Value := StrToFloat(rdeSurfDepth.Text);
+  Lake.ConvergenceCriterion := FortranStrToFloat(rdeConvergenceCriterion.Text);
+  Lake.SurfDepth.Value := FortranStrToFloat(rdeSurfDepth.Text);
   Lake.PrintLakes := cbPrintLake.Checked;
   Lake.ExternalLakeChoice := TExternalLakeChoice(rgBathymetry.ItemIndex);
 end;

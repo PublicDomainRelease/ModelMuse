@@ -63,6 +63,8 @@ resourcestring
   StrObject = 'Object ';
   StrDObjectsWereInva = '%d objects were invalid because they cross themselv' +
   'es and have been skipped.';
+  StrThereWasAnErrorR = 'There was an error reading %s. If it is open by som' +
+  'e other program, try closing that other program.';
 
 {$R *.dfm}
 
@@ -97,7 +99,17 @@ begin
       FDxfObject := DXF_Object.Create(name);
       FDxfObject.Progress := frmProgressMM.pbProgress;
       FDxfObject.OnThinking := Think;
-      FDxfObject.ReadFile(FDxfName, frmProgressMM.memoMessages.Lines);
+      try
+        FDxfObject.ReadFile(FDxfName, frmProgressMM.memoMessages.Lines);
+      except on EInOutError do
+        begin
+          result := False;
+          Beep;
+          MessageDlg(Format(StrThereWasAnErrorR, [FDxfName]),
+            mtError, [mbOK], 0);
+          Exit;
+        end;
+      end;
     finally
       frmProgressMM.Hide;
     end;

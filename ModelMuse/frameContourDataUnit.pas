@@ -528,6 +528,7 @@ begin
   lblUpperLimit.Caption := StrUpperLimit;
   if (AnObject = nil) then
   begin
+    FLegend.ValueSource := nil;
   end
   else if (AnObject is TDataArray) then
   begin
@@ -536,6 +537,7 @@ begin
       + Format(StrMinValueS, [DataSet.MinValue]);
     lblUpperLimit.Caption := StrUpperLimit
       + Format(StrMaxValueS, [DataSet.MaxValue]);
+    FLegend.ValueSource := DataSet;
   end;
 end;
 

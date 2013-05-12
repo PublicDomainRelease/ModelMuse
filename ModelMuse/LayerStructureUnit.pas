@@ -26,55 +26,47 @@ type
 
   TCustomLayerGroup = class;
   TLayerGroup = class;
+  TGrowItem = class;
+  TGrowthControls = class;
 
   TLayerCollection  = class(TCollection)
   Private
-    FLayerGroup: TCustomLayerGroup;
+    FLayerGroup: TGrowthControls;
     procedure InvalidateModel;
     procedure Sort;
+    function GetItem(Index: Integer): TLayerFraction;
+    procedure SetItem(Index: Integer; const Value: TLayerFraction);
   public
     function IsSame(AnotherLayerCollection: TLayerCollection): boolean;
     procedure Assign(Source: TPersistent); override;
-    constructor Create(LayerGroup: TCustomLayerGroup);
+    constructor Create(LayerGroup: TGrowthControls);
     destructor Destroy; override;
+    property Items[Index: Integer]: TLayerFraction read GetItem
+      write SetItem; default;
   end;
 
   TCustomLayerStructure = class;
   TLayerStructure = class;
 
-  TCustomLayerGroup = class(TOrderedItem)
+  TGrowthControls = class(TGoPhastPersistent)
   private
-    FDataArrayName: string;
-    FAquiferName: string;
-    FAquiferDisplayName: string;
     FGrowthMethod: TGrowthMethod;
+    procedure SetGrowthMethod(const Value: TGrowthMethod);
+    procedure SetGrowthRate(const Value: real);
+  protected
     FGrowthRate: real;
     {@name defines the layer or layers in @classname.}
     FLayerCollection: TLayerCollection;
-    procedure SetDataArrayName(const NewName: string);
-    procedure SetAquiferName(const Value: string);
-    procedure SetGrowthMethod(const Value: TGrowthMethod);
-    procedure SetGrowthRate(const Value: real);
-    function EvalAt: TEvaluatedAt; virtual;
-    function GetSimulated: boolean; virtual;
-    procedure SetSimulated(const Value: boolean); virtual;
-    procedure UpdateDataArray(const NewName, NewDisplayName: string);
-    procedure SetTopDisplayName(Model: TBaseModel);
-  protected
-    procedure SetLayerCollection(const Value: TLayerCollection); virtual;
-    function Collection: TCustomLayerStructure;
-    function IsSame(AnotherItem: TOrderedItem): boolean; override;
-    procedure Loaded; virtual;
     function StoreLayerCollection: boolean; virtual;
-    function ShouldCreateDataArray: Boolean; virtual;
+    procedure SetLayerCollection(const Value: TLayerCollection); virtual;
+    function IsSame(AnotherGrowControls : TGrowthControls): boolean;
   public
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Collection: TCollection); override;
-    Destructor Destroy; override;
-    function LayerCount: integer; virtual;
+    Constructor Create(Model: TBaseModel);
+//    constructor Create(Collection: TCollection); override;
+    destructor Destroy; override;
+    function LayerCount: Integer; virtual;
   published
-    property DataArrayName: string read FDataArrayName write SetDataArrayName;
-    property AquiferName: string read FAquiferName write SetAquiferName;
     {
     When a layer group is split into more than one layer, @name defines
     how the thickness of those layers is specified.
@@ -89,9 +81,73 @@ type
     how the thickness of those layers is calculated.
     }
     property GrowthRate: real read FGrowthRate write SetGrowthRate;
-    {@name defines the layer or layers in @classname.}
+    { @name defines the layer or layers in @classname.}
     property LayerCollection: TLayerCollection read FLayerCollection
       write SetLayerCollection stored StoreLayerCollection;
+  end;
+
+  TGrowItem = class(TOrderedItem)
+  private
+    FGrowthControls: TGrowthControls;
+    procedure SetGrowthMethod(const Value: TGrowthMethod);
+    procedure SetGrowthRate(const Value: real);
+    function GetGrowthMethod: TGrowthMethod;
+    function GetGrowthRate: real;
+    function GetLayerCollection: TLayerCollection;
+    procedure SetGrowthControls(const Value: TGrowthControls);
+  protected
+    function StoreLayerCollection: boolean; virtual;
+    procedure SetLayerCollection(const Value: TLayerCollection); virtual;
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+  public
+    procedure Assign(Source: TPersistent); override;
+    constructor Create(Collection: TCollection); override;
+    destructor Destroy; override;
+    function LayerCount: Integer; virtual;
+  published
+    {
+    When a layer group is split into more than one layer, @name defines
+    how the thickness of those layers is specified.
+    }
+    property GrowthMethod: TGrowthMethod read GetGrowthMethod
+      write SetGrowthMethod stored False;
+    {
+    When @link(GrowthMethod) is  @link(TGrowthMethod gmUp),
+    @link(TGrowthMethod gmDown),
+    @link(TGrowthMethod gmMiddle), or @link(TGrowthMethod gmEdge),
+    @name is used to help define
+    how the thickness of those layers is calculated.
+    }
+    property GrowthRate: real read GetGrowthRate write SetGrowthRate stored False;
+    { @name defines the layer or layers in @classname.}
+    property LayerCollection: TLayerCollection read GetLayerCollection
+      write SetLayerCollection stored False;
+    property GrowthControls: TGrowthControls read FGrowthControls
+      write SetGrowthControls;
+  end;
+
+  TCustomLayerGroup = class(TGrowItem)
+  private
+    FDataArrayName: string;
+    FAquiferName: string;
+    FAquiferDisplayName: string;
+    procedure SetDataArrayName(const NewName: string);
+    procedure SetAquiferName(const Value: string);
+    function EvalAt: TEvaluatedAt; virtual;
+    function GetSimulated: boolean; virtual;
+    procedure SetSimulated(const Value: boolean); virtual;
+    procedure UpdateDataArray(const NewName, NewDisplayName: string);
+    procedure SetTopDisplayName(Model: TBaseModel);
+  protected
+    function Collection: TCustomLayerStructure;
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    procedure Loaded; virtual;
+    function ShouldCreateDataArray: Boolean; virtual;
+  public
+    procedure Assign(Source: TPersistent); override;
+  published
+    property DataArrayName: string read FDataArrayName write SetDataArrayName;
+    property AquiferName: string read FAquiferName write SetAquiferName;
     property Simulated: boolean read GetSimulated write SetSimulated;
   end;
 
@@ -1301,7 +1357,7 @@ begin
   Sort;
 end;
 
-constructor TLayerCollection.Create(LayerGroup: TCustomLayerGroup);
+constructor TLayerCollection.Create(LayerGroup: TGrowthControls);
 begin
   inherited Create(TLayerFraction);
   Assert(LayerGroup <> nil);
@@ -1315,10 +1371,10 @@ begin
   inherited;
 end;
 
-//function TLayerCollection.GetItem(Index: Integer): TLayerFraction;
-//begin
-//  Result := inherited Items[Index] as TLayerFraction;
-//end;
+function TLayerCollection.GetItem(Index: Integer): TLayerFraction;
+begin
+  Result := inherited Items[Index] as TLayerFraction;
+end;
 
 procedure TLayerCollection.InvalidateModel;
 begin
@@ -1335,8 +1391,8 @@ begin
   begin
     for Index := 0 to Count - 1 do
     begin
-      result := (Items[Index] as TLayerFraction).IsSame(
-        AnotherLayerCollection.Items[Index] as TLayerFraction);
+      result := Items[Index].IsSame(
+        AnotherLayerCollection.Items[Index]);
       if not result then Exit;
     end;
   end;
@@ -1351,11 +1407,11 @@ begin
   result := Sign(Frac2.Fraction - Frac1.Fraction);
 end;
 
-//procedure TLayerCollection.SetItem(Index: Integer;
-//  const Value: TLayerFraction);
-//begin
-//  inherited Items[Index] := Value;
-//end;
+procedure TLayerCollection.SetItem(Index: Integer;
+  const Value: TLayerFraction);
+begin
+  inherited Items[Index] := Value;
+end;
 
 procedure TLayerCollection.Sort;
 var
@@ -1398,9 +1454,9 @@ begin
       DataArrayName := AnotherLayerGroup.DataArrayName;
     end;
     AquiferName := AnotherLayerGroup.AquiferName;
-    GrowthMethod := AnotherLayerGroup.GrowthMethod;
-    GrowthRate := AnotherLayerGroup.GrowthRate;
-    LayerCollection := AnotherLayerGroup.LayerCollection;
+//    GrowthMethod := AnotherLayerGroup.GrowthMethod;
+//    GrowthRate := AnotherLayerGroup.GrowthRate;
+//    LayerCollection := AnotherLayerGroup.LayerCollection;
   end;
 end;
 
@@ -1429,7 +1485,22 @@ begin
   end;
 end;
 
-constructor TCustomLayerGroup.Create(Collection: TCollection);
+procedure TGrowthControls.Assign(Source: TPersistent);
+var
+  AnotherGrowthControls: TGrowthControls;
+begin
+  // if Assign is updated, update IsSame too.
+//  inherited;
+  AnotherGrowthControls := Source as TGrowthControls;
+  if not IsSame(AnotherGrowthControls) then
+  begin
+    GrowthMethod := AnotherGrowthControls.GrowthMethod;
+    GrowthRate := AnotherGrowthControls.GrowthRate;
+    LayerCollection := AnotherGrowthControls.LayerCollection;
+  end;
+end;
+
+constructor TGrowthControls.Create(Model: TBaseModel);
 begin
   inherited;
   FLayerCollection:= TLayerCollection.Create(self);
@@ -1437,11 +1508,68 @@ begin
   InvalidateModel;
 end;
 
-destructor TCustomLayerGroup.Destroy;
+destructor TGrowthControls.Destroy;
 begin
   FLayerCollection.Free;
   InvalidateModel;
   inherited;
+end;
+
+function TGrowthControls.IsSame(AnotherGrowControls : TGrowthControls): boolean;
+begin
+  result := (AnotherGrowControls.GrowthMethod = GrowthMethod)
+    and (AnotherGrowControls.GrowthRate = GrowthRate)
+    and AnotherGrowControls.LayerCollection.IsSame(LayerCollection)
+end;
+
+procedure TGrowItem.Assign(Source: TPersistent);
+var
+  SourceItem: TGrowItem;
+begin
+  if Source is TGrowItem then
+  begin
+    SourceItem := TGrowItem(Source);
+    GrowthControls := SourceItem.GrowthControls;
+  end;
+  inherited;
+
+end;
+
+constructor TGrowItem.Create(Collection: TCollection);
+begin
+  inherited;
+  FGrowthControls := TGrowthControls.Create(Model);
+end;
+
+destructor TGrowItem.Destroy;
+begin
+  FGrowthControls.Free;
+  inherited;
+end;
+
+function TGrowItem.GetGrowthMethod: TGrowthMethod;
+begin
+  result := FGrowthControls.GrowthMethod;
+end;
+
+function TGrowItem.GetGrowthRate: real;
+begin
+  result := FGrowthControls.GrowthRate;
+end;
+
+function TGrowItem.GetLayerCollection: TLayerCollection;
+begin
+  result := FGrowthControls.LayerCollection;
+end;
+
+function TGrowItem.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  AnotherGrowItem : TGrowItem;
+begin
+  AnotherGrowItem := AnotherItem as TGrowItem;
+  result := (AnotherGrowItem.GrowthMethod = GrowthMethod)
+    and (AnotherGrowItem.GrowthRate = GrowthRate)
+    and AnotherGrowItem.LayerCollection.IsSame(LayerCollection)
 end;
 
 function TCustomLayerGroup.IsSame(AnotherItem: TOrderedItem): boolean;
@@ -1449,16 +1577,9 @@ var
   AnotherLayerGroup : TCustomLayerGroup;
 begin
   AnotherLayerGroup := AnotherItem as TCustomLayerGroup;
-  result := (AnotherLayerGroup.AquiferName = AquiferName)
+  result := inherited IsSame(AnotherLayerGroup)
+    and (AnotherLayerGroup.AquiferName = AquiferName)
     and (AnotherLayerGroup.DataArrayName = DataArrayName)
-    and (AnotherLayerGroup.GrowthMethod = GrowthMethod)
-    and (AnotherLayerGroup.GrowthRate = GrowthRate)
-    and AnotherLayerGroup.LayerCollection.IsSame(LayerCollection)
-end;
-
-function TCustomLayerGroup.LayerCount: integer;
-begin
-  result := LayerCollection.Count + 1;
 end;
 
 procedure TCustomLayerGroup.SetTopDisplayName(Model: TBaseModel);
@@ -1627,34 +1748,6 @@ begin
   end;
 end;
 
-procedure TCustomLayerGroup.SetGrowthMethod(const Value: TGrowthMethod);
-begin
-  if FGrowthMethod <> Value then
-  begin
-    FGrowthMethod := Value;
-    InvalidateModel;
-  end;
-end;
-
-procedure TCustomLayerGroup.SetGrowthRate(const Value: real);
-begin
-  if FGrowthRate <> Value then
-  begin
-    FGrowthRate := Value;
-    InvalidateModel;
-  end;
-end;
-
-function TCustomLayerGroup.StoreLayerCollection: boolean;
-begin
-  result := True;
-end;
-
-procedure TCustomLayerGroup.SetLayerCollection(const Value: TLayerCollection);
-begin
-  FLayerCollection.Assign(Value);
-end;
-
 procedure TCustomLayerGroup.SetSimulated(const Value: boolean);
 begin
   // do nothing
@@ -1698,7 +1791,7 @@ end;
 
 function TSutraLayerStructure.ElementLayerCount: Integer;
 begin
-  if (Model as TPhastModel).Mesh.MeshType = mt2D then
+  if (Model as TPhastModel).Mesh.MeshType in [mt2D, mtProfile] then
   begin
     result := 1;
   end
@@ -1722,7 +1815,7 @@ begin
     begin
       result := 0
     end
-    else if TPhastModel(Model).Mesh.MeshType = mt2D then
+    else if TPhastModel(Model).Mesh.MeshType in [mt2D, mtProfile] then
     begin
       result := 1;
     end
@@ -1743,7 +1836,7 @@ begin
   begin
     result := 0;
   end
-  else if (Model as TPhastModel).Mesh.MeshType = mt2D then
+  else if (Model as TPhastModel).Mesh.MeshType in [mt2D, mtProfile] then
   begin
     result := 1;
   end
@@ -1795,5 +1888,67 @@ begin
   {$ENDIF}
 end;
 
-end.
+procedure TGrowthControls.SetGrowthMethod(const Value: TGrowthMethod);
+begin
+  if FGrowthMethod <> Value then
+  begin
+    FGrowthMethod := Value;
+    InvalidateModel;
+  end;
+end;
 
+procedure TGrowthControls.SetGrowthRate(const Value: real);
+begin
+  if FGrowthRate <> Value then
+  begin
+    FGrowthRate := Value;
+    InvalidateModel;
+  end;
+end;
+
+function TGrowthControls.StoreLayerCollection: boolean;
+begin
+  Result := True;
+end;
+
+procedure TGrowthControls.SetLayerCollection(const Value: TLayerCollection);
+begin
+  FLayerCollection.Assign(Value);
+end;
+
+function TGrowthControls.LayerCount: Integer;
+begin
+  Result := LayerCollection.Count + 1;
+end;
+
+function TGrowItem.LayerCount: Integer;
+begin
+  result := FGrowthControls.LayerCount
+end;
+
+procedure TGrowItem.SetGrowthControls(const Value: TGrowthControls);
+begin
+  FGrowthControls.Assign(Value);
+end;
+
+procedure TGrowItem.SetGrowthMethod(const Value: TGrowthMethod);
+begin
+  FGrowthControls.GrowthMethod := Value;
+end;
+
+procedure TGrowItem.SetGrowthRate(const Value: real);
+begin
+  FGrowthControls.GrowthRate := Value;
+end;
+
+procedure TGrowItem.SetLayerCollection(const Value: TLayerCollection);
+begin
+  FGrowthControls.LayerCollection := Value;
+end;
+
+function TGrowItem.StoreLayerCollection: boolean;
+begin
+  result := True;
+end;
+
+end.

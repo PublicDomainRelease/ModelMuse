@@ -24,6 +24,9 @@ var
 
 implementation
 
+uses
+  ModelMuseUtilities;
+
 {$R *.dfm}
 
 { TframePackageHob }
@@ -38,7 +41,7 @@ end;
 procedure TframePackageHob.SetData(Package: TModflowPackageSelection);
 begin
   Assert(Package  is THobPackageSelection);
-  THobPackageSelection(Package).DryHead := StrToFloat(rdeDryHead.Text);
+  THobPackageSelection(Package).DryHead := FortranStrToFloat(rdeDryHead.Text);
   inherited;
 end;
 
